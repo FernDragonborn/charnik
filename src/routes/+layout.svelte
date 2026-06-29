@@ -1,0 +1,150 @@
+<script lang="ts">
+	import '$lib/styles/app.css';
+	import favicon from '$lib/assets/favicon.svg';
+	import { browser } from '$app/environment';
+	import { page } from '$app/state';
+	import { app } from '$lib/stores/app.svelte';
+	import { LOCALES, FALLBACK_LOCALE, dirFor, locale as i18nLocale, _ } from '$lib/i18n';
+	import CommandPalette from '$lib/components/CommandPalette.svelte';
+
+	let { children } = $props();
+
+	const nav = [
+		{ href: '/', key: 'nav.roster' },
+		{ href: '/compendium', key: 'nav.compendium' },
+		{ href: '/settings', key: 'nav.settings' }
+	];
+
+	// Single source of truth for live switches: mirror the store onto <html>. No reload.
+	$effect(() => {
+		if (!browser) return;
+		const el = document.documentElement;
+		el.dataset.theme = app.theme;
+		el.lang = app.activeLocale;
+		el.dir = dirFor(app.activeLocale);
+	});
+
+	// Keep svelte-i18n's active locale in sync with the store.
+	$effect(() => {
+		i18nLocale.set(app.activeLocale);
+	});
+
+	function toggleTheme() {
+		app.theme = app.theme === 'dark' ? 'light' : 'dark';
+	}
+	function cycleLocale() {
+		const ids = LOCALES.map((l) => l.id);
+		const next = ids[(ids.indexOf(app.activeLocale) + 1) % ids.length] ?? FALLBACK_LOCALE;
+		app.activeLocale = next;
+	}
+	function toggleSystem() {
+		app.activeSystem = app.activeSystem === '5.5e' ? '5e' : '5.5e';
+	}
+</script>
+
+<svelte:head>
+	<link rel="icon" href={favicon} />
+</svelte:head>
+
+<a class="skip-link" href="#main">{$_('nav.skipToContent')}</a>
+
+<header class="topbar">
+	<a class="wordmark" href="/">Char<span>nik</span></a>
+	<nav class="nav" aria-label="Primary">
+		{#each nav as item (item.href)}
+			<a href={item.href} aria-current={page.url.pathname === item.href ? 'page' : undefined}>
+				{$_(item.key)}
+			</a>
+		{/each}
+	</nav>
+	<div class="chips">
+		<button type="button" onclick={toggleSystem} title={$_('settings.system')}>
+			{app.activeSystem}
+		</button>
+		<button type="button" onclick={cycleLocale} title={$_('settings.language')}>
+			{app.activeLocale.toUpperCase()}
+		</button>
+		<button type="button" onclick={toggleTheme} title={$_('settings.theme')}>
+			{app.theme === 'dark' ? '☾' : '☀'}
+		</button>
+		<kbd>Ctrl K</kbd>
+	</div>
+</header>
+
+<main id="main" tabindex="-1">
+	{@render children()}
+</main>
+
+<CommandPalette />
+
+<style>
+	.topbar {
+		display: flex;
+		align-items: center;
+		gap: var(--space-4);
+		padding: var(--space-3) var(--space-5);
+		border-bottom: 1px solid var(--color-border);
+		background: var(--color-surface);
+	}
+	.wordmark {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--font-size-lg);
+		letter-spacing: -0.01em;
+		text-decoration: none;
+		color: var(--color-text);
+	}
+	.wordmark span {
+		color: var(--color-accent);
+	}
+	.nav {
+		display: flex;
+		gap: var(--space-3);
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+	}
+	.nav a {
+		text-decoration: none;
+		color: var(--color-text-muted);
+		padding: var(--space-1) var(--space-2);
+		border-radius: var(--radius-sm);
+	}
+	.nav a[aria-current='page'] {
+		color: var(--color-text);
+		background: var(--color-surface-2);
+	}
+	.chips {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+		gap: var(--space-2);
+	}
+	.chips button {
+		border: 1px solid var(--color-border);
+		background: transparent;
+		color: var(--color-text-muted);
+		border-radius: var(--radius-sm);
+		padding: var(--space-1) var(--space-2);
+		cursor: pointer;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+	}
+	.chips button:hover {
+		color: var(--color-text);
+		border-color: var(--color-border-strong);
+	}
+	.chips kbd {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-sm);
+		padding: 2px var(--space-2);
+	}
+	main {
+		padding: var(--space-5);
+		max-width: 1040px;
+		margin: 0 auto;
+		outline: none;
+	}
+</style>

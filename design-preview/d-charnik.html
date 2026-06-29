@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en" data-theme="charnik">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Charnik — chosen direction v2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0f1116; --surface:#171a21; --surface-2:#1f232c; --line:#272c37; --line-2:#333a47;
+    --text:#e6e8ec; --muted:#878f9d; --accent:#cf2b40; --accent-soft:#3a1820;
+    --success:#3fa66a; --gold:#caa24a; --gold-soft:#2a2415; --danger:#e0635a; --teal:#3bb8a6; --teal-soft:#11302c;
+    --accent-bri:#ef6b78; --accent-deep:#b3243a; /* bright = crimson AS TEXT on dark; deep = bg behind white */
+    --disp:'Space Grotesk',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);
+    color:var(--text);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased;padding:30px;min-height:100vh}
+  .frame{max-width:1000px;margin:0 auto}
+  header.top{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:14px}
+  .viewtabs{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px}
+  .vt{font-family:var(--disp);font-weight:600;font-size:13px;color:var(--muted);padding:9px 14px;border-bottom:2px solid transparent;cursor:pointer;text-decoration:none}
+  .vt.on{color:var(--text);border-bottom-color:var(--accent)}
+  .vt:hover{color:var(--text)}
+  .vtspace{flex:1}
+  .vt.ghost{font-size:12px;color:var(--muted)}
+  .wordmark{font-family:var(--disp);font-weight:700;font-size:21px;letter-spacing:-.01em}
+  .wordmark span{color:var(--accent-bri)}
+  .toprow{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px}
+  .kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-2);border-radius:6px;padding:3px 8px;color:var(--text);background:var(--surface)}
+  .searchbtn{display:inline-flex;align-items:center;gap:7px;font-family:var(--body);font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line-2);border-radius:6px;padding:3px 9px;cursor:pointer}
+  .searchbtn kbd{font-family:var(--mono);font-size:10px;color:var(--text);border:1px solid var(--line-2);border-radius:4px;padding:0 5px;background:var(--bg)}
+  .chip{border:1px solid var(--line);border-radius:6px;padding:3px 9px}
+  .hero{display:grid;grid-template-columns:1.5fr 1fr;gap:22px;align-items:end;margin-bottom:16px}
+  .eyebrow{font-family:var(--mono);text-transform:uppercase;letter-spacing:.2em;font-size:11px;color:var(--accent-bri)}
+  h1{font-family:var(--disp);font-weight:700;font-size:46px;line-height:1.02;letter-spacing:-.02em;margin:7px 0 4px}
+  .sub{color:var(--muted);font-size:14px}.sub b{color:var(--gold);font-weight:600}
+  .hp{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 17px}
+  .hp .lab{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:2px}
+  .hp .val{font-family:var(--disp);font-weight:700;font-size:30px}.hp .val small{color:var(--muted);font-size:16px;font-weight:500}
+  .bar{height:9px;border-radius:999px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line);margin-top:8px;display:flex}
+  .bar>i{display:block;height:100%}
+  .bar>i.cur{width:55%;background:var(--accent)}
+  .bar>i.tmp{width:12%;background:var(--teal);box-shadow:-1px 0 0 var(--surface)}
+  .temptag{font-family:var(--disp);font-weight:600;font-size:11px;padding:3px 9px;border-radius:999px;cursor:pointer;background:var(--teal-soft);border:1px solid var(--teal);color:var(--teal)}
+  .hp .val .temp{font-family:var(--disp);font-weight:600;font-size:14px;color:var(--teal);margin-left:7px}
+
+  /* play-controls strip: quick toggles live here — shield gets its OWN home, not the AC tile */
+  .controls{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:9px}
+  .toggle{display:inline-flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:600;font-size:12px;
+    padding:7px 12px;border-radius:999px;cursor:pointer;background:var(--surface);border:1px solid var(--line);color:var(--muted)}
+  .toggle .sw{font-family:var(--mono);font-size:10px;border:1px solid var(--line-2);border-radius:5px;padding:1px 6px;color:var(--muted)}
+  .toggle.on{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
+  .toggle.on .sw{border-color:var(--gold);color:var(--gold)}
+  .toggle.conc.on{background:#241317;border-color:var(--accent);color:#f0a6ad}
+  .toggle.conc.on .sw{border-color:#7a2230;color:#f0a6ad}
+  .controls .spacer{flex:1 1 auto;min-width:8px}
+  .toggle.dice{background:var(--accent-deep);border-color:var(--accent-deep);color:#fff;font-size:13px}
+  .toggle.auto.on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+  .toggle.auto.on .sw{border-color:var(--teal);color:var(--teal)}
+  .round{display:inline-flex;align-items:center;gap:5px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 10px;color:var(--muted);font-family:var(--disp);font-weight:600;font-size:12px}
+  .round .rstep{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:13px;line-height:1;padding:0 2px}
+  /* turn bar: action economy + next turn */
+  .turnbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:9px 12px;margin-bottom:14px}
+  .turnbar .lbl{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+  .ae{display:inline-flex;align-items:center;gap:7px;font-family:var(--disp);font-weight:600;font-size:12px;color:var(--text);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;cursor:pointer}
+  .ae .aepips{display:inline-flex;gap:4px}
+  .ae .aedot{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px rgba(59,184,166,.45)}
+  .ae .aedot.used{background:var(--line-2);box-shadow:none}
+  .ae .src{font-family:var(--mono);font-weight:500;font-size:9px;color:var(--gold);text-transform:uppercase;letter-spacing:.08em}
+  .ae.move{cursor:default} .ae b{color:var(--text)}
+  .turnbar .spacer{flex:1 1 auto;min-width:8px}
+  .nextturn{font-family:var(--disp);font-weight:700;font-size:13px;background:var(--accent-deep);border:1px solid var(--accent-deep);color:#fff;border-radius:9px;padding:7px 15px;cursor:pointer}
+  .playbar{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:22px}
+  .rollout{font-family:var(--mono);font-size:12px;color:var(--text);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 11px;cursor:pointer;margin-left:auto;white-space:nowrap}
+  .rollout:hover{border-color:var(--line-2)} .rollout .logcue{color:var(--muted);margin-left:8px}
+  .rollout i{font-style:normal;color:var(--muted)} .rollout .res{color:var(--teal);font-size:14px;font-weight:700}
+  .phint{font-size:12px;color:var(--muted);flex:1;min-width:220px}
+
+  .sectlab{font-family:var(--mono);text-transform:uppercase;letter-spacing:.16em;font-size:10px;color:var(--muted);margin:0 2px 9px;display:flex;align-items:center;gap:8px}
+  .sectlab::before{content:"▾";font-size:10px;color:var(--muted);cursor:pointer} /* collapsible */
+  .sectlab::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* COMBAT tiles — marked by crimson labels (no edge-bars); 3 equal compact tiles */
+  .combat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+  .tile{background:var(--surface);border:1px solid var(--line-2);border-radius:13px;padding:13px 15px}
+  .tile .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-bri)}
+  .tile .v{font-family:var(--disp);font-weight:700;font-size:26px;line-height:1.05;margin-top:4px}
+  .tile .v small{font-size:13px;color:var(--muted);font-weight:500}
+  .tile .t{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:6px}.tile .t b{color:var(--gold)}
+  /* passive senses — own compact strip, so it never forces the combat tiles tall */
+  .senses-strip{display:flex;align-items:baseline;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 16px;margin-bottom:22px}
+  .senses-strip .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .senses-strip .sv{font-family:var(--disp);font-weight:700;font-size:16px}
+  .senses-strip .sv i{font-style:normal;font-family:var(--body);font-weight:400;font-size:12px;color:var(--muted);margin-right:6px}
+  .senses-strip .edit{margin-left:auto;font-family:var(--body);font-size:12px;color:var(--muted);background:transparent;border:0;cursor:pointer;align-self:center}
+  .senses-strip .dot{color:var(--line-2)}
+
+  /* ABILITY tiles — important to the player: prominent values */
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:22px}
+  .ab{position:relative;background:var(--surface-2);border:1px solid var(--line);border-radius:11px;text-align:center;padding:12px 8px;cursor:pointer}
+  .ab .n{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+  .ab .n b{color:var(--text);font-family:var(--disp);font-weight:600}
+  .ab .m{font-family:var(--disp);font-weight:700;font-size:34px;line-height:1;margin:6px 0 9px}
+  .ab .sv{display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:4px 6px}
+  .ab .sv b{font-family:var(--disp);font-weight:700;font-size:13px;color:var(--text)}
+  .ab .sv.prof{border-color:var(--gold);color:var(--gold)} .ab .sv.prof b{color:var(--gold)}
+  .ab .sv .pdot{width:6px;height:6px;border-radius:50%;border:1.5px solid var(--line-2)}
+  .ab .sv .pdot.on{background:var(--gold);border-color:var(--gold)}
+  .ab:hover{border-color:var(--line-2);background:var(--surface)}
+  .sectlab em{font-style:normal;text-transform:none;letter-spacing:0;font-family:var(--body);font-size:11px;color:var(--muted)}
+
+  .panels{column-count:2;column-gap:18px} /* masonry: panels flow down columns, no empty space */
+  .panels .card{break-inside:avoid;margin-bottom:18px;width:100%}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px}
+  .card h2{font-family:var(--disp);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 13px;display:flex;align-items:center;gap:8px}
+  .card h2::before{content:"▾";color:var(--muted);font-size:10px;font-weight:400;cursor:pointer} /* every panel collapses */
+  .pips{display:flex;gap:7px}
+  .pip{width:17px;height:17px;border-radius:50%;border:1.5px solid #2c4a45}
+  .pip.full{background:var(--teal);border-color:var(--teal);box-shadow:0 0 10px rgba(59,184,166,.5)}
+  .pip.spent{background:transparent;border-style:dashed;opacity:.5}
+  .eff{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+  .eff:first-of-type{border-top:0}
+  .eff .d{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
+  .eff.pos .d{background:var(--teal)} .eff.pos .body b{color:var(--teal)}
+  .eff.neg .d{background:var(--accent)} .eff.neg .body b{color:var(--accent-bri)}
+  .eff .body b{font-weight:600}.eff .body small{color:var(--muted);display:block}
+  .efftag{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle}
+  .efftag.bad{color:var(--accent-bri);border-color:var(--accent)}
+  .trace{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px}.trace b{color:var(--accent-bri)}.trace .g{color:var(--gold)}
+  /* attacks / spells / actions panels on the main page */
+  .ph2{display:flex;align-items:center;gap:8px;margin:0 0 8px}
+  .ph2 h2{margin:0 auto 0 0}
+  .grpby{font-family:var(--disp);font-weight:600;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:3px 8px;cursor:pointer}
+  .atk{display:grid;grid-template-columns:1fr auto;gap:1px 10px;padding:8px 9px;margin:0 -9px;border-radius:9px;cursor:pointer;position:relative}
+  .atk + .atk{box-shadow:0 -1px 0 var(--line)}
+  .atk:hover{background:var(--surface-2);box-shadow:none} .atk:hover + .atk{box-shadow:none}
+  .atk .an{font-family:var(--disp);font-weight:600;font-size:13px}.atk .an small{color:var(--muted);font-weight:500;font-size:11px}
+  .atk .ah{font-family:var(--disp);font-weight:700;font-size:13px;color:var(--gold);justify-self:end}.atk .ah.save{color:var(--accent-bri)}
+  .atk .ad{font-family:var(--mono);font-size:12px;color:var(--text)}
+  .atk .am{font-size:11px;color:var(--muted);justify-self:end}
+  .scat{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:11px 0 3px}
+  .scat.star{color:var(--accent-bri)}
+  .scat .pips .pip{width:12px;height:12px;border-width:1px}
+  /* spell rows: effect-first + resolution tag (DC/atk live once in the castline header) */
+  .castline{font-family:var(--mono);font-size:11px;color:var(--muted);margin:-2px 0 9px}
+  .castline b{color:var(--gold);font-family:var(--disp);font-weight:700}
+  .sprow{display:grid;grid-template-columns:1fr 96px 88px 72px;align-items:center;gap:9px;padding:7px 6px;border-top:1px solid var(--line);border-radius:7px;cursor:pointer}
+  .scat + .sprow{border-top:0}
+  .sprow:hover{background:var(--surface-2)}
+  .sprow .an{min-width:0;font-family:var(--disp);font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sprow .spe{font-family:var(--mono);font-size:12px;color:var(--text);font-weight:600;white-space:nowrap;text-align:right}
+  .sprow .rtag{font-family:var(--mono);font-size:10px;border-radius:5px;padding:2px 4px;border:1px solid var(--line);color:var(--muted);white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis}
+  .sprow .rtag.hit{color:var(--gold);border-color:#5a4d28}
+  .sprow .rtag.save{color:var(--accent-bri);border-color:var(--accent)}
+  .sprow .rtag.auto{color:var(--teal);border-color:var(--teal)}
+  .sprow .tm{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
+  .prep{display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line-2);margin-right:8px;vertical-align:middle}
+  .prep.on{background:var(--gold);border-color:var(--gold)}
+  .prep.always{background:var(--gold);border-color:var(--gold)}
+  .pinstar{color:var(--line-2);margin-left:7px;cursor:pointer;font-style:normal}.pinstar.on{color:var(--accent-bri)}
+  .prepct{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .prepct b{color:var(--gold)}
+  /* skills panel */
+  .sklgrid{column-count:2;column-gap:16px;column-rule:1px solid var(--line)}
+  .skl{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;break-inside:avoid;cursor:pointer;font-size:13px}
+  .skl:hover{background:var(--surface-2)}
+  .skl .pdot{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--line-2);flex:none}
+  .skl .pdot.on{background:var(--gold);border-color:var(--gold)}
+  .skl .sn{flex:1;color:var(--text)}
+  .skl .sm{font-family:var(--disp);font-weight:700;color:var(--text)}
+  .sklgrid .catblock{break-inside:avoid;margin-bottom:7px}
+  .ssec{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:5px 0 3px}
+  .trace .pdot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--gold);vertical-align:middle}
+  /* drag handle — panels reorder within the two-column area */
+  .card > h2::after{content:"⠿";margin-left:auto;color:var(--line-2);font-size:13px;cursor:grab}
+  .ph2 .dh{color:var(--line-2);font-size:13px;cursor:grab;padding-left:8px}
+  footer{margin-top:20px;color:var(--muted);font-size:11px;font-family:var(--mono);text-align:center}
+</style>
+</head>
+<body>
+  <div class="frame">
+    <header class="top">
+      <div class="wordmark">Char<span>nik</span></div>
+      <div class="toprow"><button class="searchbtn">🔍 Search all <kbd>Ctrl K</kbd></button><span class="chip">EN · UK</span><span class="chip">5.5e</span><span class="chip">☾ dark</span></div>
+    </header>
+
+    <nav class="viewtabs">
+      <a class="vt">Profile</a>
+      <a class="vt on">Combat</a>
+      <a class="vt">Inventory</a>
+      <a class="vt">Build</a>
+      <span class="vtspace"></span>
+      <a class="vt ghost">⋮ Customize</a>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Wizard · School of Evocation</div>
+        <h1>Eldrin Vance</h1>
+        <div class="sub">Level <b>7</b> · High Elf · Proficiency <b>+3</b></div>
+      </div>
+      <div class="hp">
+        <div class="lab"><span>Hit points</span><button class="temptag">＋ Temp HP</button></div>
+        <div class="val">24<small> / 38</small><span class="temp">+5 temp</span></div>
+        <div class="bar"><i class="cur"></i><i class="tmp"></i></div>
+      </div>
+    </section>
+
+    <!-- quick play toggles; shield lives here on its own -->
+    <section class="controls">
+      <button class="toggle on">🛡 Shield <span class="sw">ON</span></button>
+      <button class="toggle conc on">◈ Concentration <span class="sw">Bless</span></button>
+      <button class="toggle">✦ Inspiration <span class="sw">OFF</span></button>
+      <button class="toggle">＋ Condition</button>
+      <span class="spacer"></span>
+      <button class="toggle auto on">⚙ Auto-calc <span class="sw">ON</span></button>
+      <button class="toggle dice">🎲 Dice tray</button>
+    </section>
+
+    <section class="turnbar">
+      <span class="lbl">Turn</span>
+      <span class="ae">Action <span class="aepips"><i class="aedot"></i><i class="aedot used"></i></span> <span class="src">+Haste</span></span>
+      <span class="ae">Bonus <span class="aepips"><i class="aedot"></i></span></span>
+      <span class="ae">Reaction <span class="aepips"><i class="aedot used"></i></span></span>
+      <span class="ae move">🦶 Move <b>30</b> / 30 ft</span>
+      <span class="spacer"></span>
+      <span class="round"><button class="rstep">‹</button>⟳ Round 3<button class="rstep">›</button></span>
+      <button class="nextturn">Next turn ▸</button>
+    </section>
+    <div class="playbar">
+      <span class="phint">Tap any check · save · attack to roll it. Auto-calc &amp; rounds are optional — tap a value to override by hand.</span>
+      <span class="rollout">🎲 Last roll · <b>Stealth</b> <i>1d20</i>(14) + 4 = <span class="res">18</span><span class="logcue">▸ log</span></span>
+    </div>
+
+    <div class="sectlab">Combat</div>
+    <section class="combat">
+      <div class="tile"><div class="k">Armor class</div><div class="v">17</div><div class="t">10 + DEX <b>+2</b> + armor <b>+3</b> + shield <b>+2</b></div></div>
+      <div class="tile"><div class="k">Initiative</div><div class="v">+2</div><div class="t">DEX <b>+2</b></div></div>
+      <div class="tile"><div class="k">Speed</div><div class="v">30 ft<small> (9 m)</small></div><div class="t">base walk</div></div>
+    </section>
+    <div class="senses-strip">
+      <span class="lbl">Passive senses</span>
+      <span class="sv"><i>Perception</i>14</span><span class="dot">·</span>
+      <span class="sv"><i>Investigation</i>13</span><span class="dot">·</span>
+      <span class="sv"><i>Insight</i>11</span>
+      <button class="edit">✎ Pin skills</button>
+    </div>
+
+    <div class="sectlab">Abilities <em>tap to roll a check or save · click a value to edit</em></div>
+    <section class="grid">
+      <div class="ab"><div class="n"><b>STR</b> · 8</div><div class="m">−1</div><div class="sv"><i class="pdot"></i>SAVE <b>−1</b></div></div>
+      <div class="ab"><div class="n"><b>DEX</b> · 14</div><div class="m">+2</div><div class="sv"><i class="pdot"></i>SAVE <b>+2</b></div></div>
+      <div class="ab"><div class="n"><b>CON</b> · 13</div><div class="m">+1</div><div class="sv"><i class="pdot"></i>SAVE <b>+1</b></div></div>
+      <div class="ab"><div class="n"><b>INT</b> · 18</div><div class="m">+4</div><div class="sv prof"><i class="pdot on"></i>SAVE <b>+7</b></div></div>
+      <div class="ab"><div class="n"><b>WIS</b> · 12</div><div class="m">+1</div><div class="sv prof"><i class="pdot on"></i>SAVE <b>+4</b></div></div>
+      <div class="ab"><div class="n"><b>CHA</b> · 10</div><div class="m">0</div><div class="sv"><i class="pdot"></i>SAVE <b>0</b></div></div>
+    </section>
+
+    <section class="panels">
+      <div class="card">
+        <h2>Skills</h2>
+        <div class="sklgrid">
+          <div class="catblock"><div class="ssec">Strength</div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Athletics</span><b class="sm">−1</b></div>
+          </div>
+          <div class="catblock"><div class="ssec">Dexterity</div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Acrobatics</span><b class="sm">+2</b></div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Sleight of Hand</span><b class="sm">+2</b></div>
+            <div class="skl"><i class="pdot on"></i><span class="sn">Stealth</span><b class="sm">+5</b></div>
+          </div>
+          <div class="catblock"><div class="ssec">Intelligence</div>
+            <div class="skl"><i class="pdot on"></i><span class="sn">Arcana</span><b class="sm">+7</b></div>
+            <div class="skl"><i class="pdot on"></i><span class="sn">History</span><b class="sm">+7</b></div>
+            <div class="skl"><i class="pdot on"></i><span class="sn">Investigation</span><b class="sm">+7</b></div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Nature</span><b class="sm">+4</b></div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Religion</span><b class="sm">+4</b></div>
+          </div>
+          <div class="catblock"><div class="ssec">Wisdom</div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Animal Handling</span><b class="sm">+1</b></div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Insight</span><b class="sm">+1</b></div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Medicine</span><b class="sm">+1</b></div>
+            <div class="skl"><i class="pdot on"></i><span class="sn">Perception</span><b class="sm">+4</b></div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Survival</span><b class="sm">+1</b></div>
+          </div>
+          <div class="catblock"><div class="ssec">Charisma</div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Deception</span><b class="sm">0</b></div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Intimidation</span><b class="sm">0</b></div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Performance</span><b class="sm">0</b></div>
+            <div class="skl"><i class="pdot"></i><span class="sn">Persuasion</span><b class="sm">0</b></div>
+          </div>
+        </div>
+        <p class="trace" style="margin-top:10px"><i class="pdot"></i> proficient · tap a skill to roll</p>
+      </div>
+
+      <div class="card">
+        <h2>Attacks</h2>
+        <div class="atk"><span class="an">Longsword</span><span class="ah">+7</span><span class="ad">1d8 + 4 slashing</span><span class="am">melee · versatile</span></div>
+        <div class="atk"><span class="an">Longbow</span><span class="ah">+5</span><span class="ad">1d8 + 2 piercing</span><span class="am">150 / 600 ft</span></div>
+        <div class="atk"><span class="an">Dagger</span><span class="ah">+5</span><span class="ad">1d4 + 2 piercing</span><span class="am">finesse · thrown</span></div>
+        <div class="atk"><span class="an">Unarmed Strike</span><span class="ah">+7</span><span class="ad">1 + 4 bludgeoning</span><span class="am">melee</span></div>
+      </div>
+      <div class="card">
+        <div class="ph2"><h2>Actions</h2><span class="grpby">👁 Show / hide</span><span class="dh">⠿</span></div>
+        <div class="atk"><span class="an">Attack</span><span class="ah">—</span><span class="ad">weapon / spell / unarmed</span><span class="am">→ Attacks</span></div>
+        <div class="atk"><span class="an">Dash</span><span class="ah">—</span><span class="ad">+30 ft this turn</span><span class="am">action</span></div>
+        <div class="atk"><span class="an">Disengage</span><span class="ah">—</span><span class="ad">no opportunity attacks</span><span class="am">action</span></div>
+        <div class="atk"><span class="an">Dodge</span><span class="ah">—</span><span class="ad">attackers have disadv.</span><span class="am">action</span></div>
+        <div class="atk"><span class="an">Hide</span><span class="ah">+5</span><span class="ad">Stealth</span><span class="am">→ roll</span></div>
+        <div class="atk"><span class="an">Search</span><span class="ah">+4</span><span class="ad">Perception</span><span class="am">→ roll</span></div>
+        <div class="atk"><span class="an">Study</span><span class="ah">+7</span><span class="ad">recall lore (Int)</span><span class="am">→ roll</span></div>
+        <div class="atk"><span class="an">Influence</span><span class="ah">0</span><span class="ad">persuade / deceive…</span><span class="am">→ roll</span></div>
+        <div class="atk"><span class="an">Grapple</span><span class="ah">−1</span><span class="ad">Athletics vs target</span><span class="am">contest</span></div>
+        <div class="atk"><span class="an">Shove</span><span class="ah">−1</span><span class="ad">prone / push 5 ft</span><span class="am">contest</span></div>
+        <div class="atk"><span class="an">Help</span><span class="ah">—</span><span class="ad">give an ally advantage</span><span class="am">action</span></div>
+        <div class="atk"><span class="an">Ready</span><span class="ah">—</span><span class="ad">prepare a trigger</span><span class="am">action</span></div>
+        <div class="atk"><span class="an">Utilize</span><span class="ah">—</span><span class="ad">use an object</span><span class="am">action</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ph2"><h2>Effects &amp; conditions</h2><span class="grpby">＋ Add</span><span class="dh">⠿</span></div>
+        <div class="eff pos"><span class="d"></span><div class="body"><b>Bless</b> <span class="efftag">spell · conc</span><small>+1d4 to attacks &amp; saves · 7 rounds</small></div></div>
+        <div class="eff pos"><span class="d"></span><div class="body"><b>Mage Armor</b> <span class="efftag">spell</span><small>set base AC 13 · 8 hr</small><div class="trace">hover any stat → full trace</div></div></div>
+        <div class="eff neg"><span class="d"></span><div class="body"><b>Poisoned</b> <span class="efftag bad">condition</span><small>disadvantage on attacks</small></div></div>
+      </div>
+
+      <div class="card">
+        <div class="ph2"><h2>Spells</h2>
+          <span style="display:flex;gap:8px;align-items:center"><span class="prepct">Prepared <b>11</b> / 11</span><span class="grpby">Prepared ▾</span><span class="grpby">⛭ Manage all</span></span><span class="dh">⠿</span>
+        </div>
+        <div class="castline">Spell save DC <b>15</b> · spell attack <b>+7</b> — same for every spell</div>
+        <div class="scat star">★ Pinned</div>
+        <div class="sprow"><span class="an"><i class="prep always"></i>Fire Bolt<i class="pinstar on">★</i></span><span class="spe">2d10 fire</span><span class="rtag hit">attack roll</span><span class="tm">cantrip</span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Shield<i class="pinstar on">★</i></span><span class="spe">+5 AC</span><span></span><span class="tm">1st · react</span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Counterspell<i class="pinstar on">★</i></span><span class="spe">negate</span><span></span><span class="tm">3rd · react</span></div>
+        <div class="scat">Cantrips</div>
+        <div class="sprow"><span class="an"><i class="prep always"></i>Ray of Frost<i class="pinstar">☆</i></span><span class="spe">1d8 cold</span><span class="rtag hit">attack roll</span><span class="tm">cantrip</span></div>
+        <div class="sprow"><span class="an"><i class="prep always"></i>Mage Hand<i class="pinstar">☆</i></span><span class="spe">utility</span><span></span><span class="tm">30 ft</span></div>
+        <div class="sprow"><span class="an"><i class="prep always"></i>Prestidigitation<i class="pinstar">☆</i></span><span class="spe">utility</span><span></span><span class="tm">—</span></div>
+        <div class="scat">1st <span class="pips"><span class="pip full"></span><span class="pip full"></span><span class="pip full"></span><span class="pip spent"></span></span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Magic Missile<i class="pinstar">☆</i></span><span class="spe">3×1d4+1 force</span><span class="rtag auto">auto-hit</span><span class="tm">1st</span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Mage Armor<i class="pinstar">☆</i></span><span class="spe">set AC 13</span><span></span><span class="tm">8 hr</span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Absorb Elements<i class="pinstar">☆</i></span><span class="spe">resist + 1d6</span><span></span><span class="tm">react</span></div>
+        <div class="scat">2nd <span class="pips"><span class="pip full"></span><span class="pip full"></span><span class="pip spent"></span></span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Scorching Ray<i class="pinstar">☆</i></span><span class="spe">3×2d6 fire</span><span class="rtag hit">attack roll</span><span class="tm">2nd</span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Misty Step<i class="pinstar">☆</i></span><span class="spe">teleport 30 ft</span><span></span><span class="tm">bonus</span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Mirror Image<i class="pinstar">☆</i></span><span class="spe">3 duplicates</span><span></span><span class="tm">—</span></div>
+        <div class="scat">3rd <span class="pips"><span class="pip full"></span><span class="pip full"></span><span class="pip full"></span></span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Fireball<i class="pinstar">☆</i></span><span class="spe">8d6 fire</span><span class="rtag save">DEX save</span><span class="tm">3rd</span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Fly<i class="pinstar">☆</i></span><span class="spe">fly 60 ft</span><span></span><span class="tm">conc.</span></div>
+        <div class="scat">4th <span class="pips"><span class="pip full"></span></span></div>
+        <div class="sprow"><span class="an"><i class="prep on"></i>Greater Invisibility<i class="pinstar">☆</i></span><span class="spe">invisible</span><span></span><span class="tm">conc.</span></div>
+        <p class="trace" style="margin-top:11px">tap a slot pip to spend / restore · showing <b>prepared + cantrips</b> (16) · spellbook <b>26</b> — Manage all</p>
+      </div>
+
+    </section>
+
+    <footer>CHARNIK v2 — shield in its own toggle strip · combat tiles emphasized + labelled vs abilities</footer>
+  </div>
+</body>
+</html>

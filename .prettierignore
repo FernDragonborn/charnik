@@ -1,0 +1,8 @@
+node_modules
+build
+.svelte-kit
+pnpm-lock.yaml
+# hand-wrapped docs + reference screenshots
+*.md
+docs
+срншоти для 1го рандун правок

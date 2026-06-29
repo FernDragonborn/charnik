@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en" data-theme="charnik">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Charnik — ability tile variants</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0f1116; --surface:#171a21; --surface-2:#1f232c; --line:#272c37; --line-2:#333a47;
+    --text:#e6e8ec; --muted:#878f9d; --accent:#cf2b40; --accent-bri:#ef6b78;
+    --teal:#3bb8a6; --teal-soft:#11302c; --gold:#caa24a; --gold-soft:#2a2415;
+    --disp:'Space Grotesk',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased;padding:30px}
+  .frame{max-width:1000px;margin:0 auto}
+  h1{font-family:var(--disp);font-weight:700;font-size:22px;margin:0 0 4px}
+  .lede{color:var(--muted);font-size:13px;margin:0 0 26px}
+  .vlabel{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-bri);margin:0 2px 10px;display:flex;gap:10px;align-items:center}
+  .vlabel span{color:var(--muted);text-transform:none;letter-spacing:0;font-family:var(--body);font-size:12px}
+  .row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:30px}
+  .pdot{width:6px;height:6px;border-radius:50%;border:1.5px solid var(--line-2);display:inline-block}
+  .pdot.on{background:var(--gold);border-color:var(--gold)}
+
+  /* ---------- Variant A: modifier hero + save chip ---------- */
+  .A{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 8px;text-align:center}
+  .A .nm{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .A .nm b{color:var(--text);font-family:var(--disp);font-weight:600}
+  .A .mod{font-family:var(--disp);font-weight:700;font-size:34px;line-height:1;margin:6px 0 9px}
+  .A .sav{display:flex;align-items:center;justify-content:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:4px 6px}
+  .A .sav b{font-family:var(--disp);font-weight:700;font-size:13px;color:var(--text)}
+  .A .sav.prof{border-color:var(--gold);color:var(--gold)}.A .sav.prof b{color:var(--gold)}
+
+  /* ---------- Variant B: two equal rolls (check | save) ---------- */
+  .B{background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:11px 6px 12px}
+  .B .nm{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:center}
+  .B .nm b{color:var(--text);font-family:var(--disp);font-weight:600}
+  .B .two{display:grid;grid-template-columns:1fr 1fr;margin-top:8px}
+  .B .c{text-align:center;padding:2px 0}
+  .B .c+.c{border-left:1px solid var(--line)}
+  .B .c .l{font-family:var(--mono);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;gap:4px;align-items:center;justify-content:center}
+  .B .c .v{font-family:var(--disp);font-weight:700;font-size:24px;margin-top:2px}
+
+  /* ---------- Variant C: score primary + mod badge + save ---------- */
+  .C{position:relative;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:12px 8px 11px;text-align:center}
+  .C .nm{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .C .score{font-family:var(--disp);font-weight:700;font-size:30px;line-height:1;margin:5px 0 0}
+  .C .mod{display:inline-block;margin:7px 0 8px;font-family:var(--disp);font-weight:700;font-size:14px;color:var(--gold);background:var(--gold-soft);border:1px solid var(--gold);border-radius:999px;padding:2px 11px}
+  .C .sav{font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;gap:5px;align-items:center;justify-content:center;border-top:1px solid var(--line);padding-top:8px}
+  .C .sav b{font-family:var(--disp);font-weight:700;font-size:12px;color:var(--text)}
+</style>
+</head>
+<body>
+<div class="frame">
+  <h1>Ability tile — 3 variants</h1>
+  <p class="lede">Same data each time: name · ability score · modifier (check) · saving throw (★ = proficient). Pick one.</p>
+
+  <!-- VARIANT A -->
+  <div class="vlabel">Variant A <span>— modifier is the hero, saving throw on a chip below</span></div>
+  <div class="row">
+    <div class="A"><div class="nm"><b>STR</b> · 8</div><div class="mod">−1</div><div class="sav"><i class="pdot"></i>SAVE <b>−1</b></div></div>
+    <div class="A"><div class="nm"><b>DEX</b> · 14</div><div class="mod">+2</div><div class="sav"><i class="pdot"></i>SAVE <b>+2</b></div></div>
+    <div class="A"><div class="nm"><b>CON</b> · 13</div><div class="mod">+1</div><div class="sav"><i class="pdot"></i>SAVE <b>+1</b></div></div>
+    <div class="A"><div class="nm"><b>INT</b> · 18</div><div class="mod">+4</div><div class="sav prof"><i class="pdot on"></i>SAVE <b>+7</b></div></div>
+    <div class="A"><div class="nm"><b>WIS</b> · 12</div><div class="mod">+1</div><div class="sav prof"><i class="pdot on"></i>SAVE <b>+4</b></div></div>
+    <div class="A"><div class="nm"><b>CHA</b> · 10</div><div class="mod">0</div><div class="sav"><i class="pdot"></i>SAVE <b>0</b></div></div>
+  </div>
+
+  <!-- VARIANT B -->
+  <div class="vlabel">Variant B <span>— check &amp; save side by side, equal weight (both are d20 rolls)</span></div>
+  <div class="row">
+    <div class="B"><div class="nm"><b>STR</b> · 8</div><div class="two"><div class="c"><div class="l">Check</div><div class="v">−1</div></div><div class="c"><div class="l">Save</div><div class="v">−1</div></div></div></div>
+    <div class="B"><div class="nm"><b>DEX</b> · 14</div><div class="two"><div class="c"><div class="l">Check</div><div class="v">+2</div></div><div class="c"><div class="l">Save</div><div class="v">+2</div></div></div></div>
+    <div class="B"><div class="nm"><b>CON</b> · 13</div><div class="two"><div class="c"><div class="l">Check</div><div class="v">+1</div></div><div class="c"><div class="l">Save</div><div class="v">+1</div></div></div></div>
+    <div class="B"><div class="nm"><b>INT</b> · 18</div><div class="two"><div class="c"><div class="l">Check</div><div class="v">+4</div></div><div class="c"><div class="l"><i class="pdot on"></i>Save</div><div class="v" style="color:var(--gold)">+7</div></div></div></div>
+    <div class="B"><div class="nm"><b>WIS</b> · 12</div><div class="two"><div class="c"><div class="l">Check</div><div class="v">+1</div></div><div class="c"><div class="l"><i class="pdot on"></i>Save</div><div class="v" style="color:var(--gold)">+4</div></div></div></div>
+    <div class="B"><div class="nm"><b>CHA</b> · 10</div><div class="two"><div class="c"><div class="l">Check</div><div class="v">0</div></div><div class="c"><div class="l">Save</div><div class="v">0</div></div></div></div>
+  </div>
+
+  <!-- VARIANT C -->
+  <div class="vlabel">Variant C <span>— ability score big, modifier as a badge, save underneath</span></div>
+  <div class="row">
+    <div class="C"><div class="nm">STR</div><div class="score">8</div><div class="mod">−1</div><div class="sav"><i class="pdot"></i>save <b>−1</b></div></div>
+    <div class="C"><div class="nm">DEX</div><div class="score">14</div><div class="mod">+2</div><div class="sav"><i class="pdot"></i>save <b>+2</b></div></div>
+    <div class="C"><div class="nm">CON</div><div class="score">13</div><div class="mod">+1</div><div class="sav"><i class="pdot"></i>save <b>+1</b></div></div>
+    <div class="C"><div class="nm">INT</div><div class="score">18</div><div class="mod">+4</div><div class="sav"><i class="pdot on"></i>save <b>+7</b></div></div>
+    <div class="C"><div class="nm">WIS</div><div class="score">12</div><div class="mod">+1</div><div class="sav"><i class="pdot on"></i>save <b>+4</b></div></div>
+    <div class="C"><div class="nm">CHA</div><div class="score">10</div><div class="mod">0</div><div class="sav"><i class="pdot"></i>save <b>0</b></div></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{
+	"app": {
+		"name": "Charnik",
+		"tagline": "Own your characters."
+	},
+	"nav": {
+		"roster": "Roster",
+		"compendium": "Compendium",
+		"settings": "Settings",
+		"skipToContent": "Skip to content",
+		"openCommandPalette": "Open command palette"
+	},
+	"command": {
+		"placeholder": "Jump to a character, spell, item, or rule…",
+		"empty": "No matches.",
+		"close": "Close"
+	},
+	"settings": {
+		"system": "Game system",
+		"language": "Language",
+		"theme": "Theme",
+		"themeDark": "Dark",
+		"themeLight": "Light"
+	},
+	"sheet": {
+		"hitPoints": "Hit points",
+		"armorClass": "Armor class",
+		"initiative": "Initiative",
+		"speed": "Speed",
+		"passivePerception": "Passive perception",
+		"spellSlots": "Spell slots",
+		"effects": "Effects",
+		"shieldToggle": "Shield"
+	}
+}

@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en" data-theme="console">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>C — Heraldic Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0f1116; --surface:#171a21; --surface-2:#1f232c; --line:#272c37; --line-2:#333a47;
+    --text:#e6e8ec; --muted:#878f9d; --accent:#cf2b40; --accent-soft:#3a1820; --success:#3fa66a; --gold:#caa24a;
+    --disp:'Space Grotesk',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased;padding:30px;min-height:100vh}
+  .frame{max-width:980px;margin:0 auto}
+  /* signature: command palette as the spine */
+  .cmd{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;padding:13px 16px;margin-bottom:8px;box-shadow:0 8px 30px #0006}
+  .cmd .car{color:var(--accent);font-family:var(--mono);font-weight:700}
+  .cmd input{all:unset;flex:1;color:var(--text);font-size:15px}
+  .cmd .ph{color:var(--muted)}
+  .cmd .kbd{font-family:var(--mono);font-size:11px;color:var(--muted);border:1px solid var(--line-2);border-radius:6px;padding:3px 7px}
+  .crumbs{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:12px;font-family:var(--mono);margin:14px 2px 22px}
+  .crumbs b{color:var(--text)}
+  .crumbs .sep{opacity:.4}
+  .crumbs .right{margin-left:auto;display:flex;gap:8px}
+  .chip{border:1px solid var(--line);border-radius:6px;padding:3px 9px;color:var(--muted)}
+  .hero{display:flex;align-items:center;gap:18px;margin-bottom:22px}
+  .crest{width:58px;height:58px;border-radius:12px;background:linear-gradient(160deg,var(--accent),#7a1320);display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:24px;color:#fff;box-shadow:0 0 0 1px var(--line-2), 0 8px 20px var(--accent-soft)}
+  h1{font-family:var(--disp);font-weight:700;font-size:34px;letter-spacing:-.02em;margin:0}
+  .sub{color:var(--muted);font-size:14px}
+  .sub b{color:var(--gold);font-weight:600}
+  .tabs{display:flex;gap:6px;margin:0 0 18px}
+  .tab{font-family:var(--disp);font-weight:600;font-size:13px;padding:8px 14px;border-radius:8px;border:1px solid var(--line);color:var(--muted)}
+  .tab.on{background:var(--surface);color:var(--text);border-color:var(--line-2)}
+  .row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+  .stat .k{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .stat .v{font-family:var(--disp);font-weight:700;font-size:28px;margin-top:4px}
+  .stat .v small{color:var(--muted);font-size:15px;font-weight:500}
+  .stat .bar{height:6px;border-radius:999px;background:var(--surface-2);margin-top:10px;overflow:hidden}
+  .stat .bar>i{display:block;height:100%;width:63%;background:linear-gradient(90deg,var(--accent),#e8636f)}
+  .slots{display:flex;gap:6px;margin-top:10px}
+  .slots span{flex:1;height:6px;border-radius:999px;background:var(--surface-2)}
+  .slots span.on{background:var(--gold)}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .panel h2{font-family:var(--disp);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+  .abs{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .abs .a{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;text-align:center;padding:9px 4px}
+  .abs .a .n{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.1em}
+  .abs .a .m{font-family:var(--disp);font-weight:700;font-size:20px}
+  .effs{display:flex;flex-wrap:wrap;gap:8px}
+  .tag{display:flex;align-items:center;gap:7px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px}
+  .tag .d{width:7px;height:7px;border-radius:50%;background:var(--gold)}
+  .tag.bad .d{background:var(--accent)}
+  .tag .r{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .trace{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:10px}
+  .trace b{color:var(--accent)}
+  footer{margin-top:18px;color:var(--muted);font-size:11px;font-family:var(--mono);text-align:center}
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="cmd">
+      <span class="car">›</span><span class="ph">Jump to spell, item, rule, or character…</span><span class="kbd">Ctrl K</span>
+    </div>
+    <div class="crumbs"><b>Charnik</b><span class="sep">/</span>Roster<span class="sep">/</span><b>Eldrin Vance</b>
+      <span class="right"><span class="chip">EN · UK</span><span class="chip">5.5e</span><span class="chip">☾ dark</span></span>
+    </div>
+
+    <div class="hero">
+      <div class="crest">E</div>
+      <div>
+        <h1>Eldrin Vance</h1>
+        <div class="sub">Wizard <b>7</b> · High Elf · Evocation · PB <b>+3</b> · Spell DC <b>15</b></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <span class="tab on">Overview</span><span class="tab">Spells</span><span class="tab">Inventory</span><span class="tab">Effects</span><span class="tab">Log</span>
+    </div>
+
+    <div class="row">
+      <div class="stat"><div class="k">Hit points</div><div class="v">24<small> / 38</small></div><div class="bar"><i></i></div></div>
+      <div class="stat"><div class="k">Armor class</div><div class="v">15</div><div class="trace">10 + DEX <b>+2</b> + armor <b>+3</b></div></div>
+      <div class="stat"><div class="k">Spell slots · 3rd</div><div class="v">3<small> / 3</small></div><div class="slots"><span class="on"></span><span class="on"></span><span class="on"></span></div></div>
+      <div class="stat"><div class="k">Initiative</div><div class="v">+2</div><div class="trace">DEX <b>+2</b></div></div>
+    </div>
+
+    <div class="panel">
+      <h2>Abilities</h2>
+      <div class="abs">
+        <div class="a"><div class="n">STR</div><div class="m">−1</div></div>
+        <div class="a"><div class="n">DEX</div><div class="m">+2</div></div>
+        <div class="a"><div class="n">CON</div><div class="m">+1</div></div>
+        <div class="a"><div class="n">INT</div><div class="m">+4</div></div>
+        <div class="a"><div class="n">WIS</div><div class="m">+1</div></div>
+        <div class="a"><div class="n">CHA</div><div class="m">+0</div></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Active effects</h2>
+      <div class="effs">
+        <span class="tag"><span class="d"></span>Bless <span class="r">7 rds</span></span>
+        <span class="tag"><span class="d"></span>Mage Armor <span class="r">8 hr</span></span>
+        <span class="tag"><span class="d"></span>Concentration <span class="r">on</span></span>
+        <span class="tag bad"><span class="d"></span>Poisoned <span class="r">disadv.</span></span>
+      </div>
+      <div class="trace">Unknown effects never dropped → shown as text + manual modifier. Engine toggle: <b>on</b>.</div>
+    </div>
+
+    <footer>C · Heraldic Console — slate app-OS · heraldic crimson · command-palette spine · Space Grotesk / Inter</footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en" data-theme="charnik">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Charnik — inventory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0f1116; --surface:#171a21; --surface-2:#1f232c; --line:#272c37; --line-2:#333a47;
+    --text:#e6e8ec; --muted:#878f9d; --accent:#cf2b40; --accent-bri:#ef6b78; --accent-deep:#b3243a;
+    --teal:#3bb8a6; --teal-soft:#11302c; --gold:#caa24a; --gold-soft:#2a2415;
+    --disp:'Space Grotesk',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased;padding:26px}
+  .frame{max-width:1020px;margin:0 auto}
+  header.top{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:14px}
+  .wordmark{font-family:var(--disp);font-weight:700;font-size:21px}.wordmark span{color:var(--accent-bri)}
+  .toprow{display:flex;gap:8px;align-items:center}
+  .searchbtn{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line-2);border-radius:6px;padding:3px 9px;cursor:pointer}
+  .searchbtn kbd{font-family:var(--mono);font-size:10px;color:var(--text);border:1px solid var(--line-2);border-radius:4px;padding:0 5px;background:var(--bg)}
+  .chip{border:1px solid var(--line);border-radius:6px;padding:3px 9px;color:var(--muted);font-size:12px}
+  .viewtabs{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px}
+  .vt{font-family:var(--disp);font-weight:600;font-size:13px;color:var(--muted);padding:9px 14px;border-bottom:2px solid transparent;cursor:pointer;text-decoration:none}
+  .vt.on{color:var(--text);border-bottom-color:var(--accent)}.vtspace{flex:1}.vt.ghost{font-size:12px}
+
+  .invhead{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+  .invhead h1{font-family:var(--disp);font-weight:700;font-size:26px;margin:0}
+  .cap{display:flex;flex-direction:column;gap:5px;min-width:200px}
+  .cap .lab{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .cap .lab b{color:var(--text)}
+  .bar{height:8px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+  .bar>i{display:block;height:100%;width:39%;background:var(--teal)}
+  .coins{font-family:var(--disp);font-weight:700;font-size:15px;color:var(--gold)}
+  .spacer{flex:1}
+  .ibtn{font-family:var(--disp);font-weight:600;font-size:12px;border:1px solid var(--line-2);border-radius:8px;padding:7px 12px;color:var(--text);background:var(--surface);cursor:pointer}
+  .ibtn.add{background:var(--accent-deep);border-color:var(--accent-deep);color:#fff}
+  .isearch{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:6px 11px;min-width:230px}
+  .isearch input{all:unset;flex:1;color:var(--text);font-size:13px}
+  .isearch input::placeholder{color:var(--muted)} .isearch .m{color:var(--muted)}
+  .isearch kbd{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--line-2);border-radius:4px;padding:0 5px}
+
+  .csec{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 2px 10px;display:flex;align-items:center;gap:9px}
+  .csec::after{content:"";flex:1;height:1px;background:var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+  .icard{position:relative;background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:13px;cursor:pointer}
+  .icard:hover{border-color:var(--line-2)}
+  .icard.eqd{border-color:var(--teal)} .icard.atd{border-color:var(--accent)}
+  .icard .top{display:flex;align-items:center;gap:10px}
+  .icard .ico{width:42px;height:42px;flex:none;display:grid;place-items:center;font-size:24px;border-radius:10px;background:var(--surface);border:1px solid var(--line);overflow:hidden}
+  .icard .ico .img{width:100%;height:100%}
+  .icard .nm{font-family:var(--disp);font-weight:600;font-size:13px;line-height:1.2;flex:1}
+  .icard .qty{font-family:var(--disp);font-weight:700;font-size:12px;color:var(--gold)}
+  .icard .st{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:10px;display:flex;flex-direction:column;gap:3px}.icard .st b{color:var(--text)}
+  .icard .st .row{display:flex;justify-content:space-between;gap:8px}
+  .icard .bdg{display:flex;gap:5px;margin-top:9px;flex-wrap:wrap}
+  .bchip{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.06em;border-radius:5px;padding:1px 6px;border:1px solid var(--line);color:var(--muted)}
+  .bchip.eq{color:var(--teal);border-color:var(--teal)} .bchip.at{color:var(--accent-bri);border-color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="frame">
+  <header class="top">
+    <div class="wordmark">Char<span>nik</span></div>
+    <div class="toprow"><button class="searchbtn">🔍 Search all <kbd>Ctrl K</kbd></button><span class="chip">EN · UK</span><span class="chip">5.5e</span><span class="chip">☾ dark</span></div>
+  </header>
+  <nav class="viewtabs">
+    <a class="vt">Profile</a><a class="vt">Combat</a><a class="vt on">Inventory</a><a class="vt">Build</a>
+    <span class="vtspace"></span><a class="vt ghost">⋮ Customize</a>
+  </nav>
+
+  <div class="invhead">
+    <h1>Inventory</h1>
+    <div class="cap">
+      <div class="lab"><span>Weight</span><span><b>47</b> / 120 lb · (21 / 54 kg)</span></div>
+      <div class="bar"><i></i></div>
+    </div>
+    <span class="coins">🪙 75 gp</span>
+    <span class="spacer"></span>
+    <div class="isearch"><span class="m">🔍</span><input placeholder="Search items…" /><kbd>Ctrl ⇧ K</kbd></div>
+    <button class="ibtn add">＋ Add item</button>
+  </div>
+
+  <div class="csec">Equipped &amp; attuned <span style="font-family:var(--body);text-transform:none;letter-spacing:0;color:var(--muted)">· 2 / 3 attunement</span></div>
+  <div class="grid">
+    <div class="icard eqd atd"><div class="top"><span class="ico"><span class="img" style="background:linear-gradient(150deg,#3a2c4a,#6b4a7a)"></span></span><span class="nm">Cloak of Protection</span></div><div class="st"><span>wondrous · uncommon</span><span class="row">bonus <b>+1 AC &amp; saves</b></span><span class="row">weight <b>1 lb</b></span></div><div class="bdg"><span class="bchip eq">equipped</span><span class="bchip at">attuned</span></div></div>
+    <div class="icard eqd atd"><div class="top"><span class="ico">🪄</span><span class="nm">Wand of Magic Missiles</span><span class="qty">×1</span></div><div class="st"><span>wondrous · rare</span><span class="row">charges <b>7 / 7</b></span><span class="row">weight <b>1 lb</b></span></div><div class="bdg"><span class="bchip eq">equipped</span><span class="bchip at">attuned</span></div></div>
+    <div class="icard eqd"><div class="top"><span class="ico">🪓</span><span class="nm">Quarterstaff</span></div><div class="st"><span>weapon · simple</span><span class="row">damage <b>1d6 bludg.</b></span><span class="row">weight <b>4 lb</b></span></div><div class="bdg"><span class="bchip eq">equipped</span></div></div>
+  </div>
+
+  <div class="csec">Weapons</div>
+  <div class="grid">
+    <div class="icard"><div class="top"><span class="ico">🗡️</span><span class="nm">Dagger</span><span class="qty">×2</span></div><div class="st"><span>weapon · finesse · thrown</span><span class="row">damage <b>1d4 pierce</b></span><span class="row">weight <b>1 lb each</b></span></div><div class="bdg"></div></div>
+    <div class="icard"><div class="top"><span class="ico">🏹</span><span class="nm">Light Crossbow</span></div><div class="st"><span>weapon · ranged 80/320</span><span class="row">damage <b>1d8 pierce</b></span><span class="row">weight <b>5 lb</b></span></div><div class="bdg"></div></div>
+  </div>
+
+  <div class="csec">Consumables</div>
+  <div class="grid">
+    <div class="icard"><div class="top"><span class="ico">🧪</span><span class="nm">Potion of Healing</span><span class="qty">×3</span></div><div class="st"><span>potion · common</span><span class="row">heals <b>2d4 + 2</b></span><span class="row">weight <b>0.5 lb</b></span></div><div class="bdg"></div></div>
+    <div class="icard"><div class="top"><span class="ico">📜</span><span class="nm">Scroll of Fireball</span><span class="qty">×1</span></div><div class="st"><span>scroll · uncommon</span><span class="row">3rd · <b>8d6 fire</b></span><span class="row">weight <b>—</b></span></div><div class="bdg"></div></div>
+    <div class="icard"><div class="top"><span class="ico">🍖</span><span class="nm">Rations</span><span class="qty">×5</span></div><div class="st"><span>consumable</span><span class="row">food <b>1 day each</b></span><span class="row">weight <b>2 lb each</b></span></div><div class="bdg"></div></div>
+  </div>
+
+  <div class="csec">Gear</div>
+  <div class="grid">
+    <div class="icard"><div class="top"><span class="ico">📖</span><span class="nm">Spellbook</span></div><div class="st"><span>gear</span><span class="row">holds <b>26 spells</b></span><span class="row">weight <b>3 lb</b></span></div><div class="bdg"></div></div>
+    <div class="icard"><div class="top"><span class="ico">🎒</span><span class="nm">Backpack</span></div><div class="st"><span>container</span><span class="row">holds <b>1 cu ft</b></span><span class="row">weight <b>5 lb</b></span></div><div class="bdg"></div></div>
+    <div class="icard"><div class="top"><span class="ico">🪢</span><span class="nm">Rope (50 ft)</span></div><div class="st"><span>gear · hempen</span><span class="row">length <b>50 ft</b></span><span class="row">weight <b>10 lb</b></span></div><div class="bdg"></div></div>
+    <div class="icard"><div class="top"><span class="ico">🧰</span><span class="nm">Component Pouch</span></div><div class="st"><span>gear</span><span class="row">use <b>spell foci</b></span><span class="row">weight <b>2 lb</b></span></div><div class="bdg"></div></div>
+  </div>
+</div>
+</body>
+</html>

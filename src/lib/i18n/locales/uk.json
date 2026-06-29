@@ -1,0 +1,35 @@
+{
+	"app": {
+		"name": "Charnik",
+		"tagline": "Твої персонажі — твої."
+	},
+	"nav": {
+		"roster": "Персонажі",
+		"compendium": "Довідник",
+		"settings": "Налаштування",
+		"skipToContent": "Перейти до вмісту",
+		"openCommandPalette": "Відкрити палітру команд"
+	},
+	"command": {
+		"placeholder": "Перейти до персонажа, закляття, предмета чи правила…",
+		"empty": "Нічого не знайдено.",
+		"close": "Закрити"
+	},
+	"settings": {
+		"system": "Ігрова система",
+		"language": "Мова",
+		"theme": "Тема",
+		"themeDark": "Темна",
+		"themeLight": "Світла"
+	},
+	"sheet": {
+		"hitPoints": "Очки здоров'я",
+		"armorClass": "Клас захисту",
+		"initiative": "Ініціатива",
+		"speed": "Швидкість",
+		"passivePerception": "Пасивна уважність",
+		"spellSlots": "Комірки заклять",
+		"effects": "Ефекти",
+		"shieldToggle": "Щит"
+	}
+}

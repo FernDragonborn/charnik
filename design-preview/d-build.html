@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en" data-theme="charnik">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Charnik — build / level-up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#0f1116; --surface:#171a21; --surface-2:#1f232c; --line:#272c37; --line-2:#333a47;
+    --text:#e6e8ec; --muted:#878f9d; --accent:#cf2b40; --accent-bri:#ef6b78; --accent-deep:#b3243a;
+    --teal:#3bb8a6; --teal-soft:#11302c; --gold:#caa24a; --gold-soft:#2a2415;
+    --disp:'Space Grotesk',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased;padding:26px}
+  .frame{max-width:1020px;margin:0 auto}
+  header.top{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:14px}
+  .wordmark{font-family:var(--disp);font-weight:700;font-size:21px}.wordmark span{color:var(--accent-bri)}
+  .toprow{display:flex;gap:8px;align-items:center}
+  .searchbtn{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line-2);border-radius:6px;padding:3px 9px;cursor:pointer}
+  .searchbtn kbd{font-family:var(--mono);font-size:10px;color:var(--text);border:1px solid var(--line-2);border-radius:4px;padding:0 5px;background:var(--bg)}
+  .chip{border:1px solid var(--line);border-radius:6px;padding:3px 9px;color:var(--muted);font-size:12px}
+  .viewtabs{display:flex;align-items:center;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px}
+  .vt{font-family:var(--disp);font-weight:600;font-size:13px;color:var(--muted);padding:9px 14px;border-bottom:2px solid transparent;cursor:pointer;text-decoration:none}
+  .vt.on{color:var(--text);border-bottom-color:var(--accent)}.vtspace{flex:1}.vt.ghost{font-size:12px}
+
+  .bhead{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+  .bhead h1{font-family:var(--disp);font-weight:700;font-size:26px;margin:0}
+  .bhead .who{font-family:var(--mono);font-size:12px;color:var(--muted)}.bhead .who b{color:var(--text)}
+  .spacer{flex:1}
+  .xptog{display:flex;align-items:center;gap:7px;font-family:var(--disp);font-weight:600;font-size:12px;color:var(--muted)}
+  .tg{width:34px;height:20px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line-2);position:relative;flex:none;cursor:pointer}
+  .tg::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--muted)}
+  .tg.on{background:var(--teal-soft);border-color:var(--teal)}.tg.on::after{left:16px;background:var(--teal)}
+  .lvlup{font-family:var(--disp);font-weight:700;font-size:14px;background:var(--accent-deep);border:1px solid var(--accent-deep);color:#fff;border-radius:9px;padding:9px 16px;cursor:pointer}
+  .modeseg{display:flex;align-items:center;gap:8px}
+  .modeseg .lbl{font-family:var(--disp);font-weight:600;font-size:12px;color:var(--muted)}
+  .mseg{display:flex;border:1px solid var(--line-2);border-radius:8px;overflow:hidden}
+  .mseg span{font-family:var(--disp);font-weight:600;font-size:12px;padding:6px 13px;color:var(--muted);cursor:pointer}
+  .mseg span.on{background:var(--teal-soft);color:var(--teal)}
+  .mseg span.free.on{background:var(--gold-soft);color:var(--gold)}
+
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:17px;margin-bottom:18px}
+  .card h2{font-family:var(--disp);font-weight:600;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 14px;display:flex;align-items:center;justify-content:space-between}
+  .card h2 .add{font-family:var(--disp);font-weight:600;font-size:11px;color:var(--muted);border:1px dashed var(--line-2);border-radius:7px;padding:3px 9px;cursor:pointer;letter-spacing:0;text-transform:none}
+
+  /* class rows */
+  .clsrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+  .clsrow:first-of-type{border-top:0}
+  .clsrow .ic{width:38px;height:38px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);display:grid;place-items:center;font-size:20px;flex:none}
+  .clsrow .nm{flex:1}.clsrow .nm b{font-family:var(--disp);font-weight:600;font-size:14px}
+  .clsrow .nm small{display:block;color:var(--muted);font-size:12px}
+  .clsrow .lv{font-family:var(--disp);font-weight:700;font-size:20px;color:var(--gold)}
+
+  /* stat-gen */
+  .method{display:flex;gap:6px;margin-bottom:4px}
+  .seg{font-family:var(--disp);font-weight:600;font-size:12px;padding:6px 12px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted);cursor:pointer}
+  .seg.on{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
+  .points{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--muted)}.points b{color:var(--teal)}
+  .statgenhead{display:flex;align-items:center;margin-bottom:12px}
+  .strow{display:grid;grid-template-columns:46px 120px 1fr 92px;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+  .strow:first-of-type{border-top:0}
+  .strow .ab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .stepper{display:flex;align-items:center;gap:0;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;overflow:hidden;width:max-content}
+  .stepper button{all:unset;cursor:pointer;color:var(--muted);width:30px;height:30px;display:grid;place-items:center;font-size:16px}
+  .stepper button:hover{background:var(--line);color:var(--text)}
+  .stepper .base{font-family:var(--disp);font-weight:700;font-size:16px;min-width:32px;text-align:center}
+  .bonus{font-family:var(--mono);font-size:11px;color:var(--muted)}.bonus b{color:var(--gold)}
+  .total{text-align:right;font-family:var(--disp);font-weight:700;font-size:18px}.total small{color:var(--muted);font-size:13px;font-weight:500;margin-left:5px}
+
+  /* choice chips */
+  .chips{display:flex;flex-wrap:wrap;gap:7px}
+  .pchip{font-family:var(--disp);font-weight:600;font-size:12px;padding:5px 11px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--text)}
+  .pchip.on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
+  .pchip.add{background:transparent;border-style:dashed;color:var(--muted);cursor:pointer}
+  .frow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13px}
+  .frow:first-of-type{border-top:0}
+  .frow .lvtag{font-family:var(--mono);font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:1px 6px}
+  .frow .ft{flex:1}.frow .ft b{font-family:var(--disp);font-weight:600}
+
+  /* level-up stepper preview */
+  .lucard{background:linear-gradient(180deg,#1b1620,var(--surface));border:1px solid var(--accent-deep)}
+  .steps{display:flex;flex-direction:column;gap:0}
+  .step{display:flex;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+  .step:first-child{border-top:0}
+  .step .dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--line-2);flex:none;display:grid;place-items:center;font-family:var(--disp);font-weight:700;font-size:11px;color:var(--muted)}
+  .step.done .dot{background:var(--teal);border-color:var(--teal);color:#0f1116}
+  .step.now .dot{border-color:var(--accent);color:var(--accent-bri)}
+  .step .body b{font-family:var(--disp);font-weight:600;font-size:14px}
+  .step .body small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+  .sub{font-family:var(--mono);font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="frame">
+  <header class="top">
+    <div class="wordmark">Char<span>nik</span></div>
+    <div class="toprow"><button class="searchbtn">🔍 Search all <kbd>Ctrl K</kbd></button><span class="chip">EN · UK</span><span class="chip">5.5e</span><span class="chip">☾ dark</span></div>
+  </header>
+  <nav class="viewtabs">
+    <a class="vt">Profile</a><a class="vt">Combat</a><a class="vt">Inventory</a><a class="vt on">Build</a>
+    <span class="vtspace"></span><a class="vt ghost">⋮ Customize</a>
+  </nav>
+
+  <div class="bhead">
+    <h1>Build</h1>
+    <span class="who">Editing <b>Eldrin Vance</b> · Level <b>7</b> · 23,000 XP</span>
+    <span class="spacer"></span>
+    <span class="modeseg"><span class="lbl">Rules</span><span class="mseg"><span class="on" title="enforce 5.5e rules">Strict</span><span class="free" title="change anything">Free</span></span></span>
+    <span class="xptog">XP <span class="tg"></span> milestone</span>
+    <button class="lvlup">↑ Level up to 8</button>
+  </div>
+
+  <div class="cols">
+    <div>
+      <!-- classes -->
+      <div class="card">
+        <h2>Classes &amp; subclass <span class="add">＋ Multiclass</span></h2>
+        <div class="clsrow"><span class="ic">🧙</span><span class="nm"><b>Wizard</b><small>School of Evocation · d6 hit die</small></span><span class="lv">7</span></div>
+        <div class="clsrow" style="opacity:.6"><span class="ic">＋</span><span class="nm"><b>Add a class</b><small>multiclass · prereqs vary by class</small></span><span class="lv"></span></div>
+      </div>
+
+      <!-- proficiencies & choices -->
+      <div class="card">
+        <h2>Proficiencies &amp; choices</h2>
+        <p class="sub" style="margin:0 0 6px">Saving throws <span style="color:var(--gold)">(fixed by class)</span></p>
+        <div class="chips" style="margin-bottom:12px"><span class="pchip on">INT</span><span class="pchip on">WIS</span></div>
+        <p class="sub" style="margin:0 0 6px">Skills · choose 2 from class + 2 from background <b style="color:var(--teal)">(4/4)</b></p>
+        <div class="chips" style="margin-bottom:12px"><span class="pchip on">Arcana</span><span class="pchip on">History</span><span class="pchip on">Investigation</span><span class="pchip on">Perception</span><span class="pchip add">＋ change</span></div>
+        <p class="sub" style="margin:0 0 6px">Languages</p>
+        <div class="chips"><span class="pchip">Common</span><span class="pchip">Elvish</span><span class="pchip">Draconic</span><span class="pchip add">＋ add</span></div>
+      </div>
+
+      <!-- feats / ASI -->
+      <div class="card">
+        <h2>Ability boosts &amp; feats</h2>
+        <div class="frow"><span class="lvtag">L4</span><span class="ft"><b>Ability Score Improvement</b> — +2 INT</span></div>
+        <div class="frow"><span class="lvtag">L6</span><span class="ft"><b>Feat</b> — Fey Touched <span class="sub">(+1 INT · Misty Step)</span></span></div>
+        <div class="frow" style="opacity:.6"><span class="lvtag">L8</span><span class="ft"><b>ASI or feat</b> — choose at level 8</span></div>
+      </div>
+    </div>
+
+    <div>
+      <!-- ability scores / stat-gen -->
+      <div class="card">
+        <div class="statgenhead">
+          <div class="method"><span class="seg on">Point buy</span><span class="seg">Standard array</span><span class="seg">Manual</span></div>
+          <span class="points">Points <b>0</b> / 27</span>
+        </div>
+        <div class="strow"><span class="ab">STR</span><span class="stepper"><button>−</button><span class="base">8</span><button>+</button></span><span class="bonus">+ base 8</span><span class="total">8 <small>−1</small></span></div>
+        <div class="strow"><span class="ab">DEX</span><span class="stepper"><button>−</button><span class="base">14</span><button>+</button></span><span class="bonus">no boosts</span><span class="total">14 <small>+2</small></span></div>
+        <div class="strow"><span class="ab">CON</span><span class="stepper"><button>−</button><span class="base">13</span><button>+</button></span><span class="bonus">no boosts</span><span class="total">13 <small>+1</small></span></div>
+        <div class="strow"><span class="ab">INT</span><span class="stepper"><button>−</button><span class="base">15</span><button>+</button></span><span class="bonus">+ bg <b>1</b> · ASI <b>2</b></span><span class="total">18 <small>+4</small></span></div>
+        <div class="strow"><span class="ab">WIS</span><span class="stepper"><button>−</button><span class="base">12</span><button>+</button></span><span class="bonus">no boosts</span><span class="total">12 <small>+1</small></span></div>
+        <div class="strow"><span class="ab">CHA</span><span class="stepper"><button>−</button><span class="base">10</span><button>+</button></span><span class="bonus">no boosts</span><span class="total">10 <small>0</small></span></div>
+        <p class="sub" style="margin:12px 0 0">Point buy: 8–15 before boosts · 5.5e puts the ability boost on your <b style="color:var(--gold)">background</b> (in 5e it's on species) · <b style="color:var(--gold)">Free</b> mode lifts the cap &amp; lets any score.</p>
+      </div>
+
+      <!-- spells -->
+      <div class="card">
+        <h2>Spells <span class="add">⛭ Manage spellbook</span></h2>
+        <p class="sub" style="margin:0 0 6px">Cantrips known <b style="color:var(--teal)">(5/5)</b></p>
+        <div class="chips" style="margin-bottom:12px"><span class="pchip on">Fire Bolt</span><span class="pchip on">Ray of Frost</span><span class="pchip on">Mage Hand</span><span class="pchip on">Light</span><span class="pchip on">Prestidigitation</span></div>
+        <p class="sub" style="margin:0 0 6px">Spellbook <b>26 spells</b> · prepared <b style="color:var(--gold)">11/11</b></p>
+        <div class="chips"><span class="pchip">Shield</span><span class="pchip">Magic Missile</span><span class="pchip">Fireball</span><span class="pchip">Counterspell</span><span class="pchip add">＋ add spell</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- level-up preview / stepper -->
+  <div class="card lucard">
+    <h2 style="color:var(--accent-bri)">Level up to 8 — preview</h2>
+    <div class="steps">
+      <div class="step done"><span class="dot">✓</span><div class="body"><b>Hit points</b><small>+1d6 (roll) or +4 (average) → max HP 38 → 42</small></div></div>
+      <div class="step done"><span class="dot">✓</span><div class="body"><b>Spell slots</b><small>gain a 4th-level slot (now 2) — recompute prepared cap</small></div></div>
+      <div class="step now"><span class="dot">3</span><div class="body"><b>Ability Score Improvement or Feat</b><small>choose +2 / +1+1 or a feat — needs your input</small></div></div>
+      <div class="step"><span class="dot">4</span><div class="body"><b>Learn spells</b><small>add 2 spells to the spellbook (any level you can cast)</small></div></div>
+      <div class="step"><span class="dot">5</span><div class="body"><b>Review &amp; confirm</b><small>see every change, then apply — saved with a new schemaVersion entry</small></div></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

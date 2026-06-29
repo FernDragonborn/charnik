@@ -1,0 +1,93 @@
+/*
+ * Design-token contract (pinned at P1; default values decided P1, see docs/PLAN.md #18).
+ *
+ * Components MUST style only via these CSS custom properties — never hardcode a color,
+ * radius, or spacing literal. Themes are switched by setting `data-theme` on <html>; a
+ * custom theme just overrides the same token NAMES. Token names are SEMANTIC (surface/
+ * text/accent/resource), not palette names, so a theme can remap meaning freely.
+ *
+ * Shipped default = DARK slate + heraldic-crimson accent + gold for resources. `:root`
+ * carries the scales plus the dark palette as the baseline; `[data-theme='light']`
+ * overrides the colors for the light theme. (Fonts are referenced here by family; the
+ * actual Space Grotesk / Inter / JetBrains Mono files are bundled at P7.5 — until then
+ * the fallbacks render.)
+ */
+
+:root {
+	/* ---- spacing scale (4px base) ---- */
+	--space-0: 0;
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-5: 1.5rem;
+	--space-6: 2rem;
+	--space-8: 3rem;
+
+	/* ---- radius ---- */
+	--radius-sm: 6px;
+	--radius-md: 11px;
+	--radius-lg: 14px;
+	--radius-full: 999px;
+
+	/* ---- typography ---- */
+	--font-display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+	--font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--font-mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, monospace;
+	--font-size-xs: 0.6875rem;
+	--font-size-sm: 0.8125rem;
+	--font-size-md: 1rem;
+	--font-size-lg: 1.25rem;
+	--font-size-xl: 1.75rem;
+	--font-size-2xl: 2.75rem;
+	--line-height: 1.5;
+	--tracking-label: 0.12em; /* mono uppercase labels/eyebrows */
+
+	/* ---- elevation ---- */
+	--shadow-1: 0 1px 2px rgb(0 0 0 / 0.4);
+	--shadow-2: 0 8px 30px rgb(0 0 0 / 0.55);
+
+	/* ---- focus ring (a11y: visible focus is non-negotiable) ---- */
+	--focus-ring: 2px solid var(--color-accent);
+	--focus-offset: 2px;
+
+	/* ---- semantic colors: DARK (shipped default) ---- */
+	color-scheme: dark;
+	--color-bg: #0f1116;
+	--color-surface: #171a21;
+	--color-surface-2: #1f232c;
+	--color-border: #272c37;
+	--color-border-strong: #333a47;
+	--color-text: #e6e8ec;
+	--color-text-muted: #878f9d;
+	--color-accent: #cf2b40; /* heraldic crimson */
+	--color-accent-text: #ffffff;
+	--color-resource: #caa24a; /* gold — spell slots / resource pips */
+	--color-resource-soft: #2a2415;
+	--color-success: #3fa66a;
+	--color-warning: #e0a44b;
+	--color-danger: #e0635a;
+	--color-overlay: rgb(0 0 0 / 0.6);
+}
+
+[data-theme='light'] {
+	color-scheme: light;
+	--color-bg: #eef0ee;
+	--color-surface: #ffffff;
+	--color-surface-2: #f4f6f2;
+	--color-border: #d9ddd6;
+	--color-border-strong: #c3c9bd;
+	--color-text: #1b2024;
+	--color-text-muted: #5a6570;
+	--color-accent: #b3243a;
+	--color-accent-text: #ffffff;
+	--color-resource: #9a6a1f;
+	--color-resource-soft: #f1e7cf;
+	--color-success: #2e7d4f;
+	--color-warning: #9a6a1f;
+	--color-danger: #a32b22;
+	--color-overlay: rgb(0 0 0 / 0.4);
+
+	--shadow-1: 0 1px 2px rgb(0 0 0 / 0.08);
+	--shadow-2: 0 10px 30px rgb(0 0 0 / 0.12);
+}
