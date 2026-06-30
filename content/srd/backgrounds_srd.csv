@@ -1,6 +1,5 @@
 id,systems,source,name_en,name_uk,text_en,text_uk,effects,skills,tools,languages,ability_choices,origin_feat
-acolyte,5e,SRD,Acolyte,Послушник,"You served in a temple, versed in rites and prayers.","Ви служили в храмі, знавець обрядів і молитов.",,"insight,religion",,2,,
-acolyte,5.5e,SRD,Acolyte,Послушник,"A temple servant; in 2024 grants ability boosts and an origin feat.","Храмовий служитель; у 2024 дає підвищення характеристик і початковий талант.",,"insight,religion",calligrapher's-supplies,2,"int,wis,cha",magic-initiate-cleric
-criminal,5.5e,SRD,Criminal,Злочинець,"You earned a living outside the law, with a knack for stealth.","Ви заробляли поза законом, з хистом до скрадливості.",,"sleight-of-hand,stealth",thieves'-tools,0,"dex,con,int",alert
-sage,5.5e,SRD,Sage,Мудрець,"A lifelong scholar of arcane and esoteric lore.","Довічний дослідник арканних і езотеричних знань.",,"arcana,history",,2,"con,int,wis",magic-initiate-wizard
-soldier,5.5e,SRD,Soldier,Солдат,"You trained for war, disciplined and battle-hardened.","Ви навчалися для війни, дисципліновані й загартовані боєм.",,"athletics,intimidation",gaming-set,0,"str,dex,con",savage-attacker
+acolyte,5.5e,SRD,Acolyte,,,,,"insight,religion",calligraphers-supplies,,"int,wis,cha",magic-initiate
+criminal,5.5e,SRD,Criminal,,,,,"sleight-of-hand,stealth",thieves-tools,,"dex,con,int",alert
+sage,5.5e,SRD,Sage,,,,,"arcana,history",calligraphers-supplies,,"con,int,wis",magic-initiate
+soldier,5.5e,SRD,Soldier,,,,,"athletics,intimidation",choose-one-kind-of-gaming-set,,"str,dex,con",savage-attacker

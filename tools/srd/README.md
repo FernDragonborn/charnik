@@ -23,22 +23,37 @@ Never claim `5e,5.5e` unless verified identical in both — 2024 diverges from 2
 # 1. fetch source (gitignored)
 mkdir -p tools/srd-src/2024 && cd tools/srd-src/2024
 for f in spells feats classes character-origins equipment magic-items rules-glossary LICENSE; do
-  curl -fsSL -o "$f${f:+.md}" "https://raw.githubusercontent.com/downfallx/dnd-5e-srd-markdown/master/$f.md"
+  curl -fsSL -o "$f.md" "https://raw.githubusercontent.com/downfallx/dnd-5e-srd-markdown/master/$f.md"
 done
-# 2. convert
-node tools/srd/convert-spells.mjs   # → content/srd/spells_srd.csv (339 spells, L0–9)
+cd ../../..
+# 2. convert (each asserts its row count against the source)
+node tools/srd/convert-spells.mjs   # → spells_srd.csv
+node tools/srd/convert.mjs          # → feats, conditions, species, backgrounds
+node tools/srd/convert-items.mjs    # → items (weapons/armor/gear/magic)
 # 3. validate: every row must pass its schema
 pnpm vitest run src/lib/content/schemas.test.ts
 ```
 
-## Status
+Each converter **asserts its emitted row count against the source** (`assertCount`) so a
+parser that drops or double-counts an entry fails loudly instead of shipping a gap.
 
-- [x] **spells** — `convert-spells.mjs`, 339 rows from SRD 5.2.1, schema-validated.
-- [ ] feats, species, backgrounds, classes, class_features, items, conditions, effects
-      (still the hand-seeded placeholders from commit 759e017 — **SUSPECT, must be
-      reconverted from source**).
-- [ ] 5e (SRD 5.1 / Tabyltop) pass for the `5e`-tagged rows.
+## Status (5.5e / SRD 5.2.1)
 
-Structured columns (resolution, save_ability, damage…) are PARSED from the source prose;
-where the text is ambiguous the column is left blank, never guessed. The verbatim
-description always lives in `text_en`.
+| Type | Rows | Script |
+|------|------|--------|
+| spells | 339 | `convert-spells.mjs` |
+| items (weapons 38 · armor 13 · gear 81 · magic 258) | 390 | `convert-items.mjs` |
+| feats | 17 | `convert.mjs` |
+| conditions | 15 | `convert.mjs` |
+| species | 9 | `convert.mjs` |
+| backgrounds | 4 | `convert.mjs` |
+
+- [ ] **classes + class_features** — still the hand-seeded placeholders from 759e017
+      (**SUSPECT, reconvert from `classes.md`**).
+- [ ] **effects** — app-specific catalog, not a raw SRD type; decide derivation.
+- [ ] **5e (SRD 5.1 / Tabyltop)** pass for `5e`-tagged rows.
+
+Structured columns (resolution, damage, ac, rarity…) are PARSED from the source; where the
+text is ambiguous the column is left blank, never guessed. Verbatim text lives in `text_en`.
+Within-file id collisions are auto-suffixed (`-2`); e.g. "Spell Scroll" is both gear and a
+magic item in SRD 5.2.1.

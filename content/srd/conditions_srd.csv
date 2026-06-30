@@ -1,16 +1,64 @@
 id,systems,source,name_en,name_uk,text_en,text_uk,effects,negative
-blinded,"5e,5.5e",SRD,Blinded,Осліплений,"Can't see, auto-fails sight checks; attacks against have advantage, its attacks have disadvantage.",,,true
-charmed,"5e,5.5e",SRD,Charmed,Зачарований,"Can't attack the charmer; charmer has advantage on social checks against it.",,,true
-deafened,"5e,5.5e",SRD,Deafened,Оглушений,"Can't hear and auto-fails hearing checks.",,,true
-frightened,"5e,5.5e",SRD,Frightened,Наляканий,"Disadvantage on checks and attacks while source is in sight; can't willingly move closer.",,,true
-grappled,"5e,5.5e",SRD,Grappled,Схоплений,"Speed becomes 0; ends if the grappler is incapacitated.",,,true
-incapacitated,"5e,5.5e",SRD,Incapacitated,Недієздатний,"Can't take actions or reactions.",,,true
-invisible,"5e,5.5e",SRD,Invisible,Невидимий,"Heavily obscured; attacks against have disadvantage, its attacks have advantage.",,,false
-paralyzed,"5e,5.5e",SRD,Paralyzed,Паралізований,"Incapacitated and can't move or speak; auto-fails Str/Dex saves; hits within 5 ft are crits.",,,true
-petrified,"5e,5.5e",SRD,Petrified,Скам'янілий,"Transformed to stone, incapacitated, resistant to all damage.",,,true
-poisoned,"5e,5.5e",SRD,Poisoned,Отруєний,"Disadvantage on attack rolls and ability checks.",,,true
-prone,"5e,5.5e",SRD,Prone,Лежачий,"Disadvantage on attacks; melee attacks against have advantage, ranged have disadvantage.",,,true
-restrained,"5e,5.5e",SRD,Restrained,Знерухомлений,"Speed 0; attacks against have advantage, its attacks disadvantage; disadvantage on Dex saves.",,,true
-stunned,"5e,5.5e",SRD,Stunned,Приголомшений,"Incapacitated, can't move, auto-fails Str/Dex saves; attacks against have advantage.",,,true
-unconscious,"5e,5.5e",SRD,Unconscious,Непритомний,"Incapacitated, drops everything, prone; auto-fails Str/Dex saves; hits within 5 ft are crits.",,,true
-exhaustion,"5e,5.5e",SRD,Exhaustion,Виснаження,"Cumulative levels of fatigue with escalating penalties; level 6 is death.",,,true
+blinded,5.5e,SRD,Blinded,,"While you have the Blinded condition, you experience the following effects.
+_Can't See._ You can't see and automatically fail any ability check that requires sight.
+_Attacks Affected._ Attack rolls against you have Advantage, and your attack rolls have Disadvantage.",,,true
+charmed,5.5e,SRD,Charmed,,"While you have the Charmed condition, you experience the following effects.
+_Can't Harm the Charmer._ You can't attack the charmer or target the charmer with damaging abilities or magical effects.
+_Social Advantage._ The charmer has Advantage on any ability check to interact with you socially.",,,true
+deafened,5.5e,SRD,Deafened,,"While you have the Deafened condition, you experience the following effect.
+_Can't Hear._ You can't hear and automatically fail any ability check that requires hearing.",,,true
+exhaustion,5.5e,SRD,Exhaustion,,"While you have the Exhaustion condition, you experience the following effects.
+_Exhaustion Levels._ This condition is cumulative. Each time you receive it, you gain 1 Exhaustion level. You die if your Exhaustion level is 6.
+_D20 Tests Affected._ When you make a D20 Test, the roll is reduced by 2 times your Exhaustion level.
+_Speed Reduced._ Your Speed is reduced by a number of feet equal to 5 times your Exhaustion level.
+_Removing Exhaustion Levels._ Finishing a Long Rest removes 1 of your Exhaustion levels. When your Exhaustion level reaches 0, the condition ends.",,,true
+frightened,5.5e,SRD,Frightened,,"While you have the Frightened condition, you experience the following effects.
+_Ability Checks and Attacks Affected._ You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.
+_Can't Approach._ You can't willingly move closer to the source of fear.",,,true
+grappled,5.5e,SRD,Grappled,,"While you have the Grappled condition, you experience the following effects.
+_Speed 0._ Your Speed is 0 and can't increase.
+_Attacks Affected._ You have Disadvantage on attack rolls against any target other than the grappler.
+_Movable._ The grappler can drag or carry you when it moves, but every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it.",,,true
+incapacitated,5.5e,SRD,Incapacitated,,"While you have the Incapacitated condition, you experience the following effects.
+_Inactive._ You can't take any action, Bonus Action, or Reaction.
+_No Concentration._ Your Concentration is broken.
+_Speechless._ You can't speak.
+_Surprised._ If you're Incapacitated when you roll Initiative, you have Disadvantage on the roll.",,,true
+invisible,5.5e,SRD,Invisible,,"While you have the Invisible condition, you experience the following effects.
+_Surprise._ If you're Invisible when you roll Initiative, you have Advantage on the roll.
+_Concealed._ You aren't affected by any effect that requires its target to be seen unless the effect's creator can somehow see you. Any equipment you are wearing or carrying is also concealed.
+_Attacks Affected._ Attack rolls against you have Disadvantage, and your attack rolls have Advantage. If a creature can somehow see you, you don't gain this benefit against that creature.",,,false
+paralyzed,5.5e,SRD,Paralyzed,,"While you have the Paralyzed condition, you experience the following effects.
+_Incapacitated._ You have the Incapacitated condition.
+_Speed 0._ Your Speed is 0 and can't increase.
+_Saving Throws Affected._ You automatically fail Strength and Dexterity saving throws.
+_Attacks Affected._ Attack rolls against you have Advantage.
+_Automatic Critical Hits._ Any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you.",,,true
+petrified,5.5e,SRD,Petrified,,"While you have the Petrified condition, you experience the following effects.
+_Turned to Inanimate Substance._ You are transformed, along with any nonmagical objects you are wearing and carrying, into a solid inanimate substance (usually stone). Your weight increases by a factor of ten, and you cease aging.
+_Incapacitated._ You have the Incapacitated condition.
+_Speed 0._ Your Speed is 0 and can't increase.
+_Attacks Affected._ Attack rolls against you have Advantage.
+_Saving Throws Affected._ You automatically fail Strength and Dexterity saving throws.
+_Resist Damage._ You have Resistance to all damage.
+_Poison Immunity._ You have Immunity to the Poisoned condition.",,,true
+poisoned,5.5e,SRD,Poisoned,,"While you have the Poisoned condition, you experience the following effect.
+_Ability Checks and Attacks Affected._ You have Disadvantage on attack rolls and ability checks.",,,true
+prone,5.5e,SRD,Prone,,"While you have the Prone condition, you experience the following effects.
+_Restricted Movement._ Your only movement options are to crawl or to spend an amount of movement equal to half your Speed (round down) to right yourself and thereby end the condition. If your Speed is 0, you can't right yourself.
+_Attacks Affected._ You have Disadvantage on attack rolls. An attack roll against you has Advantage if the attacker is within 5 feet of you. Otherwise, that attack roll has Disadvantage.",,,true
+restrained,5.5e,SRD,Restrained,,"While you have the Restrained condition, you experience the following effects.
+_Speed 0._ Your Speed is 0 and can't increase.
+_Attacks Affected._ Attack rolls against you have Advantage, and your attack rolls have Disadvantage.
+_Saving Throws Affected._ You have Disadvantage on Dexterity saving throws.",,,true
+stunned,5.5e,SRD,Stunned,,"While you have the Stunned condition, you experience the following effects.
+_Incapacitated._ You have the Incapacitated condition.
+_Saving Throws Affected._ You automatically fail Strength and Dexterity saving throws.
+_Attacks Affected._ Attack rolls against you have Advantage.",,,true
+unconscious,5.5e,SRD,Unconscious,,"While you have the Unconscious condition, you experience the following effects.
+_Inert._ You have the Incapacitated and Prone conditions, and you drop whatever you're holding. When this condition ends, you remain Prone.
+_Speed 0._ Your Speed is 0 and can't increase.
+_Attacks Affected._ Attack rolls against you have Advantage.
+_Saving Throws Affected._ You automatically fail Strength and Dexterity saving throws.
+_Automatic Critical Hits._ Any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you.
+_Unaware._ You're unaware of your surroundings.",,,true
