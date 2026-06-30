@@ -1,0 +1,14 @@
+id,systems,source,name_en,name_uk,text_en,text_uk,effects,size,speed,creature_type
+dwarf,5e,SRD,Dwarf,Дворф,"Bold and hardy, resilient to poison.","Сміливі й витривалі, стійкі до отрути.",flat-bonus:con+2;resist-immune:poison,medium,25,humanoid
+hill-dwarf,5e,SRD,Hill Dwarf,Пагорбовий дворф,"A dwarf with keen senses and remarkable resilience.",,flat-bonus:con+2;flat-bonus:wis+1;resist-immune:poison,medium,25,humanoid
+elf,5e,SRD,Elf,Ельф,"Graceful, perceptive, and long-lived.","Граційні, проникливі й довговічні.",flat-bonus:dex+2,medium,30,humanoid
+high-elf,5e,SRD,High Elf,Високий ельф,"An elf with a keen mind and a mastery of basic magic.",,flat-bonus:dex+2;flat-bonus:int+1,medium,30,humanoid
+halfling,5e,SRD,Halfling,Напіврослик,"Small, nimble, and unusually lucky.","Маленькі, спритні й надзвичайно щасливі.",flat-bonus:dex+2,small,25,humanoid
+lightfoot-halfling,5e,SRD,Lightfoot Halfling,,"A halfling who can easily slip out of notice.",,flat-bonus:dex+2;flat-bonus:cha+1,small,25,humanoid
+human,5e,SRD,Human,Людина,"Versatile and ambitious, found everywhere.","Універсальні й амбітні, зустрічаються всюди.",flat-bonus:str+1;flat-bonus:dex+1;flat-bonus:con+1;flat-bonus:int+1;flat-bonus:wis+1;flat-bonus:cha+1,medium,30,humanoid
+dragonborn,5e,SRD,Dragonborn,Драконороджений,"Born of dragons, with a breath weapon and elemental resistance.","Народжені від драконів, з диханням-зброєю.",flat-bonus:str+2;flat-bonus:cha+1,medium,30,humanoid
+gnome,5e,SRD,Gnome,Гном,"Small, clever, and bright with curiosity.","Маленькі, кмітливі й допитливі.",flat-bonus:int+2,small,25,humanoid
+rock-gnome,5e,SRD,Rock Gnome,,"A gnome with a knack for invention and tinkering.",,flat-bonus:int+2;flat-bonus:con+1,small,25,humanoid
+half-elf,5e,SRD,Half-Elf,Напівельф,"Walking in two worlds, charismatic and adaptable.","Між двох світів, харизматичні й гнучкі.",flat-bonus:cha+2,medium,30,humanoid
+half-orc,5e,SRD,Half-Orc,Напіворк,"Strong and enduring, fierce in battle.","Сильні й витривалі, люті в бою.",flat-bonus:str+2;flat-bonus:con+1,medium,30,humanoid
+tiefling,5e,SRD,Tiefling,Тіфлінг,"Marked by infernal heritage, with fire resistance.","Позначені інфернальним спадком, стійкі до вогню.",flat-bonus:cha+2;flat-bonus:int+1;resist-immune:fire,medium,30,humanoid

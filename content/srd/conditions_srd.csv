@@ -1,0 +1,16 @@
+id,systems,source,name_en,name_uk,text_en,text_uk,effects,negative
+blinded,"5e,5.5e",SRD,Blinded,Осліплений,"Can't see, auto-fails sight checks; attacks against have advantage, its attacks have disadvantage.",,,true
+charmed,"5e,5.5e",SRD,Charmed,Зачарований,"Can't attack the charmer; charmer has advantage on social checks against it.",,,true
+deafened,"5e,5.5e",SRD,Deafened,Оглушений,"Can't hear and auto-fails hearing checks.",,,true
+frightened,"5e,5.5e",SRD,Frightened,Наляканий,"Disadvantage on checks and attacks while source is in sight; can't willingly move closer.",,,true
+grappled,"5e,5.5e",SRD,Grappled,Схоплений,"Speed becomes 0; ends if the grappler is incapacitated.",,,true
+incapacitated,"5e,5.5e",SRD,Incapacitated,Недієздатний,"Can't take actions or reactions.",,,true
+invisible,"5e,5.5e",SRD,Invisible,Невидимий,"Heavily obscured; attacks against have disadvantage, its attacks have advantage.",,,false
+paralyzed,"5e,5.5e",SRD,Paralyzed,Паралізований,"Incapacitated and can't move or speak; auto-fails Str/Dex saves; hits within 5 ft are crits.",,,true
+petrified,"5e,5.5e",SRD,Petrified,Скам'янілий,"Transformed to stone, incapacitated, resistant to all damage.",,,true
+poisoned,"5e,5.5e",SRD,Poisoned,Отруєний,"Disadvantage on attack rolls and ability checks.",,,true
+prone,"5e,5.5e",SRD,Prone,Лежачий,"Disadvantage on attacks; melee attacks against have advantage, ranged have disadvantage.",,,true
+restrained,"5e,5.5e",SRD,Restrained,Знерухомлений,"Speed 0; attacks against have advantage, its attacks disadvantage; disadvantage on Dex saves.",,,true
+stunned,"5e,5.5e",SRD,Stunned,Приголомшений,"Incapacitated, can't move, auto-fails Str/Dex saves; attacks against have advantage.",,,true
+unconscious,"5e,5.5e",SRD,Unconscious,Непритомний,"Incapacitated, drops everything, prone; auto-fails Str/Dex saves; hits within 5 ft are crits.",,,true
+exhaustion,"5e,5.5e",SRD,Exhaustion,Виснаження,"Cumulative levels of fatigue with escalating penalties; level 6 is death.",,,true

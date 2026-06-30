@@ -258,6 +258,33 @@ one row to lie about both.
 - **Spell modeling** needs structured columns for components/range/area/duration and
   **upcasting + cantrip scaling** (semi-structured) — design carefully in P3.
 
+### Finalized column model (P3, IMPLEMENTED — `src/lib/content/schemas.ts`)
+zod schemas per type, validated by `parseRow(type, row)`; co-located test
+`schemas.test.ts` also asserts **every shipped SRD row validates** (data↔schema gate).
+Common columns on every type: `id` (lowercase slug; identity = `source:id`), `systems`
+(comma list over `5e,5.5e`), `source`, `name_en/uk`, `text_en/uk`, `effects`
+(`;`-sep bounded-vocab tokens, validated by kind prefix). Type-specific:
+- **species** `size, speed, creature_type` (5e ASI rides in `effects`; 5.5e splits it to background → ASI rows are usually system-split).
+- **class** (`classes_*.csv`) `hit_die, primary_ability, saves(2), caster(full/half/third/pact/none), spell_ability, skills_choose, skills_from, subclass_level`.
+- **class_feature** (`class_features_*.csv`, linked by `class_id`+`level`) `class_id, level, resource`.
+- **background** (`backgrounds_*.csv`) `skills, tools, languages, ability_choices, origin_feat` (last two = 5.5e).
+- **feat** (`feats_*.csv`) `category(origin/general/fighting-style/epic-boon/general-2014), prereq, repeatable`.
+- **spell** (`spells_*.csv`) `level, school, casting_time, range, components, material, duration, concentration, ritual, classes, resolution(attack/save/auto/none), save_ability, damage, higher_level`. Caster-wide DC/attack are **computed, never stored**.
+- **item** (`items_*.csv`) `category, item_type, cost, weight_lb, properties, damage, damage_type, range, ac, armor_dex_cap("" full / "2" medium / "0" heavy), str_min, stealth_disadvantage, attunement, rarity`.
+- **condition** (`conditions_*.csv`) `negative` (crimson vs teal); mechanics in `effects`.
+- **effect** (`effects_*.csv`, runtime "+" catalog) `kind(bounded vocab), target, op, value, duration_rounds`.
+- **Pack manifest** `content/<root>/_pack.json` carries `schemaVersion, source, license,
+  attribution, systems` for the whole pack → rows don't repeat license/version; per-row
+  `source` still allowed so packs merge. (Supersedes a per-row `schema_version` column.)
+- **TODO (later)**: 2024 subclass-level overrides (all level 3) via per-system override
+  column rather than the seeded 2014 `subclass_level`; bulk SRD fill beyond the seed.
+
+### Seeded SRD subset (P3, SHIPPED — `content/srd/*.csv`)
+Hand-authored canonical fixture (doubles as test data + shipped seed per TESTING.md):
+13 species, 12 classes, 12 class-features, 5 backgrounds, 6 feats, **~50 spells (L0–9)**,
+~34 items (weapons/armor/gear/magic), 15 conditions, 10 quick-effects. Accurate SRD
+5.1/5.2.1 values. Bulk completion (full spell/monster lists) = a later converter job.
+
 ---
 
 ## Localization (UI)

@@ -1,0 +1,11 @@
+id,systems,source,name_en,name_uk,text_en,text_uk,effects,kind,target,op,value,duration_rounds
+bless,"5e,5.5e",SRD,Bless,Благословення,"Add 1d4 to attack rolls and saving throws.",,,flat-bonus,attack-and-saves,+,1d4,10
+bane,"5e,5.5e",SRD,Bane,Прокляття,"Subtract 1d4 from attack rolls and saving throws.",,,flat-bonus,attack-and-saves,-,1d4,10
+guidance,"5e,5.5e",SRD,Guidance,Скерування,"Add 1d4 to one ability check.",,,flat-bonus,ability-check,+,1d4,1
+half-cover,"5e,5.5e",SRD,Half Cover,Половинне укриття,"+2 bonus to AC and Dexterity saving throws.",,,flat-bonus,ac,+,2,0
+three-quarters-cover,"5e,5.5e",SRD,Three-Quarters Cover,Укриття на три чверті,"+5 bonus to AC and Dexterity saving throws.",,,flat-bonus,ac,+,5,0
+dodge,"5e,5.5e",SRD,Dodging,Ухиляння,"Attacks against you have disadvantage; advantage on Dex saves.",,,advantage,dex-saves,advantage,,1
+hexed,"5e,5.5e",SRD,Hexed,Зурочений,"Target takes extra 1d6 necrotic from the caster's attacks.",,,flat-bonus,damage-taken,+,1d6,0
+hunters-mark,"5e,5.5e",SRD,Hunter's Mark,Мітка мисливця,"Marked target takes extra 1d6 damage from the caster's weapon attacks.",,,flat-bonus,damage-taken,+,1d6,0
+heroism-temp-hp,"5e,5.5e",SRD,Heroism,Героїзм,"Gain temporary hit points each turn; immune to frightened.",,,grant-resource,temp-hp,set,mod,10
+shield-of-faith,"5e,5.5e",SRD,Shield of Faith,Щит віри,"+2 bonus to AC.",,,flat-bonus,ac,+,2,100

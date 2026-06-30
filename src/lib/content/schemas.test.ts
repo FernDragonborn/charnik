@@ -1,0 +1,125 @@
+import { describe, it, expect } from 'vitest';
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import Papa from 'papaparse';
+import { CONTENT_TYPES, parseRow, type ContentType } from './schemas';
+
+describe('content schemas — unit', () => {
+	it('accepts a well-formed species row and namespaced systems', () => {
+		const r = parseRow('species', {
+			id: 'elf',
+			systems: '5e,5.5e',
+			source: 'SRD',
+			name_en: 'Elf',
+			text_en: 'Graceful and long-lived.',
+			size: 'medium',
+			speed: '30',
+			effects: ''
+		});
+		expect(r.success).toBe(true);
+		if (r.success) {
+			expect(r.data.systems).toEqual(['5e', '5.5e']);
+			expect(r.data.speed).toBe(30);
+			expect(r.data.effects).toEqual([]);
+		}
+	});
+
+	it('rejects a bad id slug', () => {
+		const r = parseRow('species', {
+			id: 'Half Elf',
+			systems: '5e',
+			source: 'SRD',
+			name_en: 'Half-Elf',
+			size: 'medium',
+			speed: '30'
+		});
+		expect(r.success).toBe(false);
+	});
+
+	it('rejects an unknown system token', () => {
+		const r = parseRow('feat', { id: 'alert', systems: '3.5e', source: 'SRD', name_en: 'Alert' });
+		expect(r.success).toBe(false);
+	});
+
+	it('flags an unknown effect kind, accepts a known one', () => {
+		const bad = parseRow('species', {
+			id: 'x',
+			systems: '5e',
+			source: 'SRD',
+			name_en: 'X',
+			size: 'medium',
+			speed: '30',
+			effects: 'teleport:far'
+		});
+		expect(bad.success).toBe(false);
+
+		const ok = parseRow('species', {
+			id: 'dwarf',
+			systems: '5e',
+			source: 'SRD',
+			name_en: 'Dwarf',
+			size: 'medium',
+			speed: '25',
+			effects: 'flat-bonus:con+2; resist-immune:poison'
+		});
+		expect(ok.success).toBe(true);
+		if (ok.success) expect(ok.data.effects.length).toBe(2);
+	});
+
+	it('coerces spell numerics and booleans', () => {
+		const r = parseRow('spell', {
+			id: 'fireball',
+			systems: '5e,5.5e',
+			source: 'SRD',
+			name_en: 'Fireball',
+			level: '3',
+			school: 'evocation',
+			casting_time: '1 action',
+			range: '150 feet',
+			components: 'V,S,M',
+			duration: 'Instantaneous',
+			concentration: 'false',
+			ritual: 'no',
+			resolution: 'save',
+			save_ability: 'dex',
+			damage: '8d6 fire'
+		});
+		expect(r.success).toBe(true);
+		if (r.success) {
+			expect(r.data.level).toBe(3);
+			expect(r.data.concentration).toBe(false);
+			expect(r.data.resolution).toBe('save');
+		}
+	});
+});
+
+// The seeded SRD pack is the canonical fixture (docs/TESTING.md): every shipped row must
+// validate against its schema. This gate keeps data and schema from drifting apart.
+describe('seeded SRD pack validates', () => {
+	const srdDir = resolve(process.cwd(), 'content/srd');
+
+	for (const [type, def] of Object.entries(CONTENT_TYPES)) {
+		const file = resolve(srdDir, `${def.filebase}_srd.csv`);
+		it(`${type}: every row in ${def.filebase}_srd.csv parses`, () => {
+			if (!existsSync(file)) {
+				// allowed while a type is not yet seeded; remove skip once present
+				return;
+			}
+			const csv = readFileSync(file, 'utf8');
+			const parsed = Papa.parse<Record<string, string>>(csv, {
+				header: true,
+				skipEmptyLines: true
+			});
+			expect(parsed.errors).toEqual([]);
+			expect(parsed.data.length).toBeGreaterThan(0);
+			const failures: string[] = [];
+			for (const row of parsed.data) {
+				const res = parseRow(type as ContentType, row);
+				if (!res.success) {
+					failures.push(`${row.id}: ${res.error.issues.map((i) => i.path.join('.') + ' ' + i.message).join('; ')}`);
+				}
+			}
+			expect(failures).toEqual([]);
+		});
+	}
+});

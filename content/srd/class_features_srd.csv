@@ -1,0 +1,13 @@
+id,systems,source,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource
+rage,"5e,5.5e",SRD,Rage,Лють,"In battle you fight with primal ferocity: bonus damage and resistance to physical damage.",,grant-resource:rage;resist-immune:bludgeoning,barbarian,1,rage
+barb-unarmored-defense,"5e,5.5e",SRD,Unarmored Defense,Беззбройний захист,"While unarmored, your AC equals 10 + Dex mod + Con mod.",,,barbarian,1,
+reckless-attack,"5e,5.5e",SRD,Reckless Attack,Безрозсудна атака,"Gain advantage on Strength-based melee attacks, but attacks against you have advantage.",,,barbarian,2,
+extra-attack-barb,"5e,5.5e",SRD,Extra Attack,Додаткова атака,"You can attack twice when you take the Attack action.",,,barbarian,5,
+second-wind,"5e,5.5e",SRD,Second Wind,Друге дихання,"On your turn, use a bonus action to regain 1d10 + fighter level hit points.",,grant-resource:second-wind,fighter,1,second-wind
+action-surge,"5e,5.5e",SRD,Action Surge,Сплеск дії,"Take one additional action on your turn.",,grant-resource:action-surge,fighter,2,action-surge
+extra-attack-fighter,"5e,5.5e",SRD,Extra Attack,Додаткова атака,"You can attack twice when you take the Attack action.",,,fighter,5,
+sneak-attack,"5e,5.5e",SRD,Sneak Attack,Підступна атака,"Once per turn deal extra damage to a target you have advantage against (or a flanking ally).",,,rogue,1,
+cunning-action,"5e,5.5e",SRD,Cunning Action,Хитра дія,"Use a bonus action to Dash, Disengage, or Hide.",,,rogue,2,
+arcane-recovery,"5e,5.5e",SRD,Arcane Recovery,Аркане відновлення,"Once per day on a short rest, recover spell slots up to half your wizard level.",,grant-resource:arcane-recovery,wizard,1,arcane-recovery
+channel-divinity,"5e,5.5e",SRD,Channel Divinity,Канал божественності,"Channel divine energy to fuel magical effects.",,grant-resource:channel-divinity,cleric,2,channel-divinity
+asi-4,"5e,5.5e",SRD,Ability Score Improvement,Покращення характеристик,"Increase ability scores by 2 (or take a feat). Slot at level 4.",,,fighter,4,
