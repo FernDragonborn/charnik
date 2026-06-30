@@ -50,14 +50,19 @@ parser that drops or double-counts an entry fails loudly instead of shipping a g
 | backgrounds | 4 | `convert.mjs` |
 | classes | 12 | `convert-classes.mjs` |
 | class_features | 174 | `convert-classes.mjs` |
+| monsters (monsters-A-Z 235 · animals 95) | 330 | `convert-monsters.mjs` |
 
 All 5.5e SRD content types are now generated from source — **no hand-authored rows remain.**
+Monster headline stats (size/type/AC/HP/abilities/CR/senses/…) are structured columns;
+traits/actions stay verbatim in `text_en`.
+
+To also fetch monsters: add `monsters-A-Z animals` to the fetch loop, then
+`node tools/srd/convert-monsters.mjs`.
 
 - [ ] **effects** — the runtime "+" quick-effect catalog is an APP concern, not a raw SRD
       type, so it is intentionally NOT seeded here (the hand-seeded placeholder was removed).
       Build it deliberately later (derive apply-condition presets from conditions, etc.).
 - [ ] **subclasses** — one per class exists in SRD 5.2.1; not seeded (separate content type).
-- [ ] **monsters** — `monsters-A-Z.md` not yet converted.
 - [ ] **5e (SRD 5.1 / Tabyltop)** pass for `5e`-tagged rows (currently 5.5e only).
 
 Structured columns (resolution, damage, ac, rarity…) are PARSED from the source; where the

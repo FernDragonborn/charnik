@@ -258,6 +258,15 @@ one row to lie about both.
   (bounded-vocab, `;`-separated), + type-specific mechanics columns.
 - **Localization = L2 suffixed columns** (all languages side-by-side; missing → EN
   fallback; add language = add `name_xx`/`text_xx`).
+  - **Loader discovers content locales from these columns** (union with UI-catalog
+    locales; EN always present as fallback). The active locale's search/sort reads
+    `name_<code>`/`text_<code>` and falls back to `_en` per missing cell, so a row that
+    has e.g. `name_es` is findable under Spanish.
+  - **Guardrail (avoid the foot-gun):** the suffix MUST be a validated **BCP-47 code**
+    (`es`, `uk`, `pt-BR`) via a strict `^(name|text)_[a-z]{2,3}(-[A-Za-z0-9]+)*$` grammar —
+    NOT a free-form name (`name_spanish`). Columns that don't match the grammar are
+    **flagged in content-health, never silently treated as a locale** (prevents phantom/
+    duplicate locales from typos like `spanish` vs `es` vs `es-ES`). Enumerate once at load.
 - **Nested via linked tables**: `class_features.csv` keyed by `class_id` + `level` (incl.
   ASI/feat slot levels). **Resource defs** as columns/linked rows.
 - Multi-value cells: `;` delimiter; small JSON blob only where unavoidable.

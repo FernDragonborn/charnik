@@ -216,6 +216,28 @@ export const effectSchema = baseRow.extend({
 	duration_rounds: optInt
 });
 
+/** Monster / NPC stat block (compendium). Headline stats are structured columns; the
+ *  full traits/actions text stays verbatim in `text_en`. `cr` is a string (fractions). */
+export const monsterSchema = baseRow.extend({
+	size: Size,
+	creature_type: reqStr, // "aberration" | "beast (dinosaur)" | "fiend (demon)" …
+	alignment: optStr,
+	ac: optInt,
+	hp: optInt,
+	hp_formula: optStr, // "20d10 + 40"
+	speed: optStr, // "10 ft., Swim 40 ft."
+	str: optInt,
+	dex: optInt,
+	con: optInt,
+	int: optInt,
+	wis: optInt,
+	cha: optInt,
+	cr: optStr, // "10" | "1/2" | "1/8" | "0"
+	senses: optStr,
+	languages: optStr,
+	skills: optStr
+});
+
 // --- Registry: type name → { schema, file glob, column order for unparse } -----
 
 export const CONTENT_TYPES = {
@@ -227,7 +249,8 @@ export const CONTENT_TYPES = {
 	spell: { schema: spellSchema, filebase: 'spells' },
 	item: { schema: itemSchema, filebase: 'items' },
 	condition: { schema: conditionSchema, filebase: 'conditions' },
-	effect: { schema: effectSchema, filebase: 'effects' }
+	effect: { schema: effectSchema, filebase: 'effects' },
+	monster: { schema: monsterSchema, filebase: 'monsters' }
 } as const;
 
 export type ContentType = keyof typeof CONTENT_TYPES;
@@ -241,6 +264,7 @@ export type Spell = z.infer<typeof spellSchema>;
 export type Item = z.infer<typeof itemSchema>;
 export type Condition = z.infer<typeof conditionSchema>;
 export type Effect = z.infer<typeof effectSchema>;
+export type Monster = z.infer<typeof monsterSchema>;
 
 /** Validate one raw CSV row for a given type. Returns zod's SafeParseReturn. */
 export function parseRow<T extends ContentType>(type: T, row: Record<string, unknown>) {
