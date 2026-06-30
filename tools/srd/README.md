@@ -30,6 +30,7 @@ cd ../../..
 node tools/srd/convert-spells.mjs   # → spells_srd.csv
 node tools/srd/convert.mjs          # → feats, conditions, species, backgrounds
 node tools/srd/convert-items.mjs    # → items (weapons/armor/gear/magic)
+node tools/srd/convert-classes.mjs  # → classes + class_features
 # 3. validate: every row must pass its schema
 pnpm vitest run src/lib/content/schemas.test.ts
 ```
@@ -47,11 +48,17 @@ parser that drops or double-counts an entry fails loudly instead of shipping a g
 | conditions | 15 | `convert.mjs` |
 | species | 9 | `convert.mjs` |
 | backgrounds | 4 | `convert.mjs` |
+| classes | 12 | `convert-classes.mjs` |
+| class_features | 174 | `convert-classes.mjs` |
 
-- [ ] **classes + class_features** — still the hand-seeded placeholders from 759e017
-      (**SUSPECT, reconvert from `classes.md`**).
-- [ ] **effects** — app-specific catalog, not a raw SRD type; decide derivation.
-- [ ] **5e (SRD 5.1 / Tabyltop)** pass for `5e`-tagged rows.
+All 5.5e SRD content types are now generated from source — **no hand-authored rows remain.**
+
+- [ ] **effects** — the runtime "+" quick-effect catalog is an APP concern, not a raw SRD
+      type, so it is intentionally NOT seeded here (the hand-seeded placeholder was removed).
+      Build it deliberately later (derive apply-condition presets from conditions, etc.).
+- [ ] **subclasses** — one per class exists in SRD 5.2.1; not seeded (separate content type).
+- [ ] **monsters** — `monsters-A-Z.md` not yet converted.
+- [ ] **5e (SRD 5.1 / Tabyltop)** pass for `5e`-tagged rows (currently 5.5e only).
 
 Structured columns (resolution, damage, ac, rarity…) are PARSED from the source; where the
 text is ambiguous the column is left blank, never guessed. Verbatim text lives in `text_en`.

@@ -279,11 +279,19 @@ Common columns on every type: `id` (lowercase slug; identity = `source:id`), `sy
 - **TODO (later)**: 2024 subclass-level overrides (all level 3) via per-system override
   column rather than the seeded 2014 `subclass_level`; bulk SRD fill beyond the seed.
 
-### Seeded SRD subset (P3, SHIPPED — `content/srd/*.csv`)
-Hand-authored canonical fixture (doubles as test data + shipped seed per TESTING.md):
-13 species, 12 classes, 12 class-features, 5 backgrounds, 6 feats, **~50 spells (L0–9)**,
-~34 items (weapons/armor/gear/magic), 15 conditions, 10 quick-effects. Accurate SRD
-5.1/5.2.1 values. Bulk completion (full spell/monster lists) = a later converter job.
+### Shipped SRD content (P3 — `content/srd/*.csv`, GENERATED not hand-written)
+**Hard rule: content is never authored from memory.** Every row is parsed from the
+official **CC-BY-4.0 SRD 5.2.1** markdown by converters in `tools/srd/` (source mirror:
+downfallx/dnd-5e-srd-markdown; see `tools/srd/README.md`). Each converter **asserts its
+row count against the source**, so a dropped entry fails loudly. Tagged `5.5e` (2024 SRD;
+not claimed as `5e` — 2024 diverges). Current (all 5.5e):
+**339 spells, 390 items** (38 weapons · 13 armor · 81 gear · 258 magic), **174 class
+features, 17 feats, 15 conditions, 12 classes, 9 species, 4 backgrounds**. Structured
+columns are parsed from the text, blank where ambiguous, never guessed; verbatim text in
+`text_en`; within-file id clashes auto-suffixed (`-2`).
+- **Rejected source**: BTMorton/dnd-5e-srd (OGL 1.0a, not CC-BY; SRD 5.0).
+- **Not seeded** (deliberate): the runtime `effects` quick-pick catalog (an app concern,
+  not a raw SRD type); subclasses; monsters. **5e/SRD-5.1 pass** (Tabyltop/CC-SRD) pending.
 
 ---
 
