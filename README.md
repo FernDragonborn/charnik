@@ -1,42 +1,41 @@
-# sv
+# Charnik
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A free, self-hostable, standalone **D&D 5e (2014) + 5.5e (2024)** character **tracking**
+system — not just a generator. Three roles in one app: **build & level-up**, **play
+tracking** (HP, slots, resources, conditions, concentration, rests, optional XP), and a
+**compendium browser** over all loaded content. Built so non-technical users own and edit
+their data as plain CSV.
 
-## Creating a project
+Desktop app: **Tauri v2 + SvelteKit** (static SPA, TypeScript). No HTTP server — runs
+standalone in the system webview.
 
-If you're seeing this, you've probably already done this step. Congrats!
+> **Status: pre-1.0, in active development.** See [`docs/PLAN.md`](docs/PLAN.md) for the
+> authoritative spec and roadmap.
 
-```sh
-# create a new project
-npx sv create my-app
-```
+## Develop
 
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-pnpm dlx sv@0.16.1 create --template minimal --types ts --install pnpm .
-```
-
-## Developing
-
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+Requires Node 22 + pnpm. The TS side runs without Rust; the Tauri desktop build also needs
+Rust + platform toolchain (MSVC C++ Build Tools + WebView2 on Windows; webkit2gtk on Linux).
 
 ```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
+pnpm install
+pnpm dev          # Vite dev server (web preview)
+pnpm tauri dev    # desktop app (needs Rust toolchain)
+pnpm test         # Vitest
+pnpm lint
+pnpm tauri build  # package the desktop app
 ```
 
-## Building
+## Licensing
 
-To create a production version of your app:
+Charnik separates **code**, **bundled data**, and **user content** — see
+[`COPYING.md`](COPYING.md) for the full picture.
 
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+- **Code → [AGPL-3.0-or-later](LICENSE).** Free for everyone, modification allowed, but
+  changes must be disclosed (including over a network).
+- **Bundled data → [CC-BY-4.0](content/LICENSE).** Rules data derives from the WotC
+  **SRD 5.1** and **SRD 5.2.1**; attribution is kept in
+  [`content/ATTRIBUTION.md`](content/ATTRIBUTION.md). Charnik ships **SRD-only** — add
+  non-SRD material yourself into homebrew CSVs.
+- **Your homebrew → yours.** Content you add stays author-owned; each `source` carries its
+  own license + attribution. The app relicenses nothing.
