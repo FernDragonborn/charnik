@@ -24,3 +24,6 @@ vite.config.ts.timestamp-*
 
 # throwaway design renders (HTML mocks kept)
 design-preview/*.png
+
+# downloaded SRD source (re-fetchable; converter in tools/srd/ reads it → content/srd/*.csv)
+tools/srd-src/
