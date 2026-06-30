@@ -51,10 +51,12 @@ parser that drops or double-counts an entry fails loudly instead of shipping a g
 | classes | 12 | `convert-classes.mjs` |
 | class_features | 174 | `convert-classes.mjs` |
 | monsters (monsters-A-Z 235 · animals 95) | 330 | `convert-monsters.mjs` |
+| subclasses (1 per class) | 12 | `convert-classes.mjs` |
 
-All 5.5e SRD content types are now generated from source — **no hand-authored rows remain.**
-Monster headline stats (size/type/AC/HP/abilities/CR/senses/…) are structured columns;
-traits/actions stay verbatim in `text_en`.
+**SRD 5.2.1 content is complete** — every type generated from source, no hand-authored
+rows remain. Monster/feature headline stats are structured columns; full text stays
+verbatim in `text_en`. Subclass features live in `class_features` with `subclass_id` set
+(232 = 174 base + 58 subclass).
 
 To also fetch monsters: add `monsters-A-Z animals` to the fetch loop, then
 `node tools/srd/convert-monsters.mjs`.
@@ -62,8 +64,7 @@ To also fetch monsters: add `monsters-A-Z animals` to the fetch loop, then
 - [ ] **effects** — the runtime "+" quick-effect catalog is an APP concern, not a raw SRD
       type, so it is intentionally NOT seeded here (the hand-seeded placeholder was removed).
       Build it deliberately later (derive apply-condition presets from conditions, etc.).
-- [ ] **subclasses** — one per class exists in SRD 5.2.1; not seeded (separate content type).
-- [ ] **5e (SRD 5.1 / Tabyltop)** pass for `5e`-tagged rows (currently 5.5e only).
+- [ ] **5e (SRD 5.1)** pass for `5e`-tagged rows (currently 5.5e only).
 
 Structured columns (resolution, damage, ac, rarity…) are PARSED from the source; where the
 text is ambiguous the column is left blank, never guessed. Verbatim text lives in `text_en`.

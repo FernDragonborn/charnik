@@ -137,12 +137,20 @@ export const classSchema = baseRow.extend({
 	subclass_level: optInt
 });
 
-/** Linked table: a class feature granted at a level (incl. ASI/feat slot markers). */
+/** Linked table: a class feature granted at a level (incl. ASI/feat slot markers).
+ *  `subclass_id` is blank for base-class features, set for subclass features. */
 export const classFeatureSchema = baseRow.extend({
 	class_id: reqStr,
 	level: z.coerce.number().int().min(1).max(20),
 	/** Optional named resource the feature grants (e.g. "rage", "ki"); count via effects. */
-	resource: optStr
+	resource: optStr,
+	subclass_id: optStr
+});
+
+/** A subclass (one per class in SRD 5.2.1). Its features live in class_features with
+ *  `subclass_id` set; `subclass_level` on the class says when one is chosen. */
+export const subclassSchema = baseRow.extend({
+	class_id: reqStr
 });
 
 /** Background. 5.5e backgrounds carry the ability boosts + an origin feat. */
@@ -250,7 +258,8 @@ export const CONTENT_TYPES = {
 	item: { schema: itemSchema, filebase: 'items' },
 	condition: { schema: conditionSchema, filebase: 'conditions' },
 	effect: { schema: effectSchema, filebase: 'effects' },
-	monster: { schema: monsterSchema, filebase: 'monsters' }
+	monster: { schema: monsterSchema, filebase: 'monsters' },
+	subclass: { schema: subclassSchema, filebase: 'subclasses' }
 } as const;
 
 export type ContentType = keyof typeof CONTENT_TYPES;
@@ -265,6 +274,7 @@ export type Item = z.infer<typeof itemSchema>;
 export type Condition = z.infer<typeof conditionSchema>;
 export type Effect = z.infer<typeof effectSchema>;
 export type Monster = z.infer<typeof monsterSchema>;
+export type Subclass = z.infer<typeof subclassSchema>;
 
 /** Validate one raw CSV row for a given type. Returns zod's SafeParseReturn. */
 export function parseRow<T extends ContentType>(type: T, row: Record<string, unknown>) {

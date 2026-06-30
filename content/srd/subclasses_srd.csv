@@ -1,0 +1,13 @@
+id,systems,source,name_en,name_uk,text_en,text_uk,effects,class_id
+path-of-the-berserker,5.5e,SRD,Path of the Berserker,,,,,barbarian
+college-of-lore,5.5e,SRD,College of Lore,,,,,bard
+life-domain,5.5e,SRD,Life Domain,,,,,cleric
+circle-of-the-land,5.5e,SRD,Circle of the Land,,,,,druid
+champion,5.5e,SRD,Champion,,,,,fighter
+warrior-of-the-open-hand,5.5e,SRD,Warrior of the Open Hand,,,,,monk
+oath-of-devotion,5.5e,SRD,Oath of Devotion,,,,,paladin
+hunter,5.5e,SRD,Hunter,,,,,ranger
+thief,5.5e,SRD,Thief,,,,,rogue
+draconic-sorcery,5.5e,SRD,Draconic Sorcery,,,,,sorcerer
+fiend-patron,5.5e,SRD,Fiend Patron,,,,,warlock
+evoker,5.5e,SRD,Evoker,,,,,wizard

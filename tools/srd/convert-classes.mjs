@@ -22,6 +22,7 @@ const parts = md.split(/^## (?=[A-Z])/m).slice(1);
 
 const classRows = [];
 const featureRows = [];
+const subclassRows = [];
 
 for (const part of parts) {
 	const name = part.slice(0, part.indexOf('\n')).trim();
@@ -72,25 +73,41 @@ for (const part of parts) {
 		subclass_level: subclassLevel
 	});
 
-	// --- base class features (before the subclass section) ---
-	const basePortion = part.split(/^### .+ Subclass:/m)[0];
-	for (const b of blocks('## x\n' + basePortion)) {
+	const pushFeature = (b, subclass_id) => {
 		const m = /^Level (\d+):\s*(.+)$/.exec(b.name);
-		if (!m) continue;
-		const level = Number(m[1]);
+		if (!m) return;
 		const featName = m[2].trim();
 		featureRows.push({
-			id: `${id}-${slug(featName)}`,
+			id: `${subclass_id || id}-${slug(featName)}`,
 			systems: '5.5e', source: 'SRD', name_en: featName, name_uk: '',
 			text_en: description(b.body), text_uk: '', effects: '',
-			class_id: id, level, resource: ''
+			class_id: id, level: Number(m[1]), resource: '', subclass_id: subclass_id || ''
 		});
+	};
+
+	// --- base class features (before the subclass section) ---
+	const basePortion = part.split(/^### .+ Subclass:/m)[0];
+	for (const b of blocks('## x\n' + basePortion)) pushFeature(b, '');
+
+	// --- the subclass (one per class in SRD 5.2.1) + its features ---
+	const subM = /^### .+ Subclass:\s*(.+)$/m.exec(part);
+	if (subM) {
+		const subName = subM[1].trim();
+		const subId = slug(subName);
+		const subPortion = part.slice(subM.index);
+		subclassRows.push({
+			id: subId, systems: '5.5e', source: 'SRD', name_en: subName, name_uk: '',
+			text_en: '', text_uk: '', effects: '', class_id: id
+		});
+		for (const b of blocks('## x\n' + subPortion)) pushFeature(b, subId);
 	}
 }
 
 assertCount('classes', classRows.length, 12);
-assertCount('class features', featureRows.length, 174);
+assertCount('subclasses', subclassRows.length, 12);
+assertCount('class features (base + subclass)', featureRows.length, 232); // 174 + 58
 dedupeIds(featureRows);
+dedupeIds(subclassRows);
 
 writeCsv(
 	resolve(root, 'content/srd/classes_srd.csv'),
@@ -99,7 +116,13 @@ writeCsv(
 );
 writeCsv(
 	resolve(root, 'content/srd/class_features_srd.csv'),
-	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id', 'level', 'resource'],
+	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id', 'level', 'resource', 'subclass_id'],
 	featureRows
 );
+writeCsv(
+	resolve(root, 'content/srd/subclasses_srd.csv'),
+	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id'],
+	subclassRows
+);
 console.log('classes:', classRows.map((c) => `${c.id}(${c.hit_die},${c.caster}${c.spell_ability ? '/' + c.spell_ability : ''})`).join(' '));
+console.log('subclasses:', subclassRows.map((s) => s.id).join(' '));
