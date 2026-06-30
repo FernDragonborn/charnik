@@ -61,6 +61,16 @@ trust what happened.
   - `grant:resource:<id>`
   Anything outside the vocab = **free text + an optional manual modifier** the user
   toggles. No Turing-complete DSL (avoids Aurora's swamp; stays testable).
+- **Expressiveness = three layers, never code-in-CSV** (DECIDED; see SECURITY.md #4):
+  **L1** the bounded vocab above (data; ~95%); **L2** safe value-expressions (`1d4`,
+  `prof*2`, `ceil(level/2)`) via OUR dice+arithmetic parser — non-Turing-complete,
+  whitelisted vars, no `eval`; **L3** plugins for the long tail. Plugins compose on the
+  engine seam: first-party/signed handlers = trusted; **community plugins run in a
+  QuickJS-in-WASM sandbox** (`quickjs-emscripten`) with a narrow host API returning
+  `{value, trace}`, hard time/memory limits, no DOM/Tauri/fs/network. **Design the plugin
+  registry seam early** (cheap) even though the sandbox itself is deferred until demand.
+  `effects.csv` is a real user-extendable content type; ship its curated catalog WITH the
+  engine/vocab (P4), not before — there is no SRD "effects table" to convert from.
 - **Modifier stacking pipeline** (single, well-defined order; one abstraction, no ad-hoc
   bonuses): `base → ability mod → proficiency → item → feature → condition → override`,
   then clamp to score caps (20 normal, 30 epic; half-feat +1 handled in source step).

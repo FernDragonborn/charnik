@@ -23,6 +23,16 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
 4. **Effects are data, never code.** The effects engine is a **fixed-vocabulary
    interpreter**, not `eval`/a DSL (incl. user-entered custom effects; free text is inert
    display). Malicious content can't execute — worst case it's flagged in content-health.
+   Expressiveness comes in **three layers**, never by putting code in a CSV cell:
+   - **L1 declarative bounded vocab** (data: `kind`/`target`/`op`/`value`/`when`/`scope`) — ~95%.
+   - **L2 safe value-expressions** (`1d4`, `prof*2`, `ceil(level/2)`): OUR dice+arithmetic
+     parser, non-Turing-complete, whitelisted variables, **no `eval`**, no host access.
+   - **L3 plugins** (long tail): first-party/signed handlers registered on the engine seam
+     are trusted/easy; **community plugins run in a QuickJS-in-WASM sandbox** (DECIDED) —
+     `quickjs-emscripten`, a narrow host API that only takes effect-context and returns
+     `{value, trace}` contributions, hard time/memory limits, **no DOM / no Tauri `invoke` /
+     no fs / no network**. Never raw dynamic-`import`, never an unsandboxed Worker-with-bridge.
+   Every layer keeps the `{value, trace}` contract so contributions stay explainable.
 5. **Webview hardening.** Strict Tauri **CSP**; no remote content loading; no `eval`/inline
    script; external links open in the OS browser, not the app webview.
 6. **Image upload hardening.** Allowlist types (png/jpg/webp); size cap; **re-encode**
