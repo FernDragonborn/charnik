@@ -128,5 +128,43 @@ function convertSpells() {
 	return rows.length;
 }
 
-const n = convertSpells();
-console.log(`wrote ${n} spells (SRD 5.1)`);
+// --- monsters (from the pre-structured Monsters JSON) ------------------------
+function convertMonsters() {
+	const data = JSON.parse(src('Monsters-SRD5.1-CCBY4.0License-TT.json'));
+	const list = data.monsters;
+	const rows = list.map((m) => {
+		const acM = /(\d+)/.exec(m.armor_class || '');
+		const hpM = /(\d+)\s*(?:\(([^)]*)\))?/.exec(m.hit_points || '');
+		const st = m.stats || {};
+		const score = (v) => (/(\d+)/.exec(v || '') || [, ''])[1]; // some are glued "29(+9)"
+		const body = [
+			...(m.abilities || []).map((a) => `${a.name} ${a.description}`),
+			...((m.actions || []).length ? ['Actions.', ...m.actions.map((a) => `${a.name} ${a.description}`)] : [])
+		].join('\n');
+		return {
+			id: slug(m.name), systems: '5e', source: 'SRD 5.1', name_en: m.name, name_uk: '',
+			text_en: body, text_uk: '', effects: '',
+			size: (m.size || '').toLowerCase(),
+			creature_type: (m.type || '').toLowerCase(),
+			alignment: m.alignment || '',
+			ac: acM ? acM[1] : '',
+			hp: hpM ? hpM[1] : '',
+			hp_formula: hpM && hpM[2] ? hpM[2].trim() : '',
+			speed: m.speed || '',
+			str: score(st.str), dex: score(st.dex), con: score(st.con),
+			int: score(st.int), wis: score(st.wis), cha: score(st.cha),
+			cr: (/^([0-9/]+)/.exec(m.challenge || '') || [, ''])[1],
+			senses: m.senses || '', languages: '', skills: m.skills || ''
+		};
+	});
+	assertCount('monsters', rows.length, 201); // Tabyltop Monsters JSON (SRD 5.1 Monsters chapter)
+	dedupeIds(rows);
+	writeCsv(out('monsters_srd.csv'),
+		['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'size', 'creature_type', 'alignment', 'ac', 'hp', 'hp_formula', 'speed', 'str', 'dex', 'con', 'int', 'wis', 'cha', 'cr', 'senses', 'languages', 'skills'],
+		rows);
+	return rows.length;
+}
+
+const nSpells = convertSpells();
+const nMonsters = convertMonsters();
+console.log(`wrote ${nSpells} spells + ${nMonsters} monsters (SRD 5.1)`);
