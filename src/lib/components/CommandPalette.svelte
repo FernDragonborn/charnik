@@ -91,6 +91,7 @@
 		class="palette"
 		role="dialog"
 		aria-modal="true"
+		tabindex="-1"
 		aria-label={$_('nav.openCommandPalette')}
 		onkeydown={onPaletteKeydown}
 	>
@@ -108,6 +109,9 @@
 		/>
 		<ul id="cmd-list" class="list" role="listbox">
 			{#each results as cmd, i (cmd.id)}
+				<!-- keyboard handled at the listbox level (↑/↓ + Enter via onPaletteKeydown);
+				     the click is a supplementary mouse shortcut -->
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<li
 					id="cmd-{cmd.id}"
 					role="option"
