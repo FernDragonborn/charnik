@@ -329,6 +329,60 @@ function convertClasses() {
 	return featureRows.length;
 }
 
+// --- items (weapons + armor) -------------------------------------------------
+// SRD 5.1 HTML splits each table into many tiny <table>s (≈ one per row), so collect ALL
+// <td>/<th> cells in the section (heading → next <h2>) and walk them in fixed-size chunks,
+// resetting the group/category whenever a known group-label cell appears.
+function sectionCells(html, headingId) {
+	const start = html.indexOf(`id='${headingId}'`);
+	const rest = html.slice(start);
+	const nextH2 = rest.indexOf('<h2', 10);
+	const region = nextH2 > 0 ? rest.slice(0, nextH2) : rest;
+	return [...region.matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((m) => strip(m[1])).filter((c) => c !== '');
+}
+const ITEM_COLS = ['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'category', 'item_type', 'cost', 'weight_lb', 'properties', 'damage', 'damage_type', 'range', 'ac', 'armor_dex_cap', 'str_min', 'stealth_disadvantage', 'attunement', 'rarity'];
+const irow = (o) => ({ systems: '5e', source: 'SRD 5.1', name_uk: '', text_en: '', text_uk: '', effects: '', cost: '', weight_lb: '', properties: '', damage: '', damage_type: '', range: '', ac: '', armor_dex_cap: '', str_min: '', stealth_disadvantage: 'false', attunement: 'false', rarity: '', ...o });
+const wlb = (s) => { const m = /([\d.]+)/.exec(s); return m ? Number(m[1]) : ''; };
+
+function convertItems() {
+	const html = src(`${SRC}.html`);
+	const rows = [];
+	// weapons: header = 5 cells, then group-label cells + 5-cell rows
+	const WG = { 'Simple Melee Weapons': 'simple melee', 'Simple Ranged Weapons': 'simple ranged', 'Martial Melee Weapons': 'martial melee', 'Martial Ranged Weapons': 'martial ranged' };
+	let wc = sectionCells(html, 'Weapons'), wtype = '', nW = 0;
+	while (wc.length && !WG[wc[0]]) wc.shift(); // skip header/intro cells
+	for (let i = 0; i < wc.length; ) {
+		if (WG[wc[i]]) { wtype = WG[wc[i]]; i++; continue; }
+		const [name, cost, dmg, weight, props] = wc.slice(i, i + 5); i += 5;
+		if (!name) continue;
+		const dm = /(\d+d\d+|\d+)\s+(\w+)/.exec(dmg || '');
+		const p = (props || '').replace(/\s*--\s*/g, '-').replace(/\s+/g, ' ').trim();
+		rows.push(irow({ id: slug(name), name_en: name, category: 'weapon', item_type: wtype, cost, weight_lb: wlb(weight), properties: p === '-' ? '' : p, damage: dm ? dm[1] : '', damage_type: dm ? dm[2].toLowerCase() : '', range: (/range\s+(\d+\/\d+)/i.exec(props || '') || [, ''])[1] }));
+		nW++;
+	}
+	assertCount('weapons', nW, 37);
+	// armor: header = 6 cells, group cells + 6-cell rows
+	const AG = { 'Light Armor': 'light', 'Medium Armor': 'medium', 'Heavy Armor': 'heavy', 'Shield': 'shield' };
+	let ac = sectionCells(html, 'Armor'), acat = '', nA = 0, justGrouped = false;
+	while (ac.length && AG[ac[0]] === undefined) ac.shift(); // skip header/intro cells
+	for (let i = 0; i < ac.length; ) {
+		// "Shield" is both a group label and the item name → the cell right after a group
+		// label is always a data row, never another group.
+		if (!justGrouped && AG[ac[i]] !== undefined) { acat = AG[ac[i]]; i++; justGrouped = true; continue; }
+		justGrouped = false;
+		const [name, cost, acv, str, stealth, weight] = ac.slice(i, i + 6); i += 6;
+		if (!name) continue;
+		if (!/\d\s*(gp|sp|cp)/i.test(cost)) break; // left the armor table (e.g. don/doff times)
+		const isShield = acat === 'shield';
+		rows.push(irow({ id: slug(name), name_en: name, category: isShield ? 'shield' : 'armor', item_type: isShield ? 'shield' : `${acat} armor`, cost, weight_lb: wlb(weight), ac: (/(\d+)/.exec(acv || '') || [, ''])[1], armor_dex_cap: isShield ? '' : acat === 'light' ? '' : acat === 'medium' ? '2' : '0', str_min: (/(\d+)/.exec(str || '') || [, ''])[1], stealth_disadvantage: String(/disadvantage/i.test(stealth || '')) }));
+		nA++;
+	}
+	assertCount('armor+shields', nA, 13);
+	dedupeIds(rows);
+	writeCsv(out('items_srd.csv'), ITEM_COLS, rows);
+	return rows.length;
+}
+
 const nSpells = convertSpells();
 const nMonsters = convertMonsters();
 const nCond = convertConditions();
@@ -336,4 +390,5 @@ const nSpec = convertSpecies();
 const nBg = convertBackgrounds();
 const nFeat = convertFeats();
 const nFeatures = convertClasses();
-console.log(`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nBg} backgrounds, ${nFeat} feats, 12 classes, ${nFeatures} class features`);
+const nItems = convertItems();
+console.log(`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nBg} backgrounds, ${nFeat} feats, 12 classes, ${nFeatures} class features, ${nItems} items`);
