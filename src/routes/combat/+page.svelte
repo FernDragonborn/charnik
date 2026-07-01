@@ -390,7 +390,6 @@
 			onclick={() => (c.play.inspiration = !c.play.inspiration)}
 			>✦ Inspiration <span class="sw">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
 		>
-		<button class="toggle" onclick={() => (overlay = { kind: 'condition' })}>＋ Condition</button>
 		<span class="spacer"></span>
 		<button class="toggle auto on">⚙ Auto-calc <span class="sw">ON</span></button>
 		<button class="toggle dice" onclick={() => (overlay = { kind: 'dice' })}>🎲 Dice tray</button>
@@ -510,13 +509,13 @@
 						<span class="chev">{collapsed[pid] ? '▸' : '▾'}</span>{PANEL_TITLE[pid]}
 					</button>
 					{#if pid === 'actions'}
-						<button
-							class="grpby"
-							title="Show / hide actions"
-							onclick={() => (overlay = { kind: 'showhide' })}>👁</button
+						<button class="grpby" onclick={() => (overlay = { kind: 'showhide' })}
+							>👁 Show / hide</button
 						>
 					{:else if pid === 'effects'}
-						<button class="grpby" onclick={() => (overlay = { kind: 'addeffect' })}>＋ Add</button>
+						<button class="grpby" onclick={() => (overlay = { kind: 'addeffect' })}
+							>＋ Add effect</button
+						>
 					{/if}
 					<button class="dh" title="drag to reorder" onmousedown={() => (dragArmed = pid)}>⠿</button
 					>
@@ -608,25 +607,26 @@
 							</div>
 							{#each g.rows as r (g.key + r.id)}
 								<button class="sprow" onclick={() => cast(r)}>
-									<span class="an"
-										><i class="prep" class:on={r.prep === 'on'} class:always={r.prep === 'always'}
-										></i>{r.name}</span
-									>
+									<span class="an">
+										<i class="prep" class:on={r.prep === 'on'} class:always={r.prep === 'always'}
+										></i>
+										<span class="nm">{r.name}</span>
+										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+										<span
+											class="pinstar"
+											class:on={pinned[r.id]}
+											role="button"
+											tabindex="-1"
+											title="pin to top"
+											onclick={(e) => {
+												e.stopPropagation();
+												pinned[r.id] = !pinned[r.id];
+											}}>{pinned[r.id] ? '★' : '☆'}</span
+										>
+									</span>
 									<span class="spe">{r.spe}</span>
 									{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span></span>{/if}
 									<span class="tm">{r.tm}</span>
-									<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-									<span
-										class="pinstar"
-										class:on={pinned[r.id]}
-										role="button"
-										tabindex="-1"
-										title="pin to top"
-										onclick={(e) => {
-											e.stopPropagation();
-											pinned[r.id] = !pinned[r.id];
-										}}>{pinned[r.id] ? '★' : '☆'}</span
-									>
 								</button>
 							{/each}
 						</div>
@@ -1224,8 +1224,8 @@
 	}
 	.ab .n {
 		font-family: var(--font-mono);
-		font-size: 10px;
-		letter-spacing: 0.1em;
+		font-size: 12px;
+		letter-spacing: 0.08em;
 		color: var(--color-text-muted);
 		text-transform: uppercase;
 	}
@@ -1233,6 +1233,7 @@
 		color: var(--color-text);
 		font-family: var(--font-display);
 		font-weight: 600;
+		font-size: 13px;
 	}
 	.ab .m {
 		font-family: var(--font-display);
@@ -1305,13 +1306,17 @@
 	.grpby {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 11px;
+		font-size: 12px;
 		color: var(--color-text-muted);
 		background: transparent;
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
-		padding: 3px 8px;
+		padding: 5px 11px;
 		cursor: pointer;
+	}
+	.grpby:hover {
+		color: var(--color-text);
+		border-color: var(--color-border-strong);
 	}
 
 	.sklgrid {
@@ -1325,11 +1330,11 @@
 	}
 	.ssec {
 		font-family: var(--font-mono);
-		font-size: 9px;
-		letter-spacing: var(--tracking-label);
+		font-size: 11px;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
-		padding: 5px 0 3px;
+		padding: 6px 0 3px;
 	}
 	.skl {
 		display: flex;
@@ -1526,12 +1531,20 @@
 	}
 	.sprow .an {
 		min-width: 0;
+		display: flex;
+		align-items: center;
+		gap: 6px;
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 13px;
-		white-space: nowrap;
+	}
+	.sprow .an .nm {
 		overflow: hidden;
 		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.sprow .pinstar {
+		flex: none;
 	}
 	.sprow .spe {
 		font-family: var(--font-mono);
