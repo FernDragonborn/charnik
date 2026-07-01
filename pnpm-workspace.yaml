@@ -1,3 +1,8 @@
+packages:
+  - '.'
+
+# Approve install/postinstall build scripts (pnpm blocks the rest by default for
+# supply-chain safety). esbuild needs its native binary built on install.
 allowBuilds:
-  es5-ext: set this to true or false
   esbuild: true
+  es5-ext: true
