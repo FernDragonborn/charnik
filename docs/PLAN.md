@@ -298,6 +298,29 @@ Common columns on every type: `id` (lowercase slug; identity = `source:id`), `sy
 - **TODO (later)**: 2024 subclass-level overrides (all level 3) via per-system override
   column rather than the seeded 2014 `subclass_level`; bulk SRD fill beyond the seed.
 
+### "Articles" + edition toggle (UI/model)
+A single content row is an **"article"**. When an article exists in BOTH editions (same
+base slug across `SRD 5.1`/5e and `SRD 5.2.1`/5.5e — e.g. `fireball`, `longsword`,
+`barbarian`), the **article view and search results carry a 5e↔5.5e toggle**. The two
+versions are distinct rows (`source:id` differs, `systems` differs); the loader/UI groups
+them by base slug. This is a **per-article local** switch (compendium/search), distinct
+from the global `activeSystem` context.
+
+### Data-model refinements surfaced by the full SRD extraction (TODO, non-blocking)
+The schema accepted everything (all rows validate) — `effects` + verbatim `text_en` absorb
+the rest — but a few things sit in text that would be better structured. Add via
+`schemaVersion` migration, in priority order:
+1. **`spell_lists.csv` linked table** (spell_id × class_id). SRD 5.1 lists class spell
+   lists separately, so 2014 spells have an empty `classes` column; a linked table fixes
+   both editions uniformly (supersedes the inline `spell.classes` string).
+2. **`mastery` column on item** (5.5e weapon mastery) — currently folded into `properties`.
+3. **Species ability bonuses → `effects`** (`flat-bonus:con+2`) instead of only prose
+   (5e: on species; 5.5e: on background); model **subraces/lineages** (e.g. Elf lineages).
+4. **Monster**: optionally structure `saving_throws`, `damage_resist/immune`,
+   `condition_immune`, `legendary_actions`, `proficiency_bonus` (now all in `text_en`).
+5. **`resource`** on class features (rage/ki counts) — currently unparsed.
+None block the loader; they raise fidelity where the UI later wants structured filters.
+
 ### Shipped SRD content (P3 — `content/srd/*.csv`, GENERATED not hand-written)
 **Hard rule: content is never authored from memory.** Every row is parsed from the
 official **CC-BY-4.0 SRD 5.2.1** markdown by converters in `tools/srd/` (source mirror:
