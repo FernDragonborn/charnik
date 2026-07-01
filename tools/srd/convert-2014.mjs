@@ -165,6 +165,92 @@ function convertMonsters() {
 	return rows.length;
 }
 
+/** Raw HTML between two heading ids (start inclusive of its <h*>, end exclusive). */
+function sliceById(html, startId, endId) {
+	const s = html.indexOf(`id='${startId}'`);
+	const e = endId ? html.indexOf(`id='${endId}'`) : html.length;
+	const s2 = html.lastIndexOf('<h', s);
+	return html.slice(s2, endId ? html.lastIndexOf('<h', e) : e);
+}
+
+// --- conditions (flat entries under the conditions appendix) -----------------
+const CONDITIONS = ['Blinded', 'Charmed', 'Deafened', 'Exhaustion', 'Frightened', 'Grappled', 'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified', 'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious'];
+function convertConditions() {
+	const entries = htmlEntries(src(`${SRC}.html`));
+	const want = new Set(CONDITIONS);
+	const rows = entries
+		.filter((e) => want.has(e.name))
+		.map((e) => ({
+			id: slug(e.name), systems: '5e', source: 'SRD 5.1', name_en: e.name, name_uk: '',
+			text_en: e.paras.map(strip).filter(Boolean).join('\n'), text_uk: '', effects: '',
+			negative: String(e.name !== 'Invisible')
+		}));
+	assertCount('conditions', rows.length, 15);
+	writeCsv(out('conditions_srd.csv'), ['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'negative'], rows);
+	return rows.length;
+}
+
+// --- species (9 races; traits are sub-headings → slice whole blocks) ---------
+const RACE_IDS = ['Dwarf', 'Elf', 'Halfling', 'Human', 'Dragonborn', 'Gnome', 'HalfElf', 'HalfOrc', 'Tiefling'];
+function convertSpecies() {
+	const html = src(`${SRC}.html`);
+	const rows = RACE_IDS.map((rid, i) => {
+		const block = sliceById(html, rid, RACE_IDS[i + 1] || 'Barbarian');
+		const nameM = /<h2[^>]*>[\s\S]*?<b>([\s\S]*?)<\/b>/i.exec(block);
+		const text = strip(block.replace(/<h2[\s\S]*?<\/h2>/i, ''));
+		const name = nameM ? strip(nameM[1]) : rid;
+		const sizeM = /your size is (\w+)/i.exec(text) || /\bis (Small|Medium)\b/i.exec(text);
+		const speedM = /walking speed is (\d+)\s*feet/i.exec(text);
+		return {
+			id: slug(name), systems: '5e', source: 'SRD 5.1', name_en: name, name_uk: '',
+			text_en: text, text_uk: '', effects: '',
+			size: (sizeM ? sizeM[1] : 'Medium').toLowerCase(),
+			speed: speedM ? Number(speedM[1]) : 30,
+			creature_type: 'humanoid'
+		};
+	});
+	assertCount('species', rows.length, 9);
+	writeCsv(out('species_srd.csv'), ['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'size', 'speed', 'creature_type'], rows);
+	return rows.length;
+}
+
+// --- backgrounds (SRD 5.1 has only Acolyte) + feats (only Grappler) ----------
+function convertBackgrounds() {
+	const html = src(`${SRC}.html`);
+	const block = sliceById(html, 'Acolyte', 'PersonalityTrait') || sliceById(html, 'Acolyte', null).slice(0, 4000);
+	const text = strip(block.replace(/<h[23][\s\S]*?<\/h[23]>/i, ''));
+	const skills = (/Skill Proficiencies?:\s*([^.]+?)(?:\.|Languages|Tool)/i.exec(text) || [, ''])[1];
+	const langsM = /Languages:\s*([^.]+)/i.exec(text);
+	const rows = [{
+		id: 'acolyte', systems: '5e', source: 'SRD 5.1', name_en: 'Acolyte', name_uk: '',
+		text_en: text.slice(0, 1500), text_uk: '', effects: '',
+		skills: skills.split(/,|and/).map((s) => slug(s)).filter(Boolean).join(','),
+		tools: '', languages: langsM ? '2' : '', ability_choices: '', origin_feat: ''
+	}];
+	assertCount('backgrounds', rows.length, 1);
+	writeCsv(out('backgrounds_srd.csv'), ['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'skills', 'tools', 'languages', 'ability_choices', 'origin_feat'], rows);
+	return rows.length;
+}
+function convertFeats() {
+	const entries = htmlEntries(src(`${SRC}.html`)).filter((e) => e.name === 'Grappler');
+	const rows = entries.map((e) => {
+		const text = e.paras.map(strip).filter(Boolean).join('\n');
+		const pm = /Prerequisite:\s*([^\n]+?)(?:\s{2,}|You)/i.exec(text);
+		return {
+			id: 'grappler', systems: '5e', source: 'SRD 5.1', name_en: 'Grappler', name_uk: '',
+			text_en: text, text_uk: '', effects: '',
+			category: 'general-2014', prereq: pm ? pm[1].trim() : '', repeatable: 'false'
+		};
+	});
+	assertCount('feats', rows.length, 1);
+	writeCsv(out('feats_srd.csv'), ['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'category', 'prereq', 'repeatable'], rows);
+	return rows.length;
+}
+
 const nSpells = convertSpells();
 const nMonsters = convertMonsters();
-console.log(`wrote ${nSpells} spells + ${nMonsters} monsters (SRD 5.1)`);
+const nCond = convertConditions();
+const nSpec = convertSpecies();
+const nBg = convertBackgrounds();
+const nFeat = convertFeats();
+console.log(`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nBg} backgrounds, ${nFeat} feats`);
