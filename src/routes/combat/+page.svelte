@@ -425,8 +425,9 @@
 	</div>
 
 	<div class="sectlab">
-		<button class="chev" onclick={() => toggle('combat')}>{collapsed.combat ? '▸' : '▾'}</button
-		>Combat
+		<button class="slabtoggle" onclick={() => toggle('combat')}
+			><span class="chev">{collapsed.combat ? '▸' : '▾'}</span>Combat</button
+		>
 	</div>
 	{#if !collapsed.combat}
 		<section class="combat">
@@ -463,9 +464,9 @@
 	{/if}
 
 	<div class="sectlab">
-		<button class="chev" onclick={() => toggle('abilities')}
-			>{collapsed.abilities ? '▸' : '▾'}</button
-		>Abilities <em>tap to roll a check or save</em>
+		<button class="slabtoggle" onclick={() => toggle('abilities')}
+			><span class="chev">{collapsed.abilities ? '▸' : '▾'}</span>Abilities</button
+		><em>tap to roll a check or save</em>
 	</div>
 	{#if !collapsed.abilities}
 		<section class="grid">
@@ -702,12 +703,18 @@
 						</button>
 					{/each}
 				{:else if overlay.kind === 'pinskills'}
-					{#each Object.keys(SKILL_ABILITY) as skill (skill)}
-						<button class="row" onclick={() => togglePassive(skill)}>
-							<span class="eye" class:on={passiveSkills.includes(skill)}></span><span class="main"
-								>{titleCase(skill)}</span
-							><span class="meta">{SKILL_ABILITY[skill].toUpperCase()}</span>
-						</button>
+					{#each ABIL as ab (ab)}
+						{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
+						{#if list.length}
+							<div class="popsec">{ABILITY_NAME[ab]}</div>
+							{#each list as skill (skill)}
+								<button class="row" onclick={() => togglePassive(skill)}>
+									<span class="eye" class:on={passiveSkills.includes(skill)}></span><span
+										class="main">{titleCase(skill)}</span
+									>
+								</button>
+							{/each}
+						{/if}
 					{/each}
 				{:else if overlay.kind === 'manage'}
 					<p class="trace">
@@ -1035,6 +1042,24 @@
 		font-size: 11px;
 		color: var(--color-text-muted);
 	}
+	/* whole label clickable to collapse (chev + name), no button box */
+	.slabtoggle {
+		display: inline-flex;
+		align-items: center;
+		background: transparent;
+		border: 0;
+		cursor: pointer;
+		color: var(--color-text-muted);
+		font: inherit;
+		text-transform: inherit;
+		letter-spacing: inherit;
+		padding: 3px 6px 3px 2px;
+		border-radius: var(--radius-sm);
+	}
+	.slabtoggle:hover {
+		background: var(--color-surface-2);
+		color: var(--color-text);
+	}
 	.chev {
 		color: var(--color-text-muted);
 		font-size: 10px;
@@ -1224,17 +1249,19 @@
 		width: 100%;
 		font-family: var(--font-mono);
 		font-size: 11px;
+		line-height: 1;
 		color: var(--color-text-muted);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
-		padding: 4px 6px;
+		padding: 5px 6px;
 		cursor: pointer;
 	}
 	.ab .sv b {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 13px;
+		line-height: 1;
 		color: var(--color-text);
 	}
 	.ab .sv.prof {
@@ -1435,16 +1462,7 @@
 		font-weight: 700;
 	}
 	.sprows {
-		column-count: 2;
-		column-gap: 22px;
-	}
-	@media (max-width: 760px) {
-		.sprows {
-			column-count: 1;
-		}
-	}
-	.spgroup {
-		break-inside: avoid;
+		max-width: 620px;
 	}
 	.scat {
 		display: flex;
@@ -1631,6 +1649,14 @@
 	}
 	.pop-b {
 		padding: 7px;
+	}
+	.popsec {
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: var(--tracking-label);
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		padding: 8px 10px 3px;
 	}
 	.row {
 		display: flex;
