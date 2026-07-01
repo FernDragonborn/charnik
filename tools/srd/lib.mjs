@@ -68,7 +68,9 @@ const ABIL = {
 };
 /** "Intelligence, Wisdom, Charisma" / "Strength and Constitution" → "int,wis,cha". */
 export function abilities(s) {
-	return (s.toLowerCase().match(/strength|dexterity|constitution|intelligence|wisdom|charisma/g) || [])
+	return (
+		s.toLowerCase().match(/strength|dexterity|constitution|intelligence|wisdom|charisma/g) || []
+	)
 		.map((a) => ABIL[a])
 		.join(',');
 }
@@ -106,6 +108,8 @@ export function writeCsv(path, columns, rows) {
 /** Throw if the emitted row count doesn't match what the source contains. */
 export function assertCount(label, got, expected) {
 	const ok = got === expected;
-	console.log(`${ok ? '✓' : '✗'} ${label}: ${got}${expected != null ? ` (expected ${expected})` : ''}`);
+	console.log(
+		`${ok ? '✓' : '✗'} ${label}: ${got}${expected != null ? ` (expected ${expected})` : ''}`
+	);
 	if (!ok) throw new Error(`${label}: emitted ${got} rows but source has ${expected}`);
 }

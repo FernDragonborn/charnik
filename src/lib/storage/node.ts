@@ -5,15 +5,7 @@
  * tooling that needs to read the real `content/` tree without Tauri. Path traversal
  * outside the root is rejected, mirroring the capability scope of the Tauri impl.
  */
-import {
-	readFile,
-	writeFile,
-	readdir,
-	mkdir as fsMkdir,
-	rm,
-	rename,
-	stat
-} from 'node:fs/promises';
+import { readFile, writeFile, readdir, mkdir as fsMkdir, rm, rename, stat } from 'node:fs/promises';
 import { existsSync, watch as fsWatch } from 'node:fs';
 import { resolve, join, dirname, sep } from 'node:path';
 import type { Storage, FileEntry } from './types';

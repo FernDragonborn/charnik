@@ -97,7 +97,12 @@ export async function loadContent(storage: Storage, roots: string[]): Promise<Co
 			try {
 				pack = JSON.parse(await storage.read(`${root}/_pack.json`));
 			} catch (e) {
-				issues.push({ level: 'error', root, file: '_pack.json', message: `invalid _pack.json: ${(e as Error).message}` });
+				issues.push({
+					level: 'error',
+					root,
+					file: '_pack.json',
+					message: `invalid _pack.json: ${(e as Error).message}`
+				});
 			}
 		}
 
@@ -107,25 +112,41 @@ export async function loadContent(storage: Storage, roots: string[]): Promise<Co
 			// type = the filebase that the name equals or starts with (e.g. species_srd → species)
 			const match = typeByFilebase.find(([fb]) => base === fb || base.startsWith(fb + '_'));
 			if (!match) {
-				issues.push({ level: 'warn', root, file: entry.name, message: 'unknown content type for file' });
+				issues.push({
+					level: 'warn',
+					root,
+					file: entry.name,
+					message: 'unknown content type for file'
+				});
 				continue;
 			}
 			const type = match[1];
 			const csv = await storage.read(`${root}/${entry.name}`);
-			const parsed = Papa.parse<Record<string, string>>(csv, { header: true, skipEmptyLines: true });
+			const parsed = Papa.parse<Record<string, string>>(csv, {
+				header: true,
+				skipEmptyLines: true
+			});
 
 			for (const h of parsed.meta.fields ?? []) {
 				const m = LOCALE_COL.exec(h);
 				if (m) localeSet.add(m[1].toLowerCase());
 				else if (/^(?:name|text)_/.test(h))
-					issues.push({ level: 'warn', root, file: entry.name, message: `malformed locale column "${h}" (expected name_<bcp47>)` });
+					issues.push({
+						level: 'warn',
+						root,
+						file: entry.name,
+						message: `malformed locale column "${h}" (expected name_<bcp47>)`
+					});
 			}
 
 			for (const raw of parsed.data) {
 				const res = parseRow(type, raw);
 				if (!res.success) {
 					issues.push({
-						level: 'error', root, file: entry.name, id: raw.id,
+						level: 'error',
+						root,
+						file: entry.name,
+						id: raw.id,
 						message: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')
 					});
 					continue;
@@ -134,8 +155,14 @@ export async function loadContent(storage: Storage, roots: string[]): Promise<Co
 				const source = (data.source as string) || pack.source || 'unknown';
 				const id = data.id as string;
 				rows.push({
-					type, source, id, effectiveId: `${type}:${source}:${id}`,
-					systems: data.systems as string[], data, root, file: entry.name
+					type,
+					source,
+					id,
+					effectiveId: `${type}:${source}:${id}`,
+					systems: data.systems as string[],
+					data,
+					root,
+					file: entry.name
 				});
 			}
 		}
@@ -148,7 +175,13 @@ export async function loadContent(storage: Storage, roots: string[]): Promise<Co
 	for (const r of rows) {
 		pushMap(byType, r.type, r);
 		if (byEffectiveId.has(r.effectiveId)) {
-			issues.push({ level: 'error', root: r.root, file: r.file, id: r.id, message: `duplicate source:id "${r.effectiveId}"` });
+			issues.push({
+				level: 'error',
+				root: r.root,
+				file: r.file,
+				id: r.id,
+				message: `duplicate source:id "${r.effectiveId}"`
+			});
 		} else {
 			byEffectiveId.set(r.effectiveId, r);
 		}
@@ -156,7 +189,12 @@ export async function loadContent(storage: Storage, roots: string[]): Promise<Co
 	}
 
 	return {
-		rows, byType, byEffectiveId, articles, locales: [...localeSet].sort(), issues,
+		rows,
+		byType,
+		byEffectiveId,
+		articles,
+		locales: [...localeSet].sort(),
+		issues,
 		list(type, opts) {
 			const all = byType.get(type) ?? [];
 			return opts?.system ? all.filter((r) => r.systems.includes(opts.system!)) : all;

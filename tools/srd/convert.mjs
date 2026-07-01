@@ -10,7 +10,16 @@
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { blocks, field, description, abilities, skillList, slug, writeCsv, assertCount } from './lib.mjs';
+import {
+	blocks,
+	field,
+	description,
+	abilities,
+	skillList,
+	slug,
+	writeCsv,
+	assertCount
+} from './lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -45,7 +54,19 @@ function convertFeats() {
 	});
 	writeCsv(
 		out('feats_srd.csv'),
-		['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'category', 'prereq', 'repeatable'],
+		[
+			'id',
+			'systems',
+			'source',
+			'name_en',
+			'name_uk',
+			'text_en',
+			'text_uk',
+			'effects',
+			'category',
+			'prereq',
+			'repeatable'
+		],
 		rows
 	);
 	assertCount('feats', rows.length, all.length);
@@ -94,14 +115,28 @@ function convertSpecies() {
 			text_en: description(b.body),
 			text_uk: '',
 			effects: '',
-			size: (/(tiny|small|medium|large|huge|gargantuan)/i.exec(sizeRaw)?.[1] || 'medium').toLowerCase(),
+			size: (
+				/(tiny|small|medium|large|huge|gargantuan)/i.exec(sizeRaw)?.[1] || 'medium'
+			).toLowerCase(),
 			speed: parseInt(speedRaw, 10) || 30,
 			creature_type: (field(text, 'Creature Type') || '').toLowerCase()
 		};
 	});
 	writeCsv(
 		out('species_srd.csv'),
-		['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'size', 'speed', 'creature_type'],
+		[
+			'id',
+			'systems',
+			'source',
+			'name_en',
+			'name_uk',
+			'text_en',
+			'text_uk',
+			'effects',
+			'size',
+			'speed',
+			'creature_type'
+		],
 		rows
 	);
 	assertCount('species', rows.length, all.length);
@@ -130,7 +165,21 @@ function convertBackgrounds() {
 	});
 	writeCsv(
 		out('backgrounds_srd.csv'),
-		['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'skills', 'tools', 'languages', 'ability_choices', 'origin_feat'],
+		[
+			'id',
+			'systems',
+			'source',
+			'name_en',
+			'name_uk',
+			'text_en',
+			'text_uk',
+			'effects',
+			'skills',
+			'tools',
+			'languages',
+			'ability_choices',
+			'origin_feat'
+		],
 		rows
 	);
 	assertCount('backgrounds', rows.length, all.length);

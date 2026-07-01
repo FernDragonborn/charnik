@@ -16,7 +16,11 @@ const srcFile = (f) => readFileSync(resolve(root, 'tools/srd-src/2024', f), 'utf
 
 const META_RE = /^_(Tiny|Small|Medium|Large|Huge|Gargantuan)\b.*_\s*$/;
 const stripTags = (s) =>
-	s.replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#39;|&rsquo;/g, "'").replace(/&[a-z]+;/g, ' ');
+	s
+		.replace(/<[^>]+>/g, ' ')
+		.replace(/&amp;/g, '&')
+		.replace(/&#39;|&rsquo;/g, "'")
+		.replace(/&[a-z]+;/g, ' ');
 const field1 = (block, label) =>
 	stripTags((new RegExp(`\\*\\*${label}\\*\\*\\s*([^\\n]+)`).exec(block) || [, ''])[1])
 		.replace(/\s+/g, ' ')
@@ -36,7 +40,11 @@ function parseMonsters(md) {
 	const starts = [];
 	for (let i = 0; i < lines.length; i++) {
 		if (META_RE.test(lines[i]) && lines.slice(i + 1, i + 5).some((l) => /\*\*AC\*\*/.test(l))) {
-			starts.push({ meta: i, name: headingFor[i], nameIdx: lines.lastIndexOf(headingFor[i] && `### ${headingFor[i]}`) });
+			starts.push({
+				meta: i,
+				name: headingFor[i],
+				nameIdx: lines.lastIndexOf(headingFor[i] && `### ${headingFor[i]}`)
+			});
 		}
 	}
 	const out = [];
@@ -69,8 +77,12 @@ function parseMonsters(md) {
 			hp: hp ? hp[1].replace(/,/g, '') : '',
 			hp_formula: hp && hp[2] ? hp[2].trim() : '',
 			speed: field1(block, 'Speed'),
-			str: abil('STR'), dex: abil('DEX'), con: abil('CON'),
-			int: abil('INT'), wis: abil('WIS'), cha: abil('CHA'),
+			str: abil('STR'),
+			dex: abil('DEX'),
+			con: abil('CON'),
+			int: abil('INT'),
+			wis: abil('WIS'),
+			cha: abil('CHA'),
 			cr: (/\*\*CR\*\*\s*([0-9/]+)/.exec(block) || [, ''])[1],
 			senses: field1(block, 'Senses'),
 			languages: field1(block, 'Languages'),
@@ -80,13 +92,42 @@ function parseMonsters(md) {
 	return out;
 }
 
-const rows = [...parseMonsters(srcFile('monsters-A-Z.md')), ...parseMonsters(srcFile('animals.md'))];
+const rows = [
+	...parseMonsters(srcFile('monsters-A-Z.md')),
+	...parseMonsters(srcFile('animals.md'))
+];
 assertCount('monsters', rows.length, 330); // monsters-A-Z 235 + animals 95
 dedupeIds(rows);
 
 writeCsv(
 	resolve(root, 'content/srd-2024/monsters_srd.csv'),
-	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'size', 'creature_type', 'alignment', 'ac', 'hp', 'hp_formula', 'speed', 'str', 'dex', 'con', 'int', 'wis', 'cha', 'cr', 'senses', 'languages', 'skills'],
+	[
+		'id',
+		'systems',
+		'source',
+		'name_en',
+		'name_uk',
+		'text_en',
+		'text_uk',
+		'effects',
+		'size',
+		'creature_type',
+		'alignment',
+		'ac',
+		'hp',
+		'hp_formula',
+		'speed',
+		'str',
+		'dex',
+		'con',
+		'int',
+		'wis',
+		'cha',
+		'cr',
+		'senses',
+		'languages',
+		'skills'
+	],
 	rows
 );
 console.log(`wrote ${rows.length} monsters`);

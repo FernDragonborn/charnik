@@ -128,7 +128,9 @@ function parseSpell(name, body) {
 	if (/spell attack/.test(low)) {
 		resolution = 'attack';
 	} else {
-		const sm = /(strength|dexterity|constitution|intelligence|wisdom|charisma) saving throw/.exec(low);
+		const sm = /(strength|dexterity|constitution|intelligence|wisdom|charisma) saving throw/.exec(
+			low
+		);
 		if (sm) {
 			resolution = 'save';
 			save_ability = ABIL[sm[1]];
@@ -182,11 +184,35 @@ for (const b of blocks(md)) {
 rows.sort((a, b) => a.level - b.level || a.id.localeCompare(b.id));
 
 const columns = [
-	'id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects',
-	'level', 'school', 'casting_time', 'range', 'components', 'material', 'duration',
-	'concentration', 'ritual', 'classes', 'resolution', 'save_ability', 'damage', 'higher_level'
+	'id',
+	'systems',
+	'source',
+	'name_en',
+	'name_uk',
+	'text_en',
+	'text_uk',
+	'effects',
+	'level',
+	'school',
+	'casting_time',
+	'range',
+	'components',
+	'material',
+	'duration',
+	'concentration',
+	'ritual',
+	'classes',
+	'resolution',
+	'save_ability',
+	'damage',
+	'higher_level'
 ];
 const csv = Papa.unparse({ fields: columns, data: rows }, { newline: '\n' });
 writeFileSync(OUT, csv + '\n', 'utf8');
 console.log(`wrote ${rows.length} spells → ${OUT}`);
-console.log('by level:', Object.entries(rows.reduce((a, r) => ((a[r.level] = (a[r.level] || 0) + 1), a), {})).map(([l, n]) => `L${l}:${n}`).join(' '));
+console.log(
+	'by level:',
+	Object.entries(rows.reduce((a, r) => ((a[r.level] = (a[r.level] || 0) + 1), a), {}))
+		.map(([l, n]) => `L${l}:${n}`)
+		.join(' ')
+);

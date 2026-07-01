@@ -1,110 +1,377 @@
 <!doctype html>
 <html lang="en" data-theme="ledger">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>B — Field Ledger</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Source+Sans+3:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,500&display=swap" rel="stylesheet" />
-<style>
-  :root{
-    --bg:#e9ece8; --paper:#ffffff; --paper-2:#f4f6f2; --line:#d2d6cd; --rule:#c3c9bd;
-    --text:#1f262b; --muted:#5a6570; --accent:#1f7a6d; --accent-2:#9a6a1f; --danger:#a32b22;
-    --disp:'Archivo',system-ui,sans-serif; --body:'Source Sans 3',system-ui,sans-serif; --num:'Source Serif 4',Georgia,serif;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased;padding:34px;min-height:100vh}
-  .frame{max-width:980px;margin:0 auto;background:var(--paper);border:1px solid var(--line);border-radius:4px;box-shadow:0 1px 0 #fff inset, 0 10px 30px #0000000f;overflow:hidden}
-  header.top{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:2px solid var(--text)}
-  .wordmark{font-family:var(--disp);font-weight:800;font-size:20px;letter-spacing:-.01em;text-transform:uppercase}
-  .wordmark span{color:var(--accent)}
-  .toprow{display:flex;gap:8px;align-items:center;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
-  .kbd{font-family:var(--disp);font-weight:600;font-size:11px;border:1px solid var(--line);border-radius:3px;padding:3px 7px;color:var(--text)}
-  .pill{border:1px solid var(--line);border-radius:3px;padding:3px 8px}
-  .hero{padding:22px 24px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-end}
-  .eyebrow{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--accent)}
-  h1{font-family:var(--disp);font-weight:800;font-size:42px;line-height:1;margin:6px 0 4px;letter-spacing:-.02em}
-  .sub{color:var(--muted);font-size:14px}
-  .sub b{color:var(--text)}
-  .badge{font-family:var(--num);font-size:13px;text-align:right;color:var(--muted)}
-  .badge b{display:block;font-size:30px;color:var(--text)}
-  .cols{display:grid;grid-template-columns:1.25fr 1fr}
-  .col{padding:20px 24px}
-  .col+.col{border-left:1px solid var(--line)}
-  h2{font-family:var(--disp);font-weight:700;text-transform:uppercase;letter-spacing:.12em;font-size:12px;color:var(--muted);margin:0 0 10px;display:flex;justify-content:space-between}
-  /* signature: ruled ledger */
-  table{width:100%;border-collapse:collapse;font-size:14px}
-  thead th{font-family:var(--disp);font-weight:600;text-transform:uppercase;letter-spacing:.08em;font-size:10px;color:var(--muted);text-align:left;padding:0 0 6px;border-bottom:1.5px solid var(--text)}
-  thead th.r,tbody td.r{text-align:right}
-  tbody td{padding:9px 0;border-bottom:1px solid var(--rule)}
-  tbody td.r{font-family:var(--num);font-variant-numeric:tabular-nums}
-  .track{font-family:var(--num);letter-spacing:.18em;color:var(--accent)}
-  .track .x{color:var(--line)}
-  .neg{color:var(--danger)}
-  .ab{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-top:4px}
-  .ab .c{padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .ab .c:nth-child(3n){border-right:0}
-  .ab .c:nth-child(n+4){border-bottom:0}
-  .ab .n{font-family:var(--disp);font-weight:600;font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
-  .ab .m{font-family:var(--num);font-size:24px}
-  .ab .s{font-size:11px;color:var(--muted)}
-  .note{font-size:12px;color:var(--muted);margin-top:10px;border-left:2px solid var(--accent);padding-left:10px}
-  .note b{color:var(--text)}
-  footer{padding:12px 24px;border-top:1px solid var(--line);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.1em;font-family:var(--disp)}
-</style>
-</head>
-<body>
-  <div class="frame">
-    <header class="top">
-      <div class="wordmark">Char<span>nik</span></div>
-      <div class="toprow"><span class="kbd">Ctrl K</span><span class="pill">EN · UK</span><span class="pill">5.5e</span><span class="pill">☀ light</span></div>
-    </header>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>B — Field Ledger</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Source+Sans+3:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,500&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--bg: #e9ece8;
+				--paper: #ffffff;
+				--paper-2: #f4f6f2;
+				--line: #d2d6cd;
+				--rule: #c3c9bd;
+				--text: #1f262b;
+				--muted: #5a6570;
+				--accent: #1f7a6d;
+				--accent-2: #9a6a1f;
+				--danger: #a32b22;
+				--disp: 'Archivo', system-ui, sans-serif;
+				--body: 'Source Sans 3', system-ui, sans-serif;
+				--num: 'Source Serif 4', Georgia, serif;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--body);
+				line-height: 1.5;
+				-webkit-font-smoothing: antialiased;
+				padding: 34px;
+				min-height: 100vh;
+			}
+			.frame {
+				max-width: 980px;
+				margin: 0 auto;
+				background: var(--paper);
+				border: 1px solid var(--line);
+				border-radius: 4px;
+				box-shadow:
+					0 1px 0 #fff inset,
+					0 10px 30px #0000000f;
+				overflow: hidden;
+			}
+			header.top {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 18px 24px;
+				border-bottom: 2px solid var(--text);
+			}
+			.wordmark {
+				font-family: var(--disp);
+				font-weight: 800;
+				font-size: 20px;
+				letter-spacing: -0.01em;
+				text-transform: uppercase;
+			}
+			.wordmark span {
+				color: var(--accent);
+			}
+			.toprow {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+				color: var(--muted);
+				font-size: 12px;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+			}
+			.kbd {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 11px;
+				border: 1px solid var(--line);
+				border-radius: 3px;
+				padding: 3px 7px;
+				color: var(--text);
+			}
+			.pill {
+				border: 1px solid var(--line);
+				border-radius: 3px;
+				padding: 3px 8px;
+			}
+			.hero {
+				padding: 22px 24px 18px;
+				border-bottom: 1px solid var(--line);
+				display: flex;
+				justify-content: space-between;
+				align-items: flex-end;
+			}
+			.eyebrow {
+				font-family: var(--disp);
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.18em;
+				font-size: 11px;
+				color: var(--accent);
+			}
+			h1 {
+				font-family: var(--disp);
+				font-weight: 800;
+				font-size: 42px;
+				line-height: 1;
+				margin: 6px 0 4px;
+				letter-spacing: -0.02em;
+			}
+			.sub {
+				color: var(--muted);
+				font-size: 14px;
+			}
+			.sub b {
+				color: var(--text);
+			}
+			.badge {
+				font-family: var(--num);
+				font-size: 13px;
+				text-align: right;
+				color: var(--muted);
+			}
+			.badge b {
+				display: block;
+				font-size: 30px;
+				color: var(--text);
+			}
+			.cols {
+				display: grid;
+				grid-template-columns: 1.25fr 1fr;
+			}
+			.col {
+				padding: 20px 24px;
+			}
+			.col + .col {
+				border-left: 1px solid var(--line);
+			}
+			h2 {
+				font-family: var(--disp);
+				font-weight: 700;
+				text-transform: uppercase;
+				letter-spacing: 0.12em;
+				font-size: 12px;
+				color: var(--muted);
+				margin: 0 0 10px;
+				display: flex;
+				justify-content: space-between;
+			}
+			/* signature: ruled ledger */
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 14px;
+			}
+			thead th {
+				font-family: var(--disp);
+				font-weight: 600;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				font-size: 10px;
+				color: var(--muted);
+				text-align: left;
+				padding: 0 0 6px;
+				border-bottom: 1.5px solid var(--text);
+			}
+			thead th.r,
+			tbody td.r {
+				text-align: right;
+			}
+			tbody td {
+				padding: 9px 0;
+				border-bottom: 1px solid var(--rule);
+			}
+			tbody td.r {
+				font-family: var(--num);
+				font-variant-numeric: tabular-nums;
+			}
+			.track {
+				font-family: var(--num);
+				letter-spacing: 0.18em;
+				color: var(--accent);
+			}
+			.track .x {
+				color: var(--line);
+			}
+			.neg {
+				color: var(--danger);
+			}
+			.ab {
+				display: grid;
+				grid-template-columns: repeat(3, 1fr);
+				gap: 0;
+				border: 1px solid var(--line);
+				border-radius: 3px;
+				overflow: hidden;
+				margin-top: 4px;
+			}
+			.ab .c {
+				padding: 10px;
+				border-right: 1px solid var(--line);
+				border-bottom: 1px solid var(--line);
+			}
+			.ab .c:nth-child(3n) {
+				border-right: 0;
+			}
+			.ab .c:nth-child(n + 4) {
+				border-bottom: 0;
+			}
+			.ab .n {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 10px;
+				letter-spacing: 0.1em;
+				color: var(--muted);
+				text-transform: uppercase;
+			}
+			.ab .m {
+				font-family: var(--num);
+				font-size: 24px;
+			}
+			.ab .s {
+				font-size: 11px;
+				color: var(--muted);
+			}
+			.note {
+				font-size: 12px;
+				color: var(--muted);
+				margin-top: 10px;
+				border-left: 2px solid var(--accent);
+				padding-left: 10px;
+			}
+			.note b {
+				color: var(--text);
+			}
+			footer {
+				padding: 12px 24px;
+				border-top: 1px solid var(--line);
+				color: var(--muted);
+				font-size: 11px;
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+				font-family: var(--disp);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="frame">
+			<header class="top">
+				<div class="wordmark">Char<span>nik</span></div>
+				<div class="toprow">
+					<span class="kbd">Ctrl K</span><span class="pill">EN · UK</span
+					><span class="pill">5.5e</span><span class="pill">☀ light</span>
+				</div>
+			</header>
 
-    <section class="hero">
-      <div>
-        <div class="eyebrow">Wizard · Evocation</div>
-        <h1>Eldrin Vance</h1>
-        <div class="sub">Level <b>7</b> · High Elf · Proficiency <b>+3</b> · Spell DC <b>15</b></div>
-      </div>
-      <div class="badge">Armor class<b>15</b></div>
-    </section>
+			<section class="hero">
+				<div>
+					<div class="eyebrow">Wizard · Evocation</div>
+					<h1>Eldrin Vance</h1>
+					<div class="sub">
+						Level <b>7</b> · High Elf · Proficiency <b>+3</b> · Spell DC <b>15</b>
+					</div>
+				</div>
+				<div class="badge">Armor class<b>15</b></div>
+			</section>
 
-    <div class="cols">
-      <div class="col">
-        <h2>Play tracker <span>this session</span></h2>
-        <table>
-          <thead><tr><th>Resource</th><th class="r">Have</th><th class="r">Max</th><th>Track</th></tr></thead>
-          <tbody>
-            <tr><td>Hit points</td><td class="r neg">24</td><td class="r">38</td><td><span class="neg" style="font-family:var(--num)">−14</span></td></tr>
-            <tr><td>Spell slot · 1st</td><td class="r">2</td><td class="r">4</td><td class="track">●●<span class="x">○○</span></td></tr>
-            <tr><td>Spell slot · 2nd</td><td class="r">2</td><td class="r">3</td><td class="track">●●<span class="x">○</span></td></tr>
-            <tr><td>Spell slot · 3rd</td><td class="r">3</td><td class="r">3</td><td class="track">●●●</td></tr>
-            <tr><td>Arcane Recovery</td><td class="r">0</td><td class="r">1</td><td class="track"><span class="x">○</span></td></tr>
-          </tbody>
-        </table>
-        <p class="note"><b>Hover any value</b> for its full trace — e.g. AC 15 = base 10 + DEX +2 + Mage Armor +3.</p>
-      </div>
-      <div class="col">
-        <h2>Abilities</h2>
-        <div class="ab">
-          <div class="c"><div class="n">Str</div><div class="m">8</div><div class="s">−1</div></div>
-          <div class="c"><div class="n">Dex</div><div class="m">14</div><div class="s">+2</div></div>
-          <div class="c"><div class="n">Con</div><div class="m">13</div><div class="s">+1</div></div>
-          <div class="c"><div class="n">Int</div><div class="m">18</div><div class="s">+4</div></div>
-          <div class="c"><div class="n">Wis</div><div class="m">12</div><div class="s">+1</div></div>
-          <div class="c"><div class="n">Cha</div><div class="m">10</div><div class="s">+0</div></div>
-        </div>
-        <h2 style="margin-top:18px">Conditions</h2>
-        <table>
-          <tbody>
-            <tr><td>Concentration</td><td class="r track">Bless</td></tr>
-            <tr><td class="neg">Poisoned</td><td class="r">disadv.</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <footer>B · Field Ledger — cool paper · oxidized copper-teal · Archivo / Source Sans / Source Serif</footer>
-  </div>
-</body>
+			<div class="cols">
+				<div class="col">
+					<h2>Play tracker <span>this session</span></h2>
+					<table>
+						<thead>
+							<tr>
+								<th>Resource</th>
+								<th class="r">Have</th>
+								<th class="r">Max</th>
+								<th>Track</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Hit points</td>
+								<td class="r neg">24</td>
+								<td class="r">38</td>
+								<td><span class="neg" style="font-family: var(--num)">−14</span></td>
+							</tr>
+							<tr>
+								<td>Spell slot · 1st</td>
+								<td class="r">2</td>
+								<td class="r">4</td>
+								<td class="track">●●<span class="x">○○</span></td>
+							</tr>
+							<tr>
+								<td>Spell slot · 2nd</td>
+								<td class="r">2</td>
+								<td class="r">3</td>
+								<td class="track">●●<span class="x">○</span></td>
+							</tr>
+							<tr>
+								<td>Spell slot · 3rd</td>
+								<td class="r">3</td>
+								<td class="r">3</td>
+								<td class="track">●●●</td>
+							</tr>
+							<tr>
+								<td>Arcane Recovery</td>
+								<td class="r">0</td>
+								<td class="r">1</td>
+								<td class="track"><span class="x">○</span></td>
+							</tr>
+						</tbody>
+					</table>
+					<p class="note">
+						<b>Hover any value</b> for its full trace — e.g. AC 15 = base 10 + DEX +2 + Mage Armor
+						+3.
+					</p>
+				</div>
+				<div class="col">
+					<h2>Abilities</h2>
+					<div class="ab">
+						<div class="c">
+							<div class="n">Str</div>
+							<div class="m">8</div>
+							<div class="s">−1</div>
+						</div>
+						<div class="c">
+							<div class="n">Dex</div>
+							<div class="m">14</div>
+							<div class="s">+2</div>
+						</div>
+						<div class="c">
+							<div class="n">Con</div>
+							<div class="m">13</div>
+							<div class="s">+1</div>
+						</div>
+						<div class="c">
+							<div class="n">Int</div>
+							<div class="m">18</div>
+							<div class="s">+4</div>
+						</div>
+						<div class="c">
+							<div class="n">Wis</div>
+							<div class="m">12</div>
+							<div class="s">+1</div>
+						</div>
+						<div class="c">
+							<div class="n">Cha</div>
+							<div class="m">10</div>
+							<div class="s">+0</div>
+						</div>
+					</div>
+					<h2 style="margin-top: 18px">Conditions</h2>
+					<table>
+						<tbody>
+							<tr>
+								<td>Concentration</td>
+								<td class="r track">Bless</td>
+							</tr>
+							<tr>
+								<td class="neg">Poisoned</td>
+								<td class="r">disadv.</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<footer>
+				B · Field Ledger — cool paper · oxidized copper-teal · Archivo / Source Sans / Source Serif
+			</footer>
+		</div>
+	</body>
 </html>

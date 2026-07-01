@@ -118,7 +118,9 @@ describe('seeded SRD packs validate', () => {
 				for (const row of parsed.data) {
 					const res = parseRow(type as ContentType, row);
 					if (!res.success) {
-						failures.push(`${row.id}: ${res.error.issues.map((i) => i.path.join('.') + ' ' + i.message).join('; ')}`);
+						failures.push(
+							`${row.id}: ${res.error.issues.map((i) => i.path.join('.') + ' ' + i.message).join('; ')}`
+						);
 					}
 				}
 				expect(failures).toEqual([]);

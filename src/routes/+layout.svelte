@@ -2,6 +2,7 @@
 	import '$lib/styles/app.css';
 	import favicon from '$lib/assets/favicon.svg';
 	import { browser } from '$app/environment';
+	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { app } from '$lib/stores/app.svelte';
 	import { LOCALES, FALLBACK_LOCALE, dirFor, locale as i18nLocale, _ } from '$lib/i18n';
@@ -14,6 +15,12 @@
 		{ href: '/compendium', key: 'nav.compendium' },
 		{ href: '/settings', key: 'nav.settings' }
 	];
+
+	// Links must include the base path so navigation works under a subpath (GitHub Pages
+	// serves the app at /<repo>). base is '' for the desktop build (served at root).
+	const link = (href: string) => `${base}${href}`;
+	const norm = (p: string) => p.replace(/\/$/, '') || '/';
+	const isCurrent = (href: string) => norm(page.url.pathname) === norm(link(href));
 
 	// Single source of truth for live switches: mirror the store onto <html>. No reload.
 	$effect(() => {
@@ -49,10 +56,10 @@
 <a class="skip-link" href="#main">{$_('nav.skipToContent')}</a>
 
 <header class="topbar">
-	<a class="wordmark" href="/">Char<span>nik</span></a>
+	<a class="wordmark" href={link('/')}>Char<span>nik</span></a>
 	<nav class="nav" aria-label="Primary">
 		{#each nav as item (item.href)}
-			<a href={item.href} aria-current={page.url.pathname === item.href ? 'page' : undefined}>
+			<a href={link(item.href)} aria-current={isCurrent(item.href) ? 'page' : undefined}>
 				{$_(item.key)}
 			</a>
 		{/each}

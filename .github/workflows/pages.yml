@@ -1,0 +1,62 @@
+name: Deploy web demo to GitHub Pages
+
+# Publishes the static SPA (adapter-static) to GitHub Pages. The app is a client-side
+# demo of Charnik using the bundled SRD CSVs; it is a WIP shell until the web Storage
+# (IndexedDB/OPFS) + character UI land. Desktop (Tauri) remains the primary target.
+#
+# One-time repo setup: Settings → Pages → Build and deployment → Source = "GitHub Actions".
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a newer deploy cancel an in-progress one; don't cancel in-progress runs mid-publish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build SPA for Pages
+        # BASE_PATH = the repo subpath (site served at /<repo>). adapter-static emits a
+        # 404.html fallback for client-side routing; static/.nojekyll keeps the _app dir.
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}
+        run: pnpm build
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

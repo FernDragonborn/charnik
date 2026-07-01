@@ -13,7 +13,12 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const src = (f) => readFileSync(resolve(root, 'tools/srd-src/2024', f), 'utf8');
 
-const strip = (s) => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#39;|&rsquo;/g, "'").trim();
+const strip = (s) =>
+	s
+		.replace(/<[^>]+>/g, '')
+		.replace(/&amp;/g, '&')
+		.replace(/&#39;|&rsquo;/g, "'")
+		.trim();
 const sectionBetween = (md, startRe, endRe) => {
 	const s = md.search(startRe);
 	const rest = md.slice(s);
@@ -21,27 +26,63 @@ const sectionBetween = (md, startRe, endRe) => {
 	return e === -1 ? rest : rest.slice(0, e + 1);
 };
 const firstTable = (s) => (/<table[\s\S]*?<\/table>/i.exec(s) || [''])[0];
-const trCells = (tr, tag) => [...tr.matchAll(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'gi'))].map((m) => strip(m[1]));
+const trCells = (tr, tag) =>
+	[...tr.matchAll(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'gi'))].map((m) => strip(m[1]));
 const num = (s) => {
 	const m = /(\d+(?:\.\d+)?)/.exec(s);
 	return m ? Number(m[1]) : '';
 };
-const cost = (s) => (/(\d[\d,]*\s*(?:GP|SP|CP|PP))/i.exec(s) || [''])[0].replace(/\s+/g, ' ').trim();
+const cost = (s) =>
+	(/(\d[\d,]*\s*(?:GP|SP|CP|PP))/i.exec(s) || [''])[0].replace(/\s+/g, ' ').trim();
 
 const COLUMNS = [
-	'id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects',
-	'category', 'item_type', 'cost', 'weight_lb', 'properties', 'damage', 'damage_type',
-	'range', 'ac', 'armor_dex_cap', 'str_min', 'stealth_disadvantage', 'attunement', 'rarity'
+	'id',
+	'systems',
+	'source',
+	'name_en',
+	'name_uk',
+	'text_en',
+	'text_uk',
+	'effects',
+	'category',
+	'item_type',
+	'cost',
+	'weight_lb',
+	'properties',
+	'damage',
+	'damage_type',
+	'range',
+	'ac',
+	'armor_dex_cap',
+	'str_min',
+	'stealth_disadvantage',
+	'attunement',
+	'rarity'
 ];
 const blank = {
-	name_uk: '', text_uk: '', effects: '', cost: '', weight_lb: '', properties: '', damage: '',
-	damage_type: '', range: '', ac: '', armor_dex_cap: '', str_min: '', stealth_disadvantage: 'false',
-	attunement: 'false', rarity: ''
+	name_uk: '',
+	text_uk: '',
+	effects: '',
+	cost: '',
+	weight_lb: '',
+	properties: '',
+	damage: '',
+	damage_type: '',
+	range: '',
+	ac: '',
+	armor_dex_cap: '',
+	str_min: '',
+	stealth_disadvantage: 'false',
+	attunement: 'false',
+	rarity: ''
 };
 const row = (o) => ({ systems: '5.5e', source: 'SRD 5.2.1', ...blank, ...o });
 
 const rows = [];
-let nWeapon = 0, nArmor = 0, nGear = 0, nMagic = 0;
+let nWeapon = 0,
+	nArmor = 0,
+	nGear = 0,
+	nMagic = 0;
 
 // --- weapons -----------------------------------------------------------------
 {
@@ -51,7 +92,10 @@ let nWeapon = 0, nArmor = 0, nGear = 0, nMagic = 0;
 	for (const tr of table.match(/<tr[\s\S]*?<\/tr>/gi) || []) {
 		const grp = /<th[^>]*>\s*<em>(.+?)<\/em>/i.exec(tr);
 		if (grp) {
-			type = grp[1].replace(/\s*Weapons$/i, '').toLowerCase().trim(); // "simple melee"
+			type = grp[1]
+				.replace(/\s*Weapons$/i, '')
+				.toLowerCase()
+				.trim(); // "simple melee"
 			continue;
 		}
 		const td = trCells(tr, 'td');
@@ -62,10 +106,19 @@ let nWeapon = 0, nArmor = 0, nGear = 0, nMagic = 0;
 		const propList = props === '—' ? '' : props;
 		rows.push(
 			row({
-				id: slug(name), name_en: name, text_en: '',
-				category: 'weapon', item_type: type, cost: cost(cst), weight_lb: num(weight),
-				properties: (propList + (mastery && mastery !== '—' ? `; mastery: ${mastery}` : '')).replace(/^; /, ''),
-				damage: dm ? dm[1] : '', damage_type: dm ? dm[2].toLowerCase() : '', range: rng ? rng[1] : ''
+				id: slug(name),
+				name_en: name,
+				text_en: '',
+				category: 'weapon',
+				item_type: type,
+				cost: cost(cst),
+				weight_lb: num(weight),
+				properties: (
+					propList + (mastery && mastery !== '—' ? `; mastery: ${mastery}` : '')
+				).replace(/^; /, ''),
+				damage: dm ? dm[1] : '',
+				damage_type: dm ? dm[2].toLowerCase() : '',
+				range: rng ? rng[1] : ''
 			})
 		);
 		nWeapon++;
@@ -92,11 +145,16 @@ let nWeapon = 0, nArmor = 0, nGear = 0, nMagic = 0;
 		const dexCap = isShield ? '' : cat === 'light' ? '' : cat === 'medium' ? '2' : '0';
 		rows.push(
 			row({
-				id: slug(name), name_en: name, text_en: '',
+				id: slug(name),
+				name_en: name,
+				text_en: '',
 				category: isShield ? 'shield' : 'armor',
 				item_type: isShield ? 'shield' : `${cat} armor`,
-				cost: cost(cst), weight_lb: num(weight),
-				ac: num(ac), armor_dex_cap: dexCap, str_min: num(str),
+				cost: cost(cst),
+				weight_lb: num(weight),
+				ac: num(ac),
+				armor_dex_cap: dexCap,
+				str_min: num(str),
 				stealth_disadvantage: String(/disadvantage/i.test(stealth))
 			})
 		);
@@ -111,8 +169,12 @@ for (const b of blocks(src('equipment.md')).filter((b) => b.h2 === 'Adventuring 
 	const name = m ? m[1].trim() : b.name;
 	rows.push(
 		row({
-			id: slug(name), name_en: name, text_en: description(b.body),
-			category: 'gear', item_type: 'adventuring gear', cost: m ? cost(m[2]) : ''
+			id: slug(name),
+			name_en: name,
+			text_en: description(b.body),
+			category: 'gear',
+			item_type: 'adventuring gear',
+			cost: m ? cost(m[2]) : ''
 		})
 	);
 	nGear++;
@@ -131,16 +193,29 @@ for (const b of blocks(src('magic-items.md'))) {
 	if (!mm) continue; // section explainer, no italic meta
 	const inner = mm[1].trim();
 	if (SIZE_RE.test(inner)) continue; // embedded creature stat block, not an item
-	const hasRarity = RARITY.some((r) => new RegExp(r, 'i').test(inner)) || /rarity varies/i.test(inner);
+	const hasRarity =
+		RARITY.some((r) => new RegExp(r, 'i').test(inner)) || /rarity varies/i.test(inner);
 	if (!hasRarity) continue;
 	const typeRaw = inner.split(',')[0].trim();
 	const rarRaw = RARITY.find((r) => new RegExp(r, 'i').test(inner)) || ''; // blank when "Rarity Varies"
 	const head = typeRaw.toLowerCase();
-	const category = head.startsWith('armor') ? 'armor' : head.startsWith('weapon') ? 'weapon' : head.startsWith('shield') ? 'shield' : head.startsWith('ammunition') ? 'ammunition' : 'gear';
+	const category = head.startsWith('armor')
+		? 'armor'
+		: head.startsWith('weapon')
+			? 'weapon'
+			: head.startsWith('shield')
+				? 'shield'
+				: head.startsWith('ammunition')
+					? 'ammunition'
+					: 'gear';
 	rows.push(
 		row({
-			id: slug(b.name), name_en: b.name, text_en: description(b.body),
-			category, item_type: head, attunement: String(/requires attunement/i.test(b.body.join('\n'))),
+			id: slug(b.name),
+			name_en: b.name,
+			text_en: description(b.body),
+			category,
+			item_type: head,
+			attunement: String(/requires attunement/i.test(b.body.join('\n'))),
 			rarity: rarRaw ? slug(rarRaw) : ''
 		})
 	);
@@ -150,4 +225,6 @@ assertCount('magic items', nMagic, 258);
 
 dedupeIds(rows);
 writeCsv(resolve(root, 'content/srd-2024/items_srd.csv'), COLUMNS, rows);
-console.log(`wrote ${rows.length} items (weapons ${nWeapon}, armor ${nArmor}, gear ${nGear}, magic ${nMagic})`);
+console.log(
+	`wrote ${rows.length} items (weapons ${nWeapon}, armor ${nArmor}, gear ${nGear}, magic ${nMagic})`
+);

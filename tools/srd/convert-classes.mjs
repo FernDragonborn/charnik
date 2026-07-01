@@ -15,7 +15,12 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const md = readFileSync(resolve(root, 'tools/srd-src/2024/classes.md'), 'utf8');
 
-const strip = (s) => s.replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&#39;/g, "'").trim();
+const strip = (s) =>
+	s
+		.replace(/<[^>]+>/g, '')
+		.replace(/&amp;/g, '&')
+		.replace(/&#39;/g, "'")
+		.trim();
 
 // split into the 12 `## Class` chunks (top-level ## headers in classes.md are the classes)
 const parts = md.split(/^## (?=[A-Z])/m).slice(1);
@@ -62,7 +67,14 @@ for (const part of parts) {
 	const subclassLevel = (/#### Level (\d+):[^\n]*Subclass/.exec(part) || [, ''])[1];
 
 	classRows.push({
-		id, systems: '5.5e', source: 'SRD 5.2.1', name_en: name, name_uk: '', text_en: '', text_uk: '', effects: '',
+		id,
+		systems: '5.5e',
+		source: 'SRD 5.2.1',
+		name_en: name,
+		name_uk: '',
+		text_en: '',
+		text_uk: '',
+		effects: '',
 		hit_die: hitDie ? `d${hitDie}` : '',
 		primary_ability: abilities(traits['Primary Ability'] || ''),
 		saves: abilities(traits['Saving Throw Proficiencies'] || ''),
@@ -79,9 +91,17 @@ for (const part of parts) {
 		const featName = m[2].trim();
 		featureRows.push({
 			id: `${subclass_id || id}-${slug(featName)}`,
-			systems: '5.5e', source: 'SRD 5.2.1', name_en: featName, name_uk: '',
-			text_en: description(b.body), text_uk: '', effects: '',
-			class_id: id, level: Number(m[1]), resource: '', subclass_id: subclass_id || ''
+			systems: '5.5e',
+			source: 'SRD 5.2.1',
+			name_en: featName,
+			name_uk: '',
+			text_en: description(b.body),
+			text_uk: '',
+			effects: '',
+			class_id: id,
+			level: Number(m[1]),
+			resource: '',
+			subclass_id: subclass_id || ''
 		});
 	};
 
@@ -96,8 +116,15 @@ for (const part of parts) {
 		const subId = slug(subName);
 		const subPortion = part.slice(subM.index);
 		subclassRows.push({
-			id: subId, systems: '5.5e', source: 'SRD 5.2.1', name_en: subName, name_uk: '',
-			text_en: '', text_uk: '', effects: '', class_id: id
+			id: subId,
+			systems: '5.5e',
+			source: 'SRD 5.2.1',
+			name_en: subName,
+			name_uk: '',
+			text_en: '',
+			text_uk: '',
+			effects: '',
+			class_id: id
 		});
 		for (const b of blocks('## x\n' + subPortion)) pushFeature(b, subId);
 	}
@@ -111,12 +138,42 @@ dedupeIds(subclassRows);
 
 writeCsv(
 	resolve(root, 'content/srd-2024/classes_srd.csv'),
-	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'hit_die', 'primary_ability', 'saves', 'caster', 'spell_ability', 'skills_choose', 'skills_from', 'subclass_level'],
+	[
+		'id',
+		'systems',
+		'source',
+		'name_en',
+		'name_uk',
+		'text_en',
+		'text_uk',
+		'effects',
+		'hit_die',
+		'primary_ability',
+		'saves',
+		'caster',
+		'spell_ability',
+		'skills_choose',
+		'skills_from',
+		'subclass_level'
+	],
 	classRows
 );
 writeCsv(
 	resolve(root, 'content/srd-2024/class_features_srd.csv'),
-	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id', 'level', 'resource', 'subclass_id'],
+	[
+		'id',
+		'systems',
+		'source',
+		'name_en',
+		'name_uk',
+		'text_en',
+		'text_uk',
+		'effects',
+		'class_id',
+		'level',
+		'resource',
+		'subclass_id'
+	],
 	featureRows
 );
 writeCsv(
@@ -124,5 +181,10 @@ writeCsv(
 	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id'],
 	subclassRows
 );
-console.log('classes:', classRows.map((c) => `${c.id}(${c.hit_die},${c.caster}${c.spell_ability ? '/' + c.spell_ability : ''})`).join(' '));
+console.log(
+	'classes:',
+	classRows
+		.map((c) => `${c.id}(${c.hit_die},${c.caster}${c.spell_ability ? '/' + c.spell_ability : ''})`)
+		.join(' ')
+);
 console.log('subclasses:', subclassRows.map((s) => s.id).join(' '));

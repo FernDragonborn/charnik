@@ -1,132 +1,669 @@
 <!doctype html>
 <html lang="en" data-theme="charnik">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Charnik — manage spells</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
-<style>
-  :root{
-    --bg:#0f1116; --surface:#171a21; --surface-2:#1f232c; --line:#272c37; --line-2:#333a47;
-    --text:#e6e8ec; --muted:#878f9d; --accent:#cf2b40; --accent-bri:#ef6b78; --accent-deep:#b3243a;
-    --teal:#3bb8a6; --teal-soft:#11302c; --gold:#caa24a; --gold-soft:#2a2415;
-    --disp:'Space Grotesk',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased}
-  .frame{max-width:1080px;margin:0 auto;padding:24px}
-  header.top{display:flex;align-items:center;gap:14px;border-bottom:1px solid var(--line);padding-bottom:14px}
-  .wordmark{font-family:var(--disp);font-weight:700;font-size:18px}.wordmark span{color:var(--accent-bri)}
-  .prepct{font-family:var(--mono);font-size:12px;color:var(--muted)}.prepct b{color:var(--teal)}
-  .done{font-family:var(--disp);font-weight:600;font-size:13px;background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:6px 14px;cursor:pointer;color:var(--text)}
-  .tg{width:34px;height:20px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line-2);position:relative;flex:none;cursor:pointer}
-  .tg::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--muted)}
-  .tg.on{background:var(--teal-soft);border-color:var(--teal)}.tg.on::after{left:16px;background:var(--teal)}
-  .tg.lock{opacity:.45;cursor:default}
-  .ocap{display:flex;align-items:center;gap:7px;font-family:var(--disp);font-weight:600;font-size:12px;color:var(--muted)}
-  .toprow{display:flex;gap:8px;align-items:center;margin-left:auto}
-  .searchbtn{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);background:var(--surface);border:1px solid var(--line-2);border-radius:6px;padding:3px 9px;cursor:pointer}
-  .searchbtn kbd{font-family:var(--mono);font-size:10px;color:var(--text);border:1px solid var(--line-2);border-radius:4px;padding:0 5px;background:var(--bg)}
-  .chip{border:1px solid var(--line);border-radius:6px;padding:3px 9px;color:var(--muted);font-size:12px}
-  .mgrhead{display:flex;align-items:center;gap:16px;margin:14px 0 16px;flex-wrap:wrap}
-  .mgrhead h1{font-family:var(--disp);font-weight:700;font-size:24px;margin:0}
-  .mgrhead .spacer{flex:1}
-  .two{display:grid;grid-template-columns:390px 1fr;border:1px solid var(--line);border-top:0;border-radius:0 0 14px 14px;overflow:hidden;min-height:560px}
-  /* left list */
-  .list{border-right:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column}
-  .lsearch{display:flex;align-items:center;gap:9px;padding:12px 13px;border-bottom:1px solid var(--line);font-size:13px}
-  .lsearch input{all:unset;flex:1;color:var(--text)}.lsearch .mag{color:var(--muted)}
-  .lfilter{display:flex;gap:6px;padding:9px 13px;border-bottom:1px solid var(--line)}
-  .chip{font-family:var(--disp);font-weight:600;font-size:11px;border:1px solid var(--line);border-radius:7px;padding:3px 9px;color:var(--muted);cursor:pointer}
-  .chip.on{background:var(--surface-2);color:var(--text);border-color:var(--line-2)}
-  .rows{overflow:auto;flex:1}
-  .sec{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:10px 13px 4px;display:flex;justify-content:space-between}
-  .srow{display:flex;align-items:center;gap:10px;padding:8px 13px;border-top:1px solid var(--line);cursor:pointer}
-  .srow:hover{background:var(--surface-2)}
-  .srow.sel{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--accent)}
-  .acts{display:flex;gap:4px;flex:none}
-  .ic{width:26px;height:24px;display:grid;place-items:center;border-radius:6px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;font-size:13px;font-style:normal}
-  .ic.eye.on{color:var(--teal);border-color:var(--teal);background:var(--teal-soft)}
-  .ic.pin.on{color:var(--accent-bri);border-color:var(--accent-deep);background:#241317}
-  .sname{flex:1;min-width:0}
-  .sname b{font-family:var(--disp);font-weight:600;font-size:13px}
-  .sname small{display:block;color:var(--muted);font-size:11px;font-family:var(--mono)}
-  .always{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
-  /* right wiki */
-  .detail{padding:20px 22px;overflow:auto}
-  .deyebrow{font-family:var(--mono);text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--accent-bri)}
-  .detail h1{font-family:var(--disp);font-weight:700;font-size:30px;margin:6px 0 12px}
-  .dactions{display:flex;gap:14px;align-items:center;margin:4px 0 16px;flex-wrap:wrap}
-  .dbtn{font-family:var(--disp);font-weight:700;font-size:13px;border-radius:8px;padding:7px 14px;cursor:pointer;background:var(--accent-deep);border:1px solid var(--accent-deep);color:#fff}
-  .dtog{display:flex;align-items:center;gap:8px;font-family:var(--disp);font-weight:600;font-size:13px;color:var(--text)}
-  .meta{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:16px}
-  .mcell{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px}
-  .mcell .k{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-  .mcell .v{font-family:var(--disp);font-weight:600;font-size:14px;margin-top:2px}
-  .body p{margin:0 0 12px;font-size:14px;color:#d4d7dd}
-  .hl{background:var(--surface);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:9px 12px;font-size:13px;color:var(--muted);margin:0 0 12px}.hl b{color:var(--gold)}
-  .src{font-family:var(--mono);font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:11px}
-</style>
-</head>
-<body>
-  <div class="frame">
-    <header class="top">
-      <span class="wordmark">Char<span>nik</span></span>
-      <span class="toprow"><button class="searchbtn">🔍 Search all <kbd>Ctrl K</kbd></button><span class="chip">EN · UK</span><span class="chip">5.5e</span><span class="chip">☾ dark</span></span>
-    </header>
-    <div class="mgrhead">
-      <h1>Manage spells</h1>
-      <span class="prepct">Prepared <b>11</b>/11 · spellbook 26</span>
-      <span class="ocap">Allow over-cap <span class="tg"></span></span>
-      <span class="spacer"></span>
-      <button class="done">Done</button>
-    </div>
-    <div class="two">
-      <!-- LEFT: spellbook list · eye (show) + pin icons, prepare = toggle on the right -->
-      <div class="list">
-        <div class="lsearch"><span class="mag">🔍</span><input placeholder="Search spellbook…" /></div>
-        <div class="lfilter"><span class="chip on">All</span><span class="chip">Prepared</span><span class="chip">Pinned</span><span class="chip">Ritual</span></div>
-        <div class="rows">
-          <div class="sec"><span>Cantrips</span><span>prepare</span></div>
-          <div class="srow"><span class="acts"><button class="ic eye on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg></button><button class="ic pin on">★</button></span><span class="sname"><b>Fire Bolt</b><small>evocation · 2d10 fire</small></span><span class="tg on lock" title="always prepared"></span></div>
-          <div class="srow"><span class="acts"><button class="ic eye on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg></button><button class="ic pin">☆</button></span><span class="sname"><b>Ray of Frost</b><small>evocation · 1d8 cold</small></span><span class="tg on lock" title="always prepared"></span></div>
-          <div class="srow"><span class="acts"><button class="ic eye"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c3.5 3.5 14.5 3.5 18 0"/><path d="M6 16l-1 2"/><path d="M12 17v2.2"/><path d="M18 16l1 2"/></svg></button><button class="ic pin">☆</button></span><span class="sname"><b>Light</b><small>evocation · utility</small></span><span class="tg on lock" title="always prepared"></span></div>
-          <div class="sec"><span>1st level</span><span>prepare</span></div>
-          <div class="srow"><span class="acts"><button class="ic eye on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg></button><button class="ic pin on">★</button></span><span class="sname"><b>Shield</b><small>abjuration · +5 AC · reaction</small></span><span class="tg on"></span></div>
-          <div class="srow"><span class="acts"><button class="ic eye on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg></button><button class="ic pin">☆</button></span><span class="sname"><b>Magic Missile</b><small>evocation · 3×1d4+1</small></span><span class="tg on"></span></div>
-          <div class="srow"><span class="acts"><button class="ic eye"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c3.5 3.5 14.5 3.5 18 0"/><path d="M6 16l-1 2"/><path d="M12 17v2.2"/><path d="M18 16l1 2"/></svg></button><button class="ic pin">☆</button></span><span class="sname"><b>Find Familiar</b><small>conjuration · ritual</small></span><span class="tg"></span></div>
-          <div class="sec"><span>3rd level</span><span>prepare</span></div>
-          <div class="srow sel"><span class="acts"><button class="ic eye on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg></button><button class="ic pin">☆</button></span><span class="sname"><b>Fireball</b><small>evocation · 8d6 fire · save</small></span><span class="tg on"></span></div>
-          <div class="srow"><span class="acts"><button class="ic eye on"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/></svg></button><button class="ic pin on">★</button></span><span class="sname"><b>Counterspell</b><small>abjuration · reaction</small></span><span class="tg on"></span></div>
-          <div class="srow"><span class="acts"><button class="ic eye"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 13c3.5 3.5 14.5 3.5 18 0"/><path d="M6 16l-1 2"/><path d="M12 17v2.2"/><path d="M18 16l1 2"/></svg></button><button class="ic pin">☆</button></span><span class="sname"><b>Fly</b><small>transmutation · conc.</small></span><span class="tg"></span></div>
-        </div>
-      </div>
-      <!-- RIGHT: wiki detail from content CSVs -->
-      <div class="detail">
-        <div class="deyebrow">Level 3 · Evocation</div>
-        <h1>Fireball</h1>
-        <div class="dactions">
-          <button class="dbtn">🎲 Cast (3rd)</button>
-          <span class="dtog">Prepared <span class="tg on"></span></span>
-          <span class="dtog">On sheet <span class="tg on"></span></span>
-          <span class="dtog">Pinned <span class="tg"></span></span>
-        </div>
-        <div class="meta">
-          <div class="mcell"><div class="k">Casting time</div><div class="v">1 action</div></div>
-          <div class="mcell"><div class="k">Range</div><div class="v">150 ft (45 m)</div></div>
-          <div class="mcell"><div class="k">Components</div><div class="v">V, S, M</div></div>
-          <div class="mcell"><div class="k">Duration</div><div class="v">Instantaneous</div></div>
-        </div>
-        <div class="body">
-          <p>A bright streak flashes from your pointing finger to a point you choose within range, then blossoms with a low roar into an explosion of flame. Each creature in a 20-foot-radius sphere centered on that point makes a Dexterity saving throw, taking <b style="color:var(--gold)">8d6 fire damage</b> on a failed save, or half as much on a success.</p>
-          <p>Flammable objects in the area that aren't being worn or carried start burning.</p>
-        </div>
-        <div class="hl">At higher levels — <b>+1d6 damage</b> for each spell slot level above 3rd.</div>
-        <div class="src">Material: a ball of bat guano and sulfur · Source: SRD 5.2.1 (CC-BY-4.0)</div>
-      </div>
-    </div>
-  </div>
-</body>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Charnik — manage spells</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--line: #272c37;
+				--line-2: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bri: #ef6b78;
+				--accent-deep: #b3243a;
+				--teal: #3bb8a6;
+				--teal-soft: #11302c;
+				--gold: #caa24a;
+				--gold-soft: #2a2415;
+				--disp: 'Space Grotesk', system-ui, sans-serif;
+				--body: 'Inter', system-ui, sans-serif;
+				--mono: 'JetBrains Mono', monospace;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--body);
+				line-height: 1.5;
+				-webkit-font-smoothing: antialiased;
+			}
+			.frame {
+				max-width: 1080px;
+				margin: 0 auto;
+				padding: 24px;
+			}
+			header.top {
+				display: flex;
+				align-items: center;
+				gap: 14px;
+				border-bottom: 1px solid var(--line);
+				padding-bottom: 14px;
+			}
+			.wordmark {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 18px;
+			}
+			.wordmark span {
+				color: var(--accent-bri);
+			}
+			.prepct {
+				font-family: var(--mono);
+				font-size: 12px;
+				color: var(--muted);
+			}
+			.prepct b {
+				color: var(--teal);
+			}
+			.done {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 13px;
+				background: var(--surface);
+				border: 1px solid var(--line-2);
+				border-radius: 8px;
+				padding: 6px 14px;
+				cursor: pointer;
+				color: var(--text);
+			}
+			.tg {
+				width: 34px;
+				height: 20px;
+				border-radius: 999px;
+				background: var(--surface-2);
+				border: 1px solid var(--line-2);
+				position: relative;
+				flex: none;
+				cursor: pointer;
+			}
+			.tg::after {
+				content: '';
+				position: absolute;
+				top: 2px;
+				left: 2px;
+				width: 14px;
+				height: 14px;
+				border-radius: 50%;
+				background: var(--muted);
+			}
+			.tg.on {
+				background: var(--teal-soft);
+				border-color: var(--teal);
+			}
+			.tg.on::after {
+				left: 16px;
+				background: var(--teal);
+			}
+			.tg.lock {
+				opacity: 0.45;
+				cursor: default;
+			}
+			.ocap {
+				display: flex;
+				align-items: center;
+				gap: 7px;
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 12px;
+				color: var(--muted);
+			}
+			.toprow {
+				display: flex;
+				gap: 8px;
+				align-items: center;
+				margin-left: auto;
+			}
+			.searchbtn {
+				display: inline-flex;
+				align-items: center;
+				gap: 7px;
+				font-size: 12px;
+				color: var(--muted);
+				background: var(--surface);
+				border: 1px solid var(--line-2);
+				border-radius: 6px;
+				padding: 3px 9px;
+				cursor: pointer;
+			}
+			.searchbtn kbd {
+				font-family: var(--mono);
+				font-size: 10px;
+				color: var(--text);
+				border: 1px solid var(--line-2);
+				border-radius: 4px;
+				padding: 0 5px;
+				background: var(--bg);
+			}
+			.chip {
+				border: 1px solid var(--line);
+				border-radius: 6px;
+				padding: 3px 9px;
+				color: var(--muted);
+				font-size: 12px;
+			}
+			.mgrhead {
+				display: flex;
+				align-items: center;
+				gap: 16px;
+				margin: 14px 0 16px;
+				flex-wrap: wrap;
+			}
+			.mgrhead h1 {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 24px;
+				margin: 0;
+			}
+			.mgrhead .spacer {
+				flex: 1;
+			}
+			.two {
+				display: grid;
+				grid-template-columns: 390px 1fr;
+				border: 1px solid var(--line);
+				border-top: 0;
+				border-radius: 0 0 14px 14px;
+				overflow: hidden;
+				min-height: 560px;
+			}
+			/* left list */
+			.list {
+				border-right: 1px solid var(--line);
+				background: var(--surface);
+				display: flex;
+				flex-direction: column;
+			}
+			.lsearch {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				padding: 12px 13px;
+				border-bottom: 1px solid var(--line);
+				font-size: 13px;
+			}
+			.lsearch input {
+				all: unset;
+				flex: 1;
+				color: var(--text);
+			}
+			.lsearch .mag {
+				color: var(--muted);
+			}
+			.lfilter {
+				display: flex;
+				gap: 6px;
+				padding: 9px 13px;
+				border-bottom: 1px solid var(--line);
+			}
+			.chip {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 11px;
+				border: 1px solid var(--line);
+				border-radius: 7px;
+				padding: 3px 9px;
+				color: var(--muted);
+				cursor: pointer;
+			}
+			.chip.on {
+				background: var(--surface-2);
+				color: var(--text);
+				border-color: var(--line-2);
+			}
+			.rows {
+				overflow: auto;
+				flex: 1;
+			}
+			.sec {
+				font-family: var(--mono);
+				font-size: 9px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--muted);
+				padding: 10px 13px 4px;
+				display: flex;
+				justify-content: space-between;
+			}
+			.srow {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 8px 13px;
+				border-top: 1px solid var(--line);
+				cursor: pointer;
+			}
+			.srow:hover {
+				background: var(--surface-2);
+			}
+			.srow.sel {
+				background: var(--surface-2);
+				box-shadow: inset 3px 0 0 var(--accent);
+			}
+			.acts {
+				display: flex;
+				gap: 4px;
+				flex: none;
+			}
+			.ic {
+				width: 26px;
+				height: 24px;
+				display: grid;
+				place-items: center;
+				border-radius: 6px;
+				border: 1px solid var(--line);
+				background: transparent;
+				color: var(--muted);
+				cursor: pointer;
+				font-size: 13px;
+				font-style: normal;
+			}
+			.ic.eye.on {
+				color: var(--teal);
+				border-color: var(--teal);
+				background: var(--teal-soft);
+			}
+			.ic.pin.on {
+				color: var(--accent-bri);
+				border-color: var(--accent-deep);
+				background: #241317;
+			}
+			.sname {
+				flex: 1;
+				min-width: 0;
+			}
+			.sname b {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 13px;
+			}
+			.sname small {
+				display: block;
+				color: var(--muted);
+				font-size: 11px;
+				font-family: var(--mono);
+			}
+			.always {
+				font-family: var(--mono);
+				font-size: 9px;
+				color: var(--muted);
+				text-transform: uppercase;
+				letter-spacing: 0.1em;
+			}
+			/* right wiki */
+			.detail {
+				padding: 20px 22px;
+				overflow: auto;
+			}
+			.deyebrow {
+				font-family: var(--mono);
+				text-transform: uppercase;
+				letter-spacing: 0.18em;
+				font-size: 11px;
+				color: var(--accent-bri);
+			}
+			.detail h1 {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 30px;
+				margin: 6px 0 12px;
+			}
+			.dactions {
+				display: flex;
+				gap: 14px;
+				align-items: center;
+				margin: 4px 0 16px;
+				flex-wrap: wrap;
+			}
+			.dbtn {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 13px;
+				border-radius: 8px;
+				padding: 7px 14px;
+				cursor: pointer;
+				background: var(--accent-deep);
+				border: 1px solid var(--accent-deep);
+				color: #fff;
+			}
+			.dtog {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 13px;
+				color: var(--text);
+			}
+			.meta {
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
+				gap: 10px;
+				margin-bottom: 16px;
+			}
+			.mcell {
+				background: var(--surface);
+				border: 1px solid var(--line);
+				border-radius: 10px;
+				padding: 9px 12px;
+			}
+			.mcell .k {
+				font-family: var(--mono);
+				font-size: 9px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--muted);
+			}
+			.mcell .v {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 14px;
+				margin-top: 2px;
+			}
+			.body p {
+				margin: 0 0 12px;
+				font-size: 14px;
+				color: #d4d7dd;
+			}
+			.hl {
+				background: var(--surface);
+				border-left: 3px solid var(--gold);
+				border-radius: 0 8px 8px 0;
+				padding: 9px 12px;
+				font-size: 13px;
+				color: var(--muted);
+				margin: 0 0 12px;
+			}
+			.hl b {
+				color: var(--gold);
+			}
+			.src {
+				font-family: var(--mono);
+				font-size: 11px;
+				color: var(--muted);
+				border-top: 1px solid var(--line);
+				padding-top: 11px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="frame">
+			<header class="top">
+				<span class="wordmark">Char<span>nik</span></span>
+				<span class="toprow"
+					><button class="searchbtn">🔍 Search all <kbd>Ctrl K</kbd></button
+					><span class="chip">EN · UK</span><span class="chip">5.5e</span
+					><span class="chip">☾ dark</span></span
+				>
+			</header>
+			<div class="mgrhead">
+				<h1>Manage spells</h1>
+				<span class="prepct">Prepared <b>11</b>/11 · spellbook 26</span>
+				<span class="ocap">Allow over-cap <span class="tg"></span></span>
+				<span class="spacer"></span>
+				<button class="done">Done</button>
+			</div>
+			<div class="two">
+				<!-- LEFT: spellbook list · eye (show) + pin icons, prepare = toggle on the right -->
+				<div class="list">
+					<div class="lsearch">
+						<span class="mag">🔍</span><input placeholder="Search spellbook…" />
+					</div>
+					<div class="lfilter">
+						<span class="chip on">All</span><span class="chip">Prepared</span
+						><span class="chip">Pinned</span><span class="chip">Ritual</span>
+					</div>
+					<div class="rows">
+						<div class="sec"><span>Cantrips</span><span>prepare</span></div>
+						<div class="srow">
+							<span class="acts"
+								><button class="ic eye on">
+									<svg
+										width="13"
+										height="13"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z" />
+										<circle cx="12" cy="12" r="2.5" />
+									</svg></button
+								><button class="ic pin on">★</button></span
+							><span class="sname"><b>Fire Bolt</b><small>evocation · 2d10 fire</small></span
+							><span class="tg on lock" title="always prepared"></span>
+						</div>
+						<div class="srow">
+							<span class="acts"
+								><button class="ic eye on">
+									<svg
+										width="13"
+										height="13"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z" />
+										<circle cx="12" cy="12" r="2.5" />
+									</svg></button
+								><button class="ic pin">☆</button></span
+							><span class="sname"><b>Ray of Frost</b><small>evocation · 1d8 cold</small></span
+							><span class="tg on lock" title="always prepared"></span>
+						</div>
+						<div class="srow">
+							<span class="acts"
+								><button class="ic eye">
+									<svg
+										width="13"
+										height="13"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path d="M3 13c3.5 3.5 14.5 3.5 18 0" />
+										<path d="M6 16l-1 2" />
+										<path d="M12 17v2.2" />
+										<path d="M18 16l1 2" />
+									</svg></button
+								><button class="ic pin">☆</button></span
+							><span class="sname"><b>Light</b><small>evocation · utility</small></span
+							><span class="tg on lock" title="always prepared"></span>
+						</div>
+						<div class="sec"><span>1st level</span><span>prepare</span></div>
+						<div class="srow">
+							<span class="acts"
+								><button class="ic eye on">
+									<svg
+										width="13"
+										height="13"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z" />
+										<circle cx="12" cy="12" r="2.5" />
+									</svg></button
+								><button class="ic pin on">★</button></span
+							><span class="sname"><b>Shield</b><small>abjuration · +5 AC · reaction</small></span
+							><span class="tg on"></span>
+						</div>
+						<div class="srow">
+							<span class="acts"
+								><button class="ic eye on">
+									<svg
+										width="13"
+										height="13"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z" />
+										<circle cx="12" cy="12" r="2.5" />
+									</svg></button
+								><button class="ic pin">☆</button></span
+							><span class="sname"><b>Magic Missile</b><small>evocation · 3×1d4+1</small></span
+							><span class="tg on"></span>
+						</div>
+						<div class="srow">
+							<span class="acts"
+								><button class="ic eye">
+									<svg
+										width="13"
+										height="13"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path d="M3 13c3.5 3.5 14.5 3.5 18 0" />
+										<path d="M6 16l-1 2" />
+										<path d="M12 17v2.2" />
+										<path d="M18 16l1 2" />
+									</svg></button
+								><button class="ic pin">☆</button></span
+							><span class="sname"><b>Find Familiar</b><small>conjuration · ritual</small></span
+							><span class="tg"></span>
+						</div>
+						<div class="sec"><span>3rd level</span><span>prepare</span></div>
+						<div class="srow sel">
+							<span class="acts"
+								><button class="ic eye on">
+									<svg
+										width="13"
+										height="13"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z" />
+										<circle cx="12" cy="12" r="2.5" />
+									</svg></button
+								><button class="ic pin">☆</button></span
+							><span class="sname"><b>Fireball</b><small>evocation · 8d6 fire · save</small></span
+							><span class="tg on"></span>
+						</div>
+						<div class="srow">
+							<span class="acts"
+								><button class="ic eye on">
+									<svg
+										width="13"
+										height="13"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path d="M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z" />
+										<circle cx="12" cy="12" r="2.5" />
+									</svg></button
+								><button class="ic pin on">★</button></span
+							><span class="sname"><b>Counterspell</b><small>abjuration · reaction</small></span
+							><span class="tg on"></span>
+						</div>
+						<div class="srow">
+							<span class="acts"
+								><button class="ic eye">
+									<svg
+										width="13"
+										height="13"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									>
+										<path d="M3 13c3.5 3.5 14.5 3.5 18 0" />
+										<path d="M6 16l-1 2" />
+										<path d="M12 17v2.2" />
+										<path d="M18 16l1 2" />
+									</svg></button
+								><button class="ic pin">☆</button></span
+							><span class="sname"><b>Fly</b><small>transmutation · conc.</small></span
+							><span class="tg"></span>
+						</div>
+					</div>
+				</div>
+				<!-- RIGHT: wiki detail from content CSVs -->
+				<div class="detail">
+					<div class="deyebrow">Level 3 · Evocation</div>
+					<h1>Fireball</h1>
+					<div class="dactions">
+						<button class="dbtn">🎲 Cast (3rd)</button>
+						<span class="dtog">Prepared <span class="tg on"></span></span>
+						<span class="dtog">On sheet <span class="tg on"></span></span>
+						<span class="dtog">Pinned <span class="tg"></span></span>
+					</div>
+					<div class="meta">
+						<div class="mcell">
+							<div class="k">Casting time</div>
+							<div class="v">1 action</div>
+						</div>
+						<div class="mcell">
+							<div class="k">Range</div>
+							<div class="v">150 ft (45 m)</div>
+						</div>
+						<div class="mcell">
+							<div class="k">Components</div>
+							<div class="v">V, S, M</div>
+						</div>
+						<div class="mcell">
+							<div class="k">Duration</div>
+							<div class="v">Instantaneous</div>
+						</div>
+					</div>
+					<div class="body">
+						<p>
+							A bright streak flashes from your pointing finger to a point you choose within range,
+							then blossoms with a low roar into an explosion of flame. Each creature in a
+							20-foot-radius sphere centered on that point makes a Dexterity saving throw, taking
+							<b style="color: var(--gold)">8d6 fire damage</b> on a failed save, or half as much on
+							a success.
+						</p>
+						<p>Flammable objects in the area that aren't being worn or carried start burning.</p>
+					</div>
+					<div class="hl">
+						At higher levels — <b>+1d6 damage</b> for each spell slot level above 3rd.
+					</div>
+					<div class="src">
+						Material: a ball of bat guano and sulfur · Source: SRD 5.2.1 (CC-BY-4.0)
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
 </html>

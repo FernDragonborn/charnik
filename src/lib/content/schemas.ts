@@ -52,7 +52,13 @@ const idField = z
 
 /** `systems` = comma list over SYSTEMS, e.g. "5e" | "5.5e" | "5e,5.5e". */
 const systemsField = z.preprocess(
-	(v) => (typeof v === 'string' ? v.split(',').map((s) => s.trim()).filter(Boolean) : v),
+	(v) =>
+		typeof v === 'string'
+			? v
+					.split(',')
+					.map((s) => s.trim())
+					.filter(Boolean)
+			: v,
 	z.array(z.enum(SYSTEMS)).min(1)
 );
 
@@ -166,7 +172,9 @@ export const backgroundSchema = baseRow.extend({
 
 /** Feat. `category` distinguishes 5.5e origin/general/fighting-style; `prereq` is text. */
 export const featSchema = baseRow.extend({
-	category: z.enum(['origin', 'general', 'fighting-style', 'epic-boon', 'general-2014']).default('general'),
+	category: z
+		.enum(['origin', 'general', 'fighting-style', 'epic-boon', 'general-2014'])
+		.default('general'),
 	prereq: optStr,
 	repeatable: z.preprocess((v) => (v === '' || v == null ? false : v), bool).default(false)
 });
@@ -203,7 +211,9 @@ export const itemSchema = baseRow.extend({
 	ac: optInt, // armor base AC
 	armor_dex_cap: optStr, // "" full | "2" medium cap | "0" none (heavy)
 	str_min: optInt, // heavy-armor STR requirement
-	stealth_disadvantage: z.preprocess((v) => (v === '' || v == null ? false : v), bool).default(false),
+	stealth_disadvantage: z
+		.preprocess((v) => (v === '' || v == null ? false : v), bool)
+		.default(false),
 	attunement: z.preprocess((v) => (v === '' || v == null ? false : v), bool).default(false),
 	rarity: z.preprocess(blankToUndef, Rarity.optional())
 });

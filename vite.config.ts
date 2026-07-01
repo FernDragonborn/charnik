@@ -10,8 +10,12 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			// Standalone Tauri desktop app → static SPA (fallback enables client-side routing).
-			adapter: adapter({ fallback: 'index.html', strict: false })
+			// Static SPA. `404.html` fallback enables client-side routing on BOTH targets:
+			// Tauri loads the prerendered index.html; GitHub Pages serves 404.html for deep
+			// links. `BASE_PATH` is set to the repo subpath for the Pages build, empty for
+			// desktop (served at root).
+			adapter: adapter({ fallback: '404.html', strict: false }),
+			paths: { base: process.env.BASE_PATH ?? '' }
 		})
 	]
 });

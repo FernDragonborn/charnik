@@ -1,361 +1,1078 @@
 <!doctype html>
 <html lang="en" data-theme="charnik">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Charnik — menus & dropdowns</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
-<style>
-  :root{
-    --bg:#0f1116; --surface:#171a21; --surface-2:#1f232c; --line:#272c37; --line-2:#333a47;
-    --text:#e6e8ec; --muted:#878f9d; --accent:#cf2b40; --accent-bri:#ef6b78; --accent-deep:#b3243a;
-    --teal:#3bb8a6; --teal-soft:#11302c; --gold:#caa24a; --gold-soft:#2a2415;
-    --disp:'Space Grotesk',system-ui,sans-serif; --body:'Inter',system-ui,sans-serif; --mono:'JetBrains Mono',monospace;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);line-height:1.5;-webkit-font-smoothing:antialiased;padding:32px}
-  h1{font-family:var(--disp);font-weight:700;font-size:24px;margin:0 0 4px}
-  .lede{color:var(--muted);font-size:13px;margin:0 0 24px}
-  /* column flow (masonry): cells continue straight down each column, not across rows */
-  .board{column-count:3;column-gap:20px}
-  .cell{break-inside:avoid;margin:0 0 20px;min-height:40px}
-  .cap{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-bri);margin:0 2px 9px}
-  .cap span{color:var(--muted)}
-  /* shared popover shell */
-  .pop{background:var(--surface);border:1px solid var(--line-2);border-radius:13px;box-shadow:0 18px 40px #000a;overflow:hidden}
-  .pop-h{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:11px 13px 4px}
-  .sec{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 13px 3px}
-  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 13px;font-size:13px;cursor:pointer}
-  .row:hover{background:var(--surface-2)}
-  .row.sel{background:var(--surface-2)}
-  .row .ic{width:18px;text-align:center;color:var(--muted)}
-  .row .main{flex:1;display:flex;align-items:center;gap:9px;min-width:0}
-  .row .meta{color:var(--muted);font-size:11px;font-family:var(--mono);white-space:nowrap}
-  .row b{font-weight:600}
-  .kbd{font-family:var(--mono);font-size:10px;border:1px solid var(--line-2);border-radius:5px;padding:1px 6px;color:var(--muted)}
-  .divlite{height:1px;background:var(--line);margin:4px 0}
-  /* search input */
-  .search{display:flex;align-items:center;gap:10px;padding:13px 14px;border-bottom:1px solid var(--line);font-size:15px}
-  .search input{all:unset;flex:1;color:var(--text)} .search .mag{color:var(--muted)}
-  .caret{width:1px;height:18px;background:var(--accent-bri);display:inline-block;animation:none}
-  /* toggles inside menus */
-  .tg{width:34px;height:20px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line-2);position:relative;flex:none}
-  .tg::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--muted)}
-  .tg.on{background:var(--teal-soft);border-color:var(--teal)} .tg.on::after{left:16px;background:var(--teal)}
-  /* visibility = open/closed eye, teal when shown */
-  .eye{display:inline-block;width:24px;height:18px;background-repeat:no-repeat;background-position:center;cursor:pointer;flex:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23878f9d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 13c3.5 3.5 14.5 3.5 18 0'/%3E%3Cpath d='M6 16l-1 2'/%3E%3Cpath d='M12 17v2'/%3E%3Cpath d='M18 16l1 2'/%3E%3C/svg%3E")}
-  .eye.on{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233bb8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='2.5'/%3E%3C/svg%3E")}
-  /* dice tray */
-  .tray{padding:13px}
-  .dice-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:11px}
-  .die{font-family:var(--disp);font-weight:600;font-size:13px;text-align:center;padding:9px 0;border-radius:9px;background:var(--surface-2);border:1px solid var(--line);cursor:pointer}
-  .die.sel{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
-  .advrow{display:flex;gap:6px;margin-bottom:11px}
-  .seg{flex:1;text-align:center;font-family:var(--disp);font-weight:600;font-size:12px;padding:7px 0;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);cursor:pointer}
-  .seg.on{background:var(--teal-soft);border-color:var(--teal);color:var(--teal)}
-  .modrow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-  .mod{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-family:var(--mono);font-size:13px}
-  .mod button{all:unset;cursor:pointer;color:var(--muted);font-size:15px;padding:0 4px}
-  .rollbtn{flex:1;text-align:center;font-family:var(--disp);font-weight:700;font-size:14px;color:#fff;background:var(--accent-deep);border:1px solid var(--accent-deep);border-radius:9px;padding:8px;cursor:pointer}
-  .hist{font-family:var(--mono);font-size:11px;color:var(--muted);border-top:1px solid var(--line);padding-top:9px}
-  .hist .res{color:var(--teal);font-weight:700}
-  .tray-src{display:flex;flex-direction:column;gap:2px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;margin-bottom:10px}
-  .tray-src b{font-family:var(--disp);font-weight:700;font-size:14px}
-  .tray-src .meta{font-size:10px;color:var(--muted);font-family:var(--mono)}
-  .pool{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-bottom:9px}
-  .poolchip{display:flex;align-items:center;gap:5px;background:var(--gold-soft);border:1px solid var(--gold);border-radius:8px;padding:3px 8px;font-family:var(--mono);font-size:12px;color:var(--gold)}
-  .poolchip button{all:unset;cursor:pointer;color:var(--gold);font-size:14px;padding:0 2px}
-  .poolchip b{font-family:var(--disp);font-weight:700}
-  .poolchip .nm{color:var(--muted)}
-  .adddie{font-family:var(--disp);font-weight:600;font-size:12px;color:var(--muted);background:var(--surface-2);border:1px dashed var(--line-2);border-radius:8px;padding:3px 10px;cursor:pointer}
-  .gridhint{font-size:10px;color:var(--muted);font-family:var(--mono);margin:0 0 6px}
-  /* temp hp small popover */
-  .ph{padding:13px;width:230px}
-  .ph .field{display:flex;gap:8px;margin:9px 0 8px}
-  .ph input{all:unset;flex:1;background:var(--surface-2);border:1px solid var(--line-2);border-radius:8px;padding:8px 11px;font-family:var(--disp);font-weight:700;font-size:18px;color:var(--teal)}
-  .ph .set{font-family:var(--disp);font-weight:700;font-size:13px;color:var(--teal);background:var(--teal-soft);border:1px solid var(--teal);border-radius:8px;padding:0 14px;cursor:pointer}
-  .note{font-size:11px;color:var(--muted);padding:0 1px}
-  .scrollbox{max-height:none;overflow:visible}
-  /* 2 columns overall; whole category blocks flow DOWN col1 then col2; toggle left of name */
-  .pinwrap{column-count:2;column-gap:16px;column-rule:1px solid var(--line);padding:7px}
-  .catblock{break-inside:avoid;margin-bottom:6px}
-  .pinwrap .sec{padding:6px 6px 2px}
-  .pinwrap .row{display:flex;align-items:center;justify-content:flex-start;gap:10px;padding:5px 6px}
-  .pinwrap .row .nm{font-size:13px}
-  .durpill{font-family:var(--mono);font-size:10px;color:var(--gold);border:1px solid var(--gold);border-radius:5px;padding:1px 6px}
-  /* attacks panel */
-  .atk{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 13px;border-top:1px solid var(--line);cursor:pointer}
-  .atk:hover{background:var(--surface-2)} .atk:first-of-type{border-top:0}
-  .atk .an{font-family:var(--disp);font-weight:600;font-size:14px} .atk .an small{color:var(--muted);font-weight:500;font-size:11px}
-  .atk .ah{font-family:var(--disp);font-weight:700;color:var(--gold);justify-self:end}
-  .atk .ah.save{color:var(--accent-bri)}
-  .atk .ad{font-family:var(--mono);font-size:12px;color:var(--text)}
-  .atk .am{font-size:11px;color:var(--muted);justify-self:end}
-  /* attack-mode roll flow */
-  .stage-h{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent-bri);margin:11px 0 7px}
-  .hitres{font-family:var(--mono);font-size:12px;color:var(--muted);margin:8px 0 2px}.hitres b{color:var(--teal)}
-  .critrow{display:flex;align-items:center;gap:8px;margin-bottom:9px}
-  .critrow .f{font-family:var(--mono);font-size:12px;color:var(--text)}
-  .crit{margin-left:auto;font-family:var(--disp);font-weight:600;font-size:11px;padding:4px 9px;border-radius:999px;background:var(--gold-soft);border:1px solid var(--gold);color:var(--gold);cursor:pointer}
-  .rollbtn.dmg{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
-  .crit.on{background:var(--gold);border-color:var(--gold);color:#1b1b18}
-  .cmethod{display:flex;gap:6px;margin-bottom:9px}
-  .cseg{flex:1;text-align:center;font-family:var(--disp);font-weight:600;font-size:11px;padding:6px 0;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);cursor:pointer;color:var(--muted)}
-  .cseg.on{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
-  /* spells panel header */
-  .cardhead2{display:flex;align-items:center;justify-content:space-between;padding:11px 13px 6px}
-  .cardhead2 .ttl{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .spctl{display:flex;gap:7px;align-items:center}
-  .grpby,.eye{font-family:var(--disp);font-weight:600;font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:3px 8px;cursor:pointer}
-  .am.util{color:var(--muted)}
-  /* roll log */
-  .logrow{padding:9px 13px;border-top:1px solid var(--line)}
-  .logrow:first-of-type{border-top:0}
-  .logscroll{max-height:320px;overflow:auto}
-  .lr-top{display:flex;align-items:center;gap:10px}
-  .lr-top b{font-family:var(--disp);font-weight:600;font-size:13px;flex:1}
-  .lr-tot{font-family:var(--disp);font-weight:700;font-size:16px;color:var(--text)}
-  .lr-tot.res{color:var(--teal)}
-  .lr-sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px}
-  .logrow:hover{background:var(--surface-2)}
-  .logrow .del{color:var(--muted);cursor:pointer;font-size:12px}
-  .logrow:hover .del{color:var(--accent-bri)}
-</style>
-</head>
-<body>
-  <h1>Menus &amp; dropdowns</h1>
-  <p class="lede">Every overlay the sheet opens — same tokens, same shell. This is the plan for each.</p>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Charnik — menus & dropdowns</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;600&display=swap"
+			rel="stylesheet"
+		/>
+		<style>
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--line: #272c37;
+				--line-2: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bri: #ef6b78;
+				--accent-deep: #b3243a;
+				--teal: #3bb8a6;
+				--teal-soft: #11302c;
+				--gold: #caa24a;
+				--gold-soft: #2a2415;
+				--disp: 'Space Grotesk', system-ui, sans-serif;
+				--body: 'Inter', system-ui, sans-serif;
+				--mono: 'JetBrains Mono', monospace;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--body);
+				line-height: 1.5;
+				-webkit-font-smoothing: antialiased;
+				padding: 32px;
+			}
+			h1 {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 24px;
+				margin: 0 0 4px;
+			}
+			.lede {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 24px;
+			}
+			/* column flow (masonry): cells continue straight down each column, not across rows */
+			.board {
+				column-count: 3;
+				column-gap: 20px;
+			}
+			.cell {
+				break-inside: avoid;
+				margin: 0 0 20px;
+				min-height: 40px;
+			}
+			.cap {
+				font-family: var(--mono);
+				font-size: 10px;
+				letter-spacing: 0.14em;
+				text-transform: uppercase;
+				color: var(--accent-bri);
+				margin: 0 2px 9px;
+			}
+			.cap span {
+				color: var(--muted);
+			}
+			/* shared popover shell */
+			.pop {
+				background: var(--surface);
+				border: 1px solid var(--line-2);
+				border-radius: 13px;
+				box-shadow: 0 18px 40px #000a;
+				overflow: hidden;
+			}
+			.pop-h {
+				font-family: var(--mono);
+				font-size: 9px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--muted);
+				padding: 11px 13px 4px;
+			}
+			.sec {
+				font-family: var(--mono);
+				font-size: 9px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--muted);
+				padding: 8px 13px 3px;
+			}
+			.row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 10px;
+				padding: 8px 13px;
+				font-size: 13px;
+				cursor: pointer;
+			}
+			.row:hover {
+				background: var(--surface-2);
+			}
+			.row.sel {
+				background: var(--surface-2);
+			}
+			.row .ic {
+				width: 18px;
+				text-align: center;
+				color: var(--muted);
+			}
+			.row .main {
+				flex: 1;
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				min-width: 0;
+			}
+			.row .meta {
+				color: var(--muted);
+				font-size: 11px;
+				font-family: var(--mono);
+				white-space: nowrap;
+			}
+			.row b {
+				font-weight: 600;
+			}
+			.kbd {
+				font-family: var(--mono);
+				font-size: 10px;
+				border: 1px solid var(--line-2);
+				border-radius: 5px;
+				padding: 1px 6px;
+				color: var(--muted);
+			}
+			.divlite {
+				height: 1px;
+				background: var(--line);
+				margin: 4px 0;
+			}
+			/* search input */
+			.search {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 13px 14px;
+				border-bottom: 1px solid var(--line);
+				font-size: 15px;
+			}
+			.search input {
+				all: unset;
+				flex: 1;
+				color: var(--text);
+			}
+			.search .mag {
+				color: var(--muted);
+			}
+			.caret {
+				width: 1px;
+				height: 18px;
+				background: var(--accent-bri);
+				display: inline-block;
+				animation: none;
+			}
+			/* toggles inside menus */
+			.tg {
+				width: 34px;
+				height: 20px;
+				border-radius: 999px;
+				background: var(--surface-2);
+				border: 1px solid var(--line-2);
+				position: relative;
+				flex: none;
+			}
+			.tg::after {
+				content: '';
+				position: absolute;
+				top: 2px;
+				left: 2px;
+				width: 14px;
+				height: 14px;
+				border-radius: 50%;
+				background: var(--muted);
+			}
+			.tg.on {
+				background: var(--teal-soft);
+				border-color: var(--teal);
+			}
+			.tg.on::after {
+				left: 16px;
+				background: var(--teal);
+			}
+			/* visibility = open/closed eye, teal when shown */
+			.eye {
+				display: inline-block;
+				width: 24px;
+				height: 18px;
+				background-repeat: no-repeat;
+				background-position: center;
+				cursor: pointer;
+				flex: none;
+				background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23878f9d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 13c3.5 3.5 14.5 3.5 18 0'/%3E%3Cpath d='M6 16l-1 2'/%3E%3Cpath d='M12 17v2'/%3E%3Cpath d='M18 16l1 2'/%3E%3C/svg%3E");
+			}
+			.eye.on {
+				background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233bb8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='2.5'/%3E%3C/svg%3E");
+			}
+			/* dice tray */
+			.tray {
+				padding: 13px;
+			}
+			.dice-grid {
+				display: grid;
+				grid-template-columns: repeat(4, 1fr);
+				gap: 7px;
+				margin-bottom: 11px;
+			}
+			.die {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 13px;
+				text-align: center;
+				padding: 9px 0;
+				border-radius: 9px;
+				background: var(--surface-2);
+				border: 1px solid var(--line);
+				cursor: pointer;
+			}
+			.die.sel {
+				background: var(--gold-soft);
+				border-color: var(--gold);
+				color: var(--gold);
+			}
+			.advrow {
+				display: flex;
+				gap: 6px;
+				margin-bottom: 11px;
+			}
+			.seg {
+				flex: 1;
+				text-align: center;
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 12px;
+				padding: 7px 0;
+				border-radius: 8px;
+				background: var(--surface-2);
+				border: 1px solid var(--line);
+				cursor: pointer;
+			}
+			.seg.on {
+				background: var(--teal-soft);
+				border-color: var(--teal);
+				color: var(--teal);
+			}
+			.modrow {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-bottom: 12px;
+			}
+			.mod {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				background: var(--surface-2);
+				border: 1px solid var(--line);
+				border-radius: 8px;
+				padding: 5px 8px;
+				font-family: var(--mono);
+				font-size: 13px;
+			}
+			.mod button {
+				all: unset;
+				cursor: pointer;
+				color: var(--muted);
+				font-size: 15px;
+				padding: 0 4px;
+			}
+			.rollbtn {
+				flex: 1;
+				text-align: center;
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 14px;
+				color: #fff;
+				background: var(--accent-deep);
+				border: 1px solid var(--accent-deep);
+				border-radius: 9px;
+				padding: 8px;
+				cursor: pointer;
+			}
+			.hist {
+				font-family: var(--mono);
+				font-size: 11px;
+				color: var(--muted);
+				border-top: 1px solid var(--line);
+				padding-top: 9px;
+			}
+			.hist .res {
+				color: var(--teal);
+				font-weight: 700;
+			}
+			.tray-src {
+				display: flex;
+				flex-direction: column;
+				gap: 2px;
+				background: var(--surface-2);
+				border: 1px solid var(--line);
+				border-radius: 9px;
+				padding: 8px 10px;
+				margin-bottom: 10px;
+			}
+			.tray-src b {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 14px;
+			}
+			.tray-src .meta {
+				font-size: 10px;
+				color: var(--muted);
+				font-family: var(--mono);
+			}
+			.pool {
+				display: flex;
+				flex-wrap: wrap;
+				align-items: center;
+				gap: 7px;
+				margin-bottom: 9px;
+			}
+			.poolchip {
+				display: flex;
+				align-items: center;
+				gap: 5px;
+				background: var(--gold-soft);
+				border: 1px solid var(--gold);
+				border-radius: 8px;
+				padding: 3px 8px;
+				font-family: var(--mono);
+				font-size: 12px;
+				color: var(--gold);
+			}
+			.poolchip button {
+				all: unset;
+				cursor: pointer;
+				color: var(--gold);
+				font-size: 14px;
+				padding: 0 2px;
+			}
+			.poolchip b {
+				font-family: var(--disp);
+				font-weight: 700;
+			}
+			.poolchip .nm {
+				color: var(--muted);
+			}
+			.adddie {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 12px;
+				color: var(--muted);
+				background: var(--surface-2);
+				border: 1px dashed var(--line-2);
+				border-radius: 8px;
+				padding: 3px 10px;
+				cursor: pointer;
+			}
+			.gridhint {
+				font-size: 10px;
+				color: var(--muted);
+				font-family: var(--mono);
+				margin: 0 0 6px;
+			}
+			/* temp hp small popover */
+			.ph {
+				padding: 13px;
+				width: 230px;
+			}
+			.ph .field {
+				display: flex;
+				gap: 8px;
+				margin: 9px 0 8px;
+			}
+			.ph input {
+				all: unset;
+				flex: 1;
+				background: var(--surface-2);
+				border: 1px solid var(--line-2);
+				border-radius: 8px;
+				padding: 8px 11px;
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 18px;
+				color: var(--teal);
+			}
+			.ph .set {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 13px;
+				color: var(--teal);
+				background: var(--teal-soft);
+				border: 1px solid var(--teal);
+				border-radius: 8px;
+				padding: 0 14px;
+				cursor: pointer;
+			}
+			.note {
+				font-size: 11px;
+				color: var(--muted);
+				padding: 0 1px;
+			}
+			.scrollbox {
+				max-height: none;
+				overflow: visible;
+			}
+			/* 2 columns overall; whole category blocks flow DOWN col1 then col2; toggle left of name */
+			.pinwrap {
+				column-count: 2;
+				column-gap: 16px;
+				column-rule: 1px solid var(--line);
+				padding: 7px;
+			}
+			.catblock {
+				break-inside: avoid;
+				margin-bottom: 6px;
+			}
+			.pinwrap .sec {
+				padding: 6px 6px 2px;
+			}
+			.pinwrap .row {
+				display: flex;
+				align-items: center;
+				justify-content: flex-start;
+				gap: 10px;
+				padding: 5px 6px;
+			}
+			.pinwrap .row .nm {
+				font-size: 13px;
+			}
+			.durpill {
+				font-family: var(--mono);
+				font-size: 10px;
+				color: var(--gold);
+				border: 1px solid var(--gold);
+				border-radius: 5px;
+				padding: 1px 6px;
+			}
+			/* attacks panel */
+			.atk {
+				display: grid;
+				grid-template-columns: 1fr auto;
+				gap: 2px 10px;
+				padding: 9px 13px;
+				border-top: 1px solid var(--line);
+				cursor: pointer;
+			}
+			.atk:hover {
+				background: var(--surface-2);
+			}
+			.atk:first-of-type {
+				border-top: 0;
+			}
+			.atk .an {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 14px;
+			}
+			.atk .an small {
+				color: var(--muted);
+				font-weight: 500;
+				font-size: 11px;
+			}
+			.atk .ah {
+				font-family: var(--disp);
+				font-weight: 700;
+				color: var(--gold);
+				justify-self: end;
+			}
+			.atk .ah.save {
+				color: var(--accent-bri);
+			}
+			.atk .ad {
+				font-family: var(--mono);
+				font-size: 12px;
+				color: var(--text);
+			}
+			.atk .am {
+				font-size: 11px;
+				color: var(--muted);
+				justify-self: end;
+			}
+			/* attack-mode roll flow */
+			.stage-h {
+				font-family: var(--mono);
+				font-size: 10px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--accent-bri);
+				margin: 11px 0 7px;
+			}
+			.hitres {
+				font-family: var(--mono);
+				font-size: 12px;
+				color: var(--muted);
+				margin: 8px 0 2px;
+			}
+			.hitres b {
+				color: var(--teal);
+			}
+			.critrow {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				margin-bottom: 9px;
+			}
+			.critrow .f {
+				font-family: var(--mono);
+				font-size: 12px;
+				color: var(--text);
+			}
+			.crit {
+				margin-left: auto;
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 11px;
+				padding: 4px 9px;
+				border-radius: 999px;
+				background: var(--gold-soft);
+				border: 1px solid var(--gold);
+				color: var(--gold);
+				cursor: pointer;
+			}
+			.rollbtn.dmg {
+				background: var(--gold-soft);
+				border-color: var(--gold);
+				color: var(--gold);
+			}
+			.crit.on {
+				background: var(--gold);
+				border-color: var(--gold);
+				color: #1b1b18;
+			}
+			.cmethod {
+				display: flex;
+				gap: 6px;
+				margin-bottom: 9px;
+			}
+			.cseg {
+				flex: 1;
+				text-align: center;
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 11px;
+				padding: 6px 0;
+				border-radius: 8px;
+				background: var(--surface-2);
+				border: 1px solid var(--line);
+				cursor: pointer;
+				color: var(--muted);
+			}
+			.cseg.on {
+				background: var(--gold-soft);
+				border-color: var(--gold);
+				color: var(--gold);
+			}
+			/* spells panel header */
+			.cardhead2 {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 11px 13px 6px;
+			}
+			.cardhead2 .ttl {
+				font-family: var(--mono);
+				font-size: 9px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--muted);
+			}
+			.spctl {
+				display: flex;
+				gap: 7px;
+				align-items: center;
+			}
+			.grpby,
+			.eye {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 11px;
+				color: var(--muted);
+				border: 1px solid var(--line);
+				border-radius: 7px;
+				padding: 3px 8px;
+				cursor: pointer;
+			}
+			.am.util {
+				color: var(--muted);
+			}
+			/* roll log */
+			.logrow {
+				padding: 9px 13px;
+				border-top: 1px solid var(--line);
+			}
+			.logrow:first-of-type {
+				border-top: 0;
+			}
+			.logscroll {
+				max-height: 320px;
+				overflow: auto;
+			}
+			.lr-top {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			.lr-top b {
+				font-family: var(--disp);
+				font-weight: 600;
+				font-size: 13px;
+				flex: 1;
+			}
+			.lr-tot {
+				font-family: var(--disp);
+				font-weight: 700;
+				font-size: 16px;
+				color: var(--text);
+			}
+			.lr-tot.res {
+				color: var(--teal);
+			}
+			.lr-sub {
+				font-family: var(--mono);
+				font-size: 11px;
+				color: var(--muted);
+				margin-top: 2px;
+			}
+			.logrow:hover {
+				background: var(--surface-2);
+			}
+			.logrow .del {
+				color: var(--muted);
+				cursor: pointer;
+				font-size: 12px;
+			}
+			.logrow:hover .del {
+				color: var(--accent-bri);
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Menus &amp; dropdowns</h1>
+		<p class="lede">
+			Every overlay the sheet opens — same tokens, same shell. This is the plan for each.
+		</p>
 
-  <div class="board">
+		<div class="board">
+			<!-- 1 command palette -->
+			<div class="cell">
+				<p class="cap">1 · Command palette <span>Ctrl K — search all</span></p>
+				<div class="pop" style="width: 300px">
+					<div class="search">
+						<span class="mag">🔍</span><input value="fire" /><span class="caret"></span>
+					</div>
+					<div class="sec">Spells</div>
+					<div class="row sel">
+						<span class="main"><span class="ic">✦</span><b>Fireball</b></span
+						><span class="meta">3rd · evocation</span>
+					</div>
+					<div class="row">
+						<span class="main"><span class="ic">✦</span>Fire Bolt</span
+						><span class="meta">cantrip</span>
+					</div>
+					<div class="sec">Compendium</div>
+					<div class="row">
+						<span class="main"><span class="ic">📖</span>Fire Giant</span
+						><span class="meta">monster</span>
+					</div>
+					<div class="row">
+						<span class="main"><span class="ic">📜</span>Fire resistance</span
+						><span class="meta">rule</span>
+					</div>
+					<div class="divlite"></div>
+					<div class="row">
+						<span class="main"><span class="ic">⮐</span>open</span><span class="kbd">Enter</span>
+					</div>
+				</div>
+			</div>
 
-    <!-- 1 command palette -->
-    <div class="cell">
-      <p class="cap">1 · Command palette <span>Ctrl K — search all</span></p>
-      <div class="pop" style="width:300px">
-        <div class="search"><span class="mag">🔍</span><input value="fire" /><span class="caret"></span></div>
-        <div class="sec">Spells</div>
-        <div class="row sel"><span class="main"><span class="ic">✦</span><b>Fireball</b></span><span class="meta">3rd · evocation</span></div>
-        <div class="row"><span class="main"><span class="ic">✦</span>Fire Bolt</span><span class="meta">cantrip</span></div>
-        <div class="sec">Compendium</div>
-        <div class="row"><span class="main"><span class="ic">📖</span>Fire Giant</span><span class="meta">monster</span></div>
-        <div class="row"><span class="main"><span class="ic">📜</span>Fire resistance</span><span class="meta">rule</span></div>
-        <div class="divlite"></div>
-        <div class="row"><span class="main"><span class="ic">⮐</span>open</span><span class="kbd">Enter</span></div>
-      </div>
-    </div>
+			<!-- 3 dice tray / roll builder -->
+			<div class="cell">
+				<p class="cap">
+					3 · Dice tray · roll builder <span>prefilled from a skill, or custom</span>
+				</p>
+				<div class="pop" style="width: 300px">
+					<div class="tray">
+						<div class="tray-src">
+							<b>Stealth check</b><span class="meta">opened from DEX skill · ✎ edit · ✕ clear</span>
+						</div>
+						<div class="pool">
+							<div class="poolchip"><button>−</button><b>1</b>×d20<button>+</button></div>
+							<div class="poolchip">
+								<button>−</button><b>1</b>×d4<button>+</button><span class="nm">Bless</span>
+							</div>
+							<button class="adddie">＋ add die</button>
+						</div>
+						<p class="gridhint">quick-add — tap a die, set count with ±</p>
+						<div class="dice-grid">
+							<div class="die">d4</div>
+							<div class="die">d6</div>
+							<div class="die">d8</div>
+							<div class="die">d10</div>
+							<div class="die">d12</div>
+							<div class="die sel">d20</div>
+							<div class="die">d100</div>
+							<div class="die">±</div>
+						</div>
+						<div class="advrow">
+							<div class="seg">Disadv.</div>
+							<div class="seg on">Normal</div>
+							<div class="seg">Advant.</div>
+						</div>
+						<div class="modrow">
+							<div class="mod"><button>−</button> mod +5 <button>+</button></div>
+							<div class="rollbtn">Roll 1d20 + 1d4 + 5</div>
+						</div>
+						<div class="hist">
+							Stealth 1d20(13)+1d4(3)+5 = <span class="res">21</span> · Fireball 8d6 =
+							<span class="res">27</span>
+						</div>
+					</div>
+				</div>
+			</div>
 
-    <!-- 3 dice tray / roll builder -->
-    <div class="cell">
-      <p class="cap">3 · Dice tray · roll builder <span>prefilled from a skill, or custom</span></p>
-      <div class="pop" style="width:300px">
-        <div class="tray">
-          <div class="tray-src"><b>Stealth check</b><span class="meta">opened from DEX skill · ✎ edit · ✕ clear</span></div>
-          <div class="pool">
-            <div class="poolchip"><button>−</button><b>1</b>×d20<button>+</button></div>
-            <div class="poolchip"><button>−</button><b>1</b>×d4<button>+</button><span class="nm">Bless</span></div>
-            <button class="adddie">＋ add die</button>
-          </div>
-          <p class="gridhint">quick-add — tap a die, set count with ±</p>
-          <div class="dice-grid">
-            <div class="die">d4</div><div class="die">d6</div><div class="die">d8</div><div class="die">d10</div>
-            <div class="die">d12</div><div class="die sel">d20</div><div class="die">d100</div><div class="die">±</div>
-          </div>
-          <div class="advrow"><div class="seg">Disadv.</div><div class="seg on">Normal</div><div class="seg">Advant.</div></div>
-          <div class="modrow">
-            <div class="mod"><button>−</button> mod +5 <button>+</button></div>
-            <div class="rollbtn">Roll 1d20 + 1d4 + 5</div>
-          </div>
-          <div class="hist">Stealth 1d20(13)+1d4(3)+5 = <span class="res">21</span> · Fireball 8d6 = <span class="res">27</span></div>
-        </div>
-      </div>
-    </div>
+			<!-- 4 add condition -->
+			<div class="cell">
+				<p class="cap">4 · Add condition <span>＋ Condition</span></p>
+				<div class="pop" style="width: 240px">
+					<div class="pop-h">Conditions · multi-select</div>
+					<div class="row"><span class="main">Blinded</span><span class="tg"></span></div>
+					<div class="row"><span class="main">Frightened</span><span class="tg"></span></div>
+					<div class="row"><span class="main">Grappled</span><span class="tg"></span></div>
+					<div class="row sel">
+						<span class="main">Poisoned <span class="meta">disadv. atk</span></span
+						><span class="tg on"></span>
+					</div>
+					<div class="row"><span class="main">Prone</span><span class="tg"></span></div>
+					<div class="row"><span class="main">Restrained</span><span class="tg"></span></div>
+				</div>
+			</div>
 
-    <!-- 4 add condition -->
-    <div class="cell">
-      <p class="cap">4 · Add condition <span>＋ Condition</span></p>
-      <div class="pop" style="width:240px">
-        <div class="pop-h">Conditions · multi-select</div>
-        <div class="row"><span class="main">Blinded</span><span class="tg"></span></div>
-        <div class="row"><span class="main">Frightened</span><span class="tg"></span></div>
-        <div class="row"><span class="main">Grappled</span><span class="tg"></span></div>
-        <div class="row sel"><span class="main">Poisoned <span class="meta">disadv. atk</span></span><span class="tg on"></span></div>
-        <div class="row"><span class="main">Prone</span><span class="tg"></span></div>
-        <div class="row"><span class="main">Restrained</span><span class="tg"></span></div>
-      </div>
-    </div>
+			<!-- 5 temp hp -->
+			<div class="cell">
+				<p class="cap">5 · Temporary HP <span>＋ Temp HP</span></p>
+				<div class="pop">
+					<div class="ph">
+						<div class="pop-h" style="padding: 0 1px 2px">Set temporary HP</div>
+						<div class="field"><input value="5" /><button class="set">Set</button></div>
+						<p class="note">
+							Separate pool — shown teal in the HP bar. Doesn't stack; takes the higher value.
+						</p>
+					</div>
+				</div>
+			</div>
 
-    <!-- 5 temp hp -->
-    <div class="cell">
-      <p class="cap">5 · Temporary HP <span>＋ Temp HP</span></p>
-      <div class="pop">
-        <div class="ph">
-          <div class="pop-h" style="padding:0 1px 2px">Set temporary HP</div>
-          <div class="field"><input value="5" /><button class="set">Set</button></div>
-          <p class="note">Separate pool — shown teal in the HP bar. Doesn't stack; takes the higher value.</p>
-        </div>
-      </div>
-    </div>
+			<!-- 6 pin skills -->
+			<div class="cell">
+				<p class="cap">6 · Pin passive skills <span>✎ on senses strip</span></p>
+				<div class="pop" style="width: 360px">
+					<div class="pop-h">Show as passive senses · 👁 = shown · any of 18 skills</div>
+					<div class="pinwrap">
+						<div class="catblock">
+							<div class="sec">Strength</div>
+							<div class="row"><span class="eye"></span><span class="nm">Athletics</span></div>
+						</div>
+						<div class="catblock">
+							<div class="sec">Dexterity</div>
+							<div class="row"><span class="eye"></span><span class="nm">Acrobatics</span></div>
+							<div class="row">
+								<span class="eye"></span><span class="nm">Sleight of Hand</span>
+							</div>
+							<div class="row"><span class="eye"></span><span class="nm">Stealth</span></div>
+						</div>
+						<div class="catblock">
+							<div class="sec">Intelligence</div>
+							<div class="row"><span class="eye"></span><span class="nm">Arcana</span></div>
+							<div class="row"><span class="eye"></span><span class="nm">History</span></div>
+							<div class="row">
+								<span class="eye on"></span><span class="nm">Investigation</span>
+							</div>
+							<div class="row"><span class="eye"></span><span class="nm">Nature</span></div>
+							<div class="row"><span class="eye"></span><span class="nm">Religion</span></div>
+						</div>
+						<div class="catblock">
+							<div class="sec">Wisdom</div>
+							<div class="row">
+								<span class="eye"></span><span class="nm">Animal Handling</span>
+							</div>
+							<div class="row"><span class="eye on"></span><span class="nm">Insight</span></div>
+							<div class="row"><span class="eye"></span><span class="nm">Medicine</span></div>
+							<div class="row"><span class="eye on"></span><span class="nm">Perception</span></div>
+							<div class="row"><span class="eye"></span><span class="nm">Survival</span></div>
+						</div>
+						<div class="catblock">
+							<div class="sec">Charisma</div>
+							<div class="row"><span class="eye"></span><span class="nm">Deception</span></div>
+							<div class="row"><span class="eye"></span><span class="nm">Intimidation</span></div>
+							<div class="row"><span class="eye"></span><span class="nm">Performance</span></div>
+							<div class="row"><span class="eye"></span><span class="nm">Persuasion</span></div>
+						</div>
+					</div>
+				</div>
+			</div>
 
-    <!-- 6 pin skills -->
-    <div class="cell">
-      <p class="cap">6 · Pin passive skills <span>✎ on senses strip</span></p>
-      <div class="pop" style="width:360px">
-        <div class="pop-h">Show as passive senses · 👁 = shown · any of 18 skills</div>
-        <div class="pinwrap">
-          <div class="catblock">
-            <div class="sec">Strength</div>
-            <div class="row"><span class="eye"></span><span class="nm">Athletics</span></div>
-          </div>
-          <div class="catblock">
-            <div class="sec">Dexterity</div>
-            <div class="row"><span class="eye"></span><span class="nm">Acrobatics</span></div>
-            <div class="row"><span class="eye"></span><span class="nm">Sleight of Hand</span></div>
-            <div class="row"><span class="eye"></span><span class="nm">Stealth</span></div>
-          </div>
-          <div class="catblock">
-            <div class="sec">Intelligence</div>
-            <div class="row"><span class="eye"></span><span class="nm">Arcana</span></div>
-            <div class="row"><span class="eye"></span><span class="nm">History</span></div>
-            <div class="row"><span class="eye on"></span><span class="nm">Investigation</span></div>
-            <div class="row"><span class="eye"></span><span class="nm">Nature</span></div>
-            <div class="row"><span class="eye"></span><span class="nm">Religion</span></div>
-          </div>
-          <div class="catblock">
-            <div class="sec">Wisdom</div>
-            <div class="row"><span class="eye"></span><span class="nm">Animal Handling</span></div>
-            <div class="row"><span class="eye on"></span><span class="nm">Insight</span></div>
-            <div class="row"><span class="eye"></span><span class="nm">Medicine</span></div>
-            <div class="row"><span class="eye on"></span><span class="nm">Perception</span></div>
-            <div class="row"><span class="eye"></span><span class="nm">Survival</span></div>
-          </div>
-          <div class="catblock">
-            <div class="sec">Charisma</div>
-            <div class="row"><span class="eye"></span><span class="nm">Deception</span></div>
-            <div class="row"><span class="eye"></span><span class="nm">Intimidation</span></div>
-            <div class="row"><span class="eye"></span><span class="nm">Performance</span></div>
-            <div class="row"><span class="eye"></span><span class="nm">Persuasion</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
+			<!-- 7 add effect -->
+			<div class="cell">
+				<p class="cap">7 · Add effect <span>＋ in effects panel</span></p>
+				<div class="pop" style="width: 280px">
+					<div class="search" style="font-size: 13px">
+						<span class="mag">🔍</span><input value="" placeholder="Search effects…" />
+					</div>
+					<div class="sec">Catalog · effects.csv</div>
+					<div class="row">
+						<span class="main"><span class="ic" style="color: var(--teal)">＋</span>Bless</span
+						><span class="durpill">10 rds</span>
+					</div>
+					<div class="row">
+						<span class="main"><span class="ic" style="color: var(--teal)">＋</span>Haste</span
+						><span class="durpill">10 rds</span>
+					</div>
+					<div class="row">
+						<span class="main"><span class="ic" style="color: var(--accent-bri)">＋</span>Bane</span
+						><span class="durpill">10 rds</span>
+					</div>
+					<div class="divlite"></div>
+					<div class="row sel">
+						<span class="main"><span class="ic">✎</span><b>Custom effect…</b></span
+						><span class="meta">text + manual mod</span>
+					</div>
+				</div>
+			</div>
 
-    <!-- 7 add effect -->
-    <div class="cell">
-      <p class="cap">7 · Add effect <span>＋ in effects panel</span></p>
-      <div class="pop" style="width:280px">
-        <div class="search" style="font-size:13px"><span class="mag">🔍</span><input value="" placeholder="Search effects…" /></div>
-        <div class="sec">Catalog · effects.csv</div>
-        <div class="row"><span class="main"><span class="ic" style="color:var(--teal)">＋</span>Bless</span><span class="durpill">10 rds</span></div>
-        <div class="row"><span class="main"><span class="ic" style="color:var(--teal)">＋</span>Haste</span><span class="durpill">10 rds</span></div>
-        <div class="row"><span class="main"><span class="ic" style="color:var(--accent-bri)">＋</span>Bane</span><span class="durpill">10 rds</span></div>
-        <div class="divlite"></div>
-        <div class="row sel"><span class="main"><span class="ic">✎</span><b>Custom effect…</b></span><span class="meta">text + manual mod</span></div>
-      </div>
-    </div>
+			<!-- 8 attacks panel -->
+			<div class="cell">
+				<p class="cap">8 · Attacks panel <span>on the sheet · tap to roll</span></p>
+				<div class="pop" style="width: 330px">
+					<div class="pop-h">Attacks · weapons</div>
+					<div class="atk">
+						<span class="an">Longsword</span><span class="ah">+7</span
+						><span class="ad">1d8 + 4 slashing</span><span class="am">melee · versatile 1d10</span>
+					</div>
+					<div class="atk">
+						<span class="an">Longbow</span><span class="ah">+5</span
+						><span class="ad">1d8 + 2 piercing</span><span class="am">150 / 600 ft</span>
+					</div>
+					<div class="atk">
+						<span class="an">Dagger</span><span class="ah">+5</span
+						><span class="ad">1d4 + 2 piercing</span><span class="am">finesse · thrown 20/60</span>
+					</div>
+					<div class="atk">
+						<span class="an">Unarmed Strike</span><span class="ah">+7</span
+						><span class="ad">1 + 4 bludgeoning</span><span class="am">melee</span>
+					</div>
+				</div>
+			</div>
 
-    <!-- 8 attacks panel -->
-    <div class="cell">
-      <p class="cap">8 · Attacks panel <span>on the sheet · tap to roll</span></p>
-      <div class="pop" style="width:330px">
-        <div class="pop-h">Attacks · weapons</div>
-        <div class="atk"><span class="an">Longsword</span><span class="ah">+7</span><span class="ad">1d8 + 4 slashing</span><span class="am">melee · versatile 1d10</span></div>
-        <div class="atk"><span class="an">Longbow</span><span class="ah">+5</span><span class="ad">1d8 + 2 piercing</span><span class="am">150 / 600 ft</span></div>
-        <div class="atk"><span class="an">Dagger</span><span class="ah">+5</span><span class="ad">1d4 + 2 piercing</span><span class="am">finesse · thrown 20/60</span></div>
-        <div class="atk"><span class="an">Unarmed Strike</span><span class="ah">+7</span><span class="ad">1 + 4 bludgeoning</span><span class="am">melee</span></div>
-      </div>
-    </div>
+			<!-- 9 attack roll flow -->
+			<div class="cell">
+				<p class="cap">9 · Attack roll <span>weapon / spell attack</span></p>
+				<div class="pop" style="width: 300px">
+					<div class="tray">
+						<div class="tray-src">
+							<b>Longsword · attack</b><span class="meta">melee · STR +7 · versatile</span>
+						</div>
+						<div class="stage-h">① To hit</div>
+						<div class="advrow">
+							<div class="seg">Disadv.</div>
+							<div class="seg on">Normal</div>
+							<div class="seg">Advant.</div>
+						</div>
+						<div class="modrow">
+							<div class="mod">1d20 + 7</div>
+							<div class="rollbtn">Roll to hit</div>
+						</div>
+						<div class="hitres">→ 1d20(15) + 7 = 22 vs AC · <b>hit</b></div>
+						<div class="stage-h">② Damage</div>
+						<div class="critrow">
+							<span class="f">1d8 + 4 slashing</span><span class="crit on">Crit ✓</span>
+						</div>
+						<div class="cmethod">
+							<div class="cseg on">Classic · 2d8</div>
+							<div class="cseg">Loyal · 8 + 1d8</div>
+						</div>
+						<div class="modrow">
+							<div class="mod"><button>−</button> 1H · 1d8 <button>+</button></div>
+							<div class="rollbtn dmg">Roll damage</div>
+						</div>
+						<div class="hist">
+							classic 2d8(7,5)+4 = <span class="res">16</span> · loyal 8 + 1d8(5) + 4 =
+							<span class="res">17</span>
+						</div>
+					</div>
+				</div>
+			</div>
 
-    <!-- 9 attack roll flow -->
-    <div class="cell">
-      <p class="cap">9 · Attack roll <span>weapon / spell attack</span></p>
-      <div class="pop" style="width:300px">
-        <div class="tray">
-          <div class="tray-src"><b>Longsword · attack</b><span class="meta">melee · STR +7 · versatile</span></div>
-          <div class="stage-h">① To hit</div>
-          <div class="advrow"><div class="seg">Disadv.</div><div class="seg on">Normal</div><div class="seg">Advant.</div></div>
-          <div class="modrow"><div class="mod">1d20 + 7</div><div class="rollbtn">Roll to hit</div></div>
-          <div class="hitres">→ 1d20(15) + 7 = 22 vs AC · <b>hit</b></div>
-          <div class="stage-h">② Damage</div>
-          <div class="critrow"><span class="f">1d8 + 4 slashing</span><span class="crit on">Crit ✓</span></div>
-          <div class="cmethod"><div class="cseg on">Classic · 2d8</div><div class="cseg">Loyal · 8 + 1d8</div></div>
-          <div class="modrow"><div class="mod"><button>−</button> 1H · 1d8 <button>+</button></div><div class="rollbtn dmg">Roll damage</div></div>
-          <div class="hist">classic 2d8(7,5)+4 = <span class="res">16</span> · loyal 8 + 1d8(5) + 4 = <span class="res">17</span></div>
-        </div>
-      </div>
-    </div>
+			<!-- 11 actions / maneuvers panel -->
+			<div class="cell">
+				<p class="cap">11 · Actions &amp; maneuvers <span>separate · hideable</span></p>
+				<div class="pop" style="width: 330px">
+					<div class="pop-h">Maneuvers · roll / contest only</div>
+					<div class="atk">
+						<span class="an">Grapple</span><span class="ah">−1</span
+						><span class="ad">Athletics vs target</span><span class="am">contest · no set DC</span>
+					</div>
+					<div class="atk">
+						<span class="an">Shove</span><span class="ah">−1</span
+						><span class="ad">prone / push 5 ft</span><span class="am">contest · no set DC</span>
+					</div>
+					<div class="atk">
+						<span class="an">Hide</span><span class="ah">+5</span
+						><span class="ad">Stealth check</span><span class="am">→ roll</span>
+					</div>
+					<div class="atk">
+						<span class="an">Jump</span><span class="ah">−1</span
+						><span class="ad">Athletics, only if contested</span><span class="am">else auto</span>
+					</div>
+					<p class="note" style="padding: 8px 13px 11px">
+						no-roll actions (Dash · Disengage · Dodge · Help · Search · Use object) live in the turn
+						tracker, not here
+					</p>
+				</div>
+			</div>
 
-    <!-- 11 actions / maneuvers panel -->
-    <div class="cell">
-      <p class="cap">11 · Actions &amp; maneuvers <span>separate · hideable</span></p>
-      <div class="pop" style="width:330px">
-        <div class="pop-h">Maneuvers · roll / contest only</div>
-        <div class="atk"><span class="an">Grapple</span><span class="ah">−1</span><span class="ad">Athletics vs target</span><span class="am">contest · no set DC</span></div>
-        <div class="atk"><span class="an">Shove</span><span class="ah">−1</span><span class="ad">prone / push 5 ft</span><span class="am">contest · no set DC</span></div>
-        <div class="atk"><span class="an">Hide</span><span class="ah">+5</span><span class="ad">Stealth check</span><span class="am">→ roll</span></div>
-        <div class="atk"><span class="an">Jump</span><span class="ah">−1</span><span class="ad">Athletics, only if contested</span><span class="am">else auto</span></div>
-        <p class="note" style="padding:8px 13px 11px">no-roll actions (Dash · Disengage · Dodge · Help · Search · Use object) live in the turn tracker, not here</p>
-      </div>
-    </div>
+			<!-- 12 roll log -->
+			<div class="cell">
+				<p class="cap">12 · Roll log <span>opens from "last roll"</span></p>
+				<div class="pop" style="width: 320px">
+					<div class="cardhead2">
+						<span class="ttl">Roll log · full history</span>
+						<div class="spctl"><span class="grpby">Filter ▾</span></div>
+					</div>
+					<div class="logscroll">
+						<div class="sec">Today · session 4</div>
+						<div class="logrow">
+							<div class="lr-top">
+								<b>Stealth check</b><span class="lr-tot res">18</span><span class="del">🗑</span>
+							</div>
+							<div class="lr-sub">1d20(14) + 4 · round 3</div>
+						</div>
+						<div class="logrow">
+							<div class="lr-top">
+								<b>Longsword · damage · crit</b><span class="lr-tot res">16</span
+								><span class="del">🗑</span>
+							</div>
+							<div class="lr-sub">classic 2d8(7,5) + 4 · round 3</div>
+						</div>
+						<div class="logrow">
+							<div class="lr-top">
+								<b>Longsword · to hit</b><span class="lr-tot">22</span><span class="del">🗑</span>
+							</div>
+							<div class="lr-sub">1d20(15) + 7 vs AC · hit</div>
+						</div>
+						<div class="sec">28 Jun · session 3</div>
+						<div class="logrow">
+							<div class="lr-top">
+								<b>Fireball · damage</b><span class="lr-tot res">27</span><span class="del">🗑</span>
+							</div>
+							<div class="lr-sub">8d6 · target DEX save DC 15</div>
+						</div>
+						<div class="logrow">
+							<div class="lr-top">
+								<b>Death save</b><span class="lr-tot res">success</span><span class="del">🗑</span>
+							</div>
+							<div class="lr-sub">1d20(14)</div>
+						</div>
+						<div class="logrow">
+							<div class="lr-top">
+								<b>Initiative</b><span class="lr-tot">12</span><span class="del">🗑</span>
+							</div>
+							<div class="lr-sub">1d20(10) + 2 · round 1</div>
+						</div>
+						<div class="sec">27 Jun · session 2</div>
+						<div class="logrow">
+							<div class="lr-top">
+								<b>Persuasion</b><span class="lr-tot">9</span><span class="del">🗑</span>
+							</div>
+							<div class="lr-sub">1d20(9) + 0</div>
+						</div>
+						<div class="logrow">
+							<div class="lr-top">
+								<b>Longbow · to hit</b><span class="lr-tot res">crit</span
+								><span class="del">🗑</span>
+							</div>
+							<div class="lr-sub">1d20(20) + 5 · nat 20</div>
+						</div>
+					</div>
+					<p class="note" style="padding: 9px 13px 11px">
+						scrolls through the whole history (log.jsonl) · 🗑 on hover deletes a roll
+					</p>
+				</div>
+			</div>
 
-    <!-- 12 roll log -->
-    <div class="cell">
-      <p class="cap">12 · Roll log <span>opens from "last roll"</span></p>
-      <div class="pop" style="width:320px">
-        <div class="cardhead2"><span class="ttl">Roll log · full history</span><div class="spctl"><span class="grpby">Filter ▾</span></div></div>
-        <div class="logscroll">
-          <div class="sec">Today · session 4</div>
-          <div class="logrow"><div class="lr-top"><b>Stealth check</b><span class="lr-tot res">18</span><span class="del">🗑</span></div><div class="lr-sub">1d20(14) + 4 · round 3</div></div>
-          <div class="logrow"><div class="lr-top"><b>Longsword · damage · crit</b><span class="lr-tot res">16</span><span class="del">🗑</span></div><div class="lr-sub">classic 2d8(7,5) + 4 · round 3</div></div>
-          <div class="logrow"><div class="lr-top"><b>Longsword · to hit</b><span class="lr-tot">22</span><span class="del">🗑</span></div><div class="lr-sub">1d20(15) + 7 vs AC · hit</div></div>
-          <div class="sec">28 Jun · session 3</div>
-          <div class="logrow"><div class="lr-top"><b>Fireball · damage</b><span class="lr-tot res">27</span><span class="del">🗑</span></div><div class="lr-sub">8d6 · target DEX save DC 15</div></div>
-          <div class="logrow"><div class="lr-top"><b>Death save</b><span class="lr-tot res">success</span><span class="del">🗑</span></div><div class="lr-sub">1d20(14)</div></div>
-          <div class="logrow"><div class="lr-top"><b>Initiative</b><span class="lr-tot">12</span><span class="del">🗑</span></div><div class="lr-sub">1d20(10) + 2 · round 1</div></div>
-          <div class="sec">27 Jun · session 2</div>
-          <div class="logrow"><div class="lr-top"><b>Persuasion</b><span class="lr-tot">9</span><span class="del">🗑</span></div><div class="lr-sub">1d20(9) + 0</div></div>
-          <div class="logrow"><div class="lr-top"><b>Longbow · to hit</b><span class="lr-tot res">crit</span><span class="del">🗑</span></div><div class="lr-sub">1d20(20) + 5 · nat 20</div></div>
-        </div>
-        <p class="note" style="padding:9px 13px 11px">scrolls through the whole history (log.jsonl) · 🗑 on hover deletes a roll</p>
-      </div>
-    </div>
+			<!-- 13 class action group (example) -->
+			<div class="cell">
+				<p class="cap">13 · Class actions <span>generic group · e.g. Battle Master</span></p>
+				<div class="pop" style="width: 300px">
+					<div class="cardhead2">
+						<span class="ttl">Maneuvers · Battle Master</span>
+						<div class="spctl"><span class="grpby">👁 Show / hide</span></div>
+					</div>
+					<div class="sec">
+						Superiority dice · <span style="color: var(--teal)">●●●</span>○ · d8
+					</div>
+					<div class="atk">
+						<span class="an">Trip Attack</span><span class="ah">+7</span
+						><span class="ad">+1d8 · DEX save or prone</span><span class="am">→ roll</span>
+					</div>
+					<div class="atk">
+						<span class="an">Disarming Attack</span><span class="ah">+7</span
+						><span class="ad">+1d8 · STR save or drop</span><span class="am">→ roll</span>
+					</div>
+					<div class="atk">
+						<span class="an">Riposte</span><span class="ah">+7</span
+						><span class="ad">+1d8 · reaction</span><span class="am">→ roll</span>
+					</div>
+					<div class="atk">
+						<span class="an">Precision Attack</span><span class="ah">—</span
+						><span class="ad">add 1d8 to a hit</span><span class="am">no save</span>
+					</div>
+					<p class="note" style="padding: 8px 13px 11px">
+						same shell for ki / metamagic / channel divinity / invocations · homebrew rows merge in
+					</p>
+				</div>
+			</div>
 
-    <!-- 13 class action group (example) -->
-    <div class="cell">
-      <p class="cap">13 · Class actions <span>generic group · e.g. Battle Master</span></p>
-      <div class="pop" style="width:300px">
-        <div class="cardhead2"><span class="ttl">Maneuvers · Battle Master</span><div class="spctl"><span class="grpby">👁 Show / hide</span></div></div>
-        <div class="sec">Superiority dice · <span style="color:var(--teal)">●●●</span>○ · d8</div>
-        <div class="atk"><span class="an">Trip Attack</span><span class="ah">+7</span><span class="ad">+1d8 · DEX save or prone</span><span class="am">→ roll</span></div>
-        <div class="atk"><span class="an">Disarming Attack</span><span class="ah">+7</span><span class="ad">+1d8 · STR save or drop</span><span class="am">→ roll</span></div>
-        <div class="atk"><span class="an">Riposte</span><span class="ah">+7</span><span class="ad">+1d8 · reaction</span><span class="am">→ roll</span></div>
-        <div class="atk"><span class="an">Precision Attack</span><span class="ah">—</span><span class="ad">add 1d8 to a hit</span><span class="am">no save</span></div>
-        <p class="note" style="padding:8px 13px 11px">same shell for ki / metamagic / channel divinity / invocations · homebrew rows merge in</p>
-      </div>
-    </div>
-
-    <!-- 14 show / hide actions -->
-    <div class="cell">
-      <p class="cap">14 · Show / hide actions <span>👁 = on the sheet</span></p>
-      <div class="pop" style="width:280px">
-        <div class="pop-h">Which actions appear in the Actions panel</div>
-        <div class="row"><span class="eye on"></span><span class="main">Attack</span></div>
-        <div class="row"><span class="eye on"></span><span class="main">Dash</span></div>
-        <div class="row"><span class="eye on"></span><span class="main">Disengage</span></div>
-        <div class="row"><span class="eye on"></span><span class="main">Dodge</span></div>
-        <div class="row"><span class="eye on"></span><span class="main">Hide</span><span class="meta">Stealth</span></div>
-        <div class="row"><span class="eye on"></span><span class="main">Search</span><span class="meta">Perception</span></div>
-        <div class="row"><span class="eye"></span><span class="main">Study</span><span class="meta">hidden</span></div>
-        <div class="row"><span class="eye on"></span><span class="main">Influence</span></div>
-        <div class="row"><span class="eye on"></span><span class="main">Grapple</span></div>
-        <div class="row"><span class="eye on"></span><span class="main">Shove</span></div>
-        <div class="row"><span class="eye"></span><span class="main">Help</span><span class="meta">hidden</span></div>
-        <div class="row"><span class="eye on"></span><span class="main">Ready</span></div>
-        <div class="row"><span class="eye"></span><span class="main">Utilize</span><span class="meta">hidden</span></div>
-      </div>
-    </div>
-
-  </div>
-</body>
+			<!-- 14 show / hide actions -->
+			<div class="cell">
+				<p class="cap">14 · Show / hide actions <span>👁 = on the sheet</span></p>
+				<div class="pop" style="width: 280px">
+					<div class="pop-h">Which actions appear in the Actions panel</div>
+					<div class="row"><span class="eye on"></span><span class="main">Attack</span></div>
+					<div class="row"><span class="eye on"></span><span class="main">Dash</span></div>
+					<div class="row"><span class="eye on"></span><span class="main">Disengage</span></div>
+					<div class="row"><span class="eye on"></span><span class="main">Dodge</span></div>
+					<div class="row">
+						<span class="eye on"></span><span class="main">Hide</span
+						><span class="meta">Stealth</span>
+					</div>
+					<div class="row">
+						<span class="eye on"></span><span class="main">Search</span
+						><span class="meta">Perception</span>
+					</div>
+					<div class="row">
+						<span class="eye"></span><span class="main">Study</span><span class="meta">hidden</span>
+					</div>
+					<div class="row"><span class="eye on"></span><span class="main">Influence</span></div>
+					<div class="row"><span class="eye on"></span><span class="main">Grapple</span></div>
+					<div class="row"><span class="eye on"></span><span class="main">Shove</span></div>
+					<div class="row">
+						<span class="eye"></span><span class="main">Help</span><span class="meta">hidden</span>
+					</div>
+					<div class="row"><span class="eye on"></span><span class="main">Ready</span></div>
+					<div class="row">
+						<span class="eye"></span><span class="main">Utilize</span
+						><span class="meta">hidden</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
 </html>
