@@ -3,7 +3,8 @@
 	// (content graph → rules core → effects engine → deriveSheet). Every number is computed,
 	// and its provenance shows on hover. Real character loading/editing lands next.
 	import { onMount } from 'svelte';
-	import { loadDemo } from '$lib/demo/sheet';
+	import { demoCharacter } from '$lib/demo/sheet';
+	import { getContentGraph } from '$lib/content/provider';
 	import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
 	import type { Character } from '$lib/character/schema';
 	import type { Computed } from '$lib/rules/pipeline';
@@ -12,9 +13,10 @@
 	let character = $state<Character | null>(null);
 
 	onMount(async () => {
-		const demo = await loadDemo();
-		character = demo.character;
-		sheet = deriveSheet(demo.character, demo.graph);
+		const graph = await getContentGraph();
+		const c = demoCharacter();
+		character = c;
+		sheet = deriveSheet(c, graph);
 	});
 
 	const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`);

@@ -6,7 +6,10 @@
 	"type": "module",
 	"packageManager": "pnpm@11.3.0",
 	"scripts": {
+		"content:static": "node tools/build-static-content.mjs",
+		"predev": "node tools/build-static-content.mjs",
 		"dev": "vite dev",
+		"prebuild": "node tools/build-static-content.mjs",
 		"build": "vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
