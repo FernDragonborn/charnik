@@ -93,6 +93,10 @@ export class MemoryStorage implements Storage {
 		const k = norm(path);
 		this.files.delete(k);
 		this.dirs.delete(k);
+		// Recursive, matching the node/Tauri impls: removing a dir removes its contents.
+		const prefix = k + '/';
+		for (const f of [...this.files.keys()]) if (f.startsWith(prefix)) this.files.delete(f);
+		for (const d of [...this.dirs]) if (d.startsWith(prefix)) this.dirs.delete(d);
 		this.emit(k);
 	}
 

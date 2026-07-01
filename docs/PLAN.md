@@ -380,6 +380,24 @@ Default save = **id references only** (small, portable); **bundle export**
 referenced content → render what's possible + flag it. **Autosave** (debounced) +
 rotating **backups** (no DB → corruption guard; atomic temp→rename).
 
+### Character model (P7, IMPLEMENTED — `src/lib/character/`)
+- `schema.ts`: zod `characterSchema` = `{ schemaVersion, id, system, build, play }` with the
+  hard **build ↔ play** split. **build** = name/species/background/classes(+subclass,
+  multiclass)/abilities/skills/saves/feats/inventory/spells/photo/notes/xp. **play** =
+  hp(current/temp/override), hitDiceSpent, spellSlotsSpent, resourcesSpent, effects
+  (runtime instances w/ optional round duration), concentration, inspiration, deathSaves,
+  exhaustion, round. Content is stored as **`type:source:id` refs** (loader effectiveId),
+  not copies. `newCharacter()` factory + `parseCharacter()`.
+- `repository.ts`: `save/load/list/deleteCharacter` over the **`Storage`** interface
+  (desktop + web), path `characters/<slug>/character.json`. Load = **parse → migrate
+  (schemaVersion registry) → validate**; a corrupt/invalid/too-new save is *reported*
+  (`LoadResult.error`), never thrown — the roster still lists it flagged. Roll log =
+  append-only `log.jsonl` (`appendLog/readLog`), kept out of character.json.
+- Tested in-memory (round-trip identity, build/play isolation, invalid-save refusal,
+  corrupt-save reporting, newer-schema rejection, roster, roll log). `MemoryStorage.remove`
+  made recursive to match node/Tauri. **TODO**: autosave debounce + rotating backups,
+  bundle export/import, `newCharacter` slug from name in the UI layer.
+
 ---
 
 ## Data directory & config
