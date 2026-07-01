@@ -108,6 +108,25 @@ trust what happened.
   So removing the module + the one seam call leaves a fully working app — every stat is
   manually overridable, effects just show as text. **Core tests never import effects.**
 
+### Rules core + effects engine (P4, IMPLEMENTED — `src/lib/rules/` + `src/lib/effects/`)
+- `rules/pipeline.ts`: the **`{value, trace, notes}` contract** — `Contribution {source,
+  layer, op, amount, note}` + `fold()` (stacking order base→ability→proficiency→item→
+  feature→condition→override; `set` overrides, `mult` scales, `add` accumulates; clamp).
+- `rules/core.ts`: pure per-value functions returning `Computed` — `abilityModifier`,
+  `proficiencyBonus`, `savingThrow`, `skillCheck` (expertise/half-prof), `passiveScore`,
+  `initiative`, `spellSaveDC`, `spellAttackBonus`, `unarmoredAC`/`armoredAC` (dex caps),
+  `maxHpForClass` (SRD fixed), `carryingCapacity`. 5e/5.5e share the formulas; only the
+  encumbrance variant branches on `system`. **No import of effects.**
+- `effects/index.ts`: the **isolated engine** — `parseEffect` (bounded vocab, unknown →
+  inert text), `applyEffects(targetKey, base, active)` (the single seam: folds matching
+  numeric tokens onto a core `Computed`, non-numeric → notes; empty effects = identical
+  value/trace = the on/off invariant), `collectFlags` (advantage/condition/resource/
+  resist/proficiency facts). Imports core *types* only, never the reverse.
+- Tests: golden SRD values, `describe.each(['5e','5.5e'])`, fast-check (mod formula,
+  proficiency bounds, save = mod+prof), the seam on/off invariant, unknown-token survival.
+  **TODO**: wire a character → all-derived-stats aggregator; L2 value-expressions (`1d4`,
+  `prof*2`); ability-score-bonus cascade; advantage/disadvantage resolution in rolls.
+
 ---
 
 ## Feature requirements
