@@ -21,7 +21,7 @@
 	let shieldOn = $state(false);
 	let collapsed = $state<Record<string, boolean>>({});
 	let pinned = $state<Record<string, boolean>>({ 'fire-bolt': true, shield: true });
-	let panelOrder = $state(['skills', 'attacks', 'actions', 'effects']);
+	let panelOrder = $state(['skills', 'attacks', 'spells', 'actions', 'effects']);
 	let overlay = $state<null | { kind: string }>(null);
 	let log = $state<{ label: string; expr: string; total: number }[]>([]);
 	let dragId = $state<string | null>(null);
@@ -57,6 +57,7 @@
 	const PANEL_TITLE: Record<string, string> = {
 		skills: 'Skills',
 		attacks: 'Attacks',
+		spells: 'Spells',
 		actions: 'Actions',
 		effects: 'Effects & conditions'
 	};
@@ -516,6 +517,11 @@
 						<button class="grpby" onclick={() => (overlay = { kind: 'addeffect' })}
 							>＋ Add effect</button
 						>
+					{:else if pid === 'spells' && s.spellcasting}
+						<span class="prepct">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
+						<button class="grpby" onclick={() => (overlay = { kind: 'manage' })}
+							>⛭ Manage all</button
+						>
 					{/if}
 					<button class="dh" title="drag to reorder" onmousedown={() => (dragArmed = pid)}>⠿</button
 					>
@@ -571,74 +577,60 @@
 								</div>
 							</div>
 						{:else}<p class="trace">No active effects.</p>{/each}
+					{:else if pid === 'spells' && s.spellcasting}
+						<div class="castline">
+							Save DC <b>{s.spellcasting.saveDC.value}</b> · attack
+							<b>{signed(s.spellcasting.attack.value)}</b> — every spell
+						</div>
+						<div class="sprows">
+							{#each spellGroups as g (g.key)}
+								<div class="spgroup">
+									<div class="scat" class:star={g.key === 'pinned'}>
+										{g.label}
+										{#if g.slots}<span class="pips"
+												>{#each Array(g.slots.full) as _, i (i)}<span
+														class="pip"
+														class:full={i >= g.slots.spent}
+														class:spent={i < g.slots.spent}
+													></span>{/each}</span
+											>{/if}
+									</div>
+									{#each g.rows as r (g.key + r.id)}
+										<button class="sprow" onclick={() => cast(r)}>
+											<span class="an">
+												<i
+													class="prep"
+													class:on={r.prep === 'on'}
+													class:always={r.prep === 'always'}
+												></i>
+												<span class="nm">{r.name}</span>
+												<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+												<span
+													class="pinstar"
+													class:on={pinned[r.id]}
+													role="button"
+													tabindex="-1"
+													title="pin to top"
+													onclick={(e) => {
+														e.stopPropagation();
+														pinned[r.id] = !pinned[r.id];
+													}}>{pinned[r.id] ? '★' : '☆'}</span
+												>
+											</span>
+											<span class="spe">{r.spe}</span>
+											{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span
+												></span>{/if}
+											<span class="tm">{r.tm}</span>
+										</button>
+									{/each}
+								</div>
+							{/each}
+						</div>
 					{/if}
 				{/if}
 			</div>
 		{/each}
 	</section>
-
-	<!-- Spells: full width so the effect-first rows are never cramped -->
-	{#if s.spellcasting && spellGroups.length}
-		<div class="card spellcard">
-			<div class="phead">
-				<button class="htoggle" onclick={() => toggle('spells')}>
-					<span class="chev">{collapsed.spells ? '▸' : '▾'}</span>Spells
-				</button>
-				<span class="prepct">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
-				<button class="grpby" onclick={() => (overlay = { kind: 'manage' })}>⛭ Manage all</button>
-			</div>
-			{#if !collapsed.spells}
-				<div class="castline">
-					Spell save DC <b>{s.spellcasting.saveDC.value}</b> · spell attack
-					<b>{signed(s.spellcasting.attack.value)}</b> — same for every spell
-				</div>
-				<div class="sprows">
-					{#each spellGroups as g (g.key)}
-						<div class="spgroup">
-							<div class="scat" class:star={g.key === 'pinned'}>
-								{g.label}
-								{#if g.slots}<span class="pips"
-										>{#each Array(g.slots.full) as _, i (i)}<span
-												class="pip"
-												class:full={i >= g.slots.spent}
-												class:spent={i < g.slots.spent}
-											></span>{/each}</span
-									>{/if}
-							</div>
-							{#each g.rows as r (g.key + r.id)}
-								<button class="sprow" onclick={() => cast(r)}>
-									<span class="an">
-										<i class="prep" class:on={r.prep === 'on'} class:always={r.prep === 'always'}
-										></i>
-										<span class="nm">{r.name}</span>
-										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-										<span
-											class="pinstar"
-											class:on={pinned[r.id]}
-											role="button"
-											tabindex="-1"
-											title="pin to top"
-											onclick={(e) => {
-												e.stopPropagation();
-												pinned[r.id] = !pinned[r.id];
-											}}>{pinned[r.id] ? '★' : '☆'}</span
-										>
-									</span>
-									<span class="spe">{r.spe}</span>
-									{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span></span>{/if}
-									<span class="tm">{r.tm}</span>
-								</button>
-							{/each}
-						</div>
-					{/each}
-				</div>
-				<p class="trace" style="margin-top:11px">
-					tap a spell to cast/roll · slot pip to spend · ★ pin
-				</p>
-			{/if}
-		</div>
-	{/if}
-
 	<!-- overlays — d-menus popovers -->
 	{#if overlay}
 		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
@@ -1300,9 +1292,6 @@
 		break-inside: avoid;
 		margin-bottom: 18px;
 	}
-	.spellcard {
-		margin-top: 0;
-	}
 	.grpby {
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -1455,7 +1444,7 @@
 		display: block;
 	}
 
-	.spellcard .castline {
+	.castline {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
@@ -1467,7 +1456,7 @@
 		font-weight: 700;
 	}
 	.sprows {
-		max-width: 620px;
+		margin-top: 2px;
 	}
 	.scat {
 		display: flex;
@@ -1506,9 +1495,10 @@
 	}
 	.sprow {
 		display: grid;
-		grid-template-columns: 1fr 84px 78px 54px;
+		grid-template-columns: minmax(0, 1fr) auto auto auto;
 		align-items: center;
-		gap: 9px;
+		gap: 8px;
+		justify-content: end;
 		padding: 7px 6px;
 		border-top: 1px solid var(--color-border);
 		border-radius: 7px;
