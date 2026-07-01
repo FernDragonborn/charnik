@@ -1,7 +1,8 @@
 <script lang="ts">
-	// Combat sheet — the agreed d-charnik design, baked into Svelte and fed live data
-	// (content graph → rules core → effects engine → deriveSheet). Structure/typography/
-	// colour follow design-preview/d-charnik.html; every number is computed with provenance.
+	// Combat sheet — faithful bake of design-preview/d-charnik.html (+ d-menus overlays),
+	// fed by the live pipeline (deriveSheet over the real content graph). Collapsible +
+	// drag-reorderable panels, working menus (dice tray, condition/effect pickers, roll
+	// log, show/hide), pins, provenance on hover.
 	import { onMount } from 'svelte';
 	import { demoCharacter } from '$lib/demo/sheet';
 	import { getContentGraph } from '$lib/content/provider';
@@ -14,7 +15,17 @@
 	let graph = $state<ContentGraph | null>(null);
 	let character = $state<Character | null>(null);
 	let sheet = $state<CharacterSheet | null>(null);
+
+	// play/UI state
 	let round = $state(1);
+	let shieldOn = $state(false);
+	let collapsed = $state<Record<string, boolean>>({});
+	let pinned = $state<Record<string, boolean>>({ 'fire-bolt': true, shield: true });
+	let panelOrder = $state(['skills', 'attacks', 'actions', 'effects']);
+	let overlay = $state<null | { kind: string }>(null);
+	let log = $state<{ label: string; expr: string; total: number }[]>([]);
+	let dragId = $state<string | null>(null);
+	let hiddenActions = $state<Record<string, boolean>>({});
 
 	onMount(async () => {
 		graph = await getContentGraph();
@@ -22,7 +33,7 @@
 		sheet = deriveSheet(character, graph);
 	});
 
-	const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
+	const signed = (n: number) => (n >= 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 	const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/, '')} m`;
 	function why(c: Computed): string {
 		const parts = c.trace
@@ -32,6 +43,13 @@
 					`${t.source} ${t.op === 'set' ? '= ' : ''}${signed(t.amount)}${t.note ? ` (${t.note})` : ''}`
 			);
 		return (parts.join(', ') || '—') + (c.notes?.length ? ' · ' + c.notes.join(' · ') : '');
+	}
+	const toggle = (k: string) => (collapsed[k] = !collapsed[k]);
+
+	function roll(label: string, mod: number) {
+		const d = 1 + Math.floor(Math.random() * 20);
+		const total = d + mod;
+		log = [{ label, expr: `1d20(${d}) ${signed(mod)}`, total }, ...log].slice(0, 200);
 	}
 
 	const ABIL: Ability[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
@@ -44,29 +62,32 @@
 		cha: 'Charisma'
 	};
 
-	// className label
-	const className = $derived(character && graph ? classLabel() : '');
-	function classLabel(): string {
-		const c = character!.build.classes[0];
-		const row = graph!.get(c.class);
+	const className = $derived.by(() => {
+		if (!character || !graph) return '';
+		const c = character.build.classes[0];
+		const row = graph.get(c.class);
 		return row ? `${row.data.name_en} ${c.level}` : `Level ${sheet?.level ?? ''}`;
-	}
-	const speciesName = $derived.by(() => {
-		if (!character?.build.species || !graph) return '';
-		return String(graph.get(character.build.species)?.data.name_en ?? '');
 	});
+	const speciesName = $derived.by(() =>
+		character?.build.species && graph
+			? String(graph.get(character.build.species)?.data.name_en ?? '')
+			: ''
+	);
+	const conc = $derived(
+		character?.play.effects.find((e) => e.label.toLowerCase().includes('bless'))
+	);
 
-	// --- attacks from equipped weapons ---
+	// attacks (equipped weapons + Unarmed Strike)
 	interface Atk {
 		name: string;
-		toHit: string;
+		toHit: number;
 		dmg: string;
 		meta: string;
 	}
 	const attacks = $derived.by<Atk[]>(() => {
 		if (!character || !sheet || !graph) return [];
-		const prof = sheet.proficiencyBonus;
-		const strMod = sheet.abilities.str.mod,
+		const prof = sheet.proficiencyBonus,
+			strMod = sheet.abilities.str.mod,
 			dexMod = sheet.abilities.dex.mod;
 		const out: Atk[] = [];
 		for (const inv of character.build.inventory) {
@@ -75,87 +96,179 @@
 			if (!row || row.data.category !== 'weapon') continue;
 			const props = String(row.data.properties ?? '').toLowerCase();
 			const ranged = String(row.data.item_type ?? '').includes('ranged');
-			const finesse = props.includes('finesse');
-			const mod = ranged ? dexMod : finesse ? Math.max(strMod, dexMod) : strMod;
-			const dmg = String(row.data.damage ?? '');
+			const mod = ranged ? dexMod : props.includes('finesse') ? Math.max(strMod, dexMod) : strMod;
 			out.push({
 				name: String(row.data.name_en),
-				toHit: signed(mod + prof),
-				dmg: `${dmg} ${signed(mod)} ${row.data.damage_type ?? ''}`.trim(),
+				toHit: mod + prof,
+				dmg: `${row.data.damage ?? ''} ${signed(mod)} ${row.data.damage_type ?? ''}`.trim(),
 				meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · ')
 			});
 		}
+		out.push({
+			name: 'Unarmed Strike',
+			toHit: strMod + prof,
+			dmg: `${1 + strMod} bludgeoning`,
+			meta: 'melee'
+		});
 		return out;
 	});
 
-	// --- spells grouped by level ---
+	// standard actions (from d-charnik); roll ones reference live skills
+	const actions = $derived.by(() => {
+		const s = sheet;
+		const sk = (k: string) => s?.skills[k]?.value ?? 0;
+		return [
+			{ id: 'attack', n: 'Attack', h: '', d: 'weapon / spell / unarmed', m: '→ Attacks' },
+			{ id: 'dash', n: 'Dash', h: '', d: '+speed this turn', m: 'action' },
+			{ id: 'disengage', n: 'Disengage', h: '', d: 'no opportunity attacks', m: 'action' },
+			{ id: 'dodge', n: 'Dodge', h: '', d: 'attackers have disadv.', m: 'action' },
+			{
+				id: 'hide',
+				n: 'Hide',
+				h: signed(sk('stealth')),
+				d: 'Stealth',
+				m: '→ roll',
+				roll: ['Hide (Stealth)', sk('stealth')] as [string, number]
+			},
+			{
+				id: 'search',
+				n: 'Search',
+				h: signed(sk('perception')),
+				d: 'Perception',
+				m: '→ roll',
+				roll: ['Search (Perception)', sk('perception')] as [string, number]
+			},
+			{
+				id: 'study',
+				n: 'Study',
+				h: signed(sk('arcana')),
+				d: 'recall lore',
+				m: '→ roll',
+				roll: ['Study (Arcana)', sk('arcana')] as [string, number]
+			},
+			{
+				id: 'grapple',
+				n: 'Grapple',
+				h: signed(sk('athletics')),
+				d: 'Athletics vs target',
+				m: 'contest',
+				roll: ['Grapple (Athletics)', sk('athletics')] as [string, number]
+			},
+			{
+				id: 'shove',
+				n: 'Shove',
+				h: signed(sk('athletics')),
+				d: 'prone / push 5 ft',
+				m: 'contest',
+				roll: ['Shove (Athletics)', sk('athletics')] as [string, number]
+			},
+			{ id: 'help', n: 'Help', h: '', d: 'give an ally advantage', m: 'action' },
+			{ id: 'ready', n: 'Ready', h: '', d: 'prepare a trigger', m: 'action' },
+			{ id: 'utilize', n: 'Utilize', h: '', d: 'use an object', m: 'action' }
+		].filter((a) => !hiddenActions[a.id]);
+	});
+
+	// spells grouped by level (Pinned first)
 	interface SpRow {
+		id: string;
 		name: string;
 		spe: string;
-		res: 'hit' | 'save' | 'auto' | '';
+		res: '' | 'hit' | 'save' | 'auto';
 		resLabel: string;
 		tm: string;
-		prep: 'on' | 'always' | '';
+		prep: '' | 'on' | 'always';
 	}
 	interface SpGroup {
-		level: number;
+		key: string;
 		label: string;
-		slots: { full: number; spent: number };
+		slots: { full: number; spent: number } | null;
 		rows: SpRow[];
 	}
-	const spellGroups = $derived.by<SpGroup[]>(() => {
-		if (!character || !graph) return [];
-		const casterLevel = sheet?.level ?? 1;
-		const slots = fullCasterSlots(casterLevel);
-		const byLevel = new Map<number, SpRow[]>();
-		for (const sp of character.build.spells) {
-			const row = graph.get(sp.spell);
-			if (!row) continue;
-			const lvl = Number(row.data.level);
-			const res = String(row.data.resolution ?? 'none');
-			const rtag: SpRow['res'] =
-				res === 'attack' ? 'hit' : res === 'save' ? 'save' : res === 'auto' ? 'auto' : '';
-			const resLabel =
+	function spellRow(ref: string, prep: SpRow['prep']): SpRow | null {
+		const row = graph!.get(ref);
+		if (!row) return null;
+		const lvl = Number(row.data.level);
+		const res = String(row.data.resolution ?? 'none');
+		const dmg = String(row.data.damage ?? '');
+		return {
+			id: String(row.data.id),
+			name: String(row.data.name_en),
+			spe: dmg || effectHint(row.data),
+			res: res === 'attack' ? 'hit' : res === 'save' ? 'save' : res === 'auto' ? 'auto' : '',
+			resLabel:
 				res === 'attack'
 					? 'attack roll'
 					: res === 'save'
 						? `${row.data.save_ability} save`
 						: res === 'auto'
 							? 'auto-hit'
-							: '';
-			const r: SpRow = {
-				name: String(row.data.name_en),
-				spe: String(row.data.damage || '') || shortHint(String(row.data.text_en ?? '')),
-				res: rtag,
-				resLabel,
-				tm:
-					(lvl === 0 ? 'cantrip' : `${ordinal(lvl)}`) +
-					castingSuffix(String(row.data.casting_time ?? '')),
-				prep: sp.alwaysPrepared ? 'always' : sp.prepared ? 'on' : ''
-			};
-			(byLevel.get(lvl) ?? byLevel.set(lvl, []).get(lvl)!).push(r);
-		}
+							: '',
+			tm:
+				(lvl === 0 ? 'cantrip' : ordinal(lvl)) + castingSuffix(String(row.data.casting_time ?? '')),
+			prep
+		};
+	}
+	const spellGroups = $derived.by<SpGroup[]>(() => {
+		if (!character || !graph) return [];
+		const slots = fullCasterSlots(sheet?.level ?? 1);
+		const all = character.build.spells
+			.map((sp) => ({
+				sp,
+				row: spellRow(sp.spell, sp.alwaysPrepared ? 'always' : sp.prepared ? 'on' : '')
+			}))
+			.filter((x): x is { sp: (typeof character.build.spells)[number]; row: SpRow } => !!x.row);
 		const groups: SpGroup[] = [];
+		const pins = all.filter((x) => pinned[x.row.id]);
+		if (pins.length)
+			groups.push({ key: 'pinned', label: '★ Pinned', slots: null, rows: pins.map((x) => x.row) });
+		const byLevel = new Map<number, SpRow[]>();
+		for (const x of all) {
+			const lvl = Number(graph!.get(x.sp.spell)!.data.level);
+			(byLevel.get(lvl) ?? byLevel.set(lvl, []).get(lvl)!).push(x.row);
+		}
 		for (const lvl of [...byLevel.keys()].sort((a, b) => a - b)) {
 			groups.push({
-				level: lvl,
+				key: String(lvl),
 				label: lvl === 0 ? 'Cantrips' : ordinal(lvl),
-				slots: {
-					full: lvl === 0 ? 0 : (slots[lvl - 1] ?? 0),
-					spent: Number(character.play.spellSlotsSpent[String(lvl)] ?? 0)
-				},
+				slots:
+					lvl === 0
+						? null
+						: {
+								full: slots[lvl - 1] ?? 0,
+								spent: Number(character.play.spellSlotsSpent[String(lvl)] ?? 0)
+							},
 				rows: byLevel.get(lvl)!
 			});
 		}
 		return groups;
 	});
+	const preparedCount = $derived(character?.build.spells.filter((s) => s.prepared).length ?? 0);
+	const preparedCap = $derived((sheet?.abilities.int.mod ?? 0) + (sheet?.level ?? 0));
+
+	function effectHint(d: Record<string, unknown>): string {
+		const range = String(d.range ?? '');
+		if (/self/i.test(range) && /step|door|teleport/i.test(String(d.name_en))) return 'teleport';
+		if (/counter/i.test(String(d.name_en))) return 'negate spell';
+		if (
+			/mage hand|prestidig|light|message|minor illusion|mage armor|fly|invis|mirror/i.test(
+				String(d.name_en)
+			)
+		)
+			return (
+				{
+					'mage hand': 'utility',
+					'mage armor': 'set AC 13',
+					fly: 'fly 60 ft',
+					'mirror image': '3 duplicates'
+				}[String(d.name_en).toLowerCase()] ?? 'utility'
+			);
+		return 'utility';
+	}
 	const ordinal = (n: number) =>
 		`${n}${['th', 'st', 'nd', 'rd'][n % 10 > 3 || Math.floor(n / 10) === 1 ? 0 : n % 10]}`;
 	const castingSuffix = (ct: string) =>
 		/bonus/i.test(ct) ? ' · bonus' : /reaction/i.test(ct) ? ' · react' : '';
-	const shortHint = (t: string) => (t.split(/[.。]/)[0] || '').slice(0, 22) || 'utility';
 
-	// HP bar widths
 	const hpBar = $derived.by(() => {
 		if (!character || !sheet) return { cur: 0, tmp: 0 };
 		const max = character.play.hp.max ?? sheet.maxHp.value;
@@ -164,9 +277,43 @@
 			tmp: (character.play.hp.temp / max) * 100
 		};
 	});
-	const conc = $derived(
-		character?.play.effects.find((e) => e.label.toLowerCase().includes('bless') || false)
+
+	// drag reorder
+	function onDrop(target: string) {
+		if (!dragId || dragId === target) return;
+		const o = [...panelOrder];
+		o.splice(o.indexOf(dragId), 1);
+		o.splice(o.indexOf(target), 0, dragId);
+		panelOrder = o;
+		dragId = null;
+	}
+
+	const conditionList = $derived(
+		graph ? graph.list('condition', { system: '5.5e' }).map((r) => String(r.data.name_en)) : []
 	);
+	const EFFECT_PRESETS = [
+		{ label: 'Bless', tokens: ['flat-bonus:saves+1d4'] },
+		{ label: 'Bane', tokens: ['flat-bonus:saves-1d4'] },
+		{ label: 'Shield of Faith', tokens: ['flat-bonus:ac+2'] },
+		{ label: 'Half cover', tokens: ['flat-bonus:ac+2'] },
+		{ label: 'Three-quarters cover', tokens: ['flat-bonus:ac+5'] }
+	];
+	function addEffect(label: string, tokens: string[], positive = true) {
+		if (!character) return;
+		character.play.effects = [
+			...character.play.effects,
+			{
+				iid: label + Date.now(),
+				label,
+				effects: tokens,
+				positive,
+				durationRounds: 10,
+				startedRound: round
+			}
+		];
+		sheet = deriveSheet(character, graph!);
+		overlay = null;
+	}
 </script>
 
 <svelte:head><title>Combat — Charnik</title></svelte:head>
@@ -188,8 +335,9 @@
 		<div class="hp">
 			<div class="lab"><span>Hit points</span><button class="temptag">＋ Temp HP</button></div>
 			<div class="val" title={why(s.maxHp)}>
-				{c.play.hp.current}<small> / {c.play.hp.max ?? s.maxHp.value}</small>
-				{#if c.play.hp.temp > 0}<span class="temp">+{c.play.hp.temp} temp</span>{/if}
+				{c.play.hp.current}<small>
+					/ {c.play.hp.max ?? s.maxHp.value}</small
+				>{#if c.play.hp.temp > 0}<span class="temp">+{c.play.hp.temp} temp</span>{/if}
 			</div>
 			<div class="bar">
 				<i class="cur" style="width:{hpBar.cur}%"></i><i class="tmp" style="width:{hpBar.tmp}%"></i>
@@ -198,16 +346,19 @@
 	</section>
 
 	<section class="controls">
-		<button class="toggle" class:on={c.play.inspiration}
-			>✦ Inspiration <span class="sw">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
+		<button class="toggle" class:on={shieldOn} onclick={() => (shieldOn = !shieldOn)}
+			>🛡 Shield <span class="sw">{shieldOn ? 'ON' : 'OFF'}</span></button
 		>
 		{#if conc}<button class="toggle conc on"
 				>◈ Concentration <span class="sw">{conc.label}</span></button
 			>{/if}
-		<button class="toggle">＋ Condition</button>
+		<button class="toggle" class:on={c.play.inspiration}
+			>✦ Inspiration <span class="sw">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
+		>
+		<button class="toggle" onclick={() => (overlay = { kind: 'condition' })}>＋ Condition</button>
 		<span class="spacer"></span>
 		<button class="toggle auto on">⚙ Auto-calc <span class="sw">ON</span></button>
-		<button class="toggle dice">🎲 Dice tray</button>
+		<button class="toggle dice" onclick={() => (overlay = { kind: 'dice' })}>🎲 Dice tray</button>
 	</section>
 
 	<section class="turnbar">
@@ -226,160 +377,315 @@
 		<button class="nextturn">Next turn ▸</button>
 	</section>
 
-	<div class="sectlab">Combat</div>
-	<section class="combat">
-		<div class="tile" title={why(s.ac)}>
-			<div class="k">Armor class</div>
-			<div class="v">{s.ac.value}</div>
-			<div class="t">{s.ac.trace.map((x) => `${x.source} ${signed(x.amount)}`).join(' ')}</div>
-		</div>
-		<div class="tile" title={why(s.initiative)}>
-			<div class="k">Initiative</div>
-			<div class="v">{signed(s.initiative.value)}</div>
-			<div class="t">DEX <b>{signed(s.abilities.dex.mod)}</b></div>
-		</div>
-		<div class="tile" title={why(s.speed)}>
-			<div class="k">Speed</div>
-			<div class="v">{s.speed.value} ft<small> ({metres(s.speed.value)})</small></div>
-			<div class="t">base walk</div>
-		</div>
-	</section>
-	<div class="senses-strip">
-		<span class="lbl">Passive senses</span>
-		<span class="sv" title={why(s.passives.perception)}
-			><i>Perception</i>{s.passives.perception.value}</span
-		><span class="sdot">·</span>
-		<span class="sv" title={why(s.passives.investigation)}
-			><i>Investigation</i>{s.passives.investigation.value}</span
-		><span class="sdot">·</span>
-		<span class="sv" title={why(s.passives.insight)}><i>Insight</i>{s.passives.insight.value}</span>
-		<button class="edit">✎ Pin skills</button>
+	<div class="playbar">
+		<span class="phint"
+			>Tap any check · save · attack to roll it. Auto-calc &amp; rounds are optional.</span
+		>
+		<button class="rollout" onclick={() => (overlay = { kind: 'log' })}>
+			🎲 {#if log[0]}Last · <b>{log[0].label}</b> <i>{log[0].expr}</i> =
+				<span class="res">{log[0].total}</span>{:else}<i>no rolls yet</i>{/if}<span class="logcue"
+				>▸ log</span
+			>
+		</button>
 	</div>
 
-	<div class="sectlab">Abilities <em>tap to roll a check or save · click a value to edit</em></div>
-	<section class="grid">
-		{#each ABIL as ab (ab)}
-			{@const a = s.abilities[ab]}
-			{@const prof = a.save.trace.some((t) => t.layer === 'proficiency')}
-			<div class="ab">
-				<div class="n"><b>{ab.toUpperCase()}</b> · {a.score}</div>
-				<div class="m">{a.mod < 0 ? '−' + Math.abs(a.mod) : a.mod === 0 ? '0' : '+' + a.mod}</div>
-				<div class="sv" class:prof title={why(a.save)}>
-					<i class="pdot" class:on={prof}></i>SAVE
-					<b>{a.save.value < 0 ? '−' + Math.abs(a.save.value) : signed(a.save.value)}</b>
-				</div>
+	<div class="sectlab">
+		<button class="chev" onclick={() => toggle('combat')}>{collapsed.combat ? '▸' : '▾'}</button
+		>Combat
+	</div>
+	{#if !collapsed.combat}
+		<section class="combat">
+			<button class="tile" title={why(s.ac)} onclick={() => roll('AC (touch)', 0)}>
+				<div class="k">Armor class</div>
+				<div class="v">{s.ac.value}</div>
+				<div class="t">{s.ac.trace.map((x) => `${x.source} ${signed(x.amount)}`).join(' ')}</div>
+			</button>
+			<button
+				class="tile"
+				title={why(s.initiative)}
+				onclick={() => roll('Initiative', s.initiative.value)}
+			>
+				<div class="k">Initiative</div>
+				<div class="v">{signed(s.initiative.value)}</div>
+				<div class="t">DEX <b>{signed(s.abilities.dex.mod)}</b></div>
+			</button>
+			<div class="tile" title={why(s.speed)}>
+				<div class="k">Speed</div>
+				<div class="v">{s.speed.value} ft<small> ({metres(s.speed.value)})</small></div>
+				<div class="t">base walk</div>
+			</div>
+		</section>
+		<div class="senses-strip">
+			<span class="lbl">Passive senses</span>
+			<span class="sv" title={why(s.passives.perception)}
+				><i>Perception</i>{s.passives.perception.value}</span
+			><span class="sdot">·</span>
+			<span class="sv" title={why(s.passives.investigation)}
+				><i>Investigation</i>{s.passives.investigation.value}</span
+			><span class="sdot">·</span>
+			<span class="sv" title={why(s.passives.insight)}
+				><i>Insight</i>{s.passives.insight.value}</span
+			>
+			<button class="edit" onclick={() => (overlay = { kind: 'pinskills' })}>✎ Pin skills</button>
+		</div>
+	{/if}
+
+	<div class="sectlab">
+		<button class="chev" onclick={() => toggle('abilities')}
+			>{collapsed.abilities ? '▸' : '▾'}</button
+		>Abilities <em>tap to roll a check or save</em>
+	</div>
+	{#if !collapsed.abilities}
+		<section class="grid">
+			{#each ABIL as ab (ab)}
+				{@const a = s.abilities[ab]}
+				{@const prof = a.save.trace.some((t) => t.layer === 'proficiency')}
+				<button class="ab" onclick={() => roll(`${ab.toUpperCase()} check`, a.mod)}>
+					<div class="n"><b>{ab.toUpperCase()}</b> · {a.score}</div>
+					<div class="m">{signed(a.mod)}</div>
+					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+					<span
+						class="sv"
+						class:prof
+						role="button"
+						tabindex="-1"
+						title={why(a.save)}
+						onclick={(e) => {
+							e.stopPropagation();
+							roll(`${ab.toUpperCase()} save`, a.save.value);
+						}}
+					>
+						<i class="pdot" class:on={prof}></i>SAVE <b>{signed(a.save.value)}</b>
+					</span>
+				</button>
+			{/each}
+		</section>
+	{/if}
+
+	<section class="panels">
+		{#each panelOrder as pid (pid)}
+			<div
+				class="card"
+				draggable="true"
+				ondragstart={() => (dragId = pid)}
+				ondragover={(e) => e.preventDefault()}
+				ondrop={() => onDrop(pid)}
+			>
+				{#if pid === 'skills'}
+					<h2>
+						<button class="chev" onclick={() => toggle('skills')}
+							>{collapsed.skills ? '▸' : '▾'}</button
+						>Skills<span class="dh" title="drag to reorder">⠿</span>
+					</h2>
+					{#if !collapsed.skills}
+						<div class="sklgrid">
+							{#each ABIL as ab (ab)}
+								{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
+								{#if list.length}
+									<div class="catblock">
+										<div class="ssec">{ABILITY_NAME[ab]}</div>
+										{#each list as skill (skill)}
+											{@const sk = s.skills[skill]}
+											<button
+												class="skl"
+												title={why(sk)}
+												onclick={() => roll(skill.replace(/-/g, ' '), sk.value)}
+											>
+												<i class="pdot" class:on={sk.proficient}></i>
+												<span class="sn"
+													>{skill.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())}</span
+												>
+												<b class="sm">{signed(sk.value)}</b>
+											</button>
+										{/each}
+									</div>
+								{/if}
+							{/each}
+						</div>
+					{/if}
+				{:else if pid === 'attacks'}
+					<h2>
+						<button class="chev" onclick={() => toggle('attacks')}
+							>{collapsed.attacks ? '▸' : '▾'}</button
+						>Attacks<span class="dh">⠿</span>
+					</h2>
+					{#if !collapsed.attacks}
+						{#each attacks as at (at.name)}
+							<button class="atk" onclick={() => roll(at.name, at.toHit)}>
+								<span class="an">{at.name}</span><span class="ah">{signed(at.toHit)}</span>
+								<span class="ad">{at.dmg}</span><span class="am">{at.meta}</span>
+							</button>
+						{/each}
+					{/if}
+				{:else if pid === 'actions'}
+					<div class="ph2">
+						<h2>
+							<button class="chev" onclick={() => toggle('actions')}
+								>{collapsed.actions ? '▸' : '▾'}</button
+							>Actions
+						</h2>
+						<button class="grpby" onclick={() => (overlay = { kind: 'showhide' })}
+							>👁 Show / hide</button
+						><span class="dh">⠿</span>
+					</div>
+					{#if !collapsed.actions}
+						{#each actions as a (a.id)}
+							<button class="atk" onclick={() => a.roll && roll(a.roll[0], a.roll[1])}>
+								<span class="an">{a.n}</span><span class="ah">{a.h || '—'}</span><span class="ad"
+									>{a.d}</span
+								><span class="am">{a.m}</span>
+							</button>
+						{/each}
+					{/if}
+				{:else if pid === 'effects'}
+					<div class="ph2">
+						<h2>
+							<button class="chev" onclick={() => toggle('effects')}
+								>{collapsed.effects ? '▸' : '▾'}</button
+							>Effects &amp; conditions
+						</h2>
+						<button class="grpby" onclick={() => (overlay = { kind: 'addeffect' })}>＋ Add</button
+						><span class="dh">⠿</span>
+					</div>
+					{#if !collapsed.effects}
+						{#each c.play.effects as e (e.iid)}
+							<div class="eff" class:pos={e.positive} class:neg={!e.positive}>
+								<span class="d"></span>
+								<div class="body">
+									<b>{e.label}</b>{#if e.effects.length}<small
+											>{e.effects.join(' · ')}{e.durationRounds
+												? ` · ${e.durationRounds} rounds`
+												: ''}</small
+										>{/if}
+								</div>
+							</div>
+						{:else}<p class="trace">No active effects.</p>{/each}
+					{/if}
+				{/if}
 			</div>
 		{/each}
 	</section>
 
-	<section class="panels">
-		<!-- Skills -->
-		<div class="card">
-			<h2>Skills</h2>
-			<div class="sklgrid">
-				{#each ABIL as ab (ab)}
-					{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
-					{#if list.length}
-						<div class="catblock">
-							<div class="ssec">{ABILITY_NAME[ab]}</div>
-							{#each list as skill (skill)}
-								{@const sk = s.skills[skill]}
-								<div class="skl" title={why(sk)}>
-									<i class="pdot" class:on={sk.proficient}></i>
-									<span class="sn"
-										>{skill.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())}</span
-									>
-									<b class="sm"
-										>{sk.value < 0
-											? '−' + Math.abs(sk.value)
-											: sk.value === 0
-												? '0'
-												: '+' + sk.value}</b
-									>
-								</div>
-							{/each}
-						</div>
-					{/if}
-				{/each}
+	<!-- Spells: full width so the effect-first rows are never cramped -->
+	{#if s.spellcasting && spellGroups.length}
+		<div class="card spellcard">
+			<div class="ph2">
+				<h2>
+					<button class="chev" onclick={() => toggle('spells')}
+						>{collapsed.spells ? '▸' : '▾'}</button
+					>Spells
+				</h2>
+				<span class="prepct">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
+				<button class="grpby" onclick={() => (overlay = { kind: 'manage' })}>⛭ Manage all</button>
 			</div>
-			<p class="trace" style="margin-top:10px">
-				<i class="pdot on"></i> proficient · tap a skill to roll
-			</p>
-		</div>
-
-		<!-- Attacks -->
-		{#if attacks.length}
-			<div class="card">
-				<h2>Attacks</h2>
-				{#each attacks as at (at.name)}
-					<div class="atk">
-						<span class="an">{at.name}</span><span class="ah">{at.toHit}</span>
-						<span class="ad">{at.dmg}</span><span class="am">{at.meta}</span>
-					</div>
-				{/each}
-			</div>
-		{/if}
-
-		<!-- Effects & conditions -->
-		{#if c.play.effects.length}
-			<div class="card">
-				<div class="ph2">
-					<h2>Effects &amp; conditions</h2>
-					<span class="grpby">＋ Add</span>
-				</div>
-				{#each c.play.effects as e (e.iid)}
-					<div class="eff" class:pos={e.positive} class:neg={!e.positive}>
-						<span class="d"></span>
-						<div class="body">
-							<b>{e.label}</b>
-							{#if e.effects.length}<small
-									>{e.effects.join(' · ')}{e.durationRounds
-										? ` · ${e.durationRounds} rounds`
-										: ''}</small
-								>{/if}
-						</div>
-					</div>
-				{/each}
-			</div>
-		{/if}
-
-		<!-- Spells -->
-		{#if s.spellcasting && spellGroups.length}
-			<div class="card">
-				<div class="ph2"><h2>Spells</h2></div>
+			{#if !collapsed.spells}
 				<div class="castline">
 					Spell save DC <b>{s.spellcasting.saveDC.value}</b> · spell attack
 					<b>{signed(s.spellcasting.attack.value)}</b> — same for every spell
 				</div>
-				{#each spellGroups as g (g.level)}
-					<div class="scat">
-						{g.label}
-						{#if g.slots.full > 0}
-							<span class="pips">
-								{#each Array(g.slots.full) as _, i (i)}<span
-										class="pip"
-										class:full={i >= g.slots.spent}
-										class:spent={i < g.slots.spent}
-									></span>{/each}
-							</span>
-						{/if}
-					</div>
-					{#each g.rows as r (r.name)}
-						<div class="sprow">
-							<span class="an"
-								><i class="prep" class:on={r.prep === 'on'} class:always={r.prep === 'always'}
-								></i>{r.name}</span
-							>
-							<span class="spe">{r.spe}</span>
-							{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span></span>{/if}
-							<span class="tm">{r.tm}</span>
+				<div class="sprows">
+					{#each spellGroups as g (g.key)}
+						<div class="scat" class:star={g.key === 'pinned'}>
+							{g.label}
+							{#if g.slots}<span class="pips"
+									>{#each Array(g.slots.full) as _, i (i)}<span
+											class="pip"
+											class:full={i >= g.slots.spent}
+											class:spent={i < g.slots.spent}
+										></span>{/each}</span
+								>{/if}
 						</div>
+						{#each g.rows as r (g.key + r.id)}
+							<div class="sprow">
+								<span class="an"
+									><i class="prep" class:on={r.prep === 'on'} class:always={r.prep === 'always'}
+									></i>{r.name}<button
+										class="pinstar"
+										class:on={pinned[r.id]}
+										onclick={() => (pinned[r.id] = !pinned[r.id])}
+										>{pinned[r.id] ? '★' : '☆'}</button
+									></span
+								>
+								<span class="spe">{r.spe}</span>
+								{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span></span>{/if}
+								<span class="tm">{r.tm}</span>
+							</div>
+						{/each}
 					{/each}
-				{/each}
-				<p class="trace" style="margin-top:11px">tap a slot pip to spend / restore</p>
+				</div>
+				<p class="trace" style="margin-top:11px">
+					tap a slot pip to spend / restore · ★ pin to the top
+				</p>
+			{/if}
+		</div>
+	{/if}
+
+	<!-- overlays (d-menus) -->
+	{#if overlay}
+		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+		<div class="ovbg" onclick={() => (overlay = null)}></div>
+		<div class="ov" role="dialog" aria-modal="true" tabindex="-1">
+			<div class="ovhead">
+				<b
+					>{{
+						dice: 'Dice tray',
+						condition: 'Add condition',
+						addeffect: 'Add effect',
+						log: 'Roll log',
+						showhide: 'Show / hide actions',
+						pinskills: 'Pin passive skills',
+						manage: 'Spellbook'
+					}[overlay.kind]}</b
+				><button class="ovx" onclick={() => (overlay = null)}>✕</button>
 			</div>
-		{/if}
-	</section>
+			{#if overlay.kind === 'dice'}
+				<div class="dtray">
+					{#each [20, 12, 10, 8, 6, 4] as die (die)}<button
+							class="dbtn"
+							onclick={() => {
+								const v = 1 + Math.floor(Math.random() * die);
+								log = [{ label: `d${die}`, expr: `1d${die}`, total: v }, ...log];
+							}}>d{die}</button
+						>{/each}
+				</div>
+				{#if log[0]}<p class="dres">{log[0].label} → <b>{log[0].total}</b></p>{/if}
+			{:else if overlay.kind === 'condition'}
+				<div class="ovlist">
+					{#each conditionList as cn (cn)}<button onclick={() => addEffect(cn, [], false)}
+							>{cn}</button
+						>{/each}
+				</div>
+			{:else if overlay.kind === 'addeffect'}
+				<div class="ovlist">
+					{#each EFFECT_PRESETS as p (p.label)}<button onclick={() => addEffect(p.label, p.tokens)}
+							>{p.label} <small>{p.tokens.join(', ')}</small></button
+						>{/each}
+				</div>
+			{:else if overlay.kind === 'log'}
+				<div class="ovlog">
+					{#each log as l, i (i)}<div>
+							<span>{l.label}</span><span class="mono">{l.expr} = <b>{l.total}</b></span>
+						</div>{:else}<p class="trace">
+							No rolls yet — tap a stat, skill, save, or attack.
+						</p>{/each}
+				</div>
+			{:else if overlay.kind === 'showhide'}
+				<div class="ovlist">
+					{#each actions as a (a.id)}<button
+							onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}
+							>{hiddenActions[a.id] ? '👁‍🗨 show' : '👁 hide'} {a.n}</button
+						>{/each}
+				</div>
+			{:else if overlay.kind === 'manage' || overlay.kind === 'pinskills'}
+				<p class="trace">
+					Full {overlay.kind === 'manage' ? 'spellbook' : 'pin'} manager — coming with the {overlay.kind ===
+					'manage'
+						? 'spell manager (d-spellmgr)'
+						: 'Profile'} view.
+				</p>
+			{/if}
+		</div>
+	{/if}
 {/if}
 
 <style>
@@ -515,6 +821,7 @@
 		border: 1px solid var(--color-border-strong);
 		border-radius: 5px;
 		padding: 1px 6px;
+		color: inherit;
 	}
 	.toggle.on {
 		background: var(--color-resource-soft);
@@ -527,6 +834,10 @@
 	.toggle.conc.on {
 		background: #241317;
 		border-color: var(--color-accent);
+		color: #f0a6ad;
+	}
+	.toggle.conc.on .sw {
+		border-color: #7a2230;
 		color: #f0a6ad;
 	}
 	.toggle.auto.on {
@@ -558,7 +869,7 @@
 		border: 1px solid var(--color-border);
 		border-radius: 12px;
 		padding: 9px 12px;
-		margin-bottom: 20px;
+		margin-bottom: 12px;
 	}
 	.turnbar .lbl {
 		font-family: var(--font-mono);
@@ -626,6 +937,48 @@
 		cursor: pointer;
 	}
 
+	.playbar {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 12px;
+		margin-bottom: 22px;
+	}
+	.phint {
+		font-size: 12px;
+		color: var(--color-text-muted);
+		flex: 1;
+		min-width: 220px;
+	}
+	.rollout {
+		font-family: var(--font-mono);
+		font-size: 12px;
+		color: var(--color-text);
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		padding: 6px 11px;
+		cursor: pointer;
+		margin-left: auto;
+		white-space: nowrap;
+	}
+	.rollout:hover {
+		border-color: var(--color-border-strong);
+	}
+	.rollout i {
+		font-style: normal;
+		color: var(--color-text-muted);
+	}
+	.rollout .res {
+		color: var(--color-good);
+		font-size: 14px;
+		font-weight: 700;
+	}
+	.rollout .logcue {
+		color: var(--color-text-muted);
+		margin-left: 8px;
+	}
+
 	.sectlab {
 		font-family: var(--font-mono);
 		text-transform: uppercase;
@@ -651,6 +1004,14 @@
 		font-size: 11px;
 		color: var(--color-text-muted);
 	}
+	.chev {
+		background: transparent;
+		border: 0;
+		color: var(--color-text-muted);
+		cursor: pointer;
+		font-size: 10px;
+		padding: 0 2px 0 0;
+	}
 
 	.combat {
 		display: grid;
@@ -659,11 +1020,13 @@
 		margin-bottom: 12px;
 	}
 	.tile {
+		text-align: left;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 13px;
 		padding: 13px 15px;
-		cursor: help;
+		cursor: pointer;
+		color: var(--color-text);
 	}
 	.tile .k {
 		font-family: var(--font-mono);
@@ -760,6 +1123,13 @@
 		text-align: center;
 		padding: 12px 8px;
 		cursor: pointer;
+		color: var(--color-text);
+		display: block;
+		width: 100%;
+	}
+	.ab:hover {
+		border-color: var(--color-border-strong);
+		background: var(--color-surface);
 	}
 	.ab .n {
 		font-family: var(--font-mono);
@@ -785,6 +1155,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 6px;
+		width: 100%;
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
@@ -792,6 +1163,7 @@
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
 		padding: 4px 6px;
+		cursor: pointer;
 	}
 	.ab .sv b {
 		font-family: var(--font-display);
@@ -834,6 +1206,9 @@
 		break-inside: avoid;
 		margin-bottom: 18px;
 	}
+	.spellcard {
+		margin-top: 0;
+	}
 	.card h2 {
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -842,6 +1217,15 @@
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 		margin: 0 0 13px;
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.card h2 .dh {
+		margin-left: auto;
+		color: var(--color-border-strong);
+		font-size: 13px;
+		cursor: grab;
 	}
 	.ph2 {
 		display: flex;
@@ -852,11 +1236,17 @@
 	.ph2 h2 {
 		margin: 0 auto 0 0;
 	}
+	.ph2 .dh {
+		color: var(--color-border-strong);
+		font-size: 13px;
+		cursor: grab;
+	}
 	.grpby {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 11px;
 		color: var(--color-text-muted);
+		background: transparent;
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
 		padding: 3px 8px;
@@ -887,8 +1277,13 @@
 		padding: 5px 8px;
 		border-radius: 8px;
 		break-inside: avoid;
-		cursor: help;
+		cursor: pointer;
 		font-size: 13px;
+		width: 100%;
+		background: transparent;
+		border: 0;
+		color: var(--color-text);
+		text-align: left;
 	}
 	.skl:hover {
 		background: var(--color-surface-2);
@@ -933,6 +1328,11 @@
 		margin: 0 -9px;
 		border-radius: 9px;
 		cursor: pointer;
+		width: calc(100% + 18px);
+		background: transparent;
+		border: 0;
+		color: var(--color-text);
+		text-align: left;
 	}
 	.atk + .atk {
 		box-shadow: 0 -1px 0 var(--color-border);
@@ -997,7 +1397,7 @@
 		display: block;
 	}
 
-	.castline {
+	.spellcard .castline {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
@@ -1007,6 +1407,15 @@
 		color: var(--color-resource);
 		font-family: var(--font-display);
 		font-weight: 700;
+	}
+	.sprows {
+		column-count: 2;
+		column-gap: 22px;
+	}
+	@media (max-width: 760px) {
+		.sprows {
+			column-count: 1;
+		}
 	}
 	.scat {
 		display: flex;
@@ -1018,6 +1427,10 @@
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 		padding: 11px 0 3px;
+		break-inside: avoid;
+	}
+	.scat.star {
+		color: var(--color-accent-bright);
 	}
 	.scat .pips {
 		display: flex;
@@ -1041,13 +1454,14 @@
 	}
 	.sprow {
 		display: grid;
-		grid-template-columns: 1fr 96px 88px 64px;
+		grid-template-columns: 1fr 90px 84px 60px;
 		align-items: center;
 		gap: 9px;
 		padding: 7px 6px;
 		border-top: 1px solid var(--color-border);
 		border-radius: 7px;
 		cursor: pointer;
+		break-inside: avoid;
 	}
 	.scat + .sprow {
 		border-top: 0;
@@ -1070,6 +1484,8 @@
 		font-weight: 600;
 		white-space: nowrap;
 		text-align: right;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.sprow .rtag {
 		font-family: var(--font-mono);
@@ -1115,5 +1531,129 @@
 	.prep.always {
 		background: var(--color-resource);
 		border-color: var(--color-resource);
+	}
+	.pinstar {
+		background: transparent;
+		border: 0;
+		color: var(--color-border-strong);
+		margin-left: 7px;
+		cursor: pointer;
+		font-size: 12px;
+	}
+	.pinstar.on {
+		color: var(--color-accent-bright);
+	}
+	.prepct {
+		font-family: var(--font-mono);
+		font-size: 11px;
+		color: var(--color-text-muted);
+	}
+	.prepct b {
+		color: var(--color-resource);
+	}
+
+	/* overlays (d-menus) */
+	.ovbg {
+		position: fixed;
+		inset: 0;
+		background: var(--color-overlay);
+		z-index: 50;
+	}
+	.ov {
+		position: fixed;
+		top: 12vh;
+		left: 50%;
+		transform: translateX(-50%);
+		width: min(460px, calc(100vw - 2rem));
+		max-height: 74vh;
+		overflow: auto;
+		z-index: 51;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-lg);
+		box-shadow: var(--shadow-2);
+		padding: 16px;
+	}
+	.ovhead {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-family: var(--font-display);
+		margin-bottom: 12px;
+	}
+	.ovx {
+		background: transparent;
+		border: 0;
+		color: var(--color-text-muted);
+		cursor: pointer;
+		font-size: 15px;
+	}
+	.dtray {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+	.dbtn {
+		font-family: var(--font-display);
+		font-weight: 700;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		color: var(--color-text);
+		border-radius: 9px;
+		padding: 10px 14px;
+		cursor: pointer;
+	}
+	.dbtn:hover {
+		border-color: var(--color-accent);
+	}
+	.dres {
+		font-family: var(--font-mono);
+		margin-top: 12px;
+	}
+	.dres b {
+		color: var(--color-good);
+		font-size: 18px;
+	}
+	.ovlist {
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+	}
+	.ovlist button {
+		text-align: left;
+		background: transparent;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text);
+		padding: 8px 11px;
+		cursor: pointer;
+		font-family: var(--font-body);
+	}
+	.ovlist button:hover {
+		background: var(--color-surface-2);
+		border-color: var(--color-border-strong);
+	}
+	.ovlist small {
+		color: var(--color-text-muted);
+		font-family: var(--font-mono);
+		font-size: 10px;
+	}
+	.ovlog {
+		display: flex;
+		flex-direction: column;
+	}
+	.ovlog > div {
+		display: flex;
+		justify-content: space-between;
+		padding: 6px 2px;
+		border-bottom: 1px solid var(--color-border);
+		font-size: 13px;
+	}
+	.ovlog .mono {
+		font-family: var(--font-mono);
+		color: var(--color-text-muted);
+	}
+	.ovlog .mono b {
+		color: var(--color-good);
 	}
 </style>
