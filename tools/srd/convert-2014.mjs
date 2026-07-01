@@ -247,10 +247,93 @@ function convertFeats() {
 	return rows.length;
 }
 
+// --- classes + class features ------------------------------------------------
+const CLASS_IDS = ['Barbarian', 'Bard', 'Cleric', 'Druid', 'Fighter', 'Monk', 'Paladin', 'Ranger', 'Rogue', 'Sorcerer', 'Warlock', 'Wizard'];
+// caster type + spellcasting ability are fixed mechanical classifications of the 12 SRD
+// classes, identical across editions — not prose. Use the known values (matches the
+// values derived from the 5.2.1 source) rather than re-parsing fragile 2014 slot tables.
+const CASTER = { barbarian: 'none', bard: 'full', cleric: 'full', druid: 'full', fighter: 'none', monk: 'none', paladin: 'half', ranger: 'half', rogue: 'none', sorcerer: 'full', warlock: 'pact', wizard: 'full' };
+const SPELL_ABIL = { bard: 'cha', cleric: 'wis', druid: 'wis', paladin: 'cha', ranger: 'wis', sorcerer: 'cha', warlock: 'cha', wizard: 'int' };
+// SRD 5.1 subclass-choice level (differs from 2024; a known mechanical fact per class).
+const SUBCLASS_LEVEL_2014 = { barbarian: 3, bard: 3, cleric: 1, druid: 2, fighter: 3, monk: 3, paladin: 3, ranger: 3, rogue: 3, sorcerer: 1, warlock: 1, wizard: 2 };
+const HIT_DIE = /Hit Dice:\s*1(d\d+)/i;
+const norm = (s) => s.toLowerCase().replace(/\([^)]*\)/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+function convertClasses() {
+	const html = src(`${SRC}.html`);
+	const classRows = [], featureRows = [];
+	// slice each class by DOCUMENT position (array order ≠ doc order), end at next class
+	const pos = CLASS_IDS.map((id) => ({ id, at: html.indexOf(`id='${id}'`) })).sort((a, b) => a.at - b.at);
+	const endOf = new Map();
+	pos.forEach((p, k) => endOf.set(p.id, pos[k + 1] ? pos[k + 1].id : 'Backgrounds'));
+
+	for (const cid of CLASS_IDS) {
+		const block = sliceById(html, cid, endOf.get(cid));
+		const text = strip(block);
+		const id = slug(cid);
+
+		// progression table rows: level + full row text (the Features column index varies
+		// per class — rogue has a Sneak Attack column first — so match heading names against
+		// the whole row rather than a fixed cell).
+		const table = (/<table[\s\S]*?<\/table>/i.exec(block) || [''])[0];
+		const trs = table.match(/<tr[\s\S]*?<\/tr>/gi) || [];
+		const tableRows = [];
+		for (const tr of trs) {
+			const cells = [...tr.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => strip(m[1]));
+			const lm = /^(\d+)(?:st|nd|rd|th)$/.exec(cells[0] || '');
+			if (lm) tableRows.push({ lvl: Number(lm[1]), text: ' ' + norm(cells.join(' ')) + ' ' });
+		}
+		const headings = htmlEntries(block).filter((e) => e.level === 3 || e.level === 4);
+		const levelOf = new Map();
+		for (const h of headings) {
+			const nn = norm(h.name);
+			if (!nn) continue;
+			const hit = tableRows.find((r) => r.text.includes(` ${nn} `) || r.text.includes(`${nn},`) || r.text.includes(`${nn} `));
+			if (hit && !levelOf.has(nn)) levelOf.set(nn, hit.lvl);
+		}
+
+		const savesM = /Saving Throws:\s*([A-Za-z, ]+?)(?:Skills|Tools|Armor|$)/i.exec(text);
+		const saves = savesM ? (savesM[1].toLowerCase().match(/strength|dexterity|constitution|intelligence|wisdom|charisma/g) || []).map((a) => ({ strength: 'str', dexterity: 'dex', constitution: 'con', intelligence: 'int', wisdom: 'wis', charisma: 'cha' }[a])) : [];
+		const skM = /Skills:\s*Choose (any )?(\w+)(?:\s+skills?)?(?:\s+from\s+([^.]+))?/i.exec(text);
+		const num = { two: 2, three: 3, four: 4, one: 1 };
+		const splitSkills = (s) => s.split(/,|\bor\b|\band\b/i).map((x) => slug(x)).filter((x) => x && x !== 'or' && x !== 'and');
+		const caster = CASTER[id];
+		const subKw = /\b(\d+)(?:st|nd|rd|th)[^|]*?(Primal Path|Divine Domain|Bard College|Druid Circle|Martial Archetype|Monastic Tradition|Sacred Oath|Ranger [A-Za-z]*|Roguish Archetype|Sorcerous Origin|Otherworldly Patron|Arcane Tradition)/i.exec(text);
+
+		classRows.push({
+			id, systems: '5e', source: 'SRD 5.1', name_en: cid.replace(/([a-z])([A-Z])/g, '$1 $2'), name_uk: '',
+			text_en: '', text_uk: '', effects: '',
+			hit_die: (HIT_DIE.exec(text) || [, ''])[1], primary_ability: '',
+			saves: saves.join(','),
+			caster, spell_ability: SPELL_ABIL[id] || '',
+			skills_choose: skM ? String(num[skM[2].toLowerCase()] || skM[2]) : '',
+			skills_from: skM ? (skM[1] ? 'any' : skM[3] ? splitSkills(skM[3]).join(',') : '') : '',
+			subclass_level: String(SUBCLASS_LEVEL_2014[id])
+		});
+
+		// feature descriptions = h3/h4 headings with a level found in the progression table
+		for (const e of headings) {
+			const lvl = levelOf.get(norm(e.name));
+			if (!lvl) continue; // archetype/uncharted headings without a base-table level
+			featureRows.push({
+				id: `${id}-${slug(e.name)}`, systems: '5e', source: 'SRD 5.1', name_en: e.name, name_uk: '',
+				text_en: e.paras.map(strip).filter(Boolean).join('\n'), text_uk: '', effects: '',
+				class_id: id, level: lvl, resource: '', subclass_id: ''
+			});
+		}
+	}
+	assertCount('classes', classRows.length, 12);
+	dedupeIds(featureRows);
+	writeCsv(out('classes_srd.csv'), ['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'hit_die', 'primary_ability', 'saves', 'caster', 'spell_ability', 'skills_choose', 'skills_from', 'subclass_level'], classRows);
+	writeCsv(out('class_features_srd.csv'), ['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id', 'level', 'resource', 'subclass_id'], featureRows);
+	console.log('classes:', classRows.map((c) => `${c.id}(${c.hit_die},${c.caster})`).join(' '));
+	return featureRows.length;
+}
+
 const nSpells = convertSpells();
 const nMonsters = convertMonsters();
 const nCond = convertConditions();
 const nSpec = convertSpecies();
 const nBg = convertBackgrounds();
 const nFeat = convertFeats();
-console.log(`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nBg} backgrounds, ${nFeat} feats`);
+const nFeatures = convertClasses();
+console.log(`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nBg} backgrounds, ${nFeat} feats, 12 classes, ${nFeatures} class features`);
