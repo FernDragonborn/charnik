@@ -3,6 +3,7 @@
 	// Thin shell: the destination list is data; navigation goes through the router. Real
 	// content search (spells/items/rules) plugs into the same filtered list later.
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { _ } from '$lib/i18n';
 
 	interface Command {
@@ -42,11 +43,14 @@
 	function run(cmd: Command | undefined) {
 		if (!cmd) return;
 		closePalette();
-		goto(cmd.href);
+		// Prefix the base path so links resolve under the GitHub Pages subpath (empty on desktop).
+		goto(`${base}${cmd.href}`);
 	}
 
 	function onWindowKeydown(e: KeyboardEvent) {
-		if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+		// Match the PHYSICAL key (e.code), not e.key, so Ctrl+K fires on any keyboard layout
+		// (e.g. Cyrillic, where the K key yields "к"). Applies to all app shortcuts.
+		if ((e.ctrlKey || e.metaKey) && e.code === 'KeyK') {
 			e.preventDefault();
 			open ? closePalette() : openPalette();
 		}

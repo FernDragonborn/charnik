@@ -233,7 +233,11 @@ items. Each may carry **effects** (bounded vocab).
   **local/view search lives INSIDE the view** (the list's own search/filter box, e.g.
   Inventory's item filter, the Spellbook search) — `Ctrl+Shift+K` just focuses it; it is NOT
   a header button. **Views switch** via a **tab bar** (Profile · Combat · Inventory · Build),
-  `Ctrl+1..4`, or the palette. **Every scrollable/selectable list is
+  `Ctrl+1..4`, or the palette. **All shortcuts match the PHYSICAL key (`e.code`, e.g.
+  `KeyK`/`Digit1`), never `e.key`** — so they work on any keyboard layout (Cyrillic etc.),
+  not only English. (Also: every internal link/navigation, incl. the palette's `goto`, must
+  prefix `base` from `$app/paths` or it 404s under the GitHub Pages subpath.)
+  **Every scrollable/selectable list is
   arrow-key navigable**: ↑/↓ move a highlighted item, **Enter activates it (identical to a
   left-click)**, Home/End jump, type-ahead where useful — applies uniformly to the command
   palette, spell/attack lists, roll log, compendium, and every dropdown. Cheaper now than
