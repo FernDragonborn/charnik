@@ -12,6 +12,7 @@
 
 	const nav = [
 		{ href: '/', key: 'nav.roster' },
+		{ href: '/combat', key: 'nav.combat' },
 		{ href: '/compendium', key: 'nav.compendium' },
 		{ href: '/settings', key: 'nav.settings' }
 	];

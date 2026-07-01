@@ -14,6 +14,7 @@
 
 	const COMMANDS: Command[] = [
 		{ id: 'roster', labelKey: 'nav.roster', href: '/' },
+		{ id: 'combat', labelKey: 'nav.combat', href: '/combat' },
 		{ id: 'compendium', labelKey: 'nav.compendium', href: '/compendium' },
 		{ id: 'settings', labelKey: 'nav.settings', href: '/settings' }
 	];

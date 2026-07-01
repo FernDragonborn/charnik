@@ -5,6 +5,7 @@
 	},
 	"nav": {
 		"roster": "Roster",
+		"combat": "Combat",
 		"compendium": "Compendium",
 		"settings": "Settings",
 		"skipToContent": "Skip to content",
