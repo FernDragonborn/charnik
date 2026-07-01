@@ -179,6 +179,20 @@ export function maxHpForClass(args: { hitDie: string; level: number; conScore: n
 	return computed(c, { min: 1 });
 }
 
+// prettier-ignore
+const FULL_CASTER_SLOTS: number[][] = [
+	[2], [3], [4, 2], [4, 3], [4, 3, 2], [4, 3, 3], [4, 3, 3, 1], [4, 3, 3, 2],
+	[4, 3, 3, 3, 1], [4, 3, 3, 3, 2], [4, 3, 3, 3, 2, 1], [4, 3, 3, 3, 2, 1],
+	[4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1],
+	[4, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 2, 1, 1, 1, 1], [4, 3, 3, 3, 3, 1, 1, 1, 1],
+	[4, 3, 3, 3, 3, 2, 1, 1, 1], [4, 3, 3, 3, 3, 2, 2, 1, 1]
+];
+
+/** Full-caster spell slots per spell level (index 0 = 1st) at a given caster level. */
+export function fullCasterSlots(casterLevel: number): number[] {
+	return FULL_CASTER_SLOTS[Math.max(1, Math.min(20, casterLevel)) - 1] ?? [];
+}
+
 /** Carrying capacity in pounds = STR × 15. The encumbrance tiers (×5 / ×10) are a 5e-only
  *  variant surfaced as notes; 5.5e just drops speed to 5 ft over capacity. */
 export function carryingCapacity(args: { strScore: number; system: System }): Computed {

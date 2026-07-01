@@ -13,9 +13,31 @@ export function demoCharacter(): Character {
 	c.build.species = `species:${S}:elf`;
 	c.build.classes = [{ class: `class:${S}:wizard`, level: 3 }];
 	c.build.abilities = { str: 8, dex: 14, con: 14, int: 16, wis: 12, cha: 10 };
-	c.build.skills = ['arcana', 'history', 'investigation', 'perception'];
-	c.build.inventory = [{ item: `item:${S}:leather-armor`, qty: 1, equipped: true, attuned: false }];
-	c.play.hp = { current: 14, max: undefined, temp: 0 };
+	c.build.skills = ['arcana', 'history', 'investigation', 'perception', 'stealth'];
+	c.build.inventory = [
+		{ item: `item:${S}:leather-armor`, qty: 1, equipped: true, attuned: false },
+		{ item: `item:${S}:quarterstaff`, qty: 1, equipped: true, attuned: false },
+		{ item: `item:${S}:dagger`, qty: 2, equipped: true, attuned: false }
+	];
+	const spell = (id: string, prepared = true, alwaysPrepared = false) => ({
+		spell: `spell:${S}:${id}`,
+		prepared,
+		alwaysPrepared
+	});
+	c.build.spells = [
+		spell('fire-bolt', false, true),
+		spell('mage-hand', false, true),
+		spell('ray-of-frost', false, true),
+		spell('magic-missile'),
+		spell('shield'),
+		spell('scorching-ray'),
+		spell('misty-step'),
+		spell('fireball'),
+		spell('counterspell'),
+		spell('fly')
+	];
+	c.play.hp = { current: 14, max: undefined, temp: 5 };
+	c.play.spellSlotsSpent = { '1': 1, '2': 0, '3': 1 };
 	c.play.effects = [
 		{
 			iid: 'shield-of-faith',

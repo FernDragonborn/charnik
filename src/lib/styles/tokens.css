@@ -62,8 +62,12 @@
 	--color-text-muted: #878f9d;
 	--color-accent: #cf2b40; /* heraldic crimson */
 	--color-accent-text: #ffffff;
-	--color-resource: #caa24a; /* gold — spell slots / resource pips */
+	--color-accent-bright: #ef6b78; /* crimson AS TEXT on dark (labels, important) */
+	--color-accent-deep: #b3243a; /* crimson bg behind white text (primary buttons) */
+	--color-resource: #caa24a; /* gold — spell slots / resource pips / prepared */
 	--color-resource-soft: #2a2415;
+	--color-good: #3bb8a6; /* teal — positive/confirmation, temp HP, available pips */
+	--color-good-soft: #11302c;
 	--color-success: #3fa66a;
 	--color-warning: #e0a44b;
 	--color-danger: #e0635a;
@@ -81,8 +85,12 @@
 	--color-text-muted: #5a6570;
 	--color-accent: #b3243a;
 	--color-accent-text: #ffffff;
+	--color-accent-bright: #b3243a;
+	--color-accent-deep: #b3243a;
 	--color-resource: #9a6a1f;
 	--color-resource-soft: #f1e7cf;
+	--color-good: #1f8a7a;
+	--color-good-soft: #d9efe9;
 	--color-success: #2e7d4f;
 	--color-warning: #9a6a1f;
 	--color-danger: #a32b22;
