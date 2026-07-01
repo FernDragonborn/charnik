@@ -1,9 +1,0 @@
-{
-  "schemaVersion": 1,
-  "source": "SRD",
-  "name": "System Reference Document (5.1 + 5.2.1)",
-  "license": "CC-BY-4.0",
-  "attribution": "This work includes material from the System Reference Document 5.1 and the System Reference Document 5.2.1, © Wizards of the Coast LLC, available under the Creative Commons Attribution 4.0 International License (https://creativecommons.org/licenses/by/4.0/legalcode).",
-  "systems": ["5e", "5.5e"],
-  "note": "Pack-level metadata. Every CSV in this folder inherits schemaVersion/license/attribution from here; rows carry their own `source` (default SRD) so packs can be merged."
-}

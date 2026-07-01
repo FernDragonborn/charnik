@@ -1,0 +1,5 @@
+id,systems,source,name_en,name_uk,text_en,text_uk,effects,skills,tools,languages,ability_choices,origin_feat
+acolyte,5.5e,SRD 5.2.1,Acolyte,,,,,"insight,religion",calligraphers-supplies,,"int,wis,cha",magic-initiate
+criminal,5.5e,SRD 5.2.1,Criminal,,,,,"sleight-of-hand,stealth",thieves-tools,,"dex,con,int",alert
+sage,5.5e,SRD 5.2.1,Sage,,,,,"arcana,history",calligraphers-supplies,,"con,int,wis",magic-initiate
+soldier,5.5e,SRD 5.2.1,Soldier,,,,,"athletics,intimidation",choose-one-kind-of-gaming-set,,"str,dex,con",savage-attacker

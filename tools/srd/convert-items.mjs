@@ -38,7 +38,7 @@ const blank = {
 	damage_type: '', range: '', ac: '', armor_dex_cap: '', str_min: '', stealth_disadvantage: 'false',
 	attunement: 'false', rarity: ''
 };
-const row = (o) => ({ systems: '5.5e', source: 'SRD', ...blank, ...o });
+const row = (o) => ({ systems: '5.5e', source: 'SRD 5.2.1', ...blank, ...o });
 
 const rows = [];
 let nWeapon = 0, nArmor = 0, nGear = 0, nMagic = 0;
@@ -149,5 +149,5 @@ for (const b of blocks(src('magic-items.md'))) {
 assertCount('magic items', nMagic, 258);
 
 dedupeIds(rows);
-writeCsv(resolve(root, 'content/srd/items_srd.csv'), COLUMNS, rows);
+writeCsv(resolve(root, 'content/srd-2024/items_srd.csv'), COLUMNS, rows);
 console.log(`wrote ${rows.length} items (weapons ${nWeapon}, armor ${nArmor}, gear ${nGear}, magic ${nMagic})`);

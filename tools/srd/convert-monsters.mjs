@@ -56,7 +56,7 @@ function parseMonsters(md) {
 		out.push({
 			id: slug(s.name),
 			systems: '5.5e',
-			source: 'SRD',
+			source: 'SRD 5.2.1',
 			name_en: s.name,
 			name_uk: '',
 			text_en: flat.replace(/\n{2,}/g, '\n').trim(),
@@ -85,7 +85,7 @@ assertCount('monsters', rows.length, 330); // monsters-A-Z 235 + animals 95
 dedupeIds(rows);
 
 writeCsv(
-	resolve(root, 'content/srd/monsters_srd.csv'),
+	resolve(root, 'content/srd-2024/monsters_srd.csv'),
 	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'size', 'creature_type', 'alignment', 'ac', 'hp', 'hp_formula', 'speed', 'str', 'dex', 'con', 'int', 'wis', 'cha', 'cr', 'senses', 'languages', 'skills'],
 	rows
 );

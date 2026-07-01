@@ -19,7 +19,7 @@ import Papa from 'papaparse';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const SRC = resolve(root, 'tools/srd-src/2024/spells.md');
-const OUT = resolve(root, 'content/srd/spells_srd.csv');
+const OUT = resolve(root, 'content/srd-2024/spells_srd.csv');
 
 const SCHOOLS = [
 	'abjuration',
@@ -150,7 +150,7 @@ function parseSpell(name, body) {
 	return {
 		id: slug(name),
 		systems: '5.5e',
-		source: 'SRD',
+		source: 'SRD 5.2.1',
 		name_en: name,
 		name_uk: '',
 		text_en: description,

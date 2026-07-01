@@ -15,7 +15,7 @@ import { blocks, field, description, abilities, skillList, slug, writeCsv, asser
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const src = (f) => readFileSync(resolve(root, 'tools/srd-src/2024', f), 'utf8');
-const out = (f) => resolve(root, 'content/srd', f);
+const out = (f) => resolve(root, 'content/srd-2024', f);
 
 // --- feats -------------------------------------------------------------------
 const FEAT_SECTIONS = {
@@ -32,7 +32,7 @@ function convertFeats() {
 		return {
 			id: slug(b.name),
 			systems: '5.5e',
-			source: 'SRD',
+			source: 'SRD 5.2.1',
 			name_en: b.name,
 			name_uk: '',
 			text_en: description(b.body),
@@ -61,7 +61,7 @@ function convertConditions() {
 		return {
 			id,
 			systems: '5.5e',
-			source: 'SRD',
+			source: 'SRD 5.2.1',
 			name_en: name,
 			name_uk: '',
 			text_en: description(b.body),
@@ -88,7 +88,7 @@ function convertSpecies() {
 		return {
 			id: slug(b.name),
 			systems: '5.5e',
-			source: 'SRD',
+			source: 'SRD 5.2.1',
 			name_en: b.name,
 			name_uk: '',
 			text_en: description(b.body),
@@ -115,7 +115,7 @@ function convertBackgrounds() {
 		return {
 			id: slug(b.name),
 			systems: '5.5e',
-			source: 'SRD',
+			source: 'SRD 5.2.1',
 			name_en: b.name,
 			name_uk: '',
 			text_en: description(b.body),

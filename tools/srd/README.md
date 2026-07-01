@@ -6,16 +6,25 @@ fix the parser or the source mapping — do not edit the CSV by hand.
 
 ## Sources (CC-BY-4.0, SRD-only)
 
-| System | SRD | Source repo | Local (gitignored) |
-|--------|-----|-------------|--------------------|
-| 5.5e (2024) | SRD 5.2.1 | [downfallx/dnd-5e-srd-markdown](https://github.com/downfallx/dnd-5e-srd-markdown) | `tools/srd-src/2024/` |
-| 5e (2014) | SRD 5.1 | [Tabyltop/CC-SRD](https://github.com/Tabyltop/CC-SRD) | `tools/srd-src/2014/` *(pending)* |
+| System | SRD | Output root | Source repo | Local (gitignored) |
+|--------|-----|-------------|-------------|--------------------|
+| 5.5e (2024) | SRD 5.2.1 | `content/srd-2024/` | [downfallx/dnd-5e-srd-markdown](https://github.com/downfallx/dnd-5e-srd-markdown) | `tools/srd-src/2024/` |
+| 5e (2014) | SRD 5.1 | `content/srd-2014/` | [Tabyltop/CC-SRD](https://github.com/Tabyltop/CC-SRD) | `tools/srd-src/2014/` |
 
-Both carry the canonical WotC CC-BY-4.0 attribution (see `content/ATTRIBUTION.md`).
-**Rejected:** BTMorton/dnd-5e-srd (OGL 1.0a, not CC-BY; SRD 5.0) — license incompatible.
+**Two edition roots, edition-specific `source`.** SRD 5.1 and 5.2.1 are different documents,
+so their rows carry distinct `source` tags (`SRD 5.1` vs `SRD 5.2.1`) → the same slug never
+collides on `source:id` across editions (`SRD 5.1:fireball` ≠ `SRD 5.2.1:fireball`). Each
+root has its own `_pack.json`. Both carry canonical WotC CC-BY-4.0 attribution.
+**Rejected:** BTMorton/dnd-5e-srd (OGL 1.0a, not CC-BY; SRD 5.0); normalized JSON
+compilations like 5e-bits (OGL provenance) — incompatible with our CC-BY-only rule.
 
-System tagging: rows are tagged by the SRD they came from (`5.5e` for 5.2.1, `5e` for 5.1).
-Never claim `5e,5.5e` unless verified identical in both — 2024 diverges from 2014.
+System tagging: rows tagged by the SRD they came from (`5.5e` for 5.2.1, `5e` for 5.1).
+Never claim both unless verified identical — 2024 diverges from 2014.
+
+**Best 5.1 source per type** (Tabyltop ships `.html` / `.txt` / coordinate-`.json` +
+`Monsters-*.json`): prose types parse from the **HTML** (semantic `<h4 id>` entries,
+`<p><b>Label:</b>value</p>` fields); monsters map from the **pre-structured Monsters JSON**.
+The coordinate JSON (PDF dump) is avoided.
 
 ## Regenerate
 

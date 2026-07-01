@@ -1,5 +1,5 @@
 /*
- * SRD 5.2.1 (CC-BY-4.0) classes.md → content/srd/classes_srd.csv + class_features_srd.csv
+ * SRD 5.2.1 (CC-BY-4.0) classes.md → content/srd-2024/classes_srd.csv + class_features_srd.csv
  * All tagged 5.5e. Class-level fields come from each "Core <Class> Traits" table; features
  * are the `#### Level N: Name` blocks BEFORE the subclass section (subclasses are a
  * separate concept, not seeded here). caster type is derived from the spell-slot columns
@@ -62,7 +62,7 @@ for (const part of parts) {
 	const subclassLevel = (/#### Level (\d+):[^\n]*Subclass/.exec(part) || [, ''])[1];
 
 	classRows.push({
-		id, systems: '5.5e', source: 'SRD', name_en: name, name_uk: '', text_en: '', text_uk: '', effects: '',
+		id, systems: '5.5e', source: 'SRD 5.2.1', name_en: name, name_uk: '', text_en: '', text_uk: '', effects: '',
 		hit_die: hitDie ? `d${hitDie}` : '',
 		primary_ability: abilities(traits['Primary Ability'] || ''),
 		saves: abilities(traits['Saving Throw Proficiencies'] || ''),
@@ -79,7 +79,7 @@ for (const part of parts) {
 		const featName = m[2].trim();
 		featureRows.push({
 			id: `${subclass_id || id}-${slug(featName)}`,
-			systems: '5.5e', source: 'SRD', name_en: featName, name_uk: '',
+			systems: '5.5e', source: 'SRD 5.2.1', name_en: featName, name_uk: '',
 			text_en: description(b.body), text_uk: '', effects: '',
 			class_id: id, level: Number(m[1]), resource: '', subclass_id: subclass_id || ''
 		});
@@ -96,7 +96,7 @@ for (const part of parts) {
 		const subId = slug(subName);
 		const subPortion = part.slice(subM.index);
 		subclassRows.push({
-			id: subId, systems: '5.5e', source: 'SRD', name_en: subName, name_uk: '',
+			id: subId, systems: '5.5e', source: 'SRD 5.2.1', name_en: subName, name_uk: '',
 			text_en: '', text_uk: '', effects: '', class_id: id
 		});
 		for (const b of blocks('## x\n' + subPortion)) pushFeature(b, subId);
@@ -110,17 +110,17 @@ dedupeIds(featureRows);
 dedupeIds(subclassRows);
 
 writeCsv(
-	resolve(root, 'content/srd/classes_srd.csv'),
+	resolve(root, 'content/srd-2024/classes_srd.csv'),
 	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'hit_die', 'primary_ability', 'saves', 'caster', 'spell_ability', 'skills_choose', 'skills_from', 'subclass_level'],
 	classRows
 );
 writeCsv(
-	resolve(root, 'content/srd/class_features_srd.csv'),
+	resolve(root, 'content/srd-2024/class_features_srd.csv'),
 	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id', 'level', 'resource', 'subclass_id'],
 	featureRows
 );
 writeCsv(
-	resolve(root, 'content/srd/subclasses_srd.csv'),
+	resolve(root, 'content/srd-2024/subclasses_srd.csv'),
 	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id'],
 	subclassRows
 );

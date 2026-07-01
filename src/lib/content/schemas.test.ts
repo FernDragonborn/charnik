@@ -95,31 +95,34 @@ describe('content schemas — unit', () => {
 
 // The seeded SRD pack is the canonical fixture (docs/TESTING.md): every shipped row must
 // validate against its schema. This gate keeps data and schema from drifting apart.
-describe('seeded SRD pack validates', () => {
-	const srdDir = resolve(process.cwd(), 'content/srd');
+describe('seeded SRD packs validate', () => {
+	// Both edition roots (SRD 5.2.1 = 5.5e, SRD 5.1 = 5e). Every shipped row must validate.
+	const roots = ['content/srd-2024', 'content/srd-2014'];
 
-	for (const [type, def] of Object.entries(CONTENT_TYPES)) {
-		const file = resolve(srdDir, `${def.filebase}_srd.csv`);
-		it(`${type}: every row in ${def.filebase}_srd.csv parses`, () => {
-			if (!existsSync(file)) {
-				// allowed while a type is not yet seeded; remove skip once present
-				return;
-			}
-			const csv = readFileSync(file, 'utf8');
-			const parsed = Papa.parse<Record<string, string>>(csv, {
-				header: true,
-				skipEmptyLines: true
-			});
-			expect(parsed.errors).toEqual([]);
-			expect(parsed.data.length).toBeGreaterThan(0);
-			const failures: string[] = [];
-			for (const row of parsed.data) {
-				const res = parseRow(type as ContentType, row);
-				if (!res.success) {
-					failures.push(`${row.id}: ${res.error.issues.map((i) => i.path.join('.') + ' ' + i.message).join('; ')}`);
+	for (const root of roots) {
+		for (const [type, def] of Object.entries(CONTENT_TYPES)) {
+			const file = resolve(process.cwd(), root, `${def.filebase}_srd.csv`);
+			it(`${root}/${def.filebase}: every row parses as ${type}`, () => {
+				if (!existsSync(file)) {
+					// a type may not exist in a given edition yet; skip
+					return;
 				}
-			}
-			expect(failures).toEqual([]);
-		});
+				const csv = readFileSync(file, 'utf8');
+				const parsed = Papa.parse<Record<string, string>>(csv, {
+					header: true,
+					skipEmptyLines: true
+				});
+				expect(parsed.errors).toEqual([]);
+				expect(parsed.data.length).toBeGreaterThan(0);
+				const failures: string[] = [];
+				for (const row of parsed.data) {
+					const res = parseRow(type as ContentType, row);
+					if (!res.success) {
+						failures.push(`${row.id}: ${res.error.issues.map((i) => i.path.join('.') + ' ' + i.message).join('; ')}`);
+					}
+				}
+				expect(failures).toEqual([]);
+			});
+		}
 	}
 });
