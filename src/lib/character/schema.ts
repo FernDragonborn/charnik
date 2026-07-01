@@ -118,6 +118,16 @@ const playSchema = z.object({
 	round: z.number().int().min(0).default(0)
 });
 
+// --- ui / per-character view preferences --------------------------------------
+
+/** Per-character sheet preferences (not build, not play — resetting play keeps these). */
+const uiSchema = z
+	.object({
+		/** Combat-sheet panel layout: one array of panel ids per column (left, right). */
+		panelColumns: z.array(z.array(z.string())).optional()
+	})
+	.default({});
+
 // --- character ----------------------------------------------------------------
 
 export const characterSchema = z.object({
@@ -125,12 +135,14 @@ export const characterSchema = z.object({
 	id: slug,
 	system: z.enum(SYSTEMS),
 	build: buildSchema,
-	play: playSchema
+	play: playSchema,
+	ui: uiSchema
 });
 
 export type Character = z.infer<typeof characterSchema>;
 export type CharacterBuild = z.infer<typeof buildSchema>;
 export type CharacterPlay = z.infer<typeof playSchema>;
+export type CharacterUi = z.infer<typeof uiSchema>;
 export type EffectInstance = z.infer<typeof effectInstance>;
 
 /** A fresh, valid character bound to a system. Abilities default to 10 (unset). */

@@ -4,6 +4,7 @@
 	// drag-reorderable panels, working menus (dice tray, condition/effect pickers, roll
 	// log, show/hide), pins, provenance on hover.
 	import { onMount } from 'svelte';
+	import { dndzone } from 'svelte-dnd-action';
 	import { demoCharacter } from '$lib/demo/sheet';
 	import { getContentGraph } from '$lib/content/provider';
 	import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
@@ -21,18 +22,33 @@
 	let shieldOn = $state(false);
 	let collapsed = $state<Record<string, boolean>>({});
 	let pinned = $state<Record<string, boolean>>({ 'fire-bolt': true, shield: true });
-	let panelOrder = $state(['skills', 'attacks', 'spells', 'actions', 'effects']);
+	// Panel layout = two independent column arrays (svelte-dnd-action items need an id).
+	// A panel's slot in its column is its position, so a neighbour's height never moves it.
+	let columns = $state<{ id: string }[][]>([
+		[{ id: 'skills' }, { id: 'spells' }, { id: 'effects' }],
+		[{ id: 'attacks' }, { id: 'actions' }]
+	]);
+	let dragDisabled = $state(true); // drag only after the ⠿ grip arms it (handle-only)
+	const flipDurationMs = 150;
 	let overlay = $state<null | { kind: string }>(null);
 	let log = $state<{ label: string; expr: string; total: number }[]>([]);
-	let dragId = $state<string | null>(null);
-	let grabbing = $state(false); // true only between ⠿ handle mousedown and drop/mouseup
 	let hiddenActions = $state<Record<string, boolean>>({});
+	const GROUP_MODES = ['level', 'prepared', 'school'] as const;
+	let spellGroupBy = $state<(typeof GROUP_MODES)[number]>('level');
+	const groupByLabel = $derived(
+		{ level: 'By level', prepared: 'Prepared', school: 'By school' }[spellGroupBy]
+	);
+	const cycleGroupBy = () =>
+		(spellGroupBy = GROUP_MODES[(GROUP_MODES.indexOf(spellGroupBy) + 1) % GROUP_MODES.length]);
 	let passiveSkills = $state<string[]>(['perception', 'investigation', 'insight']);
 
 	onMount(async () => {
 		graph = await getContentGraph();
 		character = demoCharacter();
 		sheet = deriveSheet(character, graph);
+		// restore this character's saved panel layout (falls back to the default columns)
+		const saved = character.ui.panelColumns;
+		if (saved?.length) columns = saved.map((col) => col.map((id) => ({ id })));
 	});
 
 	const signed = (n: number) => (n >= 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
@@ -254,24 +270,46 @@
 		const pins = all.filter((x) => pinned[x.row.id]);
 		if (pins.length)
 			groups.push({ key: 'pinned', label: '★ Pinned', slots: null, rows: pins.map((x) => x.row) });
-		const byLevel = new Map<number, SpRow[]>();
-		for (const x of all) {
-			const lvl = Number(graph!.get(x.sp.spell)!.data.level);
-			(byLevel.get(lvl) ?? byLevel.set(lvl, []).get(lvl)!).push(x.row);
-		}
-		for (const lvl of [...byLevel.keys()].sort((a, b) => a - b)) {
-			groups.push({
-				key: String(lvl),
-				label: lvl === 0 ? 'Cantrips' : ordinal(lvl),
-				slots:
-					lvl === 0
-						? null
-						: {
-								full: slots[lvl - 1] ?? 0,
-								spent: Number(character.play.spellSlotsSpent[String(lvl)] ?? 0)
-							},
-				rows: byLevel.get(lvl)!
-			});
+
+		if (spellGroupBy === 'level') {
+			const byLevel = new Map<number, SpRow[]>();
+			for (const x of all) {
+				const lvl = Number(graph!.get(x.sp.spell)!.data.level);
+				(byLevel.get(lvl) ?? byLevel.set(lvl, []).get(lvl)!).push(x.row);
+			}
+			for (const lvl of [...byLevel.keys()].sort((a, b) => a - b)) {
+				groups.push({
+					key: String(lvl),
+					label: lvl === 0 ? 'Cantrips' : ordinal(lvl),
+					slots:
+						lvl === 0
+							? null
+							: {
+									full: slots[lvl - 1] ?? 0,
+									spent: Number(character.play.spellSlotsSpent[String(lvl)] ?? 0)
+								},
+					rows: byLevel.get(lvl)!
+				});
+			}
+		} else if (spellGroupBy === 'prepared') {
+			const prep = all.filter((x) => x.row.prep).map((x) => x.row);
+			const rest = all.filter((x) => !x.row.prep).map((x) => x.row);
+			if (prep.length) groups.push({ key: 'prep', label: 'Prepared', slots: null, rows: prep });
+			if (rest.length)
+				groups.push({ key: 'unprep', label: 'Not prepared', slots: null, rows: rest });
+		} else {
+			const bySchool = new Map<string, SpRow[]>();
+			for (const x of all) {
+				const sch = String(graph!.get(x.sp.spell)!.data.school || 'Other');
+				(bySchool.get(sch) ?? bySchool.set(sch, []).get(sch)!).push(x.row);
+			}
+			for (const sch of [...bySchool.keys()].sort())
+				groups.push({
+					key: 'sch:' + sch,
+					label: titleCase(sch),
+					slots: null,
+					rows: bySchool.get(sch)!
+				});
 		}
 		return groups;
 	});
@@ -311,22 +349,15 @@
 		};
 	});
 
-	// drag reorder — cards are always draggable, but a drag only "takes" when it began
-	// on the ⠿ handle (grabbing). Otherwise cancel it so clicks/selection work normally.
-	function startDrag(e: DragEvent, pid: string) {
-		if (!grabbing) {
-			e.preventDefault();
-			return;
-		}
-		dragId = pid;
+	// svelte-dnd-action: sync each column on drag consider + finalize; re-lock the grip.
+	function dndConsider(ci: number, e: CustomEvent<{ items: { id: string }[] }>) {
+		columns[ci] = e.detail.items;
 	}
-	function onDrop(target: string) {
-		if (!dragId || dragId === target) return;
-		const o = [...panelOrder];
-		o.splice(o.indexOf(dragId), 1);
-		o.splice(o.indexOf(target), 0, dragId);
-		panelOrder = o;
-		dragId = null;
+	function dndFinalize(ci: number, e: CustomEvent<{ items: { id: string }[] }>) {
+		columns[ci] = e.detail.items;
+		dragDisabled = true;
+		// persist the layout ON THE CHARACTER (round-trips once save/load is wired)
+		if (character) character.ui.panelColumns = columns.map((col) => col.map((x) => x.id));
 	}
 
 	const conditionList = $derived(
@@ -358,7 +389,7 @@
 </script>
 
 <svelte:head><title>Combat — Charnik</title></svelte:head>
-<svelte:window onmouseup={() => (grabbing = false)} />
+<svelte:window onpointerup={() => (dragDisabled = true)} />
 
 {#if !sheet || !character}
 	<p class="loading">Computing sheet…</p>
@@ -504,139 +535,144 @@
 		</section>
 	{/if}
 
-	<section class="panels">
-		{#each panelOrder as pid (pid)}
-			<div
-				class="card"
-				draggable="true"
-				ondragstart={(e) => startDrag(e, pid)}
-				ondragover={(e) => e.preventDefault()}
-				ondrop={() => onDrop(pid)}
-				ondragend={() => (grabbing = false)}
-			>
-				<div class="phead">
-					<button class="htoggle" onclick={() => toggle(pid)}>
-						<span class="chev">{collapsed[pid] ? '▸' : '▾'}</span>{PANEL_TITLE[pid]}
-					</button>
-					{#if pid === 'actions'}
-						<button class="grpby" onclick={() => (overlay = { kind: 'showhide' })}
-							>👁 Show / hide</button
-						>
-					{:else if pid === 'effects'}
-						<button class="grpby" onclick={() => (overlay = { kind: 'addeffect' })}
-							>＋ Add effect</button
-						>
-					{:else if pid === 'spells' && s.spellcasting}
-						<span class="prepct">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
-						<button class="grpby" onclick={() => (overlay = { kind: 'manage' })}
-							>⛭ Manage all</button
-						>
-					{/if}
-					<button class="dh" title="drag to reorder" onmousedown={() => (grabbing = true)}>⠿</button
-					>
-				</div>
-				{#if !collapsed[pid]}
-					{#if pid === 'skills'}
-						<div class="sklgrid">
-							{#each ABIL as ab (ab)}
-								{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
-								{#if list.length}
-									<div class="catblock">
-										<div class="ssec">{ABILITY_NAME[ab]}</div>
-										{#each list as skill (skill)}
-											{@const sk = s.skills[skill]}
-											<button
-												class="skl"
-												title={why(sk)}
-												onclick={() => roll(titleCase(skill), sk.value)}
-											>
-												<i class="pdot" class:on={sk.proficient}></i>
-												<span class="sn">{titleCase(skill)}</span>
-												<b class="sm">{signed(sk.value)}</b>
-											</button>
-										{/each}
-									</div>
-								{/if}
-							{/each}
-						</div>
-					{:else if pid === 'attacks'}
-						{#each attacks as at (at.name)}
-							<button class="atk" onclick={() => roll(at.name, at.toHit)}>
-								<span class="an">{at.name}</span><span class="ah">{signed(at.toHit)}</span>
-								<span class="ad">{at.dmg}</span><span class="am">{at.meta}</span>
-							</button>
-						{/each}
-					{:else if pid === 'actions'}
-						{#each visibleActions as a (a.id)}
-							<button class="atk" onclick={() => a.roll && roll(a.roll[0], a.roll[1])}>
-								<span class="an">{a.n}</span><span class="ah">{a.h || '—'}</span>
-								<span class="ad">{a.d}</span><span class="am">{a.m}</span>
-							</button>
-						{/each}
-					{:else if pid === 'effects'}
-						{#each c.play.effects as e (e.iid)}
-							<div class="eff" class:pos={e.positive} class:neg={!e.positive}>
-								<span class="d"></span>
-								<div class="body">
-									<b>{e.label}</b>{#if e.effects.length}<small
-											>{e.effects.join(' · ')}{e.durationRounds
-												? ` · ${e.durationRounds} rounds`
-												: ''}</small
-										>{/if}
-								</div>
+	{#snippet panelCard(pid: string)}
+		<div class="phead">
+			<button class="htoggle" onclick={() => toggle(pid)}>
+				<span class="chev">{collapsed[pid] ? '▸' : '▾'}</span>{PANEL_TITLE[pid]}
+			</button>
+			{#if pid === 'actions'}
+				<button class="grpby" onclick={() => (overlay = { kind: 'showhide' })}>👁 Show / hide</button
+				>
+			{:else if pid === 'effects'}
+				<button class="grpby" onclick={() => (overlay = { kind: 'addeffect' })}
+					>＋ Add effect</button
+				>
+			{:else if pid === 'spells' && s.spellcasting}
+				<span class="prepct">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
+				<button class="grpby" onclick={cycleGroupBy} title="Change grouping"
+					>{groupByLabel} ▾</button
+				>
+				<button class="grpby" onclick={() => (overlay = { kind: 'manage' })}>⛭ Manage all</button>
+			{/if}
+			<span class="dh" title="drag to reorder" onpointerdown={() => (dragDisabled = false)}>⠿</span>
+		</div>
+		{#if !collapsed[pid]}
+			{#if pid === 'skills'}
+				<div class="sklgrid">
+					{#each ABIL as ab (ab)}
+						{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
+						{#if list.length}
+							<div class="catblock">
+								<div class="ssec">{ABILITY_NAME[ab]}</div>
+								{#each list as skill (skill)}
+									{@const sk = s.skills[skill]}
+									<button
+										class="skl"
+										title={why(sk)}
+										onclick={() => roll(titleCase(skill), sk.value)}
+									>
+										<i class="pdot" class:on={sk.proficient}></i>
+										<span class="sn">{titleCase(skill)}</span>
+										<b class="sm">{signed(sk.value)}</b>
+									</button>
+								{/each}
 							</div>
-						{:else}<p class="trace">No active effects.</p>{/each}
-					{:else if pid === 'spells' && s.spellcasting}
-						<div class="castline">
-							Save DC <b>{s.spellcasting.saveDC.value}</b> · attack
-							<b>{signed(s.spellcasting.attack.value)}</b> — every spell
+						{/if}
+					{/each}
+				</div>
+			{:else if pid === 'attacks'}
+				{#each attacks as at (at.name)}
+					<button class="atk" onclick={() => roll(at.name, at.toHit)}>
+						<span class="an">{at.name}</span><span class="ah">{signed(at.toHit)}</span>
+						<span class="ad">{at.dmg}</span><span class="am">{at.meta}</span>
+					</button>
+				{/each}
+			{:else if pid === 'actions'}
+				{#each visibleActions as a (a.id)}
+					<button class="atk" onclick={() => a.roll && roll(a.roll[0], a.roll[1])}>
+						<span class="an">{a.n}</span><span class="ah">{a.h || '—'}</span>
+						<span class="ad">{a.d}</span><span class="am">{a.m}</span>
+					</button>
+				{/each}
+			{:else if pid === 'effects'}
+				{#each c.play.effects as e (e.iid)}
+					<div class="eff" class:pos={e.positive} class:neg={!e.positive}>
+						<span class="d"></span>
+						<div class="body">
+							<b>{e.label}</b>{#if e.effects.length}<small
+									>{e.effects.join(' · ')}{e.durationRounds
+										? ` · ${e.durationRounds} rounds`
+										: ''}</small
+								>{/if}
 						</div>
-						<div class="sprows">
-							{#each spellGroups as g (g.key)}
-								<div class="spgroup">
-									<div class="scat" class:star={g.key === 'pinned'}>
-										{g.label}
-										{#if g.slots}<span class="pips"
-												>{#each Array(g.slots.full) as _, i (i)}<span
-														class="pip"
-														class:full={i >= g.slots.spent}
-														class:spent={i < g.slots.spent}
-													></span>{/each}</span
-											>{/if}
-									</div>
-									{#each g.rows as r (g.key + r.id)}
-										<button class="sprow" onclick={() => cast(r)}>
-											<span class="an">
-												<i
-													class="prep"
-													class:on={r.prep === 'on'}
-													class:always={r.prep === 'always'}
-												></i>
-												<span class="nm">{r.name}</span>
-												<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-												<span
-													class="pinstar"
-													class:on={pinned[r.id]}
-													role="button"
-													tabindex="-1"
-													title="pin to top"
-													onclick={(e) => {
-														e.stopPropagation();
-														pinned[r.id] = !pinned[r.id];
-													}}>{pinned[r.id] ? '★' : '☆'}</span
-												>
-											</span>
-											<span class="spe">{r.spe}</span>
-											{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span
-												></span>{/if}
-											<span class="tm">{r.tm}</span>
-										</button>
-									{/each}
-								</div>
+					</div>
+				{:else}<p class="trace">No active effects.</p>{/each}
+			{:else if pid === 'spells' && s.spellcasting}
+				<div class="castline">
+					Save DC <b>{s.spellcasting.saveDC.value}</b> · attack
+					<b>{signed(s.spellcasting.attack.value)}</b> — every spell
+				</div>
+				<div class="sprows">
+					{#each spellGroups as g (g.key)}
+						<div class="spgroup">
+							<div class="scat" class:star={g.key === 'pinned'}>
+								{g.label}
+								{#if g.slots}<span class="pips"
+										>{#each Array(g.slots.full) as _, i (i)}<span
+												class="pip"
+												class:full={i < g.slots.full - g.slots.spent}
+												class:spent={i >= g.slots.full - g.slots.spent}
+											></span>{/each}</span
+									>{/if}
+							</div>
+							{#each g.rows as r (g.key + r.id)}
+								<button class="sprow" onclick={() => cast(r)}>
+									<span class="an">
+										<i class="prep" class:on={r.prep === 'on'} class:always={r.prep === 'always'}
+										></i>
+										<span class="nm">{r.name}</span>
+										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+										<span
+											class="pinstar"
+											class:on={pinned[r.id]}
+											role="button"
+											tabindex="-1"
+											title="pin to top"
+											onclick={(e) => {
+												e.stopPropagation();
+												pinned[r.id] = !pinned[r.id];
+											}}>{pinned[r.id] ? '★' : '☆'}</span
+										>
+									</span>
+									<span class="spe">{r.spe}</span>
+									{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span></span>{/if}
+									<span class="tm">{r.tm}</span>
+								</button>
 							{/each}
 						</div>
-					{/if}
-				{/if}
+					{/each}
+				</div>
+			{/if}
+		{/if}
+	{/snippet}
+
+	<section class="panels">
+		{#each columns as col, ci (ci)}
+			<div
+				class="pcol"
+				use:dndzone={{
+					items: col,
+					type: 'panel',
+					dragDisabled,
+					flipDurationMs,
+					dropTargetStyle: {}
+				}}
+				onconsider={(e) => dndConsider(ci, e)}
+				onfinalize={(e) => dndFinalize(ci, e)}
+			>
+				{#each col as item (item.id)}
+					<div class="card">{@render panelCard(item.id)}</div>
+				{/each}
 			</div>
 		{/each}
 	</section>
@@ -1284,13 +1320,26 @@
 		border-color: var(--color-resource);
 	}
 
+	/* Two flex columns (not multicol): drag-safe with svelte-dnd-action, packs tight
+	   top-to-bottom so a block's height never bumps another into the next column. */
 	.panels {
-		column-count: 2;
-		column-gap: 18px;
+		display: flex;
+		gap: 18px;
+		align-items: stretch;
+	}
+	/* stretch + min-height so the whole column (incl. empty tail below the last card)
+	   is inside the dndzone → a panel can be dropped anywhere in the other column. */
+	.pcol {
+		flex: 1;
+		min-width: 0;
+		min-height: 160px;
+		display: flex;
+		flex-direction: column;
+		gap: 18px;
 	}
 	@media (max-width: 760px) {
 		.panels {
-			column-count: 1;
+			flex-direction: column;
 		}
 	}
 	.card {
@@ -1298,8 +1347,6 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		padding: 17px;
-		break-inside: avoid;
-		margin-bottom: 18px;
 	}
 	.grpby {
 		font-family: var(--font-display);
