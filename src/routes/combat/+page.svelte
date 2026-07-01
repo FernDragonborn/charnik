@@ -25,7 +25,7 @@
 	let overlay = $state<null | { kind: string }>(null);
 	let log = $state<{ label: string; expr: string; total: number }[]>([]);
 	let dragId = $state<string | null>(null);
-	let dragArmed = $state<string | null>(null); // a panel is draggable only while its ⠿ handle is held
+	let grabbing = $state(false); // true only between ⠿ handle mousedown and drop/mouseup
 	let hiddenActions = $state<Record<string, boolean>>({});
 	let passiveSkills = $state<string[]>(['perception', 'investigation', 'insight']);
 
@@ -311,7 +311,15 @@
 		};
 	});
 
-	// drag reorder
+	// drag reorder — cards are always draggable, but a drag only "takes" when it began
+	// on the ⠿ handle (grabbing). Otherwise cancel it so clicks/selection work normally.
+	function startDrag(e: DragEvent, pid: string) {
+		if (!grabbing) {
+			e.preventDefault();
+			return;
+		}
+		dragId = pid;
+	}
 	function onDrop(target: string) {
 		if (!dragId || dragId === target) return;
 		const o = [...panelOrder];
@@ -350,6 +358,7 @@
 </script>
 
 <svelte:head><title>Combat — Charnik</title></svelte:head>
+<svelte:window onmouseup={() => (grabbing = false)} />
 
 {#if !sheet || !character}
 	<p class="loading">Computing sheet…</p>
@@ -499,11 +508,11 @@
 		{#each panelOrder as pid (pid)}
 			<div
 				class="card"
-				draggable={dragArmed === pid}
-				ondragstart={() => (dragId = pid)}
+				draggable="true"
+				ondragstart={(e) => startDrag(e, pid)}
 				ondragover={(e) => e.preventDefault()}
 				ondrop={() => onDrop(pid)}
-				ondragend={() => (dragArmed = null)}
+				ondragend={() => (grabbing = false)}
 			>
 				<div class="phead">
 					<button class="htoggle" onclick={() => toggle(pid)}>
@@ -523,7 +532,7 @@
 							>⛭ Manage all</button
 						>
 					{/if}
-					<button class="dh" title="drag to reorder" onmousedown={() => (dragArmed = pid)}>⠿</button
+					<button class="dh" title="drag to reorder" onmousedown={() => (grabbing = true)}>⠿</button
 					>
 				</div>
 				{#if !collapsed[pid]}
