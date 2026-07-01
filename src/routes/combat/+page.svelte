@@ -7,7 +7,7 @@
 	import { demoCharacter } from '$lib/demo/sheet';
 	import { getContentGraph } from '$lib/content/provider';
 	import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
-	import { fullCasterSlots, type Ability } from '$lib/rules/core';
+	import { fullCasterSlots, passiveScore, type Ability } from '$lib/rules/core';
 	import type { ContentGraph } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
 	import type { Computed } from '$lib/rules/pipeline';
@@ -25,7 +25,9 @@
 	let overlay = $state<null | { kind: string }>(null);
 	let log = $state<{ label: string; expr: string; total: number }[]>([]);
 	let dragId = $state<string | null>(null);
+	let dragArmed = $state<string | null>(null); // a panel is draggable only while its ⠿ handle is held
 	let hiddenActions = $state<Record<string, boolean>>({});
+	let passiveSkills = $state<string[]>(['perception', 'investigation', 'insight']);
 
 	onMount(async () => {
 		graph = await getContentGraph();
@@ -52,6 +54,12 @@
 		log = [{ label, expr: `1d20(${d}) ${signed(mod)}`, total }, ...log].slice(0, 200);
 	}
 
+	const PANEL_TITLE: Record<string, string> = {
+		skills: 'Skills',
+		attacks: 'Attacks',
+		actions: 'Actions',
+		effects: 'Effects & conditions'
+	};
 	const ABIL: Ability[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 	const ABILITY_NAME: Record<Ability, string> = {
 		str: 'Strength',
@@ -76,6 +84,29 @@
 	const conc = $derived(
 		character?.play.effects.find((e) => e.label.toLowerCase().includes('bless'))
 	);
+
+	const titleCase = (s: string) => s.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+	// configurable passive-sense skills (Pin skills)
+	const passives = $derived(
+		sheet
+			? passiveSkills.map((k) => ({
+					key: k,
+					name: titleCase(k),
+					comp: passiveScore(sheet!.skills[k])
+				}))
+			: []
+	);
+	function togglePassive(k: string) {
+		passiveSkills = passiveSkills.includes(k)
+			? passiveSkills.filter((x) => x !== k)
+			: [...passiveSkills, k];
+	}
+	// casting a spell: attack spells roll to hit; others just log the cast
+	function cast(r: { name: string; res: string }) {
+		if (r.res === 'hit' && sheet?.spellcasting)
+			roll(`${r.name} (spell attack)`, sheet.spellcasting.attack.value);
+		else log = [{ label: `Cast ${r.name}`, expr: '', total: NaN }, ...log].slice(0, 200);
+	}
 
 	// attacks (equipped weapons + Unarmed Strike)
 	interface Atk {
@@ -165,8 +196,9 @@
 			{ id: 'help', n: 'Help', h: '', d: 'give an ally advantage', m: 'action' },
 			{ id: 'ready', n: 'Ready', h: '', d: 'prepare a trigger', m: 'action' },
 			{ id: 'utilize', n: 'Utilize', h: '', d: 'use an object', m: 'action' }
-		].filter((a) => !hiddenActions[a.id]);
+		];
 	});
+	const visibleActions = $derived(actions.filter((a) => !hiddenActions[a.id]));
 
 	// spells grouped by level (Pinned first)
 	interface SpRow {
@@ -352,7 +384,10 @@
 		{#if conc}<button class="toggle conc on"
 				>◈ Concentration <span class="sw">{conc.label}</span></button
 			>{/if}
-		<button class="toggle" class:on={c.play.inspiration}
+		<button
+			class="toggle"
+			class:on={c.play.inspiration}
+			onclick={() => (c.play.inspiration = !c.play.inspiration)}
 			>✦ Inspiration <span class="sw">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
 		>
 		<button class="toggle" onclick={() => (overlay = { kind: 'condition' })}>＋ Condition</button>
@@ -417,15 +452,12 @@
 		</section>
 		<div class="senses-strip">
 			<span class="lbl">Passive senses</span>
-			<span class="sv" title={why(s.passives.perception)}
-				><i>Perception</i>{s.passives.perception.value}</span
-			><span class="sdot">·</span>
-			<span class="sv" title={why(s.passives.investigation)}
-				><i>Investigation</i>{s.passives.investigation.value}</span
-			><span class="sdot">·</span>
-			<span class="sv" title={why(s.passives.insight)}
-				><i>Insight</i>{s.passives.insight.value}</span
-			>
+			{#each passives as p, i (p.key)}
+				{#if i > 0}<span class="sdot">·</span>{/if}
+				<span class="sv" title={why(p.comp)}><i>{p.name}</i>{p.comp.value}</span>
+			{:else}
+				<span class="sv"><i>none pinned</i></span>
+			{/each}
 			<button class="edit" onclick={() => (overlay = { kind: 'pinskills' })}>✎ Pin skills</button>
 		</div>
 	{/if}
@@ -466,18 +498,30 @@
 		{#each panelOrder as pid (pid)}
 			<div
 				class="card"
-				draggable="true"
+				draggable={dragArmed === pid}
 				ondragstart={() => (dragId = pid)}
 				ondragover={(e) => e.preventDefault()}
 				ondrop={() => onDrop(pid)}
+				ondragend={() => (dragArmed = null)}
 			>
-				{#if pid === 'skills'}
-					<h2>
-						<button class="chev" onclick={() => toggle('skills')}
-							>{collapsed.skills ? '▸' : '▾'}</button
-						>Skills<span class="dh" title="drag to reorder">⠿</span>
-					</h2>
-					{#if !collapsed.skills}
+				<div class="phead">
+					<button class="htoggle" onclick={() => toggle(pid)}>
+						<span class="chev">{collapsed[pid] ? '▸' : '▾'}</span>{PANEL_TITLE[pid]}
+					</button>
+					{#if pid === 'actions'}
+						<button
+							class="grpby"
+							title="Show / hide actions"
+							onclick={() => (overlay = { kind: 'showhide' })}>👁</button
+						>
+					{:else if pid === 'effects'}
+						<button class="grpby" onclick={() => (overlay = { kind: 'addeffect' })}>＋ Add</button>
+					{/if}
+					<button class="dh" title="drag to reorder" onmousedown={() => (dragArmed = pid)}>⠿</button
+					>
+				</div>
+				{#if !collapsed[pid]}
+					{#if pid === 'skills'}
 						<div class="sklgrid">
 							{#each ABIL as ab (ab)}
 								{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
@@ -489,12 +533,10 @@
 											<button
 												class="skl"
 												title={why(sk)}
-												onclick={() => roll(skill.replace(/-/g, ' '), sk.value)}
+												onclick={() => roll(titleCase(skill), sk.value)}
 											>
 												<i class="pdot" class:on={sk.proficient}></i>
-												<span class="sn"
-													>{skill.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase())}</span
-												>
+												<span class="sn">{titleCase(skill)}</span>
 												<b class="sm">{signed(sk.value)}</b>
 											</button>
 										{/each}
@@ -502,52 +544,21 @@
 								{/if}
 							{/each}
 						</div>
-					{/if}
-				{:else if pid === 'attacks'}
-					<h2>
-						<button class="chev" onclick={() => toggle('attacks')}
-							>{collapsed.attacks ? '▸' : '▾'}</button
-						>Attacks<span class="dh">⠿</span>
-					</h2>
-					{#if !collapsed.attacks}
+					{:else if pid === 'attacks'}
 						{#each attacks as at (at.name)}
 							<button class="atk" onclick={() => roll(at.name, at.toHit)}>
 								<span class="an">{at.name}</span><span class="ah">{signed(at.toHit)}</span>
 								<span class="ad">{at.dmg}</span><span class="am">{at.meta}</span>
 							</button>
 						{/each}
-					{/if}
-				{:else if pid === 'actions'}
-					<div class="ph2">
-						<h2>
-							<button class="chev" onclick={() => toggle('actions')}
-								>{collapsed.actions ? '▸' : '▾'}</button
-							>Actions
-						</h2>
-						<button class="grpby" onclick={() => (overlay = { kind: 'showhide' })}
-							>👁 Show / hide</button
-						><span class="dh">⠿</span>
-					</div>
-					{#if !collapsed.actions}
-						{#each actions as a (a.id)}
+					{:else if pid === 'actions'}
+						{#each visibleActions as a (a.id)}
 							<button class="atk" onclick={() => a.roll && roll(a.roll[0], a.roll[1])}>
-								<span class="an">{a.n}</span><span class="ah">{a.h || '—'}</span><span class="ad"
-									>{a.d}</span
-								><span class="am">{a.m}</span>
+								<span class="an">{a.n}</span><span class="ah">{a.h || '—'}</span>
+								<span class="ad">{a.d}</span><span class="am">{a.m}</span>
 							</button>
 						{/each}
-					{/if}
-				{:else if pid === 'effects'}
-					<div class="ph2">
-						<h2>
-							<button class="chev" onclick={() => toggle('effects')}
-								>{collapsed.effects ? '▸' : '▾'}</button
-							>Effects &amp; conditions
-						</h2>
-						<button class="grpby" onclick={() => (overlay = { kind: 'addeffect' })}>＋ Add</button
-						><span class="dh">⠿</span>
-					</div>
-					{#if !collapsed.effects}
+					{:else if pid === 'effects'}
 						{#each c.play.effects as e (e.iid)}
 							<div class="eff" class:pos={e.positive} class:neg={!e.positive}>
 								<span class="d"></span>
@@ -569,12 +580,10 @@
 	<!-- Spells: full width so the effect-first rows are never cramped -->
 	{#if s.spellcasting && spellGroups.length}
 		<div class="card spellcard">
-			<div class="ph2">
-				<h2>
-					<button class="chev" onclick={() => toggle('spells')}
-						>{collapsed.spells ? '▸' : '▾'}</button
-					>Spells
-				</h2>
+			<div class="phead">
+				<button class="htoggle" onclick={() => toggle('spells')}>
+					<span class="chev">{collapsed.spells ? '▸' : '▾'}</span>Spells
+				</button>
 				<span class="prepct">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
 				<button class="grpby" onclick={() => (overlay = { kind: 'manage' })}>⛭ Manage all</button>
 			</div>
@@ -585,105 +594,127 @@
 				</div>
 				<div class="sprows">
 					{#each spellGroups as g (g.key)}
-						<div class="scat" class:star={g.key === 'pinned'}>
-							{g.label}
-							{#if g.slots}<span class="pips"
-									>{#each Array(g.slots.full) as _, i (i)}<span
-											class="pip"
-											class:full={i >= g.slots.spent}
-											class:spent={i < g.slots.spent}
-										></span>{/each}</span
-								>{/if}
-						</div>
-						{#each g.rows as r (g.key + r.id)}
-							<div class="sprow">
-								<span class="an"
-									><i class="prep" class:on={r.prep === 'on'} class:always={r.prep === 'always'}
-									></i>{r.name}<button
+						<div class="spgroup">
+							<div class="scat" class:star={g.key === 'pinned'}>
+								{g.label}
+								{#if g.slots}<span class="pips"
+										>{#each Array(g.slots.full) as _, i (i)}<span
+												class="pip"
+												class:full={i >= g.slots.spent}
+												class:spent={i < g.slots.spent}
+											></span>{/each}</span
+									>{/if}
+							</div>
+							{#each g.rows as r (g.key + r.id)}
+								<button class="sprow" onclick={() => cast(r)}>
+									<span class="an"
+										><i class="prep" class:on={r.prep === 'on'} class:always={r.prep === 'always'}
+										></i>{r.name}</span
+									>
+									<span class="spe">{r.spe}</span>
+									{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span></span>{/if}
+									<span class="tm">{r.tm}</span>
+									<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+									<span
 										class="pinstar"
 										class:on={pinned[r.id]}
-										onclick={() => (pinned[r.id] = !pinned[r.id])}
-										>{pinned[r.id] ? '★' : '☆'}</button
-									></span
-								>
-								<span class="spe">{r.spe}</span>
-								{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span></span>{/if}
-								<span class="tm">{r.tm}</span>
-							</div>
-						{/each}
+										role="button"
+										tabindex="-1"
+										title="pin to top"
+										onclick={(e) => {
+											e.stopPropagation();
+											pinned[r.id] = !pinned[r.id];
+										}}>{pinned[r.id] ? '★' : '☆'}</span
+									>
+								</button>
+							{/each}
+						</div>
 					{/each}
 				</div>
 				<p class="trace" style="margin-top:11px">
-					tap a slot pip to spend / restore · ★ pin to the top
+					tap a spell to cast/roll · slot pip to spend · ★ pin
 				</p>
 			{/if}
 		</div>
 	{/if}
 
-	<!-- overlays (d-menus) -->
+	<!-- overlays — d-menus popovers -->
 	{#if overlay}
 		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 		<div class="ovbg" onclick={() => (overlay = null)}></div>
-		<div class="ov" role="dialog" aria-modal="true" tabindex="-1">
-			<div class="ovhead">
-				<b
-					>{{
-						dice: 'Dice tray',
-						condition: 'Add condition',
-						addeffect: 'Add effect',
-						log: 'Roll log',
-						showhide: 'Show / hide actions',
-						pinskills: 'Pin passive skills',
-						manage: 'Spellbook'
-					}[overlay.kind]}</b
-				><button class="ovx" onclick={() => (overlay = null)}>✕</button>
+		<div class="pop" role="dialog" aria-modal="true" tabindex="-1">
+			<div class="pop-h">
+				{{
+					dice: 'Dice tray',
+					condition: 'Add condition',
+					addeffect: 'Add effect',
+					log: 'Roll log',
+					showhide: 'Which actions appear',
+					pinskills: 'Which skills show as passive',
+					manage: 'Spellbook'
+				}[overlay.kind]}
+				<button class="ovx" onclick={() => (overlay = null)}>✕</button>
 			</div>
-			{#if overlay.kind === 'dice'}
-				<div class="dtray">
-					{#each [20, 12, 10, 8, 6, 4] as die (die)}<button
-							class="dbtn"
-							onclick={() => {
-								const v = 1 + Math.floor(Math.random() * die);
-								log = [{ label: `d${die}`, expr: `1d${die}`, total: v }, ...log];
-							}}>d{die}</button
-						>{/each}
-				</div>
-				{#if log[0]}<p class="dres">{log[0].label} → <b>{log[0].total}</b></p>{/if}
-			{:else if overlay.kind === 'condition'}
-				<div class="ovlist">
-					{#each conditionList as cn (cn)}<button onclick={() => addEffect(cn, [], false)}
-							>{cn}</button
-						>{/each}
-				</div>
-			{:else if overlay.kind === 'addeffect'}
-				<div class="ovlist">
-					{#each EFFECT_PRESETS as p (p.label)}<button onclick={() => addEffect(p.label, p.tokens)}
-							>{p.label} <small>{p.tokens.join(', ')}</small></button
-						>{/each}
-				</div>
-			{:else if overlay.kind === 'log'}
-				<div class="ovlog">
-					{#each log as l, i (i)}<div>
-							<span>{l.label}</span><span class="mono">{l.expr} = <b>{l.total}</b></span>
-						</div>{:else}<p class="trace">
-							No rolls yet — tap a stat, skill, save, or attack.
-						</p>{/each}
-				</div>
-			{:else if overlay.kind === 'showhide'}
-				<div class="ovlist">
-					{#each actions as a (a.id)}<button
-							onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}
-							>{hiddenActions[a.id] ? '👁‍🗨 show' : '👁 hide'} {a.n}</button
-						>{/each}
-				</div>
-			{:else if overlay.kind === 'manage' || overlay.kind === 'pinskills'}
-				<p class="trace">
-					Full {overlay.kind === 'manage' ? 'spellbook' : 'pin'} manager — coming with the {overlay.kind ===
-					'manage'
-						? 'spell manager (d-spellmgr)'
-						: 'Profile'} view.
-				</p>
-			{/if}
+			<div class="pop-b">
+				{#if overlay.kind === 'dice'}
+					<div class="dtray">
+						{#each [20, 12, 10, 8, 6, 4] as die (die)}<button
+								class="dbtn"
+								onclick={() => {
+									const v = 1 + Math.floor(Math.random() * die);
+									log = [{ label: `d${die}`, expr: `1d${die}`, total: v }, ...log];
+								}}>d{die}</button
+							>{/each}
+					</div>
+					{#if log[0]}<p class="dres">{log[0].label} → <b>{log[0].total}</b></p>{/if}
+				{:else if overlay.kind === 'condition'}
+					{#each conditionList as cn (cn)}
+						{@const added = character?.play.effects.some((e) => e.label === cn)}
+						<button class="row" onclick={() => (added ? null : addEffect(cn, [], false))}>
+							<span class="main">{cn}</span><span class="tg" class:on={added}></span>
+						</button>
+					{/each}
+				{:else if overlay.kind === 'addeffect'}
+					{#each EFFECT_PRESETS as p (p.label)}
+						<button
+							class="row"
+							onclick={() => addEffect(p.label, p.tokens, !/bane/i.test(p.label))}
+						>
+							<span class="main"
+								><span class="ic" class:neg={/bane/i.test(p.label)}>＋</span>{p.label}</span
+							><span class="meta">{p.tokens.join(', ')}</span>
+						</button>
+					{/each}
+				{:else if overlay.kind === 'log'}
+					{#each log as l, i (i)}
+						<div class="row">
+							<span class="main">{l.label}</span><span class="meta mono"
+								>{l.expr}{l.expr ? ' = ' : ''}<b>{Number.isNaN(l.total) ? '' : l.total}</b></span
+							>
+						</div>
+					{:else}<p class="trace">No rolls yet — tap a stat, skill, save, or attack.</p>{/each}
+				{:else if overlay.kind === 'showhide'}
+					{#each actions as a (a.id)}
+						<button class="row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
+							<span class="eye" class:on={!hiddenActions[a.id]}></span><span class="main"
+								>{a.n}</span
+							>{#if hiddenActions[a.id]}<span class="meta">hidden</span>{/if}
+						</button>
+					{/each}
+				{:else if overlay.kind === 'pinskills'}
+					{#each Object.keys(SKILL_ABILITY) as skill (skill)}
+						<button class="row" onclick={() => togglePassive(skill)}>
+							<span class="eye" class:on={passiveSkills.includes(skill)}></span><span class="main"
+								>{titleCase(skill)}</span
+							><span class="meta">{SKILL_ABILITY[skill].toUpperCase()}</span>
+						</button>
+					{/each}
+				{:else if overlay.kind === 'manage'}
+					<p class="trace">
+						Full spellbook manager arrives with the spell-manager view (d-spellmgr).
+					</p>
+				{/if}
+			</div>
 		</div>
 	{/if}
 {/if}
@@ -1005,12 +1036,47 @@
 		color: var(--color-text-muted);
 	}
 	.chev {
+		color: var(--color-text-muted);
+		font-size: 10px;
+		margin-right: 4px;
+	}
+	/* panel header: click the whole title area (chev + name) to collapse */
+	.phead {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin: 0 0 10px;
+	}
+	.htoggle {
+		display: inline-flex;
+		align-items: center;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 12px;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
 		background: transparent;
 		border: 0;
-		color: var(--color-text-muted);
 		cursor: pointer;
-		font-size: 10px;
-		padding: 0 2px 0 0;
+		padding: 4px 8px 4px 2px;
+		margin-right: auto;
+		border-radius: var(--radius-sm);
+	}
+	.htoggle:hover {
+		background: var(--color-surface-2);
+		color: var(--color-text);
+	}
+	.dh {
+		color: var(--color-border-strong);
+		font-size: 14px;
+		cursor: grab;
+		background: transparent;
+		border: 0;
+		padding: 2px 4px;
+	}
+	.dh:active {
+		cursor: grabbing;
 	}
 
 	.combat {
@@ -1209,38 +1275,6 @@
 	.spellcard {
 		margin-top: 0;
 	}
-	.card h2 {
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 12px;
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-		color: var(--color-text-muted);
-		margin: 0 0 13px;
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-	.card h2 .dh {
-		margin-left: auto;
-		color: var(--color-border-strong);
-		font-size: 13px;
-		cursor: grab;
-	}
-	.ph2 {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		margin: 0 0 8px;
-	}
-	.ph2 h2 {
-		margin: 0 auto 0 0;
-	}
-	.ph2 .dh {
-		color: var(--color-border-strong);
-		font-size: 13px;
-		cursor: grab;
-	}
 	.grpby {
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -1310,14 +1344,6 @@
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
-	}
-	.trace .pdot {
-		display: inline-block;
-		width: 7px;
-		height: 7px;
-		border-radius: 50%;
-		background: var(--color-resource);
-		vertical-align: middle;
 	}
 
 	.atk {
@@ -1417,6 +1443,9 @@
 			column-count: 1;
 		}
 	}
+	.spgroup {
+		break-inside: avoid;
+	}
 	.scat {
 		display: flex;
 		align-items: center;
@@ -1454,7 +1483,7 @@
 	}
 	.sprow {
 		display: grid;
-		grid-template-columns: 1fr 90px 84px 60px;
+		grid-template-columns: 1fr 84px 78px 54px;
 		align-items: center;
 		gap: 9px;
 		padding: 7px 6px;
@@ -1462,9 +1491,17 @@
 		border-radius: 7px;
 		cursor: pointer;
 		break-inside: avoid;
+		width: 100%;
+		background: transparent;
+		border-left: 0;
+		border-right: 0;
+		border-bottom: 0;
+		color: var(--color-text);
+		text-align: left;
+		font: inherit;
 	}
-	.scat + .sprow {
-		border-top: 0;
+	.spgroup:first-child .scat {
+		padding-top: 2px;
 	}
 	.sprow:hover {
 		background: var(--color-surface-2);
@@ -1552,46 +1589,137 @@
 		color: var(--color-resource);
 	}
 
-	/* overlays (d-menus) */
+	/* overlays — d-menus popover language */
 	.ovbg {
 		position: fixed;
 		inset: 0;
 		background: var(--color-overlay);
 		z-index: 50;
 	}
-	.ov {
+	.pop {
 		position: fixed;
 		top: 12vh;
 		left: 50%;
 		transform: translateX(-50%);
-		width: min(460px, calc(100vw - 2rem));
+		width: min(320px, calc(100vw - 2rem));
 		max-height: 74vh;
 		overflow: auto;
 		z-index: 51;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
-		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-2);
-		padding: 16px;
+		border-radius: 13px;
+		box-shadow: 0 18px 40px #000a;
 	}
-	.ovhead {
+	.pop-h {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		font-family: var(--font-display);
-		margin-bottom: 12px;
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: var(--tracking-label);
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		padding: 11px 13px;
+		border-bottom: 1px solid var(--color-border);
 	}
 	.ovx {
 		background: transparent;
 		border: 0;
 		color: var(--color-text-muted);
 		cursor: pointer;
-		font-size: 15px;
+		font-size: 13px;
+	}
+	.pop-b {
+		padding: 7px;
+	}
+	.row {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		width: 100%;
+		padding: 8px 10px;
+		border: 0;
+		background: transparent;
+		border-radius: 8px;
+		cursor: pointer;
+		color: var(--color-text);
+		text-align: left;
+		font: inherit;
+	}
+	.row:hover {
+		background: var(--color-surface-2);
+	}
+	.row .main {
+		flex: 1;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		font-size: 13px;
+	}
+	.row .meta {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		color: var(--color-text-muted);
+	}
+	.row .meta.mono b {
+		color: var(--color-good);
+	}
+	.row .ic {
+		width: 18px;
+		text-align: center;
+		color: var(--color-good);
+	}
+	.row .ic.neg {
+		color: var(--color-accent-bright);
+	}
+	/* visibility = open/closed eye, teal when shown */
+	.eye {
+		display: inline-block;
+		width: 22px;
+		height: 16px;
+		flex: none;
+		background-repeat: no-repeat;
+		background-position: center;
+		opacity: 0.5;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23878f9d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-6 10-6c1.6 0 3 .3 4.2.9M22 12s-3.5 6-10 6c-1.6 0-3-.3-4.2-.9'/%3E%3Cline x1='2' y1='2' x2='22' y2='22'/%3E%3C/svg%3E");
+	}
+	.eye.on {
+		opacity: 1;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233bb8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='2.5'/%3E%3C/svg%3E");
+	}
+	.tg {
+		width: 34px;
+		height: 20px;
+		border-radius: 999px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border-strong);
+		position: relative;
+		flex: none;
+	}
+	.tg::after {
+		content: '';
+		position: absolute;
+		top: 2px;
+		left: 2px;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		background: var(--color-text-muted);
+		transition: left 0.12s;
+	}
+	.tg.on {
+		background: var(--color-good-soft);
+		border-color: var(--color-good);
+	}
+	.tg.on::after {
+		left: 16px;
+		background: var(--color-good);
 	}
 	.dtray {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 8px;
+		padding: 6px;
 	}
 	.dbtn {
 		font-family: var(--font-display);
@@ -1608,52 +1736,10 @@
 	}
 	.dres {
 		font-family: var(--font-mono);
-		margin-top: 12px;
+		margin: 8px 6px 4px;
 	}
 	.dres b {
 		color: var(--color-good);
 		font-size: 18px;
-	}
-	.ovlist {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-	.ovlist button {
-		text-align: left;
-		background: transparent;
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		color: var(--color-text);
-		padding: 8px 11px;
-		cursor: pointer;
-		font-family: var(--font-body);
-	}
-	.ovlist button:hover {
-		background: var(--color-surface-2);
-		border-color: var(--color-border-strong);
-	}
-	.ovlist small {
-		color: var(--color-text-muted);
-		font-family: var(--font-mono);
-		font-size: 10px;
-	}
-	.ovlog {
-		display: flex;
-		flex-direction: column;
-	}
-	.ovlog > div {
-		display: flex;
-		justify-content: space-between;
-		padding: 6px 2px;
-		border-bottom: 1px solid var(--color-border);
-		font-size: 13px;
-	}
-	.ovlog .mono {
-		font-family: var(--font-mono);
-		color: var(--color-text-muted);
-	}
-	.ovlog .mono b {
-		color: var(--color-good);
 	}
 </style>
