@@ -239,11 +239,29 @@ items. Each may carry **effects** (bounded vocab).
   resolve references; no repeated linear scans.
 
 ### IDs & duplicates
-- Identity = **source-namespaced** `source:id` (`SRD:elf`, `PHB:elf`) → same id across
-  sources coexists. Links (class→features, character→content, locale) use namespaced id.
-- **Duplicate-group detector** surfaces "same base id across sources"; resolution stored
-  in a **separate `collisions.json`**: *keep one* (pick winner) or *keep all* (distinct,
-  default). Exact `source:id` clash within one source = error (suggest auto-suffix).
+- Identity = **`type:source:id`** (type-scoped, source-namespaced). *Refinement found in
+  P4 impl*: slugs are unique **per type**, not globally — e.g. `shield` is both a spell and
+  an item, so `source:id` alone collides; the **type** must scope identity. Same id across
+  sources still coexists (`spell:SRD 5.1:fireball` vs `spell:SRD 5.2.1:fireball`). Links
+  (class→features, character→content) and the loader index use this key.
+- **Duplicate-group detector** surfaces "same `type:id` base across sources"; resolution
+  stored in a **separate `collisions.json`**: *keep one* (pick winner) or *keep all*
+  (distinct, default). Exact `type:source:id` clash within one source = error (auto-suffix).
+
+### Content loader (P4, IMPLEMENTED — `src/lib/content/loader.ts`)
+`loadContent(storage, roots)` → a `ContentGraph`. **Storage-agnostic** (Tauri fs / node-fs /
+in-memory / read-only fetch — serves desktop AND web). Per root: reads `_pack.json` defaults,
+lists `*.csv`, infers type from `<filebase>_*.csv`, parses (papaparse) + validates
+(`parseRow`/zod). Builds `byType`, `byEffectiveId` (`type:source:id`), and **`articles`**
+(`type:id` → all editions/sources, powering the 5e↔5.5e toggle). Discovers **locales** from
+`name_/text_` columns (BCP-47 guardrail). **Robustness is output, not exceptions**: invalid
+rows / unknown files / malformed locale columns / duplicate ids become `issues`
+(content-health), never throws; `get()` returns `undefined` and **`resolveRefs()`** reports
+missing referenced ids so the render layer can "render what's possible + flag it".
+`featuresForClass()` resolves the class→features linked table. Tested in-memory + against the
+real shipped content (658 spells, 531 monsters load with zero errors). `NodeStorage`
+(`src/lib/storage/node.ts`) added for those integration tests. **TODO**: `spell_lists`
+linked table, `collisions.json` read/write, wire `charnik.config.json` for roots.
 
 ### Per-system fidelity (5e vs 5.5e)
 A row tagged `systems=5e,5.5e` means mechanics are **identical** in both. When they
@@ -391,6 +409,30 @@ is the IO layer.
   Rust surface tiny.)
 - **No server → no LAN/IP/auth surface** (simpler security; see SECURITY.md). LAN/phone
   access is therefore unavailable (accepted: standalone 99%).
+
+### Second target: free web demo on GitHub Pages (desktop stays priority)
+The **same `adapter-static` SPA** deploys to **GitHub Pages** — a full client-side web
+version (create/track/save a character in the browser) at **zero cost** (no server exists
+by design → nothing to host/pay for; public repo, CC-BY data). ~95% shared code; the whole
+difference is at the **`Storage` seam** + content source:
+- **Platform seam**: build flag `PUBLIC_PLATFORM=web|desktop` selects the Storage factory
+  and disables desktop-only bits (file-watch, folder pick). Nothing above `Storage` changes.
+- **Web Storage impl** = **IndexedDB or OPFS** (NOT localStorage — 5 MB cap too small);
+  `watch` is a no-op. Characters + homebrew live here. **Persistence is browser-evictable
+  → push export/download as backup.**
+- **Content on web** = the bundled SRD CSVs served as **static assets via `fetch()`**
+  (read-only source); the loader stays **Storage-agnostic** (a read-only fetch source +
+  a browser source), so no loader changes. Homebrew still addable via forms → browser store.
+- **Export/Import = same format, different transport.** Character JSON / **bundle export**
+  (embeds referenced content rows) is identical across platforms → a character made on web
+  opens on desktop and back, **zero conversion**. Desktop uses file dialogs; web uses
+  **download / file-upload (+ drag-drop)**. For cross-device transfer prefer the **bundle**
+  (web ships only SRD; desktop may have homebrew — the bundle carries the needed rows so it
+  always renders fully). This is the existing bundle-export design, just wired to a download.
+- **GH Pages specifics**: set `base` path (repo subpath), add SPA `404.html` fallback, CI
+  workflow to build + publish. GH Pages free tier (~1 GB / 100 GB-mo) dwarfs our few-MB SPA.
+- Reinforces the invariants that already make this nearly free: static SPA, all IO behind
+  `Storage`, nothing above the interface imports Tauri.
 - **Dev**: `pnpm tauri dev`. **Package**: `pnpm tauri build` → per-OS installers/binaries
   (Win `.exe`/`.msi`, Linux AppImage/`.deb`). **Toolchain**: Rust (rustup) + **MSVC C++
   Build Tools** on Windows; WebView2 runtime (already present); webkit2gtk on Linux. The
