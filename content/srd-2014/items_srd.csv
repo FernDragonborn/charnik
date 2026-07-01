@@ -49,3 +49,532 @@ chain-mail,5e,SRD 5.1,Chain mail,,,,,armor,heavy armor,75 gp,55,,,,,16,0,13,true
 splint,5e,SRD 5.1,Splint,,,,,armor,heavy armor,200 gp,60,,,,,17,0,15,true,false,
 plate,5e,SRD 5.1,Plate,,,,,armor,heavy armor,"1,500 gp",65,,,,,18,0,15,true,false,
 shield,5e,SRD 5.1,Shield,,,,,shield,shield,10 gp,6,,,,,2,,,false,false,
+abacus,5e,SRD 5.1,Abacus,,,,,gear,adventuring gear,2 gp,2,,,,,,,,false,false,
+acid,5e,SRD 5.1,Acid (vial),,,,,gear,adventuring gear,25 gp,1,,,,,,,,false,false,
+alchemists-fire,5e,SRD 5.1,Alchemist's fire (flask),,,,,gear,adventuring gear,50 gp,1,,,,,,,,false,false,
+arrows,5e,SRD 5.1,Arrows (20),,,,,gear,adventuring gear,1 gp,1,,,,,,,,false,false,
+blowgun-needles,5e,SRD 5.1,Blowgun needles (50),,,,,gear,adventuring gear,1 gp,1,,,,,,,,false,false,
+crossbow-bolts,5e,SRD 5.1,Crossbow bolts (20),,,,,gear,adventuring gear,1 gp,1,,,,,,,,false,false,
+sling-bullets,5e,SRD 5.1,Sling bullets (20),,,,,gear,adventuring gear,4 cp,1,,,,,,,,false,false,
+antitoxin,5e,SRD 5.1,Antitoxin (vial),,,,,gear,adventuring gear,50 gp,,,,,,,,,false,false,
+crystal,5e,SRD 5.1,Crystal,,,,,gear,adventuring gear,10 gp,1,,,,,,,,false,false,
+orb,5e,SRD 5.1,Orb,,,,,gear,adventuring gear,20 gp,3,,,,,,,,false,false,
+rod,5e,SRD 5.1,Rod,,,,,gear,adventuring gear,10 gp,2,,,,,,,,false,false,
+staff,5e,SRD 5.1,Staff,,,,,gear,adventuring gear,5 gp,4,,,,,,,,false,false,
+wand,5e,SRD 5.1,Wand,,,,,gear,adventuring gear,10 gp,1,,,,,,,,false,false,
+backpack,5e,SRD 5.1,Backpack,,,,,gear,adventuring gear,2 gp,5,,,,,,,,false,false,
+ball-bearings,5e,SRD 5.1,"Ball bearings (bag of 1,000)",,,,,gear,adventuring gear,1 gp,2,,,,,,,,false,false,
+barrel,5e,SRD 5.1,Barrel,,,,,gear,adventuring gear,2 gp,70,,,,,,,,false,false,
+basket,5e,SRD 5.1,Basket,,,,,gear,adventuring gear,4 sp,2,,,,,,,,false,false,
+bedroll,5e,SRD 5.1,Bedroll,,,,,gear,adventuring gear,1 gp,7,,,,,,,,false,false,
+bell,5e,SRD 5.1,Bell,,,,,gear,adventuring gear,1 gp,,,,,,,,,false,false,
+blanket,5e,SRD 5.1,Blanket,,,,,gear,adventuring gear,5 sp,3,,,,,,,,false,false,
+block-and-tackle,5e,SRD 5.1,Block and tackle,,,,,gear,adventuring gear,1 gp,5,,,,,,,,false,false,
+book,5e,SRD 5.1,Book,,,,,gear,adventuring gear,25 gp,5,,,,,,,,false,false,
+bottle-glass,5e,SRD 5.1,"Bottle, glass",,,,,gear,adventuring gear,2 gp,2,,,,,,,,false,false,
+bucket,5e,SRD 5.1,Bucket,,,,,gear,adventuring gear,5 cp,2,,,,,,,,false,false,
+caltrops,5e,SRD 5.1,Caltrops (bag of 20),,,,,gear,adventuring gear,1 gp,2,,,,,,,,false,false,
+candle,5e,SRD 5.1,Candle,,,,,gear,adventuring gear,1 cp,,,,,,,,,false,false,
+case-crossbow-bolt,5e,SRD 5.1,"Case, crossbow bolt",,,,,gear,adventuring gear,1 gp,1,,,,,,,,false,false,
+case-map-or-scroll,5e,SRD 5.1,"Case, map or scroll",,,,,gear,adventuring gear,1 gp,1,,,,,,,,false,false,
+chain,5e,SRD 5.1,Chain (10 feet),,,,,gear,adventuring gear,5 gp,10,,,,,,,,false,false,
+chalk,5e,SRD 5.1,Chalk (1 piece),,,,,gear,adventuring gear,1 cp,,,,,,,,,false,false,
+chest,5e,SRD 5.1,Chest,,,,,gear,adventuring gear,5 gp,25,,,,,,,,false,false,
+climbers-kit,5e,SRD 5.1,Climber's kit,,,,,gear,adventuring gear,25 gp,12,,,,,,,,false,false,
+clothes-common,5e,SRD 5.1,"Clothes, common",,,,,gear,adventuring gear,5 sp,3,,,,,,,,false,false,
+clothes-costume,5e,SRD 5.1,"Clothes, costume",,,,,gear,adventuring gear,5 gp,4,,,,,,,,false,false,
+clothes-fine,5e,SRD 5.1,"Clothes, fine",,,,,gear,adventuring gear,15 gp,6,,,,,,,,false,false,
+clothes-travelers,5e,SRD 5.1,"Clothes, traveler's",,,,,gear,adventuring gear,2 gp,4,,,,,,,,false,false,
+component-pouch,5e,SRD 5.1,Component pouch,,,,,gear,adventuring gear,25 gp,2,,,,,,,,false,false,
+crowbar,5e,SRD 5.1,Crowbar,,,,,gear,adventuring gear,2 gp,5,,,,,,,,false,false,
+sprig-of-mistletoe,5e,SRD 5.1,Sprig of mistletoe,,,,,gear,adventuring gear,1 gp,,,,,,,,,false,false,
+totem,5e,SRD 5.1,Totem,,,,,gear,adventuring gear,1 gp,,,,,,,,,false,false,
+wooden-staff,5e,SRD 5.1,Wooden staff,,,,,gear,adventuring gear,5 gp,4,,,,,,,,false,false,
+yew-wand,5e,SRD 5.1,Yew wand,,,,,gear,adventuring gear,10 gp,1,,,,,,,,false,false,
+fishing-tackle,5e,SRD 5.1,Fishing tackle,,,,,gear,adventuring gear,1 gp,4,,,,,,,,false,false,
+flask-or-tankard,5e,SRD 5.1,Flask or tankard,,,,,gear,adventuring gear,2 cp,1,,,,,,,,false,false,
+grappling-hook,5e,SRD 5.1,Grappling hook,,,,,gear,adventuring gear,2 gp,4,,,,,,,,false,false,
+hammer,5e,SRD 5.1,Hammer,,,,,gear,adventuring gear,1 gp,3,,,,,,,,false,false,
+hammer-sledge,5e,SRD 5.1,"Hammer, sledge",,,,,gear,adventuring gear,2 gp,10,,,,,,,,false,false,
+healers-kit,5e,SRD 5.1,Healer's kit,,,,,gear,adventuring gear,5 gp,3,,,,,,,,false,false,
+amulet,5e,SRD 5.1,Amulet,,,,,gear,adventuring gear,5 gp,1,,,,,,,,false,false,
+emblem,5e,SRD 5.1,Emblem,,,,,gear,adventuring gear,5 gp,,,,,,,,,false,false,
+reliquary,5e,SRD 5.1,Reliquary,,,,,gear,adventuring gear,5 gp,2,,,,,,,,false,false,
+holy-water,5e,SRD 5.1,Holy water (flask),,,,,gear,adventuring gear,25 gp,1,,,,,,,,false,false,
+hourglass,5e,SRD 5.1,Hourglass,,,,,gear,adventuring gear,25 gp,1,,,,,,,,false,false,
+hunting-trap,5e,SRD 5.1,Hunting trap,,,,,gear,adventuring gear,5 gp,25,,,,,,,,false,false,
+ink,5e,SRD 5.1,Ink (1 ounce bottle),,,,,gear,adventuring gear,10 gp,,,,,,,,,false,false,
+ink-pen,5e,SRD 5.1,Ink pen,,,,,gear,adventuring gear,2 cp,,,,,,,,,false,false,
+jug-or-pitcher,5e,SRD 5.1,Jug or pitcher,,,,,gear,adventuring gear,2 cp,4,,,,,,,,false,false,
+ladder,5e,SRD 5.1,Ladder (10 -- foot),,,,,gear,adventuring gear,1 sp,25,,,,,,,,false,false,
+lamp,5e,SRD 5.1,Lamp,,,,,gear,adventuring gear,5 sp,1,,,,,,,,false,false,
+lantern-bullseye,5e,SRD 5.1,"Lantern, bullseye",,,,,gear,adventuring gear,10 gp,2,,,,,,,,false,false,
+lantern-hooded,5e,SRD 5.1,"Lantern, hooded",,,,,gear,adventuring gear,5 gp,2,,,,,,,,false,false,
+lock,5e,SRD 5.1,Lock,,,,,gear,adventuring gear,10 gp,1,,,,,,,,false,false,
+magnifying-glass,5e,SRD 5.1,Magnifying glass,,,,,gear,adventuring gear,100 gp,,,,,,,,,false,false,
+manacles,5e,SRD 5.1,Manacles,,,,,gear,adventuring gear,2 gp,6,,,,,,,,false,false,
+mess-kit,5e,SRD 5.1,Mess kit,,,,,gear,adventuring gear,2 sp,1,,,,,,,,false,false,
+mirror-steel,5e,SRD 5.1,"Mirror, steel",,,,,gear,adventuring gear,5 gp,1,,,,,,,,false,false,
+oil,5e,SRD 5.1,Oil (flask),,,,,gear,adventuring gear,1 sp,1,,,,,,,,false,false,
+paper,5e,SRD 5.1,Paper (one sheet),,,,,gear,adventuring gear,2 sp,,,,,,,,,false,false,
+parchment,5e,SRD 5.1,Parchment (one sheet),,,,,gear,adventuring gear,1 sp,,,,,,,,,false,false,
+perfume,5e,SRD 5.1,Perfume (vial),,,,,gear,adventuring gear,5 gp,,,,,,,,,false,false,
+pick-miners,5e,SRD 5.1,"Pick, miner's",,,,,gear,adventuring gear,2 gp,10,,,,,,,,false,false,
+piton,5e,SRD 5.1,Piton,,,,,gear,adventuring gear,5 cp,1,,,,,,,,false,false,
+poison-basic,5e,SRD 5.1,"Poison, basic (vial)",,,,,gear,adventuring gear,100 gp,,,,,,,,,false,false,
+pole,5e,SRD 5.1,Pole (10 -- foot),,,,,gear,adventuring gear,5 cp,7,,,,,,,,false,false,
+pot-iron,5e,SRD 5.1,"Pot, iron",,,,,gear,adventuring gear,2 gp,10,,,,,,,,false,false,
+potion-of-healing,5e,SRD 5.1,Potion of healing,,,,,gear,adventuring gear,50 gp,1,,,,,,,,false,false,
+pouch,5e,SRD 5.1,Pouch,,,,,gear,adventuring gear,5 sp,1,,,,,,,,false,false,
+quiver,5e,SRD 5.1,Quiver,,,,,gear,adventuring gear,1 gp,1,,,,,,,,false,false,
+ram-portable,5e,SRD 5.1,"Ram, portable",,,,,gear,adventuring gear,4 gp,35,,,,,,,,false,false,
+rations,5e,SRD 5.1,Rations (1 day),,,,,gear,adventuring gear,5 sp,2,,,,,,,,false,false,
+robes,5e,SRD 5.1,Robes,,,,,gear,adventuring gear,1 gp,4,,,,,,,,false,false,
+rope-hempen,5e,SRD 5.1,"Rope, hempen (50 feet)",,,,,gear,adventuring gear,1 gp,10,,,,,,,,false,false,
+rope-silk,5e,SRD 5.1,"Rope, silk (50 feet)",,,,,gear,adventuring gear,10 gp,5,,,,,,,,false,false,
+sack,5e,SRD 5.1,Sack,,,,,gear,adventuring gear,1 cp,1,,,,,,,,false,false,
+scale-merchants,5e,SRD 5.1,"Scale, merchant's",,,,,gear,adventuring gear,5 gp,3,,,,,,,,false,false,
+sealing-wax,5e,SRD 5.1,Sealing wax,,,,,gear,adventuring gear,5 sp,,,,,,,,,false,false,
+shovel,5e,SRD 5.1,Shovel,,,,,gear,adventuring gear,2 gp,5,,,,,,,,false,false,
+signal-whistle,5e,SRD 5.1,Signal whistle,,,,,gear,adventuring gear,5 cp,,,,,,,,,false,false,
+signet-ring,5e,SRD 5.1,Signet ring,,,,,gear,adventuring gear,5 gp,,,,,,,,,false,false,
+soap,5e,SRD 5.1,Soap,,,,,gear,adventuring gear,2 cp,,,,,,,,,false,false,
+spellbook,5e,SRD 5.1,Spellbook,,,,,gear,adventuring gear,50 gp,3,,,,,,,,false,false,
+spikes-iron,5e,SRD 5.1,"Spikes, iron (10)",,,,,gear,adventuring gear,1 gp,5,,,,,,,,false,false,
+spyglass,5e,SRD 5.1,Spyglass,,,,,gear,adventuring gear,"1,000 gp",1,,,,,,,,false,false,
+tent-two-person,5e,SRD 5.1,"Tent, two -- person",,,,,gear,adventuring gear,2 gp,20,,,,,,,,false,false,
+tinderbox,5e,SRD 5.1,Tinderbox,,,,,gear,adventuring gear,5 sp,1,,,,,,,,false,false,
+torch,5e,SRD 5.1,Torch,,,,,gear,adventuring gear,1 cp,1,,,,,,,,false,false,
+vial,5e,SRD 5.1,Vial,,,,,gear,adventuring gear,1 gp,,,,,,,,,false,false,
+waterskin,5e,SRD 5.1,Waterskin,,,,,gear,adventuring gear,2 sp,5,,,,,,,,false,false,
+whetstone,5e,SRD 5.1,Whetstone,,,,,gear,adventuring gear,1 cp,1,,,,,,,,false,false,
+adamantine-armor,5e,SRD 5.1,Adamantine Armor,,"This suit of armor is reinforced with adamantine, one of the hardest substances in existence. While you're wearing it, any critical hit against you becomes a normal hit.",,,armor,armor (medium or heavy,,,,,,,,,,false,false,uncommon
+ammunition-1-2-or-3,5e,SRD 5.1,"Ammunition, +1, +2, or +3",,"You have a bonus to attack and damage rolls made with this piece of magic ammunition. The bonus is determined by the rarity of the ammunition. Once it hits a target, the ammunition is no longer magical.",,,weapon,weapon (any ammunition),,,,,,,,,,false,false,very-rare
+amulet-of-health,5e,SRD 5.1,Amulet of Health,,Your Constitution score is 19 while you wear this amulet. It has no effect on you if your Constitution is already 19 or higher.,,,gear,wondrous item,,,,,,,,,,false,true,rare
+location,5e,SRD 5.1,Location,,"While wearing this amulet, you are hidden from divination magic. You can't be targeted by such magic or perceived through magical scrying sensors.",,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+amulet-of-the-planes,5e,SRD 5.1,Amulet of the Planes,,"While wearing this amulet, you can use an action to name a location that you are familiar with on another plane of existence. Then make a DC 15 Intelligence check. On a successful check, you cast the",,,gear,wondrous item,,,,,,,,,,false,true,very-rare
+animated-shield,5e,SRD 5.1,Animated Shield,,,,,armor,armor (shield),,,,,,,,,,false,true,very-rare
+apparatus-of-the-crab,5e,SRD 5.1,Apparatus of the Crab,,"Armor Class: 20
+Hit Points: 200
+Speed: 30 ft., swim 30 ft. (or 0 ft. for both if the legs and tail aren't extended)
+Damage Immunities: poison, psychic To be used as a vehicle, the apparatus requires one pilot. While the apparatus's hatch is closed, the compartment is airtight and watertight. The compartment holds enough air for 10 hours of breathing, divided by the number of breathing creatures inside. The apparatus floats on water. It can also go underwater to a depth of 900 feet. Below that, the vehicle takes 2d6 bludgeoning damage per minute from pressure. A creature in the compartment can use an action to move as many as two of the apparatus's levers up or down. After each use, a lever goes back to its neutral position. Each lever, from left to right, functions as shown in the Apparatus of the Crab Levers table.",,,gear,wondrous item,,,,,,,,,,false,false,legendary
+armor-1-2-or-3,5e,SRD 5.1,"Armor, +1, +2, or +3",,You have a bonus to AC while wearing this armor. The bonus is determined by its rarity.,,,armor,armor (light,,,,,,,,,,false,false,very-rare
+armor-of-invulnerability,5e,SRD 5.1,Armor of Invulnerability,,"You have resistance to nonmagical damage while you wear this armor. Additionally, you can use an action to make yourself immune to nonmagical damage for 10 minutes or until you are no longer wearing the armor. Once this special action
+is used, it can't be used again until the next dawn.",,,armor,armor (plate),,,,,,,,,,false,true,legendary
+armor-of-resistance,5e,SRD 5.1,Armor of Resistance,,You have resistance to one type of damage while you wear this armor. The GM chooses the type or determines it randomly from the options below.,,,armor,armor (light,,,,,,,,,,false,true,rare
+armor-of-vulnerability,5e,SRD 5.1,Armor of Vulnerability,,,,,armor,armor (plate),,,,,,,,,,false,true,rare
+arrow-catching-shield,5e,SRD 5.1,Arrow-Catching Shield,,,,,armor,armor (shield),,,,,,,,,,false,true,rare
+arrow-of-slaying,5e,SRD 5.1,Arrow of Slaying,,,,,weapon,weapon (arrow),,,,,,,,,,false,false,very-rare
+bag-of-beans,5e,SRD 5.1,Bag of Beans,,"Inside this heavy cloth bag are 3d4 dry beans. The bag weighs 1/2 pound plus 1/4 pound for each bean it contains.
+If you dump the bag's contents out on the ground, they explode in a 10-foot radius, extending from the beans. Each creature in the area, including you, must make a DC 15 Dexterity saving
+throw, taking 5d4 fire damage on a failed save, or half as much damage on a successful one. The fire ignites flammable objects in the area that aren't being worn or carried.
+If you remove a bean from the bag, plant it in dirt or sand, and then water it, the bean produces an effect 1 minute later from the ground where it was planted. The GM can choose an effect from the following table, determine it randomly, or create an effect.",,,gear,wondrous item,,,,,,,,,,false,false,rare
+bag-of-devouring,5e,SRD 5.1,Bag of Devouring,,,,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+bag-of-holding,5e,SRD 5.1,Bag of Holding,,"If the bag is overloaded, pierced, or torn, it ruptures and is destroyed, and its contents are scattered in the Astral Plane. If the bag is turned inside out, its contents spill forth, unharmed, but the bag must be put right before it can be used again. Breathing creatures inside the bag can survive up to a number of minutes equal to 10 divided by the number of creatures (minimum 1 minute), after which time they begin to suffocate.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+bag-of-tricks,5e,SRD 5.1,Bag of Tricks,,"This ordinary bag, made from gray, rust, or tan cloth, appears empty. Reaching inside the bag, however, reveals the presence of a small, fuzzy object. The bag weighs 1/2 pound.
+You can use an action to pull the fuzzy object from the bag and throw it up to 20 feet. When the object
+lands, it transforms into a creature you determine by rolling a d8 and consulting the table that corresponds to the bag's color.
+The creature vanishes at the next dawn or when it is reduced to 0 hit points.
+The creature is friendly to you and your companions, and it acts on your turn. You can use a bonus action to command how the creature moves and what action it takes on its next turn, or to give it general orders, such as to attack your enemies. In the absence of such orders, the creature acts in a fashion appropriate to its nature.
+Once three fuzzy objects have been pulled from the bag, the bag can't be used again until the next dawn.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+bead-of-force,5e,SRD 5.1,Bead of Force,,,,,gear,wondrous item,,,,,,,,,,false,false,rare
+belt-of-dwarvenkind,5e,SRD 5.1,Belt of Dwarvenkind,,"While wearing this belt, you gain the following benefits:
+•Your Constitution score increases by 2, to a maximum of 20.
+•You have advantage on Charisma (Persuasion)checks made to interact with dwarves.
+In addition, while attuned to the belt, you have a 50 percent chance each day at dawn of growing a full beard if you're capable of growing one, or a visibly thicker beard if you already have one.
+If you aren't a dwarf, you gain the following additional benefits while wearing the belt:
+•You have advantage on saving throws against poison, and you have resistance against poison damage.
+•You have darkvision out to a range of 60 feet.
+•You can speak, read, and writeDwarvish.",,,gear,wondrous item,,,,,,,,,,false,true,rare
+berserker-axe,5e,SRD 5.1,Berserker Axe,,"You gain a +1 bonus to attack and damage rolls made
+with this magic weapon. In addition, while you are attuned to this weapon, your hit point maximum increases by 1 for each level you have attained.
+than this one, unless no foe is within 60 feet of you that you can see or hear. Whenever a hostile creature damages you while the axe is in your possession, you must succeed on a DC 15 Wisdom saving throw or go berserk. While berserk, you must use your action each round to attack the creature nearest to you with the axe. If you can make extra attacks as part of the Attack action, you use those extra attacks, moving to attack the next nearest creature after you fell your current target. If you have multiple possible targets, you attack one at random. You are berserk until you start your turn with no creatures within 60 feet of you that you can see or hear.",,,weapon,weapon (any axe),,,,,,,,,,false,true,rare
+boots-of-elvenkind,5e,SRD 5.1,Boots of Elvenkind,,,,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+boots-of-levitation,5e,SRD 5.1,Boots of Levitation,,,,,gear,wondrous item,,,,,,,,,,false,true,rare
+boots-of-speed,5e,SRD 5.1,Boots of Speed,,,,,gear,wondrous item,,,,,,,,,,false,true,rare
+boots-of-striding-and-springing,5e,SRD 5.1,Boots of Striding and Springing,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+boots-of-the-winterlands,5e,SRD 5.1,Boots of the Winterlands,,"These furred boots are snug and feel quite warm. While you wear them, you gain the following benefits:
+•You have resistance to cold damage.
+•You ignore difficult terrain created by ice or snow.
+•You can tolerate temperatures as low as −50degrees Fahrenheit without any additional protection. If you wear heavy clothes, you can tolerate temperatures as low as −100 degreesFahrenheit.",,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+bowl-of-commanding-water-elementals,5e,SRD 5.1,Bowl of Commanding Water Elementals,,"While this bowl is filled with water, you can use an action to speak the bowl's command word and summon a water elemental, as if you had cast the
+The bowl is about 1 foot in diameter and half as deep. It weighs 3 pounds and holds about 3 gallons.",,,gear,wondrous item,,,,,,,,,,false,false,rare
+bracers-of-archery,5e,SRD 5.1,Bracers of Archery,,"While wearing these bracers, you have proficiency with the longbow and shortbow, and you gain a +2 bonus to damage rolls on ranged attacks made with such weapons.",,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+bracers-of-defense,5e,SRD 5.1,Bracers of Defense,,"While wearing these bracers, you gain a +2 bonus to AC if you are wearing no armor and using no shield.",,,gear,wondrous item,,,,,,,,,,false,true,rare
+brazier-of-commanding-fire-elementals,5e,SRD 5.1,Brazier of Commanding Fire Elementals,,"While a fire burns in this brass brazier, you can use an action to speak the brazier's command word and summon a fire elemental, as if you had cast the
+The brazier weighs 5 pounds.",,,gear,wondrous item,,,,,,,,,,false,false,rare
+brooch-of-shielding,5e,SRD 5.1,Brooch of Shielding,,"While wearing this brooch, you have resistance to force damage, and you have immunity to damage from the",,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+broom-of-flying,5e,SRD 5.1,Broom of Flying,,,,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+candle-of-invocation,5e,SRD 5.1,Candle of Invocation,,"The candle's magic is activated when the candle is lit, which requires an action. After burning for 4 hours, the candle is destroyed. You can snuff it out early for use at a later time. Deduct the time it burned in increments of 1 minute from the candle's total burn time. While lit, the candle sheds dim light in a 30-foot radius. Any creature within that light whose alignment matches that of the candle makes attack rolls, saving throws, and ability checks with advantage. In addition, a cleric or druid in the light whose alignment matches the candle's can cast 1st-level spells he or she has prepared without expending spell slots, though the spell's effect is as if cast with a 1st-level slot.
+Alternatively, when you light the candle for the first time, you can cast the",,,gear,wondrous item,,,,,,,,,,false,true,very-rare
+cape-of-the-mountebank,5e,SRD 5.1,Cape of the Mountebank,,"This cape smells faintly of brimstone. While wearing it, you can use it to cast the
+When you disappear, you leave behind a cloud of smoke, and you appear in a similar cloud of smoke at your destination. The smoke lightly obscures the space you left and the space you appear in, and it dissipates at the end of your next turn. A light or stronger wind disperses the smoke.",,,gear,wondrous item,,,,,,,,,,false,false,rare
+carpet-of-flying,5e,SRD 5.1,Carpet of Flying,,"You can speak the carpet's command word as an action to make the carpet hover and fly. It moves according to your spoken directions, provided that you are within 30 feet of it.
+A carpet can carry up to twice the weight shown on the table, but it flies at half speed if it carries more than its normal capacity.",,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+censer-of-controlling-air-elementals,5e,SRD 5.1,Censer of Controlling Air Elementals,,"While incense is burning in this censer, you can use an action to speak the censer's command word and summon an air elemental, as if you had cast the
+This 6-inch-wide, 1-foot-high vessel resembles a chalice with a decorated lid. It weighs 1 pound.",,,gear,wondrous item,,,,,,,,,,false,false,rare
+chime-of-opening,5e,SRD 5.1,Chime of Opening,,"This hollow metal tube measures about 1 foot long and weighs 1 pound. You can strike it as an action, pointing it at an object within 120 feet of you that can be opened, such as a door, lid, or lock. The chime
+issues a clear tone, and one lock or latch on the object opens unless the sound can't reach the object. If no locks or latches remain, the object itself opens. The chime can be used ten times. After the tenth time, it cracks and becomes useless.",,,gear,wondrous item,,,,,,,,,,false,false,rare
+circlet-of-blasting,5e,SRD 5.1,Circlet of Blasting,,,,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+cloak-of-arachnida,5e,SRD 5.1,Cloak of Arachnida,,"•You have resistance to poison damage.
+•You have a climbing speed equal to your walking speed.
+•You can move up, down, and across vertical surfaces and upside down along ceilings, while leaving your hands free.
+•You can't be caught in webs of any sort and can move through webs as if they were difficult terrain.",,,gear,wondrous item,,,,,,,,,,false,true,very-rare
+cloak-of-displacement,5e,SRD 5.1,Cloak of Displacement,,,,,gear,wondrous item,,,,,,,,,,false,true,rare
+cloak-of-elvenkind,5e,SRD 5.1,Cloak of Elvenkind,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+cloak-of-protection,5e,SRD 5.1,Cloak of Protection,,You gain a +1 bonus to AC and saving throws while you wear this cloak.,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+cloak-of-thebat,5e,SRD 5.1,Cloak of theBat,,"While wearing this cloak, you have advantage on Dexterity (Stealth) checks. In an area of dim light or darkness, you can grip the edges of the cloak with both hands and use it to fly at a speed of 40 feet. If you ever fail to grip the cloak's edges while flying in this way, or if you are no longer in dim light or darkness, you lose this flying speed.
+While wearing the cloak in an area of dim light or darkness, you can use your action to cast
+on yourself, transforming into a bat. While you are in the form of the bat, you retain your Intelligence, Wisdom, and Charisma scores. The cloak can't be used this way again until the next dawn.",,,gear,wondrous item,,,,,,,,,,false,true,rare
+cloak-of-the-manta-ray,5e,SRD 5.1,Cloak of the Manta Ray,,"While wearing this cloak with its hood up, you can breathe underwater, and you have a swimming speed of 60 feet. Pulling the hood up or down requires an action.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+crystal-ball,5e,SRD 5.1,Crystal Ball,,"to maintain it during its duration, but it ends if",,,gear,wondrous item,,,,,,,,,,false,true,very-rare
+cube-of-force,5e,SRD 5.1,Cube of Force,,,,,gear,wondrous item,,,,,,,,,,false,true,rare
+cubic-gate,5e,SRD 5.1,Cubic Gate,,"This cube is 3 inches across and radiates palpable magical energy. The six sides of the cube are each keyed to a different plane of existence, one of which is the Material Plane. The other sides are linked to planes determined by the GM.
+You can use an action to press one side of the cube to cast the
+spell (save DC 17) with the cube and transport the targets to the plane keyed to that side.
+The cube has 3 charges. Each use of the cube expends 1 charge. The cube regains 1d3 expended charges daily at dawn.",,,gear,wondrous item,,,,,,,,,,false,false,legendary
+dagger-of-venom,5e,SRD 5.1,Dagger of Venom,,"You gain a +1 bonus to attack and damage rolls made with this magic weapon.
+You can use an action to cause thick, black poison to coat the blade. The poison remains for 1 minute or until an attack using this weapon hits a creature. That creature must succeed on a DC 15 Constitution saving throw or take 2d10 poison damage and become poisoned for 1 minute. The dagger can't be used this way again until the next dawn.",,,weapon,weapon (dagger),,,,,,,,,,false,false,rare
+dancing-sword,5e,SRD 5.1,Dancing Sword,,"You can use a bonus action to toss this magic sword into the air and
+speak the command word. When you do so, the sword begins to hover, flies up to 30 feet, and attacks one creature of your choice within 5 feet of it. The sword uses your attack roll and ability score modifier to damage rolls.
+While the sword hovers, you can use a bonus action to cause it to fly up to 30 feet to another spot within 30 feet of you. As part of the same bonus action, you can cause the sword to attack one creature within 5 feet of it.
+After the hovering sword attacks for the fourth time, it flies up to 30 feet and tries to return to your hand. If you have no hand free, it falls to the ground
+at your feet. If the sword has no unobstructed path to you, it moves as close to you as it can and then falls to the ground. It also ceases to hover if you grasp it or move more than 30 feet away from it.",,,weapon,weapon (any sword),,,,,,,,,,false,true,very-rare
+decanter-of-endless-water,5e,SRD 5.1,Decanter of Endless Water,,"•“Stream” produces 1 gallon of water.
+•“Fountain” produces 5 gallons of water.
+•“Geyser” produces 30 gallons of water that gushes forth in a geyser 30 feet long and 1 foot wide. As a bonus action while holding the decanter, you can aim the geyser at a creature you can see within 30feet of you. The target must succeed on a DC 13Strength saving throw or take 1d4 bludgeoning damage and fall prone. Instead of a creature, youcan target an object that isn't being worn or carried and that weighs no more than 200 pounds.The object is either knocked over or pushed up to15 feet away from you.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+deck-of-illusions,5e,SRD 5.1,Deck of Illusions,,"The illusion lasts until its card is moved or the illusion is dispelled. When the illusion ends, the image on its card disappears, and that card can't be used again.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+deck-of-many-things,5e,SRD 5.1,Deck of Many Things,,"Usually found in a box or pouch, this deck contains a number of cards made of ivory or vellum. Most (75 percent) of these decks have only thirteen cards, but the rest have twenty-two.
+Before you draw a card, you must declare how many cards you intend to draw and then draw them randomly (you can use an altered deck of playing cards to simulate the deck). Any cards drawn in excess of this number have no effect. Otherwise, as
+soon as you draw a card from the deck, its magic takes effect. You must draw each card no more than 1 hour after the previous draw. If you fail to draw the chosen number, the remaining number of cards fly from the deck on their own and take effect all at once. Once a card is drawn, it fades from existence. Unless the card is the Fool or the Jester, the card reappears in the deck, making it possible to draw the same card twice.
+*Found only in a deck with twenty--two cards
+each or fifty gems worth 1,000 gp each appear at your feet.
+spell 1d3 times.
+the GM's choice within 10 feet of you and attacks you, warning all others that you must win the battle alone. The avatar fights until you die or it drops to 0 hit points, whereupon it disappears. If anyone tries to help you, the helper summons its own avatar of death. A creature slain by an avatar of death can't be restored to life.",,,gear,wondrous item,,,,,,,,,,false,false,legendary
+defender,5e,SRD 5.1,Defender,,"You gain a +3 bonus to attack and damage rolls made with this magic weapon.
+The first time you attack with the sword on each of your turns, you can transfer some or all of the sword's bonus to your Armor Class, instead of using the bonus on any attacks that turn. For example, you could reduce the bonus to your attack and damage rolls to +1 and gain a +2 bonus to AC. The adjusted bonuses remain in effect until the start of your next turn, although you must hold the sword to gain a bonus to AC from it.",,,weapon,weapon (any sword),,,,,,,,,,false,true,legendary
+demon-armor,5e,SRD 5.1,Demon Armor,,"While wearing this armor, you gain a +1 bonus to AC, and you can understand and speak Abyssal. In addition, the armor's clawed gauntlets turn unarmed strikes with your hands into magic weapons that deal slashing damage, with a +1 bonus to attack rolls and damage rolls and a damage die of 1d8.
+spell or similar magic. While wearing the armor, you have disadvantage on attack rolls against demons and on saving throws against their spells and special abilities.",,,armor,armor (plate),,,,,,,,,,false,true,very-rare
+dimensional-shackles,5e,SRD 5.1,Dimensional Shackles,,,,,gear,wondrous item,,,,,,,,,,false,false,rare
+dragon-scale-mail,5e,SRD 5.1,Dragon Scale Mail,,,,,armor,armor (scale mail),,,,,,,,,,false,true,very-rare
+dragon-slayer,5e,SRD 5.1,Dragon Slayer,,,,,weapon,weapon (any sword),,,,,,,,,,false,false,rare
+dust-of-disappearance,5e,SRD 5.1,Dust of Disappearance,,"Found in a small packet, this powder resembles very fine sand. There is enough of it for one use. When you use an action to throw the dust into the air, you and each creature and object within 10 feet of you become invisible for 2d4 minutes. The duration is the same for all subjects, and the dust is consumed
+when its magic takes effect. If a creature affected by the dust attacks or casts a spell, the invisibility ends for that creature.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+dust-of-dryness,5e,SRD 5.1,Dust of Dryness,,"This small packet contains 1d6 + 4 pinches of dust. You can use an action to sprinkle a pinch of it over water. The dust turns a cube of water 15 feet on a side into one marble-sized pellet, which floats or rests near where the dust was sprinkled. The pellet's weight is negligible.
+Someone can use an action to smash the pellet against a hard surface, causing the pellet to shatter and release the water the dust absorbed. Doing so ends that pellet's magic.
+An elemental composed mostly of water that is exposed to a pinch of the dust must make a DC 13 Constitution saving throw, taking 10d6 necrotic damage on a failed save, or half as much damage on a successful one.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+dust-of-sneezing-and-choking,5e,SRD 5.1,Dust of Sneezing and Choking,,"Found in a small container, this powder resembles very fine sand. It appears to be
+When you use an action to throw a handful of the dust into the air, you and each creature that needs to breathe within 30 feet of you must succeed on a DC 15 Constitution saving throw or become unable to breathe, while sneezing uncontrollably. A creature affected in this way is incapacitated and suffocating. As long as it is conscious, a creature can repeat the saving throw at the end of each of its turns, ending the effect on it on a success. The
+spell can also end the effect on a creature.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+dwarven-plate,5e,SRD 5.1,Dwarven Plate,,,,,armor,armor (plate),,,,,,,,,,false,false,very-rare
+dwarven-thrower,5e,SRD 5.1,Dwarven Thrower,,,,,weapon,weapon (warhammer),,,,,,,,,,false,true,very-rare
+efficient-quiver,5e,SRD 5.1,Efficient Quiver,,,,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+efreeti-bottle,5e,SRD 5.1,Efreeti Bottle,,,,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+elemental-gem,5e,SRD 5.1,Elemental Gem,,"This gem contains a mote of elemental energy. When you use an action to break the gem, an elemental is summoned as if you had cast the
+spell, and the gem's magic is lost. The type of gem determines the elemental summoned by the spell.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+elven-chain,5e,SRD 5.1,Elven Chain,,You gain a +1 bonus to AC while you wear this armor. You are considered proficient with this armor even if you lack proficiency with medium armor.,,,armor,armor (chain shirt),,,,,,,,,,false,false,rare
+eversmoking-bottle,5e,SRD 5.1,Eversmoking Bottle,,"Smoke leaks from the lead-stoppered mouth of this brass bottle, which weighs 1 pound. When you use an action to remove the stopper, a cloud of thick smoke pours out in a 60-foot radius from the bottle. The cloud's area is heavily obscured. Each minute the bottle remains open and within the cloud, the radius increases by 10 feet until it reaches its maximum radius of 120 feet.
+The cloud persists as long as the bottle is open. Closing the bottle requires you to speak its command word as an action. Once the bottle is closed, the cloud disperses after 10 minutes. A moderate wind (11 to 20 miles per hour) can also disperse the smoke after 1 minute, and a strong wind (21 or more miles per hour) can do so after 1 round.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+eyes-of-charming,5e,SRD 5.1,Eyes of Charming,,"These crystal lenses fit over the eyes. They have 3 charges. While wearing them, you can expend 1 charge as an action to cast the
+(save DC 13) on a humanoid within 30 feet of you, provided that you and the target can see each other. The lenses regain all expended charges daily at dawn.",,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+eyes-of-minute-seeing,5e,SRD 5.1,Eyes of Minute Seeing,,,,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+eyes-of-the-eagle,5e,SRD 5.1,Eyes of the Eagle,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+feather-token,5e,SRD 5.1,Feather Token,,"As a bonus action on your turn, you can direct the whip to fly up to 20 feet and repeat the attack against a creature within 10 feet of it. The whip disappears after
+1 hour, when you use an action to dismiss it, or when you are incapacitated or die.",,,gear,wondrous item,,,,,,,,,,false,false,rare
+flame-tongue,5e,SRD 5.1,Flame Tongue,,,,,weapon,weapon (any sword),,,,,,,,,,false,true,rare
+folding-boat,5e,SRD 5.1,Folding Boat,,,,,gear,wondrous item,,,,,,,,,,false,false,rare
+frost-brand,5e,SRD 5.1,Frost Brand,,"In freezing temperatures, the blade sheds bright light in a 10-foot radius and dim light for an additional 10 feet.
+When you draw this weapon, you can extinguish all nonmagical flames within 30 feet of you. This property can be used no more than once per hour.",,,weapon,weapon (any sword),,,,,,,,,,false,true,very-rare
+gauntlets-of-ogre-power,5e,SRD 5.1,Gauntlets of Ogre Power,,Your Strength score is 19 while you wear these gauntlets. They have no effect on you if your Strength is already 19 or higher.,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+gem-of-brightness,5e,SRD 5.1,Gem of Brightness,,"This prism has 50 charges. While you are holding it, you can use an action to speak one of three command words to cause one of the following effects:
+•The first command word causes the gem to shed bright light in a 30-foot radius and dim light for an additional 30 feet. This effect doesn't expend a charge. It lasts until you use a bonus action to repeat the command word or until you use another function of the gem.
+•The second command word expends 1 charge and causes the gem to fire a brilliant beam of light atone creature you can see within 60 feet of you. Thecreature must succeed on a DC 15 Constitutionsaving throw or become blinded for 1 minute. Thecreature can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.
+•The third command word expends 5 charges and causes the gem to flare with blinding light in a 30-foot cone originating from it. Each creature in the cone must make a saving throw as if struck by the beam created with the second command word.When all of the gem's charges are expended, the gem becomes a nonmagical jewel worth 50 gp.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+gem-of-seeing,5e,SRD 5.1,Gem of Seeing,,"This gem has 3 charges. As an action, you can speak the gem's command word and expend 1 charge. For the next 10 minutes, you have truesight out to 120 feet when you peer through the gem.
+The gem regains 1d3 expended charges daily at dawn.",,,gear,wondrous item,,,,,,,,,,false,true,rare
+giant-slayer,5e,SRD 5.1,Giant Slayer,,,,,weapon,weapon (any axe or sword),,,,,,,,,,false,false,rare
+glamoured-studded-leather,5e,SRD 5.1,Glamoured Studded Leather,,,,,armor,armor (studded leather),,,,,,,,,,false,false,rare
+gloves-of-missile-snaring,5e,SRD 5.1,Gloves of Missile Snaring,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+gloves-of-swimming-and-climbing,5e,SRD 5.1,Gloves of Swimming and Climbing,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+goggles-of-night,5e,SRD 5.1,Goggles of Night,,,,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+hammer-of-thunderbolts,5e,SRD 5.1,Hammer of Thunderbolts,,"You gain a +1bonus to attack and damage rolls made with this magic weapon.
+The hammer also has 5 charges. While attuned to it, you can expend 1 charge and make a ranged weapon attack with the hammer, hurling it as if it had the thrown property with a normal range of 20 feet and a long range of 60 feet. If the attack hits, the hammer unleashes a thunderclap audible out to 300 feet. The target and every creature within 30 feet of it must succeed on a DC 17 Constitution saving throw or be stunned until the end of your next turn. The hammer regains 1d4 + 1 expended charges daily at dawn.",,,weapon,weapon (maul),,,,,,,,,,false,false,legendary
+handy-haversack,5e,SRD 5.1,Handy Haversack,,"This backpack has a central pouch and two side pouches, each of which is an extradimensional space. Each side pouch can hold up to 20 pounds of material, not exceeding a volume of 2 cubic feet. The large central pouch can hold up to 8 cubic feet or 80 pounds of material. The backpack always weighs 5 pounds, regardless of its contents.
+Placing an object in the haversack follows the normal rules for interacting with objects. Retrieving an item from the haversack requires you to use an action. When you reach into the haversack for a specific item, the item is always magically on top.
+The haversack has a few limitations. If it is overloaded, or if a sharp object pierces it or tears it, the haversack ruptures and is destroyed. If the haversack is destroyed, its contents are lost forever, although an artifact always turns up again somewhere. If the haversack is turned inside out, its contents spill forth, unharmed, and the haversack must be put right
+before it can be used again. If a breathing creature is placed within the haversack, the creature can survive for up to 10 minutes, after which time it begins to suffocate.",,,gear,wondrous item,,,,,,,,,,false,false,rare
+hat-of-disguise,5e,SRD 5.1,Hat of Disguise,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+headband-of-intellect,5e,SRD 5.1,Headband of Intellect,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+helm-of-brilliance,5e,SRD 5.1,Helm of Brilliance,,"•You can use an action to cast one of the following spells (save DC 18), using one of the helm's gems of the specified type as a component:
+•As long as it has at least one diamond, the helm emits dim light in a 30-foot radius when at least one undead is within that area. Any undead that starts its turn in that area takes 1d6 radiant damage.
+•As long as the helm has at least one ruby, you have resistance to fire damage.
+•As long as the helm has at least one fire opal, youcan use an action and speak a command word to cause one weapon you are holding to burst into flames. The flames emit bright light in a 10-footradius and dim light for an additional 10 feet. Theflames are harmless to you and the weapon. Whenyou hit with an attack using the blazing weapon,the target takes an extra 1d6 fire damage. The flames last until you use a bonus action to speak the command word again or until you drop or stow the weapon.
+Roll a d20 if you are wearing the helm and take fire damage as a result of failing a saving throw against a spell. On a roll of 1, the helm emits beams of light from its remaining gems. Each creature within 60 feet of the helm other than you must succeed on a DC 17 Dexterity saving throw or be struck by a beam, taking radiant damage equal to the number of gems in the helm. The helm and its
+gems are then destroyed.",,,gear,wondrous item,,,,,,,,,,false,true,very-rare
+helm-of-comprehending-languages,5e,SRD 5.1,Helm of Comprehending Languages,,"While wearing this helm, you can use an action to cast the",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+helm-of-telepathy,5e,SRD 5.1,Helm of Telepathy,,"While wearing this helm, you can use an action to cast the
+a bonus action to do so-while your focus on it continues.",,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+helm-of-teleportation,5e,SRD 5.1,Helm of Teleportation,,"This helm has 3 charges. While wearing it, you can use an action and expend 1 charge to cast the",,,gear,wondrous item,,,,,,,,,,false,true,rare
+holy-avenger,5e,SRD 5.1,Holy Avenger,,"You gain a +3 bonus to attack and damage rolls made with this magic weapon. When you hit a fiend or an undead with it, that creature takes an extra 2d10 radiant damage.
+While you hold the drawn sword, it creates an aura in a 10-foot radius around you. You and all creatures friendly to you in the aura have advantage
+on saving throws against spells and other magical effects. If you have 17 or more levels in the paladin class, the radius of the aura increases to 30 feet.",,,weapon,weapon (any sword),,,,,,,,,,false,true,legendary
+horn-of-blasting,5e,SRD 5.1,Horn of Blasting,,,,,gear,wondrous item,,,,,,,,,,false,false,rare
+horn-of-valhalla,5e,SRD 5.1,Horn of Valhalla,,"If you blow the horn without meeting its requirement, the summoned berserkers attack you. If you meet the requirement, they are friendly to you and your companions and follow your commands.",,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+horseshoes-of-a-zephyr,5e,SRD 5.1,Horseshoes of a Zephyr,,"These iron horseshoes come in a set of four. While all four shoes are affixed to the hooves of a horse or similar creature, they allow the creature to move normally while floating 4 inches above the ground. This effect means the creature can cross or stand above nonsolid or unstable surfaces, such as water or lava. The creature leaves no tracks and ignores difficult terrain. In addition, the creature can move at normal speed for up to 12 hours a day without suffering exhaustion from a forced march.",,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+horseshoes-of-speed,5e,SRD 5.1,Horseshoes of Speed,,"These iron horseshoes come in a set of four. While all four shoes are affixed to the hooves of a horse or similar creature, they increase the creature's walking speed by 30 feet.",,,gear,wondrous item,,,,,,,,,,false,false,rare
+immovable-rod,5e,SRD 5.1,Immovable Rod,,"This flat iron rod has a button on one end. You can use an action to press the button, which causes the rod to become magically fixed in place. Until you or another creature uses an action to push the button again, the rod doesn't move, even if it is defying gravity. The rod can hold up to 8,000 pounds of weight. More weight causes the rod to deactivate and fall. A creature can use an action to make a DC 30 Strength check, moving the fixed rod up to 10 feet on a success.",,,gear,rod,,,,,,,,,,false,false,uncommon
+instant-fortress,5e,SRD 5.1,Instant Fortress,,"You can use an action to place this 1-inch metal cube on the ground and speak its command word. The cube rapidly grows into a fortress that remains until you use an action to speak the command word that dismisses it, which works only if the fortress is empty.
+The fortress is a square tower, 20 feet on a side and 30 feet high, with arrow slits on all sides and a battlement atop it. Its interior is divided into two floors, with a ladder running along one wall to connect them. The ladder ends at a trapdoor leading to the roof. When activated, the tower has a small door on the side facing you. The door opens only at your command, which you can speak as a bonus action. It is immune to the",,,gear,wondrous item,,,,,,,,,,false,false,rare
+iron-bands-of-binding,5e,SRD 5.1,Iron Bands of Binding,,,,,gear,wondrous item,,,,,,,,,,false,false,rare
+iron-flask,5e,SRD 5.1,Iron Flask,,,,,gear,wondrous item,,,,,,,,,,false,false,legendary
+javelin-of-lightning,5e,SRD 5.1,Javelin of Lightning,,"This javelin is a magic weapon. When you hurl it and speak its command word, it transforms into a bolt of lightning, forming a line 5 feet wide that extends out from you to a target within 120 feet. Each creature in the line excluding you and the target must make a DC 13 Dexterity saving throw, taking 4d6 lightning damage on a failed save, and half as much damage on a successful one. The lightning bolt turns back into a javelin when it reaches the target. Make a ranged weapon attack against the target. On a hit, the target takes damage from the javelin plus 4d6 lightning damage.
+The javelin's property can't be used again until the next dawn. In the meantime, the javelin can still be used as a magic weapon.",,,weapon,weapon (javelin),,,,,,,,,,false,false,uncommon
+lantern-of-revealing,5e,SRD 5.1,Lantern of Revealing,,"While lit, this hooded lantern burns for 6 hours on 1 pint of oil, shedding bright light in a 30-foot radius and dim light for an additional 30 feet. Invisible creatures and objects are visible as long as they are in the lantern's bright light. You can use an action to lower the hood, reducing the light to dim light in a 5-foot radius.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+luck-blade,5e,SRD 5.1,Luck Blade,,,,,weapon,weapon (any sword),,,,,,,,,,false,true,legendary
+mace-of-disruption,5e,SRD 5.1,Mace of Disruption,,,,,weapon,weapon (mace),,,,,,,,,,false,true,rare
+mace-of-smiting,5e,SRD 5.1,Mace of Smiting,,,,,weapon,weapon (mace),,,,,,,,,,false,false,rare
+mace-of-terror,5e,SRD 5.1,Mace of Terror,,The mace regains 1d3 expended charges daily at dawn.,,,weapon,weapon (mace),,,,,,,,,,false,true,rare
+mantle-of-spell-resistance,5e,SRD 5.1,Mantle of Spell Resistance,,You have advantage on saving throws against spells while you wear this cloak.,,,gear,wondrous item,,,,,,,,,,false,true,rare
+manual-of-bodily-health,5e,SRD 5.1,Manual of Bodily Health,,"This book contains health and diet tips, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Constitution score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+manual-of-gainful-exercise,5e,SRD 5.1,Manual of Gainful Exercise,,"This book describes fitness exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Strength score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+manual-of-golems,5e,SRD 5.1,Manual of Golems,,"This tome contains information and incantations necessary to make a particular type of golem. The GM chooses the type or determines it randomly. To decipher and use the manual, you must be a spellcaster with at least two 5th-level spell slots. A creature that can't use a
+To create a golem, you must spend the time shown on the table, working without interruption with the manual at hand and resting no more than 8 hours per day. You must also pay the specified cost to purchase supplies. Once you finish creating the golem, the book is consumed in eldritch flames. The golem becomes animate when the ashes of the manual are sprinkled on it. It is under your control, and it understands and obeys your spoken commands.",,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+manual-of-quickness-of-action,5e,SRD 5.1,Manual of Quickness of Action,,,,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+marvelous-pigments,5e,SRD 5.1,Marvelous Pigments,,,,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+medallion-of-thoughts,5e,SRD 5.1,Medallion of Thoughts,,"The medallion has 3 charges. While wearing it, you can use an action and expend 1 charge to cast the",,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+mirror-of-life-trapping,5e,SRD 5.1,Mirror of Life Trapping,,"When this 4-foot-tall mirror is viewed indirectly, its surface shows faint images of creatures. The mirror weighs 50 pounds, and it has AC 11, 10 hit points, and vulnerability to bludgeoning damage. It shatters and is destroyed when reduced to 0 hit points.
+If the mirror is hanging on a vertical surface and you are within 5 feet of it, you can use an action to speak its command word and activate it. It remains activated until you use an action to speak the command word again.
+Any creature other than you that sees its reflection in the activated mirror while within 30 feet of it must succeed on a DC 15 Charisma saving throw or be trapped, along with anything it is wearing or carrying, in one of the mirror's twelve extradimensional cells. This saving throw is made with advantage if the creature knows the mirror's nature, and constructs succeed on the saving throw automatically.
+An extradimensional cell is an infinite expanse filled with thick fog that reduces visibility to 10 feet. Creatures trapped in the mirror's cells don't age, and they don't need to eat, drink, or sleep. A creature trapped within a cell can escape using magic that permits planar travel. Otherwise, the creature
+is confined to the cell until freed.
+If the mirror traps a creature but its twelve extradimensional cells are already occupied, the mirror frees one trapped creature at random to accommodate the new prisoner. A freed creature appears in an unoccupied space within sight of the mirror but facing away from it. If the mirror is shattered, all creatures it contains are freed and appear in unoccupied spaces near it.
+While within 5 feet of the mirror, you can use an action to speak the name of one creature trapped in it or call out a particular cell by number. The creature named or contained in the named cell appears as an image on the mirror's surface. You and the creature can then communicate normally.
+In a similar way, you can use an action to speak a second command word and free one creature
+trapped in the mirror. The freed creature appears, along with its possessions, in the unoccupied space nearest to the mirror and facing away from it.",,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+mithral-armor,5e,SRD 5.1,Mithral Armor,,,,,armor,armor (medium or heavy,,,,,,,,,,false,false,uncommon
+necklace-of-adaptation,5e,SRD 5.1,Necklace of Adaptation,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+necklace-of-fireballs,5e,SRD 5.1,Necklace of Fireballs,,,,,gear,wondrous item,,,,,,,,,,false,false,rare
+necklace-of-prayer-beads,5e,SRD 5.1,Necklace of Prayer Beads,,,,,gear,wondrous item,,,,,,,,,,false,true,rare
+nine-lives-stealer,5e,SRD 5.1,Nine Lives Stealer,,"You gain a +2 bonus to attack and damage rolls made with this magic weapon.
+The sword has 1d8 + 1 charges. If you score a critical hit against a creature that has fewer than 100 hit points, it must succeed on a DC 15 Constitution saving throw or be slain instantly as the sword tears its life force from its body (a construct or an undead is immune). The sword loses 1 charge if the creature is slain. When the sword has no charges remaining, it loses this property.",,,weapon,weapon (any sword),,,,,,,,,,false,true,very-rare
+oathbow,5e,SRD 5.1,Oathbow,,"When you nock an arrow on this bow, it whispers in Elvish, “Swift defeat to my enemies.” When you use this weapon to make a ranged attack, you can, as a command phrase, say, “Swift death to you who have
+wronged me.” The target of your attack becomes your sworn enemy until it dies or until dawn seven days later. You can have only one such sworn enemy at a time. When your sworn enemy dies, you can choose a new one after the next dawn.
+When you make a ranged attack roll with this weapon against your sworn enemy, you have advantage on the roll. In addition, your target gains no benefit from cover, other than total cover, and you suffer no disadvantage due to long range. If the attack hits, your sworn enemy takes an extra 3d6 piercing damage.
+While your sworn enemy lives, you have disadvantage on attack rolls with all other weapons.",,,weapon,weapon (longbow),,,,,,,,,,false,true,very-rare
+oil-of-etherealness,5e,SRD 5.1,Oil of Etherealness,,"Beads of this cloudy gray oil form on the outside of its container and quickly evaporate. The oil can cover a Medium or smaller creature, along with the equipment it's wearing and carrying (one additional",,,gear,potion,,,,,,,,,,false,false,rare
+oil-of-sharpness,5e,SRD 5.1,Oil of Sharpness,,,,,gear,potion,,,,,,,,,,false,false,very-rare
+oil-of-slipperiness,5e,SRD 5.1,Oil of Slipperiness,,,,,gear,potion,,,,,,,,,,false,false,uncommon
+pearl-of-power,5e,SRD 5.1,Pearl of Power,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+periapt-of-health,5e,SRD 5.1,Periapt of Health,,,,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+periapt-of-proof-against-poison,5e,SRD 5.1,Periapt of Proof against Poison,,,,,gear,wondrous item,,,,,,,,,,false,false,rare
+periapt-of-wound-closure,5e,SRD 5.1,Periapt of Wound Closure,,"While you wear this pendant, you stabilize whenever you are dying at the start of your turn. In addition, whenever you roll a Hit Die to regain hit points, double the number of hit points it restores.",,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+philter-of-love,5e,SRD 5.1,Philter of Love,,"The next time you see a creature within 10 minutes after drinking this philter, you become charmed by that creature for 1 hour. If the creature is of a species and gender you are normally attracted to, you regard it as your true love while you are charmed. This potion's rose-hued, effervescent liquid contains one easy-to-miss bubble shaped like a heart.",,,gear,potion,,,,,,,,,,false,false,uncommon
+pipes-of-haunting,5e,SRD 5.1,Pipes of Haunting,,"You must be proficient with wind instruments to use these pipes. They have 3 charges. You can use an action to play them and expend 1 charge to create an eerie, spellbinding tune. Each creature within 30 feet of you that hears you play must succeed on a DC 15 Wisdom saving throw or become frightened of you for 1 minute. If you wish, all creatures in the area that aren't hostile toward you automatically succeed on the saving throw. A creature that fails the saving throw can repeat it at the end of each of its turns, ending the effect on itself on a success. A creature that succeeds on its saving throw is immune to the effect of these pipes for 24 hours. The pipes regain 1d3 expended charges daily at dawn.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+pipes-of-the-sewers,5e,SRD 5.1,Pipes of the Sewers,,"You must be proficient with wind instruments to use these pipes. While you are attuned to the pipes, ordinary rats and giant rats are indifferent toward you and will not attack you unless you threaten or harm them.
+The pipes have 3 charges. If you play the pipes as an action, you can use a bonus action to expend 1 to 3 charges, calling forth one swarm of rats with each expended charge, provided that enough rats are within half a mile of you to be called in this fashion (as determined by the GM). If there aren't enough rats to form a swarm, the charge is wasted. Called
+swarms move toward the music by the shortest available route but aren't under your control otherwise. The pipes regain 1d3 expended charges daily at dawn. Whenever a swarm of rats that isn't under another creature's control comes within 30 feet of you while you are playing the pipes, you can make a Charisma check contested by the swarm's Wisdom check. If you lose the contest, the swarm behaves as it normally would and can't be swayed by the pipes' music for the next 24 hours. If you win the contest, the swarm is swayed by the pipes' music and becomes friendly to you and your companions for as long as you continue to play the pipes each round as an action. A friendly swarm obeys your commands. If you issue no commands to a friendly swarm, it defends itself but otherwise takes no actions. If a friendly swarm starts its turn and can't hear the pipes' music, your control over that swarm ends, and the swarm behaves as it normally would and can't be swayed by the pipes' music for the next 24 hours.",,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+plate-armor-of-etherealness,5e,SRD 5.1,Plate Armor of Etherealness,,,,,armor,armor (plate),,,,,,,,,,false,true,legendary
+portable-hole,5e,SRD 5.1,Portable Hole,,,,,gear,wondrous item,,,,,,,,,,false,false,rare
+potion-of-animal-friendship,5e,SRD 5.1,Potion of Animal Friendship,,"spell (save DC 13) for 1 hour at will. Agitating this muddy liquid brings little bits into view: a fish scale, a hummingbird tongue, a cat claw, or a squirrel hair.",,,gear,potion,,,,,,,,,,false,false,uncommon
+potion-of-clairvoyance,5e,SRD 5.1,Potion of Clairvoyance,,"When you drink this potion, you gain the effect of the",,,gear,potion,,,,,,,,,,false,false,rare
+potion-of-climbing,5e,SRD 5.1,Potion of Climbing,,"When you drink this potion, you gain a climbing speed equal to your walking speed for 1 hour. During this time, you have advantage on Strength (Athletics) checks you make to climb. The potion is separated into
+brown, silver, and gray layers resembling bands of stone. Shaking the bottle fails to mix the colors.",,,gear,potion,,,,,,,,,,false,false,common
+potion-of-diminution,5e,SRD 5.1,Potion of Diminution,,"When you drink this potion, you gain the “reduce” effect of the",,,gear,potion,,,,,,,,,,false,false,rare
+potion-of-flying,5e,SRD 5.1,Potion of Flying,,,,,gear,potion,,,,,,,,,,false,false,very-rare
+potion-of-gaseous-form,5e,SRD 5.1,Potion of Gaseous Form,,,,,gear,potion,,,,,,,,,,false,false,rare
+potion-of-growth,5e,SRD 5.1,Potion of Growth,,,,,gear,potion,,,,,,,,,,false,false,uncommon
+potion-of-heroism,5e,SRD 5.1,Potion of Heroism,,"For 1 hour after drinking it, you gain 10 temporary hit points that last for 1 hour. For the same duration, you are under the effect of the",,,gear,potion,,,,,,,,,,false,false,rare
+potion-of-invisibility,5e,SRD 5.1,Potion of Invisibility,,"This potion's container looks empty but feels as though it holds liquid. When you drink it, you become invisible for 1 hour. Anything you wear or carry is invisible with you. The effect ends early if you attack or cast a spell.",,,gear,potion,,,,,,,,,,false,false,very-rare
+potion-of-mind-reading,5e,SRD 5.1,Potion of Mind Reading,,"When you drink this potion, you gain the effect of the",,,gear,potion,,,,,,,,,,false,false,rare
+potion-of-poison,5e,SRD 5.1,Potion of Poison,,"or other beneficial potion. However, it is actually poison masked by illusion magic. An
+spell reveals its true nature.
+If you drink it, you take 3d6 poison damage, and you must succeed on a DC 13
+Constitution saving throw or be poisoned. At the start of each of your turns while you are poisoned in this way, you take 3d6 poison damage. At the end of each of your turns, you can repeat the saving throw. On a successful save, the poison damage you take on your subsequent turns decreases by 1d6. The poison ends when the damage decreases to 0.",,,gear,potion,,,,,,,,,,false,false,uncommon
+potion-of-resistance,5e,SRD 5.1,Potion of Resistance,,,,,gear,potion,,,,,,,,,,false,false,uncommon
+potion-of-speed,5e,SRD 5.1,Potion of Speed,,,,,gear,potion,,,,,,,,,,false,false,very-rare
+potion-of-water-breathing,5e,SRD 5.1,Potion of Water Breathing,,,,,gear,potion,,,,,,,,,,false,false,uncommon
+restorative-ointment,5e,SRD 5.1,Restorative Ointment,,,,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+ring-of-animal-influence,5e,SRD 5.1,Ring of Animal Influence,,,,,gear,ring,,,,,,,,,,false,false,rare
+ring-of-djinni-summoning,5e,SRD 5.1,Ring of Djinni Summoning,,"While wearing this ring, you can speak its command word as an action to summon a particular djinni from the Elemental Plane of Air. The djinni appears in
+an unoccupied space you choose within 120 feet of you. It remains as long as you concentrate (as if concentrating on a spell), to a maximum of 1 hour, or until it drops to 0 hit points. It then returns to its home plane.
+While summoned, the djinni is friendly to you and your companions. It obeys any commands you give it, no matter what language you use. If you fail to command it, the djinni defends itself against attackers but takes no other actions.
+After the djinni departs, it can't be summoned again for 24 hours, and the ring becomes nonmagical if the djinni dies.",,,gear,ring,,,,,,,,,,false,true,legendary
+ring-of-elemental-command,5e,SRD 5.1,Ring of Elemental Command,,"This ring is linked to one of the four Elemental Planes. The GM chooses or randomly determines the linked plane.
+While wearing this ring, you have advantage on attack rolls against elementals from the linked plane, and they have disadvantage on attack rolls against you. In addition, you have access to properties based on the linked plane.
+The ring has 5 charges. It regains 1d4 +1 expended charges daily at dawn. Spells cast from the ring have a save DC of 17.
+If you help slay an air elemental while attuned to the ring, you gain access to the following additional properties:
+•You have resistance to lightning damage.
+•You have a flying speed equal to your walking speed and can hover.
+•You can cast the following spells from the ring,expending the necessary number of charges:
+on an earth elemental. In addition, you can move in difficult terrain that is composed of rubble,
+rocks, or dirt as if it were normal terrain. You can also speak and understand Terran. If you help slay an earth elemental while attuned to the ring, you gain access to the following additional properties:
+•You have resistance to acid damage.
+•You can move through solid earth or rock as if those areas were difficult terrain. If you end your turn there, you are shunted out to the nearest unoccupied space you last occupied.
+You can expend 2 of the ring's charges to cast
+•You are immune to fire damage.
+You can expend 2 of the ring's charges to cast
+•You can breathe underwater and have a swimming speed equal to your walking speed.",,,gear,ring,,,,,,,,,,false,true,legendary
+ring-of-evasion,5e,SRD 5.1,Ring of Evasion,,,,,gear,ring,,,,,,,,,,false,true,rare
+ring-of-feather-falling,5e,SRD 5.1,Ring of Feather Falling,,"When you fall while wearing this ring, you descend 60 feet per round and take no damage from falling.",,,gear,ring,,,,,,,,,,false,true,rare
+ring-of-free-action,5e,SRD 5.1,Ring of Free Action,,"While you wear this ring, difficult terrain doesn't cost you extra movement. In addition, magic can neither reduce your speed nor cause you to be paralyzed or restrained.",,,gear,ring,,,,,,,,,,false,true,rare
+ring-of-invisibility,5e,SRD 5.1,Ring of Invisibility,,"While wearing this ring, you can turn invisible as an action. Anything you are wearing or carrying is invisible with you. You remain invisible until the ring is removed, until you attack or cast a spell, or until you use a bonus action to become visible again.",,,gear,ring,,,,,,,,,,false,true,legendary
+ring-of-jumping,5e,SRD 5.1,Ring of Jumping,,,,,gear,ring,,,,,,,,,,false,true,uncommon
+ring-of-mind-shielding,5e,SRD 5.1,Ring of Mind Shielding,,"While wearing this ring, you are immune to magic that allows other creatures to read your thoughts, determine whether you are lying, know your alignment, or know your creature type. Creatures can telepathically communicate with you only if you allow it.
+You can use an action to cause the ring to become invisible until you use another action to make it visible, until you remove the ring, or until you die.
+If you die while wearing the ring, your soul enters it, unless it already houses a soul. You can remain in the ring or depart for the afterlife. As long as your soul is in the ring, you can telepathically communicate with any creature wearing it. A wearer can't prevent this telepathic communication.",,,gear,ring,,,,,,,,,,false,true,uncommon
+ring-of-protection,5e,SRD 5.1,Ring of Protection,,,,,gear,ring,,,,,,,,,,false,true,rare
+ring-of-regeneration,5e,SRD 5.1,Ring of Regeneration,,,,,gear,ring,,,,,,,,,,false,true,very-rare
+ring-of-resistance,5e,SRD 5.1,Ring of Resistance,,,,,gear,ring,,,,,,,,,,false,true,rare
+ring-of-shooting-stars,5e,SRD 5.1,Ring of Shooting Stars,,"As a bonus action, you can move each sphere up to 30 feet, but no farther than 120 feet away from you. When a creature other than you comes within 5 feet of a sphere, the sphere discharges lightning at that creature and disappears. That creature must make a DC 15 Dexterity saving throw. On a failed save, the creature takes lightning damage based on the number of spheres you created.",,,gear,ring,,,,,,,,,,false,true,very-rare
+ring-of-spell-storing,5e,SRD 5.1,Ring of Spell Storing,,"This ring stores spells cast into it, holding them until the attuned wearer uses them. The ring can store up to 5 levels worth of spells at a time. When found, it contains 1d6 − 1 levels of stored spells chosen by the GM.
+Any creature can cast a spell of 1st through 5th level into the ring by touching the ring as the spell
+is cast. The spell has no effect, other than to be stored in the ring. If the ring can't hold the spell, the spell is expended without effect. The level of the slot used to cast the spell determines how much space it uses.
+While wearing this ring, you can cast any spell stored in it. The spell uses the slot level, spell save DC, spell attack bonus, and spellcasting ability of the original caster, but is otherwise treated as if you cast the spell. The spell cast from the ring is no longer stored in it, freeing up space.",,,gear,ring,,,,,,,,,,false,true,rare
+ring-of-spell-turning,5e,SRD 5.1,Ring of Spell Turning,,"While wearing this ring, you have advantage on saving throws against any spell that targets only you (not in an area of effect). In addition, if you roll a 20 for the save and the spell is 7th level or lower, the spell has no effect on you and instead targets the caster, using the slot level, spell save DC, attack bonus, and spellcasting ability of the caster.",,,gear,ring,,,,,,,,,,false,true,legendary
+ring-of-swimming,5e,SRD 5.1,Ring of Swimming,,,,,gear,ring,,,,,,,,,,false,false,uncommon
+ring-of-telekinesis,5e,SRD 5.1,Ring of Telekinesis,,,,,gear,ring,,,,,,,,,,false,true,very-rare
+ring-of-the-ram,5e,SRD 5.1,Ring of the Ram,,,,,gear,ring,,,,,,,,,,false,true,rare
+ring-of-three-wishes,5e,SRD 5.1,Ring of Three Wishes,,,,,gear,ring,,,,,,,,,,false,false,legendary
+ring-of-warmth,5e,SRD 5.1,Ring of Warmth,,,,,gear,ring,,,,,,,,,,false,true,uncommon
+ring-of-water-walking,5e,SRD 5.1,Ring of Water Walking,,,,,gear,ring,,,,,,,,,,false,false,uncommon
+ring-of-x-ray-vision,5e,SRD 5.1,Ring of X-ray Vision,,"Whenever you use the ring again before taking a long rest, you must succeed on a DC 15 Constitution saving throw or gain one level of exhaustion.",,,gear,ring,,,,,,,,,,false,true,rare
+robe-of-eyes,5e,SRD 5.1,Robe of Eyes,,"This robe is adorned with eye like patterns. While you wear the robe, you gain the following benefits:
+•The robe lets you see in all directions, and you have advantage on Wisdom (Perception) checks that rely on sight.
+•You have darkvision out to a range of 120 feet.
+•You can see invisible creatures and objects, as well as see into the Ethereal Plane, out to a range of120 feet.The eyes on the robe can't be closed or averted.Although you can close or avert your own eyes, you are never considered to be doing so while wearing this robe.",,,gear,wondrous item,,,,,,,,,,false,true,rare
+robe-of-scintillating-colors,5e,SRD 5.1,Robe of Scintillating Colors,,"This robe has 3 charges, and it regains 1d3 expended charges daily at dawn. While you wear it, you can use an action and expend 1 charge to cause the garment to display a shifting pattern of dazzling hues until the end of your next turn. During this time, the robe sheds bright light in a 30-foot radius and dim light for an additional 30 feet. Creatures that can see you have disadvantage on attack rolls against you. In addition, any creature in the bright light that can see you when the robe's power is activated must succeed on a DC 15 Wisdom saving throw or become stunned until the effect ends.",,,gear,wondrous item,,,,,,,,,,false,true,very-rare
+robe-of-stars,5e,SRD 5.1,Robe of Stars,,,,,gear,wondrous item,,,,,,,,,,false,true,very-rare
+robe-of-the-archmagi,5e,SRD 5.1,Robe of the Archmagi,,"•If you aren't wearing armor, your base ArmorClass is 15 + your Dexterity modifier.
+•You have advantage on saving throws against spells and other magical effects.
+•Your spell save DC and spell attack bonus each increase by 2.",,,gear,wondrous item,,,,,,,,,,false,true,legendary
+robe-of-useful-items,5e,SRD 5.1,Robe of Useful Items,,"•Dagger
+•Bullseye lantern (filled and lit)
+•Steel mirror
+•10-foot pole
+•Hempen rope (50 feet, coiled)
+•Sack
+In addition, the robe has 4d4 other patches. The GM chooses the patches or determines them randomly.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+rod-of-absorption,5e,SRD 5.1,Rod of Absorption,,"While holding this rod, you can use your reaction to absorb a spell that is targeting only you and not with an area of effect. The absorbed spell's effect is canceled, and the spell's energy-not the spell itself-is stored in the rod. The energy has the same level as the spell when it was cast. The rod can absorb and store up to 50 levels of energy over the course of its existence. Once the rod absorbs 50 levels of energy, it can't absorb more. If you are targeted by a spell that the rod can't store, the rod has no effect on that spell.
+When you become attuned to the rod, you know how many levels of energy the rod has absorbed over the course of its existence, and how many levels of spell energy it currently has stored.
+If you are a spellcaster holding the rod, you can convert energy stored in it into spell slots to cast spells you have prepared or know. You can create spell slots only of a level equal to or lower than your own spell slots, up to a maximum of 5th level. You use the stored levels in place of your slots, but otherwise cast the spell as normal. For example, you can use 3 levels stored in the rod as a 3rd-level spell slot.
+A newly found rod has 1d10 levels of spell energy stored in it already. A rod that can no longer absorb spell energy and has no energy remaining becomes nonmagical.",,,gear,rod,,,,,,,,,,false,true,very-rare
+rod-of-alertness,5e,SRD 5.1,Rod of Alertness,,,,,gear,rod,,,,,,,,,,false,true,very-rare
+rod-of-lordly-might,5e,SRD 5.1,Rod of Lordly Might,,"button 2 , the rod's flanged head folds down and two crescent-shaped blades spring out, transforming the rod into a magic battleaxe that grants a +3 bonus to attack and damage rolls made with it. If you press
+button 3 , the rod's flanged head folds down, a spear point springs from the rod's tip, and the rod's handle lengthens into a 6-foot haft, transforming the rod into a magic spear that grants a +3 bonus to attack and damage rolls made with it.If you press
+button 4 , the rod transforms into a climbing pole up to 50 feet long, as you specify. In surfaces as hard as granite, a spike at the bottom and three hooks at the top anchor the pole. Horizontal bars 3 inches long fold out from the sides, 1 foot apart, forming a ladder. The pole can bear up to 4,000 pounds. More weight or lack of solid anchoring causes the rod to revert to its normal form.
+If you press
+button 5 , the rod transforms into a handheld battering ram and grants its user a +10 bonus to Strength checks made to break through doors, barricades, and other barriers.
+If you press
+button 6 , the rod assumes or remains in its normal form and indicates magnetic north. (Nothing happens if this function of the rod is used in a location that has no magnetic north.) The rod also gives you knowledge of your approximate depth beneath the ground or your height above it.
+rod, you can force the target to make a DC 17 Constitution saving throw. On a failure, the target takes an extra 4d6 necrotic damage, and you regain a number of hit points equal to half that necrotic damage. This property can't be used again until the next dawn.",,,gear,rod,,,,,,,,,,false,true,legendary
+rod-of-rulership,5e,SRD 5.1,Rod of Rulership,,"You can use an action to present the rod and command obedience from each creature of your choice that you can see within 120 feet of you. Each target must succeed on a DC 15 Wisdom saving throw or be charmed by you for 8 hours. While charmed in this way, the creature regards you as its
+trusted leader. If harmed by you or your companions, or commanded to do something contrary to its nature, a target ceases to be charmed in this way. The rod can't be used again until the next dawn.",,,gear,rod,,,,,,,,,,false,true,rare
+rod-of-security,5e,SRD 5.1,Rod of Security,,,,,gear,rod,,,,,,,,,,false,false,very-rare
+rope-of-climbing,5e,SRD 5.1,Rope of Climbing,,"The rope has AC 20 and 20 hit points. It regains 1 hit point every 5 minutes as long as it has at least 1 hit point. If the rope drops to 0 hit points, it is destroyed.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+rope-of-entanglement,5e,SRD 5.1,Rope of Entanglement,,"This rope is 30 feet long and weighs 3 pounds. If you hold one end of the rope and use an action to speak its command word, the other end darts forward to entangle a creature you can see within 20 feet of you. The target must succeed on a DC 15 Dexterity saving
+throw or become restrained.
+You can release the creature by using a bonus action to speak a second command word. A target restrained by the rope can use an action to make a DC 15 Strength or Dexterity check (target's choice). On a success, the creature is no longer restrained by the rope.
+The rope has AC 20 and 20 hit points. It regains 1 hit point every 5 minutes as long as it has at least 1 hit point. If the rope drops to 0 hit points, it is destroyed.",,,gear,wondrous item,,,,,,,,,,false,false,rare
+scarab-of-protection,5e,SRD 5.1,Scarab of Protection,,"If you hold this beetle-shaped medallion in your hand for 1 round, an inscription appears on its surface revealing its magical nature. It provides two benefits while it is on your person:
+•You have advantage on saving throws against spells.
+•The scarab has 12 charges. If you fail a saving throw against a necromancy spell or a harmful effect originating from an undead creature, youcan use your reaction to expend 1 charge and turn the failed save into a successful one. The scarab crumbles into powder and is destroyed when its last charge is expended.",,,gear,wondrous item,,,,,,,,,,false,true,legendary
+scimitar-of-speed,5e,SRD 5.1,Scimitar of Speed,,"You gain a +2 bonus to attack and damage rolls made with this magic weapon. In addition, you can make one attack with it as a bonus action on each of your turns.",,,weapon,weapon (scimitar),,,,,,,,,,false,true,very-rare
+shield-1-2-or-3,5e,SRD 5.1,"Shield, +1, +2, or +3",,,,,armor,armor (shield),,,,,,,,,,false,false,very-rare
+shield-of-missile-attraction,5e,SRD 5.1,Shield of Missile Attraction,,,,,armor,armor (shield),,,,,,,,,,false,true,rare
+slippers-of-spider-climbing,5e,SRD 5.1,Slippers of Spider Climbing,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+sovereign-glue,5e,SRD 5.1,Sovereign Glue,,,,,gear,wondrous item,,,,,,,,,,false,false,legendary
+spellguard-shield,5e,SRD 5.1,Spellguard Shield,,"While holding this shield, you have advantage on saving throws against spells and other magical effects, and spell attacks have disadvantage against you.",,,armor,armor (shield),,,,,,,,,,false,true,very-rare
+sphere-of-annihilation,5e,SRD 5.1,Sphere of Annihilation,,"This 2-foot-diameter black sphere is a hole in the multiverse, hovering in space and stabilized by a magical field surrounding it.
+The sphere obliterates all matter it passes through and all matter that passes through it. Artifacts are the exception. Unless an artifact is susceptible to damage from a",,,gear,wondrous item,,,,,,,,,,false,false,legendary
+staff-of-charming,5e,SRD 5.1,Staff of Charming,,,,,gear,staff,,,,,,,,,,false,true,rare
+staff-of-fire,5e,SRD 5.1,Staff of Fire,,"You have resistance to fire damage while you hold this staff.
+The staff has 10 charges. While holding it, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC:
+The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff blackens, crumbles into cinders, and is destroyed.",,,gear,staff,,,,,,,,,,false,true,very-rare
+staff-of-frost,5e,SRD 5.1,Staff of Frost,,"You have resistance to cold damage while you hold this staff.
+The staff has 10 charges. While holding it, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC:
+The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff turns to water and is destroyed.",,,gear,staff,,,,,,,,,,false,true,very-rare
+staff-of-healing,5e,SRD 5.1,Staff of Healing,,"This staff has 10 charges. While holding it, you can use an action to expend 1 or more of its charges to cast one of the following spells from it, using your spell save DC and spellcasting ability modifier:
+The staff regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff vanishes in a flash of light, lost forever.",,,gear,staff,,,,,,,,,,false,true,rare
+staff-of-power,5e,SRD 5.1,Staff of Power,,"This staff can be wielded as a magic quarterstaff that grants a +2 bonus to attack and damage rolls made with it. While holding it, you gain a +2 bonus to Armor Class, saving throws, and spell attack rolls.
+The staff has 20 charges for the following properties. The staff regains 2d8 + 4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff retains its +2 bonus to attack and damage rolls but loses all other properties. On a 20, the staff regains 1d8 + 2 charges.",,,gear,staff,,,,,,,,,,false,true,very-rare
+staff-of-striking,5e,SRD 5.1,Staff of Striking,,,,,gear,staff,,,,,,,,,,false,true,very-rare
+staff-of-swarming-insects,5e,SRD 5.1,Staff of Swarming Insects,,"This staff has 10 charges and regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, a swarm of insects consumes and destroys the staff, then disperses.",,,gear,staff,,,,,,,,,,false,true,rare
+staff-of-the-magi,5e,SRD 5.1,Staff of the Magi,,"This staff can be wielded as a magic quarterstaff that grants a +2 bonus to attack and damage rolls made with it. While you hold it, you gain a +2 bonus to spell attack rolls.
+The staff has 50 charges for the following properties. It regains 4d6 + 2 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 20, the staff regains 1d12 + 1 charges.",,,gear,staff,,,,,,,,,,false,true,legendary
+staff-of-the-python,5e,SRD 5.1,Staff of the Python,,,,,gear,staff,,,,,,,,,,false,true,uncommon
+staff-of-the-woodlands,5e,SRD 5.1,Staff of the Woodlands,,"This staff can be wielded as a magic quarterstaff that grants a +2 bonus to attack and damage rolls made with it. While holding it, you have a +2 bonus to spell attack rolls.
+The staff has 10 charges for the following properties. It regains 1d6 + 4 expended charges daily at dawn. If you expend the last charge, roll a d20. On a 1, the staff loses its properties and becomes a nonmagical quarterstaff.
+spell from the staff without using any charges.
+its branches at the top spread out in a 20-foot radius. The tree appears ordinary but radiates a faint aura of transmutation magic if targeted by",,,gear,staff,,,,,,,,,,false,true,rare
+staff-of-thunder-and-lightning,5e,SRD 5.1,Staff of Thunder and Lightning,,"This staff can be wielded as a magic quarterstaff that grants a +2 bonus to attack and damage rolls made with it. It also has the following additional properties. When one of these properties is used, it can't be used again until the next dawn.
+taking 9d6 lightning damage on a failed save, or half as much damage on a successful one.",,,gear,staff,,,,,,,,,,false,true,very-rare
+staff-of-withering,5e,SRD 5.1,Staff of Withering,,,,,gear,staff,,,,,,,,,,false,true,rare
+stone-of-controlling-earth-elementals,5e,SRD 5.1,Stone of Controlling Earth Elementals,,,,,gear,wondrous item,,,,,,,,,,false,false,rare
+stone-of-good-luck,5e,SRD 5.1,Stone of Good Luck (Luckstone),,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+sun-blade,5e,SRD 5.1,Sun Blade,,"You gain a +2 bonus to attack and damage rolls made with this weapon, which deals radiant damage instead of slashing damage. When you hit an undead with it, that target takes an extra 1d8 radiant damage.
+The sword's luminous blade emits bright light in a 15-foot radius and dim light for an additional 15 feet. The light is sunlight. While the blade persists, you can use an action to expand or reduce its radius of bright and dim light by 5 feet each, to a maximum of 30 feet each or a minimum of 10 feet each.",,,weapon,weapon (longsword),,,,,,,,,,false,true,rare
+sword-of-life-stealing,5e,SRD 5.1,Sword of Life Stealing,,"When you attack a creature with this magic weapon and roll a 20 on the attack roll, that target takes an extra 3d6 necrotic damage, provided that the target isn't a construct or an undead. You gain temporary hit points equal to the extra damage dealt.",,,weapon,weapon (any sword),,,,,,,,,,false,true,rare
+sword-of-sharpness,5e,SRD 5.1,Sword of Sharpness,,"When you attack an object with this magic sword and hit, maximize your weapon damage dice against the target.
+When you attack a creature with this weapon and roll a 20 on the attack roll, that target takes an extra 4d6 slashing damage. Then roll another d20. If you roll a 20, you lop off one of the target's limbs, with the effect of such loss determined by the GM. If the creature has no limb to sever, you lop off a portion of its body instead.
+In addition, you can speak the sword's command word to cause the blade to shed bright light in a 10-foot radius and dim light for an additional 10 feet. Speaking the command word again or sheathing the sword puts out the light.",,,weapon,weapon (any sword that deals slashing damage),,,,,,,,,,false,true,very-rare
+sword-of-wounding,5e,SRD 5.1,Sword of Wounding,,"Hit points lost to this weapon's damage can be regained only through a short or long rest, rather than by regeneration, magic, or any other means.
+Once per turn, when you hit a creature with an attack using this magic weapon, you can wound the target. At the start of each of the
+wounded creature's turns, it takes 1d4 necrotic damage for each time you've wounded it, and it can then make a DC 15 Constitution saving throw, ending the effect of all such wounds on itself on a success. Alternatively, the wounded creature, or a creature
+within 5 feet of it,
+can use an action to make a DC 15 Wisdom (Medicine) check, ending the effect of such wounds on it on a success.",,,weapon,weapon (any sword),,,,,,,,,,false,true,rare
+talisman-of-pure-good,5e,SRD 5.1,Talisman of Pure Good,,,,,gear,wondrous item,,,,,,,,,,false,true,legendary
+talisman-of-the-sphere,5e,SRD 5.1,Talisman of the Sphere,,,,,gear,wondrous item,,,,,,,,,,false,true,legendary
+talisman-of-ultimate-evil,5e,SRD 5.1,Talisman of Ultimate Evil,,"If you are an evil cleric or paladin, you can use the talisman as a holy symbol, and you gain a +2 bonus to spell attack rolls while you wear or hold it.
+The talisman has 6 charges. If you are wearing or holding it, you can use an action to expend 1 charge from the talisman and choose one creature you can see on the ground within 120 feet of you. If the target is of good alignment, a flaming fissure opens under it. The target must succeed on a DC 20 Dexterity saving throw or fall into the fissure and be destroyed, leaving no remains. The fissure then closes, leaving no trace of its existence. When you expend the last charge, the talisman dissolves into foul-smelling slime and is destroyed.",,,gear,wondrous item,,,,,,,,,,false,true,legendary
+tome-of-clear-thought,5e,SRD 5.1,Tome of Clear Thought,,"This book contains memory and logic exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Intelligence score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+tome-of-leadership-and-influence,5e,SRD 5.1,Tome of Leadership and Influence,,"This book contains guidelines for influencing and charming others, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Charisma score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+tome-of-understanding,5e,SRD 5.1,Tome of Understanding,,"This book contains intuition and insight exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Wisdom score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",,,gear,wondrous item,,,,,,,,,,false,false,very-rare
+trident-of-fish-command,5e,SRD 5.1,Trident of Fish Command,,"This trident is a magic weapon. It has 3 charges. While you carry it, you can use an action and expend 1 charge to cast
+on a beast that has an innate swimming speed. The trident regains 1d3 expended charges daily at dawn.",,,weapon,weapon (trident),,,,,,,,,,false,true,uncommon
+universal-solvent,5e,SRD 5.1,Universal Solvent,,,,,gear,wondrous item,,,,,,,,,,false,false,legendary
+vicious-weapon,5e,SRD 5.1,Vicious Weapon,,,,,weapon,weapon (any),,,,,,,,,,false,false,rare
+vorpal-sword,5e,SRD 5.1,Vorpal Sword,,,,,weapon,weapon (any sword that deals slashing damage),,,,,,,,,,false,true,legendary
+wand-of-binding,5e,SRD 5.1,Wand of Binding,,,,,gear,wand,,,,,,,,,,false,true,rare
+wand-of-enemy-detection,5e,SRD 5.1,Wand of Enemy Detection,,"This wand has 7 charges. While holding it, you can use an action and expend 1 charge to speak its command word. For the next minute, you know the direction of the nearest creature hostile to you within 60 feet,
+but not its distance from you. The wand can sense the presence of hostile creatures that are ethereal, invisible, disguised, or hidden, as well as those in plain sight. The effect ends if you stop holding the wand.
+The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll a d20. On a 1, the wand crumbles into ashes and is destroyed.",,,gear,wand,,,,,,,,,,false,true,rare
+wand-of-fear,5e,SRD 5.1,Wand of Fear,,"This wand has 7 charges for the following properties. It regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll a d20. On a 1, the wand crumbles into ashes and is destroyed.",,,gear,wand,,,,,,,,,,false,true,rare
+wand-of-fireballs,5e,SRD 5.1,Wand of Fireballs,,"This wand has 7 charges. While holding it, you can use an action to expend 1 or more of its charges to cast the
+The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll a
+d20. On a 1, the wand crumbles into ashes and is destroyed.",,,gear,wand,,,,,,,,,,false,true,rare
+wand-of-lightning-bolts,5e,SRD 5.1,Wand of Lightning Bolts,,,,,gear,wand,,,,,,,,,,false,true,rare
+wand-of-magic-detection,5e,SRD 5.1,Wand of Magic Detection,,,,,gear,wand,,,,,,,,,,false,false,uncommon
+wand-of-magic-missiles,5e,SRD 5.1,Wand of Magic Missiles,,,,,gear,wand,,,,,,,,,,false,false,uncommon
+wand-of-paralysis,5e,SRD 5.1,Wand of Paralysis,,,,,gear,wand,,,,,,,,,,false,true,rare
+wand-of-polymorph,5e,SRD 5.1,Wand of Polymorph,,"This wand has 7 charges. While holding it, you can use an action to expend 1 of its charges to cast the
+The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll a d20. On a 1, the wand crumbles into ashes and is destroyed.",,,gear,wand,,,,,,,,,,false,true,very-rare
+wand-of-secrets,5e,SRD 5.1,Wand of Secrets,,"The wand has 3 charges. While holding it, you can use an action to expend 1 of its charges, and if a secret door or trap is within 30 feet of you, the wand pulses and points at the one nearest to you. The wand regains 1d3 expended charges daily at dawn.",,,gear,wand,,,,,,,,,,false,false,uncommon
+wand-of-the-war-mage-1-2-or-3,5e,SRD 5.1,"Wand of the War Mage, +1, +2, or +3",,"While holding this wand, you gain a bonus to spell attack rolls determined by the wand's rarity. In addition, you ignore half cover when making a spell attack.",,,gear,wand,,,,,,,,,,false,true,very-rare
+wand-of-web,5e,SRD 5.1,Wand of Web,,"This wand has 7 charges. While holding it, you can use an action to expend 1 of its charges to cast the
+The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll a d20. On a 1, the wand crumbles into ashes and is destroyed.",,,gear,wand,,,,,,,,,,false,true,uncommon
+wand-of-wonder,5e,SRD 5.1,Wand of Wonder,,"This wand has 7 charges. While holding it, you can use an action to expend 1 of its charges and choose a target within 120 feet of you. The target can be a creature, an object, or a point in space. Roll d100 and consult the following table to discover what happens.
+If the effect causes you to cast a spell fromthe wand, the spell's save DC is 15. If the spell normally has a range expressed in feet, its range becomes 120 feet if it isn't already.
+If an effect covers an area, you must center the spell on and include the target. If an effect has
+multiple possible subjects, the GM randomly determines which ones are affected. The wand regains 1d6 + 1 expended charges daily at dawn. If you expend the wand's last charge, roll a d20. On a 1, the wand crumbles into dust and is destroyed.",,,gear,wand,,,,,,,,,,false,true,rare
+weapon-1-2-or-3,5e,SRD 5.1,"Weapon, +1, +2, or +3",,You have a bonus to attack and damage rolls made with this magic weapon. The bonus is determined by the weapon's rarity.,,,weapon,weapon (any),,,,,,,,,,false,false,very-rare
+well-of-many-worlds,5e,SRD 5.1,Well of Many Worlds,,"This fine black cloth, soft as silk, is folded up to the dimensions of a handkerchief. It unfolds into a circular sheet 6 feet in diameter.
+on a solid surface, whereupon it creates a two-way portal to another world or plane of existence. Each time the item opens a portal, the GM decides where it leads. You can use an action to close an open portal by taking hold of the edges of the cloth and folding it up. Once
+has opened a portal, it can't do so again for 1d8 hours.",,,gear,wondrous item,,,,,,,,,,false,false,legendary
+wind-fan,5e,SRD 5.1,Wind Fan,,"While holding this fan, you can use an action to cast the
+cumulative 20 percent chance of not working and tearing into useless, nonmagical tatters.",,,gear,wondrous item,,,,,,,,,,false,false,uncommon
+winged-boots,5e,SRD 5.1,Winged Boots,,,,,gear,wondrous item,,,,,,,,,,false,true,uncommon
+wings-of-flying,5e,SRD 5.1,Wings of Flying,,,,,gear,wondrous item,,,,,,,,,,false,true,rare
+orb-of-dragonkind,5e,SRD 5.1,Orb of Dragonkind,,"Ages past,elves and humans waged a terrible war against evil dragons. When the world seemed doomed, powerful wizards came together and worked their greatest magic, forging five
+As the wizard towers fell in later ages, the orbs were destroyed or faded into legend, and only three are thought to survive. Their magic has been warped and twisted over the centuries, so although their primary purpose of calling dragons still functions, they also allow
+some measure of control over dragons.
+Each orb contains the essence of an evil dragon, a presence that resents any attempt to coax magic from it. Those lacking in force of personality might find themselves enslaved to an orb.
+An orb is an etched crystal globe about 10 inches in diameter. When used, it grows to about 20 inches in diameter, and mist swirls inside it.
+While attuned to an orb, you can use an action to peer into the orb's depths and speak its command word. You must then make a DC 15 Charisma
+check. On a successful check, you control the orb for as long as you remain attuned to it. On a failed check, you become charmed by the orb for as long as you remain attuned to it.
+While you are charmed by the orb, you can't voluntarily end your attunement to it, and the orb casts
+world, to advance the worship of Tiamat, or something else the GM decides.
+•2 minor beneficial properties
+•1 minor detrimental property
+•1 major detrimental property
+A monster's statistics, sometimes referred to as its
+stat block , provide the essential information that you need to run the monster.",,,gear,wondrous item,,,,,,,,,,false,true,artifact

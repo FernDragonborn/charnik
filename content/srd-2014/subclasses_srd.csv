@@ -1,0 +1,13 @@
+id,systems,source,name_en,name_uk,text_en,text_uk,effects,class_id
+pathoftheberserker,5e,SRD 5.1,PathoftheBerserker,,,,,barbarian
+collegeoflore,5e,SRD 5.1,CollegeofLore,,,,,bard
+lifedomain,5e,SRD 5.1,LifeDomain,,,,,cleric
+circleoftheland,5e,SRD 5.1,CircleoftheLand,,,,,druid
+champion,5e,SRD 5.1,Champion,,,,,fighter
+wayoftheopenhand,5e,SRD 5.1,WayoftheOpenHand,,,,,monk
+oathofdevotion,5e,SRD 5.1,OathofDevotion,,,,,paladin
+hunter,5e,SRD 5.1,Hunter,,,,,ranger
+thief,5e,SRD 5.1,Thief,,,,,rogue
+draconicbloodline,5e,SRD 5.1,DraconicBloodline,,,,,sorcerer
+thefiend,5e,SRD 5.1,TheFiend,,,,,warlock
+schoolofevocation,5e,SRD 5.1,SchoolofEvocation,,,,,wizard

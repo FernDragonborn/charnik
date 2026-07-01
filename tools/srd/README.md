@@ -26,6 +26,15 @@ Never claim both unless verified identical — 2024 diverges from 2014.
 `<p><b>Label:</b>value</p>` fields); monsters map from the **pre-structured Monsters JSON**.
 The coordinate JSON (PDF dump) is avoided.
 
+### SRD 5.1 (2014) — `tools/srd/convert-2014.mjs`, source "SRD 5.1"
+Complete except the app-only effects catalog: **spells 319, monsters 201, items 383**
+(37 weapons + 13 armor + 99 gear + 234 magic), **class_features 196** (123 base + 73
+subclass), **conditions 15, classes 12, subclasses 12, species 9, backgrounds 1** (Acolyte),
+**feats 1** (Grappler). `caster`/`spell_ability`/`subclass_level` for the 12 classes use the
+known mechanical classification (a fact, not prose) rather than fragile 2014 slot-table
+parsing; class-feature levels come from the progression table row text. SRD 5.1's monster
+chapter (Monsters JSON, 201) already includes animals/NPCs, so there is no separate appendix.
+
 ## Regenerate
 
 ```sh

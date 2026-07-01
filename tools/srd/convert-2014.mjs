@@ -321,10 +321,35 @@ function convertClasses() {
 			});
 		}
 	}
+	// --- subclasses (one per class in SRD 5.1) + their features ---
+	const SUBCLASSES = { PathoftheBerserker: 'barbarian', CollegeofLore: 'bard', LifeDomain: 'cleric', CircleoftheLand: 'druid', Champion: 'fighter', WayoftheOpenHand: 'monk', OathofDevotion: 'paladin', Hunter: 'ranger', Thief: 'rogue', DraconicBloodline: 'sorcerer', TheFiend: 'warlock', SchoolofEvocation: 'wizard' };
+	const subclassRows = [];
+	for (const [sid, classId] of Object.entries(SUBCLASSES)) {
+		const start = html.indexOf(`id='${sid}'`);
+		const rest = html.slice(start);
+		const end = rest.indexOf('<h2', 10);
+		const block = end > 0 ? rest.slice(0, end) : rest;
+		const nameM = /<h3[^>]*>[\s\S]*?<b>([\s\S]*?)<\/b>/i.exec(block);
+		const name = nameM ? strip(nameM[1]) : sid;
+		const subId = slug(name);
+		subclassRows.push({ id: subId, systems: '5e', source: 'SRD 5.1', name_en: name, name_uk: '', text_en: '', text_uk: '', effects: '', class_id: classId });
+		for (const e of htmlEntries(block).filter((e) => e.level === 4)) {
+			const ftext = e.paras.map(strip).filter(Boolean).join('\n');
+			const lm = /(\d+)(?:st|nd|rd|th) level/i.exec(ftext);
+			featureRows.push({
+				id: `${subId}-${slug(e.name)}`, systems: '5e', source: 'SRD 5.1', name_en: e.name, name_uk: '',
+				text_en: ftext, text_uk: '', effects: '',
+				class_id: classId, level: lm ? Number(lm[1]) : SUBCLASS_LEVEL_2014[classId], resource: '', subclass_id: subId
+			});
+		}
+	}
 	assertCount('classes', classRows.length, 12);
+	assertCount('subclasses', subclassRows.length, 12);
 	dedupeIds(featureRows);
+	dedupeIds(subclassRows);
 	writeCsv(out('classes_srd.csv'), ['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'hit_die', 'primary_ability', 'saves', 'caster', 'spell_ability', 'skills_choose', 'skills_from', 'subclass_level'], classRows);
 	writeCsv(out('class_features_srd.csv'), ['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id', 'level', 'resource', 'subclass_id'], featureRows);
+	writeCsv(out('subclasses_srd.csv'), ['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id'], subclassRows);
 	console.log('classes:', classRows.map((c) => `${c.id}(${c.hit_die},${c.caster})`).join(' '));
 	return featureRows.length;
 }
@@ -378,6 +403,40 @@ function convertItems() {
 		nA++;
 	}
 	assertCount('armor+shields', nA, 13);
+
+	// adventuring gear: a real <tr>/<td> table (Item, Cost, Weight); <em> rows are
+	// category sub-labels (Ammunition, Arcane focus…) and are skipped.
+	let nG = 0;
+	const gStart = html.indexOf("id='AdventuringGear'");
+	const gTable = (/<table[\s\S]*?<\/table>/i.exec(html.slice(gStart)) || [''])[0];
+	for (const tr of gTable.match(/<tr[\s\S]*?<\/tr>/gi) || []) {
+		const td = [...tr.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((m) => m[1]);
+		if (td.length < 3 || /<em>/i.test(td[0])) continue;
+		const name = strip(td[0]);
+		if (!name) continue;
+		rows.push(irow({ id: slug(name), name_en: name, category: 'gear', item_type: 'adventuring gear', cost: strip(td[1]), weight_lb: wlb(strip(td[2])) }));
+		nG++;
+	}
+
+	// magic items: h4 entries with an <em>Type, rarity (requires attunement)</em> meta.
+	let nM = 0;
+	const RAR = ['very rare', 'uncommon', 'common', 'rare', 'legendary', 'artifact'];
+	const magSlice = html.slice(html.indexOf("id='MagicItemsAZ'"));
+	for (const e of htmlEntries(magSlice).filter((x) => x.level === 4)) {
+		const metaP = e.paras.find((p) => /<em>/i.test(p)) || '';
+		const inner = strip((/<em>([\s\S]*?)<\/em>/i.exec(metaP) || [, ''])[1]).toLowerCase();
+		const rar = RAR.find((r) => inner.includes(r));
+		if (!rar) continue; // section text, not a magic item
+		const type = inner.split(',')[0].trim();
+		const category = type.startsWith('armor') ? 'armor' : type.startsWith('weapon') ? 'weapon' : type.startsWith('ammunition') ? 'ammunition' : 'gear';
+		rows.push(irow({
+			id: slug(e.name), name_en: e.name, text_en: e.paras.filter((p) => !/<em>/i.test(p)).map(strip).filter(Boolean).join('\n'),
+			category, item_type: type, attunement: String(/requires attunement/.test(inner)), rarity: slug(rar)
+		}));
+		nM++;
+	}
+	console.log(`  gear ${nG}, magic ${nM}`);
+
 	dedupeIds(rows);
 	writeCsv(out('items_srd.csv'), ITEM_COLS, rows);
 	return rows.length;
