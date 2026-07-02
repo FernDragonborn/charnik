@@ -1420,8 +1420,15 @@
 		border: 1px solid var(--color-border-strong);
 		border-radius: 13px;
 		padding: 13px 15px;
-		cursor: pointer;
 		color: var(--color-text);
+	}
+	button.tile {
+		cursor: pointer;
+	}
+	/* only the clickable tiles (AC / Init) light up; the Speed tile is a plain div */
+	button.tile:hover {
+		border-color: var(--color-accent);
+		background: var(--color-surface-2);
 	}
 	.tile .k {
 		font-family: var(--font-mono);
@@ -1491,9 +1498,22 @@
 		font-size: 12px;
 		color: var(--color-text-muted);
 		background: transparent;
-		border: 0;
+		border: 1px solid transparent;
+		border-radius: var(--radius-sm);
+		padding: 3px 8px;
 		cursor: pointer;
 		align-self: center;
+	}
+	.senses-strip .edit:hover {
+		color: var(--color-text);
+		border-color: var(--color-border-strong);
+		background: var(--color-surface-2);
+	}
+	/* colored pill buttons keep their semantic colour but brighten on hover */
+	.toggle:hover,
+	.temptag:hover,
+	.nextturn:hover {
+		filter: brightness(1.14);
 	}
 
 	.grid {
@@ -1948,11 +1968,16 @@
 		vertical-align: middle;
 		cursor: pointer;
 	}
-	/* enlarge the click target (~3×) without changing the visual dot */
+	/* big invisible click target so the tiny dot is easy to hit */
 	.prep::before {
 		content: '';
 		position: absolute;
-		inset: -10px -6px;
+		inset: -14px;
+		border-radius: 50%;
+	}
+	/* hover halo (~2.5× the dot), painted behind it, showing you're on the prep target */
+	.prep:hover {
+		box-shadow: 0 0 0 6px var(--color-border-strong);
 	}
 	.prep.always {
 		cursor: default;
