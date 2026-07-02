@@ -162,5 +162,18 @@
 		max-width: 1040px;
 		margin: 0 auto;
 		outline: none;
+		/* main is the scroll region; body fills the viewport and never scrolls itself,
+		   so full-height pages (compendium) can size to the available space with no
+		   stray body scrollbar */
+		flex: 1;
+		min-height: 0;
+		width: 100%;
+		overflow: auto;
+	}
+	:global(body) {
+		height: 100dvh;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
 	}
 </style>

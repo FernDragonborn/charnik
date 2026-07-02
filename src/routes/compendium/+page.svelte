@@ -55,7 +55,6 @@
 			return !q || String(r.data.name_en).toLowerCase().includes(q);
 		});
 	});
-	const total = $derived(rows.length);
 
 	const groups = $derived(
 		groupRows(rows.slice(0, 500), groupBy, selectedType).map((g) => ({
@@ -94,85 +93,83 @@
 {#if !graph}
 	<p class="loading">Loading content…</p>
 {:else}
-	<div class="mgrhead">
-		<h1>Compendium</h1>
-		<span class="count">{total} {selectedType.replace(/_/g, ' ')}</span>
-	</div>
-	<nav class="types">
-		{#each types as t (t)}
-			<Chip active={t === selectedType} onclick={() => pick(t)}>
-				{t.replace(/_/g, ' ')} <span class="n">{graph.list(t).length}</span>
-			</Chip>
-		{/each}
-	</nav>
+	<div class="page">
+		<nav class="types">
+			{#each types as t (t)}
+				<Chip active={t === selectedType} onclick={() => pick(t)}>
+					{t.replace(/_/g, ' ')} <span class="n">{graph.list(t).length}</span>
+				</Chip>
+			{/each}
+		</nav>
 
-	<div class="ctrls">
-		<details class="dd" bind:open={groupOpen}>
-			<summary>Group · <b>{groupLabel}</b></summary>
-			<div class="ddmenu">
-				{#each groupings as g (g.key)}
-					<button
-						class="ddopt"
-						class:on={groupBy === g.key}
-						onclick={() => {
-							groupBy = g.key;
-							groupOpen = false;
-						}}>{g.label}</button
-					>
-				{/each}
-			</div>
-		</details>
-
-		{#if sources.length > 1 || facetValues.length}
-			<details class="dd">
-				<summary>Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
-				<div class="ddmenu wide">
-					{#if sources.length > 1}
-						<div class="ddsec">Source</div>
-						<div class="ddchips">
-							{#each sources as s (s)}
-								<Chip
-									active={sourceFilter.has(s)}
-									onclick={() => (sourceFilter = toggle(sourceFilter, s))}>{s}</Chip
-								>
-							{/each}
-						</div>
-					{/if}
-					{#if facet && facetValues.length}
-						<div class="ddsec">{facet.label}</div>
-						<div class="ddchips scroll">
-							{#each facetValues as v (v)}
-								<Chip
-									active={facetFilter.has(v)}
-									onclick={() => (facetFilter = toggle(facetFilter, v))}>{v}</Chip
-								>
-							{/each}
-						</div>
-					{/if}
-					{#if activeFilters}
+		<div class="ctrls">
+			<details class="dd" bind:open={groupOpen}>
+				<summary>Group · <b>{groupLabel}</b></summary>
+				<div class="ddmenu">
+					{#each groupings as g (g.key)}
 						<button
-							class="ddclear"
+							class="ddopt"
+							class:on={groupBy === g.key}
 							onclick={() => {
-								sourceFilter = new Set();
-								facetFilter = new Set();
-							}}>Clear filters</button
+								groupBy = g.key;
+								groupOpen = false;
+							}}>{g.label}</button
 						>
-					{/if}
+					{/each}
 				</div>
 			</details>
-		{/if}
-	</div>
 
-	<div class="two">
-		<EntryList
-			{groups}
-			bind:searchValue={query}
-			{showEdition}
-			searchPlaceholder="Search {selectedType.replace(/_/g, ' ')}…"
-			selectedId={selected?.effectiveId ?? null}
-			onselect={(e) => (selected = e.row)}
-		/>
-		<WikiDetail {detail} />
+			{#if sources.length > 1 || facetValues.length}
+				<details class="dd">
+					<summary>Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
+					<div class="ddmenu wide">
+						{#if sources.length > 1}
+							<div class="ddsec">Source</div>
+							<div class="ddchips">
+								{#each sources as s (s)}
+									<Chip
+										active={sourceFilter.has(s)}
+										onclick={() => (sourceFilter = toggle(sourceFilter, s))}>{s}</Chip
+									>
+								{/each}
+							</div>
+						{/if}
+						{#if facet && facetValues.length}
+							<div class="ddsec">{facet.label}</div>
+							<div class="ddchips scroll">
+								{#each facetValues as v (v)}
+									<Chip
+										active={facetFilter.has(v)}
+										onclick={() => (facetFilter = toggle(facetFilter, v))}>{v}</Chip
+									>
+								{/each}
+							</div>
+						{/if}
+						{#if activeFilters}
+							<button
+								class="ddclear"
+								onclick={() => {
+									sourceFilter = new Set();
+									facetFilter = new Set();
+								}}>Clear filters</button
+							>
+						{/if}
+					</div>
+				</details>
+			{/if}
+		</div>
+
+		<div class="two">
+			<EntryList
+				{groups}
+				bind:searchValue={query}
+				{showEdition}
+				searchPlaceholder="Search {selectedType.replace(/_/g, ' ')}…"
+				selectedId={selected?.effectiveId ?? null}
+				onselect={(e) => (selected = e.row)}
+			/>
+			<WikiDetail {detail} />
+		</div>
 	</div>
 {/if}
 
@@ -182,30 +179,12 @@
 		padding: var(--space-6);
 		text-align: center;
 	}
-	.mgrhead {
-		display: flex;
-		align-items: baseline;
-		gap: 14px;
-		/* pull up under the nav so the two-pane gets the vertical room, not the title */
-		margin: calc(-1 * var(--space-3)) 0 10px;
-		flex-wrap: wrap;
-	}
-	.mgrhead h1 {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: var(--font-size-2xl);
-		margin: 0;
-	}
-	.count {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-	}
 	.types {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 6px;
-		margin-bottom: 14px;
+		/* no page title — pull the type tabs up under the nav for max content room */
+		margin: calc(-1 * var(--space-3)) 0 12px;
 	}
 	.types .n {
 		opacity: 0.55;
@@ -307,20 +286,26 @@
 		font-size: 11px;
 		cursor: pointer;
 	}
+	.page {
+		display: flex;
+		flex-direction: column;
+		height: 100%;
+		min-height: 0;
+	}
 	.two {
 		display: grid;
-		grid-template-columns: minmax(300px, 390px) 1fr;
+		grid-template-columns: minmax(240px, 300px) 1fr;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		overflow: hidden;
-		/* definite height so each pane's grid track is bounded → panes scroll internally */
-		height: calc(100vh - 205px);
-		min-height: 480px;
+		/* fills the remaining page height; each pane scrolls internally (min-height:0) */
+		flex: 1;
+		min-height: 0;
 	}
 	@media (max-width: 700px) {
 		.two {
 			grid-template-columns: 1fr;
-			height: auto;
+			min-height: 480px;
 		}
 	}
 </style>
