@@ -25,7 +25,8 @@ export function why(c: Computed): string {
 }
 
 /** "sleight-of-hand" → "Sleight Of Hand". */
-export const titleCase = (s: string) => s.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+export const titleCase = (s: string) =>
+	s.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 
 /** Extract a dice pool ({sides: count}) from any string containing NdM tokens. */
 export const parseDice = (s: string): Record<number, number> => {

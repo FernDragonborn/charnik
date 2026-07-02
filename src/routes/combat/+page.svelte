@@ -238,7 +238,9 @@
 				>
 				<button class="grpby" onclick={(e) => openMenu('manage', e)}>⛭ Manage all</button>
 			{/if}
-			<span class="dh" title="drag to reorder" onpointerdown={() => (combat.dragDisabled = false)}>⠿</span>
+			<span class="dh" title="drag to reorder" onpointerdown={() => (combat.dragDisabled = false)}
+				>⠿</span
+			>
 		</div>
 		{#if !collapsed[pid]}
 			{#if pid === 'skills'}
@@ -674,7 +676,6 @@
 		color: var(--color-text-muted);
 		margin-left: 8px;
 	}
-
 
 	.combat {
 		display: grid;
@@ -1248,5 +1249,4 @@
 	.prepct b {
 		color: var(--color-resource);
 	}
-
 </style>

@@ -20,173 +20,177 @@
 	const { bumpDie, doRoll, setTempHp, addEffect, addCustomEffect, togglePassive } = combat;
 </script>
 
-	{#if overlay}
-		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-		<div class="ovbg" onclick={() => (combat.overlay = null)}></div>
-		<div
-			class="pop"
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-			style="top:{overlay.top}px; {overlay.left != null
-				? `left:${overlay.left}px`
-				: `right:${overlay.right}px`}"
-		>
-			{#if overlay.kind === 'dice'}
-				<div class="tray">
-					{#if rollSrc}<div class="tray-src"><b>{rollSrc}</b></div>{/if}
-					<div class="pool">
-						{#each Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0])) as [s, c] (s)}
-							<div class="poolchip">
-								<button onclick={() => bumpDie(Number(s), -1)}>−</button><b>{c}</b>×d{s}<button
-									onclick={() => bumpDie(Number(s), 1)}>+</button
-								>
-							</div>
-						{/each}
-					</div>
-					<p class="gridhint">tap a die to add · ± sets the count</p>
-					<div class="dice-grid">
-						{#each DICE as d (d)}<button class="die" onclick={() => bumpDie(d, 1)}>d{d}</button
-							>{/each}
-					</div>
-					<div class="advrow">
-						<button class="seg" class:on={rollAdv === -1} onclick={() => (combat.rollAdv = -1)}
-							>Disadv.</button
-						>
-						<button class="seg" class:on={rollAdv === 0} onclick={() => (combat.rollAdv = 0)}
-							>Normal</button
-						>
-						<button class="seg" class:on={rollAdv === 1} onclick={() => (combat.rollAdv = 1)}
-							>Advant.</button
-						>
-					</div>
-					<div class="modrow">
-						<div class="mod">
-							<button onclick={() => (combat.rollMod -= 1)}>−</button> mod {signed(rollMod)}
-							<button onclick={() => (combat.rollMod += 1)}>+</button>
+{#if overlay}
+	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+	<div class="ovbg" onclick={() => (combat.overlay = null)}></div>
+	<div
+		class="pop"
+		role="dialog"
+		aria-modal="true"
+		tabindex="-1"
+		style="top:{overlay.top}px; {overlay.left != null
+			? `left:${overlay.left}px`
+			: `right:${overlay.right}px`}"
+	>
+		{#if overlay.kind === 'dice'}
+			<div class="tray">
+				{#if rollSrc}<div class="tray-src"><b>{rollSrc}</b></div>{/if}
+				<div class="pool">
+					{#each Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0])) as [s, c] (s)}
+						<div class="poolchip">
+							<button onclick={() => bumpDie(Number(s), -1)}>−</button><b>{c}</b>×d{s}<button
+								onclick={() => bumpDie(Number(s), 1)}>+</button
+							>
 						</div>
-						<button class="rollbtn" onclick={doRoll}>Roll {rollExpr}</button>
-					</div>
-					{#if log[0]}<div class="hist">
-							{log[0].label}
-							{#if log[0].adv}d20 <b class="res">{log[0].adv[0]}</b>
-								<s class="drop">{log[0].adv[1]}</s>{/if}
-							{log[0].expr}{log[0].expr ? ' ' : ''}=
-							<span class="res">{Number.isNaN(log[0].total) ? '' : log[0].total}</span>
-						</div>{/if}
-				</div>
-			{:else if overlay.kind === 'temphp'}
-				<div class="ph">
-					<div class="pop-h" style="border: 0">Set temporary HP</div>
-					<div class="field">
-						<input type="number" bind:value={combat.tempHpInput} />
-						<button class="set" onclick={setTempHp}>Set</button>
-					</div>
-					<p class="note">
-						Separate pool — teal in the HP bar. Doesn't stack; takes the higher value.
-					</p>
-				</div>
-			{:else if overlay.kind === 'addeffect'}
-				<div class="search"><span class="mag">🔍</span><input placeholder="Search effects…" /></div>
-				<div class="sec">Catalog · presets</div>
-				{#each EFFECT_PRESETS as p (p.label)}
-					<button class="row" onclick={() => addEffect(p.label, p.tokens, !/bane/i.test(p.label))}>
-						<span class="main"
-							><span class="ic" class:neg={/bane/i.test(p.label)}>＋</span>{p.label}</span
-						><span class="durpill">10 rds</span>
-					</button>
-				{/each}
-				<div class="divlite"></div>
-				<button
-					class="row"
-					onclick={() => combat.overlay && (combat.overlay = { ...overlay, kind: 'customeffect' })}
-				>
-					<span class="main"><span class="ic">✎</span><b>Custom effect…</b></span><span class="meta"
-						>text + manual mod</span
-					>
-				</button>
-			{:else if overlay.kind === 'customeffect'}
-				<div class="ph">
-					<div class="pop-h" style="border: 0">Custom effect</div>
-					<div class="field">
-						<!-- svelte-ignore a11y_autofocus -->
-						<input placeholder="Effect name…" bind:value={combat.customEffectLabel} autofocus />
-						<button class="set" onclick={addCustomEffect}>Add</button>
-					</div>
-					<p class="note">
-						Inert text marker — add a manual modifier in the effects panel if needed.
-					</p>
-				</div>
-			{:else if overlay.kind === 'log'}
-				<div class="cardhead2"><span class="ttl">Roll log · history</span></div>
-				<div class="logscroll">
-					{#each log as l, i (i)}
-						<div class="logrow">
-							<div class="lr-top">
-								<b>{l.label}</b><span class="lr-tot" class:res={!Number.isNaN(l.total)}
-									>{Number.isNaN(l.total) ? '—' : l.total}</span
-								>
-							</div>
-							{#if l.expr || l.adv}<div class="lr-sub">
-									{#if l.adv}d20 <b>{l.adv[0]}</b> <s class="drop">{l.adv[1]}</s>
-									{/if}{l.expr}
-								</div>{/if}
-						</div>
-					{:else}<p class="note" style="padding: 11px 13px">
-							No rolls yet — tap a stat, skill, save, or attack.
-						</p>{/each}
-				</div>
-			{:else if overlay.kind === 'showhide'}
-				<div class="pop-h">
-					Which actions appear<button class="ovx" onclick={() => (combat.overlay = null)}>✕</button>
-				</div>
-				{#each actions as a (a.id)}
-					<button class="row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
-						<span class="eye" class:on={!hiddenActions[a.id]}></span><span class="main">{a.n}</span
-						>{#if hiddenActions[a.id]}<span class="meta">hidden</span>{/if}
-					</button>
-				{/each}
-			{:else if overlay.kind === 'pinskills'}
-				<div class="pop-h">
-					Passive senses · 👁 = shown<button class="ovx" onclick={() => (combat.overlay = null)}>✕</button>
-				</div>
-				<div class="pinwrap">
-					{#each ABIL as ab (ab)}
-						{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
-						{#if list.length}
-							<div class="catblock">
-								<div class="sec">{ABILITY_NAME[ab]}</div>
-								{#each list as skill (skill)}
-									<button class="row" onclick={() => togglePassive(skill)}>
-										<span class="eye" class:on={passiveSkills.includes(skill)}></span><span
-											class="nm">{titleCase(skill)}</span
-										>
-									</button>
-								{/each}
-							</div>
-						{/if}
 					{/each}
 				</div>
-			{:else if overlay.kind === 'manage'}
-				<div class="pop-h">
-					Spellbook<button class="ovx" onclick={() => (combat.overlay = null)}>✕</button>
+				<p class="gridhint">tap a die to add · ± sets the count</p>
+				<div class="dice-grid">
+					{#each DICE as d (d)}<button class="die" onclick={() => bumpDie(d, 1)}>d{d}</button
+						>{/each}
 				</div>
-				<p class="note" style="padding: 11px 13px">
-					Full spellbook manager arrives with the spell-manager view (d-spellmgr).
+				<div class="advrow">
+					<button class="seg" class:on={rollAdv === -1} onclick={() => (combat.rollAdv = -1)}
+						>Disadv.</button
+					>
+					<button class="seg" class:on={rollAdv === 0} onclick={() => (combat.rollAdv = 0)}
+						>Normal</button
+					>
+					<button class="seg" class:on={rollAdv === 1} onclick={() => (combat.rollAdv = 1)}
+						>Advant.</button
+					>
+				</div>
+				<div class="modrow">
+					<div class="mod">
+						<button onclick={() => (combat.rollMod -= 1)}>−</button> mod {signed(rollMod)}
+						<button onclick={() => (combat.rollMod += 1)}>+</button>
+					</div>
+					<button class="rollbtn" onclick={doRoll}>Roll {rollExpr}</button>
+				</div>
+				{#if log[0]}<div class="hist">
+						{log[0].label}
+						{#if log[0].adv}d20 <b class="res">{log[0].adv[0]}</b>
+							<s class="drop">{log[0].adv[1]}</s>{/if}
+						{log[0].expr}{log[0].expr ? ' ' : ''}=
+						<span class="res">{Number.isNaN(log[0].total) ? '' : log[0].total}</span>
+					</div>{/if}
+			</div>
+		{:else if overlay.kind === 'temphp'}
+			<div class="ph">
+				<div class="pop-h" style="border: 0">Set temporary HP</div>
+				<div class="field">
+					<input type="number" bind:value={combat.tempHpInput} />
+					<button class="set" onclick={setTempHp}>Set</button>
+				</div>
+				<p class="note">
+					Separate pool — teal in the HP bar. Doesn't stack; takes the higher value.
 				</p>
-			{:else if overlay.kind === 'condition'}
-				<div class="pop-h">
-					Conditions · multi-select<button class="ovx" onclick={() => (combat.overlay = null)}>✕</button>
+			</div>
+		{:else if overlay.kind === 'addeffect'}
+			<div class="search"><span class="mag">🔍</span><input placeholder="Search effects…" /></div>
+			<div class="sec">Catalog · presets</div>
+			{#each EFFECT_PRESETS as p (p.label)}
+				<button class="row" onclick={() => addEffect(p.label, p.tokens, !/bane/i.test(p.label))}>
+					<span class="main"
+						><span class="ic" class:neg={/bane/i.test(p.label)}>＋</span>{p.label}</span
+					><span class="durpill">10 rds</span>
+				</button>
+			{/each}
+			<div class="divlite"></div>
+			<button
+				class="row"
+				onclick={() => combat.overlay && (combat.overlay = { ...overlay, kind: 'customeffect' })}
+			>
+				<span class="main"><span class="ic">✎</span><b>Custom effect…</b></span><span class="meta"
+					>text + manual mod</span
+				>
+			</button>
+		{:else if overlay.kind === 'customeffect'}
+			<div class="ph">
+				<div class="pop-h" style="border: 0">Custom effect</div>
+				<div class="field">
+					<!-- svelte-ignore a11y_autofocus -->
+					<input placeholder="Effect name…" bind:value={combat.customEffectLabel} autofocus />
+					<button class="set" onclick={addCustomEffect}>Add</button>
 				</div>
-				{#each conditionList as cn (cn)}
-					{@const added = character?.play.effects.some((e) => e.label === cn)}
-					<button class="row" onclick={() => (added ? null : addEffect(cn, [], false))}>
-						<span class="main">{cn}</span><span class="tg" class:on={added}></span>
-					</button>
+				<p class="note">
+					Inert text marker — add a manual modifier in the effects panel if needed.
+				</p>
+			</div>
+		{:else if overlay.kind === 'log'}
+			<div class="cardhead2"><span class="ttl">Roll log · history</span></div>
+			<div class="logscroll">
+				{#each log as l, i (i)}
+					<div class="logrow">
+						<div class="lr-top">
+							<b>{l.label}</b><span class="lr-tot" class:res={!Number.isNaN(l.total)}
+								>{Number.isNaN(l.total) ? '—' : l.total}</span
+							>
+						</div>
+						{#if l.expr || l.adv}<div class="lr-sub">
+								{#if l.adv}d20 <b>{l.adv[0]}</b> <s class="drop">{l.adv[1]}</s>
+								{/if}{l.expr}
+							</div>{/if}
+					</div>
+				{:else}<p class="note" style="padding: 11px 13px">
+						No rolls yet — tap a stat, skill, save, or attack.
+					</p>{/each}
+			</div>
+		{:else if overlay.kind === 'showhide'}
+			<div class="pop-h">
+				Which actions appear<button class="ovx" onclick={() => (combat.overlay = null)}>✕</button>
+			</div>
+			{#each actions as a (a.id)}
+				<button class="row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
+					<span class="eye" class:on={!hiddenActions[a.id]}></span><span class="main">{a.n}</span
+					>{#if hiddenActions[a.id]}<span class="meta">hidden</span>{/if}
+				</button>
+			{/each}
+		{:else if overlay.kind === 'pinskills'}
+			<div class="pop-h">
+				Passive senses · 👁 = shown<button class="ovx" onclick={() => (combat.overlay = null)}
+					>✕</button
+				>
+			</div>
+			<div class="pinwrap">
+				{#each ABIL as ab (ab)}
+					{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
+					{#if list.length}
+						<div class="catblock">
+							<div class="sec">{ABILITY_NAME[ab]}</div>
+							{#each list as skill (skill)}
+								<button class="row" onclick={() => togglePassive(skill)}>
+									<span class="eye" class:on={passiveSkills.includes(skill)}></span><span class="nm"
+										>{titleCase(skill)}</span
+									>
+								</button>
+							{/each}
+						</div>
+					{/if}
 				{/each}
-			{/if}
-		</div>
-	{/if}
+			</div>
+		{:else if overlay.kind === 'manage'}
+			<div class="pop-h">
+				Spellbook<button class="ovx" onclick={() => (combat.overlay = null)}>✕</button>
+			</div>
+			<p class="note" style="padding: 11px 13px">
+				Full spellbook manager arrives with the spell-manager view (d-spellmgr).
+			</p>
+		{:else if overlay.kind === 'condition'}
+			<div class="pop-h">
+				Conditions · multi-select<button class="ovx" onclick={() => (combat.overlay = null)}
+					>✕</button
+				>
+			</div>
+			{#each conditionList as cn (cn)}
+				{@const added = character?.play.effects.some((e) => e.label === cn)}
+				<button class="row" onclick={() => (added ? null : addEffect(cn, [], false))}>
+					<span class="main">{cn}</span><span class="tg" class:on={added}></span>
+				</button>
+			{/each}
+		{/if}
+	</div>
+{/if}
 
 <style>
 	/* overlays — d-menus popover language */

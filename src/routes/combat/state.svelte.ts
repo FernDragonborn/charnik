@@ -404,9 +404,7 @@ class CombatVM {
 		}
 		return groups;
 	});
-	preparedCount = $derived(
-		this.character?.build.spells.filter((s) => s.prepared).length ?? 0
-	);
+	preparedCount = $derived(this.character?.build.spells.filter((s) => s.prepared).length ?? 0);
 	preparedCap = $derived((this.sheet?.abilities.int.mod ?? 0) + (this.sheet?.level ?? 0));
 
 	hpBar = $derived.by(() => {
@@ -426,7 +424,8 @@ class CombatVM {
 		this.columns[ci] = e.detail.items;
 		this.dragDisabled = true;
 		// persist the layout ON THE CHARACTER (round-trips once save/load is wired)
-		if (this.character) this.character.ui.panelColumns = this.columns.map((col) => col.map((x) => x.id));
+		if (this.character)
+			this.character.ui.panelColumns = this.columns.map((col) => col.map((x) => x.id));
 	};
 	releaseDrag = () => (this.dragDisabled = true); // window pointerup
 
