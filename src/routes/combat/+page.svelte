@@ -3,6 +3,7 @@
 	// pure helpers in $lib/combat/helpers. Markup keeps bare names via reactive read-aliases;
 	// writes/binds go through `combat.*`.
 	import { onMount } from 'svelte';
+	import { base } from '$app/paths';
 	import { dndzone } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { SKILL_ABILITY } from '$lib/character/derive';
@@ -217,7 +218,7 @@
 				<button class="grpby" onclick={cycleGroupBy} title="Change grouping"
 					>{groupByLabel} ▾</button
 				>
-				<button class="grpby" onclick={(e) => openMenu('manage', e)}>⛭ Manage all</button>
+				<a class="grpby" href="{base}/spellbook">⛭ Manage all</a>
 			{/if}
 			<span class="dh" title="drag to reorder" onpointerdown={() => (combat.dragDisabled = false)}
 				>⠿</span

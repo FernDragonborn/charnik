@@ -27,6 +27,18 @@ const meaningful = (v: unknown) => nonEmpty(v) && !/^(false|none|0)$/i.test(Stri
 const ordinal = (n: number) =>
 	`${n}${['th', 'st', 'nd', 'rd'][n % 10 > 3 || Math.floor(n / 10) === 1 ? 0 : n % 10]}`;
 
+const ABILS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
+const abilMod = (score: number) => {
+	const m = Math.floor((score - 10) / 2);
+	return m >= 0 ? `+${m}` : `−${Math.abs(m)}`;
+};
+
+export interface AbilityScore {
+	ab: string; // "STR"
+	score: number;
+	mod: string; // "+5" / "−1"
+}
+
 /** A row in the left-pane list (name + meta sub-line + the underlying content row). */
 export interface Entry<T> {
 	id: string;
@@ -38,6 +50,7 @@ export interface Entry<T> {
 export interface DetailModel {
 	eyebrow: string; // "Level 3 · Evocation" (spell) or the type name
 	title: string;
+	abilities: AbilityScore[]; // monster STR..CHA block (empty otherwise)
 	meta: [string, string][]; // k/v cells (Casting time, Range, Components, Duration, …)
 	bodyHtml: string; // text_en — rendered as HTML (content may contain markup)
 	higherLevel: string; // higher_level, if any
@@ -61,14 +74,39 @@ export function buildDetail(row: LoadedRow, type: ContentType): DetailModel {
 	} else {
 		eyebrow = cap(String(type));
 	}
+	// monster ability scores → a compact 3×2 block, kept out of the generic meta grid
+	const abilities: AbilityScore[] = ABILS.filter((a) => meaningful(d[a])).map((a) => ({
+		ab: a.toUpperCase(),
+		score: Number(d[a]),
+		mod: abilMod(Number(d[a]))
+	}));
+	if (abilities.length) ABILS.forEach((a) => skip.add(a));
+
 	const meta = Object.entries(d)
 		.filter(([k, v]) => !skip.has(k) && meaningful(v))
 		.map(([k, v]) => [cap(k), asText(v)] as [string, string]);
+
+	// The 2024 monster text embeds the whole stat-block header (Size/AC/HP/Speed, the ability
+	// grid that flattens into "MOD SAVE …" mush, Resistances, Senses, CR) — most already shown
+	// structured above. Before dropping the header (keep only the Traits/Actions prose after
+	// the "**CR** …" line), lift the fields that AREN'T columns (Initiative/Resistances/
+	// Immunities/Vulnerabilities) into meta cells so nothing is lost. 2014 has no such header.
+	let body = String(d.text_en ?? '');
+	if (abilities.length) {
+		const cr = body.match(/\*\*CR\*\*[^\n]*\n?/);
+		const header = cr ? body.slice(0, body.indexOf(cr[0])) : '';
+		for (const key of ['Initiative', 'Resistances', 'Immunities', 'Vulnerabilities']) {
+			const m = header.match(new RegExp(`\\*\\*${key}\\*\\*\\s*([^\\n*]+)`));
+			if (m && m[1].trim()) meta.push([key, m[1].trim().replace(/\s+$/, '')]);
+		}
+		if (cr) body = body.slice(body.indexOf(cr[0]) + cr[0].length).replace(/^\s+/, '');
+	}
 	return {
 		eyebrow,
 		title: String(d.name_en),
+		abilities,
 		meta,
-		bodyHtml: String(d.text_en ?? ''),
+		bodyHtml: body,
 		higherLevel: String(d.higher_level ?? ''),
 		source: `Source: ${row.source}`
 	};
