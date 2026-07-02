@@ -185,6 +185,11 @@
 			out[Number(m[2])] = (out[Number(m[2])] ?? 0) + Number(m[1]);
 		return out;
 	};
+	// healing dice from a spell's text ("regains Hit Points equal to 2d4 plus …")
+	const healDice = (text: string): string => {
+		const m = text.match(/(?:equal to|regains?|restores?)[^.]*?(\d+d\d+)/i);
+		return m ? m[1] : '';
+	};
 
 	const PANEL_TITLE: Record<string, string> = {
 		skills: 'Skills',
@@ -237,11 +242,14 @@
 	// casting a spell: attack spells roll to hit; others just log the cast
 	function cast(r: SpRow, e: Event) {
 		const alt = wantsTray(e);
-		// a damaging spell rolls its damage dice (uniform: Fire Bolt 1d10, Fireball 8d6…);
+		// a spell with dice rolls them: damage (Fire Bolt 1d10, Fireball 8d6) or, for auto
+		// spells, healing (Healing Word 2d4 + spellcasting mod)
 		if (r.dmg && Object.keys(r.dmg).length) {
-			const label = `${r.name} damage`;
-			if (alt) openRoll(label, r.dmg, 0, e);
-			else rollDiceNow(label, r.dmg, 0);
+			const heal = r.res === 'auto';
+			const label = `${r.name} ${heal ? 'healing' : 'damage'}`;
+			const mod = heal && sheet?.spellcasting ? sheet.abilities[sheet.spellcasting.ability].mod : 0;
+			if (alt) openRoll(label, r.dmg, mod, e);
+			else rollDiceNow(label, r.dmg, mod);
 		} else if (r.res === 'hit' && sheet?.spellcasting) {
 			// non-damage attack spell → the to-hit roll
 			const m = sheet.spellcasting.attack.value;
@@ -388,7 +396,11 @@
 		if (!row) return null;
 		const lvl = Number(row.data.level);
 		const res = String(row.data.resolution ?? 'none');
-		const dmg = String(row.data.damage ?? '');
+		// dice for casting: the damage field, or (for auto/healing spells) the "regains …
+		// equal to NdM" dice parsed out of the description
+		const dmg =
+			String(row.data.damage ?? '') ||
+			(res === 'auto' ? healDice(String(row.data.text_en ?? '')) : '');
 		return {
 			id: String(row.data.id),
 			name: String(row.data.name_en),
