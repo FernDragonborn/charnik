@@ -11,6 +11,7 @@
 		onselect,
 		searchValue = $bindable(''),
 		searchPlaceholder = 'Search…',
+		showEdition = false,
 		filters,
 		leading,
 		trailing
@@ -20,6 +21,7 @@
 		onselect: (e: Entry<T>) => void;
 		searchValue?: string;
 		searchPlaceholder?: string;
+		showEdition?: boolean;
 		filters?: Snippet;
 		leading?: Snippet<[Entry<T>]>;
 		trailing?: Snippet<[Entry<T>]>;
@@ -47,6 +49,7 @@
 					<span class="sname"
 						><b>{e.name}</b>{#if e.meta}<small>{e.meta}</small>{/if}</span
 					>
+					{#if showEdition && e.edition}<span class="edtag">{e.edition}</span>{/if}
 					{#if trailing}{@render trailing(e)}{/if}
 				</div>
 			{:else}
@@ -120,6 +123,15 @@
 		display: flex;
 		gap: 4px;
 		flex: none;
+	}
+	.edtag {
+		flex: none;
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: 0.04em;
+		color: var(--color-text-muted);
+		opacity: 0.7;
+		white-space: nowrap;
 	}
 	.sname {
 		flex: 1;

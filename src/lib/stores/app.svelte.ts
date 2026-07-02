@@ -8,6 +8,9 @@ export type ThemeId = 'light' | 'dark' | (string & {});
 export const app = $state({
 	/** Compendium/creation context. Not a way to reinterpret a built character. */
 	activeSystem: '5.5e' as SystemId,
+	/** Editions currently shown in the compendium/search. When more than one is active,
+	 *  lists show each row's edition tag; with a single edition it's redundant (hidden). */
+	activeEditions: ['5e', '5.5e'] as SystemId[],
 	/** UI locale; content falls back to EN when a translation is missing. */
 	activeLocale: 'en',
 	/** Shipped default = dark slate (see docs/PLAN.md #18). */

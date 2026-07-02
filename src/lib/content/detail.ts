@@ -63,7 +63,14 @@ export interface Entry<T> {
 	id: string;
 	name: string;
 	meta: string;
+	edition: string; // "5e" | "5.5e" | "5e · 5.5e" — shown dimmed when >1 edition is active
 	row: T;
+}
+
+/** Format a row's `systems` array as a short edition label. */
+export function editionLabel(systems: unknown): string {
+	const arr = Array.isArray(systems) ? systems.map(String) : systems ? [String(systems)] : [];
+	return arr.join(' · ');
 }
 
 export interface DetailModel {

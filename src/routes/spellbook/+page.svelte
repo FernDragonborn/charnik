@@ -10,7 +10,13 @@
 	import { demoCharacter } from '$lib/demo/sheet';
 	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
-	import { buildDetail, entryMeta, groupEntries, type Entry } from '$lib/content/detail';
+	import {
+		buildDetail,
+		entryMeta,
+		groupEntries,
+		editionLabel,
+		type Entry
+	} from '$lib/content/detail';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
 	import Chip from '$lib/components/Chip.svelte';
@@ -69,6 +75,7 @@
 				id: r.effectiveId,
 				name: String(r.data.name_en),
 				meta: entryMeta(r, 'spell'),
+				edition: editionLabel(r.data.systems),
 				row: r
 			}))
 		}));

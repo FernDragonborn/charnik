@@ -5,49 +5,87 @@
 	import { getContentGraph } from '$lib/content/provider';
 	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
 	import type { ContentType } from '$lib/content/schemas';
-	import { buildDetail, entryMeta, groupEntries, type Entry } from '$lib/content/detail';
+	import { buildDetail, entryMeta, editionLabel, type Entry } from '$lib/content/detail';
+	import { groupingsFor, facetFor, groupRows, distinctValues } from '$lib/content/grouping';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
 	import Chip from '$lib/components/Chip.svelte';
+	import { app } from '$lib/stores/app.svelte';
+
+	// row is shown if any of its editions is currently active
+	const inEdition = (r: LoadedRow) =>
+		(Array.isArray(r.data.systems) ? r.data.systems : [r.data.systems]).some((s) =>
+			app.activeEditions.includes(s as (typeof app.activeEditions)[number])
+		);
+	const showEdition = $derived(app.activeEditions.length > 1);
 
 	let graph = $state<ContentGraph | null>(null);
 	let types = $state<ContentType[]>([]);
 	let selectedType = $state<ContentType>('spell');
 	let query = $state('');
 	let selected = $state<LoadedRow | null>(null);
+	let groupBy = $state('level');
+	let groupOpen = $state(false);
+	let sourceFilter = $state<Set<string>>(new Set()); // empty = all sources
+	let facetFilter = $state<Set<string>>(new Set()); // empty = all facet values
 
 	onMount(async () => {
 		const g = await getContentGraph();
 		graph = g;
 		types = [...g.byType.keys()].sort();
 		if (!types.includes(selectedType)) selectedType = types[0];
+		groupBy = groupingsFor(selectedType)[0].key;
 	});
+
+	// all rows of the type in the active editions — the pool the filters/facets draw from
+	const pool = $derived(graph ? graph.list(selectedType).filter(inEdition) : []);
+	const groupings = $derived(groupingsFor(selectedType));
+	const facet = $derived(facetFor(selectedType));
+	const sources = $derived([...new Set(pool.map((r) => r.source))].sort());
+	const facetValues = $derived(facet ? distinctValues(pool, facet.key) : []);
 
 	const rows = $derived.by(() => {
-		if (!graph) return [];
 		const q = query.trim().toLowerCase();
-		const list = graph.list(selectedType);
-		return q ? list.filter((r) => String(r.data.name_en).toLowerCase().includes(q)) : list;
+		return pool.filter((r) => {
+			if (sourceFilter.size && !sourceFilter.has(r.source)) return false;
+			if (facet && facetFilter.size) {
+				const v = r.data[facet.key];
+				if (!facetFilter.has(v == null ? '' : String(v))) return false;
+			}
+			return !q || String(r.data.name_en).toLowerCase().includes(q);
+		});
 	});
-	const total = $derived(graph ? graph.list(selectedType).length : 0);
+	const total = $derived(rows.length);
 
 	const groups = $derived(
-		groupEntries(rows.slice(0, 500), selectedType).map((g) => ({
+		groupRows(rows.slice(0, 500), groupBy, selectedType).map((g) => ({
 			label: g.label,
 			entries: g.rows.map((r): Entry<LoadedRow> => ({
 				id: r.effectiveId,
 				name: String(r.data.name_en),
 				meta: entryMeta(r, selectedType),
+				edition: editionLabel(r.data.systems),
 				row: r
 			}))
 		}))
 	);
 	const detail = $derived(selected ? buildDetail(selected, selectedType) : null);
+	const groupLabel = $derived(groupings.find((g) => g.key === groupBy)?.label ?? '');
+	const activeFilters = $derived(sourceFilter.size + facetFilter.size);
 
 	function pick(type: ContentType) {
 		selectedType = type;
 		selected = null;
 		query = '';
+		groupBy = groupingsFor(type)[0].key;
+		sourceFilter = new Set();
+		facetFilter = new Set();
+	}
+	function toggle(set: Set<string>, v: string) {
+		const next = new Set(set);
+		if (next.has(v)) next.delete(v);
+		else next.add(v);
+		return next;
 	}
 </script>
 
@@ -68,10 +106,68 @@
 		{/each}
 	</nav>
 
+	<div class="ctrls">
+		<details class="dd" bind:open={groupOpen}>
+			<summary>Group · <b>{groupLabel}</b></summary>
+			<div class="ddmenu">
+				{#each groupings as g (g.key)}
+					<button
+						class="ddopt"
+						class:on={groupBy === g.key}
+						onclick={() => {
+							groupBy = g.key;
+							groupOpen = false;
+						}}>{g.label}</button
+					>
+				{/each}
+			</div>
+		</details>
+
+		{#if sources.length > 1 || facetValues.length}
+			<details class="dd">
+				<summary>Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
+				<div class="ddmenu wide">
+					{#if sources.length > 1}
+						<div class="ddsec">Source</div>
+						<div class="ddchips">
+							{#each sources as s (s)}
+								<Chip
+									active={sourceFilter.has(s)}
+									onclick={() => (sourceFilter = toggle(sourceFilter, s))}>{s}</Chip
+								>
+							{/each}
+						</div>
+					{/if}
+					{#if facet && facetValues.length}
+						<div class="ddsec">{facet.label}</div>
+						<div class="ddchips scroll">
+							{#each facetValues as v (v)}
+								<Chip
+									active={facetFilter.has(v)}
+									onclick={() => (facetFilter = toggle(facetFilter, v))}>{v}</Chip
+								>
+							{/each}
+						</div>
+					{/if}
+					{#if activeFilters}
+						<button
+							class="ddclear"
+							onclick={() => {
+								sourceFilter = new Set();
+								facetFilter = new Set();
+							}}>Clear filters</button
+						>
+					{/if}
+				</div>
+			</details>
+		{/if}
+	</div>
+
 	<div class="two">
 		<EntryList
 			{groups}
 			bind:searchValue={query}
+			{showEdition}
 			searchPlaceholder="Search {selectedType.replace(/_/g, ' ')}…"
 			selectedId={selected?.effectiveId ?? null}
 			onselect={(e) => (selected = e.row)}
@@ -114,6 +210,103 @@
 	.types .n {
 		opacity: 0.55;
 	}
+	.ctrls {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+		margin-bottom: 12px;
+	}
+	.dd {
+		position: relative;
+	}
+	.dd summary {
+		list-style: none;
+		cursor: pointer;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 12px;
+		color: var(--color-text-muted);
+		background: transparent;
+		border: 1px solid var(--color-border);
+		border-radius: 7px;
+		padding: 5px 11px;
+	}
+	.dd summary::-webkit-details-marker {
+		display: none;
+	}
+	.dd summary:hover {
+		color: var(--color-text);
+		border-color: var(--color-border-strong);
+	}
+	.dd summary b {
+		color: var(--color-text);
+	}
+	.dd[open] summary {
+		color: var(--color-text);
+		border-color: var(--color-border-strong);
+	}
+	.ddmenu {
+		position: absolute;
+		z-index: 20;
+		top: calc(100% + 5px);
+		left: 0;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 10px;
+		padding: 6px;
+		box-shadow: var(--shadow-2);
+		min-width: 160px;
+	}
+	.ddmenu.wide {
+		width: max(320px, 100%);
+		max-width: 460px;
+	}
+	.ddopt {
+		display: block;
+		width: 100%;
+		text-align: left;
+		background: transparent;
+		border: 0;
+		color: var(--color-text);
+		font: inherit;
+		padding: 6px 9px;
+		border-radius: 6px;
+		cursor: pointer;
+	}
+	.ddopt:hover {
+		background: var(--color-surface-2);
+	}
+	.ddopt.on {
+		color: var(--color-accent-bright);
+	}
+	.ddsec {
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: var(--tracking-label);
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		margin: 6px 4px 5px;
+	}
+	.ddchips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 5px;
+		padding: 0 4px;
+	}
+	.ddchips.scroll {
+		max-height: 168px;
+		overflow: auto;
+	}
+	.ddclear {
+		margin: 8px 4px 2px;
+		background: transparent;
+		border: 0;
+		color: var(--color-accent-bright);
+		font-family: var(--font-mono);
+		font-size: 11px;
+		cursor: pointer;
+	}
 	.two {
 		display: grid;
 		grid-template-columns: minmax(300px, 390px) 1fr;
@@ -121,8 +314,8 @@
 		border-radius: var(--radius-lg);
 		overflow: hidden;
 		/* definite height so each pane's grid track is bounded → panes scroll internally */
-		height: calc(100vh - 175px);
-		min-height: 560px;
+		height: calc(100vh - 205px);
+		min-height: 480px;
 	}
 	@media (max-width: 700px) {
 		.two {
