@@ -1551,10 +1551,11 @@
 	}
 	.sprow {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) auto auto auto;
+		/* fixed columns so effect/tag/timing line up across rows even when a row has no
+		   resolution pill (its cell stays empty but keeps its width) */
+		grid-template-columns: minmax(0, 1fr) 76px 74px 46px;
 		align-items: center;
 		gap: 8px;
-		justify-content: end;
 		padding: 7px 6px;
 		border-top: 1px solid var(--color-border);
 		border-radius: 7px;
