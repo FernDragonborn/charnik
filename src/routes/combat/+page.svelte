@@ -270,7 +270,12 @@
 	}
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
 	function togglePrepared(r: SpRow) {
-		if (!character || r.prep === 'always') return;
+		if (!character) return;
+		if (r.tm === 'cantrip') {
+			toast('Cantrips are always known — you never prepare them.');
+			return;
+		}
+		if (r.prep === 'always') return;
 		const sp = character.build.spells.find((s) => s.spell.endsWith(`:${r.id}`));
 		if (sp) sp.prepared = !sp.prepared;
 	}
@@ -1933,6 +1938,7 @@
 		cursor: help;
 	}
 	.prep {
+		position: relative;
 		display: inline-block;
 		width: 8px;
 		height: 8px;
@@ -1941,6 +1947,12 @@
 		margin-right: 8px;
 		vertical-align: middle;
 		cursor: pointer;
+	}
+	/* enlarge the click target (~3×) without changing the visual dot */
+	.prep::before {
+		content: '';
+		position: absolute;
+		inset: -10px -6px;
 	}
 	.prep.always {
 		cursor: default;
