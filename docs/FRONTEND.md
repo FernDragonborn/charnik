@@ -7,8 +7,14 @@ comparisons) are the **visual source of truth**; this doc is the structural one.
 behaviour/rules live in [PLAN.md](./PLAN.md).
 
 > The mocks use **global CSS** and have repeatedly collided on short class names
-> (`.eff`, `.atk`). The Svelte build uses **per-component scoped styles** — that entire class
-> of bug disappears. Do NOT port the global classes; re-scope per component.
+> (`.eff`, `.atk`). The Svelte build splits styling in two: the **shared UI vocabulary** lives
+> in ONE curated, tokens-based global sheet `src/lib/styles/components.css` (`.card`, panel
+> header `.phead/.htoggle/.chev/.grpby/.dh`, `.sectlab/.slabtoggle`, `.trace`, `.durpill`, …),
+> imported once from `app.css`; everything **view-specific** stays **scoped** in its component
+> (`.eff`, `.atk`, `.sprow`, `.tile`, …). This kills both bugs: no duplicated scoped copies of
+> shared classes (the `.durpill` trap) and no short-name soup for the specifics. Don't split a
+> view into "area chunks" that each re-scope shared classes — put the shared class in
+> `components.css` (or, later, a real primitive component) so it lives in exactly one place.
 
 ---
 
@@ -16,6 +22,13 @@ behaviour/rules live in [PLAN.md](./PLAN.md).
 
 - **Thin shell.** Components hold no D&D math — they bind to the pure rules/effects core
   (`{value, trace, notes}`) and render. Logic lives in the core, not components.
+- **Per-view view-model.** A view's reactive state + actions live in one typed
+  `state.svelte.ts` class exported as a singleton (e.g. `combat` for Combat): `$state`/
+  `$derived` fields + arrow-method actions. Its components import the singleton and read via
+  reactive aliases (`const x = $derived(vm.x)`) keeping bare names in markup; writes/binds go
+  through `vm.*`. Pure, stateless helpers/constants/types sit in a sibling `helpers.ts`
+  (unit-testable). Combat is the reference (`src/routes/combat/state.svelte.ts`,
+  `src/lib/combat/helpers.ts`).
 - **Scoped styles.** Each `.svelte` component styles only itself; no global class soup.
   Cross-cutting visuals come from **tokens** (CSS custom properties), never copied literals.
 - **Reactive to stores.** `activeSystem` · `activeLocale` · `theme` (+ `buildMode`,

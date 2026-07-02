@@ -1,5 +1,6 @@
 /* Global base styles. Imported once in the root layout. Tokens only — see tokens.css. */
 @import './tokens.css';
+@import './components.css';
 
 *,
 *::before,

@@ -1,0 +1,135 @@
+/*
+ * Shared UI vocabulary — global, tokens-based classes reused across views/components so a
+ * shared class lives in exactly ONE place (no per-component scoped duplication). Imported
+ * once from app.css after tokens.css. View-specific styles stay scoped in their component.
+ *
+ * Keep names semantic and unambiguous (the mocks' short names like .eff/.atk stay scoped).
+ */
+
+/* --- card + panel header --- */
+.card {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-lg);
+	padding: 17px;
+}
+/* panel header: click the whole title area (chev + name) to collapse */
+.phead {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 10px;
+}
+.htoggle {
+	display: inline-flex;
+	align-items: center;
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--color-text-muted);
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+	padding: 4px 8px 4px 2px;
+	margin-right: auto;
+	border-radius: var(--radius-sm);
+}
+.htoggle:hover {
+	background: var(--color-surface-2);
+	color: var(--color-text);
+}
+.chev {
+	color: var(--color-text-muted);
+	font-size: 10px;
+	margin-right: 4px;
+}
+.dh {
+	color: var(--color-border-strong);
+	font-size: 14px;
+	cursor: grab;
+	background: transparent;
+	border: 0;
+	padding: 2px 4px;
+}
+.dh:active {
+	cursor: grabbing;
+}
+/* small ghost pill-button in a panel header (group-by / manage / show-hide) */
+.grpby {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 12px;
+	color: var(--color-text-muted);
+	background: transparent;
+	border: 1px solid var(--color-border);
+	border-radius: 7px;
+	padding: 5px 11px;
+	cursor: pointer;
+}
+.grpby:hover {
+	color: var(--color-text);
+	border-color: var(--color-border-strong);
+}
+
+/* --- section label (mono, uppercase, with trailing rule) --- */
+.sectlab {
+	font-family: var(--font-mono);
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-label);
+	font-size: 10px;
+	color: var(--color-text-muted);
+	margin: 0 2px 9px;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.sectlab::after {
+	content: '';
+	flex: 1;
+	height: 1px;
+	background: var(--color-border);
+}
+.sectlab em {
+	font-style: normal;
+	text-transform: none;
+	letter-spacing: 0;
+	font-family: var(--font-body);
+	font-size: 11px;
+	color: var(--color-text-muted);
+}
+/* whole label clickable to collapse (chev + name), no button box */
+.slabtoggle {
+	display: inline-flex;
+	align-items: center;
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+	color: var(--color-text-muted);
+	font: inherit;
+	text-transform: inherit;
+	letter-spacing: inherit;
+	padding: 3px 6px 3px 2px;
+	border-radius: var(--radius-sm);
+}
+.slabtoggle:hover {
+	background: var(--color-surface-2);
+	color: var(--color-text);
+}
+
+/* --- small shared bits --- */
+.trace {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--color-text-muted);
+}
+/* duration / generic mono pill */
+.durpill {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	color: var(--color-resource);
+	border: 1px solid var(--color-resource);
+	border-radius: 5px;
+	padding: 1px 6px;
+}
