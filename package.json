@@ -48,6 +48,7 @@
 	"dependencies": {
 		"@tauri-apps/plugin-dialog": "~2.7.1",
 		"@tauri-apps/plugin-fs": "~2.5.1",
+		"dompurify": "^3.4.11",
 		"papaparse": "^5.5.4",
 		"svelte-dnd-action": "^0.9.70",
 		"svelte-i18n": "^4.0.1",

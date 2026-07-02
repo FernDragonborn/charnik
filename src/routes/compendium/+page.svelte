@@ -1,10 +1,14 @@
 <script lang="ts">
-	// Compendium — a live browser over the shipped content graph (both editions). Pick a
-	// type, search, click a row to see its detail. Real 4000+ rows via getContentGraph().
+	// Compendium — the same two-pane shape as the Spellbook (d-spellmgr), read-only: a grouped
+	// list of every content row + the wiki detail from its CSV. Reuses EntryList + WikiDetail.
 	import { onMount } from 'svelte';
 	import { getContentGraph } from '$lib/content/provider';
 	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
 	import type { ContentType } from '$lib/content/schemas';
+	import { buildDetail, entryMeta, groupEntries, type Entry } from '$lib/content/detail';
+	import EntryList from '$lib/components/EntryList.svelte';
+	import WikiDetail from '$lib/components/WikiDetail.svelte';
+	import Chip from '$lib/components/Chip.svelte';
 
 	let graph = $state<ContentGraph | null>(null);
 	let types = $state<ContentType[]>([]);
@@ -23,35 +27,27 @@
 		if (!graph) return [];
 		const q = query.trim().toLowerCase();
 		const list = graph.list(selectedType);
-		return (q ? list.filter((r) => String(r.data.name_en).toLowerCase().includes(q)) : list).slice(
-			0,
-			400
-		);
+		return q ? list.filter((r) => String(r.data.name_en).toLowerCase().includes(q)) : list;
 	});
-
 	const total = $derived(graph ? graph.list(selectedType).length : 0);
 
-	// non-empty, non-common fields for the detail panel
-	const COMMON = new Set([
-		'id',
-		'systems',
-		'source',
-		'name_en',
-		'name_uk',
-		'text_en',
-		'text_uk',
-		'effects'
-	]);
-	function detailFields(row: LoadedRow): [string, string][] {
-		return Object.entries(row.data)
-			.filter(
-				([k, v]) => !COMMON.has(k) && v !== '' && v != null && !(Array.isArray(v) && v.length === 0)
-			)
-			.map(([k, v]) => [k, Array.isArray(v) ? v.join(', ') : String(v)]);
-	}
+	const groups = $derived(
+		groupEntries(rows.slice(0, 500), selectedType).map((g) => ({
+			label: g.label,
+			entries: g.rows.map((r): Entry<LoadedRow> => ({
+				id: r.effectiveId,
+				name: String(r.data.name_en),
+				meta: entryMeta(r, selectedType),
+				row: r
+			}))
+		}))
+	);
+	const detail = $derived(selected ? buildDetail(selected, selectedType) : null);
+
 	function pick(type: ContentType) {
 		selectedType = type;
 		selected = null;
+		query = '';
 	}
 </script>
 
@@ -60,58 +56,27 @@
 {#if !graph}
 	<p class="loading">Loading content…</p>
 {:else}
-	<header class="head">
+	<div class="mgrhead">
 		<h1>Compendium</h1>
-		<nav class="types">
-			{#each types as t (t)}
-				<button type="button" class:active={t === selectedType} onclick={() => pick(t)}>
-					{t.replace(/_/g, ' ')} <span class="n">{graph.list(t).length}</span>
-				</button>
-			{/each}
-		</nav>
-		<input class="search" type="search" placeholder="Filter {selectedType}…" bind:value={query} />
-	</header>
+		<span class="count">{total} {selectedType.replace(/_/g, ' ')}</span>
+	</div>
+	<nav class="types">
+		{#each types as t (t)}
+			<Chip active={t === selectedType} onclick={() => pick(t)}>
+				{t.replace(/_/g, ' ')} <span class="n">{graph.list(t).length}</span>
+			</Chip>
+		{/each}
+	</nav>
 
-	<div class="cols">
-		<ul class="list" aria-label="{selectedType} list">
-			{#each rows as row (row.effectiveId)}
-				<li>
-					<button
-						type="button"
-						class:active={selected?.effectiveId === row.effectiveId}
-						onclick={() => (selected = row)}
-					>
-						<span class="nm">{row.data.name_en}</span>
-						<span class="ed">{(row.data.systems as string[]).join('/')}</span>
-					</button>
-				</li>
-			{:else}
-				<li class="empty">No matches.</li>
-			{/each}
-			{#if total > rows.length}
-				<li class="more">…and {total - rows.length} more — narrow the filter</li>
-			{/if}
-		</ul>
-
-		<article class="detail">
-			{#if selected}
-				<p class="d-src">{selected.source} · {(selected.data.systems as string[]).join(' / ')}</p>
-				<h2>{selected.data.name_en}</h2>
-				{#if detailFields(selected).length}
-					<dl class="fields">
-						{#each detailFields(selected) as [k, v] (k)}
-							<dt>{k.replace(/_/g, ' ')}</dt>
-							<dd>{v}</dd>
-						{/each}
-					</dl>
-				{/if}
-				{#if selected.data.text_en}
-					<p class="text">{selected.data.text_en}</p>
-				{/if}
-			{:else}
-				<p class="pick">Select an entry to see its detail.</p>
-			{/if}
-		</article>
+	<div class="two">
+		<EntryList
+			{groups}
+			bind:searchValue={query}
+			searchPlaceholder="Search {selectedType.replace(/_/g, ' ')}…"
+			selectedId={selected?.effectiveId ?? null}
+			onselect={(e) => (selected = e.row)}
+		/>
+		<WikiDetail {detail} />
 	</div>
 {/if}
 
@@ -121,143 +86,48 @@
 		padding: var(--space-6);
 		text-align: center;
 	}
-	.head h1 {
+	.mgrhead {
+		display: flex;
+		align-items: baseline;
+		gap: 14px;
+		/* pull up under the nav so the two-pane gets the vertical room, not the title */
+		margin: calc(-1 * var(--space-3)) 0 10px;
+		flex-wrap: wrap;
+	}
+	.mgrhead h1 {
 		font-family: var(--font-display);
+		font-weight: 700;
 		font-size: var(--font-size-2xl);
-		margin: 0 0 var(--space-2);
+		margin: 0;
+	}
+	.count {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
 	}
 	.types {
 		display: flex;
 		flex-wrap: wrap;
-		gap: var(--space-1);
-		margin-bottom: var(--space-2);
-	}
-	.types button {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		text-transform: capitalize;
-		border: 1px solid var(--color-border);
-		background: var(--color-surface);
-		color: var(--color-text-muted);
-		border-radius: var(--radius-full);
-		padding: var(--space-1) var(--space-3);
-		cursor: pointer;
-	}
-	.types button.active {
-		color: var(--color-accent-text, var(--color-accent));
-		border-color: var(--color-accent);
-		background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+		gap: 6px;
+		margin-bottom: 14px;
 	}
 	.types .n {
-		opacity: 0.6;
+		opacity: 0.55;
 	}
-	.search {
-		width: 100%;
-		border: 1px solid var(--color-border);
-		background: var(--color-surface);
-		color: var(--color-text);
-		border-radius: var(--radius-md);
-		padding: var(--space-2) var(--space-3);
-		margin-bottom: var(--space-4);
-		outline: none;
-	}
-	.cols {
+	.two {
 		display: grid;
-		grid-template-columns: minmax(220px, 340px) 1fr;
-		gap: var(--space-4);
-		align-items: start;
+		grid-template-columns: minmax(300px, 390px) 1fr;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-lg);
+		overflow: hidden;
+		/* definite height so each pane's grid track is bounded → panes scroll internally */
+		height: calc(100vh - 175px);
+		min-height: 560px;
 	}
-	@media (max-width: 640px) {
-		.cols {
+	@media (max-width: 700px) {
+		.two {
 			grid-template-columns: 1fr;
+			height: auto;
 		}
-	}
-	.list {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		max-height: 70vh;
-		overflow: auto;
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-	}
-	.list button {
-		width: 100%;
-		display: flex;
-		justify-content: space-between;
-		gap: var(--space-2);
-		align-items: center;
-		background: transparent;
-		border: 0;
-		border-bottom: 1px solid var(--color-border);
-		color: var(--color-text);
-		padding: var(--space-2) var(--space-3);
-		cursor: pointer;
-		text-align: left;
-	}
-	.list button:hover {
-		background: var(--color-surface-2);
-	}
-	.list button.active {
-		background: color-mix(in srgb, var(--color-accent) 14%, transparent);
-	}
-	.nm {
-		font-family: var(--font-display);
-	}
-	.ed {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-	}
-	.empty,
-	.more {
-		padding: var(--space-3);
-		color: var(--color-text-muted);
-		font-size: var(--font-size-sm);
-	}
-	.detail {
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		padding: var(--space-4);
-		background: var(--color-surface);
-		min-height: 40vh;
-	}
-	.d-src {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		text-transform: uppercase;
-		letter-spacing: var(--tracking-label);
-		color: var(--color-accent);
-		margin: 0;
-	}
-	.detail h2 {
-		font-family: var(--font-display);
-		font-size: var(--font-size-xl);
-		margin: var(--space-1) 0 var(--space-3);
-	}
-	.fields {
-		display: grid;
-		grid-template-columns: max-content 1fr;
-		gap: 2px var(--space-3);
-		margin: 0 0 var(--space-3);
-		font-size: var(--font-size-sm);
-	}
-	.fields dt {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
-		align-self: center;
-	}
-	.fields dd {
-		margin: 0;
-	}
-	.text {
-		white-space: pre-wrap;
-		line-height: 1.5;
-		color: var(--color-text);
-	}
-	.pick {
-		color: var(--color-text-muted);
 	}
 </style>
