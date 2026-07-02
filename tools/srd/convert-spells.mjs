@@ -139,9 +139,10 @@ function parseSpell(name, body) {
 		}
 	}
 
-	// damage: first "NdN <type> damage"
-	const dm = /(\d+d\d+)\s+([A-Za-z]+)\s+damage/.exec(description);
-	const damage = dm ? `${dm[1]} ${dm[2].toLowerCase()}` : '';
+	// damage: first "NdN [<type>] damage" — the type is optional (e.g. Sorcerous Burst deals
+	// "1d8 damage of a type you choose", so it has dice but no fixed type)
+	const dm = /(\d+d\d+)\s+(?:([A-Za-z]+)\s+)?damage/.exec(description);
+	const damage = dm ? (dm[2] ? `${dm[1]} ${dm[2].toLowerCase()}` : dm[1]) : '';
 
 	const classes = classesRaw
 		.split(',')

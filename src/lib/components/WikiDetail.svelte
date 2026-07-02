@@ -46,10 +46,23 @@
 		<div class="strip">
 			<div class="fx {s.resChip}">
 				<span class="schip {s.resChip}">{s.resLabel}</span>
-				{#if s.dice}
-					<span class="fxbig">{s.dice}</span>
-					{#if s.dmgType}<span class="fxsub">{s.dmgType}</span>{/if}
-					<button class="fxroll" onclick={() => rollDice(s.dice, detail.title)}>🎲 Roll</button>
+				{#if s.dice || s.resChip === 'hit'}
+					{#if s.dice}
+						<span class="fxbig">{s.dice}</span>
+						{#if s.dmgType}<span class="fxsub">{s.dmgType}</span>{/if}
+					{/if}
+					<div class="fxrolls">
+						{#if s.resChip === 'hit'}
+							<button class="fxroll" onclick={() => rollDice('1d20', `${detail.title} — to hit`)}
+								>🎲 d20</button
+							>
+						{/if}
+						{#if s.dice}
+							<button class="fxroll" onclick={() => rollDice(s.dice, detail.title)}
+								>🎲 {s.resChip === 'auto' ? 'Heal' : 'Dmg'}</button
+							>
+						{/if}
+					</div>
 				{:else}
 					<span class="fxbig none">No roll</span>
 				{/if}
@@ -359,7 +372,7 @@
 	.hpdice {
 		border: 0;
 		background: transparent;
-		color: var(--color-resource);
+		color: var(--color-accent-bright);
 		cursor: pointer;
 		font-size: 12px;
 		padding: 0 0 0 2px;
@@ -510,15 +523,24 @@
 		font-size: 11px;
 		color: var(--color-text-muted);
 	}
+	.fxrolls {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 5px;
+	}
 	.fxroll {
 		font-family: var(--font-mono);
 		font-size: 12px;
-		color: var(--color-resource);
-		border: 1px solid var(--color-resource);
+		color: var(--color-accent-bright);
+		border: 1px solid var(--color-accent);
 		border-radius: 6px;
-		padding: 3px 12px;
+		padding: 3px 10px;
 		cursor: pointer;
 		background: transparent;
+	}
+	.fxroll:hover {
+		background: var(--color-accent-soft);
 	}
 	.scells {
 		display: grid;
