@@ -5,6 +5,7 @@
 	// log, show/hide), pins, provenance on hover.
 	import { onMount } from 'svelte';
 	import { dndzone } from 'svelte-dnd-action';
+	import { toast } from 'svelte-sonner';
 	import { demoCharacter } from '$lib/demo/sheet';
 	import { getContentGraph } from '$lib/content/provider';
 	import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
@@ -30,9 +31,88 @@
 	]);
 	let dragDisabled = $state(true); // drag only after the ⠿ grip arms it (handle-only)
 	const flipDurationMs = 150;
-	let overlay = $state<null | { kind: string }>(null);
-	let log = $state<{ label: string; expr: string; total: number }[]>([]);
+	// menus open as dropdowns anchored under their trigger button (not centered modals)
+	let overlay = $state<null | {
+		kind: string;
+		top: number;
+		left: number | null;
+		right: number | null;
+	}>(null);
+	function openMenu(kind: string, e: Event) {
+		const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		const anchorRight = r.left > window.innerWidth / 2;
+		// document coords (+scroll) so the dropdown scrolls WITH the page/button, not the viewport
+		overlay = {
+			kind,
+			top: r.bottom + window.scrollY + 6,
+			left: anchorRight ? null : r.left + window.scrollX,
+			right: anchorRight ? document.documentElement.clientWidth - r.right : null
+		};
+	}
+	let log = $state<{ label: string; expr: string; total: number; adv?: [number, number] }[]>([]);
 	let hiddenActions = $state<Record<string, boolean>>({});
+	// dice tray / roll builder
+	let dice = $state<Record<number, number>>({ 20: 1 }); // sides → count in the pool
+	let rollMod = $state(0);
+	let rollAdv = $state(0); // −1 disadvantage · 0 normal · +1 advantage
+	let rollSrc = $state<string | null>(null);
+	let tempHpInput = $state(5);
+	let customEffectLabel = $state('');
+	function addCustomEffect() {
+		if (customEffectLabel.trim()) addEffect(customEffectLabel.trim(), [], true);
+		customEffectLabel = '';
+	}
+	const DICE = [4, 6, 8, 10, 12, 20, 100];
+	function openDice(e: Event) {
+		dice = { 20: 1 };
+		rollMod = 0;
+		rollAdv = 0;
+		rollSrc = null;
+		openMenu('dice', e);
+	}
+	function bumpDie(sides: number, d: number) {
+		const n = (dice[sides] ?? 0) + d;
+		if (n <= 0) delete dice[sides];
+		else dice[sides] = n;
+		dice = { ...dice };
+	}
+	const rollExpr = $derived(
+		Object.entries(dice)
+			.sort((a, b) => Number(b[0]) - Number(a[0]))
+			.map(([s, c]) => `${c}d${s}`)
+			.join(' + ') + (rollMod ? ` ${signed(rollMod)}` : '')
+	);
+	function doRoll() {
+		const parts: string[] = [];
+		let total = 0;
+		let adv: [number, number] | undefined; // [kept, dropped] for the adv/disadv d20
+		for (const [s, c] of Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0]))) {
+			const sides = Number(s);
+			for (let k = 0; k < c; k++) {
+				const v = 1 + Math.floor(Math.random() * sides);
+				if (sides === 20 && rollAdv !== 0 && k === 0) {
+					// roll TWO d20 and keep the winner; the loser is shown struck through
+					const v2 = 1 + Math.floor(Math.random() * 20);
+					const kept = rollAdv > 0 ? Math.max(v, v2) : Math.min(v, v2);
+					adv = [kept, kept === v ? v2 : v];
+					total += kept;
+					continue; // the adv detail renders the d20, don't duplicate it in parts
+				}
+				total += v;
+				parts.push(`d${sides}(${v})`);
+			}
+		}
+		total += rollMod;
+		const label = rollSrc ?? 'Custom roll';
+		const expr = parts.join(' + ') + (rollMod ? ` ${signed(rollMod)}` : '');
+		log = [{ label, expr, total, adv }, ...log].slice(0, 200);
+		const advTxt = adv ? `d20 ${adv[0]} (drop ${adv[1]}) ` : '';
+		toast(`${label} — ${total}`, { description: `${advTxt}${expr}`.trim() });
+	}
+	function setTempHp() {
+		if (character) character.play.hp.temp = Math.max(0, tempHpInput);
+		overlay = null;
+	}
 	const GROUP_MODES = ['level', 'prepared', 'school'] as const;
 	let spellGroupBy = $state<(typeof GROUP_MODES)[number]>('level');
 	const groupByLabel = $derived(
@@ -64,11 +144,47 @@
 	}
 	const toggle = (k: string) => (collapsed[k] = !collapsed[k]);
 
-	function roll(label: string, mod: number) {
-		const d = 1 + Math.floor(Math.random() * 20);
-		const total = d + mod;
-		log = [{ label, expr: `1d20(${d}) ${signed(mod)}`, total }, ...log].slice(0, 200);
+	// open the roll builder prefilled + anchored, so the player can pick advantage then Roll
+	function openRoll(label: string, diceObj: Record<number, number>, mod: number, e: Event) {
+		rollSrc = label;
+		dice = { ...diceObj };
+		rollMod = mod;
+		rollAdv = 0;
+		openMenu('dice', e);
 	}
+	// roll a dice pool immediately (no advantage — that lives in the builder)
+	function rollDiceNow(label: string, diceObj: Record<number, number>, mod: number) {
+		const parts: string[] = [];
+		let total = 0;
+		for (const [s, c] of Object.entries(diceObj).sort((a, b) => Number(b[0]) - Number(a[0]))) {
+			const sides = Number(s);
+			for (let k = 0; k < c; k++) {
+				const v = 1 + Math.floor(Math.random() * sides);
+				total += v;
+				parts.push(`d${sides}(${v})`);
+			}
+		}
+		total += mod;
+		const expr = parts.join(' + ') + (mod ? ` ${signed(mod)}` : '');
+		log = [{ label, expr, total }, ...log].slice(0, 200);
+		toast(`${label} — ${total}`, { description: expr });
+	}
+	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray
+	// (advantage / disadvantage / custom dice).
+	const wantsTray = (e: Event) => {
+		const m = e as MouseEvent;
+		return m.altKey || m.ctrlKey || m.metaKey;
+	};
+	function roll(label: string, mod: number, e: Event) {
+		if (wantsTray(e)) openRoll(label, { 20: 1 }, mod, e);
+		else rollDiceNow(label, { 20: 1 }, mod);
+	}
+	const parseDice = (s: string): Record<number, number> => {
+		const out: Record<number, number> = {};
+		for (const m of s.matchAll(/(\d+)d(\d+)/gi))
+			out[Number(m[2])] = (out[Number(m[2])] ?? 0) + Number(m[1]);
+		return out;
+	};
 
 	const PANEL_TITLE: Record<string, string> = {
 		skills: 'Skills',
@@ -119,10 +235,42 @@
 			: [...passiveSkills, k];
 	}
 	// casting a spell: attack spells roll to hit; others just log the cast
-	function cast(r: { name: string; res: string }) {
-		if (r.res === 'hit' && sheet?.spellcasting)
-			roll(`${r.name} (spell attack)`, sheet.spellcasting.attack.value);
-		else log = [{ label: `Cast ${r.name}`, expr: '', total: NaN }, ...log].slice(0, 200);
+	function cast(r: SpRow, e: Event) {
+		const alt = wantsTray(e);
+		// a damaging spell rolls its damage dice (uniform: Fire Bolt 1d10, Fireball 8d6…);
+		if (r.dmg && Object.keys(r.dmg).length) {
+			const label = `${r.name} damage`;
+			if (alt) openRoll(label, r.dmg, 0, e);
+			else rollDiceNow(label, r.dmg, 0);
+		} else if (r.res === 'hit' && sheet?.spellcasting) {
+			// non-damage attack spell → the to-hit roll
+			const m = sheet.spellcasting.attack.value;
+			const label = `${r.name} (spell attack)`;
+			if (alt) openRoll(label, { 20: 1 }, m, e);
+			else rollDiceNow(label, { 20: 1 }, m);
+		} else {
+			log = [{ label: `Cast ${r.name}`, expr: '', total: NaN }, ...log].slice(0, 200);
+			toast(`Cast ${r.name}`);
+		}
+	}
+	// tap a slot pip: click a filled pip to spend down to it, a spent pip to restore up to it
+	function slotClick(key: string, full: number, spent: number, i: number) {
+		if (!character) return;
+		const remaining = full - spent;
+		const newSpent = i < remaining ? full - i : full - i - 1;
+		character.play.spellSlotsSpent[key] = Math.max(0, Math.min(full, newSpent));
+	}
+	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
+	function togglePrepared(r: SpRow) {
+		if (!character || r.prep === 'always') return;
+		const sp = character.build.spells.find((s) => s.spell.endsWith(`:${r.id}`));
+		if (sp) sp.prepared = !sp.prepared;
+	}
+	// a bounded-vocab effect token → a short readable tag ("flat-bonus:ac+2" → "AC +2")
+	function effectTag(token: string): string {
+		const m = token.match(/^flat-bonus:(\w+)([+-].+)$/);
+		if (m) return `${m[1] === 'ac' ? 'AC' : m[1]} ${m[2]}`;
+		return token.replace(/[-:]/g, ' ');
 	}
 
 	// attacks (equipped weapons + Unarmed Strike)
@@ -225,6 +373,8 @@
 		res: '' | 'hit' | 'save' | 'auto';
 		resLabel: string;
 		tm: string;
+		ct: '' | 'react' | 'bonus'; // casting time → icon before the level
+		dmg: Record<number, number> | null; // parsed damage dice (for casting)
 		prep: '' | 'on' | 'always';
 	}
 	interface SpGroup {
@@ -250,10 +400,11 @@
 					: res === 'save'
 						? `${row.data.save_ability} save`
 						: res === 'auto'
-							? 'auto-hit'
+							? 'auto'
 							: '',
-			tm:
-				(lvl === 0 ? 'cantrip' : ordinal(lvl)) + castingSuffix(String(row.data.casting_time ?? '')),
+			tm: lvl === 0 ? 'cantrip' : ordinal(lvl),
+			ct: castingIcon(String(row.data.casting_time ?? '')),
+			dmg: dmg ? parseDice(dmg) : null,
 			prep
 		};
 	}
@@ -337,8 +488,8 @@
 	}
 	const ordinal = (n: number) =>
 		`${n}${['th', 'st', 'nd', 'rd'][n % 10 > 3 || Math.floor(n / 10) === 1 ? 0 : n % 10]}`;
-	const castingSuffix = (ct: string) =>
-		/bonus/i.test(ct) ? ' · bonus' : /reaction/i.test(ct) ? ' · react' : '';
+	const castingIcon = (ct: string): SpRow['ct'] =>
+		/bonus/i.test(ct) ? 'bonus' : /reaction/i.test(ct) ? 'react' : '';
 
 	const hpBar = $derived.by(() => {
 		if (!character || !sheet) return { cur: 0, tmp: 0 };
@@ -406,7 +557,10 @@
 			</div>
 		</div>
 		<div class="hp">
-			<div class="lab"><span>Hit points</span><button class="temptag">＋ Temp HP</button></div>
+			<div class="lab">
+				<span>Hit points</span>
+				<button class="temptag" onclick={(e) => openMenu('temphp', e)}>＋ Temp HP</button>
+			</div>
 			<div class="val" title={why(s.maxHp)}>
 				{c.play.hp.current}<small>
 					/ {c.play.hp.max ?? s.maxHp.value}</small
@@ -433,7 +587,7 @@
 		>
 		<span class="spacer"></span>
 		<button class="toggle auto on">⚙ Auto-calc <span class="sw">ON</span></button>
-		<button class="toggle dice" onclick={() => (overlay = { kind: 'dice' })}>🎲 Dice tray</button>
+		<button class="toggle dice" onclick={openDice}>🎲 Dice tray</button>
 	</section>
 
 	<section class="turnbar">
@@ -443,20 +597,15 @@
 		<span class="ae">Reaction <span class="aepips"><i class="aedot"></i></span></span>
 		<span class="ae move">🦶 Move <b>{s.speed.value}</b> / {s.speed.value} ft</span>
 		<span class="spacer"></span>
-		<span class="roundc"
-			><button class="rstep" onclick={() => (round = Math.max(1, round - 1))}>‹</button>⟳ Round {round}<button
-				class="rstep"
-				onclick={() => (round += 1)}>›</button
-			></span
-		>
 		<button class="nextturn">Next turn ▸</button>
 	</section>
 
 	<div class="playbar">
 		<span class="phint"
-			>Tap any check · save · attack to roll it. Auto-calc &amp; rounds are optional.</span
+			>Tap any check · save · attack · spell to roll it · <b>Alt + click</b> (or Ctrl) for advantage /
+			custom dice.</span
 		>
-		<button class="rollout" onclick={() => (overlay = { kind: 'log' })}>
+		<button class="rollout" onclick={(e) => openMenu('log', e)}>
 			🎲 {#if log[0]}Last · <b>{log[0].label}</b> <i>{log[0].expr}</i> =
 				<span class="res">{log[0].total}</span>{:else}<i>no rolls yet</i>{/if}<span class="logcue"
 				>▸ log</span
@@ -471,7 +620,7 @@
 	</div>
 	{#if !collapsed.combat}
 		<section class="combat">
-			<button class="tile" title={why(s.ac)} onclick={() => roll('AC (touch)', 0)}>
+			<button class="tile" title={why(s.ac)} onclick={(e) => roll('AC (touch)', 0, e)}>
 				<div class="k">Armor class</div>
 				<div class="v">{s.ac.value}</div>
 				<div class="t">{s.ac.trace.map((x) => `${x.source} ${signed(x.amount)}`).join(' ')}</div>
@@ -479,7 +628,7 @@
 			<button
 				class="tile"
 				title={why(s.initiative)}
-				onclick={() => roll('Initiative', s.initiative.value)}
+				onclick={(e) => roll('Initiative', s.initiative.value, e)}
 			>
 				<div class="k">Initiative</div>
 				<div class="v">{signed(s.initiative.value)}</div>
@@ -499,7 +648,7 @@
 			{:else}
 				<span class="sv"><i>none pinned</i></span>
 			{/each}
-			<button class="edit" onclick={() => (overlay = { kind: 'pinskills' })}>✎ Pin skills</button>
+			<button class="edit" onclick={(e) => openMenu('pinskills', e)}>✎ Pin skills</button>
 		</div>
 	{/if}
 
@@ -513,7 +662,7 @@
 			{#each ABIL as ab (ab)}
 				{@const a = s.abilities[ab]}
 				{@const prof = a.save.trace.some((t) => t.layer === 'proficiency')}
-				<button class="ab" onclick={() => roll(`${ab.toUpperCase()} check`, a.mod)}>
+				<button class="ab" onclick={(e) => roll(`${ab.toUpperCase()} check`, a.mod, e)}>
 					<div class="n"><b>{ab.toUpperCase()}</b> · {a.score}</div>
 					<div class="m">{signed(a.mod)}</div>
 					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
@@ -525,7 +674,7 @@
 						title={why(a.save)}
 						onclick={(e) => {
 							e.stopPropagation();
-							roll(`${ab.toUpperCase()} save`, a.save.value);
+							roll(`${ab.toUpperCase()} save`, a.save.value, e);
 						}}
 					>
 						<i class="pdot" class:on={prof}></i>SAVE <b>{signed(a.save.value)}</b>
@@ -541,18 +690,15 @@
 				<span class="chev">{collapsed[pid] ? '▸' : '▾'}</span>{PANEL_TITLE[pid]}
 			</button>
 			{#if pid === 'actions'}
-				<button class="grpby" onclick={() => (overlay = { kind: 'showhide' })}>👁 Show / hide</button
-				>
+				<button class="grpby" onclick={(e) => openMenu('showhide', e)}>👁 Show / hide</button>
 			{:else if pid === 'effects'}
-				<button class="grpby" onclick={() => (overlay = { kind: 'addeffect' })}
-					>＋ Add effect</button
-				>
+				<button class="grpby" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
 			{:else if pid === 'spells' && s.spellcasting}
 				<span class="prepct">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
 				<button class="grpby" onclick={cycleGroupBy} title="Change grouping"
 					>{groupByLabel} ▾</button
 				>
-				<button class="grpby" onclick={() => (overlay = { kind: 'manage' })}>⛭ Manage all</button>
+				<button class="grpby" onclick={(e) => openMenu('manage', e)}>⛭ Manage all</button>
 			{/if}
 			<span class="dh" title="drag to reorder" onpointerdown={() => (dragDisabled = false)}>⠿</span>
 		</div>
@@ -569,7 +715,7 @@
 									<button
 										class="skl"
 										title={why(sk)}
-										onclick={() => roll(titleCase(skill), sk.value)}
+										onclick={(e) => roll(titleCase(skill), sk.value, e)}
 									>
 										<i class="pdot" class:on={sk.proficient}></i>
 										<span class="sn">{titleCase(skill)}</span>
@@ -582,14 +728,14 @@
 				</div>
 			{:else if pid === 'attacks'}
 				{#each attacks as at (at.name)}
-					<button class="atk" onclick={() => roll(at.name, at.toHit)}>
+					<button class="atk" onclick={(e) => roll(at.name, at.toHit, e)}>
 						<span class="an">{at.name}</span><span class="ah">{signed(at.toHit)}</span>
 						<span class="ad">{at.dmg}</span><span class="am">{at.meta}</span>
 					</button>
 				{/each}
 			{:else if pid === 'actions'}
 				{#each visibleActions as a (a.id)}
-					<button class="atk" onclick={() => a.roll && roll(a.roll[0], a.roll[1])}>
+					<button class="atk" onclick={(e) => a.roll && roll(a.roll[0], a.roll[1], e)}>
 						<span class="an">{a.n}</span><span class="ah">{a.h || '—'}</span>
 						<span class="ad">{a.d}</span><span class="am">{a.m}</span>
 					</button>
@@ -599,10 +745,11 @@
 					<div class="eff" class:pos={e.positive} class:neg={!e.positive}>
 						<span class="d"></span>
 						<div class="body">
-							<b>{e.label}</b>{#if e.effects.length}<small
-									>{e.effects.join(' · ')}{e.durationRounds
-										? ` · ${e.durationRounds} rounds`
-										: ''}</small
+							<b>{e.label}</b>
+							{#if e.effects.length || e.durationRounds}<span class="etags"
+									>{#each e.effects as t (t)}<span class="etag">{effectTag(t)}</span
+										>{/each}{#if e.durationRounds}<span class="durpill">{e.durationRounds} rds</span
+										>{/if}</span
 								>{/if}
 						</div>
 					</div>
@@ -617,18 +764,29 @@
 						<div class="spgroup">
 							<div class="scat" class:star={g.key === 'pinned'}>
 								{g.label}
-								{#if g.slots}<span class="pips"
-										>{#each Array(g.slots.full) as _, i (i)}<span
+								{#if g.slots}{@const sl = g.slots}<span class="pips"
+										>{#each Array(sl.full) as _, i (i)}<button
 												class="pip"
-												class:full={i < g.slots.full - g.slots.spent}
-												class:spent={i >= g.slots.full - g.slots.spent}
-											></span>{/each}</span
+												class:full={i < sl.full - sl.spent}
+												class:spent={i >= sl.full - sl.spent}
+												title="tap to spend / restore"
+												onclick={() => slotClick(g.key, sl.full, sl.spent, i)}
+											></button>{/each}</span
 									>{/if}
 							</div>
 							{#each g.rows as r (g.key + r.id)}
-								<button class="sprow" onclick={() => cast(r)}>
+								<button class="sprow" onclick={(e) => cast(r, e)}>
 									<span class="an">
-										<i class="prep" class:on={r.prep === 'on'} class:always={r.prep === 'always'}
+										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+										<i
+											class="prep"
+											class:on={r.prep === 'on'}
+											class:always={r.prep === 'always'}
+											title={r.prep === 'always' ? 'always prepared' : 'tap to prepare / unprepare'}
+											onclick={(e) => {
+												e.stopPropagation();
+												togglePrepared(r);
+											}}
 										></i>
 										<span class="nm">{r.name}</span>
 										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
@@ -646,7 +804,16 @@
 									</span>
 									<span class="spe">{r.spe}</span>
 									{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span></span>{/if}
-									<span class="tm">{r.tm}</span>
+									<span class="tm"
+										>{#if r.ct}<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions --><i
+												class="ct"
+												title={r.ct === 'react' ? 'reaction' : 'bonus action'}
+												onclick={(e) => {
+													e.stopPropagation();
+													toast(`Casting time: ${r.ct === 'react' ? 'reaction' : 'bonus action'}`);
+												}}>{r.ct === 'react' ? '↩' : '⚡'}</i
+											>{/if}{r.tm}</span
+									>
 								</button>
 							{/each}
 						</div>
@@ -676,89 +843,172 @@
 			</div>
 		{/each}
 	</section>
-	<!-- overlays — d-menus popovers -->
+	<!-- overlays — d-menus dropdowns, anchored under their trigger -->
 	{#if overlay}
 		<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 		<div class="ovbg" onclick={() => (overlay = null)}></div>
-		<div class="pop" role="dialog" aria-modal="true" tabindex="-1">
-			<div class="pop-h">
-				{{
-					dice: 'Dice tray',
-					condition: 'Add condition',
-					addeffect: 'Add effect',
-					log: 'Roll log',
-					showhide: 'Which actions appear',
-					pinskills: 'Which skills show as passive',
-					manage: 'Spellbook'
-				}[overlay.kind]}
-				<button class="ovx" onclick={() => (overlay = null)}>✕</button>
-			</div>
-			<div class="pop-b">
-				{#if overlay.kind === 'dice'}
-					<div class="dtray">
-						{#each [20, 12, 10, 8, 6, 4] as die (die)}<button
-								class="dbtn"
-								onclick={() => {
-									const v = 1 + Math.floor(Math.random() * die);
-									log = [{ label: `d${die}`, expr: `1d${die}`, total: v }, ...log];
-								}}>d{die}</button
+		<div
+			class="pop"
+			role="dialog"
+			aria-modal="true"
+			tabindex="-1"
+			style="top:{overlay.top}px; {overlay.left != null
+				? `left:${overlay.left}px`
+				: `right:${overlay.right}px`}"
+		>
+			{#if overlay.kind === 'dice'}
+				<div class="tray">
+					{#if rollSrc}<div class="tray-src"><b>{rollSrc}</b></div>{/if}
+					<div class="pool">
+						{#each Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0])) as [s, c] (s)}
+							<div class="poolchip">
+								<button onclick={() => bumpDie(Number(s), -1)}>−</button><b>{c}</b>×d{s}<button
+									onclick={() => bumpDie(Number(s), 1)}>+</button
+								>
+							</div>
+						{/each}
+					</div>
+					<p class="gridhint">tap a die to add · ± sets the count</p>
+					<div class="dice-grid">
+						{#each DICE as d (d)}<button class="die" onclick={() => bumpDie(d, 1)}>d{d}</button
 							>{/each}
 					</div>
-					{#if log[0]}<p class="dres">{log[0].label} → <b>{log[0].total}</b></p>{/if}
-				{:else if overlay.kind === 'condition'}
-					{#each conditionList as cn (cn)}
-						{@const added = character?.play.effects.some((e) => e.label === cn)}
-						<button class="row" onclick={() => (added ? null : addEffect(cn, [], false))}>
-							<span class="main">{cn}</span><span class="tg" class:on={added}></span>
-						</button>
-					{/each}
-				{:else if overlay.kind === 'addeffect'}
-					{#each EFFECT_PRESETS as p (p.label)}
-						<button
-							class="row"
-							onclick={() => addEffect(p.label, p.tokens, !/bane/i.test(p.label))}
+					<div class="advrow">
+						<button class="seg" class:on={rollAdv === -1} onclick={() => (rollAdv = -1)}
+							>Disadv.</button
 						>
-							<span class="main"
-								><span class="ic" class:neg={/bane/i.test(p.label)}>＋</span>{p.label}</span
-							><span class="meta">{p.tokens.join(', ')}</span>
-						</button>
-					{/each}
-				{:else if overlay.kind === 'log'}
-					{#each log as l, i (i)}
-						<div class="row">
-							<span class="main">{l.label}</span><span class="meta mono"
-								>{l.expr}{l.expr ? ' = ' : ''}<b>{Number.isNaN(l.total) ? '' : l.total}</b></span
-							>
+						<button class="seg" class:on={rollAdv === 0} onclick={() => (rollAdv = 0)}
+							>Normal</button
+						>
+						<button class="seg" class:on={rollAdv === 1} onclick={() => (rollAdv = 1)}
+							>Advant.</button
+						>
+					</div>
+					<div class="modrow">
+						<div class="mod">
+							<button onclick={() => (rollMod -= 1)}>−</button> mod {signed(rollMod)}
+							<button onclick={() => (rollMod += 1)}>+</button>
 						</div>
-					{:else}<p class="trace">No rolls yet — tap a stat, skill, save, or attack.</p>{/each}
-				{:else if overlay.kind === 'showhide'}
-					{#each actions as a (a.id)}
-						<button class="row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
-							<span class="eye" class:on={!hiddenActions[a.id]}></span><span class="main"
-								>{a.n}</span
-							>{#if hiddenActions[a.id]}<span class="meta">hidden</span>{/if}
-						</button>
-					{/each}
-				{:else if overlay.kind === 'pinskills'}
+						<button class="rollbtn" onclick={doRoll}>Roll {rollExpr}</button>
+					</div>
+					{#if log[0]}<div class="hist">
+							{log[0].label}
+							{#if log[0].adv}d20 <b class="res">{log[0].adv[0]}</b>
+								<s class="drop">{log[0].adv[1]}</s>{/if}
+							{log[0].expr}{log[0].expr ? ' ' : ''}=
+							<span class="res">{Number.isNaN(log[0].total) ? '' : log[0].total}</span>
+						</div>{/if}
+				</div>
+			{:else if overlay.kind === 'temphp'}
+				<div class="ph">
+					<div class="pop-h" style="border: 0">Set temporary HP</div>
+					<div class="field">
+						<input type="number" bind:value={tempHpInput} />
+						<button class="set" onclick={setTempHp}>Set</button>
+					</div>
+					<p class="note">
+						Separate pool — teal in the HP bar. Doesn't stack; takes the higher value.
+					</p>
+				</div>
+			{:else if overlay.kind === 'addeffect'}
+				<div class="search"><span class="mag">🔍</span><input placeholder="Search effects…" /></div>
+				<div class="sec">Catalog · presets</div>
+				{#each EFFECT_PRESETS as p (p.label)}
+					<button class="row" onclick={() => addEffect(p.label, p.tokens, !/bane/i.test(p.label))}>
+						<span class="main"
+							><span class="ic" class:neg={/bane/i.test(p.label)}>＋</span>{p.label}</span
+						><span class="durpill">10 rds</span>
+					</button>
+				{/each}
+				<div class="divlite"></div>
+				<button
+					class="row"
+					onclick={() => overlay && (overlay = { ...overlay, kind: 'customeffect' })}
+				>
+					<span class="main"><span class="ic">✎</span><b>Custom effect…</b></span><span class="meta"
+						>text + manual mod</span
+					>
+				</button>
+			{:else if overlay.kind === 'customeffect'}
+				<div class="ph">
+					<div class="pop-h" style="border: 0">Custom effect</div>
+					<div class="field">
+						<!-- svelte-ignore a11y_autofocus -->
+						<input placeholder="Effect name…" bind:value={customEffectLabel} autofocus />
+						<button class="set" onclick={addCustomEffect}>Add</button>
+					</div>
+					<p class="note">
+						Inert text marker — add a manual modifier in the effects panel if needed.
+					</p>
+				</div>
+			{:else if overlay.kind === 'log'}
+				<div class="cardhead2"><span class="ttl">Roll log · history</span></div>
+				<div class="logscroll">
+					{#each log as l, i (i)}
+						<div class="logrow">
+							<div class="lr-top">
+								<b>{l.label}</b><span class="lr-tot" class:res={!Number.isNaN(l.total)}
+									>{Number.isNaN(l.total) ? '—' : l.total}</span
+								>
+							</div>
+							{#if l.expr || l.adv}<div class="lr-sub">
+									{#if l.adv}d20 <b>{l.adv[0]}</b> <s class="drop">{l.adv[1]}</s>
+									{/if}{l.expr}
+								</div>{/if}
+						</div>
+					{:else}<p class="note" style="padding: 11px 13px">
+							No rolls yet — tap a stat, skill, save, or attack.
+						</p>{/each}
+				</div>
+			{:else if overlay.kind === 'showhide'}
+				<div class="pop-h">
+					Which actions appear<button class="ovx" onclick={() => (overlay = null)}>✕</button>
+				</div>
+				{#each actions as a (a.id)}
+					<button class="row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
+						<span class="eye" class:on={!hiddenActions[a.id]}></span><span class="main">{a.n}</span
+						>{#if hiddenActions[a.id]}<span class="meta">hidden</span>{/if}
+					</button>
+				{/each}
+			{:else if overlay.kind === 'pinskills'}
+				<div class="pop-h">
+					Passive senses · 👁 = shown<button class="ovx" onclick={() => (overlay = null)}>✕</button>
+				</div>
+				<div class="pinwrap">
 					{#each ABIL as ab (ab)}
 						{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
 						{#if list.length}
-							<div class="popsec">{ABILITY_NAME[ab]}</div>
-							{#each list as skill (skill)}
-								<button class="row" onclick={() => togglePassive(skill)}>
-									<span class="eye" class:on={passiveSkills.includes(skill)}></span><span
-										class="main">{titleCase(skill)}</span
-									>
-								</button>
-							{/each}
+							<div class="catblock">
+								<div class="sec">{ABILITY_NAME[ab]}</div>
+								{#each list as skill (skill)}
+									<button class="row" onclick={() => togglePassive(skill)}>
+										<span class="eye" class:on={passiveSkills.includes(skill)}></span><span
+											class="nm">{titleCase(skill)}</span
+										>
+									</button>
+								{/each}
+							</div>
 						{/if}
 					{/each}
-				{:else if overlay.kind === 'manage'}
-					<p class="trace">
-						Full spellbook manager arrives with the spell-manager view (d-spellmgr).
-					</p>
-				{/if}
-			</div>
+				</div>
+			{:else if overlay.kind === 'manage'}
+				<div class="pop-h">
+					Spellbook<button class="ovx" onclick={() => (overlay = null)}>✕</button>
+				</div>
+				<p class="note" style="padding: 11px 13px">
+					Full spellbook manager arrives with the spell-manager view (d-spellmgr).
+				</p>
+			{:else if overlay.kind === 'condition'}
+				<div class="pop-h">
+					Conditions · multi-select<button class="ovx" onclick={() => (overlay = null)}>✕</button>
+				</div>
+				{#each conditionList as cn (cn)}
+					{@const added = character?.play.effects.some((e) => e.label === cn)}
+					<button class="row" onclick={() => (added ? null : addEffect(cn, [], false))}>
+						<span class="main">{cn}</span><span class="tg" class:on={added}></span>
+					</button>
+				{/each}
+			{/if}
 		</div>
 	{/if}
 {/if}
@@ -907,13 +1157,13 @@
 		border-color: var(--color-resource);
 	}
 	.toggle.conc.on {
-		background: #241317;
+		background: var(--color-accent-soft);
 		border-color: var(--color-accent);
-		color: #f0a6ad;
+		color: var(--color-accent-bright);
 	}
 	.toggle.conc.on .sw {
-		border-color: #7a2230;
-		color: #f0a6ad;
+		border-color: var(--color-accent);
+		color: var(--color-accent-bright);
 	}
 	.toggle.auto.on {
 		background: var(--color-good-soft);
@@ -1206,7 +1456,6 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 16px;
-		cursor: help;
 	}
 	.senses-strip .sv i {
 		font-style: normal;
@@ -1286,7 +1535,7 @@
 		gap: 6px;
 		width: 100%;
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: 12px;
 		line-height: 1;
 		color: var(--color-text-muted);
 		background: var(--color-surface);
@@ -1295,10 +1544,15 @@
 		padding: 5px 6px;
 		cursor: pointer;
 	}
+	.ab .sv:hover {
+		border-color: var(--color-accent);
+		background: var(--color-surface-2);
+		color: var(--color-text);
+	}
 	.ab .sv b {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 13px;
+		font-size: 12px;
 		line-height: 1;
 		color: var(--color-text);
 	}
@@ -1468,7 +1722,7 @@
 
 	.eff {
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		gap: 10px;
 		padding: 9px 0;
 		border-top: 1px solid var(--color-border);
@@ -1476,11 +1730,17 @@
 	.eff:first-of-type {
 		border-top: 0;
 	}
+	.eff .body {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex: 1;
+		min-width: 0;
+	}
 	.eff .d {
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		margin-top: 6px;
 		flex: none;
 	}
 	.eff.pos .d {
@@ -1495,9 +1755,28 @@
 	.eff.neg .body b {
 		color: var(--color-accent-bright);
 	}
-	.eff .body small {
+	.etags {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 5px;
+		margin-left: auto;
+	}
+	.etag {
+		font-family: var(--font-mono);
+		font-size: 10px;
 		color: var(--color-text-muted);
-		display: block;
+		border: 1px solid var(--color-border);
+		border-radius: 5px;
+		padding: 1px 6px;
+	}
+	.eff.pos .etag {
+		color: var(--color-good);
+		border-color: var(--color-good);
+	}
+	.eff.neg .etag {
+		color: var(--color-accent-bright);
+		border-color: var(--color-accent);
 	}
 
 	.castline {
@@ -1536,8 +1815,10 @@
 	.scat .pip {
 		width: 12px;
 		height: 12px;
+		padding: 0;
 		border-radius: 50%;
 		border: 1px solid #2c4a45;
+		cursor: pointer;
 	}
 	.scat .pip.full {
 		background: var(--color-good);
@@ -1633,6 +1914,12 @@
 		text-align: right;
 		white-space: nowrap;
 	}
+	.sprow .tm .ct {
+		font-style: normal;
+		margin-right: 6px;
+		color: var(--color-accent-bright);
+		cursor: help;
+	}
 	.prep {
 		display: inline-block;
 		width: 8px;
@@ -1641,6 +1928,10 @@
 		border: 1.5px solid var(--color-border-strong);
 		margin-right: 8px;
 		vertical-align: middle;
+		cursor: pointer;
+	}
+	.prep.always {
+		cursor: default;
 	}
 	.prep.on,
 	.prep.always {
@@ -1668,25 +1959,24 @@
 	}
 
 	/* overlays — d-menus popover language */
+	/* transparent catcher: click outside the dropdown closes it */
 	.ovbg {
 		position: fixed;
 		inset: 0;
-		background: var(--color-overlay);
+		background: transparent;
 		z-index: 50;
 	}
 	.pop {
-		position: fixed;
-		top: 12vh;
-		left: 50%;
-		transform: translateX(-50%);
-		width: min(320px, calc(100vw - 2rem));
-		max-height: 74vh;
+		position: absolute;
+		width: min(300px, calc(100vw - 1.5rem));
+		max-height: 72vh;
 		overflow: auto;
 		z-index: 51;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 13px;
 		box-shadow: 0 18px 40px #000a;
+		padding-bottom: 6px;
 	}
 	.pop-h {
 		display: flex;
@@ -1706,17 +1996,6 @@
 		color: var(--color-text-muted);
 		cursor: pointer;
 		font-size: 13px;
-	}
-	.pop-b {
-		padding: 7px;
-	}
-	.popsec {
-		font-family: var(--font-mono);
-		font-size: 9px;
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
-		padding: 8px 10px 3px;
 	}
 	.row {
 		display: flex;
@@ -1746,9 +2025,6 @@
 		font-family: var(--font-mono);
 		font-size: 10px;
 		color: var(--color-text-muted);
-	}
-	.row .meta.mono b {
-		color: var(--color-good);
 	}
 	.row .ic {
 		width: 18px;
@@ -1801,31 +2077,296 @@
 		left: 16px;
 		background: var(--color-good);
 	}
-	.dtray {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-		padding: 6px;
+	/* --- section label + search + divider (d-menus) --- */
+	.sec {
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: var(--tracking-label);
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		padding: 8px 13px 3px;
 	}
-	.dbtn {
+	.divlite {
+		height: 1px;
+		background: var(--color-border);
+		margin: 4px 0;
+	}
+	.search {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		padding: 12px 13px;
+		border-bottom: 1px solid var(--color-border);
+		font-size: 14px;
+	}
+	.search input {
+		all: unset;
+		flex: 1;
+		color: var(--color-text);
+	}
+	.search .mag {
+		color: var(--color-text-muted);
+	}
+	.durpill {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		color: var(--color-resource);
+		border: 1px solid var(--color-resource);
+		border-radius: 5px;
+		padding: 1px 6px;
+	}
+	/* --- dice tray / roll builder --- */
+	.tray {
+		padding: 12px;
+	}
+	.tray-src {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 9px;
+		padding: 8px 11px;
+		margin-bottom: 9px;
+	}
+	.tray-src b {
 		font-family: var(--font-display);
 		font-weight: 700;
+		font-size: 14px;
+	}
+	.pool {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 7px;
+		margin-bottom: 9px;
+	}
+	.poolchip {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		background: var(--color-resource-soft);
+		border: 1px solid var(--color-resource);
+		border-radius: 8px;
+		padding: 4px 8px;
+		font-family: var(--font-mono);
+		font-size: 12px;
+		color: var(--color-resource);
+	}
+	.poolchip button {
+		all: unset;
+		cursor: pointer;
+		color: var(--color-resource);
+		font-size: 14px;
+		padding: 0 2px;
+	}
+	.poolchip b {
+		font-family: var(--font-display);
+		font-weight: 700;
+	}
+	.gridhint {
+		font-size: 11px;
+		color: var(--color-text-muted);
+		margin: 0 0 7px;
+	}
+	.dice-grid {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 7px;
+		margin-bottom: 11px;
+	}
+	.die {
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 13px;
+		text-align: center;
+		padding: 9px 0;
+		border-radius: 9px;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		color: var(--color-text);
-		border-radius: 9px;
-		padding: 10px 14px;
 		cursor: pointer;
 	}
-	.dbtn:hover {
-		border-color: var(--color-accent);
+	.die:hover {
+		border-color: var(--color-resource);
 	}
-	.dres {
-		font-family: var(--font-mono);
-		margin: 8px 6px 4px;
+	.advrow {
+		display: flex;
+		gap: 6px;
+		margin-bottom: 11px;
 	}
-	.dres b {
+	.seg {
+		flex: 1;
+		text-align: center;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 12px;
+		padding: 7px 0;
+		border-radius: 8px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		color: var(--color-text-muted);
+		cursor: pointer;
+	}
+	.seg.on {
+		background: var(--color-good-soft);
+		border-color: var(--color-good);
 		color: var(--color-good);
-		font-size: 18px;
+	}
+	.modrow {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.mod {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		padding: 7px 9px;
+		font-family: var(--font-mono);
+		font-size: 12px;
+	}
+	.mod button {
+		all: unset;
+		cursor: pointer;
+		color: var(--color-text-muted);
+		font-size: 15px;
+		padding: 0 4px;
+	}
+	.rollbtn {
+		flex: 1;
+		text-align: center;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 14px;
+		color: #fff;
+		background: var(--color-accent-deep);
+		border: 1px solid var(--color-accent-deep);
+		border-radius: 9px;
+		padding: 9px 12px;
+		cursor: pointer;
+	}
+	.hist {
+		font-family: var(--font-mono);
+		font-size: 11px;
+		color: var(--color-text-muted);
+		border-top: 1px solid var(--color-border);
+		margin-top: 10px;
+		padding-top: 9px;
+	}
+	.hist .res {
+		color: var(--color-good);
+		font-weight: 700;
+	}
+	/* --- temp HP --- */
+	.ph {
+		padding: 12px 13px;
+	}
+	.field {
+		display: flex;
+		gap: 8px;
+		margin: 6px 0 8px;
+	}
+	.field input {
+		flex: 1;
+		min-width: 0;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text);
+		font: inherit;
+		padding: 8px 10px;
+	}
+	.set {
+		font-family: var(--font-display);
+		font-weight: 700;
+		background: var(--color-good-soft);
+		border: 1px solid var(--color-good);
+		color: var(--color-good);
+		border-radius: 8px;
+		padding: 8px 14px;
+		cursor: pointer;
+	}
+	.note {
+		font-size: 11px;
+		color: var(--color-text-muted);
+		margin: 0;
+	}
+	/* --- pin skills (two-column) --- */
+	.pinwrap {
+		column-count: 2;
+		column-gap: 14px;
+		column-rule: 1px solid var(--color-border);
+		padding: 7px;
+	}
+	.pinwrap .catblock {
+		break-inside: avoid;
+	}
+	.pinwrap .sec {
+		padding: 6px 6px 2px;
+	}
+	.pinwrap .row .nm {
+		font-size: 13px;
+	}
+	/* --- roll log --- */
+	.cardhead2 {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 11px 13px 6px;
+	}
+	.cardhead2 .ttl {
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: var(--tracking-label);
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+	}
+	.logscroll {
+		padding: 0 6px 4px;
+	}
+	.logrow {
+		padding: 7px 7px;
+		border-top: 1px solid var(--color-border);
+	}
+	.logrow:first-child {
+		border-top: 0;
+	}
+	.lr-top {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 13px;
+	}
+	.lr-top b {
+		flex: 1;
+		font-weight: 600;
+	}
+	.lr-tot {
+		font-family: var(--font-display);
+		font-weight: 700;
+	}
+	.lr-tot.res {
+		color: var(--color-good);
+	}
+	.lr-sub {
+		font-family: var(--font-mono);
+		font-size: 11px;
+		color: var(--color-text-muted);
+		margin-top: 2px;
+	}
+	.lr-sub b {
+		color: var(--color-good);
+	}
+	/* the dropped die of an advantage/disadvantage pair */
+	.drop {
+		color: var(--color-text-muted);
+		text-decoration: line-through;
+		opacity: 0.7;
 	}
 </style>

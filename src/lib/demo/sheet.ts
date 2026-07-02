@@ -34,7 +34,8 @@ export function demoCharacter(): Character {
 		spell('misty-step'),
 		spell('fireball'),
 		spell('counterspell'),
-		spell('fly')
+		spell('fly'),
+		spell('healing-word') // resolution "auto" → demonstrates the teal auto pill
 	];
 	c.play.hp = { current: 14, max: undefined, temp: 5 };
 	c.play.spellSlotsSpent = { '1': 1, '2': 0, '3': 1 };
@@ -52,6 +53,14 @@ export function demoCharacter(): Character {
 			label: 'Bless',
 			effects: ['flat-bonus:saves+1d4'],
 			positive: true,
+			durationRounds: 10,
+			startedRound: 0
+		},
+		{
+			iid: 'bane',
+			label: 'Bane',
+			effects: ['flat-bonus:saves-1d4'],
+			positive: false,
 			durationRounds: 10,
 			startedRound: 0
 		}

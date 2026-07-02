@@ -7,6 +7,7 @@
 	import { app } from '$lib/stores/app.svelte';
 	import { LOCALES, FALLBACK_LOCALE, dirFor, locale as i18nLocale, _ } from '$lib/i18n';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
+	import { Toaster } from 'svelte-sonner';
 
 	let { children } = $props();
 
@@ -84,6 +85,13 @@
 </main>
 
 <CommandPalette />
+<Toaster
+	position="top-center"
+	theme={app.theme}
+	richColors
+	closeButton
+	toastOptions={{ duration: 6000 }}
+/>
 
 <style>
 	.topbar {
