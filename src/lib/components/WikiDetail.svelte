@@ -17,8 +17,8 @@
 		detail && browser ? DOMPurify.sanitize(marked.parse(detail.bodyHtml, { async: false })) : ''
 	);
 
-	// roll a monster's HP formula ("16d12 + 80") for a randomized encounter HP
-	function rollHp(formula: string) {
+	// roll a dice formula ("16d12 + 80", "8d6") and toast the total
+	function rollDice(formula: string, label: string) {
 		let total = 0;
 		const dm = /(\d+)d(\d+)/.exec(formula);
 		if (dm)
@@ -26,12 +26,55 @@
 				total += 1 + Math.floor(Math.random() * Number(dm[2]));
 		const fm = /([+-]\s*\d+)\s*$/.exec(formula);
 		if (fm) total += Number(fm[1].replace(/\s/g, ''));
-		toast(`HP rolled — ${total}`, { description: formula });
+		toast(`${label} — ${total}`, { description: formula });
 	}
+	const rollHp = (formula: string) => rollDice(formula, 'HP rolled');
 </script>
 
 <article class="detail">
-	{#if detail?.monster}
+	{#if detail?.spell}
+		{@const s = detail.spell}
+		<div class="meyebrow">
+			<span class="mtype">{detail.eyebrow}</span>
+			<span>{s.edition}</span>
+		</div>
+		<div class="stitle">
+			<h1>{detail.title}</h1>
+			{#if s.ritual}<span class="schip util">Ritual</span>{/if}
+			{#if s.concentration}<span class="schip save">Concentration</span>{/if}
+		</div>
+		<div class="strip">
+			<div class="fx {s.resChip}">
+				<span class="schip {s.resChip}">{s.resLabel}</span>
+				{#if s.dice}
+					<span class="fxbig">{s.dice}</span>
+					{#if s.dmgType}<span class="fxsub">{s.dmgType}</span>{/if}
+					<button class="fxroll" onclick={() => rollDice(s.dice, detail.title)}>🎲 Roll</button>
+				{:else}
+					<span class="fxbig none">No roll</span>
+				{/if}
+			</div>
+			<div class="scells">
+				{#each s.cells as [k, v] (k)}
+					<div class="scell">
+						<div class="sk">{k}</div>
+						<div class="sv">{v}</div>
+					</div>
+				{/each}
+				{#if s.classes}
+					<div class="scell span">
+						<div class="sk">Classes</div>
+						<div class="sv">{s.classes}</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
+		{#if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
+		{#if s.higherLevel}<div class="hl">At higher levels — {s.higherLevel}</div>{/if}
+		{#if s.material}<div class="src">Material — {s.material}</div>{/if}
+		<div class="src">{detail.source} · CC-BY-4.0</div>
+	{:else if detail?.monster}
 		{@const m = detail.monster}
 		<div class="meyebrow">
 			<span>Monster</span>
@@ -384,6 +427,129 @@
 	}
 	@media (max-width: 560px) {
 		.c-cols {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	/* ---- spell article ("strip" layout) ---- */
+	.stitle {
+		display: flex;
+		align-items: center;
+		gap: 11px;
+		margin: 4px 0 14px;
+	}
+	.stitle h1 {
+		margin: 0;
+	}
+	.schip {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		border-radius: 5px;
+		padding: 2px 7px;
+		border: 1px solid var(--color-border);
+		color: var(--color-text-muted);
+		white-space: nowrap;
+	}
+	.schip.hit {
+		color: var(--color-resource);
+		border-color: #5a4d28;
+	}
+	.schip.save {
+		color: var(--color-accent-bright);
+		border-color: var(--color-accent);
+	}
+	.schip.auto {
+		color: var(--color-good);
+		border-color: var(--color-good);
+	}
+	.schip.util {
+		color: var(--color-text-muted);
+		border-color: var(--color-border-strong);
+	}
+	.strip {
+		display: grid;
+		grid-template-columns: 168px 1fr;
+		gap: 12px;
+		align-items: start;
+		margin-bottom: 4px;
+	}
+	.fx {
+		min-height: 116px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		border: 1px solid var(--color-border-strong);
+		border-radius: 12px;
+		background: var(--color-surface-2);
+		padding: 12px 10px;
+		text-align: center;
+	}
+	.fxbig {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 28px;
+		line-height: 1;
+	}
+	.fx.save .fxbig {
+		color: var(--color-accent-bright);
+	}
+	.fx.hit .fxbig {
+		color: var(--color-resource);
+	}
+	.fx.auto .fxbig {
+		color: var(--color-good);
+	}
+	.fxbig.none {
+		color: var(--color-text-muted);
+		font-size: 18px;
+	}
+	.fxsub {
+		font-family: var(--font-mono);
+		font-size: 11px;
+		color: var(--color-text-muted);
+	}
+	.fxroll {
+		font-family: var(--font-mono);
+		font-size: 12px;
+		color: var(--color-resource);
+		border: 1px solid var(--color-resource);
+		border-radius: 6px;
+		padding: 3px 12px;
+		cursor: pointer;
+		background: transparent;
+	}
+	.scells {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 8px;
+		align-content: start;
+	}
+	.scell {
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 9px;
+		padding: 7px 11px;
+	}
+	.scell.span {
+		grid-column: span 2;
+	}
+	.scell .sk {
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+	}
+	.scell .sv {
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 14px;
+		margin-top: 2px;
+	}
+	@media (max-width: 560px) {
+		.strip {
 			grid-template-columns: 1fr;
 		}
 	}

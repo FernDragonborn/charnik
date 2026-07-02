@@ -58,6 +58,84 @@ export interface MonsterModel {
 
 const signed = (n: number) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 
+/** A spell article (the "strip" layout: fixed-size effect block + casting cells). */
+export interface SpellModel {
+	edition: string;
+	ritual: boolean;
+	concentration: boolean;
+	resChip: 'hit' | 'save' | 'auto' | 'util'; // reuse the spell-list resolution pill colours
+	resLabel: string; // "DEX save" | "Attack roll" | "Automatic" | "Utility"
+	dice: string; // "8d6" | "2d4" | "" (utility → grey "No roll")
+	dmgType: string; // "fire" | "healing" | ""
+	cells: [string, string][]; // Casting / Range / Duration / Components
+	classes: string;
+	higherLevel: string;
+	material: string;
+}
+
+const withMetric = (range: string): string => {
+	const m = range.match(/(\d+)\s*(?:feet|ft)\.?/i);
+	if (!m) return range;
+	const met = (Number(m[1]) * 0.3048).toFixed(1).replace(/\.0$/, '');
+	return `${range} (${met} m)`;
+};
+
+function buildSpell(row: LoadedRow): SpellModel {
+	const d = row.data;
+	const res = String(d.resolution ?? 'none');
+	const dmg = String(d.damage ?? '');
+	let dice = '';
+	let dmgType = '';
+	const dm = dmg.match(/(\d+d\d+(?:\s*[+-]\s*\d+)?)\s*(.*)/);
+	if (dm) {
+		dice = dm[1].replace(/\s/g, '');
+		dmgType = dm[2].trim();
+	} else if (res === 'auto') {
+		const h = String(d.text_en ?? '').match(/(\d+d\d+)/);
+		if (h) {
+			dice = h[1];
+			dmgType = 'healing';
+		}
+	}
+	const resChip =
+		res === 'attack' ? 'hit' : res === 'save' ? 'save' : res === 'auto' ? 'auto' : 'util';
+	const resLabel =
+		res === 'attack'
+			? 'Attack roll'
+			: res === 'save'
+				? `${String(d.save_ability ?? '').toUpperCase()} save`
+				: res === 'auto'
+					? 'Automatic'
+					: 'Utility';
+	const components = String(d.components ?? '')
+		.replace(/,/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+	const conc = String(d.concentration) === 'true';
+	return {
+		edition: (Array.isArray(d.systems) ? d.systems : [d.systems]).filter(Boolean).join('/'),
+		ritual: String(d.ritual) === 'true',
+		concentration: conc,
+		resChip,
+		resLabel,
+		dice,
+		dmgType,
+		cells: [
+			['Casting', String(d.casting_time ?? '')],
+			['Range', withMetric(String(d.range ?? ''))],
+			['Duration', conc ? `Concentration · ${d.duration}` : String(d.duration ?? '')],
+			['Components', components]
+		].filter(([, v]) => v) as [string, string][],
+		classes: String(d.classes ?? '')
+			.split(',')
+			.map((c) => cap(c.trim()))
+			.filter(Boolean)
+			.join(', '),
+		higherLevel: String(d.higher_level ?? ''),
+		material: String(d.material ?? '')
+	};
+}
+
 /** A row in the left-pane list (name + meta sub-line + the underlying content row). */
 export interface Entry<T> {
 	id: string;
@@ -82,6 +160,7 @@ export interface DetailModel {
 	higherLevel: string; // higher_level, if any
 	source: string; // attribution line
 	monster?: MonsterModel; // present for type === 'monster' → dedicated stat-block layout
+	spell?: SpellModel; // present for type === 'spell' → dedicated spell layout
 }
 
 /** Build the dedicated monster stat block (vitals + abilities/saves + a derived band). */
@@ -147,20 +226,25 @@ export function buildDetail(row: LoadedRow, type: ContentType): DetailModel {
 			monster: buildMonster(row)
 		};
 	}
-	const skip = new Set(COMMON);
-	let eyebrow: string;
 	if (type === 'spell') {
-		eyebrow = [
-			Number(d.level) === 0 ? 'Cantrip' : `Level ${d.level}`,
-			d.school ? cap(String(d.school)) : ''
-		]
-			.filter(Boolean)
-			.join(' · ');
-		skip.add('level');
-		skip.add('school');
-	} else {
-		eyebrow = cap(String(type));
+		return {
+			eyebrow: [
+				Number(d.level) === 0 ? 'Cantrip' : `Level ${d.level}`,
+				d.school ? cap(String(d.school)) : ''
+			]
+				.filter(Boolean)
+				.join(' · '),
+			title: String(d.name_en),
+			abilities: [],
+			meta: [],
+			bodyHtml: String(d.text_en ?? ''),
+			higherLevel: String(d.higher_level ?? ''),
+			source: `Source: ${row.source}`,
+			spell: buildSpell(row)
+		};
 	}
+	const skip = new Set(COMMON);
+	const eyebrow = cap(String(type));
 	// monster ability scores → a compact 3×2 block, kept out of the generic meta grid
 	const abilities: AbilityScore[] = ABILS.filter((a) => meaningful(d[a])).map((a) => ({
 		ab: a.toUpperCase(),
