@@ -16,12 +16,11 @@
 		effectTag,
 		ABIL,
 		ABILITY_NAME,
-		PANEL_TITLE,
-		DICE,
-		EFFECT_PRESETS
+		PANEL_TITLE
 	} from '$lib/combat/helpers';
 
-	// reactive read-aliases (bare names in markup); read+write state uses combat.* directly
+	// reactive read-aliases (bare names in markup); writes/binds use combat.* directly.
+	// (overlay/dice/roll* etc. moved to CombatMenus, so they're not aliased here.)
 	const character = $derived(combat.character);
 	const sheet = $derived(combat.sheet);
 	const className = $derived(combat.className);
@@ -30,41 +29,24 @@
 	const hpBar = $derived(combat.hpBar);
 	const passives = $derived(combat.passives);
 	const attacks = $derived(combat.attacks);
-	const actions = $derived(combat.actions);
 	const visibleActions = $derived(combat.visibleActions);
 	const spellGroups = $derived(combat.spellGroups);
 	const preparedCount = $derived(combat.preparedCount);
 	const preparedCap = $derived(combat.preparedCap);
 	const groupByLabel = $derived(combat.groupByLabel);
-	const rollExpr = $derived(combat.rollExpr);
-	const conditionList = $derived(combat.conditionList);
 	const log = $derived(combat.log);
-	const dice = $derived(combat.dice);
 	const collapsed = $derived(combat.collapsed);
 	const columns = $derived(combat.columns);
-	const spellGroupBy = $derived(combat.spellGroupBy);
 	const flipDurationMs = combat.flipDurationMs;
-	const overlay = $derived(combat.overlay);
 	const dragDisabled = $derived(combat.dragDisabled);
 	const pinned = $derived(combat.pinned);
-	const hiddenActions = $derived(combat.hiddenActions);
-	const rollAdv = $derived(combat.rollAdv);
-	const rollMod = $derived(combat.rollMod);
 	const shieldOn = $derived(combat.shieldOn);
-	const rollSrc = $derived(combat.rollSrc);
-	const passiveSkills = $derived(combat.passiveSkills);
 
 	const {
 		openMenu,
 		openDice,
 		roll,
 		cast,
-		doRoll,
-		bumpDie,
-		setTempHp,
-		addCustomEffect,
-		addEffect,
-		togglePassive,
 		toggle,
 		cycleGroupBy,
 		slotClick,
@@ -203,7 +185,6 @@
 				<button class="ab" onclick={(e) => roll(`${ab.toUpperCase()} check`, a.mod, e)}>
 					<div class="n"><b>{ab.toUpperCase()}</b> · {a.score}</div>
 					<div class="m">{signed(a.mod)}</div>
-					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 					<span
 						class="sv"
 						class:prof
@@ -329,7 +310,6 @@
 											}}
 										></i>
 										<span class="nm">{r.name}</span>
-										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 										<span
 											class="pinstar"
 											class:on={pinned[r.id]}

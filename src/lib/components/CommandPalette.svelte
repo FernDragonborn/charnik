@@ -53,7 +53,8 @@
 		// (e.g. Cyrillic, where the K key yields "к"). Applies to all app shortcuts.
 		if ((e.ctrlKey || e.metaKey) && e.code === 'KeyK') {
 			e.preventDefault();
-			open ? closePalette() : openPalette();
+			if (open) closePalette();
+			else openPalette();
 		}
 	}
 

@@ -46,14 +46,14 @@ export function parseEffect(token: string): ParsedEffect {
 	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
 
 	if (kind === 'flat-bonus') {
-		const m = /^([a-z][a-z.\-]*?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
+		const m = /^([a-z][a-z.-]*?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
 		if (!m) return { kind: 'unknown', raw };
 		const target = m[1];
 		if (/d/i.test(m[3])) return { kind, target, dice: (m[2] === '-' ? '-' : '') + m[3], raw };
 		return { kind, target, amount: Number(m[2] + m[3]), raw };
 	}
 	if (kind === 'set-override') {
-		const m = /^([a-z][a-z.\-]*):(-?\d+)$/i.exec(rest);
+		const m = /^([a-z][a-z.-]*):(-?\d+)$/i.exec(rest);
 		if (!m) return { kind: 'unknown', raw };
 		return { kind, target: m[1], amount: Number(m[2]), raw };
 	}
