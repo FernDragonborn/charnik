@@ -241,6 +241,7 @@ export const monsterSchema = baseRow.extend({
 	creature_type: reqStr, // "aberration" | "beast (dinosaur)" | "fiend (demon)" …
 	alignment: optStr,
 	ac: optInt,
+	initiative: optStr, // "+3 (13)"
 	hp: optInt,
 	hp_formula: optStr, // "20d10 + 40"
 	speed: optStr, // "10 ft., Swim 40 ft."
@@ -250,7 +251,17 @@ export const monsterSchema = baseRow.extend({
 	int: optInt,
 	wis: optInt,
 	cha: optInt,
+	str_save: optInt,
+	dex_save: optInt,
+	con_save: optInt,
+	int_save: optInt,
+	wis_save: optInt,
+	cha_save: optInt,
 	cr: optStr, // "10" | "1/2" | "1/8" | "0"
+	resistances: optStr,
+	immunities: optStr,
+	vulnerabilities: optStr,
+	gear: optStr,
 	senses: optStr,
 	languages: optStr,
 	skills: optStr

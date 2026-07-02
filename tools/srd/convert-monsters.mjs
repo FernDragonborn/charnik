@@ -1,8 +1,11 @@
 /*
  * SRD 5.2.1 (CC-BY-4.0) monsters-A-Z.md + animals.md → content/srd/monsters_srd.csv
- * Headline stats (size/type/alignment/AC/HP/speed/abilities/CR/senses/languages/skills)
- * are parsed; full traits/actions stay verbatim in text_en. All tagged 5.5e. Count is
- * asserted against the source (one stat block == one "**AC**" line).
+ * The whole stat-block header is parsed into columns (size/type/alignment/AC/initiative/HP/
+ * speed/abilities/CR/resistances/immunities/vulnerabilities/gear/senses/languages/skills) —
+ * including the HTML ability <table> — so nothing has to be scraped from text at runtime.
+ * text_en holds ONLY the cleaned Traits/Actions prose after the "**CR**" line (Markdown kept,
+ * the source's <br>/<table> HTML stripped, next-monster heading bleed cut). All tagged 5.5e.
+ * Count asserted against the source (one stat block == one "**AC**" line).
  * Run: node tools/srd/convert-monsters.mjs
  */
 import { readFileSync } from 'node:fs';
@@ -26,7 +29,24 @@ const field1 = (block, label) =>
 		.replace(/\s+/g, ' ')
 		.trim();
 
-function parseMonsters(md) {
+// Prose (Traits/Actions) cleanup — keep Markdown (**, _, ####), drop HTML the source uses
+// for the stat-block table + <br> line breaks. Used for text_en so it renders directly.
+const cleanProse = (s) =>
+	s
+		.replace(/<br\s*\/?>/gi, '')
+		.replace(/<\/?(?:table|thead|tbody|tr|th|td|strong|em|p|div|span)[^>]*>/gi, '')
+		.replace(/&amp;/g, '&')
+		.replace(/&#39;|&rsquo;/g, "'")
+		.replace(/&nbsp;/g, ' ')
+		.replace(/&[a-z]+;/g, ' ')
+		.replace(/[ \t]+/g, ' ')
+		.replace(/ *\n/g, '\n')
+		.replace(/\n{3,}/g, '\n\n')
+		.trim();
+
+// `cutH3`: in monsters-A-Z, "### Name" is a monster name (cut it from prose); in animals,
+// "### Actions" is a section heading to KEEP (only "## Name" cuts).
+function parseMonsters(md, cutH3) {
 	const lines = md.split(/\r?\n/);
 	// nearest ## / ### heading name above each line
 	const headingFor = [];
@@ -61,19 +81,38 @@ function parseMonsters(md) {
 			const r = new RegExp(`\\b${a}\\b\\s+(\\d+)`).exec(flat);
 			return r ? Number(r[1]) : '';
 		};
+		// saving throws live in the ability <table>'s 4th cell per ability (name/score/mod/SAVE)
+		const save = (a) => {
+			const r = new RegExp(
+				`<strong>${a}</strong>\\s*</td>\\s*<td>\\s*\\d+\\s*</td>\\s*<td>[^<]*</td>\\s*<td>\\s*([+−\\-\\d]+)\\s*</td>`,
+				'i'
+			).exec(block);
+			return r ? Number(r[1].replace('−', '-')) : '';
+		};
+		// text_en = only the prose after the stat-block header (which ends at the "**CR**"
+		// line); the header's fields are all captured as columns below. Section headings vary
+		// (#### Actions in monsters-A-Z, ### Actions in animals), so cut the tail at the NEXT
+		// monster's own name heading (known) rather than by heading level.
+		const crm = /\*\*CR\*\*[^\n]*/.exec(block);
+		let prose = crm ? block.slice(crm.index + crm[0].length) : block;
+		// cut the tail at the next monster/category name heading (keeps #### and, for animals,
+		// ### section headings)
+		const cut = prose.search(cutH3 ? /\n#{2,3} / : /\n## /);
+		if (cut >= 0) prose = prose.slice(0, cut);
 		out.push({
 			id: slug(s.name),
 			systems: '5.5e',
 			source: 'SRD 5.2.1',
 			name_en: s.name,
 			name_uk: '',
-			text_en: flat.replace(/\n{2,}/g, '\n').trim(),
+			text_en: cleanProse(prose),
 			text_uk: '',
 			effects: '',
 			size: m ? m[1].toLowerCase() : 'medium',
 			creature_type: m ? m[2].toLowerCase() : '',
 			alignment: m ? m[3].trim() : '',
 			ac: (/\*\*AC\*\*\s*(\d+)/.exec(block) || [, ''])[1],
+			initiative: field1(block, 'Initiative'),
 			hp: hp ? hp[1].replace(/,/g, '') : '',
 			hp_formula: hp && hp[2] ? hp[2].trim() : '',
 			speed: field1(block, 'Speed'),
@@ -83,7 +122,17 @@ function parseMonsters(md) {
 			int: abil('INT'),
 			wis: abil('WIS'),
 			cha: abil('CHA'),
+			str_save: save('STR'),
+			dex_save: save('DEX'),
+			con_save: save('CON'),
+			int_save: save('INT'),
+			wis_save: save('WIS'),
+			cha_save: save('CHA'),
 			cr: (/\*\*CR\*\*\s*([0-9/]+)/.exec(block) || [, ''])[1],
+			resistances: field1(block, 'Resistances'),
+			immunities: field1(block, 'Immunities'),
+			vulnerabilities: field1(block, 'Vulnerabilities'),
+			gear: field1(block, 'Gear'),
 			senses: field1(block, 'Senses'),
 			languages: field1(block, 'Languages'),
 			skills: field1(block, 'Skills')
@@ -93,8 +142,8 @@ function parseMonsters(md) {
 }
 
 const rows = [
-	...parseMonsters(srcFile('monsters-A-Z.md')),
-	...parseMonsters(srcFile('animals.md'))
+	...parseMonsters(srcFile('monsters-A-Z.md'), true),
+	...parseMonsters(srcFile('animals.md'), false)
 ];
 assertCount('monsters', rows.length, 330); // monsters-A-Z 235 + animals 95
 dedupeIds(rows);
@@ -114,6 +163,7 @@ writeCsv(
 		'creature_type',
 		'alignment',
 		'ac',
+		'initiative',
 		'hp',
 		'hp_formula',
 		'speed',
@@ -123,7 +173,17 @@ writeCsv(
 		'int',
 		'wis',
 		'cha',
+		'str_save',
+		'dex_save',
+		'con_save',
+		'int_save',
+		'wis_save',
+		'cha_save',
 		'cr',
+		'resistances',
+		'immunities',
+		'vulnerabilities',
+		'gear',
 		'senses',
 		'languages',
 		'skills'
