@@ -139,6 +139,11 @@ trust what happened.
   4/6/8/12/14/16/19; most 4/8/12/16/19; Rogue +10); prerequisites respected.
 - **Free-feat mode**: default RAW; user may add extra feats at ANY level (house rule);
   RAW slots vs free additions tracked distinctly.
+- **BACKLOG (do with the effects system):** feats that grant **+1 (or other) to a skill /
+  ability / save** don't apply yet. The builder gathers feats into the effects pipeline, but
+  the SRD feat rows lack encoded effect tokens for these bonuses (and half-feat "+1 ability of
+  choice" needs a user pick). Encode feat effect tokens + choice UI when the effects system is
+  fleshed out; until then feat stat/skill bonuses are inert.
 - Initiative, spell save DC, spell attack, weapon attack+damage — auto (via engine).
 - **All passive senses** (Perception, Investigation, Insight, extensible) = 10 + mod
   (+prof/expertise, ±5 adv/disadv).
@@ -230,6 +235,21 @@ may exceed it → upcast); upcast + cantrip scaling (later).
   still counts as a class spell.
 - **L8** rituals cast without preparation/slot — "castable" ≠ "prepared".
 - **L9** cantrips are independent of slots (pure warlock has 0 shared slots but has cantrips).
+- **L10** a slot casts any spell of level **≤** its own level (upcast, with scaling) — the
+  unified slot-resource must allow spending a higher slot on a lower spell. **Warlock forces
+  upcast**: every Pact spell is cast at the current Pact-slot level (a level-9 warlock casts a
+  known 1st-level spell as 5th).
+- **L11** multiclass = **multiple spell DC / attack** (each class its own ability: wizard INT,
+  cleric WIS). `deriveSheet.spellcasting` currently returns only the FIRST caster — an existing
+  bug, not just future: it must become per-class.
+- **L12** subclass/feat spell grants come in **flavors** that must be distinguished:
+  *always-prepared* (outside the count) vs *added to your list* (selectable) vs *1/day free*
+  (resource). **Feats grant spells too** (Magic Initiate, Fey Touched) — a spell source outside
+  the class list.
+- **L13** ritual **source** varies: wizard rituals cast from the **spellbook even unprepared**;
+  prepared casters ritual only what's prepared → needs class "can ritual" + spell `ritual` tag.
+- **L14** (minor, defer) costly/consumed **material components** (Revivify's 300gp diamond) —
+  tracking consumed materials.
 
 **Data defect to fix first (found while verifying SRD):** the shipped **2014** class-feature
 prose is **truncated** — cleric Spellcasting text in `srd-2014` is just "you can cast cleric
