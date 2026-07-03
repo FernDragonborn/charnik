@@ -46,6 +46,14 @@ textarea {
 	color: inherit;
 }
 
+/* Native <option> popups don't inherit the control's background — some browsers render them
+ * white on the dark theme. Pin them to theme tokens so the dropdown list matches. */
+select option,
+select optgroup {
+	background: var(--color-surface);
+	color: var(--color-text);
+}
+
 /* Screen-reader-only content (labels, live regions). */
 .visually-hidden {
 	position: absolute;

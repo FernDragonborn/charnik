@@ -130,7 +130,10 @@ class BuildVM {
 	totalLevel = $derived(
 		this.classes.reduce((n, c) => n + (c.classId ? c.level : 0), 0) || 1
 	);
+	/** Character level is capped at 20 total across all classes. */
+	canRaiseLevel = $derived(this.totalLevel < 20);
 	addClass = () => {
+		if (!this.canRaiseLevel) return; // a new class starts at 1 → would exceed 20
 		this.classes = [...this.classes, { classId: null, subclassId: null, level: 1 }];
 	};
 	removeClass = (i: number) => {
@@ -146,6 +149,7 @@ class BuildVM {
 		this.classes = this.classes.map((c, idx) => (idx === i ? { ...c, subclassId: id } : c));
 	};
 	bumpClassLevel = (i: number, dir: 1 | -1) => {
+		if (dir === 1 && !this.canRaiseLevel) return; // total character level cap
 		this.classes = this.classes.map((c, idx) =>
 			idx === i ? { ...c, level: Math.max(1, Math.min(20, c.level + dir)) } : c
 		);
@@ -209,11 +213,25 @@ class BuildVM {
 
 	toggleSkill = (skill: string) => {
 		if (this.autoSkills.includes(skill)) return; // background-granted, locked on
-		if (this.skills.includes(skill)) this.skills = this.skills.filter((s) => s !== skill);
-		else if (this.skills.length < this.classSkillCount) this.skills = [...this.skills, skill];
-		else if (this.classSkillCount === 0) this.skills = [...this.skills, skill]; // no cap → free-add
+		if (this.skills.includes(skill)) {
+			this.skills = this.skills.filter((s) => s !== skill);
+			return;
+		}
+		if (!this.strict) {
+			this.skills = [...this.skills, skill]; // Free: any skill, no cap
+			return;
+		}
+		// Strict: cap counts only NON-background picks (a background overlap frees a slot)
+		if (this.classSkillCount === 0 || this.skillChosenCount < this.classSkillCount)
+			this.skills = [...this.skills, skill];
 	};
 	skillChosenCount = $derived(this.skills.filter((s) => !this.autoSkills.includes(s)).length);
+	/** A skill is pickable when Free, or (Strict) it's on the class list / the class has no list. */
+	skillPickable = (skill: string): boolean =>
+		this.autoSkills.includes(skill) ||
+		!this.strict ||
+		this.classSkillCount === 0 ||
+		this.classSkillOptions.includes(skill);
 
 	// --- ability scores --------------------------------------------------------
 	setMethod = (m: StatMethod) => {
@@ -417,16 +435,32 @@ class BuildVM {
 		this.graph ? deriveSheet(this.draft, this.graph) : null
 	);
 
-	// --- validation (soft) -----------------------------------------------------
+	// --- validation --------------------------------------------------------------
+	// Free is lenient (only a name is required). Strict adds allocation checks that BLOCK create.
 	issues = $derived.by<string[]>(() => {
 		const out: string[] = [];
 		if (!this.name.trim()) out.push('Give your character a name.');
 		if (!this.classId) out.push('Pick a class (you can change it later).');
 		if (this.method === 'point-buy' && this.pointsLeft > 0)
 			out.push(`${this.pointsLeft} ability points unspent.`);
+		if (this.strict) {
+			const needSkills = this.classSkillCount - this.skillChosenCount;
+			if (needSkills > 0)
+				out.push(`Choose ${needSkills} more skill${needSkills > 1 ? 's' : ''}.`);
+			for (const pc of this.spellPicker) {
+				const dc = pc.profile.cantripCap - pc.cantripsChosen;
+				const dp = pc.profile.preparedCap - pc.leveledChosen;
+				const who = this.spellPicker.length > 1 ? `${pc.profile.className} ` : '';
+				if (dc > 0) out.push(`Choose ${dc} more ${who}cantrip${dc > 1 ? 's' : ''}.`);
+				if (dp > 0) out.push(`Choose ${dp} more ${who}spell${dp > 1 ? 's' : ''}.`);
+			}
+		}
 		return out;
 	});
-	canCreate = $derived(this.name.trim().length > 0);
+	// Free: name only. Strict: everything above must be resolved.
+	canCreate = $derived(
+		this.name.trim().length > 0 && (!this.strict || this.issues.length === 0)
+	);
 
 	save = async (): Promise<string | null> => {
 		if (!this.canCreate) return null;

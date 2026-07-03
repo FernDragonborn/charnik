@@ -83,7 +83,7 @@
 					<div class="clsrow">
 						<span class="ic">{clsRow ? '✦' : i === 0 ? '＋' : '⌁'}</span>
 						<span class="nm">
-							<select class="bare" value={cls.classId} onchange={(e) => b.setClass(i, e.currentTarget.value || null)}>
+							<select class="bare" value={cls.classId ?? ''} onchange={(e) => b.setClass(i, e.currentTarget.value || null)}>
 								<option value="">{i === 0 ? 'Choose a class…' : 'Add a class…'}</option>
 								{#each b.classList as r (r.effectiveId)}<option value={r.effectiveId}>{rowName(r)}</option>{/each}
 							</select>
@@ -93,7 +93,7 @@
 								<small>{i === 0 ? 'pick your class — level, saves & skills follow' : 'multiclass — adds levels'}</small>
 							{/if}
 							{#if subs.length}
-								<select class="bare sub2" value={cls.subclassId} onchange={(e) => b.setSubclass(i, e.currentTarget.value || null)}>
+								<select class="bare sub2" value={cls.subclassId ?? ''} onchange={(e) => b.setSubclass(i, e.currentTarget.value || null)}>
 									<option value="">Subclass — none yet</option>
 									{#each subs as r (r.effectiveId)}<option value={r.effectiveId}>{rowName(r)}</option>{/each}
 								</select>
@@ -110,7 +110,10 @@
 					</div>
 				{/each}
 				{#if b.classes.length > 1}
-					<p class="sub note">Total level <b class="gold">{b.totalLevel}</b> — multiclass feat slots are approximate (per-class ASI is simplified).</p>
+					<p class="sub note">
+						Total level <b class="gold">{b.totalLevel}</b> / 20 · spell slots are exact; feat/ASI
+						slot <i>timing</i> is by total level (per-class ASI timing simplified).
+					</p>
 				{/if}
 			</div>
 
@@ -134,7 +137,7 @@
 					{#each Object.keys(SKILL_ABILITY) as skill (skill)}
 						{@const auto = b.autoSkills.includes(skill)}
 						{@const on = auto || b.skills.includes(skill)}
-						{@const pickable = auto || b.classSkillOptions.includes(skill) || b.classSkillCount === 0}
+						{@const pickable = b.skillPickable(skill)}
 						<button class="pchip" class:on class:locked={auto} class:dim={!pickable} disabled={auto || !pickable} onclick={() => b.toggleSkill(skill)}>
 							{titleCase(skill)}
 						</button>
