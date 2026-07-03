@@ -205,12 +205,28 @@ that consume them.
   class list, only levels you have slots for, swap on Long Rest). Whether **2014** uses a formula
   (`mod + level`) instead is **NOT asserted from memory** — pull from real SRD 5.1 when building
   (see data-defect note). Either way the size is **descriptor data, per-edition**, not hardcoded.
-- **Spell→class access = inline `spells.classes` + additive `spell_lists.csv` join.** Inline is
-  convenient for shipped SRD; but a homebrew class (e.g. Artificer) must NOT edit shipped spell
-  rows, so it ships its OWN additive `spell_lists_<pack>.csv` (`class_id,spell_id`) pointing at
-  existing spell ids. The loader builds the access map as the **union** of both. (Revises the
-  earlier "spell_lists not needed" note — needed for extensibility. Additive-only for now; a
-  `deny` flag to subtract is far-backlog.)
+- **Spell↔class access = a bidirectional UNION map (a derived index).** Either side may declare
+  the relationship, so neither edits the other's files:
+  - **spell-side:** `spells.classes` (shipped SRD — each spell tags its classes).
+  - **class-side:** additive `spell_lists_<pack>.csv` (`class_id,spell_id`) — a homebrew class
+    (e.g. Artificer) lists existing spell ids in its OWN file.
+  The loader builds the **union** into an index `class_id → available spells` (and its reverse
+  `spell → classes`). NB "available", not "known" — the character's known/prepared set is a layer
+  above. **Two levels:** (1) this **content-level** index is a pure function of content →
+  in-memory derived (like `content.graph`, rebuilt on `content.guid`); an **on-disk cache** keyed
+  by content hash is an *optional* later optimization (rebuild-if-stale), not needed at ~600
+  spells. (2) **character-level access** adds subclass / feat (Magic Initiate) / item / race
+  grants on top — character-specific, computed in derive, NOT in the shared index (ties to L12).
+  - **Access carries provenance** (not a boolean): `{spell, via: class-list|subclass|feat|item|
+    race, flavor: selectable|always-prepared|resource}` → powers "you can cast X because you're a
+    Wizard" vs "because Magic Initiate" (the explainable invariant).
+  - **Edition-scoped:** resolve class-side bare ids to `spell:source:id` per source — a 2014 class
+    links 2014 spells; don't mix editions in one map.
+  - **Compendium consequence:** a spell article's "Available to" list must read the **reverse
+    union index**, NOT the raw `spells.classes` column — else a class that gained the spell via
+    `spell_lists.csv` won't show. Class-list access → the Classes field (with provenance); feat/
+    item grants → a separate "Also granted by" line (not classes). Per active edition.
+  - Additive-only for now; a `deny` flag to subtract is far-backlog.
 - **Resources = data + effect tokens.** Anything "N/day" (Mystic Arcanum, item "cast X 3/day",
   innate 1/day) is a resource: `grant-resource:<id>:<max>:<recharge>`; a spell carries
   `cast_via: slot | resource:<id> | at-will`. `grant-slot:<level>` for the rare artifact granting
