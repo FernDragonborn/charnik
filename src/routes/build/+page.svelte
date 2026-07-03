@@ -135,9 +135,14 @@
 						{@const auto = b.autoSkills.includes(skill)}
 						{@const on = auto || b.skills.includes(skill)}
 						{@const pickable = b.skillPickable(skill)}
-						<button class="pchip" class:on class:locked={auto} class:dim={!pickable} disabled={auto || !pickable} onclick={() => b.toggleSkill(skill)}>
-							{titleCase(skill)}
-						</button>
+						<span class="skwrap">
+							<button class="pchip" class:on class:locked={auto} class:dim={!pickable} disabled={auto || !pickable} onclick={() => b.toggleSkill(skill)}>
+								{titleCase(skill)}
+							</button>
+							{#if on}
+								<button class="x2" class:on={b.expertise.includes(skill)} title="Expertise (×2 proficiency)" onclick={() => b.toggleExpertise(skill)}>×2</button>
+							{/if}
+						</span>
 					{/each}
 				</div>
 
@@ -687,6 +692,37 @@
 		cursor: not-allowed;
 	}
 	.pchip:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 1px;
+	}
+	.skwrap {
+		display: inline-flex;
+		align-items: stretch;
+		gap: 3px;
+	}
+	.x2 {
+		all: unset;
+		font-family: var(--font-mono);
+		font-size: 10px;
+		font-weight: 700;
+		padding: 0 6px;
+		display: grid;
+		place-items: center;
+		border-radius: var(--radius-full);
+		border: 1px solid var(--color-border);
+		color: var(--color-text-muted);
+		background: var(--color-surface-2);
+		cursor: pointer;
+	}
+	.x2:hover {
+		border-color: var(--color-border-strong);
+	}
+	.x2.on {
+		background: var(--color-resource-soft);
+		border-color: var(--color-resource);
+		color: var(--color-resource);
+	}
+	.x2:focus-visible {
 		outline: 2px solid var(--color-accent);
 		outline-offset: 1px;
 	}

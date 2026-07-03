@@ -62,6 +62,8 @@ const buildSchema = z.object({
 	abilities: abilityScores,
 	/** Proficient skill ids (e.g. "athletics"). */
 	skills: z.array(z.string()).default([]),
+	/** Skill ids with **expertise** (double proficiency — Rogue/Bard). Subset of `skills`. */
+	expertise: z.array(z.string()).default([]),
 	/** Allocated ability boosts (5.5e background / ASIs), applied at the feature layer on top
 	 *  of the base `abilities` scores. Kept separate from base so point-buy stays 8–15 and the
 	 *  boost keeps its provenance. Species boosts flow through the effects engine, not here.

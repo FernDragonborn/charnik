@@ -81,6 +81,8 @@ class BuildVM {
 	boostPicks = $state<Ability[]>([]);
 
 	skills = $state<string[]>([]);
+	/** Skill ids with expertise (×2 proficiency). Must be a proficient skill. */
+	expertise = $state<string[]>([]);
 	/** What fills each ASI/feat slot, keyed by `${classIndex}:${classLevel}` (per-class, so two
 	 *  classes granting an ASI at the same class level don't collide): the `ASI` sentinel or a feat
 	 *  ref. Repeatable feats (Skilled, Magic Initiate…) and ASI may fill several slots. */
@@ -226,6 +228,16 @@ class BuildVM {
 			this.skills = [...this.skills, skill];
 	};
 	skillChosenCount = $derived(this.skills.filter((s) => !this.autoSkills.includes(s)).length);
+	/** Proficient = chosen or background-granted (a prerequisite for expertise). */
+	isProficient = (skill: string): boolean =>
+		this.autoSkills.includes(skill) || this.skills.includes(skill);
+	/** Toggle expertise (×2) on a proficient skill. */
+	toggleExpertise = (skill: string) => {
+		if (!this.isProficient(skill)) return;
+		this.expertise = this.expertise.includes(skill)
+			? this.expertise.filter((s) => s !== skill)
+			: [...this.expertise, skill];
+	};
 	/** A skill is pickable when Free, or (Strict) it's on the class list / the class has no list. */
 	skillPickable = (skill: string): boolean =>
 		this.autoSkills.includes(skill) ||
@@ -396,6 +408,7 @@ class BuildVM {
 			abilities: { ...this.abilities },
 			abilityBoosts: this.abilityBoosts as Record<string, number>,
 			skills: [...new Set([...this.autoSkills, ...this.skills])],
+			expertise: this.expertise.filter((s) => this.isProficient(s)),
 			saves: csv(this.classRow?.data.saves) as Ability[],
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
 			// its ability boost flows through abilityBoosts instead)

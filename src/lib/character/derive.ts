@@ -53,6 +53,11 @@ export const SKILL_ABILITY: Record<string, Ability> = {
 	survival: 'wis'
 };
 
+/** Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) →
+ *  proficient → expertise (×2). */
+export const SKILL_PROFICIENCY = ['none', 'half', 'proficient', 'expertise'] as const;
+export type SkillProficiency = (typeof SKILL_PROFICIENCY)[number];
+
 export interface AbilityBlock {
 	score: number;
 	baseScore: number;
@@ -64,7 +69,7 @@ export interface CharacterSheet {
 	level: number;
 	proficiencyBonus: number;
 	abilities: Record<Ability, AbilityBlock>;
-	skills: Record<string, Computed & { proficient: boolean }>;
+	skills: Record<string, Computed & { prof: SkillProficiency }>;
 	ac: Computed;
 	initiative: Computed;
 	speed: Computed;
@@ -185,13 +190,16 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		};
 	}
 
-	// skills
+	// skills (expertise doubles proficiency — Rogue/Bard)
 	const skillProf = new Set(build.skills);
-	const skills = {} as Record<string, Computed & { proficient: boolean }>;
+	const skillExpert = new Set(build.expertise ?? []);
+	const skills = {} as Record<string, Computed & { prof: SkillProficiency }>;
 	for (const [skill, ab] of Object.entries(SKILL_ABILITY)) {
 		const proficient = skillProf.has(skill);
-		const base = skillCheck({ ability: ab, score: scores[ab], level, proficient });
-		skills[skill] = { ...applyEffects(`skill.${skill}`, base, active), proficient };
+		const expertise = proficient && skillExpert.has(skill);
+		const base = skillCheck({ ability: ab, score: scores[ab], level, proficient, expertise });
+		const prof: SkillProficiency = expertise ? 'expertise' : proficient ? 'proficient' : 'none';
+		skills[skill] = { ...applyEffects(`skill.${skill}`, base, active), prof };
 	}
 
 	// AC: equipped armor + shield, else unarmored; then effects

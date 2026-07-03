@@ -250,7 +250,12 @@
 										title={why(sk)}
 										onclick={(e) => roll(titleCase(skill), sk.value, e)}
 									>
-										<i class="pdot" class:on={sk.proficient}></i>
+										<i
+											class="pdot"
+											class:on={sk.prof !== 'none'}
+											class:exp={sk.prof === 'expertise'}
+											title={sk.prof}
+										></i>
 										<span class="sn">{titleCase(skill)}</span>
 										<b class="sm">{signed(sk.value)}</b>
 									</button>
@@ -941,6 +946,12 @@
 	.skl .pdot.on {
 		background: var(--color-resource);
 		border-color: var(--color-resource);
+	}
+	/* expertise = a ringed dot (double proficiency) */
+	.skl .pdot.exp {
+		box-shadow:
+			0 0 0 2px var(--color-surface),
+			0 0 0 3.5px var(--color-resource);
 	}
 	.skl .sn {
 		flex: 1;
