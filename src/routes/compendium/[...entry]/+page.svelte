@@ -7,7 +7,7 @@
 	import { base } from '$app/paths';
 	import { getContentGraph } from '$lib/content/provider';
 	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
-	import type { ContentType } from '$lib/content/schemas';
+	import { isBrowsable, type ContentType } from '$lib/content/schemas';
 	import { buildDetail, entryMeta, editionLabel, type Entry } from '$lib/content/detail';
 	import { groupingsFor, facetFor, groupRows, distinctValues } from '$lib/content/grouping';
 	import EntryList from '$lib/components/EntryList.svelte';
@@ -35,7 +35,7 @@
 	onMount(async () => {
 		const g = await getContentGraph();
 		graph = g;
-		types = [...g.byType.keys()].sort();
+		types = [...g.byType.keys()].filter(isBrowsable).sort();
 		if (!types.includes(selectedType)) selectedType = types[0];
 		groupBy = groupingsFor(selectedType)[0].key;
 	});

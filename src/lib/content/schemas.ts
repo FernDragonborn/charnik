@@ -102,6 +102,11 @@ const Size = z.enum(['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan']);
 const Ability = z.enum(['str', 'dex', 'con', 'int', 'wis', 'cha']);
 const HitDie = z.enum(['d6', 'd8', 'd10', 'd12']);
 const CasterType = z.enum(['full', 'half', 'third', 'pact', 'none']);
+/** Multiclass caster-level contribution + rounding, as DATA (so e.g. Artificer's half-rounds-up
+ *  is a column value, never a hardcoded class name). full=×1, half=⌊/2⌋, half-up=⌈/2⌉,
+ *  third=⌊/3⌋, none=0 (pact contributes nothing to the shared pool). */
+const CasterShare = z.enum(['full', 'half', 'half-up', 'third', 'none']);
+const PrepareStyle = z.enum(['prepared', 'known']);
 const School = z.enum([
 	'abjuration',
 	'conjuration',
@@ -137,6 +142,14 @@ export const classSchema = baseRow.extend({
 		z.array(Ability).length(2)
 	),
 	caster: CasterType.default('none'),
+	/** Multiclass share (defaults follow `caster` if blank — resolved in the rules layer). */
+	caster_share: z.preprocess(blankToUndef, CasterShare.optional()),
+	/** Spellcasting shape: prepared (choose from a set each rest) vs known (fixed learned list). */
+	prepare_style: z.preprocess(blankToUndef, PrepareStyle.optional()),
+	/** Can cast ritual-tagged spells (source of rituals varies by class — see rules layer). */
+	ritual: z.preprocess((v) => (v === '' || v == null ? false : v), bool).default(false),
+	/** Id of the `spell_slots` table this class uses (e.g. `full`, `pact`, or a homebrew id). */
+	slot_table: optStr,
 	spell_ability: z.preprocess(blankToUndef, Ability.optional()),
 	skills_choose: optInt,
 	skills_from: optStr, // comma list of skill ids
@@ -156,7 +169,17 @@ export const classFeatureSchema = baseRow.extend({
 /** A subclass (one per class in SRD 5.2.1). Its features live in class_features with
  *  `subclass_id` set; `subclass_level` on the class says when one is chosen. */
 export const subclassSchema = baseRow.extend({
-	class_id: reqStr
+	class_id: reqStr,
+	/** Casting subclasses (Eldritch Knight / Arcane Trickster / Blood Hunter's Profane Soul) carry
+	 *  the caster descriptor here — active from the subclass's grant level. All optional; a
+	 *  non-casting subclass leaves them blank. */
+	caster: z.preprocess(blankToUndef, CasterType.optional()),
+	caster_share: z.preprocess(blankToUndef, CasterShare.optional()),
+	prepare_style: z.preprocess(blankToUndef, PrepareStyle.optional()),
+	slot_table: optStr,
+	spell_ability: z.preprocess(blankToUndef, Ability.optional()),
+	/** Class level at which this subclass's spellcasting comes online (e.g. 3 for EK/AT). */
+	caster_from_level: optInt
 });
 
 /** Background. 5.5e backgrounds carry the ability boosts + an origin feat. */
@@ -267,6 +290,53 @@ export const monsterSchema = baseRow.extend({
 	skills: optStr
 });
 
+// --- Rules / lookup tables (NOT browsable articles: no name_en, minimal identity) ----------
+
+/** Common identity for a lookup/join row: still needs id/systems/source so the loader can build
+ *  `type:source:id` and edition-scope it, but carries no name/text/effects. */
+const lookupBase = {
+	id: idField,
+	systems: systemsField,
+	source: reqStr
+};
+
+/** Spell-slot progression table, matrix form (row = character level, cols = slots per spell
+ *  level). Keyed by an arbitrary `kind` id (SRD ships full/half/third/pact; homebrew ships its
+ *  own). A class references it via `slot_table`. */
+export const spellSlotsSchema = z.object({
+	...lookupBase,
+	kind: reqStr,
+	level: z.coerce.number().int().min(1).max(20),
+	slot_1: optInt,
+	slot_2: optInt,
+	slot_3: optInt,
+	slot_4: optInt,
+	slot_5: optInt,
+	slot_6: optInt,
+	slot_7: optInt,
+	slot_8: optInt,
+	slot_9: optInt
+});
+
+/** Per-class-level casting counts (linked `class_id`+`level`). `prepared_known` = the size of the
+ *  prepared/known set (2024 table count); blank → the rules layer applies a `prepare_style`
+ *  formula instead. */
+export const classCastingSchema = z.object({
+	...lookupBase,
+	class_id: reqStr,
+	level: z.coerce.number().int().min(1).max(20),
+	cantrips_known: optInt,
+	prepared_known: optInt
+});
+
+/** Additive class→spell access join (`class_id`,`spell_id`), so a homebrew class grants access to
+ *  existing spells without editing the shipped spell rows. Unioned with inline `spells.classes`. */
+export const spellListsSchema = z.object({
+	...lookupBase,
+	class_id: reqStr,
+	spell_id: reqStr
+});
+
 // --- Registry: type name → { schema, file glob, column order for unparse } -----
 
 export const CONTENT_TYPES = {
@@ -280,10 +350,20 @@ export const CONTENT_TYPES = {
 	condition: { schema: conditionSchema, filebase: 'conditions' },
 	effect: { schema: effectSchema, filebase: 'effects' },
 	monster: { schema: monsterSchema, filebase: 'monsters' },
-	subclass: { schema: subclassSchema, filebase: 'subclasses' }
+	subclass: { schema: subclassSchema, filebase: 'subclasses' },
+	spell_slots: { schema: spellSlotsSchema, filebase: 'spell_slots' },
+	class_casting: { schema: classCastingSchema, filebase: 'class_casting' },
+	spell_lists: { schema: spellListsSchema, filebase: 'spell_lists' }
 } as const;
 
 export type ContentType = keyof typeof CONTENT_TYPES;
+
+/** Rules/lookup tables — data the engine consumes, NOT browsable articles (no name/text). The
+ *  compendium, search and article views skip these. */
+export const LOOKUP_TYPES = new Set<ContentType>(['spell_slots', 'class_casting', 'spell_lists']);
+
+/** A browsable content type (has name/text; shows in compendium + search). */
+export const isBrowsable = (t: ContentType): boolean => !LOOKUP_TYPES.has(t);
 
 export type Species = z.infer<typeof speciesSchema>;
 export type CharClass = z.infer<typeof classSchema>;
@@ -296,8 +376,17 @@ export type Condition = z.infer<typeof conditionSchema>;
 export type Effect = z.infer<typeof effectSchema>;
 export type Monster = z.infer<typeof monsterSchema>;
 export type Subclass = z.infer<typeof subclassSchema>;
+export type SpellSlots = z.infer<typeof spellSlotsSchema>;
+export type ClassCasting = z.infer<typeof classCastingSchema>;
+export type SpellLists = z.infer<typeof spellListsSchema>;
 
-/** Validate one raw CSV row for a given type. Returns zod's SafeParseReturn. */
-export function parseRow<T extends ContentType>(type: T, row: Record<string, unknown>) {
-	return CONTENT_TYPES[type].schema.safeParse(row);
+/** Validate one raw CSV row for a given type. Returns zod's SafeParseReturn, **narrowed to the
+ *  schema for `T`** (so `res.data` is that type's shape at a literal call site, not the union). */
+export function parseRow<T extends ContentType>(
+	type: T,
+	row: Record<string, unknown>
+): ReturnType<(typeof CONTENT_TYPES)[T]['schema']['safeParse']> {
+	return CONTENT_TYPES[type].schema.safeParse(row) as ReturnType<
+		(typeof CONTENT_TYPES)[T]['schema']['safeParse']
+	>;
 }

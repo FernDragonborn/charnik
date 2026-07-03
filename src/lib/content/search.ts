@@ -10,7 +10,7 @@
  */
 import Fuse, { type FuseResultMatch } from 'fuse.js';
 import type { ContentGraph, LoadedRow } from './loader';
-import type { ContentType } from './schemas';
+import { isBrowsable, type ContentType } from './schemas';
 
 export interface NameDoc {
 	effectiveId: string;
@@ -71,30 +71,34 @@ const base = (r: LoadedRow) => ({
 
 export function buildNameDocs(graph: ContentGraph): NameDoc[] {
 	const locales = localesOf(graph);
-	return graph.rows.map((r) => {
-		const names: Record<string, string> = {};
-		for (const l of locales) {
-			const v = r.data[`name_${l}`];
-			if (v) names[l] = String(v);
-		}
-		return { ...base(r), names, nameAll: [...new Set(Object.values(names))] };
-	});
+	return graph.rows
+		.filter((r) => isBrowsable(r.type))
+		.map((r) => {
+			const names: Record<string, string> = {};
+			for (const l of locales) {
+				const v = r.data[`name_${l}`];
+				if (v) names[l] = String(v);
+			}
+			return { ...base(r), names, nameAll: [...new Set(Object.values(names))] };
+		});
 }
 
 export function buildTextDocs(graph: ContentGraph, locale: string): TextDoc[] {
 	const locales = localesOf(graph);
-	return graph.rows.map((r) => {
-		const names: Record<string, string> = {};
-		for (const l of locales) {
-			const v = r.data[`name_${l}`];
-			if (v) names[l] = String(v);
-		}
-		return {
-			...base(r),
-			names,
-			text: plainText(String(r.data[`text_${locale}`] || r.data.text_en || ''))
-		};
-	});
+	return graph.rows
+		.filter((r) => isBrowsable(r.type))
+		.map((r) => {
+			const names: Record<string, string> = {};
+			for (const l of locales) {
+				const v = r.data[`name_${l}`];
+				if (v) names[l] = String(v);
+			}
+			return {
+				...base(r),
+				names,
+				text: plainText(String(r.data[`text_${locale}`] || r.data.text_en || ''))
+			};
+		});
 }
 
 const OPTS = {
