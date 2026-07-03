@@ -224,7 +224,7 @@
 				<button class="grpby" onclick={(e) => openMenu('showhide', e)}>👁 Show / hide</button>
 			{:else if pid === 'effects'}
 				<button class="grpby" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
-			{:else if pid === 'spells' && s.spellcasting}
+			{:else if pid === 'spells' && s.spellcasting.classes.length}
 				<span class="prepct">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
 				<button class="grpby" onclick={cycleGroupBy} title="Change grouping"
 					>{groupByLabel} ▾</button
@@ -287,10 +287,11 @@
 						</div>
 					</div>
 				{:else}<p class="trace">No active effects.</p>{/each}
-			{:else if pid === 'spells' && s.spellcasting}
+			{:else if pid === 'spells' && s.spellcasting.classes.length}
+				{@const sc = s.spellcasting.classes[0]}
 				<div class="castline">
-					Save DC <b>{s.spellcasting.saveDC.value}</b> · attack
-					<b>{signed(s.spellcasting.attack.value)}</b> — every spell
+					Save DC <b>{sc.saveDC.value}</b> · attack
+					<b>{signed(sc.attack.value)}</b> — every spell
 				</div>
 				<div class="sprows">
 					{#each spellGroups as g (g.key)}

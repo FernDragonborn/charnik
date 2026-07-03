@@ -21,8 +21,6 @@ import {
 	skillCheck,
 	passiveScore,
 	initiative as initiativeOf,
-	spellSaveDC,
-	spellAttackBonus,
 	unarmoredAC,
 	armoredAC,
 	maxHpForClass,
@@ -30,6 +28,7 @@ import {
 	type Ability
 } from '../rules/core';
 import { applyEffects, type ActiveEffect } from '../effects/index';
+import { deriveSpellcasting, type Spellcasting } from './spellcasting';
 import type { Computed, System } from '../rules/pipeline';
 
 /** Skill → its governing ability (the 18 SRD skills). */
@@ -72,7 +71,8 @@ export interface CharacterSheet {
 	maxHp: Computed;
 	passives: Record<'perception' | 'investigation' | 'insight', Computed>;
 	carryingCapacity: Computed;
-	spellcasting?: { ability: Ability; saveDC: Computed; attack: Computed };
+	/** Per-class casting profiles + shared/pact slot pools (empty classes = non-caster). */
+	spellcasting: Spellcasting;
 	/** Content refs the character points at that the graph couldn't resolve. */
 	missing: string[];
 }
@@ -251,20 +251,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	const passiveOf = (skill: 'perception' | 'investigation' | 'insight') =>
 		passiveScore(skills[skill]);
 
-	// spellcasting: first caster class with a spell_ability
-	let spellcasting: CharacterSheet['spellcasting'];
-	for (const c of build.classes) {
-		const row = graph.get(c.class);
-		const ability = row?.data.spell_ability as Ability | undefined;
-		if (ability && row?.data.caster && row.data.caster !== 'none') {
-			spellcasting = {
-				ability,
-				saveDC: spellSaveDC({ ability, score: scores[ability], level }),
-				attack: spellAttackBonus({ ability, score: scores[ability], level })
-			};
-			break;
-		}
-	}
+	// spellcasting: per-class profiles + shared/pact slot pools (fixes multiclass DCs, L11)
+	const spellcasting = deriveSpellcasting(character, graph, scores);
 
 	return {
 		level,

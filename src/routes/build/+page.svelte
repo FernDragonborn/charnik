@@ -293,7 +293,7 @@
 					<div class="stat"><b>{signed(b.sheet.initiative.value)}</b><small>Init</small></div>
 					<div class="stat"><b>{b.sheet.speed.value}</b><small>Speed</small></div>
 					<div class="stat"><b>{signed(b.sheet.proficiencyBonus)}</b><small>Prof</small></div>
-					{#if b.sheet.spellcasting}<div class="stat"><b>{b.sheet.spellcasting.saveDC.value}</b><small>Spell DC</small></div>{/if}
+					{#if b.sheet.spellcasting.classes.length}<div class="stat"><b>{b.sheet.spellcasting.classes[0].saveDC.value}</b><small>Spell DC</small></div>{/if}
 				</div>
 			{/if}
 			<div class="revside">

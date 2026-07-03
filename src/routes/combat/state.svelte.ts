@@ -222,18 +222,16 @@ class CombatVM {
 		const alt = wantsTray(e);
 		// a spell with dice rolls them: damage (Fire Bolt 1d10, Fireball 8d6) or, for auto
 		// spells, healing (Healing Word 2d4 + spellcasting mod)
+		const cast = this.sheet?.spellcasting.classes[0];
 		if (r.dmg && Object.keys(r.dmg).length) {
 			const heal = r.res === 'auto';
 			const label = `${r.name} ${heal ? 'healing' : 'damage'}`;
-			const mod =
-				heal && this.sheet?.spellcasting
-					? this.sheet.abilities[this.sheet.spellcasting.ability].mod
-					: 0;
+			const mod = heal && cast ? this.sheet!.abilities[cast.ability].mod : 0;
 			if (alt) this.openRoll(label, r.dmg, mod, e);
 			else this.rollDiceNow(label, r.dmg, mod);
-		} else if (r.res === 'hit' && this.sheet?.spellcasting) {
+		} else if (r.res === 'hit' && cast) {
 			// non-damage attack spell → the to-hit roll
-			const m = this.sheet.spellcasting.attack.value;
+			const m = cast.attack.value;
 			const label = `${r.name} (spell attack)`;
 			if (alt) this.openRoll(label, { 20: 1 }, m, e);
 			else this.rollDiceNow(label, { 20: 1 }, m);

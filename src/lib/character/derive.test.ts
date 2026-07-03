@@ -82,9 +82,10 @@ describe('deriveSheet aggregator', () => {
 
 	it('derives spellcasting DC and attack for a caster', () => {
 		const s = deriveSheet(wizard(), graph);
-		expect(s.spellcasting?.ability).toBe('int');
-		expect(s.spellcasting?.saveDC.value).toBe(13); // 8 + 2 + 3
-		expect(s.spellcasting?.attack.value).toBe(5); // 2 + 3
+		const c = s.spellcasting.classes[0];
+		expect(c?.ability).toBe('int');
+		expect(c?.saveDC.value).toBe(13); // 8 + 2 + 3
+		expect(c?.attack.value).toBe(5); // 2 + 3
 	});
 
 	it('carries speed from species and capacity from STR', () => {
