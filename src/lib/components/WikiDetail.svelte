@@ -13,9 +13,18 @@
 
 	let { detail, actions }: { detail: DetailModel | null; actions?: Snippet } = $props();
 
-	const bodyHtml = $derived(
-		detail && browser ? DOMPurify.sanitize(marked.parse(detail.bodyHtml, { async: false })) : ''
-	);
+	// Some content mixes Markdown with raw HTML tables. marked won't process Markdown that
+	// sits inside/right after an HTML block, so: force blank lines around <table> (so the
+	// following text parses as Markdown), then mop up emphasis left literal inside table cells.
+	function renderBody(md: string): string {
+		const spaced = md.replace(/\n*(<table>)/g, '\n\n$1').replace(/(<\/table>)\n*/g, '$1\n\n');
+		let html = marked.parse(spaced, { async: false }) as string;
+		html = html
+			.replace(/\*\*([^*<>\n]+)\*\*/g, '<strong>$1</strong>')
+			.replace(/\*([^*<>\n]+)\*/g, '<em>$1</em>');
+		return DOMPurify.sanitize(html);
+	}
+	const bodyHtml = $derived(detail && browser ? renderBody(detail.bodyHtml) : '');
 
 	// roll a dice formula ("16d12 + 80", "8d6") and toast the total
 	function rollDice(formula: string, label: string) {
@@ -280,6 +289,50 @@
 	}
 	.body :global(p) {
 		margin: 0 0 12px;
+	}
+	/* content tables (spell/item tables, embedded summon stat blocks) rendered from the CSV */
+	.body :global(table) {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 6px 0 14px;
+		font-size: 13px;
+	}
+	.body :global(th),
+	.body :global(td) {
+		border: 1px solid var(--color-border);
+		padding: 5px 9px;
+		text-align: left;
+		vertical-align: top;
+	}
+	.body :global(th) {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		background: var(--color-surface-2);
+	}
+	.body :global(hr) {
+		border: 0;
+		border-top: 1px solid var(--color-border);
+		margin: 12px 0;
+	}
+	.body :global(h4),
+	.body :global(h5) {
+		font-family: var(--font-display);
+		font-size: 12px;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		margin: 14px 0 6px;
+	}
+	.body :global(ul),
+	.body :global(ol) {
+		margin: 0 0 12px;
+		padding-left: 20px;
+	}
+	.body :global(li) {
+		margin: 2px 0;
 	}
 	.hl {
 		background: var(--color-surface);

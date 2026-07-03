@@ -19,7 +19,24 @@ const COMMON = new Set([
 	'higher_level'
 ]);
 
-const cap = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+// nicer meta-cell labels than the auto Title-Case of the raw column name
+const LABELS: Record<string, string> = {
+	item_type: 'Type',
+	weight_lb: 'Weight (lb)',
+	damage_type: 'Damage type',
+	armor_dex_cap: 'Dex cap',
+	str_min: 'Str min',
+	stealth_disadvantage: 'Stealth',
+	ac: 'AC',
+	hp_formula: 'HP formula',
+	save_ability: 'Save',
+	casting_time: 'Casting time',
+	higher_level: 'At higher levels',
+	creature_type: 'Type',
+	class_id: 'Class'
+};
+const cap = (s: string) =>
+	LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 const asText = (v: unknown) => (Array.isArray(v) ? v.join(', ') : String(v));
 const nonEmpty = (v: unknown) => v !== '' && v != null && !(Array.isArray(v) && v.length === 0);
 // skip noisy negative/placeholder values ("false", "none", "0") from the meta grid
@@ -123,7 +140,12 @@ function buildSpell(row: LoadedRow): SpellModel {
 		cells: [
 			['Casting', String(d.casting_time ?? '')],
 			['Range', withMetric(String(d.range ?? ''))],
-			['Duration', conc ? `Concentration · ${d.duration}` : String(d.duration ?? '')],
+			[
+				'Duration',
+				conc && !/concentration/i.test(String(d.duration))
+					? `Concentration · ${d.duration}`
+					: String(d.duration ?? '')
+			],
 			['Components', components]
 		].filter(([, v]) => v) as [string, string][],
 		classes: String(d.classes ?? '')
@@ -255,7 +277,7 @@ export function buildDetail(row: LoadedRow, type: ContentType): DetailModel {
 
 	const meta = Object.entries(d)
 		.filter(([k, v]) => !skip.has(k) && meaningful(v))
-		.map(([k, v]) => [cap(k), asText(v)] as [string, string]);
+		.map(([k, v]) => [cap(k), String(v) === 'true' ? 'Yes' : asText(v)] as [string, string]);
 
 	return {
 		eyebrow,
@@ -283,9 +305,16 @@ export function entryMeta(row: LoadedRow, type: ContentType): string {
 			.filter(Boolean)
 			.join(' · ');
 	}
-	return [d.category, d.item_type, d.rarity]
+	// item_type is usually more specific than category ("martial melee" vs "weapon"); drop the
+	// broader one when it's already implied, so basic gear isn't "gear · adventuring gear"
+	const parts = [d.category, d.item_type, d.rarity]
 		.map((x) => (x ? String(x) : ''))
-		.filter(Boolean)
+		.filter(Boolean);
+	return parts
+		.filter(
+			(p, i) =>
+				!parts.some((q, j) => j !== i && q !== p && q.toLowerCase().includes(p.toLowerCase()))
+		)
 		.join(' · ');
 }
 
