@@ -232,6 +232,12 @@ that consume them.
   `cast_via: slot | resource:<id> | at-will`. `grant-slot:<level>` for the rare artifact granting
   a real slot (a resource with a spell level, per fork 1).
 
+**Builder — Strict/Free spell picker** (mirrors the existing Strict/Free rules toggle, same as
+skills): **Strict** shows only spells the character may legally pick — via the access map, ≤ max
+castable level for that class, within the cantrips/known/prepared caps. **Free** lifts all gates
+— every spell, any level/list — for homebrew and house rules. Default follows the page's
+Strict/Free toggle (Free by default, per the lenient stance).
+
 **Rules (pure TS core):** `effectiveCasterLevel` — multiclass slots are the **SUM** of caster
 contributions (Σ full-levels + Σ⌊half/2⌋ + Σ⌊third/3⌋; Artificer rounds ½ **up**; **warlock
 levels don't count** — Pact Magic fully separate), indexing the ONE multiclass (full) table —
