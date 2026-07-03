@@ -61,7 +61,9 @@ class BuildVM {
 	// --- draft choices ---------------------------------------------------------
 	name = $state('');
 	system = $state<SystemId>(app.activeSystem);
-	strict = $state(false); // Free by default — lenient rule enforcement
+	// Strict by default so the spell picker (and manual-score bounds) follow the rules —
+	// showing every spell to a level-1 caster was confusing. Free is one click away for homebrew.
+	strict = $state(true);
 	speciesId = $state<string | null>(null);
 	backgroundId = $state<string | null>(null);
 	/** One or more classes (multiclass). classes[0] is the primary — it grants saves + the
