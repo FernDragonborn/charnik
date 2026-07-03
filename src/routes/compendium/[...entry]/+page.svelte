@@ -1,7 +1,10 @@
 <script lang="ts">
 	// Compendium — the same two-pane shape as the Spellbook (d-spellmgr), read-only: a grouped
 	// list of every content row + the wiki detail from its CSV. Reuses EntryList + WikiDetail.
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { getContentGraph } from '$lib/content/provider';
 	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
 	import type { ContentType } from '$lib/content/schemas';
@@ -35,6 +38,42 @@
 		types = [...g.byType.keys()].sort();
 		if (!types.includes(selectedType)) selectedType = types[0];
 		groupBy = groupingsFor(selectedType)[0].key;
+	});
+
+	// deep-link: /compendium/<type>/<source>/<id> opens that entry (rest-param route served by
+	// the 404.html SPA fallback). Source is in the path because a slug is unique only per TYPE,
+	// not across editions/sources ("fireball" exists in both 5e and 5.5e) → type:source:id is
+	// the unique effectiveId. Depends only on the URL param + graph (untrack the rest) so
+	// clicking a type chip isn't reverted by this effect.
+	const entryParam = $derived(page.params.entry ?? '');
+	// clicking a row updates the URL so the current entry is shareable (no history spam)
+	function openEntry(row: LoadedRow) {
+		selected = row;
+		goto(`${base}/compendium/${row.type}/${encodeURIComponent(row.source)}/${row.data.id}`, {
+			replaceState: true,
+			keepFocus: true,
+			noScroll: true
+		});
+	}
+	$effect(() => {
+		const g = graph;
+		const parts = entryParam.split('/').filter(Boolean);
+		if (!g || parts.length < 2) return;
+		const t = parts[0];
+		const id = parts[parts.length - 1];
+		const source = parts.slice(1, -1).join('/'); // "" for legacy type/id links
+		untrack(() => {
+			if (!types.includes(t as ContentType)) return;
+			if (selectedType !== t) {
+				selectedType = t as ContentType;
+				groupBy = groupingsFor(selectedType)[0].key;
+				sourceFilter = new Set();
+				facetFilter = new Set();
+			}
+			const rows = g.list(t as ContentType);
+			selected =
+				(source && g.get(`${t}:${source}:${id}`)) || rows.find((r) => r.data.id === id) || null;
+		});
 	});
 
 	// all rows of the type in the active editions — the pool the filters/facets draw from
@@ -166,7 +205,7 @@
 				{showEdition}
 				searchPlaceholder="Search {selectedType.replace(/_/g, ' ')}…"
 				selectedId={selected?.effectiveId ?? null}
-				onselect={(e) => (selected = e.row)}
+				onselect={(e) => openEntry(e.row)}
 			/>
 			<WikiDetail {detail} />
 		</div>

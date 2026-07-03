@@ -1,22 +1,37 @@
 <script lang="ts">
-	// Ctrl/Cmd+K command + search palette (a11y convention pinned at P1; full search P6).
-	// Thin shell: the destination list is data; navigation goes through the router. Real
-	// content search (spells/items/rules) plugs into the same filtered list later.
+	// Ctrl/Cmd+K command + global content search. Pages navigate via the router; content is
+	// fuzzy-searched (name + article text) over the reactive content store and opens the entry
+	// in the compendium (deep-link route). Search core lives in $lib/content/search.
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { _ } from '$lib/i18n';
+	import { app } from '$lib/stores/app.svelte';
+	import { content, loadContentStore } from '$lib/content/store.svelte';
+	import { makeNameIndex, makeTextIndex, searchContent } from '$lib/content/search';
 
-	interface Command {
-		id: string;
-		labelKey: string;
+	interface PageItem {
+		kind: 'page';
+		key: string;
+		label: string;
 		href: string;
 	}
+	interface ContentItem {
+		kind: 'content';
+		key: string;
+		type: string;
+		source: string;
+		slug: string;
+		label: string;
+		snippet: string;
+		systems: string[];
+	}
+	type Item = PageItem | ContentItem;
 
-	const COMMANDS: Command[] = [
-		{ id: 'roster', labelKey: 'nav.roster', href: '/' },
-		{ id: 'combat', labelKey: 'nav.combat', href: '/combat' },
-		{ id: 'compendium', labelKey: 'nav.compendium', href: '/compendium' },
-		{ id: 'settings', labelKey: 'nav.settings', href: '/settings' }
+	const COMMANDS = [
+		{ key: 'roster', labelKey: 'nav.roster', href: '/' },
+		{ key: 'combat', labelKey: 'nav.combat', href: '/combat' },
+		{ key: 'compendium', labelKey: 'nav.compendium', href: '/compendium' },
+		{ key: 'settings', labelKey: 'nav.settings', href: '/settings' }
 	];
 
 	let open = $state(false);
@@ -25,58 +40,83 @@
 	let inputEl = $state<HTMLInputElement | null>(null);
 	let restoreEl: HTMLElement | null = null;
 
-	const results = $derived(
-		COMMANDS.filter((c) => $_(c.labelKey).toLowerCase().includes(query.trim().toLowerCase()))
+	// name index rebuilds on content change; text index on content OR locale change (edition is
+	// a post-filter, never a rebuild). Both derived from the reactive store.
+	const nameIndex = $derived(content.graph ? makeNameIndex(content.graph) : null);
+	const textIndex = $derived(content.graph ? makeTextIndex(content.graph, app.activeLocale) : null);
+
+	const pages = $derived<PageItem[]>(
+		COMMANDS.filter((c) => $_(c.labelKey).toLowerCase().includes(query.trim().toLowerCase())).map(
+			(c) => ({ kind: 'page', key: c.key, label: $_(c.labelKey), href: c.href })
+		)
 	);
+	const contentItems = $derived<ContentItem[]>(
+		nameIndex && textIndex
+			? searchContent(nameIndex, textIndex, query, {
+					editions: app.activeEditions,
+					locale: app.activeLocale
+				}).map((r) => ({
+					kind: 'content',
+					key: r.effectiveId,
+					type: r.type,
+					source: r.source,
+					slug: r.id,
+					label: r.name,
+					snippet: r.snippet,
+					systems: r.systems
+				}))
+			: []
+	);
+	const items = $derived<Item[]>([...pages, ...contentItems]);
+
+	const typeName = (t: string) => t.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+	// header shown before the first item of each group (Pages, then each content type)
+	const groupOf = (it: Item) => (it.kind === 'page' ? 'Pages' : typeName(it.type));
 
 	function openPalette() {
 		restoreEl = document.activeElement as HTMLElement;
 		query = '';
 		active = 0;
 		open = true;
+		loadContentStore();
 	}
-
 	function closePalette() {
 		open = false;
 		restoreEl?.focus();
 	}
-
-	function run(cmd: Command | undefined) {
-		if (!cmd) return;
+	function run(it: Item | undefined) {
+		if (!it) return;
 		closePalette();
-		// Prefix the base path so links resolve under the GitHub Pages subpath (empty on desktop).
-		goto(`${base}${cmd.href}`);
+		if (it.kind === 'page') goto(`${base}${it.href}`);
+		else goto(`${base}/compendium/${it.type}/${encodeURIComponent(it.source)}/${it.slug}`);
 	}
 
 	function onWindowKeydown(e: KeyboardEvent) {
-		// Match the PHYSICAL key (e.code), not e.key, so Ctrl+K fires on any keyboard layout
-		// (e.g. Cyrillic, where the K key yields "к"). Applies to all app shortcuts.
+		// physical key (e.code) so Ctrl+K fires on any layout (Cyrillic etc.)
 		if ((e.ctrlKey || e.metaKey) && e.code === 'KeyK') {
 			e.preventDefault();
 			if (open) closePalette();
 			else openPalette();
 		}
 	}
-
 	function onPaletteKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') {
 			e.preventDefault();
 			closePalette();
 		} else if (e.key === 'ArrowDown') {
 			e.preventDefault();
-			active = (active + 1) % Math.max(results.length, 1);
+			active = (active + 1) % Math.max(items.length, 1);
 		} else if (e.key === 'ArrowUp') {
 			e.preventDefault();
-			active = (active - 1 + results.length) % Math.max(results.length, 1);
+			active = (active - 1 + items.length) % Math.max(items.length, 1);
 		} else if (e.key === 'Enter') {
 			e.preventDefault();
-			run(results[active]);
+			run(items[active]);
 		}
 	}
 
-	// Keep selection in range as the query narrows results; focus the input on open.
 	$effect(() => {
-		if (active >= results.length) active = 0;
+		if (active >= items.length) active = 0;
 	});
 	$effect(() => {
 		if (open) inputEl?.focus();
@@ -104,25 +144,36 @@
 			role="combobox"
 			aria-expanded="true"
 			aria-controls="cmd-list"
-			aria-activedescendant={results[active] ? `cmd-${results[active].id}` : undefined}
+			aria-activedescendant={items[active] ? `cmd-${items[active].key}` : undefined}
 			placeholder={$_('command.placeholder')}
 			autocomplete="off"
 		/>
 		<ul id="cmd-list" class="list" role="listbox">
-			{#each results as cmd, i (cmd.id)}
-				<!-- keyboard handled at the listbox level (↑/↓ + Enter via onPaletteKeydown);
-				     the click is a supplementary mouse shortcut -->
+			{#each items as it, i (it.key)}
+				{#if i === 0 || groupOf(items[i - 1]) !== groupOf(it)}
+					<li class="group" role="presentation">{groupOf(it)}</li>
+				{/if}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<li
-					id="cmd-{cmd.id}"
+					id="cmd-{it.key}"
 					role="option"
 					aria-selected={i === active}
 					class="item"
 					class:active={i === active}
 					onmousemove={() => (active = i)}
-					onclick={() => run(cmd)}
+					onclick={() => run(it)}
 				>
-					{$_(cmd.labelKey)}
+					{#if it.kind === 'content'}
+						<span class="tbadge">{typeName(it.type)}</span>
+						<span class="itxt">
+							<span class="iname">{it.label}</span>
+							{#if it.snippet}<span class="isnip">{it.snippet}</span>{/if}
+						</span>
+						{#if app.activeEditions.length > 1}<span class="ied">{it.systems.join(' · ')}</span
+							>{/if}
+					{:else}
+						<span class="iname">{it.label}</span>
+					{/if}
 				</li>
 			{:else}
 				<li class="empty">{$_('command.empty')}</li>
@@ -140,10 +191,10 @@
 	}
 	.palette {
 		position: fixed;
-		top: 14vh;
+		top: 12vh;
 		left: 50%;
 		transform: translateX(-50%);
-		width: min(560px, calc(100vw - 2 * var(--space-4)));
+		width: min(600px, calc(100vw - 2 * var(--space-4)));
 		z-index: 51;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
@@ -158,24 +209,71 @@
 		background: transparent;
 		padding: var(--space-4);
 		font-size: var(--font-size-lg);
+		color: var(--color-text);
 		outline: none;
 	}
 	.list {
 		list-style: none;
 		margin: 0;
 		padding: var(--space-1);
-		max-height: 50vh;
+		max-height: 56vh;
 		overflow: auto;
 	}
+	.group {
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: var(--tracking-label);
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		padding: 8px 10px 4px;
+	}
 	.item {
+		display: flex;
+		align-items: center;
+		gap: 9px;
 		padding: var(--space-2) var(--space-3);
 		border-radius: var(--radius-sm);
 		cursor: pointer;
-		font-family: var(--font-display);
 	}
 	.item.active {
 		background: var(--color-surface-2);
-		color: var(--color-accent);
+	}
+	.iname {
+		font-family: var(--font-display);
+		font-weight: 600;
+	}
+	.item.active .iname {
+		color: var(--color-accent-bright);
+	}
+	.tbadge {
+		flex: none;
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		border: 1px solid var(--color-border);
+		border-radius: 5px;
+		padding: 2px 6px;
+	}
+	.itxt {
+		min-width: 0;
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+	}
+	.isnip {
+		font-size: 12px;
+		color: var(--color-text-muted);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.ied {
+		flex: none;
+		font-family: var(--font-mono);
+		font-size: 9px;
+		color: var(--color-text-muted);
 	}
 	.empty {
 		padding: var(--space-3);

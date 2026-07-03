@@ -1,0 +1,169 @@
+/*
+ * Global fuzzy search over the content graph. Two Fuse indexes with different rebuild
+ * triggers (see the plan):
+ *  - nameIndex: over every locale's name (cross-language), rebuilt only on content change.
+ *  - textIndex: over the active-locale-or-EN article text, rebuilt on content OR locale
+ *    change. Edition is never part of an index — it's a cheap post-filter on results, so
+ *    toggling editions never rebuilds anything.
+ * Both are blind projections over `graph.rows`, so any new type/homebrew/edition is searchable
+ * automatically.
+ */
+import Fuse, { type FuseResultMatch } from 'fuse.js';
+import type { ContentGraph, LoadedRow } from './loader';
+import type { ContentType } from './schemas';
+
+export interface NameDoc {
+	effectiveId: string;
+	type: ContentType;
+	id: string;
+	source: string;
+	systems: string[];
+	names: Record<string, string>; // locale → name (for display)
+	nameAll: string[]; // every locale's name (indexed key)
+}
+export interface TextDoc {
+	effectiveId: string;
+	type: ContentType;
+	id: string;
+	source: string;
+	systems: string[];
+	names: Record<string, string>;
+	text: string; // active-locale-or-EN, plain text
+}
+
+export interface SearchResult {
+	effectiveId: string;
+	type: ContentType;
+	id: string;
+	source: string; // disambiguates same-slug rows across editions/sources in the deep-link
+	systems: string[];
+	name: string; // display name in the active locale (EN fallback)
+	snippet: string; // set for text-only matches
+}
+
+/** Strip HTML tags + markdown markers so matches hit prose, not markup. */
+export const plainText = (s: string) =>
+	s
+		.replace(/<[^>]+>/g, ' ')
+		.replace(/[*_#>`~|]+/g, ' ')
+		.replace(/&[a-z]+;/gi, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+
+/** Locales present in the data (from `name_*` columns); always includes `en`. */
+export function localesOf(graph: ContentGraph): string[] {
+	const set = new Set(['en']);
+	for (const r of graph.rows)
+		for (const k of Object.keys(r.data)) {
+			const m = /^name_([a-z]{2,3})$/.exec(k);
+			if (m) set.add(m[1]);
+		}
+	return [...set];
+}
+
+const base = (r: LoadedRow) => ({
+	effectiveId: r.effectiveId,
+	type: r.type,
+	id: r.id,
+	source: r.source,
+	systems: r.systems
+});
+
+export function buildNameDocs(graph: ContentGraph): NameDoc[] {
+	const locales = localesOf(graph);
+	return graph.rows.map((r) => {
+		const names: Record<string, string> = {};
+		for (const l of locales) {
+			const v = r.data[`name_${l}`];
+			if (v) names[l] = String(v);
+		}
+		return { ...base(r), names, nameAll: [...new Set(Object.values(names))] };
+	});
+}
+
+export function buildTextDocs(graph: ContentGraph, locale: string): TextDoc[] {
+	const locales = localesOf(graph);
+	return graph.rows.map((r) => {
+		const names: Record<string, string> = {};
+		for (const l of locales) {
+			const v = r.data[`name_${l}`];
+			if (v) names[l] = String(v);
+		}
+		return {
+			...base(r),
+			names,
+			text: plainText(String(r.data[`text_${locale}`] || r.data.text_en || ''))
+		};
+	});
+}
+
+const OPTS = {
+	ignoreLocation: true,
+	minMatchCharLength: 3,
+	includeMatches: true,
+	includeScore: true
+};
+
+export const makeNameIndex = (graph: ContentGraph) =>
+	new Fuse(buildNameDocs(graph), { ...OPTS, threshold: 0.3, keys: ['nameAll'] });
+
+export const makeTextIndex = (graph: ContentGraph, locale: string) =>
+	new Fuse(buildTextDocs(graph, locale), { ...OPTS, threshold: 0.34, keys: ['text'] });
+
+const displayName = (names: Record<string, string>, locale: string) =>
+	names[locale] || names.en || Object.values(names)[0] || '';
+
+function snippetFor(text: string, matches: readonly FuseResultMatch[] | undefined): string {
+	const m = matches?.find((x) => x.key === 'text');
+	const at = m?.indices?.[0]?.[0] ?? 0;
+	const start = Math.max(0, at - 24);
+	const s = text.slice(start, start + 72).trim();
+	return (start > 0 ? '…' : '') + s + (start + 72 < text.length ? '…' : '');
+}
+
+export interface SearchOpts {
+	editions: string[];
+	locale: string;
+	limit?: number;
+}
+
+/** name hits first, then text-only hits (deduped), post-filtered to active editions. */
+export function searchContent(
+	nameIndex: Fuse<NameDoc>,
+	textIndex: Fuse<TextDoc>,
+	query: string,
+	{ editions, locale, limit = 30 }: SearchOpts
+): SearchResult[] {
+	const q = query.trim();
+	if (q.length < 2) return [];
+	const inEdition = (systems: string[]) => systems.some((s) => editions.includes(s));
+	const out = new Map<string, SearchResult>();
+
+	for (const h of nameIndex.search(q, { limit })) {
+		const d = h.item;
+		if (!inEdition(d.systems) || out.has(d.effectiveId)) continue;
+		out.set(d.effectiveId, {
+			effectiveId: d.effectiveId,
+			type: d.type,
+			id: d.id,
+			source: d.source,
+			systems: d.systems,
+			name: displayName(d.names, locale),
+			snippet: ''
+		});
+	}
+	for (const h of textIndex.search(q, { limit })) {
+		const d = h.item;
+		if (!inEdition(d.systems) || out.has(d.effectiveId)) continue;
+		out.set(d.effectiveId, {
+			effectiveId: d.effectiveId,
+			type: d.type,
+			id: d.id,
+			source: d.source,
+			systems: d.systems,
+			name: displayName(d.names, locale),
+			snippet: snippetFor(d.text, h.matches)
+		});
+	}
+	return [...out.values()].slice(0, limit);
+}
