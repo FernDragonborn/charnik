@@ -255,23 +255,40 @@
 				{/if}
 			</div>
 
-			<!-- spells -->
+			<!-- spells (per caster class; Strict = access + level caps, Free = everything) -->
 			<div class="card">
 				<h2>Spells <span class="cnt teal">{b.selectedSpells.length}</span></h2>
-				{#if b.isCaster}
+				{#if b.spellPicker.length}
 					<p class="sub">
-						Pick spells from your class list — cantrips &amp; leveled. Refine prepared/known in the
-						<b>Spellbook</b> after creating.
+						{b.strict ? 'Only spells you can legally take' : 'Free mode — every spell'} · refine
+						prepared/known in the <b>Spellbook</b> after creating.
 					</p>
-					{#each b.spellGroups as g (g.level)}
-						<p class="sub sgrp">{g.label}</p>
-						<div class="chips gap">
-							{#each g.spells as s (s.effectiveId)}
-								<button class="pchip" class:on={b.selectedSpells.includes(s.effectiveId)} onclick={() => b.toggleSpell(s.effectiveId)}>
-									{rowName(s)}
-								</button>
-							{/each}
-						</div>
+					{#each b.spellPicker as pc (pc.profile.classEffectiveId)}
+						{#if b.spellPicker.length > 1}
+							<p class="sub sgrp">
+								{pc.profile.className} — cantrips <b class="teal">{pc.cantripsChosen}/{pc.profile.cantripCap}</b>
+								· prepared <b class="gold">{pc.leveledChosen}/{pc.profile.preparedCap}</b>
+							</p>
+						{:else}
+							<p class="sub">
+								Cantrips <b class="teal">{pc.cantripsChosen}/{pc.profile.cantripCap}</b> · prepared
+								<b class="gold">{pc.leveledChosen}/{pc.profile.preparedCap}</b>
+							</p>
+						{/if}
+						{#each pc.groups as g (g.level)}
+							<p class="sub sgrp">{g.label}</p>
+							<div class="chips gap">
+								{#each g.spells as s (s.effectiveId)}
+									<button
+										class="pchip"
+										class:on={b.selectedSpells.includes(s.effectiveId)}
+										onclick={() => b.toggleSpell(s.effectiveId)}
+									>
+										{rowName(s)}
+									</button>
+								{/each}
+							</div>
+						{/each}
 					{/each}
 				{:else if b.classRow}
 					<p class="sub">{rowName(b.classRow)} has no innate spellcasting.</p>

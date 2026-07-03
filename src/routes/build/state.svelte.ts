@@ -155,33 +155,36 @@ class BuildVM {
 			return caster && caster !== 'none';
 		})
 	);
-	/** Bare class ids of the build's caster classes (spells link to classes by bare id). */
-	casterClassIds = $derived.by<string[]>(() =>
-		this.classes
-			.filter((c) => {
-				const caster = this.row(c.classId)?.data.caster;
-				return c.classId && caster && caster !== 'none';
-			})
-			.map((c) => (c.classId as string).split(':').pop() as string)
-	);
-	/** Spells castable by any of the build's caster classes, grouped cantrips-first by level. */
-	spellGroups = $derived.by<{ level: number; label: string; spells: LoadedRow[] }[]>(() => {
-		if (!this.casterClassIds.length) return [];
-		const mine = this.list('spell').filter((s) =>
-			csv(s.data.classes).some((c) => this.casterClassIds.includes(c))
-		);
-		const byLevel = new Map<number, LoadedRow[]>();
-		for (const s of mine) {
-			const lvl = Number(s.data.level ?? 0);
-			(byLevel.get(lvl) ?? byLevel.set(lvl, []).get(lvl)!).push(s);
-		}
-		return [...byLevel.keys()]
-			.sort((a, b) => a - b)
-			.map((lvl) => ({
-				level: lvl,
-				label: lvl === 0 ? 'Cantrips' : `Level ${lvl}`,
-				spells: byLevel.get(lvl)!
-			}));
+	/**
+	 * Spell picker, PER caster class (one section each — single-class collapses to one). Strict
+	 * shows only legally-pickable spells (via the access map, cantrips always + leveled ≤ the
+	 * class's max spell level); Free lifts every gate. Mirrors the skills Strict/Free toggle.
+	 */
+	spellPicker = $derived.by(() => {
+		const graph = this.graph;
+		const sheet = this.sheet;
+		if (!graph || !sheet) return [];
+		const allSpells = this.list('spell');
+		const levelOf = (s: LoadedRow) => Number(s.data.level ?? 0);
+		return sheet.spellcasting.classes.map((profile) => {
+			const access = new Set(profile.accessSpellIds);
+			const inClass = (id: string) => !this.strict || access.has(id);
+			const pool = allSpells.filter((s) => {
+				const lvl = levelOf(s);
+				if (!this.strict) return true;
+				if (lvl > 0 && !access.has(s.effectiveId)) return false; // access gate
+				return lvl <= profile.maxSpellLevel; // cantrips (0) always pass
+			});
+			const byLevel = new Map<number, LoadedRow[]>();
+			for (const s of pool) (byLevel.get(levelOf(s)) ?? byLevel.set(levelOf(s), []).get(levelOf(s))!).push(s);
+			const groups = [...byLevel.keys()]
+				.sort((a, b) => a - b)
+				.map((lvl) => ({ level: lvl, label: lvl === 0 ? 'Cantrips' : `Level ${lvl}`, spells: byLevel.get(lvl)! }));
+			const selectedInClass = this.selectedSpells.filter(inClass);
+			const cantripsChosen = selectedInClass.filter((id) => Number(graph.get(id)?.data.level ?? 0) === 0).length;
+			const leveledChosen = selectedInClass.filter((id) => Number(graph.get(id)?.data.level ?? 0) > 0).length;
+			return { profile, groups, cantripsChosen, leveledChosen };
+		});
 	});
 	toggleSpell = (ref: string) => {
 		this.selectedSpells = this.selectedSpells.includes(ref)
