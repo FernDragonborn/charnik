@@ -8,6 +8,7 @@
 	import { toast } from 'svelte-sonner';
 	import { SKILL_ABILITY } from '$lib/character/derive';
 	import { combat } from './state.svelte';
+	import { saveCharacterToStore } from '$lib/character/store.svelte';
 	import CombatMenus from './CombatMenus.svelte';
 	import {
 		why,
@@ -58,6 +59,16 @@
 	} = combat;
 
 	onMount(combat.load);
+
+	// autosave play-state edits back to storage (debounced), so combat persists per character
+	let saveTimer: ReturnType<typeof setTimeout>;
+	$effect(() => {
+		const c = combat.character;
+		if (!c) return;
+		JSON.stringify(c.play); // deep-track play changes
+		clearTimeout(saveTimer);
+		saveTimer = setTimeout(() => void saveCharacterToStore(c), 800);
+	});
 </script>
 
 <svelte:head><title>Combat — Charnik</title></svelte:head>

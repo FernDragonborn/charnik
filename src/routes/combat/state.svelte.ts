@@ -9,6 +9,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { demoCharacter } from '$lib/demo/sheet';
+import { characters } from '$lib/character/store.svelte';
 import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
 import { fullCasterSlots, passiveScore } from '$lib/rules/core';
@@ -65,7 +66,8 @@ class CombatVM {
 
 	load = async () => {
 		this.graph = await getContentGraph();
-		this.character = demoCharacter();
+		// the character opened from the Roster, else the seeded demo
+		this.character = characters.active ?? demoCharacter();
 		this.sheet = deriveSheet(this.character, this.graph);
 		// restore this character's saved panel layout (falls back to the default columns)
 		const saved = this.character.ui.panelColumns;

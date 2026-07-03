@@ -4,7 +4,7 @@
  * effects (Bless, Shield of Faith) are play-state, so they layer regardless of content.
  * Replaced by real character load/create once the roster + Build view land.
  */
-import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
+import { characterSchema, newCharacter, type Character } from '../character/schema';
 
 const S = 'SRD 5.2.1';
 
