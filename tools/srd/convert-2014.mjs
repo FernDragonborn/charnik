@@ -336,6 +336,36 @@ function convertConditions() {
 	return rows.length;
 }
 
+// Racial Ability Score Increase → flat-bonus effect tokens (5e puts the ASI on the species).
+// "Your Constitution score increases by 2." → "flat-bonus:con+2"; Human "each increase by 1" →
+// all six. Half-Elf's "+1 to two of your choice" is a choice (not a fixed token) — deferred.
+const ABIL_ABBR = {
+	strength: 'str',
+	dexterity: 'dex',
+	constitution: 'con',
+	intelligence: 'int',
+	wisdom: 'wis',
+	charisma: 'cha'
+};
+function raceAsi(text) {
+	// only the BASE race trait — the first sentence after "Ability Score Increase." — so the
+	// subrace ASI embedded later in the block (Hill Dwarf +1 WIS, High Elf +1 INT…) doesn't bleed
+	// into the base race. Subraces become their own species_option rows later.
+	const key = 'Ability Score Increase.';
+	const at = text.indexOf(key);
+	const seg = at >= 0 ? text.slice(at + key.length).split(/\.(?:\s|$)/)[0] : '';
+	const out = new Map();
+	const re =
+		/(Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) score increases by (\d+)/gi;
+	let m;
+	while ((m = re.exec(seg))) out.set(ABIL_ABBR[m[1].toLowerCase()], Number(m[2]));
+	if (/ability scores each increase by (\d+)/i.test(seg)) {
+		const n = Number(/each increase by (\d+)/i.exec(seg)[1]);
+		for (const a of Object.values(ABIL_ABBR)) out.set(a, n);
+	}
+	return [...out].map(([a, n]) => `flat-bonus:${a}+${n}`).join(';');
+}
+
 // --- species (9 races; traits are sub-headings → slice whole blocks) ---------
 const RACE_IDS = [
 	'Dwarf',
@@ -365,7 +395,7 @@ function convertSpecies() {
 			name_uk: '',
 			text_en: text,
 			text_uk: '',
-			effects: '',
+			effects: raceAsi(text), // 5e racial Ability Score Increase → flat-bonus tokens
 			size: (sizeM ? sizeM[1] : 'Medium').toLowerCase(),
 			speed: speedM ? Number(speedM[1]) : 30,
 			creature_type: 'humanoid'
