@@ -103,6 +103,22 @@ function gatherEffects(
 			tokens: tokensOf(species)
 		});
 
+	const background = resolve(character.build.background);
+	if (background && tokensOf(background).length)
+		active.push({
+			source: String(background.data.name_en),
+			layer: 'feature',
+			tokens: tokensOf(background)
+		});
+
+	// feats (incl. repeatable ones taken more than once → their effect applies each time)
+	for (const featRef of character.build.feats) {
+		const feat = resolve(featRef);
+		const toks = tokensOf(feat);
+		if (feat && toks.length)
+			active.push({ source: String(feat.data.name_en), layer: 'feature', tokens: toks });
+	}
+
 	for (const inv of character.build.inventory) {
 		if (!inv.equipped && !inv.attuned) continue;
 		const item = resolve(inv.item);
@@ -139,9 +155,10 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	const level = build.classes.reduce((n, c) => n + c.level, 0) || 1;
 	const prof = proficiencyBonus(level);
 
-	// effective ability scores (base + score-targeting effects), then everything downstream
+	// effective ability scores (base + allocated boosts + score-targeting effects), downstream
 	const scores = {} as Record<Ability, number>;
-	for (const ab of ABILITIES) scores[ab] = build.abilities[ab] + abilityBonus(active, ab);
+	for (const ab of ABILITIES)
+		scores[ab] = build.abilities[ab] + (build.abilityBoosts?.[ab] ?? 0) + abilityBonus(active, ab);
 
 	// saves: proficient if the ability is in build.saves (or any class's saves)
 	const classSaves = new Set(build.saves as Ability[]);
