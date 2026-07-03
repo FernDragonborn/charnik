@@ -85,7 +85,10 @@ export interface SpellModel {
 	dice: string; // "8d6" | "2d4" | "" (utility → grey "No roll")
 	dmgType: string; // "fire" | "healing" | ""
 	cells: [string, string][]; // Casting / Range / Duration / Components
-	classes: string;
+	classes: string; // raw `classes` column (fallback when the access index isn't supplied)
+	/** Classes that can take the spell, from the reverse UNION access index (inline ∪ spell_lists),
+	 *  with provenance — `homebrew` = granted class-side (via spell_lists), not on the spell row. */
+	availableTo?: { name: string; homebrew: boolean }[];
 	higherLevel: string;
 	material: string;
 }
@@ -97,7 +100,7 @@ const withMetric = (range: string): string => {
 	return `${range} (${met} m)`;
 };
 
-function buildSpell(row: LoadedRow): SpellModel {
+function buildSpell(row: LoadedRow, availableTo?: SpellModel['availableTo']): SpellModel {
 	const d = row.data;
 	const res = String(d.resolution ?? 'none');
 	const dmg = String(d.damage ?? '');
@@ -153,6 +156,7 @@ function buildSpell(row: LoadedRow): SpellModel {
 			.map((c) => cap(c.trim()))
 			.filter(Boolean)
 			.join(', '),
+		availableTo,
 		higherLevel: String(d.higher_level ?? ''),
 		material: String(d.material ?? '')
 	};
@@ -233,8 +237,13 @@ function buildMonster(row: LoadedRow): MonsterModel {
 	};
 }
 
-/** Build the right-pane wiki detail model for a content row. */
-export function buildDetail(row: LoadedRow, type: ContentType): DetailModel {
+/** Build the right-pane wiki detail model for a content row. `availableTo` (for spells) comes
+ *  from the reverse access index, supplied by the caller that has the graph. */
+export function buildDetail(
+	row: LoadedRow,
+	type: ContentType,
+	availableTo?: SpellModel['availableTo']
+): DetailModel {
 	const d = row.data;
 	if (type === 'monster') {
 		return {
@@ -262,7 +271,7 @@ export function buildDetail(row: LoadedRow, type: ContentType): DetailModel {
 			bodyHtml: String(d.text_en ?? ''),
 			higherLevel: String(d.higher_level ?? ''),
 			source: `Source: ${row.source}`,
-			spell: buildSpell(row)
+			spell: buildSpell(row, availableTo)
 		};
 	}
 	const skip = new Set(COMMON);

@@ -9,6 +9,7 @@
 	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
 	import { isBrowsable, type ContentType } from '$lib/content/schemas';
 	import { buildDetail, entryMeta, editionLabel, type Entry } from '$lib/content/detail';
+	import { getSpellAccess } from '$lib/content/spellAccess';
 	import { groupingsFor, facetFor, groupRows, distinctValues } from '$lib/content/grouping';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
@@ -107,7 +108,20 @@
 			}))
 		}))
 	);
-	const detail = $derived(selected ? buildDetail(selected, selectedType) : null);
+	// spell "Available to" comes from the reverse UNION access index (inline classes ∪ spell_lists),
+	// NOT the raw column — so a class that gained the spell class-side still shows, with provenance.
+	const availableTo = $derived.by(() => {
+		if (!graph || !selected || selected.type !== 'spell') return undefined;
+		const seen = new Set<string>();
+		return getSpellAccess(graph)
+			.classesForSpell(selected.effectiveId)
+			.map((e) => ({
+				name: String(graph!.get(e.classEffectiveId)?.data.name_en ?? e.classId),
+				homebrew: e.via === 'spell-list'
+			}))
+			.filter((x) => (seen.has(x.name) ? false : seen.add(x.name)));
+	});
+	const detail = $derived(selected ? buildDetail(selected, selectedType, availableTo) : null);
 	const groupLabel = $derived(groupings.find((g) => g.key === groupBy)?.label ?? '');
 	const activeFilters = $derived(sourceFilter.size + facetFilter.size);
 

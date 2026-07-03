@@ -83,9 +83,19 @@
 						<div class="sv">{v}</div>
 					</div>
 				{/each}
-				{#if s.classes}
+				{#if s.availableTo?.length}
 					<div class="scell span">
-						<div class="sk">Classes</div>
+						<div class="sk">Available to</div>
+						<div class="sv">
+							{#each s.availableTo as c, i (c.name)}{i ? ', ' : ''}{c.name}{#if c.homebrew}<span
+										class="hb"
+										title="granted class-side (not on the spell)">+</span
+									>{/if}{/each}
+						</div>
+					</div>
+				{:else if s.classes}
+					<div class="scell span">
+						<div class="sk">Available to</div>
 						<div class="sv">{s.classes}</div>
 					</div>
 				{/if}
@@ -627,5 +637,10 @@
 		.strip {
 			grid-template-columns: 1fr;
 		}
+	}
+	.hb {
+		color: var(--color-resource);
+		font-weight: 700;
+		margin-left: 1px;
 	}
 </style>
