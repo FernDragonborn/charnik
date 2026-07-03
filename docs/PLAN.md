@@ -161,6 +161,60 @@ trust what happened.
   (`milestone` | `xp`) toggle. In `xp` mode, level derives from XP thresholds and
   accumulated XP is tracked. Milestone mode ignores XP.
 
+### Spellcasting model (slots · known/prepared · resources) — DESIGN, not yet built
+
+The single most rules-heavy subsystem. Designed up front (rebuilding it piecemeal is worse
+than designing it once). Split cleanly into **data (CSV)**, **rules (pure TS)**, and
+**play-state**; the fiddly logic honestly stays in code — CSV holds the tables, not the rules
+that consume them.
+
+**Data (CSV):**
+- **`spell_slots.csv`** — 4 SRD `kind`s (`full`/`half`/`third`/`pact`), matrix form: row =
+  character level, columns = `slot_1..slot_9` (count of slots of each spell level). The `full`
+  table doubles as the **multiclass** table (indexed by effective caster level). Per-root
+  (2024 half-casters get 1st-level spells at level 1; 2014 start at level 2). These are
+  **rules tables, not per-source content** — a class **references** its table by id
+  (`slot_table: full` / `slot_table: mysrc:custom`), the app never guesses which file is which.
+- **Caster profile** columns on `classes.csv` / `subclasses.csv` (EK/AT are third-casters
+  granted by a **subclass** at class level 3 — caster-ness can come from the subclass, gated by
+  its grant level): `caster_kind`, `prepare_style (prepared|known)`, `spell_ability`, `ritual`.
+- **`class_casting.csv`** (linked `class_id`+`level`) — per-class-level `cantrips_known` and,
+  for *known* casters, `spells_known`. *Prepared* casters leave `spells_known` blank → computed
+  by a per-class **formula** (cleric/druid = `mod + level`, paladin/artificer = `mod + ½level`).
+- Spell→class list already lives in `spells.classes`.
+- **Resources = data + effect tokens.** Anything "N/day" (Mystic Arcanum, item "cast X 3/day",
+  innate 1/day) is a **resource**, not a slot: `grant-resource:<id>:<max>:<recharge>`; a spell
+  carries `cast_via: slot | resource:<id> | at-will`. New token `grant-slot:<level>` for the
+  rare artifact that grants a real slot.
+
+**Rules (pure TS core):** `effectiveCasterLevel` (Σ full + ⌊half/2⌋ + ⌊third/3⌋; Artificer
+rounds ½ **up**; **warlock levels don't count** — Pact Magic is fully separate); `slotPool`
+(kind table + `grant-slot` grants; different levels stack); known/prepared caps; resource
+resolver; upcast + cantrip scaling (later).
+
+**Play-state (schema already fits):** `spellSlotsSpent` keyed `"1".."9"` + `"pact"`;
+`resourcesSpent` keyed by id. Only resource **definitions** are derived (not stored in play).
+
+**Open logic hazards to resolve while building (found in design review):**
+- **L1** single-class uses its own `kind` table by its level; **2+ casters** use the full
+  multiclass table by effective level — a branch, not "always effective level".
+- **L2** warlock = **two independent pools**, different recharge (pact = short rest, shared =
+  long rest); a known spell may be cast from either → cast-time pool choice.
+- **L3** known/prepared is **per-class**, and the *same* spell (e.g. Cure Wounds on cleric+bard)
+  counts differently by source → the **builder picker must be per-class, not one flat list**.
+- **L4** wizard is **3 tiers** (list → spellbook `known`, +2/level → prepared); generalize as a
+  `known-set` on every prepared caster (cleric/druid `known-set` = whole list, not editable).
+- **L5** "slot" vs "resource" blur — candidate **unification**: a slot *is* a recharge-typed
+  resource tagged with a spell level; UI still renders level-tagged ones as pips. (Fork below.)
+- **L6** subclass casters activate at the subclass grant level (gate in builder).
+- **L7** always-prepared (domain/oath/Magic Initiate) is **outside** the prepared cap.
+- **L8** rituals cast without preparation/slot — "castable" ≠ "prepared".
+- **L9** cantrips are independent of slots (pure warlock has 0 shared slots but has cantrips).
+
+**Open forks (decide before build):** (1) unify slot=resource (one "castable pools" engine)?
+(2) per-class picker sections? (3) wizard 3-tier / generalized `known-set`? — recommendations:
+yes / yes / generalize.
+
 ### Play-state tracking
 - HP current/temp/max, hit dice used, **death saves**, exhaustion.
 - **Spell slots used**, prepared/known management, **re-prepare on long rest**.
@@ -283,8 +337,31 @@ rows / unknown files / malformed locale columns / duplicate ids become `issues`
 missing referenced ids so the render layer can "render what's possible + flag it".
 `featuresForClass()` resolves the class→features linked table. Tested in-memory + against the
 real shipped content (658 spells, 531 monsters load with zero errors). `NodeStorage`
-(`src/lib/storage/node.ts`) added for those integration tests. **TODO**: `spell_lists`
-linked table, `collisions.json` read/write, wire `charnik.config.json` for roots.
+(`src/lib/storage/node.ts`) added for those integration tests. **Note**: spell→class linkage
+already lives inline in `spells.classes` (no separate `spell_lists` table needed). **TODO**:
+`spell_slots.csv` + `class_casting.csv` tables (see Spellcasting model), explicit type
+declaration + UI type-assign (see Content type identification), `collisions.json` read/write,
+wire `charnik.config.json` for roots.
+
+### Content type identification (which CSV is what) — DESIGN
+
+Users add their own CSVs and **organize them into folders freely**, so the app can't rely on
+one rigid convention to know a file's **type** (schema). Two separate concerns, don't conflate:
+- **(a) What TYPE is this CSV?** (schema) — precedence, first match wins:
+  1. **Explicit declaration** (survives any name/folder): a first-line directive
+     `#charnik-type: spell_slots`, or a `_pack.json` map (`{ "files": { "x.csv": "spell_slots" },
+     "globs": { "slots_*": "spell_slots" } }`).
+  2. **Filename convention** (current behaviour): `<filebase>_*.csv` → type. Zero-config for the
+     shipped SRD and anyone who follows it.
+  3. **Ask in the UI**: an unrecognized file is **never silently dropped** — it's surfaced in
+     content-health and the user assigns its type once (persisted to the manifest).
+- **(b) What ROLE does a row play / who uses it?** — already solved by **references**, not
+  guessing. A class points at its slot table (`slot_table: full`), a character points at content
+  by `type:source:id`. The app never infers "this file is warlock's slots" from a filename.
+- **Column-fingerprint auto-detection** (infer type from the column set) — **rejected as a
+  primary mechanism** (localization/custom columns make it unreliable, schemas overlap). Parked
+  on the **very-far backlog** ("someday, maybe" — only as a last-resort hint, never authoritative).
+- This is a **general** content problem (any user content), not spellcasting-specific.
 
 ### Per-system fidelity (5e vs 5.5e)
 A row tagged `systems=5e,5.5e` means mechanics are **identical** in both. When they
