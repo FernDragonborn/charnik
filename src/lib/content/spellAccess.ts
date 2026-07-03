@@ -87,7 +87,9 @@ export function buildSpellAccess(graph: ContentGraph): SpellAccess {
 		for (const bareClass of csv(spell.data.classes))
 			for (const cls of classesById.get(bareClass) ?? []) link(cls, spell, 'class-list');
 
-	// class-side: additive spell_lists join
+	// class-side: additive spell_lists join. An orphan join (unknown class_id or spell_id) resolves
+	// to [] → skipped here; the loader flags it as a content-health WARNING (likely a typo), so a
+	// dangling grant is harmless in the index but surfaced to the user.
 	for (const row of listRows) {
 		const cls = classesById.get(String(row.data.class_id)) ?? [];
 		const sp = spellsById.get(String(row.data.spell_id)) ?? [];

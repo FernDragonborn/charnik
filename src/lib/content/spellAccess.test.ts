@@ -80,4 +80,20 @@ describe('spell↔class access (union index)', () => {
 		// sorcerer is on fireball's list but has no class row → not linked
 		expect(byClass.sorcerer).toBeUndefined();
 	});
+
+	it('warns on an orphan spell_lists join (likely a typo)', async () => {
+		const s = await seed();
+		await s.write(
+			'hb/spell_lists_bad.csv',
+			[
+				'id,systems,source,class_id,spell_id',
+				'x,5.5e,Homebrew,warlock-typo,fireball', // unknown class
+				'y,5.5e,Homebrew,artificer,spell-typo' // unknown spell
+			].join('\n')
+		);
+		const g = await loadContent(s, ['a', 'hb', 'b']);
+		const warns = g.issues.filter((i) => i.level === 'warn').map((i) => i.message);
+		expect(warns.some((m) => /unknown class "warlock-typo"/.test(m))).toBe(true);
+		expect(warns.some((m) => /unknown spell "spell-typo"/.test(m))).toBe(true);
+	});
 });

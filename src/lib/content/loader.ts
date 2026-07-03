@@ -188,6 +188,36 @@ export async function loadContent(storage: Storage, roots: string[]): Promise<Co
 		pushMap(articles, `${r.type}:${r.id}`, r);
 	}
 
+	// validate additive spell_lists joins: an unknown class_id/spell_id is likely a typo → WARN
+	// (the join is harmless — it just resolves to nothing — but surfaced so the user can fix it).
+	const systemsById = (type: ContentType): Map<string, string[]> => {
+		const m = new Map<string, string[]>();
+		for (const r of byType.get(type) ?? []) m.set(r.id, [...(m.get(r.id) ?? []), ...r.systems]);
+		return m;
+	};
+	const classSystems = systemsById('class');
+	const spellSystems = systemsById('spell');
+	const joinResolves = (map: Map<string, string[]>, id: unknown, systems: string[]) =>
+		(map.get(String(id)) ?? []).some((s) => systems.includes(s));
+	for (const r of byType.get('spell_lists') ?? []) {
+		if (!joinResolves(classSystems, r.data.class_id, r.systems))
+			issues.push({
+				level: 'warn',
+				root: r.root,
+				file: r.file,
+				id: r.id,
+				message: `spell_lists: unknown class "${r.data.class_id}" (no class with that id in this edition)`
+			});
+		if (!joinResolves(spellSystems, r.data.spell_id, r.systems))
+			issues.push({
+				level: 'warn',
+				root: r.root,
+				file: r.file,
+				id: r.id,
+				message: `spell_lists: unknown spell "${r.data.spell_id}" (no spell with that id in this edition)`
+			});
+	}
+
 	return {
 		rows,
 		byType,
