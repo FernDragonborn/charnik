@@ -81,12 +81,12 @@ class BuildVM {
 	boostPicks = $state<Ability[]>([]);
 
 	skills = $state<string[]>([]);
-	/** What fills each ASI/feat slot, keyed by the class level that grants it: the `ASI` sentinel
-	 *  (an Ability Score Improvement), or a feat ref. Repeatable feats (Skilled, Magic Initiate…)
-	 *  and ASI may fill several slots; other feats only one. */
-	slotFeats = $state<Record<number, string>>({});
+	/** What fills each ASI/feat slot, keyed by `${classIndex}:${classLevel}` (per-class, so two
+	 *  classes granting an ASI at the same class level don't collide): the `ASI` sentinel or a feat
+	 *  ref. Repeatable feats (Skilled, Magic Initiate…) and ASI may fill several slots. */
+	slotFeats = $state<Record<string, string>>({});
 	/** Per-slot ASI allocation (only when that slot's choice is `ASI`): +2 to one, or +1 to two. */
-	slotAsi = $state<Record<number, { shape: '2' | '1-1'; picks: Ability[] }>>({});
+	slotAsi = $state<Record<string, { shape: '2' | '1-1'; picks: Ability[] }>>({});
 	/** Spell refs the character knows/prepares (leveled + cantrips), chosen from its class list. */
 	selectedSpells = $state<string[]>([]);
 
@@ -290,8 +290,7 @@ class BuildVM {
 		};
 		if (this.system === '5.5e' && this.backgroundBoostChoices.length)
 			add(allocateBackgroundBoost(this.boostShape, this.boostPicks, this.backgroundBoostChoices));
-		for (const lvl of this.featSlotLevels)
-			if (this.slotFeats[lvl] === ASI) add(this.asiBoostFor(lvl));
+		for (const s of this.featSlots) if (this.slotFeats[s.key] === ASI) add(this.asiBoostFor(s.key));
 		return out;
 	});
 	toggleBoostPick = (ab: Ability) => {
@@ -300,12 +299,18 @@ class BuildVM {
 		else if (this.boostPicks.length < cap) this.boostPicks = [...this.boostPicks, ab];
 	};
 
-	// --- feats: one ASI/feat slot per qualifying level (mirrors the mock's L-tag rows) -------
-	// slots are computed on TOTAL level via the primary class (multiclass ASI is per-class in
-	// strict RAW — a lenient approximation, adequate for v1).
-	featSlotLevels = $derived<number[]>(
-		this.classId ? asiFeatLevels(this.classId, this.totalLevel) : []
-	);
+	// --- feats: one ASI/feat slot per qualifying level, PER CLASS (RAW-correct for multiclass:
+	// each class grants its ASIs at its own class levels — Fighter +6/14, Rogue +10) ------------
+	featSlots = $derived.by<{ key: string; level: number; className: string }[]>(() => {
+		const out: { key: string; level: number; className: string }[] = [];
+		this.classes.forEach((c, i) => {
+			if (!c.classId) return;
+			const className = rowName(this.row(c.classId));
+			for (const level of asiFeatLevels(c.classId, c.level))
+				out.push({ key: `${i}:${level}`, level, className });
+		});
+		return out;
+	});
 	/** The background's granted origin feat (5.5e), resolved to a ref — auto, not a slot. */
 	originFeatRef = $derived.by<string | null>(() => {
 		const id = this.backgroundRow?.data.origin_feat;
@@ -329,29 +334,27 @@ class BuildVM {
 	/** Feat refs already spent on slots (repeatable ones may recur). */
 	usedFeatRefs = $derived<string[]>(Object.values(this.slotFeats));
 	/** A feat option is blocked for a slot if it's non-repeatable and already taken elsewhere. */
-	featOptionBlocked = (ref: string, atLevel: number): boolean =>
-		!this.isRepeatable(ref) &&
-		this.slotFeats[atLevel] !== ref &&
-		this.usedFeatRefs.includes(ref);
-	setSlotFeat = (level: number, ref: string) => {
+	featOptionBlocked = (ref: string, slotKey: string): boolean =>
+		!this.isRepeatable(ref) && this.slotFeats[slotKey] !== ref && this.usedFeatRefs.includes(ref);
+	setSlotFeat = (key: string, ref: string) => {
 		const next = { ...this.slotFeats };
-		if (ref) next[level] = ref;
-		else delete next[level];
+		if (ref) next[key] = ref;
+		else delete next[key];
 		this.slotFeats = next;
 		// initialise / clear this slot's ASI allocation as needed
-		if (ref === ASI && !this.slotAsi[level])
-			this.slotAsi = { ...this.slotAsi, [level]: { shape: '2', picks: [] } };
-		if (ref !== ASI && this.slotAsi[level]) {
+		if (ref === ASI && !this.slotAsi[key])
+			this.slotAsi = { ...this.slotAsi, [key]: { shape: '2', picks: [] } };
+		if (ref !== ASI && this.slotAsi[key]) {
 			const asi = { ...this.slotAsi };
-			delete asi[level];
+			delete asi[key];
 			this.slotAsi = asi;
 		}
 	};
-	filledSlots = $derived(this.featSlotLevels.filter((l) => this.slotFeats[l]).length);
+	filledSlots = $derived(this.featSlots.filter((s) => this.slotFeats[s.key]).length);
 
 	// --- per-slot ASI allocation (+2 to one ability, or +1 to two) --------------
-	asiBoostFor = (level: number): Partial<Record<Ability, number>> => {
-		const a = this.slotAsi[level];
+	asiBoostFor = (key: string): Partial<Record<Ability, number>> => {
+		const a = this.slotAsi[key];
 		if (!a) return {};
 		const out: Partial<Record<Ability, number>> = {};
 		if (a.shape === '2') {
@@ -361,23 +364,20 @@ class BuildVM {
 		}
 		return out;
 	};
-	setAsiShape = (level: number, shape: '2' | '1-1') => {
-		const cur = this.slotAsi[level] ?? { shape, picks: [] };
+	setAsiShape = (key: string, shape: '2' | '1-1') => {
+		const cur = this.slotAsi[key] ?? { shape, picks: [] };
 		const cap = shape === '2' ? 1 : 2;
-		this.slotAsi = {
-			...this.slotAsi,
-			[level]: { shape, picks: cur.picks.slice(0, cap) }
-		};
+		this.slotAsi = { ...this.slotAsi, [key]: { shape, picks: cur.picks.slice(0, cap) } };
 	};
-	toggleAsiPick = (level: number, ab: Ability) => {
-		const cur = this.slotAsi[level] ?? { shape: '2' as const, picks: [] as Ability[] };
+	toggleAsiPick = (key: string, ab: Ability) => {
+		const cur = this.slotAsi[key] ?? { shape: '2' as const, picks: [] as Ability[] };
 		const cap = cur.shape === '2' ? 1 : 2;
 		const picks = cur.picks.includes(ab)
 			? cur.picks.filter((a) => a !== ab)
 			: cur.picks.length < cap
 				? [...cur.picks, ab]
 				: cur.picks;
-		this.slotAsi = { ...this.slotAsi, [level]: { ...cur, picks } };
+		this.slotAsi = { ...this.slotAsi, [key]: { ...cur, picks } };
 	};
 
 	// --- assembled draft + live sheet ------------------------------------------
@@ -401,7 +401,7 @@ class BuildVM {
 			// its ability boost flows through abilityBoosts instead)
 			feats: [
 				...(this.originFeatRef ? [this.originFeatRef] : []),
-				...this.featSlotLevels.map((l) => this.slotFeats[l]).filter((r) => r && r !== ASI)
+				...this.featSlots.map((s) => this.slotFeats[s.key]).filter((r) => r && r !== ASI)
 			],
 			inventory: [],
 			// cantrips are always-prepared; leveled spells start prepared (tweak in the Spellbook)

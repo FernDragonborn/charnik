@@ -110,10 +110,7 @@
 					</div>
 				{/each}
 				{#if b.classes.length > 1}
-					<p class="sub note">
-						Total level <b class="gold">{b.totalLevel}</b> / 20 · spell slots are exact; feat/ASI
-						slot <i>timing</i> is by total level (per-class ASI timing simplified).
-					</p>
+					<p class="sub note">Total level <b class="gold">{b.totalLevel}</b> / 20</p>
 				{/if}
 			</div>
 
@@ -155,7 +152,7 @@
 
 			<!-- ability boosts & feats -->
 			<div class="card">
-				<h2>Ability boosts &amp; feats <span class="cnt">{b.filledSlots}/{b.featSlotLevels.length}</span></h2>
+				<h2>Ability boosts &amp; feats <span class="cnt">{b.filledSlots}/{b.featSlots.length}</span></h2>
 				{#if !b.classId}
 					<p class="sub">Pick a class to see its ASI / feat slots.</p>
 				{:else}
@@ -165,16 +162,17 @@
 							<span class="ft"><b>Origin feat</b> — {rowName(b.graph?.get(b.originFeatRef))} <span class="sub">(granted)</span></span>
 						</div>
 					{/if}
-					{#each b.featSlotLevels as lvl (lvl)}
-						{@const chosen = b.slotFeats[lvl] ?? ''}
-						{@const asi = b.slotAsi[lvl]}
+					{#each b.featSlots as slot (slot.key)}
+						{@const chosen = b.slotFeats[slot.key] ?? ''}
+						{@const asi = b.slotAsi[slot.key]}
+						{@const multi = b.classes.length > 1}
 						<div class="frow" class:done={!!chosen}>
-							<span class="lvtag">L{lvl}</span>
-							<select class="bare ftsel" value={chosen} onchange={(e) => b.setSlotFeat(lvl, e.currentTarget.value)}>
+							<span class="lvtag">{multi ? `${slot.className.slice(0, 3)} ` : ''}L{slot.level}</span>
+							<select class="bare ftsel" value={chosen} onchange={(e) => b.setSlotFeat(slot.key, e.currentTarget.value)}>
 								<option value="">— ASI or feat —</option>
 								<option value={ASI}>Ability Score Improvement (+2 or +1/+1)</option>
-								{#each b.featOptionsFor(lvl) as f (f.effectiveId)}
-									<option value={f.effectiveId} disabled={b.featOptionBlocked(f.effectiveId, lvl)}>
+								{#each b.featOptionsFor(slot.level) as f (f.effectiveId)}
+									<option value={f.effectiveId} disabled={b.featOptionBlocked(f.effectiveId, slot.key)}>
 										{rowName(f)}{b.isRepeatable(f.effectiveId) ? ' ↻' : ''}
 									</option>
 								{/each}
@@ -183,13 +181,13 @@
 						{#if chosen === ASI && asi}
 							<div class="asi">
 								<div class="seg2 small">
-									<button class:on={asi.shape === '2'} onclick={() => b.setAsiShape(lvl, '2')}>+2 one</button>
-									<button class:on={asi.shape === '1-1'} onclick={() => b.setAsiShape(lvl, '1-1')}>+1 / +1</button>
+									<button class:on={asi.shape === '2'} onclick={() => b.setAsiShape(slot.key, '2')}>+2 one</button>
+									<button class:on={asi.shape === '1-1'} onclick={() => b.setAsiShape(slot.key, '1-1')}>+1 / +1</button>
 								</div>
 								<div class="chips">
 									{#each ABILITIES as ab (ab)}
-										{@const amt = b.asiBoostFor(lvl)[ab as Ability]}
-										<button class="pchip" class:on={asi.picks.includes(ab as Ability)} onclick={() => b.toggleAsiPick(lvl, ab as Ability)}>
+										{@const amt = b.asiBoostFor(slot.key)[ab as Ability]}
+										<button class="pchip" class:on={asi.picks.includes(ab as Ability)} onclick={() => b.toggleAsiPick(slot.key, ab as Ability)}>
 											{ab.toUpperCase()}{#if amt}<span class="gold"> +{amt}</span>{/if}
 										</button>
 									{/each}
