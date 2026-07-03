@@ -158,17 +158,17 @@
 		padding: 2px var(--space-2);
 	}
 	main {
-		padding: var(--space-5);
-		max-width: 1040px;
-		margin: 0 auto;
 		outline: none;
-		/* main is the scroll region; body fills the viewport and never scrolls itself,
-		   so full-height pages (compendium) can size to the available space with no
-		   stray body scrollbar */
+		/* main is the scroll region; body fills the viewport and never scrolls itself, so
+		   full-height pages (compendium) size to the available space with no stray body
+		   scrollbar. main spans the FULL width (scrollbar at the viewport edge — no dead side
+		   zones); the content is centred to 1040px via auto inline padding, not a max-width on
+		   the scroll container. */
 		flex: 1;
 		min-height: 0;
-		width: 100%;
 		overflow: auto;
+		padding-block: var(--space-5);
+		padding-inline: max(var(--space-5), calc((100% - 1040px) / 2));
 	}
 	:global(body) {
 		height: 100dvh;
