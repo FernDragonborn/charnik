@@ -716,6 +716,51 @@ Config files: `charnik.config.json` (dataDir, roots, toggles, rule-options, sett
 
 ---
 
+## Backlog (post-spellcasting, prioritized) — carve down gradually
+
+Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority within each.
+
+**Builder / character:**
+- [ ] **Lineages & subraces** — new `species_option` type (linked `species_id`, `kind:
+  subrace|lineage|legacy|ancestry`, effects) covering 2014 subraces + 2024 in-species choices;
+  converter parses each species' choice trait → `option_label` (per-species/edition label) +
+  option rows; builder shows a 2nd picker; `build.speciesOption` ref gathered in derive.
+- [ ] **Half-Elf +1/+1 choice** (5e) — the choosable part of its ASI (fixed +2 CHA already lands).
+- [ ] **Expertise** — core math is done + tested (`skillCheck({expertise})`); wire it:
+  `build.expertise[]`, pass through derive, a UI toggle (skill chip 3-state off/prof/expertise).
+- [ ] **Languages** — actually chosen/stored (schema has no languages field yet; display-only now).
+- [ ] **Level-up flow** — incremental one-level-at-a-time of an existing character (only
+  create-at-level exists).
+- [ ] **Inventory/equipment at build** (empty today).
+
+**Effects engine (finish the vocab, add authoring):**
+- [ ] **Custom-modifier UI** — a structured "add modifier" form (target · +/− · amount) → emits a
+  `flat-bonus` token, so a GM "+1 AC" is 3 clicks. Engine already applies flat-bonus; the combat
+  custom-effect UI only takes a text label today.
+- [ ] **Mechanically apply the rest of the vocab**: `advantage` → rolls; `grant-proficiency` →
+  skills; `resist-immune` → damage; dice bonus (`+1d4` Bless) → rolled not just noted;
+  `apply-condition`. (flat-bonus / set-override already applied.)
+- [ ] **Feat stat/skill bonuses** — inert until feats' effect tokens are encoded + half-feat
+  ability-choice UI (do with the above).
+- [ ] **Plugin sandbox** (QuickJS-WASM) for exotic homebrew logic — far future (decided, not built).
+
+**Spellcasting follow-ups:**
+- [ ] **Resource subsystem** — `grant-resource:<id>:<max>:<recharge>` + `grant-slot:<level>` vocab,
+  resource definitions, Mystic Arcanum, item "N/day", combat resource tracker (L12/L14).
+- [ ] **2014 casting data** — shipped 2014 class-feature prose is truncated; backfill from SRD 5.1,
+  then emit 2014 `spell_slots`/`class_casting` (2024 done).
+- [ ] **Combat UI**: multiclass shows only the first class's DC (data has per-class); pact pool as a
+  distinct short-rest pip section; spell picker preview (EntryList+WikiDetail on pick).
+
+**Platform / content:**
+- [ ] **Tauri fs Storage** impl + platform factory (task #6) — desktop file-on-disk persistence.
+- [ ] **Content-type identification** — explicit `#charnik-type:` declaration + UI type-assign for
+  freely-named user files (loader is filename-only today).
+- [ ] **Homebrew subclass/content from the UI** (SRD ships one subclass per class).
+- [ ] Dependabot: 3 advisories (2 moderate, 1 low); Pages deploy recovery.
+
+---
+
 ## Implementation roadmap (phased)
 1. **Scaffold** — SvelteKit (**`adapter-static` SPA**) + **pnpm** + lint; test tooling
    (see TESTING.md); **`Storage` interface + node/in-memory impl**; `schemaVersion`
