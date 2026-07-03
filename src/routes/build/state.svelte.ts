@@ -13,7 +13,7 @@ import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
 import { characterSchema, ABILITIES, type Character } from '$lib/character/schema';
 import { CHARACTER_SCHEMA_VERSION } from '$lib/schema/version';
-import { saveCharacterToStore } from '$lib/character/store.svelte';
+import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
 import { app, type SystemId } from '$lib/stores/app.svelte';
 import type { ContentGraph, LoadedRow } from '$lib/content/loader';
 import type { Ability } from '$lib/rules/core';
@@ -471,6 +471,8 @@ class BuildVM {
 			const max = this.sheet?.maxHp.value ?? 0;
 			character.play.hp.current = max;
 			await saveCharacterToStore(character);
+			// make the freshly-created character the active one so Combat opens IT, not the demo
+			await openCharacter(character.id);
 			return character.id;
 		} finally {
 			this.saving = false;
