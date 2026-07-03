@@ -12,7 +12,7 @@ import { demoCharacter } from '$lib/demo/sheet';
 import { characters } from '$lib/character/store.svelte';
 import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
-import { fullCasterSlots, passiveScore } from '$lib/rules/core';
+import { passiveScore } from '$lib/rules/core';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import {
@@ -350,7 +350,11 @@ class CombatVM {
 		if (!this.character || !this.graph) return [];
 		const character = this.character;
 		const graph = this.graph;
-		const slots = fullCasterSlots(this.sheet?.level ?? 1);
+		// slot pips come from the derived castable pools (data-driven, per spell level); pact is a
+		// separate short-rest pool keyed "pact" in play-state.
+		const slotMax = new Map<number, number>();
+		for (const p of this.sheet?.spellcasting.pools ?? [])
+			if (!p.forcedUpcast && p.spellLevel) slotMax.set(p.spellLevel, p.max);
 		const all = character.build.spells
 			.map((sp) => ({
 				sp,
@@ -376,7 +380,7 @@ class CombatVM {
 						lvl === 0
 							? null
 							: {
-									full: slots[lvl - 1] ?? 0,
+									full: slotMax.get(lvl) ?? 0,
 									spent: Number(character.play.spellSlotsSpent[String(lvl)] ?? 0)
 								},
 					rows: byLevel.get(lvl)!
@@ -405,7 +409,8 @@ class CombatVM {
 		return groups;
 	});
 	preparedCount = $derived(this.character?.build.spells.filter((s) => s.prepared).length ?? 0);
-	preparedCap = $derived((this.sheet?.abilities.int.mod ?? 0) + (this.sheet?.level ?? 0));
+	// prepared cap from the primary caster's derived profile (class table / formula), not hardcoded
+	preparedCap = $derived(this.sheet?.spellcasting.classes[0]?.preparedCap ?? 0);
 
 	hpBar = $derived.by(() => {
 		if (!this.character || !this.sheet) return { cur: 0, tmp: 0 };
