@@ -189,12 +189,19 @@ class CombatVM {
 		p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, Math.round(this.hpAmount)));
 	};
 
-	// --- Action economy: base 1 pip per slot (features grant extras later); move tracks feet ---
-	readonly slotMax: Record<'action' | 'bonus' | 'reaction', number> = {
-		action: 1,
-		bonus: 1,
-		reaction: 1
-	};
+	// --- Action economy: base 1 pip per slot + extras from effects; move tracks feet -------------
+	// A feature/spell grants an extra action/bonus/reaction via a `flat-bonus:<slot>+N` token
+	// (Action Surge → +1 action, Haste → +1 action), rendered as more pips — data-driven.
+	slotMax = $derived.by<Record<'action' | 'bonus' | 'reaction', number>>(() => {
+		const max = { action: 1, bonus: 1, reaction: 1 };
+		if (this.character?.play.autoCalc)
+			for (const eff of this.character.play.effects)
+				for (const t of eff.effects) {
+					const m = /^flat-bonus:(action|bonus|reaction)\+(\d+)$/.exec(t.trim());
+					if (m) max[m[1] as keyof typeof max] += Number(m[2]);
+				}
+		return max;
+	});
 	get moveMax(): number {
 		return this.sheet?.speed.value ?? 0;
 	}
