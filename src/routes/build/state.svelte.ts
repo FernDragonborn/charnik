@@ -142,6 +142,36 @@ class BuildVM {
 	private editPlay: Character['play'] | null = null;
 	private editUi: Character['ui'] | null = null;
 
+	/** Reset the draft to a blank new-character state (the BuildVM is a shared singleton, so opening
+	 *  "New character" after a level-up must clear the prior edit/hydrated state). Keeps the graph. */
+	reset = () => {
+		this.editId = null;
+		this.editPlay = null;
+		this.editUi = null;
+		this.hydratedBoosts = {};
+		this.hydratedFeats = [];
+		this.name = '';
+		this.system = app.activeSystem;
+		this.strict = true;
+		this.speciesId = null;
+		this.speciesOptionId = null;
+		this.speciesBoostPicks = [];
+		this.backgroundId = null;
+		this.classes = [{ classId: null, subclassId: null, level: 1 }];
+		this.method = 'point-buy';
+		this.abilities = baseAbilities();
+		this.arrayPick = {};
+		this.boostShape = '2-1';
+		this.boostPicks = [];
+		this.skills = [];
+		this.expertise = [];
+		this.selectedLanguages = [];
+		this.inventory = [];
+		this.slotFeats = {};
+		this.slotAsi = {};
+		this.selectedSpells = [];
+	};
+
 	/** Load an existing character into the draft (for level-up / editing). Straightforward fields map
 	 *  directly; abilities become manual (base scores) with boosts carried in `hydratedBoosts`, and
 	 *  the existing feats carry in `hydratedFeats`. */
@@ -151,7 +181,8 @@ class BuildVM {
 		this.editUi = char.ui;
 		this.name = char.build.name;
 		this.system = char.system;
-		this.strict = false; // editing an existing build: don't re-block on prior choices
+		// keep the Strict default: editing stays rules-checked (and guides the new level's picks);
+		// Free is one click away if the prior build doesn't satisfy Strict.
 		this.speciesId = char.build.species ?? null;
 		this.speciesOptionId = char.build.speciesOption ?? null;
 		this.backgroundId = char.build.background ?? null;

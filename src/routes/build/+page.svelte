@@ -5,7 +5,7 @@
 	// the character store. Rules stay lenient (Free by default); only a name is required to
 	// create. Single-class v1 (multiclass deferred).
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
 	import { build, rowName, ASI } from './state.svelte';
@@ -15,14 +15,16 @@
 	import type { Ability } from '$lib/rules/core';
 	import type { StatMethod } from '$lib/build/rules';
 
-	onMount(async () => {
-		await build.load();
-		// ?edit=<slug> (or ?levelup) opens the builder hydrated from an existing character
+	onMount(build.load);
+
+	// Runs on first load AND every navigation (incl. a query-only change on this same route, which
+	// doesn't remount): ?edit/?levelup=<slug> hydrates from that character; no param → a fresh draft
+	// (so "New character" after a level-up doesn't reopen the last edit).
+	afterNavigate(async () => {
 		const slug = page.url.searchParams.get('edit') || page.url.searchParams.get('levelup');
-		if (slug) {
-			const char = await loadCharacterBySlug(slug);
-			if (char) build.hydrate(char);
-		}
+		const char = slug ? await loadCharacterBySlug(slug) : null;
+		if (char) build.hydrate(char);
+		else build.reset();
 	});
 
 	const b = build;
