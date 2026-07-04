@@ -791,11 +791,11 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   Pages deploy recovery still open.
 
 **Code quality:**
-- [ ] **Friendly source labels** — "SRD 5.1" / "SRD 5.2.1" are too technical for the UI; show
-  "D&D 5e" / "D&D 5.5e" (or "5" / "5.5") to users **everywhere a source/edition is displayed**
-  (compendium eyebrow + source line, filters, article "Available to", build, etc.). Keep the precise
-  "SRD 5.1/5.2.1" as the underlying `source` tag (CC-BY attribution + `type:source:id` identity) —
-  this is a **display map** (source → label), not a data rename, so licensing/attribution stays exact.
+- [x] **Friendly source labels** — DONE. `sourceLabel()` maps "SRD 5.1"→"D&D 5e",
+  "SRD 5.2.1"→"D&D 5.5e" (homebrew/third-party pass through), applied to the compendium article
+  source line, the source filter chips, and the "By source" grouping. The raw `source` tag stays
+  exact (CC-BY attribution + `type:source:id` identity) — display map only. (Any other future
+  source-display site should route through the same helper.)
 - [ ] **CSS class-naming rename pass** — the combat sheet has cryptic classes (`.ae`, `.aedot`,
   `.mcell`, `.sk`, `.atk`, `.an/.ah/.ad/.am`, `.hpadj/.hpbtn`, `.combatsw`, …) that read poorly and
   invite collisions (already hit `.combat`, `.modrow`). Rename to verbose, self-evident, kebab-case

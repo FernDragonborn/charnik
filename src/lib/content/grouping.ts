@@ -6,6 +6,7 @@
  */
 import type { LoadedRow } from './loader';
 import type { ContentType } from './schemas';
+import { sourceLabel } from './detail';
 
 export interface Grouping {
 	key: string;
@@ -107,6 +108,7 @@ export function groupRows(
 		if (type === 'spell' && key === 'level')
 			return k === '0' ? 'Cantrips' : `${ordinal(Number(k))} level`;
 		if (type === 'monster' && key === 'cr') return `CR ${k}`;
+		if (key === 'source') return sourceLabel(k);
 		return cap(k);
 	};
 	return keys.map((k) => ({ label: label(k), rows: buckets.get(k)! }));

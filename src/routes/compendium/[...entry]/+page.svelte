@@ -8,7 +8,13 @@
 	import { getContentGraph } from '$lib/content/provider';
 	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
 	import { isBrowsable, type ContentType } from '$lib/content/schemas';
-	import { buildDetail, entryMeta, editionLabel, type Entry } from '$lib/content/detail';
+	import {
+		buildDetail,
+		entryMeta,
+		editionLabel,
+		sourceLabel,
+		type Entry
+	} from '$lib/content/detail';
 	import { getSpellAccess } from '$lib/content/spellAccess';
 	import { groupingsFor, facetFor, groupRows, distinctValues } from '$lib/content/grouping';
 	import EntryList from '$lib/components/EntryList.svelte';
@@ -197,7 +203,7 @@
 								{#each sources as s (s)}
 									<Chip
 										active={sourceFilter.has(s)}
-										onclick={() => (sourceFilter = toggle(sourceFilter, s))}>{s}</Chip
+										onclick={() => (sourceFilter = toggle(sourceFilter, s))}>{sourceLabel(s)}</Chip
 									>
 								{/each}
 							</div>

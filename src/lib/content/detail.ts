@@ -171,6 +171,17 @@ export interface Entry<T> {
 	row: T;
 }
 
+/** User-facing label for a source tag — the raw "SRD 5.1 / 5.2.1" are too technical, show the
+ *  game edition. The underlying `source` value stays exact (CC-BY attribution + identity); this is
+ *  a DISPLAY map only. Unknown sources (homebrew, third-party) pass through unchanged. */
+const SOURCE_LABELS: Record<string, string> = {
+	'SRD 5.1': 'D&D 5e',
+	'SRD 5.2.1': 'D&D 5.5e'
+};
+export function sourceLabel(source: string): string {
+	return SOURCE_LABELS[source] ?? source;
+}
+
 /** Format a row's `systems` array as a short edition label. */
 export function editionLabel(systems: unknown): string {
 	const arr = Array.isArray(systems) ? systems.map(String) : systems ? [String(systems)] : [];
@@ -253,7 +264,7 @@ export function buildDetail(
 			meta: [],
 			bodyHtml: String(d.text_en ?? ''),
 			higherLevel: '',
-			source: `Source: ${row.source}`,
+			source: `Source: ${sourceLabel(row.source)}`,
 			monster: buildMonster(row)
 		};
 	}
@@ -270,7 +281,7 @@ export function buildDetail(
 			meta: [],
 			bodyHtml: String(d.text_en ?? ''),
 			higherLevel: String(d.higher_level ?? ''),
-			source: `Source: ${row.source}`,
+			source: `Source: ${sourceLabel(row.source)}`,
 			spell: buildSpell(row, availableTo)
 		};
 	}
@@ -295,7 +306,7 @@ export function buildDetail(
 		meta,
 		bodyHtml: String(d.text_en ?? ''),
 		higherLevel: String(d.higher_level ?? ''),
-		source: `Source: ${row.source}`
+		source: `Source: ${sourceLabel(row.source)}`
 	};
 }
 
