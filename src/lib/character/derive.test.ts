@@ -166,6 +166,22 @@ describe('deriveSheet aggregator', () => {
 		expect(s.defenses.vulnerable).toEqual([]);
 	});
 
+	it('collects trackable resources from grant-resource effects', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 'r',
+				label: 'Class features',
+				effects: ['grant-resource:rage:3:long', 'grant-resource:ki:5:short'],
+				positive: true
+			}
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		const byId = Object.fromEntries(s.resources.map((r) => [r.id, r]));
+		expect(byId.rage).toMatchObject({ name: 'Rage', max: 3, recharge: 'long' });
+		expect(byId.ki).toMatchObject({ name: 'Ki', max: 5, recharge: 'short' });
+	});
+
 	it('auto-calc off drops the effect layers (base values only)', () => {
 		const c = wizard();
 		c.play.autoCalc = false;

@@ -63,6 +63,12 @@ export function demoCharacter(): Character {
 			positive: false,
 			durationRounds: 10,
 			startedRound: 0
+		},
+		{
+			iid: 'arcane-recovery',
+			label: 'Arcane Recovery',
+			effects: ['grant-resource:arcane-recovery:1:long'],
+			positive: true
 		}
 	];
 	return characterSchema.parse(c);

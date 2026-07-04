@@ -27,7 +27,12 @@ import {
 	carryingCapacity,
 	type Ability
 } from '../rules/core';
-import { applyEffects, type ActiveEffect } from '../effects/index';
+import {
+	applyEffects,
+	collectResources,
+	type ActiveEffect,
+	type ResourceDef
+} from '../effects/index';
 import { deriveSpellcasting, type Spellcasting } from './spellcasting';
 import type { Computed, System } from '../rules/pipeline';
 
@@ -78,6 +83,8 @@ export interface CharacterSheet {
 	carryingCapacity: Computed;
 	/** Damage resistances / immunities / vulnerabilities from active effects (by type). */
 	defenses: { resist: string[]; immune: string[]; vulnerable: string[] };
+	/** Trackable resource pools (rage, ki, item N/day…) from `grant-resource` effects. */
+	resources: ResourceDef[];
 	/** Per-class casting profiles + shared/pact slot pools (empty classes = non-caster). */
 	spellcasting: Spellcasting;
 	/** Content refs the character points at that the graph couldn't resolve. */
@@ -333,6 +340,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		},
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
 		defenses,
+		resources: character.play.autoCalc ? collectResources(active) : [],
 		spellcasting,
 		missing
 	};

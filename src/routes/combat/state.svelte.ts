@@ -430,6 +430,38 @@ class CombatVM {
 		const newSpent = i < remaining ? full - i : full - i - 1;
 		this.character.play.spellSlotsSpent[key] = Math.max(0, Math.min(full, newSpent));
 	};
+
+	// --- resource tracker (rage, ki, item N/day…) — same click-to-set pip model as slots --------
+	resourceSpent = (id: string): number => this.character?.play.resourcesSpent[id] ?? 0;
+	resourceClick = (id: string, max: number, i: number) => {
+		if (!this.character) return;
+		const remaining = max - this.resourceSpent(id);
+		const newSpent = i < remaining ? max - i : max - i - 1;
+		this.character.play.resourcesSpent = {
+			...this.character.play.resourcesSpent,
+			[id]: Math.max(0, Math.min(max, newSpent))
+		};
+	};
+	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges
+	 *  both), reset spell slots (long = all, short = pact only), and restore HP on a long rest. */
+	rest = (kind: 'short' | 'long') => {
+		const c = this.character;
+		if (!c || !this.sheet) return;
+		const spent = { ...c.play.resourcesSpent };
+		for (const r of this.sheet.resources)
+			if (r.recharge === 'short' || (kind === 'long' && r.recharge === 'long')) spent[r.id] = 0;
+		c.play.resourcesSpent = spent;
+		if (kind === 'long') {
+			c.play.spellSlotsSpent = {};
+			c.play.hp = { ...c.play.hp, current: c.play.hp.max ?? this.sheet.maxHp.value, temp: 0 };
+		} else {
+			const slots = { ...c.play.spellSlotsSpent };
+			delete slots.pact; // warlock pact slots return on a short rest
+			c.play.spellSlotsSpent = slots;
+		}
+		void saveCharacterToStore(c);
+		toast(`${kind === 'long' ? 'Long' : 'Short'} rest — resources restored`);
+	};
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
 	togglePrepared = (r: SpRow) => {
 		if (!this.character) return;

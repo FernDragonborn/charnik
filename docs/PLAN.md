@@ -762,8 +762,13 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - [ ] **Plugin sandbox** (QuickJS-WASM) for exotic homebrew logic — far future (decided, not built).
 
 **Spellcasting follow-ups:**
-- [ ] **Resource subsystem** — `grant-resource:<id>:<max>:<recharge>` + `grant-slot:<level>` vocab,
-  resource definitions, Mystic Arcanum, item "N/day", combat resource tracker (L12/L14).
+- [~] **Resource subsystem** — engine + tracker DONE. `grant-resource:<id>:<max>:<recharge>` parsed
+  into resource pools (`collectResources`, data-driven / class-agnostic — rage, ki, sorcery points,
+  item N/day are one shape); `sheet.resources`; combat "Resources" strip with click-to-spend pips +
+  Short/Long **rest** buttons (recharge by type; long resets slots+HP, short returns pact slots).
+  Remaining: **encode class resources from SRD tables** (converter — rage/ki/superiority counts),
+  **`grant-slot:<level>`** (Mystic Arcanum extra slot into the pools), and **Action-Surge/Haste
+  extra action pips** (feed the action-economy `slotMax` from effects).
 - [ ] **2014 casting data** — shipped 2014 class-feature prose is truncated; backfill from SRD 5.1,
   then emit 2014 `spell_slots`/`class_casting` (2024 done).
 - [ ] **Combat UI**: multiclass shows only the first class's DC (data has per-class); pact pool as a

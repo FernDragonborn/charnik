@@ -129,6 +129,46 @@ export function applyEffects(targetKey: string, base: Computed, effects: ActiveE
 	return computed(contribs, undefined, notes.length ? notes : undefined);
 }
 
+/** A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…). */
+export interface ResourceDef {
+	id: string;
+	name: string; // display label (title-cased from id)
+	max: number;
+	recharge: 'short' | 'long' | 'other';
+	source: string; // the granting effect/feature
+}
+
+const titleCaseId = (s: string) => s.replace(/[-_]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+
+/**
+ * Collect resource pools from `grant-resource:<id>:<max>:<recharge>` tokens. Data-driven and
+ * class-agnostic — a Barbarian's rage, a Monk's ki, an item's "3/day" are all the same shape. If
+ * the same id is granted more than once (a scaling feature re-granted at a higher tier), the largest
+ * max wins.
+ */
+export function collectResources(effects: ActiveEffect[]): ResourceDef[] {
+	const out = new Map<string, ResourceDef>();
+	for (const eff of effects) {
+		for (const token of eff.tokens) {
+			const m = /^grant-resource:([a-z0-9][a-z0-9-]*):(\d+):(short|long|other)$/i.exec(
+				token.trim()
+			);
+			if (!m) continue;
+			const id = m[1].toLowerCase();
+			const def: ResourceDef = {
+				id,
+				name: titleCaseId(id),
+				max: Number(m[2]),
+				recharge: m[3].toLowerCase() as ResourceDef['recharge'],
+				source: eff.source
+			};
+			const prev = out.get(id);
+			if (!prev || def.max > prev.max) out.set(id, def);
+		}
+	}
+	return [...out.values()];
+}
+
 /** Collect the non-numeric effect facts across all active effects (for panels/flags). */
 export function collectFlags(effects: ActiveEffect[]): EffectFlags {
 	const flags: EffectFlags = {

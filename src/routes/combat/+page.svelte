@@ -149,6 +149,12 @@
 			>✦ Inspiration <span class="sw">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
 		>
 		<span class="spacer"></span>
+		<button class="toggle rest" onclick={() => combat.rest('short')} title="Short rest"
+			>☾ Short</button
+		>
+		<button class="toggle rest" onclick={() => combat.rest('long')} title="Long rest"
+			>🌙 Long</button
+		>
 		<button
 			class="toggle auto"
 			class:on={c.play.autoCalc}
@@ -192,6 +198,30 @@
 			>
 			<span class="spacer"></span>
 			<button type="button" class="nextturn" onclick={combat.nextTurn}>Next turn ▸</button>
+		</section>
+	{/if}
+
+	{#if s.resources.length}
+		<section class="resbar">
+			<span class="lbl">Resources</span>
+			{#each s.resources as r (r.id)}
+				{@const spent = combat.resourceSpent(r.id)}
+				<span class="res" title="{r.name} · recharges on {r.recharge} rest ({r.source})">
+					{r.name}
+					<span class="respips">
+						{#each range(r.max) as i (i)}
+							<button
+								type="button"
+								class="respip"
+								class:used={i < spent}
+								onclick={() => combat.resourceClick(r.id, r.max, i)}
+								aria-label="{r.name} {i + 1}"
+							></button>
+						{/each}
+					</span>
+					<small>{r.max - spent}/{r.max}</small>
+				</span>
+			{/each}
 		</section>
 	{/if}
 
@@ -657,7 +687,8 @@
 		min-width: 8px;
 	}
 
-	.turnbar {
+	.turnbar,
+	.resbar {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -667,6 +698,42 @@
 		border-radius: 12px;
 		padding: 9px 12px;
 		margin-bottom: 12px;
+	}
+	.resbar .res {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 12px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-full);
+		padding: 5px 11px;
+	}
+	.resbar .res small {
+		font-family: var(--font-mono);
+		color: var(--color-text-muted);
+	}
+	.respips {
+		display: inline-flex;
+		gap: 4px;
+	}
+	.respip {
+		width: 12px;
+		height: 12px;
+		padding: 0;
+		border: 1px solid var(--color-resource);
+		border-radius: 50%;
+		background: var(--color-resource);
+		cursor: pointer;
+	}
+	.respip.used {
+		background: transparent;
+		border-color: var(--color-border-strong);
+	}
+	.toggle.rest {
+		font-size: 12px;
 	}
 	.turnbar .lbl {
 		font-family: var(--font-mono);
