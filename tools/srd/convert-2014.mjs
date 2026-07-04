@@ -437,6 +437,67 @@ function convertSpecies() {
 	return rows.length;
 }
 
+// --- languages (Standard + Exotic tables in the SRD appendix) ----------------
+function convertLanguages() {
+	const txt = src(`${SRC}.txt`);
+	const parseTable = (heading, category) => {
+		// anchor on the heading line immediately followed by the "Language …" column header, so the
+		// earlier prose mention ("from the Standard Languages table") isn't matched
+		const m = new RegExp(heading.replace(/ /g, '\\s+') + '\\s*\\n\\s*Language\\b').exec(txt);
+		if (!m) return [];
+		// the block runs from the heading to the next blank line; drop the heading + column header
+		const block = txt
+			.slice(m.index)
+			.split(/\n\s*\n/)[0]
+			.split('\n')
+			.slice(2);
+		return block
+			.filter((l) => l.trim())
+			.map((l) => {
+				const cells = l.trim().split(/\s{2,}/); // fixed-width columns → 2+ spaces separate
+				const name = cells[0].trim();
+				const speakers = (cells.slice(1, -1).join(' ') || '').replace(/\s+/g, ' ').trim();
+				const script = (cells[cells.length - 1] || '').trim();
+				return {
+					id: slug(name),
+					systems: '5e',
+					source: 'SRD 5.1',
+					name_en: name,
+					name_uk: '',
+					text_en: `Typical speakers: ${speakers || '—'}. Script: ${script === '-' ? 'none' : script || '—'}.`,
+					text_uk: '',
+					effects: '',
+					category,
+					speakers,
+					script: script === '-' ? '' : script
+				};
+			});
+	};
+	const rows = [
+		...parseTable('Standard Languages', 'standard'),
+		...parseTable('Exotic Languages', 'exotic')
+	];
+	assertCount('languages', rows.length, 16);
+	writeCsv(
+		out('languages_srd.csv'),
+		[
+			'id',
+			'systems',
+			'source',
+			'name_en',
+			'name_uk',
+			'text_en',
+			'text_uk',
+			'effects',
+			'category',
+			'speakers',
+			'script'
+		],
+		rows
+	);
+	return rows.length;
+}
+
 // --- species options (2014 subraces) — one per race in SRD 5.1 ---------------
 // SRD 5.1 ships exactly one subrace per subrace-having race (Hill Dwarf / High Elf / Lightfoot /
 // Rock Gnome). Each is an <h4> block after its parent race's base traits; its first "Ability Score
@@ -1079,10 +1140,11 @@ const nMonsters = convertMonsters();
 const nCond = convertConditions();
 const nSpec = convertSpecies();
 const nSpecOpt = convertSpeciesOptions();
+const nLang = convertLanguages();
 const nBg = convertBackgrounds();
 const nFeat = convertFeats();
 const nFeatures = convertClasses();
 const nItems = convertItems();
 console.log(
-	`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nSpecOpt} subraces, ${nBg} backgrounds, ${nFeat} feats, 12 classes, ${nFeatures} class features, ${nItems} items`
+	`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nSpecOpt} subraces, ${nLang} languages, ${nBg} backgrounds, ${nFeat} feats, 12 classes, ${nFeatures} class features, ${nItems} items`
 );

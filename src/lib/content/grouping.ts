@@ -30,7 +30,8 @@ const GROUPINGS: Partial<Record<ContentType, Grouping[]>> = {
 	feat: [{ key: 'category', label: 'Category' }],
 	background: [{ key: 'source', label: 'Source' }],
 	species: [{ key: 'source', label: 'Source' }],
-	species_option: [{ key: 'species_id', label: 'Species' }]
+	species_option: [{ key: 'species_id', label: 'Species' }],
+	language: [{ key: 'category', label: 'Category' }]
 };
 
 /** The primary filter facet for a type (Source is always offered on top of this). */

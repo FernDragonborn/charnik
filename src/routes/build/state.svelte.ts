@@ -85,6 +85,13 @@ class BuildVM {
 	skills = $state<string[]>([]);
 	/** Skill ids with expertise (×2 proficiency). Must be a proficient skill. */
 	expertise = $state<string[]>([]);
+	/** Known languages, as `language:source:id` refs (lenient — pick any). */
+	selectedLanguages = $state<string[]>([]);
+	toggleLanguage = (ref: string) => {
+		this.selectedLanguages = this.selectedLanguages.includes(ref)
+			? this.selectedLanguages.filter((x) => x !== ref)
+			: [...this.selectedLanguages, ref];
+	};
 	/** What fills each ASI/feat slot, keyed by `${classIndex}:${classLevel}` (per-class, so two
 	 *  classes granting an ASI at the same class level don't collide): the `ASI` sentinel or a feat
 	 *  ref. Repeatable feats (Skilled, Magic Initiate…) and ASI may fill several slots. */
@@ -112,6 +119,7 @@ class BuildVM {
 	backgroundList = $derived(this.list('background'));
 	classList = $derived(this.list('class'));
 	featList = $derived(this.list('feat'));
+	languageList = $derived(this.list('language'));
 
 	private row(id: string | null): LoadedRow | undefined {
 		return id && this.graph ? this.graph.get(id) : undefined;
@@ -479,6 +487,7 @@ class BuildVM {
 				...(this.originFeatRef ? [this.originFeatRef] : []),
 				...this.featSlots.map((s) => this.slotFeats[s.key]).filter((r) => r && r !== ASI)
 			],
+			languages: [...this.selectedLanguages],
 			inventory: [],
 			// cantrips are always-prepared; leveled spells start prepared (tweak in the Spellbook)
 			spells: this.selectedSpells.map((ref) => {

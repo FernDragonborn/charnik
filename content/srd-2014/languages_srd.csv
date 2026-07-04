@@ -1,0 +1,17 @@
+id,systems,source,name_en,name_uk,text_en,text_uk,effects,category,speakers,script
+common,5e,SRD 5.1,Common,,Typical speakers: Humans. Script: Common.,,,standard,Humans,Common
+dwarvish,5e,SRD 5.1,Dwarvish,,Typical speakers: Dwarves. Script: Dwarvish.,,,standard,Dwarves,Dwarvish
+elvish,5e,SRD 5.1,Elvish,,Typical speakers: Elves. Script: Elvish.,,,standard,Elves,Elvish
+giant,5e,SRD 5.1,Giant,,"Typical speakers: Ogres, giants. Script: Dwarvish.",,,standard,"Ogres, giants",Dwarvish
+gnomish,5e,SRD 5.1,Gnomish,,Typical speakers: Gnomes. Script: Dwarvish.,,,standard,Gnomes,Dwarvish
+goblin,5e,SRD 5.1,Goblin,,Typical speakers: Goblinoids. Script: Dwarvish.,,,standard,Goblinoids,Dwarvish
+halfling,5e,SRD 5.1,Halfling,,Typical speakers: Halflings. Script: Common.,,,standard,Halflings,Common
+orc,5e,SRD 5.1,Orc,,Typical speakers: Orcs. Script: Dwarvish.,,,standard,Orcs,Dwarvish
+abyssal,5e,SRD 5.1,Abyssal,,Typical speakers: Demons. Script: Infernal.,,,exotic,Demons,Infernal
+celestial,5e,SRD 5.1,Celestial,,Typical speakers: Celestials. Script: Celestial.,,,exotic,Celestials,Celestial
+draconic,5e,SRD 5.1,Draconic,,"Typical speakers: Dragons, dragonborn. Script: Draconic.",,,exotic,"Dragons, dragonborn",Draconic
+deep-speech,5e,SRD 5.1,Deep Speech,,"Typical speakers: Aboleths, cloakers. Script: none.",,,exotic,"Aboleths, cloakers",
+infernal,5e,SRD 5.1,Infernal,,Typical speakers: Devils. Script: Infernal.,,,exotic,Devils,Infernal
+primordial,5e,SRD 5.1,Primordial,,Typical speakers: Elementals. Script: Dwarvish.,,,exotic,Elementals,Dwarvish
+sylvan,5e,SRD 5.1,Sylvan,,Typical speakers: Fey creatures. Script: Elvish.,,,exotic,Fey creatures,Elvish
+undercommon,5e,SRD 5.1,Undercommon,,Typical speakers: Underworld traders. Script: Elvish.,,,exotic,Underworld traders,Elvish

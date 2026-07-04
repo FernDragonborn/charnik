@@ -735,7 +735,10 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - [x] **Expertise** — DONE. `build.expertise[]`, derive exposes a `prof` **enum**
   (`none|half|proficient|expertise`, not two booleans), builder ×2 toggle on proficient skills,
   combat shows a ringed dot. (Strict cap by class-feature count still TODO.)
-- [ ] **Languages** — actually chosen/stored (schema has no languages field yet; display-only now).
+- [x] **Languages** — DONE. New `language` content type (16 SRD Standard+Exotic, converted from the
+  appendix tables) + `build.languages` ref array; builder shows a language chip picker (lenient —
+  pick any), stored on the character. (Auto-granting fixed languages from species/background text is
+  a later refinement.)
 - [ ] **Level-up flow** — incremental one-level-at-a-time of an existing character (only
   create-at-level exists).
 - [ ] **Inventory/equipment at build** (empty today).

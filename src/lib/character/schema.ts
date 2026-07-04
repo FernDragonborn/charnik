@@ -74,6 +74,8 @@ const buildSchema = z.object({
 	/** Chosen saving-throw proficiencies (usually from class; stored explicitly). */
 	saves: z.array(z.enum(ABILITIES)).default([]),
 	feats: z.array(ref).default([]),
+	/** Known languages, as `language:source:id` refs. */
+	languages: z.array(ref).default([]),
 	inventory: z.array(inventoryEntry).default([]),
 	spells: z.array(spellEntry).default([]),
 	/** Photo file name (sibling of character.json — NOT base64 in the JSON). */

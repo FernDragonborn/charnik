@@ -162,12 +162,20 @@
 					{/each}
 				</div>
 
-				<p class="sub">Languages</p>
-				<div class="chips">
-					<span class="pchip">Common</span>
-					{#if b.backgroundLangCount > 0}
-						<span class="pchip add">＋ {b.backgroundLangCount} of your choice</span>
-					{/if}
+				<p class="sub">
+					Languages <span class="cnt">{b.selectedLanguages.length}</span>
+					{#if b.backgroundLangCount > 0}<span class="note"
+							>· background grants {b.backgroundLangCount}</span
+						>{/if}
+				</p>
+				<div class="chips gap">
+					{#each b.languageList as r (r.effectiveId)}
+						<button
+							class="pchip"
+							class:on={b.selectedLanguages.includes(r.effectiveId)}
+							onclick={() => b.toggleLanguage(r.effectiveId)}>{rowName(r)}</button
+						>
+					{/each}
 				</div>
 			</div>
 
@@ -720,11 +728,6 @@
 		border-color: var(--color-resource);
 		color: var(--color-resource);
 		cursor: default;
-	}
-	.pchip.add {
-		background: transparent;
-		border-style: dashed;
-		color: var(--color-text-muted);
 	}
 	.pchip.dim {
 		opacity: 0.4;

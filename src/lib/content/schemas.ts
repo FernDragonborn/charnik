@@ -289,6 +289,13 @@ export const itemSchema = baseRow.extend({
 	rarity: z.preprocess(blankToUndef, Rarity.optional())
 });
 
+/** A language (SRD Standard / Exotic). Simple reference content the builder picks from. */
+export const languageSchema = baseRow.extend({
+	category: z.enum(['standard', 'exotic']).default('standard'),
+	speakers: optStr, // typical speakers
+	script: optStr
+});
+
 /** Condition (merged with effects on the sheet). Mechanics ride in `effects`. */
 export const conditionSchema = baseRow.extend({
 	/** Negative conditions render crimson, beneficial ones teal. */
@@ -397,6 +404,7 @@ export const CONTENT_TYPES = {
 	spell: { schema: spellSchema, filebase: 'spells' },
 	item: { schema: itemSchema, filebase: 'items' },
 	condition: { schema: conditionSchema, filebase: 'conditions' },
+	language: { schema: languageSchema, filebase: 'languages' },
 	effect: { schema: effectSchema, filebase: 'effects' },
 	monster: { schema: monsterSchema, filebase: 'monsters' },
 	subclass: { schema: subclassSchema, filebase: 'subclasses' },
@@ -423,6 +431,7 @@ export type Feat = z.infer<typeof featSchema>;
 export type Spell = z.infer<typeof spellSchema>;
 export type Item = z.infer<typeof itemSchema>;
 export type Condition = z.infer<typeof conditionSchema>;
+export type Language = z.infer<typeof languageSchema>;
 export type Effect = z.infer<typeof effectSchema>;
 export type Monster = z.infer<typeof monsterSchema>;
 export type Subclass = z.infer<typeof subclassSchema>;
