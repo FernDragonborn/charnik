@@ -97,7 +97,22 @@ function pushMap<K, V>(map: Map<K, V[]>, key: K, val: V): void {
 	else map.set(key, [val]);
 }
 
-export async function loadContent(storage: Storage, roots: string[]): Promise<ContentGraph> {
+/** One content root paired with the storage it lives in. Bundled SRD roots read from the
+ *  read-only fetch/asset source; user homebrew reads from the writable user storage — the loader
+ *  merges them into one graph (docs/PLAN.md "content merged from many files/roots"). */
+export interface ContentSource {
+	storage: Storage;
+	root: string;
+}
+
+/** Load + merge content. The 2-arg form (one storage, many roots) is the common case; `extra`
+ *  adds roots backed by a DIFFERENT storage (e.g. homebrew in user storage while SRD ships as
+ *  fetched assets). All sources merge by type exactly the same way. */
+export async function loadContent(
+	storage: Storage,
+	roots: string[],
+	extra: ContentSource[] = []
+): Promise<ContentGraph> {
 	const rows: LoadedRow[] = [];
 	const issues: ContentIssue[] = [];
 	const localeSet = new Set<string>(['en']);
@@ -105,12 +120,13 @@ export async function loadContent(storage: Storage, roots: string[]): Promise<Co
 		([t, d]) => [d.filebase, t as ContentType] as const
 	);
 
-	for (const root of roots) {
+	const sources: ContentSource[] = [...roots.map((root) => ({ storage, root })), ...extra];
+	for (const { storage: st, root } of sources) {
 		// pack manifest (optional defaults)
 		let pack: PackManifest = {};
-		if (await storage.exists(`${root}/_pack.json`)) {
+		if (await st.exists(`${root}/_pack.json`)) {
 			try {
-				pack = JSON.parse(await storage.read(`${root}/_pack.json`));
+				pack = JSON.parse(await st.read(`${root}/_pack.json`));
 			} catch (e) {
 				issues.push({
 					level: 'error',
@@ -121,9 +137,9 @@ export async function loadContent(storage: Storage, roots: string[]): Promise<Co
 			}
 		}
 
-		for (const entry of await storage.list(root)) {
+		for (const entry of await st.list(root)) {
 			if (entry.isDir || !entry.name.endsWith('.csv')) continue;
-			const raw = await storage.read(`${root}/${entry.name}`);
+			const raw = await st.read(`${root}/${entry.name}`);
 			// An optional `#charnik-type: <type>` first line lets a freely-named user file declare its
 			// content type explicitly (the loader is otherwise filename-only). Explicit wins.
 			const directive = extractTypeDirective(raw);

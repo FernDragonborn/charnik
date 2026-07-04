@@ -13,6 +13,7 @@
 	import { groupingsFor, facetFor, groupRows, distinctValues } from '$lib/content/grouping';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
+	import EditContentForm from '$lib/components/EditContentForm.svelte';
 	import Chip from '$lib/components/Chip.svelte';
 	import { app } from '$lib/stores/app.svelte';
 
@@ -32,6 +33,7 @@
 	let groupOpen = $state(false);
 	let sourceFilter = $state<Set<string>>(new Set()); // empty = all sources
 	let facetFilter = $state<Set<string>>(new Set()); // empty = all facet values
+	let adding = $state(false); // right pane shows the homebrew authoring form
 
 	onMount(async () => {
 		const g = await getContentGraph();
@@ -49,6 +51,7 @@
 	const entryParam = $derived(page.params.entry ?? '');
 	// clicking a row updates the URL so the current entry is shareable (no history spam)
 	function openEntry(row: LoadedRow) {
+		adding = false;
 		selected = row;
 		goto(`${base}/compendium/${row.type}/${encodeURIComponent(row.source)}/${row.data.id}`, {
 			replaceState: true,
@@ -128,10 +131,22 @@
 	function pick(type: ContentType) {
 		selectedType = type;
 		selected = null;
+		adding = false;
 		query = '';
 		groupBy = groupingsFor(type)[0].key;
 		sourceFilter = new Set();
 		facetFilter = new Set();
+	}
+
+	// homebrew authoring: open a blank editable article for the current type; on save reload the
+	// graph (so the new row is merged in) and open it.
+	async function onSaved(id: string) {
+		adding = false;
+		const g = await getContentGraph();
+		graph = g;
+		types = [...g.byType.keys()].filter(isBrowsable).sort();
+		const row = g.get(`${selectedType}:Homebrew:${id}`);
+		if (row) openEntry(row);
 	}
 	function toggle(set: Set<string>, v: string) {
 		const next = new Set(set);
@@ -210,6 +225,10 @@
 					</div>
 				</details>
 			{/if}
+
+			<button class="addbtn" onclick={() => (adding = true)}>
+				+ New {selectedType.replace(/_/g, ' ')}
+			</button>
 		</div>
 
 		<div class="two">
@@ -221,7 +240,13 @@
 				selectedId={selected?.effectiveId ?? null}
 				onselect={(e) => openEntry(e.row)}
 			/>
-			<WikiDetail {detail} />
+			{#if adding}
+				{#key selectedType}
+					<EditContentForm type={selectedType} onsave={onSaved} oncancel={() => (adding = false)} />
+				{/key}
+			{:else}
+				<WikiDetail {detail} />
+			{/if}
 		</div>
 	</div>
 {/if}
@@ -338,6 +363,22 @@
 		font-family: var(--font-mono);
 		font-size: 11px;
 		cursor: pointer;
+	}
+	.addbtn {
+		margin-left: auto;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 12px;
+		color: var(--color-accent-bright);
+		background: var(--color-accent-soft);
+		border: 1px solid var(--color-accent);
+		border-radius: 7px;
+		padding: 5px 12px;
+		cursor: pointer;
+	}
+	.addbtn:hover {
+		background: var(--color-accent);
+		color: #fff;
 	}
 	.page {
 		display: flex;

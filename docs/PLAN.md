@@ -760,7 +760,12 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - [~] **Content-type identification** — loader `#charnik-type: <type>` first-line directive DONE
   (freely-named files declare their type; explicit wins over filename; unknown type → error).
   Remaining: **UI type-assign** (a form that writes the directive) — folds into homebrew authoring.
-- [ ] **Homebrew subclass/content from the UI** (SRD ships one subclass per class).
+- [~] **Homebrew content from the UI** — DONE for all browsable types via an editable-article form
+  (mirrors the compendium article; schema-driven fields → validated row → atomic BOM/CRLF write into
+  `content/homebrew/<type>_hb.csv` in user storage; merged into the graph as an extra content root;
+  new row opens in the compendium). Remaining: **spell/monster get the generic grid** (their fancy
+  read layouts aren't editable yet), **edit/delete existing homebrew**, and linked-table authoring
+  (a subclass's `class_features` rows) — so homebrew subclasses are only half-covered.
 - [x] Dependabot: DONE — esbuild + cookie pinned via pnpm-workspace overrides (`pnpm audit` clean).
   Pages deploy recovery still open.
 
