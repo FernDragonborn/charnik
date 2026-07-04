@@ -165,7 +165,10 @@ export const speciesSchema = baseRow.extend({
 	size: Size,
 	/** Walking speed in feet. */
 	speed: z.coerce.number().int(),
-	creature_type: optStr // default "humanoid"
+	creature_type: optStr, // default "humanoid"
+	/** A "+N to M abilities of your choice" ASI (5e Half-Elf), encoded `NxM` (e.g. `1x2`). The
+	 *  fixed part rides on `effects`; abilities already boosted there are excluded from the choice. */
+	boost_choice: optStr
 });
 
 /** A sub-choice within a species: a 2014 **subrace** (Hill Dwarf) or a 2024 in-species
@@ -175,7 +178,9 @@ export const speciesSchema = baseRow.extend({
 export const speciesOptionSchema = baseRow.extend({
 	species_id: reqStr,
 	kind: z.enum(['subrace', 'lineage', 'legacy', 'ancestry']).default('subrace'),
-	option_label: optStr
+	option_label: optStr,
+	/** Like `species.boost_choice` — a "+N to M of your choice" ASI carried by the sub-option. */
+	boost_choice: optStr
 });
 
 /** A class. Subclass features live in class_features keyed by class_id+level. */

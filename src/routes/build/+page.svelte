@@ -274,6 +274,29 @@
 					</div>
 				{:else if b.boostCarrier === 'species'}
 					<p class="sub note">5e species ability bonuses apply automatically from the species entry.</p>
+					{#if b.speciesBoostChoice}
+						<div class="boost">
+							<p class="sub">
+								{rowName(b.speciesOptionRow) || rowName(b.speciesRow)} — choose
+								<b class="gold">{b.speciesBoostChoice.count}</b> to raise by +{b.speciesBoostChoice
+									.amount}
+								<span class="cnt">{b.speciesBoostPicks.length}/{b.speciesBoostChoice.count}</span>
+							</p>
+							<div class="chips gap">
+								{#each b.speciesBoostAbilities as ab (ab)}
+									<button
+										class="pchip"
+										class:on={b.speciesBoostPicks.includes(ab)}
+										onclick={() => b.toggleSpeciesBoostPick(ab)}
+									>
+										{ab.toUpperCase()}{#if b.abilityBoosts[ab]}<span class="gold">
+												+{b.abilityBoosts[ab]}</span
+											>{/if}
+									</button>
+								{/each}
+							</div>
+						</div>
+					{/if}
 				{/if}
 			</div>
 

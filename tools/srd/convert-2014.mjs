@@ -366,6 +366,19 @@ function raceAsi(text) {
 	return [...out].map(([a, n]) => `flat-bonus:${a}+${n}`).join(';');
 }
 
+// A "+N to M ability scores of your choice" ASI (Half-Elf) → "NxM" (e.g. "1x2"). The fixed part
+// (Half-Elf's CHA +2) stays in `effects`; this is only the choose-your-own part.
+const WORD_NUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6 };
+function raceBoostChoice(text) {
+	const m =
+		/(one|two|three|four|five|six)\s+(?:other\s+|different\s+)?ability scores?(?:\s+of your choice)?\s+(?:each\s+)?increase by (\d+)/i.exec(
+			text
+		);
+	if (!m) return '';
+	const count = WORD_NUM[m[1].toLowerCase()] ?? Number(m[1]);
+	return `${Number(m[2])}x${count}`;
+}
+
 // --- species (9 races; traits are sub-headings → slice whole blocks) ---------
 const RACE_IDS = [
 	'Dwarf',
@@ -398,7 +411,8 @@ function convertSpecies() {
 			effects: raceAsi(text), // 5e racial Ability Score Increase → flat-bonus tokens
 			size: (sizeM ? sizeM[1] : 'Medium').toLowerCase(),
 			speed: speedM ? Number(speedM[1]) : 30,
-			creature_type: 'humanoid'
+			creature_type: 'humanoid',
+			boost_choice: raceBoostChoice(text) // Half-Elf "+1 to two of your choice"
 		};
 	});
 	assertCount('species', rows.length, 9);
@@ -415,7 +429,8 @@ function convertSpecies() {
 			'effects',
 			'size',
 			'speed',
-			'creature_type'
+			'creature_type',
+			'boost_choice'
 		],
 		rows
 	);

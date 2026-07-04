@@ -728,7 +728,10 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   in-species choices** (parse character-origins.md), **builder 2nd picker** (shown when the chosen
   species has options), and **`build.speciesOption` ref** gathered in derive (its effects cascade
   like the species'). Per-edition label from `option_label`.
-- [ ] **Half-Elf +1/+1 choice** (5e) — the choosable part of its ASI (fixed +2 CHA already lands).
+- [x] **Half-Elf +1/+1 choice** (5e) — DONE. Data-driven `boost_choice` column (`NxM`, converter
+  parses "M ability scores of your choice increase by N" → Half-Elf `1x2`); builder shows a chip
+  picker excluding the fixed-boosted ability (CHA), folded into `abilityBoosts`. Generalizes to any
+  species/sub-option with a free-choice ASI.
 - [x] **Expertise** — DONE. `build.expertise[]`, derive exposes a `prof` **enum**
   (`none|half|proficient|expertise`, not two booleans), builder ×2 toggle on proficient skills,
   combat shows a ringed dot. (Strict cap by class-feature count still TODO.)

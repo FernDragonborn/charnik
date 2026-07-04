@@ -137,10 +137,46 @@ class BuildVM {
 	speciesOptionLabel = $derived(
 		String(this.speciesOptions[0]?.data.option_label ?? 'Lineage')
 	);
-	/** Pick a species; clears the now-stale sub-option choice. */
+	/** Pick a species; clears the now-stale sub-option + free-boost choices. */
 	pickSpecies = (id: string | null) => {
 		this.speciesId = id;
 		this.speciesOptionId = null;
+		this.speciesBoostPicks = [];
+	};
+
+	// --- species "+N to M of your choice" ASI (5e Half-Elf) --------------------
+	/** The free-choice ASI shape from the species or its sub-option, if any (e.g. `1x2`). */
+	speciesBoostChoice = $derived.by<{ amount: number; count: number } | null>(() => {
+		const raw = String(
+			this.speciesOptionRow?.data.boost_choice || this.speciesRow?.data.boost_choice || ''
+		).trim();
+		const m = /^(\d+)x(\d+)$/.exec(raw);
+		return m ? { amount: Number(m[1]), count: Number(m[2]) } : null;
+	});
+	/** Abilities already raised by the species' FIXED ASI (its effects) — excluded from the choice
+	 *  (5e Half-Elf's +1/+1 goes to two abilities OTHER than the +2 CHA). */
+	speciesFixedAbilities = $derived.by<Set<Ability>>(() => {
+		const set = new Set<Ability>();
+		for (const src of [this.speciesRow, this.speciesOptionRow]) {
+			const eff = Array.isArray(src?.data.effects) ? (src!.data.effects as string[]) : [];
+			for (const t of eff) {
+				const m = /^flat-bonus:([a-z]{3})[+-]/.exec(t);
+				if (m && (ABILITIES as readonly string[]).includes(m[1])) set.add(m[1] as Ability);
+			}
+		}
+		return set;
+	});
+	/** Abilities offered for the free choice (all six minus the fixed-boosted ones). */
+	speciesBoostAbilities = $derived<Ability[]>(
+		ABILITIES.filter((a) => !this.speciesFixedAbilities.has(a))
+	);
+	speciesBoostPicks = $state<Ability[]>([]);
+	toggleSpeciesBoostPick = (ab: Ability) => {
+		const cap = this.speciesBoostChoice?.count ?? 0;
+		if (this.speciesBoostPicks.includes(ab))
+			this.speciesBoostPicks = this.speciesBoostPicks.filter((a) => a !== ab);
+		else if (this.speciesBoostPicks.length < cap)
+			this.speciesBoostPicks = [...this.speciesBoostPicks, ab];
 	};
 
 	// --- multiclass rows -------------------------------------------------------
@@ -321,6 +357,10 @@ class BuildVM {
 		};
 		if (this.system === '5.5e' && this.backgroundBoostChoices.length)
 			add(allocateBackgroundBoost(this.boostShape, this.boostPicks, this.backgroundBoostChoices));
+		// species free-choice ASI (5e Half-Elf +1/+1)
+		if (this.speciesBoostChoice)
+			for (const ab of this.speciesBoostPicks)
+				out[ab] = (out[ab] ?? 0) + this.speciesBoostChoice.amount;
 		for (const s of this.featSlots) if (this.slotFeats[s.key] === ASI) add(this.asiBoostFor(s.key));
 		return out;
 	});
