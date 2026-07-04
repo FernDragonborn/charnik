@@ -114,6 +114,22 @@ describe('deriveSheet aggregator', () => {
 		expect(s.abilities.dex.save.value).toBe(3);
 	});
 
+	it('grants skill and save proficiency from a grant-proficiency effect', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 'g',
+				label: 'Skilled',
+				effects: ['grant-proficiency:stealth', 'grant-proficiency:save.con'],
+				positive: true
+			}
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.skills.stealth.prof).toBe('proficient'); // was 'none'
+		expect(s.skills.stealth.value).toBe(4); // DEX +2 + prof +2
+		expect(s.abilities.con.save.trace.some((t) => t.layer === 'proficiency')).toBe(true);
+	});
+
 	it('auto-calc off drops the effect layers (base values only)', () => {
 		const c = wizard();
 		c.play.autoCalc = false;

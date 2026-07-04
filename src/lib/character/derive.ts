@@ -166,8 +166,22 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	for (const ab of ABILITIES)
 		scores[ab] = build.abilities[ab] + (build.abilityBoosts?.[ab] ?? 0) + abilityBonus(active, ab);
 
-	// saves: proficient if the ability is in build.saves (or any class's saves)
-	const classSaves = new Set(build.saves as Ability[]);
+	// proficiencies granted by effects (item/feat/feature): `grant-proficiency:<target>` where
+	// target is a save (`con` / `save.con`) or a skill id (`stealth`). Collected once, unioned below.
+	const grantedSaves = new Set<Ability>();
+	const grantedSkills = new Set<string>();
+	if (character.play.autoCalc)
+		for (const eff of active)
+			for (const t of eff.tokens) {
+				const m = /^grant-proficiency:(.+)$/.exec(t.trim());
+				if (!m) continue;
+				const tgt = m[1].trim().replace(/^save\./, '');
+				if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
+				else grantedSkills.add(m[1].trim());
+			}
+
+	// saves: proficient if the ability is in build.saves (or any class's saves), or effect-granted
+	const classSaves = new Set<Ability>([...(build.saves as Ability[]), ...grantedSaves]);
 	for (const c of build.classes) {
 		const row = graph.get(c.class);
 		if (!row) missing.push(c.class);
@@ -191,8 +205,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		};
 	}
 
-	// skills (expertise doubles proficiency — Rogue/Bard)
-	const skillProf = new Set(build.skills);
+	// skills (expertise doubles proficiency — Rogue/Bard); effect-granted proficiencies union in
+	const skillProf = new Set([...build.skills, ...grantedSkills]);
 	const skillExpert = new Set(build.expertise ?? []);
 	const skills = {} as Record<string, Computed & { prof: SkillProficiency }>;
 	for (const [skill, ab] of Object.entries(SKILL_ABILITY)) {
