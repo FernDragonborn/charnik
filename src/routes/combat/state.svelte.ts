@@ -478,7 +478,12 @@ class CombatVM {
 		}
 		if (r.prep === 'always') return;
 		const sp = this.character.build.spells.find((s) => s.spell.endsWith(`:${r.id}`));
-		if (sp) sp.prepared = !sp.prepared;
+		if (!sp) return;
+		if (!sp.prepared && this.preparedCount >= this.preparedCap) {
+			toast(`Prepared spells full (${this.preparedCap}) — unprepare one first.`);
+			return;
+		}
+		sp.prepared = !sp.prepared;
 	};
 
 	// attacks (equipped weapons + Unarmed Strike)

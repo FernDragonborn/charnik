@@ -8,6 +8,7 @@
 	import { toast } from 'svelte-sonner';
 	import { getContentGraph } from '$lib/content/provider';
 	import { demoCharacter } from '$lib/demo/sheet';
+	import { deriveSheet } from '$lib/character/derive';
 	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
 	import {
@@ -83,12 +84,20 @@
 
 	const detail = $derived(selected ? buildDetail(selected, 'spell') : null);
 	const selEntry = $derived(selected ? entryOf.get(selected.effectiveId) : undefined);
-	const preparedCount = $derived(character ? character.build.spells.filter(isPrepared).length : 0);
-	const preparedCap = 11; // demo cap
+	const sheet = $derived(graph && character ? deriveSheet(character, graph) : null);
+	// only LEVELED prepared spells count toward the cap — cantrips are always-known, not prepared
+	const preparedCount = $derived(
+		character ? character.build.spells.filter((s) => s.prepared && !s.alwaysPrepared).length : 0
+	);
+	const preparedCap = $derived(sheet?.spellcasting.classes[0]?.preparedCap ?? 0);
 
 	function togglePrepare(id: string) {
 		const e = entryOf.get(id);
 		if (!e || e.alwaysPrepared) return;
+		if (!e.prepared && preparedCount >= preparedCap) {
+			toast(`Prepared spells full (${preparedCap}) — unprepare one first.`);
+			return;
+		}
 		e.prepared = !e.prepared;
 	}
 	function toggleSet(set: Set<string>, id: string): Set<string> {

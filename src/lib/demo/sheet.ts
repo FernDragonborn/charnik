@@ -33,8 +33,8 @@ export function demoCharacter(): Character {
 		spell('scorching-ray'),
 		spell('misty-step'),
 		spell('fireball'),
-		spell('counterspell'),
-		spell('fly'),
+		spell('counterspell', false), // in the spellbook but not prepared (demo of the distinction)
+		spell('fly', false),
 		spell('healing-word') // resolution "auto" → demonstrates the teal auto pill
 	];
 	c.play.hp = { current: 14, max: undefined, temp: 5 };
