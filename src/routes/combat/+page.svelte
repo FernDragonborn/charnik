@@ -4,6 +4,7 @@
 	// writes/binds go through `combat.*`.
 	import { onMount } from 'svelte';
 	import { base } from '$app/paths';
+	import { goto } from '$app/navigation';
 	import { dndzone } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
 	import { SKILL_ABILITY } from '$lib/character/derive';
@@ -94,7 +95,13 @@
 				Level <b>{s.level}</b> · <span class="sysx">{c.system}</span> · Proficiency
 				<b>{signed(s.proficiencyBonus)}</b>
 				{#if combat.canLevelUp}
-					<button class="levelup" onclick={(e) => openMenu('levelup', e)}>▲ Level up</button>
+					<button
+						class="levelup"
+						onclick={async () => {
+							await saveCharacterToStore(c); // persist first (e.g. the demo) so the builder can load it
+							goto(`${base}/build?levelup=${c.id}`);
+						}}>▲ Level up</button
+					>
 				{/if}
 			</div>
 		</div>

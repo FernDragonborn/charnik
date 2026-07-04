@@ -6,14 +6,24 @@
 	// create. Single-class v1 (multiclass deferred).
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { base } from '$app/paths';
 	import { build, rowName, ASI } from './state.svelte';
 	import { ABILITIES } from '$lib/character/schema';
 	import { SKILL_ABILITY } from '$lib/character/derive';
+	import { loadCharacterBySlug } from '$lib/character/store.svelte';
 	import type { Ability } from '$lib/rules/core';
 	import type { StatMethod } from '$lib/build/rules';
 
-	onMount(build.load);
+	onMount(async () => {
+		await build.load();
+		// ?edit=<slug> (or ?levelup) opens the builder hydrated from an existing character
+		const slug = page.url.searchParams.get('edit') || page.url.searchParams.get('levelup');
+		if (slug) {
+			const char = await loadCharacterBySlug(slug);
+			if (char) build.hydrate(char);
+		}
+	});
 
 	const b = build;
 	const titleCase = (s: string) => s.replace(/[-_]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
@@ -403,7 +413,10 @@
 
 	<!-- review & create (echoes the mock's bottom lucard) -->
 	<div class="card review">
-		<h2 class="rev">Review &amp; create <span class="cnt gold">Level {b.sheet?.level ?? b.totalLevel}</span></h2>
+		<h2 class="rev">
+			{b.editId ? 'Review & save' : 'Review & create'}
+			<span class="cnt gold">Level {b.sheet?.level ?? b.totalLevel}</span>
+		</h2>
 		<div class="revgrid">
 			{#if b.sheet}
 				<div class="stats">
@@ -425,7 +438,7 @@
 					<p class="sub warn">Missing content: {b.sheet.missing.join(', ')}</p>
 				{/if}
 				<button class="create wide" disabled={!b.canCreate || b.saving} onclick={create}>
-					{b.saving ? 'Saving…' : '✦ Create character'}
+					{b.saving ? 'Saving…' : b.editId ? '✦ Save changes' : '✦ Create character'}
 				</button>
 			</div>
 		</div>

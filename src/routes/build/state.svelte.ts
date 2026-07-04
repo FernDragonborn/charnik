@@ -131,6 +131,52 @@ class BuildVM {
 		this.system = app.activeSystem;
 	};
 
+	// --- edit / level-up: hydrate the draft from an existing character --------------------------
+	/** Set when editing an existing character (level-up). Save overwrites this id + keeps its play
+	 *  state, instead of creating a new character. */
+	editId = $state<string | null>(null);
+	/** Boosts + feats carried over verbatim from the loaded character (we don't reverse-engineer
+	 *  which pick/slot produced them — they pass through, and NEW picks at the new level add on top). */
+	hydratedBoosts = $state<Partial<Record<Ability, number>>>({});
+	hydratedFeats = $state<string[]>([]);
+	private editPlay: Character['play'] | null = null;
+	private editUi: Character['ui'] | null = null;
+
+	/** Load an existing character into the draft (for level-up / editing). Straightforward fields map
+	 *  directly; abilities become manual (base scores) with boosts carried in `hydratedBoosts`, and
+	 *  the existing feats carry in `hydratedFeats`. */
+	hydrate = (char: Character) => {
+		this.editId = char.id;
+		this.editPlay = char.play;
+		this.editUi = char.ui;
+		this.name = char.build.name;
+		this.system = char.system;
+		this.strict = false; // editing an existing build: don't re-block on prior choices
+		this.speciesId = char.build.species ?? null;
+		this.speciesOptionId = char.build.speciesOption ?? null;
+		this.backgroundId = char.build.background ?? null;
+		this.classes = char.build.classes.length
+			? char.build.classes.map((c) => ({
+					classId: c.class,
+					subclassId: c.subclass ?? null,
+					level: c.level
+				}))
+			: [{ classId: null, subclassId: null, level: 1 }];
+		this.method = 'manual';
+		this.abilities = { ...char.build.abilities };
+		this.hydratedBoosts = { ...(char.build.abilityBoosts as Partial<Record<Ability, number>>) };
+		this.hydratedFeats = [...char.build.feats];
+		this.skills = [...char.build.skills];
+		this.expertise = [...char.build.expertise];
+		this.selectedLanguages = [...char.build.languages];
+		this.selectedSpells = char.build.spells.map((s) => s.spell);
+		this.inventory = char.build.inventory.map((i) => ({
+			item: i.item,
+			qty: i.qty,
+			equipped: i.equipped
+		}));
+	};
+
 	// --- content option lists (filtered by the draft's system) -----------------
 	private list(type: Parameters<ContentGraph['list']>[0]): LoadedRow[] {
 		if (!this.graph) return [];
@@ -405,6 +451,7 @@ class BuildVM {
 		const add = (m: Partial<Record<Ability, number>>) => {
 			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
 		};
+		add(this.hydratedBoosts); // boosts carried over from a loaded character (level-up)
 		if (this.system === '5.5e' && this.backgroundBoostChoices.length)
 			add(allocateBackgroundBoost(this.boostShape, this.boostPicks, this.backgroundBoostChoices));
 		// species free-choice ASI (5e Half-Elf +1/+1)
@@ -526,8 +573,11 @@ class BuildVM {
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
 			// its ability boost flows through abilityBoosts instead)
 			feats: [
-				...(this.originFeatRef ? [this.originFeatRef] : []),
-				...this.featSlots.map((s) => this.slotFeats[s.key]).filter((r) => r && r !== ASI)
+				...new Set([
+					// carried over from a loaded character (level-up), else the auto origin feat
+					...(this.editId ? this.hydratedFeats : this.originFeatRef ? [this.originFeatRef] : []),
+					...this.featSlots.map((s) => this.slotFeats[s.key]).filter((r) => r && r !== ASI)
+				])
 			],
 			languages: [...this.selectedLanguages],
 			inventory: this.inventory.map((i) => ({ ...i, attuned: false })),
@@ -541,11 +591,12 @@ class BuildVM {
 		// parse leniently: fall back to a minimal valid character if a field is off
 		const res = characterSchema.safeParse({
 			schemaVersion: CHARACTER_SCHEMA_VERSION,
-			id: slugify(this.name),
+			// editing keeps the original id + play/ui; creating derives a fresh id from the name
+			id: this.editId ?? slugify(this.name),
 			system: this.system,
 			build,
-			play: { hp: { current: 0, temp: 0 } },
-			ui: {}
+			play: this.editPlay ?? { hp: { current: 0, temp: 0 } },
+			ui: this.editUi ?? {}
 		});
 		if (res.success) return res.data;
 		// last-resort: a bare valid character so the preview never crashes
@@ -596,9 +647,9 @@ class BuildVM {
 		this.saving = true;
 		try {
 			const character = this.draft;
-			// start play HP at max so the sheet is playable immediately
-			const max = this.sheet?.maxHp.value ?? 0;
-			character.play.hp.current = max;
+			// new character: start play HP at max so it's playable immediately. Editing/level-up:
+			// keep the character's current play state (HP, effects, spent slots…).
+			if (!this.editId) character.play.hp.current = this.sheet?.maxHp.value ?? 0;
 			await saveCharacterToStore(character);
 			// make the freshly-created character the active one so Combat opens IT, not the demo
 			await openCharacter(character.id);

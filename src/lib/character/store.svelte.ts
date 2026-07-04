@@ -44,6 +44,12 @@ export async function openCharacter(slug: string): Promise<Character | null> {
 	return characters.active;
 }
 
+/** Load a saved character by slug WITHOUT making it active (for the builder's edit/level-up). */
+export async function loadCharacterBySlug(slug: string): Promise<Character | null> {
+	const res = await loadCharacter(getUserStorage(), slug);
+	return res.ok && res.character ? res.character : null;
+}
+
 /** Persist a character (create or update) and refresh the roster. */
 export async function saveCharacterToStore(character: Character): Promise<void> {
 	await saveCharacter(getUserStorage(), character);
