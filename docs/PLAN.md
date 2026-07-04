@@ -836,6 +836,40 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 Do R1–R5 as a focused pass (they're the ones that bite: typos, duplication, drift). R6–R7 are
 opportunistic. Add tests where extracting a helper (R4/R5) makes logic unit-testable.
 
+### Call-chain audit — checklist (trace each flow end-to-end for cross-file duplication + seams)
+
+The file pass gives coverage + local smells; these chains surface the cross-file duplication and
+architecture the single-file view hides. `⚠️` = also a security/correctness surface. Tick when traced;
+each names the R-items / bugs it should confirm or expand.
+
+Duplication-heavy (do first — this is where the big refactors live):
+- [ ] **CH1 · Roll pipeline** — `+page onclick(roll/attackRoll/cast) → roll() → effectsFor →
+  helpers.rollEffectsFor → rollDiceNow` **and** the tray path `openRoll → doRoll`. Targets CVM-1
+  (doRoll≡rollDiceNow), R4 (dice/adv/bonus-dice parsing).
+- [ ] **CH2 · Effect grammar (bounded vocab)** ⚠️ — a token string wherever it's read:
+  `parseEffect/applyEffects/collectResources/collectFlags` (effects) + the ad-hoc regexes in
+  `derive.ts` (abilityBonus, grant-prof, resist-immune, apply-condition), `build/state`
+  (speciesFixedAbilities), `combat/state` (slotMax), `combat/helpers` (rollEffectsFor). Must collapse
+  to ONE parser (R4) — it's the security boundary (docs/SECURITY.md).
+- [ ] **CH3 · Pip spend/restore** — `usePip` (turn) vs `slotClick` (slots) vs `resourceClick`
+  (resources) + their page render. Three formulas for one model (R5 / CVM-2) — reconcile + one helper.
+- [ ] **CH4 · Character assembly ↔ round-trip** — `BuildVM.draft (assemble) → save → store.save →
+  load → hydrate → draft` again. Targets BVM-1 (triple-maintained fields), BVM-4 (60-line assembler);
+  verify a hydrate→save round-trip is lossless (the test we skipped).
+- [ ] **CH5 · deriveSheet aggregation** — `gatherEffects → (abilityBonus · grant-prof · resist ·
+  collectResources · applyEffects · deriveSpellcasting)`. The central math; check the repeated
+  token-scans (feeds R4) + ref-resolution/missing handling.
+
+Architecture / correctness (do after the above):
+- [ ] **CH6 · Content load → graph** — `Storage sources → loadContent (parse/merge/index/link) →
+  get/list/editionsOf` + `spellAccess` union. Multi-source merge, longest-filebase match, edition scope.
+- [ ] **CH7 · Ability-score pipeline** — point-buy / standard-array / manual / background-boost /
+  species-choice / ASI-slot → `abilityBoosts` → scores. Logic spread across `build/state` + `build/rules`.
+- [ ] **CH8 · Homebrew authoring round-trip** — `EditContentForm → buildRow/parseRow → unparse →
+  Storage.write → resetContentGraph → loader → shows in compendium`.
+- [ ] **CH9 · Menu/overlay lifecycle** — `openMenu → position → $effect clamp → wheel/click close`
+  (CombatMenus). Smaller; verify the clamp/scroll fix + overlay.kind typing (R2).
+
 ### Per-file audit — checklist (tick a file once scanned; findings recorded below it)
 
 Scan one file at a time, top to bottom, record findings, then tick. `★` = created/heavily changed in
