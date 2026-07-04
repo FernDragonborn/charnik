@@ -125,7 +125,7 @@
 
 	<section class="controls">
 		<button
-			class="toggle combat"
+			class="toggle combatsw"
 			class:on={c.play.inCombat}
 			onclick={combat.toggleCombat}
 			title="Track the action economy (rounds, action/bonus/reaction)"
@@ -601,6 +601,15 @@
 		border-color: var(--color-accent-deep);
 		color: #fff;
 		font-size: 13px;
+	}
+	/* Combat mode = gold when tracking (own class: `combat` collides with the stat-grid section) */
+	.toggle.combatsw.on {
+		background: var(--color-resource-soft);
+		border-color: var(--color-resource);
+		color: var(--color-resource);
+	}
+	.toggle.combatsw.on .sw {
+		border-color: var(--color-resource);
 	}
 	.controls .spacer,
 	.turnbar .spacer {
