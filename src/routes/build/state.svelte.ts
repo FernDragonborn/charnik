@@ -139,6 +139,10 @@ class BuildVM {
 	 *  which pick/slot produced them — they pass through, and NEW picks at the new level add on top). */
 	hydratedBoosts = $state<Partial<Record<Ability, number>>>({});
 	hydratedFeats = $state<string[]>([]);
+	/** Spells / skills the character already had at hydrate — in Strict edit they can't be undone
+	 *  (you don't unlearn a spell or drop a trained skill at level-up); new picks stay removable. */
+	private hydratedSpells = new Set<string>();
+	private hydratedSkills = new Set<string>();
 	private editPlay: Character['play'] | null = null;
 	private editUi: Character['ui'] | null = null;
 
@@ -150,6 +154,8 @@ class BuildVM {
 		this.editUi = null;
 		this.hydratedBoosts = {};
 		this.hydratedFeats = [];
+		this.hydratedSpells = new Set();
+		this.hydratedSkills = new Set();
 		this.name = '';
 		this.system = app.activeSystem;
 		this.strict = true;
@@ -197,9 +203,11 @@ class BuildVM {
 		this.hydratedBoosts = { ...(char.build.abilityBoosts as Partial<Record<Ability, number>>) };
 		this.hydratedFeats = [...char.build.feats];
 		this.skills = [...char.build.skills];
+		this.hydratedSkills = new Set(char.build.skills);
 		this.expertise = [...char.build.expertise];
 		this.selectedLanguages = [...char.build.languages];
 		this.selectedSpells = char.build.spells.map((s) => s.spell);
+		this.hydratedSpells = new Set(this.selectedSpells);
 		this.inventory = char.build.inventory.map((i) => ({
 			item: i.item,
 			qty: i.qty,
@@ -359,6 +367,10 @@ class BuildVM {
 	});
 	toggleSpell = (ref: string) => {
 		if (this.selectedSpells.includes(ref)) {
+			if (this.editId && this.strict && this.hydratedSpells.has(ref)) {
+				toast("Strict: you can't unlearn a known spell — switch to Free to remove it.");
+				return;
+			}
 			this.selectedSpells = this.selectedSpells.filter((s) => s !== ref);
 			return;
 		}
@@ -397,6 +409,10 @@ class BuildVM {
 	toggleSkill = (skill: string) => {
 		if (this.autoSkills.includes(skill)) return; // background-granted, locked on
 		if (this.skills.includes(skill)) {
+			if (this.editId && this.strict && this.hydratedSkills.has(skill)) {
+				toast("Strict: you can't drop a trained skill — switch to Free to remove it.");
+				return;
+			}
 			this.skills = this.skills.filter((s) => s !== skill);
 			return;
 		}
@@ -436,6 +452,9 @@ class BuildVM {
 	pointsLeft = $derived(POINT_BUY_BUDGET - this.pointsSpent);
 
 	bumpAbility = (ab: Ability, dir: 1 | -1) => {
+		// editing an existing character in Strict: base scores are locked (you don't re-roll them at
+		// level-up — increases come only from ASI slots). Free lets you edit anything.
+		if (this.editId && this.strict) return;
 		const cur = this.abilities[ab];
 		if (this.method === 'point-buy' && !this.strict) {
 			// lenient point-buy still respects budget/caps to keep the counter meaningful
@@ -474,6 +493,13 @@ class BuildVM {
 		csv(this.backgroundRow?.data.ability_choices).filter((a): a is Ability =>
 			(ABILITIES as readonly string[]).includes(a)
 		)
+	);
+	/** JUST the 5.5e background boost allocation (for the background chips — so an ASI boost doesn't
+	 *  leak into them). Empty unless a 5.5e background offers a choice. */
+	backgroundBoosts = $derived.by<Partial<Record<Ability, number>>>(() =>
+		this.system === '5.5e' && this.backgroundBoostChoices.length
+			? allocateBackgroundBoost(this.boostShape, this.boostPicks, this.backgroundBoostChoices)
+			: {}
 	);
 	/** All ability boosts folded together: 5.5e background choice + every ASI slot allocation. */
 	abilityBoosts = $derived.by<Partial<Record<Ability, number>>>(() => {

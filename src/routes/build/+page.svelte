@@ -287,7 +287,7 @@
 						<div class="chips gap">
 							{#each b.backgroundBoostChoices as ab (ab)}
 								<button class="pchip" class:on={b.boostPicks.includes(ab)} onclick={() => b.toggleBoostPick(ab)}>
-									{ab.toUpperCase()}{#if b.abilityBoosts[ab]}<span class="gold"> +{b.abilityBoosts[ab]}</span>{/if}
+									{ab.toUpperCase()}{#if b.backgroundBoosts[ab]}<span class="gold"> +{b.backgroundBoosts[ab]}</span>{/if}
 								</button>
 							{/each}
 						</div>
@@ -309,8 +309,8 @@
 										class:on={b.speciesBoostPicks.includes(ab)}
 										onclick={() => b.toggleSpeciesBoostPick(ab)}
 									>
-										{ab.toUpperCase()}{#if b.abilityBoosts[ab]}<span class="gold">
-												+{b.abilityBoosts[ab]}</span
+										{ab.toUpperCase()}{#if b.speciesBoostPicks.includes(ab)}<span class="gold">
+												+{b.speciesBoostChoice.amount}</span
 											>{/if}
 									</button>
 								{/each}
