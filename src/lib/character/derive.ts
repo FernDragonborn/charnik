@@ -155,7 +155,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	const build = character.build;
 	const system = character.system as System;
 	const missing: string[] = [];
-	const active = gatherEffects(character, graph, missing);
+	// effects-auto global toggle: off → no effect layers (base stats / text only)
+	const active = character.play.autoCalc ? gatherEffects(character, graph, missing) : [];
 
 	const level = build.classes.reduce((n, c) => n + c.level, 0) || 1;
 	const prof = proficiencyBonus(level);
@@ -214,10 +215,9 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	} else {
 		acBase = unarmoredAC({ dexScore: scores.dex });
 	}
-	const hasShield = build.inventory.some(
-		(i) => i.equipped && graph.get(i.item)?.data.category === 'shield'
-	);
-	if (hasShield)
+	// shield = the play-state raised flag (the dedicated combat toggle), the single source for its
+	// +2 — not the inventory equipped flag (which just says the character owns/wears one)
+	if (character.play.shieldRaised)
 		acBase = {
 			...acBase,
 			value: acBase.value + 2,

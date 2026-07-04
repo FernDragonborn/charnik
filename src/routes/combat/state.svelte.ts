@@ -31,11 +31,14 @@ import {
 class CombatVM {
 	graph = $state<ContentGraph | null>(null);
 	character = $state<Character | null>(null);
-	sheet = $state<CharacterSheet | null>(null);
+	/** Fully reactive: recomputes whenever the character (HP, effects, shield, auto-calc…) or the
+	 *  content graph changes — so every play-state edit reflects live in the derived stats. */
+	sheet = $derived.by<CharacterSheet | null>(() =>
+		this.character && this.graph ? deriveSheet(this.character, this.graph) : null
+	);
 
 	// play / UI state
 	round = $state(1);
-	shieldOn = $state(false);
 	collapsed = $state<Record<string, boolean>>({});
 	pinned = $state<Record<string, boolean>>({ 'fire-bolt': true, shield: true });
 	// Panel layout = two independent column arrays (svelte-dnd-action items need an id).
@@ -68,7 +71,6 @@ class CombatVM {
 		this.graph = await getContentGraph();
 		// the character opened from the Roster, else the seeded demo
 		this.character = characters.active ?? demoCharacter();
-		this.sheet = deriveSheet(this.character, this.graph);
 		// restore this character's saved panel layout (falls back to the default columns)
 		const saved = this.character.ui.panelColumns;
 		if (saved?.length) this.columns = saved.map((col) => col.map((id) => ({ id })));
@@ -550,7 +552,6 @@ class CombatVM {
 				startedRound: this.round
 			}
 		];
-		this.sheet = deriveSheet(this.character, this.graph!);
 		this.overlay = null;
 	};
 }

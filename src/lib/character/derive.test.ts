@@ -94,11 +94,20 @@ describe('deriveSheet aggregator', () => {
 		expect(s.carryingCapacity.value).toBe(150); // STR 10 × 15
 	});
 
-	it('adds a shield when equipped', () => {
+	it('adds a shield when raised (the play-state toggle, not the inventory flag)', () => {
 		const c = wizard();
-		c.build.inventory.push({ item: `item:${S}:shield`, qty: 1, equipped: true, attuned: false });
+		c.play.shieldRaised = true;
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.ac.value).toBe(17); // leather 11 + DEX 2 + shield 2 + faith 2
+		expect(s.ac.trace.map((x) => x.source)).toContain('Shield');
+	});
+
+	it('auto-calc off drops the effect layers (base values only)', () => {
+		const c = wizard();
+		c.play.autoCalc = false;
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.ac.value).toBe(13); // leather 11 + DEX 2, no Shield of Faith
+		expect(s.ac.trace.map((x) => x.source)).not.toContain('Shield of Faith');
 	});
 
 	it('reports a missing content ref instead of crashing', () => {

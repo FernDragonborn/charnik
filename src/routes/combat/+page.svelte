@@ -42,7 +42,6 @@
 	const flipDurationMs = combat.flipDurationMs;
 	const dragDisabled = $derived(combat.dragDisabled);
 	const pinned = $derived(combat.pinned);
-	const shieldOn = $derived(combat.shieldOn);
 
 	const {
 		openMenu,
@@ -131,8 +130,11 @@
 			title="Track the action economy (rounds, action/bonus/reaction)"
 			>⚔ Combat <span class="sw">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
 		>
-		<button class="toggle" class:on={shieldOn} onclick={() => (combat.shieldOn = !combat.shieldOn)}
-			>🛡 Shield <span class="sw">{shieldOn ? 'ON' : 'OFF'}</span></button
+		<button
+			class="toggle"
+			class:on={c.play.shieldRaised}
+			onclick={() => (c.play.shieldRaised = !c.play.shieldRaised)}
+			>🛡 Shield <span class="sw">{c.play.shieldRaised ? 'ON' : 'OFF'}</span></button
 		>
 		{#if conc}<button class="toggle conc on"
 				>◈ Concentration <span class="sw">{conc.label}</span></button
@@ -144,7 +146,13 @@
 			>✦ Inspiration <span class="sw">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
 		>
 		<span class="spacer"></span>
-		<button class="toggle auto on">⚙ Auto-calc <span class="sw">ON</span></button>
+		<button
+			class="toggle auto"
+			class:on={c.play.autoCalc}
+			onclick={() => (c.play.autoCalc = !c.play.autoCalc)}
+			title="Auto-calculate derived stats from effects (off → base values only)"
+			>⚙ Auto-calc <span class="sw">{c.play.autoCalc ? 'ON' : 'OFF'}</span></button
+		>
 		<button class="toggle dice" onclick={openDice}>🎲 Dice tray</button>
 	</section>
 
