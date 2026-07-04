@@ -56,6 +56,8 @@ const spellEntry = z.object({
 const buildSchema = z.object({
 	name: z.string().min(1),
 	species: ref.optional(),
+	/** Chosen species sub-option (2014 subrace / 2024 lineage), a `species_option` ref. */
+	speciesOption: ref.optional(),
 	background: ref.optional(),
 	/** ≥1 for a built character; empty is allowed mid-creation. */
 	classes: z.array(classEntry).default([]),

@@ -110,6 +110,15 @@ function gatherEffects(
 			tokens: tokensOf(species)
 		});
 
+	// species sub-option (subrace / lineage) — its ASI + traits cascade like the species' own
+	const speciesOption = resolve(character.build.speciesOption);
+	if (speciesOption && tokensOf(speciesOption).length)
+		active.push({
+			source: String(speciesOption.data.name_en),
+			layer: 'feature',
+			tokens: tokensOf(speciesOption)
+		});
+
 	const background = resolve(character.build.background);
 	if (background && tokensOf(background).length)
 		active.push({

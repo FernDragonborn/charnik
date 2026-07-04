@@ -65,6 +65,8 @@ class BuildVM {
 	// showing every spell to a level-1 caster was confusing. Free is one click away for homebrew.
 	strict = $state(true);
 	speciesId = $state<string | null>(null);
+	/** Chosen species sub-option (subrace / lineage) ref, when the species offers any. */
+	speciesOptionId = $state<string | null>(null);
 	backgroundId = $state<string | null>(null);
 	/** One or more classes (multiclass). classes[0] is the primary — it grants saves + the
 	 *  starting skill choices; extra classes add levels (and their own subclass). */
@@ -123,6 +125,23 @@ class BuildVM {
 
 	speciesRow = $derived(this.row(this.speciesId));
 	backgroundRow = $derived(this.row(this.backgroundId));
+
+	/** Sub-options (subrace / lineage) for the chosen species, in the draft's edition. */
+	speciesOptions = $derived.by<LoadedRow[]>(() => {
+		const sp = this.speciesRow;
+		if (!sp) return [];
+		return this.list('species_option').filter((r) => String(r.data.species_id) === String(sp.id));
+	});
+	speciesOptionRow = $derived(this.row(this.speciesOptionId));
+	/** Label for the sub-picker (e.g. "Subrace" 2014 / "Lineage" 2024), from the options' data. */
+	speciesOptionLabel = $derived(
+		String(this.speciesOptions[0]?.data.option_label ?? 'Lineage')
+	);
+	/** Pick a species; clears the now-stale sub-option choice. */
+	pickSpecies = (id: string | null) => {
+		this.speciesId = id;
+		this.speciesOptionId = null;
+	};
 
 	// --- multiclass rows -------------------------------------------------------
 	primaryClassId = $derived<string | null>(this.classes[0]?.classId ?? null);
@@ -397,6 +416,10 @@ class BuildVM {
 		const build = {
 			name: this.name || 'Unnamed',
 			species: this.speciesId ?? undefined,
+			// only persist the sub-option if it's valid for the chosen species (guards a stale pick)
+			speciesOption: this.speciesOptions.some((o) => o.effectiveId === this.speciesOptionId)
+				? (this.speciesOptionId ?? undefined)
+				: undefined,
 			background: this.backgroundId ?? undefined,
 			classes: this.classes
 				.filter((c) => c.classId)

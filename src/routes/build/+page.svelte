@@ -57,11 +57,27 @@
 				<h2>Origin</h2>
 				<label class="field">
 					<span>Species</span>
-					<select bind:value={b.speciesId}>
-						<option value={null}>— choose —</option>
-						{#each b.speciesList as r (r.effectiveId)}<option value={r.effectiveId}>{rowName(r)}</option>{/each}
+					<select
+						value={b.speciesId ?? ''}
+						onchange={(e) => b.pickSpecies(e.currentTarget.value || null)}
+					>
+						<option value="">— choose —</option>
+						{#each b.speciesList as r (r.effectiveId)}<option value={r.effectiveId}
+								>{rowName(r)}</option
+							>{/each}
 					</select>
 				</label>
+				{#if b.speciesOptions.length}
+					<label class="field">
+						<span>{b.speciesOptionLabel}</span>
+						<select bind:value={b.speciesOptionId}>
+							<option value={null}>— choose —</option>
+							{#each b.speciesOptions as r (r.effectiveId)}<option value={r.effectiveId}
+									>{rowName(r)}</option
+								>{/each}
+						</select>
+					</label>
+				{/if}
 				<label class="field">
 					<span>Background</span>
 					<select bind:value={b.backgroundId}>

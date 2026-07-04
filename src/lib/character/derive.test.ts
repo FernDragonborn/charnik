@@ -23,6 +23,13 @@ async function graphOf(): Promise<ContentGraph> {
 		].join('\n')
 	);
 	await st.write(
+		'c/species_options_srd.csv',
+		[
+			'id,systems,source,name_en,effects,species_id,kind,option_label',
+			`stoic,5.5e,${S},Stoic,flat-bonus:wis+1,hardy,subrace,Subrace`
+		].join('\n')
+	);
+	await st.write(
 		'c/items_srd.csv',
 		[
 			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap',
@@ -112,6 +119,15 @@ describe('deriveSheet aggregator', () => {
 		// DEX 14 (+2): stealth = +2 mod + 2 custom = 4; dex save = +2 mod + 1 custom = 3
 		expect(s.skills.stealth.value).toBe(4);
 		expect(s.abilities.dex.save.value).toBe(3);
+	});
+
+	it('cascades a species-option (subrace) ability bonus on top of the species', () => {
+		const c = wizard();
+		c.build.speciesOption = `species_option:${S}:stoic`;
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		// CON 12 base +2 (Hardy species) = 14; WIS 10 +1 (Stoic subrace) = 11
+		expect(s.abilities.con.score).toBe(14);
+		expect(s.abilities.wis.score).toBe(11);
 	});
 
 	it('grants skill and save proficiency from a grant-proficiency effect', () => {
