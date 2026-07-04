@@ -11,6 +11,8 @@ const S = 'SRD 5.2.1';
 export function demoCharacter(): Character {
 	const c = newCharacter('valen', 'Valen the Blue', '5.5e');
 	c.build.species = `species:${S}:elf`;
+	c.build.speciesOption = `species_option:${S}:elf-high-elf`; // Elven Lineage: High Elf
+	c.build.background = `background:${S}:sage`;
 	c.build.classes = [{ class: `class:${S}:wizard`, level: 3 }];
 	c.build.abilities = { str: 8, dex: 14, con: 14, int: 16, wis: 12, cha: 10 };
 	c.build.skills = ['arcana', 'history', 'investigation', 'perception', 'stealth'];
