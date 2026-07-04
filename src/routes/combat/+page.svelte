@@ -93,6 +93,9 @@
 			<div class="subl">
 				Level <b>{s.level}</b> · <span class="sysx">{c.system}</span> · Proficiency
 				<b>{signed(s.proficiencyBonus)}</b>
+				{#if combat.canLevelUp}
+					<button class="levelup" onclick={(e) => openMenu('levelup', e)}>▲ Level up</button>
+				{/if}
 			</div>
 		</div>
 		<div class="hp">
@@ -493,6 +496,21 @@
 	.subl b {
 		color: var(--color-resource);
 		font-weight: 600;
+	}
+	.levelup {
+		margin-left: 8px;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 12px;
+		color: var(--color-good);
+		background: var(--color-good-soft);
+		border: 1px solid var(--color-good);
+		border-radius: 7px;
+		padding: 3px 10px;
+		cursor: pointer;
+	}
+	.levelup:hover {
+		filter: brightness(1.15);
 	}
 	.sysx {
 		font-family: var(--font-mono);

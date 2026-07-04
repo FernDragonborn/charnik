@@ -94,6 +94,18 @@
 					Separate pool — teal in the HP bar. Doesn't stack; takes the higher value.
 				</p>
 			</div>
+		{:else if overlay.kind === 'levelup'}
+			<div class="pop-h" style="border: 0">Level up · which class</div>
+			{#each combat.levelUpClasses as cl (cl.index)}
+				<button class="row" onclick={() => combat.levelUp(cl.index)}>
+					<span class="main">{cl.name} <b class="gold">{cl.level} → {cl.level + 1}</b></span>
+					<span class="meta">+1 level</span>
+				</button>
+			{/each}
+			<p class="note">
+				HP, proficiency, spell slots & features update automatically. Pick any new ASI / feat /
+				spells in the builder.
+			</p>
 		{:else if overlay.kind === 'addeffect'}
 			<div class="search"><span class="mag">🔍</span><input placeholder="Search effects…" /></div>
 			<div class="sec">Catalog · presets</div>
@@ -553,6 +565,9 @@
 		margin: 0;
 	}
 	.note b {
+		color: var(--color-resource);
+	}
+	.gold {
 		color: var(--color-resource);
 	}
 	.modifier-row {

@@ -739,8 +739,11 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   appendix tables) + `build.languages` ref array; builder shows a language chip picker (lenient —
   pick any), stored on the character. (Auto-granting fixed languages from species/background text is
   a later refinement.)
-- [ ] **Level-up flow** — incremental one-level-at-a-time of an existing character (only
-  create-at-level exists).
+- [~] **Level-up flow** — minimal DONE: a "▲ Level up" control on the combat sheet advances a chosen
+  class by +1 on the open character and saves; the reactive sheet recomputes HP / proficiency / spell
+  slots / features live. Remaining: **guided choices at the new level** (ASI/feat pick, new spells,
+  subclass at its level) — needs the builder to hydrate from an existing character (edit mode), also
+  the prereq for full editing. Add-a-class-while-levelling also via the builder.
 - [ ] **Inventory/equipment at build** (empty today).
 
 **Effects engine (finish the vocab, add authoring):**

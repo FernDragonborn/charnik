@@ -9,7 +9,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { demoCharacter } from '$lib/demo/sheet';
-import { characters } from '$lib/character/store.svelte';
+import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
 import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
 import { passiveScore } from '$lib/rules/core';
@@ -273,6 +273,36 @@ class CombatVM {
 	};
 
 	toggle = (k: string) => (this.collapsed[k] = !this.collapsed[k]);
+
+	// --- level-up: advance an existing character's class by one level ---------------------------
+	/** Total character level across all classes. */
+	totalLevel = $derived(this.character?.build.classes.reduce((n, c) => n + c.level, 0) ?? 0);
+	/** Can still gain a level (hard cap 20 total). */
+	canLevelUp = $derived(this.totalLevel < 20 && (this.character?.build.classes.length ?? 0) > 0);
+	/** The character's classes with their live names, for the level-up menu. */
+	levelUpClasses = $derived.by(() =>
+		(this.character?.build.classes ?? []).map((c, i) => ({
+			index: i,
+			level: c.level,
+			name: this.graph ? String(this.graph.get(c.class)?.data.name_en ?? 'Class') : 'Class'
+		}))
+	);
+	/** Add one level to a class and persist (the sheet re-derives HP/prof/slots/features live).
+	 *  New choices at this level — ASI/feat/spells — are picked in the builder; here we advance the
+	 *  mechanical level (lenient), flag the rest. */
+	levelUp = (classIndex: number) => {
+		const c = this.character;
+		if (!c || !this.canLevelUp) return;
+		c.build.classes = c.build.classes.map((cl, i) =>
+			i === classIndex ? { ...cl, level: cl.level + 1 } : cl
+		);
+		void saveCharacterToStore(c);
+		this.overlay = null;
+		const cls = c.build.classes[classIndex];
+		toast(`Level up — ${this.graph?.get(cls.class)?.data.name_en ?? 'class'} ${cls.level}`, {
+			description: 'HP & slots updated. Set any new ASI/feat/spells in the builder.'
+		});
+	};
 
 	/** Advantage + bonus/penalty dice a stat picks up from active effects (gated on effects-auto). */
 	private effectsFor(key: string): { adv: boolean; bonusDice: BonusDie[] } {
