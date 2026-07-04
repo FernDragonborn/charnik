@@ -602,14 +602,6 @@
 		color: #fff;
 		font-size: 13px;
 	}
-	.toggle.combat.on {
-		background: var(--color-danger-soft, rgba(179, 69, 47, 0.14));
-		border-color: var(--color-danger, #b3452f);
-		color: var(--color-danger, #d06a52);
-	}
-	.toggle.combat.on .sw {
-		border-color: var(--color-danger, #b3452f);
-	}
 	.controls .spacer,
 	.turnbar .spacer {
 		flex: 1 1 auto;
