@@ -130,6 +130,26 @@ describe('deriveSheet aggregator', () => {
 		expect(s.abilities.con.save.trace.some((t) => t.layer === 'proficiency')).toBe(true);
 	});
 
+	it('collects damage defenses from resist-immune effects (mode + bare default)', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 'd',
+				label: 'Wards',
+				effects: [
+					'resist-immune:resist:fire',
+					'resist-immune:immune:poison',
+					'resist-immune:cold' // bare → defaults to resistance
+				],
+				positive: true
+			}
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.defenses.resist).toEqual(['fire', 'cold']);
+		expect(s.defenses.immune).toEqual(['poison']);
+		expect(s.defenses.vulnerable).toEqual([]);
+	});
+
 	it('auto-calc off drops the effect layers (base values only)', () => {
 		const c = wizard();
 		c.play.autoCalc = false;

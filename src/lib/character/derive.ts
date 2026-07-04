@@ -76,6 +76,8 @@ export interface CharacterSheet {
 	maxHp: Computed;
 	passives: Record<'perception' | 'investigation' | 'insight', Computed>;
 	carryingCapacity: Computed;
+	/** Damage resistances / immunities / vulnerabilities from active effects (by type). */
+	defenses: { resist: string[]; immune: string[]; vulnerable: string[] };
 	/** Per-class casting profiles + shared/pact slot pools (empty classes = non-caster). */
 	spellcasting: Spellcasting;
 	/** Content refs the character points at that the graph couldn't resolve. */
@@ -135,6 +137,23 @@ function gatherEffects(
 	for (const eff of character.play.effects) {
 		if (eff.effects.length)
 			active.push({ source: eff.label, layer: 'condition', tokens: eff.effects });
+	}
+
+	// expand `apply-condition:<id>` → the referenced condition's OWN effect tokens, so a spell/effect
+	// that inflicts a condition actually applies that condition's mechanics (nested one level).
+	for (const eff of [...active]) {
+		for (const t of eff.tokens) {
+			const m = /^apply-condition:(.+)$/.exec(t.trim());
+			if (!m) continue;
+			const cond = graph.rows.find((r) => r.type === 'condition' && r.id === m[1].trim());
+			const toks = tokensOf(cond);
+			if (cond && toks.length)
+				active.push({
+					source: `${eff.source} → ${cond.data.name_en}`,
+					layer: 'condition',
+					tokens: toks
+				});
+		}
 	}
 	return active;
 }
@@ -273,6 +292,19 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	const passiveOf = (skill: 'perception' | 'investigation' | 'insight') =>
 		passiveScore(skills[skill]);
 
+	// damage defenses from effects: `resist-immune:<resist|immune|vulnerable>:<type>` (a bare
+	// `resist-immune:<type>` defaults to resistance).
+	const defenses = { resist: [] as string[], immune: [] as string[], vulnerable: [] as string[] };
+	if (character.play.autoCalc)
+		for (const eff of active)
+			for (const t of eff.tokens) {
+				const m = /^resist-immune:(?:(resist|immune|vulnerable):)?(.+)$/.exec(t.trim());
+				if (!m) continue;
+				const bucket = (m[1] ?? 'resist') as 'resist' | 'immune' | 'vulnerable';
+				const type = m[2].trim();
+				if (!defenses[bucket].includes(type)) defenses[bucket].push(type);
+			}
+
 	// spellcasting: per-class profiles + shared/pact slot pools (fixes multiclass DCs, L11)
 	const spellcasting = deriveSpellcasting(character, graph, scores);
 
@@ -291,6 +323,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			insight: passiveOf('insight')
 		},
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
+		defenses,
 		spellcasting,
 		missing
 	};

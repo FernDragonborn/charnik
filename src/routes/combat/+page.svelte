@@ -242,6 +242,20 @@
 			{/each}
 			<button class="edit" onclick={(e) => openMenu('pinskills', e)}>✎ Pin skills</button>
 		</div>
+		{#if s.defenses.resist.length || s.defenses.immune.length || s.defenses.vulnerable.length}
+			<div class="senses-strip">
+				<span class="lbl">Defenses</span>
+				{#if s.defenses.resist.length}<span class="sv"
+						><i>Resist</i>{s.defenses.resist.join(', ')}</span
+					>{/if}
+				{#if s.defenses.immune.length}<span class="sv"
+						><i>Immune</i>{s.defenses.immune.join(', ')}</span
+					>{/if}
+				{#if s.defenses.vulnerable.length}<span class="sv"
+						><i>Vulnerable</i>{s.defenses.vulnerable.join(', ')}</span
+					>{/if}
+			</div>
+		{/if}
 	{/if}
 
 	<div class="sectlab">

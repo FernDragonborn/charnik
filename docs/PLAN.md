@@ -735,14 +735,16 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - [ ] **Inventory/equipment at build** (empty today).
 
 **Effects engine (finish the vocab, add authoring):**
-- [ ] **Custom-modifier UI** — a structured "add modifier" form (target · +/− · amount) → emits a
-  `flat-bonus` token, so a GM "+1 AC" is 3 clicks. Engine already applies flat-bonus; the combat
-  custom-effect UI only takes a text label today.
-- [ ] **Mechanically apply the rest of the vocab**: `advantage` → rolls; `grant-proficiency` →
-  skills; `resist-immune` → damage; dice bonus (`+1d4` Bless) → rolled not just noted;
-  `apply-condition`. (flat-bonus / set-override already applied.)
-- [ ] **Feat stat/skill bonuses** — inert until feats' effect tokens are encoded + half-feat
-  ability-choice UI (do with the above).
+- [x] **Custom-modifier UI** — DONE. Combat "Custom modifier" builder (grouped target · +/− ·
+  amount) → `flat-bonus` token, applied live via the reactive sheet.
+- [x] **Mechanically apply the rest of the vocab** — DONE. `advantage` presets adv on the roll;
+  dice bonus (`+1d4` Bless / `−1d4` Bane) is rolled into the total; `grant-proficiency` grants
+  skill/save proficiency; `resist-immune` collects damage defenses (shown on the sheet);
+  `apply-condition` expands to the referenced condition's own tokens. All gated on the effects-auto
+  toggle. (flat-bonus / set-override were already applied.)
+- [ ] **Feat stat/skill bonuses** — the engine applies feat effect tokens already, but the shipped
+  feat rows carry no `effects` yet (must be encoded from SRD text, no hand-authoring) + half-feat
+  ability-choice UI is still needed.
 - [ ] **Plugin sandbox** (QuickJS-WASM) for exotic homebrew logic — far future (decided, not built).
 
 **Spellcasting follow-ups:**
