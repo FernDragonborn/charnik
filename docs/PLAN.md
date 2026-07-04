@@ -836,7 +836,40 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 Do R1–R5 as a focused pass (they're the ones that bite: typos, duplication, drift). R6–R7 are
 opportunistic. Add tests where extracting a helper (R4/R5) makes logic unit-testable.
 
-### Per-file audit (built up file by file)
+### Per-file audit — checklist (tick a file once scanned; findings recorded below it)
+
+Scan one file at a time, top to bottom, record findings, then tick. `★` = created/heavily changed in
+the feature sprint (most debt), do first. `·` = older/lightly touched.
+
+Routes / VMs (high debt):
+- [x] `src/routes/combat/state.svelte.ts` ★ — DONE (2 bugs + 10 issues, see below)
+- [ ] `src/routes/build/state.svelte.ts` ★  (R1 EditContext lives here)
+- [ ] `src/routes/combat/+page.svelte` ★  (~1400 lines, S1)
+- [ ] `src/routes/build/+page.svelte` ★
+- [ ] `src/routes/combat/CombatMenus.svelte` ★
+- [ ] `src/routes/spellbook/+page.svelte` ★
+- [ ] `src/routes/compendium/[...entry]/+page.svelte` ·  + `+page.ts`
+- [ ] `src/routes/settings/+page.svelte` ·  · `+page.svelte` (root) · `+layout.svelte`/`.ts`
+
+lib — content:
+- [ ] `src/lib/content/homebrew.ts` ★ · `detail.ts` ★ · `grouping.ts` ★ · `loader.ts` ★
+- [ ] `src/lib/content/schemas.ts` ★ · `spellAccess.ts` · `search.ts` · `provider.ts` ★ · `store.svelte.ts`
+
+lib — character / rules / effects:
+- [ ] `src/lib/character/derive.ts` ★ · `spellcasting.ts` ★ · `schema.ts` ★ · `repository.ts` · `store.svelte.ts` ★
+- [ ] `src/lib/effects/index.ts` ★  (R4 token grammar) · `src/lib/combat/helpers.ts` ★
+- [ ] `src/lib/rules/core.ts` · `pipeline.ts` · `spellcasting.ts` ★ · `src/lib/build/rules.ts`
+- [ ] `src/lib/demo/sheet.ts` ★
+
+lib — storage / infra / components:
+- [ ] `src/lib/storage/tauri.ts` ★ · `provider.ts` ★ · `browser.ts` · `fetch.ts` · `node.ts` · `memory.ts` · `types.ts`
+- [ ] `src/lib/stores/app.svelte.ts` · `i18n/index.ts` · `schema/version.ts`
+- [ ] components: `EditContentForm.svelte` ★ · `WikiDetail.svelte` · `EntryList.svelte` · `Chip/Switch/Pin/EyeToggle/CommandPalette/Wip`
+
+tools (converters — check count-asserts + parsing):
+- [ ] `tools/srd/convert.mjs` ★ · `convert-2014.mjs` ★ · `convert-slots.mjs` ★ · `convert-classes.mjs` · `convert-spells.mjs` · `convert-items.mjs` · `convert-monsters.mjs` · `lib.mjs` · `tools/build-static-content.mjs`
+
+---
 
 **`src/routes/combat/state.svelte.ts` (CombatVM, ~687 lines):**
 - [ ] **CVM-bug1 · `conc` hardcodes "bless"** (`effects.find(e => e.label…includes('bless'))`) — the
