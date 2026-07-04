@@ -19,7 +19,8 @@
 		"test:watch": "vitest",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint . && stylelint \"src/**/*.{css,svelte}\"",
-		"lint:fix": "prettier --write . && eslint . --fix && stylelint \"src/**/*.{css,svelte}\" --fix"
+		"lint:fix": "prettier --write . && eslint . --fix && stylelint \"src/**/*.{css,svelte}\" --fix",
+		"knip": "knip"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -34,6 +35,7 @@
 		"fake-indexeddb": "^6.2.5",
 		"fast-check": "^4.8.0",
 		"globals": "^17.7.0",
+		"knip": "^6.24.0",
 		"postcss-html": "^1.8.1",
 		"prettier": "^3.9.0",
 		"prettier-plugin-svelte": "^4.1.1",

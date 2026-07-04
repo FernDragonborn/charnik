@@ -939,6 +939,11 @@ passes miss):
   + eslint no-explicit-any/exhaustive-deps; grep `as `/`!`/`any` casts I added.
 - [ ] **MECH4 · test coverage** (`vitest --coverage`) — uncovered branches = blind spots.
 - [x] **MECH5 · invariant greps** — DONE this pass; found a real violation → **RULES-1**, below.
+- [x] **MECH7 · orphan/dead-code (`knip`)** — DONE. Added `knip` devDep + `knip.json` (tool scripts as
+  entries, tauri CLI/dialog ignored, exports/types at `warn` so it's non-blocking) + `pnpm knip`
+  script. Full orphan triage catalogued in **`docs/ORPHANS.md`** (🟢 false-positive/internal ·
+  🟡 unfinished · 🔴 likely dead) — NOT deleted (half-finished features). Real dead-dep found:
+  `@tauri-apps/plugin-dialog` (JS file-picker not wired yet).
 - [ ] **MECH6 · differential test before merging a dup** — run both "duplicate" impls on the same
   input, assert equal. NB the pip formulas (CVM-2) are NOT equal → merging blind would change behaviour.
 
