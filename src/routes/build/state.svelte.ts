@@ -9,6 +9,7 @@
  * let the player fix the rest — matching the app's "everything doable, nothing enforced to a
  * dead end" stance.
  */
+import { toast } from 'svelte-sonner';
 import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
 import { characterSchema, ABILITIES, type Character } from '$lib/character/schema';
@@ -281,9 +282,27 @@ class BuildVM {
 		});
 	});
 	toggleSpell = (ref: string) => {
-		this.selectedSpells = this.selectedSpells.includes(ref)
-			? this.selectedSpells.filter((s) => s !== ref)
-			: [...this.selectedSpells, ref];
+		if (this.selectedSpells.includes(ref)) {
+			this.selectedSpells = this.selectedSpells.filter((s) => s !== ref);
+			return;
+		}
+		// Strict: block picking past the cantrip / prepared cap of any class this spell counts for
+		if (this.strict) {
+			const lvl = Number(this.graph?.get(ref)?.data.level ?? 0);
+			for (const pc of this.spellPicker) {
+				if (!pc.profile.accessSpellIds.includes(ref)) continue; // doesn't count for this class
+				const [chosen, cap, what] =
+					lvl === 0
+						? ([pc.cantripsChosen, pc.profile.cantripCap, 'cantrips'] as const)
+						: ([pc.leveledChosen, pc.profile.preparedCap, 'prepared spells'] as const);
+				if (chosen >= cap) {
+					const who = this.spellPicker.length > 1 ? `${pc.profile.className} ` : '';
+					toast(`${who}${what} full (${cap}) — remove one first, or switch to Free.`);
+					return;
+				}
+			}
+		}
+		this.selectedSpells = [...this.selectedSpells, ref];
 	};
 
 	// --- skills: class picks (choose N) + background grants (auto) --------------
@@ -560,7 +579,9 @@ class BuildVM {
 				const dp = pc.profile.preparedCap - pc.leveledChosen;
 				const who = this.spellPicker.length > 1 ? `${pc.profile.className} ` : '';
 				if (dc > 0) out.push(`Choose ${dc} more ${who}cantrip${dc > 1 ? 's' : ''}.`);
+				if (dc < 0) out.push(`Remove ${-dc} ${who}cantrip${dc < -1 ? 's' : ''} (over cap).`);
 				if (dp > 0) out.push(`Choose ${dp} more ${who}spell${dp > 1 ? 's' : ''}.`);
+				if (dp < 0) out.push(`Remove ${-dp} ${who}spell${dp < -1 ? 's' : ''} (over cap).`);
 			}
 		}
 		return out;
