@@ -930,6 +930,24 @@ lib — storage / infra / components:
 tools (converters — check count-asserts + parsing):
 - [ ] `tools/srd/convert.mjs` ★ · `convert-2014.mjs` ★ · `convert-slots.mjs` ★ · `convert-classes.mjs` · `convert-spells.mjs` · `convert-items.mjs` · `convert-monsters.mjs` · `lib.mjs` · `tools/build-static-content.mjs`
 
+Mechanical / independent checks (don't rely on my judgment — run these to catch what the file+chain
+passes miss):
+- [ ] **MECH1 · duplication detector** (`jscpd src`) — objective dup %; should flag the 3 roll impls,
+  pip×3, csv×4, token regexes.
+- [ ] **MECH2 · import graph** (`madge`) — cycles, god-modules (fan-in/out), orphan files.
+- [ ] **MECH3 · strict types + lint** — `tsc --noUncheckedIndexedAccess`/`--exactOptionalPropertyTypes`
+  + eslint no-explicit-any/exhaustive-deps; grep `as `/`!`/`any` casts I added.
+- [ ] **MECH4 · test coverage** (`vitest --coverage`) — uncovered branches = blind spots.
+- [x] **MECH5 · invariant greps** — DONE this pass; found a real violation → **RULES-1**, below.
+- [ ] **MECH6 · differential test before merging a dup** — run both "duplicate" impls on the same
+  input, assert equal. NB the pip formulas (CVM-2) are NOT equal → merging blind would change behaviour.
+
+**RULES-1 · `src/lib/build/rules.ts` hardcodes ASI/feat levels by class name** —
+`if (id === 'fighter') base.push(6, 14); if (id === 'rogue') base.push(10)` breaks the data-driven-
+classes invariant (asiFeatLevels should read the class's own feature levels from content, not a
+class-name switch). Found by MECH5, not the file/chain pass. (Add `build/rules.ts` to the file
+checklist — it's ★, missed it.)
+
 Not scanned (by design): `*.csv` content (data, not code), `src/lib/index.ts` (empty `$lib` stub),
 config (`vite.config.ts` · `eslint.config.js` · `svelte.config.js` — build config, not app logic;
 scan only if a config bug surfaces). Everything else functional is on the list above.
