@@ -363,9 +363,10 @@
 			</div>
 		</div>
 
-		<!-- inventory / starting equipment -->
-		<div class="card">
-			<h2>Inventory <span class="cnt">{b.inventory.length}</span></h2>
+		<!-- inventory / starting equipment (creation only — managed in the play view after that) -->
+		{#if !b.editId}
+			<div class="card">
+				<h2>Inventory <span class="cnt">{b.inventory.length}</span></h2>
 			<label class="field">
 				<span>Add item</span>
 				<select
@@ -407,10 +408,11 @@
 						</div>
 					{/each}
 				</div>
-			{:else}
-				<p class="sub">No items yet — add starting equipment.</p>
-			{/if}
-		</div>
+				{:else}
+					<p class="sub">No items yet — add starting equipment.</p>
+				{/if}
+			</div>
+		{/if}
 	</div>
 
 	<!-- review & create (echoes the mock's bottom lucard) -->

@@ -155,9 +155,12 @@ const playSchema = z.object({
 const uiSchema = z
 	.object({
 		/** Combat-sheet panel layout: one array of panel ids per column (left, right). */
-		panelColumns: z.array(z.array(z.string())).optional()
+		panelColumns: z.array(z.array(z.string())).optional(),
+		/** Build/edit mode for THIS character: Strict enforces its system's rules, Free lifts them.
+		 *  Stored per character (not a global setting), Strict by default. */
+		strict: z.boolean().default(true)
 	})
-	.default({});
+	.default({ strict: true });
 
 // --- character ----------------------------------------------------------------
 

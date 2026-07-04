@@ -181,8 +181,7 @@ class BuildVM {
 		this.editUi = char.ui;
 		this.name = char.build.name;
 		this.system = char.system;
-		// keep the Strict default: editing stays rules-checked (and guides the new level's picks);
-		// Free is one click away if the prior build doesn't satisfy Strict.
+		this.strict = char.ui.strict; // restore this character's own Strict/Free choice
 		this.speciesId = char.build.species ?? null;
 		this.speciesOptionId = char.build.speciesOption ?? null;
 		this.backgroundId = char.build.background ?? null;
@@ -627,7 +626,8 @@ class BuildVM {
 			system: this.system,
 			build,
 			play: this.editPlay ?? { hp: { current: 0, temp: 0 } },
-			ui: this.editUi ?? {}
+			// persist the Free/Strict choice per character (keep any other ui prefs like panelColumns)
+			ui: { ...(this.editUi ?? {}), strict: this.strict }
 		});
 		if (res.success) return res.data;
 		// last-resort: a bare valid character so the preview never crashes
