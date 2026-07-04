@@ -842,11 +842,16 @@ The file pass gives coverage + local smells; these chains surface the cross-file
 architecture the single-file view hides. `⚠️` = also a security/correctness surface. Tick when traced;
 each names the R-items / bugs it should confirm or expand.
 
-**Completeness method:** this list is NOT brainstormed — it's derived from an **entry-point census**
-(every `on*` handler across all `.svelte`, every lifecycle `onMount`/`afterNavigate`/`$effect`, every
-route `load`, and the build-time runners). Every entry point must map to a chain below; that's the
-completeness proof. (The first draft was brainstormed and MISSED four flows — roster CRUD, app
-switching, the command palette, and WikiDetail's own dice roll — the census caught them: CH10–CH13.)
+**Completeness method:** derived from an **entry-point census**, and the census itself has to cover
+ALL SIX entry-point classes (the first `on*`-only pass was still first-order and missed three):
+  1. DOM `on*` handlers (`onclick`/`onwheel`/`onkeydown`/…),
+  2. **component callback props** (`onselect`/`onsave`/`oncancel` — child → parent),
+  3. **`bind:`** two-way (input → VM state → derived cascade),
+  4. **`$effect`** reactive flow-starts (autosave, deep-link, theme-apply, search-on-query),
+  5. lifecycle `onMount`/`afterNavigate` + route `load`,
+  6. build-time runners.
+Every entry point must map to a chain below — that's the proof. (Two rounds of this caught seven flows
+the brainstorm missed: CH10–CH13 from the `on*` pass, then CH14 + the reactive notes from classes 2–4.)
 
 Duplication-heavy (do first — this is where the big refactors live):
 - [ ] **CH1 · Roll pipeline** — `+page onclick(roll/attackRoll/cast) → roll() → effectsFor →
@@ -883,9 +888,14 @@ Architecture / correctness (do after the above):
   editions→compendium, locale→i18n+rowName). The reactive-store contract; check nothing caches system.
 - [ ] **CH12 · Command palette (Ctrl+K)** (census-found) — `onWindowKeydown → search (Fuse name/text
   indexes) → goto page or deep-link the compendium entry`. `$lib/content/search` + the palette.
-- [ ] **CH13 · Content article render** — `graph row → buildDetail/entryMeta/groupEntries →
-  WikiDetail/EntryList` (shared by compendium + spellbook); the render/model seam + WikiDetail's roll
-  (folded into CH1).
+- [ ] **CH13 · Content article render + select** — `graph row → buildDetail/entryMeta/groupEntries →
+  WikiDetail/EntryList`, and the `onselect` callback → `openEntry` (compendium/spellbook). The
+  render/model seam + WikiDetail's roll (folded into CH1).
+- [ ] **CH14 · Reactive `$effect` flows** (census classes 2–4) — the auto-run starts, each verify it's
+  idempotent + doesn't loop: **autosave** (combat `+page`: `JSON.stringify(c.play)` → debounced
+  `saveCharacterToStore` — persistence correctness), **compendium deep-link** (`entryParam` →
+  `select`), **theme/locale apply** (`+layout`), **palette search-on-query** (CommandPalette), **menu
+  clamp** (CH9). Plus `bind:` inputs feed the VM chains (CH1/CH4/CH7/CH8) — the state entry, no new logic.
 
 ### Per-file audit — checklist (tick a file once scanned; findings recorded below it)
 
