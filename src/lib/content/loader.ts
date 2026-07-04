@@ -76,6 +76,21 @@ export interface ContentGraph {
 /** Locale column grammar: name_/text_ + a BCP-47-ish code (guardrail vs phantom locales). */
 const LOCALE_COL = /^(?:name|text)_([a-z]{2,3}(?:-[A-Za-z0-9]+)*)$/;
 
+/** Optional first-line type declaration for freely-named files: `#charnik-type: <type>`. */
+const TYPE_DIRECTIVE = /^\s*#\s*charnik-type\s*:\s*([a-z_]+)\s*$/i;
+
+/** Split an optional `#charnik-type:` directive off the top of a CSV. When present the directive
+ *  line is removed so the remaining `body` is a clean CSV for Papa; `type` is the declared name
+ *  (lowercased, not yet validated against known types). No directive → `{ body: csv }`. */
+function extractTypeDirective(csv: string): { type?: string; body: string } {
+	const nl = csv.indexOf('\n');
+	let firstLine = (nl === -1 ? csv : csv.slice(0, nl)).replace(/\r$/, '');
+	if (firstLine.charCodeAt(0) === 0xfeff) firstLine = firstLine.slice(1); // strip a leading BOM
+	const m = TYPE_DIRECTIVE.exec(firstLine);
+	if (!m) return { body: csv };
+	return { type: m[1].toLowerCase(), body: nl === -1 ? '' : csv.slice(nl + 1) };
+}
+
 function pushMap<K, V>(map: Map<K, V[]>, key: K, val: V): void {
 	const arr = map.get(key);
 	if (arr) arr.push(val);
@@ -108,21 +123,39 @@ export async function loadContent(storage: Storage, roots: string[]): Promise<Co
 
 		for (const entry of await storage.list(root)) {
 			if (entry.isDir || !entry.name.endsWith('.csv')) continue;
-			const base = entry.name.replace(/\.csv$/, '');
-			// type = the filebase that the name equals or starts with (e.g. species_srd → species)
-			const match = typeByFilebase.find(([fb]) => base === fb || base.startsWith(fb + '_'));
-			if (!match) {
-				issues.push({
-					level: 'warn',
-					root,
-					file: entry.name,
-					message: 'unknown content type for file'
-				});
-				continue;
+			const raw = await storage.read(`${root}/${entry.name}`);
+			// An optional `#charnik-type: <type>` first line lets a freely-named user file declare its
+			// content type explicitly (the loader is otherwise filename-only). Explicit wins.
+			const directive = extractTypeDirective(raw);
+			let type: ContentType;
+			if (directive.type) {
+				if (!(directive.type in CONTENT_TYPES)) {
+					issues.push({
+						level: 'error',
+						root,
+						file: entry.name,
+						message: `#charnik-type: unknown content type "${directive.type}"`
+					});
+					continue;
+				}
+				type = directive.type as ContentType;
+			} else {
+				const base = entry.name.replace(/\.csv$/, '');
+				// type = the filebase that the name equals or starts with (e.g. species_srd → species)
+				const match = typeByFilebase.find(([fb]) => base === fb || base.startsWith(fb + '_'));
+				if (!match) {
+					issues.push({
+						level: 'warn',
+						root,
+						file: entry.name,
+						message:
+							'unknown content type for file (name matches no type — add a "#charnik-type: <type>" first line to declare it)'
+					});
+					continue;
+				}
+				type = match[1];
 			}
-			const type = match[1];
-			const csv = await storage.read(`${root}/${entry.name}`);
-			const parsed = Papa.parse<Record<string, string>>(csv, {
+			const parsed = Papa.parse<Record<string, string>>(directive.body, {
 				header: true,
 				skipEmptyLines: true
 			});

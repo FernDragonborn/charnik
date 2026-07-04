@@ -88,6 +88,43 @@ describe('loader — logic (in-memory)', () => {
 		expect(g.issues.some((i) => i.level === 'error' && i.id === 'bad')).toBe(true);
 	});
 
+	it('honors a #charnik-type directive for a freely-named file (explicit wins over filename)', async () => {
+		const s = new MemoryStorage();
+		await s.write('a/_pack.json', JSON.stringify({ source: 'Homebrew', systems: ['5.5e'] }));
+		// filename maps to no type, but the directive declares it — and it parses as spells
+		await s.write(
+			'a/my-cool-spells.csv',
+			['#charnik-type: spell', SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n')
+		);
+		const g = await loadContent(s, ['a']);
+		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
+		expect(g.get('spell:Homebrew:zap')).toBeTruthy();
+		// no "unknown content type" warning, because the directive resolved it
+		expect(g.issues.some((i) => /unknown content type/.test(i.message))).toBe(false);
+	});
+
+	it('errors on a #charnik-type directive naming an unknown type', async () => {
+		const s = new MemoryStorage();
+		await s.write(
+			'a/stuff.csv',
+			['#charnik-type: gizmo', SPELL_HEAD, spell('zap', '5.5e', 'SRD 5.2.1')].join('\n')
+		);
+		const g = await loadContent(s, ['a']);
+		expect(
+			g.issues.some((i) => i.level === 'error' && /unknown content type "gizmo"/.test(i.message))
+		).toBe(true);
+		expect(g.list('spell').length).toBe(0);
+	});
+
+	it('still warns on a freely-named file with no directive and no filename match', async () => {
+		const s = new MemoryStorage();
+		await s.write('a/whatever.csv', [SPELL_HEAD, spell('zap', '5.5e', 'SRD 5.2.1')].join('\n'));
+		const g = await loadContent(s, ['a']);
+		expect(
+			g.issues.some((i) => i.level === 'warn' && /unknown content type for file/.test(i.message))
+		).toBe(true);
+	});
+
 	it('resolveRefs reports missing referenced content (render-what-you-can)', async () => {
 		const g = await loadContent(await seed(), ['a', 'b']);
 		const { found, missing } = g.resolveRefs([

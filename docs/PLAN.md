@@ -754,11 +754,15 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   distinct short-rest pip section; spell picker preview (EntryList+WikiDetail on pick).
 
 **Platform / content:**
-- [ ] **Tauri fs Storage** impl + platform factory (task #6) — desktop file-on-disk persistence.
-- [ ] **Content-type identification** — explicit `#charnik-type:` declaration + UI type-assign for
-  freely-named user files (loader is filename-only today).
+- [x] **Tauri fs Storage** impl + platform factory (task #6) — DONE. `TauriStorage` over plugin-fs
+  behind the seam (atomic temp→rename, lazy appDataDir root, `..`-rejection); `provider.ts` factory
+  picks it inside a Tauri webview, IndexedDB elsewhere; capabilities scope `$APPDATA` recursive.
+- [~] **Content-type identification** — loader `#charnik-type: <type>` first-line directive DONE
+  (freely-named files declare their type; explicit wins over filename; unknown type → error).
+  Remaining: **UI type-assign** (a form that writes the directive) — folds into homebrew authoring.
 - [ ] **Homebrew subclass/content from the UI** (SRD ships one subclass per class).
-- [ ] Dependabot: 3 advisories (2 moderate, 1 low); Pages deploy recovery.
+- [x] Dependabot: DONE — esbuild + cookie pinned via pnpm-workspace overrides (`pnpm audit` clean).
+  Pages deploy recovery still open.
 
 ---
 
