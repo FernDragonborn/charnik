@@ -350,6 +350,55 @@
 				{/if}
 			</div>
 		</div>
+
+		<!-- inventory / starting equipment -->
+		<div class="card">
+			<h2>Inventory <span class="cnt">{b.inventory.length}</span></h2>
+			<label class="field">
+				<span>Add item</span>
+				<select
+					value=""
+					onchange={(e) => {
+						b.addInventoryItem(e.currentTarget.value);
+						e.currentTarget.value = '';
+					}}
+				>
+					<option value="">— add an item —</option>
+					{#each b.itemList as r (r.effectiveId)}<option value={r.effectiveId}
+							>{rowName(r)}</option
+						>{/each}
+				</select>
+			</label>
+			{#if b.inventory.length}
+				<div class="invlist">
+					{#each b.inventory as it (it.item)}
+						<div class="invrow">
+							<span class="invname">{rowName(b.graph?.get(it.item))}</span>
+							<span class="invqty">
+								<button onclick={() => b.bumpItemQty(it.item, -1)} aria-label="Fewer">−</button>
+								<b>{it.qty}</b>
+								<button onclick={() => b.bumpItemQty(it.item, 1)} aria-label="More">+</button>
+							</span>
+							{#if b.itemEquippable(it.item)}
+								<button
+									class="pchip"
+									class:on={it.equipped}
+									onclick={() => b.toggleItemEquipped(it.item)}
+									>{it.equipped ? 'Equipped' : 'Equip'}</button
+								>
+							{/if}
+							<button
+								class="invrm"
+								onclick={() => b.removeInventoryItem(it.item)}
+								aria-label="Remove">✕</button
+							>
+						</div>
+					{/each}
+				</div>
+			{:else}
+				<p class="sub">No items yet — add starting equipment.</p>
+			{/if}
+		</div>
 	</div>
 
 	<!-- review & create (echoes the mock's bottom lucard) -->
@@ -732,6 +781,53 @@
 	.pchip.dim {
 		opacity: 0.4;
 		cursor: not-allowed;
+	}
+	.invlist {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+		margin-top: 8px;
+	}
+	.invrow {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		padding: 6px 10px;
+	}
+	.invname {
+		flex: 1;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 13px;
+	}
+	.invqty {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		font-family: var(--font-mono);
+		font-size: 13px;
+	}
+	.invqty button {
+		width: 22px;
+		height: 22px;
+		border: 1px solid var(--color-border);
+		border-radius: 5px;
+		background: var(--color-surface);
+		color: var(--color-text);
+		cursor: pointer;
+	}
+	.invrm {
+		border: 0;
+		background: transparent;
+		color: var(--color-text-muted);
+		cursor: pointer;
+		font-size: 13px;
+	}
+	.invrm:hover {
+		color: var(--color-danger, #d06a52);
 	}
 	.pchip:focus-visible {
 		outline: 2px solid var(--color-accent);

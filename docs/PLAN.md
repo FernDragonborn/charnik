@@ -744,7 +744,9 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   slots / features live. Remaining: **guided choices at the new level** (ASI/feat pick, new spells,
   subclass at its level) — needs the builder to hydrate from an existing character (edit mode), also
   the prereq for full editing. Add-a-class-while-levelling also via the builder.
-- [ ] **Inventory/equipment at build** (empty today).
+- [x] **Inventory/equipment at build** — DONE. An Inventory card: add items from the compendium,
+  set quantity, toggle equipped (armor/shield/weapon); stored in `build.inventory` (derive already
+  uses equipped armor/shield for AC). The play-view card-grid inventory management is separate.
 
 **Effects engine (finish the vocab, add authoring):**
 - [x] **Custom-modifier UI** — DONE. Combat "Custom modifier" builder (grouped target · +/− ·

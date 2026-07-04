@@ -100,6 +100,28 @@ class BuildVM {
 	slotAsi = $state<Record<string, { shape: '2' | '1-1'; picks: Ability[] }>>({});
 	/** Spell refs the character knows/prepares (leveled + cantrips), chosen from its class list. */
 	selectedSpells = $state<string[]>([]);
+	/** Starting inventory (item ref + qty + equipped). Lenient — add anything. */
+	inventory = $state<{ item: string; qty: number; equipped: boolean }[]>([]);
+	addInventoryItem = (ref: string) => {
+		if (!ref || this.inventory.some((i) => i.item === ref)) return;
+		this.inventory = [...this.inventory, { item: ref, qty: 1, equipped: false }];
+	};
+	removeInventoryItem = (ref: string) => {
+		this.inventory = this.inventory.filter((i) => i.item !== ref);
+	};
+	bumpItemQty = (ref: string, d: number) => {
+		this.inventory = this.inventory.map((i) =>
+			i.item === ref ? { ...i, qty: Math.max(1, i.qty + d) } : i
+		);
+	};
+	toggleItemEquipped = (ref: string) => {
+		this.inventory = this.inventory.map((i) =>
+			i.item === ref ? { ...i, equipped: !i.equipped } : i
+		);
+	};
+	/** Can this item be equipped (armor / shield / weapon)? */
+	itemEquippable = (ref: string): boolean =>
+		['armor', 'shield', 'weapon'].includes(String(this.row(ref)?.data.category));
 
 	saving = $state(false);
 
@@ -120,6 +142,7 @@ class BuildVM {
 	classList = $derived(this.list('class'));
 	featList = $derived(this.list('feat'));
 	languageList = $derived(this.list('language'));
+	itemList = $derived(this.list('item'));
 
 	private row(id: string | null): LoadedRow | undefined {
 		return id && this.graph ? this.graph.get(id) : undefined;
@@ -488,7 +511,7 @@ class BuildVM {
 				...this.featSlots.map((s) => this.slotFeats[s.key]).filter((r) => r && r !== ASI)
 			],
 			languages: [...this.selectedLanguages],
-			inventory: [],
+			inventory: this.inventory.map((i) => ({ ...i, attuned: false })),
 			// cantrips are always-prepared; leveled spells start prepared (tweak in the Spellbook)
 			spells: this.selectedSpells.map((ref) => {
 				const lvl = Number(this.graph?.get(ref)?.data.level ?? 0);
