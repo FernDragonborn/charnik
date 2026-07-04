@@ -42,16 +42,80 @@ export const healDice = (text: string): string => {
 	return m ? m[1] : '';
 };
 
-/** A bounded-vocab effect token → a short readable tag ("flat-bonus:ac+2" → "AC +2"). */
+/** A bounded-vocab effect token → a short readable tag ("flat-bonus:ac+2" → "AC +2",
+ *  "flat-bonus:save.dex+1" → "DEX save +1", "flat-bonus:skill.stealth-1" → "Stealth −1"). */
 export function effectTag(token: string): string {
-	const m = token.match(/^flat-bonus:(\w+)([+-].+)$/);
-	if (m) return `${m[1] === 'ac' ? 'AC' : m[1]} ${m[2]}`;
+	const m = token.match(/^flat-bonus:([\w.-]+)([+-].+)$/);
+	if (m) {
+		const t = m[1];
+		const delta = m[2].replace('-', '−');
+		let name = t.toUpperCase();
+		if (t === 'saves') name = 'all saves';
+		else if (t === 'skills') name = 'all skills';
+		else if (t.startsWith('save.')) name = `${t.slice(5).toUpperCase()} save`;
+		else if (t.startsWith('skill.')) name = titleCase(t.slice(6));
+		else if (t !== 'ac') name = titleCase(t);
+		return `${name} ${delta}`;
+	}
 	return token.replace(/[-:]/g, ' ');
 }
 
 /** 1 → "1st", 2 → "2nd", … */
 export const ordinal = (n: number) =>
 	`${n}${['th', 'st', 'nd', 'rd'][n % 10 > 3 || Math.floor(n / 10) === 1 ? 0 : n % 10]}`;
+
+/** The 18 SRD skills (id order) — for the custom-modifier target picker. */
+const SKILL_IDS = [
+	'acrobatics',
+	'animal-handling',
+	'arcana',
+	'athletics',
+	'deception',
+	'history',
+	'insight',
+	'intimidation',
+	'investigation',
+	'medicine',
+	'nature',
+	'perception',
+	'performance',
+	'persuasion',
+	'religion',
+	'sleight-of-hand',
+	'stealth',
+	'survival'
+] as const;
+
+/** Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.
+ *  Values are the exact keys the effects engine matches (`ac`, `save.dex`, `skill.stealth`,
+ *  the `saves`/`skills` groups). */
+export const MOD_TARGETS: { group: string; opts: { v: string; l: string }[] }[] = [
+	{
+		group: 'Combat',
+		opts: [
+			{ v: 'ac', l: 'AC' },
+			{ v: 'initiative', l: 'Initiative' },
+			{ v: 'speed', l: 'Speed (ft)' }
+		]
+	},
+	{
+		group: 'Saves',
+		opts: [
+			{ v: 'saves', l: 'All saves' },
+			...(['str', 'dex', 'con', 'int', 'wis', 'cha'] as const).map((a) => ({
+				v: `save.${a}`,
+				l: `${a.toUpperCase()} save`
+			}))
+		]
+	},
+	{
+		group: 'Skills',
+		opts: [
+			{ v: 'skills', l: 'All skills' },
+			...SKILL_IDS.map((s) => ({ v: `skill.${s}`, l: titleCase(s) }))
+		]
+	}
+];
 
 /** A normal tap rolls instantly; Alt/Ctrl/Cmd-click opens the prefilled roll tray. */
 export const wantsTray = (e: Event) => {

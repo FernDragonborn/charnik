@@ -88,10 +88,29 @@ class CombatVM {
 		};
 	};
 
-	addCustomEffect = () => {
-		if (this.customEffectLabel.trim()) this.addEffect(this.customEffectLabel.trim(), [], true);
+	// structured custom modifier (GM "+1 AC" in a few clicks): target · sign · amount → a
+	// flat-bonus token the effects engine already applies (now live, via the reactive sheet).
+	cmTarget = $state('ac');
+	cmSign = $state<'+' | '-'>('+');
+	cmAmount = $state(1);
+	addCustomModifier = () => {
+		const amount = Math.abs(Math.round(this.cmAmount)) || 1;
+		const token = `flat-bonus:${this.cmTarget}${this.cmSign}${amount}`;
+		const label =
+			this.customEffectLabel.trim() ||
+			`${this.cmSign}${amount} ${this.cmTargetLabel(this.cmTarget)}`;
+		this.addEffect(label, [token], this.cmSign === '+');
 		this.customEffectLabel = '';
+		this.cmAmount = 1;
 	};
+	/** Human label for a modifier target key (for the auto effect name). */
+	private cmTargetLabel(t: string): string {
+		if (t === 'saves') return 'to all saves';
+		if (t === 'skills') return 'to all skills';
+		if (t.startsWith('save.')) return `to ${t.slice(5).toUpperCase()} save`;
+		if (t.startsWith('skill.')) return `to ${titleCase(t.slice(6).replace(/-/g, ' '))}`;
+		return `to ${t.toUpperCase()}`;
+	}
 
 	openDice = (e: Event) => {
 		this.dice = { 20: 1 };

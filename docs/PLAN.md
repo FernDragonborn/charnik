@@ -769,6 +769,13 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - [x] Dependabot: DONE — esbuild + cookie pinned via pnpm-workspace overrides (`pnpm audit` clean).
   Pages deploy recovery still open.
 
+**Code quality:**
+- [ ] **CSS class-naming rename pass** — the combat sheet has cryptic classes (`.ae`, `.aedot`,
+  `.mcell`, `.sk`, `.atk`, `.an/.ah/.ad/.am`, `.hpadj/.hpbtn`, `.combatsw`, …) that read poorly and
+  invite collisions (already hit `.combat`, `.modrow`). Rename to verbose, self-evident, kebab-case
+  names with a feature prefix; do it opportunistically per file when touched, not big-bang. New code
+  already follows this (`modifier-row`, `modifier-amount`).
+
 ---
 
 ## Implementation roadmap (phased)

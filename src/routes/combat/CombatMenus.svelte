@@ -3,7 +3,15 @@
 	// show/hide, temp HP, condition). Reads the shared `combat` view-model.
 	import { combat } from './state.svelte';
 	import { SKILL_ABILITY } from '$lib/character/derive';
-	import { signed, titleCase, ABIL, ABILITY_NAME, DICE, EFFECT_PRESETS } from '$lib/combat/helpers';
+	import {
+		signed,
+		titleCase,
+		ABIL,
+		ABILITY_NAME,
+		DICE,
+		EFFECT_PRESETS,
+		MOD_TARGETS
+	} from '$lib/combat/helpers';
 
 	const overlay = $derived(combat.overlay);
 	const rollSrc = $derived(combat.rollSrc);
@@ -17,7 +25,7 @@
 	const passiveSkills = $derived(combat.passiveSkills);
 	const conditionList = $derived(combat.conditionList);
 	const character = $derived(combat.character);
-	const { bumpDie, doRoll, setTempHp, addEffect, addCustomEffect, togglePassive } = combat;
+	const { bumpDie, doRoll, setTempHp, addEffect, addCustomModifier, togglePassive } = combat;
 </script>
 
 {#if overlay}
@@ -107,14 +115,36 @@
 			</button>
 		{:else if overlay.kind === 'customeffect'}
 			<div class="ph">
-				<div class="pop-h" style="border: 0">Custom effect</div>
+				<div class="pop-h" style="border: 0">Custom modifier</div>
+				<div class="modifier-row">
+					<select class="modifier-target" bind:value={combat.cmTarget} aria-label="Modifier target">
+						{#each MOD_TARGETS as g (g.group)}
+							<optgroup label={g.group}>
+								{#each g.opts as o (o.v)}<option value={o.v}>{o.l}</option>{/each}
+							</optgroup>
+						{/each}
+					</select>
+					<button
+						class="modifier-sign"
+						onclick={() => (combat.cmSign = combat.cmSign === '+' ? '-' : '+')}
+						title="Toggle bonus / penalty">{combat.cmSign}</button
+					>
+					<input
+						class="modifier-amount"
+						type="number"
+						min="1"
+						bind:value={combat.cmAmount}
+						aria-label="Amount"
+					/>
+				</div>
 				<div class="field">
 					<!-- svelte-ignore a11y_autofocus -->
-					<input placeholder="Effect name…" bind:value={combat.customEffectLabel} autofocus />
-					<button class="set" onclick={addCustomEffect}>Add</button>
+					<input placeholder="Label (optional)…" bind:value={combat.customEffectLabel} autofocus />
+					<button class="set" onclick={addCustomModifier}>Add</button>
 				</div>
 				<p class="note">
-					Inert text marker — add a manual modifier in the effects panel if needed.
+					Adds a <b>{combat.cmSign}{Math.abs(combat.cmAmount) || 1}</b> modifier — applied live to the
+					chosen stat and listed in the effects panel.
 				</p>
 			</div>
 		{:else if overlay.kind === 'log'}
@@ -521,6 +551,45 @@
 		font-size: 11px;
 		color: var(--color-text-muted);
 		margin: 0;
+	}
+	.note b {
+		color: var(--color-resource);
+	}
+	.modifier-row {
+		display: flex;
+		gap: 8px;
+		margin: 8px 0;
+	}
+	.modifier-target {
+		flex: 1;
+		min-width: 0;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text);
+		font: inherit;
+		padding: 8px 10px;
+	}
+	.modifier-sign {
+		width: 36px;
+		font-family: var(--font-mono);
+		font-size: 16px;
+		font-weight: 700;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text);
+		cursor: pointer;
+	}
+	.modifier-amount {
+		width: 58px;
+		text-align: center;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text);
+		font: inherit;
+		padding: 8px 6px;
 	}
 	/* --- pin skills (two-column) --- */
 	.pinwrap {

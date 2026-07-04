@@ -102,6 +102,18 @@ describe('deriveSheet aggregator', () => {
 		expect(s.ac.trace.map((x) => x.source)).toContain('Shield');
 	});
 
+	it('applies a custom flat-bonus to a specific skill and save (GM modifier)', () => {
+		const c = wizard();
+		c.play.effects = [
+			{ iid: 'm1', label: '+2 Stealth', effects: ['flat-bonus:skill.stealth+2'], positive: true },
+			{ iid: 'm2', label: '+1 DEX save', effects: ['flat-bonus:save.dex+1'], positive: true }
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		// DEX 14 (+2): stealth = +2 mod + 2 custom = 4; dex save = +2 mod + 1 custom = 3
+		expect(s.skills.stealth.value).toBe(4);
+		expect(s.abilities.dex.save.value).toBe(3);
+	});
+
 	it('auto-calc off drops the effect layers (base values only)', () => {
 		const c = wizard();
 		c.play.autoCalc = false;
