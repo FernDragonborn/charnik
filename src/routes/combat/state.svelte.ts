@@ -199,6 +199,17 @@ class CombatVM {
 		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
 		this.round += 1;
 	};
+	/** Enter/leave combat. Entering resets the turn + round so tracking starts clean; leaving hides
+	 *  the turnbar and lifts action-economy enforcement. */
+	toggleCombat = () => {
+		const c = this.character;
+		if (!c) return;
+		c.play.inCombat = !c.play.inCombat;
+		if (c.play.inCombat) {
+			c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+			this.round = 1;
+		}
+	};
 
 	groupByLabel = $derived(
 		{ level: 'By level', prepared: 'Prepared', school: 'By school' }[this.spellGroupBy]
@@ -271,8 +282,41 @@ class CombatVM {
 		else this.rollDiceNow(label, { 20: 1 }, mod);
 	};
 
+	// --- action-economy enforcement -----------------------------------------------------------
+	/** Which turn slot an activity consumes, from its casting time (default = the Action). */
+	private ctSlot(ct: SpRow['ct']): 'action' | 'bonus' | 'reaction' {
+		return ct === 'react' ? 'reaction' : ct === 'bonus' ? 'bonus' : 'action';
+	}
+	/** In combat, spend one pip of `slot`; block (return false) + warn when it's exhausted. Out of
+	 *  combat there is no economy → always allowed. */
+	private trySpend(slot: 'action' | 'bonus' | 'reaction'): boolean {
+		const c = this.character;
+		if (!c || !c.play.inCombat) return true;
+		if (c.play.turn[slot] >= this.slotMax[slot]) {
+			toast(`No ${slot} left this turn`, { description: 'Press “Next turn” to refresh.' });
+			return false;
+		}
+		c.play.turn[slot] += 1;
+		return true;
+	}
+	/** Roll a weapon/unarmed attack — the Attack action, so it spends an action in combat. */
+	attackRoll = (at: Atk, e: Event) => {
+		if (!this.trySpend('action')) return;
+		this.roll(at.name, at.toHit, e);
+	};
+	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
+	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
+	actionClick = (a: { id: string; n: string; roll?: [string, number] }, e: Event) => {
+		if (a.id === 'attack') return; // routes to the Attacks panel; not itself an action spend
+		if (!this.trySpend('action')) return;
+		if (a.roll) this.roll(a.roll[0], a.roll[1], e);
+		else toast(`${a.n} — action used`);
+	};
+
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit
 	cast = (r: SpRow, e: Event) => {
+		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
+		if (!this.trySpend(this.ctSlot(r.ct))) return;
 		const alt = wantsTray(e);
 		// a spell with dice rolls them: damage (Fire Bolt 1d10, Fireball 8d6) or, for auto
 		// spells, healing (Healing Word 2d4 + spellcasting mod)

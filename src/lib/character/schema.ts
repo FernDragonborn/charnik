@@ -121,6 +121,10 @@ const playSchema = z.object({
 		.object({ successes: z.number().int().min(0).max(3), failures: z.number().int().min(0).max(3) })
 		.default({ successes: 0, failures: 0 }),
 	exhaustion: z.number().int().min(0).max(6).default(0),
+	/** Whether the action-economy is being tracked. Off → no turnbar, no action/bonus/reaction
+	 *  enforcement (rolls always go through); on → attacks/spells spend their slot and are blocked
+	 *  when the slot is exhausted. */
+	inCombat: z.boolean().default(false),
 	/** Combat round counter (drives effect expiry). */
 	round: z.number().int().min(0).default(0),
 	/** Action-economy for the current turn: pips SPENT of each slot (base max 1 until a feature

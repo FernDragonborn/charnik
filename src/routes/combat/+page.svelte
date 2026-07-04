@@ -124,6 +124,13 @@
 	</section>
 
 	<section class="controls">
+		<button
+			class="toggle combat"
+			class:on={c.play.inCombat}
+			onclick={combat.toggleCombat}
+			title="Track the action economy (rounds, action/bonus/reaction)"
+			>⚔ Combat <span class="sw">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
+		>
 		<button class="toggle" class:on={shieldOn} onclick={() => (combat.shieldOn = !combat.shieldOn)}
 			>🛡 Shield <span class="sw">{shieldOn ? 'ON' : 'OFF'}</span></button
 		>
@@ -141,39 +148,41 @@
 		<button class="toggle dice" onclick={openDice}>🎲 Dice tray</button>
 	</section>
 
-	<section class="turnbar">
-		<span class="lbl">Round <b>{combat.round}</b></span>
-		{#each SLOTS as [slot, label] (slot)}
-			<span class="ae">
-				{label}
-				<span class="aepips">
-					{#each range(combat.slotMax[slot]) as i (i)}
-						<button
-							type="button"
-							class="aedot"
-							class:used={i < c.play.turn[slot]}
-							onclick={() => combat.usePip(slot, i)}
-							title="{label}: {i < c.play.turn[slot] ? 'used — click to restore' : 'available'}"
-							aria-label="{label} pip {i + 1}"
-						></button>
-					{/each}
+	{#if c.play.inCombat}
+		<section class="turnbar">
+			<span class="lbl">Round <b>{combat.round}</b></span>
+			{#each SLOTS as [slot, label] (slot)}
+				<span class="ae">
+					{label}
+					<span class="aepips">
+						{#each range(combat.slotMax[slot]) as i (i)}
+							<button
+								type="button"
+								class="aedot"
+								class:used={i < c.play.turn[slot]}
+								onclick={() => combat.usePip(slot, i)}
+								title="{label}: {i < c.play.turn[slot] ? 'used — click to restore' : 'available'}"
+								aria-label="{label} pip {i + 1}"
+							></button>
+						{/each}
+					</span>
 				</span>
-			</span>
-		{/each}
-		<button
-			type="button"
-			class="ae move"
-			onclick={() => combat.spendMove(5)}
-			title="Click: spend 5 ft"
-		>
-			🦶 Move <b class:spent={combat.moveLeft === 0}>{combat.moveLeft}</b> / {combat.moveMax} ft
-		</button>
-		<button type="button" class="aereset" onclick={combat.resetMove} title="Reset movement"
-			>↺</button
-		>
-		<span class="spacer"></span>
-		<button type="button" class="nextturn" onclick={combat.nextTurn}>Next turn ▸</button>
-	</section>
+			{/each}
+			<button
+				type="button"
+				class="ae move"
+				onclick={() => combat.spendMove(5)}
+				title="Click: spend 5 ft"
+			>
+				🦶 Move <b class:spent={combat.moveLeft === 0}>{combat.moveLeft}</b> / {combat.moveMax} ft
+			</button>
+			<button type="button" class="aereset" onclick={combat.resetMove} title="Reset movement"
+				>↺</button
+			>
+			<span class="spacer"></span>
+			<button type="button" class="nextturn" onclick={combat.nextTurn}>Next turn ▸</button>
+		</section>
+	{/if}
 
 	<div class="playbar">
 		<span class="phint"
@@ -309,14 +318,14 @@
 				</div>
 			{:else if pid === 'attacks'}
 				{#each attacks as at (at.name)}
-					<button class="atk" onclick={(e) => roll(at.name, at.toHit, e)}>
+					<button class="atk" onclick={(e) => combat.attackRoll(at, e)}>
 						<span class="an">{at.name}</span><span class="ah">{signed(at.toHit)}</span>
 						<span class="ad">{at.dmg}</span><span class="am">{at.meta}</span>
 					</button>
 				{/each}
 			{:else if pid === 'actions'}
 				{#each visibleActions as a (a.id)}
-					<button class="atk" onclick={(e) => a.roll && roll(a.roll[0], a.roll[1], e)}>
+					<button class="atk" onclick={(e) => combat.actionClick(a, e)}>
 						<span class="an">{a.n}</span><span class="ah">{a.h || '—'}</span>
 						<span class="ad">{a.d}</span><span class="am">{a.m}</span>
 					</button>
@@ -592,6 +601,14 @@
 		border-color: var(--color-accent-deep);
 		color: #fff;
 		font-size: 13px;
+	}
+	.toggle.combat.on {
+		background: var(--color-danger-soft, rgba(179, 69, 47, 0.14));
+		border-color: var(--color-danger, #b3452f);
+		color: var(--color-danger, #d06a52);
+	}
+	.toggle.combat.on .sw {
+		border-color: var(--color-danger, #b3452f);
 	}
 	.controls .spacer,
 	.turnbar .spacer {
