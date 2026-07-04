@@ -18,6 +18,7 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const md = readFileSync(resolve(root, 'tools/srd-src/2024/classes.md'), 'utf8');
 const out = (f) => resolve(root, 'content/srd-2024', f);
+const out2014 = (f) => resolve(root, 'content/srd-2014', f);
 
 const SYSTEMS = '5.5e';
 const SOURCE = 'SRD 5.2.1';
@@ -180,12 +181,20 @@ for (const [kind, { levels }] of Object.entries(kinds))
 		for (let d = 1; d <= 9; d++) row[SLOT_COLS[d - 1]] = l.slots[d];
 		slotRows.push(row);
 	}
-writeCsv(
-	out('spell_slots_srd.csv'),
-	['id', 'systems', 'source', 'kind', 'level', ...SLOT_COLS],
-	slotRows
-);
+const SLOT_HEAD = ['id', 'systems', 'source', 'kind', 'level', ...SLOT_COLS];
+writeCsv(out('spell_slots_srd.csv'), SLOT_HEAD, slotRows);
 assertCount('spell_slots', slotRows.length, Object.keys(kinds).length * 20);
+
+// The slot progressions (full / half / pact) are IDENTICAL in 2014 and 2024 — the tables didn't
+// change between editions (spell_slots.test asserts `full` == core.fullCasterSlots). So the same
+// matrices are re-tagged for 5e, giving 2014 casters their slots. (class_casting counts DO differ
+// by edition — 2024 uses table columns, 2014 uses per-class formulas — so those are NOT re-tagged;
+// the rules layer applies the 2014 formula when class_casting is absent.)
+writeCsv(
+	out2014('spell_slots_srd.csv'),
+	SLOT_HEAD,
+	slotRows.map((r) => ({ ...r, systems: '5e', source: 'SRD 5.1' }))
+);
 
 // --- class_casting: cantrips / prepared-known per class per level ------------
 const castRows = [];

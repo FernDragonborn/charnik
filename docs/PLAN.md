@@ -772,8 +772,12 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   Remaining: **encode class resources from SRD tables** (converter — rage/ki/superiority counts),
   **`grant-slot:<level>`** (Mystic Arcanum extra slot into the pools), and **Action-Surge/Haste
   extra action pips** (feed the action-economy `slotMax` from effects).
-- [ ] **2014 casting data** — shipped 2014 class-feature prose is truncated; backfill from SRD 5.1,
-  then emit 2014 `spell_slots`/`class_casting` (2024 done).
+- [~] **2014 casting data** — 2014 **spell_slots** now emitted (the full/half/pact matrices are
+  edition-identical — spell_slots.test asserts `full`==core — so re-tagged 5e). 2014 casters
+  (caster=full/half/pact → the derive's `slot_table ?? caster` lookup) now get their slots.
+  Remaining: 2014 **class_casting** counts (cantrips/prepared differ by edition — 2024 uses table
+  columns, 2014 uses per-class formulas → the rules layer needs the 2014 formula), and backfilling
+  the truncated 2014 class-feature prose.
 - [ ] **Combat UI**: multiclass shows only the first class's DC (data has per-class); pact pool as a
   distinct short-rest pip section; spell picker preview (EntryList+WikiDetail on pick).
 
