@@ -26,12 +26,35 @@
 	const conditionList = $derived(combat.conditionList);
 	const character = $derived(combat.character);
 	const { bumpDie, doRoll, setTempHp, addEffect, addCustomModifier, togglePassive } = combat;
+
+	// Keep the dropdown inside the viewport: after it renders, if it would run off the bottom (or
+	// top) edge, shift it up/down so it fits. `overlay.top` is in document coords (button bottom +
+	// scroll); we clamp the equivalent viewport position, then convert back.
+	let popEl = $state<HTMLDivElement>();
+	$effect(() => {
+		if (!overlay || !popEl) return;
+		const margin = 8;
+		const h = popEl.offsetHeight;
+		const vh = window.innerHeight;
+		const viewportTop = overlay.top - window.scrollY; // where it currently sits on screen
+		let top = viewportTop;
+		if (top + h > vh - margin) top = vh - margin - h; // overflowing bottom → pull up
+		if (top < margin) top = margin; // …but never above the top edge
+		popEl.style.top = `${top + window.scrollY}px`;
+	});
 </script>
 
 {#if overlay}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<div class="ovbg" onclick={() => (combat.overlay = null)}></div>
+	<!-- backdrop: click closes; wheeling OUTSIDE the menu closes it too so the page can scroll
+	     (wheeling over the menu itself scrolls the menu, via its own overflow:auto) -->
 	<div
+		class="ovbg"
+		onclick={() => (combat.overlay = null)}
+		onwheel={() => (combat.overlay = null)}
+	></div>
+	<div
+		bind:this={popEl}
 		class="pop"
 		role="dialog"
 		aria-modal="true"
