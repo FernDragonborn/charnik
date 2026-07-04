@@ -23,9 +23,11 @@ import {
 	spellRow,
 	GROUP_MODES,
 	type GroupMode,
+	rollEffectsFor,
 	type Atk,
 	type SpRow,
-	type SpGroup
+	type SpGroup,
+	type BonusDie
 } from '$lib/combat/helpers';
 
 class CombatVM {
@@ -272,35 +274,66 @@ class CombatVM {
 
 	toggle = (k: string) => (this.collapsed[k] = !this.collapsed[k]);
 
+	/** Advantage + bonus/penalty dice a stat picks up from active effects (gated on effects-auto). */
+	private effectsFor(key: string): { adv: boolean; bonusDice: BonusDie[] } {
+		const c = this.character;
+		if (!c || !c.play.autoCalc) return { adv: false, bonusDice: [] }; // effects-auto off → plain
+		return rollEffectsFor(c.play.effects, key);
+	}
+
 	// open the roll builder prefilled + anchored, so the player can pick advantage then Roll
-	openRoll = (label: string, diceObj: Record<number, number>, mod: number, e: Event) => {
+	openRoll = (label: string, diceObj: Record<number, number>, mod: number, e: Event, adv = 0) => {
 		this.rollSrc = label;
 		this.dice = { ...diceObj };
 		this.rollMod = mod;
-		this.rollAdv = 0;
+		this.rollAdv = adv; // preset from the stat's active effects (adjustable in the tray)
 		this.openMenu('dice', e);
 	};
-	// roll a dice pool immediately (no advantage — that lives in the builder)
-	rollDiceNow = (label: string, diceObj: Record<number, number>, mod: number) => {
+	// roll a dice pool immediately. `adv` (−1/0/+1) and signed `bonusDice` come from the stat's
+	// active effects (advantage, Bless/Bane dice) — auto-applied so a tap "just works".
+	rollDiceNow = (
+		label: string,
+		diceObj: Record<number, number>,
+		mod: number,
+		adv = 0,
+		bonusDice: BonusDie[] = []
+	) => {
 		const parts: string[] = [];
 		let total = 0;
+		let advPair: [number, number] | undefined;
 		for (const [s, c] of Object.entries(diceObj).sort((a, b) => Number(b[0]) - Number(a[0]))) {
 			const sides = Number(s);
 			for (let k = 0; k < c; k++) {
 				const v = 1 + Math.floor(Math.random() * sides);
+				if (sides === 20 && adv !== 0 && k === 0) {
+					const v2 = 1 + Math.floor(Math.random() * 20);
+					const kept = adv > 0 ? Math.max(v, v2) : Math.min(v, v2);
+					advPair = [kept, kept === v ? v2 : v];
+					total += kept;
+					continue;
+				}
 				total += v;
 				parts.push(`d${sides}(${v})`);
 			}
 		}
+		for (const b of bonusDice)
+			for (let k = 0; k < b.count; k++) {
+				const v = 1 + Math.floor(Math.random() * b.sides);
+				total += b.sign * v;
+				parts.push(`${b.sign < 0 ? '−' : '+'}d${b.sides}(${v})`);
+			}
 		total += mod;
 		const expr = parts.join(' + ') + (mod ? ` ${signed(mod)}` : '');
-		this.log = [{ label, expr, total }, ...this.log].slice(0, 200);
-		toast(`${label} — ${total}`, { description: expr });
+		this.log = [{ label, expr, total, adv: advPair }, ...this.log].slice(0, 200);
+		const advTxt = advPair ? `d20 ${advPair[0]} (drop ${advPair[1]}) ` : '';
+		toast(`${label} — ${total}`, { description: `${advTxt}${expr}`.trim() });
 	};
-	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray
-	roll = (label: string, mod: number, e: Event) => {
-		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e);
-		else this.rollDiceNow(label, { 20: 1 }, mod);
+	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray. `key`
+	// (e.g. "save.dex", "skill.stealth", "attack") lets the roll pick up matching effects.
+	roll = (label: string, mod: number, e: Event, key?: string) => {
+		const fx = key ? this.effectsFor(key) : null;
+		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e, fx?.adv ? 1 : 0);
+		else this.rollDiceNow(label, { 20: 1 }, mod, fx?.adv ? 1 : 0, fx?.bonusDice ?? []);
 	};
 
 	// --- action-economy enforcement -----------------------------------------------------------
@@ -323,7 +356,7 @@ class CombatVM {
 	/** Roll a weapon/unarmed attack — the Attack action, so it spends an action in combat. */
 	attackRoll = (at: Atk, e: Event) => {
 		if (!this.trySpend('action')) return;
-		this.roll(at.name, at.toHit, e);
+		this.roll(at.name, at.toHit, e, 'attack');
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */

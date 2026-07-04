@@ -10,6 +10,44 @@ import type { ContentGraph } from '$lib/content/loader';
 /** +N / −N / 0 for a modifier. */
 export const signed = (n: number) => (n >= 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
+/** A signed bonus/penalty die a stat gains from an effect (Bless +1d4 → {4,1,+1}). */
+export interface BonusDie {
+	sides: number;
+	count: number;
+	sign: number;
+}
+
+/** Scan active effects for what a given roll target (e.g. "save.dex", "skill.stealth", "attack")
+ *  picks up: advantage, and signed bonus/penalty dice (Bless +1d4 / Bane −1d4). Pure — the caller
+ *  gates it on the effects-auto toggle. `saves`/`skills` group tokens fan out to every save/skill. */
+export function rollEffectsFor(
+	effects: { effects: string[] }[],
+	key: string
+): { adv: boolean; bonusDice: BonusDie[] } {
+	const out = { adv: false, bonusDice: [] as BonusDie[] };
+	const matches = (t: string) =>
+		t === key ||
+		(t === 'saves' && key.startsWith('save')) ||
+		(t === 'skills' && key.startsWith('skill'));
+	for (const eff of effects) {
+		for (const tok of eff.effects) {
+			const adv = /^advantage:(.+)$/.exec(tok);
+			if (adv && matches(adv[1].trim())) {
+				out.adv = true;
+				continue;
+			}
+			const die = /^flat-bonus:([\w.-]+)([+-])(\d+)d(\d+)$/.exec(tok);
+			if (die && matches(die[1]))
+				out.bonusDice.push({
+					sides: Number(die[4]),
+					count: Number(die[3]),
+					sign: die[2] === '-' ? -1 : 1
+				});
+		}
+	}
+	return out;
+}
+
 /** Feet → "N m" (metric in parentheses next to imperial). */
 export const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/, '')} m`;
 

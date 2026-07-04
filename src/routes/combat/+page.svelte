@@ -220,7 +220,7 @@
 			<button
 				class="tile"
 				title={why(s.initiative)}
-				onclick={(e) => roll('Initiative', s.initiative.value, e)}
+				onclick={(e) => roll('Initiative', s.initiative.value, e, 'initiative')}
 			>
 				<div class="k">Initiative</div>
 				<div class="v">{signed(s.initiative.value)}</div>
@@ -265,7 +265,7 @@
 						title={why(a.save)}
 						onclick={(e) => {
 							e.stopPropagation();
-							roll(`${ab.toUpperCase()} save`, a.save.value, e);
+							roll(`${ab.toUpperCase()} save`, a.save.value, e, `save.${ab}`);
 						}}
 					>
 						<i class="pdot" class:on={prof}></i>SAVE <b>{signed(a.save.value)}</b>
@@ -308,7 +308,7 @@
 									<button
 										class="skl"
 										title={why(sk)}
-										onclick={(e) => roll(titleCase(skill), sk.value, e)}
+										onclick={(e) => roll(titleCase(skill), sk.value, e, `skill.${skill}`)}
 									>
 										<i
 											class="pdot"
