@@ -836,6 +836,53 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 Do R1–R5 as a focused pass (they're the ones that bite: typos, duplication, drift). R6–R7 are
 opportunistic. Add tests where extracting a helper (R4/R5) makes logic unit-testable.
 
+### Per-file audit (built up file by file)
+
+**`src/routes/combat/state.svelte.ts` (CombatVM, ~687 lines):**
+- [ ] **CVM-bug1 · `conc` hardcodes "bless"** (`effects.find(e => e.label…includes('bless'))`) — the
+  concentration indicator searches effect labels for the word *bless* instead of reading
+  `play.concentration` (the schema field for it). Wrong for any other concentration spell. **Bug.**
+- [ ] **CVM-bug2 · `conditionList` hardcodes system `'5.5e'`** (`graph.list('condition',{system:'5.5e'})`)
+  — should use the character's own system, not always 5.5e. **Bug.**
+- [ ] **CVM-1 · `doRoll` vs `rollDiceNow` duplicate ~30 lines** of dice-rolling (pool loop, adv-d20
+  keep-winner, bonus dice, expr/log/toast). Extract a pure `rollPool(dice, mod, adv, bonusDice) →
+  {total, expr, advPair}`; both call it. (Deepest duplication in the file; unit-testable with seeded RNG.)
+- [ ] **CVM-2 · three inconsistent click-to-set pip impls** — `usePip` uses `t[slot] > i ? i : i+1`
+  (spent-count) while `slotClick`/`resourceClick` use `i < remaining ? full-i : full-i-1`. SAME intent,
+  two formulas → one pure `pipClick()` (this is R5, and the formulas disagreeing is a latent bug risk).
+- [ ] **CVM-3 · action-slot type `'action'|'bonus'|'reaction'`** repeated in slotMax/usePip/ctSlot/
+  trySpend (this is R3, local instances).
+- [ ] **CVM-4 · `overlay.kind: string`** + `openMenu(kind: string)` → `MenuKind` union (R2, local).
+- [ ] **CVM-5 · token regex inline** in `slotMax` (`/^flat-bonus:(action|bonus|reaction)\+(\d+)$/`)
+  (R4, local).
+- [ ] **CVM-6 · `RollLogEntry` interface** — the `{label, expr, total, adv?}` log-entry shape is inline
+  on the `log` field and re-typed at 4 push sites; the `.slice(0, 200)` cap is a repeated magic number.
+- [ ] **CVM-7 · shadowing / naming** — the action-economy field `slotMax` is shadowed by a local
+  `const slotMax` in `spellGroups`; the `cast` method is shadowed by a local `const cast` inside it.
+  Rename.
+- [ ] **CVM-8 · `actions` inline array with cryptic keys** (`{id,n,h,d,m,roll?}` = name/hint/desc/marker)
+  → a typed `StandardAction` interface with readable field names, and it's static data → move to
+  helpers/data (the derived only needs to inject the live skill mods).
+- [ ] **CVM-9 · VM `round` vs schema `play.round`** — the VM keeps its own `round = $state(1)` while
+  the character schema already has `play.round`; they can diverge. Use the persisted one.
+- [ ] **CVM-10 · `iid: label + Date.now()`** for a runtime effect id → `crypto.randomUUID()`
+  (the GUID-not-counter rule).
+
+**Structural / file-splitting debt** (split by responsibility — VM · pure helpers · area components ·
+curated global CSS · scoped specifics — so logic doesn't pile into one file and breed duplicates):
+- [ ] **S1 · `combat/+page.svelte` is still ~1400 lines** — the play sheet's markup + all its scoped
+  CSS in one file. Finish extracting area components (StatBars / HP / Turnbar / Resources / SpellBlock
+  / Panels / Menus already partly done) so each panel owns its markup + styles. (This is the old
+  in-progress task "Extract area components".)
+- [ ] **S2 · `CombatVM` (687 lines) does too much** — rolling (dice pool + tray + log), action
+  economy, spells/prepare, resources/rests, HP, level-up, drag layout, effects. Once the pure bits are
+  extracted (roll pool → CVM-1, pip math → CVM-2/R5, token parsing → R4), the VM shrinks to wiring;
+  consider grouping the rest (e.g. a roll module) rather than one flat class.
+- [ ] **S3 · `build/state.svelte.ts` (BuildVM)** similarly large — after R1 (EditContext) audit it the
+  same file-by-file way; likely candidates: statgen, spells picker, feats/ASI slots as their own units.
+- [ ] Audit the remaining big `.svelte`/`.svelte.ts` files one at a time (compendium, spellbook,
+  EditContentForm, CombatMenus) and append their findings here before touching code.
+
 ---
 
 ## Implementation roadmap (phased)
