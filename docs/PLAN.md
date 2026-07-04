@@ -843,7 +843,7 @@ the feature sprint (most debt), do first. `·` = older/lightly touched.
 
 Routes / VMs (high debt):
 - [x] `src/routes/combat/state.svelte.ts` ★ — DONE (2 bugs + 10 issues, see below)
-- [ ] `src/routes/build/state.svelte.ts` ★  (R1 EditContext lives here)
+- [x] `src/routes/build/state.svelte.ts` ★ — DONE (R1 + 7 issues, see below)
 - [ ] `src/routes/combat/+page.svelte` ★  (~1400 lines, S1)
 - [ ] `src/routes/build/+page.svelte` ★
 - [ ] `src/routes/combat/CombatMenus.svelte` ★
@@ -868,6 +868,10 @@ lib — storage / infra / components:
 
 tools (converters — check count-asserts + parsing):
 - [ ] `tools/srd/convert.mjs` ★ · `convert-2014.mjs` ★ · `convert-slots.mjs` ★ · `convert-classes.mjs` · `convert-spells.mjs` · `convert-items.mjs` · `convert-monsters.mjs` · `lib.mjs` · `tools/build-static-content.mjs`
+
+Not scanned (by design): `*.csv` content (data, not code), `src/lib/index.ts` (empty `$lib` stub),
+config (`vite.config.ts` · `eslint.config.js` · `svelte.config.js` — build config, not app logic;
+scan only if a config bug surfaces). Everything else functional is on the list above.
 
 ---
 
@@ -900,6 +904,27 @@ tools (converters — check count-asserts + parsing):
   the character schema already has `play.round`; they can diverge. Use the persisted one.
 - [ ] **CVM-10 · `iid: label + Date.now()`** for a runtime effect id → `crypto.randomUUID()`
   (the GUID-not-counter rule).
+
+**`src/routes/build/state.svelte.ts` (BuildVM, ~735 lines):**
+- [ ] **BVM-1 · draft fields are triple-maintained** — every draft `$state` must be listed in the
+  class decl, in `reset()`, and in `hydrate()`. Adding one = 3 edits (already bitten). Extract a
+  `defaultDraft()` factory (single source of the field set) that reset/hydrate build on. (This is R1's
+  bigger sibling — the whole draft is worth one typed shape, not ~25 loose fields.)
+- [ ] **BVM-2 · `csv` comma-splitter duplicated** — re-implemented here (line 36) and in
+  `combat/helpers.ts`, `spellAccess.ts`, `EditContentForm`. One shared `splitList()` util.
+- [ ] **BVM-3 · feat-category string literals** (`cat === 'origin'`, `=== 'epic-boon'`) — use the
+  exported `FEAT_CATEGORIES` const from schemas, not bare strings (enums-not-literals).
+- [ ] **BVM-4 · the `draft` derived is ~60 lines** assembling the whole Character inline (twice, incl.
+  a duplicated last-resort fallback) → extract a pure `assembleCharacter(state)` fn, unit-testable
+  (round-trips with hydrate for the level-up tests we skipped).
+- [ ] **BVM-5 · `pointsSpent` field shadows the imported `pointsSpent` fn** (same smell as CVM-7).
+  Rename the field.
+- [ ] **BVM-6 · token/format regexes inline** — `flat-bonus:([a-z]{3})…` in `speciesFixedAbilities`
+  (R4) and `^(\d+)x(\d+)$` for `boost_choice`; centralise/parse-once.
+- [ ] **BVM-7 · magic sentinels / id strings** — `ASI = '__asi__'` mixed into `slotFeats` values (a
+  discriminated union would be cleaner), the hardcoded feat id `'ability-score-improvement'`, ASI
+  shapes `'2'`/`'1-1'`, `'any'` skill list, `'species'`/`'other'` in abilityNote, `slotFeats` composite
+  string key `${i}:${level}`.
 
 **Structural / file-splitting debt** (split by responsibility — VM · pure helpers · area components ·
 curated global CSS · scoped specifics — so logic doesn't pile into one file and breed duplicates):
