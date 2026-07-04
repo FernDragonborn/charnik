@@ -142,6 +142,71 @@ function convertSpecies() {
 	assertCount('species', rows.length, all.length);
 }
 
+// --- species options (2024 in-species lineages / legacies) -------------------
+// 2024 species with a table-based choice: each is a 4-column table (Name · level-1 benefit ·
+// spell · spell). We take the name + level-1 benefit text; effects stay blank (2024 species carry
+// no ASI — the choice grants a trait, recorded + shown, not a stat change). Dragonborn draconic
+// ancestry (a paired damage-type table) and Gnome/Goliath (prose lists) are deferred.
+const SPECIES_CHOICE_2024 = {
+	Elf: { kind: 'lineage', label: 'Elven Lineage' },
+	Tiefling: { kind: 'legacy', label: 'Fiendish Legacy' }
+};
+const stripHtml = (s) =>
+	s
+		.replace(/<[^>]+>/g, '')
+		.replace(/&amp;/g, '&')
+		.replace(/&#39;|’/g, "'")
+		.replace(/\s+/g, ' ')
+		.trim();
+function firstTableTds(body) {
+	const t = /<table>([\s\S]*?)<\/table>/i.exec(body.join('\n'));
+	return t ? [...t[1].matchAll(/<td>([\s\S]*?)<\/td>/gi)].map((m) => stripHtml(m[1])) : [];
+}
+function convertSpeciesOptions() {
+	const all = blocks(src('character-origins.md')).filter((b) => b.h3 === 'Species Descriptions');
+	const rows = [];
+	for (const b of all) {
+		const ch = SPECIES_CHOICE_2024[b.name];
+		if (!ch) continue;
+		const tds = firstTableTds(b.body);
+		for (let i = 0; i + 1 < tds.length; i += 4) {
+			const name = tds[i];
+			if (!name) continue;
+			rows.push({
+				id: slug(`${b.name}-${name}`),
+				systems: '5.5e',
+				source: 'SRD 5.2.1',
+				name_en: name,
+				name_uk: '',
+				text_en: tds[i + 1] || '', // the level-1 benefit
+				text_uk: '',
+				effects: '',
+				species_id: slug(b.name),
+				kind: ch.kind,
+				option_label: ch.label
+			});
+		}
+	}
+	assertCount('species_options', rows.length, 6); // 3 Elven Lineages + 3 Fiendish Legacies
+	writeCsv(
+		out('species_options_srd.csv'),
+		[
+			'id',
+			'systems',
+			'source',
+			'name_en',
+			'name_uk',
+			'text_en',
+			'text_uk',
+			'effects',
+			'species_id',
+			'kind',
+			'option_label'
+		],
+		rows
+	);
+}
+
 // --- backgrounds -------------------------------------------------------------
 function convertBackgrounds() {
 	const all = blocks(src('character-origins.md')).filter((b) => b.h3 === 'Background Descriptions');
@@ -188,5 +253,6 @@ function convertBackgrounds() {
 convertFeats();
 convertConditions();
 convertSpecies();
+convertSpeciesOptions();
 convertBackgrounds();
 console.log('done.');

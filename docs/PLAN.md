@@ -724,10 +724,13 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - [~] **Lineages & subraces** — Phase 1 DONE: `species_option` content type (linked `species_id`,
   `kind: subrace|lineage|legacy|ancestry`, `option_label`, effects) + 2014 converter emitting the 4
   SRD subraces (Hill Dwarf/High Elf/Lightfoot/Rock Gnome, each with its own ASI) + loader
-  longest-filebase fix so `species_options_*` isn't mis-read as `species`. Remaining: **2024
-  in-species choices** (parse character-origins.md), **builder 2nd picker** (shown when the chosen
-  species has options), and **`build.speciesOption` ref** gathered in derive (its effects cascade
-  like the species'). Per-edition label from `option_label`.
+  longest-filebase fix so `species_options_*` isn't mis-read as `species`. P2 DONE: builder 2nd
+  picker (shown when the chosen species has options, per-edition label from `option_label`) +
+  `build.speciesOption` gathered in derive (effects cascade like the species'). P3 DONE (partial):
+  2024 Elf **Elven Lineages** (Drow/High Elf/Wood Elf) + Tiefling **Fiendish Legacies** (Abyssal/
+  Chthonic/Infernal) parsed from character-origins.md tables. Remaining: 2024 **Dragonborn draconic
+  ancestry** (paired damage-type table) + **Gnome/Goliath** (prose-list choices), and encoding the
+  lineage benefits as effects (currently text-only — fine, since 2024 species carry no ASI).
 - [x] **Half-Elf +1/+1 choice** (5e) — DONE. Data-driven `boost_choice` column (`NxM`, converter
   parses "M ability scores of your choice increase by N" → Half-Elf `1x2`); builder shows a chip
   picker excluding the fixed-boosted ability (CHA), folded into `abilityBoosts`. Generalizes to any

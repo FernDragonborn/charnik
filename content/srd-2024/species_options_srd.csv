@@ -1,0 +1,7 @@
+id,systems,source,name_en,name_uk,text_en,text_uk,effects,species_id,kind,option_label
+elf-drow,5.5e,SRD 5.2.1,Drow,,The range of your Darkvision increases to 120 feet. You also know the Dancing Lights cantrip.,,,elf,lineage,Elven Lineage
+elf-high-elf,5.5e,SRD 5.2.1,High Elf,,"You know the Prestidigitation cantrip. Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list.",,,elf,lineage,Elven Lineage
+elf-wood-elf,5.5e,SRD 5.2.1,Wood Elf,,Your Speed increases to 35 feet. You also know the Druidcraft cantrip.,,,elf,lineage,Elven Lineage
+tiefling-abyssal,5.5e,SRD 5.2.1,Abyssal,,You have Resistance to Poison damage. You also know the Poison Spray cantrip.,,,tiefling,legacy,Fiendish Legacy
+tiefling-chthonic,5.5e,SRD 5.2.1,Chthonic,,You have Resistance to Necrotic damage. You also know the Chill Touch cantrip.,,,tiefling,legacy,Fiendish Legacy
+tiefling-infernal,5.5e,SRD 5.2.1,Infernal,,You have Resistance to Fire damage. You also know the Fire Bolt cantrip.,,,tiefling,legacy,Fiendish Legacy
