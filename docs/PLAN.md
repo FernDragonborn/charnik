@@ -842,10 +842,17 @@ The file pass gives coverage + local smells; these chains surface the cross-file
 architecture the single-file view hides. `⚠️` = also a security/correctness surface. Tick when traced;
 each names the R-items / bugs it should confirm or expand.
 
+**Completeness method:** this list is NOT brainstormed — it's derived from an **entry-point census**
+(every `on*` handler across all `.svelte`, every lifecycle `onMount`/`afterNavigate`/`$effect`, every
+route `load`, and the build-time runners). Every entry point must map to a chain below; that's the
+completeness proof. (The first draft was brainstormed and MISSED four flows — roster CRUD, app
+switching, the command palette, and WikiDetail's own dice roll — the census caught them: CH10–CH13.)
+
 Duplication-heavy (do first — this is where the big refactors live):
 - [ ] **CH1 · Roll pipeline** — `+page onclick(roll/attackRoll/cast) → roll() → effectsFor →
-  helpers.rollEffectsFor → rollDiceNow` **and** the tray path `openRoll → doRoll`. Targets CVM-1
-  (doRoll≡rollDiceNow), R4 (dice/adv/bonus-dice parsing).
+  helpers.rollEffectsFor → rollDiceNow` **and** the tray path `openRoll → doRoll`. Targets CVM-1 and
+  now a **THIRD dice impl**: `WikiDetail.rollDice/rollHp` re-rolls `Math.random` + its own formula
+  parser (compendium/monster rolls) — three roll implementations to unify, not two. R4 (dice parsing).
 - [ ] **CH2 · Effect grammar (bounded vocab)** ⚠️ — a token string wherever it's read:
   `parseEffect/applyEffects/collectResources/collectFlags` (effects) + the ad-hoc regexes in
   `derive.ts` (abilityBonus, grant-prof, resist-immune, apply-condition), `build/state`
@@ -869,6 +876,16 @@ Architecture / correctness (do after the above):
   Storage.write → resetContentGraph → loader → shows in compendium`.
 - [ ] **CH9 · Menu/overlay lifecycle** — `openMenu → position → $effect clamp → wheel/click close`
   (CombatMenus). Smaller; verify the clamp/scroll fix + overlay.kind typing (R2).
+- [ ] **CH10 · Roster CRUD** (census-found) — root `+page.svelte`: list characters, `open(id)` →
+  `openCharacter` → combat, `removeCharacter(id)`, new. Store `characters` (guid recompute) + storage.
+- [ ] **CH11 · App switching** (census-found) — `+layout.svelte`/`settings`: theme / locale /
+  activeSystem / activeEditions toggles → `app` store → live re-render everywhere (system→build,
+  editions→compendium, locale→i18n+rowName). The reactive-store contract; check nothing caches system.
+- [ ] **CH12 · Command palette (Ctrl+K)** (census-found) — `onWindowKeydown → search (Fuse name/text
+  indexes) → goto page or deep-link the compendium entry`. `$lib/content/search` + the palette.
+- [ ] **CH13 · Content article render** — `graph row → buildDetail/entryMeta/groupEntries →
+  WikiDetail/EntryList` (shared by compendium + spellbook); the render/model seam + WikiDetail's roll
+  (folded into CH1).
 
 ### Per-file audit — checklist (tick a file once scanned; findings recorded below it)
 
