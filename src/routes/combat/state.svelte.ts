@@ -146,6 +146,60 @@ class CombatVM {
 		this.overlay = null;
 	};
 
+	// --- HP: apply damage / healing to the play-state (temp HP soaks damage first) -------------
+	hpAmount = $state(1);
+	private get hpMax(): number {
+		return this.character?.play.hp.max ?? this.sheet?.maxHp.value ?? 0;
+	}
+	damage = () => {
+		const p = this.character?.play;
+		if (!p) return;
+		let n = Math.max(0, Math.round(this.hpAmount));
+		const soaked = Math.min(p.hp.temp, n); // temp HP absorbs first (5e rule)
+		p.hp.temp -= soaked;
+		n -= soaked;
+		p.hp.current = Math.max(0, p.hp.current - n);
+	};
+	heal = () => {
+		const p = this.character?.play;
+		if (!p) return;
+		p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, Math.round(this.hpAmount)));
+	};
+
+	// --- Action economy: base 1 pip per slot (features grant extras later); move tracks feet ---
+	readonly slotMax: Record<'action' | 'bonus' | 'reaction', number> = {
+		action: 1,
+		bonus: 1,
+		reaction: 1
+	};
+	get moveMax(): number {
+		return this.sheet?.speed.value ?? 0;
+	}
+	moveLeft = $derived(Math.max(0, this.moveMax - (this.character?.play.turn.move ?? 0)));
+	/** Click a pip in a slot. Same click-to-set model as spell slots: clicking a filled (available)
+	 *  pip spends up to it; clicking a spent pip restores down to it. */
+	usePip = (slot: 'action' | 'bonus' | 'reaction', index: number) => {
+		const t = this.character?.play.turn;
+		if (!t) return;
+		t[slot] = t[slot] > index ? index : index + 1;
+	};
+	/** Spend a step of movement (default 5 ft), clamped to the remaining pool. */
+	spendMove = (ft = 5) => {
+		const t = this.character?.play.turn;
+		if (!t) return;
+		t.move = Math.min(this.moveMax, Math.max(0, t.move + ft));
+	};
+	resetMove = () => {
+		if (this.character) this.character.play.turn.move = 0;
+	};
+	/** End the turn: refresh every action-economy slot and advance the round counter. */
+	nextTurn = () => {
+		const c = this.character;
+		if (!c) return;
+		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+		this.round += 1;
+	};
+
 	groupByLabel = $derived(
 		{ level: 'By level', prepared: 'Prepared', school: 'By school' }[this.spellGroupBy]
 	);

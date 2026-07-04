@@ -58,6 +58,14 @@
 		releaseDrag
 	} = combat;
 
+	// action-economy slots (id + label); base 1 pip each until a feature grants extras
+	const SLOTS = [
+		['action', 'Action'],
+		['bonus', 'Bonus'],
+		['reaction', 'Reaction']
+	] as const;
+	const range = (n: number) => Array.from({ length: n }, (_, i) => i);
+
 	onMount(combat.load);
 
 	// autosave play-state edits back to storage (debounced), so combat persists per character
@@ -101,6 +109,17 @@
 			<div class="bar">
 				<i class="cur" style="width:{hpBar.cur}%"></i><i class="tmp" style="width:{hpBar.tmp}%"></i>
 			</div>
+			<div class="hpadj">
+				<button class="hpbtn dmg" onclick={combat.damage} title="Apply damage">− Damage</button>
+				<input
+					class="hpnum"
+					type="number"
+					min="0"
+					bind:value={combat.hpAmount}
+					aria-label="HP amount"
+				/>
+				<button class="hpbtn heal" onclick={combat.heal} title="Apply healing">Heal ＋</button>
+			</div>
 		</div>
 	</section>
 
@@ -123,13 +142,37 @@
 	</section>
 
 	<section class="turnbar">
-		<span class="lbl">Turn</span>
-		<span class="ae">Action <span class="aepips"><i class="aedot"></i></span></span>
-		<span class="ae">Bonus <span class="aepips"><i class="aedot"></i></span></span>
-		<span class="ae">Reaction <span class="aepips"><i class="aedot"></i></span></span>
-		<span class="ae move">🦶 Move <b>{s.speed.value}</b> / {s.speed.value} ft</span>
+		<span class="lbl">Round <b>{combat.round}</b></span>
+		{#each SLOTS as [slot, label] (slot)}
+			<span class="ae">
+				{label}
+				<span class="aepips">
+					{#each range(combat.slotMax[slot]) as i (i)}
+						<button
+							type="button"
+							class="aedot"
+							class:used={i < c.play.turn[slot]}
+							onclick={() => combat.usePip(slot, i)}
+							title="{label}: {i < c.play.turn[slot] ? 'used — click to restore' : 'available'}"
+							aria-label="{label} pip {i + 1}"
+						></button>
+					{/each}
+				</span>
+			</span>
+		{/each}
+		<button
+			type="button"
+			class="ae move"
+			onclick={() => combat.spendMove(5)}
+			title="Click: spend 5 ft"
+		>
+			🦶 Move <b class:spent={combat.moveLeft === 0}>{combat.moveLeft}</b> / {combat.moveMax} ft
+		</button>
+		<button type="button" class="aereset" onclick={combat.resetMove} title="Reset movement"
+			>↺</button
+		>
 		<span class="spacer"></span>
-		<button class="nextturn">Next turn ▸</button>
+		<button type="button" class="nextturn" onclick={combat.nextTurn}>Next turn ▸</button>
 	</section>
 
 	<div class="playbar">
@@ -591,14 +634,88 @@
 		gap: 4px;
 	}
 	.ae .aedot {
-		width: 8px;
-		height: 8px;
+		width: 12px;
+		height: 12px;
+		padding: 0;
+		border: 1px solid var(--color-good);
 		border-radius: 50%;
 		background: var(--color-good);
 		box-shadow: 0 0 8px rgba(59, 184, 166, 0.45);
+		cursor: pointer;
+	}
+	.ae .aedot.used {
+		background: transparent;
+		border-color: var(--color-border-strong);
+		box-shadow: none;
 	}
 	.ae b {
 		color: var(--color-text);
+	}
+	.ae b.spent {
+		color: var(--color-text-muted);
+	}
+	/* the Move slot + reset are buttons but wear the same chip look */
+	button.ae {
+		cursor: pointer;
+		color: var(--color-text-muted);
+	}
+	button.ae:hover {
+		border-color: var(--color-border-strong);
+		color: var(--color-text);
+	}
+	.aereset {
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-full);
+		width: 28px;
+		height: 28px;
+		cursor: pointer;
+		color: var(--color-text-muted);
+		font-size: 14px;
+	}
+	.aereset:hover {
+		color: var(--color-text);
+		border-color: var(--color-border-strong);
+	}
+	/* HP damage / heal control */
+	.hpadj {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		margin-top: 10px;
+	}
+	.hpnum {
+		width: 58px;
+		text-align: center;
+		font-family: var(--font-mono);
+		font-size: 14px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 7px;
+		color: var(--color-text);
+		padding: 5px 4px;
+	}
+	.hpbtn {
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 12px;
+		padding: 6px 11px;
+		border-radius: 7px;
+		cursor: pointer;
+		flex: 1;
+	}
+	.hpbtn.dmg {
+		background: var(--color-danger-soft, rgba(179, 69, 47, 0.12));
+		border: 1px solid var(--color-danger, #b3452f);
+		color: var(--color-danger, #d06a52);
+	}
+	.hpbtn.heal {
+		background: var(--color-good-soft);
+		border: 1px solid var(--color-good);
+		color: var(--color-good);
+	}
+	.hpbtn:hover {
+		filter: brightness(1.12);
 	}
 	.roundc {
 		display: inline-flex;

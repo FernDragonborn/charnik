@@ -122,7 +122,17 @@ const playSchema = z.object({
 		.default({ successes: 0, failures: 0 }),
 	exhaustion: z.number().int().min(0).max(6).default(0),
 	/** Combat round counter (drives effect expiry). */
-	round: z.number().int().min(0).default(0)
+	round: z.number().int().min(0).default(0),
+	/** Action-economy for the current turn: pips SPENT of each slot (base max 1 until a feature
+	 *  grants extras), and feet of movement used. `Next turn` resets these + advances `round`. */
+	turn: z
+		.object({
+			action: z.number().int().min(0).default(0),
+			bonus: z.number().int().min(0).default(0),
+			reaction: z.number().int().min(0).default(0),
+			move: z.number().int().min(0).default(0)
+		})
+		.default({ action: 0, bonus: 0, reaction: 0, move: 0 })
 });
 
 // --- ui / per-character view preferences --------------------------------------
