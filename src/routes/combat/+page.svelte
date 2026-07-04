@@ -400,10 +400,17 @@
 					</div>
 				{:else}<p class="trace">No active effects.</p>{/each}
 			{:else if pid === 'spells' && s.spellcasting.classes.length}
-				{@const sc = s.spellcasting.classes[0]}
+				{@const multi = s.spellcasting.classes.length > 1}
 				<div class="castline">
-					Save DC <b>{sc.saveDC.value}</b> · attack
-					<b>{signed(sc.attack.value)}</b> — every spell
+					{#each s.spellcasting.classes as sc, i (sc.className)}
+						{#if i > 0}<span class="castsep"> · </span>{/if}
+						{#if multi}<b class="castcls">{sc.className}</b>
+						{/if}Save DC
+						<b title={why(sc.saveDC)}>{sc.saveDC.value}</b> · attack
+						<b>{signed(sc.attack.value)}</b>
+					{/each}
+					{#if !multi}
+						— every spell{/if}
 				</div>
 				<div class="sprows">
 					{#each spellGroups as g (g.key)}
@@ -1315,6 +1322,12 @@
 		color: var(--color-resource);
 		font-family: var(--font-display);
 		font-weight: 700;
+	}
+	.castline b.castcls {
+		color: var(--color-accent-bright);
+	}
+	.castsep {
+		color: var(--color-border-strong);
 	}
 	.sprows {
 		margin-top: 2px;
