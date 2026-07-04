@@ -116,9 +116,11 @@ export async function loadContent(
 	const rows: LoadedRow[] = [];
 	const issues: ContentIssue[] = [];
 	const localeSet = new Set<string>(['en']);
-	const typeByFilebase = Object.entries(CONTENT_TYPES).map(
-		([t, d]) => [d.filebase, t as ContentType] as const
-	);
+	// longest filebase first, so a specific type wins over a type whose filebase is its prefix
+	// (e.g. `species_options_*` must match `species_option`, not `species`)
+	const typeByFilebase = Object.entries(CONTENT_TYPES)
+		.map(([t, d]) => [d.filebase, t as ContentType] as const)
+		.sort((a, b) => b[0].length - a[0].length);
 
 	const sources: ContentSource[] = [...roots.map((root) => ({ storage, root })), ...extra];
 	for (const { storage: st, root } of sources) {

@@ -422,6 +422,55 @@ function convertSpecies() {
 	return rows.length;
 }
 
+// --- species options (2014 subraces) — one per race in SRD 5.1 ---------------
+// SRD 5.1 ships exactly one subrace per subrace-having race (Hill Dwarf / High Elf / Lightfoot /
+// Rock Gnome). Each is an <h4> block after its parent race's base traits; its first "Ability Score
+// Increase." is the SUBRACE's ASI → flat-bonus tokens. `end` = the next race heading id.
+const SUBRACES = [
+	{ id: 'HillDwarf', end: 'Elf', species: 'Dwarf' },
+	{ id: 'HighElf', end: 'Halfling', species: 'Elf' },
+	{ id: 'Lightfoot', end: 'Human', species: 'Halfling' },
+	{ id: 'RockGnome', end: 'HalfElf', species: 'Gnome' }
+];
+const SPECIES_OPTION_COLS = [
+	'id',
+	'systems',
+	'source',
+	'name_en',
+	'name_uk',
+	'text_en',
+	'text_uk',
+	'effects',
+	'species_id',
+	'kind',
+	'option_label'
+];
+function convertSpeciesOptions() {
+	const html = src(`${SRC}.html`);
+	const rows = SUBRACES.map((sr) => {
+		const block = sliceById(html, sr.id, sr.end);
+		const nameM = /<b>([\s\S]*?)<\/b>/i.exec(block);
+		const name = nameM ? strip(nameM[1]) : sr.id;
+		const text = strip(block.replace(/<h[1-6][\s\S]*?<\/h[1-6]>/i, ''));
+		return {
+			id: slug(name),
+			systems: '5e',
+			source: 'SRD 5.1',
+			name_en: name,
+			name_uk: '',
+			text_en: text,
+			text_uk: '',
+			effects: raceAsi(text), // the subrace's own Ability Score Increase
+			species_id: slug(sr.species),
+			kind: 'subrace',
+			option_label: 'Subrace'
+		};
+	});
+	assertCount('species_options', rows.length, 4);
+	writeCsv(out('species_options_srd.csv'), SPECIES_OPTION_COLS, rows);
+	return rows.length;
+}
+
 // --- backgrounds (SRD 5.1 has only Acolyte) + feats (only Grappler) ----------
 function convertBackgrounds() {
 	const html = src(`${SRC}.html`);
@@ -1014,10 +1063,11 @@ const nSpells = convertSpells();
 const nMonsters = convertMonsters();
 const nCond = convertConditions();
 const nSpec = convertSpecies();
+const nSpecOpt = convertSpeciesOptions();
 const nBg = convertBackgrounds();
 const nFeat = convertFeats();
 const nFeatures = convertClasses();
 const nItems = convertItems();
 console.log(
-	`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nBg} backgrounds, ${nFeat} feats, 12 classes, ${nFeatures} class features, ${nItems} items`
+	`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nSpecOpt} subraces, ${nBg} backgrounds, ${nFeat} feats, 12 classes, ${nFeatures} class features, ${nItems} items`
 );

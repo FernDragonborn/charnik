@@ -721,10 +721,13 @@ Config files: `charnik.config.json` (dataDir, roots, toggles, rule-options, sett
 Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority within each.
 
 **Builder / character:**
-- [ ] **Lineages & subraces** — new `species_option` type (linked `species_id`, `kind:
-  subrace|lineage|legacy|ancestry`, effects) covering 2014 subraces + 2024 in-species choices;
-  converter parses each species' choice trait → `option_label` (per-species/edition label) +
-  option rows; builder shows a 2nd picker; `build.speciesOption` ref gathered in derive.
+- [~] **Lineages & subraces** — Phase 1 DONE: `species_option` content type (linked `species_id`,
+  `kind: subrace|lineage|legacy|ancestry`, `option_label`, effects) + 2014 converter emitting the 4
+  SRD subraces (Hill Dwarf/High Elf/Lightfoot/Rock Gnome, each with its own ASI) + loader
+  longest-filebase fix so `species_options_*` isn't mis-read as `species`. Remaining: **2024
+  in-species choices** (parse character-origins.md), **builder 2nd picker** (shown when the chosen
+  species has options), and **`build.speciesOption` ref** gathered in derive (its effects cascade
+  like the species'). Per-edition label from `option_label`.
 - [ ] **Half-Elf +1/+1 choice** (5e) — the choosable part of its ASI (fixed +2 CHA already lands).
 - [x] **Expertise** — DONE. `build.expertise[]`, derive exposes a `prof` **enum**
   (`none|half|proficient|expertise`, not two booleans), builder ×2 toggle on proficient skills,
@@ -772,6 +775,11 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   Pages deploy recovery still open.
 
 **Code quality:**
+- [ ] **Friendly source labels** — "SRD 5.1" / "SRD 5.2.1" are too technical for the UI; show
+  "D&D 5e" / "D&D 5.5e" (or "5" / "5.5") to users **everywhere a source/edition is displayed**
+  (compendium eyebrow + source line, filters, article "Available to", build, etc.). Keep the precise
+  "SRD 5.1/5.2.1" as the underlying `source` tag (CC-BY attribution + `type:source:id` identity) —
+  this is a **display map** (source → label), not a data rename, so licensing/attribution stays exact.
 - [ ] **CSS class-naming rename pass** — the combat sheet has cryptic classes (`.ae`, `.aedot`,
   `.mcell`, `.sk`, `.atk`, `.an/.ah/.ad/.am`, `.hpadj/.hpbtn`, `.combatsw`, …) that read poorly and
   invite collisions (already hit `.combat`, `.modrow`). Rename to verbose, self-evident, kebab-case

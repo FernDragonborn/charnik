@@ -168,6 +168,16 @@ export const speciesSchema = baseRow.extend({
 	creature_type: optStr // default "humanoid"
 });
 
+/** A sub-choice within a species: a 2014 **subrace** (Hill Dwarf) or a 2024 in-species
+ *  **lineage / legacy / ancestry** choice. Linked to its parent by `species_id`; carries its own
+ *  ASI + traits via the common `effects`/`text`. `option_label` overrides the picker heading
+ *  (e.g. "Subrace" vs "Lineage") when the default from `kind` isn't right. */
+export const speciesOptionSchema = baseRow.extend({
+	species_id: reqStr,
+	kind: z.enum(['subrace', 'lineage', 'legacy', 'ancestry']).default('subrace'),
+	option_label: optStr
+});
+
 /** A class. Subclass features live in class_features keyed by class_id+level. */
 export const classSchema = baseRow.extend({
 	hit_die: HitDie,
@@ -374,6 +384,7 @@ export const spellListsSchema = z.object({
 
 export const CONTENT_TYPES = {
 	species: { schema: speciesSchema, filebase: 'species' },
+	species_option: { schema: speciesOptionSchema, filebase: 'species_options' },
 	class: { schema: classSchema, filebase: 'classes' },
 	class_feature: { schema: classFeatureSchema, filebase: 'class_features' },
 	background: { schema: backgroundSchema, filebase: 'backgrounds' },
@@ -399,6 +410,7 @@ export const LOOKUP_TYPES = new Set<ContentType>(['spell_slots', 'class_casting'
 export const isBrowsable = (t: ContentType): boolean => !LOOKUP_TYPES.has(t);
 
 export type Species = z.infer<typeof speciesSchema>;
+export type SpeciesOption = z.infer<typeof speciesOptionSchema>;
 export type CharClass = z.infer<typeof classSchema>;
 export type ClassFeature = z.infer<typeof classFeatureSchema>;
 export type Background = z.infer<typeof backgroundSchema>;
