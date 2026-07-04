@@ -1,6 +1,13 @@
 packages:
   - '.'
 
+# Force patched versions of transitive deps flagged by advisories (both dev/build-only):
+#   esbuild <=0.24.2  → dev-server request SSRF (GHSA-67mh-4wv8-2f99), via svelte-i18n
+#   cookie  <0.7.0    → name/path/domain parsing (GHSA-pxg6-pf52-xh8x), via @sveltejs/kit
+overrides:
+  esbuild@<=0.24.2: '>=0.25.0'
+  cookie@<0.7.0: '~0.7.2'
+
 # Approve install/postinstall build scripts (pnpm blocks the rest by default for
 # supply-chain safety). esbuild needs its native binary built on install.
 allowBuilds:
