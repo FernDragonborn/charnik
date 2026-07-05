@@ -854,10 +854,15 @@ Every entry point must map to a chain below — that's the proof. (Two rounds of
 the brainstorm missed: CH10–CH13 from the `on*` pass, then CH14 + the reactive notes from classes 2–4.)
 
 Duplication-heavy (do first — this is where the big refactors live):
-- [ ] **CH1 · Roll pipeline** — `+page onclick(roll/attackRoll/cast) → roll() → effectsFor →
-  helpers.rollEffectsFor → rollDiceNow` **and** the tray path `openRoll → doRoll`. Targets CVM-1 and
-  now a **THIRD dice impl**: `WikiDetail.rollDice/rollHp` re-rolls `Math.random` + its own formula
-  parser (compendium/monster rolls) — three roll implementations to unify, not two. R4 (dice parsing).
+- [x] **CH1 · Roll pipeline** — DONE. Extracted a pure `src/lib/rules/dice.ts`
+  (`rollPool`/`rollFormula`/`parseDicePool`, seeded-RNG-injectable, returns `{total, expr, adv}`) with
+  `dice.test.ts` (10 golden cases). All THREE impls now call it: `doRoll` collapsed into `rollDiceNow`
+  (one roll site in the VM), `rollDiceNow` = `rollPool` + a new `pushRoll` helper (folds CVM-6: the
+  `RollLogEntry` type is shared, magic `200` → `ROLL_LOG_MAX`), and `WikiDetail.rollDice` calls
+  `rollFormula`. **Bugfix:** the old compendium roller rolled only the FIRST `NdM` group; `rollFormula`
+  rolls every group. `parseDice` (helpers) → moved to dice as `parseDicePool` (it was NOT dead —
+  `spellRow` uses it; ORPHANS 🔴 note corrected). Also fixed vitest to mirror the app's `$lib` alias
+  (value imports of `$lib` were unresolved in tests). Covers CVM-1, part of R4 (dice parsing unified).
 - [ ] **CH2 · Effect grammar (bounded vocab)** ⚠️ — a token string wherever it's read:
   `parseEffect/applyEffects/collectResources/collectFlags` (effects) + the ad-hoc regexes in
   `derive.ts` (abilityBonus, grant-prof, resist-immune, apply-condition), `build/state`

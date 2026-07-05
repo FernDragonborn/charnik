@@ -13,6 +13,7 @@ import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
 import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
 import { passiveScore } from '$lib/rules/core';
+import { rollPool, type BonusDie, type Rolled } from '$lib/rules/dice';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import {
@@ -27,8 +28,11 @@ import {
 	type Atk,
 	type SpRow,
 	type SpGroup,
-	type BonusDie
+	type RollLogEntry
 } from '$lib/combat/helpers';
+
+/** Cap on the retained roll log (newest kept). */
+const ROLL_LOG_MAX = 200;
 
 class CombatVM {
 	graph = $state<ContentGraph | null>(null);
@@ -57,7 +61,7 @@ class CombatVM {
 		left: number | null;
 		right: number | null;
 	}>(null);
-	log = $state<{ label: string; expr: string; total: number; adv?: [number, number] }[]>([]);
+	log = $state<RollLogEntry[]>([]);
 	hiddenActions = $state<Record<string, boolean>>({});
 	// dice tray / roll builder
 	dice = $state<Record<number, number>>({ 20: 1 }); // sides → count in the pool
@@ -136,33 +140,17 @@ class CombatVM {
 			.join(' + ') + (this.rollMod ? ` ${signed(this.rollMod)}` : '')
 	);
 
+	// The custom roll tray. Just the general roller fed from the tray's own state.
 	doRoll = () => {
-		const parts: string[] = [];
-		let total = 0;
-		let adv: [number, number] | undefined; // [kept, dropped] for the adv/disadv d20
-		for (const [s, c] of Object.entries(this.dice).sort((a, b) => Number(b[0]) - Number(a[0]))) {
-			const sides = Number(s);
-			for (let k = 0; k < c; k++) {
-				const v = 1 + Math.floor(Math.random() * sides);
-				if (sides === 20 && this.rollAdv !== 0 && k === 0) {
-					// roll TWO d20 and keep the winner; the loser is shown struck through
-					const v2 = 1 + Math.floor(Math.random() * 20);
-					const kept = this.rollAdv > 0 ? Math.max(v, v2) : Math.min(v, v2);
-					adv = [kept, kept === v ? v2 : v];
-					total += kept;
-					continue; // the adv detail renders the d20, don't duplicate it in parts
-				}
-				total += v;
-				parts.push(`d${sides}(${v})`);
-			}
-		}
-		total += this.rollMod;
-		const label = this.rollSrc ?? 'Custom roll';
-		const expr = parts.join(' + ') + (this.rollMod ? ` ${signed(this.rollMod)}` : '');
-		this.log = [{ label, expr, total, adv }, ...this.log].slice(0, 200);
-		const advTxt = adv ? `d20 ${adv[0]} (drop ${adv[1]}) ` : '';
-		toast(`${label} — ${total}`, { description: `${advTxt}${expr}`.trim() });
+		this.rollDiceNow(this.rollSrc ?? 'Custom roll', this.dice, this.rollMod, this.rollAdv);
 	};
+
+	/** Record a completed roll: prepend to the log (capped) and toast it. */
+	private pushRoll(label: string, r: Rolled) {
+		this.log = [{ label, ...r }, ...this.log].slice(0, ROLL_LOG_MAX);
+		const advTxt = r.adv ? `d20 ${r.adv[0]} (drop ${r.adv[1]}) ` : '';
+		toast(`${label} — ${r.total}`, { description: `${advTxt}${r.expr}`.trim() });
+	}
 
 	setTempHp = () => {
 		if (this.character) this.character.play.hp.temp = Math.max(0, this.tempHpInput);
@@ -335,35 +323,7 @@ class CombatVM {
 		adv = 0,
 		bonusDice: BonusDie[] = []
 	) => {
-		const parts: string[] = [];
-		let total = 0;
-		let advPair: [number, number] | undefined;
-		for (const [s, c] of Object.entries(diceObj).sort((a, b) => Number(b[0]) - Number(a[0]))) {
-			const sides = Number(s);
-			for (let k = 0; k < c; k++) {
-				const v = 1 + Math.floor(Math.random() * sides);
-				if (sides === 20 && adv !== 0 && k === 0) {
-					const v2 = 1 + Math.floor(Math.random() * 20);
-					const kept = adv > 0 ? Math.max(v, v2) : Math.min(v, v2);
-					advPair = [kept, kept === v ? v2 : v];
-					total += kept;
-					continue;
-				}
-				total += v;
-				parts.push(`d${sides}(${v})`);
-			}
-		}
-		for (const b of bonusDice)
-			for (let k = 0; k < b.count; k++) {
-				const v = 1 + Math.floor(Math.random() * b.sides);
-				total += b.sign * v;
-				parts.push(`${b.sign < 0 ? '−' : '+'}d${b.sides}(${v})`);
-			}
-		total += mod;
-		const expr = parts.join(' + ') + (mod ? ` ${signed(mod)}` : '');
-		this.log = [{ label, expr, total, adv: advPair }, ...this.log].slice(0, 200);
-		const advTxt = advPair ? `d20 ${advPair[0]} (drop ${advPair[1]}) ` : '';
-		toast(`${label} — ${total}`, { description: `${advTxt}${expr}`.trim() });
+		this.pushRoll(label, rollPool(diceObj, mod, adv, bonusDice));
 	};
 	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray. `key`
 	// (e.g. "save.dex", "skill.stealth", "attack") lets the roll pick up matching effects.
@@ -425,7 +385,11 @@ class CombatVM {
 			if (alt) this.openRoll(label, { 20: 1 }, m, e);
 			else this.rollDiceNow(label, { 20: 1 }, m);
 		} else {
-			this.log = [{ label: `Cast ${r.name}`, expr: '', total: NaN }, ...this.log].slice(0, 200);
+			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
+			this.log = [{ label: `Cast ${r.name}`, expr: '', total: NaN }, ...this.log].slice(
+				0,
+				ROLL_LOG_MAX
+			);
 			toast(`Cast ${r.name}`);
 		}
 	};

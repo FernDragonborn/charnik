@@ -9,6 +9,7 @@
 	import DOMPurify from 'dompurify';
 	import { marked } from 'marked';
 	import { toast } from 'svelte-sonner';
+	import { rollFormula } from '$lib/rules/dice';
 	import type { DetailModel } from '$lib/content/detail';
 
 	let { detail, actions }: { detail: DetailModel | null; actions?: Snippet } = $props();
@@ -26,16 +27,9 @@
 	}
 	const bodyHtml = $derived(detail && browser ? renderBody(detail.bodyHtml) : '');
 
-	// roll a dice formula ("16d12 + 80", "8d6") and toast the total
+	// roll a dice formula ("16d12 + 80", "8d6") and toast the total (shared roller)
 	function rollDice(formula: string, label: string) {
-		let total = 0;
-		const dm = /(\d+)d(\d+)/.exec(formula);
-		if (dm)
-			for (let i = 0; i < Number(dm[1]); i++)
-				total += 1 + Math.floor(Math.random() * Number(dm[2]));
-		const fm = /([+-]\s*\d+)\s*$/.exec(formula);
-		if (fm) total += Number(fm[1].replace(/\s/g, ''));
-		toast(`${label} — ${total}`, { description: formula });
+		toast(`${label} — ${rollFormula(formula).total}`, { description: formula });
 	}
 	const rollHp = (formula: string) => rollDice(formula, 'HP rolled');
 </script>

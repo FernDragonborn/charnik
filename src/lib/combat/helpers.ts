@@ -6,16 +6,17 @@
 import type { Ability } from '$lib/rules/core';
 import type { Computed } from '$lib/rules/pipeline';
 import type { ContentGraph } from '$lib/content/loader';
+import { parseDicePool, type BonusDie, type Rolled } from '$lib/rules/dice';
+
+// The dice roller and its BonusDie/Rolled types live in the pure rules core; re-exported here so
+// existing combat consumers keep importing from one place.
+export type { BonusDie, Rolled };
+
+/** A roll-log row: a completed roll plus what it was for. */
+export type RollLogEntry = Rolled & { label: string };
 
 /** +N / −N / 0 for a modifier. */
 export const signed = (n: number) => (n >= 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
-
-/** A signed bonus/penalty die a stat gains from an effect (Bless +1d4 → {4,1,+1}). */
-export interface BonusDie {
-	sides: number;
-	count: number;
-	sign: number;
-}
 
 /** Scan active effects for what a given roll target (e.g. "save.dex", "skill.stealth", "attack")
  *  picks up: advantage, and signed bonus/penalty dice (Bless +1d4 / Bane −1d4). Pure — the caller
@@ -65,14 +66,6 @@ export function why(c: Computed): string {
 /** "sleight-of-hand" → "Sleight Of Hand". */
 export const titleCase = (s: string) =>
 	s.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
-
-/** Extract a dice pool ({sides: count}) from any string containing NdM tokens. */
-export const parseDice = (s: string): Record<number, number> => {
-	const out: Record<number, number> = {};
-	for (const m of s.matchAll(/(\d+)d(\d+)/gi))
-		out[Number(m[2])] = (out[Number(m[2])] ?? 0) + Number(m[1]);
-	return out;
-};
 
 /** Healing dice from a spell's text ("regains Hit Points equal to 2d4 plus …"). */
 export const healDice = (text: string): string => {
@@ -268,7 +261,7 @@ export function spellRow(graph: ContentGraph, ref: string, prep: SpRow['prep']):
 						: '',
 		tm: lvl === 0 ? 'cantrip' : ordinal(lvl),
 		ct: castingIcon(String(row.data.casting_time ?? '')),
-		dmg: dmg ? parseDice(dmg) : null,
+		dmg: dmg ? parseDicePool(dmg) : null,
 		prep
 	};
 }
