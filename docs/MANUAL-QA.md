@@ -80,4 +80,16 @@ effect-driven feature still behaves:
 - ☐ **Action economy**: Action Surge / Haste (`flat-bonus:action+1`) still add an action pip.
 - ☐ **Effects panel tags**: custom modifiers render readable tags ("AC +2", "DEX save +1").
 
+## CH3 · pip trackers unified (one `pipClick`, available-left/spent-right)
+
+Files: `combat/helpers.ts` (`pipClick`), `combat/state` (usePip/slotClick/resourceClick),
+`combat/+page.svelte` (action + resource pip render flipped). Behavior changed intentionally:
+- ☐ **Resource pips** (rage/ki/…): clicking the RIGHTMOST available pip spends ONE (was: clicking any
+  pip spent the whole pool — the bug). Available pips are on the LEFT, spent fill in from the RIGHT.
+- ☐ **Action-economy pips** (action/bonus/reaction): now render available-left/spent-right too (was
+  used-from-left). Spending + restoring still works; clicking a spent pip restores it and those left.
+- ☐ **Spell-slot pips**: unchanged (they were already this model); confirm spend/restore still works.
+- ☐ All three feel identical now: click an available pip → spend from it rightward; click a spent pip
+  → restore from it leftward.
+
 <!-- append fixes with a behavioral risk here -->

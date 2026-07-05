@@ -180,12 +180,13 @@
 					{label}
 					<span class="aepips">
 						{#each range(combat.slotMax[slot]) as i (i)}
+							{@const used = i >= combat.slotMax[slot] - c.play.turn[slot]}
 							<button
 								type="button"
 								class="aedot"
-								class:used={i < c.play.turn[slot]}
+								class:used
 								onclick={() => combat.usePip(slot, i)}
-								title="{label}: {i < c.play.turn[slot] ? 'used — click to restore' : 'available'}"
+								title="{label}: {used ? 'used — click to restore' : 'available'}"
 								aria-label="{label} pip {i + 1}"
 							></button>
 						{/each}
@@ -220,7 +221,7 @@
 							<button
 								type="button"
 								class="respip"
-								class:used={i < spent}
+								class:used={i >= r.max - spent}
 								onclick={() => combat.resourceClick(r.id, r.max, i)}
 								aria-label="{r.name} {i + 1}"
 							></button>

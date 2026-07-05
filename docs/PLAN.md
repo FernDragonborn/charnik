@@ -873,8 +873,14 @@ Duplication-heavy (do first — this is where the big refactors live):
   `EFFECT_KIND` (no bare-string comparisons anywhere). The content-schema `EFFECT_KINDS` stays a
   separate list (removable-module invariant) with a drift-guard test. slotMax now uses `Object.hasOwn`
   (no proto-pollution). +7 tests. Security: one validation point for the vocab (docs/SECURITY.md). R4.
-- [ ] **CH3 · Pip spend/restore** — `usePip` (turn) vs `slotClick` (slots) vs `resourceClick`
-  (resources) + their page render. Three formulas for one model (R5 / CVM-2) — reconcile + one helper.
+- [x] **CH3 · Pip spend/restore** — DONE. One pure `pipClick(currentSpent, index, total)` helper
+  (combat/helpers) is the single click-to-set model: **available pips left, spent right** (the user's
+  chosen convention — the spell-slot one). All three handlers call it (`usePip`, `slotClick`,
+  `resourceClick`), dropping their now-redundant clamps. **Bug fixed (CVM-2):** resource pips RENDERED
+  used-from-left but used the slot (spent-right) formula, so clicking the first pip spent the whole
+  pool; the action render was also used-from-left. Flipped both renders to available-left/spent-right
+  so render + formula agree everywhere. +3 tests incl. a regression guard vs the old slot formula
+  (MECH6 differential). R5.
 - [ ] **CH4 · Character assembly ↔ round-trip** — `BuildVM.draft (assemble) → save → store.save →
   load → hydrate → draft` again. Targets BVM-1 (triple-maintained fields), BVM-4 (60-line assembler);
   verify a hydrate→save round-trip is lossless (the test we skipped).

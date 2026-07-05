@@ -19,6 +19,17 @@ export type RollLogEntry = Rolled & { label: string };
 /** +N / −N / 0 for a modifier. */
 export const signed = (n: number) => (n >= 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
+/**
+ * Click-to-set for every pip tracker (action economy, spell slots, resources) — ONE model:
+ * available pips on the LEFT, spent pips accumulate on the RIGHT. Clicking an available pip spends
+ * from it rightward; clicking a spent pip restores from it leftward. Returns the new spent count,
+ * always in [0, total]. Pure so it's the single source shared by every tracker and unit-testable.
+ */
+export function pipClick(currentSpent: number, index: number, total: number): number {
+	const remaining = total - currentSpent; // pips 0..remaining-1 are available (left), rest spent
+	return index < remaining ? total - index : total - index - 1;
+}
+
 /** Scan active effects for what a given roll target (e.g. "save.dex", "skill.stealth", "attack")
  *  picks up: advantage, and signed bonus/penalty dice (Bless +1d4 / Bane −1d4). Pure — the caller
  *  gates it on the effects-auto toggle. `saves`/`skills` group tokens fan out to every save/skill. */

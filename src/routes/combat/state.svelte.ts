@@ -23,6 +23,7 @@ import {
 	ordinal,
 	wantsTray,
 	spellRow,
+	pipClick,
 	GROUP_MODES,
 	type GroupMode,
 	rollEffectsFor,
@@ -208,7 +209,7 @@ class CombatVM {
 	usePip = (slot: 'action' | 'bonus' | 'reaction', index: number) => {
 		const t = this.character?.play.turn;
 		if (!t) return;
-		t[slot] = t[slot] > index ? index : index + 1;
+		t[slot] = pipClick(t[slot], index, this.slotMax[slot]);
 	};
 	/** Spend a step of movement (default 5 ft), clamped to the remaining pool. */
 	spendMove = (ft = 5) => {
@@ -416,20 +417,16 @@ class CombatVM {
 	// tap a slot pip: click a filled pip to spend down to it, a spent pip to restore up to it
 	slotClick = (key: string, full: number, spent: number, i: number) => {
 		if (!this.character) return;
-		const remaining = full - spent;
-		const newSpent = i < remaining ? full - i : full - i - 1;
-		this.character.play.spellSlotsSpent[key] = Math.max(0, Math.min(full, newSpent));
+		this.character.play.spellSlotsSpent[key] = pipClick(spent, i, full);
 	};
 
 	// --- resource tracker (rage, ki, item N/day…) — same click-to-set pip model as slots --------
 	resourceSpent = (id: string): number => this.character?.play.resourcesSpent[id] ?? 0;
 	resourceClick = (id: string, max: number, i: number) => {
 		if (!this.character) return;
-		const remaining = max - this.resourceSpent(id);
-		const newSpent = i < remaining ? max - i : max - i - 1;
 		this.character.play.resourcesSpent = {
 			...this.character.play.resourcesSpent,
-			[id]: Math.max(0, Math.min(max, newSpent))
+			[id]: pipClick(this.resourceSpent(id), i, max)
 		};
 	};
 	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges
