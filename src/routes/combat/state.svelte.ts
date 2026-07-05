@@ -407,18 +407,23 @@ class CombatVM {
 		// a spell with dice rolls them: damage (Fire Bolt 1d10, Fireball 8d6) or, for auto
 		// spells, healing (Healing Word 2d4 + spellcasting mod)
 		const caster = this.sheet?.spellcasting.classes[0];
-		if (r.dmg && Object.keys(r.dmg).length) {
+		const hasDmg = !!r.dmg && Object.keys(r.dmg).length > 0;
+		if (r.res === 'hit' && caster) {
+			// attack spell → roll the TO-HIT first, then its damage (if any). Previously a damage-
+			// dealing attack spell (Fire Bolt) rolled only damage and skipped the to-hit entirely.
+			const toHit = caster.attack.value;
+			if (alt) this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e);
+			else {
+				this.rollDiceNow(`${r.name} (spell attack)`, { 20: 1 }, toHit);
+				if (hasDmg) this.rollDiceNow(`${r.name} damage`, r.dmg!, 0);
+			}
+		} else if (hasDmg) {
+			// save / auto spell: damage, or (auto) healing with the spellcasting mod
 			const heal = r.res === 'auto';
 			const label = `${r.name} ${heal ? 'healing' : 'damage'}`;
 			const mod = heal && caster ? this.sheet!.abilities[caster.ability].mod : 0;
-			if (alt) this.openRoll(label, r.dmg, mod, e);
-			else this.rollDiceNow(label, r.dmg, mod);
-		} else if (r.res === 'hit' && caster) {
-			// non-damage attack spell → the to-hit roll
-			const m = caster.attack.value;
-			const label = `${r.name} (spell attack)`;
-			if (alt) this.openRoll(label, { 20: 1 }, m, e);
-			else this.rollDiceNow(label, { 20: 1 }, m);
+			if (alt) this.openRoll(label, r.dmg!, mod, e);
+			else this.rollDiceNow(label, r.dmg!, mod);
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
 			this.log = [{ label: `Cast ${r.name}`, expr: '', total: NaN }, ...this.log].slice(
@@ -439,10 +444,14 @@ class CombatVM {
 	resourceSpent = (id: string): number => this.character?.play.resourcesSpent[id] ?? 0;
 	resourceClick = (id: string, max: number, i: number) => {
 		if (!this.character) return;
-		this.character.play.resourcesSpent = {
-			...this.character.play.resourcesSpent,
-			[id]: pipClick(this.resourceSpent(id), i, max)
-		};
+		const before = this.resourceSpent(id);
+		const after = pipClick(before, i, max);
+		this.character.play.resourcesSpent = { ...this.character.play.resourcesSpent, [id]: after };
+		if (after === before) return;
+		const name = this.sheet?.resources.find((r) => r.id === id)?.name ?? id;
+		toast(`${name} ${after > before ? 'used' : 'restored'}`, {
+			description: `${max - after} of ${max} left`
+		});
 	};
 	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges
 	 *  both), reset spell slots (long = all, short = pact only), and restore HP on a long rest. */

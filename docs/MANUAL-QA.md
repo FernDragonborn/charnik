@@ -118,4 +118,13 @@ Files: `combat/helpers.ts` (SpRow `ref`+`conc`, spellRow), `combat/state.svelte.
 - ☐ Add-condition menu lists the conditions of the **character's own edition** (a 5e character shows
   5e conditions, a 5.5e character 5.5e) — not always 5.5e.
 
+## UBUG-2 + UBUG-5 · attack-spell to-hit + resource-spend toast
+
+Files: `combat/state.svelte.ts` (`cast`, `resourceClick`).
+- ☐ Cast an **attack cantrip/spell with damage** (Fire Bolt): now rolls the **to-hit** first, THEN
+  damage — two entries in the log + two toasts (was: damage only, no to-hit).
+- ☐ Cast a **save/auto** spell (Fireball / Healing Word): still one damage/healing roll (unchanged).
+- ☐ Cast a non-damage **attack** spell: rolls the to-hit (unchanged).
+- ☐ Click a **resource pip** (rage/ki/…): now toasts "<Name> used/restored — N of M left".
+
 <!-- append fixes with a behavioral risk here -->

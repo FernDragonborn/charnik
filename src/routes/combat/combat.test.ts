@@ -88,6 +88,24 @@ describe('CombatVM · round counter is the persisted play.round (CVM-9)', () => 
 	});
 });
 
+describe('CombatVM · spending a resource (UBUG-5)', () => {
+	it('spends the resource pip (and has a name to toast) when clicked', async () => {
+		const graph = await graphOf();
+		const character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.autoCalc = true;
+		character.play.effects = [
+			{ iid: '1', label: 'Rage', effects: ['grant-resource:rage:3:long'], positive: true }
+		];
+		combat.graph = graph;
+		combat.character = character;
+
+		expect(combat.sheet?.resources.find((r) => r.id === 'rage')?.name).toBe('Rage');
+		expect(combat.resourceSpent('rage')).toBe(0);
+		combat.resourceClick('rage', 3, 2); // click the rightmost available pip → spend 1
+		expect(combat.resourceSpent('rage')).toBe(1);
+	});
+});
+
 describe('CombatVM · conditionList uses the character system (CVM-bug2)', () => {
 	it('lists conditions for the character system, not a hardcoded edition', async () => {
 		const graph = await graphOf();
