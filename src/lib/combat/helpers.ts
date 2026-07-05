@@ -47,6 +47,9 @@ export type MenuKind =
 /** +N / −N / 0 for a modifier. */
 export const signed = (n: number) => (n >= 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
+/** `[0, 1, …, n-1]` — for rendering N pips/dots. */
+export const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
+
 /**
  * Click-to-set for every pip tracker (action economy, spell slots, resources) — ONE model:
  * available pips on the LEFT, spent pips accumulate on the RIGHT. Clicking an available pip spends

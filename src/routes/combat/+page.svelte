@@ -17,6 +17,7 @@
 		metres,
 		titleCase,
 		effectTag,
+		range,
 		ABIL,
 		ABILITY_NAME,
 		PANEL_TITLE
@@ -64,7 +65,6 @@
 		['bonus', 'Bonus'],
 		['reaction', 'Reaction']
 	] as const;
-	const range = (n: number) => Array.from({ length: n }, (_, i) => i);
 
 	onMount(combat.load);
 

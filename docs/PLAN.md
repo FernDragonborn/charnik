@@ -1083,10 +1083,17 @@ scan only if a config bug surfaces). Everything else functional is on the list a
 
 **Structural / file-splitting debt** (split by responsibility — VM · pure helpers · area components ·
 curated global CSS · scoped specifics — so logic doesn't pile into one file and breed duplicates):
-- [ ] **S1 · `combat/+page.svelte` is still ~1400 lines** — the play sheet's markup + all its scoped
-  CSS in one file. Finish extracting area components (StatBars / HP / Turnbar / Resources / SpellBlock
-  / Panels / Menus already partly done) so each panel owns its markup + styles. (This is the old
-  in-progress task "Extract area components".)
+- [ ] **S1 · `combat/+page.svelte` is still ~1500 lines** — the play sheet's markup (~515) + all its
+  scoped CSS (~1000) in one file. Extract area components (hero+HP / controls / **Turnbar** / **Resbar**
+  / combat-strip / the panel grid: skills/attacks/actions/effects/spells; Menus already extracted) so
+  each owns its markup + styles. **NEEDS A SCREENSHOT-VERIFICATION SESSION** — this is a CSS-untangling
+  task, not a typed refactor: the stylesheet shares rules across areas via combined selectors
+  (`.controls .spacer, .turnbar .spacer`; `.turnbar, .resbar`), so a clean split means promoting the
+  shared bits to a curated global (a `.bar` utility etc.) and scoping the specifics per component, per
+  [[charnik-split-large-svelte]]. Visual correctness can't be caught by svelte-check/tests — verify by
+  rendering (the user catches CSS bugs). The VM/logic split is already done; this is purely
+  presentational reorg. Prep done: `range` helper extracted to combat/helpers (shared by the pip
+  renders). Do it component-by-component, screenshot each, so regressions are bisectable.
 - [ ] **S2 · `CombatVM` (687 lines) does too much** — rolling (dice pool + tray + log), action
   economy, spells/prepare, resources/rests, HP, level-up, drag layout, effects. Once the pure bits are
   extracted (roll pool → CVM-1, pip math → CVM-2/R5, token parsing → R4), the VM shrinks to wiring;
