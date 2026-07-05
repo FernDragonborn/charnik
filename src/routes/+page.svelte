@@ -11,6 +11,10 @@
 		removeCharacter
 	} from '$lib/character/store.svelte';
 
+	// Only the GitHub Pages demo build carries a base path (`/charnik`); the desktop build and local
+	// dev serve at root. Use that to show the demo banner ONLY on the hosted web demo.
+	const isDemo = base !== '';
+
 	let loading = $state(true);
 	let error = $state('');
 	onMount(async () => {
@@ -38,6 +42,20 @@
 		</div>
 		<a class="new" href="{base}/build">+ New character</a>
 	</div>
+
+	{#if isDemo}
+		<aside class="demobanner">
+			<div class="db-badge">Demo · in active development</div>
+			<h2 class="db-title">This is a live demo — not the full game</h2>
+			<p class="db-body">
+				Charnik is under active development. This hosted demo ships <b>only SRD content</b>
+				(the CC-BY subset), so most of D&amp;D isn't here — for example the
+				<b>Artificer</b> class, <b>Aasimar</b>, the <b>Beholder</b>, most
+				<b>subclasses</b>, and many <b>spells &amp; monsters</b>. You add your own material as plain
+				CSV, and the desktop app keeps all your data local. Expect rough edges.
+			</p>
+		</aside>
+	{/if}
 
 	{#if loading}
 		<p class="muted">Loading…</p>
@@ -67,6 +85,46 @@
 </section>
 
 <style>
+	.demobanner {
+		display: block;
+		margin: 4px 0 22px;
+		padding: 18px 22px;
+		border: 1px solid var(--color-accent);
+		border-left-width: 5px;
+		border-radius: 12px;
+		background: var(--color-accent-soft, var(--color-surface));
+	}
+	.db-badge {
+		display: inline-block;
+		font-family: var(--font-mono);
+		text-transform: uppercase;
+		letter-spacing: 0.14em;
+		font-size: 11px;
+		font-weight: 700;
+		color: var(--color-accent-bright);
+		border: 1px solid var(--color-accent);
+		border-radius: 999px;
+		padding: 3px 10px;
+		margin-bottom: 10px;
+	}
+	.db-title {
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 22px;
+		margin: 0 0 6px;
+		color: var(--color-text);
+	}
+	.db-body {
+		margin: 0;
+		max-width: 68ch;
+		font-size: 15px;
+		line-height: 1.55;
+		color: var(--color-text-muted);
+	}
+	.db-body b {
+		color: var(--color-text);
+		font-weight: 600;
+	}
 	.head {
 		display: flex;
 		justify-content: space-between;
