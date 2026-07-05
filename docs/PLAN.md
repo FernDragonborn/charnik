@@ -1052,7 +1052,7 @@ scan only if a config bug surfaces). Everything else functional is on the list a
 - [ ] **CVM-7 · shadowing / naming** — the action-economy field `slotMax` is shadowed by a local
   `const slotMax` in `spellGroups`; the `cast` method is shadowed by a local `const cast` inside it.
   Rename.
-- [ ] **CVM-8 · `actions` inline array with cryptic keys** (`{id,n,h,d,m,roll?}` = name/hint/desc/marker)
+- [x] **CVM-8 · `actions` inline array with cryptic keys** (`{id,n,h,d,m,roll?}` = name/hint/desc/marker)
   → a typed `StandardAction` interface with readable field names, and it's static data → move to
   helpers/data (the derived only needs to inject the live skill mods).
 - [x] **CVM-9 · VM `round` vs schema `play.round`** — the VM keeps its own `round = $state(1)` while
@@ -1067,7 +1067,7 @@ scan only if a config bug surfaces). Everything else functional is on the list a
 - [x] **BVM-2 · `csv` comma-splitter duplicated** — DONE. One `splitList(v)` in `content/schemas.ts`
   (the CSV-cell coercion home); `build/state` + `spellAccess` alias to it, `EditContentForm` uses it
   for the systems field. (The byte-identical copies were in build/state + spellAccess.)
-- [ ] **BVM-3 · feat-category string literals** (`cat === 'origin'`, `=== 'epic-boon'`) — use the
+- [x] **BVM-3 · feat-category string literals** (`cat === 'origin'`, `=== 'epic-boon'`) — use the
   exported `FEAT_CATEGORIES` const from schemas, not bare strings (enums-not-literals).
 - [ ] **BVM-4 · the `draft` derived is ~60 lines** assembling the whole Character inline (twice, incl.
   a duplicated last-resort fallback) → extract a pure `assembleCharacter(state)` fn, unit-testable

@@ -19,6 +19,18 @@ export type RollLogEntry = Rolled & { label: string };
 /** The three action-economy slots a turn tracks. */
 export type ActionSlot = 'action' | 'bonus' | 'reaction';
 
+/** A standard combat action row (Dash, Hide, Grapple…). `roll` is present for the ones that make a
+ *  check; `hint` shows its live modifier. */
+export interface StandardAction {
+	id: string;
+	name: string;
+	hint: string;
+	desc: string;
+	/** Short right-side tag: "action" / "contest" / "→ roll" / "→ Attacks". */
+	marker: string;
+	roll?: [string, number];
+}
+
 /** The anchored dropdown menus the Combat view can open (overlay.kind). */
 export type MenuKind =
 	| 'dice'

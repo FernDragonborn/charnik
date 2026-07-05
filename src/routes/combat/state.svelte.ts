@@ -32,7 +32,8 @@ import {
 	type SpGroup,
 	type RollLogEntry,
 	type ActionSlot,
-	type MenuKind
+	type MenuKind,
+	type StandardAction
 } from '$lib/combat/helpers';
 
 /** Cap on the retained roll log (newest kept). */
@@ -389,11 +390,11 @@ class CombatVM {
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
-	actionClick = (a: { id: string; n: string; roll?: [string, number] }, e: Event) => {
+	actionClick = (a: StandardAction, e: Event) => {
 		if (a.id === 'attack') return; // routes to the Attacks panel; not itself an action spend
 		if (!this.trySpend('action')) return;
 		if (a.roll) this.roll(a.roll[0], a.roll[1], e);
-		else toast(`${a.n} — action used`);
+		else toast(`${a.name} — action used`);
 	};
 
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit
@@ -511,57 +512,69 @@ class CombatVM {
 	});
 
 	// standard actions (from d-charnik); roll ones reference live skills
-	actions = $derived.by(() => {
+	actions = $derived.by<StandardAction[]>(() => {
 		const s = this.sheet;
 		const sk = (k: SkillId) => s?.skills[k]?.value ?? 0;
 		return [
-			{ id: 'attack', n: 'Attack', h: '', d: 'weapon / spell / unarmed', m: '→ Attacks' },
-			{ id: 'dash', n: 'Dash', h: '', d: '+speed this turn', m: 'action' },
-			{ id: 'disengage', n: 'Disengage', h: '', d: 'no opportunity attacks', m: 'action' },
-			{ id: 'dodge', n: 'Dodge', h: '', d: 'attackers have disadv.', m: 'action' },
+			{
+				id: 'attack',
+				name: 'Attack',
+				hint: '',
+				desc: 'weapon / spell / unarmed',
+				marker: '→ Attacks'
+			},
+			{ id: 'dash', name: 'Dash', hint: '', desc: '+speed this turn', marker: 'action' },
+			{
+				id: 'disengage',
+				name: 'Disengage',
+				hint: '',
+				desc: 'no opportunity attacks',
+				marker: 'action'
+			},
+			{ id: 'dodge', name: 'Dodge', hint: '', desc: 'attackers have disadv.', marker: 'action' },
 			{
 				id: 'hide',
-				n: 'Hide',
-				h: signed(sk('stealth')),
-				d: 'Stealth',
-				m: '→ roll',
+				name: 'Hide',
+				hint: signed(sk('stealth')),
+				desc: 'Stealth',
+				marker: '→ roll',
 				roll: ['Hide (Stealth)', sk('stealth')] as [string, number]
 			},
 			{
 				id: 'search',
-				n: 'Search',
-				h: signed(sk('perception')),
-				d: 'Perception',
-				m: '→ roll',
+				name: 'Search',
+				hint: signed(sk('perception')),
+				desc: 'Perception',
+				marker: '→ roll',
 				roll: ['Search (Perception)', sk('perception')] as [string, number]
 			},
 			{
 				id: 'study',
-				n: 'Study',
-				h: signed(sk('arcana')),
-				d: 'recall lore',
-				m: '→ roll',
+				name: 'Study',
+				hint: signed(sk('arcana')),
+				desc: 'recall lore',
+				marker: '→ roll',
 				roll: ['Study (Arcana)', sk('arcana')] as [string, number]
 			},
 			{
 				id: 'grapple',
-				n: 'Grapple',
-				h: signed(sk('athletics')),
-				d: 'Athletics vs target',
-				m: 'contest',
+				name: 'Grapple',
+				hint: signed(sk('athletics')),
+				desc: 'Athletics vs target',
+				marker: 'contest',
 				roll: ['Grapple (Athletics)', sk('athletics')] as [string, number]
 			},
 			{
 				id: 'shove',
-				n: 'Shove',
-				h: signed(sk('athletics')),
-				d: 'prone / push 5 ft',
-				m: 'contest',
+				name: 'Shove',
+				hint: signed(sk('athletics')),
+				desc: 'prone / push 5 ft',
+				marker: 'contest',
 				roll: ['Shove (Athletics)', sk('athletics')] as [string, number]
 			},
-			{ id: 'help', n: 'Help', h: '', d: 'give an ally advantage', m: 'action' },
-			{ id: 'ready', n: 'Ready', h: '', d: 'prepare a trigger', m: 'action' },
-			{ id: 'utilize', n: 'Utilize', h: '', d: 'use an object', m: 'action' }
+			{ id: 'help', name: 'Help', hint: '', desc: 'give an ally advantage', marker: 'action' },
+			{ id: 'ready', name: 'Ready', hint: '', desc: 'prepare a trigger', marker: 'action' },
+			{ id: 'utilize', name: 'Utilize', hint: '', desc: 'use an object', marker: 'action' }
 		];
 	});
 	visibleActions = $derived(this.actions.filter((a) => !this.hiddenActions[a.id]));

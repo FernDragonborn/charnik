@@ -396,8 +396,8 @@
 			{:else if pid === 'actions'}
 				{#each visibleActions as a (a.id)}
 					<button class="atk" onclick={(e) => combat.actionClick(a, e)}>
-						<span class="an">{a.n}</span><span class="ah">{a.h || '—'}</span>
-						<span class="ad">{a.d}</span><span class="am">{a.m}</span>
+						<span class="an">{a.name}</span><span class="ah">{a.hint || '—'}</span>
+						<span class="ad">{a.desc}</span><span class="am">{a.marker}</span>
 					</button>
 				{/each}
 			{:else if pid === 'effects'}

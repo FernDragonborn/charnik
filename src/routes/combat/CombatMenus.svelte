@@ -214,7 +214,7 @@
 			</div>
 			{#each actions as a (a.id)}
 				<button class="row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
-					<span class="eye" class:on={!hiddenActions[a.id]}></span><span class="main">{a.n}</span
+					<span class="eye" class:on={!hiddenActions[a.id]}></span><span class="main">{a.name}</span
 					>{#if hiddenActions[a.id]}<span class="meta">hidden</span>{/if}
 				</button>
 			{/each}

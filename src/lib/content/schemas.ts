@@ -147,13 +147,16 @@ export const RARITIES = [
 	'legendary',
 	'artifact'
 ] as const;
-export const FEAT_CATEGORIES = [
-	'origin',
-	'general',
-	'fighting-style',
-	'epic-boon',
-	'general-2014'
-] as const;
+/** Feat categories as named constants — compare against these, not bare strings. */
+export const FEAT_CATEGORY = {
+	origin: 'origin',
+	general: 'general',
+	fightingStyle: 'fighting-style',
+	epicBoon: 'epic-boon',
+	general2014: 'general-2014'
+} as const;
+export type FeatCategory = (typeof FEAT_CATEGORY)[keyof typeof FEAT_CATEGORY];
+export const FEAT_CATEGORIES = Object.values(FEAT_CATEGORY);
 
 const Size = z.enum(SIZES);
 const Ability = z.enum(ABILITIES);

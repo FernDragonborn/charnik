@@ -33,7 +33,7 @@ import {
 	type BoostShape
 } from '$lib/build/rules';
 import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
-import { splitList } from '$lib/content/schemas';
+import { splitList, FEAT_CATEGORY } from '$lib/content/schemas';
 
 const csv = splitList;
 
@@ -561,9 +561,9 @@ class BuildVM {
 		this.featList.filter((f) => {
 			// the plain ASI is offered as its own dedicated slot option, not as a feat row
 			if (f.id === 'ability-score-improvement') return false;
-			const cat = String(f.data.category ?? 'general');
-			if (cat === 'origin') return false;
-			if (cat === 'epic-boon') return level >= 19;
+			const cat = String(f.data.category ?? FEAT_CATEGORY.general);
+			if (cat === FEAT_CATEGORY.origin) return false;
+			if (cat === FEAT_CATEGORY.epicBoon) return level >= 19;
 			return true;
 		});
 	// ASI may be taken in every slot; a feat is repeatable iff its row says so.
