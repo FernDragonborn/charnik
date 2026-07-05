@@ -1098,6 +1098,12 @@ curated global CSS · scoped specifics — so logic doesn't pile into one file a
   rendering (the user catches CSS bugs). The VM/logic split is already done; this is purely
   presentational reorg. Prep done: `range` helper extracted to combat/helpers (shared by the pip
   renders). Do it component-by-component, screenshot each, so regressions are bisectable.
+- [~] **P9 · component testing (browser mode)** — SET UP. vitest now has two projects (`node` for
+  logic/VM + pure, `browser` for `*.browser.test.ts` mounting real components in headless Chromium via
+  `@vitest/browser-playwright` + `vitest-browser-svelte`). CI installs Chromium before `pnpm test`.
+  First test: `EyeToggle.browser.test.ts` (aria-pressed state + click). NB browser mode asserts DOM +
+  interactions, NOT visual/CSS layout — S1's CSS still needs screenshots. More component tests welcome.
+
 - [ ] **S2 · `CombatVM` (687 lines) does too much** — rolling (dice pool + tray + log), action
   economy, spells/prepare, resources/rests, HP, level-up, drag layout, effects. Once the pure bits are
   extracted (roll pool → CVM-1, pip math → CVM-2/R5, token parsing → R4), the VM shrinks to wiring;
