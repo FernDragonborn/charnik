@@ -13,7 +13,7 @@ import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
 import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { passiveScore } from '$lib/rules/core';
-import { rollPool, type BonusDie, type Rolled } from '$lib/rules/dice';
+import { rollPool, parseDicePool, type BonusDie, type Rolled } from '$lib/rules/dice';
 import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
@@ -383,10 +383,17 @@ class CombatVM {
 		c.play.turn[slot] += 1;
 		return true;
 	}
-	/** Roll a weapon/unarmed attack — the Attack action, so it spends an action in combat. */
+	/** Roll a weapon/unarmed attack — the Attack action, so it spends an action in combat. Rolls the
+	 *  to-hit (picks up advantage/effects), then the weapon's DAMAGE dice (was: to-hit only). */
 	attackRoll = (at: Atk, e: Event) => {
 		if (!this.trySpend('action')) return;
 		this.roll(at.name, at.toHit, e, 'attack');
+		if (wantsTray(e)) return; // tray path = the player rolls each part manually
+		const pool = parseDicePool(at.dmg); // at.dmg is "1d8 +3 slashing" — take the dice + flat mod
+		if (Object.keys(pool).length) {
+			const dmgMod = Number((/([+-]\s*\d+)/.exec(at.dmg)?.[1] ?? '0').replace(/\s/g, ''));
+			this.rollDiceNow(`${at.name} damage`, pool, dmgMod);
+		}
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */

@@ -125,6 +125,8 @@ Files: `combat/state.svelte.ts` (`cast`, `resourceClick`).
   damage — two entries in the log + two toasts (was: damage only, no to-hit).
 - ☐ Cast a **save/auto** spell (Fireball / Healing Word): still one damage/healing roll (unchanged).
 - ☐ Cast a non-damage **attack** spell: rolls the to-hit (unchanged).
+- ☐ **Weapon attack** (equipped weapon): now rolls the **to-hit d20 AND the weapon damage dice**
+  (was: only the d20). Two log entries / toasts. Alt-click still opens the to-hit tray for manual play.
 - ☐ Click a **resource pip** (rage/ki/…): now toasts "<Name> used/restored — N of M left".
 
 <!-- append fixes with a behavioral risk here -->
