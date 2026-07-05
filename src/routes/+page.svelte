@@ -3,6 +3,8 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
+	import { dev } from '$app/environment';
+	import { env } from '$env/dynamic/public';
 	import { _ } from '$lib/i18n';
 	import {
 		characters,
@@ -11,9 +13,10 @@
 		removeCharacter
 	} from '$lib/character/store.svelte';
 
-	// Only the GitHub Pages demo build carries a base path (`/charnik`); the desktop build and local
-	// dev serve at root. Use that to show the demo banner ONLY on the hosted web demo.
-	const isDemo = base !== '';
+	// Show the demo banner on the hosted web demo (the Pages build carries the `/charnik` base path),
+	// in dev (so it can be previewed), or whenever `PUBLIC_DEMO=true` is set — but NOT in the shipped
+	// desktop app (base '', not dev, no env flag).
+	const isDemo = env.PUBLIC_DEMO === 'true' || dev || base !== '';
 
 	let loading = $state(true);
 	let error = $state('');
