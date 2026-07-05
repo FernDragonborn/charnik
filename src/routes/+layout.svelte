@@ -73,9 +73,9 @@
 		href="https://github.com/FernDragonborn/charnik/issues"
 		target="_blank"
 		rel="noopener noreferrer"
-		title="Report a bug or leave feedback on GitHub"
+		title={$_('feedback.title')}
 	>
-		🐞 Found a bug?
+		{$_('feedback.link')}
 	</a>
 	<div class="chips">
 		<button type="button" onclick={toggleSystem} title={$_('settings.system')}>

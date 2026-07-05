@@ -43,39 +43,33 @@
 			<p class="eyebrow">{$_('app.tagline')}</p>
 			<h1>{$_('nav.roster')}</h1>
 		</div>
-		<a class="new" href="{base}/build">+ New character</a>
+		<a class="new" href="{base}/build">{$_('roster.newCharacter')}</a>
 	</div>
 
 	{#if isDemo}
 		<aside class="demobanner">
-			<div class="db-badge">Demo · in active development</div>
-			<h2 class="db-title">Heads up — this demo only ships the free SRD content</h2>
-			<p class="db-body">
-				Charnik is in active development. I can only bundle the <b>SRD</b> — the slice Wizards of
-				the Coast released for free (CC-BY). The rest of D&amp;D is theirs, not mine to hand out, so
-				a lot isn't here out of the box: the <b>Artificer</b>, <b>Aasimar</b>, the
-				<b>Beholder</b>, most <b>subclasses</b>, and plenty of <b>spells &amp; monsters</b>. But
-				nothing's locked down — build your own <b>homebrew</b> and, with the flexible CSV system, add
-				anything you want: classes, subclasses, species, spells, whatever you can dream up. Or grab the
-				full desktop app for your computer — it keeps all your data local.
-			</p>
+			<div class="db-badge">{$_('demo.badge')}</div>
+			<h2 class="db-title">{$_('demo.title')}</h2>
+			<!-- trusted i18n string from our own catalog (not user input), carries <b> emphasis -->
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			<p class="db-body">{@html $_('demo.body')}</p>
 			<a
 				class="db-download"
 				href="https://github.com/FernDragonborn/charnik/releases"
 				target="_blank"
 				rel="noopener noreferrer"
 			>
-				⬇ Download the desktop app
+				{$_('demo.download')}
 			</a>
 		</aside>
 	{/if}
 
 	{#if loading}
-		<p class="muted">Loading…</p>
+		<p class="muted">{$_('roster.loading')}</p>
 	{:else if error}
-		<p class="rerr">Storage error — {error}</p>
+		<p class="rerr">{$_('roster.storageError')} {error}</p>
 	{:else if characters.roster.length === 0}
-		<p class="muted">No characters yet. Create one to get started.</p>
+		<p class="muted">{$_('roster.empty')}</p>
 	{:else}
 		<ul class="list">
 			{#each characters.roster as c (c.id)}
@@ -88,8 +82,10 @@
 							{#if c.error}<span class="rerr">⚠ {c.error}</span>{/if}
 						</span>
 					</button>
-					<button class="rdel" title="Delete {c.name}" onclick={() => removeCharacter(c.id)}
-						>✕</button
+					<button
+						class="rdel"
+						title={$_('roster.delete', { values: { name: c.name } })}
+						onclick={() => removeCharacter(c.id)}>✕</button
 					>
 				</li>
 			{/each}
