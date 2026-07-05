@@ -17,19 +17,19 @@ describe('homebrew — field descriptors', () => {
 		const f = fieldsFor('item');
 		const byName = Object.fromEntries(f.map((x) => [x.name, x]));
 		expect(byName.source).toBeUndefined(); // source is fixed to Homebrew, not a form field
-		expect(byName.name_en.required).toBe(true);
-		expect(byName.systems.kind).toBe('systems');
-		expect(byName.category.kind).toBe('enum');
-		expect(byName.category.options).toContain('weapon');
-		expect(byName.weight_lb.kind).toBe('number');
-		expect(byName.attunement.kind).toBe('bool');
-		expect(byName.text_en.kind).toBe('textarea');
+		expect(byName.name_en!.required).toBe(true);
+		expect(byName.systems!.kind).toBe('systems');
+		expect(byName.category!.kind).toBe('enum');
+		expect(byName.category!.options).toContain('weapon');
+		expect(byName.weight_lb!.kind).toBe('number');
+		expect(byName.attunement!.kind).toBe('bool');
+		expect(byName.text_en!.kind).toBe('textarea');
 	});
 
 	it('disambiguates feat.category (enum) from item text columns', () => {
 		const feat = Object.fromEntries(fieldsFor('feat').map((x) => [x.name, x]));
-		expect(feat.category.kind).toBe('enum');
-		expect(feat.category.options).toContain('origin');
+		expect(feat.category!.kind).toBe('enum');
+		expect(feat.category!.options).toContain('origin');
 	});
 });
 

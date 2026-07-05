@@ -15,7 +15,7 @@ describe('BrowserStorage (IndexedDB)', () => {
 		expect(await s.exists('characters/valen')).toBe(true);
 		const kids = await s.list('characters');
 		expect(kids.map((k) => k.name)).toEqual(['valen']);
-		expect(kids[0].isDir).toBe(true);
+		expect(kids[0]!.isDir).toBe(true);
 	});
 
 	it('lists only immediate children', async () => {

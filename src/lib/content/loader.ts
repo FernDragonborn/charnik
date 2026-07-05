@@ -87,7 +87,7 @@ function extractTypeDirective(csv: string): { type?: string; body: string } {
 	let firstLine = (nl === -1 ? csv : csv.slice(0, nl)).replace(/\r$/, '');
 	if (firstLine.charCodeAt(0) === 0xfeff) firstLine = firstLine.slice(1); // strip a leading BOM
 	const m = TYPE_DIRECTIVE.exec(firstLine);
-	if (!m) return { body: csv };
+	if (!m?.[1]) return { body: csv };
 	return { type: m[1].toLowerCase(), body: nl === -1 ? '' : csv.slice(nl + 1) };
 }
 
@@ -180,7 +180,7 @@ export async function loadContent(
 
 			for (const h of parsed.meta.fields ?? []) {
 				const m = LOCALE_COL.exec(h);
-				if (m) localeSet.add(m[1].toLowerCase());
+				if (m?.[1]) localeSet.add(m[1].toLowerCase());
 				else if (/^(?:name|text)_/.test(h))
 					issues.push({
 						level: 'warn',
@@ -197,7 +197,7 @@ export async function loadContent(
 						level: 'error',
 						root,
 						file: entry.name,
-						id: raw.id,
+						...(raw.id ? { id: String(raw.id) } : {}),
 						message: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')
 					});
 					continue;

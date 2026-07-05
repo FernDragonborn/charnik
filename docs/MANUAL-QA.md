@@ -52,4 +52,16 @@ absent instead of setting it to `undefined`. Verify the consumers still render:
 - ☐ Homebrew add-content form: enum fields (systems, category…) still render their **dropdown options**.
 - ☐ A **corrupt character** in the roster still shows with its error message.
 
+### noUncheckedIndexedAccess — guards added at array/record access (81 sites)
+
+Mostly `m?.[1] ?? ''` on regex matches (no behavior change) + `!` in tests. A few added a runtime
+guard that drops an item if it were unexpectedly absent — verify nothing legitimate disappears:
+- ☐ Combat sheet: **all 18 skills** still render (each row now behind `{#if sk}`), and taps still roll.
+- ☐ Combat: **passive senses** (Perception / Investigation / Insight) still show (the passives list now
+  filters to skills present in the sheet).
+- ☐ Combat: **level-up** still toasts the class + new level (toast now guarded by `if (cls)`).
+- ☐ Combat header: **class name + level** still shows (guarded first-class lookup).
+- ☐ Compendium: switching **type chips** and **group-by** still works (first-option fallbacks).
+- ☐ Build review panel: **Spell DC** stat shows for casters (guarded `classes[0]`).
+
 <!-- append fixes with a behavioral risk here -->

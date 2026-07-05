@@ -277,7 +277,7 @@ class BuildVM {
 			const eff = Array.isArray(src?.data.effects) ? (src!.data.effects as string[]) : [];
 			for (const t of eff) {
 				const m = /^flat-bonus:([a-z]{3})[+-]/.exec(t);
-				if (m && (ABILITIES as readonly string[]).includes(m[1])) set.add(m[1] as Ability);
+				if (m?.[1] && (ABILITIES as readonly string[]).includes(m[1])) set.add(m[1] as Ability);
 			}
 		}
 		return set;
@@ -397,7 +397,7 @@ class BuildVM {
 	classSkillCount = $derived(Number(this.classRow?.data.skills_choose ?? 0));
 	classSkillOptions = $derived.by<string[]>(() => {
 		const from = csv(this.classRow?.data.skills_from);
-		if (from.length === 1 && from[0].toLowerCase() === 'any') return Object.keys(SKILL_ABILITY);
+		if (from.length === 1 && from[0]?.toLowerCase() === 'any') return Object.keys(SKILL_ABILITY);
 		return from;
 	});
 	backgroundSkills = $derived(csv(this.backgroundRow?.data.skills));

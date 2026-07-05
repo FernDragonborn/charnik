@@ -117,7 +117,7 @@ describe('deriveSheet aggregator', () => {
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// DEX 14 (+2): stealth = +2 mod + 2 custom = 4; dex save = +2 mod + 1 custom = 3
-		expect(s.skills.stealth.value).toBe(4);
+		expect(s.skills.stealth!.value).toBe(4);
 		expect(s.abilities.dex.save.value).toBe(3);
 	});
 
@@ -141,8 +141,8 @@ describe('deriveSheet aggregator', () => {
 			}
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
-		expect(s.skills.stealth.prof).toBe('proficient'); // was 'none'
-		expect(s.skills.stealth.value).toBe(4); // DEX +2 + prof +2
+		expect(s.skills.stealth!.prof).toBe('proficient'); // was 'none'
+		expect(s.skills.stealth!.value).toBe(4); // DEX +2 + prof +2
 		expect(s.abilities.con.save.trace.some((t) => t.layer === 'proficiency')).toBe(true);
 	});
 

@@ -76,7 +76,7 @@ describe('content search', () => {
 		expect(searchContent(name, text, 'fireball', both).length).toBe(2);
 		const only = searchContent(name, text, 'fireball', { editions: ['5.5e'], locale: 'en' });
 		expect(only.length).toBe(1);
-		expect(only[0].systems).toContain('5.5e');
+		expect(only[0]!.systems).toContain('5.5e');
 	});
 
 	it('tolerates a typo in the name', () => {
@@ -87,9 +87,9 @@ describe('content search', () => {
 	it('matches article text and returns a snippet (name-only match has none)', () => {
 		const byText = searchContent(name, text, 'barrier', both); // only in Shield's text
 		expect(byText[0]?.id).toBe('shield');
-		expect(byText[0].snippet).toMatch(/barrier/i);
+		expect(byText[0]!.snippet).toMatch(/barrier/i);
 		const byName = searchContent(name, text, 'shield', both);
-		expect(byName[0].snippet).toBe(''); // matched by name → no snippet
+		expect(byName[0]!.snippet).toBe(''); // matched by name → no snippet
 	});
 
 	it('is cross-language on names (Ukrainian query hits name_uk)', () => {

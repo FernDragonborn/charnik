@@ -110,8 +110,8 @@ export function deriveSpellcasting(
 		shared.map((x) => ({ share: shareOf(x.row), level: x.c.level }))
 	);
 	let sharedCounts: number[] = [];
-	if (shared.length === 1) {
-		const only = shared[0];
+	const only = shared.length === 1 ? shared[0] : undefined;
+	if (only) {
 		const kind = String(only.row.data.slot_table || only.row.data.caster);
 		sharedCounts = slotCountsFor(slotTable(graph, kind, systems), only.c.level);
 	} else if (shared.length > 1) {

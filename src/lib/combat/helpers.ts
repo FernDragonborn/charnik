@@ -33,12 +33,12 @@ export function rollEffectsFor(
 	for (const eff of effects) {
 		for (const tok of eff.effects) {
 			const advantage = /^advantage:(.+)$/.exec(tok);
-			if (advantage && matches(advantage[1].trim())) {
+			if (advantage && matches((advantage[1] ?? '').trim())) {
 				out.advantage = true;
 				continue;
 			}
 			const die = /^flat-bonus:([\w.-]+)([+-])(\d+)d(\d+)$/.exec(tok);
-			if (die && matches(die[1]))
+			if (die && matches(die[1] ?? ''))
 				out.bonusDice.push({
 					sides: Number(die[4]),
 					count: Number(die[3]),
@@ -70,7 +70,7 @@ export const titleCase = (s: string) =>
 /** Healing dice from a spell's text ("regains Hit Points equal to 2d4 plus …"). */
 export const healDice = (text: string): string => {
 	const m = text.match(/(?:equal to|regains?|restores?)[^.]*?(\d+d\d+)/i);
-	return m ? m[1] : '';
+	return m?.[1] ?? '';
 };
 
 /** A bounded-vocab effect token → a short readable tag ("flat-bonus:ac+2" → "AC +2",
@@ -78,8 +78,8 @@ export const healDice = (text: string): string => {
 export function effectTag(token: string): string {
 	const m = token.match(/^flat-bonus:([\w.-]+)([+-].+)$/);
 	if (m) {
-		const t = m[1];
-		const delta = m[2].replace('-', '−');
+		const t = m[1] ?? '';
+		const delta = (m[2] ?? '').replace('-', '−');
 		let name = t.toUpperCase();
 		if (t === 'saves') name = 'all saves';
 		else if (t === 'skills') name = 'all skills';

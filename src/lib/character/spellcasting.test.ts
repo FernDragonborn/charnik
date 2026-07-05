@@ -68,10 +68,10 @@ describe('deriveSpellcasting', () => {
 		const wiz = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:wizard', level: 5 }]));
 		const sc = deriveSheet(wiz, graph).spellcasting;
 		expect(sc.classes).toHaveLength(1);
-		expect(sc.classes[0].ability).toBe('int');
-		expect(sc.classes[0].saveDC.value).toBe(14); // 8 + 3(prof L5) + 3(int)
-		expect(sc.classes[0].maxSpellLevel).toBe(3); // full@5 → [4,3,2]
-		expect(sc.classes[0].preparedCap).toBe(9); // class_casting wizard-5
+		expect(sc.classes[0]!.ability).toBe('int');
+		expect(sc.classes[0]!.saveDC.value).toBe(14); // 8 + 3(prof L5) + 3(int)
+		expect(sc.classes[0]!.maxSpellLevel).toBe(3); // full@5 → [4,3,2]
+		expect(sc.classes[0]!.preparedCap).toBe(9); // class_casting wizard-5
 		expect(sc.pools.map((p) => p.spellLevel)).toEqual([1, 2, 3]); // shared long-rest pool
 	});
 
@@ -97,7 +97,7 @@ describe('deriveSpellcasting', () => {
 		const wl = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:warlock', level: 5 }]));
 		const sc = deriveSheet(wl, graph).spellcasting;
 		expect(sc.casterLevel).toBe(0); // pact excluded from shared level
-		expect(sc.classes[0].isPact).toBe(true);
+		expect(sc.classes[0]!.isPact).toBe(true);
 		const pact = sc.pools.find((p) => p.forcedUpcast);
 		expect(pact).toMatchObject({ spellLevel: 3, max: 2, recharge: 'short' });
 	});

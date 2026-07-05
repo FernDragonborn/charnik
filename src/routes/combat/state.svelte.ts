@@ -236,11 +236,12 @@ class CombatVM {
 	);
 	cycleGroupBy = () =>
 		(this.spellGroupBy =
-			GROUP_MODES[(GROUP_MODES.indexOf(this.spellGroupBy) + 1) % GROUP_MODES.length]);
+			GROUP_MODES[(GROUP_MODES.indexOf(this.spellGroupBy) + 1) % GROUP_MODES.length] ?? 'level');
 
 	className = $derived.by(() => {
 		if (!this.character || !this.graph) return '';
 		const c = this.character.build.classes[0];
+		if (!c) return `Level ${this.sheet?.level ?? ''}`;
 		const row = this.graph.get(c.class);
 		return row ? `${row.data.name_en} ${c.level}` : `Level ${this.sheet?.level ?? ''}`;
 	});
@@ -256,11 +257,13 @@ class CombatVM {
 	// configurable passive-sense skills (Pin skills)
 	passives = $derived(
 		this.sheet
-			? this.passiveSkills.map((k) => ({
-					key: k,
-					name: titleCase(k),
-					comp: passiveScore(this.sheet!.skills[k])
-				}))
+			? this.passiveSkills
+					.filter((k) => this.sheet!.skills[k])
+					.map((k) => ({
+						key: k,
+						name: titleCase(k),
+						comp: passiveScore(this.sheet!.skills[k]!)
+					}))
 			: []
 	);
 	togglePassive = (k: string) => {
@@ -296,9 +299,10 @@ class CombatVM {
 		void saveCharacterToStore(c);
 		this.overlay = null;
 		const cls = c.build.classes[classIndex];
-		toast(`Level up — ${this.graph?.get(cls.class)?.data.name_en ?? 'class'} ${cls.level}`, {
-			description: 'HP & slots updated. Set any new ASI/feat/spells in the builder.'
-		});
+		if (cls)
+			toast(`Level up — ${this.graph?.get(cls.class)?.data.name_en ?? 'class'} ${cls.level}`, {
+				description: 'HP & slots updated. Set any new ASI/feat/spells in the builder.'
+			});
 	};
 
 	/** Advantage + bonus/penalty dice a stat picks up from active effects (gated on effects-auto). */

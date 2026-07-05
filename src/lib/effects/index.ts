@@ -48,14 +48,16 @@ export function parseEffect(token: string): ParsedEffect {
 	if (kind === 'flat-bonus') {
 		const m = /^([a-z][a-z.-]*?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
 		if (!m) return { kind: 'unknown', raw };
-		const target = m[1];
-		if (/d/i.test(m[3])) return { kind, target, dice: (m[2] === '-' ? '-' : '') + m[3], raw };
-		return { kind, target, amount: Number(m[2] + m[3]), raw };
+		const target = m[1] ?? '';
+		const sign = m[2] ?? '';
+		const amount = m[3] ?? '';
+		if (/d/i.test(amount)) return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw };
+		return { kind, target, amount: Number(sign + amount), raw };
 	}
 	if (kind === 'set-override') {
 		const m = /^([a-z][a-z.-]*):(-?\d+)$/i.exec(rest);
 		if (!m) return { kind: 'unknown', raw };
-		return { kind, target: m[1], amount: Number(m[2]), raw };
+		return { kind, target: m[1] ?? '', amount: Number(m[2]), raw };
 	}
 	// advantage / grant-proficiency / resist-immune / apply-condition / grant-resource
 	return { kind, target: rest, raw };
@@ -154,12 +156,12 @@ export function collectResources(effects: ActiveEffect[]): ResourceDef[] {
 				token.trim()
 			);
 			if (!m) continue;
-			const id = m[1].toLowerCase();
+			const id = (m[1] ?? '').toLowerCase();
 			const def: ResourceDef = {
 				id,
 				name: titleCaseId(id),
 				max: Number(m[2]),
-				recharge: m[3].toLowerCase() as ResourceDef['recharge'],
+				recharge: (m[3] ?? 'other').toLowerCase() as ResourceDef['recharge'],
 				source: eff.source
 			};
 			const prev = out.get(id);

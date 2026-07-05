@@ -45,8 +45,8 @@
 		const g = await getContentGraph();
 		graph = g;
 		types = [...g.byType.keys()].filter(isBrowsable).sort();
-		if (!types.includes(selectedType)) selectedType = types[0];
-		groupBy = groupingsFor(selectedType)[0].key;
+		if (!types.includes(selectedType)) selectedType = types[0] ?? selectedType;
+		groupBy = groupingsFor(selectedType)[0]?.key ?? groupBy;
 	});
 
 	// deep-link: /compendium/<type>/<source>/<id> opens that entry (rest-param route served by
@@ -76,7 +76,7 @@
 			if (!types.includes(t as ContentType)) return;
 			if (selectedType !== t) {
 				selectedType = t as ContentType;
-				groupBy = groupingsFor(selectedType)[0].key;
+				groupBy = groupingsFor(selectedType)[0]?.key ?? groupBy;
 				sourceFilter = new Set();
 				facetFilter = new Set();
 			}
@@ -139,7 +139,7 @@
 		selected = null;
 		adding = false;
 		query = '';
-		groupBy = groupingsFor(type)[0].key;
+		groupBy = groupingsFor(type)[0]?.key ?? groupBy;
 		sourceFilter = new Set();
 		facetFilter = new Set();
 	}

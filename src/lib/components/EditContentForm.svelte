@@ -58,7 +58,11 @@
 	<input class="titlein" placeholder="Name" bind:value={draft.name_en} />
 	<div class="idrow">
 		<span class="idk">id</span>
-		<input class="idin" placeholder={slugify(draft.name_en) || 'auto'} bind:value={draft.id} />
+		<input
+			class="idin"
+			placeholder={slugify(draft.name_en ?? '') || 'auto'}
+			bind:value={draft.id}
+		/>
 	</div>
 
 	<div class="sysrow">

@@ -940,8 +940,13 @@ passes miss):
 - [ ] **MECH1 · duplication detector** (`jscpd src`) — objective dup %; should flag the 3 roll impls,
   pip×3, csv×4, token regexes.
 - [ ] **MECH2 · import graph** (`madge`) — cycles, god-modules (fan-in/out), orphan files.
-- [ ] **MECH3 · strict types + lint** — `tsc --noUncheckedIndexedAccess`/`--exactOptionalPropertyTypes`
-  + eslint no-explicit-any/exhaustive-deps; grep `as `/`!`/`any` casts I added.
+- [x] **MECH3 · strict types + lint** — DONE. Baseline plain `tsc` was clean (0). Enabled BOTH
+  `exactOptionalPropertyTypes` (8 sites) and `noUncheckedIndexedAccess` (81 across code+tests) in
+  `tsconfig.json` and fixed every one — regex `match[n]` guarded (`m?.[1] ?? ''`), array/record
+  indexing guarded or `!`-asserted where provably populated (skills record, `sc.classes[0]` in
+  tests), optional fields constructed conditionally. Both flags now enforced by CI (svelte-check).
+  Also ran MECH1 (jscpd: 0.49% dup, only CSS clones + BVM-2 csv-splitter left) and MECH2 (madge:
+  no circular deps). Remaining lint idea (no-explicit-any grep) folded into per-file passes.
 - [ ] **MECH4 · test coverage** (`vitest --coverage`) — uncovered branches = blind spots.
 - [x] **MECH5 · invariant greps** — DONE this pass; found a real violation → **RULES-1**, below.
 - [x] **MECH7 · orphan/dead-code (`knip`)** — DONE. Added `knip` devDep + `knip.json` (tool scripts as
@@ -951,6 +956,14 @@ passes miss):
   `@tauri-apps/plugin-dialog` (JS file-picker not wired yet).
 - [ ] **MECH6 · differential test before merging a dup** — run both "duplicate" impls on the same
   input, assert equal. NB the pip formulas (CVM-2) are NOT equal → merging blind would change behaviour.
+
+**TYPE-1 · skill/ability maps are `Record<string, T>` (should be keyed unions)** — surfaced by the
+`noUncheckedIndexedAccess` pass (MECH3). `deriveSheet` builds `skills = {} as Record<string, Computed
+& {prof}>` and callers index it by a skill id; the string index signature forces every access to be
+`T | undefined`, so the two production sites (`derive.ts` passiveOf, `combat/state` passives) need a
+`!`. These maps are TOTAL over the fixed 18-skill / 6-ability sets (the `SKILL_IDS` union already
+exists in `combat/helpers`). Fix: a `SkillId`/`Ability`-keyed `Record<SkillId, T>` + typed accessor
+keys → the access is sound and the `!` disappears. (Test-only `!` are fine — they assert setup.)
 
 **RULES-1 · `src/lib/build/rules.ts` hardcodes ASI/feat levels by class name** —
 `if (id === 'fighter') base.push(6, 14); if (id === 'rogue') base.push(10)` breaks the data-driven-

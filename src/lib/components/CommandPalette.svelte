@@ -144,13 +144,13 @@
 			role="combobox"
 			aria-expanded="true"
 			aria-controls="cmd-list"
-			aria-activedescendant={items[active] ? `cmd-${items[active].key}` : undefined}
+			aria-activedescendant={items[active] ? `cmd-${items[active]?.key}` : undefined}
 			placeholder={$_('command.placeholder')}
 			autocomplete="off"
 		/>
 		<ul id="cmd-list" class="list" role="listbox">
 			{#each items as it, i (it.key)}
-				{#if i === 0 || groupOf(items[i - 1]) !== groupOf(it)}
+				{#if i === 0 || groupOf(items[i - 1]!) !== groupOf(it)}
 					<li class="group" role="presentation">{groupOf(it)}</li>
 				{/if}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->

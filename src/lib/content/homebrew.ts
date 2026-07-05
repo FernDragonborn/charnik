@@ -234,11 +234,11 @@ export async function saveHomebrewRow(
 		});
 		existing = prev.data;
 	}
-	const existingIds = new Set(existing.map((r) => r.id).filter(Boolean));
+	const existingIds = new Set(existing.map((r) => r.id).filter((id): id is string => Boolean(id)));
 
 	const built = buildRow(type, draft, existingIds);
 	if (!built.ok) return { ok: false, issues: built.issues };
 
 	await storage.write(file, toCsv(columns, [...existing, built.row]));
-	return { ok: true, id: built.row.id };
+	return built.row.id ? { ok: true, id: built.row.id } : { ok: true };
 }

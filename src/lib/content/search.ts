@@ -56,7 +56,7 @@ export function localesOf(graph: ContentGraph): string[] {
 	for (const r of graph.rows)
 		for (const k of Object.keys(r.data)) {
 			const m = /^name_([a-z]{2,3})$/.exec(k);
-			if (m) set.add(m[1]);
+			if (m?.[1]) set.add(m[1]);
 		}
 	return [...set];
 }

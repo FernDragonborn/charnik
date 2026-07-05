@@ -108,12 +108,12 @@ function buildSpell(row: LoadedRow, availableTo?: SpellModel['availableTo']): Sp
 	let dmgType = '';
 	const dm = dmg.match(/(\d+d\d+(?:\s*[+-]\s*\d+)?)\s*(.*)/);
 	if (dm) {
-		dice = dm[1].replace(/\s/g, '');
-		dmgType = dm[2].trim();
+		dice = (dm[1] ?? '').replace(/\s/g, '');
+		dmgType = (dm[2] ?? '').trim();
 	} else if (res === 'auto') {
 		const h = String(d.text_en ?? '').match(/(\d+d\d+)/);
 		if (h) {
-			dice = h[1];
+			dice = h[1] ?? '';
 			dmgType = 'healing';
 		}
 	}

@@ -160,8 +160,9 @@ function gatherEffects(
 	for (const eff of [...active]) {
 		for (const t of eff.tokens) {
 			const m = /^apply-condition:(.+)$/.exec(t.trim());
-			if (!m) continue;
-			const cond = graph.rows.find((r) => r.type === 'condition' && r.id === m[1].trim());
+			if (!m?.[1]) continue;
+			const condId = m[1].trim();
+			const cond = graph.rows.find((r) => r.type === 'condition' && r.id === condId);
 			const toks = tokensOf(cond);
 			if (cond && toks.length)
 				active.push({
@@ -209,10 +210,11 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		for (const eff of active)
 			for (const t of eff.tokens) {
 				const m = /^grant-proficiency:(.+)$/.exec(t.trim());
-				if (!m) continue;
-				const tgt = m[1].trim().replace(/^save\./, '');
+				if (!m?.[1]) continue;
+				const raw = m[1].trim();
+				const tgt = raw.replace(/^save\./, '');
 				if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
-				else grantedSkills.add(m[1].trim());
+				else grantedSkills.add(raw);
 			}
 
 	// saves: proficient if the ability is in build.saves (or any class's saves), or effect-granted
@@ -305,8 +307,9 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		active
 	);
 
+	// `skills` is populated for every skill id above, so these three are always present.
 	const passiveOf = (skill: 'perception' | 'investigation' | 'insight') =>
-		passiveScore(skills[skill]);
+		passiveScore(skills[skill]!);
 
 	// damage defenses from effects: `resist-immune:<resist|immune|vulnerable>:<type>` (a bare
 	// `resist-immune:<type>` defaults to resistance).
@@ -317,7 +320,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 				const m = /^resist-immune:(?:(resist|immune|vulnerable):)?(.+)$/.exec(t.trim());
 				if (!m) continue;
 				const bucket = (m[1] ?? 'resist') as 'resist' | 'immune' | 'vulnerable';
-				const type = m[2].trim();
+				const type = (m[2] ?? '').trim();
 				if (!defenses[bucket].includes(type)) defenses[bucket].push(type);
 			}
 

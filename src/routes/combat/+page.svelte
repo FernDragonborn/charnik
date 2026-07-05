@@ -359,20 +359,22 @@
 								<div class="ssec">{ABILITY_NAME[ab]}</div>
 								{#each list as skill (skill)}
 									{@const sk = s.skills[skill]}
-									<button
-										class="skl"
-										title={why(sk)}
-										onclick={(e) => roll(titleCase(skill), sk.value, e, `skill.${skill}`)}
-									>
-										<i
-											class="pdot"
-											class:on={sk.prof !== 'none'}
-											class:exp={sk.prof === 'expertise'}
-											title={sk.prof}
-										></i>
-										<span class="sn">{titleCase(skill)}</span>
-										<b class="sm">{signed(sk.value)}</b>
-									</button>
+									{#if sk}
+										<button
+											class="skl"
+											title={why(sk)}
+											onclick={(e) => roll(titleCase(skill), sk.value, e, `skill.${skill}`)}
+										>
+											<i
+												class="pdot"
+												class:on={sk.prof !== 'none'}
+												class:exp={sk.prof === 'expertise'}
+												title={sk.prof}
+											></i>
+											<span class="sn">{titleCase(skill)}</span>
+											<b class="sm">{signed(sk.value)}</b>
+										</button>
+									{/if}
 								{/each}
 							</div>
 						{/if}

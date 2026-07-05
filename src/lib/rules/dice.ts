@@ -91,6 +91,6 @@ export function rollPool(
  *  mod, then `rollPool`. Rolls EVERY dice group (the old compendium roller only did the first). */
 export function rollFormula(formula: string, rng: Rng = Math.random): Rolled {
 	const fm = /([+-]\s*\d+)\s*$/.exec(formula);
-	const mod = fm ? Number(fm[1].replace(/\s/g, '')) : 0;
+	const mod = fm?.[1] ? Number(fm[1].replace(/\s/g, '')) : 0;
 	return rollPool(parseDicePool(formula), mod, 0, [], rng);
 }

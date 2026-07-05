@@ -36,7 +36,7 @@ for (const { id } of LOCALES) {
 
 /** Text direction for a locale id (independent of svelte-i18n, which doesn't track it). */
 export function dirFor(localeId: string): Dir {
-	const base = localeId.toLowerCase().split('-')[0];
+	const base = localeId.toLowerCase().split('-')[0] ?? '';
 	return RTL_LANGS.has(base) ? 'rtl' : 'ltr';
 }
 
