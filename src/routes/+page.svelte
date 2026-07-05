@@ -54,9 +54,10 @@
 				Charnik is in active development. I can only bundle the <b>SRD</b> — the slice Wizards of
 				the Coast released for free (CC-BY). The rest of D&amp;D is theirs, not mine to hand out, so
 				a lot isn't here out of the box: the <b>Artificer</b>, <b>Aasimar</b>, the
-				<b>Beholder</b>, most <b>subclasses</b>, and plenty of <b>spells &amp; monsters</b>. The
-				whole point of the app is that you drop all of that in yourself as plain CSV — and on the
-				desktop build it stays on your own machine. Rough edges expected; thanks for trying it.
+				<b>Beholder</b>, most <b>subclasses</b>, and plenty of <b>spells &amp; monsters</b>. But
+				nothing's locked down — build your own <b>homebrew</b> and, with the flexible CSV system, add
+				anything you want: classes, subclasses, species, spells, whatever you can dream up (and on the
+				desktop build it all stays on your own machine).
 			</p>
 		</aside>
 	{/if}
