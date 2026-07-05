@@ -16,6 +16,22 @@ export type { BonusDie, Rolled };
 /** A roll-log row: a completed roll plus what it was for. */
 export type RollLogEntry = Rolled & { label: string };
 
+/** The three action-economy slots a turn tracks. */
+export type ActionSlot = 'action' | 'bonus' | 'reaction';
+
+/** The anchored dropdown menus the Combat view can open (overlay.kind). */
+export type MenuKind =
+	| 'dice'
+	| 'temphp'
+	| 'levelup'
+	| 'addeffect'
+	| 'customeffect'
+	| 'log'
+	| 'pinskills'
+	| 'showhide'
+	| 'condition'
+	| 'manage';
+
 /** +N / −N / 0 for a modifier. */
 export const signed = (n: number) => (n >= 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 

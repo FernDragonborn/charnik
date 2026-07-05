@@ -1042,9 +1042,9 @@ scan only if a config bug surfaces). Everything else functional is on the list a
 - [ ] **CVM-2 · three inconsistent click-to-set pip impls** — `usePip` uses `t[slot] > i ? i : i+1`
   (spent-count) while `slotClick`/`resourceClick` use `i < remaining ? full-i : full-i-1`. SAME intent,
   two formulas → one pure `pipClick()` (this is R5, and the formulas disagreeing is a latent bug risk).
-- [ ] **CVM-3 · action-slot type `'action'|'bonus'|'reaction'`** repeated in slotMax/usePip/ctSlot/
+- [x] **CVM-3 · action-slot type `'action'|'bonus'|'reaction'`** repeated in slotMax/usePip/ctSlot/
   trySpend (this is R3, local instances).
-- [ ] **CVM-4 · `overlay.kind: string`** + `openMenu(kind: string)` → `MenuKind` union (R2, local).
+- [x] **CVM-4 · `overlay.kind: string`** + `openMenu(kind: string)` → `MenuKind` union (R2, local).
 - [ ] **CVM-5 · token regex inline** in `slotMax` (`/^flat-bonus:(action|bonus|reaction)\+(\d+)$/`)
   (R4, local).
 - [ ] **CVM-6 · `RollLogEntry` interface** — the `{label, expr, total, adv?}` log-entry shape is inline

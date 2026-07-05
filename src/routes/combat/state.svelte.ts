@@ -30,7 +30,9 @@ import {
 	type Atk,
 	type SpRow,
 	type SpGroup,
-	type RollLogEntry
+	type RollLogEntry,
+	type ActionSlot,
+	type MenuKind
 } from '$lib/combat/helpers';
 
 /** Cap on the retained roll log (newest kept). */
@@ -58,7 +60,7 @@ class CombatVM {
 	flipDurationMs = 150;
 	// menus open as dropdowns anchored under their trigger button (not centered modals)
 	overlay = $state<null | {
-		kind: string;
+		kind: MenuKind;
 		top: number;
 		left: number | null;
 		right: number | null;
@@ -84,7 +86,7 @@ class CombatVM {
 		if (saved?.length) this.columns = saved.map((col) => col.map((id) => ({ id })));
 	};
 
-	openMenu = (kind: string, e: Event) => {
+	openMenu = (kind: MenuKind, e: Event) => {
 		const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
 		const anchorRight = r.left > window.innerWidth / 2;
 		// document coords (+scroll) so the dropdown scrolls WITH the page/button, not the viewport
@@ -184,7 +186,7 @@ class CombatVM {
 	// --- Action economy: base 1 pip per slot + extras from effects; move tracks feet -------------
 	// A feature/spell grants an extra action/bonus/reaction via a `flat-bonus:<slot>+N` token
 	// (Action Surge → +1 action, Haste → +1 action), rendered as more pips — data-driven.
-	slotMax = $derived.by<Record<'action' | 'bonus' | 'reaction', number>>(() => {
+	slotMax = $derived.by<Record<ActionSlot, number>>(() => {
 		const max = { action: 1, bonus: 1, reaction: 1 };
 		if (this.character?.play.autoCalc)
 			for (const eff of this.character.play.effects)
@@ -206,7 +208,7 @@ class CombatVM {
 	moveLeft = $derived(Math.max(0, this.moveMax - (this.character?.play.turn.move ?? 0)));
 	/** Click a pip in a slot. Same click-to-set model as spell slots: clicking a filled (available)
 	 *  pip spends up to it; clicking a spent pip restores down to it. */
-	usePip = (slot: 'action' | 'bonus' | 'reaction', index: number) => {
+	usePip = (slot: ActionSlot, index: number) => {
 		const t = this.character?.play.turn;
 		if (!t) return;
 		t[slot] = pipClick(t[slot], index, this.slotMax[slot]);
@@ -362,12 +364,12 @@ class CombatVM {
 
 	// --- action-economy enforcement -----------------------------------------------------------
 	/** Which turn slot an activity consumes, from its casting time (default = the Action). */
-	private ctSlot(ct: SpRow['ct']): 'action' | 'bonus' | 'reaction' {
+	private ctSlot(ct: SpRow['ct']): ActionSlot {
 		return ct === 'react' ? 'reaction' : ct === 'bonus' ? 'bonus' : 'action';
 	}
 	/** In combat, spend one pip of `slot`; block (return false) + warn when it's exhausted. Out of
 	 *  combat there is no economy → always allowed. */
-	private trySpend(slot: 'action' | 'bonus' | 'reaction'): boolean {
+	private trySpend(slot: ActionSlot): boolean {
 		const c = this.character;
 		if (!c || !c.play.inCombat) return true;
 		if (c.play.turn[slot] >= this.slotMax[slot]) {
