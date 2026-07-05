@@ -5,7 +5,7 @@
 </script>
 
 <div class="loadscreen" role="status" aria-live="polite">
-	<img class="loadgif" src="{base}/loading-dice.gif" alt="" width="240" height="266" />
+	<img class="loadgif" src="{base}/loading-dice.gif" alt="" width="220" height="244" />
 	<p class="loadbig">{message}</p>
 	<p class="loadsub">This can take up to <b>10 seconds</b> — please wait.</p>
 </div>
