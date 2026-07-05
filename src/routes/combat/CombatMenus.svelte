@@ -107,7 +107,7 @@
 				{#if log[0]}<div class="hist">
 						{log[0].label}
 						{#if log[0].advantageRoll}d20 <b class="res">{log[0].advantageRoll.kept}</b>
-							<s class="drop">{log[0].advantageRoll.dropped}</s>{/if}
+							<span class="drop">{log[0].advantageRoll.dropped}</span>{/if}
 						{log[0].expr}{log[0].expr ? ' ' : ''}=
 						<span class="res">{Number.isNaN(log[0].total) ? '' : log[0].total}</span>
 					</div>{/if}
@@ -200,7 +200,7 @@
 						</div>
 						{#if l.expr || l.advantageRoll}<div class="lr-sub">
 								{#if l.advantageRoll}d20 <b>{l.advantageRoll.kept}</b>
-									<s class="drop">{l.advantageRoll.dropped}</s>
+									<span class="drop">{l.advantageRoll.dropped}</span>
 								{/if}{l.expr}
 							</div>{/if}
 					</div>
@@ -707,9 +707,9 @@
 		color: var(--color-good);
 	}
 	/* the dropped die of an advantage/disadvantage pair */
+	/* the dropped adv/disadv d20 — shown but dimmed (de-emphasized, not struck through) */
 	.drop {
 		color: var(--color-text-muted);
-		text-decoration: line-through;
-		opacity: 0.7;
+		opacity: 0.45;
 	}
 </style>
