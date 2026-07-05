@@ -45,6 +45,10 @@ export function rowName(row: LoadedRow | undefined, locale = app.activeLocale): 
 
 /** Sentinel a feat slot holds when the choice is an Ability Score Improvement (not a feat). */
 export const ASI = '__asi__';
+/** The SRD feat id representing an ASI — filtered out of the feat picker (handled as boosts). */
+const ASI_FEAT_ID = 'ability-score-improvement';
+/** ASI allocation shape: +2 to one ability ('2') or +1 to two ('1-1'). */
+type AsiShape = '2' | '1-1';
 
 const slugify = (s: string): string =>
 	s
@@ -82,7 +86,7 @@ interface DraftState {
 	expertise: string[];
 	selectedLanguages: string[];
 	slotFeats: Record<string, string>;
-	slotAsi: Record<string, { shape: '2' | '1-1'; picks: Ability[] }>;
+	slotAsi: Record<string, { shape: AsiShape; picks: Ability[] }>;
 	selectedSpells: string[];
 	inventory: { item: string; qty: number; equipped: boolean }[];
 }
@@ -560,7 +564,7 @@ class BuildVM {
 	featOptionsFor = (level: number): LoadedRow[] =>
 		this.featList.filter((f) => {
 			// the plain ASI is offered as its own dedicated slot option, not as a feat row
-			if (f.id === 'ability-score-improvement') return false;
+			if (f.id === ASI_FEAT_ID) return false;
 			const cat = String(f.data.category ?? FEAT_CATEGORY.general);
 			if (cat === FEAT_CATEGORY.origin) return false;
 			if (cat === FEAT_CATEGORY.epicBoon) return level >= 19;
@@ -602,7 +606,7 @@ class BuildVM {
 		}
 		return out;
 	};
-	setAsiShape = (key: string, shape: '2' | '1-1') => {
+	setAsiShape = (key: string, shape: AsiShape) => {
 		const cur = this.draft.slotAsi[key] ?? { shape, picks: [] };
 		const cap = shape === '2' ? 1 : 2;
 		this.draft.slotAsi = { ...this.draft.slotAsi, [key]: { shape, picks: cur.picks.slice(0, cap) } };

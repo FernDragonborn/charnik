@@ -1076,7 +1076,7 @@ scan only if a config bug surfaces). Everything else functional is on the list a
   `pointsUsed` (only used internally by `pointsLeft`).
 - [ ] **BVM-6 · token/format regexes inline** — `flat-bonus:([a-z]{3})…` in `speciesFixedAbilities`
   (R4) and `^(\d+)x(\d+)$` for `boost_choice`; centralise/parse-once.
-- [ ] **BVM-7 · magic sentinels / id strings** — `ASI = '__asi__'` mixed into `slotFeats` values (a
+- [x] **BVM-7 (partial) · magic sentinels / id strings** — `ASI = '__asi__'` mixed into `slotFeats` values (a
   discriminated union would be cleaner), the hardcoded feat id `'ability-score-improvement'`, ASI
   shapes `'2'`/`'1-1'`, `'any'` skill list, `'species'`/`'other'` in abilityNote, `slotFeats` composite
   string key `${i}:${level}`.
