@@ -76,6 +76,8 @@ class CombatVM {
 	rollMod = $state(0);
 	rollAdvantage = $state(0); // −1 disadvantage · 0 normal · +1 advantage
 	rollSrc = $state<string | null>(null);
+	/** A follow-up roll fired right after the tray's Roll (an attack's damage after its to-hit). */
+	private pendingDamage: { label: string; dice: Record<number, number>; mod: number } | null = null;
 	tempHpInput = $state(5);
 	customEffectLabel = $state('');
 	spellGroupBy = $state<GroupMode>('level');
@@ -131,6 +133,7 @@ class CombatVM {
 		this.rollMod = 0;
 		this.rollAdvantage = 0;
 		this.rollSrc = null;
+		this.pendingDamage = null;
 		this.openMenu('dice', e);
 	};
 
@@ -148,9 +151,14 @@ class CombatVM {
 			.join(' + ') + (this.rollMod ? ` ${signed(this.rollMod)}` : '')
 	);
 
-	// The custom roll tray. Just the general roller fed from the tray's own state.
+	// The custom roll tray. Rolls the tray's pool, then any queued follow-up (an attack's damage).
 	doRoll = () => {
 		this.rollDiceNow(this.rollSrc ?? 'Custom roll', this.dice, this.rollMod, this.rollAdvantage);
+		if (this.pendingDamage) {
+			const d = this.pendingDamage;
+			this.pendingDamage = null;
+			this.rollDiceNow(d.label, d.dice, d.mod);
+		}
 	};
 
 	/** Record a completed roll: prepend to the log (capped) and toast it. */
@@ -345,6 +353,7 @@ class CombatVM {
 		this.dice = { ...diceObj };
 		this.rollMod = mod;
 		this.rollAdvantage = advantage; // preset from the stat's active effects (adjustable in the tray)
+		this.pendingDamage = null; // a plain stat roll has no follow-up (attacks set one after this)
 		this.openMenu('dice', e);
 	};
 	// roll a dice pool immediately. `advantage` (−1/0/+1) and signed `bonusDice` come from the stat's
@@ -399,7 +408,10 @@ class CombatVM {
 		const { pool, mod } = this.parseDamage(at.dmg);
 		const hasDice = Object.keys(pool).length > 0;
 		if (wantsTray(e)) {
-			this.openRoll(`${at.name} damage`, hasDice ? { ...pool } : { 20: 1 }, mod, e);
+			// tray on the TO-HIT (the attack roll — pick advantage), then Roll fires the damage after
+			const fx = this.effectsFor('attack');
+			this.openRoll(at.name, { 20: 1 }, at.toHit, e, fx.advantage ? 1 : 0);
+			if (hasDice) this.pendingDamage = { label: `${at.name} damage`, dice: pool, mod };
 			return;
 		}
 		this.roll(at.name, at.toHit, e, 'attack'); // to-hit (instant)
@@ -430,9 +442,9 @@ class CombatVM {
 			// dealing attack spell (Fire Bolt) rolled only damage and skipped the to-hit entirely.
 			const toHit = caster.attack.value;
 			if (alt) {
-				// tray on the damage dice (or the to-hit d20 for a non-damage attack spell)
-				if (hasDmg) this.openRoll(`${r.name} damage`, { ...r.dmg! }, 0, e);
-				else this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e);
+				// tray on the TO-HIT (the spell attack roll); Roll then fires the damage after
+				this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e);
+				if (hasDmg) this.pendingDamage = { label: `${r.name} damage`, dice: { ...r.dmg! }, mod: 0 };
 			} else {
 				this.rollDiceNow(`${r.name} (spell attack)`, { 20: 1 }, toHit);
 				if (hasDmg) this.rollDiceNow(`${r.name} damage`, r.dmg!, 0);
