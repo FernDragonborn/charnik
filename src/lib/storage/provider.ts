@@ -13,7 +13,7 @@ import type { Storage } from './types';
 let cache: Storage | null = null;
 
 /** True when running inside a Tauri webview (the internals global is injected by the runtime). */
-function isTauri(): boolean {
+export function isTauri(): boolean {
 	return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }
 

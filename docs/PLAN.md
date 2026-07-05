@@ -736,7 +736,17 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - **UBUG-5 · Spending a resource gives no feedback.** Clicking a resource pip (`resourceClick`) spends
   it silently — using a resource should raise a toast (e.g. "Rage — 2 left" / "Ki used"), like rolls
   do. Add a toast on spend (and probably on restore too), naming the resource + remaining count.
-- **UBUG-4 · Tauri .msi install has no content folders.** After installing the built `.msi`, there's
+- [~] **UBUG-4 · Tauri .msi install has no content folders.** CODE DONE (needs a real `.msi` verify).
+  The content was bundled inside the app (loaded over fetch) but never written to disk, so there was
+  no editable folder. Now `content/provider.ts`: on desktop (`isTauri`), `getContentGraph` SEEDS the
+  shipped CSVs into `<dataDir>/content/…` on first run (`copyMissingRoots`, skips a root that already
+  exists so user edits aren't clobbered) and then loads the graph FROM that writable folder via
+  TauriStorage; web still reads the bundle over fetch. No capability change needed (`$APPDATA/**` is
+  already scoped; `writeBytes` mkdirs recursively). Seed logic unit-tested over MemoryStorage. STILL
+  TODO: build a `.msi` and confirm the folder appears + is read; a file-watcher for live disk edits
+  and a `charnik.config.json` for custom roots are the follow-ups (per the loader TODO).
+  Original report:
+- **UBUG-4b · Tauri .msi install has no content folders.** After installing the built `.msi`, there's
   no `content/` (CSV) directory created, so the app has no data. First-run on desktop must create the
   dataDir + seed the shipped SRD content (the `static/content` bundle) into it (Tauri fs). Wire the
   first-run seed / resource-copy in the Tauri layer. (Relates to `dataDir` resolution + the Storage
