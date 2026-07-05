@@ -101,7 +101,14 @@ export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 				classes: c.build.classes.map((cl) => `${cl.class.split(':').pop()} ${cl.level}`).join(' / ')
 			});
 		} else {
-			out.push({ id: slug, name: slug, system: '5e', level: 0, classes: '', error: res.error });
+			out.push({
+				id: slug,
+				name: slug,
+				system: '5e',
+				level: 0,
+				classes: '',
+				error: res.error ?? 'unknown error'
+			});
 		}
 	}
 	return out.sort((a, b) => a.name.localeCompare(b.name));

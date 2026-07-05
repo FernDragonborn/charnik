@@ -24,17 +24,17 @@ export const signed = (n: number) => (n >= 0 ? `+${n}` : n < 0 ? `−${Math.abs(
 export function rollEffectsFor(
 	effects: { effects: string[] }[],
 	key: string
-): { adv: boolean; bonusDice: BonusDie[] } {
-	const out = { adv: false, bonusDice: [] as BonusDie[] };
+): { advantage: boolean; bonusDice: BonusDie[] } {
+	const out = { advantage: false, bonusDice: [] as BonusDie[] };
 	const matches = (t: string) =>
 		t === key ||
 		(t === 'saves' && key.startsWith('save')) ||
 		(t === 'skills' && key.startsWith('skill'));
 	for (const eff of effects) {
 		for (const tok of eff.effects) {
-			const adv = /^advantage:(.+)$/.exec(tok);
-			if (adv && matches(adv[1].trim())) {
-				out.adv = true;
+			const advantage = /^advantage:(.+)$/.exec(tok);
+			if (advantage && matches(advantage[1].trim())) {
+				out.advantage = true;
 				continue;
 			}
 			const die = /^flat-bonus:([\w.-]+)([+-])(\d+)d(\d+)$/.exec(tok);

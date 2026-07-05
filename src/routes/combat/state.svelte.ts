@@ -66,7 +66,7 @@ class CombatVM {
 	// dice tray / roll builder
 	dice = $state<Record<number, number>>({ 20: 1 }); // sides → count in the pool
 	rollMod = $state(0);
-	rollAdv = $state(0); // −1 disadvantage · 0 normal · +1 advantage
+	rollAdvantage = $state(0); // −1 disadvantage · 0 normal · +1 advantage
 	rollSrc = $state<string | null>(null);
 	tempHpInput = $state(5);
 	customEffectLabel = $state('');
@@ -121,7 +121,7 @@ class CombatVM {
 	openDice = (e: Event) => {
 		this.dice = { 20: 1 };
 		this.rollMod = 0;
-		this.rollAdv = 0;
+		this.rollAdvantage = 0;
 		this.rollSrc = null;
 		this.openMenu('dice', e);
 	};
@@ -142,14 +142,16 @@ class CombatVM {
 
 	// The custom roll tray. Just the general roller fed from the tray's own state.
 	doRoll = () => {
-		this.rollDiceNow(this.rollSrc ?? 'Custom roll', this.dice, this.rollMod, this.rollAdv);
+		this.rollDiceNow(this.rollSrc ?? 'Custom roll', this.dice, this.rollMod, this.rollAdvantage);
 	};
 
 	/** Record a completed roll: prepend to the log (capped) and toast it. */
 	private pushRoll(label: string, r: Rolled) {
 		this.log = [{ label, ...r }, ...this.log].slice(0, ROLL_LOG_MAX);
-		const advTxt = r.adv ? `d20 ${r.adv[0]} (drop ${r.adv[1]}) ` : '';
-		toast(`${label} — ${r.total}`, { description: `${advTxt}${r.expr}`.trim() });
+		const advText = r.advantageRoll
+			? `d20 ${r.advantageRoll.kept} (drop ${r.advantageRoll.dropped}) `
+			: '';
+		toast(`${label} — ${r.total}`, { description: `${advText}${r.expr}`.trim() });
 	}
 
 	setTempHp = () => {
@@ -300,37 +302,43 @@ class CombatVM {
 	};
 
 	/** Advantage + bonus/penalty dice a stat picks up from active effects (gated on effects-auto). */
-	private effectsFor(key: string): { adv: boolean; bonusDice: BonusDie[] } {
+	private effectsFor(key: string): { advantage: boolean; bonusDice: BonusDie[] } {
 		const c = this.character;
-		if (!c || !c.play.autoCalc) return { adv: false, bonusDice: [] }; // effects-auto off → plain
+		if (!c || !c.play.autoCalc) return { advantage: false, bonusDice: [] }; // effects-auto off → plain
 		return rollEffectsFor(c.play.effects, key);
 	}
 
 	// open the roll builder prefilled + anchored, so the player can pick advantage then Roll
-	openRoll = (label: string, diceObj: Record<number, number>, mod: number, e: Event, adv = 0) => {
+	openRoll = (
+		label: string,
+		diceObj: Record<number, number>,
+		mod: number,
+		e: Event,
+		advantage = 0
+	) => {
 		this.rollSrc = label;
 		this.dice = { ...diceObj };
 		this.rollMod = mod;
-		this.rollAdv = adv; // preset from the stat's active effects (adjustable in the tray)
+		this.rollAdvantage = advantage; // preset from the stat's active effects (adjustable in the tray)
 		this.openMenu('dice', e);
 	};
-	// roll a dice pool immediately. `adv` (−1/0/+1) and signed `bonusDice` come from the stat's
+	// roll a dice pool immediately. `advantage` (−1/0/+1) and signed `bonusDice` come from the stat's
 	// active effects (advantage, Bless/Bane dice) — auto-applied so a tap "just works".
 	rollDiceNow = (
 		label: string,
 		diceObj: Record<number, number>,
 		mod: number,
-		adv = 0,
+		advantage = 0,
 		bonusDice: BonusDie[] = []
 	) => {
-		this.pushRoll(label, rollPool(diceObj, mod, adv, bonusDice));
+		this.pushRoll(label, rollPool(diceObj, mod, advantage, bonusDice));
 	};
 	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray. `key`
 	// (e.g. "save.dex", "skill.stealth", "attack") lets the roll pick up matching effects.
 	roll = (label: string, mod: number, e: Event, key?: string) => {
 		const fx = key ? this.effectsFor(key) : null;
-		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e, fx?.adv ? 1 : 0);
-		else this.rollDiceNow(label, { 20: 1 }, mod, fx?.adv ? 1 : 0, fx?.bonusDice ?? []);
+		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e, fx?.advantage ? 1 : 0);
+		else this.rollDiceNow(label, { 20: 1 }, mod, fx?.advantage ? 1 : 0, fx?.bonusDice ?? []);
 	};
 
 	// --- action-economy enforcement -----------------------------------------------------------

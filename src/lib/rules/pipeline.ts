@@ -67,5 +67,7 @@ export function fold(contribs: Contribution[], clamp?: Clamp): number {
 
 /** Build a `Computed` from contributions (+ optional clamp/notes). */
 export function computed(contribs: Contribution[], clamp?: Clamp, notes?: string[]): Computed {
-	return { value: fold(contribs, clamp), trace: contribs, notes };
+	const result: Computed = { value: fold(contribs, clamp), trace: contribs };
+	if (notes) result.notes = notes;
+	return result;
 }

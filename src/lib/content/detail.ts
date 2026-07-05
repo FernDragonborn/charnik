@@ -156,7 +156,7 @@ function buildSpell(row: LoadedRow, availableTo?: SpellModel['availableTo']): Sp
 			.map((c) => cap(c.trim()))
 			.filter(Boolean)
 			.join(', '),
-		availableTo,
+		...(availableTo ? { availableTo } : {}),
 		higherLevel: String(d.higher_level ?? ''),
 		material: String(d.material ?? '')
 	};
@@ -212,7 +212,7 @@ function buildMonster(row: LoadedRow): MonsterModel {
 			ab: a.toUpperCase(),
 			score,
 			mod: abilMod(score),
-			save: save == null ? undefined : signed(save)
+			...(save == null ? {} : { save: signed(save) })
 		};
 	});
 	const hasSaves = ABILS.some((a) => {

@@ -74,14 +74,14 @@ function castingCounts(
 	classId: string,
 	level: number,
 	systems: string[]
-): { cantrips?: number; prepared?: number } {
+): { cantrips: number | undefined; prepared: number | undefined } {
 	for (const r of graph.rows) {
 		if (r.type !== 'class_casting' || String(r.data.class_id) !== classId) continue;
 		if (Number(r.data.level) !== level) continue;
 		if (!r.systems.some((s) => systems.includes(s))) continue;
 		return { cantrips: num(r.data.cantrips_known), prepared: num(r.data.prepared_known) };
 	}
-	return {};
+	return { cantrips: undefined, prepared: undefined };
 }
 
 export function deriveSpellcasting(

@@ -21,11 +21,7 @@ describe('parseDicePool', () => {
 
 describe('rollPool', () => {
 	it('rolls a single die', () => {
-		expect(rollPool({ 6: 1 }, 0, 0, [], rngSequence(0.5))).toEqual({
-			total: 4,
-			expr: 'd6(4)',
-			adv: undefined
-		});
+		expect(rollPool({ 6: 1 }, 0, 0, [], rngSequence(0.5))).toEqual({ total: 4, expr: 'd6(4)' });
 	});
 
 	it('appends a signed flat modifier', () => {
@@ -42,13 +38,13 @@ describe('rollPool', () => {
 	it('advantage rolls two d20 and keeps the higher, exposing the loser', () => {
 		const r = rollPool({ 20: 1 }, 0, 1, [], rngSequence(0.1, 0.9)); // d20 → 3, then 19
 		expect(r.total).toBe(19);
-		expect(r.adv).toEqual([19, 3]);
+		expect(r.advantageRoll).toEqual({ kept: 19, dropped: 3 });
 	});
 
 	it('disadvantage keeps the lower', () => {
 		const r = rollPool({ 20: 1 }, 0, -1, [], rngSequence(0.1, 0.9));
 		expect(r.total).toBe(3);
-		expect(r.adv).toEqual([3, 19]);
+		expect(r.advantageRoll).toEqual({ kept: 3, dropped: 19 });
 	});
 
 	it('adds signed bonus dice (Bless +1d4 / Bane −1d4)', () => {

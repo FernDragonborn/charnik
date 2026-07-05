@@ -6,7 +6,7 @@ const fx = (...tokens: string[]) => [{ effects: tokens }];
 describe('rollEffectsFor — advantage + bonus dice a roll picks up', () => {
 	it('adds Bless (+1d4) and Bane (−1d4) group tokens to any save', () => {
 		const r = rollEffectsFor(fx('flat-bonus:saves+1d4', 'flat-bonus:saves-1d4'), 'save.dex');
-		expect(r.adv).toBe(false);
+		expect(r.advantage).toBe(false);
 		expect(r.bonusDice).toEqual([
 			{ sides: 4, count: 1, sign: 1 },
 			{ sides: 4, count: 1, sign: -1 }
@@ -14,13 +14,13 @@ describe('rollEffectsFor — advantage + bonus dice a roll picks up', () => {
 	});
 
 	it('fans "skills" group advantage out to a specific skill, not to saves', () => {
-		expect(rollEffectsFor(fx('advantage:skills'), 'skill.stealth').adv).toBe(true);
-		expect(rollEffectsFor(fx('advantage:skills'), 'save.dex').adv).toBe(false);
+		expect(rollEffectsFor(fx('advantage:skills'), 'skill.stealth').advantage).toBe(true);
+		expect(rollEffectsFor(fx('advantage:skills'), 'save.dex').advantage).toBe(false);
 	});
 
 	it('matches an exact target and ignores a different one', () => {
-		expect(rollEffectsFor(fx('advantage:save.dex'), 'save.dex').adv).toBe(true);
-		expect(rollEffectsFor(fx('advantage:save.dex'), 'save.con').adv).toBe(false);
+		expect(rollEffectsFor(fx('advantage:save.dex'), 'save.dex').advantage).toBe(true);
+		expect(rollEffectsFor(fx('advantage:save.dex'), 'save.con').advantage).toBe(false);
 	});
 
 	it('ignores flat numeric bonuses (those fold into the modifier, not the dice)', () => {

@@ -1,9 +1,9 @@
 /*
- * The ONE dice roller. Pure: no Svelte, no toast, no logging — it returns {total, expr, adv?}
- * so every caller (combat tap-roll, the custom roll tray, compendium HP/damage) shares identical
- * mechanics and it's unit-testable with a seeded RNG. Before this, three copies of the roll loop
- * had drifted (the compendium one only rolled the first NdM group). A single roll path is also a
- * correctness property: adv/disadv, bonus dice and formatting can't diverge across call sites.
+ * The ONE dice roller. Pure: no Svelte, no toast, no logging — it returns {total, expr,
+ * advantageRoll?} so every caller (combat tap-roll, the custom roll tray, compendium HP/damage)
+ * shares identical mechanics and it's unit-testable with a seeded RNG. Before this, three copies of
+ * the roll loop had drifted (the compendium one only rolled the first NdM group). A single roll path
+ * is also a correctness property: advantage, bonus dice and formatting can't diverge across sites.
  */
 
 /** Injectable randomness; defaults to Math.random, seeded in tests. Returns [0,1). */
@@ -16,13 +16,19 @@ export interface BonusDie {
 	sign: number;
 }
 
-/** Result of a roll: the total, a human-readable breakdown, and the adv/disadv d20 pair if any. */
+/** The two d20 of an advantage/disadvantage roll: the one kept and the one dropped. */
+export interface AdvantageRoll {
+	kept: number;
+	dropped: number;
+}
+
+/** Result of a roll: the total, a human-readable breakdown, and the two d20 if adv/disadv applied. */
 export interface Rolled {
 	total: number;
 	/** e.g. "d8(5) + d6(2) +3"; the bonus-die parts carry their own sign. */
 	expr: string;
-	/** [kept, dropped] when an advantage/disadvantage d20 was rolled. */
-	adv?: [number, number];
+	/** Present only when an advantage/disadvantage d20 was rolled. */
+	advantageRoll?: AdvantageRoll;
 }
 
 /** Roll one die with `sides` faces. */
@@ -40,31 +46,31 @@ export function parseDicePool(s: string): Record<number, number> {
 }
 
 /**
- * Roll a dice pool + flat mod. `adv` (−1 disadvantage / 0 normal / +1 advantage) applies to the
- * FIRST d20 in the pool: roll two, keep the winner, expose the loser as `adv`. `bonusDice` are the
- * signed effect dice (Bless +1d4 / Bane −1d4). Deterministic under a seeded `rng`.
+ * Roll a dice pool + flat mod. `advantage` (−1 disadvantage / 0 normal / +1 advantage) applies to
+ * the FIRST d20 in the pool: roll two, keep the winner, expose the loser as `advantageRoll`.
+ * `bonusDice` are the signed effect dice (Bless +1d4 / Bane −1d4). Deterministic under a seeded `rng`.
  */
 export function rollPool(
 	dice: Record<number, number>,
 	mod = 0,
-	adv = 0,
+	advantage = 0,
 	bonusDice: BonusDie[] = [],
 	rng: Rng = Math.random
 ): Rolled {
 	const parts: string[] = [];
 	let total = 0;
-	let advPair: [number, number] | undefined;
+	let advantageRoll: AdvantageRoll | undefined;
 	for (const [s, c] of Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0]))) {
 		const sides = Number(s);
 		for (let k = 0; k < c; k++) {
 			const v = rollDie(sides, rng);
-			if (sides === 20 && adv !== 0 && k === 0) {
+			if (sides === 20 && advantage !== 0 && k === 0) {
 				// roll TWO d20 and keep the winner; the loser is surfaced (rendered struck through)
 				const v2 = rollDie(20, rng);
-				const kept = adv > 0 ? Math.max(v, v2) : Math.min(v, v2);
-				advPair = [kept, kept === v ? v2 : v];
+				const kept = advantage > 0 ? Math.max(v, v2) : Math.min(v, v2);
+				advantageRoll = { kept, dropped: kept === v ? v2 : v };
 				total += kept;
-				continue; // the adv detail renders the d20, don't duplicate it in `parts`
+				continue; // the advantage detail renders the d20, don't duplicate it in `parts`
 			}
 			total += v;
 			parts.push(`d${sides}(${v})`);
@@ -78,7 +84,7 @@ export function rollPool(
 		}
 	total += mod;
 	const expr = parts.join(' + ') + (mod ? ` ${formatModifier(mod)}` : '');
-	return { total, expr, adv: advPair };
+	return advantageRoll ? { total, expr, advantageRoll } : { total, expr };
 }
 
 /** Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat

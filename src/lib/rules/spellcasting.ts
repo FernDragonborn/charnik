@@ -116,7 +116,7 @@ export function slotPools(
 			spellLevel,
 			max: n,
 			recharge: opts.recharge,
-			forcedUpcast: opts.forcedUpcast
+			forcedUpcast: opts.forcedUpcast ?? false
 		});
 	});
 	return out;

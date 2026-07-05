@@ -136,13 +136,16 @@ export function columnsFor(type: ContentType): string[] {
 export function fieldsFor(type: ContentType): FieldDesc[] {
 	return columnsFor(type)
 		.filter((name) => name !== 'source') // source is fixed to Homebrew
-		.map((name) => ({
-			name,
-			label: label(name),
-			kind: kindOf(type, name),
-			options: optionsOf(type, name),
-			required: name === 'name_en' || name === 'systems'
-		}));
+		.map((name) => {
+			const options = optionsOf(type, name);
+			return {
+				name,
+				label: label(name),
+				kind: kindOf(type, name),
+				...(options ? { options } : {}),
+				required: name === 'name_en' || name === 'systems'
+			};
+		});
 }
 
 /** A blank draft for a type (all cells empty; systems defaults to nothing until the user picks). */

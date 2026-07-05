@@ -16,7 +16,7 @@
 	const overlay = $derived(combat.overlay);
 	const rollSrc = $derived(combat.rollSrc);
 	const dice = $derived(combat.dice);
-	const rollAdv = $derived(combat.rollAdv);
+	const rollAdvantage = $derived(combat.rollAdvantage);
 	const rollMod = $derived(combat.rollMod);
 	const rollExpr = $derived(combat.rollExpr);
 	const log = $derived(combat.log);
@@ -81,14 +81,20 @@
 						>{/each}
 				</div>
 				<div class="advrow">
-					<button class="seg" class:on={rollAdv === -1} onclick={() => (combat.rollAdv = -1)}
-						>Disadv.</button
+					<button
+						class="seg"
+						class:on={rollAdvantage === -1}
+						onclick={() => (combat.rollAdvantage = -1)}>Disadv.</button
 					>
-					<button class="seg" class:on={rollAdv === 0} onclick={() => (combat.rollAdv = 0)}
-						>Normal</button
+					<button
+						class="seg"
+						class:on={rollAdvantage === 0}
+						onclick={() => (combat.rollAdvantage = 0)}>Normal</button
 					>
-					<button class="seg" class:on={rollAdv === 1} onclick={() => (combat.rollAdv = 1)}
-						>Advant.</button
+					<button
+						class="seg"
+						class:on={rollAdvantage === 1}
+						onclick={() => (combat.rollAdvantage = 1)}>Advant.</button
 					>
 				</div>
 				<div class="modrow">
@@ -100,8 +106,8 @@
 				</div>
 				{#if log[0]}<div class="hist">
 						{log[0].label}
-						{#if log[0].adv}d20 <b class="res">{log[0].adv[0]}</b>
-							<s class="drop">{log[0].adv[1]}</s>{/if}
+						{#if log[0].advantageRoll}d20 <b class="res">{log[0].advantageRoll.kept}</b>
+							<s class="drop">{log[0].advantageRoll.dropped}</s>{/if}
 						{log[0].expr}{log[0].expr ? ' ' : ''}=
 						<span class="res">{Number.isNaN(log[0].total) ? '' : log[0].total}</span>
 					</div>{/if}
@@ -192,8 +198,9 @@
 								>{Number.isNaN(l.total) ? '—' : l.total}</span
 							>
 						</div>
-						{#if l.expr || l.adv}<div class="lr-sub">
-								{#if l.adv}d20 <b>{l.adv[0]}</b> <s class="drop">{l.adv[1]}</s>
+						{#if l.expr || l.advantageRoll}<div class="lr-sub">
+								{#if l.advantageRoll}d20 <b>{l.advantageRoll.kept}</b>
+									<s class="drop">{l.advantageRoll.dropped}</s>
 								{/if}{l.expr}
 							</div>{/if}
 					</div>
