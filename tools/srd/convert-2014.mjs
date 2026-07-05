@@ -766,6 +766,15 @@ function convertClasses() {
 				.split(/,|\bor\b|\band\b/i)
 				.map((x) => slug(x))
 				.filter((x) => x && x !== 'or' && x !== 'and');
+		// ASI/feat-slot levels = progression-table rows whose Features cell names an ASI (Fighter
+		// also 6 & 14, Rogue also 10, all classes 19) — read from the source table, not hardcoded.
+		// match "ability score" (not "…improvement") — the source table truncates some cells
+		// (e.g. Rogue L10 reads just "Ability Score"); no other Feature cell starts that way.
+		const asiLevels = tableRows
+			.filter((r) => r.text.includes('ability score'))
+			.map((r) => r.lvl)
+			.sort((a, b) => a - b);
+
 		const caster = CASTER[id];
 		const subKw =
 			/\b(\d+)(?:st|nd|rd|th)[^|]*?(Primal Path|Divine Domain|Bard College|Druid Circle|Martial Archetype|Monastic Tradition|Sacred Oath|Ranger [A-Za-z]*|Roguish Archetype|Sorcerous Origin|Otherworldly Patron|Arcane Tradition)/i.exec(
@@ -788,7 +797,8 @@ function convertClasses() {
 			spell_ability: SPELL_ABIL[id] || '',
 			skills_choose: skM ? String(num[skM[2].toLowerCase()] || skM[2]) : '',
 			skills_from: skM ? (skM[1] ? 'any' : skM[3] ? splitSkills(skM[3]).join(',') : '') : '',
-			subclass_level: String(SUBCLASS_LEVEL_2014[id])
+			subclass_level: String(SUBCLASS_LEVEL_2014[id]),
+			asi_levels: asiLevels.join(',')
 		});
 
 		// feature descriptions = h3/h4 headings with a level found in the progression table
@@ -887,7 +897,8 @@ function convertClasses() {
 			'spell_ability',
 			'skills_choose',
 			'skills_from',
-			'subclass_level'
+			'subclass_level',
+			'asi_levels'
 		],
 		classRows
 	);

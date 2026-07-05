@@ -83,16 +83,18 @@ describe('ability-boost placement', () => {
 });
 
 describe('feat / ASI slots', () => {
-	it('every class gets 4/8/12/16 then epic boon at 19', () => {
-		expect(asiFeatLevels('wizard', 20)).toEqual([4, 8, 12, 16, 19]);
-		expect(asiFeatLevels('wizard', 4)).toEqual([4]);
-		expect(asiFeatLevels('wizard', 3)).toEqual([]);
+	// levels come from the class's own `asi_levels` data (see the converters); the fn just filters
+	// them to the character's level, with a common-progression fallback when none is supplied.
+	const fighter = [4, 6, 8, 12, 14, 16, 19];
+	const rogue = [4, 8, 10, 12, 16, 19];
+	it('falls back to the common 4/8/12/16/19 progression when no data is given', () => {
+		expect(asiFeatLevels(20)).toEqual([4, 8, 12, 16, 19]);
+		expect(asiFeatLevels(4)).toEqual([4]);
+		expect(asiFeatLevels(3)).toEqual([]);
 	});
-	it('fighter adds 6 & 14, rogue adds 10', () => {
-		expect(asiFeatLevels('fighter', 20)).toEqual([4, 6, 8, 12, 14, 16, 19]);
-		expect(asiFeatLevels('rogue', 20)).toEqual([4, 8, 10, 12, 16, 19]);
-	});
-	it('accepts a full type:source:id ref', () => {
-		expect(asiFeatLevels('class:SRD 5.2.1:fighter', 6)).toEqual([4, 6]);
+	it('uses the class-specific progression and filters to the level', () => {
+		expect(asiFeatLevels(20, fighter)).toEqual([4, 6, 8, 12, 14, 16, 19]);
+		expect(asiFeatLevels(20, rogue)).toEqual([4, 8, 10, 12, 16, 19]);
+		expect(asiFeatLevels(6, fighter)).toEqual([4, 6]);
 	});
 });

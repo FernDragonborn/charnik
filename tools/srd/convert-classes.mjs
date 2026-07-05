@@ -66,6 +66,12 @@ for (const part of parts) {
 
 	const subclassLevel = (/#### Level (\d+):[^\n]*Subclass/.exec(part) || [, ''])[1];
 
+	// ASI/feat-slot levels: the Level-4 ASI block says "…again at <Class> levels 8, 12, and 16"
+	// (Fighter adds 6 & 14, Rogue adds 10); every class also gets the Epic Boon feat at 19.
+	const asiProse = /Ability Score Improvement[\s\S]*?again at \w+ levels ([\d,\sand]+)/i.exec(part);
+	const asiExtra = asiProse ? (asiProse[1].match(/\d+/g) || []).map(Number) : [];
+	const asiLevels = [...new Set([4, ...asiExtra, 19])].sort((a, b) => a - b);
+
 	classRows.push({
 		id,
 		systems: '5.5e',
@@ -82,7 +88,8 @@ for (const part of parts) {
 		spell_ability,
 		skills_choose: skillsChoose,
 		skills_from: skillsFrom,
-		subclass_level: subclassLevel
+		subclass_level: subclassLevel,
+		asi_levels: asiLevels.join(',')
 	});
 
 	const pushFeature = (b, subclass_id) => {
@@ -154,7 +161,8 @@ writeCsv(
 		'spell_ability',
 		'skills_choose',
 		'skills_from',
-		'subclass_level'
+		'subclass_level',
+		'asi_levels'
 	],
 	classRows
 );

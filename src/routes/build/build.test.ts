@@ -17,8 +17,9 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/classes_srd.csv',
 		[
-			'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
-			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`
+			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,asi_levels',
+			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,"4,8,12,16,19"`,
+			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,"4,6,8,12,14,16,19"`
 		].join('\n')
 	);
 	await st.write(
@@ -81,6 +82,13 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(out.build.languages).toContain(`language:${S}:common`);
 		for (const skill of saved.build.skills) expect(out.build.skills).toContain(skill);
 		expect(out.build.spells.map((s) => s.spell)).toContain(`spell:${S}:fireball`);
+	});
+
+	it('derives ASI/feat slots from the class asi_levels data (Fighter gets 6 & 14)', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.classes = [{ classId: `class:${S}:fighter`, subclassId: null, level: 14 }];
+		expect(build.featSlots.map((s) => s.level)).toEqual([4, 6, 8, 12, 14]);
 	});
 
 	it('a blank reset produces a minimal valid character (no crash on empty draft)', () => {

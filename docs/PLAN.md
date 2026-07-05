@@ -1007,11 +1007,14 @@ passes miss):
 exists in `combat/helpers`). Fix: a `SkillId`/`Ability`-keyed `Record<SkillId, T>` + typed accessor
 keys → the access is sound and the `!` disappears. (Test-only `!` are fine — they assert setup.)
 
-**RULES-1 · `src/lib/build/rules.ts` hardcodes ASI/feat levels by class name** —
-`if (id === 'fighter') base.push(6, 14); if (id === 'rogue') base.push(10)` breaks the data-driven-
-classes invariant (asiFeatLevels should read the class's own feature levels from content, not a
-class-name switch). Found by MECH5, not the file/chain pass. (Add `build/rules.ts` to the file
-checklist — it's ★, missed it.)
+**RULES-1 · `src/lib/build/rules.ts` hardcoded ASI/feat levels by class name** — FIXED. Added an
+`asi_levels` content column to `classSchema`, derived from the SRD by BOTH converters (2024: parse the
+Level-4 ASI block's "…again at <Class> levels 8, 12, and 16" prose + [4,19]; 2014: the progression
+table's ASI rows — note the source truncates Rogue L10's cell to "Ability Score", so match on
+`ability score`). Regenerated both editions (Fighter 4,6,8,12,14,16,19; Rogue 4,8,10,12,16,19; rest
+4,8,12,16,19). `asiFeatLevels(level, asiLevels?)` now filters the class's own data (common-progression
+fallback for homebrew), no class-name switch. Wired `featSlots` to read `row.data.asi_levels`. Tests:
+rules.test (filter + fallback) + a build.test wiring case (Fighter L14 → [4,6,8,12,14]).
 
 Not scanned (by design): `*.csv` content (data, not code), `src/lib/index.ts` (empty `$lib` stub),
 config (`vite.config.ts` · `eslint.config.js` · `svelte.config.js` — build config, not app logic;

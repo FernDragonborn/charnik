@@ -96,18 +96,15 @@ export function boostComplete(shape: BoostShape, boosts: Partial<Record<Ability,
 }
 
 /**
- * The levels at which a class grants an ASI-or-feat choice (a "feat slot"), for a given total
- * level. SRD 5.2.1: every class at 4/8/12/16 and an epic boon at 19; Fighter also 6 & 14,
- * Rogue also 10 — the known SRD progression (a fact, like the caster classification; the
- * class_features table only carries a single marker row so we can't derive the extra levels
- * from prose). Lenient: this drives the *count* of feat slots, it doesn't hard-gate anything.
+ * The ASI-or-feat-slot levels a class grants up to `level`. `asiLevels` is the class's own
+ * progression (the `asi_levels` content column, derived from the SRD by the converters — e.g.
+ * Fighter 4,6,8,12,14,16,19; Rogue 4,8,10,12,16,19; most classes 4,8,12,16,19). Data-driven, NOT a
+ * class-name switch. Falls back to the common progression when a (homebrew) class omits the column.
+ * Lenient: this drives the *count* of feat slots, it doesn't hard-gate anything.
  */
-export function asiFeatLevels(classId: string, level: number): number[] {
-	const base = [4, 8, 12, 16, 19];
-	const id = classId.split(':').pop() ?? classId; // accept a bare id or a type:source:id ref
-	if (id === 'fighter') base.push(6, 14);
-	if (id === 'rogue') base.push(10);
-	return base.filter((l) => l <= level).sort((a, b) => a - b);
+export function asiFeatLevels(level: number, asiLevels?: readonly number[]): number[] {
+	const levels = asiLevels && asiLevels.length ? asiLevels : [4, 8, 12, 16, 19];
+	return [...levels].filter((l) => l <= level).sort((a, b) => a - b);
 }
 
 /** A blank ability set at the point-buy floor (all 8). */

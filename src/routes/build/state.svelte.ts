@@ -545,8 +545,10 @@ class BuildVM {
 		const out: { key: string; level: number; className: string }[] = [];
 		this.draft.classes.forEach((c, i) => {
 			if (!c.classId) return;
-			const className = rowName(this.row(c.classId));
-			for (const level of asiFeatLevels(c.classId, c.level))
+			const row = this.row(c.classId);
+			const className = rowName(row);
+			const asiLevels = row?.data.asi_levels as number[] | undefined;
+			for (const level of asiFeatLevels(c.level, asiLevels))
 				out.push({ key: `${i}:${level}`, level, className });
 		});
 		return out;
