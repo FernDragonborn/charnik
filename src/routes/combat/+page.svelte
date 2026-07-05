@@ -7,7 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { dndzone } from 'svelte-dnd-action';
 	import { toast } from 'svelte-sonner';
-	import { SKILL_ABILITY } from '$lib/character/derive';
+	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
 	import { combat } from './state.svelte';
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
 	import CombatMenus from './CombatMenus.svelte';
@@ -357,7 +357,9 @@
 			{#if pid === 'skills'}
 				<div class="sklgrid">
 					{#each ABIL as ab (ab)}
-						{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
+						{@const list = (Object.keys(SKILL_ABILITY) as SkillId[]).filter(
+							(k) => SKILL_ABILITY[k] === ab
+						)}
 						{#if list.length}
 							<div class="catblock">
 								<div class="ssec">{ABILITY_NAME[ab]}</div>

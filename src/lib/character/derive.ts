@@ -39,7 +39,10 @@ import { deriveSpellcasting, type Spellcasting } from './spellcasting';
 import type { Computed, System } from '../rules/pipeline';
 
 /** Skill → its governing ability (the 18 SRD skills). */
-export const SKILL_ABILITY: Record<string, Ability> = {
+// `as const satisfies` so the KEYS form the `SkillId` union (not widened to `string`) while the
+// values are still checked to be `Ability`. This lets the skills map be keyed by `SkillId`, so
+// indexing it with a known skill id is sound (no `T | undefined`, no non-null assertions).
+export const SKILL_ABILITY = {
 	acrobatics: 'dex',
 	'animal-handling': 'wis',
 	arcana: 'int',
@@ -58,7 +61,10 @@ export const SKILL_ABILITY: Record<string, Ability> = {
 	'sleight-of-hand': 'dex',
 	stealth: 'dex',
 	survival: 'wis'
-};
+} as const satisfies Record<string, Ability>;
+
+/** The 18 SRD skill ids. */
+export type SkillId = keyof typeof SKILL_ABILITY;
 
 /** Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) →
  *  proficient → expertise (×2). */
@@ -76,7 +82,7 @@ export interface CharacterSheet {
 	level: number;
 	proficiencyBonus: number;
 	abilities: Record<Ability, AbilityBlock>;
-	skills: Record<string, Computed & { prof: SkillProficiency }>;
+	skills: Record<SkillId, Computed & { prof: SkillProficiency }>;
 	ac: Computed;
 	initiative: Computed;
 	speed: Computed;
@@ -248,8 +254,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	// skills (expertise doubles proficiency — Rogue/Bard); effect-granted proficiencies union in
 	const skillProf = new Set([...build.skills, ...grantedSkills]);
 	const skillExpert = new Set(build.expertise ?? []);
-	const skills = {} as Record<string, Computed & { prof: SkillProficiency }>;
-	for (const [skill, ab] of Object.entries(SKILL_ABILITY)) {
+	const skills = {} as Record<SkillId, Computed & { prof: SkillProficiency }>;
+	for (const [skill, ab] of Object.entries(SKILL_ABILITY) as [SkillId, Ability][]) {
 		const proficient = skillProf.has(skill);
 		const expertise = proficient && skillExpert.has(skill);
 		const base = skillCheck({ ability: ab, score: scores[ab], level, proficient, expertise });
@@ -310,9 +316,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		active
 	);
 
-	// `skills` is populated for every skill id above, so these three are always present.
 	const passiveOf = (skill: 'perception' | 'investigation' | 'insight') =>
-		passiveScore(skills[skill]!);
+		passiveScore(skills[skill]);
 
 	// damage defenses from effects: `resist-immune:<resist|immune|vulnerable>:<type>` (a bare
 	// `resist-immune:<type>` defaults to resistance).

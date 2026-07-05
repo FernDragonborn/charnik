@@ -11,7 +11,7 @@ import { toast } from 'svelte-sonner';
 import { demoCharacter } from '$lib/demo/sheet';
 import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
 import { getContentGraph } from '$lib/content/provider';
-import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
+import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { passiveScore } from '$lib/rules/core';
 import { rollPool, type BonusDie, type Rolled } from '$lib/rules/dice';
 import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
@@ -73,7 +73,7 @@ class CombatVM {
 	tempHpInput = $state(5);
 	customEffectLabel = $state('');
 	spellGroupBy = $state<GroupMode>('level');
-	passiveSkills = $state<string[]>(['perception', 'investigation', 'insight']);
+	passiveSkills = $state<SkillId[]>(['perception', 'investigation', 'insight']);
 
 	load = async () => {
 		this.graph = await getContentGraph();
@@ -274,16 +274,14 @@ class CombatVM {
 	// configurable passive-sense skills (Pin skills)
 	passives = $derived(
 		this.sheet
-			? this.passiveSkills
-					.filter((k) => this.sheet!.skills[k])
-					.map((k) => ({
-						key: k,
-						name: titleCase(k),
-						comp: passiveScore(this.sheet!.skills[k]!)
-					}))
+			? this.passiveSkills.map((k) => ({
+					key: k,
+					name: titleCase(k),
+					comp: passiveScore(this.sheet!.skills[k])
+				}))
 			: []
 	);
-	togglePassive = (k: string) => {
+	togglePassive = (k: SkillId) => {
 		this.passiveSkills = this.passiveSkills.includes(k)
 			? this.passiveSkills.filter((x) => x !== k)
 			: [...this.passiveSkills, k];
@@ -510,7 +508,7 @@ class CombatVM {
 	// standard actions (from d-charnik); roll ones reference live skills
 	actions = $derived.by(() => {
 		const s = this.sheet;
-		const sk = (k: string) => s?.skills[k]?.value ?? 0;
+		const sk = (k: SkillId) => s?.skills[k]?.value ?? 0;
 		return [
 			{ id: 'attack', n: 'Attack', h: '', d: 'weapon / spell / unarmed', m: '→ Attacks' },
 			{ id: 'dash', n: 'Dash', h: '', d: '+speed this turn', m: 'action' },

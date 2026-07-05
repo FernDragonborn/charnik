@@ -2,7 +2,7 @@
 	// Anchored dropdown menus (dice tray / roll builder, add-effect, pin-skills, roll log,
 	// show/hide, temp HP, condition). Reads the shared `combat` view-model.
 	import { combat } from './state.svelte';
-	import { SKILL_ABILITY } from '$lib/character/derive';
+	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
 	import {
 		signed,
 		titleCase,
@@ -226,7 +226,9 @@
 			</div>
 			<div class="pinwrap">
 				{#each ABIL as ab (ab)}
-					{@const list = Object.keys(SKILL_ABILITY).filter((k) => SKILL_ABILITY[k] === ab)}
+					{@const list = (Object.keys(SKILL_ABILITY) as SkillId[]).filter(
+						(k) => SKILL_ABILITY[k] === ab
+					)}
 					{#if list.length}
 						<div class="catblock">
 							<div class="sec">{ABILITY_NAME[ab]}</div>

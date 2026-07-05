@@ -999,7 +999,13 @@ passes miss):
 - [ ] **MECH6 · differential test before merging a dup** — run both "duplicate" impls on the same
   input, assert equal. NB the pip formulas (CVM-2) are NOT equal → merging blind would change behaviour.
 
-**TYPE-1 · skill/ability maps are `Record<string, T>` (should be keyed unions)** — surfaced by the
+**TYPE-1 · skill/ability maps are `Record<string, T>` (should be keyed unions)** — FIXED for skills.
+`SKILL_ABILITY` is now `as const satisfies Record<string, Ability>` (keys form a `SkillId` union), the
+sheet's `skills` is `Record<SkillId, …>`, and accessors are `SkillId`-typed — so a known-key lookup is
+sound and the two production `!` (derive `passiveOf`, combat `passives`) are gone. Dynamic-string call
+sites (`Object.keys(...) as SkillId[]`, `togglePassive`, the skill grid) carry an honest key cast
+instead. (Abilities already use the `Ability` union; no change needed there.) Original note follows —
+surfaced by the
 `noUncheckedIndexedAccess` pass (MECH3). `deriveSheet` builds `skills = {} as Record<string, Computed
 & {prof}>` and callers index it by a skill id; the string index signature forces every access to be
 `T | undefined`, so the two production sites (`derive.ts` passiveOf, `combat/state` passives) need a
