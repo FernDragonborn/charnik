@@ -12,8 +12,8 @@
 import { toast } from 'svelte-sonner';
 import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
-import { characterSchema, ABILITIES, type Character } from '$lib/character/schema';
-import { CHARACTER_SCHEMA_VERSION } from '$lib/schema/version';
+import { ABILITIES, type Character } from '$lib/character/schema';
+import { assembleCharacter } from '$lib/character/assemble';
 import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
 import { app, type SystemId } from '$lib/stores/app.svelte';
 import type { ContentGraph, LoadedRow } from '$lib/content/loader';
@@ -646,26 +646,13 @@ class BuildVM {
 			}),
 			notes: ''
 		};
-		// parse leniently: fall back to a minimal valid character if a field is off
-		const res = characterSchema.safeParse({
-			schemaVersion: CHARACTER_SCHEMA_VERSION,
-			// editing keeps the original id + play/ui; creating derives a fresh id from the name
+		// editing keeps the original id + play/ui; creating derives a fresh id from the name
+		return assembleCharacter(build, {
 			id: this.editId ?? slugify(this.name),
 			system: this.system,
-			build,
-			play: this.editPlay ?? { hp: { current: 0, temp: 0 } },
-			// persist the Free/Strict choice per character (keep any other ui prefs like panelColumns)
-			ui: { ...(this.editUi ?? {}), strict: this.strict }
-		});
-		if (res.success) return res.data;
-		// last-resort: a bare valid character so the preview never crashes
-		return characterSchema.parse({
-			schemaVersion: CHARACTER_SCHEMA_VERSION,
-			id: slugify(this.name),
-			system: this.system,
-			build: { name: build.name, abilities: build.abilities },
-			play: { hp: { current: 0, temp: 0 } },
-			ui: {}
+			strict: this.strict,
+			play: this.editPlay,
+			ui: this.editUi
 		});
 	});
 	sheet = $derived.by<CharacterSheet | null>(() =>
