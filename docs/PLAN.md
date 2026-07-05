@@ -827,23 +827,23 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   already follows this (`modifier-row`, `modifier-amount`).
 
 **Refactoring debt (self-flagged — patterns that drifted from "this is TypeScript, model it"):**
-- [ ] **R1 · Group edit/level-up state into `EditContext`** — BuildVM scattered the level-up state
+- [x] **R1 · Group edit/level-up state into `EditContext`** — BuildVM scattered the level-up state
   across 7 fields (`editId`, `editPlay`, `editUi`, `hydratedBoosts`, `hydratedFeats`,
   `hydratedSpells`, `hydratedSkills`). Collapse to one `edit: EditContext | null` (a typed object);
   `edit === null` means "creating". Every `this.editId ? …` becomes `this.edit`.
-- [ ] **R2 · Type `overlay.kind`** — CombatVM's overlay uses `kind: string`, compared against ~15
+- [x] **R2 (CVM-4) · Type `overlay.kind`** — CombatVM's overlay uses `kind: string`, compared against ~15
   bare string literals (`'dice'`, `'levelup'`, `'customeffect'`, …) spread over state + CombatMenus.
   Make a `MenuKind` union and type the overlay; kills typos + enables exhaustiveness.
-- [ ] **R3 · Name the action-economy slot type** — `'action' | 'bonus' | 'reaction'` appears ~13×
+- [x] **R3 (CVM-3) · Name the action-economy slot type** — `'action' | 'bonus' | 'reaction'` appears ~13×
   as bare strings (slotMax, usePip, trySpend, the page's SLOTS). One `type ActionSlot` + a single
   source of the slot list. (Relates to the enums-not-string-literals rule.)
-- [ ] **R4 · Centralise effect-token parsing** — the bounded-vocab regexes (`flat-bonus:…`,
+- [x] **R4 (CH2) · Centralise effect-token parsing** — the bounded-vocab regexes (`flat-bonus:…`,
   `grant-resource:…`, `grant-proficiency:…`, advantage/dice) are re-implemented in `effects/index.ts`
   (parseEffect/collectResources), `derive.ts` (abilityBonus + grant-proficiency scan), `combat/
   state.svelte.ts` (action-pip scan) and `combat/helpers.ts` (rollEffectsFor). Parse ONCE in the
   effects module and have every consumer read the structured result — the token grammar must live
   in one place (it's also the security surface, docs/SECURITY.md).
-- [ ] **R5 · Extract the click-to-set pip helper** — `slotClick`, `resourceClick` and `usePip` each
+- [x] **R5 (CH3) · Extract the click-to-set pip helper** — `slotClick`, `resourceClick` and `usePip` each
   re-derive the same "click a filled pip → spend to it; click a spent pip → restore to it" math.
   One pure `pipClick(count, spent, index) → newSpent`, unit-tested, used by all three.
 - [ ] **R6 · Source-tag constants** — `'SRD 5.1'` / `'SRD 5.2.1'` / `'Homebrew'` are string-littered
@@ -915,7 +915,7 @@ Duplication-heavy (do first — this is where the big refactors live):
   template `b.X` → `.draft.X`. **Latent bug fixed:** hydrate used to set only a subset of fields, so
   editing a character after a prior build could leak stale slotFeats/boost picks — `draftFromCharacter`
   replaces the draft wholesale. Gate: svelte-check 0, 183 tests (net green), lint clean. CH4 COMPLETE.
-- [ ] **CH5 · deriveSheet aggregation** — `gatherEffects → (abilityBonus · grant-prof · resist ·
+- [x] **CH5 · deriveSheet aggregation** — `gatherEffects → (abilityBonus · grant-prof · resist ·
   collectResources · applyEffects · deriveSpellcasting)`. The central math; check the repeated
   token-scans (feeds R4) + ref-resolution/missing handling.
 

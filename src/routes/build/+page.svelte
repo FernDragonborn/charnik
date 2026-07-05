@@ -364,7 +364,7 @@
 		</div>
 
 		<!-- inventory / starting equipment (creation only — managed in the play view after that) -->
-		{#if !b.editId}
+		{#if !b.edit}
 			<div class="card">
 				<h2>Inventory <span class="cnt">{b.draft.inventory.length}</span></h2>
 			<label class="field">
@@ -418,7 +418,7 @@
 	<!-- review & create (echoes the mock's bottom lucard) -->
 	<div class="card review">
 		<h2 class="rev">
-			{b.editId ? 'Review & save' : 'Review & create'}
+			{b.edit ? 'Review & save' : 'Review & create'}
 			<span class="cnt gold">Level {b.sheet?.level ?? b.totalLevel}</span>
 		</h2>
 		<div class="revgrid">
@@ -442,7 +442,7 @@
 					<p class="sub warn">Missing content: {b.sheet.missing.join(', ')}</p>
 				{/if}
 				<button class="create wide" disabled={!b.canCreate || b.saving} onclick={create}>
-					{b.saving ? 'Saving…' : b.editId ? '✦ Save changes' : '✦ Create character'}
+					{b.saving ? 'Saving…' : b.edit ? '✦ Save changes' : '✦ Create character'}
 				</button>
 			</div>
 		</div>

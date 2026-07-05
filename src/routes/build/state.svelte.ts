@@ -150,6 +150,19 @@ function draftFromCharacter(char: Character): DraftState {
 	};
 }
 
+/** What a level-up / edit carries over from the loaded character (null on the BuildVM = creating). */
+interface EditContext {
+	id: string;
+	play: Character['play'];
+	ui: Character['ui'];
+	/** Ability boosts carried verbatim (not reverse-engineered); new picks add on top. */
+	boosts: Partial<Record<Ability, number>>;
+	feats: string[];
+	/** Spells / skills the character already had — can't be undone in Strict edit. */
+	spells: Set<string>;
+	skills: Set<string>;
+}
+
 class BuildVM {
 	graph = $state<ContentGraph | null>(null);
 
@@ -192,28 +205,15 @@ class BuildVM {
 	// --- edit / level-up: hydrate the draft from an existing character --------------------------
 	/** Set when editing an existing character (level-up). Save overwrites this id + keeps its play
 	 *  state, instead of creating a new character. */
-	editId = $state<string | null>(null);
-	/** Boosts + feats carried over verbatim from the loaded character (we don't reverse-engineer
-	 *  which pick/slot produced them — they pass through, and NEW picks at the new level add on top). */
-	hydratedBoosts = $state<Partial<Record<Ability, number>>>({});
-	hydratedFeats = $state<string[]>([]);
-	/** Spells / skills the character already had at hydrate — in Strict edit they can't be undone
-	 *  (you don't unlearn a spell or drop a trained skill at level-up); new picks stay removable. */
-	private hydratedSpells = new Set<string>();
-	private hydratedSkills = new Set<string>();
-	private editPlay: Character['play'] | null = null;
-	private editUi: Character['ui'] | null = null;
+	/** Level-up / edit context, or null when creating a new character. Groups the loaded character's
+	 *  identity + play/ui to preserve, and the boosts/feats/spells/skills carried over verbatim (new
+	 *  picks at the new level add on top; carried spells/skills lock in Strict edit). */
+	edit = $state<EditContext | null>(null);
 
 	/** Reset the draft to a blank new-character state (the BuildVM is a shared singleton, so opening
 	 *  "New character" after a level-up must clear the prior edit/hydrated state). Keeps the graph. */
 	reset = () => {
-		this.editId = null;
-		this.editPlay = null;
-		this.editUi = null;
-		this.hydratedBoosts = {};
-		this.hydratedFeats = [];
-		this.hydratedSpells = new Set();
-		this.hydratedSkills = new Set();
+		this.edit = null;
 		this.draft = blankDraft();
 	};
 
@@ -221,14 +221,16 @@ class BuildVM {
 	 *  directly (via `draftFromCharacter`); abilities become manual (base scores) with boosts carried
 	 *  in `hydratedBoosts`, and the existing feats/skills/spells carried for Strict-edit locking. */
 	hydrate = (char: Character) => {
-		this.editId = char.id;
-		this.editPlay = char.play;
-		this.editUi = char.ui;
 		this.draft = draftFromCharacter(char);
-		this.hydratedBoosts = { ...(char.build.abilityBoosts as Partial<Record<Ability, number>>) };
-		this.hydratedFeats = [...char.build.feats];
-		this.hydratedSkills = new Set(char.build.skills);
-		this.hydratedSpells = new Set(this.draft.selectedSpells);
+		this.edit = {
+			id: char.id,
+			play: char.play,
+			ui: char.ui,
+			boosts: { ...(char.build.abilityBoosts as Partial<Record<Ability, number>>) },
+			feats: [...char.build.feats],
+			skills: new Set(char.build.skills),
+			spells: new Set(this.draft.selectedSpells)
+		};
 	};
 
 	// --- content option lists (filtered by the draft's system) -----------------
@@ -383,7 +385,7 @@ class BuildVM {
 	});
 	toggleSpell = (ref: string) => {
 		if (this.draft.selectedSpells.includes(ref)) {
-			if (this.editId && this.draft.strict && this.hydratedSpells.has(ref)) {
+			if (this.edit && this.draft.strict && this.edit.spells.has(ref)) {
 				toast("Strict: you can't unlearn a known spell — switch to Free to remove it.");
 				return;
 			}
@@ -425,7 +427,7 @@ class BuildVM {
 	toggleSkill = (skill: string) => {
 		if (this.autoSkills.includes(skill)) return; // background-granted, locked on
 		if (this.draft.skills.includes(skill)) {
-			if (this.editId && this.draft.strict && this.hydratedSkills.has(skill)) {
+			if (this.edit && this.draft.strict && this.edit.skills.has(skill)) {
 				toast("Strict: you can't drop a trained skill — switch to Free to remove it.");
 				return;
 			}
@@ -470,7 +472,7 @@ class BuildVM {
 	bumpAbility = (ab: Ability, dir: 1 | -1) => {
 		// editing an existing character in Strict: base scores are locked (you don't re-roll them at
 		// level-up — increases come only from ASI slots). Free lets you edit anything.
-		if (this.editId && this.draft.strict) return;
+		if (this.edit && this.draft.strict) return;
 		const cur = this.draft.abilities[ab];
 		if (this.draft.method === 'point-buy' && !this.draft.strict) {
 			// lenient point-buy still respects budget/caps to keep the counter meaningful
@@ -523,7 +525,7 @@ class BuildVM {
 		const add = (m: Partial<Record<Ability, number>>) => {
 			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
 		};
-		add(this.hydratedBoosts); // boosts carried over from a loaded character (level-up)
+		add(this.edit?.boosts ?? {}); // boosts carried over from a loaded character (level-up)
 		if (this.draft.system === '5.5e' && this.backgroundBoostChoices.length)
 			add(allocateBackgroundBoost(this.draft.boostShape, this.draft.boostPicks, this.backgroundBoostChoices));
 		// species free-choice ASI (5e Half-Elf +1/+1)
@@ -649,7 +651,7 @@ class BuildVM {
 			feats: [
 				...new Set([
 					// carried over from a loaded character (level-up), else the auto origin feat
-					...(this.editId ? this.hydratedFeats : this.originFeatRef ? [this.originFeatRef] : []),
+					...(this.edit ? this.edit.feats : this.originFeatRef ? [this.originFeatRef] : []),
 					...this.featSlots.map((s) => this.draft.slotFeats[s.key]).filter((r) => r && r !== ASI)
 				])
 			],
@@ -664,11 +666,11 @@ class BuildVM {
 		};
 		// editing keeps the original id + play/ui; creating derives a fresh id from the name
 		return assembleCharacter(build, {
-			id: this.editId ?? slugify(this.draft.name),
+			id: this.edit?.id ?? slugify(this.draft.name),
 			system: this.draft.system,
 			strict: this.draft.strict,
-			play: this.editPlay,
-			ui: this.editUi
+			play: this.edit?.play ?? null,
+			ui: this.edit?.ui ?? null
 		});
 	});
 	sheet = $derived.by<CharacterSheet | null>(() =>
@@ -711,7 +713,7 @@ class BuildVM {
 			const character = this.assembled;
 			// new character: start play HP at max so it's playable immediately. Editing/level-up:
 			// keep the character's current play state (HP, effects, spent slots…).
-			if (!this.editId) character.play.hp.current = this.sheet?.maxHp.value ?? 0;
+			if (!this.edit) character.play.hp.current = this.sheet?.maxHp.value ?? 0;
 			await saveCharacterToStore(character);
 			// make the freshly-created character the active one so Combat opens IT, not the demo
 			await openCharacter(character.id);
