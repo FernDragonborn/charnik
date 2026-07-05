@@ -406,16 +406,16 @@ class CombatVM {
 		const alt = wantsTray(e);
 		// a spell with dice rolls them: damage (Fire Bolt 1d10, Fireball 8d6) or, for auto
 		// spells, healing (Healing Word 2d4 + spellcasting mod)
-		const cast = this.sheet?.spellcasting.classes[0];
+		const caster = this.sheet?.spellcasting.classes[0];
 		if (r.dmg && Object.keys(r.dmg).length) {
 			const heal = r.res === 'auto';
 			const label = `${r.name} ${heal ? 'healing' : 'damage'}`;
-			const mod = heal && cast ? this.sheet!.abilities[cast.ability].mod : 0;
+			const mod = heal && caster ? this.sheet!.abilities[caster.ability].mod : 0;
 			if (alt) this.openRoll(label, r.dmg, mod, e);
 			else this.rollDiceNow(label, r.dmg, mod);
-		} else if (r.res === 'hit' && cast) {
+		} else if (r.res === 'hit' && caster) {
 			// non-damage attack spell → the to-hit roll
-			const m = cast.attack.value;
+			const m = caster.attack.value;
 			const label = `${r.name} (spell attack)`;
 			if (alt) this.openRoll(label, { 20: 1 }, m, e);
 			else this.rollDiceNow(label, { 20: 1 }, m);
@@ -585,9 +585,9 @@ class CombatVM {
 		const graph = this.graph;
 		// slot pips come from the derived castable pools (data-driven, per spell level); pact is a
 		// separate short-rest pool keyed "pact" in play-state.
-		const slotMax = new Map<number, number>();
+		const slotsByLevel = new Map<number, number>();
 		for (const p of this.sheet?.spellcasting.pools ?? [])
-			if (!p.forcedUpcast && p.spellLevel) slotMax.set(p.spellLevel, p.max);
+			if (!p.forcedUpcast && p.spellLevel) slotsByLevel.set(p.spellLevel, p.max);
 		const all = character.build.spells
 			.map((sp) => ({
 				sp,
@@ -613,7 +613,7 @@ class CombatVM {
 						lvl === 0
 							? null
 							: {
-									full: slotMax.get(lvl) ?? 0,
+									full: slotsByLevel.get(lvl) ?? 0,
 									spent: Number(character.play.spellSlotsSpent[String(lvl)] ?? 0)
 								},
 					rows: byLevel.get(lvl)!

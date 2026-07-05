@@ -1049,7 +1049,7 @@ scan only if a config bug surfaces). Everything else functional is on the list a
   (R4, local).
 - [ ] **CVM-6 · `RollLogEntry` interface** — the `{label, expr, total, adv?}` log-entry shape is inline
   on the `log` field and re-typed at 4 push sites; the `.slice(0, 200)` cap is a repeated magic number.
-- [ ] **CVM-7 · shadowing / naming** — the action-economy field `slotMax` is shadowed by a local
+- [x] **CVM-7 · shadowing / naming** — the action-economy field `slotMax` is shadowed by a local
   `const slotMax` in `spellGroups`; the `cast` method is shadowed by a local `const cast` inside it.
   Rename.
 - [x] **CVM-8 · `actions` inline array with cryptic keys** (`{id,n,h,d,m,roll?}` = name/hint/desc/marker)
