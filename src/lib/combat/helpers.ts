@@ -13,8 +13,9 @@ import { parseEffect, matchesTarget, EFFECT_KIND } from '$lib/effects/index';
 // existing combat consumers keep importing from one place.
 export type { BonusDie, Rolled };
 
-/** A roll-log row: a completed roll plus what it was for. */
-export type RollLogEntry = Rolled & { label: string };
+/** A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack —
+ *  the damage roll that follows it. Rendered as up to 3 lines: the roll, the dropped adv die, damage. */
+export type RollLogEntry = Rolled & { label: string; damage?: Rolled };
 
 /** The three action-economy slots a turn tracks. */
 export type ActionSlot = 'action' | 'bonus' | 'reaction';

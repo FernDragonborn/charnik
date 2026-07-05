@@ -104,12 +104,17 @@
 					</div>
 					<button class="rollbtn" onclick={doRoll}>Roll {rollExpr}</button>
 				</div>
-				{#if log[0]}<div class="hist">
-						{log[0].label}
-						{#if log[0].advantageRoll}d20 <b class="res">{log[0].advantageRoll.kept}</b>
-							<span class="drop">{log[0].advantageRoll.dropped}</span>{/if}
-						{log[0].expr}{log[0].expr ? ' ' : ''}=
-						<span class="res">{Number.isNaN(log[0].total) ? '' : log[0].total}</span>
+				{#if log[0]}{@const r = log[0]}
+					<div class="hist">
+						<div>
+							{r.label} · {#if r.advantageRoll}d20 <b class="res">{r.advantageRoll.kept}</b>
+							{/if}{r.expr}
+							= <span class="res">{Number.isNaN(r.total) ? '' : r.total}</span>
+						</div>
+						{#if r.advantageRoll}<div class="drop">drop d20({r.advantageRoll.dropped})</div>{/if}
+						{#if r.damage}<div>
+								dmg {r.damage.expr} = <span class="res">{r.damage.total}</span>
+							</div>{/if}
 					</div>{/if}
 			</div>
 		{:else if overlay.kind === 'temphp'}
@@ -193,6 +198,7 @@
 			<div class="logscroll">
 				{#each log as l, i (i)}
 					<div class="logrow">
+						<!-- line 1: the roll (attack roll / check) with the dice that were rolled -->
 						<div class="lr-top">
 							<b>{l.label}</b><span class="lr-tot" class:res={!Number.isNaN(l.total)}
 								>{Number.isNaN(l.total) ? '—' : l.total}</span
@@ -200,8 +206,15 @@
 						</div>
 						{#if l.expr || l.advantageRoll}<div class="lr-sub">
 								{#if l.advantageRoll}d20 <b>{l.advantageRoll.kept}</b>
-									<span class="drop">{l.advantageRoll.dropped}</span>
 								{/if}{l.expr}
+							</div>{/if}
+						<!-- line 2: the dropped advantage/disadvantage die (dimmed), if any -->
+						{#if l.advantageRoll}<div class="lr-sub drop">
+								drop d20({l.advantageRoll.dropped})
+							</div>{/if}
+						<!-- line 3: damage rolled (for an attack) -->
+						{#if l.damage}<div class="lr-sub">
+								dmg {l.damage.expr} = <b class="res">{l.damage.total}</b>
 							</div>{/if}
 					</div>
 				{:else}<p class="note" style="padding: 11px 13px">

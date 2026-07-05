@@ -151,23 +151,27 @@ class CombatVM {
 			.join(' + ') + (this.rollMod ? ` ${signed(this.rollMod)}` : '')
 	);
 
-	// The custom roll tray. Rolls the tray's pool, then any queued follow-up (an attack's damage).
+	// The custom roll tray. Rolls the tray's pool, plus any queued attack damage — as ONE combined
+	// entry (line 1 = the roll, line 2 = the dropped adv die, line 3 = damage).
 	doRoll = () => {
-		this.rollDiceNow(this.rollSrc ?? 'Custom roll', this.dice, this.rollMod, this.rollAdvantage);
-		if (this.pendingDamage) {
-			const d = this.pendingDamage;
-			this.pendingDamage = null;
-			this.rollDiceNow(d.label, d.dice, d.mod);
-		}
+		const primary = rollPool(this.dice, this.rollMod, this.rollAdvantage);
+		const damage = this.pendingDamage
+			? rollPool(this.pendingDamage.dice, this.pendingDamage.mod)
+			: undefined;
+		this.pendingDamage = null;
+		this.pushRoll(this.rollSrc ?? 'Custom roll', primary, damage);
 	};
 
-	/** Record a completed roll: prepend to the log (capped) and toast it. */
-	private pushRoll(label: string, r: Rolled) {
-		this.log = [{ label, ...r }, ...this.log].slice(0, ROLL_LOG_MAX);
-		const advText = r.advantageRoll
-			? `d20 ${r.advantageRoll.kept} (drop ${r.advantageRoll.dropped}) `
-			: '';
-		toast(`${label} — ${r.total}`, { description: `${advText}${r.expr}`.trim() });
+	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
+	 *  the roll that follows the to-hit — shown as its own line/part. */
+	private pushRoll(label: string, r: Rolled, damage?: Rolled) {
+		this.log = [{ label, ...r, ...(damage ? { damage } : {}) }, ...this.log].slice(0, ROLL_LOG_MAX);
+		const kept = r.advantageRoll ? `d20(${r.advantageRoll.kept}) ` : '';
+		const drop = r.advantageRoll ? ` · drop d20(${r.advantageRoll.dropped})` : '';
+		const dmg = damage ? ` · dmg ${damage.expr} = ${damage.total}` : '';
+		toast(`${label} — ${r.total}${damage ? ` / ${damage.total} dmg` : ''}`, {
+			description: `${kept}${r.expr} = ${r.total}${drop}${dmg}`.trim()
+		});
 	}
 
 	setTempHp = () => {
@@ -407,15 +411,16 @@ class CombatVM {
 		if (!this.trySpend('action')) return;
 		const { pool, mod } = this.parseDamage(at.dmg);
 		const hasDice = Object.keys(pool).length > 0;
+		const fx = this.effectsFor('attack');
 		if (wantsTray(e)) {
-			// tray on the TO-HIT (the attack roll — pick advantage), then Roll fires the damage after
-			const fx = this.effectsFor('attack');
+			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
 			this.openRoll(at.name, { 20: 1 }, at.toHit, e, fx.advantage ? 1 : 0);
 			if (hasDice) this.pendingDamage = { label: `${at.name} damage`, dice: pool, mod };
 			return;
 		}
-		this.roll(at.name, at.toHit, e, 'attack'); // to-hit (instant)
-		if (hasDice) this.rollDiceNow(`${at.name} damage`, pool, mod);
+		// instant: to-hit (with effect advantage/dice) + damage → one 3-line entry
+		const toHit = rollPool({ 20: 1 }, at.toHit, fx.advantage ? 1 : 0, fx.bonusDice);
+		this.pushRoll(at.name, toHit, hasDice ? rollPool(pool, mod) : undefined);
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
@@ -446,8 +451,12 @@ class CombatVM {
 				this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e);
 				if (hasDmg) this.pendingDamage = { label: `${r.name} damage`, dice: { ...r.dmg! }, mod: 0 };
 			} else {
-				this.rollDiceNow(`${r.name} (spell attack)`, { 20: 1 }, toHit);
-				if (hasDmg) this.rollDiceNow(`${r.name} damage`, r.dmg!, 0);
+				// instant: to-hit + damage → one combined 3-line entry
+				this.pushRoll(
+					`${r.name} (spell attack)`,
+					rollPool({ 20: 1 }, toHit),
+					hasDmg ? rollPool(r.dmg!, 0) : undefined
+				);
 			}
 		} else if (hasDmg) {
 			// save / auto spell: damage, or (auto) healing with the spellcasting mod
