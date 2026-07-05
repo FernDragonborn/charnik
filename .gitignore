@@ -35,5 +35,13 @@ tools/srd-src/
 # generated: content copied into static/ for the web build (source of truth = content/)
 static/content/
 
-# vitest browser-mode failure screenshots
+# vitest browser-mode failure screenshots + test attachments
 __screenshots__/
+.vitest-attachments/
+
+# test coverage output
+coverage/
+
+# editor
+.vscode/
+.idea/
