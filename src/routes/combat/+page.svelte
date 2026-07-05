@@ -11,6 +11,7 @@
 	import { combat } from './state.svelte';
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
 	import CombatMenus from './CombatMenus.svelte';
+	import Loading from '$lib/components/Loading.svelte';
 	import {
 		why,
 		signed,
@@ -83,7 +84,7 @@
 <svelte:window onpointerup={releaseDrag} />
 
 {#if !sheet || !character}
-	<p class="loading">Computing sheet…</p>
+	<Loading message="Computing your character sheet…" />
 {:else}
 	{@const s = sheet}
 	{@const c = character}
