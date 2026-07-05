@@ -720,6 +720,17 @@ Config files: `charnik.config.json` (dataDir, roots, toggles, rule-options, sett
 
 Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority within each.
 
+**Data versioning (needs a proper think — surfaced in the refactor, 2026-07-05):**
+- **DATA-VER-1 · content versioning is defined but not wired.** CHARACTER versioning works end to
+  end (schema default `schemaVersion` → `assembleCharacter` stamps it → `repository.loadCharacter`
+  runs `migrate(data, CHARACTER_MIGRATIONS, …)`; registry empty at v1, which is fine). But
+  `CONTENT_SCHEMA_VERSION` is **exported and never used anywhere** — CSV rows don't carry a version,
+  `PackManifest.schemaVersion` is optional and read by no migrate, and there is no content-migration
+  path. So if the content column model changes, old user CSVs have no forward-migration story. Decide:
+  do content rows/packs carry a version (and where — a `# schemaVersion:` directive like the type
+  directive? a manifest?), and what runs the migration in the loader. Until then either wire it or
+  drop the unused const so it doesn't imply a guarantee we don't provide.
+
 **Builder / character:**
 - [~] **Lineages & subraces** — Phase 1 DONE: `species_option` content type (linked `species_id`,
   `kind: subrace|lineage|legacy|ancestry`, `option_label`, effects) + 2014 converter emitting the 4
@@ -881,9 +892,15 @@ Duplication-heavy (do first — this is where the big refactors live):
   pool; the action render was also used-from-left. Flipped both renders to available-left/spent-right
   so render + formula agree everywhere. +3 tests incl. a regression guard vs the old slot formula
   (MECH6 differential). R5.
-- [ ] **CH4 · Character assembly ↔ round-trip** — `BuildVM.draft (assemble) → save → store.save →
-  load → hydrate → draft` again. Targets BVM-1 (triple-maintained fields), BVM-4 (60-line assembler);
-  verify a hydrate→save round-trip is lossless (the test we skipped).
+- [~] **CH4 · Character assembly ↔ round-trip** — PART 1 DONE (BVM-4): pure tested
+  `assembleCharacter(build, wrapper)` (src/lib/character/assemble.ts) owns the character envelope +
+  the once-duplicated fallback; the `draft` derived just resolves + calls it. Fallback now reuses the
+  edit id (no stray second character on a broken edit). +3 tests. **PART 2 PENDING (BVM-1):** regroup
+  the ~20 draft `$state` fields into one typed `draft` object (single field source; kills the
+  decl/reset/hydrate triplication). Deferred by decision — it's ~224 refs in the central build flow
+  with NO reactivity test net; do a BuildVM integration test (drive real VM+graph → assert
+  `.assembled`) FIRST, then the regroup guarded by it. Note the `draft` derived must be renamed
+  (collides with the new draft object).
 - [ ] **CH5 · deriveSheet aggregation** — `gatherEffects → (abilityBonus · grant-prof · resist ·
   collectResources · applyEffects · deriveSpellcasting)`. The central math; check the repeated
   token-scans (feeds R4) + ref-resolution/missing handling.
