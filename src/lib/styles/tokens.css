@@ -33,7 +33,10 @@
 	/* ---- typography ---- */
 	--font-display: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-	--font-mono: 'JetBrains Mono', 'Cascadia Code', ui-monospace, monospace;
+	/* `--font-mono` labels/readouts looked jarring in Cyrillic (monospace Cyrillic reads badly), so
+	 * the "mono" token now renders in the same sans family — one consistent typeface across locales.
+	 * (True monospace can come back with a bundled Cyrillic-capable mono font at P7.5.) */
+	--font-mono: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 	--font-size-xs: 0.6875rem;
 	--font-size-sm: 0.8125rem;
 	--font-size-md: 1rem;
