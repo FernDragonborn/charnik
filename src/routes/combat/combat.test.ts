@@ -72,6 +72,22 @@ describe('CombatVM · concentration (CVM-bug1)', () => {
 	});
 });
 
+describe('CombatVM · round counter is the persisted play.round (CVM-9)', () => {
+	it('enters combat at round 1 and Next turn advances the persisted counter', async () => {
+		const graph = await graphOf();
+		const character = newCharacter('valen', 'Valen', '5.5e');
+		combat.graph = graph;
+		combat.character = character;
+		character.play.inCombat = false;
+		combat.toggleCombat(); // enter combat
+		expect(character.play.round).toBe(1);
+		expect(combat.round).toBe(1);
+		combat.nextTurn();
+		expect(character.play.round).toBe(2); // advanced on the persisted field, not a VM copy
+		expect(combat.round).toBe(2);
+	});
+});
+
 describe('CombatVM · conditionList uses the character system (CVM-bug2)', () => {
 	it('lists conditions for the character system, not a hardcoded edition', async () => {
 		const graph = await graphOf();

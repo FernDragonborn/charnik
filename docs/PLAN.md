@@ -1055,7 +1055,7 @@ scan only if a config bug surfaces). Everything else functional is on the list a
 - [ ] **CVM-8 · `actions` inline array with cryptic keys** (`{id,n,h,d,m,roll?}` = name/hint/desc/marker)
   → a typed `StandardAction` interface with readable field names, and it's static data → move to
   helpers/data (the derived only needs to inject the live skill mods).
-- [ ] **CVM-9 · VM `round` vs schema `play.round`** — the VM keeps its own `round = $state(1)` while
+- [x] **CVM-9 · VM `round` vs schema `play.round`** — the VM keeps its own `round = $state(1)` while
   the character schema already has `play.round`; they can diverge. Use the persisted one.
 - [x] **CVM-10 · `iid: label + Date.now()`** → `crypto.randomUUID()`. DONE (GUID-not-counter).
 

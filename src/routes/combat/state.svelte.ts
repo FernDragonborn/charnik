@@ -47,8 +47,11 @@ class CombatVM {
 		this.character && this.graph ? deriveSheet(this.character, this.graph) : null
 	);
 
-	// play / UI state
-	round = $state(1);
+	// play / UI state. The round counter is the PERSISTED one (play.round) — no separate VM copy to
+	// drift; entering combat sets it to 1, Next turn advances it, and effect expiry reads it.
+	get round(): number {
+		return this.character?.play.round ?? 0;
+	}
 	collapsed = $state<Record<string, boolean>>({});
 	pinned = $state<Record<string, boolean>>({ 'fire-bolt': true, shield: true });
 	// Panel layout = two independent column arrays (svelte-dnd-action items need an id).
@@ -227,7 +230,7 @@ class CombatVM {
 		const c = this.character;
 		if (!c) return;
 		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
-		this.round += 1;
+		c.play.round += 1;
 	};
 	/** Enter/leave combat. Entering resets the turn + round so tracking starts clean; leaving hides
 	 *  the turnbar and lifts action-economy enforcement. */
@@ -237,7 +240,7 @@ class CombatVM {
 		c.play.inCombat = !c.play.inCombat;
 		if (c.play.inCombat) {
 			c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
-			this.round = 1;
+			c.play.round = 1;
 		}
 	};
 
