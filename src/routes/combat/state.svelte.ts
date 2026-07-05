@@ -383,17 +383,27 @@ class CombatVM {
 		c.play.turn[slot] += 1;
 		return true;
 	}
-	/** Roll a weapon/unarmed attack — the Attack action, so it spends an action in combat. Rolls the
-	 *  to-hit (picks up advantage/effects), then the weapon's DAMAGE dice (was: to-hit only). */
+	/** Parse a weapon/spell damage string ("1d8 +3 slashing", "1d6 −1 bludgeoning") into its dice pool
+	 *  + flat mod. Handles the unicode minus `signed()` emits. */
+	private parseDamage(dmg: string): { pool: Record<number, number>; mod: number } {
+		const pool = parseDicePool(dmg);
+		const m = /([+\-−])\s*(\d+)/.exec(dmg);
+		const mod = m ? (m[1] === '+' ? 1 : -1) * Number(m[2]) : 0;
+		return { pool, mod };
+	}
+	/** Roll a weapon/unarmed attack (the Attack action → spends an action in combat). A normal tap
+	 *  rolls the to-hit (picks up advantage/effects) THEN the weapon damage; Alt/Ctrl-click opens the
+	 *  roll tray on the weapon's DAMAGE dice (so you can tweak/crit), not a bare d20. */
 	attackRoll = (at: Atk, e: Event) => {
 		if (!this.trySpend('action')) return;
-		this.roll(at.name, at.toHit, e, 'attack');
-		if (wantsTray(e)) return; // tray path = the player rolls each part manually
-		const pool = parseDicePool(at.dmg); // at.dmg is "1d8 +3 slashing" — take the dice + flat mod
-		if (Object.keys(pool).length) {
-			const dmgMod = Number((/([+-]\s*\d+)/.exec(at.dmg)?.[1] ?? '0').replace(/\s/g, ''));
-			this.rollDiceNow(`${at.name} damage`, pool, dmgMod);
+		const { pool, mod } = this.parseDamage(at.dmg);
+		const hasDice = Object.keys(pool).length > 0;
+		if (wantsTray(e)) {
+			this.openRoll(`${at.name} damage`, hasDice ? { ...pool } : { 20: 1 }, mod, e);
+			return;
 		}
+		this.roll(at.name, at.toHit, e, 'attack'); // to-hit (instant)
+		if (hasDice) this.rollDiceNow(`${at.name} damage`, pool, mod);
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
@@ -419,8 +429,11 @@ class CombatVM {
 			// attack spell → roll the TO-HIT first, then its damage (if any). Previously a damage-
 			// dealing attack spell (Fire Bolt) rolled only damage and skipped the to-hit entirely.
 			const toHit = caster.attack.value;
-			if (alt) this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e);
-			else {
+			if (alt) {
+				// tray on the damage dice (or the to-hit d20 for a non-damage attack spell)
+				if (hasDmg) this.openRoll(`${r.name} damage`, { ...r.dmg! }, 0, e);
+				else this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e);
+			} else {
 				this.rollDiceNow(`${r.name} (spell attack)`, { 20: 1 }, toHit);
 				if (hasDmg) this.rollDiceNow(`${r.name} damage`, r.dmg!, 0);
 			}
