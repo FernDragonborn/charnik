@@ -367,10 +367,10 @@ class BuildVM {
 			const access = new Set(profile.accessSpellIds);
 			const inClass = (id: string) => !this.draft.strict || access.has(id);
 			const pool = allSpells.filter((s) => {
-				const lvl = levelOf(s);
 				if (!this.draft.strict) return true;
-				if (lvl > 0 && !access.has(s.effectiveId)) return false; // access gate
-				return lvl <= profile.maxSpellLevel; // cantrips (0) always pass
+				// class access gate — cantrips are on the class list too, so gate them the same way
+				if (!access.has(s.effectiveId)) return false;
+				return levelOf(s) <= profile.maxSpellLevel;
 			});
 			const byLevel = new Map<number, LoadedRow[]>();
 			for (const s of pool) (byLevel.get(levelOf(s)) ?? byLevel.set(levelOf(s), []).get(levelOf(s))!).push(s);

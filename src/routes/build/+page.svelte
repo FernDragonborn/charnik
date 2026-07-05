@@ -361,12 +361,11 @@
 					<p class="sub">Pick a class to see spellcasting.</p>
 				{/if}
 			</div>
-		</div>
 
-		<!-- inventory / starting equipment (creation only — managed in the play view after that) -->
-		{#if !b.edit}
-			<div class="card">
-				<h2>Inventory <span class="cnt">{b.draft.inventory.length}</span></h2>
+			<!-- inventory / starting equipment (creation only — managed in the play view after that) -->
+			{#if !b.edit}
+				<div class="card">
+					<h2>Inventory <span class="cnt">{b.draft.inventory.length}</span></h2>
 			<label class="field">
 				<span>Add item</span>
 				<select
@@ -413,6 +412,7 @@
 				{/if}
 			</div>
 		{/if}
+		</div>
 	</div>
 
 	<!-- review & create (echoes the mock's bottom lucard) -->
