@@ -47,7 +47,7 @@
 	"demo": {
 		"badge": "Demo · in active development",
 		"title": "Heads up — this demo only ships the free SRD content",
-		"body": "Charnik is in active development. I can only include the <b>SRD</b> — the part Wizards of the Coast released for free (CC-BY). The rest of D&D belongs to them, not me, so a lot of it legally can't be here out of the box: <b>Artificer</b>, <b>Aasimar</b>, the <b>Beholder</b>, most <b>subclasses</b>, and loads of <b>spells & monsters</b>. But nothing holds you back — make your own <b>homebrew</b> and, with the flexible CSV system, add whatever you want: from species and classes to spells. You can also download the full desktop app for your computer — it keeps all your data local and needs no internet connection.",
+		"body": "Charnik is in active development. We can only include the <b>SRD</b> — the part Wizards of the Coast released for free (CC-BY). The rest of D&D belongs to them, not us, so a lot of it legally can't be here out of the box: <b>Artificer</b>, <b>Aasimar</b>, the <b>Beholder</b>, most <b>subclasses</b>, and loads of <b>spells & monsters</b>. But nothing holds you back — make your own <b>homebrew</b> and, with the flexible CSV system, add whatever you want: from species and classes to spells. You can also download the full desktop app for your computer — it keeps all your data local and needs no internet connection.",
 		"download": "⬇ Download the desktop app"
 	}
 }
