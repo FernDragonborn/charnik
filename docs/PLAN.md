@@ -720,6 +720,25 @@ Config files: `charnik.config.json` (dataDir, roots, toggles, rule-options, sett
 
 Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority within each.
 
+**User-reported bugs (2026-07-05, desktop test — verify + fix):**
+- **UBUG-1 · Short rest doesn't heal.** `combat.rest('short')` restores resources/pact slots but not
+  HP. Also the heal mechanic DIFFERS by edition — check both: 5e short rest = spend Hit Dice (roll
+  HD + CON to regain HP); 5.5e similar but confirm the exact rule. Wire short-rest HP (Hit Dice pool)
+  per the character's system.
+- **UBUG-2 · No to-hit roll shown when casting an attack/weapon.** Casting a spell/attack only shows
+  the DAMAGE roll in the UI — the attack (to-hit d20) roll isn't surfaced. Trace `cast`/`attackRoll`
+  (combat/state): attack spells (`res === 'hit'`) and weapon attacks should roll + display the to-hit,
+  then damage. Make the to-hit visible (toast/log/tray), not just damage.
+- **UBUG-3 · Adv/disadv doesn't show the cancelled (dropped) roll everywhere.** The dropped d20 should
+  show: BRIEF on the card, FULL in the log + dice tray. `advantageRoll.{kept,dropped}` exists and the
+  CombatMenus log/tray render it — but the card/attack/spell roll paths may not pass advantage, or the
+  card doesn't render the dropped die. Audit every roll site passes advantage + renders kept+dropped.
+- **UBUG-4 · Tauri .msi install has no content folders.** After installing the built `.msi`, there's
+  no `content/` (CSV) directory created, so the app has no data. First-run on desktop must create the
+  dataDir + seed the shipped SRD content (the `static/content` bundle) into it (Tauri fs). Wire the
+  first-run seed / resource-copy in the Tauri layer. (Relates to `dataDir` resolution + the Storage
+  seam — the web target seeds via fetch; desktop needs the equivalent copy-on-first-run.)
+
 **Security / deps:**
 - **DEP-1 · `glib 0.18.5` moderate advisory** (GHSA-wrw7-89jp-8q8g, dependabot #3) — transitive via
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
@@ -846,12 +865,21 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - [x] **R5 (CH3) · Extract the click-to-set pip helper** — `slotClick`, `resourceClick` and `usePip` each
   re-derive the same "click a filled pip → spend to it; click a spent pip → restore to it" math.
   One pure `pipClick(count, spent, index) → newSpent`, unit-tested, used by all three.
-- [ ] **R6 · Source-tag constants** — `'SRD 5.1'` / `'SRD 5.2.1'` / `'Homebrew'` are string-littered
-  across converters, tests and app code. Central consts (pairs with the friendly-labels map).
-- [ ] **R7 · Strict/Free as a named mode**, not a bare `boolean`, per enums-not-literals — optional,
-  low priority.
-Do R1–R5 as a focused pass (they're the ones that bite: typos, duplication, drift). R6–R7 are
-opportunistic. Add tests where extracting a helper (R4/R5) makes logic unit-testable.
+- [~] **R6 · Source-tag constants** — mostly MOOT. App code already uses consts (`HOMEBREW_SOURCE`,
+  `SOURCE_LABELS` keys, a local `S` in demo/sheet); the raw `'SRD 5.x'` strings that remain live in the
+  edition-SCOPED converters (each `.mjs` emits one edition, declared once) + per-file test `S` consts,
+  where a shared TS const can't reach cleanly. Low value; leave.
+- [ ] **R7 · Strict/Free as a named mode** — NOT DONE (optional, low priority). `strict: boolean` is
+  self-documenting and works; deferring.
+Done R1–R5 as a focused pass (typos, duplication, drift). R6 moot, R7 deferred.
+
+**Refactor-session review (2026-07-05):** R1 ✓ (EditContext), R2–R5 ✓ (CVM-4/CVM-3/CH2/CH3), R6 moot,
+R7 deferred. CH1–CH5 ✓. CH6–CH14 are trace-and-verify chains (not code changes): the ones whose code
+was refactored/tested this pass are effectively covered — CH6 content-load (loader.test), CH7
+ability-score (rules.test + build.test), CH8 homebrew round-trip (homebrew.test), CH9 menu (R2 typed),
+CH13 article render (detail.test + grouping.test). CH10 (roster), CH11 (app-switch), CH12 (palette),
+CH14 ($effect flows: autosave/deep-link/theme) are UNTRACED — code works but no explicit end-to-end
+audit or test yet; a good next verification pass.
 
 ### Call-chain audit — checklist (trace each flow end-to-end for cross-file duplication + seams)
 
