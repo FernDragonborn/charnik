@@ -733,6 +733,9 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   show: BRIEF on the card, FULL in the log + dice tray. `advantageRoll.{kept,dropped}` exists and the
   CombatMenus log/tray render it — but the card/attack/spell roll paths may not pass advantage, or the
   card doesn't render the dropped die. Audit every roll site passes advantage + renders kept+dropped.
+- **UBUG-5 · Spending a resource gives no feedback.** Clicking a resource pip (`resourceClick`) spends
+  it silently — using a resource should raise a toast (e.g. "Rage — 2 left" / "Ki used"), like rolls
+  do. Add a toast on spend (and probably on restore too), naming the resource + remaining count.
 - **UBUG-4 · Tauri .msi install has no content folders.** After installing the built `.msi`, there's
   no `content/` (CSV) directory created, so the app has no data. First-run on desktop must create the
   dataDir + seed the shipped SRD content (the `static/content` bundle) into it (Tauri fs). Wire the
