@@ -258,9 +258,18 @@ class CombatVM {
 			? String(this.graph.get(this.character.build.species)?.data.name_en ?? '')
 			: ''
 	);
-	conc = $derived(
-		this.character?.play.effects.find((e) => e.label.toLowerCase().includes('bless'))
-	);
+	/** The spell currently concentrated on (resolved to a display label), or null. Reads the schema's
+	 *  `play.concentration` ref — set on cast, cleared by tapping the indicator. */
+	conc = $derived.by<{ ref: string; label: string } | null>(() => {
+		const ref = this.character?.play.concentration;
+		if (!ref) return null;
+		const name = this.graph?.get(ref)?.data.name_en;
+		return { ref, label: name ? String(name) : ref };
+	});
+	/** Stop concentrating (tap the concentration indicator). */
+	clearConcentration = () => {
+		if (this.character) this.character.play.concentration = null;
+	};
 
 	// configurable passive-sense skills (Pin skills)
 	passives = $derived(
@@ -388,6 +397,8 @@ class CombatVM {
 	cast = (r: SpRow, e: Event) => {
 		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
 		if (!this.trySpend(this.ctSlot(r.ct))) return;
+		// a concentration spell becomes the active concentration (replacing any prior one, 5e rule)
+		if (r.conc && this.character) this.character.play.concentration = r.ref;
 		const alt = wantsTray(e);
 		// a spell with dice rolls them: damage (Fire Bolt 1d10, Fireball 8d6) or, for auto
 		// spells, healing (Healing Word 2d4 + spellcasting mod)
@@ -640,11 +651,12 @@ class CombatVM {
 	};
 	releaseDrag = () => (this.dragDisabled = true); // window pointerup
 
-	conditionList = $derived(
-		this.graph
-			? this.graph.list('condition', { system: '5.5e' }).map((r) => String(r.data.name_en))
-			: []
-	);
+	// conditions for THIS character's system (not a hardcoded edition)
+	conditionList = $derived.by<string[]>(() => {
+		const system = this.character?.system;
+		if (!this.graph || !system) return [];
+		return this.graph.list('condition', { system }).map((r) => String(r.data.name_en));
+	});
 	addEffect = (label: string, tokens: string[], positive = true) => {
 		if (!this.character) return;
 		this.character.play.effects = [

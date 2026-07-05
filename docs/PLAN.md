@@ -720,6 +720,12 @@ Config files: `charnik.config.json` (dataDir, roots, toggles, rule-options, sett
 
 Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority within each.
 
+**Security / deps:**
+- **DEP-1 · `glib 0.18.5` moderate advisory** (GHSA-wrw7-89jp-8q8g, dependabot #3) — transitive via
+  Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
+  plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
+  no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
+
 **Data versioning (needs a proper think — surfaced in the refactor, 2026-07-05):**
 - **DATA-VER-1 · content versioning is defined but not wired.** CHARACTER versioning works end to
   end (schema default `schemaVersion` → `assembleCharacter` stamps it → `repository.loadCharacter`
@@ -1014,11 +1020,13 @@ scan only if a config bug surfaces). Everything else functional is on the list a
 ---
 
 **`src/routes/combat/state.svelte.ts` (CombatVM, ~687 lines):**
-- [ ] **CVM-bug1 · `conc` hardcodes "bless"** (`effects.find(e => e.label…includes('bless'))`) — the
-  concentration indicator searches effect labels for the word *bless* instead of reading
-  `play.concentration` (the schema field for it). Wrong for any other concentration spell. **Bug.**
-- [ ] **CVM-bug2 · `conditionList` hardcodes system `'5.5e'`** (`graph.list('condition',{system:'5.5e'})`)
-  — should use the character's own system, not always 5.5e. **Bug.**
+- [x] **CVM-bug1 · `conc` hardcodes "bless"** — FIXED. `conc` now reads the schema's
+  `play.concentration` ref and resolves it to the spell name; the feature is wired end to end (was a
+  dead placeholder): `SpRow` carries `ref` + `conc`, `cast()` sets `play.concentration` for a
+  concentration spell (replacing any prior, 5e rule), and the indicator button clears it. Behavioral
+  CombatVM tests (concentration set/replace/clear).
+- [x] **CVM-bug2 · `conditionList` hardcodes system `'5.5e'`** — FIXED. Uses `this.character.system`.
+  Behavioral test: a 5.5e character sees 5.5e conditions, not 5e-only ones.
 - [ ] **CVM-1 · `doRoll` vs `rollDiceNow` duplicate ~30 lines** of dice-rolling (pool loop, adv-d20
   keep-winner, bonus dice, expr/log/toast). Extract a pure `rollPool(dice, mod, adv, bonusDice) →
   {total, expr, advPair}`; both call it. (Deepest duplication in the file; unit-testable with seeded RNG.)

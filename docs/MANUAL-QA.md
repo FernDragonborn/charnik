@@ -107,4 +107,15 @@ whole builder UI moved — smoke-test it:
 - ⚠️ **Stale-leak fix**: build char A (set an ASI/feat slot), then edit char B without reloading — B no
   longer inherits A's slotFeats/boost picks (draft is now replaced wholesale on hydrate).
 
+## CVM-bug1/2 · concentration wired + conditions per-system
+
+Files: `combat/helpers.ts` (SpRow `ref`+`conc`, spellRow), `combat/state.svelte.ts` (`conc`,
+`clearConcentration`, `cast`, `conditionList`), `combat/+page.svelte` (indicator is now a button).
+- ☐ Cast a **concentration spell** (e.g. Bless) → the ◈ Concentration indicator appears with that
+  spell's name; casting a DIFFERENT concentration spell replaces it; casting a non-concentration
+  spell doesn't change it.
+- ☐ **Tap the indicator** → concentration stops (indicator disappears).
+- ☐ Add-condition menu lists the conditions of the **character's own edition** (a 5e character shows
+  5e conditions, a 5.5e character 5.5e) — not always 5.5e.
+
 <!-- append fixes with a behavioral risk here -->

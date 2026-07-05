@@ -146,7 +146,10 @@
 			onclick={() => (c.play.shieldRaised = !c.play.shieldRaised)}
 			>🛡 Shield <span class="sw">{c.play.shieldRaised ? 'ON' : 'OFF'}</span></button
 		>
-		{#if conc}<button class="toggle conc on"
+		{#if conc}<button
+				class="toggle conc on"
+				onclick={combat.clearConcentration}
+				title="Tap to stop concentrating"
 				>◈ Concentration <span class="sw">{conc.label}</span></button
 			>{/if}
 		<button

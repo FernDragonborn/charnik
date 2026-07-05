@@ -198,6 +198,8 @@ export interface Atk {
 /** A spell row in the spell block. */
 export interface SpRow {
 	id: string;
+	/** The content ref (effectiveId) — used to set play.concentration when cast. */
+	ref: string;
 	name: string;
 	spe: string;
 	res: '' | 'hit' | 'save' | 'auto';
@@ -205,6 +207,8 @@ export interface SpRow {
 	tm: string;
 	ct: '' | 'react' | 'bonus'; // casting time → icon before the level
 	dmg: Record<number, number> | null; // parsed damage/healing dice (for casting)
+	/** Whether casting this spell requires concentration. */
+	conc: boolean;
 	prep: '' | 'on' | 'always';
 }
 
@@ -254,6 +258,7 @@ export function spellRow(graph: ContentGraph, ref: string, prep: SpRow['prep']):
 		(res === 'auto' ? healDice(String(row.data.text_en ?? '')) : '');
 	return {
 		id: String(row.data.id),
+		ref,
 		name: String(row.data.name_en),
 		spe: dmg || effectHint(row.data),
 		res: res === 'attack' ? 'hit' : res === 'save' ? 'save' : res === 'auto' ? 'auto' : '',
@@ -268,6 +273,7 @@ export function spellRow(graph: ContentGraph, ref: string, prep: SpRow['prep']):
 		tm: lvl === 0 ? 'cantrip' : ordinal(lvl),
 		ct: castingIcon(String(row.data.casting_time ?? '')),
 		dmg: dmg ? parseDicePool(dmg) : null,
+		conc: String(row.data.concentration) === 'true',
 		prep
 	};
 }
