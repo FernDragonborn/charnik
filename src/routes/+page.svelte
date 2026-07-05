@@ -49,13 +49,14 @@
 	{#if isDemo}
 		<aside class="demobanner">
 			<div class="db-badge">Demo · in active development</div>
-			<h2 class="db-title">This is a live demo — not the full game</h2>
+			<h2 class="db-title">Heads up — this demo only ships the free SRD content</h2>
 			<p class="db-body">
-				Charnik is under active development. This hosted demo ships <b>only SRD content</b>
-				(the CC-BY subset), so most of D&amp;D isn't here — for example the
-				<b>Artificer</b> class, <b>Aasimar</b>, the <b>Beholder</b>, most
-				<b>subclasses</b>, and many <b>spells &amp; monsters</b>. You add your own material as plain
-				CSV, and the desktop app keeps all your data local. Expect rough edges.
+				Charnik is in active development. I can only bundle the <b>SRD</b> — the slice Wizards of
+				the Coast released for free (CC-BY). The rest of D&amp;D is theirs, not mine to hand out, so
+				a lot isn't here out of the box: the <b>Artificer</b>, <b>Aasimar</b>, the
+				<b>Beholder</b>, most <b>subclasses</b>, and plenty of <b>spells &amp; monsters</b>. The
+				whole point of the app is that you drop all of that in yourself as plain CSV — and on the
+				desktop build it stays on your own machine. Rough edges expected; thanks for trying it.
 			</p>
 		</aside>
 	{/if}
