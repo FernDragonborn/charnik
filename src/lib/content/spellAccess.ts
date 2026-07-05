@@ -13,6 +13,7 @@
  * (subclass / feat / item / race) layer on top later, in the character derive — not here.
  */
 import type { ContentGraph, LoadedRow } from './loader';
+import { splitList } from './schemas';
 
 export type AccessVia = 'class-list' | 'spell-list';
 
@@ -31,15 +32,7 @@ export interface SpellAccess {
 	classesForSpell(spellEffectiveId: string): AccessEntry[];
 }
 
-const csv = (v: unknown): string[] =>
-	Array.isArray(v)
-		? v.map(String)
-		: v == null || v === ''
-			? []
-			: String(v)
-					.split(/[,;]/)
-					.map((s) => s.trim())
-					.filter(Boolean);
+const csv = splitList;
 
 const shareEdition = (a: string[], b: string[]) => a.some((s) => b.includes(s));
 

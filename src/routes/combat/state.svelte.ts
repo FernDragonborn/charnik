@@ -660,7 +660,7 @@ class CombatVM {
 		this.character.play.effects = [
 			...this.character.play.effects,
 			{
-				iid: label + Date.now(),
+				iid: crypto.randomUUID(),
 				label,
 				effects: tokens,
 				positive,

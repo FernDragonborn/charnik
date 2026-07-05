@@ -33,13 +33,9 @@ import {
 	type BoostShape
 } from '$lib/build/rules';
 import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
+import { splitList } from '$lib/content/schemas';
 
-const csv = (v: unknown): string[] =>
-	Array.isArray(v)
-		? v.map(String)
-		: v == null || v === ''
-			? []
-			: String(v).split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+const csv = splitList;
 
 /** Localised display name for a content row (falls back to EN). */
 export function rowName(row: LoadedRow | undefined, locale = app.activeLocale): string {
@@ -464,8 +460,8 @@ class BuildVM {
 		if (m === 'standard-array') this.draft.arrayPick = {};
 		if (m === 'point-buy') this.draft.abilities = baseAbilities();
 	};
-	pointsSpent = $derived(pointsSpent(this.draft.abilities));
-	pointsLeft = $derived(POINT_BUY_BUDGET - this.pointsSpent);
+	pointsUsed = $derived(pointsSpent(this.draft.abilities));
+	pointsLeft = $derived(POINT_BUY_BUDGET - this.pointsUsed);
 
 	bumpAbility = (ab: Ability, dir: 1 | -1) => {
 		// editing an existing character in Strict: base scores are locked (you don't re-roll them at

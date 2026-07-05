@@ -1057,23 +1057,23 @@ scan only if a config bug surfaces). Everything else functional is on the list a
   helpers/data (the derived only needs to inject the live skill mods).
 - [ ] **CVM-9 · VM `round` vs schema `play.round`** — the VM keeps its own `round = $state(1)` while
   the character schema already has `play.round`; they can diverge. Use the persisted one.
-- [ ] **CVM-10 · `iid: label + Date.now()`** for a runtime effect id → `crypto.randomUUID()`
-  (the GUID-not-counter rule).
+- [x] **CVM-10 · `iid: label + Date.now()`** → `crypto.randomUUID()`. DONE (GUID-not-counter).
 
 **`src/routes/build/state.svelte.ts` (BuildVM, ~735 lines):**
 - [ ] **BVM-1 · draft fields are triple-maintained** — every draft `$state` must be listed in the
   class decl, in `reset()`, and in `hydrate()`. Adding one = 3 edits (already bitten). Extract a
   `defaultDraft()` factory (single source of the field set) that reset/hydrate build on. (This is R1's
   bigger sibling — the whole draft is worth one typed shape, not ~25 loose fields.)
-- [ ] **BVM-2 · `csv` comma-splitter duplicated** — re-implemented here (line 36) and in
-  `combat/helpers.ts`, `spellAccess.ts`, `EditContentForm`. One shared `splitList()` util.
+- [x] **BVM-2 · `csv` comma-splitter duplicated** — DONE. One `splitList(v)` in `content/schemas.ts`
+  (the CSV-cell coercion home); `build/state` + `spellAccess` alias to it, `EditContentForm` uses it
+  for the systems field. (The byte-identical copies were in build/state + spellAccess.)
 - [ ] **BVM-3 · feat-category string literals** (`cat === 'origin'`, `=== 'epic-boon'`) — use the
   exported `FEAT_CATEGORIES` const from schemas, not bare strings (enums-not-literals).
 - [ ] **BVM-4 · the `draft` derived is ~60 lines** assembling the whole Character inline (twice, incl.
   a duplicated last-resort fallback) → extract a pure `assembleCharacter(state)` fn, unit-testable
   (round-trips with hydrate for the level-up tests we skipped).
-- [ ] **BVM-5 · `pointsSpent` field shadows the imported `pointsSpent` fn** (same smell as CVM-7).
-  Rename the field.
+- [x] **BVM-5 · `pointsSpent` field shadows the imported `pointsSpent` fn** — DONE. Field renamed to
+  `pointsUsed` (only used internally by `pointsLeft`).
 - [ ] **BVM-6 · token/format regexes inline** — `flat-bonus:([a-z]{3})…` in `speciesFixedAbilities`
   (R4) and `^(\d+)x(\d+)$` for `boost_choice`; centralise/parse-once.
 - [ ] **BVM-7 · magic sentinels / id strings** — `ASI = '__asi__'` mixed into `slotFeats` values (a

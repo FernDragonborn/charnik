@@ -6,7 +6,7 @@
 	import { getUserStorage } from '$lib/storage/provider';
 	import { resetContentGraph } from '$lib/content/provider';
 	import { fieldsFor, blankDraft, slugify, saveHomebrewRow } from '$lib/content/homebrew';
-	import { SYSTEMS, type ContentType } from '$lib/content/schemas';
+	import { SYSTEMS, splitList, type ContentType } from '$lib/content/schemas';
 
 	let {
 		type,
@@ -29,12 +29,12 @@
 	);
 
 	function toggleSystem(sys: string) {
-		const set = new Set((draft.systems || '').split(',').filter(Boolean));
+		const set = new Set(splitList(draft.systems));
 		if (set.has(sys)) set.delete(sys);
 		else set.add(sys);
 		draft.systems = [...set].join(',');
 	}
-	const hasSystem = (sys: string) => (draft.systems || '').split(',').includes(sys);
+	const hasSystem = (sys: string) => splitList(draft.systems).includes(sys);
 
 	async function save() {
 		issues = [];
