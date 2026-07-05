@@ -56,9 +56,17 @@
 				a lot isn't here out of the box: the <b>Artificer</b>, <b>Aasimar</b>, the
 				<b>Beholder</b>, most <b>subclasses</b>, and plenty of <b>spells &amp; monsters</b>. But
 				nothing's locked down — build your own <b>homebrew</b> and, with the flexible CSV system, add
-				anything you want: classes, subclasses, species, spells, whatever you can dream up (and on the
-				desktop build it all stays on your own machine).
+				anything you want: classes, subclasses, species, spells, whatever you can dream up. Or grab the
+				full desktop app for your computer — it keeps all your data local.
 			</p>
+			<a
+				class="db-download"
+				href="https://github.com/FernDragonborn/charnik/releases"
+				target="_blank"
+				rel="noopener noreferrer"
+			>
+				⬇ Download the desktop app
+			</a>
 		</aside>
 	{/if}
 
@@ -121,10 +129,25 @@
 	}
 	.db-body {
 		margin: 0;
-		max-width: 68ch;
 		font-size: 15px;
 		line-height: 1.55;
 		color: var(--color-text-muted);
+	}
+	.db-download {
+		display: inline-block;
+		margin-top: 14px;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 14px;
+		text-decoration: none;
+		color: #fff;
+		background: var(--color-accent-deep);
+		border: 1px solid var(--color-accent-deep);
+		border-radius: 8px;
+		padding: 9px 16px;
+	}
+	.db-download:hover {
+		filter: brightness(1.08);
 	}
 	.db-body b {
 		color: var(--color-text);
