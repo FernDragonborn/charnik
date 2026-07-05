@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { rollPool, rollFormula, parseDicePool, type Rng } from './dice';
+import { rollPool, rollFormula, parseDicePool, parseDiceTerm, type Rng } from './dice';
 
 /** RNG that yields the given [0,1) values in order (then throws if over-drawn — catches extra draws). */
 function rngSequence(...values: number[]): Rng {
@@ -10,6 +10,18 @@ function rngSequence(...values: number[]): Rng {
 	};
 }
 // rollDie(sides) = 1 + floor(rng()*sides); 0.5 on a d6 → 4, on a d20 → 11, on a d4 → 3.
+
+describe('parseDiceTerm', () => {
+	it('parses a signed single dice term into a BonusDie', () => {
+		expect(parseDiceTerm('1d4')).toEqual({ count: 1, sides: 4, sign: 1 });
+		expect(parseDiceTerm('-1d4')).toEqual({ count: 1, sides: 4, sign: -1 });
+		expect(parseDiceTerm('2d6')).toEqual({ count: 2, sides: 6, sign: 1 });
+	});
+	it('returns null for a non-term', () => {
+		expect(parseDiceTerm('5')).toBeNull();
+		expect(parseDiceTerm('garbage')).toBeNull();
+	});
+});
 
 describe('parseDicePool', () => {
 	it('sums every NdM group', () => {

@@ -37,6 +37,14 @@ const rollDie = (sides: number, rng: Rng) => 1 + Math.floor(rng() * sides);
 /** "+N" / "−N" for a nonzero flat modifier (0 is never appended). */
 const formatModifier = (n: number) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 
+/** Parse a single signed dice term ("1d4" / "-2d4" / "+1d6") into a `BonusDie`, or null if it
+ *  isn't one. Used for effect bonus dice (Bless/Bane) where the sign matters. */
+export function parseDiceTerm(term: string): BonusDie | null {
+	const m = /^([+-]?)(\d+)d(\d+)$/.exec(term.trim());
+	if (!m) return null;
+	return { count: Number(m[2]), sides: Number(m[3]), sign: m[1] === '-' ? -1 : 1 };
+}
+
 /** Parse every `NdM` token in a string into a pool ({sides: count}). "2d6 + 1d4" → {6:2, 4:1}. */
 export function parseDicePool(s: string): Record<number, number> {
 	const out: Record<number, number> = {};

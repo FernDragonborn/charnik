@@ -30,6 +30,8 @@ import {
 import {
 	applyEffects,
 	collectResources,
+	parseEffect,
+	EFFECT_KIND,
 	type ActiveEffect,
 	type ResourceDef
 } from '../effects/index';
@@ -159,9 +161,9 @@ function gatherEffects(
 	// that inflicts a condition actually applies that condition's mechanics (nested one level).
 	for (const eff of [...active]) {
 		for (const t of eff.tokens) {
-			const m = /^apply-condition:(.+)$/.exec(t.trim());
-			if (!m?.[1]) continue;
-			const condId = m[1].trim();
+			const p = parseEffect(t);
+			if (p.kind !== EFFECT_KIND.applyCondition || !p.target) continue;
+			const condId = p.target.trim();
 			const cond = graph.rows.find((r) => r.type === 'condition' && r.id === condId);
 			const toks = tokensOf(cond);
 			if (cond && toks.length)
@@ -180,8 +182,9 @@ function abilityBonus(active: ActiveEffect[], ability: Ability): number {
 	let sum = 0;
 	for (const eff of active) {
 		for (const t of eff.tokens) {
-			const m = new RegExp(`^flat-bonus:${ability}([+-]\\d+)$`, 'i').exec(t.trim());
-			if (m) sum += Number(m[1]);
+			const p = parseEffect(t);
+			if (p.kind === EFFECT_KIND.flatBonus && p.target === ability && p.amount !== undefined)
+				sum += p.amount;
 		}
 	}
 	return sum;
@@ -209,9 +212,9 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	if (character.play.autoCalc)
 		for (const eff of active)
 			for (const t of eff.tokens) {
-				const m = /^grant-proficiency:(.+)$/.exec(t.trim());
-				if (!m?.[1]) continue;
-				const raw = m[1].trim();
+				const p = parseEffect(t);
+				if (p.kind !== EFFECT_KIND.grantProficiency || !p.target) continue;
+				const raw = p.target.trim();
 				const tgt = raw.replace(/^save\./, '');
 				if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
 				else grantedSkills.add(raw);
@@ -317,10 +320,10 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	if (character.play.autoCalc)
 		for (const eff of active)
 			for (const t of eff.tokens) {
-				const m = /^resist-immune:(?:(resist|immune|vulnerable):)?(.+)$/.exec(t.trim());
-				if (!m) continue;
-				const bucket = (m[1] ?? 'resist') as 'resist' | 'immune' | 'vulnerable';
-				const type = (m[2] ?? '').trim();
+				const p = parseEffect(t);
+				if (p.kind !== EFFECT_KIND.resistImmune || !p.target) continue;
+				const bucket = p.defense ?? 'resist';
+				const type = p.target.trim();
 				if (!defenses[bucket].includes(type)) defenses[bucket].push(type);
 			}
 

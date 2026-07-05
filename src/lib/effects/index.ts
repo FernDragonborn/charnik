@@ -15,28 +15,42 @@
  */
 import { computed, type Computed, type Contribution, type Layer } from '../rules/pipeline';
 
-export const EFFECT_KINDS = [
-	'flat-bonus',
-	'set-override',
-	'advantage',
-	'grant-proficiency',
-	'resist-immune',
-	'apply-condition',
-	'grant-resource'
-] as const;
-export type EffectKind = (typeof EFFECT_KINDS)[number];
+/** The bounded effect vocabulary, as named constants — compare against these, never bare strings. */
+export const EFFECT_KIND = {
+	flatBonus: 'flat-bonus',
+	setOverride: 'set-override',
+	advantage: 'advantage',
+	grantProficiency: 'grant-proficiency',
+	resistImmune: 'resist-immune',
+	applyCondition: 'apply-condition',
+	grantResource: 'grant-resource'
+} as const;
+export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
+/** The kinds as a list (for schema validation / the `includes` guard). */
+export const EFFECT_KINDS = Object.values(EFFECT_KIND) as readonly EffectKind[];
+
+export type Recharge = 'short' | 'long' | 'other';
+export type Defense = 'resist' | 'immune' | 'vulnerable';
 
 export interface ParsedEffect {
 	kind: EffectKind | 'unknown';
 	target?: string;
 	/** Numeric flat bonus / override value. */
 	amount?: number;
-	/** Dice bonus (e.g. "1d4") — a roll modifier, not a flat number. */
+	/** Dice bonus (e.g. "1d4" / "-1d4") — a roll modifier, not a flat number. */
 	dice?: string;
+	/** resist-immune: which bucket (defaults to 'resist' when the token omits it). */
+	defense?: Defense;
+	/** grant-resource: the fully-specified pool (only present when `id:max:recharge` is given). */
+	resource?: { id: string; max: number; recharge: Recharge };
 	raw: string;
 }
 
-/** Parse one bounded-vocab token. Unknown / malformed → `{kind:'unknown'}` (kept as text). */
+/**
+ * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security
+ * boundary: data, never code). Every consumer reads the structured result instead of its own
+ * regex. Unknown / malformed → `{kind:'unknown'}` (kept as an inert text note, never dropped).
+ */
 export function parseEffect(token: string): ParsedEffect {
 	const raw = token.trim();
 	const sep = raw.indexOf(':');
@@ -45,7 +59,7 @@ export function parseEffect(token: string): ParsedEffect {
 	const rest = raw.slice(sep + 1);
 	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
 
-	if (kind === 'flat-bonus') {
+	if (kind === EFFECT_KIND.flatBonus) {
 		const m = /^([a-z][a-z.-]*?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
 		if (!m) return { kind: 'unknown', raw };
 		const target = m[1] ?? '';
@@ -54,12 +68,33 @@ export function parseEffect(token: string): ParsedEffect {
 		if (/d/i.test(amount)) return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw };
 		return { kind, target, amount: Number(sign + amount), raw };
 	}
-	if (kind === 'set-override') {
+	if (kind === EFFECT_KIND.setOverride) {
 		const m = /^([a-z][a-z.-]*):(-?\d+)$/i.exec(rest);
 		if (!m) return { kind: 'unknown', raw };
 		return { kind, target: m[1] ?? '', amount: Number(m[2]), raw };
 	}
-	// advantage / grant-proficiency / resist-immune / apply-condition / grant-resource
+	if (kind === EFFECT_KIND.resistImmune) {
+		// `resist-immune:<type>` (defaults to resistance) or `resist-immune:<bucket>:<type>`
+		const m = /^(?:(resist|immune|vulnerable):)?(.+)$/i.exec(rest);
+		if (!m?.[2]) return { kind: 'unknown', raw };
+		const defense = (m[1]?.toLowerCase() ?? 'resist') as Defense;
+		return { kind, defense, target: m[2].trim(), raw };
+	}
+	if (kind === EFFECT_KIND.grantResource) {
+		// `grant-resource:<id>` (bare, for flags) or `grant-resource:<id>:<max>:<recharge>` (a pool)
+		const m = /^([a-z0-9][a-z0-9-]*)(?::(\d+):(short|long|other))?$/i.exec(rest.trim());
+		if (!m?.[1]) return { kind: 'unknown', raw };
+		const id = m[1].toLowerCase();
+		if (m[2] && m[3])
+			return {
+				kind,
+				target: id,
+				resource: { id, max: Number(m[2]), recharge: m[3].toLowerCase() as Recharge },
+				raw
+			};
+		return { kind, target: id, raw };
+	}
+	// advantage / grant-proficiency / apply-condition
 	return { kind, target: rest, raw };
 }
 
@@ -71,7 +106,7 @@ export interface ActiveEffect {
 }
 
 /** Does an effect target apply to this stat key? Exact, plus the `saves` group → `save.*`. */
-function matchesTarget(effTarget: string | undefined, key: string): boolean {
+export function matchesTarget(effTarget: string | undefined, key: string): boolean {
 	if (!effTarget) return false;
 	if (effTarget === key) return true;
 	if (effTarget === 'saves' && key.startsWith('save')) return true;
@@ -101,7 +136,7 @@ export function applyEffects(targetKey: string, base: Computed, effects: ActiveE
 		for (const token of eff.tokens) {
 			const p = parseEffect(token);
 			if (!matchesTarget(p.target, targetKey)) continue;
-			if (p.kind === 'flat-bonus') {
+			if (p.kind === EFFECT_KIND.flatBonus) {
 				if (p.amount !== undefined) {
 					contribs.push({
 						source: eff.source,
@@ -115,7 +150,7 @@ export function applyEffects(targetKey: string, base: Computed, effects: ActiveE
 						`${eff.source}: ${p.dice.startsWith('-') ? '' : '+'}${p.dice} to ${targetKey}`
 					);
 				}
-			} else if (p.kind === 'set-override' && p.amount !== undefined) {
+			} else if (p.kind === EFFECT_KIND.setOverride && p.amount !== undefined) {
 				contribs.push({
 					source: eff.source,
 					layer: 'override',
@@ -123,7 +158,7 @@ export function applyEffects(targetKey: string, base: Computed, effects: ActiveE
 					amount: p.amount,
 					note: token
 				});
-			} else if (p.kind === 'advantage') {
+			} else if (p.kind === EFFECT_KIND.advantage) {
 				notes.push(`${eff.source}: advantage on ${targetKey}`);
 			}
 		}
@@ -152,20 +187,15 @@ export function collectResources(effects: ActiveEffect[]): ResourceDef[] {
 	const out = new Map<string, ResourceDef>();
 	for (const eff of effects) {
 		for (const token of eff.tokens) {
-			const m = /^grant-resource:([a-z0-9][a-z0-9-]*):(\d+):(short|long|other)$/i.exec(
-				token.trim()
-			);
-			if (!m) continue;
-			const id = (m[1] ?? '').toLowerCase();
+			const p = parseEffect(token);
+			if (p.kind !== EFFECT_KIND.grantResource || !p.resource) continue;
 			const def: ResourceDef = {
-				id,
-				name: titleCaseId(id),
-				max: Number(m[2]),
-				recharge: (m[3] ?? 'other').toLowerCase() as ResourceDef['recharge'],
+				...p.resource,
+				name: titleCaseId(p.resource.id),
 				source: eff.source
 			};
-			const prev = out.get(id);
-			if (!prev || def.max > prev.max) out.set(id, def);
+			const prev = out.get(def.id);
+			if (!prev || def.max > prev.max) out.set(def.id, def);
 		}
 	}
 	return [...out.values()];
@@ -186,19 +216,19 @@ export function collectFlags(effects: ActiveEffect[]): EffectFlags {
 		for (const token of eff.tokens) {
 			const p = parseEffect(token);
 			switch (p.kind) {
-				case 'advantage':
+				case EFFECT_KIND.advantage:
 					flags.advantage.push(p.target ?? token);
 					break;
-				case 'apply-condition':
+				case EFFECT_KIND.applyCondition:
 					flags.conditions.push(p.target ?? token);
 					break;
-				case 'grant-resource':
+				case EFFECT_KIND.grantResource:
 					flags.resources.push(p.target ?? token);
 					break;
-				case 'grant-proficiency':
+				case EFFECT_KIND.grantProficiency:
 					flags.proficiencies.push(p.target ?? token);
 					break;
-				case 'resist-immune':
+				case EFFECT_KIND.resistImmune:
 					flags.resistImmune.push(p.target ?? token);
 					break;
 				case 'unknown':

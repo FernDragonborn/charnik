@@ -19,7 +19,9 @@ import { z } from 'zod';
 export const SYSTEMS = ['5e', '5.5e'] as const;
 export type System = (typeof SYSTEMS)[number];
 
-/** Bounded effect vocabulary — the only kinds the engine understands. */
+/** Bounded effect vocabulary — the only kinds the engine understands. Kept as its own list (not
+ *  imported from `$lib/effects`) so content validation doesn't depend on the removable effects
+ *  module; a test (`effects.test.ts`) guards it against drifting from the engine's `EFFECT_KINDS`. */
 export const EFFECT_KINDS = [
 	'flat-bonus',
 	'set-override',

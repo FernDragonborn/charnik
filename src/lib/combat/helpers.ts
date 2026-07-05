@@ -6,7 +6,8 @@
 import type { Ability } from '$lib/rules/core';
 import type { Computed } from '$lib/rules/pipeline';
 import type { ContentGraph } from '$lib/content/loader';
-import { parseDicePool, type BonusDie, type Rolled } from '$lib/rules/dice';
+import { parseDicePool, parseDiceTerm, type BonusDie, type Rolled } from '$lib/rules/dice';
+import { parseEffect, matchesTarget, EFFECT_KIND } from '$lib/effects/index';
 
 // The dice roller and its BonusDie/Rolled types live in the pure rules core; re-exported here so
 // existing combat consumers keep importing from one place.
@@ -26,24 +27,15 @@ export function rollEffectsFor(
 	key: string
 ): { advantage: boolean; bonusDice: BonusDie[] } {
 	const out = { advantage: false, bonusDice: [] as BonusDie[] };
-	const matches = (t: string) =>
-		t === key ||
-		(t === 'saves' && key.startsWith('save')) ||
-		(t === 'skills' && key.startsWith('skill'));
 	for (const eff of effects) {
 		for (const tok of eff.effects) {
-			const advantage = /^advantage:(.+)$/.exec(tok);
-			if (advantage && matches((advantage[1] ?? '').trim())) {
-				out.advantage = true;
-				continue;
+			const p = parseEffect(tok);
+			if (!matchesTarget(p.target, key)) continue;
+			if (p.kind === EFFECT_KIND.advantage) out.advantage = true;
+			else if (p.kind === EFFECT_KIND.flatBonus && p.dice) {
+				const die = parseDiceTerm(p.dice);
+				if (die) out.bonusDice.push(die);
 			}
-			const die = /^flat-bonus:([\w.-]+)([+-])(\d+)d(\d+)$/.exec(tok);
-			if (die && matches(die[1] ?? ''))
-				out.bonusDice.push({
-					sides: Number(die[4]),
-					count: Number(die[3]),
-					sign: die[2] === '-' ? -1 : 1
-				});
 		}
 	}
 	return out;
@@ -76,10 +68,13 @@ export const healDice = (text: string): string => {
 /** A bounded-vocab effect token → a short readable tag ("flat-bonus:ac+2" → "AC +2",
  *  "flat-bonus:save.dex+1" → "DEX save +1", "flat-bonus:skill.stealth-1" → "Stealth −1"). */
 export function effectTag(token: string): string {
-	const m = token.match(/^flat-bonus:([\w.-]+)([+-].+)$/);
-	if (m) {
-		const t = m[1] ?? '';
-		const delta = (m[2] ?? '').replace('-', '−');
+	const p = parseEffect(token);
+	if (p.kind === EFFECT_KIND.flatBonus && p.target) {
+		const t = p.target;
+		const delta =
+			p.amount !== undefined
+				? `${p.amount < 0 ? '−' : '+'}${Math.abs(p.amount)}`
+				: `${p.dice?.startsWith('-') ? '−' : '+'}${p.dice?.replace('-', '') ?? ''}`;
 		let name = t.toUpperCase();
 		if (t === 'saves') name = 'all saves';
 		else if (t === 'skills') name = 'all skills';

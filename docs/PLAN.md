@@ -863,11 +863,16 @@ Duplication-heavy (do first — this is where the big refactors live):
   rolls every group. `parseDice` (helpers) → moved to dice as `parseDicePool` (it was NOT dead —
   `spellRow` uses it; ORPHANS 🔴 note corrected). Also fixed vitest to mirror the app's `$lib` alias
   (value imports of `$lib` were unresolved in tests). Covers CVM-1, part of R4 (dice parsing unified).
-- [ ] **CH2 · Effect grammar (bounded vocab)** ⚠️ — a token string wherever it's read:
-  `parseEffect/applyEffects/collectResources/collectFlags` (effects) + the ad-hoc regexes in
-  `derive.ts` (abilityBonus, grant-prof, resist-immune, apply-condition), `build/state`
-  (speciesFixedAbilities), `combat/state` (slotMax), `combat/helpers` (rollEffectsFor). Must collapse
-  to ONE parser (R4) — it's the security boundary (docs/SECURITY.md).
+- [x] **CH2 · Effect grammar (bounded vocab)** ⚠️ — DONE. `parseEffect` (effects/index.ts) is now the
+  SINGLE interpreter: extended to fully structure `resist-immune` (→ `{defense, target}`) and
+  `grant-resource` (→ `{resource:{id,max,recharge}}`), and `matchesTarget` is exported. Every ad-hoc
+  regex now reads the structured result instead: `derive.ts` (abilityBonus, grant-prof,
+  resist-immune, apply-condition), `combat/state` (slotMax), `build/state` (speciesFixedAbilities),
+  `combat/helpers` (rollEffectsFor via `parseEffect`+`matchesTarget`+new `parseDiceTerm`, and
+  effectTag). `collectResources` dropped its own regex. Effect KINDS are now a named-const map
+  `EFFECT_KIND` (no bare-string comparisons anywhere). The content-schema `EFFECT_KINDS` stays a
+  separate list (removable-module invariant) with a drift-guard test. slotMax now uses `Object.hasOwn`
+  (no proto-pollution). +7 tests. Security: one validation point for the vocab (docs/SECURITY.md). R4.
 - [ ] **CH3 · Pip spend/restore** — `usePip` (turn) vs `slotClick` (slots) vs `resourceClick`
   (resources) + their page render. Three formulas for one model (R5 / CVM-2) — reconcile + one helper.
 - [ ] **CH4 · Character assembly ↔ round-trip** — `BuildVM.draft (assemble) → save → store.save →

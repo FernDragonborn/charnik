@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { parseEffect, applyEffects, collectFlags, type ActiveEffect } from './index';
+import { parseEffect, applyEffects, collectFlags, EFFECT_KINDS, type ActiveEffect } from './index';
+import { EFFECT_KINDS as SCHEMA_EFFECT_KINDS } from '../content/schemas';
 import { unarmoredAC, savingThrow } from '../rules/core';
+
+describe('effect vocabulary', () => {
+	it('the engine and the content schema list the same kinds (guard against drift)', () => {
+		// the two lists are intentionally separate (effects is a removable module) — keep them equal
+		expect([...EFFECT_KINDS].sort()).toEqual([...SCHEMA_EFFECT_KINDS].sort());
+	});
+});
 
 describe('parseEffect (bounded vocabulary)', () => {
 	it('parses numeric flat bonuses', () => {
@@ -40,6 +48,25 @@ describe('parseEffect (bounded vocabulary)', () => {
 			target: 'ac',
 			amount: 18
 		});
+	});
+	it('structures resist-immune into a defense bucket + type (bare defaults to resist)', () => {
+		expect(parseEffect('resist-immune:fire')).toMatchObject({ defense: 'resist', target: 'fire' });
+		expect(parseEffect('resist-immune:immune:poison')).toMatchObject({
+			defense: 'immune',
+			target: 'poison'
+		});
+		expect(parseEffect('resist-immune:vulnerable:cold')).toMatchObject({
+			defense: 'vulnerable',
+			target: 'cold'
+		});
+	});
+	it('structures a full grant-resource pool, leaves a bare one as just an id', () => {
+		expect(parseEffect('grant-resource:rage:3:long').resource).toEqual({
+			id: 'rage',
+			max: 3,
+			recharge: 'long'
+		});
+		expect(parseEffect('grant-resource:ki').resource).toBeUndefined();
 	});
 	it('flags unknown / malformed tokens instead of dropping them', () => {
 		expect(parseEffect('teleport:far').kind).toBe('unknown');

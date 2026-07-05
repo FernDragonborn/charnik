@@ -32,6 +32,7 @@ import {
 	type StatMethod,
 	type BoostShape
 } from '$lib/build/rules';
+import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
 
 const csv = (v: unknown): string[] =>
 	Array.isArray(v)
@@ -276,8 +277,9 @@ class BuildVM {
 		for (const src of [this.speciesRow, this.speciesOptionRow]) {
 			const eff = Array.isArray(src?.data.effects) ? (src!.data.effects as string[]) : [];
 			for (const t of eff) {
-				const m = /^flat-bonus:([a-z]{3})[+-]/.exec(t);
-				if (m?.[1] && (ABILITIES as readonly string[]).includes(m[1])) set.add(m[1] as Ability);
+				const p = parseEffect(t);
+				if (p.kind === EFFECT_KIND.flatBonus && p.target && (ABILITIES as readonly string[]).includes(p.target))
+					set.add(p.target as Ability);
 			}
 		}
 		return set;

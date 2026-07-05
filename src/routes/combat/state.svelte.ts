@@ -14,6 +14,7 @@ import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
 import { passiveScore } from '$lib/rules/core';
 import { rollPool, type BonusDie, type Rolled } from '$lib/rules/dice';
+import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import {
@@ -187,8 +188,14 @@ class CombatVM {
 		if (this.character?.play.autoCalc)
 			for (const eff of this.character.play.effects)
 				for (const t of eff.effects) {
-					const m = /^flat-bonus:(action|bonus|reaction)\+(\d+)$/.exec(t.trim());
-					if (m) max[m[1] as keyof typeof max] += Number(m[2]);
+					const p = parseEffect(t);
+					if (
+						p.kind === EFFECT_KIND.flatBonus &&
+						p.amount !== undefined &&
+						p.target &&
+						Object.hasOwn(max, p.target)
+					)
+						max[p.target as keyof typeof max] += p.amount;
 				}
 		return max;
 	});
