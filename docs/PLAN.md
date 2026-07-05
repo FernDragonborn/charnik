@@ -989,7 +989,11 @@ passes miss):
   tests), optional fields constructed conditionally. Both flags now enforced by CI (svelte-check).
   Also ran MECH1 (jscpd: 0.49% dup, only CSS clones + BVM-2 csv-splitter left) and MECH2 (madge:
   no circular deps). Remaining lint idea (no-explicit-any grep) folded into per-file passes.
-- [ ] **MECH4 · test coverage** (`vitest --coverage`) — uncovered branches = blind spots.
+- [~] **MECH4 · test coverage** — DONE (baseline). Added `@vitest/coverage-v8` + `pnpm test:coverage`.
+  Overall ~66% lines. Blind spots: `.svelte` components (0% — need browser-mode tests, P9) and the
+  Tauri/fetch storage impls + i18n init (0% — need integration/mocks). Real PURE gaps were
+  `content/grouping.ts` and `content/detail.ts` at 0%; added `grouping.test.ts` (7 cases). `detail.ts`
+  (the compendium render model, ~354 lines pure) is still 0% — a good next coverage target.
 - [x] **MECH5 · invariant greps** — DONE this pass; found a real violation → **RULES-1**, below.
 - [x] **MECH7 · orphan/dead-code (`knip`)** — DONE. Added `knip` devDep + `knip.json` (tool scripts as
   entries, tauri CLI/dialog ignored, exports/types at `warn` so it's non-blocking) + `pnpm knip`
