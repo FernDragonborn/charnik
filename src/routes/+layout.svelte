@@ -68,6 +68,15 @@
 			</a>
 		{/each}
 	</nav>
+	<a
+		class="feedback"
+		href="https://github.com/FernDragonborn/charnik/issues"
+		target="_blank"
+		rel="noopener noreferrer"
+		title="Report a bug or leave feedback on GitHub"
+	>
+		🐞 Found a bug?
+	</a>
 	<div class="chips">
 		<button type="button" onclick={toggleSystem} title={$_('settings.system')}>
 			{app.activeSystem}
@@ -131,8 +140,22 @@
 		color: var(--color-text);
 		background: var(--color-surface-2);
 	}
-	.chips {
+	.feedback {
 		margin-left: auto;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 13px;
+		white-space: nowrap;
+		text-decoration: none;
+		color: var(--color-accent-bright);
+		border: 1px solid var(--color-accent);
+		border-radius: var(--radius-sm);
+		padding: var(--space-1) var(--space-2);
+	}
+	.feedback:hover {
+		background: var(--color-accent-soft, var(--color-surface-2));
+	}
+	.chips {
 		display: flex;
 		align-items: center;
 		gap: var(--space-2);
