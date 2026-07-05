@@ -901,6 +901,14 @@ Duplication-heavy (do first — this is where the big refactors live):
   with NO reactivity test net; do a BuildVM integration test (drive real VM+graph → assert
   `.assembled`) FIRST, then the regroup guarded by it. Note the `draft` derived must be renamed
   (collides with the new draft object).
+  **PART 2 DONE (BVM-1):** built the net first (see the test-infra commit — rune-aware vitest +
+  `$app` stubs + a hydrate→assemble round-trip driving the real VM through stable boundaries only, so
+  it survives shape changes). Then regrouped the 20 draft `$state` fields into one
+  `draft = $state<DraftState>(blankDraft())` with `blankDraft()` / `draftFromCharacter()` factories
+  (single field source); renamed the assembled derived `draft`→`assembled`; rewrote every `this.X` /
+  template `b.X` → `.draft.X`. **Latent bug fixed:** hydrate used to set only a subset of fields, so
+  editing a character after a prior build could leak stale slotFeats/boost picks — `draftFromCharacter`
+  replaces the draft wholesale. Gate: svelte-check 0, 183 tests (net green), lint clean. CH4 COMPLETE.
 - [ ] **CH5 · deriveSheet aggregation** — `gatherEffects → (abilityBonus · grant-prof · resist ·
   collectResources · applyEffects · deriveSpellcasting)`. The central math; check the repeated
   token-scans (feeds R4) + ref-resolution/missing handling.

@@ -92,4 +92,19 @@ Files: `combat/helpers.ts` (`pipClick`), `combat/state` (usePip/slotClick/resour
 - ☐ All three feel identical now: click an available pip → spend from it rightward; click a spent pip
   → restore from it leftward.
 
+## CH4 part 2 (BVM-1) · draft fields regrouped into one `draft` object
+
+Files: `build/state.svelte.ts` (20 `$state` fields → `draft = $state<DraftState>(blankDraft())`;
+`draftFromCharacter`; assembled derived renamed `draft`→`assembled`), `build/+page.svelte` (all
+`b.X` binds → `b.draft.X`). Guarded by svelte-check (0 errors) + the hydrate→assemble net, but the
+whole builder UI moved — smoke-test it:
+- ☐ **New character**: name, species (+ sub-option), background, class(es) + subclass, level steppers,
+  ability method (point-buy/array/manual) + scores, skills/expertise, languages, feats/ASI slots,
+  spells, inventory — each control still edits and the live preview updates.
+- ☐ **Create** writes the character and opens Combat.
+- ☐ **Edit / level-up** (`?edit=` / `?levelup=`): the sheet hydrates with the saved choices; changing
+  them updates the preview; save overwrites (same id, play-state kept).
+- ⚠️ **Stale-leak fix**: build char A (set an ASI/feat slot), then edit char B without reloading — B no
+  longer inherits A's slotFeats/boost picks (draft is now replaced wholesale on hydrate).
+
 <!-- append fixes with a behavioral risk here -->

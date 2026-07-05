@@ -49,16 +49,16 @@
 		<h1>Build</h1>
 		<label class="namewrap">
 			<span class="vh">Character name</span>
-			<input class="nameinput" placeholder="Name your character…" bind:value={b.name} />
+			<input class="nameinput" placeholder="Name your character…" bind:value={b.draft.name} />
 		</label>
 		<span class="spacer"></span>
 		<div class="seg2" role="group" aria-label="Ruleset">
-			<button class:on={b.system === '5e'} onclick={() => (b.system = '5e')}>5e</button>
-			<button class:on={b.system === '5.5e'} onclick={() => (b.system = '5.5e')}>5.5e</button>
+			<button class:on={b.draft.system === '5e'} onclick={() => (b.draft.system = '5e')}>5e</button>
+			<button class:on={b.draft.system === '5.5e'} onclick={() => (b.draft.system = '5.5e')}>5.5e</button>
 		</div>
 		<div class="seg2" role="group" aria-label="Enforcement">
-			<button class:on={b.strict} onclick={() => (b.strict = true)} title="enforce rules">Strict</button>
-			<button class:free={true} class:on={!b.strict} onclick={() => (b.strict = false)} title="change anything">Free</button>
+			<button class:on={b.draft.strict} onclick={() => (b.draft.strict = true)} title="enforce rules">Strict</button>
+			<button class:free={true} class:on={!b.draft.strict} onclick={() => (b.draft.strict = false)} title="change anything">Free</button>
 		</div>
 	</div>
 
@@ -70,7 +70,7 @@
 				<label class="field">
 					<span>Species</span>
 					<select
-						value={b.speciesId ?? ''}
+						value={b.draft.speciesId ?? ''}
 						onchange={(e) => b.pickSpecies(e.currentTarget.value || null)}
 					>
 						<option value="">— choose —</option>
@@ -82,7 +82,7 @@
 				{#if b.speciesOptions.length}
 					<label class="field">
 						<span>{b.speciesOptionLabel}</span>
-						<select bind:value={b.speciesOptionId}>
+						<select bind:value={b.draft.speciesOptionId}>
 							<option value={null}>— choose —</option>
 							{#each b.speciesOptions as r (r.effectiveId)}<option value={r.effectiveId}
 									>{rowName(r)}</option
@@ -92,7 +92,7 @@
 				{/if}
 				<label class="field">
 					<span>Background</span>
-					<select bind:value={b.backgroundId}>
+					<select bind:value={b.draft.backgroundId}>
 						<option value={null}>— choose —</option>
 						{#each b.backgroundList as r (r.effectiveId)}<option value={r.effectiveId}>{rowName(r)}</option>{/each}
 					</select>
@@ -105,7 +105,7 @@
 					Classes &amp; subclass
 					<button class="add" onclick={() => b.addClass()}>＋ Multiclass</button>
 				</h2>
-				{#each b.classes as cls, i (i)}
+				{#each b.draft.classes as cls, i (i)}
 					{@const clsRow = cls.classId ? b.graph?.get(cls.classId) : undefined}
 					{@const subs = b.subclassesFor(cls.classId)}
 					<div class="clsrow">
@@ -137,7 +137,7 @@
 						{/if}
 					</div>
 				{/each}
-				{#if b.classes.length > 1}
+				{#if b.draft.classes.length > 1}
 					<p class="sub note">Total level <b class="gold">{b.totalLevel}</b> / 20</p>
 				{/if}
 			</div>
@@ -161,21 +161,21 @@
 				<div class="chips gap">
 					{#each Object.keys(SKILL_ABILITY) as skill (skill)}
 						{@const auto = b.autoSkills.includes(skill)}
-						{@const on = auto || b.skills.includes(skill)}
+						{@const on = auto || b.draft.skills.includes(skill)}
 						{@const pickable = b.skillPickable(skill)}
 						<span class="skwrap">
 							<button class="pchip" class:on class:locked={auto} class:dim={!pickable} disabled={auto || !pickable} onclick={() => b.toggleSkill(skill)}>
 								{titleCase(skill)}
 							</button>
 							{#if on}
-								<button class="x2" class:on={b.expertise.includes(skill)} title="Expertise (×2 proficiency)" onclick={() => b.toggleExpertise(skill)}>×2</button>
+								<button class="x2" class:on={b.draft.expertise.includes(skill)} title="Expertise (×2 proficiency)" onclick={() => b.toggleExpertise(skill)}>×2</button>
 							{/if}
 						</span>
 					{/each}
 				</div>
 
 				<p class="sub">
-					Languages <span class="cnt">{b.selectedLanguages.length}</span>
+					Languages <span class="cnt">{b.draft.selectedLanguages.length}</span>
 					{#if b.backgroundLangCount > 0}<span class="note"
 							>· background grants {b.backgroundLangCount}</span
 						>{/if}
@@ -184,7 +184,7 @@
 					{#each b.languageList as r (r.effectiveId)}
 						<button
 							class="pchip"
-							class:on={b.selectedLanguages.includes(r.effectiveId)}
+							class:on={b.draft.selectedLanguages.includes(r.effectiveId)}
 							onclick={() => b.toggleLanguage(r.effectiveId)}>{rowName(r)}</button
 						>
 					{/each}
@@ -204,9 +204,9 @@
 						</div>
 					{/if}
 					{#each b.featSlots as slot (slot.key)}
-						{@const chosen = b.slotFeats[slot.key] ?? ''}
-						{@const asi = b.slotAsi[slot.key]}
-						{@const multi = b.classes.length > 1}
+						{@const chosen = b.draft.slotFeats[slot.key] ?? ''}
+						{@const asi = b.draft.slotAsi[slot.key]}
+						{@const multi = b.draft.classes.length > 1}
 						<div class="frow" class:done={!!chosen}>
 							<span class="lvtag">{multi ? `${slot.className.slice(0, 3)} ` : ''}L{slot.level}</span>
 							<select class="bare ftsel" value={chosen} onchange={(e) => b.setSlotFeat(slot.key, e.currentTarget.value)}>
@@ -247,10 +247,10 @@
 				<div class="statgenhead">
 					<div class="method">
 						{#each METHODS as m (m.id)}
-							<button class="seg" class:on={b.method === m.id} onclick={() => b.setMethod(m.id)}>{m.label}</button>
+							<button class="seg" class:on={b.draft.method === m.id} onclick={() => b.setMethod(m.id)}>{m.label}</button>
 						{/each}
 					</div>
-					{#if b.method === 'point-buy'}
+					{#if b.draft.method === 'point-buy'}
 						<span class="points">Points <b class:over={b.pointsLeft < 0}>{b.pointsLeft}</b> / 27</span>
 					{/if}
 				</div>
@@ -259,21 +259,21 @@
 					{@const block = b.sheet?.abilities[ab as Ability]}
 					<div class="strow">
 						<span class="ab">{ab}</span>
-						{#if b.method === 'standard-array'}
-							<select class="arraysel bare" value={b.arrayPick[ab as Ability] ?? ''} onchange={(e) => b.assignArray(ab as Ability, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}>
+						{#if b.draft.method === 'standard-array'}
+							<select class="arraysel bare" value={b.draft.arrayPick[ab as Ability] ?? ''} onchange={(e) => b.assignArray(ab as Ability, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}>
 								<option value="">—</option>
-								{#if b.arrayPick[ab as Ability] != null}<option value={b.arrayPick[ab as Ability]}>{b.arrayPick[ab as Ability]}</option>{/if}
+								{#if b.draft.arrayPick[ab as Ability] != null}<option value={b.draft.arrayPick[ab as Ability]}>{b.draft.arrayPick[ab as Ability]}</option>{/if}
 								{#each b.arrayRemaining as v (v)}<option value={v}>{v}</option>{/each}
 							</select>
 						{:else}
 							<span class="stepper">
 								<button aria-label="lower {ab}" onclick={() => b.bumpAbility(ab as Ability, -1)}>−</button>
-								<span class="base">{b.abilities[ab as Ability]}</span>
+								<span class="base">{b.draft.abilities[ab as Ability]}</span>
 								<button aria-label="raise {ab}" onclick={() => b.bumpAbility(ab as Ability, 1)}>+</button>
 							</span>
 						{/if}
 						<span class="bonus">{b.abilityNote(ab as Ability)}</span>
-						<span class="total">{block?.score ?? b.abilities[ab as Ability]} <small>{block ? signed(block.mod) : ''}</small></span>
+						<span class="total">{block?.score ?? b.draft.abilities[ab as Ability]} <small>{block ? signed(block.mod) : ''}</small></span>
 					</div>
 				{/each}
 
@@ -281,12 +281,12 @@
 					<div class="boost">
 						<p class="sub">5.5e background boost — on your <b class="gold">{rowName(b.backgroundRow)}</b> abilities</p>
 						<div class="seg2 small">
-							<button class:on={b.boostShape === '2-1'} onclick={() => (b.boostShape = '2-1')}>+2 / +1</button>
-							<button class:on={b.boostShape === '1-1-1'} onclick={() => (b.boostShape = '1-1-1')}>+1 / +1 / +1</button>
+							<button class:on={b.draft.boostShape === '2-1'} onclick={() => (b.draft.boostShape = '2-1')}>+2 / +1</button>
+							<button class:on={b.draft.boostShape === '1-1-1'} onclick={() => (b.draft.boostShape = '1-1-1')}>+1 / +1 / +1</button>
 						</div>
 						<div class="chips gap">
 							{#each b.backgroundBoostChoices as ab (ab)}
-								<button class="pchip" class:on={b.boostPicks.includes(ab)} onclick={() => b.toggleBoostPick(ab)}>
+								<button class="pchip" class:on={b.draft.boostPicks.includes(ab)} onclick={() => b.toggleBoostPick(ab)}>
 									{ab.toUpperCase()}{#if b.backgroundBoosts[ab]}<span class="gold"> +{b.backgroundBoosts[ab]}</span>{/if}
 								</button>
 							{/each}
@@ -300,16 +300,16 @@
 								{rowName(b.speciesOptionRow) || rowName(b.speciesRow)} — choose
 								<b class="gold">{b.speciesBoostChoice.count}</b> to raise by +{b.speciesBoostChoice
 									.amount}
-								<span class="cnt">{b.speciesBoostPicks.length}/{b.speciesBoostChoice.count}</span>
+								<span class="cnt">{b.draft.speciesBoostPicks.length}/{b.speciesBoostChoice.count}</span>
 							</p>
 							<div class="chips gap">
 								{#each b.speciesBoostAbilities as ab (ab)}
 									<button
 										class="pchip"
-										class:on={b.speciesBoostPicks.includes(ab)}
+										class:on={b.draft.speciesBoostPicks.includes(ab)}
 										onclick={() => b.toggleSpeciesBoostPick(ab)}
 									>
-										{ab.toUpperCase()}{#if b.speciesBoostPicks.includes(ab)}<span class="gold">
+										{ab.toUpperCase()}{#if b.draft.speciesBoostPicks.includes(ab)}<span class="gold">
 												+{b.speciesBoostChoice.amount}</span
 											>{/if}
 									</button>
@@ -322,10 +322,10 @@
 
 			<!-- spells (per caster class; Strict = access + level caps, Free = everything) -->
 			<div class="card">
-				<h2>Spells <span class="cnt teal">{b.selectedSpells.length}</span></h2>
+				<h2>Spells <span class="cnt teal">{b.draft.selectedSpells.length}</span></h2>
 				{#if b.spellPicker.length}
 					<p class="sub">
-						{b.strict ? 'Only spells you can legally take' : 'Free mode — every spell'} · refine
+						{b.draft.strict ? 'Only spells you can legally take' : 'Free mode — every spell'} · refine
 						prepared/known in the <b>Spellbook</b> after creating.
 					</p>
 					{#each b.spellPicker as pc (pc.profile.classEffectiveId)}
@@ -346,7 +346,7 @@
 								{#each g.spells as s (s.effectiveId)}
 									<button
 										class="pchip"
-										class:on={b.selectedSpells.includes(s.effectiveId)}
+										class:on={b.draft.selectedSpells.includes(s.effectiveId)}
 										onclick={() => b.toggleSpell(s.effectiveId)}
 									>
 										{rowName(s)}
@@ -366,7 +366,7 @@
 		<!-- inventory / starting equipment (creation only — managed in the play view after that) -->
 		{#if !b.editId}
 			<div class="card">
-				<h2>Inventory <span class="cnt">{b.inventory.length}</span></h2>
+				<h2>Inventory <span class="cnt">{b.draft.inventory.length}</span></h2>
 			<label class="field">
 				<span>Add item</span>
 				<select
@@ -382,9 +382,9 @@
 						>{/each}
 				</select>
 			</label>
-			{#if b.inventory.length}
+			{#if b.draft.inventory.length}
 				<div class="invlist">
-					{#each b.inventory as it (it.item)}
+					{#each b.draft.inventory as it (it.item)}
 						<div class="invrow">
 							<span class="invname">{rowName(b.graph?.get(it.item))}</span>
 							<span class="invqty">

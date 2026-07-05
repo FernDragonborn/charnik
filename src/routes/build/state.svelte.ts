@@ -57,67 +57,124 @@ const slugify = (s: string): string =>
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/^-+|-+$/g, '') || 'hero';
 
+/** One class row in the draft (pre-resolution: nullable ids while the user is still choosing). */
+interface DraftClass {
+	classId: string | null;
+	subclassId: string | null;
+	level: number;
+}
+
+/** Every user-editable build choice, as ONE typed object (single source of the field set — adding a
+ *  field means editing `DraftState` + the two factories below, never three scattered places). */
+interface DraftState {
+	name: string;
+	system: SystemId;
+	/** Strict (rules-enforced) vs Free (lenient) authoring. */
+	strict: boolean;
+	speciesId: string | null;
+	speciesOptionId: string | null;
+	/** Abilities the user picked for a 5e species floating ASI. */
+	speciesBoostPicks: Ability[];
+	backgroundId: string | null;
+	classes: DraftClass[];
+	method: StatMethod;
+	abilities: Record<Ability, number>;
+	arrayPick: Partial<Record<Ability, number>>;
+	boostShape: BoostShape;
+	boostPicks: Ability[];
+	skills: string[];
+	expertise: string[];
+	selectedLanguages: string[];
+	slotFeats: Record<string, string>;
+	slotAsi: Record<string, { shape: '2' | '1-1'; picks: Ability[] }>;
+	selectedSpells: string[];
+	inventory: { item: string; qty: number; equipped: boolean }[];
+}
+
+/** A blank new-character draft. The one source of default choices (reset + the initial state). */
+function blankDraft(): DraftState {
+	return {
+		name: '',
+		system: app.activeSystem,
+		strict: true,
+		speciesId: null,
+		speciesOptionId: null,
+		speciesBoostPicks: [],
+		backgroundId: null,
+		classes: [{ classId: null, subclassId: null, level: 1 }],
+		method: 'point-buy',
+		abilities: baseAbilities(),
+		arrayPick: {},
+		boostShape: '2-1',
+		boostPicks: [],
+		skills: [],
+		expertise: [],
+		selectedLanguages: [],
+		slotFeats: {},
+		slotAsi: {},
+		selectedSpells: [],
+		inventory: []
+	};
+}
+
+/** Load an existing character into a fresh draft (edit / level-up). Straightforward fields map
+ *  directly; abilities become manual with prior boosts/feats carried separately (see hydrate). New
+ *  per-level picks (slotFeats/slotAsi/boost*) start blank so a prior session can't leak in. */
+function draftFromCharacter(char: Character): DraftState {
+	return {
+		...blankDraft(),
+		name: char.build.name,
+		system: char.system,
+		strict: char.ui.strict,
+		speciesId: char.build.species ?? null,
+		speciesOptionId: char.build.speciesOption ?? null,
+		backgroundId: char.build.background ?? null,
+		classes: char.build.classes.length
+			? char.build.classes.map((c) => ({
+					classId: c.class,
+					subclassId: c.subclass ?? null,
+					level: c.level
+				}))
+			: [{ classId: null, subclassId: null, level: 1 }],
+		method: 'manual',
+		abilities: { ...char.build.abilities },
+		skills: [...char.build.skills],
+		expertise: [...char.build.expertise],
+		selectedLanguages: [...char.build.languages],
+		selectedSpells: char.build.spells.map((s) => s.spell),
+		inventory: char.build.inventory.map((i) => ({
+			item: i.item,
+			qty: i.qty,
+			equipped: i.equipped
+		}))
+	};
+}
+
 class BuildVM {
 	graph = $state<ContentGraph | null>(null);
 
-	// --- draft choices ---------------------------------------------------------
-	name = $state('');
-	system = $state<SystemId>(app.activeSystem);
-	// Strict by default so the spell picker (and manual-score bounds) follow the rules —
-	// showing every spell to a level-1 caster was confusing. Free is one click away for homebrew.
-	strict = $state(true);
-	speciesId = $state<string | null>(null);
-	/** Chosen species sub-option (subrace / lineage) ref, when the species offers any. */
-	speciesOptionId = $state<string | null>(null);
-	backgroundId = $state<string | null>(null);
-	/** One or more classes (multiclass). classes[0] is the primary — it grants saves + the
-	 *  starting skill choices; extra classes add levels (and their own subclass). */
-	classes = $state<{ classId: string | null; subclassId: string | null; level: number }[]>([
-		{ classId: null, subclassId: null, level: 1 }
-	]);
+	// --- draft choices: ONE reactive object (field set defined in DraftState / blankDraft) --------
+	draft = $state<DraftState>(blankDraft());
 
-	method = $state<StatMethod>('point-buy');
-	abilities = $state<Record<Ability, number>>(baseAbilities());
-	/** Standard-array assignment: ability → which array value it holds (or undefined). */
-	arrayPick = $state<Partial<Record<Ability, number>>>({});
-
-	boostShape = $state<BoostShape>('2-1');
-	boostPicks = $state<Ability[]>([]);
-
-	skills = $state<string[]>([]);
-	/** Skill ids with expertise (×2 proficiency). Must be a proficient skill. */
-	expertise = $state<string[]>([]);
-	/** Known languages, as `language:source:id` refs (lenient — pick any). */
-	selectedLanguages = $state<string[]>([]);
 	toggleLanguage = (ref: string) => {
-		this.selectedLanguages = this.selectedLanguages.includes(ref)
-			? this.selectedLanguages.filter((x) => x !== ref)
-			: [...this.selectedLanguages, ref];
+		this.draft.selectedLanguages = this.draft.selectedLanguages.includes(ref)
+			? this.draft.selectedLanguages.filter((x) => x !== ref)
+			: [...this.draft.selectedLanguages, ref];
 	};
-	/** What fills each ASI/feat slot, keyed by `${classIndex}:${classLevel}` (per-class, so two
-	 *  classes granting an ASI at the same class level don't collide): the `ASI` sentinel or a feat
-	 *  ref. Repeatable feats (Skilled, Magic Initiate…) and ASI may fill several slots. */
-	slotFeats = $state<Record<string, string>>({});
-	/** Per-slot ASI allocation (only when that slot's choice is `ASI`): +2 to one, or +1 to two. */
-	slotAsi = $state<Record<string, { shape: '2' | '1-1'; picks: Ability[] }>>({});
-	/** Spell refs the character knows/prepares (leveled + cantrips), chosen from its class list. */
-	selectedSpells = $state<string[]>([]);
-	/** Starting inventory (item ref + qty + equipped). Lenient — add anything. */
-	inventory = $state<{ item: string; qty: number; equipped: boolean }[]>([]);
 	addInventoryItem = (ref: string) => {
-		if (!ref || this.inventory.some((i) => i.item === ref)) return;
-		this.inventory = [...this.inventory, { item: ref, qty: 1, equipped: false }];
+		if (!ref || this.draft.inventory.some((i) => i.item === ref)) return;
+		this.draft.inventory = [...this.draft.inventory, { item: ref, qty: 1, equipped: false }];
 	};
 	removeInventoryItem = (ref: string) => {
-		this.inventory = this.inventory.filter((i) => i.item !== ref);
+		this.draft.inventory = this.draft.inventory.filter((i) => i.item !== ref);
 	};
 	bumpItemQty = (ref: string, d: number) => {
-		this.inventory = this.inventory.map((i) =>
+		this.draft.inventory = this.draft.inventory.map((i) =>
 			i.item === ref ? { ...i, qty: Math.max(1, i.qty + d) } : i
 		);
 	};
 	toggleItemEquipped = (ref: string) => {
-		this.inventory = this.inventory.map((i) =>
+		this.draft.inventory = this.draft.inventory.map((i) =>
 			i.item === ref ? { ...i, equipped: !i.equipped } : i
 		);
 	};
@@ -129,7 +186,7 @@ class BuildVM {
 
 	load = async () => {
 		this.graph = await getContentGraph();
-		this.system = app.activeSystem;
+		this.draft.system = app.activeSystem;
 	};
 
 	// --- edit / level-up: hydrate the draft from an existing character --------------------------
@@ -157,69 +214,27 @@ class BuildVM {
 		this.hydratedFeats = [];
 		this.hydratedSpells = new Set();
 		this.hydratedSkills = new Set();
-		this.name = '';
-		this.system = app.activeSystem;
-		this.strict = true;
-		this.speciesId = null;
-		this.speciesOptionId = null;
-		this.speciesBoostPicks = [];
-		this.backgroundId = null;
-		this.classes = [{ classId: null, subclassId: null, level: 1 }];
-		this.method = 'point-buy';
-		this.abilities = baseAbilities();
-		this.arrayPick = {};
-		this.boostShape = '2-1';
-		this.boostPicks = [];
-		this.skills = [];
-		this.expertise = [];
-		this.selectedLanguages = [];
-		this.inventory = [];
-		this.slotFeats = {};
-		this.slotAsi = {};
-		this.selectedSpells = [];
+		this.draft = blankDraft();
 	};
 
 	/** Load an existing character into the draft (for level-up / editing). Straightforward fields map
-	 *  directly; abilities become manual (base scores) with boosts carried in `hydratedBoosts`, and
-	 *  the existing feats carry in `hydratedFeats`. */
+	 *  directly (via `draftFromCharacter`); abilities become manual (base scores) with boosts carried
+	 *  in `hydratedBoosts`, and the existing feats/skills/spells carried for Strict-edit locking. */
 	hydrate = (char: Character) => {
 		this.editId = char.id;
 		this.editPlay = char.play;
 		this.editUi = char.ui;
-		this.name = char.build.name;
-		this.system = char.system;
-		this.strict = char.ui.strict; // restore this character's own Strict/Free choice
-		this.speciesId = char.build.species ?? null;
-		this.speciesOptionId = char.build.speciesOption ?? null;
-		this.backgroundId = char.build.background ?? null;
-		this.classes = char.build.classes.length
-			? char.build.classes.map((c) => ({
-					classId: c.class,
-					subclassId: c.subclass ?? null,
-					level: c.level
-				}))
-			: [{ classId: null, subclassId: null, level: 1 }];
-		this.method = 'manual';
-		this.abilities = { ...char.build.abilities };
+		this.draft = draftFromCharacter(char);
 		this.hydratedBoosts = { ...(char.build.abilityBoosts as Partial<Record<Ability, number>>) };
 		this.hydratedFeats = [...char.build.feats];
-		this.skills = [...char.build.skills];
 		this.hydratedSkills = new Set(char.build.skills);
-		this.expertise = [...char.build.expertise];
-		this.selectedLanguages = [...char.build.languages];
-		this.selectedSpells = char.build.spells.map((s) => s.spell);
-		this.hydratedSpells = new Set(this.selectedSpells);
-		this.inventory = char.build.inventory.map((i) => ({
-			item: i.item,
-			qty: i.qty,
-			equipped: i.equipped
-		}));
+		this.hydratedSpells = new Set(this.draft.selectedSpells);
 	};
 
 	// --- content option lists (filtered by the draft's system) -----------------
 	private list(type: Parameters<ContentGraph['list']>[0]): LoadedRow[] {
 		if (!this.graph) return [];
-		return [...this.graph.list(type, { system: this.system })].sort((a, b) =>
+		return [...this.graph.list(type, { system: this.draft.system })].sort((a, b) =>
 			rowName(a).localeCompare(rowName(b))
 		);
 	}
@@ -240,8 +255,8 @@ class BuildVM {
 		return this.list('subclass').filter((r) => String(r.data.class_id) === String(cls.id));
 	};
 
-	speciesRow = $derived(this.row(this.speciesId));
-	backgroundRow = $derived(this.row(this.backgroundId));
+	speciesRow = $derived(this.row(this.draft.speciesId));
+	backgroundRow = $derived(this.row(this.draft.backgroundId));
 
 	/** Sub-options (subrace / lineage) for the chosen species, in the draft's edition. */
 	speciesOptions = $derived.by<LoadedRow[]>(() => {
@@ -249,16 +264,16 @@ class BuildVM {
 		if (!sp) return [];
 		return this.list('species_option').filter((r) => String(r.data.species_id) === String(sp.id));
 	});
-	speciesOptionRow = $derived(this.row(this.speciesOptionId));
+	speciesOptionRow = $derived(this.row(this.draft.speciesOptionId));
 	/** Label for the sub-picker (e.g. "Subrace" 2014 / "Lineage" 2024), from the options' data. */
 	speciesOptionLabel = $derived(
 		String(this.speciesOptions[0]?.data.option_label ?? 'Lineage')
 	);
 	/** Pick a species; clears the now-stale sub-option + free-boost choices. */
 	pickSpecies = (id: string | null) => {
-		this.speciesId = id;
-		this.speciesOptionId = null;
-		this.speciesBoostPicks = [];
+		this.draft.speciesId = id;
+		this.draft.speciesOptionId = null;
+		this.draft.speciesBoostPicks = [];
 	};
 
 	// --- species "+N to M of your choice" ASI (5e Half-Elf) --------------------
@@ -288,50 +303,49 @@ class BuildVM {
 	speciesBoostAbilities = $derived<Ability[]>(
 		ABILITIES.filter((a) => !this.speciesFixedAbilities.has(a))
 	);
-	speciesBoostPicks = $state<Ability[]>([]);
 	toggleSpeciesBoostPick = (ab: Ability) => {
 		const cap = this.speciesBoostChoice?.count ?? 0;
-		if (this.speciesBoostPicks.includes(ab))
-			this.speciesBoostPicks = this.speciesBoostPicks.filter((a) => a !== ab);
-		else if (this.speciesBoostPicks.length < cap)
-			this.speciesBoostPicks = [...this.speciesBoostPicks, ab];
+		if (this.draft.speciesBoostPicks.includes(ab))
+			this.draft.speciesBoostPicks = this.draft.speciesBoostPicks.filter((a) => a !== ab);
+		else if (this.draft.speciesBoostPicks.length < cap)
+			this.draft.speciesBoostPicks = [...this.draft.speciesBoostPicks, ab];
 	};
 
 	// --- multiclass rows -------------------------------------------------------
-	primaryClassId = $derived<string | null>(this.classes[0]?.classId ?? null);
+	primaryClassId = $derived<string | null>(this.draft.classes[0]?.classId ?? null);
 	classId = $derived<string | null>(this.primaryClassId); // primary drives saves/skills/ASI
 	classRow = $derived(this.row(this.primaryClassId));
 	/** Total character level = sum of all class levels (drives prof, HP, feat slots). */
 	totalLevel = $derived(
-		this.classes.reduce((n, c) => n + (c.classId ? c.level : 0), 0) || 1
+		this.draft.classes.reduce((n, c) => n + (c.classId ? c.level : 0), 0) || 1
 	);
 	/** Character level is capped at 20 total across all classes. */
 	canRaiseLevel = $derived(this.totalLevel < 20);
 	addClass = () => {
 		if (!this.canRaiseLevel) return; // a new class starts at 1 → would exceed 20
-		this.classes = [...this.classes, { classId: null, subclassId: null, level: 1 }];
+		this.draft.classes = [...this.draft.classes, { classId: null, subclassId: null, level: 1 }];
 	};
 	removeClass = (i: number) => {
 		if (i === 0) return; // keep the primary row
-		this.classes = this.classes.filter((_, idx) => idx !== i);
+		this.draft.classes = this.draft.classes.filter((_, idx) => idx !== i);
 	};
 	setClass = (i: number, id: string | null) => {
-		this.classes = this.classes.map((c, idx) =>
+		this.draft.classes = this.draft.classes.map((c, idx) =>
 			idx === i ? { ...c, classId: id, subclassId: null } : c
 		);
 	};
 	setSubclass = (i: number, id: string | null) => {
-		this.classes = this.classes.map((c, idx) => (idx === i ? { ...c, subclassId: id } : c));
+		this.draft.classes = this.draft.classes.map((c, idx) => (idx === i ? { ...c, subclassId: id } : c));
 	};
 	bumpClassLevel = (i: number, dir: 1 | -1) => {
 		if (dir === 1 && !this.canRaiseLevel) return; // total character level cap
-		this.classes = this.classes.map((c, idx) =>
+		this.draft.classes = this.draft.classes.map((c, idx) =>
 			idx === i ? { ...c, level: Math.max(1, Math.min(20, c.level + dir)) } : c
 		);
 	};
 
 	isCaster = $derived.by(() =>
-		this.classes.some((c) => {
+		this.draft.classes.some((c) => {
 			const caster = this.row(c.classId)?.data.caster;
 			return caster && caster !== 'none';
 		})
@@ -349,10 +363,10 @@ class BuildVM {
 		const levelOf = (s: LoadedRow) => Number(s.data.level ?? 0);
 		return sheet.spellcasting.classes.map((profile) => {
 			const access = new Set(profile.accessSpellIds);
-			const inClass = (id: string) => !this.strict || access.has(id);
+			const inClass = (id: string) => !this.draft.strict || access.has(id);
 			const pool = allSpells.filter((s) => {
 				const lvl = levelOf(s);
-				if (!this.strict) return true;
+				if (!this.draft.strict) return true;
 				if (lvl > 0 && !access.has(s.effectiveId)) return false; // access gate
 				return lvl <= profile.maxSpellLevel; // cantrips (0) always pass
 			});
@@ -361,23 +375,23 @@ class BuildVM {
 			const groups = [...byLevel.keys()]
 				.sort((a, b) => a - b)
 				.map((lvl) => ({ level: lvl, label: lvl === 0 ? 'Cantrips' : `Level ${lvl}`, spells: byLevel.get(lvl)! }));
-			const selectedInClass = this.selectedSpells.filter(inClass);
+			const selectedInClass = this.draft.selectedSpells.filter(inClass);
 			const cantripsChosen = selectedInClass.filter((id) => Number(graph.get(id)?.data.level ?? 0) === 0).length;
 			const leveledChosen = selectedInClass.filter((id) => Number(graph.get(id)?.data.level ?? 0) > 0).length;
 			return { profile, groups, cantripsChosen, leveledChosen };
 		});
 	});
 	toggleSpell = (ref: string) => {
-		if (this.selectedSpells.includes(ref)) {
-			if (this.editId && this.strict && this.hydratedSpells.has(ref)) {
+		if (this.draft.selectedSpells.includes(ref)) {
+			if (this.editId && this.draft.strict && this.hydratedSpells.has(ref)) {
 				toast("Strict: you can't unlearn a known spell — switch to Free to remove it.");
 				return;
 			}
-			this.selectedSpells = this.selectedSpells.filter((s) => s !== ref);
+			this.draft.selectedSpells = this.draft.selectedSpells.filter((s) => s !== ref);
 			return;
 		}
 		// Strict: block picking past the cantrip / prepared cap of any class this spell counts for
-		if (this.strict) {
+		if (this.draft.strict) {
 			const lvl = Number(this.graph?.get(ref)?.data.level ?? 0);
 			for (const pc of this.spellPicker) {
 				if (!pc.profile.accessSpellIds.includes(ref)) continue; // doesn't count for this class
@@ -392,7 +406,7 @@ class BuildVM {
 				}
 			}
 		}
-		this.selectedSpells = [...this.selectedSpells, ref];
+		this.draft.selectedSpells = [...this.draft.selectedSpells, ref];
 	};
 
 	// --- skills: class picks (choose N) + background grants (auto) --------------
@@ -410,87 +424,87 @@ class BuildVM {
 
 	toggleSkill = (skill: string) => {
 		if (this.autoSkills.includes(skill)) return; // background-granted, locked on
-		if (this.skills.includes(skill)) {
-			if (this.editId && this.strict && this.hydratedSkills.has(skill)) {
+		if (this.draft.skills.includes(skill)) {
+			if (this.editId && this.draft.strict && this.hydratedSkills.has(skill)) {
 				toast("Strict: you can't drop a trained skill — switch to Free to remove it.");
 				return;
 			}
-			this.skills = this.skills.filter((s) => s !== skill);
+			this.draft.skills = this.draft.skills.filter((s) => s !== skill);
 			return;
 		}
-		if (!this.strict) {
-			this.skills = [...this.skills, skill]; // Free: any skill, no cap
+		if (!this.draft.strict) {
+			this.draft.skills = [...this.draft.skills, skill]; // Free: any skill, no cap
 			return;
 		}
 		// Strict: cap counts only NON-background picks (a background overlap frees a slot)
 		if (this.classSkillCount === 0 || this.skillChosenCount < this.classSkillCount)
-			this.skills = [...this.skills, skill];
+			this.draft.skills = [...this.draft.skills, skill];
 	};
-	skillChosenCount = $derived(this.skills.filter((s) => !this.autoSkills.includes(s)).length);
+	skillChosenCount = $derived(this.draft.skills.filter((s) => !this.autoSkills.includes(s)).length);
 	/** Proficient = chosen or background-granted (a prerequisite for expertise). */
 	isProficient = (skill: string): boolean =>
-		this.autoSkills.includes(skill) || this.skills.includes(skill);
+		this.autoSkills.includes(skill) || this.draft.skills.includes(skill);
 	/** Toggle expertise (×2) on a proficient skill. */
 	toggleExpertise = (skill: string) => {
 		if (!this.isProficient(skill)) return;
-		this.expertise = this.expertise.includes(skill)
-			? this.expertise.filter((s) => s !== skill)
-			: [...this.expertise, skill];
+		this.draft.expertise = this.draft.expertise.includes(skill)
+			? this.draft.expertise.filter((s) => s !== skill)
+			: [...this.draft.expertise, skill];
 	};
 	/** A skill is pickable when Free, or (Strict) it's on the class list / the class has no list. */
 	skillPickable = (skill: string): boolean =>
 		this.autoSkills.includes(skill) ||
-		!this.strict ||
+		!this.draft.strict ||
 		this.classSkillCount === 0 ||
 		this.classSkillOptions.includes(skill);
 
 	// --- ability scores --------------------------------------------------------
 	setMethod = (m: StatMethod) => {
-		this.method = m;
-		if (m === 'standard-array') this.arrayPick = {};
-		if (m === 'point-buy') this.abilities = baseAbilities();
+		this.draft.method = m;
+		if (m === 'standard-array') this.draft.arrayPick = {};
+		if (m === 'point-buy') this.draft.abilities = baseAbilities();
 	};
-	pointsSpent = $derived(pointsSpent(this.abilities));
+	pointsSpent = $derived(pointsSpent(this.draft.abilities));
 	pointsLeft = $derived(POINT_BUY_BUDGET - this.pointsSpent);
 
 	bumpAbility = (ab: Ability, dir: 1 | -1) => {
 		// editing an existing character in Strict: base scores are locked (you don't re-roll them at
 		// level-up — increases come only from ASI slots). Free lets you edit anything.
-		if (this.editId && this.strict) return;
-		const cur = this.abilities[ab];
-		if (this.method === 'point-buy' && !this.strict) {
+		if (this.editId && this.draft.strict) return;
+		const cur = this.draft.abilities[ab];
+		if (this.draft.method === 'point-buy' && !this.draft.strict) {
 			// lenient point-buy still respects budget/caps to keep the counter meaningful
 		}
-		if (this.method === 'point-buy') {
-			if (dir === 1 && !canRaise(this.abilities, ab)) return;
-			if (dir === -1 && !canLower(this.abilities, ab)) return;
+		if (this.draft.method === 'point-buy') {
+			if (dir === 1 && !canRaise(this.draft.abilities, ab)) return;
+			if (dir === -1 && !canLower(this.draft.abilities, ab)) return;
 		} else {
 			// manual: 1..30 (Free) or 3..20 (Strict-ish) — stay lenient, just clamp sane bounds
-			const lo = this.strict ? 3 : 1;
-			const hi = this.strict ? 20 : 30;
+			const lo = this.draft.strict ? 3 : 1;
+			const hi = this.draft.strict ? 20 : 30;
 			if (cur + dir < lo || cur + dir > hi) return;
 		}
-		this.abilities = { ...this.abilities, [ab]: cur + dir };
+		this.draft.abilities = { ...this.draft.abilities, [ab]: cur + dir };
 	};
 
 	/** Standard array: assign the next unused value to an ability, or clear it. */
 	assignArray = (ab: Ability, value: number | null) => {
-		const next = { ...this.arrayPick };
+		const next = { ...this.draft.arrayPick };
 		// remove this value from any other ability first (each value used once)
 		if (value != null) for (const k of ABILITIES) if (next[k] === value) delete next[k];
 		if (value == null) delete next[ab];
 		else next[ab] = value;
-		this.arrayPick = next;
-		this.abilities = { ...this.abilities, [ab]: value ?? 8 };
+		this.draft.arrayPick = next;
+		this.draft.abilities = { ...this.draft.abilities, [ab]: value ?? 8 };
 	};
 	/** Standard-array values not yet assigned to an ability. */
 	arrayRemaining = $derived.by(() => {
-		const used = new Set(Object.values(this.arrayPick));
+		const used = new Set(Object.values(this.draft.arrayPick));
 		return STANDARD_ARRAY.filter((v) => !used.has(v));
 	});
 
 	// --- ability boosts (5.5e background choice; 5e species flows via effects) --
-	boostCarrier = $derived(boostCarrier(this.system));
+	boostCarrier = $derived(boostCarrier(this.draft.system));
 	backgroundBoostChoices = $derived.by<Ability[]>(() =>
 		csv(this.backgroundRow?.data.ability_choices).filter((a): a is Ability =>
 			(ABILITIES as readonly string[]).includes(a)
@@ -499,8 +513,8 @@ class BuildVM {
 	/** JUST the 5.5e background boost allocation (for the background chips — so an ASI boost doesn't
 	 *  leak into them). Empty unless a 5.5e background offers a choice. */
 	backgroundBoosts = $derived.by<Partial<Record<Ability, number>>>(() =>
-		this.system === '5.5e' && this.backgroundBoostChoices.length
-			? allocateBackgroundBoost(this.boostShape, this.boostPicks, this.backgroundBoostChoices)
+		this.draft.system === '5.5e' && this.backgroundBoostChoices.length
+			? allocateBackgroundBoost(this.draft.boostShape, this.draft.boostPicks, this.backgroundBoostChoices)
 			: {}
 	);
 	/** All ability boosts folded together: 5.5e background choice + every ASI slot allocation. */
@@ -510,26 +524,26 @@ class BuildVM {
 			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
 		};
 		add(this.hydratedBoosts); // boosts carried over from a loaded character (level-up)
-		if (this.system === '5.5e' && this.backgroundBoostChoices.length)
-			add(allocateBackgroundBoost(this.boostShape, this.boostPicks, this.backgroundBoostChoices));
+		if (this.draft.system === '5.5e' && this.backgroundBoostChoices.length)
+			add(allocateBackgroundBoost(this.draft.boostShape, this.draft.boostPicks, this.backgroundBoostChoices));
 		// species free-choice ASI (5e Half-Elf +1/+1)
 		if (this.speciesBoostChoice)
-			for (const ab of this.speciesBoostPicks)
+			for (const ab of this.draft.speciesBoostPicks)
 				out[ab] = (out[ab] ?? 0) + this.speciesBoostChoice.amount;
-		for (const s of this.featSlots) if (this.slotFeats[s.key] === ASI) add(this.asiBoostFor(s.key));
+		for (const s of this.featSlots) if (this.draft.slotFeats[s.key] === ASI) add(this.asiBoostFor(s.key));
 		return out;
 	});
 	toggleBoostPick = (ab: Ability) => {
-		const cap = this.boostShape === '2-1' ? 2 : 3;
-		if (this.boostPicks.includes(ab)) this.boostPicks = this.boostPicks.filter((a) => a !== ab);
-		else if (this.boostPicks.length < cap) this.boostPicks = [...this.boostPicks, ab];
+		const cap = this.draft.boostShape === '2-1' ? 2 : 3;
+		if (this.draft.boostPicks.includes(ab)) this.draft.boostPicks = this.draft.boostPicks.filter((a) => a !== ab);
+		else if (this.draft.boostPicks.length < cap) this.draft.boostPicks = [...this.draft.boostPicks, ab];
 	};
 
 	// --- feats: one ASI/feat slot per qualifying level, PER CLASS (RAW-correct for multiclass:
 	// each class grants its ASIs at its own class levels — Fighter +6/14, Rogue +10) ------------
 	featSlots = $derived.by<{ key: string; level: number; className: string }[]>(() => {
 		const out: { key: string; level: number; className: string }[] = [];
-		this.classes.forEach((c, i) => {
+		this.draft.classes.forEach((c, i) => {
 			if (!c.classId) return;
 			const className = rowName(this.row(c.classId));
 			for (const level of asiFeatLevels(c.classId, c.level))
@@ -558,29 +572,29 @@ class BuildVM {
 	isRepeatable = (ref: string): boolean =>
 		ref === ASI || Boolean(this.graph?.get(ref)?.data.repeatable);
 	/** Feat refs already spent on slots (repeatable ones may recur). */
-	usedFeatRefs = $derived<string[]>(Object.values(this.slotFeats));
+	usedFeatRefs = $derived<string[]>(Object.values(this.draft.slotFeats));
 	/** A feat option is blocked for a slot if it's non-repeatable and already taken elsewhere. */
 	featOptionBlocked = (ref: string, slotKey: string): boolean =>
-		!this.isRepeatable(ref) && this.slotFeats[slotKey] !== ref && this.usedFeatRefs.includes(ref);
+		!this.isRepeatable(ref) && this.draft.slotFeats[slotKey] !== ref && this.usedFeatRefs.includes(ref);
 	setSlotFeat = (key: string, ref: string) => {
-		const next = { ...this.slotFeats };
+		const next = { ...this.draft.slotFeats };
 		if (ref) next[key] = ref;
 		else delete next[key];
-		this.slotFeats = next;
+		this.draft.slotFeats = next;
 		// initialise / clear this slot's ASI allocation as needed
-		if (ref === ASI && !this.slotAsi[key])
-			this.slotAsi = { ...this.slotAsi, [key]: { shape: '2', picks: [] } };
-		if (ref !== ASI && this.slotAsi[key]) {
-			const asi = { ...this.slotAsi };
+		if (ref === ASI && !this.draft.slotAsi[key])
+			this.draft.slotAsi = { ...this.draft.slotAsi, [key]: { shape: '2', picks: [] } };
+		if (ref !== ASI && this.draft.slotAsi[key]) {
+			const asi = { ...this.draft.slotAsi };
 			delete asi[key];
-			this.slotAsi = asi;
+			this.draft.slotAsi = asi;
 		}
 	};
-	filledSlots = $derived(this.featSlots.filter((s) => this.slotFeats[s.key]).length);
+	filledSlots = $derived(this.featSlots.filter((s) => this.draft.slotFeats[s.key]).length);
 
 	// --- per-slot ASI allocation (+2 to one ability, or +1 to two) --------------
 	asiBoostFor = (key: string): Partial<Record<Ability, number>> => {
-		const a = this.slotAsi[key];
+		const a = this.draft.slotAsi[key];
 		if (!a) return {};
 		const out: Partial<Record<Ability, number>> = {};
 		if (a.shape === '2') {
@@ -591,42 +605,42 @@ class BuildVM {
 		return out;
 	};
 	setAsiShape = (key: string, shape: '2' | '1-1') => {
-		const cur = this.slotAsi[key] ?? { shape, picks: [] };
+		const cur = this.draft.slotAsi[key] ?? { shape, picks: [] };
 		const cap = shape === '2' ? 1 : 2;
-		this.slotAsi = { ...this.slotAsi, [key]: { shape, picks: cur.picks.slice(0, cap) } };
+		this.draft.slotAsi = { ...this.draft.slotAsi, [key]: { shape, picks: cur.picks.slice(0, cap) } };
 	};
 	toggleAsiPick = (key: string, ab: Ability) => {
-		const cur = this.slotAsi[key] ?? { shape: '2' as const, picks: [] as Ability[] };
+		const cur = this.draft.slotAsi[key] ?? { shape: '2' as const, picks: [] as Ability[] };
 		const cap = cur.shape === '2' ? 1 : 2;
 		const picks = cur.picks.includes(ab)
 			? cur.picks.filter((a) => a !== ab)
 			: cur.picks.length < cap
 				? [...cur.picks, ab]
 				: cur.picks;
-		this.slotAsi = { ...this.slotAsi, [key]: { ...cur, picks } };
+		this.draft.slotAsi = { ...this.draft.slotAsi, [key]: { ...cur, picks } };
 	};
 
-	// --- assembled draft + live sheet ------------------------------------------
-	draft = $derived.by<Character>(() => {
+	// --- assembled character + live sheet --------------------------------------
+	assembled = $derived.by<Character>(() => {
 		const build = {
-			name: this.name || 'Unnamed',
-			species: this.speciesId ?? undefined,
+			name: this.draft.name || 'Unnamed',
+			species: this.draft.speciesId ?? undefined,
 			// only persist the sub-option if it's valid for the chosen species (guards a stale pick)
-			speciesOption: this.speciesOptions.some((o) => o.effectiveId === this.speciesOptionId)
-				? (this.speciesOptionId ?? undefined)
+			speciesOption: this.speciesOptions.some((o) => o.effectiveId === this.draft.speciesOptionId)
+				? (this.draft.speciesOptionId ?? undefined)
 				: undefined,
-			background: this.backgroundId ?? undefined,
-			classes: this.classes
+			background: this.draft.backgroundId ?? undefined,
+			classes: this.draft.classes
 				.filter((c) => c.classId)
 				.map((c) => ({
 					class: c.classId as string,
 					level: c.level,
 					subclass: c.subclassId ?? undefined
 				})),
-			abilities: { ...this.abilities },
+			abilities: { ...this.draft.abilities },
 			abilityBoosts: this.abilityBoosts as Record<string, number>,
-			skills: [...new Set([...this.autoSkills, ...this.skills])],
-			expertise: this.expertise.filter((s) => this.isProficient(s)),
+			skills: [...new Set([...this.autoSkills, ...this.draft.skills])],
+			expertise: this.draft.expertise.filter((s) => this.isProficient(s)),
 			saves: csv(this.classRow?.data.saves) as Ability[],
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
 			// its ability boost flows through abilityBoosts instead)
@@ -634,13 +648,13 @@ class BuildVM {
 				...new Set([
 					// carried over from a loaded character (level-up), else the auto origin feat
 					...(this.editId ? this.hydratedFeats : this.originFeatRef ? [this.originFeatRef] : []),
-					...this.featSlots.map((s) => this.slotFeats[s.key]).filter((r) => r && r !== ASI)
+					...this.featSlots.map((s) => this.draft.slotFeats[s.key]).filter((r) => r && r !== ASI)
 				])
 			],
-			languages: [...this.selectedLanguages],
-			inventory: this.inventory.map((i) => ({ ...i, attuned: false })),
+			languages: [...this.draft.selectedLanguages],
+			inventory: this.draft.inventory.map((i) => ({ ...i, attuned: false })),
 			// cantrips are always-prepared; leveled spells start prepared (tweak in the Spellbook)
-			spells: this.selectedSpells.map((ref) => {
+			spells: this.draft.selectedSpells.map((ref) => {
 				const lvl = Number(this.graph?.get(ref)?.data.level ?? 0);
 				return { spell: ref, prepared: lvl > 0, alwaysPrepared: lvl === 0 };
 			}),
@@ -648,26 +662,26 @@ class BuildVM {
 		};
 		// editing keeps the original id + play/ui; creating derives a fresh id from the name
 		return assembleCharacter(build, {
-			id: this.editId ?? slugify(this.name),
-			system: this.system,
-			strict: this.strict,
+			id: this.editId ?? slugify(this.draft.name),
+			system: this.draft.system,
+			strict: this.draft.strict,
 			play: this.editPlay,
 			ui: this.editUi
 		});
 	});
 	sheet = $derived.by<CharacterSheet | null>(() =>
-		this.graph ? deriveSheet(this.draft, this.graph) : null
+		this.graph ? deriveSheet(this.assembled, this.graph) : null
 	);
 
 	// --- validation --------------------------------------------------------------
 	// Free is lenient (only a name is required). Strict adds allocation checks that BLOCK create.
 	issues = $derived.by<string[]>(() => {
 		const out: string[] = [];
-		if (!this.name.trim()) out.push('Give your character a name.');
+		if (!this.draft.name.trim()) out.push('Give your character a name.');
 		if (!this.classId) out.push('Pick a class (you can change it later).');
-		if (this.method === 'point-buy' && this.pointsLeft > 0)
+		if (this.draft.method === 'point-buy' && this.pointsLeft > 0)
 			out.push(`${this.pointsLeft} ability points unspent.`);
-		if (this.strict) {
+		if (this.draft.strict) {
 			const needSkills = this.classSkillCount - this.skillChosenCount;
 			if (needSkills > 0)
 				out.push(`Choose ${needSkills} more skill${needSkills > 1 ? 's' : ''}.`);
@@ -685,14 +699,14 @@ class BuildVM {
 	});
 	// Free: name only. Strict: everything above must be resolved.
 	canCreate = $derived(
-		this.name.trim().length > 0 && (!this.strict || this.issues.length === 0)
+		this.draft.name.trim().length > 0 && (!this.draft.strict || this.issues.length === 0)
 	);
 
 	save = async (): Promise<string | null> => {
 		if (!this.canCreate) return null;
 		this.saving = true;
 		try {
-			const character = this.draft;
+			const character = this.assembled;
 			// new character: start play HP at max so it's playable immediately. Editing/level-up:
 			// keep the character's current play state (HP, effects, spent slots…).
 			if (!this.editId) character.play.hp.current = this.sheet?.maxHp.value ?? 0;
@@ -707,7 +721,7 @@ class BuildVM {
 
 	/** Provenance sub-line for an ability row: base + boost + species/effect bonus. */
 	abilityNote = (ab: Ability): string => {
-		const base = this.abilities[ab];
+		const base = this.draft.abilities[ab];
 		const boost = this.abilityBoosts[ab] ?? 0;
 		const total = this.sheet?.abilities[ab].score ?? base;
 		const extra = total - base - boost; // species / effect contribution
@@ -716,7 +730,7 @@ class BuildVM {
 		if (extra) parts.push(`${this.boostCarrier === 'species' ? 'species' : 'other'} ${extra > 0 ? '+' : ''}${extra}`);
 		return parts.join(' · ');
 	};
-	abilityCost = (ab: Ability): number => pointBuyCost(this.abilities[ab]);
+	abilityCost = (ab: Ability): number => pointBuyCost(this.draft.abilities[ab]);
 }
 
 /** The single shared Build view-model instance. */

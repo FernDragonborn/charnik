@@ -63,7 +63,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('preserves identity, system, and the core build choices', () => {
 		const saved = savedCharacter();
 		build.hydrate(saved);
-		const out = build.draft; // the assembled Character
+		const out = build.assembled; // the assembled Character
 
 		expect(out.id).toBe('valen');
 		expect(out.system).toBe('5.5e');
@@ -76,7 +76,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('keeps chosen languages, skills, and spell refs (skills may gain auto-grants)', () => {
 		const saved = savedCharacter();
 		build.hydrate(saved);
-		const out = build.draft;
+		const out = build.assembled;
 
 		expect(out.build.languages).toContain(`language:${S}:common`);
 		for (const skill of saved.build.skills) expect(out.build.skills).toContain(skill);
@@ -86,7 +86,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('a blank reset produces a minimal valid character (no crash on empty draft)', () => {
 		build.reset();
 		build.graph = graph;
-		const out = build.draft;
+		const out = build.assembled;
 		expect(out.build.name).toBeTruthy();
 		expect(out.build.classes).toEqual([]);
 	});
