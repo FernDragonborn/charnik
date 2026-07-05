@@ -9,11 +9,16 @@
  * past the caller (roster keeps listing the others).
  */
 import type { Storage } from '../storage/types';
-import { migrate, CHARACTER_SCHEMA_VERSION, type Migration } from '../schema/version';
+import {
+	migrate,
+	CHARACTER_SCHEMA_VERSION,
+	type Migration,
+	type Versioned
+} from '../schema/version';
 import { characterSchema, parseCharacter, type Character } from './schema';
 
 /** Forward migrations keyed by the version they upgrade FROM. Empty at v1. */
-export const CHARACTER_MIGRATIONS: Record<number, Migration> = {};
+export const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = {};
 
 const CHARACTERS_DIR = 'characters';
 const dirOf = (slug: string) => `${CHARACTERS_DIR}/${slug}`;
@@ -64,11 +69,7 @@ export async function loadCharacter(storage: Storage, slug: string): Promise<Loa
 		return { ok: false, error: `invalid JSON: ${(e as Error).message}` };
 	}
 	try {
-		data = migrate(
-			data as { schemaVersion: number },
-			CHARACTER_MIGRATIONS,
-			CHARACTER_SCHEMA_VERSION
-		);
+		data = migrate(data as Versioned, CHARACTER_MIGRATIONS, CHARACTER_SCHEMA_VERSION);
 	} catch (e) {
 		return { ok: false, error: `migration failed: ${(e as Error).message}` };
 	}

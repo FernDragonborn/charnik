@@ -2,6 +2,13 @@ import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
+// SvelteKit's `paths.base` must be '' or a '/'-prefixed string. Normalize the raw env var.
+function basePath(): '' | `/${string}` {
+	const raw = process.env.BASE_PATH ?? '';
+	if (!raw) return '';
+	return raw.startsWith('/') ? (raw as `/${string}`) : `/${raw}`;
+}
+
 export default defineConfig({
 	plugins: [
 		sveltekit({
@@ -15,7 +22,7 @@ export default defineConfig({
 			// links. `BASE_PATH` is set to the repo subpath for the Pages build, empty for
 			// desktop (served at root).
 			adapter: adapter({ fallback: '404.html', strict: false }),
-			paths: { base: process.env.BASE_PATH ?? '' }
+			paths: { base: basePath() }
 		})
 	]
 });

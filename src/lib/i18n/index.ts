@@ -44,8 +44,9 @@ export function dirFor(localeId: string): Dir {
  * Initialize the catalogs. Call once (from the root layout load) and await the returned
  * promise via `waitLocale()` so the first paint has messages.
  */
-export function startI18n(initialLocale: string = FALLBACK_LOCALE): Promise<void> {
-	return init({ fallbackLocale: FALLBACK_LOCALE, initialLocale });
+export async function startI18n(initialLocale: string = FALLBACK_LOCALE): Promise<void> {
+	// `init` returns `void | Promise<void>`; await normalizes it to a real Promise.
+	await init({ fallbackLocale: FALLBACK_LOCALE, initialLocale });
 }
 
 export { locale, waitLocale, isLoading, _ };

@@ -41,6 +41,8 @@
 	function toggleTheme() {
 		app.theme = app.theme === 'dark' ? 'light' : 'dark';
 	}
+	// svelte-sonner only accepts light/dark/system; custom theme ids render on the dark base.
+	const toasterTheme = $derived(app.theme === 'light' ? 'light' : 'dark');
 	function cycleLocale() {
 		const ids = LOCALES.map((l) => l.id);
 		const next = ids[(ids.indexOf(app.activeLocale) + 1) % ids.length] ?? FALLBACK_LOCALE;
@@ -87,7 +89,7 @@
 <CommandPalette />
 <Toaster
 	position="top-center"
-	theme={app.theme}
+	theme={toasterTheme}
 	richColors
 	closeButton
 	toastOptions={{ duration: 6000 }}

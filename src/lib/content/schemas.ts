@@ -74,10 +74,9 @@ const effectsField = z.preprocess(
 	},
 	z
 		.array(
-			z.string().refine(
-				(tok) => EFFECT_KINDS.some((k) => tok === k || tok.startsWith(k + ':')),
-				(tok) => ({ message: `unknown effect kind in "${tok}"` })
-			)
+			z.string().refine((tok) => EFFECT_KINDS.some((k) => tok === k || tok.startsWith(k + ':')), {
+				error: (iss) => `unknown effect kind in "${String(iss.input)}"`
+			})
 		)
 		.default([])
 );
