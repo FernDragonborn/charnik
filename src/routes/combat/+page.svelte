@@ -129,26 +129,26 @@
 	<section class="controls">
 		<button
 			class="toggle combatsw"
-			class:active={c.play.inCombat}
+			class:on={c.play.inCombat}
 			onclick={combat.economy.toggleCombat}
 			title="Track the action economy (rounds, action/bonus/reaction)"
 			>⚔ Combat <span class="toggle-state">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
 		>
 		<button
 			class="toggle"
-			class:active={c.play.shieldRaised}
+			class:on={c.play.shieldRaised}
 			onclick={() => (c.play.shieldRaised = !c.play.shieldRaised)}
 			>🛡 Shield <span class="toggle-state">{c.play.shieldRaised ? 'ON' : 'OFF'}</span></button
 		>
 		{#if conc}<button
-				class="toggle conc active"
+				class="toggle conc on"
 				onclick={combat.clearConcentration}
 				title="Tap to stop concentrating"
 				>◈ Concentration <span class="toggle-state">{conc.label}</span></button
 			>{/if}
 		<button
 			class="toggle"
-			class:active={c.play.inspiration}
+			class:on={c.play.inspiration}
 			onclick={() => (c.play.inspiration = !c.play.inspiration)}
 			>✦ Inspiration <span class="toggle-state">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
 		>
@@ -161,7 +161,7 @@
 		>
 		<button
 			class="toggle auto"
-			class:active={c.play.autoCalc}
+			class:on={c.play.autoCalc}
 			onclick={() => (c.play.autoCalc = !c.play.autoCalc)}
 			title="Auto-calculate derived stats from effects (off → base values only)"
 			>⚙ Auto-calc <span class="toggle-state">{c.play.autoCalc ? 'ON' : 'OFF'}</span></button
@@ -326,7 +326,7 @@
 							roll(`${ab.toUpperCase()} save`, a.save.value, e, `save.${ab}`);
 						}}
 					>
-						<i class="pdot" class:active={prof}></i>SAVE <b>{signed(a.save.value)}</b>
+						<i class="pdot" class:on={prof}></i>SAVE <b>{signed(a.save.value)}</b>
 					</span>
 				</button>
 			{/each}
@@ -375,7 +375,7 @@
 										>
 											<i
 												class="pdot"
-												class:active={sk.prof !== 'none'}
+												class:on={sk.prof !== 'none'}
 												class:expertise={sk.prof === 'expertise'}
 												title={sk.prof}
 											></i>
@@ -458,7 +458,7 @@
 										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 										<i
 											class="prep"
-											class:active={r.prep === 'on'}
+											class:on={r.prep === 'on'}
 											class:always={r.prep === 'always'}
 											title={r.prep === 'always' ? 'always prepared' : 'tap to prepare / unprepare'}
 											onclick={(e) => {
@@ -469,7 +469,7 @@
 										<span class="name-main">{r.name}</span>
 										<span
 											class="pinstar"
-											class:active={pinned[r.id]}
+											class:on={pinned[r.id]}
 											role="button"
 											tabindex="-1"
 											title="pin to top"
@@ -673,29 +673,29 @@
 		padding: 1px 6px;
 		color: inherit;
 	}
-	.toggle.active {
+	.toggle.on {
 		background: var(--color-resource-soft);
 		border-color: var(--color-resource);
 		color: var(--color-resource);
 	}
-	.toggle.active .toggle-state {
+	.toggle.on .toggle-state {
 		border-color: var(--color-resource);
 	}
-	.toggle.conc.active {
+	.toggle.conc.on {
 		background: var(--color-accent-soft);
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
 	}
-	.toggle.conc.active .toggle-state {
+	.toggle.conc.on .toggle-state {
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
 	}
-	.toggle.auto.active {
+	.toggle.auto.on {
 		background: var(--color-good-soft);
 		border-color: var(--color-good);
 		color: var(--color-good);
 	}
-	.toggle.auto.active .toggle-state {
+	.toggle.auto.on .toggle-state {
 		border-color: var(--color-good);
 	}
 	.toggle.dice {
@@ -705,12 +705,12 @@
 		font-size: 13px;
 	}
 	/* Combat mode = gold when tracking (own class: `combat` collides with the stat-grid section) */
-	.toggle.combatsw.active {
+	.toggle.combatsw.on {
 		background: var(--color-resource-soft);
 		border-color: var(--color-resource);
 		color: var(--color-resource);
 	}
-	.toggle.combatsw.active .toggle-state {
+	.toggle.combatsw.on .toggle-state {
 		border-color: var(--color-resource);
 	}
 	.controls .spacer,
@@ -1147,7 +1147,7 @@
 		border-radius: 50%;
 		border: 1.5px solid var(--color-border-strong);
 	}
-	.ability .ability-save .pdot.active {
+	.ability .ability-save .pdot.on {
 		background: var(--color-resource);
 		border-color: var(--color-resource);
 	}
@@ -1217,7 +1217,7 @@
 		border: 1.5px solid var(--color-border-strong);
 		flex: none;
 	}
-	.skill-row .pdot.active {
+	.skill-row .pdot.on {
 		background: var(--color-resource);
 		border-color: var(--color-resource);
 	}
@@ -1509,7 +1509,7 @@
 	.prep.always {
 		cursor: default;
 	}
-	.prep.active,
+	.prep.on,
 	.prep.always {
 		background: var(--color-resource);
 		border-color: var(--color-resource);
@@ -1522,7 +1522,7 @@
 		cursor: pointer;
 		font-size: 12px;
 	}
-	.pinstar.active {
+	.pinstar.on {
 		color: var(--color-accent-bright);
 	}
 	.prepared-count {
