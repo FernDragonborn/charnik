@@ -96,18 +96,21 @@
 				{/if}
 			</div>
 		</div>
-		<div class="hp">
-			<div class="lab">
+		<div class="hitpoints">
+			<div class="hitpoints-label">
 				<span>Hit points</span>
 				<button class="temptag" onclick={(e) => openMenu('temphp', e)}>＋ Temp HP</button>
 			</div>
-			<div class="val" title={why(s.maxHp)}>
+			<div class="hitpoints-value" title={why(s.maxHp)}>
 				{c.play.hp.current}<small>
 					/ {c.play.hp.max ?? s.maxHp.value}</small
 				>{#if c.play.hp.temp > 0}<span class="temp">+{c.play.hp.temp} temp</span>{/if}
 			</div>
-			<div class="bar">
-				<i class="cur" style="width:{hpBar.cur}%"></i><i class="tmp" style="width:{hpBar.tmp}%"></i>
+			<div class="hitpoints-bar">
+				<i class="hitpoints-bar-current" style="width:{hpBar.cur}%"></i><i
+					class="hitpoints-bar-temp"
+					style="width:{hpBar.tmp}%"
+				></i>
 			</div>
 			<div class="hpadj">
 				<button class="hpbtn dmg" onclick={combat.damage} title="Apply damage">− Damage</button>
@@ -170,7 +173,7 @@
 		<section class="turnbar">
 			<span class="lbl">Round <b>{combat.round}</b></span>
 			{#each SLOTS as [slot, label] (slot)}
-				<span class="ae">
+				<span class="turn-slot">
 					{label}
 					<span class="aepips">
 						{#each range(combat.economy.slotMax[slot]) as i (i)}
@@ -189,7 +192,7 @@
 			{/each}
 			<button
 				type="button"
-				class="ae move"
+				class="turn-slot move"
 				onclick={() => combat.economy.spendMove(5)}
 				title="Click: spend 5 ft"
 			>
@@ -572,13 +575,13 @@
 		border-radius: var(--radius-sm);
 		padding: 1px 6px;
 	}
-	.hp {
+	.hitpoints {
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		padding: 15px 17px;
 	}
-	.hp .lab {
+	.hitpoints .hitpoints-label {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -597,24 +600,24 @@
 		border: 1px solid var(--color-good);
 		color: var(--color-good);
 	}
-	.hp .val {
+	.hitpoints .hitpoints-value {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 30px;
 	}
-	.hp .val small {
+	.hitpoints .hitpoints-value small {
 		color: var(--color-text-muted);
 		font-size: 16px;
 		font-weight: 500;
 	}
-	.hp .val .temp {
+	.hitpoints .hitpoints-value .temp {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 14px;
 		color: var(--color-good);
 		margin-left: 7px;
 	}
-	.bar {
+	.hitpoints-bar {
 		height: 9px;
 		border-radius: var(--radius-full);
 		background: var(--color-surface-2);
@@ -623,14 +626,14 @@
 		margin-top: 8px;
 		display: flex;
 	}
-	.bar > i {
+	.hitpoints-bar > i {
 		display: block;
 		height: 100%;
 	}
-	.bar > i.cur {
+	.hitpoints-bar > i.hitpoints-bar-current {
 		background: var(--color-accent);
 	}
-	.bar > i.tmp {
+	.hitpoints-bar > i.hitpoints-bar-temp {
 		background: var(--color-good);
 		box-shadow: -1px 0 0 var(--color-surface);
 	}
@@ -765,7 +768,7 @@
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
-	.ae {
+	.turn-slot {
 		display: inline-flex;
 		align-items: center;
 		gap: 7px;
@@ -777,11 +780,11 @@
 		border-radius: var(--radius-full);
 		padding: 5px 11px;
 	}
-	.ae .aepips {
+	.turn-slot .aepips {
 		display: inline-flex;
 		gap: 4px;
 	}
-	.ae .aedot {
+	.turn-slot .aedot {
 		width: 12px;
 		height: 12px;
 		padding: 0;
@@ -791,23 +794,23 @@
 		box-shadow: 0 0 8px rgba(59, 184, 166, 0.45);
 		cursor: pointer;
 	}
-	.ae .aedot.used {
+	.turn-slot .aedot.used {
 		background: transparent;
 		border-color: var(--color-border-strong);
 		box-shadow: none;
 	}
-	.ae b {
+	.turn-slot b {
 		color: var(--color-text);
 	}
-	.ae b.spent {
+	.turn-slot b.spent {
 		color: var(--color-text-muted);
 	}
 	/* the Move slot + reset are buttons but wear the same chip look */
-	button.ae {
+	button.turn-slot {
 		cursor: pointer;
 		color: var(--color-text-muted);
 	}
-	button.ae:hover {
+	button.turn-slot:hover {
 		border-color: var(--color-border-strong);
 		color: var(--color-text);
 	}
