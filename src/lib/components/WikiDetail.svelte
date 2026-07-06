@@ -37,18 +37,18 @@
 <article class="detail">
 	{#if detail?.spell}
 		{@const s = detail.spell}
-		<div class="meyebrow">
-			<span class="mtype">{detail.eyebrow}</span>
+		<div class="detail-eyebrow">
+			<span class="monster-type">{detail.eyebrow}</span>
 			<span>{s.edition}</span>
 		</div>
-		<div class="stitle">
+		<div class="stat-title">
 			<h1>{detail.title}</h1>
-			{#if s.ritual}<span class="schip util">Ritual</span>{/if}
-			{#if s.concentration}<span class="schip save">Concentration</span>{/if}
+			{#if s.ritual}<span class="stat-chip util">Ritual</span>{/if}
+			{#if s.concentration}<span class="stat-chip save">Concentration</span>{/if}
 		</div>
 		<div class="strip">
 			<div class="fx {s.resChip}">
-				<span class="schip {s.resChip}">{s.resLabel}</span>
+				<span class="stat-chip {s.resChip}">{s.resLabel}</span>
 				{#if s.dice || s.resChip === 'hit'}
 					{#if s.dice}
 						<span class="fxbig">{s.dice}</span>
@@ -70,17 +70,17 @@
 					<span class="fxbig none">No roll</span>
 				{/if}
 			</div>
-			<div class="scells">
+			<div class="stat-cells">
 				{#each s.cells as [k, v] (k)}
-					<div class="scell">
-						<div class="sk">{k}</div>
-						<div class="sv">{v}</div>
+					<div class="stat-cell">
+						<div class="stat-key">{k}</div>
+						<div class="stat-value">{v}</div>
 					</div>
 				{/each}
 				{#if s.availableTo?.length}
-					<div class="scell span">
-						<div class="sk">Available to</div>
-						<div class="sv">
+					<div class="stat-cell span">
+						<div class="stat-key">Available to</div>
+						<div class="stat-value">
 							{#each s.availableTo as c, i (c.name)}{i ? ', ' : ''}{c.name}{#if c.homebrew}<span
 										class="hb"
 										title="granted class-side (not on the spell)">+</span
@@ -88,60 +88,64 @@
 						</div>
 					</div>
 				{:else if s.classes}
-					<div class="scell span">
-						<div class="sk">Available to</div>
-						<div class="sv">{s.classes}</div>
+					<div class="stat-cell span">
+						<div class="stat-key">Available to</div>
+						<div class="stat-value">{s.classes}</div>
 					</div>
 				{/if}
 			</div>
 		</div>
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
 		{#if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
-		{#if s.higherLevel}<div class="hl">At higher levels — {s.higherLevel}</div>{/if}
+		{#if s.higherLevel}<div class="highlight">At higher levels — {s.higherLevel}</div>{/if}
 		{#if s.material}<div class="source-line">Material — {s.material}</div>{/if}
 		<div class="source-line">{detail.source} · CC-BY-4.0</div>
 	{:else if detail?.monster}
 		{@const m = detail.monster}
-		<div class="meyebrow">
+		<div class="detail-eyebrow">
 			<span>Monster</span>
-			<span><span class="mtype">{m.type}</span> · {m.edition}</span>
+			<span><span class="monster-type">{m.type}</span> · {m.edition}</span>
 		</div>
 		<h1>{detail.title}</h1>
-		<div class="c-cols">
-			<div class="mpanel">
-				<div class="mph">Vitals</div>
-				<div class="vrow cr"><span class="vk">CR</span><span class="crv">{m.cr || '—'}</span></div>
-				{#if m.ac}<div class="vrow"><span class="vk">AC</span><span>{m.ac}</span></div>{/if}
-				{#if m.initiative}<div class="vrow">
-						<span class="vk">Initiative</span><span>{m.initiative}</span>
+		<div class="content-cols">
+			<div class="detail-panel">
+				<div class="panel-header">Vitals</div>
+				<div class="value-row cr">
+					<span class="value-key">CR</span><span class="crv">{m.cr || '—'}</span>
+				</div>
+				{#if m.ac}<div class="value-row">
+						<span class="value-key">AC</span><span>{m.ac}</span>
+					</div>{/if}
+				{#if m.initiative}<div class="value-row">
+						<span class="value-key">Initiative</span><span>{m.initiative}</span>
 					</div>{/if}
 				{#if m.hp}
-					<div class="vrow">
-						<span class="vk">HP</span>
+					<div class="value-row">
+						<span class="value-key">HP</span>
 						<span>
 							{m.hp}
 							{#if m.hpFormula}<span class="dim">{m.hpFormula}</span>
-								<button class="hpdice" title="Roll HP" onclick={() => rollHp(m.hpFormula)}
+								<button class="hp-dice" title="Roll HP" onclick={() => rollHp(m.hpFormula)}
 									>🎲</button
 								>{/if}
 						</span>
 					</div>
 				{/if}
-				{#if m.speed}<div class="vrow">
-						<span class="vk">Speed</span><span>{m.speed}</span>
+				{#if m.speed}<div class="value-row">
+						<span class="value-key">Speed</span><span>{m.speed}</span>
 					</div>{/if}
 			</div>
-			<div class="mpanel">
-				<div class="mph">Abilities</div>
-				<div class="arow head" class:has-save={m.hasSaves}>
+			<div class="detail-panel">
+				<div class="panel-header">Abilities</div>
+				<div class="ability-row head" class:has-save={m.hasSaves}>
 					<span></span><span>score</span><span>mod</span>{#if m.hasSaves}<span>save</span>{/if}
 				</div>
 				{#each m.abilities as a (a.ab)}
-					<div class="arow" class:has-save={m.hasSaves}>
+					<div class="ability-row" class:has-save={m.hasSaves}>
 						<span class="ab-n">{a.ab}</span>
 						<span>{a.score}</span>
 						<span class="amod">{a.mod}</span>
-						{#if m.hasSaves}<span class="asv">{a.save ?? a.mod}</span>{/if}
+						{#if m.hasSaves}<span class="ability-save">{a.save ?? a.mod}</span>{/if}
 					</div>
 				{/each}
 			</div>
@@ -166,10 +170,10 @@
 		{#if detail.abilities.length}
 			<div class="abilities">
 				{#each detail.abilities as a (a.ab)}
-					<div class="abil">
+					<div class="ability-block">
 						<span class="ability-code">{a.ab}</span>
 						<span class="sc">{a.score}</span>
-						<span class="md">{a.mod}</span>
+						<span class="markdown">{a.mod}</span>
 					</div>
 				{/each}
 			</div>
@@ -187,7 +191,7 @@
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
 		{#if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
 		{#if detail.higherLevel}
-			<div class="hl">At higher levels — {detail.higherLevel}</div>
+			<div class="highlight">At higher levels — {detail.higherLevel}</div>
 		{/if}
 		<div class="source-line">{detail.source} · CC-BY-4.0</div>
 	{:else}
@@ -220,7 +224,7 @@
 		gap: 6px;
 		margin-bottom: 16px;
 	}
-	.abil {
+	.ability-block {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -231,18 +235,18 @@
 		padding: 8px 4px;
 		text-align: center;
 	}
-	.abil .ability-code {
+	.ability-block .ability-code {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		letter-spacing: 0.08em;
 		color: var(--color-text-muted);
 	}
-	.abil .sc {
+	.ability-block .sc {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 17px;
 	}
-	.abil .md {
+	.ability-block .markdown {
 		font-family: var(--font-mono);
 		font-size: 12px;
 		color: var(--color-accent-bright);
@@ -331,7 +335,7 @@
 	.body :global(li) {
 		margin: 2px 0;
 	}
-	.hl {
+	.highlight {
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-left: 3px solid var(--color-resource);
@@ -347,7 +351,7 @@
 	}
 
 	/* ---- monster stat block (C layout) ---- */
-	.meyebrow {
+	.detail-eyebrow {
 		display: flex;
 		justify-content: space-between;
 		align-items: baseline;
@@ -358,22 +362,22 @@
 		font-size: 11px;
 		color: var(--color-text-muted);
 	}
-	.meyebrow .mtype {
+	.detail-eyebrow .monster-type {
 		color: var(--color-accent-bright);
 	}
-	.c-cols {
+	.content-cols {
 		display: grid;
 		grid-template-columns: 1fr 1.2fr;
 		gap: 12px;
 		margin-bottom: 12px;
 	}
-	.mpanel {
+	.detail-panel {
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: 11px;
 		padding: 11px 14px;
 	}
-	.mph {
+	.panel-header {
 		font-family: var(--font-mono);
 		font-size: 9px;
 		letter-spacing: 0.12em;
@@ -381,7 +385,7 @@
 		color: var(--color-text-muted);
 		margin-bottom: 6px;
 	}
-	.vrow {
+	.value-row {
 		display: flex;
 		justify-content: space-between;
 		align-items: baseline;
@@ -391,28 +395,28 @@
 		font-family: var(--font-mono);
 		font-size: 13px;
 	}
-	.vrow:first-of-type {
+	.value-row:first-of-type {
 		border-top: 0;
 	}
-	.vrow .vk {
+	.value-row .value-key {
 		color: var(--color-text-muted);
 	}
-	.vrow .dim {
+	.value-row .dim {
 		color: var(--color-text-muted);
 	}
-	.vrow.cr {
+	.value-row.cr {
 		padding: 2px 0 6px;
 	}
-	.vrow.cr .vk {
+	.value-row.cr .value-key {
 		align-self: center;
 	}
-	.vrow.cr .crv {
+	.value-row.cr .crv {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 26px;
 		color: var(--color-accent-bright);
 	}
-	.hpdice {
+	.hp-dice {
 		border: 0;
 		background: transparent;
 		color: var(--color-accent-bright);
@@ -420,7 +424,7 @@
 		font-size: 12px;
 		padding: 0 0 0 2px;
 	}
-	.arow {
+	.ability-row {
 		display: grid;
 		grid-template-columns: 42px 1fr 1fr;
 		gap: 6px;
@@ -430,22 +434,22 @@
 		font-family: var(--font-mono);
 		font-size: 13px;
 	}
-	.arow.has-save {
+	.ability-row.has-save {
 		grid-template-columns: 42px 1fr 1fr 1fr;
 	}
-	.arow:first-of-type {
+	.ability-row:first-of-type {
 		border-top: 0;
 	}
-	.arow.head {
+	.ability-row.head {
 		color: var(--color-text-muted);
 		font-size: 10px;
 	}
-	.arow .ability-code-n {
+	.ability-row .ability-code-n {
 		color: var(--color-accent-bright);
 		font-family: var(--font-display);
 		font-weight: 600;
 	}
-	.arow .asv {
+	.ability-row .ability-save {
 		color: var(--color-good);
 	}
 	.band {
@@ -482,22 +486,22 @@
 		color: var(--color-accent-bright);
 	}
 	@media (max-width: 560px) {
-		.c-cols {
+		.content-cols {
 			grid-template-columns: 1fr;
 		}
 	}
 
 	/* ---- spell article ("strip" layout) ---- */
-	.stitle {
+	.stat-title {
 		display: flex;
 		align-items: center;
 		gap: 11px;
 		margin: 4px 0 14px;
 	}
-	.stitle h1 {
+	.stat-title h1 {
 		margin: 0;
 	}
-	.schip {
+	.stat-chip {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		border-radius: 5px;
@@ -506,19 +510,19 @@
 		color: var(--color-text-muted);
 		white-space: nowrap;
 	}
-	.schip.hit {
+	.stat-chip.hit {
 		color: var(--color-resource);
 		border-color: #5a4d28;
 	}
-	.schip.save {
+	.stat-chip.save {
 		color: var(--color-accent-bright);
 		border-color: var(--color-accent);
 	}
-	.schip.auto {
+	.stat-chip.auto {
 		color: var(--color-good);
 		border-color: var(--color-good);
 	}
-	.schip.util {
+	.stat-chip.util {
 		color: var(--color-text-muted);
 		border-color: var(--color-border-strong);
 	}
@@ -585,29 +589,29 @@
 	.fxroll:hover {
 		background: var(--color-accent-soft);
 	}
-	.scells {
+	.stat-cells {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 8px;
 		align-content: start;
 	}
-	.scell {
+	.stat-cell {
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: 9px;
 		padding: 7px 11px;
 	}
-	.scell.span {
+	.stat-cell.span {
 		grid-column: span 2;
 	}
-	.scell .sk {
+	.stat-cell .stat-key {
 		font-family: var(--font-mono);
 		font-size: 9px;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
-	.scell .sv {
+	.stat-cell .stat-value {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 14px;
