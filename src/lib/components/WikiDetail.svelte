@@ -98,8 +98,8 @@
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
 		{#if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
 		{#if s.higherLevel}<div class="hl">At higher levels — {s.higherLevel}</div>{/if}
-		{#if s.material}<div class="src">Material — {s.material}</div>{/if}
-		<div class="src">{detail.source} · CC-BY-4.0</div>
+		{#if s.material}<div class="source-line">Material — {s.material}</div>{/if}
+		<div class="source-line">{detail.source} · CC-BY-4.0</div>
 	{:else if detail?.monster}
 		{@const m = detail.monster}
 		<div class="meyebrow">
@@ -158,7 +158,7 @@
 		{/if}
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
 		{#if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
-		<div class="src">{detail.source} · CC-BY-4.0</div>
+		<div class="source-line">{detail.source} · CC-BY-4.0</div>
 	{:else if detail}
 		<div class="deyebrow">{detail.eyebrow}</div>
 		<h1>{detail.title}</h1>
@@ -189,7 +189,7 @@
 		{#if detail.higherLevel}
 			<div class="hl">At higher levels — {detail.higherLevel}</div>
 		{/if}
-		<div class="src">{detail.source} · CC-BY-4.0</div>
+		<div class="source-line">{detail.source} · CC-BY-4.0</div>
 	{:else}
 		<p class="pick">Select an entry to see its detail.</p>
 	{/if}
@@ -200,13 +200,6 @@
 		padding: 20px 22px;
 		overflow: auto;
 		min-height: 0;
-	}
-	.deyebrow {
-		font-family: var(--font-mono);
-		text-transform: uppercase;
-		letter-spacing: 0.18em;
-		font-size: 11px;
-		color: var(--color-accent-bright);
 	}
 	.detail h1 {
 		font-family: var(--font-display);
@@ -347,13 +340,6 @@
 		font-size: 13px;
 		color: var(--color-text-muted);
 		margin: 6px 0 14px;
-	}
-	.src {
-		font-family: var(--font-mono);
-		font-size: 11px;
-		color: var(--color-text-muted);
-		border-top: 1px solid var(--color-border);
-		padding-top: 11px;
 	}
 	.pick {
 		color: var(--color-text-muted);

@@ -129,7 +129,7 @@
 		</button>
 		<button type="button" class="cancel" onclick={oncancel}>Cancel</button>
 	</div>
-	<div class="src">Homebrew · you own this row (stored as CSV you can edit)</div>
+	<div class="source-line">Homebrew · you own this row (stored as CSV you can edit)</div>
 </article>
 
 <style>
@@ -137,13 +137,6 @@
 		padding: 20px 22px;
 		overflow: auto;
 		min-height: 0;
-	}
-	.deyebrow {
-		font-family: var(--font-mono);
-		text-transform: uppercase;
-		letter-spacing: 0.18em;
-		font-size: 11px;
-		color: var(--color-accent-bright);
 	}
 	.titlein {
 		font-family: var(--font-display);
@@ -346,12 +339,5 @@
 	.cancel:hover {
 		color: var(--color-text);
 		border-color: var(--color-border-strong);
-	}
-	.src {
-		font-family: var(--font-mono);
-		font-size: 11px;
-		color: var(--color-text-muted);
-		border-top: 1px solid var(--color-border);
-		padding-top: 11px;
 	}
 </style>

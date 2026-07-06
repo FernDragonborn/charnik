@@ -118,6 +118,22 @@
 	color: var(--color-text);
 }
 
+/* --- compendium/detail article bits (WikiDetail + the homebrew EditContentForm) --- */
+.deyebrow {
+	font-family: var(--font-mono);
+	text-transform: uppercase;
+	letter-spacing: 0.18em;
+	font-size: 11px;
+	color: var(--color-accent-bright);
+}
+.source-line {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--color-text-muted);
+	border-top: 1px solid var(--color-border);
+	padding-top: 11px;
+}
+
 /* --- small shared bits --- */
 .trace {
 	font-family: var(--font-mono);
