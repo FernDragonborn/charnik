@@ -80,7 +80,7 @@
 	{#if metaFields.length}
 		<div class="meta">
 			{#each metaFields as f (f.name)}
-				<label class="mcell">
+				<label class="meta-cell">
 					<span class="k"
 						>{f.label}{#if f.required}<span class="req">*</span>{/if}</span
 					>
@@ -208,7 +208,7 @@
 		gap: 8px;
 		margin-bottom: 16px;
 	}
-	.mcell {
+	.meta-cell {
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
@@ -217,7 +217,7 @@
 		border-radius: 10px;
 		padding: 7px 11px;
 	}
-	.mcell .k {
+	.meta-cell .k {
 		font-family: var(--font-mono);
 		font-size: 9px;
 		letter-spacing: 0.1em;
@@ -227,8 +227,8 @@
 	.req {
 		color: var(--color-accent-bright);
 	}
-	.mcell input,
-	.mcell select {
+	.meta-cell input,
+	.meta-cell select {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 14px;
@@ -239,8 +239,8 @@
 		padding: 2px 0;
 		width: 100%;
 	}
-	.mcell input:focus,
-	.mcell select:focus {
+	.meta-cell input:focus,
+	.meta-cell select:focus {
 		outline: none;
 		border-bottom-color: var(--color-accent);
 	}

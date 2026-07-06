@@ -343,7 +343,7 @@
 			{:else if pid === 'effects'}
 				<button class="grpby" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
 			{:else if pid === 'spells' && s.spellcasting.classes.length}
-				<span class="prepct">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
+				<span class="prepared-count">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
 				<button class="grpby" onclick={cycleGroupBy} title="Change grouping"
 					>{groupByLabel} ▾</button
 				>
@@ -363,7 +363,7 @@
 							(k) => SKILL_ABILITY[k] === ab
 						)}
 						{#if list.length}
-							<div class="catblock">
+							<div class="category-block">
 								<div class="ssec">{ABILITY_NAME[ab]}</div>
 								{#each list as skill (skill)}
 									{@const sk = s.skills[skill]}
@@ -1180,7 +1180,7 @@
 		column-gap: 16px;
 		column-rule: 1px solid var(--color-border);
 	}
-	.catblock {
+	.category-block {
 		break-inside: avoid;
 		margin-bottom: 7px;
 	}
@@ -1525,12 +1525,12 @@
 	.pinstar.active {
 		color: var(--color-accent-bright);
 	}
-	.prepct {
+	.prepared-count {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
 	}
-	.prepct b {
+	.prepared-count b {
 		color: var(--color-resource);
 	}
 </style>

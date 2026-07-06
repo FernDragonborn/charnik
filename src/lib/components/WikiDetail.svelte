@@ -167,7 +167,7 @@
 			<div class="abilities">
 				{#each detail.abilities as a (a.ab)}
 					<div class="abil">
-						<span class="ability-abbr">{a.ab}</span>
+						<span class="ability-code">{a.ab}</span>
 						<span class="sc">{a.score}</span>
 						<span class="md">{a.mod}</span>
 					</div>
@@ -177,7 +177,7 @@
 		{#if detail.meta.length}
 			<div class="meta">
 				{#each detail.meta as [k, v] (k)}
-					<div class="mcell">
+					<div class="meta-cell">
 						<div class="k">{k}</div>
 						<div class="v">{v}</div>
 					</div>
@@ -231,7 +231,7 @@
 		padding: 8px 4px;
 		text-align: center;
 	}
-	.abil .ability-abbr {
+	.abil .ability-code {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		letter-spacing: 0.08em;
@@ -259,20 +259,20 @@
 		gap: 8px;
 		margin-bottom: 16px;
 	}
-	.mcell {
+	.meta-cell {
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 10px;
 		padding: 7px 11px;
 	}
-	.mcell :global(.k) {
+	.meta-cell :global(.k) {
 		font-family: var(--font-mono);
 		font-size: 9px;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
-	.mcell :global(.v) {
+	.meta-cell :global(.v) {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 14px;
@@ -440,7 +440,7 @@
 		color: var(--color-text-muted);
 		font-size: 10px;
 	}
-	.arow .ability-abbr-n {
+	.arow .ability-code-n {
 		color: var(--color-accent-bright);
 		font-family: var(--font-display);
 		font-weight: 600;

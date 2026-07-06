@@ -118,7 +118,7 @@
 											class="lic"
 											role="radio"
 											aria-checked={!licCustom[issue.file] && fills[issue.file]!.license === lic}
-											class:sel={!licCustom[issue.file] && fills[issue.file]!.license === lic}
+											class:selected={!licCustom[issue.file] && fills[issue.file]!.license === lic}
 											onclick={() => setLicense(issue.file, lic)}
 										>
 											<span class="lic-id">{lic}</span>
@@ -130,7 +130,7 @@
 										class="lic"
 										role="radio"
 										aria-checked={licCustom[issue.file]}
-										class:sel={licCustom[issue.file]}
+										class:selected={licCustom[issue.file]}
 										onclick={() => pickCustomLicense(issue.file)}
 									>
 										<span class="lic-id">{$_('contentMeta.customLicense')}</span>
@@ -289,7 +289,7 @@
 		border-color: var(--color-border-strong);
 		background: var(--color-surface);
 	}
-	.lic.sel {
+	.lic.selected {
 		border-color: var(--color-accent);
 		background: var(--color-accent-soft);
 	}
@@ -298,7 +298,7 @@
 		font-size: var(--font-size-sm);
 		font-weight: 600;
 	}
-	.lic.sel .lic-id {
+	.lic.selected .lic-id {
 		color: var(--color-accent-bright);
 	}
 	.lic-desc {

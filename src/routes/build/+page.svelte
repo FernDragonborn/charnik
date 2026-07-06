@@ -258,7 +258,7 @@
 				{#each ABILITIES as ab (ab)}
 					{@const block = b.sheet?.abilities[ab as Ability]}
 					<div class="strow">
-						<span class="ability-abbr">{ab}</span>
+						<span class="ability-code">{ab}</span>
 						{#if b.draft.method === 'standard-array'}
 							<select class="arraysel bare" value={b.draft.arrayPick[ab as Ability] ?? ''} onchange={(e) => b.assignArray(ab as Ability, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}>
 								<option value="">—</option>
@@ -973,7 +973,7 @@
 	.strow:first-of-type {
 		border-top: 0;
 	}
-	.ability-abbr {
+	.ability-code {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		letter-spacing: 0.1em;

@@ -39,7 +39,7 @@
 			{#each g.entries as e (e.id)}
 				<div
 					class="srow"
-					class:sel={e.id === selectedId}
+					class:selected={e.id === selectedId}
 					role="button"
 					tabindex="-1"
 					onclick={() => onselect(e)}
@@ -115,7 +115,7 @@
 	.srow:hover {
 		background: var(--color-surface-2);
 	}
-	.srow.sel {
+	.srow.selected {
 		background: var(--color-surface-2);
 		box-shadow: inset 3px 0 0 var(--color-accent);
 	}

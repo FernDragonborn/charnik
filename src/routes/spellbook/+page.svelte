@@ -118,7 +118,7 @@
 {:else}
 	<div class="mgrhead">
 		<h1>Manage spells</h1>
-		<span class="prepct"
+		<span class="prepared-count"
 			>Prepared <b>{preparedCount}</b>/{preparedCap} · spellbook {resolved.length}</span
 		>
 		<span class="spacer"></span>
@@ -210,12 +210,12 @@
 		font-size: var(--font-size-2xl);
 		margin: 0;
 	}
-	.prepct {
+	.prepared-count {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
-	.prepct b {
+	.prepared-count b {
 		color: var(--color-resource);
 	}
 	.spacer {

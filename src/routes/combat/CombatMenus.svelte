@@ -244,7 +244,7 @@
 						(k) => SKILL_ABILITY[k] === ab
 					)}
 					{#if list.length}
-						<div class="catblock">
+						<div class="category-block">
 							<div class="sec">{ABILITY_NAME[ab]}</div>
 							{#each list as skill (skill)}
 								<button class="row" onclick={() => togglePassive(skill)}>
@@ -631,7 +631,7 @@
 		column-rule: 1px solid var(--color-border);
 		padding: 7px;
 	}
-	.pinwrap .catblock {
+	.pinwrap .category-block {
 		break-inside: avoid;
 	}
 	.pinwrap .sec {
