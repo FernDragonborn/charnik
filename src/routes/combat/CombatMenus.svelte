@@ -56,7 +56,7 @@
 	></div>
 	<div
 		bind:this={popEl}
-		class="pop"
+		class="popup"
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
@@ -78,7 +78,7 @@
 				</div>
 				<p class="gridhint">tap a die to add · ± sets the count</p>
 				<div class="dice-grid">
-					{#each DICE as d (d)}<button class="die" onclick={() => bumpDie(d, 1)}>d{d}</button
+					{#each DICE as d (d)}<button class="die-btn" onclick={() => bumpDie(d, 1)}>d{d}</button
 						>{/each}
 				</div>
 				<div class="advrow">
@@ -99,7 +99,7 @@
 					>
 				</div>
 				<div class="modrow">
-					<div class="mod">
+					<div class="roll-mod">
 						<button onclick={() => (combat.tray.rollMod -= 1)}>−</button> mod {signed(rollMod)}
 						<button onclick={() => (combat.tray.rollMod += 1)}>+</button>
 					</div>
@@ -108,31 +108,31 @@
 				{#if log[0]}{@const r = log[0]}
 					<div class="hist">
 						<div>
-							{r.label} · {#if r.advantageRoll}d20 <b class="res">{r.advantageRoll.kept}</b>
+							{r.label} · {#if r.advantageRoll}d20 <b class="roll-result">{r.advantageRoll.kept}</b>
 							{/if}{r.expr}
-							= <span class="res">{Number.isNaN(r.total) ? '' : r.total}</span>
+							= <span class="roll-result">{Number.isNaN(r.total) ? '' : r.total}</span>
 						</div>
 						{#if r.advantageRoll}<div class="drop">drop d20({r.advantageRoll.dropped})</div>{/if}
 						{#if r.damage}<div>
-								dmg {r.damage.expr} = <span class="res">{r.damage.total}</span>
+								dmg {r.damage.expr} = <span class="roll-result">{r.damage.total}</span>
 							</div>{/if}
 					</div>{/if}
 			</div>
 		{:else if overlay.kind === 'temphp'}
-			<div class="ph">
-				<div class="pop-h" style="border: 0">Set temporary HP</div>
+			<div class="menu-panel">
+				<div class="popup-h" style="border: 0">Set temporary HP</div>
 				<div class="field">
 					<input type="number" bind:value={combat.tempHpInput} />
-					<button class="set" onclick={setTempHp}>Set</button>
+					<button class="submit-btn" onclick={setTempHp}>Set</button>
 				</div>
 				<p class="note">
 					Separate pool — teal in the HP bar. Doesn't stack; takes the higher value.
 				</p>
 			</div>
 		{:else if overlay.kind === 'levelup'}
-			<div class="pop-h" style="border: 0">Level up · which class</div>
+			<div class="popup-h" style="border: 0">Level up · which class</div>
 			{#each combat.levelUpClasses as cl (cl.index)}
-				<button class="row" onclick={() => combat.levelUp(cl.index)}>
+				<button class="menu-row" onclick={() => combat.levelUp(cl.index)}>
 					<span class="main">{cl.name} <b class="gold">{cl.level} → {cl.level + 1}</b></span>
 					<span class="meta">+1 level</span>
 				</button>
@@ -142,18 +142,24 @@
 				spells in the builder.
 			</p>
 		{:else if overlay.kind === 'addeffect'}
-			<div class="search"><span class="mag">🔍</span><input placeholder="Search effects…" /></div>
+			<div class="search">
+				<span class="search-icon">🔍</span><input placeholder="Search effects…" />
+			</div>
 			<div class="section">Catalog · presets</div>
 			{#each EFFECT_PRESETS as p (p.label)}
-				<button class="row" onclick={() => addEffect(p.label, p.tokens, !/bane/i.test(p.label))}>
+				<button
+					class="menu-row"
+					onclick={() => addEffect(p.label, p.tokens, !/bane/i.test(p.label))}
+				>
 					<span class="main"
-						><span class="effect-icon" class:neg={/bane/i.test(p.label)}>＋</span>{p.label}</span
+						><span class="effect-icon" class:negative={/bane/i.test(p.label)}>＋</span
+						>{p.label}</span
 					><span class="durpill">10 rds</span>
 				</button>
 			{/each}
 			<div class="divlite"></div>
 			<button
-				class="row"
+				class="menu-row"
 				onclick={() => combat.overlay && (combat.overlay = { ...overlay, kind: 'customeffect' })}
 			>
 				<span class="main"><span class="effect-icon">✎</span><b>Custom effect…</b></span><span
@@ -161,8 +167,8 @@
 				>
 			</button>
 		{:else if overlay.kind === 'customeffect'}
-			<div class="ph">
-				<div class="pop-h" style="border: 0">Custom modifier</div>
+			<div class="menu-panel">
+				<div class="popup-h" style="border: 0">Custom modifier</div>
 				<div class="modifier-row">
 					<select class="modifier-target" bind:value={combat.cmTarget} aria-label="Modifier target">
 						{#each MOD_TARGETS as g (g.group)}
@@ -187,7 +193,7 @@
 				<div class="field">
 					<!-- svelte-ignore a11y_autofocus -->
 					<input placeholder="Label (optional)…" bind:value={combat.customEffectLabel} autofocus />
-					<button class="set" onclick={addCustomModifier}>Add</button>
+					<button class="submit-btn" onclick={addCustomModifier}>Add</button>
 				</div>
 				<p class="note">
 					Adds a <b>{combat.cmSign}{Math.abs(combat.cmAmount) || 1}</b> modifier — applied live to the
@@ -195,13 +201,13 @@
 				</p>
 			</div>
 		{:else if overlay.kind === 'log'}
-			<div class="cardhead2"><span class="ttl">Roll log · history</span></div>
+			<div class="cardhead2"><span class="menu-title">Roll log · history</span></div>
 			<div class="logscroll">
 				{#each log as l, i (i)}
 					<div class="logrow">
 						<!-- line 1: the roll (attack roll / check) with the dice that were rolled -->
 						<div class="lr-top">
-							<b>{l.label}</b><span class="lr-tot" class:res={!Number.isNaN(l.total)}
+							<b>{l.label}</b><span class="lr-tot" class:roll-result={!Number.isNaN(l.total)}
 								>{Number.isNaN(l.total) ? '—' : l.total}</span
 							>
 						</div>
@@ -215,7 +221,7 @@
 							</div>{/if}
 						<!-- line 3: damage rolled (for an attack) -->
 						{#if l.damage}<div class="lr-sub">
-								dmg {l.damage.expr} = <b class="res">{l.damage.total}</b>
+								dmg {l.damage.expr} = <b class="roll-result">{l.damage.total}</b>
 							</div>{/if}
 					</div>
 				{:else}<p class="note" style="padding: 11px 13px">
@@ -223,19 +229,23 @@
 					</p>{/each}
 			</div>
 		{:else if overlay.kind === 'showhide'}
-			<div class="pop-h">
-				Which actions appear<button class="ovx" onclick={() => (combat.overlay = null)}>✕</button>
+			<div class="popup-h">
+				Which actions appear<button class="overlay-close" onclick={() => (combat.overlay = null)}
+					>✕</button
+				>
 			</div>
 			{#each actions as a (a.id)}
-				<button class="row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
-					<span class="eye" class:on={!hiddenActions[a.id]}></span><span class="main">{a.name}</span
+				<button class="menu-row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
+					<span class="passive-eye" class:on={!hiddenActions[a.id]}></span><span class="main"
+						>{a.name}</span
 					>{#if hiddenActions[a.id]}<span class="meta">hidden</span>{/if}
 				</button>
 			{/each}
 		{:else if overlay.kind === 'pinskills'}
-			<div class="pop-h">
-				Passive senses · 👁 = shown<button class="ovx" onclick={() => (combat.overlay = null)}
-					>✕</button
+			<div class="popup-h">
+				Passive senses · 👁 = shown<button
+					class="overlay-close"
+					onclick={() => (combat.overlay = null)}>✕</button
 				>
 			</div>
 			<div class="pinwrap">
@@ -247,8 +257,8 @@
 						<div class="category-block">
 							<div class="section">{ABILITY_NAME[ab]}</div>
 							{#each list as skill (skill)}
-								<button class="row" onclick={() => togglePassive(skill)}>
-									<span class="eye" class:on={passiveSkills.includes(skill)}></span><span
+								<button class="menu-row" onclick={() => togglePassive(skill)}>
+									<span class="passive-eye" class:on={passiveSkills.includes(skill)}></span><span
 										class="skill-name">{titleCase(skill)}</span
 									>
 								</button>
@@ -258,21 +268,22 @@
 				{/each}
 			</div>
 		{:else if overlay.kind === 'manage'}
-			<div class="pop-h">
-				Spellbook<button class="ovx" onclick={() => (combat.overlay = null)}>✕</button>
+			<div class="popup-h">
+				Spellbook<button class="overlay-close" onclick={() => (combat.overlay = null)}>✕</button>
 			</div>
 			<p class="note" style="padding: 11px 13px">
 				Full spellbook manager arrives with the spell-manager view (d-spellmgr).
 			</p>
 		{:else if overlay.kind === 'condition'}
-			<div class="pop-h">
-				Conditions · multi-select<button class="ovx" onclick={() => (combat.overlay = null)}
-					>✕</button
+			<div class="popup-h">
+				Conditions · multi-select<button
+					class="overlay-close"
+					onclick={() => (combat.overlay = null)}>✕</button
 				>
 			</div>
 			{#each conditionList as cn (cn)}
 				{@const added = character?.play.effects.some((e) => e.label === cn)}
-				<button class="row" onclick={() => (added ? null : addEffect(cn, [], false))}>
+				<button class="menu-row" onclick={() => (added ? null : addEffect(cn, [], false))}>
 					<span class="main">{cn}</span><span class="toggle-track" class:on={added}></span>
 				</button>
 			{/each}
@@ -289,7 +300,7 @@
 		background: transparent;
 		z-index: 50;
 	}
-	.pop {
+	.popup {
 		position: absolute;
 		width: min(300px, calc(100vw - 1.5rem));
 		max-height: 72vh;
@@ -301,7 +312,7 @@
 		box-shadow: 0 18px 40px #000a;
 		padding-bottom: 6px;
 	}
-	.pop-h {
+	.popup-h {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -313,14 +324,14 @@
 		padding: 11px 13px;
 		border-bottom: 1px solid var(--color-border);
 	}
-	.ovx {
+	.overlay-close {
 		background: transparent;
 		border: 0;
 		color: var(--color-text-muted);
 		cursor: pointer;
 		font-size: 13px;
 	}
-	.row {
+	.menu-row {
 		display: flex;
 		align-items: center;
 		gap: 9px;
@@ -334,31 +345,31 @@
 		text-align: left;
 		font: inherit;
 	}
-	.row:hover {
+	.menu-row:hover {
 		background: var(--color-surface-2);
 	}
-	.row .main {
+	.menu-row .main {
 		flex: 1;
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
 		font-size: 13px;
 	}
-	.row .meta {
+	.menu-row .meta {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		color: var(--color-text-muted);
 	}
-	.row .effect-icon {
+	.menu-row .effect-icon {
 		width: 18px;
 		text-align: center;
 		color: var(--color-good);
 	}
-	.row .effect-icon.neg {
+	.menu-row .effect-icon.negative {
 		color: var(--color-accent-bright);
 	}
 	/* visibility = open/closed eye, teal when shown */
-	.eye {
+	.passive-eye {
 		display: inline-block;
 		width: 22px;
 		height: 16px;
@@ -368,7 +379,7 @@
 		opacity: 0.5;
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23878f9d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-6 10-6c1.6 0 3 .3 4.2.9M22 12s-3.5 6-10 6c-1.6 0-3-.3-4.2-.9'/%3E%3Cline x1='2' y1='2' x2='22' y2='22'/%3E%3C/svg%3E");
 	}
-	.eye.on {
+	.passive-eye.on {
 		opacity: 1;
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233bb8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='2.5'/%3E%3C/svg%3E");
 	}
@@ -399,7 +410,7 @@
 		flex: 1;
 		color: var(--color-text);
 	}
-	.search .mag {
+	.search .search-icon {
 		color: var(--color-text-muted);
 	}
 	/* --- dice tray / roll builder --- */
@@ -462,7 +473,7 @@
 		gap: 7px;
 		margin-bottom: 11px;
 	}
-	.die {
+	.die-btn {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 13px;
@@ -474,7 +485,7 @@
 		color: var(--color-text);
 		cursor: pointer;
 	}
-	.die:hover {
+	.die-btn:hover {
 		border-color: var(--color-resource);
 	}
 	.advrow {
@@ -505,7 +516,7 @@
 		align-items: center;
 		gap: 8px;
 	}
-	.mod {
+	.roll-mod {
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -516,7 +527,7 @@
 		font-family: var(--font-mono);
 		font-size: 12px;
 	}
-	.mod button {
+	.roll-mod button {
 		all: unset;
 		cursor: pointer;
 		color: var(--color-text-muted);
@@ -544,12 +555,12 @@
 		margin-top: 10px;
 		padding-top: 9px;
 	}
-	.hist .res {
+	.hist .roll-result {
 		color: var(--color-good);
 		font-weight: 700;
 	}
 	/* --- temp HP --- */
-	.ph {
+	.menu-panel {
 		padding: 12px 13px;
 	}
 	.field {
@@ -567,7 +578,7 @@
 		font: inherit;
 		padding: 8px 10px;
 	}
-	.set {
+	.submit-btn {
 		font-family: var(--font-display);
 		font-weight: 700;
 		background: var(--color-good-soft);
@@ -637,7 +648,7 @@
 	.pinwrap .section {
 		padding: 6px 6px 2px;
 	}
-	.pinwrap .row .skill-name {
+	.pinwrap .menu-row .skill-name {
 		font-size: 13px;
 	}
 	/* --- roll log --- */
@@ -647,7 +658,7 @@
 		justify-content: space-between;
 		padding: 11px 13px 6px;
 	}
-	.cardhead2 .ttl {
+	.cardhead2 .menu-title {
 		font-family: var(--font-mono);
 		font-size: 9px;
 		letter-spacing: var(--tracking-label);
@@ -680,7 +691,7 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 	}
-	.lr-tot.res {
+	.lr-tot.roll-result {
 		color: var(--color-good);
 	}
 	.lr-sub {

@@ -28,10 +28,10 @@ for (const [oldC, newC] of map) {
 				.map((t) => (t === oldC ? newC : t))
 				.join(' ')}"`
 	);
-	// class:old  Svelte directive
-	head = head.replace(new RegExp(`class:${oldC}\\b`, 'g'), `class:${newC}`);
-	// .old selectors — ONLY in the <style> block
-	style = style.replace(new RegExp(`\\.${oldC}\\b`, 'g'), `.${newC}`);
+	// class:old  Svelte directive — `(?![\w-])` so `.pop` does NOT match inside `.pop-h`
+	head = head.replace(new RegExp(`class:${oldC}(?![\\w-])`, 'g'), `class:${newC}`);
+	// .old selectors — ONLY in the <style> block; same hyphen-safe boundary
+	style = style.replace(new RegExp(`\\.${oldC}(?![\\w-])`, 'g'), `.${newC}`);
 }
 
 writeFileSync(file, styleM ? head + '<style>' + style + '</style>' + tail : head, 'utf8');

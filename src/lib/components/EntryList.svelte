@@ -30,7 +30,10 @@
 
 <div class="list">
 	<div class="lsearch">
-		<span class="mag">🔍</span><input placeholder={searchPlaceholder} bind:value={searchValue} />
+		<span class="search-icon">🔍</span><input
+			placeholder={searchPlaceholder}
+			bind:value={searchValue}
+		/>
 	</div>
 	{#if filters}<div class="lfilter">{@render filters()}</div>{/if}
 	<div class="rows">
@@ -80,7 +83,7 @@
 		flex: 1;
 		color: var(--color-text);
 	}
-	.lsearch .mag {
+	.lsearch .search-icon {
 		color: var(--color-text-muted);
 	}
 	.lfilter {
