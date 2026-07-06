@@ -27,11 +27,17 @@ const STATES = [
 	{
 		name: 'combat-turnbar',
 		prep: async (page) => {
-			await page.getByRole('button', { name: /Combat/ }).first().click();
+			await page
+				.getByRole('button', { name: /Combat/ })
+				.first()
+				.click();
 			await page.waitForTimeout(150);
 		},
 		restore: async (page) => {
-			await page.getByRole('button', { name: /Combat/ }).first().click();
+			await page
+				.getByRole('button', { name: /Combat/ })
+				.first()
+				.click();
 		}
 	},
 	{

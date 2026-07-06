@@ -20,8 +20,13 @@ const tail = styleM ? src.slice(styleM.index + styleM[0].length) : '';
 
 for (const [oldC, newC] of map) {
 	// class="..." attribute tokens (exact token, so JS never matches)
-	head = head.replace(/class="([^"]*)"/g, (_m, cls) =>
-		`class="${cls.split(/\s+/).map((t) => (t === oldC ? newC : t)).join(' ')}"`
+	head = head.replace(
+		/class="([^"]*)"/g,
+		(_m, cls) =>
+			`class="${cls
+				.split(/\s+/)
+				.map((t) => (t === oldC ? newC : t))
+				.join(' ')}"`
 	);
 	// class:old  Svelte directive
 	head = head.replace(new RegExp(`class:${oldC}\\b`, 'g'), `class:${newC}`);
