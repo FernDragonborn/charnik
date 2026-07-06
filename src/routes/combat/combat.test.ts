@@ -150,11 +150,11 @@ describe('CombatVM · S2 split net', () => {
 	});
 
 	it('roll/log: rollDiceNow prepends a labelled entry with a numeric total', () => {
-		const before = combat.log.length;
-		combat.rollDiceNow('Stealth', { 20: 1 }, 5);
-		expect(combat.log.length).toBe(before + 1);
-		expect(combat.log[0]!.label).toBe('Stealth');
-		expect(typeof combat.log[0]!.total).toBe('number');
+		const before = combat.tray.log.length;
+		combat.tray.rollDiceNow('Stealth', { 20: 1 }, 5);
+		expect(combat.tray.log.length).toBe(before + 1);
+		expect(combat.tray.log[0]!.label).toBe('Stealth');
+		expect(typeof combat.tray.log[0]!.total).toBe('number');
 	});
 
 	it('HP: damage soaks temp HP first, then current; heal clamps to max', () => {
@@ -205,8 +205,8 @@ describe('CombatVM · S2 split net', () => {
 		const names = combat.attacks.map((a) => a.name);
 		expect(names).toContain('Dagger');
 		expect(names).toContain('Unarmed Strike');
-		const before = combat.log.length;
+		const before = combat.tray.log.length;
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
-		expect(combat.log.length).toBe(before + 1);
+		expect(combat.tray.log.length).toBe(before + 1);
 	});
 });

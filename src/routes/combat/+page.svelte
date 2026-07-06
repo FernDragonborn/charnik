@@ -39,7 +39,7 @@
 	const preparedCount = $derived(combat.preparedCount);
 	const preparedCap = $derived(combat.preparedCap);
 	const groupByLabel = $derived(combat.groupByLabel);
-	const log = $derived(combat.log);
+	const log = $derived(combat.tray.log);
 	const collapsed = $derived(combat.collapsed);
 	const columns = $derived(combat.columns);
 	const flipDurationMs = combat.flipDurationMs;

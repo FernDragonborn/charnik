@@ -13,12 +13,11 @@ import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
 import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { passiveScore } from '$lib/rules/core';
-import { rollPool, type BonusDie, type Rolled } from '$lib/rules/dice';
+import { rollPool, type BonusDie } from '$lib/rules/dice';
 import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import {
-	signed,
 	titleCase,
 	wantsTray,
 	pipClick,
@@ -32,16 +31,15 @@ import {
 	modTargetLabel,
 	type Atk,
 	type SpRow,
-	type RollLogEntry,
 	type ActionSlot,
 	type MenuKind,
 	type StandardAction
 } from '$lib/combat/helpers';
-
-/** Cap on the retained roll log (newest kept). */
-const ROLL_LOG_MAX = 200;
+import { RollTray } from './roll.svelte';
 
 class CombatVM {
+	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. */
+	tray = new RollTray();
 	graph = $state<ContentGraph | null>(null);
 	character = $state<Character | null>(null);
 	/** Fully reactive: recomputes whenever the character (HP, effects, shield, auto-calc…) or the
@@ -71,15 +69,7 @@ class CombatVM {
 		left: number | null;
 		right: number | null;
 	}>(null);
-	log = $state<RollLogEntry[]>([]);
 	hiddenActions = $state<Record<string, boolean>>({});
-	// dice tray / roll builder
-	dice = $state<Record<number, number>>({ 20: 1 }); // sides → count in the pool
-	rollMod = $state(0);
-	rollAdvantage = $state(0); // −1 disadvantage · 0 normal · +1 advantage
-	rollSrc = $state<string | null>(null);
-	/** A follow-up roll fired right after the tray's Roll (an attack's damage after its to-hit). */
-	private pendingDamage: { label: string; dice: Record<number, number>; mod: number } | null = null;
 	tempHpInput = $state(5);
 	customEffectLabel = $state('');
 	spellGroupBy = $state<GroupMode>('level');
@@ -122,50 +112,9 @@ class CombatVM {
 	};
 
 	openDice = (e: Event) => {
-		this.dice = { 20: 1 };
-		this.rollMod = 0;
-		this.rollAdvantage = 0;
-		this.rollSrc = null;
-		this.pendingDamage = null;
+		this.tray.reset();
 		this.openMenu('dice', e);
 	};
-
-	bumpDie = (sides: number, d: number) => {
-		const n = (this.dice[sides] ?? 0) + d;
-		if (n <= 0) delete this.dice[sides];
-		else this.dice[sides] = n;
-		this.dice = { ...this.dice };
-	};
-
-	rollExpr = $derived(
-		Object.entries(this.dice)
-			.sort((a, b) => Number(b[0]) - Number(a[0]))
-			.map(([s, c]) => `${c}d${s}`)
-			.join(' + ') + (this.rollMod ? ` ${signed(this.rollMod)}` : '')
-	);
-
-	// The custom roll tray. Rolls the tray's pool, plus any queued attack damage — as ONE combined
-	// entry (line 1 = the roll, line 2 = the dropped adv die, line 3 = damage).
-	doRoll = () => {
-		const primary = rollPool(this.dice, this.rollMod, this.rollAdvantage);
-		const damage = this.pendingDamage
-			? rollPool(this.pendingDamage.dice, this.pendingDamage.mod)
-			: undefined;
-		this.pendingDamage = null;
-		this.pushRoll(this.rollSrc ?? 'Custom roll', primary, damage);
-	};
-
-	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
-	 *  the roll that follows the to-hit — shown as its own line/part. */
-	private pushRoll(label: string, r: Rolled, damage?: Rolled) {
-		this.log = [{ label, ...r, ...(damage ? { damage } : {}) }, ...this.log].slice(0, ROLL_LOG_MAX);
-		const kept = r.advantageRoll ? `d20(${r.advantageRoll.kept}) ` : '';
-		const drop = r.advantageRoll ? ` · drop d20(${r.advantageRoll.dropped})` : '';
-		const dmg = damage ? ` · dmg ${damage.expr} = ${damage.total}` : '';
-		toast(`${label} — ${r.total}${damage ? ` / ${damage.total} dmg` : ''}`, {
-			description: `${kept}${r.expr} = ${r.total}${drop}${dmg}`.trim()
-		});
-	}
 
 	setTempHp = () => {
 		if (this.character) this.character.play.hp.temp = Math.max(0, this.tempHpInput);
@@ -346,30 +295,15 @@ class CombatVM {
 		e: Event,
 		advantage = 0
 	) => {
-		this.rollSrc = label;
-		this.dice = { ...diceObj };
-		this.rollMod = mod;
-		this.rollAdvantage = advantage; // preset from the stat's active effects (adjustable in the tray)
-		this.pendingDamage = null; // a plain stat roll has no follow-up (attacks set one after this)
+		this.tray.prefill(label, diceObj, mod, advantage);
 		this.openMenu('dice', e);
-	};
-	// roll a dice pool immediately. `advantage` (−1/0/+1) and signed `bonusDice` come from the stat's
-	// active effects (advantage, Bless/Bane dice) — auto-applied so a tap "just works".
-	rollDiceNow = (
-		label: string,
-		diceObj: Record<number, number>,
-		mod: number,
-		advantage = 0,
-		bonusDice: BonusDie[] = []
-	) => {
-		this.pushRoll(label, rollPool(diceObj, mod, advantage, bonusDice));
 	};
 	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray. `key`
 	// (e.g. "save.dex", "skill.stealth", "attack") lets the roll pick up matching effects.
 	roll = (label: string, mod: number, e: Event, key?: string) => {
 		const fx = key ? this.effectsFor(key) : null;
 		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e, fx?.advantage ? 1 : 0);
-		else this.rollDiceNow(label, { 20: 1 }, mod, fx?.advantage ? 1 : 0, fx?.bonusDice ?? []);
+		else this.tray.rollDiceNow(label, { 20: 1 }, mod, fx?.advantage ? 1 : 0, fx?.bonusDice ?? []);
 	};
 
 	// --- action-economy enforcement -----------------------------------------------------------
@@ -400,12 +334,12 @@ class CombatVM {
 		if (wantsTray(e)) {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
 			this.openRoll(at.name, { 20: 1 }, at.toHit, e, fx.advantage ? 1 : 0);
-			if (hasDice) this.pendingDamage = { label: `${at.name} damage`, dice: pool, mod };
+			if (hasDice) this.tray.queueDamage(`${at.name} damage`, pool, mod);
 			return;
 		}
 		// instant: to-hit (with effect advantage/dice) + damage → one 3-line entry
 		const toHit = rollPool({ 20: 1 }, at.toHit, fx.advantage ? 1 : 0, fx.bonusDice);
-		this.pushRoll(at.name, toHit, hasDice ? rollPool(pool, mod) : undefined);
+		this.tray.pushRoll(at.name, toHit, hasDice ? rollPool(pool, mod) : undefined);
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
@@ -434,10 +368,10 @@ class CombatVM {
 			if (alt) {
 				// tray on the TO-HIT (the spell attack roll); Roll then fires the damage after
 				this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e);
-				if (hasDmg) this.pendingDamage = { label: `${r.name} damage`, dice: { ...r.dmg! }, mod: 0 };
+				if (hasDmg) this.tray.queueDamage(`${r.name} damage`, { ...r.dmg! }, 0);
 			} else {
 				// instant: to-hit + damage → one combined 3-line entry
-				this.pushRoll(
+				this.tray.pushRoll(
 					`${r.name} (spell attack)`,
 					rollPool({ 20: 1 }, toHit),
 					hasDmg ? rollPool(r.dmg!, 0) : undefined
@@ -449,13 +383,10 @@ class CombatVM {
 			const label = `${r.name} ${heal ? 'healing' : 'damage'}`;
 			const mod = heal && caster ? this.sheet!.abilities[caster.ability].mod : 0;
 			if (alt) this.openRoll(label, r.dmg!, mod, e);
-			else this.rollDiceNow(label, r.dmg!, mod);
+			else this.tray.rollDiceNow(label, r.dmg!, mod);
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
-			this.log = [{ label: `Cast ${r.name}`, expr: '', total: NaN }, ...this.log].slice(
-				0,
-				ROLL_LOG_MAX
-			);
+			this.tray.logMarker(`Cast ${r.name}`);
 			toast(`Cast ${r.name}`);
 		}
 	};

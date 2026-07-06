@@ -14,18 +14,19 @@
 	} from '$lib/combat/helpers';
 
 	const overlay = $derived(combat.overlay);
-	const rollSrc = $derived(combat.rollSrc);
-	const dice = $derived(combat.dice);
-	const rollAdvantage = $derived(combat.rollAdvantage);
-	const rollMod = $derived(combat.rollMod);
-	const rollExpr = $derived(combat.rollExpr);
-	const log = $derived(combat.log);
+	const rollSrc = $derived(combat.tray.rollSrc);
+	const dice = $derived(combat.tray.dice);
+	const rollAdvantage = $derived(combat.tray.rollAdvantage);
+	const rollMod = $derived(combat.tray.rollMod);
+	const rollExpr = $derived(combat.tray.rollExpr);
+	const log = $derived(combat.tray.log);
 	const actions = $derived(combat.actions);
 	const hiddenActions = $derived(combat.hiddenActions);
 	const passiveSkills = $derived(combat.passiveSkills);
 	const conditionList = $derived(combat.conditionList);
 	const character = $derived(combat.character);
-	const { bumpDie, doRoll, setTempHp, addEffect, addCustomModifier, togglePassive } = combat;
+	const { setTempHp, addEffect, addCustomModifier, togglePassive } = combat;
+	const { bumpDie, doRoll } = combat.tray; // roll subsystem lives on combat.tray now
 
 	// Keep the dropdown inside the viewport: after it renders, if it would run off the bottom (or
 	// top) edge, shift it up/down so it fits. `overlay.top` is in document coords (button bottom +
@@ -84,23 +85,23 @@
 					<button
 						class="seg"
 						class:on={rollAdvantage === -1}
-						onclick={() => (combat.rollAdvantage = -1)}>Disadv.</button
+						onclick={() => (combat.tray.rollAdvantage = -1)}>Disadv.</button
 					>
 					<button
 						class="seg"
 						class:on={rollAdvantage === 0}
-						onclick={() => (combat.rollAdvantage = 0)}>Normal</button
+						onclick={() => (combat.tray.rollAdvantage = 0)}>Normal</button
 					>
 					<button
 						class="seg"
 						class:on={rollAdvantage === 1}
-						onclick={() => (combat.rollAdvantage = 1)}>Advant.</button
+						onclick={() => (combat.tray.rollAdvantage = 1)}>Advant.</button
 					>
 				</div>
 				<div class="modrow">
 					<div class="mod">
-						<button onclick={() => (combat.rollMod -= 1)}>−</button> mod {signed(rollMod)}
-						<button onclick={() => (combat.rollMod += 1)}>+</button>
+						<button onclick={() => (combat.tray.rollMod -= 1)}>−</button> mod {signed(rollMod)}
+						<button onclick={() => (combat.tray.rollMod += 1)}>+</button>
 					</div>
 					<button class="rollbtn" onclick={doRoll}>Roll {rollExpr}</button>
 				</div>
