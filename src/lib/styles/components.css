@@ -118,6 +118,15 @@
 	color: var(--color-text);
 }
 
+/* --- dialog field/section label (mono uppercase eyebrow inside the review modals) --- */
+.dialog-label {
+	font-family: var(--font-mono);
+	font-size: var(--font-size-xs);
+	letter-spacing: var(--tracking-label);
+	text-transform: uppercase;
+	color: var(--color-text-muted);
+}
+
 /* --- compendium/detail article bits (WikiDetail + the homebrew EditContentForm) --- */
 .deyebrow {
 	font-family: var(--font-mono);

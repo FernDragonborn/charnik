@@ -59,11 +59,11 @@
 					<span class="fname">{item.file}</span>
 					<span class="dates">
 						<span class="date">
-							<span class="dlabel">{$_('contentDrift.changedLabel')}</span>
+							<span class="dialog-label">{$_('contentDrift.changedLabel')}</span>
 							<span class="dval strong">{item.changedAt ?? $_('contentDrift.unknownDate')}</span>
 						</span>
 						<span class="date">
-							<span class="dlabel">{$_('contentDrift.declaredLabel')}</span>
+							<span class="dialog-label">{$_('contentDrift.declaredLabel')}</span>
 							<span class="dval">{item.declaredDate ?? $_('contentDrift.unknownDate')}</span>
 						</span>
 					</span>
@@ -139,13 +139,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
-	}
-	.dlabel {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.dval {
 		font-size: var(--font-size-md);

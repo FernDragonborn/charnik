@@ -99,7 +99,7 @@
 			<section class="file">
 				<h3 class="fname">{issue.file}</h3>
 
-				<span class="section-label">{$_('contentMeta.needFromYou')}</span>
+				<span class="dialog-label section-label">{$_('contentMeta.needFromYou')}</span>
 				<div class="fields">
 					{#each EDITABLE_KEYS as key (key)}
 						{@const optional = OPTIONAL_KEYS.includes(key)}
@@ -171,7 +171,7 @@
 
 				{#if issue.missingAuto.length}
 					<div class="auto">
-						<span class="auto-label">{$_('contentMeta.willAutofill')}</span>
+						<span class="dialog-label">{$_('contentMeta.willAutofill')}</span>
 						<span class="chips">
 							{#each issue.missingAuto as key (key)}
 								<span class="autofill-chip">{keyLabel(key)}</span>
@@ -225,14 +225,6 @@
 		font-size: var(--font-size-sm);
 		color: var(--color-text);
 		margin: 0 0 var(--space-3);
-	}
-	.section-label,
-	.auto-label {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.section-label {
 		display: block;
