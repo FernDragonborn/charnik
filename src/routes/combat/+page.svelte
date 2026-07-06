@@ -46,8 +46,9 @@
 	const dragDisabled = $derived(combat.layout.dragDisabled);
 	const pinned = $derived(combat.pinned);
 
-	const { openMenu, openDice, roll, cast, cycleGroupBy, slotClick, togglePrepared } = combat;
+	const { openMenu, openDice, roll, cast, cycleGroupBy, togglePrepared } = combat;
 	const { toggle, dndConsider, dndFinalize, releaseDrag } = combat.layout;
+	const { slotClick } = combat.resources;
 
 	// action-economy slots (id + label); base 1 pip each until a feature grants extras
 	const SLOTS = [
@@ -149,10 +150,10 @@
 			>✦ Inspiration <span class="sw">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
 		>
 		<span class="spacer"></span>
-		<button class="toggle rest" onclick={() => combat.rest('short')} title="Short rest"
+		<button class="toggle rest" onclick={() => combat.resources.rest('short')} title="Short rest"
 			>☾ Short</button
 		>
-		<button class="toggle rest" onclick={() => combat.rest('long')} title="Long rest"
+		<button class="toggle rest" onclick={() => combat.resources.rest('long')} title="Long rest"
 			>🌙 Long</button
 		>
 		<button
@@ -210,7 +211,7 @@
 		<section class="resbar">
 			<span class="lbl">Resources</span>
 			{#each s.resources as r (r.id)}
-				{@const spent = combat.resourceSpent(r.id)}
+				{@const spent = combat.resources.resourceSpent(r.id)}
 				<span class="res" title="{r.name} · recharges on {r.recharge} rest ({r.source})">
 					{r.name}
 					<span class="respips">
@@ -219,7 +220,7 @@
 								type="button"
 								class="respip"
 								class:used={i >= r.max - spent}
-								onclick={() => combat.resourceClick(r.id, r.max, i)}
+								onclick={() => combat.resources.resourceClick(r.id, r.max, i)}
 								aria-label="{r.name} {i + 1}"
 							></button>
 						{/each}

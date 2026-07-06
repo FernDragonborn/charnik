@@ -108,9 +108,9 @@ describe('CombatVM · spending a resource (UBUG-5)', () => {
 		combat.character = character;
 
 		expect(combat.sheet?.resources.find((r) => r.id === 'rage')?.name).toBe('Rage');
-		expect(combat.resourceSpent('rage')).toBe(0);
-		combat.resourceClick('rage', 3, 2); // click the rightmost available pip → spend 1
-		expect(combat.resourceSpent('rage')).toBe(1);
+		expect(combat.resources.resourceSpent('rage')).toBe(0);
+		combat.resources.resourceClick('rage', 3, 2); // click the rightmost available pip → spend 1
+		expect(combat.resources.resourceSpent('rage')).toBe(1);
 	});
 });
 
@@ -183,7 +183,7 @@ describe('CombatVM · S2 split net', () => {
 	it('rests: a long rest clears spent slots and restores HP to max', () => {
 		character.play.spellSlotsSpent = { '1': 2 };
 		character.play.hp = { current: 3, max: 20, temp: 4 };
-		combat.rest('long');
+		combat.resources.rest('long');
 		expect(character.play.spellSlotsSpent).toEqual({});
 		expect(character.play.hp.current).toBe(20);
 		expect(character.play.hp.temp).toBe(0);

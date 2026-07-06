@@ -1,0 +1,61 @@
+/*
+ * The resource/rest subsystem of the Combat view-model: spell-slot pips, named resource pips (rage,
+ * ki, item N/day…) and short/long rests (which recharge them + restore HP). All use the one
+ * click-to-set pip model (pipClick). Split out of CombatVM so the consumables concern is one cohesive
+ * unit; CombatVM composes it as `combat.resources`, passing getters for the reactive character + sheet.
+ */
+import { toast } from 'svelte-sonner';
+import { saveCharacterToStore } from '$lib/character/store.svelte';
+import { pipClick } from '$lib/combat/helpers';
+import type { Character } from '$lib/character/schema';
+import type { CharacterSheet } from '$lib/character/derive';
+
+export class ResourceTracker {
+	constructor(
+		private getCharacter: () => Character | null,
+		private getSheet: () => CharacterSheet | null
+	) {}
+
+	// tap a spell-slot pip: click a filled pip to spend down to it, a spent pip to restore up to it
+	slotClick = (key: string, full: number, spent: number, i: number) => {
+		const c = this.getCharacter();
+		if (!c) return;
+		c.play.spellSlotsSpent[key] = pipClick(spent, i, full);
+	};
+
+	resourceSpent = (id: string): number => this.getCharacter()?.play.resourcesSpent[id] ?? 0;
+	resourceClick = (id: string, max: number, i: number) => {
+		const c = this.getCharacter();
+		if (!c) return;
+		const before = this.resourceSpent(id);
+		const after = pipClick(before, i, max);
+		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: after };
+		if (after === before) return;
+		const name = this.getSheet()?.resources.find((r) => r.id === id)?.name ?? id;
+		toast(`${name} ${after > before ? 'used' : 'restored'}`, {
+			description: `${max - after} of ${max} left`
+		});
+	};
+
+	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges both),
+	 *  reset spell slots (long = all, short = pact only), and restore HP on a long rest. */
+	rest = (kind: 'short' | 'long') => {
+		const c = this.getCharacter();
+		const sheet = this.getSheet();
+		if (!c || !sheet) return;
+		const spent = { ...c.play.resourcesSpent };
+		for (const r of sheet.resources)
+			if (r.recharge === 'short' || (kind === 'long' && r.recharge === 'long')) spent[r.id] = 0;
+		c.play.resourcesSpent = spent;
+		if (kind === 'long') {
+			c.play.spellSlotsSpent = {};
+			c.play.hp = { ...c.play.hp, current: c.play.hp.max ?? sheet.maxHp.value, temp: 0 };
+		} else {
+			const slots = { ...c.play.spellSlotsSpent };
+			delete slots.pact; // warlock pact slots return on a short rest
+			c.play.spellSlotsSpent = slots;
+		}
+		void saveCharacterToStore(c);
+		toast(`${kind === 'long' ? 'Long' : 'Short'} rest — resources restored`);
+	};
+}

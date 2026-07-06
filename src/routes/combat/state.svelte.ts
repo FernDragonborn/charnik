@@ -19,7 +19,6 @@ import type { Character } from '$lib/character/schema';
 import {
 	titleCase,
 	wantsTray,
-	pipClick,
 	GROUP_MODES,
 	type GroupMode,
 	rollEffectsFor,
@@ -36,6 +35,7 @@ import {
 import { RollTray } from './roll.svelte';
 import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
+import { ResourceTracker } from './resources.svelte';
 
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. */
@@ -46,6 +46,11 @@ class CombatVM {
 	});
 	/** Action-economy subsystem (pips, movement, turn/round, in-combat spend checks). */
 	economy = new TurnEconomy(
+		() => this.character,
+		() => this.sheet
+	);
+	/** Resource/rest subsystem (spell slots, resource pips, short/long rests). */
+	resources = new ResourceTracker(
 		() => this.character,
 		() => this.sheet
 	);
@@ -314,45 +319,6 @@ class CombatVM {
 		}
 	};
 
-	// tap a slot pip: click a filled pip to spend down to it, a spent pip to restore up to it
-	slotClick = (key: string, full: number, spent: number, i: number) => {
-		if (!this.character) return;
-		this.character.play.spellSlotsSpent[key] = pipClick(spent, i, full);
-	};
-
-	// --- resource tracker (rage, ki, item N/day…) — same click-to-set pip model as slots --------
-	resourceSpent = (id: string): number => this.character?.play.resourcesSpent[id] ?? 0;
-	resourceClick = (id: string, max: number, i: number) => {
-		if (!this.character) return;
-		const before = this.resourceSpent(id);
-		const after = pipClick(before, i, max);
-		this.character.play.resourcesSpent = { ...this.character.play.resourcesSpent, [id]: after };
-		if (after === before) return;
-		const name = this.sheet?.resources.find((r) => r.id === id)?.name ?? id;
-		toast(`${name} ${after > before ? 'used' : 'restored'}`, {
-			description: `${max - after} of ${max} left`
-		});
-	};
-	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges
-	 *  both), reset spell slots (long = all, short = pact only), and restore HP on a long rest. */
-	rest = (kind: 'short' | 'long') => {
-		const c = this.character;
-		if (!c || !this.sheet) return;
-		const spent = { ...c.play.resourcesSpent };
-		for (const r of this.sheet.resources)
-			if (r.recharge === 'short' || (kind === 'long' && r.recharge === 'long')) spent[r.id] = 0;
-		c.play.resourcesSpent = spent;
-		if (kind === 'long') {
-			c.play.spellSlotsSpent = {};
-			c.play.hp = { ...c.play.hp, current: c.play.hp.max ?? this.sheet.maxHp.value, temp: 0 };
-		} else {
-			const slots = { ...c.play.spellSlotsSpent };
-			delete slots.pact; // warlock pact slots return on a short rest
-			c.play.spellSlotsSpent = slots;
-		}
-		void saveCharacterToStore(c);
-		toast(`${kind === 'long' ? 'Long' : 'Short'} rest — resources restored`);
-	};
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
 	togglePrepared = (r: SpRow) => {
 		if (!this.character) return;
