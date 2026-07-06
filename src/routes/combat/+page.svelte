@@ -126,7 +126,7 @@
 		<button
 			class="toggle combatsw"
 			class:on={c.play.inCombat}
-			onclick={combat.toggleCombat}
+			onclick={combat.economy.toggleCombat}
 			title="Track the action economy (rounds, action/bonus/reaction)"
 			>⚔ Combat <span class="sw">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
 		>
@@ -172,13 +172,13 @@
 				<span class="ae">
 					{label}
 					<span class="aepips">
-						{#each range(combat.slotMax[slot]) as i (i)}
-							{@const used = i >= combat.slotMax[slot] - c.play.turn[slot]}
+						{#each range(combat.economy.slotMax[slot]) as i (i)}
+							{@const used = i >= combat.economy.slotMax[slot] - c.play.turn[slot]}
 							<button
 								type="button"
 								class="aedot"
 								class:used
-								onclick={() => combat.usePip(slot, i)}
+								onclick={() => combat.economy.usePip(slot, i)}
 								title="{label}: {used ? 'used — click to restore' : 'available'}"
 								aria-label="{label} pip {i + 1}"
 							></button>
@@ -189,16 +189,20 @@
 			<button
 				type="button"
 				class="ae move"
-				onclick={() => combat.spendMove(5)}
+				onclick={() => combat.economy.spendMove(5)}
 				title="Click: spend 5 ft"
 			>
-				🦶 Move <b class:spent={combat.moveLeft === 0}>{combat.moveLeft}</b> / {combat.moveMax} ft
+				🦶 Move <b class:spent={combat.economy.moveLeft === 0}>{combat.economy.moveLeft}</b> / {combat
+					.economy.moveMax} ft
 			</button>
-			<button type="button" class="aereset" onclick={combat.resetMove} title="Reset movement"
-				>↺</button
+			<button
+				type="button"
+				class="aereset"
+				onclick={combat.economy.resetMove}
+				title="Reset movement">↺</button
 			>
 			<span class="spacer"></span>
-			<button type="button" class="nextturn" onclick={combat.nextTurn}>Next turn ▸</button>
+			<button type="button" class="nextturn" onclick={combat.economy.nextTurn}>Next turn ▸</button>
 		</section>
 	{/if}
 

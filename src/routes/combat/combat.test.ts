@@ -87,10 +87,10 @@ describe('CombatVM · round counter is the persisted play.round (CVM-9)', () => 
 		combat.graph = graph;
 		combat.character = character;
 		character.play.inCombat = false;
-		combat.toggleCombat(); // enter combat
+		combat.economy.toggleCombat(); // enter combat
 		expect(character.play.round).toBe(1);
 		expect(combat.round).toBe(1);
-		combat.nextTurn();
+		combat.economy.nextTurn();
 		expect(character.play.round).toBe(2); // advanced on the persisted field, not a VM copy
 		expect(combat.round).toBe(2);
 	});
@@ -176,7 +176,7 @@ describe('CombatVM · S2 split net', () => {
 		expect(character.play.turn.action).toBe(1);
 		combat.cast(fireBolt, noModifiers); // none left → blocked, stays 1
 		expect(character.play.turn.action).toBe(1);
-		combat.nextTurn(); // refreshes the economy
+		combat.economy.nextTurn(); // refreshes the economy
 		expect(character.play.turn.action).toBe(0);
 	});
 
