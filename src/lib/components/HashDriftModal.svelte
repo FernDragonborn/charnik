@@ -42,13 +42,13 @@
 <svelte:window onkeydown={onKeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="backdrop" onclick={onSkip}></div>
+<div class="dialog-backdrop" onclick={onSkip}></div>
 <div class="modal" role="dialog" aria-modal="true" aria-labelledby="drift-title" tabindex="-1">
-	<header class="head">
-		<div class="lang-corner"><LangSwitcher /></div>
-		<span class="badge">⚑</span>
-		<h2 id="drift-title" class="title">{$_('contentDrift.title')}</h2>
-		<p class="subtitle">{$_('contentDrift.subtitle')}</p>
+	<header class="dialog-head">
+		<div class="dialog-lang-corner"><LangSwitcher /></div>
+		<span class="dialog-badge">⚑</span>
+		<h2 id="drift-title" class="dialog-title">{$_('contentDrift.title')}</h2>
+		<p class="dialog-subtitle">{$_('contentDrift.subtitle')}</p>
 	</header>
 
 	<div class="files">
@@ -72,9 +72,9 @@
 		{/each}
 	</div>
 
-	<footer class="foot">
+	<footer class="dialog-foot">
 		<button class="btn ghost" onclick={onNeverAsk}>{$_('contentDrift.neverAsk')}</button>
-		<span class="spacer"></span>
+		<span class="dialog-spacer"></span>
 		<button class="btn ghost" onclick={onSkip}>{$_('contentDrift.skip')}</button>
 		<button class="btn primary" onclick={apply} disabled={!anyChecked}
 			>{$_('contentDrift.update')}</button
@@ -83,12 +83,6 @@
 </div>
 
 <style>
-	.backdrop {
-		position: fixed;
-		inset: 0;
-		background: var(--color-overlay);
-		z-index: 60;
-	}
 	.modal {
 		position: fixed;
 		inset: 0;
@@ -103,35 +97,6 @@
 		border-radius: var(--radius-lg);
 		box-shadow: var(--shadow-2);
 		overflow: hidden;
-	}
-	.head {
-		position: relative;
-		padding: var(--space-5) var(--space-6) var(--space-4);
-		border-bottom: 1px solid var(--color-border);
-		border-left: 4px solid var(--color-accent);
-	}
-	.lang-corner {
-		position: absolute;
-		top: var(--space-4);
-		right: var(--space-4);
-	}
-	.badge {
-		display: inline-block;
-		color: var(--color-accent-bright);
-		font-size: var(--font-size-lg);
-	}
-	.title {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: var(--font-size-xl);
-		color: var(--color-text);
-		margin: var(--space-1) 0 var(--space-2);
-	}
-	.subtitle {
-		margin: 0;
-		color: var(--color-text-muted);
-		font-size: var(--font-size-sm);
-		line-height: var(--line-height);
 	}
 	.files {
 		overflow: auto;
@@ -189,16 +154,6 @@
 	.dval.strong {
 		color: var(--color-accent-bright);
 		font-weight: 600;
-	}
-	.foot {
-		display: flex;
-		align-items: center;
-		gap: var(--space-2);
-		padding: var(--space-4) var(--space-6);
-		border-top: 1px solid var(--color-border);
-	}
-	.spacer {
-		flex: 1;
 	}
 	/* .btn / .btn.ghost / .btn.primary (+ :disabled) are shared globals in styles/components.css */
 </style>
