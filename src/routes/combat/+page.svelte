@@ -171,7 +171,7 @@
 
 	{#if c.play.inCombat}
 		<section class="turnbar">
-			<span class="lbl">Round <b>{combat.round}</b></span>
+			<span class="bar-label">Round <b>{combat.round}</b></span>
 			{#each SLOTS as [slot, label] (slot)}
 				<span class="turn-slot">
 					{label}
@@ -212,10 +212,10 @@
 
 	{#if s.resources.length}
 		<section class="resbar">
-			<span class="lbl">Resources</span>
+			<span class="bar-label">Resources</span>
 			{#each s.resources as r (r.id)}
 				{@const spent = combat.resources.resourceSpent(r.id)}
-				<span class="res" title="{r.name} · recharges on {r.recharge} rest ({r.source})">
+				<span class="resource" title="{r.name} · recharges on {r.recharge} rest ({r.source})">
 					{r.name}
 					<span class="respips">
 						{#each range(r.max) as i (i)}
@@ -241,8 +241,8 @@
 		>
 		<button class="rollout" onclick={(e) => openMenu('log', e)}>
 			🎲 {#if log[0]}Last · <b>{log[0].label}</b> <i>{log[0].expr}</i> =
-				<span class="res">{log[0].total}</span>{:else}<i>no rolls yet</i>{/if}<span class="logcue"
-				>▸ log</span
+				<span class="roll-result">{log[0].total}</span>{:else}<i>no rolls yet</i>{/if}<span
+				class="logcue">▸ log</span
 			>
 		</button>
 	</div>
@@ -277,7 +277,7 @@
 			</div>
 		</section>
 		<div class="senses-strip">
-			<span class="lbl">Passive senses</span>
+			<span class="bar-label">Passive senses</span>
 			{#each passives as p, i (p.key)}
 				{#if i > 0}<span class="sdot">·</span>{/if}
 				<span class="ability-save" title={why(p.comp)}><i>{p.name}</i>{p.comp.value}</span>
@@ -288,7 +288,7 @@
 		</div>
 		{#if s.defenses.resist.length || s.defenses.immune.length || s.defenses.vulnerable.length}
 			<div class="senses-strip">
-				<span class="lbl">Defenses</span>
+				<span class="bar-label">Defenses</span>
 				{#if s.defenses.resist.length}<span class="ability-save"
 						><i>Resist</i>{s.defenses.resist.join(', ')}</span
 					>{/if}
@@ -391,7 +391,9 @@
 			{:else if pid === 'attacks'}
 				{#each attacks as at (at.name)}
 					<button class="combat-row" onclick={(e) => combat.attackRoll(at, e)}>
-						<span class="an">{at.name}</span><span class="combat-row-hint">{signed(at.toHit)}</span>
+						<span class="row-name">{at.name}</span><span class="combat-row-hint"
+							>{signed(at.toHit)}</span
+						>
 						<span class="combat-row-desc">{at.dmg}</span><span class="combat-row-marker"
 							>{at.meta}</span
 						>
@@ -400,7 +402,9 @@
 			{:else if pid === 'actions'}
 				{#each visibleActions as a (a.id)}
 					<button class="combat-row" onclick={(e) => combat.actionClick(a, e)}>
-						<span class="an">{a.name}</span><span class="combat-row-hint">{a.hint || '—'}</span>
+						<span class="row-name">{a.name}</span><span class="combat-row-hint"
+							>{a.hint || '—'}</span
+						>
 						<span class="combat-row-desc">{a.desc}</span><span class="combat-row-marker"
 							>{a.marker}</span
 						>
@@ -450,7 +454,7 @@
 							</div>
 							{#each g.rows as r (g.key + r.id)}
 								<button class="sprow" onclick={(e) => cast(r, e)}>
-									<span class="an">
+									<span class="row-name">
 										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 										<i
 											class="prep"
@@ -462,7 +466,7 @@
 												togglePrepared(r);
 											}}
 										></i>
-										<span class="nm">{r.name}</span>
+										<span class="name-main">{r.name}</span>
 										<span
 											class="pinstar"
 											class:active={pinned[r.id]}
@@ -727,7 +731,7 @@
 		padding: 9px 12px;
 		margin-bottom: 12px;
 	}
-	.resbar .res {
+	.resbar .resource {
 		display: inline-flex;
 		align-items: center;
 		gap: 7px;
@@ -739,7 +743,7 @@
 		border-radius: var(--radius-full);
 		padding: 5px 11px;
 	}
-	.resbar .res small {
+	.resbar .resource small {
 		font-family: var(--font-mono);
 		color: var(--color-text-muted);
 	}
@@ -763,7 +767,7 @@
 	.toggle.rest {
 		font-size: 12px;
 	}
-	.turnbar .lbl {
+	.turnbar .bar-label {
 		font-family: var(--font-mono);
 		font-size: 9px;
 		letter-spacing: var(--tracking-label);
@@ -935,7 +939,7 @@
 		font-style: normal;
 		color: var(--color-text-muted);
 	}
-	.rollout .res {
+	.rollout .roll-result {
 		color: var(--color-good);
 		font-size: 14px;
 		font-weight: 700;
@@ -1006,7 +1010,7 @@
 		padding: 11px 16px;
 		margin-bottom: 22px;
 	}
-	.senses-strip .lbl {
+	.senses-strip .bar-label {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		letter-spacing: var(--tracking-label);
@@ -1252,7 +1256,7 @@
 		background: var(--color-surface-2);
 		box-shadow: none;
 	}
-	.combat-row .an {
+	.combat-row .row-name {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 13px;
@@ -1417,7 +1421,7 @@
 	.sprow:hover {
 		background: var(--color-surface-2);
 	}
-	.sprow .an {
+	.sprow .row-name {
 		min-width: 0;
 		display: flex;
 		align-items: center;
@@ -1426,7 +1430,7 @@
 		font-weight: 600;
 		font-size: 13px;
 	}
-	.sprow .an .nm {
+	.sprow .row-name .name-main {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
