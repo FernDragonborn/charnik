@@ -21,7 +21,11 @@ const CURRENT = `${DIR}/current`;
 mkdirSync(BASELINE, { recursive: true });
 mkdirSync(CURRENT, { recursive: true });
 
-const clickCombat = (page) => page.getByRole('button', { name: /Combat/ }).first().click();
+const clickCombat = (page) =>
+	page
+		.getByRole('button', { name: /Combat/ })
+		.first()
+		.click();
 
 /** Routes to capture. Each: a path, a selector to await, and optional extra interactive states. */
 const ROUTES = [
