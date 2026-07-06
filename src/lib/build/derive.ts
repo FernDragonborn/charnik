@@ -8,6 +8,7 @@ import { ABILITIES } from '../character/schema';
 import type { ContentGraph, LoadedRow } from '../content/loader';
 import type { CharacterSheet } from '../character/derive';
 import { parseEffect, EFFECT_KIND } from '../effects/index';
+import type { StatMethod } from './rules';
 
 /** Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null. */
 export function parseSpeciesBoostChoice(raw: string): { amount: number; count: number } | null {
@@ -87,4 +88,37 @@ export function buildSpellPicker(
 		).length;
 		return { profile, groups, cantripsChosen, leveledChosen };
 	});
+}
+
+/** The blocking-in-Strict validation messages for a draft. Free is lenient (a name is all that's
+ *  strictly required — enforced by the caller); Strict adds the allocation checks below. Pure. */
+export function buildIssues(
+	d: { name: string; method: StatMethod; strict: boolean },
+	deps: {
+		hasClass: boolean;
+		pointsLeft: number;
+		classSkillCount: number;
+		skillChosenCount: number;
+		spellPicker: ReturnType<typeof buildSpellPicker>;
+	}
+): string[] {
+	const out: string[] = [];
+	if (!d.name.trim()) out.push('Give your character a name.');
+	if (!deps.hasClass) out.push('Pick a class (you can change it later).');
+	if (d.method === 'point-buy' && deps.pointsLeft > 0)
+		out.push(`${deps.pointsLeft} ability points unspent.`);
+	if (d.strict) {
+		const needSkills = deps.classSkillCount - deps.skillChosenCount;
+		if (needSkills > 0) out.push(`Choose ${needSkills} more skill${needSkills > 1 ? 's' : ''}.`);
+		for (const pc of deps.spellPicker) {
+			const dc = pc.profile.cantripCap - pc.cantripsChosen;
+			const dp = pc.profile.preparedCap - pc.leveledChosen;
+			const who = deps.spellPicker.length > 1 ? `${pc.profile.className} ` : '';
+			if (dc > 0) out.push(`Choose ${dc} more ${who}cantrip${dc > 1 ? 's' : ''}.`);
+			if (dc < 0) out.push(`Remove ${-dc} ${who}cantrip${dc < -1 ? 's' : ''} (over cap).`);
+			if (dp > 0) out.push(`Choose ${dp} more ${who}spell${dp > 1 ? 's' : ''}.`);
+			if (dp < 0) out.push(`Remove ${-dp} ${who}spell${dp < -1 ? 's' : ''} (over cap).`);
+		}
+	}
+	return out;
 }

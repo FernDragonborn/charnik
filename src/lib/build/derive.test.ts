@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseSpeciesBoostChoice, asiBoost, speciesFixedAbilities } from './derive';
+import { parseSpeciesBoostChoice, asiBoost, speciesFixedAbilities, buildIssues } from './derive';
 import type { LoadedRow } from '../content/loader';
 
 describe('parseSpeciesBoostChoice', () => {
@@ -29,5 +29,38 @@ describe('speciesFixedAbilities', () => {
 	it('collects the abilities a flat-bonus effect raises, ignoring non-ability targets', () => {
 		const set = speciesFixedAbilities([row(['flat-bonus:cha+2', 'flat-bonus:ac+1']), undefined]);
 		expect([...set]).toEqual(['cha']); // ac is not an ability
+	});
+});
+
+describe('buildIssues', () => {
+	const base = { name: 'Hero', method: 'manual' as const, strict: true };
+	const noDeps = {
+		hasClass: true,
+		pointsLeft: 0,
+		classSkillCount: 0,
+		skillChosenCount: 0,
+		spellPicker: []
+	};
+	it('flags a missing name and a missing class', () => {
+		const out = buildIssues({ ...base, name: '  ' }, { ...noDeps, hasClass: false });
+		expect(out).toContain('Give your character a name.');
+		expect(out).toContain('Pick a class (you can change it later).');
+	});
+	it('flags unspent point-buy points only in point-buy', () => {
+		expect(buildIssues({ ...base, method: 'point-buy' }, { ...noDeps, pointsLeft: 3 })).toContain(
+			'3 ability points unspent.'
+		);
+		expect(buildIssues({ ...base, method: 'manual' }, { ...noDeps, pointsLeft: 3 })).not.toContain(
+			'3 ability points unspent.'
+		);
+	});
+	it('a complete Strict draft has no issues; Free skips the Strict checks', () => {
+		expect(buildIssues(base, noDeps)).toEqual([]);
+		expect(buildIssues({ ...base, strict: false }, { ...noDeps, classSkillCount: 2 })).toEqual([]);
+	});
+	it('Strict flags too-few chosen skills', () => {
+		expect(buildIssues(base, { ...noDeps, classSkillCount: 2, skillChosenCount: 0 })).toContain(
+			'Choose 2 more skills.'
+		);
 	});
 });

@@ -36,7 +36,8 @@ import {
 	parseSpeciesBoostChoice,
 	speciesFixedAbilities as fixedAbilitiesFromRows,
 	asiBoost,
-	buildSpellPicker
+	buildSpellPicker,
+	buildIssues
 } from '$lib/build/derive';
 import { splitList, FEAT_CATEGORY } from '$lib/content/schemas';
 
@@ -647,28 +648,18 @@ class BuildVM {
 
 	// --- validation --------------------------------------------------------------
 	// Free is lenient (only a name is required). Strict adds allocation checks that BLOCK create.
-	issues = $derived.by<string[]>(() => {
-		const out: string[] = [];
-		if (!this.draft.name.trim()) out.push('Give your character a name.');
-		if (!this.classId) out.push('Pick a class (you can change it later).');
-		if (this.draft.method === 'point-buy' && this.pointsLeft > 0)
-			out.push(`${this.pointsLeft} ability points unspent.`);
-		if (this.draft.strict) {
-			const needSkills = this.classSkillCount - this.skillChosenCount;
-			if (needSkills > 0)
-				out.push(`Choose ${needSkills} more skill${needSkills > 1 ? 's' : ''}.`);
-			for (const pc of this.spellPicker) {
-				const dc = pc.profile.cantripCap - pc.cantripsChosen;
-				const dp = pc.profile.preparedCap - pc.leveledChosen;
-				const who = this.spellPicker.length > 1 ? `${pc.profile.className} ` : '';
-				if (dc > 0) out.push(`Choose ${dc} more ${who}cantrip${dc > 1 ? 's' : ''}.`);
-				if (dc < 0) out.push(`Remove ${-dc} ${who}cantrip${dc < -1 ? 's' : ''} (over cap).`);
-				if (dp > 0) out.push(`Choose ${dp} more ${who}spell${dp > 1 ? 's' : ''}.`);
-				if (dp < 0) out.push(`Remove ${-dp} ${who}spell${dp < -1 ? 's' : ''} (over cap).`);
+	issues = $derived.by<string[]>(() =>
+		buildIssues(
+			{ name: this.draft.name, method: this.draft.method, strict: this.draft.strict },
+			{
+				hasClass: !!this.classId,
+				pointsLeft: this.pointsLeft,
+				classSkillCount: this.classSkillCount,
+				skillChosenCount: this.skillChosenCount,
+				spellPicker: this.spellPicker
 			}
-		}
-		return out;
-	});
+		)
+	);
 	// Free: name only. Strict: everything above must be resolved.
 	canCreate = $derived(
 		this.draft.name.trim().length > 0 && (!this.draft.strict || this.issues.length === 0)
