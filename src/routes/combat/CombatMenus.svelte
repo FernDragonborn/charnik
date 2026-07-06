@@ -273,7 +273,7 @@
 			{#each conditionList as cn (cn)}
 				{@const added = character?.play.effects.some((e) => e.label === cn)}
 				<button class="row" onclick={() => (added ? null : addEffect(cn, [], false))}>
-					<span class="main">{cn}</span><span class="tg" class:on={added}></span>
+					<span class="main">{cn}</span><span class="toggle-track" class:on={added}></span>
 				</button>
 			{/each}
 		{/if}
@@ -371,34 +371,6 @@
 	.eye.on {
 		opacity: 1;
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233bb8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='2.5'/%3E%3C/svg%3E");
-	}
-	.tg {
-		width: 34px;
-		height: 20px;
-		border-radius: 999px;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border-strong);
-		position: relative;
-		flex: none;
-	}
-	.tg::after {
-		content: '';
-		position: absolute;
-		top: 2px;
-		left: 2px;
-		width: 14px;
-		height: 14px;
-		border-radius: 50%;
-		background: var(--color-text-muted);
-		transition: left 0.12s;
-	}
-	.tg.on {
-		background: var(--color-good-soft);
-		border-color: var(--color-good);
-	}
-	.tg.on::after {
-		left: 16px;
-		background: var(--color-good);
 	}
 	/* --- section label + search + divider (d-menus) --- */
 	.sec {
