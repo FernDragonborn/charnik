@@ -83,17 +83,17 @@
 				</div>
 				<div class="advrow">
 					<button
-						class="seg"
+						class="adv-seg"
 						class:on={rollAdvantage === -1}
 						onclick={() => (combat.tray.rollAdvantage = -1)}>Disadv.</button
 					>
 					<button
-						class="seg"
+						class="adv-seg"
 						class:on={rollAdvantage === 0}
 						onclick={() => (combat.tray.rollAdvantage = 0)}>Normal</button
 					>
 					<button
-						class="seg"
+						class="adv-seg"
 						class:on={rollAdvantage === 1}
 						onclick={() => (combat.tray.rollAdvantage = 1)}>Advant.</button
 					>
@@ -248,8 +248,8 @@
 							<div class="sec">{ABILITY_NAME[ab]}</div>
 							{#each list as skill (skill)}
 								<button class="row" onclick={() => togglePassive(skill)}>
-									<span class="eye" class:on={passiveSkills.includes(skill)}></span><span class="nm"
-										>{titleCase(skill)}</span
+									<span class="eye" class:on={passiveSkills.includes(skill)}></span><span
+										class="skill-name">{titleCase(skill)}</span
 									>
 								</button>
 							{/each}
@@ -482,7 +482,7 @@
 		gap: 6px;
 		margin-bottom: 11px;
 	}
-	.seg {
+	.adv-seg {
 		flex: 1;
 		text-align: center;
 		font-family: var(--font-display);
@@ -495,7 +495,7 @@
 		color: var(--color-text-muted);
 		cursor: pointer;
 	}
-	.seg.on {
+	.adv-seg.on {
 		background: var(--color-good-soft);
 		border-color: var(--color-good);
 		color: var(--color-good);
@@ -637,7 +637,7 @@
 	.pinwrap .sec {
 		padding: 6px 6px 2px;
 	}
-	.pinwrap .row .nm {
+	.pinwrap .row .skill-name {
 		font-size: 13px;
 	}
 	/* --- roll log --- */

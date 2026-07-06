@@ -110,7 +110,7 @@
 					{@const subs = b.subclassesFor(cls.classId)}
 					<div class="clsrow">
 						<span class="class-icon">{clsRow ? '✦' : i === 0 ? '＋' : '⌁'}</span>
-						<span class="nm">
+						<span class="class-name">
 							<select class="bare" value={cls.classId ?? ''} onchange={(e) => b.setClass(i, e.currentTarget.value || null)}>
 								<option value="">{i === 0 ? 'Choose a class…' : 'Add a class…'}</option>
 								{#each b.classList as r (r.effectiveId)}<option value={r.effectiveId}>{rowName(r)}</option>{/each}
@@ -247,7 +247,7 @@
 				<div class="statgenhead">
 					<div class="method">
 						{#each METHODS as m (m.id)}
-							<button class="seg" class:on={b.draft.method === m.id} onclick={() => b.setMethod(m.id)}>{m.label}</button>
+							<button class="method-seg" class:on={b.draft.method === m.id} onclick={() => b.setMethod(m.id)}>{m.label}</button>
 						{/each}
 					</div>
 					{#if b.draft.method === 'point-buy'}
@@ -258,7 +258,7 @@
 				{#each ABILITIES as ab (ab)}
 					{@const block = b.sheet?.abilities[ab as Ability]}
 					<div class="strow">
-						<span class="ab">{ab}</span>
+						<span class="ability-abbr">{ab}</span>
 						{#if b.draft.method === 'standard-array'}
 							<select class="arraysel bare" value={b.draft.arrayPick[ab as Ability] ?? ''} onchange={(e) => b.assignArray(ab as Ability, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}>
 								<option value="">—</option>
@@ -710,14 +710,14 @@
 		flex: none;
 		color: var(--color-accent-bright);
 	}
-	.clsrow .nm {
+	.clsrow .class-name {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
 		min-width: 0;
 	}
-	.clsrow .nm small {
+	.clsrow .class-name small {
 		color: var(--color-text-muted);
 		font-size: 12px;
 		padding-left: 5px;
@@ -933,7 +933,7 @@
 		display: flex;
 		gap: 6px;
 	}
-	.seg {
+	.method-seg {
 		all: unset;
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -945,7 +945,7 @@
 		color: var(--color-text-muted);
 		cursor: pointer;
 	}
-	.seg.on {
+	.method-seg.on {
 		background: var(--color-resource-soft);
 		border-color: var(--color-resource);
 		color: var(--color-resource);
@@ -973,7 +973,7 @@
 	.strow:first-of-type {
 		border-top: 0;
 	}
-	.ab {
+	.ability-abbr {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		letter-spacing: 0.1em;

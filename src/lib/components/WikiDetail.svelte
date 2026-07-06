@@ -167,7 +167,7 @@
 			<div class="abilities">
 				{#each detail.abilities as a (a.ab)}
 					<div class="abil">
-						<span class="ab">{a.ab}</span>
+						<span class="ability-abbr">{a.ab}</span>
 						<span class="sc">{a.score}</span>
 						<span class="md">{a.mod}</span>
 					</div>
@@ -231,7 +231,7 @@
 		padding: 8px 4px;
 		text-align: center;
 	}
-	.abil .ab {
+	.abil .ability-abbr {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		letter-spacing: 0.08em;
@@ -440,7 +440,7 @@
 		color: var(--color-text-muted);
 		font-size: 10px;
 	}
-	.arow .ab-n {
+	.arow .ability-abbr-n {
 		color: var(--color-accent-bright);
 		font-family: var(--font-display);
 		font-weight: 600;
