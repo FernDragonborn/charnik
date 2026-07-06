@@ -385,16 +385,20 @@
 				</div>
 			{:else if pid === 'attacks'}
 				{#each attacks as at (at.name)}
-					<button class="atk" onclick={(e) => combat.attackRoll(at, e)}>
-						<span class="an">{at.name}</span><span class="ah">{signed(at.toHit)}</span>
-						<span class="ad">{at.dmg}</span><span class="am">{at.meta}</span>
+					<button class="combat-row" onclick={(e) => combat.attackRoll(at, e)}>
+						<span class="an">{at.name}</span><span class="combat-row-hint">{signed(at.toHit)}</span>
+						<span class="combat-row-desc">{at.dmg}</span><span class="combat-row-marker"
+							>{at.meta}</span
+						>
 					</button>
 				{/each}
 			{:else if pid === 'actions'}
 				{#each visibleActions as a (a.id)}
-					<button class="atk" onclick={(e) => combat.actionClick(a, e)}>
-						<span class="an">{a.name}</span><span class="ah">{a.hint || '—'}</span>
-						<span class="ad">{a.desc}</span><span class="am">{a.marker}</span>
+					<button class="combat-row" onclick={(e) => combat.actionClick(a, e)}>
+						<span class="an">{a.name}</span><span class="combat-row-hint">{a.hint || '—'}</span>
+						<span class="combat-row-desc">{a.desc}</span><span class="combat-row-marker"
+							>{a.marker}</span
+						>
 					</button>
 				{/each}
 			{:else if pid === 'effects'}
@@ -1222,7 +1226,7 @@
 		font-weight: 700;
 	}
 
-	.atk {
+	.combat-row {
 		display: grid;
 		grid-template-columns: 1fr auto;
 		gap: 1px 10px;
@@ -1236,30 +1240,30 @@
 		color: var(--color-text);
 		text-align: left;
 	}
-	.atk + .atk {
+	.combat-row + .combat-row {
 		box-shadow: 0 -1px 0 var(--color-border);
 	}
-	.atk:hover {
+	.combat-row:hover {
 		background: var(--color-surface-2);
 		box-shadow: none;
 	}
-	.atk .an {
+	.combat-row .an {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 13px;
 	}
-	.atk .ah {
+	.combat-row .combat-row-hint {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 13px;
 		color: var(--color-resource);
 		justify-self: end;
 	}
-	.atk .ad {
+	.combat-row .combat-row-desc {
 		font-family: var(--font-mono);
 		font-size: 12px;
 	}
-	.atk .am {
+	.combat-row .combat-row-marker {
 		font-size: 11px;
 		color: var(--color-text-muted);
 		justify-self: end;
