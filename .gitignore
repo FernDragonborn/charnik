@@ -45,3 +45,7 @@ coverage/
 # editor
 .vscode/
 .idea/
+
+# visual-regression screenshots (local, machine/font-specific)
+tools/visual/baseline/
+tools/visual/current/
