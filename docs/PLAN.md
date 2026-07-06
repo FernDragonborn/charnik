@@ -757,17 +757,191 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
+- **SEC-2 · route every `{@html}` through a sanitizer — no manual eslint-disable bypass.** GitHub
+  raised security warnings (XSS) after `{@html}` was hand-waved past the lint. `dompurify` is ALREADY
+  a dep and WikiDetail uses it correctly (`DOMPurify.sanitize`), but `src/routes/+page.svelte:55`
+  (`demo.body`) renders `{@html $_('demo.body')}` with a bare `eslint-disable svelte/no-at-html-tags`
+  and NO sanitize — "trusted own catalog" is wrong: **locale catalogs are user-droppable** (CLAUDE.md
+  lets a user add a locale with no rebuild), so any i18n HTML string is untrusted input. Fix: (1) one
+  shared `sanitizeHtml()` helper wrapping DOMPurify; (2) pipe demo.body + any i18n `{@html}` through
+  it; (3) forbid raw `{@html}` without going through the helper (the only allowed disables cite a
+  sanitize call on the same value, like WikiDetail's). Also check the actual Dependabot/code-scanning
+  alert — bump `dompurify` if the advisory is on the lib itself. Ties to the "add a proven lib beats
+  DIY" rule — do not hand-roll HTML escaping. See docs/SECURITY.md.
 
-**Data versioning (needs a proper think — surfaced in the refactor, 2026-07-05):**
-- **DATA-VER-1 · content versioning is defined but not wired.** CHARACTER versioning works end to
-  end (schema default `schemaVersion` → `assembleCharacter` stamps it → `repository.loadCharacter`
-  runs `migrate(data, CHARACTER_MIGRATIONS, …)`; registry empty at v1, which is fine). But
-  `CONTENT_SCHEMA_VERSION` is **exported and never used anywhere** — CSV rows don't carry a version,
-  `PackManifest.schemaVersion` is optional and read by no migrate, and there is no content-migration
-  path. So if the content column model changes, old user CSVs have no forward-migration story. Decide:
-  do content rows/packs carry a version (and where — a `# schemaVersion:` directive like the type
-  directive? a manifest?), and what runs the migration in the loader. Until then either wire it or
-  drop the unused const so it doesn't imply a guarantee we don't provide.
+**Data versioning (DECIDED 2026-07-06 — design below; surfaced in the refactor, 2026-07-05):**
+- **DATA-VER-1 · content versioning — the problem.** CHARACTER versioning works end to end (schema
+  default `schemaVersion` → `assembleCharacter` stamps it → `repository.loadCharacter` runs
+  `migrate(data, CHARACTER_MIGRATIONS, …)`; registry empty at v1, fine). But `CONTENT_SCHEMA_VERSION`
+  is **exported and never used** — CSV rows carry no version, `PackManifest.schemaVersion` is read by
+  no migrate, no content-migration path. If the content column model changes, old user CSVs have no
+  forward-migration story.
+
+- **DATA-VER-1 · DECISION — a `#content-*:` directive header (metadata as leading comment lines).**
+  Generalise the existing single first-line directive into a small header block of leading
+  `#content-<key>: <value>` lines (any order, before the CSV column header). One extractor eats them
+  all, strips them off, hands a clean body to Papa. Keys:
+  - `#content-type: <type>` — RENAME of today's `#charnik-type:` (the `charnik-` prefix read like the
+    *app* version; `content-` describes the object). Only 3 files reference the old name (loader.ts,
+    loader.test.ts, PLAN.md). Type still defaults from the filename when the directive is absent.
+  - `#content-source: <tag>` — file-level source, **the per-row `source` COLUMN is DROPPED** (not a
+    default+override — the file IS the unit of source; the whole `*_srd.csv` / `*_phb.csv` naming
+    already encodes that). The loader stamps this tag onto every parsed row (into `source:id` identity)
+    — literally "the source slug is prepended to all rows automatically." Need mixed sources? Split into
+    two files (the natural unit). Keeps `source:id` identity + 2-D source filtering (source still lives
+    on each row, just sourced from the header). Missing + not homebrew = flag (see fallbacks below).
+  - `#content-url: <http(s)>` — OPTIONAL provenance/attribution link (CC-BY needs it); shown in the UI
+    as the row's clickable source, and a future "check for updates" endpoint. Light URL validation →
+    warn (not error) on malformed.
+  - `#content-schema: <int>` — the column-shape version, **per-type** (spell-schema and class-schema
+    evolve independently; the migration is per-type anyway). Absent → 1 (old files = baseline, never
+    break). Loader runs each row through `migrate(row, CONTENT_MIGRATIONS[type], from→CURRENT)` after
+    parse / before index — **the same generic `migrate()` engine the character path uses**; registry
+    empty at v1 = fine. A future/unknown-higher schema → load the row as-is + warn (forward-compat,
+    never drop the user's data). This finally consumes `CONTENT_SCHEMA_VERSION` (or a per-type map
+    replaces it).
+  - `#content-updated-at: <YYYY-MM-DD>` — the DATA revision date (errata / "edited 3 spells"), distinct
+    from `schema` (shape). Named `updated` not `version`/`revision` to avoid reading as an app version.
+  - `#content-license: <spdx>` — REQUIRED-ish attribution field (e.g. `CC-BY-4.0`). FOSS + SRD app,
+    CLAUDE.md licensing constraint: attribution is license + `source` + `url`, and shipped SRD must
+    carry CC-BY. Warn if a non-homebrew file omits it.
+  - `#content-id: <uuidv7>` — stable GUID identity of the FILE/pack as a distributable artifact
+    (**UUIDv7**, time-sortable so revisions/packs order chronologically). NOTE the two distinct
+    identities that must not be conflated: (a) **row identity** = the text slug `source:id` (human,
+    namespaced, referenced by characters and by `requires`); (b) **pack identity** = this
+    `content-id` GUID (the file as an artifact). There's no central distribution, so its value today is
+    limited but cheap: peer-shared file → re-import matches "same pack, newer revision" by id (not by
+    filename), plus dedup + the update-detect match key (better than matching on path). Generated once
+    when the app first authors/saves a homebrew file.
+  - `#content-author: <name>` and `#content-author-url: <http(s)>` — OPTIONAL. Who MADE the homebrew
+    (the person), distinct from `#content-source:` (the in-game source tag) — for the share/import
+    story. Name + an optional link to their profile/contact, parallel to `source` + `url`.
+  - `#content-systems: 5e,5.5e` — file-level editions, **the per-row `systems` COLUMN is DROPPED** (same
+    as `source`: file = one edition unit). VERIFIED 2026-07-06: no shipped CSV mixes editions — content
+    is ALREADY split by root (`content/srd-2014/*` = `5e`, `content/srd-2024/*` = `5.5e`), the `systems`
+    column is uniform-per-file and fully redundant with the root. So there is **nothing to split**; the
+    work is: drop the column, add `#content-systems:` to each file (converters emit it), loader stamps
+    every row. **Fallback when absent AND the root gives no edition (a custom homebrew root):
+    `[5e, 5.5e]` — both** (deterministic, doesn't depend on the active-system toggle; permissive =
+    visible in both editions, not hidden; the author narrows it later). So `systems` never needs
+    prompting — default to both + flag. Doesn't break `joinResolves` (feature↔class systems-overlap) or
+    `editionsOf` (a spell in both roots = two rows same `id`, stitched by id → the article edition
+    toggle survives).
+  - DEFERRED keys (not now): `content-min-app` (needs app ≥ X — coarser than `schema`, which already
+    covers column shape); `content-requires` (a homebrew depending on other content, e.g. a subclass
+    needing its class) — if ever added it references **row slugs `source:id`, NOT the pack GUID**, and a
+    long dependency list belongs in `_pack.json` as an array, not a one-line `#`-directive.
+  - `#content-hash: xxh64:<hex>` — hash of the **normalised body only** (column header + data rows),
+    EXCLUDING the `#content-*:` directive block AND the hash line itself (can't hash a line containing
+    its own hash). Lib = **`xxhash-wasm`** (XXH3/xxh64; a proven fast lib beats a hand-rolled FNV — see
+    the deps-beats-DIY rule; do NOT DIY the hash). Normalise before hashing so an Excel re-save doesn't
+    false-trigger: newlines→LF, strip BOM, trim EOF whitespace/blank lines; row ORDER preserved
+    (reorder = a real change). Algo prefix (`xxh64:`) so it can be swapped later.
+
+- **DATA-VER-1 · DECISION — missing required meta never hard-blocks; two fill classes, two owners.**
+  A missing directive degrades (load rows with a fallback + flag), never fails the file. Split by WHO
+  can supply the value:
+  - **Machine-fillable (no human) — auto-fill via the consented write-back:** `id` (generate a
+    UUIDv7 on first sight), `hash` (always computable from the body), `updated-at` (file mtime, else
+    today), `schema` (absent = 1), `type` (from filename). At most a one-time notice, never a question.
+  - **Human-semantic (must ask the OWNER of this app instance):** `source` (a tag the app can't guess)
+    and `license` (homebrew → default `unspecified`; shipped SRD must be `CC-BY-*`, emitted by the
+    converter so never missing). `systems` is NOT prompted — it defaults to `[5e,5.5e]` (both) + flag.
+    `author`/`author-url` optional, never block.
+  - **Who prompts, three scenarios:**
+    1. **Authored through the app** (EditContentForm) — the form COLLECTS source/systems/license/author
+       at creation (inputs + pickers, author from Settings). Complete by construction; nothing missing.
+    2. **Hand-dropped CSV on disk** missing required — the loader records a `ContentIssue` and surfaces
+       a non-blocking "content issues" panel with a fill-in prompt to the instance owner: "{file} is
+       missing: source, license → [Fill in]" → mini-form → app writes the directives back (same atomic
+       BOM+CRLF consented write). Rows still load meanwhile via fallbacks (source = filebase,
+       systems = both, license = unspecified).
+    3. **Imported pack from someone else** — the meta should already be present (the author filled it).
+       Enforce at the SHARE/EXPORT side: the export flow VALIDATES required meta before producing the
+       artifact, so emptiness is caught on the sharer's side, not dumped on the importer.
+
+- **DATA-VER-1 · DECISION — edits MADE THROUGH THE APP stamp the metadata automatically (no prompt).**
+  When the user edits content via our own UI (EditContentForm / homebrew authoring — `buildRow` →
+  `unparse` → `Storage.write`), the writer **always refreshes the directive header on save**:
+  `content-updated-at` = today and `content-hash` = recomputed on the new body, with NO pop-up. The
+  pop-up flow below is ONLY for content that changed OUTSIDE the app (hand-edited CSV on disk), where
+  we can't have stamped it ourselves. So: in-app edit ⇒ metadata is always correct by construction;
+  out-of-app edit ⇒ detected by hash mismatch and offered/auto-synced per the settings toggle. Same
+  atomic BOM+CRLF write + watcher-ignore either way.
+
+- **DATA-VER-1 · SLICE BUILT (2026-07-06, standalone, not yet wired into the loader):**
+  `src/lib/content/meta.ts` (pure `parseContentDirectives` multi-line `#content-*:` parser + BOM/blank
+  tolerant; `checkFileMeta` → `MetaIssue`), `meta.test.ts`, an underfilled fixture
+  (`tests/fixtures/content/homebrew-underfilled/spells_homebrew.csv`), the full-screen dark-backdrop
+  `ContentMetaModal.svelte` (+ browser test), i18n `contentMeta.*`, and a DEV-ONLY preview at
+  **`/dev/meta`** (`src/routes/dev/meta/+page.svelte`) to see it live. Key modal behaviours settled with
+  the user: (a) it opens ONLY when a REQUIRED human key (source/license) is missing — a missing/stale
+  machine key alone (id/hash/updated-at/schema) does NOT open it (hash-drift is the separate pop-up
+  below); (b) it renders ALL editable fields (source, license, systems, url, author, author-url),
+  **pre-filled** from whatever the file already declares (`MetaIssue.values`), missing required flagged;
+  (c) license is a card list WITH one-line descriptions + a "Custom…" free-text option (order
+  CC-BY-4.0, CC-BY-SA-4.0, CC0-1.0, MIT); (d) machine keys shown as a reassuring "we'll add these" FYI;
+  (e) actions = [Don't ask again (content-editing mode)] · [Skip for now] · [Fill in & save] (no
+  confusing "autofill all"). **Both this modal AND the future drift pop-up must show the shared
+  `LangSwitcher` component in the top-right** (a user may need to switch language to read it) — the
+  switcher was extracted to `src/lib/components/LangSwitcher.svelte` and now used by the topbar too
+  (single canonical control).
+
+- **DATA-VER-1 · IMPLEMENTED (2026-07-06, tasks 1–5 of 6, all green — 240 tests, build OK):**
+  1. Loader uses `parseContentDirectives` (meta.ts) — `#charnik-type`→`#content-type` rename done;
+     `source`/`systems` stamped from the file header (per-row columns are now a legacy fallback).
+  2. `xxhash-wasm` + pure `hashBody()`/`normalizeBody()` (src/lib/content/hash.ts) — LF/BOM/trailing
+     normalisation so an Excel re-save is not drift; `xxh64:` prefix.
+  3. `FileEntry.mtime?` added across the Storage seam (node stat, Tauri stat, MemoryStorage write-time;
+     fetch/web leaves it undefined).
+  4. **Shipped CSVs migrated**: `source`/`systems` COLUMNS dropped, hoisted into a `#content-*:` header
+     (source/systems/url/license/id-uuidv7/updated-at/hash). Done centrally in `tools/srd/lib.mjs`
+     `writeCsv` (top-level xxhash init) so every converter emits headers on regen — no converter edits.
+     `schemas.ts` made `source`/`systems` optional. 2815 rows load, 0 errors, **0 metaIssues / 0 drift**
+     on the clean shipped set.
+  5. Loader surfaces `graph.metaIssues` (checkFileMeta) + `graph.driftItems` (isHashDrift vs a
+     recomputed `hashBody`); `+layout.svelte` mounts `HashDriftModal` (first) + `ContentMetaModal` off a
+     `content/review.svelte` store (per-session dismiss); content loads once at startup.
+  **STILL TODO (task 6 — the delicate part, writes to USER files):** the confirm actions
+  (`onFillAndSave` / `onUpdate`) currently just DISMISS — they do NOT yet persist. Remaining: the
+  directive write-back (atomic BOM+CRLF, watcher-ignore, only app-writable files), the Settings
+  "content-editing mode" toggle (auto-stamp, no prompt), the in-app authoring stamp, and per-type
+  `CONTENT_MIGRATIONS` via `migrate()`.
+
+- **DATA-VER-1 · DECISION — the hash is the change DETECTOR (semi-automatic date bump).**
+  **We detect a content update specifically by the hash not matching the body** — not by dates, not by
+  the file mtime. On load, for each content CSV recompute the normalised-body hash and compare to
+  `#content-hash:`. Mismatch ⇒ the data was hand-edited after the header was last stamped. Collect all
+  mismatches and, right after startup, show ONE reassuring pop-up (batched, not per-file spam):
+  > "Дані в {file} були змінені (востаннє редаговано {OS file mtime}), а в шапці стоїть, що оновлено
+  > {#content-updated}. Це нормальний процес, ми просто хочемо звіритись, що ви так і планували —
+  > поставити сьогоднішню дату в `content-updated-at` та перерахувати хеш автоматично?"  [Оновити все]
+  > [Обрати] [Пропустити] [Не питати]
+
+  Tone = reassuring ("це нормальний процес, ми просто хочемо звіритись"): editing a CSV is expected, we just offer to sync the
+  metadata. Copy must state the detection reason — *we noticed because the recorded hash no longer
+  matches the file's contents.* On confirm: rewrite `#content-updated:` = today and `#content-hash:` =
+  recomputed, in place.
+  - **mtime for the pop-up copy** needs a seam change: `FileEntry` has no `mtime`. Add
+    `mtime?: number` (Tauri `stat` provides it; Memory/Fetch leave it undefined — copy degrades to
+    "were changed" without the date). Small, optional field.
+  - **Write-back invariant exception:** CLAUDE.md says the app writes only files it *created* and never
+    rewrites hand-edited user files. This auto-bump rewrites a hand-edited CSV, so it is a **deliberate,
+    explicitly-consented exception** — gated on the pop-up Yes, atomic (temp→rename), preserving
+    UTF-8-BOM + CRLF, and the **file watcher must ignore the app's own write** (no write→reload loop,
+    also an invariant). "Не питати" persists a per-file (or global) suppression like the collisions
+    store.
+  - **Settings toggle · "Режим редагування контенту" (content-authoring mode).** Add a Settings item:
+    a switch for the user who edits CSVs by hand and does not want the pop-up nagging them every
+    launch. When ON, a hash/body mismatch **auto-updates `content-updated-at`=today + recomputes the hash
+    with NO prompt** (same write-back as the confirmed path — atomic, BOM+CRLF, watcher-ignored). When
+    OFF (default), the pop-up flow above applies. This is the "always yes" companion to the pop-up's
+    "Не питати" (which suppresses per-file; this mode suppresses globally + keeps metadata live while
+    authoring).
+  - **Web target** is read-only (fetched content, can't write back) → detection can still surface as an
+    FYI, but the auto-bump offer only appears on the writable desktop storage.
+  - Also feeds the **UBUG-4 seed path**: when re-seeding shipped content, compare shipped vs on-disk
+    `#content-updated:`/hash — shipped newer ⇒ offer an update instead of the current blind skip.
 
 **Builder / character:**
 - [~] **Lineages & subraces** — Phase 1 DONE: `species_option` content type (linked `species_id`,

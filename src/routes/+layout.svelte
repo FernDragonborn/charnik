@@ -5,8 +5,13 @@
 	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { app } from '$lib/stores/app.svelte';
-	import { LOCALES, FALLBACK_LOCALE, dirFor, locale as i18nLocale, _ } from '$lib/i18n';
+	import { dirFor, locale as i18nLocale, _ } from '$lib/i18n';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
+	import LangSwitcher from '$lib/components/LangSwitcher.svelte';
+	import ContentMetaModal from '$lib/components/ContentMetaModal.svelte';
+	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
+	import { loadContentStore } from '$lib/content/store.svelte';
+	import { review, pendingMetaIssues, pendingDriftItems } from '$lib/content/review.svelte';
 	import { Toaster } from 'svelte-sonner';
 
 	let { children } = $props();
@@ -38,16 +43,20 @@
 		i18nLocale.set(app.activeLocale);
 	});
 
+	// Load content once at startup so the DATA-VER-1 review (missing metadata / hash drift) can surface
+	// app-wide, regardless of which page is open. Cached — a no-op if a page already loaded it.
+	$effect(() => {
+		if (browser) loadContentStore();
+	});
+	// Drift is shown first (a quick date/hash confirm), then the metadata prompt.
+	const driftItems = $derived(pendingDriftItems());
+	const metaIssues = $derived(pendingMetaIssues());
+
 	function toggleTheme() {
 		app.theme = app.theme === 'dark' ? 'light' : 'dark';
 	}
 	// svelte-sonner only accepts light/dark/system; custom theme ids render on the dark base.
 	const toasterTheme = $derived(app.theme === 'light' ? 'light' : 'dark');
-	function cycleLocale() {
-		const ids = LOCALES.map((l) => l.id);
-		const next = ids[(ids.indexOf(app.activeLocale) + 1) % ids.length] ?? FALLBACK_LOCALE;
-		app.activeLocale = next;
-	}
 	function toggleSystem() {
 		app.activeSystem = app.activeSystem === '5.5e' ? '5e' : '5.5e';
 	}
@@ -81,9 +90,7 @@
 		<button type="button" onclick={toggleSystem} title={$_('settings.system')}>
 			{app.activeSystem}
 		</button>
-		<button type="button" onclick={cycleLocale} title={$_('settings.language')}>
-			{app.activeLocale.toUpperCase()}
-		</button>
+		<LangSwitcher />
 		<button type="button" onclick={toggleTheme} title={$_('settings.theme')}>
 			{app.theme === 'dark' ? '☾' : '☀'}
 		</button>
@@ -96,6 +103,26 @@
 </main>
 
 <CommandPalette />
+
+<!-- DATA-VER-1 startup review: drift first, then missing-metadata. Confirm actions do the write-back
+     (task 6); for now they dismiss for the session. Shipped SRD carries full metadata, so a clean
+     install shows neither. -->
+{#if driftItems.length}
+	<HashDriftModal
+		items={driftItems}
+		onUpdate={() => (review.driftDismissed = true)}
+		onSkip={() => (review.driftDismissed = true)}
+		onNeverAsk={() => (review.driftDismissed = true)}
+	/>
+{:else if metaIssues.length}
+	<ContentMetaModal
+		issues={metaIssues}
+		onFillAndSave={() => (review.metaDismissed = true)}
+		onSkip={() => (review.metaDismissed = true)}
+		onNeverAsk={() => (review.metaDismissed = true)}
+	/>
+{/if}
+
 <Toaster
 	position="top-center"
 	theme={toasterTheme}

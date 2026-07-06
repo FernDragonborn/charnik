@@ -49,5 +49,49 @@
 		"title": "Heads up — this demo only ships the free SRD content",
 		"body": "Charnik is in active development. We can only include the <b>SRD</b> — the part Wizards of the Coast released for free (CC-BY). The rest of D&D belongs to them, not us, so a lot of it legally can't be here out of the box: <b>Artificer</b>, <b>Aasimar</b>, the <b>Beholder</b>, most <b>subclasses</b>, and loads of <b>spells & monsters</b>. But nothing holds you back — make your own <b>homebrew</b> and, with the flexible CSV system, add whatever you want: from species and classes to spells. You can also download the full desktop app for your computer — it keeps all your data local and needs no internet connection.",
 		"download": "⬇ Download the desktop app"
+	},
+	"contentMeta": {
+		"title": "Content metadata check",
+		"subtitle": "Some content files are missing a bit of metadata — nothing's broken, this is a normal step. Fill it in below, or discard this dialog.",
+		"needFromYou": "Needs a value from you",
+		"willAutofill": "We'll add these automatically",
+		"optional": "· optional",
+		"sourcePlaceholder": "e.g. My Homebrew",
+		"urlPlaceholder": "https://…",
+		"authorPlaceholder": "Your name or handle",
+		"customLicense": "Custom…",
+		"customLicensePlaceholder": "SPDX id or text",
+		"licenses": {
+			"CC-BY-4.0": "Others may use and adapt it, even commercially, as long as they credit you.",
+			"CC0-1.0": "Public domain — anyone can do anything, no attribution required.",
+			"CC-BY-SA-4.0": "Same as CC-BY, but adaptations must keep this same license.",
+			"MIT": "Very permissive; reuse freely as long as the copyright notice stays."
+		},
+		"fillAndSave": "Fill in & save",
+		"skip": "Skip for now",
+		"neverAsk": "Don't ask again (content-editing mode)",
+		"keys": {
+			"source": "Source",
+			"license": "License",
+			"id": "Pack ID",
+			"hash": "Content hash",
+			"updated-at": "Updated date",
+			"schema": "Schema version",
+			"systems": "Editions",
+			"url": "Source link",
+			"author": "Author",
+			"author-url": "Author link",
+			"type": "Type"
+		}
+	},
+	"contentDrift": {
+		"title": "Content data changed",
+		"subtitle": "We noticed because a file's recorded hash no longer matches its contents — the data was edited outside the app. This is a normal step, we just want to confirm you meant it this way. Set today's date as the revision date and recompute the hash?",
+		"declaredLabel": "Header says updated",
+		"changedLabel": "Actually changed",
+		"unknownDate": "unknown",
+		"update": "Update dates & hashes",
+		"skip": "Skip for now",
+		"neverAsk": "Don't ask again (content-editing mode)"
 	}
 }
