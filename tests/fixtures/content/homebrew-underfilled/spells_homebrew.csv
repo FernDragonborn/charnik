@@ -1,0 +1,3 @@
+id,name_en,name_uk,text_en,text_uk,effects,level,school,casting_time,range,components,duration,concentration,ritual,classes
+test_bolt,Test Bolt,Тестовий Промінь,A crackling bolt of raw test energy.,Тріскотливий промінь чистої тестової енергії.,,1,evocation,1 action,60 ft,"V,S",Instantaneous,false,false,wizard,sorcerer
+test_ward,Test Ward,Тестовий Оберіг,A shimmering ward that soaks the first hit.,Мерехтливий оберіг що поглинає перший удар.,,2,abjuration,1 action,Self,"V,S",1 minute,true,false,wizard

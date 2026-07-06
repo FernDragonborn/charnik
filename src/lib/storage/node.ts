@@ -46,11 +46,18 @@ export class NodeStorage implements Storage {
 		const full = this.abs(dir);
 		if (!existsSync(full)) return [];
 		const entries = await readdir(full, { withFileTypes: true });
-		return entries.map((e) => ({
-			path: (dir ? join(dir, e.name) : e.name).split(sep).join('/'),
-			name: e.name,
-			isDir: e.isDirectory()
-		}));
+		return Promise.all(
+			entries.map(async (e) => {
+				const isDir = e.isDirectory();
+				const mtime = isDir ? undefined : (await stat(join(full, e.name))).mtimeMs;
+				return {
+					path: (dir ? join(dir, e.name) : e.name).split(sep).join('/'),
+					name: e.name,
+					isDir,
+					mtime
+				};
+			})
+		);
 	}
 	async mkdir(path: string): Promise<void> {
 		await fsMkdir(this.abs(path), { recursive: true });

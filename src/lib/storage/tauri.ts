@@ -17,6 +17,7 @@ import {
 	writeFile,
 	exists as fsExists,
 	readDir,
+	stat as fsStat,
 	mkdir as fsMkdir,
 	remove as fsRemove,
 	rename as fsRename,
@@ -77,11 +78,22 @@ export class TauriStorage implements Storage {
 		if (!(await fsExists(full))) return [];
 		const entries = await readDir(full);
 		const prefix = dir.replace(/^\/+|\/+$/g, '');
-		return entries.map((e) => ({
-			path: prefix ? `${prefix}/${e.name}` : e.name,
-			name: e.name,
-			isDir: e.isDirectory
-		}));
+		return Promise.all(
+			entries.map(async (e) => {
+				// stat each file for its mtime (readDir entries don't carry it); dirs skip it
+				let mtime: number | undefined;
+				if (!e.isDirectory) {
+					const info = await fsStat(await this.abs(prefix ? `${prefix}/${e.name}` : e.name));
+					mtime = info.mtime ? info.mtime.getTime() : undefined;
+				}
+				return {
+					path: prefix ? `${prefix}/${e.name}` : e.name,
+					name: e.name,
+					isDir: e.isDirectory,
+					mtime
+				};
+			})
+		);
 	}
 	async mkdir(path: string): Promise<void> {
 		await fsMkdir(await this.abs(path), { recursive: true });

@@ -66,6 +66,7 @@
 		"svelte-dnd-action": "^0.9.70",
 		"svelte-i18n": "^4.0.1",
 		"svelte-sonner": "^1.1.1",
+		"xxhash-wasm": "^1.1.0",
 		"zod": "^4.4.3"
 	}
 }

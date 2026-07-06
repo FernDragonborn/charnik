@@ -10,6 +10,18 @@ describe('MemoryStorage', () => {
 		expect(await s.read('content/srd/species.csv')).toContain('elf,Elf');
 	});
 
+	it('reports a file mtime on list (set at write time), undefined for dirs', async () => {
+		const s = new MemoryStorage();
+		const before = Date.now();
+		await s.write('content/srd/species.csv', 'x');
+		const [entry] = await s.list('content/srd');
+		expect(entry!.name).toBe('species.csv');
+		expect(entry!.mtime).toBeGreaterThanOrEqual(before);
+		const [dir] = await s.list('content');
+		expect(dir!.isDir).toBe(true);
+		expect(dir!.mtime).toBeUndefined();
+	});
+
 	it('lists immediate children (dirs and files)', async () => {
 		const s = new MemoryStorage();
 		await s.write('content/srd/species.csv', 'x');

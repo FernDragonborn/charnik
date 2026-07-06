@@ -19,6 +19,7 @@ const dec = new TextDecoder();
  */
 export class MemoryStorage implements Storage {
 	private files = new Map<string, Uint8Array>();
+	private mtimes = new Map<string, number>();
 	private dirs = new Set<string>(['']);
 	private watchers = new Map<string, Set<(path: string) => void>>();
 
@@ -54,6 +55,7 @@ export class MemoryStorage implements Storage {
 		const k = norm(path);
 		this.ensureAncestors(k);
 		this.files.set(k, data);
+		this.mtimes.set(k, Date.now());
 		this.emit(k);
 	}
 
@@ -72,7 +74,7 @@ export class MemoryStorage implements Storage {
 			if (!rest) return;
 			const slash = rest.indexOf('/');
 			if (slash === -1) {
-				out.set(full, { path: full, name: rest, isDir });
+				out.set(full, { path: full, name: rest, isDir, mtime: this.mtimes.get(full) });
 			} else {
 				const top = rest.slice(0, slash);
 				out.set(prefix + top, { path: prefix + top, name: top, isDir: true });
@@ -92,10 +94,15 @@ export class MemoryStorage implements Storage {
 	async remove(path: string): Promise<void> {
 		const k = norm(path);
 		this.files.delete(k);
+		this.mtimes.delete(k);
 		this.dirs.delete(k);
 		// Recursive, matching the node/Tauri impls: removing a dir removes its contents.
 		const prefix = k + '/';
-		for (const f of [...this.files.keys()]) if (f.startsWith(prefix)) this.files.delete(f);
+		for (const f of [...this.files.keys()])
+			if (f.startsWith(prefix)) {
+				this.files.delete(f);
+				this.mtimes.delete(f);
+			}
 		for (const d of [...this.dirs]) if (d.startsWith(prefix)) this.dirs.delete(d);
 		this.emit(k);
 	}

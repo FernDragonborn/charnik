@@ -88,13 +88,13 @@ describe('loader — logic (in-memory)', () => {
 		expect(g.issues.some((i) => i.level === 'error' && i.id === 'bad')).toBe(true);
 	});
 
-	it('honors a #charnik-type directive for a freely-named file (explicit wins over filename)', async () => {
+	it('honors a #content-type directive for a freely-named file (explicit wins over filename)', async () => {
 		const s = new MemoryStorage();
 		await s.write('a/_pack.json', JSON.stringify({ source: 'Homebrew', systems: ['5.5e'] }));
 		// filename maps to no type, but the directive declares it — and it parses as spells
 		await s.write(
 			'a/my-cool-spells.csv',
-			['#charnik-type: spell', SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n')
+			['#content-type: spell', SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n')
 		);
 		const g = await loadContent(s, ['a']);
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -103,11 +103,11 @@ describe('loader — logic (in-memory)', () => {
 		expect(g.issues.some((i) => /unknown content type/.test(i.message))).toBe(false);
 	});
 
-	it('errors on a #charnik-type directive naming an unknown type', async () => {
+	it('errors on a #content-type directive naming an unknown type', async () => {
 		const s = new MemoryStorage();
 		await s.write(
 			'a/stuff.csv',
-			['#charnik-type: gizmo', SPELL_HEAD, spell('zap', '5.5e', 'SRD 5.2.1')].join('\n')
+			['#content-type: gizmo', SPELL_HEAD, spell('zap', '5.5e', 'SRD 5.2.1')].join('\n')
 		);
 		const g = await loadContent(s, ['a']);
 		expect(
@@ -123,6 +123,59 @@ describe('loader — logic (in-memory)', () => {
 		expect(
 			g.issues.some((i) => i.level === 'warn' && /unknown content type for file/.test(i.message))
 		).toBe(true);
+	});
+
+	it('flags a file missing a REQUIRED metadata key (source/license) as a metaIssue', async () => {
+		const s = new MemoryStorage();
+		// header declares source but NOT license → the ContentMetaModal should be offered
+		await s.write(
+			'a/spells_srd.csv',
+			['#content-source: Homebrew', SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n')
+		);
+		const g = await loadContent(s, ['a']);
+		const issue = g.metaIssues.find((i) => i.file === 'a/spells_srd.csv');
+		expect(issue).toBeTruthy();
+		expect(issue!.missingHuman).toContain('license');
+		expect(g.driftItems).toEqual([]); // no stored hash → no drift
+	});
+
+	it('detects a stale #content-hash as a driftItem (with the declared + actual dates)', async () => {
+		const s = new MemoryStorage();
+		await s.write(
+			'a/spells_srd.csv',
+			[
+				'#content-source: Homebrew',
+				'#content-license: CC-BY-4.0',
+				'#content-updated-at: 2020-01-01',
+				'#content-hash: xxh64:deadbeef', // deliberately wrong
+				SPELL_HEAD,
+				spell('zap', '5.5e', 'Homebrew')
+			].join('\n')
+		);
+		const g = await loadContent(s, ['a']);
+		const drift = g.driftItems.find((d) => d.file === 'a/spells_srd.csv');
+		expect(drift).toBeTruthy();
+		expect(drift!.declaredDate).toBe('2020-01-01');
+		expect(drift!.changedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/); // from the MemoryStorage mtime
+		expect(g.metaIssues).toEqual([]); // source+license present → no meta prompt
+	});
+
+	it('a correct #content-hash produces no drift', async () => {
+		const s = new MemoryStorage();
+		const { hashBody } = await import('./hash');
+		const body = [SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n') + '\n';
+		const hash = await hashBody(body);
+		await s.write(
+			'a/spells_srd.csv',
+			[
+				`#content-source: Homebrew`,
+				`#content-license: CC-BY-4.0`,
+				`#content-hash: ${hash}`,
+				body
+			].join('\n')
+		);
+		const g = await loadContent(s, ['a']);
+		expect(g.driftItems).toEqual([]);
 	});
 
 	it('resolveRefs reports missing referenced content (render-what-you-can)', async () => {

@@ -95,11 +95,14 @@ const effectsField = z.preprocess(
 		.default([])
 );
 
-/** Fields every content row carries. Spread into each type via `.extend`. */
+/** Fields every content row carries. Spread into each type via `.extend`. `systems` and `source` are
+ *  OPTIONAL on the row because they are normally declared once in the file's `#content-*:` header and
+ *  stamped onto every row by the loader; a per-row column is only a legacy fallback (validated when
+ *  present — a bad `systems` value still errors). */
 const base = {
 	id: idField,
-	systems: systemsField,
-	source: reqStr,
+	systems: systemsField.optional(),
+	source: optStr,
 	name_en: reqStr,
 	name_uk: optStr,
 	text_en: optStr,
@@ -376,12 +379,13 @@ export const monsterSchema = baseRow.extend({
 
 // --- Rules / lookup tables (NOT browsable articles: no name_en, minimal identity) ----------
 
-/** Common identity for a lookup/join row: still needs id/systems/source so the loader can build
- *  `type:source:id` and edition-scope it, but carries no name/text/effects. */
+/** Common identity for a lookup/join row: the loader builds `type:source:id` + edition-scopes it, but
+ *  carries no name/text/effects. `systems`/`source` are optional (file header stamps them; per-row
+ *  column is a legacy fallback). */
 const lookupBase = {
 	id: idField,
-	systems: systemsField,
-	source: reqStr
+	systems: systemsField.optional(),
+	source: optStr
 };
 
 /** Spell-slot progression table, matrix form (row = character level, cols = slots per spell

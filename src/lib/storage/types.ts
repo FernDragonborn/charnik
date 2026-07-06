@@ -15,6 +15,10 @@ export interface FileEntry {
 	/** Final path segment. */
 	name: string;
 	isDir: boolean;
+	/** Last-modified time in epoch milliseconds, when the backing store can report it (real
+	 *  filesystems + in-memory). Left `undefined` where unavailable (e.g. the read-only fetch/web
+	 *  source). Used by the content drift pop-up to show when a file was actually touched. */
+	mtime?: number | undefined;
 }
 
 export interface Storage {

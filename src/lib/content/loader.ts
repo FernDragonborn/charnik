@@ -15,6 +15,14 @@
 import Papa from 'papaparse';
 import type { Storage } from '../storage/types';
 import { CONTENT_TYPES, parseRow, type ContentType } from './schemas';
+import {
+	parseContentDirectives,
+	checkFileMeta,
+	isHashDrift,
+	type MetaIssue,
+	type DriftItem
+} from './meta';
+import { hashBody } from './hash';
 
 export interface PackManifest {
 	source?: string;
@@ -62,6 +70,10 @@ export interface ContentGraph {
 	/** Discovered content locales (always includes `en`). */
 	locales: string[];
 	issues: ContentIssue[];
+	/** Files missing REQUIRED metadata (source/license) → drive the ContentMetaModal (DATA-VER-1). */
+	metaIssues: MetaIssue[];
+	/** Files whose body no longer matches their recorded `#content-hash` → drive the HashDriftModal. */
+	driftItems: DriftItem[];
 
 	list(type: ContentType, opts?: ListOptions): LoadedRow[];
 	get(effectiveId: string): LoadedRow | undefined;
@@ -75,21 +87,6 @@ export interface ContentGraph {
 
 /** Locale column grammar: name_/text_ + a BCP-47-ish code (guardrail vs phantom locales). */
 const LOCALE_COL = /^(?:name|text)_([a-z]{2,3}(?:-[A-Za-z0-9]+)*)$/;
-
-/** Optional first-line type declaration for freely-named files: `#charnik-type: <type>`. */
-const TYPE_DIRECTIVE = /^\s*#\s*charnik-type\s*:\s*([a-z_]+)\s*$/i;
-
-/** Split an optional `#charnik-type:` directive off the top of a CSV. When present the directive
- *  line is removed so the remaining `body` is a clean CSV for Papa; `type` is the declared name
- *  (lowercased, not yet validated against known types). No directive → `{ body: csv }`. */
-function extractTypeDirective(csv: string): { type?: string; body: string } {
-	const nl = csv.indexOf('\n');
-	let firstLine = (nl === -1 ? csv : csv.slice(0, nl)).replace(/\r$/, '');
-	if (firstLine.charCodeAt(0) === 0xfeff) firstLine = firstLine.slice(1); // strip a leading BOM
-	const m = TYPE_DIRECTIVE.exec(firstLine);
-	if (!m?.[1]) return { body: csv };
-	return { type: m[1].toLowerCase(), body: nl === -1 ? '' : csv.slice(nl + 1) };
-}
 
 function pushMap<K, V>(map: Map<K, V[]>, key: K, val: V): void {
 	const arr = map.get(key);
@@ -115,6 +112,8 @@ export async function loadContent(
 ): Promise<ContentGraph> {
 	const rows: LoadedRow[] = [];
 	const issues: ContentIssue[] = [];
+	const metaIssues: MetaIssue[] = [];
+	const driftItems: DriftItem[] = [];
 	const localeSet = new Set<string>(['en']);
 	// longest filebase first, so a specific type wins over a type whose filebase is its prefix
 	// (e.g. `species_options_*` must match `species_option`, not `species`)
@@ -142,21 +141,24 @@ export async function loadContent(
 		for (const entry of await st.list(root)) {
 			if (entry.isDir || !entry.name.endsWith('.csv')) continue;
 			const raw = await st.read(`${root}/${entry.name}`);
-			// An optional `#charnik-type: <type>` first line lets a freely-named user file declare its
-			// content type explicitly (the loader is otherwise filename-only). Explicit wins.
-			const directive = extractTypeDirective(raw);
+			// A `#content-<key>:` header block (any order, before the CSV) declares the file's metadata.
+			// `#content-type:` lets a freely-named file declare its type (the loader is otherwise
+			// filename-only); `#content-source:` / `#content-systems:` are the file-level source tag and
+			// editions, stamped onto every row (the per-row columns are legacy fallbacks). Explicit wins.
+			const { directives, body } = parseContentDirectives(raw);
+			const declaredType = directives.get('type');
 			let type: ContentType;
-			if (directive.type) {
-				if (!(directive.type in CONTENT_TYPES)) {
+			if (declaredType) {
+				if (!(declaredType in CONTENT_TYPES)) {
 					issues.push({
 						level: 'error',
 						root,
 						file: entry.name,
-						message: `#charnik-type: unknown content type "${directive.type}"`
+						message: `#content-type: unknown content type "${declaredType}"`
 					});
 					continue;
 				}
-				type = directive.type as ContentType;
+				type = declaredType as ContentType;
 			} else {
 				const base = entry.name.replace(/\.csv$/, '');
 				// type = the filebase that the name equals or starts with (e.g. species_srd → species)
@@ -167,13 +169,35 @@ export async function loadContent(
 						root,
 						file: entry.name,
 						message:
-							'unknown content type for file (name matches no type — add a "#charnik-type: <type>" first line to declare it)'
+							'unknown content type for file (name matches no type — add a "#content-type: <type>" first line to declare it)'
 					});
 					continue;
 				}
 				type = match[1];
 			}
-			const parsed = Papa.parse<Record<string, string>>(directive.body, {
+			// DATA-VER-1 detection (surfaced, never thrown): (a) a REQUIRED metadata key missing →
+			// ContentMetaModal; (b) a recorded hash that no longer matches the body → HashDriftModal.
+			const fileLabel = `${root}/${entry.name}`;
+			const metaIssue = checkFileMeta(fileLabel, directives);
+			if (metaIssue) metaIssues.push(metaIssue);
+			const storedHash = directives.get('hash');
+			if (storedHash && isHashDrift(storedHash, await hashBody(raw))) {
+				driftItems.push({
+					file: fileLabel,
+					declaredDate: directives.get('updated-at'),
+					changedAt: entry.mtime ? new Date(entry.mtime).toISOString().slice(0, 10) : undefined
+				});
+			}
+
+			// file-level source/systems from the header, applied to every row (row columns override for
+			// legacy files that still carry them; header → pack default → fallback).
+			const fileSource = directives.get('source');
+			const fileSystems = directives
+				.get('systems')
+				?.split(',')
+				.map((s) => s.trim())
+				.filter(Boolean);
+			const parsed = Papa.parse<Record<string, string>>(body, {
 				header: true,
 				skipEmptyLines: true
 			});
@@ -203,14 +227,17 @@ export async function loadContent(
 					continue;
 				}
 				const data = res.data as Record<string, unknown>;
-				const source = (data.source as string) || pack.source || 'unknown';
+				// precedence: per-row column (legacy) → file header → pack default → fallback
+				const source = (data.source as string) || fileSource || pack.source || 'unknown';
+				const rowSystems = data.systems as string[] | undefined;
+				const systems = rowSystems?.length ? rowSystems : (fileSystems ?? pack.systems ?? []);
 				const id = data.id as string;
 				rows.push({
 					type,
 					source,
 					id,
 					effectiveId: `${type}:${source}:${id}`,
-					systems: data.systems as string[],
+					systems,
 					data,
 					root,
 					file: entry.name
@@ -276,6 +303,8 @@ export async function loadContent(
 		articles,
 		locales: [...localeSet].sort(),
 		issues,
+		metaIssues,
+		driftItems,
 		list(type, opts) {
 			const all = byType.get(type) ?? [];
 			return opts?.system ? all.filter((r) => r.systems.includes(opts.system!)) : all;
