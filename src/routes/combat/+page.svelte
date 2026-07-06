@@ -113,7 +113,7 @@
 				></i>
 			</div>
 			<div class="hpadj">
-				<button class="hpbtn dmg" onclick={combat.damage} title="Apply damage">− Damage</button>
+				<button class="hpbtn damage" onclick={combat.damage} title="Apply damage">− Damage</button>
 				<input
 					class="hpnum"
 					type="number"
@@ -129,28 +129,28 @@
 	<section class="controls">
 		<button
 			class="toggle combatsw"
-			class:on={c.play.inCombat}
+			class:active={c.play.inCombat}
 			onclick={combat.economy.toggleCombat}
 			title="Track the action economy (rounds, action/bonus/reaction)"
-			>⚔ Combat <span class="sw">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
+			>⚔ Combat <span class="toggle-state">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
 		>
 		<button
 			class="toggle"
-			class:on={c.play.shieldRaised}
+			class:active={c.play.shieldRaised}
 			onclick={() => (c.play.shieldRaised = !c.play.shieldRaised)}
-			>🛡 Shield <span class="sw">{c.play.shieldRaised ? 'ON' : 'OFF'}</span></button
+			>🛡 Shield <span class="toggle-state">{c.play.shieldRaised ? 'ON' : 'OFF'}</span></button
 		>
 		{#if conc}<button
-				class="toggle conc on"
+				class="toggle conc active"
 				onclick={combat.clearConcentration}
 				title="Tap to stop concentrating"
-				>◈ Concentration <span class="sw">{conc.label}</span></button
+				>◈ Concentration <span class="toggle-state">{conc.label}</span></button
 			>{/if}
 		<button
 			class="toggle"
-			class:on={c.play.inspiration}
+			class:active={c.play.inspiration}
 			onclick={() => (c.play.inspiration = !c.play.inspiration)}
-			>✦ Inspiration <span class="sw">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
+			>✦ Inspiration <span class="toggle-state">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
 		>
 		<span class="spacer"></span>
 		<button class="toggle rest" onclick={() => combat.resources.rest('short')} title="Short rest"
@@ -161,10 +161,10 @@
 		>
 		<button
 			class="toggle auto"
-			class:on={c.play.autoCalc}
+			class:active={c.play.autoCalc}
 			onclick={() => (c.play.autoCalc = !c.play.autoCalc)}
 			title="Auto-calculate derived stats from effects (off → base values only)"
-			>⚙ Auto-calc <span class="sw">{c.play.autoCalc ? 'ON' : 'OFF'}</span></button
+			>⚙ Auto-calc <span class="toggle-state">{c.play.autoCalc ? 'ON' : 'OFF'}</span></button
 		>
 		<button class="toggle dice" onclick={openDice}>🎲 Dice tray</button>
 	</section>
@@ -255,45 +255,47 @@
 	{#if !collapsed.combat}
 		<section class="combat">
 			<button class="tile" title={why(s.ac)} onclick={(e) => roll('AC (touch)', 0, e)}>
-				<div class="k">Armor class</div>
-				<div class="v">{s.ac.value}</div>
-				<div class="t">{s.ac.trace.map((x) => `${x.source} ${signed(x.amount)}`).join(' ')}</div>
+				<div class="tile-key">Armor class</div>
+				<div class="tile-value">{s.ac.value}</div>
+				<div class="tile-text">
+					{s.ac.trace.map((x) => `${x.source} ${signed(x.amount)}`).join(' ')}
+				</div>
 			</button>
 			<button
 				class="tile"
 				title={why(s.initiative)}
 				onclick={(e) => roll('Initiative', s.initiative.value, e, 'initiative')}
 			>
-				<div class="k">Initiative</div>
-				<div class="v">{signed(s.initiative.value)}</div>
-				<div class="t">DEX <b>{signed(s.abilities.dex.mod)}</b></div>
+				<div class="tile-key">Initiative</div>
+				<div class="tile-value">{signed(s.initiative.value)}</div>
+				<div class="tile-text">DEX <b>{signed(s.abilities.dex.mod)}</b></div>
 			</button>
 			<div class="tile" title={why(s.speed)}>
-				<div class="k">Speed</div>
-				<div class="v">{s.speed.value} ft<small> ({metres(s.speed.value)})</small></div>
-				<div class="t">base walk</div>
+				<div class="tile-key">Speed</div>
+				<div class="tile-value">{s.speed.value} ft<small> ({metres(s.speed.value)})</small></div>
+				<div class="tile-text">base walk</div>
 			</div>
 		</section>
 		<div class="senses-strip">
 			<span class="lbl">Passive senses</span>
 			{#each passives as p, i (p.key)}
 				{#if i > 0}<span class="sdot">·</span>{/if}
-				<span class="sv" title={why(p.comp)}><i>{p.name}</i>{p.comp.value}</span>
+				<span class="ability-save" title={why(p.comp)}><i>{p.name}</i>{p.comp.value}</span>
 			{:else}
-				<span class="sv"><i>none pinned</i></span>
+				<span class="ability-save"><i>none pinned</i></span>
 			{/each}
 			<button class="edit" onclick={(e) => openMenu('pinskills', e)}>✎ Pin skills</button>
 		</div>
 		{#if s.defenses.resist.length || s.defenses.immune.length || s.defenses.vulnerable.length}
 			<div class="senses-strip">
 				<span class="lbl">Defenses</span>
-				{#if s.defenses.resist.length}<span class="sv"
+				{#if s.defenses.resist.length}<span class="ability-save"
 						><i>Resist</i>{s.defenses.resist.join(', ')}</span
 					>{/if}
-				{#if s.defenses.immune.length}<span class="sv"
+				{#if s.defenses.immune.length}<span class="ability-save"
 						><i>Immune</i>{s.defenses.immune.join(', ')}</span
 					>{/if}
-				{#if s.defenses.vulnerable.length}<span class="sv"
+				{#if s.defenses.vulnerable.length}<span class="ability-save"
 						><i>Vulnerable</i>{s.defenses.vulnerable.join(', ')}</span
 					>{/if}
 			</div>
@@ -310,11 +312,11 @@
 			{#each ABIL as ab (ab)}
 				{@const a = s.abilities[ab]}
 				{@const prof = a.save.trace.some((t) => t.layer === 'proficiency')}
-				<button class="ab" onclick={(e) => roll(`${ab.toUpperCase()} check`, a.mod, e)}>
-					<div class="n"><b>{ab.toUpperCase()}</b> · {a.score}</div>
-					<div class="m">{signed(a.mod)}</div>
+				<button class="ability" onclick={(e) => roll(`${ab.toUpperCase()} check`, a.mod, e)}>
+					<div class="ability-name"><b>{ab.toUpperCase()}</b> · {a.score}</div>
+					<div class="ability-mod">{signed(a.mod)}</div>
 					<span
-						class="sv"
+						class="ability-save"
 						class:prof
 						role="button"
 						tabindex="-1"
@@ -324,7 +326,7 @@
 							roll(`${ab.toUpperCase()} save`, a.save.value, e, `save.${ab}`);
 						}}
 					>
-						<i class="pdot" class:on={prof}></i>SAVE <b>{signed(a.save.value)}</b>
+						<i class="pdot" class:active={prof}></i>SAVE <b>{signed(a.save.value)}</b>
 					</span>
 				</button>
 			{/each}
@@ -367,18 +369,18 @@
 									{@const sk = s.skills[skill]}
 									{#if sk}
 										<button
-											class="skl"
+											class="skill-row"
 											title={why(sk)}
 											onclick={(e) => roll(titleCase(skill), sk.value, e, `skill.${skill}`)}
 										>
 											<i
 												class="pdot"
-												class:on={sk.prof !== 'none'}
-												class:exp={sk.prof === 'expertise'}
+												class:active={sk.prof !== 'none'}
+												class:expertise={sk.prof === 'expertise'}
 												title={sk.prof}
 											></i>
-											<span class="sn">{titleCase(skill)}</span>
-											<b class="sm">{signed(sk.value)}</b>
+											<span class="skill-name">{titleCase(skill)}</span>
+											<b class="skill-mod">{signed(sk.value)}</b>
 										</button>
 									{/if}
 								{/each}
@@ -406,8 +408,8 @@
 				{/each}
 			{:else if pid === 'effects'}
 				{#each c.play.effects as e (e.iid)}
-					<div class="eff" class:pos={e.positive} class:neg={!e.positive}>
-						<span class="d"></span>
+					<div class="effect" class:positive={e.positive} class:negative={!e.positive}>
+						<span class="effect-dot"></span>
 						<div class="body">
 							<b>{e.label}</b>
 							{#if e.effects.length || e.durationRounds}<span class="etags"
@@ -438,7 +440,7 @@
 								{g.label}
 								{#if g.slots}{@const sl = g.slots}<span class="pips"
 										>{#each Array(sl.full) as _, i (i)}<button
-												class="pip"
+												class="slot-pip"
 												class:full={i < sl.full - sl.spent}
 												class:spent={i >= sl.full - sl.spent}
 												title="tap to spend / restore"
@@ -452,7 +454,7 @@
 										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 										<i
 											class="prep"
-											class:on={r.prep === 'on'}
+											class:active={r.prep === 'on'}
 											class:always={r.prep === 'always'}
 											title={r.prep === 'always' ? 'always prepared' : 'tap to prepare / unprepare'}
 											onclick={(e) => {
@@ -463,7 +465,7 @@
 										<span class="nm">{r.name}</span>
 										<span
 											class="pinstar"
-											class:on={pinned[r.id]}
+											class:active={pinned[r.id]}
 											role="button"
 											tabindex="-1"
 											title="pin to top"
@@ -473,11 +475,11 @@
 											}}>{pinned[r.id] ? '★' : '☆'}</span
 										>
 									</span>
-									<span class="spe">{r.spe}</span>
+									<span class="spell-summary">{r.spe}</span>
 									{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span></span>{/if}
-									<span class="tm"
+									<span class="spell-level"
 										>{#if r.ct}<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions --><i
-												class="ct"
+												class="cast-icon"
 												title={r.ct === 'react' ? 'reaction' : 'bonus action'}
 												onclick={(e) => {
 													e.stopPropagation();
@@ -659,7 +661,7 @@
 		border: 1px solid var(--color-border);
 		color: var(--color-text-muted);
 	}
-	.toggle .sw {
+	.toggle .toggle-state {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		border: 1px solid var(--color-border-strong);
@@ -667,29 +669,29 @@
 		padding: 1px 6px;
 		color: inherit;
 	}
-	.toggle.on {
+	.toggle.active {
 		background: var(--color-resource-soft);
 		border-color: var(--color-resource);
 		color: var(--color-resource);
 	}
-	.toggle.on .sw {
+	.toggle.active .toggle-state {
 		border-color: var(--color-resource);
 	}
-	.toggle.conc.on {
+	.toggle.conc.active {
 		background: var(--color-accent-soft);
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
 	}
-	.toggle.conc.on .sw {
+	.toggle.conc.active .toggle-state {
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
 	}
-	.toggle.auto.on {
+	.toggle.auto.active {
 		background: var(--color-good-soft);
 		border-color: var(--color-good);
 		color: var(--color-good);
 	}
-	.toggle.auto.on .sw {
+	.toggle.auto.active .toggle-state {
 		border-color: var(--color-good);
 	}
 	.toggle.dice {
@@ -699,12 +701,12 @@
 		font-size: 13px;
 	}
 	/* Combat mode = gold when tracking (own class: `combat` collides with the stat-grid section) */
-	.toggle.combatsw.on {
+	.toggle.combatsw.active {
 		background: var(--color-resource-soft);
 		border-color: var(--color-resource);
 		color: var(--color-resource);
 	}
-	.toggle.combatsw.on .sw {
+	.toggle.combatsw.active .toggle-state {
 		border-color: var(--color-resource);
 	}
 	.controls .spacer,
@@ -855,7 +857,7 @@
 		cursor: pointer;
 		flex: 1;
 	}
-	.hpbtn.dmg {
+	.hpbtn.damage {
 		background: var(--color-danger-soft, rgba(179, 69, 47, 0.12));
 		border: 1px solid var(--color-danger, #b3452f);
 		color: var(--color-danger, #d06a52);
@@ -965,32 +967,32 @@
 		border-color: var(--color-accent);
 		background: var(--color-surface-2);
 	}
-	.tile .k {
+	.tile .tile-key {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-accent-bright);
 	}
-	.tile .v {
+	.tile .tile-value {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 26px;
 		line-height: 1.05;
 		margin-top: 4px;
 	}
-	.tile .v small {
+	.tile .tile-value small {
 		font-size: 13px;
 		color: var(--color-text-muted);
 		font-weight: 500;
 	}
-	.tile .t {
+	.tile .tile-text {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
 		margin-top: 6px;
 	}
-	.tile .t b {
+	.tile .tile-text b {
 		color: var(--color-resource);
 	}
 
@@ -1011,12 +1013,12 @@
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
-	.senses-strip .sv {
+	.senses-strip .ability-save {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 16px;
 	}
-	.senses-strip .sv i {
+	.senses-strip .ability-save i {
 		font-style: normal;
 		font-family: var(--font-body);
 		font-weight: 400;
@@ -1065,7 +1067,7 @@
 			grid-template-columns: 1fr;
 		}
 	}
-	.ab {
+	.ability {
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: 11px;
@@ -1076,31 +1078,31 @@
 		display: block;
 		width: 100%;
 	}
-	.ab:hover {
+	.ability:hover {
 		border-color: var(--color-border-strong);
 		background: var(--color-surface);
 	}
-	.ab .n {
+	.ability .ability-name {
 		font-family: var(--font-mono);
 		font-size: 12px;
 		letter-spacing: 0.08em;
 		color: var(--color-text-muted);
 		text-transform: uppercase;
 	}
-	.ab .n b {
+	.ability .ability-name b {
 		color: var(--color-text);
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 13px;
 	}
-	.ab .m {
+	.ability .ability-mod {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 34px;
 		line-height: 1;
 		margin: 6px 0 9px;
 	}
-	.ab .sv {
+	.ability .ability-save {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -1116,32 +1118,32 @@
 		padding: 5px 6px;
 		cursor: pointer;
 	}
-	.ab .sv:hover {
+	.ability .ability-save:hover {
 		border-color: var(--color-accent);
 		background: var(--color-surface-2);
 		color: var(--color-text);
 	}
-	.ab .sv b {
+	.ability .ability-save b {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 12px;
 		line-height: 1;
 		color: var(--color-text);
 	}
-	.ab .sv.prof {
+	.ability .ability-save.prof {
 		border-color: var(--color-resource);
 		color: var(--color-resource);
 	}
-	.ab .sv.prof b {
+	.ability .ability-save.prof b {
 		color: var(--color-resource);
 	}
-	.ab .sv .pdot {
+	.ability .ability-save .pdot {
 		width: 6px;
 		height: 6px;
 		border-radius: 50%;
 		border: 1.5px solid var(--color-border-strong);
 	}
-	.ab .sv .pdot.on {
+	.ability .ability-save .pdot.active {
 		background: var(--color-resource);
 		border-color: var(--color-resource);
 	}
@@ -1186,7 +1188,7 @@
 		color: var(--color-text-muted);
 		padding: 6px 0 3px;
 	}
-	.skl {
+	.skill-row {
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -1201,30 +1203,30 @@
 		color: var(--color-text);
 		text-align: left;
 	}
-	.skl:hover {
+	.skill-row:hover {
 		background: var(--color-surface-2);
 	}
-	.skl .pdot {
+	.skill-row .pdot {
 		width: 7px;
 		height: 7px;
 		border-radius: 50%;
 		border: 1.5px solid var(--color-border-strong);
 		flex: none;
 	}
-	.skl .pdot.on {
+	.skill-row .pdot.active {
 		background: var(--color-resource);
 		border-color: var(--color-resource);
 	}
 	/* expertise = a ringed dot (double proficiency) */
-	.skl .pdot.exp {
+	.skill-row .pdot.expertise {
 		box-shadow:
 			0 0 0 2px var(--color-surface),
 			0 0 0 3.5px var(--color-resource);
 	}
-	.skl .sn {
+	.skill-row .skill-name {
 		flex: 1;
 	}
-	.skl .sm {
+	.skill-row .skill-mod {
 		font-family: var(--font-display);
 		font-weight: 700;
 	}
@@ -1272,39 +1274,39 @@
 		justify-self: end;
 	}
 
-	.eff {
+	.effect {
 		display: flex;
 		align-items: center;
 		gap: 10px;
 		padding: 9px 0;
 		border-top: 1px solid var(--color-border);
 	}
-	.eff:first-of-type {
+	.effect:first-of-type {
 		border-top: 0;
 	}
-	.eff .body {
+	.effect .body {
 		display: flex;
 		align-items: center;
 		gap: 10px;
 		flex: 1;
 		min-width: 0;
 	}
-	.eff .d {
+	.effect .effect-dot {
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
 		flex: none;
 	}
-	.eff.pos .d {
+	.effect.positive .effect-dot {
 		background: var(--color-good);
 	}
-	.eff.pos .body b {
+	.effect.positive .body b {
 		color: var(--color-good);
 	}
-	.eff.neg .d {
+	.effect.negative .effect-dot {
 		background: var(--color-accent);
 	}
-	.eff.neg .body b {
+	.effect.negative .body b {
 		color: var(--color-accent-bright);
 	}
 	.etags {
@@ -1322,11 +1324,11 @@
 		border-radius: 5px;
 		padding: 1px 6px;
 	}
-	.eff.pos .etag {
+	.effect.positive .etag {
 		color: var(--color-good);
 		border-color: var(--color-good);
 	}
-	.eff.neg .etag {
+	.effect.negative .etag {
 		color: var(--color-accent-bright);
 		border-color: var(--color-accent);
 	}
@@ -1370,7 +1372,7 @@
 		display: flex;
 		gap: 5px;
 	}
-	.scat .pip {
+	.scat .slot-pip {
 		width: 12px;
 		height: 12px;
 		padding: 0;
@@ -1378,12 +1380,12 @@
 		border: 1px solid #2c4a45;
 		cursor: pointer;
 	}
-	.scat .pip.full {
+	.scat .slot-pip.full {
 		background: var(--color-good);
 		border-color: var(--color-good);
 		box-shadow: 0 0 8px rgba(59, 184, 166, 0.45);
 	}
-	.scat .pip.spent {
+	.scat .slot-pip.spent {
 		background: transparent;
 		border-style: dashed;
 		opacity: 0.5;
@@ -1432,7 +1434,7 @@
 	.sprow .pinstar {
 		flex: none;
 	}
-	.sprow .spe {
+	.sprow .spell-summary {
 		font-family: var(--font-mono);
 		font-size: 12px;
 		font-weight: 600;
@@ -1465,14 +1467,14 @@
 		color: var(--color-good);
 		border-color: var(--color-good);
 	}
-	.sprow .tm {
+	.sprow .spell-level {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
 		text-align: right;
 		white-space: nowrap;
 	}
-	.sprow .tm .ct {
+	.sprow .spell-level .cast-icon {
 		font-style: normal;
 		margin-right: 6px;
 		color: var(--color-accent-bright);
@@ -1503,7 +1505,7 @@
 	.prep.always {
 		cursor: default;
 	}
-	.prep.on,
+	.prep.active,
 	.prep.always {
 		background: var(--color-resource);
 		border-color: var(--color-resource);
@@ -1516,7 +1518,7 @@
 		cursor: pointer;
 		font-size: 12px;
 	}
-	.pinstar.on {
+	.pinstar.active {
 		color: var(--color-accent-bright);
 	}
 	.prepct {
