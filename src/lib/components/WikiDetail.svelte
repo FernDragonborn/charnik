@@ -177,7 +177,7 @@
 				{#each detail.abilities as a (a.ab)}
 					<div class="ability-block">
 						<span class="ability-code">{a.ab}</span>
-						<span class="sc">{a.score}</span>
+						<span class="ability-score">{a.score}</span>
 						<span class="markdown">{a.mod}</span>
 					</div>
 				{/each}
@@ -187,8 +187,8 @@
 			<div class="meta">
 				{#each detail.meta as [k, v] (k)}
 					<div class="meta-cell">
-						<div class="k">{k}</div>
-						<div class="v">{v}</div>
+						<div class="meta-key">{k}</div>
+						<div class="meta-value">{v}</div>
 					</div>
 				{/each}
 			</div>
@@ -246,7 +246,7 @@
 		letter-spacing: 0.08em;
 		color: var(--color-text-muted);
 	}
-	.ability-block .sc {
+	.ability-block .ability-score {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 17px;
@@ -274,14 +274,14 @@
 		border-radius: 10px;
 		padding: 7px 11px;
 	}
-	.meta-cell :global(.k) {
+	.meta-cell :global(.meta-key) {
 		font-family: var(--font-mono);
 		font-size: 9px;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
-	.meta-cell :global(.v) {
+	.meta-cell :global(.meta-value) {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 14px;

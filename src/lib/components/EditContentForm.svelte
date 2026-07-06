@@ -81,7 +81,7 @@
 		<div class="meta">
 			{#each metaFields as f (f.name)}
 				<label class="meta-cell">
-					<span class="k"
+					<span class="meta-key"
 						>{f.label}{#if f.required}<span class="req">*</span>{/if}</span
 					>
 					{#if f.kind === 'enum'}
@@ -217,7 +217,7 @@
 		border-radius: 10px;
 		padding: 7px 11px;
 	}
-	.meta-cell .k {
+	.meta-cell .meta-key {
 		font-family: var(--font-mono);
 		font-size: 9px;
 		letter-spacing: 0.1em;
