@@ -40,25 +40,14 @@
 	const preparedCap = $derived(combat.preparedCap);
 	const groupByLabel = $derived(combat.groupByLabel);
 	const log = $derived(combat.tray.log);
-	const collapsed = $derived(combat.collapsed);
-	const columns = $derived(combat.columns);
-	const flipDurationMs = combat.flipDurationMs;
-	const dragDisabled = $derived(combat.dragDisabled);
+	const collapsed = $derived(combat.layout.collapsed);
+	const columns = $derived(combat.layout.columns);
+	const flipDurationMs = combat.layout.flipDurationMs;
+	const dragDisabled = $derived(combat.layout.dragDisabled);
 	const pinned = $derived(combat.pinned);
 
-	const {
-		openMenu,
-		openDice,
-		roll,
-		cast,
-		toggle,
-		cycleGroupBy,
-		slotClick,
-		togglePrepared,
-		dndConsider,
-		dndFinalize,
-		releaseDrag
-	} = combat;
+	const { openMenu, openDice, roll, cast, cycleGroupBy, slotClick, togglePrepared } = combat;
+	const { toggle, dndConsider, dndFinalize, releaseDrag } = combat.layout;
 
 	// action-economy slots (id + label); base 1 pip each until a feature grants extras
 	const SLOTS = [
@@ -350,8 +339,10 @@
 				>
 				<a class="grpby" href="{base}/spellbook">⛭ Manage all</a>
 			{/if}
-			<span class="dh" title="drag to reorder" onpointerdown={() => (combat.dragDisabled = false)}
-				>⠿</span
+			<span
+				class="dh"
+				title="drag to reorder"
+				onpointerdown={() => (combat.layout.dragDisabled = false)}>⠿</span
 			>
 		</div>
 		{#if !collapsed[pid]}

@@ -36,10 +36,15 @@ import {
 	type StandardAction
 } from '$lib/combat/helpers';
 import { RollTray } from './roll.svelte';
+import { PanelLayout } from './panel.svelte';
 
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. */
 	tray = new RollTray();
+	/** Panel-layout subsystem (columns, collapse, drag) — persists column order onto the character. */
+	layout = new PanelLayout((cols) => {
+		if (this.character) this.character.ui.panelColumns = cols;
+	});
 	graph = $state<ContentGraph | null>(null);
 	character = $state<Character | null>(null);
 	/** Fully reactive: recomputes whenever the character (HP, effects, shield, auto-calc…) or the
@@ -53,15 +58,7 @@ class CombatVM {
 	get round(): number {
 		return this.character?.play.round ?? 0;
 	}
-	collapsed = $state<Record<string, boolean>>({});
 	pinned = $state<Record<string, boolean>>({ 'fire-bolt': true, shield: true });
-	// Panel layout = two independent column arrays (svelte-dnd-action items need an id).
-	columns = $state<{ id: string }[][]>([
-		[{ id: 'skills' }, { id: 'spells' }, { id: 'effects' }],
-		[{ id: 'attacks' }, { id: 'actions' }]
-	]);
-	dragDisabled = $state(true); // drag only after the ⠿ grip arms it (handle-only)
-	flipDurationMs = 150;
 	// menus open as dropdowns anchored under their trigger button (not centered modals)
 	overlay = $state<null | {
 		kind: MenuKind;
@@ -80,8 +77,7 @@ class CombatVM {
 		// the character opened from the Roster, else the seeded demo
 		this.character = characters.active ?? demoCharacter();
 		// restore this character's saved panel layout (falls back to the default columns)
-		const saved = this.character.ui.panelColumns;
-		if (saved?.length) this.columns = saved.map((col) => col.map((id) => ({ id })));
+		this.layout.restore(this.character.ui.panelColumns);
 	};
 
 	openMenu = (kind: MenuKind, e: Event) => {
@@ -246,8 +242,6 @@ class CombatVM {
 			? this.passiveSkills.filter((x) => x !== k)
 			: [...this.passiveSkills, k];
 	};
-
-	toggle = (k: string) => (this.collapsed[k] = !this.collapsed[k]);
 
 	// --- level-up: advance an existing character's class by one level ---------------------------
 	/** Total character level across all classes. */
@@ -475,19 +469,6 @@ class CombatVM {
 			tmp: (this.character.play.hp.temp / max) * 100
 		};
 	});
-
-	// svelte-dnd-action: sync each column on drag consider + finalize; re-lock the grip.
-	dndConsider = (ci: number, e: CustomEvent<{ items: { id: string }[] }>) => {
-		this.columns[ci] = e.detail.items;
-	};
-	dndFinalize = (ci: number, e: CustomEvent<{ items: { id: string }[] }>) => {
-		this.columns[ci] = e.detail.items;
-		this.dragDisabled = true;
-		// persist the layout ON THE CHARACTER (round-trips once save/load is wired)
-		if (this.character)
-			this.character.ui.panelColumns = this.columns.map((col) => col.map((x) => x.id));
-	};
-	releaseDrag = () => (this.dragDisabled = true); // window pointerup
 
 	// conditions for THIS character's system (not a hardcoded edition)
 	conditionList = $derived.by<string[]>(() => {
