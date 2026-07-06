@@ -1,13 +1,20 @@
-id,systems,source,name_en,name_uk,text_en,text_uk,effects,class_id
-pathoftheberserker,5e,SRD 5.1,PathoftheBerserker,,,,,barbarian
-collegeoflore,5e,SRD 5.1,CollegeofLore,,,,,bard
-lifedomain,5e,SRD 5.1,LifeDomain,,,,,cleric
-circleoftheland,5e,SRD 5.1,CircleoftheLand,,,,,druid
-champion,5e,SRD 5.1,Champion,,,,,fighter
-wayoftheopenhand,5e,SRD 5.1,WayoftheOpenHand,,,,,monk
-oathofdevotion,5e,SRD 5.1,OathofDevotion,,,,,paladin
-hunter,5e,SRD 5.1,Hunter,,,,,ranger
-thief,5e,SRD 5.1,Thief,,,,,rogue
-draconicbloodline,5e,SRD 5.1,DraconicBloodline,,,,,sorcerer
-thefiend,5e,SRD 5.1,TheFiend,,,,,warlock
-schoolofevocation,5e,SRD 5.1,SchoolofEvocation,,,,,wizard
+#content-source: SRD 5.1
+#content-systems: 5e
+#content-url: https://dnd.wizards.com/resources/systems-reference-document
+#content-license: CC-BY-4.0
+#content-id: 019f374c-ed08-7dea-9d4c-68ad82c08362
+#content-updated-at: 2026-07-06
+#content-hash: xxh64:6b5e0154f619531f
+id,name_en,name_uk,text_en,text_uk,effects,class_id
+pathoftheberserker,PathoftheBerserker,,,,,barbarian
+collegeoflore,CollegeofLore,,,,,bard
+lifedomain,LifeDomain,,,,,cleric
+circleoftheland,CircleoftheLand,,,,,druid
+champion,Champion,,,,,fighter
+wayoftheopenhand,WayoftheOpenHand,,,,,monk
+oathofdevotion,OathofDevotion,,,,,paladin
+hunter,Hunter,,,,,ranger
+thief,Thief,,,,,rogue
+draconicbloodline,DraconicBloodline,,,,,sorcerer
+thefiend,TheFiend,,,,,warlock
+schoolofevocation,SchoolofEvocation,,,,,wizard

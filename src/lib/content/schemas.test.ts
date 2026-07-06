@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import Papa from 'papaparse';
 import { CONTENT_TYPES, parseRow, type ContentType } from './schemas';
+import { parseContentDirectives } from './meta';
 
 describe('content schemas — unit', () => {
 	it('accepts a well-formed species row and namespaced systems', () => {
@@ -107,8 +108,9 @@ describe('seeded SRD packs validate', () => {
 					// a type may not exist in a given edition yet; skip
 					return;
 				}
-				const csv = readFileSync(file, 'utf8');
-				const parsed = Papa.parse<Record<string, string>>(csv, {
+				// strip the `#content-*:` directive header (the loader does this) before parsing rows
+				const { body } = parseContentDirectives(readFileSync(file, 'utf8'));
+				const parsed = Papa.parse<Record<string, string>>(body, {
 					header: true,
 					skipEmptyLines: true
 				});

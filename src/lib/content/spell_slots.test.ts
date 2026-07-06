@@ -3,6 +3,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import Papa from 'papaparse';
 import { fullCasterSlots } from '../rules/core';
+import { parseContentDirectives } from './meta';
 
 /*
  * Data gate: the shipped `full` spell-slot table (generated from the SRD class tables by
@@ -14,7 +15,8 @@ const file = resolve(process.cwd(), 'content/srd-2024/spell_slots_srd.csv');
 describe('shipped spell_slots table', () => {
 	it('the full-caster rows match core.fullCasterSlots for every level', () => {
 		expect(existsSync(file)).toBe(true);
-		const rows = Papa.parse<Record<string, string>>(readFileSync(file, 'utf8'), {
+		const { body } = parseContentDirectives(readFileSync(file, 'utf8'));
+		const rows = Papa.parse<Record<string, string>>(body, {
 			header: true,
 			skipEmptyLines: true
 		}).data;

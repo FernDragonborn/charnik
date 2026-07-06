@@ -1,13 +1,20 @@
-id,systems,source,name_en,name_uk,text_en,text_uk,effects,hit_die,primary_ability,saves,caster,spell_ability,skills_choose,skills_from,subclass_level,asi_levels
-barbarian,5.5e,SRD 5.2.1,Barbarian,,,,,d12,str,"str,con",none,,2,"animal-handling,athletics,intimidation,nature,perception,survival",3,"4,8,12,16,19"
-bard,5.5e,SRD 5.2.1,Bard,,,,,d8,cha,"dex,cha",full,cha,3,any,3,"4,8,12,16,19"
-cleric,5.5e,SRD 5.2.1,Cleric,,,,,d8,wis,"wis,cha",full,wis,2,"history,insight,medicine,persuasion,religion",3,"4,8,12,16,19"
-druid,5.5e,SRD 5.2.1,Druid,,,,,d8,wis,"int,wis",full,wis,2,"animal-handling,arcana,insight,medicine,nature,perception,religion,survival",3,"4,8,12,16,19"
-fighter,5.5e,SRD 5.2.1,Fighter,,,,,d10,"str,dex","str,con",none,,2,"acrobatics,animal-handling,athletics,history,insight,intimidation,persuasion,perception,survival",3,"4,6,8,12,14,16,19"
-monk,5.5e,SRD 5.2.1,Monk,,,,,d8,"dex,wis","str,dex",none,,2,"acrobatics,athletics,history,insight,religion,stealth",3,"4,8,12,16,19"
-paladin,5.5e,SRD 5.2.1,Paladin,,,,,d10,"str,cha","wis,cha",half,cha,2,"athletics,insight,intimidation,medicine,persuasion,religion",3,"4,8,12,16,19"
-ranger,5.5e,SRD 5.2.1,Ranger,,,,,d10,"dex,wis","str,dex",half,wis,3,"animal-handling,athletics,insight,investigation,nature,perception,stealth,survival",3,"4,8,12,16,19"
-rogue,5.5e,SRD 5.2.1,Rogue,,,,,d8,dex,"dex,int",none,,4,"acrobatics,athletics,deception,insight,intimidation,investigation,perception,persuasion,sleight-of-hand,stealth",3,"4,8,10,12,16,19"
-sorcerer,5.5e,SRD 5.2.1,Sorcerer,,,,,d6,cha,"con,cha",full,cha,2,"arcana,deception,insight,intimidation,persuasion,religion",3,"4,8,12,16,19"
-warlock,5.5e,SRD 5.2.1,Warlock,,,,,d8,cha,"wis,cha",pact,cha,2,"arcana,deception,history,intimidation,investigation,nature,religion",3,"4,8,12,16,19"
-wizard,5.5e,SRD 5.2.1,Wizard,,,,,d6,int,"int,wis",full,int,2,"arcana,history,insight,investigation,medicine,nature,religion",3,"4,8,12,16,19"
+#content-source: SRD 5.2.1
+#content-systems: 5.5e
+#content-url: https://dnd.wizards.com/resources/systems-reference-document
+#content-license: CC-BY-4.0
+#content-id: 019f374c-ec7b-7b28-95d1-afd1c53acc43
+#content-updated-at: 2026-07-06
+#content-hash: xxh64:37690533293532b1
+id,name_en,name_uk,text_en,text_uk,effects,hit_die,primary_ability,saves,caster,spell_ability,skills_choose,skills_from,subclass_level,asi_levels
+barbarian,Barbarian,,,,,d12,str,"str,con",none,,2,"animal-handling,athletics,intimidation,nature,perception,survival",3,"4,8,12,16,19"
+bard,Bard,,,,,d8,cha,"dex,cha",full,cha,3,any,3,"4,8,12,16,19"
+cleric,Cleric,,,,,d8,wis,"wis,cha",full,wis,2,"history,insight,medicine,persuasion,religion",3,"4,8,12,16,19"
+druid,Druid,,,,,d8,wis,"int,wis",full,wis,2,"animal-handling,arcana,insight,medicine,nature,perception,religion,survival",3,"4,8,12,16,19"
+fighter,Fighter,,,,,d10,"str,dex","str,con",none,,2,"acrobatics,animal-handling,athletics,history,insight,intimidation,persuasion,perception,survival",3,"4,6,8,12,14,16,19"
+monk,Monk,,,,,d8,"dex,wis","str,dex",none,,2,"acrobatics,athletics,history,insight,religion,stealth",3,"4,8,12,16,19"
+paladin,Paladin,,,,,d10,"str,cha","wis,cha",half,cha,2,"athletics,insight,intimidation,medicine,persuasion,religion",3,"4,8,12,16,19"
+ranger,Ranger,,,,,d10,"dex,wis","str,dex",half,wis,3,"animal-handling,athletics,insight,investigation,nature,perception,stealth,survival",3,"4,8,12,16,19"
+rogue,Rogue,,,,,d8,dex,"dex,int",none,,4,"acrobatics,athletics,deception,insight,intimidation,investigation,perception,persuasion,sleight-of-hand,stealth",3,"4,8,10,12,16,19"
+sorcerer,Sorcerer,,,,,d6,cha,"con,cha",full,cha,2,"arcana,deception,insight,intimidation,persuasion,religion",3,"4,8,12,16,19"
+warlock,Warlock,,,,,d8,cha,"wis,cha",pact,cha,2,"arcana,deception,history,intimidation,investigation,nature,religion",3,"4,8,12,16,19"
+wizard,Wizard,,,,,d6,int,"int,wis",full,int,2,"arcana,history,insight,investigation,medicine,nature,religion",3,"4,8,12,16,19"

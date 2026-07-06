@@ -1,5 +1,12 @@
-id,systems,source,name_en,name_uk,text_en,text_uk,effects,skills,tools,languages,ability_choices,origin_feat
-acolyte,5.5e,SRD 5.2.1,Acolyte,,,,,"insight,religion",calligraphers-supplies,,"int,wis,cha",magic-initiate
-criminal,5.5e,SRD 5.2.1,Criminal,,,,,"sleight-of-hand,stealth",thieves-tools,,"dex,con,int",alert
-sage,5.5e,SRD 5.2.1,Sage,,,,,"arcana,history",calligraphers-supplies,,"con,int,wis",magic-initiate
-soldier,5.5e,SRD 5.2.1,Soldier,,,,,"athletics,intimidation",choose-one-kind-of-gaming-set,,"str,dex,con",savage-attacker
+#content-source: SRD 5.2.1
+#content-systems: 5.5e
+#content-url: https://dnd.wizards.com/resources/systems-reference-document
+#content-license: CC-BY-4.0
+#content-id: 019f374c-ec73-7414-81a1-d9163af2ea07
+#content-updated-at: 2026-07-06
+#content-hash: xxh64:52b477ba40c3d0c5
+id,name_en,name_uk,text_en,text_uk,effects,skills,tools,languages,ability_choices,origin_feat
+acolyte,Acolyte,,,,,"insight,religion",calligraphers-supplies,,"int,wis,cha",magic-initiate
+criminal,Criminal,,,,,"sleight-of-hand,stealth",thieves-tools,,"dex,con,int",alert
+sage,Sage,,,,,"arcana,history",calligraphers-supplies,,"con,int,wis",magic-initiate
+soldier,Soldier,,,,,"athletics,intimidation",choose-one-kind-of-gaming-set,,"str,dex,con",savage-attacker
