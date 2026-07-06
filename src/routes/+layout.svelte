@@ -87,11 +87,11 @@
 		{$_('feedback.link')}
 	</a>
 	<div class="chips">
-		<button type="button" onclick={toggleSystem} title={$_('settings.system')}>
+		<button type="button" class="chip" onclick={toggleSystem} title={$_('settings.system')}>
 			{app.activeSystem}
 		</button>
 		<LangSwitcher />
-		<button type="button" onclick={toggleTheme} title={$_('settings.theme')}>
+		<button type="button" class="chip" onclick={toggleTheme} title={$_('settings.theme')}>
 			{app.theme === 'dark' ? '☾' : '☀'}
 		</button>
 		<kbd>Ctrl K</kbd>
@@ -187,20 +187,7 @@
 		align-items: center;
 		gap: var(--space-2);
 	}
-	.chips button {
-		border: 1px solid var(--color-border);
-		background: transparent;
-		color: var(--color-text-muted);
-		border-radius: var(--radius-sm);
-		padding: var(--space-1) var(--space-2);
-		cursor: pointer;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-	}
-	.chips button:hover {
-		color: var(--color-text);
-		border-color: var(--color-border-strong);
-	}
+	/* the chip buttons use the shared global .chip (styles/components.css) */
 	.chips kbd {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);

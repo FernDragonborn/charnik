@@ -11,29 +11,13 @@
 	}
 </script>
 
+<!-- `.chip` is the shared global chip style (styles/components.css) -->
 <button
 	type="button"
-	class="lang-switch"
+	class="chip"
 	onclick={cycle}
 	title={$_('settings.language')}
 	aria-label={$_('settings.language')}
 >
 	{app.activeLocale.toUpperCase()}
 </button>
-
-<style>
-	.lang-switch {
-		border: 1px solid var(--color-border);
-		background: transparent;
-		color: var(--color-text-muted);
-		border-radius: var(--radius-sm);
-		padding: var(--space-1) var(--space-2);
-		cursor: pointer;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-	}
-	.lang-switch:hover {
-		color: var(--color-text);
-		border-color: var(--color-border-strong);
-	}
-</style>

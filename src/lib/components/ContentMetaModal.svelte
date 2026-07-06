@@ -174,7 +174,7 @@
 						<span class="auto-label">{$_('contentMeta.willAutofill')}</span>
 						<span class="chips">
 							{#each issue.missingAuto as key (key)}
-								<span class="chip">{keyLabel(key)}</span>
+								<span class="autofill-chip">{keyLabel(key)}</span>
 							{/each}
 						</span>
 					</div>
@@ -374,7 +374,7 @@
 		flex-wrap: wrap;
 		gap: var(--space-2);
 	}
-	.chip {
+	.autofill-chip {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-good);
