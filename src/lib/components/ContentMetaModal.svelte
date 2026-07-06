@@ -392,36 +392,5 @@
 	.spacer {
 		flex: 1;
 	}
-	.btn {
-		font-family: var(--font-body);
-		font-size: var(--font-size-sm);
-		font-weight: 600;
-		border-radius: var(--radius-sm);
-		padding: var(--space-2) var(--space-4);
-		border: 1px solid var(--color-border-strong);
-		background: var(--color-surface-2);
-		color: var(--color-text);
-		cursor: pointer;
-	}
-	.btn:hover {
-		border-color: var(--color-accent);
-	}
-	.btn.ghost {
-		background: transparent;
-		border-color: transparent;
-		color: var(--color-text-muted);
-	}
-	.btn.ghost:hover {
-		color: var(--color-text);
-		border-color: var(--color-border);
-	}
-	.btn.primary {
-		background: var(--color-accent-deep);
-		border-color: var(--color-accent-deep);
-		color: var(--color-accent-text);
-	}
-	.btn.primary:hover {
-		background: var(--color-accent);
-		border-color: var(--color-accent);
-	}
+	/* .btn / .btn.ghost / .btn.primary are shared globals in styles/components.css */
 </style>
