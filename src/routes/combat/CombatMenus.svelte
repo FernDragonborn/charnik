@@ -143,7 +143,7 @@
 			</p>
 		{:else if overlay.kind === 'addeffect'}
 			<div class="search"><span class="mag">🔍</span><input placeholder="Search effects…" /></div>
-			<div class="sec">Catalog · presets</div>
+			<div class="section">Catalog · presets</div>
 			{#each EFFECT_PRESETS as p (p.label)}
 				<button class="row" onclick={() => addEffect(p.label, p.tokens, !/bane/i.test(p.label))}>
 					<span class="main"
@@ -245,7 +245,7 @@
 					)}
 					{#if list.length}
 						<div class="category-block">
-							<div class="sec">{ABILITY_NAME[ab]}</div>
+							<div class="section">{ABILITY_NAME[ab]}</div>
 							{#each list as skill (skill)}
 								<button class="row" onclick={() => togglePassive(skill)}>
 									<span class="eye" class:on={passiveSkills.includes(skill)}></span><span
@@ -373,7 +373,7 @@
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233bb8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='2.5'/%3E%3C/svg%3E");
 	}
 	/* --- section label + search + divider (d-menus) --- */
-	.sec {
+	.section {
 		font-family: var(--font-mono);
 		font-size: 9px;
 		letter-spacing: var(--tracking-label);
@@ -634,7 +634,7 @@
 	.pinwrap .category-block {
 		break-inside: avoid;
 	}
-	.pinwrap .sec {
+	.pinwrap .section {
 		padding: 6px 6px 2px;
 	}
 	.pinwrap .row .skill-name {

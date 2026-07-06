@@ -97,7 +97,7 @@
 	<div class="files">
 		{#each issues as issue (issue.file)}
 			<section class="file">
-				<h3 class="fname">{issue.file}</h3>
+				<h3 class="file-name">{issue.file}</h3>
 
 				<span class="dialog-label section-label">{$_('contentMeta.needFromYou')}</span>
 				<div class="fields">
@@ -220,7 +220,7 @@
 		border-radius: var(--radius-md);
 		padding: var(--space-4);
 	}
-	.fname {
+	.file-name {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-sm);
 		color: var(--color-text);

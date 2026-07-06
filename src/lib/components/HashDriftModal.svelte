@@ -56,7 +56,7 @@
 			<label class="file">
 				<input type="checkbox" bind:checked={checked[item.file]} />
 				<span class="body">
-					<span class="fname">{item.file}</span>
+					<span class="file-name">{item.file}</span>
 					<span class="dates">
 						<span class="date">
 							<span class="dialog-label">{$_('contentDrift.changedLabel')}</span>
@@ -125,7 +125,7 @@
 		min-width: 0;
 		flex: 1;
 	}
-	.fname {
+	.file-name {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-sm);
 		color: var(--color-text);
