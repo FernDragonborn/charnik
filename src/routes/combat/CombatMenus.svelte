@@ -147,7 +147,7 @@
 			{#each EFFECT_PRESETS as p (p.label)}
 				<button class="row" onclick={() => addEffect(p.label, p.tokens, !/bane/i.test(p.label))}>
 					<span class="main"
-						><span class="ic" class:neg={/bane/i.test(p.label)}>＋</span>{p.label}</span
+						><span class="effect-icon" class:neg={/bane/i.test(p.label)}>＋</span>{p.label}</span
 					><span class="durpill">10 rds</span>
 				</button>
 			{/each}
@@ -156,8 +156,8 @@
 				class="row"
 				onclick={() => combat.overlay && (combat.overlay = { ...overlay, kind: 'customeffect' })}
 			>
-				<span class="main"><span class="ic">✎</span><b>Custom effect…</b></span><span class="meta"
-					>text + manual mod</span
+				<span class="main"><span class="effect-icon">✎</span><b>Custom effect…</b></span><span
+					class="meta">text + manual mod</span
 				>
 			</button>
 		{:else if overlay.kind === 'customeffect'}
@@ -349,12 +349,12 @@
 		font-size: 10px;
 		color: var(--color-text-muted);
 	}
-	.row .ic {
+	.row .effect-icon {
 		width: 18px;
 		text-align: center;
 		color: var(--color-good);
 	}
-	.row .ic.neg {
+	.row .effect-icon.neg {
 		color: var(--color-accent-bright);
 	}
 	/* visibility = open/closed eye, teal when shown */

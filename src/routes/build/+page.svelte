@@ -109,7 +109,7 @@
 					{@const clsRow = cls.classId ? b.graph?.get(cls.classId) : undefined}
 					{@const subs = b.subclassesFor(cls.classId)}
 					<div class="clsrow">
-						<span class="ic">{clsRow ? '✦' : i === 0 ? '＋' : '⌁'}</span>
+						<span class="class-icon">{clsRow ? '✦' : i === 0 ? '＋' : '⌁'}</span>
 						<span class="nm">
 							<select class="bare" value={cls.classId ?? ''} onchange={(e) => b.setClass(i, e.currentTarget.value || null)}>
 								<option value="">{i === 0 ? 'Choose a class…' : 'Add a class…'}</option>
@@ -698,7 +698,7 @@
 	.clsrow:first-of-type {
 		border-top: 0;
 	}
-	.clsrow .ic {
+	.clsrow .class-icon {
 		width: 38px;
 		height: 38px;
 		border-radius: 10px;

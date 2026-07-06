@@ -7,7 +7,7 @@
 	}: { on?: boolean; title?: string; onclick?: () => void } = $props();
 </script>
 
-<button class="ic eye" class:on type="button" {title} aria-pressed={on} {onclick}>
+<button class="icon-toggle eye" class:on type="button" {title} aria-pressed={on} {onclick}>
 	{#if on}
 		<svg
 			width="13"
@@ -42,7 +42,7 @@
 </button>
 
 <style>
-	.ic {
+	.icon-toggle {
 		width: 26px;
 		height: 24px;
 		display: grid;
@@ -53,7 +53,7 @@
 		color: var(--color-text-muted);
 		cursor: pointer;
 	}
-	.ic.on {
+	.icon-toggle.on {
 		color: var(--color-good);
 		border-color: var(--color-good);
 		background: var(--color-good-soft);

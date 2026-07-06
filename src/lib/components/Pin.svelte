@@ -7,12 +7,12 @@
 	}: { on?: boolean; title?: string; onclick?: () => void } = $props();
 </script>
 
-<button class="ic pin" class:on type="button" {title} aria-pressed={on} {onclick}>
+<button class="icon-toggle pin" class:on type="button" {title} aria-pressed={on} {onclick}>
 	{on ? '★' : '☆'}
 </button>
 
 <style>
-	.ic {
+	.icon-toggle {
 		width: 26px;
 		height: 24px;
 		display: grid;
@@ -24,7 +24,7 @@
 		cursor: pointer;
 		font-size: 13px;
 	}
-	.ic.on {
+	.icon-toggle.on {
 		color: var(--color-accent-bright);
 		border-color: var(--color-accent-deep);
 		background: var(--color-accent-soft);
