@@ -3,6 +3,7 @@
  * (set character + graph, call an action, read the derived). Guards the concentration + condition
  * fixes (CVM-bug1/2). Asserts behavior, not internal shape.
  */
+import 'fake-indexeddb/auto'; // the VM's saveCharacterToStore hits IndexedDB (rest/level-up) — provide it
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
@@ -28,6 +29,13 @@ async function graphOf(): Promise<ContentGraph> {
 			'id,systems,source,name_en',
 			`prone,5.5e,${S},Prone`,
 			`grappled,5e,${S},Grappled` // a DIFFERENT edition — must NOT appear for a 5.5e character
+		].join('\n')
+	);
+	await st.write(
+		'c/items_srd.csv',
+		[
+			'id,systems,source,name_en,category,item_type,damage,damage_type,properties',
+			`dagger,5.5e,${S},Dagger,weapon,melee weapon,1d4,piercing,finesse`
 		].join('\n')
 	);
 	const g = await loadContent(st, ['c']);
@@ -113,5 +121,92 @@ describe('CombatVM · conditionList uses the character system (CVM-bug2)', () =>
 		combat.character = newCharacter('valen', 'Valen', '5.5e');
 		expect(combat.conditionList).toContain('Prone'); // 5.5e
 		expect(combat.conditionList).not.toContain('Grappled'); // 5e-only
+	});
+});
+
+/*
+ * S2 SPLIT NET — pins the behavior of every area CombatVM is about to be split into (roll/log, HP,
+ * action economy, rests, spell grouping, level-up, attacks). Asserts behavior (state in → state out),
+ * not internal shape, so the split can regroup methods freely as long as these survive. RNG is not
+ * seeded here → assert structure/labels/ranges, never exact rolled totals.
+ */
+describe('CombatVM · S2 split net', () => {
+	let graph: ContentGraph;
+	let character: Character;
+	beforeEach(async () => {
+		graph = await graphOf();
+		character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.hp = { current: 20, max: 20, temp: 0 };
+		character.build.classes = [{ class: `class:${S}:wizard`, level: 3 }];
+		character.build.spells = [
+			{ spell: `spell:${S}:fire-bolt`, prepared: true, alwaysPrepared: false },
+			{ spell: `spell:${S}:bless`, prepared: true, alwaysPrepared: false }
+		];
+		character.build.inventory = [
+			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false }
+		];
+		combat.graph = graph;
+		combat.character = character;
+	});
+
+	it('roll/log: rollDiceNow prepends a labelled entry with a numeric total', () => {
+		const before = combat.log.length;
+		combat.rollDiceNow('Stealth', { 20: 1 }, 5);
+		expect(combat.log.length).toBe(before + 1);
+		expect(combat.log[0]!.label).toBe('Stealth');
+		expect(typeof combat.log[0]!.total).toBe('number');
+	});
+
+	it('HP: damage soaks temp HP first, then current; heal clamps to max', () => {
+		character.play.hp = { current: 20, max: 20, temp: 5 };
+		combat.hpAmount = 8;
+		combat.damage(); // 5 soaked by temp, 3 off current
+		expect(character.play.hp.temp).toBe(0);
+		expect(character.play.hp.current).toBe(17);
+		combat.hpAmount = 100;
+		combat.heal(); // clamps to max
+		expect(character.play.hp.current).toBe(20);
+	});
+
+	it('action economy: in combat a spell spends its slot and the second cast is blocked', () => {
+		character.play.inCombat = true;
+		character.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+		const fireBolt = spellRow(graph, `spell:${S}:fire-bolt`, 'on')!;
+		combat.cast(fireBolt, noModifiers); // action ct → spends the action
+		expect(character.play.turn.action).toBe(1);
+		combat.cast(fireBolt, noModifiers); // none left → blocked, stays 1
+		expect(character.play.turn.action).toBe(1);
+		combat.nextTurn(); // refreshes the economy
+		expect(character.play.turn.action).toBe(0);
+	});
+
+	it('rests: a long rest clears spent slots and restores HP to max', () => {
+		character.play.spellSlotsSpent = { '1': 2 };
+		character.play.hp = { current: 3, max: 20, temp: 4 };
+		combat.rest('long');
+		expect(character.play.spellSlotsSpent).toEqual({});
+		expect(character.play.hp.current).toBe(20);
+		expect(character.play.hp.temp).toBe(0);
+	});
+
+	it('spell grouping: level mode yields a Cantrips group and a 1st-level group', () => {
+		const keys = combat.spellGroups.map((g) => g.key);
+		expect(keys).toContain('0'); // Fire Bolt (cantrip)
+		expect(keys).toContain('1'); // Bless (1st level)
+	});
+
+	it('level-up: advances the chosen class by one and stays under the cap', () => {
+		expect(combat.canLevelUp).toBe(true);
+		combat.levelUp(0);
+		expect(character.build.classes[0]!.level).toBe(4);
+	});
+
+	it('attacks: an equipped weapon + Unarmed Strike are offered; attackRoll logs a roll', () => {
+		const names = combat.attacks.map((a) => a.name);
+		expect(names).toContain('Dagger');
+		expect(names).toContain('Unarmed Strike');
+		const before = combat.log.length;
+		combat.attackRoll(combat.attacks[0]!, noModifiers);
+		expect(combat.log.length).toBe(before + 1);
 	});
 });

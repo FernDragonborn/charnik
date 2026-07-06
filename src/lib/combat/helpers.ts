@@ -6,6 +6,8 @@
 import type { Ability } from '$lib/rules/core';
 import type { Computed } from '$lib/rules/pipeline';
 import type { ContentGraph } from '$lib/content/loader';
+import type { Character } from '$lib/character/schema';
+import type { CharacterSheet, SkillId } from '$lib/character/derive';
 import { parseDicePool, parseDiceTerm, type BonusDie, type Rolled } from '$lib/rules/dice';
 import { parseEffect, matchesTarget, EFFECT_KIND } from '$lib/effects/index';
 
@@ -275,6 +277,188 @@ export function effectHint(d: Record<string, unknown>): string {
 			}[String(d.name_en).toLowerCase()] ?? 'utility'
 		);
 	return 'utility';
+}
+
+/** Human label for a custom-modifier target key (for the auto effect name). Pure. */
+export function modTargetLabel(t: string): string {
+	if (t === 'saves') return 'to all saves';
+	if (t === 'skills') return 'to all skills';
+	if (t.startsWith('save.')) return `to ${t.slice(5).toUpperCase()} save`;
+	if (t.startsWith('skill.')) return `to ${titleCase(t.slice(6).replace(/-/g, ' '))}`;
+	return `to ${t.toUpperCase()}`;
+}
+
+/** Parse a weapon/spell damage string ("1d8 +3 slashing", "1d6 −1 bludgeoning") into its dice pool +
+ *  flat mod. Handles the unicode minus `signed()` emits. Pure. */
+export function parseDamage(dmg: string): { pool: Record<number, number>; mod: number } {
+	const pool = parseDicePool(dmg);
+	const m = /([+\-−])\s*(\d+)/.exec(dmg);
+	const mod = m ? (m[1] === '+' ? 1 : -1) * Number(m[2]) : 0;
+	return { pool, mod };
+}
+
+/** Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet. Pure. */
+export function computeAttacks(
+	character: Character,
+	sheet: CharacterSheet,
+	graph: ContentGraph
+): Atk[] {
+	const prof = sheet.proficiencyBonus,
+		strMod = sheet.abilities.str.mod,
+		dexMod = sheet.abilities.dex.mod;
+	const out: Atk[] = [];
+	for (const inv of character.build.inventory) {
+		if (!inv.equipped) continue;
+		const row = graph.get(inv.item);
+		if (!row || row.data.category !== 'weapon') continue;
+		const props = String(row.data.properties ?? '').toLowerCase();
+		const ranged = String(row.data.item_type ?? '').includes('ranged');
+		const mod = ranged ? dexMod : props.includes('finesse') ? Math.max(strMod, dexMod) : strMod;
+		out.push({
+			name: String(row.data.name_en),
+			toHit: mod + prof,
+			dmg: `${row.data.damage ?? ''} ${signed(mod)} ${row.data.damage_type ?? ''}`.trim(),
+			meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · ')
+		});
+	}
+	out.push({
+		name: 'Unarmed Strike',
+		toHit: strMod + prof,
+		dmg: `${1 + strMod} bludgeoning`,
+		meta: 'melee'
+	});
+	return out;
+}
+
+/** The standard combat actions (Dash, Hide, Grapple…); roll ones reference live skills. Pure. */
+export function standardActions(sheet: CharacterSheet | null): StandardAction[] {
+	const sk = (k: SkillId) => sheet?.skills[k]?.value ?? 0;
+	return [
+		{
+			id: 'attack',
+			name: 'Attack',
+			hint: '',
+			desc: 'weapon / spell / unarmed',
+			marker: '→ Attacks'
+		},
+		{ id: 'dash', name: 'Dash', hint: '', desc: '+speed this turn', marker: 'action' },
+		{
+			id: 'disengage',
+			name: 'Disengage',
+			hint: '',
+			desc: 'no opportunity attacks',
+			marker: 'action'
+		},
+		{ id: 'dodge', name: 'Dodge', hint: '', desc: 'attackers have disadv.', marker: 'action' },
+		{
+			id: 'hide',
+			name: 'Hide',
+			hint: signed(sk('stealth')),
+			desc: 'Stealth',
+			marker: '→ roll',
+			roll: ['Hide (Stealth)', sk('stealth')]
+		},
+		{
+			id: 'search',
+			name: 'Search',
+			hint: signed(sk('perception')),
+			desc: 'Perception',
+			marker: '→ roll',
+			roll: ['Search (Perception)', sk('perception')]
+		},
+		{
+			id: 'study',
+			name: 'Study',
+			hint: signed(sk('arcana')),
+			desc: 'recall lore',
+			marker: '→ roll',
+			roll: ['Study (Arcana)', sk('arcana')]
+		},
+		{
+			id: 'grapple',
+			name: 'Grapple',
+			hint: signed(sk('athletics')),
+			desc: 'Athletics vs target',
+			marker: 'contest',
+			roll: ['Grapple (Athletics)', sk('athletics')]
+		},
+		{
+			id: 'shove',
+			name: 'Shove',
+			hint: signed(sk('athletics')),
+			desc: 'prone / push 5 ft',
+			marker: 'contest',
+			roll: ['Shove (Athletics)', sk('athletics')]
+		},
+		{ id: 'help', name: 'Help', hint: '', desc: 'give an ally advantage', marker: 'action' },
+		{ id: 'ready', name: 'Ready', hint: '', desc: 'prepare a trigger', marker: 'action' },
+		{ id: 'utilize', name: 'Utilize', hint: '', desc: 'use an object', marker: 'action' }
+	];
+}
+
+/** Group the character's spells for the spell block (Pinned first, then by level / prepared / school),
+ *  attaching the castable slot pool per level. Pure — the VM just wraps it in a `$derived`. */
+export function buildSpellGroups(
+	character: Character,
+	sheet: CharacterSheet | null,
+	graph: ContentGraph,
+	groupBy: GroupMode,
+	pinned: Record<string, boolean>
+): SpGroup[] {
+	const slotsByLevel = new Map<number, number>();
+	for (const p of sheet?.spellcasting.pools ?? [])
+		if (!p.forcedUpcast && p.spellLevel) slotsByLevel.set(p.spellLevel, p.max);
+	const all = character.build.spells
+		.map((sp) => ({
+			sp,
+			row: spellRow(graph, sp.spell, sp.alwaysPrepared ? 'always' : sp.prepared ? 'on' : '')
+		}))
+		.filter((x): x is { sp: (typeof character.build.spells)[number]; row: SpRow } => !!x.row);
+	const groups: SpGroup[] = [];
+	const pins = all.filter((x) => pinned[x.row.id]);
+	if (pins.length)
+		groups.push({ key: 'pinned', label: '★ Pinned', slots: null, rows: pins.map((x) => x.row) });
+
+	if (groupBy === 'level') {
+		const byLevel = new Map<number, SpRow[]>();
+		for (const x of all) {
+			const lvl = Number(graph.get(x.sp.spell)!.data.level);
+			(byLevel.get(lvl) ?? byLevel.set(lvl, []).get(lvl)!).push(x.row);
+		}
+		for (const lvl of [...byLevel.keys()].sort((a, b) => a - b)) {
+			groups.push({
+				key: String(lvl),
+				label: lvl === 0 ? 'Cantrips' : ordinal(lvl),
+				slots:
+					lvl === 0
+						? null
+						: {
+								full: slotsByLevel.get(lvl) ?? 0,
+								spent: Number(character.play.spellSlotsSpent[String(lvl)] ?? 0)
+							},
+				rows: byLevel.get(lvl)!
+			});
+		}
+	} else if (groupBy === 'prepared') {
+		const prep = all.filter((x) => x.row.prep).map((x) => x.row);
+		const rest = all.filter((x) => !x.row.prep).map((x) => x.row);
+		if (prep.length) groups.push({ key: 'prep', label: 'Prepared', slots: null, rows: prep });
+		if (rest.length) groups.push({ key: 'unprep', label: 'Not prepared', slots: null, rows: rest });
+	} else {
+		const bySchool = new Map<string, SpRow[]>();
+		for (const x of all) {
+			const sch = String(graph.get(x.sp.spell)!.data.school || 'Other');
+			(bySchool.get(sch) ?? bySchool.set(sch, []).get(sch)!).push(x.row);
+		}
+		for (const sch of [...bySchool.keys()].sort())
+			groups.push({
+				key: 'sch:' + sch,
+				label: titleCase(sch),
+				slots: null,
+				rows: bySchool.get(sch)!
+			});
+	}
+	return groups;
 }
 
 /** Build a spell row from the content graph (or null if the ref is missing). */

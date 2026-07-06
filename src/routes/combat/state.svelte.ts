@@ -13,23 +13,25 @@ import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
 import { getContentGraph } from '$lib/content/provider';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { passiveScore } from '$lib/rules/core';
-import { rollPool, parseDicePool, type BonusDie, type Rolled } from '$lib/rules/dice';
+import { rollPool, type BonusDie, type Rolled } from '$lib/rules/dice';
 import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import {
 	signed,
 	titleCase,
-	ordinal,
 	wantsTray,
-	spellRow,
 	pipClick,
 	GROUP_MODES,
 	type GroupMode,
 	rollEffectsFor,
+	computeAttacks,
+	standardActions,
+	buildSpellGroups,
+	parseDamage,
+	modTargetLabel,
 	type Atk,
 	type SpRow,
-	type SpGroup,
 	type RollLogEntry,
 	type ActionSlot,
 	type MenuKind,
@@ -113,20 +115,11 @@ class CombatVM {
 		const amount = Math.abs(Math.round(this.cmAmount)) || 1;
 		const token = `flat-bonus:${this.cmTarget}${this.cmSign}${amount}`;
 		const label =
-			this.customEffectLabel.trim() ||
-			`${this.cmSign}${amount} ${this.cmTargetLabel(this.cmTarget)}`;
+			this.customEffectLabel.trim() || `${this.cmSign}${amount} ${modTargetLabel(this.cmTarget)}`;
 		this.addEffect(label, [token], this.cmSign === '+');
 		this.customEffectLabel = '';
 		this.cmAmount = 1;
 	};
-	/** Human label for a modifier target key (for the auto effect name). */
-	private cmTargetLabel(t: string): string {
-		if (t === 'saves') return 'to all saves';
-		if (t === 'skills') return 'to all skills';
-		if (t.startsWith('save.')) return `to ${t.slice(5).toUpperCase()} save`;
-		if (t.startsWith('skill.')) return `to ${titleCase(t.slice(6).replace(/-/g, ' '))}`;
-		return `to ${t.toUpperCase()}`;
-	}
 
 	openDice = (e: Event) => {
 		this.dice = { 20: 1 };
@@ -396,20 +389,12 @@ class CombatVM {
 		c.play.turn[slot] += 1;
 		return true;
 	}
-	/** Parse a weapon/spell damage string ("1d8 +3 slashing", "1d6 −1 bludgeoning") into its dice pool
-	 *  + flat mod. Handles the unicode minus `signed()` emits. */
-	private parseDamage(dmg: string): { pool: Record<number, number>; mod: number } {
-		const pool = parseDicePool(dmg);
-		const m = /([+\-−])\s*(\d+)/.exec(dmg);
-		const mod = m ? (m[1] === '+' ? 1 : -1) * Number(m[2]) : 0;
-		return { pool, mod };
-	}
 	/** Roll a weapon/unarmed attack (the Attack action → spends an action in combat). A normal tap
 	 *  rolls the to-hit (picks up advantage/effects) THEN the weapon damage; Alt/Ctrl-click opens the
 	 *  roll tray on the weapon's DAMAGE dice (so you can tweak/crit), not a bare d20. */
 	attackRoll = (at: Atk, e: Event) => {
 		if (!this.trySpend('action')) return;
-		const { pool, mod } = this.parseDamage(at.dmg);
+		const { pool, mod } = parseDamage(at.dmg);
 		const hasDice = Object.keys(pool).length > 0;
 		const fx = this.effectsFor('attack');
 		if (wantsTray(e)) {
@@ -531,166 +516,22 @@ class CombatVM {
 		sp.prepared = !sp.prepared;
 	};
 
-	// attacks (equipped weapons + Unarmed Strike)
-	attacks = $derived.by<Atk[]>(() => {
-		if (!this.character || !this.sheet || !this.graph) return [];
-		const prof = this.sheet.proficiencyBonus,
-			strMod = this.sheet.abilities.str.mod,
-			dexMod = this.sheet.abilities.dex.mod;
-		const out: Atk[] = [];
-		for (const inv of this.character.build.inventory) {
-			if (!inv.equipped) continue;
-			const row = this.graph.get(inv.item);
-			if (!row || row.data.category !== 'weapon') continue;
-			const props = String(row.data.properties ?? '').toLowerCase();
-			const ranged = String(row.data.item_type ?? '').includes('ranged');
-			const mod = ranged ? dexMod : props.includes('finesse') ? Math.max(strMod, dexMod) : strMod;
-			out.push({
-				name: String(row.data.name_en),
-				toHit: mod + prof,
-				dmg: `${row.data.damage ?? ''} ${signed(mod)} ${row.data.damage_type ?? ''}`.trim(),
-				meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · ')
-			});
-		}
-		out.push({
-			name: 'Unarmed Strike',
-			toHit: strMod + prof,
-			dmg: `${1 + strMod} bludgeoning`,
-			meta: 'melee'
-		});
-		return out;
-	});
+	// attacks (equipped weapons + Unarmed Strike) — pure builder in helpers
+	attacks = $derived.by<Atk[]>(() =>
+		this.character && this.sheet && this.graph
+			? computeAttacks(this.character, this.sheet, this.graph)
+			: []
+	);
 
-	// standard actions (from d-charnik); roll ones reference live skills
-	actions = $derived.by<StandardAction[]>(() => {
-		const s = this.sheet;
-		const sk = (k: SkillId) => s?.skills[k]?.value ?? 0;
-		return [
-			{
-				id: 'attack',
-				name: 'Attack',
-				hint: '',
-				desc: 'weapon / spell / unarmed',
-				marker: '→ Attacks'
-			},
-			{ id: 'dash', name: 'Dash', hint: '', desc: '+speed this turn', marker: 'action' },
-			{
-				id: 'disengage',
-				name: 'Disengage',
-				hint: '',
-				desc: 'no opportunity attacks',
-				marker: 'action'
-			},
-			{ id: 'dodge', name: 'Dodge', hint: '', desc: 'attackers have disadv.', marker: 'action' },
-			{
-				id: 'hide',
-				name: 'Hide',
-				hint: signed(sk('stealth')),
-				desc: 'Stealth',
-				marker: '→ roll',
-				roll: ['Hide (Stealth)', sk('stealth')] as [string, number]
-			},
-			{
-				id: 'search',
-				name: 'Search',
-				hint: signed(sk('perception')),
-				desc: 'Perception',
-				marker: '→ roll',
-				roll: ['Search (Perception)', sk('perception')] as [string, number]
-			},
-			{
-				id: 'study',
-				name: 'Study',
-				hint: signed(sk('arcana')),
-				desc: 'recall lore',
-				marker: '→ roll',
-				roll: ['Study (Arcana)', sk('arcana')] as [string, number]
-			},
-			{
-				id: 'grapple',
-				name: 'Grapple',
-				hint: signed(sk('athletics')),
-				desc: 'Athletics vs target',
-				marker: 'contest',
-				roll: ['Grapple (Athletics)', sk('athletics')] as [string, number]
-			},
-			{
-				id: 'shove',
-				name: 'Shove',
-				hint: signed(sk('athletics')),
-				desc: 'prone / push 5 ft',
-				marker: 'contest',
-				roll: ['Shove (Athletics)', sk('athletics')] as [string, number]
-			},
-			{ id: 'help', name: 'Help', hint: '', desc: 'give an ally advantage', marker: 'action' },
-			{ id: 'ready', name: 'Ready', hint: '', desc: 'prepare a trigger', marker: 'action' },
-			{ id: 'utilize', name: 'Utilize', hint: '', desc: 'use an object', marker: 'action' }
-		];
-	});
+	// standard actions (from d-charnik); roll ones reference live skills — pure builder in helpers
+	actions = $derived.by<StandardAction[]>(() => standardActions(this.sheet));
 	visibleActions = $derived(this.actions.filter((a) => !this.hiddenActions[a.id]));
 
-	spellGroups = $derived.by<SpGroup[]>(() => {
-		if (!this.character || !this.graph) return [];
-		const character = this.character;
-		const graph = this.graph;
-		// slot pips come from the derived castable pools (data-driven, per spell level); pact is a
-		// separate short-rest pool keyed "pact" in play-state.
-		const slotsByLevel = new Map<number, number>();
-		for (const p of this.sheet?.spellcasting.pools ?? [])
-			if (!p.forcedUpcast && p.spellLevel) slotsByLevel.set(p.spellLevel, p.max);
-		const all = character.build.spells
-			.map((sp) => ({
-				sp,
-				row: spellRow(graph, sp.spell, sp.alwaysPrepared ? 'always' : sp.prepared ? 'on' : '')
-			}))
-			.filter((x): x is { sp: (typeof character.build.spells)[number]; row: SpRow } => !!x.row);
-		const groups: SpGroup[] = [];
-		const pins = all.filter((x) => this.pinned[x.row.id]);
-		if (pins.length)
-			groups.push({ key: 'pinned', label: '★ Pinned', slots: null, rows: pins.map((x) => x.row) });
-
-		if (this.spellGroupBy === 'level') {
-			const byLevel = new Map<number, SpRow[]>();
-			for (const x of all) {
-				const lvl = Number(graph.get(x.sp.spell)!.data.level);
-				(byLevel.get(lvl) ?? byLevel.set(lvl, []).get(lvl)!).push(x.row);
-			}
-			for (const lvl of [...byLevel.keys()].sort((a, b) => a - b)) {
-				groups.push({
-					key: String(lvl),
-					label: lvl === 0 ? 'Cantrips' : ordinal(lvl),
-					slots:
-						lvl === 0
-							? null
-							: {
-									full: slotsByLevel.get(lvl) ?? 0,
-									spent: Number(character.play.spellSlotsSpent[String(lvl)] ?? 0)
-								},
-					rows: byLevel.get(lvl)!
-				});
-			}
-		} else if (this.spellGroupBy === 'prepared') {
-			const prep = all.filter((x) => x.row.prep).map((x) => x.row);
-			const rest = all.filter((x) => !x.row.prep).map((x) => x.row);
-			if (prep.length) groups.push({ key: 'prep', label: 'Prepared', slots: null, rows: prep });
-			if (rest.length)
-				groups.push({ key: 'unprep', label: 'Not prepared', slots: null, rows: rest });
-		} else {
-			const bySchool = new Map<string, SpRow[]>();
-			for (const x of all) {
-				const sch = String(graph.get(x.sp.spell)!.data.school || 'Other');
-				(bySchool.get(sch) ?? bySchool.set(sch, []).get(sch)!).push(x.row);
-			}
-			for (const sch of [...bySchool.keys()].sort())
-				groups.push({
-					key: 'sch:' + sch,
-					label: titleCase(sch),
-					slots: null,
-					rows: bySchool.get(sch)!
-				});
-		}
-		return groups;
-	});
+	spellGroups = $derived.by(() =>
+		this.character && this.graph
+			? buildSpellGroups(this.character, this.sheet, this.graph, this.spellGroupBy, this.pinned)
+			: []
+	);
 	preparedCount = $derived(this.character?.build.spells.filter((s) => s.prepared).length ?? 0);
 	// prepared cap from the primary caster's derived profile (class table / formula), not hardcoded
 	preparedCap = $derived(this.sheet?.spellcasting.classes[0]?.preparedCap ?? 0);
