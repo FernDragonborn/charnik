@@ -47,27 +47,28 @@
 			{#if s.concentration}<span class="stat-chip save">Concentration</span>{/if}
 		</div>
 		<div class="strip">
-			<div class="fx {s.resChip}">
+			<div class="spell-effect {s.resChip}">
 				<span class="stat-chip {s.resChip}">{s.resLabel}</span>
 				{#if s.dice || s.resChip === 'hit'}
 					{#if s.dice}
-						<span class="fxbig">{s.dice}</span>
-						{#if s.dmgType}<span class="fxsub">{s.dmgType}</span>{/if}
+						<span class="spell-effect-value">{s.dice}</span>
+						{#if s.dmgType}<span class="spell-effect-sub">{s.dmgType}</span>{/if}
 					{/if}
-					<div class="fxrolls">
+					<div class="spell-effect-rolls">
 						{#if s.resChip === 'hit'}
-							<button class="fxroll" onclick={() => rollDice('1d20', `${detail.title} — to hit`)}
-								>🎲 d20</button
+							<button
+								class="spell-effect-roll"
+								onclick={() => rollDice('1d20', `${detail.title} — to hit`)}>🎲 d20</button
 							>
 						{/if}
 						{#if s.dice}
-							<button class="fxroll" onclick={() => rollDice(s.dice, detail.title)}
+							<button class="spell-effect-roll" onclick={() => rollDice(s.dice, detail.title)}
 								>🎲 {s.resChip === 'auto' ? 'Heal' : 'Dmg'}</button
 							>
 						{/if}
 					</div>
 				{:else}
-					<span class="fxbig none">No roll</span>
+					<span class="spell-effect-value none">No roll</span>
 				{/if}
 			</div>
 			<div class="stat-cells">
@@ -82,7 +83,7 @@
 						<div class="stat-key">Available to</div>
 						<div class="stat-value">
 							{#each s.availableTo as c, i (c.name)}{i ? ', ' : ''}{c.name}{#if c.homebrew}<span
-										class="hb"
+										class="homebrew-mark"
 										title="granted class-side (not on the spell)">+</span
 									>{/if}{/each}
 						</div>
@@ -110,8 +111,8 @@
 		<div class="content-cols">
 			<div class="detail-panel">
 				<div class="panel-header">Vitals</div>
-				<div class="value-row cr">
-					<span class="value-key">CR</span><span class="crv">{m.cr || '—'}</span>
+				<div class="value-row challenge-rating">
+					<span class="value-key">CR</span><span class="challenge-rating-value">{m.cr || '—'}</span>
 				</div>
 				{#if m.ac}<div class="value-row">
 						<span class="value-key">AC</span><span>{m.ac}</span>
@@ -153,10 +154,14 @@
 		{#if m.band.length || m.defenses.length}
 			<div class="band">
 				{#each m.band as [k, v] (k)}
-					<div class="brow"><span class="bk">{k}</span><span class="bv">{v}</span></div>
+					<div class="band-row">
+						<span class="band-key">{k}</span><span class="band-value">{v}</span>
+					</div>
 				{/each}
 				{#each m.defenses as [k, v] (k)}
-					<div class="brow def"><span class="bk">{k}</span><span class="bv">{v}</span></div>
+					<div class="band-row defenses">
+						<span class="band-key">{k}</span><span class="band-value">{v}</span>
+					</div>
 				{/each}
 			</div>
 		{/if}
@@ -404,13 +409,13 @@
 	.value-row .dim {
 		color: var(--color-text-muted);
 	}
-	.value-row.cr {
+	.value-row.challenge-rating {
 		padding: 2px 0 6px;
 	}
-	.value-row.cr .value-key {
+	.value-row.challenge-rating .value-key {
 		align-self: center;
 	}
-	.value-row.cr .crv {
+	.value-row.challenge-rating .challenge-rating-value {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 26px;
@@ -458,17 +463,17 @@
 		padding: 2px 14px;
 		margin-bottom: 4px;
 	}
-	.brow {
+	.band-row {
 		display: flex;
 		gap: 12px;
 		padding: 6px 0;
 		border-top: 1px solid var(--color-border);
 		font-size: 13px;
 	}
-	.brow:first-child {
+	.band-row:first-child {
 		border-top: 0;
 	}
-	.brow .bk {
+	.band-row .band-key {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		letter-spacing: 0.08em;
@@ -478,11 +483,11 @@
 		flex: none;
 		padding-top: 2px;
 	}
-	.brow .bv {
+	.band-row .band-value {
 		font-family: var(--font-mono);
 		font-size: 13px;
 	}
-	.brow.def .bv {
+	.band-row.defenses .band-value {
 		color: var(--color-accent-bright);
 	}
 	@media (max-width: 560px) {
@@ -533,7 +538,7 @@
 		align-items: start;
 		margin-bottom: 4px;
 	}
-	.fx {
+	.spell-effect {
 		min-height: 116px;
 		display: flex;
 		flex-direction: column;
@@ -546,37 +551,37 @@
 		padding: 12px 10px;
 		text-align: center;
 	}
-	.fxbig {
+	.spell-effect-value {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 28px;
 		line-height: 1;
 	}
-	.fx.save .fxbig {
+	.spell-effect.save .spell-effect-value {
 		color: var(--color-accent-bright);
 	}
-	.fx.hit .fxbig {
+	.spell-effect.hit .spell-effect-value {
 		color: var(--color-resource);
 	}
-	.fx.auto .fxbig {
+	.spell-effect.auto .spell-effect-value {
 		color: var(--color-good);
 	}
-	.fxbig.none {
+	.spell-effect-value.none {
 		color: var(--color-text-muted);
 		font-size: 18px;
 	}
-	.fxsub {
+	.spell-effect-sub {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
 	}
-	.fxrolls {
+	.spell-effect-rolls {
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
 		gap: 5px;
 	}
-	.fxroll {
+	.spell-effect-roll {
 		font-family: var(--font-mono);
 		font-size: 12px;
 		color: var(--color-accent-bright);
@@ -586,7 +591,7 @@
 		cursor: pointer;
 		background: transparent;
 	}
-	.fxroll:hover {
+	.spell-effect-roll:hover {
 		background: var(--color-accent-soft);
 	}
 	.stat-cells {
@@ -622,7 +627,7 @@
 			grid-template-columns: 1fr;
 		}
 	}
-	.hb {
+	.homebrew-mark {
 		color: var(--color-resource);
 		font-weight: 700;
 		margin-left: 1px;
