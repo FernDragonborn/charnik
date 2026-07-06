@@ -32,7 +32,12 @@ import {
 	type StatMethod,
 	type BoostShape
 } from '$lib/build/rules';
-import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
+import {
+	parseSpeciesBoostChoice,
+	speciesFixedAbilities as fixedAbilitiesFromRows,
+	asiBoost,
+	buildSpellPicker
+} from '$lib/build/derive';
 import { splitList, FEAT_CATEGORY } from '$lib/content/schemas';
 
 const csv = splitList;
@@ -280,27 +285,14 @@ class BuildVM {
 
 	// --- species "+N to M of your choice" ASI (5e Half-Elf) --------------------
 	/** The free-choice ASI shape from the species or its sub-option, if any (e.g. `1x2`). */
-	speciesBoostChoice = $derived.by<{ amount: number; count: number } | null>(() => {
-		const raw = String(
-			this.speciesOptionRow?.data.boost_choice || this.speciesRow?.data.boost_choice || ''
-		).trim();
-		const m = /^(\d+)x(\d+)$/.exec(raw);
-		return m ? { amount: Number(m[1]), count: Number(m[2]) } : null;
-	});
+	speciesBoostChoice = $derived(
+		parseSpeciesBoostChoice(
+			String(this.speciesOptionRow?.data.boost_choice || this.speciesRow?.data.boost_choice || '')
+		)
+	);
 	/** Abilities already raised by the species' FIXED ASI (its effects) — excluded from the choice
 	 *  (5e Half-Elf's +1/+1 goes to two abilities OTHER than the +2 CHA). */
-	speciesFixedAbilities = $derived.by<Set<Ability>>(() => {
-		const set = new Set<Ability>();
-		for (const src of [this.speciesRow, this.speciesOptionRow]) {
-			const eff = Array.isArray(src?.data.effects) ? (src!.data.effects as string[]) : [];
-			for (const t of eff) {
-				const p = parseEffect(t);
-				if (p.kind === EFFECT_KIND.flatBonus && p.target && (ABILITIES as readonly string[]).includes(p.target))
-					set.add(p.target as Ability);
-			}
-		}
-		return set;
-	});
+	speciesFixedAbilities = $derived(fixedAbilitiesFromRows([this.speciesRow, this.speciesOptionRow]));
 	/** Abilities offered for the free choice (all six minus the fixed-boosted ones). */
 	speciesBoostAbilities = $derived<Ability[]>(
 		ABILITIES.filter((a) => !this.speciesFixedAbilities.has(a))
@@ -357,32 +349,17 @@ class BuildVM {
 	 * shows only legally-pickable spells (via the access map, cantrips always + leveled ≤ the
 	 * class's max spell level); Free lifts every gate. Mirrors the skills Strict/Free toggle.
 	 */
-	spellPicker = $derived.by(() => {
-		const graph = this.graph;
-		const sheet = this.sheet;
-		if (!graph || !sheet) return [];
-		const allSpells = this.list('spell');
-		const levelOf = (s: LoadedRow) => Number(s.data.level ?? 0);
-		return sheet.spellcasting.classes.map((profile) => {
-			const access = new Set(profile.accessSpellIds);
-			const inClass = (id: string) => !this.draft.strict || access.has(id);
-			const pool = allSpells.filter((s) => {
-				if (!this.draft.strict) return true;
-				// class access gate — cantrips are on the class list too, so gate them the same way
-				if (!access.has(s.effectiveId)) return false;
-				return levelOf(s) <= profile.maxSpellLevel;
-			});
-			const byLevel = new Map<number, LoadedRow[]>();
-			for (const s of pool) (byLevel.get(levelOf(s)) ?? byLevel.set(levelOf(s), []).get(levelOf(s))!).push(s);
-			const groups = [...byLevel.keys()]
-				.sort((a, b) => a - b)
-				.map((lvl) => ({ level: lvl, label: lvl === 0 ? 'Cantrips' : `Level ${lvl}`, spells: byLevel.get(lvl)! }));
-			const selectedInClass = this.draft.selectedSpells.filter(inClass);
-			const cantripsChosen = selectedInClass.filter((id) => Number(graph.get(id)?.data.level ?? 0) === 0).length;
-			const leveledChosen = selectedInClass.filter((id) => Number(graph.get(id)?.data.level ?? 0) > 0).length;
-			return { profile, groups, cantripsChosen, leveledChosen };
-		});
-	});
+	spellPicker = $derived.by(() =>
+		this.graph && this.sheet
+			? buildSpellPicker(
+					this.list('spell'),
+					this.sheet,
+					this.graph,
+					this.draft.strict,
+					this.draft.selectedSpells
+				)
+			: []
+	);
 	toggleSpell = (ref: string) => {
 		if (this.draft.selectedSpells.includes(ref)) {
 			if (this.edit && this.draft.strict && this.edit.spells.has(ref)) {
@@ -597,17 +574,8 @@ class BuildVM {
 	filledSlots = $derived(this.featSlots.filter((s) => this.draft.slotFeats[s.key]).length);
 
 	// --- per-slot ASI allocation (+2 to one ability, or +1 to two) --------------
-	asiBoostFor = (key: string): Partial<Record<Ability, number>> => {
-		const a = this.draft.slotAsi[key];
-		if (!a) return {};
-		const out: Partial<Record<Ability, number>> = {};
-		if (a.shape === '2') {
-			if (a.picks[0]) out[a.picks[0]] = 2;
-		} else {
-			for (const ab of a.picks.slice(0, 2)) out[ab] = (out[ab] ?? 0) + 1;
-		}
-		return out;
-	};
+	asiBoostFor = (key: string): Partial<Record<Ability, number>> =>
+		asiBoost(this.draft.slotAsi[key]);
 	setAsiShape = (key: string, shape: AsiShape) => {
 		const cur = this.draft.slotAsi[key] ?? { shape, picks: [] };
 		const cap = shape === '2' ? 1 : 2;
