@@ -46,7 +46,8 @@ const WORDS = new Set(
 );
 // cryptic = a single token (no hyphen) that is short (≤6) AND not a plain allow-listed word — catches
 // glued abbreviations like .aedot / .pchip / .iname that a vowel test misses.
-const isCryptic = (n) => !n.includes('-') && n.length <= 6 && !WORDS.has(n) && !/^[a-z]\d+$/.test(n);
+const isCryptic = (n) =>
+	!n.includes('-') && n.length <= 6 && !WORDS.has(n) && !/^[a-z]\d+$/.test(n);
 
 let names = [...byName.keys()].sort();
 if (MODE === 'cryptic') names = names.filter(isCryptic);
