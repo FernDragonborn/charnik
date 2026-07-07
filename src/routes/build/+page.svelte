@@ -400,7 +400,7 @@
 								>
 							{/if}
 							<button
-								class="invrm"
+								class="icon-button"
 								onclick={() => b.removeInventoryItem(it.item)}
 								aria-label="Remove">✕</button
 							>
@@ -553,7 +553,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 18px;
-	}
+	}
 	.card :global(h2) {
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -830,14 +830,7 @@
 		color: var(--color-text);
 		cursor: pointer;
 	}
-	.invrm {
-		border: 0;
-		background: transparent;
-		color: var(--color-text-muted);
-		cursor: pointer;
-		font-size: 13px;
-	}
-	.invrm:hover {
+	.icon-button:hover {
 		color: var(--color-danger, #d06a52);
 	}
 	.pchip:focus-visible {

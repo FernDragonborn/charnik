@@ -230,7 +230,7 @@
 			</div>
 		{:else if overlay.kind === 'showhide'}
 			<div class="popup-h">
-				Which actions appear<button class="overlay-close" onclick={() => (combat.overlay = null)}
+				Which actions appear<button class="icon-button" onclick={() => (combat.overlay = null)}
 					>✕</button
 				>
 			</div>
@@ -244,7 +244,7 @@
 		{:else if overlay.kind === 'pinskills'}
 			<div class="popup-h">
 				Passive senses · 👁 = shown<button
-					class="overlay-close"
+					class="icon-button"
 					onclick={() => (combat.overlay = null)}>✕</button
 				>
 			</div>
@@ -269,16 +269,15 @@
 			</div>
 		{:else if overlay.kind === 'manage'}
 			<div class="popup-h">
-				Spellbook<button class="overlay-close" onclick={() => (combat.overlay = null)}>✕</button>
+				Spellbook<button class="icon-button" onclick={() => (combat.overlay = null)}>✕</button>
 			</div>
 			<p class="note" style="padding: 11px 13px">
 				Full spellbook manager arrives with the spell-manager view (d-spellmgr).
 			</p>
 		{:else if overlay.kind === 'condition'}
 			<div class="popup-h">
-				Conditions · multi-select<button
-					class="overlay-close"
-					onclick={() => (combat.overlay = null)}>✕</button
+				Conditions · multi-select<button class="icon-button" onclick={() => (combat.overlay = null)}
+					>✕</button
 				>
 			</div>
 			{#each conditionList as cn (cn)}
@@ -323,13 +322,6 @@
 		color: var(--color-text-muted);
 		padding: 11px 13px;
 		border-bottom: 1px solid var(--color-border);
-	}
-	.overlay-close {
-		background: transparent;
-		border: 0;
-		color: var(--color-text-muted);
-		cursor: pointer;
-		font-size: 13px;
 	}
 	.menu-row {
 		display: flex;

@@ -150,6 +150,15 @@
 	text-align: center;
 }
 
+/* --- ghost icon button (remove / close ✕) --- */
+.icon-button {
+	background: transparent;
+	border: 0;
+	color: var(--color-text-muted);
+	cursor: pointer;
+	font-size: 13px;
+}
+
 /* --- small shared bits --- */
 .trace {
 	font-family: var(--font-mono);
