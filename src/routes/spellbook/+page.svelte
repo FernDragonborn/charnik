@@ -125,7 +125,7 @@
 		<button class="done" onclick={() => goto(`${base}/combat`)}>Done</button>
 	</div>
 
-	<div class="two">
+	<div class="two-column">
 		<EntryList
 			{groups}
 			bind:searchValue={query}
@@ -232,7 +232,7 @@
 		border: 1px solid var(--color-accent-deep);
 		color: #fff;
 	}
-	.two {
+	.two-column {
 		display: grid;
 		grid-template-columns: minmax(300px, 390px) 1fr;
 		border: 1px solid var(--color-border);
@@ -262,7 +262,7 @@
 		color: var(--color-text);
 	}
 	@media (max-width: 700px) {
-		.two {
+		.two-column {
 			grid-template-columns: 1fr;
 			height: auto;
 		}

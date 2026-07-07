@@ -339,18 +339,18 @@
 				<span class="chev">{collapsed[pid] ? '▸' : '▾'}</span>{PANEL_TITLE[pid]}
 			</button>
 			{#if pid === 'actions'}
-				<button class="grpby" onclick={(e) => openMenu('showhide', e)}>👁 Show / hide</button>
+				<button class="group-by" onclick={(e) => openMenu('showhide', e)}>👁 Show / hide</button>
 			{:else if pid === 'effects'}
-				<button class="grpby" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
+				<button class="group-by" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
 			{:else if pid === 'spells' && s.spellcasting.classes.length}
 				<span class="prepared-count">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
-				<button class="grpby" onclick={cycleGroupBy} title="Change grouping"
+				<button class="group-by" onclick={cycleGroupBy} title="Change grouping"
 					>{groupByLabel} ▾</button
 				>
-				<a class="grpby" href="{base}/spellbook">⛭ Manage all</a>
+				<a class="group-by" href="{base}/spellbook">⛭ Manage all</a>
 			{/if}
 			<span
-				class="dh"
+				class="drag-handle"
 				title="drag to reorder"
 				onpointerdown={() => (combat.layout.dragDisabled = false)}>⠿</span
 			>

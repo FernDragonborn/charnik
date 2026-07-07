@@ -237,7 +237,7 @@
 			</button>
 		</div>
 
-		<div class="two">
+		<div class="two-column">
 			<EntryList
 				{groups}
 				bind:searchValue={query}
@@ -392,7 +392,7 @@
 		height: 100%;
 		min-height: 0;
 	}
-	.two {
+	.two-column {
 		display: grid;
 		grid-template-columns: minmax(240px, 300px) 1fr;
 		border: 1px solid var(--color-border);
@@ -403,7 +403,7 @@
 		min-height: 0;
 	}
 	@media (max-width: 700px) {
-		.two {
+		.two-column {
 			grid-template-columns: 1fr;
 			min-height: 480px;
 		}
