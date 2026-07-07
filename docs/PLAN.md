@@ -566,13 +566,29 @@ rotating **backups** (no DB → corruption guard; atomic temp→rename).
 ---
 
 ## Data directory & config
-- **`dataDir` via Tauri `path`**: default = OS **app-data dir** (`appDataDir`), with an
-  optional **portable mode** (`data/` next to the exe). Holds `content/`, `characters/`,
-  `charnik.config.json`, `collisions.json`.
-- First run: pick/confirm `dataDir` (Tauri **dialog** folder picker) + language + system →
-  written to config; overridable later in settings.
-- All file IO is confined to `dataDir`/roots via the **`Storage` interface + Tauri fs
-  capability scope** (see SECURITY.md).
+The `dataDir` holds everything the user owns: `content/`, `characters/`, `charnik.config.json`,
+`collisions.json`. Because "own your data as plain CSV" is a core goal, the folder MUST be
+**discoverable** — a hidden per-app dir (`%APPDATA%\org.charnik.app`, the initial implementation)
+fails that: users can't find it. So:
+
+- **Default location = `<documentDir>/charnik`** (e.g. `C:\Users\<u>\Documents\charnik`) — a
+  **visible** folder literally named `charnik`, not the hidden OS app-data dir.
+- **First-run dialog**: on first launch (no config pointer yet) a modal proposes the default
+  location and lets the user **pick a different folder** (Tauri `plugin-dialog`). The choice is
+  saved to a tiny **pointer config** at `appConfigDir()/config.json` (`{ dataDir }`) — the one
+  small app-managed file the user never edits; the data itself lives at the chosen path.
+- **Settings → Data** (when the Settings page lands): shows the current path + **[Change folder…]**
+  (re-pick) + **[Open content folder]** (reveal in the OS file manager via `plugin-opener`
+  `revealItemInDir`).
+- **Resolution order** (`storage/tauri.ts`): pointer config → else the `<documentDir>/charnik`
+  default.
+- **fs-scope** (`capabilities/`): statically allow `$DOCUMENT/charnik/**` + `$APPCONFIG/**`; an
+  **arbitrary user-picked folder** is granted at runtime via a Rust command
+  (`app.fs_scope().allow_directory(path, true)`), re-applied on startup for a saved custom path.
+- **No auto-migration** from the old `%APPDATA%\org.charnik.app` for now — we deploy fresh to test
+  seeding (a migrate/import path can come later).
+- All file IO stays confined to `dataDir`/roots via the **`Storage` interface + Tauri fs capability
+  scope** (see SECURITY.md).
 
 ---
 

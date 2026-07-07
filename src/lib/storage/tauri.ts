@@ -23,12 +23,44 @@ import {
 	rename as fsRename,
 	watchImmediate
 } from '@tauri-apps/plugin-fs';
-import { appDataDir, join } from '@tauri-apps/api/path';
+import { appConfigDir, documentDir, join } from '@tauri-apps/api/path';
 import type { Storage, FileEntry } from './types';
 
-/** Resolve the writable data root once (OS app-data dir for this app id). */
+/** The user's data root is a VISIBLE, self-named folder (not a hidden per-app dir) — see
+ *  docs/PLAN.md "Data directory & config". */
+const DATA_DIR_NAME = 'charnik';
+/** Tiny app-managed pointer (in the OS app-config dir) recording a user-chosen data location. */
+const POINTER_FILE = 'config.json';
+
+/** Absolute path of the pointer config — lives in appConfig, OUTSIDE the data root it points at. */
+async function pointerPath(): Promise<string> {
+	return join(await appConfigDir(), POINTER_FILE);
+}
+
+/** The user's saved data-dir choice, or null if none / unreadable. */
+async function readDataDirOverride(): Promise<string | null> {
+	try {
+		const p = await pointerPath();
+		if (!(await fsExists(p))) return null;
+		const saved = JSON.parse(await readTextFile(p))?.dataDir;
+		return typeof saved === 'string' && saved ? saved : null;
+	} catch {
+		return null;
+	}
+}
+
+/** Persist a user-chosen data dir to the pointer (used by the first-run + settings folder picker). */
+export async function setDataDirOverride(dir: string): Promise<void> {
+	await fsMkdir(await appConfigDir(), { recursive: true });
+	await writeFile(
+		await pointerPath(),
+		new TextEncoder().encode(JSON.stringify({ dataDir: dir }, null, 2))
+	);
+}
+
+/** Resolve the writable data root: an explicit user choice, else the default `<Documents>/charnik`. */
 async function resolveDataDir(): Promise<string> {
-	return appDataDir();
+	return (await readDataDirOverride()) ?? join(await documentDir(), DATA_DIR_NAME);
 }
 
 export class TauriStorage implements Storage {
