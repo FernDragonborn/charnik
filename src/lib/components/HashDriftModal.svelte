@@ -60,11 +60,13 @@
 					<span class="dates">
 						<span class="date">
 							<span class="dialog-label">{$_('contentDrift.changedLabel')}</span>
-							<span class="dval strong">{item.changedAt ?? $_('contentDrift.unknownDate')}</span>
+							<span class="date-value strong"
+								>{item.changedAt ?? $_('contentDrift.unknownDate')}</span
+							>
 						</span>
 						<span class="date">
 							<span class="dialog-label">{$_('contentDrift.declaredLabel')}</span>
-							<span class="dval">{item.declaredDate ?? $_('contentDrift.unknownDate')}</span>
+							<span class="date-value">{item.declaredDate ?? $_('contentDrift.unknownDate')}</span>
 						</span>
 					</span>
 				</span>
@@ -140,11 +142,11 @@
 		flex-direction: column;
 		gap: 2px;
 	}
-	.dval {
+	.date-value {
 		font-size: var(--font-size-md);
 		color: var(--color-text-muted);
 	}
-	.dval.strong {
+	.date-value.strong {
 		color: var(--color-accent-bright);
 		font-weight: 600;
 	}

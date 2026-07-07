@@ -56,10 +56,10 @@
 <article class="detail-body edit">
 	<div class="deyebrow">{type.replace(/_/g, ' ')} · new homebrew</div>
 	<input class="titlein" placeholder="Name" bind:value={draft.name_en} />
-	<div class="idrow">
+	<div class="id-row">
 		<span class="id-label">id</span>
 		<input
-			class="idin"
+			class="id-input"
 			placeholder={slugify(draft.name_en ?? '') || 'auto'}
 			bind:value={draft.id}
 		/>
@@ -111,7 +111,7 @@
 	{/if}
 
 	{#each bodyFields as f (f.name)}
-		<textarea class="bodyin" placeholder={f.label} bind:value={draft[f.name]}></textarea>
+		<textarea class="body-input" placeholder={f.label} bind:value={draft[f.name]}></textarea>
 	{/each}
 
 	{#if issues.length}
@@ -149,7 +149,7 @@
 		outline: none;
 		border-bottom-color: var(--color-accent);
 	}
-	.idrow {
+	.id-row {
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -163,7 +163,7 @@
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
-	.idin {
+	.id-input {
 		font-family: var(--font-mono);
 		font-size: 12px;
 		background: var(--color-surface);
@@ -264,7 +264,7 @@
 		left: 19px;
 		background: #fff;
 	}
-	.bodyin {
+	.body-input {
 		width: 100%;
 		min-height: 120px;
 		font-family: inherit;
@@ -278,7 +278,7 @@
 		margin-bottom: 12px;
 		resize: vertical;
 	}
-	.bodyin:focus {
+	.body-input:focus {
 		outline: none;
 		border-color: var(--color-accent);
 	}

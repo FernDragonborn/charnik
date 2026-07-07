@@ -104,8 +104,8 @@
 					{#each EDITABLE_KEYS as key (key)}
 						{@const optional = OPTIONAL_KEYS.includes(key)}
 						<div class="field" class:wide={key === 'license'}>
-							<span class="flabel" class:optional-tag={optional}>
-								{keyLabel(key)}{#if optional}<span class="opttag">
+							<span class="field-label" class:optional-tag={optional}>
+								{keyLabel(key)}{#if optional}<span class="optional-label">
 										{$_('contentMeta.optional')}</span
 									>{/if}
 							</span>
@@ -137,7 +137,7 @@
 									</button>
 									{#if licCustom[issue.file]}
 										<input
-											class="finput"
+											class="field-input"
 											type="text"
 											bind:value={fills[issue.file]!.license}
 											placeholder={$_('contentMeta.customLicensePlaceholder')}
@@ -155,7 +155,7 @@
 								</div>
 							{:else}
 								<input
-									class="finput"
+									class="field-input"
 									type={isUrl(key) ? 'url' : 'text'}
 									bind:value={fills[issue.file]![key]}
 									placeholder={key === 'source'
@@ -244,19 +244,19 @@
 	.field.wide {
 		flex-basis: 100%;
 	}
-	.flabel {
+	.field-label {
 		font-size: var(--font-size-sm);
 		color: var(--color-accent-bright);
 		font-weight: 600;
 	}
-	.flabel.optional-tag {
+	.field-label.optional-tag {
 		color: var(--color-text);
 	}
-	.opttag {
+	.optional-label {
 		color: var(--color-text-muted);
 		font-weight: 400;
 	}
-	.finput {
+	.field-input {
 		background: var(--color-bg);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-sm);
@@ -265,7 +265,7 @@
 		font-size: var(--font-size-md);
 		outline: none;
 	}
-	.finput:focus {
+	.field-input:focus {
 		border-color: var(--color-accent);
 	}
 	.lic-list {

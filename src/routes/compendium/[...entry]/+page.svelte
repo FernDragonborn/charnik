@@ -179,10 +179,10 @@
 		<div class="controls">
 			<details class="disclosure" bind:open={groupOpen}>
 				<summary>Group · <b>{groupLabel}</b></summary>
-				<div class="ddmenu">
+				<div class="dropdown-menu">
 					{#each groupings as g (g.key)}
 						<button
-							class="ddopt"
+							class="dropdown-option"
 							class:on={groupBy === g.key}
 							onclick={() => {
 								groupBy = g.key;
@@ -196,9 +196,9 @@
 			{#if sources.length > 1 || facetValues.length}
 				<details class="disclosure">
 					<summary>Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
-					<div class="ddmenu wide">
+					<div class="dropdown-menu wide">
 						{#if sources.length > 1}
-							<div class="ddsec">Source</div>
+							<div class="dropdown-section">Source</div>
 							<div class="ddchips">
 								{#each sources as s (s)}
 									<Chip
@@ -209,7 +209,7 @@
 							</div>
 						{/if}
 						{#if facet && facetValues.length}
-							<div class="ddsec">{facet.label}</div>
+							<div class="dropdown-section">{facet.label}</div>
 							<div class="ddchips scroll">
 								{#each facetValues as v (v)}
 									<Chip
@@ -232,7 +232,7 @@
 				</details>
 			{/if}
 
-			<button class="addbtn" onclick={() => (adding = true)}>
+			<button class="add-button" onclick={() => (adding = true)}>
 				+ New {selectedType.replace(/_/g, ' ')}
 			</button>
 		</div>
@@ -304,7 +304,7 @@
 		color: var(--color-text);
 		border-color: var(--color-border-strong);
 	}
-	.ddmenu {
+	.dropdown-menu {
 		position: absolute;
 		z-index: 20;
 		top: calc(100% + 5px);
@@ -316,11 +316,11 @@
 		box-shadow: var(--shadow-2);
 		min-width: 160px;
 	}
-	.ddmenu.wide {
+	.dropdown-menu.wide {
 		width: max(320px, 100%);
 		max-width: 460px;
 	}
-	.ddopt {
+	.dropdown-option {
 		display: block;
 		width: 100%;
 		text-align: left;
@@ -332,13 +332,13 @@
 		border-radius: 6px;
 		cursor: pointer;
 	}
-	.ddopt:hover {
+	.dropdown-option:hover {
 		background: var(--color-surface-2);
 	}
-	.ddopt.on {
+	.dropdown-option.on {
 		color: var(--color-accent-bright);
 	}
-	.ddsec {
+	.dropdown-section {
 		font-family: var(--font-mono);
 		font-size: 9px;
 		letter-spacing: var(--tracking-label);
@@ -365,7 +365,7 @@
 		font-size: 11px;
 		cursor: pointer;
 	}
-	.addbtn {
+	.add-button {
 		margin-left: auto;
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -377,7 +377,7 @@
 		padding: 5px 12px;
 		cursor: pointer;
 	}
-	.addbtn:hover {
+	.add-button:hover {
 		background: var(--color-accent);
 		color: #fff;
 	}

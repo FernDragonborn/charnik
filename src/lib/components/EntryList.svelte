@@ -52,7 +52,7 @@
 					<span class="sname"
 						><b>{e.name}</b>{#if e.meta}<small>{e.meta}</small>{/if}</span
 					>
-					{#if showEdition && e.edition}<span class="edtag">{e.edition}</span>{/if}
+					{#if showEdition && e.edition}<span class="edition-tag">{e.edition}</span>{/if}
 					{#if trailing}{@render trailing(e)}{/if}
 				</div>
 			{:else}
@@ -127,7 +127,7 @@
 		gap: 4px;
 		flex: none;
 	}
-	.edtag {
+	.edition-tag {
 		flex: none;
 		font-family: var(--font-mono);
 		font-size: 9px;

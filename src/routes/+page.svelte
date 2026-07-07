@@ -67,23 +67,23 @@
 	{#if loading}
 		<p class="muted">{$_('roster.loading')}</p>
 	{:else if error}
-		<p class="rerr">{$_('roster.storageError')} {error}</p>
+		<p class="roster-error">{$_('roster.storageError')} {error}</p>
 	{:else if characters.roster.length === 0}
 		<p class="muted">{$_('roster.empty')}</p>
 	{:else}
 		<ul class="list">
 			{#each characters.roster as c (c.id)}
-				<li class="card rcard">
-					<button class="ropen" onclick={() => open(c.id)}>
-						<span class="rname">{c.name}</span>
-						<span class="rsub">
+				<li class="card roster-card">
+					<button class="roster-open" onclick={() => open(c.id)}>
+						<span class="roster-name">{c.name}</span>
+						<span class="roster-subtitle">
 							{c.classes || 'level ' + c.level}
 							<span class="sysbadge">{c.system}</span>
-							{#if c.error}<span class="rerr">⚠ {c.error}</span>{/if}
+							{#if c.error}<span class="roster-error">⚠ {c.error}</span>{/if}
 						</span>
 					</button>
 					<button
-						class="rdel"
+						class="roster-delete"
 						title={$_('roster.delete', { values: { name: c.name } })}
 						onclick={() => removeCharacter(c.id)}>✕</button
 					>
@@ -192,14 +192,14 @@
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 		gap: 10px;
 	}
-	.rcard {
+	.roster-card {
 		display: flex;
 		align-items: stretch;
 		gap: 0;
 		padding: 0;
 		overflow: hidden;
 	}
-	.ropen {
+	.roster-open {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
@@ -211,15 +211,15 @@
 		padding: 14px 16px;
 		cursor: pointer;
 	}
-	.ropen:hover {
+	.roster-open:hover {
 		background: var(--color-surface-2);
 	}
-	.rname {
+	.roster-name {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 16px;
 	}
-	.rsub {
+	.roster-subtitle {
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -234,10 +234,10 @@
 		padding: 1px 6px;
 		text-transform: none;
 	}
-	.rerr {
+	.roster-error {
 		color: var(--color-accent-bright);
 	}
-	.rdel {
+	.roster-delete {
 		flex: none;
 		background: transparent;
 		border: 0;
@@ -247,7 +247,7 @@
 		padding: 0 14px;
 		font-size: 13px;
 	}
-	.rdel:hover {
+	.roster-delete:hover {
 		color: var(--color-accent-bright);
 		background: var(--color-surface-2);
 	}

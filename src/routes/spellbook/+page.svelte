@@ -164,7 +164,7 @@
 		<WikiDetail {detail}>
 			{#snippet actions()}
 				<button class="cast-btn" onclick={cast}>🎲 Cast</button>
-				<span class="dtog">
+				<span class="detail-toggle">
 					Prepared
 					<Switch
 						on={selEntry ? isPrepared(selEntry) : false}
@@ -172,14 +172,14 @@
 						onclick={() => selected && togglePrepare(selected.effectiveId)}
 					/>
 				</span>
-				<span class="dtog">
+				<span class="detail-toggle">
 					On sheet
 					<Switch
 						on={selected ? shown.has(selected.effectiveId) : false}
 						onclick={() => selected && (shown = toggleSet(shown, selected.effectiveId))}
 					/>
 				</span>
-				<span class="dtog">
+				<span class="detail-toggle">
 					Pinned
 					<Switch
 						on={selected ? pinned.has(selected.effectiveId) : false}
@@ -247,7 +247,7 @@
 		border: 1px solid var(--color-accent-deep);
 		color: #fff;
 	}
-	.dtog {
+	.detail-toggle {
 		display: flex;
 		align-items: center;
 		gap: 8px;

@@ -165,15 +165,15 @@
 				>
 					{#if it.kind === 'content'}
 						<span class="tbadge">{typeName(it.type)}</span>
-						<span class="itxt">
-							<span class="iname">{it.label}</span>
-							{#if it.snippet}<span class="isnip">{it.snippet}</span>{/if}
+						<span class="item-text">
+							<span class="item-name">{it.label}</span>
+							{#if it.snippet}<span class="item-snippet">{it.snippet}</span>{/if}
 						</span>
 						{#if app.activeEditions.length > 1}<span class="item-edition"
 								>{it.systems.join(' · ')}</span
 							>{/if}
 					{:else}
-						<span class="iname">{it.label}</span>
+						<span class="item-name">{it.label}</span>
 					{/if}
 				</li>
 			{:else}
@@ -239,11 +239,11 @@
 	.item.active {
 		background: var(--color-surface-2);
 	}
-	.iname {
+	.item-name {
 		font-family: var(--font-display);
 		font-weight: 600;
 	}
-	.item.active .iname {
+	.item.active .item-name {
 		color: var(--color-accent-bright);
 	}
 	.tbadge {
@@ -257,13 +257,13 @@
 		border-radius: 5px;
 		padding: 2px 6px;
 	}
-	.itxt {
+	.item-text {
 		min-width: 0;
 		flex: 1;
 		display: flex;
 		flex-direction: column;
 	}
-	.isnip {
+	.item-snippet {
 		font-size: 12px;
 		color: var(--color-text-muted);
 		overflow: hidden;
