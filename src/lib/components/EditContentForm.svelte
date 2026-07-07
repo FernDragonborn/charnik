@@ -53,7 +53,7 @@
 	}
 </script>
 
-<article class="detail edit">
+<article class="detail-body edit">
 	<div class="deyebrow">{type.replace(/_/g, ' ')} · new homebrew</div>
 	<input class="titlein" placeholder="Name" bind:value={draft.name_en} />
 	<div class="idrow">
@@ -78,7 +78,7 @@
 	</div>
 
 	{#if metaFields.length}
-		<div class="meta">
+		<div class="detail-meta">
 			{#each metaFields as f (f.name)}
 				<label class="meta-cell">
 					<span class="meta-key"
@@ -133,11 +133,6 @@
 </article>
 
 <style>
-	.detail {
-		padding: 20px 22px;
-		overflow: auto;
-		min-height: 0;
-	}
 	.titlein {
 		font-family: var(--font-display);
 		font-weight: 700;
@@ -201,12 +196,6 @@
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
 		background: var(--color-accent-soft);
-	}
-	.meta {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-		gap: 8px;
-		margin-bottom: 16px;
 	}
 	.meta-cell {
 		display: flex;

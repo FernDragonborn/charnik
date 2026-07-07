@@ -34,7 +34,7 @@
 	const rollHp = (formula: string) => rollDice(formula, 'HP rolled');
 </script>
 
-<article class="detail">
+<article class="detail-body">
 	{#if detail?.spell}
 		{@const s = detail.spell}
 		<div class="detail-eyebrow">
@@ -184,7 +184,7 @@
 			</div>
 		{/if}
 		{#if detail.meta.length}
-			<div class="meta">
+			<div class="detail-meta">
 				{#each detail.meta as [k, v] (k)}
 					<div class="meta-cell">
 						<div class="meta-key">{k}</div>
@@ -205,12 +205,7 @@
 </article>
 
 <style>
-	.detail {
-		padding: 20px 22px;
-		overflow: auto;
-		min-height: 0;
-	}
-	.detail h1 {
+	.detail-body h1 {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 30px;
@@ -260,13 +255,6 @@
 		.abilities {
 			grid-template-columns: repeat(3, 1fr);
 		}
-	}
-	.meta {
-		display: grid;
-		/* short values (AC, size, CR…) pack more per row instead of two giant boxes */
-		grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-		gap: 8px;
-		margin-bottom: 16px;
 	}
 	.meta-cell {
 		background: var(--color-surface);

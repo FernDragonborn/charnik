@@ -159,6 +159,19 @@
 	font-size: 13px;
 }
 
+/* --- content-detail layout (WikiDetail render + EditContentForm edit) --- */
+.detail-body {
+	min-height: 0;
+	overflow: auto;
+	padding: 20px 22px;
+}
+.detail-meta {
+	display: grid;
+	gap: 8px;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	margin-bottom: 16px;
+}
+
 /* --- small shared bits --- */
 .trace {
 	font-family: var(--font-mono);
