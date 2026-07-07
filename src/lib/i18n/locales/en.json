@@ -93,5 +93,13 @@
 		"update": "Update dates & hashes",
 		"skip": "Skip for now",
 		"neverAsk": "Don't ask again (content-editing mode)"
+	},
+	"firstRun": {
+		"title": "Choose where Charnik keeps your data",
+		"subtitle": "Your characters and the SRD content live here as plain files you can open, edit, and back up any time. You can change this later in Settings.",
+		"folderLabel": "Data folder",
+		"choose": "Choose folder…",
+		"hint": "A folder named “charnik” will be created here.",
+		"save": "Save here"
 	}
 }

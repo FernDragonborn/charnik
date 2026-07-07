@@ -4,6 +4,7 @@
 	// folder. Presentation only — the folder picker + fs-scope grant are injected so this previews in a
 	// plain browser (see /dev/firstrun) and the Tauri wiring stays out of the component.
 	import { untrack } from 'svelte';
+	import { _ } from '$lib/i18n';
 	import LangSwitcher from './LangSwitcher.svelte';
 
 	let {
@@ -51,25 +52,24 @@
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>
 		<span class="dialog-badge">📁</span>
-		<h2 id="fr-title" class="dialog-title">Choose where Charnik keeps your data</h2>
-		<p class="dialog-subtitle">
-			Your characters and the SRD content live here as plain files you can open, edit, and back up
-			any time. You can change this later in Settings.
-		</p>
+		<h2 id="fr-title" class="dialog-title">{$_('firstRun.title')}</h2>
+		<p class="dialog-subtitle">{$_('firstRun.subtitle')}</p>
 	</header>
 
 	<div class="body">
-		<span class="dialog-label section-label">Data folder</span>
+		<span class="dialog-label section-label">{$_('firstRun.folderLabel')}</span>
 		<div class="picker">
 			<code class="path" title={dir}>{dir}</code>
-			<button class="btn" onclick={choose} disabled={busy}>Choose folder…</button>
+			<button class="btn" onclick={choose} disabled={busy}>{$_('firstRun.choose')}</button>
 		</div>
-		<p class="hint">A folder named <b>charnik</b> will be created here.</p>
+		<p class="hint">{$_('firstRun.hint')}</p>
 	</div>
 
 	<footer class="dialog-foot">
 		<span class="dialog-spacer"></span>
-		<button class="btn primary" onclick={() => onConfirm(dir)} disabled={busy}>Save here</button>
+		<button class="btn primary" onclick={() => onConfirm(dir)} disabled={busy}
+			>{$_('firstRun.save')}</button
+		>
 	</footer>
 </div>
 
