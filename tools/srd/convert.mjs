@@ -154,8 +154,8 @@ const SPECIES_CHOICE_2024 = {
 const stripHtml = (s) =>
 	s
 		.replace(/<[^>]+>/g, '')
-		.replace(/&amp;/g, '&')
 		.replace(/&#39;|’/g, "'")
+		.replace(/&amp;/g, '&')
 		.replace(/\s+/g, ' ')
 		.trim();
 function firstTableTds(body) {
