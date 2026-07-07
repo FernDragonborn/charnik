@@ -50,7 +50,7 @@
 	<!-- backdrop: click closes; wheeling OUTSIDE the menu closes it too so the page can scroll
 	     (wheeling over the menu itself scrolls the menu, via its own overflow:auto) -->
 	<div
-		class="ovbg"
+		class="overlay-backdrop"
 		onclick={() => (combat.overlay = null)}
 		onwheel={() => (combat.overlay = null)}
 	></div>
@@ -81,7 +81,7 @@
 					{#each DICE as d (d)}<button class="die-btn" onclick={() => bumpDie(d, 1)}>d{d}</button
 						>{/each}
 				</div>
-				<div class="advrow">
+				<div class="advantage-row">
 					<button
 						class="adv-seg"
 						class:on={rollAdvantage === -1}
@@ -98,7 +98,7 @@
 						onclick={() => (combat.tray.rollAdvantage = 1)}>Advant.</button
 					>
 				</div>
-				<div class="modrow">
+				<div class="modifier-row">
 					<div class="roll-mod">
 						<button onclick={() => (combat.tray.rollMod -= 1)}>−</button> mod {signed(rollMod)}
 						<button onclick={() => (combat.tray.rollMod += 1)}>+</button>
@@ -106,7 +106,7 @@
 					<button class="rollbtn" onclick={doRoll}>Roll {rollExpr}</button>
 				</div>
 				{#if log[0]}{@const r = log[0]}
-					<div class="hist">
+					<div class="roll-history">
 						<div>
 							{r.label} · {#if r.advantageRoll}d20 <b class="roll-result">{r.advantageRoll.kept}</b>
 							{/if}{r.expr}
@@ -204,7 +204,7 @@
 			<div class="cardhead2"><span class="menu-title">Roll log · history</span></div>
 			<div class="logscroll">
 				{#each log as l, i (i)}
-					<div class="logrow">
+					<div class="log-row">
 						<!-- line 1: the roll (attack roll / check) with the dice that were rolled -->
 						<div class="lr-top">
 							<b>{l.label}</b><span class="lr-tot" class:roll-result={!Number.isNaN(l.total)}
@@ -293,7 +293,7 @@
 <style>
 	/* overlays — d-menus popover language */
 	/* transparent catcher: click outside the dropdown closes it */
-	.ovbg {
+	.overlay-backdrop {
 		position: fixed;
 		inset: 0;
 		background: transparent;
@@ -480,7 +480,7 @@
 	.die-btn:hover {
 		border-color: var(--color-resource);
 	}
-	.advrow {
+	.advantage-row {
 		display: flex;
 		gap: 6px;
 		margin-bottom: 11px;
@@ -503,7 +503,7 @@
 		border-color: var(--color-good);
 		color: var(--color-good);
 	}
-	.modrow {
+	.modifier-row {
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -539,7 +539,7 @@
 		padding: 9px 12px;
 		cursor: pointer;
 	}
-	.hist {
+	.roll-history {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
@@ -547,7 +547,7 @@
 		margin-top: 10px;
 		padding-top: 9px;
 	}
-	.hist .roll-result {
+	.roll-history .roll-result {
 		color: var(--color-good);
 		font-weight: 700;
 	}
@@ -660,11 +660,11 @@
 	.logscroll {
 		padding: 0 6px 4px;
 	}
-	.logrow {
+	.log-row {
 		padding: 7px 7px;
 		border-top: 1px solid var(--color-border);
 	}
-	.logrow:first-child {
+	.log-row:first-child {
 		border-top: 0;
 	}
 	.lr-top {

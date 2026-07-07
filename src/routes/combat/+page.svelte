@@ -112,10 +112,10 @@
 					style="width:{hpBar.tmp}%"
 				></i>
 			</div>
-			<div class="hpadj">
+			<div class="hp-adjust">
 				<button class="hp-btn damage" onclick={combat.damage} title="Apply damage">− Damage</button>
 				<input
-					class="hpnum"
+					class="hp-number"
 					type="number"
 					min="0"
 					bind:value={combat.hpAmount}
@@ -175,12 +175,12 @@
 			{#each SLOTS as [slot, label] (slot)}
 				<span class="turn-slot">
 					{label}
-					<span class="aepips">
+					<span class="turn-pips">
 						{#each range(combat.economy.slotMax[slot]) as i (i)}
 							{@const used = i >= combat.economy.slotMax[slot] - c.play.turn[slot]}
 							<button
 								type="button"
-								class="aedot"
+								class="turn-pip"
 								class:used
 								onclick={() => combat.economy.usePip(slot, i)}
 								title="{label}: {used ? 'used — click to restore' : 'available'}"
@@ -235,14 +235,14 @@
 	{/if}
 
 	<div class="playbar">
-		<span class="phint"
+		<span class="panel-hint"
 			>Tap any check · save · attack · spell to roll it · <b>Alt + click</b> (or Ctrl) for advantage /
 			custom dice.</span
 		>
 		<button class="rollout" onclick={(e) => openMenu('log', e)}>
 			🎲 {#if log[0]}Last · <b>{log[0].label}</b> <i>{log[0].expr}</i> =
 				<span class="roll-result">{log[0].total}</span>{:else}<i>no rolls yet</i>{/if}<span
-				class="logcue">▸ log</span
+				class="log-cue">▸ log</span
 			>
 		</button>
 	</div>
@@ -326,7 +326,7 @@
 							roll(`${ab.toUpperCase()} save`, a.save.value, e, `save.${ab}`);
 						}}
 					>
-						<i class="pdot" class:on={prof}></i>SAVE <b>{signed(a.save.value)}</b>
+						<i class="prof-dot" class:on={prof}></i>SAVE <b>{signed(a.save.value)}</b>
 					</span>
 				</button>
 			{/each}
@@ -374,7 +374,7 @@
 											onclick={(e) => roll(titleCase(skill), sk.value, e, `skill.${skill}`)}
 										>
 											<i
-												class="pdot"
+												class="prof-dot"
 												class:on={sk.prof !== 'none'}
 												class:expertise={sk.prof === 'expertise'}
 												title={sk.prof}
@@ -416,8 +416,8 @@
 						<span class="effect-dot"></span>
 						<div class="body">
 							<b>{e.label}</b>
-							{#if e.effects.length || e.durationRounds}<span class="etags"
-									>{#each e.effects as t (t)}<span class="etag">{effectTag(t)}</span
+							{#if e.effects.length || e.durationRounds}<span class="effect-tags"
+									>{#each e.effects as t (t)}<span class="effect-tag">{effectTag(t)}</span
 										>{/each}{#if e.durationRounds}<span class="durpill">{e.durationRounds} rds</span
 										>{/if}</span
 								>{/if}
@@ -503,7 +503,7 @@
 	<section class="panels">
 		{#each columns as col, ci (ci)}
 			<div
-				class="pcol"
+				class="panel-column"
 				use:dndzone={{
 					items: col,
 					type: 'panel',
@@ -781,11 +781,11 @@
 		border-radius: var(--radius-full);
 		padding: 5px 11px;
 	}
-	.turn-slot .aepips {
+	.turn-slot .turn-pips {
 		display: inline-flex;
 		gap: 4px;
 	}
-	.turn-slot .aedot {
+	.turn-slot .turn-pip {
 		width: 12px;
 		height: 12px;
 		padding: 0;
@@ -795,7 +795,7 @@
 		box-shadow: 0 0 8px rgba(59, 184, 166, 0.45);
 		cursor: pointer;
 	}
-	.turn-slot .aedot.used {
+	.turn-slot .turn-pip.used {
 		background: transparent;
 		border-color: var(--color-border-strong);
 		box-shadow: none;
@@ -830,13 +830,13 @@
 		border-color: var(--color-border-strong);
 	}
 	/* HP damage / heal control */
-	.hpadj {
+	.hp-adjust {
 		display: flex;
 		align-items: center;
 		gap: 6px;
 		margin-top: 10px;
 	}
-	.hpnum {
+	.hp-number {
 		width: 58px;
 		text-align: center;
 		font-family: var(--font-mono);
@@ -909,7 +909,7 @@
 		gap: 12px;
 		margin-bottom: 22px;
 	}
-	.phint {
+	.panel-hint {
 		font-size: 12px;
 		color: var(--color-text-muted);
 		flex: 1;
@@ -939,7 +939,7 @@
 		font-size: 14px;
 		font-weight: 700;
 	}
-	.rollout .logcue {
+	.rollout .log-cue {
 		color: var(--color-text-muted);
 		margin-left: 8px;
 	}
@@ -1136,13 +1136,13 @@
 	.ability .ability-save.prof b {
 		color: var(--color-resource);
 	}
-	.ability .ability-save .pdot {
+	.ability .ability-save .prof-dot {
 		width: 6px;
 		height: 6px;
 		border-radius: 50%;
 		border: 1.5px solid var(--color-border-strong);
 	}
-	.ability .ability-save .pdot.on {
+	.ability .ability-save .prof-dot.on {
 		background: var(--color-resource);
 		border-color: var(--color-resource);
 	}
@@ -1156,7 +1156,7 @@
 	}
 	/* stretch + min-height so the whole column (incl. empty tail below the last card)
 	   is inside the dndzone → a panel can be dropped anywhere in the other column. */
-	.pcol {
+	.panel-column {
 		flex: 1;
 		min-width: 0;
 		min-height: 160px;
@@ -1205,19 +1205,19 @@
 	.skill-row:hover {
 		background: var(--color-surface-2);
 	}
-	.skill-row .pdot {
+	.skill-row .prof-dot {
 		width: 7px;
 		height: 7px;
 		border-radius: 50%;
 		border: 1.5px solid var(--color-border-strong);
 		flex: none;
 	}
-	.skill-row .pdot.on {
+	.skill-row .prof-dot.on {
 		background: var(--color-resource);
 		border-color: var(--color-resource);
 	}
 	/* expertise = a ringed dot (double proficiency) */
-	.skill-row .pdot.expertise {
+	.skill-row .prof-dot.expertise {
 		box-shadow:
 			0 0 0 2px var(--color-surface),
 			0 0 0 3.5px var(--color-resource);
@@ -1308,14 +1308,14 @@
 	.effect.negative .body b {
 		color: var(--color-accent-bright);
 	}
-	.etags {
+	.effect-tags {
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: flex-end;
 		gap: 5px;
 		margin-left: auto;
 	}
-	.etag {
+	.effect-tag {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		color: var(--color-text-muted);
@@ -1323,11 +1323,11 @@
 		border-radius: 5px;
 		padding: 1px 6px;
 	}
-	.effect.positive .etag {
+	.effect.positive .effect-tag {
 		color: var(--color-good);
 		border-color: var(--color-good);
 	}
-	.effect.negative .etag {
+	.effect.negative .effect-tag {
 		color: var(--color-accent-bright);
 		border-color: var(--color-accent);
 	}

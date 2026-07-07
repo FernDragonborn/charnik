@@ -35,9 +35,18 @@ for (const file of walk('src')) {
 	}
 }
 
-// cryptic = ≤3 chars, OR looks like a consonant-abbreviation (no full word), excluding kebab compounds
-const isCryptic = (n) =>
-	(n.length <= 3 || !/[aeiou]/.test(n.replace(/-/g, ''))) && !n.includes('-');
+// A small allowlist of real single words that are fine on their own (not abbreviations).
+const WORDS = new Set(
+	`btn nav card body head item page list note save name text icon edit view menu row col cell tag chip
+	 pill dot pip star gold teal warn done free full open lock knob band base bare bool auto meta main
+	 hero grid group count date dates dice tray pool prep prof rest heal temp tile trace types used util
+	 wide small span none empty entry field file files input modal popup level total stat stats strip
+	 check ready muted spent bonus boost pick drop over acts hint sub two dim on off die eye set new add
+	 mod res neg pos big rev asi ctrls req opt`.split(/\s+/)
+);
+// cryptic = a single token (no hyphen) that is short (≤6) AND not a plain allow-listed word — catches
+// glued abbreviations like .aedot / .pchip / .iname that a vowel test misses.
+const isCryptic = (n) => !n.includes('-') && n.length <= 6 && !WORDS.has(n) && !/^[a-z]\d+$/.test(n);
 
 let names = [...byName.keys()].sort();
 if (MODE === 'cryptic') names = names.filter(isCryptic);

@@ -45,7 +45,7 @@
 <svelte:head><title>Build — Charnik</title></svelte:head>
 
 <section class="page">
-	<div class="bhead">
+	<div class="boost-head">
 		<h1>Build</h1>
 		<label class="namewrap">
 			<span class="visually-hidden">Character name</span>
@@ -108,7 +108,7 @@
 				{#each b.draft.classes as cls, i (i)}
 					{@const clsRow = cls.classId ? b.graph?.get(cls.classId) : undefined}
 					{@const subs = b.subclassesFor(cls.classId)}
-					<div class="clsrow">
+					<div class="class-row">
 						<span class="class-icon">{clsRow ? '✦' : i === 0 ? '＋' : '⌁'}</span>
 						<span class="class-name">
 							<select class="bare" value={cls.classId ?? ''} onchange={(e) => b.setClass(i, e.currentTarget.value || null)}>
@@ -149,7 +149,7 @@
 				<div class="chips spaced">
 					{#if b.classRow}
 						{#each String(b.classRow.data.saves).split(',') as sv (sv)}
-							<span class="pchip locked">{sv.trim().toUpperCase()}</span>
+							<span class="pick-chip locked">{sv.trim().toUpperCase()}</span>
 						{/each}
 					{:else}<span class="subtext">—</span>{/if}
 				</div>
@@ -164,7 +164,7 @@
 						{@const on = auto || b.draft.skills.includes(skill)}
 						{@const pickable = b.skillPickable(skill)}
 						<span class="skwrap">
-							<button class="pchip" class:on class:locked={auto} class:dim={!pickable} disabled={auto || !pickable} onclick={() => b.toggleSkill(skill)}>
+							<button class="pick-chip" class:on class:locked={auto} class:dim={!pickable} disabled={auto || !pickable} onclick={() => b.toggleSkill(skill)}>
 								{titleCase(skill)}
 							</button>
 							{#if on}
@@ -183,7 +183,7 @@
 				<div class="chips spaced">
 					{#each b.languageList as r (r.effectiveId)}
 						<button
-							class="pchip"
+							class="pick-chip"
 							class:on={b.draft.selectedLanguages.includes(r.effectiveId)}
 							onclick={() => b.toggleLanguage(r.effectiveId)}>{rowName(r)}</button
 						>
@@ -198,8 +198,8 @@
 					<p class="subtext">Pick a class to see its ASI / feat slots.</p>
 				{:else}
 					{#if b.originFeatRef}
-						<div class="frow">
-							<span class="lvtag gold">BG</span>
+						<div class="field-row">
+							<span class="level-tag gold">BG</span>
 							<span class="feat-line"><b>Origin feat</b> — {rowName(b.graph?.get(b.originFeatRef))} <span class="subtext">(granted)</span></span>
 						</div>
 					{/if}
@@ -207,9 +207,9 @@
 						{@const chosen = b.draft.slotFeats[slot.key] ?? ''}
 						{@const asi = b.draft.slotAsi[slot.key]}
 						{@const multi = b.draft.classes.length > 1}
-						<div class="frow" class:done={!!chosen}>
-							<span class="lvtag">{multi ? `${slot.className.slice(0, 3)} ` : ''}L{slot.level}</span>
-							<select class="bare ftsel" value={chosen} onchange={(e) => b.setSlotFeat(slot.key, e.currentTarget.value)}>
+						<div class="field-row" class:done={!!chosen}>
+							<span class="level-tag">{multi ? `${slot.className.slice(0, 3)} ` : ''}L{slot.level}</span>
+							<select class="bare feat-select" value={chosen} onchange={(e) => b.setSlotFeat(slot.key, e.currentTarget.value)}>
 								<option value="">— ASI or feat —</option>
 								<option value={ASI}>Ability Score Improvement (+2 or +1/+1)</option>
 								{#each b.featOptionsFor(slot.level) as f (f.effectiveId)}
@@ -228,7 +228,7 @@
 								<div class="chips">
 									{#each ABILITIES as ab (ab)}
 										{@const amt = b.asiBoostFor(slot.key)[ab as Ability]}
-										<button class="pchip" class:on={asi.picks.includes(ab as Ability)} onclick={() => b.toggleAsiPick(slot.key, ab as Ability)}>
+										<button class="pick-chip" class:on={asi.picks.includes(ab as Ability)} onclick={() => b.toggleAsiPick(slot.key, ab as Ability)}>
 											{ab.toUpperCase()}{#if amt}<span class="gold"> +{amt}</span>{/if}
 										</button>
 									{/each}
@@ -286,7 +286,7 @@
 						</div>
 						<div class="chips spaced">
 							{#each b.backgroundBoostChoices as ab (ab)}
-								<button class="pchip" class:on={b.draft.boostPicks.includes(ab)} onclick={() => b.toggleBoostPick(ab)}>
+								<button class="pick-chip" class:on={b.draft.boostPicks.includes(ab)} onclick={() => b.toggleBoostPick(ab)}>
 									{ab.toUpperCase()}{#if b.backgroundBoosts[ab]}<span class="gold"> +{b.backgroundBoosts[ab]}</span>{/if}
 								</button>
 							{/each}
@@ -305,7 +305,7 @@
 							<div class="chips spaced">
 								{#each b.speciesBoostAbilities as ab (ab)}
 									<button
-										class="pchip"
+										class="pick-chip"
 										class:on={b.draft.speciesBoostPicks.includes(ab)}
 										onclick={() => b.toggleSpeciesBoostPick(ab)}
 									>
@@ -345,7 +345,7 @@
 							<div class="chips spaced">
 								{#each g.spells as s (s.effectiveId)}
 									<button
-										class="pchip"
+										class="pick-chip"
 										class:on={b.draft.selectedSpells.includes(s.effectiveId)}
 										onclick={() => b.toggleSpell(s.effectiveId)}
 									>
@@ -384,16 +384,16 @@
 			{#if b.draft.inventory.length}
 				<div class="invlist">
 					{#each b.draft.inventory as it (it.item)}
-						<div class="invrow">
+						<div class="inventory-row">
 							<span class="invname">{rowName(b.graph?.get(it.item))}</span>
-							<span class="invqty">
+							<span class="inventory-qty">
 								<button onclick={() => b.bumpItemQty(it.item, -1)} aria-label="Fewer">−</button>
 								<b>{it.qty}</b>
 								<button onclick={() => b.bumpItemQty(it.item, 1)} aria-label="More">+</button>
 							</span>
 							{#if b.itemEquippable(it.item)}
 								<button
-									class="pchip"
+									class="pick-chip"
 									class:on={it.equipped}
 									onclick={() => b.toggleItemEquipped(it.item)}
 									>{it.equipped ? 'Equipped' : 'Equip'}</button
@@ -457,7 +457,7 @@
 		overflow: hidden;
 		clip: rect(0 0 0 0);
 	}
-	.bhead {
+	.boost-head {
 		display: flex;
 		align-items: center;
 		gap: 12px;
@@ -682,17 +682,17 @@
 	}
 
 	/* class rows */
-	.clsrow {
+	.class-row {
 		display: flex;
 		align-items: center;
 		gap: 12px;
 		padding: 10px 0;
 		border-top: 1px solid var(--color-border);
 	}
-	.clsrow:first-of-type {
+	.class-row:first-of-type {
 		border-top: 0;
 	}
-	.clsrow .class-icon {
+	.class-row .class-icon {
 		width: 38px;
 		height: 38px;
 		border-radius: 10px;
@@ -704,14 +704,14 @@
 		flex: none;
 		color: var(--color-accent-bright);
 	}
-	.clsrow .class-name {
+	.class-row .class-name {
 		flex: 1;
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
 		min-width: 0;
 	}
-	.clsrow .class-name small {
+	.class-row .class-name small {
 		color: var(--color-text-muted);
 		font-size: 12px;
 		padding-left: 5px;
@@ -763,7 +763,7 @@
 	.chips.spaced {
 		margin-bottom: 12px;
 	}
-	.pchip {
+	.pick-chip {
 		all: unset;
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -775,21 +775,21 @@
 		color: var(--color-text);
 		cursor: pointer;
 	}
-	.pchip:hover:not(:disabled) {
+	.pick-chip:hover:not(:disabled) {
 		border-color: var(--color-border-strong);
 	}
-	.pchip.on {
+	.pick-chip.on {
 		background: var(--color-good-soft);
 		border-color: var(--color-good);
 		color: var(--color-good);
 	}
-	.pchip.locked {
+	.pick-chip.locked {
 		background: var(--color-resource-soft);
 		border-color: var(--color-resource);
 		color: var(--color-resource);
 		cursor: default;
 	}
-	.pchip.dim {
+	.pick-chip.dim {
 		opacity: 0.4;
 		cursor: not-allowed;
 	}
@@ -799,7 +799,7 @@
 		gap: 6px;
 		margin-top: 8px;
 	}
-	.invrow {
+	.inventory-row {
 		display: flex;
 		align-items: center;
 		gap: 8px;
@@ -814,14 +814,14 @@
 		font-weight: 600;
 		font-size: 13px;
 	}
-	.invqty {
+	.inventory-qty {
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
 		font-family: var(--font-mono);
 		font-size: 13px;
 	}
-	.invqty button {
+	.inventory-qty button {
 		width: 22px;
 		height: 22px;
 		border: 1px solid var(--color-border);
@@ -833,7 +833,7 @@
 	.icon-button:hover {
 		color: var(--color-danger, #d06a52);
 	}
-	.pchip:focus-visible {
+	.pick-chip:focus-visible {
 		outline: 2px solid var(--color-accent);
 		outline-offset: 1px;
 	}
@@ -870,17 +870,17 @@
 	}
 
 	/* feat / ASI slot rows */
-	.frow {
+	.field-row {
 		display: flex;
 		align-items: center;
 		gap: 10px;
 		padding: 8px 0;
 		border-top: 1px solid var(--color-border);
 	}
-	.frow:first-of-type {
+	.field-row:first-of-type {
 		border-top: 0;
 	}
-	.frow .lvtag {
+	.field-row .level-tag {
 		flex: none;
 		font-family: var(--font-mono);
 		font-size: 10px;
@@ -889,19 +889,19 @@
 		border-radius: 5px;
 		padding: 2px 7px;
 	}
-	.frow.done .lvtag {
+	.field-row.done .level-tag {
 		border-color: var(--color-good);
 		color: var(--color-good);
 	}
-	.frow .feat-line {
+	.field-row .feat-line {
 		flex: 1;
 		font-size: 13px;
 	}
-	.frow .feat-line b {
+	.field-row .feat-line b {
 		font-family: var(--font-display);
 		font-weight: 600;
 	}
-	.ftsel {
+	.feat-select {
 		flex: 1;
 	}
 	.asi-block {
