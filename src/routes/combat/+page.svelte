@@ -82,7 +82,7 @@
 		<div>
 			<div class="eyebrow">{className}{speciesName ? ` · ${speciesName}` : ''}</div>
 			<h1>{c.build.name}</h1>
-			<div class="subl">
+			<div class="subline">
 				Level <b>{s.level}</b> · <span class="system-badge">{c.system}</span> · Proficiency
 				<b>{signed(s.proficiencyBonus)}</b>
 				{#if combat.canLevelUp}
@@ -547,11 +547,11 @@
 		letter-spacing: -0.02em;
 		margin: 7px 0 4px;
 	}
-	.subl {
+	.subline {
 		color: var(--color-text-muted);
 		font-size: 14px;
 	}
-	.subl b {
+	.subline b {
 		color: var(--color-resource);
 		font-weight: 600;
 	}
@@ -882,14 +882,6 @@
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 12px;
-	}
-	.rstep {
-		background: transparent;
-		border: 0;
-		color: var(--color-text-muted);
-		cursor: pointer;
-		font-size: 13px;
-		padding: 0 2px;
 	}
 	.nextturn {
 		font-family: var(--font-display);

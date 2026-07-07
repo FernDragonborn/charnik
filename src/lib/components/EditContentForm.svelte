@@ -65,7 +65,7 @@
 		/>
 	</div>
 
-	<div class="sysrow">
+	<div class="systems-row">
 		<span class="systems-label">Editions</span>
 		{#each SYSTEMS as sys (sys)}
 			<button
@@ -172,7 +172,7 @@
 		padding: 3px 8px;
 		color: var(--color-text-muted);
 	}
-	.sysrow {
+	.systems-row {
 		display: flex;
 		align-items: center;
 		gap: 8px;

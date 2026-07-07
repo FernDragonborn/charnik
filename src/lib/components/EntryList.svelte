@@ -41,7 +41,7 @@
 			{#if g.label}<div class="section"><span>{g.label}</span></div>{/if}
 			{#each g.entries as e (e.id)}
 				<div
-					class="srow"
+					class="entry-row"
 					class:selected={e.id === selectedId}
 					role="button"
 					tabindex="-1"
@@ -49,7 +49,7 @@
 					onkeydown={(ev) => (ev.key === 'Enter' || ev.key === ' ') && onselect(e)}
 				>
 					{#if leading}<span class="acts">{@render leading(e)}</span>{/if}
-					<span class="sname"
+					<span class="entry-name"
 						><b>{e.name}</b>{#if e.meta}<small>{e.meta}</small>{/if}</span
 					>
 					{#if showEdition && e.edition}<span class="edition-tag">{e.edition}</span>{/if}
@@ -107,7 +107,7 @@
 		display: flex;
 		justify-content: space-between;
 	}
-	.srow {
+	.entry-row {
 		display: flex;
 		align-items: center;
 		gap: 10px;
@@ -115,10 +115,10 @@
 		border-top: 1px solid var(--color-border);
 		cursor: pointer;
 	}
-	.srow:hover {
+	.entry-row:hover {
 		background: var(--color-surface-2);
 	}
-	.srow.selected {
+	.entry-row.selected {
 		background: var(--color-surface-2);
 		box-shadow: inset 3px 0 0 var(--color-accent);
 	}
@@ -136,16 +136,16 @@
 		opacity: 0.7;
 		white-space: nowrap;
 	}
-	.sname {
+	.entry-name {
 		flex: 1;
 		min-width: 0;
 	}
-	.sname b {
+	.entry-name b {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 13px;
 	}
-	.sname small {
+	.entry-name small {
 		display: block;
 		color: var(--color-text-muted);
 		font-size: 11px;
