@@ -14,7 +14,7 @@
 	padding: 17px;
 }
 /* panel header: click the whole title area (chev + name) to collapse */
-.phead {
+.panel-head {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -40,7 +40,7 @@
 	background: var(--color-surface-2);
 	color: var(--color-text);
 }
-.chev {
+.chevron {
 	color: var(--color-text-muted);
 	font-size: 10px;
 	margin-right: 4px;

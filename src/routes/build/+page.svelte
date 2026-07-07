@@ -52,11 +52,11 @@
 			<input class="nameinput" placeholder="Name your character…" bind:value={b.draft.name} />
 		</label>
 		<span class="spacer"></span>
-		<div class="seg2" role="group" aria-label="Ruleset">
+		<div class="segment-group" role="group" aria-label="Ruleset">
 			<button class:on={b.draft.system === '5e'} onclick={() => (b.draft.system = '5e')}>5e</button>
 			<button class:on={b.draft.system === '5.5e'} onclick={() => (b.draft.system = '5.5e')}>5.5e</button>
 		</div>
-		<div class="seg2" role="group" aria-label="Enforcement">
+		<div class="segment-group" role="group" aria-label="Enforcement">
 			<button class:on={b.draft.strict} onclick={() => (b.draft.strict = true)} title="enforce rules">Strict</button>
 			<button class:free={true} class:on={!b.draft.strict} onclick={() => (b.draft.strict = false)} title="change anything">Free</button>
 		</div>
@@ -121,7 +121,7 @@
 								<small>{i === 0 ? 'pick your class — level, saves & skills follow' : 'multiclass — adds levels'}</small>
 							{/if}
 							{#if subs.length}
-								<select class="bare sub2" value={cls.subclassId ?? ''} onchange={(e) => b.setSubclass(i, e.currentTarget.value || null)}>
+								<select class="bare subclass-select" value={cls.subclassId ?? ''} onchange={(e) => b.setSubclass(i, e.currentTarget.value || null)}>
 									<option value="">Subclass — none yet</option>
 									{#each subs as r (r.effectiveId)}<option value={r.effectiveId}>{rowName(r)}</option>{/each}
 								</select>
@@ -163,7 +163,7 @@
 						{@const auto = b.autoSkills.includes(skill)}
 						{@const on = auto || b.draft.skills.includes(skill)}
 						{@const pickable = b.skillPickable(skill)}
-						<span class="skwrap">
+						<span class="skill-wrap">
 							<button class="pick-chip" class:on class:locked={auto} class:dim={!pickable} disabled={auto || !pickable} onclick={() => b.toggleSkill(skill)}>
 								{titleCase(skill)}
 							</button>
@@ -221,7 +221,7 @@
 						</div>
 						{#if chosen === ASI && asi}
 							<div class="asi-block">
-								<div class="seg2 small">
+								<div class="segment-group small">
 									<button class:on={asi.shape === '2'} onclick={() => b.setAsiShape(slot.key, '2')}>+2 one</button>
 									<button class:on={asi.shape === '1-1'} onclick={() => b.setAsiShape(slot.key, '1-1')}>+1 / +1</button>
 								</div>
@@ -257,7 +257,7 @@
 
 				{#each ABILITIES as ab (ab)}
 					{@const block = b.sheet?.abilities[ab as Ability]}
-					<div class="strow">
+					<div class="stat-row">
 						<span class="ability-code">{ab}</span>
 						{#if b.draft.method === 'standard-array'}
 							<select class="arraysel bare" value={b.draft.arrayPick[ab as Ability] ?? ''} onchange={(e) => b.assignArray(ab as Ability, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}>
@@ -280,7 +280,7 @@
 				{#if b.boostCarrier === 'background' && b.backgroundBoostChoices.length}
 					<div class="boost">
 						<p class="subtext">5.5e background boost — on your <b class="gold">{rowName(b.backgroundRow)}</b> abilities</p>
-						<div class="seg2 small">
+						<div class="segment-group small">
 							<button class:on={b.draft.boostShape === '2-1'} onclick={() => (b.draft.boostShape = '2-1')}>+2 / +1</button>
 							<button class:on={b.draft.boostShape === '1-1-1'} onclick={() => (b.draft.boostShape = '1-1-1')}>+1 / +1 / +1</button>
 						</div>
@@ -493,13 +493,13 @@
 	.spacer {
 		flex: 1;
 	}
-	.seg2 {
+	.segment-group {
 		display: flex;
 		border: 1px solid var(--color-border-strong);
 		border-radius: 8px;
 		overflow: hidden;
 	}
-	.seg2 button {
+	.segment-group button {
 		all: unset;
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -508,18 +508,18 @@
 		color: var(--color-text-muted);
 		cursor: pointer;
 	}
-	.seg2 button:hover {
+	.segment-group button:hover {
 		color: var(--color-text);
 	}
-	.seg2 button.on {
+	.segment-group button.on {
 		background: var(--color-good-soft);
 		color: var(--color-good);
 	}
-	.seg2 button.free.on {
+	.segment-group button.free.on {
 		background: var(--color-resource-soft);
 		color: var(--color-resource);
 	}
-	.seg2.small button {
+	.segment-group.small button {
 		padding: 5px 10px;
 		font-size: 11px;
 	}
@@ -594,7 +594,7 @@
 	.remove-btn:hover {
 		color: var(--color-accent-bright);
 	}
-	.sub2 {
+	.subclass-select {
 		display: block;
 		margin-top: 3px;
 		font-size: 12px;
@@ -837,7 +837,7 @@
 		outline: 2px solid var(--color-accent);
 		outline-offset: 1px;
 	}
-	.skwrap {
+	.skill-wrap {
 		display: inline-flex;
 		align-items: stretch;
 		gap: 3px;
@@ -949,7 +949,7 @@
 	.points b.over {
 		color: var(--color-danger);
 	}
-	.strow {
+	.stat-row {
 		display: grid;
 		grid-template-columns: 40px 108px 1fr 76px;
 		align-items: center;
@@ -957,7 +957,7 @@
 		padding: 8px 0;
 		border-top: 1px solid var(--color-border);
 	}
-	.strow:first-of-type {
+	.stat-row:first-of-type {
 		border-top: 0;
 	}
 	.ability-code {

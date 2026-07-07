@@ -211,7 +211,7 @@
 	{/if}
 
 	{#if s.resources.length}
-		<section class="resbar">
+		<section class="resource-bar">
 			<span class="bar-label">Resources</span>
 			{#each s.resources as r (r.id)}
 				{@const spent = combat.resources.resourceSpent(r.id)}
@@ -221,7 +221,7 @@
 						{#each range(r.max) as i (i)}
 							<button
 								type="button"
-								class="respip"
+								class="resource-pip"
 								class:used={i >= r.max - spent}
 								onclick={() => combat.resources.resourceClick(r.id, r.max, i)}
 								aria-label="{r.name} {i + 1}"
@@ -249,7 +249,7 @@
 
 	<div class="sectlab">
 		<button class="slabtoggle" onclick={() => toggle('combat')}
-			><span class="chev">{collapsed.combat ? '▸' : '▾'}</span>Combat</button
+			><span class="chevron">{collapsed.combat ? '▸' : '▾'}</span>Combat</button
 		>
 	</div>
 	{#if !collapsed.combat}
@@ -279,7 +279,7 @@
 		<div class="senses-strip">
 			<span class="bar-label">Passive senses</span>
 			{#each passives as p, i (p.key)}
-				{#if i > 0}<span class="sdot">·</span>{/if}
+				{#if i > 0}<span class="separator-dot">·</span>{/if}
 				<span class="ability-save" title={why(p.comp)}><i>{p.name}</i>{p.comp.value}</span>
 			{:else}
 				<span class="ability-save"><i>none pinned</i></span>
@@ -304,7 +304,7 @@
 
 	<div class="sectlab">
 		<button class="slabtoggle" onclick={() => toggle('abilities')}
-			><span class="chev">{collapsed.abilities ? '▸' : '▾'}</span>Abilities</button
+			><span class="chevron">{collapsed.abilities ? '▸' : '▾'}</span>Abilities</button
 		><em>tap to roll a check or save</em>
 	</div>
 	{#if !collapsed.abilities}
@@ -334,9 +334,9 @@
 	{/if}
 
 	{#snippet panelCard(pid: string)}
-		<div class="phead">
+		<div class="panel-head">
 			<button class="htoggle" onclick={() => toggle(pid)}>
-				<span class="chev">{collapsed[pid] ? '▸' : '▾'}</span>{PANEL_TITLE[pid]}
+				<span class="chevron">{collapsed[pid] ? '▸' : '▾'}</span>{PANEL_TITLE[pid]}
 			</button>
 			{#if pid === 'actions'}
 				<button class="group-by" onclick={(e) => openMenu('showhide', e)}>👁 Show / hide</button>
@@ -364,7 +364,7 @@
 						)}
 						{#if list.length}
 							<div class="category-block">
-								<div class="ssec">{ABILITY_NAME[ab]}</div>
+								<div class="ability-heading">{ABILITY_NAME[ab]}</div>
 								{#each list as skill (skill)}
 									{@const sk = s.skills[skill]}
 									{#if sk}
@@ -437,10 +437,10 @@
 					{#if !multi}
 						— every spell{/if}
 				</div>
-				<div class="sprows">
+				<div class="spell-rows">
 					{#each spellGroups as g (g.key)}
 						<div class="spgroup">
-							<div class="scat" class:star={g.key === 'pinned'}>
+							<div class="spell-category" class:star={g.key === 'pinned'}>
 								{g.label}
 								{#if g.slots}{@const sl = g.slots}<span class="pips"
 										>{#each Array(sl.full) as _, i (i)}<button
@@ -453,7 +453,7 @@
 									>{/if}
 							</div>
 							{#each g.rows as r (g.key + r.id)}
-								<button class="sprow" onclick={(e) => cast(r, e)}>
+								<button class="spell-row" onclick={(e) => cast(r, e)}>
 									<span class="row-name">
 										<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 										<i
@@ -480,7 +480,8 @@
 										>
 									</span>
 									<span class="spell-summary">{r.spe}</span>
-									{#if r.res}<span class="rtag {r.res}">{r.resLabel}</span>{:else}<span></span>{/if}
+									{#if r.res}<span class="resolution-tag {r.res}">{r.resLabel}</span>{:else}<span
+										></span>{/if}
 									<span class="spell-level"
 										>{#if r.ct}<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions --><i
 												class="cast-icon"
@@ -715,7 +716,7 @@
 	}
 
 	.turnbar,
-	.resbar {
+	.resource-bar {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -726,7 +727,7 @@
 		padding: 9px 12px;
 		margin-bottom: 12px;
 	}
-	.resbar .resource {
+	.resource-bar .resource {
 		display: inline-flex;
 		align-items: center;
 		gap: 7px;
@@ -738,7 +739,7 @@
 		border-radius: var(--radius-full);
 		padding: 5px 11px;
 	}
-	.resbar .resource small {
+	.resource-bar .resource small {
 		font-family: var(--font-mono);
 		color: var(--color-text-muted);
 	}
@@ -746,7 +747,7 @@
 		display: inline-flex;
 		gap: 4px;
 	}
-	.respip {
+	.resource-pip {
 		width: 12px;
 		height: 12px;
 		padding: 0;
@@ -755,7 +756,7 @@
 		background: var(--color-resource);
 		cursor: pointer;
 	}
-	.respip.used {
+	.resource-pip.used {
 		background: transparent;
 		border-color: var(--color-border-strong);
 	}
@@ -869,7 +870,7 @@
 	.hp-btn:hover {
 		filter: brightness(1.12);
 	}
-	.roundc {
+	.round-counter {
 		display: inline-flex;
 		align-items: center;
 		gap: 5px;
@@ -1025,7 +1026,7 @@
 		color: var(--color-text-muted);
 		margin-right: 6px;
 	}
-	.senses-strip .sdot {
+	.senses-strip .separator-dot {
 		color: var(--color-border-strong);
 	}
 	.senses-strip .edit {
@@ -1179,7 +1180,7 @@
 		break-inside: avoid;
 		margin-bottom: 7px;
 	}
-	.ssec {
+	.ability-heading {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		letter-spacing: 0.08em;
@@ -1349,10 +1350,10 @@
 	.castsep {
 		color: var(--color-border-strong);
 	}
-	.sprows {
+	.spell-rows {
 		margin-top: 2px;
 	}
-	.scat {
+	.spell-category {
 		display: flex;
 		align-items: center;
 		gap: 9px;
@@ -1364,14 +1365,14 @@
 		padding: 11px 0 3px;
 		break-inside: avoid;
 	}
-	.scat.star {
+	.spell-category.star {
 		color: var(--color-accent-bright);
 	}
-	.scat .pips {
+	.spell-category .pips {
 		display: flex;
 		gap: 5px;
 	}
-	.scat .slot-pip {
+	.spell-category .slot-pip {
 		width: 12px;
 		height: 12px;
 		padding: 0;
@@ -1379,17 +1380,17 @@
 		border: 1px solid #2c4a45;
 		cursor: pointer;
 	}
-	.scat .slot-pip.full {
+	.spell-category .slot-pip.full {
 		background: var(--color-good);
 		border-color: var(--color-good);
 		box-shadow: 0 0 8px rgba(59, 184, 166, 0.45);
 	}
-	.scat .slot-pip.spent {
+	.spell-category .slot-pip.spent {
 		background: transparent;
 		border-style: dashed;
 		opacity: 0.5;
 	}
-	.sprow {
+	.spell-row {
 		display: grid;
 		/* fixed columns so effect/tag/timing line up across rows even when a row has no
 		   resolution pill (its cell stays empty but keeps its width) */
@@ -1410,13 +1411,13 @@
 		text-align: left;
 		font: inherit;
 	}
-	.spgroup:first-child .scat {
+	.spgroup:first-child .spell-category {
 		padding-top: 2px;
 	}
-	.sprow:hover {
+	.spell-row:hover {
 		background: var(--color-surface-2);
 	}
-	.sprow .row-name {
+	.spell-row .row-name {
 		min-width: 0;
 		display: flex;
 		align-items: center;
@@ -1425,15 +1426,15 @@
 		font-weight: 600;
 		font-size: 13px;
 	}
-	.sprow .row-name .name-main {
+	.spell-row .row-name .name-main {
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	.sprow .pinstar {
+	.spell-row .pinstar {
 		flex: none;
 	}
-	.sprow .spell-summary {
+	.spell-row .spell-summary {
 		font-family: var(--font-mono);
 		font-size: 12px;
 		font-weight: 600;
@@ -1442,7 +1443,7 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-	.sprow .rtag {
+	.spell-row .resolution-tag {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		border-radius: 5px;
@@ -1454,26 +1455,26 @@
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
-	.sprow .rtag.hit {
+	.spell-row .resolution-tag.hit {
 		color: var(--color-resource);
 		border-color: #5a4d28;
 	}
-	.sprow .rtag.save {
+	.spell-row .resolution-tag.save {
 		color: var(--color-accent-bright);
 		border-color: var(--color-accent);
 	}
-	.sprow .rtag.auto {
+	.spell-row .resolution-tag.auto {
 		color: var(--color-good);
 		border-color: var(--color-good);
 	}
-	.sprow .spell-level {
+	.spell-row .spell-level {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
 		text-align: right;
 		white-space: nowrap;
 	}
-	.sprow .spell-level .cast-icon {
+	.spell-row .spell-level .cast-icon {
 		font-style: normal;
 		margin-right: 6px;
 		color: var(--color-accent-bright);

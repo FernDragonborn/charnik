@@ -164,7 +164,7 @@
 					onclick={() => run(it)}
 				>
 					{#if it.kind === 'content'}
-						<span class="tbadge">{typeName(it.type)}</span>
+						<span class="type-badge">{typeName(it.type)}</span>
 						<span class="item-text">
 							<span class="item-name">{it.label}</span>
 							{#if it.snippet}<span class="item-snippet">{it.snippet}</span>{/if}
@@ -246,7 +246,7 @@
 	.item.active .item-name {
 		color: var(--color-accent-bright);
 	}
-	.tbadge {
+	.type-badge {
 		flex: none;
 		font-family: var(--font-mono);
 		font-size: 9px;
