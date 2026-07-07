@@ -553,13 +553,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 18px;
-	}
-	.card {
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg);
-		padding: 17px;
-	}
+	}
 	.card :global(h2) {
 		font-family: var(--font-display);
 		font-weight: 600;

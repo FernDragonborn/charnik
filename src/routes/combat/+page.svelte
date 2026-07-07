@@ -524,11 +524,6 @@
 {/if}
 
 <style>
-	.loading {
-		color: var(--color-text-muted);
-		padding: var(--space-6);
-		text-align: center;
-	}
 	.hero {
 		display: grid;
 		grid-template-columns: 1.5fr 1fr;

@@ -258,11 +258,6 @@
 {/if}
 
 <style>
-	.loading {
-		color: var(--color-text-muted);
-		padding: var(--space-6);
-		text-align: center;
-	}
 	.types {
 		display: flex;
 		flex-wrap: wrap;

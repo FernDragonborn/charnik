@@ -192,11 +192,6 @@
 {/if}
 
 <style>
-	.loading {
-		color: var(--color-text-muted);
-		padding: var(--space-6);
-		text-align: center;
-	}
 	.mgrhead {
 		display: flex;
 		align-items: center;

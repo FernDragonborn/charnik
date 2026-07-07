@@ -143,6 +143,13 @@
 	padding-top: 11px;
 }
 
+/* --- full-view loading / empty state --- */
+.loading {
+	color: var(--color-text-muted);
+	padding: var(--space-6);
+	text-align: center;
+}
+
 /* --- small shared bits --- */
 .trace {
 	font-family: var(--font-mono);
