@@ -13,9 +13,8 @@
  * Everything above this uses `getContentGraph()` and never touches Storage directly.
  */
 import { base } from '$app/paths';
-import { browser } from '$app/environment';
 import { FetchStorage } from '$lib/storage/fetch';
-import { getUserStorage, isTauri } from '$lib/storage/provider';
+import { getUserStorage, detectPlatform, Platform } from '$lib/storage/provider';
 import type { Storage } from '$lib/storage/types';
 import { loadContent, type ContentGraph, type ContentSource } from './loader';
 import { HOMEBREW_ROOT } from './homebrew';
@@ -31,18 +30,19 @@ export function getContentGraph(): Promise<ContentGraph> {
 }
 
 async function buildGraph(): Promise<ContentGraph> {
-	// homebrew lives in the writable user store, only reachable in the browser/webview
-	const homebrew: ContentSource[] = browser
-		? [{ storage: getUserStorage(), root: HOMEBREW_ROOT }]
-		: [];
+	const platform = detectPlatform();
 
-	if (browser && isTauri()) {
+	// homebrew lives in the writable user store (desktop FS / web IndexedDB); absent when headless
+	const homebrew: ContentSource[] =
+		platform === Platform.Headless ? [] : [{ storage: getUserStorage(), root: HOMEBREW_ROOT }];
+
+	if (platform === Platform.Desktop) {
 		// desktop: seed the shipped content onto disk (first run), then read it from there
 		const user = getUserStorage();
 		await seedShippedContent(user);
 		return loadContent(user, CONTENT_ROOTS, homebrew);
 	}
-	// web (and SSR/prerender): read the bundled CSVs over fetch
+	// web + headless (build-time prerender / tests): read the bundled CSVs over fetch
 	return loadContent(new FetchStorage(base), CONTENT_ROOTS, homebrew);
 }
 
