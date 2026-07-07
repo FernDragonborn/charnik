@@ -48,7 +48,7 @@
 	<div class="bhead">
 		<h1>Build</h1>
 		<label class="namewrap">
-			<span class="vh">Character name</span>
+			<span class="visually-hidden">Character name</span>
 			<input class="nameinput" placeholder="Name your character…" bind:value={b.draft.name} />
 		</label>
 		<span class="spacer"></span>
@@ -63,7 +63,7 @@
 	</div>
 
 	<div class="cols">
-		<div class="col">
+		<div class="column">
 			<!-- origin (creation-only: the mock edits an existing sheet, so it has no picker) -->
 			<div class="card">
 				<h2>Origin</h2>
@@ -103,7 +103,7 @@
 			<div class="card">
 				<h2>
 					Classes &amp; subclass
-					<button class="add" onclick={() => b.addClass()}>＋ Multiclass</button>
+					<button class="add-btn" onclick={() => b.addClass()}>＋ Multiclass</button>
 				</h2>
 				{#each b.draft.classes as cls, i (i)}
 					{@const clsRow = cls.classId ? b.graph?.get(cls.classId) : undefined}
@@ -127,38 +127,38 @@
 								</select>
 							{/if}
 						</span>
-						<span class="stepper lvl">
+						<span class="stepper level">
 							<button aria-label="lower level" onclick={() => b.bumpClassLevel(i, -1)}>−</button>
 							<span class="base">{cls.level}</span>
 							<button aria-label="raise level" onclick={() => b.bumpClassLevel(i, 1)}>+</button>
 						</span>
 						{#if i > 0}
-							<button class="rm" title="Remove class" onclick={() => b.removeClass(i)}>✕</button>
+							<button class="remove-btn" title="Remove class" onclick={() => b.removeClass(i)}>✕</button>
 						{/if}
 					</div>
 				{/each}
 				{#if b.draft.classes.length > 1}
-					<p class="sub note">Total level <b class="gold">{b.totalLevel}</b> / 20</p>
+					<p class="subtext note">Total level <b class="gold">{b.totalLevel}</b> / 20</p>
 				{/if}
 			</div>
 
 			<!-- proficiencies & choices -->
 			<div class="card">
 				<h2>Proficiencies &amp; choices</h2>
-				<p class="sub">Saving throws <span class="gold">(fixed by class)</span></p>
-				<div class="chips gap">
+				<p class="subtext">Saving throws <span class="gold">(fixed by class)</span></p>
+				<div class="chips spaced">
 					{#if b.classRow}
 						{#each String(b.classRow.data.saves).split(',') as sv (sv)}
 							<span class="pchip locked">{sv.trim().toUpperCase()}</span>
 						{/each}
-					{:else}<span class="sub">—</span>{/if}
+					{:else}<span class="subtext">—</span>{/if}
 				</div>
 
-				<p class="sub">
+				<p class="subtext">
 					Skills — choose <b class="teal">{b.skillChosenCount}/{b.classSkillCount}</b> from class
 					{#if b.autoSkills.length}· <span class="gold">{b.autoSkills.length} from background</span>{/if}
 				</p>
-				<div class="chips gap">
+				<div class="chips spaced">
 					{#each Object.keys(SKILL_ABILITY) as skill (skill)}
 						{@const auto = b.autoSkills.includes(skill)}
 						{@const on = auto || b.draft.skills.includes(skill)}
@@ -168,19 +168,19 @@
 								{titleCase(skill)}
 							</button>
 							{#if on}
-								<button class="x2" class:on={b.draft.expertise.includes(skill)} title="Expertise (×2 proficiency)" onclick={() => b.toggleExpertise(skill)}>×2</button>
+								<button class="expertise-toggle" class:on={b.draft.expertise.includes(skill)} title="Expertise (×2 proficiency)" onclick={() => b.toggleExpertise(skill)}>×2</button>
 							{/if}
 						</span>
 					{/each}
 				</div>
 
-				<p class="sub">
-					Languages <span class="cnt">{b.draft.selectedLanguages.length}</span>
+				<p class="subtext">
+					Languages <span class="count">{b.draft.selectedLanguages.length}</span>
 					{#if b.backgroundLangCount > 0}<span class="note"
 							>· background grants {b.backgroundLangCount}</span
 						>{/if}
 				</p>
-				<div class="chips gap">
+				<div class="chips spaced">
 					{#each b.languageList as r (r.effectiveId)}
 						<button
 							class="pchip"
@@ -193,14 +193,14 @@
 
 			<!-- ability boosts & feats -->
 			<div class="card">
-				<h2>Ability boosts &amp; feats <span class="cnt">{b.filledSlots}/{b.featSlots.length}</span></h2>
+				<h2>Ability boosts &amp; feats <span class="count">{b.filledSlots}/{b.featSlots.length}</span></h2>
 				{#if !b.classId}
-					<p class="sub">Pick a class to see its ASI / feat slots.</p>
+					<p class="subtext">Pick a class to see its ASI / feat slots.</p>
 				{:else}
 					{#if b.originFeatRef}
 						<div class="frow">
 							<span class="lvtag gold">BG</span>
-							<span class="ft"><b>Origin feat</b> — {rowName(b.graph?.get(b.originFeatRef))} <span class="sub">(granted)</span></span>
+							<span class="feat-line"><b>Origin feat</b> — {rowName(b.graph?.get(b.originFeatRef))} <span class="subtext">(granted)</span></span>
 						</div>
 					{/if}
 					{#each b.featSlots as slot (slot.key)}
@@ -220,7 +220,7 @@
 							</select>
 						</div>
 						{#if chosen === ASI && asi}
-							<div class="asi">
+							<div class="asi-block">
 								<div class="seg2 small">
 									<button class:on={asi.shape === '2'} onclick={() => b.setAsiShape(slot.key, '2')}>+2 one</button>
 									<button class:on={asi.shape === '1-1'} onclick={() => b.setAsiShape(slot.key, '1-1')}>+1 / +1</button>
@@ -236,12 +236,12 @@
 							</div>
 						{/if}
 					{/each}
-					<p class="sub note">↻ = repeatable — take it in more than one slot. ASI &amp; feats apply to the preview.</p>
+					<p class="subtext note">↻ = repeatable — take it in more than one slot. ASI &amp; feats apply to the preview.</p>
 				{/if}
 			</div>
 		</div>
 
-		<div class="col">
+		<div class="column">
 			<!-- ability scores -->
 			<div class="card">
 				<div class="statgenhead">
@@ -279,12 +279,12 @@
 
 				{#if b.boostCarrier === 'background' && b.backgroundBoostChoices.length}
 					<div class="boost">
-						<p class="sub">5.5e background boost — on your <b class="gold">{rowName(b.backgroundRow)}</b> abilities</p>
+						<p class="subtext">5.5e background boost — on your <b class="gold">{rowName(b.backgroundRow)}</b> abilities</p>
 						<div class="seg2 small">
 							<button class:on={b.draft.boostShape === '2-1'} onclick={() => (b.draft.boostShape = '2-1')}>+2 / +1</button>
 							<button class:on={b.draft.boostShape === '1-1-1'} onclick={() => (b.draft.boostShape = '1-1-1')}>+1 / +1 / +1</button>
 						</div>
-						<div class="chips gap">
+						<div class="chips spaced">
 							{#each b.backgroundBoostChoices as ab (ab)}
 								<button class="pchip" class:on={b.draft.boostPicks.includes(ab)} onclick={() => b.toggleBoostPick(ab)}>
 									{ab.toUpperCase()}{#if b.backgroundBoosts[ab]}<span class="gold"> +{b.backgroundBoosts[ab]}</span>{/if}
@@ -293,16 +293,16 @@
 						</div>
 					</div>
 				{:else if b.boostCarrier === 'species'}
-					<p class="sub note">5e species ability bonuses apply automatically from the species entry.</p>
+					<p class="subtext note">5e species ability bonuses apply automatically from the species entry.</p>
 					{#if b.speciesBoostChoice}
 						<div class="boost">
-							<p class="sub">
+							<p class="subtext">
 								{rowName(b.speciesOptionRow) || rowName(b.speciesRow)} — choose
 								<b class="gold">{b.speciesBoostChoice.count}</b> to raise by +{b.speciesBoostChoice
 									.amount}
-								<span class="cnt">{b.draft.speciesBoostPicks.length}/{b.speciesBoostChoice.count}</span>
+								<span class="count">{b.draft.speciesBoostPicks.length}/{b.speciesBoostChoice.count}</span>
 							</p>
-							<div class="chips gap">
+							<div class="chips spaced">
 								{#each b.speciesBoostAbilities as ab (ab)}
 									<button
 										class="pchip"
@@ -322,27 +322,27 @@
 
 			<!-- spells (per caster class; Strict = access + level caps, Free = everything) -->
 			<div class="card">
-				<h2>Spells <span class="cnt teal">{b.draft.selectedSpells.length}</span></h2>
+				<h2>Spells <span class="count teal">{b.draft.selectedSpells.length}</span></h2>
 				{#if b.spellPicker.length}
-					<p class="sub">
+					<p class="subtext">
 						{b.draft.strict ? 'Only spells you can legally take' : 'Free mode — every spell'} · refine
 						prepared/known in the <b>Spellbook</b> after creating.
 					</p>
 					{#each b.spellPicker as pc (pc.profile.classEffectiveId)}
 						{#if b.spellPicker.length > 1}
-							<p class="sub sgrp">
+							<p class="subtext subgroup">
 								{pc.profile.className} — cantrips <b class="teal">{pc.cantripsChosen}/{pc.profile.cantripCap}</b>
 								· prepared <b class="gold">{pc.leveledChosen}/{pc.profile.preparedCap}</b>
 							</p>
 						{:else}
-							<p class="sub">
+							<p class="subtext">
 								Cantrips <b class="teal">{pc.cantripsChosen}/{pc.profile.cantripCap}</b> · prepared
 								<b class="gold">{pc.leveledChosen}/{pc.profile.preparedCap}</b>
 							</p>
 						{/if}
 						{#each pc.groups as g (g.level)}
-							<p class="sub sgrp">{g.label}</p>
-							<div class="chips gap">
+							<p class="subtext subgroup">{g.label}</p>
+							<div class="chips spaced">
 								{#each g.spells as s (s.effectiveId)}
 									<button
 										class="pchip"
@@ -356,16 +356,16 @@
 						{/each}
 					{/each}
 				{:else if b.classRow}
-					<p class="sub">{rowName(b.classRow)} has no innate spellcasting.</p>
+					<p class="subtext">{rowName(b.classRow)} has no innate spellcasting.</p>
 				{:else}
-					<p class="sub">Pick a class to see spellcasting.</p>
+					<p class="subtext">Pick a class to see spellcasting.</p>
 				{/if}
 			</div>
 
 			<!-- inventory / starting equipment (creation only — managed in the play view after that) -->
 			{#if !b.edit}
 				<div class="card">
-					<h2>Inventory <span class="cnt">{b.draft.inventory.length}</span></h2>
+					<h2>Inventory <span class="count">{b.draft.inventory.length}</span></h2>
 			<label class="field">
 				<span>Add item</span>
 				<select
@@ -408,7 +408,7 @@
 					{/each}
 				</div>
 				{:else}
-					<p class="sub">No items yet — add starting equipment.</p>
+					<p class="subtext">No items yet — add starting equipment.</p>
 				{/if}
 			</div>
 		{/if}
@@ -417,9 +417,9 @@
 
 	<!-- review & create (echoes the mock's bottom lucard) -->
 	<div class="card review">
-		<h2 class="rev">
+		<h2 class="review-title">
 			{b.edit ? 'Review & save' : 'Review & create'}
-			<span class="cnt gold">Level {b.sheet?.level ?? b.totalLevel}</span>
+			<span class="count gold">Level {b.sheet?.level ?? b.totalLevel}</span>
 		</h2>
 		<div class="revgrid">
 			{#if b.sheet}
@@ -436,10 +436,10 @@
 				{#if b.issues.length}
 					<ul class="issues">{#each b.issues as msg (msg)}<li>{msg}</li>{/each}</ul>
 				{:else}
-					<p class="sub ready">Ready to create.</p>
+					<p class="subtext ready">Ready to create.</p>
 				{/if}
 				{#if b.sheet?.missing.length}
-					<p class="sub warn">Missing content: {b.sheet.missing.join(', ')}</p>
+					<p class="subtext warn">Missing content: {b.sheet.missing.join(', ')}</p>
 				{/if}
 				<button class="create wide" disabled={!b.canCreate || b.saving} onclick={create}>
 					{b.saving ? 'Saving…' : b.edit ? '✦ Save changes' : '✦ Create character'}
@@ -450,7 +450,7 @@
 </section>
 
 <style>
-	.vh {
+	.visually-hidden {
 		position: absolute;
 		width: 1px;
 		height: 1px;
@@ -549,7 +549,7 @@
 		gap: 18px;
 		align-items: start;
 	}
-	.col {
+	.column {
 		display: flex;
 		flex-direction: column;
 		gap: 18px;
@@ -572,7 +572,7 @@
 		align-items: center;
 		justify-content: space-between;
 	}
-	.add {
+	.add-btn {
 		all: unset;
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -585,11 +585,11 @@
 		padding: 3px 9px;
 		cursor: pointer;
 	}
-	.add:hover {
+	.add-btn:hover {
 		color: var(--color-text);
 		border-color: var(--color-accent);
 	}
-	.rm {
+	.remove-btn {
 		all: unset;
 		flex: none;
 		cursor: pointer;
@@ -597,7 +597,7 @@
 		font-size: 12px;
 		padding: 0 6px;
 	}
-	.rm:hover {
+	.remove-btn:hover {
 		color: var(--color-accent-bright);
 	}
 	.sub2 {
@@ -606,7 +606,7 @@
 		font-size: 12px;
 		font-weight: 500;
 	}
-	.cnt {
+	.count {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		letter-spacing: 0;
@@ -617,23 +617,23 @@
 	.teal {
 		color: var(--color-good);
 	}
-	.sub {
+	.subtext {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
 		margin: 0 0 8px;
 	}
-	.sub.note {
+	.subtext.note {
 		margin-top: 10px;
 	}
-	.sub.sgrp {
+	.subtext.subgroup {
 		margin-top: 10px;
 		color: var(--color-resource);
 	}
-	.sub.warn {
+	.subtext.warn {
 		color: var(--color-warning);
 	}
-	.sub.ready {
+	.subtext.ready {
 		color: var(--color-good);
 	}
 
@@ -722,7 +722,7 @@
 		font-size: 12px;
 		padding-left: 5px;
 	}
-	.lvl {
+	.level {
 		flex: none;
 	}
 
@@ -756,7 +756,7 @@
 		min-width: 32px;
 		text-align: center;
 	}
-	.lvl .base {
+	.level .base {
 		color: var(--color-resource);
 		font-size: 20px;
 	}
@@ -766,7 +766,7 @@
 		flex-wrap: wrap;
 		gap: 7px;
 	}
-	.chips.gap {
+	.chips.spaced {
 		margin-bottom: 12px;
 	}
 	.pchip {
@@ -855,7 +855,7 @@
 		align-items: stretch;
 		gap: 3px;
 	}
-	.x2 {
+	.expertise-toggle {
 		all: unset;
 		font-family: var(--font-mono);
 		font-size: 10px;
@@ -869,15 +869,15 @@
 		background: var(--color-surface-2);
 		cursor: pointer;
 	}
-	.x2:hover {
+	.expertise-toggle:hover {
 		border-color: var(--color-border-strong);
 	}
-	.x2.on {
+	.expertise-toggle.on {
 		background: var(--color-resource-soft);
 		border-color: var(--color-resource);
 		color: var(--color-resource);
 	}
-	.x2:focus-visible {
+	.expertise-toggle:focus-visible {
 		outline: 2px solid var(--color-accent);
 		outline-offset: 1px;
 	}
@@ -906,18 +906,18 @@
 		border-color: var(--color-good);
 		color: var(--color-good);
 	}
-	.frow .ft {
+	.frow .feat-line {
 		flex: 1;
 		font-size: 13px;
 	}
-	.frow .ft b {
+	.frow .feat-line b {
 		font-family: var(--font-display);
 		font-weight: 600;
 	}
 	.ftsel {
 		flex: 1;
 	}
-	.asi {
+	.asi-block {
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
@@ -1015,7 +1015,7 @@
 		background: linear-gradient(180deg, var(--color-accent-soft), var(--color-surface));
 		border-color: var(--color-accent-deep);
 	}
-	.review .rev {
+	.review .review-title {
 		color: var(--color-accent-bright);
 	}
 	.revgrid {
