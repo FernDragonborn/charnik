@@ -24,6 +24,8 @@ import {
 	watchImmediate
 } from '@tauri-apps/plugin-fs';
 import { appConfigDir, documentDir, join } from '@tauri-apps/api/path';
+import { invoke } from '@tauri-apps/api/core';
+import { open } from '@tauri-apps/plugin-dialog';
 import type { Storage, FileEntry } from './types';
 
 /** The user's data root is a VISIBLE, self-named folder (not a hidden per-app dir) — see
@@ -60,7 +62,29 @@ export async function setDataDirOverride(dir: string): Promise<void> {
 
 /** Resolve the writable data root: an explicit user choice, else the default `<Documents>/charnik`. */
 async function resolveDataDir(): Promise<string> {
-	return (await readDataDirOverride()) ?? join(await documentDir(), DATA_DIR_NAME);
+	return (await readDataDirOverride()) ?? defaultDataDir();
+}
+
+/** The user's previously saved data-dir choice, or null on first run (drives the first-run picker). */
+export async function getSavedDataDir(): Promise<string | null> {
+	return readDataDirOverride();
+}
+
+/** The proposed default data dir (`<Documents>/charnik`) shown in the first-run picker. */
+export async function defaultDataDir(): Promise<string> {
+	return join(await documentDir(), DATA_DIR_NAME);
+}
+
+/** Grant the fs plugin runtime access to `dir` (a user-picked folder outside the static scope);
+ *  redundant-but-harmless for the default. Backed by the `allow_data_dir` Rust command. */
+export async function grantDataDirScope(dir: string): Promise<void> {
+	await invoke('allow_data_dir', { path: dir });
+}
+
+/** Open the OS folder picker; resolves to the chosen directory, or null if cancelled. */
+export async function pickDataDir(): Promise<string | null> {
+	const chosen = await open({ directory: true, multiple: false });
+	return typeof chosen === 'string' ? chosen : null;
 }
 
 export class TauriStorage implements Storage {

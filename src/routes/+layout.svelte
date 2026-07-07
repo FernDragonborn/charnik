@@ -13,6 +13,16 @@
 	import { loadContentStore } from '$lib/content/store.svelte';
 	import { review, pendingMetaIssues, pendingDriftItems } from '$lib/content/review.svelte';
 	import { Toaster } from 'svelte-sonner';
+	import { onMount } from 'svelte';
+	import { detectPlatform, Platform } from '$lib/storage/provider';
+	import {
+		getSavedDataDir,
+		defaultDataDir,
+		grantDataDirScope,
+		setDataDirOverride,
+		pickDataDir
+	} from '$lib/storage/tauri';
+	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
 
 	let { children } = $props();
 
@@ -43,11 +53,31 @@
 		i18nLocale.set(app.activeLocale);
 	});
 
-	// Load content once at startup so the DATA-VER-1 review (missing metadata / hash drift) can surface
-	// app-wide, regardless of which page is open. Cached — a no-op if a page already loaded it.
-	$effect(() => {
-		if (browser) loadContentStore();
+	// Content loads once at startup so the DATA-VER-1 review surfaces app-wide. On desktop the FIRST
+	// launch first asks WHERE to keep the data (docs/PLAN.md) and holds the load until chosen, so it
+	// seeds to the chosen folder; a saved custom folder is re-granted fs-scope each start. Web/headless
+	// just load. Cached — a no-op if a page already loaded it.
+	let firstRunDefault = $state<string | null>(null); // non-null → show the first-run picker
+	onMount(async () => {
+		if (detectPlatform() !== Platform.Desktop) {
+			loadContentStore();
+			return;
+		}
+		const saved = await getSavedDataDir();
+		if (saved) {
+			await grantDataDirScope(saved); // re-allow a custom folder outside the static scope
+			loadContentStore();
+		} else {
+			firstRunDefault = await defaultDataDir(); // first run → show picker, hold content load
+		}
 	});
+
+	async function confirmDataDir(dir: string) {
+		await grantDataDirScope(dir);
+		await setDataDirOverride(dir);
+		firstRunDefault = null;
+		loadContentStore();
+	}
 	// Drift is shown first (a quick date/hash confirm), then the metadata prompt.
 	const driftItems = $derived(pendingDriftItems());
 	const metaIssues = $derived(pendingMetaIssues());
@@ -101,6 +131,10 @@
 <main id="main" tabindex="-1">
 	{@render children()}
 </main>
+
+{#if firstRunDefault}
+	<FirstRunModal defaultDir={firstRunDefault} pickFolder={pickDataDir} onConfirm={confirmDataDir} />
+{/if}
 
 <CommandPalette />
 
