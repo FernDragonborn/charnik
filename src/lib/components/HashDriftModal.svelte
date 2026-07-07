@@ -43,7 +43,13 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div class="dialog-backdrop" onclick={onSkip}></div>
-<div class="modal" role="dialog" aria-modal="true" aria-labelledby="drift-title" tabindex="-1">
+<div
+	class="dialog drift-dialog"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="drift-title"
+	tabindex="-1"
+>
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>
 		<span class="dialog-badge">⚑</span>
@@ -85,20 +91,9 @@
 </div>
 
 <style>
-	.modal {
-		position: fixed;
-		inset: 0;
-		z-index: 61;
+	/* shared shell = global .dialog (styles/components.css); this only sets THIS dialog's width */
+	.drift-dialog {
 		width: min(680px, calc(100vw - 2 * var(--space-4)));
-		max-height: calc(100vh - 2 * var(--space-6));
-		margin: auto;
-		display: flex;
-		flex-direction: column;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-strong);
-		border-radius: var(--radius-lg);
-		box-shadow: var(--shadow-2);
-		overflow: hidden;
 	}
 	.files {
 		overflow: auto;

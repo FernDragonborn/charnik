@@ -189,12 +189,31 @@
 }
 
 /* --- dialog shell: full-screen dark-backdrop modal (content-review pop-ups) ---
-   (the `.dialog` container's width is set per-modal; everything else is shared) */
+   (only the `.dialog` container's WIDTH is set per-modal — a scoped `.dialog { width }` in the
+   component overrides this; everything else is shared) */
 .dialog-backdrop {
 	position: fixed;
 	inset: 0;
 	background: var(--color-overlay);
 	z-index: 60;
+}
+/* the centred panel: sized to its CONTENT height (capped at the viewport), never full-height —
+   centring via transform, because inset:0 + margin:auto would stretch top-to-bottom */
+.dialog {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	z-index: 61;
+	width: min(600px, calc(100vw - 2 * var(--space-4)));
+	max-height: calc(100vh - 2 * var(--space-6));
+	display: flex;
+	flex-direction: column;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border-strong);
+	border-radius: var(--radius-lg);
+	box-shadow: var(--shadow-2);
+	overflow: hidden;
 }
 .dialog-head {
 	position: relative;
