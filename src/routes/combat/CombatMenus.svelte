@@ -98,7 +98,7 @@
 						onclick={() => (combat.tray.rollAdvantage = 1)}>Advant.</button
 					>
 				</div>
-				<div class="modifier-row">
+				<div class="roll-mod-row">
 					<div class="roll-mod">
 						<button onclick={() => (combat.tray.rollMod -= 1)}>−</button> mod {signed(rollMod)}
 						<button onclick={() => (combat.tray.rollMod += 1)}>+</button>
@@ -591,7 +591,7 @@
 	.gold {
 		color: var(--color-resource);
 	}
-	.modifier-row {
+	.roll-mod-row {
 		display: flex;
 		gap: 8px;
 		margin: 8px 0;
