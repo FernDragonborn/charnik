@@ -57,7 +57,7 @@
 	<div class="deyebrow">{type.replace(/_/g, ' ')} · new homebrew</div>
 	<input class="titlein" placeholder="Name" bind:value={draft.name_en} />
 	<div class="idrow">
-		<span class="idk">id</span>
+		<span class="id-label">id</span>
 		<input
 			class="idin"
 			placeholder={slugify(draft.name_en ?? '') || 'auto'}
@@ -66,7 +66,7 @@
 	</div>
 
 	<div class="sysrow">
-		<span class="sysk">Editions</span>
+		<span class="systems-label">Editions</span>
 		{#each SYSTEMS as sys (sys)}
 			<button
 				type="button"
@@ -82,7 +82,7 @@
 			{#each metaFields as f (f.name)}
 				<label class="meta-cell">
 					<span class="meta-key"
-						>{f.label}{#if f.required}<span class="req">*</span>{/if}</span
+						>{f.label}{#if f.required}<span class="required-mark">*</span>{/if}</span
 					>
 					{#if f.kind === 'enum'}
 						<select bind:value={draft[f.name]}>
@@ -160,8 +160,8 @@
 		gap: 8px;
 		margin-bottom: 14px;
 	}
-	.idk,
-	.sysk {
+	.id-label,
+	.systems-label {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		letter-spacing: 0.1em;
@@ -224,7 +224,7 @@
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
-	.req {
+	.required-mark {
 		color: var(--color-accent-bright);
 	}
 	.meta-cell input,

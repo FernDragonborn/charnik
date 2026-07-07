@@ -83,7 +83,7 @@
 			<div class="eyebrow">{className}{speciesName ? ` · ${speciesName}` : ''}</div>
 			<h1>{c.build.name}</h1>
 			<div class="subl">
-				Level <b>{s.level}</b> · <span class="sysx">{c.system}</span> · Proficiency
+				Level <b>{s.level}</b> · <span class="system-badge">{c.system}</span> · Proficiency
 				<b>{signed(s.proficiencyBonus)}</b>
 				{#if combat.canLevelUp}
 					<button
@@ -113,7 +113,7 @@
 				></i>
 			</div>
 			<div class="hpadj">
-				<button class="hpbtn damage" onclick={combat.damage} title="Apply damage">− Damage</button>
+				<button class="hp-btn damage" onclick={combat.damage} title="Apply damage">− Damage</button>
 				<input
 					class="hpnum"
 					type="number"
@@ -121,7 +121,7 @@
 					bind:value={combat.hpAmount}
 					aria-label="HP amount"
 				/>
-				<button class="hpbtn heal" onclick={combat.heal} title="Apply healing">Heal ＋</button>
+				<button class="hp-btn heal" onclick={combat.heal} title="Apply healing">Heal ＋</button>
 			</div>
 		</div>
 	</section>
@@ -574,7 +574,7 @@
 	.levelup:hover {
 		filter: brightness(1.15);
 	}
-	.sysx {
+	.system-badge {
 		font-family: var(--font-mono);
 		font-size: 11px;
 		border: 1px solid var(--color-border-strong);
@@ -852,7 +852,7 @@
 		color: var(--color-text);
 		padding: 5px 4px;
 	}
-	.hpbtn {
+	.hp-btn {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 12px;
@@ -861,17 +861,17 @@
 		cursor: pointer;
 		flex: 1;
 	}
-	.hpbtn.damage {
+	.hp-btn.damage {
 		background: var(--color-danger-soft, rgba(179, 69, 47, 0.12));
 		border: 1px solid var(--color-danger, #b3452f);
 		color: var(--color-danger, #d06a52);
 	}
-	.hpbtn.heal {
+	.hp-btn.heal {
 		background: var(--color-good-soft);
 		border: 1px solid var(--color-good);
 		color: var(--color-good);
 	}
-	.hpbtn:hover {
+	.hp-btn:hover {
 		filter: brightness(1.12);
 	}
 	.roundc {

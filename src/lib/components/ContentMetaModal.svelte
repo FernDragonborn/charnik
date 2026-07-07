@@ -104,7 +104,7 @@
 					{#each EDITABLE_KEYS as key (key)}
 						{@const optional = OPTIONAL_KEYS.includes(key)}
 						<div class="field" class:wide={key === 'license'}>
-							<span class="flabel" class:opt={optional}>
+							<span class="flabel" class:optional-tag={optional}>
 								{keyLabel(key)}{#if optional}<span class="opttag">
 										{$_('contentMeta.optional')}</span
 									>{/if}
@@ -115,7 +115,7 @@
 									{#each LICENSES as lic (lic)}
 										<button
 											type="button"
-											class="lic"
+											class="license-card"
 											role="radio"
 											aria-checked={!licCustom[issue.file] && fills[issue.file]!.license === lic}
 											class:selected={!licCustom[issue.file] && fills[issue.file]!.license === lic}
@@ -127,7 +127,7 @@
 									{/each}
 									<button
 										type="button"
-										class="lic"
+										class="license-card"
 										role="radio"
 										aria-checked={licCustom[issue.file]}
 										class:selected={licCustom[issue.file]}
@@ -249,7 +249,7 @@
 		color: var(--color-accent-bright);
 		font-weight: 600;
 	}
-	.flabel.opt {
+	.flabel.optional-tag {
 		color: var(--color-text);
 	}
 	.opttag {
@@ -273,7 +273,7 @@
 		flex-direction: column;
 		gap: var(--space-2);
 	}
-	.lic {
+	.license-card {
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
@@ -285,11 +285,11 @@
 		cursor: pointer;
 		color: var(--color-text);
 	}
-	.lic:hover {
+	.license-card:hover {
 		border-color: var(--color-border-strong);
 		background: var(--color-surface);
 	}
-	.lic.selected {
+	.license-card.selected {
 		border-color: var(--color-accent);
 		background: var(--color-accent-soft);
 	}
@@ -298,7 +298,7 @@
 		font-size: var(--font-size-sm);
 		font-weight: 600;
 	}
-	.lic.selected .lic-id {
+	.license-card.selected .lic-id {
 		color: var(--color-accent-bright);
 	}
 	.lic-desc {

@@ -4,15 +4,15 @@
 	let { title = '', note = '' }: { title?: string; note?: string } = $props();
 </script>
 
-<section class="wip" aria-label="Work in progress">
-	<p class="tag">Work in progress</p>
-	<p class="big" aria-hidden="true">WIP</p>
+<section class="wip-panel" aria-label="Work in progress">
+	<p class="wip-tag">Work in progress</p>
+	<p class="big-text" aria-hidden="true">WIP</p>
 	{#if title}<h1>{title}</h1>{/if}
 	<p class="note">{note || 'This part of Charnik is being built.'}</p>
 </section>
 
 <style>
-	.wip {
+	.wip-panel {
 		min-height: 60vh;
 		display: flex;
 		flex-direction: column;
@@ -21,7 +21,7 @@
 		text-align: center;
 		gap: var(--space-2);
 	}
-	.tag {
+	.wip-tag {
 		font-family: var(--font-mono);
 		text-transform: uppercase;
 		letter-spacing: var(--tracking-label);
@@ -29,7 +29,7 @@
 		color: var(--color-accent);
 		margin: 0;
 	}
-	.big {
+	.big-text {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: clamp(4rem, 22vw, 12rem);

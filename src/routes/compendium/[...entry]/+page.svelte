@@ -171,13 +171,13 @@
 		<nav class="types">
 			{#each types as t (t)}
 				<Chip active={t === selectedType} onclick={() => pick(t)}>
-					{t.replace(/_/g, ' ')} <span class="n">{graph.list(t).length}</span>
+					{t.replace(/_/g, ' ')} <span class="count">{graph.list(t).length}</span>
 				</Chip>
 			{/each}
 		</nav>
 
-		<div class="ctrls">
-			<details class="dd" bind:open={groupOpen}>
+		<div class="controls">
+			<details class="disclosure" bind:open={groupOpen}>
 				<summary>Group · <b>{groupLabel}</b></summary>
 				<div class="ddmenu">
 					{#each groupings as g (g.key)}
@@ -194,7 +194,7 @@
 			</details>
 
 			{#if sources.length > 1 || facetValues.length}
-				<details class="dd">
+				<details class="disclosure">
 					<summary>Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
 					<div class="ddmenu wide">
 						{#if sources.length > 1}
@@ -270,20 +270,20 @@
 		/* no page title — pull the type tabs up under the nav for max content room */
 		margin: calc(-1 * var(--space-3)) 0 12px;
 	}
-	.types .n {
+	.types .count {
 		opacity: 0.55;
 	}
-	.ctrls {
+	.controls {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
 		gap: 8px;
 		margin-bottom: 12px;
 	}
-	.dd {
+	.disclosure {
 		position: relative;
 	}
-	.dd summary {
+	.disclosure summary {
 		list-style: none;
 		cursor: pointer;
 		font-family: var(--font-display);
@@ -295,17 +295,17 @@
 		border-radius: 7px;
 		padding: 5px 11px;
 	}
-	.dd summary::-webkit-details-marker {
+	.disclosure summary::-webkit-details-marker {
 		display: none;
 	}
-	.dd summary:hover {
+	.disclosure summary:hover {
 		color: var(--color-text);
 		border-color: var(--color-border-strong);
 	}
-	.dd summary b {
+	.disclosure summary b {
 		color: var(--color-text);
 	}
-	.dd[open] summary {
+	.disclosure[open] summary {
 		color: var(--color-text);
 		border-color: var(--color-border-strong);
 	}

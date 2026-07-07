@@ -163,7 +163,7 @@
 
 		<WikiDetail {detail}>
 			{#snippet actions()}
-				<button class="dbtn" onclick={cast}>🎲 Cast</button>
+				<button class="cast-btn" onclick={cast}>🎲 Cast</button>
 				<span class="dtog">
 					Prepared
 					<Switch
@@ -241,7 +241,7 @@
 		height: calc(100vh - 175px);
 		min-height: 560px;
 	}
-	.dbtn {
+	.cast-btn {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 13px;

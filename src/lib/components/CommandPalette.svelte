@@ -169,7 +169,8 @@
 							<span class="iname">{it.label}</span>
 							{#if it.snippet}<span class="isnip">{it.snippet}</span>{/if}
 						</span>
-						{#if app.activeEditions.length > 1}<span class="ied">{it.systems.join(' · ')}</span
+						{#if app.activeEditions.length > 1}<span class="item-edition"
+								>{it.systems.join(' · ')}</span
 							>{/if}
 					{:else}
 						<span class="iname">{it.label}</span>
@@ -269,7 +270,7 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	.ied {
+	.item-edition {
 		flex: none;
 		font-family: var(--font-mono);
 		font-size: 9px;

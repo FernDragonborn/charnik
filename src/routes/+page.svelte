@@ -43,7 +43,7 @@
 			<p class="eyebrow">{$_('app.tagline')}</p>
 			<h1>{$_('nav.roster')}</h1>
 		</div>
-		<a class="new" href="{base}/build">{$_('roster.newCharacter')}</a>
+		<a class="new-btn" href="{base}/build">{$_('roster.newCharacter')}</a>
 	</div>
 
 	{#if isDemo}
@@ -169,7 +169,7 @@
 		color: var(--color-accent);
 		margin: 0;
 	}
-	.new {
+	.new-btn {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 13px;
