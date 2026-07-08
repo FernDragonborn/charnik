@@ -103,8 +103,7 @@ export async function openDataDir(): Promise<void> {
 export async function changeDataDir(): Promise<string | null> {
 	const parent = await pickDataDir();
 	if (!parent) return null;
-	const sep = parent.includes('\\') ? '\\' : '/';
-	const dir = `${parent.replace(/[\\/]+$/, '')}${sep}${DATA_DIR_NAME}`;
+	const dir = await join(parent, DATA_DIR_NAME); // OS-native join (Windows \, POSIX /)
 	await grantDataDirScope(dir);
 	await setDataDirOverride(dir);
 	return dir;
