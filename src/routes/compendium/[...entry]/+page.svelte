@@ -5,8 +5,8 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
-	import { getContentGraph } from '$lib/content/provider';
-	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
+	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
+	import type { LoadedRow } from '$lib/content/loader';
 	import { isBrowsable, type ContentType } from '$lib/content/schemas';
 	import {
 		buildDetail,
@@ -30,8 +30,9 @@
 		);
 	const showEdition = $derived(app.activeEditions.length > 1);
 
-	let graph = $state<ContentGraph | null>(null);
-	let types = $state<ContentType[]>([]);
+	// shared reactive store → a live content refresh re-renders every derived list below, no reload
+	const graph = $derived(content.graph);
+	const types = $derived(graph ? [...graph.byType.keys()].filter(isBrowsable).sort() : []);
 	let selectedType = $state<ContentType>('spell');
 	let query = $state('');
 	let selected = $state<LoadedRow | null>(null);
@@ -42,9 +43,7 @@
 	let adding = $state(false); // right pane shows the homebrew authoring form
 
 	onMount(async () => {
-		const g = await getContentGraph();
-		graph = g;
-		types = [...g.byType.keys()].filter(isBrowsable).sort();
+		await loadContentStore();
 		if (!types.includes(selectedType)) selectedType = types[0] ?? selectedType;
 		groupBy = groupingsFor(selectedType)[0]?.key ?? groupBy;
 	});
@@ -148,9 +147,7 @@
 	// graph (so the new row is merged in) and open it.
 	async function onSaved(id: string) {
 		adding = false;
-		const g = await getContentGraph();
-		graph = g;
-		types = [...g.byType.keys()].filter(isBrowsable).sort();
+		const g = await reloadContent(); // merge the new homebrew row + rotate guid → lists recompute
 		const row = g.get(`${selectedType}:Homebrew:${id}`);
 		if (row) openEntry(row);
 	}

@@ -6,10 +6,10 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { toast } from 'svelte-sonner';
-	import { getContentGraph } from '$lib/content/provider';
+	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { demoCharacter } from '$lib/demo/sheet';
 	import { deriveSheet } from '$lib/character/derive';
-	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
+	import type { LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
 	import {
 		buildDetail,
@@ -27,7 +27,7 @@
 
 	type SpellEntry = Character['build']['spells'][number];
 
-	let graph = $state<ContentGraph | null>(null);
+	const graph = $derived(content.graph); // shared reactive store → live refresh re-renders the list
 	let character = $state<Character | null>(null);
 	let query = $state('');
 	let selected = $state<LoadedRow | null>(null);
@@ -36,9 +36,8 @@
 	let filter = $state<'all' | 'prepared' | 'pinned'>('all');
 
 	onMount(async () => {
-		graph = await getContentGraph();
+		const g = await loadContentStore();
 		character = demoCharacter();
-		const g = graph;
 		for (const s of character.build.spells) {
 			const row = g.get(s.spell);
 			if (!row) continue;

@@ -24,11 +24,25 @@
 	} from '$lib/storage/tauri';
 	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
 	import { reloadApp } from '$lib/content/reload';
+	import { reloadContent } from '$lib/content/store.svelte';
+	import { loadRoster } from '$lib/character/store.svelte';
 
 	let { children } = $props();
 
-	// F5 (or the ⟳ topbar button) refreshes the views from disk without restarting the app — a
-	// webview reload after flushing pending writes. See $lib/content/reload.
+	// The ⟳ button does a no-flash refresh: re-read content + roster from disk into their reactive
+	// stores, so every view re-derives without a page reload. F5 keeps the familiar hard reload
+	// (flush + reload the webview — not a process restart). See $lib/content/reload.
+	let refreshing = $state(false);
+	async function softRefresh() {
+		if (refreshing) return;
+		refreshing = true;
+		try {
+			await reloadContent();
+			await loadRoster();
+		} finally {
+			refreshing = false;
+		}
+	}
 	function onGlobalKey(e: KeyboardEvent) {
 		if (e.code === 'F5') {
 			e.preventDefault();
@@ -139,7 +153,8 @@
 		<button
 			type="button"
 			class="chip"
-			onclick={() => void reloadApp()}
+			onclick={() => void softRefresh()}
+			disabled={refreshing}
 			title={$_('refresh.title')}
 			aria-label={$_('refresh.title')}>⟳</button
 		>
