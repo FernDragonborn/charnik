@@ -23,11 +23,11 @@
 	import Chip from '$lib/components/Chip.svelte';
 	import { app } from '$lib/stores/app.svelte';
 
-	// row is shown if any of its editions is currently active
+	// row is shown if any of its editions is currently active. Use the STAMPED `r.systems` (from the
+	// file's `#content-systems:` header / pack default), NOT the raw `r.data.systems` column — the SRD
+	// files declare editions in the header, so the column is absent and filtered everything out.
 	const inEdition = (r: LoadedRow) =>
-		(Array.isArray(r.data.systems) ? r.data.systems : [r.data.systems]).some((s) =>
-			app.activeEditions.includes(s as (typeof app.activeEditions)[number])
-		);
+		r.systems.some((s) => app.activeEditions.includes(s as (typeof app.activeEditions)[number]));
 	const showEdition = $derived(app.activeEditions.length > 1);
 
 	// shared reactive store → a live content refresh re-renders every derived list below, no reload
@@ -111,7 +111,7 @@
 				id: r.effectiveId,
 				name: String(r.data.name_en),
 				meta: entryMeta(r, selectedType),
-				edition: editionLabel(r.data.systems),
+				edition: editionLabel(r.systems),
 				row: r
 			}))
 		}))

@@ -75,7 +75,7 @@
 				id: r.effectiveId,
 				name: String(r.data.name_en),
 				meta: entryMeta(r, 'spell'),
-				edition: editionLabel(r.data.systems),
+				edition: editionLabel(r.systems),
 				row: r
 			}))
 		}));
