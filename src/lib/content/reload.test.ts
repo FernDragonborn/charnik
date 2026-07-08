@@ -52,7 +52,6 @@ const spell = (id: string) =>
 describe('reload reflects on-disk changes', () => {
 	it('re-reading a content root after a file changes shows the new data', async () => {
 		const s = new MemoryStorage();
-		await s.write('a/_pack.json', JSON.stringify({ source: 'SRD 5.2.1', systems: ['5.5e'] }));
 		await s.write('a/spells_srd.csv', [SPELL_HEAD, spell('fireball')].join('\n'));
 
 		const before = await loadContent(s, ['a']);

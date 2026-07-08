@@ -17,7 +17,6 @@ const LIST_HEAD = 'id,systems,source,class_id,spell_id';
 async function seed() {
 	const s = new MemoryStorage();
 	// 2024 root
-	await s.write('a/_pack.json', JSON.stringify({ source: 'SRD 5.2.1', systems: ['5.5e'] }));
 	await s.write(
 		'a/spells_srd.csv',
 		[
@@ -29,7 +28,6 @@ async function seed() {
 	await s.write('a/classes_srd.csv', [CLASS_HEAD, cls('wizard', '5.5e', 'SRD 5.2.1')].join('\n'));
 	// homebrew pack: an Artificer that grants access to fireball via a class-side join (no edit
 	// to the shipped fireball row)
-	await s.write('hb/_pack.json', JSON.stringify({ source: 'Homebrew', systems: ['5.5e'] }));
 	await s.write(
 		'hb/classes_srd.csv',
 		[CLASS_HEAD, cls('artificer', '5.5e', 'Homebrew', 'half')].join('\n')
@@ -39,7 +37,6 @@ async function seed() {
 		[LIST_HEAD, 'artificer-fireball,5.5e,Homebrew,artificer,fireball'].join('\n')
 	);
 	// 2014 root — a wizard + a 5e-only spell, to prove edition scoping
-	await s.write('b/_pack.json', JSON.stringify({ source: 'SRD 5.1', systems: ['5e'] }));
 	await s.write(
 		'b/spells_srd.csv',
 		[SPELL_HEAD, spell('magic-missile', '5e', 'SRD 5.1', 'wizard')].join('\n')

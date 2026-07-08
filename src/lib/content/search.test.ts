@@ -17,7 +17,6 @@ const row = (
 
 async function seed(): Promise<ContentGraph> {
 	const s = new MemoryStorage();
-	await s.write('a/_pack.json', JSON.stringify({ source: 'SRD 5.2.1', systems: ['5.5e'] }));
 	await s.write(
 		'a/spells_srd.csv',
 		[
@@ -48,7 +47,6 @@ async function seed(): Promise<ContentGraph> {
 			)
 		].join('\n')
 	);
-	await s.write('b/_pack.json', JSON.stringify({ source: 'SRD 5.1', systems: ['5e'] }));
 	await s.write(
 		'b/spells_srd.csv',
 		[HEAD, row('fireball', 'Fireball', '', 'An explosion of flame.', '5e', 'SRD 5.1')].join('\n')

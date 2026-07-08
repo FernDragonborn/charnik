@@ -22,7 +22,6 @@ const castRow = (c: string, lvl: number, cantrips: number | '', prepared: number
 let graph: ContentGraph;
 beforeAll(async () => {
 	const s = new MemoryStorage();
-	await s.write('a/_pack.json', JSON.stringify({ source: 'SRD 5.2.1', systems: ['5.5e'] }));
 	await s.write(
 		'a/classes_srd.csv',
 		[

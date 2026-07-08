@@ -13,7 +13,6 @@ const spell = (id: string, systems: string, source: string, name_uk = '') =>
 describe('loader — logic (in-memory)', () => {
 	async function seed() {
 		const s = new MemoryStorage();
-		await s.write('a/_pack.json', JSON.stringify({ source: 'SRD 5.2.1', systems: ['5.5e'] }));
 		await s.write(
 			'a/spells_srd.csv',
 			[
@@ -22,7 +21,6 @@ describe('loader — logic (in-memory)', () => {
 				spell('shield', '5.5e', 'SRD 5.2.1')
 			].join('\n')
 		);
-		await s.write('b/_pack.json', JSON.stringify({ source: 'SRD 5.1', systems: ['5e'] }));
 		await s.write('b/spells_srd.csv', [SPELL_HEAD, spell('fireball', '5e', 'SRD 5.1')].join('\n'));
 		return s;
 	}
@@ -90,7 +88,6 @@ describe('loader — logic (in-memory)', () => {
 
 	it('honors a #content-type directive for a freely-named file (explicit wins over filename)', async () => {
 		const s = new MemoryStorage();
-		await s.write('a/_pack.json', JSON.stringify({ source: 'Homebrew', systems: ['5.5e'] }));
 		// filename maps to no type, but the directive declares it — and it parses as spells
 		await s.write(
 			'a/my-cool-spells.csv',

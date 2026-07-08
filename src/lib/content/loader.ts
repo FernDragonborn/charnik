@@ -24,17 +24,9 @@ import {
 } from './meta';
 import { hashBody } from './hash';
 
-export interface PackManifest {
-	source?: string;
-	systems?: string[];
-	license?: string;
-	attribution?: string;
-	schemaVersion?: number;
-}
-
 export interface LoadedRow {
 	type: ContentType;
-	/** Owning source tag (row's own `source`, else the pack default). */
+	/** Owning source tag (row's own `source` column, else the file's `#content-source` header). */
 	source: string;
 	/** Local slug. */
 	id: string;
@@ -123,21 +115,6 @@ export async function loadContent(
 
 	const sources: ContentSource[] = [...roots.map((root) => ({ storage, root })), ...extra];
 	for (const { storage: st, root } of sources) {
-		// pack manifest (optional defaults)
-		let pack: PackManifest = {};
-		if (await st.exists(`${root}/_pack.json`)) {
-			try {
-				pack = JSON.parse(await st.read(`${root}/_pack.json`));
-			} catch (e) {
-				issues.push({
-					level: 'error',
-					root,
-					file: '_pack.json',
-					message: `invalid _pack.json: ${(e as Error).message}`
-				});
-			}
-		}
-
 		for (const entry of await st.list(root)) {
 			if (entry.isDir || !entry.name.endsWith('.csv')) continue;
 			const raw = await st.read(`${root}/${entry.name}`);
@@ -190,7 +167,7 @@ export async function loadContent(
 			}
 
 			// file-level source/systems from the header, applied to every row (row columns override for
-			// legacy files that still carry them; header → pack default → fallback).
+			// legacy files that still carry them; else the `#content-` header, else a fallback).
 			const fileSource = directives.get('source');
 			const fileSystems = directives
 				.get('systems')
@@ -227,10 +204,10 @@ export async function loadContent(
 					continue;
 				}
 				const data = res.data as Record<string, unknown>;
-				// precedence: per-row column (legacy) → file header → pack default → fallback
-				const source = (data.source as string) || fileSource || pack.source || 'unknown';
+				// precedence: per-row column (legacy) → file `#content-` header → fallback
+				const source = (data.source as string) || fileSource || 'unknown';
 				const rowSystems = data.systems as string[] | undefined;
-				const systems = rowSystems?.length ? rowSystems : (fileSystems ?? pack.systems ?? []);
+				const systems = rowSystems?.length ? rowSystems : (fileSystems ?? []);
 				const id = data.id as string;
 				rows.push({
 					type,
