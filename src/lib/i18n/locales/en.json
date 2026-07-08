@@ -107,5 +107,8 @@
 		"choose": "Choose folder…",
 		"hint": "A folder named “charnik” will be created here.",
 		"save": "Save here"
+	},
+	"refresh": {
+		"title": "Refresh data (re-read from disk)"
 	}
 }

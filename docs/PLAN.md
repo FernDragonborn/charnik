@@ -592,6 +592,31 @@ fails that: users can't find it. So:
 
 ---
 
+## Live refresh & file-watching
+Goal: show new on-disk data (edited CSVs, a changed data folder) **without restarting the app**.
+Three levels, phased (`src/lib/content/reload.ts`):
+
+- **Phase A — controlled reload (DONE).** `reloadApp()` flushes pending writes (views register a
+  flusher via `onBeforeReload`, e.g. combat's debounced autosave) then `location.reload()`. This is a
+  **webview reload, not a process restart** — the Rust side stays up, the SPA re-mounts and re-reads
+  content + characters from disk. Triggered by **F5** or the topbar **⟳** button. Reliable + simple;
+  a data-folder change also uses a reload.
+- **Phase B — no-flash live reload (planned).** A `contentVersion` `$state` signal that each view's
+  data-load reads inside a `$effect`, so bumping it re-runs every view's load with no page reload.
+  `reloadContent()` resets the caches (`resetUserStorage` for a folder change, `resetContentGraph`,
+  reload store + roster) then bumps the signal.
+- **Phase C — file watcher (planned).** `Storage.watch(dataDir)` → debounced `reloadContent()` so
+  editing a CSV on disk updates the UI live. Desktop-only.
+
+**Known problems (and how B/C avoid them):** views cache the graph in `onMount` → won't live-update
+(fix = the version signal, #B); the watcher must **ignore the app's own writes** (no write→reload
+loop) and **debounce bursts / tolerate torn reads** (keep last-good graph on a parse fail); a live
+reload must **not clobber in-progress edits** (scope it to content + roster listing, never the open
+character's play-state/draft — missing refs just get flagged); one `reloadContent()` coordinator must
+reset **every** cache (storage root, graph, roster, spell-access, search) or a view goes stale.
+
+---
+
 ## Architecture — Tauri desktop app + SvelteKit (TypeScript)
 **Standalone desktop app, no HTTP server.** Shell = **Tauri v2** (Rust core + system
 webview); frontend = **SvelteKit with `adapter-static` (SPA, `ssr=false`)** loaded in the

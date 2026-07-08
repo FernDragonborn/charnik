@@ -23,8 +23,18 @@
 		pickDataDir
 	} from '$lib/storage/tauri';
 	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
+	import { reloadApp } from '$lib/content/reload';
 
 	let { children } = $props();
+
+	// F5 (or the ⟳ topbar button) refreshes the views from disk without restarting the app — a
+	// webview reload after flushing pending writes. See $lib/content/reload.
+	function onGlobalKey(e: KeyboardEvent) {
+		if (e.code === 'F5') {
+			e.preventDefault();
+			void reloadApp();
+		}
+	}
 
 	const nav = [
 		{ href: '/', key: 'nav.roster' },
@@ -96,6 +106,8 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
+<svelte:window onkeydown={onGlobalKey} />
+
 <a class="skip-link" href="#main">{$_('nav.skipToContent')}</a>
 
 <header class="topbar">
@@ -124,6 +136,13 @@
 		<button type="button" class="chip" onclick={toggleTheme} title={$_('settings.theme')}>
 			{app.theme === 'dark' ? '☾' : '☀'}
 		</button>
+		<button
+			type="button"
+			class="chip"
+			onclick={() => void reloadApp()}
+			title={$_('refresh.title')}
+			aria-label={$_('refresh.title')}>⟳</button
+		>
 		<kbd>Ctrl K</kbd>
 	</div>
 </header>

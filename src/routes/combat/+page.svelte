@@ -10,6 +10,7 @@
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
 	import { combat } from './state.svelte';
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
+	import { onBeforeReload } from '$lib/content/reload';
 	import CombatMenus from './CombatMenus.svelte';
 	import HpPanel from './blocks/HpPanel/HpPanel.svelte';
 	import Loading from '$lib/components/Loading.svelte';
@@ -69,6 +70,14 @@
 		clearTimeout(saveTimer);
 		saveTimer = setTimeout(() => void saveCharacterToStore(c), 800);
 	});
+
+	// flush the pending autosave before a manual refresh, so an unsaved edit survives the reload
+	onMount(() =>
+		onBeforeReload(async () => {
+			clearTimeout(saveTimer);
+			if (combat.character) await saveCharacterToStore(combat.character);
+		})
+	);
 </script>
 
 <svelte:head><title>Combat — Charnik</title></svelte:head>
