@@ -78,6 +78,7 @@
 			bind:value={draft.id}
 		/>
 	</div>
+	<p class="id-hint">{$_('homebrewForm.idHint')}</p>
 
 	<div class="systems-row">
 		<span class="systems-label">Editions</span>
@@ -188,6 +189,11 @@
 		border: 1px solid var(--color-border);
 		border-radius: 6px;
 		padding: 3px 8px;
+		color: var(--color-text-muted);
+	}
+	.id-hint {
+		margin: -8px 0 14px;
+		font-size: 11px;
 		color: var(--color-text-muted);
 	}
 	.systems-row {

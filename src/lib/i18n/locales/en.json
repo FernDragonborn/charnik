@@ -131,5 +131,8 @@
 		"caster_share": "Caster share (multiclass)",
 		"caster_from_level": "Casting from level",
 		"prepare_style": "Prepare style"
+	},
+	"homebrewForm": {
+		"idHint": "lowercase, dashes — e.g. fire-bolt. Leave blank to auto-generate from the name."
 	}
 }
