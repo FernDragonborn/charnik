@@ -41,3 +41,9 @@ export function getUserStorage(): Storage {
 		cache = detectPlatform() === Platform.Desktop ? new TauriStorage() : new BrowserStorage();
 	return cache;
 }
+
+/** Drop the cached storage instance so the next `getUserStorage()` re-resolves the data root — used
+ *  when the user changes the data folder, so reads/writes retarget the new location. */
+export function resetUserStorage(): void {
+	cache = null;
+}

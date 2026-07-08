@@ -10,11 +10,10 @@
 import { toast } from 'svelte-sonner';
 import { demoCharacter } from '$lib/demo/sheet';
 import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
-import { getContentGraph } from '$lib/content/provider';
+import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { passiveScore } from '$lib/rules/core';
 import { rollPool, type BonusDie } from '$lib/rules/dice';
-import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import {
 	titleCase,
@@ -54,7 +53,9 @@ class CombatVM {
 		() => this.character,
 		() => this.sheet
 	);
-	graph = $state<ContentGraph | null>(null);
+	// read the shared reactive content store → a live content refresh (reloadContent) re-derives the
+	// sheet with no page reload, while the character's play-state is left untouched
+	graph = $derived(content.graph);
 	character = $state<Character | null>(null);
 	/** Fully reactive: recomputes whenever the character (HP, effects, shield, auto-calc…) or the
 	 *  content graph changes — so every play-state edit reflects live in the derived stats. */
@@ -82,7 +83,7 @@ class CombatVM {
 	passiveSkills = $state<SkillId[]>(['perception', 'investigation', 'insight']);
 
 	load = async () => {
-		this.graph = await getContentGraph();
+		await loadContentStore(); // populate the shared graph; `this.graph` derives from it
 		// the character opened from the Roster, else the seeded demo
 		this.character = characters.active ?? demoCharacter();
 		// restore this character's saved panel layout (falls back to the default columns)

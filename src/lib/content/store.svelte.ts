@@ -7,6 +7,7 @@
  * call `reloadContent()`; that's the whole rebuild mechanism.
  */
 import { getContentGraph, resetContentGraph } from './provider';
+import { resetUserStorage } from '$lib/storage/provider';
 import type { ContentGraph } from './loader';
 
 export const content = $state<{ graph: ContentGraph | null; guid: string }>({
@@ -23,8 +24,10 @@ export async function loadContentStore(): Promise<ContentGraph> {
 	return content.graph;
 }
 
-/** Drop the cache, reload, and rotate the guid → all derived state recomputes. */
-export async function reloadContent(): Promise<ContentGraph> {
+/** Drop the cache, reload, and rotate the guid → all derived state recomputes with no page reload.
+ *  `remount` also drops the storage instance so a changed data folder is re-resolved. */
+export async function reloadContent(opts: { remount?: boolean } = {}): Promise<ContentGraph> {
+	if (opts.remount) resetUserStorage();
 	resetContentGraph();
 	content.graph = await getContentGraph();
 	content.guid = crypto.randomUUID();

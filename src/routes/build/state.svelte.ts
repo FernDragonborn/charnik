@@ -10,7 +10,7 @@
  * dead end" stance.
  */
 import { toast } from 'svelte-sonner';
-import { getContentGraph } from '$lib/content/provider';
+import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
 import { ABILITIES, type Character } from '$lib/character/schema';
 import { assembleCharacter } from '$lib/character/assemble';
@@ -170,7 +170,8 @@ interface EditContext {
 }
 
 class BuildVM {
-	graph = $state<ContentGraph | null>(null);
+	// read the shared reactive content store → a live content refresh re-derives options with no reload
+	graph = $derived(content.graph);
 
 	// --- draft choices: ONE reactive object (field set defined in DraftState / blankDraft) --------
 	draft = $state<DraftState>(blankDraft());
@@ -204,7 +205,7 @@ class BuildVM {
 	saving = $state(false);
 
 	load = async () => {
-		this.graph = await getContentGraph();
+		await loadContentStore(); // populate the shared graph; `this.graph` derives from it
 		this.draft.system = app.activeSystem;
 	};
 
