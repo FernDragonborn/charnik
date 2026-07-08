@@ -168,6 +168,45 @@ export function homebrewFile(type: ContentType): string {
 	return `${HOMEBREW_ROOT}/${CONTENT_TYPES[type].filebase}_hb.csv`;
 }
 
+/** A new homebrew file for a type + a user-chosen name part — always in the safe homebrew root. */
+export function newHomebrewFile(type: ContentType, namePart: string): string {
+	return `${HOMEBREW_ROOT}/${CONTENT_TYPES[type].filebase}_${slugify(namePart) || 'custom'}.csv`;
+}
+
+/** True when `file` ships with the app (lives under a seeded content root), so an update can
+ *  overwrite it → unsafe to write. Root-based on the passed `shippedRoots` (provider's CONTENT_ROOTS),
+ *  so it extends to any FUTURE default pack we ship — not hardcoded to SRD. */
+export function isShippedFile(file: string, shippedRoots: readonly string[]): boolean {
+	return shippedRoots.some((r) => file === r || file.startsWith(`${r}/`));
+}
+
+export interface TargetFile {
+	/** dataDir-relative CSV path a homebrew row can be saved to. */
+	file: string;
+	/** true when the file ships with the app (writing there warns; a Charnik update may clobber it). */
+	shipped: boolean;
+}
+
+/** Existing CSV files that can hold `type` (filename matches its filebase), across the shipped roots +
+ *  the homebrew root — the choices offered for WHERE to save a homebrew row. */
+export async function listTypeTargets(
+	storage: Storage,
+	type: ContentType,
+	shippedRoots: readonly string[]
+): Promise<TargetFile[]> {
+	const fb = CONTENT_TYPES[type].filebase;
+	const out: TargetFile[] = [];
+	for (const root of [...shippedRoots, HOMEBREW_ROOT]) {
+		for (const e of await storage.list(root)) {
+			if (e.isDir || !e.name.endsWith('.csv')) continue;
+			const base = e.name.replace(/\.csv$/, '');
+			if (base === fb || base.startsWith(`${fb}_`))
+				out.push({ file: e.path, shipped: isShippedFile(e.path, shippedRoots) });
+		}
+	}
+	return out;
+}
+
 export interface SaveResult {
 	ok: boolean;
 	/** The final id written (may be de-duplicated), when ok. */
@@ -220,9 +259,10 @@ export function toCsv(columns: string[], rows: Record<string, string>[]): string
 export async function saveHomebrewRow(
 	storage: Storage,
 	type: ContentType,
-	draft: Record<string, string>
+	draft: Record<string, string>,
+	targetFile: string = homebrewFile(type)
 ): Promise<SaveResult> {
-	const file = homebrewFile(type);
+	const file = targetFile;
 	const columns = columnsFor(type);
 
 	// existing rows (if the file exists) — to keep ids unique and preserve prior entries

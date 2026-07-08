@@ -3,9 +3,20 @@
 	// WikiDetail (eyebrow · title · meta grid · body) so adding content feels like editing the
 	// page you were just reading. Binds a flat draft, validates + writes via the homebrew pipeline
 	// (schema-checked, UTF-8-BOM/CRLF, atomic), then hands the new id back to the caller.
+	import { onMount } from 'svelte';
 	import { getUserStorage } from '$lib/storage/provider';
-	import { resetContentGraph } from '$lib/content/provider';
-	import { fieldsFor, blankDraft, slugify, saveHomebrewRow } from '$lib/content/homebrew';
+	import { resetContentGraph, CONTENT_ROOTS } from '$lib/content/provider';
+	import {
+		fieldsFor,
+		blankDraft,
+		slugify,
+		saveHomebrewRow,
+		homebrewFile,
+		newHomebrewFile,
+		isShippedFile,
+		listTypeTargets,
+		type TargetFile
+	} from '$lib/content/homebrew';
 	import { SYSTEMS, splitList, type ContentType } from '$lib/content/schemas';
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
@@ -35,6 +46,19 @@
 	let issues = $state<string[]>([]);
 	let saving = $state(false);
 
+	// WHERE to save this row. Default = the safe homebrew file; the picker also lists existing files
+	// (incl. shipped ones, which warn). `sel` holds the chosen file path or the NEW_FILE sentinel.
+	const NEW_FILE = '__new__';
+	let targets = $state<TargetFile[]>([]);
+	// svelte-ignore state_referenced_locally
+	let sel = $state(homebrewFile(type));
+	let newFileName = $state('');
+	const target = $derived(sel === NEW_FILE ? newHomebrewFile(type, newFileName) : sel);
+	const targetShipped = $derived(isShippedFile(target, CONTENT_ROOTS));
+	onMount(async () => {
+		targets = await listTypeTargets(getUserStorage(), type, CONTENT_ROOTS);
+	});
+
 	const fields = $derived(fieldsFor(type));
 	const bodyFields = $derived(fields.filter((f) => f.kind === 'textarea'));
 	// everything the meta grid renders: not the title, body, systems or id (those get their own row)
@@ -51,10 +75,11 @@
 	const hasSystem = (sys: string) => splitList(draft.systems).includes(sys);
 
 	async function save() {
+		if (targetShipped) return; // never write a shipped file (the UI also blocks this)
 		issues = [];
 		saving = true;
 		try {
-			const res = await saveHomebrewRow(getUserStorage(), type, draft);
+			const res = await saveHomebrewRow(getUserStorage(), type, draft, target);
 			if (!res.ok) {
 				issues = res.issues ?? ['Could not save'];
 				return;
@@ -133,6 +158,36 @@
 			bind:value={draft[f.name]}></textarea>
 	{/each}
 
+	<div class="target-row">
+		<span class="systems-label">{$_('homebrewForm.targetLabel')}</span>
+		<select class="target-select" bind:value={sel}>
+			<option value={homebrewFile(type)}>{$_('homebrewForm.targetHomebrew')}</option>
+			{#each targets.filter((t) => t.file !== homebrewFile(type)) as t (t.file)}
+				<option value={t.file}
+					>{t.file}{t.shipped ? ` · ${$_('homebrewForm.targetShippedTag')}` : ''}</option
+				>
+			{/each}
+			<option value={NEW_FILE}>{$_('homebrewForm.targetNewFile')}</option>
+		</select>
+		{#if sel === NEW_FILE}
+			<input
+				class="id-input"
+				placeholder={$_('homebrewForm.newFilePlaceholder')}
+				bind:value={newFileName}
+			/>
+		{/if}
+	</div>
+
+	{#if targetShipped}
+		<div class="shipped-warn">
+			<b>⚠ {$_('homebrewForm.srdWarnTitle')}</b>
+			<p>{$_('homebrewForm.srdWarnBody')}</p>
+			<button type="button" class="btn primary" onclick={() => (sel = homebrewFile(type))}
+				>{$_('homebrewForm.srdWarnAction')}</button
+			>
+		</div>
+	{/if}
+
 	{#if issues.length}
 		<div class="issues">
 			<b>Fix before saving:</b>
@@ -143,7 +198,7 @@
 	{/if}
 
 	<div class="actions">
-		<button type="button" class="save" onclick={save} disabled={saving}>
+		<button type="button" class="save" onclick={save} disabled={saving || targetShipped}>
 			{saving ? 'Saving…' : 'Save homebrew'}
 		</button>
 		<button type="button" class="cancel" onclick={oncancel}>Cancel</button>
@@ -194,6 +249,39 @@
 	.id-hint {
 		margin: -8px 0 14px;
 		font-size: 11px;
+		color: var(--color-text-muted);
+	}
+	.target-row {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex-wrap: wrap;
+		margin: 18px 0 8px;
+	}
+	.target-select {
+		font-family: var(--font-mono);
+		font-size: 12px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 6px;
+		padding: 4px 8px;
+		color: var(--color-text);
+	}
+	.shipped-warn {
+		border: 1px solid var(--color-danger, #b3452f);
+		background: var(--color-danger-soft, rgba(179, 69, 47, 0.1));
+		border-radius: 10px;
+		padding: 12px 14px;
+		margin-bottom: 12px;
+	}
+	.shipped-warn b {
+		color: var(--color-danger, #d06a52);
+		font-size: 14px;
+	}
+	.shipped-warn p {
+		margin: 6px 0 10px;
+		font-size: 13px;
+		line-height: 1.4;
 		color: var(--color-text-muted);
 	}
 	.systems-row {

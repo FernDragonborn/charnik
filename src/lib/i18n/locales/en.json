@@ -133,6 +133,14 @@
 		"prepare_style": "Prepare style"
 	},
 	"homebrewForm": {
-		"idHint": "lowercase, dashes — e.g. fire-bolt. Leave blank to auto-generate from the name."
+		"idHint": "lowercase, dashes — e.g. fire-bolt. Leave blank to auto-generate from the name.",
+		"targetLabel": "Save to file",
+		"targetHomebrew": "My homebrew (recommended)",
+		"targetNewFile": "＋ New file…",
+		"targetShippedTag": "ships with app",
+		"newFilePlaceholder": "name",
+		"srdWarnTitle": "This file ships with Charnik",
+		"srdWarnBody": "Saving here works now, but a Charnik update can overwrite this file and your entry would be lost. Add it to your own file instead.",
+		"srdWarnAction": "Create my own file"
 	}
 }
