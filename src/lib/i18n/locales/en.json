@@ -110,5 +110,26 @@
 	},
 	"refresh": {
 		"title": "Refresh data (re-read from disk)"
+	},
+	"contentField": {
+		"name": "Name",
+		"text": "Description",
+		"hit_die": "Hit die",
+		"primary_ability": "Primary ability",
+		"spell_ability": "Spellcasting ability",
+		"save_ability": "Save",
+		"item_type": "Type",
+		"weight_lb": "Weight (lb)",
+		"armor_dex_cap": "Dex cap",
+		"str_min": "Str min",
+		"casting_time": "Casting time",
+		"higher_level": "At higher levels",
+		"creature_type": "Creature type",
+		"skills_choose": "Skill choices",
+		"skills_from": "Skill list",
+		"subclass_level": "Subclass at level",
+		"caster_share": "Caster share (multiclass)",
+		"caster_from_level": "Casting from level",
+		"prepare_style": "Prepare style"
 	}
 }

@@ -110,5 +110,26 @@
 	},
 	"refresh": {
 		"title": "Оновити дані (перечитати з диска)"
+	},
+	"contentField": {
+		"name": "Назва",
+		"text": "Опис",
+		"hit_die": "Кістка здоровʼя",
+		"primary_ability": "Основна характеристика",
+		"spell_ability": "Характеристика заклять",
+		"save_ability": "Рятунок",
+		"item_type": "Тип",
+		"weight_lb": "Вага (фунт)",
+		"armor_dex_cap": "Ліміт Спритності",
+		"str_min": "Мін. Сила",
+		"casting_time": "Час створення",
+		"higher_level": "На вищих рівнях",
+		"creature_type": "Тип істоти",
+		"skills_choose": "Вибір навичок",
+		"skills_from": "Список навичок",
+		"subclass_level": "Підклас на рівні",
+		"caster_share": "Частка закляттяра (мультиклас)",
+		"caster_from_level": "Закляття з рівня",
+		"prepare_style": "Стиль підготовки"
 	}
 }

@@ -7,6 +7,20 @@
 	import { resetContentGraph } from '$lib/content/provider';
 	import { fieldsFor, blankDraft, slugify, saveHomebrewRow } from '$lib/content/homebrew';
 	import { SYSTEMS, splitList, type ContentType } from '$lib/content/schemas';
+	import { _ } from '$lib/i18n';
+	import { app } from '$lib/stores/app.svelte';
+
+	// Localised field label. A localizable column (name_<loc> / text_<loc>) shows the base label plus
+	// the locale tag when it isn't the current UI language (e.g. "Name (uk)" in an EN interface);
+	// structural columns use their catalog key, falling back to fieldsFor's English label.
+	function fieldLabel(name: string, fallback: string): string {
+		const m = /^(name|text)_([a-z-]+)$/.exec(name);
+		if (m) {
+			const base = $_(`contentField.${m[1]}`);
+			return m[2] === app.activeLocale ? base : `${base} (${m[2]})`;
+		}
+		return $_(`contentField.${name}`, { default: fallback });
+	}
 
 	let {
 		type,
@@ -82,7 +96,8 @@
 			{#each metaFields as f (f.name)}
 				<label class="meta-cell">
 					<span class="meta-key"
-						>{f.label}{#if f.required}<span class="required-mark">*</span>{/if}</span
+						>{fieldLabel(f.name, f.label)}{#if f.required}<span class="required-mark">*</span
+							>{/if}</span
 					>
 					{#if f.kind === 'enum'}
 						<select bind:value={draft[f.name]}>
@@ -96,7 +111,7 @@
 							class:on={draft[f.name] === 'true'}
 							onclick={() => (draft[f.name] = draft[f.name] === 'true' ? 'false' : 'true')}
 							aria-pressed={draft[f.name] === 'true'}
-							aria-label={f.label}
+							aria-label={fieldLabel(f.name, f.label)}
 						>
 							<span class="knob"></span>
 						</button>
@@ -111,7 +126,10 @@
 	{/if}
 
 	{#each bodyFields as f (f.name)}
-		<textarea class="body-input" placeholder={f.label} bind:value={draft[f.name]}></textarea>
+		<textarea
+			class="body-input"
+			placeholder={fieldLabel(f.name, f.label)}
+			bind:value={draft[f.name]}></textarea>
 	{/each}
 
 	{#if issues.length}
