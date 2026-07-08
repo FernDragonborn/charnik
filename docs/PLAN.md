@@ -601,12 +601,16 @@ Three levels, phased (`src/lib/content/reload.ts`):
   **webview reload, not a process restart** — the Rust side stays up, the SPA re-mounts and re-reads
   content + characters from disk. Triggered by **F5** or the topbar **⟳** button. Reliable + simple;
   a data-folder change also uses a reload.
-- **Phase B — no-flash live reload (planned).** A `contentVersion` `$state` signal that each view's
-  data-load reads inside a `$effect`, so bumping it re-runs every view's load with no page reload.
-  `reloadContent()` resets the caches (`resetUserStorage` for a folder change, `resetContentGraph`,
-  reload store + roster) then bumps the signal.
-- **Phase C — file watcher (planned).** `Storage.watch(dataDir)` → debounced `reloadContent()` so
-  editing a CSV on disk updates the UI live. Desktop-only.
+- **Phase B — no-flash live reload (DONE).** Views derive from the shared reactive content store
+  (`content.graph`) rather than caching `getContentGraph()` in `onMount` — combat/build VMs, the
+  compendium and the spellbook. `reloadContent()` (store) rotates the graph → every derived list
+  re-renders with no page reload; the character's play-state/draft is untouched. The topbar **⟳**
+  does this soft refresh (`reloadContent()` + `loadRoster()`); `resetUserStorage()` re-resolves a
+  changed data folder.
+- **Phase C — file watcher (DONE).** `src/lib/content/watcher.ts` watches `<dataDir>/content` on
+  desktop → debounced (300 ms) `reloadContent()`, so editing a CSV on disk updates the UI live.
+  `reloadContent()` only reads, so the app's own homebrew write can't loop; debounce coalesces
+  bursts / tolerates torn reads.
 
 **Known problems (and how B/C avoid them):** views cache the graph in `onMount` → won't live-update
 (fix = the version signal, #B); the watcher must **ignore the app's own writes** (no write→reload

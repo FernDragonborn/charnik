@@ -13,7 +13,7 @@
 	import { loadContentStore } from '$lib/content/store.svelte';
 	import { review, pendingMetaIssues, pendingDriftItems } from '$lib/content/review.svelte';
 	import { Toaster } from 'svelte-sonner';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { detectPlatform, Platform } from '$lib/storage/provider';
 	import {
 		getSavedDataDir,
@@ -25,6 +25,7 @@
 	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
 	import { reloadApp } from '$lib/content/reload';
 	import { reloadContent } from '$lib/content/store.svelte';
+	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
 	import { loadRoster } from '$lib/character/store.svelte';
 
 	let { children } = $props();
@@ -90,17 +91,20 @@
 		const saved = await getSavedDataDir();
 		if (saved) {
 			await grantDataDirScope(saved); // re-allow a custom folder outside the static scope
-			loadContentStore();
+			await loadContentStore();
+			startContentWatcher(); // live-refresh when a CSV is edited on disk
 		} else {
 			firstRunDefault = await defaultDataDir(); // first run → show picker, hold content load
 		}
 	});
+	onDestroy(stopContentWatcher);
 
 	async function confirmDataDir(dir: string) {
 		await grantDataDirScope(dir);
 		await setDataDirOverride(dir);
 		firstRunDefault = null;
-		loadContentStore();
+		await loadContentStore();
+		startContentWatcher();
 	}
 	// Drift is shown first (a quick date/hash confirm), then the metadata prompt.
 	const driftItems = $derived(pendingDriftItems());
