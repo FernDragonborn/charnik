@@ -10,6 +10,10 @@ function basePath(): '' | `/${string}` {
 }
 
 export default defineConfig({
+	// Don't let Vite's dev watcher descend into the Rust build tree — `src-tauri/target` holds a
+	// locked `app.exe` during a Tauri build/run, which crashes chokidar with EBUSY (standard
+	// Tauri+Vite setting).
+	server: { watch: { ignored: ['**/src-tauri/**'] } },
 	plugins: [
 		sveltekit({
 			compilerOptions: {
