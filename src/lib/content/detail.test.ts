@@ -46,6 +46,42 @@ describe('buildDetail', () => {
 		expect(detail.title).toBe('Alert');
 		expect(detail.meta).toContainEqual(['Category', 'origin']);
 	});
+
+	it('locale-aware: prose reads <base>_<loc>, falls back to _en, then a bare column', () => {
+		const d = {
+			name_en: 'Fireball',
+			name_uk: 'Вогняна куля',
+			text_en: 'A bright streak…',
+			text_uk: 'Яскравий промінь…',
+			material: 'bat guano', // legacy bare column (no _en) → still shown
+			higher_level: '+1d6 per slot',
+			level: '3',
+			school: 'evocation'
+		};
+		const uk = buildDetail(row(d), 'spell', undefined, 'uk');
+		expect(uk.title).toBe('Вогняна куля');
+		expect(uk.bodyHtml).toBe('Яскравий промінь…');
+		expect(uk.spell?.material).toBe('bat guano'); // bare fallback when no _uk/_en
+
+		const en = buildDetail(row(d), 'spell', undefined, 'en');
+		expect(en.title).toBe('Fireball');
+
+		// missing target locale → English fallback, never empty
+		const de = buildDetail(row(d), 'spell', undefined, 'de');
+		expect(de.title).toBe('Fireball');
+	});
+
+	it('locale-aware generic: localized prose columns never leak into the meta grid', () => {
+		const detail = buildDetail(
+			row({ name_en: 'Alert', name_uk: 'Пильність', text_uk: 'опис', category: 'origin' }, 'feat'),
+			'feat',
+			undefined,
+			'uk'
+		);
+		expect(detail.title).toBe('Пильність');
+		expect(detail.meta.map(([k]) => k)).not.toContain('Name Uk');
+		expect(detail.meta.map(([k]) => k)).not.toContain('Text Uk');
+	});
 });
 
 describe('entryMeta', () => {

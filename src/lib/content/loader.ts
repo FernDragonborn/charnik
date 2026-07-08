@@ -80,6 +80,12 @@ export interface ContentGraph {
 /** Locale column grammar: name_/text_ + a BCP-47-ish code (guardrail vs phantom locales). */
 const LOCALE_COL = /^(?:name|text)_([a-z]{2,3}(?:-[A-Za-z0-9]+)*)$/;
 
+/** Localized PROSE columns (`<base>_<loc>`). The strict per-type schema declares only name_/text_
+ *  en+uk, so `safeParse` STRIPS extra locales (name_de) and other prose fields (material_uk,
+ *  higher_level_uk). We re-attach these from the raw row so localized render + translation survive —
+ *  narrow to the prose bases so genuine junk columns still don't leak into `data` (→ the meta grid). */
+const PROSE_LOCALE_COL = /^(?:name|text|material|higher_level)_[a-z]{2,3}(?:-[A-Za-z0-9]+)*$/;
+
 function pushMap<K, V>(map: Map<K, V[]>, key: K, val: V): void {
 	const arr = map.get(key);
 	if (arr) arr.push(val);
@@ -204,6 +210,10 @@ export async function loadContent(
 					continue;
 				}
 				const data = res.data as Record<string, unknown>;
+				// re-attach localized prose columns the strict schema stripped (see PROSE_LOCALE_COL)
+				for (const [k, v] of Object.entries(raw))
+					if (PROSE_LOCALE_COL.test(k) && data[k] === undefined && v !== '' && v != null)
+						data[k] = v;
 				// precedence: per-row column (legacy) → file `#content-` header → fallback
 				const source = (data.source as string) || fileSource || 'unknown';
 				const rowSystems = data.systems as string[] | undefined;

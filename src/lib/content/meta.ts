@@ -64,6 +64,16 @@ export function parseContentDirectives(csv: string): ParsedDirectives {
 	return { directives, body: lines.slice(i).join('\n') };
 }
 
+/** Inverse of {@link parseContentDirectives}: re-assemble a full CSV file from a directive map + a
+ *  body. Emits UTF-8 BOM + CRLF (Excel/Cyrillic safety) and keeps the map's insertion order, so an
+ *  in-place rewrite (e.g. a saved translation re-stamping hash/updated-at) preserves the header shape. */
+export function stampDirectives(directives: Map<MetaKey, string>, body: string): string {
+	const BOM = String.fromCharCode(0xfeff);
+	const head = [...directives].map(([k, v]) => `#content-${k}: ${v}`).join('\r\n');
+	const crlfBody = body.replace(/\r\n?|\n/g, '\r\n');
+	return `${BOM}${head}\r\n${crlfBody}`;
+}
+
 export interface MetaIssue {
 	/** Display path of the offending file (root-relative). */
 	file: string;

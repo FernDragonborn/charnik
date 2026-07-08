@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Translations · V1 — list + full source article + target</title>
+		<style>
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--border: #272c37;
+				--border-strong: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bright: #ef6b78;
+				--accent-deep: #b3243a;
+				--gold: #caa24a;
+				--teal: #3bb8a6;
+				--display: 'Space Grotesk', system-ui, sans-serif;
+				--body: 'Inter', system-ui, sans-serif;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				height: 100vh;
+				display: flex;
+				flex-direction: column;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--body);
+				overflow: hidden;
+			}
+			/* topbar: just the crumb */
+			.topbar {
+				display: flex;
+				align-items: center;
+				padding: 12px 20px;
+				border-bottom: 1px solid var(--border);
+				background: var(--surface);
+			}
+			.crumb {
+				font-family: var(--display);
+				font-weight: 700;
+				font-size: 18px;
+			}
+			.crumb b {
+				color: var(--accent);
+			}
+			/* subbar: target language (moved to its own row) + type + search + progress */
+			.subbar {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				padding: 10px 20px;
+				border-bottom: 1px solid var(--border);
+				background: var(--surface);
+			}
+			.tlang {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.tlang .lbl {
+				font-size: 11px;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+				color: var(--muted);
+			}
+			.pill {
+				border: 1px solid var(--border-strong);
+				border-radius: 8px;
+				padding: 5px 12px;
+				background: var(--surface-2);
+				color: var(--text);
+				font-weight: 600;
+				font-size: 13px;
+				cursor: pointer;
+			}
+			.pill .arrow {
+				color: var(--muted);
+				margin-left: 6px;
+			}
+			.sep {
+				width: 1px;
+				height: 22px;
+				background: var(--border);
+			}
+			.type-sel {
+				font-family: var(--display);
+				font-weight: 600;
+				font-size: 13px;
+				color: var(--gold);
+			}
+			.search {
+				flex: 1;
+				max-width: 300px;
+				background: var(--surface-2);
+				border: 1px solid var(--border);
+				border-radius: 8px;
+				padding: 6px 12px;
+				color: var(--muted);
+				font-size: 13px;
+			}
+			.prog {
+				margin-left: auto;
+				font-size: 12px;
+				color: var(--muted);
+			}
+			.prog b {
+				color: var(--teal);
+			}
+			/* body: list | source article | target */
+			.body {
+				flex: 1;
+				display: grid;
+				grid-template-columns: 230px 1fr 1fr;
+				min-height: 0;
+			}
+			.pane {
+				overflow: auto;
+				min-height: 0;
+			}
+			.pane + .pane {
+				border-left: 1px solid var(--border);
+			}
+			/* list */
+			.list {
+				padding: 8px;
+			}
+			.item {
+				display: flex;
+				align-items: center;
+				gap: 9px;
+				padding: 8px 11px;
+				border-radius: 8px;
+				cursor: pointer;
+				font-size: 14px;
+			}
+			.item.active {
+				background: var(--surface-2);
+			}
+			.item.active .name {
+				color: var(--accent-bright);
+				font-weight: 600;
+			}
+			.mark {
+				width: 15px;
+				text-align: center;
+				font-size: 12px;
+			}
+			.todo {
+				color: var(--muted);
+			}
+			.done {
+				color: var(--teal);
+			}
+			/* source article — matches the compendium (WikiDetail): eyebrow, title, stat cells, prose */
+			.article {
+				padding: 22px 26px;
+			}
+			.panelabel {
+				font-size: 10px;
+				letter-spacing: 0.14em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin-bottom: 16px;
+			}
+			.eyebrow {
+				font-size: 11px;
+				letter-spacing: 0.16em;
+				text-transform: uppercase;
+				color: var(--accent-bright);
+			}
+			.title {
+				font-family: var(--display);
+				font-weight: 700;
+				font-size: 30px;
+				margin: 6px 0 3px;
+			}
+			.subtitle {
+				color: var(--muted);
+				font-size: 13px;
+				margin-bottom: 16px;
+			}
+			.stats {
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
+				gap: 8px;
+				margin-bottom: 16px;
+			}
+			.cell {
+				background: var(--surface);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 8px 12px;
+			}
+			.cell .k {
+				font-size: 9px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--muted);
+			}
+			.cell .v {
+				font-family: var(--display);
+				font-weight: 600;
+				font-size: 15px;
+				margin-top: 2px;
+			}
+			.band {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px 18px;
+				font-size: 13px;
+				color: var(--muted);
+				margin-bottom: 14px;
+			}
+			.band b {
+				color: var(--text);
+			}
+			.prose {
+				font-size: 15px;
+				line-height: 1.6;
+			}
+			.prose p {
+				margin: 0 0 12px;
+			}
+			.prose h4 {
+				font-family: var(--display);
+				font-size: 12px;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				color: var(--gold);
+				margin: 18px 0 6px;
+			}
+			.srcnote {
+				font-size: 11px;
+				color: var(--muted);
+				margin-top: 18px;
+				border-top: 1px solid var(--border);
+				padding-top: 10px;
+			}
+			/* target: only the translatable prose fields */
+			.target {
+				padding: 22px 26px;
+			}
+			.panelabel.t {
+				color: var(--accent-bright);
+			}
+			.flabel {
+				font-size: 10px;
+				letter-spacing: 0.1em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin: 16px 0 5px;
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+			.untr {
+				color: var(--gold);
+				font-size: 9px;
+				border: 1px solid var(--gold);
+				border-radius: 20px;
+				padding: 1px 7px;
+			}
+			.tinput {
+				width: 100%;
+				background: var(--surface);
+				border: 1px solid var(--border-strong);
+				border-radius: 8px;
+				color: var(--text);
+				font-family: var(--display);
+				font-weight: 700;
+				font-size: 24px;
+				padding: 6px 10px;
+			}
+			.tarea {
+				width: 100%;
+				min-height: 260px;
+				resize: vertical;
+				background: var(--surface);
+				border: 1px solid var(--border-strong);
+				border-radius: 8px;
+				color: var(--text);
+				font-family: var(--body);
+				font-size: 15px;
+				line-height: 1.55;
+				padding: 10px 12px;
+			}
+			.tinput:focus,
+			.tarea:focus {
+				outline: none;
+				border-color: var(--accent);
+			}
+			.actions {
+				display: flex;
+				gap: 10px;
+				margin-top: 16px;
+				align-items: center;
+			}
+			.btn {
+				font-family: var(--body);
+				font-weight: 600;
+				font-size: 14px;
+				border-radius: 8px;
+				padding: 9px 16px;
+				border: 1px solid var(--border-strong);
+				background: var(--surface-2);
+				color: var(--text);
+				cursor: pointer;
+			}
+			.btn.primary {
+				background: var(--accent-deep);
+				border-color: var(--accent-deep);
+				color: #fff;
+			}
+			.mdnote {
+				margin-left: auto;
+				font-size: 11px;
+				color: var(--muted);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="topbar">
+			<div class="crumb">Char<b>nik</b> · Translations</div>
+		</div>
+
+		<div class="subbar">
+			<div class="tlang">
+				<span class="lbl">Target</span>
+				<button class="pill">🇺🇦 Українська <span class="arrow">▾</span></button>
+			</div>
+			<div class="sep"></div>
+			<span class="type-sel">Spells ▾</span>
+			<input class="search" placeholder="Search articles…" />
+			<span class="prog"><b>12</b> / 342 translated</span>
+		</div>
+
+		<div class="body">
+			<!-- list -->
+			<div class="pane list">
+				<div class="item"><span class="mark todo">○</span><span class="name">Fire Bolt</span></div>
+				<div class="item active">
+					<span class="mark todo">○</span><span class="name">Fireball</span>
+				</div>
+				<div class="item"><span class="mark done">✓</span><span class="name">Shield</span></div>
+				<div class="item"><span class="mark done">✓</span><span class="name">Mage Armor</span></div>
+				<div class="item">
+					<span class="mark todo">○</span><span class="name">Magic Missile</span>
+				</div>
+				<div class="item">
+					<span class="mark todo">○</span><span class="name">Counterspell</span>
+				</div>
+				<div class="item"><span class="mark todo">○</span><span class="name">Misty Step</span></div>
+				<div class="item"><span class="mark done">✓</span><span class="name">Light</span></div>
+			</div>
+
+			<!-- SOURCE: the full compendium article (WikiDetail), nothing omitted -->
+			<div class="pane article">
+				<div class="panelabel">Source · English (read-only)</div>
+				<div class="eyebrow">Spell · SRD 5.2.1</div>
+				<div class="title">Fireball</div>
+				<div class="subtitle">Level 3 · Evocation · Sorcerer, Wizard</div>
+
+				<div class="stats">
+					<div class="cell">
+						<div class="k">Casting time</div>
+						<div class="v">1 Action</div>
+					</div>
+					<div class="cell">
+						<div class="k">Range</div>
+						<div class="v">150 feet</div>
+					</div>
+					<div class="cell">
+						<div class="k">Components</div>
+						<div class="v">V, S, M</div>
+					</div>
+					<div class="cell">
+						<div class="k">Duration</div>
+						<div class="v">Instantaneous</div>
+					</div>
+				</div>
+
+				<div class="band">
+					<span><b>Material:</b> a tiny ball of bat guano and sulfur</span>
+					<span><b>Save:</b> Dexterity</span>
+					<span><b>Damage:</b> 8d6 fire</span>
+					<span><b>Concentration:</b> No · <b>Ritual:</b> No</span>
+				</div>
+
+				<div class="prose">
+					<p>
+						A bright streak flashes from your pointing finger to a point you choose within range,
+						then blossoms with a low roar into an explosion of flame.
+					</p>
+					<p>
+						Each creature in a 20-foot-radius sphere centered on that point must make a
+						<b>Dexterity</b> saving throw. A target takes <b>8d6 fire damage</b> on a failed save,
+						or half as much on a successful one.
+					</p>
+					<p>
+						The fire spreads around corners. It ignites flammable objects in the area that aren't
+						being worn or carried.
+					</p>
+					<h4>At Higher Levels</h4>
+					<p>
+						When you cast this spell using a spell slot of 4th level or higher, the damage increases
+						by 1d6 for each slot level above 3rd.
+					</p>
+				</div>
+
+				<div class="srcnote">
+					The full article, exactly as in the compendium. The translator only edits the prose on the
+					right — stats (level, components, material…) aren't translated.
+				</div>
+			</div>
+
+			<!-- TARGET: only the translatable prose fields -->
+			<div class="pane target">
+				<div class="panelabel t">Your translation · Ukrainian</div>
+
+				<div class="flabel">Name</div>
+				<input class="tinput" value="Вогняна куля" />
+
+				<div class="flabel">Description <span class="untr">Markdown</span></div>
+				<textarea class="tarea">
+Яскравий промінь спалахує з вашого пальця до обраної точки в межах дистанції й розквітає глухим ревом у вибух полум'я.
+
+Кожна істота в сфері радіусом 20 футів робить рятунок **Спритності**, отримуючи **8к6 вогняної шкоди** при провалі, або вдвічі менше при успіху.
+
+Вогонь огинає кути. Він підпалює горючі предмети, які ніхто не носить і не тримає.</textarea>
+
+				<div class="actions">
+					<button class="btn primary">Save translation</button>
+					<button class="btn">Skip →</button>
+					<span class="mdnote">preview later · plain-text now</span>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

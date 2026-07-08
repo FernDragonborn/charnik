@@ -41,6 +41,7 @@
 	let sourceFilter = $state<Set<string>>(new Set()); // empty = all sources
 	let facetFilter = $state<Set<string>>(new Set()); // empty = all facet values
 	let adding = $state(false); // right pane shows the homebrew authoring form
+	let pickerOpen = $state(false); // the "Edit compendium" mode menu (translate / editor / add)
 
 	onMount(async () => {
 		await loadContentStore();
@@ -129,7 +130,9 @@
 			}))
 			.filter((x) => (seen.has(x.name) ? false : seen.add(x.name)));
 	});
-	const detail = $derived(selected ? buildDetail(selected, selectedType, availableTo) : null);
+	const detail = $derived(
+		selected ? buildDetail(selected, selectedType, availableTo, app.activeLocale) : null
+	);
 	const groupLabel = $derived(groupings.find((g) => g.key === groupBy)?.label ?? '');
 	const activeFilters = $derived(sourceFilter.size + facetFilter.size);
 
@@ -229,9 +232,34 @@
 				</details>
 			{/if}
 
-			<button class="add-button" onclick={() => (adding = true)}>
-				+ New {selectedType.replace(/_/g, ' ')}
-			</button>
+			<details class="mode-picker" bind:open={pickerOpen}>
+				<summary>✎ Edit compendium</summary>
+				<!-- One entry for all content-authoring modes; each opens the same 2-pane structure.
+				     Translate is live; Editor (edit every field in place) is still WIP. -->
+				<div class="mode-menu">
+					<button
+						class="mode-item"
+						onclick={() => {
+							pickerOpen = false;
+							goto(`${base}/translate`);
+						}}
+					>
+						<b>Translate</b><small>side-by-side prose translation</small>
+					</button>
+					<button
+						class="mode-item"
+						onclick={() => {
+							pickerOpen = false;
+							adding = true;
+						}}
+					>
+						<b>Add</b><small>author a new {selectedType.replace(/_/g, ' ')}</small>
+					</button>
+					<button class="mode-item wip" disabled>
+						<b>Editor</b><small>edit all fields <span class="wip-tag">WIP</span></small>
+					</button>
+				</div>
+			</details>
 		</div>
 
 		<div class="two-column">
@@ -362,8 +390,12 @@
 		font-size: 11px;
 		cursor: pointer;
 	}
-	.add-button {
+	.mode-picker {
 		margin-left: auto;
+		position: relative;
+	}
+	.mode-picker > summary {
+		list-style: none;
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 12px;
@@ -374,9 +406,65 @@
 		padding: 5px 12px;
 		cursor: pointer;
 	}
-	.add-button:hover {
+	.mode-picker > summary::-webkit-details-marker {
+		display: none;
+	}
+	.mode-picker[open] > summary {
 		background: var(--color-accent);
 		color: #fff;
+	}
+	.mode-menu {
+		position: absolute;
+		right: 0;
+		z-index: 20;
+		margin-top: 6px;
+		display: flex;
+		flex-direction: column;
+		gap: 4px;
+		min-width: 230px;
+		padding: 6px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 10px;
+		box-shadow: 0 10px 30px rgb(0 0 0 / 40%);
+	}
+	.mode-item {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1px;
+		text-align: left;
+		padding: 8px 11px;
+		border: 0;
+		border-radius: 7px;
+		background: transparent;
+		color: var(--color-text);
+		cursor: pointer;
+	}
+	.mode-item:hover:not(:disabled) {
+		background: var(--color-surface-2);
+	}
+	.mode-item b {
+		font-family: var(--font-display);
+		font-size: 14px;
+	}
+	.mode-item small {
+		font-size: 11px;
+		color: var(--color-text-muted);
+	}
+	.mode-item.wip {
+		opacity: 0.5;
+		cursor: default;
+	}
+	.wip-tag {
+		font-family: var(--font-mono);
+		font-size: 8px;
+		letter-spacing: 0.1em;
+		border: 1px solid var(--color-border-strong);
+		border-radius: 20px;
+		padding: 0 5px;
+		margin-left: 4px;
+		color: var(--color-resource);
 	}
 	.page {
 		display: flex;

@@ -41,6 +41,13 @@ const asText = (v: unknown) => (Array.isArray(v) ? v.join(', ') : String(v));
 const nonEmpty = (v: unknown) => v !== '' && v != null && !(Array.isArray(v) && v.length === 0);
 // skip noisy negative/placeholder values ("false", "none", "0") from the meta grid
 const meaningful = (v: unknown) => nonEmpty(v) && !/^(false|none|0)$/i.test(String(v));
+
+// Prose columns are localized `<base>_<loc>`. Read a locale with fallback: target → en → a legacy
+// bare column (so pre-localization data like a plain `material` still renders). PROSE_LOC matches the
+// suffixed variants so the meta grid can skip them (they're rendered as prose, not as k/v cells).
+const localized = (d: Record<string, unknown>, base: string, locale: string): string =>
+	String(d[`${base}_${locale}`] ?? d[`${base}_en`] ?? d[base] ?? '');
+const PROSE_LOC = /^(?:name|text|material|higher_level)_[a-z]{2,3}(?:-[A-Za-z0-9]+)*$/;
 const ordinal = (n: number) =>
 	`${n}${['th', 'st', 'nd', 'rd'][n % 10 > 3 || Math.floor(n / 10) === 1 ? 0 : n % 10]}`;
 
@@ -100,7 +107,11 @@ const withMetric = (range: string): string => {
 	return `${range} (${met} m)`;
 };
 
-function buildSpell(row: LoadedRow, availableTo?: SpellModel['availableTo']): SpellModel {
+function buildSpell(
+	row: LoadedRow,
+	availableTo?: SpellModel['availableTo'],
+	locale = 'en'
+): SpellModel {
 	const d = row.data;
 	const res = String(d.resolution ?? 'none');
 	const dmg = String(d.damage ?? '');
@@ -157,8 +168,8 @@ function buildSpell(row: LoadedRow, availableTo?: SpellModel['availableTo']): Sp
 			.filter(Boolean)
 			.join(', '),
 		...(availableTo ? { availableTo } : {}),
-		higherLevel: String(d.higher_level ?? ''),
-		material: String(d.material ?? '')
+		higherLevel: localized(d, 'higher_level', locale),
+		material: localized(d, 'material', locale)
 	};
 }
 
@@ -253,16 +264,17 @@ function buildMonster(row: LoadedRow): MonsterModel {
 export function buildDetail(
 	row: LoadedRow,
 	type: ContentType,
-	availableTo?: SpellModel['availableTo']
+	availableTo?: SpellModel['availableTo'],
+	locale = 'en'
 ): DetailModel {
 	const d = row.data;
 	if (type === 'monster') {
 		return {
 			eyebrow: '',
-			title: String(d.name_en),
+			title: localized(d, 'name', locale),
 			abilities: [],
 			meta: [],
-			bodyHtml: String(d.text_en ?? ''),
+			bodyHtml: localized(d, 'text', locale),
 			higherLevel: '',
 			source: `Source: ${sourceLabel(row.source)}`,
 			monster: buildMonster(row)
@@ -276,13 +288,13 @@ export function buildDetail(
 			]
 				.filter(Boolean)
 				.join(' · '),
-			title: String(d.name_en),
+			title: localized(d, 'name', locale),
 			abilities: [],
 			meta: [],
-			bodyHtml: String(d.text_en ?? ''),
-			higherLevel: String(d.higher_level ?? ''),
+			bodyHtml: localized(d, 'text', locale),
+			higherLevel: localized(d, 'higher_level', locale),
 			source: `Source: ${sourceLabel(row.source)}`,
-			spell: buildSpell(row, availableTo)
+			spell: buildSpell(row, availableTo, locale)
 		};
 	}
 	const skip = new Set(COMMON);
@@ -296,16 +308,16 @@ export function buildDetail(
 	if (abilities.length) ABILS.forEach((a) => skip.add(a));
 
 	const meta = Object.entries(d)
-		.filter(([k, v]) => !skip.has(k) && meaningful(v))
+		.filter(([k, v]) => !skip.has(k) && !PROSE_LOC.test(k) && meaningful(v))
 		.map(([k, v]) => [cap(k), String(v) === 'true' ? 'Yes' : asText(v)] as [string, string]);
 
 	return {
 		eyebrow,
-		title: String(d.name_en),
+		title: localized(d, 'name', locale),
 		abilities,
 		meta,
-		bodyHtml: String(d.text_en ?? ''),
-		higherLevel: String(d.higher_level ?? ''),
+		bodyHtml: localized(d, 'text', locale),
+		higherLevel: localized(d, 'higher_level', locale),
 		source: `Source: ${sourceLabel(row.source)}`
 	};
 }

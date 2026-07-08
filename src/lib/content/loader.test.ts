@@ -215,3 +215,22 @@ describe('loader — real content', () => {
 		}
 	);
 });
+
+describe('localized prose columns survive the strict schema', () => {
+	// The per-type schema declares only name_/text_ en+uk, so safeParse strips extra locales and
+	// extra prose fields; the loader re-attaches them (PROSE_LOCALE_COL) so localized render works.
+	it('keeps extra-locale + extra-prose columns (name_de, material_uk, higher_level_uk)', async () => {
+		const s = new MemoryStorage();
+		const head =
+			'id,systems,source,name_en,name_uk,name_de,text_en,material,material_uk,higher_level,higher_level_uk,level,school,casting_time,range,components,duration,concentration,ritual';
+		const line =
+			'fireball,5.5e,SRD 5.2.1,Fireball,Вогняна,Feuerball,desc,guano,гуано,+1d6,+1к6,3,evocation,Action,150 feet,V,Instantaneous,false,false';
+		await s.write('a/spells_srd.csv', [head, line].join('\n'));
+		const g = await loadContent(s, ['a']);
+		const d = g.get('spell:SRD 5.2.1:fireball')!.data;
+		expect(d.name_de).toBe('Feuerball');
+		expect(d.material_uk).toBe('гуано');
+		expect(d.higher_level_uk).toBe('+1к6');
+		expect(g.locales).toEqual(expect.arrayContaining(['de', 'en', 'uk']));
+	});
+});

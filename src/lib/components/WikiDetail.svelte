@@ -12,7 +12,29 @@
 	import { rollFormula } from '$lib/rules/dice';
 	import type { DetailModel } from '$lib/content/detail';
 
-	let { detail, actions }: { detail: DetailModel | null; actions?: Snippet } = $props();
+	/** In `editable` (translate) mode, the raw TARGET-locale prose being edited (bound from the parent).
+	 *  Only prose is editable — structural stats stay read-only. Empty fields show the source (the
+	 *  read-only `detail`, already localized with en fallback) as a placeholder so the translator sees
+	 *  what to translate. `higher_level` keeps the snake_case CSV base name. */
+	export interface WikiEditDraft {
+		name: string;
+		text: string;
+		material?: string;
+		higher_level?: string;
+	}
+
+	let {
+		detail,
+		actions,
+		editable = false,
+		draft
+	}: {
+		detail: DetailModel | null;
+		actions?: Snippet;
+		editable?: boolean;
+		/** Mutated in place (its properties are bound); the parent owns the $state object. */
+		draft?: WikiEditDraft;
+	} = $props();
 
 	// Some content mixes Markdown with raw HTML tables. marked won't process Markdown that
 	// sits inside/right after an HTML block, so: force blank lines around <table> (so the
@@ -34,6 +56,22 @@
 	const rollHp = (formula: string) => rollDice(formula, 'HP rolled');
 </script>
 
+<!-- Prose spots swap to inputs in editable mode (translate). Reused across all type branches so a
+     future layout change touches one place. Source (read-only `detail`) is the placeholder. -->
+{#snippet titleEl()}
+	{#if editable && draft}
+		<input class="edit-title" bind:value={draft.name} placeholder={detail?.title} />
+	{:else}
+		<h1>{detail?.title}</h1>
+	{/if}
+{/snippet}
+{#snippet bodyEl()}
+	{#if editable && draft}
+		<textarea class="edit-body" bind:value={draft.text} placeholder={detail?.bodyHtml}></textarea>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
+	{:else if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
+{/snippet}
+
 <article class="detail-body">
 	{#if detail?.spell}
 		{@const s = detail.spell}
@@ -42,7 +80,7 @@
 			<span>{s.edition}</span>
 		</div>
 		<div class="stat-title">
-			<h1>{detail.title}</h1>
+			{@render titleEl()}
 			{#if s.ritual}<span class="stat-chip util">Ritual</span>{/if}
 			{#if s.concentration}<span class="stat-chip save">Concentration</span>{/if}
 		</div>
@@ -96,10 +134,27 @@
 				{/if}
 			</div>
 		</div>
-		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
-		{#if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
-		{#if s.higherLevel}<div class="highlight">At higher levels — {s.higherLevel}</div>{/if}
-		{#if s.material}<div class="source-line">Material — {s.material}</div>{/if}
+		{@render bodyEl()}
+		{#if editable && draft}
+			{#if s.higherLevel}
+				<label class="edit-line">
+					<span>At higher levels</span>
+					<textarea
+						class="edit-body short"
+						bind:value={draft.higher_level}
+						placeholder={s.higherLevel}></textarea>
+				</label>
+			{/if}
+			{#if s.material}
+				<label class="edit-line">
+					<span>Material</span>
+					<input class="edit-inline" bind:value={draft.material} placeholder={s.material} />
+				</label>
+			{/if}
+		{:else}
+			{#if s.higherLevel}<div class="highlight">At higher levels — {s.higherLevel}</div>{/if}
+			{#if s.material}<div class="source-line">Material — {s.material}</div>{/if}
+		{/if}
 		<div class="source-line">{detail.source} · CC-BY-4.0</div>
 	{:else if detail?.monster}
 		{@const m = detail.monster}
@@ -107,7 +162,7 @@
 			<span>Monster</span>
 			<span><span class="monster-type">{m.type}</span> · {m.edition}</span>
 		</div>
-		<h1>{detail.title}</h1>
+		{@render titleEl()}
 		<div class="content-cols">
 			<div class="detail-panel">
 				<div class="panel-header">Vitals</div>
@@ -165,12 +220,11 @@
 				{/each}
 			</div>
 		{/if}
-		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
-		{#if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
+		{@render bodyEl()}
 		<div class="source-line">{detail.source} · CC-BY-4.0</div>
 	{:else if detail}
 		<div class="deyebrow">{detail.eyebrow}</div>
-		<h1>{detail.title}</h1>
+		{@render titleEl()}
 		{#if actions}<div class="dactions">{@render actions()}</div>{/if}
 		{#if detail.abilities.length}
 			<div class="abilities">
@@ -193,9 +247,16 @@
 				{/each}
 			</div>
 		{/if}
-		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
-		{#if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
-		{#if detail.higherLevel}
+		{@render bodyEl()}
+		{#if editable && draft && detail.higherLevel}
+			<label class="edit-line">
+				<span>At higher levels</span>
+				<textarea
+					class="edit-body short"
+					bind:value={draft.higher_level}
+					placeholder={detail.higherLevel}></textarea>
+			</label>
+		{:else if detail.higherLevel}
 			<div class="highlight">At higher levels — {detail.higherLevel}</div>
 		{/if}
 		<div class="source-line">{detail.source} · CC-BY-4.0</div>
@@ -210,6 +271,64 @@
 		font-weight: 700;
 		font-size: 30px;
 		margin: 6px 0 12px;
+	}
+	/* ---- editable (translate) inputs — prose spots only; structural stays read-only ---- */
+	.edit-title {
+		width: 100%;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: 28px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 8px;
+		color: var(--color-text);
+		padding: 4px 10px;
+		margin: 4px 0 12px;
+	}
+	.edit-body {
+		width: 100%;
+		min-height: 180px;
+		resize: vertical;
+		font-family: var(--font-body);
+		font-size: 14px;
+		line-height: 1.5;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 8px;
+		color: var(--color-text);
+		padding: 10px 12px;
+	}
+	.edit-body.short {
+		min-height: 70px;
+	}
+	.edit-line {
+		display: block;
+		margin: 10px 0;
+	}
+	.edit-line > span {
+		display: block;
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		margin-bottom: 4px;
+	}
+	.edit-inline {
+		width: 100%;
+		font-family: var(--font-body);
+		font-size: 14px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 8px;
+		color: var(--color-text);
+		padding: 7px 10px;
+	}
+	.edit-title:focus,
+	.edit-body:focus,
+	.edit-inline:focus {
+		outline: none;
+		border-color: var(--color-accent);
 	}
 	.dactions {
 		display: flex;

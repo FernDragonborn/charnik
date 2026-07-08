@@ -166,7 +166,8 @@
 	</div>
 </header>
 
-<main id="main" tabindex="-1">
+<!-- Translate mode needs the full viewport width (3 columns); other routes stay centred to 1040px. -->
+<main id="main" tabindex="-1" class:full-bleed={page.url.pathname.startsWith(`${base}/translate`)}>
 	{@render children()}
 </main>
 
@@ -280,6 +281,10 @@
 		overflow: auto;
 		padding-block: var(--space-5);
 		padding-inline: max(var(--space-5), calc((100% - 1040px) / 2));
+	}
+	/* full-bleed routes (translate): use the whole width, keep only a small edge gutter */
+	main.full-bleed {
+		padding-inline: var(--space-5);
 	}
 	:global(body) {
 		height: 100dvh;

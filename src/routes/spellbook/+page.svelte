@@ -18,6 +18,7 @@
 		editionLabel,
 		type Entry
 	} from '$lib/content/detail';
+	import { app } from '$lib/stores/app.svelte';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
 	import Chip from '$lib/components/Chip.svelte';
@@ -81,7 +82,9 @@
 		}));
 	});
 
-	const detail = $derived(selected ? buildDetail(selected, 'spell') : null);
+	const detail = $derived(
+		selected ? buildDetail(selected, 'spell', undefined, app.activeLocale) : null
+	);
 	const selEntry = $derived(selected ? entryOf.get(selected.effectiveId) : undefined);
 	const sheet = $derived(graph && character ? deriveSheet(character, graph) : null);
 	// only LEVELED prepared spells count toward the cap — cantrips are always-known, not prepared
