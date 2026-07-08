@@ -26,6 +26,7 @@ import {
 import { appConfigDir, documentDir, join } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
+import { openPath } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
 
 /** The user's data root is a VISIBLE, self-named folder (not a hidden per-app dir) — see
@@ -85,6 +86,28 @@ export async function grantDataDirScope(dir: string): Promise<void> {
 export async function pickDataDir(): Promise<string | null> {
 	const chosen = await open({ directory: true, multiple: false });
 	return typeof chosen === 'string' ? chosen : null;
+}
+
+/** The active data dir (the saved choice or the default) — for display in settings. */
+export async function currentDataDir(): Promise<string> {
+	return resolveDataDir();
+}
+
+/** Open the active data folder in the OS file manager (shows content/ + characters/). */
+export async function openDataDir(): Promise<void> {
+	await openPath(await resolveDataDir());
+}
+
+/** Prompt for a new data folder (picked parent → …/charnik), grant scope + persist it. Returns the
+ *  new dir, or null if cancelled. The caller should reload so content re-seeds/loads from there. */
+export async function changeDataDir(): Promise<string | null> {
+	const parent = await pickDataDir();
+	if (!parent) return null;
+	const sep = parent.includes('\\') ? '\\' : '/';
+	const dir = `${parent.replace(/[\\/]+$/, '')}${sep}${DATA_DIR_NAME}`;
+	await grantDataDirScope(dir);
+	await setDataDirOverride(dir);
+	return dir;
 }
 
 export class TauriStorage implements Storage {

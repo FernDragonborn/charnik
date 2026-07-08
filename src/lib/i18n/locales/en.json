@@ -21,7 +21,13 @@
 		"language": "Language",
 		"theme": "Theme",
 		"themeDark": "Dark",
-		"themeLight": "Light"
+		"themeLight": "Light",
+		"data": {
+			"title": "Data folder",
+			"desc": "Charnik keeps your characters and content here as plain files you can open, edit, and back up.",
+			"open": "Open content folder",
+			"change": "Change folder…"
+		}
 	},
 	"sheet": {
 		"hitPoints": "Hit points",
