@@ -1400,6 +1400,13 @@ decomposition + RollButton). Ordering + open decisions below.
   sites, but the shared `base` (name_en/text_en/systems/source/effects) means common-column reads
   compile un-narrowed; only type-specific reads need `row.type === 'x'` narrowing (mostly at sites
   that already know the type). `svelte-check` drives the pass.
+- [ ] **LOC-CHECK · Flag partial/mis-filled translations (loader content-health)** — the loader
+  discovers locales but doesn't verify a locale's rows are actually complete. Add a check that emits a
+  WARN `issue` (never throws — same channel as bad rows) when a row is **partially** translated for a
+  locale: it has SOME `<base>_<loc>` filled but is MISSING a `<base>_<loc>` whose `<base>_en` is
+  non-empty. That's the "someone mis-filled the table" signal (started a translation, missed a field);
+  a fully-untranslated row is NOT flagged (normal — EN fallback). Keyed off `PROSE_BASES`; surfaced in
+  content-health + (later) the translate list's ~ marker. Low-noise by construction.
 - [ ] **LINT-1 · Ban type-escape hatches** — tsconfig is already max-strict (`strict` +
   `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`); the hole is lint. Add:
   `@typescript-eslint/no-non-null-assertion`, keep `no-explicit-any` + `ban-ts-comment` (errors),
