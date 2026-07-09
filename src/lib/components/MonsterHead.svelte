@@ -1,10 +1,9 @@
 <script lang="ts">
 	// The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the
 	// senses/defenses band. Structural stats are read-only; only the title is editable (translate).
-	import { toast } from 'svelte-sonner';
-	import { rollFormula } from '$lib/rules/dice';
 	import type { DetailModel, MonsterModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
+	import RollButton from './RollButton.svelte';
 
 	let {
 		detail,
@@ -17,9 +16,6 @@
 		editable?: boolean;
 		draft?: WikiEditDraft | undefined;
 	} = $props();
-
-	const rollHp = (formula: string) =>
-		toast(`HP rolled — ${rollFormula(formula).total}`, { description: formula });
 </script>
 
 <div class="detail-eyebrow">
@@ -51,8 +47,8 @@
 				<span>
 					{monster.hp}
 					{#if monster.hpFormula}<span class="dim">{monster.hpFormula}</span>
-						<button class="hp-dice" title="Roll HP" onclick={() => rollHp(monster.hpFormula)}
-							>🎲</button
+						<RollButton formula={monster.hpFormula} label="HP rolled" variant="icon" title="Roll HP"
+							>🎲</RollButton
 						>{/if}
 				</span>
 			</div>
@@ -178,14 +174,6 @@
 		font-weight: 700;
 		font-size: 26px;
 		color: var(--color-accent-bright);
-	}
-	.hp-dice {
-		border: 0;
-		background: transparent;
-		color: var(--color-accent-bright);
-		cursor: pointer;
-		font-size: 12px;
-		padding: 0 0 0 2px;
 	}
 	.ability-row {
 		display: grid;

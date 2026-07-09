@@ -2,10 +2,9 @@
 	// The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration
 	// chips), and the effect/casting strip. Structural stats are read-only; only the title is editable
 	// (translate). Prose lives BELOW in ArticleProse; the dispatcher (WikiDetail) stacks them.
-	import { toast } from 'svelte-sonner';
-	import { rollFormula } from '$lib/rules/dice';
 	import type { DetailModel, SpellModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
+	import RollButton from './RollButton.svelte';
 
 	let {
 		detail,
@@ -18,11 +17,6 @@
 		editable?: boolean;
 		draft?: WikiEditDraft | undefined;
 	} = $props();
-
-	// roll a dice formula ("8d6", "1d20") and toast the total (shared roller)
-	function rollDice(formula: string, label: string) {
-		toast(`${label} — ${rollFormula(formula).total}`, { description: formula });
-	}
 </script>
 
 <div class="detail-eyebrow">
@@ -48,14 +42,11 @@
 			{/if}
 			<div class="spell-effect-rolls">
 				{#if spell.resChip === 'hit'}
-					<button
-						class="spell-effect-roll"
-						onclick={() => rollDice('1d20', `${detail.title} — to hit`)}>🎲 d20</button
-					>
+					<RollButton formula="1d20" label={`${detail.title} — to hit`}>🎲 d20</RollButton>
 				{/if}
 				{#if spell.dice}
-					<button class="spell-effect-roll" onclick={() => rollDice(spell.dice, detail.title)}
-						>🎲 {spell.resChip === 'auto' ? 'Heal' : 'Dmg'}</button
+					<RollButton formula={spell.dice} label={detail.title}
+						>🎲 {spell.resChip === 'auto' ? 'Heal' : 'Dmg'}</RollButton
 					>
 				{/if}
 			</div>
@@ -206,19 +197,6 @@
 		flex-wrap: wrap;
 		justify-content: center;
 		gap: 5px;
-	}
-	.spell-effect-roll {
-		font-family: var(--font-mono);
-		font-size: 12px;
-		color: var(--color-accent-bright);
-		border: 1px solid var(--color-accent);
-		border-radius: 6px;
-		padding: 3px 10px;
-		cursor: pointer;
-		background: transparent;
-	}
-	.spell-effect-roll:hover {
-		background: var(--color-accent-soft);
 	}
 	.stat-cells {
 		display: grid;

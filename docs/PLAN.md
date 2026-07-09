@@ -1389,8 +1389,12 @@ decomposition + RollButton). Ordering + open decisions below.
   Safety net: `WikiDetail.browser.test.ts` (P9 infra) asserting each type/mode renders the right
   fields + inputs, plus per-type screenshots for CSS (moving ~470 scoped lines into 4 files is
   the regression risk).
-- [ ] **WD-2 · Extract `RollButton`** — shared roll affordance (plain click = `rollFormula` +
-  toast; ctrl/alt-click = `openTray(pool)` stub until DiceTray). Replaces every inline 🎲 + Cast.
+- [x] **WD-2 · Extract `RollButton`** — DONE. shared roll affordance (plain click = `rollFormula` +
+  toast; ctrl/alt-click = `openDiceTray(request)` CONTRACT — `$lib/dice/tray.svelte`, a registry with an
+  instant-roll fallback until a real tray registers, so callers aren't nailed to a concrete tray).
+  Pill/icon variants own the styling; replaced the inline spell-effect (d20/Dmg/Heal) + monster HP 🎲.
+  Spellbook Cast left alone (it's a play-state action, not a dice roll). Verified by screenshot + a
+  contract test.
 - [ ] **TYPE-2 · Typed `LoadedRow` (the loader keeps the type it already knew)** — the loader
   reads `#content-type:` (or filename) and runs the typed `parseRow(type, raw)`, then **discards
   the type** into `data: Record<string, unknown>`. Make `LoadedRow` a discriminated union on
