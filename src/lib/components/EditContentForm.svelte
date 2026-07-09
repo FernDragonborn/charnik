@@ -85,7 +85,7 @@
 				return;
 			}
 			resetContentGraph();
-			onsave(res.id!);
+			if (res.id) onsave(res.id);
 		} finally {
 			saving = false;
 		}

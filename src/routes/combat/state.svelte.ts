@@ -180,15 +180,15 @@ class CombatVM {
 	};
 
 	// configurable passive-sense skills (Pin skills)
-	passives = $derived(
-		this.sheet
-			? this.passiveSkills.map((k) => ({
-					key: k,
-					name: titleCase(k),
-					comp: passiveScore(this.sheet!.skills[k])
-				}))
-			: []
-	);
+	passives = $derived.by(() => {
+		const sheet = this.sheet;
+		if (!sheet) return [];
+		return this.passiveSkills.map((k) => ({
+			key: k,
+			name: titleCase(k),
+			comp: passiveScore(sheet.skills[k])
+		}));
+	});
 	togglePassive = (k: SkillId) => {
 		this.passiveSkills = this.passiveSkills.includes(k)
 			? this.passiveSkills.filter((x) => x !== k)
@@ -297,22 +297,22 @@ class CombatVM {
 			if (alt) {
 				// tray on the TO-HIT (the spell attack roll); Roll then fires the damage after
 				this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e);
-				if (hasDmg) this.tray.queueDamage(`${r.name} damage`, { ...r.dmg! }, 0);
+				if (hasDmg) this.tray.queueDamage(`${r.name} damage`, { ...(r.dmg ?? {}) }, 0);
 			} else {
 				// instant: to-hit + damage → one combined 3-line entry
 				this.tray.pushRoll(
 					`${r.name} (spell attack)`,
 					rollPool({ 20: 1 }, toHit),
-					hasDmg ? rollPool(r.dmg!, 0) : undefined
+					hasDmg ? rollPool(r.dmg ?? {}, 0) : undefined
 				);
 			}
 		} else if (hasDmg) {
 			// save / auto spell: damage, or (auto) healing with the spellcasting mod
 			const heal = r.res === 'auto';
 			const label = `${r.name} ${heal ? 'healing' : 'damage'}`;
-			const mod = heal && caster ? this.sheet!.abilities[caster.ability].mod : 0;
-			if (alt) this.openRoll(label, r.dmg!, mod, e);
-			else this.tray.rollDiceNow(label, r.dmg!, mod);
+			const mod = heal && caster ? (this.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
+			if (alt) this.openRoll(label, r.dmg ?? {}, mod, e);
+			else this.tray.rollDiceNow(label, r.dmg ?? {}, mod);
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
 			this.tray.logMarker(`Cast ${r.name}`);

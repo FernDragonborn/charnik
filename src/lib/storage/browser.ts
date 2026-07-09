@@ -91,7 +91,8 @@ export class BrowserStorage implements Storage {
 			if (!key.startsWith(prefix) || key === d) continue;
 			const rest = key.slice(prefix.length);
 			if (rest.includes('/')) continue; // not an immediate child
-			const n = (await this.#get(key))!;
+			const n = await this.#get(key);
+			if (!n) continue; // key came from getAllKeys, but tolerate a concurrent delete
 			out.push({ path: key, name: name(key), isDir: n.isDir });
 		}
 		return out.sort((a, b) => a.name.localeCompare(b.name));

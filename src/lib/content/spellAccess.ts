@@ -66,13 +66,12 @@ export function buildSpellAccess(graph: ContentGraph): SpellAccess {
 		const key = `${cls.effectiveId}|${spell.effectiveId}`;
 		if (seen.has(key)) return;
 		seen.add(key);
-		(
-			forClass.get(cls.effectiveId) ??
-			forClass.set(cls.effectiveId, new Set()).get(cls.effectiveId)!
-		).add(spell.effectiveId);
-		(
-			forSpell.get(spell.effectiveId) ?? forSpell.set(spell.effectiveId, []).get(spell.effectiveId)!
-		).push({ classId: cls.id, classEffectiveId: cls.effectiveId, via });
+		let classSpells = forClass.get(cls.effectiveId);
+		if (!classSpells) forClass.set(cls.effectiveId, (classSpells = new Set()));
+		classSpells.add(spell.effectiveId);
+		let spellClasses = forSpell.get(spell.effectiveId);
+		if (!spellClasses) forSpell.set(spell.effectiveId, (spellClasses = []));
+		spellClasses.push({ classId: cls.id, classEffectiveId: cls.effectiveId, via });
 	};
 
 	// spell-side: inline `classes` column

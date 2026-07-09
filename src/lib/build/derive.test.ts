@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseSpeciesBoostChoice, asiBoost, speciesFixedAbilities, buildIssues } from './derive';
-import type { LoadedRow } from '../content/loader';
+import { makeRow } from '../content/test-utils';
 
 describe('parseSpeciesBoostChoice', () => {
 	it('parses "AxB" into { amount: A, count: B } and rejects junk', () => {
@@ -25,7 +25,7 @@ describe('asiBoost', () => {
 });
 
 describe('speciesFixedAbilities', () => {
-	const row = (effects: string[]) => ({ data: { effects } }) as unknown as LoadedRow;
+	const row = (effects: string[]) => makeRow('species', { effects });
 	it('collects the abilities a flat-bonus effect raises, ignoring non-ability targets', () => {
 		const set = speciesFixedAbilities([row(['flat-bonus:cha+2', 'flat-bonus:ac+1']), undefined]);
 		expect([...set]).toEqual(['cha']); // ac is not an ability

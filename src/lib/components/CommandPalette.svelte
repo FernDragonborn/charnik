@@ -150,7 +150,8 @@
 		/>
 		<ul id="cmd-list" class="list" role="listbox">
 			{#each items as it, i (it.key)}
-				{#if i === 0 || groupOf(items[i - 1]!) !== groupOf(it)}
+				{@const prev = items[i - 1]}
+				{#if i === 0 || (prev && groupOf(prev) !== groupOf(it))}
 					<li class="group" role="presentation">{groupOf(it)}</li>
 				{/if}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->

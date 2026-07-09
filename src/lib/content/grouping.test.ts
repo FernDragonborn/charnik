@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { groupingsFor, facetFor, distinctValues, groupRows } from './grouping';
-import type { LoadedRow } from './loader';
 import type { ContentType } from './schemas';
+import { makeRow } from './test-utils';
 
 /** A minimal LoadedRow for grouping tests (only `type`, `source`, `data` matter here). */
 const row = (data: Record<string, unknown>, type: ContentType = 'spell', source = 'SRD 5.2.1') =>
-	({ type, source, id: String(data.id ?? data.name_en ?? ''), data }) as unknown as LoadedRow;
+	makeRow(type, data, source);
 
 describe('groupingsFor', () => {
 	it('appends Source + A–Z and never duplicates Source', () => {

@@ -55,12 +55,14 @@
 	const isUrl = (k: MetaKey) => k === 'url' || k === 'author-url';
 
 	function setLicense(file: string, value: string) {
-		fills[file]!.license = value;
+		const fill = fills[file];
+		if (fill) fill.license = value;
 		licCustom[file] = false;
 	}
 	function pickCustomLicense(file: string) {
 		licCustom[file] = true;
-		fills[file]!.license = '';
+		const fill = fills[file];
+		if (fill) fill.license = '';
 	}
 
 	function save() {
@@ -68,8 +70,10 @@
 		const payload: FilledMeta = {};
 		for (const issue of issues) {
 			const f = issue.file;
-			payload[f] = { ...fills[f] };
-			if (sysSel[f]!.length) payload[f]!.systems = sysSel[f]!.join(',');
+			const entry: FilledMeta[string] = { ...fills[f] };
+			const sys = sysSel[f];
+			if (sys?.length) entry.systems = sys.join(',');
+			payload[f] = entry;
 		}
 		onFillAndSave(payload);
 	}
@@ -102,78 +106,81 @@
 
 	<div class="files">
 		{#each issues as issue (issue.file)}
+			{@const fill = fills[issue.file]}
 			<section class="file">
 				<h3 class="file-name">{issue.file}</h3>
 
 				<span class="dialog-label section-label">{$_('contentMeta.needFromYou')}</span>
-				<div class="fields">
-					{#each EDITABLE_KEYS as key (key)}
-						{@const optional = OPTIONAL_KEYS.includes(key)}
-						<div class="field" class:wide={key === 'license'}>
-							<span class="field-label" class:optional-tag={optional}>
-								{keyLabel(key)}{#if optional}<span class="optional-label">
-										{$_('contentMeta.optional')}</span
-									>{/if}
-							</span>
+				{#if fill}
+					<div class="fields">
+						{#each EDITABLE_KEYS as key (key)}
+							{@const optional = OPTIONAL_KEYS.includes(key)}
+							<div class="field" class:wide={key === 'license'}>
+								<span class="field-label" class:optional-tag={optional}>
+									{keyLabel(key)}{#if optional}<span class="optional-label">
+											{$_('contentMeta.optional')}</span
+										>{/if}
+								</span>
 
-							{#if key === 'license'}
-								<div class="lic-list" role="radiogroup" aria-label={keyLabel(key)}>
-									{#each LICENSES as lic (lic)}
+								{#if key === 'license'}
+									<div class="lic-list" role="radiogroup" aria-label={keyLabel(key)}>
+										{#each LICENSES as lic (lic)}
+											<button
+												type="button"
+												class="license-card"
+												role="radio"
+												aria-checked={!licCustom[issue.file] && fill.license === lic}
+												class:selected={!licCustom[issue.file] && fill.license === lic}
+												onclick={() => setLicense(issue.file, lic)}
+											>
+												<span class="lic-id">{lic}</span>
+												<span class="lic-desc">{$_(`contentMeta.licenses.${lic}`)}</span>
+											</button>
+										{/each}
 										<button
 											type="button"
 											class="license-card"
 											role="radio"
-											aria-checked={!licCustom[issue.file] && fills[issue.file]!.license === lic}
-											class:selected={!licCustom[issue.file] && fills[issue.file]!.license === lic}
-											onclick={() => setLicense(issue.file, lic)}
+											aria-checked={licCustom[issue.file]}
+											class:selected={licCustom[issue.file]}
+											onclick={() => pickCustomLicense(issue.file)}
 										>
-											<span class="lic-id">{lic}</span>
-											<span class="lic-desc">{$_(`contentMeta.licenses.${lic}`)}</span>
+											<span class="lic-id">{$_('contentMeta.customLicense')}</span>
 										</button>
-									{/each}
-									<button
-										type="button"
-										class="license-card"
-										role="radio"
-										aria-checked={licCustom[issue.file]}
-										class:selected={licCustom[issue.file]}
-										onclick={() => pickCustomLicense(issue.file)}
-									>
-										<span class="lic-id">{$_('contentMeta.customLicense')}</span>
-									</button>
-									{#if licCustom[issue.file]}
-										<input
-											class="field-input"
-											type="text"
-											bind:value={fills[issue.file]!.license}
-											placeholder={$_('contentMeta.customLicensePlaceholder')}
-										/>
-									{/if}
-								</div>
-							{:else if key === 'systems'}
-								<div class="checks">
-									{#each EDITIONS as ed (ed)}
-										<label class="check">
-											<input type="checkbox" value={ed} bind:group={sysSel[issue.file]} />
-											{ed}
-										</label>
-									{/each}
-								</div>
-							{:else}
-								<input
-									class="field-input"
-									type={isUrl(key) ? 'url' : 'text'}
-									bind:value={fills[issue.file]![key]}
-									placeholder={key === 'source'
-										? $_('contentMeta.sourcePlaceholder')
-										: isUrl(key)
-											? $_('contentMeta.urlPlaceholder')
-											: $_('contentMeta.authorPlaceholder')}
-								/>
-							{/if}
-						</div>
-					{/each}
-				</div>
+										{#if licCustom[issue.file]}
+											<input
+												class="field-input"
+												type="text"
+												bind:value={fill.license}
+												placeholder={$_('contentMeta.customLicensePlaceholder')}
+											/>
+										{/if}
+									</div>
+								{:else if key === 'systems'}
+									<div class="checks">
+										{#each EDITIONS as ed (ed)}
+											<label class="check">
+												<input type="checkbox" value={ed} bind:group={sysSel[issue.file]} />
+												{ed}
+											</label>
+										{/each}
+									</div>
+								{:else}
+									<input
+										class="field-input"
+										type={isUrl(key) ? 'url' : 'text'}
+										bind:value={fill[key]}
+										placeholder={key === 'source'
+											? $_('contentMeta.sourcePlaceholder')
+											: isUrl(key)
+												? $_('contentMeta.urlPlaceholder')
+												: $_('contentMeta.authorPlaceholder')}
+									/>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{/if}
 
 				{#if issue.missingAuto.length}
 					<div class="auto">

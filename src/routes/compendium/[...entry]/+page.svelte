@@ -126,7 +126,7 @@
 		return getSpellAccess(graph)
 			.classesForSpell(selected.effectiveId)
 			.map((e) => ({
-				name: String(graph!.get(e.classEffectiveId)?.data.name_en ?? e.classId),
+				name: String(graph?.get(e.classEffectiveId)?.data.name_en ?? e.classId),
 				homebrew: e.via === 'spell-list'
 			}))
 			.filter((x) => (seen.has(x.name) ? false : seen.add(x.name)));

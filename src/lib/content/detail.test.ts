@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { sourceLabel, editionLabel, buildDetail, entryMeta } from './detail';
-import type { LoadedRow } from './loader';
 import type { ContentType } from './schemas';
+import { makeRow } from './test-utils';
 
 const row = (data: Record<string, unknown>, type: ContentType = 'spell', source = 'SRD 5.2.1') =>
-	({ type, source, id: String(data.id ?? data.name_en ?? ''), data }) as unknown as LoadedRow;
+	makeRow(type, data, source);
 
 describe('sourceLabel', () => {
 	it('maps SRD tags to friendly D&D edition names, passes others through', () => {

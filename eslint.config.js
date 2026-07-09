@@ -20,10 +20,22 @@ export default ts.config(
 				'error',
 				{ argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
 			],
+			// Ban the type-escape hatches (recommended already errors on `any` + ts-comments; this adds
+			// the non-null `!`, which silently defeats strict null-checks). `noUncheckedIndexedAccess` is
+			// on, so handle absence explicitly (`?.`, a guard, `?? fallback`) instead of asserting it away.
+			'@typescript-eslint/no-non-null-assertion': 'error',
 			// local Maps inside $derived computations aren't reactive state — plain Map is correct
 			'svelte/prefer-svelte-reactivity': 'off',
 			// internal links prepend `base` manually (SPA under a subpath) — intentional
 			'svelte/no-navigation-without-resolve': 'off'
+		}
+	},
+	{
+		// tests build deliberately-partial / invalid inputs and assert on array indices; the non-null
+		// `!` after a length/shape assertion is a pragmatic test idiom, not a production escape hatch.
+		files: ['**/*.test.ts'],
+		rules: {
+			'@typescript-eslint/no-non-null-assertion': 'off'
 		}
 	},
 	{

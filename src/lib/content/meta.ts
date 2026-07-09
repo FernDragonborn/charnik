@@ -54,12 +54,14 @@ export function parseContentDirectives(csv: string): ParsedDirectives {
 	const lines = csv.split('\n');
 	let i = 0;
 	for (; i < lines.length; i++) {
-		let line = lines[i]!.replace(/\r$/, '');
+		let line = (lines[i] ?? '').replace(/\r$/, '');
 		if (i === 0 && line.charCodeAt(0) === 0xfeff) line = line.slice(1); // strip a leading BOM
 		if (line.trim() === '') continue; // allow blank spacer lines inside the header block
 		const m = DIRECTIVE.exec(line);
-		if (!m) break; // first real (non-directive) line → body starts here
-		directives.set(m[1]!.toLowerCase() as MetaKey, m[2]!.trim());
+		const key = m?.[1];
+		const value = m?.[2];
+		if (key === undefined || value === undefined) break; // first real (non-directive) line → body
+		directives.set(key.toLowerCase() as MetaKey, value.trim());
 	}
 	return { directives, body: lines.slice(i).join('\n') };
 }
