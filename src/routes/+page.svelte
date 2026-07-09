@@ -3,8 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
-	import { dev } from '$app/environment';
-	import { env } from '$env/dynamic/public';
+	import { isDemo } from '$lib/config/demo';
 	import { _ } from '$lib/i18n';
 	import {
 		characters,
@@ -13,10 +12,7 @@
 		removeCharacter
 	} from '$lib/character/store.svelte';
 
-	// Show the demo banner on the hosted web demo (the Pages build carries the `/charnik` base path),
-	// in dev (so it can be previewed), or whenever `PUBLIC_DEMO=true` is set — but NOT in the shipped
-	// desktop app (base '', not dev, no env flag).
-	const isDemo = env.PUBLIC_DEMO === 'true' || dev || base !== '';
+	const demo = isDemo();
 
 	let loading = $state(true);
 	let error = $state('');
@@ -46,7 +42,7 @@
 		<a class="new-btn" href="{base}/build">{$_('roster.newCharacter')}</a>
 	</div>
 
-	{#if isDemo}
+	{#if demo}
 		<aside class="demobanner">
 			<div class="db-badge">{$_('demo.badge')}</div>
 			<h2 class="db-title">{$_('demo.title')}</h2>

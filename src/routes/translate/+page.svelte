@@ -17,8 +17,14 @@
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail, { type WikiEditDraft } from '$lib/components/WikiDetail.svelte';
 	import { app } from '$lib/stores/app.svelte';
+	import { isReadOnlyContent } from '$lib/config/demo';
+	import { _ } from '$lib/i18n';
 
 	const SOURCE_LOCALE = 'en'; // fixed for now; a "translate from" picker comes later
+	// A demo build is read-only for content: browse + preview edits, but saving is blocked (the
+	// shipped SRD isn't writable in the hosted demo). Not a bare platform gate — the real web build
+	// writes; only a demo flag (never desktop) opts out.
+	const demo = isReadOnlyContent();
 
 	const graph = $derived(content.graph);
 	const targetLocale = $derived(app.activeLocale);
@@ -86,6 +92,10 @@
 
 	async function save() {
 		if (!selected || saving) return;
+		if (demo) {
+			toast($_('demo.readonly'));
+			return;
+		}
 		saving = true;
 		try {
 			await saveTranslation(getUserStorage(), selected, targetLocale, {
@@ -149,11 +159,15 @@
 						app language (top-right) to translate into another language.
 					</p>
 				{:else if selected}
-					<WikiDetail detail={targetDetail} editable {draft} />
+					<WikiDetail detail={targetDetail} editable={!demo} {draft} />
 					<div class="save-row">
-						<button class="save" onclick={save} disabled={saving}>
-							{saving ? 'Saving…' : 'Save translation'}
-						</button>
+						{#if demo}
+							<p class="demo-note">{$_('demo.readonly')}</p>
+						{:else}
+							<button class="save" onclick={save} disabled={saving}>
+								{saving ? 'Saving…' : 'Save translation'}
+							</button>
+						{/if}
 					</div>
 				{:else}
 					<p class="pick">Pick an entry to translate.</p>
@@ -269,6 +283,14 @@
 	.save:disabled {
 		opacity: 0.6;
 		cursor: default;
+	}
+	.demo-note {
+		font-size: 13px;
+		color: var(--color-text-muted);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		padding: 10px 12px;
+		margin: 0;
 	}
 	.pick,
 	.loading {
