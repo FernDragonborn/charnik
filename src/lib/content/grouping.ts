@@ -60,9 +60,13 @@ export function facetFor(type: ContentType): Grouping | null {
 	return FACET[type] ?? null;
 }
 
+// The grouping/facet key is a runtime config string, so `r.data` is a union with no shared index —
+// scan entries (rather than index by a dynamic key) to read the cell type-safely, no cast.
 const fieldVal = (r: LoadedRow, key: string): string => {
-	const v = r.data[key];
-	return v == null || v === '' ? '' : String(Array.isArray(v) ? v.join(', ') : v);
+	for (const [column, v] of Object.entries(r.data))
+		if (column === key)
+			return v == null || v === '' ? '' : String(Array.isArray(v) ? v.join(', ') : v);
+	return '';
 };
 
 /** Distinct non-empty values of a field across rows (for filter chips), sorted. */
@@ -97,7 +101,9 @@ export function groupRows(
 	for (const r of rows) {
 		const raw = key === 'source' ? r.source : fieldVal(r, key);
 		const k = raw || '—';
-		(buckets.get(k) ?? buckets.set(k, []).get(k)!).push(r);
+		const bucket = buckets.get(k) ?? [];
+		bucket.push(r);
+		buckets.set(k, bucket);
 	}
 	const keys = [...buckets.keys()];
 	if (type === 'spell' && key === 'level') keys.sort((a, b) => Number(a) - Number(b));
@@ -111,5 +117,5 @@ export function groupRows(
 		if (key === 'source') return sourceLabel(k);
 		return cap(k);
 	};
-	return keys.map((k) => ({ label: label(k), rows: buckets.get(k)! }));
+	return keys.map((k) => ({ label: label(k), rows: buckets.get(k) ?? [] }));
 }

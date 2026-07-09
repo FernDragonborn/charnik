@@ -14,7 +14,14 @@
  */
 import Papa from 'papaparse';
 import type { Storage } from '../storage/types';
-import { CONTENT_TYPES, parseRow, type ContentType } from './schemas';
+import {
+	CONTENT_TYPES,
+	parseRow,
+	PROSE_BASES,
+	type ContentType,
+	type RowData,
+	type ProseBase
+} from './schemas';
 import {
 	parseContentDirectives,
 	checkFileMeta,
@@ -24,8 +31,8 @@ import {
 } from './meta';
 import { hashBody } from './hash';
 
-export interface LoadedRow {
-	type: ContentType;
+/** Identity + provenance a loaded row carries regardless of its content type. */
+interface LoadedRowCommon {
 	/** Owning source tag (row's own `source` column, else the file's `#content-source` header). */
 	source: string;
 	/** Local slug. */
@@ -35,11 +42,32 @@ export interface LoadedRow {
 	 *  type must scope the identity — refines the docs' original `source:id`.) */
 	effectiveId: string;
 	systems: string[];
-	/** The zod-validated, coerced row. */
-	data: Record<string, unknown>;
 	root: string;
 	file: string;
 }
+
+/** A loaded row of a KNOWN content type `T`: the common identity + the zod-validated, coerced model
+ *  for `T` (Spell, Monster, …) — not an untyped bag. `graph.list('spell')` yields `LoadedRowOf<'spell'>`,
+ *  so `row.data.level` is `number`. */
+export interface LoadedRowOf<T extends ContentType> extends LoadedRowCommon {
+	type: T;
+	data: RowData<T>;
+}
+
+/** A loaded content row — a discriminated union on `type`. Narrowing on `row.type` (or reaching a row
+ *  via `list(type)`) narrows `row.data` to that type's model; the shared `base` columns
+ *  (name_en/text_en/systems/source/effects) read without narrowing since every member has them. */
+export type LoadedRow = { [T in ContentType]: LoadedRowOf<T> }[ContentType];
+
+/** The data payload of SOME loaded row — the union of every type's model. Used only at the loader's
+ *  parse boundary, where a row's type is a runtime value, not a static `T`; typed reads elsewhere use
+ *  `RowData<T>` via a narrowed `LoadedRowOf<T>`. */
+type AnyRowData = { [T in ContentType]: RowData<T> }[ContentType];
+
+/** The loaded-row member(s) for a type `T`. Distributes: `LoadedRowByType<'spell'>` is one member,
+ *  `LoadedRowByType<ContentType>` is the whole `LoadedRow` union — so `list(runtimeType)` stays
+ *  assignable to `LoadedRow[]` while `list('spell')` narrows to the spell member. */
+export type LoadedRowByType<T extends ContentType> = Extract<LoadedRow, { type: T }>;
 
 export interface ContentIssue {
 	level: 'error' | 'warn';
@@ -67,7 +95,9 @@ export interface ContentGraph {
 	/** Files whose body no longer matches their recorded `#content-hash` → drive the HashDriftModal. */
 	driftItems: DriftItem[];
 
-	list(type: ContentType, opts?: ListOptions): LoadedRow[];
+	/** Rows of one type, precisely typed: `list('spell')` → `Spell` rows; a runtime `ContentType`
+	 *  yields the full `LoadedRow` union (the return distributes over `T`). */
+	list<T extends ContentType>(type: T, opts?: ListOptions): LoadedRowByType<T>[];
 	get(effectiveId: string): LoadedRow | undefined;
 	/** All editions/sources of one article (same type + slug). */
 	editionsOf(type: ContentType, id: string): LoadedRow[];
@@ -83,8 +113,15 @@ const LOCALE_COL = /^(?:name|text)_([a-z]{2,3}(?:-[A-Za-z0-9]+)*)$/;
 /** Localized PROSE columns (`<base>_<loc>`). The strict per-type schema declares only name_/text_
  *  en+uk, so `safeParse` STRIPS extra locales (name_de) and other prose fields (material_uk,
  *  higher_level_uk). We re-attach these from the raw row so localized render + translation survive —
- *  narrow to the prose bases so genuine junk columns still don't leak into `data` (→ the meta grid). */
-const PROSE_LOCALE_COL = /^(?:name|text|material|higher_level)_[a-z]{2,3}(?:-[A-Za-z0-9]+)*$/;
+ *  narrow to the prose bases so genuine junk columns still don't leak into `data` (→ the meta grid).
+ *  Generated from PROSE_BASES so the base list has one source (shared with the translate write path). */
+const PROSE_LOCALE_COL = new RegExp(`^(?:${PROSE_BASES.join('|')})_[a-z]{2,3}(?:-[A-Za-z0-9]+)*$`);
+
+/** Type guard for the re-attach: narrows a raw header to the prose-locale key type, so writing it onto
+ *  the typed `RowData` needs no cast (the key is provably a `${ProseBase}_${string}`). */
+function isProseLocaleColumn(column: string): column is `${ProseBase}_${string}` {
+	return PROSE_LOCALE_COL.test(column);
+}
 
 function pushMap<K, V>(map: Map<K, V[]>, key: K, val: V): void {
 	const arr = map.get(key);
@@ -197,28 +234,39 @@ export async function loadContent(
 					});
 			}
 
-			for (const raw of parsed.data) {
-				const res = parseRow(type, raw);
+			for (const rawRow of parsed.data) {
+				const res = parseRow(type, rawRow);
 				if (!res.success) {
 					issues.push({
 						level: 'error',
 						root,
 						file: entry.name,
-						...(raw.id ? { id: String(raw.id) } : {}),
+						...(rawRow.id ? { id: String(rawRow.id) } : {}),
 						message: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')
 					});
 					continue;
 				}
-				const data = res.data as Record<string, unknown>;
-				// re-attach localized prose columns the strict schema stripped (see PROSE_LOCALE_COL)
-				for (const [k, v] of Object.entries(raw))
-					if (PROSE_LOCALE_COL.test(k) && data[k] === undefined && v !== '' && v != null)
-						data[k] = v;
+				// `data` shares every type's `base` columns (id/source/systems/name_en/…), so those read
+				// typed with no narrowing; type-specific reads happen after the row is narrowed by `.type`.
+				const data: AnyRowData = res.data;
+				// re-attach localized prose columns the strict schema stripped (see isProseLocaleColumn) —
+				// the guard narrows the key so this writes onto the typed row without a cast
+				for (const [column, value] of Object.entries(rawRow))
+					if (
+						isProseLocaleColumn(column) &&
+						data[column] === undefined &&
+						value !== '' &&
+						value != null
+					)
+						data[column] = value;
 				// precedence: per-row column (legacy) → file `#content-` header → fallback
-				const source = (data.source as string) || fileSource || 'unknown';
-				const rowSystems = data.systems as string[] | undefined;
-				const systems = rowSystems?.length ? rowSystems : (fileSystems ?? []);
-				const id = data.id as string;
+				const source = data.source || fileSource || 'unknown';
+				const systems = data.systems?.length ? data.systems : (fileSystems ?? []);
+				const id = data.id;
+				// parseRow already validated `data` against `type`, but TS can't correlate the runtime
+				// `type` union with the per-type `data` union into a single `LoadedRow` member without an
+				// assertion — the same generic-indexing seam as `parseRow`. ONE localized cast at the parse
+				// boundary; every read past here is fully typed.
 				rows.push({
 					type,
 					source,
@@ -228,7 +276,7 @@ export async function loadContent(
 					data,
 					root,
 					file: entry.name
-				});
+				} as LoadedRow);
 			}
 		}
 	}
@@ -265,6 +313,7 @@ export async function loadContent(
 	const joinResolves = (map: Map<string, string[]>, id: unknown, systems: string[]) =>
 		(map.get(String(id)) ?? []).some((s) => systems.includes(s));
 	for (const r of byType.get('spell_lists') ?? []) {
+		if (r.type !== 'spell_lists') continue; // byType guarantees it; the guard narrows the union for TS
 		if (!joinResolves(classSystems, r.data.class_id, r.systems))
 			issues.push({
 				level: 'warn',
@@ -292,9 +341,12 @@ export async function loadContent(
 		issues,
 		metaIssues,
 		driftItems,
-		list(type, opts) {
-			const all = byType.get(type) ?? [];
-			return opts?.system ? all.filter((r) => r.systems.includes(opts.system!)) : all;
+		list<T extends ContentType>(type: T, opts?: ListOptions): LoadedRowByType<T>[] {
+			// byType is keyed by `type`, so every row under it is a LoadedRowByType<T>; the Map value
+			// widens to the union, so narrow it back here — the single seam that keeps `list` precise.
+			const all = (byType.get(type) ?? []) as LoadedRowByType<T>[];
+			const system = opts?.system;
+			return system ? all.filter((r) => r.systems.includes(system)) : all;
 		},
 		get(effectiveId) {
 			return byEffectiveId.get(effectiveId);
@@ -304,7 +356,10 @@ export async function loadContent(
 		},
 		featuresForClass(classRow) {
 			return (byType.get('class_feature') ?? []).filter(
-				(f) => f.source === classRow.source && f.data.class_id === classRow.id
+				(f) =>
+					f.type === 'class_feature' &&
+					f.source === classRow.source &&
+					f.data.class_id === classRow.id
 			);
 		},
 		resolveRefs(effectiveIds) {

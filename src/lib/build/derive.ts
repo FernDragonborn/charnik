@@ -21,7 +21,8 @@ export function parseSpeciesBoostChoice(raw: string): { amount: number; count: n
 export function speciesFixedAbilities(rows: (LoadedRow | undefined)[]): Set<Ability> {
 	const set = new Set<Ability>();
 	for (const src of rows) {
-		const eff = Array.isArray(src?.data.effects) ? (src!.data.effects as string[]) : [];
+		const effects = src && 'effects' in src.data ? src.data.effects : undefined;
+		const eff = Array.isArray(effects) ? effects : [];
 		for (const t of eff) {
 			const p = parseEffect(t);
 			if (
@@ -59,7 +60,11 @@ export function buildSpellPicker(
 	strict: boolean,
 	selectedSpells: string[]
 ) {
-	const levelOf = (s: LoadedRow) => Number(s.data.level ?? 0);
+	const levelOf = (s: LoadedRow) => (s.type === 'spell' ? Number(s.data.level ?? 0) : 0);
+	const chosenLevel = (id: string) => {
+		const r = graph.get(id);
+		return r?.type === 'spell' ? Number(r.data.level ?? 0) : 0;
+	};
 	return sheet.spellcasting.classes.map((profile) => {
 		const access = new Set(profile.accessSpellIds);
 		const inClass = (id: string) => !strict || access.has(id);
@@ -70,22 +75,21 @@ export function buildSpellPicker(
 			return levelOf(s) <= profile.maxSpellLevel;
 		});
 		const byLevel = new Map<number, LoadedRow[]>();
-		for (const s of pool)
-			(byLevel.get(levelOf(s)) ?? byLevel.set(levelOf(s), []).get(levelOf(s))!).push(s);
+		for (const s of pool) {
+			const bucket = byLevel.get(levelOf(s)) ?? [];
+			bucket.push(s);
+			byLevel.set(levelOf(s), bucket);
+		}
 		const groups = [...byLevel.keys()]
 			.sort((a, b) => a - b)
 			.map((lvl) => ({
 				level: lvl,
 				label: lvl === 0 ? 'Cantrips' : `Level ${lvl}`,
-				spells: byLevel.get(lvl)!
+				spells: byLevel.get(lvl) ?? []
 			}));
 		const selectedInClass = selectedSpells.filter(inClass);
-		const cantripsChosen = selectedInClass.filter(
-			(id) => Number(graph.get(id)?.data.level ?? 0) === 0
-		).length;
-		const leveledChosen = selectedInClass.filter(
-			(id) => Number(graph.get(id)?.data.level ?? 0) > 0
-		).length;
+		const cantripsChosen = selectedInClass.filter((id) => chosenLevel(id) === 0).length;
+		const leveledChosen = selectedInClass.filter((id) => chosenLevel(id) > 0).length;
 		return { profile, groups, cantripsChosen, leveledChosen };
 	});
 }

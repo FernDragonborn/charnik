@@ -86,12 +86,12 @@ describe('buildDetail', () => {
 
 describe('entryMeta', () => {
 	it('spell sub-line = school · damage', () => {
-		expect(entryMeta(row({ school: 'evocation', damage: '8d6' }), 'spell')).toBe('evocation · 8d6');
+		expect(entryMeta(row({ school: 'evocation', damage: '8d6' }))).toBe('evocation · 8d6');
 	});
 
 	it('item sub-line drops a broader term already implied by a more specific one', () => {
-		expect(
-			entryMeta(row({ category: 'gear', item_type: 'adventuring gear' }, 'item'), 'item')
-		).toBe('adventuring gear');
+		expect(entryMeta(row({ category: 'gear', item_type: 'adventuring gear' }, 'item'))).toBe(
+			'adventuring gear'
+		);
 	});
 });

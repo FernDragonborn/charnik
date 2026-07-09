@@ -310,7 +310,7 @@ export function computeAttacks(
 	for (const inv of character.build.inventory) {
 		if (!inv.equipped) continue;
 		const row = graph.get(inv.item);
-		if (!row || row.data.category !== 'weapon') continue;
+		if (row?.type !== 'item' || row.data.category !== 'weapon') continue;
 		const props = String(row.data.properties ?? '').toLowerCase();
 		const ranged = String(row.data.item_type ?? '').includes('ranged');
 		const mod = ranged ? dexMod : props.includes('finesse') ? Math.max(strMod, dexMod) : strMod;
@@ -422,8 +422,11 @@ export function buildSpellGroups(
 	if (groupBy === 'level') {
 		const byLevel = new Map<number, SpRow[]>();
 		for (const x of all) {
-			const lvl = Number(graph.get(x.sp.spell)!.data.level);
-			(byLevel.get(lvl) ?? byLevel.set(lvl, []).get(lvl)!).push(x.row);
+			const spell = graph.get(x.sp.spell);
+			const lvl = spell?.type === 'spell' ? Number(spell.data.level) : 0;
+			const bucket = byLevel.get(lvl) ?? [];
+			bucket.push(x.row);
+			byLevel.set(lvl, bucket);
 		}
 		for (const lvl of [...byLevel.keys()].sort((a, b) => a - b)) {
 			groups.push({
@@ -436,7 +439,7 @@ export function buildSpellGroups(
 								full: slotsByLevel.get(lvl) ?? 0,
 								spent: Number(character.play.spellSlotsSpent[String(lvl)] ?? 0)
 							},
-				rows: byLevel.get(lvl)!
+				rows: byLevel.get(lvl) ?? []
 			});
 		}
 	} else if (groupBy === 'prepared') {
@@ -447,15 +450,18 @@ export function buildSpellGroups(
 	} else {
 		const bySchool = new Map<string, SpRow[]>();
 		for (const x of all) {
-			const sch = String(graph.get(x.sp.spell)!.data.school || 'Other');
-			(bySchool.get(sch) ?? bySchool.set(sch, []).get(sch)!).push(x.row);
+			const spell = graph.get(x.sp.spell);
+			const sch = String((spell?.type === 'spell' ? spell.data.school : '') || 'Other');
+			const bucket = bySchool.get(sch) ?? [];
+			bucket.push(x.row);
+			bySchool.set(sch, bucket);
 		}
 		for (const sch of [...bySchool.keys()].sort())
 			groups.push({
 				key: 'sch:' + sch,
 				label: titleCase(sch),
 				slots: null,
-				rows: bySchool.get(sch)!
+				rows: bySchool.get(sch) ?? []
 			});
 	}
 	return groups;
@@ -464,7 +470,7 @@ export function buildSpellGroups(
 /** Build a spell row from the content graph (or null if the ref is missing). */
 export function spellRow(graph: ContentGraph, ref: string, prep: SpRow['prep']): SpRow | null {
 	const row = graph.get(ref);
-	if (!row) return null;
+	if (row?.type !== 'spell') return null;
 	const lvl = Number(row.data.level);
 	const res = String(row.data.resolution ?? 'none');
 	// dice for casting: the damage field, or (for auto/healing spells) the "regains …

@@ -98,7 +98,8 @@
 		return pool.filter((r) => {
 			if (sourceFilter.size && !sourceFilter.has(r.source)) return false;
 			if (facet && facetFilter.size) {
-				const v = r.data[facet.key];
+				// facet.key is a runtime config string; scan entries to read the cell off the union (no cast)
+				const v = Object.entries(r.data).find(([k]) => k === facet.key)?.[1];
 				if (!facetFilter.has(v == null ? '' : String(v))) return false;
 			}
 			return !q || String(r.data.name_en).toLowerCase().includes(q);
@@ -111,7 +112,7 @@
 			entries: g.rows.map((r): Entry<LoadedRow> => ({
 				id: r.effectiveId,
 				name: String(r.data.name_en),
-				meta: entryMeta(r, selectedType),
+				meta: entryMeta(r),
 				edition: editionLabel(r.systems),
 				row: r
 			}))

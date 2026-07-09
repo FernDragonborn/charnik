@@ -8,7 +8,7 @@
 	import { goto, afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
-	import { build, rowName, ASI } from './state.svelte';
+	import { build, rowName, rowOfType, ASI } from './state.svelte';
 	import { ABILITIES } from '$lib/character/schema';
 	import { SKILL_ABILITY } from '$lib/character/derive';
 	import { loadCharacterBySlug } from '$lib/character/store.svelte';
@@ -106,7 +106,7 @@
 					<button class="add-btn" onclick={() => b.addClass()}>＋ Multiclass</button>
 				</h2>
 				{#each b.draft.classes as cls, i (i)}
-					{@const clsRow = cls.classId ? b.graph?.get(cls.classId) : undefined}
+					{@const clsRow = cls.classId ? rowOfType(b.graph?.get(cls.classId), 'class') : undefined}
 					{@const subs = b.subclassesFor(cls.classId)}
 					<div class="class-row">
 						<span class="class-icon">{clsRow ? '✦' : i === 0 ? '＋' : '⌁'}</span>

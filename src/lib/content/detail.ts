@@ -3,8 +3,8 @@
  * same two-pane shape: a grouped list + a wiki detail rendered from the CSV row). No Svelte —
  * unit-testable. The components (WikiDetail / EntryList) just render these models.
  */
-import type { LoadedRow } from '$lib/content/loader';
-import type { ContentType } from '$lib/content/schemas';
+import type { LoadedRow, LoadedRowOf } from '$lib/content/loader';
+import type { ContentType, RowColumn } from '$lib/content/schemas';
 
 /** Columns never shown as a meta cell (identity / localization / rendered elsewhere). */
 const COMMON = new Set([
@@ -108,7 +108,7 @@ const withMetric = (range: string): string => {
 };
 
 function buildSpell(
-	row: LoadedRow,
+	row: LoadedRowOf<'spell'>,
 	availableTo?: SpellModel['availableTo'],
 	locale = 'en'
 ): SpellModel {
@@ -212,13 +212,13 @@ export interface DetailModel {
 }
 
 /** Build the dedicated monster stat block (vitals + abilities/saves + a derived band). */
-function buildMonster(row: LoadedRow): MonsterModel {
+function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 	const d = row.data;
-	const s = (k: string) => (d[k] == null || d[k] === '' ? '' : String(d[k]));
+	const s = (k: RowColumn<'monster'>) => (d[k] == null || d[k] === '' ? '' : String(d[k]));
 	const abilities: AbilityScore[] = ABILS.map((a) => {
 		const score = Number(d[a]);
 		const raw = d[`${a}_save`];
-		const save = raw === '' || raw == null ? undefined : Number(raw);
+		const save = raw == null ? undefined : Number(raw);
 		return {
 			ab: a.toUpperCase(),
 			score,
@@ -228,9 +228,9 @@ function buildMonster(row: LoadedRow): MonsterModel {
 	});
 	const hasSaves = ABILS.some((a) => {
 		const raw = d[`${a}_save`];
-		return raw !== '' && raw != null && Number(raw) !== Math.floor((Number(d[a]) - 10) / 2);
+		return raw != null && Number(raw) !== Math.floor((Number(d[a]) - 10) / 2);
 	});
-	const pair = (label: string, key: string): [string, string][] =>
+	const pair = (label: string, key: RowColumn<'monster'>): [string, string][] =>
 		meaningful(d[key]) ? [[label, asText(d[key])]] : [];
 	return {
 		type: [d.size ? cap(String(d.size)) : '', d.creature_type ? cap(String(d.creature_type)) : '']
@@ -268,7 +268,7 @@ export function buildDetail(
 	locale = 'en'
 ): DetailModel {
 	const d = row.data;
-	if (type === 'monster') {
+	if (row.type === 'monster') {
 		return {
 			eyebrow: '',
 			title: localized(d, 'name', locale),
@@ -280,11 +280,12 @@ export function buildDetail(
 			monster: buildMonster(row)
 		};
 	}
-	if (type === 'spell') {
+	if (row.type === 'spell') {
+		const spell = row.data;
 		return {
 			eyebrow: [
-				Number(d.level) === 0 ? 'Cantrip' : `Level ${d.level}`,
-				d.school ? cap(String(d.school)) : ''
+				Number(spell.level) === 0 ? 'Cantrip' : `Level ${spell.level}`,
+				spell.school ? cap(String(spell.school)) : ''
 			]
 				.filter(Boolean)
 				.join(' · '),
@@ -297,16 +298,10 @@ export function buildDetail(
 			spell: buildSpell(row, availableTo, locale)
 		};
 	}
+	// generic types carry no ability-score columns (only monster does, handled above), so the meta
+	// grid is the whole story here — every non-identity, non-prose column becomes a k/v cell.
 	const skip = new Set(COMMON);
 	const eyebrow = cap(String(type));
-	// monster ability scores → a compact 3×2 block, kept out of the generic meta grid
-	const abilities: AbilityScore[] = ABILS.filter((a) => meaningful(d[a])).map((a) => ({
-		ab: a.toUpperCase(),
-		score: Number(d[a]),
-		mod: abilMod(Number(d[a]))
-	}));
-	if (abilities.length) ABILS.forEach((a) => skip.add(a));
-
 	const meta = Object.entries(d)
 		.filter(([k, v]) => !skip.has(k) && !PROSE_LOC.test(k) && meaningful(v))
 		.map(([k, v]) => [cap(k), String(v) === 'true' ? 'Yes' : asText(v)] as [string, string]);
@@ -314,7 +309,7 @@ export function buildDetail(
 	return {
 		eyebrow,
 		title: localized(d, 'name', locale),
-		abilities,
+		abilities: [],
 		meta,
 		bodyHtml: localized(d, 'text', locale),
 		higherLevel: localized(d, 'higher_level', locale),
@@ -323,9 +318,9 @@ export function buildDetail(
 }
 
 /** The small sub-line under an entry's name in the list. */
-export function entryMeta(row: LoadedRow, type: ContentType): string {
-	const d = row.data;
-	if (type === 'spell') {
+export function entryMeta(row: LoadedRow): string {
+	if (row.type === 'spell') {
+		const d = row.data;
 		const res =
 			d.resolution &&
 			d.resolution !== 'none' &&
@@ -338,10 +333,14 @@ export function entryMeta(row: LoadedRow, type: ContentType): string {
 			.join(' · ');
 	}
 	// item_type is usually more specific than category ("martial melee" vs "weapon"); drop the
-	// broader one when it's already implied, so basic gear isn't "gear · adventuring gear"
-	const parts = [d.category, d.item_type, d.rarity]
-		.map((x) => (x ? String(x) : ''))
-		.filter(Boolean);
+	// broader one when it's already implied, so basic gear isn't "gear · adventuring gear". The
+	// `in` checks read only the columns a row's type actually has — no cast onto the union.
+	const data = row.data;
+	const parts = [
+		'category' in data ? String(data.category ?? '') : '',
+		'item_type' in data ? String(data.item_type ?? '') : '',
+		'rarity' in data ? String(data.rarity ?? '') : ''
+	].filter(Boolean);
 	return parts
 		.filter(
 			(p, i) =>
@@ -358,10 +357,15 @@ export function groupEntries(
 	if (type !== 'spell') return [{ label: '', rows }];
 	const byLevel = new Map<number, LoadedRow[]>();
 	for (const r of rows) {
-		const l = Number(r.data.level);
-		(byLevel.get(l) ?? byLevel.set(l, []).get(l)!).push(r);
+		const level = r.type === 'spell' ? Number(r.data.level) : 0;
+		const bucket = byLevel.get(level) ?? [];
+		bucket.push(r);
+		byLevel.set(level, bucket);
 	}
 	return [...byLevel.keys()]
 		.sort((a, b) => a - b)
-		.map((l) => ({ label: l === 0 ? 'Cantrips' : `${ordinal(l)} level`, rows: byLevel.get(l)! }));
+		.map((level) => ({
+			label: level === 0 ? 'Cantrips' : `${ordinal(level)} level`,
+			rows: byLevel.get(level) ?? []
+		}));
 }

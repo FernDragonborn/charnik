@@ -9,7 +9,7 @@
  * highest spell level a class can LEARN is its own single-class table's max (a Wizard 1 can't
  * prepare 3rd-level spells even if a Cleric multiclass grants 3rd-level slots).
  */
-import type { ContentGraph } from '../content/loader';
+import type { ContentGraph, LoadedRowOf } from '../content/loader';
 import { getSpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
@@ -54,6 +54,20 @@ export interface Spellcasting {
 
 const num = (v: unknown): number | undefined => (v === '' || v == null ? undefined : Number(v));
 
+/** The nine spell-slot columns, as literal keys so `spell_slots` rows are read type-safely (a
+ *  `slot_${number}` template would be too wide for `keyof SpellSlots`). */
+const SLOT_COLUMNS = [
+	'slot_1',
+	'slot_2',
+	'slot_3',
+	'slot_4',
+	'slot_5',
+	'slot_6',
+	'slot_7',
+	'slot_8',
+	'slot_9'
+] as const;
+
 /** Build a slot table (charLevel → counts) for a `kind`, scoped to the character's edition. */
 function slotTable(graph: ContentGraph, kind: string, systems: string[]): SlotTable {
 	const m = new Map<number, number[]>();
@@ -62,7 +76,7 @@ function slotTable(graph: ContentGraph, kind: string, systems: string[]): SlotTa
 		if (!r.systems.some((s) => systems.includes(s))) continue;
 		m.set(
 			Number(r.data.level),
-			Array.from({ length: 9 }, (_, i) => Number(r.data[`slot_${i + 1}`] || 0))
+			SLOT_COLUMNS.map((col) => Number(r.data[col] || 0))
 		);
 	}
 	return m;
@@ -92,17 +106,20 @@ export function deriveSpellcasting(
 	const systems = [character.system];
 	const totalLevel = character.build.classes.reduce((n, c) => n + c.level, 0) || 1;
 
+	// a build class references a `class` row by id; keep the ones that actually cast. The type
+	// predicate narrows `row` to LoadedRowOf<'class'>, so caster/caster_share/slot_table/spell_ability
+	// below read typed — no casts.
 	const casters = character.build.classes
 		.map((c) => ({ c, row: graph.get(c.class) }))
-		.filter((x) => x.row && x.row.data.caster && x.row.data.caster !== 'none') as {
-		c: { class: string; level: number };
-		row: NonNullable<ReturnType<ContentGraph['get']>>;
-	}[];
+		.filter(
+			(x): x is { c: { class: string; level: number }; row: LoadedRowOf<'class'> } =>
+				x.row?.type === 'class' && x.row.data.caster !== 'none'
+		);
 
 	if (casters.length === 0) return { classes: [], pools: [], casterLevel: 0 };
 
-	const shareOf = (row: (typeof casters)[number]['row']): CasterShare =>
-		(row.data.caster_share as CasterShare) ?? shareFromCaster(String(row.data.caster));
+	const shareOf = (row: LoadedRowOf<'class'>): CasterShare =>
+		row.data.caster_share ?? shareFromCaster(String(row.data.caster));
 
 	// shared multiclass caster level (pact excluded) + shared leveled slot pool (L1 branch)
 	const shared = casters.filter((x) => x.row.data.caster !== 'pact');
@@ -123,7 +140,7 @@ export function deriveSpellcasting(
 	const classes: SpellcastingClass[] = casters.map(({ c, row }) => {
 		const caster = String(row.data.caster);
 		const isPact = caster === 'pact';
-		const ability = ((row.data.spell_ability as Ability) ?? 'int') as Ability;
+		const ability: Ability = row.data.spell_ability ?? 'int';
 		const score = scores[ability];
 
 		// the class's OWN table (drives its learnable max) + pact's separate pool
@@ -142,7 +159,7 @@ export function deriveSpellcasting(
 			ability,
 			saveDC: spellSaveDC({ ability, score, level: totalLevel }),
 			attack: spellAttackBonus({ ability, score, level: totalLevel }),
-			prepareStyle: (row.data.prepare_style as 'prepared' | 'known') ?? 'prepared',
+			prepareStyle: row.data.prepare_style ?? 'prepared',
 			cantripCap: cc.cantrips ?? 0,
 			preparedCap: preparedCap(cc.prepared, {
 				abilityMod: abilityModifier(score),

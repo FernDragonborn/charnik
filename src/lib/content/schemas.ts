@@ -472,6 +472,29 @@ export type SpellSlots = z.infer<typeof spellSlotsSchema>;
 export type ClassCasting = z.infer<typeof classCastingSchema>;
 export type SpellLists = z.infer<typeof spellListsSchema>;
 
+/** The localizable prose bases that carry per-locale columns (`name_uk`, `text_de`, `material_fr`,
+ *  `higher_level_uk`). Kept in ONE place — the loader re-attach, the translate write path and this
+ *  type all key off it — so "which columns are translatable" has a single source of truth. */
+export const PROSE_BASES = ['name', 'text', 'material', 'higher_level'] as const;
+export type ProseBase = (typeof PROSE_BASES)[number];
+
+/** Localized prose columns the strict per-type schema strips (it declares only name/text en+uk) and
+ *  the loader re-attaches. Typed by the prose bases so ONLY real `<base>_<loc>` columns are allowed —
+ *  arbitrary junk columns stay off the row. Reads come back `string | undefined`
+ *  (`noUncheckedIndexedAccess`), which is the intended "missing translation → EN fallback" signal. */
+export type ProseLocaleColumns = Partial<Record<`${ProseBase}_${string}`, string>>;
+
+/** The validated, coerced data a loaded row of type `T` carries: the zod-inferred model for `T` PLUS
+ *  the re-attached prose-locale columns. This is what replaces the old `Record<string, unknown>` bag —
+ *  reads like `spell.data.level` are now `number`, not `unknown`. */
+export type RowData<T extends ContentType> = z.infer<(typeof CONTENT_TYPES)[T]['schema']> &
+	ProseLocaleColumns;
+
+/** A column name of type `T`'s model (used to type grouping/facet keys so `row.data[key]` is
+ *  provably safe — no cast). `& string` drops any non-string index keys. */
+export type RowColumn<T extends ContentType> = keyof z.infer<(typeof CONTENT_TYPES)[T]['schema']> &
+	string;
+
 /** Validate one raw CSV row for a given type. Returns zod's SafeParseReturn, **narrowed to the
  *  schema for `T`** (so `res.data` is that type's shape at a literal call site, not the union). */
 export function parseRow<T extends ContentType>(

@@ -11,7 +11,7 @@
  *
  * Every field is a `Computed` ({value, trace, notes}), so the UI explains any number.
  */
-import type { ContentGraph, LoadedRow } from '../content/loader';
+import type { ContentGraph, LoadedRow, LoadedRowOf } from '../content/loader';
 import type { Character } from './schema';
 import { ABILITIES } from './schema';
 import {
@@ -100,8 +100,11 @@ export interface CharacterSheet {
 }
 
 const num = (v: unknown, d = 0): number => (typeof v === 'number' ? v : Number(v) || d);
-const tokensOf = (row: LoadedRow | undefined): string[] =>
-	Array.isArray(row?.data.effects) ? (row!.data.effects as string[]) : [];
+const tokensOf = (row: LoadedRow | undefined): string[] => {
+	// `effects` rides on every browsable type but not the lookup tables; read it only where present
+	const effects = row && 'effects' in row.data ? row.data.effects : undefined;
+	return Array.isArray(effects) ? effects : [];
+};
 
 /** Gather every active effect (species/items/runtime) as {source, layer, tokens}. */
 function gatherEffects(
@@ -231,8 +234,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	for (const c of build.classes) {
 		const row = graph.get(c.class);
 		if (!row) missing.push(c.class);
-		const s = row?.data.saves;
-		if (Array.isArray(s)) for (const a of s) classSaves.add(a as Ability);
+		const s = row?.type === 'class' ? row.data.saves : undefined;
+		if (Array.isArray(s)) for (const a of s) classSaves.add(a);
 	}
 
 	const abilities = {} as Record<Ability, AbilityBlock>;
@@ -267,7 +270,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	let acBase: Computed;
 	const armor = build.inventory
 		.map((i) => (i.equipped ? graph.get(i.item) : undefined))
-		.find((r) => r?.type === 'item' && r.data.category === 'armor');
+		.find((r): r is LoadedRowOf<'item'> => r?.type === 'item' && r.data.category === 'armor');
 	if (armor) {
 		const capRaw = armor.data.armor_dex_cap;
 		const dexCap = capRaw === '' || capRaw == null ? null : num(capRaw);
@@ -288,7 +291,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	// HP: sum per class (SRD fixed); CON uses effective score
 	const hpContribs = build.classes.map((c) => {
 		const row = graph.get(c.class);
-		const hitDie = String(row?.data.hit_die || 'd8');
+		const hitDie = String((row?.type === 'class' ? row.data.hit_die : undefined) || 'd8');
 		return maxHpForClass({ hitDie, level: c.level, conScore: scores.con });
 	});
 	const maxHp: Computed = hpContribs.length
@@ -300,16 +303,17 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 
 	// speed from species
 	const speciesRow = build.species ? graph.get(build.species) : undefined;
+	const speciesSpeed = speciesRow?.type === 'species' ? speciesRow.data.speed : undefined;
 	const speed = applyEffects(
 		'speed',
 		{
-			value: num(speciesRow?.data.speed, 30),
+			value: num(speciesSpeed, 30),
 			trace: [
 				{
 					source: speciesRow ? String(speciesRow.data.name_en) : 'Default',
 					layer: 'base',
 					op: 'add',
-					amount: num(speciesRow?.data.speed, 30)
+					amount: num(speciesSpeed, 30)
 				}
 			]
 		},

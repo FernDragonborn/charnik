@@ -75,7 +75,7 @@
 			entries: grp.rows.map((r): Entry<LoadedRow> => ({
 				id: r.effectiveId,
 				name: String(r.data.name_en),
-				meta: entryMeta(r, 'spell'),
+				meta: entryMeta(r),
 				edition: editionLabel(r.systems),
 				row: r
 			}))

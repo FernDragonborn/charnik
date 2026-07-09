@@ -16,7 +16,7 @@ import { ABILITIES, type Character } from '$lib/character/schema';
 import { assembleCharacter } from '$lib/character/assemble';
 import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
 import { app, type SystemId } from '$lib/stores/app.svelte';
-import type { ContentGraph, LoadedRow } from '$lib/content/loader';
+import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
 import type { Ability } from '$lib/rules/core';
 import {
 	baseAbilities,
@@ -39,7 +39,25 @@ import {
 	buildSpellPicker,
 	buildIssues
 } from '$lib/build/derive';
-import { splitList, FEAT_CATEGORY } from '$lib/content/schemas';
+import { splitList, FEAT_CATEGORY, type ContentType } from '$lib/content/schemas';
+
+/** Type guard: is this row of content type `T`? (A predicate is needed — TS won't narrow a union by a
+ *  bare `row.type === type` comparison against a generic `T`.) */
+function isRowOfType<T extends ContentType>(
+	row: LoadedRow,
+	type: T
+): row is LoadedRowByType<T> {
+	return row.type === type;
+}
+
+/** Narrow a looked-up row to a known content type (or undefined if it's a different type / missing).
+ *  Lets the build derive read type-specific columns without a cast. */
+export function rowOfType<T extends ContentType>(
+	row: LoadedRow | undefined,
+	type: T
+): LoadedRowByType<T> | undefined {
+	return row && isRowOfType(row, type) ? row : undefined;
+}
 
 const csv = splitList;
 
@@ -199,8 +217,10 @@ class BuildVM {
 		);
 	};
 	/** Can this item be equipped (armor / shield / weapon)? */
-	itemEquippable = (ref: string): boolean =>
-		['armor', 'shield', 'weapon'].includes(String(this.row(ref)?.data.category));
+	itemEquippable = (ref: string): boolean => {
+		const r = this.row(ref);
+		return r?.type === 'item' && ['armor', 'shield', 'weapon'].includes(r.data.category);
+	};
 
 	saving = $state(false);
 
@@ -241,7 +261,7 @@ class BuildVM {
 	};
 
 	// --- content option lists (filtered by the draft's system) -----------------
-	private list(type: Parameters<ContentGraph['list']>[0]): LoadedRow[] {
+	private list<T extends ContentType>(type: T): LoadedRowByType<T>[] {
 		if (!this.graph) return [];
 		return [...this.graph.list(type, { system: this.draft.system })].sort((a, b) =>
 			rowName(a).localeCompare(rowName(b))
@@ -264,16 +284,16 @@ class BuildVM {
 		return this.list('subclass').filter((r) => String(r.data.class_id) === String(cls.id));
 	};
 
-	speciesRow = $derived(this.row(this.draft.speciesId));
-	backgroundRow = $derived(this.row(this.draft.backgroundId));
+	speciesRow = $derived(rowOfType(this.row(this.draft.speciesId), 'species'));
+	backgroundRow = $derived(rowOfType(this.row(this.draft.backgroundId), 'background'));
 
 	/** Sub-options (subrace / lineage) for the chosen species, in the draft's edition. */
-	speciesOptions = $derived.by<LoadedRow[]>(() => {
+	speciesOptions = $derived.by(() => {
 		const sp = this.speciesRow;
 		if (!sp) return [];
 		return this.list('species_option').filter((r) => String(r.data.species_id) === String(sp.id));
 	});
-	speciesOptionRow = $derived(this.row(this.draft.speciesOptionId));
+	speciesOptionRow = $derived(rowOfType(this.row(this.draft.speciesOptionId), 'species_option'));
 	/** Label for the sub-picker (e.g. "Subrace" 2014 / "Lineage" 2024), from the options' data. */
 	speciesOptionLabel = $derived(
 		String(this.speciesOptions[0]?.data.option_label ?? 'Lineage')
@@ -310,7 +330,7 @@ class BuildVM {
 	// --- multiclass rows -------------------------------------------------------
 	primaryClassId = $derived<string | null>(this.draft.classes[0]?.classId ?? null);
 	classId = $derived<string | null>(this.primaryClassId); // primary drives saves/skills/ASI
-	classRow = $derived(this.row(this.primaryClassId));
+	classRow = $derived(rowOfType(this.row(this.primaryClassId), 'class'));
 	/** Total character level = sum of all class levels (drives prof, HP, feat slots). */
 	totalLevel = $derived(
 		this.draft.classes.reduce((n, c) => n + (c.classId ? c.level : 0), 0) || 1
@@ -342,7 +362,7 @@ class BuildVM {
 
 	isCaster = $derived.by(() =>
 		this.draft.classes.some((c) => {
-			const caster = this.row(c.classId)?.data.caster;
+			const caster = rowOfType(this.row(c.classId), 'class')?.data.caster;
 			return caster && caster !== 'none';
 		})
 	);
@@ -373,7 +393,7 @@ class BuildVM {
 		}
 		// Strict: block picking past the cantrip / prepared cap of any class this spell counts for
 		if (this.draft.strict) {
-			const lvl = Number(this.graph?.get(ref)?.data.level ?? 0);
+			const lvl = Number(rowOfType(this.graph?.get(ref), 'spell')?.data.level ?? 0);
 			for (const pc of this.spellPicker) {
 				if (!pc.profile.accessSpellIds.includes(ref)) continue; // doesn't count for this class
 				const [chosen, cap, what] =
@@ -528,7 +548,7 @@ class BuildVM {
 			if (!c.classId) return;
 			const row = this.row(c.classId);
 			const className = rowName(row);
-			const asiLevels = row?.data.asi_levels as number[] | undefined;
+			const asiLevels = rowOfType(row, 'class')?.data.asi_levels;
 			for (const level of asiFeatLevels(c.level, asiLevels))
 				out.push({ key: `${i}:${level}`, level, className });
 		});
@@ -553,7 +573,7 @@ class BuildVM {
 		});
 	// ASI may be taken in every slot; a feat is repeatable iff its row says so.
 	isRepeatable = (ref: string): boolean =>
-		ref === ASI || Boolean(this.graph?.get(ref)?.data.repeatable);
+		ref === ASI || Boolean(rowOfType(this.graph?.get(ref), 'feat')?.data.repeatable);
 	/** Feat refs already spent on slots (repeatable ones may recur). */
 	usedFeatRefs = $derived<string[]>(Object.values(this.draft.slotFeats));
 	/** A feat option is blocked for a slot if it's non-repeatable and already taken elsewhere. */
@@ -615,7 +635,7 @@ class BuildVM {
 			abilityBoosts: this.abilityBoosts as Record<string, number>,
 			skills: [...new Set([...this.autoSkills, ...this.draft.skills])],
 			expertise: this.draft.expertise.filter((s) => this.isProficient(s)),
-			saves: csv(this.classRow?.data.saves) as Ability[],
+			saves: this.classRow?.data.saves ?? [],
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
 			// its ability boost flows through abilityBoosts instead)
 			feats: [
@@ -629,7 +649,7 @@ class BuildVM {
 			inventory: this.draft.inventory.map((i) => ({ ...i, attuned: false })),
 			// cantrips are always-prepared; leveled spells start prepared (tweak in the Spellbook)
 			spells: this.draft.selectedSpells.map((ref) => {
-				const lvl = Number(this.graph?.get(ref)?.data.level ?? 0);
+				const lvl = Number(rowOfType(this.graph?.get(ref), 'spell')?.data.level ?? 0);
 				return { spell: ref, prepared: lvl > 0, alwaysPrepared: lvl === 0 };
 			}),
 			notes: ''
