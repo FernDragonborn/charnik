@@ -15,7 +15,8 @@
 	import { saveTranslation, translationStatus } from '$lib/content/translate';
 	import type { LoadedRow } from '$lib/content/loader';
 	import EntryList from '$lib/components/EntryList.svelte';
-	import WikiDetail, { type WikiEditDraft } from '$lib/components/WikiDetail.svelte';
+	import WikiDetail from '$lib/components/WikiDetail.svelte';
+	import type { WikiEditDraft } from '$lib/components/wikiEdit';
 	import { app } from '$lib/stores/app.svelte';
 	import { isReadOnlyContent } from '$lib/config/demo';
 	import { _ } from '$lib/i18n';

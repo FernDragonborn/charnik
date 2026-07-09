@@ -1379,7 +1379,9 @@ A coordinated set: split the wiki detail into components, type the loader proper
 the lint gate. Detailed component shapes live in `docs/FRONTEND.md` §4.3 (WikiDetail
 decomposition + RollButton). Ordering + open decisions below.
 
-- [ ] **WD-1 · Split `WikiDetail` (~740 lines)** into: dispatcher (`WikiDetail`) + per-type
+- [x] **WD-1 · Split `WikiDetail` (~740 lines)** — DONE (dispatcher + SpellHead/MonsterHead/GenericHead
+  + ArticleProse + wikiEdit types; actions moved to dispatcher; read + translate verified via
+  screenshots — spell/monster/generic + editable path pixel-faithful). Original notes: split into: dispatcher (`WikiDetail`) + per-type
   `SpellHead`/`MonsterHead`/`GenericHead` (mode-aware: `read | translate | editor`) + shared
   `ArticleProse` (body/higher_level/material). `actions` slot moves to the dispatcher (fixes:
   today it only renders in the generic branch, so Spellbook's Cast never shows on a spell).
