@@ -1373,6 +1373,53 @@ curated global CSS · scoped specifics — so logic doesn't pile into one file a
 - [ ] Audit the remaining big `.svelte`/`.svelte.ts` files one at a time (compendium, spellbook,
   EditContentForm, CombatMenus) and append their findings here before touching code.
 
+### Compendium-editor refactor set (planned 2026-07-09)
+
+A coordinated set: split the wiki detail into components, type the loader properly, and harden
+the lint gate. Detailed component shapes live in `docs/FRONTEND.md` §4.3 (WikiDetail
+decomposition + RollButton). Ordering + open decisions below.
+
+- [ ] **WD-1 · Split `WikiDetail` (~740 lines)** into: dispatcher (`WikiDetail`) + per-type
+  `SpellHead`/`MonsterHead`/`GenericHead` (mode-aware: `read | translate | editor`) + shared
+  `ArticleProse` (body/higher_level/material). `actions` slot moves to the dispatcher (fixes:
+  today it only renders in the generic branch, so Spellbook's Cast never shows on a spell).
+  Scope THIS pass = **read + translate parity only**; `editor` mode stays the WIP stub.
+  Safety net: `WikiDetail.browser.test.ts` (P9 infra) asserting each type/mode renders the right
+  fields + inputs, plus per-type screenshots for CSS (moving ~470 scoped lines into 4 files is
+  the regression risk).
+- [ ] **WD-2 · Extract `RollButton`** — shared roll affordance (plain click = `rollFormula` +
+  toast; ctrl/alt-click = `openTray(pool)` stub until DiceTray). Replaces every inline 🎲 + Cast.
+- [ ] **TYPE-2 · Typed `LoadedRow` (the loader keeps the type it already knew)** — the loader
+  reads `#content-type:` (or filename) and runs the typed `parseRow(type, raw)`, then **discards
+  the type** into `data: Record<string, unknown>`. Make `LoadedRow` a discriminated union on
+  `type` (`LoadedRowOf<T>` with `data: z.infer<schema[T]> & LocaleCols`), and thread the generic
+  through `graph.list<T>(type)` / `get`. Frictions: (1) locale-prose columns zod strips + the
+  loader re-attaches need a template-literal index (`` `${string}_${string}` `` → `string`,
+  which under `noUncheckedIndexedAccess` reads as `string | undefined`); (2) dynamic-key reads
+  (`buildDetail`'s `d[ability]`, grouping, spellAccess) lean on that index. ~236 `.data`/`.list`
+  sites, but the shared `base` (name_en/text_en/systems/source/effects) means common-column reads
+  compile un-narrowed; only type-specific reads need `row.type === 'x'` narrowing (mostly at sites
+  that already know the type). `svelte-check` drives the pass.
+- [ ] **LINT-1 · Ban type-escape hatches** — tsconfig is already max-strict (`strict` +
+  `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`); the hole is lint. Add:
+  `@typescript-eslint/no-non-null-assertion`, keep `no-explicit-any` + `ban-ts-comment` (errors),
+  `consistent-type-assertions` (no unsafe object-literal `as`). Then enable
+  `recommendedTypeChecked` (the unsafe-`any` family — real teeth) **after TYPE-2**, so it doesn't
+  drown in the current bag. Policy: new code fully typed; avoid the `undefined` TYPE (model
+  absence deliberately) — introducing it needs a deliberate decision. Null-checks are their own
+  follow-on track (`noUncheckedIndexedAccess` already forces many).
+
+**Sequencing (DECIDED 2026-07-09):** **TYPE-2 → LINT-1 → WD-1 → WD-2.** Type the foundation
+first so every new component (the heads) is born typed and LINT-1's type-checked rules land on
+clean code; the view split follows.
+
+**Editor mode is a separate later task.** Write-back for a **read-only shipped SRD row = fork
+-to-homebrew (DECIDED)**: editing a shipped row copies it into a homebrew CSV (same id,
+`source=homebrew`), which overrides the SRD row via collision resolution; the SRD file stays
+untouched (survives a future SRD update, keeps CC-BY attribution on the original). Homebrew rows
+edit in place. Still to design when we build it: the `fieldsFor`→head-slot widget placement (the
+widget/validation stack already exists via `fieldsFor` + zod `parseRow`).
+
 ---
 
 ## Implementation roadmap (phased)

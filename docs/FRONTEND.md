@@ -140,6 +140,35 @@ Defined in `src/lib/styles/tokens.css` (already scaffolded). Components referenc
 - **InventoryCard** (sectioned grid, `IconSlot`, qty, equipped/attuned badges, weight/value).
 - **SpellManager** — two-pane: list (per-row `EyeToggle` show / Switch prepare / pin) +
   **content wiki detail rendered from CSV**. `Allow over-cap` switch.
+- **WikiDetail decomposition** (planned refactor — today one ~740-line file with 3 inline
+  type branches). Split so the two edit modes (translate = prose, editor = structural) get
+  clean, independent seams; keep `WikiDetail`'s public API so compendium/spellbook/translate
+  callers don't change. Pieces:
+  - **WikiDetail** (dispatcher) — picks the head by type, renders **source-line + `actions`
+    slot + empty state**; `actions` moves HERE (rendered once under the head, type-independent
+    — fixes today's quirk where it only renders in the generic branch, so Spellbook's Cast
+    never shows on a spell).
+  - **SpellHead / MonsterHead / GenericHead** — per-type *shapka*: eyebrow + title(+chips) +
+    the structural stat block (spell strip/cells · monster vitals/abilities/band · generic
+    abilities/meta). **Mode-aware** — `type DetailMode = 'read' | 'translate' | 'editor'`:
+    `read` static · `translate` title=input, stats read-only · `editor` title + stat widgets
+    (range dropdown+number, components V/S/M checkboxes) editable. Title lives in the head (it
+    IS the top of the shapka; spell couples title+chips).
+  - **ArticleProse** (shared) — body text + higher_level + material (html ↔ textarea). Plain
+    `editable` bool (prose edits in both translate + editor). This is the translate surface.
+  - Callers map: compendium=`read`, translate view=`translate`, future editor=`editor`.
+  - Tests assert at the WikiDetail boundary (behavioral) so the split stays invisible.
+- **RollButton** (shared roll affordance — extract; reused across compendium + sheet). Props
+  `formula, label, variant ('d20'|'dmg'|'heal'|'hp'|'cast')`. **plain click** → `rollFormula`
+  + toast; **ctrl/alt-click** → `openTray(pool)` (stub until DiceTray lands). One place owns
+  the modifier-click contract + the roller + the tray hook. Replaces every inline 🎲 (spell
+  effect Dmg/Heal/d20, monster HP) + Spellbook Cast. See deferred concepts:
+  [[charnik-dicetray-attack-damage-concept]] (attack+damage as chained sub-rolls),
+  [[charnik-3d-dice-deferred]] (variant A: 3D engine owns the number, `rollFormula` stays as
+  fallback + test target).
+  - **Build order:** (1) split WikiDetail → heads + prose + dispatcher (behavior identical),
+    (2) extract RollButton + replace inline 🎲 + Cast, (3) mod-click → `openTray` stub;
+    then later tasks: build DiceTray, wire `openTray`, optional 3D overlay.
 - **StatGen** (point-buy/array/manual + steppers + points + boost breakdown) ·
   **LevelUpStepper** (HP → slots → ASI/feat → learn spells → review) · **ClassRow** +
   multiclass (per-class prereqs) — the **Build view**, with a **Strict | Free** mode toggle
