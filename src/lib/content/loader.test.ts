@@ -184,6 +184,26 @@ describe('loader — logic (in-memory)', () => {
 		expect(found.map((r) => r.id)).toEqual(['fireball']);
 		expect(missing).toEqual(['spell:SRD 5.2.1:does-not-exist']);
 	});
+
+	it('warns on a PARTIALLY translated row, but not on complete or fully-untranslated ones', async () => {
+		const s = new MemoryStorage();
+		// conditions need only id + name_en, so this isolates the translation-gap check
+		await s.write(
+			'a/conditions_srd.csv',
+			[
+				'id,systems,source,name_en,name_uk,text_en,text_uk',
+				'partial,5.5e,SRD 5.2.1,Blinded,Осліплений,Cannot see,', // name_uk set, text_uk missing → PARTIAL
+				'complete,5.5e,SRD 5.2.1,Charmed,Зачарований,Cannot attack,Не може атакувати', // both → OK
+				'untouched,5.5e,SRD 5.2.1,Deafened,,Cannot hear,' // no uk at all → silent (EN fallback)
+			].join('\n')
+		);
+		const g = await loadContent(s, ['a']);
+		const warns = g.issues.filter(
+			(i) => i.level === 'warn' && /partial translation/.test(i.message)
+		);
+		expect(warns.map((w) => w.id)).toEqual(['partial']);
+		expect(warns[0]?.message).toMatch(/text_uk/);
+	});
 });
 
 // Integration: load the real shipped content and assert it indexes cleanly.

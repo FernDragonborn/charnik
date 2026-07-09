@@ -129,6 +129,38 @@ function pushMap<K, V>(map: Map<K, V[]>, key: K, val: V): void {
 	else map.set(key, [val]);
 }
 
+const nonEmptyString = (v: unknown): boolean => typeof v === 'string' && v.trim() !== '';
+
+/**
+ * Content-health: flag rows that are PARTIALLY translated into a locale — some `<base>_<loc>` prose is
+ * filled but a `<base>_<loc>` is missing where the English is present. That's the "someone mis-filled
+ * the table" signal. A fully-untranslated row stays silent: EN fallback is the normal, intended case,
+ * so it isn't an error. Reads only prose-locale columns (typed via the ProseLocaleColumns index).
+ */
+function collectTranslationGaps(rows: LoadedRow[], locales: string[]): ContentIssue[] {
+	const gaps: ContentIssue[] = [];
+	for (const locale of locales) {
+		if (locale === 'en') continue;
+		for (const row of rows) {
+			const expected = PROSE_BASES.filter((base) => nonEmptyString(row.data[`${base}_en`]));
+			if (expected.length === 0) continue; // nothing in English to translate
+			const missing = expected.filter((base) => !nonEmptyString(row.data[`${base}_${locale}`]));
+			// partial = started (at least one base translated) but not finished
+			if (missing.length > 0 && missing.length < expected.length)
+				gaps.push({
+					level: 'warn',
+					root: row.root,
+					file: row.file,
+					id: row.id,
+					message: `locale "${locale}": partial translation — missing ${missing
+						.map((base) => `${base}_${locale}`)
+						.join(', ')}`
+				});
+		}
+	}
+	return gaps;
+}
+
 /** One content root paired with the storage it lives in. Bundled SRD roots read from the
  *  read-only fetch/asset source; user homebrew reads from the writable user storage — the loader
  *  merges them into one graph (docs/PLAN.md "content merged from many files/roots"). */
@@ -331,6 +363,9 @@ export async function loadContent(
 				message: `spell_lists: unknown spell "${r.data.spell_id}" (no spell with that id in this edition)`
 			});
 	}
+
+	// content-health: surface partially-translated rows (mis-filled tables), never throw
+	issues.push(...collectTranslationGaps(rows, [...localeSet]));
 
 	return {
 		rows,

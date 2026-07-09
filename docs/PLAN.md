@@ -1400,7 +1400,7 @@ decomposition + RollButton). Ordering + open decisions below.
   sites, but the shared `base` (name_en/text_en/systems/source/effects) means common-column reads
   compile un-narrowed; only type-specific reads need `row.type === 'x'` narrowing (mostly at sites
   that already know the type). `svelte-check` drives the pass.
-- [ ] **LOC-CHECK · Flag partial/mis-filled translations (loader content-health)** — the loader
+- [x] **LOC-CHECK · Flag partial/mis-filled translations (loader content-health)** — DONE. the loader
   discovers locales but doesn't verify a locale's rows are actually complete. Add a check that emits a
   WARN `issue` (never throws — same channel as bad rows) when a row is **partially** translated for a
   locale: it has SOME `<base>_<loc>` filled but is MISSING a `<base>_<loc>` whose `<base>_en` is
