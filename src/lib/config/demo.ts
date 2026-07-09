@@ -11,16 +11,19 @@ import { base } from '$app/paths';
 import { env } from '$env/dynamic/public';
 import { detectPlatform, Platform } from '$lib/storage/provider';
 
+/** Show the demo banner: the hosted preview, a `PUBLIC_DEMO=true` build, OR dev (so it can be
+ *  previewed while developing). This is informational only — it does NOT gate writes. */
 export function isDemo(): boolean {
 	return env.PUBLIC_DEMO === 'true' || dev || base !== '';
 }
 
 /**
- * Whether shipped content is READ-ONLY here → block saves with a message. This is the demo flag
- * MINUS the desktop app: the desktop `tauri dev` build reports `dev === true` (so `isDemo()` is
- * true) yet is genuinely writable (its own data folder), so it must never be gated. Only a hosted /
- * flagged demo — which is always the web/headless target — is read-only.
+ * Whether shipped content is READ-ONLY here → block saves with a message. Stricter than the banner:
+ * `dev` is deliberately EXCLUDED so you can actually test editing locally, and the desktop app is
+ * always writable (its own data folder). So only a genuinely-hosted demo — an explicit
+ * `PUBLIC_DEMO=true`, or the Pages build under a non-root base — on a non-desktop target is read-only.
  */
 export function isReadOnlyContent(): boolean {
-	return isDemo() && detectPlatform() !== Platform.Desktop;
+	if (detectPlatform() === Platform.Desktop) return false;
+	return env.PUBLIC_DEMO === 'true' || base !== '';
 }
