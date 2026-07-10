@@ -18,6 +18,8 @@
 		type TargetFile
 	} from '$lib/content/homebrew';
 	import { SYSTEMS, splitList, type ContentType } from '$lib/content/schemas';
+	import { writeDraft, deleteDraft, listDrafts, type DraftTarget } from '$lib/drafts/store';
+	import { isReadOnlyContent } from '$lib/config/demo';
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
 
@@ -36,15 +38,44 @@
 	let {
 		type,
 		onsave,
-		oncancel
-	}: { type: ContentType; onsave: (id: string) => void; oncancel: () => void } = $props();
+		oncancel,
+		resumeGuid,
+		resumeDraft
+	}: {
+		type: ContentType;
+		onsave: (id: string) => void;
+		oncancel: () => void;
+		/** When resuming a pending add-draft: its GUID + saved fields (else a fresh add-session). */
+		resumeGuid?: string;
+		resumeDraft?: Record<string, string>;
+	} = $props();
+
+	// A new entry has no id yet, so its draft is keyed by a stable per-session GUID (per
+	// charnik-guid-not-counter): resumed from the pending list / an existing add-draft, else fresh.
+	// svelte-ignore state_referenced_locally
+	let addGuid = $state(resumeGuid ?? crypto.randomUUID());
+	const addTarget = $derived<DraftTarget>({ kind: 'add', type, addGuid });
+	const readOnly = isReadOnlyContent();
 
 	// initial-only capture is intended: the parent remounts this form with {#key type}, so the
-	// draft resets cleanly whenever the type changes.
+	// draft resets cleanly whenever the type changes. A resumed draft overlays the blank shape.
 	// svelte-ignore state_referenced_locally
-	let draft = $state(blankDraft(type));
+	const initialDraft = resumeDraft ? { ...blankDraft(type), ...resumeDraft } : blankDraft(type);
+	let draft = $state(initialDraft);
+	let baseline = $state(JSON.stringify(initialDraft));
 	let issues = $state<string[]>([]);
 	let saving = $state(false);
+
+	// auto-save the in-progress new entry (debounced) once it diverges from blank — so a closed form
+	// restores. An untouched form never spawns a draft. Skipped when content is read-only (demo).
+	let writeTimer: ReturnType<typeof setTimeout> | undefined;
+	$effect(() => {
+		const current = JSON.stringify(draft);
+		clearTimeout(writeTimer);
+		if (readOnly || current === baseline) return;
+		const snapshot = { ...draft };
+		writeTimer = setTimeout(() => void writeDraft(getUserStorage(), addTarget, snapshot), 600);
+	});
 
 	// WHERE to save this row. Default = the safe homebrew file; the picker also lists existing files
 	// (incl. shipped ones, which warn). `sel` holds the chosen file path or the NEW_FILE sentinel.
@@ -57,6 +88,20 @@
 	const targetShipped = $derived(isShippedFile(target, CONTENT_ROOTS));
 	onMount(async () => {
 		targets = await listTypeTargets(getUserStorage(), type, CONTENT_ROOTS);
+		// resume the most-recent unsaved add-draft for this type (unless the parent already handed us a
+		// specific one to resume, or content is read-only) — so reopening the add form restores it.
+		if (!resumeGuid && !readOnly) {
+			const mine = (await listDrafts(getUserStorage()))
+				.filter((d) => d.target.kind === 'add' && d.target.type === type)
+				.sort((a, b) => b.savedAt.localeCompare(a.savedAt));
+			const top = mine[0];
+			if (top && top.target.kind === 'add') {
+				addGuid = top.target.addGuid;
+				const restored = { ...blankDraft(type), ...(top.data as Record<string, string>) };
+				draft = restored;
+				baseline = JSON.stringify(restored);
+			}
+		}
 	});
 
 	const fields = $derived(fieldsFor(type));
@@ -84,6 +129,8 @@
 				issues = res.issues ?? ['Could not save'];
 				return;
 			}
+			await deleteDraft(getUserStorage(), addTarget); // saved → drop the cached draft
+			baseline = JSON.stringify(draft); // stop the auto-save effect from re-spawning it
 			resetContentGraph();
 			if (res.id) onsave(res.id);
 		} finally {
