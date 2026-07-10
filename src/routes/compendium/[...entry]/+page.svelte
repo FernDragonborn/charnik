@@ -264,8 +264,8 @@
 	const isHomebrew = (r: LoadedRow | null) => r?.source === HOMEBREW_SOURCE;
 	let confirmDelete = $state<LoadedRow | null>(null); // non-null → the delete-confirm dialog is open
 
-	// remove the row from its homebrew CSV (a fork deletion brings the shipped original back), reload,
-	// and clear the view.
+	// remove the row from its homebrew CSV, reload, and clear the view. (A fork coexists with the
+	// shipped original — sort, not hide — so deleting it doesn't affect the original.)
 	async function deleteRow(row: LoadedRow) {
 		await removeHomebrewRow(getUserStorage(), row.type, `${row.root}/${row.file}`, row.id);
 		confirmDelete = null;
@@ -550,7 +550,7 @@
 	{#if confirmDelete}
 		<ConfirmDialog
 			title="Delete “{String(confirmDelete.data.name_en)}”?"
-			message="This removes the entry from your homebrew CSV and can’t be undone. If it overrode a shipped entry, the original comes back."
+			message="This removes the entry from your homebrew CSV and can’t be undone."
 			confirmLabel="Delete"
 			danger
 			onConfirm={() => confirmDelete && deleteRow(confirmDelete)}

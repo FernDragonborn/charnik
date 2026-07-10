@@ -303,7 +303,8 @@ export async function upsertHomebrewRow(
 
 /** Delete a homebrew row (by id) from its CSV — the only content the app may remove (never a shipped
  *  file). Rewrites the file without that row (re-stamping the header); if it was the file's last row,
- *  the whole file is removed. Deleting a fork lets the shipped original show again. No-op if absent. */
+ *  the whole file is removed. No-op if absent. (A fork doesn't hide the shipped original by default —
+ *  both coexist, homebrew just sorts on top — so removing it changes nothing about the original.) */
 export async function removeHomebrewRow(
 	storage: Storage,
 	type: ContentType,
