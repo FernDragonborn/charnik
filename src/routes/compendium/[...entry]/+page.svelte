@@ -228,6 +228,11 @@
 	const detail = $derived(
 		selected ? buildDetail(selected, selectedType, availableTo, app.activeLocale) : null
 	);
+	// editor mode = a two-panel BEFORE | AFTER: the current rendered article (read-only) beside the
+	// editable form, so you see the original next to your changes.
+	const editorBefore = $derived(
+		editRow ? buildDetail(editRow, editRow.type, undefined, app.activeLocale) : null
+	);
 	const groupLabel = $derived(groupings.find((g) => g.key === groupBy)?.label ?? '');
 	const activeFilters = $derived(sourceFilter.size + facetFilter.size);
 
@@ -402,12 +407,21 @@
 				/>
 			{:else if editRow}
 				{#key editRow.effectiveId}
-					<EditContentForm
-						type={editRow.type}
-						editRow={editRow ?? undefined}
-						onsave={onSaved}
-						oncancel={() => (editRow = null)}
-					/>
+					<div class="editor-2pane">
+						<div class="epane before">
+							<div class="epane-label">Current</div>
+							<WikiDetail detail={editorBefore} />
+						</div>
+						<div class="epane after">
+							<div class="epane-label edit">Your edit</div>
+							<EditContentForm
+								type={editRow.type}
+								editRow={editRow ?? undefined}
+								onsave={onSaved}
+								oncancel={() => (editRow = null)}
+							/>
+						</div>
+					</div>
 				{/key}
 			{:else if adding}
 				{#key resumeAdd?.guid ?? selectedType}
@@ -640,6 +654,41 @@
 		.two-column {
 			grid-template-columns: 1fr;
 			min-height: 480px;
+		}
+	}
+	/* editor mode = BEFORE | AFTER inside the content cell (each panel scrolls independently) */
+	.editor-2pane {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		min-height: 0;
+		overflow: hidden;
+	}
+	.epane {
+		overflow: auto;
+		min-height: 0;
+		padding: 16px 18px;
+	}
+	.epane.before {
+		border-right: 1px solid var(--color-border);
+	}
+	.epane-label {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		margin-bottom: 10px;
+	}
+	.epane-label.edit {
+		color: var(--color-accent-bright);
+	}
+	@media (max-width: 900px) {
+		.editor-2pane {
+			grid-template-columns: 1fr;
+		}
+		.epane.before {
+			border-right: 0;
+			border-bottom: 1px solid var(--color-border);
 		}
 	}
 </style>
