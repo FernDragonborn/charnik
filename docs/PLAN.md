@@ -1410,6 +1410,11 @@ decomposition + RollButton). Ordering + open decisions below.
   DONE (parts 1–2, commits `6178ce3`/`48cb105`): `$lib/drafts/store` (self-contained files, no manifest,
   content-versioned, discard-on-mismatch, +6 tests) + translate wired (prefill/debounced-save/clear,
   e2e-verified) + add wired (per-GUID, resume newest-of-type on mount, clear on save).
+  DONE (part 3, commit `1bfa62e`): the pending-drafts **surface** — `DraftsPane` (full-width list, 4th
+  "Drafts" picker entry, unlimited pickable add-drafts) + `OrphanDialog` (N-of-M step-through, 2-pane
+  reassign picker + preview + conflict view) + compendium/translate wiring + store `findOrphanDrafts`/
+  `repointDraft`/`draftEffectiveId` (+10 tests). Verified live. STILL OPEN: **warn-on-schema-discard**
+  notice (same dialog template) + **editor** draft wiring (lands with Editor mode).
   **SURFACE DECIDED 2026-07-10** (mocks: `design-preview/drafts-surface.html`, `orphan-popup.html`):
   - **Drafts list = full-width pane that replaces the editing block** (compendium right column, where
     WikiDetail/EditContentForm render) — opened via a **4th "Drafts" entry** in the "✎ Edit compendium"
