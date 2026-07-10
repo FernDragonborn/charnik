@@ -17,6 +17,7 @@
 		newHomebrewFile,
 		isShippedFile,
 		listTypeTargets,
+		HOMEBREW_SOURCE,
 		type TargetFile
 	} from '$lib/content/homebrew';
 	import type { LoadedRow } from '$lib/content/loader';
@@ -52,7 +53,8 @@
 		oncancel,
 		resumeGuid,
 		resumeDraft,
-		editRow
+		editRow,
+		ondelete
 	}: {
 		type: ContentType;
 		onsave: (id: string) => void;
@@ -65,6 +67,8 @@
 		/** Editor mode: edit an EXISTING row in place. A shipped SRD row forks to homebrew on save
 		 *  (same id, source=Homebrew → sorts above the original); a homebrew row edits its own file. */
 		editRow?: LoadedRow | undefined;
+		/** Editing a homebrew row → offer to delete it (the page handles confirm + removal). */
+		ondelete?: (() => void) | undefined;
 	} = $props();
 
 	// Editor mode is captured once (the parent remounts via {#key editRow.effectiveId}). Its save
@@ -429,6 +433,9 @@
 			{saving ? 'Saving…' : editing ? 'Save changes' : 'Save homebrew'}
 		</button>
 		<button type="button" class="cancel" onclick={oncancel}>Cancel</button>
+		{#if editRow?.source === HOMEBREW_SOURCE && ondelete}
+			<button type="button" class="delete-entry" onclick={ondelete}>Delete entry</button>
+		{/if}
 	</div>
 	<div class="source-line">Homebrew · you own this row (stored as CSV you can edit)</div>
 </article>
@@ -733,5 +740,19 @@
 	.cancel:hover {
 		color: var(--color-text);
 		border-color: var(--color-border-strong);
+	}
+	.delete-entry {
+		margin-left: auto;
+		font-family: var(--font-display);
+		font-size: 14px;
+		background: transparent;
+		color: var(--color-accent-bright);
+		border: 1px solid transparent;
+		border-radius: 8px;
+		padding: 9px 16px;
+		cursor: pointer;
+	}
+	.delete-entry:hover {
+		border-color: var(--color-accent);
 	}
 </style>

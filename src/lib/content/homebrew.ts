@@ -301,6 +301,28 @@ export async function upsertHomebrewRow(
 	return { ok: true, id };
 }
 
+/** Delete a homebrew row (by id) from its CSV — the only content the app may remove (never a shipped
+ *  file). Rewrites the file without that row (re-stamping the header); if it was the file's last row,
+ *  the whole file is removed. Deleting a fork lets the shipped original show again. No-op if absent. */
+export async function removeHomebrewRow(
+	storage: Storage,
+	type: ContentType,
+	targetFile: string,
+	id: string
+): Promise<void> {
+	if (!(await storage.exists(targetFile))) return;
+	const { rows, directives } = await readHomebrewFile(storage, targetFile);
+	const remaining = rows.filter((r) => r.id !== id);
+	if (remaining.length === rows.length) return; // nothing matched
+	if (remaining.length === 0) {
+		await storage.remove(targetFile); // last row gone → drop the empty file
+		return;
+	}
+	const cols = columnsFor(type);
+	const extras = [...new Set(remaining.flatMap(Object.keys))].filter((c) => !cols.includes(c));
+	await writeStampedHomebrew(storage, targetFile, [...cols, ...extras], remaining, directives);
+}
+
 /** UTF-8 byte-order mark — prepended to CSV writes (Excel/Cyrillic safety, per the invariant). */
 const BOM = String.fromCharCode(0xfeff);
 

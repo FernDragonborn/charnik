@@ -24,12 +24,15 @@
 	import DraftsPane from '$lib/components/DraftsPane.svelte';
 	import OrphanDialog from '$lib/components/OrphanDialog.svelte';
 	import SchemaDiscardDialog from '$lib/components/SchemaDiscardDialog.svelte';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import Chip from '$lib/components/Chip.svelte';
 	import { getUserStorage } from '$lib/storage/provider';
+	import { removeHomebrewRow, rowToDraft, HOMEBREW_SOURCE } from '$lib/content/homebrew';
 	import {
 		findOrphanDrafts,
 		findStaleDrafts,
 		discardDrafts,
+		writeDraft,
 		type DraftEnvelope
 	} from '$lib/drafts/store';
 	import { isRowActive } from '$lib/content/sources.svelte';
@@ -257,6 +260,36 @@
 		};
 	});
 
+	// homebrew rows (the user's own) can be deleted or pulled back into a draft; shipped rows can't.
+	const isHomebrew = (r: LoadedRow | null) => r?.source === HOMEBREW_SOURCE;
+	let confirmDelete = $state<LoadedRow | null>(null); // non-null → the delete-confirm dialog is open
+
+	// remove the row from its homebrew CSV (a fork deletion brings the shipped original back), reload,
+	// and clear the view.
+	async function deleteRow(row: LoadedRow) {
+		await removeHomebrewRow(getUserStorage(), row.type, `${row.root}/${row.file}`, row.id);
+		confirmDelete = null;
+		selected = null;
+		editRow = null;
+		await reloadContent();
+	}
+
+	// "not ready yet" → move the homebrew row back to an unfinished DRAFT (a new add-draft seeded from
+	// it) and remove it from the compendium, so it can be finished + re-saved later from Drafts.
+	async function convertToDraft(row: LoadedRow) {
+		const storage = getUserStorage();
+		await writeDraft(
+			storage,
+			{ kind: 'add', type: row.type, addGuid: crypto.randomUUID() },
+			rowToDraft(row)
+		);
+		await removeHomebrewRow(storage, row.type, `${row.root}/${row.file}`, row.id);
+		selected = null;
+		editRow = null;
+		await reloadContent();
+		showDrafts = true; // land in the drafts list so the user sees where it went
+	}
+
 	// in any authoring mode (editor / add / drafts), the "Edit compendium" picker becomes a single
 	// "back to compendium" action that returns to plain browsing.
 	const inMode = $derived(!!editRow || adding || showDrafts);
@@ -476,6 +509,7 @@
 								editRow={editRow ?? undefined}
 								onsave={onSaved}
 								oncancel={() => (editRow = null)}
+								ondelete={() => (confirmDelete = editRow)}
 							/>
 						</div>
 					</div>
@@ -495,9 +529,31 @@
 				{/key}
 			{:else}
 				<WikiDetail {detail} />
+				{#if isHomebrew(selected)}
+					<!-- your own row: manage it from the bottom of its article -->
+					<div class="homebrew-actions">
+						<button class="hb-btn" onclick={() => selected && convertToDraft(selected)}>
+							Move to drafts
+						</button>
+						<button class="hb-btn danger" onclick={() => (confirmDelete = selected)}>
+							Delete entry
+						</button>
+					</div>
+				{/if}
 			{/if}
 		</div>
 	</div>
+
+	{#if confirmDelete}
+		<ConfirmDialog
+			title="Delete “{String(confirmDelete.data.name_en)}”?"
+			message="This removes the entry from your homebrew CSV and can’t be undone. If it overrode a shipped entry, the original comes back."
+			confirmLabel="Delete"
+			danger
+			onConfirm={() => confirmDelete && deleteRow(confirmDelete)}
+			onCancel={() => (confirmDelete = null)}
+		/>
+	{/if}
 
 	{#if staleDrafts.length}
 		<SchemaDiscardDialog
@@ -624,6 +680,35 @@
 		font-family: var(--font-mono);
 		font-size: 11px;
 		cursor: pointer;
+	}
+	.homebrew-actions {
+		display: flex;
+		gap: 10px;
+		margin-top: 22px;
+		padding-top: 16px;
+		border-top: 1px solid var(--color-border);
+	}
+	.hb-btn {
+		font-family: var(--font-body);
+		font-size: 13px;
+		font-weight: 600;
+		border-radius: 8px;
+		padding: 8px 14px;
+		border: 1px solid var(--color-border-strong);
+		background: var(--color-surface-2);
+		color: var(--color-text);
+		cursor: pointer;
+	}
+	.hb-btn:hover {
+		border-color: var(--color-text-muted);
+	}
+	.hb-btn.danger {
+		color: var(--color-accent-bright);
+		border-color: transparent;
+		background: transparent;
+	}
+	.hb-btn.danger:hover {
+		border-color: var(--color-accent);
 	}
 	.lang-control {
 		display: flex;

@@ -6,6 +6,7 @@ import {
 	listTypeTargets,
 	rowToDraft,
 	upsertHomebrewRow,
+	removeHomebrewRow,
 	homebrewFile,
 	HOMEBREW_SOURCE
 } from './homebrew';
@@ -104,6 +105,16 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 		const rows = await readRows(s, file);
 		expect(rows[0]?.name_uk).toBe('Ікс');
 		expect(rows[0]?.text_uk).toBe('опис');
+	});
+
+	it('removes a row by id (rewriting the file), and deletes the file when its last row goes', async () => {
+		const s = new MemoryStorage();
+		await upsertHomebrewRow(s, 'condition', { id: 'a', name_en: 'A', systems: '5e' }, file);
+		await upsertHomebrewRow(s, 'condition', { id: 'b', name_en: 'B', systems: '5e' }, file);
+		await removeHomebrewRow(s, 'condition', file, 'a');
+		expect((await readRows(s, file)).map((r) => r.id)).toEqual(['b']);
+		await removeHomebrewRow(s, 'condition', file, 'b'); // last row → file removed
+		expect(await s.exists(file)).toBe(false);
 	});
 
 	it('stamps a #content header (source+license) so the metadata-check pop-up never nags', async () => {
