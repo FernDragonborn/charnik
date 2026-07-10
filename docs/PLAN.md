@@ -789,6 +789,12 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - **UBUG-5 · Spending a resource gives no feedback.** Clicking a resource pip (`resourceClick`) spends
   it silently — using a resource should raise a toast (e.g. "Rage — 2 left" / "Ki used"), like rolls
   do. Add a toast on spend (and probably on restore too), naming the resource + remaining count.
+- [ ] **REL-1 · Linux release build.** `release.yml` is Windows-only (`runs-on: windows-latest`). Add
+  a Linux job (matrix `ubuntu-22.04` + apt webkit2gtk deps) so `tauri-action` publishes Linux artifacts
+  alongside the Windows NSIS. Ship **more than the updater bundle**: AppImage is the only auto-updatable
+  target (its `.sig` feeds `latest.json`), but also emit installable `.deb`/`.rpm` for users who just
+  want to install (those don't self-update — that's fine). macOS deferred (needs Apple notarization/
+  signing, $99/yr, else Gatekeeper warns).
 - [~] **UBUG-4 · Tauri .msi install has no content folders.** CODE DONE (needs a real `.msi` verify).
   The content was bundled inside the app (loaded over fetch) but never written to disk, so there was
   no editable folder. Now `content/provider.ts`: on desktop (`isTauri`), `getContentGraph` SEEDS the
@@ -1188,14 +1194,37 @@ Duplication-heavy (do first — this is where the big refactors live):
   token-scans (feeds R4) + ref-resolution/missing handling.
 
 Architecture / correctness (do after the above):
-- [ ] **CH6 · Content load → graph** — `Storage sources → loadContent (parse/merge/index/link) →
-  get/list/editionsOf` + `spellAccess` union. Multi-source merge, longest-filebase match, edition scope.
-- [ ] **CH7 · Ability-score pipeline** — point-buy / standard-array / manual / background-boost /
-  species-choice / ASI-slot → `abilityBoosts` → scores. Logic spread across `build/state` + `build/rules`.
-- [ ] **CH8 · Homebrew authoring round-trip** — `EditContentForm → buildRow/parseRow → unparse →
-  Storage.write → resetContentGraph → loader → shows in compendium`.
-- [ ] **CH9 · Menu/overlay lifecycle** — `openMenu → position → $effect clamp → wheel/click close`
-  (CombatMenus). Smaller; verify the clamp/scroll fix + overlay.kind typing (R2).
+- [x] **CH6 · Content load → graph** — TRACED (2026-07-11), no code change. Chain is coherent: sources
+  (roots + extra) → per-file `parseContentDirectives` → type resolution (`#content-type:` explicit,
+  else longest-filebase match) → meta/hash checks → `Papa.parse` → locale scan → `parseRow` (zod) →
+  prose re-attach → row w/ `effectiveId`; then index (`byType`/`byEffectiveId` dup-detect/`articles`),
+  link (`spell_lists` joins via a shared `systemsById`), API (`list`/`get`/`editionsOf`/`resolveRefs`).
+  No cross-file duplication (join-map builder deduped; type casts are documented single seams).
+  `spellAccess` is a separate blind projection. Comprehensively tested (loader.test: merge, source:id
+  identity, cross-edition articles, #content-type, hash drift, resolveRefs, translation gaps, real 2-root).
+- [x] **CH7 · Ability-score pipeline** — TRACED + deduped (2026-07-11). VM (`build/state`) cleanly
+  delegates math to `build/rules`; found + fixed small VM-side duplication: (a) `toggleCapped<T>` helper
+  now backs the 3 capped multi-selects (species-boost / background-boost / ASI-target picks) that each
+  re-implemented includes/filter/cap; (b) magic pick-caps → `boostPickCount(BoostShape)` (rules, +test) and
+  local `asiPickCount(AsiShape)`; (c) `abilityBoosts` reuses the `backgroundBoosts` derived instead of
+  re-calling `allocateBackgroundBoost`; (d) `boostComplete` had a redundant `? total===3 : total===3`
+  ternary → simplified. Behavior-preserving (289 tests green).
+- [x] **CH8 · Homebrew authoring round-trip** — TRACED + deduped (2026-07-11). Chain intact
+  (EditContentForm → save/upsertHomebrewRow → buildRow(zod parseRow) → writeStampedHomebrew(stamps
+  `#content-*` header + BOM+CRLF via stampDirectives) → storage.write → resetContentGraph → loader).
+  Cleanups: (a) `slugify` was implemented TWICE (homebrew + build/state) → moved to a dependency-free
+  `src/lib/util/slug.ts`, imported by both + EditContentForm (no more route→authoring coupling);
+  (b) `toCsv` + its module `BOM` const were dead (knip-confirmed) → deleted; (c) `buildRow`/`columnsFor`
+  were unused *exports* → de-exported (internal only); (d) the "schema columns + preserved extra
+  columns" block (upsert + remove) → one `columnsWithExtras(type, rows)`. Behavior-preserving, 289
+  tests, 0 visual drift. **FLAGGED (latent, not fixed):** `saveHomebrewRow` (fresh append) writes only
+  schema columns and does NOT re-attach draft extras the way `upsertHomebrewRow` does — a NEW homebrew
+  row carrying localized-prose columns could drop them on first save. Verify + align with upsert.
+- [x] **CH9 · Menu/overlay lifecycle** — TRACED (2026-07-11). Verified: the `$effect` clamp
+  (CombatMenus) keeps the popup in-viewport (viewport-coord math, bottom-overflow pull-up + top-edge
+  guard, idempotent from `overlay.top`); backdrop click + outside-wheel both close; `overlay.kind` is
+  the typed `MenuKind` union with exhaustive branches (R2 confirmed). Deduped the one within-file CSS
+  clone: `.field input` + `.modifier-target` (identical menu text-input) merged to one selector.
 - [ ] **CH10 · Roster CRUD** (census-found) — root `+page.svelte`: list characters, `open(id)` →
   `openCharacter` → combat, `removeCharacter(id)`, new. Store `characters` (guid recompute) + storage.
 - [ ] **CH11 · App switching** (census-found) — `+layout.svelte`/`settings`: theme / locale /

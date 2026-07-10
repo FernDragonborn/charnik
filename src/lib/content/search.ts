@@ -69,16 +69,24 @@ const base = (r: LoadedRow) => ({
 	systems: r.systems
 });
 
+// Both index projections carry every locale's name (not just the active one) so a name match in ANY
+// language surfaces the row and the UI can still show the active-locale label. Empty columns are
+// skipped so `displayName`'s fallback chain sees only real translations.
+function displayNamesByLocale(row: LoadedRow, locales: string[]): Record<string, string> {
+	const names: Record<string, string> = {};
+	for (const locale of locales) {
+		const value = row.data[`name_${locale}`];
+		if (value) names[locale] = String(value);
+	}
+	return names;
+}
+
 export function buildNameDocs(graph: ContentGraph): NameDoc[] {
 	const locales = localesOf(graph);
 	return graph.rows
 		.filter((r) => isBrowsable(r.type))
 		.map((r) => {
-			const names: Record<string, string> = {};
-			for (const l of locales) {
-				const v = r.data[`name_${l}`];
-				if (v) names[l] = String(v);
-			}
+			const names = displayNamesByLocale(r, locales);
 			return { ...base(r), names, nameAll: [...new Set(Object.values(names))] };
 		});
 }
@@ -87,18 +95,11 @@ export function buildTextDocs(graph: ContentGraph, locale: string): TextDoc[] {
 	const locales = localesOf(graph);
 	return graph.rows
 		.filter((r) => isBrowsable(r.type))
-		.map((r) => {
-			const names: Record<string, string> = {};
-			for (const l of locales) {
-				const v = r.data[`name_${l}`];
-				if (v) names[l] = String(v);
-			}
-			return {
-				...base(r),
-				names,
-				text: plainText(String(r.data[`text_${locale}`] || r.data.text_en || ''))
-			};
-		});
+		.map((r) => ({
+			...base(r),
+			names: displayNamesByLocale(r, locales),
+			text: plainText(String(r.data[`text_${locale}`] || r.data.text_en || ''))
+		}));
 }
 
 const OPTS = {
@@ -131,6 +132,18 @@ export interface SearchOpts {
 	limit?: number;
 }
 
+/** Project a matched doc into a result row. `snippet` is empty for name matches and a text excerpt
+ *  for text matches — the only field that differs between the two index passes. */
+const toSearchResult = (doc: NameDoc | TextDoc, locale: string, snippet: string): SearchResult => ({
+	effectiveId: doc.effectiveId,
+	type: doc.type,
+	id: doc.id,
+	source: doc.source,
+	systems: doc.systems,
+	name: displayName(doc.names, locale),
+	snippet
+});
+
 /** name hits first, then text-only hits (deduped), post-filtered to active editions. */
 export function searchContent(
 	nameIndex: Fuse<NameDoc>,
@@ -141,33 +154,19 @@ export function searchContent(
 	const q = query.trim();
 	if (q.length < 2) return [];
 	const inEdition = (systems: string[]) => systems.some((s) => editions.includes(s));
+	// Name pass runs first and wins on collision (deduped by effectiveId), so a name match keeps its
+	// empty snippet even if the same row also matches on text — name relevance beats a text excerpt.
 	const out = new Map<string, SearchResult>();
 
 	for (const h of nameIndex.search(q, { limit })) {
 		const d = h.item;
 		if (!inEdition(d.systems) || out.has(d.effectiveId)) continue;
-		out.set(d.effectiveId, {
-			effectiveId: d.effectiveId,
-			type: d.type,
-			id: d.id,
-			source: d.source,
-			systems: d.systems,
-			name: displayName(d.names, locale),
-			snippet: ''
-		});
+		out.set(d.effectiveId, toSearchResult(d, locale, ''));
 	}
 	for (const h of textIndex.search(q, { limit })) {
 		const d = h.item;
 		if (!inEdition(d.systems) || out.has(d.effectiveId)) continue;
-		out.set(d.effectiveId, {
-			effectiveId: d.effectiveId,
-			type: d.type,
-			id: d.id,
-			source: d.source,
-			systems: d.systems,
-			name: displayName(d.names, locale),
-			snippet: snippetFor(d.text, h.matches)
-		});
+		out.set(d.effectiveId, toSearchResult(d, locale, snippetFor(d.text, h.matches)));
 	}
 	return [...out.values()].slice(0, limit);
 }

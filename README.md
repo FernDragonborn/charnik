@@ -12,6 +12,15 @@ standalone in the system webview.
 > **Status: pre-1.0, in active development.** See [`docs/PLAN.md`](docs/PLAN.md) for the
 > authoritative spec and roadmap.
 
+## Install
+
+Grab the latest Windows installer from the [Releases](https://github.com/FernDragonborn/charnik/releases)
+page and run it. Linux and macOS builds aren't packaged yet — build from source (see below) in the meantime.
+
+The installer isn't code-signed yet, so Windows SmartScreen shows an "unknown publisher" warning:
+choose **More info → Run anyway**. Once installed, Charnik **checks for updates on launch** — when a new
+version is out, an **Update** button appears in the top bar; click it to update and restart.
+
 ## Develop
 
 Requires Node 22 + pnpm. The TS side runs without Rust; the Tauri desktop build also needs

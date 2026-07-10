@@ -89,10 +89,16 @@ export function allocateBackgroundBoost(
 	return out;
 }
 
-/** Is a background boost allocation complete for its shape? (2-1 → 2 distinct; 1-1-1 → 3). */
-export function boostComplete(shape: BoostShape, boosts: Partial<Record<Ability, number>>): boolean {
+/** How many abilities a background-boost shape asks the user to pick (2-1 → 2, 1-1-1 → 3). */
+export function boostPickCount(shape: BoostShape): number {
+	return shape === '2-1' ? 2 : 3;
+}
+
+/** Is a background boost allocation complete? Both shapes spend the same 3 total points (2-1 = one +2
+ *  and one +1; 1-1-1 = three +1s), so completeness is just "3 points allocated". */
+export function boostComplete(_shape: BoostShape, boosts: Partial<Record<Ability, number>>): boolean {
 	const total = ABILITIES.reduce((n, a) => n + (boosts[a] ?? 0), 0);
-	return shape === '2-1' ? total === 3 : total === 3;
+	return total === 3;
 }
 
 /**

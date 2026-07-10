@@ -8,6 +8,7 @@ import {
 	canLower,
 	boostCarrier,
 	allocateBackgroundBoost,
+	boostPickCount,
 	asiFeatLevels,
 	baseAbilities,
 	POINT_BUY_BUDGET,
@@ -79,6 +80,11 @@ describe('ability-boost placement', () => {
 	it('ignores picks outside the background offer', () => {
 		const b = allocateBackgroundBoost('2-1', ['str', 'int'], ['int', 'wis', 'con']);
 		expect(b).toEqual({ int: 2 }); // str dropped, only int remains
+	});
+
+	it('asks for 2 picks on a 2-1 shape and 3 on 1-1-1', () => {
+		expect(boostPickCount('2-1')).toBe(2);
+		expect(boostPickCount('1-1-1')).toBe(3);
 	});
 });
 

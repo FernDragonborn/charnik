@@ -14,6 +14,7 @@ import type { Storage } from '$lib/storage/types';
 import type { LoadedRow } from './loader';
 import { parseContentDirectives, stampDirectives, type MetaKey } from './meta';
 import { hashBody } from './hash';
+import { slugify } from '$lib/util/slug';
 import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
 import {
 	CONTENT_TYPES,
@@ -131,9 +132,17 @@ function optionsOf(type: ContentType, name: string): readonly string[] | undefin
 }
 
 /** Canonical column order for a type = its schema's declared field order. */
-export function columnsFor(type: ContentType): string[] {
+function columnsFor(type: ContentType): string[] {
 	const shape = (CONTENT_TYPES[type].schema as z.ZodObject).shape as Record<string, unknown>;
 	return Object.keys(shape);
+}
+
+/** Column order for a rewrite: schema columns first, then any extra columns present in `rows`
+ *  (localized prose, etc.) so writing back never drops columns the loader would otherwise keep. */
+function columnsWithExtras(type: ContentType, rows: Record<string, string>[]): string[] {
+	const cols = columnsFor(type);
+	const extras = [...new Set(rows.flatMap(Object.keys))].filter((c) => !cols.includes(c));
+	return [...cols, ...extras];
 }
 
 /** Every editable field for a type, in schema order, with the input kind the form should render. */
@@ -160,13 +169,6 @@ export function blankDraft(type: ContentType): Record<string, string> {
 }
 
 /** Slugify a display name into an id (lowercase, a-z0-9 + hyphens) — matches the loader's id rule. */
-export function slugify(name: string): string {
-	return name
-		.toLowerCase()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '');
-}
-
 /** Which file a type's homebrew rows live in (e.g. `content/homebrew/items_hb.csv`). */
 export function homebrewFile(type: ContentType): string {
 	return `${HOMEBREW_ROOT}/${CONTENT_TYPES[type].filebase}_hb.csv`;
@@ -221,7 +223,7 @@ export interface SaveResult {
 
 /** Fill identity + validate a draft against the type's schema. Returns the row object (all columns)
  *  ready for unparse, or the validation issues. `id` is auto-slugged from the name when blank. */
-export function buildRow(
+function buildRow(
 	type: ContentType,
 	draft: Record<string, string>,
 	existingIds: Set<string> = new Set()
@@ -286,12 +288,7 @@ export async function upsertHomebrewRow(
 	const finalRow = { ...built.row };
 	for (const [k, v] of Object.entries(draft)) if (!(k in finalRow)) finalRow[k] = (v ?? '').trim();
 
-	// column order = schema columns first, then any extras seen in the file or this row
-	const cols = columnsFor(type);
-	const extras = [...new Set([...existing.flatMap(Object.keys), ...Object.keys(finalRow)])].filter(
-		(c) => !cols.includes(c)
-	);
-	const columns = [...cols, ...extras];
+	const columns = columnsWithExtras(type, [...existing, finalRow]);
 
 	const idx = existing.findIndex((r) => r.id === id);
 	if (idx >= 0) existing[idx] = finalRow;
@@ -319,17 +316,8 @@ export async function removeHomebrewRow(
 		await storage.remove(targetFile); // last row gone → drop the empty file
 		return;
 	}
-	const cols = columnsFor(type);
-	const extras = [...new Set(remaining.flatMap(Object.keys))].filter((c) => !cols.includes(c));
-	await writeStampedHomebrew(storage, targetFile, [...cols, ...extras], remaining, directives);
-}
-
-/** UTF-8 byte-order mark — prepended to CSV writes (Excel/Cyrillic safety, per the invariant). */
-const BOM = String.fromCharCode(0xfeff);
-
-/** Emit CSV text (UTF-8 BOM + CRLF) for a header + rows, with a fixed column order. */
-export function toCsv(columns: string[], rows: Record<string, string>[]): string {
-	return BOM + Papa.unparse({ fields: columns, data: rows }, { newline: '\r\n' });
+	const columns = columnsWithExtras(type, remaining);
+	await writeStampedHomebrew(storage, targetFile, columns, remaining, directives);
 }
 
 /** Default license stamped on app-authored homebrew. "Custom" = the user's own content on their own

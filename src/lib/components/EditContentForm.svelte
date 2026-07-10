@@ -9,7 +9,6 @@
 	import {
 		fieldsFor,
 		blankDraft,
-		slugify,
 		saveHomebrewRow,
 		upsertHomebrewRow,
 		rowToDraft,
@@ -20,6 +19,7 @@
 		HOMEBREW_SOURCE,
 		type TargetFile
 	} from '$lib/content/homebrew';
+	import { slugify } from '$lib/util/slug';
 	import type { LoadedRow } from '$lib/content/loader';
 	import { content } from '$lib/content/store.svelte';
 	import ClassPicker from './ClassPicker.svelte';
@@ -350,7 +350,9 @@
 		</div>
 	{/if}
 
-	{#each bodyFields as f (f.name)}
+	<!-- one full-width labelled textarea; the same block renders for every body field and for the
+	     textarea-kind bottom fields (higher_level), so it lives in one snippet -->
+	{#snippet textareaBlock(f: (typeof bodyFields)[number])}
 		<label class="body-block">
 			<span class="block-label">{fieldLabel(f.name, f.label)} {@render infoBadge(f.name)}</span>
 			<textarea
@@ -358,17 +360,15 @@
 				placeholder={fieldLabel(f.name, f.label)}
 				bind:value={draft[f.name]}></textarea>
 		</label>
+	{/snippet}
+
+	{#each bodyFields as f (f.name)}
+		{@render textareaBlock(f)}
 	{/each}
 
 	{#each bottomFields as f (f.name)}
 		{#if f.kind === 'textarea'}
-			<label class="body-block">
-				<span class="block-label">{fieldLabel(f.name, f.label)} {@render infoBadge(f.name)}</span>
-				<textarea
-					class="body-input"
-					placeholder={fieldLabel(f.name, f.label)}
-					bind:value={draft[f.name]}></textarea>
-			</label>
+			{@render textareaBlock(f)}
 		{:else}
 			<label class="bottom-field">
 				<span class="block-label">{fieldLabel(f.name, f.label)} {@render infoBadge(f.name)}</span>

@@ -26,6 +26,7 @@ import {
 	canLower,
 	boostCarrier,
 	allocateBackgroundBoost,
+	boostPickCount,
 	asiFeatLevels,
 	POINT_BUY_BUDGET,
 	STANDARD_ARRAY,
@@ -40,6 +41,7 @@ import {
 	buildIssues
 } from '$lib/build/derive';
 import { splitList, FEAT_CATEGORY, type ContentType } from '$lib/content/schemas';
+import { slugify } from '$lib/util/slug';
 
 /** Type guard: is this row of content type `T`? (A predicate is needed — TS won't narrow a union by a
  *  bare `row.type === type` comparison against a generic `T`.) */
@@ -73,13 +75,16 @@ export const ASI = '__asi__';
 const ASI_FEAT_ID = 'ability-score-improvement';
 /** ASI allocation shape: +2 to one ability ('2') or +1 to two ('1-1'). */
 type AsiShape = '2' | '1-1';
+/** How many abilities an ASI shape lets you pick ('2' → 1 target, '1-1' → 2 targets). */
+const asiPickCount = (shape: AsiShape): number => (shape === '2' ? 1 : 2);
 
-const slugify = (s: string): string =>
-	s
-		.toLowerCase()
-		.trim()
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '') || 'hero';
+/** Toggle `item` in a capped multi-select list: drop it if already picked, else add it only while
+ *  under `cap`. The shared shape behind every "pick up to N" control in the builder (ability boosts,
+ *  ASI targets, …) so they can't drift apart. */
+function toggleCapped<T>(list: T[], item: T, cap: number): T[] {
+	if (list.includes(item)) return list.filter((x) => x !== item);
+	return list.length < cap ? [...list, item] : list;
+}
 
 /** One class row in the draft (pre-resolution: nullable ids while the user is still choosing). */
 interface DraftClass {
@@ -320,11 +325,11 @@ class BuildVM {
 		ABILITIES.filter((a) => !this.speciesFixedAbilities.has(a))
 	);
 	toggleSpeciesBoostPick = (ab: Ability) => {
-		const cap = this.speciesBoostChoice?.count ?? 0;
-		if (this.draft.speciesBoostPicks.includes(ab))
-			this.draft.speciesBoostPicks = this.draft.speciesBoostPicks.filter((a) => a !== ab);
-		else if (this.draft.speciesBoostPicks.length < cap)
-			this.draft.speciesBoostPicks = [...this.draft.speciesBoostPicks, ab];
+		this.draft.speciesBoostPicks = toggleCapped(
+			this.draft.speciesBoostPicks,
+			ab,
+			this.speciesBoostChoice?.count ?? 0
+		);
 	};
 
 	// --- multiclass rows -------------------------------------------------------
@@ -525,8 +530,7 @@ class BuildVM {
 			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
 		};
 		add(this.edit?.boosts ?? {}); // boosts carried over from a loaded character (level-up)
-		if (this.draft.system === '5.5e' && this.backgroundBoostChoices.length)
-			add(allocateBackgroundBoost(this.draft.boostShape, this.draft.boostPicks, this.backgroundBoostChoices));
+		add(this.backgroundBoosts); // 5.5e background choice (empty unless the guard in backgroundBoosts holds)
 		// species free-choice ASI (5e Half-Elf +1/+1)
 		if (this.speciesBoostChoice)
 			for (const ab of this.draft.speciesBoostPicks)
@@ -535,9 +539,11 @@ class BuildVM {
 		return out;
 	});
 	toggleBoostPick = (ab: Ability) => {
-		const cap = this.draft.boostShape === '2-1' ? 2 : 3;
-		if (this.draft.boostPicks.includes(ab)) this.draft.boostPicks = this.draft.boostPicks.filter((a) => a !== ab);
-		else if (this.draft.boostPicks.length < cap) this.draft.boostPicks = [...this.draft.boostPicks, ab];
+		this.draft.boostPicks = toggleCapped(
+			this.draft.boostPicks,
+			ab,
+			boostPickCount(this.draft.boostShape)
+		);
 	};
 
 	// --- feats: one ASI/feat slot per qualifying level, PER CLASS (RAW-correct for multiclass:
@@ -600,17 +606,13 @@ class BuildVM {
 		asiBoost(this.draft.slotAsi[key]);
 	setAsiShape = (key: string, shape: AsiShape) => {
 		const cur = this.draft.slotAsi[key] ?? { shape, picks: [] };
-		const cap = shape === '2' ? 1 : 2;
-		this.draft.slotAsi = { ...this.draft.slotAsi, [key]: { shape, picks: cur.picks.slice(0, cap) } };
+		// trim picks to the new shape's cap (switching 1-1 → 2 drops the extra target)
+		const picks = cur.picks.slice(0, asiPickCount(shape));
+		this.draft.slotAsi = { ...this.draft.slotAsi, [key]: { shape, picks } };
 	};
 	toggleAsiPick = (key: string, ab: Ability) => {
 		const cur = this.draft.slotAsi[key] ?? { shape: '2' as const, picks: [] as Ability[] };
-		const cap = cur.shape === '2' ? 1 : 2;
-		const picks = cur.picks.includes(ab)
-			? cur.picks.filter((a) => a !== ab)
-			: cur.picks.length < cap
-				? [...cur.picks, ab]
-				: cur.picks;
+		const picks = toggleCapped(cur.picks, ab, asiPickCount(cur.shape));
 		this.draft.slotAsi = { ...this.draft.slotAsi, [key]: { ...cur, picks } };
 	};
 
@@ -656,7 +658,7 @@ class BuildVM {
 		};
 		// editing keeps the original id + play/ui; creating derives a fresh id from the name
 		return assembleCharacter(build, {
-			id: this.edit?.id ?? slugify(this.draft.name),
+			id: this.edit?.id ?? (slugify(this.draft.name) || 'hero'),
 			system: this.draft.system,
 			strict: this.draft.strict,
 			play: this.edit?.play ?? null,
