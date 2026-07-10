@@ -1406,7 +1406,13 @@ decomposition + RollButton). Ordering + open decisions below.
   sites, but the shared `base` (name_en/text_en/systems/source/effects) means common-column reads
   compile un-narrowed; only type-specific reads need `row.type === 'x'` narrowing (mostly at sites
   that already know the type). `svelte-check` drives the pass.
-- [ ] **DRAFT-CACHE · Persist in-progress edits (translate / add / editor) so a closed form restores.**
+- [~] **DRAFT-CACHE · Persist in-progress edits (translate / add / editor) so a closed form restores.**
+  DONE (parts 1–2, commits `6178ce3`/`48cb105`): `$lib/drafts/store` (self-contained files, no manifest,
+  content-versioned, discard-on-mismatch, +6 tests) + translate wired (prefill/debounced-save/clear,
+  e2e-verified) + add wired (per-GUID, resume newest-of-type on mount, clear on save). STILL OPEN
+  (needs UX input — see decisions list): the **pending-drafts / orphan surface** (list drafts, resume/
+  delete, orphan reassign-to-existing dialog) + editor wiring (with Editor mode) + the warn-on-schema-
+  discard notice. Original spec:
   A form's last unsaved state is cached to disk and silently re-fills the form when reopened (for any
   reason — nav away, reload, crash). Over the `Storage` seam; reuses the character autosave debounce.
   - **All drafts live in a `drafts/` folder on disk, one self-contained JSON per draft — NO manifest /
