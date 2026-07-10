@@ -17,6 +17,7 @@
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
 	import type { WikiEditDraft } from '$lib/components/wikiEdit';
+	import { writeDraft, readDraft, deleteDraft, type DraftTarget } from '$lib/drafts/store';
 	import { app } from '$lib/stores/app.svelte';
 	import { isReadOnlyContent } from '$lib/config/demo';
 	import { _ } from '$lib/i18n';
@@ -74,13 +75,25 @@
 		selected ? buildDetail(selected, selectedType, undefined, targetLocale) : null
 	);
 
-	// draft = the raw target-locale prose of the selected row; reset whenever the row or locale changes
+	// draft = the raw target-locale prose of the selected row; reset whenever the row or locale changes.
+	// `baseline` is the draft as LOADED (from the row, or a restored cache) — the auto-save writes only
+	// when the draft diverges from it, so merely VIEWING an entry never spawns a draft file.
 	let draft = $state<WikiEditDraft>({ name: '', text: '' });
+	let baseline = $state('');
+
+	const translateTarget = (r: LoadedRow, loc: string): DraftTarget => ({
+		kind: 'translate',
+		type: r.type,
+		source: r.source,
+		id: r.id,
+		locale: loc
+	});
+
 	$effect(() => {
 		const r = selected;
 		const loc = targetLocale;
 		untrack(() => {
-			draft = r
+			const fromRow: WikiEditDraft = r
 				? {
 						name: String(r.data[`name_${loc}`] ?? ''),
 						text: String(r.data[`text_${loc}`] ?? ''),
@@ -88,7 +101,40 @@
 						higher_level: String(r.data[`higher_level_${loc}`] ?? '')
 					}
 				: { name: '', text: '' };
+			draft = fromRow;
+			baseline = JSON.stringify(fromRow);
 		});
+		// then, async, restore a cached draft if one exists for this exact target (unless read-only)
+		if (r && !demo) {
+			void readDraft<Partial<WikiEditDraft>>(getUserStorage(), translateTarget(r, loc)).then(
+				(env) => {
+					if (!env || selected !== r || targetLocale !== loc) return; // selection moved on; ignore
+					const d = env.data;
+					const restored: WikiEditDraft = {
+						name: String(d.name ?? ''),
+						text: String(d.text ?? ''),
+						material: String(d.material ?? ''),
+						higher_level: String(d.higher_level ?? '')
+					};
+					draft = restored;
+					baseline = JSON.stringify(restored); // a restored draft is the new clean baseline
+				}
+			);
+		}
+	});
+
+	// auto-save the draft to disk (debounced) whenever it diverges from the loaded baseline
+	let writeTimer: ReturnType<typeof setTimeout> | undefined;
+	$effect(() => {
+		const current = JSON.stringify(draft);
+		const r = selected;
+		const loc = targetLocale;
+		clearTimeout(writeTimer);
+		if (demo || !r || current === baseline) return;
+		const snapshot: WikiEditDraft = { ...draft };
+		writeTimer = setTimeout(() => {
+			void writeDraft(getUserStorage(), translateTarget(r, loc), snapshot);
+		}, 600);
 	});
 
 	async function save() {
@@ -99,12 +145,15 @@
 		}
 		saving = true;
 		try {
+			const target = translateTarget(selected, targetLocale);
 			await saveTranslation(getUserStorage(), selected, targetLocale, {
 				name: draft.name,
 				text: draft.text,
 				...(draft.material !== undefined ? { material: draft.material } : {}),
 				...(draft.higher_level !== undefined ? { higher_level: draft.higher_level } : {})
 			});
+			await deleteDraft(getUserStorage(), target); // saved → the cached draft is now redundant
+			baseline = JSON.stringify(draft); // prevent the auto-save effect from re-spawning it
 			await reloadContent();
 			toast('Translation saved');
 		} catch (e) {
