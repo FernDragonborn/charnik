@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.2
+
+- **Automatic updates (desktop).** Charnik now checks for a new version on launch. When one is
+  available, a gold **Update** button appears in the top bar; click it to download and install the
+  new version and restart — no need to visit the releases page or reinstall by hand. Updates are
+  cryptographically signed, so only genuine Charnik releases can be installed. The check is quiet and
+  never blocks you: if you're offline or no update exists, nothing changes.
+- **One-time cleanup for older installs.** Because the app's internal identifier changed, a build
+  installed before this identifier switch won't be replaced in place — uninstall the old Charnik once
+  by hand, then install this version. From here on, updates apply over the top automatically.
+
 ## 0.2.1
 
 - **Editor mode.** From **Edit compendium → Editor**, edit every field of a selected entry in a

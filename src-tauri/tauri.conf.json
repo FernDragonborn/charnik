@@ -1,7 +1,7 @@
 {
 	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
 	"productName": "charnik",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"identifier": "io.github.ferndragonborn.charnik",
 	"build": {
 		"frontendDist": "../build",
@@ -23,9 +23,18 @@
 			"csp": null
 		}
 	},
+	"plugins": {
+		"updater": {
+			"endpoints": [
+				"https://github.com/FernDragonborn/charnik/releases/latest/download/latest.json"
+			],
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhGMjYxQ0I4ODU0ODUyNjEKUldSaFVraUZ1Qndtai96M2hWUVJHelZWZXFCblNEelVhNnhIa2FoL0JHZjZDVlEvcGhQYTJSTEkK"
+		}
+	},
 	"bundle": {
 		"active": true,
 		"targets": "all",
+		"createUpdaterArtifacts": true,
 		"icon": [
 			"icons/32x32.png",
 			"icons/128x128.png",

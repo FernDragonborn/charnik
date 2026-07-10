@@ -1,0 +1,72 @@
+name: Release desktop
+
+# Manual only — daily pushes never trigger a release. Ship a real build like this:
+#   1. Bump the version in BOTH package.json and src-tauri/tauri.conf.json.
+#   2. Write the new section at the top of CHANGELOG.md (its top block becomes the release notes).
+#   3. Actions tab → this workflow → "Run workflow".
+# It builds + signs the installer, emits latest.json (the updater manifest the app polls), and
+# publishes a GitHub Release tagged from tauri.conf.json's version.
+#
+# One-time setup — the signing key is scoped to the `release` ENVIRONMENT, not repository secrets, so
+# no other workflow (ci.yml, pages.yml, a PR) can read it (Settings → Environments → New environment
+# → "release", then add these as environment secrets):
+#   TAURI_SIGNING_PRIVATE_KEY           the minisign private key (contents of the generated .key file)
+#   TAURI_SIGNING_PRIVATE_KEY_PASSWORD  its password
+# Recommended on that environment: a deployment branch rule limiting it to `main`/tags.
+# The matching public key lives in src-tauri/tauri.conf.json (plugins.updater.pubkey).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write # create the release + upload assets
+
+jobs:
+  release:
+    # `environment: release` is what grants this job (and only this job) the signing secrets.
+    environment: release
+    # Windows-only for now (the primary target). Add macos-latest / ubuntu-22.04 to a matrix later.
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4 # version comes from packageManager in package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - run: pnpm install --frozen-lockfile
+
+      # Release notes = the top CHANGELOG.md section (its first "## …" header through the line before
+      # the next "## "). Manual bump means CHANGELOG's top block already describes this version.
+      - name: Extract release notes
+        id: notes
+        shell: bash
+        run: |
+          notes=$(awk '/^## /{c++} c==1' CHANGELOG.md)
+          {
+            echo 'body<<CHANGELOG_EOF'
+            echo "$notes"
+            echo CHANGELOG_EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          # __VERSION__ is replaced by the version in src-tauri/tauri.conf.json.
+          tagName: v__VERSION__
+          releaseName: Charnik v__VERSION__
+          releaseBody: ${{ steps.notes.outputs.body }}
+          releaseDraft: false
+          prerelease: false

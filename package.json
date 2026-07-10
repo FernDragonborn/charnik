@@ -1,7 +1,7 @@
 {
 	"name": "charnik",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.2.2",
 	"license": "AGPL-3.0-or-later",
 	"type": "module",
 	"packageManager": "pnpm@11.3.0",
@@ -61,6 +61,8 @@
 		"@tauri-apps/plugin-dialog": "~2.7.1",
 		"@tauri-apps/plugin-fs": "~2.5.1",
 		"@tauri-apps/plugin-opener": "^2.5.4",
+		"@tauri-apps/plugin-process": "^2.3.1",
+		"@tauri-apps/plugin-updater": "^2.10.1",
 		"dompurify": "^3.4.11",
 		"fuse.js": "^7.4.2",
 		"idb": "^8.0.3",

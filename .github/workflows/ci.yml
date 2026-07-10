@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+# Read-only: CI only checks/tests/builds — it never writes to the repo or creates releases.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest

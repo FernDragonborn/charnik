@@ -28,6 +28,12 @@
 	import { reloadContent } from '$lib/content/store.svelte';
 	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
 	import { loadRoster } from '$lib/character/store.svelte';
+	import {
+		updater,
+		checkForUpdate,
+		installUpdate,
+		simulateUpdateAvailable
+	} from '$lib/update/updater.svelte';
 
 	let { children } = $props();
 
@@ -85,6 +91,9 @@
 	// just load. Cached — a no-op if a page already loaded it.
 	let firstRunDefault = $state<string | null>(null); // non-null → show the first-run picker
 	onMount(async () => {
+		void checkForUpdate(); // fire-and-forget; self-guards to desktop, never blocks the load
+		// Dev preview of the update chip: `?dev-update` in the URL. No-op in production.
+		if (import.meta.env.DEV && page.url.searchParams.has('dev-update')) simulateUpdateAvailable();
 		if (detectPlatform() !== Platform.Desktop) {
 			loadContentStore();
 			return;
@@ -119,6 +128,26 @@
 	function toggleSystem() {
 		app.activeSystem = app.activeSystem === '5.5e' ? '5e' : '5.5e';
 	}
+
+	// The update chip only exists once a newer build is found; it stays gold-lit until installed, shows
+	// live % while downloading, and is inert (no re-trigger) mid-install.
+	const updateBusy = $derived(updater.status === 'downloading' || updater.status === 'installing');
+	const updateLabel = $derived(
+		updater.status === 'downloading'
+			? `${updater.progress}%`
+			: updater.status === 'installing'
+				? '…'
+				: $_('update.ready')
+	);
+	const updateTitle = $derived(
+		updater.status === 'error'
+			? $_('update.error', { values: { error: updater.error } })
+			: updater.status === 'downloading'
+				? $_('update.downloading', { values: { progress: updater.progress } })
+				: updater.status === 'installing'
+					? $_('update.installing')
+					: $_('update.tooltip', { values: { version: updater.version } })
+	);
 </script>
 
 <svelte:head>
@@ -163,6 +192,17 @@
 			title={$_('refresh.title')}
 			aria-label={$_('refresh.title')}>⟳</button
 		>
+		{#if updater.status !== 'idle'}
+			<button
+				type="button"
+				class="chip chip-update"
+				class:is-busy={updateBusy}
+				onclick={() => void installUpdate()}
+				disabled={updateBusy}
+				title={updateTitle}
+				aria-label={updateTitle}>⭳ {updateLabel}</button
+			>
+		{/if}
 		<kbd>Ctrl K</kbd>
 	</div>
 </header>
@@ -267,6 +307,19 @@
 		gap: var(--space-2);
 	}
 	/* the chip buttons use the shared global .chip (styles/components.css) */
+	/* The one gold-lit chip: absent until a release is found, so its arrival draws the eye. Selector
+	   also matches :hover to keep the gold instead of reverting to the base .chip:hover grey. */
+	.chip-update,
+	.chip-update:hover {
+		color: var(--color-resource);
+		border-color: var(--color-resource);
+		background: var(--color-resource-soft);
+		font-weight: 600;
+	}
+	.chip-update.is-busy {
+		cursor: default;
+		opacity: 0.85;
+	}
 	.chips kbd {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);

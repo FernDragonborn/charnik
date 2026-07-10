@@ -112,6 +112,13 @@
 	"refresh": {
 		"title": "Refresh data (re-read from disk)"
 	},
+	"update": {
+		"ready": "Update",
+		"tooltip": "Version {version} is ready — click to install and restart",
+		"downloading": "Downloading update… {progress}%",
+		"installing": "Installing…",
+		"error": "Update failed: {error}. Click to retry."
+	},
 	"contentField": {
 		"name": "Name",
 		"text": "Description",
