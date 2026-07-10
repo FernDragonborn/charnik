@@ -19,6 +19,7 @@
 	import { groupingsFor, facetFor, groupRows, distinctValues } from '$lib/content/grouping';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
+	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
 	import EditContentForm from '$lib/components/EditContentForm.svelte';
 	import DraftsPane from '$lib/components/DraftsPane.svelte';
 	import OrphanDialog from '$lib/components/OrphanDialog.svelte';
@@ -45,6 +46,19 @@
 	// shared reactive store → a live content refresh re-renders every derived list below, no reload
 	const graph = $derived(content.graph);
 	const types = $derived(graph ? [...graph.byType.keys()].filter(isBrowsable).sort() : []);
+
+	// CONTENT language — independent of the app UI language: a picker over the locales that actually
+	// exist in the CSVs (graph.locales). Persisted; defaults to the UI locale on first run, then sticks.
+	const LOCALE_KEY = 'charnik:compendium-locale';
+	const storedLocale =
+		typeof localStorage !== 'undefined' ? localStorage.getItem(LOCALE_KEY) : null;
+	let contentLocale = $state(storedLocale ?? app.activeLocale);
+	const contentLocales = $derived(graph?.locales ?? ['en']);
+	$effect(() => {
+		if (typeof localStorage !== 'undefined') localStorage.setItem(LOCALE_KEY, contentLocale);
+	});
+	// localized display name for a row (the chosen content locale, English fallback)
+	const localName = (r: LoadedRow) => String(r.data[`name_${contentLocale}`] ?? r.data.name_en);
 	let selectedType = $state<ContentType>('spell');
 	let query = $state('');
 	let selected = $state<LoadedRow | null>(null);
@@ -197,7 +211,7 @@
 				const v = Object.entries(r.data).find(([k]) => k === facet.key)?.[1];
 				if (!facetFilter.has(v == null ? '' : String(v))) return false;
 			}
-			return !q || String(r.data.name_en).toLowerCase().includes(q);
+			return !q || localName(r).toLowerCase().includes(q);
 		});
 	});
 
@@ -206,7 +220,7 @@
 			label: g.label,
 			entries: g.rows.map((r): Entry<LoadedRow> => ({
 				id: r.effectiveId,
-				name: String(r.data.name_en),
+				name: localName(r),
 				meta: entryMeta(r),
 				edition: editionLabel(r.systems),
 				row: r
@@ -227,12 +241,12 @@
 			.filter((x) => (seen.has(x.name) ? false : seen.add(x.name)));
 	});
 	const detail = $derived(
-		selected ? buildDetail(selected, selectedType, availableTo, app.activeLocale) : null
+		selected ? buildDetail(selected, selectedType, availableTo, contentLocale) : null
 	);
 	// editor mode = a two-panel BEFORE | AFTER: the current rendered article (read-only) beside the
 	// editable form, so you see the original next to your changes.
 	const editorBefore = $derived(
-		editRow ? buildDetail(editRow, editRow.type, undefined, app.activeLocale) : null
+		editRow ? buildDetail(editRow, editRow.type, undefined, contentLocale) : null
 	);
 	// the editor is a 3-column view — ask the shell for the full viewport width (like translate);
 	// cleared when editing ends or the page unmounts.
@@ -364,6 +378,13 @@
 						{/if}
 					</div>
 				</details>
+			{/if}
+
+			{#if contentLocales.length > 1}
+				<label class="lang-control">
+					<span class="lang-label">Language</span>
+					<LanguagePicker bind:value={contentLocale} locales={contentLocales} />
+				</label>
 			{/if}
 
 			{#if inMode}
@@ -603,6 +624,19 @@
 		font-family: var(--font-mono);
 		font-size: 11px;
 		cursor: pointer;
+	}
+	.lang-control {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-left: auto;
+	}
+	.lang-label {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
 	}
 	.back-to-browse {
 		margin-left: auto;
