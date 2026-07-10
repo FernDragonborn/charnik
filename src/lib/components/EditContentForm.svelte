@@ -187,6 +187,33 @@
 		)
 	);
 	const hasClasses = $derived(fields.some((f) => f.name === CLASSES_FIELD));
+
+	// Per-field help shown on an (i) badge (hover) — formats + examples for the non-obvious columns
+	// (the parser-driven `damage`/`effects`, spell fields, …). Missing → no badge.
+	const FIELD_INFO: Record<string, string> = {
+		text_en: 'The main description. Markdown is supported.',
+		level: 'Spell level 0–9 (0 = cantrip). Levels above 9 have no spell slot in the classic rules.',
+		school: 'e.g. Evocation, Abjuration, Necromancy.',
+		casting_time: 'e.g. 1 action, 1 bonus action, 1 reaction, 1 minute.',
+		range: 'e.g. 60 feet, Self, Touch, Sight.',
+		components: 'Verbal / Somatic / Material, e.g. V S M.',
+		duration: 'e.g. Instantaneous, 1 minute, Concentration up to 1 hour.',
+		concentration: 'On = the spell needs concentration to keep going.',
+		ritual: 'On = can also be cast as a ritual (no slot, +10 min).',
+		resolution: 'How it resolves: save / attack / auto / util — drives the roll widget.',
+		save: 'Ability for the saving throw, e.g. dex, wis, con.',
+		damage: 'Dice + type for the parser, e.g. “8d6 fire” or “2d4 necrotic”. Leave blank if none.',
+		material: 'Material component text, e.g. “a pinch of sulfur and bat guano”.',
+		higher_level: 'What changes when cast with a higher-level slot.',
+		effects:
+			'Auto-calc effects, “;”-separated. Format kind:target±amount. ' +
+			'e.g. flat-bonus:ac+1; resist-immune:fire; grant-proficiency:skill.stealth. Leave blank if none.',
+		classes: 'Tick the spellcaster classes this spell is available to (below).'
+	};
+	// live warning for the level cell: a value above 9 has no slot in the classic rules
+	const levelWarning = $derived(
+		Number(draft.level) > 9 ? `No level ${draft.level} spell slot in the classic rules (0–9).` : ''
+	);
 	// existing SPELLCASTER classes to tick in the ClassPicker — only classes with a caster type have
 	// spell slots (excludes Barbarian/Fighter/Monk/Rogue); deduped by id (a class exists once per
 	// edition, same id) and sorted by name. Data-driven off the class row's `caster` column.
@@ -230,6 +257,12 @@
 	}
 </script>
 
+{#snippet infoBadge(name: string)}
+	{#if FIELD_INFO[name]}
+		<span class="info-badge" title={FIELD_INFO[name]} aria-label={FIELD_INFO[name]}>i</span>
+	{/if}
+{/snippet}
+
 <article class="detail-body edit">
 	<div class="deyebrow">
 		{type.replace(/_/g, ' ')} · {editing ? 'edit' : 'new homebrew'}{#if editShipped}
@@ -267,10 +300,10 @@
 		<div class="detail-meta">
 			{#each metaFields as f (f.name)}
 				<label class="meta-cell">
-					<span class="meta-key"
-						>{fieldLabel(f.name, f.label)}{#if f.required}<span class="required-mark">*</span
-							>{/if}</span
-					>
+					<span class="meta-key">
+						{fieldLabel(f.name, f.label)}{#if f.required}<span class="required-mark">*</span>{/if}
+						{@render infoBadge(f.name)}
+					</span>
 					{#if f.kind === 'enum'}
 						<select bind:value={draft[f.name]}>
 							<option value="">—</option>
@@ -292,6 +325,9 @@
 					{:else}
 						<input type="text" bind:value={draft[f.name]} />
 					{/if}
+					{#if f.name === 'level' && levelWarning}
+						<span class="cell-warn">⚠ {levelWarning}</span>
+					{/if}
 				</label>
 			{/each}
 		</div>
@@ -299,7 +335,9 @@
 
 	{#if hasClasses}
 		<div class="classes-block">
-			<span class="block-label">{fieldLabel('classes', 'Available to')}</span>
+			<span class="block-label"
+				>{fieldLabel('classes', 'Available to')} {@render infoBadge('classes')}</span
+			>
 			<ClassPicker
 				value={draft.classes ?? ''}
 				options={classList}
@@ -309,21 +347,27 @@
 	{/if}
 
 	{#each bodyFields as f (f.name)}
-		<textarea
-			class="body-input"
-			placeholder={fieldLabel(f.name, f.label)}
-			bind:value={draft[f.name]}></textarea>
-	{/each}
-
-	{#each bottomFields as f (f.name)}
-		{#if f.kind === 'textarea'}
+		<label class="body-block">
+			<span class="block-label">{fieldLabel(f.name, f.label)} {@render infoBadge(f.name)}</span>
 			<textarea
 				class="body-input"
 				placeholder={fieldLabel(f.name, f.label)}
 				bind:value={draft[f.name]}></textarea>
+		</label>
+	{/each}
+
+	{#each bottomFields as f (f.name)}
+		{#if f.kind === 'textarea'}
+			<label class="body-block">
+				<span class="block-label">{fieldLabel(f.name, f.label)} {@render infoBadge(f.name)}</span>
+				<textarea
+					class="body-input"
+					placeholder={fieldLabel(f.name, f.label)}
+					bind:value={draft[f.name]}></textarea>
+			</label>
 		{:else}
 			<label class="bottom-field">
-				<span class="block-label">{fieldLabel(f.name, f.label)}</span>
+				<span class="block-label">{fieldLabel(f.name, f.label)} {@render infoBadge(f.name)}</span>
 				<input type="text" bind:value={draft[f.name]} />
 			</label>
 		{/if}
@@ -572,9 +616,36 @@
 		background: #fff;
 	}
 	.classes-block,
-	.bottom-field {
+	.bottom-field,
+	.body-block {
 		display: block;
 		margin-bottom: 14px;
+	}
+	.info-badge {
+		display: inline-grid;
+		place-items: center;
+		width: 14px;
+		height: 14px;
+		border-radius: 50%;
+		border: 1px solid var(--color-border-strong);
+		color: var(--color-text-muted);
+		font-size: 9px;
+		font-style: italic;
+		font-weight: 700;
+		cursor: help;
+		vertical-align: middle;
+		user-select: none;
+	}
+	.info-badge:hover {
+		border-color: var(--color-accent);
+		color: var(--color-accent-bright);
+	}
+	.cell-warn {
+		display: block;
+		margin-top: 4px;
+		font-size: 11px;
+		line-height: 1.3;
+		color: var(--color-warning);
 	}
 	.block-label {
 		display: block;
