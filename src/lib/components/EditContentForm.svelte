@@ -20,6 +20,8 @@
 		type TargetFile
 	} from '$lib/content/homebrew';
 	import type { LoadedRow } from '$lib/content/loader';
+	import { content } from '$lib/content/store.svelte';
+	import ClassPicker from './ClassPicker.svelte';
 	import { SYSTEMS, splitList, type ContentType } from '$lib/content/schemas';
 	import {
 		writeDraft,
@@ -155,12 +157,46 @@
 		}
 	});
 
-	const fields = $derived(fieldsFor(type));
-	const bodyFields = $derived(fields.filter((f) => f.kind === 'textarea'));
-	// everything the meta grid renders: not the title, body, systems or id (those get their own row)
-	const metaFields = $derived(
-		fields.filter((f) => !['name_en', 'systems', 'id'].includes(f.name) && f.kind !== 'textarea')
+	// Localized prose columns (name_uk / text_uk / material_de / …) are NOT edited here — translating is
+	// the Translate view's job — so the authoring form only shows the base (English) prose + structure.
+	const isLocaleVariant = (name: string) =>
+		/^(name|text)_(?!en$)[a-z][a-z-]*$/.test(name) ||
+		/^(material|higher_level)_[a-z][a-z-]*$/.test(name);
+	// material + higher_level render at the BOTTOM (below the body), mirroring the compendium article.
+	const BOTTOM_FIELDS = ['higher_level', 'material'];
+	const CLASSES_FIELD = 'classes';
+
+	const fields = $derived(fieldsFor(type).filter((f) => !isLocaleVariant(f.name)));
+	const bodyFields = $derived(
+		fields.filter((f) => f.kind === 'textarea' && !BOTTOM_FIELDS.includes(f.name))
 	);
+	// the spell "at higher levels" (textarea) + material (short text), pulled under the body IN
+	// BOTTOM_FIELDS order (higher_level then material) to mirror the compendium article
+	const bottomFields = $derived(
+		fields
+			.filter((f) => BOTTOM_FIELDS.includes(f.name))
+			.sort((a, b) => BOTTOM_FIELDS.indexOf(a.name) - BOTTOM_FIELDS.indexOf(b.name))
+	);
+	// everything the meta grid renders: not the title, body, systems, id, classes or the bottom fields
+	const metaFields = $derived(
+		fields.filter(
+			(f) =>
+				!['name_en', 'systems', 'id', CLASSES_FIELD].includes(f.name) &&
+				f.kind !== 'textarea' &&
+				!BOTTOM_FIELDS.includes(f.name)
+		)
+	);
+	const hasClasses = $derived(fields.some((f) => f.name === CLASSES_FIELD));
+	// existing SPELLCASTER classes to tick in the ClassPicker — only classes with a caster type have
+	// spell slots (excludes Barbarian/Fighter/Monk/Rogue); deduped by id (a class exists once per
+	// edition, same id) and sorted by name. Data-driven off the class row's `caster` column.
+	const classList = $derived.by(() => {
+		const byId = new Map<string, { id: string; name: string }>();
+		for (const c of content.graph?.list('class') ?? [])
+			if (c.data.caster !== 'none' && !byId.has(c.id))
+				byId.set(c.id, { id: c.id, name: String(c.data.name_en) });
+		return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
+	});
 
 	function toggleSystem(sys: string) {
 		const set = new Set(splitList(draft.systems));
@@ -261,11 +297,36 @@
 		</div>
 	{/if}
 
+	{#if hasClasses}
+		<div class="classes-block">
+			<span class="block-label">{fieldLabel('classes', 'Available to')}</span>
+			<ClassPicker
+				value={draft.classes ?? ''}
+				options={classList}
+				onChange={(v) => (draft.classes = v)}
+			/>
+		</div>
+	{/if}
+
 	{#each bodyFields as f (f.name)}
 		<textarea
 			class="body-input"
 			placeholder={fieldLabel(f.name, f.label)}
 			bind:value={draft[f.name]}></textarea>
+	{/each}
+
+	{#each bottomFields as f (f.name)}
+		{#if f.kind === 'textarea'}
+			<textarea
+				class="body-input"
+				placeholder={fieldLabel(f.name, f.label)}
+				bind:value={draft[f.name]}></textarea>
+		{:else}
+			<label class="bottom-field">
+				<span class="block-label">{fieldLabel(f.name, f.label)}</span>
+				<input type="text" bind:value={draft[f.name]} />
+			</label>
+		{/if}
 	{/each}
 
 	{#if editing}
@@ -509,6 +570,33 @@
 	.bool.on .knob {
 		left: 19px;
 		background: #fff;
+	}
+	.classes-block,
+	.bottom-field {
+		display: block;
+		margin-bottom: 14px;
+	}
+	.block-label {
+		display: block;
+		font-family: var(--font-mono);
+		font-size: 10px;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		margin-bottom: 8px;
+	}
+	.bottom-field input {
+		width: 100%;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		color: var(--color-text);
+		padding: 8px 10px;
+		font-size: 14px;
+	}
+	.bottom-field input:focus {
+		outline: none;
+		border-color: var(--color-accent);
 	}
 	.body-input {
 		width: 100%;
