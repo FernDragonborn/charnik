@@ -56,8 +56,10 @@
 .drag-handle:active {
 	cursor: grabbing;
 }
-/* small ghost pill-button in a panel header (group-by / manage / show-hide) */
-.group-by {
+/* display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium
+   group-by + disclosure summaries, back/mode pickers). Neutral by default; `.accent` is the crimson
+   call-to-action variant (back-to-compendium, mode picker). One family so every pill matches. */
+.pill-btn {
 	font-family: var(--font-display);
 	font-weight: 600;
 	font-size: 12px;
@@ -68,9 +70,19 @@
 	padding: 5px 11px;
 	cursor: pointer;
 }
-.group-by:hover {
+.pill-btn:hover {
 	color: var(--color-text);
 	border-color: var(--color-border-strong);
+}
+.pill-btn.accent {
+	color: var(--color-accent-bright);
+	background: var(--color-accent-soft);
+	border-color: var(--color-accent);
+	padding: 5px 12px;
+}
+.pill-btn.accent:hover {
+	background: var(--color-accent);
+	color: #fff;
 }
 
 /* --- section label (mono, uppercase, with trailing rule) --- */
@@ -135,6 +147,22 @@
 	font-size: 11px;
 	color: var(--color-accent-bright);
 }
+/* the two-ended article eyebrow (label left, edition/type right) shared by the spell + monster heads;
+   the `.monster-type` slot is the accented left/right label inside it */
+.detail-eyebrow {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 12px;
+	font-family: var(--font-mono);
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	font-size: 11px;
+	color: var(--color-text-muted);
+}
+.detail-eyebrow .monster-type {
+	color: var(--color-accent-bright);
+}
 .source-line {
 	font-family: var(--font-mono);
 	font-size: 11px;
@@ -170,6 +198,33 @@
 	gap: 8px;
 	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 	margin-bottom: 16px;
+}
+
+/* --- settings-tab section chrome (shared by every Settings panel: Content-health / Sources /
+   Collisions) — one heading + intro-note + muted-line + all-clear banner so the three tabs stay
+   visually identical without each re-declaring them --- */
+.sec-head h2 {
+	font-family: var(--font-display);
+	font-size: 18px;
+	margin: 0 0 4px;
+}
+.sec-note {
+	color: var(--color-text-muted);
+	font-size: 13px;
+	margin: 0 0 16px;
+	max-width: 640px;
+}
+.muted {
+	color: var(--color-text-muted);
+	font-size: 13px;
+}
+.all-clear {
+	color: var(--color-good);
+	font-size: 14px;
+	border: 1px solid var(--color-good);
+	border-radius: 10px;
+	padding: 12px 14px;
+	background: var(--color-good-soft);
 }
 
 /* --- small shared bits --- */
@@ -231,6 +286,24 @@
 	color: var(--color-accent-bright);
 	font-size: var(--font-size-lg);
 }
+/* Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned /
+   discarded drafts), matching the warning colour their count-pill uses. `danger` (crimson) lives
+   with its own dialog since it pairs with a danger button. */
+.dialog-badge.warn {
+	color: var(--color-warning);
+}
+/* The "N of M" counter beside an attention-dialog title — one warning-toned pill shared by every
+   multi-item review dialog so the header reads identically across them. */
+.count-pill {
+	font-family: var(--font-mono);
+	font-size: var(--font-size-xs);
+	color: var(--color-warning);
+	border: 1px solid var(--color-warning);
+	border-radius: 20px;
+	padding: 1px 9px;
+	margin-left: var(--space-3);
+	vertical-align: middle;
+}
 .dialog-title {
 	font-family: var(--font-display);
 	font-weight: 700;
@@ -285,6 +358,20 @@
 .toggle-track.on::after {
 	left: 16px;
 	background: var(--color-good);
+}
+
+/* --- icon-toggle: square 26×24 icon button that flips on/off (EyeToggle show-on-sheet, Pin quick-bar).
+   Base is shared; each toggle keeps only its own `.on` accent (green for show, crimson for pin) --- */
+.icon-toggle {
+	width: 26px;
+	height: 24px;
+	display: grid;
+	place-items: center;
+	border-radius: 6px;
+	border: 1px solid var(--color-border);
+	background: transparent;
+	color: var(--color-text-muted);
+	cursor: pointer;
 }
 
 /* --- chip: small mono bordered toggle (topbar system/theme/lang, filters) --- */

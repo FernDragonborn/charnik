@@ -42,17 +42,7 @@
 </button>
 
 <style>
-	.icon-toggle {
-		width: 26px;
-		height: 24px;
-		display: grid;
-		place-items: center;
-		border-radius: 6px;
-		border: 1px solid var(--color-border);
-		background: transparent;
-		color: var(--color-text-muted);
-		cursor: pointer;
-	}
+	/* base .icon-toggle is global (components.css); only the "on the sheet" green accent is local */
 	.icon-toggle.on {
 		color: var(--color-good);
 		border-color: var(--color-good);

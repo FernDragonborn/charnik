@@ -44,7 +44,7 @@
 <div class="dialog-backdrop" onclick={onKeep}></div>
 <div class="dialog discard-dialog" role="dialog" aria-modal="true" aria-labelledby="discard-title">
 	<header class="dialog-head">
-		<span class="dialog-badge discard-badge">⚑</span>
+		<span class="dialog-badge warn">⚑</span>
 		<h2 id="discard-title" class="dialog-title">
 			Older drafts can’t be restored{#if drafts.length > 1}<span class="count-pill"
 					>{drafts.length}</span
@@ -83,19 +83,6 @@
 <style>
 	.discard-dialog {
 		width: min(560px, calc(100vw - 2 * var(--space-4)));
-	}
-	.discard-badge {
-		color: var(--color-warning);
-	}
-	.count-pill {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-warning);
-		border: 1px solid var(--color-warning);
-		border-radius: 20px;
-		padding: 1px 9px;
-		margin-left: var(--space-3);
-		vertical-align: middle;
 	}
 	.list {
 		overflow: auto;

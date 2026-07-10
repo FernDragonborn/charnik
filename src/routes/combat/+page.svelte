@@ -322,15 +322,15 @@
 				<span class="chevron">{collapsed[pid] ? '▸' : '▾'}</span>{PANEL_TITLE[pid]}
 			</button>
 			{#if pid === 'actions'}
-				<button class="group-by" onclick={(e) => openMenu('showhide', e)}>👁 Show / hide</button>
+				<button class="pill-btn" onclick={(e) => openMenu('showhide', e)}>👁 Show / hide</button>
 			{:else if pid === 'effects'}
-				<button class="group-by" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
+				<button class="pill-btn" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
 			{:else if pid === 'spells' && s.spellcasting.classes.length}
 				<span class="prepared-count">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
-				<button class="group-by" onclick={cycleGroupBy} title="Change grouping"
+				<button class="pill-btn" onclick={cycleGroupBy} title="Change grouping"
 					>{groupByLabel} ▾</button
 				>
-				<a class="group-by" href="{base}/spellbook">⛭ Manage all</a>
+				<a class="pill-btn" href="{base}/spellbook">⛭ Manage all</a>
 			{/if}
 			<span
 				class="drag-handle"

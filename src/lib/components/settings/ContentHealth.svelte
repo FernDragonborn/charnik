@@ -83,29 +83,6 @@
 </section>
 
 <style>
-	.sec-head h2 {
-		font-family: var(--font-display);
-		font-size: 18px;
-		margin: 0 0 4px;
-	}
-	.sec-note {
-		color: var(--color-text-muted);
-		font-size: 13px;
-		margin: 0 0 16px;
-		max-width: 640px;
-	}
-	.muted {
-		color: var(--color-text-muted);
-		font-size: 13px;
-	}
-	.all-clear {
-		color: var(--color-good);
-		font-size: 14px;
-		border: 1px solid var(--color-good);
-		border-radius: 10px;
-		padding: 12px 14px;
-		background: var(--color-good-soft);
-	}
 	.counts {
 		display: flex;
 		flex-wrap: wrap;

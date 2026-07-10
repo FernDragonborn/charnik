@@ -153,7 +153,7 @@
 <div class="dialog-backdrop" onclick={() => onDone()}></div>
 <div class="dialog orphan-dialog" role="dialog" aria-modal="true" aria-labelledby="orphan-title">
 	<header class="dialog-head">
-		<span class="dialog-badge orphan-badge">⚑</span>
+		<span class="dialog-badge warn">⚑</span>
 		<h2 id="orphan-title" class="dialog-title">
 			Orphaned draft{#if total > 1}<span class="count-pill">{index + 1} of {total}</span>{/if}
 		</h2>
@@ -238,19 +238,6 @@
 <style>
 	.orphan-dialog {
 		width: min(900px, calc(100vw - 2 * var(--space-4)));
-	}
-	.orphan-badge {
-		color: var(--color-warning);
-	}
-	.count-pill {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-warning);
-		border: 1px solid var(--color-warning);
-		border-radius: 20px;
-		padding: 1px 9px;
-		margin-left: var(--space-3);
-		vertical-align: middle;
 	}
 	.panes {
 		display: grid;

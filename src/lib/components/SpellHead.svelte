@@ -5,6 +5,7 @@
 	import type { DetailModel, SpellModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
 	import RollButton from './RollButton.svelte';
+	import EditableTitle from './EditableTitle.svelte';
 
 	let {
 		detail,
@@ -25,7 +26,7 @@
 </div>
 <div class="stat-title">
 	{#if editable && draft}
-		<input class="edit-title" bind:value={draft.name} placeholder={detail.title} />
+		<EditableTitle bind:value={draft.name} placeholder={detail.title} />
 	{:else}
 		<h1>{detail.title}</h1>
 	{/if}
@@ -86,36 +87,6 @@
 		font-weight: 700;
 		font-size: 30px;
 		margin: 0;
-	}
-	.edit-title {
-		width: 100%;
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 28px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-strong);
-		border-radius: 8px;
-		color: var(--color-text);
-		padding: 4px 10px;
-		margin: 4px 0 12px;
-	}
-	.edit-title:focus {
-		outline: none;
-		border-color: var(--color-accent);
-	}
-	.detail-eyebrow {
-		display: flex;
-		justify-content: space-between;
-		align-items: baseline;
-		gap: 12px;
-		font-family: var(--font-mono);
-		text-transform: uppercase;
-		letter-spacing: 0.16em;
-		font-size: 11px;
-		color: var(--color-text-muted);
-	}
-	.detail-eyebrow .monster-type {
-		color: var(--color-accent-bright);
 	}
 	.stat-title {
 		display: flex;

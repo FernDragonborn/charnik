@@ -560,7 +560,9 @@
 		gap: 8px;
 		margin: 6px 0 8px;
 	}
-	.field input {
+	/* menu text inputs: the roll-builder field and the custom-modifier target share one style */
+	.field input,
+	.modifier-target {
 		flex: 1;
 		min-width: 0;
 		background: var(--color-surface-2);
@@ -595,16 +597,6 @@
 		display: flex;
 		gap: 8px;
 		margin: 8px 0;
-	}
-	.modifier-target {
-		flex: 1;
-		min-width: 0;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		color: var(--color-text);
-		font: inherit;
-		padding: 8px 10px;
 	}
 	.modifier-sign {
 		width: 36px;

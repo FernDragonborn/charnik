@@ -219,7 +219,7 @@
 {:else}
 	<div class="page">
 		<div class="subbar">
-			<button class="back-to-browse" onclick={() => goto(`${base}/compendium`)}>
+			<button class="pill-btn accent" onclick={() => goto(`${base}/compendium`)}>
 				← Back to compendium
 			</button>
 			<span class="sep"></span>
@@ -294,21 +294,6 @@
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
-	}
-	.back-to-browse {
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 12px;
-		color: var(--color-accent-bright);
-		background: var(--color-accent-soft);
-		border: 1px solid var(--color-accent);
-		border-radius: 7px;
-		padding: 5px 12px;
-		cursor: pointer;
-	}
-	.back-to-browse:hover {
-		background: var(--color-accent);
-		color: #fff;
 	}
 	.pane-head {
 		display: flex;

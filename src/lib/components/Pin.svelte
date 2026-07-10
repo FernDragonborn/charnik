@@ -12,16 +12,9 @@
 </button>
 
 <style>
+	/* base .icon-toggle is global (components.css); the ★/☆ glyph needs a font-size and the pinned
+	   state uses the crimson accent — both local to Pin */
 	.icon-toggle {
-		width: 26px;
-		height: 24px;
-		display: grid;
-		place-items: center;
-		border-radius: 6px;
-		border: 1px solid var(--color-border);
-		background: transparent;
-		color: var(--color-text-muted);
-		cursor: pointer;
 		font-size: 13px;
 	}
 	.icon-toggle.on {

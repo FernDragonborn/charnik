@@ -5,6 +5,7 @@
 	// dispatcher below the title, not here.
 	import type { DetailModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
+	import EditableTitle from './EditableTitle.svelte';
 
 	let {
 		detail,
@@ -19,7 +20,7 @@
 
 <div class="deyebrow">{detail.eyebrow}</div>
 {#if editable && draft}
-	<input class="edit-title" bind:value={draft.name} placeholder={detail.title} />
+	<EditableTitle bind:value={draft.name} placeholder={detail.title} />
 {:else}
 	<h1>{detail.title}</h1>
 {/if}
@@ -51,22 +52,6 @@
 		font-weight: 700;
 		font-size: 30px;
 		margin: 6px 0 12px;
-	}
-	.edit-title {
-		width: 100%;
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 28px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-strong);
-		border-radius: 8px;
-		color: var(--color-text);
-		padding: 4px 10px;
-		margin: 4px 0 12px;
-	}
-	.edit-title:focus {
-		outline: none;
-		border-color: var(--color-accent);
 	}
 	.abilities {
 		display: grid;

@@ -359,7 +359,7 @@
 
 		<div class="controls">
 			<details class="disclosure" bind:open={groupOpen} use:autoClose>
-				<summary>Group · <b>{groupLabel}</b></summary>
+				<summary class="pill-btn">Group · <b>{groupLabel}</b></summary>
 				<div class="dropdown-menu">
 					{#each groupings as g (g.key)}
 						<button
@@ -376,7 +376,7 @@
 
 			{#if sources.length > 1 || facetValues.length}
 				<details class="disclosure" use:autoClose>
-					<summary>Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
+					<summary class="pill-btn">Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
 					<div class="dropdown-menu wide">
 						{#if sources.length > 1}
 							<div class="dropdown-section">Source</div>
@@ -421,10 +421,12 @@
 			{/if}
 
 			{#if inMode}
-				<button class="back-to-browse" onclick={exitMode}>← Back to compendium</button>
+				<button class="back-to-browse pill-btn accent" onclick={exitMode}
+					>← Back to compendium</button
+				>
 			{:else}
 				<details class="mode-picker" bind:open={pickerOpen} use:autoClose>
-					<summary>✎ Edit compendium</summary>
+					<summary class="pill-btn accent">✎ Edit compendium</summary>
 					<!-- One entry for all content-authoring modes; each opens in the right pane. Editor edits
 				     the currently-selected entry (a shipped row forks to homebrew on save). -->
 					<div class="mode-menu">
@@ -597,24 +599,13 @@
 	.disclosure {
 		position: relative;
 	}
+	/* summaries carry .pill-btn for the shared pill look; only the summary-specific marker removal and
+	   open-state accent stay local */
 	.disclosure summary {
 		list-style: none;
-		cursor: pointer;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 12px;
-		color: var(--color-text-muted);
-		background: transparent;
-		border: 1px solid var(--color-border);
-		border-radius: 7px;
-		padding: 5px 11px;
 	}
 	.disclosure summary::-webkit-details-marker {
 		display: none;
-	}
-	.disclosure summary:hover {
-		color: var(--color-text);
-		border-color: var(--color-border-strong);
 	}
 	.disclosure summary b {
 		color: var(--color-text);
@@ -726,21 +717,10 @@
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
+	/* both the back button and mode-picker summary use .pill-btn.accent for the crimson look; only
+	   their right-alignment / marker-removal / open-state stay local */
 	.back-to-browse {
 		margin-left: auto;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 12px;
-		color: var(--color-accent-bright);
-		background: var(--color-accent-soft);
-		border: 1px solid var(--color-accent);
-		border-radius: 7px;
-		padding: 5px 12px;
-		cursor: pointer;
-	}
-	.back-to-browse:hover {
-		background: var(--color-accent);
-		color: #fff;
 	}
 	.mode-picker {
 		margin-left: auto;
@@ -748,15 +728,6 @@
 	}
 	.mode-picker > summary {
 		list-style: none;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 12px;
-		color: var(--color-accent-bright);
-		background: var(--color-accent-soft);
-		border: 1px solid var(--color-accent);
-		border-radius: 7px;
-		padding: 5px 12px;
-		cursor: pointer;
 	}
 	.mode-picker > summary::-webkit-details-marker {
 		display: none;
