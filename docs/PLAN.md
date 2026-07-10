@@ -1409,10 +1409,28 @@ decomposition + RollButton). Ordering + open decisions below.
 - [~] **DRAFT-CACHE · Persist in-progress edits (translate / add / editor) so a closed form restores.**
   DONE (parts 1–2, commits `6178ce3`/`48cb105`): `$lib/drafts/store` (self-contained files, no manifest,
   content-versioned, discard-on-mismatch, +6 tests) + translate wired (prefill/debounced-save/clear,
-  e2e-verified) + add wired (per-GUID, resume newest-of-type on mount, clear on save). STILL OPEN
-  (needs UX input — see decisions list): the **pending-drafts / orphan surface** (list drafts, resume/
-  delete, orphan reassign-to-existing dialog) + editor wiring (with Editor mode) + the warn-on-schema-
-  discard notice. Original spec:
+  e2e-verified) + add wired (per-GUID, resume newest-of-type on mount, clear on save).
+  **SURFACE DECIDED 2026-07-10** (mocks: `design-preview/drafts-surface.html`, `orphan-popup.html`):
+  - **Drafts list = full-width pane that replaces the editing block** (compendium right column, where
+    WikiDetail/EditContentForm render) — opened via a **4th "Drafts" entry** in the "✎ Edit compendium"
+    picker, with a live count badge. Lists **every** draft (all types+kinds), grouped ⚑Needs-attention /
+    Translations / New entries; each row = kind icon + title + target (locale for translate) + age +
+    Resume/Delete. This makes add-drafts **unlimited + individually pickable** (supersedes resume-newest
+    -of-type). A draft must be **openable no matter what** (incl. orphans) so modified fields are never
+    lost.
+  - **Orphan dialog** = the house attention-dialog template ([[charnik-dialog-design-template]]): centered
+    modal, ⚑ badge header + **"N of M" step-through** (one orphan at a time), 2-pane body (left = your
+    draft prose read-only; right = **searchable reassign picker across ALL sources** + live preview of the
+    highlighted target), footer = Delete · Skip · Keep-as-new · Reassign. Orphans are discovered **when the
+    cache is read** and a `target` id resolves to no content row.
+  - **Reassign = re-point, then resume** (NOT write-through): the draft is re-targeted to the chosen entry
+    and opens in Translate/Editor prefilled; nothing is written to content until the user hits Save.
+  - **Reassign CONFLICT:** if the chosen target **already has a draft** for the same key, the user must
+    choose **which of the two survives** — and must be able to **open either draft to inspect its modified
+    fields first** (no silent overwrite, no lost work). The loser can be kept-as-new rather than hard-
+    deleted where possible.
+  - Editor wiring lands with Editor mode. Warn-on-schema-discard notice = same dialog template.
+  Original spec:
   A form's last unsaved state is cached to disk and silently re-fills the form when reopened (for any
   reason — nav away, reload, crash). Over the `Storage` seam; reuses the character autosave debounce.
   - **All drafts live in a `drafts/` folder on disk, one self-contained JSON per draft — NO manifest /

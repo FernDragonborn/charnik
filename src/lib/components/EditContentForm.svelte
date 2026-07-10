@@ -45,9 +45,11 @@
 		type: ContentType;
 		onsave: (id: string) => void;
 		oncancel: () => void;
-		/** When resuming a pending add-draft: its GUID + saved fields (else a fresh add-session). */
-		resumeGuid?: string;
-		resumeDraft?: Record<string, string>;
+		/** When resuming a pending add-draft: its GUID + saved fields (else a fresh add-session).
+		 *  `| undefined` is deliberate — these are optional passthrough from the parent's optional
+		 *  `resumeAdd`, so `exactOptionalPropertyTypes` needs the explicit-undefined form. */
+		resumeGuid?: string | undefined;
+		resumeDraft?: Record<string, string> | undefined;
 	} = $props();
 
 	// A new entry has no id yet, so its draft is keyed by a stable per-session GUID (per

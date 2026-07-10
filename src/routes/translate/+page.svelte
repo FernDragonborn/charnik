@@ -6,6 +6,7 @@
 	// into the row's own CSV + re-stamp its hash (see content/translate.ts). Reuses EntryList +
 	// WikiDetail + the shared list helpers — only the shell is new.
 	import { onMount, untrack } from 'svelte';
+	import { page } from '$app/state';
 	import { toast } from 'svelte-sonner';
 	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
 	import { getUserStorage } from '$lib/storage/provider';
@@ -39,7 +40,22 @@
 	onMount(async () => {
 		await loadContentStore();
 		if (!types.includes(selectedType)) selectedType = types[0] ?? selectedType;
+		resumeFromParams();
 	});
+
+	// Resume a draft: /translate?type=&source=&id=&locale= (from the compendium Drafts list) preselects
+	// that row + switches the target locale, so the reset effect prefills + restores its cached draft.
+	function resumeFromParams() {
+		const p = page.url.searchParams;
+		const type = p.get('type');
+		const source = p.get('source');
+		const id = p.get('id');
+		const locale = p.get('locale');
+		if (!type || !source || !id || !content.graph) return;
+		if (isBrowsable(type as ContentType)) selectedType = type as ContentType;
+		if (locale) app.activeLocale = locale;
+		selected = content.graph.get(`${type}:${source}:${id}`) ?? selected;
+	}
 
 	const inEdition = (r: LoadedRow) =>
 		r.systems.some((s) => app.activeEditions.includes(s as (typeof app.activeEditions)[number]));

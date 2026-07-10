@@ -1,0 +1,480 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Drafts surface — where the pending-drafts list lives</title>
+		<style>
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--border: #272c37;
+				--border-strong: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bright: #ef6b78;
+				--accent-deep: #b3243a;
+				--gold: #caa24a;
+				--teal: #3bb8a6;
+				--amber: #d99a2b;
+				--display: 'Space Grotesk', system-ui, sans-serif;
+				--body: 'Inter', system-ui, sans-serif;
+				--mono: 'JetBrains Mono', ui-monospace, monospace;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--body);
+				padding: 28px 34px;
+			}
+			h1 {
+				font-family: var(--display);
+				font-size: 20px;
+				margin: 0 0 4px;
+			}
+			.lede {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0 0 26px;
+				max-width: 720px;
+			}
+			.lede b {
+				color: var(--accent-bright);
+			}
+			h2 {
+				font-family: var(--display);
+				font-size: 13px;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				color: var(--gold);
+				margin: 34px 0 4px;
+			}
+			.note {
+				color: var(--muted);
+				font-size: 12px;
+				margin: 0 0 14px;
+			}
+
+			/* ---- the compendium "Edit compendium" mode-picker menu (variant A: a 4th entry) ---- */
+			.mockframe {
+				border: 1px solid var(--border);
+				border-radius: 14px;
+				overflow: hidden;
+				background: var(--surface);
+				max-width: 940px;
+			}
+			.mock-top {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 10px 14px;
+				border-bottom: 1px solid var(--border);
+				background: var(--surface-2);
+				font-size: 12px;
+				color: var(--muted);
+				font-family: var(--mono);
+			}
+			.mode-menu {
+				display: flex;
+				flex-direction: column;
+				gap: 6px;
+				padding: 12px;
+				max-width: 340px;
+			}
+			.mode-item {
+				display: flex;
+				flex-direction: column;
+				gap: 2px;
+				text-align: left;
+				background: var(--surface-2);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 10px 12px;
+				cursor: pointer;
+				color: var(--text);
+			}
+			.mode-item:hover {
+				border-color: var(--border-strong);
+			}
+			.mode-item b {
+				font-size: 14px;
+			}
+			.mode-item small {
+				color: var(--muted);
+				font-size: 12px;
+			}
+			.mode-item .count {
+				margin-left: auto;
+				font-family: var(--mono);
+				font-size: 11px;
+				color: var(--gold);
+				background: rgba(202, 162, 74, 0.12);
+				border: 1px solid rgba(202, 162, 74, 0.3);
+				border-radius: 20px;
+				padding: 1px 8px;
+			}
+			.mode-item .row1 {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				width: 100%;
+			}
+			.mode-item.wip {
+				opacity: 0.55;
+				cursor: default;
+			}
+			.wip-tag {
+				font-family: var(--mono);
+				font-size: 9px;
+				color: var(--amber);
+				border: 1px solid var(--amber);
+				border-radius: 4px;
+				padding: 0 4px;
+				margin-left: 6px;
+			}
+
+			/* ---- the drafts LIST panel (opens in the right pane, like Add does) ---- */
+			.two-col {
+				display: grid;
+				grid-template-columns: 300px 1fr;
+			}
+			.col-list {
+				border-right: 1px solid var(--border);
+				padding: 10px;
+				min-height: 360px;
+				color: var(--muted);
+				font-size: 12px;
+			}
+			.col-list .ghost-item {
+				padding: 7px 10px;
+				border-radius: 8px;
+				color: var(--muted);
+				font-size: 13px;
+			}
+			.drafts-pane {
+				padding: 16px 20px;
+			}
+			.dp-head {
+				display: flex;
+				align-items: baseline;
+				gap: 10px;
+				margin-bottom: 4px;
+			}
+			.dp-head h3 {
+				font-family: var(--display);
+				font-size: 18px;
+				margin: 0;
+			}
+			.dp-head .sub {
+				color: var(--muted);
+				font-size: 12px;
+			}
+			.dp-hint {
+				color: var(--muted);
+				font-size: 12px;
+				margin: 0 0 16px;
+			}
+
+			.draft-group-label {
+				font-family: var(--mono);
+				font-size: 10px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin: 16px 0 8px;
+			}
+			.draft {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+				background: var(--surface-2);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 11px 13px;
+				margin-bottom: 8px;
+			}
+			.draft:hover {
+				border-color: var(--border-strong);
+			}
+			.dkind {
+				width: 34px;
+				height: 34px;
+				flex: none;
+				border-radius: 8px;
+				display: grid;
+				place-items: center;
+				font-size: 15px;
+				background: var(--surface);
+				border: 1px solid var(--border);
+			}
+			.dkind.translate {
+				color: var(--teal);
+			}
+			.dkind.add {
+				color: var(--gold);
+			}
+			.dkind.editor {
+				color: var(--accent-bright);
+			}
+			.dmeta {
+				flex: 1;
+				min-width: 0;
+			}
+			.dtitle {
+				font-size: 14px;
+				font-weight: 600;
+			}
+			.dtitle .frag {
+				color: var(--muted);
+				font-weight: 400;
+			}
+			.dsub {
+				font-size: 12px;
+				color: var(--muted);
+				margin-top: 2px;
+				display: flex;
+				gap: 10px;
+				flex-wrap: wrap;
+				align-items: center;
+			}
+			.tag {
+				font-family: var(--mono);
+				font-size: 10px;
+				padding: 1px 7px;
+				border-radius: 20px;
+				border: 1px solid var(--border-strong);
+				color: var(--muted);
+			}
+			.tag.loc {
+				color: var(--teal);
+				border-color: rgba(59, 184, 166, 0.4);
+			}
+			.tag.orphan {
+				color: var(--amber);
+				border-color: var(--amber);
+				background: rgba(217, 154, 43, 0.1);
+			}
+			.dactions {
+				display: flex;
+				gap: 8px;
+				flex: none;
+			}
+			.btn {
+				font-family: var(--body);
+				font-weight: 600;
+				font-size: 13px;
+				border-radius: 8px;
+				padding: 7px 13px;
+				border: 1px solid var(--border-strong);
+				background: var(--surface);
+				color: var(--text);
+				cursor: pointer;
+			}
+			.btn.primary {
+				background: var(--accent-deep);
+				border-color: var(--accent-deep);
+				color: #fff;
+			}
+			.btn.warn {
+				border-color: var(--amber);
+				color: var(--amber);
+			}
+			.btn.danger {
+				color: var(--accent-bright);
+				border-color: transparent;
+				background: transparent;
+			}
+			.btn.danger:hover {
+				border-color: var(--accent);
+			}
+
+			.draft.is-orphan {
+				border-color: rgba(217, 154, 43, 0.45);
+			}
+			.divider {
+				height: 1px;
+				background: var(--border);
+				margin: 6px 0 2px;
+			}
+
+			.legend {
+				display: flex;
+				gap: 18px;
+				margin-top: 10px;
+				color: var(--muted);
+				font-size: 12px;
+			}
+			.legend span b {
+				color: var(--text);
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Drafts surface</h1>
+		<p class="lede">
+			Where the <b>pending-drafts</b> list lives + how <b>add-drafts</b> are scoped. Core
+			persistence (translate + add auto-save/restore) already ships — this is only the
+			<b>browse / resume / delete / resolve-orphan</b> surface. Pick a direction (or mix) and I
+			build it.
+		</p>
+
+		<h2>1 · Home = a 4th entry in “✎ Edit compendium”</h2>
+		<p class="note">
+			The mode-picker already lists Translate / Add / Editor. Add <b>Drafts</b> with a live count
+			badge — one obvious home, no new nav item. (Count = current-version drafts on disk.)
+		</p>
+		<div class="mockframe">
+			<div class="mock-top">compendium · Spells &nbsp;›&nbsp; ✎ Edit compendium ▾</div>
+			<div class="mode-menu">
+				<button class="mode-item">
+					<b>Translate</b><small>side-by-side prose translation</small>
+				</button>
+				<button class="mode-item"><b>Add</b><small>author a new spell</small></button>
+				<button class="mode-item">
+					<div class="row1"><b>Drafts</b><span class="count">3</span></div>
+					<small>resume unfinished edits · 1 needs attention</small>
+				</button>
+				<button class="mode-item wip">
+					<div class="row1"><b>Editor</b><span class="wip-tag">WIP</span></div>
+					<small>edit all fields in place</small>
+				</button>
+			</div>
+		</div>
+
+		<h2>2 · The list itself (opens in the right pane, like Add)</h2>
+		<p class="note">
+			Shows <b>every</b> draft (all types, all kinds) — grouped by kind. This is the
+			<b>unlimited add-drafts</b> direction: each Add-in-progress is its own row you can resume or
+			delete (not just newest-of-type). Orphans float to the top with an amber flag + a
+			<b>Resolve…</b> button (opens the two-pane popup).
+		</p>
+		<div class="mockframe">
+			<div class="mock-top">compendium · Spells &nbsp;›&nbsp; Drafts</div>
+			<div class="two-col">
+				<div class="col-list">
+					<div class="ghost-item">Fire Bolt</div>
+					<div class="ghost-item">Fireball</div>
+					<div class="ghost-item">Magic Missile</div>
+					<div class="ghost-item">Shield</div>
+					<div class="ghost-item" style="opacity: 0.5">…entry list (dimmed while Drafts open)</div>
+				</div>
+
+				<div class="drafts-pane">
+					<div class="dp-head">
+						<h3>Drafts</h3>
+						<span class="sub">3 unfinished · autosaved locally</span>
+					</div>
+					<p class="dp-hint">
+						Resume picks up exactly where you left off. Deleting a draft is permanent.
+					</p>
+
+					<div class="draft-group-label">⚑ Needs attention</div>
+					<div class="draft is-orphan">
+						<div class="dkind translate">⇄</div>
+						<div class="dmeta">
+							<div class="dtitle">Chill Touch <span class="frag">→ Українська</span></div>
+							<div class="dsub">
+								<span class="tag orphan">orphan</span>
+								<span>target entry not found (deleted or source disabled)</span>
+								<span>· 2 days ago</span>
+							</div>
+						</div>
+						<div class="dactions">
+							<button class="btn warn">Resolve…</button>
+							<button class="btn danger">Delete</button>
+						</div>
+					</div>
+
+					<div class="draft-group-label">Translations</div>
+					<div class="draft">
+						<div class="dkind translate">⇄</div>
+						<div class="dmeta">
+							<div class="dtitle">Fireball <span class="frag">→ Українська</span></div>
+							<div class="dsub">
+								<span class="tag loc">uk</span><span>Spell</span><span>· 5 min ago</span>
+							</div>
+						</div>
+						<div class="dactions">
+							<button class="btn primary">Resume</button>
+							<button class="btn danger">Delete</button>
+						</div>
+					</div>
+
+					<div class="draft-group-label">New entries</div>
+					<div class="draft">
+						<div class="dkind add">＋</div>
+						<div class="dmeta">
+							<div class="dtitle">Sunfire Blade <span class="frag">· unsaved new spell</span></div>
+							<div class="dsub">
+								<span class="tag">add</span><span>Spell</span><span>· 1 hour ago</span>
+							</div>
+						</div>
+						<div class="dactions">
+							<button class="btn primary">Resume</button>
+							<button class="btn danger">Delete</button>
+						</div>
+					</div>
+					<div class="draft">
+						<div class="dkind add">＋</div>
+						<div class="dmeta">
+							<div class="dtitle"><span class="frag">Untitled</span> · unsaved new spell</div>
+							<div class="dsub">
+								<span class="tag">add</span><span>Spell</span><span>· yesterday</span>
+							</div>
+						</div>
+						<div class="dactions">
+							<button class="btn primary">Resume</button>
+							<button class="btn danger">Delete</button>
+						</div>
+					</div>
+
+					<div class="legend">
+						<span><b>⇄</b> translate</span>
+						<span><b>＋</b> new entry</span>
+						<span><b>✎</b> editor</span>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<h2>Alt · Slimmer: no left list, full-width drafts</h2>
+		<p class="note">
+			If the dimmed entry-list feels noisy, Drafts can take the full pane instead. Same rows.
+		</p>
+		<div class="mockframe">
+			<div class="mock-top">compendium · Spells &nbsp;›&nbsp; Drafts (full width)</div>
+			<div class="drafts-pane">
+				<div class="dp-head">
+					<h3>Drafts</h3>
+					<span class="sub">3 unfinished</span>
+				</div>
+				<div class="draft" style="max-width: 640px">
+					<div class="dkind translate">⇄</div>
+					<div class="dmeta">
+						<div class="dtitle">Fireball <span class="frag">→ Українська</span></div>
+						<div class="dsub"><span class="tag loc">uk</span><span>· 5 min ago</span></div>
+					</div>
+					<div class="dactions">
+						<button class="btn primary">Resume</button><button class="btn danger">Delete</button>
+					</div>
+				</div>
+				<div class="draft" style="max-width: 640px">
+					<div class="dkind add">＋</div>
+					<div class="dmeta">
+						<div class="dtitle">Sunfire Blade <span class="frag">· new spell</span></div>
+						<div class="dsub"><span class="tag">add</span><span>· 1 hour ago</span></div>
+					</div>
+					<div class="dactions">
+						<button class="btn primary">Resume</button><button class="btn danger">Delete</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

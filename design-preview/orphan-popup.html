@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Orphan draft — reassign popup</title>
+		<style>
+			:root {
+				--bg: #0f1116;
+				--surface: #171a21;
+				--surface-2: #1f232c;
+				--border: #272c37;
+				--border-strong: #333a47;
+				--text: #e6e8ec;
+				--muted: #878f9d;
+				--accent: #cf2b40;
+				--accent-bright: #ef6b78;
+				--accent-deep: #b3243a;
+				--gold: #caa24a;
+				--teal: #3bb8a6;
+				--amber: #d99a2b;
+				--display: 'Space Grotesk', system-ui, sans-serif;
+				--body: 'Inter', system-ui, sans-serif;
+				--mono: 'JetBrains Mono', ui-monospace, monospace;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				min-height: 100vh;
+				background: var(--bg);
+				color: var(--text);
+				font-family: var(--body);
+				display: grid;
+				place-items: center;
+				padding: 24px;
+			}
+			.backdrop {
+				position: fixed;
+				inset: 0;
+				background: rgba(0, 0, 0, 0.6);
+			}
+
+			.dialog {
+				position: relative;
+				z-index: 1;
+				width: min(900px, calc(100vw - 40px));
+				background: var(--surface);
+				border: 1px solid var(--border-strong);
+				border-radius: 16px;
+				box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+				display: flex;
+				flex-direction: column;
+				max-height: calc(100vh - 48px);
+			}
+			.dialog-head {
+				padding: 18px 22px 14px;
+				border-bottom: 1px solid var(--border);
+				text-align: center;
+			}
+			.badge {
+				display: inline-grid;
+				place-items: center;
+				width: 34px;
+				height: 34px;
+				border-radius: 50%;
+				background: rgba(217, 154, 43, 0.14);
+				border: 1px solid var(--amber);
+				color: var(--amber);
+				font-size: 17px;
+				margin-bottom: 6px;
+			}
+			.dialog-title {
+				font-family: var(--display);
+				font-size: 19px;
+				margin: 2px 0 3px;
+			}
+			.dialog-sub {
+				color: var(--muted);
+				font-size: 13px;
+				margin: 0;
+			}
+			.count-pill {
+				font-family: var(--mono);
+				font-size: 11px;
+				color: var(--amber);
+				border: 1px solid var(--amber);
+				border-radius: 20px;
+				padding: 1px 9px;
+				margin-left: 8px;
+			}
+
+			.panes {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				min-height: 0;
+				overflow: hidden;
+			}
+			.pane {
+				padding: 16px 20px;
+				overflow: auto;
+				min-height: 0;
+			}
+			.pane + .pane {
+				border-left: 1px solid var(--border);
+			}
+			.panelabel {
+				font-family: var(--mono);
+				font-size: 10px;
+				letter-spacing: 0.14em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin-bottom: 12px;
+			}
+			.panelabel.target {
+				color: var(--accent-bright);
+			}
+
+			/* left: the orphan draft (what the user wrote) */
+			.eyebrow {
+				font-size: 11px;
+				letter-spacing: 0.16em;
+				text-transform: uppercase;
+				color: var(--amber);
+			}
+			.d-title {
+				font-family: var(--display);
+				font-weight: 700;
+				font-size: 24px;
+				margin: 5px 0 3px;
+			}
+			.d-id {
+				font-family: var(--mono);
+				font-size: 11px;
+				color: var(--muted);
+				margin-bottom: 12px;
+			}
+			.prose {
+				font-size: 14px;
+				line-height: 1.55;
+				color: var(--text);
+			}
+			.prose p {
+				margin: 0 0 10px;
+			}
+			.prose .h {
+				font-family: var(--display);
+				font-size: 11px;
+				text-transform: uppercase;
+				letter-spacing: 0.08em;
+				color: var(--gold);
+				margin: 14px 0 5px;
+			}
+
+			/* right: searchable reassign picker + preview of the highlighted target */
+			.search {
+				width: 100%;
+				background: var(--surface-2);
+				border: 1px solid var(--border-strong);
+				border-radius: 8px;
+				padding: 8px 11px;
+				color: var(--text);
+				font-size: 13px;
+				margin-bottom: 10px;
+			}
+			.search::placeholder {
+				color: var(--muted);
+			}
+			.tfilter {
+				display: flex;
+				gap: 6px;
+				margin-bottom: 10px;
+				flex-wrap: wrap;
+			}
+			.chip {
+				font-size: 11px;
+				padding: 3px 9px;
+				border-radius: 20px;
+				cursor: pointer;
+				border: 1px solid var(--border-strong);
+				background: var(--surface-2);
+				color: var(--muted);
+			}
+			.chip.on {
+				color: var(--text);
+				border-color: var(--accent);
+				background: rgba(207, 43, 64, 0.12);
+			}
+			.results {
+				display: flex;
+				flex-direction: column;
+				gap: 4px;
+				margin-bottom: 12px;
+			}
+			.res {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 8px 10px;
+				border-radius: 8px;
+				cursor: pointer;
+				border: 1px solid transparent;
+				font-size: 13px;
+			}
+			.res:hover {
+				background: var(--surface-2);
+			}
+			.res.sel {
+				background: var(--surface-2);
+				border-color: var(--accent);
+			}
+			.res .nm {
+				font-weight: 600;
+			}
+			.res .src {
+				margin-left: auto;
+				font-family: var(--mono);
+				font-size: 10px;
+				color: var(--muted);
+			}
+			.res .kicker {
+				font-size: 11px;
+				color: var(--muted);
+			}
+
+			.preview {
+				background: var(--surface-2);
+				border: 1px solid var(--border);
+				border-radius: 10px;
+				padding: 12px 14px;
+			}
+			.preview .pv-label {
+				font-family: var(--mono);
+				font-size: 9px;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--muted);
+				margin-bottom: 6px;
+			}
+			.preview .pv-title {
+				font-family: var(--display);
+				font-weight: 700;
+				font-size: 16px;
+			}
+			.preview .pv-sub {
+				color: var(--muted);
+				font-size: 12px;
+				margin: 2px 0 8px;
+			}
+			.preview .pv-body {
+				font-size: 12.5px;
+				line-height: 1.5;
+				color: var(--muted);
+			}
+
+			.foot {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 14px 22px;
+				border-top: 1px solid var(--border);
+			}
+			.foot .spacer {
+				flex: 1;
+			}
+			.btn {
+				font-family: var(--body);
+				font-weight: 600;
+				font-size: 13px;
+				border-radius: 8px;
+				padding: 9px 15px;
+				border: 1px solid var(--border-strong);
+				background: var(--surface-2);
+				color: var(--text);
+				cursor: pointer;
+			}
+			.btn.primary {
+				background: var(--accent-deep);
+				border-color: var(--accent-deep);
+				color: #fff;
+			}
+			.btn.ghost {
+				background: transparent;
+				border-color: transparent;
+				color: var(--muted);
+			}
+			.btn.ghost:hover {
+				color: var(--text);
+			}
+			.btn.danger {
+				color: var(--accent-bright);
+				border-color: transparent;
+				background: transparent;
+			}
+			.btn.danger:hover {
+				border-color: var(--accent);
+			}
+			.hint-inline {
+				color: var(--muted);
+				font-size: 12px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="backdrop"></div>
+		<div class="dialog" role="dialog" aria-modal="true">
+			<div class="dialog-head">
+				<div class="badge">⚑</div>
+				<div class="dialog-title">Orphaned draft <span class="count-pill">1 of 2</span></div>
+				<p class="dialog-sub">
+					A saved draft points at content that no longer exists (deleted, renamed, or its source is
+					disabled). Reassign it to an existing entry, keep it as a brand-new entry, or delete it.
+				</p>
+			</div>
+
+			<div class="panes">
+				<!-- LEFT: the orphan draft content, read-only -->
+				<div class="pane">
+					<div class="panelabel">Orphaned draft · your work</div>
+					<div class="eyebrow">Translation → Українська</div>
+					<div class="d-title">Дотик холоду</div>
+					<div class="d-id">was: spell:phb-2024:chill_touch · saved 2 days ago</div>
+					<div class="prose">
+						<p>Ви створюєте примарну руку, що тягнеться до істоти в межах дистанції.</p>
+						<p>
+							Ціль отримує <b>1к10 некротичної шкоди</b> й не може відновлювати здоров’я до початку
+							вашого наступного ходу.
+						</p>
+						<div class="h">На вищих рівнях</div>
+						<p>Шкода зростає на 1к10, коли ви досягаєте 5-го рівня.</p>
+					</div>
+				</div>
+
+				<!-- RIGHT: reassign picker — full search across content, previews highlighted target -->
+				<div class="pane">
+					<div class="panelabel target">Reassign to…</div>
+					<input class="search" value="chill" />
+					<div class="tfilter">
+						<span class="chip on">Spell</span>
+						<span class="chip">All types</span>
+						<span class="hint-inline" style="margin-left: auto">any source</span>
+					</div>
+					<div class="results">
+						<div class="res sel">
+							<span class="nm">Chill Touch</span><span class="kicker">Necromancy · lvl 1</span>
+							<span class="src">SRD 5.1</span>
+						</div>
+						<div class="res">
+							<span class="nm">Chill Touch</span><span class="kicker">Necromancy · cantrip</span>
+							<span class="src">SRD 5.2.1</span>
+						</div>
+						<div class="res">
+							<span class="nm">Ray of Frost</span><span class="kicker">Evocation · cantrip</span>
+							<span class="src">SRD 5.1</span>
+						</div>
+					</div>
+					<div class="preview">
+						<div class="pv-label">Preview · target (English source)</div>
+						<div class="pv-title">Chill Touch</div>
+						<div class="pv-sub">Level 1 · Necromancy · SRD 5.1</div>
+						<div class="pv-body">
+							You create a ghostly, skeletal hand in the space of a creature within range. Make a
+							ranged spell attack; on a hit the target takes 1d8 necrotic damage and can’t regain
+							hit points…
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="foot">
+				<button class="btn danger">Delete draft</button>
+				<span class="spacer"></span>
+				<button class="btn ghost">Skip for now</button>
+				<button class="btn">Keep as new entry</button>
+				<button class="btn primary">Reassign to “Chill Touch” (SRD 5.1)</button>
+			</div>
+		</div>
+	</body>
+</html>

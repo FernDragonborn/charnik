@@ -97,6 +97,48 @@ export async function deleteDraft(storage: Storage, target: DraftTarget): Promis
 	if (await storage.exists(path)) await storage.remove(path);
 }
 
+/** The content row a draft points at (`type:source:id`), or null for an `add` draft (no row yet).
+ *  Basis of orphan detection: a translate/editor target whose effectiveId resolves to no row is an
+ *  orphan. */
+export function draftEffectiveId(target: DraftTarget): string | null {
+	return target.kind === 'add' ? null : `${target.type}:${target.source}:${target.id}`;
+}
+
+/** Drafts whose target row no longer exists (deleted / renamed / source disabled) — the orphan set the
+ *  reassign dialog resolves. `rowExists` is the content graph's membership test (`(eid) => !!graph.get`).
+ *  `add` drafts are never orphans (they have no row yet; they're reached via the drafts list). */
+export async function findOrphanDrafts(
+	storage: Storage,
+	rowExists: (effectiveId: string) => boolean
+): Promise<DraftEnvelope[]> {
+	const drafts = await listDrafts(storage);
+	return drafts.filter((d) => {
+		const eid = draftEffectiveId(d.target);
+		return eid !== null && !rowExists(eid);
+	});
+}
+
+/** Outcome of a re-point: the move happened, or the destination already holds a draft (the caller must
+ *  let the user choose which survives before retrying with `overwrite`), or the source was gone. */
+export type RepointResult = 'moved' | 'conflict' | 'missing';
+
+/** Re-target an (orphan) draft onto a different entry: copy its data under the new key, delete the old
+ *  file. Refuses to clobber an existing draft at `to` unless `overwrite` — a conflict is a user choice
+ *  (which of the two drafts to keep), never a silent overwrite. */
+export async function repointDraft(
+	storage: Storage,
+	from: DraftTarget,
+	to: DraftTarget,
+	overwrite = false
+): Promise<RepointResult> {
+	const env = await readDraft(storage, from);
+	if (!env) return 'missing';
+	if (!overwrite && (await readDraft(storage, to))) return 'conflict';
+	await writeDraft(storage, to, env.data, env.sourceHash);
+	await deleteDraft(storage, from);
+	return 'moved';
+}
+
 /** Every current-version draft on disk (for the pending-drafts / orphan surface). Corrupt or
  *  wrong-version files are skipped, never thrown on. */
 export async function listDrafts(storage: Storage): Promise<DraftEnvelope[]> {

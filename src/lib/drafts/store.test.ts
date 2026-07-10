@@ -1,6 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
-import { writeDraft, readDraft, deleteDraft, listDrafts, type DraftTarget } from './store';
+import {
+	writeDraft,
+	readDraft,
+	deleteDraft,
+	listDrafts,
+	draftEffectiveId,
+	findOrphanDrafts,
+	repointDraft,
+	type DraftTarget
+} from './store';
 
 const translateTarget: DraftTarget = {
 	kind: 'translate',
@@ -52,5 +61,99 @@ describe('draft store', () => {
 
 	it('is empty when there is no drafts folder', async () => {
 		expect(await listDrafts(new MemoryStorage())).toEqual([]);
+	});
+
+	it('effectiveId points a translate/editor draft at its row; an add draft has none', () => {
+		expect(draftEffectiveId(translateTarget)).toBe('spell:SRD 5.2.1:fireball');
+		expect(
+			draftEffectiveId({ kind: 'editor', type: 'monster', source: 'SRD 5.1', id: 'goblin' })
+		).toBe('monster:SRD 5.1:goblin');
+		expect(draftEffectiveId({ kind: 'add', type: 'spell', addGuid: 'g' })).toBeNull();
+	});
+
+	it('finds only drafts whose row is gone (add drafts are never orphans)', async () => {
+		const s = new MemoryStorage();
+		await writeDraft(s, translateTarget, { name: 'kept', text: '' }); // row exists
+		const goneTarget: DraftTarget = {
+			kind: 'translate',
+			type: 'spell',
+			source: 'phb',
+			id: 'gone',
+			locale: 'uk'
+		};
+		await writeDraft(s, goneTarget, { name: 'orphan', text: '' }); // row missing
+		await writeDraft(s, { kind: 'add', type: 'spell', addGuid: 'g1' }, { id: 'x' }); // add: never orphan
+		const present = new Set(['spell:SRD 5.2.1:fireball']);
+		const orphans = await findOrphanDrafts(s, (eid) => present.has(eid));
+		expect(orphans.map((o) => o.data.name)).toEqual(['orphan']);
+	});
+
+	it('re-points an orphan onto a new target, moving its data and clearing the old file', async () => {
+		const s = new MemoryStorage();
+		const from: DraftTarget = {
+			kind: 'translate',
+			type: 'spell',
+			source: 'phb',
+			id: 'gone',
+			locale: 'uk'
+		};
+		const to: DraftTarget = {
+			kind: 'translate',
+			type: 'spell',
+			source: 'SRD 5.1',
+			id: 'chill_touch',
+			locale: 'uk'
+		};
+		await writeDraft(s, from, { name: 'Дотик холоду', text: 'опис' }, 'xxh64:z');
+		expect(await repointDraft(s, from, to)).toBe('moved');
+		expect(await readDraft(s, from)).toBeNull();
+		const moved = await readDraft(s, to);
+		expect(moved?.data.name).toBe('Дотик холоду');
+		expect(moved?.sourceHash).toBe('xxh64:z');
+	});
+
+	it('refuses to clobber an existing draft at the destination (conflict = a user choice)', async () => {
+		const s = new MemoryStorage();
+		const from: DraftTarget = {
+			kind: 'translate',
+			type: 'spell',
+			source: 'phb',
+			id: 'gone',
+			locale: 'uk'
+		};
+		const to: DraftTarget = {
+			kind: 'translate',
+			type: 'spell',
+			source: 'SRD 5.1',
+			id: 'chill_touch',
+			locale: 'uk'
+		};
+		await writeDraft(s, from, { name: 'incoming', text: '' });
+		await writeDraft(s, to, { name: 'existing', text: '' });
+		expect(await repointDraft(s, from, to)).toBe('conflict');
+		expect((await readDraft(s, to))?.data.name).toBe('existing'); // untouched
+		expect((await readDraft(s, from))?.data.name).toBe('incoming'); // source still there
+		expect(await repointDraft(s, from, to, true)).toBe('moved'); // overwrite = user chose incoming
+		expect((await readDraft(s, to))?.data.name).toBe('incoming');
+		expect(await readDraft(s, from)).toBeNull();
+	});
+
+	it('reports a missing source when re-pointing a draft that is not there', async () => {
+		const s = new MemoryStorage();
+		const from: DraftTarget = {
+			kind: 'translate',
+			type: 'spell',
+			source: 'phb',
+			id: 'x',
+			locale: 'uk'
+		};
+		const to: DraftTarget = {
+			kind: 'translate',
+			type: 'spell',
+			source: 'srd',
+			id: 'y',
+			locale: 'uk'
+		};
+		expect(await repointDraft(s, from, to)).toBe('missing');
 	});
 });

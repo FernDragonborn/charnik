@@ -20,7 +20,11 @@
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
 	import EditContentForm from '$lib/components/EditContentForm.svelte';
+	import DraftsPane from '$lib/components/DraftsPane.svelte';
+	import OrphanDialog from '$lib/components/OrphanDialog.svelte';
 	import Chip from '$lib/components/Chip.svelte';
+	import { getUserStorage } from '$lib/storage/provider';
+	import { findOrphanDrafts, type DraftEnvelope } from '$lib/drafts/store';
 	import { app } from '$lib/stores/app.svelte';
 
 	// row is shown if any of its editions is currently active. Use the STAMPED `r.systems` (from the
@@ -41,13 +45,59 @@
 	let sourceFilter = $state<Set<string>>(new Set()); // empty = all sources
 	let facetFilter = $state<Set<string>>(new Set()); // empty = all facet values
 	let adding = $state(false); // right pane shows the homebrew authoring form
+	let showDrafts = $state(false); // right pane shows the pending-drafts list
 	let pickerOpen = $state(false); // the "Edit compendium" mode menu (translate / editor / add)
+	// resuming a pending add-draft: the form is handed the GUID + saved fields to restore
+	let resumeAdd = $state<{ guid: string; data: Record<string, string> } | undefined>(undefined);
+	// orphan reassign: a non-empty queue shows the step-through dialog (starting at `orphanStart`)
+	let orphanQueue = $state<DraftEnvelope[]>([]);
+	let orphanStart = $state<DraftEnvelope | null>(null);
 
 	onMount(async () => {
 		await loadContentStore();
 		if (!types.includes(selectedType)) selectedType = types[0] ?? selectedType;
 		groupBy = groupingsFor(selectedType)[0]?.key ?? groupBy;
+		void detectOrphans();
 	});
+
+	// on load, surface any draft whose target row is gone (deleted / renamed / source disabled) — the
+	// only way an orphan is reachable, since auto-restore-on-open never fires for a vanished target.
+	async function detectOrphans() {
+		const g = graph;
+		if (!g) return;
+		const orphans = await findOrphanDrafts(getUserStorage(), (eid) => !!g.get(eid));
+		if (orphans.length) openOrphans(orphans, orphans[0]);
+	}
+	function openOrphans(orphans: DraftEnvelope[], startAt: DraftEnvelope | undefined) {
+		if (!startAt) return;
+		orphanQueue = orphans;
+		orphanStart = startAt;
+	}
+	function closeOrphans(resume?: DraftEnvelope) {
+		orphanQueue = [];
+		orphanStart = null;
+		if (resume) resumeDraft(resume);
+	}
+
+	// route a resumed draft to the right editor: translate → /translate preselected; add → the edit form.
+	function resumeDraft(env: DraftEnvelope) {
+		const t = env.target;
+		if (t.kind === 'translate') {
+			const qs = new URLSearchParams({
+				type: t.type,
+				source: t.source,
+				id: t.id,
+				locale: t.locale
+			});
+			goto(`${base}/translate?${qs.toString()}`);
+		} else if (t.kind === 'add') {
+			resumeAdd = { guid: t.addGuid, data: env.data as Record<string, string> };
+			selectedType = t.type;
+			showDrafts = false;
+			adding = true;
+		}
+		// editor drafts route in with Editor mode (not built yet)
+	}
 
 	// deep-link: /compendium/<type>/<source>/<id> opens that entry (rest-param route served by
 	// the 404.html SPA fallback). Source is in the path because a slug is unique only per TYPE,
@@ -58,6 +108,7 @@
 	// clicking a row updates the URL so the current entry is shareable (no history spam)
 	function openEntry(row: LoadedRow) {
 		adding = false;
+		showDrafts = false;
 		selected = row;
 		goto(`${base}/compendium/${row.type}/${encodeURIComponent(row.source)}/${row.data.id}`, {
 			replaceState: true,
@@ -141,6 +192,8 @@
 		selectedType = type;
 		selected = null;
 		adding = false;
+		showDrafts = false;
+		resumeAdd = undefined;
 		query = '';
 		groupBy = groupingsFor(type)[0]?.key ?? groupBy;
 		sourceFilter = new Set();
@@ -151,6 +204,7 @@
 	// graph (so the new row is merged in) and open it.
 	async function onSaved(id: string) {
 		adding = false;
+		resumeAdd = undefined;
 		const g = await reloadContent(); // merge the new homebrew row + rotate guid → lists recompute
 		const row = g.get(`${selectedType}:Homebrew:${id}`);
 		if (row) openEntry(row);
@@ -251,10 +305,22 @@
 						class="mode-item"
 						onclick={() => {
 							pickerOpen = false;
+							resumeAdd = undefined;
+							showDrafts = false;
 							adding = true;
 						}}
 					>
 						<b>Add</b><small>author a new {selectedType.replace(/_/g, ' ')}</small>
+					</button>
+					<button
+						class="mode-item"
+						onclick={() => {
+							pickerOpen = false;
+							adding = false;
+							showDrafts = true;
+						}}
+					>
+						<b>Drafts</b><small>resume unfinished edits</small>
 					</button>
 					<button class="mode-item wip" disabled>
 						<b>Editor</b><small>edit all fields <span class="wip-tag">WIP</span></small>
@@ -272,15 +338,39 @@
 				selectedId={selected?.effectiveId ?? null}
 				onselect={(e) => openEntry(e.row)}
 			/>
-			{#if adding}
-				{#key selectedType}
-					<EditContentForm type={selectedType} onsave={onSaved} oncancel={() => (adding = false)} />
+			{#if showDrafts && graph}
+				<DraftsPane
+					{graph}
+					onResume={resumeDraft}
+					onResolveOrphans={(orphans, startAt) => openOrphans(orphans, startAt)}
+				/>
+			{:else if adding}
+				{#key resumeAdd?.guid ?? selectedType}
+					<EditContentForm
+						type={selectedType}
+						onsave={onSaved}
+						oncancel={() => {
+							adding = false;
+							resumeAdd = undefined;
+						}}
+						resumeGuid={resumeAdd?.guid}
+						resumeDraft={resumeAdd?.data}
+					/>
 				{/key}
 			{:else}
 				<WikiDetail {detail} />
 			{/if}
 		</div>
 	</div>
+
+	{#if orphanQueue.length && orphanStart && graph}
+		<OrphanDialog
+			orphans={orphanQueue}
+			startAt={orphanStart}
+			{graph}
+			onDone={(resume) => closeOrphans(resume)}
+		/>
+	{/if}
 {/if}
 
 <style>
