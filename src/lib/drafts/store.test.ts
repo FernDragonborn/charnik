@@ -8,6 +8,8 @@ import {
 	draftEffectiveId,
 	findOrphanDrafts,
 	repointDraft,
+	findStaleDrafts,
+	discardDrafts,
 	type DraftTarget
 } from './store';
 
@@ -136,6 +138,27 @@ describe('draft store', () => {
 		expect(await repointDraft(s, from, to, true)).toBe('moved'); // overwrite = user chose incoming
 		expect((await readDraft(s, to))?.data.name).toBe('incoming');
 		expect(await readDraft(s, from)).toBeNull();
+	});
+
+	it('finds stale-version drafts (without removing them) and discards on request', async () => {
+		const s = new MemoryStorage();
+		await writeDraft(s, translateTarget, { name: 'current', text: '' }); // current version
+		const stale: DraftTarget = { kind: 'add', type: 'spell', addGuid: 'old' };
+		await writeDraft(s, stale, { name_en: 'Old draft' });
+		// hand-patch the add draft to a future schema version (a bumped app wrote it)
+		const path = `drafts/${encodeURIComponent('add:old')}.json`;
+		const env = JSON.parse(await s.read(path));
+		env.schemaVersion = 999;
+		await s.write(path, JSON.stringify(env));
+
+		const staleDrafts = await findStaleDrafts(s);
+		expect(staleDrafts.map((d) => d.target.kind)).toEqual(['add']);
+		expect(await s.exists(path)).toBe(true); // NOT removed by the scan — warned first
+		expect((await listDrafts(s)).length).toBe(1); // the current-version one still lists
+
+		await discardDrafts(s, staleDrafts);
+		expect(await s.exists(path)).toBe(false); // now gone
+		expect(await findStaleDrafts(s)).toEqual([]);
 	});
 
 	it('reports a missing source when re-pointing a draft that is not there', async () => {

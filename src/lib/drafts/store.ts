@@ -139,17 +139,35 @@ export async function repointDraft(
 	return 'moved';
 }
 
-/** Every current-version draft on disk (for the pending-drafts / orphan surface). Corrupt or
- *  wrong-version files are skipped, never thrown on. */
-export async function listDrafts(storage: Storage): Promise<DraftEnvelope[]> {
+/** Every parseable draft on disk REGARDLESS of schema version (corrupt/unparseable files skipped).
+ *  The version-filtered {@link listDrafts} and the stale-version scan both build on this. */
+async function listAllDrafts(storage: Storage): Promise<DraftEnvelope[]> {
 	if (!(await storage.exists(DRAFTS_DIR))) return [];
 	const out: DraftEnvelope[] = [];
 	for (const entry of await storage.list(DRAFTS_DIR)) {
 		if (entry.isDir || !entry.name.endsWith('.json')) continue;
 		const envelope = await parseDraft(storage, entry.path);
-		if (envelope && envelope.schemaVersion === CONTENT_SCHEMA_VERSION) out.push(envelope);
+		if (envelope) out.push(envelope);
 	}
 	return out;
+}
+
+/** Every current-version draft on disk (for the pending-drafts / orphan surface). Corrupt or
+ *  wrong-version files are skipped, never thrown on. */
+export async function listDrafts(storage: Storage): Promise<DraftEnvelope[]> {
+	return (await listAllDrafts(storage)).filter((e) => e.schemaVersion === CONTENT_SCHEMA_VERSION);
+}
+
+/** Drafts saved under a DIFFERENT content-schema version — ephemeral WIP that can't be migrated, so it
+ *  will be discarded. Surfaced (before removal) so the user is WARNED their unsaved work is being
+ *  dropped, rather than it vanishing silently on the next read (PLAN DRAFT-CACHE backlog). */
+export async function findStaleDrafts(storage: Storage): Promise<DraftEnvelope[]> {
+	return (await listAllDrafts(storage)).filter((e) => e.schemaVersion !== CONTENT_SCHEMA_VERSION);
+}
+
+/** Delete the given stale drafts (called after the user acknowledges the discard warning). */
+export async function discardDrafts(storage: Storage, drafts: DraftEnvelope[]): Promise<void> {
+	for (const d of drafts) await deleteDraft(storage, d.target);
 }
 
 /** Read + JSON-parse a draft file, or null if it's corrupt / unparseable (never throws). */

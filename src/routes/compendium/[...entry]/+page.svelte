@@ -22,9 +22,15 @@
 	import EditContentForm from '$lib/components/EditContentForm.svelte';
 	import DraftsPane from '$lib/components/DraftsPane.svelte';
 	import OrphanDialog from '$lib/components/OrphanDialog.svelte';
+	import SchemaDiscardDialog from '$lib/components/SchemaDiscardDialog.svelte';
 	import Chip from '$lib/components/Chip.svelte';
 	import { getUserStorage } from '$lib/storage/provider';
-	import { findOrphanDrafts, type DraftEnvelope } from '$lib/drafts/store';
+	import {
+		findOrphanDrafts,
+		findStaleDrafts,
+		discardDrafts,
+		type DraftEnvelope
+	} from '$lib/drafts/store';
 	import { app } from '$lib/stores/app.svelte';
 
 	// row is shown if any of its editions is currently active. Use the STAMPED `r.systems` (from the
@@ -53,13 +59,26 @@
 	// orphan reassign: a non-empty queue shows the step-through dialog (starting at `orphanStart`)
 	let orphanQueue = $state<DraftEnvelope[]>([]);
 	let orphanStart = $state<DraftEnvelope | null>(null);
+	// drafts from an older content schema that can't be migrated → warn before discarding
+	let staleDrafts = $state<DraftEnvelope[]>([]);
 
 	onMount(async () => {
 		await loadContentStore();
 		if (!types.includes(selectedType)) selectedType = types[0] ?? selectedType;
 		groupBy = groupingsFor(selectedType)[0]?.key ?? groupBy;
+		void detectStaleDrafts();
 		void detectOrphans();
 	});
+
+	// on load, warn if any cached draft was saved under a different content schema (it will be dropped —
+	// surface it so the user's unsaved work doesn't vanish silently).
+	async function detectStaleDrafts() {
+		staleDrafts = await findStaleDrafts(getUserStorage());
+	}
+	async function discardStale() {
+		await discardDrafts(getUserStorage(), staleDrafts);
+		staleDrafts = [];
+	}
 
 	// on load, surface any draft whose target row is gone (deleted / renamed / source disabled) — the
 	// only way an orphan is reachable, since auto-restore-on-open never fires for a vanished target.
@@ -398,6 +417,14 @@
 			{/if}
 		</div>
 	</div>
+
+	{#if staleDrafts.length}
+		<SchemaDiscardDialog
+			drafts={staleDrafts}
+			onDiscard={discardStale}
+			onKeep={() => (staleDrafts = [])}
+		/>
+	{/if}
 
 	{#if orphanQueue.length && orphanStart && graph}
 		<OrphanDialog
