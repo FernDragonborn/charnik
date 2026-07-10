@@ -26,6 +26,10 @@
   spell "available to" is a checklist of spellcaster classes plus a free-add, and a warning appears if a
   spell level above 9 is entered.
 - Dropdowns close when you click outside them; various layout fixes.
+- **Smoother updates (desktop).** The Windows installer now updates an existing install in place
+  instead of asking you to uninstall first. This release also changes the app's internal identifier
+  (to `io.github.ferndragonborn.charnik`); if you had an earlier build installed, uninstall it once —
+  future versions will update over the top.
 
 ## 0.2.0
 

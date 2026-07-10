@@ -576,7 +576,7 @@ rotating **backups** (no DB → corruption guard; atomic temp→rename).
 ## Data directory & config
 The `dataDir` holds everything the user owns: `content/`, `characters/`, `charnik.config.json`,
 `collisions.json`. Because "own your data as plain CSV" is a core goal, the folder MUST be
-**discoverable** — a hidden per-app dir (`%APPDATA%\org.charnik.app`, the initial implementation)
+**discoverable** — a hidden per-app dir (`%APPDATA%\io.github.ferndragonborn.charnik`, the initial implementation)
 fails that: users can't find it. So:
 
 - **Default location = `<documentDir>/charnik`** (e.g. `C:\Users\<u>\Documents\charnik`) — a
@@ -593,7 +593,7 @@ fails that: users can't find it. So:
 - **fs-scope** (`capabilities/`): statically allow `$DOCUMENT/charnik/**` + `$APPCONFIG/**`; an
   **arbitrary user-picked folder** is granted at runtime via a Rust command
   (`app.fs_scope().allow_directory(path, true)`), re-applied on startup for a saved custom path.
-- **No auto-migration** from the old `%APPDATA%\org.charnik.app` for now — we deploy fresh to test
+- **No auto-migration** from the old `%APPDATA%\io.github.ferndragonborn.charnik` for now — we deploy fresh to test
   seeding (a migrate/import path can come later).
 - All file IO stays confined to `dataDir`/roots via the **`Storage` interface + Tauri fs capability
   scope** (see SECURITY.md).

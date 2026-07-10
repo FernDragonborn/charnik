@@ -2,7 +2,7 @@
 	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
 	"productName": "charnik",
 	"version": "0.2.1",
-	"identifier": "org.charnik.app",
+	"identifier": "io.github.ferndragonborn.charnik",
 	"build": {
 		"frontendDist": "../build",
 		"devUrl": "http://localhost:5173",
@@ -33,6 +33,11 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
+		"windows": {
+			"nsis": {
+				"installMode": "currentUser"
+			}
+		},
 		"android": {
 			"debugApplicationIdSuffix": ".debug"
 		}
