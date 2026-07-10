@@ -1217,9 +1217,11 @@ Architecture / correctness (do after the above):
   (b) `toCsv` + its module `BOM` const were dead (knip-confirmed) → deleted; (c) `buildRow`/`columnsFor`
   were unused *exports* → de-exported (internal only); (d) the "schema columns + preserved extra
   columns" block (upsert + remove) → one `columnsWithExtras(type, rows)`. Behavior-preserving, 289
-  tests, 0 visual drift. **FLAGGED (latent, not fixed):** `saveHomebrewRow` (fresh append) writes only
-  schema columns and does NOT re-attach draft extras the way `upsertHomebrewRow` does — a NEW homebrew
-  row carrying localized-prose columns could drop them on first save. Verify + align with upsert.
+  tests, 0 visual drift. **FIXED (was a latent contract gap):** `saveHomebrewRow` (fresh append) wrote
+  only schema columns and dropped draft extras, unlike `upsertHomebrewRow`. Not UI-triggerable today
+  (the add form filters locale-variant columns), but the two write paths disagreed. Both now go through
+  one `buildRowWithExtras` helper (buildRow + re-attach non-schema columns) + `columnsWithExtras`, so a
+  new row keeps localized-prose columns exactly like an edited one. +2 tests (fresh-save id + extras).
 - [x] **CH9 · Menu/overlay lifecycle** — TRACED (2026-07-11). Verified: the `$effect` clamp
   (CombatMenus) keeps the popup in-viewport (viewport-coord math, bottom-overflow pull-up + top-edge
   guard, idempotent from `overlay.top`); backdrop click + outside-wheel both close; `overlay.kind` is

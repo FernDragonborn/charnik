@@ -249,6 +249,22 @@ function buildRow(
 	return { ok: true, row };
 }
 
+/** `buildRow` + carry over any columns the schema doesn't declare (localized prose like `text_uk`,
+ *  `material_de`, …) that the strict build drops. Used by EVERY write path so a new row preserves its
+ *  extra columns exactly like an edited one — otherwise a fresh homebrew entry could silently lose a
+ *  translation column the loader would have kept. */
+function buildRowWithExtras(
+	type: ContentType,
+	draft: Record<string, string>,
+	existingIds: Set<string>
+): { ok: true; row: Record<string, string> } | { ok: false; issues: string[] } {
+	const built = buildRow(type, draft, existingIds);
+	if (!built.ok) return built;
+	const row = { ...built.row };
+	for (const [k, v] of Object.entries(draft)) if (!(k in row)) row[k] = (v ?? '').trim();
+	return { ok: true, row };
+}
+
 /** Seed an editor draft from an existing row — every column as a string cell (`systems` from the
  *  stamped `row.systems`, arrays joined). Copies ALL of `row.data`, incl. locale-prose columns beyond
  *  the schema (name_uk/text_uk/…), so an edit round-trips without dropping them. */
@@ -282,11 +298,9 @@ export async function upsertHomebrewRow(
 
 	// validate through the schema (buildRow forces source + slugs a blank id); pass no existingIds so
 	// the id is KEPT (an upsert reuses it), not de-duplicated like a fresh add.
-	const built = buildRow(type, { ...draft, id }, new Set());
+	const built = buildRowWithExtras(type, { ...draft, id }, new Set());
 	if (!built.ok) return { ok: false, issues: built.issues };
-	// re-attach any columns the schema doesn't declare (locale prose) so the edit doesn't lose them
-	const finalRow = { ...built.row };
-	for (const [k, v] of Object.entries(draft)) if (!(k in finalRow)) finalRow[k] = (v ?? '').trim();
+	const finalRow = built.row;
 
 	const columns = columnsWithExtras(type, [...existing, finalRow]);
 
@@ -374,15 +388,15 @@ export async function saveHomebrewRow(
 	targetFile: string = homebrewFile(type)
 ): Promise<SaveResult> {
 	const file = targetFile;
-	const columns = columnsFor(type);
 
 	// existing rows + header (if the file exists) — to keep ids unique, preserve prior entries + header
 	const { rows: existing, directives } = await readHomebrewFile(storage, file);
 	const existingIds = new Set(existing.map((r) => r.id).filter((id): id is string => Boolean(id)));
 
-	const built = buildRow(type, draft, existingIds);
+	const built = buildRowWithExtras(type, draft, existingIds);
 	if (!built.ok) return { ok: false, issues: built.issues };
 
-	await writeStampedHomebrew(storage, file, columns, [...existing, built.row], directives);
+	const rows = [...existing, built.row];
+	await writeStampedHomebrew(storage, file, columnsWithExtras(type, rows), rows, directives);
 	return built.row.id ? { ok: true, id: built.row.id } : { ok: true };
 }

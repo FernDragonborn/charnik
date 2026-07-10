@@ -5,6 +5,7 @@ import {
 	isShippedFile,
 	listTypeTargets,
 	rowToDraft,
+	saveHomebrewRow,
 	upsertHomebrewRow,
 	removeHomebrewRow,
 	homebrewFile,
@@ -124,5 +125,31 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 		expect(directives.get('source')).toBe(HOMEBREW_SOURCE);
 		expect(directives.get('license')).toBeTruthy();
 		expect(checkFileMeta(file, directives)).toBeNull(); // required human keys present → no modal
+	});
+});
+
+describe('fresh save (append a new row)', () => {
+	const file = homebrewFile('condition');
+
+	it('appends the validated row and returns its id', async () => {
+		const s = new MemoryStorage();
+		const res = await saveHomebrewRow(s, 'condition', { name_en: 'Dazed', systems: '5e' }, file);
+		expect(res).toEqual({ ok: true, id: 'dazed' }); // id auto-slugged from the name
+		expect((await readRows(s, file)).map((r) => r.id)).toEqual(['dazed']);
+	});
+
+	// regression: a NEW row must keep columns the schema doesn't declare (localized prose), the same as
+	// an edited row does — otherwise a fresh homebrew entry with a translation silently loses it.
+	it('preserves columns beyond the schema (localized prose) on a fresh save', async () => {
+		const s = new MemoryStorage();
+		await saveHomebrewRow(
+			s,
+			'condition',
+			{ id: 'x', name_en: 'X', text_en: 'e', name_uk: 'Ікс', text_uk: 'опис', systems: '5e' },
+			file
+		);
+		const rows = await readRows(s, file);
+		expect(rows[0]?.name_uk).toBe('Ікс');
+		expect(rows[0]?.text_uk).toBe('опис');
 	});
 });
