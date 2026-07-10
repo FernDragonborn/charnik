@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.2.1
+
+- **Editor mode.** From **Edit compendium → Editor**, edit every field of a selected entry in a
+  two-panel view: the current article on the left, your changes on the right. Editing an entry that
+  ships with the app saves a homebrew copy (the original is untouched and your version sorts above it);
+  your own entries edit in place.
+- **Drafts.** Unfinished translations and new/edited entries now auto-save and can be picked up later
+  from **Edit compendium → Drafts**. If a saved draft points at an entry that no longer exists, a
+  dialog helps you reassign it to another entry, keep it as new, or delete it. Drafts from an older
+  version are flagged before they're discarded.
+- **Delete or shelve your homebrew.** A homebrew entry's page has, at the bottom, **Delete entry**
+  (with a confirmation) and **Move to drafts** (park a not-yet-ready entry back as a draft).
+- **Content management in Settings.** A new Settings page with three tabs: **Content health**
+  (problems found while loading your content), **Sources** (turn whole sources or individual files on
+  and off — nothing is deleted), and **Collisions** (when the same entry exists in more than one
+  source, keep them all or pick one).
+- **Compendium language, independent of the app.** A language selector in the compendium shows content
+  in any language you've translated to, regardless of the interface language. Your choice is remembered.
+- **Better translating.** Pick the "from" and "to" languages freely from searchable dropdowns above each
+  panel — full language names, a broad list (incl. minority languages like Crimean Tatar), and an "add a
+  language" option to start a new one. The view remembers your settings, with a "back to compendium" button.
+- **Clearer authoring form.** Adding or editing an entry now mirrors how the article looks; each field
+  has an **(i)** with the format + an example (for the parser-driven damage and effects fields too), the
+  spell "available to" is a checklist of spellcaster classes plus a free-add, and a warning appears if a
+  spell level above 9 is entered.
+- Dropdowns close when you click outside them; various layout fixes.
+
 ## 0.2.0
 
 - **Translate mode.** From the compendium, open **Edit compendium → Translate** to translate any
