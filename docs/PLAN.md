@@ -1409,16 +1409,33 @@ decomposition + RollButton). Ordering + open decisions below.
 - [ ] **DRAFT-CACHE · Persist in-progress edits (translate / add / editor) so a closed form restores.**
   A form's last unsaved state is cached to disk and silently re-fills the form when reopened (for any
   reason — nav away, reload, crash). Over the `Storage` seam; reuses the character autosave debounce.
-  - **All drafts live in a `drafts/` folder on disk, one file per draft** (`drafts/<key>.json`) →
-    unlimited concurrent drafts, collision-free (effectiveId is unique), forward-compatible, and each is
-    an individually inspectable/portable file (own-your-data). Keys: translate = `<effectiveId>:<locale>`,
-    editor = `<effectiveId>`, **add = a generated draft GUID** (a new entry has no id yet →
-    `crypto.randomUUID`, per [[charnik-guid-not-counter]]).
-  - Lifecycle: prefill on open → debounced save on change → **clear (delete the file) on successful save.**
-  - **Orphan draft** (a draft file whose id resolves to no content row — row deleted, or an add-GUID):
-    a pop-up dialog offers **reassign to an existing entry** (picker) / **keep as a new entry** /
-    **delete the draft**. (For a new-add GUID, "keep as new" is the normal resolution.)
-  - Staleness: the source `#content-hash` changed since the draft → keep but flag "source changed."
+  - **All drafts live in a `drafts/` folder on disk, one self-contained JSON per draft — NO manifest /
+    index file** (a lost manifest must never break the set; discover by scanning `drafts/` + reading
+    each, same principle as removing `_pack.json` and content's self-describing `#content-` headers).
+    Each file carries its own identity so nothing external is needed:
+    ```jsonc
+    { "schemaVersion": CONTENT_SCHEMA_VERSION, "kind": "translate|add|editor",
+      "target": { "type","source","id","locale?" } | { "addGuid","type" },
+      "sourceHash": "xxh64:…", "savedAt": "…", "data": { …the row/prose model… } }
+    ```
+    Identity lives IN the file (`target`), so the **filename is just a safe unique name** — a hash of
+    `kind+target` for translate/editor (re-editing the same row+locale overwrites its one file, no
+    dupes) or the add GUID (`crypto.randomUUID`, per [[charnik-guid-not-counter]]). This sidesteps the
+    Windows filename hazard (raw `effectiveId` = `type:source:id` has illegal `:` + spaces).
+  - **Versioning follows the general schema — NO separate draft schema.** `data` is a content row (or a
+    prose subset), so it carries `CONTENT_SCHEMA_VERSION` via the existing `Versioned`/`migrate`
+    convention (`src/lib/schema/version.ts`). But drafts are ephemeral WIP, so on a version mismatch →
+    **discard, don't migrate** (`<` current or `>` current → drop). **BACKLOG: warn the user on a schema
+    change that unsaved draft data will be / was dropped** (a notice, not silent) — losing WIP silently
+    is surprising.
+  - Lifecycle: prefill on open → debounced save on change (`untrack` so the write doesn't re-fire) →
+    **clear (delete the file) on successful save** (write content first, then delete the draft).
+  - **Orphan draft** (a draft file whose `target` resolves to no content row — row deleted, or an
+    add-GUID): a pop-up dialog offers **reassign to an existing entry** (picker) / **keep as a new
+    entry** / **delete the draft**. Add a small **"pending drafts" surface** (in the Edit-compendium
+    picker) so orphan add-GUID drafts are reachable — auto-restore-on-open never reaches them otherwise.
+  - Staleness: `sourceHash` differs from the row's current `#content-hash` → keep but flag "source
+    changed since your draft."
   - Demo/read-only: caching is harmless but saving is blocked, so skip caching there.
 - [x] **LOC-CHECK · Flag partial/mis-filled translations (loader content-health)** — DONE. the loader
   discovers locales but doesn't verify a locale's rows are actually complete. Add a check that emits a
