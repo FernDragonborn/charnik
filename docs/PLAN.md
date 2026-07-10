@@ -1413,8 +1413,12 @@ decomposition + RollButton). Ordering + open decisions below.
   DONE (part 3, commit `1bfa62e`): the pending-drafts **surface** — `DraftsPane` (full-width list, 4th
   "Drafts" picker entry, unlimited pickable add-drafts) + `OrphanDialog` (N-of-M step-through, 2-pane
   reassign picker + preview + conflict view) + compendium/translate wiring + store `findOrphanDrafts`/
-  `repointDraft`/`draftEffectiveId` (+10 tests). Verified live. STILL OPEN: **warn-on-schema-discard**
-  notice (same dialog template) + **editor** draft wiring (lands with Editor mode).
+  `repointDraft`/`draftEffectiveId` (+10 tests). Verified live.
+  DONE (part 4, commit `2868f5c`): **editor** draft wiring — landed with Editor mode (below).
+  DONE (part 5, commit `83996d7`): **warn-on-schema-discard** — `SchemaDiscardDialog` (house template,
+  single-pane notice) fires on compendium load when the cache holds drafts from another
+  `CONTENT_SCHEMA_VERSION`; store `findStaleDrafts`/`discardDrafts`. Verified live.
+  **DRAFT-CACHE is COMPLETE — no open tails.**
   **SURFACE DECIDED 2026-07-10** (mocks: `design-preview/drafts-surface.html`, `orphan-popup.html`):
   - **Drafts list = full-width pane that replaces the editing block** (compendium right column, where
     WikiDetail/EditContentForm render) — opened via a **4th "Drafts" entry** in the "✎ Edit compendium"
@@ -1486,12 +1490,20 @@ decomposition + RollButton). Ordering + open decisions below.
 first so every new component (the heads) is born typed and LINT-1's type-checked rules land on
 clean code; the view split follows.
 
-**Editor mode is a separate later task.** Write-back for a **read-only shipped SRD row = fork
--to-homebrew (DECIDED)**: editing a shipped row copies it into a homebrew CSV (same id,
-`source=homebrew`), which overrides the SRD row via collision resolution; the SRD file stays
-untouched (survives a future SRD update, keeps CC-BY attribution on the original). Homebrew rows
-edit in place. Still to design when we build it: the `fieldsFor`→head-slot widget placement (the
-widget/validation stack already exists via `fieldsFor` + zod `parseRow`).
+**Editor mode — DONE (commit `2868f5c`).** The "Editor" mode-picker entry edits a selected row's
+fields in place, REUSING `EditContentForm` (an `editRow` prop) rather than bespoke editable heads —
+so every `fieldsFor` widget + zod validation is shared with Add. Save = `upsertHomebrewRow` (replace
+same-id row, preserve columns beyond the schema so localized prose survives). A **read-only shipped
+SRD row FORKS to homebrew** (same id, `source=Homebrew`); a homebrew row edits its own file. The SRD
+file stays untouched (survives a future SRD update, keeps CC-BY attribution).
+**Override = SORT, not hide (DECIDED 2026-07-10 by the user):** a homebrew row floats ABOVE the SRD
+original in every compendium group (`grouping.compareRows`/`homebrewFirst`, stable so shipped order is
+otherwise untouched — 0px on the SRD-only set). Both coexist (honours the source-namespaced-identity
+invariant); the full keep-one/keep-all UI stays a later `collisions.json` feature.
+Also landed with it: homebrew writes now **stamp a `#content-*` header** (source/license/id/schema/
+updated-at/hash — the DATA-VER "in-app authoring stamp") so app files never trip the metadata-check /
+hash-drift dialogs (default homebrew license = `Custom`); and the **license** is threaded onto rows +
+the detail source-line (was a hardcoded `CC-BY-4.0`).
 
 ---
 
