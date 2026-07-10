@@ -23,6 +23,10 @@ export const characters = $state<{
 
 let seeded = false;
 
+/** Rotate the recompute key so every view keyed on `characters.guid` re-renders after a change (a
+ *  fresh GUID, not an incrementing counter — see charnik-guid-not-counter). */
+const bumpGuid = () => (characters.guid = crypto.randomUUID());
+
 /** Load the roster; on first ever run seed the demo character so there's something to play. */
 export async function loadRoster(): Promise<void> {
 	const s = getUserStorage();
@@ -33,21 +37,21 @@ export async function loadRoster(): Promise<void> {
 		roster = await listCharacters(s);
 	}
 	characters.roster = roster;
-	characters.guid = crypto.randomUUID();
+	bumpGuid();
+}
+
+/** Load a saved character by slug WITHOUT making it active (for the builder's edit/level-up).
+ *  Returns null if the save is bad or missing. */
+export async function loadCharacterBySlug(slug: string): Promise<Character | null> {
+	const res = await loadCharacter(getUserStorage(), slug);
+	return res.ok && res.character ? res.character : null;
 }
 
 /** Open a saved character as the active one (returns null if the save is bad/missing). */
 export async function openCharacter(slug: string): Promise<Character | null> {
-	const res = await loadCharacter(getUserStorage(), slug);
-	characters.active = res.ok && res.character ? res.character : null;
-	characters.guid = crypto.randomUUID();
+	characters.active = await loadCharacterBySlug(slug);
+	bumpGuid();
 	return characters.active;
-}
-
-/** Load a saved character by slug WITHOUT making it active (for the builder's edit/level-up). */
-export async function loadCharacterBySlug(slug: string): Promise<Character | null> {
-	const res = await loadCharacter(getUserStorage(), slug);
-	return res.ok && res.character ? res.character : null;
 }
 
 /** Persist a character (create or update) and refresh the roster. */

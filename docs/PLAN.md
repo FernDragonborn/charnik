@@ -1227,11 +1227,20 @@ Architecture / correctness (do after the above):
   guard, idempotent from `overlay.top`); backdrop click + outside-wheel both close; `overlay.kind` is
   the typed `MenuKind` union with exhaustive branches (R2 confirmed). Deduped the one within-file CSS
   clone: `.field input` + `.modifier-target` (identical menu text-input) merged to one selector.
-- [ ] **CH10 · Roster CRUD** (census-found) — root `+page.svelte`: list characters, `open(id)` →
-  `openCharacter` → combat, `removeCharacter(id)`, new. Store `characters` (guid recompute) + storage.
-- [ ] **CH11 · App switching** (census-found) — `+layout.svelte`/`settings`: theme / locale /
-  activeSystem / activeEditions toggles → `app` store → live re-render everywhere (system→build,
-  editions→compendium, locale→i18n+rowName). The reactive-store contract; check nothing caches system.
+- [x] **CH10 · Roster CRUD** (census-found) — TRACED + deduped (2026-07-11). Chain clean (roster
+  `+page` → character store → repository over `getUserStorage()`). Store dedup: `openCharacter` now
+  delegates to `loadCharacterBySlug` (both did the same load + `res.ok && res.character ? … : null`
+  unwrap), and the twice-written `characters.guid = crypto.randomUUID()` → a named `bumpGuid()` that
+  states the why (rotate the recompute key; GUID not counter).
+- [x] **CH11 · App switching** (census-found) — TRACED + deduped (2026-07-11). Reactive-store contract
+  holds: theme/system/locale toggles write `app.*` and every consumer reads it reactively (`$derived`
+  / template). The ONLY `activeSystem` snapshot is `build/state` `draft.system = app.activeSystem`,
+  which is BY DESIGN (a character binds to its creation system — the invariant), not a caching bug.
+  Deduped: the byte-identical `inEdition` row-filter (compendium + translate) → one
+  `inActiveEdition(systems)` exported from the app store (row-type-agnostic; each page keeps a trivial
+  `r => inActiveEdition(r.systems)` wrapper). **FLAGGED:** `app.activeEditions` has NO writer anywhere —
+  the 5e/5.5e edition toggle (see the article-edition-toggle design) isn't wired; editions are fixed at
+  both. Feature gap, not a refactor item.
 - [ ] **CH12 · Command palette (Ctrl+K)** (census-found) — `onWindowKeydown → search (Fuse name/text
   indexes) → goto page or deep-link the compendium entry`. `$lib/content/search` + the palette.
 - [ ] **CH13 · Content article render + select** — `graph row → buildDetail/entryMeta/groupEntries →

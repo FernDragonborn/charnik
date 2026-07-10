@@ -36,14 +36,10 @@
 		type DraftEnvelope
 	} from '$lib/drafts/store';
 	import { isRowActive } from '$lib/content/sources.svelte';
-	import { app } from '$lib/stores/app.svelte';
+	import { app, inActiveEdition } from '$lib/stores/app.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 
-	// row is shown if any of its editions is currently active. Use the STAMPED `r.systems` (from the
-	// file's `#content-systems:` header / pack default), NOT the raw `r.data.systems` column — the SRD
-	// files declare editions in the header, so the column is absent and filtered everything out.
-	const inEdition = (r: LoadedRow) =>
-		r.systems.some((s) => app.activeEditions.includes(s as (typeof app.activeEditions)[number]));
+	const inEdition = (r: LoadedRow) => inActiveEdition(r.systems);
 	const showEdition = $derived(app.activeEditions.length > 1);
 
 	// shared reactive store → a live content refresh re-renders every derived list below, no reload

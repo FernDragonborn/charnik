@@ -16,3 +16,11 @@ export const app = $state({
 	/** Shipped default = dark slate (see docs/PLAN.md #18). */
 	theme: 'dark' as ThemeId
 });
+
+/** Is a content row visible under the current edition filter? True when ANY of its editions is
+ *  active. Pass the row's STAMPED `systems` (from the file's `#content-systems:` header / pack
+ *  default), not the raw `data.systems` column — SRD files declare editions in the header, so the
+ *  column is absent and would filter everything out. */
+export function inActiveEdition(systems: string[]): boolean {
+	return systems.some((s) => app.activeEditions.includes(s as SystemId));
+}

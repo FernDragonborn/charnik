@@ -22,7 +22,7 @@
 	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
 	import type { WikiEditDraft } from '$lib/components/wikiEdit';
 	import { writeDraft, readDraft, deleteDraft, type DraftTarget } from '$lib/drafts/store';
-	import { app } from '$lib/stores/app.svelte';
+	import { app, inActiveEdition } from '$lib/stores/app.svelte';
 	import { isReadOnlyContent } from '$lib/config/demo';
 	import { _ } from '$lib/i18n';
 
@@ -87,8 +87,7 @@
 		selected = content.graph.get(`${type}:${source}:${id}`) ?? selected;
 	}
 
-	const inEdition = (r: LoadedRow) =>
-		r.systems.some((s) => app.activeEditions.includes(s as (typeof app.activeEditions)[number]));
+	const inEdition = (r: LoadedRow) => inActiveEdition(r.systems);
 
 	const pool = $derived(graph ? graph.list(selectedType).filter(inEdition) : []);
 	const rows = $derived.by(() => {
