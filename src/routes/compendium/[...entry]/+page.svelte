@@ -33,6 +33,7 @@
 	} from '$lib/drafts/store';
 	import { isRowActive } from '$lib/content/sources.svelte';
 	import { app } from '$lib/stores/app.svelte';
+	import { ui } from '$lib/stores/ui.svelte';
 
 	// row is shown if any of its editions is currently active. Use the STAMPED `r.systems` (from the
 	// file's `#content-systems:` header / pack default), NOT the raw `r.data.systems` column — the SRD
@@ -233,6 +234,24 @@
 	const editorBefore = $derived(
 		editRow ? buildDetail(editRow, editRow.type, undefined, app.activeLocale) : null
 	);
+	// the editor is a 3-column view — ask the shell for the full viewport width (like translate);
+	// cleared when editing ends or the page unmounts.
+	$effect(() => {
+		ui.fullBleed = !!editRow;
+		return () => {
+			ui.fullBleed = false;
+		};
+	});
+
+	// in any authoring mode (editor / add / drafts), the "Edit compendium" picker becomes a single
+	// "back to compendium" action that returns to plain browsing.
+	const inMode = $derived(!!editRow || adding || showDrafts);
+	function exitMode() {
+		editRow = null;
+		adding = false;
+		showDrafts = false;
+		resumeAdd = undefined;
+	}
 	const groupLabel = $derived(groupings.find((g) => g.key === groupBy)?.label ?? '');
 	const activeFilters = $derived(sourceFilter.size + facetFilter.size);
 
@@ -265,6 +284,16 @@
 		else next.add(v);
 		return next;
 	}
+
+	// close an open <details> dropdown when the user clicks/taps anywhere outside it (native <details>
+	// stays open otherwise). Capture-phase so it fires before inner handlers.
+	function autoClose(node: HTMLDetailsElement) {
+		const onDown = (e: Event) => {
+			if (node.open && !node.contains(e.target as Node)) node.open = false;
+		};
+		document.addEventListener('pointerdown', onDown, true);
+		return { destroy: () => document.removeEventListener('pointerdown', onDown, true) };
+	}
 </script>
 
 <svelte:head><title>Compendium — Charnik</title></svelte:head>
@@ -282,7 +311,7 @@
 		</nav>
 
 		<div class="controls">
-			<details class="disclosure" bind:open={groupOpen}>
+			<details class="disclosure" bind:open={groupOpen} use:autoClose>
 				<summary>Group · <b>{groupLabel}</b></summary>
 				<div class="dropdown-menu">
 					{#each groupings as g (g.key)}
@@ -299,7 +328,7 @@
 			</details>
 
 			{#if sources.length > 1 || facetValues.length}
-				<details class="disclosure">
+				<details class="disclosure" use:autoClose>
 					<summary>Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
 					<div class="dropdown-menu wide">
 						{#if sources.length > 1}
@@ -337,57 +366,64 @@
 				</details>
 			{/if}
 
-			<details class="mode-picker" bind:open={pickerOpen}>
-				<summary>✎ Edit compendium</summary>
-				<!-- One entry for all content-authoring modes; each opens in the right pane. Editor edits
+			{#if inMode}
+				<button class="back-to-browse" onclick={exitMode}>← Back to compendium</button>
+			{:else}
+				<details class="mode-picker" bind:open={pickerOpen} use:autoClose>
+					<summary>✎ Edit compendium</summary>
+					<!-- One entry for all content-authoring modes; each opens in the right pane. Editor edits
 				     the currently-selected entry (a shipped row forks to homebrew on save). -->
-				<div class="mode-menu">
-					<button
-						class="mode-item"
-						onclick={() => {
-							pickerOpen = false;
-							goto(`${base}/translate`);
-						}}
-					>
-						<b>Translate</b><small>side-by-side prose translation</small>
-					</button>
-					<button
-						class="mode-item"
-						onclick={() => {
-							pickerOpen = false;
-							resumeAdd = undefined;
-							showDrafts = false;
-							adding = true;
-						}}
-					>
-						<b>Add</b><small>author a new {selectedType.replace(/_/g, ' ')}</small>
-					</button>
-					<button
-						class="mode-item"
-						disabled={!selected}
-						onclick={() => {
-							pickerOpen = false;
-							if (selected) openEditor(selected);
-						}}
-					>
-						<b>Editor</b>
-						<small>
-							{selected ? `edit “${selected.data.name_en}” — all fields` : 'select an entry first'}
-						</small>
-					</button>
-					<button
-						class="mode-item"
-						onclick={() => {
-							pickerOpen = false;
-							adding = false;
-							editRow = null;
-							showDrafts = true;
-						}}
-					>
-						<b>Drafts</b><small>resume unfinished edits</small>
-					</button>
-				</div>
-			</details>
+					<div class="mode-menu">
+						<button
+							class="mode-item"
+							onclick={() => {
+								pickerOpen = false;
+								goto(`${base}/translate`);
+							}}
+						>
+							<b>Translate</b><small>side-by-side prose translation</small>
+						</button>
+						<button
+							class="mode-item"
+							onclick={() => {
+								pickerOpen = false;
+								resumeAdd = undefined;
+								editRow = null;
+								showDrafts = false;
+								adding = true;
+							}}
+						>
+							<b>Add</b><small>author a new {selectedType.replace(/_/g, ' ')}</small>
+						</button>
+						<button
+							class="mode-item"
+							disabled={!selected}
+							onclick={() => {
+								pickerOpen = false;
+								if (selected) openEditor(selected);
+							}}
+						>
+							<b>Editor</b>
+							<small>
+								{selected
+									? `edit “${selected.data.name_en}” — all fields`
+									: 'select an entry first'}
+							</small>
+						</button>
+						<button
+							class="mode-item"
+							onclick={() => {
+								pickerOpen = false;
+								adding = false;
+								editRow = null;
+								showDrafts = true;
+							}}
+						>
+							<b>Drafts</b><small>resume unfinished edits</small>
+						</button>
+					</div>
+				</details>
+			{/if}
 		</div>
 
 		<div class="two-column">
@@ -567,6 +603,22 @@
 		font-family: var(--font-mono);
 		font-size: 11px;
 		cursor: pointer;
+	}
+	.back-to-browse {
+		margin-left: auto;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 12px;
+		color: var(--color-accent-bright);
+		background: var(--color-accent-soft);
+		border: 1px solid var(--color-accent);
+		border-radius: 7px;
+		padding: 5px 12px;
+		cursor: pointer;
+	}
+	.back-to-browse:hover {
+		background: var(--color-accent);
+		color: #fff;
 	}
 	.mode-picker {
 		margin-left: auto;

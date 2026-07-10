@@ -5,6 +5,7 @@
 	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { app } from '$lib/stores/app.svelte';
+	import { ui } from '$lib/stores/ui.svelte';
 	import { dirFor, locale as i18nLocale, _ } from '$lib/i18n';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
 	import LangSwitcher from '$lib/components/LangSwitcher.svelte';
@@ -166,8 +167,13 @@
 	</div>
 </header>
 
-<!-- Translate mode needs the full viewport width (3 columns); other routes stay centred to 1040px. -->
-<main id="main" tabindex="-1" class:full-bleed={page.url.pathname.startsWith(`${base}/translate`)}>
+<!-- Translate + the compendium editor (3-column views) need the full viewport width; other routes stay
+     centred to 1040px. A view flips `ui.fullBleed` while it needs the width. -->
+<main
+	id="main"
+	tabindex="-1"
+	class:full-bleed={page.url.pathname.startsWith(`${base}/translate`) || ui.fullBleed}
+>
 	{@render children()}
 </main>
 

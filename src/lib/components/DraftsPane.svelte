@@ -155,8 +155,8 @@
 
 <style>
 	.drafts-pane {
-		padding: 4px 4px 24px;
-		max-width: 720px;
+		padding: 20px 22px 28px;
+		max-width: 760px;
 	}
 	.dp-head {
 		display: flex;
