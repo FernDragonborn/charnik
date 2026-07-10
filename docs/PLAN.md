@@ -311,9 +311,17 @@ Armor/weapon proficiencies · Tool proficiencies · Languages — each its own s
 ### Compendium / browser
 - Browse every content type. **Search respects active system, or across both** when the
   user picks "all". Sort/filter: spells by level/school/(class, casting time…); generic
-  sort/filter elsewhere.
+  sort/filter elsewhere. **DONE** (groupings: level/school/source/A–Z + school/source facets +
+  edition; the parenthetical class/casting-time spell facets remain an optional nice-to-have).
 - **Content-health view**: diagnostics over loaded content — broken references, missing
   translations, ID collisions, malformed rows. Valuable since content is user-edited.
+  **DONE (commit `bfe3df0`)** — Settings ▸ Content health, over `graph.issues`/`metaIssues`/`driftItems`.
+- **Two-dimensional source filtering + collision resolution — DONE (commit `bfe3df0`).** Settings ▸
+  Sources (per-source + per-file enable toggles; a row shows iff file AND source enabled) and ▸
+  Collisions (same `type:id` overlapping an edition → keep-all / keep-one = the collisions.json
+  resolution). Browse-layer only via `sources.svelte`'s persisted `sourceConfig` + pure `isRowActive`/
+  `detectCollisions` — the loader/core graph is untouched, so it's live + never drops data. The
+  homebrew fork-override (Editor mode) is the same mechanism (keep-all, homebrew sorts on top).
 
 ### Custom content types (add + persist via UI forms)
 Species (+subraces), Backgrounds, Classes, Subclasses, Class features (per level),
