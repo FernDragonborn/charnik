@@ -1,12 +1,14 @@
 <script lang="ts">
-	// Translate mode — a compendium sub-mode: pick an entry, see the English SOURCE (read-only
+	// Translate mode — a compendium sub-mode: pick an entry, see the SOURCE-locale article (read-only
 	// WikiDetail, exactly as the compendium renders it) on the left, edit the TARGET-locale prose on
-	// the right (the SAME WikiDetail in `editable` mode, so a layout change hits both panes). Target
-	// locale = the app's active locale (switch it in the topbar). Saves write the localized columns
-	// into the row's own CSV + re-stamp its hash (see content/translate.ts). Reuses EntryList +
-	// WikiDetail + the shared list helpers — only the shell is new.
+	// the right (the SAME WikiDetail in `editable` mode, so a layout change hits both panes). FROM/TO
+	// locales are chosen freely via two dropdowns above the panes + persisted across re-entries. Saves
+	// write the localized columns into the row's own CSV + re-stamp its hash (see content/translate.ts).
+	// Reuses EntryList + WikiDetail + the shared list helpers — only the shell is new.
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
 	import { getUserStorage } from '$lib/storage/provider';
@@ -23,16 +25,32 @@
 	import { isReadOnlyContent } from '$lib/config/demo';
 	import { _ } from '$lib/i18n';
 
-	const SOURCE_LOCALE = 'en'; // fixed for now; a "translate from" picker comes later
 	// A demo build is read-only for content: browse + preview edits, but saving is blocked (the
 	// shipped SRD isn't writable in the hosted demo). Not a bare platform gate — the real web build
 	// writes; only a demo flag (never desktop) opts out.
 	const demo = isReadOnlyContent();
 
+	// persisted translate settings — the FROM/TO locales + type are restored when you re-enter the view.
+	const TSTATE_KEY = 'charnik:translate';
+	function loadTState(): { sourceLocale?: string; targetLocale?: string; selectedType?: string } {
+		if (typeof localStorage === 'undefined') return {};
+		try {
+			return JSON.parse(localStorage.getItem(TSTATE_KEY) ?? '{}');
+		} catch {
+			return {};
+		}
+	}
+	const savedT = loadTState();
+
 	const graph = $derived(content.graph);
-	const targetLocale = $derived(app.activeLocale);
+	// FROM (source) and TO (target) locales are freely chosen via the two dropdowns above the panes.
+	let sourceLocale = $state(savedT.sourceLocale ?? 'en');
+	let targetLocale = $state(
+		savedT.targetLocale ?? (app.activeLocale === 'en' ? 'uk' : app.activeLocale)
+	);
+	const locales = $derived(graph?.locales ?? ['en']);
 	const types = $derived(graph ? [...graph.byType.keys()].filter(isBrowsable).sort() : []);
-	let selectedType = $state<ContentType>('spell');
+	let selectedType = $state<ContentType>((savedT.selectedType as ContentType) ?? 'spell');
 	let query = $state('');
 	let selected = $state<LoadedRow | null>(null);
 	let saving = $state(false);
@@ -41,6 +59,17 @@
 		await loadContentStore();
 		if (!types.includes(selectedType)) selectedType = types[0] ?? selectedType;
 		resumeFromParams();
+	});
+
+	// persist the FROM/TO locales + type so re-entering the view restores them
+	$effect(() => {
+		const snapshot = { sourceLocale, targetLocale, selectedType };
+		if (typeof localStorage === 'undefined') return;
+		try {
+			localStorage.setItem(TSTATE_KEY, JSON.stringify(snapshot));
+		} catch {
+			/* private mode / quota — settings just won't persist */
+		}
 	});
 
 	// Resume a draft: /translate?type=&source=&id=&locale= (from the compendium Drafts list) preselects
@@ -53,7 +82,7 @@
 		const locale = p.get('locale');
 		if (!type || !source || !id || !content.graph) return;
 		if (isBrowsable(type as ContentType)) selectedType = type as ContentType;
-		if (locale) app.activeLocale = locale;
+		if (locale) targetLocale = locale;
 		selected = content.graph.get(`${type}:${source}:${id}`) ?? selected;
 	}
 
@@ -85,7 +114,7 @@
 
 	// the two rendered models: English source (read-only) + target (editable draft binds to prose)
 	const sourceDetail = $derived(
-		selected ? buildDetail(selected, selectedType, undefined, SOURCE_LOCALE) : null
+		selected ? buildDetail(selected, selectedType, undefined, sourceLocale) : null
 	);
 	const targetDetail = $derived(
 		selected ? buildDetail(selected, selectedType, undefined, targetLocale) : null
@@ -189,8 +218,23 @@
 {:else}
 	<div class="page">
 		<div class="subbar">
-			<span class="tlabel">Target</span>
-			<span class="tlang">{targetLocale.toUpperCase()}</span>
+			<button class="back-to-browse" onclick={() => goto(`${base}/compendium`)}>
+				← Back to compendium
+			</button>
+			<span class="sep"></span>
+			<label class="locpick"
+				><span class="tlabel">From</span>
+				<select class="loc-sel" bind:value={sourceLocale}>
+					{#each locales as l (l)}<option value={l}>{l.toUpperCase()}</option>{/each}
+				</select></label
+			>
+			<span class="arrow">→</span>
+			<label class="locpick"
+				><span class="tlabel">To</span>
+				<select class="loc-sel target" bind:value={targetLocale}>
+					{#each locales as l (l)}<option value={l}>{l.toUpperCase()}</option>{/each}
+				</select></label
+			>
 			<span class="sep"></span>
 			<select class="type-sel" bind:value={selectedType}>
 				{#each types as t (t)}<option value={t}>{t}</option>{/each}
@@ -213,16 +257,16 @@
 			</EntryList>
 
 			<div class="pane source">
-				<div class="panelabel">Source · {SOURCE_LOCALE.toUpperCase()}</div>
+				<div class="panelabel">Source · {sourceLocale.toUpperCase()}</div>
 				<WikiDetail detail={sourceDetail} />
 			</div>
 
 			<div class="pane target">
 				<div class="panelabel target-label">Your translation · {targetLocale.toUpperCase()}</div>
-				{#if targetLocale === SOURCE_LOCALE}
+				{#if targetLocale === sourceLocale}
 					<p class="pick">
-						Target language is the same as the source ({SOURCE_LOCALE.toUpperCase()}). Switch the
-						app language (top-right) to translate into another language.
+						The target language is the same as the source ({sourceLocale.toUpperCase()}). Pick a
+						different “To” language above to translate.
 					</p>
 				{:else if selected}
 					<WikiDetail detail={targetDetail} editable={!demo} {draft} />
@@ -258,11 +302,44 @@
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
-	.tlang {
+	.back-to-browse {
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 12px;
+		color: var(--color-accent-bright);
+		background: var(--color-accent-soft);
+		border: 1px solid var(--color-accent);
+		border-radius: 7px;
+		padding: 5px 12px;
+		cursor: pointer;
+	}
+	.back-to-browse:hover {
+		background: var(--color-accent);
+		color: #fff;
+	}
+	.locpick {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		cursor: pointer;
+	}
+	.loc-sel {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 14px;
+		font-size: 13px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		padding: 4px 8px;
+		color: var(--color-text);
+	}
+	.loc-sel.target {
 		color: var(--color-accent-bright);
+		border-color: var(--color-accent);
+	}
+	.arrow {
+		color: var(--color-text-muted);
+		font-size: 14px;
 	}
 	.sep {
 		width: 1px;
