@@ -1406,6 +1406,20 @@ decomposition + RollButton). Ordering + open decisions below.
   sites, but the shared `base` (name_en/text_en/systems/source/effects) means common-column reads
   compile un-narrowed; only type-specific reads need `row.type === 'x'` narrowing (mostly at sites
   that already know the type). `svelte-check` drives the pass.
+- [ ] **DRAFT-CACHE · Persist in-progress edits (translate / add / editor) so a closed form restores.**
+  A form's last unsaved state is cached to disk and silently re-fills the form when reopened (for any
+  reason — nav away, reload, crash). Over the `Storage` seam; reuses the character autosave debounce.
+  - **All drafts live in a `drafts/` folder on disk, one file per draft** (`drafts/<key>.json`) →
+    unlimited concurrent drafts, collision-free (effectiveId is unique), forward-compatible, and each is
+    an individually inspectable/portable file (own-your-data). Keys: translate = `<effectiveId>:<locale>`,
+    editor = `<effectiveId>`, **add = a generated draft GUID** (a new entry has no id yet →
+    `crypto.randomUUID`, per [[charnik-guid-not-counter]]).
+  - Lifecycle: prefill on open → debounced save on change → **clear (delete the file) on successful save.**
+  - **Orphan draft** (a draft file whose id resolves to no content row — row deleted, or an add-GUID):
+    a pop-up dialog offers **reassign to an existing entry** (picker) / **keep as a new entry** /
+    **delete the draft**. (For a new-add GUID, "keep as new" is the normal resolution.)
+  - Staleness: the source `#content-hash` changed since the draft → keep but flag "source changed."
+  - Demo/read-only: caching is harmless but saving is blocked, so skip caching there.
 - [x] **LOC-CHECK · Flag partial/mis-filled translations (loader content-health)** — DONE. the loader
   discovers locales but doesn't verify a locale's rows are actually complete. Add a check that emits a
   WARN `issue` (never throws — same channel as bad rows) when a row is **partially** translated for a
