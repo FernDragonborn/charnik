@@ -1127,6 +1127,13 @@ CH13 article render (detail.test + grouping.test). CH10 (roster), CH11 (app-swit
 CH14 ($effect flows: autosave/deep-link/theme) are UNTRACED — code works but no explicit end-to-end
 audit or test yet; a good next verification pass.
 
+**Update (2026-07-11):** CH6–CH14 now ALL traced (see each ticked item above). The pass surfaced +
+fixed real cross-file duplication (slugify → util/slug; inEdition → app store; compendium deep-link +
+list-entry projection → detail.ts; ability capped-toggles; homebrew column helpers; search helpers)
+and one latent bug (saveHomebrewRow dropped non-schema columns — fixed + tested). All behavior-
+preserving: 291 tests green, `shot.mjs` 0 visual drift. Remaining open items are the flagged FEATURE
+gaps (edition toggle unwired), NOT refactor debt. Next refactor phase = the S1/S2 page splits.
+
 ### Call-chain audit — checklist (trace each flow end-to-end for cross-file duplication + seams)
 
 The file pass gives coverage + local smells; these chains surface the cross-file duplication and
@@ -1252,11 +1259,16 @@ Architecture / correctness (do after the above):
   fn (`groupRows` vs `groupEntries`) and name source (localized vs `name_en`). Extracted
   `toEntryGroups(groups, nameOf)` on detail.ts; both call it. `buildDetail`/`WikiDetail` seam + the
   `onselect → openEntry` callback are otherwise single-site. 0 visual drift on the compendium list.
-- [ ] **CH14 · Reactive `$effect` flows** (census classes 2–4) — the auto-run starts, each verify it's
-  idempotent + doesn't loop: **autosave** (combat `+page`: `JSON.stringify(c.play)` → debounced
-  `saveCharacterToStore` — persistence correctness), **compendium deep-link** (`entryParam` →
-  `select`), **theme/locale apply** (`+layout`), **palette search-on-query** (CommandPalette), **menu
-  clamp** (CH9). Plus `bind:` inputs feed the VM chains (CH1/CH4/CH7/CH8) — the state entry, no new logic.
+- [x] **CH14 · Reactive `$effect` flows** — TRACED (2026-07-11), all idempotent + loop-free, no code
+  change. **combat autosave**: debounced 800ms; `combat.character` is an independent `$state` set once
+  at load, NOT derived from `characters.active`, so `saveCharacterToStore` (which reassigns `.active` +
+  reloads the roster) never re-triggers the effect → no write-loop; flushes on before-reload.
+  **EditContentForm draft**: debounced 600ms, guarded by `readOnly` (demo) + `current === baseline`
+  (untouched form spawns nothing), writes the draft cache (not `draft`). **compendium deep-link**: reads
+  only `graph` + `entryParam`, every write inside `untrack`, no self-`goto` → `openEntry`→url→select
+  terminates. **theme/locale apply + localStorage persist**: write DOM / external store, no reactive
+  back-edge. The two debounced-autosave effects are structurally similar but differ in guards/payload;
+  a shared helper (must run inside `$effect`) isn't worth the indirection.
 
 ### Per-file audit — checklist (tick a file once scanned; findings recorded below it)
 
