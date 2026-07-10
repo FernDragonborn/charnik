@@ -19,6 +19,7 @@
 	import type { LoadedRow } from '$lib/content/loader';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
+	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
 	import type { WikiEditDraft } from '$lib/components/wikiEdit';
 	import { writeDraft, readDraft, deleteDraft, type DraftTarget } from '$lib/drafts/store';
 	import { app } from '$lib/stores/app.svelte';
@@ -222,20 +223,6 @@
 				← Back to compendium
 			</button>
 			<span class="sep"></span>
-			<label class="locpick"
-				><span class="tlabel">From</span>
-				<select class="loc-sel" bind:value={sourceLocale}>
-					{#each locales as l (l)}<option value={l}>{l.toUpperCase()}</option>{/each}
-				</select></label
-			>
-			<span class="arrow">→</span>
-			<label class="locpick"
-				><span class="tlabel">To</span>
-				<select class="loc-sel target" bind:value={targetLocale}>
-					{#each locales as l (l)}<option value={l}>{l.toUpperCase()}</option>{/each}
-				</select></label
-			>
-			<span class="sep"></span>
 			<select class="type-sel" bind:value={selectedType}>
 				{#each types as t (t)}<option value={t}>{t}</option>{/each}
 			</select>
@@ -257,16 +244,22 @@
 			</EntryList>
 
 			<div class="pane source">
-				<div class="panelabel">Source · {sourceLocale.toUpperCase()}</div>
+				<div class="pane-head">
+					<span class="panelabel">Translate from</span>
+					<LanguagePicker bind:value={sourceLocale} {locales} />
+				</div>
 				<WikiDetail detail={sourceDetail} />
 			</div>
 
 			<div class="pane target">
-				<div class="panelabel target-label">Your translation · {targetLocale.toUpperCase()}</div>
+				<div class="pane-head">
+					<span class="panelabel target-label">Into</span>
+					<LanguagePicker bind:value={targetLocale} {locales} allowAdd accent />
+				</div>
 				{#if targetLocale === sourceLocale}
 					<p class="pick">
 						The target language is the same as the source ({sourceLocale.toUpperCase()}). Pick a
-						different “To” language above to translate.
+						different language above to translate.
 					</p>
 				{:else if selected}
 					<WikiDetail detail={targetDetail} editable={!demo} {draft} />
@@ -317,29 +310,14 @@
 		background: var(--color-accent);
 		color: #fff;
 	}
-	.locpick {
+	.pane-head {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		cursor: pointer;
+		gap: 10px;
+		margin-bottom: 12px;
 	}
-	.loc-sel {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 13px;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: 8px;
-		padding: 4px 8px;
-		color: var(--color-text);
-	}
-	.loc-sel.target {
-		color: var(--color-accent-bright);
-		border-color: var(--color-accent);
-	}
-	.arrow {
-		color: var(--color-text-muted);
-		font-size: 14px;
+	.pane-head .panelabel {
+		margin-bottom: 0;
 	}
 	.sep {
 		width: 1px;
