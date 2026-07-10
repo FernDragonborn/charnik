@@ -4,6 +4,7 @@
 	// in the compendium (deep-link route). Search core lives in $lib/content/search.
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
+	import { compendiumEntryPath } from '$lib/content/detail';
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
@@ -88,7 +89,7 @@
 		if (!it) return;
 		closePalette();
 		if (it.kind === 'page') goto(`${base}${it.href}`);
-		else goto(`${base}/compendium/${it.type}/${encodeURIComponent(it.source)}/${it.slug}`);
+		else goto(compendiumEntryPath(base, it.type, it.source, it.slug));
 	}
 
 	function onWindowKeydown(e: KeyboardEvent) {

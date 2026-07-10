@@ -182,6 +182,19 @@ export interface Entry<T> {
 	row: T;
 }
 
+/** Deep-link path to a compendium entry. `source` is IN the path (encoded) because a slug is unique
+ *  only per TYPE, not across sources/editions ("fireball" exists in both 5e and 5.5e) — so the unique
+ *  identity is type:source:id. `base` is the app base path ('' on desktop, the repo subpath on Pages).
+ *  One builder shared by the compendium row-click and the command-palette jump so the URL can't drift. */
+export function compendiumEntryPath(
+	base: string,
+	type: string,
+	source: string,
+	id: string
+): string {
+	return `${base}/compendium/${type}/${encodeURIComponent(source)}/${id}`;
+}
+
 /** User-facing label for a source tag — the raw "SRD 5.1 / 5.2.1" are too technical, show the
  *  game edition. The underlying `source` value stays exact (CC-BY attribution + identity); this is
  *  a DISPLAY map only. Unknown sources (homebrew, third-party) pass through unchanged. */
@@ -351,6 +364,25 @@ export function entryMeta(row: LoadedRow): string {
 				!parts.some((q, j) => j !== i && q !== p && q.toLowerCase().includes(p.toLowerCase()))
 		)
 		.join(' · ');
+}
+
+/** Project grouped rows into the EntryList model: each group's rows become display Entries (id, name
+ *  via `nameOf`, meta, edition, row). Shared by the compendium + spellbook lists so the row projection
+ *  stays identical; the caller supplies the grouping and the name source (localized vs English). */
+export function toEntryGroups(
+	groups: { label: string; rows: LoadedRow[] }[],
+	nameOf: (row: LoadedRow) => string
+): { label: string; entries: Entry<LoadedRow>[] }[] {
+	return groups.map((g) => ({
+		label: g.label,
+		entries: g.rows.map((r) => ({
+			id: r.effectiveId,
+			name: nameOf(r),
+			meta: entryMeta(r),
+			edition: editionLabel(r.systems),
+			row: r
+		}))
+	}));
 }
 
 /** Group entries for the list — spells by level, everything else as one flat group. */

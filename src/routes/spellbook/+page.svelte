@@ -11,13 +11,7 @@
 	import { deriveSheet } from '$lib/character/derive';
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
-	import {
-		buildDetail,
-		entryMeta,
-		groupEntries,
-		editionLabel,
-		type Entry
-	} from '$lib/content/detail';
+	import { buildDetail, groupEntries, toEntryGroups } from '$lib/content/detail';
 	import { app } from '$lib/stores/app.svelte';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
@@ -70,16 +64,7 @@
 				return true;
 			})
 			.map((x) => x.row);
-		return groupEntries(rows, 'spell').map((grp) => ({
-			label: grp.label,
-			entries: grp.rows.map((r): Entry<LoadedRow> => ({
-				id: r.effectiveId,
-				name: String(r.data.name_en),
-				meta: entryMeta(r),
-				edition: editionLabel(r.systems),
-				row: r
-			}))
-		}));
+		return toEntryGroups(groupEntries(rows, 'spell'), (r) => String(r.data.name_en));
 	});
 
 	const detail = $derived(

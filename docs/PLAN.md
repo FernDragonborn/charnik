@@ -1241,11 +1241,17 @@ Architecture / correctness (do after the above):
   `r => inActiveEdition(r.systems)` wrapper). **FLAGGED:** `app.activeEditions` has NO writer anywhere —
   the 5e/5.5e edition toggle (see the article-edition-toggle design) isn't wired; editions are fixed at
   both. Feature gap, not a refactor item.
-- [ ] **CH12 · Command palette (Ctrl+K)** (census-found) — `onWindowKeydown → search (Fuse name/text
-  indexes) → goto page or deep-link the compendium entry`. `$lib/content/search` + the palette.
-- [ ] **CH13 · Content article render + select** — `graph row → buildDetail/entryMeta/groupEntries →
-  WikiDetail/EntryList`, and the `onselect` callback → `openEntry` (compendium/spellbook). The
-  render/model seam + WikiDetail's roll (folded into CH1).
+- [x] **CH12 · Command palette (Ctrl+K)** (census-found) — TRACED + deduped (2026-07-11). Search core
+  (`makeNameIndex`/`makeTextIndex`/`searchContent`) is correctly shared with the palette (+ its own
+  tests); Ctrl+K uses `e.code` (physical key, any layout). Deduped the compendium deep-link URL, built
+  identically in the palette + `openEntry` → one `compendiumEntryPath(base, type, source, id)` on
+  detail.ts (source encoded in the path since a slug is unique only per type).
+- [x] **CH13 · Content article render + select** — TRACED + deduped (2026-07-11). Both the compendium
+  and spellbook lists projected grouped rows into the EntryList model with the SAME per-row shape
+  (`{id: effectiveId, name, meta: entryMeta, edition: editionLabel, row}`), differing only in grouping
+  fn (`groupRows` vs `groupEntries`) and name source (localized vs `name_en`). Extracted
+  `toEntryGroups(groups, nameOf)` on detail.ts; both call it. `buildDetail`/`WikiDetail` seam + the
+  `onselect → openEntry` callback are otherwise single-site. 0 visual drift on the compendium list.
 - [ ] **CH14 · Reactive `$effect` flows** (census classes 2–4) — the auto-run starts, each verify it's
   idempotent + doesn't loop: **autosave** (combat `+page`: `JSON.stringify(c.play)` → debounced
   `saveCharacterToStore` — persistence correctness), **compendium deep-link** (`entryParam` →

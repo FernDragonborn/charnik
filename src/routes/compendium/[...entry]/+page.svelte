@@ -10,10 +10,9 @@
 	import { isBrowsable, type ContentType } from '$lib/content/schemas';
 	import {
 		buildDetail,
-		entryMeta,
-		editionLabel,
 		sourceLabel,
-		type Entry
+		compendiumEntryPath,
+		toEntryGroups
 	} from '$lib/content/detail';
 	import { getSpellAccess } from '$lib/content/spellAccess';
 	import { groupingsFor, facetFor, groupRows, distinctValues } from '$lib/content/grouping';
@@ -158,7 +157,7 @@
 		editRow = null;
 		showDrafts = false;
 		selected = row;
-		goto(`${base}/compendium/${row.type}/${encodeURIComponent(row.source)}/${row.data.id}`, {
+		goto(compendiumEntryPath(base, row.type, row.source, row.data.id), {
 			replaceState: true,
 			keepFocus: true,
 			noScroll: true
@@ -215,16 +214,7 @@
 	});
 
 	const groups = $derived(
-		groupRows(rows.slice(0, 500), groupBy, selectedType).map((g) => ({
-			label: g.label,
-			entries: g.rows.map((r): Entry<LoadedRow> => ({
-				id: r.effectiveId,
-				name: localName(r),
-				meta: entryMeta(r),
-				edition: editionLabel(r.systems),
-				row: r
-			}))
-		}))
+		toEntryGroups(groupRows(rows.slice(0, 500), groupBy, selectedType), localName)
 	);
 	// spell "Available to" comes from the reverse UNION access index (inline classes ∪ spell_lists),
 	// NOT the raw column — so a class that gained the spell class-side still shows, with provenance.
