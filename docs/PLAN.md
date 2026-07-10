@@ -1498,9 +1498,11 @@ decomposition + RollButton). Ordering + open decisions below.
 first so every new component (the heads) is born typed and LINT-1's type-checked rules land on
 clean code; the view split follows.
 
-**Editor mode — DONE (commit `2868f5c`).** The "Editor" mode-picker entry edits a selected row's
-fields in place, REUSING `EditContentForm` (an `editRow` prop) rather than bespoke editable heads —
-so every `fieldsFor` widget + zod validation is shared with Add. Save = `upsertHomebrewRow` (replace
+**Editor mode — DONE (commit `2868f5c`; two-panel `5550e9c`).** The "Editor" mode-picker entry (active
+once an entry is selected) opens a **two-panel BEFORE | AFTER** view (commit `5550e9c`, as agreed):
+the current rendered article (read-only `WikiDetail`, "Current") beside the editable form ("Your edit"),
+mirroring Translate's source|target. The "after" pane REUSES `EditContentForm` (an `editRow` prop)
+rather than bespoke editable heads — so every `fieldsFor` widget + zod validation is shared with Add. Save = `upsertHomebrewRow` (replace
 same-id row, preserve columns beyond the schema so localized prose survives). A **read-only shipped
 SRD row FORKS to homebrew** (same id, `source=Homebrew`); a homebrew row edits its own file. The SRD
 file stays untouched (survives a future SRD update, keeps CC-BY attribution).
