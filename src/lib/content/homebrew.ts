@@ -11,6 +11,10 @@
  */
 import Papa from 'papaparse';
 import type { Storage } from '$lib/storage/types';
+import type { LoadedRow } from './loader';
+import { parseContentDirectives, stampDirectives, type MetaKey } from './meta';
+import { hashBody } from './hash';
+import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
 import {
 	CONTENT_TYPES,
 	parseRow,
@@ -243,12 +247,108 @@ export function buildRow(
 	return { ok: true, row };
 }
 
+/** Seed an editor draft from an existing row — every column as a string cell (`systems` from the
+ *  stamped `row.systems`, arrays joined). Copies ALL of `row.data`, incl. locale-prose columns beyond
+ *  the schema (name_uk/text_uk/…), so an edit round-trips without dropping them. */
+export function rowToDraft(row: LoadedRow): Record<string, string> {
+	const d = blankDraft(row.type);
+	for (const [k, v] of Object.entries(row.data as Record<string, unknown>)) {
+		if (k === 'source') continue;
+		d[k] = v == null ? '' : Array.isArray(v) ? v.join(',') : String(v);
+	}
+	d.systems = row.systems.join(',');
+	d.id = row.id;
+	return d;
+}
+
+/**
+ * Editor-mode save (UPSERT). Validates the edited draft, then REPLACES the same-id row in `targetFile`
+ * (or appends it). Homebrew authoring forces `source=Homebrew`, so editing a shipped SRD row and
+ * pointing `targetFile` at the homebrew CSV forks it (same id → sorts above the original via
+ * `compareRows`); editing a homebrew row in its own file edits in place. Columns beyond the schema
+ * (localized prose, etc.) present in the file or the draft are preserved, never dropped.
+ */
+export async function upsertHomebrewRow(
+	storage: Storage,
+	type: ContentType,
+	draft: Record<string, string>,
+	targetFile: string = homebrewFile(type)
+): Promise<SaveResult> {
+	const id = (draft.id ?? '').trim() || slugify(draft.name_en ?? '');
+
+	const { rows: existing, directives } = await readHomebrewFile(storage, targetFile);
+
+	// validate through the schema (buildRow forces source + slugs a blank id); pass no existingIds so
+	// the id is KEPT (an upsert reuses it), not de-duplicated like a fresh add.
+	const built = buildRow(type, { ...draft, id }, new Set());
+	if (!built.ok) return { ok: false, issues: built.issues };
+	// re-attach any columns the schema doesn't declare (locale prose) so the edit doesn't lose them
+	const finalRow = { ...built.row };
+	for (const [k, v] of Object.entries(draft)) if (!(k in finalRow)) finalRow[k] = (v ?? '').trim();
+
+	// column order = schema columns first, then any extras seen in the file or this row
+	const cols = columnsFor(type);
+	const extras = [...new Set([...existing.flatMap(Object.keys), ...Object.keys(finalRow)])].filter(
+		(c) => !cols.includes(c)
+	);
+	const columns = [...cols, ...extras];
+
+	const idx = existing.findIndex((r) => r.id === id);
+	if (idx >= 0) existing[idx] = finalRow;
+	else existing.push(finalRow);
+
+	await writeStampedHomebrew(storage, targetFile, columns, existing, directives);
+	return { ok: true, id };
+}
+
 /** UTF-8 byte-order mark — prepended to CSV writes (Excel/Cyrillic safety, per the invariant). */
 const BOM = String.fromCharCode(0xfeff);
 
 /** Emit CSV text (UTF-8 BOM + CRLF) for a header + rows, with a fixed column order. */
 export function toCsv(columns: string[], rows: Record<string, string>[]): string {
 	return BOM + Papa.unparse({ fields: columns, data: rows }, { newline: '\r\n' });
+}
+
+/** Default license stamped on app-authored homebrew. "Custom" = the user's own content on their own
+ *  terms — not presuming an open license on their work; they can refine it via the content-metadata
+ *  dialog. Only needs to be PRESENT so the metadata-check pop-up doesn't nag on every save. */
+const HOMEBREW_LICENSE = 'Custom';
+
+/**
+ * Write a homebrew CSV WITH a `#content-*` header, so the app's own files never trip the
+ * metadata-check or hash-drift dialogs (the DATA-VER-1 "in-app authoring stamp"). Preserves an
+ * existing header (a stable `id`/source/license carries across saves), fills the required
+ * `source`+`license` when absent, and re-stamps `schema`/`updated-at`/`hash` to match the body just
+ * written — exactly like {@link saveTranslation}, so an app write is never seen as external drift.
+ */
+async function writeStampedHomebrew(
+	storage: Storage,
+	file: string,
+	columns: string[],
+	rows: Record<string, string>[],
+	prior: Map<MetaKey, string>
+): Promise<void> {
+	const body = Papa.unparse({ fields: columns, data: rows }, { newline: '\r\n' });
+	const d = new Map(prior);
+	if (!d.has('source')) d.set('source', HOMEBREW_SOURCE);
+	if (!d.has('license')) d.set('license', HOMEBREW_LICENSE);
+	if (!d.has('id')) d.set('id', crypto.randomUUID());
+	d.set('schema', String(CONTENT_SCHEMA_VERSION));
+	d.set('updated-at', new Date().toISOString().slice(0, 10));
+	d.set('hash', await hashBody(body));
+	await storage.write(file, stampDirectives(d, body));
+}
+
+/** Read a homebrew CSV's existing rows + header directives (the directive block is stripped before
+ *  Papa so it isn't mistaken for the column header). Empty when the file doesn't exist yet. */
+async function readHomebrewFile(
+	storage: Storage,
+	file: string
+): Promise<{ rows: Record<string, string>[]; directives: Map<MetaKey, string> }> {
+	if (!(await storage.exists(file))) return { rows: [], directives: new Map() };
+	const { directives, body } = parseContentDirectives(await storage.read(file));
+	const parsed = Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
+	return { rows: parsed.data, directives };
 }
 
 /**
@@ -265,20 +365,13 @@ export async function saveHomebrewRow(
 	const file = targetFile;
 	const columns = columnsFor(type);
 
-	// existing rows (if the file exists) — to keep ids unique and preserve prior entries
-	let existing: Record<string, string>[] = [];
-	if (await storage.exists(file)) {
-		const prev = Papa.parse<Record<string, string>>(await storage.read(file), {
-			header: true,
-			skipEmptyLines: true
-		});
-		existing = prev.data;
-	}
+	// existing rows + header (if the file exists) — to keep ids unique, preserve prior entries + header
+	const { rows: existing, directives } = await readHomebrewFile(storage, file);
 	const existingIds = new Set(existing.map((r) => r.id).filter((id): id is string => Boolean(id)));
 
 	const built = buildRow(type, draft, existingIds);
 	if (!built.ok) return { ok: false, issues: built.issues };
 
-	await storage.write(file, toCsv(columns, [...existing, built.row]));
+	await writeStampedHomebrew(storage, file, columns, [...existing, built.row], directives);
 	return built.row.id ? { ok: true, id: built.row.id } : { ok: true };
 }

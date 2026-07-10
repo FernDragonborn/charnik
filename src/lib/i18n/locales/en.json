@@ -135,6 +135,9 @@
 	},
 	"homebrewForm": {
 		"idHint": "lowercase, dashes — e.g. fire-bolt. Leave blank to auto-generate from the name.",
+		"editIdHint": "The id is fixed while editing — your homebrew copy keeps it so it overrides the original.",
+		"editForkNote": "This entry ships with Charnik, so your edit is saved as a homebrew copy (the original stays untouched and your version sorts above it).",
+		"editInPlaceNote": "Editing your homebrew entry in place.",
 		"targetLabel": "Save to file",
 		"targetHomebrew": "My homebrew (recommended)",
 		"targetNewFile": "＋ New file…",

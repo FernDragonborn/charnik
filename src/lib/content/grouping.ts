@@ -7,6 +7,21 @@
 import type { LoadedRow } from './loader';
 import type { ContentType } from './schemas';
 import { sourceLabel } from './detail';
+import { HOMEBREW_SOURCE } from './homebrew';
+
+/** A homebrew row ranks ABOVE a shipped one — so a fork-to-homebrew edit always sits above the SRD
+ *  original it overrides (the decided collision default: coexist, don't hide — PLAN Editor mode). */
+const homebrewRank = (r: LoadedRow) => (r.source === HOMEBREW_SOURCE ? 0 : 1);
+
+/** Homebrew-first, then A–Z — for the flat "A–Z" grouping (which already sorted by name). */
+export const compareRows = (a: LoadedRow, b: LoadedRow): number =>
+	homebrewRank(a) - homebrewRank(b) || String(a.data.name_en).localeCompare(String(b.data.name_en));
+
+/** Float homebrew rows to the top of a group while PRESERVING the existing relative order otherwise
+ *  (JS sort is stable) — so grouped views only change when a homebrew row is present, never reshuffle
+ *  the shipped order. */
+const homebrewFirst = (rows: LoadedRow[]): LoadedRow[] =>
+	[...rows].sort((a, b) => homebrewRank(a) - homebrewRank(b));
 
 export interface Grouping {
 	key: string;
@@ -90,12 +105,7 @@ export function groupRows(
 	type: ContentType
 ): { label: string; rows: LoadedRow[] }[] {
 	if (key === 'none') {
-		return [
-			{
-				label: '',
-				rows: [...rows].sort((a, b) => String(a.data.name_en).localeCompare(String(b.data.name_en)))
-			}
-		];
+		return [{ label: '', rows: [...rows].sort(compareRows) }];
 	}
 	const buckets = new Map<string, LoadedRow[]>();
 	for (const r of rows) {
@@ -117,5 +127,5 @@ export function groupRows(
 		if (key === 'source') return sourceLabel(k);
 		return cap(k);
 	};
-	return keys.map((k) => ({ label: label(k), rows: buckets.get(k) ?? [] }));
+	return keys.map((k) => ({ label: label(k), rows: homebrewFirst(buckets.get(k) ?? []) }));
 }

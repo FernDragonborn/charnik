@@ -207,6 +207,7 @@ export interface DetailModel {
 	bodyHtml: string; // text_en — rendered as HTML (content may contain markup)
 	higherLevel: string; // higher_level, if any
 	source: string; // attribution line
+	license: string; // the file's #content-license (e.g. CC-BY-4.0), '' when the file declares none
 	monster?: MonsterModel; // present for type === 'monster' → dedicated stat-block layout
 	spell?: SpellModel; // present for type === 'spell' → dedicated spell layout
 }
@@ -277,6 +278,7 @@ export function buildDetail(
 			bodyHtml: localized(d, 'text', locale),
 			higherLevel: '',
 			source: `Source: ${sourceLabel(row.source)}`,
+			license: row.license ?? '',
 			monster: buildMonster(row)
 		};
 	}
@@ -295,6 +297,7 @@ export function buildDetail(
 			bodyHtml: localized(d, 'text', locale),
 			higherLevel: localized(d, 'higher_level', locale),
 			source: `Source: ${sourceLabel(row.source)}`,
+			license: row.license ?? '',
 			spell: buildSpell(row, availableTo, locale)
 		};
 	}
@@ -313,7 +316,8 @@ export function buildDetail(
 		meta,
 		bodyHtml: localized(d, 'text', locale),
 		higherLevel: localized(d, 'higher_level', locale),
-		source: `Source: ${sourceLabel(row.source)}`
+		source: `Source: ${sourceLabel(row.source)}`,
+		license: row.license ?? ''
 	};
 }
 

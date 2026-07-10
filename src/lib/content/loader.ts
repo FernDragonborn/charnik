@@ -42,6 +42,9 @@ interface LoadedRowCommon {
 	 *  type must scope the identity — refines the docs' original `source:id`.) */
 	effectiveId: string;
 	systems: string[];
+	/** The file's `#content-license` (CC-BY-4.0 for shipped SRD, the user's choice for homebrew), or
+	 *  undefined for a legacy file with no header. Drives the source-line's license label. */
+	license?: string | undefined;
 	root: string;
 	file: string;
 }
@@ -244,6 +247,7 @@ export async function loadContent(
 			// file-level source/systems from the header, applied to every row (row columns override for
 			// legacy files that still carry them; else the `#content-` header, else a fallback).
 			const fileSource = directives.get('source');
+			const fileLicense = directives.get('license');
 			const fileSystems = directives
 				.get('systems')
 				?.split(',')
@@ -305,6 +309,7 @@ export async function loadContent(
 					id,
 					effectiveId: `${type}:${source}:${id}`,
 					systems,
+					...(fileLicense ? { license: fileLicense } : {}),
 					data,
 					root,
 					file: entry.name

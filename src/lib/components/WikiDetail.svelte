@@ -48,7 +48,10 @@
 		{#if actions}<div class="dactions">{@render actions()}</div>{/if}
 
 		<ArticleProse bodyMarkdown={detail.bodyHtml} {higherLevel} {material} {editable} {draft} />
-		<div class="source-line">{detail.source} · CC-BY-4.0</div>
+		<div class="source-line">
+			{detail.source}{#if detail.license}
+				· {detail.license}{/if}
+		</div>
 	{/if}
 </article>
 

@@ -11,14 +11,23 @@
 		blankDraft,
 		slugify,
 		saveHomebrewRow,
+		upsertHomebrewRow,
+		rowToDraft,
 		homebrewFile,
 		newHomebrewFile,
 		isShippedFile,
 		listTypeTargets,
 		type TargetFile
 	} from '$lib/content/homebrew';
+	import type { LoadedRow } from '$lib/content/loader';
 	import { SYSTEMS, splitList, type ContentType } from '$lib/content/schemas';
-	import { writeDraft, deleteDraft, listDrafts, type DraftTarget } from '$lib/drafts/store';
+	import {
+		writeDraft,
+		readDraft,
+		deleteDraft,
+		listDrafts,
+		type DraftTarget
+	} from '$lib/drafts/store';
 	import { isReadOnlyContent } from '$lib/config/demo';
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
@@ -40,7 +49,8 @@
 		onsave,
 		oncancel,
 		resumeGuid,
-		resumeDraft
+		resumeDraft,
+		editRow
 	}: {
 		type: ContentType;
 		onsave: (id: string) => void;
@@ -50,19 +60,47 @@
 		 *  `resumeAdd`, so `exactOptionalPropertyTypes` needs the explicit-undefined form. */
 		resumeGuid?: string | undefined;
 		resumeDraft?: Record<string, string> | undefined;
+		/** Editor mode: edit an EXISTING row in place. A shipped SRD row forks to homebrew on save
+		 *  (same id, source=Homebrew → sorts above the original); a homebrew row edits its own file. */
+		editRow?: LoadedRow | undefined;
 	} = $props();
+
+	// Editor mode is captured once (the parent remounts via {#key editRow.effectiveId}). Its save
+	// target = the row's own homebrew file, or a fork into the homebrew file when the row ships.
+	// svelte-ignore state_referenced_locally
+	const editing = !!editRow;
+	// svelte-ignore state_referenced_locally
+	const editShipped = editRow
+		? isShippedFile(`${editRow.root}/${editRow.file}`, CONTENT_ROOTS)
+		: false;
+	// svelte-ignore state_referenced_locally
+	const editTarget = editRow
+		? editShipped
+			? homebrewFile(type)
+			: `${editRow.root}/${editRow.file}`
+		: undefined;
 
 	// A new entry has no id yet, so its draft is keyed by a stable per-session GUID (per
 	// charnik-guid-not-counter): resumed from the pending list / an existing add-draft, else fresh.
+	// An editor draft is keyed by the row it edits (kind:'editor').
 	// svelte-ignore state_referenced_locally
 	let addGuid = $state(resumeGuid ?? crypto.randomUUID());
-	const addTarget = $derived<DraftTarget>({ kind: 'add', type, addGuid });
+	const draftCacheTarget = $derived<DraftTarget>(
+		editRow
+			? { kind: 'editor', type, source: editRow.source, id: editRow.id }
+			: { kind: 'add', type, addGuid }
+	);
 	const readOnly = isReadOnlyContent();
 
 	// initial-only capture is intended: the parent remounts this form with {#key type}, so the
-	// draft resets cleanly whenever the type changes. A resumed draft overlays the blank shape.
+	// draft resets cleanly whenever the type changes. Editor mode seeds from the row; a resumed
+	// add-draft overlays the blank shape; else blank.
 	// svelte-ignore state_referenced_locally
-	const initialDraft = resumeDraft ? { ...blankDraft(type), ...resumeDraft } : blankDraft(type);
+	const initialDraft = editRow
+		? rowToDraft(editRow)
+		: resumeDraft
+			? { ...blankDraft(type), ...resumeDraft }
+			: blankDraft(type);
 	let draft = $state(initialDraft);
 	let baseline = $state(JSON.stringify(initialDraft));
 	let issues = $state<string[]>([]);
@@ -76,7 +114,10 @@
 		clearTimeout(writeTimer);
 		if (readOnly || current === baseline) return;
 		const snapshot = { ...draft };
-		writeTimer = setTimeout(() => void writeDraft(getUserStorage(), addTarget, snapshot), 600);
+		writeTimer = setTimeout(
+			() => void writeDraft(getUserStorage(), draftCacheTarget, snapshot),
+			600
+		);
 	});
 
 	// WHERE to save this row. Default = the safe homebrew file; the picker also lists existing files
@@ -91,8 +132,8 @@
 	onMount(async () => {
 		targets = await listTypeTargets(getUserStorage(), type, CONTENT_ROOTS);
 		// resume the most-recent unsaved add-draft for this type (unless the parent already handed us a
-		// specific one to resume, or content is read-only) — so reopening the add form restores it.
-		if (!resumeGuid && !readOnly) {
+		// specific one to resume, we're editing an existing row, or content is read-only).
+		if (!resumeGuid && !editing && !readOnly) {
 			const mine = (await listDrafts(getUserStorage()))
 				.filter((d) => d.target.kind === 'add' && d.target.type === type)
 				.sort((a, b) => b.savedAt.localeCompare(a.savedAt));
@@ -102,6 +143,14 @@
 				const restored = { ...blankDraft(type), ...(top.data as Record<string, string>) };
 				draft = restored;
 				baseline = JSON.stringify(restored);
+			}
+		}
+		// editor mode: restore a cached edit of THIS row (deterministic key) over the row-seeded draft
+		if (editing && !readOnly) {
+			const env = await readDraft<Record<string, string>>(getUserStorage(), draftCacheTarget);
+			if (env) {
+				draft = { ...initialDraft, ...env.data };
+				baseline = JSON.stringify(draft);
 			}
 		}
 	});
@@ -122,16 +171,20 @@
 	const hasSystem = (sys: string) => splitList(draft.systems).includes(sys);
 
 	async function save() {
-		if (targetShipped) return; // never write a shipped file (the UI also blocks this)
+		if (!editing && targetShipped) return; // add mode never writes a shipped file (UI blocks it too)
 		issues = [];
 		saving = true;
 		try {
-			const res = await saveHomebrewRow(getUserStorage(), type, draft, target);
+			// editor mode UPSERTs into the row's homebrew file (fork if shipped); add mode appends a new row
+			const res =
+				editing && editTarget
+					? await upsertHomebrewRow(getUserStorage(), type, draft, editTarget)
+					: await saveHomebrewRow(getUserStorage(), type, draft, target);
 			if (!res.ok) {
 				issues = res.issues ?? ['Could not save'];
 				return;
 			}
-			await deleteDraft(getUserStorage(), addTarget); // saved → drop the cached draft
+			await deleteDraft(getUserStorage(), draftCacheTarget); // saved → drop the cached draft
 			baseline = JSON.stringify(draft); // stop the auto-save effect from re-spawning it
 			resetContentGraph();
 			if (res.id) onsave(res.id);
@@ -142,17 +195,25 @@
 </script>
 
 <article class="detail-body edit">
-	<div class="deyebrow">{type.replace(/_/g, ' ')} · new homebrew</div>
+	<div class="deyebrow">
+		{type.replace(/_/g, ' ')} · {editing ? 'edit' : 'new homebrew'}{#if editShipped}
+			· fork to homebrew{/if}
+	</div>
 	<input class="titlein" placeholder="Name" bind:value={draft.name_en} />
 	<div class="id-row">
 		<span class="id-label">id</span>
-		<input
-			class="id-input"
-			placeholder={slugify(draft.name_en ?? '') || 'auto'}
-			bind:value={draft.id}
-		/>
+		{#if editing}
+			<!-- id is locked in editor mode: a fork keeps the SRD id so it sorts above the original -->
+			<input class="id-input" value={draft.id} readonly aria-readonly="true" />
+		{:else}
+			<input
+				class="id-input"
+				placeholder={slugify(draft.name_en ?? '') || 'auto'}
+				bind:value={draft.id}
+			/>
+		{/if}
 	</div>
-	<p class="id-hint">{$_('homebrewForm.idHint')}</p>
+	<p class="id-hint">{editing ? $_('homebrewForm.editIdHint') : $_('homebrewForm.idHint')}</p>
 
 	<div class="systems-row">
 		<span class="systems-label">Editions</span>
@@ -207,34 +268,41 @@
 			bind:value={draft[f.name]}></textarea>
 	{/each}
 
-	<div class="target-row">
-		<span class="systems-label">{$_('homebrewForm.targetLabel')}</span>
-		<select class="target-select" bind:value={sel}>
-			<option value={homebrewFile(type)}>{$_('homebrewForm.targetHomebrew')}</option>
-			{#each targets.filter((t) => t.file !== homebrewFile(type)) as t (t.file)}
-				<option value={t.file}
-					>{t.file}{t.shipped ? ` · ${$_('homebrewForm.targetShippedTag')}` : ''}</option
-				>
-			{/each}
-			<option value={NEW_FILE}>{$_('homebrewForm.targetNewFile')}</option>
-		</select>
-		{#if sel === NEW_FILE}
-			<input
-				class="id-input"
-				placeholder={$_('homebrewForm.newFilePlaceholder')}
-				bind:value={newFileName}
-			/>
-		{/if}
-	</div>
-
-	{#if targetShipped}
-		<div class="shipped-warn">
-			<b>⚠ {$_('homebrewForm.srdWarnTitle')}</b>
-			<p>{$_('homebrewForm.srdWarnBody')}</p>
-			<button type="button" class="btn primary" onclick={() => (sel = homebrewFile(type))}
-				>{$_('homebrewForm.srdWarnAction')}</button
-			>
+	{#if editing}
+		<!-- editor mode has a forced target (the row's own homebrew file, or a fork) — no picker -->
+		<p class="edit-target-note">
+			{editShipped ? $_('homebrewForm.editForkNote') : $_('homebrewForm.editInPlaceNote')}
+		</p>
+	{:else}
+		<div class="target-row">
+			<span class="systems-label">{$_('homebrewForm.targetLabel')}</span>
+			<select class="target-select" bind:value={sel}>
+				<option value={homebrewFile(type)}>{$_('homebrewForm.targetHomebrew')}</option>
+				{#each targets.filter((t) => t.file !== homebrewFile(type)) as t (t.file)}
+					<option value={t.file}
+						>{t.file}{t.shipped ? ` · ${$_('homebrewForm.targetShippedTag')}` : ''}</option
+					>
+				{/each}
+				<option value={NEW_FILE}>{$_('homebrewForm.targetNewFile')}</option>
+			</select>
+			{#if sel === NEW_FILE}
+				<input
+					class="id-input"
+					placeholder={$_('homebrewForm.newFilePlaceholder')}
+					bind:value={newFileName}
+				/>
+			{/if}
 		</div>
+
+		{#if targetShipped}
+			<div class="shipped-warn">
+				<b>⚠ {$_('homebrewForm.srdWarnTitle')}</b>
+				<p>{$_('homebrewForm.srdWarnBody')}</p>
+				<button type="button" class="btn primary" onclick={() => (sel = homebrewFile(type))}
+					>{$_('homebrewForm.srdWarnAction')}</button
+				>
+			</div>
+		{/if}
 	{/if}
 
 	{#if issues.length}
@@ -247,8 +315,13 @@
 	{/if}
 
 	<div class="actions">
-		<button type="button" class="save" onclick={save} disabled={saving || targetShipped}>
-			{saving ? 'Saving…' : 'Save homebrew'}
+		<button
+			type="button"
+			class="save"
+			onclick={save}
+			disabled={saving || (!editing && targetShipped)}
+		>
+			{saving ? 'Saving…' : editing ? 'Save changes' : 'Save homebrew'}
 		</button>
 		<button type="button" class="cancel" onclick={oncancel}>Cancel</button>
 	</div>
@@ -299,6 +372,18 @@
 		margin: -8px 0 14px;
 		font-size: 11px;
 		color: var(--color-text-muted);
+	}
+	.id-input[readonly] {
+		opacity: 0.7;
+		cursor: default;
+	}
+	.edit-target-note {
+		margin: 18px 0 10px;
+		font-size: 12px;
+		line-height: 1.45;
+		color: var(--color-text-muted);
+		border-left: 2px solid var(--color-border-strong);
+		padding-left: 10px;
 	}
 	.target-row {
 		display: flex;

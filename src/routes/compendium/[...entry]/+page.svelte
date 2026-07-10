@@ -44,7 +44,8 @@
 	let groupOpen = $state(false);
 	let sourceFilter = $state<Set<string>>(new Set()); // empty = all sources
 	let facetFilter = $state<Set<string>>(new Set()); // empty = all facet values
-	let adding = $state(false); // right pane shows the homebrew authoring form
+	let adding = $state(false); // right pane shows the homebrew authoring form (new entry)
+	let editRow = $state<LoadedRow | null>(null); // right pane edits THIS existing row (editor mode)
 	let showDrafts = $state(false); // right pane shows the pending-drafts list
 	let pickerOpen = $state(false); // the "Edit compendium" mode menu (translate / editor / add)
 	// resuming a pending add-draft: the form is handed the GUID + saved fields to restore
@@ -95,8 +96,20 @@
 			selectedType = t.type;
 			showDrafts = false;
 			adding = true;
+			editRow = null;
+		} else if (t.kind === 'editor') {
+			const row = graph?.get(`${t.type}:${t.source}:${t.id}`);
+			if (row) openEditor(row);
 		}
-		// editor drafts route in with Editor mode (not built yet)
+	}
+
+	// open editor mode for a row (edit all its fields in place; a shipped row forks to homebrew on save)
+	function openEditor(row: LoadedRow) {
+		selectedType = row.type;
+		showDrafts = false;
+		adding = false;
+		resumeAdd = undefined;
+		editRow = row;
 	}
 
 	// deep-link: /compendium/<type>/<source>/<id> opens that entry (rest-param route served by
@@ -108,6 +121,7 @@
 	// clicking a row updates the URL so the current entry is shareable (no history spam)
 	function openEntry(row: LoadedRow) {
 		adding = false;
+		editRow = null;
 		showDrafts = false;
 		selected = row;
 		goto(`${base}/compendium/${row.type}/${encodeURIComponent(row.source)}/${row.data.id}`, {
@@ -192,6 +206,7 @@
 		selectedType = type;
 		selected = null;
 		adding = false;
+		editRow = null;
 		showDrafts = false;
 		resumeAdd = undefined;
 		query = '';
@@ -204,8 +219,9 @@
 	// graph (so the new row is merged in) and open it.
 	async function onSaved(id: string) {
 		adding = false;
+		editRow = null;
 		resumeAdd = undefined;
-		const g = await reloadContent(); // merge the new homebrew row + rotate guid → lists recompute
+		const g = await reloadContent(); // merge the new/edited homebrew row + rotate guid → lists recompute
 		const row = g.get(`${selectedType}:Homebrew:${id}`);
 		if (row) openEntry(row);
 	}
@@ -289,8 +305,8 @@
 
 			<details class="mode-picker" bind:open={pickerOpen}>
 				<summary>✎ Edit compendium</summary>
-				<!-- One entry for all content-authoring modes; each opens the same 2-pane structure.
-				     Translate is live; Editor (edit every field in place) is still WIP. -->
+				<!-- One entry for all content-authoring modes; each opens in the right pane. Editor edits
+				     the currently-selected entry (a shipped row forks to homebrew on save). -->
 				<div class="mode-menu">
 					<button
 						class="mode-item"
@@ -314,16 +330,27 @@
 					</button>
 					<button
 						class="mode-item"
+						disabled={!selected}
+						onclick={() => {
+							pickerOpen = false;
+							if (selected) openEditor(selected);
+						}}
+					>
+						<b>Editor</b>
+						<small>
+							{selected ? `edit “${selected.data.name_en}” — all fields` : 'select an entry first'}
+						</small>
+					</button>
+					<button
+						class="mode-item"
 						onclick={() => {
 							pickerOpen = false;
 							adding = false;
+							editRow = null;
 							showDrafts = true;
 						}}
 					>
 						<b>Drafts</b><small>resume unfinished edits</small>
-					</button>
-					<button class="mode-item wip" disabled>
-						<b>Editor</b><small>edit all fields <span class="wip-tag">WIP</span></small>
 					</button>
 				</div>
 			</details>
@@ -344,6 +371,15 @@
 					onResume={resumeDraft}
 					onResolveOrphans={(orphans, startAt) => openOrphans(orphans, startAt)}
 				/>
+			{:else if editRow}
+				{#key editRow.effectiveId}
+					<EditContentForm
+						type={editRow.type}
+						editRow={editRow ?? undefined}
+						onsave={onSaved}
+						oncancel={() => (editRow = null)}
+					/>
+				{/key}
 			{:else if adding}
 				{#key resumeAdd?.guid ?? selectedType}
 					<EditContentForm
@@ -543,19 +579,9 @@
 		font-size: 11px;
 		color: var(--color-text-muted);
 	}
-	.mode-item.wip {
+	.mode-item:disabled {
 		opacity: 0.5;
 		cursor: default;
-	}
-	.wip-tag {
-		font-family: var(--font-mono);
-		font-size: 8px;
-		letter-spacing: 0.1em;
-		border: 1px solid var(--color-border-strong);
-		border-radius: 20px;
-		padding: 0 5px;
-		margin-left: 4px;
-		color: var(--color-resource);
 	}
 	.page {
 		display: flex;
