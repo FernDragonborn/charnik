@@ -15,11 +15,14 @@
 	let {
 		detail,
 		actions,
+		footer,
 		editable = false,
 		draft
 	}: {
 		detail: DetailModel | null;
 		actions?: Snippet;
+		/** Rendered at the bottom of the article (e.g. homebrew manage buttons), inside its padding/scroll. */
+		footer?: Snippet;
 		editable?: boolean;
 		/** Mutated in place (its properties are bound); the parent owns the $state object. */
 		draft?: WikiEditDraft;
@@ -52,6 +55,7 @@
 			{detail.source}{#if detail.license}
 				· {detail.license}{/if}
 		</div>
+		{#if footer}{@render footer()}{/if}
 	{/if}
 </article>
 

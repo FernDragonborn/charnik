@@ -528,18 +528,21 @@
 					/>
 				{/key}
 			{:else}
-				<WikiDetail {detail} />
-				{#if isHomebrew(selected)}
-					<!-- your own row: manage it from the bottom of its article -->
-					<div class="homebrew-actions">
-						<button class="hb-btn" onclick={() => selected && convertToDraft(selected)}>
-							Move to drafts
-						</button>
-						<button class="hb-btn danger" onclick={() => (confirmDelete = selected)}>
-							Delete entry
-						</button>
-					</div>
-				{/if}
+				<WikiDetail {detail}>
+					{#snippet footer()}
+						{#if isHomebrew(selected)}
+							<!-- your own row: manage it from the bottom of its article -->
+							<div class="homebrew-actions">
+								<button class="hb-btn" onclick={() => selected && convertToDraft(selected)}>
+									Move to drafts
+								</button>
+								<button class="hb-btn danger" onclick={() => (confirmDelete = selected)}>
+									Delete entry
+								</button>
+							</div>
+						{/if}
+					{/snippet}
+				</WikiDetail>
 			{/if}
 		</div>
 	</div>
