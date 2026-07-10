@@ -31,6 +31,7 @@
 		discardDrafts,
 		type DraftEnvelope
 	} from '$lib/drafts/store';
+	import { isRowActive } from '$lib/content/sources.svelte';
 	import { app } from '$lib/stores/app.svelte';
 
 	// row is shown if any of its editions is currently active. Use the STAMPED `r.systems` (from the
@@ -171,7 +172,16 @@
 	});
 
 	// all rows of the type in the active editions — the pool the filters/facets draw from
-	const pool = $derived(graph ? graph.list(selectedType).filter(inEdition) : []);
+	// browse pool = rows of the type, in an active edition, AND active per the Settings source/collision
+	// config (two-dimensional filtering + collision resolution; live via the reactive sourceConfig).
+	const pool = $derived(
+		graph
+			? graph
+					.list(selectedType)
+					.filter(inEdition)
+					.filter((r) => isRowActive(r))
+			: []
+	);
 	const groupings = $derived(groupingsFor(selectedType));
 	const facet = $derived(facetFor(selectedType));
 	const sources = $derived([...new Set(pool.map((r) => r.source))].sort());
