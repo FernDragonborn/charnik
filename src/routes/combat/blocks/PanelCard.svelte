@@ -14,12 +14,29 @@
 		signed,
 		titleCase,
 		effectTag,
+		groupEffects,
+		rechargeLabel,
+		range,
+		type EffectInstance,
 		ABIL,
 		ABILITY_NAME,
 		PANEL_TITLE
 	} from '$lib/combat/helpers';
+	import EffectDurationMenu from './EffectDurationMenu.svelte';
 
 	let { pid, c, s }: { pid: string; c: Character; s: CharacterSheet } = $props();
+
+	// effects grouped into Buffs / Debuffs / Resources sections
+	const effectGroups = $derived(groupEffects(c.play.effects));
+	// the open duration dropdown (which effect + its anchor button); its rounds tracked live
+	let durationMenu = $state<{ iid: string; anchor: HTMLElement } | null>(null);
+	const menuRounds = $derived(
+		durationMenu
+			? (c.play.effects.find((e) => e.iid === durationMenu?.iid)?.durationRounds ?? null)
+			: null
+	);
+	const durationLabel = (rounds: number | null | undefined) =>
+		rounds != null ? `${rounds} rds` : '∞';
 
 	const collapsed = $derived(combat.layout.collapsed);
 	const attacks = $derived(combat.attacks);
@@ -33,6 +50,31 @@
 	const { toggle } = combat.layout;
 	const { slotClick } = combat.resources;
 </script>
+
+<!-- one Buffs/Debuffs effect row: name (white) + wrapping tags, then the duration dropdown + remove -->
+{#snippet effectRow(e: EffectInstance, polarity: 'positive' | 'negative')}
+	<div class="effect-row">
+		<div class="effect-main">
+			<span class="effect-name">{e.label}</span>
+			{#each e.effects as tok (tok)}
+				<span class="effect-tag effect-tag--{polarity}">{effectTag(tok)}</span>
+			{/each}
+		</div>
+		<span class="effect-ctrl">
+			<button
+				class="duration-select"
+				title="Set duration"
+				onclick={(ev) => (durationMenu = { iid: e.iid, anchor: ev.currentTarget })}
+				>{durationLabel(e.durationRounds)} ▾</button
+			>
+			<button
+				class="icon-button effect-remove"
+				title="Remove effect"
+				onclick={() => combat.removeEffect(e.iid)}>✕</button
+			>
+		</span>
+	</div>
+{/snippet}
 
 <div class="panel-head">
 	<button class="htoggle" onclick={() => toggle(pid)}>
@@ -107,41 +149,104 @@
 			</button>
 		{/each}
 	{:else if pid === 'effects'}
-		{#each c.play.effects as e (e.iid)}
-			<div class="effect" class:positive={e.positive} class:negative={!e.positive}>
-				<span class="effect-dot"></span>
-				<div class="body">
-					<b>{e.label}</b>
-					{#if e.effects.length}<span class="effect-tags"
-							>{#each e.effects as t (t)}<span class="effect-tag">{effectTag(t)}</span>{/each}</span
-						>{/if}
+		{#if !c.play.effects.length}
+			<p class="trace">No active effects.</p>
+		{:else}
+			{@const firstKind = effectGroups.buffs.length
+				? 'buffs'
+				: effectGroups.debuffs.length
+					? 'debuffs'
+					: 'resources'}
+			{#if effectGroups.buffs.length}
+				<div class="effect-section" class:effect-section--first={firstKind === 'buffs'}>
+					<div class="section-head section-head--buff">
+						<svg
+							width="14"
+							height="14"
+							viewBox="0 0 20 20"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.6"
+							stroke-linejoin="round"
+							aria-hidden="true"
+							><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /><path
+								d="M10 7 V12 M7.5 9.5 H12.5"
+								stroke-linecap="round"
+							/></svg
+						>
+						Buffs <span class="sec-count">· {effectGroups.buffs.length}</span>
+					</div>
+					{#each effectGroups.buffs as e (e.iid)}{@render effectRow(e, 'positive')}{/each}
 				</div>
-				<div
-					class="effect-dur"
-					title="Duration in rounds — type a number, or blank = until removed"
-				>
-					<button class="icon-button" onclick={() => combat.bumpEffectDuration(e.iid, -1)}>−</button
-					>
-					<span class="durpill">
-						<input
-							class="dur-input"
-							type="number"
-							min="0"
-							placeholder="∞"
-							value={e.durationRounds ?? ''}
-							onchange={(ev) => combat.setEffectDuration(e.iid, Number(ev.currentTarget.value))}
-						/>{e.durationRounds != null ? 'rds' : ''}
-					</span>
-					<button class="icon-button" onclick={() => combat.bumpEffectDuration(e.iid, 1)}>＋</button
-					>
+			{/if}
+			{#if effectGroups.debuffs.length}
+				<div class="effect-section" class:effect-section--first={firstKind === 'debuffs'}>
+					<div class="section-head section-head--debuff">
+						<svg
+							width="14"
+							height="14"
+							viewBox="0 0 20 20"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.7"
+							stroke-linejoin="round"
+							aria-hidden="true"
+							><path d="M10 2.5 L16 5 V10 C16 14 13 16.6 10 18 C7 16.6 4 14 4 10 V5 Z" /><path
+								d="M10.5 4.5 L8.5 9 L11 10.5 L9.2 15.5"
+								stroke-linecap="round"
+							/></svg
+						>
+						Debuffs <span class="sec-count">· {effectGroups.debuffs.length}</span>
+					</div>
+					{#each effectGroups.debuffs as e (e.iid)}{@render effectRow(e, 'negative')}{/each}
 				</div>
-				<button
-					class="icon-button eff-remove"
-					title="Remove effect"
-					onclick={() => combat.removeEffect(e.iid)}>✕</button
-				>
-			</div>
-		{:else}<p class="trace">No active effects.</p>{/each}
+			{/if}
+			{#if effectGroups.resources.length}
+				<div class="effect-section" class:effect-section--first={firstKind === 'resources'}>
+					<div class="section-head section-head--resource">
+						<svg
+							width="14"
+							height="14"
+							viewBox="0 0 20 20"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linejoin="round"
+							aria-hidden="true"
+							><rect x="3" y="6" width="12" height="8" rx="2" /><path
+								d="M17 9 V11"
+								stroke-linecap="round"
+							/><path d="M6 10 H9" stroke-linecap="round" /></svg
+						>
+						Resources <span class="sec-count">· {effectGroups.resources.length}</span>
+					</div>
+					{#each effectGroups.resources as r (r.iid)}
+						{@const spent = combat.resources.resourceSpent(r.id)}
+						<div class="resource-row">
+							<span class="resource-name">{r.name}</span>
+							<span class="resource-pips">
+								{#each range(r.max) as i (i)}
+									<button
+										class="resource-pip"
+										class:off={i >= r.max - spent}
+										title="{r.name} {i + 1}"
+										aria-label="{r.name} {i + 1}"
+										onclick={() => combat.resources.resourceClick(r.id, r.max, i)}
+									></button>
+								{/each}
+							</span>
+							<span class="resource-count">{r.max - spent}/{r.max}</span>
+							<span class="recharge-chip">{rechargeLabel(r.recharge)}</span>
+							<button
+								class="icon-button effect-remove"
+								title="Remove effect"
+								onclick={() => combat.removeEffect(r.iid)}>✕</button
+							>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		{/if}
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
 		{@const multi = s.spellcasting.classes.length > 1}
 		<div class="castline">
@@ -216,6 +321,15 @@
 			{/each}
 		</div>
 	{/if}
+{/if}
+
+{#if durationMenu}
+	<EffectDurationMenu
+		iid={durationMenu.iid}
+		rounds={menuRounds}
+		anchor={durationMenu.anchor}
+		onclose={() => (durationMenu = null)}
+	/>
 {/if}
 
 <style>
@@ -322,99 +436,154 @@
 		justify-self: end;
 	}
 
-	.effect {
+	/* --- effects panel: Buffs / Debuffs / Resources sections (see effects-block-SPEC.md) --- */
+	.section-head {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		padding: 9px 0;
-		border-top: 1px solid var(--color-border);
+		gap: 7px;
+		padding: 12px 0 5px;
+		font-family: var(--font-mono);
+		font-size: 9px;
+		letter-spacing: 0.13em;
+		text-transform: uppercase;
 	}
-	.effect:first-of-type {
-		border-top: 0;
-	}
-	.effect .body {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		flex: 1;
-		min-width: 0;
-	}
-	/* per-effect duration stepper + remove — reuses global .icon-button (±/✕) + .durpill (value pill);
-	   the value is a click-to-type number input styled to sit flush inside the pill */
-	.effect-dur {
-		display: inline-flex;
-		align-items: center;
-		gap: 2px;
+	.section-head svg {
 		flex: none;
 	}
-	.effect-dur .durpill {
-		display: inline-flex;
-		align-items: baseline;
-		gap: 3px;
-	}
-	.dur-input {
-		width: 24px;
-		background: transparent;
-		border: 0;
-		color: inherit;
-		font: inherit;
-		text-align: right;
-		padding: 0;
-		-moz-appearance: textfield;
-		appearance: textfield;
-	}
-	.dur-input::-webkit-outer-spin-button,
-	.dur-input::-webkit-inner-spin-button {
-		-webkit-appearance: none;
-		margin: 0;
-	}
-	.dur-input::placeholder {
-		color: var(--color-resource);
-		opacity: 1;
-	}
-	.eff-remove:hover {
-		color: var(--color-accent-bright);
-	}
-	.effect .effect-dot {
-		width: 8px;
-		height: 8px;
-		border-radius: 50%;
-		flex: none;
-	}
-	.effect.positive .effect-dot {
-		background: var(--color-good);
-	}
-	.effect.positive .body b {
+	.section-head--buff {
 		color: var(--color-good);
 	}
-	.effect.negative .effect-dot {
-		background: var(--color-accent);
-	}
-	.effect.negative .body b {
+	.section-head--debuff {
 		color: var(--color-accent-bright);
 	}
-	.effect-tags {
+	.section-head--resource {
+		color: var(--color-resource);
+	}
+	.section-head .sec-count {
+		color: var(--color-text-muted);
+	}
+	.effect-row {
+		display: flex;
+		gap: 9px;
+		padding: 7px 0;
+		border-top: 1px solid var(--color-border);
+		align-items: flex-start;
+	}
+	/* the very first row of the very first section has no divider above it */
+	.effect-section--first .effect-row:first-of-type,
+	.effect-section--first .resource-row:first-of-type {
+		border-top: 0;
+	}
+	.effect-main {
+		flex: 1;
+		min-width: 0;
 		display: flex;
 		flex-wrap: wrap;
-		justify-content: flex-end;
-		gap: 5px;
-		margin-left: auto;
+		align-items: center;
+		gap: 6px 8px;
 	}
+	.effect-name {
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 13px;
+		color: var(--color-text);
+	}
+	.effect-ctrl {
+		display: flex;
+		gap: 8px;
+		flex: none;
+	}
+	/* tag pill — pos/neg share the box (identical height); modifier names avoid the row `.r` collision */
 	.effect-tag {
+		display: inline-flex;
+		align-items: center;
+		line-height: 1.35;
+		font-family: var(--font-mono);
+		font-size: 10px;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface-2);
+		border-radius: 5px;
+		padding: 1px 6px;
+		color: var(--color-text-muted);
+		white-space: nowrap;
+		flex: none;
+	}
+	.effect-tag--positive {
+		color: var(--color-good);
+		border-color: rgba(59, 184, 166, 0.4);
+		background: rgba(59, 184, 166, 0.08);
+	}
+	.effect-tag--negative {
+		color: var(--color-accent-bright);
+		border-color: rgba(207, 43, 64, 0.45);
+		background: rgba(207, 43, 64, 0.08);
+	}
+	/* duration dropdown control (closed) */
+	.duration-select {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		font-family: var(--font-mono);
+		font-size: 10px;
+		color: var(--color-resource);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 7px;
+		padding: 3px 7px;
+		cursor: pointer;
+		white-space: nowrap;
+		flex: none;
+		background: transparent;
+	}
+	.effect-remove:hover {
+		color: var(--color-accent-bright);
+	}
+	/* resource row: pips + count + recharge chip */
+	.resource-row {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		padding: 7px 0;
+		border-top: 1px solid var(--color-border);
+	}
+	.resource-name {
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: 13px;
+		color: var(--color-text);
+		flex: 1;
+	}
+	.resource-pips {
+		display: inline-flex;
+		gap: 4px;
+	}
+	.resource-pip {
+		width: 11px;
+		height: 11px;
+		padding: 0;
+		border-radius: 50%;
+		border: 1px solid var(--color-resource);
+		background: var(--color-resource);
+		cursor: pointer;
+	}
+	.resource-pip.off {
+		background: transparent;
+		border-color: var(--color-border-strong);
+	}
+	.resource-count {
 		font-family: var(--font-mono);
 		font-size: 10px;
 		color: var(--color-text-muted);
-		border: 1px solid var(--color-border);
+		min-width: 26px;
+	}
+	.recharge-chip {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		color: var(--color-resource);
+		border: 1px solid #5a4d28;
+		background: rgba(202, 162, 74, 0.08);
 		border-radius: 5px;
 		padding: 1px 6px;
-	}
-	.effect.positive .effect-tag {
-		color: var(--color-good);
-		border-color: var(--color-good);
-	}
-	.effect.negative .effect-tag {
-		color: var(--color-accent-bright);
-		border-color: var(--color-accent);
+		white-space: nowrap;
 	}
 
 	.castline {

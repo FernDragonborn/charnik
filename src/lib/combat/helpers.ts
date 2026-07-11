@@ -9,7 +9,7 @@ import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, SkillId } from '$lib/character/derive';
 import { parseDicePool, parseDiceTerm, type BonusDie, type Rolled } from '$lib/rules/dice';
-import { parseEffect, matchesTarget, EFFECT_KIND } from '$lib/effects/index';
+import { parseEffect, matchesTarget, EFFECT_KIND, type Recharge } from '$lib/effects/index';
 
 // The dice roller and its BonusDie/Rolled types live in the pure rules core; re-exported here so
 // existing combat consumers keep importing from one place.
@@ -110,26 +110,95 @@ export const healDice = (text: string): string => {
 	return m?.[1] ?? '';
 };
 
-/** A bounded-vocab effect token → a short readable tag ("flat-bonus:ac+2" → "AC +2",
- *  "flat-bonus:save.dex+1" → "DEX save +1", "flat-bonus:skill.stealth-1" → "Stealth −1"). */
+/** A bounded-vocab target key → a short readable label ("ac" → "AC", "save.dex" → "DEX save",
+ *  "skill.stealth" → "Stealth", "saves"/"skills" → the group names). */
+function targetLabel(t: string): string {
+	if (t === 'saves') return 'all saves';
+	if (t === 'skills') return 'all skills';
+	if (t.startsWith('save.')) return `${t.slice(5).toUpperCase()} save`;
+	if (t.startsWith('skill.')) return titleCase(t.slice(6));
+	if (t === 'ac') return 'AC';
+	return titleCase(t);
+}
+
+/** A bounded-vocab effect token → a short readable tag for the effects panel:
+ *  flat-bonus → "AC +2" / "saves +1d4"; set-override → "AC = 13"; resist-immune → "resist · fire";
+ *  advantage → "adv · <target>"; grant-proficiency → "prof · <target>"; apply-condition → the name.
+ *  grant-resource is NOT tagged here — it gets its own Resources section (see groupEffects). */
 export function effectTag(token: string): string {
 	const p = parseEffect(token);
 	if (p.kind === EFFECT_KIND.flatBonus && p.target) {
-		const t = p.target;
 		const delta =
 			p.amount !== undefined
 				? `${p.amount < 0 ? '−' : '+'}${Math.abs(p.amount)}`
 				: `${p.dice?.startsWith('-') ? '−' : '+'}${p.dice?.replace('-', '') ?? ''}`;
-		let name = t.toUpperCase();
-		if (t === 'saves') name = 'all saves';
-		else if (t === 'skills') name = 'all skills';
-		else if (t.startsWith('save.')) name = `${t.slice(5).toUpperCase()} save`;
-		else if (t.startsWith('skill.')) name = titleCase(t.slice(6));
-		else if (t !== 'ac') name = titleCase(t);
-		return `${name} ${delta}`;
+		return `${targetLabel(p.target)} ${delta}`;
 	}
+	if (p.kind === EFFECT_KIND.setOverride && p.target)
+		return `${targetLabel(p.target)} = ${p.amount}`;
+	if (p.kind === EFFECT_KIND.resistImmune && p.target)
+		return `${p.defense ?? 'resist'} · ${p.target}`;
+	if (p.kind === EFFECT_KIND.advantage && p.target) return `adv · ${targetLabel(p.target)}`;
+	if (p.kind === EFFECT_KIND.grantProficiency && p.target) return `prof · ${titleCase(p.target)}`;
+	if (p.kind === EFFECT_KIND.applyCondition && p.target) return titleCase(p.target);
 	return token.replace(/[-:]/g, ' ');
 }
+
+/** A runtime effect instance (from the character's play-state). */
+export type EffectInstance = Character['play']['effects'][number];
+
+/** A grant-resource effect, resolved for the Resources section (name + charges + recharge). */
+export interface ResourceView {
+	iid: string;
+	name: string;
+	id: string;
+	max: number;
+	recharge: Recharge;
+}
+
+/** If an effect grants a fully-specified resource pool, resolve it — else null. The effect's Resources
+ *  section membership is decided by this (grant-resource ⇒ Resources, not Buffs/Debuffs). */
+export function parseResourceEffect(eff: EffectInstance): ResourceView | null {
+	for (const tok of eff.effects) {
+		const p = parseEffect(tok);
+		if (p.kind === EFFECT_KIND.grantResource && p.resource)
+			return { iid: eff.iid, name: eff.label, ...p.resource };
+	}
+	return null;
+}
+
+/** Split active effects into the three panel sections. Resource-granting effects go to Resources
+ *  (they recharge on rests, not rounds); the rest split by their positive flag. */
+export function groupEffects(effects: EffectInstance[]): {
+	buffs: EffectInstance[];
+	debuffs: EffectInstance[];
+	resources: ResourceView[];
+} {
+	const buffs: EffectInstance[] = [];
+	const debuffs: EffectInstance[] = [];
+	const resources: ResourceView[] = [];
+	for (const eff of effects) {
+		const res = parseResourceEffect(eff);
+		if (res) resources.push(res);
+		else if (eff.positive) buffs.push(eff);
+		else debuffs.push(eff);
+	}
+	return { buffs, debuffs, resources };
+}
+
+/** Recharge id → the label shown on a resource's recharge chip. */
+export const rechargeLabel = (r: Recharge): string =>
+	r === 'long' ? 'long rest' : r === 'short' ? 'short rest' : 'special';
+
+/** The common effect durations offered in the duration dropdown (game terms, no round/minute dup).
+ *  `rounds: null` = indefinite (until removed). "Custom…" is handled separately in the menu. */
+export const EFFECT_DURATION_PRESETS: { label: string; rounds: number | null }[] = [
+	{ label: '1 round', rounds: 1 },
+	{ label: '1 minute · 10 rds', rounds: 10 },
+	{ label: '10 minutes · 100 rds', rounds: 100 },
+	{ label: '1 hour · 600 rds', rounds: 600 },
+	{ label: '∞ until removed', rounds: null }
+];
 
 /** 1 → "1st", 2 → "2nd", … */
 export const ordinal = (n: number) =>

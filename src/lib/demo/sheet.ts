@@ -67,9 +67,27 @@ export function demoCharacter(): Character {
 			startedRound: 0
 		},
 		{
+			iid: 'poisoned',
+			label: 'Poisoned',
+			effects: ['apply-condition:poisoned'],
+			positive: false
+		},
+		{
 			iid: 'arcane-recovery',
 			label: 'Arcane Recovery',
 			effects: ['grant-resource:arcane-recovery:1:long'],
+			positive: true
+		},
+		{
+			iid: 'second-wind',
+			label: 'Second Wind',
+			effects: ['grant-resource:second-wind:1:short'],
+			positive: true
+		},
+		{
+			iid: 'channel-divinity',
+			label: 'Channel Divinity',
+			effects: ['grant-resource:channel-divinity:2:short'],
 			positive: true
 		}
 	];
