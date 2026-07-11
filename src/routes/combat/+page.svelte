@@ -12,6 +12,9 @@
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
 	import { onBeforeReload } from '$lib/content/reload';
 	import CombatMenus from './CombatMenus.svelte';
+	import Controls from './blocks/Controls.svelte';
+	import Turnbar from './blocks/Turnbar.svelte';
+	import ResourceBar from './blocks/ResourceBar.svelte';
 	import HpPanel from './blocks/HpPanel/HpPanel.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import {
@@ -32,8 +35,6 @@
 	const sheet = $derived(combat.sheet);
 	const className = $derived(combat.className);
 	const speciesName = $derived(combat.speciesName);
-	const conc = $derived(combat.conc);
-
 	const passives = $derived(combat.passives);
 	const attacks = $derived(combat.attacks);
 	const visibleActions = $derived(combat.visibleActions);
@@ -48,16 +49,9 @@
 	const dragDisabled = $derived(combat.layout.dragDisabled);
 	const pinned = $derived(combat.pinned);
 
-	const { openMenu, openDice, roll, cast, cycleGroupBy, togglePrepared } = combat;
+	const { openMenu, roll, cast, cycleGroupBy, togglePrepared } = combat;
 	const { toggle, dndConsider, dndFinalize, releaseDrag } = combat.layout;
 	const { slotClick } = combat.resources;
-
-	// action-economy slots (id + label); base 1 pip each until a feature grants extras
-	const SLOTS = [
-		['action', 'Action'],
-		['bonus', 'Bonus'],
-		['reaction', 'Reaction']
-	] as const;
 
 	onMount(combat.load);
 
@@ -109,112 +103,14 @@
 		<HpPanel {c} {s} />
 	</section>
 
-	<section class="controls">
-		<button
-			class="toggle combatsw"
-			class:on={c.play.inCombat}
-			onclick={combat.economy.toggleCombat}
-			title="Track the action economy (rounds, action/bonus/reaction)"
-			>⚔ Combat <span class="toggle-state">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
-		>
-		<button
-			class="toggle"
-			class:on={c.play.shieldRaised}
-			onclick={() => (c.play.shieldRaised = !c.play.shieldRaised)}
-			>🛡 Shield <span class="toggle-state">{c.play.shieldRaised ? 'ON' : 'OFF'}</span></button
-		>
-		{#if conc}<button
-				class="toggle conc on"
-				onclick={combat.clearConcentration}
-				title="Tap to stop concentrating"
-				>◈ Concentration <span class="toggle-state">{conc.label}</span></button
-			>{/if}
-		<button
-			class="toggle"
-			class:on={c.play.inspiration}
-			onclick={() => (c.play.inspiration = !c.play.inspiration)}
-			>✦ Inspiration <span class="toggle-state">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
-		>
-		<span class="spacer"></span>
-		<button class="toggle rest" onclick={() => combat.resources.rest('short')} title="Short rest"
-			>☾ Short</button
-		>
-		<button class="toggle rest" onclick={() => combat.resources.rest('long')} title="Long rest"
-			>🌙 Long</button
-		>
-		<button
-			class="toggle auto"
-			class:on={c.play.autoCalc}
-			onclick={() => (c.play.autoCalc = !c.play.autoCalc)}
-			title="Auto-calculate derived stats from effects (off → base values only)"
-			>⚙ Auto-calc <span class="toggle-state">{c.play.autoCalc ? 'ON' : 'OFF'}</span></button
-		>
-		<button class="toggle dice" onclick={openDice}>🎲 Dice tray</button>
-	</section>
+	<Controls {c} />
 
 	{#if c.play.inCombat}
-		<section class="turnbar">
-			<span class="bar-label">Round <b>{combat.round}</b></span>
-			{#each SLOTS as [slot, label] (slot)}
-				<span class="turn-slot">
-					{label}
-					<span class="turn-pips">
-						{#each range(combat.economy.slotMax[slot]) as i (i)}
-							{@const used = i >= combat.economy.slotMax[slot] - c.play.turn[slot]}
-							<button
-								type="button"
-								class="turn-pip"
-								class:used
-								onclick={() => combat.economy.usePip(slot, i)}
-								title="{label}: {used ? 'used — click to restore' : 'available'}"
-								aria-label="{label} pip {i + 1}"
-							></button>
-						{/each}
-					</span>
-				</span>
-			{/each}
-			<button
-				type="button"
-				class="turn-slot move"
-				onclick={() => combat.economy.spendMove(5)}
-				title="Click: spend 5 ft"
-			>
-				🦶 Move <b class:spent={combat.economy.moveLeft === 0}>{combat.economy.moveLeft}</b> / {combat
-					.economy.moveMax} ft
-			</button>
-			<button
-				type="button"
-				class="aereset"
-				onclick={combat.economy.resetMove}
-				title="Reset movement">↺</button
-			>
-			<span class="spacer"></span>
-			<button type="button" class="nextturn" onclick={combat.economy.nextTurn}>Next turn ▸</button>
-		</section>
+		<Turnbar {c} />
 	{/if}
 
 	{#if s.resources.length}
-		<section class="resource-bar">
-			<span class="bar-label">Resources</span>
-			{#each s.resources as r (r.id)}
-				{@const spent = combat.resources.resourceSpent(r.id)}
-				<span class="resource" title="{r.name} · recharges on {r.recharge} rest ({r.source})">
-					{r.name}
-					<span class="respips">
-						{#each range(r.max) as i (i)}
-							<button
-								type="button"
-								class="resource-pip"
-								class:used={i >= r.max - spent}
-								onclick={() => combat.resources.resourceClick(r.id, r.max, i)}
-								aria-label="{r.name} {i + 1}"
-							></button>
-						{/each}
-					</span>
-					<small>{r.max - spent}/{r.max}</small>
-				</span>
-			{/each}
-		</section>
+		<ResourceBar {s} />
 	{/if}
 
 	<div class="playbar">
@@ -561,222 +457,6 @@
 		padding: 1px 6px;
 	}
 
-	.controls {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 8px;
-		margin-bottom: 14px;
-	}
-	.toggle {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 12px;
-		padding: 7px 12px;
-		border-radius: var(--radius-full);
-		cursor: pointer;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		color: var(--color-text-muted);
-	}
-	.toggle .toggle-state {
-		font-family: var(--font-mono);
-		font-size: 10px;
-		border: 1px solid var(--color-border-strong);
-		border-radius: 5px;
-		padding: 1px 6px;
-		color: inherit;
-	}
-	.toggle.on {
-		background: var(--color-resource-soft);
-		border-color: var(--color-resource);
-		color: var(--color-resource);
-	}
-	.toggle.on .toggle-state {
-		border-color: var(--color-resource);
-	}
-	.toggle.conc.on {
-		background: var(--color-accent-soft);
-		border-color: var(--color-accent);
-		color: var(--color-accent-bright);
-	}
-	.toggle.conc.on .toggle-state {
-		border-color: var(--color-accent);
-		color: var(--color-accent-bright);
-	}
-	.toggle.auto.on {
-		background: var(--color-good-soft);
-		border-color: var(--color-good);
-		color: var(--color-good);
-	}
-	.toggle.auto.on .toggle-state {
-		border-color: var(--color-good);
-	}
-	.toggle.dice {
-		background: var(--color-accent-deep);
-		border-color: var(--color-accent-deep);
-		color: #fff;
-		font-size: 13px;
-	}
-	/* Combat mode = gold when tracking (own class: `combat` collides with the stat-grid section) */
-	.toggle.combatsw.on {
-		background: var(--color-resource-soft);
-		border-color: var(--color-resource);
-		color: var(--color-resource);
-	}
-	.toggle.combatsw.on .toggle-state {
-		border-color: var(--color-resource);
-	}
-	.controls .spacer,
-	.turnbar .spacer {
-		flex: 1 1 auto;
-		min-width: 8px;
-	}
-
-	.turnbar,
-	.resource-bar {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 8px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
-		padding: 9px 12px;
-		margin-bottom: 12px;
-	}
-	.resource-bar .resource {
-		display: inline-flex;
-		align-items: center;
-		gap: 7px;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 12px;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-full);
-		padding: 5px 11px;
-	}
-	.resource-bar .resource small {
-		font-family: var(--font-mono);
-		color: var(--color-text-muted);
-	}
-	.respips {
-		display: inline-flex;
-		gap: 4px;
-	}
-	.resource-pip {
-		width: 12px;
-		height: 12px;
-		padding: 0;
-		border: 1px solid var(--color-resource);
-		border-radius: 50%;
-		background: var(--color-resource);
-		cursor: pointer;
-	}
-	.resource-pip.used {
-		background: transparent;
-		border-color: var(--color-border-strong);
-	}
-	.toggle.rest {
-		font-size: 12px;
-	}
-	.turnbar .bar-label {
-		font-family: var(--font-mono);
-		font-size: 9px;
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
-	}
-	.turn-slot {
-		display: inline-flex;
-		align-items: center;
-		gap: 7px;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 12px;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-full);
-		padding: 5px 11px;
-	}
-	.turn-slot .turn-pips {
-		display: inline-flex;
-		gap: 4px;
-	}
-	.turn-slot .turn-pip {
-		width: 12px;
-		height: 12px;
-		padding: 0;
-		border: 1px solid var(--color-good);
-		border-radius: 50%;
-		background: var(--color-good);
-		box-shadow: 0 0 8px rgba(59, 184, 166, 0.45);
-		cursor: pointer;
-	}
-	.turn-slot .turn-pip.used {
-		background: transparent;
-		border-color: var(--color-border-strong);
-		box-shadow: none;
-	}
-	.turn-slot b {
-		color: var(--color-text);
-	}
-	.turn-slot b.spent {
-		color: var(--color-text-muted);
-	}
-	/* the Move slot + reset are buttons but wear the same chip look */
-	button.turn-slot {
-		cursor: pointer;
-		color: var(--color-text-muted);
-	}
-	button.turn-slot:hover {
-		border-color: var(--color-border-strong);
-		color: var(--color-text);
-	}
-	.aereset {
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-full);
-		width: 28px;
-		height: 28px;
-		cursor: pointer;
-		color: var(--color-text-muted);
-		font-size: 14px;
-	}
-	.aereset:hover {
-		color: var(--color-text);
-		border-color: var(--color-border-strong);
-	}
-	/* HP damage / heal control */
-	.round-counter {
-		display: inline-flex;
-		align-items: center;
-		gap: 5px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-full);
-		padding: 7px 10px;
-		color: var(--color-text-muted);
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 12px;
-	}
-	.nextturn {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 13px;
-		background: var(--color-accent-deep);
-		border: 1px solid var(--color-accent-deep);
-		color: #fff;
-		border-radius: 9px;
-		padding: 7px 15px;
-		cursor: pointer;
-	}
-
 	.playbar {
 		display: flex;
 		align-items: center;
@@ -921,7 +601,6 @@
 		background: var(--color-surface-2);
 	}
 	/* colored pill buttons keep their semantic colour but brighten on hover */
-	.toggle:hover,
 	.nextturn:hover {
 		filter: brightness(1.14);
 	}
