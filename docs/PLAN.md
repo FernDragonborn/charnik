@@ -1366,19 +1366,21 @@ scan only if a config bug surfaces). Everything else functional is on the list a
   CombatVM tests (concentration set/replace/clear).
 - [x] **CVM-bug2 · `conditionList` hardcodes system `'5.5e'`** — FIXED. Uses `this.character.system`.
   Behavioral test: a 5.5e character sees 5.5e conditions, not 5e-only ones.
-- [ ] **CVM-1 · `doRoll` vs `rollDiceNow` duplicate ~30 lines** of dice-rolling (pool loop, adv-d20
-  keep-winner, bonus dice, expr/log/toast). Extract a pure `rollPool(dice, mod, adv, bonusDice) →
-  {total, expr, advPair}`; both call it. (Deepest duplication in the file; unit-testable with seeded RNG.)
-- [ ] **CVM-2 · three inconsistent click-to-set pip impls** — `usePip` uses `t[slot] > i ? i : i+1`
-  (spent-count) while `slotClick`/`resourceClick` use `i < remaining ? full-i : full-i-1`. SAME intent,
-  two formulas → one pure `pipClick()` (this is R5, and the formulas disagreeing is a latent bug risk).
+- [x] **CVM-1 · `doRoll` vs `rollDiceNow` duplication** — DONE. Pure `rollPool(dice, mod, adv, bonusDice)`
+  lives in `$lib/rules/dice`; both the tray's `doRoll` and the instant `rollDiceNow`/`pushRoll` paths in
+  `roll.svelte.ts` call it. Seeded-RNG unit-testable.
+- [x] **CVM-2 · click-to-set pip impls unified** — DONE. One pure `pipClick(currentSpent, index, total)`
+  in `combat/helpers` is the single source for action-economy pips (`economy.usePip`), spell slots, and
+  resource pips (`resources.svelte.ts`) — the disagreeing formulas are gone (R5).
 - [x] **CVM-3 · action-slot type `'action'|'bonus'|'reaction'`** repeated in slotMax/usePip/ctSlot/
   trySpend (this is R3, local instances).
 - [x] **CVM-4 · `overlay.kind: string`** + `openMenu(kind: string)` → `MenuKind` union (R2, local).
-- [ ] **CVM-5 · token regex inline** in `slotMax` (`/^flat-bonus:(action|bonus|reaction)\+(\d+)$/`)
-  (R4, local).
-- [ ] **CVM-6 · `RollLogEntry` interface** — the `{label, expr, total, adv?}` log-entry shape is inline
-  on the `log` field and re-typed at 4 push sites; the `.slice(0, 200)` cap is a repeated magic number.
+- [x] **CVM-5 · token regex inline in `slotMax`** — DONE. `TurnEconomy.slotMax` now folds action/bonus/
+  reaction extras via the shared bounded-vocab `parseEffect` (`EFFECT_KIND.flatBonus` + `Object.hasOwn`),
+  no local regex (R4).
+- [x] **CVM-6 · `RollLogEntry` type + log cap** — DONE. Named `RollLogEntry` type in `combat/helpers`
+  (`Rolled & {label, damage?}`), the `log` field + all push sites use it, and the cap is a single
+  `ROLL_LOG_MAX = 200` constant in `roll.svelte.ts`.
 - [x] **CVM-7 · shadowing / naming** — the action-economy field `slotMax` is shadowed by a local
   `const slotMax` in `spellGroups`; the `cast` method is shadowed by a local `const cast` inside it.
   Rename.
@@ -1433,10 +1435,18 @@ curated global CSS · scoped specifics — so logic doesn't pile into one file a
   First test: `EyeToggle.browser.test.ts` (aria-pressed state + click). NB browser mode asserts DOM +
   interactions, NOT visual/CSS layout — S1's CSS still needs screenshots. More component tests welcome.
 
-- [ ] **S2 · `CombatVM` (687 lines) does too much** — rolling (dice pool + tray + log), action
-  economy, spells/prepare, resources/rests, HP, level-up, drag layout, effects. Once the pure bits are
-  extracted (roll pool → CVM-1, pip math → CVM-2/R5, token parsing → R4), the VM shrinks to wiring;
-  consider grouping the rest (e.g. a roll module) rather than one flat class.
+- [x] **S2 · `CombatVM` decomposed into cohesive subsystems** — DONE (verified 2026-07-11). The old
+  687-line god-class is now **393 lines of wiring + derived**, with the heavy concerns split into their
+  own `$state` classes that `CombatVM` composes: `RollTray` (`roll.svelte.ts`, dice tray + log + roll
+  execution), `PanelLayout` (`panel.svelte.ts`, columns/collapse/drag), `TurnEconomy`
+  (`economy.svelte.ts`, pips/movement/turn/round/spend checks), `ResourceTracker`
+  (`resources.svelte.ts`, slots/resources/rests). The pure bits are all shared helpers now:
+  **CVM-1** roll pool → `rollPool` in `$lib/rules/dice` (both tray + instant paths call it),
+  **CVM-2/R5** pip math → one `pipClick` in `combat/helpers` (used by economy + resources + slots),
+  **CVM-5/R4** slotMax token parse → the bounded-vocab `parseEffect` (no inline regex),
+  **CVM-6** the log-entry shape → the named `RollLogEntry` type + `ROLL_LOG_MAX` constant. What's left
+  in `state.svelte.ts` is genuine coordination (load, menus, HP, level-up, spell cast/prepare routing,
+  the derived stat aggregates) — cohesive, not a dumping ground.
 - [ ] **S3 · `build/state.svelte.ts` (BuildVM)** similarly large — after R1 (EditContext) audit it the
   same file-by-file way; likely candidates: statgen, spells picker, feats/ASI slots as their own units.
 - [ ] Audit the remaining big `.svelte`/`.svelte.ts` files one at a time (compendium, spellbook,
