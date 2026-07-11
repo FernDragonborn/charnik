@@ -4,7 +4,7 @@
 	// singleton; the non-null character comes in as a prop so the markup stays terse.
 	import type { Character } from '$lib/character/schema';
 	import { combat } from '../state.svelte';
-	import D20Icon from '$lib/components/D20Icon.svelte';
+	import DiceIcon from '$lib/components/DiceIcon.svelte';
 
 	let { c }: { c: Character } = $props();
 	const conc = $derived(combat.conc);
@@ -51,7 +51,7 @@
 		title="Auto-calculate derived stats from effects (off → base values only)"
 		>⚙ Auto-calc <span class="toggle-state">{c.play.autoCalc ? 'ON' : 'OFF'}</span></button
 	>
-	<button class="toggle dice" onclick={openDice}><D20Icon /> Dice tray</button>
+	<button class="toggle dice" onclick={openDice}><DiceIcon /> Dice tray</button>
 </section>
 
 <style>
