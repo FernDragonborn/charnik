@@ -152,11 +152,15 @@
 					onclick={() => (combat.newEffectDuration = Math.max(0, combat.newEffectDuration - 1))}
 					>−</button
 				>
-				<span class="dur-val"
-					>{combat.newEffectDuration > 0
-						? `${combat.newEffectDuration} rds`
-						: '∞ until removed'}</span
-				>
+				<input
+					class="modifier-amount"
+					type="number"
+					min="0"
+					placeholder="∞"
+					aria-label="Duration in rounds"
+					bind:value={combat.newEffectDuration}
+				/>
+				<span class="dur-val">{combat.newEffectDuration > 0 ? 'rds' : 'until removed (∞)'}</span>
 				<button class="pill-btn" onclick={() => (combat.newEffectDuration += 1)}>＋</button>
 				<button
 					class="pill-btn"

@@ -242,4 +242,14 @@ describe('CombatVM · S2 split net', () => {
 		combat.bumpEffectDuration(iid, -3); // past 1 → indefinite
 		expect(dur()).toBeUndefined();
 	});
+
+	it('setEffectDuration sets an exact typed round count; 0/blank → indefinite', () => {
+		combat.addEffect('Typed', ['flat-bonus:ac+1']);
+		const iid = character.play.effects.at(-1)!.iid;
+		const dur = () => character.play.effects.find((e) => e.iid === iid)!.durationRounds;
+		combat.setEffectDuration(iid, 7);
+		expect(dur()).toBe(7);
+		combat.setEffectDuration(iid, 0); // typed 0 → until removed
+		expect(dur()).toBeUndefined();
+	});
 });

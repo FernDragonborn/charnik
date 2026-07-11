@@ -116,10 +116,22 @@
 							>{#each e.effects as t (t)}<span class="effect-tag">{effectTag(t)}</span>{/each}</span
 						>{/if}
 				</div>
-				<div class="effect-dur" title="Duration — − past 1 = until removed">
+				<div
+					class="effect-dur"
+					title="Duration in rounds — type a number, or blank = until removed"
+				>
 					<button class="icon-button" onclick={() => combat.bumpEffectDuration(e.iid, -1)}>−</button
 					>
-					<span class="durpill">{e.durationRounds != null ? `${e.durationRounds} rds` : '∞'}</span>
+					<span class="durpill">
+						<input
+							class="dur-input"
+							type="number"
+							min="0"
+							placeholder="∞"
+							value={e.durationRounds ?? ''}
+							onchange={(ev) => combat.setEffectDuration(e.iid, Number(ev.currentTarget.value))}
+						/>{e.durationRounds != null ? 'rds' : ''}
+					</span>
 					<button class="icon-button" onclick={() => combat.bumpEffectDuration(e.iid, 1)}>＋</button
 					>
 				</div>
@@ -327,13 +339,38 @@
 		flex: 1;
 		min-width: 0;
 	}
-	/* per-effect duration stepper + remove — reuses global .icon-button (±/✕) + .durpill (value);
-	   only the tight grouping and the remove-hover accent are effect-specific */
+	/* per-effect duration stepper + remove — reuses global .icon-button (±/✕) + .durpill (value pill);
+	   the value is a click-to-type number input styled to sit flush inside the pill */
 	.effect-dur {
 		display: inline-flex;
 		align-items: center;
 		gap: 2px;
 		flex: none;
+	}
+	.effect-dur .durpill {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 3px;
+	}
+	.dur-input {
+		width: 24px;
+		background: transparent;
+		border: 0;
+		color: inherit;
+		font: inherit;
+		text-align: right;
+		padding: 0;
+		-moz-appearance: textfield;
+		appearance: textfield;
+	}
+	.dur-input::-webkit-outer-spin-button,
+	.dur-input::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+	.dur-input::placeholder {
+		color: var(--color-resource);
+		opacity: 1;
 	}
 	.eff-remove:hover {
 		color: var(--color-accent-bright);

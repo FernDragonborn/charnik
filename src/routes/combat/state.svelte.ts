@@ -398,21 +398,26 @@ class CombatVM {
 		const c = this.character;
 		if (c) c.play.effects = c.play.effects.filter((e) => e.iid !== iid);
 	};
-	/** Nudge an active effect's remaining duration by ±1 round from the panel. Dropping to 0 makes it
-	 *  indefinite again (the duration fields are removed), so − past 1 == "until removed". */
-	bumpEffectDuration = (iid: string, delta: number) => {
+	/** Set an active effect's remaining duration to an exact round count (typed into the panel field).
+	 *  0 / blank → indefinite: the duration fields are removed ("until removed"). */
+	setEffectDuration = (iid: string, rounds: number) => {
 		const c = this.character;
 		if (!c) return;
+		const n = Math.max(0, Math.round(rounds || 0));
 		c.play.effects = c.play.effects.map((e) => {
 			if (e.iid !== iid) return e;
-			const next = Math.max(0, (e.durationRounds ?? 0) + delta);
-			if (next === 0) {
-				// strip duration → indefinite
+			if (n === 0) {
 				const { durationRounds: _d, startedRound: _s, ...rest } = e;
 				return rest;
 			}
-			return { ...e, durationRounds: next, startedRound: e.startedRound ?? this.round };
+			return { ...e, durationRounds: n, startedRound: e.startedRound ?? this.round };
 		});
+	};
+	/** Nudge an active effect's remaining duration by ±1 round from the panel. Dropping to 0 makes it
+	 *  indefinite again (the duration fields are removed), so − past 1 == "until removed". */
+	bumpEffectDuration = (iid: string, delta: number) => {
+		const cur = this.character?.play.effects.find((e) => e.iid === iid)?.durationRounds ?? 0;
+		this.setEffectDuration(iid, cur + delta);
 	};
 }
 
