@@ -1413,17 +1413,20 @@ scan only if a config bug surfaces). Everything else functional is on the list a
 
 **Structural / file-splitting debt** (split by responsibility — VM · pure helpers · area components ·
 curated global CSS · scoped specifics — so logic doesn't pile into one file and breed duplicates):
-- [ ] **S1 · `combat/+page.svelte` is still ~1500 lines** — the play sheet's markup (~515) + all its
-  scoped CSS (~1000) in one file. Extract area components (hero+HP / controls / **Turnbar** / **Resbar**
-  / combat-strip / the panel grid: skills/attacks/actions/effects/spells; Menus already extracted) so
-  each owns its markup + styles. **NEEDS A SCREENSHOT-VERIFICATION SESSION** — this is a CSS-untangling
-  task, not a typed refactor: the stylesheet shares rules across areas via combined selectors
-  (`.controls .spacer, .turnbar .spacer`; `.turnbar, .resbar`), so a clean split means promoting the
-  shared bits to a curated global (a `.bar` utility etc.) and scoping the specifics per component, per
-  [[charnik-split-large-svelte]]. Visual correctness can't be caught by svelte-check/tests — verify by
-  rendering (the user catches CSS bugs). The VM/logic split is already done; this is purely
-  presentational reorg. Prep done: `range` helper extracted to combat/helpers (shared by the pip
-  renders). Do it component-by-component, screenshot each, so regressions are bisectable.
+- [x] **S1 · `combat/+page.svelte` split into area components** — DONE (2026-07-11). `combat/+page.svelte`
+  went **1405 → 124 lines** (a thin shell that composes the blocks and owns only the dnd panel grid).
+  Eight components under `combat/blocks/`: `Hero` (wraps the existing `HpPanel`), `Controls`, `Turnbar`,
+  `ResourceBar`, `Playbar`, `CombatStrip` (AC/init/speed tiles + senses + defenses), `Abilities`, and
+  `PanelCard` (the skills/attacks/actions/effects/spells card, ~553 lines — its own sub-split into
+  per-panel components is a possible follow-up but not required). Each reads the `combat` view-model
+  singleton and takes `c`/`s` props; no global-CSS changes were needed. **CSS subtlety preserved**: the
+  resource-bar's `.bar-label` is *unstyled* (only `.turnbar .bar-label` + `.senses-strip .bar-label`
+  ever existed), so promoting a global `.bar-label` would have changed pixels — instead each component
+  keeps its own scoped copy (a few trivial rules like `.spacer`/the bar container duplicated across 2–3
+  blocks, acceptable vs. a pixel regression). Dropped dead rules along the way: `.round-counter`,
+  orphaned `.toggle.rest`, stray `.nextturn:hover`. **Verified 0px** across all 8 shot.mjs states after
+  every component, `svelte-check` 0 errors (4 pre-existing a11y warnings, just relocated), 291 tests
+  green. Component-by-component + screenshot each, per [[charnik-split-large-svelte]] / [[charnik-repo-tooling]].
 - [~] **P9 · component testing (browser mode)** — SET UP. vitest now has two projects (`node` for
   logic/VM + pure, `browser` for `*.browser.test.ts` mounting real components in headless Chromium via
   `@vitest/browser-playwright` + `vitest-browser-svelte`). CI installs Chromium before `pnpm test`.
