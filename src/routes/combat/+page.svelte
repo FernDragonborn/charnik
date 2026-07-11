@@ -16,11 +16,12 @@
 	import Turnbar from './blocks/Turnbar.svelte';
 	import ResourceBar from './blocks/ResourceBar.svelte';
 	import Playbar from './blocks/Playbar.svelte';
+	import CombatStrip from './blocks/CombatStrip.svelte';
+	import Abilities from './blocks/Abilities.svelte';
 	import Loading from '$lib/components/Loading.svelte';
 	import {
 		why,
 		signed,
-		metres,
 		titleCase,
 		effectTag,
 		range,
@@ -33,7 +34,6 @@
 	// (overlay/dice/roll* etc. moved to CombatMenus, so they're not aliased here.)
 	const character = $derived(combat.character);
 	const sheet = $derived(combat.sheet);
-	const passives = $derived(combat.passives);
 	const attacks = $derived(combat.attacks);
 	const visibleActions = $derived(combat.visibleActions);
 	const spellGroups = $derived(combat.spellGroups);
@@ -93,91 +93,9 @@
 
 	<Playbar />
 
-	<div class="sectlab">
-		<button class="slabtoggle" onclick={() => toggle('combat')}
-			><span class="chevron">{collapsed.combat ? '▸' : '▾'}</span>Combat</button
-		>
-	</div>
-	{#if !collapsed.combat}
-		<section class="combat">
-			<button class="tile" title={why(s.ac)} onclick={(e) => roll('AC (touch)', 0, e)}>
-				<div class="tile-key">Armor class</div>
-				<div class="tile-value">{s.ac.value}</div>
-				<div class="tile-text">
-					{s.ac.trace.map((x) => `${x.source} ${signed(x.amount)}`).join(' ')}
-				</div>
-			</button>
-			<button
-				class="tile"
-				title={why(s.initiative)}
-				onclick={(e) => roll('Initiative', s.initiative.value, e, 'initiative')}
-			>
-				<div class="tile-key">Initiative</div>
-				<div class="tile-value">{signed(s.initiative.value)}</div>
-				<div class="tile-text">DEX <b>{signed(s.abilities.dex.mod)}</b></div>
-			</button>
-			<div class="tile" title={why(s.speed)}>
-				<div class="tile-key">Speed</div>
-				<div class="tile-value">{s.speed.value} ft<small> ({metres(s.speed.value)})</small></div>
-				<div class="tile-text">base walk</div>
-			</div>
-		</section>
-		<div class="senses-strip">
-			<span class="bar-label">Passive senses</span>
-			{#each passives as p, i (p.key)}
-				{#if i > 0}<span class="separator-dot">·</span>{/if}
-				<span class="ability-save" title={why(p.comp)}><i>{p.name}</i>{p.comp.value}</span>
-			{:else}
-				<span class="ability-save"><i>none pinned</i></span>
-			{/each}
-			<button class="edit" onclick={(e) => openMenu('pinskills', e)}>✎ Pin skills</button>
-		</div>
-		{#if s.defenses.resist.length || s.defenses.immune.length || s.defenses.vulnerable.length}
-			<div class="senses-strip">
-				<span class="bar-label">Defenses</span>
-				{#if s.defenses.resist.length}<span class="ability-save"
-						><i>Resist</i>{s.defenses.resist.join(', ')}</span
-					>{/if}
-				{#if s.defenses.immune.length}<span class="ability-save"
-						><i>Immune</i>{s.defenses.immune.join(', ')}</span
-					>{/if}
-				{#if s.defenses.vulnerable.length}<span class="ability-save"
-						><i>Vulnerable</i>{s.defenses.vulnerable.join(', ')}</span
-					>{/if}
-			</div>
-		{/if}
-	{/if}
+	<CombatStrip {s} />
 
-	<div class="sectlab">
-		<button class="slabtoggle" onclick={() => toggle('abilities')}
-			><span class="chevron">{collapsed.abilities ? '▸' : '▾'}</span>Abilities</button
-		><em>tap to roll a check or save</em>
-	</div>
-	{#if !collapsed.abilities}
-		<section class="grid">
-			{#each ABIL as ab (ab)}
-				{@const a = s.abilities[ab]}
-				{@const prof = a.save.trace.some((t) => t.layer === 'proficiency')}
-				<button class="ability" onclick={(e) => roll(`${ab.toUpperCase()} check`, a.mod, e)}>
-					<div class="ability-name"><b>{ab.toUpperCase()}</b> · {a.score}</div>
-					<div class="ability-mod">{signed(a.mod)}</div>
-					<span
-						class="ability-save"
-						class:prof
-						role="button"
-						tabindex="-1"
-						title={why(a.save)}
-						onclick={(e) => {
-							e.stopPropagation();
-							roll(`${ab.toUpperCase()} save`, a.save.value, e, `save.${ab}`);
-						}}
-					>
-						<i class="prof-dot" class:on={prof}></i>SAVE <b>{signed(a.save.value)}</b>
-					</span>
-				</button>
-			{/each}
-		</section>
-	{/if}
+	<Abilities {s} />
 
 	{#snippet panelCard(pid: string)}
 		<div class="panel-head">
@@ -371,204 +289,6 @@
 {/if}
 
 <style>
-	.combat {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 12px;
-		margin-bottom: 12px;
-	}
-	.tile {
-		text-align: left;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-strong);
-		border-radius: 13px;
-		padding: 13px 15px;
-		color: var(--color-text);
-	}
-	button.tile {
-		cursor: pointer;
-	}
-	/* only the clickable tiles (AC / Init) light up; the Speed tile is a plain div */
-	button.tile:hover {
-		border-color: var(--color-accent);
-		background: var(--color-surface-2);
-	}
-	.tile .tile-key {
-		font-family: var(--font-mono);
-		font-size: 10px;
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-accent-bright);
-	}
-	.tile .tile-value {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 26px;
-		line-height: 1.05;
-		margin-top: 4px;
-	}
-	.tile .tile-value small {
-		font-size: 13px;
-		color: var(--color-text-muted);
-		font-weight: 500;
-	}
-	.tile .tile-text {
-		font-family: var(--font-mono);
-		font-size: 11px;
-		color: var(--color-text-muted);
-		margin-top: 6px;
-	}
-	.tile .tile-text b {
-		color: var(--color-resource);
-	}
-
-	.senses-strip {
-		display: flex;
-		align-items: baseline;
-		gap: 14px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
-		padding: 11px 16px;
-		margin-bottom: 22px;
-	}
-	.senses-strip .bar-label {
-		font-family: var(--font-mono);
-		font-size: 10px;
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
-	}
-	.senses-strip .ability-save {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 16px;
-	}
-	.senses-strip .ability-save i {
-		font-style: normal;
-		font-family: var(--font-body);
-		font-weight: 400;
-		font-size: 12px;
-		color: var(--color-text-muted);
-		margin-right: 6px;
-	}
-	.senses-strip .separator-dot {
-		color: var(--color-border-strong);
-	}
-	.senses-strip .edit {
-		margin-left: auto;
-		font-family: var(--font-body);
-		font-size: 12px;
-		color: var(--color-text-muted);
-		background: transparent;
-		border: 1px solid transparent;
-		border-radius: var(--radius-sm);
-		padding: 3px 8px;
-		cursor: pointer;
-		align-self: center;
-	}
-	.senses-strip .edit:hover {
-		color: var(--color-text);
-		border-color: var(--color-border-strong);
-		background: var(--color-surface-2);
-	}
-	/* colored pill buttons keep their semantic colour but brighten on hover */
-	.nextturn:hover {
-		filter: brightness(1.14);
-	}
-
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(6, 1fr);
-		gap: 10px;
-		margin-bottom: 22px;
-	}
-	@media (max-width: 640px) {
-		.grid {
-			grid-template-columns: repeat(3, 1fr);
-		}
-	}
-	.ability {
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: 11px;
-		text-align: center;
-		padding: 12px 8px;
-		cursor: pointer;
-		color: var(--color-text);
-		display: block;
-		width: 100%;
-	}
-	.ability:hover {
-		border-color: var(--color-border-strong);
-		background: var(--color-surface);
-	}
-	.ability .ability-name {
-		font-family: var(--font-mono);
-		font-size: 12px;
-		letter-spacing: 0.08em;
-		color: var(--color-text-muted);
-		text-transform: uppercase;
-	}
-	.ability .ability-name b {
-		color: var(--color-text);
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 13px;
-	}
-	.ability .ability-mod {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 34px;
-		line-height: 1;
-		margin: 6px 0 9px;
-	}
-	.ability .ability-save {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 6px;
-		width: 100%;
-		font-family: var(--font-mono);
-		font-size: 12px;
-		line-height: 1;
-		color: var(--color-text-muted);
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: 7px;
-		padding: 5px 6px;
-		cursor: pointer;
-	}
-	.ability .ability-save:hover {
-		border-color: var(--color-accent);
-		background: var(--color-surface-2);
-		color: var(--color-text);
-	}
-	.ability .ability-save b {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 12px;
-		line-height: 1;
-		color: var(--color-text);
-	}
-	.ability .ability-save.prof {
-		border-color: var(--color-resource);
-		color: var(--color-resource);
-	}
-	.ability .ability-save.prof b {
-		color: var(--color-resource);
-	}
-	.ability .ability-save .prof-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		border: 1.5px solid var(--color-border-strong);
-	}
-	.ability .ability-save .prof-dot.on {
-		background: var(--color-resource);
-		border-color: var(--color-resource);
-	}
-
 	/* Two flex columns (not multicol): drag-safe with svelte-dnd-action, packs tight
 	   top-to-bottom so a block's height never bumps another into the next column. */
 	.panels {
