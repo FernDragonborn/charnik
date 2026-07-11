@@ -2,6 +2,7 @@
 	// Anchored dropdown menus (dice tray / roll builder, add-effect, pin-skills, roll log,
 	// show/hide, temp HP, condition). Reads the shared `combat` view-model.
 	import { combat } from './state.svelte';
+	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
 	import {
 		signed,
@@ -282,9 +283,11 @@
 			</div>
 			{#each actions as a (a.id)}
 				<button class="menu-row" onclick={() => (hiddenActions[a.id] = !hiddenActions[a.id])}>
-					<span class="passive-eye" class:on={!hiddenActions[a.id]}></span><span class="main"
-						>{a.name}</span
-					>{#if hiddenActions[a.id]}<span class="meta">hidden</span>{/if}
+					<span class="passive-eye" class:on={!hiddenActions[a.id]}
+						><EyeIcon on={!hiddenActions[a.id]} /></span
+					><span class="main">{a.name}</span>{#if hiddenActions[a.id]}<span class="meta"
+							>hidden</span
+						>{/if}
 				</button>
 			{/each}
 		{:else if overlay.kind === 'pinskills'}
@@ -304,9 +307,9 @@
 							<div class="section">{ABILITY_NAME[ab]}</div>
 							{#each list as skill (skill)}
 								<button class="menu-row" onclick={() => togglePassive(skill)}>
-									<span class="passive-eye" class:on={passiveSkills.includes(skill)}></span><span
-										class="skill-name">{titleCase(skill)}</span
-									>
+									<span class="passive-eye" class:on={passiveSkills.includes(skill)}
+										><EyeIcon on={passiveSkills.includes(skill)} /></span
+									><span class="skill-name">{titleCase(skill)}</span>
 								</button>
 							{/each}
 						</div>
@@ -406,20 +409,19 @@
 	.menu-row .effect-icon.negative {
 		color: var(--color-accent-bright);
 	}
-	/* visibility = open/closed eye, teal when shown */
+	/* visibility = open/closed eye (shared EyeIcon glyph in currentColor), teal when shown */
 	.passive-eye {
-		display: inline-block;
+		display: inline-grid;
+		place-items: center;
 		width: 22px;
 		height: 16px;
 		flex: none;
-		background-repeat: no-repeat;
-		background-position: center;
-		opacity: 0.5;
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23878f9d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-6 10-6c1.6 0 3 .3 4.2.9M22 12s-3.5 6-10 6c-1.6 0-3-.3-4.2-.9'/%3E%3Cline x1='2' y1='2' x2='22' y2='22'/%3E%3C/svg%3E");
+		color: var(--color-text-muted);
+		opacity: 0.55;
 	}
 	.passive-eye.on {
+		color: var(--color-good);
 		opacity: 1;
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%233bb8a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s4-6 10-6 10 6 10 6-4 6-10 6S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='2.5'/%3E%3C/svg%3E");
 	}
 	/* --- section label + search + divider (d-menus) --- */
 	.section {
