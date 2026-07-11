@@ -124,7 +124,8 @@ interface DraftState {
 function blankDraft(): DraftState {
 	return {
 		name: '',
-		system: app.activeSystem,
+		// newest ruleset by default; the build page's 5e/5.5e switcher changes it before saving
+		system: '5.5e',
 		strict: true,
 		speciesId: null,
 		speciesOptionId: null,
@@ -231,7 +232,6 @@ class BuildVM {
 
 	load = async () => {
 		await loadContentStore(); // populate the shared graph; `this.graph` derives from it
-		this.draft.system = app.activeSystem;
 	};
 
 	// --- edit / level-up: hydrate the draft from an existing character --------------------------

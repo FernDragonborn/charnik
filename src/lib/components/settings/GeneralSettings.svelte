@@ -1,8 +1,8 @@
 <script lang="ts">
-	// Appearance & language settings: theme, UI locale, compendium/creation system, and the edition
-	// filter. All bind straight to the `app` store — which persists to localStorage and is mirrored
-	// onto <html> by the root layout — so a choice here is live AND survives a reload. Mirrors the
-	// top-bar quick switches with fuller, labelled controls.
+	// Appearance & language settings: theme, UI locale, and the compendium/search edition filter.
+	// All bind straight to the `app` store — which persists to localStorage and is mirrored onto
+	// <html> by the root layout — so a choice here is live AND survives a reload. (The system a NEW
+	// character is built under is chosen on the Build page, not here.)
 	import { app, type SystemId, type ThemeId } from '$lib/stores/app.svelte';
 	import { LOCALES } from '$lib/i18n';
 
@@ -53,19 +53,6 @@
 				class="pill-btn"
 				class:accent={app.activeLocale === l.id}
 				onclick={() => (app.activeLocale = l.id)}>{l.label}</button
-			>
-		{/each}
-	</div>
-</div>
-
-<div class="setrow">
-	<span class="setlabel">Active system</span>
-	<div class="opts">
-		{#each SYSTEMS as sys (sys.id)}
-			<button
-				class="pill-btn"
-				class:accent={app.activeSystem === sys.id}
-				onclick={() => (app.activeSystem = sys.id)}>{sys.label}</button
 			>
 		{/each}
 	</div>

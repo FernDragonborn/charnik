@@ -1,20 +1,19 @@
 // App-level reactive state (pinned frontend convention, see docs/PLAN.md P1).
-// Live-switchable with no reload. NOTE: `activeSystem` is the compendium/creation
-// context only — a saved character is bound to its OWN system (stored in its JSON).
+// Live-switchable with no reload. A saved character is bound to its OWN system (stored in its
+// JSON); the system a NEW character is built under is chosen on the Build page (draft.system).
 //
 // Persisted across reloads in localStorage (standalone/offline-safe, same pattern as
-// content/sources.svelte.ts): the chosen theme, UI locale, active system and editions
-// survive a page reload / app restart. Loaded synchronously at module init so the very
-// first paint (and startI18n in +layout.ts) already uses the saved locale/theme.
+// content/sources.svelte.ts): the chosen theme, UI locale and shown editions survive a page
+// reload / app restart. Loaded synchronously at module init so the very first paint (and
+// startI18n in +layout.ts) already uses the saved locale/theme.
 
 export type SystemId = '5e' | '5.5e';
 export type ThemeId = 'light' | 'dark' | (string & {});
 
 interface AppState {
-	/** Compendium/creation context. Not a way to reinterpret a built character. */
-	activeSystem: SystemId;
 	/** Editions currently shown in the compendium/search. When more than one is active,
-	 *  lists show each row's edition tag; with a single edition it's redundant (hidden). */
+	 *  lists show each row's edition tag; with a single edition it's redundant (hidden). The
+	 *  system a NEW character is built under is picked ON the build page (draft.system), not here. */
 	activeEditions: SystemId[];
 	/** UI locale; content falls back to EN when a translation is missing. */
 	activeLocale: string;
@@ -26,7 +25,6 @@ const STORAGE_KEY = 'charnik:app';
 
 function defaults(): AppState {
 	return {
-		activeSystem: '5.5e',
 		activeEditions: ['5e', '5.5e'],
 		activeLocale: 'en',
 		theme: 'dark'
@@ -60,7 +58,6 @@ function persist(): void {
 		localStorage.setItem(
 			STORAGE_KEY,
 			JSON.stringify({
-				activeSystem: app.activeSystem,
 				activeEditions: app.activeEditions,
 				activeLocale: app.activeLocale,
 				theme: app.theme

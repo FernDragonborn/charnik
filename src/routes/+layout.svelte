@@ -134,9 +134,6 @@
 	}
 	// svelte-sonner only accepts light/dark/system; custom theme ids render on the dark base.
 	const toasterTheme = $derived(app.theme === 'light' ? 'light' : 'dark');
-	function toggleSystem() {
-		app.activeSystem = app.activeSystem === '5.5e' ? '5e' : '5.5e';
-	}
 
 	// The update chip only exists once a newer build is found; it stays gold-lit until installed, shows
 	// live % while downloading, and is inert (no re-trigger) mid-install.
@@ -186,9 +183,6 @@
 		{$_('feedback.link')}
 	</a>
 	<div class="chips">
-		<button type="button" class="chip" onclick={toggleSystem} title={$_('settings.system')}>
-			{app.activeSystem}
-		</button>
 		<LangSwitcher />
 		<button type="button" class="chip" onclick={toggleTheme} title={$_('settings.theme')}>
 			{app.theme === 'dark' ? '☾' : '☀'}
