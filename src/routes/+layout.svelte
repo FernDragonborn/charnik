@@ -51,13 +51,17 @@
 			refreshing = false;
 		}
 	}
+	// Ctrl+R interception is DESKTOP ONLY. In the browser (web target / dev) Ctrl+R and Ctrl+Shift+R
+	// must stay the native page reload — we don't hijack them. F5 stays intercepted everywhere so it
+	// flushes pending writes before reloading.
+	const isDesktop = browser && detectPlatform() === Platform.Desktop;
 	function onGlobalKey(e: KeyboardEvent) {
 		if (e.code === 'F5') {
 			e.preventDefault();
 			void reloadApp(); // hard reload (flush + reload the webview)
-		} else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyR') {
-			// Intercept the webview's native Ctrl+R reload → our no-flash soft refresh (matches the ⟳
-			// button). preventDefault stops the browser/WebView2 hard reload, same as we do for F5.
+		} else if (isDesktop && (e.ctrlKey || e.metaKey) && !e.shiftKey && e.code === 'KeyR') {
+			// Desktop only: the webview's native Ctrl+R is a hard reload → swap it for our no-flash soft
+			// refresh (matches the ⟳ button). Ctrl+Shift+R is left alone.
 			e.preventDefault();
 			void softRefresh();
 		}
@@ -194,8 +198,8 @@
 			class="chip"
 			onclick={() => void softRefresh()}
 			disabled={refreshing}
-			title="{$_('refresh.title')} (Ctrl+R)"
-			aria-label="{$_('refresh.title')} (Ctrl+R)">⟳</button
+			title={isDesktop ? `${$_('refresh.title')} (Ctrl+R)` : $_('refresh.title')}
+			aria-label={isDesktop ? `${$_('refresh.title')} (Ctrl+R)` : $_('refresh.title')}>⟳</button
 		>
 		{#if updater.status !== 'idle'}
 			<button
