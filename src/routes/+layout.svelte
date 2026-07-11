@@ -54,7 +54,12 @@
 	function onGlobalKey(e: KeyboardEvent) {
 		if (e.code === 'F5') {
 			e.preventDefault();
-			void reloadApp();
+			void reloadApp(); // hard reload (flush + reload the webview)
+		} else if ((e.ctrlKey || e.metaKey) && e.code === 'KeyR') {
+			// Intercept the webview's native Ctrl+R reload → our no-flash soft refresh (matches the ⟳
+			// button). preventDefault stops the browser/WebView2 hard reload, same as we do for F5.
+			e.preventDefault();
+			void softRefresh();
 		}
 	}
 
@@ -189,8 +194,8 @@
 			class="chip"
 			onclick={() => void softRefresh()}
 			disabled={refreshing}
-			title={$_('refresh.title')}
-			aria-label={$_('refresh.title')}>⟳</button
+			title="{$_('refresh.title')} (Ctrl+R)"
+			aria-label="{$_('refresh.title')} (Ctrl+R)">⟳</button
 		>
 		{#if updater.status !== 'idle'}
 			<button
@@ -203,7 +208,29 @@
 				aria-label={updateTitle}>⭳ {updateLabel}</button
 			>
 		{/if}
-		<kbd>Ctrl K</kbd>
+		<button
+			type="button"
+			class="chip search-chip"
+			onclick={() => (ui.commandPaletteOpen = true)}
+			title={$_('nav.openCommandPalette')}
+			aria-label={$_('nav.openCommandPalette')}
+		>
+			<svg
+				width="13"
+				height="13"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<circle cx="11" cy="11" r="7" />
+				<path d="M21 21l-4.3-4.3" />
+			</svg>
+			Ctrl K
+		</button>
 	</div>
 </header>
 
@@ -320,13 +347,14 @@
 		cursor: default;
 		opacity: 0.85;
 	}
-	.chips kbd {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-		border: 1px solid var(--color-border-strong);
-		border-radius: var(--radius-sm);
-		padding: 2px var(--space-2);
+	/* search chip = the Ctrl+K hint, now a clickable button (magnifier + label) that opens the palette */
+	.search-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+	}
+	.search-chip svg {
+		opacity: 0.85;
 	}
 	main {
 		outline: none;

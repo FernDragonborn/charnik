@@ -7,6 +7,7 @@
 	import { compendiumEntryPath } from '$lib/content/detail';
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
+	import { ui } from '$lib/stores/ui.svelte';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { makeNameIndex, makeTextIndex, searchContent } from '$lib/content/search';
 
@@ -35,7 +36,7 @@
 		{ key: 'settings', labelKey: 'nav.settings', href: '/settings' }
 	];
 
-	let open = $state(false);
+	// Visibility lives in the shared ui store so the header search chip can open the same palette.
 	let query = $state('');
 	let active = $state(0);
 	let inputEl = $state<HTMLInputElement | null>(null);
@@ -74,16 +75,8 @@
 	// header shown before the first item of each group (Pages, then each content type)
 	const groupOf = (it: Item) => (it.kind === 'page' ? 'Pages' : typeName(it.type));
 
-	function openPalette() {
-		restoreEl = document.activeElement as HTMLElement;
-		query = '';
-		active = 0;
-		open = true;
-		loadContentStore();
-	}
 	function closePalette() {
-		open = false;
-		restoreEl?.focus();
+		ui.commandPaletteOpen = false;
 	}
 	function run(it: Item | undefined) {
 		if (!it) return;
@@ -96,8 +89,7 @@
 		// physical key (e.code) so Ctrl+K fires on any layout (Cyrillic etc.)
 		if ((e.ctrlKey || e.metaKey) && e.code === 'KeyK') {
 			e.preventDefault();
-			if (open) closePalette();
-			else openPalette();
+			ui.commandPaletteOpen = !ui.commandPaletteOpen;
 		}
 	}
 	function onPaletteKeydown(e: KeyboardEvent) {
@@ -120,13 +112,28 @@
 		if (active >= items.length) active = 0;
 	});
 	$effect(() => {
-		if (open) inputEl?.focus();
+		if (ui.commandPaletteOpen) inputEl?.focus();
+	});
+	// Rising/falling-edge setup so opening via EITHER the shortcut or the header chip runs the same
+	// prep (fresh query, remember focus, warm the content store) and closing restores focus.
+	let wasOpen = false;
+	$effect(() => {
+		const isOpen = ui.commandPaletteOpen;
+		if (isOpen && !wasOpen) {
+			restoreEl = document.activeElement as HTMLElement;
+			query = '';
+			active = 0;
+			loadContentStore();
+		} else if (!isOpen && wasOpen) {
+			restoreEl?.focus();
+		}
+		wasOpen = isOpen;
 	});
 </script>
 
 <svelte:window onkeydown={onWindowKeydown} />
 
-{#if open}
+{#if ui.commandPaletteOpen}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 	<div class="backdrop" onclick={closePalette}></div>
 	<div
