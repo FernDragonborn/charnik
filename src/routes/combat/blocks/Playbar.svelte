@@ -9,8 +9,8 @@
 
 <div class="playbar">
 	<span class="panel-hint"
-		>Tap any check · save · attack · spell to roll it · <b>Alt + click</b> (or Ctrl) for advantage /
-		custom dice.</span
+		>Tap any check · save · attack · spell to roll it · <b>Alt + click</b> (or Ctrl) for advantage / custom
+		dice.</span
 	>
 	<button class="rollout" onclick={(e) => openMenu('log', e)}>
 		🎲 {#if log[0]}Last · <b>{log[0].label}</b> <i>{log[0].expr}</i> =

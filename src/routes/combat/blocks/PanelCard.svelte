@@ -44,7 +44,8 @@
 		<button class="pill-btn" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
 		<span class="prepared-count">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
-		<button class="pill-btn" onclick={cycleGroupBy} title="Change grouping">{groupByLabel} ▾</button>
+		<button class="pill-btn" onclick={cycleGroupBy} title="Change grouping">{groupByLabel} ▾</button
+		>
 		<a class="pill-btn" href="{base}/spellbook">⛭ Manage all</a>
 	{/if}
 	<span
@@ -89,16 +90,20 @@
 	{:else if pid === 'attacks'}
 		{#each attacks as at (at.name)}
 			<button class="combat-row" onclick={(e) => combat.attackRoll(at, e)}>
-				<span class="row-name">{at.name}</span><span class="combat-row-hint">{signed(at.toHit)}</span
+				<span class="row-name">{at.name}</span><span class="combat-row-hint"
+					>{signed(at.toHit)}</span
 				>
-				<span class="combat-row-desc">{at.dmg}</span><span class="combat-row-marker">{at.meta}</span>
+				<span class="combat-row-desc">{at.dmg}</span><span class="combat-row-marker">{at.meta}</span
+				>
 			</button>
 		{/each}
 	{:else if pid === 'actions'}
 		{#each visibleActions as a (a.id)}
 			<button class="combat-row" onclick={(e) => combat.actionClick(a, e)}>
 				<span class="row-name">{a.name}</span><span class="combat-row-hint">{a.hint || '—'}</span>
-				<span class="combat-row-desc">{a.desc}</span><span class="combat-row-marker">{a.marker}</span>
+				<span class="combat-row-desc">{a.desc}</span><span class="combat-row-marker"
+					>{a.marker}</span
+				>
 			</button>
 		{/each}
 	{:else if pid === 'effects'}
@@ -107,12 +112,22 @@
 				<span class="effect-dot"></span>
 				<div class="body">
 					<b>{e.label}</b>
-					{#if e.effects.length || e.durationRounds}<span class="effect-tags"
-							>{#each e.effects as t (t)}<span class="effect-tag">{effectTag(t)}</span
-								>{/each}{#if e.durationRounds}<span class="durpill">{e.durationRounds} rds</span
-								>{/if}</span
+					{#if e.effects.length}<span class="effect-tags"
+							>{#each e.effects as t (t)}<span class="effect-tag">{effectTag(t)}</span>{/each}</span
 						>{/if}
 				</div>
+				<div class="effect-dur" title="Duration — − past 1 = until removed">
+					<button class="icon-button" onclick={() => combat.bumpEffectDuration(e.iid, -1)}>−</button
+					>
+					<span class="durpill">{e.durationRounds != null ? `${e.durationRounds} rds` : '∞'}</span>
+					<button class="icon-button" onclick={() => combat.bumpEffectDuration(e.iid, 1)}>＋</button
+					>
+				</div>
+				<button
+					class="icon-button eff-remove"
+					title="Remove effect"
+					onclick={() => combat.removeEffect(e.iid)}>✕</button
+				>
 			</div>
 		{:else}<p class="trace">No active effects.</p>{/each}
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
@@ -311,6 +326,17 @@
 		gap: 10px;
 		flex: 1;
 		min-width: 0;
+	}
+	/* per-effect duration stepper + remove — reuses global .icon-button (±/✕) + .durpill (value);
+	   only the tight grouping and the remove-hover accent are effect-specific */
+	.effect-dur {
+		display: inline-flex;
+		align-items: center;
+		gap: 2px;
+		flex: none;
+	}
+	.eff-remove:hover {
+		color: var(--color-accent-bright);
 	}
 	.effect .effect-dot {
 		width: 8px;

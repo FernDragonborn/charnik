@@ -145,6 +145,26 @@
 			<div class="search">
 				<span class="search-icon">🔍</span><input placeholder="Search effects…" />
 			</div>
+			<div class="section">Duration · applied to what you add</div>
+			<div class="dur-picker">
+				<button
+					class="pill-btn"
+					onclick={() => (combat.newEffectDuration = Math.max(0, combat.newEffectDuration - 1))}
+					>−</button
+				>
+				<span class="dur-val"
+					>{combat.newEffectDuration > 0
+						? `${combat.newEffectDuration} rds`
+						: '∞ until removed'}</span
+				>
+				<button class="pill-btn" onclick={() => (combat.newEffectDuration += 1)}>＋</button>
+				<button
+					class="pill-btn"
+					class:on={combat.newEffectDuration === 0}
+					title="Lasts until you remove it"
+					onclick={() => (combat.newEffectDuration = 0)}>∞</button
+				>
+			</div>
 			<div class="section">Catalog · presets</div>
 			{#each EFFECT_PRESETS as p (p.label)}
 				<button
@@ -154,7 +174,9 @@
 					<span class="main"
 						><span class="effect-icon" class:negative={/bane/i.test(p.label)}>＋</span
 						>{p.label}</span
-					><span class="durpill">10 rds</span>
+					><span class="durpill"
+						>{combat.newEffectDuration > 0 ? `${combat.newEffectDuration} rds` : '∞'}</span
+					>
 				</button>
 			{/each}
 			<div class="divlite"></div>
@@ -189,6 +211,26 @@
 						bind:value={combat.cmAmount}
 						aria-label="Amount"
 					/>
+				</div>
+				<div class="section" style="padding-left: 0">Duration</div>
+				<div class="dur-picker">
+					<button
+						class="dur-step"
+						onclick={() => (combat.newEffectDuration = Math.max(0, combat.newEffectDuration - 1))}
+						>−</button
+					>
+					<span class="dur-picker-val"
+						>{combat.newEffectDuration > 0
+							? `${combat.newEffectDuration} rds`
+							: '∞ until removed'}</span
+					>
+					<button class="dur-step" onclick={() => (combat.newEffectDuration += 1)}>＋</button>
+					<button
+						class="dur-inf"
+						class:on={combat.newEffectDuration === 0}
+						title="Lasts until you remove it"
+						onclick={() => (combat.newEffectDuration = 0)}>∞</button
+					>
 				</div>
 				<div class="field">
 					<!-- svelte-ignore a11y_autofocus -->
@@ -388,6 +430,25 @@
 		height: 1px;
 		background: var(--color-border);
 		margin: 4px 0;
+	}
+	/* duration picker (add-effect + custom-effect) — buttons reuse global .pill-btn; only the row
+	   layout, the value text, and the ∞-active tint are picker-specific */
+	.dur-picker {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 4px 13px 8px;
+	}
+	.dur-picker .dur-val {
+		flex: 1;
+		font-family: var(--font-mono);
+		font-size: 12px;
+		color: var(--color-resource);
+	}
+	.dur-picker .pill-btn.on {
+		background: var(--color-resource-soft);
+		border-color: var(--color-resource);
+		color: var(--color-resource);
 	}
 	.search {
 		display: flex;

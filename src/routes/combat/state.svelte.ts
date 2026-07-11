@@ -372,20 +372,47 @@ class CombatVM {
 		if (!this.graph || !system) return [];
 		return this.graph.list('condition', { system }).map((r) => String(r.data.name_en));
 	});
-	addEffect = (label: string, tokens: string[], positive = true) => {
+	/** Duration (in rounds) applied to the NEXT effect added from the add-effect / custom menus.
+	 *  0 = indefinite (lasts until the player removes it). Editable in the add-effect menu. */
+	newEffectDuration = $state(10);
+	addEffect = (
+		label: string,
+		tokens: string[],
+		positive = true,
+		durationRounds = this.newEffectDuration
+	) => {
 		if (!this.character) return;
+		// 0 / negative → indefinite: omit the duration fields entirely (schema: absent = until removed)
+		const duration =
+			durationRounds > 0
+				? { durationRounds: Math.round(durationRounds), startedRound: this.round }
+				: {};
 		this.character.play.effects = [
 			...this.character.play.effects,
-			{
-				iid: crypto.randomUUID(),
-				label,
-				effects: tokens,
-				positive,
-				durationRounds: 10,
-				startedRound: this.round
-			}
+			{ iid: crypto.randomUUID(), label, effects: tokens, positive, ...duration }
 		];
 		this.overlay = null;
+	};
+	/** Remove an active effect from the panel (the ✕). */
+	removeEffect = (iid: string) => {
+		const c = this.character;
+		if (c) c.play.effects = c.play.effects.filter((e) => e.iid !== iid);
+	};
+	/** Nudge an active effect's remaining duration by ±1 round from the panel. Dropping to 0 makes it
+	 *  indefinite again (the duration fields are removed), so − past 1 == "until removed". */
+	bumpEffectDuration = (iid: string, delta: number) => {
+		const c = this.character;
+		if (!c) return;
+		c.play.effects = c.play.effects.map((e) => {
+			if (e.iid !== iid) return e;
+			const next = Math.max(0, (e.durationRounds ?? 0) + delta);
+			if (next === 0) {
+				// strip duration → indefinite
+				const { durationRounds: _d, startedRound: _s, ...rest } = e;
+				return rest;
+			}
+			return { ...e, durationRounds: next, startedRound: e.startedRound ?? this.round };
+		});
 	};
 }
 

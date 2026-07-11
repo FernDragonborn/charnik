@@ -120,5 +120,4 @@
 			flex-direction: column;
 		}
 	}
-
 </style>

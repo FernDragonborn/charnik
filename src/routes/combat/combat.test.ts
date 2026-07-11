@@ -209,4 +209,37 @@ describe('CombatVM · S2 split net', () => {
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
 		expect(combat.tray.log.length).toBe(before + 1);
 	});
+
+	// the effects panel controls the user asked for: choose duration on add, edit/remove on the panel
+	it('addEffect applies the chosen newEffectDuration; 0 = indefinite (no duration field)', () => {
+		combat.newEffectDuration = 4;
+		combat.addEffect('Haste', ['flat-bonus:ac+2'], true);
+		const added = character.play.effects.at(-1)!;
+		expect(added.label).toBe('Haste');
+		expect(added.durationRounds).toBe(4);
+
+		combat.newEffectDuration = 0; // indefinite
+		combat.addEffect('Curse', [], false);
+		expect(character.play.effects.at(-1)!.durationRounds).toBeUndefined();
+	});
+
+	it('removeEffect drops the effect by its instance id', () => {
+		combat.addEffect('Temp', ['flat-bonus:ac+1']);
+		const iid = character.play.effects.at(-1)!.iid;
+		const before = character.play.effects.length;
+		combat.removeEffect(iid);
+		expect(character.play.effects.length).toBe(before - 1);
+		expect(character.play.effects.some((e) => e.iid === iid)).toBe(false);
+	});
+
+	it('bumpEffectDuration nudges rounds, and dropping to 0 makes it indefinite', () => {
+		combat.newEffectDuration = 2;
+		combat.addEffect('Bless2', ['flat-bonus:saves+1d4']);
+		const iid = character.play.effects.at(-1)!.iid;
+		const dur = () => character.play.effects.find((e) => e.iid === iid)!.durationRounds;
+		combat.bumpEffectDuration(iid, 1);
+		expect(dur()).toBe(3);
+		combat.bumpEffectDuration(iid, -3); // past 1 → indefinite
+		expect(dur()).toBeUndefined();
+	});
 });
