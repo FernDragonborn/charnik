@@ -5,13 +5,14 @@
 	import { onMount } from 'svelte';
 	import { loadContentStore, content } from '$lib/content/store.svelte';
 	import { detectCollisions } from '$lib/content/sources.svelte';
+	import GeneralSettings from '$lib/components/settings/GeneralSettings.svelte';
 	import ContentHealth from '$lib/components/settings/ContentHealth.svelte';
 	import SourceManager from '$lib/components/settings/SourceManager.svelte';
 	import CollisionManager from '$lib/components/settings/CollisionManager.svelte';
 	import { _ } from '$lib/i18n';
 
-	type Tab = 'health' | 'sources' | 'collisions';
-	let tab = $state<Tab>('health');
+	type Tab = 'general' | 'health' | 'sources' | 'collisions';
+	let tab = $state<Tab>('general');
 
 	onMount(loadContentStore);
 
@@ -23,6 +24,7 @@
 	const collisionCount = $derived(graph ? detectCollisions(graph).length : 0);
 
 	const TABS: { id: Tab; label: string; badge?: () => number }[] = [
+		{ id: 'general', label: 'General' },
 		{ id: 'health', label: 'Content health', badge: () => issueCount },
 		{ id: 'sources', label: 'Sources' },
 		{ id: 'collisions', label: 'Collisions', badge: () => collisionCount }
@@ -43,7 +45,9 @@
 	</div>
 
 	<div class="panel">
-		{#if tab === 'health'}
+		{#if tab === 'general'}
+			<GeneralSettings />
+		{:else if tab === 'health'}
 			<ContentHealth />
 		{:else if tab === 'sources'}
 			<SourceManager />
