@@ -26,8 +26,8 @@ vite.config.ts.timestamp-*
 src-tauri/target/
 src-tauri/gen/
 
-# throwaway design renders (HTML mocks kept)
-design-preview/*.png
+# local design mocks + renders (kept on disk, not tracked)
+design-preview/
 
 # downloaded SRD source (re-fetchable; converter in tools/srd/ reads it → content/srd/*.csv)
 tools/srd-src/
