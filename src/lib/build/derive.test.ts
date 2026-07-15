@@ -26,8 +26,8 @@ describe('asiBoost', () => {
 
 describe('speciesFixedAbilities', () => {
 	const row = (effects: string[]) => makeRow('species', { effects });
-	it('collects the abilities a flat-bonus effect raises, ignoring non-ability targets', () => {
-		const set = speciesFixedAbilities([row(['flat-bonus:cha+2', 'flat-bonus:ac+1']), undefined]);
+	it('collects the abilities a flat_bonus effect raises, ignoring non-ability targets', () => {
+		const set = speciesFixedAbilities([row(['flat_bonus:cha+2', 'flat_bonus:ac+1']), undefined]);
 		expect([...set]).toEqual(['cha']); // ac is not an ability
 	});
 });

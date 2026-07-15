@@ -22,14 +22,14 @@ export const SYSTEMS = ['5e', '5.5e'] as const;
  *  imported from `$lib/effects`) so content validation doesn't depend on the removable effects
  *  module; a test (`effects.test.ts`) guards it against drifting from the engine's `EFFECT_KINDS`. */
 export const EFFECT_KINDS = [
-	'flat-bonus',
-	'set-override',
+	'flat_bonus',
+	'set_override',
 	'advantage',
 	'disadvantage',
-	'grant-proficiency',
-	'resist-immune',
-	'apply-condition',
-	'grant-resource'
+	'grant_proficiency',
+	'resist_immune',
+	'apply_condition',
+	'grant_resource'
 ] as const;
 
 // --- CSV-cell coercion helpers (every cell arrives as a string) ---------------

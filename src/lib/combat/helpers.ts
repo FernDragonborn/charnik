@@ -137,9 +137,9 @@ function targetLabel(t: string): string {
 }
 
 /** A bounded-vocab effect token → a short readable tag for the effects panel:
- *  flat-bonus → "AC +2" / "saves +1d4"; set-override → "AC = 13"; resist-immune → "resist · fire";
- *  advantage → "adv · <target>"; grant-proficiency → "prof · <target>"; apply-condition → the name.
- *  grant-resource is NOT tagged here — it gets its own Resources section (see groupEffects). */
+ *  flat_bonus → "AC +2" / "saves +1d4"; set_override → "AC = 13"; resist_immune → "resist · fire";
+ *  advantage → "adv · <target>"; grant_proficiency → "prof · <target>"; apply_condition → the name.
+ *  grant_resource is NOT tagged here — it gets its own Resources section (see groupEffects). */
 export function effectTag(token: string): string {
 	const p = parseEffect(token);
 	if (p.kind === EFFECT_KIND.flatBonus && p.target) {
@@ -163,7 +163,7 @@ export function effectTag(token: string): string {
 /** A runtime effect instance — the character-schema type, re-exported for the combat views. */
 export type { EffectInstance } from '$lib/character/schema';
 
-/** A grant-resource effect, resolved for the Resources section (name + charges + recharge). */
+/** A grant_resource effect, resolved for the Resources section (name + charges + recharge). */
 export interface ResourceView {
 	iid: string;
 	name: string;
@@ -173,7 +173,7 @@ export interface ResourceView {
 }
 
 /** If an effect grants a fully-specified resource pool, resolve it — else null. The effect's Resources
- *  section membership is decided by this (grant-resource ⇒ Resources, not Buffs/Debuffs). */
+ *  section membership is decided by this (grant_resource ⇒ Resources, not Buffs/Debuffs). */
 export function parseResourceEffect(eff: EffectInstance): ResourceView | null {
 	for (const tok of eff.effects) {
 		const p = parseEffect(tok);

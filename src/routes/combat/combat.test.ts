@@ -19,8 +19,8 @@ async function graphOf(): Promise<ContentGraph> {
 		'c/spells_srd.csv',
 		[
 			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,effects',
-			`bless,5.5e,${S},Bless,1,enchantment,action,30 ft,"Concentration, up to 1 minute",V S M,true,flat-bonus:saves+1d4`,
-			`shield-of-faith,5.5e,${S},Shield of Faith,1,abjuration,bonus,60 ft,"Concentration, up to 10 minutes",V S M,true,flat-bonus:ac+2`,
+			`bless,5.5e,${S},Bless,1,enchantment,action,30 ft,"Concentration, up to 1 minute",V S M,true,flat_bonus:saves+1d4`,
+			`shield-of-faith,5.5e,${S},Shield of Faith,1,abjuration,bonus,60 ft,"Concentration, up to 10 minutes",V S M,true,flat_bonus:ac+2`,
 			`fire-bolt,5.5e,${S},Fire Bolt,0,evocation,action,120 ft,instant,V S,false,`
 		].join('\n')
 	);
@@ -96,7 +96,7 @@ describe('CombatVM · casting applies the spell effect (EFX-2)', () => {
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
 		const eff = blessEffect();
 		expect(eff?.label).toBe('Bless');
-		expect(eff?.effects).toEqual(['flat-bonus:saves+1d4']);
+		expect(eff?.effects).toEqual(['flat_bonus:saves+1d4']);
 		expect(eff?.durationRounds).toBe(10); // "up to 1 minute"
 	});
 
@@ -206,7 +206,7 @@ describe('CombatVM · spending a resource (UBUG-5)', () => {
 		const character = newCharacter('valen', 'Valen', '5.5e');
 		character.play.autoCalc = true;
 		character.play.effects = [
-			{ iid: '1', label: 'Rage', effects: ['grant-resource:rage:3:long'], positive: true }
+			{ iid: '1', label: 'Rage', effects: ['grant_resource:rage:3:long'], positive: true }
 		];
 		combat.graph = graph;
 		combat.character = character;
@@ -215,6 +215,22 @@ describe('CombatVM · spending a resource (UBUG-5)', () => {
 		expect(combat.resources.resourceSpent('rage')).toBe(0);
 		combat.resources.resourceClick('rage', 3, 2); // click the rightmost available pip → spend 1
 		expect(combat.resources.resourceSpent('rage')).toBe(1);
+	});
+
+	it('clamps stale spent state so a shrunk/removed resource never shows negative left', async () => {
+		const graph = await graphOf();
+		const character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.autoCalc = true;
+		character.play.effects = [
+			{ iid: '1', label: 'Rage', effects: ['grant_resource:rage:2:long'], positive: true }
+		];
+		// stored spent (3) exceeds the live max (2), and 'ki' no longer exists at all
+		character.play.resourcesSpent = { rage: 3, ki: 5 };
+		combat.graph = graph;
+		combat.character = character;
+
+		expect(combat.resources.resourceSpent('rage')).toBe(2); // clamped to max, not 3
+		expect(combat.resources.resourceSpent('ki')).toBe(0); // orphan → 0, no phantom pips
 	});
 });
 
@@ -317,7 +333,7 @@ describe('CombatVM · S2 split net', () => {
 	// the effects panel controls the user asked for: choose duration on add, edit/remove on the panel
 	it('addEffect applies the chosen newEffectDuration; 0 = indefinite (no duration field)', () => {
 		combat.newEffectDuration = 4;
-		combat.addEffect('Haste', ['flat-bonus:ac+2'], true);
+		combat.addEffect('Haste', ['flat_bonus:ac+2'], true);
 		const added = character.play.effects.at(-1)!;
 		expect(added.label).toBe('Haste');
 		expect(added.durationRounds).toBe(4);
@@ -328,7 +344,7 @@ describe('CombatVM · S2 split net', () => {
 	});
 
 	it('removeEffect drops the effect by its instance id', () => {
-		combat.addEffect('Temp', ['flat-bonus:ac+1']);
+		combat.addEffect('Temp', ['flat_bonus:ac+1']);
 		const iid = character.play.effects.at(-1)!.iid;
 		const before = character.play.effects.length;
 		combat.removeEffect(iid);
@@ -338,7 +354,7 @@ describe('CombatVM · S2 split net', () => {
 
 	it('bumpEffectDuration nudges rounds, and dropping to 0 makes it indefinite', () => {
 		combat.newEffectDuration = 2;
-		combat.addEffect('Bless2', ['flat-bonus:saves+1d4']);
+		combat.addEffect('Bless2', ['flat_bonus:saves+1d4']);
 		const iid = character.play.effects.at(-1)!.iid;
 		const dur = () => character.play.effects.find((e) => e.iid === iid)!.durationRounds;
 		combat.bumpEffectDuration(iid, 1);
@@ -348,7 +364,7 @@ describe('CombatVM · S2 split net', () => {
 	});
 
 	it('setEffectDuration sets an exact typed round count; 0/blank → indefinite', () => {
-		combat.addEffect('Typed', ['flat-bonus:ac+1']);
+		combat.addEffect('Typed', ['flat_bonus:ac+1']);
 		const iid = character.play.effects.at(-1)!.iid;
 		const dur = () => character.play.effects.find((e) => e.iid === iid)!.durationRounds;
 		combat.setEffectDuration(iid, 7);

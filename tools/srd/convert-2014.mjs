@@ -336,8 +336,8 @@ function convertConditions() {
 	return rows.length;
 }
 
-// Racial Ability Score Increase → flat-bonus effect tokens (5e puts the ASI on the species).
-// "Your Constitution score increases by 2." → "flat-bonus:con+2"; Human "each increase by 1" →
+// Racial Ability Score Increase → flat_bonus effect tokens (5e puts the ASI on the species).
+// "Your Constitution score increases by 2." → "flat_bonus:con+2"; Human "each increase by 1" →
 // all six. Half-Elf's "+1 to two of your choice" is a choice (not a fixed token) — deferred.
 const ABIL_ABBR = {
 	strength: 'str',
@@ -363,7 +363,7 @@ function raceAsi(text) {
 		const n = Number(/each increase by (\d+)/i.exec(seg)[1]);
 		for (const a of Object.values(ABIL_ABBR)) out.set(a, n);
 	}
-	return [...out].map(([a, n]) => `flat-bonus:${a}+${n}`).join(';');
+	return [...out].map(([a, n]) => `flat_bonus:${a}+${n}`).join(';');
 }
 
 // A "+N to M ability scores of your choice" ASI (Half-Elf) → "NxM" (e.g. "1x2"). The fixed part
@@ -408,7 +408,7 @@ function convertSpecies() {
 			name_uk: '',
 			text_en: text,
 			text_uk: '',
-			effects: raceAsi(text), // 5e racial Ability Score Increase → flat-bonus tokens
+			effects: raceAsi(text), // 5e racial Ability Score Increase → flat_bonus tokens
 			size: (sizeM ? sizeM[1] : 'Medium').toLowerCase(),
 			speed: speedM ? Number(speedM[1]) : 30,
 			creature_type: 'humanoid',
@@ -501,7 +501,7 @@ function convertLanguages() {
 // --- species options (2014 subraces) — one per race in SRD 5.1 ---------------
 // SRD 5.1 ships exactly one subrace per subrace-having race (Hill Dwarf / High Elf / Lightfoot /
 // Rock Gnome). Each is an <h4> block after its parent race's base traits; its first "Ability Score
-// Increase." is the SUBRACE's ASI → flat-bonus tokens. `end` = the next race heading id.
+// Increase." is the SUBRACE's ASI → flat_bonus tokens. `end` = the next race heading id.
 const SUBRACES = [
 	{ id: 'HillDwarf', end: 'Elf', species: 'Dwarf' },
 	{ id: 'HighElf', end: 'Halfling', species: 'Elf' },

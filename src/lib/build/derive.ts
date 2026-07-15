@@ -16,7 +16,7 @@ export function parseSpeciesBoostChoice(raw: string): { amount: number; count: n
 	return m ? { amount: Number(m[1]), count: Number(m[2]) } : null;
 }
 
-/** Abilities raised by a species/sub-option's FIXED ASI (its flat-bonus effects) — excluded from the
+/** Abilities raised by a species/sub-option's FIXED ASI (its flat_bonus effects) — excluded from the
  *  free choice (5e Half-Elf's +1/+1 goes to two abilities OTHER than the +2 CHA). */
 export function speciesFixedAbilities(rows: (LoadedRow | undefined)[]): Set<Ability> {
 	const set = new Set<Ability>();

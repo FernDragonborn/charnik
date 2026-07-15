@@ -108,13 +108,13 @@ class CombatVM {
 	};
 
 	// structured custom modifier (GM "+1 AC" in a few clicks): target · sign · amount → a
-	// flat-bonus token the effects engine already applies (now live, via the reactive sheet).
+	// flat_bonus token the effects engine already applies (now live, via the reactive sheet).
 	cmTarget = $state('ac');
 	cmSign = $state<'+' | '-'>('+');
 	cmAmount = $state(1);
 	addCustomModifier = () => {
 		const amount = Math.abs(Math.round(this.cmAmount)) || 1;
-		const token = `flat-bonus:${this.cmTarget}${this.cmSign}${amount}`;
+		const token = `flat_bonus:${this.cmTarget}${this.cmSign}${amount}`;
 		const label =
 			this.customEffectLabel.trim() || `${this.cmSign}${amount} ${modTargetLabel(this.cmTarget)}`;
 		this.addEffect(label, [token], this.cmSign === '+');

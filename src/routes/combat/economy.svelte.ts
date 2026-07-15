@@ -17,7 +17,7 @@ export class TurnEconomy {
 	) {}
 
 	// base 1 pip per slot + extras from effects (Action Surge → +1 action, Haste → +1 action), rendered
-	// as more pips — data-driven via `flat-bonus:<slot>+N` tokens.
+	// as more pips — data-driven via `flat_bonus:<slot>+N` tokens.
 	slotMax = $derived.by<Record<ActionSlot, number>>(() => {
 		const c = this.getCharacter();
 		const max = { action: 1, bonus: 1, reaction: 1 };

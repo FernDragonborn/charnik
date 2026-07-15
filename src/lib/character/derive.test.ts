@@ -19,14 +19,14 @@ async function graphOf(): Promise<ContentGraph> {
 		'c/species_srd.csv',
 		[
 			'id,systems,source,name_en,effects,size,speed,creature_type',
-			`hardy,5.5e,${S},Hardy,flat-bonus:con+2,medium,30,humanoid`
+			`hardy,5.5e,${S},Hardy,flat_bonus:con+2,medium,30,humanoid`
 		].join('\n')
 	);
 	await st.write(
 		'c/species_options_srd.csv',
 		[
 			'id,systems,source,name_en,effects,species_id,kind,option_label',
-			`stoic,5.5e,${S},Stoic,flat-bonus:wis+1,hardy,subrace,Subrace`
+			`stoic,5.5e,${S},Stoic,flat_bonus:wis+1,hardy,subrace,Subrace`
 		].join('\n')
 	);
 	await st.write(
@@ -41,17 +41,17 @@ async function graphOf(): Promise<ContentGraph> {
 		'c/subclasses_srd.csv',
 		[
 			'id,systems,source,name_en,effects,class_id',
-			`evoker,5.5e,${S},Evoker,flat-bonus:skill.arcana+1,wizard`
+			`evoker,5.5e,${S},Evoker,flat_bonus:skill.arcana+1,wizard`
 		].join('\n')
 	);
 	await st.write(
 		'c/class_features_srd.csv',
 		[
 			'id,systems,source,name_en,effects,class_id,level,subclass_id',
-			`arcane-ward,5.5e,${S},Arcane Ward,grant-resource:arcane-ward:3:long,wizard,2,`,
-			`spell-mastery,5.5e,${S},Spell Mastery,flat-bonus:ac+1,wizard,18,`,
-			`sculpt-spells,5.5e,${S},Sculpt Spells,flat-bonus:save.dex+1,wizard,2,evoker`,
-			`overchannel,5.5e,${S},Overchannel,flat-bonus:ac+3,wizard,14,evoker`
+			`arcane-ward,5.5e,${S},Arcane Ward,grant_resource:arcane-ward:3:long,wizard,2,`,
+			`spell-mastery,5.5e,${S},Spell Mastery,flat_bonus:ac+1,wizard,18,`,
+			`sculpt-spells,5.5e,${S},Sculpt Spells,flat_bonus:save.dex+1,wizard,2,evoker`,
+			`overchannel,5.5e,${S},Overchannel,flat_bonus:ac+3,wizard,14,evoker`
 		].join('\n')
 	);
 	const g = await loadContent(st, ['c']);
@@ -66,7 +66,7 @@ function wizard(): Character {
 	c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 10, cha: 10 };
 	c.build.inventory = [{ item: `item:${S}:leather-armor`, qty: 1, equipped: true, attuned: false }];
 	c.play.effects = [
-		{ iid: '1', label: 'Shield of Faith', effects: ['flat-bonus:ac+2'], positive: true }
+		{ iid: '1', label: 'Shield of Faith', effects: ['flat_bonus:ac+2'], positive: true }
 	];
 	return characterSchema.parse(c);
 }
@@ -126,11 +126,11 @@ describe('deriveSheet aggregator', () => {
 		expect(s.ac.trace.map((x) => x.source)).toContain('Shield');
 	});
 
-	it('applies a custom flat-bonus to a specific skill and save (GM modifier)', () => {
+	it('applies a custom flat_bonus to a specific skill and save (GM modifier)', () => {
 		const c = wizard();
 		c.play.effects = [
-			{ iid: 'm1', label: '+2 Stealth', effects: ['flat-bonus:skill.stealth+2'], positive: true },
-			{ iid: 'm2', label: '+1 DEX save', effects: ['flat-bonus:save.dex+1'], positive: true }
+			{ iid: 'm1', label: '+2 Stealth', effects: ['flat_bonus:skill.stealth+2'], positive: true },
+			{ iid: 'm2', label: '+1 DEX save', effects: ['flat_bonus:save.dex+1'], positive: true }
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// DEX 14 (+2): stealth = +2 mod + 2 custom = 4; dex save = +2 mod + 1 custom = 3
@@ -147,9 +147,9 @@ describe('deriveSheet aggregator', () => {
 		expect(s.abilities.wis.score).toBe(11);
 	});
 
-	it('hp-max effects flow through the seam (Toughness/Aid)', () => {
+	it('hp_max effects flow through the seam (Toughness/Aid)', () => {
 		const c = wizard();
-		c.play.effects = [{ iid: 'a', label: 'Aid', effects: ['flat-bonus:hp-max+5'], positive: true }];
+		c.play.effects = [{ iid: 'a', label: 'Aid', effects: ['flat_bonus:hp_max+5'], positive: true }];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.maxHp.value).toBe(25); // 20 base + 5
 		expect(s.maxHp.trace.map((t) => t.source)).toContain('Aid');
@@ -179,7 +179,7 @@ describe('deriveSheet aggregator', () => {
 			{
 				iid: 'e',
 				label: 'Mentor',
-				effects: ['grant-proficiency:expertise:skill.stealth'],
+				effects: ['grant_proficiency:expertise:skill.stealth'],
 				positive: true
 			}
 		];
@@ -188,13 +188,13 @@ describe('deriveSheet aggregator', () => {
 		expect(s.skills.stealth!.value).toBe(6); // DEX +2 + prof 2 × 2
 	});
 
-	it('grants skill and save proficiency from a grant-proficiency effect', () => {
+	it('grants skill and save proficiency from a grant_proficiency effect', () => {
 		const c = wizard();
 		c.play.effects = [
 			{
 				iid: 'g',
 				label: 'Skilled',
-				effects: ['grant-proficiency:stealth', 'grant-proficiency:save.con'],
+				effects: ['grant_proficiency:stealth', 'grant_proficiency:save.con'],
 				positive: true
 			}
 		];
@@ -204,16 +204,16 @@ describe('deriveSheet aggregator', () => {
 		expect(s.abilities.con.save.trace.some((t) => t.layer === 'proficiency')).toBe(true);
 	});
 
-	it('collects damage defenses from resist-immune effects (mode + bare default)', () => {
+	it('collects damage defenses from resist_immune effects (mode + bare default)', () => {
 		const c = wizard();
 		c.play.effects = [
 			{
 				iid: 'd',
 				label: 'Wards',
 				effects: [
-					'resist-immune:resist:fire',
-					'resist-immune:immune:poison',
-					'resist-immune:cold' // bare → defaults to resistance
+					'resist_immune:resist:fire',
+					'resist_immune:immune:poison',
+					'resist_immune:cold' // bare → defaults to resistance
 				],
 				positive: true
 			}
@@ -224,13 +224,13 @@ describe('deriveSheet aggregator', () => {
 		expect(s.defenses.vulnerable).toEqual([]);
 	});
 
-	it('collects trackable resources from grant-resource effects', () => {
+	it('collects trackable resources from grant_resource effects', () => {
 		const c = wizard();
 		c.play.effects = [
 			{
 				iid: 'r',
 				label: 'Class features',
-				effects: ['grant-resource:rage:3:long', 'grant-resource:ki:5:short'],
+				effects: ['grant_resource:rage:3:long', 'grant_resource:ki:5:short'],
 				positive: true
 			}
 		];

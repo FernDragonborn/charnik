@@ -8,8 +8,8 @@
  * `{value, trace, notes}` contract intact (values just lose their effect layers). This
  * module may import core TYPES (`pipeline`), never the reverse.
  *
- * Numeric tokens (`flat-bonus`, `set-override`) fold into the value; the rest
- * (`advantage`, `resist-immune`, `apply-condition`, `grant-resource`, `grant-proficiency`)
+ * Numeric tokens (`flat_bonus`, `set_override`) fold into the value; the rest
+ * (`advantage`, `resist_immune`, `apply_condition`, `grant_resource`, `grant_proficiency`)
  * are non-numeric and surface as structured facts / notes. Anything unparseable is kept as
  * an inert text note — never dropped, never executed.
  */
@@ -17,14 +17,14 @@ import { computed, type Computed, type Contribution, type Layer } from '../rules
 
 /** The bounded effect vocabulary, as named constants — compare against these, never bare strings. */
 export const EFFECT_KIND = {
-	flatBonus: 'flat-bonus',
-	setOverride: 'set-override',
+	flatBonus: 'flat_bonus',
+	setOverride: 'set_override',
 	advantage: 'advantage',
 	disadvantage: 'disadvantage',
-	grantProficiency: 'grant-proficiency',
-	resistImmune: 'resist-immune',
-	applyCondition: 'apply-condition',
-	grantResource: 'grant-resource'
+	grantProficiency: 'grant_proficiency',
+	resistImmune: 'resist_immune',
+	applyCondition: 'apply_condition',
+	grantResource: 'grant_resource'
 } as const;
 export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 /** The kinds as a list (for schema validation / the `includes` guard). */
@@ -33,6 +33,15 @@ export const EFFECT_KINDS = Object.values(EFFECT_KIND) as readonly EffectKind[];
 export type Recharge = 'short' | 'long' | 'other';
 type Defense = 'resist' | 'immune' | 'vulnerable';
 
+/** Numeric caps on token values (cost, not game balance — content is untrusted input). Two classes:
+ *  a bonus/override is only STORED and rendered as a scalar → a generous finite guard is enough (a
+ *  +1e6 AC is silly, not dangerous); a resource `max` DRIVES the pip render loop (see AUDIT B10) →
+ *  bound the WORK. Values past a cap are clamped, not dropped, so a typo still parses. */
+const MAX_EFFECT_AMOUNT = 1_000_000;
+const MAX_RESOURCE_MAX = 1000;
+const clampAmount = (n: number) =>
+	Number.isFinite(n) ? Math.max(-MAX_EFFECT_AMOUNT, Math.min(MAX_EFFECT_AMOUNT, n)) : 0;
+
 export interface ParsedEffect {
 	kind: EffectKind | 'unknown';
 	target?: string;
@@ -40,12 +49,12 @@ export interface ParsedEffect {
 	amount?: number;
 	/** Dice bonus (e.g. "1d4" / "-1d4") — a roll modifier, not a flat number. */
 	dice?: string;
-	/** resist-immune: which bucket (defaults to 'resist' when the token omits it). */
+	/** resist_immune: which bucket (defaults to 'resist' when the token omits it). */
 	defense?: Defense;
-	/** grant-proficiency: the LEVEL granted — one ladder value, not two booleans, so "expertise
+	/** grant_proficiency: the LEVEL granted — one ladder value, not two booleans, so "expertise
 	 *  without proficiency" is unrepresentable (expertise sits above proficient on the ladder). */
 	proficiency?: 'proficient' | 'expertise';
-	/** grant-resource: the fully-specified pool (only present when `id:max:recharge` is given). */
+	/** grant_resource: the fully-specified pool (only present when `id:max:recharge` is given). */
 	resource?: { id: string; max: number; recharge: Recharge };
 	raw: string;
 }
@@ -64,49 +73,53 @@ export function parseEffect(token: string): ParsedEffect {
 	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
 
 	if (kind === EFFECT_KIND.flatBonus) {
-		const m = /^([a-z][a-z.-]*?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
+		const m = /^([a-z][a-z._-]*?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
 		if (!m) return { kind: 'unknown', raw };
 		const target = m[1] ?? '';
 		const sign = m[2] ?? '';
 		const amount = m[3] ?? '';
 		if (/d/i.test(amount)) return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw };
-		return { kind, target, amount: Number(sign + amount), raw };
+		return { kind, target, amount: clampAmount(Number(sign + amount)), raw };
 	}
 	if (kind === EFFECT_KIND.setOverride) {
-		const m = /^([a-z][a-z.-]*):(-?\d+)$/i.exec(rest);
+		const m = /^([a-z][a-z._-]*):(-?\d+)$/i.exec(rest);
 		if (!m) return { kind: 'unknown', raw };
-		return { kind, target: m[1] ?? '', amount: Number(m[2]), raw };
+		return { kind, target: m[1] ?? '', amount: clampAmount(Number(m[2])), raw };
 	}
 	if (kind === EFFECT_KIND.resistImmune) {
-		// `resist-immune:<type>` (defaults to resistance) or `resist-immune:<bucket>:<type>`
+		// `resist_immune:<type>` (defaults to resistance) or `resist_immune:<bucket>:<type>`
 		const m = /^(?:(resist|immune|vulnerable):)?(.+)$/i.exec(rest);
 		if (!m?.[2]) return { kind: 'unknown', raw };
 		const defense = (m[1]?.toLowerCase() ?? 'resist') as Defense;
 		return { kind, defense, target: m[2].trim(), raw };
 	}
 	if (kind === EFFECT_KIND.grantResource) {
-		// `grant-resource:<id>` (bare, for flags) or `grant-resource:<id>:<max>:<recharge>` (a pool)
-		const m = /^([a-z0-9][a-z0-9-]*)(?::(\d+):(short|long|other))?$/i.exec(rest.trim());
+		// `grant_resource:<id>` (bare, for flags) or `grant_resource:<id>:<max>:<recharge>` (a pool)
+		const m = /^([a-z0-9][a-z0-9_-]*)(?::(\d+):(short|long|other))?$/i.exec(rest.trim());
 		if (!m?.[1]) return { kind: 'unknown', raw };
 		const id = m[1].toLowerCase();
 		if (m[2] && m[3])
 			return {
 				kind,
 				target: id,
-				resource: { id, max: Number(m[2]), recharge: m[3].toLowerCase() as Recharge },
+				resource: {
+					id,
+					max: Math.min(Number(m[2]), MAX_RESOURCE_MAX),
+					recharge: m[3].toLowerCase() as Recharge
+				},
 				raw
 			};
 		return { kind, target: id, raw };
 	}
 	if (kind === EFFECT_KIND.grantProficiency) {
-		// `grant-proficiency:[expertise:]<target>` — the target is canonicalized here (the ONE place):
+		// `grant_proficiency:[expertise:]<target>` — the target is canonicalized here (the ONE place):
 		// a `skill.` prefix strips to the bare skill id (skills are bare in this vocab; only saves
 		// carry their `save.` prefix), so authors can write either form without it silently dropping.
 		const m = /^(expertise:)?(?:skill\.)?(.+)$/i.exec(rest);
 		if (!m?.[2]) return { kind: 'unknown', raw };
 		return { kind, target: m[2].trim(), proficiency: m[1] ? 'expertise' : 'proficient', raw };
 	}
-	// advantage / disadvantage / apply-condition
+	// advantage / disadvantage / apply_condition
 	return { kind, target: rest, raw };
 }
 
@@ -192,7 +205,7 @@ export interface ResourceDef {
 const titleCaseId = (s: string) => s.replace(/[-_]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 
 /**
- * Collect resource pools from `grant-resource:<id>:<max>:<recharge>` tokens. Data-driven and
+ * Collect resource pools from `grant_resource:<id>:<max>:<recharge>` tokens. Data-driven and
  * class-agnostic — a Barbarian's rage, a Monk's ki, an item's "3/day" are all the same shape. If
  * the same id is granted more than once (a scaling feature re-granted at a higher tier), the largest
  * max wins.

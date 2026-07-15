@@ -101,7 +101,7 @@ export interface CharacterSheet {
 	carryingCapacity: Computed;
 	/** Damage resistances / immunities / vulnerabilities from active effects (by type). */
 	defenses: { resist: string[]; immune: string[]; vulnerable: string[] };
-	/** Trackable resource pools (rage, ki, item N/day…) from `grant-resource` effects. */
+	/** Trackable resource pools (rage, ki, item N/day…) from `grant_resource` effects. */
 	resources: ResourceDef[];
 	/** Per-class casting profiles + shared/pact slot pools (empty classes = non-caster). */
 	spellcasting: Spellcasting;
@@ -212,7 +212,7 @@ function gatherEffects(
 			active.push({ source: eff.label, layer: 'condition', tokens: eff.effects });
 	}
 
-	// expand `apply-condition:<id>` → the referenced condition's OWN effect tokens, so a spell/effect
+	// expand `apply_condition:<id>` → the referenced condition's OWN effect tokens, so a spell/effect
 	// that inflicts a condition actually applies that condition's mechanics (nested one level).
 	for (const eff of [...active]) {
 		for (const t of eff.tokens) {
@@ -232,7 +232,7 @@ function gatherEffects(
 	return active;
 }
 
-/** Sum flat-bonus tokens that target a given ability score (the cascade layer). */
+/** Sum flat_bonus tokens that target a given ability score (the cascade layer). */
 function abilityBonus(active: ActiveEffect[], ability: Ability): number {
 	let sum = 0;
 	for (const eff of active) {
@@ -260,7 +260,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	for (const ab of ABILITIES)
 		scores[ab] = build.abilities[ab] + (build.abilityBoosts?.[ab] ?? 0) + abilityBonus(active, ab);
 
-	// proficiencies granted by effects (item/feat/feature): `grant-proficiency:[expertise:]<target>`
+	// proficiencies granted by effects (item/feat/feature): `grant_proficiency:[expertise:]<target>`
 	// where target is a save (`con` / `save.con`) or a skill id (`stealth` — the parser already
 	// stripped any `skill.` prefix). Skills collect the granted LEVEL (max of the ladder); saves are
 	// proficient-or-not (expertise doesn't apply to saves — a granted 'expertise' still just means
@@ -365,8 +365,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 				trace: hpContribs.flatMap((h) => h.trace)
 			}
 		: maxHpForClass({ hitDie: 'd8', level, conScore: scores.con });
-	// hp-max flows through the seam like every other stat (Toughness, Aid → `flat-bonus:hp-max+N`)
-	const maxHp = applyEffects('hp-max', maxHpBase, active);
+	// hp_max flows through the seam like every other stat (Toughness, Aid → `flat_bonus:hp_max+N`)
+	const maxHp = applyEffects('hp_max', maxHpBase, active);
 
 	// speed from species
 	const speciesRow = build.species ? graph.get(build.species) : undefined;
@@ -418,8 +418,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		return applyEffects(`passive.${skill}`, base, active);
 	};
 
-	// damage defenses from effects: `resist-immune:<resist|immune|vulnerable>:<type>` (a bare
-	// `resist-immune:<type>` defaults to resistance).
+	// damage defenses from effects: `resist_immune:<resist|immune|vulnerable>:<type>` (a bare
+	// `resist_immune:<type>` defaults to resistance).
 	const defenses = { resist: [] as string[], immune: [] as string[], vulnerable: [] as string[] };
 	if (character.play.autoCalc)
 		for (const eff of active)

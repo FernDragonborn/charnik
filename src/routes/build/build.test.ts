@@ -26,7 +26,7 @@ async function graphOf(): Promise<ContentGraph> {
 		'c/species_srd.csv',
 		[
 			'id,systems,source,name_en,effects,size,speed,creature_type',
-			`hardy,5.5e,${S},Hardy,flat-bonus:con+2,medium,30,humanoid`
+			`hardy,5.5e,${S},Hardy,flat_bonus:con+2,medium,30,humanoid`
 		].join('\n')
 	);
 	await st.write(

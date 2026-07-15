@@ -211,7 +211,7 @@
 		higher_level: 'What changes when cast with a higher-level slot.',
 		effects:
 			'Auto-calc effects, “;”-separated. Format kind:target±amount. ' +
-			'e.g. flat-bonus:ac+1; resist-immune:fire; grant-proficiency:skill.stealth. Leave blank if none.',
+			'e.g. flat_bonus:ac+1; resist_immune:fire; grant_proficiency:skill.stealth. Leave blank if none.',
 		classes: 'Tick the spellcaster classes this spell is available to (below).'
 	};
 	// live warning for the level cell: a value above 9 has no slot in the classic rules

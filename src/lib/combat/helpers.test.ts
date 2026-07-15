@@ -36,7 +36,7 @@ describe('pipClick — one click-to-set model (available left, spent right)', ()
 
 describe('rollEffectsFor — advantage + bonus dice a roll picks up', () => {
 	it('adds Bless (+1d4) and Bane (−1d4) group tokens to any save', () => {
-		const r = rollEffectsFor(fx('flat-bonus:saves+1d4', 'flat-bonus:saves-1d4'), 'save.dex');
+		const r = rollEffectsFor(fx('flat_bonus:saves+1d4', 'flat_bonus:saves-1d4'), 'save.dex');
 		expect(r.advantage).toBe(false);
 		expect(r.bonusDice).toEqual([
 			{ sides: 4, count: 1, sign: 1 },
@@ -55,20 +55,20 @@ describe('rollEffectsFor — advantage + bonus dice a roll picks up', () => {
 	});
 
 	it('ignores flat numeric bonuses (those fold into the modifier, not the dice)', () => {
-		expect(rollEffectsFor(fx('flat-bonus:save.dex+2'), 'save.dex').bonusDice).toEqual([]);
+		expect(rollEffectsFor(fx('flat_bonus:save.dex+2'), 'save.dex').bonusDice).toEqual([]);
 	});
 });
 
 describe('effectTag — readable tags for the effects panel', () => {
-	it('prettifies dotted flat-bonus targets', () => {
-		expect(effectTag('flat-bonus:ac+2')).toBe('AC +2');
-		expect(effectTag('flat-bonus:save.dex+1')).toBe('DEX save +1');
-		expect(effectTag('flat-bonus:skill.stealth-1')).toBe('Stealth −1');
+	it('prettifies dotted flat_bonus targets', () => {
+		expect(effectTag('flat_bonus:ac+2')).toBe('AC +2');
+		expect(effectTag('flat_bonus:save.dex+1')).toBe('DEX save +1');
+		expect(effectTag('flat_bonus:skill.stealth-1')).toBe('Stealth −1');
 	});
 	it('short-forms the other vocab kinds', () => {
-		expect(effectTag('set-override:ac:13')).toBe('AC = 13');
-		expect(effectTag('resist-immune:resist:fire')).toBe('resist · fire');
-		expect(effectTag('apply-condition:poisoned')).toBe('Poisoned');
+		expect(effectTag('set_override:ac:13')).toBe('AC = 13');
+		expect(effectTag('resist_immune:resist:fire')).toBe('resist · fire');
+		expect(effectTag('apply_condition:poisoned')).toBe('Poisoned');
 	});
 });
 
@@ -82,19 +82,19 @@ describe('groupEffects — Buffs / Debuffs / Resources split', () => {
 	const bless = eff({
 		iid: 'bless',
 		label: 'Bless',
-		effects: ['flat-bonus:saves+1d4'],
+		effects: ['flat_bonus:saves+1d4'],
 		positive: true
 	});
 	const bane = eff({
 		iid: 'bane',
 		label: 'Bane',
-		effects: ['flat-bonus:saves-1d4'],
+		effects: ['flat_bonus:saves-1d4'],
 		positive: false
 	});
 	const arcane = eff({
 		iid: 'ar',
 		label: 'Arcane Recovery',
-		effects: ['grant-resource:arcane-recovery:1:long'],
+		effects: ['grant_resource:arcane-recovery:1:long'],
 		positive: true // still lands in Resources, not Buffs
 	});
 	const g = groupEffects([bless, bane, arcane]);
@@ -105,19 +105,19 @@ describe('groupEffects — Buffs / Debuffs / Resources split', () => {
 	it('puts negative non-resource effects in debuffs', () => {
 		expect(g.debuffs.map((e) => e.iid)).toEqual(['bane']);
 	});
-	it('routes grant-resource effects to resources regardless of the positive flag', () => {
+	it('routes grant_resource effects to resources regardless of the positive flag', () => {
 		expect(g.resources).toHaveLength(1);
 		expect(g.resources[0]).toMatchObject({ id: 'arcane-recovery', max: 1, recharge: 'long' });
 	});
 });
 
 describe('parseResourceEffect + rechargeLabel', () => {
-	it('resolves a fully-specified grant-resource token', () => {
+	it('resolves a fully-specified grant_resource token', () => {
 		const r = parseResourceEffect(
 			eff({
 				iid: 'cd',
 				label: 'Channel Divinity',
-				effects: ['grant-resource:channel-divinity:2:short']
+				effects: ['grant_resource:channel-divinity:2:short']
 			})
 		);
 		expect(r).toMatchObject({
@@ -129,7 +129,7 @@ describe('parseResourceEffect + rechargeLabel', () => {
 	});
 	it('returns null for a non-resource effect', () => {
 		expect(
-			parseResourceEffect(eff({ iid: 'x', label: 'Bless', effects: ['flat-bonus:ac+2'] }))
+			parseResourceEffect(eff({ iid: 'x', label: 'Bless', effects: ['flat_bonus:ac+2'] }))
 		).toBeNull();
 	});
 	it('labels recharges', () => {
@@ -145,8 +145,8 @@ describe('rollEffectsFor — disadvantage + flat (EFX-1)', () => {
 		expect(out.advantage).toBe(false);
 	});
 	it('sums flat bonuses for attack/damage keys', () => {
-		expect(rollEffectsFor(fx('flat-bonus:attack+2'), 'attack').flat).toBe(2);
-		expect(rollEffectsFor(fx('flat-bonus:damage+2', 'flat-bonus:damage+1'), 'damage').flat).toBe(3);
+		expect(rollEffectsFor(fx('flat_bonus:attack+2'), 'attack').flat).toBe(2);
+		expect(rollEffectsFor(fx('flat_bonus:damage+2', 'flat_bonus:damage+1'), 'damage').flat).toBe(3);
 	});
 	it('netAdvantage: advantage and disadvantage cancel to a straight roll', () => {
 		expect(netAdvantage({ advantage: true, disadvantage: false })).toBe(1);

@@ -45,7 +45,7 @@ export function demoCharacter(): Character {
 		{
 			iid: 'shield-of-faith',
 			label: 'Shield of Faith',
-			effects: ['flat-bonus:ac+2'],
+			effects: ['flat_bonus:ac+2'],
 			positive: true,
 			durationRounds: 100,
 			startedRound: 0
@@ -53,7 +53,7 @@ export function demoCharacter(): Character {
 		{
 			iid: 'bless',
 			label: 'Bless',
-			effects: ['flat-bonus:saves+1d4'],
+			effects: ['flat_bonus:saves+1d4'],
 			positive: true,
 			durationRounds: 10,
 			startedRound: 0
@@ -61,7 +61,7 @@ export function demoCharacter(): Character {
 		{
 			iid: 'bane',
 			label: 'Bane',
-			effects: ['flat-bonus:saves-1d4'],
+			effects: ['flat_bonus:saves-1d4'],
 			positive: false,
 			durationRounds: 10,
 			startedRound: 0
@@ -69,25 +69,25 @@ export function demoCharacter(): Character {
 		{
 			iid: 'poisoned',
 			label: 'Poisoned',
-			effects: ['apply-condition:poisoned'],
+			effects: ['apply_condition:poisoned'],
 			positive: false
 		},
 		{
 			iid: 'arcane-recovery',
 			label: 'Arcane Recovery',
-			effects: ['grant-resource:arcane-recovery:1:long'],
+			effects: ['grant_resource:arcane-recovery:1:long'],
 			positive: true
 		},
 		{
 			iid: 'second-wind',
 			label: 'Second Wind',
-			effects: ['grant-resource:second-wind:1:short'],
+			effects: ['grant_resource:second-wind:1:short'],
 			positive: true
 		},
 		{
 			iid: 'channel-divinity',
 			label: 'Channel Divinity',
-			effects: ['grant-resource:channel-divinity:2:short'],
+			effects: ['grant_resource:channel-divinity:2:short'],
 			positive: true
 		}
 	];
