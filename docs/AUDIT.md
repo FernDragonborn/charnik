@@ -18,16 +18,13 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
   and medium (2) still apply a negative Dex mod (the cap is an upper bound only), matching RAW in
   both editions. Golden tests added (plate + DEX 8 = 18; medium 14 + DEX 8 = 13; light 11 + DEX 8
   = 10).
-- [ ] **A2 · Multiclass max-die HP overcount.** VERIFIED both editions, rule identical
-  (PHB'14 / PHB'24 multiclassing): the max-die level-1 HP is granted **once per character** —
-  for level 1 of the FIRST class; level 1 of every later class uses avg-rounded-up + CON.
-  `character/derive.ts` calls `maxHpForClass` per class, so every class gets its max die →
-  Fighter 3 / Wizard 2 is +2 HP high. Fix shape (decided): `maxHpForClass` gains an
-  `includesCharacterLevel1` flag, true only for `build.classes[0]`; pin in PLAN that
-  `classes[0]` MEANS "the class taken at character level 1" (BuildVM already preserves index
-  0). No system branch needed. NB the hit-dice POOL (short rest, → B2/UBUG-1) is per-die-type
-  across classes in both editions — the existing `hitDiceSpent: Record<die, n>` shape already
-  matches.
+- [x] **A2 · Multiclass max-die HP overcount.** FIXED 2026-07-15. `maxHpForClass` gained an
+  `includesCharacterLevel1` flag: true only for `build.classes[0]` (the class taken at character
+  level 1) → it grants the die MAX on level 1; every later multiclass gets avg-rounded-up on ALL
+  its levels, including its first. `character/derive.ts` passes `i === 0`. Golden test: Fighter 3 /
+  Wizard 2, CON 14 → 40 (was 42, the +2 overcount). Rule identical both editions, no system branch.
+  NB the hit-dice POOL (short rest, → B2/UBUG-1) is per-die-type across classes in both editions —
+  the existing `hitDiceSpent: Record<die, n>` shape already matches.
 - [ ] **A3 · Heavy-armor `str_min` ignored.** The column is loaded (13/15 in SRD items) but
   derive never applies the −10 ft speed penalty nor emits an explainability note.
 - [ ] **A4 · `stealth_disadvantage` is display-only.** Never reaches Stealth rolls (blocked on

@@ -83,8 +83,33 @@ describe.each<System>(['5e', '5.5e'])('system-agnostic formulas (%s)', () => {
 	});
 
 	it('max HP (SRD fixed): barbarian d12 L3 CON 14, wizard d6 L1 CON 12', () => {
-		expect(maxHpForClass({ hitDie: 'd12', level: 3, conScore: 14 }).value).toBe(32);
-		expect(maxHpForClass({ hitDie: 'd6', level: 1, conScore: 12 }).value).toBe(7);
+		expect(
+			maxHpForClass({ hitDie: 'd12', level: 3, conScore: 14, includesCharacterLevel1: true }).value
+		).toBe(32);
+		expect(
+			maxHpForClass({ hitDie: 'd6', level: 1, conScore: 12, includesCharacterLevel1: true }).value
+		).toBe(7);
+	});
+
+	it('multiclass HP: only the first class gets the max hit die (A2)', () => {
+		// Fighter 3 / Wizard 2, CON 14 (+2). Fighter is the level-1 class → max die.
+		// Fighter d10: 10 + 6 + 6 = 22 dice + CON 2×3 = 6 → 28
+		const fighter = maxHpForClass({
+			hitDie: 'd10',
+			level: 3,
+			conScore: 14,
+			includesCharacterLevel1: true
+		});
+		expect(fighter.value).toBe(28);
+		// Wizard d6 multiclassed in: EVERY level is avg-up (4+4=8) + CON 2×2 = 4 → 12 (NOT 6 on level 1)
+		const wizard = maxHpForClass({
+			hitDie: 'd6',
+			level: 2,
+			conScore: 14,
+			includesCharacterLevel1: false
+		});
+		expect(wizard.value).toBe(12);
+		expect(fighter.value + wizard.value).toBe(40); // was 42 before the fix (+2 overcount)
 	});
 
 	it('carrying capacity = STR × 15', () => {

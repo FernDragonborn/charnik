@@ -568,7 +568,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function spellAttackBonus` — Spell attack bonus = proficiency + spellcasting-ability modifier.
 - `function unarmoredAC` — Unarmored AC = 10 + DEX modifier.
 - `function armoredAC` — Armored AC = armor base + capped DEX.
-- `function maxHpForClass` — Max HP for one class (SRD fixed values): level 1 = die max + CON; each later level = * (die average, rounded up) + CON.
+- `function maxHpForClass` — Max HP for one class (SRD fixed values).
 - `function fullCasterSlots` — Full-caster spell slots per spell level (index 0 = 1st) at a given caster level.
 - `function carryingCapacity` — Carrying capacity in pounds = STR × 15.
 
@@ -678,4 +678,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into a URL/id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single dash, …
 
 ---
-_46 tokens · 50 global classes · 34 components · 340 exports across 53 modules · 32 duplicate suspects · generated in 123ms._
+_46 tokens · 50 global classes · 34 components · 340 exports across 53 modules · 32 duplicate suspects · generated in 112ms._

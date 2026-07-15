@@ -353,18 +353,25 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		};
 	const ac = applyEffects('ac', acBase, active);
 
-	// HP: sum per class (SRD fixed); CON uses effective score
-	const hpContribs = build.classes.map((c) => {
+	// HP: sum per class (SRD fixed); CON uses effective score. `classes[0]` IS the class taken at
+	// character level 1 (BuildVM preserves add-order) → only it grants the max hit die; later
+	// multiclasses get avg-up on every level, including their first (RAW multiclass HP).
+	const hpContribs = build.classes.map((c, i) => {
 		const row = graph.get(c.class);
 		const hitDie = String((row?.type === 'class' ? row.data.hit_die : undefined) || 'd8');
-		return maxHpForClass({ hitDie, level: c.level, conScore: scores.con });
+		return maxHpForClass({
+			hitDie,
+			level: c.level,
+			conScore: scores.con,
+			includesCharacterLevel1: i === 0
+		});
 	});
 	const maxHpBase: Computed = hpContribs.length
 		? {
 				value: hpContribs.reduce((n, h) => n + h.value, 0),
 				trace: hpContribs.flatMap((h) => h.trace)
 			}
-		: maxHpForClass({ hitDie: 'd8', level, conScore: scores.con });
+		: maxHpForClass({ hitDie: 'd8', level, conScore: scores.con, includesCharacterLevel1: true });
 	// hp_max flows through the seam like every other stat (Toughness, Aid → `flat_bonus:hp_max+N`)
 	const maxHp = applyEffects('hp_max', maxHpBase, active);
 

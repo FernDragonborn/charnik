@@ -153,23 +153,42 @@ export function armoredAC(args: {
 
 const DIE_MAX: Record<string, number> = { d6: 6, d8: 8, d10: 10, d12: 12 };
 
-/** Max HP for one class (SRD fixed values): level 1 = die max + CON; each later level =
- *  (die average, rounded up) + CON. Multiclass callers sum per-class results. */
-export function maxHpForClass(args: { hitDie: string; level: number; conScore: number }): Computed {
+/** Max HP for one class (SRD fixed values). The **max hit die** is granted ONCE per character —
+ *  for the class taken at CHARACTER level 1; every other level (including the 1st level of a class
+ *  multiclassed INTO later) uses the die average rounded up. So only the caller that owns the
+ *  character's first level passes `includesCharacterLevel1: true`; every other class passes false
+ *  and gets avg-up on all its levels. Rule identical in 5e (PHB'14) and 5.5e (PHB'24) — no system
+ *  branch. Multiclass callers sum per-class results. */
+export function maxHpForClass(args: {
+	hitDie: string;
+	level: number;
+	conScore: number;
+	includesCharacterLevel1: boolean;
+}): Computed {
 	const max = DIE_MAX[args.hitDie];
 	if (!max) throw new Error(`unknown hit die: ${args.hitDie}`);
 	const conMod = abilityModifier(args.conScore);
 	const avgUp = max / 2 + 1; // d6→4, d8→5, d10→6, d12→7
-	const laterLevels = Math.max(0, args.level - 1);
-	const c: Contribution[] = [
-		{ source: `${args.hitDie} (level 1)`, layer: 'base', op: 'add', amount: max }
-	];
-	if (laterLevels > 0) {
+	const c: Contribution[] = [];
+	if (args.includesCharacterLevel1) {
+		// this class holds the character's 1st level → that level is the die MAX, the rest are avg
+		c.push({ source: `${args.hitDie} (level 1)`, layer: 'base', op: 'add', amount: max });
+		const laterLevels = Math.max(0, args.level - 1);
+		if (laterLevels > 0) {
+			c.push({
+				source: `avg ${avgUp} × ${laterLevels}`,
+				layer: 'base',
+				op: 'add',
+				amount: avgUp * laterLevels
+			});
+		}
+	} else if (args.level > 0) {
+		// multiclassed into later → EVERY level (incl. this class's 1st) is avg-rounded-up
 		c.push({
-			source: `avg ${avgUp} × ${laterLevels}`,
+			source: `avg ${avgUp} × ${args.level}`,
 			layer: 'base',
 			op: 'add',
-			amount: avgUp * laterLevels
+			amount: avgUp * args.level
 		});
 	}
 	c.push({
