@@ -17,7 +17,7 @@ export interface BonusDie {
 }
 
 /** The two d20 of an advantage/disadvantage roll: the one kept and the one dropped. */
-export interface AdvantageRoll {
+interface AdvantageRoll {
 	kept: number;
 	dropped: number;
 }

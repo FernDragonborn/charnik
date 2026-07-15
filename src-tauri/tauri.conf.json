@@ -1,7 +1,7 @@
 {
 	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
 	"productName": "charnik",
-	"version": "0.2.2",
+	"version": "0.3.0",
 	"identifier": "io.github.ferndragonborn.charnik",
 	"build": {
 		"frontendDist": "../build",
@@ -16,11 +16,12 @@
 				"width": 800,
 				"height": 600,
 				"resizable": true,
+				"maximized": true,
 				"fullscreen": false
 			}
 		],
 		"security": {
-			"csp": null
+			"csp": "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'"
 		}
 	},
 	"plugins": {
@@ -34,7 +35,7 @@
 	"bundle": {
 		"active": true,
 		"targets": "all",
-		"createUpdaterArtifacts": true,
+		"createUpdaterArtifacts": false,
 		"icon": [
 			"icons/32x32.png",
 			"icons/128x128.png",

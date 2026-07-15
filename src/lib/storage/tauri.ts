@@ -15,6 +15,7 @@ import {
 	readTextFile,
 	readFile,
 	writeFile,
+	copyFile,
 	exists as fsExists,
 	readDir,
 	stat as fsStat,
@@ -28,6 +29,13 @@ import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { openPath } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
+import {
+	copyFailures,
+	mergeCopyList,
+	mergeFailures,
+	isSameOrInside,
+	type DirFile
+} from './migrate';
 
 /** The user's data root is a VISIBLE, self-named folder (not a hidden per-app dir) — see
  *  docs/PLAN.md "Data directory & config". */
@@ -93,20 +101,178 @@ export async function currentDataDir(): Promise<string> {
 	return resolveDataDir();
 }
 
+/** Open the folder picker and propose `<picked parent>/charnik` as the move target. Grants fs-scope
+ *  for the target right away (session-only — nothing is persisted until the move flow commits): the
+ *  dialog plugin auto-extends scope for the PICKED path, but the flow then reads/copies into the
+ *  `charnik` child, and we must not bet on that extension being recursive. Null if cancelled. */
+export async function pickTargetDataDir(): Promise<string | null> {
+	const parent = await pickDataDir();
+	if (!parent) return null;
+	const target = await join(parent, DATA_DIR_NAME);
+	await grantDataDirScope(target);
+	return target;
+}
+
 /** Open the active data folder in the OS file manager (shows content/ + characters/). */
 export async function openDataDir(): Promise<void> {
 	await openPath(await resolveDataDir());
 }
 
-/** Prompt for a new data folder (picked parent → …/charnik), grant scope + persist it. Returns the
- *  new dir, or null if cancelled. The caller should reload so content re-seeds/loads from there. */
-export async function changeDataDir(): Promise<string | null> {
-	const parent = await pickDataDir();
-	if (!parent) return null;
-	const dir = await join(parent, DATA_DIR_NAME); // OS-native join (Windows \, POSIX /)
+/** Persist a chosen data folder WITHOUT moving anything — "just read from here now". Used when the
+ *  user has already copied their data across by hand (the repoint-only branch of the change flow). */
+export async function repointDataDir(dir: string): Promise<void> {
 	await grantDataDirScope(dir);
 	await setDataDirOverride(dir);
-	return dir;
+}
+
+/** True when `dir` has no entries (or doesn't exist yet) — the precondition for an automatic move. */
+export async function dirIsEmpty(dir: string): Promise<boolean> {
+	if (!(await fsExists(dir))) return true;
+	return (await readDir(dir)).length === 0;
+}
+
+/** Walk a folder subtree into a flat list of files (relative path + size + mtime). Directories are
+ *  not listed — `copyTree` recreates them from each file's path. */
+async function walkTree(dir: string): Promise<DirFile[]> {
+	const out: DirFile[] = [];
+	async function recurse(abs: string, rel: string): Promise<void> {
+		for (const e of await readDir(abs)) {
+			const childAbs = await join(abs, e.name);
+			const childRel = rel ? `${rel}/${e.name}` : e.name;
+			if (e.isDirectory) await recurse(childAbs, childRel);
+			else {
+				const info = await fsStat(childAbs);
+				out.push({ path: childRel, size: info.size, mtime: info.mtime?.getTime() });
+			}
+		}
+	}
+	if (await fsExists(dir)) await recurse(dir, '');
+	return out;
+}
+
+/** The current data folder's files — for the merge dialog's name table (see docs/PLAN.md). */
+export async function listDataDirFiles(dir: string): Promise<DirFile[]> {
+	return walkTree(dir);
+}
+
+/** Where a failed move broke, so the UI can say exactly what went wrong:
+ *  - `target-inside-source` — chosen folder is nested in the current one (would copy into itself).
+ *  - `copy` — an fs error while copying (permissions, disk full, path too long…); `error` has the text.
+ *  - `verify` — copy finished but files are missing / wrong size (`failures` lists them); nothing deleted.
+ *  - `cleanup` — the MOVE SUCCEEDED (data safe at the new folder) but deleting the OLD folder failed. */
+type MigrateStage = 'target-inside-source' | 'copy' | 'verify' | 'cleanup';
+
+export interface MigrateOutcome {
+	ok: boolean;
+	/** Which step failed — absent on full success. */
+	stage?: MigrateStage;
+	/** Source files that didn't reach the target (only set for `stage: 'verify'`). */
+	failures: string[];
+	/** Human-readable reason for a thrown fs error (`copy`/`cleanup` stages). */
+	error?: string;
+}
+
+const errText = (e: unknown): string => (e instanceof Error ? e.message : String(e));
+
+/** Copy each listed file `oldDir → newDir`, recreating parent folders. Throws on the first fs error.
+ *  NB: mtime survives on Windows (CopyFileEx) but NOT on Linux (`std::fs::copy`) — so a later merge's
+ *  "newer" comparison treats Linux-copied files as fresh. Verification compares size, not mtime. */
+async function copyFilesInto(oldDir: string, newDir: string, files: DirFile[]): Promise<void> {
+	await fsMkdir(newDir, { recursive: true });
+	for (const file of files) {
+		const to = await join(newDir, ...file.path.split('/'));
+		const from = await join(oldDir, ...file.path.split('/'));
+		const lastSep = Math.max(to.lastIndexOf('/'), to.lastIndexOf('\\'));
+		if (lastSep > 0) await fsMkdir(to.slice(0, lastSep), { recursive: true });
+		await copyFile(from, to);
+	}
+}
+
+/** Repoint the pointer at `newDir`, then (if asked) delete the old folder — the shared tail of both a
+ *  move and a merge, once the copy has been verified. A delete failure is non-fatal (`cleanup`). */
+async function finalizeMove(
+	oldDir: string,
+	newDir: string,
+	deleteOld: boolean
+): Promise<MigrateOutcome> {
+	await grantDataDirScope(newDir);
+	await setDataDirOverride(newDir);
+	if (deleteOld) {
+		try {
+			await fsRemove(oldDir, { recursive: true });
+		} catch (e) {
+			return { ok: true, stage: 'cleanup', failures: [], error: errText(e) };
+		}
+	}
+	return { ok: true, failures: [] };
+}
+
+/** Best-effort removal of a half-copied target after a failed move. Only safe on the EMPTY-target
+ *  path (the folder held nothing but our fresh copies) — without it a retry would find a non-empty
+ *  folder and confusingly open the conflict dialog on the app's own leftovers. */
+async function discardFailedCopy(newDir: string): Promise<void> {
+	try {
+		await fsRemove(newDir, { recursive: true });
+	} catch {
+		// leftover junk is cosmetic; the retry path still works via the conflict dialog
+	}
+}
+
+/** Move the data folder into an EMPTY target: copy every file `oldDir → newDir`, verify the copy is
+ *  complete (each source file present at the right size), then repoint and delete the old folder (when
+ *  `deleteOld`). On any failure the SOURCE folder is left intact and the pointer stays on the old dir
+ *  (half-copied target files are swept away) — except a `cleanup` failure, where the move already
+ *  succeeded and only the old folder lingers. */
+export async function migrateDataDir(
+	oldDir: string,
+	newDir: string,
+	deleteOld: boolean
+): Promise<MigrateOutcome> {
+	if (isSameOrInside(newDir, oldDir))
+		return { ok: false, stage: 'target-inside-source', failures: [] };
+
+	const source = await walkTree(oldDir);
+	try {
+		await copyFilesInto(oldDir, newDir, source);
+	} catch (e) {
+		await discardFailedCopy(newDir);
+		return { ok: false, stage: 'copy', failures: [], error: errText(e) };
+	}
+
+	const failures = copyFailures(source, await walkTree(newDir));
+	if (failures.length) {
+		await discardFailedCopy(newDir);
+		return { ok: false, stage: 'verify', failures };
+	}
+
+	return finalizeMove(oldDir, newDir, deleteOld);
+}
+
+/** Merge the data folder into a NON-empty target: copy only the files the target lacks or that the
+ *  source has a newer copy of (newer-wins; undatable collisions keep the target). Verify every source
+ *  file is present afterwards, then repoint and delete the old folder (when `deleteOld`). Same
+ *  failure/rollback contract as `migrateDataDir`. */
+export async function mergeDataDir(
+	oldDir: string,
+	newDir: string,
+	deleteOld: boolean
+): Promise<MigrateOutcome> {
+	if (isSameOrInside(newDir, oldDir))
+		return { ok: false, stage: 'target-inside-source', failures: [] };
+
+	const source = await walkTree(oldDir);
+	const target = await walkTree(newDir);
+	const toCopy = mergeCopyList(source, target);
+	try {
+		await copyFilesInto(oldDir, newDir, toCopy);
+	} catch (e) {
+		return { ok: false, stage: 'copy', failures: [], error: errText(e) };
+	}
+
+	const failures = mergeFailures(source, toCopy, await walkTree(newDir));
+	if (failures.length) return { ok: false, stage: 'verify', failures };
+
+	return finalizeMove(oldDir, newDir, deleteOld);
 }
 
 export class TauriStorage implements Storage {

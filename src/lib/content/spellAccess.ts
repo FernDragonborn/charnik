@@ -15,9 +15,9 @@
 import type { ContentGraph, LoadedRow } from './loader';
 import { splitList } from './schemas';
 
-export type AccessVia = 'class-list' | 'spell-list';
+type AccessVia = 'class-list' | 'spell-list';
 
-export interface AccessEntry {
+interface AccessEntry {
 	/** Bare class id (e.g. "wizard"). */
 	classId: string;
 	/** The class row's effectiveId (`class:source:id`) — edition/source-specific. */

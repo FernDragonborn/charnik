@@ -14,7 +14,7 @@ export type System = '5e' | '5.5e';
 export type Layer =
 	'base' | 'ability' | 'proficiency' | 'item' | 'feature' | 'condition' | 'override';
 
-export type Op = 'add' | 'set' | 'mult';
+type Op = 'add' | 'set' | 'mult';
 
 export interface Contribution {
 	/** Human label, e.g. "DEX mod", "Proficiency", "Ring of Protection". */
@@ -50,7 +50,7 @@ const LAYER_ORDER: Record<Layer, number> = {
 
 /** Fold contributions into a final value in pipeline order. `set` overrides, `mult` scales
  *  (floored), `add` accumulates. A later `override`-layer `set` wins over earlier layers. */
-export function fold(contribs: Contribution[], clamp?: Clamp): number {
+function fold(contribs: Contribution[], clamp?: Clamp): number {
 	const ordered = [...contribs].sort((a, b) => LAYER_ORDER[a.layer] - LAYER_ORDER[b.layer]);
 	let value = 0;
 	for (const c of ordered) {

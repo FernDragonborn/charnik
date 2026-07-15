@@ -4,6 +4,7 @@
  * unit-testable. The components (WikiDetail / EntryList) just render these models.
  */
 import type { LoadedRow, LoadedRowOf } from '$lib/content/loader';
+import { ordinal } from '$lib/util/format';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
 
 /** Columns never shown as a meta cell (identity / localization / rendered elsewhere). */
@@ -48,8 +49,6 @@ const meaningful = (v: unknown) => nonEmpty(v) && !/^(false|none|0)$/i.test(Stri
 const localized = (d: Record<string, unknown>, base: string, locale: string): string =>
 	String(d[`${base}_${locale}`] ?? d[`${base}_en`] ?? d[base] ?? '');
 const PROSE_LOC = /^(?:name|text|material|higher_level)_[a-z]{2,3}(?:-[A-Za-z0-9]+)*$/;
-const ordinal = (n: number) =>
-	`${n}${['th', 'st', 'nd', 'rd'][n % 10 > 3 || Math.floor(n / 10) === 1 ? 0 : n % 10]}`;
 
 const ABILS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 const abilMod = (score: number) => {
@@ -57,7 +56,7 @@ const abilMod = (score: number) => {
 	return m >= 0 ? `+${m}` : `−${Math.abs(m)}`;
 };
 
-export interface AbilityScore {
+interface AbilityScore {
 	ab: string; // "STR"
 	score: number;
 	mod: string; // "+5" / "−1"

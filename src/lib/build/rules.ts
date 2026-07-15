@@ -94,13 +94,6 @@ export function boostPickCount(shape: BoostShape): number {
 	return shape === '2-1' ? 2 : 3;
 }
 
-/** Is a background boost allocation complete? Both shapes spend the same 3 total points (2-1 = one +2
- *  and one +1; 1-1-1 = three +1s), so completeness is just "3 points allocated". */
-export function boostComplete(_shape: BoostShape, boosts: Partial<Record<Ability, number>>): boolean {
-	const total = ABILITIES.reduce((n, a) => n + (boosts[a] ?? 0), 0);
-	return total === 3;
-}
-
 /**
  * The ASI-or-feat-slot levels a class grants up to `level`. `asiLevels` is the class's own
  * progression (the `asi_levels` content column, derived from the SRD by the converters — e.g.

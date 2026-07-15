@@ -6,7 +6,7 @@
  * hardcoded array inside a component. Runtime-added catalogs extend `LOCALES`; everything
  * UI-facing reads from it. Missing keys fall back to English.
  */
-import { register, init, locale, waitLocale, isLoading, _ } from 'svelte-i18n';
+import { register, init, locale, waitLocale, _ } from 'svelte-i18n';
 
 export type Dir = 'ltr' | 'rtl';
 
@@ -49,4 +49,4 @@ export async function startI18n(initialLocale: string = FALLBACK_LOCALE): Promis
 	await init({ fallbackLocale: FALLBACK_LOCALE, initialLocale });
 }
 
-export { locale, waitLocale, isLoading, _ };
+export { locale, waitLocale, _ };

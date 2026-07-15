@@ -34,9 +34,9 @@
 	</p>
 </section>
 
-<div class="setrow">
-	<span class="setlabel">Theme</span>
-	<div class="opts">
+<div class="setting-row">
+	<span class="setting-label">Theme</span>
+	<div class="setting-options">
 		{#each THEMES as t (t.id)}
 			<button class="pill-btn" class:accent={app.theme === t.id} onclick={() => (app.theme = t.id)}
 				>{t.label}</button
@@ -45,9 +45,9 @@
 	</div>
 </div>
 
-<div class="setrow">
-	<span class="setlabel">Language</span>
-	<div class="opts">
+<div class="setting-row">
+	<span class="setting-label">Language</span>
+	<div class="setting-options">
 		{#each LOCALES as l (l.id)}
 			<button
 				class="pill-btn"
@@ -58,9 +58,9 @@
 	</div>
 </div>
 
-<div class="setrow">
-	<span class="setlabel">Shown editions</span>
-	<div class="opts">
+<div class="setting-row">
+	<span class="setting-label">Shown editions</span>
+	<div class="setting-options">
 		{#each SYSTEMS as sys (sys.id)}
 			<button
 				class="pill-btn"
@@ -72,26 +72,5 @@
 </div>
 
 <style>
-	.setrow {
-		display: flex;
-		align-items: center;
-		gap: 16px;
-		padding: 14px 0;
-		border-top: 1px solid var(--color-border);
-	}
-	.setrow:first-of-type {
-		border-top: 0;
-	}
-	.setlabel {
-		flex: 0 0 140px;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: 14px;
-		color: var(--color-text);
-	}
-	.opts {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 8px;
-	}
+	/* rows use the global .setting-row / .setting-label / .setting-options (components.css) */
 </style>

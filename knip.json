@@ -2,8 +2,7 @@
 	"$schema": "https://unpkg.com/knip@5/schema.json",
 	"entry": ["tools/**/*.mjs"],
 	"project": ["src/**/*.{ts,svelte}", "tools/**/*.mjs"],
-	"ignore": ["src/lib/index.ts"],
-	"ignoreDependencies": ["@tauri-apps/cli", "@tauri-apps/plugin-dialog"],
+	"ignoreDependencies": ["@tauri-apps/cli"],
 	"rules": {
 		"exports": "warn",
 		"types": "warn",

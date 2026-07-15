@@ -16,4 +16,3 @@ export interface WikiEditDraft {
 /** How a head renders. `read` = static; `translate` = prose editable (title/body/…), stats read-only;
  *  `editor` (future) = structural fields become widgets too. This pass implements read + translate;
  *  `editor` is reserved so the seam exists. */
-export type DetailMode = 'read' | 'translate' | 'editor';

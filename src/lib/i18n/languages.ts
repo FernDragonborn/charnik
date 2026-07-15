@@ -7,7 +7,7 @@
  * Codes are ISO 639-1 where one exists, else ISO 639-2/3 (e.g. `crh`). Extend freely.
  */
 
-export interface Language {
+interface Language {
 	/** shown in the picker — the language's own name in its own script. */
 	native: string;
 	/** English name (search). */
@@ -16,7 +16,7 @@ export interface Language {
 	uk?: string;
 }
 
-export const LANGUAGES: Record<string, Language> = {
+const LANGUAGES: Record<string, Language> = {
 	// — widely spoken / European —
 	en: { native: 'English', en: 'English', uk: 'англійська' },
 	uk: { native: 'Українська', en: 'Ukrainian', uk: 'українська' },

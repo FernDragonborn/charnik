@@ -15,7 +15,7 @@ import { hashBody } from './hash';
 
 /** The localizable prose bases a translation can set — kept in sync with the loader's
  *  PROSE_LOCALE_COL (re-attach) and detail.ts's localized read. */
-export const TRANSLATABLE_BASES = ['name', 'text', 'material', 'higher_level'] as const;
+const TRANSLATABLE_BASES = ['name', 'text', 'material', 'higher_level'] as const;
 
 /** Coverage of a row's translation into `locale`, for the list marker: `done` = both the required
  *  prose (name + text) present, `partial` = one of them, `none` = neither. material/higher_level are
@@ -33,7 +33,7 @@ export function translationStatus(
 	if (name && text) return 'done';
 	return name || text ? 'partial' : 'none';
 }
-export type TranslatableBase = (typeof TRANSLATABLE_BASES)[number];
+type TranslatableBase = (typeof TRANSLATABLE_BASES)[number];
 /** base → translated text for one locale (only provided bases are written). */
 export type TranslationDraft = Partial<Record<TranslatableBase, string>>;
 

@@ -24,11 +24,11 @@ export type MetaKey =
 	| 'hash';
 
 /** Keys the app can fill with NO human input — generate/compute + write back (DATA-VER-1). */
-export const AUTOFILL_KEYS: readonly MetaKey[] = ['id', 'hash', 'updated-at', 'schema'];
+const AUTOFILL_KEYS: readonly MetaKey[] = ['id', 'hash', 'updated-at', 'schema'];
 
 /** Keys only a human knows the semantics of — REQUIRED, must be prompted (or collected by the
  *  authoring form). `type` falls back to the filename so it's not here. */
-export const HUMAN_KEYS: readonly MetaKey[] = ['source', 'license'];
+const HUMAN_KEYS: readonly MetaKey[] = ['source', 'license'];
 
 /** Keys we OFFER to fill when the modal is already open, but whose absence does NOT trigger it on its
  *  own — all have a safe fallback (`systems` → both editions; the rest are simply optional metadata).

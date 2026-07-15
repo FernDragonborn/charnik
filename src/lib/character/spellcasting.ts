@@ -26,7 +26,7 @@ import {
 	type SlotTable
 } from '../rules/spellcasting';
 
-export interface SpellcastingClass {
+interface SpellcastingClass {
 	classId: string;
 	classEffectiveId: string;
 	className: string;

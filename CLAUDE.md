@@ -10,19 +10,51 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project status: pre-code
+## Project status: active development
 
-This repo is **greenfield**. No application code, `package.json`, or tests exist yet —
-only planning docs. **`docs/PLAN.md` is the authoritative spec** (index); companions:
-**`docs/TESTING.md`**, **`docs/SECURITY.md`**, and `docs/FRONTEND.md` (written at
-roadmap P7.5). `docs/research/existing-generators.md` records why design choices were
-made (what to avoid from D&D Beyond / Aurora / Roll20, what to copy). The
+The app is **built and shipping** (Tauri desktop releases on GitHub + a web demo on
+GitHub Pages): content pipeline, character build/play views, compendium, homebrew
+authoring, effects engine, i18n — with 300+ Vitest tests. **`docs/PLAN.md` is the
+authoritative spec** (index) and tracks what's done vs open (roadmap ticks, UBUG/REL/DEP
+items); companions: **`docs/TESTING.md`**, **`docs/SECURITY.md`**, and `docs/FRONTEND.md`.
+`docs/research/existing-generators.md` records why design choices were made (what to
+avoid from D&D Beyond / Aurora / Roll20, what to copy). The
 `срншоти для 1го рандун правок/` folder holds reference screenshots (official UA 5.5e
 sheet pages; carrying-capacity rules) — consult them for sheet field coverage and the
 capacity formula.
 
-Before implementing, read `docs/PLAN.md`. When a decision there proves wrong or
-incomplete during implementation, update `docs/PLAN.md` in the same change.
+Before implementing, read the relevant `docs/PLAN.md` section. When a decision there
+proves wrong or incomplete during implementation, update `docs/PLAN.md` in the same
+change.
+
+## Reuse before you write (no duplicates)
+
+**Before writing ANY code in `src/` — not only before consciously "adding" a shared
+thing — check what already exists, so you reuse it instead of re-creating a near-duplicate.**
+The most-duplicated things are **CSS classes** and **TS functions of every kind** — not
+just tiny "helpers", but derivations, parsers, click-handlers, rules math, formatters, and
+store accessors (then shared components, types, and stores). Treat any reusable `src/lib`
+function as high-risk, not only obvious utilities — e.g. past dups here spanned three roll
+impls collapsed into `rollPool` and a CSV splitter into `splitList`. (Deeper history if
+ever needed: the CH / CVM / BVM audit in `docs/PLAN.md`. But `SURFACE.md` is the live list;
+prefer it.)
+
+The discovery artifact is **`docs/SURFACE.md`** — a generated catalog of the reusable
+surface under `src/lib`: design tokens, global CSS classes (`styles/components.css`,
+`styles/app.css`), shared components, stores, and library functions/types. Workflow:
+
+1. **Regenerate it** at the start of any coding task: `node tools/surface.mjs`
+   (~0.15s; `pnpm surface` also works but is ~0.9s). It's disposable/always-fresh — never
+   hand-edit it.
+2. **Read it, then `grep`** for the concept (a class name, a formatter, a helper) before
+   writing a class or function. If a fitting one exists, use it; if one is close, extend
+   the shared one rather than forking a scoped lookalike.
+3. A shared class lives in exactly ONE place (`styles/components.css`); a shared control is
+   ONE component (e.g. `LangSwitcher`). Adding a second is the duplication to avoid.
+
+`knip` (`pnpm knip`) is the back-stop — it flags unused/duplicate exports after the fact,
+but the point is to not create the dup in the first place. Regenerate `SURFACE.md` when you
+add/rename shared surface so the catalog stays accurate.
 
 ## What this is
 

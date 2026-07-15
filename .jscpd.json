@@ -1,0 +1,9 @@
+{
+	"$schema": "https://raw.githubusercontent.com/kucherenko/jscpd/master/schema.json",
+	"pattern": "src/**/*.{ts,svelte,css}",
+	"ignore": ["**/*.test.ts", "**/node_modules/**"],
+	"minTokens": 35,
+	"threshold": 1.8,
+	"reporters": ["consoleFull"],
+	"gitignore": true
+}

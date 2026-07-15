@@ -5,6 +5,7 @@
  * the page just drives these.
  */
 import type { LoadedRow } from './loader';
+import { ordinal } from '$lib/util/format';
 import type { ContentType } from './schemas';
 import { sourceLabel } from './detail';
 import { HOMEBREW_SOURCE } from './homebrew';
@@ -14,7 +15,7 @@ import { HOMEBREW_SOURCE } from './homebrew';
 const homebrewRank = (r: LoadedRow) => (r.source === HOMEBREW_SOURCE ? 0 : 1);
 
 /** Homebrew-first, then A–Z — for the flat "A–Z" grouping (which already sorted by name). */
-export const compareRows = (a: LoadedRow, b: LoadedRow): number =>
+const compareRows = (a: LoadedRow, b: LoadedRow): number =>
 	homebrewRank(a) - homebrewRank(b) || String(a.data.name_en).localeCompare(String(b.data.name_en));
 
 /** Float homebrew rows to the top of a group while PRESERVING the existing relative order otherwise
@@ -60,8 +61,6 @@ const FACET: Partial<Record<ContentType, Grouping>> = {
 };
 
 const cap = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
-const ordinal = (n: number) =>
-	`${n}${['th', 'st', 'nd', 'rd'][n % 10 > 3 || Math.floor(n / 10) === 1 ? 0 : n % 10]}`;
 
 export function groupingsFor(type: ContentType): Grouping[] {
 	const base = GROUPINGS[type] ?? [];

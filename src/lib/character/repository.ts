@@ -18,7 +18,7 @@ import {
 import { characterSchema, parseCharacter, type Character } from './schema';
 
 /** Forward migrations keyed by the version they upgrade FROM. Empty at v1. */
-export const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = {};
+const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = {};
 
 const CHARACTERS_DIR = 'characters';
 const dirOf = (slug: string) => `${CHARACTERS_DIR}/${slug}`;

@@ -1,8 +1,7 @@
 name: Deploy web demo to GitHub Pages
 
 # Publishes the static SPA (adapter-static) to GitHub Pages. The app is a client-side
-# demo of Charnik using the bundled SRD CSVs; it is a WIP shell until the web Storage
-# (IndexedDB/OPFS) + character UI land. Desktop (Tauri) remains the primary target.
+# demo of Charnik using the bundled SRD CSVs. Desktop (Tauri) remains the primary target.
 #
 # One-time repo setup: Settings → Pages → Build and deployment → Source = "GitHub Actions".
 

@@ -7,7 +7,10 @@
 // reload / app restart. Loaded synchronously at module init so the very first paint (and
 // startI18n in +layout.ts) already uses the saved locale/theme.
 
-export type SystemId = '5e' | '5.5e';
+import { SYSTEMS } from '$lib/content/schemas';
+
+/** Derived from the content-schema SYSTEMS list — ONE source of truth for the editions. */
+export type SystemId = (typeof SYSTEMS)[number];
 export type ThemeId = 'light' | 'dark' | (string & {});
 
 interface AppState {

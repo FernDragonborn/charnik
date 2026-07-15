@@ -8,6 +8,9 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
 ## Threat model & assumptions
 - **No network server** → no LAN/remote/auth surface. Single local user, single app
   instance. (This is why the server-era controls — localhost bind, LAN token — are gone.)
+  The **updater is an outbound HTTP *client*** (GET on the GitHub releases endpoint via
+  `plugin-updater` in Rust) — not a server, and not webview `fetch`. It listens on no port
+  and is governed by the **updater capability**, not the CSP.
 - **Content is untrusted input** — it may come from strangers (shared packs, imports).
 - **Assumption**: personal desktop use; not multi-tenant. Concurrency clobber is largely
   moot (one instance) but writes are still atomic + mtime-guarded.
@@ -33,8 +36,20 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
      `{value, trace}` contributions, hard time/memory limits, **no DOM / no Tauri `invoke` /
      no fs / no network**. Never raw dynamic-`import`, never an unsandboxed Worker-with-bridge.
    Every layer keeps the `{value, trace}` contract so contributions stay explainable.
-5. **Webview hardening.** Strict Tauri **CSP**; no remote content loading; no `eval`/inline
-   script; external links open in the OS browser, not the app webview.
+5. **Webview hardening.** Strict Tauri **CSP** — `default-src 'self'` (webview may only load
+   its own bundled resources) plus `script-src 'self' 'wasm-unsafe-eval'` and
+   `style-src 'self' 'unsafe-inline'`. The `'wasm-unsafe-eval'` is **required** because the
+   app instantiates WebAssembly (`xxhash-wasm` for content hashing today; the QuickJS effects
+   sandbox later); it permits WASM compilation only, **not** general `eval`. Without it
+   `default-src 'self'` blocks `WebAssembly.instantiate` and content fails to load. The
+   style `'unsafe-inline'` is **insurance, not a confirmed need**: Svelte 5 applies dynamic
+   `style="…"` via CSSOM (`style.cssText`), which CSP doesn't govern — verified working on
+   WebView2 (Windows) without it — but the templates also carry static inline `style`
+   attributes, and other engines (WebKitGTK on the Linux AppImage) may enforce `style-src`
+   against those where Chromium doesn't. Allowing inline **styles** (not scripts) is
+   low-risk — content is data, never HTML, so there's no injection path to abuse it. No remote content loading; no inline
+   script; external links open in the OS browser, not the app webview. CSP governs the
+   **webview's** network only; it does **not** cover the updater (see below).
 6. **Image upload hardening.** Allowlist types (png/jpg/webp); size cap; **re-encode**
    (strip EXIF / prevent polyglots); store only inside the character folder (in scope).
 7. **Bundle / content-pack import = data only.** Parsed, **validated (zod) against the

@@ -16,7 +16,7 @@ import type { Storage } from '$lib/storage/types';
 import type { ContentType } from '$lib/content/schemas';
 import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
 
-export const DRAFTS_DIR = 'drafts';
+const DRAFTS_DIR = 'drafts';
 
 /** What a draft is editing. translate/editor point at an existing row; add is a brand-new entry (no id
  *  yet) identified by a stable per-session GUID (`crypto.randomUUID`). */

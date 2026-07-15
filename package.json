@@ -1,12 +1,13 @@
 {
 	"name": "charnik",
 	"private": true,
-	"version": "0.2.2",
+	"version": "0.3.0",
 	"license": "AGPL-3.0-or-later",
 	"type": "module",
 	"packageManager": "pnpm@11.3.0",
 	"scripts": {
 		"content:static": "node tools/build-static-content.mjs",
+		"surface": "node tools/surface.mjs",
 		"predev": "node tools/build-static-content.mjs",
 		"dev": "vite dev",
 		"prebuild": "node tools/build-static-content.mjs",
@@ -19,9 +20,14 @@
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint . && stylelint \"src/**/*.{css,svelte}\"",
+		"lint": "prettier --check . && eslint . && stylelint \"src/**/*.{css,svelte}\" && knip && jscpd",
 		"lint:fix": "prettier --write . && eslint . --fix && stylelint \"src/**/*.{css,svelte}\" --fix",
-		"knip": "knip"
+		"knip": "knip",
+		"jscpd": "jscpd",
+		"postinstall": "simple-git-hooks"
+	},
+	"simple-git-hooks": {
+		"pre-commit": "node tools/surface.mjs && git add docs/SURFACE.md && npx jscpd"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -39,6 +45,7 @@
 		"fake-indexeddb": "^6.2.5",
 		"fast-check": "^4.8.0",
 		"globals": "^17.7.0",
+		"jscpd": "^5.0.12",
 		"knip": "^6.24.0",
 		"pixelmatch": "^7.2.0",
 		"playwright": "^1.61.1",
@@ -46,6 +53,7 @@
 		"postcss-html": "^1.8.1",
 		"prettier": "^3.9.0",
 		"prettier-plugin-svelte": "^4.1.1",
+		"simple-git-hooks": "^2.13.1",
 		"stylelint": "^17.14.0",
 		"stylelint-config-standard": "^40.0.0",
 		"svelte": "^5.56.1",

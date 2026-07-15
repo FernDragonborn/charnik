@@ -17,6 +17,10 @@ standalone in the system webview.
 Grab the latest Windows installer from the [Releases](https://github.com/FernDragonborn/charnik/releases)
 page and run it. Linux and macOS builds aren't packaged yet — build from source (see below) in the meantime.
 
+> **Prefer the `.exe` (NSIS) installer.** If Releases also list an `.msi`, pick the `*-setup.exe`
+> instead — it installs per-user without admin rights and gets auto-updates. The `.msi` is a
+> system-wide package that needs admin and doesn't auto-update.
+
 The installer isn't code-signed yet, so Windows SmartScreen shows an "unknown publisher" warning:
 choose **More info → Run anyway**. Once installed, Charnik **checks for updates on launch** — when a new
 version is out, an **Update** button appears in the top bar; click it to update and restart.
@@ -32,8 +36,13 @@ pnpm dev          # Vite dev server (web preview)
 pnpm tauri dev    # desktop app (needs Rust toolchain)
 pnpm test         # Vitest
 pnpm lint
-pnpm tauri build  # package the desktop app
+pnpm tauri build  # package the desktop app (unsigned — no signing key needed)
 ```
+
+`pnpm tauri build` produces a working, **unsigned** installer — no signing key required, so anyone
+can build from source. Only official releases are signed (the updater's `.sig` files + `latest.json`
+are added by CI via `src-tauri/tauri.release.conf.json`, which needs the private key); local unsigned
+builds simply don't auto-update.
 
 ## Licensing
 

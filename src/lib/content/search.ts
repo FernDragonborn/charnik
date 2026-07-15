@@ -51,7 +51,7 @@ export const plainText = (s: string) =>
 		.trim();
 
 /** Locales present in the data (from `name_*` columns); always includes `en`. */
-export function localesOf(graph: ContentGraph): string[] {
+function localesOf(graph: ContentGraph): string[] {
 	const set = new Set(['en']);
 	for (const r of graph.rows)
 		for (const k of Object.keys(r.data)) {
@@ -81,7 +81,7 @@ function displayNamesByLocale(row: LoadedRow, locales: string[]): Record<string,
 	return names;
 }
 
-export function buildNameDocs(graph: ContentGraph): NameDoc[] {
+function buildNameDocs(graph: ContentGraph): NameDoc[] {
 	const locales = localesOf(graph);
 	return graph.rows
 		.filter((r) => isBrowsable(r.type))
@@ -91,7 +91,7 @@ export function buildNameDocs(graph: ContentGraph): NameDoc[] {
 		});
 }
 
-export function buildTextDocs(graph: ContentGraph, locale: string): TextDoc[] {
+function buildTextDocs(graph: ContentGraph, locale: string): TextDoc[] {
 	const locales = localesOf(graph);
 	return graph.rows
 		.filter((r) => isBrowsable(r.type))

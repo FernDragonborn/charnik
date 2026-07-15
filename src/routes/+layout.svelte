@@ -13,7 +13,8 @@
 	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
 	import { loadContentStore } from '$lib/content/store.svelte';
 	import { review, pendingMetaIssues, pendingDriftItems } from '$lib/content/review.svelte';
-	import { Toaster } from 'svelte-sonner';
+	import { Toaster, toast } from 'svelte-sonner';
+	import { takeFlash } from '$lib/stores/flash';
 	import { onMount, onDestroy } from 'svelte';
 	import { detectPlatform, Platform } from '$lib/storage/provider';
 	import {
@@ -100,6 +101,8 @@
 	// just load. Cached — a no-op if a page already loaded it.
 	let firstRunDefault = $state<string | null>(null); // non-null → show the first-run picker
 	onMount(async () => {
+		const flash = takeFlash(); // a success note stashed before a reload (e.g. data-folder move)
+		if (flash) toast.success(flash);
 		void checkForUpdate(); // fire-and-forget; self-guards to desktop, never blocks the load
 		// Dev preview of the update chip: `?dev-update` in the URL. No-op in production.
 		if (import.meta.env.DEV && page.url.searchParams.has('dev-update')) simulateUpdateAvailable();

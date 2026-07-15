@@ -6,12 +6,13 @@
 	import { loadContentStore, content } from '$lib/content/store.svelte';
 	import { detectCollisions } from '$lib/content/sources.svelte';
 	import GeneralSettings from '$lib/components/settings/GeneralSettings.svelte';
+	import StorageSettings from '$lib/components/settings/StorageSettings.svelte';
 	import ContentHealth from '$lib/components/settings/ContentHealth.svelte';
 	import SourceManager from '$lib/components/settings/SourceManager.svelte';
 	import CollisionManager from '$lib/components/settings/CollisionManager.svelte';
 	import { _ } from '$lib/i18n';
 
-	type Tab = 'general' | 'health' | 'sources' | 'collisions';
+	type Tab = 'general' | 'data' | 'health' | 'sources' | 'collisions';
 	let tab = $state<Tab>('general');
 
 	onMount(loadContentStore);
@@ -25,6 +26,7 @@
 
 	const TABS: { id: Tab; label: string; badge?: () => number }[] = [
 		{ id: 'general', label: 'General' },
+		{ id: 'data', label: 'Data' },
 		{ id: 'health', label: 'Content health', badge: () => issueCount },
 		{ id: 'sources', label: 'Sources' },
 		{ id: 'collisions', label: 'Collisions', badge: () => collisionCount }
@@ -47,6 +49,8 @@
 	<div class="panel">
 		{#if tab === 'general'}
 			<GeneralSettings />
+		{:else if tab === 'data'}
+			<StorageSettings />
 		{:else if tab === 'health'}
 			<ContentHealth />
 		{:else if tab === 'sources'}

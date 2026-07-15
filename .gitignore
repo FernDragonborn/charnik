@@ -26,6 +26,9 @@ vite.config.ts.timestamp-*
 src-tauri/target/
 src-tauri/gen/
 
+# Tauri script
+build.ps1
+
 # local design mocks + renders (kept on disk, not tracked)
 design-preview/
 

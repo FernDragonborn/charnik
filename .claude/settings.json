@@ -1,0 +1,16 @@
+{
+	"hooks": {
+		"SessionStart": [
+			{
+				"hooks": [
+					{
+						"type": "command",
+						"command": "node tools/surface.mjs >/dev/null 2>&1 && echo 'docs/SURFACE.md regenerated (fresh reuse-surface catalog). Before writing ANY src/ code: consult it + grep for the concept (CLAUDE.md \"Reuse before you write\").' || echo 'surface.mjs FAILED - run node tools/surface.mjs manually and check it before writing src/ code.'",
+						"timeout": 30,
+						"statusMessage": "Regenerating reuse-surface catalog"
+					}
+				]
+			}
+		]
+	}
+}

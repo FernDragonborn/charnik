@@ -174,7 +174,6 @@ export const characterSchema = z.object({
 });
 
 export type Character = z.infer<typeof characterSchema>;
-export type CharacterBuild = z.infer<typeof buildSchema>;
 export type CharacterPlay = z.infer<typeof playSchema>;
 export type CharacterUi = z.infer<typeof uiSchema>;
 export type EffectInstance = z.infer<typeof effectInstance>;

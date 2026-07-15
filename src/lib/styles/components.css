@@ -214,6 +214,41 @@
 	margin: 0 0 16px;
 	max-width: 640px;
 }
+/* settings option rows (label + pill options / value), shared by the General + Data tabs and the
+   dev previews — one row vocabulary so every settings tab lines up on the same label column */
+.setting-row {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 14px 0;
+	border-top: 1px solid var(--color-border);
+}
+.setting-row:first-of-type {
+	border-top: 0;
+}
+.setting-label {
+	flex: 0 0 140px;
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: 14px;
+	color: var(--color-text);
+}
+.setting-options {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+/* a filesystem path shown inline (settings Data row) — mono, muted, ellipsized */
+.mono-path {
+	flex: 1;
+	min-width: 0;
+	font-family: var(--font-mono);
+	font-size: 13px;
+	color: var(--color-text-muted);
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
 .muted {
 	color: var(--color-text-muted);
 	font-size: 13px;

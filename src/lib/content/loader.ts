@@ -72,7 +72,7 @@ type AnyRowData = { [T in ContentType]: RowData<T> }[ContentType];
  *  assignable to `LoadedRow[]` while `list('spell')` narrows to the spell member. */
 export type LoadedRowByType<T extends ContentType> = Extract<LoadedRow, { type: T }>;
 
-export interface ContentIssue {
+interface ContentIssue {
 	level: 'error' | 'warn';
 	root: string;
 	file?: string;
@@ -80,7 +80,7 @@ export interface ContentIssue {
 	message: string;
 }
 
-export interface ListOptions {
+interface ListOptions {
 	system?: string;
 }
 

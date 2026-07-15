@@ -32,6 +32,7 @@
 
 	onMount(async () => {
 		const g = await loadContentStore();
+		if (!g) return; // content load failed — error surfaces via the content store
 		character = demoCharacter();
 		for (const s of character.build.spells) {
 			const row = g.get(s.spell);

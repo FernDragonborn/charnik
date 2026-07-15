@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import { dndzone } from 'svelte-dnd-action';
 	import { combat } from './state.svelte';
+	import { content } from '$lib/content/store.svelte';
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
 	import { onBeforeReload } from '$lib/content/reload';
 	import CombatMenus from './CombatMenus.svelte';
@@ -22,6 +23,11 @@
 	// (which needs the dnd wiring). Everything else lives in the `combat` view-model + blocks/.
 	const character = $derived(combat.character);
 	const sheet = $derived(combat.sheet);
+	// The sheet can't compute until content is loaded, so while the graph is still null the wait is
+	// really about content, not the sheet — say so instead of the misleading "computing your sheet".
+	const loadingMessage = $derived(
+		content.graph ? 'Computing your character sheet…' : 'Loading content…'
+	);
 	const columns = $derived(combat.layout.columns);
 	const flipDurationMs = combat.layout.flipDurationMs;
 	const dragDisabled = $derived(combat.layout.dragDisabled);
@@ -52,7 +58,7 @@
 <svelte:window onpointerup={releaseDrag} />
 
 {#if !sheet || !character}
-	<Loading message="Computing your character sheet…" />
+	<Loading message={loadingMessage} error={content.error} />
 {:else}
 	{@const s = sheet}
 	{@const c = character}

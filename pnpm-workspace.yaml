@@ -13,3 +13,4 @@ overrides:
 allowBuilds:
   esbuild: true
   es5-ext: true
+  simple-git-hooks: set this to true or false

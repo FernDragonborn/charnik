@@ -40,7 +40,7 @@ export const HOMEBREW_ROOT = 'content/homebrew';
 /** The source tag every homebrew row carries. */
 export const HOMEBREW_SOURCE = 'Homebrew';
 
-export type FieldKind = 'text' | 'textarea' | 'number' | 'bool' | 'enum' | 'systems' | 'slug';
+type FieldKind = 'text' | 'textarea' | 'number' | 'bool' | 'enum' | 'systems' | 'slug';
 
 export interface FieldDesc {
 	name: string;

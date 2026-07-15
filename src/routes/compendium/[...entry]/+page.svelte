@@ -18,6 +18,7 @@
 	import { groupingsFor, facetFor, groupRows, distinctValues } from '$lib/content/grouping';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
+	import Loading from '$lib/components/Loading.svelte';
 	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
 	import EditContentForm from '$lib/components/EditContentForm.svelte';
 	import DraftsPane from '$lib/components/DraftsPane.svelte';
@@ -308,6 +309,7 @@
 		editRow = null;
 		resumeAdd = undefined;
 		const g = await reloadContent(); // merge the new/edited homebrew row + rotate guid → lists recompute
+		if (!g) return; // load failed — the error surfaces via the content store
 		const row = g.get(`${selectedType}:Homebrew:${id}`);
 		if (row) openEntry(row);
 	}
@@ -332,7 +334,17 @@
 <svelte:head><title>Compendium — Charnik</title></svelte:head>
 
 {#if !graph}
-	<p class="loading">Loading content…</p>
+	<Loading message="Loading content…" error={content.error} />
+{:else if types.length === 0}
+	<div class="loading empty-content">
+		<h2>No content found</h2>
+		<p>
+			The content library is empty — the shipped SRD files don't seem to be present. If this is an
+			installed build, the content bundle may be missing or the data folder points somewhere without
+			content.
+		</p>
+		<p class="muted">Data folder &amp; content sources live in <b>Settings → Data</b>.</p>
+	</div>
 {:else}
 	<div class="page">
 		<nav class="types">
@@ -565,6 +577,17 @@
 {/if}
 
 <style>
+	/* reuses the global .loading (centred + muted + padding); only adds the heading + width cap */
+	.empty-content {
+		max-width: 560px;
+		margin-inline: auto;
+	}
+	.empty-content h2 {
+		font-family: var(--font-display);
+		font-size: 22px;
+		color: var(--color-text);
+		margin: 0 0 12px;
+	}
 	.types {
 		display: flex;
 		flex-wrap: wrap;

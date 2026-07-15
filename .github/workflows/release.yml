@@ -64,6 +64,10 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
+          # Signing is release-only: the base config keeps createUpdaterArtifacts OFF so anyone can
+          # `pnpm tauri build` from source without the key; this overlay turns it back ON here, where
+          # the signing secrets exist, so the release gets its .sig files + latest.json.
+          args: --config src-tauri/tauri.release.conf.json
           # __VERSION__ is replaced by the version in src-tauri/tauri.conf.json.
           tagName: v__VERSION__
           releaseName: Charnik v__VERSION__
