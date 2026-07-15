@@ -100,8 +100,8 @@ These span many files and are easy to violate; preserve them.
 - **Effects/modifier engine = data, never code.** Auto-calc of derived stats flows
   through one **stacking pipeline** (`base → ability mod → proficiency → item → feature
   → condition → override`, clamped to caps) fed by a **bounded effect vocabulary** (flat
-  bonus / set-override / advantage / grant-proficiency / resist-immune / apply-condition
-  / grant-resource). Effects are **interpreted data, not `eval`/a DSL** (also a security
+  bonus / set_override / advantage / grant_proficiency / resist_immune / apply_condition
+  / grant_resource). Effects are **interpreted data, not `eval`/a DSL** (also a security
   property — see `docs/SECURITY.md`). Unknown effects fall back to **text + a manual
   modifier** (never silently dropped; surfaced in the effects panel). The whole
   effects-auto system has a **global toggle** (off → stats are manual/text only). Users

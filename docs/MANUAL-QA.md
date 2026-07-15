@@ -70,14 +70,14 @@ Files: `effects/index.ts` (parser + `EFFECT_KIND` const + `matchesTarget` export
 (`parseDiceTerm`), `derive.ts`, `combat/state` (slotMax), `combat/helpers` (rollEffectsFor, effectTag),
 `build/state` (speciesFixedAbilities). All token reads route through one parser now — verify every
 effect-driven feature still behaves:
-- ☐ **Resistance/immunity/vulnerability**: an effect with `resist-immune:immune:poison` shows poison
-  under Immunities (and `resist-immune:fire` → Resistances); the defenses panel is correct.
-- ☐ **Resource pools**: a feature granting `grant-resource:rage:3:long` shows a 3-pip rage tracker.
-- ☐ **Granted proficiency / condition**: `grant-proficiency:stealth` marks stealth proficient; an
-  `apply-condition:*` effect applies its condition tokens.
+- ☐ **Resistance/immunity/vulnerability**: an effect with `resist_immune:immune:poison` shows poison
+  under Immunities (and `resist_immune:fire` → Resistances); the defenses panel is correct.
+- ☐ **Resource pools**: a feature granting `grant_resource:rage:3:long` shows a 3-pip rage tracker.
+- ☐ **Granted proficiency / condition**: `grant_proficiency:stealth` marks stealth proficient; an
+  `apply_condition:*` effect applies its condition tokens.
 - ☐ **Ability bonuses** (species +2, etc.) still cascade into scores in the builder.
 - ☐ **Roll effects**: Bless/Bane add the bonus die; an `advantage:*` effect flips a roll to advantage.
-- ☐ **Action economy**: Action Surge / Haste (`flat-bonus:action+1`) still add an action pip.
+- ☐ **Action economy**: Action Surge / Haste (`flat_bonus:action+1`) still add an action pip.
 - ☐ **Effects panel tags**: custom modifiers render readable tags ("AC +2", "DEX save +1").
 
 ## CH3 · pip trackers unified (one `pipClick`, available-left/spent-right)

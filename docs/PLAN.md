@@ -64,7 +64,19 @@ trust what happened.
 - **Expressiveness = three layers, never code-in-CSV** (DECIDED; see SECURITY.md #4):
   **L1** the bounded vocab above (data; ~95%); **L2** safe value-expressions (`1d4`,
   `prof*2`, `ceil(level/2)`) via OUR dice+arithmetic parser — non-Turing-complete,
-  whitelisted vars, no `eval`; **L3** plugins for the long tail. Plugins compose on the
+  whitelisted vars, no `eval`; **L3** plugins for the long tail. **Ordering DECIDED
+  (2026-07-15): L2 ships BEFORE L3.** L2 over a rich (conditional) ctx covers the great
+  majority of the tail with ZERO sandbox/attack surface, so it must land first; L3's sandbox
+  is only justified once L2 is exhausted and `onUse`/`onEvent` (core-owned, deferred) demand
+  it. Concretely: an L2 phase precedes PLG-2 (the sandbox) — a `passive`-only `api: 1` sandbox
+  must NOT ship ahead of L2. **DSL naming convention (DECIDED + applied 2026-07-15): the effect
+  token DSL is `snake_case`, with `.` for namespacing** — kinds `flat_bonus`/`set_override`/
+  `grant_resource`/`apply_condition`/`grant_proficiency`/`resist_immune`, target `hp_max`,
+  vars `wis_mod`/`base_speed`/`class_level.monk`/`is_bloodied`. Renamed from the old kebab
+  kinds because L2 makes `-` the subtraction operator, so any identifier that can appear inside an
+  expression (kind, target, variable, resource/condition id) MUST avoid `-`; snake also matches
+  the CSV-column convention (`hit_die`, `name_en`). TS CODE stays camelCase/PascalCase/SCREAMING —
+  a separate layer nobody types in a CSV. Plugins compose on the
   engine seam: first-party/signed handlers = trusted; **community plugins run in a
   QuickJS-in-WASM sandbox** (`quickjs-emscripten`) with a narrow host API returning
   `{value, trace}`, hard time/memory limits, no DOM/Tauri/fs/network. **Design the plugin
@@ -235,7 +247,7 @@ that consume them.
     item grants → a separate "Also granted by" line (not classes). Per active edition.
   - Additive-only for now; a `deny` flag to subtract is far-backlog.
 - **Resources = data + effect tokens.** Anything "N/day" (Mystic Arcanum, item "cast X 3/day",
-  innate 1/day) is a resource: `grant-resource:<id>:<max>:<recharge>`; a spell carries
+  innate 1/day) is a resource: `grant_resource:<id>:<max>:<recharge>`; a spell carries
   `cast_via: slot | resource:<id> | at-will`. `grant-slot:<level>` for the rare artifact granting
   a real slot (a resource with a spell level, per fork 1).
 
@@ -512,7 +524,7 @@ the rest — but a few things sit in text that would be better structured. Add v
    lists separately, so 2014 spells have an empty `classes` column; a linked table fixes
    both editions uniformly (supersedes the inline `spell.classes` string).
 2. **`mastery` column on item** (5.5e weapon mastery) — currently folded into `properties`.
-3. **Species ability bonuses → `effects`** (`flat-bonus:con+2`) instead of only prose
+3. **Species ability bonuses → `effects`** (`flat_bonus:con+2`) instead of only prose
    (5e: on species; 5.5e: on background); model **subraces/lineages** (e.g. Elf lineages).
 4. **Monster**: optionally structure `saving_throws`, `damage_resist/immune`,
    `condition_immune`, `legendary_actions`, `proficiency_bonus` (now all in `text_en`).
@@ -823,11 +835,11 @@ stay semi-manual.
   both editions is a hard requirement here** (HP pool vs temp HP, CR/movement limits per
   level, what's kept vs replaced, revert-at-0 carryover, equipment handling, casting rules).
   Superiority dice: extend the grammar —
-  `grant-resource:superiority-dice:4:d8:short` (decided 2026-07-14: die BEFORE recharge —
+  `grant_resource:superiority-dice:4:d8:short` (decided 2026-07-14: die BEFORE recharge —
   "what the resource is, then when it refills"; ResourceDef + `die`). The die segment is
   optional and shape-distinguishable (`d\d+` vs `short|long|other`), so existing 3-segment
-  tokens (`grant-resource:rage:2:long`) keep parsing unchanged. Spending rolls the die into
-  attacks via the existing `bonusDice` path. Extra Attack: `flat-bonus:attacks+N` →
+  tokens (`grant_resource:rage:2:long`) keep parsing unchanged. Spending rolls the die into
+  attacks via the existing `bonusDice` path. Extra Attack: `flat_bonus:attacks+N` →
   Attacks panel shows ×N. Prereq: EFX-2; content-schema columns bump + converter updates.
   Order: shapes 1→3→2, Wild Shape last as its own item.
 - [ ] **N3 · Builder/level-up redesign — descriptions everywhere.** Requirement: NOTHING is
@@ -863,6 +875,187 @@ stay semi-manual.
   (1 gp = 10 sp = 100 cp; 1 ep = 5 sp; 1 pp = 10 gp). Coin WEIGHT (50 coins = 1 lb) is
   optional and OFF by default — many tables don't track it; when on, folds into N1's
   capacity bar. Lives in play-state; no migration concerns pre-release (see N1 note).
+
+### EXPR · L2 value-expression layer — implementation plan (2026-07-15)
+
+**Ships BEFORE L3 (PLG).** L2 widens the L1 token grammar so a token's VALUE (and a conditional
+GUARD on the token) can be a bounded expression instead of only a literal — covering the great
+majority of the "long tail" (level-scaling, computed pools, conditional bonuses) with **zero
+sandbox / attack surface**, because it is a formula, not code: non-Turing-complete, no loops, no
+recursion, no assignment, no `eval`, whitelisted variables + functions, terminates by construction.
+It is also the vehicle that lands the **conditional-derive core + the one authoritative `ctx`
+contract** (fresh-eyes review #1/#6) — L3 plugins later read the SAME `ctx` and reuse the SAME
+condition machinery, so building L2 first is what gives L3 a solid base instead of inventing it.
+
+**What it is (no separate store — widens the token grammar in the SAME `effects` cells /
+`play.effects`, per "Formula storage"):**
+
+- **Value expression** where a literal stood: `flat_bonus:ac+ceil(level/2)`,
+  `set_override:speed:base_speed-10`, `grant_resource:grit:max(1,wis_mod):short`. Evaluates to a
+  **quantity** that is EITHER a flat integer OR a dice formula. A **dice term is
+  `<amount>d<sides>` where BOTH the amount and the sides are expressions** (not just literals) — so
+  the count can scale (`ceil(class_level.rogue/2)d6` — Sneak Attack) OR the die size can scale
+  (`1d(if(class_level.monk>=17, 10, if(class_level.monk>=11, 8, if(class_level.monk>=5, 6, 4))))` —
+  Martial Arts die), from ONE rule. The `d` operator takes a PRIMARY on each side (literal,
+  variable, function call, or a parenthesized expression), so a complex amount/sides is
+  parenthesized: `(ceil(class_level.rogue/2))d6`. Both operands are cost-clamped
+  (`MAX_DICE_PER_TERM` / `MAX_DIE_SIDES`, the class-19 caps). Dice terms stay dice (ride the one
+  roll path — never collapsed to a number at parse); flats fold as contribution amounts.
+- **Condition guard** `<bool-expr> ? <token>` — **condition-FIRST**, like an English question
+  ("is raging? → …"): `is_bloodied ? flat_bonus:ac+2`, `is_concentrating ? disadvantage:attack`,
+  `is_raging ? advantage:attack`. The `?` reads "if this"; false → the token simply doesn't apply.
+  There is NO else branch and NO `:` here (that is the whole point — see the colon rule below). The
+  guard is a top-level prefix; the effect part starts with a kind keyword, so it's unambiguous. It
+  gates whether the token contributes at all — this IS the conditional-effect mechanism the state
+  model needs, feeding the dependency-order resolution (RAW default, cycle → content-health,
+  reorderable safety net). A guard is needed (not just a conditional value) because non-numeric
+  tokens — `advantage`, `grant_proficiency`, `apply_condition` — have no numeric slot to hold a
+  condition. **Conditional VALUES use the `if(cond, then, else)` function**, never a `?:` ternary
+  (`flat_bonus:ac+if(is_bloodied, 2, 0)`).
+
+**Grammar (pinned).** Variable and function names are spelled out in full — NEVER abbreviated
+(`<ability>_mod`, not `<ab>_mod`); a formula is read by non-technical authors, so no letter-saving.
+Vars = the `ctx` fields; integer literals + `<amount>d<sides>` dice terms (both operands are
+expressions, see above). **Ability variables are ALWAYS explicit —
+`<ability>_mod` (modifier) and `<ability>_score` (raw), where `<ability>` is one of the codebase's
+six ability ids `str/dex/con/int/wis/cha` (so `wis_mod`, `dex_score`); a bare `wis`/`str`/… (no
+`_mod`/`_score` suffix) is a parse error → fallback** (never leave "is this the mod or the score?"
+ambiguous). Same
+rule for class levels: **`class_level.<id>`** (reads `ctx.classLevels[<id>]`), never a bare
+`class.<id>` — the latter reads as a boolean "has this class?" rather than a number. Boolean flags
+start with `is_` (never bare) and are camel-free snake: `is_bloodied`, `is_raging`,
+`is_concentrating`, `is_wearing_armor`, `is_wearing_shield`.
+
+Full var set:
+- **Build/derived numbers:** `level` (total character level), `proficiency_bonus`,
+  `<ability>_mod`/`<ability>_score` (six abilities), `class_level.<id>`, `spellcasting_mod`
+  (the active class's casting stat), `base_speed` (species walking speed, pre-effect).
+- **Guards — dependency-resolved play-state:** `hp`, `hp_max`, `hp_percent`, `temp_hp`,
+  `exhaustion` (0..ladder-max), `size` (ordinal), `armor_type` (`none/light/medium/heavy`),
+  the `is_*` flags above, `has_condition.<id>` (a specific active condition),
+  `resource.<id>` (remaining), `resource_max.<id>`.
+
+**Operators (precedence high→low):** `d` (dice) > unary `-` > `* / %` > binary `+ -` >
+comparisons (`< <= > >= == !=`) > `not` > `and` > `or`. Unary minus is prefix negation
+(`-str_mod`), distinct from binary subtraction. **No `?:` ternary** — a conditional value is the
+`if(cond, then, else)` function. Whitelisted functions `if min max floor ceil round abs clamp sign`
+— NOTHING else.
+
+**The colon rule (why `if()` not `?:`):** `:` is STRUCTURAL only — the token delimiter
+(`kind:target:value`) and namespacing (`spell:source:id`). An **expression NEVER contains a `:`**,
+so the delimiter is never ambiguous with operator syntax. That is exactly why conditional values use
+`if(cond, then, else)` (no `:`) instead of a `?:` ternary, and why the guard `<cond> ? <token>` has
+no else branch. One character, one meaning.
+
+**Semantics (pinned):** lowercase, case-sensitive (`Level` invalid); whitespace insignificant; NO
+string type. **No randomness at eval** — a dice term is DATA that rides to the roller, never rolled
+during evaluation, so eval is deterministic. **Rounding:** division keeps an exact intermediate;
+if the FINAL value fed to a stat is non-integer it is **floored** (5e's global "round down"
+default), and `ceil()`/`round()` are the explicit opt-in for the exceptions (e.g. some Artificer
+math rounds up). **Read boundary (the cycle rule):** an expression may read BASE/build values +
+dependency-resolved play-state, but NEVER the post-effect DERIVED value of the stat it is
+modifying (that is the forbidden self-reference; `base_speed` is the species input, not the derived
+speed). Bounded parse depth + an expression-string length cap (it lives in the `effects` cell, not
+plugin `args`). **One `ctx` definition, shared by L2 and L3** (this is where it's pinned).
+
+**Failure = the L1 fallback, never a throw.** A malformed expression, an undefined variable, or a
+division by zero degrades the token to **inert text + an optional manual modifier** (exactly like an
+unknown token) and surfaces in content-health — derive never throws, a bad formula never breaks the
+sheet. Same "never silently dropped" contract as everywhere. Content-health shows the parse error
+WITH detail (reason + offending token), not a bare "invalid" — the author must never be left guessing.
+
+**Worked examples (the whole syntax at a glance):**
+
+```
+# value = expression
+set_override:ac:10+dex_mod+con_mod                Barbarian Unarmored Defense
+set_override:ac:10+dex_mod+wis_mod                Monk Unarmored Defense
+flat_bonus:saves+max(1,cha_mod)                   Paladin Aura of Protection
+grant_resource:ki:class_level.monk:short          Ki = monk level
+grant_resource:lay_on_hands:class_level.paladin*5:long   pool = 5 × level
+grant_resource:grit:max(1,wis_mod):short          at least 1, else WIS mod
+
+# dice <amount>d<sides> (both operands are expressions)
+flat_bonus:damage+ceil(class_level.rogue/2)d6     Sneak Attack (count scales)
+flat_bonus:damage+1d(if(class_level.monk>=17, 10, if(class_level.monk>=11, 8, if(class_level.monk>=5, 6, 4))))
+                                                  Martial Arts die (size scales)
+
+# conditional VALUE = if(cond, then, else)   (no ?: ternary, no ':' in expressions)
+flat_bonus:ac+if(is_bloodied, 2, 0)               +2 AC while below half
+flat_bonus:damage+if(level>=16, 4, if(level>=9, 3, 2))   Rage bonus (scales)
+flat_bonus:d20_tests+(-2*exhaustion)              2024 exhaustion (uniform, via var)
+
+# guard = <cond> ? <token>  (condition-first; for non-numeric tokens)
+is_raging ? advantage:attack                      advantage while raging
+is_raging ? resist_immune:bludgeoning
+armor_type==heavy ? disadvantage:skill.stealth
+hp_percent<=50 ? advantage:save.death
+has_condition.frightened ? disadvantage:attack
+
+# guard + expression value combined
+is_raging ? flat_bonus:damage+cha_mod             Zealot: CHA to damage while raging
+```
+
+**Dice sides = any integer ≥ 1 (≤ cap), soft-warned.** D&D uses d4/d6/d8/d10/d12/d20/d100, but
+homebrew legitimately uses d2/d3/d30 — so a non-standard die is NOT rejected (that would fight
+homebrew), it is allowed and flagged in content-health (`unusual die dN`) to catch a `d7` typo.
+Amount clamps to ≥ 0 (a negative count rolls nothing), sides to ≥ 1.
+
+**Displaying an expression (the explainability invariant).** Auto-generating natural language from
+an arbitrary formula (`ceil(level/2)` → "half your level, rounded up") is too unreliable — REJECTED.
+Instead: the player sees the **resolved value + the effect's name** ("+4 · Sneak Attack"); the effect
+row may carry an author-written **plain description** (localized, like `name_uk`) for the tooltip;
+the raw formula shows only in an **author/dev view**. The formula itself is language-neutral math, so
+L2 has NO i18n gap at the display seam (unlike L3 plugin notes).
+
+**Exhaustion + leveled conditions = DATA, not hardcode (pinned 2026-07-15).** Homebrew heavily
+modifies exhaustion (different ladders, recovery/gain amounts), so it must be content, not code. A
+per-system ladder (a content type keyed by level → effect tokens in the L1/L2 vocabulary): 2014 =
+distinct effect per level, applied CUMULATIVELY (all rows with level ≤ current); 2024 = ONE row using
+the `exhaustion` variable (`flat_bonus:d20_tests+(-2*exhaustion)`, `flat_bonus:speed+(-5*exhaustion)`).
+`exhaustion` is play-state (0..ladder-max) AND an L2 variable. **Always manually settable** (+/−/set,
+clamped to the ladder) — because recovery/gain amounts vary too much across homebrew to fully
+automate; the automatic long-rest −1 is a DEFAULT convenience, never a lock (tool, not enforcer). This
+is the leveled case of the broader **conditions-as-data** model (`has_condition.<id>` + a condition →
+effect-token mapping) that also closes AUDIT A4 (stealth_disadvantage display-only) and B9 (no
+rule-based blocks) — both are symptoms of conditions not being mechanical.
+
+**"Ship the PHB on L2" needs L1 to grow too (scoping note).** ~95% of the PHB is L1+L2, but two tails
+are NOT value-expressions: (a) **roll manipulation** (Halfling Lucky, GWF reroll, Portent, Reliable
+Talent "treat < 10 as 10", Elven Accuracy) — a BOUNDED, known set → add as new L1 vocabulary
+(`reroll:…`, `min_die:…`, `treat_as:…`), NOT L3; (b) **target breadth** — the current target set
+(ac/speed/attack/damage/saves/skills/hp_max/initiative/passive) misses fly/swim speed, Extra Attack
+(structural), spell DC/attack, death-save bonus, etc. So "PHB on L2" really means "extend L1 (roll
+modifiers + targets) so L2 has enough to compute over" — achievable, keeps L3 for true homebrew, but
+it is L1 work, not just an expression parser.
+
+**Phases:**
+
+- [ ] **EXPR-1 · Parser + evaluator (pure, zero pipeline wiring).** The expression language in
+  isolation: tokenizer → recursive-descent/Pratt parser → AST → evaluator over a plain `ctx` object;
+  whitelisted vars/functions enforced at parse (unknown ident → parse error → fallback, not a
+  runtime surprise); the number-OR-dice-formula value type; bounded depth. Reuse existing surface
+  (dice-term parsing from `rules/dice.ts`, `splitList`) rather than re-deriving. Tests: golden values
+  hand-derived from SRD; malformed/undefined-var/div-by-zero → defined fallback; fast-check
+  invariants (evaluation total over the whitelisted domain never throws; determinism). Proves the
+  language with no derive risk (mirrors PLG-1's "prove the seam first" discipline).
+- [ ] **EXPR-2 · Value expressions in tokens + the `ctx` contract.** Widen `parseEffect` so
+  `flat_bonus`/`set_override`/`grant_resource` accept an expression where a literal was; resolve
+  against `ctx` in the derive; dice-producing expressions ride the roller; result cost-clamped;
+  malformed → inert note. **Lands the build-time `ctx` subset** (system/level/prof/abilities/
+  classLevels) as the ONE authoritative definition L3 will reuse. No conditions yet.
+- [ ] **EXPR-3 · Condition guards + the conditional-derive core (the big one).** Add the
+  condition-first `<cond-expr> ? <token>` guard (the ternary `?` without an else); the guard gates
+  the contribution; this lands the **conditional `ctx`**
+  (dependency-resolved play-state: hp/bloodied/flags/resources) and the resolution model from the
+  state-model decision — dependency-order single pass (real content ≈ empty graph), cycle detection
+  → content-health, the visible reorderable order + GitHub report loop. This is where derive becomes
+  conditional and where the authoritative derive-pipeline description (review #6) is written. Golden
+  rules tests per edition (`describe.each(['5e','5.5e'])`), incl. the Bloodied per-system seam.
+
+Deferred to L3/onEvent (NOT L2): stateful transitions, latches, actions, anything that WRITES state
+— L2 only READS `ctx` and produces contributions. Keep the layer honest: it is a pure read-only
+formula language.
 
 ### PLG · Plugin sandbox (L3 expressiveness) — implementation plan (2026-07-15)
 
@@ -943,7 +1136,10 @@ single most common homebrew pattern (class-level scaling) is inexpressible.
   (+ schemas EFFECT_KINDS sync + effectsField accepts the prefix), the registry interface,
   the derive pre-pass, `effectTag` → "plugin · <ns>", behavioral tests with an injected fake
   evaluator. Proves the seam with zero sandbox risk.
-- [ ] **PLG-2 · The sandbox itself.** quickjs-emscripten (sync build) behind a dynamic
+- [ ] **PLG-2 · The sandbox itself. GATED ON L2 (decided 2026-07-15): the L2 value-expression
+  layer must ship BEFORE this** — L2 over a conditional ctx covers most of the tail with no sandbox
+  surface, so the sandbox only starts once L2 is exhausted (and `onUse`/`onEvent` earn it).
+  quickjs-emscripten (sync build) behind a dynamic
   import; budgets + intrinsic-neutering; JSON marshalling + zod output validation; plugin
   discovery from `dataDir/plugins/` via Storage; Settings → Plugins list (enable toggle,
   manifest, status, open-folder) + consent dialog; plugin errors surface in content health.
@@ -967,7 +1163,19 @@ shipping requirement for PLG-2):** the sandbox's job is capability containment; 
 leak paths are around it, not through it:
 
 1. **Zero-capability context**: nothing injected; integration tests ASSERT
-   fetch/XMLHttpRequest/WebSocket/import/require are undefined inside.
+   fetch/XMLHttpRequest/WebSocket/import/require are undefined inside. Determinism/side-channel
+   intrinsics are ALSO removed and asserted: `Math.random`, `Date`, `performance`, `WeakRef`,
+   `FinalizationRegistry` (entropy + timing + GC-observation). Remove via the `newContext`
+   intrinsics config, not `delete` after construction.
+1b. **Interrupt must cover regexp (ReDoS).** The per-call deadline fires between JS ops, but the
+    classic QuickJS regexp engine historically doesn't check the interrupt mid-match — and the
+    canonical handler pattern runs a regexp on hostile `args`. Use a QuickJS build whose regexp
+    honours the interrupt (quickjs-ng) and add an integration test: a catastrophic-backtracking
+    pattern on adversarial input → interrupted, not hung, alongside the infinite-loop test.
+1c. **JSON-string boundary, not object-walk.** The handler result is `JSON.stringify`-d INSIDE
+    the sandbox; the host takes one string, length-caps it BEFORE `JSON.parse`, then zod-validates.
+    Never `context.dump()` a live object (that runs sandbox getters host-side during extraction).
+    A returned `Promise` / pending job → invalid result; the host never calls `executePendingJobs`.
 2. **JSON-only boundary**: no live handles/functions cross; output through strict zod
    (unknown keys stripped), numeric clamps, string/count caps; never deep-merge raw output.
 3. **Plugin output renders as PLAIN TEXT only** — no markdown/HTML/autolinked URLs from
@@ -997,13 +1205,17 @@ leak paths are around it, not through it:
 
 Second hardening pass (2026-07-15, self-audit — items 12–18 are also shipping requirements):
 
-12. **Consent is PER-MACHINE, hash-pinned, and lives OUTSIDE the dataDir.** The B6 decision
-    moves config INTO the dataDir, and the data-folder move/merge feature imports dataDirs
-    wholesale — so an enable-flag inside the dataDir would let a malicious "campaign backup"
-    arrive with `plugins/` + its own pre-enabled config, bypassing consent entirely. Fix:
-    consent record = `(ns, xxh64(main.js))` in app-side storage (NOT the dataDir); any hash
-    mismatch (edited/replaced main.js — also closes TOCTOU) → plugin disabled + notice +
-    re-consent. A dataDir can carry code, never consent.
+12. **Consent is PER-MACHINE, hash-pinned with a CRYPTOGRAPHIC hash, and lives OUTSIDE the
+    dataDir.** The B6 decision moves config INTO the dataDir, and the data-folder move/merge
+    feature imports dataDirs wholesale — so an enable-flag inside the dataDir would let a malicious
+    "campaign backup" arrive with `plugins/` + its own pre-enabled config, bypassing consent
+    entirely. Fix: consent record = `(ns, sha256(main.js ‖ plugin.json))` in app-side storage
+    (NOT the dataDir). **SHA-256, not the content-drift xxh64** — consent is an adversarial gate,
+    an attacker WANTS a collision to smuggle a pre-consented `main.js`; a fast non-crypto checksum
+    is forgeable. The manifest is in the hash too, so a merged folder can't swap a phishing
+    `url`/`author` post-consent. Read `main.js` ONCE and hash+eval the same buffer (closes TOCTOU).
+    Any mismatch → plugin disabled + notice + re-consent. A dataDir can carry code, never consent.
+    Consent verification is off the derive path, so its async `crypto.subtle.digest` is free.
 13. **Aggregate per-derive budget + memoization.** The per-CALL budget alone allows 50 tokens
     × 5 ms = 250 ms of synchronous main-thread work on EVERY derive (each HP click). Add a
     global budget per derive (~20 ms; once exhausted the remaining plugin tokens degrade to
@@ -1022,18 +1234,112 @@ Second hardening pass (2026-07-15, self-audit — items 12–18 are also shippin
     (shared packs from strangers) — args are the untrusted path INTO an installed plugin.
     Length-cap args in `parseEffect`; the authoring docs state "treat args as hostile" as a
     contract requirement.
+19. **Cap the COST of a number, not its VALUE (present-day, content path — done in code).** This
+    is not plugin-specific: untrusted CONTENT already reaches the same parser/roller. Two number
+    classes: (a) STORED/rendered scalars (`flat_bonus`, `set_override` amount) → only need finite
+    + a generous clamp (a +1e6 AC is silly, not dangerous) — no balance cap, matching "it's a
+    sheet, not a competitive game"; (b) numbers that drive a LOOP/ALLOC/DOM-COUNT (dice count,
+    resource `max`) → bound the WORK. Implemented: `MAX_DICE_PER_TERM`/`MAX_DIE_SIDES` clamp in
+    `rules/dice.ts`; `clampAmount` + `MAX_RESOURCE_MAX` in `effects/index.ts parseEffect`; the
+    resource pip render is the remaining O(max) site (AUDIT B10). Process rule: any NEW consumer
+    of a plugin-/content-influenced number must be checked for O(n) or the class-(a) cap leaks
+    into a new loop.
+20. **Returned `tokens` = one token per array element.** A `;`/newline inside an element (the CSV
+    separator) rejects the whole result — otherwise a handler packs N tokens into one string and
+    beats the ≤16 cap. Values inside ride the class-19 host clamps (same as content).
+21. **Desktop-only; web build ships no sandbox.** Plugin discovery is gated on the Tauri Storage
+    impl; the web demo (GitHub Pages, static) neither discovers plugins nor bundles the QuickJS
+    WASM — dissolving the "consent has no 'outside the dataDir' on web" problem and keeping the
+    sandbox attack surface off the public URL entirely.
+22. **Discovery + fold hardening (loose ends).** (a) Validate `ns` against the token grammar on the
+    FOLDER NAME (reject `..`/absolute/traversal), and treat discovery as case-sensitive but detect
+    Windows case-folding collisions (`My-Homebrew` folder vs `my-homebrew` ns → reject, don't
+    silently match). (b) `contributions` is a record keyed by §4.4 target keys — whitelist the keys
+    (kills `__proto__`/`constructor` prototype-pollution in one move) and fold via a `Map` /
+    `Object.create(null)`, never `obj[key] =`. (c) Bound the pre-pass memo cache with an LRU cap
+    (ctx changes every stat tweak → unbounded growth over a session) and key it on the RAW token
+    string + ctx-hash (the token is attacker-controlled — don't hash it with a collidable checksum).
 
-Smaller pinned decisions: deterministic fold order across plugins (sort by ns, not folder
-scan order); the fail-closed counter is SESSION-scoped (persistent would strand a plugin
-disabled after a transient bug) + a notice each time; ctx carries no source-row data by
-design — "encode what you need in args" is the documented v1 pattern. Open: whether plugins
-may emit `override`-layer (`set`) contributions in v1.
+Smaller pinned decisions: **cross-effect fold is order-INDEPENDENT** (done in `rules/pipeline.ts`),
+so plugin fold order is a non-issue — no ns-sort tie-break needed. Two effects (two items, or two
+plugins) that `set` the same key resolve by D&D's "Combining Game Effects" rule (same-target sets
+don't stack, the most potent/HIGHEST applies; identical in 5e and 5.5e), and each superseded set
+becomes an explanatory note (`overriddenSetNotes`) — never a silent stomp, satisfying the
+explainability invariant. RESOLVED (was open): **plugins MAY emit `override`/`set`** — the value
+is a harmless class-19(a) scalar and the commutative fold removes the cross-plugin stomp that was
+the only reason to forbid it; the host still stamps provenance so a plugin can't masquerade as core
+math. The fail-closed counter is SESSION-scoped (persistent would strand a plugin disabled after a
+transient bug) + a notice each time; ctx carries no source-row data by design — "encode what you
+need in args" is the documented v1 pattern.
+
+**State model + conditional-effect resolution (pinned 2026-07-15; rules-core, spec'd in PLUGINS.md
+§8.4/§8.7).** THREE state channels, each transition maps to one: `passive` (derive READS state →
+contributions), `onUse` (user click WRITES state), `onEvent` (game event WRITES state — deferred
+`api: 2+`, vocabulary pinned: turnStart/turnEnd/attackMade/damageTaken/rest/wentUnconscious/
+`effectGained`/`effectLost`, mapped onto `play.effects` add/expire). Hooks renamed from
+`apply`/`activate` → **`passive`/`onUse`** (the old pair was semantically indistinct; players
+already know "passive" vs an ability you "use"). Conditional-effect resolution follows RAW:
+(1) commutative fold is the order-independent default (done); (2) a conditional whose condition
+reads a value another conditional writes resolves in DEPENDENCY order (a DAG — for real 5e/5.5e
+content the graph is ~empty, so it's a plain single pass; NO iterate-to-fixpoint / "was iterated"
+flag — that was rejected as runtime machinery coping with ill-posed input); (3) a genuine CYCLE
+(self-referential effect) is a CONTENT BUG surfaced in content-health, not tolerated at runtime;
+sticky effects are modelled as an `onEvent` latch, not a derived condition. On top of the RAW
+default sits a **visible, per-character reorderable application order** (play-state; reset-to-
+default) as a safety net — for the commutative majority reordering is a no-op (UI marks what's
+actually order-sensitive), and reordering to fix a rules-wrong result prompts a pre-filled GitHub
+"rules-order" issue so the DEFAULT gets corrected (manual reorder = temporary patch + bug signal,
+target need → 0). `ctx` for `passive` carries the dependency-resolved state incl. active flags
+(`bloodied`/`raging`/`concentrating`). Per-system seam: **Bloodied** is a defined 2024 term
+(HP ≤ half max, many triggers) but not a 2014 core term — first-class flag under 5.5e, computed
+convenience under 5e.
+
+**Fresh-eyes architectural review (2026-07-15) — six structural corrections:**
+
+1. **The action/event/state model is a CORE concern, not plugin-owned.** Using an ability (spend a
+   slot, heal, apply a buff), events (rest recharges, condition gained), and turn/action-economy are
+   things the TRACKING app needs with or without plugins — the `onUse`/`onEvent` intent shape IS the
+   core's own play-state mutation language. Designing it inside PLUGINS.md inverts ownership and
+   risks the core, once built, not matching a "pinned" plugin contract. FIX: extract the
+   action-intent + event + state-channel model into a CORE spec; plugin `onUse`/`onEvent` become
+   THIN adapters returning that same core shape. Design the core action system first; plugins hook
+   into it. §8 should reference the core model, not define it.
+2. **A `plugin:` token on a LOAD-BEARING stat silently produces a wrong character + breaks
+   portability.** Missing/disabled/over-budget/different-version plugin → the contribution vanishes
+   and only an inert note hints (e.g. −5 AC), violating the "no silent rules-divergence" bar; and a
+   shared character/pack gives the recipient different numbers (no version pin; bundle embeds content
+   ROWS but not plugin CODE). FIX (UI decided): surface plugin dependency LOUDLY in **content-health**
+   ("this content needs plugin X to compute correctly") + a **dedicated notification view** for these
+   + a **Settings tab** (the plugins/health tab) collecting them — not a quiet inert note. Document
+   that plugin-dependent content/characters are NOT portable, and add version awareness.
+3. **Stop over-pinning deferred contracts.** §8 currently reads like a finished `api: 2` spec inside
+   an `api: 1` doc — pinning intent schemas (`hp/spend/cost/tempHp`) and event vocab before a host
+   executor exists is speculation dressed as forward-safety. Pin the SEAM (there will be an `onUse`
+   hook returning declarative intent); DEFER the detailed schema until the core action system (#1)
+   defines it.
+4. **L3-`passive`'s marginal value over L2 is thin — effort is inverted.** Determinism + least-data
+   ctx + no host-callbacks make a `passive` plugin a pure `(token, ctx)` function — exactly what an
+   L2 expression is, minus a WASM sandbox. L3's real justification is `onUse`/`onEvent` (deferred,
+   core-owned per #1). **DECIDED (2026-07-15): L2 ships BEFORE L3** (see the three-layers bullet at
+   the top of the spec). L2 over a conditional ctx covers ~95% of the tail with zero sandbox risk;
+   an `api: 1` passive-only sandbox must NOT ship ahead of L2 — the sandbox waits until L2 is
+   exhausted and `onUse`/`onEvent` earn it.
+5. **The reorderable order is a SECOND dangling-reference surface.** It persists per-character order
+   keyed by effect id, but effects come/go (buffs, items, conditions) — same orphan/desync class as
+   the `resourcesSpent` bug just fixed. FIX: stable key + orphan-GC + content-update realignment, or
+   it rots the same way.
+6. **The derive pipeline is accreting stages with no single authoritative description** (base →
+   unconditional → dependency-ordered conditionals → plugin pre-pass → fold → reorder-override), and
+   already carried a contradiction (§4 "frozen snapshot at derive start" vs §8.4 "dependency-
+   resolved"). FIXED the doc contradiction; still TODO: one authoritative derive-pipeline spec
+   (stages + exactly what the ctx snapshot is) that every feature references instead of assuming its
+   own version.
 
 **Formula storage (pinned 2026-07-15): there is no separate formula store.** L1 dice terms
 live INSIDE tokens in the `effects` CSV cells / `play.effects`; L2 expressions (when built)
 widen the token grammar in the SAME cells, parsed by our own non-Turing parser; L3
 computation lives as code in `dataDir/plugins/<ns>/main.js` with CSV holding only the
-`plugin:ns:fn:args` reference (no-code-in-CSV). `activate`-returned formulas are transient
+`plugin:ns:fn:args` reference (no-code-in-CSV). `onUse`-returned formulas are transient
 intent (rolled, logged, discarded); computed RESULTS are never persisted — derive recomputes
 from scratch (same principle as refs-not-copies), and the pre-pass cache is session-memory
 only.
@@ -1041,8 +1347,8 @@ only.
 - Deferred: plugin signing/first-party verification, web-target plugin upload UX, host
   callbacks (`api: 2`), any marketplace/sharing story.
 
-**Open questions:** v1 desktop-only (web upload UX unclear — recommend yes)? Budget defaults
-(5 ms/call, 8 MB) fine? Consent copy tone?
+**Open questions:** Budget defaults (5 ms/call, 8 MB) fine? (RESOLVED: v1 is desktop-only — web is
+a static demo, no plugins; consent copy drafted, EN/UA in §6.)
 
 ---
 
@@ -1344,19 +1650,19 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 
 **Effects engine (finish the vocab, add authoring):**
 - [x] **Custom-modifier UI** — DONE. Combat "Custom modifier" builder (grouped target · +/− ·
-  amount) → `flat-bonus` token, applied live via the reactive sheet.
+  amount) → `flat_bonus` token, applied live via the reactive sheet.
 - [x] **Mechanically apply the rest of the vocab** — DONE. `advantage` presets adv on the roll;
-  dice bonus (`+1d4` Bless / `−1d4` Bane) is rolled into the total; `grant-proficiency` grants
-  skill/save proficiency; `resist-immune` collects damage defenses (shown on the sheet);
-  `apply-condition` expands to the referenced condition's own tokens. All gated on the effects-auto
-  toggle. (flat-bonus / set-override were already applied.)
+  dice bonus (`+1d4` Bless / `−1d4` Bane) is rolled into the total; `grant_proficiency` grants
+  skill/save proficiency; `resist_immune` collects damage defenses (shown on the sheet);
+  `apply_condition` expands to the referenced condition's own tokens. All gated on the effects-auto
+  toggle. (flat_bonus / set_override were already applied.)
 - [ ] **Feat stat/skill bonuses** — the engine applies feat effect tokens already, but the shipped
   feat rows carry no `effects` yet (must be encoded from SRD text, no hand-authoring) + half-feat
   ability-choice UI is still needed.
 - [ ] **Plugin sandbox** (QuickJS-WASM) for exotic homebrew logic — far future (decided, not built).
 
 **Spellcasting follow-ups:**
-- [~] **Resource subsystem** — engine + tracker DONE. `grant-resource:<id>:<max>:<recharge>` parsed
+- [~] **Resource subsystem** — engine + tracker DONE. `grant_resource:<id>:<max>:<recharge>` parsed
   into resource pools (`collectResources`, data-driven / class-agnostic — rage, ki, sorcery points,
   item N/day are one shape); `sheet.resources`; combat "Resources" strip with click-to-spend pips +
   Short/Long **rest** buttons (recharge by type; long resets slots+HP, short returns pact slots).
@@ -1411,9 +1717,9 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - [x] **R3 (CVM-3) · Name the action-economy slot type** — `'action' | 'bonus' | 'reaction'` appears ~13×
   as bare strings (slotMax, usePip, trySpend, the page's SLOTS). One `type ActionSlot` + a single
   source of the slot list. (Relates to the enums-not-string-literals rule.)
-- [x] **R4 (CH2) · Centralise effect-token parsing** — the bounded-vocab regexes (`flat-bonus:…`,
-  `grant-resource:…`, `grant-proficiency:…`, advantage/dice) are re-implemented in `effects/index.ts`
-  (parseEffect/collectResources), `derive.ts` (abilityBonus + grant-proficiency scan), `combat/
+- [x] **R4 (CH2) · Centralise effect-token parsing** — the bounded-vocab regexes (`flat_bonus:…`,
+  `grant_resource:…`, `grant_proficiency:…`, advantage/dice) are re-implemented in `effects/index.ts`
+  (parseEffect/collectResources), `derive.ts` (abilityBonus + grant_proficiency scan), `combat/
   state.svelte.ts` (action-pip scan) and `combat/helpers.ts` (rollEffectsFor). Parse ONCE in the
   effects module and have every consumer read the structured result — the token grammar must live
   in one place (it's also the security surface, docs/SECURITY.md).
@@ -1471,10 +1777,10 @@ Duplication-heavy (do first — this is where the big refactors live):
   `spellRow` uses it; ORPHANS 🔴 note corrected). Also fixed vitest to mirror the app's `$lib` alias
   (value imports of `$lib` were unresolved in tests). Covers CVM-1, part of R4 (dice parsing unified).
 - [x] **CH2 · Effect grammar (bounded vocab)** ⚠️ — DONE. `parseEffect` (effects/index.ts) is now the
-  SINGLE interpreter: extended to fully structure `resist-immune` (→ `{defense, target}`) and
-  `grant-resource` (→ `{resource:{id,max,recharge}}`), and `matchesTarget` is exported. Every ad-hoc
+  SINGLE interpreter: extended to fully structure `resist_immune` (→ `{defense, target}`) and
+  `grant_resource` (→ `{resource:{id,max,recharge}}`), and `matchesTarget` is exported. Every ad-hoc
   regex now reads the structured result instead: `derive.ts` (abilityBonus, grant-prof,
-  resist-immune, apply-condition), `combat/state` (slotMax), `build/state` (speciesFixedAbilities),
+  resist_immune, apply_condition), `combat/state` (slotMax), `build/state` (speciesFixedAbilities),
   `combat/helpers` (rollEffectsFor via `parseEffect`+`matchesTarget`+new `parseDiceTerm`, and
   effectTag). `collectResources` dropped its own regex. Effect KINDS are now a named-const map
   `EFFECT_KIND` (no bare-string comparisons anywhere). The content-schema `EFFECT_KINDS` stays a
@@ -1724,7 +2030,7 @@ scan only if a config bug surfaces). Everything else functional is on the list a
   (round-trips with hydrate for the level-up tests we skipped).
 - [x] **BVM-5 · `pointsSpent` field shadows the imported `pointsSpent` fn** — DONE. Field renamed to
   `pointsUsed` (only used internally by `pointsLeft`).
-- [ ] **BVM-6 · token/format regexes inline** — `flat-bonus:([a-z]{3})…` in `speciesFixedAbilities`
+- [ ] **BVM-6 · token/format regexes inline** — `flat_bonus:([a-z]{3})…` in `speciesFixedAbilities`
   (R4) and `^(\d+)x(\d+)$` for `boost_choice`; centralise/parse-once.
 - [x] **BVM-7 (partial) · magic sentinels / id strings** — `ASI = '__asi__'` mixed into `slotFeats` values (a
   discriminated union would be cleaner), the hardcoded feat id `'ability-score-improvement'`, ASI
@@ -1996,7 +2302,7 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
    spends one, clicking the first empty pip restores one — and clicking deep into the row
    sets the count in a single tap.
    **Conditions are MERGED into the Effects panel** (a condition is just an effect of type
-   `apply-condition`) — ONE "Effects & conditions" list is the single source of truth for
+   `apply_condition`) — ONE "Effects & conditions" list is the single source of truth for
    active modifiers, each with provenance, duration, a type tag (spell/item/feature/condition)
    and remove; concentration shows inline. The +Condition / +Effect quick-pickers write into
    this same list. **No separate Conditions panel.**

@@ -81,7 +81,7 @@ To also fetch monsters: add `monsters-A-Z animals` to the fetch loop, then
 
 - [ ] **effects** — the runtime "+" quick-effect catalog is an APP concern, not a raw SRD
       type, so it is intentionally NOT seeded here (the hand-seeded placeholder was removed).
-      Build it deliberately later (derive apply-condition presets from conditions, etc.).
+      Build it deliberately later (derive apply_condition presets from conditions, etc.).
 - [ ] **5e (SRD 5.1)** pass for `5e`-tagged rows (currently 5.5e only).
 
 Structured columns (resolution, damage, ac, rarity…) are PARSED from the source; where the

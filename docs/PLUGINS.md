@@ -32,7 +32,7 @@ plugin:<ns>:<fn>[:<args>]
 Example CSV cell (the `effects` column, `;`-separated like any tokens):
 
 ```
-plugin:my-homebrew:exploit-die;flat-bonus:ac+1
+plugin:my-homebrew:exploit-die;flat_bonus:ac+1
 ```
 
 A `plugin:` token whose plugin is missing, disabled, over budget, or errored **degrades to an
@@ -85,7 +85,7 @@ evaluated once per session per plugin in its own isolated runtime.
 ```js
 globalThis.handlers = {
 	'exploit-die': {
-		apply(token, ctx) {
+		passive(token, ctx) {
 			/* … */
 		}
 	}
@@ -93,18 +93,23 @@ globalThis.handlers = {
 ```
 
 - Keys are handler names (`fn` in the token grammar).
-- Each handler is an object so future hooks (`activate`, see §8) slot in without breaking.
+- Each handler is an object so future hooks (`onUse`, see §8) slot in without breaking.
 - Evaluation must be side-effect-free apart from this assignment; top-level work counts
   against the load budget.
 
-## 4. The `apply` hook (the only hook in `api: 1`)
+## 4. The `passive` hook (the only hook in `api: 1`)
 
-Called by the derive pre-pass — **once per distinct token per sheet computation**, NOT once
-per stat. The handler receives the parsed token and a read-only context, and returns what
-should be folded into the character sheet.
+The two hooks mirror how a character sheet already thinks about features — a **passive** effect
+that is always folded into your stats, versus an ability you actively USE (its hook is `onUse`,
+§8). `passive` is the `api: 1` hook: a PURE read-only computation. It is called by the derive pre-pass —
+**once per distinct token per sheet computation**, NOT once per stat — receives the parsed token and
+a read-only context (the **dependency-resolved derive state**, §8.4 — so a passive condition reads a
+well-defined value; a self-referential effect is flagged in content-health rather than allowed to
+oscillate), and returns what should be folded into the sheet. It can never mutate anything; only
+`onUse` (§8) produces state changes, and only on a user click.
 
 ```
-apply(token, ctx) → result
+passive(token, ctx) → result
 ```
 
 ### 4.1 `token` (input)
@@ -148,7 +153,7 @@ change meaning.
 
 ```json
 {
-	"tokens": ["flat-bonus:attack+1d8"],
+	"tokens": ["flat_bonus:attack+1d8"],
 	"contributions": {
 		"ac": [{ "layer": "feature", "op": "add", "amount": 1, "label": "Defensive stance" }]
 	},
@@ -163,7 +168,11 @@ All three keys optional; an empty object is a valid "nothing applies" answer.
   dialect when the vocabulary can express the outcome and only the CHOICE is computed
   (which die at this level, how many charges). This is the preferred dialect: dice riders,
   advantage/disadvantage, resources, proficiency grants all work through it. `plugin:` tokens
-  inside `tokens` are IGNORED (no recursion).
+  inside `tokens` are IGNORED (no recursion). **Each array element must be exactly ONE token** —
+  a `;` or newline inside an element (the CSV token separator) rejects the whole result, so a
+  handler can't smuggle 100 tokens past the ≤16 cap in one string. Numeric values inside these
+  tokens are host-CLAMPED like any content (a bonus is finite-guarded; a resource/dice count is
+  cost-capped) — the same treatment content gets, since these ride the same parser.
 - **`contributions`** — pre-folded pipeline entries for computed AMOUNTS the vocabulary can't
   say (`ceil(level/2) + WIS`). Keyed by target key (see §4.4). Constraints: `layer` ∈
   `feature | item | condition` (the core layers `base`/`ability`/`proficiency` and the
@@ -178,7 +187,7 @@ Caps (host-enforced; exceeding any → the whole result is rejected → inert no
 
 ### 4.4 Target keys
 
-`ac` · `initiative` · `speed` · `hp-max` · `attack` · `damage` · `save.<str|dex|con|int|wis|cha>`
+`ac` · `initiative` · `speed` · `hp_max` · `attack` · `damage` · `save.<str|dex|con|int|wis|cha>`
 · `skill.<skill-id>` (the 18 SRD ids) · `passive.<perception|investigation|insight>`.
 The group keys `saves` / `skills` are valid in TOKENS (they fan out), not as contribution keys.
 
@@ -187,7 +196,13 @@ The group keys `saves` / `skills` are valid in TOKENS (they fan out), not as con
 - **Isolation.** One QuickJS-in-WASM runtime per plugin. No `fetch`, no `XMLHttpRequest`, no
   `import`/`require`, no filesystem, no DOM, no timers, no host objects. If you can observe it
   being there, that's a bug — report it.
-- **Determinism is mandatory and enforced.** `Math.random` and `Date` are removed. Same
+- **The boundary is a single JSON string.** Your handler's return value is `JSON.stringify`-d
+  inside the sandbox and the host parses ONE string (size-capped before parse) — the host never
+  walks live sandbox objects (no getter runs host-side during extraction). Return plain JSON;
+  a `Promise` / async handler is an invalid result (the host never drains the job queue).
+- **Determinism is mandatory and enforced.** `Math.random`, `Date`, `performance`, `WeakRef`,
+  and `FinalizationRegistry` are removed (entropy, timing side-channels, and GC-observation all
+  break reproducibility — and memoization assumes determinism). Same
   `(token, ctx)` MUST produce the same result — results are **memoized**: your handler may be
   called once and its answer reused for hours. Never rely on call counts or hidden state.
 - **Budgets.** Per call: ~5 ms CPU (interrupt-based) and 8 MB memory; per sheet computation:
@@ -196,19 +211,29 @@ The group keys `saves` / `skills` are valid in TOKENS (they fan out), not as con
 - **Failure is contained and fail-closed.** A throw, a timeout, or an invalid result becomes
   an inert note; 3 consecutive failures disable the plugin for the session (with a notice).
 - **Randomness belongs to the host.** You never roll dice — you return dice FORMULAS (in
-  tokens, or via `activate` later). Charnik's single dice path rolls them, so the roll log
-  stays honest.
+  tokens, or via `onUse` later). Charnik's single dice path rolls them, so the roll log
+  stays honest. This is WHY a roll-dependent outcome ("heal 2d6") is expressed as a formula the
+  host rolls, never a number your code rolled.
 
 ## 6. Lifecycle: install, consent, enable
 
 1. **Install** = put the folder under `<dataDir>/plugins/`. Discovery is automatic.
 2. **Everything is disabled by default.** Enabling happens per plugin in Settings → Plugins,
    behind a consent dialog showing the manifest.
-3. **Consent is per-machine and pinned to the code hash** `(ns, xxh64(main.js))`, stored
-   OUTSIDE the data folder. Consequences: moving/merging a data folder carries plugin CODE but
-   never its permission; ANY change to `main.js` disables the plugin until re-consented. This
-   is deliberate — a "campaign backup" must not be able to arrive pre-enabled.
+3. **Consent is per-machine and pinned to a CRYPTOGRAPHIC code hash**
+   `(ns, sha256(main.js ‖ plugin.json))`, stored OUTSIDE the data folder. The hash is SHA-256
+   (`crypto.subtle.digest`), NOT the fast xxh64 used for content-drift detection — consent is an
+   adversarial trust gate (an attacker WANTS a collision to smuggle in a pre-enabled malicious
+   `main.js`), so a collision-resistant hash is required; xxh64 answers "did this change?", SHA-256
+   answers "can I trust this exact bytes?". The manifest is hashed too, so a merged data folder
+   can't swap in a phishing `url`/`author` after consent. Consequences: moving/merging a data
+   folder carries plugin CODE but never its permission; ANY change to `main.js` OR `plugin.json`
+   disables the plugin until re-consented. This is deliberate — a "campaign backup" must not be
+   able to arrive pre-enabled.
 4. **Kill switch:** a global "disable all plugins" toggle exists and always works.
+5. **Desktop only.** Plugins run on the Tauri desktop build. The web demo (GitHub Pages) has no
+   plugin discovery and does not bundle the QuickJS runtime — so the "consent outside the dataDir"
+   requirement has no web edge case, and the sandbox attack surface never exists on the public URL.
 
 ## 7. Compatibility contract (what WE promise)
 
@@ -219,17 +244,186 @@ The group keys `saves` / `skills` are valid in TOKENS (they fan out), not as con
 - The host refuses manifests with an `api` newer than it supports (clear message: update
   Charnik).
 
-## 8. Reserved: the `activate` hook (`api: 2`, shape pinned now)
+## 8. Reserved: the `onUse` hook (`api: 2`, shape pinned now)
 
-Action-time logic (variable-cost powers, on-use computations) will be a second export on the
-same handler object. It follows the **declarative-intent** pattern — the plugin returns what
-should happen; the host validates and executes through its normal systems:
+`passive` computes always-on stats; `onUse` is the OTHER half — an ability the player actively
+uses (variable-cost powers, on-use heals/rolls). It is a second export on the same handler object.
+Not called in `api: 1`; defining it today is harmless and forward-compatible. The full contract is
+pinned NOW so `api: 1` can't paint us into a corner.
 
 ```
-activate(token, ctx) → { rolls?: [{ label, formula }], apply?: [tokens], spend?: { resource, n }, notes? }
+onUse(token, ctx) → intent
 ```
 
-Not called in `api: 1`; defining it today is harmless and forward-compatible.
+`onUse` follows the **declarative-intent** pattern: the plugin still DOES nothing — it RETURNS a
+description of what should happen, and the host validates it and executes through its own systems.
+A plugin can no more heal you directly than a `passive` handler can change your AC directly.
+
+### 8.1 How `onUse` differs from `passive` (the state model)
+
+| | `passive` | `onUse` |
+| --- | --- | --- |
+| When | every derive (auto) | one user click, never in derive/render |
+| Reads | the dependency-resolved derive state (§8.4) | the LIVE state at the instant of the click |
+| Produces | contributions folded into stats | an intent that MUTATES play-state, once |
+| Memoized | yes (pure) | no (side-effecting; runs once per gesture) |
+| Budget | per-call + the ~20 ms aggregate | per-call only (no aggregate — it's one click) |
+
+`onUse` reads LIVE state on purpose: clicking two abilities in a row must let the second see the
+first's result (heal to 54, then a "while below 50%" ability correctly sees you're no longer below
+half). Each click applies atomically, then triggers a fresh derive, so the next click's `ctx` is
+already up to date. There is no simultaneity to resolve — one click is exactly one `onUse`.
+
+### 8.2 The intent (output) — every field optional; `{}` means "nothing happened"
+
+```json
+{
+	"rolls":   [{ "label": "Smite", "formula": "2d8" }],
+	"spend":   [{ "resource": "grit", "n": 1 }],
+	"effects": ["flat_bonus:ac+2", "apply_condition:blessed"],
+	"hp":      { "delta": "2d4+2" },
+	"tempHp":  { "amount": "cha" },
+	"cost":    "bonus",
+	"notes":   ["Second Wind"]
+}
+```
+
+- **`rolls`** — dice to roll. FORMULAS only (host rolls, logs, shows) — the plugin never sees the
+  result (see §8.3). Each formula is cost-capped like any dice.
+- **`spend`** — resources / spell slots to consume. The host checks each EXISTS and `n ≤ remaining`
+  BEFORE applying anything; if any is unaffordable the WHOLE use is rejected with a notice and
+  nothing is spent (§8.5). `n` is a finite integer, cost-capped.
+- **`effects`** — L1 vocabulary tokens applied as a runtime effect (a buff/condition/resource),
+  same parser + host clamps as content; a `plugin:` token here is ignored (no recursion); a
+  duration is carried by the token and expired by the existing round counter.
+- **`hp`** — `{ delta }` where delta is a signed FORMULA or number the host applies through its
+  normal HP path (temp HP absorbs damage first; heal clamps to max; damage floors at 0 → the host's
+  death-save flow, never an instant-kill shortcut). A random heal ("heal 2d6") is expressed HERE as
+  a formula — the host rolls it — never as a number the plugin rolled.
+- **`tempHp`** — grant temporary HP (formula/number); the host applies 5e's "don't stack, take the
+  higher" rule — the plugin can't force a lower value over a higher existing one.
+- **`cost`** — optional action-economy cost (`action | bonus | reaction | free`); the host deducts
+  it from the turn tracker. Absent → the host doesn't touch the economy.
+- **`notes`** — plain-text log/tooltip lines (same plain-text-only rule as everywhere).
+
+Caps (host-enforced; exceeding → whole use rejected → notice): ≤ 8 rolls, ≤ 8 spend entries, ≤ 16
+effect tokens, ≤ 8 notes; every number finite + clamped.
+
+### 8.3 The single-pass limit (what `onUse` CANNOT do in `api: 2`)
+
+`onUse` returns its intent in ONE shot, BEFORE any dice are rolled — so it cannot branch on a roll
+result ("on a 6, also stun"). Roll-dependent OUTCOMES are expressed as formulas the host resolves
+(`hp.delta: "2d6"`), but roll-dependent LOGIC (read the die, then decide) needs a host callback and
+is deferred to a later API. Design your ability so the math is decided from `ctx`, and randomness
+is only in the formulas you hand back.
+
+### 8.4 Resolving conditional effects (the order model — a rules-core concern)
+
+A condition like "+2 attack while below 50% HP" reads a value that usually no effect changes, so a
+single derive pass resolves it. The only hard case is a conditional whose CONDITION reads a value
+another conditional WRITES — raging grants +10 max HP, and separately "advantage while below half"
+reads max HP. RAW gives a clear answer (you ARE raging → max IS 110 → you ARE below half): a
+DEPENDENCY order, not an arbitrary one. The host resolves it as:
+
+1. **RAW default, order-independent where RAW is.** Stacking bonuses fold commutatively (sum);
+   same-target sets take the most potent (max), per "Combining Game Effects". Order literally can't
+   change the number, so no file-scan / namespace-sort luck ever decides a stat.
+2. **Dependency order for the rare chain.** Where one conditional's condition depends on another's
+   output, effects resolve in dependency order (a DAG). For real 5e/5.5e content this graph is
+   almost always empty, so it collapses to the plain single pass — no iteration, no convergence
+   loop, no "was iterated" flag.
+3. **A genuine cycle is a content bug, not runtime state.** A self-referential effect ("+10 max HP
+   while below 50% of max") has no unique answer (two self-consistent fixed points); the host
+   DETECTS the cycle and flags it in content-health ("this effect's condition depends on its own
+   output") instead of iterating to cope. Sticky / self-referential effects must be modelled as a
+   LATCH (an `onEvent` toggle, §8.7), never a pure derived condition.
+
+**Visible, reorderable order + a report loop (the safety net).** The resolution order is shown as a
+list and can be reordered per character (play-state; a "reset to default" restores the computed
+order). For the commutative majority reordering changes NOTHING (RAW ignores order there) — the UI
+marks which effects are actually order-sensitive so the control isn't a false affordance.
+Reordering is the escape hatch for the rare case the default resolves a stat in a way the user
+believes breaks a rule; doing so prompts a pre-filled GitHub "rules-order" issue so the DEFAULT
+gets fixed. The intent: a manual reorder is a temporary patch AND a bug signal — if anyone needs
+it, our default was wrong and we correct it, driving the need toward zero.
+
+The `ctx` a `passive` handler reads is therefore the dependency-resolved state, including active
+flags/conditions (`bloodied`, `raging`, `concentrating`) so a "while raging" condition can see it.
+Per-system note: 5.5e defines **Bloodied** (HP ≤ half max) as a game term many triggers use; 5e
+(2014) has no such core term (features spell out "half its hit points"). So `bloodied` is a
+first-class flag under 5.5e and a computed convenience under 5e — a real per-system seam.
+
+### 8.5 Atomicity, targeting, failure
+
+- **All-or-nothing.** The host validates the ENTIRE intent (affordability, caps, well-formedness)
+  first, then applies every part, or rejects the whole thing. Never a partial (a spent resource
+  with a failed heal).
+- **Self-target only.** An intent affects the active character. Multi-target (heal an ally) is out
+  of scope for a single-character app.
+- **Self-gating.** If the ability's own condition isn't met, `onUse` returns `{}` (+ a note); the
+  button can stay clickable, the handler declines. Availability logic lives in the handler.
+- **Fail-closed.** A throw / timeout / invalid intent applies NOTHING and shows a notice; the
+  shared "3 failures → disable for the session" counter applies. `onUse` never runs during derive
+  or render — only on an explicit user gesture — so a broken handler can't corrupt a recompute.
+
+### 8.6 Example (pinned shape)
+
+```js
+globalThis.handlers = {
+	'second-wind': {
+		onUse(token, ctx) {
+			// "spend 1 grit, heal 2d6 + fighter level" — decided from ctx, rolled by the host
+			const lvl = ctx.classLevels.fighter ?? 0;
+			if ((ctx.resources?.grit ?? 0) < 1) return { notes: ['Second Wind: no grit left'] };
+			return {
+				spend: [{ resource: 'grit', n: 1 }],
+				hp: { delta: `2d6+${lvl}` },
+				cost: 'bonus',
+				notes: ['Second Wind']
+			};
+		}
+	}
+};
+```
+
+### 8.7 Reserved: the `onEvent` hook — the third state channel (`api: 2+`, shape pinned)
+
+The state model has exactly THREE channels, and every state transition maps to one:
+
+| Channel | Fires | Direction | Reads |
+| --- | --- | --- | --- |
+| `passive` | every derive (auto) | READS state → contributions | dependency-resolved state (§8.4) |
+| `onUse` | explicit user click | WRITES state (once) | live state |
+| `onEvent` | a game event | WRITES state (once) | live state |
+
+`onEvent` covers transitions that are neither a passive read nor a user click — automatic changes
+driven by play events (rage ends if you didn't attack this turn; concentration breaks on damage; a
+trigger on GAINING a condition). Same declarative-intent output as `onUse`.
+
+```
+onEvent(event, ctx) → intent
+```
+
+Event vocabulary (pinned): `turnStart` · `turnEnd` · `attackMade` · `damageTaken` · `rest` ·
+`wentUnconscious` · **`effectGained`** · **`effectLost`**. `effectGained`/`effectLost` map onto the
+existing `play.effects` add / expire path — a condition is an effect (`apply_condition`), so
+"gained the poisoned condition" and "gained rage" are the same event, carrying
+`{ effect: { id, source, positive, durationRounds? } }`.
+
+Three guards this hook MUST ship with:
+
+1. **Post-hoc, not veto.** `effectGained` fires AFTER the effect is applied — it can add a
+   consequence (a roll, another effect, temp HP) but cannot cancel the arrival. "Save to resist the
+   condition" is pre-application interception — a harder hook, not in v1.
+2. **No recursive cascade.** An intent applied BY an `onEvent` handler does NOT itself re-fire
+   events (one level; or a small depth cap with dedupe) — otherwise `effectGained` → apply effect →
+   `effectGained` → … loops.
+3. **Deterministic order.** One event may wake several plugins → resolve in `ns` order; side-effecting, not memoized, once per event.
+
+With all three channels, Rage is fully expressible: `onUse` to start (flag + spend a use),
+`passive` for the bonuses while the flag is set, `onEvent('turnEnd')` to end it if you didn't
+attack, `effectLost` to clear the bonuses when the flag drops. `onEvent` is deferred (`api: 2+`);
+only its vocabulary and shape are pinned now so adding it later stays non-breaking.
 
 ## 9. Examples
 
@@ -246,7 +440,7 @@ content: … ,effects
 // plugins/my-homebrew/main.js
 globalThis.handlers = {
 	'exploit-die': {
-		apply(token, ctx) {
+		passive(token, ctx) {
 			const lvl = ctx.classLevels.fighter ?? 0;
 			if (lvl < 1) return { notes: ['Exploit die: requires fighter levels'] };
 			// args = "d6@1,d8@5,d10@11" — hostile input: parse defensively
@@ -257,7 +451,7 @@ globalThis.handlers = {
 			}
 			if (!die) return {};
 			return {
-				tokens: [`flat-bonus:attack+1${die}`],
+				tokens: [`flat_bonus:attack+1${die}`],
 				notes: [`Exploit die: ${die} (fighter ${lvl})`]
 			};
 		}
@@ -279,9 +473,9 @@ effects: plugin:my-homebrew:grit-pool
 ```js
 globalThis.handlers = {
 	'grit-pool': {
-		apply(token, ctx) {
+		passive(token, ctx) {
 			const n = Math.max(1, ctx.abilities.wis.mod);
-			return { tokens: [`grant-resource:grit:${n}:short`] };
+			return { tokens: [`grant_resource:grit:${n}:short`] };
 		}
 	}
 };
@@ -294,7 +488,7 @@ globalThis.handlers = {
 ```js
 globalThis.handlers = {
 	'scaling-ward': {
-		apply(token, ctx) {
+		passive(token, ctx) {
 			const bonus = Math.floor(ctx.level / 5);
 			if (bonus === 0) return {};
 			return {

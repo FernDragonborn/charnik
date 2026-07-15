@@ -13,11 +13,11 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
 
 ## A · Rules-math bugs (pure core — wrong numbers on the sheet)
 
-- [ ] **A1 · Heavy armor + negative DEX lowers AC.** `rules/core.ts armoredAC` does
-  `Math.min(dexMod, dexCap)`; heavy-armor rows carry `armor_dex_cap = 0`, so DEX 8 gives
-  chain mail AC 15. RAW (both editions): heavy armor **ignores** Dex entirely. Fix:
-  `dexCap === 0` ⇒ Dex contribution is 0 (medium armor with negative Dex stays as-is — RAW
-  applies it). Add golden test: chain mail + DEX 8 = AC 16.
+- [x] **A1 · Heavy armor + negative DEX lowers AC.** FIXED 2026-07-15. `rules/core.ts armoredAC`
+  now special-cases `dexCap === 0` ⇒ Dex contribution is 0 (no bonus, no penalty); light (null)
+  and medium (2) still apply a negative Dex mod (the cap is an upper bound only), matching RAW in
+  both editions. Golden tests added (plate + DEX 8 = 18; medium 14 + DEX 8 = 13; light 11 + DEX 8
+  = 10).
 - [ ] **A2 · Multiclass max-die HP overcount.** VERIFIED both editions, rule identical
   (PHB'14 / PHB'24 multiclassing): the max-die level-1 HP is granted **once per character** —
   for level 1 of the FIRST class; level 1 of every later class uses avg-rounded-up + CON.
@@ -35,7 +35,7 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
 - [x] **A5 · `disadvantage` missing from the effect vocabulary.** FIXED 2026-07-15 (EFX-1):
   full kind (parse/apply-note/flags/rollEffectsFor + `netAdvantage` cancel rule); passives take
   ±5 from adv/dis on the underlying check.
-- [x] **A6 · `grant-proficiency:skill.<id>` silently dropped.** FIXED 2026-07-15 (EFX-1):
+- [x] **A6 · `grant_proficiency:skill.<id>` silently dropped.** FIXED 2026-07-15 (EFX-1):
   `parseEffect` canonicalizes the target in ONE place (`skill.` strips, `save.` stays); the
   granted level is a single ladder value (`proficient`/`expertise`), never two booleans.
 - [ ] **A7 · Attack-row heuristics (minor).** `computeAttacks` adds proficiency
@@ -51,7 +51,10 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
   the panel shows REMAINING rounds and typed durations re-anchor to "from now".
 - [ ] **B2 · Dead play-state fields: `hitDiceSpent`, `deathSaves`, `exhaustion`.** Schema-only;
   no UI, no logic. Short rest can't spend hit dice (see UBUG-1 — same work), long rest doesn't
-  restore them, death saves have no tracker, exhaustion levels have no effects.
+  restore them, death saves have no tracker, exhaustion levels have no effects. `exhaustion`
+  design DECIDED (2026-07-15) → PLAN.md EXPR section: data-driven per-system ladder (effect tokens
+  keyed by level, cumulative in 2014 / uniform via the `exhaustion` L2 var in 2024), always
+  manually settable; part of the broader conditions-as-data model (closes A4/B9).
 - [ ] **B3 · No rotating backups for character.json.** Atomic temp→rename exists
   (`storage/tauri.ts writeBytes`); the "autosave + rotating backups" invariant's backup half
   doesn't.
@@ -81,6 +84,33 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
   emits a block (e.g. "spellcasting blocked: wearing armor without proficiency" — PLAN's own
   example). Related: passives never receive the ±5 advantage/disadvantage adjustment
   (core.ts comment defers it to effects; no code does it).
+- [ ] **B10 · Resource pip render is O(max) — unbounded content can OOM the view.** Both
+  `ResourceBar.svelte:19` and `PanelCard.svelte:229` do `{#each range(r.max) …}`, and
+  `range` (`combat/helpers.ts:51`) is `Array.from({length: n})` — so a resource's `max`
+  becomes that many allocated array entries + DOM `<button>` pips. `max` comes from a
+  `grant_resource:<id>:<max>:<recharge>` token with NO cap in `parseEffect`
+  (`effects/index.ts:89`, `max: Number(m[2])`), and content is untrusted input (shared
+  packs). A single cell `grant_resource:x:1000000000` allocates a billion-element array →
+  the tab OOMs before rendering. Today the pip UI is only sane up to ~6-ish points anyway.
+  **Fix = make the render O(1) above a small threshold, not just cap the number:** render
+  individual pips up to a THRESHOLD (≈12), and above it switch to the compact numeric
+  `spent/max` control (± buttons + the `N/max` label that already renders alongside the
+  pips) so cost is bounded regardless of `max`. This is the general "cap the COST of a
+  number where it drives a loop/alloc/DOM-count, not its VALUE" rule (see the plugin
+  cost-cap discussion in PLAN.md → PLG); the same class covers the dice roller loop
+  (`rules/dice.ts:73`). Present-day content-path hardening — not gated on plugins.
+  UPDATE: the DATA cap is now in (`MAX_RESOURCE_MAX = 1000` in `parseEffect`), so the
+  billion-array OOM is gone — but 1000 pips still renders badly; the O(1) threshold
+  (pips ≤ ~12, else numeric `spent/max` control) is the remaining UI work here.
+- [ ] **B11 · `Storage.read()` has no size cap — `FileEntry` exposes no size to gate on.** The
+  seam (`storage/types.ts`) slurps a whole file into a string with `read(path)`, and `FileEntry`
+  carries `mtime` but not `size`, so nothing can reject an oversized file BEFORE reading it into
+  memory. Untrusted content (shared CSV packs; later `plugins/<ns>/main.js` with its ≤256 KB spec
+  cap) can therefore be read wholesale first. Fix = add `size` to `FileEntry` (the same `stat`
+  that already fills `mtime` returns it — near-free) and have discovery/loaders check it from
+  `list()` and skip over-cap files without a `read()`. Serves both the content path (SECURITY #8
+  "file size caps", currently unenforced) and plugin loading. Deferred implementation: it's a
+  cross-cutting interface change (types + Tauri fs + memory impl + consumers) with no consumer yet.
 
 ## C · Design-token / CSS violations
 
@@ -138,9 +168,9 @@ the existing spec, not a redesign. Architecture unchanged: bounded vocab (no DSL
 `applyEffects` seam, `{value, trace, notes}`, removable module, eslint fence. 342 tests green.
 
 - [x] **EFX-1 · Vocabulary to spec.** DONE: `disadvantage` kind end-to-end (parse / apply-note /
-  flags / `rollEffectsFor` / `netAdvantage` cancel rule); `grant-proficiency:[expertise:]` as ONE
+  flags / `rollEffectsFor` / `netAdvantage` cancel rule); `grant_proficiency:[expertise:]` as ONE
   ladder level (expertise-without-proficiency unrepresentable); target canonicalization in
-  `parseEffect` (fixes A5/A6); `hp-max` + `passive.<skill>` routed THROUGH `applyEffects`
+  `parseEffect` (fixes A5/A6); `hp_max` + `passive.<skill>` routed THROUGH `applyEffects`
   (Toughness/Aid work; passives take ±5 adv/dis); `attack`/`damage` flat + dice effects wired
   into weapon AND spell-attack rolls. Plugin seam prep: `plugin:` namespace reserved + handler
   contract pinned in PLAN (doc-only).
