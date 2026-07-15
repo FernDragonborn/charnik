@@ -135,16 +135,19 @@ export function armoredAC(args: {
 	dexCap: number | null;
 }): Computed {
 	const dexMod = abilityModifier(args.dexScore);
-	const applied = args.dexCap === null ? dexMod : Math.min(dexMod, args.dexCap);
+	// Heavy armor (dexCap 0) ignores DEX ENTIRELY — no bonus AND no penalty, so a negative DEX mod
+	// must not lower AC (RAW, identical in 5e and 5.5e). Light (null) applies the full mod; medium
+	// (2) caps the mod's UPPER bound but a negative mod still applies (the cap is a maximum, not a
+	// floor). `Math.min(dexMod, 0)` would wrongly subtract a negative mod under heavy armor.
+	const applied =
+		args.dexCap === null ? dexMod : args.dexCap === 0 ? 0 : Math.min(dexMod, args.dexCap);
+	const dexLabel =
+		args.dexCap === 0
+			? 'DEX (heavy: ignored)'
+			: `DEX${args.dexCap !== null ? ` (max ${args.dexCap})` : ''}`;
 	return computed([
 		{ source: 'Armor', layer: 'item', op: 'add', amount: args.armorBaseAc },
-		{
-			source: 'DEX' + (args.dexCap !== null ? ` (max ${args.dexCap})` : ''),
-			layer: 'ability',
-			op: 'add',
-			amount: applied,
-			note: `DEX ${args.dexScore}`
-		}
+		{ source: dexLabel, layer: 'ability', op: 'add', amount: applied, note: `DEX ${args.dexScore}` }
 	]);
 }
 

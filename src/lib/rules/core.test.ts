@@ -73,6 +73,15 @@ describe.each<System>(['5e', '5.5e'])('system-agnostic formulas (%s)', () => {
 		expect(armoredAC({ armorBaseAc: 16, dexScore: 18, dexCap: 0 }).value).toBe(16); // chain mail
 	});
 
+	it('AC: heavy armor ignores DEX entirely — a negative DEX must NOT lower AC (A1)', () => {
+		// plate (18) on a DEX 8 (mod −1) character: heavy armor gives no DEX bonus AND no penalty
+		expect(armoredAC({ armorBaseAc: 18, dexScore: 8, dexCap: 0 }).value).toBe(18);
+		// medium armor: the cap is only an upper bound, so a negative DEX mod still applies
+		expect(armoredAC({ armorBaseAc: 14, dexScore: 8, dexCap: 2 }).value).toBe(13);
+		// light armor: full negative mod applies too
+		expect(armoredAC({ armorBaseAc: 11, dexScore: 8, dexCap: null }).value).toBe(10);
+	});
+
 	it('max HP (SRD fixed): barbarian d12 L3 CON 14, wizard d6 L1 CON 12', () => {
 		expect(maxHpForClass({ hitDie: 'd12', level: 3, conScore: 14 }).value).toBe(32);
 		expect(maxHpForClass({ hitDie: 'd6', level: 1, conScore: 12 }).value).toBe(7);

@@ -31,6 +31,13 @@ export interface Rolled {
 	advantageRoll?: AdvantageRoll;
 }
 
+/** Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted
+ *  formula (shared content pack, later a plugin) must not be able to request a billion dice and
+ *  freeze the tab. Bounds are far above any real spell (Meteor Swarm is 40d6) — they cap WORK, not
+ *  legal values. Terms beyond them are clamped, not rejected, so a typo still rolls something. */
+const MAX_DICE_PER_TERM = 1000;
+const MAX_DIE_SIDES = 1000;
+
 /** Roll one die with `sides` faces. */
 const rollDie = (sides: number, rng: Rng) => 1 + Math.floor(rng() * sides);
 
@@ -42,14 +49,22 @@ const formatModifier = (n: number) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 export function parseDiceTerm(term: string): BonusDie | null {
 	const m = /^([+-]?)(\d+)d(\d+)$/.exec(term.trim());
 	if (!m) return null;
-	return { count: Number(m[2]), sides: Number(m[3]), sign: m[1] === '-' ? -1 : 1 };
+	return {
+		count: Math.min(Number(m[2]), MAX_DICE_PER_TERM),
+		sides: Math.min(Number(m[3]), MAX_DIE_SIDES),
+		sign: m[1] === '-' ? -1 : 1
+	};
 }
 
-/** Parse every `NdM` token in a string into a pool ({sides: count}). "2d6 + 1d4" → {6:2, 4:1}. */
+/** Parse every `NdM` token in a string into a pool ({sides: count}). "2d6 + 1d4" → {6:2, 4:1}.
+ *  Counts/sides are cost-capped (see the caps above) so an untrusted formula can't blow the loop. */
 export function parseDicePool(s: string): Record<number, number> {
 	const out: Record<number, number> = {};
-	for (const m of s.matchAll(/(\d+)d(\d+)/gi))
-		out[Number(m[2])] = (out[Number(m[2])] ?? 0) + Number(m[1]);
+	for (const m of s.matchAll(/(\d+)d(\d+)/gi)) {
+		const sides = Math.min(Number(m[2]), MAX_DIE_SIDES);
+		const count = Math.min(Number(m[1]), MAX_DICE_PER_TERM);
+		out[sides] = Math.min((out[sides] ?? 0) + count, MAX_DICE_PER_TERM);
+	}
 	return out;
 }
 

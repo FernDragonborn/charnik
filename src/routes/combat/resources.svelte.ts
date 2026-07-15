@@ -23,7 +23,16 @@ export class ResourceTracker {
 		c.play.spellSlotsSpent[key] = pipClick(spent, i, full);
 	};
 
-	resourceSpent = (id: string): number => this.getCharacter()?.play.resourcesSpent[id] ?? 0;
+	/** Spent count for a resource, CLAMPED to what the current sheet actually grants. Persisted
+	 *  `resourcesSpent` is keyed by id and outlives the effect that granted it — so after a feature/
+	 *  plugin is removed or its max drops, the stored `spent` can exceed the live max (or reference a
+	 *  gone resource). Clamp to `[0, currentMax]` (an absent resource → max 0) so the sheet can never
+	 *  show a negative "left" or orphan pips. */
+	resourceSpent = (id: string): number => {
+		const stored = this.getCharacter()?.play.resourcesSpent[id] ?? 0;
+		const max = this.getSheet()?.resources.find((r) => r.id === id)?.max ?? 0;
+		return Math.max(0, Math.min(stored, max));
+	};
 	resourceClick = (id: string, max: number, i: number) => {
 		const c = this.getCharacter();
 		if (!c) return;

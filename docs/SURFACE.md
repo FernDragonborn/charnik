@@ -245,7 +245,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/build/derive.ts`
 
 - `function parseSpeciesBoostChoice` — Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null.
-- `function speciesFixedAbilities` — Abilities raised by a species/sub-option's FIXED ASI (its flat-bonus effects) — excluded from the * free choice (5e H…
+- `function speciesFixedAbilities` — Abilities raised by a species/sub-option's FIXED ASI (its flat_bonus effects) — excluded from the * free choice (5e H…
 - `function asiBoost` — One per-slot ASI allocation (+2 to one ability, or +1 to two) → its ability-boost map.
 - `function buildSpellPicker` — Build the per-caster-class spell picker: the pickable spell pool grouped by level, plus the * cantrip/leveled counts …
 - `function buildIssues` — The blocking-in-Strict validation messages for a draft.
@@ -327,9 +327,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const metres` — Feet → "N m" (metric in parentheses next to imperial).
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
 - `const titleCase` — "sleight-of-hand" → "Sleight Of Hand".
-- `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat-bonus → "AC +2" / "saves +1d4"; set…
+- `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
 - `re-export EffectInstance` — A runtime effect instance — the character-schema type, re-exported for the combat views.
-- `interface ResourceView` — A grant-resource effect, resolved for the Resources section (name + charges + recharge).
+- `interface ResourceView` — A grant_resource effect, resolved for the Resources section (name + charges + recharge).
 - `function parseResourceEffect` — If an effect grants a fully-specified resource pool, resolve it — else null.
 - `function groupEffects` — Split active effects into the three panel sections.
 - `const rechargeLabel` — Recharge id → the label shown on a resource's recharge chip.
@@ -534,7 +534,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface EffectFlags`
 - `function applyEffects` — * The seam: compose effects onto a core-computed stat for `targetKey`.
 - `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
-- `function collectResources` — * Collect resource pools from `grant-resource:<id>:<max>:<recharge>` tokens.
+- `function collectResources` — * Collect resource pools from `grant_resource:<id>:<max>:<recharge>` tokens.
 - `function collectFlags` — Collect the non-numeric effect facts across all active effects (for panels/flags).
 
 ### `src/lib/i18n/index.ts`
@@ -678,4 +678,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into a URL/id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single dash, …
 
 ---
-_46 tokens · 50 global classes · 34 components · 340 exports across 53 modules · 32 duplicate suspects · generated in 119ms._
+_46 tokens · 50 global classes · 34 components · 340 exports across 53 modules · 32 duplicate suspects · generated in 140ms._
