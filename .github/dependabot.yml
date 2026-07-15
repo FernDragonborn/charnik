@@ -1,0 +1,31 @@
+# Automated dependency updates — the app's security posture assumes it may outlive active
+# maintenance: a library bump must be able to close a vulnerability without anyone hand-rolling
+# a fix (docs/PLAN.md, PLG-SEC #10). Minor/patch bumps are grouped to keep PR noise low;
+# security advisories always get their own PR regardless.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: cargo
+    directory: /src-tauri
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3

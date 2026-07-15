@@ -69,6 +69,13 @@ trust what happened.
   QuickJS-in-WASM sandbox** (`quickjs-emscripten`) with a narrow host API returning
   `{value, trace}`, hard time/memory limits, no DOM/Tauri/fs/network. **Design the plugin
   registry seam early** (cheap) even though the sandbox itself is deferred until demand.
+  Seam prep (decided 2026-07-15, doc-only — no dead code, knip is a hard gate): the token
+  namespace **`plugin:<ns>:<rest>` is RESERVED** (today such tokens parse as `unknown` → inert
+  text note, which is exactly the safe default); the handler contract is pinned as a pure
+  `(parsedToken, context) → Contribution[] | notes` returning the same `{value, trace}` shapes,
+  time-budgeted, no side effects — first-party handlers implement it as trusted TS, community
+  plugins later implement the SAME interface inside the sandbox. CSP already permits WASM
+  (`wasm-unsafe-eval`, shipped for xxhash-wasm).
   `effects.csv` is a real user-extendable content type; ship its curated catalog WITH the
   engine/vocab (P4), not before — there is no SRD "effects table" to convert from.
 - **Modifier stacking pipeline** (single, well-defined order; one abstraction, no ad-hoc
@@ -670,7 +677,7 @@ difference is at the **`Storage` seam** + content source:
 - Reinforces the invariants that already make this nearly free: static SPA, all IO behind
   `Storage`, nothing above the interface imports Tauri.
 - **Dev**: `pnpm tauri dev`. **Package**: `pnpm tauri build` → per-OS installers/binaries
-  (Win `.exe`/`.msi`, Linux AppImage/`.deb`). **Toolchain**: Rust (rustup) + **MSVC C++
+  (Win `.exe`/`.msi`, Linux AppImage (appimage-only, `tauri.linux.conf.json`)). **Toolchain**: Rust (rustup) + **MSVC C++
   Build Tools** on Windows; WebView2 runtime (already present); webkit2gtk on Linux. The
   TS side (SvelteKit + core + tests) scaffolds and runs **without** Rust; Tauri wiring
   needs the toolchain.
@@ -720,7 +727,7 @@ Libs (minimal): `papaparse`, `svelte-i18n`, `zod`; **Tauri v2** + plugins
 12. **Dice roller, content-health view, change-log** — in scope. **PWA deferred.**
 13. **Testing** → [TESTING.md]; **Security** → [SECURITY.md] (separate plans).
 14. **Packaging** — **`pnpm tauri build`** → per-OS installers (Win `.exe`/`.msi`, Linux
-    AppImage/`.deb`). Toolchain: **Rust (rustup) + MSVC C++ Build Tools** (Win) + WebView2
+    AppImage). Toolchain: **Rust (rustup) + MSVC C++ Build Tools** (Win) + WebView2
     (present); webkit2gtk (Linux). **No server / no LAN.**
 15. **System per character** — bound at creation & stored in JSON; active-system switch =
     browse/creation context only. **Cross-system character conversion = out of scope.**
@@ -769,9 +776,288 @@ Config files: `charnik.config.json` (dataDir, roots, toggles, rule-options, sett
 
 ---
 
+## Planned feature systems (N1–N6, planning drafts 2026-07-14/15)
+
+Feature designs from the audit-session planning discussions (moved here from docs/AUDIT.md —
+these are roadmap work, not defects). Cross-refs: `EFX-*` / `B*` / `D*` / `A*` = items in
+[`docs/AUDIT.md`](AUDIT.md); `UBUG-*` = the backlog below. Stable IDs — don't renumber.
+
+Core insight: PHB class features reduce to THREE data shapes, and the engine for two of them
+already exists — (1) passive modifier tokens (blocked only on EFX-2 gathering), (2) activatable
+actions = COMPOSITION of existing systems (`economy.trySpend` + `resourcesSpent` + `addEffect`
+with duration + `rollPool` — no new engine, new `class_features` columns: activation slot,
+resource cost, applied tokens, duration, roll), (3) choice groups (`choice_group` + `choose_n`
+columns; generalizes the builder's slotFeats pattern; chosen rows then behave as 1/2).
+Level scaling stays formula-free: per-level `class_features` rows re-grant (monk die d6→d12,
+superiority d8→d12) — the table is already keyed by level; L2 expressions not needed for ~90%
+of PHB. **Acceptance (decided 2026-07-15): FULL PHB integration — every feature of every PHB
+class must be expressible via one of the three shapes (or explicitly marked manual-text
+fallback) — PLUS the tier-1 homebrew set** (researched 2026-07-15): Blood Hunter (Mercer;
+D&D-Beyond-hosted, the most-played homebrew), Gunslinger (Mercer), Pugilist (Ben Hoffman),
+KibblesTasty Psion/Warlord/Inventor/Spellblade, laserllama alternate classes (Exploit Dice),
+Scholar (A. M. Black). That set adds a mechanics superset the engine must cover:
+**HP-as-cost** (Crimson Rite, Blood Curse amplify), **variable point cost per use** (Psion
+psi powers — spending is not always 1 pip), **event-based recharge** (Gunslinger grit on
+crit/kill — v1: manual restore button + note, automate later), **attack dice riders**
+(hemocraft/exploit/sneak dice — existing bonusDice path, per-level scaling via data rows),
+**weapon properties misfire/reload** (item columns; v1 display-only, no enforcement).
+Choice groups already cover maneuvers = curses = exploits = invocations = metamagic (one
+shape). PHB examples remain the smoke set: Rage, Second Wind + Action Surge, ki + martial
+die + Flurry, Sneak Attack, Wild Shape, Divine Smite; Metamagic point↔slot conversion may
+stay semi-manual.
+
+- [ ] **N1 · Inventory view.** New combat panel `pid: 'inventory'` (panel infra + the
+  layout-model plan already reserve it): rows = name + description, qty stepper, equip/attune
+  toggles (attunement cap 3 — Strict blocks, note explains), "use" on consumables (qty−1).
+  B7 lands here: weight sum → carrying-capacity bar (+ kg). Money is its OWN item (→ N6),
+  not an inventory row. Equipped/attuned effects already flow (gatherEffects) and AC/attacks
+  re-derive reactively. MIGRATIONS: decided 2026-07-15 — 0 users yet, so NO migration work
+  now; schema may change freely (breaking) until release; the schemaVersion machinery stays
+  for post-release.
+- [ ] **N2 · Class-feature engine ("features as data").** The three shapes above + the hard
+  case: **Wild Shape = stat-block replacement**. Model: `play.form = {monsterRef, formHp} |
+  null`; deriveSheet branches — physical scores/AC/attacks/speed from the (already-typed!)
+  monster row, mental stays own; isolated removable seam like effects; 2014/2024 diverge
+  (2024 = temp HP, known-forms list). **Gate (decided 2026-07-15): implement ONLY against a
+  written per-edition spec sheet taken verbatim from PHB'14 + PHB'24 — 100% RAW fidelity in
+  both editions is a hard requirement here** (HP pool vs temp HP, CR/movement limits per
+  level, what's kept vs replaced, revert-at-0 carryover, equipment handling, casting rules).
+  Superiority dice: extend the grammar —
+  `grant-resource:superiority-dice:4:d8:short` (decided 2026-07-14: die BEFORE recharge —
+  "what the resource is, then when it refills"; ResourceDef + `die`). The die segment is
+  optional and shape-distinguishable (`d\d+` vs `short|long|other`), so existing 3-segment
+  tokens (`grant-resource:rage:2:long`) keep parsing unchanged. Spending rolls the die into
+  attacks via the existing `bonusDice` path. Extra Attack: `flat-bonus:attacks+N` →
+  Attacks panel shows ×N. Prereq: EFX-2; content-schema columns bump + converter updates.
+  Order: shapes 1→3→2, Wild Shape last as its own item.
+- [ ] **N3 · Builder/level-up redesign — descriptions everywhere.** Requirement: NOTHING is
+  picked blind (spells, feats, subclasses, maneuvers, features). UI thesis: master–detail
+  with REUSED WikiDetail as the detail pane (one-shared-component rule; no new renderer);
+  hover/focus previews, click pins; narrow screens = expandable rows. Level-up gets a
+  "gained at level N" screen from `featuresForClass`. Process (decided 2026-07-15): go
+  STRAIGHT to an HTML mock in design-preview/ (no ASCII drafts — too big a piece), approve,
+  bake — and split the 1032-line build page (D1) while baking. Choice groups (N2 shape 3)
+  render here.
+- [ ] **N4 · Skills system fixes.** (a) BUG: `toggleExpertise` is uncapped — cap from data
+  (`expertise_slots` per-level class_features rows: Rogue 2@1+2@6, Bard 2@3+2@10), Strict
+  enforces, Free doesn't; (b) effects integration: `grant:expertise` missing (EFX-1),
+  effect-granted skills not shown as locked-on in the builder; (c) 'half' (Jack of All
+  Trades) is a dead branch — type + `skillCheck(halfProficient)` exist, nothing calls them;
+  wire via a bard feature token; (d) combat view renders only a binary prof dot though
+  `sheet.skills[k].prof` already carries none/half/proficient/expertise — tiered indicator
+  + `why()` source.
+- [ ] **N5 · Adjacent gaps (assistant's additions).** (1) **Features panel on the combat
+  sheet** — a character can't READ their own features/traits anywhere; read-only prose list,
+  cheapest big win, zero prereqs. (2) Concentration check prompt on damage (CON save DC
+  max(10, dmg/2)) — `damage()` doesn't even hint. (3) Death saves + exhaustion UI (→ B2).
+  (4) Ammunition as consumable — decided 2026-07-15: tracking OFF by default (a toggle
+  that exists but is never enforced; ~99% of tables don't track ammo). (5) Short-rest
+  hit-dice UI (→ UBUG-1/B2). (6) Search/filter in builder pickers — SRD lists are already
+  long, PHB homebrew makes them impassable. (7) Multiclass: combat preparedCap reads
+  classes[0] only. (8) Sneak Attack "once per turn" — first per-turn-limit case; manual
+  toggle first, automation later.
+- [ ] **N6 · Currency (decided 2026-07-15: separate design, not an inventory row).** Support
+  ONLY the base PHB coins (cp / sp / ep / gp / pp — 5 in the PHB; settings invent their own,
+  those stay out of scope), with per-character HIDING of denominations the player doesn't
+  use (electrum first candidate). An exchange-rate reference sits right next to the tracker
+  (1 gp = 10 sp = 100 cp; 1 ep = 5 sp; 1 pp = 10 gp). Coin WEIGHT (50 coins = 1 lb) is
+  optional and OFF by default — many tables don't track it; when on, folds into N1's
+  capacity bar. Lives in play-state; no migration concerns pre-release (see N1 note).
+
+### PLG · Plugin sandbox (L3 expressiveness) — implementation plan (2026-07-15)
+
+The QuickJS-in-WASM decision stands (SECURITY.md #4); this pins HOW. Vocabulary L1 is built
+(EFX-1..4), the `plugin:` namespace is reserved, CSP already allows WASM — the runway exists.
+
+**SPEC-FIRST (decided 2026-07-15): [`docs/PLUGINS.md`](PLUGINS.md) is the normative `api: 1`
+specification, written BEFORE any code** — token grammar, manifest, handler registration, the
+full ctx and result schemas with caps, execution model, lifecycle/consent, compatibility
+contract, worked examples, troubleshooting. PLG-1/PLG-2 implement AGAINST it; divergence means
+amending the spec first. Two design changes born while writing it: (a) the `apply` result may
+return **L1 `tokens`** alongside `contributions` — the plugin computes WHICH vocabulary token
+applies (level-scaled dice, computed resource counts) and the tokens ride the existing
+parse/validate/fold machinery (no new validation surface; nested `plugin:` tokens ignored —
+no recursion); (b) `ctx` includes **`classLevels`** (bare class id → level) — without it the
+single most common homebrew pattern (class-level scaling) is inexpressible.
+
+**Design decisions (proposed):**
+
+- **Proven solution, zero DIY (decided 2026-07-15).** quickjs-emscripten is the
+  industry-validated container for exactly this job — Figma's plugin system runs this same
+  architecture after two failed iterations (iframe, then a Realms shim that got broken).
+  Alternatives considered and rejected: SES/LavaMoat (MetaMask) — same-engine realm
+  isolation, faster but a weaker container with no built-in CPU/memory budgets; ShadowRealm
+  (TC39) — not stabilized; Extism (polyglot WASM plugins) — proven but demands a build
+  toolchain from authors instead of "write a main.js". NO DIY at any layer: limits are the
+  library's own APIs (`interruptHandler`/`setMemoryLimit`/`setMaxStackSize`), output
+  validation is zod (existing dep), and DIY fallbacks ("regex-sanitize the JS and eval it")
+  are forbidden permanently.
+- **Sync execution.** `deriveSheet` is synchronous and stays so → use quickjs-emscripten's
+  SYNC variant (RELEASE_SYNC). The async variant would force async through the whole rules
+  chain — rejected.
+- **One call per token per derive, not per stat.** `applyEffects` runs ~30×/derive; a
+  per-stat handler call at a ms-scale budget would melt the sheet. Handler API:
+  `apply(parsedToken, ctx) → { [targetKey]: Contribution[] } | { notes }` — a PRE-PASS in
+  deriveSheet resolves every `plugin:` token once, materializes plain contributions, and the
+  existing fold consumes them. Budget applies per call.
+- **Sandbox output = untrusted input.** Everything crossing the boundary is JSON, validated
+  with zod on the host side: layer whitelist, `|amount|` clamped, string lengths capped,
+  contribution/note counts capped. A handler that throws / times out / returns junk degrades
+  to the existing inert-text-note fallback — a plugin can NEVER break derive.
+- **Budgets & determinism.** Per-call CPU deadline via `interruptHandler` (default ~5 ms,
+  tunable const), `setMemoryLimit` (~8 MB), `setMaxStackSize`; `Math.random` and `Date`
+  neutered inside the context (same input ⇒ same output ⇒ reproducible traces).
+- **Packaging (no code-in-CSV invariant).** CSV tokens only REFERENCE handlers:
+  `plugin:<ns>:<fn>[:<args>]`. Code lives in `dataDir/plugins/<ns>/` — `plugin.json`
+  manifest (name, version, author, url, `api: 1`) + `main.js` — discovered through the
+  Storage seam ("own your data": a plugin is a folder you can read). Per-plugin enable
+  toggle, **default OFF**; first enable shows a consent dialog (manifest info + "runs
+  sandboxed: no files, no network, no app access").
+- **Registry inside the effects module** (`src/lib/effects/registry.ts`) so it dies with the
+  module (removability invariant). Two handler kinds behind ONE interface: native TS
+  (first-party, trusted) and sandboxed (community). The sandbox runtime itself is
+  DYNAMICALLY imported only when ≥1 plugin is enabled — the web bundle and the
+  effects-module seam stay lean.
+- **Host API v1 = nothing.** The context receives the serialized `(token, ctx)` and exports
+  functions; no host callbacks (no dice, no content queries). `ctx` is a read-only
+  serializable snapshot: system, level, proficiencyBonus, ability scores/mods. Callbacks
+  (roll, content lookup) are a later API bump (`api: 2`).
+- **Character ACTIONS and the sandbox (decided 2026-07-15).** Two layers. (a) The 90% case
+  needs NO action-time sandbox run: an activatable action (N2 shape 2) is DATA — clicking it
+  spends slots/resources natively and applies effect tokens; any plugin-token among them is
+  computed by the NEXT derive through the normal pre-pass (one cache-miss call, ~5 ms).
+  (b) True action-time logic (variable-cost powers etc.) = a second handler export,
+  **`activate(token, ctx) → declarative intent**: `{ rolls?: [{label, formula}], apply?:
+  [tokens], spend?: {resource, n}, notes? }` — the plugin DOES nothing, it RETURNS what
+  should happen; the host zod-validates (caps on roll/token counts, spend ≤ max) and executes
+  through the existing systems (rollPool / addEffect / resourcesSpent). Plugins return dice
+  FORMULAS, never rolled numbers — all randomness stays in dice.ts (one-roll-path invariant,
+  honest roll-log provenance; in-sandbox RNG is removed anyway). Runs on a user click, not in
+  the derive loop → per-call budget suffices, no memoization needed. `activate` is DEFERRED
+  to `api: 2` — handlers are addressed by export name, so adding it later is non-breaking;
+  the shape is pinned now so `api: 1` can't paint us into a corner.
+
+**Phases:**
+
+- [ ] **PLG-1 · Registry + native handlers (no new dep).** `plugin:` kind in `parseEffect`
+  (+ schemas EFFECT_KINDS sync + effectsField accepts the prefix), the registry interface,
+  the derive pre-pass, `effectTag` → "plugin · <ns>", behavioral tests with an injected fake
+  evaluator. Proves the seam with zero sandbox risk.
+- [ ] **PLG-2 · The sandbox itself.** quickjs-emscripten (sync build) behind a dynamic
+  import; budgets + intrinsic-neutering; JSON marshalling + zod output validation; plugin
+  discovery from `dataDir/plugins/` via Storage; Settings → Plugins list (enable toggle,
+  manifest, status, open-folder) + consent dialog; plugin errors surface in content health.
+  Integration tests in vitest/node: infinite loop → interrupted, memory bomb → limited,
+  escape attempts (fetch/require/globalThis) → undefined, malformed output → rejected,
+  happy path → contributions, determinism.
+- [ ] **PLG-3 · Documentation — a RELEASE GATE, not a DX pass** (decided 2026-07-15: we own
+  the docs responsibility; the sandbox does not ship without the full set). `docs/PLUGINS.md`
+  (+ published with the web demo): API reference (token grammar, handler signature, every ctx
+  field, the result schema, budgets/limits, determinism rules), manifest format, packaging &
+  install, the **compatibility contract** (`api: 1` is stable; breaking host-API changes bump
+  to `api: 2` with a support window — this is the long-term responsibility we're signing up
+  for), the security model FOR authors (what a plugin cannot do), a testing guide (run your
+  plugin against a character fixture), 2–3 annotated example plugins, and troubleshooting for
+  the common rejections (over budget, invalid output, disabled after repeated failures).
+  `why()` trace attribution ("via plugin <ns>") lands here too. EN first; UA translation
+  follows the app's own docs-i18n track.
+
+**PLG-SEC · Exfiltration hardening checklist (2026-07-15, user-raised — every item is a
+shipping requirement for PLG-2):** the sandbox's job is capability containment; the realistic
+leak paths are around it, not through it:
+
+1. **Zero-capability context**: nothing injected; integration tests ASSERT
+   fetch/XMLHttpRequest/WebSocket/import/require are undefined inside.
+2. **JSON-only boundary**: no live handles/functions cross; output through strict zod
+   (unknown keys stripped), numeric clamps, string/count caps; never deep-merge raw output.
+3. **Plugin output renders as PLAIN TEXT only** — no markdown/HTML/autolinked URLs from
+   notes/labels, ever. Closes the social-exfil channel (encoding data into a "click me" URL).
+4. **Least-data ctx**: game numbers only; NEVER free-text fields (character name, notes) —
+   nothing worth stealing crosses the boundary.
+5. **CSP backstop**: webview `default-src 'self'` blocks network exfil even if data leaked
+   into app-side code.
+6. **No write path by construction**: the registry API has no disk/character/config access;
+   a plugin cannot enable itself (enable state lives in user config, written only by Settings).
+7. **No remote code, no plugin auto-update** (supply-chain stance); `manifest.url` is
+   display-only and opens in the OS browser.
+8. **Fail-closed**: N consecutive failures/limit trips auto-disable the plugin (with a
+   notice); global "disable all plugins" kill switch; context recycled after any limit trip.
+9. **Resource caps**: CPU deadline, memory limit, stack size, `main.js` file-size cap,
+   output-size caps.
+10. **Dependency hygiene — the survival rationale (2026-07-15):** the app may outlive its
+    active maintenance, so security-critical surfaces must be LIBRARIES a version bump can
+    fix, never DIY nobody will patch. Consequences: use quickjs-emscripten's vanilla API
+    only (no fork, no patch-package, no monkey-patching — a bump stays a clean one-liner);
+    enable **GitHub Dependabot security updates** on the repo (auto-PRs for vulnerable deps
+    keep arriving even without an active maintainer — cheap, do it before PLG-2, it guards
+    the whole dep tree, not just the sandbox); document the WASM build's provenance.
+11. **Accepted residual risk (documented)**: hardware side channels (Spectre-class) are out
+    of the threat model for a local single-user app — the plugin already runs on the user's
+    machine WITH their consent; containment targets capability escalation and data egress.
+
+Second hardening pass (2026-07-15, self-audit — items 12–18 are also shipping requirements):
+
+12. **Consent is PER-MACHINE, hash-pinned, and lives OUTSIDE the dataDir.** The B6 decision
+    moves config INTO the dataDir, and the data-folder move/merge feature imports dataDirs
+    wholesale — so an enable-flag inside the dataDir would let a malicious "campaign backup"
+    arrive with `plugins/` + its own pre-enabled config, bypassing consent entirely. Fix:
+    consent record = `(ns, xxh64(main.js))` in app-side storage (NOT the dataDir); any hash
+    mismatch (edited/replaced main.js — also closes TOCTOU) → plugin disabled + notice +
+    re-consent. A dataDir can carry code, never consent.
+13. **Aggregate per-derive budget + memoization.** The per-CALL budget alone allows 50 tokens
+    × 5 ms = 250 ms of synchronous main-thread work on EVERY derive (each HP click). Add a
+    global budget per derive (~20 ms; once exhausted the remaining plugin tokens degrade to
+    notes) and memoize the pre-pass on (token, ctx-hash) — ctx is nearly static between
+    derives, so most derives cost zero plugin time.
+14. **Isolation granularity: one QuickJS RUNTIME per plugin.** A shared runtime would let
+    plugin A read/poison globals left by plugin B. Never share contexts.
+15. **The manifest is untrusted input too**: zod-validate plugin.json (strict, length caps),
+    render its fields as plain text in the consent dialog, and `url` must be https:// only
+    (no file:, no custom schemes — local protocol handlers are their own attack surface).
+16. **Host stamps provenance.** Plugin contributions get `source = "<ns>: …"` assigned by the
+    HOST — a plugin must not be able to masquerade as core math ("Proficiency") in `why()`.
+17. **`.finite()` everywhere**: zod's `z.number()` rejects NaN but ADMITS Infinity — every
+    numeric output field is `.finite()` + clamped.
+18. **Plugin token args are hostile.** `plugin:<ns>:<fn>:<args>` tokens arrive via CONTENT
+    (shared packs from strangers) — args are the untrusted path INTO an installed plugin.
+    Length-cap args in `parseEffect`; the authoring docs state "treat args as hostile" as a
+    contract requirement.
+
+Smaller pinned decisions: deterministic fold order across plugins (sort by ns, not folder
+scan order); the fail-closed counter is SESSION-scoped (persistent would strand a plugin
+disabled after a transient bug) + a notice each time; ctx carries no source-row data by
+design — "encode what you need in args" is the documented v1 pattern. Open: whether plugins
+may emit `override`-layer (`set`) contributions in v1.
+
+**Formula storage (pinned 2026-07-15): there is no separate formula store.** L1 dice terms
+live INSIDE tokens in the `effects` CSV cells / `play.effects`; L2 expressions (when built)
+widen the token grammar in the SAME cells, parsed by our own non-Turing parser; L3
+computation lives as code in `dataDir/plugins/<ns>/main.js` with CSV holding only the
+`plugin:ns:fn:args` reference (no-code-in-CSV). `activate`-returned formulas are transient
+intent (rolled, logged, discarded); computed RESULTS are never persisted — derive recomputes
+from scratch (same principle as refs-not-copies), and the pre-pass cache is session-memory
+only.
+
+- Deferred: plugin signing/first-party verification, web-target plugin upload UX, host
+  callbacks (`api: 2`), any marketplace/sharing story.
+
+**Open questions:** v1 desktop-only (web upload UX unclear — recommend yes)? Budget defaults
+(5 ms/call, 8 MB) fine? Consent copy tone?
+
+---
+
 ## Backlog (post-spellcasting, prioritized) — carve down gradually
 
 Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority within each.
+
+- [ ] **AUDIT-1 · Full-project audit backlog (2026-07-14) → [`docs/AUDIT.md`](AUDIT.md).**
+  Whole-`src/` correctness pass: rules-math bugs (A1 heavy-armor AC, A2 multiclass HP —
+  verified vs both editions), unfinished invariants (B1 effect expiry, B2 dead play fields,
+  B5 source filtering only in compendium, B6 config → dataDir file, DECIDED), token/CSS
+  violations, structure/size, data gaps (no 2024 languages CSV), semantic duplicates jscpd
+  can't see (F1–F9: titleCase ×6, signed ×4, ability-list ×5…), plus the **effects-engine
+  buildout plan (EFX-1..4)** — the vocab/gathering/catalog/lifecycle gaps behind "effects
+  account for too little". Stable letter+number IDs; tick items THERE, graduate designs here.
 
 **User-reported bugs (2026-07-05, desktop test — verify + fix):**
 - **UBUG-1 · Short rest doesn't heal.** `combat.rest('short')` restores resources/pact slots but not
@@ -793,8 +1079,31 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   a Linux job (matrix `ubuntu-22.04` + apt webkit2gtk deps) so `tauri-action` publishes Linux artifacts
   alongside the Windows NSIS. Ship **more than the updater bundle**: AppImage is the only auto-updatable
   target (its `.sig` feeds `latest.json`), but also emit installable `.deb`/`.rpm` for users who just
-  want to install (those don't self-update — that's fine). macOS deferred (needs Apple notarization/
-  signing, $99/yr, else Gatekeeper warns).
+  want to install (those don't self-update — that's fine). NB: `src-tauri/tauri.linux.conf.json`
+  currently pins Linux to **appimage-only** (decided 2026-07-14, "поки що тільки апімадж") and Tauri
+  auto-merges it in CI too — when this item lands, widen its `targets` (or delete the file) to get the
+  `.deb`/`.rpm` back. macOS deferred (needs Apple notarization/signing, $99/yr, else Gatekeeper warns).
+- [ ] **A11Y-1 · Dialog focus management pass.** No dialog moves keyboard focus into itself on open or
+  traps Tab inside (focus stays on the trigger behind the backdrop; Tab walks the background). The two
+  data-move dialogs now set initial focus (DataMigrationDialog/DataConflictDialog) — do the same +
+  a shared focus-trap for the rest (ConfirmDialog, OrphanDialog, ContentMetaModal, HashDriftModal,
+  SchemaDiscardDialog, FirstRunModal), ideally as one action/helper on the shared `.dialog` shell,
+  and return focus to the trigger on close. (CLAUDE.md "accessibility from day 1" invariant.)
+- [ ] **REL-2 · Package-repo distribution channels.** Beyond GitHub Releases, ship Charnik through
+  the platform package managers so users install/update the native way. Target set (decided):
+  - **AUR** (Arch) — a `charnik-bin` PKGBUILD pulling the Release AppImage; `git push` to
+    `aur.archlinux.org`, no review, cheapest channel.
+  - **Flathub** (Linux) — Flatpak manifest; widest cross-distro reach, one channel for all Linux.
+    Note the **sandbox**: Charnik reads/writes arbitrary content dataDirs, so wire XDG **portals** /
+    `--filesystem` perms or the data-move + custom roots break.
+  - **AppImage** (Linux) — already built (appimage-only via `tauri.linux.conf.json`); the portable,
+    zero-install, self-updating target.
+  - **WinGet** (Windows) — YAML manifest PR to `winget-pkgs`; standard Win10/11 channel.
+  - **Chocolatey** (Windows) — nuspec package; broader/older Win audience.
+  - **Homebrew Cask** (macOS) — **out of scope for now**: no macOS build host to compile on, so no
+    artifact to ship. Revisit if a mac runner/notarization appears (blocked on same as REL-1 macOS).
+  Most of these consume the Release artifacts, so they hang off REL-1 (need Linux + eventual mac
+  builds published first). Sequence by effort/reach: AppImage (done) → Flathub + WinGet → AUR → Choco.
 - [~] **UBUG-4 · Tauri .msi install has no content folders.** CODE DONE (needs a real `.msi` verify).
   The content was bundled inside the app (loaded over fetch) but never written to disk, so there was
   no editable folder. Now `content/provider.ts`: on desktop (`isTauri`), `getContentGraph` SEEDS the
@@ -1305,8 +1614,11 @@ tools (converters — check count-asserts + parsing):
 
 Mechanical / independent checks (don't rely on my judgment — run these to catch what the file+chain
 passes miss):
-- [ ] **MECH1 · duplication detector** (`jscpd src`) — objective dup %; should flag the 3 roll impls,
-  pip×3, csv×4, token regexes.
+- [x] **MECH1 · duplication detector** (`jscpd src`) — DONE (2026-07-14). `jscpd` devDep + `.jscpd.json`
+  (src `{ts,svelte,css}`, tests excluded, minTokens 35) + `pnpm jscpd`, wired into `pnpm lint` AND the
+  pre-commit hook (simple-git-hooks). Baseline: 100 clones / 1.67% lines (CSS worst at 3.69%, TS 0.58%);
+  **threshold 1.8%** = new duplication fails the gate. Follow-up: burn down the CSS clones, then ratchet
+  the threshold toward ~1%.
 - [ ] **MECH2 · import graph** (`madge`) — cycles, god-modules (fan-in/out), orphan files.
 - [x] **MECH3 · strict types + lint** — DONE. Baseline plain `tsc` was clean (0). Enabled BOTH
   `exactOptionalPropertyTypes` (8 sites) and `noUncheckedIndexedAccess` (81 across code+tests) in
@@ -1326,6 +1638,12 @@ passes miss):
   script. Full orphan triage catalogued in **`docs/ORPHANS.md`** (🟢 false-positive/internal ·
   🟡 unfinished · 🔴 likely dead) — NOT deleted (half-finished features). Real dead-dep found:
   `@tauri-apps/plugin-dialog` (JS file-picker not wired yet).
+  **Update (2026-07-14): knip is now GREEN and a hard gate** (wired into `pnpm lint`). Cleared the
+  whole backlog: 35 unused exports + 28 unused types un-exported or deleted, `Wip.svelte` +
+  `changeDataDir` + `diffTrees`/`TreeDiff` + `boostComplete` removed. The triage also surfaced real
+  cross-file dups fixed on the spot: `ordinal` ×3 → `util/format.ts`; combat's `EffectInstance`
+  redefinition → re-export of the character-schema type; `SystemId` now derives from the schema
+  `SYSTEMS` const (one source of truth for editions).
 - [ ] **MECH6 · differential test before merging a dup** — run both "duplicate" impls on the same
   input, assert equal. NB the pip formulas (CVM-2) are NOT equal → merging blind would change behaviour.
 
@@ -1763,7 +2081,7 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
     effects-engine on/off, language, system, theme) — all live.
 12. **Export/print + roster + content-pack sharing** — good PDF/print; manage many
     characters; **export a `source` as a shareable pack** (+ import via collision/health).
-13. **Package** via **`pnpm tauri build`** (Win `.exe`/`.msi`, Linux AppImage/`.deb`) +
+13. **Package** via **`pnpm tauri build`** (Win `.exe`/`.msi`, Linux AppImage (appimage-only, `tauri.linux.conf.json`)) +
     README (install, add-content-via-CSV, portable vs app-data mode).
 
 Security tasks are woven across phases per [SECURITY.md].
