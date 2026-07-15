@@ -6,14 +6,11 @@
 import type { Ability } from '$lib/rules/core';
 import type { Computed } from '$lib/rules/pipeline';
 import type { ContentGraph } from '$lib/content/loader';
-import type { Character } from '$lib/character/schema';
+import type { Character, EffectInstance } from '$lib/character/schema';
 import type { CharacterSheet, SkillId } from '$lib/character/derive';
 import { parseDicePool, parseDiceTerm, type BonusDie, type Rolled } from '$lib/rules/dice';
+import { ordinal } from '$lib/util/format';
 import { parseEffect, matchesTarget, EFFECT_KIND, type Recharge } from '$lib/effects/index';
-
-// The dice roller and its BonusDie/Rolled types live in the pure rules core; re-exported here so
-// existing combat consumers keep importing from one place.
-export type { BonusDie, Rolled };
 
 /** A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack —
  *  the damage roll that follows it. Rendered as up to 3 lines: the roll, the dropped adv die, damage. */
@@ -64,27 +61,45 @@ export function pipClick(currentSpent: number, index: number, total: number): nu
 	return index < remaining ? total - index : total - index - 1;
 }
 
-/** Scan active effects for what a given roll target (e.g. "save.dex", "skill.stealth", "attack")
- *  picks up: advantage, and signed bonus/penalty dice (Bless +1d4 / Bane −1d4). Pure — the caller
- *  gates it on the effects-auto toggle. `saves`/`skills` group tokens fan out to every save/skill. */
-export function rollEffectsFor(
-	effects: { effects: string[] }[],
-	key: string
-): { advantage: boolean; bonusDice: BonusDie[] } {
-	const out = { advantage: false, bonusDice: [] as BonusDie[] };
+/** What a roll target (e.g. "save.dex", "skill.stealth", "attack", "damage") picks up from active
+ *  effects: advantage/disadvantage, signed bonus/penalty dice (Bless +1d4 / Bane −1d4), and the
+ *  summed FLAT bonus. NB `flat` is for keys the sheet does NOT already fold (attack/damage) — for
+ *  save/skill keys the flat part is already inside the sheet value, so callers must ignore it there
+ *  or it double-counts. Pure — the caller gates it on the effects-auto toggle. */
+export interface RollEffects {
+	advantage: boolean;
+	disadvantage: boolean;
+	flat: number;
+	bonusDice: BonusDie[];
+}
+export const NO_ROLL_EFFECTS: RollEffects = {
+	advantage: false,
+	disadvantage: false,
+	flat: 0,
+	bonusDice: []
+};
+export function rollEffectsFor(effects: { effects: string[] }[], key: string): RollEffects {
+	const out: RollEffects = { ...NO_ROLL_EFFECTS, bonusDice: [] };
 	for (const eff of effects) {
 		for (const tok of eff.effects) {
 			const p = parseEffect(tok);
 			if (!matchesTarget(p.target, key)) continue;
 			if (p.kind === EFFECT_KIND.advantage) out.advantage = true;
-			else if (p.kind === EFFECT_KIND.flatBonus && p.dice) {
-				const die = parseDiceTerm(p.dice);
-				if (die) out.bonusDice.push(die);
+			else if (p.kind === EFFECT_KIND.disadvantage) out.disadvantage = true;
+			else if (p.kind === EFFECT_KIND.flatBonus) {
+				if (p.dice) {
+					const die = parseDiceTerm(p.dice);
+					if (die) out.bonusDice.push(die);
+				} else if (p.amount !== undefined) out.flat += p.amount;
 			}
 		}
 	}
 	return out;
 }
+
+/** Advantage + disadvantage cancel to a straight roll (5e rule) → the −1/0/+1 the roller takes. */
+export const netAdvantage = (fx: Pick<RollEffects, 'advantage' | 'disadvantage'>): number =>
+	fx.advantage === fx.disadvantage ? 0 : fx.advantage ? 1 : -1;
 
 /** Feet → "N m" (metric in parentheses next to imperial). */
 export const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/, '')} m`;
@@ -105,7 +120,7 @@ export const titleCase = (s: string) =>
 	s.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 
 /** Healing dice from a spell's text ("regains Hit Points equal to 2d4 plus …"). */
-export const healDice = (text: string): string => {
+const healDice = (text: string): string => {
 	const m = text.match(/(?:equal to|regains?|restores?)[^.]*?(\d+d\d+)/i);
 	return m?.[1] ?? '';
 };
@@ -139,13 +154,14 @@ export function effectTag(token: string): string {
 	if (p.kind === EFFECT_KIND.resistImmune && p.target)
 		return `${p.defense ?? 'resist'} · ${p.target}`;
 	if (p.kind === EFFECT_KIND.advantage && p.target) return `adv · ${targetLabel(p.target)}`;
+	if (p.kind === EFFECT_KIND.disadvantage && p.target) return `disadv · ${targetLabel(p.target)}`;
 	if (p.kind === EFFECT_KIND.grantProficiency && p.target) return `prof · ${titleCase(p.target)}`;
 	if (p.kind === EFFECT_KIND.applyCondition && p.target) return titleCase(p.target);
 	return token.replace(/[-:]/g, ' ');
 }
 
-/** A runtime effect instance (from the character's play-state). */
-export type EffectInstance = Character['play']['effects'][number];
+/** A runtime effect instance — the character-schema type, re-exported for the combat views. */
+export type { EffectInstance } from '$lib/character/schema';
 
 /** A grant-resource effect, resolved for the Resources section (name + charges + recharge). */
 export interface ResourceView {
@@ -190,6 +206,25 @@ export function groupEffects(effects: EffectInstance[]): {
 export const rechargeLabel = (r: Recharge): string =>
 	r === 'long' ? 'long rest' : r === 'short' ? 'short rest' : 'special';
 
+/** Rounds an effect has left at the given round counter (null = indefinite, floor 0). */
+export const remainingRounds = (e: EffectInstance, round: number): number | null =>
+	e.durationRounds == null ? null : Math.max(0, (e.startedRound ?? 0) + e.durationRounds - round);
+
+/** A round-timed effect is expired once the counter has advanced past its duration. */
+export const isEffectExpired = (e: EffectInstance, round: number): boolean =>
+	e.durationRounds != null && round >= (e.startedRound ?? 0) + e.durationRounds;
+
+/** Spell duration text → rounds (1 round = 6 s): "1 minute" → 10, "Concentration, up to 1 hour" →
+ *  600, "2 rounds" → 2. Null when it doesn't map to rounds (Instantaneous / Until dispelled /
+ *  Special) — a cast-applied effect is then indefinite (until removed). Pure. */
+export function durationToRounds(text: string): number | null {
+	const m = /(\d+)\s*(round|minute|hour|day)/i.exec(text);
+	if (!m) return null;
+	const n = Number(m[1]);
+	const unit = (m[2] ?? '').toLowerCase();
+	return unit === 'round' ? n : unit === 'minute' ? n * 10 : unit === 'hour' ? n * 600 : n * 14400;
+}
+
 /** The common effect durations offered in the duration dropdown (game terms, no round/minute dup).
  *  `rounds: null` = indefinite (until removed). "Custom…" is handled separately in the menu. */
 export const EFFECT_DURATION_PRESETS: { label: string; rounds: number | null }[] = [
@@ -199,10 +234,6 @@ export const EFFECT_DURATION_PRESETS: { label: string; rounds: number | null }[]
 	{ label: '1 hour · 600 rds', rounds: 600 },
 	{ label: '∞ until removed', rounds: null }
 ];
-
-/** 1 → "1st", 2 → "2nd", … */
-export const ordinal = (n: number) =>
-	`${n}${['th', 'st', 'nd', 'rd'][n % 10 > 3 || Math.floor(n / 10) === 1 ? 0 : n % 10]}`;
 
 /** The 18 SRD skills (id order) — for the custom-modifier target picker. */
 const SKILL_IDS = [
@@ -282,13 +313,6 @@ export const ABILITY_NAME: Record<Ability, string> = {
 export const DICE = [4, 6, 8, 10, 12, 20, 100];
 export const GROUP_MODES = ['level', 'prepared', 'school'] as const;
 export type GroupMode = (typeof GROUP_MODES)[number];
-export const EFFECT_PRESETS = [
-	{ label: 'Bless', tokens: ['flat-bonus:saves+1d4'] },
-	{ label: 'Bane', tokens: ['flat-bonus:saves-1d4'] },
-	{ label: 'Shield of Faith', tokens: ['flat-bonus:ac+2'] },
-	{ label: 'Half cover', tokens: ['flat-bonus:ac+2'] },
-	{ label: 'Three-quarters cover', tokens: ['flat-bonus:ac+5'] }
-];
 
 /** A weapon/unarmed attack row. */
 export interface Atk {
@@ -324,11 +348,11 @@ export interface SpGroup {
 }
 
 /** Casting-time → the icon shown before the level (↩ reaction, ⚡ bonus). */
-export const castingIcon = (ct: string): SpRow['ct'] =>
+const castingIcon = (ct: string): SpRow['ct'] =>
 	/bonus/i.test(ct) ? 'bonus' : /reaction/i.test(ct) ? 'react' : '';
 
 /** Short effect summary for a non-damage spell (curated, falls back to "utility"). */
-export function effectHint(d: Record<string, unknown>): string {
+function effectHint(d: Record<string, unknown>): string {
 	const range = String(d.range ?? '');
 	if (/self/i.test(range) && /step|door|teleport/i.test(String(d.name_en))) return 'teleport';
 	if (/counter/i.test(String(d.name_en))) return 'negate spell';

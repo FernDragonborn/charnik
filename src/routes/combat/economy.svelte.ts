@@ -6,7 +6,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
-import { pipClick, type ActionSlot, type SpRow } from '$lib/combat/helpers';
+import { pipClick, isEffectExpired, type ActionSlot, type SpRow } from '$lib/combat/helpers';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 
@@ -59,12 +59,21 @@ export class TurnEconomy {
 		const c = this.getCharacter();
 		if (c) c.play.turn.move = 0;
 	};
-	/** End the turn: refresh every action-economy slot and advance the round counter. */
+	/** End the turn: refresh every action-economy slot, advance the round counter, and expire
+	 *  round-timed effects (with a notice — never silently). A cast-linked effect that expires also
+	 *  ends its concentration (the spell's duration IS the concentration's, RAW). */
 	nextTurn = () => {
 		const c = this.getCharacter();
 		if (!c) return;
 		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
 		c.play.round += 1;
+		const expired = c.play.effects.filter((e) => isEffectExpired(e, c.play.round));
+		if (!expired.length) return;
+		c.play.effects = c.play.effects.filter((e) => !isEffectExpired(e, c.play.round));
+		for (const e of expired) {
+			if (e.source && e.source === c.play.concentration) c.play.concentration = null;
+			toast(`${e.label} — expired`);
+		}
 	};
 	/** Enter/leave combat. Entering resets the turn + round so tracking starts clean; leaving hides the
 	 *  turnbar and lifts action-economy enforcement. */

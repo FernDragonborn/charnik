@@ -16,6 +16,7 @@
 		effectTag,
 		groupEffects,
 		rechargeLabel,
+		remainingRounds,
 		range,
 		type EffectInstance,
 		ABIL,
@@ -30,11 +31,11 @@
 	const effectGroups = $derived(groupEffects(c.play.effects));
 	// the open duration dropdown (which effect + its anchor button); its rounds tracked live
 	let durationMenu = $state<{ iid: string; anchor: HTMLElement } | null>(null);
-	const menuRounds = $derived(
-		durationMenu
-			? (c.play.effects.find((e) => e.iid === durationMenu?.iid)?.durationRounds ?? null)
-			: null
+	const menuEffect = $derived(
+		durationMenu ? c.play.effects.find((e) => e.iid === durationMenu?.iid) : undefined
 	);
+	// the menu prefills / the chip shows REMAINING rounds at the live round counter, not the total
+	const menuRounds = $derived(menuEffect ? remainingRounds(menuEffect, combat.round) : null);
 	const durationLabel = (rounds: number | null | undefined) =>
 		rounds != null ? `${rounds} rds` : '∞';
 
@@ -65,7 +66,7 @@
 				class="duration-select"
 				title="Set duration"
 				onclick={(ev) => (durationMenu = { iid: e.iid, anchor: ev.currentTarget })}
-				>{durationLabel(e.durationRounds)} ▾</button
+				>{durationLabel(remainingRounds(e, combat.round))} ▾</button
 			>
 			<button
 				class="icon-button effect-remove"

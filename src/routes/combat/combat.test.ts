@@ -18,9 +18,10 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/spells_srd.csv',
 		[
-			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration',
-			`bless,5.5e,${S},Bless,1,enchantment,action,30 ft,1 minute,V S M,true`,
-			`fire-bolt,5.5e,${S},Fire Bolt,0,evocation,action,120 ft,instant,V S,false`
+			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,effects',
+			`bless,5.5e,${S},Bless,1,enchantment,action,30 ft,"Concentration, up to 1 minute",V S M,true,flat-bonus:saves+1d4`,
+			`shield-of-faith,5.5e,${S},Shield of Faith,1,abjuration,bonus,60 ft,"Concentration, up to 10 minutes",V S M,true,flat-bonus:ac+2`,
+			`fire-bolt,5.5e,${S},Fire Bolt,0,evocation,action,120 ft,instant,V S,false,`
 		].join('\n')
 	);
 	await st.write(
@@ -77,6 +78,109 @@ describe('CombatVM · concentration (CVM-bug1)', () => {
 		character.play.concentration = `spell:${S}:bless`;
 		combat.clearConcentration();
 		expect(character.play.concentration).toBeNull();
+	});
+});
+
+describe('CombatVM · casting applies the spell effect (EFX-2)', () => {
+	let graph: ContentGraph;
+	let character: Character;
+	beforeEach(async () => {
+		graph = await graphOf();
+		character = newCharacter('valen', 'Valen', '5.5e');
+		combat.graph = graph;
+		combat.character = character;
+	});
+	const blessEffect = () => character.play.effects.find((e) => e.source === `spell:${S}:bless`);
+
+	it("casting adds the spell's tokens as a runtime effect with the parsed duration", () => {
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		const eff = blessEffect();
+		expect(eff?.label).toBe('Bless');
+		expect(eff?.effects).toEqual(['flat-bonus:saves+1d4']);
+		expect(eff?.durationRounds).toBe(10); // "up to 1 minute"
+	});
+
+	it('a spell with no tokens applies nothing', () => {
+		combat.cast(spellRow(graph, `spell:${S}:fire-bolt`, 'on')!, noModifiers);
+		expect(character.play.effects).toEqual([]);
+	});
+
+	it('re-casting refreshes instead of stacking a duplicate', () => {
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		expect(character.play.effects.filter((e) => e.source === `spell:${S}:bless`).length).toBe(1);
+	});
+
+	it("replacing concentration removes the prior spell's effect; clearing removes the current one", () => {
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		combat.cast(spellRow(graph, `spell:${S}:shield-of-faith`, 'on')!, noModifiers);
+		expect(blessEffect()).toBeUndefined(); // Bless dropped with its concentration
+		expect(character.play.concentration).toBe(`spell:${S}:shield-of-faith`);
+		expect(character.play.effects.some((e) => e.label === 'Shield of Faith')).toBe(true);
+		combat.clearConcentration();
+		expect(character.play.effects).toEqual([]);
+	});
+});
+
+describe('CombatVM · effect lifecycle (EFX-4)', () => {
+	let graph: ContentGraph;
+	let character: Character;
+	beforeEach(async () => {
+		graph = await graphOf();
+		character = newCharacter('valen', 'Valen', '5.5e');
+		combat.graph = graph;
+		combat.character = character;
+	});
+
+	it('next turn expires a round-timed effect (and only then)', () => {
+		character.play.round = 1;
+		character.play.effects = [
+			{ iid: 'a', label: 'Bless', effects: [], positive: true, durationRounds: 2, startedRound: 1 },
+			{ iid: 'b', label: 'Curse', effects: [], positive: false } // indefinite — never expires
+		];
+		combat.economy.nextTurn(); // round 2 — Bless has 1 round left
+		expect(character.play.effects.map((e) => e.iid)).toEqual(['a', 'b']);
+		combat.economy.nextTurn(); // round 3 = started 1 + duration 2 → expired
+		expect(character.play.effects.map((e) => e.iid)).toEqual(['b']);
+	});
+
+	it('an expiring cast-linked effect also ends its concentration', () => {
+		character.play.round = 1;
+		character.play.concentration = `spell:${S}:bless`;
+		character.play.effects = [
+			{
+				iid: 'a',
+				label: 'Bless',
+				source: `spell:${S}:bless`,
+				effects: [],
+				positive: true,
+				durationRounds: 1,
+				startedRound: 1
+			}
+		];
+		combat.economy.nextTurn();
+		expect(character.play.effects).toEqual([]);
+		expect(character.play.concentration).toBeNull();
+	});
+
+	it('a short rest outlives effects up to 1 h (600 rds); a long rest outlives all timed ones', () => {
+		const timed = (iid: string, rounds: number) => ({
+			iid,
+			label: iid,
+			effects: [],
+			positive: true,
+			durationRounds: rounds,
+			startedRound: 0
+		});
+		character.play.effects = [
+			timed('short-lived', 10),
+			timed('eight-hours', 4800),
+			{ iid: 'forever', label: 'forever', effects: [], positive: false }
+		];
+		combat.resources.rest('short');
+		expect(character.play.effects.map((e) => e.iid)).toEqual(['eight-hours', 'forever']);
+		combat.resources.rest('long');
+		expect(character.play.effects.map((e) => e.iid)).toEqual(['forever']);
 	});
 });
 

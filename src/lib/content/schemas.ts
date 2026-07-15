@@ -17,7 +17,6 @@
 import { z } from 'zod';
 
 export const SYSTEMS = ['5e', '5.5e'] as const;
-export type System = (typeof SYSTEMS)[number];
 
 /** Bounded effect vocabulary — the only kinds the engine understands. Kept as its own list (not
  *  imported from `$lib/effects`) so content validation doesn't depend on the removable effects
@@ -26,6 +25,7 @@ export const EFFECT_KINDS = [
 	'flat-bonus',
 	'set-override',
 	'advantage',
+	'disadvantage',
 	'grant-proficiency',
 	'resist-immune',
 	'apply-condition',
@@ -158,7 +158,6 @@ export const FEAT_CATEGORY = {
 	epicBoon: 'epic-boon',
 	general2014: 'general-2014'
 } as const;
-export type FeatCategory = (typeof FEAT_CATEGORY)[keyof typeof FEAT_CATEGORY];
 export const FEAT_CATEGORIES = Object.values(FEAT_CATEGORY);
 
 const Size = z.enum(SIZES);
@@ -180,7 +179,7 @@ const Rarity = z.enum(RARITIES);
 
 /** Playable species / race. 5e ability bonuses ride on the species (via `effects`);
  *  5.5e moves them to the background — so ASI-bearing rows are usually system-split. */
-export const speciesSchema = baseRow.extend({
+const speciesSchema = baseRow.extend({
 	size: Size,
 	/** Walking speed in feet. */
 	speed: z.coerce.number().int(),
@@ -194,7 +193,7 @@ export const speciesSchema = baseRow.extend({
  *  **lineage / legacy / ancestry** choice. Linked to its parent by `species_id`; carries its own
  *  ASI + traits via the common `effects`/`text`. `option_label` overrides the picker heading
  *  (e.g. "Subrace" vs "Lineage") when the default from `kind` isn't right. */
-export const speciesOptionSchema = baseRow.extend({
+const speciesOptionSchema = baseRow.extend({
 	species_id: reqStr,
 	kind: z.enum(['subrace', 'lineage', 'legacy', 'ancestry']).default('subrace'),
 	option_label: optStr,
@@ -203,7 +202,7 @@ export const speciesOptionSchema = baseRow.extend({
 });
 
 /** A class. Subclass features live in class_features keyed by class_id+level. */
-export const classSchema = baseRow.extend({
+const classSchema = baseRow.extend({
 	hit_die: HitDie,
 	primary_ability: optStr, // comma list of Ability
 	saves: z.preprocess(
@@ -240,7 +239,7 @@ export const classSchema = baseRow.extend({
 
 /** Linked table: a class feature granted at a level (incl. ASI/feat slot markers).
  *  `subclass_id` is blank for base-class features, set for subclass features. */
-export const classFeatureSchema = baseRow.extend({
+const classFeatureSchema = baseRow.extend({
 	class_id: reqStr,
 	level: z.coerce.number().int().min(1).max(20),
 	/** Optional named resource the feature grants (e.g. "rage", "ki"); count via effects. */
@@ -250,7 +249,7 @@ export const classFeatureSchema = baseRow.extend({
 
 /** A subclass (one per class in SRD 5.2.1). Its features live in class_features with
  *  `subclass_id` set; `subclass_level` on the class says when one is chosen. */
-export const subclassSchema = baseRow.extend({
+const subclassSchema = baseRow.extend({
 	class_id: reqStr,
 	/** Casting subclasses (Eldritch Knight / Arcane Trickster / Blood Hunter's Profane Soul) carry
 	 *  the caster descriptor here — active from the subclass's grant level. All optional; a
@@ -265,7 +264,7 @@ export const subclassSchema = baseRow.extend({
 });
 
 /** Background. 5.5e backgrounds carry the ability boosts + an origin feat. */
-export const backgroundSchema = baseRow.extend({
+const backgroundSchema = baseRow.extend({
 	skills: optStr, // comma list of skill ids
 	tools: optStr,
 	languages: optInt,
@@ -276,7 +275,7 @@ export const backgroundSchema = baseRow.extend({
 });
 
 /** Feat. `category` distinguishes 5.5e origin/general/fighting-style; `prereq` is text. */
-export const featSchema = baseRow.extend({
+const featSchema = baseRow.extend({
 	category: z.enum(FEAT_CATEGORIES).default('general'),
 	prereq: optStr,
 	repeatable: z.preprocess((v) => (v === '' || v == null ? false : v), bool).default(false)
@@ -284,7 +283,7 @@ export const featSchema = baseRow.extend({
 
 /** Spell. Semi-structured upcasting in `higher_level`; resolution + save_ability drive
  *  the combat sheet's resolution tag. Caster-wide DC/attack are computed, never stored. */
-export const spellSchema = baseRow.extend({
+const spellSchema = baseRow.extend({
 	level: z.coerce.number().int().min(0).max(9),
 	school: School,
 	casting_time: reqStr, // "1 action" | "1 bonus action" | "1 reaction" | "1 minute" ...
@@ -302,7 +301,7 @@ export const spellSchema = baseRow.extend({
 });
 
 /** Item / equipment. Weapon, armor, shield, gear, tool, pack, ammunition. */
-export const itemSchema = baseRow.extend({
+const itemSchema = baseRow.extend({
 	category: ItemCategory,
 	item_type: optStr, // "martial melee" | "light armor" | "artisan's tools" ...
 	cost: optStr, // "15 gp"
@@ -322,31 +321,30 @@ export const itemSchema = baseRow.extend({
 });
 
 /** A language (SRD Standard / Exotic). Simple reference content the builder picks from. */
-export const languageSchema = baseRow.extend({
+const languageSchema = baseRow.extend({
 	category: z.enum(['standard', 'exotic']).default('standard'),
 	speakers: optStr, // typical speakers
 	script: optStr
 });
 
 /** Condition (merged with effects on the sheet). Mechanics ride in `effects`. */
-export const conditionSchema = baseRow.extend({
+const conditionSchema = baseRow.extend({
 	/** Negative conditions render crimson, beneficial ones teal. */
 	negative: z.preprocess((v) => (v === '' || v == null ? true : v), bool).default(true)
 });
 
-/** Catalog row for the runtime "+" effect picker (effects.csv). One bounded-vocab op. */
-export const effectSchema = baseRow.extend({
-	kind: z.enum(EFFECT_KINDS),
-	target: optStr, // what it modifies, e.g. "ac" | "save.dex" | "skill.stealth"
-	op: optStr, // "+" | "-" | "set" | "advantage" | "resist" ...
-	value: optStr,
-	/** Optional default duration; a round counter auto-expires it. */
+/** Catalog row for the runtime "+" effect picker (effects.csv). The mechanics ride in the shared
+ *  `effects` token list like every other content type; this row only adds picker metadata. */
+const effectSchema = baseRow.extend({
+	/** Debuffs (Bane, covers against you…) render crimson in the panel, like conditions. */
+	negative: z.preprocess((v) => (v === '' || v == null ? false : v), bool).default(false),
+	/** Optional default duration the picker applies; the round counter auto-expires it. */
 	duration_rounds: optInt
 });
 
 /** Monster / NPC stat block (compendium). Headline stats are structured columns; the
  *  full traits/actions text stays verbatim in `text_en`. `cr` is a string (fractions). */
-export const monsterSchema = baseRow.extend({
+const monsterSchema = baseRow.extend({
 	size: Size,
 	creature_type: reqStr, // "aberration" | "beast (dinosaur)" | "fiend (demon)" …
 	alignment: optStr,
@@ -391,7 +389,7 @@ const lookupBase = {
 /** Spell-slot progression table, matrix form (row = character level, cols = slots per spell
  *  level). Keyed by an arbitrary `kind` id (SRD ships full/half/third/pact; homebrew ships its
  *  own). A class references it via `slot_table`. */
-export const spellSlotsSchema = z.object({
+const spellSlotsSchema = z.object({
 	...lookupBase,
 	kind: reqStr,
 	level: z.coerce.number().int().min(1).max(20),
@@ -409,7 +407,7 @@ export const spellSlotsSchema = z.object({
 /** Per-class-level casting counts (linked `class_id`+`level`). `prepared_known` = the size of the
  *  prepared/known set (2024 table count); blank → the rules layer applies a `prepare_style`
  *  formula instead. */
-export const classCastingSchema = z.object({
+const classCastingSchema = z.object({
 	...lookupBase,
 	class_id: reqStr,
 	level: z.coerce.number().int().min(1).max(20),
@@ -419,7 +417,7 @@ export const classCastingSchema = z.object({
 
 /** Additive class→spell access join (`class_id`,`spell_id`), so a homebrew class grants access to
  *  existing spells without editing the shipped spell rows. Unioned with inline `spells.classes`. */
-export const spellListsSchema = z.object({
+const spellListsSchema = z.object({
 	...lookupBase,
 	class_id: reqStr,
 	spell_id: reqStr
@@ -450,27 +448,10 @@ export type ContentType = keyof typeof CONTENT_TYPES;
 
 /** Rules/lookup tables — data the engine consumes, NOT browsable articles (no name/text). The
  *  compendium, search and article views skip these. */
-export const LOOKUP_TYPES = new Set<ContentType>(['spell_slots', 'class_casting', 'spell_lists']);
+const LOOKUP_TYPES = new Set<ContentType>(['spell_slots', 'class_casting', 'spell_lists']);
 
 /** A browsable content type (has name/text; shows in compendium + search). */
 export const isBrowsable = (t: ContentType): boolean => !LOOKUP_TYPES.has(t);
-
-export type Species = z.infer<typeof speciesSchema>;
-export type SpeciesOption = z.infer<typeof speciesOptionSchema>;
-export type CharClass = z.infer<typeof classSchema>;
-export type ClassFeature = z.infer<typeof classFeatureSchema>;
-export type Background = z.infer<typeof backgroundSchema>;
-export type Feat = z.infer<typeof featSchema>;
-export type Spell = z.infer<typeof spellSchema>;
-export type Item = z.infer<typeof itemSchema>;
-export type Condition = z.infer<typeof conditionSchema>;
-export type Language = z.infer<typeof languageSchema>;
-export type Effect = z.infer<typeof effectSchema>;
-export type Monster = z.infer<typeof monsterSchema>;
-export type Subclass = z.infer<typeof subclassSchema>;
-export type SpellSlots = z.infer<typeof spellSlotsSchema>;
-export type ClassCasting = z.infer<typeof classCastingSchema>;
-export type SpellLists = z.infer<typeof spellListsSchema>;
 
 /** The localizable prose bases that carry per-locale columns (`name_uk`, `text_de`, `material_fr`,
  *  `higher_level_uk`). Kept in ONE place — the loader re-attach, the translate write path and this
@@ -482,7 +463,7 @@ export type ProseBase = (typeof PROSE_BASES)[number];
  *  the loader re-attaches. Typed by the prose bases so ONLY real `<base>_<loc>` columns are allowed —
  *  arbitrary junk columns stay off the row. Reads come back `string | undefined`
  *  (`noUncheckedIndexedAccess`), which is the intended "missing translation → EN fallback" signal. */
-export type ProseLocaleColumns = Partial<Record<`${ProseBase}_${string}`, string>>;
+type ProseLocaleColumns = Partial<Record<`${ProseBase}_${string}`, string>>;
 
 /** The validated, coerced data a loaded row of type `T` carries: the zod-inferred model for `T` PLUS
  *  the re-attached prose-locale columns. This is what replaces the old `Record<string, unknown>` bag —

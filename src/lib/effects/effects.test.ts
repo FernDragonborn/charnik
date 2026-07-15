@@ -72,6 +72,26 @@ describe('parseEffect (bounded vocabulary)', () => {
 		expect(parseEffect('teleport:far').kind).toBe('unknown');
 		expect(parseEffect('garbage').kind).toBe('unknown');
 	});
+	it('parses disadvantage like advantage (its own kind + target)', () => {
+		expect(parseEffect('disadvantage:skill.stealth')).toMatchObject({
+			kind: 'disadvantage',
+			target: 'skill.stealth'
+		});
+	});
+	it('grant-proficiency carries ONE ladder level and canonicalizes a skill. prefix', () => {
+		expect(parseEffect('grant-proficiency:stealth')).toMatchObject({
+			target: 'stealth',
+			proficiency: 'proficient'
+		});
+		// a `skill.`-prefixed target must not silently drop (audit A6)
+		expect(parseEffect('grant-proficiency:skill.stealth')).toMatchObject({ target: 'stealth' });
+		expect(parseEffect('grant-proficiency:expertise:stealth')).toMatchObject({
+			target: 'stealth',
+			proficiency: 'expertise'
+		});
+		// saves keep their prefix (derive tells them apart by it)
+		expect(parseEffect('grant-proficiency:save.con')).toMatchObject({ target: 'save.con' });
+	});
 });
 
 describe('applyEffects seam', () => {
@@ -152,5 +172,11 @@ describe('collectFlags', () => {
 		expect(flags.resistImmune).toContain('bludgeoning');
 		expect(flags.conditions).toContain('paralyzed');
 		expect(flags.unknown).toContain('teleport:far');
+	});
+	it('fills the disadvantage bucket (was a dead field — audit A5)', () => {
+		const flags = collectFlags([
+			{ source: 'Poisoned', layer: 'condition', tokens: ['disadvantage:skills'] }
+		]);
+		expect(flags.disadvantage).toContain('skills');
 	});
 });

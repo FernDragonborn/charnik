@@ -6,6 +6,10 @@ import {
 	groupEffects,
 	parseResourceEffect,
 	rechargeLabel,
+	durationToRounds,
+	netAdvantage,
+	remainingRounds,
+	isEffectExpired,
 	type EffectInstance
 } from './helpers';
 
@@ -131,5 +135,60 @@ describe('parseResourceEffect + rechargeLabel', () => {
 	it('labels recharges', () => {
 		expect(rechargeLabel('long')).toBe('long rest');
 		expect(rechargeLabel('short')).toBe('short rest');
+	});
+});
+
+describe('rollEffectsFor — disadvantage + flat (EFX-1)', () => {
+	it('collects disadvantage for the matching key', () => {
+		const out = rollEffectsFor(fx('disadvantage:skill.stealth'), 'skill.stealth');
+		expect(out.disadvantage).toBe(true);
+		expect(out.advantage).toBe(false);
+	});
+	it('sums flat bonuses for attack/damage keys', () => {
+		expect(rollEffectsFor(fx('flat-bonus:attack+2'), 'attack').flat).toBe(2);
+		expect(rollEffectsFor(fx('flat-bonus:damage+2', 'flat-bonus:damage+1'), 'damage').flat).toBe(3);
+	});
+	it('netAdvantage: advantage and disadvantage cancel to a straight roll', () => {
+		expect(netAdvantage({ advantage: true, disadvantage: false })).toBe(1);
+		expect(netAdvantage({ advantage: false, disadvantage: true })).toBe(-1);
+		expect(netAdvantage({ advantage: true, disadvantage: true })).toBe(0);
+		expect(netAdvantage({ advantage: false, disadvantage: false })).toBe(0);
+	});
+});
+
+describe('effect expiry math (EFX-4)', () => {
+	const e = (durationRounds?: number, startedRound?: number): EffectInstance => ({
+		iid: 'x',
+		label: 'X',
+		effects: [],
+		positive: true,
+		...(durationRounds != null ? { durationRounds } : {}),
+		...(startedRound != null ? { startedRound } : {})
+	});
+	it('remainingRounds counts down from the start round and floors at 0', () => {
+		expect(remainingRounds(e(3, 2), 2)).toBe(3);
+		expect(remainingRounds(e(3, 2), 4)).toBe(1);
+		expect(remainingRounds(e(3, 2), 9)).toBe(0);
+		expect(remainingRounds(e(), 5)).toBeNull(); // indefinite
+	});
+	it('isEffectExpired flips exactly when the duration is used up', () => {
+		expect(isEffectExpired(e(2, 1), 2)).toBe(false);
+		expect(isEffectExpired(e(2, 1), 3)).toBe(true);
+		expect(isEffectExpired(e(), 99)).toBe(false); // indefinite never expires
+	});
+});
+
+describe('durationToRounds — spell duration text → rounds (1 round = 6 s)', () => {
+	it('maps rounds / minutes / hours / days', () => {
+		expect(durationToRounds('1 round')).toBe(1);
+		expect(durationToRounds('1 minute')).toBe(10);
+		expect(durationToRounds('Concentration, up to 10 minutes')).toBe(100);
+		expect(durationToRounds('8 hours')).toBe(4800);
+		expect(durationToRounds('1 day')).toBe(14400);
+	});
+	it('returns null for durations that are not round-mappable', () => {
+		expect(durationToRounds('Instantaneous')).toBeNull();
+		expect(durationToRounds('Until dispelled')).toBeNull();
+		expect(durationToRounds('')).toBeNull();
 	});
 });

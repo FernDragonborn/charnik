@@ -20,6 +20,7 @@ export const EFFECT_KIND = {
 	flatBonus: 'flat-bonus',
 	setOverride: 'set-override',
 	advantage: 'advantage',
+	disadvantage: 'disadvantage',
 	grantProficiency: 'grant-proficiency',
 	resistImmune: 'resist-immune',
 	applyCondition: 'apply-condition',
@@ -30,7 +31,7 @@ export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 export const EFFECT_KINDS = Object.values(EFFECT_KIND) as readonly EffectKind[];
 
 export type Recharge = 'short' | 'long' | 'other';
-export type Defense = 'resist' | 'immune' | 'vulnerable';
+type Defense = 'resist' | 'immune' | 'vulnerable';
 
 export interface ParsedEffect {
 	kind: EffectKind | 'unknown';
@@ -41,6 +42,9 @@ export interface ParsedEffect {
 	dice?: string;
 	/** resist-immune: which bucket (defaults to 'resist' when the token omits it). */
 	defense?: Defense;
+	/** grant-proficiency: the LEVEL granted — one ladder value, not two booleans, so "expertise
+	 *  without proficiency" is unrepresentable (expertise sits above proficient on the ladder). */
+	proficiency?: 'proficient' | 'expertise';
 	/** grant-resource: the fully-specified pool (only present when `id:max:recharge` is given). */
 	resource?: { id: string; max: number; recharge: Recharge };
 	raw: string;
@@ -94,7 +98,15 @@ export function parseEffect(token: string): ParsedEffect {
 			};
 		return { kind, target: id, raw };
 	}
-	// advantage / grant-proficiency / apply-condition
+	if (kind === EFFECT_KIND.grantProficiency) {
+		// `grant-proficiency:[expertise:]<target>` — the target is canonicalized here (the ONE place):
+		// a `skill.` prefix strips to the bare skill id (skills are bare in this vocab; only saves
+		// carry their `save.` prefix), so authors can write either form without it silently dropping.
+		const m = /^(expertise:)?(?:skill\.)?(.+)$/i.exec(rest);
+		if (!m?.[2]) return { kind: 'unknown', raw };
+		return { kind, target: m[2].trim(), proficiency: m[1] ? 'expertise' : 'proficient', raw };
+	}
+	// advantage / disadvantage / apply-condition
 	return { kind, target: rest, raw };
 }
 
@@ -160,6 +172,8 @@ export function applyEffects(targetKey: string, base: Computed, effects: ActiveE
 				});
 			} else if (p.kind === EFFECT_KIND.advantage) {
 				notes.push(`${eff.source}: advantage on ${targetKey}`);
+			} else if (p.kind === EFFECT_KIND.disadvantage) {
+				notes.push(`${eff.source}: disadvantage on ${targetKey}`);
 			}
 		}
 	}
@@ -218,6 +232,9 @@ export function collectFlags(effects: ActiveEffect[]): EffectFlags {
 			switch (p.kind) {
 				case EFFECT_KIND.advantage:
 					flags.advantage.push(p.target ?? token);
+					break;
+				case EFFECT_KIND.disadvantage:
+					flags.disadvantage.push(p.target ?? token);
 					break;
 				case EFFECT_KIND.applyCondition:
 					flags.conditions.push(p.target ?? token);

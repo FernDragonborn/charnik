@@ -4,15 +4,7 @@
 	import { combat } from './state.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
-	import {
-		signed,
-		titleCase,
-		ABIL,
-		ABILITY_NAME,
-		DICE,
-		EFFECT_PRESETS,
-		MOD_TARGETS
-	} from '$lib/combat/helpers';
+	import { signed, titleCase, ABIL, ABILITY_NAME, DICE, MOD_TARGETS } from '$lib/combat/helpers';
 
 	const overlay = $derived(combat.overlay);
 	const rollSrc = $derived(combat.tray.rollSrc);
@@ -170,18 +162,13 @@
 					onclick={() => (combat.newEffectDuration = 0)}>∞</button
 				>
 			</div>
-			<div class="section">Catalog · presets</div>
-			{#each EFFECT_PRESETS as p (p.label)}
-				<button
-					class="menu-row"
-					onclick={() => addEffect(p.label, p.tokens, !/bane/i.test(p.label))}
-				>
+			<div class="section">Catalog</div>
+			{#each combat.effectCatalog as p (p.label)}
+				{@const dur = p.durationRounds ?? combat.newEffectDuration}
+				<button class="menu-row" onclick={() => addEffect(p.label, p.tokens, !p.negative, dur)}>
 					<span class="main"
-						><span class="effect-icon" class:negative={/bane/i.test(p.label)}>＋</span
-						>{p.label}</span
-					><span class="durpill"
-						>{combat.newEffectDuration > 0 ? `${combat.newEffectDuration} rds` : '∞'}</span
-					>
+						><span class="effect-icon" class:negative={p.negative}>＋</span>{p.label}</span
+					><span class="durpill">{dur > 0 ? `${dur} rds` : '∞'}</span>
 				</button>
 			{/each}
 			<div class="divlite"></div>

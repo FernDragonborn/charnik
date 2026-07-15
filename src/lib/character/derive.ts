@@ -31,6 +31,7 @@ import {
 	applyEffects,
 	collectResources,
 	parseEffect,
+	matchesTarget,
 	EFFECT_KIND,
 	type ActiveEffect,
 	type ResourceDef
@@ -68,10 +69,19 @@ export type SkillId = keyof typeof SKILL_ABILITY;
 
 /** Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) →
  *  proficient → expertise (×2). */
-export const SKILL_PROFICIENCY = ['none', 'half', 'proficient', 'expertise'] as const;
-export type SkillProficiency = (typeof SKILL_PROFICIENCY)[number];
+type SkillProficiency = 'none' | 'half' | 'proficient' | 'expertise';
+const PROF_ORDER: Record<SkillProficiency, number> = {
+	none: 0,
+	half: 1,
+	proficient: 2,
+	expertise: 3
+};
+/** The higher rung of the proficiency ladder — sources combine by MAX, never by flag-union, so
+ *  "expertise without proficiency" is unrepresentable. */
+const maxProf = (a: SkillProficiency, b: SkillProficiency): SkillProficiency =>
+	PROF_ORDER[a] >= PROF_ORDER[b] ? a : b;
 
-export interface AbilityBlock {
+interface AbilityBlock {
 	score: number;
 	baseScore: number;
 	mod: number;
@@ -100,7 +110,9 @@ export interface CharacterSheet {
 }
 
 const num = (v: unknown, d = 0): number => (typeof v === 'number' ? v : Number(v) || d);
-const tokensOf = (row: LoadedRow | undefined): string[] => {
+/** A row's bounded-vocab effect tokens (empty for lookup tables, which carry no `effects`).
+ *  Exported: the combat cast path reads a spell's tokens through the same single accessor. */
+export const tokensOf = (row: LoadedRow | undefined): string[] => {
 	// `effects` rides on every browsable type but not the lookup tables; read it only where present
 	const effects = row && 'effects' in row.data ? row.data.effects : undefined;
 	return Array.isArray(effects) ? effects : [];
@@ -144,6 +156,40 @@ function gatherEffects(
 			layer: 'feature',
 			tokens: tokensOf(background)
 		});
+
+	// class + subclass: the class row's own tokens, its base features up to the class level, the
+	// chosen subclass row, and that subclass's features (same level gate). Features are matched by
+	// class_id within the CLASS ROW'S source + the character's edition, so a 5e and a 5.5e feature
+	// table for the same class can coexist without double-applying.
+	for (const entry of character.build.classes) {
+		const classRow = resolve(entry.class);
+		if (classRow && tokensOf(classRow).length)
+			active.push({
+				source: String(classRow.data.name_en),
+				layer: 'feature',
+				tokens: tokensOf(classRow)
+			});
+		const subclassRow = resolve(entry.subclass);
+		if (subclassRow && tokensOf(subclassRow).length)
+			active.push({
+				source: String(subclassRow.data.name_en),
+				layer: 'feature',
+				tokens: tokensOf(subclassRow)
+			});
+		if (!classRow) continue;
+		for (const f of graph.rows) {
+			if (f.type !== 'class_feature' || f.source !== classRow.source) continue;
+			if (f.data.class_id !== classRow.id || Number(f.data.level) > entry.level) continue;
+			if (!f.systems.includes(character.system)) continue;
+			// base feature (no subclass_id) always applies; a subclass feature only for the chosen one
+			const forSubclass = f.data.subclass_id;
+			if (forSubclass && forSubclass !== (subclassRow?.type === 'subclass' ? subclassRow.id : ''))
+				continue;
+			const toks = tokensOf(f);
+			if (toks.length)
+				active.push({ source: String(f.data.name_en), layer: 'feature', tokens: toks });
+		}
+	}
 
 	// feats (incl. repeatable ones taken more than once → their effect applies each time)
 	for (const featRef of character.build.feats) {
@@ -214,10 +260,13 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	for (const ab of ABILITIES)
 		scores[ab] = build.abilities[ab] + (build.abilityBoosts?.[ab] ?? 0) + abilityBonus(active, ab);
 
-	// proficiencies granted by effects (item/feat/feature): `grant-proficiency:<target>` where
-	// target is a save (`con` / `save.con`) or a skill id (`stealth`). Collected once, unioned below.
+	// proficiencies granted by effects (item/feat/feature): `grant-proficiency:[expertise:]<target>`
+	// where target is a save (`con` / `save.con`) or a skill id (`stealth` — the parser already
+	// stripped any `skill.` prefix). Skills collect the granted LEVEL (max of the ladder); saves are
+	// proficient-or-not (expertise doesn't apply to saves — a granted 'expertise' still just means
+	// proficient there).
 	const grantedSaves = new Set<Ability>();
-	const grantedSkills = new Set<string>();
+	const grantedSkills = new Map<string, SkillProficiency>();
 	if (character.play.autoCalc)
 		for (const eff of active)
 			for (const t of eff.tokens) {
@@ -226,7 +275,11 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 				const raw = p.target.trim();
 				const tgt = raw.replace(/^save\./, '');
 				if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
-				else grantedSkills.add(raw);
+				else
+					grantedSkills.set(
+						raw,
+						maxProf(grantedSkills.get(raw) ?? 'none', p.proficiency ?? 'proficient')
+					);
 			}
 
 	// saves: proficient if the ability is in build.saves (or any class's saves), or effect-granted
@@ -254,15 +307,27 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		};
 	}
 
-	// skills (expertise doubles proficiency — Rogue/Bard); effect-granted proficiencies union in
-	const skillProf = new Set([...build.skills, ...grantedSkills]);
-	const skillExpert = new Set(build.expertise ?? []);
+	// skills: the BUILD's chosen level (expertise requires the chosen proficiency — Rogue/Bard)
+	// combines with the effect-granted level by MAX on the one ladder; the math flags derive from
+	// that single level, so no boolean combination can express an invalid state.
+	const chosenProf = new Set(build.skills);
+	const chosenExpert = new Set(build.expertise ?? []);
 	const skills = {} as Record<SkillId, Computed & { prof: SkillProficiency }>;
 	for (const [skill, ab] of Object.entries(SKILL_ABILITY) as [SkillId, Ability][]) {
-		const proficient = skillProf.has(skill);
-		const expertise = proficient && skillExpert.has(skill);
-		const base = skillCheck({ ability: ab, score: scores[ab], level, proficient, expertise });
-		const prof: SkillProficiency = expertise ? 'expertise' : proficient ? 'proficient' : 'none';
+		const chosen: SkillProficiency = chosenProf.has(skill)
+			? chosenExpert.has(skill)
+				? 'expertise'
+				: 'proficient'
+			: 'none';
+		const prof = maxProf(chosen, grantedSkills.get(skill) ?? 'none');
+		const base = skillCheck({
+			ability: ab,
+			score: scores[ab],
+			level,
+			proficient: prof === 'proficient',
+			expertise: prof === 'expertise',
+			halfProficient: prof === 'half'
+		});
 		skills[skill] = { ...applyEffects(`skill.${skill}`, base, active), prof };
 	}
 
@@ -294,12 +359,14 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		const hitDie = String((row?.type === 'class' ? row.data.hit_die : undefined) || 'd8');
 		return maxHpForClass({ hitDie, level: c.level, conScore: scores.con });
 	});
-	const maxHp: Computed = hpContribs.length
+	const maxHpBase: Computed = hpContribs.length
 		? {
 				value: hpContribs.reduce((n, h) => n + h.value, 0),
 				trace: hpContribs.flatMap((h) => h.trace)
 			}
 		: maxHpForClass({ hitDie: 'd8', level, conScore: scores.con });
+	// hp-max flows through the seam like every other stat (Toughness, Aid → `flat-bonus:hp-max+N`)
+	const maxHp = applyEffects('hp-max', maxHpBase, active);
 
 	// speed from species
 	const speciesRow = build.species ? graph.get(build.species) : undefined;
@@ -320,8 +387,36 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		active
 	);
 
-	const passiveOf = (skill: 'perception' | 'investigation' | 'insight') =>
-		passiveScore(skills[skill]);
+	const passiveOf = (skill: 'perception' | 'investigation' | 'insight') => {
+		// advantage/disadvantage on the underlying check moves the passive by ±5 (both → cancel, RAW);
+		// then `passive.<skill>`-targeted effects (Observant) fold in through the seam.
+		let adv = false;
+		let dis = false;
+		if (character.play.autoCalc)
+			for (const eff of active)
+				for (const t of eff.tokens) {
+					const p = parseEffect(t);
+					if (!matchesTarget(p.target, `skill.${skill}`)) continue;
+					if (p.kind === EFFECT_KIND.advantage) adv = true;
+					else if (p.kind === EFFECT_KIND.disadvantage) dis = true;
+				}
+		let base = passiveScore(skills[skill]);
+		if (adv !== dis)
+			base = {
+				...base,
+				value: base.value + (adv ? 5 : -5),
+				trace: [
+					...base.trace,
+					{
+						source: adv ? 'Advantage' : 'Disadvantage',
+						layer: 'condition',
+						op: 'add',
+						amount: adv ? 5 : -5
+					}
+				]
+			};
+		return applyEffects(`passive.${skill}`, base, active);
+	};
 
 	// damage defenses from effects: `resist-immune:<resist|immune|vulnerable>:<type>` (a bare
 	// `resist-immune:<type>` defaults to resistance).

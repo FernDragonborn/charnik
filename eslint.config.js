@@ -39,6 +39,47 @@ export default ts.config(
 		}
 	},
 	{
+		// ARCHITECTURE GATE (PLAN invariant): Tauri is imported ONLY behind the Storage seam
+		// (lib/storage/tauri.ts) and the desktop-only updater module. Everything else talks to the
+		// `Storage` interface / store functions, so the web + test builds never touch Tauri.
+		files: ['src/**'],
+		ignores: ['src/lib/storage/tauri.ts', 'src/lib/update/**'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							group: ['@tauri-apps/*', '@tauri-apps/**'],
+							message:
+								'Tauri imports live ONLY in lib/storage/tauri.ts (Storage seam) or lib/update — go through the Storage interface instead (docs/PLAN.md invariant).'
+						}
+					]
+				}
+			]
+		}
+	},
+	{
+		// ARCHITECTURE GATE (PLAN invariant): the effects engine is optional/removable — the pure
+		// rules core must never depend on it. (character/derive + build/derive are the composition
+		// points where effects legally join, so only rules/** is fenced.)
+		files: ['src/lib/rules/**'],
+		rules: {
+			'no-restricted-imports': [
+				'error',
+				{
+					patterns: [
+						{
+							group: ['$lib/effects', '$lib/effects/**', '**/effects/index*', '../effects/**'],
+							message:
+								'The rules/build/character core must not import the effects module — it is an optional, removable layer composed on top (docs/PLAN.md invariant).'
+						}
+					]
+				}
+			]
+		}
+	},
+	{
 		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
 		languageOptions: {
 			parserOptions: {
@@ -48,6 +89,15 @@ export default ts.config(
 		}
 	},
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/', 'static/', 'node_modules/', 'src-tauri/', 'tools/']
+		ignores: [
+			'build/',
+			'.svelte-kit/',
+			'dist/',
+			'static/',
+			'node_modules/',
+			'src-tauri/',
+			'tools/',
+			'coverage/'
+		]
 	}
 );

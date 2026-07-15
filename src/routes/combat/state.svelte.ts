@@ -11,16 +11,21 @@ import { toast } from 'svelte-sonner';
 import { demoCharacter } from '$lib/demo/sheet';
 import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
-import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
+import { deriveSheet, tokensOf, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { passiveScore } from '$lib/rules/core';
-import { rollPool, type BonusDie } from '$lib/rules/dice';
+import { rollPool } from '$lib/rules/dice';
 import type { Character } from '$lib/character/schema';
 import {
 	titleCase,
 	wantsTray,
 	GROUP_MODES,
 	type GroupMode,
+	durationToRounds,
+	remainingRounds,
 	rollEffectsFor,
+	netAdvantage,
+	NO_ROLL_EFFECTS,
+	type RollEffects,
 	computeAttacks,
 	standardActions,
 	buildSpellGroups,
@@ -174,9 +179,18 @@ class CombatVM {
 		const name = this.graph?.get(ref)?.data.name_en;
 		return { ref, label: name ? String(name) : ref };
 	});
+	/** Remove the cast-applied effect linked to a spell ref (`source === ref`) — dropping or
+	 *  replacing concentration takes the spell's own buff down with it. */
+	private removeLinkedEffect(ref: string) {
+		const c = this.character;
+		if (c) c.play.effects = c.play.effects.filter((e) => e.source !== ref);
+	}
 	/** Stop concentrating (tap the concentration indicator). */
 	clearConcentration = () => {
-		if (this.character) this.character.play.concentration = null;
+		const c = this.character;
+		if (!c) return;
+		if (c.play.concentration) this.removeLinkedEffect(c.play.concentration);
+		c.play.concentration = null;
 	};
 
 	// configurable passive-sense skills (Pin skills)
@@ -226,10 +240,11 @@ class CombatVM {
 			});
 	};
 
-	/** Advantage + bonus/penalty dice a stat picks up from active effects (gated on effects-auto). */
-	private effectsFor(key: string): { advantage: boolean; bonusDice: BonusDie[] } {
+	/** Advantage/disadvantage + flat + bonus dice a roll picks up from active effects (gated on the
+	 *  effects-auto toggle). */
+	private effectsFor(key: string): RollEffects {
 		const c = this.character;
-		if (!c || !c.play.autoCalc) return { advantage: false, bonusDice: [] }; // effects-auto off → plain
+		if (!c || !c.play.autoCalc) return NO_ROLL_EFFECTS; // effects-auto off → plain rolls
 		return rollEffectsFor(c.play.effects, key);
 	}
 
@@ -245,30 +260,37 @@ class CombatVM {
 		this.openMenu('dice', e);
 	};
 	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray. `key`
-	// (e.g. "save.dex", "skill.stealth", "attack") lets the roll pick up matching effects.
+	// (e.g. "save.dex", "skill.stealth", "attack") lets the roll pick up matching effects. NB the
+	// flat part is IGNORED for save/skill keys — it's already folded into the sheet value `mod`.
 	roll = (label: string, mod: number, e: Event, key?: string) => {
 		const fx = key ? this.effectsFor(key) : null;
-		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e, fx?.advantage ? 1 : 0);
-		else this.tray.rollDiceNow(label, { 20: 1 }, mod, fx?.advantage ? 1 : 0, fx?.bonusDice ?? []);
+		const adv = fx ? netAdvantage(fx) : 0;
+		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e, adv);
+		else this.tray.rollDiceNow(label, { 20: 1 }, mod, adv, fx?.bonusDice ?? []);
 	};
 
 	/** Roll a weapon/unarmed attack (the Attack action → spends an action in combat). A normal tap
-	 *  rolls the to-hit (picks up advantage/effects) THEN the weapon damage; Alt/Ctrl-click opens the
-	 *  roll tray on the weapon's DAMAGE dice (so you can tweak/crit), not a bare d20. */
+	 *  rolls the to-hit (picks up attack advantage/flat/dice effects) THEN the weapon damage (with
+	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Alt/Ctrl-click opens the roll tray. */
 	attackRoll = (at: Atk, e: Event) => {
 		if (!this.economy.trySpend('action')) return;
 		const { pool, mod } = parseDamage(at.dmg);
 		const hasDice = Object.keys(pool).length > 0;
 		const fx = this.effectsFor('attack');
+		const dmgFx = this.effectsFor('damage');
 		if (wantsTray(e)) {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
-			this.openRoll(at.name, { 20: 1 }, at.toHit, e, fx.advantage ? 1 : 0);
-			if (hasDice) this.tray.queueDamage(`${at.name} damage`, pool, mod);
+			this.openRoll(at.name, { 20: 1 }, at.toHit + fx.flat, e, netAdvantage(fx));
+			if (hasDice) this.tray.queueDamage(`${at.name} damage`, pool, mod + dmgFx.flat);
 			return;
 		}
-		// instant: to-hit (with effect advantage/dice) + damage → one 3-line entry
-		const toHit = rollPool({ 20: 1 }, at.toHit, fx.advantage ? 1 : 0, fx.bonusDice);
-		this.tray.pushRoll(at.name, toHit, hasDice ? rollPool(pool, mod) : undefined);
+		// instant: to-hit (with effect advantage/flat/dice) + damage → one 3-line entry
+		const toHit = rollPool({ 20: 1 }, at.toHit + fx.flat, netAdvantage(fx), fx.bonusDice);
+		this.tray.pushRoll(
+			at.name,
+			toHit,
+			hasDice ? rollPool(pool, mod + dmgFx.flat, 0, dmgFx.bonusDice) : undefined
+		);
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
@@ -279,31 +301,63 @@ class CombatVM {
 		else toast(`${a.name} — action used`);
 	};
 
+	/** Casting applies the spell's OWN effect tokens (EFX-2): they become a runtime effect on self,
+	 *  expiring per the spell's duration text; linked via `source: r.ref` so dropping/replacing
+	 *  concentration (or re-casting = refresh) removes/replaces it. No tokens → no-op. */
+	private applySpellEffect(r: SpRow) {
+		const c = this.character;
+		const spell = this.graph?.get(r.ref);
+		const tokens = tokensOf(spell);
+		if (!c || !tokens.length) return;
+		this.removeLinkedEffect(r.ref); // re-cast refreshes instead of stacking a duplicate
+		const rounds = spell?.type === 'spell' ? durationToRounds(String(spell.data.duration)) : null;
+		c.play.effects = [
+			...c.play.effects,
+			{
+				iid: crypto.randomUUID(),
+				label: r.name,
+				source: r.ref,
+				effects: tokens,
+				positive: true,
+				...(rounds ? { durationRounds: rounds, startedRound: this.round } : {})
+			}
+		];
+	}
+
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit
 	cast = (r: SpRow, e: Event) => {
 		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
 		if (!this.economy.trySpend(this.economy.ctSlot(r.ct))) return;
-		// a concentration spell becomes the active concentration (replacing any prior one, 5e rule)
-		if (r.conc && this.character) this.character.play.concentration = r.ref;
+		// a concentration spell becomes the active concentration (replacing any prior one, 5e rule);
+		// the PRIOR concentration's cast-applied effect goes down with it
+		if (r.conc && this.character) {
+			const prior = this.character.play.concentration;
+			if (prior && prior !== r.ref) this.removeLinkedEffect(prior);
+			this.character.play.concentration = r.ref;
+		}
+		this.applySpellEffect(r);
 		const alt = wantsTray(e);
 		// a spell with dice rolls them: damage (Fire Bolt 1d10, Fireball 8d6) or, for auto
 		// spells, healing (Healing Word 2d4 + spellcasting mod)
 		const caster = this.sheet?.spellcasting.classes[0];
 		const hasDmg = !!r.dmg && Object.keys(r.dmg).length > 0;
 		if (r.res === 'hit' && caster) {
-			// attack spell → roll the TO-HIT first, then its damage (if any). Previously a damage-
-			// dealing attack spell (Fire Bolt) rolled only damage and skipped the to-hit entirely.
-			const toHit = caster.attack.value;
+			// attack spell → roll the TO-HIT first (attack-keyed effects apply, same as weapons),
+			// then its damage (if any, with damage-keyed effects). Previously a damage-dealing attack
+			// spell (Fire Bolt) rolled only damage and skipped the to-hit entirely.
+			const fx = this.effectsFor('attack');
+			const dmgFx = this.effectsFor('damage');
+			const toHit = caster.attack.value + fx.flat;
 			if (alt) {
 				// tray on the TO-HIT (the spell attack roll); Roll then fires the damage after
-				this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e);
-				if (hasDmg) this.tray.queueDamage(`${r.name} damage`, { ...(r.dmg ?? {}) }, 0);
+				this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e, netAdvantage(fx));
+				if (hasDmg) this.tray.queueDamage(`${r.name} damage`, { ...(r.dmg ?? {}) }, dmgFx.flat);
 			} else {
 				// instant: to-hit + damage → one combined 3-line entry
 				this.tray.pushRoll(
 					`${r.name} (spell attack)`,
-					rollPool({ 20: 1 }, toHit),
-					hasDmg ? rollPool(r.dmg ?? {}, 0) : undefined
+					rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice),
+					hasDmg ? rollPool(r.dmg ?? {}, dmgFx.flat, 0, dmgFx.bonusDice) : undefined
 				);
 			}
 		} else if (hasDmg) {
@@ -372,6 +426,19 @@ class CombatVM {
 		if (!this.graph || !system) return [];
 		return this.graph.list('condition', { system }).map((r) => String(r.data.name_en));
 	});
+	/** The "+" picker catalog — the `effects.csv` CONTENT type scoped to the character's edition
+	 *  (user-extendable like all content), not a hardcoded preset list. A row's `duration_rounds`
+	 *  is its default duration; blank falls back to the menu's duration picker. */
+	effectCatalog = $derived.by(() => {
+		const system = this.character?.system;
+		if (!this.graph || !system) return [];
+		return this.graph.list('effect', { system }).map((r) => ({
+			label: String(r.data.name_en),
+			tokens: r.data.effects,
+			negative: r.data.negative,
+			durationRounds: r.data.duration_rounds ?? null
+		}));
+	});
 	/** Duration (in rounds) applied to the NEXT effect added from the add-effect / custom menus.
 	 *  0 = indefinite (lasts until the player removes it). Editable in the add-effect menu. */
 	newEffectDuration = $state(10);
@@ -399,6 +466,7 @@ class CombatVM {
 		if (c) c.play.effects = c.play.effects.filter((e) => e.iid !== iid);
 	};
 	/** Set an active effect's remaining duration to an exact round count (typed into the panel field).
+	 *  The typed number means "rounds from NOW" — the start is re-anchored to the current round.
 	 *  0 / blank → indefinite: the duration fields are removed ("until removed"). */
 	setEffectDuration = (iid: string, rounds: number) => {
 		const c = this.character;
@@ -410,13 +478,14 @@ class CombatVM {
 				const { durationRounds: _d, startedRound: _s, ...rest } = e;
 				return rest;
 			}
-			return { ...e, durationRounds: n, startedRound: e.startedRound ?? this.round };
+			return { ...e, durationRounds: n, startedRound: this.round };
 		});
 	};
-	/** Nudge an active effect's remaining duration by ±1 round from the panel. Dropping to 0 makes it
+	/** Nudge an active effect's REMAINING duration by ±1 round from the panel. Dropping to 0 makes it
 	 *  indefinite again (the duration fields are removed), so − past 1 == "until removed". */
 	bumpEffectDuration = (iid: string, delta: number) => {
-		const cur = this.character?.play.effects.find((e) => e.iid === iid)?.durationRounds ?? 0;
+		const e = this.character?.play.effects.find((x) => x.iid === iid);
+		const cur = e ? (remainingRounds(e, this.round) ?? 0) : 0;
 		this.setEffectDuration(iid, cur + delta);
 	};
 }

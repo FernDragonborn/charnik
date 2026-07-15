@@ -38,7 +38,10 @@ export class ResourceTracker {
 	};
 
 	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges both),
-	 *  reset spell slots (long = all, short = pact only), and restore HP on a long rest. */
+	 *  reset spell slots (long = all, short = pact only), restore HP on a long rest, and expire
+	 *  round-timed effects the rest outlives: a short rest is 1 h (600 rounds), a long rest outlives
+	 *  every round-timed effect. Indefinite effects (no duration) persist — those are curses/manual
+	 *  states the player removes explicitly. */
 	rest = (kind: 'short' | 'long') => {
 		const c = this.getCharacter();
 		const sheet = this.getSheet();
@@ -55,6 +58,11 @@ export class ResourceTracker {
 			delete slots.pact; // warlock pact slots return on a short rest
 			c.play.spellSlotsSpent = slots;
 		}
+		const outlived = (e: (typeof c.play.effects)[number]) =>
+			e.durationRounds != null && (kind === 'long' || e.durationRounds <= 600);
+		for (const e of c.play.effects.filter(outlived))
+			if (e.source && e.source === c.play.concentration) c.play.concentration = null;
+		c.play.effects = c.play.effects.filter((e) => !outlived(e));
 		void saveCharacterToStore(c);
 		toast(`${kind === 'long' ? 'Long' : 'Short'} rest — resources restored`);
 	};
