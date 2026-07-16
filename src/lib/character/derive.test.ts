@@ -279,3 +279,52 @@ describe('deriveSheet aggregator', () => {
 		expect(s.abilities.con.mod).toBe(1);
 	});
 });
+
+describe('deriveSheet · L2 value expressions (EXPR-2)', () => {
+	async function exprGraph(): Promise<ContentGraph> {
+		const st = new MemoryStorage();
+		await st.write(
+			'c/classes_srd.csv',
+			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n')
+		);
+		await st.write(
+			'c/species_srd.csv',
+			[
+				'id,systems,source,name_en,effects,size,speed,creature_type',
+				// AC scales with character level: ceil(level/2); Ki pool = monk level
+				`ward,5.5e,${S},Ward,flat_bonus:ac+ceil(level/2),medium,30,humanoid`
+			].join('\n')
+		);
+		await st.write(
+			'c/class_features_srd.csv',
+			[
+				'id,systems,source,name_en,effects,class_id,level,subclass_id',
+				`ki,5.5e,${S},Ki,grant_resource:ki:class_level.monk:short,monk,1,`
+			].join('\n')
+		);
+		const g = await loadContent(st, ['c']);
+		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
+		return g;
+	}
+
+	function monk(level: number): Character {
+		const c = newCharacter('kwai', 'Kwai', '5.5e');
+		c.build.species = `species:${S}:ward`;
+		c.build.classes = [{ class: `class:${S}:monk`, level }];
+		c.build.abilities = { str: 12, dex: 16, con: 12, int: 10, wis: 14, cha: 10 };
+		return characterSchema.parse(c);
+	}
+
+	it('folds a level-scaling AC expression into the sheet', async () => {
+		const g = await exprGraph();
+		// unarmored AC = 10 + dex(3) = 13; + ceil(level/2)
+		expect(deriveSheet(monk(4), g).ac.value).toBe(13 + 2); // ceil(4/2)=2
+		expect(deriveSheet(monk(9), g).ac.value).toBe(13 + 5); // ceil(9/2)=5
+	});
+
+	it('resolves a computed resource pool (Ki = monk level)', async () => {
+		const g = await exprGraph();
+		const ki = deriveSheet(monk(6), g).resources.find((r) => r.id === 'ki');
+		expect(ki?.max).toBe(6);
+	});
+});

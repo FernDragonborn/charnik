@@ -14,6 +14,7 @@
  * an inert text note — never dropped, never executed.
  */
 import { computed, type Computed, type Contribution, type Layer } from '../rules/pipeline';
+import { evalExpression, diceToFormula, type ExprContext } from './expr';
 
 /** The bounded effect vocabulary, as named constants — compare against these, never bare strings. */
 export const EFFECT_KIND = {
@@ -45,17 +46,23 @@ const clampAmount = (n: number) =>
 export interface ParsedEffect {
 	kind: EffectKind | 'unknown';
 	target?: string;
-	/** Numeric flat bonus / override value. */
+	/** Numeric flat bonus / override value (present when the value slot is a plain literal). */
 	amount?: number;
 	/** Dice bonus (e.g. "1d4" / "-1d4") — a roll modifier, not a flat number. */
 	dice?: string;
+	/** L2 value expression (`ceil(level/2)`, `class_level.monk`) when the value slot is NOT a plain
+	 *  literal — resolved against a ctx at derive time by `resolveEffectValue`, not here. Present on
+	 *  `flat_bonus` / `set_override` (the stat value) and mirrored by `resource.max` below. */
+	valueExpr?: string;
 	/** resist_immune: which bucket (defaults to 'resist' when the token omits it). */
 	defense?: Defense;
 	/** grant_proficiency: the LEVEL granted — one ladder value, not two booleans, so "expertise
 	 *  without proficiency" is unrepresentable (expertise sits above proficient on the ladder). */
 	proficiency?: 'proficient' | 'expertise';
-	/** grant_resource: the fully-specified pool (only present when `id:max:recharge` is given). */
-	resource?: { id: string; max: number; recharge: Recharge };
+	/** grant_resource: the fully-specified pool (only present when `id:max:recharge` is given). `max`
+	 *  is a literal count; `maxExpr` is an L2 expression for it (`class_level.monk`) resolved at
+	 *  derive time — exactly one of the two is set. */
+	resource?: { id: string; max?: number; maxExpr?: string; recharge: Recharge };
 	raw: string;
 }
 
@@ -73,18 +80,28 @@ export function parseEffect(token: string): ParsedEffect {
 	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
 
 	if (kind === EFFECT_KIND.flatBonus) {
-		const m = /^([a-z][a-z._-]*?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
-		if (!m) return { kind: 'unknown', raw };
-		const target = m[1] ?? '';
-		const sign = m[2] ?? '';
-		const amount = m[3] ?? '';
-		if (/d/i.test(amount)) return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw };
-		return { kind, target, amount: clampAmount(Number(sign + amount)), raw };
+		// literal fast path (backward compatible, incl. the `-1d4` dice-note form and kebab targets)
+		const lit = /^([a-z][a-z._-]*?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
+		if (lit) {
+			const target = lit[1] ?? '';
+			const sign = lit[2] ?? '';
+			const amount = lit[3] ?? '';
+			if (/d/i.test(amount)) return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw };
+			return { kind, target, amount: clampAmount(Number(sign + amount)), raw };
+		}
+		// L2 expression value: `<target><+|->` then an expression. Target is snake (no `-`, which is
+		// now the minus operator) so the split is unambiguous. A `-` sign negates the whole value.
+		const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)\s*([+-])\s*(.+)$/i.exec(rest);
+		if (!ex) return { kind: 'unknown', raw };
+		const valueExpr = ex[2] === '-' ? `-(${(ex[3] ?? '').trim()})` : (ex[3] ?? '').trim();
+		return { kind, target: ex[1] ?? '', valueExpr, raw };
 	}
 	if (kind === EFFECT_KIND.setOverride) {
-		const m = /^([a-z][a-z._-]*):(-?\d+)$/i.exec(rest);
-		if (!m) return { kind: 'unknown', raw };
-		return { kind, target: m[1] ?? '', amount: clampAmount(Number(m[2])), raw };
+		const lit = /^([a-z][a-z._-]*):(-?\d+)$/i.exec(rest);
+		if (lit) return { kind, target: lit[1] ?? '', amount: clampAmount(Number(lit[2])), raw };
+		const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(.+)$/i.exec(rest);
+		if (!ex) return { kind: 'unknown', raw };
+		return { kind, target: ex[1] ?? '', valueExpr: (ex[2] ?? '').trim(), raw };
 	}
 	if (kind === EFFECT_KIND.resistImmune) {
 		// `resist_immune:<type>` (defaults to resistance) or `resist_immune:<bucket>:<type>`
@@ -94,21 +111,20 @@ export function parseEffect(token: string): ParsedEffect {
 		return { kind, defense, target: m[2].trim(), raw };
 	}
 	if (kind === EFFECT_KIND.grantResource) {
-		// `grant_resource:<id>` (bare, for flags) or `grant_resource:<id>:<max>:<recharge>` (a pool)
-		const m = /^([a-z0-9][a-z0-9_-]*)(?::(\d+):(short|long|other))?$/i.exec(rest.trim());
+		// `grant_resource:<id>` (bare flag) or `grant_resource:<id>:<max>:<recharge>` where <max> is a
+		// literal OR an L2 expression (`class_level.monk`). The recharge keyword anchors the end, so
+		// the middle (max) can hold expression characters (`*`, `(`, `,`) unambiguously.
+		const m = /^([a-z0-9][a-z0-9_-]*)(?::(.+):(short|long|other))?$/i.exec(rest.trim());
 		if (!m?.[1]) return { kind: 'unknown', raw };
 		const id = m[1].toLowerCase();
-		if (m[2] && m[3])
-			return {
-				kind,
-				target: id,
-				resource: {
-					id,
-					max: Math.min(Number(m[2]), MAX_RESOURCE_MAX),
-					recharge: m[3].toLowerCase() as Recharge
-				},
-				raw
-			};
+		const maxSlot = m[2]?.trim();
+		const recharge = m[3]?.toLowerCase() as Recharge | undefined;
+		if (maxSlot && recharge) {
+			const resource = /^\d+$/.test(maxSlot)
+				? { id, max: Math.min(Number(maxSlot), MAX_RESOURCE_MAX), recharge }
+				: { id, maxExpr: maxSlot, recharge };
+			return { kind, target: id, resource, raw };
+		}
 		return { kind, target: id, raw };
 	}
 	if (kind === EFFECT_KIND.grantProficiency) {
@@ -121,6 +137,34 @@ export function parseEffect(token: string): ParsedEffect {
 	}
 	// advantage / disadvantage / apply_condition
 	return { kind, target: rest, raw };
+}
+
+/** A resolved value for a `flat_bonus`/`set_override`/`grant_resource` token: a folded numeric
+ *  `amount`, a `diceFormula` (rides the roll path, shown as a note), or an `error` (the L2
+ *  expression failed → the token degrades to an inert note; EXPR-3 also routes it to content-health). */
+export interface ResolvedValue {
+	amount?: number;
+	diceFormula?: string;
+	error?: string;
+}
+
+/**
+ * Resolve a token's value slot to a concrete quantity. A plain literal (`amount`/`dice`) passes
+ * straight through; an L2 `valueExpr` is evaluated against `ctx` (SPEC2: effective vars) — a numeric
+ * result is FLOORED (5e round-down) and cost-clamped, a dice result becomes a roller formula, a
+ * failure returns `{error}`. Without a ctx an expression can't resolve (→ error), so the caller
+ * degrades it; literals never need a ctx (core-off / no-effects path stays ctx-free).
+ */
+export function resolveEffectValue(p: ParsedEffect, ctx?: ExprContext): ResolvedValue {
+	if (p.amount !== undefined) return { amount: p.amount };
+	if (p.dice) return { diceFormula: p.dice };
+	if (!p.valueExpr) return {};
+	if (!ctx) return { error: 'expression needs a context' };
+	const r = evalExpression(p.valueExpr, ctx);
+	if (!r.ok) return { error: r.error };
+	// `+ 0` normalizes a `-0` (from e.g. `-2*exhaustion` at exhaustion 0) to `0`.
+	if (r.value.type === 'number') return { amount: clampAmount(Math.floor(r.value.value) + 0) };
+	return { diceFormula: diceToFormula(r.value.dice) };
 }
 
 /** A runtime effect source contributing tokens at a pipeline layer. */
@@ -154,7 +198,12 @@ export interface EffectFlags {
  * `Computed` with the matching numeric contributions folded in and non-numeric effects as
  * notes. With no effects, the value/trace are unchanged (the on/off invariant).
  */
-export function applyEffects(targetKey: string, base: Computed, effects: ActiveEffect[]): Computed {
+export function applyEffects(
+	targetKey: string,
+	base: Computed,
+	effects: ActiveEffect[],
+	ctx?: ExprContext
+): Computed {
 	const contribs: Contribution[] = [...base.trace];
 	const notes: string[] = [...(base.notes ?? [])];
 	for (const eff of effects) {
@@ -162,27 +211,34 @@ export function applyEffects(targetKey: string, base: Computed, effects: ActiveE
 			const p = parseEffect(token);
 			if (!matchesTarget(p.target, targetKey)) continue;
 			if (p.kind === EFFECT_KIND.flatBonus) {
-				if (p.amount !== undefined) {
+				const v = resolveEffectValue(p, ctx);
+				if (v.amount !== undefined) {
 					contribs.push({
 						source: eff.source,
 						layer: eff.layer,
 						op: 'add',
-						amount: p.amount,
+						amount: v.amount,
 						note: token
 					});
-				} else if (p.dice) {
-					notes.push(
-						`${eff.source}: ${p.dice.startsWith('-') ? '' : '+'}${p.dice} to ${targetKey}`
-					);
+				} else if (v.diceFormula) {
+					const f = v.diceFormula;
+					notes.push(`${eff.source}: ${f.startsWith('-') ? '' : '+'}${f} to ${targetKey}`);
+				} else if (v.error) {
+					notes.push(`${eff.source}: unresolved "${token}" (${v.error})`);
 				}
-			} else if (p.kind === EFFECT_KIND.setOverride && p.amount !== undefined) {
-				contribs.push({
-					source: eff.source,
-					layer: 'override',
-					op: 'set',
-					amount: p.amount,
-					note: token
-				});
+			} else if (p.kind === EFFECT_KIND.setOverride) {
+				const v = resolveEffectValue(p, ctx);
+				if (v.amount !== undefined) {
+					contribs.push({
+						source: eff.source,
+						layer: 'override',
+						op: 'set',
+						amount: v.amount,
+						note: token
+					});
+				} else if (v.error) {
+					notes.push(`${eff.source}: unresolved "${token}" (${v.error})`);
+				}
 			} else if (p.kind === EFFECT_KIND.advantage) {
 				notes.push(`${eff.source}: advantage on ${targetKey}`);
 			} else if (p.kind === EFFECT_KIND.disadvantage) {
@@ -210,14 +266,26 @@ const titleCaseId = (s: string) => s.replace(/[-_]/g, ' ').replace(/\b\w/g, (m) 
  * the same id is granted more than once (a scaling feature re-granted at a higher tier), the largest
  * max wins.
  */
-export function collectResources(effects: ActiveEffect[]): ResourceDef[] {
+export function collectResources(effects: ActiveEffect[], ctx?: ExprContext): ResourceDef[] {
 	const out = new Map<string, ResourceDef>();
 	for (const eff of effects) {
 		for (const token of eff.tokens) {
 			const p = parseEffect(token);
 			if (p.kind !== EFFECT_KIND.grantResource || !p.resource) continue;
+			// max is either a literal or an L2 expression (`class_level.monk`); resolve the latter and
+			// clamp to the pip cap. An unresolved expression means the pool count is unknown → skip it
+			// (it would otherwise render as an inert 0-pip resource).
+			let maxVal: number | undefined;
+			if (p.resource.max !== undefined) maxVal = p.resource.max;
+			else if (p.resource.maxExpr && ctx) {
+				const r = evalExpression(p.resource.maxExpr, ctx);
+				if (r.ok && r.value.type === 'number') maxVal = Math.floor(r.value.value);
+			}
+			if (maxVal === undefined) continue;
 			const def: ResourceDef = {
-				...p.resource,
+				id: p.resource.id,
+				max: Math.max(0, Math.min(maxVal, MAX_RESOURCE_MAX)),
+				recharge: p.resource.recharge,
 				name: titleCaseId(p.resource.id),
 				source: eff.source
 			};

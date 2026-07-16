@@ -530,14 +530,14 @@ function evalBin(n: { op: BinOp; l: Node; r: Node }, ctx: ExprContext): ExprValu
 
 /** dice × integer: scale the pool counts and flat by the integer factor. */
 function scaleDice(a: ExprValue, b: ExprValue): ExprValue {
-	const dice = isDice(a) ? a : b;
+	const d: DiceValue = isDice(a) ? a.dice : isDice(b) ? b.dice : { pool: {}, flat: 0 };
 	const factorV = isDice(a) ? b : a;
 	if (isDice(factorV)) throw new EvalError('cannot multiply a dice term by a dice term');
 	const factor = Math.floor(factorV.value);
 	const pool: Record<number, number> = {};
-	for (const [s, c] of Object.entries(dice.dice.pool))
+	for (const [s, c] of Object.entries(d.pool))
 		pool[Number(s)] = Math.max(0, Math.min(c * factor, MAX_DICE_COUNT));
-	return { type: 'dice', dice: { pool, flat: dice.dice.flat * factor } };
+	return { type: 'dice', dice: { pool, flat: d.flat * factor } };
 }
 
 function isEnumCompare(l: Node, r: Node): boolean {
@@ -621,10 +621,4 @@ export function diceToFormula(d: DiceValue): string {
 	if (d.flat > 0) terms.push(String(d.flat));
 	else if (d.flat < 0) terms.push(String(d.flat)); // keep the sign
 	return terms.join('+').replace(/\+-/g, '-') || '0';
-}
-
-/** Whether a value is a whole number (dice always are; a number may be fractional mid-expression).
- *  The FINAL value fed to a stat is floored by the caller — this is a convenience for tests/callers. */
-export function isWhole(v: ExprValue): boolean {
-	return isDice(v) || Number.isInteger(v.value);
 }

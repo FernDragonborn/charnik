@@ -37,6 +37,8 @@ import {
 	type ResourceDef
 } from '../effects/index';
 import { deriveSpellcasting, type Spellcasting } from './spellcasting';
+import { makeExprContext } from '../effects/context';
+import type { ExprContext } from '../effects/expr';
 import type { Computed, System } from '../rules/pipeline';
 
 /** Skill → its governing ability (the 18 SRD skills). */
@@ -260,6 +262,39 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	for (const ab of ABILITIES)
 		scores[ab] = build.abilities[ab] + (build.abilityBoosts?.[ab] ?? 0) + abilityBonus(active, ab);
 
+	// L2 expression context (EXPR-2, build vars). Class levels keyed by BARE id (`class_level.monk`);
+	// spellcasting computed up-front so `spellcasting_mod` reads the primary caster; base_speed is the
+	// species walking speed pre-effect. Play-state guards (hp/flags/enums) arrive in EXPR-3; until then
+	// every guard variable resolves to its absent default, so conditions read as "off".
+	const abilityMods = {} as Record<Ability, number>;
+	for (const ab of ABILITIES) abilityMods[ab] = abilityModifier(scores[ab]);
+	const classLevels: Record<string, number> = {};
+	for (const c of build.classes) {
+		const row = graph.get(c.class);
+		if (row) classLevels[row.id] = (classLevels[row.id] ?? 0) + c.level;
+	}
+	const speciesRow = build.species ? graph.get(build.species) : undefined;
+	const baseSpeed = num(speciesRow?.type === 'species' ? speciesRow.data.speed : undefined, 30);
+	const spellcasting = deriveSpellcasting(character, graph, scores);
+	const primaryCaster = spellcasting.classes.reduce<
+		(typeof spellcasting.classes)[number] | undefined
+	>(
+		(best, c) =>
+			(classLevels[c.classId] ?? 0) > (best ? (classLevels[best.classId] ?? 0) : -1) ? c : best,
+		undefined
+	);
+	const exprCtx: ExprContext | undefined = character.play.autoCalc
+		? makeExprContext({
+				level,
+				proficiencyBonus: prof,
+				abilityMods,
+				abilityScores: scores,
+				classLevels,
+				spellcastingMod: primaryCaster ? abilityMods[primaryCaster.ability] : 0,
+				baseSpeed
+			})
+		: undefined;
+
 	// proficiencies granted by effects (item/feat/feature): `grant_proficiency:[expertise:]<target>`
 	// where target is a save (`con` / `save.con`) or a skill id (`stealth` — the parser already
 	// stripped any `skill.` prefix). Skills collect the granted LEVEL (max of the ladder); saves are
@@ -303,7 +338,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			score: scores[ab],
 			baseScore: build.abilities[ab],
 			mod: abilityModifier(scores[ab]),
-			save: applyEffects(`save.${ab}`, base, active)
+			save: applyEffects(`save.${ab}`, base, active, exprCtx)
 		};
 	}
 
@@ -328,7 +363,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			expertise: prof === 'expertise',
 			halfProficient: prof === 'half'
 		});
-		skills[skill] = { ...applyEffects(`skill.${skill}`, base, active), prof };
+		skills[skill] = { ...applyEffects(`skill.${skill}`, base, active, exprCtx), prof };
 	}
 
 	// AC: equipped armor + shield, else unarmored; then effects
@@ -351,7 +386,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			value: acBase.value + 2,
 			trace: [...acBase.trace, { source: 'Shield', layer: 'item', op: 'add', amount: 2 }]
 		};
-	const ac = applyEffects('ac', acBase, active);
+	const ac = applyEffects('ac', acBase, active, exprCtx);
 
 	// HP: sum per class (SRD fixed); CON uses effective score. `classes[0]` IS the class taken at
 	// character level 1 (BuildVM preserves add-order) → only it grants the max hit die; later
@@ -373,25 +408,24 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			}
 		: maxHpForClass({ hitDie: 'd8', level, conScore: scores.con, includesCharacterLevel1: true });
 	// hp_max flows through the seam like every other stat (Toughness, Aid → `flat_bonus:hp_max+N`)
-	const maxHp = applyEffects('hp_max', maxHpBase, active);
+	const maxHp = applyEffects('hp_max', maxHpBase, active, exprCtx);
 
-	// speed from species
-	const speciesRow = build.species ? graph.get(build.species) : undefined;
-	const speciesSpeed = speciesRow?.type === 'species' ? speciesRow.data.speed : undefined;
+	// speed from species (base_speed, computed above for the expr ctx)
 	const speed = applyEffects(
 		'speed',
 		{
-			value: num(speciesSpeed, 30),
+			value: baseSpeed,
 			trace: [
 				{
 					source: speciesRow ? String(speciesRow.data.name_en) : 'Default',
 					layer: 'base',
 					op: 'add',
-					amount: num(speciesSpeed, 30)
+					amount: baseSpeed
 				}
 			]
 		},
-		active
+		active,
+		exprCtx
 	);
 
 	const passiveOf = (skill: 'perception' | 'investigation' | 'insight') => {
@@ -422,7 +456,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 					}
 				]
 			};
-		return applyEffects(`passive.${skill}`, base, active);
+		return applyEffects(`passive.${skill}`, base, active, exprCtx);
 	};
 
 	// damage defenses from effects: `resist_immune:<resist|immune|vulnerable>:<type>` (a bare
@@ -438,8 +472,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 				if (!defenses[bucket].includes(type)) defenses[bucket].push(type);
 			}
 
-	// spellcasting: per-class profiles + shared/pact slot pools (fixes multiclass DCs, L11)
-	const spellcasting = deriveSpellcasting(character, graph, scores);
+	// spellcasting: per-class profiles + shared/pact slot pools (fixes multiclass DCs, L11) — computed
+	// up-front (above) so `spellcasting_mod` is available to the expr ctx.
 
 	return {
 		level,
@@ -447,7 +481,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		abilities,
 		skills,
 		ac,
-		initiative: applyEffects('initiative', initiativeOf({ dexScore: scores.dex }), active),
+		initiative: applyEffects('initiative', initiativeOf({ dexScore: scores.dex }), active, exprCtx),
 		speed,
 		maxHp,
 		passives: {
@@ -457,7 +491,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		},
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
 		defenses,
-		resources: character.play.autoCalc ? collectResources(active) : [],
+		resources: character.play.autoCalc ? collectResources(active, exprCtx) : [],
 		spellcasting,
 		missing
 	};

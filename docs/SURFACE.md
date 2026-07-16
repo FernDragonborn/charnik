@@ -54,7 +54,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Identical literal array:**
 
-- `ABILITIES` (src/lib/character/schema.ts) = `ABIL` (src/lib/combat/helpers.ts) = `ABILS` (src/lib/content/detail.ts) = `ABILITIES` (src/lib/content/schemas.ts) = `ABILITIES` (src/lib/effects/expr.ts)
+- `ABILITIES` (src/lib/character/schema.ts) = `ABIL` (src/lib/combat/helpers.ts) = `ABILS` (src/lib/content/detail.ts) = `ABILITIES` (src/lib/content/schemas.ts) = `ABILITY_IDS` (src/lib/effects/context.ts) = `ABILITIES` (src/lib/effects/expr.ts)
 - `PROSE_BASES` (src/lib/content/schemas.ts) = `TRANSLATABLE_BASES` (src/lib/content/translate.ts)
 
 ## Design tokens (`styles/tokens.css`)
@@ -241,7 +241,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (45 modules)
+## Library functions & types (46 modules)
 
 ### `src/lib/build/derive.ts`
 
@@ -522,6 +522,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function findStaleDrafts` — Drafts saved under a DIFFERENT content-schema version — ephemeral WIP that can't be migrated, so it * will be discarded.
 - `function discardDrafts` — Delete the given stale drafts (called after the user acknowledges the discard warning).
 
+### `src/lib/effects/context.ts`
+
+- `interface BuildVars` — Build-lifetime numbers (always available; the EXPR-2 subset of the ctx).
+- `interface PlayVars` — Play-lifetime state (the EXPR-3 half; optional so EXPR-2 can omit it entirely).
+- `function makeExprContext` — * Build the `ExprContext` the evaluator reads.
+
 ### `src/lib/effects/expr.ts`
 
 - `interface DiceValue` — A dice quantity: a pool ({sides: count}) plus a flat modifier, mirroring rules/dice.ts so it * rides the existing rol…
@@ -534,7 +540,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function evaluate` — Evaluate a parsed expression against a context.
 - `function evalExpression` — Parse + evaluate in one step (convenience for callers that don't cache the AST).
 - `function diceToFormula` — Serialize a dice value to a formula string the roller (rules/dice.ts) accepts: "2d6+1d4+3".
-- `function isWhole` — Whether a value is a whole number (dice always are; a number may be fractional mid-expression).
 
 ### `src/lib/effects/index.ts`
 
@@ -544,6 +549,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type Recharge`
 - `interface ParsedEffect`
 - `function parseEffect` — * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security * boundary: data, never co…
+- `interface ResolvedValue` — A resolved value for a `flat_bonus`/`set_override`/`grant_resource` token: a folded numeric * `amount`, a `diceFormul…
+- `function resolveEffectValue` — * Resolve a token's value slot to a concrete quantity.
 - `interface ActiveEffect` — A runtime effect source contributing tokens at a pipeline layer.
 - `function matchesTarget` — Does an effect target apply to this stat key?
 - `interface EffectFlags`
@@ -693,4 +700,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into a URL/id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single dash, …
 
 ---
-_46 tokens · 50 global classes · 34 components · 351 exports across 54 modules · 33 duplicate suspects · generated in 108ms._
+_46 tokens · 50 global classes · 34 components · 355 exports across 55 modules · 33 duplicate suspects · generated in 112ms._

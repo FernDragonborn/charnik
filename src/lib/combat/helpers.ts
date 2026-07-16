@@ -177,8 +177,16 @@ export interface ResourceView {
 export function parseResourceEffect(eff: EffectInstance): ResourceView | null {
 	for (const tok of eff.effects) {
 		const p = parseEffect(tok);
-		if (p.kind === EFFECT_KIND.grantResource && p.resource)
-			return { iid: eff.iid, name: eff.label, ...p.resource };
+		// runtime effects carry a LITERAL max (user-entered via the "+" form); an expression max
+		// (`class_level.monk`) needs a derive ctx to resolve and is handled there, not in this panel.
+		if (p.kind === EFFECT_KIND.grantResource && p.resource && p.resource.max !== undefined)
+			return {
+				iid: eff.iid,
+				name: eff.label,
+				id: p.resource.id,
+				max: p.resource.max,
+				recharge: p.resource.recharge
+			};
 	}
 	return null;
 }
