@@ -42,17 +42,24 @@ describe('content schemas — unit', () => {
 		expect(r.success).toBe(false);
 	});
 
-	it('flags an unknown effect kind, accepts a known one', () => {
-		const bad = parseRow('species', {
+	it('keeps an unknown effect token instead of rejecting the row (B12)', () => {
+		// vocabulary growth must be additive: an unknown/future token (L2 guard, plugin:, reroll:)
+		// is kept verbatim and degrades to an inert note downstream, never a killed row.
+		const kept = parseRow('species', {
 			id: 'x',
 			systems: '5e',
 			source: 'SRD',
 			name_en: 'X',
 			size: 'medium',
 			speed: '30',
-			effects: 'teleport:far'
+			effects: 'teleport:far; is_raging ? advantage:attack; plugin:hb:ward'
 		});
-		expect(bad.success).toBe(false);
+		expect(kept.success).toBe(true);
+		if (kept.success) expect(kept.data.effects).toEqual([
+			'teleport:far',
+			'is_raging ? advantage:attack',
+			'plugin:hb:ward'
+		]);
 
 		const ok = parseRow('species', {
 			id: 'dwarf',

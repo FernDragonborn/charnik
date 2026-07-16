@@ -10,9 +10,10 @@
  * Localization is L2 suffixed columns (name_xx / text_xx); only en/uk are seeded, more can
  * be added without code changes (the loader discovers *_<lang> columns).
  *
- * `effects` is a `;`-separated list of bounded-vocabulary tokens (see effectsField). The
- * effect ENGINE interprets them (src/lib/effects/, optional/removable) — here we only
- * validate the surface grammar so a typo'd effect is flagged, not silently dropped.
+ * `effects` is a `;`-separated list of tokens (see effectsField). The effect ENGINE interprets
+ * them (src/lib/effects/, optional/removable) — the schema only SPLITS the cell into tokens and
+ * never rejects one (B12): an unknown/future token degrades to an inert note downstream, so
+ * vocabulary growth never breaks older rows.
  */
 import { z } from 'zod';
 
@@ -76,24 +77,21 @@ const systemsField = z.preprocess(
 	z.array(z.enum(SYSTEMS)).min(1)
 );
 
-/** A `;`-separated list of effect tokens; each must start with a known kind. */
-const effectsField = z.preprocess(
-	(v) => {
-		if (v === '' || v == null) return [];
-		if (Array.isArray(v)) return v;
-		return String(v)
-			.split(';')
-			.map((s) => s.trim())
-			.filter(Boolean);
-	},
-	z
-		.array(
-			z.string().refine((tok) => EFFECT_KINDS.some((k) => tok === k || tok.startsWith(k + ':')), {
-				error: (iss) => `unknown effect kind in "${String(iss.input)}"`
-			})
-		)
-		.default([])
-);
+/** A `;`-separated list of effect tokens. The loader NEVER rejects a token (B12): an unknown or
+ *  not-yet-understood token (an L2 guard that starts with a condition not a kind, a `plugin:` token,
+ *  a future `reroll:`/`min_die:` kind) is kept VERBATIM and degrades to an inert text note when the
+ *  engine interprets it (`parseEffect` → `unknown`), never a killed row — so vocabulary growth is
+ *  additive, not a breaking change for older apps. Classifying/flagging an unknown token is the
+ *  effect engine's job (and a downstream content-health pass, which may import `$lib/effects`), NOT
+ *  the schema's — the schema deliberately stays independent of the removable engine. */
+const effectsField = z.preprocess((v) => {
+	if (v === '' || v == null) return [];
+	if (Array.isArray(v)) return v;
+	return String(v)
+		.split(';')
+		.map((s) => s.trim())
+		.filter(Boolean);
+}, z.array(z.string()).default([]));
 
 /** Fields every content row carries. Spread into each type via `.extend`. `systems` and `source` are
  *  OPTIONAL on the row because they are normally declared once in the file's `#content-*:` header and
