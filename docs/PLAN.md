@@ -1053,14 +1053,14 @@ has_condition.frightened ? disadvantage:attack
 is_raging ? flat_bonus:damage+cha_mod             Zealot: CHA to damage while raging
 ```
 
-> **† `d20_tests` and `save.death` are PROPOSED target additions, not existing targets (SPEC6).**
+> **† `d20_tests` DONE (L1); `save.death` parses but awaits a death-save roll consumer (SPEC6).**
 > The shipped target set is `ac/initiative/speed/hp_max/attack/damage/save.<abil>/skill.<id>/
-> passive.<skill>` + the `saves`/`skills` groups (`PLUGINS.md §4.4`; `matchesTarget` in
-> `effects/index.ts`). `d20_tests` (a group over all d20 checks/saves/attacks) and `save.death`
-> (death saves aren't ability-keyed) are part of the **"extend L1 targets" work** in the scoping
-> note below — the examples above show the INTENDED L2 syntax, gated on that L1 growth, not a
-> capability that exists today. The Unarmored-Defense rows now carry the `armor_type` guard they
-> need (without it they'd override AC while in plate).
+> passive.<skill>` + the groups `saves`/`skills`/**`d20_tests`** (`matchesTarget` in
+> `effects/index.ts`). **`d20_tests`** now fans out to every d20-based roll (saves, skills, attack,
+> initiative) — so `flat_bonus:d20_tests+(-2*exhaustion)` (2024 exhaustion) works end to end.
+> `save.death` (death saves aren't ability-keyed) PARSES and matches its own key, but no sheet stat
+> consumes it yet — it lands when the death-save roll path reads targeted effects (a combat
+> follow-up). The Unarmored-Defense rows carry the `armor_type` guard they need.
 
 **Dice sides = any integer ≥ 1 (≤ cap), soft-warned.** D&D uses d4/d6/d8/d10/d12/d20/d100, but
 homebrew legitimately uses d2/d3/d30 — so a non-standard die is NOT rejected (that would fight
@@ -1094,6 +1094,15 @@ Talent "treat < 10 as 10", Elven Accuracy) — a BOUNDED, known set → add as n
 (structural), spell DC/attack, death-save bonus, etc. So "PHB on L2" really means "extend L1 (roll
 modifiers + targets) so L2 has enough to compute over" — achievable, keeps L3 for true homebrew, but
 it is L1 work, not just an expression parser.
+
+**L1 growth — PARTIAL (2026-07-16).** DONE: the **`d20_tests`** group target (fans out to
+saves/skills/attack/initiative) and the roll-manip kinds **`reroll:<target>:<threshold>`** /
+**`min_die:<target>:<floor>`** — parsed to `ParsedEffect` + surfaced as `EffectFlags.rerolls` /
+`.minDie` structured facts (recognized, never inert), ready for the roll path. REMAINING (deferred):
+the roll path must actually CONSUME those facts (reroll/floor a die during a d20/damage roll — a
+combat-integration follow-up, the facts contract is what L1 pins); `treat_as`, Elven Accuracy, and
+the extra targets (fly/swim speed, spell DC/attack as fold targets, `save.death` consumer, Extra
+Attack) are not yet added.
 
 **Phases:**
 

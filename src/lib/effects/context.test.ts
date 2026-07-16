@@ -5,6 +5,9 @@ import {
 	resolveEffectValue,
 	applyEffects,
 	collectResources,
+	collectFlags,
+	matchesTarget,
+	EFFECT_KIND,
 	type ActiveEffect
 } from './index';
 import { computed } from '../rules/pipeline';
@@ -124,5 +127,66 @@ describe('collectResources · expression max (Ki = monk level)', () => {
 			max: 3,
 			recharge: 'long'
 		});
+	});
+});
+
+describe('L1 · d20_tests group target', () => {
+	it('fans out to every d20-based roll but not to non-rolls', () => {
+		expect(matchesTarget('d20_tests', 'save.str')).toBe(true);
+		expect(matchesTarget('d20_tests', 'skill.stealth')).toBe(true);
+		expect(matchesTarget('d20_tests', 'attack')).toBe(true);
+		expect(matchesTarget('d20_tests', 'initiative')).toBe(true);
+		expect(matchesTarget('d20_tests', 'ac')).toBe(false);
+		expect(matchesTarget('d20_tests', 'speed')).toBe(false);
+		expect(matchesTarget('d20_tests', 'passive.perception')).toBe(false);
+	});
+
+	it('applies a uniform 2024-exhaustion penalty to all d20 tests via one token', () => {
+		const exhaustedCtx = makeExprContext(build, {
+			hp: 10,
+			hpMax: 30,
+			tempHp: 0,
+			exhaustion: 3,
+			flags: {},
+			conditions: new Set(),
+			resources: {},
+			resourceMax: {},
+			armorType: 'none',
+			size: 'medium'
+		});
+		const effects: ActiveEffect[] = [
+			{ source: 'Exhaustion', layer: 'condition', tokens: ['flat_bonus:d20_tests+(-2*exhaustion)'] }
+		];
+		const base = (n: number) => computed([{ source: 'b', layer: 'base', op: 'add', amount: n }]);
+		expect(applyEffects('save.dex', base(5), effects, exhaustedCtx).value).toBe(-1); // 5 − 6
+		expect(applyEffects('initiative', base(2), effects, exhaustedCtx).value).toBe(-4); // 2 − 6
+		expect(applyEffects('ac', base(15), effects, exhaustedCtx).value).toBe(15); // not a d20 test
+	});
+});
+
+describe('L1 · roll-manipulation vocab (reroll / min_die)', () => {
+	it('parses reroll and min_die into target + value', () => {
+		expect(parseEffect('reroll:damage:2')).toMatchObject({
+			kind: EFFECT_KIND.reroll,
+			target: 'damage',
+			amount: 2
+		});
+		expect(parseEffect('min_die:skill.stealth:10')).toMatchObject({
+			kind: EFFECT_KIND.minDie,
+			target: 'skill.stealth',
+			amount: 10
+		});
+		expect(parseEffect('reroll:damage').kind).toBe('unknown'); // malformed → inert, not dropped
+	});
+
+	it('surfaces them as structured roll-mod facts (recognized, not inert, not folded)', () => {
+		const effects: ActiveEffect[] = [
+			{ source: 'GWF', layer: 'feature', tokens: ['reroll:damage:2'] },
+			{ source: 'Reliable Talent', layer: 'feature', tokens: ['min_die:skills:10'] }
+		];
+		const flags = collectFlags(effects);
+		expect(flags.rerolls).toEqual([{ target: 'damage', value: 2 }]);
+		expect(flags.minDie).toEqual([{ target: 'skills', value: 10 }]);
+		expect(flags.unknown).toEqual([]);
 	});
 });

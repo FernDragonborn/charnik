@@ -25,7 +25,10 @@ export const EFFECT_KIND = {
 	grantProficiency: 'grant_proficiency',
 	resistImmune: 'resist_immune',
 	applyCondition: 'apply_condition',
-	grantResource: 'grant_resource'
+	grantResource: 'grant_resource',
+	// L1 roll-manipulation (the bounded, known set — NOT L3): the roll path consumes these facts.
+	reroll: 'reroll', // `reroll:<target>:<threshold>` — reroll a die that lands ≤ threshold (GWF ≤2)
+	minDie: 'min_die' // `min_die:<target>:<floor>` — treat a die result below floor AS floor (Reliable Talent d20→10)
 } as const;
 export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 /** The kinds as a list (for schema validation / the `includes` guard). */
@@ -134,6 +137,13 @@ export function parseEffect(token: string): ParsedEffect {
 		const m = /^(expertise:)?(?:skill\.)?(.+)$/i.exec(rest);
 		if (!m?.[2]) return { kind: 'unknown', raw };
 		return { kind, target: m[2].trim(), proficiency: m[1] ? 'expertise' : 'proficient', raw };
+	}
+	if (kind === EFFECT_KIND.reroll || kind === EFFECT_KIND.minDie) {
+		// `reroll:<target>:<threshold>` / `min_die:<target>:<floor>` — a target plus one integer the
+		// roll path reads. Target may be a group (`d20_tests`) or a specific key (`skill.stealth`).
+		const m = /^(.+):(\d+)$/.exec(rest);
+		if (!m?.[1]) return { kind: 'unknown', raw };
+		return { kind, target: m[1].trim(), amount: Number(m[2]), raw };
 	}
 	// advantage / disadvantage / apply_condition
 	return { kind, target: rest, raw };
@@ -244,15 +254,28 @@ export function resolveActiveEffects(
 	return { effects: out, issues };
 }
 
-/** Does an effect target apply to this stat key? Exact, plus the `saves` group → `save.*`. */
+/** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
+ *  `saves`→`save.*`, `skills`→`skill.*`, and `d20_tests`→every d20-based roll (saves, ability
+ *  checks/skills, attack, initiative) — the 2024 exhaustion penalty rides this one group. */
 export function matchesTarget(effTarget: string | undefined, key: string): boolean {
 	if (!effTarget) return false;
 	if (effTarget === key) return true;
 	if (effTarget === 'saves' && key.startsWith('save')) return true;
 	if (effTarget === 'skills' && key.startsWith('skill')) return true;
+	if (
+		effTarget === 'd20_tests' &&
+		(key.startsWith('save') || key.startsWith('skill') || key === 'attack' || key === 'initiative')
+	)
+		return true;
 	return false;
 }
 
+/** A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll
+ *  threshold (`reroll`) or the die floor (`min_die`). */
+export interface RollMod {
+	target: string;
+	value: number;
+}
 export interface EffectFlags {
 	advantage: string[];
 	disadvantage: string[];
@@ -260,6 +283,10 @@ export interface EffectFlags {
 	resources: string[];
 	proficiencies: string[];
 	resistImmune: string[];
+	/** `reroll:<target>:<threshold>` facts — the roll path rerolls a die that lands ≤ threshold. */
+	rerolls: RollMod[];
+	/** `min_die:<target>:<floor>` facts — the roll path treats a die below floor AS floor. */
+	minDie: RollMod[];
 	unknown: string[];
 }
 
@@ -375,6 +402,8 @@ export function collectFlags(effects: ActiveEffect[]): EffectFlags {
 		resources: [],
 		proficiencies: [],
 		resistImmune: [],
+		rerolls: [],
+		minDie: [],
 		unknown: []
 	};
 	for (const eff of effects) {
@@ -398,6 +427,14 @@ export function collectFlags(effects: ActiveEffect[]): EffectFlags {
 					break;
 				case EFFECT_KIND.resistImmune:
 					flags.resistImmune.push(p.target ?? token);
+					break;
+				case EFFECT_KIND.reroll:
+					if (p.target && p.amount !== undefined)
+						flags.rerolls.push({ target: p.target, value: p.amount });
+					break;
+				case EFFECT_KIND.minDie:
+					if (p.target && p.amount !== undefined)
+						flags.minDie.push({ target: p.target, value: p.amount });
 					break;
 				case 'unknown':
 					flags.unknown.push(token);

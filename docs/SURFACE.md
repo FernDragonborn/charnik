@@ -557,6 +557,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ResolvedEffects` — The one resolve stage (EXPR-3; closes D7/B21): gather → evaluate guards (drop false/errored) → * expand `apply_condit…
 - `function resolveActiveEffects`
 - `function matchesTarget` — Does an effect target apply to this stat key?
+- `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
 - `interface EffectFlags`
 - `function applyEffects` — * The seam: compose effects onto a core-computed stat for `targetKey`.
 - `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
@@ -704,4 +705,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 34 components · 359 exports across 55 modules · 33 duplicate suspects · generated in 95ms._
+_46 tokens · 50 global classes · 34 components · 360 exports across 55 modules · 33 duplicate suspects · generated in 102ms._
