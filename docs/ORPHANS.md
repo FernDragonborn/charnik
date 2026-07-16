@@ -1,8 +1,12 @@
 # Orphans catalogue
 
-Symbols/files with **no importer** per `knip` (run: `pnpm dlx knip`). **Nothing here is deleted** —
-the app has half-finished features, so an orphan may be *pending wiring*, not dead. This is a
-triage list; classify, then act deliberately.
+> **STATUS 2026-07-16 (SPEC13): `pnpm knip` is GREEN — zero reported orphans.** This catalogue is
+> now **historical**; every entry below was since wired, un-`export`ed, or removed, and `knip.json` +
+> the lint gate (CLAUDE.md "repo tooling") keep it clean going forward. Specifically the old 🔴
+> "likely dead" calls were WRONG: `healDice` is live (`combat/helpers.ts:573` via `spellRow`),
+> `castingIcon` is live (`helpers.ts:589`). **Do not delete anything on the strength of this file** —
+> re-run `pnpm knip` for the current truth; the sections below are kept only as a record of the
+> 2026-07-14 triage.
 
 Legend: 🟢 false-positive / internal-only (keep; maybe drop the `export`) · 🟡 unfinished feature
 (keep — wire it up) · 🔴 likely dead (safe to remove after a quick confirm) · ❓ verify (unsure).

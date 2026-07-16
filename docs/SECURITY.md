@@ -27,15 +27,19 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    interpreter**, not `eval`/a DSL (incl. user-entered custom effects; free text is inert
    display). Malicious content can't execute — worst case it's flagged in content-health.
    Expressiveness comes in **three layers**, never by putting code in a CSV cell:
-   - **L1 declarative bounded vocab** (data: `kind`/`target`/`op`/`value`/`when`/`scope`) — ~95%.
+   - **L1 declarative bounded vocab** (data: `kind:target:value` tokens; the fixed `kind` set is
+     `flat_bonus`/`set_override`/`advantage`/`disadvantage`/`grant_proficiency`/`resist_immune`/
+     `apply_condition`/`grant_resource`, per `effects/index.ts`) — ~95%. There is no `op`/`when`/
+     `scope` token dimension: `op` (add/set/mult) is a pipeline-internal concept, and "when"
+     (conditionality) is expressed by the L2 guard `<cond> ? <token>`, not an L1 field.
    - **L2 safe value-expressions** (`1d4`, `prof*2`, `ceil(level/2)`): OUR dice+arithmetic
      parser, non-Turing-complete, whitelisted variables, **no `eval`**, no host access.
    - **L3 plugins** (long tail): first-party/signed handlers registered on the engine seam
      are trusted/easy; **community plugins run in a QuickJS-in-WASM sandbox** (DECIDED) —
      `quickjs-emscripten`, a narrow host API that only takes effect-context and returns
-     `{value, trace}` contributions, hard time/memory limits, **no DOM / no Tauri `invoke` /
+     `{value, trace, notes}` contributions, hard time/memory limits, **no DOM / no Tauri `invoke` /
      no fs / no network**. Never raw dynamic-`import`, never an unsandboxed Worker-with-bridge.
-   Every layer keeps the `{value, trace}` contract so contributions stay explainable.
+   Every layer keeps the `{value, trace, notes}` contract so contributions stay explainable.
 5. **Webview hardening.** Strict Tauri **CSP** — `default-src 'self'` (webview may only load
    its own bundled resources) plus `script-src 'self' 'wasm-unsafe-eval'` and
    `style-src 'self' 'unsafe-inline'`. The `'wasm-unsafe-eval'` is **required** because the

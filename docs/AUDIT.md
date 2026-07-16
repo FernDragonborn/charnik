@@ -40,6 +40,60 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
   PLAN); `parseDamage` would double-count a bonus die in a "2d6+1d4"-style damage string
   (first `[+-]\d` parsed as the flat mod) — not triggered by current SRD data, fragile.
 
+Deep effects-system review, 2026-07-16 (A8–A18):
+
+- [ ] **A8 · Multiclass saves = union of ALL classes.** `character/derive.ts:287-292` adds every
+  class's save proficiencies; RAW grants saves from the FIRST class only. The builder writes
+  `build.saves` correctly (first class, `build/state.svelte.ts` assemble) — the derive union on top
+  is the bug. Fighter/Wizard gets STR+CON+INT+WIS.
+- [ ] **A9 · Same-layer `set` resolution "highest wins" is wrong for restrictive sets.**
+  `rules/pipeline.ts:69` folds competing sets by `Math.max` — grappled (`set_override:speed:0`)
+  vs any other same-layer speed set → the character keeps moving. CONFIRMED (user 2026-07-16).
+  "Most potent" is contextual, not always max; potency model TBD (for penalty-type stats the
+  restrictive set must win).
+- [ ] **A10 · Ability scores bypass the pipeline entirely.** `derive.ts:259-261` computes
+  `scores[ab] = base + boosts + abilityBonus()` as bare numbers: NO 20/30 clamp (CLAUDE.md promises
+  it; `flat_bonus:str+1000000` → mod +499995), NO trace (a species +2 CON is unexplainable on
+  hover), and `set_override:int:19` (Headband of Intellect) parses but is **silently dropped**
+  (abilityBonus reads only flat_bonus; no stat key matches a bare ability target). Also
+  `abilityBoosts` values are unclamped ints (G3). Ability scores must become `Computed` through
+  the same fold/clamp as everything else.
+- [ ] **A11 · Same-name effects stack.** Two Bless instances → 2×1d4; the same condition arriving
+  from two sources doubles its numeric penalties (gatherEffects has no dedupe). D&D's "Combining
+  Game Effects" is implemented ONLY for `set` ops (`overriddenSetNotes`) — add/dice contributions
+  and duplicate `apply_condition`s stack freely. Needs same-source/same-name dedupe at the gather
+  stage.
+- [ ] **A12 · Short-rest expiry compares TOTAL duration, not remaining.**
+  `routes/combat/resources.svelte.ts:71`: `e.durationRounds <= 600` — an effect with 1000 total
+  rounds and 1 remaining survives the hour; a fresh 600-round one is wiped. Use `remainingRounds`
+  (already in `combat/helpers.ts`).
+- [ ] **A13 · Long rest doesn't end concentration unconditionally.** Concentration clears only via
+  an expiring LINKED effect (`resources.svelte.ts:73`); a concentration spell with no self-tokens
+  (Hold Person) has no linked effect → concentration survives the night.
+- [ ] **A14 · HP clamp is one-sided.** Heal clamps to max, damage floors at 0
+  (`combat/state.svelte.ts:147-152`), but when `hp_max` DROPS (Aid expires) `hp.current` stays
+  above max until the next heal. Also `play.hp.max ?? sheet.maxHp.value` (:138) — a manual max
+  override silently disables ALL `hp_max` effects (Aid on top of a manual max vanishes).
+- [ ] **A15 · Cantrip scaling absent.** Fire Bolt stays 1d10 forever — the 5/11/17 damage scaling
+  (both editions) exists nowhere (sheet, cast, data, targets). Canonical L2 case
+  (`higher_level` text is unparsed prose); until then the sheet is silently wrong from level 5.
+- [ ] **A16 · `apply_condition` expansion holes** (`derive.ts:217-231`): (a) condition row lookup
+  has NO edition filter (a 5.5e condition row can apply to a 5e character when both roots load) —
+  class features right beside it DO filter `systems`; (b) `graph.rows.find` = first match, source
+  namespacing ignored; (c) no dedupe (see A11); (d) one-level only; (e) ordering vs future L2
+  guards unspecified (expansion must run AFTER guard resolution).
+- [ ] **A17 · Casting never spends spell slots.** `cast()` (`combat/state.svelte.ts:328`) spends
+  only the action-economy slot; level-N slot pips are manual. The schema comment
+  (`character/schema.ts:136`) claims "spells spend their slot and are blocked when exhausted" —
+  doc lies about code. No slot-level model at all: no upcast choice, no "no 3rd-level slots left"
+  gate. (Ties to PLAN L10; ritual L8/L13 also unbuilt — `class.ritual` is a dead column, E7.)
+- [ ] **A18 · Multiclass caster collapses to `classes[0]` across the UI.** Per-class profiles exist
+  (L11 core fix, `character/spellcasting.ts`) but: cast uses `spellcasting.classes[0]` for
+  DC/attack/heal-mod (`state.svelte.ts:342`), `preparedCap` is `classes[0]` (:412), and BOTH
+  prepared togglers (combat `togglePrepared`, spellbook `togglePrepare`) gate every spell against
+  the first class's cap. A Wizard 3 / Cleric 2 casts cleric spells off INT. (Backlog line ~1678
+  knew the DC half; scope is wider.) Cross-ref D13.
+
 ## B · Unfinished invariants (CLAUDE.md/PLAN promise it; code doesn't do it)
 
 - [x] **B1 · Effect duration auto-expiry not implemented.** FIXED 2026-07-15 (EFX-4):
@@ -109,6 +163,82 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
   "file size caps", currently unenforced) and plugin loading. Deferred implementation: it's a
   cross-cutting interface change (types + Tauri fs + memory impl + consumers) with no consumer yet.
 
+Deep effects-system review, 2026-07-16 (B12–B26):
+
+- [ ] **B12 · The loader REJECTS unknown effect kinds — violates "unknown → inert note".**
+  `content/schemas.ts:91` (`effectsField` refine) fails the whole ROW when a token doesn't start
+  with a known kind. Consequence: ANY vocabulary growth (L2 guards start with a condition, not a
+  kind; `plugin:`; future `reroll:`/`min_die:`) is a breaking change — new content kills rows in
+  older apps instead of degrading. **DECIDED (user 2026-07-16): the loader never rejects a token —
+  unknown degrades to inert text + a content-health WARNING; if the user has explicitly dismissed/
+  skipped it, skip silently.** Only `parseEffect` classifies tokens.
+- [ ] **B13 · Third silent token class: recognized kind, unconsumed target.** A known kind whose
+  target no consumer reads vanishes with no note and no content-health (e.g. a typo'd target).
+  There is no exhaustiveness accounting: every parsed token must be either applied or surfaced as
+  unsupported. Related: `action`/`bonus`/`reaction` targets are honored by `TurnEconomy.slotMax`
+  but exist in NO documented vocabulary (PLAN L1 list, PLUGINS.md §4.4) — code extended the vocab
+  silently; shipped Haste uses `flat_bonus:action+1`.
+- [ ] **B14 · `collectFlags` has zero production consumers; the effects panel shows only
+  `play.effects`.** The "panel lists ALL active effects (auto-applied vs text-only) so nothing is
+  silently lost" invariant is unimplemented for content-borne effects (item/feature buffs and
+  their unknown tokens are invisible outside stat traces).
+- [ ] **B15 · Derive ignores source filtering entirely** (extends B5): `gatherEffects`/`deriveSheet`
+  read `graph.get`/`graph.rows` raw — a DISABLED file/source and the LOSING side of a resolved
+  collision still feed the character's stats.
+- [ ] **B16 · `CHARACTER_MIGRATIONS = {}` though the DSL rename already shipped.**
+  (`character/repository.ts:21`.) The kebab→snake token rename (6f02ff0) silently inerts any
+  saved `play.effects` tokens written before it. Wider: the TOKEN GRAMMAR is not versioned at
+  all — `schemaVersion` covers JSON shape, not token strings inside play-state; every future DSL
+  change (L2!) is silent corruption of saved effects without a migration.
+- [ ] **B17 · `effectInstance` violates refs-not-copies.** `play.effects` stores BAKED tokens +
+  label copied from the catalog at add-time (`character/schema.ts:92-105`); fixing a catalog row
+  doesn't propagate to active buffs, and the baked label doesn't re-localize.
+- [ ] **B18 · Provenance/notes are baked EN strings — explainability can't localize.**
+  `gatherEffects` bakes `name_en` (`derive.ts:138` etc.), `applyEffects` composes English notes
+  ("advantage on skill.stealth"), `why()` concatenates them, the roll log too. The
+  `{value, trace, notes}` contract needs structured facts (source ref + op + params) localized at
+  render; strings baked at derive are untranslatable. The longer this waits the more consumers
+  bake in.
+- [ ] **B19 · Durations tick only in combat.** Rounds advance only via `nextTurn`; out of combat
+  `play.round` is frozen → a 10-round Bless cast outside combat never expires (only a rest clears
+  it). No real-time/out-of-combat expiry model.
+- [ ] **B20 · Defenses are display-only.** `damage()` has no concept of damage TYPE — resist/
+  immune/vulnerable render in CombatStrip and are never applied. Blocked by data too: spell
+  damage type is unstructured (`damage: "8d6 fire"` one string; `items.damage_type` exists but
+  the HP flow takes a bare number).
+- [ ] **B21 · Split-brain effect consumers (three universes).** Derive uses `gatherEffects` (full:
+  species/features/items/runtime + condition expansion); the ROLL path uses
+  `rollEffectsFor(c.play.effects)` (`combat/state.svelte.ts:248`) and the ACTION ECONOMY uses
+  `slotMax` over `play.effects` — both see ONLY runtime effects. Consequences: a magic weapon's
+  `flat_bonus:attack+1` or a feature's `advantage:...` never reaches rolls; Action Surge as a
+  content feature can't grant an action; `apply_condition:poisoned` added via the panel gives
+  stat penalties but NO disadvantage on attack rolls (expansion lives only in gatherEffects).
+  Fix = one resolve stage (gather → guards → expansion → dedupe → typed effective facts) that
+  every consumer reads. Cross-ref D7.
+- [ ] **B22 · Duplicate `source:id` rows apply twice.** The loader dedupes only `byEffectiveId`
+  (`loader.ts:327-337`) but keeps both rows in `graph.rows` — the class-feature scan and
+  condition expansion iterate `graph.rows` directly, so a duplicated id contributes its tokens
+  ×2 while `get()` sees one row.
+- [ ] **B23 · `tests/integration/` doesn't exist.** CLAUDE.md + TESTING.md describe an integration
+  tier (temp content roots, watcher self-write test, save/load round-trip…) as a convention;
+  the repo has only `tests/fixtures/` with one CSV. Either build the tier or stop documenting it
+  as present.
+- [ ] **B24 · Watcher reloads EVERYTHING on any change** — CLAUDE.md promises "reparse only the
+  changed file". `watcher.ts` debounces into a full `reloadContent()`. Perf-only today; the
+  invariant should be re-worded or implemented.
+- [ ] **B25 · Subclass casting is a UI lie.** `subclasses.csv` carries caster columns +
+  `caster_from_level` (schemas.ts:252-264) and the homebrew FORM offers them (homebrew.ts:86,113),
+  but `deriveSpellcasting` reads only class rows — Eldritch Knight / Arcane Trickster get no
+  slots, no DC (PLAN L6 designed-not-built; the authoring form shouldn't offer dead fields).
+- [ ] **B26 · Feature source-pinning blocks homebrew extension of SRD classes.**
+  `derive.ts:181` (`f.source !== classRow.source`) means PHB features a user adds for the SRD
+  fighter (their own source tag) never match — contradicts "users add non-SRD content
+  themselves". DIRECTION (discussion 2026-07-16, pending confirm): match on
+  `(class_id, edition)` + respect `isRowActive` (B15), and treat the same `(class_id, level, id)`
+  from two sources as a COLLISION resolved by the existing keep-one/keep-all UI, with a
+  warn+apply-one default. `graph.featuresForClass` (loader.ts:397) is an unused divergent
+  duplicate of this query — fold it in (D18).
+
 ## C · Design-token / CSS violations
 
 - [ ] **C1 · Hardcoded colors (~15 sites).** `color: #fff` ×8 (should be
@@ -149,6 +279,63 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
 - [ ] **D6 · `effectHint` hardcodes spell names** ('mage hand', 'counter'…, EN-only) as a
   curated fallback — against the data-driven grain; candidate for a content column instead.
 
+Deep effects-system review, 2026-07-16 (D7–D19):
+
+- [ ] **D7 · Token scans scattered across ~8 sites; no resolve stage.** `applyEffects` (per stat)
+  + `abilityBonus` (derive.ts:236) + the grant_proficiency scan (:270) + the defenses scan (:431)
+  + `passiveOf` adv/dis (:402) + `apply_condition` expansion (:217) + `collectResources`/
+  `collectFlags` + `rollEffectsFor` + `TurnEconomy.slotMax` + `speciesFixedAbilities`
+  (build/derive.ts:21). EXPR-3 guards must gate ALL of them — without one resolve stage that's 8+
+  forks of conditional logic. Also perf: `parseEffect` runs O(stats × tokens) per derive (derive
+  fires on every HP click); an L2 expression parser multiplies that. Parse once per token per
+  derive. Cross-ref B21.
+- [ ] **D8 · Two parallel dice-tray stacks.** `lib/dice/tray.svelte.ts` (DiceTrayRequest contract:
+  registry + formula string + roll-instantly fallback; comment claims "the seam every caller talks
+  to") vs `routes/combat/roll.svelte.ts` RollTray (pool-based, never registers the contract). Two
+  roll-request representations, two log paths — violates shared-control-=-one-component in its own
+  seam.
+- [ ] **D9 · `computeAttacks` is a data→string→reparse round-trip.** Builds `dmg` as a display
+  string with the mod baked in (helpers.ts:413), then `attackRoll` re-parses it via `parseDamage`
+  (A7's fragility is a symptom). Also no magic-weapon path at all: no bonus column and item effect
+  tokens don't reach rolls (B21) — a +1 sword is mechanically inert.
+- [ ] **D10 · Text-heuristics tier where data columns belong** (D6 is one member): `healDice`
+  regexes `text_en` for healing dice (helpers.ts:123 — UA-only homebrew heals nothing),
+  `durationToRounds` parses duration prose (:220), `castingIcon` regexes casting_time (:351).
+  Mechanics must be columns; prose is display.
+- [ ] **D11 · Two `Recharge` unions.** `rules/spellcasting.ts:14` (`short|long|day|dawn`) vs
+  `effects/index.ts:33` (`short|long|other`). `rest()` handles short/long only: `day`/`dawn` are
+  unproducible, `other` never recharges (undocumented whether that's intended manual). One owner.
+- [ ] **D12 · `set_override` tokens are forced to the `override` layer** (`effects/index.ts:178`
+  ignores `eff.layer`) while the pipeline is designed for layered sets ("an override-layer set
+  beats an item-layer one") and PLUGINS.md lets plugin contributions set at feature/item layers.
+  Token path and plugin path give the same op different semantics.
+- [ ] **D13 · Prepared-toggle logic duplicated with DIVERGENT semantics.** Combat
+  `togglePrepared` (state.svelte.ts:378) vs spellbook `togglePrepare` (+page.svelte:82): near-
+  identical cap check + toast, but combat's `preparedCount` counts `s.prepared` (may include
+  always-prepared) while spellbook excludes `alwaysPrepared` — the two pages enforce different
+  caps. One shared helper; also both use `classes[0]` (A18).
+- [ ] **D14 · Character id = `slugify(name)`** (build/state.svelte.ts:663) — two "Hero"s silently
+  overwrite each other's save. Violates the GUID-for-shareable-data principle; id should be a
+  GUID with the slug as display/folder hint.
+- [ ] **D15 · `assemble` hardcodes `attuned: false`** (build/state.svelte.ts:653) — ANY builder
+  edit/level-up wipes every item's attunement.
+- [ ] **D16 · No "player choice" dimension in the content model.** Half-feat "+1 to one ability of
+  your choice" (Resilient), Magic Initiate's spell picks, feat-granted expertise — content with a
+  CHOICE is unrepresentable (tokens are static; a feat slot holds only a ref). Related smell:
+  THREE ASI mechanisms already coexist (species effect tokens, `abilityBoosts`, the `boost_choice`
+  `NxM` mini-grammar) — a fourth ad-hoc one for feats would compound it. PLAN's "half-feat +1
+  handled in source step" has no mechanism behind it.
+- [ ] **D17 · `ENUM_OPTS.kind = EFFECT_KINDS` in the homebrew form** (homebrew.ts) — but `kind` as
+  a COLUMN belongs to `spell_slots` (values full/half/third/pact). Verify what the form renders
+  for a spell_slots row; wrong option list if lookup types are authorable.
+- [ ] **D18 · `graph.featuresForClass` (loader.ts:397) has no consumer** and diverges from
+  derive's inline feature query (no system/level gates). Fold into the B26 fix; one query owner.
+- [ ] **D19 · Minor pile:** `hpBar` divides by max=0 → NaN (state.svelte.ts:418); `missing[]`
+  refs not deduped (derive.ts); `passiveSkills` pins not persisted (belongs in `ui`, cf. D3);
+  `RollEffects.flat` carries a "callers must ignore it for save/skill keys or it double-counts"
+  contract in a comment instead of the type (helpers.ts:66); `exhaustion` hardcoded `max(6)` in
+  the schema (schema.ts:133) vs the decided data-driven ladder.
+
 ## E · Data / locale content
 
 - [ ] **E1 · `static/content/srd-2024/` has no `languages_srd.csv`** (2014 has one) → a 5.5e
@@ -156,6 +343,28 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
   hand-author — house rule).
 - [ ] **E2 · uk.json violations:** tagline "Твої персонажі — твої" is ти-form (rule: formal
   «ви» / impersonal); typo "створюте" → "створюйте" in `demo.body`.
+
+Deep effects-system review, 2026-07-16 (E3–E7):
+
+- [ ] **E3 · Content ids are kebab-case; L2 makes `-` the minus operator.** Shipped SRD is kebab
+  throughout (`acid-splash`, `animal-handling`); `idField` (schemas.ts:65) and the resource-id
+  grammar in `parseEffect` (effects/index.ts:98) both ALLOW `-`; so `class_level.blood-hunter`,
+  `resource.lay-on-hands`, `has_condition.<kebab>` are unparseable as expressions. **DECIDED
+  (user 2026-07-16): migrate ids to snake_case EVERYWHERE** — idField regex, SRD regeneration via
+  the converters (never hand-edit), resource/condition ids, and a saved-character ref migration
+  (B16 machinery); character folder slugs too, for one grammar.
+- [ ] **E4 · Shipped tokens ahead of the vocabulary.** `effects_srd.csv` Haste row uses
+  `flat_bonus:action+1` — a target documented nowhere (B13). Also the EFX note stands: most SRD
+  condition/feature rows still carry EMPTY `effects` columns (engine ready, data not encoded).
+- [ ] **E5 · `class_casting` requires a row per EXACT level** (character/spellcasting.ts:94) — a
+  sparse table (rows only where counts change) silently yields caps of 0 and spells vanish.
+  Either fill-down in the lookup or document the density requirement for homebrew.
+- [ ] **E6 · `classes.saves` schema demands EXACTLY 2** (`z.array(Ability).length(2)`,
+  schemas.ts:208-211) — a homebrew class with 1 or 3 save proficiencies fails validation and the
+  row is dropped. Arbitrary stiffness against the homebrew-first stance.
+- [ ] **E7 · Dead columns shipped in the schema:** `class_feature.resource` (schemas.ts:246 — zero
+  consumers; resources come only from `grant_resource` tokens) and `class.ritual` (read nowhere;
+  spell-side `ritual` only renders a chip). Either wire or drop from schema + authoring form.
 
 ## EFX · Effects-engine buildout (IMPLEMENTED 2026-07-15; order was EFX-2 → 1 → 4 → 3)
 
@@ -240,6 +449,11 @@ plus imports. Verify with a differential test before merging where bodies differ
   (`load`/`persist`/`STORAGE_KEY`) duplicated between sources.svelte.ts and app.svelte.ts.
   The live list is SURFACE.md's "Duplicate suspects" — review it there; this item tracks
   burning down the initial 32.
+
+- [ ] **F11 · Locale-column grammar ×3, diverged.** Loader `LOCALE_COL` accepts BCP-47 with
+  subtags (`name_pt-BR`), `search.ts:58` accepts only `[a-z]{2,3}` (pt-BR names exist but are
+  UNSEARCHABLE), `detail.ts:51` `PROSE_LOC` is a third copy. One exported grammar
+  (2026-07-16 review).
 
 ## G · Typing gaps (2026-07-14; strategy: strict types + user stories are the primary bug nets)
 
@@ -327,3 +541,93 @@ point at THIS file.
 - [ ] **W6 · SessionStart surface-hook didn't fire/deliver** in a live session (SURFACE.md was
   stale at session start; only the caveman plugin hook's output arrived). Verify project-hook
   delivery on Windows (`claude --debug`; the command uses sh redirects — needs Git Bash).
+
+## SPEC · Effects-spec / docs findings (2026-07-16 deep review)
+
+Holes and self-contradictions in the L2/PLG specs (PLAN.md EXPR/PLG + PLUGINS.md) and doc↔code
+drift. Spec items must be resolved IN the docs (amend first, per PLUGINS.md's own rule) — most
+gate EXPR-1/2 or PLG-2.
+
+> **ALL RESOLVED IN DOCS 2026-07-16** (spec-first amendments, no code changed). Map:
+> **SPEC1** → PLUGINS.md §4.2 (ctx split into `ctx.build`/`ctx.play`, hashed separately for memo).
+> **SPEC2** → PLAN.md EXPR "Type & resolution rules" (ability/derived vars = effective; writers→readers DAG).
+> **SPEC3** → same block (per-enum literal whitelist; ordered enums allow ordinal compare).
+> **SPEC4** → same block (absent-but-whitelisted var = 0/false, not fallback; `spellcasting_mod` rule).
+> **SPEC5** → same block (`if()` type = the eval-taken branch; mixed → content-health warn).
+> **SPEC6** → PLAN.md EXPR examples (`armor_type` guard on Unarmored Defense; `d20_tests`/`save.death` flagged PROPOSED).
+> **SPEC7** → same block (ONE resolve stage: gather→guards→expand→dedupe→facts).
+> **SPEC8** → PLUGINS.md §4.4a (compute-once/memo vs fold-per-carrying-occurrence; returned-token layer/source).
+> **SPEC9** → PLUGINS.md §6.3 (length-prefixed, domain-separated consent hash).
+> **SPEC10** → PLAN.md EXPR block (per-sheet `deriveIssues` channel, like `missing`, into content-health).
+> **SPEC11** → SECURITY.md #4 (real `kind:target:value` vocab; no `op`/`when`/`scope` dimension; `{value,trace,notes}`).
+> **SPEC12** → TESTING.md (integration tier + rule-block/concentration/rest coverage marked ASPIRATIONAL).
+> **SPEC13** → ORPHANS.md (knip GREEN banner; `healDice`/`castingIcon` corrected as live).
+> **SPEC14** → PLAN.md (`grant-slot`→`grant_slot` ×3; L11 "first caster" note updated — core is per-class).
+
+- [x] **SPEC1 · PLUGINS.md contradicts itself about `ctx`.** §4.2 pins "the WHOLE context" as
+  build numbers only; §8.4 says a `passive` handler reads the dependency-resolved state incl.
+  `bloodied`/`raging`/`concentrating`; §8.6's example reads `ctx.resources`. Three different ctx
+  in one doc. Plus memo economics: the pre-pass memoizes on (token, ctx-hash) — once ctx includes
+  hp/flags, EVERY HP tick misses the whole cache and re-runs all plugin tokens (~20 ms budget per
+  derive), killing PLG-SEC 13's "most derives cost zero". Direction: split ctx into a stable
+  build-ctx and a play-ctx, hash separately (or let a handler declare what it reads).
+- [x] **SPEC2 · L2 `<ability>_mod`: base or effective? UNPINNED.** Effects can WRITE ability
+  scores while expressions READ them — the same dependency problem §8.4 solves for guards, but
+  the spec discusses only guards. Likely answer: effective (post-ability-stage) with
+  expression-writers ordered before readers in the DAG; cycle → content-health. Must be pinned in
+  the EXPR grammar section; also note derive.ts's current hardcoded two-stage cascade
+  (scores-first) is exactly what EXPR-3's DAG replaces.
+- [x] **SPEC3 · Enum comparisons undefined in the L2 grammar.** The spec's own example
+  `armor_type==heavy ? …` is unparseable by its own rules (no string type, unknown ident = parse
+  error — `heavy` is neither). Same for `size` ordinals. Whitelist enum literals per enum-typed
+  variable.
+- [x] **SPEC4 · Absent-but-whitelisted variable semantics unpinned.** `class_level.rogue` on a
+  non-rogue: 0 or degrade-to-fallback? (Sneak-Attack-style content in a shared pack depends on
+  it; §8.6 hints `?? 0`.) `spellcasting_mod` on a non-caster / WHICH class on a multiclass —
+  undefined.
+- [x] **SPEC5 · `if()` with mixed branch types.** `if(is_bloodied, 1d4, 0)` — dice in one branch,
+  int in the other; the value type is "int OR dice formula" with no unification rule.
+- [x] **SPEC6 · Worked examples use targets that don't exist** (`flat_bonus:d20_tests+…`,
+  `advantage:save.death` — neither in PLUGINS.md §4.4 nor in code), and both Unarmored-Defense
+  examples lack the `armor_type==none ?` guard (as written they'd override AC in plate). The
+  "PHB on L2 needs L1 targets to grow" scoping note is honest — but the examples present the gap
+  as already solved.
+- [x] **SPEC7 · Where guards are resolved is unspecified.** Must be ONE resolve stage
+  (gather → guards → condition expansion → dedupe → typed facts) that every consumer reads —
+  else 8+ scan sites each fork conditional logic (D7/B21). Guard × `apply_condition`-expansion
+  ordering also unstated (expansion after guards).
+- [x] **SPEC8 · Plugin fold-count ambiguity.** "Called once per distinct token per derive" — two
+  ITEMS carrying the same `plugin:` token: folded once or twice? And returned `tokens` ride at
+  which layer/source (the carrying effect's? always `feature`?) — unstated.
+- [x] **SPEC9 · Consent hash `sha256(main.js ‖ plugin.json)` lacks a length prefix/delimiter** —
+  boundary ambiguity: the same concatenation with bytes moved across the file boundary keeps the
+  hash while both files differ. Hash with length-prefix or hash the two files separately.
+- [x] **SPEC10 · Derive-time errors have no route into content-health.** L2 parse/eval failures
+  are character-dependent (undefined var for THIS build) and happen in derive; `issues` is a
+  loader-time list. The spec says "surfaces in content-health" — the mechanism doesn't exist and
+  isn't designed.
+- [x] **SPEC11 · SECURITY.md describes an L1 vocab (`kind/target/op/value/when/scope`) that never
+  existed** — `when`/`scope` dimensions appear nowhere else; sync it with the real vocabulary
+  (and with L2 guards once they land).
+- [x] **SPEC12 · TESTING.md describes the integration tier + high-risk coverage as the current
+  gate** while `tests/integration/` doesn't exist (B23) and most listed high-risk tests
+  (rule-blocks, concentration prompts, rests/hit-dice) are unimplemented. Mark aspirational vs
+  actual.
+- [x] **SPEC13 · ORPHANS.md is stale/wrong:** `healDice` marked "likely dead" but `spellRow`
+  (helpers.ts:573) calls it today; `castingIcon` (marked ❓) is used. Re-run knip and re-triage.
+- [x] **SPEC14 · Post-rename doc drift:** PLAN still spells `grant-slot` (kebab) in the
+  spellcasting design; PLAN L11's note "deriveSheet returns only the FIRST caster" is stale (core
+  is per-class; the collapse is in the UI, A18).
+
+## S · Security / robustness (2026-07-16 review; complements docs/SECURITY.md)
+
+- [ ] **S1 · `TauriStorage.abs` traversal check misses backslashes.** `tauri.ts:289-293` splits on
+  `/` and rejects `..` segments — but on Windows `read('..\\x')` passes the validator (one
+  segment `..\x`) and `join` resolves it. The fs-scope is the remaining line of defence (holds:
+  escapes leave the allowed scope), but the seam's own validation — which is ALL the web/memory
+  impls have conceptually — is half-broken. Normalize `\`→`/` before splitting.
+- [ ] **S2 · `allow_data_dir` is invokable with ANY path** (lib.rs:6) — any renderer JS can extend
+  the fs scope to an arbitrary directory, recursive+write. By design (the folder-picker escape
+  hatch) and gated by CSP/no-remote-code, but it's the single widest capability: consider
+  restricting to paths returned by the dialog plugin, or at least document it as accepted risk in
+  SECURITY.md §9 (minimal Rust surface).

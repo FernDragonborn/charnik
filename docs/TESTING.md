@@ -19,7 +19,9 @@ engine disabled (identical shape; trace = base-only when off).
 - **Unit** — co-located `*.test.ts` next to source (`src/lib/rules/abilities.ts` +
   `abilities.test.ts`; same for effects interpreter, stacking pipeline, content
   parse/merge/locale, leveling/XP, multiclass slot math). Node env.
-- **Integration** — `tests/integration/**`; run against the **node/in-memory `Storage`
+- **Integration** *(ASPIRATIONAL — not built yet; `tests/integration/` does not exist as of
+  2026-07-16, AUDIT B23; this describes the intended tier, not current coverage)* —
+  `tests/integration/**`; run against the **node/in-memory `Storage`
   impl** (NOT Tauri), backed by per-test **temp dirs** (`os.tmpdir()`) where real fs is
   wanted; **never** the user's real `content/`/`characters/`. The Tauri `Storage` impl is
   thin and covered by e2e, not unit/integration. Cover:
@@ -44,7 +46,11 @@ divergences: ASI source (species vs background), weapon mastery (5.5e-only),
 encumbrance tiers (5e-only), over-capacity→5 ft, multiclass slot rules.
 
 ## High-risk modules (extra coverage)
-Per [PLAN.md] these historically break (Aurora failed several):
+Per [PLAN.md] these historically break (Aurora failed several). **Coverage status (2026-07-16):**
+the effects engine, multiclass spellcasting, and level-up math have unit tests today; the
+**rule-blocks** (armor→spellcasting), **concentration** prompt fn, and **rests** (hit-dice /
+per-rest resources / 5.5e long-rest −1 exhaustion) items below are still LARGELY UNIMPLEMENTED —
+they describe the target coverage, not what exists. Treat an unchecked item here as a TODO.
 - **Effects engine** — every vocab verb; stacking order; cap clamping (20/30, half-feat
   +1); unknown-effect → falls back to text/manual (never silently dropped); global
   toggle off → manual/text only; **custom/temporary effects** apply; **duration

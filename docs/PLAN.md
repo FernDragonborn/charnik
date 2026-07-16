@@ -75,7 +75,12 @@ trust what happened.
   vars `wis_mod`/`base_speed`/`class_level.monk`/`is_bloodied`. Renamed from the old kebab
   kinds because L2 makes `-` the subtraction operator, so any identifier that can appear inside an
   expression (kind, target, variable, resource/condition id) MUST avoid `-`; snake also matches
-  the CSV-column convention (`hit_die`, `name_en`). TS CODE stays camelCase/PascalCase/SCREAMING —
+  the CSV-column convention (`hit_die`, `name_en`). **Extended (DECIDED 2026-07-16): content IDs
+  migrate to snake_case EVERYWHERE** — shipped SRD ids are still kebab (`acid-splash`,
+  `animal-handling`), which collides with `-`-as-minus the moment an id appears in an L2
+  expression (`class_level.blood-hunter`). Scope: `idField` grammar, SRD regeneration via the
+  converters (never hand-edit), resource/condition ids, saved-character ref migration (the
+  currently-EMPTY migration registry — AUDIT B16), character slugs. See AUDIT E3. TS CODE stays camelCase/PascalCase/SCREAMING —
   a separate layer nobody types in a CSV. Plugins compose on the
   engine seam: first-party/signed handlers = trusted; **community plugins run in a
   QuickJS-in-WASM sandbox** (`quickjs-emscripten`) with a narrow host API returning
@@ -248,7 +253,7 @@ that consume them.
   - Additive-only for now; a `deny` flag to subtract is far-backlog.
 - **Resources = data + effect tokens.** Anything "N/day" (Mystic Arcanum, item "cast X 3/day",
   innate 1/day) is a resource: `grant_resource:<id>:<max>:<recharge>`; a spell carries
-  `cast_via: slot | resource:<id> | at-will`. `grant-slot:<level>` for the rare artifact granting
+  `cast_via: slot | resource:<id> | at-will`. `grant_slot:<level>` for the rare artifact granting
   a real slot (a resource with a spell level, per fork 1).
 
 **Builder — Strict/Free spell picker** (mirrors the existing Strict/Free rules toggle, same as
@@ -261,7 +266,7 @@ Strict/Free toggle (Free by default, per the lenient stance).
 contributions (Σ full-levels + Σ⌊half/2⌋ + Σ⌊third/3⌋; Artificer rounds ½ **up**; **warlock
 levels don't count** — Pact Magic fully separate), indexing the ONE multiclass (full) table —
 **not** the highest/senior class. Single-class uses its own `kind` table by its level.
-`slotPool` (table + `grant-slot`; levels stack); known/prepared caps; resource resolver; the
+`slotPool` (table + `grant_slot`; levels stack); known/prepared caps; resource resolver; the
 highest spell level you can **learn/prepare** is capped by your level **in that class** (slots
 may exceed it → upcast); upcast + cantrip scaling (later).
 
@@ -281,8 +286,10 @@ may exceed it → upcast); upcast + cantrip scaling (later).
   upcast**: every Pact spell is cast at the current Pact-slot level (a level-9 warlock casts a
   known 1st-level spell as 5th).
 - **L11** multiclass = **multiple spell DC / attack** (each class its own ability: wizard INT,
-  cleric WIS). `deriveSheet.spellcasting` currently returns only the FIRST caster — an existing
-  bug, not just future: it must become per-class.
+  cleric WIS). **DONE (SPEC14):** `deriveSheet.spellcasting` is now per-class — `deriveSpellcasting`
+  returns per-class profiles + shared/pact slot pools (`derive.ts:442`, `character/spellcasting.ts`),
+  so multiclass DCs are correct in the core. Any remaining single-caster collapse is a UI display
+  choice (see A18), not a core bug.
 - **L12** subclass/feat spell grants come in **flavors** that must be distinguished:
   *always-prepared* (outside the count) vs *added to your list* (selectable) vs *1/day free*
   (resource). **Feats grant spells too** (Magic Initiate, Fey Touched) — a spell source outside
@@ -878,6 +885,10 @@ stay semi-manual.
 
 ### EXPR · L2 value-expression layer — implementation plan (2026-07-15)
 
+> **Review gate (2026-07-16): AUDIT.md → SPEC2–SPEC7 + E3 (snake_case ids) + B12 (loader must
+> stop rejecting unknown tokens) block/shape EXPR-1..3; A10 (ability scores outside the
+> pipeline) and D7/B21 (one resolve stage for all token consumers) are the structural prep.**
+
 **Ships BEFORE L3 (PLG).** L2 widens the L1 token grammar so a token's VALUE (and a conditional
 GUARD on the token) can be a bounded expression instead of only a literal — covering the great
 majority of the "long tail" (level-scaling, computed pools, conditional bonuses) with **zero
@@ -956,7 +967,53 @@ math rounds up). **Read boundary (the cycle rule):** an expression may read BASE
 dependency-resolved play-state, but NEVER the post-effect DERIVED value of the stat it is
 modifying (that is the forbidden self-reference; `base_speed` is the species input, not the derived
 speed). Bounded parse depth + an expression-string length cap (it lives in the `effects` cell, not
-plugin `args`). **One `ctx` definition, shared by L2 and L3** (this is where it's pinned).
+plugin `args`). **One `ctx` definition, shared by L2 and L3** — the build/play split pinned in
+[PLUGINS.md §4.2](PLUGINS.md): L2's build variables read `ctx.build`, its guard variables read the
+dependency-resolved `ctx.play`; the same two-lifetime object both layers evaluate over.
+
+**Type & resolution rules (pinned 2026-07-16 — closes AUDIT SPEC2–5, SPEC7, SPEC10):**
+
+- **Ability/score/derived vars are EFFECTIVE, not base (SPEC2).** `<ability>_mod`/`<ability>_score`,
+  `proficiency_bonus`, `spellcasting_mod` read the POST-effect value (a species/item +2 CON is
+  already folded in), matching what the sheet shows. Because effects can WRITE ability scores while
+  expressions READ them, score-writing effects are ordered BEFORE score-readers in the same
+  dependency DAG that §guards use (writers → readers; a read↔write cycle → content-health, never a
+  loop). `base_speed` is the deliberate exception — it names the species INPUT, not the derived
+  speed, so a speed effect can read it without self-reference. Implementation note: `derive.ts`
+  already hardcodes exactly this (effective scores computed first, at `derive.ts:258-261`, then every
+  downstream stat reads them); EXPR-3 GENERALIZES that fixed two-stage cascade into the DAG.
+- **Enum-typed variables compare against a per-enum literal whitelist (SPEC3).** There is no string
+  type, so `armor_type==heavy` does NOT read `heavy` as an identifier — each enum-typed variable
+  declares its allowed bare-word literals, valid ONLY on the other side of `==`/`!=` against that
+  variable: `armor_type` ∈ `none|light|medium|heavy`, `size` ∈ the size ladder. An **ordered** enum
+  (`size`, `exhaustion`-as-ordinal) additionally allows `< <= > >=` by ordinal; an unordered enum
+  (`armor_type`) allows only `==`/`!=`. A literal that isn't in the compared variable's whitelist is
+  a parse error → fallback, same as any unknown identifier.
+- **An absent-but-whitelisted variable resolves to 0, never to fallback (SPEC4).** `class_level.rogue`
+  on a non-rogue is `0` (so Sneak-Attack content in a shared pack degrades to "+0", not a broken
+  token); `resource.<id>`/`has_condition.<id>` on an absent id are `0`/false. Only an UNKNOWN
+  variable name (not in the whitelist at all) is a parse error. `spellcasting_mod` resolves to the
+  casting ability mod of the class whose FEATURE carries the token; a token not scoped to a class
+  uses the character's primary caster (highest caster class level); a true non-caster → `0`.
+- **`if()` branch type is decided at eval by the taken branch (SPEC5).** The value type is "integer
+  OR dice term"; since eval is deterministic over `ctx`, exactly one branch of `if(cond, then, else)`
+  is taken, and ITS type is the result type (`if(is_bloodied, 1d4, 0)` → a `1d4` dice term when
+  bloodied, a flat `0` otherwise — the flat rides the fold path, the dice rides the roll path). No
+  compile-time unification is needed (there is no separate storage); a mixed-type `if` is legal but
+  **content-health-warned** ("branches differ in type") to catch an authoring slip.
+- **ONE resolve stage feeds every consumer (SPEC7, closes D7/B21).** Guards are evaluated in a single
+  authoritative stage — **gather effects → evaluate guards (drop tokens whose guard is false) →
+  expand `apply_condition:<id>` one level (the expanded tokens are themselves guarded) → dedupe →
+  emit typed facts + folded contributions** — and EVERY downstream site (stats, panels, defenses,
+  proficiencies) reads that one output, never its own re-scan. Guard evaluation precedes condition
+  expansion. `derive.ts` today does gather + expansion but NO guard stage; EXPR-3 inserts guard-eval
+  into this pipeline as the conditional-derive core.
+- **Derive-time failures ride a per-character issue channel into content-health (SPEC10).** A
+  malformed/undefined-var/div-by-zero token is build-DEPENDENT (bad only for THIS character), so it
+  can't live in the loader-time `issues` list. Derive returns a `deriveIssues: {token, reason}[]`
+  alongside the sheet — the SAME channel as the existing `missing: string[]` on `CharacterSheet` —
+  and content-health merges loader issues with the open character's `deriveIssues`. The mechanism is
+  "extend the `missing`-style per-sheet issue array", not a new subsystem.
 
 **Failure = the L1 fallback, never a throw.** A malformed expression, an undefined variable, or a
 division by zero degrades the token to **inert text + an optional manual modifier** (exactly like an
@@ -968,8 +1025,8 @@ WITH detail (reason + offending token), not a bare "invalid" — the author must
 
 ```
 # value = expression
-set_override:ac:10+dex_mod+con_mod                Barbarian Unarmored Defense
-set_override:ac:10+dex_mod+wis_mod                Monk Unarmored Defense
+armor_type==none ? set_override:ac:10+dex_mod+con_mod                    Barbarian Unarmored Defense
+armor_type==none and not is_wearing_shield ? set_override:ac:10+dex_mod+wis_mod   Monk Unarmored Defense
 flat_bonus:saves+max(1,cha_mod)                   Paladin Aura of Protection
 grant_resource:ki:class_level.monk:short          Ki = monk level
 grant_resource:lay_on_hands:class_level.paladin*5:long   pool = 5 × level
@@ -983,18 +1040,27 @@ flat_bonus:damage+1d(if(class_level.monk>=17, 10, if(class_level.monk>=11, 8, if
 # conditional VALUE = if(cond, then, else)   (no ?: ternary, no ':' in expressions)
 flat_bonus:ac+if(is_bloodied, 2, 0)               +2 AC while below half
 flat_bonus:damage+if(level>=16, 4, if(level>=9, 3, 2))   Rage bonus (scales)
-flat_bonus:d20_tests+(-2*exhaustion)              2024 exhaustion (uniform, via var)
+flat_bonus:d20_tests+(-2*exhaustion)              2024 exhaustion — d20_tests is a PROPOSED target†
 
 # guard = <cond> ? <token>  (condition-first; for non-numeric tokens)
 is_raging ? advantage:attack                      advantage while raging
 is_raging ? resist_immune:bludgeoning
 armor_type==heavy ? disadvantage:skill.stealth
-hp_percent<=50 ? advantage:save.death
+hp_percent<=50 ? advantage:save.death             save.death is a PROPOSED target†
 has_condition.frightened ? disadvantage:attack
 
 # guard + expression value combined
 is_raging ? flat_bonus:damage+cha_mod             Zealot: CHA to damage while raging
 ```
+
+> **† `d20_tests` and `save.death` are PROPOSED target additions, not existing targets (SPEC6).**
+> The shipped target set is `ac/initiative/speed/hp_max/attack/damage/save.<abil>/skill.<id>/
+> passive.<skill>` + the `saves`/`skills` groups (`PLUGINS.md §4.4`; `matchesTarget` in
+> `effects/index.ts`). `d20_tests` (a group over all d20 checks/saves/attacks) and `save.death`
+> (death saves aren't ability-keyed) are part of the **"extend L1 targets" work** in the scoping
+> note below — the examples above show the INTENDED L2 syntax, gated on that L1 growth, not a
+> capability that exists today. The Unarmored-Defense rows now carry the `armor_type` guard they
+> need (without it they'd override AC while in plate).
 
 **Dice sides = any integer ≥ 1 (≤ cap), soft-warned.** D&D uses d4/d6/d8/d10/d12/d20/d100, but
 homebrew legitimately uses d2/d3/d30 — so a non-standard die is NOT rejected (that would fight
@@ -1058,6 +1124,10 @@ Deferred to L3/onEvent (NOT L2): stateful transitions, latches, actions, anythin
 formula language.
 
 ### PLG · Plugin sandbox (L3 expressiveness) — implementation plan (2026-07-15)
+
+> **Review gate (2026-07-16): AUDIT.md → SPEC1 (ctx self-contradiction + memo economics), SPEC8
+> (fold-count/layer of returned tokens), SPEC9 (consent-hash boundary) must be amended in
+> PLUGINS.md before PLG-2.**
 
 The QuickJS-in-WASM decision stands (SECURITY.md #4); this pins HOW. Vocabulary L1 is built
 (EFX-1..4), the `plugin:` namespace is reserved, CSP already allows WASM — the runway exists.
@@ -1667,7 +1737,7 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   item N/day are one shape); `sheet.resources`; combat "Resources" strip with click-to-spend pips +
   Short/Long **rest** buttons (recharge by type; long resets slots+HP, short returns pact slots).
   Remaining: **encode class resources from SRD tables** (converter — rage/ki/superiority counts),
-  **`grant-slot:<level>`** (Mystic Arcanum extra slot into the pools), and **Action-Surge/Haste
+  **`grant_slot:<level>`** (Mystic Arcanum extra slot into the pools), and **Action-Surge/Haste
   extra action pips** (feed the action-economy `slotMax` from effects).
 - [~] **2014 casting data** — 2014 **spell_slots** now emitted (the full/half/pact matrices are
   edition-identical — spell_slots.test asserts `full`==core — so re-tagged 5e). 2014 casters

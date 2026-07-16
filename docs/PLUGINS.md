@@ -125,29 +125,53 @@ passive(token, ctx) → result
 
 ### 4.2 `ctx` (input) — everything a handler may know
 
+`ctx` is **two sub-objects with different lifetimes** (this is the ONE authoritative ctx
+definition; L2 and L3 read the SAME split — L2's build/play variable groups map 1:1 onto these):
+
+- **`ctx.build`** — the stable, always-available character definition. Changes only on a
+  build edit (level-up, ASI, new item), never during play.
+- **`ctx.play`** — the dependency-resolved play-state (§8.4): current HP, active flags and
+  conditions, remaining resources. Changes constantly (every HP tick, every condition).
+
 ```json
 {
 	"api": 1,
-	"system": "5e",
-	"level": 7,
-	"classLevels": { "fighter": 5, "rogue": 2 },
-	"proficiencyBonus": 3,
-	"abilities": {
-		"str": { "score": 16, "mod": 3 },
-		"dex": { "score": 14, "mod": 2 },
-		"con": { "score": 14, "mod": 2 },
-		"int": { "score": 10, "mod": 0 },
-		"wis": { "score": 12, "mod": 1 },
-		"cha": { "score": 8, "mod": -1 }
+	"build": {
+		"system": "5e",
+		"level": 7,
+		"classLevels": { "fighter": 5, "rogue": 2 },
+		"proficiencyBonus": 3,
+		"abilities": {
+			"str": { "score": 16, "mod": 3 },
+			"dex": { "score": 14, "mod": 2 },
+			"con": { "score": 14, "mod": 2 },
+			"int": { "score": 10, "mod": 0 },
+			"wis": { "score": 12, "mod": 1 },
+			"cha": { "score": 8, "mod": -1 }
+		}
+	},
+	"play": {
+		"hp": 41, "hpMax": 58, "tempHp": 0,
+		"flags": { "bloodied": false, "raging": false, "concentrating": false },
+		"conditions": ["frightened"],
+		"resources": { "grit": 2 }
 	}
 }
 ```
 
-That is the WHOLE context, by design (least-data: game numbers only — never names, notes, or
-any free text; nothing worth stealing crosses the boundary). Anything else your mechanic
-needs, encode into the token's `args` when you author the content row. `classLevels` is keyed
-by bare class ids. Fields may be ADDED to `ctx` within `api: 1`; none will be removed or
-change meaning.
+Least-data by design: game numbers only — never names, notes, or any free text; nothing worth
+stealing crosses the boundary. Anything else your mechanic needs, encode into the token's `args`.
+`classLevels` is keyed by bare class ids. Fields may be ADDED to either sub-object within
+`api: 1`; none will be removed or change meaning. The `abilities` scores/mods are the
+**effective** (post-effect) values, resolved before your handler runs (§8.4).
+
+**Memo economics (why the split exists).** Results are memoized on `(token, ctx-hash)`, and the
+two sub-objects are **hashed separately**. The host tracks which sub-objects a handler actually
+reads: a `passive` that touches only `ctx.build` (an always-on numeric effect — most of them)
+is re-run ONLY on a build edit, so it stays cache-hot across every HP tick and satisfies
+PLG-SEC 13's "most derives cost zero". A handler that reads `ctx.play` re-runs whenever play-state
+changes — the cost you opt into by writing a conditional. Read `ctx.play` only when your mechanic
+is genuinely conditional; a build-only handler is free.
 
 ### 4.3 `result` (output) — two dialects, both Charnik's own data language
 
@@ -185,6 +209,23 @@ All three keys optional; an empty object is a valid "nothing applies" answer.
 Caps (host-enforced; exceeding any → the whole result is rejected → inert note): ≤ 16 tokens,
 ≤ 20 contribution target keys, ≤ 8 contributions per key, ≤ 8 notes.
 
+### 4.4a Compute-once vs fold-per-occurrence, and how a result is attributed
+
+Two distinct counts, easy to conflate:
+
+- **Compute is memoized** on `(raw token, ctx-hash)` (§4.2, §5). The handler runs at most ONCE
+  per distinct token per computation — the "once per distinct token, NOT once per stat" rule
+  above is about COMPUTE, not application.
+- **Application folds once per CARRYING occurrence.** If two equipped items each carry the SAME
+  `plugin:` token, the memoized result is computed once but APPLIED twice — once per item — exactly
+  as two identical L1 tokens on two items stack. (Compute is deduped; effect is not. A mechanic that
+  must not stack should say so in its own math, like any content.)
+- **Attribution.** A result inherits the **carrying effect's `source`** (the item/feature/effect
+  that held the token), so provenance reads "Ring of Protection · my-homebrew: …", never a bare
+  plugin name. Returned **`contributions`** fold at the handler-declared `layer` (§4.3);
+  returned **`tokens`** fold at the **carrying effect's own layer** (an item's token → `item`
+  layer, a feature's → `feature`) — identical to how that effect's literal tokens are attributed.
+
 ### 4.4 Target keys
 
 `ac` · `initiative` · `speed` · `hp_max` · `attack` · `damage` · `save.<str|dex|con|int|wis|cha>`
@@ -221,7 +262,12 @@ The group keys `saves` / `skills` are valid in TOKENS (they fan out), not as con
 2. **Everything is disabled by default.** Enabling happens per plugin in Settings → Plugins,
    behind a consent dialog showing the manifest.
 3. **Consent is per-machine and pinned to a CRYPTOGRAPHIC code hash**
-   `(ns, sha256(main.js ‖ plugin.json))`, stored OUTSIDE the data folder. The hash is SHA-256
+   `(ns, sha256(len(main.js) ‖ main.js ‖ len(plugin.json) ‖ plugin.json))`, stored OUTSIDE the
+   data folder — each file **length-prefixed** (8-byte big-endian byte count) so the two files are
+   domain-separated. A bare `main.js ‖ plugin.json` concatenation is ambiguous: bytes moved across
+   the file boundary (shrink `main.js` by N, grow `plugin.json` by N) yield the SAME digest while
+   both files differ — a length prefix makes the boundary part of what's signed, closing that seam.
+   The hash is SHA-256
    (`crypto.subtle.digest`), NOT the fast xxh64 used for content-drift detection — consent is an
    adversarial trust gate (an attacker WANTS a collision to smuggle in a pre-enabled malicious
    `main.js`), so a collision-resistant hash is required; xxh64 answers "did this change?", SHA-256
@@ -347,8 +393,10 @@ believes breaks a rule; doing so prompts a pre-filled GitHub "rules-order" issue
 gets fixed. The intent: a manual reorder is a temporary patch AND a bug signal — if anyone needs
 it, our default was wrong and we correct it, driving the need toward zero.
 
-The `ctx` a `passive` handler reads is therefore the dependency-resolved state, including active
-flags/conditions (`bloodied`, `raging`, `concentrating`) so a "while raging" condition can see it.
+The `ctx.play` a `passive` handler reads is therefore the dependency-resolved state, including active
+flags/conditions (`bloodied`, `raging`, `concentrating`) so a "while raging" condition can see it —
+which is exactly why reading `ctx.play` costs a re-run per play-state change (§4.2 memo economics)
+while a `ctx.build`-only handler stays cache-hot.
 Per-system note: 5.5e defines **Bloodied** (HP ≤ half max) as a game term many triggers use; 5e
 (2014) has no such core term (features spell out "half its hit points"). So `bloodied` is a
 first-class flag under 5.5e and a computed convenience under 5e — a real per-system seam.
@@ -373,8 +421,8 @@ globalThis.handlers = {
 	'second-wind': {
 		onUse(token, ctx) {
 			// "spend 1 grit, heal 2d6 + fighter level" — decided from ctx, rolled by the host
-			const lvl = ctx.classLevels.fighter ?? 0;
-			if ((ctx.resources?.grit ?? 0) < 1) return { notes: ['Second Wind: no grit left'] };
+			const lvl = ctx.build.classLevels.fighter ?? 0;
+			if ((ctx.play.resources?.grit ?? 0) < 1) return { notes: ['Second Wind: no grit left'] };
 			return {
 				spend: [{ resource: 'grit', n: 1 }],
 				hp: { delta: `2d6+${lvl}` },
@@ -441,7 +489,7 @@ content: … ,effects
 globalThis.handlers = {
 	'exploit-die': {
 		passive(token, ctx) {
-			const lvl = ctx.classLevels.fighter ?? 0;
+			const lvl = ctx.build.classLevels.fighter ?? 0;
 			if (lvl < 1) return { notes: ['Exploit die: requires fighter levels'] };
 			// args = "d6@1,d8@5,d10@11" — hostile input: parse defensively
 			let die = null;
@@ -474,7 +522,7 @@ effects: plugin:my-homebrew:grit-pool
 globalThis.handlers = {
 	'grit-pool': {
 		passive(token, ctx) {
-			const n = Math.max(1, ctx.abilities.wis.mod);
+			const n = Math.max(1, ctx.build.abilities.wis.mod);
 			return { tokens: [`grant_resource:grit:${n}:short`] };
 		}
 	}
@@ -489,7 +537,7 @@ globalThis.handlers = {
 globalThis.handlers = {
 	'scaling-ward': {
 		passive(token, ctx) {
-			const bonus = Math.floor(ctx.level / 5);
+			const bonus = Math.floor(ctx.build.level / 5);
 			if (bonus === 0) return {};
 			return {
 				contributions: {
