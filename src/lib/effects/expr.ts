@@ -16,17 +16,16 @@
  */
 
 // Cost caps: a dice count/sides drives a roll loop later, so an untrusted formula must not request a
-// billion dice. Mirrors rules/dice.ts (kept in sync); values are clamped, not rejected, so a typo
-// still yields something. Depth/length bound the parser itself against a pathological nesting bomb.
-const MAX_DICE_COUNT = 1000;
-const MAX_DIE_SIDES = 1000;
+// billion dice. The dice caps are the roller's own (one owner in rules/dice.ts); values are clamped,
+// not rejected, so a typo still yields something. Depth/length bound the parser itself against a
+// pathological nesting bomb.
+import { ABILITY_IDS, SIZES, ARMOR_TYPES } from '../rules/core';
+import { MAX_DICE_PER_TERM, MAX_DIE_SIDES } from '../rules/dice';
+
 const MAX_DEPTH = 32;
 const MAX_LENGTH = 512;
 
 /* ─────────────────────────── whitelist (enforced at parse) ─────────────────────────── */
-
-/** The six ability ids, source of `<ability>_mod` / `<ability>_score` variables. */
-const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
 
 /** Exact-name numeric variables (the build/derived + play numbers). Ability mod/score names are
  *  generated from ABILITIES so they can never drift out of sync. */
@@ -41,8 +40,8 @@ const NUMERIC_VARS: ReadonlySet<string> = new Set<string>([
 	'hp_percent',
 	'temp_hp',
 	'exhaustion',
-	...ABILITIES.map((a) => `${a}_mod`),
-	...ABILITIES.map((a) => `${a}_score`)
+	...ABILITY_IDS.map((a) => `${a}_mod`),
+	...ABILITY_IDS.map((a) => `${a}_score`)
 ]);
 
 /** Boolean flags (0/1). Always `is_`-prefixed so a flag never reads as a bare enum literal. */
@@ -57,8 +56,8 @@ const BOOLEAN_VARS: ReadonlySet<string> = new Set<string>([
 /** Enum-typed variables → their allowed literal values. A literal is valid ONLY when compared
  *  (`==`/`!=`, plus ordinal `<`/`<=`/`>`/`>=` for ORDERED enums) against a variable of its enum. */
 const ENUM_VARS: Readonly<Record<string, readonly string[]>> = {
-	armor_type: ['none', 'light', 'medium', 'heavy'],
-	size: ['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan']
+	armor_type: ARMOR_TYPES,
+	size: SIZES
 };
 /** Enums whose members have a meaningful order (so `<`/`>` compare by index). `armor_type` is a
  *  bag (only `==`/`!=`); `size` is a ladder. */
@@ -66,9 +65,22 @@ const ORDERED_ENUMS: ReadonlySet<string> = new Set(['size']);
 /** Every enum literal across all enums — the set a bare word must belong to, to parse at all. */
 const ENUM_LITERALS: ReadonlySet<string> = new Set(Object.values(ENUM_VARS).flat());
 
-/** Dotted variable families: `<prefix>.<id>`. The id is opaque (a class/condition/resource id). */
-const DOTTED_NUMERIC: ReadonlySet<string> = new Set(['class_level', 'resource', 'resource_max']);
-const DOTTED_BOOLEAN: ReadonlySet<string> = new Set(['has_condition']);
+/** Dotted variable families: `<prefix>.<id>`. The id is opaque (a class/condition/resource id).
+ *  Exported so the ctx adapter (context.ts) routes off the SAME sets — one grammar owner. */
+export const DOTTED_NUMERIC: ReadonlySet<string> = new Set([
+	'class_level',
+	'resource',
+	'resource_max'
+]);
+export const DOTTED_BOOLEAN: ReadonlySet<string> = new Set(['has_condition']);
+
+/** Split a dotted variable name into its family prefix + opaque id, or null when undotted.
+ *  Shared by the parser (whitelist check) and the ctx adapter (routing). */
+export function splitDottedName(name: string): { prefix: string; id: string } | null {
+	const dot = name.indexOf('.');
+	if (dot === -1) return null;
+	return { prefix: name.slice(0, dot), id: name.slice(dot + 1) };
+}
 
 /** Whitelisted functions → allowed arity range [min, max]. NOTHING else is callable. */
 const FUNCTIONS: Readonly<Record<string, { min: number; max: number }>> = {
@@ -282,21 +294,20 @@ function parse(toks: Tok[]): Node {
 		return parseComparison();
 	}
 	function parseComparison(): Node {
-		let l = parseAddSub();
-		while (true) {
+		const isCompareOp = (): string | null => {
 			const t = peek();
-			if (!t || t.k !== 'op') break;
-			if (
-				t.v === '<' ||
-				t.v === '<=' ||
-				t.v === '>' ||
-				t.v === '>=' ||
-				t.v === '==' ||
-				t.v === '!='
-			) {
-				eat();
-				l = { t: 'bin', op: t.v as BinOp, l, r: parseAddSub() };
-			} else break;
+			if (!t || t.k !== 'op') return null;
+			return ['<', '<=', '>', '>=', '==', '!='].includes(t.v) ? t.v : null;
+		};
+		let l = parseAddSub();
+		const op = isCompareOp();
+		if (op) {
+			eat();
+			l = { t: 'bin', op: op as BinOp, l, r: parseAddSub() };
+			// non-associative BY DESIGN: `5<=level<=10` would silently parse as `(5<=level)<=10`
+			// (always true) — an authoring trap, so a chain is a parse error, not a wrong answer.
+			if (isCompareOp())
+				throw new ParseError("chained comparisons are not supported (use 'and': a<=x and x<=b)");
 		}
 		return l;
 	}
@@ -373,14 +384,12 @@ function parse(toks: Tok[]): Node {
 		return varNode(name);
 	}
 	function varNode(name: string): Node {
-		const dot = name.indexOf('.');
-		if (dot !== -1) {
-			const prefix = name.slice(0, dot);
-			const id = name.slice(dot + 1);
-			if (!id) throw new ParseError(`'${name}' is missing an id after '.'`);
-			if (DOTTED_NUMERIC.has(prefix)) return { t: 'numvar', name };
-			if (DOTTED_BOOLEAN.has(prefix)) return { t: 'boolvar', name };
-			throw new ParseError(`unknown variable family '${prefix}.'`);
+		const d = splitDottedName(name);
+		if (d) {
+			if (!d.id) throw new ParseError(`'${name}' is missing an id after '.'`);
+			if (DOTTED_NUMERIC.has(d.prefix)) return { t: 'numvar', name };
+			if (DOTTED_BOOLEAN.has(d.prefix)) return { t: 'boolvar', name };
+			throw new ParseError(`unknown variable family '${d.prefix}.'`);
 		}
 		if (NUMERIC_VARS.has(name)) return { t: 'numvar', name };
 		if (BOOLEAN_VARS.has(name)) return { t: 'boolvar', name };
@@ -402,9 +411,25 @@ const arityText = (s: { min: number; max: number }): string =>
 const tokText = (t: Tok | undefined): string =>
 	!t ? 'end' : t.k === 'num' ? String(t.v) : t.k === 'dice' ? 'd' : t.v;
 
-/** Parse an expression string into an AST. Never throws — a syntax error, unknown variable/function,
- *  over-length or over-nested input all return `{ok:false, error}`. */
+/** Parse results memoized by source string: expressions live in content rows and re-evaluate on
+ *  EVERY derive (each HP click), so re-parsing the same string per stat per derive is pure waste
+ *  (AUDIT D7 perf note). ASTs are never mutated by evaluation, so sharing is safe. Bounded: content
+ *  has a finite token set; the clear-at-cap guards against a pathological generator. */
+const PARSE_CACHE = new Map<string, ParseResult>();
+const PARSE_CACHE_MAX = 2000;
+
+/** Parse an expression string into an AST (memoized). Never throws — a syntax error, unknown
+ *  variable/function, over-length or over-nested input all return `{ok:false, error}`. */
 export function parseExpression(src: string): ParseResult {
+	const hit = PARSE_CACHE.get(src);
+	if (hit) return hit;
+	const res = parseExpressionUncached(src);
+	if (PARSE_CACHE.size >= PARSE_CACHE_MAX) PARSE_CACHE.clear();
+	PARSE_CACHE.set(src, res);
+	return res;
+}
+
+function parseExpressionUncached(src: string): ParseResult {
 	if (src.length > MAX_LENGTH) return { ok: false, error: 'expression too long' };
 	const t = tokenize(src);
 	if (!t.ok) return t;
@@ -436,7 +461,10 @@ function addValues(a: ExprValue, b: ExprValue): ExprValue {
 	const da: DiceValue = isDice(a) ? a.dice : { pool: {}, flat: a.value };
 	const db: DiceValue = isDice(b) ? b.dice : { pool: {}, flat: b.value };
 	const pool: Record<number, number> = { ...da.pool };
-	for (const [s, c] of Object.entries(db.pool)) pool[Number(s)] = (pool[Number(s)] ?? 0) + c;
+	// per-side cap holds under repeated ADDITION too, not only at the dice term (`1000d6+1000d6+…`
+	// within the length cap could otherwise pile ~73k dice past the cost bound)
+	for (const [s, c] of Object.entries(db.pool))
+		pool[Number(s)] = Math.min((pool[Number(s)] ?? 0) + c, MAX_DICE_PER_TERM);
 	return { type: 'dice', dice: { pool, flat: da.flat + db.flat } };
 }
 
@@ -474,7 +502,7 @@ function evalDice(n: { count: Node; sides: Node }, ctx: ExprContext): ExprValue 
 	const count = Math.floor(asNumber(evalNode(n.count, ctx)));
 	const sides = Math.floor(asNumber(evalNode(n.sides, ctx)));
 	// amount clamps ≥0 (a negative count rolls nothing); sides ≥1; both cost-capped
-	const c = Math.max(0, Math.min(count, MAX_DICE_COUNT));
+	const c = Math.max(0, Math.min(count, MAX_DICE_PER_TERM));
 	const s = Math.max(1, Math.min(sides, MAX_DIE_SIDES));
 	return { type: 'dice', dice: { pool: c > 0 ? { [s]: c } : {}, flat: 0 } };
 }
@@ -536,7 +564,7 @@ function scaleDice(a: ExprValue, b: ExprValue): ExprValue {
 	const factor = Math.floor(factorV.value);
 	const pool: Record<number, number> = {};
 	for (const [s, c] of Object.entries(d.pool))
-		pool[Number(s)] = Math.max(0, Math.min(c * factor, MAX_DICE_COUNT));
+		pool[Number(s)] = Math.max(0, Math.min(c * factor, MAX_DICE_PER_TERM));
 	return { type: 'dice', dice: { pool, flat: d.flat * factor } };
 }
 
@@ -549,17 +577,21 @@ function evalEnumCompare(op: BinOp, l: Node, r: Node, ctx: ExprContext): ExprVal
 	const varNode = (l.t === 'enumvar' ? l : r) as { t: 'enumvar'; name: string };
 	const litNode = (l.t === 'enumlit' ? l : r) as { t: 'enumlit'; name: string };
 	const members = ENUM_VARS[varNode.name] ?? [];
+	// authoring errors FIRST — a wrong literal / ordinal-on-unordered must say so even when the
+	// variable happens to be absent (absence must not mask the mistake)
 	if (!members.includes(litNode.name))
 		throw new EvalError(`'${litNode.name}' is not a value of ${varNode.name}`);
+	if (op !== '==' && op !== '!=' && !ORDERED_ENUMS.has(varNode.name))
+		throw new EvalError(`${varNode.name} is unordered; only == and != apply`);
 	const current = ctx.enum(varNode.name);
+	// absent enum var → NO comparison matches (SPEC4 fail-closed) — `!=` included, else a missing
+	// play ctx would satisfy every negative guard
+	if (current === undefined) return num(0);
 	if (op === '==') return num(current === litNode.name ? 1 : 0);
 	if (op === '!=') return num(current !== litNode.name ? 1 : 0);
-	// ordinal comparison — only for ordered enums
-	if (!ORDERED_ENUMS.has(varNode.name))
-		throw new EvalError(`${varNode.name} is unordered; only == and != apply`);
-	const ci = current === undefined ? -1 : members.indexOf(current);
+	const ci = members.indexOf(current);
 	const li = members.indexOf(litNode.name);
-	if (ci === -1) return num(0); // absent enum var → no ordinal relation holds
+	if (ci === -1) return num(0);
 	const r2 = op === '<' ? ci < li : op === '<=' ? ci <= li : op === '>' ? ci > li : ci >= li;
 	return num(r2 ? 1 : 0);
 }
@@ -611,6 +643,74 @@ export function evalExpression(src: string, ctx: ExprContext): EvalResult {
 	const p = parseExpression(src);
 	if (!p.ok) return p;
 	return evaluate(p.ast, ctx);
+}
+
+/* ─────────────────────────── static lint (authoring warnings, PLAN SPEC5/dice-note) ─────────────────────────── */
+
+/** D&D's standard dice; anything else is legal homebrew but soft-warned (`d7` is usually a typo). */
+const STANDARD_SIDES = new Set([2, 3, 4, 6, 8, 10, 12, 20, 100]);
+
+/** Static type of a node: 'number', 'dice', or 'either' (depends on runtime state). */
+function staticKind(n: Node): 'number' | 'dice' | 'either' {
+	switch (n.t) {
+		case 'dice':
+			return 'dice';
+		case 'bin': {
+			if (n.op === '+' || n.op === '-' || n.op === '*') {
+				const l = staticKind(n.l);
+				const r = staticKind(n.r);
+				if (l === 'dice' || r === 'dice') return 'dice';
+				if (l === 'either' || r === 'either') return 'either';
+			}
+			return 'number';
+		}
+		case 'call': {
+			if (n.fn !== 'if') return 'number';
+			const a = staticKind(n.args[1] as Node);
+			const b = staticKind(n.args[2] as Node);
+			return a === b ? a : 'either';
+		}
+		default:
+			return 'number';
+	}
+}
+
+/** Authoring-slip warnings the spec promises content-health (PLAN EXPR): a mixed-type `if()`
+ *  (dice in one branch, number in the other — legal but usually an accident) and a non-standard
+ *  LITERAL die size (`1d7`). Returns [] for an unparseable expression — parse errors are the
+ *  eval path's job, not the linter's. */
+export function lintExpression(src: string): string[] {
+	const p = parseExpression(src);
+	if (!p.ok) return [];
+	const warns: string[] = [];
+	const walk = (n: Node): void => {
+		if (n.t === 'call' && n.fn === 'if') {
+			const a = staticKind(n.args[1] as Node);
+			const b = staticKind(n.args[2] as Node);
+			if (a !== b) warns.push('if() branches differ in type (dice vs number)');
+		}
+		if (n.t === 'dice' && n.sides.t === 'num' && !STANDARD_SIDES.has(n.sides.value))
+			warns.push(`unusual die d${n.sides.value}`);
+		switch (n.t) {
+			case 'neg':
+			case 'not':
+				walk(n.e);
+				break;
+			case 'dice':
+				walk(n.count);
+				walk(n.sides);
+				break;
+			case 'bin':
+				walk(n.l);
+				walk(n.r);
+				break;
+			case 'call':
+				n.args.forEach(walk);
+				break;
+		}
+	};
+	walk(p.ast.root);
+	return warns;
 }
 
 /** Serialize a dice value to a formula string the roller (rules/dice.ts) accepts: "2d6+1d4+3". */

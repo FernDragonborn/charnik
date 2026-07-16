@@ -5,6 +5,7 @@ import {
 	evaluate,
 	evalExpression,
 	diceToFormula,
+	lintExpression,
 	type ExprContext,
 	type ExprValue,
 	type DiceValue
@@ -220,6 +221,53 @@ describe('EXPR-1 · enum comparisons — SPEC3', () => {
 
 	it('parses the Unarmored Defense guard shape', () => {
 		expect(parseExpression('armor_type==none').ok).toBe(true);
+	});
+});
+
+describe('EXPR-1 · chained comparisons are a parse error (authoring trap)', () => {
+	it('rejects `5<=level<=10` instead of silently evaluating `(5<=level)<=10`', () => {
+		const r = parseExpression('5<=level<=10');
+		expect(r.ok).toBe(false);
+		if (!r.ok) expect(r.error).toContain('chained comparisons');
+	});
+	it('a single comparison still parses', () => {
+		expect(n('level>=5', ctx({ numbers: { level: 6 } }))).toBe(1);
+	});
+	it('the `and` spelling works', () => {
+		expect(n('5<=level and level<=10', ctx({ numbers: { level: 7 } }))).toBe(1);
+		expect(n('5<=level and level<=10', ctx({ numbers: { level: 12 } }))).toBe(0);
+	});
+});
+
+describe('EXPR-1 · absent enum var fails every comparison (SPEC4 fail-closed)', () => {
+	it('neither == nor != matches when the enum is absent', () => {
+		expect(n('armor_type==none')).toBe(0);
+		expect(n('armor_type!=heavy')).toBe(0); // NOT 1 — absence is no evidence
+		expect(n('size<large')).toBe(0);
+	});
+});
+
+describe('EXPR-1 · dice cost caps hold under addition', () => {
+	it('caps a pool built by repeated + at the per-term cap', () => {
+		const d = dice('1000d6+1000d6');
+		expect(d.pool[6]).toBe(1000);
+	});
+});
+
+describe('lintExpression · authoring soft-warns', () => {
+	it('warns on a mixed-type if() (dice vs number)', () => {
+		expect(lintExpression('if(is_bloodied, 1d4, 0)').join(' ')).toContain('differ in type');
+		expect(lintExpression('if(is_bloodied, 2, 0)')).toEqual([]);
+		expect(lintExpression('if(is_bloodied, 1d4, 2d6)')).toEqual([]);
+	});
+	it('warns on a non-standard literal die size, not on standard or computed ones', () => {
+		expect(lintExpression('1d7').join(' ')).toContain('unusual die d7');
+		expect(lintExpression('1d6')).toEqual([]);
+		expect(lintExpression('1d100')).toEqual([]);
+		expect(lintExpression('1d(level)')).toEqual([]); // computed sides — can't lint statically
+	});
+	it('returns [] for an unparseable expression (parse errors are the eval path’s job)', () => {
+		expect(lintExpression('bogus ~~~')).toEqual([]);
 	});
 });
 

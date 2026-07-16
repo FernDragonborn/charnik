@@ -7,6 +7,7 @@
 	import { combat } from './state.svelte';
 	import { content } from '$lib/content/store.svelte';
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
+	import { deriveHealth } from '$lib/character/health.svelte';
 	import { onBeforeReload } from '$lib/content/reload';
 	import CombatMenus from './CombatMenus.svelte';
 	import Hero from './blocks/Hero.svelte';
@@ -52,6 +53,14 @@
 			if (combat.character) await saveCharacterToStore(combat.character);
 		})
 	);
+
+	// publish this character's derive-time issues to content-health (SPEC10); cleared on leave
+	$effect(() => {
+		const c = combat.character;
+		const s = combat.sheet;
+		if (c && s) deriveHealth.set(c.build.name, s.deriveIssues);
+		return () => deriveHealth.clear();
+	});
 </script>
 
 <svelte:head><title>Combat — Charnik</title></svelte:head>

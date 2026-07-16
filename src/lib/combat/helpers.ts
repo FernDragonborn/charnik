@@ -65,7 +65,12 @@ export function pipClick(currentSpent: number, index: number, total: number): nu
  *  effects: advantage/disadvantage, signed bonus/penalty dice (Bless +1d4 / Bane −1d4), and the
  *  summed FLAT bonus. NB `flat` is for keys the sheet does NOT already fold (attack/damage) — for
  *  save/skill keys the flat part is already inside the sheet value, so callers must ignore it there
- *  or it double-counts. Pure — the caller gates it on the effects-auto toggle. */
+ *  or it double-counts. Pure — the caller gates it on the effects-auto toggle.
+ *
+ *  Reads the sheet's RESOLVED effect list (guard-stripped, condition-expanded, items/features
+ *  included — B21), never raw `play.effects`: a raw token still carrying its guard would parse as
+ *  unknown here and silently lose its advantage/dice. Expression-valued bonuses (`+cha_mod`) need
+ *  a derive ctx and fold on the sheet side; the roll path consumes literals and dice. */
 export interface RollEffects {
 	advantage: boolean;
 	disadvantage: boolean;
@@ -78,10 +83,10 @@ export const NO_ROLL_EFFECTS: RollEffects = {
 	flat: 0,
 	bonusDice: []
 };
-export function rollEffectsFor(effects: { effects: string[] }[], key: string): RollEffects {
+export function rollEffectsFor(effects: { tokens: string[] }[], key: string): RollEffects {
 	const out: RollEffects = { ...NO_ROLL_EFFECTS, bonusDice: [] };
 	for (const eff of effects) {
-		for (const tok of eff.effects) {
+		for (const tok of eff.tokens) {
 			const p = parseEffect(tok);
 			if (!matchesTarget(p.target, key)) continue;
 			if (p.kind === EFFECT_KIND.advantage) out.advantage = true;

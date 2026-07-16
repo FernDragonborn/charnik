@@ -35,8 +35,8 @@ export interface Rolled {
  *  formula (shared content pack, later a plugin) must not be able to request a billion dice and
  *  freeze the tab. Bounds are far above any real spell (Meteor Swarm is 40d6) — they cap WORK, not
  *  legal values. Terms beyond them are clamped, not rejected, so a typo still rolls something. */
-const MAX_DICE_PER_TERM = 1000;
-const MAX_DIE_SIDES = 1000;
+export const MAX_DICE_PER_TERM = 1000;
+export const MAX_DIE_SIDES = 1000;
 
 /** Roll one die with `sides` faces. */
 const rollDie = (sides: number, rng: Rng) => 1 + Math.floor(rng() * sides);

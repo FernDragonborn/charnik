@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (33)
+## Duplicate suspects (31)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -19,7 +19,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 - `onKeydown` ×5 — src/lib/components/ConfirmDialog.svelte · src/lib/components/ContentMetaModal.svelte · src/lib/components/HashDriftModal.svelte · src/lib/components/OrphanDialog.svelte · src/lib/components/SchemaDiscardDialog.svelte
 - `norm` ×4 — src/lib/storage/browser.ts · src/lib/storage/memory.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
-- `ABILITIES` ×3 — src/lib/character/schema.ts · src/lib/content/schemas.ts · src/lib/effects/expr.ts
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `load` ×3 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expr.ts
@@ -35,7 +34,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `label` ×2 — src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
-- `MAX_DIE_SIDES` ×2 — src/lib/effects/expr.ts · src/lib/rules/dice.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `onKey` ×2 — src/lib/components/settings/DataConflictDialog.svelte · src/lib/components/settings/DataMigrationDialog.svelte
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
@@ -54,7 +52,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Identical literal array:**
 
-- `ABILITIES` (src/lib/character/schema.ts) = `ABIL` (src/lib/combat/helpers.ts) = `ABILS` (src/lib/content/detail.ts) = `ABILITIES` (src/lib/content/schemas.ts) = `ABILITY_IDS` (src/lib/effects/context.ts) = `ABILITIES` (src/lib/effects/expr.ts)
+- `ABIL` (src/lib/combat/helpers.ts) = `ABILS` (src/lib/content/detail.ts) = `ABILITY_IDS` (src/lib/rules/core.ts)
 - `PROSE_BASES` (src/lib/content/schemas.ts) = `TRANSLATABLE_BASES` (src/lib/content/translate.ts)
 
 ## Design tokens (`styles/tokens.css`)
@@ -175,7 +173,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **Switch** | `on`, `lock`, `title`, `onclick` | Toggle switch (d-spellmgr `.tg`). |
 | **WikiDetail** | `detail`, `actions`, `footer`, `editable`, `draft` | Right-pane wiki detail: a thin DISPATCHER. |
 
-## Stores & reactive state (9 modules)
+## Stores & reactive state (10 modules)
+
+### `src/lib/character/health.svelte.ts`
+
+- `const deriveHealth`
 
 ### `src/lib/character/store.svelte.ts`
 
@@ -280,7 +282,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const SKILL_ABILITY` — `as const satisfies` so the KEYS form the `SkillId` union (not widened to `string`) while the values are still checke…
 - `type SkillId` — The 18 SRD skill ids.
 - `interface CharacterSheet`
-- `const tokensOf` — A row's bounded-vocab effect tokens (empty for lookup tables, which carry no `effects`).
 - `function deriveSheet`
 
 ### `src/lib/character/repository.ts`
@@ -298,7 +299,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/character/schema.ts`
 
 - `const SYSTEMS`
-- `const ABILITIES`
+- `re-export ABILITIES` — single owner in rules/core (AUDIT F3) — re-exported because half the app already imports it here
 - `const characterSchema`
 - `type Character`
 - `type CharacterPlay`
@@ -415,6 +416,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface LoadedRowOf` — A loaded row of a KNOWN content type `T`: the common identity + the zod-validated, coerced model * for `T` (Spell, Mo…
 - `type LoadedRow` — A loaded content row — a discriminated union on `type`.
+- `const tokensOf` — A row's bounded-vocab effect tokens (empty for lookup tables, which carry no `effects` column).
 - `type LoadedRowByType` — The loaded-row member(s) for a type `T`.
 - `interface ContentGraph`
 - `interface ContentSource` — One content root paired with the storage it lives in.
@@ -450,8 +452,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const SYSTEMS`
 - `const EFFECT_KINDS` — Bounded effect vocabulary — the only kinds the engine understands.
 - `const splitList` — Split a CSV list cell (comma/semicolon separated) into trimmed, non-empty items.
-- `const SIZES` — Option lists are exported (single source) so the homebrew authoring form renders identical selects — a value the form…
-- `const ABILITIES`
+- `re-export SIZES` — Option lists are exported (single source) so the homebrew authoring form renders identical selects — a value the form…
+- `re-export ABILITIES` — Option lists are exported (single source) so the homebrew authoring form renders identical selects — a value the form…
 - `const HIT_DICE`
 - `const CASTER_TYPES`
 - `const CASTER_SHARES`
@@ -527,18 +529,23 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface BuildVars` — Build-lifetime numbers (always available; the EXPR-2 subset of the ctx).
 - `interface PlayVars` — Play-lifetime state (the EXPR-3 half; optional so EXPR-2 can omit it entirely).
 - `function makeExprContext` — * Build the `ExprContext` the evaluator reads.
+- `function withSpellcastingMod` — The same ctx with `spellcasting_mod` re-pointed at a specific class's casting mod — SPEC4: a * token carried by a cla…
 
 ### `src/lib/effects/expr.ts`
 
+- `const DOTTED_NUMERIC` — Dotted variable families: `<prefix>.<id>`.
+- `const DOTTED_BOOLEAN`
+- `function splitDottedName` — Split a dotted variable name into its family prefix + opaque id, or null when undotted.
 - `interface DiceValue` — A dice quantity: a pool ({sides: count}) plus a flat modifier, mirroring rules/dice.ts so it * rides the existing rol…
 - `type ExprValue` — The result of evaluating an expression: a plain number OR a dice quantity (PLAN: "int OR dice * formula").
 - `interface Ast`
 - `interface ExprContext` — How the evaluator resolves variables.
 - `type ParseResult`
 - `type EvalResult`
-- `function parseExpression` — Parse an expression string into an AST.
+- `function parseExpression` — Parse an expression string into an AST (memoized).
 - `function evaluate` — Evaluate a parsed expression against a context.
 - `function evalExpression` — Parse + evaluate in one step (convenience for callers that don't cache the AST).
+- `function lintExpression` — Authoring-slip warnings the spec promises content-health (PLAN EXPR): a mixed-type `if()` * (dice in one branch, numb…
 - `function diceToFormula` — Serialize a dice value to a formula string the roller (rules/dice.ts) accepts: "2d6+1d4+3".
 
 ### `src/lib/effects/index.ts`
@@ -552,9 +559,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ResolvedValue` — A resolved value for a `flat_bonus`/`set_override`/`grant_resource` token: a folded numeric * `amount`, a `diceFormul…
 - `function resolveEffectValue` — * Resolve a token's value slot to a concrete quantity.
 - `interface ActiveEffect` — A runtime effect source contributing tokens at a pipeline layer.
+- `type EffectCtx` — A ctx, or a per-effect ctx provider (used to scope `spellcasting_mod` to the carrying class).
 - `interface GuardedToken` — A token split into its optional condition GUARD and the effect part.
 - `function splitGuard`
-- `interface ResolvedEffects` — The one resolve stage (EXPR-3; closes D7/B21): gather → evaluate guards (drop false/errored) → * expand `apply_condit…
+- `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
+- `interface ResolvedEffects` — The one resolve stage (EXPR-3; closes D7/B21): gather → evaluate guards → expand * `apply_condition` one level (its o…
 - `function resolveActiveEffects`
 - `function matchesTarget` — Does an effect target apply to this stat key?
 - `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
@@ -562,6 +571,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function applyEffects` — * The seam: compose effects onto a core-computed stat for `targetKey`.
 - `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
 - `function collectResources` — * Collect resource pools from `grant_resource:<id>:<max>:<recharge>` tokens.
+- `function lintEffectTokens` — Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression * slot — guard, value…
 - `function collectFlags` — Collect the non-numeric effect facts across all active effects (for panels/flags).
 
 ### `src/lib/i18n/index.ts`
@@ -584,7 +594,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/rules/core.ts`
 
+- `const ABILITY_IDS` — The six ability ids — the ONE owning list (AUDIT F3); derive, don't re-declare.
 - `type Ability`
+- `const SIZES` — Creature sizes, smallest→largest (an ORDERED ladder — L2 `size` compares by ordinal).
+- `type Size`
+- `const ARMOR_TYPES` — Armor weight classes ('none' = unarmored).
+- `type ArmorType`
 - `function abilityModifier` — Ability modifier: floor((score − 10) / 2).
 - `function proficiencyBonus` — Proficiency bonus by character level: 2 + floor((level − 1) / 4) → +2..+6.
 - `function savingThrow` — A saving throw: ability mod + proficiency (if proficient in that save).
@@ -604,6 +619,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type Rng` — Injectable randomness; defaults to Math.random, seeded in tests.
 - `interface BonusDie` — A signed bonus/penalty die a roll gains from an effect (Bless +1d4 → {sides:4,count:1,sign:+1}).
 - `interface Rolled` — Result of a roll: the total, a human-readable breakdown, and the two d20 if adv/disadv applied.
+- `const MAX_DICE_PER_TERM` — Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted * formula (shared cont…
+- `const MAX_DIE_SIDES`
 - `function parseDiceTerm` — Parse a single signed dice term ("1d4" / "-2d4" / "+1d6") into a `BonusDie`, or null if it * isn't one.
 - `function parseDicePool` — Parse every `NdM` token in a string into a pool ({sides: count}).
 - `function rollPool` — * Roll a dice pool + flat mod.
@@ -705,4 +722,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 34 components · 360 exports across 55 modules · 33 duplicate suspects · generated in 102ms._
+_46 tokens · 50 global classes · 34 components · 376 exports across 56 modules · 31 duplicate suspects · generated in 97ms._

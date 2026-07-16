@@ -74,13 +74,18 @@ describe('resolveActiveEffects · guards', () => {
 		expect(tokens).toContain('flat_bonus:ac+1'); // unguarded survives
 	});
 
-	it('records a malformed guard as an issue and drops the token (never throws)', () => {
+	it('records a malformed guard as an issue and keeps the token verbatim (inert, never dropped)', () => {
 		const bad: ActiveEffect[] = [
 			{ source: 'Broken', layer: 'feature', tokens: ['bogus_var ? flat_bonus:ac+1'] }
 		];
 		const r = resolveActiveEffects(bad, makeExprContext(build, play()), noExpand);
-		expect(r.effects).toEqual([]);
-		expect(r.issues[0]).toContain('bad guard');
+		// kept WITH its guard → downstream parses it as `unknown` → an inert note, not an applied effect
+		expect(r.effects.flatMap((e) => e.tokens)).toEqual(['bogus_var ? flat_bonus:ac+1']);
+		expect(r.issues[0]?.reason).toContain('bad guard');
+		expect(r.issues[0]?.token).toBe('bogus_var ? flat_bonus:ac+1');
+		// and the seam does NOT apply it as a bonus
+		const ac = applyEffects('ac', computed([]), r.effects, makeExprContext(build, play()));
+		expect(ac.trace).toEqual([]);
 	});
 
 	it('evaluates an enum guard (Unarmored Defense only without armor)', () => {

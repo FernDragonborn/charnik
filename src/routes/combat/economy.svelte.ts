@@ -17,13 +17,14 @@ export class TurnEconomy {
 	) {}
 
 	// base 1 pip per slot + extras from effects (Action Surge → +1 action, Haste → +1 action), rendered
-	// as more pips — data-driven via `flat_bonus:<slot>+N` tokens.
+	// as more pips — data-driven via `flat_bonus:<slot>+N` tokens. Reads the sheet's RESOLVED list
+	// (guards evaluated, item/feature effects included — B21), not raw `play.effects`.
 	slotMax = $derived.by<Record<ActionSlot, number>>(() => {
 		const c = this.getCharacter();
 		const max = { action: 1, bonus: 1, reaction: 1 };
 		if (c?.play.autoCalc)
-			for (const eff of c.play.effects)
-				for (const t of eff.effects) {
+			for (const eff of this.getSheet()?.resolvedEffects ?? [])
+				for (const t of eff.tokens) {
 					const p = parseEffect(t);
 					if (
 						p.kind === EFFECT_KIND.flatBonus &&

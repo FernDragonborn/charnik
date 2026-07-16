@@ -948,7 +948,9 @@ Full var set:
 
 **Operators (precedence high→low):** `d` (dice) > unary `-` > `* / %` > binary `+ -` >
 comparisons (`< <= > >= == !=`) > `not` > `and` > `or`. Unary minus is prefix negation
-(`-str_mod`), distinct from binary subtraction. **No `?:` ternary** — a conditional value is the
+(`-str_mod`), distinct from binary subtraction. **Comparisons are NON-associative** — a chain
+like `5<=level<=10` is a parse error (it would silently mean `(5<=level)<=10` = always true;
+spell it `5<=level and level<=10`). **No `?:` ternary** — a conditional value is the
 `if(cond, then, else)` function. Whitelisted functions `if min max floor ceil round abs clamp sign`
 — NOTHING else.
 
@@ -1112,23 +1114,34 @@ Attack) are not yet added.
   number-OR-dice(`{pool,flat}`) value type; bounded depth+length; Result types (never throws).
   fast-check: never-throws over the domain, determinism.
 - [x] **EXPR-2 · Value expressions in tokens + the `ctx` contract.** DONE — `parseEffect` widened
-  (literal fast-path kept for back-compat + kebab targets); `resolveEffectValue` evaluates the expr
+  (literal fast-path kept — ONE snake target grammar with the expr path; kebab targets/ids degrade
+  to visible-inert per E3); `resolveEffectValue` evaluates the expr
   (floored+clamped number, or dice→roller formula, or inert-note error). `makeExprContext`
   (`effects/context.ts`) is the ONE authoritative build-ctx (SPEC2 effective vars); `derive.ts`
   builds it once and threads it through every `applyEffects`/`collectResources`. Tests in
   `context.test.ts` + derive integration.
-- [x] **EXPR-3 · Condition guards + the conditional-derive core.** DONE (single-pass) —
+- [x] **EXPR-3 · Condition guards + the conditional-derive core.** DONE —
   `splitGuard` + `resolveActiveEffects` (the ONE resolve stage, closes D7/B21): gather → evaluate
-  guards (drop false/errored) → expand `apply_condition` after guards (SPEC7) → guard-stripped list
-  every consumer reads. Play-ctx (hp/hp_percent/is_bloodied/flags/conditions/resources/armor_type/
-  size) built in derive; `deriveIssues` channel surfaces guard/expr failures (SPEC10). Tests in
-  `resolve.test.ts` + derive guard integration (Unarmored Defense enum guard, bloodied save bonus).
-  **Deferred within EXPR-3 (documented, not blocking):** the full dependency-order DAG + cycle
-  detection + the reorderable-order UI — real content is a single pass (the graph is ≈ empty), so a
-  guarded effect that RAISES a value another guard reads (e.g. rage +maxHP feeding is_bloodied in the
-  SAME derive) is the rare case not yet fed back; and full **A10** (folding ability-score bonuses
-  through the pipeline as expressions) stays the literal-sum cascade for now. Both are follow-ups on
-  top of the working guard core.
+  guards (drop false; an ERRORED guard keeps the token verbatim = inert note + issue, per the
+  fallback contract) → expand `apply_condition` after guards (SPEC7) → guard-stripped list every
+  consumer reads — the sheet exposes it as `resolvedEffects`, and the roll path + action economy
+  consume THAT (B21). Runs **two passes** so the guard ctx is fail-closed: pass 1 evaluates guards
+  against an empty condition/resource state, the survivors' `apply_condition`/`grant_resource`
+  define the conditions + pools pass 2 (authoritative) reads — so `has_condition.x ?
+  apply_condition:x` can't self-fulfil and a false-guarded rage never sets `is_raging`. Play-ctx
+  (hp/hp_percent/is_bloodied/flags/conditions/resources/armor_type/size) built in derive;
+  `spellcasting_mod` is per-carrying-class (SPEC4: `ActiveEffect.classId` + a scoped ctx);
+  `deriveIssues` = structured `{source, token, reason}` (SPEC10), published to content-health via
+  the `deriveHealth` store, alongside the static `lintEffectTokens` authoring warns (mixed-type
+  `if()`, unusual die). Tests in `resolve.test.ts` + derive integration (fail-closed conditions,
+  spellcasting scoping, Unarmored Defense enum guard, bloodied save bonus).
+  **Deferred within EXPR-3 (documented, not blocking):** the FULL dependency-order DAG + cycle
+  detection + the reorderable-order UI — the two-pass bootstrap covers one feedback level
+  (conditions/resources); a guarded effect that RAISES a value another guard reads (rage +maxHP
+  feeding is_bloodied in the SAME derive) is still not fed back; and full **A10** (folding
+  ability-score bonuses through the pipeline as expressions) stays the literal-sum cascade —
+  guarded/expression ability tokens are NOT applied but are surfaced as deriveIssues, never
+  silent. Both are follow-ups on top of the working guard core.
 
 Deferred to L3/onEvent (NOT L2): stateful transitions, latches, actions, anything that WRITES state
 — L2 only READS `ctx` and produces contributions. Keep the layer honest: it is a pure read-only

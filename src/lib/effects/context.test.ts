@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeExprContext, type BuildVars } from './context';
+import { makeExprContext, withSpellcastingMod, type BuildVars } from './context';
 import {
 	parseEffect,
 	resolveEffectValue,
@@ -38,6 +38,25 @@ describe('makeExprContext · build variables', () => {
 		expect(ctx.number('resource.ki')).toBe(0); // no play state → 0
 		expect(ctx.boolean('is_raging')).toBe(false);
 		expect(ctx.enum('armor_type')).toBeUndefined();
+	});
+
+	it('does NOT hand back inherited Object.prototype members for hostile dotted ids', () => {
+		// `class_level.constructor` etc. — a bare index would return a FUNCTION, which reads
+		// truthy in guards and NaN→0 in arithmetic; own-property-or-absent keeps SPEC4 honest
+		expect(ctx.number('class_level.constructor')).toBe(0);
+		expect(ctx.number('class_level.__proto__')).toBe(0);
+		expect(ctx.number('resource.toString')).toBe(0);
+		expect(ctx.boolean('is_toString')).toBe(false);
+	});
+});
+
+describe('withSpellcastingMod · per-class scoping (SPEC4)', () => {
+	it('overrides only spellcasting_mod, passing every other variable through', () => {
+		const scoped = withSpellcastingMod(ctx, 4);
+		expect(scoped.number('spellcasting_mod')).toBe(4);
+		expect(ctx.number('spellcasting_mod')).toBe(0); // base untouched
+		expect(scoped.number('level')).toBe(7);
+		expect(scoped.boolean('is_raging')).toBe(false);
 	});
 });
 

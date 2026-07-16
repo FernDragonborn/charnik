@@ -18,11 +18,17 @@ import { z } from 'zod';
 import { CHARACTER_SCHEMA_VERSION } from '../schema/version';
 
 export const SYSTEMS = ['5e', '5.5e'] as const;
-export const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
+// single owner in rules/core (AUDIT F3) — re-exported because half the app already imports it here
+export { ABILITY_IDS as ABILITIES } from '../rules/core';
+import { ABILITY_IDS as ABILITIES } from '../rules/core';
 
 /** A content reference: `type:source:id` (loader effectiveId). */
 const ref = z.string().min(1);
-const slug = z.string().regex(/^[a-z0-9][a-z0-9-]*$/, 'slug: lowercase, digits, hyphens');
+// underscore REQUIRED: `slugify` emits snake_case (E3) — without `_` here every multi-word
+// character name failed validation and refused to save; hyphens stay accepted for pre-E3 saves
+const slug = z
+	.string()
+	.regex(/^[a-z0-9][a-z0-9_-]*$/, 'slug: lowercase, digits, underscores/hyphens');
 
 const abilityScores = z.object(
 	Object.fromEntries(ABILITIES.map((a) => [a, z.number().int().min(1).max(30)])) as Record<

@@ -3,7 +3,12 @@
 	// previews): malformed rows, unresolved spell_lists joins, partial translations (LOC-CHECK), plus
 	// files missing metadata (source/license) or with a drifted #content-hash. Read-only; the loader
 	// already computes everything (graph.issues / metaIssues / driftItems), this just presents it.
+	// Two effect-token layers merge in (SPEC10): static authoring lint over every loaded row's
+	// tokens, and the OPEN character's derive-time issues published by the combat page.
 	import { content } from '$lib/content/store.svelte';
+	import { deriveHealth } from '$lib/character/health.svelte';
+	import { lintEffectTokens } from '$lib/effects/index';
+	import { tokensOf } from '$lib/content/loader';
 
 	const graph = $derived(content.graph);
 	const issues = $derived(graph?.issues ?? []);
@@ -11,7 +16,24 @@
 	const warnings = $derived(issues.filter((i) => i.level === 'warn'));
 	const metaIssues = $derived(graph?.metaIssues ?? []);
 	const driftItems = $derived(graph?.driftItems ?? []);
-	const total = $derived(errors.length + warnings.length + metaIssues.length + driftItems.length);
+	// authoring-slip warnings in effect tokens (mixed-type if(), unusual die) — spec-promised soft
+	// warns, computed once per graph load (parses are memoized)
+	const tokenLints = $derived.by(() => {
+		if (!graph) return [];
+		const out: { id: string; message: string }[] = [];
+		for (const row of graph.rows)
+			for (const w of lintEffectTokens(tokensOf(row))) out.push({ id: row.id, message: w });
+		return out;
+	});
+	const deriveIssues = $derived(deriveHealth.issues);
+	const total = $derived(
+		errors.length +
+			warnings.length +
+			metaIssues.length +
+			driftItems.length +
+			tokenLints.length +
+			deriveIssues.length
+	);
 
 	const fileLabel = (root: string, file?: string) => (file ? `${root}/${file}` : root);
 </script>
@@ -76,6 +98,28 @@
 					<div class="row-msg">
 						changed {d.changedAt ?? 'unknown'} · declared {d.declaredDate ?? '—'}
 					</div>
+				</div>
+			{/each}
+		{/if}
+
+		{#if tokenLints.length}
+			<div class="group-label warn">Effect-token warnings (authoring)</div>
+			{#each tokenLints as l, i (l.id + i)}
+				<div class="row warn">
+					<div class="row-file">{l.id}</div>
+					<div class="row-msg">{l.message}</div>
+				</div>
+			{/each}
+		{/if}
+
+		{#if deriveIssues.length}
+			<div class="group-label warn">
+				Effect problems for “{deriveHealth.characterName}” (this character only)
+			</div>
+			{#each deriveIssues as it, i (it.token + i)}
+				<div class="row warn">
+					<div class="row-file">{it.source} · <span class="row-id">{it.token}</span></div>
+					<div class="row-msg">{it.reason}</div>
 				</div>
 			{/each}
 		{/if}

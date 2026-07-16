@@ -13,7 +13,8 @@ import {
 	type EffectInstance
 } from './helpers';
 
-const fx = (...tokens: string[]) => [{ effects: tokens }];
+// rollEffectsFor reads the sheet's RESOLVED effect list ({tokens}), not raw play.effects (B21)
+const fx = (...tokens: string[]) => [{ tokens }];
 
 describe('pipClick — one click-to-set model (available left, spent right)', () => {
 	it('clicking an available pip spends it + everything to its right', () => {
@@ -94,7 +95,7 @@ describe('groupEffects — Buffs / Debuffs / Resources split', () => {
 	const arcane = eff({
 		iid: 'ar',
 		label: 'Arcane Recovery',
-		effects: ['grant_resource:arcane-recovery:1:long'],
+		effects: ['grant_resource:arcane_recovery:1:long'], // snake id (E3)
 		positive: true // still lands in Resources, not Buffs
 	});
 	const g = groupEffects([bless, bane, arcane]);
@@ -107,7 +108,7 @@ describe('groupEffects — Buffs / Debuffs / Resources split', () => {
 	});
 	it('routes grant_resource effects to resources regardless of the positive flag', () => {
 		expect(g.resources).toHaveLength(1);
-		expect(g.resources[0]).toMatchObject({ id: 'arcane-recovery', max: 1, recharge: 'long' });
+		expect(g.resources[0]).toMatchObject({ id: 'arcane_recovery', max: 1, recharge: 'long' });
 	});
 });
 
@@ -117,12 +118,12 @@ describe('parseResourceEffect + rechargeLabel', () => {
 			eff({
 				iid: 'cd',
 				label: 'Channel Divinity',
-				effects: ['grant_resource:channel-divinity:2:short']
+				effects: ['grant_resource:channel_divinity:2:short'] // snake id (E3)
 			})
 		);
 		expect(r).toMatchObject({
 			name: 'Channel Divinity',
-			id: 'channel-divinity',
+			id: 'channel_divinity',
 			max: 2,
 			recharge: 'short'
 		});

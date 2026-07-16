@@ -379,4 +379,199 @@ describe('deriveSheet · L2 condition guards (EXPR-3)', () => {
 		const g = await guardGraph();
 		expect(deriveSheet(brute(50, 50), g).deriveIssues).toEqual([]);
 	});
+
+	it('exposes the resolved (guard-stripped) effect list for the roll path (B21)', async () => {
+		const g = await guardGraph();
+		const tokens = deriveSheet(brute(20, 50), g).resolvedEffects.flatMap((e) => e.tokens);
+		expect(tokens).toContain('flat_bonus:save.con+2'); // bloodied guard passed → stripped
+		expect(tokens.some((t) => t.includes('?'))).toBe(false); // no raw guards leak through
+	});
+});
+
+describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
+	async function condGraph(): Promise<ContentGraph> {
+		const st = new MemoryStorage();
+		await st.write(
+			'c/classes_srd.csv',
+			[
+				'id,systems,source,name_en,hit_die,saves',
+				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`
+			].join('\n')
+		);
+		await st.write(
+			'c/species_srd.csv',
+			[
+				'id,systems,source,name_en,effects,size,speed,creature_type',
+				`brute,5.5e,${S},Brute,is_raging ? flat_bonus:ac+2,medium,30,humanoid`
+			].join('\n')
+		);
+		await st.write(
+			'c/conditions_srd.csv',
+			[
+				'id,systems,source,name_en,effects,negative',
+				`rage,5.5e,${S},Rage,flat_bonus:save.str+1,false`,
+				`marked,5.5e,${S},Marked,flat_bonus:ac+5,true`
+			].join('\n')
+		);
+		const g = await loadContent(st, ['c']);
+		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
+		return g;
+	}
+
+	function brute(): Character {
+		const c = newCharacter('grog', 'Grog', '5.5e');
+		c.build.species = `species:${S}:brute`;
+		c.build.classes = [{ class: `class:${S}:barbarian`, level: 5 }];
+		c.build.abilities = { str: 16, dex: 14, con: 16, int: 8, wis: 10, cha: 8 };
+		c.play.hp = { current: 50, max: 50, temp: 0 };
+		return characterSchema.parse(c);
+	}
+
+	it('a FALSE-guarded apply_condition does not activate its condition (no fail-open)', async () => {
+		const g = await condGraph();
+		const c = brute();
+		// guard is false at full HP → rage must NOT come active → is_raging stays false
+		c.play.effects = [
+			{
+				iid: 'f',
+				label: 'Frenzy',
+				effects: ['hp_percent<=25 ? apply_condition:rage'],
+				positive: true
+			}
+		];
+		const s = deriveSheet(c, g);
+		expect(s.ac.trace.map((t) => t.source)).not.toContain('Brute'); // is_raging ? +2 AC off
+		expect(s.abilities.str.save.trace.map((t) => t.source)).not.toContain('Frenzy → Rage');
+	});
+
+	it('a self-fulfilling has_condition guard stays false (cannot bootstrap itself)', async () => {
+		const g = await condGraph();
+		const c = brute();
+		c.play.effects = [
+			{
+				iid: 's',
+				label: 'Loop',
+				effects: ['has_condition.marked ? apply_condition:marked'],
+				positive: false
+			}
+		];
+		const s = deriveSheet(c, g);
+		expect(s.ac.trace.map((t) => t.source)).not.toContain('Loop → Marked'); // no +5 AC
+	});
+
+	it('an UNguarded apply_condition feeds pass-2 guards (is_raging chain works)', async () => {
+		const g = await condGraph();
+		const c = brute();
+		c.play.effects = [
+			{ iid: 'r', label: 'Raging', effects: ['apply_condition:rage'], positive: true }
+		];
+		const s = deriveSheet(c, g);
+		// the species' `is_raging ? flat_bonus:ac+2` now applies
+		expect(s.ac.trace.some((t) => t.source === 'Brute' && t.amount === 2)).toBe(true);
+		// and the rage condition's own tokens expanded
+		expect(s.abilities.str.save.trace.map((t) => t.source)).toContain('Raging → Rage');
+	});
+});
+
+describe('deriveSheet · unsupported ability-score tokens are surfaced, never silent', () => {
+	async function abilityGraph(): Promise<ContentGraph> {
+		const st = new MemoryStorage();
+		await st.write(
+			'c/classes_srd.csv',
+			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n')
+		);
+		await st.write(
+			'c/species_srd.csv',
+			[
+				'id,systems,source,name_en,effects,size,speed,creature_type',
+				// an expression and a guard on ability targets — both await the DAG, must be reported
+				`odd,5.5e,${S},Odd,flat_bonus:str+ceil(level/4); is_bloodied ? flat_bonus:con+2,medium,30,humanoid`
+			].join('\n')
+		);
+		const g = await loadContent(st, ['c']);
+		return g;
+	}
+
+	it('reports expression/guarded ability bonuses as derive issues and does not apply them', async () => {
+		const g = await abilityGraph();
+		const c = newCharacter('odd', 'Odd', '5.5e');
+		c.build.species = `species:${S}:odd`;
+		c.build.classes = [{ class: `class:${S}:monk`, level: 8 }];
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+		const s = deriveSheet(characterSchema.parse(c), g);
+		expect(s.abilities.str.score).toBe(10); // ceil(8/4)=2 NOT applied (deferred DAG)
+		expect(s.abilities.con.score).toBe(10);
+		const reasons = s.deriveIssues.map((i) => i.reason).join(' ');
+		expect(reasons).toContain('expression on an ability-score bonus');
+		expect(reasons).toContain('guard on an ability-score bonus');
+	});
+});
+
+describe('deriveSheet · spellcasting_mod reads the carrying class (SPEC4)', () => {
+	async function multiGraph(): Promise<ContentGraph> {
+		const st = new MemoryStorage();
+		await st.write(
+			'c/classes_srd.csv',
+			[
+				'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
+				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`,
+				`cleric,5.5e,${S},Cleric,d8,"wis,cha",full,wis`
+			].join('\n')
+		);
+		await st.write(
+			'c/class_features_srd.csv',
+			[
+				'id,systems,source,name_en,effects,class_id,level,subclass_id',
+				// a cleric feature reading spellcasting_mod — must use WIS, not the primary (wizard/INT)
+				`blessed_ward,5.5e,${S},Blessed Ward,flat_bonus:save.wis+spellcasting_mod,cleric,1,`
+			].join('\n')
+		);
+		const g = await loadContent(st, ['c']);
+		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
+		return g;
+	}
+
+	it('a class feature token uses ITS class casting mod; runtime tokens use the primary caster', async () => {
+		const g = await multiGraph();
+		const c = newCharacter('multi', 'Multi', '5.5e');
+		c.build.classes = [
+			{ class: `class:${S}:wizard`, level: 3 }, // primary caster (higher level)
+			{ class: `class:${S}:cleric`, level: 2 }
+		];
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 16, wis: 14, cha: 10 };
+		// a runtime (unscoped) token: primary caster = wizard → INT +3
+		c.play.effects = [
+			{
+				iid: 'u',
+				label: 'Focus',
+				effects: ['flat_bonus:save.str+spellcasting_mod'],
+				positive: true
+			}
+		];
+		const s = deriveSheet(characterSchema.parse(c), g);
+		const wisSave = s.abilities.wis.save.trace.find((t) => t.source === 'Blessed Ward');
+		expect(wisSave?.amount).toBe(2); // cleric feature → WIS mod (+2), NOT wizard INT (+3)
+		const strSave = s.abilities.str.save.trace.find((t) => t.source === 'Focus');
+		expect(strSave?.amount).toBe(3); // unscoped → primary caster (wizard, INT +3)
+	});
+});
+
+describe('deriveSheet · set_override with a dice value degrades to a note', () => {
+	it('never silently drops the token', async () => {
+		const st = new MemoryStorage();
+		await st.write(
+			'c/classes_srd.csv',
+			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n')
+		);
+		const g = await loadContent(st, ['c']);
+		const c = newCharacter('x', 'X', '5.5e');
+		c.build.classes = [{ class: `class:${S}:monk`, level: 1 }];
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+		c.play.effects = [
+			{ iid: 'd', label: 'Weird', effects: ['set_override:ac:1d6'], positive: true }
+		];
+		const s = deriveSheet(characterSchema.parse(c), g);
+		expect(s.ac.value).toBe(10); // base unarmored, override NOT applied
+		expect(s.ac.notes?.join(' ')).toContain('unresolved');
+	});
 });

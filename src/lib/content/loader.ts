@@ -62,6 +62,14 @@ export interface LoadedRowOf<T extends ContentType> extends LoadedRowCommon {
  *  (name_en/text_en/systems/source/effects) read without narrowing since every member has them. */
 export type LoadedRow = { [T in ContentType]: LoadedRowOf<T> }[ContentType];
 
+/** A row's bounded-vocab effect tokens (empty for lookup tables, which carry no `effects` column).
+ *  The ONE accessor every consumer (derive gather, combat cast, content-health lint) reads. */
+export const tokensOf = (row: LoadedRow | undefined): string[] => {
+	// `effects` rides on every browsable type but not the lookup tables; read it only where present
+	const effects = row && 'effects' in row.data ? row.data.effects : undefined;
+	return Array.isArray(effects) ? effects : [];
+};
+
 /** The data payload of SOME loaded row — the union of every type's model. Used only at the loader's
  *  parse boundary, where a row's type is a runtime value, not a static `T`; typed reads elsewhere use
  *  `RowData<T>` via a narrowed `LoadedRowOf<T>`. */

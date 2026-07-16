@@ -9,7 +9,17 @@
  */
 import { computed, type Computed, type Contribution, type System } from './pipeline';
 
-export type Ability = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha';
+/** The six ability ids — the ONE owning list (AUDIT F3); derive, don't re-declare. */
+export const ABILITY_IDS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
+export type Ability = (typeof ABILITY_IDS)[number];
+
+/** Creature sizes, smallest→largest (an ORDERED ladder — L2 `size` compares by ordinal). */
+export const SIZES = ['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'] as const;
+export type Size = (typeof SIZES)[number];
+
+/** Armor weight classes ('none' = unarmored). Unordered in rules terms (L2 allows only ==/!=). */
+export const ARMOR_TYPES = ['none', 'light', 'medium', 'heavy'] as const;
+export type ArmorType = (typeof ARMOR_TYPES)[number];
 
 /** Ability modifier: floor((score − 10) / 2). Defined for scores 1..30. */
 export function abilityModifier(score: number): number {

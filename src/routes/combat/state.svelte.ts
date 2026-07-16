@@ -11,7 +11,8 @@ import { toast } from 'svelte-sonner';
 import { demoCharacter } from '$lib/demo/sheet';
 import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
-import { deriveSheet, tokensOf, type CharacterSheet, type SkillId } from '$lib/character/derive';
+import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
+import { tokensOf } from '$lib/content/loader';
 import { passiveScore } from '$lib/rules/core';
 import { rollPool } from '$lib/rules/dice';
 import type { Character } from '$lib/character/schema';
@@ -241,11 +242,12 @@ class CombatVM {
 	};
 
 	/** Advantage/disadvantage + flat + bonus dice a roll picks up from active effects (gated on the
-	 *  effects-auto toggle). */
+	 *  effects-auto toggle). Reads the sheet's RESOLVED list (guards evaluated, conditions expanded,
+	 *  item/feature effects included — B21), not raw `play.effects`. */
 	private effectsFor(key: string): RollEffects {
 		const c = this.character;
 		if (!c || !c.play.autoCalc) return NO_ROLL_EFFECTS; // effects-auto off → plain rolls
-		return rollEffectsFor(c.play.effects, key);
+		return rollEffectsFor(this.sheet?.resolvedEffects ?? [], key);
 	}
 
 	// open the roll builder prefilled + anchored, so the player can pick advantage then Roll

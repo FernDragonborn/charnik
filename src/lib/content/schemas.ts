@@ -116,8 +116,9 @@ const baseRow = z.object(base);
 
 // Option lists are exported (single source) so the homebrew authoring form renders identical
 // selects — a value the form offers is by construction a value the schema accepts.
-export const SIZES = ['tiny', 'small', 'medium', 'large', 'huge', 'gargantuan'] as const;
-export const ABILITIES = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
+// SIZES/ABILITIES are owned by rules/core (AUDIT F3) and re-exported for the form imports.
+export { SIZES, ABILITY_IDS as ABILITIES } from '../rules/core';
+import { SIZES, ABILITY_IDS as ABILITIES } from '../rules/core';
 export const HIT_DICE = ['d6', 'd8', 'd10', 'd12'] as const;
 export const CASTER_TYPES = ['full', 'half', 'third', 'pact', 'none'] as const;
 export const CASTER_SHARES = ['full', 'half', 'half-up', 'third', 'none'] as const;

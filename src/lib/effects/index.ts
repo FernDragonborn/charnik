@@ -14,7 +14,7 @@
  * an inert text note — never dropped, never executed.
  */
 import { computed, type Computed, type Contribution, type Layer } from '../rules/pipeline';
-import { evalExpression, diceToFormula, type ExprContext } from './expr';
+import { evalExpression, diceToFormula, lintExpression, type ExprContext } from './expr';
 
 /** The bounded effect vocabulary, as named constants — compare against these, never bare strings. */
 export const EFFECT_KIND = {
@@ -69,12 +69,27 @@ export interface ParsedEffect {
 	raw: string;
 }
 
+/** Parse results memoized by token string — consumers scan tokens per stat per derive (AUDIT D7
+ *  perf), and a `ParsedEffect` is read-only by contract. Bounded like the expr parse cache. */
+const EFFECT_CACHE = new Map<string, ParsedEffect>();
+const EFFECT_CACHE_MAX = 4000;
+
 /**
  * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security
  * boundary: data, never code). Every consumer reads the structured result instead of its own
  * regex. Unknown / malformed → `{kind:'unknown'}` (kept as an inert text note, never dropped).
+ * Memoized; treat the result as immutable.
  */
 export function parseEffect(token: string): ParsedEffect {
+	const hit = EFFECT_CACHE.get(token);
+	if (hit) return hit;
+	const res = parseEffectUncached(token);
+	if (EFFECT_CACHE.size >= EFFECT_CACHE_MAX) EFFECT_CACHE.clear();
+	EFFECT_CACHE.set(token, res);
+	return res;
+}
+
+function parseEffectUncached(token: string): ParsedEffect {
 	const raw = token.trim();
 	const sep = raw.indexOf(':');
 	if (sep === -1) return { kind: 'unknown', raw };
@@ -83,8 +98,9 @@ export function parseEffect(token: string): ParsedEffect {
 	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
 
 	if (kind === EFFECT_KIND.flatBonus) {
-		// literal fast path (backward compatible, incl. the `-1d4` dice-note form and kebab targets)
-		const lit = /^([a-z][a-z._-]*?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
+		// literal fast path — ONE target grammar with the expression path below (snake, single
+		// optional dot; `-` is the L2 minus operator, E3): a literal amount/dice never needs a ctx
+		const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
 		if (lit) {
 			const target = lit[1] ?? '';
 			const sign = lit[2] ?? '';
@@ -92,15 +108,14 @@ export function parseEffect(token: string): ParsedEffect {
 			if (/d/i.test(amount)) return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw };
 			return { kind, target, amount: clampAmount(Number(sign + amount)), raw };
 		}
-		// L2 expression value: `<target><+|->` then an expression. Target is snake (no `-`, which is
-		// now the minus operator) so the split is unambiguous. A `-` sign negates the whole value.
+		// L2 expression value: `<target><+|->` then an expression. A `-` sign negates the whole value.
 		const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)\s*([+-])\s*(.+)$/i.exec(rest);
 		if (!ex) return { kind: 'unknown', raw };
 		const valueExpr = ex[2] === '-' ? `-(${(ex[3] ?? '').trim()})` : (ex[3] ?? '').trim();
 		return { kind, target: ex[1] ?? '', valueExpr, raw };
 	}
 	if (kind === EFFECT_KIND.setOverride) {
-		const lit = /^([a-z][a-z._-]*):(-?\d+)$/i.exec(rest);
+		const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(-?\d+)$/i.exec(rest);
 		if (lit) return { kind, target: lit[1] ?? '', amount: clampAmount(Number(lit[2])), raw };
 		const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(.+)$/i.exec(rest);
 		if (!ex) return { kind: 'unknown', raw };
@@ -117,7 +132,8 @@ export function parseEffect(token: string): ParsedEffect {
 		// `grant_resource:<id>` (bare flag) or `grant_resource:<id>:<max>:<recharge>` where <max> is a
 		// literal OR an L2 expression (`class_level.monk`). The recharge keyword anchors the end, so
 		// the middle (max) can hold expression characters (`*`, `(`, `,`) unambiguously.
-		const m = /^([a-z0-9][a-z0-9_-]*)(?::(.+):(short|long|other))?$/i.exec(rest.trim());
+		// Id is snake-only (E3): a kebab pool id would be unreadable from `resource.<id>` expressions.
+		const m = /^([a-z0-9][a-z0-9_]*)(?::(.+):(short|long|other))?$/i.exec(rest.trim());
 		if (!m?.[1]) return { kind: 'unknown', raw };
 		const id = m[1].toLowerCase();
 		const maxSlot = m[2]?.trim();
@@ -177,16 +193,25 @@ export function resolveEffectValue(p: ParsedEffect, ctx?: ExprContext): Resolved
 	return { diceFormula: diceToFormula(r.value.dice) };
 }
 
-/** A runtime effect source contributing tokens at a pipeline layer. */
+/** A runtime effect source contributing tokens at a pipeline layer. `classId` marks tokens carried
+ *  by a specific class's row/feature — SPEC4: their `spellcasting_mod` reads THAT class's mod. */
 export interface ActiveEffect {
 	source: string;
 	layer: Layer;
 	tokens: string[];
+	classId?: string;
 }
 
+/** A ctx, or a per-effect ctx provider (used to scope `spellcasting_mod` to the carrying class). */
+export type EffectCtx = ExprContext | ((eff: ActiveEffect) => ExprContext);
+const ctxOf = (ctx: EffectCtx | undefined, eff: ActiveEffect): ExprContext | undefined =>
+	typeof ctx === 'function' ? ctx(eff) : ctx;
+
 /** A token split into its optional condition GUARD and the effect part. The L2 guard is
- *  condition-FIRST (`is_raging ? advantage:attack`); `?` never appears elsewhere (expressions use
- *  `if()`, not `?:`, and `:` is structural), so splitting on the first `?` is unambiguous. */
+ *  condition-FIRST (`is_raging ? advantage:attack`); `?` never appears elsewhere in the GRAMMAR
+ *  (expressions use `if()`, not `?:`, and `:` is structural), so splitting on the first `?` is
+ *  unambiguous. Free-text/unknown tokens MAY contain a `?` — their "guard" then fails to evaluate
+ *  and the resolve stage keeps them verbatim as inert notes (never dropped). */
 export interface GuardedToken {
 	guard?: string;
 	token: string;
@@ -197,34 +222,46 @@ export function splitGuard(raw: string): GuardedToken {
 	return { guard: raw.slice(0, q).trim(), token: raw.slice(q + 1).trim() };
 }
 
-/** The one resolve stage (EXPR-3; closes D7/B21): gather → evaluate guards (drop false/errored) →
- *  expand `apply_condition` one level (its own tokens are guard-checked too) → the surviving,
- *  guard-STRIPPED tokens every consumer reads. A guard that errors or isn't boolean drops its token
- *  and is recorded in `issues` (SPEC10 → content-health), never throwing. `expandCondition` is
- *  injected (the graph lives in the caller) so this stays free of content-loader deps. */
+/** A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source)
+ *  content-health merges with loader issues. */
+export interface EffectIssue {
+	source: string;
+	token: string;
+	reason: string;
+}
+
+/** The one resolve stage (EXPR-3; closes D7/B21): gather → evaluate guards → expand
+ *  `apply_condition` one level (its own tokens are guard-checked too) → the surviving,
+ *  guard-STRIPPED tokens every consumer reads. A FALSE guard drops its token (that's its job); a
+ *  guard that ERRORS or isn't boolean keeps the token verbatim — downstream parses it as `unknown`,
+ *  i.e. an inert note (the "never silently dropped" contract) — and records an issue (SPEC10),
+ *  never throwing. `expandCondition` is injected (the graph lives in the caller) so this stays free
+ *  of content-loader deps. */
 export interface ResolvedEffects {
 	effects: ActiveEffect[];
-	issues: string[];
+	issues: EffectIssue[];
 }
 export function resolveActiveEffects(
 	active: ActiveEffect[],
-	ctx: ExprContext,
+	ctx: EffectCtx,
 	expandCondition: (condId: string) => { source: string; tokens: string[] } | undefined
 ): ResolvedEffects {
-	const issues: string[] = [];
-	/** Keep the tokens whose guard passes, stripped of the guard; a bad guard → issue + drop. */
-	const passGuards = (source: string, tokens: string[]): string[] => {
+	const issues: EffectIssue[] = [];
+	/** Tokens whose guard passes, stripped of the guard; a broken guard → issue + kept verbatim
+	 *  (parses as unknown → inert). */
+	const passGuards = (eff: ActiveEffect, source: string, tokens: string[]): string[] => {
 		const kept: string[] = [];
 		for (const raw of tokens) {
 			const g = splitGuard(raw);
 			if (g.guard !== undefined) {
-				const r = evalExpression(g.guard, ctx);
-				if (!r.ok) {
-					issues.push(`${source}: bad guard "${g.guard}" (${r.error})`);
-					continue;
-				}
-				if (r.value.type !== 'number') {
-					issues.push(`${source}: guard "${g.guard}" is not a condition`);
+				const r = evalExpression(g.guard, ctxOf(ctx, eff) ?? NO_CTX);
+				if (!r.ok || r.value.type !== 'number') {
+					issues.push({
+						source,
+						token: raw,
+						reason: r.ok ? `guard "${g.guard}" is not a condition` : `bad guard: ${r.error}`
+					});
+					kept.push(raw); // inert: unparseable as an effect, visible as unknown
 					continue;
 				}
 				if (r.value.value === 0) continue; // condition false → token doesn't apply
@@ -236,8 +273,8 @@ export function resolveActiveEffects(
 
 	const out: ActiveEffect[] = [];
 	for (const eff of active) {
-		const kept = passGuards(eff.source, eff.tokens);
-		if (kept.length) out.push({ source: eff.source, layer: eff.layer, tokens: kept });
+		const kept = passGuards(eff, eff.source, eff.tokens);
+		if (kept.length) out.push({ ...eff, tokens: kept });
 	}
 	// expand apply_condition AFTER guards (SPEC7 order); one level, no recursive cascade
 	for (const eff of [...out]) {
@@ -246,13 +283,20 @@ export function resolveActiveEffects(
 			if (p.kind !== EFFECT_KIND.applyCondition || !p.target) continue;
 			const c = expandCondition(p.target.trim());
 			if (!c) continue;
-			const kept = passGuards(`${eff.source} → ${c.source}`, c.tokens);
-			if (kept.length)
-				out.push({ source: `${eff.source} → ${c.source}`, layer: 'condition', tokens: kept });
+			const source = `${eff.source} → ${c.source}`;
+			const kept = passGuards(eff, source, c.tokens);
+			if (kept.length) out.push({ source, layer: 'condition', tokens: kept });
 		}
 	}
 	return { effects: out, issues };
 }
+
+/** Fallback ctx for a guard evaluated with no context at all: every variable absent (0/false). */
+const NO_CTX: ExprContext = {
+	number: () => undefined,
+	boolean: () => undefined,
+	enum: () => undefined
+};
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
  *  `saves`→`save.*`, `skills`→`skill.*`, and `d20_tests`→every d20-based roll (saves, ability
@@ -299,7 +343,7 @@ export function applyEffects(
 	targetKey: string,
 	base: Computed,
 	effects: ActiveEffect[],
-	ctx?: ExprContext
+	ctx?: EffectCtx
 ): Computed {
 	const contribs: Contribution[] = [...base.trace];
 	const notes: string[] = [...(base.notes ?? [])];
@@ -308,7 +352,7 @@ export function applyEffects(
 			const p = parseEffect(token);
 			if (!matchesTarget(p.target, targetKey)) continue;
 			if (p.kind === EFFECT_KIND.flatBonus) {
-				const v = resolveEffectValue(p, ctx);
+				const v = resolveEffectValue(p, ctxOf(ctx, eff));
 				if (v.amount !== undefined) {
 					contribs.push({
 						source: eff.source,
@@ -324,7 +368,7 @@ export function applyEffects(
 					notes.push(`${eff.source}: unresolved "${token}" (${v.error})`);
 				}
 			} else if (p.kind === EFFECT_KIND.setOverride) {
-				const v = resolveEffectValue(p, ctx);
+				const v = resolveEffectValue(p, ctxOf(ctx, eff));
 				if (v.amount !== undefined) {
 					contribs.push({
 						source: eff.source,
@@ -333,6 +377,10 @@ export function applyEffects(
 						amount: v.amount,
 						note: token
 					});
+				} else if (v.diceFormula) {
+					// a set to a dice quantity is meaningless for a stat — degrade to a note, never
+					// silently vanish (the inert-fallback contract)
+					notes.push(`${eff.source}: unresolved "${token}" (an override cannot be a dice value)`);
 				} else if (v.error) {
 					notes.push(`${eff.source}: unresolved "${token}" (${v.error})`);
 				}
@@ -363,20 +411,33 @@ const titleCaseId = (s: string) => s.replace(/[-_]/g, ' ').replace(/\b\w/g, (m) 
  * the same id is granted more than once (a scaling feature re-granted at a higher tier), the largest
  * max wins.
  */
-export function collectResources(effects: ActiveEffect[], ctx?: ExprContext): ResourceDef[] {
+export function collectResources(
+	effects: ActiveEffect[],
+	ctx?: EffectCtx,
+	issues?: EffectIssue[]
+): ResourceDef[] {
 	const out = new Map<string, ResourceDef>();
 	for (const eff of effects) {
 		for (const token of eff.tokens) {
 			const p = parseEffect(token);
 			if (p.kind !== EFFECT_KIND.grantResource || !p.resource) continue;
 			// max is either a literal or an L2 expression (`class_level.monk`); resolve the latter and
-			// clamp to the pip cap. An unresolved expression means the pool count is unknown → skip it
-			// (it would otherwise render as an inert 0-pip resource).
+			// clamp to the pip cap. An unresolvable expression means the pool count is unknown → skip
+			// the pool (a 0-pip render would be noise) but SURFACE the failure (never silently).
 			let maxVal: number | undefined;
 			if (p.resource.max !== undefined) maxVal = p.resource.max;
-			else if (p.resource.maxExpr && ctx) {
-				const r = evalExpression(p.resource.maxExpr, ctx);
+			else if (p.resource.maxExpr) {
+				const c = ctxOf(ctx, eff);
+				const r = c
+					? evalExpression(p.resource.maxExpr, c)
+					: ({ ok: false, error: 'expression needs a context' } as const);
 				if (r.ok && r.value.type === 'number') maxVal = Math.floor(r.value.value);
+				else
+					issues?.push({
+						source: eff.source,
+						token,
+						reason: r.ok ? 'resource max is not a number' : r.error
+					});
 			}
 			if (maxVal === undefined) continue;
 			const def: ResourceDef = {
@@ -391,6 +452,23 @@ export function collectResources(effects: ActiveEffect[], ctx?: ExprContext): Re
 		}
 	}
 	return [...out.values()];
+}
+
+/** Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression
+ *  slot — guard, value, resource max — for the spec-promised soft warns (mixed-type `if()`,
+ *  unusual die). Parse ERRORS are not reported here; they surface at derive as issues/inert notes. */
+export function lintEffectTokens(tokens: string[]): string[] {
+	const warns: string[] = [];
+	for (const raw of tokens) {
+		const g = splitGuard(raw);
+		const exprs: string[] = [];
+		if (g.guard !== undefined) exprs.push(g.guard);
+		const p = parseEffect(g.token);
+		if (p.valueExpr) exprs.push(p.valueExpr);
+		if (p.resource?.maxExpr) exprs.push(p.resource.maxExpr);
+		for (const e of exprs) for (const w of lintExpression(e)) warns.push(`${raw} — ${w}`);
+	}
+	return warns;
 }
 
 /** Collect the non-numeric effect facts across all active effects (for panels/flags). */

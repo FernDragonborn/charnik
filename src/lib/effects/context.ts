@@ -9,11 +9,8 @@
  * resolve to 0 / false / no-match (SPEC4) — the evaluator already treats `undefined` that way, so a
  * resolver returns `undefined` for a name it doesn't carry rather than guessing.
  */
-import type { Ability } from '../rules/core';
-import type { ExprContext } from './expr';
-
-/** The six ability ids — must match rules/core's `Ability` and expr.ts's ABILITIES. */
-const ABILITY_IDS: readonly Ability[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+import { ABILITY_IDS, type Ability, type ArmorType, type Size } from '../rules/core';
+import { splitDottedName, type ExprContext } from './expr';
 
 /** Build-lifetime numbers (always available; the EXPR-2 subset of the ctx). */
 export interface BuildVars {
@@ -24,7 +21,8 @@ export interface BuildVars {
 	abilityScores: Record<Ability, number>;
 	/** Class level keyed by BARE class id (`class_level.monk`). */
 	classLevels: Record<string, number>;
-	/** The active/primary caster's casting-stat modifier (0 for a non-caster). */
+	/** The active/primary caster's casting-stat modifier (0 for a non-caster). A token carried by a
+	 *  specific class's feature reads THAT class's mod instead — see `withSpellcastingMod` (SPEC4). */
 	spellcastingMod: number;
 	/** Species walking speed pre-effect (`base_speed`). */
 	baseSpeed: number;
@@ -44,9 +42,16 @@ export interface PlayVars {
 	resources: Record<string, number>;
 	resourceMax: Record<string, number>;
 	/** Enum-typed play state. */
-	armorType: 'none' | 'light' | 'medium' | 'heavy';
-	size: string;
+	armorType: ArmorType;
+	size: Size | string;
 }
+
+/** Read an own property of a plain record, or undefined. Guards the dotted-id lookups: the id is
+ *  attacker-controlled content (`class_level.__proto__`, `resource.constructor`), and a bare index
+ *  would hand back an INHERITED Object.prototype member — a function flowing into arithmetic and
+ *  reading truthy in guards. Own-or-nothing keeps SPEC4's "absent ⇒ 0/false" honest. */
+const own = <T>(rec: Record<string, T> | undefined, key: string): T | undefined =>
+	rec !== undefined && Object.hasOwn(rec, key) ? rec[key] : undefined;
 
 /**
  * Build the `ExprContext` the evaluator reads. `play` is optional: without it, every guard variable
@@ -54,19 +59,14 @@ export interface PlayVars {
  * behaviour (values compute; conditions are all "off" because there's no play state to read yet).
  */
 export function makeExprContext(build: BuildVars, play?: PlayVars): ExprContext {
-	const dotted = (name: string): { prefix: string; id: string } | null => {
-		const i = name.indexOf('.');
-		return i === -1 ? null : { prefix: name.slice(0, i), id: name.slice(i + 1) };
-	};
-
 	return {
 		number(name) {
 			// dotted numeric families first
-			const d = dotted(name);
+			const d = splitDottedName(name);
 			if (d) {
-				if (d.prefix === 'class_level') return build.classLevels[d.id] ?? 0;
-				if (d.prefix === 'resource') return play?.resources[d.id] ?? 0;
-				if (d.prefix === 'resource_max') return play?.resourceMax[d.id] ?? 0;
+				if (d.prefix === 'class_level') return own(build.classLevels, d.id) ?? 0;
+				if (d.prefix === 'resource') return own(play?.resources, d.id) ?? 0;
+				if (d.prefix === 'resource_max') return own(play?.resourceMax, d.id) ?? 0;
 				return undefined;
 			}
 			// ability mod / score (e.g. `wis_mod`, `dex_score`)
@@ -100,15 +100,26 @@ export function makeExprContext(build: BuildVars, play?: PlayVars): ExprContext 
 			}
 		},
 		boolean(name) {
-			const d = dotted(name);
+			const d = splitDottedName(name);
 			if (d)
 				return d.prefix === 'has_condition' ? (play?.conditions.has(d.id) ?? false) : undefined;
-			return play?.flags[name] ?? false;
+			return own(play?.flags, name) ?? false;
 		},
 		enum(name) {
 			if (name === 'armor_type') return play?.armorType;
 			if (name === 'size') return play?.size;
 			return undefined;
 		}
+	};
+}
+
+/** The same ctx with `spellcasting_mod` re-pointed at a specific class's casting mod — SPEC4: a
+ *  token carried by a class's own feature reads THAT class, not the primary caster. Every other
+ *  variable passes through. */
+export function withSpellcastingMod(base: ExprContext, mod: number): ExprContext {
+	return {
+		number: (name) => (name === 'spellcasting_mod' ? mod : base.number(name)),
+		boolean: (name) => base.boolean(name),
+		enum: (name) => base.enum(name)
 	};
 }
