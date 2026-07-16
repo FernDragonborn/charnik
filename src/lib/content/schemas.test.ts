@@ -55,11 +55,12 @@ describe('content schemas — unit', () => {
 			effects: 'teleport:far; is_raging ? advantage:attack; plugin:hb:ward'
 		});
 		expect(kept.success).toBe(true);
-		if (kept.success) expect(kept.data.effects).toEqual([
-			'teleport:far',
-			'is_raging ? advantage:attack',
-			'plugin:hb:ward'
-		]);
+		if (kept.success)
+			expect(kept.data.effects).toEqual([
+				'teleport:far',
+				'is_raging ? advantage:attack',
+				'plugin:hb:ward'
+			]);
 
 		const ok = parseRow('species', {
 			id: 'dwarf',

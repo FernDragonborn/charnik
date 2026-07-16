@@ -704,4 +704,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into a URL/id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single dash, …
 
 ---
-_46 tokens · 50 global classes · 34 components · 359 exports across 55 modules · 33 duplicate suspects · generated in 106ms._
+_46 tokens · 50 global classes · 34 components · 359 exports across 55 modules · 33 duplicate suspects · generated in 105ms._
