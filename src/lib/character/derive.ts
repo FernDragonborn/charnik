@@ -30,14 +30,17 @@ import {
 import {
 	applyEffects,
 	collectResources,
+	resolveActiveEffects,
+	splitGuard,
 	parseEffect,
 	matchesTarget,
 	EFFECT_KIND,
 	type ActiveEffect,
+	type ResolvedEffects,
 	type ResourceDef
 } from '../effects/index';
 import { deriveSpellcasting, type Spellcasting } from './spellcasting';
-import { makeExprContext } from '../effects/context';
+import { makeExprContext, type BuildVars, type PlayVars } from '../effects/context';
 import type { ExprContext } from '../effects/expr';
 import type { Computed, System } from '../rules/pipeline';
 
@@ -109,6 +112,18 @@ export interface CharacterSheet {
 	spellcasting: Spellcasting;
 	/** Content refs the character points at that the graph couldn't resolve. */
 	missing: string[];
+	/** Per-character derive-time problems (a malformed L2 expression / guard for THIS build) — the
+	 *  SPEC10 channel content-health merges with loader issues. Empty on a clean sheet. */
+	deriveIssues: string[];
+}
+
+/** Armor weight class of the equipped armor (for the `armor_type` guard variable); no armor → none. */
+function armorWeightOf(row: LoadedRowOf<'item'> | undefined): PlayVars['armorType'] {
+	const t = String(row?.data.item_type ?? '').toLowerCase();
+	if (t.includes('heavy')) return 'heavy';
+	if (t.includes('medium')) return 'medium';
+	if (t.includes('light')) return 'light';
+	return 'none';
 }
 
 const num = (v: unknown, d = 0): number => (typeof v === 'number' ? v : Number(v) || d);
@@ -213,24 +228,9 @@ function gatherEffects(
 		if (eff.effects.length)
 			active.push({ source: eff.label, layer: 'condition', tokens: eff.effects });
 	}
-
-	// expand `apply_condition:<id>` → the referenced condition's OWN effect tokens, so a spell/effect
-	// that inflicts a condition actually applies that condition's mechanics (nested one level).
-	for (const eff of [...active]) {
-		for (const t of eff.tokens) {
-			const p = parseEffect(t);
-			if (p.kind !== EFFECT_KIND.applyCondition || !p.target) continue;
-			const condId = p.target.trim();
-			const cond = graph.rows.find((r) => r.type === 'condition' && r.id === condId);
-			const toks = tokensOf(cond);
-			if (cond && toks.length)
-				active.push({
-					source: `${eff.source} → ${cond.data.name_en}`,
-					layer: 'condition',
-					tokens: toks
-				});
-		}
-	}
+	// NOTE: guard evaluation + `apply_condition` expansion happen in the ONE resolve stage
+	// (`resolveActiveEffects`, EXPR-3), not here — so guards gate a token BEFORE its condition is
+	// expanded (SPEC7 order) and every consumer reads the same resolved list.
 	return active;
 }
 
@@ -262,10 +262,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	for (const ab of ABILITIES)
 		scores[ab] = build.abilities[ab] + (build.abilityBoosts?.[ab] ?? 0) + abilityBonus(active, ab);
 
-	// L2 expression context (EXPR-2, build vars). Class levels keyed by BARE id (`class_level.monk`);
-	// spellcasting computed up-front so `spellcasting_mod` reads the primary caster; base_speed is the
-	// species walking speed pre-effect. Play-state guards (hp/flags/enums) arrive in EXPR-3; until then
-	// every guard variable resolves to its absent default, so conditions read as "off".
+	// L2/L3 expression context. Class levels keyed by BARE id (`class_level.monk`); spellcasting
+	// computed up-front so `spellcasting_mod` reads the primary caster; base_speed is the species speed.
 	const abilityMods = {} as Record<Ability, number>;
 	for (const ab of ABILITIES) abilityMods[ab] = abilityModifier(scores[ab]);
 	const classLevels: Record<string, number> = {};
@@ -283,17 +281,87 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			(classLevels[c.classId] ?? 0) > (best ? (classLevels[best.classId] ?? 0) : -1) ? c : best,
 		undefined
 	);
-	const exprCtx: ExprContext | undefined = character.play.autoCalc
-		? makeExprContext({
-				level,
-				proficiencyBonus: prof,
-				abilityMods,
-				abilityScores: scores,
-				classLevels,
-				spellcastingMod: primaryCaster ? abilityMods[primaryCaster.ability] : 0,
-				baseSpeed
-			})
-		: undefined;
+	const buildVars: BuildVars = {
+		level,
+		proficiencyBonus: prof,
+		abilityMods,
+		abilityScores: scores,
+		classLevels,
+		spellcastingMod: primaryCaster ? abilityMods[primaryCaster.ability] : 0,
+		baseSpeed
+	};
+
+	// base max HP (pre-effect) — computed EARLY because the play ctx's `hp_max`/`hp_percent`/
+	// `is_bloodied` guards read it (§8.4). classes[0] grants the max hit die; multiclasses avg-up (RAW).
+	const hpContribs = build.classes.map((c, i) => {
+		const row = graph.get(c.class);
+		const hitDie = String((row?.type === 'class' ? row.data.hit_die : undefined) || 'd8');
+		return maxHpForClass({
+			hitDie,
+			level: c.level,
+			conScore: scores.con,
+			includesCharacterLevel1: i === 0
+		});
+	});
+	const maxHpBase: Computed = hpContribs.length
+		? {
+				value: hpContribs.reduce((n, h) => n + h.value, 0),
+				trace: hpContribs.flatMap((h) => h.trace)
+			}
+		: maxHpForClass({ hitDie: 'd8', level, conScore: scores.con, includesCharacterLevel1: true });
+
+	// equipped armor — shared by the AC math below and the `armor_type`/`is_wearing_armor` guards.
+	const equippedArmor = build.inventory
+		.map((i) => (i.equipped ? graph.get(i.item) : undefined))
+		.find((r): r is LoadedRowOf<'item'> => r?.type === 'item' && r.data.category === 'armor');
+
+	// The ONE resolve stage (EXPR-3, D7/B21): build the full build+play ctx, then gather → guards →
+	// expand → the guard-stripped effect list every consumer below reads. Active conditions (for
+	// `has_condition`/`is_raging`) come from `apply_condition` tokens; a guarded effect that RAISES
+	// hp_max is not fed back into the same-pass guards (the rare DAG case, deferred per the spec).
+	const conditions = new Set<string>();
+	for (const eff of active)
+		for (const t of eff.tokens) {
+			const p = parseEffect(splitGuard(t).token);
+			if (p.kind === EFFECT_KIND.applyCondition && p.target) conditions.add(p.target.trim());
+		}
+	let exprCtx: ExprContext | undefined;
+	let resolved: ResolvedEffects = { effects: [], issues: [] };
+	if (character.play.autoCalc) {
+		const buildCtx = makeExprContext(buildVars);
+		const resources: Record<string, number> = {};
+		const resourceMax: Record<string, number> = {};
+		for (const r of collectResources(active, buildCtx)) {
+			resourceMax[r.id] = r.max;
+			resources[r.id] = Math.max(0, r.max - (character.play.resourcesSpent[r.id] ?? 0));
+		}
+		const hpMaxGuard = character.play.hp.max ?? maxHpBase.value;
+		const playVars: PlayVars = {
+			hp: character.play.hp.current,
+			hpMax: hpMaxGuard,
+			tempHp: character.play.hp.temp,
+			exhaustion: character.play.exhaustion,
+			flags: {
+				is_bloodied: character.play.hp.current <= hpMaxGuard / 2,
+				is_concentrating: character.play.concentration != null,
+				is_wearing_shield: character.play.shieldRaised,
+				is_wearing_armor: !!equippedArmor,
+				is_raging: conditions.has('rage')
+			},
+			conditions,
+			resources,
+			resourceMax,
+			armorType: armorWeightOf(equippedArmor),
+			size: String(speciesRow?.type === 'species' ? speciesRow.data.size : 'medium')
+		};
+		exprCtx = makeExprContext(buildVars, playVars);
+		const expandCondition = (condId: string) => {
+			const cond = graph.rows.find((r) => r.type === 'condition' && r.id === condId);
+			const toks = tokensOf(cond);
+			return cond && toks.length ? { source: String(cond.data.name_en), tokens: toks } : undefined;
+		};
+		resolved = resolveActiveEffects(active, exprCtx, expandCondition);
+	}
 
 	// proficiencies granted by effects (item/feat/feature): `grant_proficiency:[expertise:]<target>`
 	// where target is a save (`con` / `save.con`) or a skill id (`stealth` — the parser already
@@ -302,20 +370,19 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	// proficient there).
 	const grantedSaves = new Set<Ability>();
 	const grantedSkills = new Map<string, SkillProficiency>();
-	if (character.play.autoCalc)
-		for (const eff of active)
-			for (const t of eff.tokens) {
-				const p = parseEffect(t);
-				if (p.kind !== EFFECT_KIND.grantProficiency || !p.target) continue;
-				const raw = p.target.trim();
-				const tgt = raw.replace(/^save\./, '');
-				if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
-				else
-					grantedSkills.set(
-						raw,
-						maxProf(grantedSkills.get(raw) ?? 'none', p.proficiency ?? 'proficient')
-					);
-			}
+	for (const eff of resolved.effects)
+		for (const t of eff.tokens) {
+			const p = parseEffect(t);
+			if (p.kind !== EFFECT_KIND.grantProficiency || !p.target) continue;
+			const raw = p.target.trim();
+			const tgt = raw.replace(/^save\./, '');
+			if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
+			else
+				grantedSkills.set(
+					raw,
+					maxProf(grantedSkills.get(raw) ?? 'none', p.proficiency ?? 'proficient')
+				);
+		}
 
 	// saves: proficient if the ability is in build.saves (or any class's saves), or effect-granted
 	const classSaves = new Set<Ability>([...(build.saves as Ability[]), ...grantedSaves]);
@@ -338,7 +405,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			score: scores[ab],
 			baseScore: build.abilities[ab],
 			mod: abilityModifier(scores[ab]),
-			save: applyEffects(`save.${ab}`, base, active, exprCtx)
+			save: applyEffects(`save.${ab}`, base, resolved.effects, exprCtx)
 		};
 	}
 
@@ -363,18 +430,15 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			expertise: prof === 'expertise',
 			halfProficient: prof === 'half'
 		});
-		skills[skill] = { ...applyEffects(`skill.${skill}`, base, active, exprCtx), prof };
+		skills[skill] = { ...applyEffects(`skill.${skill}`, base, resolved.effects, exprCtx), prof };
 	}
 
-	// AC: equipped armor + shield, else unarmored; then effects
+	// AC: equipped armor (found above for the armor_type guard) + shield, else unarmored; then effects
 	let acBase: Computed;
-	const armor = build.inventory
-		.map((i) => (i.equipped ? graph.get(i.item) : undefined))
-		.find((r): r is LoadedRowOf<'item'> => r?.type === 'item' && r.data.category === 'armor');
-	if (armor) {
-		const capRaw = armor.data.armor_dex_cap;
+	if (equippedArmor) {
+		const capRaw = equippedArmor.data.armor_dex_cap;
 		const dexCap = capRaw === '' || capRaw == null ? null : num(capRaw);
-		acBase = armoredAC({ armorBaseAc: num(armor.data.ac), dexScore: scores.dex, dexCap });
+		acBase = armoredAC({ armorBaseAc: num(equippedArmor.data.ac), dexScore: scores.dex, dexCap });
 	} else {
 		acBase = unarmoredAC({ dexScore: scores.dex });
 	}
@@ -386,29 +450,11 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			value: acBase.value + 2,
 			trace: [...acBase.trace, { source: 'Shield', layer: 'item', op: 'add', amount: 2 }]
 		};
-	const ac = applyEffects('ac', acBase, active, exprCtx);
+	const ac = applyEffects('ac', acBase, resolved.effects, exprCtx);
 
-	// HP: sum per class (SRD fixed); CON uses effective score. `classes[0]` IS the class taken at
-	// character level 1 (BuildVM preserves add-order) → only it grants the max hit die; later
-	// multiclasses get avg-up on every level, including their first (RAW multiclass HP).
-	const hpContribs = build.classes.map((c, i) => {
-		const row = graph.get(c.class);
-		const hitDie = String((row?.type === 'class' ? row.data.hit_die : undefined) || 'd8');
-		return maxHpForClass({
-			hitDie,
-			level: c.level,
-			conScore: scores.con,
-			includesCharacterLevel1: i === 0
-		});
-	});
-	const maxHpBase: Computed = hpContribs.length
-		? {
-				value: hpContribs.reduce((n, h) => n + h.value, 0),
-				trace: hpContribs.flatMap((h) => h.trace)
-			}
-		: maxHpForClass({ hitDie: 'd8', level, conScore: scores.con, includesCharacterLevel1: true });
-	// hp_max flows through the seam like every other stat (Toughness, Aid → `flat_bonus:hp_max+N`)
-	const maxHp = applyEffects('hp_max', maxHpBase, active, exprCtx);
+	// HP: `maxHpBase` computed early (above, for the hp guards). hp_max flows through the seam like
+	// every other stat (Toughness, Aid → `flat_bonus:hp_max+N`).
+	const maxHp = applyEffects('hp_max', maxHpBase, resolved.effects, exprCtx);
 
 	// speed from species (base_speed, computed above for the expr ctx)
 	const speed = applyEffects(
@@ -424,7 +470,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 				}
 			]
 		},
-		active,
+		resolved.effects,
 		exprCtx
 	);
 
@@ -433,14 +479,13 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		// then `passive.<skill>`-targeted effects (Observant) fold in through the seam.
 		let adv = false;
 		let dis = false;
-		if (character.play.autoCalc)
-			for (const eff of active)
-				for (const t of eff.tokens) {
-					const p = parseEffect(t);
-					if (!matchesTarget(p.target, `skill.${skill}`)) continue;
-					if (p.kind === EFFECT_KIND.advantage) adv = true;
-					else if (p.kind === EFFECT_KIND.disadvantage) dis = true;
-				}
+		for (const eff of resolved.effects)
+			for (const t of eff.tokens) {
+				const p = parseEffect(t);
+				if (!matchesTarget(p.target, `skill.${skill}`)) continue;
+				if (p.kind === EFFECT_KIND.advantage) adv = true;
+				else if (p.kind === EFFECT_KIND.disadvantage) dis = true;
+			}
 		let base = passiveScore(skills[skill]);
 		if (adv !== dis)
 			base = {
@@ -456,21 +501,20 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 					}
 				]
 			};
-		return applyEffects(`passive.${skill}`, base, active, exprCtx);
+		return applyEffects(`passive.${skill}`, base, resolved.effects, exprCtx);
 	};
 
 	// damage defenses from effects: `resist_immune:<resist|immune|vulnerable>:<type>` (a bare
 	// `resist_immune:<type>` defaults to resistance).
 	const defenses = { resist: [] as string[], immune: [] as string[], vulnerable: [] as string[] };
-	if (character.play.autoCalc)
-		for (const eff of active)
-			for (const t of eff.tokens) {
-				const p = parseEffect(t);
-				if (p.kind !== EFFECT_KIND.resistImmune || !p.target) continue;
-				const bucket = p.defense ?? 'resist';
-				const type = p.target.trim();
-				if (!defenses[bucket].includes(type)) defenses[bucket].push(type);
-			}
+	for (const eff of resolved.effects)
+		for (const t of eff.tokens) {
+			const p = parseEffect(t);
+			if (p.kind !== EFFECT_KIND.resistImmune || !p.target) continue;
+			const bucket = p.defense ?? 'resist';
+			const type = p.target.trim();
+			if (!defenses[bucket].includes(type)) defenses[bucket].push(type);
+		}
 
 	// spellcasting: per-class profiles + shared/pact slot pools (fixes multiclass DCs, L11) — computed
 	// up-front (above) so `spellcasting_mod` is available to the expr ctx.
@@ -481,7 +525,12 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		abilities,
 		skills,
 		ac,
-		initiative: applyEffects('initiative', initiativeOf({ dexScore: scores.dex }), active, exprCtx),
+		initiative: applyEffects(
+			'initiative',
+			initiativeOf({ dexScore: scores.dex }),
+			resolved.effects,
+			exprCtx
+		),
 		speed,
 		maxHp,
 		passives: {
@@ -491,8 +540,9 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		},
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
 		defenses,
-		resources: character.play.autoCalc ? collectResources(active, exprCtx) : [],
+		resources: collectResources(resolved.effects, exprCtx),
 		spellcasting,
-		missing
+		missing,
+		deriveIssues: resolved.issues
 	};
 }

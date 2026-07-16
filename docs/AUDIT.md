@@ -165,7 +165,8 @@ Deep effects-system review, 2026-07-16 (A8–A18):
 
 Deep effects-system review, 2026-07-16 (B12–B26):
 
-- [ ] **B12 · The loader REJECTS unknown effect kinds — violates "unknown → inert note".**
+- [x] **B12 · The loader REJECTS unknown effect kinds — violates "unknown → inert note".** DONE:
+  `effectsField` no longer refines; tokens are kept verbatim and classified downstream.
   `content/schemas.ts:91` (`effectsField` refine) fails the whole ROW when a token doesn't start
   with a known kind. Consequence: ANY vocabulary growth (L2 guards start with a condition, not a
   kind; `plugin:`; future `reroll:`/`min_die:`) is a breaking change — new content kills rows in
@@ -281,7 +282,10 @@ Deep effects-system review, 2026-07-16 (B12–B26):
 
 Deep effects-system review, 2026-07-16 (D7–D19):
 
-- [ ] **D7 · Token scans scattered across ~8 sites; no resolve stage.** `applyEffects` (per stat)
+- [~] **D7 · Token scans scattered across ~8 sites; no resolve stage.** MOSTLY DONE (EXPR-3):
+  `resolveActiveEffects` is the one stage (gather→guards→expand→stripped list); every derive scan +
+  `applyEffects` now reads that single resolved list, not raw `active`. Remaining: the scans aren't
+  yet merged into a single typed-facts object (they still re-`parseEffect` the shared list). `applyEffects` (per stat)
   + `abilityBonus` (derive.ts:236) + the grant_proficiency scan (:270) + the defenses scan (:431)
   + `passiveOf` adv/dis (:402) + `apply_condition` expansion (:217) + `collectResources`/
   `collectFlags` + `rollEffectsFor` + `TurnEconomy.slotMax` + `speciesFixedAbilities`

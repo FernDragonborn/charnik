@@ -328,3 +328,55 @@ describe('deriveSheet · L2 value expressions (EXPR-2)', () => {
 		expect(ki?.max).toBe(6);
 	});
 });
+
+describe('deriveSheet · L2 condition guards (EXPR-3)', () => {
+	async function guardGraph(): Promise<ContentGraph> {
+		const st = new MemoryStorage();
+		await st.write(
+			'c/classes_srd.csv',
+			[
+				'id,systems,source,name_en,hit_die,saves',
+				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`
+			].join('\n')
+		);
+		await st.write(
+			'c/species_srd.csv',
+			[
+				'id,systems,source,name_en,effects,size,speed,creature_type',
+				// Unarmored Defense: only applies with no armor; a CON-save bonus while bloodied
+				`brute,5.5e,${S},Brute,armor_type==none ? set_override:ac:13; is_bloodied ? flat_bonus:save.con+2,medium,30,humanoid`
+			].join('\n')
+		);
+		const g = await loadContent(st, ['c']);
+		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
+		return g;
+	}
+
+	function brute(hpCurrent: number, hpMax: number): Character {
+		const c = newCharacter('grog', 'Grog', '5.5e');
+		c.build.species = `species:${S}:brute`;
+		c.build.classes = [{ class: `class:${S}:barbarian`, level: 5 }];
+		c.build.abilities = { str: 16, dex: 14, con: 16, int: 8, wis: 10, cha: 8 };
+		c.play.hp = { current: hpCurrent, max: hpMax, temp: 0 };
+		return characterSchema.parse(c);
+	}
+
+	it('applies an enum-guarded override only when the guard holds', async () => {
+		const g = await guardGraph();
+		// no armor → Unarmored Defense sets AC to 13 (overrides the 10+dex base)
+		const healthy = deriveSheet(brute(50, 50), g);
+		expect(healthy.ac.value).toBe(13);
+	});
+
+	it('applies a bloodied guard only below half HP', async () => {
+		const g = await guardGraph();
+		// CON save base = +3 mod + 3 prof (barbarian) = 6; bloodied adds +2
+		expect(deriveSheet(brute(50, 50), g).abilities.con.save.value).toBe(6); // healthy: no bonus
+		expect(deriveSheet(brute(20, 50), g).abilities.con.save.value).toBe(8); // bloodied (≤25): +2
+	});
+
+	it('reports no derive issues on clean guarded content', async () => {
+		const g = await guardGraph();
+		expect(deriveSheet(brute(50, 50), g).deriveIssues).toEqual([]);
+	});
+});

@@ -1097,27 +1097,29 @@ it is L1 work, not just an expression parser.
 
 **Phases:**
 
-- [ ] **EXPR-1 · Parser + evaluator (pure, zero pipeline wiring).** The expression language in
-  isolation: tokenizer → recursive-descent/Pratt parser → AST → evaluator over a plain `ctx` object;
-  whitelisted vars/functions enforced at parse (unknown ident → parse error → fallback, not a
-  runtime surprise); the number-OR-dice-formula value type; bounded depth. Reuse existing surface
-  (dice-term parsing from `rules/dice.ts`, `splitList`) rather than re-deriving. Tests: golden values
-  hand-derived from SRD; malformed/undefined-var/div-by-zero → defined fallback; fast-check
-  invariants (evaluation total over the whitelisted domain never throws; determinism). Proves the
-  language with no derive risk (mirrors PLG-1's "prove the seam first" discipline).
-- [ ] **EXPR-2 · Value expressions in tokens + the `ctx` contract.** Widen `parseEffect` so
-  `flat_bonus`/`set_override`/`grant_resource` accept an expression where a literal was; resolve
-  against `ctx` in the derive; dice-producing expressions ride the roller; result cost-clamped;
-  malformed → inert note. **Lands the build-time `ctx` subset** (system/level/prof/abilities/
-  classLevels) as the ONE authoritative definition L3 will reuse. No conditions yet.
-- [ ] **EXPR-3 · Condition guards + the conditional-derive core (the big one).** Add the
-  condition-first `<cond-expr> ? <token>` guard (the ternary `?` without an else); the guard gates
-  the contribution; this lands the **conditional `ctx`**
-  (dependency-resolved play-state: hp/bloodied/flags/resources) and the resolution model from the
-  state-model decision — dependency-order single pass (real content ≈ empty graph), cycle detection
-  → content-health, the visible reorderable order + GitHub report loop. This is where derive becomes
-  conditional and where the authoritative derive-pipeline description (review #6) is written. Golden
-  rules tests per edition (`describe.each(['5e','5.5e'])`), incl. the Bloodied per-system seam.
+- [x] **EXPR-1 · Parser + evaluator (pure, zero pipeline wiring).** DONE — `src/lib/effects/expr.ts`
+  (+ `expr.test.ts`, 36 tests). Tokenizer (positional `d` disambiguation) → precedence parser → AST →
+  evaluator over an `ExprContext` resolver; whitelisted vars/enums/functions enforced at parse;
+  number-OR-dice(`{pool,flat}`) value type; bounded depth+length; Result types (never throws).
+  fast-check: never-throws over the domain, determinism.
+- [x] **EXPR-2 · Value expressions in tokens + the `ctx` contract.** DONE — `parseEffect` widened
+  (literal fast-path kept for back-compat + kebab targets); `resolveEffectValue` evaluates the expr
+  (floored+clamped number, or dice→roller formula, or inert-note error). `makeExprContext`
+  (`effects/context.ts`) is the ONE authoritative build-ctx (SPEC2 effective vars); `derive.ts`
+  builds it once and threads it through every `applyEffects`/`collectResources`. Tests in
+  `context.test.ts` + derive integration.
+- [x] **EXPR-3 · Condition guards + the conditional-derive core.** DONE (single-pass) —
+  `splitGuard` + `resolveActiveEffects` (the ONE resolve stage, closes D7/B21): gather → evaluate
+  guards (drop false/errored) → expand `apply_condition` after guards (SPEC7) → guard-stripped list
+  every consumer reads. Play-ctx (hp/hp_percent/is_bloodied/flags/conditions/resources/armor_type/
+  size) built in derive; `deriveIssues` channel surfaces guard/expr failures (SPEC10). Tests in
+  `resolve.test.ts` + derive guard integration (Unarmored Defense enum guard, bloodied save bonus).
+  **Deferred within EXPR-3 (documented, not blocking):** the full dependency-order DAG + cycle
+  detection + the reorderable-order UI — real content is a single pass (the graph is ≈ empty), so a
+  guarded effect that RAISES a value another guard reads (e.g. rage +maxHP feeding is_bloodied in the
+  SAME derive) is the rare case not yet fed back; and full **A10** (folding ability-score bonuses
+  through the pipeline as expressions) stays the literal-sum cascade for now. Both are follow-ups on
+  top of the working guard core.
 
 Deferred to L3/onEvent (NOT L2): stateful transitions, latches, actions, anything that WRITES state
 — L2 only READS `ctx` and produces contributions. Keep the layer honest: it is a pure read-only

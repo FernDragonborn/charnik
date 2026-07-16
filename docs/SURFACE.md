@@ -552,6 +552,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ResolvedValue` — A resolved value for a `flat_bonus`/`set_override`/`grant_resource` token: a folded numeric * `amount`, a `diceFormul…
 - `function resolveEffectValue` — * Resolve a token's value slot to a concrete quantity.
 - `interface ActiveEffect` — A runtime effect source contributing tokens at a pipeline layer.
+- `interface GuardedToken` — A token split into its optional condition GUARD and the effect part.
+- `function splitGuard`
+- `interface ResolvedEffects` — The one resolve stage (EXPR-3; closes D7/B21): gather → evaluate guards (drop false/errored) → * expand `apply_condit…
+- `function resolveActiveEffects`
 - `function matchesTarget` — Does an effect target apply to this stat key?
 - `interface EffectFlags`
 - `function applyEffects` — * The seam: compose effects onto a core-computed stat for `targetKey`.
@@ -700,4 +704,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into a URL/id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single dash, …
 
 ---
-_46 tokens · 50 global classes · 34 components · 355 exports across 55 modules · 33 duplicate suspects · generated in 112ms._
+_46 tokens · 50 global classes · 34 components · 359 exports across 55 modules · 33 duplicate suspects · generated in 106ms._

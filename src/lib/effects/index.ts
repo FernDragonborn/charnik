@@ -174,6 +174,76 @@ export interface ActiveEffect {
 	tokens: string[];
 }
 
+/** A token split into its optional condition GUARD and the effect part. The L2 guard is
+ *  condition-FIRST (`is_raging ? advantage:attack`); `?` never appears elsewhere (expressions use
+ *  `if()`, not `?:`, and `:` is structural), so splitting on the first `?` is unambiguous. */
+export interface GuardedToken {
+	guard?: string;
+	token: string;
+}
+export function splitGuard(raw: string): GuardedToken {
+	const q = raw.indexOf('?');
+	if (q === -1) return { token: raw.trim() };
+	return { guard: raw.slice(0, q).trim(), token: raw.slice(q + 1).trim() };
+}
+
+/** The one resolve stage (EXPR-3; closes D7/B21): gather → evaluate guards (drop false/errored) →
+ *  expand `apply_condition` one level (its own tokens are guard-checked too) → the surviving,
+ *  guard-STRIPPED tokens every consumer reads. A guard that errors or isn't boolean drops its token
+ *  and is recorded in `issues` (SPEC10 → content-health), never throwing. `expandCondition` is
+ *  injected (the graph lives in the caller) so this stays free of content-loader deps. */
+export interface ResolvedEffects {
+	effects: ActiveEffect[];
+	issues: string[];
+}
+export function resolveActiveEffects(
+	active: ActiveEffect[],
+	ctx: ExprContext,
+	expandCondition: (condId: string) => { source: string; tokens: string[] } | undefined
+): ResolvedEffects {
+	const issues: string[] = [];
+	/** Keep the tokens whose guard passes, stripped of the guard; a bad guard → issue + drop. */
+	const passGuards = (source: string, tokens: string[]): string[] => {
+		const kept: string[] = [];
+		for (const raw of tokens) {
+			const g = splitGuard(raw);
+			if (g.guard !== undefined) {
+				const r = evalExpression(g.guard, ctx);
+				if (!r.ok) {
+					issues.push(`${source}: bad guard "${g.guard}" (${r.error})`);
+					continue;
+				}
+				if (r.value.type !== 'number') {
+					issues.push(`${source}: guard "${g.guard}" is not a condition`);
+					continue;
+				}
+				if (r.value.value === 0) continue; // condition false → token doesn't apply
+			}
+			kept.push(g.token);
+		}
+		return kept;
+	};
+
+	const out: ActiveEffect[] = [];
+	for (const eff of active) {
+		const kept = passGuards(eff.source, eff.tokens);
+		if (kept.length) out.push({ source: eff.source, layer: eff.layer, tokens: kept });
+	}
+	// expand apply_condition AFTER guards (SPEC7 order); one level, no recursive cascade
+	for (const eff of [...out]) {
+		for (const token of eff.tokens) {
+			const p = parseEffect(token);
+			if (p.kind !== EFFECT_KIND.applyCondition || !p.target) continue;
+			const c = expandCondition(p.target.trim());
+			if (!c) continue;
+			const kept = passGuards(`${eff.source} → ${c.source}`, c.tokens);
+			if (kept.length)
+				out.push({ source: `${eff.source} → ${c.source}`, layer: 'condition', tokens: kept });
+		}
+	}
+	return { effects: out, issues };
+}
+
 /** Does an effect target apply to this stat key? Exact, plus the `saves` group → `save.*`. */
 export function matchesTarget(effTarget: string | undefined, key: string): boolean {
 	if (!effTarget) return false;
