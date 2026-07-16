@@ -11,7 +11,8 @@
 
 export const CONTENT_SCHEMA_VERSION = 1;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
-export const CHARACTER_SCHEMA_VERSION = 2;
+// v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
+export const CHARACTER_SCHEMA_VERSION = 3;
 
 export interface Versioned {
 	schemaVersion: number;

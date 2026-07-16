@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import { characterSchema, newCharacter, type Character } from './schema';
+import { CHARACTER_SCHEMA_VERSION } from '../schema/version';
 import {
 	saveCharacter,
 	loadCharacter,
@@ -39,6 +40,14 @@ describe('character schema', () => {
 		(c.build.abilities as Record<string, number>).str = 40;
 		expect(characterSchema.safeParse(c).success).toBe(false);
 	});
+
+	it('accepts a snake_case id — what slugify makes of any multi-word name (E3 regression)', () => {
+		// slugify('Bob the Brave') → 'bob_the_brave'; the schema refusing `_` made saving impossible
+		const c = newCharacter('bob_the_brave', 'Bob the Brave', '5e');
+		expect(characterSchema.safeParse(c).success).toBe(true);
+		// pre-E3 kebab ids in existing saves stay loadable
+		expect(characterSchema.safeParse(newCharacter('elf-1', 'Aria', '5e')).success).toBe(true);
+	});
 });
 
 describe('character migration v1→v2 (E3 kebab→snake refs)', () => {
@@ -75,7 +84,7 @@ describe('character migration v1→v2 (E3 kebab→snake refs)', () => {
 		const res = await loadCharacter(s, 'grog');
 		expect(res.ok).toBe(true);
 		const c = res.character!;
-		expect(c.schemaVersion).toBe(2);
+		expect(c.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION); // chained through every step
 		expect(c.build.species).toBe('species:SRD 5.2.1:half_orc'); // id snaked, "SRD 5.2.1" source kept
 		expect(c.build.background).toBe('background:SRD 5.2.1:folk_hero');
 		expect(c.build.classes[0]!.subclass).toBe('subclass:SRD 5.2.1:path_of_the_berserker');
@@ -85,6 +94,36 @@ describe('character migration v1→v2 (E3 kebab→snake refs)', () => {
 		expect(c.build.inventory[0]!.item).toBe('item:SRD 5.2.1:studded_leather');
 		expect(c.build.spells[0]!.spell).toBe('spell:SRD 5.2.1:fire_bolt');
 		expect(c.play.concentration).toBe('spell:SRD 5.2.1:hold_person');
+	});
+
+	it('v2→v3 re-snakes refs a v2 save still carried in kebab (the seeded demo)', async () => {
+		const s = new MemoryStorage();
+		// the pre-fix seeded demo: written AT v2 (so v1→v2 never ran) with kebab refs
+		const v2 = {
+			schemaVersion: 2,
+			id: 'valen',
+			system: '5.5e',
+			build: {
+				name: 'Valen',
+				abilities: { str: 8, dex: 14, con: 14, int: 16, wis: 12, cha: 10 },
+				species: 'species:SRD 5.2.1:elf',
+				speciesOption: 'species_option:SRD 5.2.1:elf-high-elf',
+				classes: [{ class: 'class:SRD 5.2.1:wizard', level: 3 }],
+				inventory: [
+					{ item: 'item:SRD 5.2.1:leather-armor', qty: 1, equipped: true, attuned: false }
+				],
+				spells: [{ spell: 'spell:SRD 5.2.1:fire-bolt', prepared: true, alwaysPrepared: false }]
+			},
+			play: { hp: { current: 14, temp: 0 } }
+		};
+		await s.write('characters/valen/character.json', JSON.stringify(v2));
+		const res = await loadCharacter(s, 'valen');
+		expect(res.ok).toBe(true);
+		const c = res.character!;
+		expect(c.schemaVersion).toBe(CHARACTER_SCHEMA_VERSION);
+		expect(c.build.speciesOption).toBe('species_option:SRD 5.2.1:elf_high_elf');
+		expect(c.build.inventory[0]!.item).toBe('item:SRD 5.2.1:leather_armor');
+		expect(c.build.spells[0]!.spell).toBe('spell:SRD 5.2.1:fire_bolt');
 	});
 });
 

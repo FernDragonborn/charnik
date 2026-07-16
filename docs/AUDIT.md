@@ -208,15 +208,14 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   immune/vulnerable render in CombatStrip and are never applied. Blocked by data too: spell
   damage type is unstructured (`damage: "8d6 fire"` one string; `items.damage_type` exists but
   the HP flow takes a bare number).
-- [ ] **B21 · Split-brain effect consumers (three universes).** Derive uses `gatherEffects` (full:
-  species/features/items/runtime + condition expansion); the ROLL path uses
-  `rollEffectsFor(c.play.effects)` (`combat/state.svelte.ts:248`) and the ACTION ECONOMY uses
-  `slotMax` over `play.effects` — both see ONLY runtime effects. Consequences: a magic weapon's
-  `flat_bonus:attack+1` or a feature's `advantage:...` never reaches rolls; Action Surge as a
-  content feature can't grant an action; `apply_condition:poisoned` added via the panel gives
-  stat penalties but NO disadvantage on attack rolls (expansion lives only in gatherEffects).
-  Fix = one resolve stage (gather → guards → expansion → dedupe → typed effective facts) that
-  every consumer reads. Cross-ref D7.
+- [x] **B21 · Split-brain effect consumers (three universes).** FIXED 2026-07-16 (L2R-6): the
+  sheet exposes `resolvedEffects` (the one resolve stage's output — guards evaluated, conditions
+  expanded, item/feature effects included) and BOTH `rollEffectsFor` (combat rolls) and
+  `TurnEconomy.slotMax` (action economy) consume it instead of raw `play.effects`. A magic
+  weapon's `flat_bonus:attack+1`, a feature's `advantage:…`, Action-Surge-as-content and
+  panel-applied condition expansion now reach rolls/economy. Remaining (→ D7): the scans still
+  re-`parseEffect` the shared list rather than reading typed facts; expression-valued
+  attack/damage bonuses still resolve only sheet-side.
 - [ ] **B22 · Duplicate `source:id` rows apply twice.** The loader dedupes only `byEffectiveId`
   (`loader.ts:327-337`) but keeps both rows in `graph.rows` — the class-feature scan and
   condition expansion iterate `graph.rows` directly, so a duplicated id contributes its tokens
@@ -626,6 +625,90 @@ gate EXPR-1/2 or PLG-2.
 - [x] **SPEC14 · Post-rename doc drift:** PLAN still spells `grant-slot` (kebab) in the
   spellcasting design; PLAN L11's note "deriveSheet returns only the FIRST caster" is stale (core
   is per-class; the collapse is in the UI, A18).
+
+## L2R · Post-EXPR-2/3 implementation review (2026-07-16, fresh-eyes pass over the L2 code)
+
+Found by a review of the freshly-landed EXPR-2/3 commits (f250c68, 7b71b4e) + E3 (f11fab4);
+ALL FIXED SAME DAY unless marked open. Kept for the record — the IDs are referenced from tests.
+
+- [x] **L2R-1 · E3 broke saving any multi-word character.** `character/schema.ts` slug regex
+  allowed hyphens but NOT underscores while post-E3 `slugify` emits snake_case →
+  `saveCharacter` refused every id like `bob_the_brave`. FIXED: regex accepts `[a-z0-9_-]`
+  (hyphens stay for pre-E3 saves); regression test in character.test.ts.
+- [x] **L2R-2 · Guard ctx was fail-open for conditions (and self-fulfilling).** derive built the
+  `conditions` set from ALL `apply_condition` tokens with guards STRIPPED but not evaluated —
+  `hp_percent<=25 ? apply_condition:rage` set `is_raging` at full HP; `has_condition.x ?
+  apply_condition:x` bootstrapped itself. FIXED: two-pass resolve (pass 1 = empty
+  condition/resource state → survivors define conditions/resources → pass 2 = authoritative);
+  also closes the ctx-resources inconsistency (guarded grant_resource pools now feed guards).
+- [x] **L2R-3 · A guard parse/eval error DROPPED the token** — violated the pinned "degrades to
+  inert text, never dropped" fallback; any free-text unknown token containing `?` also vanished.
+  FIXED: broken guard → issue + token kept verbatim (parses as `unknown` → inert note).
+- [x] **L2R-4 · `set_override` resolving to dice vanished silently** (applyEffects handled only
+  amount/error). FIXED: degrades to an "unresolved" note.
+- [x] **L2R-5 · Ability-score targets silently ignored L2** (extends A10): a guarded or
+  expression-valued `flat_bonus:str+…` and any `set_override:<ability>` disappeared with no
+  trace. FIXED: surfaced as deriveIssues ("not applied — awaits the DAG"); still NOT applied —
+  the ability-stage DAG itself stays deferred (A10 remains open for clamp/trace/pipeline).
+- [x] **L2R-6 · Roll path + action economy read raw `play.effects`** — guarded tokens parsed as
+  `unknown` and lost their advantage/dice even when true; content-borne effects never reached
+  rolls (B21). FIXED: sheet exposes `resolvedEffects` (the one resolve stage's output);
+  `rollEffectsFor` + `TurnEconomy.slotMax` consume it. Closes the roll/economy halves of B21.
+- [x] **L2R-7 · `spellcasting_mod` ignored the carrying class** (SPEC4 pins: a class feature's
+  token reads THAT class's mod). FIXED: `ActiveEffect.classId` + per-effect ctx provider
+  (`withSpellcastingMod`); unscoped tokens keep the primary caster.
+- [x] **L2R-8 · deriveIssues had no consumer and a string shape.** FIXED: `EffectIssue
+  {source, token, reason}` (SPEC10 shape); combat page publishes the open character's issues via
+  the `deriveHealth` store; ContentHealth renders them + a static `lintEffectTokens` pass
+  (mixed-type `if()` warn, `unusual die dN` warn — the spec-promised soft warns).
+- [x] **L2R-9 · Chained comparisons silently wrong:** `5<=level<=10` parsed as `(5<=level)<=10`
+  → always true. FIXED: a chain is a parse error ("use and").
+- [x] **L2R-10 · Enum `!=` matched on an ABSENT enum var** (`armor_type!=heavy` true with no play
+  ctx) — contradicted SPEC4 fail-closed. FIXED: absent enum fails every comparison.
+- [x] **L2R-11 · Dotted-id lookups returned inherited Object.prototype members**
+  (`class_level.constructor` → a function → truthy guard). FIXED: `Object.hasOwn` guard in the
+  ctx adapter. Security-hardening (read-only; no pollution was possible).
+- [x] **L2R-12 · Dice cost cap bypassable via addition** (`1000d6+1000d6+…` within the length
+  cap). FIXED: per-side clamp in `addValues` (the roller's parse re-clamp was the only net).
+- [x] **L2R-13 · New duplicates the L2 code added** (against "reuse before you write"): ability
+  list ×2 (expr.ts/context.ts), dice caps re-declared with a "kept in sync" comment, size/armor
+  enum lists, a second dot-split. FIXED: `rules/core` now owns `ABILITY_IDS`/`SIZES`/
+  `ARMOR_TYPES` (schema.ts + content/schemas re-export — two old F3 copies also folded);
+  `rules/dice` exports its caps; expr.ts exports `splitDottedName` + the dotted-family sets.
+  F3's remaining copies (detail.ABILS, combat/helpers.ABIL, inline) still open.
+- [x] **L2R-14 · Per-derive re-parsing** (extends D7's perf note): every stat × token re-ran
+  `parseEffect` AND the L2 expression parser per derive. FIXED: bounded memo caches on both
+  parsers (content token sets are finite; ASTs immutable).
+- [x] **L2R-15 · `grant_resource` still accepted kebab ids** E3 left unreadable from
+  `resource.<id>` expressions. FIXED: id grammar snake-only (kebab degrades to inert+visible,
+  better than a silently unreachable pool).
+- [ ] **L2R-16 · `is_raging` reads a hardcoded `rage` condition id** — now a named const
+  (`RAGE_CONDITION_ID`) but still code, not data; dies with the conditions-as-data ladder (B2).
+
+Second fresh-eyes pass + call-chain walk (2026-07-16, later the same day):
+
+- [x] **L2R-17 · E3 missed the DEMO character — the seed/fallback was fully broken.**
+  `demo/sheet.ts` carried kebab refs (`elf-high-elf`, `leather-armor`, `fire-bolt`, …) and kebab
+  resource ids; it is built FRESH at the current schemaVersion, so the v1→v2 ref migration never
+  touches it — every ref missed against the snake content (combat fallback, first-run roster seed,
+  spellbook page all consume it). FIXED: demo ids snaked (verified against shipped CSVs) AND a
+  **v2→v3 migration** (same idempotent snaking re-run) repairs the already-SEEDED demo saves in
+  users' storage; CHARACTER_SCHEMA_VERSION=3; migration test added. Caught by reading the
+  `demoCharacter() → characterSchema.parse (current version, no migration) → deriveSheet` chain.
+- [x] **L2R-18 · Absent enum var masked authoring errors.** `evalEnumCompare` returned no-match
+  BEFORE validating the literal/operator — `armor_type==tiny` or `size` ordinal misuse reported
+  nothing when the variable was absent. FIXED: membership + ordered-enum checks precede the
+  absence fail-closed return.
+- [x] **L2R-19 · `speciesFixedAbilities` (build picker) didn't strip guards** — a guarded species
+  ASI parsed as `unknown` and escaped the free-choice exclusion. FIXED: `splitGuard` first.
+- [x] **L2R-20 · `gatherEffects` was 6 near-identical push blocks** (one even pushed token-less
+  species rows). FIXED: one `pushRow(row, layer, classId?)` helper.
+- [x] **L2R-21 · `tokensOf` lived in character/derive but is a content-row accessor** — the
+  ContentHealth settings component had to import the derive aggregator for it. FIXED: moved to
+  `content/loader` (its natural home next to `LoadedRow`); derive/combat/settings import it there.
+- Panel path (`groupEffects`/`parseResourceEffect`/`effectTag`) still parses raw `play.effects` —
+  deliberate for the "what did I add" list, but guarded tokens render as unknown there; folds into
+  B14/B17 (panel shows resolved facts) when that lands. NOT fixed here.
 
 ## S · Security / robustness (2026-07-16 review; complements docs/SECURITY.md)
 

@@ -66,8 +66,23 @@ const migrateV1toV2: Migration<Versioned> = (data) => {
 	return { ...d, build, play, schemaVersion: 2 } as unknown as Versioned;
 };
 
+/**
+ * v2→v3: re-run the SAME ref-snaking. Why: the seeded DEMO character was written at v2 with
+ * kebab refs (demo/sheet.ts predated the E3 id rename but was never migrated — it is built fresh,
+ * so migrateV1toV2 never saw it). snakeRef is idempotent on already-snake ids, so re-running is
+ * safe for every legitimate v2 save; only stale kebab refs change.
+ */
+const migrateV2toV3: Migration<Versioned> = (data) =>
+	({
+		...(migrateV1toV2(data) as unknown as Record<string, unknown>),
+		schemaVersion: 3
+	}) as unknown as Versioned;
+
 /** Forward migrations keyed by the version they upgrade FROM. */
-const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = { 1: migrateV1toV2 };
+const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = {
+	1: migrateV1toV2,
+	2: migrateV2toV3
+};
 
 const CHARACTERS_DIR = 'characters';
 const dirOf = (slug: string) => `${CHARACTERS_DIR}/${slug}`;

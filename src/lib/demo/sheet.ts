@@ -10,14 +10,16 @@ const S = 'SRD 5.2.1';
 
 export function demoCharacter(): Character {
 	const c = newCharacter('valen', 'Valen the Blue', '5.5e');
+	// ids are snake_case (E3) — these must match the SHIPPED content ids exactly; the demo is built
+	// fresh at the current schemaVersion, so the v1→v2 ref migration never rewrites it
 	c.build.species = `species:${S}:elf`;
-	c.build.speciesOption = `species_option:${S}:elf-high-elf`; // Elven Lineage: High Elf
+	c.build.speciesOption = `species_option:${S}:elf_high_elf`; // Elven Lineage: High Elf
 	c.build.background = `background:${S}:sage`;
 	c.build.classes = [{ class: `class:${S}:wizard`, level: 3 }];
 	c.build.abilities = { str: 8, dex: 14, con: 14, int: 16, wis: 12, cha: 10 };
 	c.build.skills = ['arcana', 'history', 'investigation', 'perception', 'stealth'];
 	c.build.inventory = [
-		{ item: `item:${S}:leather-armor`, qty: 1, equipped: true, attuned: false },
+		{ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false },
 		{ item: `item:${S}:quarterstaff`, qty: 1, equipped: true, attuned: false },
 		{ item: `item:${S}:dagger`, qty: 2, equipped: true, attuned: false }
 	];
@@ -27,17 +29,17 @@ export function demoCharacter(): Character {
 		alwaysPrepared
 	});
 	c.build.spells = [
-		spell('fire-bolt', false, true),
-		spell('mage-hand', false, true),
-		spell('ray-of-frost', false, true),
-		spell('magic-missile'),
+		spell('fire_bolt', false, true),
+		spell('mage_hand', false, true),
+		spell('ray_of_frost', false, true),
+		spell('magic_missile'),
 		spell('shield'),
-		spell('scorching-ray'),
-		spell('misty-step'),
+		spell('scorching_ray'),
+		spell('misty_step'),
 		spell('fireball'),
 		spell('counterspell', false), // in the spellbook but not prepared (demo of the distinction)
 		spell('fly', false),
-		spell('healing-word') // resolution "auto" → demonstrates the teal auto pill
+		spell('healing_word') // resolution "auto" → demonstrates the teal auto pill
 	];
 	c.play.hp = { current: 14, max: undefined, temp: 5 };
 	c.play.spellSlotsSpent = { '1': 1, '2': 0, '3': 1 };
@@ -75,19 +77,19 @@ export function demoCharacter(): Character {
 		{
 			iid: 'arcane-recovery',
 			label: 'Arcane Recovery',
-			effects: ['grant_resource:arcane-recovery:1:long'],
+			effects: ['grant_resource:arcane_recovery:1:long'], // resource ids snake (E3)
 			positive: true
 		},
 		{
 			iid: 'second-wind',
 			label: 'Second Wind',
-			effects: ['grant_resource:second-wind:1:short'],
+			effects: ['grant_resource:second_wind:1:short'],
 			positive: true
 		},
 		{
 			iid: 'channel-divinity',
 			label: 'Channel Divinity',
-			effects: ['grant_resource:channel-divinity:2:short'],
+			effects: ['grant_resource:channel_divinity:2:short'],
 			positive: true
 		}
 	];
