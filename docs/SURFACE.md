@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (32)
+## Duplicate suspects (33)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -19,12 +19,13 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 - `onKeydown` ×5 — src/lib/components/ConfirmDialog.svelte · src/lib/components/ContentMetaModal.svelte · src/lib/components/HashDriftModal.svelte · src/lib/components/OrphanDialog.svelte · src/lib/components/SchemaDiscardDialog.svelte
 - `norm` ×4 — src/lib/storage/browser.ts · src/lib/storage/memory.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
+- `ABILITIES` ×3 — src/lib/character/schema.ts · src/lib/content/schemas.ts · src/lib/effects/expr.ts
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `load` ×3 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts · src/routes/+layout.ts
+- `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expr.ts
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `signed` ×3 — src/lib/combat/helpers.ts · src/lib/content/detail.ts · src/routes/build/+page.svelte
 - `SYSTEMS` ×3 — src/lib/character/schema.ts · src/lib/components/settings/GeneralSettings.svelte · src/lib/content/schemas.ts
-- `ABILITIES` ×2 — src/lib/character/schema.ts · src/lib/content/schemas.ts
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/state.svelte.ts
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
@@ -34,7 +35,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `label` ×2 — src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
-- `num` ×2 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts
+- `MAX_DIE_SIDES` ×2 — src/lib/effects/expr.ts · src/lib/rules/dice.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `onKey` ×2 — src/lib/components/settings/DataConflictDialog.svelte · src/lib/components/settings/DataMigrationDialog.svelte
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
@@ -53,7 +54,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Identical literal array:**
 
-- `ABILITIES` (src/lib/character/schema.ts) = `ABIL` (src/lib/combat/helpers.ts) = `ABILS` (src/lib/content/detail.ts) = `ABILITIES` (src/lib/content/schemas.ts)
+- `ABILITIES` (src/lib/character/schema.ts) = `ABIL` (src/lib/combat/helpers.ts) = `ABILS` (src/lib/content/detail.ts) = `ABILITIES` (src/lib/content/schemas.ts) = `ABILITIES` (src/lib/effects/expr.ts)
 - `PROSE_BASES` (src/lib/content/schemas.ts) = `TRANSLATABLE_BASES` (src/lib/content/translate.ts)
 
 ## Design tokens (`styles/tokens.css`)
@@ -240,7 +241,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (44 modules)
+## Library functions & types (45 modules)
 
 ### `src/lib/build/derive.ts`
 
@@ -521,6 +522,20 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function findStaleDrafts` — Drafts saved under a DIFFERENT content-schema version — ephemeral WIP that can't be migrated, so it * will be discarded.
 - `function discardDrafts` — Delete the given stale drafts (called after the user acknowledges the discard warning).
 
+### `src/lib/effects/expr.ts`
+
+- `interface DiceValue` — A dice quantity: a pool ({sides: count}) plus a flat modifier, mirroring rules/dice.ts so it * rides the existing rol…
+- `type ExprValue` — The result of evaluating an expression: a plain number OR a dice quantity (PLAN: "int OR dice * formula").
+- `interface Ast`
+- `interface ExprContext` — How the evaluator resolves variables.
+- `type ParseResult`
+- `type EvalResult`
+- `function parseExpression` — Parse an expression string into an AST.
+- `function evaluate` — Evaluate a parsed expression against a context.
+- `function evalExpression` — Parse + evaluate in one step (convenience for callers that don't cache the AST).
+- `function diceToFormula` — Serialize a dice value to a formula string the roller (rules/dice.ts) accepts: "2d6+1d4+3".
+- `function isWhole` — Whether a value is a whole number (dice always are; a number may be fractional mid-expression).
+
 ### `src/lib/effects/index.ts`
 
 - `const EFFECT_KIND` — The bounded effect vocabulary, as named constants — compare against these, never bare strings.
@@ -678,4 +693,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into a URL/id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single dash, …
 
 ---
-_46 tokens · 50 global classes · 34 components · 340 exports across 53 modules · 32 duplicate suspects · generated in 102ms._
+_46 tokens · 50 global classes · 34 components · 351 exports across 54 modules · 33 duplicate suspects · generated in 113ms._
