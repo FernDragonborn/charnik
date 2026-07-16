@@ -14,10 +14,10 @@ const cls = (id: string, caster: string, ab: string) =>
 const SLOTS =
 	'id,systems,source,kind,level,slot_1,slot_2,slot_3,slot_4,slot_5,slot_6,slot_7,slot_8,slot_9';
 const slotRow = (kind: string, level: number, ...s: number[]) =>
-	`${kind}-${level},5.5e,SRD 5.2.1,${kind},${level},${[...s, 0, 0, 0, 0, 0, 0, 0, 0, 0].slice(0, 9).join(',')}`;
+	`${kind}_${level},5.5e,SRD 5.2.1,${kind},${level},${[...s, 0, 0, 0, 0, 0, 0, 0, 0, 0].slice(0, 9).join(',')}`;
 const CAST = 'id,systems,source,class_id,level,cantrips_known,prepared_known';
 const castRow = (c: string, lvl: number, cantrips: number | '', prepared: number) =>
-	`${c}-${lvl},5.5e,SRD 5.2.1,${c},${lvl},${cantrips},${prepared}`;
+	`${c}_${lvl},5.5e,SRD 5.2.1,${c},${lvl},${cantrips},${prepared}`;
 
 let graph: ContentGraph;
 beforeAll(async () => {
@@ -70,7 +70,7 @@ describe('deriveSpellcasting', () => {
 		expect(sc.classes[0]!.ability).toBe('int');
 		expect(sc.classes[0]!.saveDC.value).toBe(14); // 8 + 3(prof L5) + 3(int)
 		expect(sc.classes[0]!.maxSpellLevel).toBe(3); // full@5 → [4,3,2]
-		expect(sc.classes[0]!.preparedCap).toBe(9); // class_casting wizard-5
+		expect(sc.classes[0]!.preparedCap).toBe(9); // class_casting wizard_5
 		expect(sc.pools.map((p) => p.spellLevel)).toEqual([1, 2, 3]); // shared long-rest pool
 	});
 

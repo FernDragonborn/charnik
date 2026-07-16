@@ -2,19 +2,19 @@
 #content-systems: 5.5e
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
-#content-id: 019f374c-ecc9-7891-aea2-aff2042afedd
-#content-updated-at: 2026-07-06
-#content-hash: xxh64:4d75a802e6815a1d
+#content-id: 019f6ae3-f9eb-7a5a-b347-792978e9197c
+#content-updated-at: 2026-07-16
+#content-hash: xxh64:a36fd0552dfc2679
 id,name_en,name_uk,text_en,text_uk,effects,class_id
-path-of-the-berserker,Path of the Berserker,,,,,barbarian
-college-of-lore,College of Lore,,,,,bard
-life-domain,Life Domain,,,,,cleric
-circle-of-the-land,Circle of the Land,,,,,druid
+path_of_the_berserker,Path of the Berserker,,,,,barbarian
+college_of_lore,College of Lore,,,,,bard
+life_domain,Life Domain,,,,,cleric
+circle_of_the_land,Circle of the Land,,,,,druid
 champion,Champion,,,,,fighter
-warrior-of-the-open-hand,Warrior of the Open Hand,,,,,monk
-oath-of-devotion,Oath of Devotion,,,,,paladin
+warrior_of_the_open_hand,Warrior of the Open Hand,,,,,monk
+oath_of_devotion,Oath of Devotion,,,,,paladin
 hunter,Hunter,,,,,ranger
 thief,Thief,,,,,rogue
-draconic-sorcery,Draconic Sorcery,,,,,sorcerer
-fiend-patron,Fiend Patron,,,,,warlock
+draconic_sorcery,Draconic Sorcery,,,,,sorcerer
+fiend_patron,Fiend Patron,,,,,warlock
 evoker,Evoker,,,,,wizard

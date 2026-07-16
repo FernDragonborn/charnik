@@ -41,6 +41,53 @@ describe('character schema', () => {
 	});
 });
 
+describe('character migration v1→v2 (E3 kebab→snake refs)', () => {
+	it('snakes content-ref id segments and skill ids on load, leaving source tags alone', async () => {
+		const s = new MemoryStorage();
+		// a v1 save written before the E3 id migration (kebab ids everywhere)
+		const v1 = {
+			schemaVersion: 1,
+			id: 'grog',
+			system: '5.5e',
+			build: {
+				name: 'Grog',
+				abilities: { str: 16, dex: 12, con: 14, int: 8, wis: 10, cha: 10 },
+				species: 'species:SRD 5.2.1:half-orc',
+				background: 'background:SRD 5.2.1:folk-hero',
+				classes: [
+					{
+						class: 'class:SRD 5.2.1:barbarian',
+						level: 5,
+						subclass: 'subclass:SRD 5.2.1:path-of-the-berserker'
+					}
+				],
+				feats: ['feat:SRD 5.2.1:great-weapon-master'],
+				skills: ['animal-handling', 'sleight-of-hand', 'athletics'],
+				expertise: ['animal-handling'],
+				inventory: [
+					{ item: 'item:SRD 5.2.1:studded-leather', qty: 1, equipped: true, attuned: false }
+				],
+				spells: [{ spell: 'spell:SRD 5.2.1:fire-bolt', prepared: true, alwaysPrepared: false }]
+			},
+			play: { hp: { current: 20, temp: 0 }, concentration: 'spell:SRD 5.2.1:hold-person' }
+		};
+		await s.write('characters/grog/character.json', JSON.stringify(v1));
+		const res = await loadCharacter(s, 'grog');
+		expect(res.ok).toBe(true);
+		const c = res.character!;
+		expect(c.schemaVersion).toBe(2);
+		expect(c.build.species).toBe('species:SRD 5.2.1:half_orc'); // id snaked, "SRD 5.2.1" source kept
+		expect(c.build.background).toBe('background:SRD 5.2.1:folk_hero');
+		expect(c.build.classes[0]!.subclass).toBe('subclass:SRD 5.2.1:path_of_the_berserker');
+		expect(c.build.feats[0]).toBe('feat:SRD 5.2.1:great_weapon_master');
+		expect(c.build.skills).toEqual(['animal_handling', 'sleight_of_hand', 'athletics']);
+		expect(c.build.expertise).toEqual(['animal_handling']);
+		expect(c.build.inventory[0]!.item).toBe('item:SRD 5.2.1:studded_leather');
+		expect(c.build.spells[0]!.spell).toBe('spell:SRD 5.2.1:fire_bolt');
+		expect(c.play.concentration).toBe('spell:SRD 5.2.1:hold_person');
+	});
+});
+
 describe('character repository (in-memory)', () => {
 	it('round-trips a character unchanged', async () => {
 		const s = new MemoryStorage();

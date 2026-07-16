@@ -17,8 +17,57 @@ import {
 } from '../schema/version';
 import { characterSchema, parseCharacter, type Character } from './schema';
 
-/** Forward migrations keyed by the version they upgrade FROM. Empty at v1. */
-const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = {};
+/** Snake-case the ID segment of a content ref `type:source:id` (only the id part — the `source`
+ *  like "SRD 5.1" is display and left alone), or a bare skill id. Non-strings pass through. */
+const snakeRef = (ref: unknown): unknown => {
+	if (typeof ref !== 'string' || ref === '') return ref;
+	const i = ref.lastIndexOf(':');
+	return i === -1
+		? ref.replace(/-/g, '_')
+		: ref.slice(0, i + 1) + ref.slice(i + 1).replace(/-/g, '_');
+};
+const snakeRefs = (arr: unknown): unknown => (Array.isArray(arr) ? arr.map(snakeRef) : arr);
+
+/**
+ * E3 migration (v1→v2): content ids became snake_case, so a saved character's REFS are rewritten.
+ * Build refs (species/classes/subclass/feats/inventory/spells/background) + skill/expertise arrays
+ * + the concentration ref are snaked. Runtime `play.effects` tokens are left as-is (user-entered,
+ * ambiguous with the `-` minus operator; the user re-adds them) — a pragmatic, safe scope.
+ */
+const migrateV1toV2: Migration<Versioned> = (data) => {
+	const d = data as unknown as Record<string, unknown>;
+	const build = (d.build ?? {}) as Record<string, unknown>;
+	const play = (d.play ?? {}) as Record<string, unknown>;
+	for (const key of ['species', 'speciesOption', 'background'] as const)
+		if (typeof build[key] === 'string') build[key] = snakeRef(build[key]);
+	for (const key of ['feats', 'skills', 'expertise'] as const) build[key] = snakeRefs(build[key]);
+	// spells are `{spell: ref, …}` objects, not bare refs
+	if (Array.isArray(build.spells))
+		build.spells = build.spells.map((s) => {
+			const ss = s as Record<string, unknown>;
+			return { ...ss, spell: snakeRef(ss.spell) };
+		});
+	if (Array.isArray(build.classes))
+		build.classes = build.classes.map((c) => {
+			const cc = c as Record<string, unknown>;
+			return { ...cc, class: snakeRef(cc.class), subclass: snakeRef(cc.subclass) };
+		});
+	if (Array.isArray(build.inventory))
+		build.inventory = build.inventory.map((it) => {
+			const ii = it as Record<string, unknown>;
+			return { ...ii, item: snakeRef(ii.item) };
+		});
+	if (typeof play.concentration === 'string') play.concentration = snakeRef(play.concentration);
+	if (Array.isArray(play.effects))
+		play.effects = play.effects.map((e) => {
+			const ee = e as Record<string, unknown>;
+			return typeof ee.source === 'string' ? { ...ee, source: snakeRef(ee.source) } : ee;
+		});
+	return { ...d, build, play, schemaVersion: 2 } as unknown as Versioned;
+};
+
+/** Forward migrations keyed by the version they upgrade FROM. */
+const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = { 1: migrateV1toV2 };
 
 const CHARACTERS_DIR = 'characters';
 const dirOf = (slug: string) => `${CHARACTERS_DIR}/${slug}`;

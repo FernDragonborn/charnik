@@ -90,7 +90,7 @@ describe('loader — logic (in-memory)', () => {
 		const s = new MemoryStorage();
 		// filename maps to no type, but the directive declares it — and it parses as spells
 		await s.write(
-			'a/my-cool-spells.csv',
+			'a/my_cool_spells.csv',
 			['#content-type: spell', SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n')
 		);
 		const g = await loadContent(s, ['a']);
@@ -229,7 +229,7 @@ describe('loader — real content', () => {
 			const barb = g.get('class:SRD 5.2.1:barbarian');
 			expect(barb).toBeTruthy();
 			const feats = g.featuresForClass(barb!);
-			expect(feats.some((f) => f.id === 'barbarian-rage')).toBe(true);
+			expect(feats.some((f) => f.id === 'barbarian_rage')).toBe(true);
 
 			expect(g.locales).toContain('uk');
 		}

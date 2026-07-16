@@ -2,9 +2,9 @@
 #content-systems: 5.5e
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
-#content-id: 019f374c-ecad-7178-94f0-730df9eb5f54
-#content-updated-at: 2026-07-06
-#content-hash: xxh64:409a0ec8673b5c58
+#content-id: 019f6ae3-fb3a-7a28-894a-aedc0dd1440a
+#content-updated-at: 2026-07-16
+#content-hash: xxh64:dd9098d0cd39dc2e
 id,name_en,name_uk,text_en,text_uk,effects,size,creature_type,alignment,ac,initiative,hp,hp_formula,speed,str,dex,con,int,wis,cha,str_save,dex_save,con_save,int_save,wis_save,cha_save,cr,resistances,immunities,vulnerabilities,gear,senses,languages,skills
 aboleth,Aboleth,,"#### Traits
 
@@ -44,7 +44,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Lash._** The aboleth makes one Tentacle attack.
 
 **_Psychic Drain._** If the aboleth has at least one creature Charmed or Grappled, it uses Consume Memories and regains 5 (1d10) Hit Points.",,,large,aberration,Lawful Evil,17,+7 (17),150,20d10 + 40,"10 ft., Swim 40 ft.",21,9,15,18,15,18,5,3,6,8,6,4,10,,,,,Darkvision 120 ft.; Passive Perception 20,Deep Speech; telepathy 120 ft.,"History +12, Perception +10"
-air-elemental,Air Elemental,,"#### Traits
+air_elemental,Air Elemental,,"#### Traits
 
 <hr>
 
@@ -59,19 +59,19 @@ air-elemental,Air Elemental,,"#### Traits
 **_Thunderous Slam._** _Melee Attack Roll:_ +8, reach 10 ft. _Hit:_ 14 (2d8 + 5) Thunder damage.
 
 **_Whirlwind (Recharge 4–6)._** _Strength Saving Throw:_ DC 13, one Medium or smaller creature in the elemental's space. _Failure:_ 24 (4d10 + 2) Thunder damage, and the target is pushed up to 20 feet straight away from the elemental and has the Prone condition. _Success:_ Half damage only.",,,large,elemental,Neutral,15,+5 (15),90,12d10 + 24,"10 ft., Fly 90 ft. (hover)",14,20,14,6,10,6,2,5,2,-2,0,-2,5,"Bludgeoning, Lightning, Piercing, Slashing","Poison, Thunder; Exhaustion, Grappled, Paralyzed, Petrified, Poisoned, Prone, Restrained, Unconscious",,,Darkvision 60 ft.; Passive Perception 10,Primordial (Auran),
-animated-armor,Animated Armor,,"#### Actions
+animated_armor,Animated Armor,,"#### Actions
 
 <hr>
 
 **_Multiattack._** The armor makes two Slam attacks.
 
 **_Slam._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Bludgeoning damage.",,,medium,construct,Unaligned,18,+2 (12),33,6d8 + 6,25 ft.,14,11,13,1,3,1,2,0,1,-5,-4,-5,1,,"Poison, Psychic; Charmed, Deafened, Exhaustion, Frightened, Paralyzed, Petrified, Poisoned",,,Blindsight 60 ft.; Passive Perception 6,None,
-animated-flying-sword,Animated Flying Sword,,"#### Actions
+animated_flying_sword,Animated Flying Sword,,"#### Actions
 
 <hr>
 
 **_Slash._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 6 (1d8 + 2) Slashing damage.",,,small,construct,Unaligned,17,+4 (14),14,4d6,"5 ft., Fly 50 ft. (hover)",12,15,11,1,5,1,1,4,0,-5,-3,-5,1/4,,"Poison, Psychic; Charmed, Deafened, Exhaustion, Frightened, Paralyzed, Petrified, Poisoned",,,Blindsight 60 ft.; Passive Perception 7,None,
-animated-rug-of-smothering,Animated Rug of Smothering,,"#### Actions
+animated_rug_of_smothering,Animated Rug of Smothering,,"#### Actions
 
 <hr>
 
@@ -111,22 +111,22 @@ assassin,Assassin,,"#### Traits
 <hr>
 
 **_Cunning Action._** The assassin takes the Dash, Disengage, or Hide action.",,,medium,or small humanoid,Neutral,16,+10 (20),97,15d8 + 30,30 ft.,11,18,14,16,11,10,0,7,2,6,0,0,8,Poison,,,"Light Crossbow, Shortsword, Studded Leather Armor",Passive Perception 16,"Common, Thieves' Cant","Acrobatics +7, Perception +6, Stealth +10"
-awakened-shrub,Awakened Shrub,,"#### Actions
+awakened_shrub,Awakened Shrub,,"#### Actions
 
 <hr>
 
 **_Rake._** _Melee Attack Roll:_ +1, reach 5 ft. _Hit:_ 1 Slashing damage.",,,small,plant,Neutral,9,−1 (9),10,3d6,20 ft.,3,8,11,10,10,6,-4,-1,0,0,0,-2,0,Piercing,,Fire,,Passive Perception 10,Common plus one other language,
-awakened-tree,Awakened Tree,,"#### Actions
+awakened_tree,Awakened Tree,,"#### Actions
 
 <hr>
 
 **_Slam._** _Melee Attack Roll:_ +6, reach 10 ft. _Hit:_ 14 (3d6 + 4) Bludgeoning damage.",,,huge,plant,Neutral,13,−2 (8),59,7d12 + 14,20 ft.,19,6,15,10,10,7,4,-2,2,0,0,-2,2,"Bludgeoning, Piercing",,Fire,,Passive Perception 10,Common plus one other language,
-axe-beak,Axe Beak,,"#### Actions
+axe_beak,Axe Beak,,"#### Actions
 
 <hr>
 
 **_Beak._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 6 (1d8 + 2) Slashing damage.",,,large,monstrosity,Unaligned,11,+1 (11),19,3d10 + 3,50 ft.,14,12,12,2,10,5,2,1,1,-4,0,-3,1/4,,,,,Passive Perception 10,None,
-azer-sentinel,Azer Sentinel,,"#### Traits
+azer_sentinel,Azer Sentinel,,"#### Traits
 
 <hr>
 
@@ -173,7 +173,7 @@ bandit,Bandit,,"#### Actions
 **_Scimitar._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 4 (1d6 + 1) Slashing damage.
 
 **_Light Crossbow._** _Ranged Attack Roll:_ +3, range 80/320 ft. _Hit:_ 5 (1d8 + 1) Piercing damage.",,,medium,or small humanoid,Neutral,12,+1 (11),11,2d8 + 2,30 ft.,11,12,12,10,10,10,0,1,1,0,0,0,1/8,,,,"Leather Armor, Light Crossbow, Scimitar",Passive Perception 10,"Common, Thieves' Cant",
-bandit-captain,Bandit Captain,,"#### Actions
+bandit_captain,Bandit Captain,,"#### Actions
 
 <hr>
 
@@ -188,7 +188,7 @@ bandit-captain,Bandit Captain,,"#### Actions
 <hr>
 
 **_Parry._** _Trigger:_ The bandit is hit by a melee attack roll while holding a weapon. _Response:_ The bandit adds 2 to its AC against that attack, possibly causing it to miss.",,,medium,or small humanoid,Neutral,15,+3 (13),52,8d8 + 16,30 ft.,15,16,14,14,11,14,4,5,2,2,2,2,2,,,,"Pistol, Scimitar, Studded Leather Armor",Passive Perception 10,"Common, Thieves' Cant","Athletics +4, Deception +4"
-barbed-devil,Barbed Devil,,"#### Traits
+barbed_devil,Barbed Devil,,"#### Traits
 
 <hr>
 
@@ -220,7 +220,7 @@ basilisk,Basilisk,,"#### Actions
 <hr>
 
 **_Petrifying Gaze (Recharge 4–6)._** _Constitution Saving Throw:_ DC 12, each creature in a 30-foot Cone. If the basilisk sees its reflection in the Cone, the basilisk must make this save. _First Failure:_ The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. _Second Failure:_ The target has the Petrified condition instead of the Restrained condition.",,,medium,monstrosity,Unaligned,15,−1 (9),52,8d8 + 16,20 ft.,16,8,15,2,8,7,3,-1,2,-4,-1,-2,3,,,,,Darkvision 60 ft.; Passive Perception 9,None,
-bearded-devil,Bearded Devil,,"#### Traits
+bearded_devil,Bearded Devil,,"#### Traits
 
 <hr>
 
@@ -264,7 +264,7 @@ berserker,Berserker,,"#### Traits
 <hr>
 
 **_Greataxe._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 9 (1d12 + 3) Slashing damage.",,,medium,or small humanoid,Neutral,13,+1 (11),67,9d8 + 27,30 ft.,16,12,17,9,11,9,3,1,3,-1,0,-1,2,,,,"Greataxe, Hide Armor",Passive Perception 10,Common,
-black-dragon-wyrmling,Black Dragon Wyrmling,,"#### Traits
+black_dragon_wyrmling,Black Dragon Wyrmling,,"#### Traits
 
 <hr>
 
@@ -279,7 +279,7 @@ black-dragon-wyrmling,Black Dragon Wyrmling,,"#### Traits
 **_Rend._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Slashing damage plus 2 (1d4) Acid damage.
 
 **_Acid Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 11, each creature in a 15-foot-long, 5-foot-wide Line. _Failure:_ 22 (5d8) Acid damage. _Success:_ Half damage.",,,medium,dragon (chromatic),Chaotic Evil,17,+4 (14),33,6d8 + 6,"30 ft., Fly 60 ft., Swim 30 ft.",15,14,13,10,11,13,2,4,1,0,2,1,2,,Acid,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14",Draconic,"Perception +4, Stealth +4"
-young-black-dragon,Young Black Dragon,,"#### Traits
+young_black_dragon,Young Black Dragon,,"#### Traits
 
 <hr>
 
@@ -294,7 +294,7 @@ young-black-dragon,Young Black Dragon,,"#### Traits
 **_Rend._** _Melee Attack Roll:_ +7, reach 10 ft. _Hit:_ 9 (2d4 + 4) Slashing damage plus 3 (1d6) Acid damage.
 
 **_Acid Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 14, each creature in a 30-foot-long, 5-foot-wide Line. _Failure:_ 49 (14d6) Acid damage. _Success:_ Half damage.",,,large,dragon (chromatic),Chaotic Evil,18,+5 (15),127,15d10 + 45,"40 ft., Fly 80 ft., Swim 40 ft.",19,14,17,12,11,15,4,5,3,1,3,2,7,,Acid,,,"Blindsight 30 ft., Darkvision 120 ft.; Passive Perception 16","Common, Draconic","Perception +6, Stealth +5"
-adult-black-dragon,Adult Black Dragon,,"#### Traits
+adult_black_dragon,Adult Black Dragon,,"#### Traits
 
 <hr>
 
@@ -327,7 +327,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Frightful Presence._** The dragon uses Spellcasting to cast _Fear_. The dragon can't take this action again until the start of its next turn.
 
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.",,,huge,dragon (chromatic),Chaotic Evil,19,+12 (22),195,17d12 + 85,"40 ft., Fly 80 ft., Swim 40 ft.",23,14,21,14,13,19,6,7,5,2,6,4,14,,Acid,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 21","Common, Draconic","Perception +11, Stealth +7"
-ancient-black-dragon,Ancient Black Dragon,,"#### Traits
+ancient_black_dragon,Ancient Black Dragon,,"#### Traits
 
 <hr>
 
@@ -360,7 +360,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Frightful Presence._** The dragon uses Spellcasting to cast _Fear_. The dragon can't take this action again until the start of its next turn.
 
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.",,,gargantuan,dragon (chromatic),Chaotic Evil,22,+16 (26),367,21d20 + 147,"40 ft., Fly 80 ft., Swim 40 ft.",27,14,25,16,15,22,8,9,7,3,9,6,21,,Acid,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 26","Common, Draconic","Perception +16, Stealth +9"
-black-pudding,Black Pudding,,"#### Traits
+black_pudding,Black Pudding,,"#### Traits
 
 <hr>
 
@@ -382,7 +382,7 @@ black-pudding,Black Pudding,,"#### Traits
 <hr>
 
 **_Split._** _Trigger:_ While the pudding is Large or Medium and has 10+ Hit Points, it becomes Bloodied or is subjected to Lightning or Slashing damage. _Response:_ The pudding splits into two new **Black Puddings**. Each new pudding is one size smaller than the original pudding and acts on its Initiative. The original pudding's Hit Points are divided evenly between the new puddings (round down).",,,large,ooze,Unaligned,7,−3 (7),68,8d10 + 24,"20 ft., Climb 20 ft.",16,5,16,1,6,1,3,-3,3,-5,-2,-5,4,,"Acid, Cold, Lightning, Slashing; Charmed, Deafened, Exhaustion, Frightened, Grappled, Prone, Restrained",,,Blindsight 60 ft.; Passive Perception 8,None,
-blink-dog,Blink Dog,,"#### Actions
+blink_dog,Blink Dog,,"#### Actions
 
 <hr>
 
@@ -393,7 +393,7 @@ blink-dog,Blink Dog,,"#### Actions
 <hr>
 
 **_Teleport (Recharge 4–6)._** The dog teleports up to 40 feet to an unoccupied space it can see.",,,medium,fey,Lawful Good,13,+3 (13),22,4d8 + 4,40 ft.,12,17,12,10,13,11,1,3,1,0,1,0,1/4,,,,,Darkvision 60 ft.; Passive Perception 15,Blink Dog; understands Elvish and Sylvan but can't speak them,"Perception +5, Stealth +5"
-blue-dragon-wyrmling,Blue Dragon Wyrmling,,"#### Actions
+blue_dragon_wyrmling,Blue Dragon Wyrmling,,"#### Actions
 
 <hr>
 
@@ -402,7 +402,7 @@ blue-dragon-wyrmling,Blue Dragon Wyrmling,,"#### Actions
 **_Rend._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 8 (1d10 + 3) Slashing damage plus 3 (1d6) Lightning damage.
 
 **_Lightning Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 12, each creature in a 30-foot-long, 5-foot-wide Line. _Failure:_ 21 (6d6) Lightning damage. _Success:_ Half damage.",,,medium,dragon (chromatic),Lawful Evil,17,+2 (12),65,10d8 + 20,"30 ft., Burrow 15 ft., Fly 60 ft.",17,10,15,12,11,15,3,2,2,1,2,2,3,,Lightning,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14",Draconic,"Perception +4, Stealth +2"
-young-blue-dragon,Young Blue Dragon,,"#### Actions
+young_blue_dragon,Young Blue Dragon,,"#### Actions
 
 <hr>
 
@@ -411,7 +411,7 @@ young-blue-dragon,Young Blue Dragon,,"#### Actions
 **_Rend._** _Melee Attack Roll:_ +9, reach 10 ft. _Hit:_ 12 (2d6 + 5) Slashing damage plus 5 (1d10) Lightning damage.
 
 **_Lightning Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 16, each creature in a 60-foot-long, 5-foot-wide Line. _Failure:_ 55 (10d10) Lightning damage. _Success:_ Half damage.",,,large,dragon (chromatic),Lawful Evil,18,+4 (14),152,16d10 + 64,"40 ft., Burrow 20 ft., Fly 80 ft.",21,10,19,14,13,17,5,4,4,2,5,3,9,,Lightning,,,"Blindsight 30 ft., Darkvision 120 ft.; Passive Perception 19","Common, Draconic","Perception +9, Stealth +4"
-adult-blue-dragon,Adult Blue Dragon,,"#### Traits
+adult_blue_dragon,Adult Blue Dragon,,"#### Traits
 
 <hr>
 
@@ -442,7 +442,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Sonic Boom._** The dragon uses Spellcasting to cast _Shatter_. The dragon can't take this action again until the start of its next turn.
 
 **_Tail Swipe._** The dragon makes one Rend attack.",,,huge,dragon (chromatic),Lawful Evil,19,+10 (20),212,17d12 + 102,"40 ft., Burrow 30 ft., Fly 80 ft.",25,10,23,16,15,20,7,5,6,3,7,5,16,,Lightning,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 22","Common, Draconic","Perception +12, Stealth +5"
-ancient-blue-dragon,Ancient Blue Dragon,,"#### Traits
+ancient_blue_dragon,Ancient Blue Dragon,,"#### Traits
 
 <hr>
 
@@ -473,7 +473,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Sonic Boom._** The dragon uses Spellcasting to cast _Shatter_ (level 3 version). The dragon can't take this action again until the start of its next turn.
 
 **_Tail Swipe._** The dragon makes one Rend attack.",,,gargantuan,dragon (chromatic),Lawful Evil,22,+14 (24),481,26d20 + 208,"40 ft., Burrow 40 ft., Fly 80 ft.",29,10,27,18,17,25,9,7,8,4,10,7,23,,Lightning,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 27","Common, Draconic","Perception +17, Stealth +7"
-bone-devil,Bone Devil,,"#### Traits
+bone_devil,Bone Devil,,"#### Traits
 
 <hr>
 
@@ -490,7 +490,7 @@ bone-devil,Bone Devil,,"#### Traits
 **_Claw._** _Melee Attack Roll:_ +8, reach 10 ft. _Hit:_ 13 (2d8 + 4) Slashing damage.
 
 **_Infernal Sting._** _Melee Attack Roll:_ +8, reach 10 ft. _Hit:_ 15 (2d10 + 4) Piercing damage plus 18 (4d8) Poison damage, and the target has the Poisoned condition until the start of the devil's next turn. While Poisoned, the target can't regain Hit Points.",,,large,fiend (devil),Lawful Evil,16,+7 (17),161,17d10 + 68,"40 ft., Fly 40 ft.",18,16,18,13,14,16,8,3,4,5,6,7,9,Cold,"Fire, Poison; Poisoned",,,Darkvision 120 ft. (unimpeded by magical Darkness); Passive Perception 12,Infernal; telepathy 120 ft.,"Deception +7, Insight +6"
-brass-dragon-wyrmling,Brass Dragon Wyrmling,,"#### Actions
+brass_dragon_wyrmling,Brass Dragon Wyrmling,,"#### Actions
 
 <hr>
 
@@ -499,7 +499,7 @@ brass-dragon-wyrmling,Brass Dragon Wyrmling,,"#### Actions
 **_Fire Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 11, each creature in a 20-foot-long, 5-foot-wide Line. _Failure:_ 14 (4d6) Fire damage. _Success:_ Half damage.
 
 **_Sleep Breath._** _Constitution Saving Throw:_ DC 11, each creature in a 15-foot Cone. _Failure:_ The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save. _Second Failure:_ The target has the Unconscious condition for 1 minute. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it.",,,medium,dragon (metallic),Chaotic Good,15,+2 (12),22,4d8 + 4,"30 ft., Burrow 15 ft., Fly 60 ft.",15,10,13,10,11,13,2,2,1,0,2,1,1,,Fire,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14",Draconic,"Perception +4, Stealth +2"
-young-brass-dragon,Young Brass Dragon,,"#### Actions
+young_brass_dragon,Young Brass Dragon,,"#### Actions
 
 <hr>
 
@@ -510,7 +510,7 @@ young-brass-dragon,Young Brass Dragon,,"#### Actions
 **_Fire Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 14, each creature in a 40-foot-long, 5-foot-wide Line. _Failure:_ 38 (11d6) Fire damage. _Success:_ Half damage.
 
 **_Sleep Breath._** _Constitution Saving Throw:_ DC 14, each creature in a 30-foot Cone. _Failure:_ The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save. _Second Failure:_ The target has the Unconscious condition for 1 minute. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it.",,,large,dragon (metallic),Chaotic Good,17,+3 (13),110,13d10 + 39,"40 ft., Burrow 20 ft., Fly 80 ft.",19,10,17,12,11,15,4,3,3,1,3,2,6,,Fire,,,"Blindsight 30 ft., Darkvision 120 ft.; Passive Perception 16","Common, Draconic","Perception +6, Persuasion +5, Stealth +3"
-adult-brass-dragon,Adult Brass Dragon,,"#### Traits
+adult_brass_dragon,Adult Brass Dragon,,"#### Traits
 
 <hr>
 
@@ -543,7 +543,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.
 
 **_Scorching Sands._** _Dexterity Saving Throw:_ DC 16, one creature the dragon can see within 120 feet. _Failure:_ 27 (6d8) Fire damage, and the target's Speed is halved until the end of its next turn. _Failure or Success:_ The dragon can't take this action again until the start of its next turn.",,,huge,dragon (metallic),Chaotic Good,18,+10 (20),172,15d12 + 75,"40 ft., Burrow 30 ft., Fly 80 ft.",23,10,21,14,13,17,6,5,5,2,6,3,13,,Fire,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 21","Common, Draconic","History +7, Perception +11, Persuasion +8, Stealth +5"
-ancient-brass-dragon,Ancient Brass Dragon,,"#### Traits
+ancient_brass_dragon,Ancient Brass Dragon,,"#### Traits
 
 <hr>
 
@@ -576,7 +576,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.
 
 **_Scorching Sands._** _Dexterity Saving Throw:_ DC 20, one creature the dragon can see within 120 feet. _Failure:_ 36 (8d8) Fire damage, and the target's Speed is halved until the end of its next turn. _Failure or Success:_ The dragon can't take this action again until the start of its next turn.",,,gargantuan,dragon (metallic),Chaotic Good,20,+12 (22),332,19d20 + 133,"40 ft., Burrow 40 ft., Fly 80 ft.",27,10,25,16,15,22,8,6,7,3,8,6,20,,Fire,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 24","Common, Draconic","History +9, Perception +14, Persuasion +12, Stealth +6"
-bronze-dragon-wyrmling,Bronze Dragon Wyrmling,,"#### Traits
+bronze_dragon_wyrmling,Bronze Dragon Wyrmling,,"#### Traits
 
 <hr>
 
@@ -593,7 +593,7 @@ bronze-dragon-wyrmling,Bronze Dragon Wyrmling,,"#### Traits
 **_Lightning Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 12, each creature in a 40-foot-long, 5-foot-wide Line. _Failure:_ 16 (3d10) Lightning damage. _Success:_ Half damage.
 
 **_Repulsion Breath._** _Strength Saving Throw:_ DC 12, each creature in a 30-foot Cone. _Failure:_ The target is pushed up to 30 feet straight away from the dragon and has the Prone condition.",,,medium,dragon (metallic),Lawful Good,15,+2 (12),39,6d8 + 12,"30 ft., Fly 60 ft., Swim 30 ft.",17,10,15,12,11,15,3,2,2,1,2,2,2,,Lightning,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14",Draconic,"Perception +4, Stealth +2"
-young-bronze-dragon,Young Bronze Dragon,,"#### Traits
+young_bronze_dragon,Young Bronze Dragon,,"#### Traits
 
 <hr>
 
@@ -610,7 +610,7 @@ young-bronze-dragon,Young Bronze Dragon,,"#### Traits
 **_Lightning Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 15, each creature in a 60-foot-long, 5-foot-wide Line. _Failure:_ 49 (9d10) Lightning damage. _Success:_ Half damage.
 
 **_Repulsion Breath._** _Strength Saving Throw:_ DC 15, each creature in a 30-foot Cone. _Failure:_ The target is pushed up to 40 feet straight away from the dragon and has the Prone condition.",,,large,dragon (metallic),Lawful Good,17,+3 (13),142,15d10 + 60,"40 ft., Fly 80 ft., Swim 40 ft.",21,10,19,14,13,17,5,3,4,2,4,3,8,,Lightning,,,"Blindsight 30 ft., Darkvision 120 ft.; Passive Perception 17","Common, Draconic","Insight +4, Perception +7, Stealth +3"
-adult-bronze-dragon,Adult Bronze Dragon,,"#### Traits
+adult_bronze_dragon,Adult Bronze Dragon,,"#### Traits
 
 <hr>
 
@@ -646,7 +646,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 
 **_Thunderclap._** _Constitution Saving Throw:_ DC 17, each creature in a 20-foot-radius Sphere centered on a point the dragon can see within 90 feet. _Failure:_ 10 (3d6)
 Thunder damage, and the target has the Deafened condition until the end of its next turn.",,,huge,dragon (metallic),Lawful Good,18,+10 (20),212,17d12 + 102,"40 ft., Fly 80 ft., Swim 40 ft.",25,10,23,16,15,20,7,5,6,3,7,5,15,,Lightning,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 22","Common, Draconic","Insight +7, Perception +12, Stealth +5"
-ancient-bronze-dragon,Ancient Bronze Dragon,,"#### Traits
+ancient_bronze_dragon,Ancient Bronze Dragon,,"#### Traits
 
 <hr>
 
@@ -681,7 +681,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.
 
 **_Thunderclap._** _Constitution Saving Throw:_ DC 22, each creature in a 20-foot-radius Sphere centered on a point the dragon can see within 120 feet. _Failure:_ 13 (3d8) Thunder damage, and the target has the Deafened condition until the end of its next turn.",,,gargantuan,dragon (metallic),Lawful Good,22,+14 (24),444,24d20 + 192,"40 ft., Fly 80 ft., Swim 40 ft.",29,10,27,18,17,25,9,7,8,4,10,7,22,,Lightning,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 27","Common, Draconic","Insight +10, Perception +17, Stealth +7"
-bugbear-stalker,Bugbear Stalker,,"#### Traits
+bugbear_stalker,Bugbear Stalker,,"#### Traits
 
 <hr>
 
@@ -702,7 +702,7 @@ bugbear-stalker,Bugbear Stalker,,"#### Traits
 <hr>
 
 **_Quick Grapple._** _Dexterity Saving Throw:_ DC 13, one Medium or smaller creature the bugbear can see within 10 feet. _Failure:_ The target has the Grappled condition (escape DC 13).",,,medium,fey (goblinoid),Chaotic Evil,15,+2 (12),65,10d8 + 20,30 ft.,17,14,14,11,12,11,3,2,4,0,3,0,3,,,,"Chain Shirt, Javelins (6), Morningstar",Darkvision 60 ft.; Passive Perception 11,"Common, Goblin","Stealth +6, Survival +3"
-bugbear-warrior,Bugbear Warrior,,"#### Traits
+bugbear_warrior,Bugbear Warrior,,"#### Traits
 
 <hr>
 
@@ -730,7 +730,7 @@ bulette,Bulette,,"#### Actions
 <hr>
 
 **_Leap._** The bulette jumps up to 30 feet by spending 10 feet of movement.",,,large,monstrosity,Unaligned,17,+0 (10),94,9d10 + 45,"40 ft., Burrow 40 ft.",19,11,21,2,10,5,4,0,5,-4,0,-3,5,,,,,"Darkvision 60 ft., Tremorsense 120 ft.; Passive Perception 16",None,Perception +6
-centaur-trooper,Centaur Trooper,,"#### Actions
+centaur_trooper,Centaur Trooper,,"#### Actions
 
 <hr>
 
@@ -745,7 +745,7 @@ centaur-trooper,Centaur Trooper,,"#### Actions
 <hr>
 
 **_Trampling Charge (Recharge 5–6)._** The centaur moves up to its Speed without provoking Opportunity Attacks and can move through the spaces of Medium or smaller creatures. Each creature whose space the centaur enters is targeted once by the following effect. _Strength Saving Throw:_ DC 14. _Failure:_ 7 (1d6 + 4) Bludgeoning damage, and the target has the Prone condition.",,,large,fey,Neutral Good,16,+2 (12),45,6d10 + 12,50 ft.,18,14,14,9,13,11,4,2,2,-1,1,0,2,,,,"Breastplate, Longbow, Pike",Passive Perception 13,"Elvish, Sylvan","Athletics +6, Perception +3"
-chain-devil,Chain Devil,,"#### Traits
+chain_devil,Chain Devil,,"#### Traits
 
 <hr>
 
@@ -798,7 +798,7 @@ chuul,Chuul,,"#### Traits
 **_Pincer._** _Melee Attack Roll:_ +6, reach 10 ft. _Hit:_ 9 (1d10 + 4) Bludgeoning damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two pincers.
 
 **_Paralyzing Tentacles._** _Constitution Saving Throw:_ DC 13, one creature Grappled by the chuul. _Failure:_ The target has the Poisoned condition and repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically. While Poisoned, the target has the Paralyzed condition.",,,large,aberration,Chaotic Evil,16,+0 (10),76,9d10 + 27,"30 ft., Swim 30 ft.",19,10,16,5,11,5,4,0,3,-3,0,-3,4,,Poison; Poisoned,,,Darkvision 60 ft.; Passive Perception 14,Understands Deep Speech but can't speak,Perception +4
-clay-golem,Clay Golem,,"#### Traits
+clay_golem,Clay Golem,,"#### Traits
 
 <hr>
 
@@ -847,7 +847,7 @@ cloaker,Cloaker,,"#### Traits
 **_Moan._** _Wisdom Saving Throw:_ DC 13, each creature in a 60-foot Emanation originating from the cloaker. _Failure:_ The target has the Frightened condition until the end of the cloaker's next turn. _Success:_ The target is immune to this cloaker's Moan for the next 24 hours.
 
 **_Phantasms (Recharge after a Short or Long Rest)._** The cloaker casts the _Mirror Image_ spell, requiring no spell components and using Wisdom as the spellcasting ability. The spell ends early if the cloaker starts or ends its turn in Bright Light.",,,large,aberration,Chaotic Neutral,14,+5 (15),91,14d10 + 14,"10 ft., Fly 40 ft.",17,15,12,13,14,7,3,2,1,1,2,-2,8,,Frightened,,,Darkvision 120 ft.; Passive Perception 12,"Deep Speech, Undercommon",Stealth +5
-cloud-giant,Cloud Giant,,"#### Actions
+cloud_giant,Cloud Giant,,"#### Actions
 
 <hr>
 
@@ -882,7 +882,7 @@ commoner,Commoner,,"#### Traits
 <hr>
 
 **_Club._** _Melee Attack Roll:_ +2, reach 5 ft. _Hit:_ 2 (1d4) Bludgeoning damage.",,,medium,or small humanoid,Neutral,10,+0 (10),4,1d8,30 ft.,10,10,10,10,10,10,0,0,0,0,0,0,0,,,,Club,Passive Perception 10,Common,
-copper-dragon-wyrmling,Copper Dragon Wyrmling,,"#### Actions
+copper_dragon_wyrmling,Copper Dragon Wyrmling,,"#### Actions
 
 <hr>
 
@@ -891,7 +891,7 @@ copper-dragon-wyrmling,Copper Dragon Wyrmling,,"#### Actions
 **_Acid Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 11, each creature in a 20-foot-long, 5-foot-wide Line. _Failure:_ 18 (4d8) Acid damage. _Success:_ Half damage.
 
 **_Slowing Breath._** _Constitution Saving Throw:_ DC 11, each creature in a 15-foot Cone. _Failure:_ The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn.",,,medium,dragon (metallic),Chaotic Good,16,+3 (13),22,4d8 + 4,"30 ft., Climb 30 ft., Fly 60 ft.",15,12,13,14,11,13,2,3,1,2,2,1,1,,Acid,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14",Draconic,"Perception +4, Stealth +3"
-young-copper-dragon,Young Copper Dragon,,"#### Actions
+young_copper_dragon,Young Copper Dragon,,"#### Actions
 
 <hr>
 
@@ -902,7 +902,7 @@ young-copper-dragon,Young Copper Dragon,,"#### Actions
 **_Acid Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 14, each creature in a 40-foot-long, 5-foot-wide Line. _Failure:_ 40 (9d8) Acid damage. _Success:_ Half damage.
 
 **_Slowing Breath._** _Constitution Saving Throw:_ DC 14, each creature in a 30-foot Cone. _Failure:_ The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn.",,,large,dragon (metallic),Chaotic Good,17,+4 (14),119,14d10 + 42,"40 ft., Climb 40 ft., Fly 80 ft.",19,12,17,16,13,15,4,4,3,3,4,2,7,,Acid,,,"Blindsight 30 ft., Darkvision 120 ft.; Passive Perception 17","Common, Draconic","Deception +5, Perception +7, Stealth +4"
-adult-copper-dragon,Adult Copper Dragon,,"#### Traits
+adult_copper_dragon,Adult Copper Dragon,,"#### Traits
 
 <hr>
 
@@ -935,7 +935,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Mind Jolt._** The dragon uses Spellcasting to cast _Mind Spike_ (level 4 version). The dragon can't take this action again until the start of its next turn.
 
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.",,,huge,dragon (metallic),Chaotic Good,18,+11 (21),184,16d12 + 80,"40 ft., Climb 40 ft., Fly 80 ft.",23,12,21,18,15,18,6,6,5,4,7,4,14,,Acid,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 22","Common, Draconic","Deception +9, Perception +12, Stealth +6"
-ancient-copper-dragon,Ancient Copper Dragon,,"#### Traits
+ancient_copper_dragon,Ancient Copper Dragon,,"#### Traits
 
 <hr>
 
@@ -991,7 +991,7 @@ couatl,Couatl,,"#### Traits
 <hr>
 
 **_Divine Aid (2/Day)._** The couatl casts _Bless_, _Lesser Restoration_, or _Sanctuary_, requiring no spell components and using the same spellcasting ability as Spellcasting.",,,medium,celestial,Lawful Good,19,+5 (15),60,8d8 + 24,"30 ft., Fly 90 ft.",16,20,17,18,20,18,3,5,5,4,7,4,4,"Bludgeoning, Piercing, Slashing","Psychic, Radiant",,,Truesight 120 ft.; Passive Perception 15,All; telepathy 120 ft.,
-swarm-of-crawling-claws,Swarm of Crawling Claws,,"#### Traits
+swarm_of_crawling_claws,Swarm of Crawling Claws,,"#### Traits
 
 <hr>
 
@@ -1007,7 +1007,7 @@ cultist,Cultist,,"#### Actions
 <hr>
 
 **_Ritual Sickle._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 3 (1d4 + 1) Slashing damage plus 1 Necrotic damage.",,,medium,or small humanoid,Neutral,12,+1 (11),9,2d8,30 ft.,11,12,10,10,11,10,0,1,0,0,2,0,1/8,,,,"Leather Armor, Sickle",Passive Perception 10,Common,"Deception +2, Religion +2"
-cultist-fanatic,Cultist Fanatic,,"#### Actions
+cultist_fanatic,Cultist Fanatic,,"#### Actions
 
 <hr>
 
@@ -1032,7 +1032,7 @@ darkmantle,Darkmantle,,"#### Actions
  A creature can take an action to try to detach the darkmantle from itself, doing so with a successful DC 13 Strength (Athletics) check. On its turn, the darkmantle can detach itself by using 5 feet of movement.
 
 **_Darkness Aura (1/Day)._** Magical Darkness fills a 15-foot Emanation originating from the darkmantle. This effect lasts while the darkmantle maintains Concentration on it, up to 10 minutes. Darkvision can't penetrate this area, and no light can illuminate it.",,,small,aberration,Unaligned,11,+3 (13),22,5d6 + 5,"10 ft., Fly 30 ft.",16,12,13,2,10,5,3,1,1,-4,0,-3,1/2,,,,,Blindsight 60 ft.; Passive Perception 10,None,Stealth +3
-death-dog,Death Dog,,"#### Actions
+death_dog,Death Dog,,"#### Actions
 
 <hr>
 
@@ -1108,7 +1108,7 @@ doppelganger,Doppelganger,,"#### Actions
 <hr>
 
 **_Shape-Shift._** The doppelganger shape-shifts into a Medium or Small Humanoid, or it returns to its true form. Its game statistics, other than its size, are the same in each form. Any equipment it is wearing or carrying isn't transformed.",,,medium,monstrosity,Neutral,14,+4 (14),52,8d8 + 16,30 ft.,11,18,14,11,12,14,0,4,2,0,1,2,3,,Charmed,,,Darkvision 60 ft.; Passive Perception 11,Common plus three other languages,"Deception +6, Insight +3"
-dragon-turtle,Dragon Turtle,,"#### Traits
+dragon_turtle,Dragon Turtle,,"#### Traits
 
 <hr>
 
@@ -1198,7 +1198,7 @@ dryad,Dryad,,"#### Traits
 <hr>
 
 **_Tree Stride._** If within 5 feet of a Large or bigger tree, the dryad teleports to an unoccupied space within 5 feet of a second Large or bigger tree that is within 60 feet of the previous tree.",,,medium,fey,Neutral,16,+1 (11),22,5d8,30 ft.,10,12,11,14,15,18,0,1,0,2,2,4,1,,,,,Darkvision 60 ft.; Passive Perception 14,"Elvish, Sylvan","Perception +4, Stealth +5"
-earth-elemental,Earth Elemental,,"#### Traits
+earth_elemental,Earth Elemental,,"#### Traits
 
 <hr>
 
@@ -1297,7 +1297,7 @@ ettin,Ettin,,"#### Actions
 **_Battleaxe._** _Melee Attack Roll:_ +7, reach 5 ft. _Hit:_ 14 (2d8 + 5) Slashing damage. If the target is a Large or smaller creature, it has the Prone condition.
 
 **_Morningstar._** _Melee Attack Roll:_ +7, reach 5 ft. _Hit:_ 14 (2d8 + 5) Piercing damage, and the target has Disadvantage on the next attack roll it makes before the end of its next turn.",,,large,giant,Chaotic Evil,12,−1 (9),85,10d10 + 30,40 ft.,21,8,17,6,10,8,5,-1,3,-2,0,-1,4,,"Blinded, Charmed, Deafened, Frightened, Stunned, Unconscious",,"Battleaxe, Morningstar",Darkvision 60 ft.; Passive Perception 14,Giant,Perception +4
-fire-elemental,Fire Elemental,,"#### Traits
+fire_elemental,Fire Elemental,,"#### Traits
 
 <hr>
 
@@ -1316,7 +1316,7 @@ fire-elemental,Fire Elemental,,"#### Traits
 **_Multiattack._** The elemental makes two Burn attacks.
 
 **_Burn._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 10 (2d6 + 3) Fire damage. If the target is a creature or a flammable object, it starts burning.",,,large,elemental,Neutral,13,+3 (13),93,11d10 + 33,50 ft.,10,17,16,6,10,7,0,3,3,-2,0,-2,5,"Bludgeoning, Piercing, Slashing","Fire, Poison; Exhaustion, Grappled, Paralyzed, Petrified, Poisoned, Prone, Restrained, Unconscious",,,Darkvision 60 ft.; Passive Perception 10,Primordial (Ignan),
-fire-giant,Fire Giant,,"#### Actions
+fire_giant,Fire Giant,,"#### Actions
 
 <hr>
 
@@ -1325,7 +1325,7 @@ fire-giant,Fire Giant,,"#### Actions
 **_Flame Sword._** _Melee Attack Roll:_ +11, reach 10 ft. _Hit:_ 21 (4d6 + 7) Slashing damage plus 10 (3d6) Fire damage.
 
 **_Hammer Throw._** _Ranged Attack Roll:_ +11, range 60/240 ft. _Hit:_ 23 (3d10 + 7) Bludgeoning damage plus 4 (1d8) Fire damage, and the target is pushed up to 15 feet straight away from the giant and has Disadvantage on the next attack roll it makes before the end of its next turn.",,,huge,giant,Lawful Evil,18,+3 (13),162,13d12 + 78,30 ft.,25,9,23,10,14,13,7,3,10,0,2,5,9,,Fire,,,Passive Perception 16,Giant,"Athletics +11, Perception +6"
-flesh-golem,Flesh Golem,,"#### Traits
+flesh_golem,Flesh Golem,,"#### Traits
 
 <hr>
 
@@ -1347,7 +1347,7 @@ flesh-golem,Flesh Golem,,"#### Traits
 **_Multiattack._** The golem makes two Slam attacks.
 
 **_Slam._** _Melee Attack Roll:_ +7, reach 5 ft. _Hit:_ 13 (2d8 + 4) Bludgeoning damage plus 4 (1d8) Lightning damage.",,,medium,construct,Neutral,9,−1 (9),127,15d8 + 60,30 ft.,19,9,18,6,10,5,4,-1,4,-2,0,-3,5,,"Lightning, Poison; Charmed, Exhaustion, Frightened, Paralyzed, Petrified, Poisoned",,,Darkvision 60 ft.; Passive Perception 10,Understands Common plus one other language but can't speak,
-frost-giant,Frost Giant,,"#### Actions
+frost_giant,Frost Giant,,"#### Actions
 
 <hr>
 
@@ -1362,12 +1362,12 @@ frost-giant,Frost Giant,,"#### Actions
 <hr>
 
 **_War Cry (Recharge 5–6)._** The giant or one creature of its choice that can see or hear it gains 16 (2d10 + 5) Temporary Hit Points and has Advantage on attack rolls until the start of the giant's next turn.",,,huge,giant,Neutral Evil,15,+2 (12),149,13d12 + 65,40 ft.,23,9,21,9,10,12,6,-1,8,-1,3,4,8,,Cold,,,Passive Perception 13,Giant,"Athletics +9, Perception +3"
-shrieker-fungus,Shrieker Fungus,,"#### Reactions
+shrieker_fungus,Shrieker Fungus,,"#### Reactions
 
 <hr>
 
 **_Shriek._** _Trigger:_ A creature or a source of Bright Light moves within 30 feet of the shrieker. _Response:_ The shrieker emits a shriek audible within 300 feet of itself for 1 minute or until the shrieker dies.",,,medium,plant,Unaligned,5,−5 (5),13,3d8,5 ft.,1,1,10,1,3,1,-5,-5,0,-5,-4,-5,0,,"Blinded, Charmed, Deafened, Frightened",,,Blindsight 30 ft.; Passive Perception 6,None,
-violet-fungus,Violet Fungus,,"#### Actions
+violet_fungus,Violet Fungus,,"#### Actions
 
 <hr>
 
@@ -1387,7 +1387,7 @@ gargoyle,Gargoyle,,"#### Traits
 **_Multiattack._** The gargoyle makes two Claw attacks.
 
 **_Claw._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 7 (2d4 + 2) Slashing damage.",,,medium,elemental,Chaotic Evil,15,+2 (12),67,9d8 + 27,"30 ft., Fly 60 ft.",15,11,16,6,11,7,2,0,3,-2,0,-2,2,,"Poison; Exhaustion, Petrified, Poisoned",,,Darkvision 60 ft.; Passive Perception 10,Primordial (Terran),Stealth +4
-gelatinous-cube,Gelatinous Cube,,"#### Traits
+gelatinous_cube,Gelatinous Cube,,"#### Traits
 
 <hr>
 
@@ -1449,7 +1449,7 @@ ghoul,Ghoul,,"#### Actions
 **_Bite._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Piercing damage plus 3 (1d6) Necrotic damage.
 
 **_Claw._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 4 (1d4 + 2) Slashing damage. If the target is a creature that isn't an Undead or elf, it is subjected to the following effect. _Constitution Saving Throw:_ DC 10. _Failure:_ The target has the Paralyzed condition until the end of its next turn.",,,medium,undead,Chaotic Evil,12,+2 (12),22,5d8,30 ft.,13,15,10,7,10,6,1,2,0,-2,0,-2,1,,"Poison; Charmed, Exhaustion, Poisoned",,,Darkvision 60 ft.; Passive Perception 10,Common,
-gibbering-mouther,Gibbering Mouther,,"#### Traits
+gibbering_mouther,Gibbering Mouther,,"#### Traits
 
 <hr>
 
@@ -1503,7 +1503,7 @@ gladiator,Gladiator,,"#### Actions
 <hr>
 
 **_Parry._** _Trigger:_ The gladiator is hit by a melee attack roll while holding a weapon. _Response:_ The gladiator adds 3 to its AC against that attack, possibly causing it to miss.",,,medium,or small humanoid,Neutral,16,+5 (15),112,15d8 + 45,30 ft.,18,15,16,10,12,15,7,5,6,0,4,2,5,,,,"Shield, Spears (3), Studded Leather Armor",Passive Perception 11,Common,"Athletics +10, Performance +5"
-gnoll-warrior,Gnoll Warrior,,"#### Actions
+gnoll_warrior,Gnoll Warrior,,"#### Actions
 
 <hr>
 
@@ -1516,7 +1516,7 @@ gnoll-warrior,Gnoll Warrior,,"#### Actions
 <hr>
 
 **_Rampage (1/Day)._** Immediately after dealing damage to a creature that is already Bloodied, the gnoll moves up to half its Speed, and it makes one Rend attack.",,,medium,fiend,Chaotic Evil,15,+1 (11),27,6d8,30 ft.,14,12,11,6,10,7,2,1,0,-2,0,-2,1/2,,,,,Darkvision 60 ft.; Passive Perception 10,Gnoll,
-goblin-minion,Goblin Minion,,"#### Actions
+goblin_minion,Goblin Minion,,"#### Actions
 
 <hr>
 
@@ -1527,7 +1527,7 @@ goblin-minion,Goblin Minion,,"#### Actions
 <hr>
 
 **_Nimble Escape._** The goblin takes the Disengage or Hide action.",,,small,fey (goblinoid),Chaotic Neutral,12,+2 (12),7,2d6,30 ft.,8,15,10,10,8,8,-1,2,0,0,-1,-1,1/8,,,,Daggers (3),Darkvision 60 ft.; Passive Perception 9,"Common, Goblin",Stealth +6
-goblin-warrior,Goblin Warrior,,"#### Actions
+goblin_warrior,Goblin Warrior,,"#### Actions
 
 <hr>
 
@@ -1540,7 +1540,7 @@ goblin-warrior,Goblin Warrior,,"#### Actions
 <hr>
 
 **_Nimble Escape._** The goblin takes the Disengage or Hide action.",,,small,fey (goblinoid),Chaotic Neutral,15,+2 (12),10,3d6,30 ft.,8,15,10,10,8,8,-1,2,0,0,-1,-1,1/4,,,,"Leather Armor, Scimitar, Shield, Shortbow",Darkvision 60 ft.; Passive Perception 9,"Common, Goblin",Stealth +6
-goblin-boss,Goblin Boss,,"#### Actions
+goblin_boss,Goblin Boss,,"#### Actions
 
 <hr>
 
@@ -1561,7 +1561,7 @@ goblin-boss,Goblin Boss,,"#### Actions
 <hr>
 
 **_Redirect Attack._** _Trigger:_ A creature the goblin can see makes an attack roll against it. _Response:_ The goblin chooses a Small or Medium ally within 5 feet of itself. The goblin and that ally swap places, and the ally becomes the target of the attack instead.",,,small,fey (goblinoid),Chaotic Neutral,17,+2 (12),21,6d6,30 ft.,10,15,10,10,8,10,0,2,0,0,-1,0,1,,,,"Chain Shirt, Scimitar, Shield, Shortbow",Darkvision 60 ft.; Passive Perception 9,"Common, Goblin",Stealth +6
-gold-dragon-wyrmling,Gold Dragon Wyrmling,,"#### Traits
+gold_dragon_wyrmling,Gold Dragon Wyrmling,,"#### Traits
 
 <hr>
 
@@ -1578,7 +1578,7 @@ gold-dragon-wyrmling,Gold Dragon Wyrmling,,"#### Traits
 **_Fire Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 13, each creature in a 15-foot Cone. _Failure:_ 22 (4d10) Fire damage. _Success:_ Half damage.
 
 **_Weakening Breath._** _Strength Saving Throw:_ DC 13, each creature that isn't currently affected by this breath in a 15-foot Cone. _Failure:_ The target has Disadvantage on Strength-based D20 Tests and subtracts 2 (1d4) from its damage rolls. It repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",,,medium,dragon (metallic),Lawful Good,17,+4 (14),60,8d8 + 24,"30 ft., Fly 60 ft., Swim 30 ft.",19,14,17,14,11,16,4,4,3,2,2,3,3,,Fire,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14",Draconic,"Perception +4, Stealth +4"
-young-gold-dragon,Young Gold Dragon,,"#### Traits
+young_gold_dragon,Young Gold Dragon,,"#### Traits
 
 <hr>
 
@@ -1595,7 +1595,7 @@ young-gold-dragon,Young Gold Dragon,,"#### Traits
 **_Fire Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 17, each creature in a 30-foot Cone. _Failure:_ 55 (10d10) Fire damage. _Success:_ Half damage.
 
 **_Weakening Breath._** _Strength Saving Throw:_ DC 17, each creature that isn't currently affected by this breath in a 30-foot Cone. _Failure:_ The target has Disadvantage on Strength-based D20 Tests and subtracts 3 (1d6) from its damage rolls. It repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",,,large,dragon (metallic),Lawful Good,18,+6 (16),178,17d10 + 85,"40 ft., Fly 80 ft., Swim 40 ft.",23,14,21,16,13,20,6,6,5,3,5,5,10,,Fire,,,"Blindsight 30 ft., Darkvision 120 ft.; Passive Perception 19","Common, Draconic","Insight +5, Perception +9, Persuasion +9, Stealth +6"
-adult-gold-dragon,Adult Gold Dragon,,"#### Traits
+adult_gold_dragon,Adult Gold Dragon,,"#### Traits
 
 <hr>
 
@@ -1630,7 +1630,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Guiding Light._** The dragon uses Spellcasting to cast _Guiding Bolt_ (level 2 version).
 
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.",,,huge,dragon (metallic),Lawful Good,19,+14 (24),243,18d12 + 126,"40 ft., Fly 80 ft., Swim 40 ft.",27,14,25,16,15,24,8,8,7,3,8,7,17,,Fire,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 24","Common, Draconic","Insight +8, Perception +14, Persuasion +13, Stealth +8"
-ancient-gold-dragon,Ancient Gold Dragon,,"#### Traits
+ancient_gold_dragon,Ancient Gold Dragon,,"#### Traits
 
 <hr>
 
@@ -1678,7 +1678,7 @@ gorgon,Gorgon,,"#### Actions
 <hr>
 
 **_Trample._** _Dexterity Saving Throw:_ DC 16, one creature within 5 feet that has the Prone condition. _Failure:_ 16 (2d10 + 5) Bludgeoning damage. _Success:_ Half damage.",,,large,construct,Unaligned,19,+0 (10),114,12d10 + 48,40 ft.,20,11,18,2,12,7,5,0,4,-4,1,-2,5,,"Exhaustion, Petrified",,,Darkvision 60 ft.; Passive Perception 17,None,Perception +7
-gray-ooze,Gray Ooze,,"#### Traits
+gray_ooze,Gray Ooze,,"#### Traits
 
 <hr>
 
@@ -1692,7 +1692,7 @@ gray-ooze,Gray Ooze,,"#### Traits
 <hr>
 
 **_Pseudopod._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 10 (2d8 + 1) Acid damage. Nonmagical armor worn by the target takes a −1 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10. The penalty can be removed by casting the _Mending_ spell on the armor.",,,medium,ooze,Unaligned,9,−2 (13),22,3d8 + 9,"10 ft., Climb 10 ft.",12,6,16,1,6,2,1,-2,3,-5,-2,-4,1/2,"Acid, Cold, Fire","Blinded, Charmed, Deafened, Exhaustion, Frightened, Grappled, Prone, Restrained",,,Blindsight 60 ft.; Passive Perception 8,None,Stealth +2
-green-dragon-wyrmling,Green Dragon Wyrmling,,"#### Traits
+green_dragon_wyrmling,Green Dragon Wyrmling,,"#### Traits
 
 <hr>
 
@@ -1707,7 +1707,7 @@ green-dragon-wyrmling,Green Dragon Wyrmling,,"#### Traits
 **_Rend._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 7 (1d10 + 2) Slashing damage plus 3 (1d6) Poison damage.
 
 **_Poison Breath (Recharge 5–6)._** _Constitution Saving Throw:_ DC 11, each creature in a 15-foot Cone. _Failure:_ 21 (6d6) Poison damage. _Success:_ Half damage.",,,medium,dragon (chromatic),Lawful Evil,17,+3 (13),38,7d8 + 7,"30 ft., Fly 60 ft., Swim 30 ft.",15,12,13,14,11,13,2,3,1,2,2,1,2,,Poison; Poisoned,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14",Draconic,"Perception +4, Stealth +3"
-young-green-dragon,Young Green Dragon,,"#### Traits
+young_green_dragon,Young Green Dragon,,"#### Traits
 
 <hr>
 
@@ -1722,7 +1722,7 @@ young-green-dragon,Young Green Dragon,,"#### Traits
 **_Rend._** _Melee Attack Roll:_ +7, reach 10 ft. _Hit:_ 11 (2d6 + 4) Slashing damage plus 7 (2d6) Poison damage.
 
 **_Poison Breath (Recharge 5–6)._** _Constitution Saving Throw:_ DC 14, each creature in a 30-foot Cone. _Failure:_ 42 (12d6) Poison damage. _Success:_ Half damage.",,,large,dragon (chromatic),Lawful Evil,18,+4 (14),136,16d10 + 48,"40 ft., Fly 80 ft., Swim 40 ft.",19,12,17,16,13,15,4,4,3,3,4,2,8,,Poison; Poisoned,,,"Blindsight 30 ft., Darkvision 120 ft.; Passive Perception 17","Common, Draconic","Deception +5, Perception +7, Stealth +4"
-adult-green-dragon,Adult Green Dragon,,"#### Traits
+adult_green_dragon,Adult Green Dragon,,"#### Traits
 
 <hr>
 
@@ -1755,7 +1755,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Noxious Miasma._** _Constitution Saving Throw:_ DC 17, each creature in a 20-foot-radius Sphere centered on a point the dragon can see within 90 feet. _Failure:_ 7 (2d6) Poison damage, and the target takes a −2 penalty to AC until the end of its next turn. _Failure or Success:_ The dragon can't take this action again until the start of its next turn.
 
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.",,,huge,dragon (chromatic),Lawful Evil,19,+11 (21),207,18d12 + 90,"40 ft., Fly 80 ft., Swim 40 ft.",23,12,21,18,15,18,6,6,5,4,7,4,15,,Poison; Poisoned,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 22","Common, Draconic","Deception +9, Perception +12, Persuasion +9, Stealth +6"
-ancient-green-dragon,Ancient Green Dragon,,"#### Traits
+ancient_green_dragon,Ancient Green Dragon,,"#### Traits
 
 <hr>
 
@@ -1788,7 +1788,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Noxious Miasma._** _Constitution Saving Throw:_ DC 21, each creature in a 30-foot-radius Sphere centered on a point the dragon can see within 90 feet. _Failure:_ 17 (5d6) Poison damage, and the target takes a −2 penalty to AC until the end of its next turn. _Failure or Success:_ The dragon can't take this action again until the start of its next turn.
 
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.",,,gargantuan,dragon (chromatic),Lawful Evil,21,+15 (25),402,23d20 + 161,"40 ft., Fly 80 ft., Swim 40 ft.",27,12,25,20,17,22,8,8,7,5,10,6,22,,Poison; Poisoned,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 27","Common, Draconic","Deception +13, Perception +17, Persuasion +13, Stealth +8"
-green-hag,Green Hag,,"#### Traits
+green_hag,Green Hag,,"#### Traits
 
 <hr>
 
@@ -1829,7 +1829,7 @@ grimlock,Grimlock,,"#### Actions
 <hr>
 
 **_Bone Cudgel._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 6 (1d6 + 3) Bludgeoning damage plus 2 (1d4) Psychic damage.",,,medium,aberration,Neutral Evil,11,+1 (11),11,2d8 + 2,"30 ft., Climb 30 ft.",16,12,12,9,8,6,3,1,1,-1,-1,-2,1/4,,,,,Blindsight 30 ft.; Passive Perception 13,None,"Athletics +5, Perception +3, Stealth +5"
-guardian-naga,Guardian Naga,,"#### Traits
+guardian_naga,Guardian Naga,,"#### Traits
 
 <hr>
 
@@ -1853,7 +1853,7 @@ guard,Guard,,"#### Actions
 <hr>
 
 **_Spear._** _Melee or Ranged Attack Roll:_ +3, reach 5 ft. or range 20/60 ft. _Hit:_ 4 (1d6 + 1) Piercing damage.",,,medium,or small humanoid,Neutral,16,+1 (11),11,2d8 + 2,30 ft.,13,12,12,10,11,10,1,1,1,0,0,0,1/8,,,,"Chain Shirt, Shield, Spear",Passive Perception 12,Common,Perception +2
-guard-captain,Guard Captain,,"#### Actions
+guard_captain,Guard Captain,,"#### Actions
 
 <hr>
 
@@ -1862,7 +1862,7 @@ guard-captain,Guard Captain,,"#### Actions
 **_Javelin._** _Melee or Ranged Attack Roll:_ +6, reach 5 ft. or range 30/120 ft. _Hit:_ 14 (3d6 + 4) Piercing damage.
 
 **_Longsword._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 15 (2d10 + 4) Slashing damage.",,,medium,or small humanoid,Neutral,18,+4 (14),75,10d8 + 30,30 ft.,18,14,16,12,14,13,4,2,3,1,2,1,4,,,,"Breastplate, Javelins (6), Longsword, Shield",Passive Perception 14,Common,"Athletics +6, Perception +4"
-half-dragon,Half-Dragon,,"#### Traits
+half_dragon,Half-Dragon,,"#### Traits
 
 <hr>
 
@@ -1890,7 +1890,7 @@ harpy,Harpy,,"#### Actions
 **_Claw._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 6 (2d4 + 1) Slashing damage.
 
 **_Luring Song._** The harpy sings a magical melody, which lasts until the harpy's Concentration ends on it. _Wisdom Saving Throw:_ DC 11, each Humanoid and Giant in a 300-foot Emanation originating from the harpy when the song starts. _Failure:_ The target has the Charmed condition until the song ends and repeats the save at the end of each of its turns. While Charmed, the target has the Incapacitated condition and ignores the Luring Song of other harpies. If the target is more than 5 feet from the harpy, the target moves on its turn toward the harpy by the most direct route, trying to get within 5 feet of the harpy. It doesn't avoid Opportunity Attacks; however, before moving into damaging terrain (such as lava or a pit) and whenever it takes damage from a source other than the harpy, the target repeats the save. _Success:_ The target is immune to this harpy's Luring Song for 24 hours.",,,medium,monstrosity,Chaotic Evil,11,+1 (11),38,7d8 + 7,"20 ft., Fly 40 ft.",12,13,12,7,10,13,1,1,1,-2,0,1,1,,,,,Passive Perception 10,Common,
-hell-hound,Hell Hound,,"#### Traits
+hell_hound,Hell Hound,,"#### Traits
 
 <hr>
 
@@ -1928,7 +1928,7 @@ hezrou,Hezrou,,"#### Traits
 <hr>
 
 **_Leap._** The hezrou jumps up to 30 feet by spending 10 feet of movement.",,,large,fiend (demon),Chaotic Evil,18,+6 (16),157,15d10 + 75,30 ft.,19,17,20,5,12,13,7,3,8,-3,4,1,8,"Cold, Fire, Lightning",Poison; Poisoned,,,Darkvision 120 ft.; Passive Perception 11,Abyssal; telepathy 120 ft.,
-hill-giant,Hill Giant,,"#### Actions
+hill_giant,Hill Giant,,"#### Actions
 
 <hr>
 
@@ -1950,7 +1950,7 @@ hippogriff,Hippogriff,,"#### Traits
 **_Multiattack._** The hippogriff makes two Rend attacks.
 
 **_Rend._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 7 (1d8 + 3) Slashing damage.",,,large,monstrosity,Unaligned,11,+1 (11),26,4d10 + 4,"40 ft., Fly 60 ft.",17,13,13,2,12,8,3,1,1,-4,1,-1,1,,,,,Passive Perception 15,None,Perception +5
-hobgoblin-warrior,Hobgoblin Warrior,,"#### Traits
+hobgoblin_warrior,Hobgoblin Warrior,,"#### Traits
 
 <hr>
 
@@ -1963,7 +1963,7 @@ hobgoblin-warrior,Hobgoblin Warrior,,"#### Traits
 **_Longsword._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 12 (2d10 + 1) Slashing damage.
 
 **_Longbow._** _Ranged Attack Roll:_ +3, range 150/600 ft. _Hit:_ 5 (1d8 + 1) Piercing damage plus 7 (3d4) Poison damage.",,,medium,fey (goblinoid),Lawful Evil,18,+3 (13),11,2d8 + 2,30 ft.,13,12,12,10,10,9,1,1,1,0,0,-1,1/2,,,,"Half Plate Armor, Longbow, Longsword, Shield",Darkvision 60 ft.; Passive Perception 10,"Common, Goblin",
-hobgoblin-captain,Hobgoblin Captain,,"#### Traits
+hobgoblin_captain,Hobgoblin Captain,,"#### Traits
 
 <hr>
 
@@ -1989,7 +1989,7 @@ homunculus,Homunculus,,"#### Traits
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 1 Piercing damage, and the target is subjected to the following effect. _Constitution Saving Throw:_ DC 12. _Failure:_ The target has the Poisoned condition until the end of the homunculus's next turn. _Failure by 5 or More:_ The target has the Poisoned condition for 1 minute. While Poisoned, the target has the Unconscious condition, which ends early if the target takes any damage.",,,tiny,construct,Neutral,13,+2 (12),4,1d4 + 2,"20 ft., Fly 40 ft.",4,15,14,10,10,7,-3,2,2,0,2,0,0,,"Poison; Charmed, Poisoned",,,Darkvision 60 ft.; Passive Perception 10,Understands Common plus one other language but can't speak,
-horned-devil,Horned Devil,,"#### Traits
+horned_devil,Horned Devil,,"#### Traits
 
 <hr>
 
@@ -2025,7 +2025,7 @@ hydra,Hydra,,"#### Traits
 **_Multiattack._** The hydra makes as many Bite attacks as it has heads.
 
 **_Bite._** _Melee Attack Roll:_ +8, reach 10 ft. _Hit:_ 10 (1d10 + 5) Piercing damage.",,,huge,monstrosity,Unaligned,15,+4 (14),184,16d12 + 80,"40 ft., Swim 40 ft.",20,12,20,2,10,7,5,1,5,-4,0,-2,8,,"Blinded, Charmed, Deafened, Frightened, Stunned, Unconscious",,,Darkvision 60 ft.; Passive Perception 16,None,Perception +6
-ice-devil,Ice Devil,,"#### Traits
+ice_devil,Ice Devil,,"#### Traits
 
 <hr>
 
@@ -2082,7 +2082,7 @@ incubus,Incubus,,"#### Traits
 <hr>
 
 **_Nightmare (Recharge 6)._** _Wisdom Saving Throw:_ DC 15, one creature the incubus can see within 60 feet. _Failure:_ If the target has 20 Hit Points or fewer, it has the Unconscious condition for 1 hour, until it takes damage, or until a creature within 5 feet of it takes an action to wake it. Otherwise, the target takes 18 (4d8) Psychic damage.",,,medium,fiend,Neutral Evil,15,+3 (13),66,12d8 + 12,"30 ft., Fly 60 ft.",8,17,13,15,12,20,-1,3,1,2,1,5,4,"Cold, Fire, Poison, Psychic",,,,Darkvision 60 ft.; Passive Perception 15,"Abyssal, Common, Infernal; telepathy 60 ft.","Deception +9, Insight +5, Perception +5, Persuasion +9, Stealth +7"
-invisible-stalker,Invisible Stalker,,"#### Traits
+invisible_stalker,Invisible Stalker,,"#### Traits
 
 <hr>
 
@@ -2099,7 +2099,7 @@ invisible-stalker,Invisible Stalker,,"#### Traits
 **_Wind Swipe._** _Melee Attack Roll:_ +7, reach 5 ft. _Hit:_ 11 (2d6 + 4) Force damage.
 
 **_Vortex._** _Constitution Saving Throw:_ DC 14, one Large or smaller creature in the stalker's space. _Failure:_ 7 (1d8 + 3) Thunder damage, and the target has the Grappled condition (escape DC 13). Until the grapple ends, the target can't cast spells with a Verbal component and takes 7 (2d6) Thunder damage at the start of each of the stalker's turns.",,,large,elemental,Neutral,14,+7 (22),97,13d10 + 26,"50 ft., Fly 50 ft. (hover)",16,19,14,10,15,11,3,4,2,0,2,0,6,"Bludgeoning, Piercing, Slashing","Poison; Exhaustion, Grappled, Paralyzed, Petrified, Poisoned, Prone, Restrained, Unconscious",,,Darkvision 60 ft.; Passive Perception 18,"Common, Primordial (Auran)","Perception +8, Stealth +10"
-iron-golem,Iron Golem,,"#### Traits
+iron_golem,Iron Golem,,"#### Traits
 
 <hr>
 
@@ -2135,7 +2135,7 @@ knight,Knight,,"#### Actions
 <hr>
 
 **_Parry._** _Trigger:_ The knight is hit by a melee attack roll while holding a weapon. _Response:_ The knight adds 2 to its AC against that attack, possibly causing it to miss.",,,medium,or small humanoid,Neutral,18,+0 (10),52,8d8 + 16,30 ft.,16,11,14,11,11,15,3,0,4,0,2,2,3,,Frightened,,"Greatsword, Heavy Crossbow, Plate Armor",Passive Perception 10,Common plus one other language,
-kobold-warrior,Kobold Warrior,,"#### Traits
+kobold_warrior,Kobold Warrior,,"#### Traits
 
 <hr>
 
@@ -2376,7 +2376,7 @@ medusa,Medusa,,"#### Actions
 **_Poison Ray._** _Ranged Attack Roll:_ +5, range 150 ft. _Hit:_ 11 (2d8 + 2) Poison damage.
 
 **_Petrifying Gaze (Recharge 5–6)._** _Constitution Saving Throw:_ DC 13, each creature in a 30-foot Cone. If the medusa sees its reflection in the Cone, the medusa must make this save. _First Failure:_ The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. _Second Failure:_ The target has the Petrified condition instead of the Restrained condition.",,,medium,monstrosity,Lawful Evil,15,+6 (16),127,17d8 + 51,30 ft.,10,17,16,12,13,15,0,3,3,1,4,2,6,,,,,Darkvision 150 ft.; Passive Perception 14,Common plus one other language,"Deception +5, Perception +4, Stealth +6"
-dust-mephit,Dust Mephit,,"#### Traits
+dust_mephit,Dust Mephit,,"#### Traits
 
 <hr>
 
@@ -2391,7 +2391,7 @@ dust-mephit,Dust Mephit,,"#### Traits
 **_Blinding Breath (Recharge 6)._** _Dexterity Saving Throw:_ DC 10, each creature in a 15-foot Cone. _Failure:_ The target has the Blinded condition until the end of the mephit's next turn.
 
 **_Sleep (1/Day)._** The mephit casts the _Sleep_ spell, requiring no spell components and using Charisma as the spellcasting ability (spell save DC 10).",,,small,elemental,Neutral Evil,12,+2 (12),17,5d6,"30 ft., Fly 30 ft.",5,14,10,9,11,10,-3,2,0,-1,0,0,1/2,,"Poison; Exhaustion, Poisoned",Fire,,Darkvision 60 ft.; Passive Perception 12,"Primordial (Auran, Terran)","Perception +2, Stealth +4"
-ice-mephit,Ice Mephit,,"#### Traits
+ice_mephit,Ice Mephit,,"#### Traits
 
 <hr>
 
@@ -2406,7 +2406,7 @@ ice-mephit,Ice Mephit,,"#### Traits
 **_Fog Cloud (1/Day)._** The mephit casts _Fog Cloud_, requiring no spell components and using Charisma as the spellcasting ability.
 
 **_Frost Breath (Recharge 6)._** _Constitution Saving Throw:_ DC 10, each creature in a 15-foot Cone. _Failure:_ 7 (3d4) Cold damage. _Success:_ Half damage.",,,small,elemental,Neutral Evil,11,+1 (11),21,6d6,"30 ft., Fly 30 ft.",7,13,10,9,11,12,-2,1,0,-1,0,1,1/2,,"Cold, Poison; Exhaustion, Poisoned",Fire,,Darkvision 60 ft.; Passive Perception 12,"Primordial (Aquan, Auran)","Perception +2, Stealth +3"
-magma-mephit,Magma Mephit,,"#### Traits
+magma_mephit,Magma Mephit,,"#### Traits
 
 <hr>
 
@@ -2419,7 +2419,7 @@ magma-mephit,Magma Mephit,,"#### Traits
 **_Claw._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 3 (1d4 + 1) Slashing damage plus 3 (1d6) Fire damage.
 
 **_Fire Breath (Recharge 6)._** _Dexterity Saving Throw:_ DC 11, each creature in a 15-foot Cone. _Failure:_ 7 (2d6) Fire damage. _Success:_ Half damage.",,,small,elemental,Neutral Evil,11,+1 (11),18,4d6 + 4,"30 ft., Fly 30 ft.",8,12,12,7,10,10,-1,1,1,-2,0,0,1/2,,"Fire, Poison; Exhaustion, Poisoned",Cold,,Darkvision 60 ft.; Passive Perception 10,"Primordial (Ignan, Terran)",Stealth +3
-steam-mephit,Steam Mephit,,"#### Traits
+steam_mephit,Steam Mephit,,"#### Traits
 
 <hr>
 
@@ -2434,7 +2434,7 @@ steam-mephit,Steam Mephit,,"#### Traits
 **_Claw._** _Melee Attack Roll:_ +2, reach 5 ft. _Hit:_ 2 (1d4) Slashing damage plus 2 (1d4) Fire damage.
 
 **_Steam Breath (Recharge 6)._** _Constitution Saving Throw:_ DC 10, each creature in a 15-foot Cone. _Failure:_ 5 (2d4) Fire damage, and the target's Speed decreases by 10 feet until the end of the mephit's next turn. _Success:_ Half damage only. _Failure or Success:_ Being underwater doesn't grant Resistance to this Fire damage.",,,small,elemental,Neutral Evil,10,+0 (10),17,5d6,"30 ft., Fly 30 ft.",5,11,10,11,10,12,-3,0,0,0,0,1,1/4,,"Fire, Poison; Exhaustion, Poisoned",,,Darkvision 60 ft.; Passive Perception 10,"Primordial (Aquan, Ignan)",Stealth +2
-merfolk-skirmisher,Merfolk Skirmisher,,"#### Traits
+merfolk_skirmisher,Merfolk Skirmisher,,"#### Traits
 
 <hr>
 
@@ -2481,7 +2481,7 @@ mimic,Mimic,,"#### Traits
 <hr>
 
 **_Shape-Shift._** The mimic shape-shifts to resemble a Medium or Small object while retaining its game statistics, or it returns to its true blob form. Any equipment it is wearing or carrying isn't transformed.",,,medium,monstrosity,Neutral,12,+3 (13),58,9d8 + 18,20 ft.,17,12,15,5,13,8,3,1,2,-3,1,-1,2,,Acid; Prone,,,Darkvision 60 ft.; Passive Perception 11,None,Stealth +5
-minotaur-of-baphomet,Minotaur of Baphomet,,"#### Actions
+minotaur_of_baphomet,Minotaur of Baphomet,,"#### Actions
 
 <hr>
 
@@ -2497,7 +2497,7 @@ mummy,Mummy,,"#### Actions
 **_Rotting Fist._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 8 (1d10 + 3) Bludgeoning damage plus 10 (3d6) Necrotic damage. If the target is a creature, it is cursed. While cursed, the target can't regain Hit Points, its Hit Point maximum doesn't return to normal when finishing a Long Rest, and its Hit Point maximum decreases by 10 (3d6) every 24 hours that elapse. A creature dies and turns to dust if reduced to 0 Hit Points by this attack.
 
 **_Dreadful Glare._** _Wisdom Saving Throw:_ DC 11, one creature the mummy can see within 60 feet. _Failure:_ The target has the Frightened condition until the end of the mummy's next turn. _Success:_ The target is immune to this mummy's Dreadful Glare for 24 hours.",,,medium,or small undead,Lawful Evil,11,−1 (9),58,9d8 + 18,20 ft.,16,8,15,6,12,12,3,-1,2,-2,3,1,3,,"Necrotic, Poison; Charmed, Exhaustion, Frightened, Paralyzed, Poisoned",Fire,,Darkvision 60 ft.; Passive Perception 11,Common plus two other languages,
-mummy-lord,Mummy Lord,,"#### Traits
+mummy_lord,Mummy Lord,,"#### Traits
 
 <hr>
 
@@ -2570,7 +2570,7 @@ The target is immune to this nalfeshnee's Horror Nimbus for 24 hours.
 <hr>
 
 **_Pursuit._** Trigger: Another creature the nalfeshnee can see ends its move within 120 feet of the nalfeshnee. Response: The nalfeshnee uses Teleport, but its destination space must be within 10 feet of the triggering creature.",,,large,fiend (demon),Chaotic Evil,18,+5 (15),184,16d10 + 96,"20 ft., Fly 30 ft.",21,10,22,19,12,15,5,0,11,9,6,7,13,"Cold, Fire, Lightning","Poison; Frightened, Poisoned",,,Truesight 120 ft.; Passive Perception 11,Abyssal; telepathy 120 ft.,
-night-hag,Night Hag,,"#### Traits
+night_hag,Night Hag,,"#### Traits
 
 <hr>
 
@@ -2627,7 +2627,7 @@ noble,Noble,,"#### Actions
 <hr>
 
 **_Parry._** _Trigger:_ The noble is hit by a melee attack roll while holding a weapon. _Response:_ The noble adds 2 to its AC against that attack, possibly causing it to miss.",,,medium,or small humanoid,Neutral,15,+1 (11),9,2d8,30 ft.,11,12,11,12,14,16,0,1,0,1,2,3,1/8,,,,"Breastplate, Rapier",Passive Perception 12,Common plus two other languages,"Deception +5, Insight +4, Persuasion +5"
-ochre-jelly,Ochre Jelly,,"#### Traits
+ochre_jelly,Ochre Jelly,,"#### Traits
 
 <hr>
 
@@ -2702,7 +2702,7 @@ pegasus,Pegasus,,"#### Actions
 <hr>
 
 **_Hooves._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 7 (1d6 + 4) Bludgeoning damage plus 5 (2d4) Radiant damage.",,,large,celestial,Chaotic Good,12,+2 (12),59,7d10 + 21,"60 ft., Fly 90 ft.",18,15,16,10,15,13,4,4,5,0,4,3,2,,,,,Passive Perception 16,"Understands Celestial, Common, Elvish, and Sylvan but can't speak",Perception +6
-phase-spider,Phase Spider,,"#### Traits
+phase_spider,Phase Spider,,"#### Traits
 
 <hr>
 
@@ -2734,7 +2734,7 @@ pirate,Pirate,,"#### Actions
 **_Dagger._** _Melee or Ranged Attack Roll:_ +5, reach 5 ft. or range 20/60 ft. _Hit:_ 5 (1d4 + 3) Piercing damage.
 
 **_Enthralling Panache._** _Wisdom Saving Throw:_ DC 12, one creature the pirate can see within 30 feet. _Failure:_ The target has the Charmed condition until the start of the pirate's next turn.",,,medium,or small humanoid,Neutral,14,+5 (15),33,6d8 + 6,30 ft.,10,16,12,8,12,14,0,5,1,-1,1,4,1,,,,"Daggers (6), Leather Armor",Passive Perception 11,Common plus one other language,
-pirate-captain,Pirate Captain,,"#### Actions
+pirate_captain,Pirate Captain,,"#### Actions
 
 <hr>
 
@@ -2755,7 +2755,7 @@ pirate-captain,Pirate Captain,,"#### Actions
 <hr>
 
 **_Riposte._** _Trigger:_ The pirate is hit by a melee attack roll while holding a weapon. _Response:_ The pirate adds 3 to its AC against that attack, possibly causing it to miss. On a miss, the pirate makes one Rapier attack against the triggering creature if within range.",,,medium,or small humanoid,Neutral,17,+7 (17),84,13d8 + 26,30 ft.,10,18,14,10,14,17,3,7,2,0,5,6,6,,,,"Pistol, Rapier",Passive Perception 15,Common plus one other language,"Acrobatics +7, Perception +5"
-pit-fiend,Pit Fiend,,"#### Traits
+pit_fiend,Pit Fiend,,"#### Traits
 
 <hr>
 
@@ -2809,7 +2809,7 @@ planetar,Planetar,,"#### Traits
 <hr>
 
 **_Divine Aid (2/Day)._** The planetar casts _Cure Wounds_, _Invisibility_, _Lesser Restoration_, or _Remove Curse_, using the same spellcasting ability as Spellcasting.",,,large,celestial (angel),Lawful Good,19,+10 (20),262,21d10 + 147,"40 ft., Fly 120 ft. (hover)",24,20,24,19,22,25,12,5,12,4,11,12,16,Radiant,"Charmed, Exhaustion, Frightened",,,Truesight 120 ft.; Passive Perception 21,All; telepathy 120 ft.,Perception +11
-priest-acolyte,Priest Acolyte,,"#### Actions
+priest_acolyte,Priest Acolyte,,"#### Actions
 
 <hr>
 
@@ -2859,7 +2859,7 @@ pseudodragon,Pseudodragon,,"#### Traits
 **_Bite._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 4 (1d4 + 2) Piercing damage.
 
 **_Sting._** _Constitution Saving Throw:_ DC 12, one creature the pseudodragon can see within 5 feet. _Failure:_ 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. _Failure by 5 or More:_ While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it.",,,tiny,dragon,Neutral Good,14,+2 (12),10,3d4 + 3,"15 ft., Fly 60 ft.",6,15,13,10,12,10,-2,2,1,0,1,0,1/4,,,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 15",Understands Common and Draconic but can't speak,"Perception +5, Stealth +4"
-purple-worm,Purple Worm,,"#### Traits
+purple_worm,Purple Worm,,"#### Traits
 
 <hr>
 
@@ -2919,7 +2919,7 @@ rakshasa,Rakshasa,,"#### Traits
 **_Spellcasting._** The rakshasa casts one of the following spells, requiring no Material components and using Charisma as the spellcasting ability (spell save DC 18):
  **At Will:** _Detect Magic, Detect Thoughts, Disguise Self, Mage Hand, Minor Illusion_
  **1/Day Each:** _Fly, Invisibility, Major Image, Plane Shift_",,,medium,fiend,Lawful Evil,17,+8 (18),221,26d8 + 104,40 ft.,14,17,18,13,16,20,2,3,4,1,3,5,13,,"Charmed, Frightened",Piercing damage from weapons wielded by creatures under the effect of a _Bless_ spell,,Truesight 60 ft.; Passive Perception 18,"Common, Infernal","Deception +10, Insight +8, Perception +8"
-red-dragon-wyrmling,Red Dragon Wyrmling,,"#### Actions
+red_dragon_wyrmling,Red Dragon Wyrmling,,"#### Actions
 
 <hr>
 
@@ -2928,7 +2928,7 @@ red-dragon-wyrmling,Red Dragon Wyrmling,,"#### Actions
 **_Rend._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 9 (1d10 + 4) Slashing damage plus 3 (1d6) Fire damage.
 
 **_Fire Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 13, each creature in a 15-foot Cone. _Failure:_ 24 (7d6) Fire damage. _Success:_ Half damage.",,,medium,dragon (chromatic),Chaotic Evil,17,+2 (12),75,10d8 + 30,"30 ft., Climb 30 ft., Fly 60 ft.",19,10,17,12,11,15,4,2,3,1,2,2,4,,Fire,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14",Draconic,"Perception +4, Stealth +2"
-young-red-dragon,Young Red Dragon,,"#### Actions
+young_red_dragon,Young Red Dragon,,"#### Actions
 
 <hr>
 
@@ -2937,7 +2937,7 @@ young-red-dragon,Young Red Dragon,,"#### Actions
 **_Rend._** _Melee Attack Roll:_ +10, reach 10 ft. _Hit:_ 13 (2d6 + 6) Slashing damage plus 3 (1d6) Fire damage.
 
 **_Fire Breath (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 17, each creature in a 30-foot Cone. _Failure:_ 56 (16d6) Fire damage. _Success:_ Half damage.",,,large,dragon (chromatic),Chaotic Evil,18,+4 (14),178,17d10 + 85,"40 ft., Climb 40 ft., Fly 80 ft.",23,10,21,14,11,19,6,4,5,2,4,4,10,,Fire,,,"Blindsight 30 ft., Darkvision 120 ft.; Passive Perception 18","Common, Draconic","Perception +8, Stealth +4"
-adult-red-dragon,Adult Red Dragon,,"#### Traits
+adult_red_dragon,Adult Red Dragon,,"#### Traits
 
 <hr>
 
@@ -2968,7 +2968,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Fiery Rays._** The dragon uses Spellcasting to cast _Scorching Ray_. The dragon can't take this action again until the start of its next turn.
 
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.",,,huge,dragon (chromatic),Chaotic Evil,19,+12 (22),256,19d12 + 133,"40 ft., Climb 40 ft., Fly 80 ft.",27,10,25,16,13,23,8,6,7,3,7,6,17,,Fire,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 23","Common, Draconic","Perception +13, Stealth +6"
-ancient-red-dragon,Ancient Red Dragon,,"#### Traits
+ancient_red_dragon,Ancient Red Dragon,,"#### Traits
 
 <hr>
 
@@ -3050,7 +3050,7 @@ roper,Roper,,"#### Traits
  The tentacle can be damaged, freeing a creature it has Grappled when destroyed (AC 20, HP 10, Immunity to Poison and Psychic damage). Damaging the tentacle deals no damage to the roper, and a destroyed tentacle regrows at the start of the roper's next turn.
 
 **_Reel._** The roper pulls each creature Grappled by it up to 30 feet straight toward it.",,,large,aberration,Neutral Evil,20,+5 (15),93,11d10 + 33,"10 ft., Climb 20 ft.",18,8,17,7,16,6,4,-1,3,-2,3,-2,5,,,,,Darkvision 60 ft.; Passive Perception 16,None,"Perception +6, Stealth +5"
-rust-monster,Rust Monster,,"#### Traits
+rust_monster,Rust Monster,,"#### Traits
 
 <hr>
 
@@ -3073,7 +3073,7 @@ rust-monster,Rust Monster,,"#### Traits
 <hr>
 
 **_Reflexive Antennae._** _Trigger:_ An attack roll hits the rust monster. _Response:_ The rust monster uses Antennae.",,,medium,monstrosity,Unaligned,14,+1 (11),33,6d8 + 6,40 ft.,13,12,13,2,13,6,1,1,1,-4,1,-2,1/2,,,,,Darkvision 60 ft.; Passive Perception 11,None,
-sahuagin-warrior,Sahuagin Warrior,,"#### Traits
+sahuagin_warrior,Sahuagin Warrior,,"#### Traits
 
 <hr>
 
@@ -3133,7 +3133,7 @@ scout,Scout,,"#### Actions
 **_Shortsword._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Piercing damage.
 
 **_Longbow._** _Ranged Attack Roll:_ +4, range 150/600 ft. _Hit:_ 6 (1d8 + 2) Piercing damage.",,,medium,or small humanoid,Neutral,13,+2 (12),16,3d8 + 3,30 ft.,11,14,12,11,13,11,0,2,1,0,1,0,1/2,,,,"Leather Armor, Longbow, Shortsword",Passive Perception 15,Common plus one other language,"Nature +4, Perception +5, Stealth +6, Survival +5"
-sea-hag,Sea Hag,,"#### Traits
+sea_hag,Sea Hag,,"#### Traits
 
 <hr>
 
@@ -3171,7 +3171,7 @@ shadow,Shadow,,"#### Traits
 <hr>
 
 **_Shadow Stealth._** While in Dim Light or Darkness, the shadow takes the Hide action.",,,medium,undead,Chaotic Evil,12,+2 (12),27,5d8 + 5,40 ft.,6,14,13,6,10,8,-2,2,1,-2,0,-1,1/2,"Acid, Cold, Fire, Lightning, Thunder","Necrotic, Poison; Exhaustion, Frightened, Grappled, Paralyzed, Petrified, Poisoned, Prone, Restrained, Unconscious",Radiant,,Darkvision 60 ft.; Passive Perception 10,None,Stealth +6
-shambling-mound,Shambling Mound,,"#### Traits
+shambling_mound,Shambling Mound,,"#### Traits
 
 <hr>
 
@@ -3186,7 +3186,7 @@ shambling-mound,Shambling Mound,,"#### Traits
 **_Charged Tendril._** _Melee Attack Roll:_ +7, reach 10 ft. _Hit:_ 7 (1d6 + 4) Bludgeoning damage plus 5 (2d4) Lightning damage. If the target is a Medium or smaller creature, the shambling mound pulls the target 5 feet straight toward itself.
 
 **_Engulf._** _Strength Saving Throw:_ DC 15, one Medium or smaller creature within 5 feet. _Failure:_ The target is pulled into the shambling mound's space and has the Grappled condition (escape DC 14). Until the grapple ends, the target has the Blinded and Restrained conditions, and it takes 10 (3d6) Lightning damage at the start of each of its turns. When the shambling mound moves, the Grappled target moves with it, costing it no extra movement. The shambling mound can have only one creature Grappled by this action at a time.",,,large,plant,Unaligned,15,−1 (9),110,13d10 + 39,"30 ft., Swim 20 ft.",18,8,16,5,10,5,4,-1,3,-3,0,-3,5,"Cold, Fire","Lightning; Deafened, Exhaustion",,,Blindsight 60 ft.; Passive Perception 10,None,Stealth +3
-shield-guardian,Shield Guardian,,"#### Traits
+shield_guardian,Shield Guardian,,"#### Traits
 
 <hr>
 
@@ -3209,7 +3209,7 @@ shield-guardian,Shield Guardian,,"#### Traits
 <hr>
 
 **_Protection._** _Trigger:_ An attack roll hits the wearer of the guardian's amulet while the wearer is within 5 feet of the guardian. _Response:_ The wearer gains a +5 bonus to AC, including against the triggering attack and possibly causing it to miss, until the start of the guardian's next turn.",,,large,construct,Unaligned,17,−1 (9),142,15d10 + 60,30 ft.,18,8,18,7,10,3,4,-1,4,-2,0,-4,7,,"Poison; Charmed, Exhaustion, Frightened, Paralyzed, Petrified, Poisoned",,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 10",Understands commands given in any language but can't speak,
-silver-dragon-wyrmling,Silver Dragon Wyrmling,,"#### Actions
+silver_dragon_wyrmling,Silver Dragon Wyrmling,,"#### Actions
 
 <hr>
 
@@ -3220,7 +3220,7 @@ silver-dragon-wyrmling,Silver Dragon Wyrmling,,"#### Actions
 **_Cold Breath (Recharge 5–6)._** _Constitution Saving Throw:_ DC 13, each creature in a 15-foot Cone. _Failure:_ 18 (4d8) Cold damage. _Success:_ Half damage.
 
 **_Paralyzing Breath._** _Constitution Saving Throw:_ DC 13, each creature in a 15-foot Cone. _First Failure:_ The target has the Incapacitated condition until the end of its next turn, when it repeats the save. _Second Failure:_ The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",,,medium,dragon (metallic),Lawful Good,17,+2 (12),45,6d8 + 18,"30 ft., Fly 60 ft.",19,10,17,12,11,15,4,2,3,1,2,2,2,,Cold,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14",Draconic,"Perception +4, Stealth +2"
-young-silver-dragon,Young Silver Dragon,,"#### Actions
+young_silver_dragon,Young Silver Dragon,,"#### Actions
 
 <hr>
 
@@ -3231,7 +3231,7 @@ young-silver-dragon,Young Silver Dragon,,"#### Actions
 **_Cold Breath (Recharge 5–6)._** _Constitution Saving Throw:_ DC 17, each creature in a 30-foot Cone. _Failure:_ 49 (11d8) Cold damage. _Success:_ Half damage.
 
 **_Paralyzing Breath._** _Constitution Saving Throw:_ DC 17, each creature in a 30-foot Cone. _First Failure:_ The target has the Incapacitated condition until the end of its next turn, when it repeats the save. _Second Failure:_ The target has the Paralyzed condition, and it repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",,,large,dragon (metallic),Lawful Good,18,+4 (14),168,16d10 + 80,"40 ft., Fly 80 ft.",23,10,21,14,11,19,6,4,5,2,4,4,9,,Cold,,,"Blindsight 30 ft., Darkvision 120 ft.; Passive Perception 18","Common, Draconic","History +6, Perception +8, Stealth +4"
-adult-silver-dragon,Adult Silver Dragon,,"#### Traits
+adult_silver_dragon,Adult Silver Dragon,,"#### Traits
 
 <hr>
 
@@ -3264,7 +3264,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Cold Gale._** _Dexterity Saving Throw:_ DC 19, each creature in a 60-foot-long, 10-foot-wide Line. _Failure:_ 14 (4d6) Cold damage, and the target is pushed up to 30 feet straight away from the dragon. _Success:_ Half damage only. _Failure or Success:_ The dragon can't take this action again until the start of its next turn.
 
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.",,,huge,dragon (metallic),Lawful Good,19,+10 (20),216,16d12 + 112,"40 ft., Fly 80 ft.",27,10,25,16,13,22,8,5,7,3,6,6,16,,Cold,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 21","Common, Draconic","History +8, Perception +11, Stealth +5"
-ancient-silver-dragon,Ancient Silver Dragon,,"#### Traits
+ancient_silver_dragon,Ancient Silver Dragon,,"#### Traits
 
 <hr>
 
@@ -3304,12 +3304,12 @@ skeleton,Skeleton,,"#### Actions
 **_Shortsword._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 6 (1d6 + 3) Piercing damage.
 
 **_Shortbow._** _Ranged Attack Roll:_ +5, range 80/320 ft. _Hit:_ 6 (1d6 + 3) Piercing damage.",,,medium,undead,Lawful Evil,14,+3 (13),13,2d8 + 4,30 ft.,10,16,15,6,8,5,0,3,2,-2,-1,-3,1/4,,"Poison; Exhaustion, Poisoned",Bludgeoning,"Shortbow, Shortsword",Darkvision 60 ft.; Passive Perception 9,Understands Common plus one other language but can't speak,
-warhorse-skeleton,Warhorse Skeleton,,"#### Actions
+warhorse_skeleton,Warhorse Skeleton,,"#### Actions
 
 <hr>
 
 **_Hooves._** _Melee Attack Roll:_ +6, reach 5 ft. _Hit:_ 7 (1d6 + 4) Bludgeoning damage. If the target is a Large or smaller creature and the skeleton moved 20+ feet straight toward it immediately before the hit, the target has the Prone condition.",,,large,undead,Lawful Evil,13,+1 (11),22,3d10 + 6,60 ft.,18,12,15,2,8,5,4,1,2,-4,-1,-3,1/2,,"Poison; Exhaustion, Poisoned",Bludgeoning,,Darkvision 60 ft.; Passive Perception 9,None,
-minotaur-skeleton,Minotaur Skeleton,,"#### Actions
+minotaur_skeleton,Minotaur Skeleton,,"#### Actions
 
 <hr>
 
@@ -3370,7 +3370,7 @@ specter,Specter,,"#### Traits
 <hr>
 
 **_Life Drain._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 7 (2d6) Necrotic damage. If the target is a creature, its Hit Point maximum decreases by an amount equal to the damage taken.",,,medium,undead,Chaotic Evil,12,+2 (12),22,5d8,"30 ft., Fly 50 ft. (hover)",1,14,11,10,10,11,-5,2,0,0,0,0,1,"Acid, Bludgeoning, Cold, Fire, Lightning, Piercing, Slashing, Thunder","Necrotic, Poison; Charmed, Exhaustion, Grappled, Paralyzed, Petrified, Poisoned, Prone, Restrained, Unconscious",,,Darkvision 60 ft.; Passive Perception 10,Understands Common plus one other language but can't speak,
-sphinx-of-wonder,Sphinx of Wonder,,"#### Traits
+sphinx_of_wonder,Sphinx of Wonder,,"#### Traits
 
 <hr>
 
@@ -3387,7 +3387,7 @@ sphinx-of-wonder,Sphinx of Wonder,,"#### Traits
 <hr>
 
 **_Burst of Ingenuity (2/Day)._** _Trigger:_ The sphinx or another creature within 30 feet makes an ability check or a saving throw. _Response:_ The sphinx adds 2 to the roll.",,,tiny,celestial,Lawful Good,13,+3 (13),24,7d4 + 7,"20 ft., Fly 40 ft.",6,17,13,15,12,11,-2,3,1,2,1,0,1,"Necrotic, Psychic, Radiant",,,,Darkvision 60 ft.; Passive Perception 11,"Celestial, Common","Arcana +4, Religion +4, Stealth +5"
-sphinx-of-lore,Sphinx of Lore,,"#### Traits
+sphinx_of_lore,Sphinx of Lore,,"#### Traits
 
 <hr>
 
@@ -3418,7 +3418,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Arcane Prowl._** The sphinx can teleport up to 30 feet to an unoccupied space it can see, and it makes one Claw attack.
 
 **_Weight of Years._** _Constitution Saving Throw:_ DC 16, one creature the sphinx can see within 120 feet. _Failure:_ The target gains 1 Exhaustion level. While the target has any Exhaustion levels, it appears 3d10 years older. _Failure or Success:_ The sphinx can't take this action again until the start of its next turn.",,,large,celestial,Lawful Neutral,17,+10 (20),170,20d10 + 60,"40 ft., Fly 60 ft.",18,15,16,18,18,18,4,2,3,4,4,4,11,"Necrotic, Radiant","Psychic; Charmed, Frightened",,,Truesight 120 ft.; Passive Perception 18,"Celestial, Common","Arcana +12, History +12, Perception +8, Religion +12"
-sphinx-of-valor,Sphinx of Valor,,"#### Traits
+sphinx_of_valor,Sphinx of Valor,,"#### Traits
 
 <hr>
 
@@ -3455,7 +3455,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Arcane Prowl._** The sphinx can teleport up to 30 feet to an unoccupied space it can see, and it makes one Claw attack.
 
 **_Weight of Years._** _Constitution Saving Throw:_ DC 16, one creature the sphinx can see within 120 feet. _Failure:_ The target gains 1 Exhaustion level. While the target has any Exhaustion levels, it appears 3d10 years older. _Failure or Success:_ The sphinx can't take this action again until the start of its next turn.",,,large,celestial,Lawful Neutral,17,+12 (22),199,19d10 + 95,"40 ft., Fly 60 ft.",22,10,20,16,23,18,6,6,11,9,12,4,17,"Necrotic, Radiant","Psychic; Charmed, Frightened",,,Truesight 120 ft.; Passive Perception 22,"Celestial, Common","Arcana +9, Perception +12, Religion +15"
-spirit-naga,Spirit Naga,,"#### Traits
+spirit_naga,Spirit Naga,,"#### Traits
 
 <hr>
 
@@ -3504,7 +3504,7 @@ stirge,Stirge,,"#### Actions
 
 **_Proboscis._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 6 (1d6 + 3) Piercing damage, and the stirge attaches to the target. While attached, the stirge can't make Proboscis attacks, and the target takes 5 (2d4) Necrotic damage at the start of each of the stirge's turns.
  The stirge can detach itself by spending 5 feet of its movement. The target or a creature within 5 feet of it can detach the stirge as an action.",,,tiny,monstrosity,Unaligned,13,+3 (13),5,2d4,"10 ft., Fly 40 ft.",4,16,11,2,8,6,-3,3,0,-4,-1,-2,1/8,,,,,Darkvision 60 ft.; Passive Perception 9,None,
-stone-giant,Stone Giant,,"#### Actions
+stone_giant,Stone Giant,,"#### Actions
 
 <hr>
 
@@ -3519,7 +3519,7 @@ stone-giant,Stone Giant,,"#### Actions
 <hr>
 
 **_Deflect Missile (Recharge 5–6)._** _Trigger:_ The giant is hit by a ranged attack roll and takes Bludgeoning, Piercing, or Slashing damage from it. _Response:_ The giant reduces the damage it takes from the attack by 11 (1d10 + 6), and if that damage is reduced to 0, the giant can redirect some of the attack's force. _Dexterity Saving Throw:_ DC 17, one creature the giant can see within 60 feet. _Failure:_ 11 (1d10 + 6) Force damage.",,,huge,giant,Neutral,17,+5 (15),126,11d12 + 55,40 ft.,23,15,20,10,12,9,6,5,8,0,4,-1,7,,,,,Darkvision 60 ft.; Passive Perception 14,Giant,"Athletics +12, Perception +4, Stealth +5"
-stone-golem,Stone Golem,,"#### Traits
+stone_golem,Stone Golem,,"#### Traits
 
 <hr>
 
@@ -3542,7 +3542,7 @@ stone-golem,Stone Golem,,"#### Traits
 <hr>
 
 **_Slow (Recharge 5–6)._** The golem casts the _Slow_ spell, requiring no spell components and using Constitution as the spellcasting ability (spell save DC 17).",,,large,construct,Unaligned,18,+3 (13),220,21d10 + 105,30 ft.,22,9,20,3,11,1,6,-1,5,-4,0,-5,10,,"Poison, Psychic; Charmed, Exhaustion, Frightened, Paralyzed, Petrified, Poisoned",,,Darkvision 120 ft.; Passive Perception 10,Understands Common plus two other languages but can't speak,
-storm-giant,Storm Giant,,"#### Traits
+storm_giant,Storm Giant,,"#### Traits
 
 <hr>
 
@@ -3643,7 +3643,7 @@ tough,Tough,,"#### Traits
 **_Mace._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Bludgeoning damage.
 
 **_Heavy Crossbow._** _Ranged Attack Roll:_ +3, range 100/400 ft. _Hit:_ 6 (1d10 + 1) Piercing damage.",,,medium,or small humanoid,Neutral,12,+1 (11),32,5d8 + 10,30 ft.,15,12,14,10,10,11,2,1,2,0,0,0,1/2,,,,"Heavy Crossbow, Leather Armor, Mace",Passive Perception 10,Common,
-tough-boss,Tough Boss,,"#### Traits
+tough_boss,Tough Boss,,"#### Traits
 
 <hr>
 
@@ -3696,7 +3696,7 @@ troll,Troll,,"#### Traits
 <hr>
 
 **_Charge._** The troll moves up to half its Speed straight toward an enemy it can see.",,,large,giant,Chaotic Evil,15,+1 (11),94,9d10 + 45,30 ft.,18,13,20,7,9,7,4,1,5,-2,-1,-2,5,,,,,Darkvision 60 ft.; Passive Perception 15,Giant,Perception +5
-troll-limb,Troll Limb,,"#### Traits
+troll_limb,Troll Limb,,"#### Traits
 
 <hr>
 
@@ -3747,7 +3747,7 @@ _Legendary Action Uses: 3. Immediately after another creature's turn, the unicor
 
 **_Shimmering Shield._** The unicorn targets itself or one creature it can see within 60 feet of itself. The target gains 10 (3d6) Temporary Hit Points, and its AC increases by 2 until the end of the unicorn's next turn.
  The unicorn can't take this action again until the start of its next turn.",,,large,celestial,Lawful Good,12,+8 (18),97,13d10 + 26,50 ft.,18,14,15,11,17,16,4,2,2,0,3,3,5,,"Poison; Charmed, Paralyzed, Poisoned",,,Darkvision 60 ft.; Passive Perception 13,"Celestial, Elvish, Sylvan; telepathy 120 ft.",
-vampire-familiar,Vampire Familiar,,"#### Traits
+vampire_familiar,Vampire Familiar,,"#### Traits
 
 <hr>
 
@@ -3766,7 +3766,7 @@ vampire-familiar,Vampire Familiar,,"#### Traits
 <hr>
 
 **_Deathless Agility._** The familiar takes the Dash or Disengage action.",,,medium,or small humanoid,Neutral Evil,15,+5 (15),65,10d8 + 20,"30 ft., Climb 30 ft.",17,16,15,10,10,14,3,5,2,0,2,2,3,Necrotic,Charmed (except from its vampire master),,Daggers (10),Darkvision 60 ft.; Passive Perception 14,Common plus one other language,"Perception +4, Persuasion +4, Stealth +7"
-vampire-spawn,Vampire Spawn,,"#### Traits
+vampire_spawn,Vampire Spawn,,"#### Traits
 
 <hr>
 
@@ -3866,7 +3866,7 @@ vrock,Vrock,,"#### Traits
 **_Spores (Recharge 6)._** _Constitution Saving Throw:_ DC 15, each creature in a 20-foot Emanation originating from the vrock. _Failure:_ The target has the Poisoned condition and repeats the save at the end of each of its turns, ending the effect on itself on a success. While Poisoned, the target takes 5 (1d10) Poison damage at the start of each of its turns. Emptying a flask of Holy Water on the target ends the effect early.
 
 **_Stunning Screech (1/Day)._** _Constitution Saving Throw:_ DC 15, each creature in a 20-foot Emanation originating from the vrock (demons succeed automatically). _Failure:_ 10 (3d6) Thunder damage, and the target has the Stunned condition until the end of the vrock's next turn.",,,large,fiend (demon),Chaotic Evil,15,+2 (12),152,16d10 + 64,"40 ft., Fly 60 ft.",17,15,18,8,13,8,3,5,4,-1,4,2,6,"Cold, Fire, Lightning",Poison; Poisoned,,,Darkvision 120 ft.; Passive Perception 11,Abyssal; telepathy 120 ft.,
-warrior-infantry,Warrior Infantry,,"#### Traits
+warrior_infantry,Warrior Infantry,,"#### Traits
 
 <hr>
 
@@ -3877,7 +3877,7 @@ warrior-infantry,Warrior Infantry,,"#### Traits
 <hr>
 
 **_Spear._** _Melee or Ranged Attack Roll:_ +3, reach 5 ft. or range 20/60 ft. _Hit:_ 4 (1d6 + 1) Piercing damage.",,,medium,or small humanoid,Neutral,13,+0 (10),9,2d8,30 ft.,13,11,11,8,11,8,1,0,0,-1,0,-1,1/8,,,,"Chain Shirt, Spear",Passive Perception 10,Common,
-warrior-veteran,Warrior Veteran,,"#### Actions
+warrior_veteran,Warrior Veteran,,"#### Actions
 
 <hr>
 
@@ -3892,7 +3892,7 @@ warrior-veteran,Warrior Veteran,,"#### Actions
 <hr>
 
 **_Parry._** _Trigger:_ The warrior is hit by a melee attack roll while holding a weapon. _Response:_ The warrior adds 2 to its AC against that attack, possibly causing it to miss.",,,medium,or small humanoid,Neutral,17,+3 (13),65,10d8 + 20,30 ft.,16,13,14,10,11,10,3,1,2,0,0,0,3,,,,"Greatsword, Heavy Crossbow, Splint Armor",Passive Perception 12,Common plus one other language,"Athletics +5, Perception +2"
-water-elemental,Water Elemental,,"#### Traits
+water_elemental,Water Elemental,,"#### Traits
 
 <hr>
 
@@ -4002,7 +4002,7 @@ werewolf,Werewolf,,"#### Traits
 <hr>
 
 **_Shape-Shift._** The werewolf shape-shifts into a Large wolf-humanoid hybrid or a Medium wolf, or it returns to its true humanoid form. Its game statistics, other than its size, are the same in each form. Any equipment it is wearing or carrying isn't transformed.",,,medium,or small monstrosity (lycanthrope),Chaotic Evil,15,+4 (14),71,11d8 + 22,"30 ft., 40 ft. (wolf form only)",16,14,14,10,11,10,3,2,2,0,0,0,3,,,,Longbow,Darkvision 60 ft.; Passive Perception 14,Common (can't speak in wolf form),"Perception +4, Stealth +4"
-white-dragon-wyrmling,White Dragon Wyrmling,,"#### Traits
+white_dragon_wyrmling,White Dragon Wyrmling,,"#### Traits
 
 <hr>
 
@@ -4017,7 +4017,7 @@ white-dragon-wyrmling,White Dragon Wyrmling,,"#### Traits
 **_Rend._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 6 (1d8 + 2) Slashing damage plus 2 (1d4) Cold damage.
 
 **_Cold Breath (Recharge 5–6)._** _Constitution Saving Throw:_ DC 12, each creature in a 15-foot Cone. _Failure:_ 22 (5d8) Cold damage. _Success:_ Half damage.",,,medium,dragon (chromatic),Chaotic Evil,16,+2 (12),32,5d8 + 10,"30 ft., Burrow 15 ft., Fly 60 ft., Swim 30 ft.",14,10,14,5,10,11,2,2,2,-3,2,0,2,,Cold,,,"Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14",Draconic,"Perception +4, Stealth +2"
-young-white-dragon,Young White Dragon,,"#### Traits
+young_white_dragon,Young White Dragon,,"#### Traits
 
 <hr>
 
@@ -4032,7 +4032,7 @@ young-white-dragon,Young White Dragon,,"#### Traits
 **_Rend._** _Melee Attack Roll:_ +7, reach 10 ft. _Hit:_ 9 (2d4 + 4) Slashing damage plus 2 (1d4) Cold damage.
 
 **_Cold Breath (Recharge 5–6)._** _Constitution Saving Throw:_ DC 15, each creature in a 30-foot Cone. _Failure:_ 40 (9d8) Cold damage. _Success:_ Half damage.",,,large,dragon (chromatic),Chaotic Evil,17,+3 (13),123,13d10 + 52,"40 ft., Burrow 20 ft., Fly 80 ft., Swim 40 ft.",18,10,18,6,11,12,4,3,4,2,3,1,6,,Cold,,,"Blindsight 30 ft., Darkvision 120 ft.; Passive Perception 16","Common, Draconic","Perception +6, Stealth +3"
-adult-white-dragon,Adult White Dragon,,"#### Traits
+adult_white_dragon,Adult White Dragon,,"#### Traits
 
 <hr>
 
@@ -4061,7 +4061,7 @@ _Legendary Action Uses: 3 (4 in Lair). Immediately after another creature's turn
 **_Frightful Presence._** The dragon casts _Fear_, requiring no Material components and using Charisma as the spellcasting ability (spell save DC 14). The dragon can't take this action again until the start of its next turn.
 
 **_Pounce._** The dragon moves up to half its Speed, and it makes one Rend attack.",,,huge,dragon (chromatic),Chaotic Evil,18,+10 (20),200,16d12 + 96,"40 ft., Burrow 30 ft., Fly 80 ft., Swim 40 ft.",22,10,22,8,12,12,6,5,6,-1,6,1,13,,Cold,,,"Blindsight 60 ft., Darkvision 120 ft.; Passive Perception 21","Common, Draconic","Perception +11, Stealth +5"
-ancient-white-dragon,Ancient White Dragon,,"#### Traits
+ancient_white_dragon,Ancient White Dragon,,"#### Traits
 
 <hr>
 
@@ -4108,7 +4108,7 @@ wight,Wight,,"#### Traits
 
 **_Life Drain._** _Constitution Saving Throw:_ DC 13, one creature within 5 feet. _Failure:_ 6 (1d8 + 2) Necrotic damage, and the target's Hit Point maximum decreases by an amount equal to the damage taken.
  A Humanoid slain by this attack rises 24 hours later as a **Zombie** under the wight's control, unless the Humanoid is restored to life or its body is destroyed. The wight can have no more than twelve zombies under its control at a time.",,,medium,undead,Neutral Evil,14,+4 (14),82,11d8 + 33,30 ft.,15,14,16,10,13,15,2,2,3,0,1,2,3,Necrotic,"Poison; Exhaustion, Poisoned",,Studded Leather Armor,Darkvision 60 ft.; Passive Perception 13,Common plus one other language,"Perception +3, Stealth +4"
-will-o-wisp,Will-o'-Wisp,,"#### Traits
+will_o_wisp,Will-o'-Wisp,,"#### Traits
 
 <hr>
 
@@ -4131,7 +4131,7 @@ will-o-wisp,Will-o'-Wisp,,"#### Traits
 **_Consume Life._** _Constitution Saving Throw:_ DC 10, one living creature the wisp can see within 5 feet that has 0 Hit Points. _Failure:_ The target dies, and the wisp regains 10 (3d6) Hit Points.
 
 **_Vanish._** The wisp and its light have the Invisible condition until the wisp's Concentration ends on this effect, which ends early immediately after the wisp makes an attack roll or uses Consume Life.",,,tiny,undead,Chaotic Evil,19,+9 (19),27,11d4,"5 ft., Fly 50 ft. (hover)",,28,10,13,14,11,,9,0,1,2,0,2,"Acid, Bludgeoning, Cold, Fire, Necrotic, Piercing, Slashing","Lightning, Poison; Exhaustion, Grappled, Paralyzed, Petrified, Poisoned, Prone, Restrained, Unconscious",,,Darkvision 120 ft.; Passive Perception 12,Common plus one other language,
-winter-wolf,Winter Wolf,,"#### Traits
+winter_wolf,Winter Wolf,,"#### Traits
 
 <hr>
 
@@ -4207,7 +4207,7 @@ zombie,Zombie,,"#### Traits
 <hr>
 
 **_Slam._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 5 (1d8 + 1) Bludgeoning damage.",,,medium,undead,Neutral Evil,8,−2 (8),15,2d8 + 6,20 ft.,13,6,16,3,6,5,1,-2,3,-4,0,-3,1/4,,"Poison; Exhaustion, Poisoned",,,Darkvision 60 ft.; Passive Perception 8,Understands Common plus one other language but can't speak,
-ogre-zombie,Ogre Zombie,,"#### Traits
+ogre_zombie,Ogre Zombie,,"#### Traits
 
 <hr>
 
@@ -4275,14 +4275,14 @@ bat,Bat,,"### Actions
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 1 Piercing damage.",,,tiny,beast,Unaligned,12,+2 (12),1,1d4 − 1,"5 ft., Fly 30 ft.",2,15,8,2,12,4,-4,2,-1,-4,1,-3,0,,,,,Blindsight 60 ft.; Passive Perception 11,None,
-black-bear,Black Bear,,"### Actions
+black_bear,Black Bear,,"### Actions
 
 <hr>
 
 **_Multiattack._** The bear makes two Rend attacks.
 
 **_Rend._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Slashing damage.",,,medium,beast,Unaligned,11,+1 (11),19,3d8 + 6,"30 ft., Climb 30 ft., Swim 30 ft.",15,12,14,2,12,7,2,1,2,-4,1,-2,1/2,,,,,Darkvision 60 ft.; Passive Perception 15,None,Perception +5
-blood-hawk,Blood Hawk,,"### Traits
+blood_hawk,Blood Hawk,,"### Traits
 
 <hr>
 
@@ -4304,7 +4304,7 @@ boar,Boar,,"### Traits
 <hr>
 
 **_Gore._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 4 (1d6 + 1) Piercing damage. If the target is a Medium or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit, the target takes an extra 3 (1d6) Piercing damage and has the Prone condition.",,,medium,beast,Unaligned,11,+0 (10),13,2d8 + 4,40 ft.,13,11,14,2,9,5,1,0,2,-4,-1,-3,1/4,,,,,Passive Perception 9,None,
-brown-bear,Brown Bear,,"### Actions
+brown_bear,Brown Bear,,"### Actions
 
 <hr>
 
@@ -4329,7 +4329,7 @@ cat,Cat,,"### Traits
 <hr>
 
 **_Scratch._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 1 Slashing damage.",,,tiny,beast,Unaligned,12,+2 (12),2,1d4,"40 ft., Climb 40 ft.",3,15,10,3,12,7,-4,4,0,-4,1,-2,0,,,,,Darkvision 60 ft.; Passive Perception 13,None,"Perception +3, Stealth +4"
-constrictor-snake,Constrictor Snake,,"### Actions
+constrictor_snake,Constrictor Snake,,"### Actions
 
 <hr>
 
@@ -4369,7 +4369,7 @@ deer,Deer,,"### Traits
 <hr>
 
 **_Ram._** _Melee Attack Roll:_ +2, reach 5 ft. _Hit:_ 2 (1d4) Bludgeoning damage.",,,medium,beast,Unaligned,13,+3 (13),4,1d8,50 ft.,11,16,11,2,14,5,0,3,0,-4,2,-3,0,,,,,Darkvision 60 ft.; Passive Perception 14,None,Perception +4
-dire-wolf,Dire Wolf,,"### Traits
+dire_wolf,Dire Wolf,,"### Traits
 
 <hr>
 
@@ -4380,7 +4380,7 @@ dire-wolf,Dire Wolf,,"### Traits
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 8 (1d10 + 3) Piercing damage. If the target is a Large or smaller creature, it has the Prone condition.",,,large,beast,Unaligned,14,+2 (12),22,3d10 + 6,50 ft.,17,15,15,3,12,7,3,2,2,-4,1,-2,1,,,,,Darkvision 60 ft.; Passive Perception 15,None,"Perception +5, Stealth +4"
-draft-horse,Draft Horse,,"### Actions
+draft_horse,Draft Horse,,"### Actions
 
 <hr>
 
@@ -4408,7 +4408,7 @@ elk,Elk,,"### Actions
 <hr>
 
 **_Ram._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 6 (1d6 + 3) Bludgeoning damage. If the target is a Large or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit, the target takes an extra 3 (1d6) Bludgeoning damage and has the Prone condition.",,,large,beast,Unaligned,10,+0 (10),11,2d10,50 ft.,16,10,11,2,10,6,3,0,0,-4,0,-2,1/4,,,,,Darkvision 60 ft.; Passive Perception 12,None,Perception +2
-flying-snake,Flying Snake,,"### Traits
+flying_snake,Flying Snake,,"### Traits
 
 <hr>
 
@@ -4432,7 +4432,7 @@ frog,Frog,,"### Traits
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 1 Piercing damage.",,,tiny,beast,Unaligned,11,+1 (11),1,1d4 − 1,"20 ft., Swim 20 ft.",1,13,8,1,8,3,-5,1,-1,-5,-1,-4,0,,,,,Darkvision 30 ft.; Passive Perception 11,None,"Perception +1, Stealth +3"
-giant-ape,Giant Ape,,"### Actions
+giant_ape,Giant Ape,,"### Actions
 
 <hr>
 
@@ -4447,17 +4447,17 @@ giant-ape,Giant Ape,,"### Actions
 <hr>
 
 **_Leap._** The ape jumps up to 30 feet by spending 10 feet of movement.",,,huge,beast,Unaligned,12,+5 (15),168,16d12 + 64,"40 ft., Climb 40 ft.",23,14,18,5,12,7,6,2,4,-3,1,-2,7,,,,,Passive Perception 14,None,"Athletics +9, Perception +4, Survival +4"
-giant-badger,Giant Badger,,"### Actions
+giant_badger,Giant Badger,,"### Actions
 
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 6 (2d4 + 1) Piercing damage.",,,medium,beast,Unaligned,13,+0 (10),15,2d8 + 6,"30 ft., Burrow 10 ft.",13,10,17,2,12,5,1,0,3,-4,1,-3,1/4,Poison,,,,Darkvision 60 ft.; Passive Perception 13,None,Perception +3
-giant-bat,Giant Bat,,"### Actions
+giant_bat,Giant Bat,,"### Actions
 
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 6 (1d6 + 3) Piercing damage.",,,large,beast,Unaligned,13,+3 (13),22,4d10,"10 ft., Fly 60 ft.",15,16,11,2,12,6,2,3,0,-4,1,-2,1/4,,,,,Blindsight 120 ft.; Passive Perception 11,None,
-giant-boar,Giant Boar,,"### Traits
+giant_boar,Giant Boar,,"### Traits
 
 <hr>
 
@@ -4468,12 +4468,12 @@ giant-boar,Giant Boar,,"### Traits
 <hr>
 
 **_Gore._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 10 (2d6 + 3) Piercing damage. If the target is a Large or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit, the target takes an extra 7 (2d6) Piercing damage and has the Prone condition.",,,large,beast,Unaligned,13,+0 (10),42,5d10 + 15,40 ft.,17,10,16,2,7,5,5,0,3,-4,-2,-3,2,,,,,Passive Perception 8,None,
-giant-centipede,Giant Centipede,,"### Actions
+giant_centipede,Giant Centipede,,"### Actions
 
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 4 (1d4 + 2) Piercing damage, and the target has the Poisoned condition until the start of the centipede's next turn.",,,small,beast,Unaligned,14,+2 (12),9,2d6 + 2,"30 ft., Climb 30 ft.",5,14,12,1,7,3,-3,2,1,-5,-2,-4,1/4,,,,,Blindsight 30 ft.; Passive Perception 8,None,
-giant-constrictor-snake,Giant Constrictor Snake,,"### Actions
+giant_constrictor_snake,Giant Constrictor Snake,,"### Actions
 
 <hr>
 
@@ -4482,7 +4482,7 @@ giant-constrictor-snake,Giant Constrictor Snake,,"### Actions
 **_Bite._** _Melee Attack Roll:_ +6, reach 10 ft. _Hit:_ 11 (2d6 + 4) Piercing damage.
 
 **_Constrict._** _Strength Saving Throw:_ DC 14, one Large or smaller creature the snake can see within 10 feet. _Failure:_ 13 (2d8 + 4) Bludgeoning damage, and the target has the Grappled condition (escape DC 14).",,,huge,beast,Unaligned,12,+2 (12),60,8d12 + 8,"30 ft., Swim 30 ft.",19,14,12,1,10,3,4,2,1,-5,0,-4,2,,,,,Blindsight 10 ft.; Passive Perception 12,None,Perception +2
-giant-crab,Giant Crab,,"### Traits
+giant_crab,Giant Crab,,"### Traits
 
 <hr>
 
@@ -4493,7 +4493,7 @@ giant-crab,Giant Crab,,"### Traits
 <hr>
 
 **_Claw._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 4 (1d6 + 1) Bludgeoning damage. If the target is a Medium or smaller creature, it has the Grappled condition (escape DC 11) from one of two claws.",,,medium,beast,Unaligned,15,+1 (11),13,3d8,"30 ft., Swim 30 ft.",13,13,11,1,9,3,1,1,0,-5,-1,-4,1/8,,,,,Blindsight 30 ft.; Passive Perception 9,None,Stealth +3
-giant-crocodile,Giant Crocodile,,"### Traits
+giant_crocodile,Giant Crocodile,,"### Traits
 
 <hr>
 
@@ -4508,19 +4508,19 @@ giant-crocodile,Giant Crocodile,,"### Traits
 **_Bite._** _Melee Attack Roll:_ +8, reach 5 ft. _Hit:_ 21 (3d10 + 5) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 15). While Grappled, the target has the Restrained condition and can't be targeted by the crocodile's Tail.
 
 **_Tail._** _Melee Attack Roll:_ +8, reach 10 ft. _Hit:_ 18 (3d8 + 5) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition.",,,huge,beast,Unaligned,14,−1 (9),85,9d12 + 27,"30 ft., Swim 50 ft.",21,9,17,2,10,7,5,-1,3,-4,0,-2,5,,,,,Passive Perception 10,None,Stealth +5
-giant-eagle,Giant Eagle,,"### Actions
+giant_eagle,Giant Eagle,,"### Actions
 
 <hr>
 
 **_Multiattack._** The eagle makes two Rend attacks.
 
 **_Rend._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 5 (1d4 + 3) Slashing damage plus 3 (1d6) Radiant damage.",,,large,celestial,Neutral Good,13,+3 (13),26,4d10 + 4,"10 ft., Fly 80 ft.",16,17,13,8,14,10,3,3,1,-1,2,0,1,"Necrotic, Radiant",,,,Passive Perception 16,Celestial; understands Common and Primordial (Auran) but can't speak them,Perception +6
-giant-elk,Giant Elk,,"### Actions
+giant_elk,Giant Elk,,"### Actions
 
 <hr>
 
 **_Ram._** _Melee Attack Roll:_ +6, reach 10 ft. _Hit:_ 11 (2d6 + 4) Bludgeoning damage plus 5 (2d4) Radiant damage. If the target is a Huge or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition.",,,huge,celestial,Neutral Good,14,+6 (16),42,5d12 + 10,60 ft.,19,18,14,7,14,10,6,6,2,-2,2,0,2,"Necrotic, Radiant",,,,Darkvision 90 ft.; Passive Perception 14,"Celestial; understands Common, Elvish, and Sylvan but can't speak them",Perception +4
-giant-fire-beetle,Giant Fire Beetle,,"### Traits
+giant_fire_beetle,Giant Fire Beetle,,"### Traits
 
 <hr>
 
@@ -4531,7 +4531,7 @@ giant-fire-beetle,Giant Fire Beetle,,"### Traits
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +1, reach 5 ft. _Hit:_ 1 Fire damage.",,,small,beast,Unaligned,13,+0 (10),4,1d6 + 1,"30 ft., Climb 30 ft.",8,10,12,1,7,3,-1,0,1,-5,-2,-4,0,Fire,,,,Blindsight 30 ft.; Passive Perception 8,None,
-giant-frog,Giant Frog,,"### Traits
+giant_frog,Giant Frog,,"### Traits
 
 <hr>
 
@@ -4547,12 +4547,12 @@ giant-frog,Giant Frog,,"### Traits
 
 **_Swallow._** The frog swallows a Small or smaller target it is grappling. While swallowed, the target isn't Grappled but has the Blinded and Restrained conditions, and it has Total Cover against attacks and other effects outside the frog. While swallowing the target, the frog can't use Bite, and if the frog dies, the swallowed target is no longer Restrained and can escape from the corpse using 5 feet of movement, exiting with the Prone condition.
  At the end of the frog's next turn, the swallowed target takes 5 (2d4) Acid damage. If that damage doesn't kill it, the frog disgorges it, causing it to exit Prone.",,,medium,beast,Unaligned,11,+1 (11),18,4d8,"30 ft., Swim 30 ft.",12,13,11,2,10,3,1,1,0,-4,0,-4,1/4,,,,,Darkvision 30 ft.; Passive Perception 12,None,"Perception +2, Stealth +4"
-giant-goat,Giant Goat,,"### Actions
+giant_goat,Giant Goat,,"### Actions
 
 <hr>
 
 **_Ram._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 6 (1d6 + 3) Bludgeoning damage. If the target is a Large or smaller creature and the goat moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition.",,,large,beast,Unaligned,11,+1 (11),19,3d10 + 3,"40 ft., Climb 30 ft.",17,13,12,3,12,6,5,1,1,-4,1,-2,1/2,,,,,Darkvision 60 ft.; Passive Perception 13,None,Perception +3
-giant-hyena,Giant Hyena,,"### Actions
+giant_hyena,Giant Hyena,,"### Actions
 
 <hr>
 
@@ -4563,7 +4563,7 @@ giant-hyena,Giant Hyena,,"### Actions
 <hr>
 
 **_Rampage (1/Day)._** Immediately after dealing damage to a creature that was already Bloodied, the hyena can move up to half its Speed, and it makes one Bite attack.",,,large,beast,Unaligned,12,+2 (12),45,6d10 + 12,50 ft.,16,14,14,2,12,7,3,2,2,-4,1,-2,1,,,,,Darkvision 60 ft.; Passive Perception 13,None,Perception +3
-giant-lizard,Giant Lizard,,"### Traits
+giant_lizard,Giant Lizard,,"### Traits
 
 <hr>
 
@@ -4574,7 +4574,7 @@ giant-lizard,Giant Lizard,,"### Traits
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 6 (1d8 + 2) Piercing damage.",,,large,beast,Unaligned,12,+1 (11),19,3d10 + 3,"40 ft., Climb 40 ft.",15,12,13,2,10,5,2,3,1,-4,0,-3,1/4,,,,,Darkvision 60 ft.; Passive Perception 10,None,
-giant-octopus,Giant Octopus,,"### Traits
+giant_octopus,Giant Octopus,,"### Traits
 
 <hr>
 
@@ -4591,7 +4591,7 @@ giant-octopus,Giant Octopus,,"### Traits
 <hr>
 
 **_Ink Cloud (1/Day)._** _Trigger:_ The octopus takes damage while underwater. _Response:_ The octopus releases ink that fills a 10-foot Cube centered on itself, and the octopus moves up to its Swim Speed. The Cube is Heavily Obscured for 1 minute or until a strong current or similar effect disperses the ink.",,,large,beast,Unaligned,11,+1 (11),45,7d10 + 7,"10 ft., Swim 60 ft.",17,13,13,5,10,4,3,1,1,-3,0,-3,1,,,,,Darkvision 60 ft.; Passive Perception 14,None,"Perception +4, Stealth +5"
-giant-owl,Giant Owl,,"### Traits
+giant_owl,Giant Owl,,"### Traits
 
 <hr>
 
@@ -4606,7 +4606,7 @@ giant-owl,Giant Owl,,"### Traits
 **_Spellcasting._** The owl casts one of the following spells, requiring no spell components and using Wisdom as the spellcasting ability:
  **At Will:** _Detect Evil and Good_, _Detect Magic_
  **1/Day:** _Clairvoyance_",,,large,celestial,Neutral,12,+2 (12),19,3d10 + 3,"5 ft., Fly 60 ft.",13,15,12,10,14,10,1,2,1,0,4,0,1/4,"Necrotic, Radiant",,,,Darkvision 120 ft.; Passive Perception 16,"Celestial; understands Common, Elvish, and Sylvan but can't speak them","Perception +6, Stealth +6"
-giant-rat,Giant Rat,,"### Traits
+giant_rat,Giant Rat,,"### Traits
 
 <hr>
 
@@ -4617,7 +4617,7 @@ giant-rat,Giant Rat,,"### Traits
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +5, reach 5 feet. _Hit:_ 5 (1d4 + 3) Piercing damage.",,,small,beast,Unaligned,13,+3 (13),7,2d6,"30 ft., Climb 30 ft.",7,16,11,2,10,4,-2,5,0,-4,0,-3,1/8,,,,,Darkvision 60 ft.; Passive Perception 12,None,Perception +2
-giant-scorpion,Giant Scorpion,,"### Actions
+giant_scorpion,Giant Scorpion,,"### Actions
 
 <hr>
 
@@ -4626,7 +4626,7 @@ giant-scorpion,Giant Scorpion,,"### Actions
 **_Claw._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 6 (1d6 + 3) Bludgeoning damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13) from one of two claws.
 
 **_Sting._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 7 (1d8 + 3) Piercing damage plus 11 (2d10) Poison damage.",,,large,beast,Unaligned,15,+1 (11),52,7d10 + 14,40 ft.,16,13,15,1,9,3,3,1,2,-5,-1,-4,3,,,,,Blindsight 60 ft.; Passive Perception 9,None,
-giant-seahorse,Giant Seahorse,,"### Traits
+giant_seahorse,Giant Seahorse,,"### Traits
 
 <hr>
 
@@ -4643,7 +4643,7 @@ giant-seahorse,Giant Seahorse,,"### Traits
 <hr>
 
 **_Bubble Dash._** While underwater, the seahorse moves up to half its Swim Speed without provoking Opportunity Attacks.",,,large,beast,Unaligned,14,+1 (11),16,3d10,"5 ft., Swim 40 ft.",15,12,11,2,12,5,2,1,0,-4,1,-3,1/2,,,,,Passive Perception 11,None,
-giant-shark,Giant Shark,,"### Traits
+giant_shark,Giant Shark,,"### Traits
 
 <hr>
 
@@ -4656,7 +4656,7 @@ giant-shark,Giant Shark,,"### Traits
 **_Multiattack._** The shark makes two Bite attacks.
 
 **_Bite._** _Melee Attack Roll:_ +9 (with Advantage if the target doesn't have all its Hit Points), reach 5 ft. _Hit:_ 22 (3d10 + 6) Piercing damage.",,,huge,beast,Unaligned,13,+3 (13),92,8d12 + 40,"5 ft., Swim 60 ft.",23,11,21,1,10,5,6,0,5,-5,0,-3,5,,,,,Blindsight 60 ft.; Passive Perception 13,None,Perception +3
-giant-spider,Giant Spider,,"### Traits
+giant_spider,Giant Spider,,"### Traits
 
 <hr>
 
@@ -4671,7 +4671,7 @@ giant-spider,Giant Spider,,"### Traits
 **_Bite._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 7 (1d8 + 3) Piercing damage plus 7 (2d6) Poison damage.
 
 **_Web (Recharge 5–6)._** _Dexterity Saving Throw:_ DC 13, one creature the spider can see within 60 feet. _Failure:_ The target has the Restrained condition until the web is destroyed (AC 10; HP 5; Vulnerability to Fire damage; Immunity to Poison and Psychic damage).",,,large,beast,Unaligned,14,+3 (13),26,4d10 + 4,"30 ft., Climb 30 ft.",14,16,12,2,11,4,2,3,1,-4,0,-3,1,,,,,Darkvision 60 ft.; Passive Perception 14,None,"Perception +4, Stealth +7"
-giant-toad,Giant Toad,,"### Traits
+giant_toad,Giant Toad,,"### Traits
 
 <hr>
 
@@ -4687,12 +4687,12 @@ giant-toad,Giant Toad,,"### Traits
 
 **_Swallow._** The toad swallows a Medium or smaller target it is grappling. While swallowed, the target isn't Grappled but has the Blinded and Restrained conditions, and it has Total Cover against attacks and other effects outside the toad. In addition, the target takes 10 (3d6) Acid damage at the end of each of the toad's turns. The
  toad can have only one target swallowed at a time, and it can't use Bite while it has a swallowed target. If the toad dies, a swallowed creature is no longer Restrained and can escape from the corpse using 5 feet of movement, exiting with the Prone condition.",,,large,beast,Unaligned,11,+1 (11),39,6d10 + 6,"30 ft., Swim 30 ft.",15,13,13,2,10,3,2,1,1,-4,0,-4,1,,,,,Darkvision 60 ft.; Passive Perception 10,None,
-giant-venomous-snake,Giant Venomous Snake,,"### Actions
+giant_venomous_snake,Giant Venomous Snake,,"### Actions
 
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +6, reach 10 ft. _Hit:_ 6 (1d4 + 4) Piercing damage plus 4 (1d8) Poison damage.",,,medium,beast,Unaligned,14,+4 (14),11,2d8 + 2,"40 ft., Swim 40 ft.",10,18,13,2,10,3,0,4,1,-4,0,-4,1/4,,,,,Blindsight 10 ft.; Passive Perception 12,None,Perception +2
-giant-vulture,Giant Vulture,,"### Traits
+giant_vulture,Giant Vulture,,"### Traits
 
 <hr>
 
@@ -4703,7 +4703,7 @@ giant-vulture,Giant Vulture,,"### Traits
 <hr>
 
 **_Gouge._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 9 (2d6 + 2) Piercing damage, and the target has the Poisoned condition until the end of its next turn.",,,large,monstrosity,Neutral Evil,10,+0 (10),25,3d10 + 9,"10 ft., Fly 60 ft.",15,10,16,6,12,7,2,0,3,-2,1,-2,1,Necrotic,,,,Darkvision 60 ft.; Passive Perception 13,Understands Common but can't speak,Perception +3
-giant-wasp,Giant Wasp,,"### Traits
+giant_wasp,Giant Wasp,,"### Traits
 
 <hr>
 
@@ -4714,12 +4714,12 @@ giant-wasp,Giant Wasp,,"### Traits
 <hr>
 
 **_Sting._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Piercing damage plus 5 (2d4) Poison damage.",,,medium,beast,Unaligned,13,+2 (12),22,5d8,"10 ft., Fly 50 ft.",10,14,10,1,10,3,0,2,0,-5,0,-4,1/2,,,,,Passive Perception 10,None,
-giant-weasel,Giant Weasel,,"### Actions
+giant_weasel,Giant Weasel,,"### Actions
 
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 5 (1d4 + 3) Piercing damage.",,,medium,beast,Unaligned,13,+3 (13),9,2d8,"40 ft., Climb 30 ft.",11,17,10,4,12,5,0,3,0,-3,1,-3,1/8,,,,,Darkvision 60 ft.; Passive Perception 13,None,"Acrobatics +5, Perception +3, Stealth +5"
-giant-wolf-spider,Giant Wolf Spider,,"### Traits
+giant_wolf_spider,Giant Wolf Spider,,"### Traits
 
 <hr>
 
@@ -4753,7 +4753,7 @@ hippopotamus,Hippopotamus,,"### Traits
 **_Multiattack._** The hippopotamus makes two Bite attacks.
 
 **_Bite._** _Melee Attack Roll:_ +7, reach 5 ft. _Hit:_ 16 (2d10 + 5) Piercing damage.",,,large,beast,Unaligned,14,−2 (8),82,11d10 + 22,"30 ft., Swim 30 ft.",21,7,15,2,12,4,7,-2,2,-4,1,-3,4,,,,,Passive Perception 13,None,Perception +3
-hunter-shark,Hunter Shark,,"### Traits
+hunter_shark,Hunter Shark,,"### Traits
 
 <hr>
 
@@ -4780,7 +4780,7 @@ jackal,Jackal,,"### Actions
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +1, reach 5 ft. _Hit:_ 1 (1d4 − 1) Piercing damage.",,,small,beast,Unaligned,12,+2 (12),3,1d6,40 ft.,8,15,11,3,12,6,-1,2,0,-4,1,-2,0,,,,,Darkvision 90 ft.; Passive Perception 15,None,"Perception +5, Stealth +4"
-killer-whale,Killer Whale,,"### Traits
+killer_whale,Killer Whale,,"### Traits
 
 <hr>
 
@@ -4911,7 +4911,7 @@ plesiosaurus,Plesiosaurus,,"### Traits
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +6, reach 10 ft. _Hit:_ 11 (2d6 + 4) Piercing damage.",,,large,beast (dinosaur),Unaligned,13,+2 (12),68,8d10 + 24,"20 ft., Swim 40 ft.",18,15,16,2,12,5,4,2,3,-4,1,-3,2,,,,,Passive Perception 13,None,"Perception +3, Stealth +4"
-polar-bear,Polar Bear,,"### Actions
+polar_bear,Polar Bear,,"### Actions
 
 <hr>
 
@@ -4956,7 +4956,7 @@ raven,Raven,,"### Traits
 <hr>
 
 **_Beak._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 1 Piercing damage.",,,tiny,beast,Unaligned,12,+2 (12),2,1d4,"10 ft., Fly 50 ft.",2,14,10,5,13,6,-4,2,0,-3,1,-2,0,,,,,Passive Perception 13,None,Perception +3
-reef-shark,Reef Shark,,"### Traits
+reef_shark,Reef Shark,,"### Traits
 
 <hr>
 
@@ -4974,12 +4974,12 @@ rhinoceros,Rhinoceros,,"### Actions
 <hr>
 
 **_Gore._** _Melee Attack Roll:_ +7, reach 5 ft. _Hit:_ 14 (2d8 + 5) Piercing damage. If target is a Large or smaller creature and the rhinoceros moved 20+ feet straight toward it immediately before the hit, the target takes an extra 9 (2d8) Piercing damage and has the Prone condition.",,,large,beast,Unaligned,13,−1 (9),45,6d10 + 12,40 ft.,21,8,15,2,12,6,5,-1,2,-4,1,-2,2,,,,,Passive Perception 11,None,
-riding-horse,Riding Horse,,"### Actions
+riding_horse,Riding Horse,,"### Actions
 
 <hr>
 
 **_Hooves._** _Melee Attack Roll:_ +5, reach 5 ft. _Hit:_ 7 (1d8 + 3) Bludgeoning damage.",,,large,beast,Unaligned,11,+1 (11),13,2d10 + 2,60 ft.,16,13,12,2,11,7,3,1,1,-4,0,-2,1/4,,,,,Passive Perception 10,None,
-saber-toothed-tiger,Saber-Toothed Tiger,,"### Traits
+saber_toothed_tiger,Saber-Toothed Tiger,,"### Traits
 
 <hr>
 
@@ -5027,7 +5027,7 @@ spider,Spider,,"### Traits
 <hr>
 
 **_Bite._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 1 Piercing damage plus 2 (1d4) Poison damage.",,,tiny,beast,Unaligned,12,+2 (12),1,1d4 − 1,"20 ft., Climb 20 ft.",2,14,8,1,10,2,-4,2,-1,-5,0,-4,0,,,,,Darkvision 30 ft.; Passive Perception 10,None,Stealth +4
-swarm-of-bats,Swarm of Bats,,"### Traits
+swarm_of_bats,Swarm of Bats,,"### Traits
 
 <hr>
 
@@ -5038,7 +5038,7 @@ swarm-of-bats,Swarm of Bats,,"### Traits
 <hr>
 
 **_Bites._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (2d4) Piercing damage, or 2 (1d4) Piercing damage if the swarm is Bloodied.",,,large,swarm of tiny beasts,Unaligned,12,+2 (12),11,2d10,"5 ft., Fly 30 ft.",5,15,10,2,12,4,-3,2,0,-4,1,-3,1/4,"Bludgeoning, Piercing, Slashing","Charmed, Frightened, Grappled, Paralyzed, Petrified, Prone, Restrained, Stunned",,,Blindsight 60 ft.; Passive Perception 11,None,
-swarm-of-insects,Swarm of Insects,,"### Traits
+swarm_of_insects,Swarm of Insects,,"### Traits
 
 <hr>
 
@@ -5051,7 +5051,7 @@ swarm-of-insects,Swarm of Insects,,"### Traits
 <hr>
 
 **_Bites._** _Melee Attack Roll:_ +3, reach 5 ft. _Hit:_ 6 (2d4 + 1) Poison damage, or 3 (1d4 + 1) Poison damage if the swarm is Bloodied.",,,medium,swarm of tiny beasts,Unaligned,11,+1 (11),19,3d8 + 6,"20 ft., Climb or Fly 20 ft. (GM's choice)",3,13,14,1,7,1,-4,1,2,-5,-2,-5,1/2,"Bludgeoning, Piercing, Slashing","Charmed, Frightened, Grappled, Paralyzed, Petrified, Prone, Restrained, Stunned",,,Blindsight 30 ft.; Passive Perception 8,None,
-swarm-of-piranhas,Swarm of Piranhas,,"### Traits
+swarm_of_piranhas,Swarm of Piranhas,,"### Traits
 
 <hr>
 
@@ -5064,7 +5064,7 @@ swarm-of-piranhas,Swarm of Piranhas,,"### Traits
 <hr>
 
 **_Bites._** _Melee Attack Roll:_ +5 (with Advantage if the target doesn't have all its Hit Points), reach 5 ft. _Hit:_ 8 (2d4 + 3) Piercing damage, or 5 (1d4 + 3) Piercing damage if the swarm is Bloodied.",,,medium,swarm of tiny beasts,Unaligned,13,+3 (13),28,8d8 − 8,"5 ft., Swim 40 ft.",13,16,9,1,7,2,1,3,-1,-5,-2,-4,1,"Bludgeoning, Piercing, Slashing","Charmed, Frightened, Grappled, Paralyzed, Petrified, Prone, Restrained, Stunned",,,Darkvision 60 ft.; Passive Perception 8,None,
-swarm-of-rats,Swarm of Rats,,"### Traits
+swarm_of_rats,Swarm of Rats,,"### Traits
 
 <hr>
 
@@ -5075,7 +5075,7 @@ swarm-of-rats,Swarm of Rats,,"### Traits
 <hr>
 
 **_Bites._** _Melee Attack Roll:_ +2, reach 5 ft. _Hit:_ 5 (2d4) Piercing damage, or 2 (1d4) Piercing damage if the swarm is Bloodied.",,,medium,swarm of tiny beasts,Unaligned,10,+0 (10),14,4d8 − 4,"30 ft., Climb 30 ft.",9,11,9,2,10,3,-1,2,-1,-4,0,-4,1/4,"Bludgeoning, Piercing, Slashing","Charmed, Frightened, Grappled, Paralyzed, Petrified, Prone, Restrained, Stunned",,,Darkvision 30 ft.; Passive Perception 10,None,
-swarm-of-ravens,Swarm of Ravens,,"### Traits
+swarm_of_ravens,Swarm of Ravens,,"### Traits
 
 <hr>
 
@@ -5088,7 +5088,7 @@ swarm-of-ravens,Swarm of Ravens,,"### Traits
 **_Beaks._** _Melee Attack Roll:_ +4, reach 5 ft. _Hit:_ 5 (1d6 + 2) Piercing damage, or 2 (1d4) Piercing damage if the swarm is Bloodied.
 
 **_Cacophony (Recharge 6)._** _Wisdom Saving Throw:_ DC 10, one creature in the swarm's space. _Failure:_ The target has the Deafened condition until the start of the swarm's next turn. While Deafened, the target also has Disadvantage on ability checks and attack rolls.",,,medium,swarm of tiny beasts,Unaligned,12,+2 (12),11,2d8 + 2,"10 ft., Fly 50 ft.",6,14,12,5,12,6,-2,2,1,-3,1,-2,1/4,"Bludgeoning, Piercing, Slashing","Charmed, Frightened, Grappled, Paralyzed, Petrified, Prone, Restrained, Stunned",,,Passive Perception 15,None,Perception +5
-swarm-of-venomous-snakes,Swarm of Venomous Snakes,,"### Traits
+swarm_of_venomous_snakes,Swarm of Venomous Snakes,,"### Traits
 
 <hr>
 
@@ -5117,7 +5117,7 @@ triceratops,Triceratops,,"### Actions
 **_Multiattack._** The triceratops makes two Gore attacks.
 
 **_Gore._** _Melee Attack Roll:_ +9, reach 5 ft. _Hit:_ 19 (2d12 + 6) Piercing damage. If the target is Huge or smaller and the triceratops moved 20+ feet straight toward it immediately before the hit, the target takes an extra 9 (2d8) Piercing damage and has the Prone condition.",,,huge,beast (dinosaur),Unaligned,14,−1 (9),114,12d12 + 36,50 ft.,22,9,17,2,11,5,6,-1,3,-4,0,-3,5,,,,,Passive Perception 10,None,
-tyrannosaurus-rex,Tyrannosaurus Rex,,"### Actions
+tyrannosaurus_rex,Tyrannosaurus Rex,,"### Actions
 
 <hr>
 
@@ -5126,7 +5126,7 @@ tyrannosaurus-rex,Tyrannosaurus Rex,,"### Actions
 **_Bite._** _Melee Attack Roll:_ +10, reach 10 ft. _Hit:_ 33 (4d12 + 7) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 17). While Grappled, the target has the Restrained condition and can't be targeted by the tyrannosaurus's Tail.
 
 **_Tail._** _Melee Attack Roll:_ +10, reach 15 ft. _Hit:_ 25 (4d8 + 7) Bludgeoning damage. If the target is a Huge or smaller creature, it has the Prone condition.",,,huge,beast (dinosaur),Unaligned,13,+3 (13),136,13d12 + 52,50 ft.,25,10,19,2,12,9,10,0,4,-4,4,-1,8,,,,,Passive Perception 14,None,Perception +4
-venomous-snake,Venomous Snake,,"### Actions
+venomous_snake,Venomous Snake,,"### Actions
 
 <hr>
 

@@ -172,7 +172,7 @@ const slotRows = [];
 for (const [kind, { levels }] of Object.entries(kinds))
 	for (const l of levels) {
 		const row = {
-			id: `${kind}-${l.level}`,
+			id: `${kind}_${l.level}`,
 			systems: SYSTEMS,
 			source: SOURCE,
 			kind,
@@ -201,7 +201,7 @@ const castRows = [];
 for (const [id, { levels }] of Object.entries(parsed))
 	for (const l of levels)
 		castRows.push({
-			id: `${id}-${l.level}`,
+			id: `${id}_${l.level}`,
 			systems: SYSTEMS,
 			source: SOURCE,
 			class_id: id,

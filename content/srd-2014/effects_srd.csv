@@ -5,8 +5,8 @@
 id,name_en,name_uk,text_en,text_uk,effects,negative,duration_rounds
 bless,Bless,,"+1d4 to attack rolls and saving throws while the Bless spell lasts (concentration, up to 1 minute).",,flat_bonus:attack+1d4;flat_bonus:saves+1d4,false,10
 bane,Bane,,"−1d4 to attack rolls and saving throws while the Bane spell lasts (concentration, up to 1 minute).",,flat_bonus:attack-1d4;flat_bonus:saves-1d4,true,10
-shield-of-faith,Shield of Faith,,"+2 AC from the Shield of Faith spell (concentration, up to 10 minutes).",,flat_bonus:ac+2,false,100
+shield_of_faith,Shield of Faith,,"+2 AC from the Shield of Faith spell (concentration, up to 10 minutes).",,flat_bonus:ac+2,false,100
 guidance,Guidance,,"+1d4 to one ability check from the Guidance cantrip (concentration, up to 1 minute).",,flat_bonus:skills+1d4,false,10
 haste,Haste,,"+2 AC, advantage on Dexterity saving throws and one additional action while hasted (concentration, up to 1 minute).",,flat_bonus:ac+2;advantage:save.dex;flat_bonus:action+1,false,10
-half-cover,Half cover,,"+2 to AC and Dexterity saving throws while behind half cover.",,flat_bonus:ac+2;flat_bonus:save.dex+2,false,
-three-quarters-cover,Three-quarters cover,,"+5 to AC and Dexterity saving throws while behind three-quarters cover.",,flat_bonus:ac+5;flat_bonus:save.dex+5,false,
+half_cover,Half cover,,"+2 to AC and Dexterity saving throws while behind half cover.",,flat_bonus:ac+2;flat_bonus:save.dex+2,false,
+three_quarters_cover,Three-quarters cover,,"+5 to AC and Dexterity saving throws while behind three-quarters cover.",,flat_bonus:ac+5;flat_bonus:save.dex+5,false,

@@ -2,9 +2,9 @@
 #content-systems: 5e
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
-#content-id: 019f374c-ece4-7e96-b61c-0946a1178199
-#content-updated-at: 2026-07-06
-#content-hash: xxh64:24239fe1b5ecc3d9
+#content-id: 019f6ae3-fd04-7646-ab5f-e26e4f827818
+#content-updated-at: 2026-07-16
+#content-hash: xxh64:59047ff2c453443f
 id,name_en,name_uk,text_en,text_uk,effects,category,speakers,script
 common,Common,,Typical speakers: Humans. Script: Common.,,,standard,Humans,Common
 dwarvish,Dwarvish,,Typical speakers: Dwarves. Script: Dwarvish.,,,standard,Dwarves,Dwarvish
@@ -17,7 +17,7 @@ orc,Orc,,Typical speakers: Orcs. Script: Dwarvish.,,,standard,Orcs,Dwarvish
 abyssal,Abyssal,,Typical speakers: Demons. Script: Infernal.,,,exotic,Demons,Infernal
 celestial,Celestial,,Typical speakers: Celestials. Script: Celestial.,,,exotic,Celestials,Celestial
 draconic,Draconic,,"Typical speakers: Dragons, dragonborn. Script: Draconic.",,,exotic,"Dragons, dragonborn",Draconic
-deep-speech,Deep Speech,,"Typical speakers: Aboleths, cloakers. Script: none.",,,exotic,"Aboleths, cloakers",
+deep_speech,Deep Speech,,"Typical speakers: Aboleths, cloakers. Script: none.",,,exotic,"Aboleths, cloakers",
 infernal,Infernal,,Typical speakers: Devils. Script: Infernal.,,,exotic,Devils,Infernal
 primordial,Primordial,,Typical speakers: Elementals. Script: Dwarvish.,,,exotic,Elementals,Dwarvish
 sylvan,Sylvan,,Typical speakers: Fey creatures. Script: Elvish.,,,exotic,Fey creatures,Elvish

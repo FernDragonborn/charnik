@@ -35,13 +35,15 @@ function normalizeBody(body) {
 		.replace(/\n+$/, '');
 }
 
+// snake_case (E3): `-` is the L2 minus operator, so every content id that could appear in an
+// expression (`class_level.blood_hunter`) must avoid `-`; snake also matches the CSV-column style.
 export const slug = (s) =>
 	s
 		.toLowerCase()
 		.replace(/['’]/g, '')
 		.replace(/\([^)]*\)/g, '') // drop parentheticals e.g. "Magic Initiate (Cleric)"
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '');
+		.replace(/[^a-z0-9]+/g, '_')
+		.replace(/^_+|_+$/g, '');
 
 /**
  * Split markdown into `#### Name` blocks, each tagged with its parent `##` (h2) and
@@ -119,14 +121,14 @@ export function skillList(s) {
 
 /**
  * Guarantee unique ids within one file (an exact source:id clash is a real error in our
- * model). On collision, append `-2`, `-3`… deterministically by input order. Rare —
+ * model). On collision, append `_2`, `_3`… deterministically by input order (snake, E3). Rare —
  * e.g. "Spell Scroll" appears both as adventuring gear and as a magic item in SRD 5.2.1.
  */
 export function dedupeIds(rows) {
 	const seen = new Set();
 	for (const r of rows) {
 		let id = r.id;
-		for (let n = 2; seen.has(id); n++) id = `${r.id}-${n}`;
+		for (let n = 2; seen.has(id); n++) id = `${r.id}_${n}`;
 		seen.add(id);
 		r.id = id;
 	}

@@ -20,8 +20,8 @@ async function graphOf(): Promise<ContentGraph> {
 		[
 			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,effects',
 			`bless,5.5e,${S},Bless,1,enchantment,action,30 ft,"Concentration, up to 1 minute",V S M,true,flat_bonus:saves+1d4`,
-			`shield-of-faith,5.5e,${S},Shield of Faith,1,abjuration,bonus,60 ft,"Concentration, up to 10 minutes",V S M,true,flat_bonus:ac+2`,
-			`fire-bolt,5.5e,${S},Fire Bolt,0,evocation,action,120 ft,instant,V S,false,`
+			`shield_of_faith,5.5e,${S},Shield of Faith,1,abjuration,bonus,60 ft,"Concentration, up to 10 minutes",V S M,true,flat_bonus:ac+2`,
+			`fire_bolt,5.5e,${S},Fire Bolt,0,evocation,action,120 ft,instant,V S,false,`
 		].join('\n')
 	);
 	await st.write(
@@ -70,7 +70,7 @@ describe('CombatVM · concentration (CVM-bug1)', () => {
 
 	it('casting a non-concentration spell leaves concentration untouched', () => {
 		character.play.concentration = `spell:${S}:bless`;
-		combat.cast(spellRow(graph, `spell:${S}:fire-bolt`, 'on')!, noModifiers);
+		combat.cast(spellRow(graph, `spell:${S}:fire_bolt`, 'on')!, noModifiers);
 		expect(character.play.concentration).toBe(`spell:${S}:bless`);
 	});
 
@@ -101,7 +101,7 @@ describe('CombatVM · casting applies the spell effect (EFX-2)', () => {
 	});
 
 	it('a spell with no tokens applies nothing', () => {
-		combat.cast(spellRow(graph, `spell:${S}:fire-bolt`, 'on')!, noModifiers);
+		combat.cast(spellRow(graph, `spell:${S}:fire_bolt`, 'on')!, noModifiers);
 		expect(character.play.effects).toEqual([]);
 	});
 
@@ -113,9 +113,9 @@ describe('CombatVM · casting applies the spell effect (EFX-2)', () => {
 
 	it("replacing concentration removes the prior spell's effect; clearing removes the current one", () => {
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
-		combat.cast(spellRow(graph, `spell:${S}:shield-of-faith`, 'on')!, noModifiers);
+		combat.cast(spellRow(graph, `spell:${S}:shield_of_faith`, 'on')!, noModifiers);
 		expect(blessEffect()).toBeUndefined(); // Bless dropped with its concentration
-		expect(character.play.concentration).toBe(`spell:${S}:shield-of-faith`);
+		expect(character.play.concentration).toBe(`spell:${S}:shield_of_faith`);
 		expect(character.play.effects.some((e) => e.label === 'Shield of Faith')).toBe(true);
 		combat.clearConcentration();
 		expect(character.play.effects).toEqual([]);
@@ -144,7 +144,7 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 		expect(character.play.effects.map((e) => e.iid)).toEqual(['b']);
 	});
 
-	it('an expiring cast-linked effect also ends its concentration', () => {
+	it('an expiring cast_linked effect also ends its concentration', () => {
 		character.play.round = 1;
 		character.play.concentration = `spell:${S}:bless`;
 		character.play.effects = [
@@ -259,7 +259,7 @@ describe('CombatVM · S2 split net', () => {
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		character.build.classes = [{ class: `class:${S}:wizard`, level: 3 }];
 		character.build.spells = [
-			{ spell: `spell:${S}:fire-bolt`, prepared: true, alwaysPrepared: false },
+			{ spell: `spell:${S}:fire_bolt`, prepared: true, alwaysPrepared: false },
 			{ spell: `spell:${S}:bless`, prepared: true, alwaysPrepared: false }
 		];
 		character.build.inventory = [
@@ -291,7 +291,7 @@ describe('CombatVM · S2 split net', () => {
 	it('action economy: in combat a spell spends its slot and the second cast is blocked', () => {
 		character.play.inCombat = true;
 		character.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
-		const fireBolt = spellRow(graph, `spell:${S}:fire-bolt`, 'on')!;
+		const fireBolt = spellRow(graph, `spell:${S}:fire_bolt`, 'on')!;
 		combat.cast(fireBolt, noModifiers); // action ct → spends the action
 		expect(character.play.turn.action).toBe(1);
 		combat.cast(fireBolt, noModifiers); // none left → blocked, stays 1

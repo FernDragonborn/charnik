@@ -2,9 +2,9 @@
 #content-systems: 5e
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
-#content-id: 019f374c-ecef-7c07-aa0d-7b45bb744fb1
-#content-updated-at: 2026-07-06
-#content-hash: xxh64:0861b0f4687c1709
+#content-id: 019f6ae3-fcd5-7377-ab65-afb0860395ea
+#content-updated-at: 2026-07-16
+#content-hash: xxh64:06645d840940d9fa
 id,name_en,name_uk,text_en,text_uk,effects,size,creature_type,alignment,ac,hp,hp_formula,speed,str,dex,con,int,wis,cha,cr,senses,languages,skills
 aboleth,Aboleth,,"Amphibious. The aboleth can breathe air and water.
 Mucous Cloud. While underwater, the aboleth is surrounded by transformative mucus. A creature that touches the aboleth or that hits it with a melee attack while within 5 feet of it must make a DC 14 Constitution saving throw. On a failure, the creature is diseased for 1d4 hours. The diseased creature can breathe only underwater.
@@ -46,16 +46,16 @@ Healing Touch (4/Day). The solar touches another creature. The target magically 
 Teleport. The solar magically teleports, along with any equipment it is wearing or carrying, up to 120 feet to an unoccupied space it can see.
 Searing Burst (Costs 2 Actions). The solar emits magical, divine energy. Each creature of its choice in a 10--foot radius must make a DC 23 Dexterity saving throw, taking 14 (4d6) fire damage plus 14 (4d6) radiant damage on a failed save, or half as much damage on a successful one.
 Blinding Gaze (Costs 3 Actions). The solar targets one creature it can see within 30 feet of it. If the target can see it, the target must succeed on a DC 15 Constitution saving throw or be blinded until magic such as the lesser restorationspell removes the blindness.",,,large,celestial,lawful good,21,243,18d10 + 144,"50 ft., fly 150 ft.",26,22,26,25,25,30,21,"truesight 120 ft., passive Perception 24",,Perception +14
-animated-armor,Animated Armor,,"Antimagic Susceptibility. The armor is incapacitated while in the area of an antimagic field.If targeted by dispel magic, the armor must succeed on a Constitution saving throw against the caster’s spell save DC or fall unconscious for 1 minute.
+animated_armor,Animated Armor,,"Antimagic Susceptibility. The armor is incapacitated while in the area of an antimagic field.If targeted by dispel magic, the armor must succeed on a Constitution saving throw against the caster’s spell save DC or fall unconscious for 1 minute.
 False Appearance. While the armor remains motionless, it is indistinguishable from a normal suit of armor.
 Actions.
 Multiattack. The armor makes two melee attacks.
 Slam. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 5 (1d6 + 2) bludgeoning damage.",,,medium,construct,unaligned,18,33,6d8 + 6,25 ft.,14,11,13,1,3,1,1,"blindsight 60 ft. (blind beyond this radius), passive Perception 6",,
-flying-sword,Flying Sword,,"Antimagic Susceptibility. The sword is incapacitated while in the area of an antimagic field. If targeted by dispel magic, the sword must succeed on a Constitution saving throw against the caster’s spell save DC or fall unconscious for 1 minute.
+flying_sword,Flying Sword,,"Antimagic Susceptibility. The sword is incapacitated while in the area of an antimagic field. If targeted by dispel magic, the sword must succeed on a Constitution saving throw against the caster’s spell save DC or fall unconscious for 1 minute.
 False Appearance. While the sword remains motionless and isn’t flying, it is indistinguishable from a normal sword.
 Actions.
 Longsword. Melee Weapon Attack: +3 to hit, reach 5 ft., one target. Hit: 5 (1d8 + 1) slashing damage.",,,small,construct,unaligned,17,17,5d6,"0 ft., fly 50 ft. (hover)",12,15,11,1,5,1,1/4,"blindsight 60 ft. (blind beyond this radius), passive Perception 7",,
-rug-of-smothering,Rug of Smothering,,"Antimagic Susceptibility. The rug is incapacitated while in the area of an antimagic field.If targeted by dispel magic , the rug must succeed on a Constitution saving throw against the caster’s spell save DC or fall unconscious for 1 minute.
+rug_of_smothering,Rug of Smothering,,"Antimagic Susceptibility. The rug is incapacitated while in the area of an antimagic field.If targeted by dispel magic , the rug must succeed on a Constitution saving throw against the caster’s spell save DC or fall unconscious for 1 minute.
 Damage Transfer. While it is grappling a creature, the rug takes only half the damage dealt to it, and the creature grappled by the rug takes the other half.
 False Appearance. While the rug remains motionless, it is indistinguishable from a normal rug.
 Actions.
@@ -181,7 +181,7 @@ Beak. Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit:10 (2d6 + 3) 
 Talons. Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit:14 (2d10 + 3) slashing damage.
 Spores (Recharge 6). A 15--foot--radius cloud of toxic spores extends out from the vrock. The spores spread around corners. Each creature in that area must succeed on a DC 14 Constitution saving throw or become poisoned. While poisoned in this way, a target takes 5 (1d10) poison damage at the start of each of its turns. A target can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success. Emptying a vial of holy water on the target also ends the effect on it.
 Stunning Screech (1/Day). The vrock emits a horrific screech. Each creature within 20 feet of it that can hear it and that isn’t a demon must succeed on a DC 14 Constitution saving throw or be stunned until the end of the vrock’s next turn.",,,large,fiend,chaotic evil,15,104,11d10 + 44,"40 ft., fly 60 ft.",17,15,18,8,13,8,6,"darkvision 120 ft., passive Perception 11",,
-barbed-devil,Barbed Devil,,"Barbed Hide. At the start of each of its turns, the barbed devil deals 5 (1d10) piercing damage to any creature grappling it.
+barbed_devil,Barbed Devil,,"Barbed Hide. At the start of each of its turns, the barbed devil deals 5 (1d10) piercing damage to any creature grappling it.
 Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
 Magic Resistance. The devil has advantage on saving throws against spells and other magical effects.
 Actions.
@@ -189,20 +189,20 @@ Multiattack. The devil makes three melee attacks: one with its tail and two with
 Claw. Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 6 (1d6 + 3) piercing damage.
 Tail. Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 10 (2d6 + 3) piercing damage.
 Hurl Flame. Ranged Spell Attack: +5 to hit, range 150 ft., one target. Hit: 10 (3d6) fire damage. If the target is a flammable object that isn’t being worn or carried, it also catches fire.",,,medium,fiend,lawful evil,15,110,13d8 + 52,30 ft.,16,17,18,12,14,14,5,"darkvision 120 ft., passive Perception 18",,"Deception +5, Insight +5, Perception +8"
-bearded-devil,Bearded Devil,,"Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
+bearded_devil,Bearded Devil,,"Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
 Magic Resistance. The devil has advantage on saving throws against spells and other magical effects.
 Steadfast. The devil can’t be frightened while it can see an allied creature within 30 feet of it.
 Actions.
 Multiattack. The devil makes two attacks: one with its beard and one with its glaive.
 Beard. Melee Weapon Attack: +5 to hit, reach 5 ft., one creature. Hit:6 (1d8 + 2) piercing damage, and the target must succeed on a DC 12 Constitution saving throw or be poisoned for 1 minute. While poisoned in this way, the target can’t regain hit points. The target can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.
 Glaive. Melee Weapon Attack:+5 to hit, reach 10 ft., one target. Hit: 8 (1d10 + 3) slashing damage. If the target is a creature other than an undead or a construct, it must succeed on a DC 12 Constitution saving throw or lose 5 (1d10) hit points at the start of each of its turns due to an infernal wound. Each time the devil hits the wounded target with this attack, the damage dealt by the wound increases by 5 (1d10). Any creature can take an action to stanch the wound with a successful DC 12 Wisdom (Medicine) check. The wound also closes if the target receives magical healing.",,,medium,fiend,lawful evil,13,52,8d8 + 16,30 ft.,16,15,15,9,11,11,3,"darkvision 120 ft., passive Perception 10",,
-bone-devil,Bone Devil,,"Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
+bone_devil,Bone Devil,,"Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
 Magic Resistance. The devil has advantage on saving throws against spells and other magical effects.
 Actions.
 Multiattack. The devil makes three attacks: two with its claws and one with its sting.
 Claw. Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 8 (1d8 + 4) slashing damage.
 Sting. Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 13 (2d8 + 4) piercing damage plus 17 (5d6) poison damage, and the target must succeed on a DC 14 Constitution saving throw or become poisoned for 1 minute. The target can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.",,,large,fiend,lawful evil,19,142,15d10 + 60,"40 ft., fly 40 ft.",18,16,18,13,14,16,9,"darkvision 120 ft., passive Perception 12",,"Deception +7, Insight +6"
-chain-devil,Chain Devil,,"Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
+chain_devil,Chain Devil,,"Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
 Magic Resistance. The devil has advantage on saving throws against spells and other magical effects.
 Actions.
 Multiattack. The devil makes two attacks with its chains.
@@ -216,14 +216,14 @@ Multiattack. The erinyes makes three attacks.
 Longsword. Melee Weapon Attack: +8 to hit, reach 5 ft., one target. Hit: 8 (1d8 + 4) slashing damage, or 9 (1d10 +4) slashing damage if used with two hands, plus 13(3d8) poison damage.
 Longbow. Ranged Weapon Attack: +7 to hit, range 150/600 ft., one target. Hit: 7 (1d8 + 3) piercing damage plus 13 (3d8) poison damage, and the target must succeed on a DC 14 Constitution saving throw or be poisoned. The poison lasts until it is removed by the lesser restoration spell or similar magic.
 Parry. The erinyes adds 4 to its AC against one melee attack that would hit it. To do so, the erinyes must see the attacker and be wielding a melee weapon.",,,medium,fiend,lawful evil,18,153,18d8 + 72,"30 ft., fly 60 ft.",18,16,18,14,14,18,12,"truesight 120 ft., passive Perception 12",,
-horned-devil,Horned Devil,,"Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
+horned_devil,Horned Devil,,"Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
 Magic Resistance. The devil has advantage on saving throws against spells and other magical effects.
 Actions.
 Multiattack. The devil makes three melee attacks: two with its fork and one with its tail. It can use Hurl Flame in place of any melee attack.
 Fork. Melee Weapon Attack:+10 to hit, reach 10 ft., one target. Hit: 15 (2d8 + 6) piercing damage.
 Tail. Melee Weapon Attack:+10 to hit, reach 10 ft., one target. Hit: 10 (1d8 + 6) piercing damage. If the target is a creature other than an undead or a construct, it must succeed on a DC 17 Constitution saving throw or lose 10 (3d6) hit points at the start of each of its turns due to an infernal wound. Each time the devil hits the wounded target with this attack, the damage dealt by the wound increases by 10 (3d6). Any creature can take an action to stanch the wound with a successful DC 12 Wisdom (Medicine) check. The wound also closes if the target receives magical healing.
 Hurl Flame. Ranged Spell Attack:+7 to hit, range 150 ft., one target. Hit:14 (4d6) fire damage. If the target is a flammable object that isn’t being worn or carried, it also catches fire.",,,large,fiend,lawful evil,18,178,17d10 + 85,"20 ft., fly 60 ft.",22,17,21,12,16,17,11,"darkvision 120 ft., passive Perception 13",,
-ice-devil,Ice Devil,,"Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
+ice_devil,Ice Devil,,"Devil’s Sight. Magical darkness doesn’t impede the devil’s darkvision.
 Magic Resistance. The devil has advantage on saving throws against spells and other magical effects.
 Actions.
 Multiattack. The devil makes three attacks: one with its bite, one with its claws, and one with its tail.
@@ -240,7 +240,7 @@ lemure,Lemure,,"Devil’s Sight. Magical darkness doesn’t impede the lemure’
 Hellish Rejuvenation. A lemure that dies in the Nine Hells comes back to life with all its hit points in 1d10 days unless it is killed by a good--aligned creature with a bless spell cast on that creature or its remains are sprinkled with holy water.
 Actions.
 Fist. Melee Weapon Attack: +3 to hit, reach 5 ft., one target. Hit: 2 (1d4) bludgeoning damage.",,,medium,fiend,lawful evil,7,13,3d8,15 ft.,10,5,11,1,11,3,0,"darkvision 120 ft., passive Perception 10",,
-pit-fiend,Pit Fiend,,"Fear Aura. Any creature hostile to the pit fiend that starts its turn within 20 feet of the pit fiend must make a DC 21 Wisdom saving throw, unless the pit fiend is incapacitated. On a failed save, the creature is frightened until the start of its next turn. If a creature’s saving throw is successful, the creature is immune to the pit fiend’s Fear Aura for the next 24 hours.
+pit_fiend,Pit Fiend,,"Fear Aura. Any creature hostile to the pit fiend that starts its turn within 20 feet of the pit fiend must make a DC 21 Wisdom saving throw, unless the pit fiend is incapacitated. On a failed save, the creature is frightened until the start of its next turn. If a creature’s saving throw is successful, the creature is immune to the pit fiend’s Fear Aura for the next 24 hours.
 Magic Resistance. The pit fiend has advantage on saving throws against spells and other magical effects.
 Magic Weapons. The pit fiend’s weapon attacks are magical.
 Innate Spellcasting. The pit fiend’s spellcasting ability is Charisma (spell save DC 21). The pit fiend can innately cast the following spells, requiring no material components: At will: detect magic, fireball 3/day each: hold monster, wall of fire
@@ -257,7 +257,7 @@ triceratops,Triceratops,,"Trampling Charge. If the triceratops moves at least 20
 Actions.
 Gore. Melee Weapon Attack: +9 to hit, reach 5 ft., one target. Hit:24 (4d8 + 6) piercing damage.
 Stomp. Melee Weapon Attack:+9 to hit, reach 5 ft., one prone creature. Hit:22 (3d10 + 6) bludgeoning damage.",,,huge,beast,unaligned,13,95,10d12 + 30,50 ft.,22,9,17,2,11,5,5,passive Perception 10,,
-tyrannosaurus-rex,Tyrannosaurus Rex,,"Actions.
+tyrannosaurus_rex,Tyrannosaurus Rex,,"Actions.
 Multiattack. The tyrannosaurus makes two attacks: one with its bite and one with its tail. It can’t make both attacks against the same target.
 Bite. Melee Weapon Attack: +10 to hit, reach 10 ft.,one target. Hit:33 (4d12 + 7) piercing damage. If the target is a Medium or smaller creature, it is grappled (escape DC 17). Until this grapple ends, the target is restrained, and the tyrannosaurus can’t bite another target.
 Tail. Melee Weapon Attack: +10 to hit, reach 10 ft., one target. Hit:20 (3d8 + 7) bludgeoning damage.",,,huge,beast,unaligned,13,136,13d12 + 52,50 ft.,25,10,19,2,12,9,8,passive Perception 14,,Perception +4
@@ -268,7 +268,7 @@ Actions.
 Multiattack. The doppelganger makes two melee attacks.
 Slam. Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 7 (1d6 + 4) bludgeoning damage.
 Read Thoughts. The doppelganger magically reads the surface thoughts of one creature within 60 feet of it. The effect can penetrate barriers, but 3 feet of wood or dirt, 2 feet of stone, 2 inches of metal, or a thin sheet of lead blocks it. While the target is in range, the doppelganger can continue reading its thoughts, as long as the doppelganger’s concentration isn’t broken (as if concentrating on a spell). While reading the target’s mind, the doppelganger has advantage on Wisdom (Insight) and Charisma (Deception, Intimidation, and Persuasion) checks against the target.",,,medium,monstrosity,neutral,14,52,8d8 + 16,30 ft.,11,18,14,11,12,14,3,"darkvision 60 ft., passive Perception 11",,"Deception +6, Insight +3"
-ancient-black-dragon,Ancient Black Dragon,,"Amphibious. The dragon can breathe air and water.
+ancient_black_dragon,Ancient Black Dragon,,"Amphibious. The dragon can breathe air and water.
 Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
@@ -280,7 +280,7 @@ Acid Breath (Recharge 5-6). The dragon exhales acid in a 90--foot line that is 1
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 15 feet of the dragon must succeed on a DC 23 Dexterity saving throw or take 15 (2d6 + 8) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,gargantuan,dragon,chaotic evil,22,367,21d20 + 147,"40 ft., fly 80 ft., swim 40 ft.",27,14,25,16,15,19,21,"blindsight 60 ft., darkvision 120 ft., passive Perception 26",,"Perception +16, Stealth +9"
-adult-black-dragon,Adult Black Dragon,,"Amphibious. The dragon can breathe air and water.
+adult_black_dragon,Adult Black Dragon,,"Amphibious. The dragon can breathe air and water.
 Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
@@ -292,16 +292,16 @@ Acid Breath (Recharge 5-6). The dragon exhales acid in a 60--foot line that is 5
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 10 feet of the dragon must succeed on a DC 19 Dexterity saving throw or take 13 (2d6 + 6) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,huge,dragon,chaotic evil,19,195,17d12 + 85,"40 ft., fly 80 ft., swim 40 ft.",23,14,21,14,13,17,14,"blindsight 60 ft., darkvision 120 ft., passive Perception 21",,"Perception +11, Stealth +7"
-young-black-dragon,Young Black Dragon,,"Amphibious. The dragon can breathe air and water.
+young_black_dragon,Young Black Dragon,,"Amphibious. The dragon can breathe air and water.
 Multiattack. The dragon makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +7 to hit, reach 10 ft., one target. Hit: 15 (2d10 + 4) piercing damage plus 4 (1d8) acid damage.
 Claw. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 11 (2d6 + 4) slashing damage.
 Acid Breath (Recharge 5-6). The dragon exhales acid in a 30--foot line that is 5 feet wide. Each creature in that line must make a DC 14 Dexterity saving throw, taking 49 (11d8) acid damage on a failed save, or half as much damage on a successful one.",,,large,dragon,chaotic evil,18,127,15d10 + 45,"40 ft., fly 80 ft., swim 40 ft.",19,14,17,12,11,15,7,"blindsight 30 ft., darkvision 120 ft., passive Perception 16",,"Perception +6, Stealth +5"
-black-dragon-wyrmling,Black Dragon Wyrmling,,"Amphibious. The dragon can breathe air and water.
+black_dragon_wyrmling,Black Dragon Wyrmling,,"Amphibious. The dragon can breathe air and water.
 Actions.
 Bite. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 7 (1d10 + 2) piercing damage plus 2 (1d4) acid damage.
 Acid Breath (Recharge 5-6). The dragon exhales acid in a 15--foot line that is 5 feet wide. Each creature in that line must make a DC 11 Dexterity saving throw, taking 22 (5d8) acid damage on a failed save, or half as much damage on a successful one.",,,medium,dragon,chaotic evil,17,33,6d8 + 6,"30 ft., fly 60 ft., swim 30 ft.",15,14,13,10,11,13,2,"blindsight 10 ft., darkvision 60 ft., passive Perception 14",,"Perception +4, Stealth +4"
-blue-dragon-ancient-blue-dragon,Blue Dragon Ancient Blue Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
+blue_dragon_ancient_blue_dragon,Blue Dragon Ancient Blue Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack:+16 to hit, reach 15 ft., one target. Hit:20 (2d10 + 9) piercing damage plus 11 (2d10) lightning damage.
@@ -312,7 +312,7 @@ Lightning Breath (Recharge 5-6). The dragon exhales lightning in a 120--foot lin
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 15 feet of the dragon must succeed on a DC 24 Dexterity saving throw or take 16 (2d6 + 9) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,gargantuan,dragon,lawful evil,22,481,26d20 + 208,"40 ft., burrow 40 ft., fly 80 ft.",29,10,27,18,17,21,23,"blindsight 60 ft., darkvision 120 ft., passive Perception 27",,"Perception +17, Stealth +7"
-adult-blue-dragon,Adult Blue Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
+adult_blue_dragon,Adult Blue Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +12 to hit, reach 10 ft., one target. Hit: 18 (2d10 + 7) piercing damage plus 5 (1d10) lightning damage.
@@ -323,15 +323,15 @@ Lightning Breath (Recharge 5-6). The dragon exhales lightning in a 90--foot line
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 10 feet of the dragon must succeed on a DC 20 Dexterity saving throw or take 14 (2d6 + 7) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,huge,dragon,lawful evil,19,225,18d12 + 108,"40 ft., burrow 30 ft., fly 80 ft.",25,10,23,16,15,19,16,"blindsight 60 ft., darkvision 120 ft., passive Perception 22",,"Perception +12, Stealth +5"
-young-blue-dragon,Young Blue Dragon,,"Actions.
+young_blue_dragon,Young Blue Dragon,,"Actions.
 Multiattack. The dragon makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +9 to hit, reach 10 ft., one target. Hit: 16 (2d10 + 5) piercing damage plus 5 (1d10) lightning damage.
 Claw. Melee Weapon Attack: +9 to hit, reach 5 ft., one target. Hit: 12 (2d6 + 5) slashing damage.
 Lightning Breath (Recharge 5-6). The dragon exhales lightning in an 60--foot line that is 5 feet wide. Each creature in that line must make a DC 16 Dexterity saving throw, taking 55 (10d10) lightning damage on a failed save, or half as much damage on a successful one.",,,large,dragon,lawful evil,18,152,16d10 + 64,"40 ft., burrow 20 ft., fly 80 ft.",21,10,19,14,13,17,9,"blindsight 30 ft., darkvision 120 ft., passive Perception 19",,"Perception +9, Stealth +4"
-blue-dragon-wyrmling,Blue Dragon Wyrmling,,"Actions.
+blue_dragon_wyrmling,Blue Dragon Wyrmling,,"Actions.
 Bite. Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 8 (1d10 + 3) piercing damage plus 3 (1d6) lightning damage.
 Lightning Breath (Recharge 5-6). The dragon exhales lightning in a 30--foot line that is 5 feet wide. Each creature in that line must make a DC 12 Dexterity saving throw, taking 22 (4d10) lightning damage on a failed save, or half as much damage on a successful one.",,,medium,dragon,lawful evil,17,52,8d8 + 16,"30 ft., burrow 15 ft., fly 60 ft.",17,10,15,12,11,15,3,"blindsight 10 ft., darkvision 60 ft., passive Perception 14",,"Perception +4, Stealth +2"
-ancient-green-dragon,Ancient Green Dragon,,"Amphibious. The dragon can breathe air and water.
+ancient_green_dragon,Ancient Green Dragon,,"Amphibious. The dragon can breathe air and water.
 Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
@@ -343,7 +343,7 @@ Poison Breath (Recharge 5-6). The dragon exhales poisonous gas in a 90--foot con
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 15 feet of the dragon must succeed on a DC 23 Dexterity saving throw or take 15 (2d6 + 8) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,gargantuan,dragon,lawful evil,21,385,22d20 + 154,"40 ft., fly 80 ft., swim 40 ft.",27,12,25,20,17,19,22,"blindsight 60 ft., darkvision 120 ft., passive Perception 27",,"Deception +11, Insight +10, Perception +17, Persuasion +11, Stealth +8"
-adult-green-dragon,Adult Green Dragon,,"Amphibious. The dragon can breathe air and water.
+adult_green_dragon,Adult Green Dragon,,"Amphibious. The dragon can breathe air and water.
 Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
@@ -355,17 +355,17 @@ Poison Breath (Recharge 5-6). The dragon exhales poisonous gas in a 60--foot con
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 10 feet of the dragon must succeed on a DC 19 Dexterity saving throw or take 13 (2d6 + 6) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,huge,dragon,lawful evil,19,207,18d12 + 90,"40 ft., fly 80 ft., swim 40 ft.",23,12,21,18,15,17,15,"blindsight 60 ft., darkvision 120 ft., passive Perception 22",,"Deception +8, Insight +7, Perception +12, Persuasion +8, Stealth +6"
-young-green-dragon,Young Green Dragon,,"Amphibious. The dragon can breathe air and water.
+young_green_dragon,Young Green Dragon,,"Amphibious. The dragon can breathe air and water.
 Actions.
 Multiattack. The dragon makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +7 to hit, reach 10 ft., one target. Hit: 15 (2d10 + 4) piercing damage plus 7 (2d6) poison damage.
 Claw. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 11 (2d6 + 4) slashing damage.
 Poison Breath (Recharge 5-6). The dragon exhales poisonous gas in a 30--foot cone. Each creature in that area must make a DC 14 Constitution saving throw, taking 42 (12d6) poison damage on a failed save, or half as much damage on a successful one.",,,large,dragon,lawful evil,18,136,16d10 + 48,"40 ft., fly 80 ft., swim 40 ft.",19,12,17,16,13,15,8,"blindsight 30 ft., darkvision 120 ft., passive Perception 17",,"Deception +5, Perception +7, Stealth +4"
-green-dragon-wyrmling,Green Dragon Wyrmling,,"Amphibious. The dragon can breathe air and water.
+green_dragon_wyrmling,Green Dragon Wyrmling,,"Amphibious. The dragon can breathe air and water.
 Actions.
 Bite. Melee Weapon Attack:+4 to hit, reach 5 ft., one target. Hit:7 (1d10 + 2) piercing damage plus 3 (1d6) poison damage.
 Poison Breath (Recharge 5-6). The dragon exhales poisonous gas in a 15--foot cone. Each creature in that area must make a DC 11 Constitution saving throw, taking 21 (6d6) poison damage on a failed save, or half as much damage on a successful one.",,,medium,dragon,lawful evil,17,38,7d8 + 7,"30 ft., fly 60 ft., swim 30 ft.",15,12,13,14,11,13,2,"blindsight 10 ft., darkvision 60 ft., passive Perception 14",,"Perception +4, Stealth +3"
-ancient-red-dragon,Ancient Red Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
+ancient_red_dragon,Ancient Red Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack:+17 to hit, reach 15 ft., one target. Hit:21 (2d10 + 10) piercing damage plus 14 (4d6) fire damage.
@@ -376,7 +376,7 @@ Fire Breath (Recharge 5-6). The dragon exhales fire in a 90--foot cone. Each cre
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 15 feet of the dragon must succeed on a DC 25 Dexterity saving throw or take 17 (2d6 + 10) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,gargantuan,dragon,chaotic evil,22,546,28d20 + 252,"40 ft., climb 40 ft., fly 80 ft.",30,10,29,18,15,23,24,"blindsight 60 ft., darkvision 120 ft., passive Perception 26",,"Perception +16, Stealth +7"
-adult-red-dragon,Adult Red Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
+adult_red_dragon,Adult Red Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack:+14 to hit, reach 10 ft., one target. Hit:19 (2d10 + 8) piercing damage plus 7 (2d6) fire damage.
@@ -387,15 +387,15 @@ Fire Breath (Recharge 5-6). The dragon exhales fire in a 60--foot cone. Each cre
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 10 feet of the dragon must succeed on a DC 22 Dexterity saving throw or take 15 (2d6 + 8) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,huge,dragon,chaotic evil,19,256,19d12 + 133,"40 ft., climb 40 ft., fly 80 ft.",27,10,25,16,13,21,17,"blindsight 60 ft., darkvision 120 ft., passive Perception 23",,"Perception +13, Stealth +6"
-young-red-dragon,Young Red Dragon,,"Actions.
+young_red_dragon,Young Red Dragon,,"Actions.
 Multiattack. The dragon makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +10 to hit, reach 10 ft., one target. Hit: 17 (2d10 + 6) piercing damage plus 3 (1d6) fire damage.
 Claw. Melee Weapon Attack: +10 to hit, reach 5 ft., one target. Hit: 13 (2d6 + 6) slashing damage.
 Fire Breath (Recharge 5-6). The dragon exhales fire in a 30--foot cone. Each creature in that area must make a DC 17 Dexterity saving throw, taking 56 (16d6) fire damage on a failed save, or half as much damage on a successful one.",,,large,dragon,chaotic evil,18,178,17d10 + 85,"40 ft., climb 40 ft., fly 80 ft.",23,10,21,14,11,19,10,"blindsight 30 ft., darkvision 120 ft., passive Perception 18",,"Perception +8, Stealth +4"
-red-dragon-wyrmling,Red Dragon Wyrmling,,"Actions.
+red_dragon_wyrmling,Red Dragon Wyrmling,,"Actions.
 Bite. Melee Weapon Attack:+6 to hit, reach 5 ft., one target. Hit:9 (1d10 + 4) piercing damage plus 3 (1d6) fire damage.
 Fire Breath (Recharge 5-6). The dragon exhales fire in a 15--foot cone. Each creature in that area must make a DC 13 Dexterity saving throw, taking 24 (7d6) fire damage on a failed save, or half as much damage on a successful one.",,,medium,dragon,chaotic evil,17,75,10d8 + 30,"30 ft., climb 30 ft., fly 60 ft.",19,10,17,12,11,15,4,"blindsight 10 ft., darkvision 60 ft., passive Perception 14",,"Perception +4, Stealth +2"
-ancient-white-dragon,Ancient White Dragon,,"Ice Walk. The dragon can move across and climb icy surfaces without needing to make an ability check. Additionally, difficult terrain composed of ice or snow doesn’t cost it extra moment.
+ancient_white_dragon,Ancient White Dragon,,"Ice Walk. The dragon can move across and climb icy surfaces without needing to make an ability check. Additionally, difficult terrain composed of ice or snow doesn’t cost it extra moment.
 Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
@@ -407,7 +407,7 @@ Cold Breath (Recharge 5-6). The dragon exhales an icy blast in a 90--foot cone. 
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 15 feet of the dragon must succeed on a DC 22 Dexterity saving throw or take 15 (2d6 + 8) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,gargantuan,dragon,chaotic evil,20,333,18d20 + 144,"40 ft., burrow 40 ft., fly 80 ft., swim 40 ft.",26,10,26,10,13,14,20,"blindsight 60 ft., darkvision 120 ft., passive Perception 23",,"Perception +13, Stealth +6"
-adult-white-dragon,Adult White Dragon,,"Ice Walk. The dragon can move across and climb icy surfaces without needing to make an ability check. Additionally, difficult terrain composed of ice or snow doesn’t cost it extra moment.
+adult_white_dragon,Adult White Dragon,,"Ice Walk. The dragon can move across and climb icy surfaces without needing to make an ability check. Additionally, difficult terrain composed of ice or snow doesn’t cost it extra moment.
 Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
@@ -419,16 +419,16 @@ Cold Breath (Recharge 5-6). The dragon exhales an icy blast in a 60--foot cone. 
 Detect. The dragon makes a Wisdom(Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 10 feet of the dragon must succeed on a DC 19 Dexterity saving throw or take 13 (2d6 + 6) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,huge,dragon,chaotic evil,18,200,16d12 + 96,"40 ft., burrow 30 ft., fly 80 ft., swim 40 ft.",22,10,22,8,12,12,13,"blindsight 60 ft., darkvision 120 ft., passive Perception 21",,"Perception +11, Stealth +5"
-young-white-dragon,Young White Dragon,,"Ice Walk. The dragon can move across and climb icy surfaces without needing to make an ability check. Additionally, difficult terrain composed of ice or snow doesn’t cost it extra moment.
+young_white_dragon,Young White Dragon,,"Ice Walk. The dragon can move across and climb icy surfaces without needing to make an ability check. Additionally, difficult terrain composed of ice or snow doesn’t cost it extra moment.
 Actions.
 Multiattack. The dragon makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +7 to hit, reach 10 ft., one target. Hit: 15 (2d10 + 4) piercing damage plus 4 (1d8) cold damage.
 Claw. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 11 (2d6 + 4) slashing damage.
 Cold Breath (Recharge 5-6). The dragon exhales an icy blast in a 30--foot cone. Each creature in that area must make a DC 15 Constitution saving throw, taking 45 (10d8) cold damage on a failed save, or half as much damage on a successful one.",,,large,dragon,chaotic evil,17,133,14d10 + 56,"40 ft., burrow 20 ft., fly 80 ft., swim 40 ft.",18,10,18,6,11,12,6,"blindsight 30 ft., darkvision 120 ft., passive Perception 16",,"Perception +6, Stealth +3"
-white-dragon-wyrmling,White Dragon Wyrmling,,"Actions.
+white_dragon_wyrmling,White Dragon Wyrmling,,"Actions.
 Bite. Melee Weapon Attack:+4 to hit, reach 5 ft., one target. Hit:7 (1d10 + 2) piercing damage plus 2 (1d4) cold damage.
 Cold Breath (Recharge 5-6). The dragon exhales an icy blast of hail in a 15--foot cone. Each creature in that area must make a DC 12 Constitution saving throw, taking 22 (5d8) cold damage on a failed save, or half as much damage on a successful one.",,,medium,dragon,chaotic evil,16,32,5d8 + 10,"30 ft., burrow 15 ft., fly 60 ft., swim 30 ft.",14,10,14,5,10,11,2,"blindsight 10 ft., darkvision 60 ft., passive Perception 14",,"Perception +4, Stealth +2"
-ancient-brass-dragon,Ancient Brass Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
+ancient_brass_dragon,Ancient Brass Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +14 to hit, reach 15 ft., one target. Hit: 19 (2d10 + 8) piercing damage.
@@ -443,7 +443,7 @@ Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack 
 (Costs 2 Actions). The dragon beats its wings. Each creature within 15 feet of the dragon must succeed on a DC 22 Dexterity saving throw or take 15 (2d6 + 8) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,gargantuan,dragon,chaotic good,20,297,17d20 + 119,"40 ft., burrow40 ft., fly 80 ft.",27,10,25,16,15,19,20,"blindsight 60 ft., darkvision 120 ft., passive Perception 24",,"History +9, Perception +14, Persuasion +10, Stealth +6"
-adult-brass-dragon,Adult Brass Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
+adult_brass_dragon,Adult Brass Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack:+11 to hit, reach 10 ft., one target. Hit: 17 (2d10 + 6) piercing damage.
@@ -456,19 +456,19 @@ Sleep Breath. The dragon exhales sleep gas in a 60--foot cone. Each creature in 
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 10 feet of the dragon must succeed on a DC 19 Dexterity saving throw or take 13 (2d6 + 6) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,huge,dragon,chaotic good,18,172,15d12 + 75,"40 ft., burrow 30 ft., fly 80 ft.",23,10,21,14,13,17,13,"blindsight 60 ft., darkvision 120 ft., passive Perception 21",,"History +7, Perception +11, Persuasion +8, Stealth +5"
-young-brass-dragon,Young Brass Dragon,,"Actions.
+young_brass_dragon,Young Brass Dragon,,"Actions.
 Multiattack. The dragon makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack:+7 to hit, reach 10 ft., one target. Hit:15 (2d10 + 4) piercing damage.
 Claw. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit:11 (2d6 + 4) slashing damage.
 Breath Weapons (Recharge 5-6). The dragon uses one of the following breath weapons.
 Fire Breath. The dragon exhales fire in a 40--foot line that is 5 feet wide. Each creature in that line must make a DC 14 Dexterity saving throw, taking 42 (12d6) fire damage on a failed save, or half as much damage on a successful one.
 Sleep Breath. The dragon exhales sleep gas in a 30--foot cone. Each creature in that area must succeed on a DC 14 Constitution saving throw or fall unconscious for 5 minutes. This effect ends for a creature if the creature takes damage or someone uses an action to wake it.",,,large,dragon,chaotic good,17,110,13d10 + 39,"40 ft., burrow 20 ft., fly 80 ft.",19,10,17,12,11,15,6,"blindsight 30 ft., darkvision 120 ft., passive Perception 16",,"Perception +6, Persuasion +5, Stealth +3"
-brass-dragon-wyrmling,Brass Dragon Wyrmling,,"Actions.
+brass_dragon_wyrmling,Brass Dragon Wyrmling,,"Actions.
 Bite. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 7 (1d10 + 2) piercing damage.
 Breath Weapons (Recharge 5-6). The dragon uses one of the following breath weapons.
 Fire Breath. The dragon exhales fire in an 20--foot line that is 5 feet wide. Each creature in that line must make a DC 11 Dexterity saving throw, taking 14 (4d6) fire damage on a failed save, or half as much damage on a successful one.
 Sleep Breath. The dragon exhales sleep gas in a 15--foot cone. Each creature in that area must succeed on a DC 11 Constitution saving throw or fall unconscious for 1 minute. This effect ends for a creature if the creature takes damage or someone uses an action to wake it.",,,medium,dragon,chaotic good,16,16,3d8 + 3,"30 ft., burrow 15 ft., fly 60 ft.",15,10,13,10,11,13,1,"blindsight 10 ft., darkvision 60 ft., passive Perception 14",,"Perception +4, Stealth +2"
-ancient-bronze-dragon,Ancient Bronze Dragon,,"Amphibious. The dragon can breathe air and water.
+ancient_bronze_dragon,Ancient Bronze Dragon,,"Amphibious. The dragon can breathe air and water.
 Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
@@ -483,7 +483,7 @@ Change Shape. The dragon magically polymorphs into a humanoid or beast that has 
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 15 feet of the dragon must succeed on a DC 24 Dexterity saving throw or take 16 (2d6 + 9) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,gargantuan,dragon,lawful good,22,444,24d20 + 192,"40 ft., fly 80 ft., swim 40 ft.",29,10,27,18,17,21,22,"blindsight 60 ft., darkvision 120 ft., passive Perception 27",,"Insight +10, Perception +17, Stealth +7"
-adult-bronze-dragon,Adult Bronze Dragon,,"Amphibious. The dragon can breathe air and water.
+adult_bronze_dragon,Adult Bronze Dragon,,"Amphibious. The dragon can breathe air and water.
 Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
@@ -498,7 +498,7 @@ Change Shape. The dragon magically polymorphs into a humanoid or beast that has 
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 10 feet of the dragon must succeed on a DC 20 Dexterity saving throw or take 14 (2d6 + 7) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,huge,dragon,lawful good,19,212,17d12 + 102,"40 ft., fly 80 ft., swim 40 ft.",25,10,23,16,15,19,15,"blindsight 60 ft., darkvision 120 ft., passive Perception 22",,"Insight +7, Perception +12, Stealth +5"
-young-bronze-dragon,Young Bronze Dragon,,"Amphibious. The dragon can breathe air and water.
+young_bronze_dragon,Young Bronze Dragon,,"Amphibious. The dragon can breathe air and water.
 Actions.
 Multiattack. The dragon makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit: 16 (2d10 + 5) piercing damage.
@@ -506,13 +506,13 @@ Claw. Melee Weapon Attack: +8 to hit, reach 5 ft., one target. Hit: 12 (2d6 + 5)
 Breath Weapons (Recharge 5-6). The dragon uses one of the following breath weapons.
 Lightning Breath. The dragon exhales lightning in a 60--foot line that is 5 feet wide. Each creature in that line must make a DC 15 Dexterity saving throw, taking 55 (10d10) lightning damage on a failed save, or half as much damage on a successful one.
 Repulsion Breath. The dragon exhales repulsion energy in a 30--foot cone. Each creature in that area must succeed on a DC 15 Strength saving throw. On a failed save, the creature is pushed 40 feet away from the dragon.",,,large,dragon,lawful good,18,142,15d10 + 60,"40 ft., fly 80 ft., swim 40 ft.",21,10,19,14,13,17,8,"blindsight 30 ft., darkvision 120 ft., passive Perception 17",,"Insight +4, Perception +7, Stealth +3"
-bronze-dragon-wyrmling,Bronze Dragon Wyrmling,,"Amphibious. The dragon can breathe air and water.
+bronze_dragon_wyrmling,Bronze Dragon Wyrmling,,"Amphibious. The dragon can breathe air and water.
 Actions.
 Bite. Melee Weapon Attack:+5 to hit, reach 5 ft., one target. Hit:8 (1d10 + 3) piercing damage.
 Breath Weapons (Recharge 5-6). The dragon uses one of the following breath weapons.
 Lightning Breath. The dragon exhales lightning in a 40--foot line that is 5 feet wide. Each creature in that line must make a DC 12 Dexterity saving throw, taking 16 (3d10) lightning damage on a failed save, or half as much damage on a successful one.
 Repulsion Breath. The dragon exhales repulsion energy in a 30--foot cone. Each creature in that area must succeed on a DC 12 Strength saving throw. On a failed save, the creature is pushed 30 feet away from the dragon.",,,medium,dragon,lawful good,17,32,5d8 + 10,"30 ft., fly 60 ft., swim 30 ft.",17,10,15,12,11,15,2,"blindsight 10 ft., darkvision 60 ft., passive Perception 14",,"Perception +4, Stealth +2"
-ancient-copper-dragon,Ancient Copper Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
+ancient_copper_dragon,Ancient Copper Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +15 to hit, reach 15 ft., one target. Hit: 19 (2d10 + 8) piercing damage.
@@ -526,7 +526,7 @@ Change Shape. The dragon magically polymorphs into a humanoid or beast that has 
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 15 feet of the dragon must succeed on a DC 23 Dexterity saving throw or take 15 (2d6 + 8) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,gargantuan,dragon,chaotic good,21,350,20d20 + 140,"40 ft., climb 40 ft., fly 80 ft.",27,12,25,20,17,19,21,"blindsight 60 ft., darkvision 120 ft., passive Perception 27",,"Deception +11, Perception +17, Stealth +8"
-adult-copper-dragon,Adult Copper Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
+adult_copper_dragon,Adult Copper Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +11 to hit, reach 10 ft., one target. Hit: 17 (2d10 + 6) piercing damage.
 Claw. Melee Weapon Attack: +11 to hit, reach 5 ft., one target. Hit: 13 (2d6 + 6) slashing damage.
@@ -538,19 +538,19 @@ Slowing Breath. The dragon exhales gas in a 60--foot cone. Each creature in that
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 10 feet of the dragon must succeed on a DC 19 Dexterity saving throw or take 13 (2d6 + 6) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,huge,dragon,chaotic good,18,184,16d12 + 80,"40 ft., climb 40 ft., fly 80 ft.",23,12,21,18,15,17,14,"blindsight 60 ft., darkvision 120 ft., passive Perception 22",,"Deception +8, Perception +12, Stealth +6"
-young-copper-dragon,Young Copper Dragon,,"Actions.
+young_copper_dragon,Young Copper Dragon,,"Actions.
 Multiattack. The dragon makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack:+7 to hit, reach 10 ft., one target. Hit:15 (2d10 + 4) piercing damage.
 Claw. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit:11 (2d6 + 4) slashing damage.
 Breath Weapons (Recharge 5-6). The dragon uses one of the following breath weapons.
 Acid Breath. The dragon exhales acid in an 40--foot line that is 5 feet wide. Each creature in that line must make a DC 14 Dexterity saving throw, taking 40 (9d8) acid damage on a failed save, or half as much damage on a successful one.
 Slowing Breath. The dragon exhales gas in a 30--foot cone. Each creature in that area must succeed on a DC 14 Constitution saving throw. On a failed save, the creature can’t use reactions, its speed is halved, and it can’t make more than one attack on its turn. In addition, the creature can use either an action or a bonus action on its turn, but not both. These effects last for 1 minute. The creature can repeat the saving throw at the end of each of its turns, ending the effect on itself with a successful save.",,,large,dragon,chaotic good,17,119,14d10 + 42,"40 ft., climb 40 ft., fly 80 ft.",19,12,17,16,13,15,7,"blindsight 30 ft., darkvision 120 ft., passive Perception 17",,"Deception +5, Perception +7, Stealth +4"
-copper-dragon-wyrmling,Copper Dragon Wyrmling,,"Actions.
+copper_dragon_wyrmling,Copper Dragon Wyrmling,,"Actions.
 Bite. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 7 (1d10 + 2) piercing damage.
 Breath Weapons (Recharge 5-6). The dragon uses one of the following breath weapons.
 Acid Breath. The dragon exhales acid in an 20--foot line that is 5 feet wide. Each creature in that line must make a DC 11 Dexterity saving throw, taking 18 (4d8) acid damage on a failed save, or half as much damage on a successful one.
 Slowing Breath. The dragon exhales gas in a 15--foot cone. Each creature in that area must succeed on a DC 11 Constitution saving throw. On a failed save, the creature can’t use reactions, its speed is halved, and it can’t make more than one attack on its turn. In addition, the creature can use either an action or a bonus action on its turn, but not both. These effects last for 1 minute. The creature can repeat the saving throw at the end of each of its turns, ending the effect on itself with a successful save.",,,medium,dragon,chaotic good,16,22,4d8 + 4,"30 ft., climb 30 ft., fly 60 ft.",15,12,13,14,11,13,1,"blindsight 10 ft., darkvision 60 ft., passive Perception 14",,"Perception +4, Stealth +3"
-ancient-gold-dragon,Ancient Gold Dragon,,"Amphibious. The dragon can breathe air and water.
+ancient_gold_dragon,Ancient Gold Dragon,,"Amphibious. The dragon can breathe air and water.
 Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
@@ -565,7 +565,7 @@ Change Shape. The dragon magically polymorphs into a humanoid or beast that has 
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 15 feet of the dragon must succeed on a DC 25 Dexterity saving throw or take 17 (2d6 + 10) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,gargantuan,dragon,lawful good,22,546,28d20 + 252,"40 ft., fly 80 ft., swim 40 ft.",30,14,29,18,17,28,24,"blindsight 60 ft., darkvision 120 ft., passive Perception 27",,"Insight +10, Perception +17, Persuasion +16, Stealth +9"
-adult-gold-dragon,Adult Gold Dragon,,"Amphibious. The dragon can breathe air and water.
+adult_gold_dragon,Adult Gold Dragon,,"Amphibious. The dragon can breathe air and water.
 Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
@@ -580,7 +580,7 @@ Change Shape. The dragon magically polymorphs into a humanoid or beast that has 
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 10 feet of the dragon must succeed on a DC 22 Dexterity saving throw or take 15 (2d6 + 8) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,huge,dragon,lawful good,19,256,19d12 + 133,"40 ft., fly 80 ft., swim 40 ft.",27,14,25,16,15,24,17,"blindsight 60 ft., darkvision 120 ft., passive Perception 24",,"Insight +8, Perception +14, Persuasion +13, Stealth +8"
-young-gold-dragon,Young Gold Dragon,,"Amphibious. The dragon can breathe air and water.
+young_gold_dragon,Young Gold Dragon,,"Amphibious. The dragon can breathe air and water.
 Actions.
 Multiattack. The dragon makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack:+10 to hit, reach 10 ft., one target. Hit:17 (2d10 + 6) piercing damage.
@@ -588,13 +588,13 @@ Claw. Melee Weapon Attack: +10 to hit, reach 5 ft., one target. Hit:13 (2d6 + 6)
 Breath Weapons (Recharge 5-6). The dragon uses one of the following breath weapons.
 Fire Breath. The dragon exhales fire in a 30--foot cone. Each creature in that area must make a DC 17 Dexterity saving throw, taking 55 (10d10) fire damage on a failed save, or half as much damage on a successful one.
 Weakening Breath. The dragon exhales gas in a 30--foot cone. Each creature in that area must succeed on a DC 17 Strength saving throw or have disadvantage on Strength--based attack rolls, Strength checks, and Strength saving throws for 1 minute. A creature can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.",,,large,dragon,lawful good,18,178,17d10 + 85,"40 ft., fly 80 ft., swim 40 ft.",23,14,21,16,13,20,10,"blindsight 30 ft., darkvision 120 ft., passive Perception 19",,"Insight +5, Perception +9, Persuasion +9, Stealth +6"
-gold-dragon-wyrmling,Gold Dragon Wyrmling,,"Amphibious. The dragon can breathe air and water.
+gold_dragon_wyrmling,Gold Dragon Wyrmling,,"Amphibious. The dragon can breathe air and water.
 Actions.
 Bite. Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 9 (1d10 + 4) piercing damage.
 Breath Weapons (Recharge 5-6). The dragon uses one of the following breath weapons.
 Fire Breath. The dragon exhales fire in a 15--foot cone. Each creature in that area must make a DC 13 Dexterity saving throw, taking 22 (4d10) fire damage on a failed save, or half as much damage on a successful one.
 Weakening Breath. The dragon exhales gas in a 15--foot cone. Each creature in that area must succeed on a DC 13 Strength saving throw or have disadvantage on Strength--based attack rolls, Strength checks, and Strength saving throws for 1 minute. A creature can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.",,,medium,dragon,lawful good,17,60,8d8 + 24,"30 ft., fly 60 ft., swim 30 ft.",19,14,17,14,11,16,3,"blindsight 10 ft., darkvision 60 ft., passive Perception 14",,"Perception +4, Stealth +4"
-ancient-silver-dragon,Ancient Silver Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
+ancient_silver_dragon,Ancient Silver Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack:+17 to hit, reach 15 ft., one target. Hit: 21 (2d10 + 10) piercing damage.
@@ -608,7 +608,7 @@ Change Shape. The dragon magically polymorphs into a humanoid or beast that has 
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 15 feet of the dragon must succeed on a DC 25 Dexterity saving throw or take 17 (2d6 + 10) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,gargantuan,dragon,lawful good,22,487,25d20 + 225,"40 ft., fly 80 ft.",30,10,29,18,15,23,23,"blindsight 60 ft., darkvision 120 ft., passive Perception 26",,"Arcana +11, History +11, Perception +16, Stealth +7"
-adult-silver-dragon,Adult Silver Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
+adult_silver_dragon,Adult Silver Dragon,,"Legendary Resistance (3/Day). If the dragon fails a saving throw, it can choose to succeed instead.
 Actions.
 Multiattack. The dragon can use its Frightful Presence. It then makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +13 to hit, reach 10 ft., one target. Hit: 19 (2d10 + 8) piercing damage.
@@ -622,19 +622,19 @@ Change Shape. The dragon magically polymorphs into a humanoid or beast that has 
 Detect. The dragon makes a Wisdom (Perception) check.
 Tail Attack. The dragon makes a tail attack.
 Wing Attack (Costs 2 Actions). The dragon beats its wings. Each creature within 10 feet of the dragon must succeed on a DC 21 Dexterity saving throw or take 15 (2d6 + 8) bludgeoning damage and be knocked prone. The dragon can then fly up to half its flying speed.",,,huge,dragon,lawful good,19,243,18d12 + 126,"40 ft., fly 80 ft.",27,10,25,16,13,21,16,"blindsight 60 ft., darkvision 120 ft., passive Perception 21",,"Arcana +8, History +8, Perception +11, Stealth +5"
-young-silver-dragon,Young Silver Dragon,,"Actions.
+young_silver_dragon,Young Silver Dragon,,"Actions.
 Multiattack. The dragon makes three attacks: one with its bite and two with its claws.
 Bite. Melee Weapon Attack: +10 to hit, reach 10 ft., one target. Hit: 17 (2d10 + 6) piercing damage.
 Claw. Melee Weapon Attack: +10 to hit, reach 5 ft., one target. Hit: 13 (2d6 + 6) slashing damage.
 Breath Weapons (Recharge 5-6). The dragon uses one of the following breath weapons.
 Cold Breath. The dragon exhales an icy blast in a 30--foot cone. Each creature in that area must make a DC 17 Constitution saving throw, taking 54 (12d8) cold damage on a failed save, or half as much damage on a successful one.
 Paralyzing Breath. The dragon exhales paralyzing gas in a 30--foot cone. Each creature in that area must succeed on a DC 17 Constitution saving throw or be paralyzed for 1 minute. A creature can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.",,,large,dragon,lawful good,18,168,16d10 + 80,"40 ft., fly 80 ft.",23,10,21,14,11,19,9,"blindsight 30 ft., darkvision 120 ft., passive Perception 18",,"Arcana +6, History +6, Perception +8, Stealth +4"
-silver-dragon-wyrmling,Silver Dragon Wyrmling,,"Actions.
+silver_dragon_wyrmling,Silver Dragon Wyrmling,,"Actions.
 Bite. Melee Weapon Attack:+6 to hit, reach 5 ft., one target. Hit:9 (1d10 + 4) piercing damage.
 Breath Weapons (Recharge 5-6). The dragon uses one of the following breath weapons.
 Cold Breath. The dragon exhales an icy blast in a 15--foot cone. Each creature in that area must make a DC 13 Constitution saving throw, taking 18 (4d8) cold damage on a failed save, or half as much damage on a successful one.
 Paralyzing Breath. The dragon exhales paralyzing gas in a 15--foot cone. Each creature in that area must succeed on a DC 13 Constitution saving throw or be paralyzed for 1 minute. A creature can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.",,,medium,dragon,lawful good,17,45,6d8 + 18,"30 ft., fly 60 ft.",19,10,17,12,11,15,2,"blindsight 10 ft., darkvision 60 ft., passive Perception 14",,"Perception +4, Stealth +2"
-dragon-turtle,Dragon Turtle,,"Amphibious. The dragon turtle can breathe air and water.
+dragon_turtle,Dragon Turtle,,"Amphibious. The dragon turtle can breathe air and water.
 Actions.
 Multiattack. The dragon turtle makes three attacks: one with its bite and two with its claws. It can make one tail attack in place of its two claw attacks.
 Bite. Melee Weapon Attack: +13 to hit, reach 15 ft., one target. Hit: 26 (3d12 + 7) piercing damage.
@@ -665,28 +665,28 @@ Enlarge (Recharges after a Short or Long Rest). For 1 minute, the duergar magica
 War Pick. Melee Weapon Attack:+4 to hit, reach 5 ft., one target. Hit:6 (1d8 + 2) piercing damage, or 11 (2d8 +2) piercing damage while enlarged.
 Javelin. Melee or Ranged Weapon Attack: +4 to hit, reach 5 ft. or range 30/120 ft., one target. Hit:5 (1d6 + 2)piercing damage, or 9 (2d6 + 2) piercing damage while enlarged.
 Invisibility (Recharges after a Short or Long Rest). The duergar magically turns invisible until it attacks, casts a spell, or uses its Enlarge, or until its concentration is broken, up to 1 hour (as if concentrating on a spell). Any equipment the duergar wears or carries is invisible with it.",,,medium,humanoid,lawful evil,16,26,4d8 + 8,25 ft.,14,11,14,11,10,9,1,"darkvision 120 ft., passive Perception 10",,
-air-elemental,Air Elemental,,"Air Form. The elemental can enter a hostile creature’s space and stop there. It can move through a space as narrow as 1 inch wide without squeezing.
+air_elemental,Air Elemental,,"Air Form. The elemental can enter a hostile creature’s space and stop there. It can move through a space as narrow as 1 inch wide without squeezing.
 Actions.
 Multiattack. The elemental makes two slam attacks.
 Slam. Melee Weapon Attack: +8 to hit, reach 5 ft., one target. Hit: 14 (2d8 + 5) bludgeoning damage.
 Whirlwind (Recharge 4-6). Each creature in the elemental’s space must make a DC 13 Strength saving throw. On a failure, a target takes 15 (3d8 + 2) bludgeoning damage and is flung up 20 feet away from the elemental in a random direction and knocked prone. If a thrown target strikes an object, such as a wall or floor, the target takes 3 (1d6) bludgeoning damage for every 10 feet it was thrown. If the target is thrown at another creature, that creature must succeed on a DC 13 Dexterity saving throw or take the same damage and be knocked prone.  If the saving throw is successful, the target takes half the bludgeoning damage and isn’t flung away or knocked prone.",,,large,elemental,neutral,15,90,12d10 + 24,"0 ft., fly 90 ft. (hover)",14,20,14,6,10,6,5,"darkvision 60 ft., passive Perception 10",,
-earth-elemental,Earth Elemental,,"Earth Glide. The elemental can burrow through nonmagical, unworked earth and stone. While doing so, the elemental doesn’t disturb the material it moves through.
+earth_elemental,Earth Elemental,,"Earth Glide. The elemental can burrow through nonmagical, unworked earth and stone. While doing so, the elemental doesn’t disturb the material it moves through.
 Siege Monster. The elemental deals double damage to objects and structures.
 Actions.
 Multiattack. The elemental makes two slam attacks.
 Slam. Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit:14 (2d8 + 5) bludgeoning damage.",,,large,elemental,neutral,17,126,12d10 + 60,"30 ft., burrow 30 ft.",20,8,20,5,10,5,5,"darkvision 60 ft., tremorsense 60 ft., passive Perception 10",,
-fire-elemental,Fire Elemental,,"Fire Form. The elemental can move through a space as narrow as 1 inch wide without squeezing. A creature that touches the elemental or hits it with a melee attack while within 5 feet of it takes 5 (1d10) fire damage. In addition, the elemental can enter a hostile creature’s space and stop there. The first time it enters a creature’s space on a turn, that creature takes 5 (1d10) fire damage and catches fire; until someone takes an action to douse the fire, the creature takes 5 (1d10) fire damage at the start of each of its turns.
+fire_elemental,Fire Elemental,,"Fire Form. The elemental can move through a space as narrow as 1 inch wide without squeezing. A creature that touches the elemental or hits it with a melee attack while within 5 feet of it takes 5 (1d10) fire damage. In addition, the elemental can enter a hostile creature’s space and stop there. The first time it enters a creature’s space on a turn, that creature takes 5 (1d10) fire damage and catches fire; until someone takes an action to douse the fire, the creature takes 5 (1d10) fire damage at the start of each of its turns.
 Illumination. The elemental sheds bright light in a 30--foot radius and dim light in an additional 30 feet.
 Water Susceptibility. For every 5 feet the elemental moves in water, or for every gallon of water splashed on it, it takes 1 cold damage.
 Actions.
 Multiattack. The elemental makes two touch attacks.
 Touch. Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 10 (2d6 + 3) fire damage. If the target is a creature or a flammable object, it ignites. Until a creature takes an action to douse the fire, the target takes 5 (1d10) fire damage at the start of each of its turns.",,,large,elemental,neutral,13,102,12d10 + 36,50 ft.,10,17,16,6,10,7,5,"darkvision 60 ft., passive Perception 10",,
-water-elemental,Water Elemental,,"Water Form. The elemental can enter a hostile creature’s space and stop there. It can move through a space as narrow as 1 inch wide without squeezing.
+water_elemental,Water Elemental,,"Water Form. The elemental can enter a hostile creature’s space and stop there. It can move through a space as narrow as 1 inch wide without squeezing.
 Freeze. If the elemental takes cold damage, it partially freezes; its speed is reduced by 20 feet until the end of its next turn.
 Multiattack. The elemental makes two slam attacks.
 Slam. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 13 (2d8 + 4) bludgeoning damage.
 Whelm(Recharge 4-6). Each creature in the elemental’s space must make a DC 15 Strength saving throw. On a failure, a target takes 13 (2d8 + 4) bludgeoning damage. If it is Large or smaller, it is also grappled (escape DC 14). Until this grapple ends, the target is restrained and unable to breathe unless it can breathe water. If the saving throw is successful, the target is pushed out of the elemental’s space. The elemental can grapple one Large creature or up to two Medium or smaller creatures at one time. At the start of each of the elemental’s turns, each target grappled by it takes 13 (2d8 + 4) bludgeoning damage. A creature within 5 feet of the elemental can pull a creature or object out of it by taking an action to make a DC 14 Strength and succeeding.",,,large,elemental,neutral,14,114,12d10 + 48,"30 ft., swim 90 ft.",18,14,18,5,10,8,5,"darkvision 60 ft., passive Perception 10",,
-elf-drow,"Elf, Drow",,"Fey Ancestry. The drow has advantage on saving throws against being charmed, and magic can’t put the drow to sleep.
+elf_drow,"Elf, Drow",,"Fey Ancestry. The drow has advantage on saving throws against being charmed, and magic can’t put the drow to sleep.
 Innate Spellcasting. The drow’s spellcasting ability is Charisma (spell save DC 11). It can innately cast the following spells, requiring no material components: At will: dancing lights 1/day each: darkness, faerie fire
 Sunlight Sensitivity. While in sunlight, the drow has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight.
 Actions.
@@ -708,7 +708,7 @@ Battleaxe. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit:14 (2d8 
 Morningstar. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit:14 (2d8 + 5) piercing damage.",,,large,giant,chaotic evil,12,85,10d10 + 30,40 ft.,21,8,17,6,10,8,4,"darkvision 60 ft., passive Perception 14",,Perception +4
 shrieker,Shrieker,,"False Appearance. While the shrieker remains motionless, it is indistinguishable from an ordinary fungus.
 Shriek. When bright light or a creature is within 30 feet of the shrieker, it emits a shriek audible within 300 feet of it. The shrieker continues to shriek until the disturbance moves out of range and for 1d4 of the shrieker’s turns afterward.",,,medium,plant,unaligned,5,13,3d8,0 ft.,1,1,10,1,3,1,0,"blindsight 30 ft. (blind beyond this radius), passive Perception 6",,
-violet-fungus,Violet Fungus,,"False Appearance. While the violet fungus remains motionless, it is indistinguishable from an ordinary fungus.
+violet_fungus,Violet Fungus,,"False Appearance. While the violet fungus remains motionless, it is indistinguishable from an ordinary fungus.
 Actions.
 Multiattack. The fungus makes 1d4 Rotting Touch attacks.
 Rotting Touch. Melee Weapon Attack:+2 to hit, reach 10 ft., one creature. Hit:4 (1d8) necrotic damage.",,,medium,plant,unaligned,5,18,4d8,5 ft.,3,1,10,1,3,1,1/4,"blindsight 30 ft. (blind beyond this radius), passive Perception 6",,
@@ -744,38 +744,38 @@ Claws. Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 10 (2d6 + 3
 ghoul,Ghoul,,"Actions.
 Bite. Melee Weapon Attack: +2 to hit, reach 5 ft., one creature. Hit: 9 (2d6 + 2) piercing damage.
 Claws. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 7 (2d4 + 2) slashing damage. If the target is a creature other than an elf or undead, it must succeed on a DC 10 Constitution saving throw or be paralyzed for 1 minute. The target can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.",,,medium,undead,chaotic evil,12,22,5d8,30 ft.,13,15,10,7,10,6,1,"darkvision 60 ft., passive Perception 10",,
-cloud-giant,Cloud Giant,,"Keen Smell. The giant has advantage on Wisdom (Perception) checks that rely on smell.
+cloud_giant,Cloud Giant,,"Keen Smell. The giant has advantage on Wisdom (Perception) checks that rely on smell.
 Innate Spellcasting. The giant’s innate spellcasting ability is Charisma. It can innately cast the following spells, requiring no material components: At will: detect magic, fog cloud, light 3/day each: feather fall, fly, misty step, telekinesis 1/day each: control weather, gaseous form
 Actions.
 Multiattack. The giant makes two morningstar attacks.
 Morningstar. Melee Weapon Attack: +12 to hit, reach 10 ft., one target. Hit:21 (3d8 + 8) piercing damage.
 Rock. Ranged Weapon Attack: +12 to hit, range 60/240 ft., one target. Hit:30 (4d10 + 8) bludgeoning damage.",,,huge,giant,neutral good (50%) or neutral evil (50%),14,200,16d12 + 96,40 ft.,27,10,22,12,16,16,9,passive Perception 17,,"Insight +7, Perception +7"
-fire-giant,Fire Giant,,"Actions.
+fire_giant,Fire Giant,,"Actions.
 Multiattack. The giant makes two greatsword attacks.
 Greatsword. Melee Weapon Attack: +11 to hit, reach 10 ft., one target. Hit: 28 (6d6 + 7) slashing damage.
 Rock. Ranged Weapon Attack: +11 to hit, range 60/240 ft., one target. Hit: 29 (4d10 + 7) bludgeoning damage.",,,huge,giant,lawful evil,18,162,13d12 + 78,30 ft.,25,9,23,10,14,13,9,passive Perception 16,,"Athletics +11, Perception +6"
-frost-giant,Frost Giant,,"Actions.
+frost_giant,Frost Giant,,"Actions.
 Multiattack. The giant makes two greataxe attacks.
 Greataxe. Melee Weapon Attack: +9 to hit, reach 10 ft., one target. Hit: 25 (3d12 + 6) slashing damage.
 Rock. Ranged Weapon Attack: +9 to hit, range 60/240 ft., one target. Hit: 28 (4d10 + 6) bludgeoning damage.",,,huge,giant,neutral evil,15,138,12d12 + 60,40 ft.,23,9,21,9,10,12,8,passive Perception 13,,"Athletics +9, Perception +3"
-hill-giant,Hill Giant,,"Actions.
+hill_giant,Hill Giant,,"Actions.
 Multiattack. The giant makes two greatclub attacks.
 Greatclub. Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit:18 (3d8 + 5) bludgeoning damage.
 Rock. Ranged Weapon Attack: +8 to hit, range 60/240 ft., one target. Hit:21 (3d10 + 5) bludgeoning damage.",,,huge,giant,chaotic evil,13,105,10d12 + 40,40 ft.,21,8,19,5,9,6,5,passive Perception 12,,Perception +2
-stone-giant,Stone Giant,,"Stone Camouflage. The giant has advantage on Dexterity (Stealth) checks made to hide in rocky terrain.
+stone_giant,Stone Giant,,"Stone Camouflage. The giant has advantage on Dexterity (Stealth) checks made to hide in rocky terrain.
 Actions.
 Multiattack. The giant makes two greatclub attacks.
 Greatclub. Melee Weapon Attack: +9 to hit, reach 15 ft., one target. Hit:19 (3d8 + 6) bludgeoning damage.
 Rock. Ranged Weapon Attack: +9 to hit, range 60/240 ft., one target. Hit:28 (4d10 + 6) bludgeoning damage. If the target is a creature, it must succeed on a DC 17 Strength saving throw or be knocked prone.
 Rock Catching. If a rock or similar object is hurled at the giant, the giant can, with a successful DC 10 Dexterity saving throw, catch the missile and take no bludgeoning damage from it.",,,huge,giant,neutral,17,126,11d12 + 55,40 ft.,23,15,20,10,12,9,7,"darkvision 60 ft., passive Perception 14",,"Athletics +12, Perception +4"
-storm-giant,Storm Giant,,"Amphibious. The giant can breathe air and water.
+storm_giant,Storm Giant,,"Amphibious. The giant can breathe air and water.
 Innate Spellcasting. The giant’s innate spellcasting ability is Charisma (spell save DC 17). It can innately cast the following spells, requiring no material components: At will: detect magic, feather fall, levitate, light3/day each: control weather, water breathing
 Actions.
 Multiattack. The giant makes two greatsword attacks.
 Greatsword. Melee Weapon Attack: +14 to hit, reach 10 ft., one target. Hit: 30 (6d6 + 9) slashing damage.
 Rock. Ranged Weapon Attack: +14 to hit, range 60/240 ft., one target. Hit: 35 (4d12 + 9) bludgeoning damage.
 Lightning Strike (Recharge 5-6). The giant hurls a magical lightning bolt at a point it can see within 500 feet of it. Each creature within 10 feet of that point must make a DC 17 Dexterity saving throw, taking 54 (12d8) lightning damage on a failed save, or half as much damage on a successful one.",,,huge,giant,chaotic good,16,230,20d12 + 100,"50 ft., swim 50 ft.",29,14,20,16,18,18,13,passive Perception 19,,"Arcana +8, Athletics +14, History +8, Perception +9"
-gibbering-mouther,Gibbering Mouther,,"Aberrant Ground. The ground in a 10--foot radius around the mouther is dough like difficult terrain. Each creature that starts its turn in that area must succeed on a DC 10 Strength saving throw or have its speed reduced to 0 until the start of its next turn.
+gibbering_mouther,Gibbering Mouther,,"Aberrant Ground. The ground in a 10--foot radius around the mouther is dough like difficult terrain. Each creature that starts its turn in that area must succeed on a DC 10 Strength saving throw or have its speed reduced to 0 until the start of its next turn.
 Gibbering. The mouther babbles incoherently while it can see any creature and isn’t incapacitated. Each creature that starts its turn within 20 feet of the mouther and can hear the gibbering must succeed on a DC 10 Wisdom saving throw. On a failure, the creature can’t take reactions until the start of its next turn and rolls a d8 to determine what it does during its turn. On a 1 to 4, the creature does nothing. On a 5 or 6, the creature takes no action or bonus action and uses all its movement to move in a randomly determined direction. On a 7 or 8, the creature makes a melee attack against a randomly determined creature within its reach or does nothing if it can’t make such an attack.
 Actions.
 Multiattack. The gibbering mouther makes one bite attack and, if it can, uses its Blinding Spittle.
@@ -786,7 +786,7 @@ Actions.
 Bite. Melee Weapon Attack: +4 to hit, reach 5 ft., one creature. Hit: 4 (1d4 + 2) piercing damage.
 Spear. Melee or Ranged Weapon Attack: +4 to hit, reach 5 ft. or range 20/60 ft., one target. Hit: 5 (1d6 + 2)piercing damage, or 6 (1d8 + 2) piercing damage if used with two hands to make a melee attack.
 Longbow. Ranged Weapon Attack: +3 to hit, range 150/600 ft., one target. Hit: 5 (1d8 + 1) piercing damage.",,,medium,humanoid,chaotic evil,15,22,5d8,30 ft.,14,12,11,6,10,7,1/2,"darkvision 60 ft., passive Perception 10",,
-gnome-deep,"Gnome, Deep (Svirfneblin)",,"Stone Camouflage. The gnome has advantage on Dexterity (Stealth) checks made to hide in rocky terrain.
+gnome_deep,"Gnome, Deep (Svirfneblin)",,"Stone Camouflage. The gnome has advantage on Dexterity (Stealth) checks made to hide in rocky terrain.
 Gnome Cunning. The gnome has advantage on Intelligence, Wisdom, and Charisma saving throws against magic.
 Innate Spellcasting. The gnome’s innate spellcasting ability is Intelligence (spell save DC 11). It can innately cast the following spells, requiring no material components: At will: non detection (self only) 1/day each: blindness/deafness, blur, disguise self
 Actions.
@@ -796,7 +796,7 @@ goblin,Goblin,,"Nimble Escape. The goblin can take the Disengage or Hide action 
 Actions.
 Scimitar. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit:5 (1d6 + 2) slashing damage.
 Shortbow. Ranged Weapon Attack: +4 to hit, range 80/320 ft., one target. Hit:5 (1d6 + 2) piercing damage.",,,small,humanoid,neutral evil,15,7,2d6,30 ft.,8,14,10,10,8,8,1/4,"darkvision 60 ft., passive Perception 9",,Stealth +6
-clay-golem,Clay Golem,,"Acid Absorption . Whenever the golem is subjected to acid damage, it takes no damage and instead regains a number of hit points equal to the acid damage dealt.
+clay_golem,Clay Golem,,"Acid Absorption . Whenever the golem is subjected to acid damage, it takes no damage and instead regains a number of hit points equal to the acid damage dealt.
 Berserk. Whenever the golem starts its turn with 60 hit points or fewer, roll a d6. On a 6, the golem goes berserk. On each of its turns while berserk, the golem attacks the nearest creature it can see. If no creature is near enough to move to and attack, the golem attacks an object, with preference for an object smaller than itself. Once the golem goes berserk, it continues to do so until it is destroyed or regains all its hit points.
 Immutable Form. The golem is immune to any spell or effect that would alter its form.
 Magic Resistance. The golem has advantage on saving throws against spells and other magical effects.
@@ -805,7 +805,7 @@ Actions.
 Multiattack. The golem makes two slam attacks.
 Slam. Melee Weapon Attack: +8 to hit, reach 5 ft., one target. Hit: 16 (2d10 + 5) bludgeoning damage. If the target is a creature, it must succeed on a DC 15 Constitution saving throw or have its hit point maximum reduced by an amount equal to the damage taken. The target dies if this attack reduces its hit point maximum to 0. The reduction lasts until removed by the greater restoration spell or other magic.
 Haste (Recharge 5-6). Until the end of its next turn, the golem magically gains a +2 bonus to its AC, has advantage on Dexterity saving throws, and can use its slam attack as a bonus action.",,,large,construct,unaligned,14,133,14d10 + 56,20 ft.,20,9,18,3,8,1,9,"darkvision 60 ft., passive Perception 9",,
-flesh-golem,Flesh Golem,,"Berserk. Whenever the golem starts its turn with 40 hit points or fewer, roll a d6. On a 6, the golem goes berserk. On each of its turns while berserk, the golem attacks the nearest creature it can see. If no creature is near enough to move to and attack, the golem attacks an object, with preference for an object smaller than itself. Once the golem goes berserk, it continues to do so until it is destroyed or regains all its hit points. The golem’s creator, if within 60 feet of the berserk golem, can try to calm it by speaking firmly and persuasively. The golem must be able to hear its creator, who must take an action to make a DC 15 Charisma (Persuasion) check. If the check succeeds, the golem ceases being berserk. If it takes damage while still at 40 hit points or fewer, the golem might go berserk again.
+flesh_golem,Flesh Golem,,"Berserk. Whenever the golem starts its turn with 40 hit points or fewer, roll a d6. On a 6, the golem goes berserk. On each of its turns while berserk, the golem attacks the nearest creature it can see. If no creature is near enough to move to and attack, the golem attacks an object, with preference for an object smaller than itself. Once the golem goes berserk, it continues to do so until it is destroyed or regains all its hit points. The golem’s creator, if within 60 feet of the berserk golem, can try to calm it by speaking firmly and persuasively. The golem must be able to hear its creator, who must take an action to make a DC 15 Charisma (Persuasion) check. If the check succeeds, the golem ceases being berserk. If it takes damage while still at 40 hit points or fewer, the golem might go berserk again.
 Aversion of Fire. If the golem takes fire damage, it has disadvantage on attack rolls and ability checks until the end of its next turn.
 Immutable Form. The golem is immune to any spell or effect that would alter its form.
 Lightning Absorption . Whenever the golem is subjected to lightning damage, it takes no damage and instead regains a number of hit points equal to the lightning damage dealt.
@@ -814,7 +814,7 @@ Magic Weapons. The golem’s weapon attacks are magical.
 Actions.
 Multiattack. The golem makes two slam attacks.
 Slam. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit:13 (2d8 + 4) bludgeoning damage.",,,medium,construct,neutral,9,93,11d8 + 44,30 ft.,19,9,18,6,10,5,5,"darkvision 60 ft., passive Perception 10",,
-iron-golem,Iron Golem,,"Fire Absorption . Whenever the golem is subjected to fire damage, it takes no damage and instead regains a number of hit points equal to the fire damage dealt.
+iron_golem,Iron Golem,,"Fire Absorption . Whenever the golem is subjected to fire damage, it takes no damage and instead regains a number of hit points equal to the fire damage dealt.
 Immutable Form. The golem is immune to any spell or effect that would alter its form.
 Magic Resistance. The golem has advantage on saving throws against spells and other magical effects.
 Magic Weapons. The golem’s weapon attacks are magical.
@@ -823,7 +823,7 @@ Multiattack. The golem makes two melee attacks.
 Slam. Melee Weapon Attack: +13 to hit, reach 5 ft., one target. Hit: 20 (3d8 + 7) bludgeoning damage.
 Sword. Melee Weapon Attack: +13 to hit, reach 10 ft., one target. Hit: 23 (3d10 + 7) slashing damage.
 Poison Breath (Recharge 6). The golem exhales poisonous gas in a 15--foot cone. Each creature in that area must make a DC 19 Constitution saving throw, taking 45 (10d8) poison damage on a failed save, or half as much damage on a successful one.",,,large,construct,unaligned,20,210,20d10 + 100,30 ft.,24,9,20,3,11,1,16,"darkvision 120 ft., passive Perception 10",,
-stone-golem,Stone Golem,,"Immutable Form. The golem is immune to any spell or effect that would alter its form.
+stone_golem,Stone Golem,,"Immutable Form. The golem is immune to any spell or effect that would alter its form.
 Magic Resistance. The golem has advantage on saving throws against spells and other magical effects.
 Magic Weapons. The golem’s weapon attacks are magical.
 Actions.
@@ -850,21 +850,21 @@ Keen Hearing and Smell. The grimlock has advantage on Wisdom (Perception) checks
 Stone Camouflage. The grimlock has advantage on Dexterity (Stealth) checks made to hide in rocky terrain.
 Actions.
 Spiked Bone Club. Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 5 (1d4 + 3) bludgeoning damage plus 2 (1d4) piercing damage.",,,medium,humanoid,neutral evil,11,11,2d8 + 2,30 ft.,16,12,12,9,8,6,1/4,"blindsight 30 ft. or 10 ft. while deafened (blind beyond this radius), passive Perception 13",,"Athletics +5, Perception +3, Stealth +3"
-green-hag,Green Hag,,"Amphibious. The hag can breathe air and water.
+green_hag,Green Hag,,"Amphibious. The hag can breathe air and water.
 Innate Spellcasting. The hag’s innate spellcasting ability is Charisma (spell save DC 12). She can innately cast the following spells, requiring no material components: At will: dancing lights, minor illusion, vicious mockery
 Mimicry. The hag can mimic animal sounds and humanoid voices. A creature that hears the sounds can tell they are imitations with a successful DC 14 Wisdom (Insight) check.
 Actions.
 Claws. Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit:13 (2d8 + 4) slashing damage.
 Illusory Appearance. The hag covers herself and anything she is wearing or carrying with a magical illusion that makes her look like another creature of her general size and humanoid shape. The illusion ends if the hag takes a bonus action to end it or if she dies. The changes wrought by this effect fail to hold up to physical inspection. For example, the hag could appear to have smooth skin, but someone touching her would feel her rough flesh. Otherwise, a creature must take an action to visually inspect the illusion and succeed on a DC 20 Intelligence (Investigation) check to discern that the hag is disguised.
 Invisible Passage. The hag magically turns invisible until she attacks or casts a spell, or until her concentration ends (as if concentrating on a spell). While invisible, she leaves no physical evidence of her passage, so she can be tracked only by magic. Any equipment she wears or carries is invisible with her.",,,medium,fey,neutral evil,17,82,11d8 + 33,30 ft.,18,12,16,13,14,14,3,"darkvision 60 ft., passive Perception 14",,"Arcana +3, Deception +4, Perception +4, Stealth +3"
-night-hag,Night Hag,,"Innate Spellcasting. The hag’s innate spellcasting ability is Charisma (spell save DC 14, +6 to hit with spell attacks). She can innately cast the following spells, requiring no material components: At will: detect magic, magic missile 2/day each: plane shift (self only), ray of enfeeblement, sleep
+night_hag,Night Hag,,"Innate Spellcasting. The hag’s innate spellcasting ability is Charisma (spell save DC 14, +6 to hit with spell attacks). She can innately cast the following spells, requiring no material components: At will: detect magic, magic missile 2/day each: plane shift (self only), ray of enfeeblement, sleep
 Magic Resistance. The hag has advantage on saving throws against spells and other magical effects.
 Actions.
 Claws (Hag Form Only). Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 13 (2d8 + 4) slashing damage.
 Change Shape. The hag magically polymorphs into a Small or Medium female humanoid, or back into her true form. Her statistics are the same in each form. Any equipment she is wearing or carrying isn’t transformed. She reverts to her true form if she dies.
 Etherealness. The hag magically enters the Ethereal Plane from the Material Plane, or vice versa. To do so, the hag must have a heartstone in her possession.
 Nightmare Haunting (1/Day). While on the Ethereal Plane, the hag magically touches a sleeping humanoid on the Material Plane. A protection from evil and goodspell cast on the target prevents this contact, as does a magic circle. As long as the contact persists, the target has dreadful visions. If these visions last for at least 1 hour, the target gains no benefit from its rest, and its hit point maximum is reduced by 5 (1d10). If this effect reduces the target’s hit point maximum to 0, the target dies, and if the target was evil, its soul is trapped in the hag’s soul bag. The reduction to the target’s hit point maximum lasts until removed by the greater restoration spell or similar magic.",,,medium,fiend,neutral evil,17,112,15d8 + 45,30 ft.,18,15,16,16,14,16,5,"darkvision 120 ft., passive Perception 16",,"Deception +7, Insight +6, Perception +6, Stealth +6"
-sea-hag,Sea Hag,,"Amphibious. The hag can breathe air and water.
+sea_hag,Sea Hag,,"Amphibious. The hag can breathe air and water.
 Horrific Appearance. Any humanoid that starts its turn within 30 feet of the hag and can see the hag’s true form must make a DC 11 Wisdom saving throw. On a failed save, the creature is frightened for 1 minute. A creature can repeat the saving throw at the end of each of its turns, with disadvantage if the hag is within line of sight, ending the effect on itself on a success. If a creature’s saving throw is successful or the effect ends for it, the creature is immune to the hag’s Horrific Appearance for the next 24 hours. Unless the target is surprised or the revelation of the hag’s true form is sudden, the target can avert its eyes and avoid making the initial saving throw. Until the start of its next turn, a creature that averts its eyes has disadvantage on attack rolls against the hag.
 Actions.
 Claws. Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit:10 (2d6 + 3) slashing damage.
@@ -875,7 +875,7 @@ Senses. The half-dragon gains blindsight with a radius of 10 feet and darkvision
 Resistances. The half-dragon gains resistance to a type of damage based on its color.
 Languages. The half-dragon speaks Draconic in addition to any other languages it knows.
 New Action: Breath Weapon. The half-dragon has the breath weapon of its dragon half. The half-dragon’s size determines how this action functions.",,,medium,fey,chaotic evil,14,52,7d8 + 21,"30 ft., swim 40 ft.",16,13,16,12,12,13,2,"darkvision 60 ft., passive Perception 11",,
-half-red-dragon-veteran,Half--Red Dragon Veteran,,"Actions.
+half_red_dragon_veteran,Half--Red Dragon Veteran,,"Actions.
 Multiattack. The veteran makes two longsword attacks. If it has a shortsword drawn, it can also make a shortsword attack.
 Longsword. Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 7 (1d8 + 3) slashing damage, or 8 (1d10 +3) slashing damage if used with two hands.
 Shortsword. Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 6 (1d6 + 3) piercing damage.
@@ -886,7 +886,7 @@ Multiattack. The harpy makes two attacks: one with its claws and one with its cl
 Claws. Melee Weapon Attack: +3 to hit, reach 5 ft., one target. Hit:6 (2d4 + 1) slashing damage.
 Club. Melee Weapon Attack: +3 to hit, reach 5 ft., one target. Hit: 3 (1d4 + 1) bludgeoning damage.
 Luring Song. The harpy sings a magical melody. Every humanoid and giant within 300 feet of the harpy that can hear the song must succeed on a DC 11 Wisdom saving throw or be charmed until the song ends. The harpy must take a bonus action on its subsequent turns to continue singing. It can stop singing at any time. The song ends if the harpy is incapacitated. While charmed by the harpy, a target is incapacitated and ignores the songs of other harpies. If the charmed target is more than 5 feet away from the harpy, the target must move on its turn toward the harpy by the most direct route, trying to get within 5 feet. It doesn’t avoid opportunity attacks, but before moving into damaging terrain, such as lava or a pit, and whenever it takes damage from a source other than the harpy, the target can repeat the saving throw. A charmed target can also repeat the saving throw at the end of each of its turns. If the saving throw is successful, the effect ends on it. A target that successfully saves is immune to this harpy’s song for the next 24 hours.",,,medium,monstrosity,chaotic evil,11,38,7d8 + 7,"20 ft., fly 40 ft.",12,13,12,7,10,13,1,passive Perception 10,,
-hell-hound,Hell Hound,,"Keen Hearing and Smell. The hound has advantage on Wisdom (Perception) checks that rely on hearing or smell.
+hell_hound,Hell Hound,,"Keen Hearing and Smell. The hound has advantage on Wisdom (Perception) checks that rely on hearing or smell.
 Pack Tactics. The hound has advantage on an attack roll against a creature if at least one of the hound’s allies is within 5 feet of the creature and the ally isn’t incapacitated.
 Actions.
 Bite. Melee Weapon Attack: +5 to hit, reach 5 ft., one target. Hit: 7 (1d8 + 3) piercing damage plus 7 (2d6) fire damage.
@@ -910,7 +910,7 @@ Wakeful. While the hydra sleeps, at least one of its heads is awake.
 Actions.
 Multiattack. The hydra makes as many bite attacks as it has heads.
 Bite. Melee Weapon Attack: +8 to hit, reach 10 ft., one target. Hit:10 (1d10 + 5) piercing damage.",,,huge,monstrosity,unaligned,15,172,15d12 + 75,"30 ft., swim 30 ft.",20,12,20,2,10,7,8,"darkvision 60 ft., passive Perception 16",,Perception +6
-invisible-stalker,Invisible Stalker,,"Invisibility. The stalker is invisible.
+invisible_stalker,Invisible Stalker,,"Invisibility. The stalker is invisible.
 Faultless Tracker. The stalker is given a quarry by its summoner. The stalker knows the direction and distance to its quarry as long as the two of them are on the same plane of existence. The stalker also knows the location of its summoner.
 Actions.
 Multiattack. The stalker makes two slam attacks.
@@ -1008,23 +1008,23 @@ Multiattack. The medusa makes either three melee attacks-one with its snake hair
 Snake Hair. Melee Weapon Attack: +5 to hit, reach 5 ft., one creature. Hit:4 (1d4 + 2) piercing damage plus 14 (4d6) poison damage.
 Shortsword. MeleeWeapon Attack: +5 to hit, reach 5 ft., one target. Hit:5 (1d6 + 2) piercing damage.
 Longbow. Ranged Weapon Attack:+5 to hit, range 150/600 ft., one target. Hit:6 (1d8 + 2) piercing damage plus 7 (2d6) poison damage.",,,medium,monstrosity,lawful evil,15,127,17d8 + 51,30 ft.,10,15,16,12,13,15,6,"darkvision 60 ft., passive Perception 14",,"Deception +5, Insight +4, Perception +4, Stealth +5"
-dust-mephit,Dust Mephit,,"Death Burst. When the mephit dies, it explodes in a burst of dust. Each creature within 5 feet of it must then succeed on a DC 10 Constitution saving throw or be blinded for 1 minute. A blinded creature can repeat the saving throw on each of its turns, ending the effect on itself on a success.
+dust_mephit,Dust Mephit,,"Death Burst. When the mephit dies, it explodes in a burst of dust. Each creature within 5 feet of it must then succeed on a DC 10 Constitution saving throw or be blinded for 1 minute. A blinded creature can repeat the saving throw on each of its turns, ending the effect on itself on a success.
 Innate Spellcasting (1/Day). The mephit can innately cast sleep, requiring no material components. Its innate spellcasting ability is Charisma.
 Claws. Melee Weapon Attack: +4 to hit, reach 5 ft., one creature. Hit: 4 (1d4 + 2) slashing damage.
 Blinding Breath (Recharge 6). The mephit exhales a 15--foot cone of blinding dust. Each creature in that area must succeed on a DC 10 Dexterity saving throw or be blinded for 1 minute. A creature can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.",,,small,elemental,neutral evil,12,17,5d6,"30 ft., fly 30 ft.",5,14,10,9,11,10,1/2,"darkvision 60 ft., passive Perception 12",,"Perception +2, Stealth +4"
-ice-mephit,Ice Mephit,,"Death Burst. When the mephit dies, it explodes in a burst of jagged ice. Each creature within 5 feet of it must make a DC 10 Dexterity saving throw, taking 4 (1d8) slashing damage on a failed save, or half as much damage on a successful one.
+ice_mephit,Ice Mephit,,"Death Burst. When the mephit dies, it explodes in a burst of jagged ice. Each creature within 5 feet of it must make a DC 10 Dexterity saving throw, taking 4 (1d8) slashing damage on a failed save, or half as much damage on a successful one.
 False Appearance. While the mephit remains motionless, it is indistinguishable from an ordinary shard of ice.
 Innate Spellcasting (1/Day). The mephit can innately cast fog cloud, requiring no material components. Its innate spellcasting ability is Charisma.
 Actions.
 Claws. Melee Weapon Attack: +3 to hit, reach 5 ft., one creature. Hit: 3 (1d4 + 1) slashing damage plus 2 (1d4) cold damage.
 Frost Breath (Recharge 6). The mephit exhales a 15--foot cone of cold air. Each creature in that area must succeed on a DC 10 Dexterity saving throw, taking 5 (2d4) cold damage on a failed save, or half as much damage on a successful one.",,,small,elemental,neutral evil,11,21,6d6,"30 ft., fly 30 ft.",7,13,10,9,11,12,1/2,"darkvision 60 ft., passive Perception 12",,"Perception +2, Stealth +3"
-magma-mephit,Magma Mephit,,"Death Burst. When the mephit dies, it explodes in a burst of lava. Each creature within 5 feet of it must make a DC 11 Dexterity saving throw, taking 7 (2d6) fire damage on a failed save, or half as much damage on a successful one.
+magma_mephit,Magma Mephit,,"Death Burst. When the mephit dies, it explodes in a burst of lava. Each creature within 5 feet of it must make a DC 11 Dexterity saving throw, taking 7 (2d6) fire damage on a failed save, or half as much damage on a successful one.
 False Appearance. While the mephit remains motionless, it is indistinguishable from an ordinary mound of magma.
 Innate Spellcasting (1/Day). The mephit can innately cast heat metal(spell save DC 10), requiring no material components. Its innate spellcasting ability is Charisma.
 Actions.
 Claws. Melee Weapon Attack:+3 to hit, reach 5 ft., one creature. Hit:3 (1d4 + 1) slashing damage plus 2 (1d4) fire damage.
 Fire Breath (Recharge 6). The mephit exhales a 15--foot cone of fire. Each creature in that area must make a DC 11 Dexterity saving throw, taking 7 (2d6) fire damage on a failed save, or half as much damage on a successful one.",,,small,elemental,neutral evil,11,22,5d6 + 5,"30 ft., fly 30 ft.",8,12,12,7,10,10,1/2,"darkvision 60 ft., passive Perception 10",,Stealth +3
-steam-mephit,Steam Mephit,,"Death Burst. When the mephit dies, it explodes in a cloud of steam. Each creature within 5 feet of the mephit must succeed on a DC 10 Dexterity saving throw or take 4 (1d8) fire damage.
+steam_mephit,Steam Mephit,,"Death Burst. When the mephit dies, it explodes in a cloud of steam. Each creature within 5 feet of the mephit must succeed on a DC 10 Dexterity saving throw or take 4 (1d8) fire damage.
 Innate Spellcasting (1/Day). The mephit can innately cast blur, requiring no material components. Its innate spellcasting ability is Charisma.
 Actions.
 Claws. Melee Weapon Attack: +2 to hit, reach 5 ft., one creature. Hit: 2 (1d4) slashing damage plus 2 (1d4) fire damage.
@@ -1055,7 +1055,7 @@ mummy,Mummy,,"Actions.
 Multiattack. The mummy can use its Dreadful Glare and makes one attack with its rotting fist.
 Rotting Fist. Melee Weapon Attack:+5 to hit, reach 5 ft., one target. Hit:10 (2d6 + 3) bludgeoning damage plus 10 (3d6) necrotic damage. If the target is a creature, it must succeed on a DC 12 Constitution saving throw or be cursed with mummy rot. The cursed target can’t regain hit points, and its hit point maximum decreases by 10 (3d6) for every 24 hours that elapse. If the curse reduces the target’s hit point maximum to 0, the target dies, and its body turns to dust. The curse lasts until removed by the remove curse spell or other magic.
 Dreadful Glare. The mummy targets one creature it can see within 60 feet of it. If the target can see the mummy, it must succeed on a DC 11 Wisdom saving throw against this magic or become frightened until the end of the mummy’s next turn. If the target fails the saving throw by 5 or more, it is also paralyzed for the same duration. A target that succeeds on the saving throw is immune to the Dreadful Glare of all mummies (but not mummy lords) for the next 24 hours.",,,medium,undead,lawful evil,11,58,9d8 + 18,20 ft.,16,8,15,6,10,12,3,"darkvision 60 ft., passive Perception 10",,
-mummy-lord,Mummy Lord,,"Magic Resistance. The mummy lord has advantage on saving throws against spells and other magical effects.
+mummy_lord,Mummy Lord,,"Magic Resistance. The mummy lord has advantage on saving throws against spells and other magical effects.
 Rejuvenation. A destroyed mummy lord gains a new body in 24 hours if its heart is intact, regaining all its hit points and becoming active again. The new body appears within 5 feet of the mummy lord’s heart.
 Spellcasting. The mummy lord is a 10th--level spellcaster. Its spellcasting ability is Wisdom (spell save DC 17, +9 to hit with spell attacks). The mummy lord has the following cleric spells prepared: Cantrips (at will): sacred flame, thaumaturgy 1st level (4 slots): command, guiding bolt, shield of faith 2nd level (3 slots): hold person, silence, spiritual weapon 3rd level (3 slots): animate dead, dispel magic 4th level (3 slots): divination, guardian of faith 5th level (2 slots): contagion, insect plague 6th level (1 slot):harm
 Actions.
@@ -1067,12 +1067,12 @@ Blinding Dust. Blinding dust and sand swirls magically around the mummy lord. Ea
 Blasphemous Word (Costs 2 Actions). The mummy lord utters a blasphemous word. Each non--undead creature within 10 feet of the mummy lord that can hear the magical utterance must succeed on a DC 16 Constitution saving throw or be stunned until the end of the mummy lord’s next turn.
 Channel Negative Energy (Costs 2 Actions). The mummy lord magically unleashes negative energy. Creatures within 60 feet of the mummy lord, including ones behind barriers and around corners, can’t regain hit points until the end of the mummy lord’s next turn.
 Whirlwind of Sand (Costs 2 Actions). The mummy lord magically transforms into a whirlwind of sand, moves up to 60 feet, and reverts to its normal form. While in whirlwind form, the mummy lord is immune to all damage, and it can’t be grappled, petrified, knocked prone, restrained, or stunned. Equipment worn or carried by the mummy lord remain in its possession.",,,medium,undead,lawful evil,17,97,13d8 + 39,20 ft.,18,10,17,11,18,16,15,"darkvision 60 ft., passive Perception 14",,"History +5, Religion +5"
-guardian-naga,Guardian Naga,,"Rejuvenation. If it dies, the naga returns to life in 1d6 days and regains all its hit points. Only a wish spell can prevent this trait from functioning.
+guardian_naga,Guardian Naga,,"Rejuvenation. If it dies, the naga returns to life in 1d6 days and regains all its hit points. Only a wish spell can prevent this trait from functioning.
 Spellcasting. The naga is an 11th--level spellcaster. Its spellcasting ability is Wisdom (spell save DC 16, +8 to hit with spell attacks), and it needs only verbal components to cast its spells. It has the following cleric spells prepared: Cantrips (at will): mending, sacred flame, thaumaturgy 1st level (4 slots): command, cure wounds, shield of faith 2nd level (3 slots): calm emotions, hold person 3rd level (3 slots): bestow curse, clairvoyance 4th level (3 slots): banishment, freedom of movement 5th level (2 slots): flame strike, geas 6th level (1 slot): true seeing
 Actions.
 Bite. Melee Weapon Attack: +8 to hit, reach 10 ft., one creature. Hit:8 (1d8 + 4) piercing damage, and the target must make a DC 15 Constitution saving throw, taking 45 (10d8) poison damage on a failed save, or half as much damage on a successful one.
 Spit Poison. Ranged Weapon Attack: +8 to hit, range 15/30 ft., one creature. Hit:The target must make a DC 15 Constitution saving throw, taking 45 (10d8) poison damage on a failed save, or half as much damage on a successful one.",,,large,monstrosity,lawful good,18,127,15d10 + 45,40 ft.,19,18,16,16,19,18,10,"darkvision 60 ft., passive Perception 14",,
-spirit-naga,Spirit Naga,,"Rejuvenation. If it dies, the naga returns to life in 1d6 days and regains all its hit points. Only a wishspell can prevent this trait from functioning.
+spirit_naga,Spirit Naga,,"Rejuvenation. If it dies, the naga returns to life in 1d6 days and regains all its hit points. Only a wishspell can prevent this trait from functioning.
 Spellcasting. The naga is a 10th--level spellcaster. Its spellcasting ability is Intelligence (spell save DC 14, +6 to hit with spell attacks), and it needs only verbal components to cast its spells. It has the following wizard spells prepared: Cantrips (at will): mage hand, minor illusion, ray of frost 1st level (4 slots): charm person, detect magic, sleep 2nd level (3 slots): detect thoughts, hold person 3rd level (3 slots): lightning bolt, water breathing 4th level (3 slots): blight, dimension door 5th level (2 slots): dominate person
 Actions.
 Bite. Melee Weapon Attack: +7 to hit, reach 10 ft., one creature. Hit: 7 (1d6 + 4) piercing damage, and the target must make a DC 13 Constitution saving throw, taking 31 (7d8) poison damage on a failed save, or half as much damage on a successful one.",,,large,monstrosity,chaotic evil,15,75,10d10 + 20,40 ft.,18,17,14,16,15,16,8,"darkvision 60 ft., passive Perception 12",,
@@ -1092,23 +1092,23 @@ Multiattack. The oni makes two attacks, either with its claws or its glaive.
 Claw (Oni Form Only). Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 8 (1d8 + 4) slashing damage.
 Glaive. Melee Weapon Attack: +7 to hit, reach 10 ft., one target. Hit: 15 (2d10 + 4) slashing damage, or 9 (1d10 + 4) slashing damage in Small or Medium form.
 Change Shape. The oni magically polymorphs into a Small or Medium humanoid, into a Large giant, or back into its true form. Other than its size, its statistics are the same in each form. The only equipment that is transformed is its glaive, which shrinks so that it can be wielded in humanoid form. If the oni dies, it reverts to its true form, and its glaive reverts to its normal size.",,,large,giant,lawful evil,16,110,13d10 + 39,"30 ft., fly 30 ft.",19,11,16,14,12,15,7,"darkvision 60 ft., passive Perception 14",,"Arcana +5, Deception +8, Perception +4"
-black-pudding,Black Pudding,,"Amorphous. The pudding can move through a space as narrow as 1 inch wide without squeezing.
+black_pudding,Black Pudding,,"Amorphous. The pudding can move through a space as narrow as 1 inch wide without squeezing.
 Corrosive Form. A creature that touches the pudding or hits it with a melee attack while within 5 feet of it takes 4 (1d8) acid damage. Any nonmagical weapon made of metal or wood that hits the pudding corrodes. After dealing damage, the weapon takes a permanent and cumulative −1 penalty to damage rolls. If its penalty drops to −5, the weapon is destroyed. Nonmagical ammunition made of metal or wood that hits the pudding is destroyed after dealing damage. The pudding can eat through 2--inch--thick, nonmagical wood or metal in 1 round.
 Spider Climb. The pudding can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 Actions.
 Pseudopod. Melee Weapon Attack:+5 to hit, reach 5 ft., one target. Hit: 6 (1d6 + 3) bludgeoning damage plus 18 (4d8) acid damage. In addition, nonmagical armor worn by the target is partly dissolved and takes a permanent and cumulative −1 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10.
 Split. When a pudding that is Mediumor larger is subjected to lightning or slashing damage, it splits into two new puddings if it has at least 10 hit points. Each new pudding has hit points equal to half the original pudding’s, rounded down. New puddings are one size smaller than the original pudding.",,,large,ooze,unaligned,7,85,10d10 + 30,"20 ft., climb 20 ft.",16,5,16,1,6,1,4,"blindsight 60 ft. (blind beyond this radius), passive Perception 8",,
-gelatinous-cube,Gelatinous Cube,,"Ooze Cube. The cube takes up its entire space. Other creatures can enter the space, but a creature that does so is subjected to the cube’s Engulf and has disadvantage on the saving throw. Creatures inside the cube can be seen but have total cover. A creature within 5 feet of the cube can take an action to pull a creature or object out of the cube. Doing so requires a successful DC 12 Strength check, and the creature making the attempt takes 10 (3d6) acid damage.  The cube can hold only one Large creature or up to four Medium or smaller creatures inside it at a time.
+gelatinous_cube,Gelatinous Cube,,"Ooze Cube. The cube takes up its entire space. Other creatures can enter the space, but a creature that does so is subjected to the cube’s Engulf and has disadvantage on the saving throw. Creatures inside the cube can be seen but have total cover. A creature within 5 feet of the cube can take an action to pull a creature or object out of the cube. Doing so requires a successful DC 12 Strength check, and the creature making the attempt takes 10 (3d6) acid damage.  The cube can hold only one Large creature or up to four Medium or smaller creatures inside it at a time.
 Transparent. Even when the cube is in plain sight, it takes a successful DC 15 Wisdom (Perception) check to spot a cube that has neither moved nor attacked. A creature that tries to enter the cube’s space while unaware of the cube is surprised by the cube.
 Actions.
 Pseudopod. Melee Weapon Attack: +4 to hit, reach 5 ft., one creature. Hit: 10 (3d6) acid damage.
 Engulf. The cube moves up to its speed. While doing so, it can enter Large or smaller creatures’ spaces. Whenever the cube enters a creature’s space, the creature must make a DC 12 Dexterity saving throw.  On a successful save, the creature can choose to be pushed 5 feet back or to the side of the cube. A creature that chooses not to be pushed suffers the consequences of a failed saving throw.  On a failed save, the cube enters the creature’s space, and the creature takes 10 (3d6) acid damage and is engulfed. The engulfed creature can’t breathe, is restrained, and takes 21 (6d6) acid damage at the start of each of the cube’s turns. When the cube moves, the engulfed creature moves with it.  An engulfed creature can try to escape by taking an action to make a DC 12 Strength check. On a success, the creature escapes and enters a space of its choice within 5 feet of the cube.",,,large,ooze,unaligned,6,84,8d10 + 40,15 ft.,14,3,20,1,6,1,2,"blindsight 60 ft. (blind beyond this radius), passive Perception 8",,
-gray-ooze,Gray Ooze,,"Amorphous. The ooze can move through a space as narrow as 1 inch wide without squeezing.
+gray_ooze,Gray Ooze,,"Amorphous. The ooze can move through a space as narrow as 1 inch wide without squeezing.
 Corrode Metal. Any nonmagical weapon made of metal that hits the ooze corrodes. After dealing damage, the weapon takes a permanent and cumulative −1 penalty to damage rolls. If its penalty drops to −5, the weapon is destroyed. Nonmagical ammunition made of metal that hits the ooze is destroyed after dealing damage. The ooze can eat through 2--inch--thick, nonmagical metal in 1 round.
 False Appearance. While the ooze remains motionless, it is indistinguishable from an oily pool or wet rock.
 Actions.
 Pseudopod. Melee Weapon Attack:+3 to hit, reach 5 ft., one target. Hit:4 (1d6 + 1) bludgeoning damage plus 7 (2d6) acid damage, and if the target is wearing nonmagical metal armor, its armor is partly corroded and takes a permanent and cumulative −1 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10.",,,medium,ooze,unaligned,8,22,3d8 + 9,"10 ft., climb 10 ft.",12,6,16,1,6,2,1/2,"blindsight 60 ft. (blind beyond this radius), passive Perception 8",,Stealth +2
-ochre-jelly,Ochre Jelly,,"Amorphous. The jelly can move through a space as narrow as 1 inch wide without squeezing.
+ochre_jelly,Ochre Jelly,,"Amorphous. The jelly can move through a space as narrow as 1 inch wide without squeezing.
 Spider Climb. The jelly can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 Actions.
 Pseudopod. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 9 (2d6 + 2) bludgeoning damage plus 3 (1d6) acid damage.
@@ -1136,7 +1136,7 @@ Limited Telepathy. The pseudodragon can magically communicate simple ideas, emot
 Actions.
 Bite. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit:4 (1d4 + 2) piercing damage.
 Sting. Melee Weapon Attack: +4 to hit, reach 5 ft., one creature. Hit:4 (1d4 + 2) piercing damage, and the target must succeed on a DC 11 Constitution saving throw or become poisoned for 1 hour. If the saving throw fails by 5 or more, the target falls unconscious for the same duration, or until it takes damage or another creature uses an action to shake it awake.",,,tiny,dragon,neutral good,13,7,2d4 + 2,"15 ft., fly 60 ft.",6,15,13,10,12,10,1/4,"blindsight 10 ft., darkvision 60 ft., passive Perception 13",,"Perception +3, Stealth +4"
-purple-worm,Purple Worm,,"Tunneler . The worm can burrow through solid rock at half its burrow speed and leaves a 10--foot--diameter tunnel in its wake.
+purple_worm,Purple Worm,,"Tunneler . The worm can burrow through solid rock at half its burrow speed and leaves a 10--foot--diameter tunnel in its wake.
 Actions.
 Multiattack. The worm makes two attacks: one with its bite and one with its stinger.
 Bite. Melee Weapon Attack: +9 to hit, reach 10 ft., one target. Hit: 22 (3d8 + 9) piercing damage. If the target is a Large or smaller creature, it must succeed on a DC 19 Dexterity saving throw or be swallowed by the worm. A swallowed creature is blinded and restrained, it has total cover against attacks and other effects outside the worm, and it takes 21 (6d6) acid damage at the start of each of the worm’s turns.  If the worm takes 30 damage or more on a single turn from a creature inside it, the worm must succeed on a DC 21 Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall prone in a space within 10 feet of the worm. If the worm dies, a swallowed creature is no longer restrained by it and can escape from the corpse by using 20 feet of movement, exiting prone.
@@ -1162,7 +1162,7 @@ Multiattack. The roper makes four attacks with its tendrils, uses Reel, and make
 Bite. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 22 (4d8 + 4) piercing damage.
 Tendril. Melee Weapon Attack: +7 to hit, reach 50 ft., one creature. Hit: The target is grappled (escape DC 15). Until the grapple ends, the target is restrained and has disadvantage on Strength checks and Strength saving throws, and the roper can’t use the same tendril on another target.
 Reel. The roper pulls each creature grappled by it up to 25 feet straight toward it.",,,large,monstrosity,neutral evil,20,93,11d10 + 33,"10 ft., climb 10 ft.",18,8,17,7,16,6,5,"darkvision 60 ft., passive Perception 16",,"Perception +6, Stealth +5"
-rust-monster,Rust Monster,,"Iron Scent. The rust monster can pinpoint, by scent, the location of ferrous metal within 30 feet of it.
+rust_monster,Rust Monster,,"Iron Scent. The rust monster can pinpoint, by scent, the location of ferrous metal within 30 feet of it.
 Rust Metal. Any nonmagical weapon made of metal that hits the rust monster corrodes. After dealing damage, the weapon takes a permanent and cumulative −1 penalty to damage rolls. If its penalty drops to −5, the weapon is destroyed. Nonmagical ammunition made of metal that hits the rust monster is destroyed after dealing damage.
 Actions.
 Bite. Melee Weapon Attack: +3 to hit, reach 5 ft., one target. Hit: 5 (1d8 + 1) piercing damage.
@@ -1191,12 +1191,12 @@ Shadow Stealth. While in dim light or darkness, the shadow can take the Hide act
 Sunlight Weakness. While in sunlight, the shadow has disadvantage on attack rolls, ability checks, and saving throws.
 Actions.
 Strength Drain. Melee Weapon Attack: +4 to hit, reach 5 ft., one creature. Hit: 9 (2d6 + 2) necrotic damage, and the target’s Strength score is reduced by 1d4. The target dies if this reduces its Strength to 0. Otherwise, the reduction lasts until the target finishes a short or long rest.  If a non--evil humanoid dies from this attack, a new shadow rises from the corpse 1d4 hours later.",,,medium,undead,chaotic evil,12,16,3d8 + 3,40 ft.,6,14,13,6,10,8,1/2,"darkvision 60 ft., passive Perception 10",,Stealth +4 (+6 in dim light or darkness)
-shambling-mound,Shambling Mound,,"Lightning Absorption . Whenever the shambling mound is subjected to lightning damage, it takes no damage and regains a number of hit points equal to the lightning damage dealt.
+shambling_mound,Shambling Mound,,"Lightning Absorption . Whenever the shambling mound is subjected to lightning damage, it takes no damage and regains a number of hit points equal to the lightning damage dealt.
 Actions.
 Multiattack. The shambling mound makes two slam attacks. If both attacks hit a Medium or smaller target, the target is grappled (escape DC 14), and the shambling mound uses its Engulf on it.
 Slam. Melee Weapon Attack: +7 to hit, reach 5 ft., one target. Hit: 13 (2d8 + 4) bludgeoning damage.
 Engulf. The shambling mound engulfs a Medium or smaller creature grappled by it. The engulfed target is blinded, restrained, and unable to breathe, and it must succeed on a DC 14 Constitution saving throw at the start of each of the mound’s turns or take 13 (2d8 + 4) bludgeoning damage. If the mound moves, the engulfed target moves with it. The mound can have only one creature engulfed at a time.",,,large,plant,unaligned,15,136,16d10 + 48,"20 ft., swim 20 ft.",18,8,16,5,10,5,5,"blindsight 60 ft. (blind beyond this radius), passive Perception 10",,Stealth +2
-shield-guardian,Shield Guardian,,"Bound. The shield guardian is magically bound to an amulet. As long as the guardian and its amulet are on the same plane of existence, the amulet’s wearer can telepathically call the guardian to travel to it, and the guardian knows the distance and direction to the amulet. If the guardian is within 60 feet of the amulet’s wearer, half of any damage the wearer takes (rounded up) is transferred to the guardian.
+shield_guardian,Shield Guardian,,"Bound. The shield guardian is magically bound to an amulet. As long as the guardian and its amulet are on the same plane of existence, the amulet’s wearer can telepathically call the guardian to travel to it, and the guardian knows the distance and direction to the amulet. If the guardian is within 60 feet of the amulet’s wearer, half of any damage the wearer takes (rounded up) is transferred to the guardian.
 Regeneration. The shield guardian regains 10 hit points at the start of its turn if it has at least 1 hit point.
 Spell Storing . A spellcaster who wears the shield guardian’s amulet can cause the guardian to store one spell of 4th level or lower. To do so, the wearer must cast the spell on the guardian. The spell has no effect but is stored within the guardian. When commanded to do so by the wearer or when a situation arises that was predefined by the spellcaster, the guardian casts the stored spell with any parameters set by the original caster, requiring no components. When the spell is cast or a new spell is stored, any previously stored spell is lost.
 Actions.
@@ -1206,11 +1206,11 @@ Shield. When a creature makes an attack against the wearer of the guardian’s a
 skeleton,Skeleton,,"Actions.
 Shortsword. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 5 (1d6 + 2) piercing damage.
 Shortbow. Ranged Weapon Attack: +4 to hit, range 80/320 ft., one target. Hit: 5 (1d6 + 2) piercing damage.",,,medium,undead,lawful evil,13,13,2d8 + 4,30 ft.,10,14,15,6,8,5,1/4,"darkvision 60 ft., passive Perception 9",,
-minotaur-skeleton,Minotaur Skeleton,,"Charge. If the skeleton moves at least 10 feet straight toward a target and then hits it with a gore attack on the same turn, the target takes an extra 9 (2d8) piercing damage. If the target is a creature, it must succeed on a DC 14 Strength saving throw or be pushed up to 10 feet away and knocked prone.
+minotaur_skeleton,Minotaur Skeleton,,"Charge. If the skeleton moves at least 10 feet straight toward a target and then hits it with a gore attack on the same turn, the target takes an extra 9 (2d8) piercing damage. If the target is a creature, it must succeed on a DC 14 Strength saving throw or be pushed up to 10 feet away and knocked prone.
 Actions.
 Greataxe. Melee Weapon Attack:+6 to hit, reach 5 ft., one target. Hit:17 (2d12 + 4) slashing damage.
 Gore. Melee Weapon Attack:+6 to hit, reach 5 ft., one target. Hit:13 (2d8 + 4) piercing damage.",,,large,undead,lawful evil,12,67,9d10 + 18,40 ft.,18,11,15,6,8,5,2,"darkvision 60 ft., passive Perception 9",,
-warhorse-skeleton,Warhorse Skeleton,,"Actions.
+warhorse_skeleton,Warhorse Skeleton,,"Actions.
 Hooves. Melee Weapon Attack:+6 to hit, reach 5 ft., one target. Hit:11 (2d6 + 4) bludgeoning damage.",,,large,undead,lawful evil,13,22,3d10 + 6,60 ft.,18,12,15,2,8,5,1/2,"darkvision 60 ft., passive Perception 9",,
 specter,Specter,,"Incorporeal Movement. The specter can move through other creatures and objects as if they were difficult terrain. It takes 5 (1d10) force damage if it ends its turn inside an object.
 Sunlight Sensitivity. While in sunlight, the specter has disadvantage on attack rolls, as well as on Wisdom (Perception) checks that rely on sight.
@@ -1244,7 +1244,7 @@ Heart Sight. The sprite touches a creature and magically knows the creature’s 
 Invisibility. The sprite magically turns invisible until it attacks or casts a spell, or until its concentration ends (as if concentrating on a spell). Any equipment the sprite wears or carries is invisible with it.",,,tiny,fey,neutral good,15,2,1d4,"10 ft., fly 40 ft.",3,18,10,14,13,11,1/4,passive Perception 13,,"Perception +3, Stealth +8"
 stirge,Stirge,,"Actions.
 Blood Drain. Melee Weapon Attack: +5 to hit, reach 5 ft., one creature. Hit: 5 (1d4 + 3) piercing damage, and the stirge attaches to the target. While attached, the stirge doesn’t attack. Instead, at the start of each of the stirge’s turns, the target loses 5 (1d4 + 3) hit points due to blood loss. The stirge can detach itself by spending 5 feet of its movement. It does so after it drains 10 hit points of blood from the target or the target dies. A creature, including the target, can use its action to detach the stirge.",,,tiny,beast,unaligned,14,2,1d4,"10 ft., fly 40 ft.",4,16,11,2,8,6,1/8,"darkvision 60 ft., passive Perception 9",,
-succubus-incubus,Succubus/Incubus,,"Telepathic Bond. The fiend ignores the range restriction on its telepathy when communicating with a creature it has charmed. The two don’t even need to be on the same plane of existence. 
+succubus_incubus,Succubus/Incubus,,"Telepathic Bond. The fiend ignores the range restriction on its telepathy when communicating with a creature it has charmed. The two don’t even need to be on the same plane of existence. 
 Shapechanger. The fiend can use its action to polymorph into a Small or Medium humanoid, or back into its true form. Without wings, the fiend loses its flying speed. Other than its size and speed, its statistics are the same in each form. Any equipment it is wearing or carrying isn’t transformed. It reverts to its true form if it dies.
 Actions.
 Claw (Fiend Form Only). Melee Weapon Attack:+5 to hit, reach 5 ft., one target. Hit:6 (1d6 + 3) slashing damage.
@@ -1306,7 +1306,7 @@ Children of the Night (1/Day). The vampire magically calls 2d4 swarms of bats or
 Move. The vampire moves up to its speed without provoking opportunity attacks.
 Unarmed Strike. The vampire makes one unarmed strike.
 Bite (Costs 2 Actions). The vampire makes one bite attack.",,,medium,undead,lawful evil,16,144,17d8 + 68,30 ft.,18,18,18,17,15,18,13,"darkvision 120 ft., passive Perception 17",,"Perception +7, Stealth +9"
-vampire-spawn,Vampire Spawn,,"Regeneration. The vampire regains 10 hit points at the start of its turn if it has at least 1 hit point and isn’t in sunlight or running water. If the vampire takes radiant damage or damage from holy water, this trait doesn’t function at the start of the vampire’s next turn.
+vampire_spawn,Vampire Spawn,,"Regeneration. The vampire regains 10 hit points at the start of its turn if it has at least 1 hit point and isn’t in sunlight or running water. If the vampire takes radiant damage or damage from holy water, this trait doesn’t function at the start of the vampire’s next turn.
 Spider Climb. The vampire can climb difficult surfaces, including upside down on ceilings, without needing to make an ability check.
 Vampire Weaknesses. The vampire has the following flaws: Forbiddance. The vampire can’t enter a residence without an invitation from one of the occupants. Harmed by Running Water. The vampire takes 20 acid damage when it ends its turn in running water. Stake to the Heart. The vampire is destroyed if a piercing weapon made of wood is driven into its heart while it is incapacitated in its resting place. Sunlight Hypersensitivity. The vampire takes 20 radiant damage when it starts its turn in sunlight. While in sunlight, it has disadvantage on attack rolls and ability checks.
 Actions.
@@ -1319,7 +1319,7 @@ Multiattack. The wight makes two longsword attacks or two longbow attacks. It ca
 Life Drain. Melee Weapon Attack:+4 to hit, reach 5 ft., one creature. Hit:5 (1d6 + 2) necrotic damage. The target must succeed on a DC 13 Constitution saving throw or its hit point maximum is reduced by an amount equal to the damage taken. This reduction lasts until the target finishes a long rest. The target dies if this effect reduces its hit point maximum to 0.  A humanoid slain by this attack rises 24 hours later as a zombie under the wight’s control, unless the humanoid is restored to life or its body is destroyed. The wight can have no more than twelve zombies under its control at one time.
 Longsword. Melee Weapon Attack: +4 to hit, reach 5 ft., one target. Hit: 6 (1d8 + 2) slashing damage, or 7 (1d10 +2) slashing damage if used with two hands.
 Longbow. Ranged Weapon Attack: +4 to hit, range 150/600 ft., one target. Hit: 6 (1d8 + 2) piercing damage.",,,medium,undead,neutral evil,14,45,6d8 + 18,30 ft.,15,14,16,10,13,15,3,"darkvision 60 ft., passive Perception 13",,"Perception +3, Stealth +4"
-will-o-wisp,Will--o’--Wisp,,"Consume Life. As a bonus action, the will--o’--wisp can target one creature it can see within 5 feet of it that has 0 hit points and is still alive. The target must succeed on a DC 10 Constitution saving throw against this magic or die. If the target dies, the will--o’--wisp regains 10 (3d6) hit points.
+will_o_wisp,Will--o’--Wisp,,"Consume Life. As a bonus action, the will--o’--wisp can target one creature it can see within 5 feet of it that has 0 hit points and is still alive. The target must succeed on a DC 10 Constitution saving throw against this magic or die. If the target dies, the will--o’--wisp regains 10 (3d6) hit points.
 Ephemeral. The will--o’--wisp can’t wear or carry anything.
 Incorporeal Movement. The will--o’--wisp can move through other creatures and objects as if they were difficult terrain. It takes 5 (1d10) force damage if it ends its turn inside an object.
 Variable Illumination. The will--o’--wisp sheds bright light in a 5-- to 20--foot radius and dim light for an additional number of feet equal to the chosen radius. The will--o’--wisp can alter the radius as a bonus action.
@@ -1346,6 +1346,6 @@ Bite. Melee Weapon Attack:+6 to hit, reach 5 ft., one target. Hit:13 (3d6 + 3) p
 zombie,Zombie,,"Undead Fortitude. If damage reduces the zombie to 0 hit points, it must make a Constitution saving throw with a DC of 5 + the damage taken, unless the damage is radiant or from a critical hit. On a success, the zombie drops to 1 hit point instead.
 Actions.
 Slam. Melee Weapon Attack: +3 to hit, reach 5 ft., one target. Hit: 4 (1d6 + 1) bludgeoning damage.",,,medium,undead,neutral evil,8,22,3d8 + 9,20 ft.,13,6,16,3,6,5,1/4,"darkvision 60 ft., passive Perception 8",,
-ogre-zombie,Ogre Zombie,,"Undead Fortitude. If damage reduces the zombie to 0 hit points, it must make a Constitution saving throw with a DC of 5 + the damage taken, unless the damage is radiant or from a critical hit. On a success, the zombie drops to 1 hit point instead.
+ogre_zombie,Ogre Zombie,,"Undead Fortitude. If damage reduces the zombie to 0 hit points, it must make a Constitution saving throw with a DC of 5 + the damage taken, unless the damage is radiant or from a critical hit. On a success, the zombie drops to 1 hit point instead.
 Actions.
 Morningstar. Melee Weapon Attack: +6 to hit, reach 5 ft., one target. Hit: 13 (2d8 + 4) bludgeoning damage.",,,large,undead,neutral evil,8,85,9d10 + 36,30 ft.,19,6,18,3,6,5,2,"darkvision 60 ft., passive Perception 8",,

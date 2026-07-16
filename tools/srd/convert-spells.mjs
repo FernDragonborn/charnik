@@ -40,12 +40,13 @@ const ABIL = {
 	charisma: 'cha'
 };
 
+// snake_case ids (E3) — kept in sync with lib.mjs `slug`.
 const slug = (s) =>
 	s
 		.toLowerCase()
 		.replace(/['’]/g, '')
-		.replace(/[^a-z0-9]+/g, '-')
-		.replace(/^-+|-+$/g, '');
+		.replace(/[^a-z0-9]+/g, '_')
+		.replace(/^_+|_+$/g, '');
 
 /** Split the file into `#### Name` blocks. */
 function blocks(md) {

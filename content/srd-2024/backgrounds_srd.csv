@@ -2,11 +2,11 @@
 #content-systems: 5.5e
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
-#content-id: 019f374c-ec73-7414-81a1-d9163af2ea07
-#content-updated-at: 2026-07-06
-#content-hash: xxh64:52b477ba40c3d0c5
+#content-id: 019f6ae3-f977-74de-bd84-45a7be49ca74
+#content-updated-at: 2026-07-16
+#content-hash: xxh64:e009dd8c473d1653
 id,name_en,name_uk,text_en,text_uk,effects,skills,tools,languages,ability_choices,origin_feat
-acolyte,Acolyte,,,,,"insight,religion",calligraphers-supplies,,"int,wis,cha",magic-initiate
-criminal,Criminal,,,,,"sleight-of-hand,stealth",thieves-tools,,"dex,con,int",alert
-sage,Sage,,,,,"arcana,history",calligraphers-supplies,,"con,int,wis",magic-initiate
-soldier,Soldier,,,,,"athletics,intimidation",choose-one-kind-of-gaming-set,,"str,dex,con",savage-attacker
+acolyte,Acolyte,,,,,"insight,religion",calligraphers_supplies,,"int,wis,cha",magic_initiate
+criminal,Criminal,,,,,"sleight_of_hand,stealth",thieves_tools,,"dex,con,int",alert
+sage,Sage,,,,,"arcana,history",calligraphers_supplies,,"con,int,wis",magic_initiate
+soldier,Soldier,,,,,"athletics,intimidation",choose_one_kind_of_gaming_set,,"str,dex,con",savage_attacker

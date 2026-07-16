@@ -22,7 +22,7 @@ async function seed() {
 		[
 			SPELL_HEAD,
 			spell('fireball', '5.5e', 'SRD 5.2.1', 'wizard,sorcerer'),
-			spell('cure-wounds', '5.5e', 'SRD 5.2.1', 'cleric')
+			spell('cure_wounds', '5.5e', 'SRD 5.2.1', 'cleric')
 		].join('\n')
 	);
 	await s.write('a/classes_srd.csv', [CLASS_HEAD, cls('wizard', '5.5e', 'SRD 5.2.1')].join('\n'));
@@ -34,12 +34,12 @@ async function seed() {
 	);
 	await s.write(
 		'hb/spell_lists_hb.csv',
-		[LIST_HEAD, 'artificer-fireball,5.5e,Homebrew,artificer,fireball'].join('\n')
+		[LIST_HEAD, 'artificer_fireball,5.5e,Homebrew,artificer,fireball'].join('\n')
 	);
 	// 2014 root — a wizard + a 5e-only spell, to prove edition scoping
 	await s.write(
 		'b/spells_srd.csv',
-		[SPELL_HEAD, spell('magic-missile', '5e', 'SRD 5.1', 'wizard')].join('\n')
+		[SPELL_HEAD, spell('magic_missile', '5e', 'SRD 5.1', 'wizard')].join('\n')
 	);
 	await s.write('b/classes_srd.csv', [CLASS_HEAD, cls('wizard', '5e', 'SRD 5.1')].join('\n'));
 	return s;
@@ -51,14 +51,14 @@ describe('spell↔class access (union index)', () => {
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 		const access = buildSpellAccess(g);
 
-		// 2024 wizard reaches fireball (inline) but NOT the 2014-only magic-missile
+		// 2024 wizard reaches fireball (inline) but NOT the 2014-only magic_missile
 		const wiz24 = access.spellIdsForClass('class:SRD 5.2.1:wizard');
 		expect(wiz24).toContain('spell:SRD 5.2.1:fireball');
-		expect(wiz24).not.toContain('spell:SRD 5.1:magic-missile');
+		expect(wiz24).not.toContain('spell:SRD 5.1:magic_missile');
 
 		// 2014 wizard reaches the 5e spell, not the 2024 fireball
 		const wiz14 = access.spellIdsForClass('class:SRD 5.1:wizard');
-		expect(wiz14).toContain('spell:SRD 5.1:magic-missile');
+		expect(wiz14).toContain('spell:SRD 5.1:magic_missile');
 		expect(wiz14).not.toContain('spell:SRD 5.2.1:fireball');
 
 		// the homebrew Artificer reaches fireball WITHOUT the fireball row being edited
@@ -85,12 +85,12 @@ describe('spell↔class access (union index)', () => {
 			[
 				'id,systems,source,class_id,spell_id',
 				'x,5.5e,Homebrew,warlock-typo,fireball', // unknown class
-				'y,5.5e,Homebrew,artificer,spell-typo' // unknown spell
+				'y,5.5e,Homebrew,artificer,spell_typo' // unknown spell
 			].join('\n')
 		);
 		const g = await loadContent(s, ['a', 'hb', 'b']);
 		const warns = g.issues.filter((i) => i.level === 'warn').map((i) => i.message);
 		expect(warns.some((m) => /unknown class "warlock-typo"/.test(m))).toBe(true);
-		expect(warns.some((m) => /unknown spell "spell-typo"/.test(m))).toBe(true);
+		expect(warns.some((m) => /unknown spell "spell_typo"/.test(m))).toBe(true);
 	});
 });

@@ -186,7 +186,8 @@ Deep effects-system review, 2026-07-16 (B12–B26):
 - [ ] **B15 · Derive ignores source filtering entirely** (extends B5): `gatherEffects`/`deriveSheet`
   read `graph.get`/`graph.rows` raw — a DISABLED file/source and the LOSING side of a resolved
   collision still feed the character's stats.
-- [ ] **B16 · `CHARACTER_MIGRATIONS = {}` though the DSL rename already shipped.**
+- [x] **B16 · `CHARACTER_MIGRATIONS = {}` though the DSL rename already shipped.** DONE: registry
+  now carries the v1→v2 E3 ref migration (`migrateV1toV2`).
   (`character/repository.ts:21`.) The kebab→snake token rename (6f02ff0) silently inerts any
   saved `play.effects` tokens written before it. Wider: the TOKEN GRAMMAR is not versioned at
   all — `schemaVersion` covers JSON shape, not token strings inside play-state; every future DSL
@@ -350,7 +351,10 @@ Deep effects-system review, 2026-07-16 (D7–D19):
 
 Deep effects-system review, 2026-07-16 (E3–E7):
 
-- [ ] **E3 · Content ids are kebab-case; L2 makes `-` the minus operator.** Shipped SRD is kebab
+- [x] **E3 · Content ids are kebab-case; L2 makes `-` the minus operator.** DONE: `slug()` +
+  converter id-templates + dedupe suffix + `idField` grammar + `slugify` + `SKILL_ABILITY` +
+  `RARITIES` all snake; all SRD CSVs regenerated (counts asserted); v1→v2 character-ref migration.
+  Shipped SRD is kebab
   throughout (`acid-splash`, `animal-handling`); `idField` (schemas.ts:65) and the resource-id
   grammar in `parseEffect` (effects/index.ts:98) both ALLOW `-`; so `class_level.blood-hunter`,
   `resource.lay-on-hands`, `has_condition.<kebab>` are unparseable as expressions. **DECIDED

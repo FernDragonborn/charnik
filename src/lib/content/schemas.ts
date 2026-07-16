@@ -63,7 +63,7 @@ const bool = z.preprocess(
 const idField = z
 	.string()
 	.min(1)
-	.regex(/^[a-z0-9][a-z0-9_-]*$/, 'id must be a lowercase slug (a-z 0-9 _ -)');
+	.regex(/^[a-z0-9][a-z0-9_]*$/, 'id must be a lowercase snake_case slug (a-z 0-9 _)');
 
 /** `systems` = comma list over SYSTEMS, e.g. "5e" | "5.5e" | "5e,5.5e". */
 const systemsField = z.preprocess(
@@ -144,7 +144,7 @@ export const RARITIES = [
 	'common',
 	'uncommon',
 	'rare',
-	'very-rare',
+	'very_rare',
 	'legendary',
 	'artifact'
 ] as const;

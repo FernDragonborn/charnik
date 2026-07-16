@@ -634,7 +634,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/schema/version.ts`
 
 - `const CONTENT_SCHEMA_VERSION`
-- `const CHARACTER_SCHEMA_VERSION`
+- `const CHARACTER_SCHEMA_VERSION` — v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 - `interface Versioned`
 - `type Migration` — A single forward step.
 - `function migrate` — * Run registered migrations until `data.schemaVersion` reaches `target`.
@@ -701,7 +701,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/util/slug.ts`
 
-- `function slugify` — * Turn a human name into a URL/id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single dash, …
+- `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 34 components · 359 exports across 55 modules · 33 duplicate suspects · generated in 105ms._
+_46 tokens · 50 global classes · 34 components · 359 exports across 55 modules · 33 duplicate suspects · generated in 95ms._

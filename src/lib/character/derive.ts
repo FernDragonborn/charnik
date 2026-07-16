@@ -50,7 +50,7 @@ import type { Computed, System } from '../rules/pipeline';
 // indexing it with a known skill id is sound (no `T | undefined`, no non-null assertions).
 export const SKILL_ABILITY = {
 	acrobatics: 'dex',
-	'animal-handling': 'wis',
+	animal_handling: 'wis',
 	arcana: 'int',
 	athletics: 'str',
 	deception: 'cha',
@@ -64,7 +64,7 @@ export const SKILL_ABILITY = {
 	performance: 'cha',
 	persuasion: 'cha',
 	religion: 'int',
-	'sleight-of-hand': 'dex',
+	sleight_of_hand: 'dex',
 	stealth: 'dex',
 	survival: 'wis'
 } as const satisfies Record<string, Ability>;

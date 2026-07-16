@@ -806,7 +806,7 @@ function convertClasses() {
 			const lvl = levelOf.get(norm(e.name));
 			if (!lvl) continue; // archetype/uncharted headings without a base-table level
 			featureRows.push({
-				id: `${id}-${slug(e.name)}`,
+				id: `${id}_${slug(e.name)}`,
 				systems: '5e',
 				source: 'SRD 5.1',
 				name_en: e.name,
@@ -860,7 +860,7 @@ function convertClasses() {
 			const ftext = e.paras.map(strip).filter(Boolean).join('\n');
 			const lm = /(\d+)(?:st|nd|rd|th) level/i.exec(ftext);
 			featureRows.push({
-				id: `${subId}-${slug(e.name)}`,
+				id: `${subId}_${slug(e.name)}`,
 				systems: '5e',
 				source: 'SRD 5.1',
 				name_en: e.name,

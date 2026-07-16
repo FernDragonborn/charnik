@@ -2,8 +2,8 @@
 #content-systems: 5e
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
-#content-id: 019f374c-eccb-7578-aa9d-a92252405281
-#content-updated-at: 2026-07-06
+#content-id: 019f6ae3-fd0c-71c0-adfd-47da785502ea
+#content-updated-at: 2026-07-16
 #content-hash: xxh64:721d772c1ba73753
 id,name_en,name_uk,text_en,text_uk,effects,skills,tools,languages,ability_choices,origin_feat
 acolyte,Acolyte,,"You have spent your life in the service of a temple to a specific god or pantheon of gods. You act as an intermediary between the realm of the holy and the mortal world, performing sacred rites and offering sacrifices in order to conduct worshipers into the presence of the divine. You are not necessarily a cleric-performing sacred rites is not the same thing as channeling divine power. Choose a god, a pantheon of gods, or some other quasi-divine being from among those listed in ""Fantasy-Historical Pantheons"" or those specified by your GM, and work with your GM to detail the nature of your religious service. Were you a lesser functionary in a temple, raised from childhood to assist the priests in the sacred rites? Or were you a high priest who suddenly experienced a call to serve your god in a different way? Perhaps you were the leader of a small cult outside of any established temple structure, or even an occult group that served a fiendish master that you now deny. Skill Proficiencies: Insight, Religion Languages: Two of your choice Equipment: A holy symbol (a gift to you when you entered the priesthood), a prayer book or prayer wheel, 5 sticks of incense, vestments, a set of common clothes, and a pouch containing 15 gp Feature: Shelter of the Faithful As an acolyte, you command the respect of those who share your faith, and you can perform the religious ceremonies of your deity. You and your adventuring companions can expect to receive free healing and care at a temple, shr",,,"insight,religion",,2,,

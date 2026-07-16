@@ -33,7 +33,7 @@ async function graphOf(): Promise<ContentGraph> {
 		'c/items_srd.csv',
 		[
 			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap',
-			`leather-armor,5.5e,${S},Leather Armor,,armor,light armor,11,`,
+			`leather_armor,5.5e,${S},Leather Armor,,armor,light armor,11,`,
 			`shield,5.5e,${S},Shield,,shield,shield,2,`
 		].join('\n')
 	);
@@ -48,9 +48,9 @@ async function graphOf(): Promise<ContentGraph> {
 		'c/class_features_srd.csv',
 		[
 			'id,systems,source,name_en,effects,class_id,level,subclass_id',
-			`arcane-ward,5.5e,${S},Arcane Ward,grant_resource:arcane-ward:3:long,wizard,2,`,
-			`spell-mastery,5.5e,${S},Spell Mastery,flat_bonus:ac+1,wizard,18,`,
-			`sculpt-spells,5.5e,${S},Sculpt Spells,flat_bonus:save.dex+1,wizard,2,evoker`,
+			`arcane_ward,5.5e,${S},Arcane Ward,grant_resource:arcane_ward:3:long,wizard,2,`,
+			`spell_mastery,5.5e,${S},Spell Mastery,flat_bonus:ac+1,wizard,18,`,
+			`sculpt_spells,5.5e,${S},Sculpt Spells,flat_bonus:save.dex+1,wizard,2,evoker`,
 			`overchannel,5.5e,${S},Overchannel,flat_bonus:ac+3,wizard,14,evoker`
 		].join('\n')
 	);
@@ -64,7 +64,7 @@ function wizard(): Character {
 	c.build.species = `species:${S}:hardy`;
 	c.build.classes = [{ class: `class:${S}:wizard`, level: 3 }];
 	c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 10, cha: 10 };
-	c.build.inventory = [{ item: `item:${S}:leather-armor`, qty: 1, equipped: true, attuned: false }];
+	c.build.inventory = [{ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false }];
 	c.play.effects = [
 		{ iid: '1', label: 'Shield of Faith', effects: ['flat_bonus:ac+2'], positive: true }
 	];
@@ -251,7 +251,7 @@ describe('deriveSheet aggregator', () => {
 	it('gathers class-feature effects up to the class level (and not above it)', () => {
 		const s = deriveSheet(wizard(), graph); // wizard 3
 		// Arcane Ward (L2) applies → its resource pool exists
-		expect(s.resources.map((r) => r.id)).toContain('arcane-ward');
+		expect(s.resources.map((r) => r.id)).toContain('arcane_ward');
 		// Spell Mastery (L18) must NOT apply at level 3
 		expect(s.ac.trace.map((t) => t.source)).not.toContain('Spell Mastery');
 	});

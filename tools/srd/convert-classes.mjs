@@ -97,7 +97,7 @@ for (const part of parts) {
 		if (!m) return;
 		const featName = m[2].trim();
 		featureRows.push({
-			id: `${subclass_id || id}-${slug(featName)}`,
+			id: `${subclass_id || id}_${slug(featName)}`,
 			systems: '5.5e',
 			source: 'SRD 5.2.1',
 			name_en: featName,

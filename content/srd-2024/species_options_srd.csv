@@ -2,13 +2,13 @@
 #content-systems: 5.5e
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
-#content-id: 019f374c-ecb4-7846-8655-638506bd1698
-#content-updated-at: 2026-07-06
-#content-hash: xxh64:bcebed3f851455bc
+#content-id: 019f6ae3-f976-7552-b17a-956ec8debbde
+#content-updated-at: 2026-07-16
+#content-hash: xxh64:68f715c03d1f1d50
 id,name_en,name_uk,text_en,text_uk,effects,species_id,kind,option_label
-elf-drow,Drow,,The range of your Darkvision increases to 120 feet. You also know the Dancing Lights cantrip.,,,elf,lineage,Elven Lineage
-elf-high-elf,High Elf,,"You know the Prestidigitation cantrip. Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list.",,,elf,lineage,Elven Lineage
-elf-wood-elf,Wood Elf,,Your Speed increases to 35 feet. You also know the Druidcraft cantrip.,,,elf,lineage,Elven Lineage
-tiefling-abyssal,Abyssal,,You have Resistance to Poison damage. You also know the Poison Spray cantrip.,,,tiefling,legacy,Fiendish Legacy
-tiefling-chthonic,Chthonic,,You have Resistance to Necrotic damage. You also know the Chill Touch cantrip.,,,tiefling,legacy,Fiendish Legacy
-tiefling-infernal,Infernal,,You have Resistance to Fire damage. You also know the Fire Bolt cantrip.,,,tiefling,legacy,Fiendish Legacy
+elf_drow,Drow,,The range of your Darkvision increases to 120 feet. You also know the Dancing Lights cantrip.,,,elf,lineage,Elven Lineage
+elf_high_elf,High Elf,,"You know the Prestidigitation cantrip. Whenever you finish a Long Rest, you can replace that cantrip with a different cantrip from the Wizard spell list.",,,elf,lineage,Elven Lineage
+elf_wood_elf,Wood Elf,,Your Speed increases to 35 feet. You also know the Druidcraft cantrip.,,,elf,lineage,Elven Lineage
+tiefling_abyssal,Abyssal,,You have Resistance to Poison damage. You also know the Poison Spray cantrip.,,,tiefling,legacy,Fiendish Legacy
+tiefling_chthonic,Chthonic,,You have Resistance to Necrotic damage. You also know the Chill Touch cantrip.,,,tiefling,legacy,Fiendish Legacy
+tiefling_infernal,Infernal,,You have Resistance to Fire damage. You also know the Fire Bolt cantrip.,,,tiefling,legacy,Fiendish Legacy
