@@ -136,14 +136,15 @@ interface Inst {
 	parsed: ParsedEffect;
 	writeKey: DepKey | null;
 	reads: DepKey[];
-	/** Expansion child: the `apply_condition` inst that carries it + the condition row's label. */
-	parent?: Inst;
-	children?: Inst[];
+	/** Expansion child: the condition id it came from + the condition row's label. Children exist
+	 *  ONCE per condition id (A11: the same condition from two sources applies once); they apply
+	 *  iff the id made it into `state.conditions` (any applier survived its guard). */
+	condId?: string;
 	condLabel?: string;
 	disposition: 'pending' | 'applied' | 'dropped' | 'inert';
 }
 
-const readsOf = (guard: string | undefined, parsed: ParsedEffect, parent?: Inst): DepKey[] => {
+const readsOf = (guard: string | undefined, parsed: ParsedEffect, condId?: string): DepKey[] => {
 	const names: string[] = [];
 	if (guard !== undefined) names.push(...collectExprVariables(guard));
 	if (parsed.valueExpr !== undefined) names.push(...collectExprVariables(parsed.valueExpr));
@@ -151,7 +152,7 @@ const readsOf = (guard: string | undefined, parsed: ParsedEffect, parent?: Inst)
 		names.push(...collectExprVariables(parsed.resource.maxExpr));
 	const keys = new Set<DepKey>();
 	for (const n of names) for (const k of varDepKeys(n)) keys.add(k);
-	if (parent?.parsed.target !== undefined) keys.add(conditionKey(parent.parsed.target.trim()));
+	if (condId !== undefined) keys.add(conditionKey(condId));
 	return [...keys];
 };
 
@@ -214,10 +215,22 @@ export function resolveActiveEffects(args: ResolveArgs): DependencyResolved {
 	const sourceOf = (inst: Inst): string =>
 		inst.condLabel !== undefined ? `${inst.eff.source} → ${inst.condLabel}` : inst.eff.source;
 
-	// ---- token instances (incl. one-level condition expansions, instantiated per applier) ----
+	// ---- token instances + one-level condition expansions (ONE child set per condition id: the
+	// ---- same condition applied from two sources expands/folds once — AUDIT A11) ----
 	const insts: Inst[] = [];
-	const expandMemo = new Map<string, { source: string; tokens: string[] } | undefined>();
-	const makeInst = (eff: ActiveEffect, raw: string, parent?: Inst, condLabel?: string): Inst => {
+	// A11 (D&D "Combining Game Effects"): the SAME named runtime effect applied twice (two Bless
+	// casts) applies once. Dedupe by (source label + token list) on the runtime/'condition' layer
+	// only — build-time layers stay per-instance (a repeatable feat legitimately applies each time).
+	const seenRuntime = new Set<string>();
+	const active = args.active.filter((eff) => {
+		if (eff.layer !== 'condition') return true;
+		const k = `${eff.source}|${eff.tokens.join(';')}`;
+		if (seenRuntime.has(k)) return false;
+		seenRuntime.add(k);
+		return true;
+	});
+	const expansions = new Map<string, { label: string; children: Inst[]; appliers: Inst[] }>();
+	const makeInst = (eff: ActiveEffect, raw: string, condId?: string, condLabel?: string): Inst => {
 		const g = splitGuard(raw);
 		const parsed = parseEffect(g.token);
 		return {
@@ -227,23 +240,31 @@ export function resolveActiveEffects(args: ResolveArgs): DependencyResolved {
 			body: g.token,
 			parsed,
 			writeKey: writeKeyOf(parsed),
-			reads: readsOf(g.guard, parsed, parent),
-			...(parent !== undefined ? { parent } : {}),
+			reads: readsOf(g.guard, parsed, condId),
+			...(condId !== undefined ? { condId } : {}),
 			...(condLabel !== undefined ? { condLabel } : {}),
 			disposition: 'pending'
 		};
 	};
-	for (const eff of args.active) {
+	for (const eff of active) {
 		for (const raw of eff.tokens) {
 			const inst = makeInst(eff, raw);
 			insts.push(inst);
 			if (inst.parsed.kind === EFFECT_KIND.applyCondition && inst.parsed.target !== undefined) {
 				const id = inst.parsed.target.trim();
-				if (!expandMemo.has(id)) expandMemo.set(id, args.expandCondition(id));
-				const c = expandMemo.get(id);
-				if (!c) continue;
-				inst.children = c.tokens.map((t) => makeInst(eff, t, inst, c.source));
-				insts.push(...inst.children);
+				let ex = expansions.get(id);
+				if (!ex) {
+					const c = args.expandCondition(id);
+					if (!c) continue;
+					ex = {
+						label: c.source,
+						children: c.tokens.map((t) => makeInst(eff, t, id, c.source)),
+						appliers: []
+					};
+					expansions.set(id, ex);
+					insts.push(...ex.children);
+				}
+				ex.appliers.push(inst);
 			}
 		}
 	}
@@ -303,7 +324,9 @@ export function resolveActiveEffects(args: ResolveArgs): DependencyResolved {
 
 	/** Decide a token's guard (writers at their node's turn; plain tokens at the end). */
 	const decide = (inst: Inst): boolean => {
-		if (inst.parent && inst.parent.disposition !== 'applied') {
+		// an expansion child applies iff its condition came active (any applier survived its guard) —
+		// the condition NODE is dependency-ordered before every child, so the Set is authoritative here
+		if (inst.condId !== undefined && !state.conditions.has(inst.condId)) {
 			inst.disposition = 'dropped'; // its condition never came active
 			return false;
 		}
@@ -357,7 +380,7 @@ export function resolveActiveEffects(args: ResolveArgs): DependencyResolved {
 		const isSet = w.parsed.kind === EFFECT_KIND.setOverride;
 		return {
 			source: sourceOf(w),
-			layer: isSet ? 'override' : w.parent ? 'condition' : w.eff.layer,
+			layer: isSet ? 'override' : w.condId !== undefined ? 'condition' : w.eff.layer,
 			op: isSet ? 'set' : 'add',
 			amount: v.amount,
 			note: w.body
@@ -420,7 +443,8 @@ export function resolveActiveEffects(args: ResolveArgs): DependencyResolved {
 	// ---- plain (non-writing) tokens: guards read the FINAL state ----
 	for (const inst of insts) if (inst.disposition === 'pending') decide(inst);
 
-	// ---- assemble the resolved list (base effects first, expansions after — the B21 contract) ----
+	// ---- assemble the resolved list (base effects first, expansions after — the B21 contract;
+	// ---- ONE expansion per condition id, attributed to the first applier that survived — A11) ----
 	const keptTokens = (list: Inst[]): string[] => {
 		const kept: string[] = [];
 		for (const inst of list) {
@@ -430,16 +454,17 @@ export function resolveActiveEffects(args: ResolveArgs): DependencyResolved {
 		return kept;
 	};
 	const out: ActiveEffect[] = [];
-	for (const eff of args.active) {
-		const kept = keptTokens(insts.filter((i) => i.eff === eff && i.parent === undefined));
+	for (const eff of active) {
+		const kept = keptTokens(insts.filter((i) => i.eff === eff && i.condId === undefined));
 		if (kept.length) out.push({ ...eff, tokens: kept });
 	}
-	for (const applier of insts) {
-		if (!applier.children?.length || applier.disposition !== 'applied') continue;
-		const kept = keptTokens(applier.children);
-		if (kept.length && applier.condLabel === undefined)
+	for (const ex of expansions.values()) {
+		const applier = ex.appliers.find((a) => a.disposition === 'applied');
+		if (!applier) continue;
+		const kept = keptTokens(ex.children);
+		if (kept.length)
 			out.push({
-				source: `${applier.eff.source} → ${applier.children[0]?.condLabel ?? ''}`,
+				source: `${applier.eff.source} → ${ex.label}`,
 				layer: 'condition',
 				tokens: kept
 			});

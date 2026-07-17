@@ -9,6 +9,9 @@
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 	const hpBar = $derived(combat.hpBar);
 	const { openMenu } = combat;
+	// death saves show only while downed (0 HP); pips render the tracked count, the button rolls one
+	const downed = $derived(c.play.hp.current <= 0);
+	const pips = [0, 1, 2];
 </script>
 
 <div class="hitpoints">
@@ -38,6 +41,45 @@
 		/>
 		<button class="hp-btn heal" onclick={combat.heal} title="Apply healing">Heal ＋</button>
 	</div>
+	{#if downed}
+		<div class="death-saves">
+			<button
+				class="hp-btn deathroll"
+				onclick={(e) => combat.deathSave(e)}
+				title="Roll a death save"
+			>
+				🎲 Death save
+			</button>
+			<div class="death-tracks">
+				<div class="death-track" role="group" aria-label="Death save successes">
+					<span class="death-track-label good">Success</span>
+					{#each pips as i (i)}
+						<button
+							type="button"
+							class="death-pip good"
+							class:filled={c.play.deathSaves.successes > i}
+							aria-label="Success {i + 1}"
+							aria-pressed={c.play.deathSaves.successes > i}
+							onclick={() => combat.toggleDeathSave('successes', i)}
+						></button>
+					{/each}
+				</div>
+				<div class="death-track" role="group" aria-label="Death save failures">
+					<span class="death-track-label bad">Failure</span>
+					{#each pips as i (i)}
+						<button
+							type="button"
+							class="death-pip bad"
+							class:filled={c.play.deathSaves.failures > i}
+							aria-label="Failure {i + 1}"
+							aria-pressed={c.play.deathSaves.failures > i}
+							onclick={() => combat.toggleDeathSave('failures', i)}
+						></button>
+					{/each}
+				</div>
+			</div>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -144,5 +186,64 @@
 	}
 	.hp-btn:hover {
 		filter: brightness(1.12);
+	}
+	.death-saves {
+		margin-top: 12px;
+		padding-top: 11px;
+		border-top: 1px solid var(--color-border);
+		display: flex;
+		flex-direction: column;
+		gap: 9px;
+	}
+	.hp-btn.deathroll {
+		flex: 0 0 auto;
+		align-self: flex-start;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		color: var(--color-text);
+	}
+	.death-tracks {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+	.death-track {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.death-track-label {
+		font-size: 11px;
+		font-weight: 600;
+		width: 56px;
+	}
+	.death-track-label.good {
+		color: var(--color-good);
+	}
+	.death-track-label.bad {
+		color: var(--color-danger, #d06a52);
+	}
+	.death-pip {
+		width: 15px;
+		height: 15px;
+		border-radius: var(--radius-full);
+		cursor: pointer;
+		padding: 0;
+		background: var(--color-surface-2);
+	}
+	.death-pip.good {
+		border: 1px solid var(--color-good);
+	}
+	.death-pip.bad {
+		border: 1px solid var(--color-danger, #b3452f);
+	}
+	.death-pip.good.filled {
+		background: var(--color-good);
+	}
+	.death-pip.bad.filled {
+		background: var(--color-danger, #b3452f);
+	}
+	.death-pip:hover {
+		filter: brightness(1.15);
 	}
 </style>

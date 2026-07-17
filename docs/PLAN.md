@@ -1055,14 +1055,14 @@ has_condition.frightened ? disadvantage:attack
 is_raging ? flat_bonus:damage+cha_mod             Zealot: CHA to damage while raging
 ```
 
-> **† `d20_tests` DONE (L1); `save.death` parses but awaits a death-save roll consumer (SPEC6).**
-> The shipped target set is `ac/initiative/speed/hp_max/attack/damage/save.<abil>/skill.<id>/
-> passive.<skill>` + the groups `saves`/`skills`/**`d20_tests`** (`matchesTarget` in
-> `effects/index.ts`). **`d20_tests`** now fans out to every d20-based roll (saves, skills, attack,
-> initiative) — so `flat_bonus:d20_tests+(-2*exhaustion)` (2024 exhaustion) works end to end.
-> `save.death` (death saves aren't ability-keyed) PARSES and matches its own key, but no sheet stat
-> consumes it yet — it lands when the death-save roll path reads targeted effects (a combat
-> follow-up). The Unarmored-Defense rows carry the `armor_type` guard they need.
+> **† `d20_tests` + `save.death` DONE (EXPR-5, 2026-07-17).** The shipped target set is
+> `ac/initiative/speed/speed.fly/speed.swim/hp_max/attack/damage/spell_dc/spell_attack/save.<abil>/
+> save.death/skill.<id>/passive.<skill>` + the groups `saves`/`skills`/**`d20_tests`**
+> (`matchesTarget` in `effects/index.ts`). **`d20_tests`** fans out to every d20-based roll (saves,
+> skills, attack, initiative) — so `flat_bonus:d20_tests+(-2*exhaustion)` (2024 exhaustion) works end
+> to end. **`save.death`** now has its consumer: the death-save roll (`combat.deathSave`) reads
+> `save.death`-targeted effects + the `saves`/`d20_tests` groups (Bless, exhaustion apply), with the
+> HP-panel success/failure track. The Unarmored-Defense rows carry the `armor_type` guard they need.
 
 **Dice sides = any integer ≥ 1 (≤ cap), soft-warned.** D&D uses d4/d6/d8/d10/d12/d20/d100, but
 homebrew legitimately uses d2/d3/d30 — so a non-standard die is NOT rejected (that would fight
@@ -1097,14 +1097,14 @@ Talent "treat < 10 as 10", Elven Accuracy) — a BOUNDED, known set → add as n
 modifiers + targets) so L2 has enough to compute over" — achievable, keeps L3 for true homebrew, but
 it is L1 work, not just an expression parser.
 
-**L1 growth — PARTIAL (2026-07-16).** DONE: the **`d20_tests`** group target (fans out to
-saves/skills/attack/initiative) and the roll-manip kinds **`reroll:<target>:<threshold>`** /
-**`min_die:<target>:<floor>`** — parsed to `ParsedEffect` + surfaced as `EffectFlags.rerolls` /
-`.minDie` structured facts (recognized, never inert), ready for the roll path. REMAINING (deferred):
-the roll path must actually CONSUME those facts (reroll/floor a die during a d20/damage roll — a
-combat-integration follow-up, the facts contract is what L1 pins); `treat_as`, Elven Accuracy, and
-the extra targets (fly/swim speed, spell DC/attack as fold targets, `save.death` consumer, Extra
-Attack) are not yet added.
+**L1 growth — DONE for the PHB set (2026-07-16 start, EXPR-5 2026-07-17 close).** DONE: the
+**`d20_tests`** group target (fans out to saves/skills/attack/initiative); the roll-manip kinds
+**`reroll:<target>:<threshold>`** / **`min_die:<target>:<floor>`** — now CONSUMED by `rollPool`
+(reroll ≤N once, floor a die AS the min; both faces shown in the roll log, `natural` face exposed
+for nat-1/nat-20); the extra fold targets **`speed.fly`/`speed.swim`** (sheet), **`spell_dc`/
+`spell_attack`** (fold onto every caster class), and the **`save.death` consumer** (death-save roll
++ HP-panel track). REMAINING (deferred, true tail): `treat_as`, Elven Accuracy, and **Extra Attack**
+(structural, not a fold target) — a small known set for a later pass, NOT a blocker for L3.
 
 **Phases:**
 
@@ -1136,6 +1136,26 @@ Attack) are not yet added.
   `if()`, unusual die). Tests in `resolve.test.ts` + derive integration (fail-closed conditions,
   spellcasting scoping, Unarmored Defense enum guard, bloodied save bonus).
   ~~Deferred within EXPR-3~~ — closed by EXPR-4 below (the reorderable-order UI stays deferred).
+- [x] **EXPR-5 · L2 tail: one typed-facts output + roll-path consumption + target breadth.** DONE
+  (2026-07-17) — the loose ends that make "PHB on L2" real and clear the PLG-2 "L2 exhausted" gate:
+  - **D7 closed — ONE typed-facts object.** `collectFacts` (effects/index.ts) parses every RESOLVED
+    token ONCE and resolves L2 values ONCE per derive → `CharacterSheet.facts` (`EffectFacts`:
+    numeric/advantage/disadvantage/proficiencies/defenses/resources/conditions/rerolls/minDie/unknown).
+    Every consumer reads it — `applyEffects` folds `facts.numeric`, the roll path
+    (`rollEffectsFor`), the action economy (`slotMax`), proficiency/defense/resource scans — none
+    re-`parseEffect`s the shared list. Replaces the old per-stat `collectFlags`/`collectResources`
+    scans. `applyEffects` still accepts a raw `ActiveEffect[]` (converts on the spot) for tests.
+  - **A11 closed — same-name dedupe.** Two identical runtime effects (two Bless casts) apply once;
+    the SAME condition from two sources expands once (dedupe at the DAG gather; build-layer effects
+    still stack, so a repeatable feat applies each time).
+  - **Roll-manip facts CONSUMED (L1 tail).** `rollPool` now applies `reroll:<t>:<n>` / `min_die`
+    (GWF reroll ≤N once, Reliable Talent d20→10) with the both-faces provenance in the roll log
+    (`d20(3→10)`); `natural` exposes the pre-floor face for nat-1/nat-20.
+  - **Target breadth.** `speed.fly`/`speed.swim` fold targets on the sheet; `spell_dc`/`spell_attack`
+    fold onto every caster class's numbers; `save.death` has its consumer (the death-save roll +
+    HP-panel track — nat-20 → 1 HP, nat-1 → two failures, 3 successes → stable).
+  - **A15 closed — cantrip scaling.** `cantripDieMultiplier` (5/11/17, both editions) scales a
+    cantrip's damage dice in `spellRow`, so Fire Bolt shows AND rolls 2d10 at level 5.
 - [x] **EXPR-4 · Dependency-order DAG + the ability-score pipeline (A10).** DONE (2026-07-17) —
   `src/lib/effects/dag.ts` REPLACES the two-pass bootstrap as the ONE resolve stage
   (`resolveActiveEffects`): value-WRITING tokens are ordered over VALUE NODES (the six ability
@@ -1435,9 +1455,22 @@ convenience under 5e.
 6. **The derive pipeline is accreting stages with no single authoritative description** (base →
    unconditional → dependency-ordered conditionals → plugin pre-pass → fold → reorder-override), and
    already carried a contradiction (§4 "frozen snapshot at derive start" vs §8.4 "dependency-
-   resolved"). FIXED the doc contradiction; still TODO: one authoritative derive-pipeline spec
-   (stages + exactly what the ctx snapshot is) that every feature references instead of assuming its
-   own version.
+   resolved"). FIXED the doc contradiction; **the authoritative stage list (EXPR-5, 2026-07-17)** —
+   `deriveSheet` runs exactly these, in order:
+   1. **Seed** base ability contributions + hp-max-base fn + class levels + species/armor context.
+   2. **Resolve** (`resolveActiveEffects`, effects/dag.ts) — gather (with A11 dedupe) → order value
+      nodes (abilities, hp_max, conditions, resources) by read/write deps (Tarjan SCC; cycles →
+      inert + issue) → evaluate guards in that order → expand `apply_condition` once per id → emit
+      the guard-stripped `resolvedEffects` + the effective ability `Computed`s + hp-max base.
+   3. **Facts** (`collectFacts`) — parse every resolved token ONCE, resolve L2 values ONCE →
+      the `EffectFacts` object.
+   4. **Fold** — every sheet stat = core math `Computed` → `applyEffects(key, base, facts)` (numeric
+      facts fold at their layer; set/override combine by max; adv/dis/dice → notes).
+   5. **Spellcasting** — AFTER the fold, over the effective scores, with `spell_dc`/`spell_attack`
+      facts folded in.
+   The ctx is ONE `makeExprContext` over the LIVE resolve state (getters, not a frozen copy), so a
+   guard reads exactly what the DAG has resolved so far. A future plugin pre-pass slots between (3)
+   and (4). Every feature references THIS list, not its own version.
 
 **Formula storage (pinned 2026-07-15): there is no separate formula store.** L1 dice terms
 live INSIDE tokens in the `effects` CSV cells / `play.effects`; L2 expressions (when built)

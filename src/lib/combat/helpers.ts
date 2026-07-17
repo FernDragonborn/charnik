@@ -8,9 +8,22 @@ import type { Computed } from '$lib/rules/pipeline';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character, EffectInstance } from '$lib/character/schema';
 import type { CharacterSheet, SkillId } from '$lib/character/derive';
-import { parseDicePool, parseDiceTerm, type BonusDie, type Rolled } from '$lib/rules/dice';
+import {
+	parseDicePool,
+	parseDiceTerm,
+	type BonusDie,
+	type DieMods,
+	type Rolled
+} from '$lib/rules/dice';
 import { ordinal } from '$lib/util/format';
-import { parseEffect, matchesTarget, EFFECT_KIND, type Recharge } from '$lib/effects/index';
+import {
+	parseEffect,
+	matchesTarget,
+	EFFECT_KIND,
+	type EffectFacts,
+	type Recharge
+} from '$lib/effects/index';
+import { cantripDieMultiplier } from '$lib/rules/spellcasting';
 
 /** A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack —
  *  the damage roll that follows it. Rendered as up to 3 lines: the roll, the dropped adv die, damage. */
@@ -62,16 +75,16 @@ export function pipClick(currentSpent: number, index: number, total: number): nu
 }
 
 /** What a roll target (e.g. "save.dex", "skill.stealth", "attack", "damage") picks up from active
- *  effects: advantage/disadvantage, signed bonus/penalty dice (Bless +1d4 / Bane −1d4), and the
- *  summed FLAT bonus. NB `flat` is for keys the sheet does NOT already fold (attack/damage) — for
- *  save/skill keys the flat part is already inside the sheet value, so callers must ignore it there
- *  or it double-counts. Pure — the caller gates it on the effects-auto toggle.
+ *  effects: advantage/disadvantage, signed bonus/penalty dice (Bless +1d4 / Bane −1d4), the summed
+ *  FLAT bonus, and the roll-manipulation facts (`reroll`/`min_die`). NB `flat` is for keys the
+ *  sheet does NOT already fold (attack/damage) — for save/skill keys the flat part is already
+ *  inside the sheet value, so callers must ignore it there or it double-counts. Pure — the caller
+ *  gates it on the effects-auto toggle.
  *
- *  Reads the sheet's RESOLVED effect list (guard-stripped, condition-expanded, items/features
- *  included — B21), never raw `play.effects`: a raw token still carrying its guard would parse as
- *  unknown here and silently lose its advantage/dice. Expression-valued bonuses (`+cha_mod`) need
- *  a derive ctx and fold on the sheet side; the roll path consumes literals and dice. */
-export interface RollEffects {
+ *  Reads the sheet's typed-facts object (D7) — the resolve stage already evaluated guards,
+ *  expanded conditions and resolved L2 expression values, so an expression bonus
+ *  (`is_raging ? flat_bonus:damage+cha_mod`) arrives here as a plain number. */
+export interface RollEffects extends DieMods {
 	advantage: boolean;
 	disadvantage: boolean;
 	flat: number;
@@ -83,22 +96,23 @@ export const NO_ROLL_EFFECTS: RollEffects = {
 	flat: 0,
 	bonusDice: []
 };
-export function rollEffectsFor(effects: { tokens: string[] }[], key: string): RollEffects {
+export function rollEffectsFor(facts: EffectFacts, key: string): RollEffects {
 	const out: RollEffects = { ...NO_ROLL_EFFECTS, bonusDice: [] };
-	for (const eff of effects) {
-		for (const tok of eff.tokens) {
-			const p = parseEffect(tok);
-			if (!matchesTarget(p.target, key)) continue;
-			if (p.kind === EFFECT_KIND.advantage) out.advantage = true;
-			else if (p.kind === EFFECT_KIND.disadvantage) out.disadvantage = true;
-			else if (p.kind === EFFECT_KIND.flatBonus) {
-				if (p.dice) {
-					const die = parseDiceTerm(p.dice);
-					if (die) out.bonusDice.push(die);
-				} else if (p.amount !== undefined) out.flat += p.amount;
-			}
+	out.advantage = facts.advantage.some((a) => matchesTarget(a.target, key));
+	out.disadvantage = facts.disadvantage.some((d) => matchesTarget(d.target, key));
+	for (const f of facts.numeric) {
+		if (f.op !== 'add' || !matchesTarget(f.target, key)) continue;
+		if (f.amount !== undefined) out.flat += f.amount;
+		else if (f.diceFormula) {
+			const die = parseDiceTerm(f.diceFormula);
+			if (die) out.bonusDice.push(die);
 		}
 	}
+	// several sources → the most generous single value applies (they don't stack — one reroll pass)
+	for (const r of facts.rerolls)
+		if (matchesTarget(r.target, key)) out.reroll = Math.max(out.reroll ?? 0, r.value);
+	for (const m of facts.minDie)
+		if (matchesTarget(m.target, key)) out.minDie = Math.max(out.minDie ?? 0, m.value);
 	return out;
 }
 
@@ -517,7 +531,12 @@ export function buildSpellGroups(
 	const all = character.build.spells
 		.map((sp) => ({
 			sp,
-			row: spellRow(graph, sp.spell, sp.alwaysPrepared ? 'always' : sp.prepared ? 'on' : '')
+			row: spellRow(
+				graph,
+				sp.spell,
+				sp.alwaysPrepared ? 'always' : sp.prepared ? 'on' : '',
+				sheet?.level ?? 1
+			)
 		}))
 		.filter((x): x is { sp: (typeof character.build.spells)[number]; row: SpRow } => !!x.row);
 	const groups: SpGroup[] = [];
@@ -573,17 +592,27 @@ export function buildSpellGroups(
 	return groups;
 }
 
-/** Build a spell row from the content graph (or null if the ref is missing). */
-export function spellRow(graph: ContentGraph, ref: string, prep: SpRow['prep']): SpRow | null {
+/** Build a spell row from the content graph (or null if the ref is missing). `charLevel` scales
+ *  cantrip damage dice (the 5/11/17 steps, both editions — AUDIT A15): Fire Bolt is 2d10 at
+ *  character level 5, shown AND rolled that way. */
+export function spellRow(
+	graph: ContentGraph,
+	ref: string,
+	prep: SpRow['prep'],
+	charLevel = 1
+): SpRow | null {
 	const row = graph.get(ref);
 	if (row?.type !== 'spell') return null;
 	const lvl = Number(row.data.level);
 	const res = String(row.data.resolution ?? 'none');
 	// dice for casting: the damage field, or (for auto/healing spells) the "regains …
 	// equal to NdM" dice parsed out of the description
-	const dmg =
+	let dmg =
 		String(row.data.damage ?? '') ||
 		(res === 'auto' ? healDice(String(row.data.text_en ?? '')) : '');
+	const scale = lvl === 0 ? cantripDieMultiplier(charLevel) : 1;
+	if (scale > 1)
+		dmg = dmg.replace(/(\d+)d(\d+)/gi, (_, n: string, s: string) => `${Number(n) * scale}d${s}`);
 	return {
 		id: String(row.data.id),
 		ref,

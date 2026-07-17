@@ -83,6 +83,45 @@ describe('rollPool', () => {
 		expect(r.expr).toBe('d8(5) + d4(3)');
 		expect(r.total).toBe(8);
 	});
+
+	it('exposes the natural d20 face (nat-1/nat-20 outcomes)', () => {
+		expect(rollPool({ 20: 1 }, 5, 0, [], rngSequence(0.999)).natural).toBe(20); // 20 + 5 = 25 total
+		expect(rollPool({ 20: 1 }, 5, 0, [], rngSequence(0)).natural).toBe(1);
+		expect(rollPool({ 6: 1 }, 0, 0, [], rngSequence(0.5)).natural).toBeUndefined(); // no d20 in pool
+	});
+});
+
+describe('rollPool · roll-manipulation (L1 reroll / min_die facts)', () => {
+	it('rerolls a die that lands ≤ the threshold, keeping the new result (GWF ≤2)', () => {
+		// d6 → 1 (≤2, reroll) → 5; the label shows both faces
+		const r = rollPool({ 6: 1 }, 0, 0, [], { rng: rngSequence(0, 0.7), reroll: 2 });
+		expect(r.total).toBe(5);
+		expect(r.expr).toBe('d6(1↻5)');
+	});
+
+	it('does NOT reroll a die above the threshold', () => {
+		const r = rollPool({ 6: 1 }, 0, 0, [], { rng: rngSequence(0.5), reroll: 2 }); // d6 → 4, kept
+		expect(r.total).toBe(4);
+		expect(r.expr).toBe('d6(4)');
+	});
+
+	it('floors a die below the minimum AS the minimum (Reliable Talent d20 → 10)', () => {
+		const r = rollPool({ 20: 1 }, 3, 0, [], { rng: rngSequence(0.1), minDie: 10 }); // d20 → 3 → 10
+		expect(r.total).toBe(13); // 10 + 3 mod
+		expect(r.expr).toBe('d20(3→10) +3');
+		expect(r.natural).toBe(3); // the NATURAL face is pre-floor (a nat-1 is still a nat-1)
+	});
+
+	it('applies reroll THEN floor in order (Halfling Lucky 1 + a floor)', () => {
+		// d20 → 1 (reroll on 1) → 4, then floored to 10
+		const r = rollPool({ 20: 1 }, 0, 0, [], { rng: rngSequence(0, 0.15), reroll: 1, minDie: 10 });
+		expect(r.total).toBe(10);
+		expect(r.expr).toBe('d20(1↻4→10)');
+	});
+
+	it('accepts a bare Rng for the existing callers (back-compat)', () => {
+		expect(rollPool({ 6: 1 }, 0, 0, [], rngSequence(0.5)).total).toBe(4);
+	});
 });
 
 describe('rollFormula', () => {

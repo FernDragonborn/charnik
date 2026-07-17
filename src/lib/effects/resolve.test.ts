@@ -110,6 +110,45 @@ describe('resolveActiveEffects · guards', () => {
 	});
 });
 
+describe('resolveActiveEffects · same-name dedupe (A11, D&D "Combining Game Effects")', () => {
+	it('two identical runtime effects (two Bless casts) apply their tokens ONCE', () => {
+		const bless: ActiveEffect = {
+			source: 'Bless',
+			layer: 'condition',
+			tokens: ['flat_bonus:saves+1d4']
+		};
+		const r = resolve([bless, { ...bless }], makeExprContext(build, play()));
+		const saveTokens = r.effects
+			.flatMap((e) => e.tokens)
+			.filter((t) => t === 'flat_bonus:saves+1d4');
+		expect(saveTokens).toHaveLength(1); // not 2× the 1d4
+	});
+
+	it('does NOT dedupe distinct build-layer effects (a repeatable feat applies each time)', () => {
+		const feat: ActiveEffect = {
+			source: 'Resilient',
+			layer: 'feature',
+			tokens: ['flat_bonus:hp_max+1']
+		};
+		const r = resolve([feat, { ...feat }], makeExprContext(build, play()));
+		const hp = r.effects.flatMap((e) => e.tokens).filter((t) => t === 'flat_bonus:hp_max+1');
+		expect(hp).toHaveLength(2); // build layers stack; only runtime same-name collapses
+	});
+
+	it('the SAME condition applied from two sources expands ONCE', () => {
+		const expandFrightened = (id: string) =>
+			id === 'frightened' ? { source: 'Frightened', tokens: ['disadvantage:attack'] } : undefined;
+		const effects: ActiveEffect[] = [
+			{ source: 'Dragon', layer: 'condition', tokens: ['apply_condition:frightened'] },
+			{ source: 'Ghost', layer: 'condition', tokens: ['apply_condition:frightened'] }
+		];
+		const tokens = resolve(effects, makeExprContext(build, play()), expandFrightened)
+			.effects.flatMap((e) => e.tokens)
+			.filter((t) => t === 'disadvantage:attack');
+		expect(tokens).toHaveLength(1); // condition tokens fold once, not per applier
+	});
+});
+
 describe('resolveActiveEffects · apply_condition expansion (after guards, SPEC7)', () => {
 	const expandFrightened = (id: string) =>
 		id === 'frightened' ? { source: 'Frightened', tokens: ['disadvantage:attack'] } : undefined;

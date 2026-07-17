@@ -31,12 +31,11 @@ import {
 } from '../rules/core';
 import {
 	applyEffects,
-	collectResources,
-	parseEffect,
+	collectFacts,
 	matchesTarget,
-	EFFECT_KIND,
 	type ActiveEffect,
 	type EffectCtx,
+	type EffectFacts,
 	type EffectIssue,
 	type ResourceDef
 } from '../effects/index';
@@ -120,6 +119,10 @@ export interface CharacterSheet {
 	ac: Computed;
 	initiative: Computed;
 	speed: Computed;
+	/** Fly / swim speeds — base 0 (no SRD species grants one); effects (`set_override:speed.fly:60`
+	 *  — the Fly spell, magic items) are the source. Rendered only when nonzero. */
+	flySpeed: Computed;
+	swimSpeed: Computed;
 	maxHp: Computed;
 	passives: Record<'perception' | 'investigation' | 'insight', Computed>;
 	carryingCapacity: Computed;
@@ -138,6 +141,9 @@ export interface CharacterSheet {
 	 *  roll path / action economy read THIS, never raw `play.effects` (B21). Empty when
 	 *  effects-auto is off. */
 	resolvedEffects: ActiveEffect[];
+	/** The typed-facts view of `resolvedEffects` (parsed once, values resolved once — D7): what
+	 *  every consumer outside the stat folds reads (roll path, action economy, panels). */
+	facts: EffectFacts;
 }
 
 /** Armor weight class of the equipped armor (for the `armor_type` guard variable); no armor → none. */
@@ -378,9 +384,13 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	const scores = {} as Record<Ability, number>;
 	for (const ab of ABILITIES) scores[ab] = abilityComputed[ab].value;
 
+	// the ONE typed-facts object (D7): every token parsed + value-resolved once; every consumer
+	// below (and the roll path / action economy through the sheet) reads THIS, never a re-scan.
+	const facts = collectFacts(resolvedEffects, effCtx, issues);
+
 	// spellcasting AFTER the resolve, so DCs/attacks read the EFFECTIVE scores (a Headband of
-	// Intellect moves the wizard's DC, as it should).
-	const spellcasting = deriveSpellcasting(character, graph, scores);
+	// Intellect moves the wizard's DC, as it should) — and `spell_dc`/`spell_attack` effects fold in.
+	const spellcasting = deriveSpellcasting(character, graph, scores, facts);
 
 	// proficiencies granted by effects (item/feat/feature): `grant_proficiency:[expertise:]<target>`
 	// where target is a save (`con` / `save.con`) or a skill id (`stealth` — the parser already
@@ -389,19 +399,11 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	// proficient there).
 	const grantedSaves = new Set<Ability>();
 	const grantedSkills = new Map<string, SkillProficiency>();
-	for (const eff of resolvedEffects)
-		for (const t of eff.tokens) {
-			const p = parseEffect(t);
-			if (p.kind !== EFFECT_KIND.grantProficiency || !p.target) continue;
-			const raw = p.target.trim();
-			const tgt = raw.replace(/^save\./, '');
-			if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
-			else
-				grantedSkills.set(
-					raw,
-					maxProf(grantedSkills.get(raw) ?? 'none', p.proficiency ?? 'proficient')
-				);
-		}
+	for (const p of facts.proficiencies) {
+		const tgt = p.target.replace(/^save\./, '');
+		if ((ABILITIES as readonly string[]).includes(tgt)) grantedSaves.add(tgt as Ability);
+		else grantedSkills.set(p.target, maxProf(grantedSkills.get(p.target) ?? 'none', p.level));
+	}
 
 	// saves: proficient if the ability is in build.saves (or any class's saves), or effect-granted
 	const classSaves = new Set<Ability>([...(build.saves as Ability[]), ...grantedSaves]);
@@ -424,7 +426,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			score: abilityComputed[ab],
 			baseScore: build.abilities[ab],
 			mod: abilityModifier(scores[ab]),
-			save: applyEffects(`save.${ab}`, base, resolvedEffects, effCtx)
+			save: applyEffects(`save.${ab}`, base, facts)
 		};
 	}
 
@@ -450,7 +452,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			halfProficient: profLevel === 'half'
 		});
 		skills[skill] = {
-			...applyEffects(`skill.${skill}`, base, resolvedEffects, effCtx),
+			...applyEffects(`skill.${skill}`, base, facts),
 			prof: profLevel
 		};
 	}
@@ -472,11 +474,11 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 			value: acBase.value + 2,
 			trace: [...acBase.trace, { source: 'Shield', layer: 'item', op: 'add', amount: 2 }]
 		};
-	const ac = applyEffects('ac', acBase, resolvedEffects, effCtx);
+	const ac = applyEffects('ac', acBase, facts);
 
 	// HP: the base fold came out of the resolve stage (recomputed at the final CON); hp_max flows
 	// through the seam like every other stat (Toughness, Aid → `flat_bonus:hp_max+N`).
-	const maxHp = applyEffects('hp_max', maxHpBase, resolvedEffects, effCtx);
+	const maxHp = applyEffects('hp_max', maxHpBase, facts);
 
 	// speed from species (base_speed, computed above for the expr ctx)
 	const speed = applyEffects(
@@ -492,22 +494,17 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 				}
 			]
 		},
-		resolvedEffects,
-		effCtx
+		facts
 	);
+	// fly/swim: no SRD species grants a base, so the fold starts at 0 and effects are the source
+	const movementOf = (key: 'speed.fly' | 'speed.swim') =>
+		applyEffects(key, computed([], { min: 0 }), facts);
 
 	const passiveOf = (skill: 'perception' | 'investigation' | 'insight') => {
 		// advantage/disadvantage on the underlying check moves the passive by ±5 (both → cancel, RAW);
 		// then `passive.<skill>`-targeted effects (Observant) fold in through the seam.
-		let adv = false;
-		let dis = false;
-		for (const eff of resolvedEffects)
-			for (const t of eff.tokens) {
-				const p = parseEffect(t);
-				if (!matchesTarget(p.target, `skill.${skill}`)) continue;
-				if (p.kind === EFFECT_KIND.advantage) adv = true;
-				else if (p.kind === EFFECT_KIND.disadvantage) dis = true;
-			}
+		const adv = facts.advantage.some((a) => matchesTarget(a.target, `skill.${skill}`));
+		const dis = facts.disadvantage.some((d) => matchesTarget(d.target, `skill.${skill}`));
 		let base = passiveScore(skills[skill]);
 		if (adv !== dis)
 			base = {
@@ -523,20 +520,14 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 					}
 				]
 			};
-		return applyEffects(`passive.${skill}`, base, resolvedEffects, effCtx);
+		return applyEffects(`passive.${skill}`, base, facts);
 	};
 
 	// damage defenses from effects: `resist_immune:<resist|immune|vulnerable>:<type>` (a bare
 	// `resist_immune:<type>` defaults to resistance).
 	const defenses = { resist: [] as string[], immune: [] as string[], vulnerable: [] as string[] };
-	for (const eff of resolvedEffects)
-		for (const t of eff.tokens) {
-			const p = parseEffect(t);
-			if (p.kind !== EFFECT_KIND.resistImmune || !p.target) continue;
-			const bucket = p.defense ?? 'resist';
-			const type = p.target.trim();
-			if (!defenses[bucket].includes(type)) defenses[bucket].push(type);
-		}
+	for (const d of facts.defenses)
+		if (!defenses[d.bucket].includes(d.type)) defenses[d.bucket].push(d.type);
 
 	return {
 		level,
@@ -544,13 +535,10 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		abilities,
 		skills,
 		ac,
-		initiative: applyEffects(
-			'initiative',
-			initiativeOf({ dexScore: scores.dex }),
-			resolvedEffects,
-			effCtx
-		),
+		initiative: applyEffects('initiative', initiativeOf({ dexScore: scores.dex }), facts),
 		speed,
+		flySpeed: movementOf('speed.fly'),
+		swimSpeed: movementOf('speed.swim'),
 		maxHp,
 		passives: {
 			perception: passiveOf('perception'),
@@ -559,10 +547,11 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		},
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
 		defenses,
-		resources: collectResources(resolvedEffects, effCtx, issues),
+		resources: facts.resources,
 		spellcasting,
 		missing,
 		deriveIssues: issues,
-		resolvedEffects
+		resolvedEffects,
+		facts
 	};
 }

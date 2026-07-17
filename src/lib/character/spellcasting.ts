@@ -14,6 +14,7 @@ import { getSpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
 import type { Computed } from '../rules/pipeline';
+import { applyEffects, type EffectFacts } from '../effects/index';
 import {
 	effectiveCasterLevel,
 	shareFromCaster,
@@ -117,7 +118,8 @@ export function castingAbilityByClass(
 export function deriveSpellcasting(
 	character: Character,
 	graph: ContentGraph,
-	scores: Record<Ability, number>
+	scores: Record<Ability, number>,
+	facts?: EffectFacts
 ): Spellcasting {
 	const systems = [character.system];
 	const totalLevel = character.build.classes.reduce((n, c) => n + c.level, 0) || 1;
@@ -152,6 +154,9 @@ export function deriveSpellcasting(
 	}
 	const pools: CastPool[] = slotPools(sharedCounts, { idPrefix: 'slot', recharge: 'long' });
 
+	const foldSpellStat = (key: 'spell_dc' | 'spell_attack', base: Computed): Computed =>
+		facts ? applyEffects(key, base, facts) : base;
+
 	const access = getSpellAccess(graph);
 	const classes: SpellcastingClass[] = casters.map(({ c, row }) => {
 		const caster = String(row.data.caster);
@@ -173,8 +178,13 @@ export function deriveSpellcasting(
 			classEffectiveId: c.class,
 			className: String(row.data.name_en),
 			ability,
-			saveDC: spellSaveDC({ ability, score, level: totalLevel }),
-			attack: spellAttackBonus({ ability, score, level: totalLevel }),
+			// `spell_dc`/`spell_attack` effects (a Rod-of-the-Pact-Keeper-style item) fold onto every
+			// caster class's numbers — the target is not class-scoped in the L1 vocabulary
+			saveDC: foldSpellStat('spell_dc', spellSaveDC({ ability, score, level: totalLevel })),
+			attack: foldSpellStat(
+				'spell_attack',
+				spellAttackBonus({ ability, score, level: totalLevel })
+			),
 			prepareStyle: row.data.prepare_style ?? 'prepared',
 			cantripCap: cc.cantrips ?? 0,
 			preparedCap: preparedCap(cc.prepared, {

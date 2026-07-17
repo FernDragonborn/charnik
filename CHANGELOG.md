@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.3.0
+
+- **Effects that think for themselves.** Auto-calc now understands *conditional* and *computed*
+  effects, not just flat bonuses. A feature can apply only when it should ("+2 AC while below half
+  HP", "advantage on attacks while raging", "disadvantage while frightened"), and a value can be a
+  formula that scales with you ("Ki equal to your monk level", "Sneak Attack dice = half your rogue
+  level", the Martial Arts die that grows as you level). You write these in the effects field with a
+  small, safe formula language — no code, no macros — and the sheet keeps every number explainable on
+  hover, showing exactly which feature contributed what.
+- **Ability scores flow through the same engine.** A Headband of Intellect, a belt that sets your
+  Strength, a species bonus — these now fold into your score with a full breakdown on hover, and
+  everything downstream (saves, spell DCs, carrying capacity) updates from the effective score.
+- **Cantrips scale with level.** Fire Bolt and friends now show *and roll* their extra dice at
+  levels 5, 11, and 17 automatically (both editions), instead of being stuck at their level-1 dice.
+- **Roll-changing features actually change the roll.** Great Weapon Fighting rerolls low damage dice,
+  Reliable Talent floors a check at 10 — the dice tray now applies these when you roll, and the log
+  shows both faces (e.g. `d20(3→10)`) so you can see what happened.
+- **Death saves.** At 0 HP the hit-points panel shows a death-save roller with success/failure pips.
+  Rolling reads any effects that apply (Bless, exhaustion), and the natural 20 → up at 1 HP / natural
+  1 → two failures / three successes → stable outcomes are handled for you (pips are also editable by
+  hand).
+- **More things effects can target.** Fly and swim speed, spell save DC and spell attack bonus are
+  now effect targets, so magic items and features that grant them compute correctly.
+- **Same buff twice no longer double-counts.** Two castings of Bless, or the same condition applied
+  from two sources, now apply once (per the game's "Combining Game Effects" rule) instead of stacking.
+- **Faster, more accurate sheets.** The whole effects pipeline was consolidated so every derived
+  value is computed from one resolved list — fewer recalculations per change, and conditional effects,
+  the roll log, and the action-economy tracker all read the same source of truth.
+
 ## 0.2.2
 
 - **Automatic updates (desktop).** Charnik now checks for a new version on launch. When one is

@@ -85,6 +85,14 @@ export function maxSpellLevel(counts: readonly number[]): number {
 	return m;
 }
 
+/** Cantrip damage-dice multiplier at a CHARACTER level — the 5/11/17 steps (identical in 2014 and
+ *  2024, so no per-system seam): 1 die → 2/3/4 dice. Every SRD damage cantrip follows these steps
+ *  (its `higher_level` prose restates them); a homebrew cantrip that scales differently simply
+ *  isn't level 0-typed or overrides via its own damage column. */
+export function cantripDieMultiplier(charLevel: number): number {
+	return charLevel >= 17 ? 4 : charLevel >= 11 ? 3 : charLevel >= 5 ? 2 : 1;
+}
+
 /** The prepared/known set SIZE: the class-table value if present (2024), else a per-share formula
  *  fallback (`ability mod + effective level`, floored at 1) for editions lacking a table count. */
 export function preparedCap(

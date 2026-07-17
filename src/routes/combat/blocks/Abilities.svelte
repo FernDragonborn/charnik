@@ -21,25 +21,29 @@
 		{#each ABIL as ab (ab)}
 			{@const a = s.abilities[ab]}
 			{@const prof = a.save.trace.some((t) => t.layer === 'proficiency')}
-			<button class="ability" onclick={(e) => roll(`${ab.toUpperCase()} check`, a.mod, e)}>
-				<div class="ability-name" title={why(a.score)}>
-					<b>{ab.toUpperCase()}</b> · {a.score.value}
-				</div>
-				<div class="ability-mod">{signed(a.mod)}</div>
-				<span
+			<!-- a tile is NOT a button (it holds two): a check button + a save button, both keyboard-
+			     reachable — a nested <button> is invalid HTML and drops the save from the tab order -->
+			<div class="ability">
+				<button
+					type="button"
+					class="ability-check"
+					onclick={(e) => roll(`${ab.toUpperCase()} check`, a.mod, e)}
+				>
+					<span class="ability-name" title={why(a.score)}>
+						<b>{ab.toUpperCase()}</b> · {a.score.value}
+					</span>
+					<span class="ability-mod">{signed(a.mod)}</span>
+				</button>
+				<button
+					type="button"
 					class="ability-save"
 					class:prof
-					role="button"
-					tabindex="-1"
 					title={why(a.save)}
-					onclick={(e) => {
-						e.stopPropagation();
-						roll(`${ab.toUpperCase()} save`, a.save.value, e, `save.${ab}`);
-					}}
+					onclick={(e) => roll(`${ab.toUpperCase()} save`, a.save.value, e, `save.${ab}`)}
 				>
 					<i class="prof-dot" class:on={prof}></i>SAVE <b>{signed(a.save.value)}</b>
-				</span>
-			</button>
+				</button>
+			</div>
 		{/each}
 	</section>
 {/if}
@@ -60,18 +64,30 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: 11px;
-		text-align: center;
 		padding: 12px 8px;
-		cursor: pointer;
 		color: var(--color-text);
 		display: block;
 		width: 100%;
+	}
+	.ability .ability-check {
+		display: block;
+		width: 100%;
+		text-align: center;
+		background: none;
+		border: 0;
+		padding: 0;
+		color: inherit;
+		cursor: pointer;
+	}
+	.ability .ability-check:hover {
+		filter: brightness(1.08);
 	}
 	.ability:hover {
 		border-color: var(--color-border-strong);
 		background: var(--color-surface);
 	}
 	.ability .ability-name {
+		display: block;
 		font-family: var(--font-mono);
 		font-size: 12px;
 		letter-spacing: 0.08em;
@@ -85,6 +101,7 @@
 		font-size: 13px;
 	}
 	.ability .ability-mod {
+		display: block;
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 34px;

@@ -579,12 +579,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
 - `function matchesTarget` — Does an effect target apply to this stat key?
 - `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
-- `interface EffectFlags`
+- `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
+- `interface FactRef` — A non-numeric fact tied to a target key (`advantage:attack` → {target:'attack', source}).
+- `interface ProficiencyFact`
+- `interface DefenseFact`
+- `interface EffectFacts` — * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and * value-resolved on…
+- `function collectFacts` — * One pass over the RESOLVED effect list → the typed-facts object (D7).
 - `function applyEffects` — * The seam: compose effects onto a core-computed stat for `targetKey`.
 - `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
-- `function collectResources` — * Collect resource pools from `grant_resource:<id>:<max>:<recharge>` tokens.
 - `function lintEffectTokens` — Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression * slot — guard, value…
-- `function collectFlags` — Collect the non-numeric effect facts across all active effects (for panels/flags).
 
 ### `src/lib/i18n/index.ts`
 
@@ -631,10 +634,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type Rng` — Injectable randomness; defaults to Math.random, seeded in tests.
 - `interface BonusDie` — A signed bonus/penalty die a roll gains from an effect (Bless +1d4 → {sides:4,count:1,sign:+1}).
 - `interface Rolled` — Result of a roll: the total, a human-readable breakdown, and the two d20 if adv/disadv applied.
+- `interface DieMods` — Roll-manipulation effects a roll carries (L1 `reroll:`/`min_die:` facts — the roll path is * their consumer).
 - `const MAX_DICE_PER_TERM` — Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted * formula (shared cont…
 - `const MAX_DIE_SIDES`
 - `function parseDiceTerm` — Parse a single signed dice term ("1d4" / "-2d4" / "+1d6") into a `BonusDie`, or null if it * isn't one.
 - `function parseDicePool` — Parse every `NdM` token in a string into a pool ({sides: count}).
+- `interface RollOptions` — Options for `rollPool` beyond the pool itself: injectable rng + roll-manipulation effects.
 - `function rollPool` — * Roll a dice pool + flat mod.
 - `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat * mod, then `rollPool`.
 
@@ -658,6 +663,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function effectiveCasterLevel` — Shared multiclass caster level = SUM of contributions (NOT the senior class).
 - `function slotCountsFor` — Slot counts (per spell level, index 0 = 1st) at a character level, clamped to 1..20.
 - `function maxSpellLevel` — Highest spell level with at least one slot (0 = no leveled slots).
+- `function cantripDieMultiplier` — Cantrip damage-dice multiplier at a CHARACTER level — the 5/11/17 steps (identical in 2014 and * 2024, so no per-syst…
 - `function preparedCap` — The prepared/known set SIZE: the class-table value if present (2024), else a per-share formula * fallback (`ability m…
 - `function slotPools` — Turn a slot-count array into one castable pool per non-empty spell level.
 
@@ -734,4 +740,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 34 components · 384 exports across 57 modules · 32 duplicate suspects · generated in 104ms._
+_46 tokens · 50 global classes · 34 components · 390 exports across 57 modules · 32 duplicate suspects · generated in 100ms._

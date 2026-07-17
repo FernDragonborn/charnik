@@ -12,9 +12,11 @@ import {
 	isEffectExpired,
 	type EffectInstance
 } from './helpers';
+import { collectFacts } from '$lib/effects/index';
 
-// rollEffectsFor reads the sheet's RESOLVED effect list ({tokens}), not raw play.effects (B21)
-const fx = (...tokens: string[]) => [{ tokens }];
+// rollEffectsFor reads the sheet's typed-facts object (D7), built from the RESOLVED effect list
+// (never raw play.effects — B21); collectFacts is that one conversion.
+const fx = (...tokens: string[]) => collectFacts([{ source: 'Test', layer: 'condition', tokens }]);
 
 describe('pipClick — one click-to-set model (available left, spent right)', () => {
 	it('clicking an available pip spends it + everything to its right', () => {

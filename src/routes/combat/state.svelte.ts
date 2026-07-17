@@ -14,7 +14,7 @@ import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { tokensOf } from '$lib/content/loader';
 import { passiveScore } from '$lib/rules/core';
-import { rollPool } from '$lib/rules/dice';
+import { rollPool, type DieMods } from '$lib/rules/dice';
 import type { Character } from '$lib/character/schema';
 import {
 	titleCase,
@@ -241,13 +241,13 @@ class CombatVM {
 			});
 	};
 
-	/** Advantage/disadvantage + flat + bonus dice a roll picks up from active effects (gated on the
-	 *  effects-auto toggle). Reads the sheet's RESOLVED list (guards evaluated, conditions expanded,
-	 *  item/feature effects included — B21), not raw `play.effects`. */
+	/** Advantage/disadvantage + flat + bonus dice + reroll/min_die a roll picks up from active
+	 *  effects (gated on the effects-auto toggle). Reads the sheet's typed-facts object (D7: guards
+	 *  evaluated, conditions expanded, expression values resolved — B21), not raw `play.effects`. */
 	private effectsFor(key: string): RollEffects {
 		const c = this.character;
-		if (!c || !c.play.autoCalc) return NO_ROLL_EFFECTS; // effects-auto off → plain rolls
-		return rollEffectsFor(this.sheet?.resolvedEffects ?? [], key);
+		if (!c || !c.play.autoCalc || !this.sheet) return NO_ROLL_EFFECTS; // effects-auto off → plain rolls
+		return rollEffectsFor(this.sheet.facts, key);
 	}
 
 	// open the roll builder prefilled + anchored, so the player can pick advantage then Roll
@@ -256,9 +256,10 @@ class CombatVM {
 		diceObj: Record<number, number>,
 		mod: number,
 		e: Event,
-		advantage = 0
+		advantage = 0,
+		mods: DieMods = {}
 	) => {
-		this.tray.prefill(label, diceObj, mod, advantage);
+		this.tray.prefill(label, diceObj, mod, advantage, mods);
 		this.openMenu('dice', e);
 	};
 	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray. `key`
@@ -267,8 +268,49 @@ class CombatVM {
 	roll = (label: string, mod: number, e: Event, key?: string) => {
 		const fx = key ? this.effectsFor(key) : null;
 		const adv = fx ? netAdvantage(fx) : 0;
-		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e, adv);
-		else this.tray.rollDiceNow(label, { 20: 1 }, mod, adv, fx?.bonusDice ?? []);
+		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e, adv, fx ?? {});
+		else this.tray.rollDiceNow(label, { 20: 1 }, mod, adv, fx?.bonusDice ?? [], fx ?? {});
+	};
+
+	/** Roll a death save (shown while at 0 HP): a d20 vs 10 — `save.death`-targeted effects (and
+	 *  the `saves`/`d20_tests` groups: Bless, exhaustion) apply. Outcomes per RAW: nat 20 → back up
+	 *  at 1 HP; nat 1 → two failures; 10+ → success; three successes → stable (counters reset). */
+	deathSave = (e: Event) => {
+		const c = this.character;
+		if (!c) return;
+		const fx = this.effectsFor('save.death');
+		if (wantsTray(e)) {
+			this.openRoll('Death save', { 20: 1 }, fx.flat, e, netAdvantage(fx), fx);
+			return;
+		}
+		const r = rollPool({ 20: 1 }, fx.flat, netAdvantage(fx), fx.bonusDice, fx);
+		this.tray.pushRoll('Death save', r);
+		const ds = c.play.deathSaves;
+		if (r.natural === 20) {
+			c.play.hp.current = 1;
+			c.play.deathSaves = { successes: 0, failures: 0 };
+			toast('Natural 20 — back on your feet at 1 HP');
+		} else if (r.natural === 1) {
+			ds.failures = Math.min(3, ds.failures + 2);
+			toast('Natural 1 — two death-save failures');
+		} else if (r.total >= 10) {
+			ds.successes = Math.min(3, ds.successes + 1);
+			if (ds.successes >= 3) {
+				c.play.deathSaves = { successes: 0, failures: 0 };
+				toast('Three successes — stable at 0 HP');
+			}
+		} else {
+			ds.failures = Math.min(3, ds.failures + 1);
+			if (ds.failures >= 3) toast('Three failures — the character has died', { description: '💀' });
+		}
+	};
+
+	/** Manually set a death-save track (players track by hand too): clicking pip `index` fills to it,
+	 *  or clears it when it's already the last filled one. `kind` is 'successes' | 'failures'. */
+	toggleDeathSave = (kind: 'successes' | 'failures', index: number) => {
+		const ds = this.character?.play.deathSaves;
+		if (!ds) return;
+		ds[kind] = ds[kind] === index + 1 ? index : index + 1;
 	};
 
 	/** Roll a weapon/unarmed attack (the Attack action → spends an action in combat). A normal tap
@@ -282,16 +324,16 @@ class CombatVM {
 		const dmgFx = this.effectsFor('damage');
 		if (wantsTray(e)) {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
-			this.openRoll(at.name, { 20: 1 }, at.toHit + fx.flat, e, netAdvantage(fx));
-			if (hasDice) this.tray.queueDamage(`${at.name} damage`, pool, mod + dmgFx.flat);
+			this.openRoll(at.name, { 20: 1 }, at.toHit + fx.flat, e, netAdvantage(fx), fx);
+			if (hasDice) this.tray.queueDamage(`${at.name} damage`, pool, mod + dmgFx.flat, dmgFx);
 			return;
 		}
 		// instant: to-hit (with effect advantage/flat/dice) + damage → one 3-line entry
-		const toHit = rollPool({ 20: 1 }, at.toHit + fx.flat, netAdvantage(fx), fx.bonusDice);
+		const toHit = rollPool({ 20: 1 }, at.toHit + fx.flat, netAdvantage(fx), fx.bonusDice, fx);
 		this.tray.pushRoll(
 			at.name,
 			toHit,
-			hasDice ? rollPool(pool, mod + dmgFx.flat, 0, dmgFx.bonusDice) : undefined
+			hasDice ? rollPool(pool, mod + dmgFx.flat, 0, dmgFx.bonusDice, dmgFx) : undefined
 		);
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
@@ -352,14 +394,15 @@ class CombatVM {
 			const toHit = caster.attack.value + fx.flat;
 			if (alt) {
 				// tray on the TO-HIT (the spell attack roll); Roll then fires the damage after
-				this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e, netAdvantage(fx));
-				if (hasDmg) this.tray.queueDamage(`${r.name} damage`, { ...(r.dmg ?? {}) }, dmgFx.flat);
+				this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e, netAdvantage(fx), fx);
+				if (hasDmg)
+					this.tray.queueDamage(`${r.name} damage`, { ...(r.dmg ?? {}) }, dmgFx.flat, dmgFx);
 			} else {
 				// instant: to-hit + damage → one combined 3-line entry
 				this.tray.pushRoll(
 					`${r.name} (spell attack)`,
-					rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice),
-					hasDmg ? rollPool(r.dmg ?? {}, dmgFx.flat, 0, dmgFx.bonusDice) : undefined
+					rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice, fx),
+					hasDmg ? rollPool(r.dmg ?? {}, dmgFx.flat, 0, dmgFx.bonusDice, dmgFx) : undefined
 				);
 			}
 		} else if (hasDmg) {

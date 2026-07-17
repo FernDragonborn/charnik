@@ -4,8 +4,7 @@ import {
 	parseEffect,
 	resolveEffectValue,
 	applyEffects,
-	collectResources,
-	collectFlags,
+	collectFacts,
 	matchesTarget,
 	EFFECT_KIND,
 	type ActiveEffect
@@ -126,13 +125,13 @@ describe('applyEffects · expression contributions fold through the seam', () =>
 	});
 });
 
-describe('collectResources · expression max (Ki = monk level)', () => {
+describe('collectFacts · resource pools with expression max (Ki = monk level)', () => {
 	it('resolves a computed pool max against the ctx', () => {
 		const monkCtx = makeExprContext({ ...build, classLevels: { monk: 6 } });
 		const effects: ActiveEffect[] = [
 			{ source: 'Monk', layer: 'feature', tokens: ['grant_resource:ki:class_level.monk:short'] }
 		];
-		const res = collectResources(effects, monkCtx);
+		const res = collectFacts(effects, monkCtx).resources;
 		expect(res).toHaveLength(1);
 		expect(res[0]).toMatchObject({ id: 'ki', max: 6, recharge: 'short' });
 	});
@@ -141,7 +140,7 @@ describe('collectResources · expression max (Ki = monk level)', () => {
 		const effects: ActiveEffect[] = [
 			{ source: 'Barbarian', layer: 'feature', tokens: ['grant_resource:rage:3:long'] }
 		];
-		expect(collectResources(effects, ctx)[0]).toMatchObject({
+		expect(collectFacts(effects, ctx).resources[0]).toMatchObject({
 			id: 'rage',
 			max: 3,
 			recharge: 'long'
@@ -203,9 +202,9 @@ describe('L1 · roll-manipulation vocab (reroll / min_die)', () => {
 			{ source: 'GWF', layer: 'feature', tokens: ['reroll:damage:2'] },
 			{ source: 'Reliable Talent', layer: 'feature', tokens: ['min_die:skills:10'] }
 		];
-		const flags = collectFlags(effects);
-		expect(flags.rerolls).toEqual([{ target: 'damage', value: 2 }]);
-		expect(flags.minDie).toEqual([{ target: 'skills', value: 10 }]);
-		expect(flags.unknown).toEqual([]);
+		const facts = collectFacts(effects);
+		expect(facts.rerolls).toEqual([{ target: 'damage', value: 2 }]);
+		expect(facts.minDie).toEqual([{ target: 'skills', value: 10 }]);
+		expect(facts.unknown).toEqual([]);
 	});
 });

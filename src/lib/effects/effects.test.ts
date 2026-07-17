@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseEffect, applyEffects, collectFlags, EFFECT_KINDS, type ActiveEffect } from './index';
+import { parseEffect, applyEffects, collectFacts, EFFECT_KINDS, type ActiveEffect } from './index';
 import { EFFECT_KINDS as SCHEMA_EFFECT_KINDS } from '../content/schemas';
 import { unarmoredAC, savingThrow } from '../rules/core';
 
@@ -182,7 +182,7 @@ describe('applyEffects seam', () => {
 	});
 });
 
-describe('collectFlags', () => {
+describe('collectFacts', () => {
 	it('gathers non-numeric effect facts', () => {
 		const effects: ActiveEffect[] = [
 			{
@@ -193,16 +193,20 @@ describe('collectFlags', () => {
 			{ source: 'Hold Person', layer: 'condition', tokens: ['apply_condition:paralyzed'] },
 			{ source: 'Weird', layer: 'feature', tokens: ['teleport:far'] }
 		];
-		const flags = collectFlags(effects);
-		expect(flags.resources).toContain('rage');
-		expect(flags.resistImmune).toContain('bludgeoning');
-		expect(flags.conditions).toContain('paralyzed');
-		expect(flags.unknown).toContain('teleport:far');
+		const facts = collectFacts(effects);
+		expect(facts.resourceIds).toContain('rage');
+		expect(facts.defenses).toContainEqual({
+			bucket: 'resist',
+			type: 'bludgeoning',
+			source: 'Rage'
+		});
+		expect(facts.conditions).toContain('paralyzed');
+		expect(facts.unknown).toContainEqual({ source: 'Weird', token: 'teleport:far' });
 	});
 	it('fills the disadvantage bucket (was a dead field — audit A5)', () => {
-		const flags = collectFlags([
+		const facts = collectFacts([
 			{ source: 'Poisoned', layer: 'condition', tokens: ['disadvantage:skills'] }
 		]);
-		expect(flags.disadvantage).toContain('skills');
+		expect(facts.disadvantage).toContainEqual({ target: 'skills', source: 'Poisoned' });
 	});
 });

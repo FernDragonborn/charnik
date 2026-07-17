@@ -8,8 +8,22 @@ import {
 	maxSpellLevel,
 	preparedCap,
 	slotPools,
+	cantripDieMultiplier,
 	type SlotTable
 } from './spellcasting';
+
+describe('cantrip damage scaling (A15 — 5/11/17 steps, both editions)', () => {
+	it('steps the die multiplier at levels 5, 11, 17', () => {
+		expect(cantripDieMultiplier(1)).toBe(1);
+		expect(cantripDieMultiplier(4)).toBe(1);
+		expect(cantripDieMultiplier(5)).toBe(2); // Fire Bolt 1d10 → 2d10
+		expect(cantripDieMultiplier(10)).toBe(2);
+		expect(cantripDieMultiplier(11)).toBe(3);
+		expect(cantripDieMultiplier(16)).toBe(3);
+		expect(cantripDieMultiplier(17)).toBe(4);
+		expect(cantripDieMultiplier(20)).toBe(4);
+	});
+});
 
 describe('caster level (multiclass)', () => {
 	it('contributions round per share', () => {

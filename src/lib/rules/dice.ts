@@ -29,6 +29,19 @@ export interface Rolled {
 	expr: string;
 	/** Present only when an advantage/disadvantage d20 was rolled. */
 	advantageRoll?: AdvantageRoll;
+	/** The NATURAL face of the first d20 (post reroll/floor, pre modifiers) — for nat-1/nat-20
+	 *  outcomes (death saves, crits). Present only when the pool rolled a d20. */
+	natural?: number;
+}
+
+/** Roll-manipulation effects a roll carries (L1 `reroll:`/`min_die:` facts — the roll path is
+ *  their consumer). They apply to the POOL's own dice, not to signed bonus dice (GWF rerolls the
+ *  weapon's dice, not a Bless die). */
+export interface DieMods {
+	/** Reroll (once, keep the new result) any die that lands ≤ this — GWF ≤2, Halfling Lucky 1. */
+	reroll?: number;
+	/** Treat a die below this AS this — Reliable Talent's d20 → 10. */
+	minDie?: number;
 }
 
 /** Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted
@@ -68,35 +81,65 @@ export function parseDicePool(s: string): Record<number, number> {
 	return out;
 }
 
+/** Options for `rollPool` beyond the pool itself: injectable rng + roll-manipulation effects. */
+export interface RollOptions extends DieMods {
+	rng?: Rng;
+}
+
 /**
  * Roll a dice pool + flat mod. `advantage` (−1 disadvantage / 0 normal / +1 advantage) applies to
  * the FIRST d20 in the pool: roll two, keep the winner, expose the loser as `advantageRoll`.
- * `bonusDice` are the signed effect dice (Bless +1d4 / Bane −1d4). Deterministic under a seeded `rng`.
+ * `bonusDice` are the signed effect dice (Bless +1d4 / Bane −1d4). `opts` takes the rng (seeded in
+ * tests) and the `reroll`/`min_die` effect facts — a bare `Rng` is accepted for existing callers.
+ * Deterministic under a seeded rng.
  */
 export function rollPool(
 	dice: Record<number, number>,
 	mod = 0,
 	advantage = 0,
 	bonusDice: BonusDie[] = [],
-	rng: Rng = Math.random
+	opts: RollOptions | Rng = {}
 ): Rolled {
+	const o: RollOptions = typeof opts === 'function' ? { rng: opts } : opts;
+	const rng = o.rng ?? Math.random;
+	// one pool die with reroll/floor applied; `label` spells out what happened (d6(1↻4), d20(3→10)).
+	// `face` is the actual die result AFTER a reroll but BEFORE a min_die floor — a nat-1/nat-20 is
+	// judged by what the die shows (Reliable Talent's "treat as 10" doesn't erase a natural 1).
+	const rollOne = (sides: number): { v: number; face: number; label: string } => {
+		let v = rollDie(sides, rng);
+		let detail = `${v}`;
+		if (o.reroll !== undefined && v <= o.reroll) {
+			v = rollDie(sides, rng);
+			detail += `↻${v}`;
+		}
+		const face = v;
+		if (o.minDie !== undefined && v < o.minDie) {
+			v = o.minDie;
+			detail += `→${v}`;
+		}
+		return { v, face, label: `d${sides}(${detail})` };
+	};
 	const parts: string[] = [];
 	let total = 0;
 	let advantageRoll: AdvantageRoll | undefined;
+	let natural: number | undefined;
 	for (const [s, c] of Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0]))) {
 		const sides = Number(s);
 		for (let k = 0; k < c; k++) {
-			const v = rollDie(sides, rng);
+			const r = rollOne(sides);
 			if (sides === 20 && advantage !== 0 && k === 0) {
 				// roll TWO d20 and keep the winner; the loser is surfaced (rendered struck through)
-				const v2 = rollDie(20, rng);
-				const kept = advantage > 0 ? Math.max(v, v2) : Math.min(v, v2);
-				advantageRoll = { kept, dropped: kept === v ? v2 : v };
-				total += kept;
+				const r2 = rollOne(20);
+				const win = advantage > 0 ? Math.max(r.v, r2.v) : Math.min(r.v, r2.v);
+				const winIsFirst = win === r.v;
+				advantageRoll = { kept: win, dropped: winIsFirst ? r2.v : r.v };
+				natural = winIsFirst ? r.face : r2.face; // the kept die's face (pre-floor)
+				total += win;
 				continue; // the advantage detail renders the d20, don't duplicate it in `parts`
 			}
-			total += v;
-			parts.push(`d${sides}(${v})`);
+			if (sides === 20 && natural === undefined) natural = r.face;
+			total += r.v;
+			parts.push(r.label);
 		}
 	}
 	for (const b of bonusDice)
@@ -107,7 +150,12 @@ export function rollPool(
 		}
 	total += mod;
 	const expr = parts.join(' + ') + (mod ? ` ${formatModifier(mod)}` : '');
-	return advantageRoll ? { total, expr, advantageRoll } : { total, expr };
+	return {
+		total,
+		expr,
+		...(advantageRoll !== undefined ? { advantageRoll } : {}),
+		...(natural !== undefined ? { natural } : {})
+	};
 }
 
 /** Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat

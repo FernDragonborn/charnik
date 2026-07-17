@@ -5,7 +5,6 @@
  * CombatVM composes it as `combat.economy`, passing getters for the reactive character + sheet.
  */
 import { toast } from 'svelte-sonner';
-import { parseEffect, EFFECT_KIND } from '$lib/effects/index';
 import { pipClick, isEffectExpired, type ActionSlot, type SpRow } from '$lib/combat/helpers';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -17,23 +16,15 @@ export class TurnEconomy {
 	) {}
 
 	// base 1 pip per slot + extras from effects (Action Surge → +1 action, Haste → +1 action), rendered
-	// as more pips — data-driven via `flat_bonus:<slot>+N` tokens. Reads the sheet's RESOLVED list
-	// (guards evaluated, item/feature effects included — B21), not raw `play.effects`.
+	// as more pips — data-driven via `flat_bonus:<slot>+N` tokens. Reads the sheet's typed-facts
+	// object (D7: guards evaluated, item/feature effects included, values resolved — B21).
 	slotMax = $derived.by<Record<ActionSlot, number>>(() => {
 		const c = this.getCharacter();
 		const max = { action: 1, bonus: 1, reaction: 1 };
 		if (c?.play.autoCalc)
-			for (const eff of this.getSheet()?.resolvedEffects ?? [])
-				for (const t of eff.tokens) {
-					const p = parseEffect(t);
-					if (
-						p.kind === EFFECT_KIND.flatBonus &&
-						p.amount !== undefined &&
-						p.target &&
-						Object.hasOwn(max, p.target)
-					)
-						max[p.target as keyof typeof max] += p.amount;
-				}
+			for (const f of this.getSheet()?.facts.numeric ?? [])
+				if (f.op === 'add' && f.amount !== undefined && Object.hasOwn(max, f.target))
+					max[f.target as keyof typeof max] += f.amount;
 		return max;
 	});
 	get moveMax(): number {

@@ -57,11 +57,11 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   (hover explains a species +2 CON); Headband's `set_override:int:19` applies at the override
   layer; guarded/expression ability tokens resolve via the dependency DAG. Remaining from the
   original note: `abilityBoosts` values are still unclamped ints at the BUILD stage (G3).
-- [ ] **A11 · Same-name effects stack.** Two Bless instances → 2×1d4; the same condition arriving
-  from two sources doubles its numeric penalties (gatherEffects has no dedupe). D&D's "Combining
-  Game Effects" is implemented ONLY for `set` ops (`overriddenSetNotes`) — add/dice contributions
-  and duplicate `apply_condition`s stack freely. Needs same-source/same-name dedupe at the gather
-  stage.
+- [x] **A11 · Same-name effects stack.** FIXED (EXPR-5, 2026-07-17): the DAG gather dedupes runtime
+  (`condition`-layer) effects by `(source label + token list)` — two Bless casts apply their `1d4`
+  once — and expands each condition id ONCE regardless of how many sources apply it (two Frightened
+  sources → one `disadvantage:attack`). Build-layer effects still stack (a repeatable feat applies
+  each time). Complements the pre-existing `set`-op combine (`overriddenSetNotes`).
 - [ ] **A12 · Short-rest expiry compares TOTAL duration, not remaining.**
   `routes/combat/resources.svelte.ts:71`: `e.durationRounds <= 600` — an effect with 1000 total
   rounds and 1 remaining survives the hour; a fresh 600-round one is wiped. Use `remainingRounds`
@@ -73,9 +73,11 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   (`combat/state.svelte.ts:147-152`), but when `hp_max` DROPS (Aid expires) `hp.current` stays
   above max until the next heal. Also `play.hp.max ?? sheet.maxHp.value` (:138) — a manual max
   override silently disables ALL `hp_max` effects (Aid on top of a manual max vanishes).
-- [ ] **A15 · Cantrip scaling absent.** Fire Bolt stays 1d10 forever — the 5/11/17 damage scaling
-  (both editions) exists nowhere (sheet, cast, data, targets). Canonical L2 case
-  (`higher_level` text is unparsed prose); until then the sheet is silently wrong from level 5.
+- [x] **A15 · Cantrip scaling absent.** FIXED (EXPR-5, 2026-07-17): `cantripDieMultiplier`
+  (rules/spellcasting.ts — 5/11/17 steps, identical both editions) scales a level-0 spell's damage
+  dice in `spellRow`, so Fire Bolt shows AND rolls 2d10 at character level 5 (3d10 at 11, 4d10 at
+  17). Data-driven off the `level==0` flag; a homebrew cantrip overrides via its own `damage`
+  column. (The `higher_level` prose stays unparsed — the multiplier is the rule, not the text.)
 - [ ] **A16 · `apply_condition` expansion holes** (`derive.ts:217-231`): (a) condition row lookup
   has NO edition filter (a 5.5e condition row can apply to a 5e character when both roots load) —
   class features right beside it DO filter `systems`; (b) `graph.rows.find` = first match, source
@@ -281,17 +283,14 @@ Deep effects-system review, 2026-07-16 (B12–B26):
 
 Deep effects-system review, 2026-07-16 (D7–D19):
 
-- [~] **D7 · Token scans scattered across ~8 sites; no resolve stage.** MOSTLY DONE (EXPR-3):
-  `resolveActiveEffects` is the one stage (gather→guards→expand→stripped list); every derive scan +
-  `applyEffects` now reads that single resolved list, not raw `active`. Remaining: the scans aren't
-  yet merged into a single typed-facts object (they still re-`parseEffect` the shared list). `applyEffects` (per stat)
-  + `abilityBonus` (derive.ts:236) + the grant_proficiency scan (:270) + the defenses scan (:431)
-  + `passiveOf` adv/dis (:402) + `apply_condition` expansion (:217) + `collectResources`/
-  `collectFlags` + `rollEffectsFor` + `TurnEconomy.slotMax` + `speciesFixedAbilities`
-  (build/derive.ts:21). EXPR-3 guards must gate ALL of them — without one resolve stage that's 8+
-  forks of conditional logic. Also perf: `parseEffect` runs O(stats × tokens) per derive (derive
-  fires on every HP click); an L2 expression parser multiplies that. Parse once per token per
-  derive. Cross-ref B21.
+- [x] **D7 · Token scans scattered across ~8 sites; no resolve stage.** DONE (EXPR-3 opened the one
+  resolve stage; EXPR-5, 2026-07-17 closed the typed-facts half): `collectFacts` parses every
+  RESOLVED token ONCE and resolves L2 values ONCE per derive into `CharacterSheet.facts`
+  (`EffectFacts`). Every consumer reads that object — `applyEffects` folds `facts.numeric`,
+  proficiency/defense/resource/adv-dis scans read their typed arrays, the roll path
+  (`rollEffectsFor`) and action economy (`slotMax`) read it too — none re-`parseEffect`s the shared
+  list. Killed the old per-stat `collectFlags`/`collectResources` re-scans. `parseEffect` no longer
+  runs O(stats × tokens) per derive. Cross-ref B21.
 - [ ] **D8 · Two parallel dice-tray stacks.** `lib/dice/tray.svelte.ts` (DiceTrayRequest contract:
   registry + formula string + roll-instantly fallback; comment claims "the seam every caller talks
   to") vs `routes/combat/roll.svelte.ts` RollTray (pool-based, never registers the contract). Two
