@@ -80,7 +80,8 @@ describe('deriveSheet aggregator', () => {
 	it('cascades a species ability-score bonus into the modifier', () => {
 		const s = deriveSheet(wizard(), graph);
 		expect(s.abilities.con.baseScore).toBe(12);
-		expect(s.abilities.con.score).toBe(14); // +2 from Hardy
+		expect(s.abilities.con.score.value).toBe(14); // +2 from Hardy
+		expect(s.abilities.con.score.trace.map((t) => t.source)).toContain('Hardy'); // A10: traced
 		expect(s.abilities.con.mod).toBe(2);
 		expect(s.level).toBe(3);
 		expect(s.proficiencyBonus).toBe(2);
@@ -143,8 +144,8 @@ describe('deriveSheet aggregator', () => {
 		c.build.speciesOption = `species_option:${S}:stoic`;
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// CON 12 base +2 (Hardy species) = 14; WIS 10 +1 (Stoic subrace) = 11
-		expect(s.abilities.con.score).toBe(14);
-		expect(s.abilities.wis.score).toBe(11);
+		expect(s.abilities.con.score.value).toBe(14);
+		expect(s.abilities.wis.score.value).toBe(11);
 	});
 
 	it('hp_max effects flow through the seam (Toughness/Aid)', () => {
@@ -473,7 +474,7 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 	});
 });
 
-describe('deriveSheet · unsupported ability-score tokens are surfaced, never silent', () => {
+describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 	async function abilityGraph(): Promise<ContentGraph> {
 		const st = new MemoryStorage();
 		await st.write(
@@ -484,26 +485,76 @@ describe('deriveSheet · unsupported ability-score tokens are surfaced, never si
 			'c/species_srd.csv',
 			[
 				'id,systems,source,name_en,effects,size,speed,creature_type',
-				// an expression and a guard on ability targets — both await the DAG, must be reported
-				`odd,5.5e,${S},Odd,flat_bonus:str+ceil(level/4); is_bloodied ? flat_bonus:con+2,medium,30,humanoid`
+				// an expression and a guard on ability targets — resolved by the DAG (dex is safe to
+				// guard on is_bloodied; CON would be a genuine cycle, tested separately below)
+				`odd,5.5e,${S},Odd,flat_bonus:str+ceil(level/4); is_bloodied ? flat_bonus:dex+2,medium,30,humanoid`,
+				`looper,5.5e,${S},Looper,is_bloodied ? flat_bonus:con+2,medium,30,humanoid`
+			].join('\n')
+		);
+		await st.write(
+			'c/items_srd.csv',
+			[
+				'id,systems,source,name_en,effects,category,item_type',
+				`headband,5.5e,${S},Headband of Intellect,set_override:int:19,gear,wondrous item`
 			].join('\n')
 		);
 		const g = await loadContent(st, ['c']);
 		return g;
 	}
-
-	it('reports expression/guarded ability bonuses as derive issues and does not apply them', async () => {
-		const g = await abilityGraph();
+	function odd(species = 'odd'): Character {
 		const c = newCharacter('odd', 'Odd', '5.5e');
-		c.build.species = `species:${S}:odd`;
+		c.build.species = `species:${S}:${species}`;
 		c.build.classes = [{ class: `class:${S}:monk`, level: 8 }];
 		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+		return c;
+	}
+
+	it('applies an expression-valued ability bonus, traced through the pipeline', async () => {
+		const g = await abilityGraph();
+		const s = deriveSheet(characterSchema.parse(odd()), g);
+		expect(s.abilities.str.score.value).toBe(12); // 10 + ceil(8/4)
+		expect(s.abilities.str.score.trace.map((t) => t.source)).toContain('Odd');
+		expect(s.abilities.str.mod).toBe(1); // and the modifier cascades
+	});
+
+	it('applies a guarded ability bonus only when the guard holds', async () => {
+		const g = await abilityGraph();
+		const healthy = odd();
+		healthy.play.hp = { current: 50, max: 50, temp: 0 };
+		expect(deriveSheet(characterSchema.parse(healthy), g).abilities.dex.score.value).toBe(10);
+		const bloodied = odd();
+		bloodied.play.hp = { current: 10, max: 50, temp: 0 };
+		expect(deriveSheet(characterSchema.parse(bloodied), g).abilities.dex.score.value).toBe(12);
+	});
+
+	it('applies set_override on a score (Headband of Intellect) with provenance', async () => {
+		const g = await abilityGraph();
+		const c = odd();
+		c.build.inventory = [{ item: `item:${S}:headband`, qty: 1, equipped: true, attuned: false }];
 		const s = deriveSheet(characterSchema.parse(c), g);
-		expect(s.abilities.str.score).toBe(10); // ceil(8/4)=2 NOT applied (deferred DAG)
-		expect(s.abilities.con.score).toBe(10);
-		const reasons = s.deriveIssues.map((i) => i.reason).join(' ');
-		expect(reasons).toContain('expression on an ability-score bonus');
-		expect(reasons).toContain('guard on an ability-score bonus');
+		expect(s.abilities.int.score.value).toBe(19);
+		expect(s.abilities.int.mod).toBe(4);
+		expect(s.abilities.int.score.trace.map((t) => t.source)).toContain('Headband of Intellect');
+		expect(s.deriveIssues).toEqual([]);
+	});
+
+	it('clamps the effective score to the 0..30 pipeline cap', async () => {
+		const g = await abilityGraph();
+		const c = odd();
+		c.play.effects = [
+			{ iid: 'b', label: 'Typo', effects: ['flat_bonus:str+1000000'], positive: true }
+		];
+		const s = deriveSheet(characterSchema.parse(c), g);
+		expect(s.abilities.str.score.value).toBe(30);
+	});
+
+	it('flags a CON bonus guarded on is_bloodied as a dependency cycle (CON feeds hp_max)', async () => {
+		const g = await abilityGraph();
+		const c = odd('looper');
+		c.play.hp = { current: 10, max: 50, temp: 0 };
+		const s = deriveSheet(characterSchema.parse(c), g);
+		expect(s.abilities.con.score.value).toBe(10); // not applied — no fixpoint iteration
+		expect(s.deriveIssues.some((i) => i.reason.includes('dependency cycle'))).toBe(true);
 	});
 });
 

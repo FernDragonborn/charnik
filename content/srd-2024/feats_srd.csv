@@ -31,40 +31,40 @@ _Punch and Grab._ When you hit a creature with an Unarmed Strike as part of the 
 _Attack Advantage._ You have Advantage on attack rolls against a creature Grappled by you.
 _Fast Wrestler._ You don't have to spend extra movement to move a creature Grappled by you if the creature is your size or smaller.",,,general,"Level 4+, Strength or Dexterity 13+",false
 archery,Archery,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
-You gain a +2 bonus to attack rolls you make with Ranged weapons.",,,fighting-style,Fighting Style Feature,false
+You gain a +2 bonus to attack rolls you make with Ranged weapons.",,,fighting_style,Fighting Style Feature,false
 defense,Defense,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
-While you're wearing Light, Medium, or Heavy armor, you gain a +1 bonus to Armor Class.",,,fighting-style,Fighting Style Feature,false
+While you're wearing Light, Medium, or Heavy armor, you gain a +1 bonus to Armor Class.",,,fighting_style,Fighting Style Feature,false
 great_weapon_fighting,Great Weapon Fighting,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
-When you roll damage for an attack you make with a Melee weapon that you are holding with two hands, you can treat any 1 or 2 on a damage die as a 3. The weapon must have the Two-Handed or Versatile property to gain this benefit.",,,fighting-style,Fighting Style Feature,false
+When you roll damage for an attack you make with a Melee weapon that you are holding with two hands, you can treat any 1 or 2 on a damage die as a 3. The weapon must have the Two-Handed or Versatile property to gain this benefit.",,,fighting_style,Fighting Style Feature,false
 two_weapon_fighting,Two-Weapon Fighting,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
-When you make an extra attack as a result of using a weapon that has the Light property, you can add your ability modifier to the damage of that attack if you aren't already adding it to the damage.",,,fighting-style,Fighting Style Feature,false
+When you make an extra attack as a result of using a weapon that has the Light property, you can add your ability modifier to the damage of that attack if you aren't already adding it to the damage.",,,fighting_style,Fighting Style Feature,false
 boon_of_combat_prowess,Boon of Combat Prowess,,"_Epic Boon Feat (Prerequisite: Level 19+)_
 You gain the following benefits.
 _Ability Score Increase._ Increase one ability score of your choice by 1, to a maximum of 30.
-_Peerless Aim._ When you miss with an attack roll, you can hit instead. Once you use this benefit, you can't use it again until the start of your next turn.",,,epic-boon,Level 19+,false
+_Peerless Aim._ When you miss with an attack roll, you can hit instead. Once you use this benefit, you can't use it again until the start of your next turn.",,,epic_boon,Level 19+,false
 boon_of_dimensional_travel,Boon of Dimensional Travel,,"_Epic Boon Feat (Prerequisite: Level 19+)_
 You gain the following benefits.
 _Ability Score Increase._ Increase one ability score of your choice by 1, to a maximum of 30.
-_Blink Steps._ Immediately after you take the Attack action or the Magic action, you can teleport up to 30 feet to an unoccupied space you can see.",,,epic-boon,Level 19+,false
+_Blink Steps._ Immediately after you take the Attack action or the Magic action, you can teleport up to 30 feet to an unoccupied space you can see.",,,epic_boon,Level 19+,false
 boon_of_fate,Boon of Fate,,"_Epic Boon Feat (Prerequisite: Level 19+)_
 You gain the following benefits.
 _Ability Score Increase._ Increase one ability score of your choice by 1, to a maximum of 30.
-_Improve Fate._ When you or another creature within 60 feet of you succeeds on or fails a D20 Test, you can roll 2d4 and apply the total rolled as a bonus or penalty to the d20 roll. Once you use this benefit, you can't use it again until you roll Initiative or finish a Short or Long Rest.",,,epic-boon,Level 19+,false
+_Improve Fate._ When you or another creature within 60 feet of you succeeds on or fails a D20 Test, you can roll 2d4 and apply the total rolled as a bonus or penalty to the d20 roll. Once you use this benefit, you can't use it again until you roll Initiative or finish a Short or Long Rest.",,,epic_boon,Level 19+,false
 boon_of_irresistible_offense,Boon of Irresistible Offense,,"_Epic Boon Feat (Prerequisite: Level 19+)_
 You gain the following benefits.
 _Ability Score Increase._ Increase your Strength or Dexterity score by 1, to a maximum of 30.
 _Overcome Defenses._ The Bludgeoning, Piercing, and Slashing damage you deal always ignores Resistance.
-_Overwhelming Strike._ When you roll a 20 on the d20 for an attack roll, you can deal extra damage to the target equal to the ability score increased by this feat. The extra damage's type is the same as the attack's type.",,,epic-boon,Level 19+,false
+_Overwhelming Strike._ When you roll a 20 on the d20 for an attack roll, you can deal extra damage to the target equal to the ability score increased by this feat. The extra damage's type is the same as the attack's type.",,,epic_boon,Level 19+,false
 boon_of_spell_recall,Boon of Spell Recall,,"_Epic Boon Feat (Prerequisite: Level 19+, Spellcasting Feature)_
 You gain the following benefits.
 _Ability Score Increase._ Increase your Intelligence, Wisdom, or Charisma score by 1, to a maximum of 30.
-_Free Casting._ Whenever you cast a spell with a level 1–4 spell slot, roll 1d4. If the number you roll is the same as the slot's level, the slot isn't expended.",,,epic-boon,"Level 19+, Spellcasting Feature",false
+_Free Casting._ Whenever you cast a spell with a level 1–4 spell slot, roll 1d4. If the number you roll is the same as the slot's level, the slot isn't expended.",,,epic_boon,"Level 19+, Spellcasting Feature",false
 boon_of_the_night_spirit,Boon of the Night Spirit,,"_Epic Boon Feat (Prerequisite: Level 19+)_
 You gain the following benefits.
 _Ability Score Increase._ Increase one ability score of your choice by 1, to a maximum of 30.
 _Merge with Shadows._ While within Dim Light or Darkness, you can give yourself the Invisible condition as a Bonus Action. The condition ends on you immediately after you take an action, a Bonus Action, or a Reaction.
-_Shadowy Form._ While within Dim Light or Darkness, you have Resistance to all damage except Psychic and Radiant.",,,epic-boon,Level 19+,false
+_Shadowy Form._ While within Dim Light or Darkness, you have Resistance to all damage except Psychic and Radiant.",,,epic_boon,Level 19+,false
 boon_of_truesight,Boon of Truesight,,"_Epic Boon Feat (Prerequisite: Level 19+)_
 You gain the following benefits.
 _Ability Score Increase._ Increase one ability score of your choice by 1, to a maximum of 30.
-_Truesight._ You have Truesight with a range of 60 feet.",,,epic-boon,Level 19+,false
+_Truesight._ You have Truesight with a range of 60 feet.",,,epic_boon,Level 19+,false

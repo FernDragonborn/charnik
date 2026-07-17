@@ -42,7 +42,7 @@ type Defense = 'resist' | 'immune' | 'vulnerable';
  *  +1e6 AC is silly, not dangerous); a resource `max` DRIVES the pip render loop (see AUDIT B10) →
  *  bound the WORK. Values past a cap are clamped, not dropped, so a typo still parses. */
 const MAX_EFFECT_AMOUNT = 1_000_000;
-const MAX_RESOURCE_MAX = 1000;
+export const MAX_RESOURCE_MAX = 1000;
 const clampAmount = (n: number) =>
 	Number.isFinite(n) ? Math.max(-MAX_EFFECT_AMOUNT, Math.min(MAX_EFFECT_AMOUNT, n)) : 0;
 
@@ -204,7 +204,7 @@ export interface ActiveEffect {
 
 /** A ctx, or a per-effect ctx provider (used to scope `spellcasting_mod` to the carrying class). */
 export type EffectCtx = ExprContext | ((eff: ActiveEffect) => ExprContext);
-const ctxOf = (ctx: EffectCtx | undefined, eff: ActiveEffect): ExprContext | undefined =>
+export const ctxOf = (ctx: EffectCtx | undefined, eff: ActiveEffect): ExprContext | undefined =>
 	typeof ctx === 'function' ? ctx(eff) : ctx;
 
 /** A token split into its optional condition GUARD and the effect part. The L2 guard is
@@ -230,73 +230,9 @@ export interface EffectIssue {
 	reason: string;
 }
 
-/** The one resolve stage (EXPR-3; closes D7/B21): gather → evaluate guards → expand
- *  `apply_condition` one level (its own tokens are guard-checked too) → the surviving,
- *  guard-STRIPPED tokens every consumer reads. A FALSE guard drops its token (that's its job); a
- *  guard that ERRORS or isn't boolean keeps the token verbatim — downstream parses it as `unknown`,
- *  i.e. an inert note (the "never silently dropped" contract) — and records an issue (SPEC10),
- *  never throwing. `expandCondition` is injected (the graph lives in the caller) so this stays free
- *  of content-loader deps. */
-export interface ResolvedEffects {
-	effects: ActiveEffect[];
-	issues: EffectIssue[];
-}
-export function resolveActiveEffects(
-	active: ActiveEffect[],
-	ctx: EffectCtx,
-	expandCondition: (condId: string) => { source: string; tokens: string[] } | undefined
-): ResolvedEffects {
-	const issues: EffectIssue[] = [];
-	/** Tokens whose guard passes, stripped of the guard; a broken guard → issue + kept verbatim
-	 *  (parses as unknown → inert). */
-	const passGuards = (eff: ActiveEffect, source: string, tokens: string[]): string[] => {
-		const kept: string[] = [];
-		for (const raw of tokens) {
-			const g = splitGuard(raw);
-			if (g.guard !== undefined) {
-				const r = evalExpression(g.guard, ctxOf(ctx, eff) ?? NO_CTX);
-				if (!r.ok || r.value.type !== 'number') {
-					issues.push({
-						source,
-						token: raw,
-						reason: r.ok ? `guard "${g.guard}" is not a condition` : `bad guard: ${r.error}`
-					});
-					kept.push(raw); // inert: unparseable as an effect, visible as unknown
-					continue;
-				}
-				if (r.value.value === 0) continue; // condition false → token doesn't apply
-			}
-			kept.push(g.token);
-		}
-		return kept;
-	};
-
-	const out: ActiveEffect[] = [];
-	for (const eff of active) {
-		const kept = passGuards(eff, eff.source, eff.tokens);
-		if (kept.length) out.push({ ...eff, tokens: kept });
-	}
-	// expand apply_condition AFTER guards (SPEC7 order); one level, no recursive cascade
-	for (const eff of [...out]) {
-		for (const token of eff.tokens) {
-			const p = parseEffect(token);
-			if (p.kind !== EFFECT_KIND.applyCondition || !p.target) continue;
-			const c = expandCondition(p.target.trim());
-			if (!c) continue;
-			const source = `${eff.source} → ${c.source}`;
-			const kept = passGuards(eff, source, c.tokens);
-			if (kept.length) out.push({ source, layer: 'condition', tokens: kept });
-		}
-	}
-	return { effects: out, issues };
-}
-
-/** Fallback ctx for a guard evaluated with no context at all: every variable absent (0/false). */
-const NO_CTX: ExprContext = {
-	number: () => undefined,
-	boolean: () => undefined,
-	enum: () => undefined
-};
+// NOTE: the ONE resolve stage (gather → guards → condition expansion → the guard-stripped list
+// every consumer reads) lives in `./dag` (`resolveActiveEffects`) — it resolves effects in
+// DEPENDENCY order (writers → readers) and owns the ability-score pipeline (A10).
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
  *  `saves`→`save.*`, `skills`→`skill.*`, and `d20_tests`→every d20-based roll (saves, ability

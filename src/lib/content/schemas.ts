@@ -155,9 +155,9 @@ export const RARITIES = [
 export const FEAT_CATEGORY = {
 	origin: 'origin',
 	general: 'general',
-	fightingStyle: 'fighting-style',
-	epicBoon: 'epic-boon',
-	general2014: 'general-2014'
+	fightingStyle: 'fighting_style',
+	epicBoon: 'epic_boon',
+	general2014: 'general_2014'
 } as const;
 export const FEAT_CATEGORIES = Object.values(FEAT_CATEGORY);
 

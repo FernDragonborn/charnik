@@ -115,10 +115,12 @@ export function makeExprContext(build: BuildVars, play?: PlayVars): ExprContext 
 
 /** The same ctx with `spellcasting_mod` re-pointed at a specific class's casting mod — SPEC4: a
  *  token carried by a class's own feature reads THAT class, not the primary caster. Every other
- *  variable passes through. */
-export function withSpellcastingMod(base: ExprContext, mod: number): ExprContext {
+ *  variable passes through. `mod` may be a thunk so the value tracks a LIVE score (the DAG resolve
+ *  mutates ability mods mid-pass; a captured number would go stale). */
+export function withSpellcastingMod(base: ExprContext, mod: number | (() => number)): ExprContext {
 	return {
-		number: (name) => (name === 'spellcasting_mod' ? mod : base.number(name)),
+		number: (name) =>
+			name === 'spellcasting_mod' ? (typeof mod === 'function' ? mod() : mod) : base.number(name),
 		boolean: (name) => base.boolean(name),
 		enum: (name) => base.enum(name)
 	};

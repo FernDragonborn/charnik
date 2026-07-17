@@ -273,7 +273,7 @@
 							</span>
 						{/if}
 						<span class="bonus">{b.abilityNote(ab as Ability)}</span>
-						<span class="total">{block?.score ?? b.draft.abilities[ab as Ability]} <small>{block ? signed(block.mod) : ''}</small></span>
+						<span class="total">{block?.score.value ?? b.draft.abilities[ab as Ability]} <small>{block ? signed(block.mod) : ''}</small></span>
 					</div>
 				{/each}
 

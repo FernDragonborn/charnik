@@ -98,6 +98,22 @@ function castingCounts(
 	return { cantrips: undefined, prepared: undefined };
 }
 
+/** Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the
+ *  effects resolve needs BEFORE final scores exist (`spellcasting_mod` reads a live score by
+ *  ability; the full `deriveSpellcasting` waits for the final scores to compute DCs). */
+export function castingAbilityByClass(
+	character: Character,
+	graph: ContentGraph
+): Record<string, Ability> {
+	const out: Record<string, Ability> = {};
+	for (const c of character.build.classes) {
+		const row = graph.get(c.class);
+		if (row?.type === 'class' && row.data.caster !== 'none')
+			out[row.id] = row.data.spell_ability ?? 'int';
+	}
+	return out;
+}
+
 export function deriveSpellcasting(
 	character: Character,
 	graph: ContentGraph,

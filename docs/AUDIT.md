@@ -51,13 +51,12 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   vs any other same-layer speed set → the character keeps moving. CONFIRMED (user 2026-07-16).
   "Most potent" is contextual, not always max; potency model TBD (for penalty-type stats the
   restrictive set must win).
-- [ ] **A10 · Ability scores bypass the pipeline entirely.** `derive.ts:259-261` computes
-  `scores[ab] = base + boosts + abilityBonus()` as bare numbers: NO 20/30 clamp (CLAUDE.md promises
-  it; `flat_bonus:str+1000000` → mod +499995), NO trace (a species +2 CON is unexplainable on
-  hover), and `set_override:int:19` (Headband of Intellect) parses but is **silently dropped**
-  (abilityBonus reads only flat_bonus; no stat key matches a bare ability target). Also
-  `abilityBoosts` values are unclamped ints (G3). Ability scores must become `Computed` through
-  the same fold/clamp as everything else.
+- [x] **A10 · Ability scores bypass the pipeline entirely.** FIXED (EXPR-4, 2026-07-17): scores
+  fold through the pipeline in `effects/dag.ts` — base + boosts + `flat_bonus`/`set_override`
+  contributions (their real layers), traced, clamped 0..30; `AbilityBlock.score` is a `Computed`
+  (hover explains a species +2 CON); Headband's `set_override:int:19` applies at the override
+  layer; guarded/expression ability tokens resolve via the dependency DAG. Remaining from the
+  original note: `abilityBoosts` values are still unclamped ints at the BUILD stage (G3).
 - [ ] **A11 · Same-name effects stack.** Two Bless instances → 2×1d4; the same condition arriving
   from two sources doubles its numeric penalties (gatherEffects has no dedupe). D&D's "Combining
   Game Effects" is implemented ONLY for `set` ops (`overriddenSetNotes`) — add/dice contributions
@@ -648,8 +647,8 @@ ALL FIXED SAME DAY unless marked open. Kept for the record — the IDs are refer
   amount/error). FIXED: degrades to an "unresolved" note.
 - [x] **L2R-5 · Ability-score targets silently ignored L2** (extends A10): a guarded or
   expression-valued `flat_bonus:str+…` and any `set_override:<ability>` disappeared with no
-  trace. FIXED: surfaced as deriveIssues ("not applied — awaits the DAG"); still NOT applied —
-  the ability-stage DAG itself stays deferred (A10 remains open for clamp/trace/pipeline).
+  trace. FIXED: surfaced as deriveIssues; then EXPR-4 (2026-07-17) closed the rest — the DAG now
+  APPLIES them through the pipeline (A10 closed).
 - [x] **L2R-6 · Roll path + action economy read raw `play.effects`** — guarded tokens parsed as
   `unknown` and lost their advantage/dice even when true; content-borne effects never reached
   rolls (B21). FIXED: sheet exposes `resolvedEffects` (the one resolve stage's output);

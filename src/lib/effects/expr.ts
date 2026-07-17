@@ -713,6 +713,43 @@ export function lintExpression(src: string): string[] {
 	return warns;
 }
 
+/** Variable names an expression READS (feeds the dependency-order DAG: a token whose expression
+ *  reads `str_mod` must resolve after effects that WRITE the STR score). Numeric + boolean vars
+ *  only — enum vars (`armor_type`, `size`) are static play-state no effect can write. Returns []
+ *  for an unparseable expression (error surfacing is the eval path's job). */
+export function collectExprVariables(src: string): string[] {
+	const p = parseExpression(src);
+	if (!p.ok) return [];
+	const names = new Set<string>();
+	const walk = (n: Node): void => {
+		switch (n.t) {
+			case 'numvar':
+			case 'boolvar':
+				names.add(n.name);
+				break;
+			case 'neg':
+			case 'not':
+				walk(n.e);
+				break;
+			case 'dice':
+				walk(n.count);
+				walk(n.sides);
+				break;
+			case 'bin':
+				walk(n.l);
+				walk(n.r);
+				break;
+			case 'call':
+				n.args.forEach(walk);
+				break;
+			default:
+				break;
+		}
+	};
+	walk(p.ast.root);
+	return [...names];
+}
+
 /** Serialize a dice value to a formula string the roller (rules/dice.ts) accepts: "2d6+1d4+3". */
 export function diceToFormula(d: DiceValue): string {
 	const terms = Object.entries(d.pool)

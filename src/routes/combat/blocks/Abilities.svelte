@@ -22,7 +22,9 @@
 			{@const a = s.abilities[ab]}
 			{@const prof = a.save.trace.some((t) => t.layer === 'proficiency')}
 			<button class="ability" onclick={(e) => roll(`${ab.toUpperCase()} check`, a.mod, e)}>
-				<div class="ability-name"><b>{ab.toUpperCase()}</b> · {a.score}</div>
+				<div class="ability-name" title={why(a.score)}>
+					<b>{ab.toUpperCase()}</b> · {a.score.value}
+				</div>
 				<div class="ability-mod">{signed(a.mod)}</div>
 				<span
 					class="ability-save"

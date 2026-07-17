@@ -709,7 +709,7 @@ class BuildVM {
 	abilityNote = (ab: Ability): string => {
 		const base = this.draft.abilities[ab];
 		const boost = this.abilityBoosts[ab] ?? 0;
-		const total = this.sheet?.abilities[ab].score ?? base;
+		const total = this.sheet?.abilities[ab].score.value ?? base;
 		const extra = total - base - boost; // species / effect contribution
 		const parts: string[] = [`base ${base}`];
 		if (boost) parts.push(`boost +${boost}`);

@@ -504,7 +504,7 @@ Common columns on every type: `id` (lowercase slug; identity = `source:id`), `sy
 - **class** (`classes_*.csv`) `hit_die, primary_ability, saves(2), caster(full/half/third/pact/none), spell_ability, skills_choose, skills_from, subclass_level`.
 - **class_feature** (`class_features_*.csv`, linked by `class_id`+`level`) `class_id, level, resource`.
 - **background** (`backgrounds_*.csv`) `skills, tools, languages, ability_choices, origin_feat` (last two = 5.5e).
-- **feat** (`feats_*.csv`) `category(origin/general/fighting-style/epic-boon/general-2014), prereq, repeatable`.
+- **feat** (`feats_*.csv`) `category(origin/general/fighting_style/epic_boon/general_2014), prereq, repeatable`.
 - **spell** (`spells_*.csv`) `level, school, casting_time, range, components, material, duration, concentration, ritual, classes, resolution(attack/save/auto/none), save_ability, damage, higher_level`. Caster-wide DC/attack are **computed, never stored**.
 - **item** (`items_*.csv`) `category, item_type, cost, weight_lb, properties, damage, damage_type, range, ac, armor_dex_cap("" full / "2" medium / "0" heavy), str_min, stealth_disadvantage, attunement, rarity`.
 - **condition** (`conditions_*.csv`) `negative` (crimson vs teal); mechanics in `effects`.
@@ -1135,13 +1135,23 @@ Attack) are not yet added.
   the `deriveHealth` store, alongside the static `lintEffectTokens` authoring warns (mixed-type
   `if()`, unusual die). Tests in `resolve.test.ts` + derive integration (fail-closed conditions,
   spellcasting scoping, Unarmored Defense enum guard, bloodied save bonus).
-  **Deferred within EXPR-3 (documented, not blocking):** the FULL dependency-order DAG + cycle
-  detection + the reorderable-order UI — the two-pass bootstrap covers one feedback level
-  (conditions/resources); a guarded effect that RAISES a value another guard reads (rage +maxHP
-  feeding is_bloodied in the SAME derive) is still not fed back; and full **A10** (folding
-  ability-score bonuses through the pipeline as expressions) stays the literal-sum cascade —
-  guarded/expression ability tokens are NOT applied but are surfaced as deriveIssues, never
-  silent. Both are follow-ups on top of the working guard core.
+  ~~Deferred within EXPR-3~~ — closed by EXPR-4 below (the reorderable-order UI stays deferred).
+- [x] **EXPR-4 · Dependency-order DAG + the ability-score pipeline (A10).** DONE (2026-07-17) —
+  `src/lib/effects/dag.ts` REPLACES the two-pass bootstrap as the ONE resolve stage
+  (`resolveActiveEffects`): value-WRITING tokens are ordered over VALUE NODES (the six ability
+  scores, `hp_max`, `condition:<id>`, `resource:<id>`) by what their guards/values READ
+  (`collectExprVariables` over the AST; Tarjan SCC + condensation topo; `spellcasting_mod`
+  conservatively reads all six scores; a structural con→hp_max edge covers the hit-die base).
+  **A10 closed:** ability scores fold through the SAME pipeline as every stat — base + boosts +
+  `flat_bonus`/`set_override` contributions at their layers, traced + clamped 0..30
+  (`AbilityBlock.score` is now a `Computed`; Headband of Intellect works; guarded/expression
+  ability tokens APPLY). A guarded effect that raises a value another guard reads (rage +maxHP
+  feeding `is_bloodied`) resolves in dependency order; a genuine CYCLE (incl. the subtle
+  `is_bloodied ? flat_bonus:con+…` — CON feeds hp_max) degrades its writers to inert notes + a
+  "dependency cycle" deriveIssue — NO fixpoint iteration, per the state model. The ctx stays ONE
+  `makeExprContext` over live getters into the DAG's `ResolveState`; `deriveSpellcasting` moved
+  AFTER the resolve so DCs/attacks read the EFFECTIVE scores. Deferred: the visible
+  reorderable-order UI (cosmetic while the fold is RAW-commutative and cycles are rejected).
 
 Deferred to L3/onEvent (NOT L2): stateful transitions, latches, actions, anything that WRITES state
 — L2 only READS `ctx` and produces contributions. Keep the layer honest: it is a pure read-only

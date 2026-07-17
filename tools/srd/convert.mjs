@@ -30,8 +30,8 @@ const out = (f) => resolve(root, 'content/srd-2024', f);
 const FEAT_SECTIONS = {
 	'Origin Feats': 'origin',
 	'General Feats': 'general',
-	'Fighting Style Feats': 'fighting-style',
-	'Epic Boon Feats': 'epic-boon'
+	'Fighting Style Feats': 'fighting_style',
+	'Epic Boon Feats': 'epic_boon'
 };
 function convertFeats() {
 	const all = blocks(src('feats.md')).filter((b) => FEAT_SECTIONS[b.h3]);

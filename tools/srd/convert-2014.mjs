@@ -613,7 +613,7 @@ function convertFeats() {
 			text_en: text,
 			text_uk: '',
 			effects: '',
-			category: 'general-2014',
+			category: 'general_2014',
 			prereq: pm ? pm[1].trim() : '',
 			repeatable: 'false'
 		};
