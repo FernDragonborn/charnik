@@ -8,9 +8,11 @@ overrides:
   esbuild@<=0.24.2: '>=0.25.0'
   cookie@<0.7.0: '~0.7.2'
 
-# Approve install/postinstall build scripts (pnpm blocks the rest by default for
-# supply-chain safety). esbuild needs its native binary built on install.
+# Approve install/postinstall build scripts (pnpm 11 blocks the rest by default for
+# supply-chain safety). esbuild builds its native binary, simple-git-hooks installs the
+# pre-commit hook. Each must be an explicit `true` — a placeholder value leaves it ignored
+# and fails `pnpm install --frozen-lockfile` in CI (ERR_PNPM_IGNORED_BUILDS).
 allowBuilds:
   esbuild: true
   es5-ext: true
-  simple-git-hooks: set this to true or false
+  simple-git-hooks: true
