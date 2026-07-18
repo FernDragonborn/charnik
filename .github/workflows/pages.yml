@@ -6,7 +6,12 @@ name: Deploy web demo to GitHub Pages
 # One-time repo setup: Settings → Pages → Build and deployment → Source = "GitHub Actions".
 
 on:
-  push:
+  # Deploy only AFTER the CI workflow (test + lint + build) succeeds on main — never publish
+  # a red build. The build job below gates on `conclusion == 'success'`. workflow_dispatch
+  # stays for a manual redeploy.
+  workflow_run:
+    workflows: ['CI']
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -22,6 +27,9 @@ concurrency:
 
 jobs:
   build:
+    # gate: run only when CI passed (workflow_run) or on a manual dispatch — a failed CI run
+    # still fires workflow_run (with conclusion 'failure'), so this skips the deploy on red.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
