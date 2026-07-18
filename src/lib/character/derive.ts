@@ -292,7 +292,13 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	}
 
 	const expandCondition = (condId: string) => {
-		const cond = graph.rows.find((r) => r.type === 'condition' && r.id === condId);
+		// A16(a): edition-filter the lookup — a 5.5e `frightened` row must NOT apply to a 5e character
+		// when both roots are loaded, exactly the `systems` gate the class-feature scan above uses.
+		// A16(b): first match is now deterministic within the edition (load order); a genuine
+		// same-id/same-edition clash across two sources is a collisions.json concern, not resolved here.
+		const cond = graph.rows.find(
+			(r) => r.type === 'condition' && r.id === condId && r.systems.includes(character.system)
+		);
 		const toks = tokensOf(cond);
 		return cond && toks.length ? { source: String(cond.data.name_en), tokens: toks } : undefined;
 	};

@@ -472,6 +472,34 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 		// and the rage condition's own tokens expanded
 		expect(s.abilities.str.save.trace.map((t) => t.source)).toContain('Raging → Rage');
 	});
+
+	it('does NOT expand a condition row from the OTHER edition (A16(a) edition filter)', async () => {
+		// `marked` here is a 5e row (+5 AC); a 5.5e character applying it must find NOTHING — before
+		// the edition filter, both-roots-loaded would wrongly apply the 5e condition to the 5e char.
+		const st = new MemoryStorage();
+		await st.write(
+			'c/classes_srd.csv',
+			[
+				'id,systems,source,name_en,hit_die,saves',
+				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`
+			].join('\n')
+		);
+		await st.write(
+			'c/conditions_srd.csv',
+			[
+				'id,systems,source,name_en,effects,negative',
+				`marked,5e,SRD 5.1,Marked,flat_bonus:ac+5,true` // 5e ONLY
+			].join('\n')
+		);
+		const g = await loadContent(st, ['c']);
+		const c = brute(); // a 5.5e character
+		c.play.effects = [
+			{ iid: 'm', label: 'Hex', effects: ['apply_condition:marked'], positive: false }
+		];
+		const s = deriveSheet(c, g);
+		expect(s.ac.trace.map((t) => t.source)).not.toContain('Hex → Marked'); // the 5e +5 AC never lands
+		expect(s.ac.value).toBe(12); // unarmored: 10 + dex_mod(14→+2), the wrong-edition +5 is ignored
+	});
 });
 
 describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
