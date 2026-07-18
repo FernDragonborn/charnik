@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (33)
+## Duplicate suspects (32)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -55,7 +55,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 **Identical literal array:**
 
 - `ABIL` (src/lib/combat/helpers.ts) = `ABILS` (src/lib/content/detail.ts) = `ABILITY_IDS` (src/lib/rules/core.ts)
-- `PROSE_BASES` (src/lib/content/schemas.ts) = `TRANSLATABLE_BASES` (src/lib/content/translate.ts)
 
 ## Design tokens (`styles/tokens.css`)
 
@@ -472,6 +471,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const isBrowsable` — A browsable content type (has name/text; shows in compendium + search).
 - `const PROSE_BASES` — The localizable prose bases that carry per-locale columns (`name_uk`, `text_de`, `material_fr`, * `higher_level_uk`).
 - `type ProseBase`
+- `const LOC_STATUS` — Tracked localization status of a row's translation into ONE locale — set in the translate view and * stored per-local…
+- `type LocStatus`
+- `const LOC_STATUS_ORDER` — The statuses in display order (control buttons + marker legend) — LOC_STATUS insertion order.
+- `function isLocStatus` — Narrow a raw cell to a known status.
+- `const LOC_STATUS_COL_BASE` — Column base for the per-locale tracked status (`loc_status_uk`, `loc_status_pt-BR`).
 - `type RowData` — The validated, coerced data a loaded row of type `T` carries: the zod-inferred model for `T` PLUS * the re-attached p…
 - `type RowColumn` — A column name of type `T`'s model (used to type grouping/facet keys so `row.data[key]` is * provably safe — no cast).
 - `function parseRow` — Validate one raw CSV row for a given type.
@@ -499,9 +503,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/translate.ts`
 
-- `function translationStatus` — Coverage of a row's translation into `locale`, for the list marker: `done` = both the required * prose (name + text) …
+- `const COVERAGE` — Prose COVERAGE of a row into `locale` — purely "is the prose physically there?", derived from the * cells.
+- `type Coverage`
+- `function translationCoverage`
+- `function locStatus` — * The tracked localization status of `data`'s translation into `locale`, for the translate view's list * marker + sta…
 - `type TranslationDraft` — base → translated text for one locale (only provided bases are written).
-- `function saveTranslation` — * Write `prose` for `locale` into `row`'s CSV file, in place.
+- `function saveTranslation` — Write `prose` for `locale` into `row`'s CSV file, in place (only the provided bases).
+- `function saveLocStatus` — Set the tracked localization `status` for `locale` on `row`, in place (the `loc_status_<locale>` * column).
 
 ### `src/lib/content/watcher.ts`
 
@@ -752,4 +760,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 34 components · 395 exports across 59 modules · 33 duplicate suspects · generated in 122ms._
+_46 tokens · 50 global classes · 34 components · 404 exports across 59 modules · 32 duplicate suspects · generated in 120ms._

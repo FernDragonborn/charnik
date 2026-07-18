@@ -18,6 +18,7 @@ import {
 	CONTENT_TYPES,
 	parseRow,
 	PROSE_BASES,
+	LOC_STATUS_COL_BASE,
 	type ContentType,
 	type RowData,
 	type ProseBase
@@ -45,6 +46,10 @@ interface LoadedRowCommon {
 	/** The file's `#content-license` (CC-BY-4.0 for shipped SRD, the user's choice for homebrew), or
 	 *  undefined for a legacy file with no header. Drives the source-line's license label. */
 	license?: string | undefined;
+	/** The language the row's content was authored IN — its file's `#content-source-lang` (default
+	 *  `en`). The source language is always "reviewed" for localization status: there's nothing to
+	 *  translate it into. Per file, so a homebrew CSV authored in Ukrainian can stamp `source-lang: uk`. */
+	sourceLang: string;
 	root: string;
 	file: string;
 }
@@ -132,6 +137,14 @@ const PROSE_LOCALE_COL = new RegExp(`^(?:${PROSE_BASES.join('|')})_[a-z]{2,3}(?:
  *  the typed `RowData` needs no cast (the key is provably a `${ProseBase}_${string}`). */
 function isProseLocaleColumn(column: string): column is `${ProseBase}_${string}` {
 	return PROSE_LOCALE_COL.test(column);
+}
+
+/** Tracked-status columns (`loc_status_<loc>`) — the strict schema strips them, so the loader re-attaches
+ *  them exactly like the prose columns (isProseLocaleColumn). The guard narrows the key to the
+ *  `${typeof LOC_STATUS_COL_BASE}_${string}` template type so the re-attach writes onto `data` cast-free. */
+const LOC_STATUS_COL = new RegExp(`^${LOC_STATUS_COL_BASE}_[a-z]{2,3}(?:-[A-Za-z0-9]+)*$`);
+function isLocStatusColumn(column: string): column is `${typeof LOC_STATUS_COL_BASE}_${string}` {
+	return LOC_STATUS_COL.test(column);
 }
 
 function pushMap<K, V>(map: Map<K, V[]>, key: K, val: V): void {
@@ -256,6 +269,8 @@ export async function loadContent(
 			// legacy files that still carry them; else the `#content-` header, else a fallback).
 			const fileSource = directives.get('source');
 			const fileLicense = directives.get('license');
+			// the language this file's rows are authored in (default en) — always "reviewed" for l10n status
+			const fileSourceLang = (directives.get('source-lang') ?? 'en').toLowerCase();
 			const fileSystems = directives
 				.get('systems')
 				?.split(',')
@@ -293,16 +308,14 @@ export async function loadContent(
 				// `data` shares every type's `base` columns (id/source/systems/name_en/…), so those read
 				// typed with no narrowing; type-specific reads happen after the row is narrowed by `.type`.
 				const data: AnyRowData = res.data;
-				// re-attach localized prose columns the strict schema stripped (see isProseLocaleColumn) —
-				// the guard narrows the key so this writes onto the typed row without a cast
-				for (const [column, value] of Object.entries(rawRow))
-					if (
-						isProseLocaleColumn(column) &&
-						data[column] === undefined &&
-						value !== '' &&
-						value != null
-					)
-						data[column] = value;
+				// re-attach the localized columns the strict schema stripped — prose (name_uk, …) and the
+				// tracked translation status (loc_status_uk). Each guard narrows the key to its template
+				// type so the write needs no cast; a blank/absent cell is left off (EN-fallback / unset).
+				for (const [column, value] of Object.entries(rawRow)) {
+					if (value === '' || value == null) continue;
+					if (isProseLocaleColumn(column) && data[column] === undefined) data[column] = value;
+					else if (isLocStatusColumn(column) && data[column] === undefined) data[column] = value;
+				}
 				// precedence: per-row column (legacy) → file `#content-` header → fallback
 				const source = data.source || fileSource || 'unknown';
 				const systems = data.systems?.length ? data.systems : (fileSystems ?? []);
@@ -318,6 +331,7 @@ export async function loadContent(
 					effectiveId: `${type}:${source}:${id}`,
 					systems,
 					...(fileLicense ? { license: fileLicense } : {}),
+					sourceLang: fileSourceLang,
 					data,
 					root,
 					file: entry.name

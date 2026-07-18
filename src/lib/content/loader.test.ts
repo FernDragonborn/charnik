@@ -254,3 +254,32 @@ describe('localized prose columns survive the strict schema', () => {
 		expect(g.locales).toEqual(expect.arrayContaining(['de', 'en', 'uk']));
 	});
 });
+
+describe('localization status columns + source language', () => {
+	const HEAD =
+		'id,systems,source,name_en,name_uk,loc_status_uk,level,school,casting_time,range,components,duration,concentration,ritual';
+	const line = (id: string, name_uk: string, status: string) =>
+		`${id},5.5e,SRD 5.2.1,${id},${name_uk},${status},3,evocation,Action,150 feet,V,Instantaneous,false,false`;
+
+	it('re-attaches loc_status_<loc> to row.data without inventing a locale', async () => {
+		const s = new MemoryStorage();
+		await s.write('a/spells_srd.csv', [HEAD, line('fireball', 'Вогняна', 'reviewed')].join('\n'));
+		const g = await loadContent(s, ['a']);
+		const d = g.get('spell:SRD 5.2.1:fireball')!.data;
+		expect(d.loc_status_uk).toBe('reviewed');
+		// a status column carries no prose, so it must NOT register a phantom locale (only name_/text_ do)
+		expect(g.locales).not.toContain('status');
+	});
+
+	it('reads #content-source-lang, defaulting to en', async () => {
+		const s = new MemoryStorage();
+		await s.write('a/spells_srd.csv', [HEAD, line('fireball', '', '')].join('\n'));
+		await s.write(
+			'b/spells_uk.csv',
+			['#content-source-lang: uk', HEAD, line('lightning', 'Блискавка', '')].join('\n')
+		);
+		const g = await loadContent(s, ['a', 'b']);
+		expect(g.get('spell:SRD 5.2.1:fireball')!.sourceLang).toBe('en');
+		expect(g.get('spell:SRD 5.2.1:lightning')!.sourceLang).toBe('uk');
+	});
+});

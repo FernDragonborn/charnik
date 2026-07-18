@@ -2316,7 +2316,26 @@ decomposition + RollButton). Ordering + open decisions below.
   locale: it has SOME `<base>_<loc>` filled but is MISSING a `<base>_<loc>` whose `<base>_en` is
   non-empty. That's the "someone mis-filled the table" signal (started a translation, missed a field);
   a fully-untranslated row is NOT flagged (normal — EN fallback). Keyed off `PROSE_BASES`; surfaced in
-  content-health + (later) the translate list's ~ marker. Low-noise by construction.
+  content-health. Low-noise by construction. (A mis-fill signal — orthogonal to the tracked **LOC-STATUS**
+  below, which is a per-locale workflow state the user sets, not a completeness check.)
+- [x] **LOC-STATUS · Tracked per-locale localization status (translate view)** — DONE 2026-07-19. Each
+  content row carries a tracked localization status PER target language, set + shown in `/translate`:
+  **not_started / started / machine / reviewed** (UA «Не почато» / «Почато» / «Машинний переклад» /
+  «Вичитано»). Stored **in-file** in a `loc_status_<loc>` column via the SAME write-path as prose
+  (`saveLocStatus`, re-stamps `#content-hash`; the loader re-attaches it like the prose columns). The
+  vocabulary is a `LOC_STATUS` const (schemas.ts) — **extensible**: a new member + a marker glyph + a
+  `translate.status.<x>` i18n key auto-appears in the control + list marker (both iterate
+  `LOC_STATUS_ORDER`). `reviewed` and `machine` are set **only explicitly**; an UNSET column DERIVES a
+  default from prose coverage (no prose → not_started, some → started), so legacy already-translated rows
+  read right and pristine rows need no write. The **source language is always `reviewed`** (virtual),
+  read from a per-file `#content-source-lang` directive (default `en`) threaded onto `LoadedRow.sourceLang`
+  — so "en isn't always the source" needs no data write. The old `translationStatus` coverage fn was
+  renamed `translationCoverage` (now the private default-deriver + content-health helper); the list
+  marker + header switched from coverage (○~✓) to the tracked status. Tests: loader (col re-attach,
+  source-lang, no phantom locale) + translate (`locStatus` precedence, `saveLocStatus` write/re-stamp).
+  **Boundary:** single-value column (one status per locale); orthogonal flags (e.g. `outdated` AND
+  `reviewed`) would be a later multi-column change. Chrome copy in the view stays hardcoded-EN (pre-
+  existing; only the status labels went through i18n).
 - [ ] **LINT-1 · Ban type-escape hatches** — tsconfig is already max-strict (`strict` +
   `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`); the hole is lint. Add:
   `@typescript-eslint/no-non-null-assertion`, keep `no-explicit-any` + `ban-ts-comment` (errors),

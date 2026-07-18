@@ -57,6 +57,15 @@
 		"download": "⬇ Download the desktop app",
 		"readonly": "Editing isn't available in the demo. Download the desktop app to save changes."
 	},
+	"translate": {
+		"status": {
+			"label": "Status",
+			"not_started": "Not started",
+			"machine": "Machine translation",
+			"started": "Started",
+			"reviewed": "Reviewed"
+		}
+	},
 	"contentMeta": {
 		"title": "Content metadata check",
 		"subtitle": "Some content files are missing a bit of metadata — nothing's broken, this is a normal step. Fill it in below, or discard this dialog.",

@@ -15,7 +15,8 @@
 	import { isBrowsable, type ContentType } from '$lib/content/schemas';
 	import { buildDetail, entryMeta, editionLabel, type Entry } from '$lib/content/detail';
 	import { groupingsFor, groupRows } from '$lib/content/grouping';
-	import { saveTranslation, translationStatus } from '$lib/content/translate';
+	import { saveTranslation, saveLocStatus, locStatus } from '$lib/content/translate';
+	import { LOC_STATUS, LOC_STATUS_ORDER, type LocStatus } from '$lib/content/schemas';
 	import type { LoadedRow } from '$lib/content/loader';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
@@ -107,9 +108,9 @@
 			}))
 		}))
 	);
-	// coverage of the whole active pool into the target locale (drives the header count)
-	const doneCount = $derived(
-		pool.filter((r) => translationStatus(r.data, targetLocale) === 'done').length
+	// how many of the active pool are REVIEWED into the target locale (drives the header count)
+	const reviewedCount = $derived(
+		pool.filter((r) => locStatus(r.data, r.sourceLang, targetLocale) === LOC_STATUS.reviewed).length
 	);
 
 	// the two rendered models: English source (read-only) + target (editable draft binds to prose)
@@ -208,7 +209,30 @@
 		}
 	}
 
-	const MARK = { none: '○', partial: '~', done: '✓' } as const;
+	// list-marker glyph per tracked status. Extension recipe: a new LOC_STATUS member needs a glyph here
+	// + a `translate.status.<x>` i18n key; colour comes from the `.loc-mark.<status>` class.
+	const LOC_MARK: Record<LocStatus, string> = {
+		[LOC_STATUS.notStarted]: '○',
+		[LOC_STATUS.machine]: '⚙',
+		[LOC_STATUS.started]: '◐',
+		[LOC_STATUS.reviewed]: '✓'
+	};
+
+	// set the tracked status for the selected row + target locale, then reload + re-point `selected` at
+	// the fresh row so the control highlight and the list marker reflect the new stored value.
+	async function setStatus(status: LocStatus) {
+		if (!selected || saving || demo) return;
+		saving = true;
+		try {
+			await saveLocStatus(getUserStorage(), selected, targetLocale, status);
+			await reloadContent();
+			selected = content.graph?.get(selected.effectiveId) ?? selected;
+		} catch (e) {
+			toast(`Could not save: ${e instanceof Error ? e.message : String(e)}`);
+		} finally {
+			saving = false;
+		}
+	}
 </script>
 
 <svelte:head><title>Translate — Charnik</title></svelte:head>
@@ -225,7 +249,7 @@
 			<select class="type-sel" bind:value={selectedType}>
 				{#each types as t (t)}<option value={t}>{t}</option>{/each}
 			</select>
-			<span class="prog"><b>{doneCount}</b> / {pool.length} translated</span>
+			<span class="prog"><b>{reviewedCount}</b> / {pool.length} reviewed</span>
 		</div>
 
 		<div class="panes">
@@ -237,8 +261,8 @@
 				onselect={(e) => (selected = e.row)}
 			>
 				{#snippet leading(e)}
-					{@const st = translationStatus(e.row.data, targetLocale)}
-					<span class="mark {st}" title={st}>{MARK[st]}</span>
+					{@const st = locStatus(e.row.data, e.row.sourceLang, targetLocale)}
+					<span class="loc-mark {st}" title={$_(`translate.status.${st}`)}>{LOC_MARK[st]}</span>
 				{/snippet}
 			</EntryList>
 
@@ -261,6 +285,23 @@
 						different language above to translate.
 					</p>
 				{:else if selected}
+					{@const st = locStatus(selected.data, selected.sourceLang, targetLocale)}
+					<div class="status-row">
+						<span class="status-label">{$_('translate.status.label')}</span>
+						<div class="status-seg" role="group" aria-label={$_('translate.status.label')}>
+							{#each LOC_STATUS_ORDER as s (s)}
+								<button
+									class="status-opt {s}"
+									class:cur={st === s}
+									aria-pressed={st === s}
+									disabled={saving || demo}
+									onclick={() => setStatus(s)}
+								>
+									{$_(`translate.status.${s}`)}
+								</button>
+							{/each}
+						</div>
+					</div>
 					<WikiDetail detail={targetDetail} editable={!demo} {draft} />
 					<div class="save-row">
 						{#if demo}
@@ -357,19 +398,77 @@
 	.panelabel.target-label {
 		color: var(--color-accent-bright);
 	}
-	.mark {
+	.loc-mark {
 		width: 15px;
 		text-align: center;
 		font-size: 12px;
 	}
-	.mark.none {
+	.loc-mark.not_started {
 		color: var(--color-text-muted);
 	}
-	.mark.partial {
+	.loc-mark.machine {
+		color: var(--color-accent-bright);
+	}
+	.loc-mark.started {
 		color: var(--color-resource);
 	}
-	.mark.done {
+	.loc-mark.reviewed {
 		color: var(--color-good);
+	}
+	.status-row {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		flex-wrap: wrap;
+		margin-bottom: 14px;
+	}
+	.status-label {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+	}
+	.status-seg {
+		display: inline-flex;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	.status-opt {
+		font-family: var(--font-body);
+		font-size: 12px;
+		background: var(--color-surface-2);
+		color: var(--color-text-muted);
+		border: 0;
+		border-left: 1px solid var(--color-border);
+		padding: 6px 12px;
+		cursor: pointer;
+	}
+	.status-opt:first-child {
+		border-left: 0;
+	}
+	.status-opt:hover:not(:disabled) {
+		color: var(--color-text);
+		background: var(--color-surface);
+	}
+	.status-opt.cur {
+		color: var(--color-text);
+		font-weight: 600;
+		background: var(--color-surface);
+	}
+	.status-opt.cur.machine {
+		color: var(--color-accent-bright);
+	}
+	.status-opt.cur.started {
+		color: var(--color-resource);
+	}
+	.status-opt.cur.reviewed {
+		color: var(--color-good);
+	}
+	.status-opt:disabled {
+		opacity: 0.6;
+		cursor: default;
 	}
 	.save-row {
 		margin-top: 14px;

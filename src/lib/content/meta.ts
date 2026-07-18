@@ -19,6 +19,7 @@ export type MetaKey =
 	| 'author'
 	| 'author-url'
 	| 'systems'
+	| 'source-lang'
 	| 'schema'
 	| 'updated-at'
 	| 'hash';
