@@ -10,7 +10,8 @@
  * resolver returns `undefined` for a name it doesn't carry rather than guessing.
  */
 import { ABILITY_IDS, type Ability, type ArmorType, type Size } from '../rules/core';
-import { splitDottedName, type ExprContext } from './expr';
+import { splitDottedName } from './expression-parser';
+import { type ExprContext } from './expression-evaluator';
 
 /** Build-lifetime numbers (always available; the EXPR-2 subset of the ctx). */
 export interface BuildVars {

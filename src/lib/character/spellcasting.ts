@@ -14,7 +14,7 @@ import { getSpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
 import type { Computed } from '../rules/pipeline';
-import { applyEffects, type EffectFacts } from '../effects/index';
+import { applyEffects, type EffectFacts } from '../effects/apply';
 import {
 	effectiveCasterLevel,
 	shareFromCaster,

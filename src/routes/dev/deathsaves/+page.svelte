@@ -23,8 +23,8 @@
 		The <b>Death save</b> button rolls a real d20 (picking up <code>save.death</code>,
 		<code>saves</code>
 		and <code>d20_tests</code> effects), applies the RAW outcomes (nat 20 → 1 HP · nat 1 → two
-		failures · three successes → stable), and logs it. The Success/Failure pips are also clickable to
-		set by hand. Use <b>Heal ＋</b> to bring the character back up and watch the track disappear.
+		failures · three successes → stable), and logs it. The Success/Failure pips are also clickable
+		to set by hand. Use <b>Heal ＋</b> to bring the character back up and watch the track disappear.
 	</p>
 
 	{#if c && s}

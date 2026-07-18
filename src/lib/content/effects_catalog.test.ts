@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import Papa from 'papaparse';
 import { parseRow } from './schemas';
 import { parseContentDirectives } from './meta';
-import { parseEffect } from '../effects/index';
+import { parseToken } from '../effects/token-parser';
 
 /*
  * Data gate for the shipped effects catalog (EFX-3): every row must validate against the effect
@@ -33,7 +33,7 @@ describe.each(['content/srd-2014/effects_srd.csv', 'content/srd-2024/effects_srd
 				const res = parseRow('effect', raw);
 				if (!res.success) continue; // the other test reports this
 				for (const tok of res.data.effects) {
-					expect(parseEffect(tok).kind, `${raw.id}: ${tok}`).not.toBe('unknown');
+					expect(parseToken(tok).kind, `${raw.id}: ${tok}`).not.toBe('unknown');
 				}
 			}
 		});

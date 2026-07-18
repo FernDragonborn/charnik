@@ -4,7 +4,7 @@
  * the loader's issues. The derive core is pure and can't publish to a store itself, so the view
  * that derives the OPEN character (the combat page) publishes here.
  */
-import type { EffectIssue } from '$lib/effects/index';
+import type { EffectIssue } from '$lib/effects/token-parser';
 
 class DeriveHealth {
 	/** Display name of the character the issues belong to ('' = none published). */

@@ -12,7 +12,7 @@ import {
 	isEffectExpired,
 	type EffectInstance
 } from './helpers';
-import { collectFacts } from '$lib/effects/index';
+import { collectFacts } from '$lib/effects/apply';
 
 // rollEffectsFor reads the sheet's typed-facts object (D7), built from the RESOLVED effect list
 // (never raw play.effects — B21); collectFacts is that one conversion.

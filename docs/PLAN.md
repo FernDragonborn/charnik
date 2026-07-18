@@ -141,8 +141,8 @@ trust what happened.
   `initiative`, `spellSaveDC`, `spellAttackBonus`, `unarmoredAC`/`armoredAC` (dex caps),
   `maxHpForClass` (SRD fixed), `carryingCapacity`. 5e/5.5e share the formulas; only the
   encumbrance variant branches on `system`. **No import of effects.**
-- `effects/index.ts`: the **isolated engine** — `parseEffect` (bounded vocab, unknown →
-  inert text), `applyEffects(targetKey, base, active)` (the single seam: folds matching
+- `effects/token-parser.ts` + `effects/apply.ts`: the **isolated engine** — `parseToken`
+  (bounded vocab, unknown → inert text), `applyEffects(targetKey, base, active)` (the single seam: folds matching
   numeric tokens onto a core `Computed`, non-numeric → notes; empty effects = identical
   value/trace = the on/off invariant), `collectFlags` (advantage/condition/resource/
   resist/proficiency facts). Imports core *types* only, never the reverse.
@@ -1458,7 +1458,7 @@ convenience under 5e.
    resolved"). FIXED the doc contradiction; **the authoritative stage list (EXPR-5, 2026-07-17)** —
    `deriveSheet` runs exactly these, in order:
    1. **Seed** base ability contributions + hp-max-base fn + class levels + species/armor context.
-   2. **Resolve** (`resolveActiveEffects`, effects/dag.ts) — gather (with A11 dedupe) → order value
+   2. **Resolve** (`resolveActiveEffects`, effects/dependency-graph.ts) — gather (with A11 dedupe) → order value
       nodes (abilities, hp_max, conditions, resources) by read/write deps (Tarjan SCC; cycles →
       inert + issue) → evaluate guards in that order → expand `apply_condition` once per id → emit
       the guard-stripped `resolvedEffects` + the effective ability `Computed`s + hp-max base.

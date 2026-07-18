@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (32)
+## Duplicate suspects (33)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -21,14 +21,14 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `norm` ×4 — src/lib/storage/browser.ts · src/lib/storage/memory.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `load` ×3 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts · src/routes/+layout.ts
-- `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expr.ts
+- `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `signed` ×3 — src/lib/combat/helpers.ts · src/lib/content/detail.ts · src/routes/build/+page.svelte
 - `SYSTEMS` ×3 — src/lib/character/schema.ts · src/lib/components/settings/GeneralSettings.svelte · src/lib/content/schemas.ts
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/state.svelte.ts
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
-- `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/index.ts
+- `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
 - `errText` ×2 — src/lib/components/settings/StorageSettings.svelte · src/lib/storage/tauri.ts
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
 - `label` ×2 — src/lib/content/grouping.ts · src/lib/content/homebrew.ts
@@ -43,13 +43,14 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `STORAGE_KEY` ×2 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `titleCase` ×2 — src/lib/combat/helpers.ts · src/routes/build/+page.svelte
 - `toggle` ×2 — src/lib/components/ClassPicker.svelte · src/routes/compendium/[...entry]/+page.svelte
+- `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
 **Identical one-liner body, different names:**
 
 - `signed` (src/lib/content/detail.ts) = `formatModifier` (src/lib/rules/dice.ts) = `signed` (src/routes/build/+page.svelte)
 - `typeName` (src/lib/components/CommandPalette.svelte) = `cap` (src/lib/content/grouping.ts)
 - `cap` (src/lib/content/detail.ts) = `label` (src/lib/content/homebrew.ts)
-- `titleCaseId` (src/lib/effects/index.ts) = `titleCase` (src/routes/build/+page.svelte)
+- `titleCaseId` (src/lib/effects/apply.ts) = `titleCase` (src/routes/build/+page.svelte)
 
 **Identical literal array:**
 
@@ -244,7 +245,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (47 modules)
+## Library functions & types (49 modules)
 
 ### `src/lib/build/derive.ts`
 
@@ -526,57 +527,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function findStaleDrafts` — Drafts saved under a DIFFERENT content-schema version — ephemeral WIP that can't be migrated, so it * will be discarded.
 - `function discardDrafts` — Delete the given stale drafts (called after the user acknowledges the discard warning).
 
-### `src/lib/effects/context.ts`
+### `src/lib/effects/apply.ts`
 
-- `interface BuildVars` — Build-lifetime numbers (always available; the EXPR-2 subset of the ctx).
-- `interface PlayVars` — Play-lifetime state (the EXPR-3 half; optional so EXPR-2 can omit it entirely).
-- `function makeExprContext` — * Build the `ExprContext` the evaluator reads.
-- `function withSpellcastingMod` — The same ctx with `spellcasting_mod` re-pointed at a specific class's casting mod — SPEC4: a * token carried by a cla…
-
-### `src/lib/effects/dag.ts`
-
-- `const RAGE_CONDITION_ID` — The condition id the `is_raging` L2 flag reads.
-- `interface ResolveState` — The mutable dependency-resolve state.
-- `interface ResolveArgs`
-- `interface DependencyResolved`
-- `const ABILITY_SCORE_CLAMP` — Effective scores clamp: 30 is the hard cap both editions share; 0 floors a drained score.
-- `function resolveActiveEffects`
-
-### `src/lib/effects/expr.ts`
-
-- `const DOTTED_NUMERIC` — Dotted variable families: `<prefix>.<id>`.
-- `const DOTTED_BOOLEAN`
-- `function splitDottedName` — Split a dotted variable name into its family prefix + opaque id, or null when undotted.
-- `interface DiceValue` — A dice quantity: a pool ({sides: count}) plus a flat modifier, mirroring rules/dice.ts so it * rides the existing rol…
-- `type ExprValue` — The result of evaluating an expression: a plain number OR a dice quantity (PLAN: "int OR dice * formula").
-- `interface Ast`
-- `interface ExprContext` — How the evaluator resolves variables.
-- `type ParseResult`
-- `type EvalResult`
-- `function parseExpression` — Parse an expression string into an AST (memoized).
-- `function evaluate` — Evaluate a parsed expression against a context.
-- `function evalExpression` — Parse + evaluate in one step (convenience for callers that don't cache the AST).
-- `function lintExpression` — Authoring-slip warnings the spec promises content-health (PLAN EXPR): a mixed-type `if()` * (dice in one branch, numb…
-- `function collectExprVariables` — Variable names an expression READS (feeds the dependency-order DAG: a token whose expression * reads `str_mod` must r…
-- `function diceToFormula` — Serialize a dice value to a formula string the roller (rules/dice.ts) accepts: "2d6+1d4+3".
-
-### `src/lib/effects/index.ts`
-
-- `const EFFECT_KIND` — The bounded effect vocabulary, as named constants — compare against these, never bare strings.
-- `type EffectKind`
-- `const EFFECT_KINDS` — The kinds as a list (for schema validation / the `includes` guard).
-- `type Recharge`
-- `const MAX_RESOURCE_MAX`
-- `interface ParsedEffect`
-- `function parseEffect` — * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security * boundary: data, never co…
-- `interface ResolvedValue` — A resolved value for a `flat_bonus`/`set_override`/`grant_resource` token: a folded numeric * `amount`, a `diceFormul…
-- `function resolveEffectValue` — * Resolve a token's value slot to a concrete quantity.
-- `interface ActiveEffect` — A runtime effect source contributing tokens at a pipeline layer.
-- `type EffectCtx` — A ctx, or a per-effect ctx provider (used to scope `spellcasting_mod` to the carrying class).
-- `const ctxOf`
-- `interface GuardedToken` — A token split into its optional condition GUARD and the effect part.
-- `function splitGuard`
-- `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
 - `function matchesTarget` — Does an effect target apply to this stat key?
 - `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
 - `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
@@ -588,6 +540,66 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function applyEffects` — * The seam: compose effects onto a core-computed stat for `targetKey`.
 - `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
 - `function lintEffectTokens` — Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression * slot — guard, value…
+
+### `src/lib/effects/context.ts`
+
+- `interface BuildVars` — Build-lifetime numbers (always available; the EXPR-2 subset of the ctx).
+- `interface PlayVars` — Play-lifetime state (the EXPR-3 half; optional so EXPR-2 can omit it entirely).
+- `function makeExprContext` — * Build the `ExprContext` the evaluator reads.
+- `function withSpellcastingMod` — The same ctx with `spellcasting_mod` re-pointed at a specific class's casting mod — SPEC4: a * token carried by a cla…
+
+### `src/lib/effects/dependency-graph.ts`
+
+- `const RAGE_CONDITION_ID` — The condition id the `is_raging` L2 flag reads.
+- `interface ResolveState` — The mutable dependency-resolve state.
+- `interface ResolveArgs`
+- `interface DependencyResolved`
+- `const ABILITY_SCORE_CLAMP` — Effective scores clamp: 30 is the hard cap both editions share; 0 floors a drained score.
+- `function resolveActiveEffects`
+
+### `src/lib/effects/expression-evaluator.ts`
+
+- `interface DiceValue` — A dice quantity: a pool ({sides: count}) plus a flat modifier, mirroring rules/dice.ts so it * rides the existing rol…
+- `type ExprValue` — The result of evaluating an expression: a plain number OR a dice quantity (PLAN: "int OR dice * formula").
+- `interface ExprContext` — How the evaluator resolves variables.
+- `type EvalResult`
+- `function evaluate` — Evaluate a parsed expression against a context.
+- `function evalExpression` — Parse + evaluate in one step (convenience for callers that don't cache the AST).
+- `function lintExpression` — Authoring-slip warnings the spec promises content-health (PLAN EXPR): a mixed-type `if()` * (dice in one branch, numb…
+- `function collectExprVariables` — Variable names an expression READS (feeds the dependency-order DAG: a token whose expression * reads `str_mod` must r…
+- `function diceToFormula` — Serialize a dice value to a formula string the roller (rules/dice.ts) accepts: "2d6+1d4+3".
+
+### `src/lib/effects/expression-parser.ts`
+
+- `const ENUM_VARS` — Enum-typed variables → their allowed literal values.
+- `const ORDERED_ENUMS` — Enums whose members have a meaningful order (so `<`/`>` compare by index).
+- `const DOTTED_NUMERIC` — Dotted variable families: `<prefix>.<id>`.
+- `const DOTTED_BOOLEAN`
+- `function splitDottedName` — Split a dotted variable name into its family prefix + opaque id, or null when undotted.
+- `type BinOp`
+- `type Node`
+- `interface Ast`
+- `type ParseResult`
+- `function parseExpression` — Parse an expression string into an AST (memoized).
+
+### `src/lib/effects/token-parser.ts`
+
+- `const EFFECT_KIND` — The bounded effect vocabulary, as named constants — compare against these, never bare strings.
+- `type EffectKind`
+- `const EFFECT_KINDS` — The kinds as a list (for schema validation / the `includes` guard).
+- `type Recharge`
+- `type Defense`
+- `const MAX_RESOURCE_MAX`
+- `interface ParsedEffect`
+- `function parseToken` — * Parse one bounded-vocab token — the SINGLE interpreter of the effect grammar (a security * boundary: data, never co…
+- `interface ResolvedValue` — A resolved value for a `flat_bonus`/`set_override`/`grant_resource` token: a folded numeric * `amount`, a `diceFormul…
+- `function resolveEffectValue` — * Resolve a token's value slot to a concrete quantity.
+- `interface ActiveEffect` — A runtime effect source contributing tokens at a pipeline layer.
+- `type EffectCtx` — A ctx, or a per-effect ctx provider (used to scope `spellcasting_mod` to the carrying class).
+- `const ctxOf`
+- `interface GuardedToken` — A token split into its optional condition GUARD and the effect part.
+- `function splitGuard`
+- `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
 
 ### `src/lib/i18n/index.ts`
 
@@ -740,4 +752,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 34 components · 390 exports across 57 modules · 32 duplicate suspects · generated in 111ms._
+_46 tokens · 50 global classes · 34 components · 395 exports across 59 modules · 33 duplicate suspects · generated in 115ms._

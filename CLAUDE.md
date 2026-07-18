@@ -114,6 +114,19 @@ These span many files and are easy to violate; preserve them.
   whether effects are on, off, or deleted — so it can be ripped out without breaking core
   or UI. **Core tests must not import the effects module.**
 
+  **Module layout (per expressiveness layer):** L1 = the bounded token vocabulary —
+  `token-parser.ts` (`parseToken`: string→`ParsedEffect`) + `apply.ts` (`collectFacts`,
+  `applyEffects`, the fold seam). L2 = value expressions — `expression-parser.ts`
+  (formula→AST) + `expression-evaluator.ts` (AST→value). Shared: `dependency-graph.ts`
+  (the ONE resolve stage, in dependency order) + `context.ts` (the ctx a formula reads).
+  L3 (future) = plugins — `plugin-registry.ts` / `plugin-sandbox.ts`.
+
+  **Naming rule (token vs effect):** a raw effect **string** is a "token" until
+  `parseToken` turns it into an object, after which it is an "effect" (`ParsedEffect`).
+  So string-form identifiers say **token** (`token`, `tokens: string[]`, `parseToken`,
+  `splitGuard(raw)`); object-form identifiers say **effect** (`ParsedEffect`,
+  `applyEffects`, `EFFECT_KIND`, `resolveEffectValue`). Keep new code on this seam.
+
 - **Computed values are explainable.** Core returns **value + provenance trace**
   (each `{source, op, amount}` contribution + rule notes/blocks), never bare numbers, so
   the UI can explain any stat on **hover/tap** — including rule-based blocks (e.g. why

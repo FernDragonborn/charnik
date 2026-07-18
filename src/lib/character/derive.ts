@@ -7,7 +7,7 @@
  * effects through `applyEffects`. Ability scores flow through the SAME fold/clamp pipeline
  * as every other stat (A10): base + boosts + score-targeting effects fold into a traced,
  * clamped `Computed`, resolved in DEPENDENCY order by the effects DAG (a guarded ability
- * bonus, a rage that raises max HP feeding `is_bloodied` — see effects/dag.ts). Missing
+ * bonus, a rage that raises max HP feeding `is_bloodied` — see effects/dependency-graph.ts). Missing
  * referenced content is skipped gracefully (loader already flagged it) — the sheet computes
  * with what it can.
  *
@@ -29,22 +29,20 @@ import {
 	carryingCapacity,
 	type Ability
 } from '../rules/core';
+import { type ActiveEffect, type EffectCtx, type EffectIssue } from '../effects/token-parser';
 import {
 	applyEffects,
 	collectFacts,
 	matchesTarget,
-	type ActiveEffect,
-	type EffectCtx,
 	type EffectFacts,
-	type EffectIssue,
 	type ResourceDef
-} from '../effects/index';
+} from '../effects/apply';
 import {
 	resolveActiveEffects,
 	ABILITY_SCORE_CLAMP,
 	RAGE_CONDITION_ID,
 	type ResolveState
-} from '../effects/dag';
+} from '../effects/dependency-graph';
 import { deriveSpellcasting, castingAbilityByClass, type Spellcasting } from './spellcasting';
 import {
 	makeExprContext,
@@ -52,7 +50,7 @@ import {
 	type BuildVars,
 	type PlayVars
 } from '../effects/context';
-import type { ExprContext } from '../effects/expr';
+import type { ExprContext } from '../effects/expression-evaluator';
 import {
 	computed,
 	type Computed,
@@ -223,7 +221,7 @@ function gatherEffects(
 			active.push({ source: eff.label, layer: 'condition', tokens: eff.effects });
 	}
 	// NOTE: guard evaluation + `apply_condition` expansion happen in the ONE resolve stage
-	// (`resolveActiveEffects`, effects/dag.ts) — in DEPENDENCY order, so guards gate a token BEFORE
+	// (`resolveActiveEffects`, effects/dependency-graph.ts) — in DEPENDENCY order, so guards gate a token BEFORE
 	// its condition is expanded (SPEC7) and every consumer reads the same resolved list.
 	return active;
 }
@@ -361,7 +359,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		};
 	};
 
-	// The ONE resolve stage (effects/dag.ts): dependency-ordered guards, A10 ability pipeline,
+	// The ONE resolve stage (effects/dependency-graph.ts): dependency-ordered guards, A10 ability pipeline,
 	// condition expansion — every consumer below reads its output.
 	let effCtx: EffectCtx | undefined;
 	let resolvedEffects: ActiveEffect[] = [];

@@ -7,7 +7,7 @@
 	// tokens, and the OPEN character's derive-time issues published by the combat page.
 	import { content } from '$lib/content/store.svelte';
 	import { deriveHealth } from '$lib/character/health.svelte';
-	import { lintEffectTokens } from '$lib/effects/index';
+	import { lintEffectTokens } from '$lib/effects/apply';
 	import { tokensOf } from '$lib/content/loader';
 
 	const graph = $derived(content.graph);

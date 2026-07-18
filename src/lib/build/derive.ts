@@ -7,7 +7,7 @@ import type { Ability } from '../rules/core';
 import { ABILITIES } from '../character/schema';
 import type { ContentGraph, LoadedRow } from '../content/loader';
 import type { CharacterSheet } from '../character/derive';
-import { parseEffect, splitGuard, EFFECT_KIND } from '../effects/index';
+import { parseToken, splitGuard, EFFECT_KIND } from '../effects/token-parser';
 import type { StatMethod } from './rules';
 
 /** Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null. */
@@ -26,7 +26,7 @@ export function speciesFixedAbilities(rows: (LoadedRow | undefined)[]): Set<Abil
 		for (const t of eff) {
 			// strip an L2 guard first — a conditionally-granted ASI still OCCUPIES the ability for
 			// the free-choice exclusion (a raw guarded token would parse as `unknown` and slip by)
-			const p = parseEffect(splitGuard(t).token);
+			const p = parseToken(splitGuard(t).token);
 			if (
 				p.kind === EFFECT_KIND.flatBonus &&
 				p.target &&

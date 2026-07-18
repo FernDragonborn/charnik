@@ -16,13 +16,8 @@ import {
 	type Rolled
 } from '$lib/rules/dice';
 import { ordinal } from '$lib/util/format';
-import {
-	parseEffect,
-	matchesTarget,
-	EFFECT_KIND,
-	type EffectFacts,
-	type Recharge
-} from '$lib/effects/index';
+import { parseToken, EFFECT_KIND, type Recharge } from '$lib/effects/token-parser';
+import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
 import { cantripDieMultiplier } from '$lib/rules/spellcasting';
 
 /** A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack —
@@ -160,7 +155,7 @@ function targetLabel(t: string): string {
  *  advantage → "adv · <target>"; grant_proficiency → "prof · <target>"; apply_condition → the name.
  *  grant_resource is NOT tagged here — it gets its own Resources section (see groupEffects). */
 export function effectTag(token: string): string {
-	const p = parseEffect(token);
+	const p = parseToken(token);
 	if (p.kind === EFFECT_KIND.flatBonus && p.target) {
 		const delta =
 			p.amount !== undefined
@@ -195,7 +190,7 @@ export interface ResourceView {
  *  section membership is decided by this (grant_resource ⇒ Resources, not Buffs/Debuffs). */
 export function parseResourceEffect(eff: EffectInstance): ResourceView | null {
 	for (const tok of eff.effects) {
-		const p = parseEffect(tok);
+		const p = parseToken(tok);
 		// runtime effects carry a LITERAL max (user-entered via the "+" form); an expression max
 		// (`class_level.monk`) needs a derive ctx to resolve and is handled there, not in this panel.
 		if (p.kind === EFFECT_KIND.grantResource && p.resource && p.resource.max !== undefined)

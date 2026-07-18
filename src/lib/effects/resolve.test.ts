@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { makeExprContext, type BuildVars, type PlayVars } from './context';
-import { splitGuard, applyEffects, type ActiveEffect, type EffectCtx } from './index';
-import { resolveActiveEffects, type ResolveState } from './dag';
+import { splitGuard, type ActiveEffect, type EffectCtx } from './token-parser';
+import { applyEffects } from './apply';
+import { resolveActiveEffects, type ResolveState } from './dependency-graph';
 import { computed, type Contribution } from '../rules/pipeline';
-import type { ExprContext } from './expr';
+import type { ExprContext } from './expression-evaluator';
 import { ABILITY_IDS, type Ability } from '../rules/core';
 
 const build: BuildVars = {

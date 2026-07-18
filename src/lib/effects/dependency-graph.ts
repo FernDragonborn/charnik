@@ -17,18 +17,19 @@
  */
 import { ABILITY_IDS, abilityModifier, type Ability } from '../rules/core';
 import { computed, type Computed, type Contribution } from '../rules/pipeline';
-import { collectExprVariables, evalExpression, splitDottedName, type ExprContext } from './expr';
+import { splitDottedName } from './expression-parser';
+import { collectExprVariables, evalExpression, type ExprContext } from './expression-evaluator';
 import {
 	EFFECT_KIND,
 	MAX_RESOURCE_MAX,
-	parseEffect,
+	parseToken,
 	resolveEffectValue,
 	splitGuard,
 	type ActiveEffect,
 	type EffectCtx,
 	type EffectIssue,
 	type ParsedEffect
-} from './index';
+} from './token-parser';
 
 /** The condition id the `is_raging` L2 flag reads. A named seam, not scattered string compares —
  *  goes away when conditions-as-data lands a var→condition mapping (PLAN EXPR, AUDIT B2). */
@@ -232,7 +233,7 @@ export function resolveActiveEffects(args: ResolveArgs): DependencyResolved {
 	const expansions = new Map<string, { label: string; children: Inst[]; appliers: Inst[] }>();
 	const makeInst = (eff: ActiveEffect, raw: string, condId?: string, condLabel?: string): Inst => {
 		const g = splitGuard(raw);
-		const parsed = parseEffect(g.token);
+		const parsed = parseToken(g.token);
 		return {
 			eff,
 			raw,

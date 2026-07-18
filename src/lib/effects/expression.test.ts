@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import * as fc from 'fast-check';
+import { parseExpression } from './expression-parser';
 import {
-	parseExpression,
 	evaluate,
 	evalExpression,
 	diceToFormula,
@@ -9,7 +9,7 @@ import {
 	type ExprContext,
 	type ExprValue,
 	type DiceValue
-} from './expr';
+} from './expression-evaluator';
 
 /** A test context backed by plain maps. Absent numeric var → undefined (evaluator treats as 0). */
 function ctx(

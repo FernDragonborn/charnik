@@ -1,14 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { makeExprContext, withSpellcastingMod, type BuildVars } from './context';
-import {
-	parseEffect,
-	resolveEffectValue,
-	applyEffects,
-	collectFacts,
-	matchesTarget,
-	EFFECT_KIND,
-	type ActiveEffect
-} from './index';
+import { parseToken, resolveEffectValue, EFFECT_KIND, type ActiveEffect } from './token-parser';
+import { applyEffects, collectFacts, matchesTarget } from './apply';
 import { computed } from '../rules/pipeline';
 
 const build: BuildVars = {
@@ -61,43 +54,43 @@ describe('withSpellcastingMod · per-class scoping (SPEC4)', () => {
 
 describe('resolveEffectValue · literal vs expression', () => {
 	it('passes a literal amount/dice straight through', () => {
-		expect(resolveEffectValue(parseEffect('flat_bonus:ac+2'), ctx)).toEqual({ amount: 2 });
-		expect(resolveEffectValue(parseEffect('flat_bonus:save.dex-1'), ctx)).toEqual({ amount: -1 });
-		expect(resolveEffectValue(parseEffect('flat_bonus:damage+1d6'), ctx)).toEqual({
+		expect(resolveEffectValue(parseToken('flat_bonus:ac+2'), ctx)).toEqual({ amount: 2 });
+		expect(resolveEffectValue(parseToken('flat_bonus:save.dex-1'), ctx)).toEqual({ amount: -1 });
+		expect(resolveEffectValue(parseToken('flat_bonus:damage+1d6'), ctx)).toEqual({
 			diceFormula: '1d6'
 		});
 	});
 
 	it('evaluates an expression value, flooring the numeric result (5e round-down)', () => {
-		expect(resolveEffectValue(parseEffect('flat_bonus:ac+ceil(level/2)'), ctx)).toEqual({
+		expect(resolveEffectValue(parseToken('flat_bonus:ac+ceil(level/2)'), ctx)).toEqual({
 			amount: 4
 		});
-		expect(resolveEffectValue(parseEffect('flat_bonus:saves+max(1,cha_mod)'), ctx)).toEqual({
+		expect(resolveEffectValue(parseToken('flat_bonus:saves+max(1,cha_mod)'), ctx)).toEqual({
 			amount: 1
 		});
 		// division floors at the final stat value: 7/2 = 3.5 → 3
-		expect(resolveEffectValue(parseEffect('flat_bonus:ac+level/2'), ctx)).toEqual({ amount: 3 });
+		expect(resolveEffectValue(parseToken('flat_bonus:ac+level/2'), ctx)).toEqual({ amount: 3 });
 	});
 
 	it('evaluates a dice-count expression to a roller formula (Sneak Attack)', () => {
 		// class_level.rogue = 2 → ceil(2/2)=1 → 1d6
 		expect(
-			resolveEffectValue(parseEffect('flat_bonus:damage+ceil(class_level.rogue/2)d6'), ctx)
+			resolveEffectValue(parseToken('flat_bonus:damage+ceil(class_level.rogue/2)d6'), ctx)
 		).toEqual({
 			diceFormula: '1d6'
 		});
 	});
 
 	it('degrades a malformed expression to an error (→ inert note)', () => {
-		const r = resolveEffectValue(parseEffect('flat_bonus:ac+bogus_var'), ctx);
+		const r = resolveEffectValue(parseToken('flat_bonus:ac+bogus_var'), ctx);
 		expect(r.error).toBeTruthy();
 		// and with no ctx an expression cannot resolve
-		expect(resolveEffectValue(parseEffect('flat_bonus:ac+level'), undefined).error).toBeTruthy();
+		expect(resolveEffectValue(parseToken('flat_bonus:ac+level'), undefined).error).toBeTruthy();
 	});
 
 	it('handles a negated expression value', () => {
 		// exhaustion is a play var → 0 here → -2*0 = 0
-		expect(resolveEffectValue(parseEffect('flat_bonus:speed-2*exhaustion'), ctx)).toEqual({
+		expect(resolveEffectValue(parseToken('flat_bonus:speed-2*exhaustion'), ctx)).toEqual({
 			amount: 0
 		});
 	});
@@ -184,17 +177,17 @@ describe('L1 · d20_tests group target', () => {
 
 describe('L1 · roll-manipulation vocab (reroll / min_die)', () => {
 	it('parses reroll and min_die into target + value', () => {
-		expect(parseEffect('reroll:damage:2')).toMatchObject({
+		expect(parseToken('reroll:damage:2')).toMatchObject({
 			kind: EFFECT_KIND.reroll,
 			target: 'damage',
 			amount: 2
 		});
-		expect(parseEffect('min_die:skill.stealth:10')).toMatchObject({
+		expect(parseToken('min_die:skill.stealth:10')).toMatchObject({
 			kind: EFFECT_KIND.minDie,
 			target: 'skill.stealth',
 			amount: 10
 		});
-		expect(parseEffect('reroll:damage').kind).toBe('unknown'); // malformed → inert, not dropped
+		expect(parseToken('reroll:damage').kind).toBe('unknown'); // malformed → inert, not dropped
 	});
 
 	it('surfaces them as structured roll-mod facts (recognized, not inert, not folded)', () => {

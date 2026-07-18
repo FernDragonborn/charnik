@@ -82,7 +82,7 @@ const systemsField = z.preprocess(
 /** A `;`-separated list of effect tokens. The loader NEVER rejects a token (B12): an unknown or
  *  not-yet-understood token (an L2 guard that starts with a condition not a kind, a `plugin:` token,
  *  a future `reroll:`/`min_die:` kind) is kept VERBATIM and degrades to an inert text note when the
- *  engine interprets it (`parseEffect` → `unknown`), never a killed row — so vocabulary growth is
+ *  engine interprets it (`parseToken` → `unknown`), never a killed row — so vocabulary growth is
  *  additive, not a breaking change for older apps. Classifying/flagging an unknown token is the
  *  effect engine's job (and a downstream content-health pass, which may import `$lib/effects`), NOT
  *  the schema's — the schema deliberately stays independent of the removable engine. */

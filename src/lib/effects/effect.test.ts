@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseEffect, applyEffects, collectFacts, EFFECT_KINDS, type ActiveEffect } from './index';
+import { parseToken, EFFECT_KINDS, type ActiveEffect } from './token-parser';
+import { applyEffects, collectFacts } from './apply';
 import { EFFECT_KINDS as SCHEMA_EFFECT_KINDS } from '../content/schemas';
 import { unarmoredAC, savingThrow } from '../rules/core';
 
@@ -10,87 +11,87 @@ describe('effect vocabulary', () => {
 	});
 });
 
-describe('parseEffect (bounded vocabulary)', () => {
+describe('parseToken (bounded vocabulary)', () => {
 	it('parses numeric flat bonuses', () => {
-		expect(parseEffect('flat_bonus:ac+1')).toMatchObject({
+		expect(parseToken('flat_bonus:ac+1')).toMatchObject({
 			kind: 'flat_bonus',
 			target: 'ac',
 			amount: 1
 		});
-		expect(parseEffect('flat_bonus:con-2')).toMatchObject({
+		expect(parseToken('flat_bonus:con-2')).toMatchObject({
 			kind: 'flat_bonus',
 			target: 'con',
 			amount: -2
 		});
 	});
 	it('keeps dice bonuses as dice (roll modifier, not a flat number)', () => {
-		expect(parseEffect('flat_bonus:saves+1d4')).toMatchObject({
+		expect(parseToken('flat_bonus:saves+1d4')).toMatchObject({
 			kind: 'flat_bonus',
 			target: 'saves',
 			dice: '1d4'
 		});
 	});
 	it('parses the non-numeric kinds', () => {
-		expect(parseEffect('resist_immune:poison')).toMatchObject({
+		expect(parseToken('resist_immune:poison')).toMatchObject({
 			kind: 'resist_immune',
 			target: 'poison'
 		});
-		expect(parseEffect('apply_condition:paralyzed')).toMatchObject({
+		expect(parseToken('apply_condition:paralyzed')).toMatchObject({
 			kind: 'apply_condition',
 			target: 'paralyzed'
 		});
-		expect(parseEffect('grant_resource:rage')).toMatchObject({
+		expect(parseToken('grant_resource:rage')).toMatchObject({
 			kind: 'grant_resource',
 			target: 'rage'
 		});
-		expect(parseEffect('set_override:ac:18')).toMatchObject({
+		expect(parseToken('set_override:ac:18')).toMatchObject({
 			kind: 'set_override',
 			target: 'ac',
 			amount: 18
 		});
 	});
 	it('structures resist_immune into a defense bucket + type (bare defaults to resist)', () => {
-		expect(parseEffect('resist_immune:fire')).toMatchObject({ defense: 'resist', target: 'fire' });
-		expect(parseEffect('resist_immune:immune:poison')).toMatchObject({
+		expect(parseToken('resist_immune:fire')).toMatchObject({ defense: 'resist', target: 'fire' });
+		expect(parseToken('resist_immune:immune:poison')).toMatchObject({
 			defense: 'immune',
 			target: 'poison'
 		});
-		expect(parseEffect('resist_immune:vulnerable:cold')).toMatchObject({
+		expect(parseToken('resist_immune:vulnerable:cold')).toMatchObject({
 			defense: 'vulnerable',
 			target: 'cold'
 		});
 	});
 	it('structures a full grant_resource pool, leaves a bare one as just an id', () => {
-		expect(parseEffect('grant_resource:rage:3:long').resource).toEqual({
+		expect(parseToken('grant_resource:rage:3:long').resource).toEqual({
 			id: 'rage',
 			max: 3,
 			recharge: 'long'
 		});
-		expect(parseEffect('grant_resource:ki').resource).toBeUndefined();
+		expect(parseToken('grant_resource:ki').resource).toBeUndefined();
 	});
 	it('flags unknown / malformed tokens instead of dropping them', () => {
-		expect(parseEffect('teleport:far').kind).toBe('unknown');
-		expect(parseEffect('garbage').kind).toBe('unknown');
+		expect(parseToken('teleport:far').kind).toBe('unknown');
+		expect(parseToken('garbage').kind).toBe('unknown');
 	});
 	it('parses disadvantage like advantage (its own kind + target)', () => {
-		expect(parseEffect('disadvantage:skill.stealth')).toMatchObject({
+		expect(parseToken('disadvantage:skill.stealth')).toMatchObject({
 			kind: 'disadvantage',
 			target: 'skill.stealth'
 		});
 	});
 	it('grant_proficiency carries ONE ladder level and canonicalizes a skill. prefix', () => {
-		expect(parseEffect('grant_proficiency:stealth')).toMatchObject({
+		expect(parseToken('grant_proficiency:stealth')).toMatchObject({
 			target: 'stealth',
 			proficiency: 'proficient'
 		});
 		// a `skill.`-prefixed target must not silently drop (audit A6)
-		expect(parseEffect('grant_proficiency:skill.stealth')).toMatchObject({ target: 'stealth' });
-		expect(parseEffect('grant_proficiency:expertise:stealth')).toMatchObject({
+		expect(parseToken('grant_proficiency:skill.stealth')).toMatchObject({ target: 'stealth' });
+		expect(parseToken('grant_proficiency:expertise:stealth')).toMatchObject({
 			target: 'stealth',
 			proficiency: 'expertise'
 		});
 		// saves keep their prefix (derive tells them apart by it)
-		expect(parseEffect('grant_proficiency:save.con')).toMatchObject({ target: 'save.con' });
+		expect(parseToken('grant_proficiency:save.con')).toMatchObject({ target: 'save.con' });
 	});
 });
 
@@ -165,7 +166,7 @@ describe('applyEffects seam', () => {
 	});
 
 	it('clamps a hostile resource max (cost cap, not balance)', () => {
-		expect(parseEffect('grant_resource:x:1000000000:short')).toMatchObject({
+		expect(parseToken('grant_resource:x:1000000000:short')).toMatchObject({
 			resource: { id: 'x', max: 1000 }
 		});
 	});
