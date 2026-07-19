@@ -333,6 +333,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
 - `const titleCase` — "sleight-of-hand" → "Sleight Of Hand".
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
+- `function conditionIdOf` — The condition id an effect applies (its `apply_condition:<id>` token), or null — so the combat * panel can surface a …
 - `re-export EffectInstance` — A runtime effect instance — the character-schema type, re-exported for the combat views.
 - `interface ResourceView` — A grant_resource effect, resolved for the Resources section (name + charges + recharge).
 - `function parseResourceEffect` — If an effect grants a fully-specified resource pool, resolve it — else null.
@@ -761,4 +762,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 34 components · 405 exports across 59 modules · 32 duplicate suspects · generated in 130ms._
+_46 tokens · 50 global classes · 34 components · 406 exports across 59 modules · 32 duplicate suspects · generated in 313ms._

@@ -493,6 +493,17 @@ class CombatVM {
 			.list('condition', { system })
 			.map((r) => ({ id: r.id, label: String(r.data.name_en) }));
 	});
+	/** A condition's rules text (English, consistent with the panel's other content labels), looked up
+	 *  by id — the G2 info channel: the "attacks against you have advantage", concealed, auto-crit
+	 *  parts a single-character sheet can't fold onto any stat still reach the player as reference. */
+	conditionText = (id: string): string | null => {
+		const system = this.character?.system;
+		if (!this.graph || !system) return null;
+		const row = this.graph.list('condition', { system }).find((r) => r.id === id);
+		const text = row ? String(row.data.text_en ?? '') : '';
+		return text || null;
+	};
+
 	/** The "+" picker catalog — the `effects.csv` CONTENT type scoped to the character's edition
 	 *  (user-extendable like all content), not a hardcoded preset list. A row's `duration_rounds`
 	 *  is its default duration; blank falls back to the menu's duration picker. */

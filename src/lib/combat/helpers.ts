@@ -181,7 +181,21 @@ export function effectTag(token: string): string {
 	if (p.kind === EFFECT_KIND.disadvantage && p.target) return `disadv · ${targetLabel(p.target)}`;
 	if (p.kind === EFFECT_KIND.grantProficiency && p.target) return `prof · ${titleCase(p.target)}`;
 	if (p.kind === EFFECT_KIND.applyCondition && p.target) return titleCase(p.target);
+	if (p.kind === EFFECT_KIND.autoFail && p.target) return `auto-fail · ${targetLabel(p.target)}`;
+	if (p.kind === EFFECT_KIND.autoSucceed && p.target)
+		return `auto-succeed · ${targetLabel(p.target)}`;
 	return token.replace(/[-:]/g, ' ');
+}
+
+/** The condition id an effect applies (its `apply_condition:<id>` token), or null — so the combat
+ *  panel can surface a condition's rules text (the "attacks against you" / concealed parts that no
+ *  stat token carries). First applied condition wins (an effect usually applies at most one). */
+export function conditionIdOf(e: Pick<EffectInstance, 'effects'>): string | null {
+	for (const token of e.effects) {
+		const p = parseToken(token);
+		if (p.kind === EFFECT_KIND.applyCondition && p.target) return p.target;
+	}
+	return null;
 }
 
 /** A runtime effect instance — the character-schema type, re-exported for the combat views. */

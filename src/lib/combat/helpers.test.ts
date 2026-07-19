@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	rollEffectsFor,
 	autoOutcome,
+	conditionIdOf,
 	effectTag,
 	pipClick,
 	groupEffects,
@@ -54,6 +55,25 @@ describe('autoOutcome — forced roll result (paralyzed → auto-fail STR/DEX sa
 	});
 	it('is null when no forced-outcome effect is present', () => {
 		expect(autoOutcome(fx('advantage:save.dex'), 'save.dex')).toBeNull();
+	});
+});
+
+describe('conditionIdOf — the condition an effect applies (G2 info channel)', () => {
+	const inst = (...effects: string[]) => ({ effects });
+	it('extracts the id from an apply_condition token', () => {
+		expect(conditionIdOf(inst('apply_condition:prone'))).toBe('prone');
+		expect(conditionIdOf(inst('flat_bonus:ac+1', 'apply_condition:frightened'))).toBe('frightened');
+	});
+	it('is null for an effect that applies no condition', () => {
+		expect(conditionIdOf(inst('flat_bonus:ac+2'))).toBeNull();
+		expect(conditionIdOf(inst())).toBeNull();
+	});
+});
+
+describe('effectTag — auto_fail / auto_succeed render readably in the panel', () => {
+	it('tags the forced-outcome kinds', () => {
+		expect(effectTag('auto_fail:save.str')).toBe('auto-fail · STR save');
+		expect(effectTag('auto_succeed:save.wis')).toBe('auto-succeed · WIS save');
 	});
 });
 

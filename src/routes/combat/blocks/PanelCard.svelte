@@ -14,6 +14,7 @@
 		signed,
 		titleCase,
 		effectTag,
+		conditionIdOf,
 		groupEffects,
 		rechargeLabel,
 		remainingRounds,
@@ -31,6 +32,8 @@
 	const effectGroups = $derived(groupEffects(c.play.effects));
 	// the open duration dropdown (which effect + its anchor button); its rounds tracked live
 	let durationMenu = $state<{ iid: string; anchor: HTMLElement } | null>(null);
+	// the condition effect whose rules text is expanded (the G2 info channel), by iid; single-open
+	let infoOpen = $state<string | null>(null);
 	const menuEffect = $derived(
 		durationMenu ? c.play.effects.find((e) => e.iid === durationMenu?.iid) : undefined
 	);
@@ -54,6 +57,8 @@
 
 <!-- one Buffs/Debuffs effect row: name (white) + wrapping tags, then the duration dropdown + remove -->
 {#snippet effectRow(e: EffectInstance, polarity: 'positive' | 'negative')}
+	{@const condId = conditionIdOf(e)}
+	{@const infoText = condId ? combat.conditionText(condId) : null}
 	<div class="effect-row">
 		<div class="effect-main">
 			<span class="effect-name">{e.label}</span>
@@ -62,6 +67,15 @@
 			{/each}
 		</div>
 		<span class="effect-ctrl">
+			{#if infoText}
+				<button
+					class="icon-button effect-info-btn"
+					class:on={infoOpen === e.iid}
+					title="Rules text"
+					aria-expanded={infoOpen === e.iid}
+					onclick={() => (infoOpen = infoOpen === e.iid ? null : e.iid)}>ⓘ</button
+				>
+			{/if}
 			<button
 				class="duration-select"
 				title="Set duration"
@@ -75,6 +89,9 @@
 			>
 		</span>
 	</div>
+	{#if infoText && infoOpen === e.iid}
+		<p class="effect-info-text">{infoText}</p>
+	{/if}
 {/snippet}
 
 <div class="panel-head">
@@ -537,6 +554,25 @@
 	}
 	.effect-remove:hover {
 		color: var(--color-accent-bright);
+	}
+	.effect-info-btn {
+		color: var(--color-text-muted);
+	}
+	.effect-info-btn:hover,
+	.effect-info-btn.on {
+		color: var(--color-resource);
+	}
+	/* the expanded condition rules text (G2 info channel) — reference prose under the row */
+	.effect-info-text {
+		margin: 0 0 7px;
+		padding: 7px 9px;
+		font-size: 12px;
+		line-height: 1.5;
+		white-space: pre-line;
+		color: var(--color-text-muted);
+		background: var(--color-surface-2);
+		border-radius: 6px;
+		border: 1px solid var(--color-border);
 	}
 	/* resource row: pips + count + recharge chip */
 	.resource-row {
