@@ -504,6 +504,16 @@ class CombatVM {
 		return text || null;
 	};
 
+	/** A condition's own effect tokens (its `effects` column) — what the panel renders as tags for an
+	 *  applied condition, since the effect INSTANCE only carries `apply_condition:<id>`. So a Poisoned
+	 *  row shows its disadvantage tags + the display-only `note:` mechanics, not a bare "Poisoned". */
+	conditionTokens = (id: string): string[] => {
+		const system = this.character?.system;
+		if (!this.graph || !system) return [];
+		const row = this.graph.list('condition', { system }).find((r) => r.id === id);
+		return row?.data.effects ?? [];
+	};
+
 	/** The "+" picker catalog — the `effects.csv` CONTENT type scoped to the character's edition
 	 *  (user-extendable like all content), not a hardcoded preset list. A row's `duration_rounds`
 	 *  is its default duration; blank falls back to the menu's duration picker. */

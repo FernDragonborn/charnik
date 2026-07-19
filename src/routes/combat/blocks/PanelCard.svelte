@@ -60,10 +60,13 @@
 {#snippet effectRow(e: EffectInstance, polarity: 'positive' | 'negative')}
 	{@const condId = conditionIdOf(e)}
 	{@const infoText = condId ? combat.conditionText(condId) : null}
+	<!-- a condition instance only carries `apply_condition:<id>`; show what the condition DOES by
+	     rendering the condition row's own tokens (mechanical tags + display-only notes) instead -->
+	{@const tags = condId ? combat.conditionTokens(condId) : e.effects}
 	<div class="effect-row">
 		<div class="effect-main">
 			<span class="effect-name">{e.label}</span>
-			{#each e.effects as tok (tok)}
+			{#each tags as tok (tok)}
 				{@const note = noteText(tok)}
 				{#if note}
 					<span class="effect-tag effect-tag--note" title="Shown for reference — not auto-applied"
@@ -109,7 +112,10 @@
 	{#if pid === 'actions'}
 		<button class="pill-btn" onclick={(e) => openMenu('showhide', e)}>👁 Show / hide</button>
 	{:else if pid === 'effects'}
-		<button class="pill-btn" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
+		<span class="head-btns">
+			<button class="pill-btn" onclick={(e) => openMenu('condition', e)}>＋ Condition</button>
+			<button class="pill-btn" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
+		</span>
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
 		<span class="prepared-count">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
 		<button class="pill-btn" onclick={cycleGroupBy} title="Change grouping">{groupByLabel} ▾</button
@@ -573,6 +579,10 @@
 	}
 	.effect-remove:hover {
 		color: var(--color-accent-bright);
+	}
+	.head-btns {
+		display: flex;
+		gap: 6px;
 	}
 	.effect-info-btn {
 		color: var(--color-text-muted);
