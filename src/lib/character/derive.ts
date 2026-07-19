@@ -27,6 +27,7 @@ import {
 	armoredAC,
 	maxHpForClass,
 	carryingCapacity,
+	ABILITY_SCORE_CLAMP,
 	type Ability
 } from '../rules/core';
 import { type ActiveEffect, type EffectCtx, type EffectIssue } from '../effects/token-parser';
@@ -39,7 +40,6 @@ import {
 } from '../effects/apply';
 import {
 	resolveActiveEffects,
-	ABILITY_SCORE_CLAMP,
 	RAGE_CONDITION_ID,
 	type ResolveState
 } from '../effects/dependency-graph';

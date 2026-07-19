@@ -26,6 +26,11 @@ export function abilityModifier(score: number): number {
 	return Math.floor((score - 10) / 2);
 }
 
+/** Hard cap an effective ability score folds to: 30 is the ceiling both editions share; 0 floors a
+ *  fully-drained score. A CORE rule (not an effects concern) — it clamps abilities whether the
+ *  effects engine is on, off, or removed, so it lives here and the effects fold pipeline imports it. */
+export const ABILITY_SCORE_CLAMP = { min: 0, max: 30 } as const;
+
 /** Proficiency bonus by character level: 2 + floor((level − 1) / 4) → +2..+6. */
 export function proficiencyBonus(level: number): number {
 	return 2 + Math.floor((Math.max(1, Math.min(20, level)) - 1) / 4);

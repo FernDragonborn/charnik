@@ -12,7 +12,8 @@ import {
 	unarmoredAC,
 	armoredAC,
 	maxHpForClass,
-	carryingCapacity
+	carryingCapacity,
+	ABILITY_SCORE_CLAMP
 } from './core';
 import type { System } from './pipeline';
 
@@ -25,6 +26,11 @@ describe('primitives (golden SRD values)', () => {
 		expect(abilityModifier(15)).toBe(2);
 		expect(abilityModifier(20)).toBe(5);
 		expect(abilityModifier(30)).toBe(10);
+	});
+
+	it('ability-score clamp is a core rule (0..30, both editions) — not owned by the effects module', () => {
+		// lives here so the cap survives even with src/lib/effects/ removed; the effects fold imports it
+		expect(ABILITY_SCORE_CLAMP).toEqual({ min: 0, max: 30 });
 	});
 
 	it('proficiency bonus by level', () => {

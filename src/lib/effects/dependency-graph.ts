@@ -15,7 +15,7 @@
  * as a derive issue, and its writers degrade to inert notes — never an iterate-to-fixpoint loop
  * (PLUGINS.md §8.4, PLAN "State model").
  */
-import { ABILITY_IDS, abilityModifier, type Ability } from '../rules/core';
+import { ABILITY_IDS, abilityModifier, ABILITY_SCORE_CLAMP, type Ability } from '../rules/core';
 import { computed, type Computed, type Contribution } from '../rules/pipeline';
 import { splitDottedName } from './expression-parser';
 import { collectExprVariables, evalExpression, type ExprContext } from './expression-evaluator';
@@ -120,9 +120,6 @@ export interface DependencyResolved {
 	ctx: EffectCtx;
 	state: ResolveState;
 }
-
-/** Effective scores clamp: 30 is the hard cap both editions share; 0 floors a drained score. */
-export const ABILITY_SCORE_CLAMP = { min: 0, max: 30 } as const;
 
 /* ─────────────────────── internals ─────────────────────── */
 

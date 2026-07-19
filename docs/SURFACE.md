@@ -327,6 +327,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface RollEffects` — What a roll target (e.g.
 - `const NO_ROLL_EFFECTS`
 - `function rollEffectsFor`
+- `function autoOutcome` — A forced roll outcome for `key`, or null to roll normally.
 - `const netAdvantage` — Advantage + disadvantage cancel to a straight roll (5e rule) → the −1/0/+1 the roller takes.
 - `const metres` — Feet → "N m" (metric in parentheses next to imperial).
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
@@ -562,7 +563,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ResolveState` — The mutable dependency-resolve state.
 - `interface ResolveArgs`
 - `interface DependencyResolved`
-- `const ABILITY_SCORE_CLAMP` — Effective scores clamp: 30 is the hard cap both editions share; 0 floors a drained score.
 - `function resolveActiveEffects`
 
 ### `src/lib/effects/expression-evaluator.ts`
@@ -636,6 +636,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ARMOR_TYPES` — Armor weight classes ('none' = unarmored).
 - `type ArmorType`
 - `function abilityModifier` — Ability modifier: floor((score − 10) / 2).
+- `const ABILITY_SCORE_CLAMP` — Hard cap an effective ability score folds to: 30 is the ceiling both editions share; 0 floors a * fully-drained score.
 - `function proficiencyBonus` — Proficiency bonus by character level: 2 + floor((level − 1) / 4) → +2..+6.
 - `function savingThrow` — A saving throw: ability mod + proficiency (if proficient in that save).
 - `function skillCheck` — A skill (or ability) check bonus.
@@ -760,4 +761,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 34 components · 404 exports across 59 modules · 32 duplicate suspects · generated in 151ms._
+_46 tokens · 50 global classes · 34 components · 405 exports across 59 modules · 32 duplicate suspects · generated in 160ms._
