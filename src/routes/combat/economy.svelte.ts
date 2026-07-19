@@ -9,16 +9,32 @@ import { pipClick, isEffectExpired, type ActionSlot, type SpRow } from '$lib/com
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 
+/** The condition that zeroes the action economy (no Action, Bonus Action, or Reaction). A named seam
+ *  (not a bare string compare) — paralyzed/stunned/petrified/unconscious reach it by chaining
+ *  `apply_condition:incapacitated`, so this one id gates them all. */
+export const INCAPACITATED_CONDITION_ID = 'incapacitated';
+
 export class TurnEconomy {
 	constructor(
 		private getCharacter: () => Character | null,
 		private getSheet: () => CharacterSheet | null
 	) {}
 
+	/** Incapacitated → can't take actions/reactions/bonus actions (a rule-based block, B9). Read from
+	 *  the resolved condition set, so any condition that chains into `incapacitated` triggers it too.
+	 *  Gated on effects-auto (off → no automatic block). */
+	incapacitated = $derived.by<boolean>(() => {
+		const c = this.getCharacter();
+		if (!c?.play.autoCalc) return false;
+		return this.getSheet()?.facts.conditions.includes(INCAPACITATED_CONDITION_ID) ?? false;
+	});
+
 	// base 1 pip per slot + extras from effects (Action Surge → +1 action, Haste → +1 action), rendered
 	// as more pips — data-driven via `flat_bonus:<slot>+N` tokens. Reads the sheet's typed-facts
-	// object (D7: guards evaluated, item/feature effects included, values resolved — B21).
+	// object (D7: guards evaluated, item/feature effects included, values resolved — B21). Incapacitated
+	// zeroes every slot (no action/bonus/reaction), overriding any extras.
 	slotMax = $derived.by<Record<ActionSlot, number>>(() => {
+		if (this.incapacitated) return { action: 0, bonus: 0, reaction: 0 };
 		const c = this.getCharacter();
 		const max = { action: 1, bonus: 1, reaction: 1 };
 		if (c?.play.autoCalc)
@@ -88,6 +104,11 @@ export class TurnEconomy {
 	trySpend(slot: ActionSlot): boolean {
 		const c = this.getCharacter();
 		if (!c || !c.play.inCombat) return true;
+		// incapacitated is a hard block, not an exhaustion — a distinct message ("Next turn" won't help)
+		if (this.incapacitated) {
+			toast('Incapacitated', { description: "Can't take actions, bonus actions, or reactions." });
+			return false;
+		}
 		if (c.play.turn[slot] >= this.slotMax[slot]) {
 			toast(`No ${slot} left this turn`, { description: 'Press “Next turn” to refresh.' });
 			return false;

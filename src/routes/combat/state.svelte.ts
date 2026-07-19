@@ -482,11 +482,16 @@ class CombatVM {
 		};
 	});
 
-	// conditions for THIS character's system (not a hardcoded edition)
-	conditionList = $derived.by<string[]>(() => {
+	// conditions for THIS character's system (not a hardcoded edition). Carries the row `id` (not just
+	// the label) so applying one emits `apply_condition:<id>` — the DAG then expands the condition
+	// row's own `effects` tokens and registers the id in facts.conditions (what the economy + guards
+	// read). An empty effects column still registers the id, so mechanics can be authored incrementally.
+	conditionList = $derived.by<{ id: string; label: string }[]>(() => {
 		const system = this.character?.system;
 		if (!this.graph || !system) return [];
-		return this.graph.list('condition', { system }).map((r) => String(r.data.name_en));
+		return this.graph
+			.list('condition', { system })
+			.map((r) => ({ id: r.id, label: String(r.data.name_en) }));
 	});
 	/** The "+" picker catalog — the `effects.csv` CONTENT type scoped to the character's edition
 	 *  (user-extendable like all content), not a hardcoded preset list. A row's `duration_rounds`

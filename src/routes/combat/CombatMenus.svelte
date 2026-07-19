@@ -316,10 +316,13 @@
 					>✕</button
 				>
 			</div>
-			{#each conditionList as cn (cn)}
-				{@const added = character?.play.effects.some((e) => e.label === cn)}
-				<button class="menu-row" onclick={() => (added ? null : addEffect(cn, [], false))}>
-					<span class="main">{cn}</span><span class="toggle-track" class:on={added}></span>
+			{#each conditionList as cn (cn.id)}
+				{@const added = character?.play.effects.some((e) => e.label === cn.label)}
+				<button
+					class="menu-row"
+					onclick={() => (added ? null : addEffect(cn.label, [`apply_condition:${cn.id}`], false))}
+				>
+					<span class="main">{cn.label}</span><span class="toggle-track" class:on={added}></span>
 				</button>
 			{/each}
 		{/if}

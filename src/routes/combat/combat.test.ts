@@ -239,8 +239,38 @@ describe('CombatVM · conditionList uses the character system (CVM-bug2)', () =>
 		const graph = await graphOf();
 		combat.graph = graph;
 		combat.character = newCharacter('valen', 'Valen', '5.5e');
-		expect(combat.conditionList).toContain('Prone'); // 5.5e
-		expect(combat.conditionList).not.toContain('Grappled'); // 5e-only
+		const labels = combat.conditionList.map((c) => c.label);
+		expect(labels).toContain('Prone'); // 5.5e
+		expect(labels).not.toContain('Grappled'); // 5e-only
+		expect(combat.conditionList.find((c) => c.label === 'Prone')?.id).toBe('prone'); // carries the id
+	});
+});
+
+describe('CombatVM · incapacitated zeroes the action economy (G3)', () => {
+	it('blocks action/bonus/reaction while incapacitated, restores when it ends', async () => {
+		const graph = await graphOf();
+		combat.graph = graph;
+		const character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.autoCalc = true;
+		character.play.inCombat = true;
+		combat.character = character;
+
+		// baseline: one of each slot, spending allowed
+		expect(combat.economy.slotMax).toEqual({ action: 1, bonus: 1, reaction: 1 });
+		expect(combat.economy.trySpend('action')).toBe(true);
+
+		// apply Incapacitated → the id lands in facts.conditions (the row's own effects are irrelevant here)
+		combat.addEffect('Incapacitated', ['apply_condition:incapacitated'], false);
+		expect(combat.economy.incapacitated).toBe(true);
+		expect(combat.economy.slotMax).toEqual({ action: 0, bonus: 0, reaction: 0 });
+		expect(combat.economy.trySpend('bonus')).toBe(false); // hard block, not exhaustion
+		expect(combat.economy.trySpend('reaction')).toBe(false);
+
+		// remove it → economy restored
+		const iid = character.play.effects.find((e) => e.label === 'Incapacitated')?.iid;
+		if (iid) combat.removeEffect(iid);
+		expect(combat.economy.incapacitated).toBe(false);
+		expect(combat.economy.slotMax).toEqual({ action: 1, bonus: 1, reaction: 1 });
 	});
 });
 
