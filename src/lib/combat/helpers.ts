@@ -111,6 +111,16 @@ export function rollEffectsFor(facts: EffectFacts, key: string): RollEffects {
 	return out;
 }
 
+/** A forced roll outcome for `key`, or null to roll normally. `auto_fail`/`auto_succeed` effects
+ *  (paralyzed → STR/DEX saves) override the RESULT, not the die — so a matched save doesn't roll at
+ *  all. Auto-fail wins a contradictory pair (the debuff bias: conditions that force outcomes are
+ *  debilitating, and a fail-closed default is safer than silently succeeding). */
+export function autoOutcome(facts: EffectFacts, key: string): 'fail' | 'succeed' | null {
+	if (facts.autoFail.some((a) => matchesTarget(a.target, key))) return 'fail';
+	if (facts.autoSucceed.some((a) => matchesTarget(a.target, key))) return 'succeed';
+	return null;
+}
+
 /** Advantage + disadvantage cancel to a straight roll (5e rule) → the −1/0/+1 the roller takes. */
 export const netAdvantage = (fx: Pick<RollEffects, 'advantage' | 'disadvantage'>): number =>
 	fx.advantage === fx.disadvantage ? 0 : fx.advantage ? 1 : -1;

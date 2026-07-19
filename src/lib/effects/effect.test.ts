@@ -314,6 +314,60 @@ describe('splitGuard · guard/token split edges (the `?` is a hard boundary)', (
 	});
 });
 
+describe('G1 · auto_fail / auto_succeed (forced roll outcome, e.g. paralyzed → STR/DEX saves)', () => {
+	it('parses to its own kind + target (like advantage), target normalized', () => {
+		expect(parseToken('auto_fail:save.dex')).toMatchObject({
+			kind: 'auto_fail',
+			target: 'save.dex'
+		});
+		expect(parseToken('auto_succeed:save.wis')).toMatchObject({
+			kind: 'auto_succeed',
+			target: 'save.wis'
+		});
+		expect(parseToken('auto_fail:SAVE.STR').target).toBe('save.str'); // normalized
+	});
+	it('collects into its own fact bucket, not the numeric/advantage ones', () => {
+		const facts = collectFacts([
+			{
+				source: 'Paralyzed',
+				layer: 'condition',
+				tokens: ['auto_fail:save.str', 'auto_fail:save.dex']
+			}
+		]);
+		expect(facts.autoFail).toEqual([
+			{ target: 'save.str', source: 'Paralyzed' },
+			{ target: 'save.dex', source: 'Paralyzed' }
+		]);
+		expect(facts.numeric).toEqual([]); // it is NOT a bonus — never folds onto the save value
+	});
+	it('surfaces on the matched save as a note (does not change the save number)', () => {
+		const base = savingThrow({ ability: 'str', score: 10, level: 1, proficient: false }); // +0
+		const paralyzed: ActiveEffect = {
+			source: 'Paralyzed',
+			layer: 'condition',
+			tokens: ['auto_fail:save.str']
+		};
+		const out = applyEffects('save.str', base, [paralyzed]);
+		expect(out.value).toBe(0); // unchanged — auto-fail is an outcome, not a modifier
+		expect(out.notes?.some((n) => n.includes('auto-fail on save.str'))).toBe(true);
+	});
+	it('the `saves` group auto-fails every save; a different save is untouched', () => {
+		const facts = collectFacts([{ source: 'X', layer: 'condition', tokens: ['auto_fail:saves'] }]);
+		const strSave = applyEffects(
+			'save.str',
+			savingThrow({ ability: 'str', score: 10, level: 1, proficient: false }),
+			facts
+		);
+		expect(strSave.notes?.some((n) => n.includes('auto-fail'))).toBe(true);
+		const skill = applyEffects(
+			'skill.stealth',
+			savingThrow({ ability: 'dex', score: 10, level: 1, proficient: false }),
+			facts
+		);
+		expect(skill.notes ?? []).toEqual([]); // saves group doesn't touch a skill
+	});
+});
+
 describe('lintEffectTokens · content-health soft-warns over every expression slot', () => {
 	it('warns on an unusual die in a LITERAL dice bonus (fast-path `+1d7`, was silently skipped)', () => {
 		expect(lintEffectTokens(['flat_bonus:damage+1d7']).join(' ')).toContain('unusual die d7');

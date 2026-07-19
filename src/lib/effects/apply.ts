@@ -88,6 +88,11 @@ export interface EffectFacts {
 	numeric: NumericFact[];
 	advantage: FactRef[];
 	disadvantage: FactRef[];
+	/** Rolls whose OUTCOME is forced (paralyzed → auto-fail STR/DEX saves): the target roll fails
+	 *  (`autoFail`) or succeeds (`autoSucceed`) regardless of the die. Consumed as a save note + the
+	 *  roll-outcome check (combat), NOT as a die modifier — so it never mixes with advantage math. */
+	autoFail: FactRef[];
+	autoSucceed: FactRef[];
 	proficiencies: ProficiencyFact[];
 	defenses: DefenseFact[];
 	/** Fully-specified resource pools (id:max:recharge), expression maxes resolved. */
@@ -105,6 +110,8 @@ const emptyFacts = (): EffectFacts => ({
 	numeric: [],
 	advantage: [],
 	disadvantage: [],
+	autoFail: [],
+	autoSucceed: [],
 	proficiencies: [],
 	defenses: [],
 	resources: [],
@@ -158,6 +165,12 @@ export function collectFacts(
 					break;
 				case EFFECT_KIND.disadvantage:
 					if (p.target) facts.disadvantage.push({ target: p.target, source: eff.source });
+					break;
+				case EFFECT_KIND.autoFail:
+					if (p.target) facts.autoFail.push({ target: p.target, source: eff.source });
+					break;
+				case EFFECT_KIND.autoSucceed:
+					if (p.target) facts.autoSucceed.push({ target: p.target, source: eff.source });
 					break;
 				case EFFECT_KIND.grantProficiency:
 					if (p.target)
@@ -271,6 +284,10 @@ export function applyEffects(
 		if (matchesTarget(a.target, targetKey)) notes.push(`${a.source}: advantage on ${targetKey}`);
 	for (const d of facts.disadvantage)
 		if (matchesTarget(d.target, targetKey)) notes.push(`${d.source}: disadvantage on ${targetKey}`);
+	for (const a of facts.autoFail)
+		if (matchesTarget(a.target, targetKey)) notes.push(`${a.source}: auto-fail on ${targetKey}`);
+	for (const a of facts.autoSucceed)
+		if (matchesTarget(a.target, targetKey)) notes.push(`${a.source}: auto-succeed on ${targetKey}`);
 	return computed(contribs, undefined, notes.length ? notes : undefined);
 }
 

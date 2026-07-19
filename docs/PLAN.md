@@ -1173,6 +1173,35 @@ for nat-1/nat-20); the extra fold targets **`speed.fly`/`speed.swim`** (sheet), 
   AFTER the resolve so DCs/attacks read the EFFECTIVE scores. Deferred: the visible
   reorderable-order UI (cosmetic while the fold is RAW-commutative and cycles are rejected).
 
+- [ ] **CONDITIONS-1 · Wire the 15 standard conditions mechanically (close the empty `effects`
+  column).** All 15 SRD conditions ship as content rows (name + text, both editions) but their
+  `effects` column is BLANK — so applying one is descriptive-only, no stat changes (symptom of A4
+  stealth-display-only + B9 no-rule-blocks). The engine (apply_condition expansion, has_condition,
+  guards, DAG) is ready; the gap is (a) missing L1 vocabulary for a few mechanics, then (b) authoring
+  the tokens. Ordered by how many conditions each gap unblocks. **Scope line:** anything the CHARACTER
+  rolls (own attack/save/check, incl. contested Athletics/Acrobatics) is modelable; only the pure
+  ATTACKER's-roll part ("attacks against you have advantage", auto-crit within 5 ft) has no carrier on
+  a single-character sheet → display-only.
+  - **G1 · `auto_fail:<target>` / `auto_succeed:<target>` (auto-fail/succeed a save).** New L1 kinds,
+    mirroring advantage/disadvantage: a fact bucket + a note on the save + a roll-path flag that forces
+    the outcome (not a bonus — `disadvantage:save.str` ≠ auto-fail). Unblocks paralyzed, stunned,
+    petrified, unconscious (all auto-fail STR/DEX saves). HIGHEST value.
+  - **G3 · `incapacitated` → action-economy lockout.** The sheet reads `has_condition.incapacitated`
+    to disable actions/reactions/bonus actions (marker, not a stat token). Unblocks incapacitated +
+    everything that `apply_condition:incapacitated`-chains into it (paralyzed/petrified/stunned/
+    unconscious already chain via the existing expansion).
+  - **G2 · condition info-note channel ("attacks against you", concealed, etc.).** A condition carries
+    display-only notes surfaced in the status block — the carrier for every ATTACKER's-roll mechanic
+    that can't fold onto a stat. Closes the visible half of prone/blinded/restrained/paralyzed/…
+  - **G4 · stat multiply/halve op** (2014 exhaustion: speed halved, hp-max halved) — no multiply-op on
+    a stat today. Lowest engine-priority (2024 exhaustion needs none; already fully modelable).
+  - **G5 · sense-gated check failure** (blinded → fail sight checks, deafened → hearing) — needs a
+    sense tag on checks; likely stays text.
+  - **G6 · relational / "while source in sight"** (charmed's charmer, frightened's line-of-sight) —
+    target-specific, inherently outside a self-only sheet; approximate unconditionally or leave text.
+  Fully-clean-today: poisoned, exhaustion-2024. Order: **G1 → G3 → G2 → G4/G5/G6.** The condition→token
+  table lives in this commit's work notes (see git history / the CONDITIONS work).
+
 Deferred to L3/onEvent (NOT L2): stateful transitions, latches, actions, anything that WRITES state
 — L2 only READS `ctx` and produces contributions. Keep the layer honest: it is a pure read-only
 formula language.

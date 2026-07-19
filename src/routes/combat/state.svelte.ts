@@ -24,6 +24,7 @@ import {
 	durationToRounds,
 	remainingRounds,
 	rollEffectsFor,
+	autoOutcome,
 	netAdvantage,
 	NO_ROLL_EFFECTS,
 	type RollEffects,
@@ -250,6 +251,14 @@ class CombatVM {
 		return rollEffectsFor(this.sheet.facts, key);
 	}
 
+	/** A forced outcome (paralyzed → auto-fail STR/DEX saves) for a roll key, or null. Gated on the
+	 *  same effects-auto toggle as `effectsFor`, so turning auto off restores plain rolls. */
+	private autoOutcomeFor(key: string): 'fail' | 'succeed' | null {
+		const c = this.character;
+		if (!c || !c.play.autoCalc || !this.sheet) return null;
+		return autoOutcome(this.sheet.facts, key);
+	}
+
 	// open the roll builder prefilled + anchored, so the player can pick advantage then Roll
 	openRoll = (
 		label: string,
@@ -266,6 +275,14 @@ class CombatVM {
 	// (e.g. "save.dex", "skill.stealth", "attack") lets the roll pick up matching effects. NB the
 	// flat part is IGNORED for save/skill keys — it's already folded into the sheet value `mod`.
 	roll = (label: string, mod: number, e: Event, key?: string) => {
+		// a forced outcome (paralyzed → auto-fail its STR/DEX save) skips the die entirely — the result
+		// is decided by the condition, not the roll; logged as a no-roll marker so it's still visible
+		const forced = key ? this.autoOutcomeFor(key) : null;
+		if (forced) {
+			this.tray.logMarker(`${label} — auto-${forced}`);
+			toast(`${label}: automatic ${forced === 'fail' ? 'failure' : 'success'}`);
+			return;
+		}
 		const fx = key ? this.effectsFor(key) : null;
 		const adv = fx ? netAdvantage(fx) : 0;
 		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e, adv, fx ?? {});

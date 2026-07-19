@@ -32,7 +32,9 @@ export const EFFECT_KINDS = [
 	'apply_condition',
 	'grant_resource',
 	'reroll',
-	'min_die'
+	'min_die',
+	'auto_fail',
+	'auto_succeed'
 ] as const;
 
 // --- CSV-cell coercion helpers (every cell arrives as a string) ---------------

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	rollEffectsFor,
+	autoOutcome,
 	effectTag,
 	pipClick,
 	groupEffects,
@@ -34,6 +35,25 @@ describe('pipClick — one click-to-set model (available left, spent right)', ()
 		for (let full = 1; full <= 5; full++)
 			for (let spent = 0; spent <= full; spent++)
 				for (let i = 0; i < full; i++) expect(pipClick(spent, i, full)).toBe(slot(full, spent, i));
+	});
+});
+
+describe('autoOutcome — forced roll result (paralyzed → auto-fail STR/DEX saves)', () => {
+	it('returns fail for a matched auto_fail target, null for an unmatched roll', () => {
+		expect(autoOutcome(fx('auto_fail:save.str'), 'save.str')).toBe('fail');
+		expect(autoOutcome(fx('auto_fail:save.str'), 'save.dex')).toBeNull();
+		expect(autoOutcome(fx('auto_fail:save.str'), 'skill.athletics')).toBeNull();
+	});
+	it('fans out through the `saves` group but not to skills or attacks', () => {
+		expect(autoOutcome(fx('auto_fail:saves'), 'save.wis')).toBe('fail');
+		expect(autoOutcome(fx('auto_fail:saves'), 'skill.stealth')).toBeNull();
+	});
+	it('returns succeed for auto_succeed, with auto_fail winning a contradictory pair', () => {
+		expect(autoOutcome(fx('auto_succeed:save.wis'), 'save.wis')).toBe('succeed');
+		expect(autoOutcome(fx('auto_fail:save.wis', 'auto_succeed:save.wis'), 'save.wis')).toBe('fail');
+	});
+	it('is null when no forced-outcome effect is present', () => {
+		expect(autoOutcome(fx('advantage:save.dex'), 'save.dex')).toBeNull();
 	});
 });
 

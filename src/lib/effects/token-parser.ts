@@ -26,7 +26,12 @@ export const EFFECT_KIND = {
 	grantResource: 'grant_resource',
 	// L1 roll-manipulation (the bounded, known set — NOT L3): the roll path consumes these facts.
 	reroll: 'reroll', // `reroll:<target>:<threshold>` — reroll a die that lands ≤ threshold (GWF ≤2)
-	minDie: 'min_die' // `min_die:<target>:<floor>` — treat a die result below floor AS floor (Reliable Talent d20→10)
+	minDie: 'min_die', // `min_die:<target>:<floor>` — treat a die result below floor AS floor (Reliable Talent d20→10)
+	// Roll-OUTCOME overrides (not a die modifier — the result is forced regardless of the roll):
+	// paralyzed/stunned auto-fail STR & DEX saves; a rare few auto-succeed. `auto_fail:<target>` /
+	// `auto_succeed:<target>`, mirroring advantage/disadvantage (a fact + a note, matched by target).
+	autoFail: 'auto_fail',
+	autoSucceed: 'auto_succeed'
 } as const;
 export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 /** The kinds as a list (for schema validation / the `includes` guard). */
