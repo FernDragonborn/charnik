@@ -14,6 +14,7 @@
 		signed,
 		titleCase,
 		effectTag,
+		noteText,
 		conditionIdOf,
 		groupEffects,
 		rechargeLabel,
@@ -63,7 +64,14 @@
 		<div class="effect-main">
 			<span class="effect-name">{e.label}</span>
 			{#each e.effects as tok (tok)}
-				<span class="effect-tag effect-tag--{polarity}">{effectTag(tok)}</span>
+				{@const note = noteText(tok)}
+				{#if note}
+					<span class="effect-tag effect-tag--note" title="Shown for reference — not auto-applied"
+						>ⓘ {note}</span
+					>
+				{:else}
+					<span class="effect-tag effect-tag--{polarity}">{effectTag(tok)}</span>
+				{/if}
 			{/each}
 		</div>
 		<span class="effect-ctrl">
@@ -535,6 +543,17 @@
 		color: var(--color-accent-bright);
 		border-color: rgba(207, 43, 64, 0.45);
 		background: rgba(207, 43, 64, 0.08);
+	}
+	/* display-only rules note (not engine-computed) — dashed + muted so it reads as reference, and
+	   allowed to wrap since it carries a sentence, not a short tag */
+	.effect-tag--note {
+		color: var(--color-text-muted);
+		border-style: dashed;
+		border-color: var(--color-border-strong);
+		background: transparent;
+		font-family: var(--font-body);
+		white-space: normal;
+		font-style: italic;
 	}
 	/* duration dropdown control (closed) */
 	.duration-select {

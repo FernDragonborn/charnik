@@ -31,7 +31,12 @@ export const EFFECT_KIND = {
 	// paralyzed/stunned auto-fail STR & DEX saves; a rare few auto-succeed. `auto_fail:<target>` /
 	// `auto_succeed:<target>`, mirroring advantage/disadvantage (a fact + a note, matched by target).
 	autoFail: 'auto_fail',
-	autoSucceed: 'auto_succeed'
+	autoSucceed: 'auto_succeed',
+	// DISPLAY-ONLY free text (`note:<text>`): a rules effect the engine can't model on a single-
+	// character sheet (attacks AGAINST you, auto-crit, sense-gated or relational effects). It never
+	// folds and matches no target — it's shown, distinctly styled, so the mechanic is visible even
+	// though it isn't auto-applied. Text is free-form (keeps its casing; `;` is the list separator).
+	note: 'note'
 } as const;
 export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 /** The kinds as a list (for schema validation / the `includes` guard). */
@@ -98,8 +103,9 @@ function parseTokenUncached(token: string): ParsedEffect {
 	// chokepoint) so an author who types `flat_bonus:AC+2` or `resist_immune:Fire` matches the
 	// case-sensitive derive keys instead of silently folding onto nothing (a parsed-but-never-applied
 	// no-op — the worst failure for an untrusted CSV). `valueExpr` is untouched (the L2 grammar is
-	// already lowercase) and `raw` keeps the author's casing for the inert-note display.
-	if (p.target !== undefined && p.target !== p.target.toLowerCase())
+	// already lowercase) and `raw` keeps the author's casing for the inert-note display. `note` is
+	// EXEMPT — its "target" is free-form display prose that must keep its casing.
+	if (p.kind !== EFFECT_KIND.note && p.target !== undefined && p.target !== p.target.toLowerCase())
 		return { ...p, target: p.target.toLowerCase() };
 	return p;
 }

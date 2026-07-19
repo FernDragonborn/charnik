@@ -34,7 +34,8 @@ export const EFFECT_KINDS = [
 	'reroll',
 	'min_die',
 	'auto_fail',
-	'auto_succeed'
+	'auto_succeed',
+	'note'
 ] as const;
 
 // --- CSV-cell coercion helpers (every cell arrives as a string) ---------------

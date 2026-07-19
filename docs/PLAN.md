@@ -1173,8 +1173,22 @@ for nat-1/nat-20); the extra fold targets **`speed.fly`/`speed.swim`** (sheet), 
   AFTER the resolve so DCs/attacks read the EFFECTIVE scores. Deferred: the visible
   reorderable-order UI (cosmetic while the fold is RAW-commutative and cycles are rejected).
 
-- [ ] **CONDITIONS-1 · Wire the 15 standard conditions mechanically (close the empty `effects`
-  column).** All 15 SRD conditions ship as content rows (name + text, both editions) but their
+- [x] **CONDITIONS-1 · Wire the 15 standard conditions mechanically — DONE 2026-07-19.** All 14
+  mechanical conditions (exhaustion excepted) now carry `effects` tokens in both editions'
+  `conditions_srd.csv`; applying one is real. Delivered: G1 `auto_fail`/`auto_succeed` (forced save
+  outcomes); the apply-a-condition path emits `apply_condition:<id>` so the row's effects flow +
+  register the id; G3 `incapacitated` zeroes the action economy; G2 an ⓘ shows the condition's full
+  rules text; and a `note:<text>` display-only kind renders the non-engine mechanics (attacks against
+  you, auto-crit, sense/relational) as distinctly-styled, non-folding tags. **G4** (stat multiply/
+  halve for 2014 exhaustion speed/hp-halved) is DEFERRED — 2024 (the default edition) needs none and
+  the 2014 exhaustion ladder is its own plan item; a new pipeline op for that edge isn't worth it now.
+  **G5/G6** (sense-gated checks, relational "while in sight") are closed BY the `note:` channel — they
+  correctly stay descriptive (the engine can't detect line-of-sight / a specific attacker on a
+  single-character sheet). A `conditions_content.test.ts` guards the shipped data (loads clean, no
+  drift, every token a known kind). Original gap analysis below.
+
+  ~~[ ] **CONDITIONS-1 · Wire the 15 standard conditions mechanically (close the empty `effects`
+  column).**~~ All 15 SRD conditions ship as content rows (name + text, both editions) but their
   `effects` column is BLANK — so applying one is descriptive-only, no stat changes (symptom of A4
   stealth-display-only + B9 no-rule-blocks). The engine (apply_condition expansion, has_condition,
   guards, DAG) is ready; the gap is (a) missing L1 vocabulary for a few mechanics, then (b) authoring

@@ -184,7 +184,16 @@ export function effectTag(token: string): string {
 	if (p.kind === EFFECT_KIND.autoFail && p.target) return `auto-fail · ${targetLabel(p.target)}`;
 	if (p.kind === EFFECT_KIND.autoSucceed && p.target)
 		return `auto-succeed · ${targetLabel(p.target)}`;
+	if (p.kind === EFFECT_KIND.note && p.target) return p.target; // free-form display text, as authored
 	return token.replace(/[-:]/g, ' ');
+}
+
+/** The display text of a `note:` token (a rules effect shown but NOT auto-applied — attacks against
+ *  you, auto-crit, sense/relational), or null for any other token. Lets the panel style notes apart
+ *  from the mechanical tags so it's clear the engine isn't computing them. */
+export function noteText(token: string): string | null {
+	const p = parseToken(token);
+	return p.kind === EFFECT_KIND.note && p.target ? p.target : null;
 }
 
 /** The condition id an effect applies (its `apply_condition:<id>` token), or null — so the combat
