@@ -51,7 +51,14 @@ export type EvalResult = { ok: true; value: ExprValue } | { ok: false; error: st
 class EvalError extends Error {}
 
 const isDice = (v: ExprValue): v is { type: 'dice'; dice: DiceValue } => v.type === 'dice';
-const num = (n: number): ExprValue => ({ type: 'number', value: n });
+/** The ONE constructor of a numeric value — so a single finite-guard covers every arithmetic path.
+ *  A huge literal (`999…` → Infinity), an overflowing product, or an `Inf-Inf`/`0*Inf` (→ NaN) is
+ *  rejected HERE as a structured error rather than leaking a non-finite number into a character stat
+ *  (the whole point of the fail-closed contract). Booleans (num(0)/num(1)) are always finite. */
+const num = (n: number): ExprValue => {
+	if (!Number.isFinite(n)) throw new EvalError('result is not a finite number');
+	return { type: 'number', value: n };
+};
 
 /** A number operand required where an expression yielded dice → an error (e.g. dice as a die-size,
  *  or a comparison on dice). Extracts the JS number or throws EvalError. */
@@ -168,9 +175,13 @@ function scaleDice(a: ExprValue, b: ExprValue): ExprValue {
 	if (isDice(factorV)) throw new EvalError('cannot multiply a dice term by a dice term');
 	const factor = Math.floor(factorV.value);
 	const pool: Record<number, number> = {};
-	for (const [s, c] of Object.entries(d.pool))
-		pool[Number(s)] = Math.max(0, Math.min(c * factor, MAX_DICE_PER_TERM));
-	return { type: 'dice', dice: { pool, flat: d.flat * factor } };
+	for (const [s, c] of Object.entries(d.pool)) {
+		// a zero/negative factor scales the count to nothing — drop the side entirely rather than
+		// leave a `{6:0}` entry (which serializes to junk "0d6"); matches evalDice's `0d6` → {}
+		const scaled = Math.max(0, Math.min(c * factor, MAX_DICE_PER_TERM));
+		if (scaled > 0) pool[Number(s)] = scaled;
+	}
+	return { type: 'dice', dice: { pool, flat: d.flat * factor + 0 } }; // +0 normalizes -0 → 0
 }
 
 function isEnumCompare(l: Node, r: Node): boolean {

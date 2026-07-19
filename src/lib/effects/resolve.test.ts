@@ -289,3 +289,124 @@ describe('resolveActiveEffects · dependency order (the DAG)', () => {
 		expect(r.effects.flatMap((e) => e.tokens)).toContain('flat_bonus:ac+1'); // guard saw 65
 	});
 });
+
+/* ─────────────────────────── P2 · dependency-graph edges ─────────────────────────── */
+
+describe('resolveActiveEffects · P2 · cycle & guard edge cases', () => {
+	const liveCtx = (state: ResolveState): ExprContext => ({
+		number: (name) => {
+			const abil = /^([a-z]{3})_(mod|score)$/.exec(name);
+			const ab = ABILITY_IDS.find((a) => a === abil?.[1]);
+			if (ab !== undefined) return abil?.[2] === 'mod' ? state.mods[ab] : state.scores[ab];
+			if (name === 'hp_max') return state.hpMax.value;
+			return undefined;
+		},
+		boolean: (name) =>
+			name.startsWith('has_condition.')
+				? state.conditions.has(name.slice('has_condition.'.length))
+				: false,
+		enum: () => undefined
+	});
+	const abilityBase = (amt: number): Partial<Record<Ability, Contribution[]>> => {
+		const b: Partial<Record<Ability, Contribution[]>> = {};
+		for (const ab of ABILITY_IDS)
+			b[ab] = [{ source: 'base', layer: 'base', op: 'add', amount: amt }];
+		return b;
+	};
+
+	it('flags a TWO-NODE mutual cycle (A writes str reading dex, B writes dex reading str)', () => {
+		const active: ActiveEffect[] = [
+			{ source: 'A', layer: 'feature', tokens: ['dex_mod>=0 ? flat_bonus:str+2'] },
+			{ source: 'B', layer: 'feature', tokens: ['str_mod>=0 ? flat_bonus:dex+2'] }
+		];
+		const r = resolveActiveEffects({
+			active,
+			makeCtx: liveCtx,
+			expandCondition: noExpand,
+			abilityBase: abilityBase(10)
+		});
+		expect(r.abilities.str.value).toBe(10); // neither +2 applied — both condemned as cyclic
+		expect(r.abilities.dex.value).toBe(10);
+		expect(r.issues.filter((i) => i.reason.includes('dependency cycle'))).toHaveLength(2);
+		// both tokens stay visible (inert, guard intact) — never silently dropped
+		const tokens = r.effects.flatMap((e) => e.tokens);
+		expect(tokens).toContain('dex_mod>=0 ? flat_bonus:str+2');
+		expect(tokens).toContain('str_mod>=0 ? flat_bonus:dex+2');
+	});
+
+	it('a non-writing token of a cyclic effect still applies (only the cyclic writer is condemned)', () => {
+		const active: ActiveEffect[] = [
+			// A carries a cyclic str writer AND an innocent unguarded ac bonus
+			{
+				source: 'A',
+				layer: 'feature',
+				tokens: ['dex_mod>=0 ? flat_bonus:str+2', 'flat_bonus:ac+1']
+			},
+			{ source: 'B', layer: 'feature', tokens: ['str_mod>=0 ? flat_bonus:dex+2'] }
+		];
+		const r = resolveActiveEffects({
+			active,
+			makeCtx: liveCtx,
+			expandCondition: noExpand,
+			abilityBase: abilityBase(10)
+		});
+		const ac = applyEffects('ac', computed([]), r.effects, r.ctx);
+		expect(ac.trace.find((c) => c.source === 'A')?.amount).toBe(1); // the ac bonus survived the cycle
+	});
+
+	it('a guard that evaluates to DICE is not a condition — inert + surfaced, never applied', () => {
+		const active: ActiveEffect[] = [
+			{ source: 'D', layer: 'feature', tokens: ['1d6 ? flat_bonus:ac+1'] }
+		];
+		const r = resolveActiveEffects({ active, makeCtx: liveCtx, expandCondition: noExpand });
+		expect(r.issues[0]?.reason).toContain('not a condition');
+		expect(r.effects.flatMap((e) => e.tokens)).toContain('1d6 ? flat_bonus:ac+1'); // kept verbatim
+		expect(applyEffects('ac', computed([]), r.effects, r.ctx).trace).toEqual([]); // not folded
+	});
+
+	it('recomputes the hp_max base at the FINAL con (the structural con→hp_max edge)', () => {
+		const active: ActiveEffect[] = [
+			{ source: 'Belt of Con', layer: 'item', tokens: ['flat_bonus:con+4'] }
+		];
+		const r = resolveActiveEffects({
+			active,
+			makeCtx: liveCtx,
+			expandCondition: noExpand,
+			abilityBase: abilityBase(10),
+			hpMaxBase: (con) => [{ source: 'Hit dice', layer: 'base', op: 'add', amount: con * 5 }]
+		});
+		expect(r.abilities.con.value).toBe(14);
+		expect(r.hpMaxBase.value).toBe(70); // 14×5 — con resolved BEFORE hp_max, not the base 10
+	});
+
+	it('two grants of the same resource id keep the LARGER max; spending nets the remainder', () => {
+		const active: ActiveEffect[] = [
+			{
+				source: 'X',
+				layer: 'feature',
+				tokens: ['grant_resource:ki:3:short', 'grant_resource:ki:6:short']
+			}
+		];
+		const r = resolveActiveEffects({
+			active,
+			makeCtx: liveCtx,
+			expandCondition: noExpand,
+			resourcesSpent: { ki: 2 }
+		});
+		expect(r.state.resourceMax.ki).toBe(6); // larger of 3 / 6
+		expect(r.state.resources.ki).toBe(4); // 6 − 2 spent
+	});
+
+	it('clamps remaining to 0 when spent exceeds max (never a negative pool)', () => {
+		const active: ActiveEffect[] = [
+			{ source: 'X', layer: 'feature', tokens: ['grant_resource:ki:3:short'] }
+		];
+		const r = resolveActiveEffects({
+			active,
+			makeCtx: liveCtx,
+			expandCondition: noExpand,
+			resourcesSpent: { ki: 5 }
+		});
+		expect(r.state.resources.ki).toBe(0);
+	});
+});

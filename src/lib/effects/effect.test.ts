@@ -1,6 +1,13 @@
 import { describe, it, expect } from 'vitest';
-import { parseToken, EFFECT_KINDS, type ActiveEffect } from './token-parser';
-import { applyEffects, collectFacts } from './apply';
+import {
+	parseToken,
+	splitGuard,
+	resolveEffectValue,
+	EFFECT_KINDS,
+	type ActiveEffect
+} from './token-parser';
+import { applyEffects, collectFacts, lintEffectTokens } from './apply';
+import { makeExprContext, type BuildVars } from './context';
 import { EFFECT_KINDS as SCHEMA_EFFECT_KINDS } from '../content/schemas';
 import { unarmoredAC, savingThrow } from '../rules/core';
 
@@ -209,5 +216,118 @@ describe('collectFacts', () => {
 			{ source: 'Poisoned', layer: 'condition', tokens: ['disadvantage:skills'] }
 		]);
 		expect(facts.disadvantage).toContainEqual({ target: 'skills', source: 'Poisoned' });
+	});
+});
+
+/* ─────────────────────────── L1 boundary · raw token first-contact (unfiltered input) ─────────────────────────── */
+
+describe('parseToken · set_override value slot (literal vs expression vs dice)', () => {
+	const build: BuildVars = {
+		level: 5,
+		proficiencyBonus: 3,
+		abilityMods: { str: 0, dex: 3, con: 0, int: 0, wis: 0, cha: 0 },
+		abilityScores: { str: 10, dex: 16, con: 10, int: 10, wis: 10, cha: 10 },
+		classLevels: {},
+		spellcastingMod: 0,
+		baseSpeed: 30
+	};
+	const ctx = makeExprContext(build);
+
+	it('resolves an EXPRESSION override (Unarmored Defense `10+dex_mod`)', () => {
+		const p = parseToken('set_override:ac:10+dex_mod');
+		expect(p).toMatchObject({ kind: 'set_override', target: 'ac', valueExpr: '10+dex_mod' });
+		expect(resolveEffectValue(p, ctx)).toEqual({ amount: 13 }); // 10 + dex mod 3
+	});
+	it('rejects a DICE value in an override — an AC cannot be a die (surfaced as an error fact)', () => {
+		const facts = collectFacts(
+			[{ source: 'Bug', layer: 'feature', tokens: ['set_override:ac:1d6'] }],
+			ctx
+		);
+		expect(facts.numeric[0]?.error).toContain('override cannot be a dice');
+	});
+	it('folds an expression override through the seam (13 AC, overriding the base)', () => {
+		const base = unarmoredAC({ dexScore: 20 }); // 15
+		const ud: ActiveEffect = {
+			source: 'Barbarian',
+			layer: 'feature',
+			tokens: ['set_override:ac:10+dex_mod']
+		};
+		expect(applyEffects('ac', base, [ud], ctx).value).toBe(13);
+	});
+});
+
+describe('parseToken · malformed tokens degrade to `unknown` (never throw, never a wrong apply)', () => {
+	// every one of these is a plausible author slip typed into a CSV cell; each must parse to a
+	// visible inert note, not silently vanish and not crash the derive
+	const unknowns = [
+		'resist_immune:', // empty type
+		'grant_resource:', // empty id
+		'grant_proficiency:', // empty target
+		'flat_bonus:ac+', // sign but no value
+		'flat_bonus:+2', // value but no target
+		'flat_bonus:ac', // no value slot at all
+		'FLAT_BONUS:ac+2', // kind is case-SENSITIVE (target is not) → unknown
+		'set_override:ac', // missing value
+		'', // empty string
+		':', // bare separator
+		'flat_bonus' // no separator
+	];
+	for (const t of unknowns)
+		it(`"${t}" → unknown`, () => {
+			expect(parseToken(t).kind).toBe('unknown');
+		});
+	it('trims surrounding whitespace before parsing', () => {
+		expect(parseToken('  flat_bonus:ac+2  ')).toMatchObject({ target: 'ac', amount: 2 });
+	});
+	it('normalizes an uppercase TARGET to lowercase so it actually applies (no silent no-op)', () => {
+		expect(parseToken('flat_bonus:AC+2')).toMatchObject({ target: 'ac', amount: 2 });
+		expect(parseToken('resist_immune:Fire')).toMatchObject({ defense: 'resist', target: 'fire' });
+		expect(parseToken('apply_condition:Frightened')).toMatchObject({ target: 'frightened' });
+		// the raw form keeps the author's casing for the inert-note / provenance display
+		expect(parseToken('flat_bonus:AC+2').raw).toBe('flat_bonus:AC+2');
+	});
+	it('an uppercase-target bonus now folds through the seam (was a parsed-but-dead token)', () => {
+		const base = unarmoredAC({ dexScore: 14 }); // 12
+		const ring: ActiveEffect = { source: 'Ring', layer: 'item', tokens: ['flat_bonus:AC+1'] };
+		expect(applyEffects('ac', base, [ring]).value).toBe(13);
+	});
+});
+
+describe('splitGuard · guard/token split edges (the `?` is a hard boundary)', () => {
+	it('splits on the FIRST `?` only (a stray `?` in the tail stays in the token)', () => {
+		expect(splitGuard('a ? b ? c')).toEqual({ guard: 'a', token: 'b ? c' });
+	});
+	it('an empty guard (`? token`) yields an empty guard string (evaluates to an error → inert)', () => {
+		expect(splitGuard('? advantage:attack')).toEqual({ guard: '', token: 'advantage:attack' });
+	});
+	it('a trailing `?` yields an empty token', () => {
+		expect(splitGuard('flat_bonus:ac+2 ?')).toEqual({ guard: 'flat_bonus:ac+2', token: '' });
+	});
+	it('needs no surrounding spaces around `?`', () => {
+		expect(splitGuard('is_raging?advantage:attack')).toEqual({
+			guard: 'is_raging',
+			token: 'advantage:attack'
+		});
+	});
+	it('a token with no `?` is returned whole (trimmed), no guard', () => {
+		expect(splitGuard('  flat_bonus:ac+2  ')).toEqual({ token: 'flat_bonus:ac+2' });
+	});
+});
+
+describe('lintEffectTokens · content-health soft-warns over every expression slot', () => {
+	it('warns on an unusual die in a LITERAL dice bonus (fast-path `+1d7`, was silently skipped)', () => {
+		expect(lintEffectTokens(['flat_bonus:damage+1d7']).join(' ')).toContain('unusual die d7');
+	});
+	it('warns on a mixed-type if() inside a value expression', () => {
+		const w = lintEffectTokens(['flat_bonus:ac+if(is_raging,1d4,2)']);
+		expect(w.join(' ')).toContain('differ in type');
+	});
+	it('lints the GUARD slot and the resource maxExpr slot too', () => {
+		expect(lintEffectTokens(['1d7 ? advantage:attack']).join(' ')).toContain('unusual die d7');
+		expect(lintEffectTokens(['grant_resource:ki:1d7:short']).join(' ')).toContain('unusual die');
+	});
+	it('is quiet for clean tokens and prefixes each warning with the offending token', () => {
+		expect(lintEffectTokens(['flat_bonus:ac+2', 'flat_bonus:damage+1d6'])).toEqual([]);
+		expect(lintEffectTokens(['flat_bonus:damage+1d7'])[0]).toContain('flat_bonus:damage+1d7 —');
 	});
 });

@@ -296,6 +296,9 @@ export function lintEffectTokens(tokens: string[]): string[] {
 		if (g.guard !== undefined) exprs.push(g.guard);
 		const p = parseToken(g.token);
 		if (p.valueExpr) exprs.push(p.valueExpr);
+		// a LITERAL dice bonus (`+1d7`) parses to `p.dice`, not `valueExpr` — lint it too, else the most
+		// common author typo (an unusual die size in the fast-path form) would silently skip the warning
+		if (p.dice) exprs.push(p.dice);
 		if (p.resource?.maxExpr) exprs.push(p.resource.maxExpr);
 		for (const e of exprs) for (const w of lintExpression(e)) warns.push(`${raw} — ${w}`);
 	}

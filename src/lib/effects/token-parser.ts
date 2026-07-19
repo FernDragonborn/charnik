@@ -88,6 +88,18 @@ export function parseToken(token: string): ParsedEffect {
 }
 
 function parseTokenUncached(token: string): ParsedEffect {
+	const p = classifyToken(token);
+	// Targets/ids are lowercase snake by convention (E3). Normalize the target HERE (the one parse
+	// chokepoint) so an author who types `flat_bonus:AC+2` or `resist_immune:Fire` matches the
+	// case-sensitive derive keys instead of silently folding onto nothing (a parsed-but-never-applied
+	// no-op — the worst failure for an untrusted CSV). `valueExpr` is untouched (the L2 grammar is
+	// already lowercase) and `raw` keeps the author's casing for the inert-note display.
+	if (p.target !== undefined && p.target !== p.target.toLowerCase())
+		return { ...p, target: p.target.toLowerCase() };
+	return p;
+}
+
+function classifyToken(token: string): ParsedEffect {
 	const raw = token.trim();
 	const sep = raw.indexOf(':');
 	if (sep === -1) return { kind: 'unknown', raw };

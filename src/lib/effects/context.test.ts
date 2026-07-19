@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { makeExprContext, withSpellcastingMod, type BuildVars } from './context';
+import { makeExprContext, withSpellcastingMod, type BuildVars, type PlayVars } from './context';
 import { parseToken, resolveEffectValue, EFFECT_KIND, type ActiveEffect } from './token-parser';
 import { applyEffects, collectFacts, matchesTarget } from './apply';
 import { computed } from '../rules/pipeline';
@@ -49,6 +49,60 @@ describe('withSpellcastingMod · per-class scoping (SPEC4)', () => {
 		expect(ctx.number('spellcasting_mod')).toBe(0); // base untouched
 		expect(scoped.number('level')).toBe(7);
 		expect(scoped.boolean('is_raging')).toBe(false);
+	});
+
+	it('reads a THUNK mod live — a later state change is reflected (the DAG relies on this)', () => {
+		// the DAG mutates ability mods mid-resolve; a captured number would go stale, a thunk re-reads
+		let modNow = 2;
+		const scoped = withSpellcastingMod(ctx, () => modNow);
+		expect(scoped.number('spellcasting_mod')).toBe(2);
+		modNow = 5;
+		expect(scoped.number('spellcasting_mod')).toBe(5); // re-evaluated, not frozen at 2
+	});
+});
+
+describe('makeExprContext · play variables (EXPR-3 half)', () => {
+	const withPlay = (over: Partial<PlayVars> = {}) =>
+		makeExprContext(build, {
+			hp: 10,
+			hpMax: 30,
+			tempHp: 4,
+			exhaustion: 2,
+			flags: { is_raging: true },
+			conditions: new Set(['frightened']),
+			resources: { ki: 3 },
+			resourceMax: { ki: 6 },
+			armorType: 'heavy',
+			size: 'large',
+			...over
+		});
+
+	it('resolves the raw play numbers and flags', () => {
+		const c = withPlay();
+		expect(c.number('hp')).toBe(10);
+		expect(c.number('hp_max')).toBe(30);
+		expect(c.number('temp_hp')).toBe(4);
+		expect(c.number('exhaustion')).toBe(2);
+		expect(c.boolean('is_raging')).toBe(true);
+		expect(c.boolean('has_condition.frightened')).toBe(true);
+		expect(c.number('resource.ki')).toBe(3);
+		expect(c.number('resource_max.ki')).toBe(6);
+		expect(c.enum('armor_type')).toBe('heavy');
+	});
+
+	it('computes hp_percent as a floored integer', () => {
+		expect(withPlay().number('hp_percent')).toBe(33); // floor(10/30*100)
+		expect(withPlay({ hp: 30 }).number('hp_percent')).toBe(100);
+	});
+
+	it('guards hp_percent against division by zero (hpMax 0 → 0, never NaN)', () => {
+		expect(withPlay({ hp: 0, hpMax: 0 }).number('hp_percent')).toBe(0);
+	});
+
+	it('an absent condition / resource stays fail-closed (false / 0)', () => {
+		const c = withPlay();
+		expect(c.boolean('has_condition.poisoned')).toBe(false);
+		expect(c.number('resource.rage')).toBe(0);
 	});
 });
 
