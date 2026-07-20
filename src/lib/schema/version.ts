@@ -10,6 +10,10 @@
  */
 
 export const CONTENT_SCHEMA_VERSION = 1;
+// Desktop content SEED version — bump whenever the shipped SRD CSVs change (data, ids, headers). On
+// update, a desktop install whose on-disk seed version is older is RE-SEEDED (untouched shipped files
+// overwritten, user-edited ones preserved). v1 = the 0.4.0 snake_case + redone-SRD baseline.
+export const CONTENT_SEED_VERSION = 1;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

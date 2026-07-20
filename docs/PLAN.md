@@ -1632,6 +1632,17 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   `resources`/`slotClick`: a levelled cast should auto-spend one slot of the chosen level (pact
   pool for warlock; cantrips spend nothing), update the pips, and respect the UBUG-5 feedback
   pattern once that lands. Check both editions' pools (shared + pact).
+- [x] **REL-3 · Desktop content re-seed on update (0.4.0 data change).** DONE 2026-07-20. The desktop
+  seed (`content/provider.ts`) was skip-if-root-exists → a returning user stayed on their FIRST-run
+  SRD copy and never got shipped data changes (0.4.0 redid a lot: snake_case ids, snake `#content-`
+  headers, regenerated CSVs). Fixed with a `CONTENT_SEED_VERSION` marker (`content/.seed-version`,
+  outside the scanned roots): on an install whose on-disk version is older (or absent — every pre-0.4.0
+  install), `seedShippedContent` REWRITES each shipped file with the new bundled copy, EXCEPT one the
+  user hand-edited (its body no longer matches its own `#content-hash` → drift → preserved, and the
+  existing HashDrift flow still surfaces it). Homebrew + characters are never touched (different roots);
+  character refs already migrate kebab→snake (v1→v3). WEB needs nothing — it always fetches the fresh
+  deploy. Unit-tested over two MemoryStorages (first-run / overwrite-untouched / preserve-edited /
+  up-to-date-noop). **Bump `CONTENT_SEED_VERSION` whenever shipped SRD data changes.**
 - [ ] **REL-1 · Linux release build.** `release.yml` is Windows-only (`runs-on: windows-latest`). Add
   a Linux job (matrix `ubuntu-22.04` + apt webkit2gtk deps) so `tauri-action` publishes Linux artifacts
   alongside the Windows NSIS. Ship **more than the updater bundle**: AppImage is the only auto-updatable

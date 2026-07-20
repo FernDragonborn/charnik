@@ -459,6 +459,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const CONTENT_ROOTS` — The content roots that ship with the app (both editions).
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
+- `function seedShippedContent` — * Seed / UPDATE the shipped SRD roots on disk (desktop).
 - `function copyMissingRoots` — Copy each root's files from `from` to `to`, byte-for-byte, but skip a root that already exists in * `to` (so we never…
 - `function resetContentGraph` — Drop the cache (e.g.
 
@@ -748,6 +749,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/schema/version.ts`
 
 - `const CONTENT_SCHEMA_VERSION`
+- `const CONTENT_SEED_VERSION` — Desktop content SEED version — bump whenever the shipped SRD CSVs change (data, ids, headers).
 - `const CHARACTER_SCHEMA_VERSION` — v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 - `interface Versioned`
 - `type Migration` — A single forward step.
@@ -826,4 +828,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 456 exports across 66 modules · 26 duplicate suspects · generated in 137ms._
+_46 tokens · 50 global classes · 36 components · 458 exports across 66 modules · 26 duplicate suspects · generated in 121ms._
