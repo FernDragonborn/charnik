@@ -30,7 +30,12 @@ import {
 	ABILITY_SCORE_CLAMP,
 	type Ability
 } from '../rules/core';
-import { type ActiveEffect, type EffectCtx, type EffectIssue } from '../effects/token-parser';
+import {
+	EFFECT_KIND,
+	type ActiveEffect,
+	type EffectCtx,
+	type EffectIssue
+} from '../effects/token-parser';
 import {
 	applyEffects,
 	collectFacts,
@@ -89,6 +94,77 @@ export const SKILL_ABILITY = {
 /** The 18 SRD skill ids. */
 export type SkillId = keyof typeof SKILL_ABILITY;
 
+// B13 exhaustiveness — the CLOSED-vocab targets each effect kind's consumer actually reads. derive
+// IS the authority (it makes every applyEffects/rollEffectsFor call), so it owns these sets and
+// hands a validator to collectFacts; a known-kind token outside them is surfaced as a content-health
+// issue instead of folding onto nothing (`flat_bonus:armorclass+1` no longer vanishes). Kept as a
+// permissive SUPERSET: a false negative (a rare bogus target slips through) is far better than a
+// false positive (flagging a real target scares authors). action/bonus/reaction are the economy
+// targets `TurnEconomy.slotMax` consumes (now documented in PLUGINS.md §4.4).
+const SAVE_TARGETS = ['saves', ...ABILITIES.map((a) => `save.${a}`)];
+const SKILL_TARGETS = ['skills', ...Object.keys(SKILL_ABILITY).map((s) => `skill.${s}`)];
+const NUMERIC_TARGETS = new Set<string>([
+	...ABILITIES,
+	'ac',
+	'hp_max',
+	'speed',
+	'speed.fly',
+	'speed.swim',
+	'initiative',
+	'attack',
+	'damage',
+	'spell_dc',
+	'spell_attack',
+	'action',
+	'bonus',
+	'reaction',
+	'd20_tests',
+	// passive score of ANY skill (RAW: any ability check has a passive form — passive Athletics,
+	// passive Stealth…), not only the three senses the strip highlights.
+	...Object.keys(SKILL_ABILITY).map((s) => `passive.${s}`),
+	...SAVE_TARGETS,
+	...SKILL_TARGETS
+]);
+// roll-matched kinds (advantage/disadvantage/auto_*/reroll/min_die): the keys `matchesTarget` fans
+// out over — `damage` included for GWF-style `reroll:damage`.
+const ROLL_TARGETS = new Set<string>([
+	'attack',
+	'damage',
+	'initiative',
+	'd20_tests',
+	...SAVE_TARGETS,
+	...SKILL_TARGETS
+]);
+// grant_proficiency canonical target (token-parser strips `skill.` → bare skill id; saves keep
+// `save.`; a bare ability grants that save).
+const PROFICIENCY_TARGETS = new Set<string>([
+	...ABILITIES,
+	...ABILITIES.map((a) => `save.${a}`),
+	...Object.keys(SKILL_ABILITY)
+]);
+
+/** B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
+ *  Open-vocab kinds (resist_immune, grant_resource, apply_condition) return true — validated
+ *  elsewhere or unbounded. */
+const isEffectTargetSupported = (kind: string, target: string): boolean => {
+	switch (kind) {
+		case EFFECT_KIND.flatBonus:
+		case EFFECT_KIND.setOverride:
+			return NUMERIC_TARGETS.has(target);
+		case EFFECT_KIND.advantage:
+		case EFFECT_KIND.disadvantage:
+		case EFFECT_KIND.autoFail:
+		case EFFECT_KIND.autoSucceed:
+		case EFFECT_KIND.reroll:
+		case EFFECT_KIND.minDie:
+			return ROLL_TARGETS.has(target);
+		case EFFECT_KIND.grantProficiency:
+			return PROFICIENCY_TARGETS.has(target);
+		default:
+			return true;
+	}
+};
+
 /** Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) →
  *  proficient → expertise (×2). */
 type SkillProficiency = 'none' | 'half' | 'proficient' | 'expertise';
@@ -124,7 +200,9 @@ export interface CharacterSheet {
 	flySpeed: Computed;
 	swimSpeed: Computed;
 	maxHp: Computed;
-	passives: Record<'perception' | 'investigation' | 'insight', Computed>;
+	/** Passive score of every skill (10 + mod ± adv/dis, `passive.<skill>` effects folded). The play
+	 *  view can pin any skill as a passive sense; the strip highlights perception/investigation/insight. */
+	passives: Record<SkillId, Computed>;
 	carryingCapacity: Computed;
 	/** Damage resistances / immunities / vulnerabilities from active effects (by type). */
 	defenses: { resist: string[]; immune: string[]; vulnerable: string[] };
@@ -392,7 +470,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 
 	// the ONE typed-facts object (D7): every token parsed + value-resolved once; every consumer
 	// below (and the roll path / action economy through the sheet) reads THIS, never a re-scan.
-	const facts = collectFacts(resolvedEffects, effCtx, issues);
+	const facts = collectFacts(resolvedEffects, effCtx, issues, isEffectTargetSupported);
 
 	// L3 plugin PRE-PASS (docs/PLUGINS.md; stage 2½ — between resolve and the fold): resolve every
 	// `plugin:` token against the registry over the §4.2 least-data ctx. Returned TOKENS become
@@ -442,7 +520,10 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		if (expansion) {
 			const condsBefore = new Set(facts.conditions);
 			if (expansion.syntheticEffects.length)
-				mergeFacts(facts, collectFacts(expansion.syntheticEffects, effCtx, issues));
+				mergeFacts(
+					facts,
+					collectFacts(expansion.syntheticEffects, effCtx, issues, isEffectTargetSupported)
+				);
 			facts.numeric.push(...expansion.numeric);
 			facts.pluginNotes.push(...expansion.notes);
 			facts.unknown.push(...expansion.unknown);
@@ -458,7 +539,8 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 					if (cond)
 						condEffects.push({ source: cond.source, layer: 'condition', tokens: cond.tokens });
 				}
-				if (condEffects.length) mergeFacts(facts, collectFacts(condEffects, effCtx, issues));
+				if (condEffects.length)
+					mergeFacts(facts, collectFacts(condEffects, effCtx, issues, isEffectTargetSupported));
 			}
 		}
 	}
@@ -472,6 +554,24 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		if (!facts.disadvantage.some((d) => d.target === 'skill.stealth' && d.source === source))
 			facts.disadvantage.push({ target: 'skill.stealth', source });
 	}
+
+	// A16: an `apply_condition:<id>` referencing a condition that has no row in the active edition
+	// otherwise applies a PHANTOM condition silently (a typo'd id sets a flag that never matches).
+	// Surface it as a content-health issue. A real, edition-matched condition with an EMPTY effects
+	// column is legitimate (many SRD conditions) — checked by row existence, not by expandCondition
+	// (which also returns undefined for token-less rows). Guard/expansion ordering is already handled
+	// by the resolve stage (A16 e / SPEC7); edition-filter + once-per-id by expandCondition (A16 a/c).
+	const conditionExists = (id: string): boolean =>
+		graph.rows.some(
+			(r) => r.type === 'condition' && r.id === id && r.systems.includes(character.system)
+		);
+	for (const id of facts.conditions)
+		if (!conditionExists(id) && id !== RAGE_CONDITION_ID)
+			issues.push({
+				source: 'apply_condition',
+				token: `apply_condition:${id}`,
+				reason: `unknown condition "${id}"`
+			});
 
 	// spellcasting AFTER the resolve, so DCs/attacks read the EFFECTIVE scores (a Headband of
 	// Intellect moves the wizard's DC, as it should) — and `spell_dc`/`spell_attack` effects fold in.
@@ -590,7 +690,10 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	const movementOf = (key: 'speed.fly' | 'speed.swim') =>
 		applyEffects(key, computed([], { min: 0 }), facts);
 
-	const passiveOf = (skill: 'perception' | 'investigation' | 'insight') => {
+	// passive score of every skill — RAW any ability check has a passive form (passive Athletics,
+	// passive Stealth…), and the play view lets the user pin ANY skill as a passive sense, so
+	// `passive.<skill>` (Observant, an item bonus) must resolve for all 18, not just the three senses.
+	const passiveOf = (skill: SkillId) => {
 		// advantage/disadvantage on the underlying check moves the passive by ±5 (both → cancel, RAW);
 		// then `passive.<skill>`-targeted effects (Observant) fold in through the seam.
 		const adv = facts.advantage.some((a) => matchesTarget(a.target, `skill.${skill}`));
@@ -630,11 +733,9 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		flySpeed: movementOf('speed.fly'),
 		swimSpeed: movementOf('speed.swim'),
 		maxHp,
-		passives: {
-			perception: passiveOf('perception'),
-			investigation: passiveOf('investigation'),
-			insight: passiveOf('insight')
-		},
+		passives: Object.fromEntries(
+			(Object.keys(SKILL_ABILITY) as SkillId[]).map((k) => [k, passiveOf(k)])
+		) as Record<SkillId, Computed>,
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
 		defenses,
 		resources: facts.resources,

@@ -61,6 +61,13 @@ async function graphOf(): Promise<ContentGraph> {
 			`overchannel,5.5e,${S},Overchannel,flat_bonus:ac+3,wizard,14,evoker`
 		].join('\n')
 	);
+	await st.write(
+		'c/conditions_srd.csv',
+		[
+			'id,systems,source,name_en,effects,negative',
+			`poisoned,5.5e,${S},Poisoned,disadvantage:attack,true`
+		].join('\n')
+	);
 	const g = await loadContent(st, ['c']);
 	expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 	return g;
@@ -148,6 +155,48 @@ describe('deriveSheet aggregator', () => {
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.facts.disadvantage.some((d) => d.target === 'skill.stealth')).toBe(true);
 		expect(s.skills.stealth!.notes?.some((n) => /disadvantage/i.test(n))).toBe(true);
+	});
+
+	it('B13: a known-kind token with a dead target is surfaced, not silently dropped', () => {
+		const c = wizard();
+		c.play.effects = [
+			{ iid: 'x', label: 'Typo', effects: ['flat_bonus:armorclass+1'], positive: true }
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.ac.value).toBe(13); // leather 11 + DEX 2 — the typo'd bonus did NOT apply
+		expect(s.deriveIssues.some((i) => /unknown target "armorclass"/.test(i.reason))).toBe(true);
+	});
+
+	it('B13: the action-economy targets (action/bonus/reaction) are recognized, not flagged', () => {
+		const c = wizard();
+		c.play.effects = [
+			{ iid: 'h', label: 'Haste', effects: ['flat_bonus:action+1'], positive: true }
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.deriveIssues.some((i) => /unknown target/.test(i.reason))).toBe(false);
+	});
+
+	it('passive.<any skill> is valid vocab and applies (not just the three senses)', () => {
+		const c = wizard();
+		c.play.effects = [
+			{ iid: 'o', label: 'Keen', effects: ['flat_bonus:passive.athletics+5'], positive: true }
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		// STR 10 (+0), not proficient: passive athletics = 10 + 5 = 15; no false "unknown target"
+		expect(s.passives.athletics.value).toBe(15);
+		expect(s.deriveIssues.some((i) => /unknown target/.test(i.reason))).toBe(false);
+	});
+
+	it('A16: apply_condition to a nonexistent condition surfaces an issue', () => {
+		const c = wizard();
+		c.play.effects = [
+			{ iid: 'p', label: 'Poison', effects: ['apply_condition:poisoned'], positive: false },
+			{ iid: 'z', label: 'Typo', effects: ['apply_condition:frightend'], positive: false }
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		// the real, edition-matched condition is fine; only the typo'd id is flagged
+		expect(s.deriveIssues.some((i) => /unknown condition "frightend"/.test(i.reason))).toBe(true);
+		expect(s.deriveIssues.some((i) => /unknown condition "poisoned"/.test(i.reason))).toBe(false);
 	});
 
 	it('adds a shield when raised (the play-state toggle, not the inventory flag)', () => {

@@ -250,9 +250,15 @@ Two distinct counts, easy to conflate:
 
 ### 4.4 Target keys
 
-`ac` · `initiative` · `speed` · `hp_max` · `attack` · `damage` · `save.<str|dex|con|int|wis|cha>`
-· `skill.<skill-id>` (the 18 SRD ids) · `passive.<perception|investigation|insight>`.
+`ac` · `initiative` · `speed` · `speed.fly` · `speed.swim` · `hp_max` · `attack` · `damage` ·
+`spell_dc` · `spell_attack` · `save.<str|dex|con|int|wis|cha>` · `skill.<skill-id>` (the 18 SRD
+ids) · `passive.<skill-id>` (any of the 18 — every check has a passive form, not only the three
+senses the strip highlights) · the action-economy keys `action` · `bonus` · `reaction` (a
+`flat_bonus:action+1` grants an extra action-economy slot; consumed by `TurnEconomy.slotMax`) ·
+the group `d20_tests` (fans out to every d20 roll — saves, checks/skills, attack, initiative).
 The group keys `saves` / `skills` are valid in TOKENS (they fan out), not as contribution keys.
+A known-kind token whose target is outside this closed set is kept inert AND surfaced in
+content-health (`unknown target "<t>" for <kind>`), not silently dropped (AUDIT B13).
 `skill.<id>` is validated by GRAMMAR (a snake-case id), not by membership in the 18 — an unknown
 id is accepted and folds onto nothing (the same harmless no-op as a typo'd content target);
 prototype-pollution keys die on the grammar + the ≤20-key cap, and folding never indexes an

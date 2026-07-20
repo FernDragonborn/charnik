@@ -14,7 +14,6 @@ import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { tokensOf } from '$lib/content/loader';
-import { passiveScore } from '$lib/rules/core';
 import { rollPool, type DieMods } from '$lib/rules/dice';
 import type { Character } from '$lib/character/schema';
 import {
@@ -34,6 +33,7 @@ import {
 	buildSpellGroups,
 	parseDamage,
 	modTargetLabel,
+	applyDefense,
 	type Atk,
 	type SpRow,
 	type MenuKind,
@@ -139,13 +139,25 @@ class CombatVM {
 
 	// --- HP: apply damage / healing to the play-state (temp HP soaks damage first) -------------
 	hpAmount = $state(1);
+	/** Selected damage type for the next Damage press (B20). Null = untyped (no resist/vuln math). */
+	damageType = $state<string | null>(null);
 	private get hpMax(): number {
 		return this.character?.play.hp.max ?? this.sheet?.maxHp.value ?? 0;
 	}
+	/** The damage types the character has ANY defense for — the only ones worth offering in the
+	 *  type picker (any other type resolves identically to untyped). Empty → no picker shown. */
+	damageTypeOptions = $derived.by<string[]>(() => {
+		const d = this.sheet?.defenses;
+		if (!d) return [];
+		return [...new Set([...d.resist, ...d.immune, ...d.vulnerable])].sort();
+	});
 	damage = () => {
 		const p = this.character?.play;
 		if (!p) return;
-		let n = Math.max(0, Math.round(this.hpAmount));
+		const raw = Math.max(0, Math.round(this.hpAmount));
+		// B20: resist/immune/vulnerable modify the damage BEFORE temp HP soaks it (RAW ordering).
+		const defenses = this.sheet?.defenses ?? { resist: [], immune: [], vulnerable: [] };
+		let n = applyDefense(raw, this.damageType, defenses).final;
 		const soaked = Math.min(p.hp.temp, n); // temp HP absorbs first (5e rule)
 		p.hp.temp -= soaked;
 		n -= soaked;
@@ -205,7 +217,7 @@ class CombatVM {
 		return this.passiveSkills.map((k) => ({
 			key: k,
 			name: titleCase(k),
-			comp: passiveScore(sheet.skills[k])
+			comp: sheet.passives[k] // effect-adjusted (adv/dis ±5, passive.<skill>), not bare 10+mod
 		}));
 	});
 	togglePassive = (k: SkillId) => {

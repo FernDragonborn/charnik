@@ -125,6 +125,34 @@ export function autoOutcome(facts: EffectFacts, key: string): 'fail' | 'succeed'
 export const netAdvantage = (fx: Pick<RollEffects, 'advantage' | 'disadvantage'>): number =>
 	fx.advantage === fx.disadvantage ? 0 : fx.advantage ? 1 : -1;
 
+/** The sheet's damage defenses (from `resist_immune` effects) — the three buckets by damage type. */
+export interface Defenses {
+	resist: string[];
+	immune: string[];
+	vulnerable: string[];
+}
+
+/** Which bucket, if any, a damage type hits. */
+export type DefenseBucket = 'immune' | 'resist' | 'vulnerable' | null;
+
+/**
+ * Apply resist/immune/vulnerable to a raw damage amount given its type (B20). Immune → 0, resist →
+ * half rounded DOWN (RAW), vulnerable → doubled; an untyped hit or a type the sheet has no defense
+ * for is unchanged. Immunity outranks vulnerability (you can't be both for one type in SRD, but
+ * fail-safe to 0). Pure — the resist/vuln math happens BEFORE temp-HP soak at the call site (RAW:
+ * modify the damage, then absorb). */
+export function applyDefense(
+	amount: number,
+	type: string | null,
+	defenses: Defenses
+): { final: number; bucket: DefenseBucket } {
+	if (!type) return { final: amount, bucket: null };
+	if (defenses.immune.includes(type)) return { final: 0, bucket: 'immune' };
+	if (defenses.vulnerable.includes(type)) return { final: amount * 2, bucket: 'vulnerable' };
+	if (defenses.resist.includes(type)) return { final: Math.floor(amount / 2), bucket: 'resist' };
+	return { final: amount, bucket: null };
+}
+
 /** Feet → "N m" (metric in parentheses next to imperial). */
 export const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/, '')} m`;
 

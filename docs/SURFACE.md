@@ -346,6 +346,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function rollEffectsFor`
 - `function autoOutcome` — A forced roll outcome for `key`, or null to roll normally.
 - `const netAdvantage` — Advantage + disadvantage cancel to a straight roll (5e rule) → the −1/0/+1 the roller takes.
+- `interface Defenses` — The sheet's damage defenses (from `resist_immune` effects) — the three buckets by damage type.
+- `type DefenseBucket` — Which bucket, if any, a damage type hits.
+- `function applyDefense` — * Apply resist/immune/vulnerable to a raw damage amount given its type (B20).
 - `const metres` — Feet → "N m" (metric in parentheses next to imperial).
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
 - `const titleCase` — "sleight-of-hand" → "Sleight Of Hand".
@@ -558,6 +561,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/apply.ts`
 
 - `function matchesTarget` — Does an effect target apply to this stat key?
+- `type TargetValidator` — Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
 - `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
 - `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
 - `interface FactRef` — A non-numeric fact tied to a target key (`advantage:attack` → {target:'attack', source}).
@@ -810,4 +814,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 438 exports across 63 modules · 34 duplicate suspects · generated in 108ms._
+_46 tokens · 50 global classes · 36 components · 442 exports across 63 modules · 34 duplicate suspects · generated in 115ms._

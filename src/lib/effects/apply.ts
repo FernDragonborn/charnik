@@ -39,6 +39,12 @@ export function matchesTarget(effTarget: string | undefined, key: string): boole
 	return false;
 }
 
+/** Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
+ *  Only CLOSED-vocab targets are checked (stat/roll/proficiency keys); open-vocab kinds
+ *  (resist_immune types, grant_resource / apply_condition ids) are validated elsewhere or unbounded,
+ *  so the validator returns true for them. `kind` is an `EFFECT_KIND` value. */
+export type TargetValidator = (kind: string, target: string) => boolean;
+
 /** A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll
  *  threshold (`reroll`) or the die floor (`min_die`). */
 export interface RollMod {
@@ -136,12 +142,22 @@ const emptyFacts = (): EffectFacts => ({
 export function collectFacts(
 	effects: ActiveEffect[],
 	ctx?: EffectCtx,
-	issues?: EffectIssue[]
+	issues?: EffectIssue[],
+	isTargetSupported?: TargetValidator
 ): EffectFacts {
 	const facts = emptyFacts();
 	const pools = new Map<string, ResourceDef>();
 	const resourceIds = new Set<string>();
 	const conditions = new Set<string>();
+	// B13 exhaustiveness: a KNOWN kind whose target no consumer reads would fold onto nothing and
+	// vanish silently (`flat_bonus:armorclass+1`). The derive that owns the consumers passes a
+	// validator over the CLOSED-vocab targets; an unsupported one is kept inert AND surfaced as an
+	// issue (content-health) instead of dropped. Returns true = the token was rejected + reported.
+	const rejectTarget = (kind: string, target: string, source: string, token: string): boolean => {
+		if (!isTargetSupported || isTargetSupported(kind, target)) return false;
+		issues?.push({ source, token, reason: `unknown target "${target}" for ${kind}` });
+		return true;
+	};
 	for (const eff of effects) {
 		for (const token of eff.tokens) {
 			const p = parseToken(token);
@@ -149,6 +165,7 @@ export function collectFacts(
 				case EFFECT_KIND.flatBonus:
 				case EFFECT_KIND.setOverride: {
 					if (!p.target) break;
+					if (rejectTarget(p.kind, p.target, eff.source, token)) break;
 					const op = p.kind === EFFECT_KIND.setOverride ? 'set' : 'add';
 					const v = resolveEffectValue(p, ctxOf(ctx, eff));
 					const fact: NumericFact = {
@@ -166,19 +183,23 @@ export function collectFacts(
 					break;
 				}
 				case EFFECT_KIND.advantage:
-					if (p.target) facts.advantage.push({ target: p.target, source: eff.source });
+					if (p.target && !rejectTarget(p.kind, p.target, eff.source, token))
+						facts.advantage.push({ target: p.target, source: eff.source });
 					break;
 				case EFFECT_KIND.disadvantage:
-					if (p.target) facts.disadvantage.push({ target: p.target, source: eff.source });
+					if (p.target && !rejectTarget(p.kind, p.target, eff.source, token))
+						facts.disadvantage.push({ target: p.target, source: eff.source });
 					break;
 				case EFFECT_KIND.autoFail:
-					if (p.target) facts.autoFail.push({ target: p.target, source: eff.source });
+					if (p.target && !rejectTarget(p.kind, p.target, eff.source, token))
+						facts.autoFail.push({ target: p.target, source: eff.source });
 					break;
 				case EFFECT_KIND.autoSucceed:
-					if (p.target) facts.autoSucceed.push({ target: p.target, source: eff.source });
+					if (p.target && !rejectTarget(p.kind, p.target, eff.source, token))
+						facts.autoSucceed.push({ target: p.target, source: eff.source });
 					break;
 				case EFFECT_KIND.grantProficiency:
-					if (p.target)
+					if (p.target && !rejectTarget(p.kind, p.target.trim(), eff.source, token))
 						facts.proficiencies.push({
 							target: p.target.trim(),
 							level: p.proficiency ?? 'proficient',
@@ -232,11 +253,19 @@ export function collectFacts(
 					break;
 				}
 				case EFFECT_KIND.reroll:
-					if (p.target && p.amount !== undefined)
+					if (
+						p.target &&
+						p.amount !== undefined &&
+						!rejectTarget(p.kind, p.target, eff.source, token)
+					)
 						facts.rerolls.push({ target: p.target, value: p.amount });
 					break;
 				case EFFECT_KIND.minDie:
-					if (p.target && p.amount !== undefined)
+					if (
+						p.target &&
+						p.amount !== undefined &&
+						!rejectTarget(p.kind, p.target, eff.source, token)
+					)
 						facts.minDie.push({ target: p.target, value: p.amount });
 					break;
 				case EFFECT_KIND.plugin:

@@ -41,6 +41,20 @@
 		/>
 		<button class="hp-btn heal" onclick={combat.heal} title="Apply healing">Heal ＋</button>
 	</div>
+	{#if combat.damageTypeOptions.length}
+		<!-- B20: only shown when the sheet HAS a defense — picks the incoming damage's type so
+		     resist (½) / immune (0) / vulnerable (×2) apply. Untyped = plain damage. -->
+		<select
+			class="hp-damage-type"
+			bind:value={combat.damageType}
+			aria-label="Damage type (applies resistance / immunity / vulnerability)"
+		>
+			<option value={null}>untyped</option>
+			{#each combat.damageTypeOptions as t (t)}
+				<option value={t}>{t}</option>
+			{/each}
+		</select>
+	{/if}
 	{#if downed}
 		<div class="death-saves">
 			<button
@@ -186,6 +200,17 @@
 	}
 	.hp-btn:hover {
 		filter: brightness(1.12);
+	}
+	.hp-damage-type {
+		margin-top: 6px;
+		width: 100%;
+		padding: 5px 8px;
+		font-size: 12px;
+		border-radius: 7px;
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		color: var(--color-text);
+		cursor: pointer;
 	}
 	.death-saves {
 		margin-top: 12px;

@@ -86,7 +86,16 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   dice in `spellRow`, so Fire Bolt shows AND rolls 2d10 at character level 5 (3d10 at 11, 4d10 at
   17). Data-driven off the `level==0` flag; a homebrew cantrip overrides via its own `damage`
   column. (The `higher_level` prose stays unparsed — the multiplier is the rule, not the text.)
-- [ ] **A16 · `apply_condition` expansion holes** (`derive.ts:217-231`): (a) condition row lookup
+- [x] **A16 · `apply_condition` expansion holes** — CLOSED 2026-07-20 (the last piece here; the
+  rest landed with EXPR-3/A11/SPEC7). (a) edition filter + (b) deterministic first-match: done in
+  `derive.ts expandCondition` (`r.systems.includes(character.system)`); (c) dedupe: the DAG expands
+  each condition id ONCE (A11); (d) one-level: intentional per SPEC7/PLUGINS.md §4.3; (e) guards
+  before expansion: the ONE resolve stage (gather → guards → expand). NEW this pass: a referenced
+  condition with NO row in the active edition was a silent PHANTOM (a typo'd id set a flag nothing
+  matched) — `derive.ts` now emits a `unknown condition "<id>"` deriveIssue (content-health). A real
+  edition-matched condition with an empty `effects` column stays legitimate (checked by row
+  existence, not by `expandCondition` which also returns undefined for token-less rows). The
+  cross-source same-id/same-edition dup stays a `collisions.json` concern (B15/B22). ORIGINAL: (`derive.ts:217-231`): (a) condition row lookup
   has NO edition filter (a 5.5e condition row can apply to a 5e character when both roots load) —
   class features right beside it DO filter `systems`; (b) `graph.rows.find` = first match, source
   namespacing ignored; (c) no dedupe (see A11); (d) one-level only; (e) ordering vs future L2
@@ -182,7 +191,17 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   older apps instead of degrading. **DECIDED (user 2026-07-16): the loader never rejects a token —
   unknown degrades to inert text + a content-health WARNING; if the user has explicitly dismissed/
   skipped it, skip silently.** Only `parseEffect` classifies tokens.
-- [ ] **B13 · Third silent token class: recognized kind, unconsumed target.** A known kind whose
+- [x] **B13 · Third silent token class: recognized kind, unconsumed target.** FIXED 2026-07-20.
+  `derive.ts` owns the CLOSED-vocab target sets per kind (it IS the consumer — every
+  `applyEffects`/`rollEffectsFor` call) and hands `collectFacts` a validator (`TargetValidator` in
+  `apply.ts`); a known-kind token whose target is outside the set is kept INERT and surfaced as a
+  `unknown target "<t>" for <kind>` deriveIssue (content-health) instead of folding onto nothing
+  (`flat_bonus:armorclass+1` no longer vanishes). Sets are permissive supersets (a false negative
+  beats a false positive that scares authors); shipped-content targets all verified inside them.
+  `action`/`bonus`/`reaction` are now DOCUMENTED as the economy targets (PLUGINS.md §4.4). Also
+  closes PLG-7-C (a plugin-returned token with a typo'd known-kind target is validated on the same
+  path). NB `passive.<skill>` is valid for ALL 18 skills (any check has a passive form), which
+  required generalizing the passive computation — see below. ORIGINAL: A known kind whose
   target no consumer reads vanishes with no note and no content-health (e.g. a typo'd target).
   There is no exhaustiveness accounting: every parsed token must be either applied or surfaced as
   unsupported. Related: `action`/`bonus`/`reaction` targets are honored by `TurnEconomy.slotMax`
@@ -213,7 +232,15 @@ Deep effects-system review, 2026-07-16 (B12–B26):
 - [ ] **B19 · Durations tick only in combat.** Rounds advance only via `nextTurn`; out of combat
   `play.round` is frozen → a 10-round Bless cast outside combat never expires (only a rest clears
   it). No real-time/out-of-combat expiry model.
-- [ ] **B20 · Defenses are display-only.** `damage()` has no concept of damage TYPE — resist/
+- [x] **B20 · Defenses are display-only.** FIXED 2026-07-20. `applyDefense(amount, type, defenses)`
+  (pure, `combat/helpers.ts`) applies immune→0 / resist→½ (round down, RAW) / vulnerable→×2 BEFORE
+  temp-HP soak (RAW ordering); the combat VM's `damage()` runs it with a selected `damageType`, and
+  `HpPanel` shows a compact type picker ONLY when the sheet has any defense (options = the union of
+  its resist/immune/vulnerable types + untyped; untyped = no modifier, current behavior). Unit tests
+  on the pure helper. NOTE the deeper data gap the finding also names (spell `damage:"8d6 fire"` is
+  one unstructured string; the attack/spell roll path still doesn't auto-route typed damage into the
+  HP flow) is separate and stays open under D9/D10 — this closes the "defenses never applied" half.
+  ORIGINAL: `damage()` has no concept of damage TYPE — resist/
   immune/vulnerable render in CombatStrip and are never applied. Blocked by data too: spell
   damage type is unstructured (`damage: "8d6 fire"` one string; `items.damage_type` exists but
   the HP flow takes a bare number).

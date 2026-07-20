@@ -13,6 +13,7 @@ import {
 	remainingRounds,
 	isEffectExpired,
 	parseDamage,
+	applyDefense,
 	type EffectInstance
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
@@ -252,5 +253,22 @@ describe('parseDamage — dice pool + flat mod (A7: a bonus die is not a flat mo
 
 	it('keeps a real flat mod alongside a bonus die (1d8+1d6+2)', () => {
 		expect(parseDamage('1d8+1d6+2 radiant')).toEqual({ pool: { 8: 1, 6: 1 }, mod: 2 });
+	});
+});
+
+describe('applyDefense — resist / immune / vulnerable applied to damage (B20)', () => {
+	const d = { resist: ['fire'], immune: ['poison'], vulnerable: ['cold'] };
+	it('halves (round down) a resisted type', () => {
+		expect(applyDefense(9, 'fire', d)).toEqual({ final: 4, bucket: 'resist' });
+	});
+	it('zeroes an immune type', () => {
+		expect(applyDefense(20, 'poison', d)).toEqual({ final: 0, bucket: 'immune' });
+	});
+	it('doubles a vulnerable type', () => {
+		expect(applyDefense(7, 'cold', d)).toEqual({ final: 14, bucket: 'vulnerable' });
+	});
+	it('leaves an untyped hit or an undefended type unchanged', () => {
+		expect(applyDefense(10, null, d)).toEqual({ final: 10, bucket: null });
+		expect(applyDefense(10, 'radiant', d)).toEqual({ final: 10, bucket: null });
 	});
 });
