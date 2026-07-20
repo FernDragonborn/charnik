@@ -808,10 +808,16 @@ inline (user, 2026-07-20).
   bad target (`armorclass`/`armor_class` → `ac`), a skill/condition/resource id typo, a plugin
   `bad target key "X"` — the error should append the nearest valid candidate(s) by edit distance:
   "unknown target 'armorclass' — did you mean 'ac'?". Turns a dead-end into a one-glance fix. Needs a
-  small fuzzy/Levenshtein helper (a proven tiny dep, e.g. `didyoumean2`/`fastest-levenshtein`) + the
-  candidate sets, which already exist (`EFFECT_KINDS`, the `TARGET_KEY_RE` targets, `SKILL_ABILITY`
-  keys, condition/resource ids). Only suggest when the input is CLOSE (distance ≤ ~2) and the slot is
-  a closed vocabulary — never for free-text (`args`, guard expressions). Spans all effect authoring
+  small fuzzy helper (a proven tiny dep, e.g. `didyoumean2`/`fastest-levenshtein`) + the candidate
+  sets, which already exist (`EFFECT_KINDS`, the `TARGET_KEY_RE` targets, `SKILL_ABILITY` keys,
+  condition/resource ids). Threshold must be **length-RELATIVE, not a fixed absolute** — a flat
+  "distance ≤ 2" is both too loose for short ids (`hp`→`ac` is distance 2, a garbage suggestion) and
+  too strict for long ones (`invstigaton`→`investigation` is 3 edits, missed): use a normalized ratio
+  (`distance / max(len)` ≲ 1/3) or length tiers (≤1 for len ≤4, ≤2 for 5–8, ≤3 for 9+). Use
+  **Damerau**-Levenshtein so a transposition (`flta_bonus`→`flat_bonus`) counts as 1, not 2. Rank all
+  candidates and show the top 1–2 under the threshold ("did you mean X or Y?"), not a hard cutoff.
+  Only for CLOSED vocabularies — never for free-text (`args`, guard expressions). Spans all effect
+  authoring
   (the homebrew form, CSV content-health, plugin results), cross-ref B12/B13; pairs with PLG-8 (a
   suggestion + a doc link is the ideal message).
 - [~] **PLG-T1 · `plugin-store.svelte.ts` test coverage.** DONE: the `pluginStatus` state machine
