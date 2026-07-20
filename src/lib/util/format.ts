@@ -11,6 +11,6 @@ export const titleCase = (s: string): string =>
  *  ubiquitous try/catch pattern lives (AUDIT F6). */
 export const errText = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
-/** A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "+0" (D&D shows a zero mod as "+0";
- *  uses the real minus glyph). The one modifier-formatter (AUDIT F2). */
-export const signed = (n: number): string => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
+/** A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "0" (a zero modifier reads plain, no
+ *  sign — the sheet's convention for abilities/skills/saves). Real minus glyph. One formatter (F2). */
+export const signed = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');

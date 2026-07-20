@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (28)
+## Duplicate suspects (27)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -47,7 +47,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 - `typeName` (src/lib/components/CommandPalette.svelte) = `cap` (src/lib/content/grouping.ts)
 - `cap` (src/lib/content/detail.ts) = `label` (src/lib/content/homebrew.ts)
-- `formatModifier` (src/lib/rules/dice.ts) = `signed` (src/lib/util/format.ts)
 
 ## Design tokens (`styles/tokens.css`)
 
@@ -814,7 +813,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ordinal` — 1 → "1st", 2 → "2nd", 11 → "11th" … (spell-level labels, feature lists).
 - `const titleCase` — "sleight_of_hand" / "animal-handling" → "Sleight Of Hand" / "Animal Handling".
 - `const errText` — An unknown thrown value → its message string (`e.message` or `String(e)`).
-- `const signed` — A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "+0" (D&D shows a zero mod as "+0"; * uses the real minus gly…
+- `const signed` — A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "0" (a zero modifier reads plain, no * sign — the sheet's con…
 
 ### `src/lib/util/persist.ts`
 
@@ -826,4 +825,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 454 exports across 66 modules · 28 duplicate suspects · generated in 112ms._
+_46 tokens · 50 global classes · 36 components · 454 exports across 66 modules · 27 duplicate suspects · generated in 112ms._
