@@ -1646,6 +1646,19 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   when exhausted — ties UBUG-5). I.e. extend the "use → spend + gate + surface" model from spell slots
   to the resource pools, so using a feature that costs a resource deducts it the way casting deducts a
   slot. Pure spend logic mirrors `slotToSpend`; the render mirrors the spell-row affordance.
+- **UBUG-9 · Spell-block summary caption is weak for non-damage spells (think about).** The bold
+  caption per spell row (`SpRow.spe` = `dmg || effectHint(row.data)`) is great for damage (`1d10 fire`)
+  but for the rest it's mostly a flat "utility" — except a few HAND-CURATED cases (`effectHint`
+  hardcodes `mage hand`→"utility", a self-range teleport→"teleport" so Misty Step reads well, etc.).
+  Goal: that descriptive style EVERYWHERE (Misty Step "teleport", Mage Armor "set AC 13", Bless
+  "+1d4 attacks & saves"…), not a generic "utility". This is AUDIT **D6** (`effectHint` hardcodes
+  spell names, EN-only, against the data-driven grain). **Idea to explore:** derive the caption from
+  the spell's EFFECT TOKENS via the existing engine (parse `flat_bonus`/`set_override`/`apply_condition`/
+  `speed`… into a short human phrase) instead of a hardcoded name list — the engine already parses these
+  into typed facts, so a `factsToSummary(facts)` could render "set AC 13" / "+1d4 saves" / "teleport"
+  data-drivenly + localized. Blocked partly by **E4** (most SRD spells still ship EMPTY `effects`
+  columns — no tokens to summarize yet); until encoded, a per-spell content `summary_*` column is the
+  fallback. Cross-ref D6 + E4.
 - [x] **REL-3 · Desktop content re-seed on update (0.4.0 data change).** DONE 2026-07-20. The desktop
   seed (`content/provider.ts`) was skip-if-root-exists → a returning user stayed on their FIRST-run
   SRD copy and never got shipped data changes (0.4.0 redid a lot: snake_case ids, snake `#content-`
