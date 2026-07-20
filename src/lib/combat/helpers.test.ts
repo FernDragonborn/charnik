@@ -12,6 +12,7 @@ import {
 	netAdvantage,
 	remainingRounds,
 	isEffectExpired,
+	parseDamage,
 	type EffectInstance
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
@@ -233,5 +234,23 @@ describe('durationToRounds — spell duration text → rounds (1 round = 6 s)', 
 		expect(durationToRounds('Instantaneous')).toBeNull();
 		expect(durationToRounds('Until dispelled')).toBeNull();
 		expect(durationToRounds('')).toBeNull();
+	});
+});
+
+describe('parseDamage — dice pool + flat mod (A7: a bonus die is not a flat mod)', () => {
+	it('splits a single die and its flat mod', () => {
+		expect(parseDamage('1d8 +3 slashing')).toEqual({ pool: { 8: 1 }, mod: 3 });
+	});
+
+	it('handles the unicode minus signed() emits', () => {
+		expect(parseDamage('1d6 −1 bludgeoning')).toEqual({ pool: { 6: 1 }, mod: -1 });
+	});
+
+	it('does NOT read a bonus die count as a flat mod (2d6+1d4)', () => {
+		expect(parseDamage('2d6+1d4 fire')).toEqual({ pool: { 6: 2, 4: 1 }, mod: 0 });
+	});
+
+	it('keeps a real flat mod alongside a bonus die (1d8+1d6+2)', () => {
+		expect(parseDamage('1d8+1d6+2 radiant')).toEqual({ pool: { 8: 1, 6: 1 }, mod: 2 });
 	});
 });

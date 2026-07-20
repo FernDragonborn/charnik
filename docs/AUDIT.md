@@ -25,20 +25,28 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
   Wizard 2, CON 14 → 40 (was 42, the +2 overcount). Rule identical both editions, no system branch.
   NB the hit-dice POOL (short rest, → B2/UBUG-1) is per-die-type across classes in both editions —
   the existing `hitDiceSpent: Record<die, n>` shape already matches.
-- [ ] **A3 · Heavy-armor `str_min` ignored.** The column is loaded (13/15 in SRD items) but
-  derive never applies the −10 ft speed penalty nor emits an explainability note.
-- [ ] **A4 · `stealth_disadvantage` is display-only.** Never reaches Stealth rolls (blocked on
-  the disadvantage vocab gap, → A5/EFX-1).
+- [x] **A3 · Heavy-armor `str_min` ignored.** FIXED 2026-07-20. `character/derive.ts` speed fold
+  now pushes an item-layer `-10` contribution when the equipped armor's `str_min` exceeds the
+  wearer's STR (RAW, both editions), traced with a `STR <score> < <min>` note so the sheet explains
+  the penalty on hover; then effects layer on top, clamped `min: 0`. Golden tests: plate (STR 15)
+  on STR 10 -> 20; STR 15 -> 30 (no penalty).
+- [x] **A4 · `stealth_disadvantage` is display-only.** FIXED 2026-07-20 (the A5/EFX-1 disadvantage
+  vocab unblocked it). `derive.ts` synthesizes a `disadvantage` FACT targeting `skill.stealth` when
+  the equipped armor carries the flag — reaching BOTH the `skill.stealth` hover note and the actual
+  Hide/Stealth roll (`rollEffectsFor` reads `facts.disadvantage`), deduped by (target, source) like
+  a real token. Test asserts the fact + the note.
 - [x] **A5 · `disadvantage` missing from the effect vocabulary.** FIXED 2026-07-15 (EFX-1):
   full kind (parse/apply-note/flags/rollEffectsFor + `netAdvantage` cancel rule); passives take
   ±5 from adv/dis on the underlying check.
 - [x] **A6 · `grant_proficiency:skill.<id>` silently dropped.** FIXED 2026-07-15 (EFX-1):
   `parseEffect` canonicalizes the target in ONE place (`skill.` strips, `save.` stays); the
   granted level is a single ladder value (`proficient`/`expertise`), never two booleans.
-- [ ] **A7 · Attack-row heuristics (minor).** `computeAttacks` adds proficiency
-  unconditionally (no weapon-proficiency check — if this is deliberate leniency, say so in
-  PLAN); `parseDamage` would double-count a bonus die in a "2d6+1d4"-style damage string
-  (first `[+-]\d` parsed as the flat mod) — not triggered by current SRD data, fragile.
+- [~] **A7 · Attack-row heuristics (minor).** `parseDamage` double-count FIXED 2026-07-20: the
+  flat-mod regex gained a `(?!d)` lookahead so a bonus die's count ("2d6+1d4") is no longer read as
+  the flat mod (regression tests added). The proficiency half is DEFERRED-BY-DESIGN: weapon/armor
+  proficiency is not modeled in the content schema at all (no column to check against), so
+  `computeAttacks` adding proficiency unconditionally is deliberate leniency — recorded in PLAN.md.
+  Revisit if a weapon-proficiency data model lands.
 
 Deep effects-system review, 2026-07-16 (A8–A18):
 

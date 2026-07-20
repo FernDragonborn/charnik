@@ -334,6 +334,13 @@ cp/sp/ep/gp/pp. **Optional appearance** (age, height, weight, eyes, skin, hair, 
 **Separate sections — NOT one blob**: Class features · Species traits · Feats ·
 Armor/weapon proficiencies · Tool proficiencies · Languages — each its own section.
 
+**Attacks — deliberate leniency (AUDIT A7):** `computeAttacks` adds the proficiency bonus to
+every equipped weapon's to-hit UNCONDITIONALLY. Weapon/armor proficiency is not modeled in the
+content schema (no `weapon_prof` column, no character store field), so there's nothing to gate on
+— proficiency is granted by class narratively and the sheet trusts the equip. This is accepted
+until a weapon-proficiency data model lands (would also feed the "proficiencies" section above);
+revisit A7 then.
+
 ### Compendium / browser
 - Browse every content type. **Search respects active system, or across both** when the
   user picks "all". Sort/filter: spells by level/school/(class, casting time…); generic

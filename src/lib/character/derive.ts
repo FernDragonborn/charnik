@@ -463,6 +463,16 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		}
 	}
 
+	// A4: armor with the stealth-disadvantage flag imposes disadvantage on Stealth. Synthesized as a
+	// disadvantage FACT (the vocab exists since EFX-1) so it reaches BOTH the skill.stealth hover note
+	// (applyEffects below) AND the actual Hide/Stealth roll (rollEffectsFor reads facts.disadvantage),
+	// not just the item card. Deduped by (target, source) like a real token would be (A11).
+	if (equippedArmor?.data.stealth_disadvantage) {
+		const source = String(equippedArmor.data.name_en);
+		if (!facts.disadvantage.some((d) => d.target === 'skill.stealth' && d.source === source))
+			facts.disadvantage.push({ target: 'skill.stealth', source });
+	}
+
 	// spellcasting AFTER the resolve, so DCs/attacks read the EFFECTIVE scores (a Headband of
 	// Intellect moves the wizard's DC, as it should) — and `spell_dc`/`spell_attack` effects fold in.
 	const spellcasting = deriveSpellcasting(character, graph, scores, facts);
@@ -555,22 +565,27 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	// through the seam like every other stat (Toughness, Aid → `flat_bonus:hp_max+N`).
 	const maxHp = applyEffects('hp_max', maxHpBase, facts);
 
-	// speed from species (base_speed, computed above for the expr ctx)
-	const speed = applyEffects(
-		'speed',
+	// speed from species (base_speed, computed above for the expr ctx). A3: armor whose STR
+	// requirement (`str_min`) exceeds the wearer's STR drops speed by 10 ft (RAW, both editions) —
+	// folded as an item-layer contribution so it's traced/explained, then effects layer on top.
+	const speedBase: Contribution[] = [
 		{
-			value: baseSpeed,
-			trace: [
-				{
-					source: speciesRow ? String(speciesRow.data.name_en) : 'Default',
-					layer: 'base',
-					op: 'add',
-					amount: baseSpeed
-				}
-			]
-		},
-		facts
-	);
+			source: speciesRow ? String(speciesRow.data.name_en) : 'Default',
+			layer: 'base',
+			op: 'add',
+			amount: baseSpeed
+		}
+	];
+	const armorStrMin = equippedArmor ? num(equippedArmor.data.str_min) : 0;
+	if (armorStrMin > 0 && scores.str < armorStrMin)
+		speedBase.push({
+			source: `${String(equippedArmor?.data.name_en)} (STR ${armorStrMin})`,
+			layer: 'item',
+			op: 'add',
+			amount: -10,
+			note: `STR ${scores.str} < ${armorStrMin}`
+		});
+	const speed = applyEffects('speed', computed(speedBase, { min: 0 }), facts);
 	// fly/swim: no SRD species grants a base, so the fold starts at 0 and effects are the source
 	const movementOf = (key: 'speed.fly' | 'speed.swim') =>
 		applyEffects(key, computed([], { min: 0 }), facts);

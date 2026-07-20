@@ -442,7 +442,10 @@ export function modTargetLabel(t: string): string {
  *  flat mod. Handles the unicode minus `signed()` emits. Pure. */
 export function parseDamage(dmg: string): { pool: Record<number, number>; mod: number } {
 	const pool = parseDicePool(dmg);
-	const m = /([+\-−])\s*(\d+)/.exec(dmg);
+	// A7: a die's count must not be read as a flat mod — in "2d6+1d4" the `+1` precedes `d4`, so match
+	// a signed number only when NOT immediately followed by `d` (a die is `<count>d<sides>`, never
+	// spaced). Damage-type words never start with `d`, so a real "+3 slashing" mod still parses.
+	const m = /([+\-−])\s*(\d+)(?!d)/i.exec(dmg);
 	const mod = m ? (m[1] === '+' ? 1 : -1) * Number(m[2]) : 0;
 	return { pool, mod };
 }

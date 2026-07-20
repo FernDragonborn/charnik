@@ -38,9 +38,10 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/items_srd.csv',
 		[
-			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap',
-			`leather_armor,5.5e,${S},Leather Armor,,armor,light armor,11,`,
-			`shield,5.5e,${S},Shield,,shield,shield,2,`
+			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap,str_min,stealth_disadvantage',
+			`leather_armor,5.5e,${S},Leather Armor,,armor,light armor,11,,,`,
+			`plate_armor,5.5e,${S},Plate Armor,,armor,heavy armor,18,0,15,true`,
+			`shield,5.5e,${S},Shield,,shield,shield,2,,,`
 		].join('\n')
 	);
 	await st.write(
@@ -123,6 +124,30 @@ describe('deriveSheet aggregator', () => {
 		const s = deriveSheet(wizard(), graph);
 		expect(s.speed.value).toBe(30);
 		expect(s.carryingCapacity.value).toBe(150); // STR 10 × 15
+	});
+
+	it('A3: heavy armor over the STR requirement drops speed 10 ft, traced', () => {
+		const c = wizard(); // STR 10 < plate STR 15
+		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.speed.value).toBe(20); // 30 − 10
+		expect(s.speed.trace.some((t) => t.amount === -10 && /STR 15/.test(t.source))).toBe(true);
+	});
+
+	it('A3: no speed penalty when STR meets the armor requirement', () => {
+		const c = wizard();
+		c.build.abilities.str = 15; // meets plate STR 15
+		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.speed.value).toBe(30);
+	});
+
+	it('A4: stealth-disadvantage armor imposes disadvantage on Stealth (roll + hover note)', () => {
+		const c = wizard();
+		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.facts.disadvantage.some((d) => d.target === 'skill.stealth')).toBe(true);
+		expect(s.skills.stealth!.notes?.some((n) => /disadvantage/i.test(n))).toBe(true);
 	});
 
 	it('adds a shield when raised (the play-state toggle, not the inventory flag)', () => {
