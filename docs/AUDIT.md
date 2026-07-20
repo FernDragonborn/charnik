@@ -795,6 +795,14 @@ inline (user, 2026-07-20).
   still folds onto nothing silently (this is the general B13 "known kind, dead target" gap, now
   reachable via plugins — fix belongs with B13's exhaustiveness accounting). **D — the richer surface**
   (per-plugin health with the load error + last failure + a retry) is PLG-6.
+- [ ] **PLG-8 · deep-link errors to the docs (backlog, gated on docs existing).** Once PLUGINS.md
+  (and the effect-token vocab docs) are published/hostable, every author-facing error — the load
+  error, the `invalid result: <path>` validation messages, unknown-token / bad-target-key reasons,
+  the `plugin:test` CLI rejections — should carry a link to the exact doc section for that failure,
+  so the author jumps straight to the fix rather than searching. Needs a stable anchor scheme in the
+  docs + an error→anchor map keyed by the failure CLASS (not the message string). Applies beyond L3 —
+  the same "an error carries its doc link" rule should cover content/effect authoring errors too
+  (content-health entries). Blocked on the docs being a linkable target.
 - [~] **PLG-T1 · `plugin-store.svelte.ts` test coverage.** DONE: the `pluginStatus` state machine
   (broken / needs_consent / code_changed / disabled / enabled) is covered in `plugin-store.test.ts`.
   STILL OPEN: the async flows — `consentAndEnable`/`disablePlugin`/`enableConsented`/`setKillSwitch`
