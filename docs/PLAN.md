@@ -1626,12 +1626,26 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - **UBUG-5 · Spending a resource gives no feedback.** Clicking a resource pip (`resourceClick`) spends
   it silently — using a resource should raise a toast (e.g. "Rage — 2 left" / "Ki used"), like rolls
   do. Add a toast on spend (and probably on restore too), naming the resource + remaining count.
-- **UBUG-6 · Casting a spell doesn't consume a spell slot (reported 2026-07-19).** Using/casting a
-  levelled spell leaves the slot-pip count unchanged — the cast path doesn't decrement
-  `play.spellSlotsSpent` (only a manual pip click spends). Trace `cast` (combat/state) →
-  `resources`/`slotClick`: a levelled cast should auto-spend one slot of the chosen level (pact
-  pool for warlock; cantrips spend nothing), update the pips, and respect the UBUG-5 feedback
-  pattern once that lands. Check both editions' pools (shared + pact).
+- [x] **UBUG-6 · Casting a spell doesn't consume a spell slot (reported 2026-07-19).** DONE 2026-07-20
+  (AUDIT A17). `cast()` auto-spends the lowest available leveled slot (pure `slotToSpend`, unit-tested)
+  via `play.spellSlotsSpent` and blocks with a toast when none remain; cantrips spend nothing; a slot
+  is spent in AND out of combat (like HP). A RITUAL cast (the `R` badge, gated on `class.ritual`
+  ritual-casting eligibility — E7) spends no slot. STILL OPEN (deferred): a manual upcast picker,
+  warlock PACT-slot pips (not UI-wired → pact casts unslotted for now).
+- **UBUG-7 · Effect (i) rules text renders raw, not Markdown/HTML.** The condition/effect description
+  under the ⓘ button (`PanelCard.svelte` — `<p class="effect-info-text">{infoText}</p>`) is plain
+  text interpolation, so Markdown shows literally (and any HTML is escaped). The compendium already
+  renders BOTH Markdown AND sanitized HTML for article prose (`ArticleProse.svelte` = `marked` +
+  `DOMPurify`) — so YES, HTML is supported (sanitized), the user's uncertainty is resolved. Fix: reuse
+  the same sanitize pipeline (ideally the `ArticleProse` component, or its marked+DOMPurify path) for
+  the effect ⓘ text so descriptions render formatted + consistent with the compendium.
+- **UBUG-8 · Resources should be highlighted + used like spells.** After A17 (spells auto-spend a slot
+  on cast + gate when empty), named resources (Rage, Ki, Channel Divinity, N/day features…) should get
+  the SAME treatment: presented as first-class ACTIONABLE items (highlighted/clickable like a castable
+  spell row, not just manual pips), and auto-SPENT on use (decrement `resourcesSpent`, block/feedback
+  when exhausted — ties UBUG-5). I.e. extend the "use → spend + gate + surface" model from spell slots
+  to the resource pools, so using a feature that costs a resource deducts it the way casting deducts a
+  slot. Pure spend logic mirrors `slotToSpend`; the render mirrors the spell-row affordance.
 - [x] **REL-3 · Desktop content re-seed on update (0.4.0 data change).** DONE 2026-07-20. The desktop
   seed (`content/provider.ts`) was skip-if-root-exists → a returning user stayed on their FIRST-run
   SRD copy and never got shipped data changes (0.4.0 redid a lot: snake_case ids, snake `#content-`
