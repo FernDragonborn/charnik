@@ -69,6 +69,8 @@
 	border-radius: 7px;
 	padding: 5px 11px;
 	cursor: pointer;
+	/* the class is used on <a> too (e.g. "Manage all") — kill the browser link underline */
+	text-decoration: none;
 }
 .pill-btn:hover {
 	color: var(--color-text);
