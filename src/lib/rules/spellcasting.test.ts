@@ -9,6 +9,8 @@ import {
 	preparedCap,
 	slotPools,
 	cantripDieMultiplier,
+	slotToSpend,
+	type CastPool,
 	type SlotTable
 } from './spellcasting';
 
@@ -111,6 +113,47 @@ describe('slots + caps', () => {
 			max: 2,
 			recharge: 'short',
 			forcedUpcast: true
+		});
+	});
+});
+
+describe('slotToSpend — which slot a cast consumes (A17)', () => {
+	const pool = (spellLevel: number, max: number): CastPool => ({
+		id: `slot-${spellLevel}`,
+		label: `Level ${spellLevel}`,
+		spellLevel,
+		max,
+		recharge: 'long'
+	});
+	const pools = [pool(1, 4), pool(2, 3), pool(3, 2)];
+
+	it('spends a slot of the spell own level when free', () => {
+		expect(slotToSpend(2, pools, {})).toEqual({ key: '2' });
+	});
+
+	it('auto-fills from the lowest AVAILABLE slot ≥ the level (own level exhausted → next up)', () => {
+		expect(slotToSpend(2, pools, { '2': 3 })).toEqual({ key: '3' });
+	});
+
+	it('cantrips (level 0) consume nothing', () => {
+		expect(slotToSpend(0, pools, {})).toBeNull();
+	});
+
+	it('a caster with NO leveled pool (pure warlock) is not gated here', () => {
+		const pact: CastPool = {
+			id: 'pact-1',
+			label: 'Pact',
+			spellLevel: 1,
+			max: 2,
+			recharge: 'short',
+			forcedUpcast: true
+		};
+		expect(slotToSpend(1, [pact], {})).toBeNull();
+	});
+
+	it('blocks when the caster has leveled slots but none ≥ the level remain', () => {
+		expect(slotToSpend(3, pools, { '3': 2 })).toEqual({
+			block: 'No level-3 spell slot remaining'
 		});
 	});
 });

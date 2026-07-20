@@ -392,6 +392,8 @@ export interface SpRow {
 	/** The content ref (effectiveId) — used to set play.concentration when cast. */
 	ref: string;
 	name: string;
+	/** Spell level (0 = cantrip). Drives which spell slot a cast spends (AUDIT A17). */
+	level: number;
 	spe: string;
 	res: '' | 'hit' | 'save' | 'auto';
 	resLabel: string;
@@ -657,6 +659,7 @@ export function spellRow(
 		id: String(row.data.id),
 		ref,
 		name: String(row.data.name_en),
+		level: lvl,
 		spe: dmg || effectHint(row.data),
 		res: res === 'attack' ? 'hit' : res === 'save' ? 'save' : res === 'auto' ? 'auto' : '',
 		resLabel:

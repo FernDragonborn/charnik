@@ -30,6 +30,37 @@ export interface CastPool {
 	castsSpell?: string;
 }
 
+/** What casting a spell should do to the leveled slot pools (AUDIT A17): spend `key` (a
+ *  `spellSlotsSpent` key, "1".."9"), do nothing (`null`), or refuse with `block`. */
+export type SlotSpend = { key: string } | { block: string } | null;
+
+/**
+ * Which leveled spell slot a cast of `spellLevel` consumes. The LOWEST leveled slot ≥ the spell's
+ * level that still has a use left (basic auto-fill — no manual upcast picker yet). Returns:
+ *   - `null` when nothing is consumed: a cantrip (level 0), OR a caster with NO leveled pool (a pure
+ *     warlock — pact pips aren't wired to the UI yet, so casting isn't gated on them).
+ *   - `{ key }` — the `spellSlotsSpent` key to increment.
+ *   - `{ block }` — the caster HAS leveled slots but none ≥ the spell's level remain (cast refused).
+ * Pure; the play-state map is read, never mutated.
+ */
+export function slotToSpend(
+	spellLevel: number,
+	pools: readonly CastPool[],
+	spent: Readonly<Record<string, number>>
+): SlotSpend {
+	if (spellLevel <= 0) return null; // cantrip
+	const leveled = pools.filter(
+		(p): p is CastPool & { spellLevel: number } => !p.forcedUpcast && p.spellLevel !== undefined
+	);
+	if (!leveled.length) return null; // no leveled pool (pure warlock / non-caster) — don't gate
+	const open = leveled
+		.filter((p) => p.spellLevel >= spellLevel && p.max - (spent[String(p.spellLevel)] ?? 0) > 0)
+		.sort((a, b) => a.spellLevel - b.spellLevel)[0];
+	return open
+		? { key: String(open.spellLevel) }
+		: { block: `No level-${spellLevel} spell slot remaining` };
+}
+
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
 /** One caster class's contribution to the shared multiclass caster level. */

@@ -100,11 +100,16 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   class features right beside it DO filter `systems`; (b) `graph.rows.find` = first match, source
   namespacing ignored; (c) no dedupe (see A11); (d) one-level only; (e) ordering vs future L2
   guards unspecified (expansion must run AFTER guard resolution).
-- [ ] **A17 · Casting never spends spell slots.** `cast()` (`combat/state.svelte.ts:328`) spends
-  only the action-economy slot; level-N slot pips are manual. The schema comment
-  (`character/schema.ts:136`) claims "spells spend their slot and are blocked when exhausted" —
-  doc lies about code. No slot-level model at all: no upcast choice, no "no 3rd-level slots left"
-  gate. (Ties to PLAN L10; ritual L8/L13 also unbuilt — `class.ritual` is a dead column, E7.)
+- [~] **A17 · Casting never spends spell slots.** CORE FIXED 2026-07-20. `SpRow` now carries `level`;
+  a pure `slotToSpend(spellLevel, pools, spent)` (`rules/spellcasting.ts`, unit-tested) picks the
+  LOWEST leveled slot ≥ the spell's level with a use left, and `cast()` — while `inCombat` (mirroring
+  the action-economy gate + the schema's documented behavior) — spends it via `spellSlotsSpent` and
+  BLOCKS the cast with a toast ("No level-N spell slot remaining") when none remain. Cantrips consume
+  nothing. The doc comment (`schema.ts:145`) is now accurate. Reserve-before-commit: a block returns
+  before the action economy is touched. STILL OPEN (deferred): a manual UPCAST picker (L10 — today it
+  auto-fills the lowest available slot, no "cast at 4th" choice); warlock PACT slots aren't
+  UI-rendered as pips yet (a separate gap — so a pure-warlock cast isn't gated, `slotToSpend` → null);
+  ritual casting (L8/L13). Cross-ref A18 (cast still uses `classes[0]`).
 - [ ] **A18 · Multiclass caster collapses to `classes[0]` across the UI.** Per-class profiles exist
   (L11 core fix, `character/spellcasting.ts`) but: cast uses `spellcasting.classes[0]` for
   DC/attack/heal-mod (`state.svelte.ts:342`), `preparedCap` is `classes[0]` (:412), and BOTH

@@ -734,6 +734,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type Recharge`
 - `type SlotTable` — A spell-slot table: character level → counts per spell level (index 0 = 1st-level slots).
 - `interface CastPool` — A castable pool — a slot group (has `spellLevel`) or a generic/limited resource.
+- `type SlotSpend` — What casting a spell should do to the leveled slot pools (AUDIT A17): spend `key` (a * `spellSlotsSpent` key, "1".."9…
+- `function slotToSpend` — * Which leveled spell slot a cast of `spellLevel` consumes.
 - `function shareContribution` — One caster class's contribution to the shared multiclass caster level.
 - `function shareFromCaster` — Default `caster_share` from the `caster` column when the data leaves it blank.
 - `function effectiveCasterLevel` — Shared multiclass caster level = SUM of contributions (NOT the senior class).
@@ -824,4 +826,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 454 exports across 66 modules · 26 duplicate suspects · generated in 113ms._
+_46 tokens · 50 global classes · 36 components · 456 exports across 66 modules · 26 duplicate suspects · generated in 108ms._

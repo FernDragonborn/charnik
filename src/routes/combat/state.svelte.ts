@@ -43,6 +43,7 @@ import { RollTray } from './roll.svelte';
 import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
+import { slotToSpend } from '$lib/rules/spellcasting';
 
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. */
@@ -402,8 +403,27 @@ class CombatVM {
 
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit
 	cast = (r: SpRow, e: Event) => {
+		const play = this.character?.play;
+		// A17: while tracking combat, a leveled spell SPENDS a slot and is BLOCKED when none remain
+		// (mirrors the action-economy gate + the schema's documented behavior). Cantrips and pure
+		// pact casters consume no leveled slot (slotToSpend → null). Reserve first so a block returns
+		// BEFORE the action economy is touched; commit only once both the slot and the action pass.
+		let slotKey: string | undefined;
+		if (play?.inCombat) {
+			const spend = slotToSpend(
+				r.level,
+				this.sheet?.spellcasting.pools ?? [],
+				play.spellSlotsSpent
+			);
+			if (spend && 'block' in spend) {
+				toast(spend.block);
+				return;
+			}
+			if (spend && 'key' in spend) slotKey = spend.key;
+		}
 		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
 		if (!this.economy.trySpend(this.economy.ctSlot(r.ct))) return;
+		if (slotKey && play) play.spellSlotsSpent[slotKey] = (play.spellSlotsSpent[slotKey] ?? 0) + 1;
 		// a concentration spell becomes the active concentration (replacing any prior one, 5e rule);
 		// the PRIOR concentration's cast-applied effect goes down with it
 		if (r.conc && this.character) {
