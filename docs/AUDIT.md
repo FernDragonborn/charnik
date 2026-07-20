@@ -786,6 +786,14 @@ inline (user, 2026-07-20).
 - [~] **PLG-T2 · degrade-path coverage.** DONE (`plugin.test.ts` / `plugin-host.test.ts`):
   aggregate-budget exhaustion (busy-clock fake), `noteSuccess` resetting the fail streak mid-session,
   and `loadPluginPrefs` on corrupt/partial localStorage. STILL OPEN: memo LRU eviction at `MEMO_MAX`.
+- [x] **PLG-P1 · performance guarantees.** `plugin-perf.test.ts` — work-count regression guards
+  (assert WORK done, not wall-clock, so CI-stable): the zero-plugin fast path never touches the
+  evaluator; a build-only handler is computed ONCE across 500 play ticks (memo §4.2); one token on
+  100 carriers = 1 compute + 100 folds; a play-reading handler re-runs only on distinct play states;
+  the aggregate budget bounds sandbox calls per derive; a real QuickJS call stays under the 5 ms
+  CALL_BUDGET. `plugin.bench.ts` — throughput numbers (`vitest bench`). Measured: fast path ≈ 3 µs
+  (~350k/s), memo hit ≈ 2.5 µs, real QuickJS arithmetic call ≈ 0.13 ms (~7.5k/s, 37× under budget),
+  sandbox boot (module load + 1 plugin) ≈ 38 ms one-time & lazy (only when ≥1 plugin is enabled).
 - Confirmed CLEAN by tracing (ruled out): resource-`max` NaN into ctx (clamped `[0,MAX]` in
   `apply.ts`); `args` injection through the sandbox wrapper (`JSON.stringify`-escaped, positional);
   recursion via returned `tokens` (`plugin:` filtered, no re-feed); stale memo across an evaluator
