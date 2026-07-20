@@ -39,11 +39,19 @@ export function matchesTarget(effTarget: string | undefined, key: string): boole
 	return false;
 }
 
+/** Result of the derive's target check (B13): whether a consumer reads this (kind, target), plus an
+ *  optional "did you mean X?" suffix (PLG-9) when it's unsupported but near a known key. */
+export interface TargetCheck {
+	supported: boolean;
+	/** Ready-to-append suffix like ` — did you mean "ac"?`, or absent. */
+	suggestion?: string;
+}
+
 /** Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
  *  Only CLOSED-vocab targets are checked (stat/roll/proficiency keys); open-vocab kinds
  *  (resist_immune types, grant_resource / apply_condition ids) are validated elsewhere or unbounded,
- *  so the validator returns true for them. `kind` is an `EFFECT_KIND` value. */
-export type TargetValidator = (kind: string, target: string) => boolean;
+ *  so the validator returns `supported: true` for them. `kind` is an `EFFECT_KIND` value. */
+export type TargetValidator = (kind: string, target: string) => TargetCheck;
 
 /** A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll
  *  threshold (`reroll`) or the die floor (`min_die`). */
@@ -154,8 +162,14 @@ export function collectFacts(
 	// validator over the CLOSED-vocab targets; an unsupported one is kept inert AND surfaced as an
 	// issue (content-health) instead of dropped. Returns true = the token was rejected + reported.
 	const rejectTarget = (kind: string, target: string, source: string, token: string): boolean => {
-		if (!isTargetSupported || isTargetSupported(kind, target)) return false;
-		issues?.push({ source, token, reason: `unknown target "${target}" for ${kind}` });
+		if (!isTargetSupported) return false;
+		const check = isTargetSupported(kind, target);
+		if (check.supported) return false;
+		issues?.push({
+			source,
+			token,
+			reason: `unknown target "${target}" for ${kind}${check.suggestion ?? ''}`
+		});
 		return true;
 	};
 	for (const eff of effects) {

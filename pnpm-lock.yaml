@@ -36,6 +36,9 @@ importers:
       dompurify:
         specifier: ^3.4.11
         version: 3.4.11
+      fastest-levenshtein:
+        specifier: ^1.0.16
+        version: 1.0.16
       fuse.js:
         specifier: ^7.4.2
         version: 7.4.2

@@ -65,7 +65,8 @@ async function graphOf(): Promise<ContentGraph> {
 		'c/conditions_srd.csv',
 		[
 			'id,systems,source,name_en,effects,negative',
-			`poisoned,5.5e,${S},Poisoned,disadvantage:attack,true`
+			`poisoned,5.5e,${S},Poisoned,disadvantage:attack,true`,
+			`frightened,5.5e,${S},Frightened,disadvantage:attack,true`
 		].join('\n')
 	);
 	const g = await loadContent(st, ['c']);
@@ -167,6 +168,13 @@ describe('deriveSheet aggregator', () => {
 		expect(s.deriveIssues.some((i) => /unknown target "armorclass"/.test(i.reason))).toBe(true);
 	});
 
+	it('PLG-9: a near-miss target typo gets a "did you mean?" suggestion', () => {
+		const c = wizard();
+		c.play.effects = [{ iid: 'x', label: 'Typo', effects: ['flat_bonus:attak+1'], positive: true }];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.deriveIssues.some((i) => /did you mean "attack"\?/.test(i.reason))).toBe(true);
+	});
+
 	it('B13: the action-economy targets (action/bonus/reaction) are recognized, not flagged', () => {
 		const c = wizard();
 		c.play.effects = [
@@ -194,8 +202,12 @@ describe('deriveSheet aggregator', () => {
 			{ iid: 'z', label: 'Typo', effects: ['apply_condition:frightend'], positive: false }
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
-		// the real, edition-matched condition is fine; only the typo'd id is flagged
-		expect(s.deriveIssues.some((i) => /unknown condition "frightend"/.test(i.reason))).toBe(true);
+		// the real, edition-matched condition is fine; only the typo'd id is flagged + suggested (PLG-9)
+		expect(
+			s.deriveIssues.some((i) =>
+				/unknown condition "frightend" — did you mean "frightened"\?/.test(i.reason)
+			)
+		).toBe(true);
 		expect(s.deriveIssues.some((i) => /unknown condition "poisoned"/.test(i.reason))).toBe(false);
 	});
 

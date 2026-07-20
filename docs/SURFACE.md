@@ -261,7 +261,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (52 modules)
+## Library functions & types (53 modules)
 
 ### `src/lib/build/derive.ts`
 
@@ -561,6 +561,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/apply.ts`
 
 - `function matchesTarget` — Does an effect target apply to this stat key?
+- `interface TargetCheck` — Result of the derive's target check (B13): whether a consumer reads this (kind, target), plus an * optional "did you …
 - `type TargetValidator` — Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
 - `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
 - `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
@@ -642,6 +643,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface SandboxPluginSpec`
 - `function createSandboxEvaluator` — * Build the `PluginEvaluator` for a set of consented, enabled plugins.
+
+### `src/lib/effects/suggest.ts`
+
+- `function suggestClosest` — * The nearest 1–2 candidates to `input` within the length-relative cap, CLOSEST first.
+- `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ### `src/lib/effects/token-parser.ts`
 
@@ -814,4 +820,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 442 exports across 63 modules · 34 duplicate suspects · generated in 115ms._
+_46 tokens · 50 global classes · 36 components · 445 exports across 64 modules · 34 duplicate suspects · generated in 105ms._

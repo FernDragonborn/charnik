@@ -42,8 +42,10 @@ import {
 	mergeFacts,
 	matchesTarget,
 	type EffectFacts,
-	type ResourceDef
+	type ResourceDef,
+	type TargetCheck
 } from '../effects/apply';
+import { didYouMean } from '../effects/suggest';
 import { expandPluginEffects, type PluginCtx } from '../effects/plugin-registry';
 import {
 	resolveActiveEffects,
@@ -143,26 +145,33 @@ const PROFICIENCY_TARGETS = new Set<string>([
 	...Object.keys(SKILL_ABILITY)
 ]);
 
-/** B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
- *  Open-vocab kinds (resist_immune, grant_resource, apply_condition) return true — validated
- *  elsewhere or unbounded. */
-const isEffectTargetSupported = (kind: string, target: string): boolean => {
+/** The candidate target set a kind is checked against, or null for an open-vocab kind. */
+const targetCandidatesFor = (kind: string): Set<string> | null => {
 	switch (kind) {
 		case EFFECT_KIND.flatBonus:
 		case EFFECT_KIND.setOverride:
-			return NUMERIC_TARGETS.has(target);
+			return NUMERIC_TARGETS;
 		case EFFECT_KIND.advantage:
 		case EFFECT_KIND.disadvantage:
 		case EFFECT_KIND.autoFail:
 		case EFFECT_KIND.autoSucceed:
 		case EFFECT_KIND.reroll:
 		case EFFECT_KIND.minDie:
-			return ROLL_TARGETS.has(target);
+			return ROLL_TARGETS;
 		case EFFECT_KIND.grantProficiency:
-			return PROFICIENCY_TARGETS.has(target);
+			return PROFICIENCY_TARGETS;
 		default:
-			return true;
+			return null;
 	}
+};
+
+/** B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
+ *  Open-vocab kinds (resist_immune, grant_resource, apply_condition) are always supported —
+ *  validated elsewhere or unbounded. An unsupported target carries a PLG-9 "did you mean?" suffix. */
+const isEffectTargetSupported = (kind: string, target: string): TargetCheck => {
+	const candidates = targetCandidatesFor(kind);
+	if (!candidates || candidates.has(target)) return { supported: true };
+	return { supported: false, suggestion: didYouMean(target, candidates) };
 };
 
 /** Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) →
@@ -561,16 +570,17 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	// column is legitimate (many SRD conditions) — checked by row existence, not by expandCondition
 	// (which also returns undefined for token-less rows). Guard/expansion ordering is already handled
 	// by the resolve stage (A16 e / SPEC7); edition-filter + once-per-id by expandCondition (A16 a/c).
-	const conditionExists = (id: string): boolean =>
-		graph.rows.some(
-			(r) => r.type === 'condition' && r.id === id && r.systems.includes(character.system)
-		);
+	const conditionIds = new Set(
+		graph.rows
+			.filter((r) => r.type === 'condition' && r.systems.includes(character.system))
+			.map((r) => r.id)
+	);
 	for (const id of facts.conditions)
-		if (!conditionExists(id) && id !== RAGE_CONDITION_ID)
+		if (!conditionIds.has(id) && id !== RAGE_CONDITION_ID)
 			issues.push({
 				source: 'apply_condition',
 				token: `apply_condition:${id}`,
-				reason: `unknown condition "${id}"`
+				reason: `unknown condition "${id}"${didYouMean(id, conditionIds)}` // PLG-9
 			});
 
 	// spellcasting AFTER the resolve, so DCs/attacks read the EFFECTIVE scores (a Headband of

@@ -829,10 +829,11 @@ inline (user, 2026-07-20).
     (`invalid result: contributions.ac.0.layer: Required`) instead of a bare "Required".
   Tests: syntax/throw-at-load surface the real message; a broken plugin degrades with its load
   error; a wrong result shape names the offending path.
-  STILL OPEN: **C — a returned token with a typo'd but KNOWN-kind target** (`flat_bonus:armorclass+1`)
-  still folds onto nothing silently (this is the general B13 "known kind, dead target" gap, now
-  reachable via plugins — fix belongs with B13's exhaustiveness accounting). **D — the richer surface**
-  (per-plugin health with the load error + last failure + a retry) is PLG-6.
+  **C — a returned token with a typo'd but KNOWN-kind target** (`flat_bonus:armorclass+1`): CLOSED
+  2026-07-20 with B13 — the plugin pre-pass folds returned tokens through the same validated
+  `collectFacts`, so a dead target is now surfaced in content-health (+ a PLG-9 "did you mean?"), not
+  silently dropped. STILL OPEN: **D — the richer surface** (per-plugin health with the load error +
+  last failure + a retry) is PLG-6.
 - [ ] **PLG-8 · deep-link errors to the docs (backlog, gated on docs existing).** Once PLUGINS.md
   (and the effect-token vocab docs) are published/hostable, every author-facing error — the load
   error, the `invalid result: <path>` validation messages, unknown-token / bad-target-key reasons,
@@ -841,8 +842,20 @@ inline (user, 2026-07-20).
   docs + an error→anchor map keyed by the failure CLASS (not the message string). Applies beyond L3 —
   the same "an error carries its doc link" rule should cover content/effect authoring errors too
   (content-health entries). Blocked on the docs being a linkable target.
-- [ ] **PLG-9 · "did you mean?" fuzzy suggestions for a typo'd effect token (backlog).** When a token
-  fails against a KNOWN, finite vocabulary — an unknown effect kind (`flt_bonus` → `flat_bonus`), a
+- [~] **PLG-9 · "did you mean?" fuzzy suggestions for a typo'd effect token.** PARTIAL 2026-07-20.
+  DONE: `effects/suggest.ts` (`suggestClosest`/`didYouMean`) over `fastest-levenshtein` (proven tiny
+  dep — chosen over hand-rolling Damerau per the deps preference; plain Levenshtein, transposition =
+  2, still surfaced by the tiers). Length-RELATIVE cap exactly as specced (≤1 for len ≤4, ≤2 for 5–8,
+  ≤3 for 9+), ranked closest-first, top 1–2, closed-vocab only. WIRED into the two fresh B13/A16
+  issue sites: an unsupported effect TARGET (`flat_bonus:attak+1` → `did you mean "attack"?` via the
+  `TargetValidator`, which now returns `{supported, suggestion}`) and an unknown apply_condition id
+  (`frightend` → `frightened`). Because the plugin pre-pass runs returned tokens through the SAME
+  validated `collectFacts`, PLG-7-C's typo'd-target-via-plugin now gets a suggestion too. Unit +
+  derive tests. STILL OPEN: unknown effect KIND (`flt_bonus`→`flat_bonus`; the `unknown` token path
+  feeds `facts.unknown`, no issue channel yet — pairs with B12/B13 surfacing), plugin CONTRIBUTION
+  bad-target-key (validateResult path, §4.4), the homebrew authoring FORM, and the `plugin:test` CLI.
+  ORIGINAL: When a token fails against a KNOWN, finite vocabulary — an unknown effect kind
+  (`flt_bonus` → `flat_bonus`), a
   bad target (`armorclass`/`armor_class` → `ac`), a skill/condition/resource id typo, a plugin
   `bad target key "X"` — the error should append the nearest valid candidate(s) by edit distance:
   "unknown target 'armorclass' — did you mean 'ac'?". Turns a dead-end into a one-glance fix. Needs a
