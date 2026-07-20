@@ -100,16 +100,19 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   class features right beside it DO filter `systems`; (b) `graph.rows.find` = first match, source
   namespacing ignored; (c) no dedupe (see A11); (d) one-level only; (e) ordering vs future L2
   guards unspecified (expansion must run AFTER guard resolution).
-- [~] **A17 · Casting never spends spell slots.** CORE FIXED 2026-07-20. `SpRow` now carries `level`;
-  a pure `slotToSpend(spellLevel, pools, spent)` (`rules/spellcasting.ts`, unit-tested) picks the
-  LOWEST leveled slot ≥ the spell's level with a use left, and `cast()` — while `inCombat` (mirroring
-  the action-economy gate + the schema's documented behavior) — spends it via `spellSlotsSpent` and
-  BLOCKS the cast with a toast ("No level-N spell slot remaining") when none remain. Cantrips consume
-  nothing. The doc comment (`schema.ts:145`) is now accurate. Reserve-before-commit: a block returns
-  before the action economy is touched. STILL OPEN (deferred): a manual UPCAST picker (L10 — today it
-  auto-fills the lowest available slot, no "cast at 4th" choice); warlock PACT slots aren't
-  UI-rendered as pips yet (a separate gap — so a pure-warlock cast isn't gated, `slotToSpend` → null);
-  ritual casting (L8/L13). Cross-ref A18 (cast still uses `classes[0]`).
+- [~] **A17 · Casting never spends spell slots.** CORE FIXED 2026-07-20 (+ ritual). `SpRow` carries
+  `level` + `ritual`; a pure `slotToSpend(spellLevel, pools, spent)` (`rules/spellcasting.ts`,
+  unit-tested) picks the LOWEST leveled slot ≥ the spell's level with a use left, and `cast()` spends
+  it via `spellSlotsSpent` and BLOCKS with a toast ("No level-N spell slot remaining") when none
+  remain. A slot is a resource like HP → spent in AND out of combat (NOT gated on `inCombat`; only the
+  action-economy check stays combat-only). Cantrips consume nothing. **Ritual cast (user 2026-07-20):**
+  a ritual-tagged spell shows an `R` badge that casts with NO slot (`cast(r, e, {ritual:true})`); the
+  row-click still casts normally (spends a slot). Only `ritual`-tagged spells qualify (SRD). The doc
+  comment (`schema.ts:145`) is now accurate; reserve-before-commit so a block doesn't burn an action.
+  STILL OPEN (deferred): a manual UPCAST picker (L10 — auto-fills the lowest slot for now); warlock
+  PACT slots aren't UI-rendered as pips (a separate gap — so a pure-warlock cast isn't slot-gated,
+  `slotToSpend` → null); ritual SOURCE nuance (L13 — wizard from spellbook unprepared, etc.).
+  Cross-ref A18 (cast still uses `classes[0]`).
 - [ ] **A18 · Multiclass caster collapses to `classes[0]` across the UI.** Per-class profiles exist
   (L11 core fix, `character/spellcasting.ts`) but: cast uses `spellcasting.classes[0]` for
   DC/attack/heal-mod (`state.svelte.ts:342`), `preparedCap` is `classes[0]` (:412), and BOTH

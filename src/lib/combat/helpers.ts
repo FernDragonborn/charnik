@@ -394,6 +394,8 @@ export interface SpRow {
 	name: string;
 	/** Spell level (0 = cantrip). Drives which spell slot a cast spends (AUDIT A17). */
 	level: number;
+	/** Ritual-taggable — only these can be cast as a ritual (no slot). Not all spells qualify (SRD). */
+	ritual: boolean;
 	spe: string;
 	res: '' | 'hit' | 'save' | 'auto';
 	resLabel: string;
@@ -674,6 +676,7 @@ export function spellRow(
 		ct: castingIcon(String(row.data.casting_time ?? '')),
 		dmg: dmg ? parseDicePool(dmg) : null,
 		conc: String(row.data.concentration) === 'true',
+		ritual: String(row.data.ritual) === 'true',
 		prep
 	};
 }

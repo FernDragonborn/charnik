@@ -343,6 +343,20 @@
 										pinned[r.id] = !pinned[r.id];
 									}}>{pinned[r.id] ? '★' : '☆'}</span
 								>
+								{#if r.ritual}
+									<!-- ritual cast: no spell slot (A17). Row-click casts normally (spends a slot). -->
+									<!-- svelte-ignore a11y_click_events_have_key_events -->
+									<span
+										class="ritual-cast"
+										role="button"
+										tabindex="-1"
+										title="Cast as ritual (no slot, +10 min)"
+										onclick={(e) => {
+											e.stopPropagation();
+											cast(r, e, { ritual: true });
+										}}>R</span
+									>
+								{/if}
 							</span>
 							<span class="spell-summary">{r.spe}</span>
 							{#if r.res}<span class="resolution-tag {r.res}">{r.resLabel}</span>{:else}<span
@@ -860,6 +874,22 @@
 	}
 	.pinstar.on {
 		color: var(--color-accent-bright);
+	}
+	/* ritual-cast badge — only on ritual-tagged spells; casts with no slot */
+	.ritual-cast {
+		margin-left: 6px;
+		padding: 0 5px;
+		border: 1px solid var(--color-border);
+		border-radius: 4px;
+		color: var(--color-text-muted);
+		font-family: var(--font-mono);
+		font-size: 10px;
+		line-height: 15px;
+		cursor: pointer;
+	}
+	.ritual-cast:hover {
+		color: var(--color-accent-bright);
+		border-color: var(--color-accent-bright);
 	}
 	.prepared-count {
 		font-family: var(--font-mono);

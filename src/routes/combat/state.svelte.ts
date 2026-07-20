@@ -402,14 +402,17 @@ class CombatVM {
 	}
 
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit
-	cast = (r: SpRow, e: Event) => {
+	cast = (r: SpRow, e: Event, opts?: { ritual?: boolean }) => {
 		const play = this.character?.play;
-		// A17: while tracking combat, a leveled spell SPENDS a slot and is BLOCKED when none remain
-		// (mirrors the action-economy gate + the schema's documented behavior). Cantrips and pure
-		// pact casters consume no leveled slot (slotToSpend → null). Reserve first so a block returns
-		// BEFORE the action economy is touched; commit only once both the slot and the action pass.
+		// A17: casting SPENDS a leveled spell slot and is BLOCKED when none remain — UNLESS it's a
+		// RITUAL cast (rituals cost no slot; only ritual-tagged spells qualify — SRD). A slot is a
+		// resource like HP, so this holds in AND out of combat (independent of the action-economy
+		// check below, which stays combat-only). Cantrips + pure pact casters spend nothing
+		// (slotToSpend → null). Reserve first so a block returns BEFORE the action economy is touched;
+		// commit only once both the slot and the action pass.
+		const ritual = opts?.ritual === true && r.ritual;
 		let slotKey: string | undefined;
-		if (play?.inCombat) {
+		if (!ritual && play) {
 			const spend = slotToSpend(
 				r.level,
 				this.sheet?.spellcasting.pools ?? [],
@@ -466,8 +469,9 @@ class CombatVM {
 			else this.tray.rollDiceNow(label, r.dmg ?? {}, mod);
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
-			this.tray.logMarker(`Cast ${r.name}`);
-			toast(`Cast ${r.name}`);
+			const suffix = ritual ? ' (ritual)' : '';
+			this.tray.logMarker(`Cast ${r.name}${suffix}`);
+			toast(`Cast ${r.name}${suffix}`);
 		}
 	};
 
