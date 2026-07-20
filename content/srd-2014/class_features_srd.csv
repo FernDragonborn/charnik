@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fd36-72ad-8fc3-f977f1cf41cb
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:73a6855a5f52511e
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id
 barbarian_rage,Rage,,"In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.

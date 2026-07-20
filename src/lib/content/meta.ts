@@ -7,8 +7,9 @@
  * it does NO IO and imports no Svelte/Tauri (thin-component + pure-core rules).
  */
 
-/** One directive line: `#content-<key>: <value>` (key kebab, value the rest of the line trimmed). */
-const DIRECTIVE = /^\s*#\s*content-([a-z][a-z-]*)\s*:\s*(.*)$/i;
+/** One directive line: `#content-<key>: <value>`. The key is snake_case (matching the CSV columns);
+ *  a legacy hyphen is accepted and normalized to `_` on read, so pre-snake files still parse. */
+const DIRECTIVE = /^\s*#\s*content-([a-z][a-z_-]*)\s*:\s*(.*)$/i;
 
 export type MetaKey =
 	| 'type'
@@ -17,15 +18,15 @@ export type MetaKey =
 	| 'url'
 	| 'license'
 	| 'author'
-	| 'author-url'
+	| 'author_url'
 	| 'systems'
-	| 'source-lang'
+	| 'source_lang'
 	| 'schema'
-	| 'updated-at'
+	| 'updated_at'
 	| 'hash';
 
 /** Keys the app can fill with NO human input — generate/compute + write back (DATA-VER-1). */
-const AUTOFILL_KEYS: readonly MetaKey[] = ['id', 'hash', 'updated-at', 'schema'];
+const AUTOFILL_KEYS: readonly MetaKey[] = ['id', 'hash', 'updated_at', 'schema'];
 
 /** Keys only a human knows the semantics of — REQUIRED, must be prompted (or collected by the
  *  authoring form). `type` falls back to the filename so it's not here. */
@@ -34,7 +35,7 @@ const HUMAN_KEYS: readonly MetaKey[] = ['source', 'license'];
 /** Keys we OFFER to fill when the modal is already open, but whose absence does NOT trigger it on its
  *  own — all have a safe fallback (`systems` → both editions; the rest are simply optional metadata).
  *  Shown as optional inputs so the user can see every field that could be filled. */
-export const OPTIONAL_KEYS: readonly MetaKey[] = ['systems', 'url', 'author', 'author-url'];
+export const OPTIONAL_KEYS: readonly MetaKey[] = ['systems', 'url', 'author', 'author_url'];
 
 /** Every key the user can type/pick in the modal (required first, then optional). Any of these that
  *  the file already declares is passed back in `MetaIssue.values` so the form shows it PRE-FILLED. */
@@ -62,7 +63,8 @@ export function parseContentDirectives(csv: string): ParsedDirectives {
 		const key = m?.[1];
 		const value = m?.[2];
 		if (key === undefined || value === undefined) break; // first real (non-directive) line → body
-		directives.set(key.toLowerCase() as MetaKey, value.trim());
+		// normalize a legacy kebab key to snake (`updated-at` → `updated_at`) so pre-snake files parse
+		directives.set(key.toLowerCase().replace(/-/g, '_') as MetaKey, value.trim());
 	}
 	return { directives, body: lines.slice(i).join('\n') };
 }

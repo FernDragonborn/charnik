@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fcc4-791a-94c7-423e595e76d1
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:485e95f1fe6e4871
 id,name_en,name_uk,text_en,text_uk,effects,level,school,casting_time,range,components,material,duration,concentration,ritual,classes,resolution,save_ability,damage,higher_level
 acid_splash,Acid Splash,,"You hurl a bubble of acid. Choose one creature within range, or choose two creatures within range that are within 5 feet of each other. A target must succeed on a Dexterity saving throw or take 1d6 acid damage. This spell's damage increases by 1d6 when you reach 5th level (2d6), 11th level (3d6), and 17th level (4d6).",,,0,conjuration,1 action,60 feet,"V,S",,Instantaneous,false,false,,save,dex,1d6 acid,

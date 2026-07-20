@@ -47,7 +47,7 @@ describe('buildIssues', () => {
 		expect(out).toContain('Pick a class (you can change it later).');
 	});
 	it('flags unspent point-buy points only in point-buy', () => {
-		expect(buildIssues({ ...base, method: 'point-buy' }, { ...noDeps, pointsLeft: 3 })).toContain(
+		expect(buildIssues({ ...base, method: 'point_buy' }, { ...noDeps, pointsLeft: 3 })).toContain(
 			'3 ability points unspent.'
 		);
 		expect(buildIssues({ ...base, method: 'manual' }, { ...noDeps, pointsLeft: 3 })).not.toContain(

@@ -19,6 +19,13 @@ describe('content meta directives', () => {
 		expect(body).toBe('id,name_en\nx,X\n'); // directive block gone, CSV intact
 	});
 
+	it('normalizes a legacy kebab directive key to snake (backward-compat read)', () => {
+		const csv = '#content-updated-at: 2026-07-16\n#content-author-url: https://x.y\nid\nrow\n';
+		const { directives } = parseContentDirectives(csv);
+		expect(directives.get('updated_at')).toBe('2026-07-16'); // `updated-at` → `updated_at`
+		expect(directives.get('author_url')).toBe('https://x.y');
+	});
+
 	it('tolerates a BOM and blank spacer lines in the header', () => {
 		const csv = '﻿#content-source: Homebrew\n\n#content-schema: 2\nid\nrow\n';
 		const { directives, body } = parseContentDirectives(csv);
@@ -34,8 +41,8 @@ describe('content meta directives', () => {
 		const issue = checkFileMeta('spells_homebrew.csv', directives);
 		expect(issue).not.toBeNull();
 		expect(issue!.missingHuman).toEqual(['source', 'license']);
-		expect(issue!.missingAuto).toEqual(['id', 'hash', 'updated-at', 'schema']);
-		expect(issue!.missingOptional).toEqual(['systems', 'url', 'author', 'author-url']);
+		expect(issue!.missingAuto).toEqual(['id', 'hash', 'updated_at', 'schema']);
+		expect(issue!.missingOptional).toEqual(['systems', 'url', 'author', 'author_url']);
 		expect(issue!.values).toEqual({}); // fixture declares nothing → form starts empty
 	});
 

@@ -17,7 +17,7 @@ import {
 } from './rules';
 import { ABILITIES } from '../character/schema';
 
-describe('point-buy', () => {
+describe('point_buy', () => {
 	it('costs match the SRD table', () => {
 		expect([8, 9, 10, 11, 12, 13, 14, 15].map(pointBuyCost)).toEqual([0, 1, 2, 3, 4, 5, 7, 9]);
 	});

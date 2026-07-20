@@ -15,7 +15,7 @@
 import type { ContentGraph, LoadedRow } from './loader';
 import { splitList } from './schemas';
 
-type AccessVia = 'class-list' | 'spell-list';
+type AccessVia = 'class_list' | 'spell_list';
 
 interface AccessEntry {
 	/** Bare class id (e.g. "wizard"). */
@@ -77,7 +77,7 @@ export function buildSpellAccess(graph: ContentGraph): SpellAccess {
 	// spell-side: inline `classes` column
 	for (const spell of spellRows)
 		for (const bareClass of csv(spell.data.classes))
-			for (const cls of classesById.get(bareClass) ?? []) link(cls, spell, 'class-list');
+			for (const cls of classesById.get(bareClass) ?? []) link(cls, spell, 'class_list');
 
 	// class-side: additive spell_lists join. An orphan join (unknown class_id or spell_id) resolves
 	// to [] → skipped here; the loader flags it as a content-health WARNING (likely a typo), so a
@@ -85,7 +85,7 @@ export function buildSpellAccess(graph: ContentGraph): SpellAccess {
 	for (const row of listRows) {
 		const cls = classesById.get(String(row.data.class_id)) ?? [];
 		const sp = spellsById.get(String(row.data.spell_id)) ?? [];
-		for (const c of cls) for (const s of sp) link(c, s, 'spell-list');
+		for (const c of cls) for (const s of sp) link(c, s, 'spell_list');
 	}
 
 	return {

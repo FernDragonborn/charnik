@@ -100,7 +100,7 @@ async function patchRowColumns(
 	const newBody = Papa.unparse({ fields, data: rows }, { newline: '\r\n' });
 	// re-stamp: the app edited the data on purpose, so the recorded hash should follow (no drift nag)
 	directives.set('hash', await hashBody(newBody));
-	directives.set('updated-at', new Date().toISOString().slice(0, 10));
+	directives.set('updated_at', new Date().toISOString().slice(0, 10));
 	await storage.write(path, stampDirectives(directives, newBody));
 }
 

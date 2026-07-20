@@ -72,8 +72,8 @@ describe('spell↔class access (union index)', () => {
 		const access = buildSpellAccess(g);
 		const entries = access.classesForSpell('spell:SRD 5.2.1:fireball');
 		const byClass = Object.fromEntries(entries.map((e) => [e.classId, e.via]));
-		expect(byClass.wizard).toBe('class-list'); // from spells.classes
-		expect(byClass.artificer).toBe('spell-list'); // from the additive join
+		expect(byClass.wizard).toBe('class_list'); // from spells.classes
+		expect(byClass.artificer).toBe('spell_list'); // from the additive join
 		// sorcerer is on fireball's list but has no class row → not linked
 		expect(byClass.sorcerer).toBeUndefined();
 	});

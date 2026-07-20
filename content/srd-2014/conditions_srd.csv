@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fce9-7a08-a279-ae8d4b1fe0b9
-#content-updated-at: 2026-07-19
+#content-updated_at: 2026-07-19
 #content-hash: xxh64:d0241d097e54a590
 id,name_en,name_uk,text_en,text_uk,effects,negative
 blinded,Blinded,,"•A blinded creature can't see and automatically fails any ability check that requires sight.

@@ -10,7 +10,7 @@
  */
 
 /** Multiclass caster-level contribution + rounding (data value `caster_share`). */
-export type CasterShare = 'full' | 'half' | 'half-up' | 'third' | 'none';
+export type CasterShare = 'full' | 'half' | 'half_up' | 'third' | 'none';
 export type Recharge = 'short' | 'long' | 'day' | 'dawn';
 
 /** A spell-slot table: character level → counts per spell level (index 0 = 1st-level slots). */
@@ -39,7 +39,7 @@ export function shareContribution(share: CasterShare, classLevel: number): numbe
 			return classLevel;
 		case 'half':
 			return Math.floor(classLevel / 2);
-		case 'half-up':
+		case 'half_up':
 			return Math.ceil(classLevel / 2);
 		case 'third':
 			return Math.floor(classLevel / 3);

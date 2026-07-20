@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fd04-7646-ab5f-e26e4f827818
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:59047ff2c453443f
 id,name_en,name_uk,text_en,text_uk,effects,category,speakers,script
 common,Common,,Typical speakers: Humans. Script: Common.,,,standard,Humans,Common

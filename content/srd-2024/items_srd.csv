@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fa92-7ecb-9807-4042842f8ba9
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:83220d4a7f1190d6
 id,name_en,name_uk,text_en,text_uk,effects,category,item_type,cost,weight_lb,properties,damage,damage_type,range,ac,armor_dex_cap,str_min,stealth_disadvantage,attunement,rarity
 club,Club,,,,,weapon,simple melee,1 SP,2,Light; mastery: Slow,1d4,bludgeoning,,,,,false,false,

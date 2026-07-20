@@ -53,7 +53,7 @@
 	);
 
 	const keyLabel = (k: MetaKey) => $_(`contentMeta.keys.${k}`);
-	const isUrl = (k: MetaKey) => k === 'url' || k === 'author-url';
+	const isUrl = (k: MetaKey) => k === 'url' || k === 'author_url';
 
 	function setLicense(file: string, value: string) {
 		const fill = fills[file];

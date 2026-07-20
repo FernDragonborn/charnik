@@ -111,7 +111,7 @@ export function buildIssues(
 	const out: string[] = [];
 	if (!d.name.trim()) out.push('Give your character a name.');
 	if (!deps.hasClass) out.push('Pick a class (you can change it later).');
-	if (d.method === 'point-buy' && deps.pointsLeft > 0)
+	if (d.method === 'point_buy' && deps.pointsLeft > 0)
 		out.push(`${deps.pointsLeft} ability points unspent.`);
 	if (d.strict) {
 		const needSkills = deps.classSkillCount - deps.skillChosenCount;

@@ -12,7 +12,7 @@ import type { Ability } from '../rules/core';
 import { ABILITIES } from '../character/schema';
 import type { SystemId } from '../stores/app.svelte';
 
-export type StatMethod = 'point-buy' | 'standard-array' | 'manual';
+export type StatMethod = 'point_buy' | 'standard_array' | 'manual';
 
 /** 5e/5.5e point-buy: cost of raising a score from 8 to N (8–15). */
 const POINT_BUY_COST: Record<number, number> = {

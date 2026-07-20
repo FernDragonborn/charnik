@@ -30,8 +30,8 @@
 
 	const b = build;
 	const METHODS: { id: StatMethod; label: string }[] = [
-		{ id: 'point-buy', label: 'Point buy' },
-		{ id: 'standard-array', label: 'Standard array' },
+		{ id: 'point_buy', label: 'Point buy' },
+		{ id: 'standard_array', label: 'Standard array' },
 		{ id: 'manual', label: 'Manual' }
 	];
 
@@ -249,7 +249,7 @@
 							<button class="method-seg" class:on={b.draft.method === m.id} onclick={() => b.setMethod(m.id)}>{m.label}</button>
 						{/each}
 					</div>
-					{#if b.draft.method === 'point-buy'}
+					{#if b.draft.method === 'point_buy'}
 						<span class="points">Points <b class:over={b.pointsLeft < 0}>{b.pointsLeft}</b> / 27</span>
 					{/if}
 				</div>
@@ -258,7 +258,7 @@
 					{@const block = b.sheet?.abilities[ab as Ability]}
 					<div class="stat-row">
 						<span class="ability-code">{ab}</span>
-						{#if b.draft.method === 'standard-array'}
+						{#if b.draft.method === 'standard_array'}
 							<select class="arraysel bare" value={b.draft.arrayPick[ab as Ability] ?? ''} onchange={(e) => b.assignArray(ab as Ability, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}>
 								<option value="">—</option>
 								{#if b.draft.arrayPick[ab as Ability] != null}<option value={b.draft.arrayPick[ab as Ability]}>{b.draft.arrayPick[ab as Ability]}</option>{/if}

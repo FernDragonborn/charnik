@@ -29,7 +29,7 @@ describe('caster level (multiclass)', () => {
 	it('contributions round per share', () => {
 		expect(shareContribution('full', 5)).toBe(5);
 		expect(shareContribution('half', 5)).toBe(2); // ⌊5/2⌋
-		expect(shareContribution('half-up', 5)).toBe(3); // ⌈5/2⌉ — Artificer
+		expect(shareContribution('half_up', 5)).toBe(3); // ⌈5/2⌉ — Artificer
 		expect(shareContribution('third', 7)).toBe(2); // ⌊7/3⌋ — EK/AT
 		expect(shareContribution('none', 20)).toBe(0); // warlock/pact
 	});
@@ -61,8 +61,8 @@ describe('caster level (multiclass)', () => {
 	});
 
 	it('effective level never exceeds total level (invariant)', () => {
-		const share = fc.constantFrom('full', 'half', 'half-up', 'third', 'none') as fc.Arbitrary<
-			'full' | 'half' | 'half-up' | 'third' | 'none'
+		const share = fc.constantFrom('full', 'half', 'half_up', 'third', 'none') as fc.Arbitrary<
+			'full' | 'half' | 'half_up' | 'third' | 'none'
 		>;
 		fc.assert(
 			fc.property(fc.array(fc.record({ share, level: fc.integer({ min: 1, max: 20 }) })), (es) => {

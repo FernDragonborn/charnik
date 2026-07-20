@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fcd5-7377-ab65-afb0860395ea
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:06645d840940d9fa
 id,name_en,name_uk,text_en,text_uk,effects,size,creature_type,alignment,ac,hp,hp_formula,speed,str,dex,con,int,wis,cha,cr,senses,languages,skills
 aboleth,Aboleth,,"Amphibious. The aboleth can breathe air and water.

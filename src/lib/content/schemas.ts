@@ -126,7 +126,7 @@ export { SIZES, ABILITY_IDS as ABILITIES } from '../rules/core';
 import { SIZES, ABILITY_IDS as ABILITIES } from '../rules/core';
 export const HIT_DICE = ['d6', 'd8', 'd10', 'd12'] as const;
 export const CASTER_TYPES = ['full', 'half', 'third', 'pact', 'none'] as const;
-export const CASTER_SHARES = ['full', 'half', 'half-up', 'third', 'none'] as const;
+export const CASTER_SHARES = ['full', 'half', 'half_up', 'third', 'none'] as const;
 export const PREPARE_STYLES = ['prepared', 'known'] as const;
 export const SCHOOLS = [
 	'abjuration',

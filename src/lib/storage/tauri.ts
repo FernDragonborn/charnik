@@ -161,7 +161,7 @@ export async function listDataDirFiles(dir: string): Promise<DirFile[]> {
  *  - `copy` — an fs error while copying (permissions, disk full, path too long…); `error` has the text.
  *  - `verify` — copy finished but files are missing / wrong size (`failures` lists them); nothing deleted.
  *  - `cleanup` — the MOVE SUCCEEDED (data safe at the new folder) but deleting the OLD folder failed. */
-type MigrateStage = 'target-inside-source' | 'copy' | 'verify' | 'cleanup';
+type MigrateStage = 'target_inside_source' | 'copy' | 'verify' | 'cleanup';
 
 export interface MigrateOutcome {
 	ok: boolean;
@@ -228,7 +228,7 @@ export async function migrateDataDir(
 	deleteOld: boolean
 ): Promise<MigrateOutcome> {
 	if (isSameOrInside(newDir, oldDir))
-		return { ok: false, stage: 'target-inside-source', failures: [] };
+		return { ok: false, stage: 'target_inside_source', failures: [] };
 
 	const source = await walkTree(oldDir);
 	try {
@@ -257,7 +257,7 @@ export async function mergeDataDir(
 	deleteOld: boolean
 ): Promise<MigrateOutcome> {
 	if (isSameOrInside(newDir, oldDir))
-		return { ok: false, stage: 'target-inside-source', failures: [] };
+		return { ok: false, stage: 'target_inside_source', failures: [] };
 
 	const source = await walkTree(oldDir);
 	const target = await walkTree(newDir);

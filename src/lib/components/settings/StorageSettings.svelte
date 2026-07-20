@@ -62,7 +62,7 @@
 	// Turn a failed migrate outcome into a one-sentence "what happened".
 	function moveDetail(outcome: MigrateOutcome): string {
 		switch (outcome.stage) {
-			case 'target-inside-source':
+			case 'target_inside_source':
 				return "The chosen folder is inside the current data folder, so it can't be the move target.";
 			case 'copy':
 				return `Copying the files failed: ${outcome.error ?? 'unknown error'}.`;

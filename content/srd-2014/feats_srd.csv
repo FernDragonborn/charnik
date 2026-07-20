@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fd19-71e4-84e5-32b9acbacb5d
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:44cad5664ba62c7d
 id,name_en,name_uk,text_en,text_uk,effects,category,prereq,repeatable
 grappler,Grappler,,"Prerequisite: Strength 13 or higher You've developed the skills necessary to hold your own in close-quarters grappling. You gain the following benefits:

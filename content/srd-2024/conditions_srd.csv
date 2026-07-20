@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f972-79f0-8cbe-db82843f9ea2
-#content-updated-at: 2026-07-19
+#content-updated_at: 2026-07-19
 #content-hash: xxh64:f0f0ac176d591b84
 id,name_en,name_uk,text_en,text_uk,effects,negative
 blinded,Blinded,,"While you have the Blinded condition, you experience the following effects.

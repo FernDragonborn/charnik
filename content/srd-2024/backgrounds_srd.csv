@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f977-74de-bd84-45a7be49ca74
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:e009dd8c473d1653
 id,name_en,name_uk,text_en,text_uk,effects,skills,tools,languages,ability_choices,origin_feat
 acolyte,Acolyte,,,,,"insight,religion",calligraphers_supplies,,"int,wis,cha",magic_initiate

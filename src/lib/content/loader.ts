@@ -264,7 +264,7 @@ export async function loadContent(
 			if (storedHash && isHashDrift(storedHash, await hashBody(raw))) {
 				driftItems.push({
 					file: fileLabel,
-					declaredDate: directives.get('updated-at'),
+					declaredDate: directives.get('updated_at'),
 					changedAt: entry.mtime ? new Date(entry.mtime).toISOString().slice(0, 10) : undefined
 				});
 			}
@@ -274,7 +274,7 @@ export async function loadContent(
 			const fileSource = directives.get('source');
 			const fileLicense = directives.get('license');
 			// the language this file's rows are authored in (default en) — always "reviewed" for l10n status
-			const fileSourceLang = (directives.get('source-lang') ?? 'en').toLowerCase();
+			const fileSourceLang = (directives.get('source_lang') ?? 'en').toLowerCase();
 			const fileSystems = directives
 				.get('systems')
 				?.split(',')

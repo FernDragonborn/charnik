@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fd37-7903-ba00-ccfa91d6c74d
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:6b5e0154f619531f
 id,name_en,name_uk,text_en,text_uk,effects,class_id
 pathoftheberserker,PathoftheBerserker,,,,,barbarian

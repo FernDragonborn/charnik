@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f976-7552-b17a-956ec8debbde
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:68f715c03d1f1d50
 id,name_en,name_uk,text_en,text_uk,effects,species_id,kind,option_label
 elf_drow,Drow,,The range of your Darkvision increases to 120 feet. You also know the Dancing Lights cantrip.,,,elf,lineage,Elven Lineage

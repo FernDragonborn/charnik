@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fcf9-7ba2-a215-209c56f70146
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:b485c4563d62924e
 id,name_en,name_uk,text_en,text_uk,effects,species_id,kind,option_label
 hill_dwarf,Hill Dwarf,,"As a hill dwarf, you have keen senses, deep intuition, and remarkable resilience. Ability Score Increase. Your Wisdom score increases by 1. Dwarven Toughness. Your hit point maximum increases by 1, and it increases by 1 every time you gain a level.",,flat_bonus:wis+1,dwarf,subrace,Subrace

@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f968-7fd0-88fc-dbf43af3ecc8
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:f02b6e5eb6ebc9e2
 id,name_en,name_uk,text_en,text_uk,effects,category,prereq,repeatable
 alert,Alert,,"_Origin Feat_

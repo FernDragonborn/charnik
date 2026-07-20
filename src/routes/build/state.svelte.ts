@@ -74,7 +74,7 @@ export function rowName(row: LoadedRow | undefined, locale = app.activeLocale): 
 /** Sentinel a feat slot holds when the choice is an Ability Score Improvement (not a feat). */
 export const ASI = '__asi__';
 /** The SRD feat id representing an ASI — filtered out of the feat picker (handled as boosts). */
-const ASI_FEAT_ID = 'ability-score-improvement';
+const ASI_FEAT_ID = 'ability_score_improvement';
 /** ASI allocation shape: +2 to one ability ('2') or +1 to two ('1-1'). */
 type AsiShape = '2' | '1-1';
 /** How many abilities an ASI shape lets you pick ('2' → 1 target, '1-1' → 2 targets). */
@@ -134,7 +134,7 @@ function blankDraft(): DraftState {
 		speciesBoostPicks: [],
 		backgroundId: null,
 		classes: [{ classId: null, subclassId: null, level: 1 }],
-		method: 'point-buy',
+		method: 'point_buy',
 		abilities: baseAbilities(),
 		arrayPick: {},
 		boostShape: '2-1',
@@ -469,8 +469,8 @@ class BuildVM {
 	// --- ability scores --------------------------------------------------------
 	setMethod = (m: StatMethod) => {
 		this.draft.method = m;
-		if (m === 'standard-array') this.draft.arrayPick = {};
-		if (m === 'point-buy') this.draft.abilities = baseAbilities();
+		if (m === 'standard_array') this.draft.arrayPick = {};
+		if (m === 'point_buy') this.draft.abilities = baseAbilities();
 	};
 	pointsUsed = $derived(pointsSpent(this.draft.abilities));
 	pointsLeft = $derived(POINT_BUY_BUDGET - this.pointsUsed);
@@ -480,10 +480,10 @@ class BuildVM {
 		// level-up — increases come only from ASI slots). Free lets you edit anything.
 		if (this.edit && this.draft.strict) return;
 		const cur = this.draft.abilities[ab];
-		if (this.draft.method === 'point-buy' && !this.draft.strict) {
+		if (this.draft.method === 'point_buy' && !this.draft.strict) {
 			// lenient point-buy still respects budget/caps to keep the counter meaningful
 		}
-		if (this.draft.method === 'point-buy') {
+		if (this.draft.method === 'point_buy') {
 			if (dir === 1 && !canRaise(this.draft.abilities, ab)) return;
 			if (dir === -1 && !canLower(this.draft.abilities, ab)) return;
 		} else {

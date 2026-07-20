@@ -227,7 +227,7 @@
 			.classesForSpell(selected.effectiveId)
 			.map((e) => ({
 				name: String(graph?.get(e.classEffectiveId)?.data.name_en ?? e.classId),
-				homebrew: e.via === 'spell-list'
+				homebrew: e.via === 'spell_list'
 			}))
 			.filter((x) => (seen.has(x.name) ? false : seen.add(x.name)));
 	});

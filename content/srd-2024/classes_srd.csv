@@ -3,7 +3,7 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f9e3-73e9-b5d8-eed9f6418232
-#content-updated-at: 2026-07-16
+#content-updated_at: 2026-07-16
 #content-hash: xxh64:c779e2047a020887
 id,name_en,name_uk,text_en,text_uk,effects,hit_die,primary_ability,saves,caster,spell_ability,skills_choose,skills_from,subclass_level,asi_levels
 barbarian,Barbarian,,,,,d12,str,"str,con",none,,2,"animal_handling,athletics,intimidation,nature,perception,survival",3,"4,8,12,16,19"

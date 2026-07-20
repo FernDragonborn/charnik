@@ -359,7 +359,7 @@ async function writeStampedHomebrew(
 	if (!d.has('license')) d.set('license', HOMEBREW_LICENSE);
 	if (!d.has('id')) d.set('id', crypto.randomUUID());
 	d.set('schema', String(CONTENT_SCHEMA_VERSION));
-	d.set('updated-at', new Date().toISOString().slice(0, 10));
+	d.set('updated_at', new Date().toISOString().slice(0, 10));
 	d.set('hash', await hashBody(body));
 	await storage.write(file, stampDirectives(d, body));
 }

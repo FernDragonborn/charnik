@@ -126,12 +126,12 @@
 			"license": "License",
 			"id": "Pack ID",
 			"hash": "Content hash",
-			"updated-at": "Updated date",
+			"updated_at": "Updated date",
 			"schema": "Schema version",
 			"systems": "Editions",
 			"url": "Source link",
 			"author": "Author",
-			"author-url": "Author link",
+			"author_url": "Author link",
 			"type": "Type"
 		}
 	},
