@@ -767,17 +767,20 @@ inline (user, 2026-07-20).
   `plugin:<namespace>:<handlerName>` (positional; only the manifest key literally changed — free now,
   pre-release, no plugins in the wild). `tools/rename-ns`/`-fn` guarded regexes protected values like
   `test-ns` and generic non-plugin `fn` vars.
-- [ ] **PLG-6 · plugin health has no UI surface — a runtime auto-disable is invisible (backlog).**
-  The session fail-closed disable (`isDisabled`, 3 failures) lives entirely inside `plugin-registry.ts`
-  with no getter, and the per-token degrade reasons go only into the derive `issues` channel — so a
-  plugin that SILENTLY stopped working still shows "enabled" in Settings ▸ Plugins, and the user has
-  no idea WHY or WHERE it dropped out. Backlog: a **plugin-health section in Settings** that reports,
-  per plugin, why + where it was disabled — the auto-disable state and its last failure reason
-  (surface `failCounts`/last-reason from the registry via a small read API), plus the per-character
-  scope (PLG-3: "disabled for THIS character") and a link to the affected sheet/stat. Ties to the
-  existing content-health / `deriveHealth` channel (L2R-8) — likely the same panel, a plugins tab.
-  Also expose a manual "re-enable / retry" that clears the fail counter (today only a full rebuild or
-  restart does). NOT built.
+- [~] **PLG-6 · plugin health UI surface (D).** Was: a plugin that failed to boot or auto-disabled
+  read as "enabled" with no hint. DONE, split by the data's nature (per the decision — global plugin
+  facts vs per-character runtime state):
+  · **Global (Settings ▸ Plugins):** a plugin that is consented+enabled but whose main.js failed to
+    evaluate at boot now shows a `Failed to load` badge + the real error (`plugin-store` captures
+    `evaluator.loadError(ns)` after each rebuild into `plugins.loadErrors`; `PluginsSettings` renders
+    it). Discovery can't catch this (it never runs the code), so this is the only place it surfaces.
+  · **Per-character (Content health):** the per-token degrade reasons (broken/over-budget/
+    auto-disabled, with the PLG-7 messages) ALREADY flow via `deriveIssues` → `ContentHealth` ("Effect
+    problems for '<character>'"). Added a **Retry plugins** button there — `retryPlugins()` clears the
+    memo (which resets the per-(namespace,character) fail counters) and bumps `version` to re-derive,
+    so a fixed plugin gets another chance without a full re-scan.
+  STILL OPEN: a deep LINK from a plugin issue to the exact affected sheet/stat (ties PLG-8); exposing
+  the raw `failCounts`/last-reason as a structured read API (today the reason rides `deriveIssues`).
 - [~] **PLG-7 · plugin-author DX — honest mistakes must produce a fixable message, not a puzzle.**
   Goal: the tool "just works" — every failure the app CAN detect tells the author WHAT/WHERE, no
   silent drops, no generic errors. DONE (reusing the existing `deriveIssues` → content-health

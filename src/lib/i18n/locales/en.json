@@ -45,7 +45,8 @@
 				"needsConsent": "Not reviewed",
 				"codeChanged": "Code changed",
 				"disabled": "Disabled",
-				"enabled": "Enabled"
+				"enabled": "Enabled",
+				"loadFailed": "Failed to load"
 			},
 			"consent": {
 				"title": "Enable this plugin?",

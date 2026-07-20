@@ -9,6 +9,7 @@
 	import { deriveHealth } from '$lib/character/health.svelte';
 	import { lintEffectTokens } from '$lib/effects/apply';
 	import { tokensOf } from '$lib/content/loader';
+	import { retryPlugins } from '$lib/effects/plugin-store.svelte';
 
 	const graph = $derived(content.graph);
 	const issues = $derived(graph?.issues ?? []);
@@ -26,6 +27,9 @@
 		return out;
 	});
 	const deriveIssues = $derived(deriveHealth.issues);
+	// a plugin token that degraded (broken/over-budget/auto-disabled) — offer a one-click retry that
+	// resets the per-character fail counters and re-derives (e.g. after fixing the plugin's code)
+	const hasPluginIssue = $derived(deriveIssues.some((i) => i.token.startsWith('plugin:')));
 	const total = $derived(
 		errors.length +
 			warnings.length +
@@ -113,8 +117,11 @@
 		{/if}
 
 		{#if deriveIssues.length}
-			<div class="group-label warn">
-				Effect problems for “{deriveHealth.characterName}” (this character only)
+			<div class="group-label warn plugin-retry-row">
+				<span>Effect problems for “{deriveHealth.characterName}” (this character only)</span>
+				{#if hasPluginIssue}
+					<button class="retry-btn" onclick={retryPlugins}>Retry plugins</button>
+				{/if}
 			</div>
 			{#each deriveIssues as it, i (it.token + i)}
 				<div class="row warn">
@@ -162,6 +169,28 @@
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 		margin: 18px 0 8px;
+	}
+	.plugin-retry-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 12px;
+	}
+	.retry-btn {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--color-text);
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border-strong);
+		border-radius: 20px;
+		padding: 3px 10px;
+		cursor: pointer;
+	}
+	.retry-btn:hover {
+		border-color: var(--color-accent);
+		color: var(--color-accent-bright);
 	}
 	.row {
 		border: 1px solid var(--color-border);

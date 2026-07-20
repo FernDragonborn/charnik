@@ -70,6 +70,7 @@
 		<div class="plugin-list">
 			{#each plugins.discovered as p (p.namespace)}
 				{@const status = pluginStatus(p, plugins.prefs)}
+				{@const loadErr = plugins.loadErrors[p.namespace]}
 				<div class="plugin-row" class:dim={status === 'broken' || plugins.prefs.killSwitch}>
 					<div class="plugin-meta">
 						<div class="plugin-name">
@@ -82,11 +83,17 @@
 						</div>
 						{#if p.problem}
 							<div class="plugin-problem">{p.problem}</div>
+						{:else if loadErr}
+							<div class="plugin-problem">⚠ {loadErr}</div>
 						{:else if p.manifest?.description}
 							<div class="plugin-desc">{p.manifest.description}</div>
 						{/if}
 					</div>
-					<span class="status status-{status}">{$_(statusKey[status])}</span>
+					{#if loadErr}
+						<span class="status status-broken">{$_('settings.plugins.status.loadFailed')}</span>
+					{:else}
+						<span class="status status-{status}">{$_(statusKey[status])}</span>
+					{/if}
 					{#if status !== 'broken'}
 						<button class="pill-btn" class:accent={status === 'enabled'} onclick={() => toggle(p)}>
 							{status === 'enabled'

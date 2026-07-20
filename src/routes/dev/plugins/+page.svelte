@@ -30,7 +30,11 @@
 		fake({ namespace: 'exploit-dice', hash: 'b'.repeat(64) }), // enabled below
 		fake({ namespace: 'old-friend', hash: 'c'.repeat(64) }), // code changed (stale consent)
 		fake({ namespace: 'sleepy', hash: 'd'.repeat(64) }), // consented but disabled
-		{ namespace: 'broken-one', ok: false, problem: 'plugin.json invalid: version — not a semver version' }
+		{
+			namespace: 'broken-one',
+			ok: false,
+			problem: 'plugin.json invalid: version — not a semver version'
+		}
 	];
 	plugins.prefs = {
 		consent: {
@@ -40,6 +44,10 @@
 		},
 		enabled: { 'exploit-dice': true, sleepy: false },
 		killSwitch: false
+	};
+	// enabled but its main.js failed to evaluate at boot → the load-error surface (PLG-6/D)
+	plugins.loadErrors = {
+		'exploit-dice': 'main.js failed to load: SyntaxError: unexpected token (line 12)'
 	};
 </script>
 

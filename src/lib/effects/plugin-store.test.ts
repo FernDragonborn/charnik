@@ -5,7 +5,7 @@
  * sandbox integration suite + tsc, not here (it needs the QuickJS module + a Desktop platform).
  */
 import { describe, it, expect } from 'vitest';
-import { pluginStatus } from './plugin-store.svelte';
+import { pluginStatus, retryPlugins, plugins } from './plugin-store.svelte';
 import { emptyPrefs, type DiscoveredPlugin, type PluginPrefs } from './plugin-host';
 
 const disc = (over: Partial<DiscoveredPlugin> = {}): DiscoveredPlugin => ({
@@ -39,5 +39,13 @@ describe('pluginStatus — the Settings status label', () => {
 	it('a missing hash (ok but unhashable) is treated as not-consented → "needs_consent"', () => {
 		const noHash: DiscoveredPlugin = { namespace: 'p1', ok: true };
 		expect(pluginStatus(noHash, emptyPrefs())).toBe('needs_consent');
+	});
+});
+
+describe('retryPlugins', () => {
+	it('bumps the version so the sheet re-derives (and resets fail counters via the memo clear)', () => {
+		const before = plugins.version;
+		retryPlugins();
+		expect(plugins.version).toBe(before + 1);
 	});
 });

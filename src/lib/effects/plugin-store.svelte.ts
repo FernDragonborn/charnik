@@ -35,6 +35,10 @@ interface PluginsState {
 	loaded: boolean;
 	discovered: DiscoveredPlugin[];
 	prefs: PluginPrefs;
+	/** namespace → the REAL main.js load error, for a plugin that is consented+enabled but whose
+	 *  code failed to evaluate at sandbox boot (discovery can't catch this — it never runs the code).
+	 *  Surfaced in Settings ▸ Plugins so a broken plugin doesn't silently read as "enabled". */
+	loadErrors: Record<string, string>;
 	/** Bumped on every evaluator rebuild — a reactive dependency for sheet derivation. */
 	version: number;
 }
@@ -44,6 +48,7 @@ export const plugins = $state<PluginsState>({
 	loaded: false,
 	discovered: [],
 	prefs: emptyPrefs(),
+	loadErrors: {},
 	version: 0
 });
 
@@ -99,6 +104,20 @@ async function rebuildEvaluator(): Promise<void> {
 	clearPluginMemo();
 	if (next) registerPluginEvaluator(next);
 	else clearPluginEvaluator();
+	// a plugin that booted with a broken main.js reports its real error → surface it globally
+	const errs: Record<string, string> = {};
+	for (const p of runnable) {
+		const le = next?.loadError?.(p.namespace);
+		if (le) errs[p.namespace] = le;
+	}
+	plugins.loadErrors = errs;
+	plugins.version++;
+}
+
+/** Give plugins that auto-disabled (3 failures) another chance on THIS character without a full
+ *  re-scan: clearing the memo also resets the fail counters; the version bump re-derives. */
+export function retryPlugins(): void {
+	clearPluginMemo();
 	plugins.version++;
 }
 

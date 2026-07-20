@@ -45,7 +45,8 @@
 				"needsConsent": "Не переглянутий",
 				"codeChanged": "Код змінився",
 				"disabled": "Вимкнено",
-				"enabled": "Увімкнено"
+				"enabled": "Увімкнено",
+				"loadFailed": "Не завантажився"
 			},
 			"consent": {
 				"title": "Увімкнути цей плагін?",

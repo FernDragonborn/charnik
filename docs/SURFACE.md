@@ -229,6 +229,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const plugins`
 - `function loadPlugins` — Discover plugins + build the evaluator for already-consented, enabled ones.
 - `function refreshPlugins` — Re-scan `<dataDir>/plugins/` (user added/edited a folder) and rebuild the evaluator.
+- `function retryPlugins` — Give plugins that auto-disabled (3 failures) another chance on THIS character without a full * re-scan: clearing the …
 - `function consentAndEnable` — The user accepted the consent dialog for THIS plugin at THIS code hash → record + enable.
 - `function disablePlugin`
 - `function enableConsented` — Re-enable a plugin whose consent is still valid (no dialog needed).
@@ -809,4 +810,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 437 exports across 63 modules · 34 duplicate suspects · generated in 107ms._
+_46 tokens · 50 global classes · 36 components · 438 exports across 63 modules · 34 duplicate suspects · generated in 222ms._
