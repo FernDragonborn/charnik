@@ -34,10 +34,12 @@ import { type ActiveEffect, type EffectCtx, type EffectIssue } from '../effects/
 import {
 	applyEffects,
 	collectFacts,
+	mergeFacts,
 	matchesTarget,
 	type EffectFacts,
 	type ResourceDef
 } from '../effects/apply';
+import { expandPluginEffects, type PluginCtx } from '../effects/plugin-registry';
 import {
 	resolveActiveEffects,
 	RAGE_CONDITION_ID,
@@ -391,6 +393,75 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 	// the ONE typed-facts object (D7): every token parsed + value-resolved once; every consumer
 	// below (and the roll path / action economy through the sheet) reads THIS, never a re-scan.
 	const facts = collectFacts(resolvedEffects, effCtx, issues);
+
+	// L3 plugin PRE-PASS (docs/PLUGINS.md; stage 2½ — between resolve and the fold): resolve every
+	// `plugin:` token against the registry over the §4.2 least-data ctx. Returned TOKENS become
+	// synthetic effects merged through a second collectFacts (same parser/rules as content);
+	// CONTRIBUTIONS fold as host-stamped numeric facts. No plugin tokens / no registry → null,
+	// and the sheet computes exactly as before (removability invariant).
+	// `api: 1` limits (documented): the ctx's hpMax and a returned `apply_condition`'s sub-token
+	// expansion both read the PRE-plugin state — plugins cannot feed the condition DAG.
+	if (character.play.autoCalc && resolvedEffects.length) {
+		const preHpMax = character.play.hp.max ?? applyEffects('hp_max', maxHpBase, facts).value;
+		const pluginCtx: PluginCtx = {
+			api: 1,
+			build: {
+				system: character.system,
+				level,
+				classLevels,
+				proficiencyBonus: prof,
+				abilities: Object.fromEntries(
+					ABILITIES.map((ab) => [ab, { score: scores[ab], mod: abilityModifier(scores[ab]) }])
+				) as Record<Ability, { score: number; mod: number }>
+			},
+			play: {
+				hp: character.play.hp.current,
+				hpMax: preHpMax,
+				tempHp: character.play.hp.temp,
+				flags: {
+					isBloodied: character.play.hp.current <= preHpMax / 2,
+					isRaging: facts.conditions.includes(RAGE_CONDITION_ID),
+					isConcentrating: character.play.concentration != null
+				},
+				conditions: facts.conditions,
+				resources: Object.fromEntries(
+					facts.resources.map((r) => {
+						// own-or-zero: the id is content-controlled (`constructor` parses fine) — a bare
+						// index would read an inherited Object.prototype member (same guard as context.ts)
+						const spent = Object.hasOwn(character.play.resourcesSpent, r.id)
+							? (character.play.resourcesSpent[r.id] ?? 0)
+							: 0;
+						return [r.id, Math.max(0, r.max - spent)];
+					})
+				)
+			}
+		};
+		// scope = character id: the fail-closed counter is per (plugin, character), so one
+		// character's ctx can't disable a plugin for another (PLG-3)
+		const expansion = expandPluginEffects(resolvedEffects, pluginCtx, issues, character.id);
+		if (expansion) {
+			const condsBefore = new Set(facts.conditions);
+			if (expansion.syntheticEffects.length)
+				mergeFacts(facts, collectFacts(expansion.syntheticEffects, effCtx, issues));
+			facts.numeric.push(...expansion.numeric);
+			facts.pluginNotes.push(...expansion.notes);
+			facts.unknown.push(...expansion.unknown);
+			// a plugin-granted `apply_condition` expands ONE level here (PLUGINS.md §4.3): the
+			// condition's own stat tokens DO apply — only guard/DAG participation stays out of
+			// reach (the resolve stage already ran). A condition already active pre-plugin was
+			// expanded by the resolve stage; skip it (the A11 once-per-id rule).
+			const grantedConds = facts.conditions.filter((id) => !condsBefore.has(id));
+			if (grantedConds.length) {
+				const condEffects: ActiveEffect[] = [];
+				for (const id of grantedConds) {
+					const cond = expandCondition(id);
+					if (cond)
+						condEffects.push({ source: cond.source, layer: 'condition', tokens: cond.tokens });
+				}
+				if (condEffects.length) mergeFacts(facts, collectFacts(condEffects, effCtx, issues));
+			}
+		}
+	}
 
 	// spellcasting AFTER the resolve, so DCs/attacks read the EFFECTIVE scores (a Headband of
 	// Intellect moves the wizard's DC, as it should) — and `spell_dc`/`spell_attack` effects fold in.

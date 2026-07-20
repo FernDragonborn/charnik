@@ -51,7 +51,8 @@ export interface RollMod {
  *  re-parses/re-evaluates. Exactly one of `amount`/`diceFormula`/`error` is set. */
 export interface NumericFact {
 	target: string;
-	op: 'add' | 'set';
+	/** `mult` never comes from content tokens — only plugin `contributions` emit it (PLUGINS.md §4.3). */
+	op: 'add' | 'set' | 'mult';
 	layer: Layer;
 	source: string;
 	/** The guard-stripped token, for provenance notes. */
@@ -104,6 +105,9 @@ export interface EffectFacts {
 	rerolls: RollMod[];
 	minDie: RollMod[];
 	unknown: { source: string; token: string }[];
+	/** Plain-text notes returned by plugin handlers (PLUGINS.md §4.3) — panel display only,
+	 *  rendered as TEXT (PLG-SEC 3). Filled by the plugin pre-pass, empty otherwise. */
+	pluginNotes: { source: string; text: string }[];
 }
 
 const emptyFacts = (): EffectFacts => ({
@@ -119,7 +123,8 @@ const emptyFacts = (): EffectFacts => ({
 	conditions: [],
 	rerolls: [],
 	minDie: [],
-	unknown: []
+	unknown: [],
+	pluginNotes: []
 });
 
 /**
@@ -234,6 +239,11 @@ export function collectFacts(
 					if (p.target && p.amount !== undefined)
 						facts.minDie.push({ target: p.target, value: p.amount });
 					break;
+				case EFFECT_KIND.plugin:
+					// resolved by the derive PRE-PASS (`expandPluginEffects`), not here — the pre-pass
+					// reports every plugin token itself (result, or degraded inert note), so counting it
+					// as unknown too would double the panel entry.
+					break;
 				case 'unknown':
 					facts.unknown.push({ source: eff.source, token });
 					break;
@@ -244,6 +254,33 @@ export function collectFacts(
 	facts.resourceIds = [...resourceIds];
 	facts.conditions = [...conditions];
 	return facts;
+}
+
+/**
+ * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned
+ * tokens become synthetic effects, collected separately, then merged. Arrays concatenate;
+ * condition/resource ids dedupe; resource pools keep the largest max per id (the same rule
+ * `collectFacts` itself applies within one pass).
+ */
+export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
+	base.numeric.push(...extra.numeric);
+	base.advantage.push(...extra.advantage);
+	base.disadvantage.push(...extra.disadvantage);
+	base.autoFail.push(...extra.autoFail);
+	base.autoSucceed.push(...extra.autoSucceed);
+	base.proficiencies.push(...extra.proficiencies);
+	base.defenses.push(...extra.defenses);
+	base.rerolls.push(...extra.rerolls);
+	base.minDie.push(...extra.minDie);
+	base.unknown.push(...extra.unknown);
+	base.pluginNotes.push(...extra.pluginNotes);
+	base.conditions = [...new Set([...base.conditions, ...extra.conditions])];
+	base.resourceIds = [...new Set([...base.resourceIds, ...extra.resourceIds])];
+	for (const def of extra.resources) {
+		const prev = base.resources.find((r) => r.id === def.id);
+		if (!prev) base.resources.push(def);
+		else if (def.max > prev.max) base.resources[base.resources.indexOf(prev)] = def;
+	}
 }
 
 /**

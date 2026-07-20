@@ -825,7 +825,10 @@ shape). PHB examples remain the smoke set: Rage, Second Wind + Action Surge, ki 
 die + Flurry, Sneak Attack, Wild Shape, Divine Smite; Metamagic point↔slot conversion may
 stay semi-manual.
 
-- [ ] **N1 · Inventory view.** New combat panel `pid: 'inventory'` (panel infra + the
+- [ ] **N1 · Inventory view.** USER-CONFIRMED WANTED (2026-07-19): there is still NO inventory
+  view anywhere in the app (only `build.inventory` rows in the builder) — bake it from the
+  `design-preview/d-inventory.html` mock per the bake-from-mocks rule, don't design from
+  scratch. New combat panel `pid: 'inventory'` (panel infra + the
   layout-model plan already reserve it): rows = name + description, qty stepper, equip/attune
   toggles (attunement cap 3 — Strict blocks, note explains), "use" on consumables (qty−1).
   B7 lands here: weight sum → carrying-capacity bar (+ kg). Money is its OWN item (→ N6),
@@ -833,14 +836,26 @@ stay semi-manual.
   re-derive reactively. MIGRATIONS: decided 2026-07-15 — 0 users yet, so NO migration work
   now; schema may change freely (breaking) until release; the schemaVersion machinery stays
   for post-release.
+- [ ] **DEMO-1 · Showcase demo character: warlock/barbarian multiclass (user-decided
+  2026-07-19).** The seeded demo (`src/lib/demo/sheet.ts`, Wizard 3) under-demonstrates the
+  system. Rebuild it as a **warlock × barbarian multiclass** — deliberately the widest
+  coverage in one sheet: pact magic pool alongside the shared-slot math (multiclass caster
+  level), Rage as a `grant_resource` + `apply_condition` with while-raging guards (L2), CON/STR
+  meets CHA casting (per-class `spellcasting_mod`, SPEC4), equipped armor vs unarmored,
+  invocations as choice-group features, resources + conditions + concentration on one sheet.
+  Keep it SRD-only. Update the demo-dependent tests/screenshots; the demo seeds first-run on
+  web + desktop, so it IS the first impression of the system's scope.
 - [ ] **N2 · Class-feature engine ("features as data").** The three shapes above + the hard
-  case: **Wild Shape = stat-block replacement**. Model: `play.form = {monsterRef, formHp} |
-  null`; deriveSheet branches — physical scores/AC/attacks/speed from the (already-typed!)
-  monster row, mental stays own; isolated removable seam like effects; 2014/2024 diverge
-  (2024 = temp HP, known-forms list). **Gate (decided 2026-07-15): implement ONLY against a
-  written per-edition spec sheet taken verbatim from PHB'14 + PHB'24 — 100% RAW fidelity in
-  both editions is a hard requirement here** (HP pool vs temp HP, CR/movement limits per
-  level, what's kept vs replaced, revert-at-0 carryover, equipment handling, casting rules).
+  case: **Wild Shape = stat-block replacement** (USER-RECONFIRMED 2026-07-19: still fully
+  unimplemented — a druid has no working Wild Shape at all; the complexity + the 5e↔5.5e
+  divergence is exactly why the spec-sheet gate below exists). Model: `play.form =
+  {monsterRef, formHp} | null`; deriveSheet branches — physical scores/AC/attacks/speed from
+  the (already-typed!) monster row, mental stays own; isolated removable seam like effects;
+  2014/2024 diverge (2024 = temp HP, known-forms list). **Gate (decided 2026-07-15):
+  implement ONLY against a written per-edition spec sheet taken verbatim from PHB'14 +
+  PHB'24 — 100% RAW fidelity in both editions is a hard requirement here** (HP pool vs temp
+  HP, CR/movement limits per level, what's kept vs replaced, revert-at-0 carryover,
+  equipment handling, casting rules).
   Superiority dice: extend the grammar —
   `grant_resource:superiority-dice:4:d8:short` (decided 2026-07-14: die BEFORE recharge —
   "what the resource is, then when it refills"; ResourceDef + `die`). The die segment is
@@ -1299,22 +1314,42 @@ single most common homebrew pattern (class-level scaling) is inexpressible.
 
 **Phases:**
 
-- [ ] **PLG-1 · Registry + native handlers (no new dep).** `plugin:` kind in `parseEffect`
-  (+ schemas EFFECT_KINDS sync + effectsField accepts the prefix), the registry interface,
-  the derive pre-pass, `effectTag` → "plugin · <ns>", behavioral tests with an injected fake
-  evaluator. Proves the seam with zero sandbox risk.
-- [ ] **PLG-2 · The sandbox itself. GATED ON L2 (decided 2026-07-15): the L2 value-expression
-  layer must ship BEFORE this** — L2 over a conditional ctx covers most of the tail with no sandbox
-  surface, so the sandbox only starts once L2 is exhausted (and `onUse`/`onEvent` earn it).
-  quickjs-emscripten (sync build) behind a dynamic
-  import; budgets + intrinsic-neutering; JSON marshalling + zod output validation; plugin
-  discovery from `dataDir/plugins/` via Storage; Settings → Plugins list (enable toggle,
-  manifest, status, open-folder) + consent dialog; plugin errors surface in content health.
-  Integration tests in vitest/node: infinite loop → interrupted, memory bomb → limited,
-  escape attempts (fetch/require/globalThis) → undefined, malformed output → rejected,
-  happy path → contributions, determinism.
-- [ ] **PLG-3 · Documentation — a RELEASE GATE, not a DX pass** (decided 2026-07-15: we own
-  the docs responsibility; the sandbox does not ship without the full set). `docs/PLUGINS.md`
+- [x] **PLG-1 · Registry + native handlers (no new dep).** DONE 2026-07-19. `plugin:` kind in
+  `parseToken` (+ schemas EFFECT_KINDS sync), `effects/plugin-registry.ts` = the `PluginEvaluator`
+  seam + host-side zod validation (caps, target-key whitelist-by-grammar, one-token-per-element),
+  memo split on (token, buildJson[, playJson]) with LRU + read-tracking, session fail-closed
+  counter, ~20 ms aggregate budget, `expandPluginEffects` pre-pass (stage 3½, see the stage list);
+  `mergeFacts` in apply.ts; `effectTag` → "plugin · <ns>"; 21 behavioral tests with a fake
+  evaluator (`plugin.test.ts`). NB: the "effectsField accepts the prefix" sub-item was moot —
+  effectsField keeps ALL tokens verbatim (B12), no schema coupling existed.
+- [x] **PLG-2 · The sandbox itself.** DONE 2026-07-19 (the L2 gate was cleared by EXPR-5).
+  `effects/plugin-sandbox.ts` = quickjs-emscripten-core + **`@jitl/quickjs-ng-wasmfile-release-sync`**
+  (the quickjs-NG sync build — chosen for PLG-SEC 1b: its regexp engine honours the interrupt, so
+  ReDoS on hostile args is interruptible), dynamically imported only when ≥1 plugin runs; one
+  runtime per plugin; budgets (5 ms call / 50 ms load interrupt, 8 MB memory, 256 KB stack);
+  Date off via intrinsics, Math.random throws + frozen, WeakRef/FinalizationRegistry/performance/
+  `eval` binding neutered by a setup script (`Eval: false` was IMPOSSIBLE — it kills the host's own
+  `evalCode` boundary; found at implementation, spec note added); JSON-string boundary with
+  in-sandbox stringify + play-read tracking via a ctx getter; context recycled after any limit trip.
+  `effects/plugin-host.ts` = discovery over the Storage seam (ns grammar on folder name, strict zod
+  manifest, https-only url, size caps) + the §6.3 length-prefixed SHA-256 consent hash;
+  `plugin-store.svelte.ts` = prefs in localStorage (OUTSIDE the dataDir), kill switch, and a
+  reactive `version` the combat/build VMs read so enable/disable re-derives sheets LIVE.
+  Settings ▸ Plugins tab + house-template consent dialog (i18n en+uk; web shows a desktop-only
+  note; `/dev/plugins` previews all five statuses). Plugin failures surface as deriveIssues →
+  content health. 45 tests: 29 sandbox integration (infinite loop + ReDoS interrupted, memory
+  bomb limited, escapes undefined, §9 examples verbatim, isolation between plugins, boundary
+  rejections) + 16 host (discovery/manifest/hash/runnability).
+- [x] **PLG-3 · Documentation — a RELEASE GATE, not a DX pass** (decided 2026-07-15: we own
+  the docs responsibility; the sandbox does not ship without the full set). DONE 2026-07-19:
+  PLUGINS.md amended to IMPLEMENTED status (guarded plugin tokens, the `apply_condition`
+  one-level-expansion rule, ctx↔L2 naming rule (`isBloodied` mirrors `is_bloodied` — one
+  vocabulary, camelCased in ctx JSON), `set`→override-stage fold, skill-target
+  grammar-not-membership note, precise import()/eval containment notes, the real §11 CLI);
+  fixture-runner =
+  `pnpm plugin:test <folder> --token "plugin:…" [--ctx fixture.json]` (`tools/plugin-test.ts`,
+  runs the REAL sandbox + the REAL registry validation). UA translation still follows the app's
+  docs-i18n track. Original scope: `docs/PLUGINS.md`
   (+ published with the web demo): API reference (token grammar, handler signature, every ctx
   field, the result schema, budgets/limits, determinism rules), manifest format, packaging &
   install, the **compatibility contract** (`api: 1` is stable; breaking host-API changes bump
@@ -1470,7 +1505,11 @@ convenience under 5e.
    risks the core, once built, not matching a "pinned" plugin contract. FIX: extract the
    action-intent + event + state-channel model into a CORE spec; plugin `onUse`/`onEvent` become
    THIN adapters returning that same core shape. Design the core action system first; plugins hook
-   into it. §8 should reference the core model, not define it.
+   into it. §8 should reference the core model, not define it. **FIXED 2026-07-19:** the model is
+   extracted into **`docs/ACTIONS.md`** (normative core spec: three channels, the ONE intent
+   language + host-execution mapping, event vocabulary, build order native-actions-first);
+   PLUGINS.md §8 now carries an ownership note deferring to it. The core executor itself is still
+   unbuilt (lands with N2 activatable actions).
 2. **A `plugin:` token on a LOAD-BEARING stat silently produces a wrong character + breaks
    portability.** Missing/disabled/over-budget/different-version plugin → the contribution vanishes
    and only an inert note hints (e.g. −5 AC), violating the "no silent rules-divergence" bar; and a
@@ -1479,11 +1518,15 @@ convenience under 5e.
    ("this content needs plugin X to compute correctly") + a **dedicated notification view** for these
    + a **Settings tab** (the plugins/health tab) collecting them — not a quiet inert note. Document
    that plugin-dependent content/characters are NOT portable, and add version awareness.
+   **PARTIAL 2026-07-19:** every plugin-token failure now lands in `deriveIssues` → content-health,
+   and Settings ▸ Plugins lists broken/disabled/code-changed states; still open: the dedicated
+   notification view, the portability warning in docs/bundle, and version awareness.
 3. **Stop over-pinning deferred contracts.** §8 currently reads like a finished `api: 2` spec inside
    an `api: 1` doc — pinning intent schemas (`hp/spend/cost/tempHp`) and event vocab before a host
    executor exists is speculation dressed as forward-safety. Pin the SEAM (there will be an `onUse`
    hook returning declarative intent); DEFER the detailed schema until the core action system (#1)
-   defines it.
+   defines it. **FIXED 2026-07-19 with #1:** ACTIONS.md owns the schema; §8's copy is marked
+   illustrative-until-the-executor-lands, ACTIONS.md wins on conflict.
 4. **L3-`passive`'s marginal value over L2 is thin — effort is inverted.** Determinism + least-data
    ctx + no host-callbacks make a `passive` plugin a pure `(token, ctx)` function — exactly what an
    L2 expression is, minus a WASM sandbox. L3's real justification is `onUse`/`onEvent` (deferred,
@@ -1512,8 +1555,15 @@ convenience under 5e.
    5. **Spellcasting** — AFTER the fold, over the effective scores, with `spell_dc`/`spell_attack`
       facts folded in.
    The ctx is ONE `makeExprContext` over the LIVE resolve state (getters, not a frozen copy), so a
-   guard reads exactly what the DAG has resolved so far. A future plugin pre-pass slots between (3)
-   and (4). Every feature references THIS list, not its own version.
+   guard reads exactly what the DAG has resolved so far. The L3 plugin pre-pass (PLG, BUILT
+   2026-07-19) is stage 3½: it runs AFTER the first `collectFacts` (its §4.2 ctx reads the
+   content-only facts — conditions, resources, pre-plugin hp_max), returned plugin `tokens` go
+   through a SECOND `collectFacts` merged via `mergeFacts` (the tokens dialect must ride the same
+   parser/facts machinery — the old "between (3) and (4)" placement couldn't feed tokens through
+   facts), and `contributions` append as host-stamped numeric facts. Consequence (documented,
+   PLUGINS.md §4.3): plugin output cannot feed the DAG/guards; a returned `apply_condition`
+   registers + expands its stat tokens ONE level (no further cascade, no guard visibility).
+   Every feature references THIS list, not its own version.
 
 **Formula storage (pinned 2026-07-15): there is no separate formula store.** L1 dice terms
 live INSIDE tokens in the `effects` CSV cells / `play.effects`; L2 expressions (when built)
@@ -1561,6 +1611,12 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
 - **UBUG-5 · Spending a resource gives no feedback.** Clicking a resource pip (`resourceClick`) spends
   it silently — using a resource should raise a toast (e.g. "Rage — 2 left" / "Ki used"), like rolls
   do. Add a toast on spend (and probably on restore too), naming the resource + remaining count.
+- **UBUG-6 · Casting a spell doesn't consume a spell slot (reported 2026-07-19).** Using/casting a
+  levelled spell leaves the slot-pip count unchanged — the cast path doesn't decrement
+  `play.spellSlotsSpent` (only a manual pip click spends). Trace `cast` (combat/state) →
+  `resources`/`slotClick`: a levelled cast should auto-spend one slot of the chosen level (pact
+  pool for warlock; cantrips spend nothing), update the pips, and respect the UBUG-5 feedback
+  pattern once that lands. Check both editions' pools (shared + pact).
 - [ ] **REL-1 · Linux release build.** `release.yml` is Windows-only (`runs-on: windows-latest`). Add
   a Linux job (matrix `ubuntu-22.04` + apt webkit2gtk deps) so `tauri-action` publishes Linux artifacts
   alongside the Windows NSIS. Ship **more than the updater bundle**: AppImage is the only auto-updatable

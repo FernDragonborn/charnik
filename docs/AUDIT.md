@@ -720,3 +720,75 @@ Second fresh-eyes pass + call-chain walk (2026-07-16, later the same day):
   hatch) and gated by CSP/no-remote-code, but it's the single widest capability: consider
   restricting to paths returned by the dialog plugin, or at least document it as accepted risk in
   SECURITY.md §9 (minimal Rust surface).
+
+## PLG · L3 plugin implementation review (2026-07-20)
+
+Fresh-eyes + call-chain walk over the whole L3 module (host / sandbox / registry / store /
+`token-parser` plugin kind / `apply` merge-seam / `derive` pre-pass / Settings UI / dev route /
+`tools/plugin-test`). The security containment (read-once TOCTOU-closed buffer, QuickJS zero-cap
+sandbox, host-side revalidation, fail-closed, length-prefixed consent hash) is SOUND — the finds
+cluster in the reactive store's async wiring and in untested degradation paths. Decisions taken
+inline (user, 2026-07-20).
+
+- [x] **PLG-1 · `rebuildEvaluator` race → leaked WASM runtime.** `plugin-store.svelte.ts`: every
+  toggle (consent/enable/disable/kill/refresh) calls the async rebuild, which disposed the handle,
+  cleared the registry, then `await import()` + `await createSandboxEvaluator()` before registering.
+  Two overlapping calls interleave at the awaits: the loser's built evaluator overwrites
+  `evaluatorHandle` WITHOUT `dispose()` → an orphaned QuickJS runtime + WASM context leaks on every
+  race (rapid enable→disable, or a toggle during the startup `refreshPlugins`), and last-COMPLETED
+  (not last-INTENDED) wins the registry. FIXED (**generation-guard + build-before-swap**,
+  `plugin-store.svelte.ts`): a monotonic `rebuildGen` captured on entry; the new evaluator is built
+  BEFORE the old is disposed and the swap is atomic; a superseded in-flight rebuild disposes what it
+  built and bails. Rebuild is a fold-to-final-prefs (order-irrelevant, no queue needed) — latest gen
+  wins, stale is discarded. (No dedicated concurrency unit-test yet → PLG-T1.)
+- [x] **PLG-2 · transient `evaluator === null` window during async rebuild.** Same method: between
+  `clearPluginEvaluator()` and the later `registerPluginEvaluator()` sat two awaits; a derive firing
+  in that gap (HP tick, `reloadContent`, the other VM's `plugins.version` read) degraded ALL
+  `plugin:` tokens to inert notes, then flipped back on `version++` — a visible flicker of plugin
+  effects. FIXED: the same build-before-swap (the old evaluator keeps serving until the atomic
+  swap; no null gap).
+- [x] **PLG-3 · fail-closed counter was `namespace`-only → cross-character poisoning.**
+  `plugin-registry.ts`: 3 consecutive failures disable a plugin for the session, but the counter was
+  keyed by namespace alone — a handler that fails only on character A's ctx (a bug at level > 15, a
+  ctx field A lacks) disabled the plugin for characters B/C too, for the whole session. FIXED
+  (**key by `(namespace, characterId)`** — the disabled state is a property of the exact
+  plugin×character pair and persists per character across switches; `character.id` threads in as one
+  `scope` arg to `expandPluginEffects` from the `deriveSheet` seam — no `PluginCtx` change; the memo
+  is already per-character via `buildJson`). Verified by a per-character fail-closed test.
+- [ ] **PLG-4 · aggregate-budget starvation (low).** `plugin-registry.ts` `expandPluginEffects`: an
+  uncached token reached only AFTER the 20 ms aggregate line degrades + `continue`s BEFORE it can be
+  memoized → it degrades on EVERY re-derive. A `plugin:` token that consistently sorts late in a
+  large effect list may never compute (ordering-dependent). Documented; unlikely to bite (20 ms is
+  many sandbox calls) — revisit if real content hits it.
+- [x] **PLG-5 · naming: `ns` → `namespace`, `fn` → `handlerName` everywhere.** Terse author-facing
+  identifiers (the `ns`/`fn` fields ride the `plugin:<…>:<…>` token AND the `plugin.json` manifest a
+  user hand-writes) violated the verbose-names + names-match-in-code-and-docs rules. FIXED across all
+  L3 code, the manifest key (zod schema + fixtures), docs/PLUGINS.md, and tests. Token grammar is now
+  `plugin:<namespace>:<handlerName>` (positional; only the manifest key literally changed — free now,
+  pre-release, no plugins in the wild). `tools/rename-ns`/`-fn` guarded regexes protected values like
+  `test-ns` and generic non-plugin `fn` vars.
+- [ ] **PLG-6 · plugin health has no UI surface — a runtime auto-disable is invisible (backlog).**
+  The session fail-closed disable (`isDisabled`, 3 failures) lives entirely inside `plugin-registry.ts`
+  with no getter, and the per-token degrade reasons go only into the derive `issues` channel — so a
+  plugin that SILENTLY stopped working still shows "enabled" in Settings ▸ Plugins, and the user has
+  no idea WHY or WHERE it dropped out. Backlog: a **plugin-health section in Settings** that reports,
+  per plugin, why + where it was disabled — the auto-disable state and its last failure reason
+  (surface `failCounts`/last-reason from the registry via a small read API), plus the per-character
+  scope (PLG-3: "disabled for THIS character") and a link to the affected sheet/stat. Ties to the
+  existing content-health / `deriveHealth` channel (L2R-8) — likely the same panel, a plugins tab.
+  Also expose a manual "re-enable / retry" that clears the fail counter (today only a full rebuild or
+  restart does). NOT built.
+- [~] **PLG-T1 · `plugin-store.svelte.ts` test coverage.** DONE: the `pluginStatus` state machine
+  (broken / needs_consent / code_changed / disabled / enabled) is covered in `plugin-store.test.ts`.
+  STILL OPEN: the async flows — `consentAndEnable`/`disablePlugin`/`enableConsented`/`setKillSwitch`
+  and the PLG-1 generation-guard race — need a suite that mocks `./plugin-sandbox` + `storage/provider`
+  (Desktop platform); not yet written.
+- [~] **PLG-T2 · degrade-path coverage.** DONE (`plugin.test.ts` / `plugin-host.test.ts`):
+  aggregate-budget exhaustion (busy-clock fake), `noteSuccess` resetting the fail streak mid-session,
+  and `loadPluginPrefs` on corrupt/partial localStorage. STILL OPEN: memo LRU eviction at `MEMO_MAX`.
+- Confirmed CLEAN by tracing (ruled out): resource-`max` NaN into ctx (clamped `[0,MAX]` in
+  `apply.ts`); `args` injection through the sandbox wrapper (`JSON.stringify`-escaped, positional);
+  recursion via returned `tokens` (`plugin:` filtered, no re-feed); stale memo across an evaluator
+  swap (`clearPluginMemo` on every rebuild); consent bypass / TOCTOU (read-once buffer, exact-hash
+  gate, hidden-mutate handlers caught by the in-sandbox `try`); reactivity (both build/combat VMs
+  `void plugins.version` inside `$derived.by`, so enable/disable re-derives live).

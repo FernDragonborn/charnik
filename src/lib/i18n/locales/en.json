@@ -27,6 +27,40 @@
 			"desc": "Charnik keeps your characters and content here as plain files you can open, edit, and back up.",
 			"open": "Open content folder",
 			"change": "Change folder…"
+		},
+		"plugins": {
+			"title": "Plugins",
+			"desc": "Community plugins extend effects with sandboxed code, read from the plugins/ folder inside your data folder. Every plugin is off until you review and enable it.",
+			"webOnly": "Plugins run in the desktop app only.",
+			"none": "No plugins found. Put a plugin folder under plugins/ in your data folder and refresh.",
+			"refresh": "Refresh",
+			"killSwitch": "All plugins",
+			"killSwitchOn": "Disabled (kill switch on)",
+			"killSwitchOff": "Allowed",
+			"enable": "Enable",
+			"disable": "Disable",
+			"review": "Review & enable…",
+			"status": {
+				"broken": "Broken",
+				"needsConsent": "Not reviewed",
+				"codeChanged": "Code changed",
+				"disabled": "Disabled",
+				"enabled": "Enabled"
+			},
+			"consent": {
+				"title": "Enable this plugin?",
+				"titleChanged": "Plugin code changed — review again",
+				"sandbox": "Runs sandboxed: no files, no network, no app access. It can only compute numbers for your sheet.",
+				"name": "Name",
+				"namespace": "Namespace",
+				"version": "Version",
+				"author": "Author",
+				"description": "Description",
+				"codeHash": "Code hash",
+				"warning": "Only enable plugins from authors you trust.",
+				"cancel": "Cancel",
+				"accept": "Enable plugin"
+			}
 		}
 	},
 	"sheet": {

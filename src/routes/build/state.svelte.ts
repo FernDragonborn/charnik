@@ -12,6 +12,7 @@
 import { toast } from 'svelte-sonner';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
+import { plugins } from '$lib/effects/plugin-store.svelte';
 import { ABILITIES, type Character } from '$lib/character/schema';
 import { assembleCharacter } from '$lib/character/assemble';
 import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
@@ -665,9 +666,10 @@ class BuildVM {
 			ui: this.edit?.ui ?? null
 		});
 	});
-	sheet = $derived.by<CharacterSheet | null>(() =>
-		this.graph ? deriveSheet(this.assembled, this.graph) : null
-	);
+	sheet = $derived.by<CharacterSheet | null>(() => {
+		void plugins.version; // a plugin enable/disable re-derives the preview live
+		return this.graph ? deriveSheet(this.assembled, this.graph) : null;
+	});
 
 	// --- validation --------------------------------------------------------------
 	// Free is lenient (only a name is required). Strict adds allocation checks that BLOCK create.

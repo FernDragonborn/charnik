@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (32)
+## Duplicate suspects (34)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -17,14 +17,16 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Same name, several files:**
 
-- `onKeydown` ×5 — src/lib/components/ConfirmDialog.svelte · src/lib/components/ContentMetaModal.svelte · src/lib/components/HashDriftModal.svelte · src/lib/components/OrphanDialog.svelte · src/lib/components/SchemaDiscardDialog.svelte
+- `onKeydown` ×6 — src/lib/components/ConfirmDialog.svelte · src/lib/components/ContentMetaModal.svelte · src/lib/components/HashDriftModal.svelte · src/lib/components/OrphanDialog.svelte · src/lib/components/SchemaDiscardDialog.svelte · src/lib/components/settings/PluginConsentDialog.svelte
 - `norm` ×4 — src/lib/storage/browser.ts · src/lib/storage/memory.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `load` ×3 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
+- `persist` ×3 — src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `signed` ×3 — src/lib/combat/helpers.ts · src/lib/content/detail.ts · src/routes/build/+page.svelte
 - `SYSTEMS` ×3 — src/lib/character/schema.ts · src/lib/components/settings/GeneralSettings.svelte · src/lib/content/schemas.ts
+- `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/state.svelte.ts
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
@@ -34,15 +36,15 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `label` ×2 — src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
+- `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
+- `now` ×2 — src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `onKey` ×2 — src/lib/components/settings/DataConflictDialog.svelte · src/lib/components/settings/DataMigrationDialog.svelte
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
-- `persist` ×2 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `STORAGE_KEY` ×2 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `titleCase` ×2 — src/lib/combat/helpers.ts · src/routes/build/+page.svelte
-- `toggle` ×2 — src/lib/components/ClassPicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
 **Identical one-liner body, different names:**
@@ -135,7 +137,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (34)
+## Shared components (36)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -166,6 +168,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` | Orphan-draft reassign dialog — fires when the draft cache is read and a draft's target row no longer |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle (d-spellmgr `.ic.pin`): ★ pinned to the quick bar, ☆ not. |
+| **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` | Plugin consent — the house attention-dialog template, single-pane notice variant |
+| **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
 | **SchemaDiscardDialog** | `drafts`, `onDiscard`, `onKeep` | Schema-discard warning — the house attention-dialog template |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
@@ -174,7 +178,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **Switch** | `on`, `lock`, `title`, `onclick` | Toggle switch (d-spellmgr `.tg`). |
 | **WikiDetail** | `detail`, `actions`, `footer`, `editable`, `draft` | Right-pane wiki detail: a thin DISPATCHER. |
 
-## Stores & reactive state (10 modules)
+## Stores & reactive state (11 modules)
 
 ### `src/lib/character/health.svelte.ts`
 
@@ -220,6 +224,18 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function registerDiceTray` — Register the live tray (a DiceTray component calls this on mount); returns an unregister fn.
 - `function openDiceTray` — Open the tray for a request — or, with no tray registered, roll instantly + toast (the fallback so * the roll afforda…
 
+### `src/lib/effects/plugin-store.svelte.ts`
+
+- `const plugins`
+- `function loadPlugins` — Discover plugins + build the evaluator for already-consented, enabled ones.
+- `function refreshPlugins` — Re-scan `<dataDir>/plugins/` (user added/edited a folder) and rebuild the evaluator.
+- `function consentAndEnable` — The user accepted the consent dialog for THIS plugin at THIS code hash → record + enable.
+- `function disablePlugin`
+- `function enableConsented` — Re-enable a plugin whose consent is still valid (no dialog needed).
+- `function setKillSwitch` — The global "disable all plugins" kill switch (§6.4) — always works, survives restarts.
+- `type PluginStatus` — The one status label the Settings list renders per plugin.
+- `function pluginStatus`
+
 ### `src/lib/stores/app.svelte.ts`
 
 - `type SystemId` — Derived from the content-schema SYSTEMS list — ONE source of truth for the editions.
@@ -244,7 +260,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (49 modules)
+## Library functions & types (52 modules)
 
 ### `src/lib/build/derive.ts`
 
@@ -548,6 +564,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface DefenseFact`
 - `interface EffectFacts` — * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and * value-resolved on…
 - `function collectFacts` — * One pass over the RESOLVED effect list → the typed-facts object (D7).
+- `function mergeFacts` — * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned * tokens become sy…
 - `function applyEffects` — * The seam: compose effects onto a core-computed stat for `targetKey`.
 - `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
 - `function lintEffectTokens` — Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression * slot — guard, value…
@@ -591,6 +608,35 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface Ast`
 - `type ParseResult`
 - `function parseExpression` — Parse an expression string into an AST (memoized).
+
+### `src/lib/effects/plugin-host.ts`
+
+- `const pluginManifestSchema` — Strict manifest schema (§2): unknown keys REJECTED, every field capped, url https-only.
+- `interface DiscoveredPlugin` — One discovered plugin folder.
+- `function consentHash` — `sha256(len(mainJs) ‖ mainJs ‖ len(manifestRaw) ‖ manifestRaw)` as lowercase hex.
+- `function discoverPlugins` — * Discover every plugin folder under `<dataDir>/plugins/`.
+- `interface PluginPrefs`
+- `const emptyPrefs`
+- `function loadPluginPrefs`
+- `function savePluginPrefs`
+- `function isRunnable` — Is this discovered plugin runnable under the given prefs?
+
+### `src/lib/effects/plugin-registry.ts`
+
+- `interface PluginCtx`
+- `interface PluginTokenRef` — The parsed token as the handler sees it (§4.1).
+- `type PluginCallOutcome` — One sandbox call.
+- `interface PluginEvaluator`
+- `function registerPluginEvaluator` — Install the evaluator (the sandbox host, once ≥1 plugin is enabled).
+- `function clearPluginEvaluator` — Remove the evaluator (kill switch / module teardown) — plugin tokens degrade to notes.
+- `function clearPluginMemo` — Test/teardown helper: drop all memoized results + failure counts.
+- `interface PluginExpansion`
+- `function expandPluginEffects` — * Resolve every `plugin:` token in the resolved effect list — once per DISTINCT token (memoized), * applied once per …
+
+### `src/lib/effects/plugin-sandbox.ts`
+
+- `interface SandboxPluginSpec`
+- `function createSandboxEvaluator` — * Build the `PluginEvaluator` for a set of consented, enabled plugins.
 
 ### `src/lib/effects/token-parser.ts`
 
@@ -763,4 +809,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 34 components · 407 exports across 59 modules · 32 duplicate suspects · generated in 124ms._
+_46 tokens · 50 global classes · 36 components · 437 exports across 63 modules · 34 duplicate suspects · generated in 118ms._

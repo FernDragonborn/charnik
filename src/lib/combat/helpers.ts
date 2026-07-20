@@ -185,6 +185,8 @@ export function effectTag(token: string): string {
 	if (p.kind === EFFECT_KIND.autoSucceed && p.target)
 		return `auto-succeed · ${targetLabel(p.target)}`;
 	if (p.kind === EFFECT_KIND.note && p.target) return p.target; // free-form display text, as authored
+	// a handler REFERENCE — the namespace is the readable part; args are opaque (often long) machine input
+	if (p.kind === EFFECT_KIND.plugin && p.plugin) return `plugin · ${p.plugin.namespace}`;
 	return token.replace(/[-:]/g, ' ');
 }
 

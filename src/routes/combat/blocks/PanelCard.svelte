@@ -278,6 +278,16 @@
 					{/each}
 				</div>
 			{/if}
+			{#if s.facts.pluginNotes.length}
+				<!-- L3 plugin notes (PLUGINS.md §4.3) — PLAIN TEXT only (PLG-SEC 3), attributed to
+				     the carrying effect · plugin namespace, styled like the display-only rules notes -->
+				<div class="effect-section">
+					<div class="section-head">⚙ Plugin notes</div>
+					{#each s.facts.pluginNotes as n, i (i)}
+						<p class="plugin-note"><b>{n.source}</b> — {n.text}</p>
+					{/each}
+				</div>
+			{/if}
 		{/if}
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
 		{@const multi = s.spellcasting.classes.length > 1}
@@ -602,6 +612,17 @@
 		background: var(--color-surface-2);
 		border-radius: 6px;
 		border: 1px solid var(--color-border);
+	}
+	/* a plugin handler's explanatory note — same reference styling family as the info text */
+	.plugin-note {
+		margin: 0 0 4px;
+		font-size: 12px;
+		line-height: 1.5;
+		color: var(--color-text-muted);
+	}
+	.plugin-note b {
+		color: var(--color-text);
+		font-weight: 600;
 	}
 	/* resource row: pips + count + recharge chip */
 	.resource-row {

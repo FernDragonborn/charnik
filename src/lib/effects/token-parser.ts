@@ -36,7 +36,11 @@ export const EFFECT_KIND = {
 	// character sheet (attacks AGAINST you, auto-crit, sense-gated or relational effects). It never
 	// folds and matches no target — it's shown, distinctly styled, so the mechanic is visible even
 	// though it isn't auto-applied. Text is free-form (keeps its casing; `;` is the list separator).
-	note: 'note'
+	note: 'note',
+	// L3 handler REFERENCE (`plugin:<namespace>:<handlerName>[:<args>]`) — content never contains code, only this
+	// pointer; the derive pre-pass resolves it through the plugin registry (docs/PLUGINS.md §1).
+	// Missing/disabled/errored plugin → the token degrades to an inert note like any unknown.
+	plugin: 'plugin'
 } as const;
 export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 /** The kinds as a list (for schema validation / the `includes` guard). */
@@ -74,6 +78,9 @@ export interface ParsedEffect {
 	 *  is a literal count; `maxExpr` is an L2 expression for it (`class_level.monk`) resolved at
 	 *  derive time — exactly one of the two is set. */
 	resource?: { id: string; max?: number; maxExpr?: string; recharge: Recharge };
+	/** plugin: the parsed handler reference. `args` is OPAQUE, hostile text the handler must parse
+	 *  defensively (docs/PLUGINS.md §1) — never interpreted here. */
+	plugin?: { namespace: string; handlerName: string; args: string };
 	raw: string;
 }
 
@@ -174,6 +181,16 @@ function classifyToken(token: string): ParsedEffect {
 		const m = /^(expertise:)?(?:skill\.)?(.+)$/i.exec(rest);
 		if (!m?.[2]) return { kind: 'unknown', raw };
 		return { kind, target: m[2].trim(), proficiency: m[1] ? 'expertise' : 'proficient', raw };
+	}
+	if (kind === EFFECT_KIND.plugin) {
+		// `plugin:<namespace>:<handlerName>[:<args>]` — grammar + length caps from docs/PLUGINS.md §1. The token is
+		// attacker-controlled content; over-cap or malformed → inert unknown (never a partial parse).
+		// `args` may itself contain `:` — only the first two separators are structural.
+		const m = /^([a-z0-9][a-z0-9-]{0,31}):([a-z0-9][a-z0-9-]{0,31})(?::([\s\S]{0,256}))?$/.exec(
+			rest
+		);
+		if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
+		return { kind, plugin: { namespace: m[1], handlerName: m[2], args: m[3] ?? '' }, raw };
 	}
 	if (kind === EFFECT_KIND.reroll || kind === EFFECT_KIND.minDie) {
 		// `reroll:<target>:<threshold>` / `min_die:<target>:<floor>` — a target plus one integer the

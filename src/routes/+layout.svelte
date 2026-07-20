@@ -12,6 +12,7 @@
 	import ContentMetaModal from '$lib/components/ContentMetaModal.svelte';
 	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
 	import { loadContentStore } from '$lib/content/store.svelte';
+	import { loadPlugins } from '$lib/effects/plugin-store.svelte';
 	import { review, pendingMetaIssues, pendingDriftItems } from '$lib/content/review.svelte';
 	import { Toaster, toast } from 'svelte-sonner';
 	import { takeFlash } from '$lib/stores/flash';
@@ -115,6 +116,7 @@
 			await grantDataDirScope(saved); // re-allow a custom folder outside the static scope
 			await loadContentStore();
 			startContentWatcher(); // live-refresh when a CSV is edited on disk
+			void loadPlugins(); // desktop-only L3 discovery; consented+enabled plugins wake up
 		} else {
 			firstRunDefault = await defaultDataDir(); // first run → show picker, hold content load
 		}
@@ -127,6 +129,7 @@
 		firstRunDefault = null;
 		await loadContentStore();
 		startContentWatcher();
+		void loadPlugins();
 	}
 	// Drift is shown first (a quick date/hash confirm), then the metadata prompt.
 	const driftItems = $derived(pendingDriftItems());

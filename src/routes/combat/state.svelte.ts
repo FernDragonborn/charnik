@@ -12,6 +12,7 @@ import { demoCharacter } from '$lib/demo/sheet';
 import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
+import { plugins } from '$lib/effects/plugin-store.svelte';
 import { tokensOf } from '$lib/content/loader';
 import { passiveScore } from '$lib/rules/core';
 import { rollPool, type DieMods } from '$lib/rules/dice';
@@ -64,11 +65,13 @@ class CombatVM {
 	// sheet with no page reload, while the character's play-state is left untouched
 	graph = $derived(content.graph);
 	character = $state<Character | null>(null);
-	/** Fully reactive: recomputes whenever the character (HP, effects, shield, auto-calc…) or the
-	 *  content graph changes — so every play-state edit reflects live in the derived stats. */
-	sheet = $derived.by<CharacterSheet | null>(() =>
-		this.character && this.graph ? deriveSheet(this.character, this.graph) : null
-	);
+	/** Fully reactive: recomputes whenever the character (HP, effects, shield, auto-calc…), the
+	 *  content graph, or the enabled-plugin set changes — so every play-state edit AND a plugin
+	 *  enable/disable reflect live in the derived stats. */
+	sheet = $derived.by<CharacterSheet | null>(() => {
+		void plugins.version; // the plugin registry isn't reactive itself — this tick is its signal
+		return this.character && this.graph ? deriveSheet(this.character, this.graph) : null;
+	});
 
 	// play / UI state. The round counter is the PERSISTED one (play.round) — no separate VM copy to
 	// drift; entering combat sets it to 1, Next turn advances it, and effect expiry reads it.

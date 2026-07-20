@@ -1,8 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import { loadContent, type ContentGraph } from '../content/loader';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
+import {
+	registerPluginEvaluator,
+	clearPluginEvaluator,
+	clearPluginMemo,
+	type PluginEvaluator
+} from '../effects/plugin-registry';
 
 const S = 'SRD 5.2.1';
 
@@ -652,5 +658,79 @@ describe('deriveSheet · set_override with a dice value degrades to a note', () 
 		const s = deriveSheet(characterSchema.parse(c), g);
 		expect(s.ac.value).toBe(10); // base unarmored, override NOT applied
 		expect(s.ac.notes?.join(' ')).toContain('unresolved');
+	});
+});
+
+describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
+	afterEach(() => {
+		clearPluginEvaluator();
+		clearPluginMemo();
+	});
+
+	/** A fake evaluator whose one handler returns a fixed result object. */
+	const fixed = (namespace: string, handlerName: string, result: unknown): PluginEvaluator => ({
+		has: (n, f) => n === namespace && f === handlerName,
+		call: () => ({ ok: true, resultJson: JSON.stringify(result), readPlay: false })
+	});
+
+	async function pluginGraph(): Promise<ContentGraph> {
+		const st = new MemoryStorage();
+		await st.write(
+			'c/classes_srd.csv',
+			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n')
+		);
+		await st.write(
+			'c/items_srd.csv',
+			[
+				'id,systems,source,name_en,effects,category,item_type',
+				`cursed_ring,5.5e,${S},Cursed Ring,plugin:test-ns:curse,gear,ring`
+			].join('\n')
+		);
+		await st.write(
+			'c/conditions_srd.csv',
+			['id,systems,source,name_en,effects', `poisoned,5.5e,${S},Poisoned,disadvantage:attack`].join(
+				'\n'
+			)
+		);
+		return loadContent(st, ['c']);
+	}
+
+	function ringWearer(): Character {
+		const c = newCharacter('x', 'X', '5.5e');
+		c.build.classes = [{ class: `class:${S}:monk`, level: 1 }];
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+		c.build.inventory = [{ item: `item:${S}:cursed_ring`, qty: 1, equipped: true, attuned: false }];
+		return characterSchema.parse(c);
+	}
+
+	it('a returned apply_condition registers AND expands one level (its stat tokens apply)', async () => {
+		registerPluginEvaluator(
+			fixed('test-ns', 'curse', { tokens: ['apply_condition:poisoned'], notes: ['Cursed!'] })
+		);
+		const s = deriveSheet(ringWearer(), await pluginGraph());
+		expect(s.facts.conditions).toContain('poisoned');
+		// the condition's OWN token (disadvantage:attack) folded — the §4.3 one-level expansion
+		expect(s.facts.disadvantage.some((d) => d.target === 'attack' && d.source === 'Poisoned')).toBe(
+			true
+		);
+		expect(s.facts.pluginNotes).toEqual([{ source: 'Cursed Ring · test-ns', text: 'Cursed!' }]);
+	});
+
+	it('contributions fold into the sheet stat with ns-stamped provenance', async () => {
+		registerPluginEvaluator(
+			fixed('test-ns', 'curse', {
+				contributions: { ac: [{ layer: 'item', op: 'add', amount: 2, label: 'Ward' }] }
+			})
+		);
+		const s = deriveSheet(ringWearer(), await pluginGraph());
+		expect(s.ac.value).toBe(12); // 10 unarmored + 2
+		expect(s.ac.trace.some((t) => t.source === 'test-ns: Ward')).toBe(true);
+	});
+
+	it('no evaluator → the token degrades to an inert note + a deriveIssue, sheet unbroken', async () => {
+		const s = deriveSheet(ringWearer(), await pluginGraph());
+		expect(s.ac.value).toBe(10);
+		expect(s.facts.unknown.some((u) => u.token === 'plugin:test-ns:curse')).toBe(true);
+		expect(s.deriveIssues.some((i) => i.reason.includes('not available'))).toBe(true);
 	});
 });

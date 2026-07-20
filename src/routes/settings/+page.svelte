@@ -10,9 +10,10 @@
 	import ContentHealth from '$lib/components/settings/ContentHealth.svelte';
 	import SourceManager from '$lib/components/settings/SourceManager.svelte';
 	import CollisionManager from '$lib/components/settings/CollisionManager.svelte';
+	import PluginsSettings from '$lib/components/settings/PluginsSettings.svelte';
 	import { _ } from '$lib/i18n';
 
-	type Tab = 'general' | 'data' | 'health' | 'sources' | 'collisions';
+	type Tab = 'general' | 'data' | 'health' | 'sources' | 'collisions' | 'plugins';
 	let tab = $state<Tab>('general');
 
 	onMount(loadContentStore);
@@ -29,7 +30,8 @@
 		{ id: 'data', label: 'Data' },
 		{ id: 'health', label: 'Content health', badge: () => issueCount },
 		{ id: 'sources', label: 'Sources' },
-		{ id: 'collisions', label: 'Collisions', badge: () => collisionCount }
+		{ id: 'collisions', label: 'Collisions', badge: () => collisionCount },
+		{ id: 'plugins', label: 'Plugins' }
 	];
 </script>
 
@@ -55,8 +57,10 @@
 			<ContentHealth />
 		{:else if tab === 'sources'}
 			<SourceManager />
-		{:else}
+		{:else if tab === 'collisions'}
 			<CollisionManager />
+		{:else}
+			<PluginsSettings />
 		{/if}
 	</div>
 </div>
