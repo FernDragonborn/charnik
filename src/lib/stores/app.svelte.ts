@@ -8,6 +8,7 @@
 // startI18n in +layout.ts) already uses the saved locale/theme.
 
 import { SYSTEMS } from '$lib/content/schemas';
+import { readStored, writeStored } from '$lib/util/persist';
 
 /** Derived from the content-schema SYSTEMS list — ONE source of truth for the editions. */
 export type SystemId = (typeof SYSTEMS)[number];
@@ -36,39 +37,25 @@ function defaults(): AppState {
 
 function load(): AppState {
 	const base = defaults();
-	if (typeof localStorage === 'undefined') return base;
-	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) return base;
-		// Merge over defaults so a partial / older snapshot never leaves a field undefined.
-		const saved = JSON.parse(raw) as Partial<AppState>;
-		return {
-			...base,
-			...saved,
-			// never persist an empty edition set (would hide all content) — fall back to both
-			activeEditions: saved.activeEditions?.length ? saved.activeEditions : base.activeEditions
-		};
-	} catch {
-		return base;
-	}
+	// Merge over defaults so a partial / older snapshot never leaves a field undefined.
+	const saved = readStored<Partial<AppState>>(STORAGE_KEY);
+	if (!saved) return base;
+	return {
+		...base,
+		...saved,
+		// never persist an empty edition set (would hide all content) — fall back to both
+		activeEditions: saved.activeEditions?.length ? saved.activeEditions : base.activeEditions
+	};
 }
 
 export const app = $state<AppState>(load());
 
 function persist(): void {
-	if (typeof localStorage === 'undefined') return;
-	try {
-		localStorage.setItem(
-			STORAGE_KEY,
-			JSON.stringify({
-				activeEditions: app.activeEditions,
-				activeLocale: app.activeLocale,
-				theme: app.theme
-			})
-		);
-	} catch {
-		/* private mode / quota — switching still works this session, just not persisted */
-	}
+	writeStored(STORAGE_KEY, {
+		activeEditions: app.activeEditions,
+		activeLocale: app.activeLocale,
+		theme: app.theme
+	});
 }
 
 // Auto-save whenever any field changes. `$effect.root` lets a module-level singleton own an effect

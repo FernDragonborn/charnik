@@ -10,6 +10,7 @@
  * that overlap an edition, the user can keep just one source (keep-one) or show them all (keep-all).
  */
 import type { ContentGraph, LoadedRow } from './loader';
+import { readStored, writeStored } from '$lib/util/persist';
 
 const STORAGE_KEY = 'charnik:sources';
 
@@ -27,14 +28,8 @@ interface SourceConfigData {
 
 function load(): SourceConfigData {
 	const empty: SourceConfigData = { disabledFiles: [], disabledSources: [], collisions: {} };
-	if (typeof localStorage === 'undefined') return empty;
-	try {
-		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) return empty;
-		return { ...empty, ...(JSON.parse(raw) as Partial<SourceConfigData>) };
-	} catch {
-		return empty;
-	}
+	const saved = readStored<Partial<SourceConfigData>>(STORAGE_KEY);
+	return saved ? { ...empty, ...saved } : empty;
 }
 
 /** Reactive, persisted config. Read `.disabledFiles`/… in derived state; mutate via the helpers below
@@ -42,12 +37,7 @@ function load(): SourceConfigData {
 export const sourceConfig = $state<SourceConfigData>(load());
 
 function persist(): void {
-	if (typeof localStorage === 'undefined') return;
-	try {
-		localStorage.setItem(STORAGE_KEY, JSON.stringify(sourceConfig));
-	} catch {
-		/* private mode / quota — filtering still works this session, just not persisted */
-	}
+	writeStored(STORAGE_KEY, sourceConfig);
 }
 
 function toggleIn(list: string[], value: string): void {

@@ -445,6 +445,20 @@ Invisible to jscpd (different shapes, <35 tokens) and knip (all used). Each is a
 you write" violation; the fix is one shared home (mostly `util/format.ts` next to `ordinal`)
 plus imports. Verify with a differential test before merging where bodies differ (MECH6).
 
+> **Intentional non-duplicates — DO NOT merge these (surface.mjs still flags them as suspects).**
+> Judgment calls from the 2026-07-20 dedup pass; recorded so a future pass doesn't "fix" them:
+> - **`EFFECT_KINDS` (`content/schemas` vs `effects/token-parser`)** — kept SEPARATE on purpose: the
+>   content-validation vocab must NOT depend on the removable effects module (architecture
+>   invariant). A drift test (`effects.test.ts`) guards them instead of a shared import.
+> - **`formatModifier` (`rules/dice`) vs `signed` (`util/format`)** — same body, but `dice.ts` is
+>   pure rules core and must not import a general util into the hot roll path; the one accepted copy.
+> - **`displayNamesByLocale` (`content/search`) & translate/+page name-reads vs `localizedName`** —
+>   NOT the same read: search builds a per-locale index over ALL locales (no fallback), translate
+>   wants `?? ''` (empty = "not yet translated", never an EN fallback). Merging would break both.
+> - **`cap`/`label` LABELS-map fallbacks (`content/detail`, `content/homebrew`, `content/grouping`)**
+>   — related to `titleCase` but each pairs it with a domain LABELS lookup; the title-case core is
+>   now shared, the LABELS maps are legitimately per-domain.
+
 - [x] **F1 · `titleCase` ×6.** DONE 2026-07-20. One `titleCase` (`[-_]`) in `util/format.ts`;
   `combat/helpers` re-exports it (importers unchanged), `effects/apply.titleCaseId` + the
   `build/+page.svelte` local deleted. NB the old `combat/helpers` copy was `-`-only, so it
@@ -490,17 +504,17 @@ plus imports. Verify with a differential test before merging where bodies differ
   no EN fallback) and `search.displayNamesByLocale` (builds a per-locale index over ALL locales, no
   fallback). So this is the whole real duplication; the two exclusions are correct.
 
-- [ ] **F10 · New catches from the surface.mjs dup-detector (2026-07-14).** `tools/surface.mjs`
-  now emits a "Duplicate suspects" section in SURFACE.md (same-name defs ×2+ files,
-  identical param-normalized one-liner bodies, identical literal arrays; scans ALL of src incl.
-  routes + .svelte scripts). First run confirmed F1/F2/F3/F6/F7/F8 AND found what the manual
-  audit missed: a THIRD `SYSTEMS` const (GeneralSettings.svelte), `inEdition` ×3
-  (search.ts / compendium / translate), `norm` ×4 path normalizers (browser/memory/migrate/
-  layout), `PROSE_BASES` = `TRANSLATABLE_BASES` (translate.ts even comments "kept in sync
-  with" — manual sync the array detector caught), and the localStorage persistence pattern
-  (`load`/`persist`/`STORAGE_KEY`) duplicated between sources.svelte.ts and app.svelte.ts.
-  The live list is SURFACE.md's "Duplicate suspects" — review it there; this item tracks
-  burning down the initial 32.
+- [~] **F10 · New catches from the surface.mjs dup-detector (2026-07-14).** Burned down over the
+  2026-07-20 pass. REAL dups fixed: the **localStorage persistence pattern** (`load`/`persist` SSR
+  guard + try/catch + JSON) → one `util/persist.ts` (`readStored`/`writeStored`), adopted by
+  `stores/app`, `content/sources` AND `effects/plugin-host` (the last even GAINED a missing
+  try/catch on save); `PROSE_BASES = TRANSLATABLE_BASES` already collapsed to one owner
+  (`content/schemas`); the third `SYSTEMS` const handled by F7. VERIFIED FALSE-POSITIVES (same name,
+  different behavior — left, documented in the non-dups box above): `norm` ×4 are FOUR distinct path
+  normalizations (URL-path / storage-key split / case-insensitive compare / route-path default),
+  `inEdition` ×3 already delegate to the shared `inActiveEdition` (thin local aliases, fine). The
+  live list is SURFACE.md's "Duplicate suspects" — the remainder there is names-reused-for-different-
+  things, not work.
 
 - [x] **F11 · Locale-column grammar ×3, diverged.** DONE 2026-07-20 — `loader.LOCALE_TAG` (exported)
   is the ONE grammar; `LOCALE_COL`/`PROSE_LOCALE_COL`/`LOC_STATUS_COL` in the loader, `detail.PROSE_LOC`

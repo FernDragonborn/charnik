@@ -254,7 +254,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (53 modules)
+## Library functions & types (54 modules)
 
 ### `src/lib/build/derive.ts`
 
@@ -814,9 +814,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const errText` — An unknown thrown value → its message string (`e.message` or `String(e)`).
 - `const signed` — A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "+0" (D&D shows a zero mod as "+0"; * uses the real minus gly…
 
+### `src/lib/util/persist.ts`
+
+- `function readStored` — Read + JSON-parse a localStorage key.
+- `function writeStored` — JSON-stringify + write a localStorage key.
+
 ### `src/lib/util/slug.ts`
 
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 451 exports across 64 modules · 30 duplicate suspects · generated in 113ms._
+_46 tokens · 50 global classes · 36 components · 453 exports across 65 modules · 30 duplicate suspects · generated in 119ms._

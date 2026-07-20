@@ -17,6 +17,7 @@
  */
 import { z } from 'zod';
 import type { Storage } from '../storage/types';
+import { readStored, writeStored } from '../util/persist';
 
 /** `main.js` size cap (docs/PLUGINS.md §2). */
 const MAX_MAIN_JS_BYTES = 256 * 1024;
@@ -168,24 +169,17 @@ export const emptyPrefs = (): PluginPrefs => ({ consent: {}, enabled: {}, killSw
 const PREFS_KEY = 'charnik:plugins';
 
 export function loadPluginPrefs(): PluginPrefs {
-	if (typeof localStorage === 'undefined') return emptyPrefs();
-	try {
-		const raw = localStorage.getItem(PREFS_KEY);
-		if (!raw) return emptyPrefs();
-		const p = JSON.parse(raw) as Partial<PluginPrefs>;
-		return {
-			consent: typeof p.consent === 'object' && p.consent !== null ? p.consent : {},
-			enabled: typeof p.enabled === 'object' && p.enabled !== null ? p.enabled : {},
-			killSwitch: p.killSwitch === true
-		};
-	} catch {
-		return emptyPrefs();
-	}
+	const p = readStored<Partial<PluginPrefs>>(PREFS_KEY);
+	if (!p) return emptyPrefs();
+	return {
+		consent: typeof p.consent === 'object' && p.consent !== null ? p.consent : {},
+		enabled: typeof p.enabled === 'object' && p.enabled !== null ? p.enabled : {},
+		killSwitch: p.killSwitch === true
+	};
 }
 
 export function savePluginPrefs(prefs: PluginPrefs): void {
-	if (typeof localStorage === 'undefined') return;
-	localStorage.setItem(PREFS_KEY, JSON.stringify(prefs));
+	writeStored(PREFS_KEY, prefs);
 }
 
 /** Is this discovered plugin runnable under the given prefs? (consented to EXACTLY these bytes,
