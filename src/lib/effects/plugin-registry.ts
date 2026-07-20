@@ -70,6 +70,9 @@ export interface PluginEvaluator {
 	has(namespace: string, handlerName: string): boolean;
 	/** Run the handler synchronously. buildJson/playJson are the pre-serialized ctx halves. */
 	call(token: PluginTokenRef, buildJson: string, playJson: string): PluginCallOutcome;
+	/** The REAL load error for a plugin that failed to evaluate (`main.js failed to load: SyntaxError
+	 *  …`), so a broken plugin reports WHY instead of a generic "handler not registered". */
+	loadError?(namespace: string): string | undefined;
 }
 
 let evaluator: PluginEvaluator | null = null;
@@ -133,8 +136,13 @@ function validateResult(
 		return { ok: false, reason: 'result is not JSON' };
 	}
 	const r = resultSchema.safeParse(parsed);
-	if (!r.success)
-		return { ok: false, reason: `invalid result: ${r.error.issues[0]?.message ?? 'shape'}` };
+	if (!r.success) {
+		// include the field PATH so an author sees WHERE (`contributions.ac.0.layer: Required`), not
+		// just a bare "Required" — the point is a fixable message, not a puzzle
+		const iss = r.error.issues[0];
+		const where = iss?.path.length ? `${iss.path.join('.')}: ` : '';
+		return { ok: false, reason: `invalid result: ${where}${iss?.message ?? 'shape'}` };
+	}
 	const keys = Object.keys(r.data.contributions ?? {});
 	if (keys.length > 20) return { ok: false, reason: 'invalid result: too many contribution keys' };
 	for (const k of keys)
@@ -266,10 +274,14 @@ export function expandPluginEffects(
 				continue;
 			}
 			if (!evaluator.has(namespace, handlerName)) {
+				// a broken main.js reports its REAL error; otherwise it's a genuine unknown handler
+				const loadErr = evaluator.loadError?.(namespace);
 				degrade(
 					eff,
 					token,
-					`plugin "${namespace}" missing/disabled or handler "${handlerName}" not registered`
+					loadErr
+						? `plugin "${namespace}": ${loadErr}`
+						: `plugin "${namespace}" missing/disabled or handler "${handlerName}" not registered`
 				);
 				continue;
 			}

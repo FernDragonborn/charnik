@@ -126,6 +126,17 @@ describe('expandPluginEffects — availability degradation', () => {
 		expect(out?.unknown.length).toBe(1);
 		expect(issues[0]?.reason).toMatch(/missing\/disabled/);
 	});
+	it('a broken plugin surfaces its REAL load error, not a generic "not registered" (author DX)', () => {
+		const ev: PluginEvaluator = {
+			has: () => false,
+			call: () => ({ ok: false, reason: 'n/a' }),
+			loadError: () => 'main.js failed to load: SyntaxError: unexpected token'
+		};
+		registerPluginEvaluator(ev);
+		const issues: EffectIssue[] = [];
+		expandPluginEffects([carrier('plugin:ns1:h')], ctx(), issues);
+		expect(issues[0]?.reason).toMatch(/SyntaxError/); // the author sees WHY, not a puzzle
+	});
 });
 
 describe('the tokens dialect (§4.3) — returned L1 tokens ride the content machinery', () => {
@@ -243,6 +254,15 @@ describe('the contributions dialect (§4.3) — host-stamped pre-folded amounts'
 		const out = expandPluginEffects([carrier('plugin:ns1:fn1')], ctx(), issues);
 		expect(out?.numeric).toEqual([]);
 		expect(out?.unknown.length).toBe(1);
+	});
+	it('a wrong result shape names the OFFENDING field path, not a bare "Required" (author DX)', () => {
+		// a contribution missing its `layer` — the author should be told WHERE
+		registerPluginEvaluator(
+			fakeEvaluator({ 'ns1:fn1': () => ({ contributions: { ac: [{ op: 'add', amount: 1 }] } }) })
+		);
+		const issues: EffectIssue[] = [];
+		expandPluginEffects([carrier('plugin:ns1:fn1')], ctx(), issues);
+		expect(issues[0]?.reason).toMatch(/contributions\.ac\.0\.layer|layer/);
 	});
 });
 

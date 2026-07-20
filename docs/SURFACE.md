@@ -19,6 +19,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 - `onKeydown` ×6 — src/lib/components/ConfirmDialog.svelte · src/lib/components/ContentMetaModal.svelte · src/lib/components/HashDriftModal.svelte · src/lib/components/OrphanDialog.svelte · src/lib/components/SchemaDiscardDialog.svelte · src/lib/components/settings/PluginConsentDialog.svelte
 - `norm` ×4 — src/lib/storage/browser.ts · src/lib/storage/memory.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
+- `errText` ×3 — src/lib/components/settings/StorageSettings.svelte · src/lib/effects/plugin-sandbox.ts · src/lib/storage/tauri.ts
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `load` ×3 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
@@ -31,7 +32,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
-- `errText` ×2 — src/lib/components/settings/StorageSettings.svelte · src/lib/storage/tauri.ts
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
 - `label` ×2 — src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
@@ -809,4 +809,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 437 exports across 63 modules · 34 duplicate suspects · generated in 321ms._
+_46 tokens · 50 global classes · 36 components · 437 exports across 63 modules · 34 duplicate suspects · generated in 104ms._

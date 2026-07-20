@@ -778,6 +778,23 @@ inline (user, 2026-07-20).
   existing content-health / `deriveHealth` channel (L2R-8) — likely the same panel, a plugins tab.
   Also expose a manual "re-enable / retry" that clears the fail counter (today only a full rebuild or
   restart does). NOT built.
+- [~] **PLG-7 · plugin-author DX — honest mistakes must produce a fixable message, not a puzzle.**
+  Goal: the tool "just works" — every failure the app CAN detect tells the author WHAT/WHERE, no
+  silent drops, no generic errors. DONE (reusing the existing `deriveIssues` → content-health
+  channel, no new UI):
+  · **A — real main.js load error surfaced.** `plugin-sandbox.ts` now extracts the actual thrown
+    value (`SyntaxError: … / ReferenceError: …`) via `context.dump` into `LoadedPlugin.loadError`,
+    the evaluator exposes `loadError(namespace)`, and the registry's degrade reason becomes
+    `plugin "<ns>": main.js failed to load: <real error>` instead of a misleading "handler not
+    registered". (Was: the JS error `.dispose()`d unread; author saw nothing.)
+  · **B — validation names the field path.** `validateResult` now prefixes the zod issue path
+    (`invalid result: contributions.ac.0.layer: Required`) instead of a bare "Required".
+  Tests: syntax/throw-at-load surface the real message; a broken plugin degrades with its load
+  error; a wrong result shape names the offending path.
+  STILL OPEN: **C — a returned token with a typo'd but KNOWN-kind target** (`flat_bonus:armorclass+1`)
+  still folds onto nothing silently (this is the general B13 "known kind, dead target" gap, now
+  reachable via plugins — fix belongs with B13's exhaustiveness accounting). **D — the richer surface**
+  (per-plugin health with the load error + last failure + a retry) is PLG-6.
 - [~] **PLG-T1 · `plugin-store.svelte.ts` test coverage.** DONE: the `pluginStatus` state machine
   (broken / needs_consent / code_changed / disabled / enabled) is covered in `plugin-store.test.ts`.
   STILL OPEN: the async flows — `consentAndEnable`/`disablePlugin`/`enableConsented`/`setKillSwitch`

@@ -24,6 +24,7 @@ import {
 	newQuickJSWASMModuleFromVariant,
 	DefaultIntrinsics,
 	type QuickJSContext,
+	type QuickJSHandle,
 	type QuickJSRuntime,
 	type QuickJSWASMModule
 } from 'quickjs-emscripten-core';
@@ -63,6 +64,23 @@ interface LoadedPlugin {
 	runtime: QuickJSRuntime | null;
 	context: QuickJSContext | null;
 	deadline: number;
+	/** The REAL main.js load error (`SyntaxError: …`), surfaced to the author instead of a generic
+	 *  "handler not registered". `null` once the plugin loaded cleanly. */
+	loadError: string | null;
+}
+
+/** Read a thrown sandbox value as a short author-facing message (`SyntaxError: …`). Never throws. */
+function errText(context: QuickJSContext, handle: QuickJSHandle): string {
+	try {
+		const v: unknown = context.dump(handle);
+		if (v && typeof v === 'object' && 'message' in v) {
+			const o = v as { name?: unknown; message?: unknown };
+			return `${o.name ?? 'Error'}: ${String(o.message)}`.slice(0, 200);
+		}
+		return String(v).slice(0, 200);
+	} catch {
+		return 'unreadable error';
+	}
 }
 
 export interface SandboxPluginSpec {
@@ -125,9 +143,11 @@ function bootPlugin(mod: QuickJSWASMModule, p: LoadedPlugin): string | null {
 
 	const main = context.evalCode(p.code, 'main.js');
 	if (main.error) {
+		// keep the REAL error (SyntaxError / ReferenceError + message) — this is the author's fix hint
+		const msg = errText(context, main.error);
 		main.error.dispose();
 		disposePlugin(p);
-		return 'main.js failed to evaluate (or exceeded the load budget)';
+		return `main.js failed to load: ${msg}`;
 	}
 	main.value.dispose();
 
@@ -181,9 +201,10 @@ export async function createSandboxEvaluator(
 			passiveHandlers: new Set(),
 			runtime: null,
 			context: null,
-			deadline: 0
+			deadline: 0,
+			loadError: null
 		};
-		bootPlugin(mod, p); // boot failure leaves passiveHandlers empty → has() = false
+		p.loadError = bootPlugin(mod, p); // boot failure leaves passiveHandlers empty → has() = false
 		plugins.set(spec.namespace, p);
 	}
 
@@ -191,13 +212,16 @@ export async function createSandboxEvaluator(
 		has(namespace, handlerName) {
 			return plugins.get(namespace)?.passiveHandlers.has(handlerName) ?? false;
 		},
+		loadError(namespace) {
+			return plugins.get(namespace)?.loadError ?? undefined;
+		},
 		call(token: PluginTokenRef, buildJson: string, playJson: string): PluginCallOutcome {
 			const p = plugins.get(token.namespace);
 			if (!p || !p.passiveHandlers.has(token.handlerName))
 				return { ok: false, reason: 'handler not registered' };
 			// context recycled after a limit trip (PLG-SEC 8): rebuild lazily
 			if (!p.context) {
-				const err = bootPlugin(getModuleSync(), p);
+				const err = (p.loadError = bootPlugin(getModuleSync(), p));
 				if (err || !p.context) return { ok: false, reason: err ?? 'sandbox unavailable' };
 			}
 			const context = p.context;
@@ -228,7 +252,7 @@ export async function createSandboxEvaluator(
 			if (res.error) {
 				// an interrupt / OOM / stack trip lands here (the in-sandbox try can't catch those)
 				res.error.dispose();
-				const err = bootPlugin(getModuleSync(), p);
+				const err = (p.loadError = bootPlugin(getModuleSync(), p));
 				return { ok: false, reason: err ? 'over budget (sandbox rebuild failed)' : 'over budget' };
 			}
 			const raw = context.getString(res.value);

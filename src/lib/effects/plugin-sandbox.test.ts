@@ -309,6 +309,15 @@ describe('determinism + isolation', () => {
 		const ev = await evaluatorFor('ns1', `throw new Error('broken plugin');`);
 		expect(ev.has('ns1', 'anything')).toBe(false);
 	});
+	it('a main.js THROW at load surfaces the real error message (author DX)', async () => {
+		const ev = await evaluatorFor('ns1', `throw new Error('boom at load');`);
+		expect(ev.loadError?.('ns1')).toMatch(/boom at load/);
+	});
+	it('a main.js SYNTAX error surfaces the real error, not a generic miss (author DX)', async () => {
+		const ev = await evaluatorFor('ns1', `globalThis.handlers = { oops(`); // unterminated
+		expect(ev.has('ns1', 'oops')).toBe(false);
+		expect(ev.loadError?.('ns1')).toMatch(/main\.js failed to load|SyntaxError/i);
+	});
 	it('main.js over the 256 KB cap is not loaded', async () => {
 		const ev = await evaluatorFor(
 			'ns1',
