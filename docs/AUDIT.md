@@ -803,6 +803,17 @@ inline (user, 2026-07-20).
   docs + an error→anchor map keyed by the failure CLASS (not the message string). Applies beyond L3 —
   the same "an error carries its doc link" rule should cover content/effect authoring errors too
   (content-health entries). Blocked on the docs being a linkable target.
+- [ ] **PLG-9 · "did you mean?" fuzzy suggestions for a typo'd effect token (backlog).** When a token
+  fails against a KNOWN, finite vocabulary — an unknown effect kind (`flt_bonus` → `flat_bonus`), a
+  bad target (`armorclass`/`armor_class` → `ac`), a skill/condition/resource id typo, a plugin
+  `bad target key "X"` — the error should append the nearest valid candidate(s) by edit distance:
+  "unknown target 'armorclass' — did you mean 'ac'?". Turns a dead-end into a one-glance fix. Needs a
+  small fuzzy/Levenshtein helper (a proven tiny dep, e.g. `didyoumean2`/`fastest-levenshtein`) + the
+  candidate sets, which already exist (`EFFECT_KINDS`, the `TARGET_KEY_RE` targets, `SKILL_ABILITY`
+  keys, condition/resource ids). Only suggest when the input is CLOSE (distance ≤ ~2) and the slot is
+  a closed vocabulary — never for free-text (`args`, guard expressions). Spans all effect authoring
+  (the homebrew form, CSV content-health, plugin results), cross-ref B12/B13; pairs with PLG-8 (a
+  suggestion + a doc link is the ideal message).
 - [~] **PLG-T1 · `plugin-store.svelte.ts` test coverage.** DONE: the `pluginStatus` state machine
   (broken / needs_consent / code_changed / disabled / enabled) is covered in `plugin-store.test.ts`.
   STILL OPEN: the async flows — `consentAndEnable`/`disablePlugin`/`enableConsented`/`setKillSwitch`
