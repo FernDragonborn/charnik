@@ -107,7 +107,8 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   remain. A slot is a resource like HP → spent in AND out of combat (NOT gated on `inCombat`; only the
   action-economy check stays combat-only). Cantrips consume nothing. **Ritual cast (user 2026-07-20):**
   a ritual-tagged spell shows an `R` badge that casts with NO slot (`cast(r, e, {ritual:true})`); the
-  row-click still casts normally (spends a slot). Only `ritual`-tagged spells qualify (SRD). The doc
+  row-click still casts normally (spends a slot). Gated: the spell must be `ritual`-tagged AND the
+  character must HAVE Ritual Casting (`spellcasting.ritualCasting`, E7 — not a base Warlock). The doc
   comment (`schema.ts:145`) is now accurate; reserve-before-commit so a block doesn't burn an action.
   STILL OPEN (deferred): a manual UPCAST picker (L10 — auto-fills the lowest slot for now); warlock
   PACT slots aren't UI-rendered as pips (a separate gap — so a pure-warlock cast isn't slot-gated,
@@ -410,9 +411,12 @@ Deep effects-system review, 2026-07-16 (E3–E7):
 - [ ] **E6 · `classes.saves` schema demands EXACTLY 2** (`z.array(Ability).length(2)`,
   schemas.ts:208-211) — a homebrew class with 1 or 3 save proficiencies fails validation and the
   row is dropped. Arbitrary stiffness against the homebrew-first stance.
-- [ ] **E7 · Dead columns shipped in the schema:** `class_feature.resource` (schemas.ts:246 — zero
-  consumers; resources come only from `grant_resource` tokens) and `class.ritual` (read nowhere;
-  spell-side `ritual` only renders a chip). Either wire or drop from schema + authoring form.
+- [~] **E7 · Dead columns shipped in the schema:** `class.ritual` NOW WIRED 2026-07-20 —
+  `deriveSpellcasting` reads it into `Spellcasting.ritualCasting` (true iff a caster class has Ritual
+  Casting — Wizard/Cleric/Druid/Bard, not base Warlock), which gates the A17 ritual-cast `R` badge
+  (previously shown on any ritual-tagged spell regardless of eligibility). The Book-of-Ancient-Secrets
+  warlock exception is deferred (choice-group invocation). STILL DEAD: `class_feature.resource`
+  (schemas.ts:246 — zero consumers; resources come only from `grant_resource` tokens) — wire or drop.
 
 ## EFX · Effects-engine buildout (IMPLEMENTED 2026-07-15; order was EFX-2 → 1 → 4 → 3)
 

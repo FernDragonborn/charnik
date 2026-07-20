@@ -17,8 +17,8 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/classes_srd.csv',
 		[
-			'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
-			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`
+			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,ritual',
+			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,true`
 		].join('\n')
 	);
 	await st.write(
@@ -126,6 +126,10 @@ describe('deriveSheet aggregator', () => {
 		expect(c?.ability).toBe('int');
 		expect(c?.saveDC.value).toBe(13); // 8 + 2 + 3
 		expect(c?.attack.value).toBe(5); // 2 + 3
+	});
+
+	it('E7/A17: ritual casting derives from class.ritual (Wizard has it)', () => {
+		expect(deriveSheet(wizard(), graph).spellcasting.ritualCasting).toBe(true);
 	});
 
 	it('carries speed from species and capacity from STR', () => {

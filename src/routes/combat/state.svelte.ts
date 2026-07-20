@@ -410,7 +410,8 @@ class CombatVM {
 		// check below, which stays combat-only). Cantrips + pure pact casters spend nothing
 		// (slotToSpend → null). Reserve first so a block returns BEFORE the action economy is touched;
 		// commit only once both the slot and the action pass.
-		const ritual = opts?.ritual === true && r.ritual;
+		const ritual =
+			opts?.ritual === true && r.ritual && (this.sheet?.spellcasting.ritualCasting ?? false);
 		let slotKey: string | undefined;
 		if (!ritual && play) {
 			const spend = slotToSpend(

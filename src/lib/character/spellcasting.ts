@@ -51,6 +51,10 @@ export interface Spellcasting {
 	pools: CastPool[];
 	/** The shared multiclass caster level (0 for a pure warlock). */
 	casterLevel: number;
+	/** Has the Ritual Casting class feature (any class with `class.ritual` — Wizard/Cleric/Druid/Bard;
+	 *  NOT Warlock by default). Gates the ritual-cast affordance (AUDIT E7/A17). The Book of Ancient
+	 *  Secrets invocation that grants a warlock ritual casting is a choice-group feature — deferred. */
+	ritualCasting: boolean;
 }
 
 const num = (v: unknown): number | undefined => (v === '' || v == null ? undefined : Number(v));
@@ -134,7 +138,11 @@ export function deriveSpellcasting(
 				x.row?.type === 'class' && x.row.data.caster !== 'none'
 		);
 
-	if (casters.length === 0) return { classes: [], pools: [], casterLevel: 0 };
+	if (casters.length === 0) return { classes: [], pools: [], casterLevel: 0, ritualCasting: false };
+
+	// E7: revive the dead `class.ritual` column — the character can ritual-cast iff ANY of its caster
+	// classes carries Ritual Casting (Wizard/Cleric/Druid/Bard; not base Warlock).
+	const ritualCasting = casters.some((x) => x.row.data.ritual === true);
 
 	const shareOf = (row: LoadedRowOf<'class'>): CasterShare =>
 		row.data.caster_share ?? shareFromCaster(String(row.data.caster));
@@ -198,5 +206,5 @@ export function deriveSpellcasting(
 		};
 	});
 
-	return { classes, pools, casterLevel };
+	return { classes, pools, casterLevel, ritualCasting };
 }

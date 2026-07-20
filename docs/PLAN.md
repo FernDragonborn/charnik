@@ -852,11 +852,14 @@ stay semi-manual.
   invocations as choice-group features, resources + conditions + concentration on one sheet.
   Keep it SRD-only. Update the demo-dependent tests/screenshots; the demo seeds first-run on
   web + desktop, so it IS the first impression of the system's scope.
-  - **Include a RITUAL spell** (user 2026-07-20) so the ritual-cast `R` badge (A17 — casts with no
-    slot) is exercised on first run. Use a REAL shipped SRD ritual (e.g. Detect Magic / Comprehend
-    Languages / Identify — verify the id ships + is ritual-tagged; NEVER hand-author). Also fix the
-    stale `fire-bolt` demo pin → `fire_bolt` (kebab, post-E3 never matches — ties D3: the pin
-    hardcode should move to persisted per-character `ui` state).
+  - **Ritual demo caveat (user 2026-07-20):** a base **Warlock does NOT have Ritual Casting** — only
+    via the Pact of the Tome *Book of Ancient Secrets* invocation (then any-class rituals). So the
+    A17 `R` badge (now gated on `class.ritual` — E7) won't appear on the warlock×barbarian build
+    unless it takes that invocation. Either give the demo Book of Ancient Secrets, OR demo rituals on
+    a Wizard/Cleric-flavored aspect; a ritual-tagged spell alone isn't enough. Use a REAL shipped SRD
+    ritual (verify id ships + `ritual` tag; NEVER hand-author). Also fix the stale `fire-bolt` demo
+    pin → `fire_bolt` (kebab, post-E3 never matches — ties D3: move the pin hardcode to persisted
+    per-character `ui`).
 - [ ] **N2 · Class-feature engine ("features as data").** The three shapes above + the hard
   case: **Wild Shape = stat-block replacement** (USER-RECONFIRMED 2026-07-19: still fully
   unimplemented — a druid has no working Wild Shape at all; the complexity + the 5e↔5.5e

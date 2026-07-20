@@ -343,8 +343,9 @@
 										pinned[r.id] = !pinned[r.id];
 									}}>{pinned[r.id] ? '★' : '☆'}</span
 								>
-								{#if r.ritual}
-									<!-- ritual cast: no spell slot (A17). Row-click casts normally (spends a slot). -->
+								{#if r.ritual && s.spellcasting.ritualCasting}
+									<!-- ritual cast: no spell slot (A17). Only shown when the character HAS ritual casting
+									     (E7 — Wizard/Cleric/Druid/Bard; not base Warlock). Row-click casts normally. -->
 									<!-- svelte-ignore a11y_click_events_have_key_events -->
 									<span
 										class="ritual-cast"
