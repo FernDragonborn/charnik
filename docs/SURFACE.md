@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (27)
+## Duplicate suspects (26)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -45,7 +45,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Identical one-liner body, different names:**
 
-- `typeName` (src/lib/components/CommandPalette.svelte) = `cap` (src/lib/content/grouping.ts)
 - `cap` (src/lib/content/detail.ts) = `label` (src/lib/content/homebrew.ts)
 
 ## Design tokens (`styles/tokens.css`)
@@ -825,4 +824,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 454 exports across 66 modules · 27 duplicate suspects · generated in 112ms._
+_46 tokens · 50 global classes · 36 components · 454 exports across 66 modules · 26 duplicate suspects · generated in 108ms._

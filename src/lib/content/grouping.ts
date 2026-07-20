@@ -5,7 +5,7 @@
  * the page just drives these.
  */
 import type { LoadedRow } from './loader';
-import { ordinal } from '$lib/util/format';
+import { ordinal, titleCase } from '$lib/util/format';
 import type { ContentType } from './schemas';
 import { sourceLabel } from './detail';
 import { HOMEBREW_SOURCE } from './homebrew';
@@ -60,7 +60,7 @@ const FACET: Partial<Record<ContentType, Grouping>> = {
 	class_feature: { key: 'class_id', label: 'Class' }
 };
 
-const cap = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+const cap = (s: string) => titleCase(s);
 
 export function groupingsFor(type: ContentType): Grouping[] {
 	const base = GROUPINGS[type] ?? [];

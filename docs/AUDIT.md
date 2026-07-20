@@ -455,16 +455,20 @@ plus imports. Verify with a differential test before merging where bodies differ
 > - **`displayNamesByLocale` (`content/search`) & translate/+page name-reads vs `localizedName`** —
 >   NOT the same read: search builds a per-locale index over ALL locales (no fallback), translate
 >   wants `?? ''` (empty = "not yet translated", never an EN fallback). Merging would break both.
-> - **`cap`/`label` LABELS-map fallbacks (`content/detail`, `content/homebrew`, `content/grouping`)**
->   — related to `titleCase` but each pairs it with a domain LABELS lookup; the title-case core is
->   now shared, the LABELS maps are legitimately per-domain.
+> - **`cap`/`label` LABELS-map lookups (`content/detail`, `content/homebrew`, `content/grouping`)**
+>   — the title-case FALLBACK now calls the shared `titleCase` (F1); only the domain LABELS maps stay
+>   separate (each is a legitimately different label set), so these are not dups to merge further.
 
-- [x] **F1 · `titleCase` ×6.** DONE 2026-07-20. One `titleCase` (`[-_]`) in `util/format.ts`;
-  `combat/helpers` re-exports it (importers unchanged), `effects/apply.titleCaseId` + the
-  `build/+page.svelte` local deleted. NB the old `combat/helpers` copy was `-`-only, so it
-  mis-rendered snake ids (`sleight_of_hand` → "Sleight_of_hand") — the shared `[-_]` version fixes
-  that latent bug. (The `content/*` label fallbacks `cap`/`label` are a distinct LABELS-map concern,
-  left.)
+- [x] **F1 · `titleCase` ×6.** DONE 2026-07-20 (fully — incl. the re-inlined copies a first pass
+  missed). One `titleCase` (`[-_]`) in `util/format.ts`; `combat/helpers` re-exports it,
+  `effects/apply.titleCaseId` + the `build/+page.svelte` local deleted, AND the same `\b\w`
+  title-case logic re-inlined in `content/detail.cap`, `content/grouping.cap`, `content/homebrew`
+  label, `CommandPalette.typeName`, the dev/plugins namespace label, and the redundant `-`→space in
+  `helpers.modTargetLabel` all now call the shared `titleCase` (LABELS maps stay per-domain; only the
+  fallback title-caser is shared). NB the old `combat/helpers` copy was `-`-only → mis-rendered snake
+  ids (`sleight_of_hand` → "Sleight_of_hand"); the shared `[-_]` version fixes that latent bug.
+  Verified: no `\b\w`-uppercase inline title-caser remains in `src/` (grep). The plain `_`→space type
+  labels (compendium nav, DraftsPane…) are a DIFFERENT lowercase style, not title-case — left.
 - [x] **F2 · `signed` ×4.** DONE 2026-07-20. One `signed` in `util/format.ts` (the `+0` D&D form);
   `combat/helpers` re-exports it, `build/+page.svelte` + `content/detail.ts` locals deleted.
   Behavior note: the old `combat/helpers.signed` returned `"0"` (no sign) for a zero mod; the shared

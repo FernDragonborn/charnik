@@ -4,7 +4,7 @@
  * unit-testable. The components (WikiDetail / EntryList) just render these models.
  */
 import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loader';
-import { ordinal, signed } from '$lib/util/format';
+import { ordinal, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
 
@@ -37,8 +37,7 @@ const LABELS: Record<string, string> = {
 	creature_type: 'Type',
 	class_id: 'Class'
 };
-const cap = (s: string) =>
-	LABELS[s] ?? s.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+const cap = (s: string) => LABELS[s] ?? titleCase(s);
 const asText = (v: unknown) => (Array.isArray(v) ? v.join(', ') : String(v));
 const nonEmpty = (v: unknown) => v !== '' && v != null && !(Array.isArray(v) && v.length === 0);
 // skip noisy negative/placeholder values ("false", "none", "0") from the meta grid

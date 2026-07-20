@@ -15,6 +15,7 @@ import type { LoadedRow } from './loader';
 import { parseContentDirectives, stampDirectives, type MetaKey } from './meta';
 import { hashBody } from './hash';
 import { slugify } from '$lib/util/slug';
+import { titleCase } from '$lib/util/format';
 import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
 import {
 	CONTENT_TYPES,
@@ -113,8 +114,7 @@ const LABELS: Record<string, string> = {
 	caster_from_level: 'Casting from level',
 	prepare_style: 'Prepare style'
 };
-const label = (name: string): string =>
-	LABELS[name] ?? name.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+const label = (name: string): string => LABELS[name] ?? titleCase(name);
 
 function kindOf(type: ContentType, name: string): FieldKind {
 	if (name === 'systems') return 'systems';

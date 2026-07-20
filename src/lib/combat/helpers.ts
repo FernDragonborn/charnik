@@ -441,7 +441,7 @@ export function modTargetLabel(t: string): string {
 	if (t === 'saves') return 'to all saves';
 	if (t === 'skills') return 'to all skills';
 	if (t.startsWith('save.')) return `to ${t.slice(5).toUpperCase()} save`;
-	if (t.startsWith('skill.')) return `to ${titleCase(t.slice(6).replace(/-/g, ' '))}`;
+	if (t.startsWith('skill.')) return `to ${titleCase(t.slice(6))}`;
 	return `to ${t.toUpperCase()}`;
 }
 

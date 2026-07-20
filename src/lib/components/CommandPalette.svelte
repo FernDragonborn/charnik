@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { compendiumEntryPath } from '$lib/content/detail';
+	import { titleCase } from '$lib/util/format';
 	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
@@ -71,7 +72,7 @@
 	);
 	const items = $derived<Item[]>([...pages, ...contentItems]);
 
-	const typeName = (t: string) => t.replace(/_/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
+	const typeName = (t: string) => titleCase(t);
 	// header shown before the first item of each group (Pages, then each content type)
 	const groupOf = (it: Item) => (it.kind === 'page' ? 'Pages' : typeName(it.type));
 

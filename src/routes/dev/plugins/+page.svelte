@@ -6,13 +6,14 @@
 	import PluginsSettings from '$lib/components/settings/PluginsSettings.svelte';
 	import { plugins } from '$lib/effects/plugin-store.svelte';
 	import type { DiscoveredPlugin } from '$lib/effects/plugin-host';
+	import { titleCase } from '$lib/util/format';
 
 	const fake = (over: Partial<DiscoveredPlugin> & { namespace: string }): DiscoveredPlugin => ({
 		ok: true,
 		manifest: {
 			api: 1,
 			namespace: over.namespace,
-			name: over.namespace.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase()),
+			name: titleCase(over.namespace),
 			version: '1.2.0',
 			author: 'Jane Doe',
 			url: 'https://example.com/plugin',
