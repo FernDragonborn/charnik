@@ -1,6 +1,8 @@
 <script lang="ts">
 	// Generic confirm dialog — the house attention-dialog template (charnik-dialog-design-template),
 	// for a destructive/irreversible action that needs an explicit yes. Shared `.dialog` shell.
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+
 	let {
 		title,
 		message,
@@ -17,20 +19,17 @@
 		onConfirm: () => void;
 		onCancel: () => void;
 	} = $props();
-
-	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			onCancel();
-		}
-	}
 </script>
-
-<svelte:window onkeydown={onKeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div class="dialog-backdrop" onclick={onCancel}></div>
-<div class="dialog confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+<div
+	class="dialog confirm-dialog"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="confirm-title"
+	use:dismissOnEscape={onCancel}
+>
 	<header class="dialog-head">
 		<span class="dialog-badge" class:danger>⚑</span>
 		<h2 id="confirm-title" class="dialog-title">{title}</h2>

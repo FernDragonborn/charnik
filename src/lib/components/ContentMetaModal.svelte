@@ -4,6 +4,7 @@
 	// inline widgets; machine-fillable keys (id / hash / updated-at / schema) are a reassuring "we'll
 	// add these" FYI. Presentation only — detection + write-back live in the loader (thin-component).
 	import { untrack } from 'svelte';
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { _ } from '$lib/i18n';
 	import LangSwitcher from './LangSwitcher.svelte';
 	import { EDITABLE_KEYS, OPTIONAL_KEYS } from '$lib/content/meta';
@@ -77,16 +78,7 @@
 		}
 		onFillAndSave(payload);
 	}
-
-	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			onSkip();
-		}
-	}
 </script>
-
-<svelte:window onkeydown={onKeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div class="dialog-backdrop" onclick={onSkip}></div>
@@ -96,6 +88,7 @@
 	aria-modal="true"
 	aria-labelledby="cm-title"
 	tabindex="-1"
+	use:dismissOnEscape={onSkip}
 >
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>

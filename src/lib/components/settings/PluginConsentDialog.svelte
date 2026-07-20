@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	// Plugin consent — the house attention-dialog template, single-pane notice variant
 	// (charnik-dialog-design-template). Shown before a plugin is FIRST enabled, and again whenever
 	// its code hash changed (docs/PLUGINS.md §6). Every manifest field renders as PLAIN TEXT
@@ -21,20 +22,17 @@
 	} = $props();
 
 	const m = $derived(plugin.manifest);
-
-	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			onCancel();
-		}
-	}
 </script>
-
-<svelte:window onkeydown={onKeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div class="dialog-backdrop" onclick={onCancel}></div>
-<div class="dialog consent-dialog" role="dialog" aria-modal="true" aria-labelledby="plg-title">
+<div
+	class="dialog consent-dialog"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="plg-title"
+	use:dismissOnEscape={onCancel}
+>
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>
 		<span class="dialog-badge warn">⚿</span>

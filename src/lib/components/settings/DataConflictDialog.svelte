@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	// Shown when the folder chosen for a data move ISN'T empty (an automatic move needs an empty one).
 	// Offers three ways out: pick another folder, just repoint (the user already copied their data
 	// here), or merge the two. The table lists every file across both folders — collisions (a name in
@@ -29,13 +30,7 @@
 	// Move keyboard focus INTO the dialog on open — onto the safe choice, not the merging one.
 	let safeBtn = $state<HTMLButtonElement | null>(null);
 	$effect(() => safeBtn?.focus());
-
-	function onKey(e: KeyboardEvent) {
-		if (e.key === 'Escape') onclose();
-	}
 </script>
-
-<svelte:window on:keydown={onKey} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div class="dialog-backdrop" onclick={onclose}></div>
@@ -45,6 +40,7 @@
 	aria-modal="true"
 	aria-labelledby="cf-title"
 	tabindex="-1"
+	use:dismissOnEscape={onclose}
 >
 	<header class="dialog-head">
 		<span class="dialog-badge warn">⚠</span>

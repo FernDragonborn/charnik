@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	// Full-screen, dark-backdrop modal for the DATA-DRIFT case (DATA-VER-1): a file's body no longer
 	// matches its recorded #content-hash, i.e. it was hand-edited outside the app. Offers to bump
 	// #content-updated-at to today + recompute the hash. Per-file checkboxes let the user choose which
@@ -28,18 +29,10 @@
 	);
 	const anyChecked = $derived(items.some((i) => checked[i.file]));
 
-	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			onSkip();
-		}
-	}
 	function apply() {
 		onUpdate(items.filter((i) => checked[i.file]).map((i) => i.file));
 	}
 </script>
-
-<svelte:window onkeydown={onKeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div class="dialog-backdrop" onclick={onSkip}></div>
@@ -49,6 +42,7 @@
 	aria-modal="true"
 	aria-labelledby="drift-title"
 	tabindex="-1"
+	use:dismissOnEscape={onSkip}
 >
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>

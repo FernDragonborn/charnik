@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	// Orphan-draft reassign dialog — fires when the draft cache is read and a draft's target row no longer
 	// exists (deleted / renamed / source disabled). The house attention-dialog template
 	// (charnik-dialog-design-template): ⚑ badge header, "N of M" step-through, two-pane body (your draft
@@ -134,24 +135,21 @@
 		advance();
 	}
 
-	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			onDone();
-		}
-	}
-
 	// keep index in range if the orphan set shrinks between opens
 	$effect(() => {
 		if (index >= total) untrack(() => onDone());
 	});
 </script>
 
-<svelte:window onkeydown={onKeydown} />
-
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div class="dialog-backdrop" onclick={() => onDone()}></div>
-<div class="dialog orphan-dialog" role="dialog" aria-modal="true" aria-labelledby="orphan-title">
+<div
+	class="dialog orphan-dialog"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="orphan-title"
+	use:dismissOnEscape={onDone}
+>
 	<header class="dialog-head">
 		<span class="dialog-badge warn">⚑</span>
 		<h2 id="orphan-title" class="dialog-title">

@@ -493,10 +493,15 @@ plus imports. Verify with a differential test before merging where bodies differ
   it. Kills the "four sources of truth" (the two consts collapse into pipeline's, and `System` is now
   `typeof SYSTEMS[number]`). GeneralSettings' `SYSTEMS` is a `{id,label}` DISPLAY list — a different
   thing, left.
-- [ ] **F8 · Escape-close handler ×9 dialogs.** Same `e.key === 'Escape'` close wiring in
-  ConfirmDialog, CommandPalette, ContentMetaModal, LanguagePicker, SchemaDiscardDialog,
-  OrphanDialog, HashDriftModal, DataMigrationDialog, DataConflictDialog. Fold into the shared
-  dialog-shell behavior A11Y-1 already plans (one action = focus trap + Escape + backdrop).
+- [~] **F8 · Escape-close handler ×9 dialogs.** MOSTLY DONE 2026-07-20 — one Svelte action
+  `actions/dismissOnEscape.ts` (`use:dismissOnEscape={close}` on the dialog root) replaces the
+  hand-written `<svelte:window onkeydown>` + Escape check in the 7 pure escape-close dialogs
+  (ConfirmDialog, ContentMetaModal, HashDriftModal, OrphanDialog, SchemaDiscardDialog,
+  PluginConsentDialog, DataConflictDialog — the last also gained the missing `preventDefault`).
+  CORRECTLY LEFT: **DataMigrationDialog** deliberately REFUSES Escape (must-acknowledge modal →
+  `refuseClose`), **CommandPalette** has richer key handling (arrows/enter), **LanguagePicker**
+  binds keydown on its own element, not window. This is the Escape half; the focus-trap + backdrop
+  half stays with the planned A11Y-1 dialog-shell (the action is the seam it will extend).
 - [~] **F9 · Localized-name lookup ×4.** MOSTLY DONE 2026-07-20 — `content/detail.localizedName(row,
   locale)` (name_loc → EN → id) is the one reader; `build/state.rowName` now wraps it (adds the
   undefined guard + active-locale default) and compendium `localName` calls it. DELIBERATELY EXCLUDED

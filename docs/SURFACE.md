@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (30)
+## Duplicate suspects (28)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -17,7 +17,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Same name, several files:**
 
-- `onKeydown` ×6 — src/lib/components/ConfirmDialog.svelte · src/lib/components/ContentMetaModal.svelte · src/lib/components/HashDriftModal.svelte · src/lib/components/OrphanDialog.svelte · src/lib/components/SchemaDiscardDialog.svelte · src/lib/components/settings/PluginConsentDialog.svelte
 - `norm` ×4 — src/lib/storage/browser.ts · src/lib/storage/memory.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `load` ×3 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts · src/routes/+layout.ts
@@ -38,7 +37,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `now` ×2 — src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
-- `onKey` ×2 — src/lib/components/settings/DataConflictDialog.svelte · src/lib/components/settings/DataMigrationDialog.svelte
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `STORAGE_KEY` ×2 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
@@ -142,7 +140,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ConfirmDialog** | `title`, `message`, `confirmLabel`, `danger`, `onConfirm`, `onCancel` | Generic confirm dialog — the house attention-dialog template (charnik-dialog-design-template), |
 | **ContentHealth** | — | Content-health diagnostics — surfaces the loader's findings to the USER (not just the dev |
 | **ContentMetaModal** | `issues`, `onFillAndSave`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal that reviews content files with missing metadata (DATA-VER-1). |
-| **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` | Shown when the folder chosen for a data move ISN'T empty (an automatic move needs an empty one). |
+| **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` |  |
 | **DataMigrationDialog** | `tone`, `title`, `detail`, `note`, `onclose` | Persistent result dialog for a data-folder move. |
 | **DiceIcon** | `size` | The dice-roll glyph: a d20 (icosahedron, top-down) with a small d4 (tetrahedron) tucked at its |
 | **DraftsPane** | `graph`, `onResume`, `onResolveOrphans` | Pending-drafts list — the full-width pane that replaces the editing block in the compendium right |
@@ -154,17 +152,17 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **FirstRunModal** | `defaultDir`, `pickFolder`, `onConfirm` | First-run, full-screen modal: asks WHERE to keep the user's data (characters + content) before |
 | **GeneralSettings** | — | Appearance & language settings: theme, UI locale, and the compendium/search edition filter. |
 | **GenericHead** | `detail`, `editable`, `draft` | The "shapka" for every non-spell, non-monster article (species, class, feat, item, …): eyebrow, |
-| **HashDriftModal** | `items`, `onUpdate`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal for the DATA-DRIFT case (DATA-VER-1): a file's body no longer |
+| **HashDriftModal** | `items`, `onUpdate`, `onSkip`, `onNeverAsk` |  |
 | **LangSwitcher** | — | The one canonical language switcher — reused everywhere (topbar, dialogs) so it looks and behaves |
 | **LanguagePicker** | `value`, `locales`, `allowAdd`, `accent` | Searchable language dropdown — one shared control for the translate view's FROM and TO pickers |
 | **Loading** | `message`, `error` | Full-view loading screen shown while the sheet/content is being loaded (the derive can take a |
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
-| **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` | Orphan-draft reassign dialog — fires when the draft cache is read and a draft's target row no longer |
+| **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle (d-spellmgr `.ic.pin`): ★ pinned to the quick bar, ☆ not. |
-| **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` | Plugin consent — the house attention-dialog template, single-pane notice variant |
+| **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
-| **SchemaDiscardDialog** | `drafts`, `onDiscard`, `onKeep` | Schema-discard warning — the house attention-dialog template |
+| **SchemaDiscardDialog** | `drafts`, `onDiscard`, `onKeep` |  |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
 | **SpellHead** | `detail`, `spell`, `editable`, `draft` | The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration |
 | **StorageSettings** | — | Where Charnik keeps your data (characters + content). |
@@ -254,7 +252,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (54 modules)
+## Library functions & types (55 modules)
+
+### `src/lib/actions/dismissOnEscape.ts`
+
+- `const dismissOnEscape` — * Call `onEscape` when the Escape key is pressed while the node is mounted (AUDIT F8) — the one home * for the `<svel…
 
 ### `src/lib/build/derive.ts`
 
@@ -824,4 +826,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 453 exports across 65 modules · 30 duplicate suspects · generated in 119ms._
+_46 tokens · 50 global classes · 36 components · 454 exports across 66 modules · 28 duplicate suspects · generated in 112ms._

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	// Schema-discard warning — the house attention-dialog template
 	// (charnik-dialog-design-template), single-pane notice variant. Fires when the draft cache holds
 	// drafts saved under a DIFFERENT content-schema version: ephemeral WIP that can't be migrated, so it
@@ -29,20 +30,17 @@
 			return { title: t.id, sub: `${t.type.replace(/_/g, ' ')} → ${t.locale.toUpperCase()}` };
 		return { title: t.id, sub: `${t.type.replace(/_/g, ' ')} · edit` };
 	}
-
-	function onKeydown(e: KeyboardEvent) {
-		if (e.key === 'Escape') {
-			e.preventDefault();
-			onKeep();
-		}
-	}
 </script>
-
-<svelte:window onkeydown={onKeydown} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <div class="dialog-backdrop" onclick={onKeep}></div>
-<div class="dialog discard-dialog" role="dialog" aria-modal="true" aria-labelledby="discard-title">
+<div
+	class="dialog discard-dialog"
+	role="dialog"
+	aria-modal="true"
+	aria-labelledby="discard-title"
+	use:dismissOnEscape={onKeep}
+>
 	<header class="dialog-head">
 		<span class="dialog-badge warn">⚑</span>
 		<h2 id="discard-title" class="dialog-title">
