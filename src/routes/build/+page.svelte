@@ -12,6 +12,7 @@
 	import { ABILITIES } from '$lib/character/schema';
 	import { SKILL_ABILITY } from '$lib/character/derive';
 	import { loadCharacterBySlug } from '$lib/character/store.svelte';
+	import { titleCase, signed } from '$lib/util/format';
 	import type { Ability } from '$lib/rules/core';
 	import type { StatMethod } from '$lib/build/rules';
 
@@ -28,8 +29,6 @@
 	});
 
 	const b = build;
-	const titleCase = (s: string) => s.replace(/[-_]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
-	const signed = (n: number) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 	const METHODS: { id: StatMethod; label: string }[] = [
 		{ id: 'point-buy', label: 'Point buy' },
 		{ id: 'standard-array', label: 'Standard array' },

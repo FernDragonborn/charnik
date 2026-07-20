@@ -9,7 +9,7 @@
  * automatically.
  */
 import Fuse, { type FuseResultMatch } from 'fuse.js';
-import type { ContentGraph, LoadedRow } from './loader';
+import { LOCALE_TAG, type ContentGraph, type LoadedRow } from './loader';
 import { isBrowsable, type ContentType } from './schemas';
 
 export interface NameDoc {
@@ -51,11 +51,13 @@ export const plainText = (s: string) =>
 		.trim();
 
 /** Locales present in the data (from `name_*` columns); always includes `en`. */
+// F11: the ONE locale grammar (was `[a-z]{2,3}` — subtag locales like pt-BR were unsearchable)
+const NAME_LOCALE_COL = new RegExp(`^name_(${LOCALE_TAG})$`);
 function localesOf(graph: ContentGraph): string[] {
 	const set = new Set(['en']);
 	for (const r of graph.rows)
 		for (const k of Object.keys(r.data)) {
-			const m = /^name_([a-z]{2,3})$/.exec(k);
+			const m = NAME_LOCALE_COL.exec(k);
 			if (m?.[1]) set.add(m[1]);
 		}
 	return [...set];

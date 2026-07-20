@@ -16,8 +16,9 @@
  * vocabulary growth never breaks older rows.
  */
 import { z } from 'zod';
+import { SYSTEMS } from '../rules/pipeline';
 
-export const SYSTEMS = ['5e', '5.5e'] as const;
+export { SYSTEMS }; // one owner in rules/pipeline (AUDIT F7/D2)
 
 /** Bounded effect vocabulary — the only kinds the engine understands. Kept as its own list (not
  *  imported from `$lib/effects`) so content validation doesn't depend on the removable effects

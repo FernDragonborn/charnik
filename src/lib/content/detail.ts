@@ -3,8 +3,9 @@
  * same two-pane shape: a grouped list + a wiki detail rendered from the CSV row). No Svelte —
  * unit-testable. The components (WikiDetail / EntryList) just render these models.
  */
-import type { LoadedRow, LoadedRowOf } from '$lib/content/loader';
-import { ordinal } from '$lib/util/format';
+import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loader';
+import { ordinal, signed } from '$lib/util/format';
+import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
 
 /** Columns never shown as a meta cell (identity / localization / rendered elsewhere). */
@@ -48,13 +49,13 @@ const meaningful = (v: unknown) => nonEmpty(v) && !/^(false|none|0)$/i.test(Stri
 // suffixed variants so the meta grid can skip them (they're rendered as prose, not as k/v cells).
 const localized = (d: Record<string, unknown>, base: string, locale: string): string =>
 	String(d[`${base}_${locale}`] ?? d[`${base}_en`] ?? d[base] ?? '');
-const PROSE_LOC = /^(?:name|text|material|higher_level)_[a-z]{2,3}(?:-[A-Za-z0-9]+)*$/;
 
-const ABILS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
-const abilMod = (score: number) => {
-	const m = Math.floor((score - 10) / 2);
-	return m >= 0 ? `+${m}` : `−${Math.abs(m)}`;
-};
+/** A content row's display NAME in `locale`, falling back to EN then the id (AUDIT F9 — the one
+ *  localized-name reader). NB translate view deliberately does NOT use this (it wants an empty
+ *  string, not an EN fallback, to mark "not yet translated"). */
+export const localizedName = (row: LoadedRow, locale: string): string =>
+	String(row.data[`name_${locale}`] || row.data.name_en || row.id);
+const PROSE_LOC = new RegExp(`^(?:name|text|material|higher_level)_${LOCALE_TAG}$`);
 
 interface AbilityScore {
 	ab: string; // "STR"
@@ -78,8 +79,6 @@ export interface MonsterModel {
 	band: [string, string][]; // Senses / Skills / Languages / Gear
 	defenses: [string, string][]; // Resistances / Immunities / Vulnerabilities (accent)
 }
-
-const signed = (n: number) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 
 /** A spell article (the "strip" layout: fixed-size effect block + casting cells). */
 export interface SpellModel {
@@ -228,18 +227,18 @@ export interface DetailModel {
 function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 	const d = row.data;
 	const s = (k: RowColumn<'monster'>) => (d[k] == null || d[k] === '' ? '' : String(d[k]));
-	const abilities: AbilityScore[] = ABILS.map((a) => {
+	const abilities: AbilityScore[] = ABILITY_IDS.map((a) => {
 		const score = Number(d[a]);
 		const raw = d[`${a}_save`];
 		const save = raw == null ? undefined : Number(raw);
 		return {
 			ab: a.toUpperCase(),
 			score,
-			mod: abilMod(score),
+			mod: signed(abilityModifier(score)),
 			...(save == null ? {} : { save: signed(save) })
 		};
 	});
-	const hasSaves = ABILS.some((a) => {
+	const hasSaves = ABILITY_IDS.some((a) => {
 		const raw = d[`${a}_save`];
 		return raw != null && Number(raw) !== Math.floor((Number(d[a]) - 10) / 2);
 	});

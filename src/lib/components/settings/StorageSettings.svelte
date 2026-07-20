@@ -18,6 +18,7 @@
 		type MigrateOutcome
 	} from '$lib/storage/tauri';
 	import { conflictRows, isSameOrInside, type ConflictRow } from '$lib/storage/migrate';
+	import { errText } from '$lib/util/format';
 	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
 	import { reloadApp } from '$lib/content/reload';
 	import { flashAfterReload } from '$lib/stores/flash';
@@ -47,7 +48,6 @@
 	// their data is safe and where it still is.
 	const ORIGINAL_SAFE =
 		"Your original folder is untouched — we didn't delete or overwrite any files there.";
-	const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 	// When the chosen folder isn't empty an automatic move is impossible, so we open the conflict
 	// dialog with a file-by-file table instead — the user picks another folder, repoints, or merges.

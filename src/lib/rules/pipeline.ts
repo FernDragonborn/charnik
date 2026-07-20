@@ -8,7 +8,10 @@
  * item/feature/condition/override layers via `applyEffects` WITHOUT this file importing it —
  * the `{value, trace, notes}` shape is identical whether effects are on, off, or deleted.
  */
-export type System = '5e' | '5.5e';
+/** The two supported rule systems — the ONE owner (AUDIT F7/D2). character/content schemas and the
+ *  app store all derive their system union from here, so there's a single source of truth. */
+export const SYSTEMS = ['5e', '5.5e'] as const;
+export type System = (typeof SYSTEMS)[number];
 
 /** Where a stat's math comes from, in pipeline order. */
 export type Layer =

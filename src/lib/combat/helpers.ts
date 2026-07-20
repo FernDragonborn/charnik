@@ -3,11 +3,11 @@
  * no component state — so they can be shared by the state module (state.svelte.ts) and
  * every area component. Split out of the old monolithic combat/+page.svelte.
  */
-import type { Ability } from '$lib/rules/core';
+import { ABILITY_IDS, type Ability } from '$lib/rules/core';
 import type { Computed } from '$lib/rules/pipeline';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character, EffectInstance } from '$lib/character/schema';
-import type { CharacterSheet, SkillId } from '$lib/character/derive';
+import { SKILL_ABILITY, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import {
 	parseDicePool,
 	parseDiceTerm,
@@ -15,7 +15,9 @@ import {
 	type DieMods,
 	type Rolled
 } from '$lib/rules/dice';
-import { ordinal } from '$lib/util/format';
+import { ordinal, titleCase, signed } from '$lib/util/format';
+// re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
+export { titleCase, signed };
 import { parseToken, EFFECT_KIND, type Recharge } from '$lib/effects/token-parser';
 import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
 import { cantripDieMultiplier } from '$lib/rules/spellcasting';
@@ -51,9 +53,6 @@ export type MenuKind =
 	| 'showhide'
 	| 'condition'
 	| 'manage';
-
-/** +N / −N / 0 for a modifier. */
-export const signed = (n: number) => (n >= 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
 
 /** `[0, 1, …, n-1]` — for rendering N pips/dots. */
 export const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
@@ -166,10 +165,6 @@ export function why(c: Computed): string {
 		);
 	return (parts.join(', ') || '—') + (c.notes?.length ? ' · ' + c.notes.join(' · ') : '');
 }
-
-/** "sleight-of-hand" → "Sleight Of Hand". */
-export const titleCase = (s: string) =>
-	s.replace(/-/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 
 /** Healing dice from a spell's text ("regains Hit Points equal to 2d4 plus …"). */
 const healDice = (text: string): string => {
@@ -321,26 +316,9 @@ export const EFFECT_DURATION_PRESETS: { label: string; rounds: number | null }[]
 ];
 
 /** The 18 SRD skills (id order) — for the custom-modifier target picker. */
-const SKILL_IDS = [
-	'acrobatics',
-	'animal-handling',
-	'arcana',
-	'athletics',
-	'deception',
-	'history',
-	'insight',
-	'intimidation',
-	'investigation',
-	'medicine',
-	'nature',
-	'perception',
-	'performance',
-	'persuasion',
-	'religion',
-	'sleight-of-hand',
-	'stealth',
-	'survival'
-] as const;
+// the 18 skill ids from the ONE owner (AUDIT F4) — snake-case post-E3, so the target values below
+// are `skill.animal_handling` (a stale kebab list here silently produced unmatched targets).
+const SKILL_IDS = Object.keys(SKILL_ABILITY) as SkillId[];
 
 /** Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.
  *  Values are the exact keys the effects engine matches (`ac`, `save.dex`, `skill.stealth`,
@@ -386,7 +364,8 @@ export const PANEL_TITLE: Record<string, string> = {
 	actions: 'Actions',
 	effects: 'Effects & conditions'
 };
-export const ABIL: Ability[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
+/** Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`. */
+export const ABIL: readonly Ability[] = ABILITY_IDS;
 export const ABILITY_NAME: Record<Ability, string> = {
 	str: 'Strength',
 	dex: 'Dexterity',

@@ -17,8 +17,10 @@
 import { z } from 'zod';
 import { CHARACTER_SCHEMA_VERSION } from '../schema/version';
 
-export const SYSTEMS = ['5e', '5.5e'] as const;
-// single owner in rules/core (AUDIT F3) — re-exported because half the app already imports it here
+// single owners re-exported (half the app imports these here): systems from rules/pipeline (F7/D2),
+// ability ids from rules/core (F3).
+import { SYSTEMS } from '../rules/pipeline';
+export { SYSTEMS };
 export { ABILITY_IDS as ABILITIES } from '../rules/core';
 import { ABILITY_IDS as ABILITIES } from '../rules/core';
 

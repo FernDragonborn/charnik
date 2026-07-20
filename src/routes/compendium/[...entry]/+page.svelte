@@ -12,7 +12,8 @@
 		buildDetail,
 		sourceLabel,
 		compendiumEntryPath,
-		toEntryGroups
+		toEntryGroups,
+		localizedName
 	} from '$lib/content/detail';
 	import { getSpellAccess } from '$lib/content/spellAccess';
 	import { groupingsFor, facetFor, groupRows, distinctValues } from '$lib/content/grouping';
@@ -57,7 +58,7 @@
 		if (typeof localStorage !== 'undefined') localStorage.setItem(LOCALE_KEY, contentLocale);
 	});
 	// localized display name for a row (the chosen content locale, English fallback)
-	const localName = (r: LoadedRow) => String(r.data[`name_${contentLocale}`] ?? r.data.name_en);
+	const localName = (r: LoadedRow) => localizedName(r, contentLocale);
 	let selectedType = $state<ContentType>('spell');
 	let query = $state('');
 	let selected = $state<LoadedRow | null>(null);

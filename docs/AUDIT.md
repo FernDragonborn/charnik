@@ -445,38 +445,50 @@ Invisible to jscpd (different shapes, <35 tokens) and knip (all used). Each is a
 you write" violation; the fix is one shared home (mostly `util/format.ts` next to `ordinal`)
 plus imports. Verify with a differential test before merging where bodies differ (MECH6).
 
-- [ ] **F1 · `titleCase` ×6.** `combat/helpers.titleCase` (shared, `-` only); local copy in
-  `build/+page.svelte:31` (`[-_]`); `effects/index.titleCaseId` (`[-_]`); label fallbacks in
-  `content/detail.ts:40` + `content/homebrew.ts:117` (`_`); `content/grouping.cap` (`_`).
-  One `titleCase` in `util/format.ts` handling `[-_]` covers all six.
-- [ ] **F2 · `signed` ×4.** `combat/helpers.signed` is EXPORTED shared — yet
-  `build/+page.svelte:32` defines an identical local; `rules/dice.formatModifier` and
-  `content/detail.ts:82` are the same body again. Home: `util/format.ts` (dice.ts is pure
-  core and must not import combat helpers).
-- [ ] **F3 · Ability-list const ×5.** `['str','dex',…]` in `character/schema.ABILITIES`,
-  `content/schemas.ABILITIES`, `detail.ABILS`, `combat/helpers.ABIL`, inline at
-  `helpers.ts:242`. One const (rules layer owns it — `Ability` type already lives there),
-  the rest derive/import.
-- [ ] **F4 · `SKILL_IDS` duplicates `SKILL_ABILITY` keys.** `combat/helpers.ts:205` hand-lists
-  the 18 skills; `character/derive.SKILL_ABILITY` already owns them →
-  `Object.keys(SKILL_ABILITY)`.
-- [ ] **F5 · Ability-mod formula re-inlined.** `content/detail.ts:55` + `:244` compute
-  `Math.floor((score-10)/2)` instead of `rules/core.abilityModifier` — compendium math can
+- [x] **F1 · `titleCase` ×6.** DONE 2026-07-20. One `titleCase` (`[-_]`) in `util/format.ts`;
+  `combat/helpers` re-exports it (importers unchanged), `effects/apply.titleCaseId` + the
+  `build/+page.svelte` local deleted. NB the old `combat/helpers` copy was `-`-only, so it
+  mis-rendered snake ids (`sleight_of_hand` → "Sleight_of_hand") — the shared `[-_]` version fixes
+  that latent bug. (The `content/*` label fallbacks `cap`/`label` are a distinct LABELS-map concern,
+  left.)
+- [x] **F2 · `signed` ×4.** DONE 2026-07-20. One `signed` in `util/format.ts` (the `+0` D&D form);
+  `combat/helpers` re-exports it, `build/+page.svelte` + `content/detail.ts` locals deleted.
+  Behavior note: the old `combat/helpers.signed` returned `"0"` (no sign) for a zero mod; the shared
+  one returns `"+0"` (standard, matches the other three sources) — a cosmetic change to combat
+  zero-mod displays. `rules/dice.formatModifier` stays separate (pure core keeps its own; identical
+  body but no cross-layer import) — the one remaining copy, acceptable.
+- [x] **F3 · Ability-list const ×5.** DONE 2026-07-20 (L2R-13 folded the schema copies; this pass
+  finished it). `rules/core.ABILITY_IDS` is the owner; `detail.ABILS` → `ABILITY_IDS`,
+  `combat/helpers.ABIL` is now a re-export alias of it. `schema.ABILITIES` / `content/schemas`
+  already re-export it.
+- [x] **F4 · `SKILL_IDS` duplicates `SKILL_ABILITY` keys.** DONE 2026-07-20 —
+  `Object.keys(SKILL_ABILITY)`. Also a BUGFIX: the hand-listed copy was stale KEBAB
+  (`animal-handling`, `sleight-of-hand`) post-E3, so the custom-modifier target dropdown emitted
+  `skill.animal-handling` values that matched no snake skill target (a B13-class silent drop). Now
+  snake-correct.
+- [x] **F5 · Ability-mod formula re-inlined.** DONE 2026-07-20 — `content/detail.ts` uses
+  `signed(abilityModifier(score))`; the local `abilMod` deleted. Compendium mod math can no longer
   drift from the sheet.
-- [ ] **F6 · `errText` ×2 + inline ×3.** Identical helpers in `storage/tauri.ts:175` and
-  `settings/StorageSettings.svelte:50`; the `e instanceof Error ? e.message : String(e)`
-  pattern again in translate/+page and updater (×2). One `errText` in a shared util.
-- [ ] **F7 · `SYSTEMS` const ×2.** `character/schema.ts:20` and `content/schemas.ts:19` both
-  define `['5e','5.5e'] as const` — supersedes D2's count: editions have FOUR sources of
-  truth (2 consts + `pipeline.System` type + derived `SystemId`). Pick one owner.
+- [~] **F6 · `errText` ×2 + inline ×3.** MOSTLY DONE 2026-07-20 — one `errText` in `util/format.ts`;
+  `storage/tauri.ts` + `settings/StorageSettings.svelte` locals deleted, import it. STILL OPEN: the
+  inline `e instanceof Error ? …` in translate/+page + the updater could adopt it too. (NB
+  `effects/plugin-sandbox.errText` is a DIFFERENT function — a QuickJS handle→string extractor — NOT
+  this pattern; left alone.)
+- [x] **F7 · `SYSTEMS` const ×2** (+ D2). DONE 2026-07-20 — `rules/pipeline` owns
+  `SYSTEMS` + derives `System` from it (one place); `character/schema` + `content/schemas` re-export
+  it. Kills the "four sources of truth" (the two consts collapse into pipeline's, and `System` is now
+  `typeof SYSTEMS[number]`). GeneralSettings' `SYSTEMS` is a `{id,label}` DISPLAY list — a different
+  thing, left.
 - [ ] **F8 · Escape-close handler ×9 dialogs.** Same `e.key === 'Escape'` close wiring in
   ConfirmDialog, CommandPalette, ContentMetaModal, LanguagePicker, SchemaDiscardDialog,
   OrphanDialog, HashDriftModal, DataMigrationDialog, DataConflictDialog. Fold into the shared
   dialog-shell behavior A11Y-1 already plans (one action = focus trap + Escape + backdrop).
-- [ ] **F9 · Localized-name lookup ×4.** The `name_${locale} ?? name_en` read exists as
-  `build/state.rowName`, compendium `localName` (`+page.svelte:60`), inline in
-  translate/+page:143 and search.ts:78 (+ `detail.localized` for the general case). One
-  shared `localizedName(row, locale)`.
+- [~] **F9 · Localized-name lookup ×4.** MOSTLY DONE 2026-07-20 — `content/detail.localizedName(row,
+  locale)` (name_loc → EN → id) is the one reader; `build/state.rowName` now wraps it (adds the
+  undefined guard + active-locale default) and compendium `localName` calls it. DELIBERATELY EXCLUDED
+  (different semantics, NOT dups): translate/+page (wants `?? ''` — empty marks "not yet translated",
+  no EN fallback) and `search.displayNamesByLocale` (builds a per-locale index over ALL locales, no
+  fallback). So this is the whole real duplication; the two exclusions are correct.
 
 - [ ] **F10 · New catches from the surface.mjs dup-detector (2026-07-14).** `tools/surface.mjs`
   now emits a "Duplicate suspects" section in SURFACE.md (same-name defs ×2+ files,
@@ -490,10 +502,10 @@ plus imports. Verify with a differential test before merging where bodies differ
   The live list is SURFACE.md's "Duplicate suspects" — review it there; this item tracks
   burning down the initial 32.
 
-- [ ] **F11 · Locale-column grammar ×3, diverged.** Loader `LOCALE_COL` accepts BCP-47 with
-  subtags (`name_pt-BR`), `search.ts:58` accepts only `[a-z]{2,3}` (pt-BR names exist but are
-  UNSEARCHABLE), `detail.ts:51` `PROSE_LOC` is a third copy. One exported grammar
-  (2026-07-16 review).
+- [x] **F11 · Locale-column grammar ×3, diverged.** DONE 2026-07-20 — `loader.LOCALE_TAG` (exported)
+  is the ONE grammar; `LOCALE_COL`/`PROSE_LOCALE_COL`/`LOC_STATUS_COL` in the loader, `detail.PROSE_LOC`
+  and `search.localesOf` all build from it. BUGFIX: search used bare `[a-z]{2,3}` → subtag locales
+  (`pt-BR`) were unsearchable; now consistent.
 
 ## G · Typing gaps (2026-07-14; strategy: strict types + user stories are the primary bug nets)
 

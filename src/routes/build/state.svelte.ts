@@ -11,6 +11,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { content, loadContentStore } from '$lib/content/store.svelte';
+import { localizedName } from '$lib/content/detail';
 import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { ABILITIES, type Character } from '$lib/character/schema';
@@ -64,10 +65,10 @@ export function rowOfType<T extends ContentType>(
 
 const csv = splitList;
 
-/** Localised display name for a content row (falls back to EN). */
+/** Localised display name for a content row (falls back to EN). Thin wrapper over the shared
+ *  `localizedName` (AUDIT F9) that adds the undefined-row guard + the active-locale default. */
 export function rowName(row: LoadedRow | undefined, locale = app.activeLocale): string {
-	if (!row) return '';
-	return String(row.data[`name_${locale}`] || row.data.name_en || row.id);
+	return row ? localizedName(row, locale) : '';
 }
 
 /** Sentinel a feat slot holds when the choice is an Ability Score Improvement (not a feat). */

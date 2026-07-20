@@ -123,15 +123,19 @@ export interface ContentGraph {
 	resolveRefs(effectiveIds: string[]): { found: LoadedRow[]; missing: string[] };
 }
 
-/** Locale column grammar: name_/text_ + a BCP-47-ish code (guardrail vs phantom locales). */
-const LOCALE_COL = /^(?:name|text)_([a-z]{2,3}(?:-[A-Za-z0-9]+)*)$/;
+/** A BCP-47-ish locale code (guardrail vs phantom locales): a 2–3 letter base + optional subtags
+ *  (`pt-BR`). The ONE grammar every locale-column regex is built from (AUDIT F11). */
+export const LOCALE_TAG = '[a-z]{2,3}(?:-[A-Za-z0-9]+)*';
+
+/** Locale column grammar: name_/text_ + a locale code. */
+const LOCALE_COL = new RegExp(`^(?:name|text)_(${LOCALE_TAG})$`);
 
 /** Localized PROSE columns (`<base>_<loc>`). The strict per-type schema declares only name_/text_
  *  en+uk, so `safeParse` STRIPS extra locales (name_de) and other prose fields (material_uk,
  *  higher_level_uk). We re-attach these from the raw row so localized render + translation survive —
  *  narrow to the prose bases so genuine junk columns still don't leak into `data` (→ the meta grid).
  *  Generated from PROSE_BASES so the base list has one source (shared with the translate write path). */
-const PROSE_LOCALE_COL = new RegExp(`^(?:${PROSE_BASES.join('|')})_[a-z]{2,3}(?:-[A-Za-z0-9]+)*$`);
+const PROSE_LOCALE_COL = new RegExp(`^(?:${PROSE_BASES.join('|')})_${LOCALE_TAG}$`);
 
 /** Type guard for the re-attach: narrows a raw header to the prose-locale key type, so writing it onto
  *  the typed `RowData` needs no cast (the key is provably a `${ProseBase}_${string}`). */
@@ -142,7 +146,7 @@ function isProseLocaleColumn(column: string): column is `${ProseBase}_${string}`
 /** Tracked-status columns (`loc_status_<loc>`) — the strict schema strips them, so the loader re-attaches
  *  them exactly like the prose columns (isProseLocaleColumn). The guard narrows the key to the
  *  `${typeof LOC_STATUS_COL_BASE}_${string}` template type so the re-attach writes onto `data` cast-free. */
-const LOC_STATUS_COL = new RegExp(`^${LOC_STATUS_COL_BASE}_[a-z]{2,3}(?:-[A-Za-z0-9]+)*$`);
+const LOC_STATUS_COL = new RegExp(`^${LOC_STATUS_COL_BASE}_${LOCALE_TAG}$`);
 function isLocStatusColumn(column: string): column is `${typeof LOC_STATUS_COL_BASE}_${string}` {
 	return LOC_STATUS_COL.test(column);
 }

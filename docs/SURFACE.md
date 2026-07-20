@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (34)
+## Duplicate suspects (30)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -19,19 +19,17 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 - `onKeydown` ×6 — src/lib/components/ConfirmDialog.svelte · src/lib/components/ContentMetaModal.svelte · src/lib/components/HashDriftModal.svelte · src/lib/components/OrphanDialog.svelte · src/lib/components/SchemaDiscardDialog.svelte · src/lib/components/settings/PluginConsentDialog.svelte
 - `norm` ×4 — src/lib/storage/browser.ts · src/lib/storage/memory.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
-- `errText` ×3 — src/lib/components/settings/StorageSettings.svelte · src/lib/effects/plugin-sandbox.ts · src/lib/storage/tauri.ts
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `load` ×3 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `persist` ×3 — src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
-- `signed` ×3 — src/lib/combat/helpers.ts · src/lib/content/detail.ts · src/routes/build/+page.svelte
-- `SYSTEMS` ×3 — src/lib/character/schema.ts · src/lib/components/settings/GeneralSettings.svelte · src/lib/content/schemas.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/state.svelte.ts
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
+- `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
 - `label` ×2 — src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
@@ -44,19 +42,14 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `STORAGE_KEY` ×2 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
-- `titleCase` ×2 — src/lib/combat/helpers.ts · src/routes/build/+page.svelte
+- `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
 **Identical one-liner body, different names:**
 
-- `signed` (src/lib/content/detail.ts) = `formatModifier` (src/lib/rules/dice.ts) = `signed` (src/routes/build/+page.svelte)
 - `typeName` (src/lib/components/CommandPalette.svelte) = `cap` (src/lib/content/grouping.ts)
 - `cap` (src/lib/content/detail.ts) = `label` (src/lib/content/homebrew.ts)
-- `titleCaseId` (src/lib/effects/apply.ts) = `titleCase` (src/routes/build/+page.svelte)
-
-**Identical literal array:**
-
-- `ABIL` (src/lib/combat/helpers.ts) = `ABILS` (src/lib/content/detail.ts) = `ABILITY_IDS` (src/lib/rules/core.ts)
+- `formatModifier` (src/lib/rules/dice.ts) = `signed` (src/lib/util/format.ts)
 
 ## Design tokens (`styles/tokens.css`)
 
@@ -316,8 +309,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/schema.ts`
 
-- `const SYSTEMS`
-- `re-export ABILITIES` — single owner in rules/core (AUDIT F3) — re-exported because half the app already imports it here
+- `re-export SYSTEMS`
+- `re-export ABILITIES`
 - `const characterSchema`
 - `type Character`
 - `type CharacterPlay`
@@ -334,11 +327,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/helpers.ts`
 
+- `re-export titleCase` — re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
+- `re-export signed` — re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
 - `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the damage roll t…
 - `type ActionSlot` — The three action-economy slots a turn tracks.
 - `interface StandardAction` — A standard combat action row (Dash, Hide, Grapple…).
 - `type MenuKind` — The anchored dropdown menus the Combat view can open (overlay.kind).
-- `const signed` — +N / −N / 0 for a modifier.
 - `const range` — `[0, 1, …, n-1]` — for rendering N pips/dots.
 - `function pipClick` — * Click-to-set for every pip tracker (action economy, spell slots, resources) — ONE model: * available pips on the LE…
 - `interface RollEffects` — What a roll target (e.g.
@@ -351,7 +345,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function applyDefense` — * Apply resist/immune/vulnerable to a raw damage amount given its type (B20).
 - `const metres` — Feet → "N m" (metric in parentheses next to imperial).
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
-- `const titleCase` — "sleight-of-hand" → "Sleight Of Hand".
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
 - `function noteText` — The display text of a `note:` token (a rules effect shown but NOT auto-applied — attacks against * you, auto-crit, se…
 - `function conditionIdOf` — The condition id an effect applies (its `apply_condition:<id>` token), or null — so the combat * panel can surface a …
@@ -367,7 +360,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MOD_TARGETS` — Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.
 - `const wantsTray` — A normal tap rolls instantly; Alt/Ctrl/Cmd-click opens the prefilled roll tray.
 - `const PANEL_TITLE`
-- `const ABIL`
+- `const ABIL` — Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`.
 - `const ABILITY_NAME`
 - `const DICE`
 - `const GROUP_MODES`
@@ -393,6 +386,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/detail.ts`
 
+- `const localizedName` — A content row's display NAME in `locale`, falling back to EN then the id (AUDIT F9 — the one * localized-name reader).
 - `interface MonsterModel` — A monster stat block (the two-table "C" layout), built when type === 'monster'.
 - `interface SpellModel` — A spell article (the "strip" layout: fixed-size effect block + casting cells).
 - `interface Entry` — A row in the left-pane list (name + meta sub-line + the underlying content row).
@@ -444,6 +438,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const tokensOf` — A row's bounded-vocab effect tokens (empty for lookup tables, which carry no `effects` column).
 - `type LoadedRowByType` — The loaded-row member(s) for a type `T`.
 - `interface ContentGraph`
+- `const LOCALE_TAG` — A BCP-47-ish locale code (guardrail vs phantom locales): a 2–3 letter base + optional subtags * (`pt-BR`).
 - `interface ContentSource` — One content root paired with the storage it lives in.
 - `function loadContent` — Load + merge content.
 
@@ -474,7 +469,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/schemas.ts`
 
-- `const SYSTEMS`
+- `re-export SYSTEMS`
 - `const EFFECT_KINDS` — Bounded effect vocabulary — the only kinds the engine understands.
 - `const splitList` — Split a CSV list cell (comma/semicolon separated) into trimmed, non-empty items.
 - `re-export SIZES` — Option lists are exported (single source) so the homebrew authoring form renders identical selects — a value the form…
@@ -725,7 +720,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/rules/pipeline.ts`
 
-- `type System` — * The core value contract: every computed stat returns a VALUE plus a provenance TRACE, * never a bare number — so th…
+- `const SYSTEMS` — The two supported rule systems — the ONE owner (AUDIT F7/D2).
+- `type System`
 - `type Layer` — Where a stat's math comes from, in pipeline order.
 - `interface Contribution`
 - `interface Computed`
@@ -814,10 +810,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/util/format.ts`
 
 - `const ordinal` — 1 → "1st", 2 → "2nd", 11 → "11th" … (spell-level labels, feature lists).
+- `const titleCase` — "sleight_of_hand" / "animal-handling" → "Sleight Of Hand" / "Animal Handling".
+- `const errText` — An unknown thrown value → its message string (`e.message` or `String(e)`).
+- `const signed` — A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "+0" (D&D shows a zero mod as "+0"; * uses the real minus gly…
 
 ### `src/lib/util/slug.ts`
 
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 445 exports across 64 modules · 34 duplicate suspects · generated in 105ms._
+_46 tokens · 50 global classes · 36 components · 451 exports across 64 modules · 30 duplicate suspects · generated in 113ms._

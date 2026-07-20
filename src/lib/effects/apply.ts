@@ -9,6 +9,7 @@
  * dependency-graph.ts (`resolveActiveEffects`, in dependency order).
  */
 import { computed, type Computed, type Contribution, type Layer } from '../rules/pipeline';
+import { titleCase } from '../util/format';
 import { evalExpression, lintExpression } from './expression-evaluator';
 import {
 	parseToken,
@@ -258,7 +259,7 @@ export function collectFacts(
 						id: p.resource.id,
 						max: Math.max(0, Math.min(maxVal, MAX_RESOURCE_MAX)),
 						recharge: p.resource.recharge,
-						name: titleCaseId(p.resource.id),
+						name: titleCase(p.resource.id),
 						source: eff.source
 					};
 					const prev = pools.get(def.id);
@@ -379,8 +380,6 @@ export interface ResourceDef {
 	recharge: 'short' | 'long' | 'other';
 	source: string; // the granting effect/feature
 }
-
-const titleCaseId = (s: string) => s.replace(/[-_]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 
 /** Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression
  *  slot — guard, value, resource max — for the spec-promised soft warns (mixed-type `if()`,

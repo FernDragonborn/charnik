@@ -29,6 +29,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { openPath } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
+import { errText } from '../util/format';
 import {
 	copyFailures,
 	mergeCopyList,
@@ -171,8 +172,6 @@ export interface MigrateOutcome {
 	/** Human-readable reason for a thrown fs error (`copy`/`cleanup` stages). */
 	error?: string;
 }
-
-const errText = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
 /** Copy each listed file `oldDir → newDir`, recreating parent folders. Throws on the first fs error.
  *  NB: mtime survives on Windows (CopyFileEx) but NOT on Linux (`std::fs::copy`) — so a later merge's
