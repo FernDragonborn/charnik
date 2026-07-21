@@ -266,24 +266,29 @@
 							onclick={() => combat.resources.useResource(r.id, r.max)}
 						>
 							<span class="resource-name">{r.name}</span>
-							<span class="resource-pips">
-								{#each range(r.max) as i (i)}
-									<!-- svelte-ignore a11y_click_events_have_key_events -->
-									<span
-										class="resource-pip"
-										class:off={i >= r.max - spent}
-										role="button"
-										tabindex="-1"
-										title="{r.name} {i + 1}"
-										aria-label="{r.name} {i + 1}"
-										onclick={(e) => {
-											e.stopPropagation();
-											combat.resources.resourceClick(r.id, r.max, i);
-										}}
-									></span>
-								{/each}
-							</span>
-							<span class="resource-count">{r.max - spent}/{r.max}</span>
+							{#if Number.isFinite(r.max)}
+								<span class="resource-pips">
+									{#each range(r.max) as i (i)}
+										<!-- svelte-ignore a11y_click_events_have_key_events -->
+										<span
+											class="resource-pip"
+											class:off={i >= r.max - spent}
+											role="button"
+											tabindex="-1"
+											title="{r.name} {i + 1}"
+											aria-label="{r.name} {i + 1}"
+											onclick={(e) => {
+												e.stopPropagation();
+												combat.resources.resourceClick(r.id, r.max, i);
+											}}
+										></span>
+									{/each}
+								</span>
+								<span class="resource-count">{r.max - spent}/{r.max}</span>
+							{:else}
+								<!-- unlimited pool (`inf` max): no pips, count = uses since recharge -->
+								<span class="resource-count">{spent} · ∞</span>
+							{/if}
 							<span class="recharge-chip">{rechargeLabel(r.recharge)}</span>
 							<!-- svelte-ignore a11y_click_events_have_key_events -->
 							<span

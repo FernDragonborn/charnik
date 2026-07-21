@@ -229,8 +229,13 @@ export function resolveEffectValue(p: ParsedEffect, ctx?: ExprContext): Resolved
 	if (!ctx) return { error: 'expression needs a context' };
 	const r = evalExpression(p.valueExpr, ctx);
 	if (!r.ok) return { error: r.error };
-	// `+ 0` normalizes a `-0` (from e.g. `-2*exhaustion` at exhaustion 0) to `0`.
-	if (r.value.type === 'number') return { amount: clampAmount(Math.floor(r.value.value) + 0) };
+	if (r.value.type === 'number') {
+		// `inf` is a resource-max-only terminal (the evaluator lets it through untouched); every
+		// OTHER value slot rejects it here — clampAmount would otherwise silently zero it.
+		if (!Number.isFinite(r.value.value)) return { error: "'inf' is only valid as a resource max" };
+		// `+ 0` normalizes a `-0` (from e.g. `-2*exhaustion` at exhaustion 0) to `0`.
+		return { amount: clampAmount(Math.floor(r.value.value) + 0) };
+	}
 	return { diceFormula: diceToFormula(r.value.dice) };
 }
 

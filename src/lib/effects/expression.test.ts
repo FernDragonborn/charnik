@@ -491,8 +491,11 @@ describe('EXPR · P1 · dice-operator `d` disambiguation', () => {
 		// a bonus die off dex must be written `2d(dex_mod)` or similar, never `2ddex_mod`)
 		errs('2dex_mod');
 	});
-	it('a bare identifier as a die count/size does not glue to `d` (needs parens)', () => {
-		errs('level d6'); // `level` then `d6`(ident) → not a dice term → error; write `(level)d6`
+	it('a variable operand before `d` IS the dice count (rule widened, decisions doc 2026-07-21)', () => {
+		// `level d6` used to need parens; the operand rule now covers variable identifiers too
+		expect(dice('level d6', ctx({ numbers: { level: 4 } }))).toEqual({ pool: { 6: 4 }, flat: 0 });
+	});
+	it('dice still cannot nest or chain', () => {
 		errs('1d(1d6)'); // dice as a die size → error
 		errs('1d6d8'); // chained dice → the second `d` reads dice as an operand → error
 	});
@@ -600,5 +603,149 @@ describe('EXPR · fuzz — arbitrary raw input never throws (returns {ok:boolean
 			}),
 			{ numRuns: 1000 }
 		);
+	});
+});
+
+describe('EXPR · dice lexing forms (spaces, parens, var(), bare die)', () => {
+	it('accepts spaces around the d operator', () => {
+		expect(dice('1d 10')).toEqual({ pool: { 10: 1 }, flat: 0 });
+		expect(dice('10 d2')).toEqual({ pool: { 2: 10 }, flat: 0 });
+		expect(dice('6 d 6')).toEqual({ pool: { 6: 6 }, flat: 0 });
+	});
+
+	it('takes a variable as the dice count — spaced, parened, or var()-wrapped', () => {
+		const c = ctx({ numbers: { level: 5, 'class_level.rogue': 3 } });
+		expect(dice('level d6', c)).toEqual({ pool: { 6: 5 }, flat: 0 });
+		expect(dice('level d 6', c)).toEqual({ pool: { 6: 5 }, flat: 0 });
+		expect(dice('(level)d6', c)).toEqual({ pool: { 6: 5 }, flat: 0 });
+		expect(dice('var(class_level.rogue)d6', c)).toEqual({ pool: { 6: 3 }, flat: 0 });
+	});
+
+	it('desugars a bare die (`d6`) to count 1 (tabletop habit)', () => {
+		expect(dice('d6')).toEqual({ pool: { 6: 1 }, flat: 0 });
+		expect(dice('d20+5')).toEqual({ pool: { 20: 1 }, flat: 5 });
+		expect(dice('2+d6')).toEqual({ pool: { 6: 1 }, flat: 2 });
+	});
+
+	it('rejects fully-glued `leveld6` with a did-you-mean hint (NEVER-support)', () => {
+		const p = parseExpression('leveld6');
+		expect(p.ok).toBe(false);
+		if (!p.ok) expect(p.error).toContain("did you mean 'level d6'");
+	});
+
+	it('stays silent on the hint when the glued prefix is not a known variable', () => {
+		const p = parseExpression('bogusd6');
+		expect(p.ok).toBe(false);
+		if (!p.ok) expect(p.error).not.toContain('did you mean');
+	});
+
+	it('keeps d-starting identifiers intact after word operators', () => {
+		const c = ctx({ numbers: { dex_mod: 3 }, booleans: { is_raging: true } });
+		expect(n('is_raging and dex_mod > 0', c)).toBe(1);
+		expect(n('not dex_mod', c)).toBe(0);
+	});
+});
+
+describe('EXPR · step() breakpoint tables', () => {
+	const rage = 'step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6)';
+	const at = (lvl: number) => ctx({ numbers: { 'class_level.barbarian': lvl } });
+
+	it('answers the 5e Rage table per SRD', () => {
+		expect(n(rage, at(1))).toBe(2);
+		expect(n(rage, at(2))).toBe(2);
+		expect(n(rage, at(3))).toBe(3);
+		expect(n(rage, at(5))).toBe(3);
+		expect(n(rage, at(6))).toBe(4);
+		expect(n(rage, at(12))).toBe(5);
+		expect(n(rage, at(16))).toBe(5);
+		expect(n(rage, at(17))).toBe(6);
+	});
+
+	it('returns 0 below the first threshold (a non-barbarian, SPEC4 degrade)', () => {
+		expect(n(rage, at(0))).toBe(0);
+		expect(n(rage, ctx())).toBe(0); // absent var → 0 → below the first threshold
+	});
+
+	it('is order-independent (an unsorted table still answers correctly)', () => {
+		expect(n('step(level, 17->6, 1->2, 6->4)', ctx({ numbers: { level: 7 } }))).toBe(4);
+	});
+
+	it('composes with the dice operator both ways (die SIZE and die COUNT)', () => {
+		const bard = ctx({ numbers: { 'class_level.bard': 10 } });
+		expect(dice('1d step(class_level.bard, 1->6, 5->8, 10->10, 15->12)', bard)).toEqual({
+			pool: { 10: 1 },
+			flat: 0
+		});
+		expect(dice('step(level, 1->1, 5->2)d6', ctx({ numbers: { level: 5 } }))).toEqual({
+			pool: { 6: 2 },
+			flat: 0
+		});
+	});
+
+	it('allows dice pair VALUES (a die table reads even better than 1d step(...))', () => {
+		const c = ctx({ numbers: { 'class_level.bard': 5 } });
+		expect(dice('step(class_level.bard, 1->1d6, 5->1d8, 10->1d10, 15->1d12)', c)).toEqual({
+			pool: { 8: 1 },
+			flat: 0
+		});
+	});
+
+	it('rejects malformed shapes at parse (pairs are step()-only, index is not a pair)', () => {
+		expect(parseExpression('step(5)').ok).toBe(false); // no pairs
+		expect(parseExpression('step(1->2, 3->4)').ok).toBe(false); // index is a pair
+		expect(parseExpression('step(level, 5)').ok).toBe(false); // non-pair after the index
+		expect(parseExpression('max(1->2)').ok).toBe(false); // pair outside step()
+		expect(parseExpression('1->2').ok).toBe(false); // pair outside any call
+	});
+
+	it('rejects a dice threshold at eval (thresholds are numbers)', () => {
+		expect(evalExpression('step(level, 1d4->2)', ctx()).ok).toBe(false);
+	});
+
+	it('lints unsorted / duplicate literal thresholds (eval still answers)', () => {
+		expect(lintExpression('step(level, 5->1, 1->2)')).toContain(
+			'step() thresholds are not in increasing order'
+		);
+		expect(lintExpression('step(level, 1->2, 1->3)')).toContain(
+			'step() has a duplicate threshold 1'
+		);
+		expect(lintExpression(rage)).toEqual([]);
+	});
+
+	it('feeds the dependency DAG — pair sides contribute their variables', () => {
+		expect(collectExprVariables(rage)).toEqual(['class_level.barbarian']);
+	});
+});
+
+describe('EXPR · the `inf` terminal literal', () => {
+	it('passes through the pass-through positions (step value, if branch, var)', () => {
+		expect(n('inf')).toBe(Infinity);
+		expect(n('var(inf)')).toBe(Infinity);
+		expect(n('if(level>=20, inf, 5)', ctx({ numbers: { level: 20 } }))).toBe(Infinity);
+		expect(n('if(level>=20, inf, 5)', ctx({ numbers: { level: 5 } }))).toBe(5);
+		const rageInf = 'step(class_level.barbarian, 1->2, 17->6, 20->inf)';
+		expect(n(rageInf, ctx({ numbers: { 'class_level.barbarian': 20 } }))).toBe(Infinity);
+		expect(n(rageInf, ctx({ numbers: { 'class_level.barbarian': 19 } }))).toBe(6);
+	});
+
+	it('fails loudly the moment arithmetic touches it (terminal-only, NaN never escapes)', () => {
+		for (const src of ['inf+1', 'inf-inf', '0*inf', 'inf/inf', '-inf', 'floor(inf)', 'max(inf,3)'])
+			expect(evalExpression(src, ctx()).ok, src).toBe(false);
+	});
+
+	it('compares naturally (inf beats any level)', () => {
+		expect(n('inf > 100')).toBe(1);
+		expect(n('inf <= 100')).toBe(0);
+		expect(n('min(inf, 3)')).toBe(3); // min() folds finite → legal, and semantically right
+	});
+});
+
+describe('EXPR · var() identity works wherever an expression is legal', () => {
+	it('wraps numbers, dice and comparisons transparently', () => {
+		const c = ctx({ numbers: { level: 7, wis_mod: 2 } });
+		expect(n('var(level)', c)).toBe(7);
+		expect(n('var(level)+var(wis_mod)', c)).toBe(9);
+		expect(n('var(level)>=5', c)).toBe(1);
+		expect(dice('var(2d6+1)', c)).toEqual({ pool: { 6: 2 }, flat: 1 });
 	});
 });

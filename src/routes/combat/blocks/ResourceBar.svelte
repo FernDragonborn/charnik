@@ -22,23 +22,29 @@
 			onclick={() => combat.resources.useResource(r.id, r.max)}
 		>
 			{r.name}
-			<span class="respips">
-				{#each range(r.max) as i (i)}
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
-					<span
-						class="resource-pip"
-						class:used={i >= r.max - spent}
-						role="button"
-						tabindex="-1"
-						aria-label="{r.name} {i + 1}"
-						onclick={(e) => {
-							e.stopPropagation();
-							combat.resources.resourceClick(r.id, r.max, i);
-						}}
-					></span>
-				{/each}
-			</span>
-			<small>{r.max - spent}/{r.max}</small>
+			{#if Number.isFinite(r.max)}
+				<span class="respips">
+					{#each range(r.max) as i (i)}
+						<!-- svelte-ignore a11y_click_events_have_key_events -->
+						<span
+							class="resource-pip"
+							class:used={i >= r.max - spent}
+							role="button"
+							tabindex="-1"
+							aria-label="{r.name} {i + 1}"
+							onclick={(e) => {
+								e.stopPropagation();
+								combat.resources.resourceClick(r.id, r.max, i);
+							}}
+						></span>
+					{/each}
+				</span>
+				<small>{r.max - spent}/{r.max}</small>
+			{:else}
+				<!-- an unlimited pool (`inf` max — 5e Rage at 20): no pips (nothing to exhaust), the
+				     count shows uses since the last recharge -->
+				<small>{spent} · ∞</small>
+			{/if}
 		</button>
 	{/each}
 </section>

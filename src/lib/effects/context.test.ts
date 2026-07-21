@@ -255,3 +255,49 @@ describe('L1 · roll-manipulation vocab (reroll / min_die)', () => {
 		expect(facts.unknown).toEqual([]);
 	});
 });
+
+describe('collectFacts · step() tables and the `inf` unlimited max (Rage end-to-end)', () => {
+	// the full 5e Rage token, table + Unlimited at 20 (SRD 5.1), as ONE token
+	const rageToken =
+		'grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6, 20->inf):long';
+	const barb = (lvl: number) => makeExprContext({ ...build, classLevels: { barbarian: lvl } });
+	const rageEffects: ActiveEffect[] = [
+		{ source: 'Barbarian', layer: 'feature', tokens: [rageToken] }
+	];
+
+	it('resolves the table max at low/mid levels', () => {
+		expect(collectFacts(rageEffects, barb(1)).resources[0]).toMatchObject({ id: 'rage', max: 2 });
+		expect(collectFacts(rageEffects, barb(5)).resources[0]).toMatchObject({ id: 'rage', max: 3 });
+		expect(collectFacts(rageEffects, barb(17)).resources[0]).toMatchObject({ id: 'rage', max: 6 });
+	});
+
+	it('resolves Unlimited (Infinity) at 20 — `inf` passes the cost-cap clamp', () => {
+		expect(collectFacts(rageEffects, barb(20)).resources[0]).toMatchObject({
+			id: 'rage',
+			max: Infinity
+		});
+	});
+
+	it('SKIPS the pool (no 0-pip noise) when the max resolves ≤ 0, but keeps the resource id', () => {
+		const facts = collectFacts(rageEffects, barb(0)); // shared-pack content on a non-barbarian
+		expect(facts.resources).toHaveLength(0);
+		expect(facts.resourceIds).toContain('rage');
+	});
+
+	it('largest-max fold prefers Infinity (multiclass-style re-grant)', () => {
+		const both: ActiveEffect[] = [
+			{ source: 'A', layer: 'feature', tokens: ['grant_resource:rage:3:long'] },
+			{ source: 'B', layer: 'feature', tokens: [rageToken] }
+		];
+		expect(collectFacts(both, barb(20)).resources[0]).toMatchObject({ max: Infinity, source: 'B' });
+	});
+});
+
+describe("resolveEffectValue · `inf` outside a resource max degrades ('resource max only')", () => {
+	it('rejects an inf flat_bonus instead of silently clamping it', () => {
+		const p = parseToken('flat_bonus:speed+inf');
+		const v = resolveEffectValue(p, ctx);
+		expect(v.error).toContain('resource max');
+		expect(v.amount).toBeUndefined();
+	});
+});

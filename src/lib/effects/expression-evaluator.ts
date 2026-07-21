@@ -103,6 +103,14 @@ function evalNode(n: Node, ctx: ExprContext): ExprValue {
 			return evalBin(n, ctx);
 		case 'call':
 			return evalCall(n, ctx);
+		case 'inf':
+			// the ONE producer of a non-finite value — deliberately bypasses num()'s finite-guard.
+			// TERMINAL semantics: step()/if()/var() pass it through untouched, but any arithmetic ON
+			// it flows back through num() and fails loudly (inf+1, inf-inf → error, NaN never escapes).
+			return { type: 'number', value: Infinity };
+		case 'pair':
+			// unreachable — the parser rejects pairs outside step() args; defensive for hand-built ASTs
+			throw new EvalError(`a 'threshold->value' pair is only valid inside step()`);
 	}
 }
 
@@ -219,6 +227,9 @@ function evalCall(n: { fn: string; args: Node[] }, ctx: ExprContext): ExprValue 
 		const cond = truthy(evalNode(n.args[0] as Node, ctx));
 		return evalNode((cond ? n.args[1] : n.args[2]) as Node, ctx);
 	}
+	// `var` is identity — readability sugar that must pass dice and `inf` through untouched.
+	if (n.fn === 'var') return evalNode(n.args[0] as Node, ctx);
+	if (n.fn === 'step') return evalStep(n.args, ctx);
 	const a = n.args.map((x) => asNumber(evalNode(x, ctx)));
 	switch (n.fn) {
 		case 'min':
@@ -242,6 +253,27 @@ function evalCall(n: { fn: string; args: Node[] }, ctx: ExprContext): ExprValue 
 		default:
 			throw new EvalError(`unknown function '${n.fn}'`);
 	}
+}
+
+/** step(index, t->v, …): the value of the pair with the LARGEST threshold ≤ index; no pair matches
+ *  (index below the first threshold) → 0, matching the absent-var→0 degrade. The scan is
+ *  order-independent, so an unsorted table still answers correctly (the lint warns about it).
+ *  Thresholds must be numbers (dice → error); a pair VALUE may be a number, dice, or `inf` — only
+ *  the winning pair's value is evaluated-and-returned untouched (terminal-safe). */
+function evalStep(args: Node[], ctx: ExprContext): ExprValue {
+	const index = asNumber(evalNode(args[0] as Node, ctx));
+	let bestThreshold: number | undefined;
+	let bestValue: Node | undefined;
+	for (const a of args.slice(1)) {
+		// parser guarantees pair-shape; the cast documents it
+		const p = a as { t: 'pair'; threshold: Node; value: Node };
+		const t = asNumber(evalNode(p.threshold, ctx));
+		if (t <= index && (bestThreshold === undefined || t > bestThreshold)) {
+			bestThreshold = t;
+			bestValue = p.value;
+		}
+	}
+	return bestValue === undefined ? num(0) : evalNode(bestValue, ctx);
 }
 
 /** Evaluate a parsed expression against a context. Never throws — an undefined-var (handled as 0),
@@ -280,7 +312,16 @@ function staticKind(n: Node): 'number' | 'dice' | 'either' {
 			}
 			return 'number';
 		}
+		case 'pair':
+			return staticKind(n.value);
 		case 'call': {
+			if (n.fn === 'var') return staticKind(n.args[0] as Node);
+			if (n.fn === 'step') {
+				// step yields one of its pair VALUES (or the number 0) — fold their kinds
+				const kinds = new Set(n.args.slice(1).map(staticKind));
+				if (kinds.size === 1) return [...kinds][0] as 'number' | 'dice' | 'either';
+				return kinds.size === 0 ? 'number' : 'either';
+			}
 			if (n.fn !== 'if') return 'number';
 			const a = staticKind(n.args[1] as Node);
 			const b = staticKind(n.args[2] as Node);
@@ -305,6 +346,7 @@ export function lintExpression(src: string): string[] {
 			const b = staticKind(n.args[2] as Node);
 			if (a !== b) warns.push('if() branches differ in type (dice vs number)');
 		}
+		if (n.t === 'call' && n.fn === 'step') lintStepThresholds(n.args, warns);
 		if (n.t === 'dice' && n.sides.t === 'num' && !STANDARD_SIDES.has(n.sides.value))
 			warns.push(`unusual die d${n.sides.value}`);
 		switch (n.t) {
@@ -323,10 +365,36 @@ export function lintExpression(src: string): string[] {
 			case 'call':
 				n.args.forEach(walk);
 				break;
+			case 'pair':
+				walk(n.threshold);
+				walk(n.value);
+				break;
 		}
 	};
 	walk(p.ast.root);
 	return warns;
+}
+
+/** step() answers correctly regardless of pair order (the eval scan is order-independent), but an
+ *  unsorted or duplicated LITERAL threshold is almost always an authoring slip — warn. Expression
+ *  thresholds are skipped (their order is unknowable statically). */
+function lintStepThresholds(args: Node[], warns: string[]): void {
+	const literals = args
+		.slice(1)
+		.map((a) => (a.t === 'pair' && a.threshold.t === 'num' ? a.threshold.value : undefined))
+		.filter((v): v is number => v !== undefined);
+	for (let i = 1; i < literals.length; i++) {
+		const prev = literals[i - 1] as number;
+		const cur = literals[i] as number;
+		if (cur === prev) {
+			warns.push(`step() has a duplicate threshold ${cur}`);
+			return;
+		}
+		if (cur < prev) {
+			warns.push('step() thresholds are not in increasing order');
+			return;
+		}
+	}
 }
 
 /** Variable names an expression READS (feeds the dependency-order DAG: a token whose expression
@@ -357,6 +425,10 @@ export function collectExprVariables(src: string): string[] {
 				break;
 			case 'call':
 				n.args.forEach(walk);
+				break;
+			case 'pair':
+				walk(n.threshold);
+				walk(n.value);
 				break;
 			default:
 				break;

@@ -255,10 +255,15 @@ export function collectFacts(
 								reason: r.ok ? 'resource max is not a number' : r.error
 							});
 					}
-					if (maxVal === undefined) break;
+					// max ≤ 0 (a shared-pack `class_level.monk` on a non-monk, a step() below its first
+					// threshold) → the pool is benignly ABSENT, not a 0-pip render; the id above still
+					// registers so `resource.<id>` expressions read 0, not unknown.
+					if (maxVal === undefined || maxVal <= 0) break;
 					const def: ResourceDef = {
 						id: p.resource.id,
-						max: Math.max(0, Math.min(maxVal, MAX_RESOURCE_MAX)),
+						// `inf` (Rage at barbarian 20 = Unlimited, SRD 5.1) passes the cost-cap: the cap
+						// bounds pip-render WORK, and the ∞ render draws no pips at all.
+						max: maxVal === Infinity ? Infinity : Math.max(0, Math.min(maxVal, MAX_RESOURCE_MAX)),
 						recharge: p.resource.recharge,
 						name: titleCase(p.resource.id),
 						source: eff.source

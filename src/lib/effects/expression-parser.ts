@@ -83,7 +83,13 @@ const FUNCTIONS: Readonly<Record<string, { min: number; max: number }>> = {
 	round: { min: 1, max: 1 },
 	abs: { min: 1, max: 1 },
 	clamp: { min: 3, max: 3 },
-	sign: { min: 1, max: 1 }
+	sign: { min: 1, max: 1 },
+	// breakpoint lookup over `threshold->value` pairs: value of the highest threshold ≤ index, no
+	// match → 0. The level-table primitive (Rage count, Bardic die). Args = index + ≥1 pair.
+	step: { min: 2, max: Infinity },
+	// identity — pure readability sugar (`var(class_level.rogue)d6` reads better glued than bare
+	// parens); passes dice and `inf` through untouched.
+	var: { min: 1, max: 1 }
 };
 
 /* ─────────────────────────── AST ─────────────────────────── */
@@ -101,7 +107,12 @@ export type Node =
 	| { t: 'not'; e: Node }
 	| { t: 'dice'; count: Node; sides: Node }
 	| { t: 'bin'; op: BinOp; l: Node; r: Node }
-	| { t: 'call'; fn: string; args: Node[] };
+	| { t: 'call'; fn: string; args: Node[] }
+	// a `threshold->value` pair — legal ONLY as a step() argument (validated at parse)
+	| { t: 'pair'; threshold: Node; value: Node }
+	// the `inf` literal — a TERMINAL value: legal to produce (a step() pair value, an if() branch),
+	// illegal to compute with (every arithmetic result still passes the evaluator's finite-guard)
+	| { t: 'inf' };
 
 export interface Ast {
 	root: Node;
@@ -116,22 +127,30 @@ export type ParseResult = { ok: true; ast: Ast } | { ok: false; error: string };
 type Tok =
 	| { k: 'num'; v: number }
 	| { k: 'ident'; v: string }
-	| { k: 'op'; v: string } // + - * / % ( ) , and comparison operators
+	| { k: 'op'; v: string } // + - * / % ( ) , -> and comparison operators
 	| { k: 'dice' }; // the `d` dice operator (disambiguated from identifiers here)
 
 const COMPARE_STARTS = new Set(['<', '>', '=', '!']);
 
+/** Word-form operators lex as identifiers but are NOT operands — a `d` right after one must belong
+ *  to the next identifier (`is_raging and dex_mod`), never be the dice operator. */
+const WORD_OPERATORS: ReadonlySet<string> = new Set(['and', 'or', 'not']);
+
 /** Split source into tokens. The `d` dice operator is the one hard case: `d` is also a letter, so
  *  `1d6` would lex as num(1)+ident("d6"). We resolve it positionally — a `d` is the dice operator
- *  ONLY when the previous token is a number or `)` (a left operand) and it is not part of a longer
- *  identifier in that position. In every valid expression an identifier starting with `d`
- *  (`dex_mod`) follows an operator/`(`/`,`/start, never a number/`)`, so the rule is unambiguous. */
+ *  ONLY when the previous token is an OPERAND: a number, `)`, or a variable identifier (any ident
+ *  except the word-operators and/or/not) — so `1d6`, `(level)d6` and `level d6` all lex as dice,
+ *  while `dex_mod` after an operator/`(`/`,`/start stays one identifier. A fully-glued `leveld6`
+ *  is indivisible (one identifier) and deliberately NOT supported — the parser's unknown-variable
+ *  error carries a did-you-mean hint instead of guessing a split. */
 function tokenize(src: string): { ok: true; toks: Tok[] } | { ok: false; error: string } {
 	const toks: Tok[] = [];
 	let i = 0;
 	const prevIsOperand = () => {
 		const p = toks[toks.length - 1];
-		return !!p && (p.k === 'num' || (p.k === 'op' && p.v === ')'));
+		if (!p) return false;
+		if (p.k === 'num' || (p.k === 'op' && p.v === ')')) return true;
+		return p.k === 'ident' && !WORD_OPERATORS.has(p.v);
 	};
 	while (i < src.length) {
 		const c = src[i] ?? '';
@@ -161,8 +180,22 @@ function tokenize(src: string): { ok: true; toks: Tok[] } | { ok: false; error: 
 				if (!idChar) break;
 				j++;
 			}
-			toks.push({ k: 'ident', v: src.slice(i, j) });
+			const word = src.slice(i, j);
+			// bare-die sugar: `d6`/`d20` with no operand before it desugars to `1d6`/`1d20` (the
+			// tabletop habit). Safe: no whitelisted variable matches `d<digits>`.
+			const bareDie = /^d(\d+)$/.exec(word);
+			if (bareDie) {
+				toks.push({ k: 'num', v: 1 }, { k: 'dice' }, { k: 'num', v: Number(bareDie[1]) });
+			} else {
+				toks.push({ k: 'ident', v: word });
+			}
 			i = j;
+			continue;
+		}
+		// `->` (the step() pair separator) must lex before the single-char `-`
+		if (c === '-' && src[i + 1] === '>') {
+			toks.push({ k: 'op', v: '->' });
+			i += 2;
 			continue;
 		}
 		if (
@@ -322,6 +355,16 @@ function parse(toks: Tok[]): Node {
 		if (t.k === 'ident') return identNode(t.v);
 		throw new ParseError(`unexpected token near '${tokText(t)}'`);
 	}
+	/** A call argument: an expression, optionally extended to a `threshold->value` pair. Pairs are
+	 *  parsed for ANY call (one grammar) and rejected below for every function but step(). */
+	function parseArg(): Node {
+		const e = parseExpr();
+		if (isOp('->')) {
+			eat();
+			return { t: 'pair', threshold: e, value: parseExpr() };
+		}
+		return e;
+	}
 	function identNode(name: string): Node {
 		// function call?
 		if (isOp('(')) {
@@ -331,10 +374,10 @@ function parse(toks: Tok[]): Node {
 			guardDepth();
 			const args: Node[] = [];
 			if (!isOp(')')) {
-				args.push(parseExpr());
+				args.push(parseArg());
 				while (isOp(',')) {
 					eat();
-					args.push(parseExpr());
+					args.push(parseArg());
 				}
 			}
 			if (!isOp(')')) throw new ParseError(`missing ')' in ${name}(...)`);
@@ -342,11 +385,27 @@ function parse(toks: Tok[]): Node {
 			depth--;
 			if (args.length < spec.min || args.length > spec.max)
 				throw new ParseError(`${name}() takes ${arityText(spec)} arguments, got ${args.length}`);
+			validatePairShape(name, args);
 			return { t: 'call', fn: name, args };
 		}
 		return varNode(name);
 	}
+	/** step() takes `index, t->v, t->v, …` — the index must NOT be a pair, everything after MUST be;
+	 *  any other function must have no pairs at all. */
+	function validatePairShape(fn: string, args: Node[]): void {
+		if (fn !== 'step') {
+			if (args.some((a) => a.t === 'pair'))
+				throw new ParseError(`'->' pairs are only valid inside step()`);
+			return;
+		}
+		if (args[0]?.t === 'pair')
+			throw new ParseError(`step()'s first argument is the index, not a 'threshold->value' pair`);
+		const bad = args.slice(1).find((a) => a.t !== 'pair');
+		if (bad)
+			throw new ParseError(`step() arguments after the index must be 'threshold->value' pairs`);
+	}
 	function varNode(name: string): Node {
+		if (name === 'inf') return { t: 'inf' };
 		const d = splitDottedName(name);
 		if (d) {
 			if (!d.id) throw new ParseError(`'${name}' is missing an id after '.'`);
@@ -358,6 +417,13 @@ function parse(toks: Tok[]): Node {
 		if (BOOLEAN_VARS.has(name)) return { t: 'boolvar', name };
 		if (name in ENUM_VARS) return { t: 'enumvar', name };
 		if (ENUM_LITERALS.has(name)) return { t: 'enumlit', name };
+		// a KNOWN variable glued straight onto a die (`leveld6`) is indivisible by design — hint the
+		// supported spelling instead of guessing a split (NEVER-support, decisions doc)
+		const glued = /^(.+?)d(\d+)$/.exec(name);
+		if (glued && glued[1] && isKnownVarName(glued[1]))
+			throw new ParseError(
+				`unknown variable '${name}' — did you mean '${glued[1]} d${glued[2]}'? (a variable needs a space or parens before the dice operator)`
+			);
 		// A bare ability name (`wis`) with no _mod/_score suffix is a deliberate parse error — never
 		// leave "mod or score?" ambiguous (PLAN).
 		throw new ParseError(`unknown variable '${name}'`);
@@ -367,6 +433,13 @@ function parse(toks: Tok[]): Node {
 	if (pos !== toks.length)
 		throw new ParseError(`unexpected trailing token '${tokText(toks[pos])}'`);
 	return root;
+}
+
+/** Is this name a whitelisted variable (any family)? Used only for the glued-die hint. */
+function isKnownVarName(name: string): boolean {
+	if (NUMERIC_VARS.has(name) || BOOLEAN_VARS.has(name) || name in ENUM_VARS) return true;
+	const d = splitDottedName(name);
+	return !!d && !!d.id && (DOTTED_NUMERIC.has(d.prefix) || DOTTED_BOOLEAN.has(d.prefix));
 }
 
 const arityText = (s: { min: number; max: number }): string =>

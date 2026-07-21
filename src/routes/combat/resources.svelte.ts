@@ -47,7 +47,10 @@ export class ResourceTracker {
 		}
 		const after = before + 1;
 		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: after };
-		toast(`${name} used`, { description: `${max - after} of ${max} left` });
+		// an unlimited pool (`inf` max) never runs out — count uses instead of a remaining total
+		toast(`${name} used`, {
+			description: Number.isFinite(max) ? `${max - after} of ${max} left` : `${after} used · ∞`
+		});
 	};
 	resourceClick = (id: string, max: number, i: number) => {
 		const c = this.getCharacter();
