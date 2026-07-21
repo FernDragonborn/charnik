@@ -75,7 +75,10 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   now expires an effect the rest OUTLASTS by its rounds LEFT — `remainingRounds(e, play.round)` ≤ 600
   for a short rest (long still outlasts any timed effect) — instead of its total `durationRounds`. So a
   1000-round effect with 1 left is cleared and a freshly-cast long one survives. Unit-tested.
-- [ ] **A13 · Long rest doesn't end concentration unconditionally.** Concentration clears only via
+- [x] **A13 · Long rest doesn't end concentration unconditionally.** FIXED 2026-07-21. `rest('long')`
+  now clears `play.concentration` outright, so a concentration spell with no self-effect in
+  `play.effects` (e.g. Hold Person on an enemy) no longer survives the night. Short rest unchanged
+  (only drops concentration whose linked effect it outlasts). Unit-tested. [was:] Concentration clears only via
   an expiring LINKED effect (`resources.svelte.ts:73`); a concentration spell with no self-tokens
   (Hold Person) has no linked effect → concentration survives the night.
 - [ ] **A14 · HP clamp is one-sided.** Heal clamps to max, damage floors at 0

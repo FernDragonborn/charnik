@@ -78,6 +78,8 @@ export class ResourceTracker {
 		if (kind === 'long') {
 			c.play.spellSlotsSpent = {};
 			c.play.hp = { ...c.play.hp, current: c.play.hp.max ?? sheet.maxHp.value, temp: 0 };
+			c.play.concentration = null; // a long rest ALWAYS ends concentration, even with no linked
+			// effect in play.effects (e.g. Hold Person on an enemy) — A13
 		} else {
 			const slots = { ...c.play.spellSlotsSpent };
 			delete slots.pact; // warlock pact slots return on a short rest

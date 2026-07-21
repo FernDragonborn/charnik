@@ -183,6 +183,15 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 		expect(character.play.effects.map((e) => e.iid)).toEqual(['forever']);
 	});
 
+	it('a long rest ends concentration unconditionally, even with no linked effect (A13)', () => {
+		character.play.concentration = `spell:${S}:bless`; // no matching entry in play.effects
+		character.play.effects = [];
+		combat.resources.rest('short');
+		expect(character.play.concentration).toBe(`spell:${S}:bless`); // short rest doesn't force it
+		combat.resources.rest('long');
+		expect(character.play.concentration).toBeNull();
+	});
+
 	it('short rest expiry uses REMAINING rounds, not total duration (A12)', () => {
 		character.play.round = 999;
 		character.play.effects = [
