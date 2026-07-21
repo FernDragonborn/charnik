@@ -376,10 +376,20 @@ export function resolveActiveEffects(args: ResolveArgs): DependencyResolved {
 			return undefined;
 		}
 		const isSet = w.parsed.kind === EFFECT_KIND.setOverride;
+		// A9: a set_override's mode slot chooses floor/cap (Headband INT ≥ 19 resolves HERE — the
+		// ability DAG, not applyEffects). D12: honor the carried layer for sets too (only the
+		// condId → 'condition' refinement remains), so a floor lands at the item layer it belongs to.
+		const op = isSet
+			? w.parsed.setMode === 'floor'
+				? 'floor'
+				: w.parsed.setMode === 'cap'
+					? 'cap'
+					: 'set'
+			: 'add';
 		return {
 			source: sourceOf(w),
-			layer: isSet ? 'override' : w.condId !== undefined ? 'condition' : w.eff.layer,
-			op: isSet ? 'set' : 'add',
+			layer: w.condId !== undefined ? 'condition' : w.eff.layer,
+			op,
 			amount: v.amount,
 			note: w.body
 		};

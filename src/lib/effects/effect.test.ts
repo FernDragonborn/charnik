@@ -10,6 +10,7 @@ import { applyEffects, collectFacts, lintEffectTokens } from './apply';
 import { makeExprContext, type BuildVars } from './context';
 import { EFFECT_KINDS as SCHEMA_EFFECT_KINDS } from '../content/schemas';
 import { unarmoredAC, savingThrow } from '../rules/core';
+import type { Contribution } from '../rules/pipeline';
 
 describe('effect vocabulary', () => {
 	it('the engine and the content schema list the same kinds (guard against drift)', () => {
@@ -187,6 +188,85 @@ describe('applyEffects seam', () => {
 		};
 		const composed = applyEffects('ac', base, [weird]);
 		expect(composed.value).toBe(13); // the good token still applies
+	});
+});
+
+describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D12 layer honoring', () => {
+	const speedBase = (): { value: number; trace: Contribution[] } => ({
+		value: 30,
+		trace: [{ source: 'Base speed', layer: 'base', op: 'set', amount: 30 }]
+	});
+
+	it('parses the floor/cap mode slot', () => {
+		expect(parseToken('set_override:int:19:floor')).toMatchObject({
+			kind: 'set_override',
+			target: 'int',
+			amount: 19,
+			setMode: 'floor'
+		});
+		expect(parseToken('set_override:str:10:cap')).toMatchObject({ setMode: 'cap' });
+		expect(parseToken('set_override:ac:11').setMode).toBeUndefined();
+	});
+
+	it('floor raises a plain stat, cap lowers it (via applyEffects)', () => {
+		const base = unarmoredAC({ dexScore: 14 }); // 12
+		const floor: ActiveEffect = {
+			source: 'Item',
+			layer: 'item',
+			tokens: ['set_override:ac:15:floor']
+		};
+		expect(applyEffects('ac', base, [floor]).value).toBe(15);
+		const cap: ActiveEffect = { source: 'Item', layer: 'item', tokens: ['set_override:ac:11:cap'] };
+		expect(applyEffects('ac', base, [cap]).value).toBe(11);
+		const noop: ActiveEffect = {
+			source: 'Item',
+			layer: 'item',
+			tokens: ['set_override:ac:9:floor']
+		};
+		const r = applyEffects('ac', base, [noop]);
+		expect(r.value).toBe(12);
+		expect(r.notes?.some((n) => /already ≥ 9/.test(n))).toBe(true);
+	});
+
+	it('block_bonus drops effect-borne positive speed bonuses but not the base', () => {
+		const grapple: ActiveEffect = {
+			source: 'Grappled',
+			layer: 'condition',
+			tokens: ['set_override:speed:0', 'block_bonus:speed']
+		};
+		const boots: ActiveEffect = { source: 'Boots', layer: 'item', tokens: ['flat_bonus:speed+10'] };
+		const r = applyEffects('speed', speedBase(), [grapple, boots]);
+		expect(r.value).toBe(0); // 0-set wins (condition layer) AND the +10 is blocked
+		expect(r.notes?.some((n) => /blocked/.test(n))).toBe(true);
+	});
+
+	it('block_bonus leaves penalties (negative adds) intact — RAW blocks bonuses only', () => {
+		const block: ActiveEffect = {
+			source: 'Grappled',
+			layer: 'condition',
+			tokens: ['block_bonus:speed']
+		};
+		const penalty: ActiveEffect = {
+			source: 'Slow',
+			layer: 'condition',
+			tokens: ['flat_bonus:speed-5']
+		};
+		expect(applyEffects('speed', speedBase(), [block, penalty]).value).toBe(25);
+	});
+
+	it('D12: a condition-layer set beats a lower item-layer set (no longer both forced to override)', () => {
+		const boots: ActiveEffect = {
+			source: 'Boots',
+			layer: 'item',
+			tokens: ['set_override:speed:40']
+		};
+		const grapple: ActiveEffect = {
+			source: 'Grappled',
+			layer: 'condition',
+			tokens: ['set_override:speed:0']
+		};
+		expect(applyEffects('speed', speedBase(), [boots, grapple]).value).toBe(0);
+		expect(applyEffects('speed', speedBase(), [grapple, boots]).value).toBe(0);
 	});
 });
 

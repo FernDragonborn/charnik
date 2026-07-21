@@ -67,8 +67,9 @@ export interface RollMod {
  *  re-parses/re-evaluates. Exactly one of `amount`/`diceFormula`/`error` is set. */
 export interface NumericFact {
 	target: string;
-	/** `mult` never comes from content tokens — only plugin `contributions` emit it (PLUGINS.md §4.3). */
-	op: 'add' | 'set' | 'mult';
+	/** `add`/`set` from flat_bonus/set_override; `floor`/`cap` from set_override's mode slot (A9);
+	 *  `mult` never comes from content tokens — only plugin `contributions` emit it (PLUGINS.md §4.3). */
+	op: 'add' | 'set' | 'mult' | 'floor' | 'cap';
 	layer: Layer;
 	source: string;
 	/** The guard-stripped token, for provenance notes. */
@@ -103,6 +104,9 @@ export interface DefenseFact {
  */
 export interface EffectFacts {
 	numeric: NumericFact[];
+	/** `block_bonus:<target>` facts (A9): while active, effect-borne POSITIVE bonuses to the target
+	 *  are dropped (grappled/restrained "can't benefit from any bonus to its speed"). */
+	blockedBonuses: FactRef[];
 	advantage: FactRef[];
 	disadvantage: FactRef[];
 	/** Rolls whose OUTCOME is forced (paralyzed → auto-fail STR/DEX saves): the target roll fails
@@ -128,6 +132,7 @@ export interface EffectFacts {
 
 const emptyFacts = (): EffectFacts => ({
 	numeric: [],
+	blockedBonuses: [],
 	advantage: [],
 	disadvantage: [],
 	autoFail: [],
@@ -182,7 +187,14 @@ export function collectFacts(
 				case EFFECT_KIND.setOverride: {
 					if (!p.target) break;
 					if (rejectTarget(p.kind, p.target, eff.source, token)) break;
-					const op = p.kind === EFFECT_KIND.setOverride ? 'set' : 'add';
+					const op: NumericFact['op'] =
+						p.kind === EFFECT_KIND.flatBonus
+							? 'add'
+							: p.setMode === 'floor'
+								? 'floor'
+								: p.setMode === 'cap'
+									? 'cap'
+									: 'set';
 					const v = resolveEffectValue(p, ctxOf(ctx, eff));
 					const fact: NumericFact = {
 						target: p.target,
@@ -198,6 +210,10 @@ export function collectFacts(
 					facts.numeric.push(fact);
 					break;
 				}
+				case EFFECT_KIND.blockBonus:
+					if (p.target && !rejectTarget(p.kind, p.target.trim(), eff.source, token))
+						facts.blockedBonuses.push({ target: p.target.trim(), source: eff.source });
+					break;
 				case EFFECT_KIND.advantage:
 					if (p.target && !rejectTarget(p.kind, p.target, eff.source, token))
 						facts.advantage.push({ target: p.target, source: eff.source });
@@ -314,6 +330,7 @@ export function collectFacts(
  */
 export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.numeric.push(...extra.numeric);
+	base.blockedBonuses.push(...extra.blockedBonuses);
 	base.advantage.push(...extra.advantage);
 	base.disadvantage.push(...extra.disadvantage);
 	base.autoFail.push(...extra.autoFail);
@@ -350,18 +367,31 @@ export function applyEffects(
 	const facts = Array.isArray(effects) ? collectFacts(effects, ctx) : effects;
 	const contribs: Contribution[] = [...base.trace];
 	const notes: string[] = [...(base.notes ?? [])];
+	// A9 speed-bonus block: while a block_bonus matches this target, effect-borne POSITIVE bonuses
+	// are dropped (RAW). Negative adds (penalties) survive; the BASE trace is never touched.
+	const block = facts.blockedBonuses.find((b) => matchesTarget(b.target, targetKey));
 	for (const f of facts.numeric) {
 		if (!matchesTarget(f.target, targetKey)) continue;
 		if (f.amount !== undefined) {
+			if (block && f.op === 'add' && f.amount > 0) {
+				notes.push(`${block.source}: +${f.amount} to ${targetKey} blocked (${f.source})`);
+				continue;
+			}
+			// D12: honor the effect's own layer for sets too (no longer forced to `override`) — a
+			// condition-layer set (grappled speed 0) now correctly beats a lower item-layer set.
 			contribs.push({
 				source: f.source,
-				layer: f.op === 'set' ? 'override' : f.layer,
+				layer: f.layer,
 				op: f.op,
 				amount: f.amount,
 				note: f.token
 			});
 		} else if (f.diceFormula) {
 			const d = f.diceFormula;
+			if (block && !d.startsWith('-')) {
+				notes.push(`${block.source}: +${d} to ${targetKey} blocked (${f.source})`);
+				continue;
+			}
 			notes.push(`${f.source}: ${d.startsWith('-') ? '' : '+'}${d} to ${targetKey}`);
 		} else if (f.error) {
 			notes.push(`${f.source}: unresolved "${f.token}" (${f.error})`);

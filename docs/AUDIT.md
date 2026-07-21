@@ -61,11 +61,12 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   `classes[0]` contributes saves (`build.saves` + effect-granted still layer on); the loop still
   resolves each class row so missing refs stay flagged. Unit-tested: Fighter 1 / Wizard 3 → STR+CON
   saves, INT/WIS NOT proficient (INT save +3, not +5).
-- [ ] **A9 · Same-layer `set` resolution "highest wins" is wrong for restrictive sets.**
-  `rules/pipeline.ts:69` folds competing sets by `Math.max` — grappled (`set_override:speed:0`)
-  vs any other same-layer speed set → the character keeps moving. CONFIRMED (user 2026-07-16).
-  "Most potent" is contextual, not always max; potency model TBD (for penalty-type stats the
-  restrictive set must win).
+- [x] **A9 · Same-layer `set` resolution "highest wins" is wrong for restrictive sets.** FIXED
+  (EFX-A9, 2026-07-21): RAW per-effect direction, not a potency heuristic — `set_override` gained
+  a `floor`/`cap` mode slot (Headband INT ≥ 19 = floor; fold order set→floor→cap→mult→add) and a
+  new `block_bonus:<target>` kind reproduces grapple's "can't benefit from any bonus to its speed"
+  (drops effect-borne positive adds; base + penalties survive). Grappled now = `set_override:speed:0`
+  + `block_bonus:speed`. Both apply paths (applyEffects + ability DAG) patched. See DECISIONS-PENDING §5.
 - [x] **A10 · Ability scores bypass the pipeline entirely.** FIXED (EXPR-4, 2026-07-17): scores
   fold through the pipeline in `effects/dag.ts` — base + boosts + `flat_bonus`/`set_override`
   contributions (their real layers), traced, clamped 0..30; `AbilityBlock.score` is a `Computed`
@@ -368,10 +369,11 @@ Deep effects-system review, 2026-07-16 (D7–D19):
   manual/never, documented on the type). `effects/token-parser.ts` imports + re-exports it (so token
   consumers keep the same import site) and `apply.ts`'s inline union is gone. Core stays effects-free;
   effects imports the core type (the allowed direction).
-- [ ] **D12 · `set_override` tokens are forced to the `override` layer** (`effects/index.ts:178`
-  ignores `eff.layer`) while the pipeline is designed for layered sets ("an override-layer set
-  beats an item-layer one") and PLUGINS.md lets plugin contributions set at feature/item layers.
-  Token path and plugin path give the same op different semantics.
+- [x] **D12 · `set_override` tokens are forced to the `override` layer.** FIXED (EFX-D12,
+  2026-07-21, with A9): both force-sites now honor the carried layer — `apply.ts` (`applyEffects`)
+  and `dependency-graph.ts:381` (`contributionOf`, keeps only the `condId → 'condition'`
+  refinement). A condition-layer set now beats a lower item-layer set (grappled 0 wins); token/plugin
+  set semantics are now identical. (The old `effects/index.ts:178` pointer was stale.)
 - [x] **D13 · Prepared-toggle logic duplicated with DIVERGENT semantics.** DONE 2026-07-21. Two pure
   helpers in `rules/spellcasting.ts` — `preparedLeveledCount` (leveled prepared only, excludes
   always-prepared) and `canTogglePrepared` (cantrip / always / cap guard → toast decision) — are now

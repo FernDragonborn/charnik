@@ -229,6 +229,46 @@ describe('resolveActiveEffects · dependency order (the DAG)', () => {
 		expect(r.issues).toEqual([]);
 	});
 
+	it('A9 floor: Headband of Intellect (INT = 19 unless already higher) folds via the ability DAG', () => {
+		const headband: ActiveEffect = {
+			source: 'Headband of Intellect',
+			layer: 'item',
+			tokens: ['set_override:int:19:floor']
+		};
+		// base INT 8 → floored up to 19
+		const low = resolveActiveEffects({
+			active: [headband],
+			makeCtx: liveCtx,
+			expandCondition: noExpand,
+			abilityBase: { int: [{ source: 'Base score', layer: 'base', op: 'add', amount: 8 }] }
+		});
+		expect(low.abilities.int.value).toBe(19);
+		// base INT 20 → floor has no effect, and it's EXPLAINED (never silent)
+		const high = resolveActiveEffects({
+			active: [headband],
+			makeCtx: liveCtx,
+			expandCondition: noExpand,
+			abilityBase: { int: [{ source: 'Base score', layer: 'base', op: 'add', amount: 20 }] }
+		});
+		expect(high.abilities.int.value).toBe(20);
+		expect(high.abilities.int.notes?.some((n) => /already ≥ 19/.test(n))).toBe(true);
+	});
+
+	it('A9 cap: a set_override cap lowers only when the value is higher', () => {
+		const hex: ActiveEffect = {
+			source: 'Curse',
+			layer: 'item',
+			tokens: ['set_override:str:10:cap']
+		};
+		const r = resolveActiveEffects({
+			active: [hex],
+			makeCtx: liveCtx,
+			expandCondition: noExpand,
+			abilityBase: { str: [{ source: 'Base score', layer: 'base', op: 'add', amount: 16 }] }
+		});
+		expect(r.abilities.str.value).toBe(10);
+	});
+
 	it('a guard reading a written score sees the resolved value', () => {
 		const active: ActiveEffect[] = [
 			{ source: 'Trigger', layer: 'feature', tokens: ['str_score>=15 ? advantage:attack'] },

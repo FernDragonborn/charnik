@@ -148,8 +148,10 @@ const PROFICIENCY_TARGETS = new Set<string>([
 /** The candidate target set a kind is checked against, or null for an open-vocab kind. */
 const targetCandidatesFor = (kind: string): Set<string> | null => {
 	switch (kind) {
+		// block_bonus blocks bonuses to a stat target (grappled → speed) — same closed vocab as sets.
 		case EFFECT_KIND.flatBonus:
 		case EFFECT_KIND.setOverride:
+		case EFFECT_KIND.blockBonus:
 			return NUMERIC_TARGETS;
 		case EFFECT_KIND.advantage:
 		case EFFECT_KIND.disadvantage:

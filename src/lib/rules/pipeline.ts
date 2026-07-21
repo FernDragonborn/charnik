@@ -17,7 +17,9 @@ export type System = (typeof SYSTEMS)[number];
 export type Layer =
 	'base' | 'ability' | 'proficiency' | 'item' | 'feature' | 'condition' | 'override';
 
-type Op = 'add' | 'set' | 'mult';
+// `floor`/`cap` = RAW's per-effect set directions (A9): `floor` = "value becomes N unless already
+// higher" (Headband of Intellect → INT ≥ 19); `cap` = "unless already lower". `set` = plain absolute.
+type Op = 'add' | 'set' | 'mult' | 'floor' | 'cap';
 
 export interface Contribution {
 	/** Human label, e.g. "DEX mod", "Proficiency", "Ring of Protection". */
@@ -58,18 +60,34 @@ const LAYER_SEQUENCE: Layer[] = [
  * contributions were gathered — so two effects that both `set` the same key (two items, or two
  * community plugins) can never get a different result from file-scan / namespace-sort luck.
  *
- * Within a layer the ops fold commutatively: `set` follows D&D's "Combining Game Effects" rule
- * (same-target effects don't stack — the most potent, i.e. HIGHEST, applies; identical in 5e and
- * 5.5e); `mult` folds as one product then floors once; `add` accumulates. Across layers the fixed
- * base→…→override order still holds, so an override-layer `set` beats an item-layer one.
+ * Within a layer the ops fold in a fixed sub-order — set → floor → cap → mult → add (A9):
+ * `set` follows D&D's "Combining Game Effects" rule (same-target effects don't stack — the most
+ * potent, i.e. HIGHEST, applies; identical in 5e and 5.5e); `floor` raises the running value to at
+ * least its amount ("INT is 19 unless already higher" — Headband, fold = max); `cap` lowers it to
+ * at most its amount (fold = min); floor-before-cap is fixed (a floor+cap conflict is pathological
+ * content); `mult` folds as one product then floors once; `add` accumulates. Across layers the
+ * fixed base→…→override order still holds, so an override-layer `set` beats an item-layer one.
+ *
+ * `ineffectiveNotes` (if given) collects an explanation for any floor/cap that did NOT change the
+ * value ("already ≥ N") — the explainability invariant: nothing folds silently.
  */
-function fold(contribs: Contribution[], clamp?: Clamp): number {
+function fold(contribs: Contribution[], clamp?: Clamp, ineffectiveNotes?: string[]): number {
 	let value = 0;
 	for (const layer of LAYER_SEQUENCE) {
 		const here = contribs.filter((c) => c.layer === layer);
 		if (here.length === 0) continue;
 		const sets = here.filter((c) => c.op === 'set');
 		if (sets.length) value = Math.max(...sets.map((c) => c.amount));
+		// floors raise (max), highest-first so the winner lands and the rest are noted "already ≥"
+		for (const f of here.filter((c) => c.op === 'floor').sort((a, b) => b.amount - a.amount)) {
+			if (f.amount > value) value = f.amount;
+			else ineffectiveNotes?.push(`${f.source}: already ≥ ${f.amount}`);
+		}
+		// caps lower (min), lowest-first
+		for (const c of here.filter((c) => c.op === 'cap').sort((a, b) => a.amount - b.amount)) {
+			if (c.amount < value) value = c.amount;
+			else ineffectiveNotes?.push(`${c.source}: already ≤ ${c.amount}`);
+		}
 		const product = here.filter((c) => c.op === 'mult').reduce((p, c) => p * c.amount, 1);
 		if (product !== 1) value = Math.floor(value * product);
 		value += here.filter((c) => c.op === 'add').reduce((sum, c) => sum + c.amount, 0);
@@ -98,8 +116,10 @@ function overriddenSetNotes(contribs: Contribution[]): string[] {
 
 /** Build a `Computed` from contributions (+ optional clamp/notes). */
 export function computed(contribs: Contribution[], clamp?: Clamp, notes?: string[]): Computed {
-	const allNotes = [...(notes ?? []), ...overriddenSetNotes(contribs)];
-	const result: Computed = { value: fold(contribs, clamp), trace: contribs };
+	const ineffective: string[] = [];
+	const value = fold(contribs, clamp, ineffective);
+	const allNotes = [...(notes ?? []), ...overriddenSetNotes(contribs), ...ineffective];
+	const result: Computed = { value, trace: contribs };
 	if (allNotes.length) result.notes = allNotes;
 	return result;
 }

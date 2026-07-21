@@ -19,6 +19,9 @@ import { evalExpression, diceToFormula, type ExprContext } from './expression-ev
 export const EFFECT_KIND = {
 	flatBonus: 'flat_bonus',
 	setOverride: 'set_override',
+	// `block_bonus:<target>` — RAW's "can't benefit from any bonus to its <target>" (grappled/
+	// restrained block ALL speed bonuses). A fact matched by target; drops effect-borne positive adds.
+	blockBonus: 'block_bonus',
 	advantage: 'advantage',
 	disadvantage: 'disadvantage',
 	grantProficiency: 'grant_proficiency',
@@ -68,6 +71,9 @@ export interface ParsedEffect {
 	amount?: number;
 	/** Dice bonus (e.g. "1d4" / "-1d4") — a roll modifier, not a flat number. */
 	dice?: string;
+	/** set_override comparison mode (A9): `floor` = "unless already higher" (Headband → INT ≥ 19),
+	 *  `cap` = "unless already lower". Absent = a plain absolute set. */
+	setMode?: 'floor' | 'cap';
 	/** L2 value expression (`ceil(level/2)`, `class_level.monk`) when the value slot is NOT a plain
 	 *  literal — resolved against a ctx at derive time by `resolveEffectValue`, not here. Present on
 	 *  `flat_bonus` / `set_override` (the stat value) and mirrored by `resource.max` below. */
@@ -146,12 +152,24 @@ function classifyToken(token: string): ParsedEffect {
 		return { kind, target: ex[1] ?? '', valueExpr, raw };
 	}
 	if (kind === EFFECT_KIND.setOverride) {
-		const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(-?\d+)$/i.exec(rest);
-		if (lit) return { kind, target: lit[1] ?? '', amount: clampAmount(Number(lit[2])), raw };
-		const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(.+)$/i.exec(rest);
+		// Optional trailing `:floor` / `:cap` (A9). L2 value expressions are colon-free (`:` is
+		// structural, the guard's `?` is stripped upstream), so a final `:(floor|cap)` is unambiguous.
+		let setMode: 'floor' | 'cap' | undefined;
+		let body = rest;
+		const modeM = /:(floor|cap)$/i.exec(rest);
+		if (modeM?.[1]) {
+			setMode = modeM[1].toLowerCase() as 'floor' | 'cap';
+			body = rest.slice(0, modeM.index);
+		}
+		const withMode = (p: ParsedEffect): ParsedEffect => (setMode ? { ...p, setMode } : p);
+		const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(-?\d+)$/i.exec(body);
+		if (lit)
+			return withMode({ kind, target: lit[1] ?? '', amount: clampAmount(Number(lit[2])), raw });
+		const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(.+)$/i.exec(body);
 		if (!ex) return { kind: 'unknown', raw };
-		return { kind, target: ex[1] ?? '', valueExpr: (ex[2] ?? '').trim(), raw };
+		return withMode({ kind, target: ex[1] ?? '', valueExpr: (ex[2] ?? '').trim(), raw });
 	}
+	if (kind === EFFECT_KIND.blockBonus) return { kind, target: rest.trim(), raw };
 	if (kind === EFFECT_KIND.resistImmune) {
 		// `resist_immune:<type>` (defaults to resistance) or `resist_immune:<bucket>:<type>`
 		const m = /^(?:(resist|immune|vulnerable):)?(.+)$/i.exec(rest);

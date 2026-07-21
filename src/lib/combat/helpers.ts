@@ -4,7 +4,7 @@
  * every area component. Split out of the old monolithic combat/+page.svelte.
  */
 import { ABILITY_IDS, type Ability } from '$lib/rules/core';
-import type { Computed, System } from '$lib/rules/pipeline';
+import type { Computed, Contribution, System } from '$lib/rules/pipeline';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character, EffectInstance } from '$lib/character/schema';
 import { SKILL_ABILITY, type CharacterSheet, type SkillId } from '$lib/character/derive';
@@ -157,12 +157,11 @@ export const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/
 
 /** Provenance trace of a Computed → a human-readable "why" string for tooltips. */
 export function why(c: Computed): string {
+	const opSym = (op: Contribution['op']): string =>
+		op === 'set' ? '= ' : op === 'floor' ? '≥ ' : op === 'cap' ? '≤ ' : '';
 	const parts = c.trace
-		.filter((t) => t.amount !== 0 || t.op === 'set')
-		.map(
-			(t) =>
-				`${t.source} ${t.op === 'set' ? '= ' : ''}${signed(t.amount)}${t.note ? ` (${t.note})` : ''}`
-		);
+		.filter((t) => t.amount !== 0 || t.op === 'set' || t.op === 'floor' || t.op === 'cap')
+		.map((t) => `${t.source} ${opSym(t.op)}${signed(t.amount)}${t.note ? ` (${t.note})` : ''}`);
 	return (parts.join(', ') || '—') + (c.notes?.length ? ' · ' + c.notes.join(' · ') : '');
 }
 
@@ -196,8 +195,11 @@ export function effectTag(token: string): string {
 				: `${p.dice?.startsWith('-') ? '−' : '+'}${p.dice?.replace('-', '') ?? ''}`;
 		return `${targetLabel(p.target)} ${delta}`;
 	}
-	if (p.kind === EFFECT_KIND.setOverride && p.target)
-		return `${targetLabel(p.target)} = ${p.amount}`;
+	if (p.kind === EFFECT_KIND.setOverride && p.target) {
+		const sym = p.setMode === 'floor' ? '≥' : p.setMode === 'cap' ? '≤' : '=';
+		return `${targetLabel(p.target)} ${sym} ${p.amount ?? p.valueExpr ?? '?'}`;
+	}
+	if (p.kind === EFFECT_KIND.blockBonus && p.target) return `block · ${targetLabel(p.target)}`;
 	if (p.kind === EFFECT_KIND.resistImmune && p.target)
 		return `${p.defense ?? 'resist'} · ${p.target}`;
 	if (p.kind === EFFECT_KIND.advantage && p.target) return `adv · ${targetLabel(p.target)}`;

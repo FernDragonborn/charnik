@@ -522,11 +522,24 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
 - Gates per change: `node tools/surface.mjs`, full `pnpm vitest run`, `pnpm check`, `pnpm lint`
   (knip GREEN + jscpd ratchet). New SRD data only via converters (no hand-authored game data).
 
-**Recommended order**: EFX-A9 + EFX-D12 (one set-semantics pass) → EFX-E4 (grapple family + Rage
+**Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4 (grapple family + Rage
 token; visually verifies the ∞ render) + EFX-B14 → EFX-A14 → EFX-G4 + EFX-EXH → EFX-D9 → D8 →
 EFX-ROLL → piece 3 (§0.5) → EFX-B17 → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
 
-## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — DECIDED (spelling pinned here)
+## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — ✅ DONE (2026-07-21)
+
+**Landed** (commit pending): `Op` gained `floor`/`cap` (`pipeline.ts` fold: set→floor→cap→mult→add,
+floor-before-cap, ineffective floor/cap → "already ≥/≤ N" notes). `ParsedEffect.setMode` +
+`set_override:tgt:val:floor|cap` grammar (`token-parser.ts`); new `block_bonus:<target>` kind (both
+lists in `token-parser` + `content/schemas`). `NumericFact.op` widened + `EffectFacts.blockedBonuses`;
+BOTH apply paths patched — `applyEffects` (`apply.ts`) drops effect-borne POSITIVE adds/dice when a
+block matches (base trace + negatives survive) AND the ability DAG (`dependency-graph.ts`
+`contributionOf`) emits floor/cap for the flagship Headband case. `block_bonus`→NUMERIC_TARGETS in
+derive's validator; `effectTag`/`why()` render `≥`/`≤`/`block`. Tests: DAG Headband floor (raise +
+"already ≥" no-op), cap, plain-stat floor/cap via `applyEffects`, grapple 0-set + block, penalty
+survives block, D12 layering. All 740+ green, `pnpm check` 0 errors, lint green.
+
+**Original plan below (retained for reference):**
 
 **Token spelling (the delegated sub-call)**: optional 4th slot — `set_override:int:19:floor`,
 `set_override:str:10:cap`; absent = absolute. New kind `block_bonus:<target>` for the grapple
@@ -558,7 +571,17 @@ derive `isTargetSupported` (+`block_bonus` targets) → effectTag → tests.
 5. Tests: floor over the DAG (int 19 vs base 8 → 19; vs 20 → 20 + "already ≥" note); grappled
    speed 0 with an active +10 speed item (→ 0 + blocked note); cap mode; D12 interplay below.
 
-## EFX-D12 · honor `eff.layer` for token sets — DECIDED A
+## EFX-D12 · honor `eff.layer` for token sets — ✅ DONE (2026-07-21, with EFX-A9)
+
+**Landed**: both force-sites now honor the carried layer — `apply.ts` (`applyEffects`, was
+`f.op === 'set' ? 'override' : f.layer`) and `dependency-graph.ts:381` (`contributionOf`, kept the
+`condId → 'condition'` refinement). Net effect verified: a condition-layer `set_override:speed:0`
+(grappled) now beats a lower item-layer `set_override:speed:40` (both orderings → 0), which is the
+point. No test pinned the old "sets always override" fold — the existing collision tests used
+override-layer sets already, so they held. Plugin sets already carried layers → token/plugin set
+parity is now real.
+
+**Original plan below (retained for reference):**
 
 **Exactly two force-sites** (the older `effects/index.ts:178` pointer is STALE): `apply.ts:358`
 (`layer: f.op === 'set' ? 'override' : f.layer`) and `dependency-graph.ts:381`
