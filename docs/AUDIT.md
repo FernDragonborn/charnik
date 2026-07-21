@@ -232,9 +232,11 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   `play.effects`.** The "panel lists ALL active effects (auto-applied vs text-only) so nothing is
   silently lost" invariant is unimplemented for content-borne effects (item/feature buffs and
   their unknown tokens are invisible outside stat traces).
-- [ ] **B15 · Derive ignores source filtering entirely** (extends B5): `gatherEffects`/`deriveSheet`
-  read `graph.get`/`graph.rows` raw — a DISABLED file/source and the LOSING side of a resolved
-  collision still feed the character's stats.
+- [x] **B15 · Derive ignores source filtering entirely.** FIXED (EFX-B15, 2026-07-21):
+  `deriveSheet` takes an `isActive` predicate (the VMs pass `isRowActive`; derive stays a pure param,
+  not a store import). `gatherEffects.resolve()` + the class-feature loop treat a disabled/
+  collision-lost row as a missing ref — flagged in `sheet.missing`, never applied. Tests cover a
+  disabled species + a disabled feature. See DECISIONS-PENDING §5.
 - [x] **B16 · `CHARACTER_MIGRATIONS = {}` though the DSL rename already shipped.** DONE: registry
   now carries the v1→v2 E3 ref migration (`migrateV1toV2`).
   (`character/repository.ts:21`.) The kebab→snake token rename (6f02ff0) silently inerts any

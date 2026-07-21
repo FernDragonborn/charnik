@@ -103,6 +103,24 @@ describe('deriveSheet aggregator', () => {
 		expect(s.proficiencyBonus).toBe(2);
 	});
 
+	it('B15: a filtered-out row (disabled file/source or collision-lost) is treated as missing', () => {
+		// baseline: Hardy's +2 CON applies
+		expect(deriveSheet(wizard(), graph).abilities.con.score.value).toBe(14);
+		// with an isActive predicate that rejects the Hardy row, its effect is gone AND it's flagged
+		const filtered = deriveSheet(wizard(), graph, (row) => row.id !== 'hardy');
+		expect(filtered.abilities.con.score.value).toBe(12); // species bonus no longer applied
+		expect(filtered.missing.some((m) => m.includes('hardy'))).toBe(true); // surfaced, not silent
+	});
+
+	it('B15: a disabled class_feature row stops contributing (feature loop respects the filter)', () => {
+		const c = wizard();
+		c.build.classes = [{ class: `class:${S}:wizard`, level: 2 }]; // Arcane Ward at L2
+		const parsed = characterSchema.parse(c);
+		expect(deriveSheet(parsed, graph).resources.some((r) => r.id === 'arcane_ward')).toBe(true);
+		const filtered = deriveSheet(parsed, graph, (row) => row.id !== 'arcane_ward');
+		expect(filtered.resources.some((r) => r.id === 'arcane_ward')).toBe(false);
+	});
+
 	it('derives saves with class proficiencies', () => {
 		const s = deriveSheet(wizard(), graph);
 		expect(s.abilities.int.save.value).toBe(5); // +3 INT + 2 prof (wizard proficient)

@@ -256,13 +256,19 @@ const num = (v: unknown, d = 0): number => (typeof v === 'number' ? v : Number(v
 function gatherEffects(
 	character: Character,
 	graph: ContentGraph,
-	missing: string[]
+	missing: string[],
+	isActive: (row: LoadedRow) => boolean
 ): ActiveEffect[] {
 	const active: ActiveEffect[] = [];
+	// B15: a row whose file/source is disabled, or which lost a collision, is treated exactly like a
+	// missing ref — rendered as unresolved + flagged, never silently applied and never a crash.
 	const resolve = (ref: string | undefined) => {
 		if (!ref) return undefined;
 		const row = graph.get(ref);
-		if (!row) missing.push(ref);
+		if (!row || !isActive(row)) {
+			missing.push(ref);
+			return undefined;
+		}
 		return row;
 	};
 	/** Push a row's tokens as one active effect (skipping token-less rows). `classId` marks
@@ -297,6 +303,7 @@ function gatherEffects(
 			if (f.type !== 'class_feature' || f.source !== classRow.source) continue;
 			if (f.data.class_id !== classRow.id || Number(f.data.level) > entry.level) continue;
 			if (!f.systems.includes(character.system)) continue;
+			if (!isActive(f)) continue; // B15: a disabled/collision-lost feature row doesn't apply
 			// base feature (no subclass_id) always applies; a subclass feature only for the chosen one
 			const forSubclass = f.data.subclass_id;
 			if (forSubclass && forSubclass !== (subclassRow?.type === 'subclass' ? subclassRow.id : ''))
@@ -323,13 +330,20 @@ function gatherEffects(
 	return active;
 }
 
-export function deriveSheet(character: Character, graph: ContentGraph): CharacterSheet {
+export function deriveSheet(
+	character: Character,
+	graph: ContentGraph,
+	// B15: source/collision filter. Kept a PARAMETER (not an import) so derive stays framework-
+	// agnostic and testable; the VMs pass `isRowActive` (reactive over the source config), tests
+	// default to all-active. Applied once at gather, never per-stat.
+	isActive: (row: LoadedRow) => boolean = () => true
+): CharacterSheet {
 	const build = character.build;
 	const system = character.system as System;
 	const missing: string[] = [];
 	const issues: EffectIssue[] = [];
 	// effects-auto global toggle: off → no effect layers (base stats / text only)
-	const active = character.play.autoCalc ? gatherEffects(character, graph, missing) : [];
+	const active = character.play.autoCalc ? gatherEffects(character, graph, missing, isActive) : [];
 
 	const level = build.classes.reduce((n, c) => n + c.level, 0) || 1;
 	const prof = proficiencyBonus(level);

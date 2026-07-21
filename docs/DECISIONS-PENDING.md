@@ -761,7 +761,17 @@ converters only.
 hardcode → data), L2R-16 (`RAGE_CONDITION_ID` hardcode dies with conditions-as-data). The B2
 death-saves/hit-dice UI shares the group but is NOT engine work.
 
-## EFX-B15 · derive respects source filters + collisions — WORK
+## EFX-B15 · derive respects source filters + collisions — ✅ DONE (2026-07-21)
+
+**Landed**: `deriveSheet` gained an optional `isActive: (row) => boolean` PARAMETER (kept a param,
+not a store import, so derive stays framework-agnostic + testable; the 3 VMs — combat/build/spellbook
+— pass `isRowActive`, reactive over the source config; tests default to all-active). Applied ONCE at
+gather: `gatherEffects.resolve()` treats a disabled/collision-lost row exactly like a missing ref
+(flagged in `sheet.missing`, never applied, never a crash), and the class-feature loop skips inactive
+rows. Tests: a disabled Hardy species drops its +2 CON and surfaces in `missing`; a disabled
+Arcane-Ward feature stops granting its resource.
+
+**Original plan below (retained for reference):**
 
 `gatherEffects`/`deriveSheet` read the raw graph; wire `isRowActive` + resolved collisions into
 derive's row lookups. ⚠ Filter once at gather (perf), not per-stat. ⚠ A filtered-out row a

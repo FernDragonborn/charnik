@@ -41,6 +41,7 @@ import {
 } from '$lib/combat/helpers';
 import { RollTray } from './roll.svelte';
 import { registerDiceTray, openDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
+import { isRowActive } from '$lib/content/sources.svelte';
 import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
@@ -75,7 +76,9 @@ class CombatVM {
 	 *  enable/disable reflect live in the derived stats. */
 	sheet = $derived.by<CharacterSheet | null>(() => {
 		void plugins.version; // the plugin registry isn't reactive itself — this tick is its signal
-		return this.character && this.graph ? deriveSheet(this.character, this.graph) : null;
+		return this.character && this.graph
+			? deriveSheet(this.character, this.graph, isRowActive)
+			: null;
 	});
 
 	// play / UI state. The round counter is the PERSISTED one (play.round) — no separate VM copy to

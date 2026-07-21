@@ -11,6 +11,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { content, loadContentStore } from '$lib/content/store.svelte';
+import { isRowActive } from '$lib/content/sources.svelte';
 import { localizedName } from '$lib/content/detail';
 import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
@@ -673,7 +674,7 @@ class BuildVM {
 	});
 	sheet = $derived.by<CharacterSheet | null>(() => {
 		void plugins.version; // a plugin enable/disable re-derives the preview live
-		return this.graph ? deriveSheet(this.assembled, this.graph) : null;
+		return this.graph ? deriveSheet(this.assembled, this.graph, isRowActive) : null;
 	});
 
 	// --- validation --------------------------------------------------------------

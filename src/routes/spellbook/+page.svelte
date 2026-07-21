@@ -10,6 +10,7 @@
 	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 	import { deriveSheet } from '$lib/character/derive';
+	import { isRowActive } from '$lib/content/sources.svelte';
 	import { canTogglePrepared, preparedLeveledCount } from '$lib/rules/spellcasting';
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
@@ -83,7 +84,7 @@
 		selected ? buildDetail(selected, 'spell', undefined, app.activeLocale) : null
 	);
 	const selEntry = $derived(selected ? entryOf.get(selected.effectiveId) : undefined);
-	const sheet = $derived(graph && character ? deriveSheet(character, graph) : null);
+	const sheet = $derived(graph && character ? deriveSheet(character, graph, isRowActive) : null);
 	// only LEVELED prepared spells count toward the cap — cantrips are always-known, not prepared
 	const preparedCount = $derived(preparedLeveledCount(character?.build.spells ?? []));
 	const preparedCap = $derived(sheet?.spellcasting.classes[0]?.preparedCap ?? 0);
