@@ -409,6 +409,9 @@ export interface Atk {
 	toHit: number;
 	dmg: string;
 	meta: string;
+	/** D9 provenance — a magic weapon's own bonus folded into THIS attack ("+1 attack & damage"),
+	 *  or a visible degrade note for a bonus v1 can't fold yet (dice / expression). */
+	note?: string;
 }
 
 /** A spell row in the spell block. */
@@ -486,6 +489,29 @@ export function parseDamage(dmg: string): { pool: Record<number, number>; mod: n
 	return { pool, mod };
 }
 
+/** D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus. Only LITERAL
+ *  `flat_bonus:attack` / `flat_bonus:damage` fold in v1; a dice / expression bonus becomes a visible
+ *  note (it rides the roll path / needs a ctx — deferred, never silently dropped). Pure. */
+export function weaponBonus(tokens: string[]): { attack: number; damage: number; note?: string } {
+	let attack = 0;
+	let damage = 0;
+	const deferred: string[] = [];
+	for (const tok of tokens) {
+		const p = parseToken(tok);
+		if (p.kind !== EFFECT_KIND.flatBonus || (p.target !== 'attack' && p.target !== 'damage'))
+			continue;
+		if (p.amount !== undefined) {
+			if (p.target === 'attack') attack += p.amount;
+			else damage += p.amount;
+		} else deferred.push(effectTag(tok)); // dice / expression → visible degrade
+	}
+	const parts: string[] = [];
+	if (attack) parts.push(`${signed(attack)} attack`);
+	if (damage) parts.push(`${signed(damage)} damage`);
+	parts.push(...deferred);
+	return parts.length ? { attack, damage, note: parts.join(', ') } : { attack, damage };
+}
+
 /** Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet. Pure. */
 export function computeAttacks(
 	character: Character,
@@ -503,11 +529,17 @@ export function computeAttacks(
 		const props = String(row.data.properties ?? '').toLowerCase();
 		const ranged = String(row.data.item_type ?? '').includes('ranged');
 		const mod = ranged ? dexMod : props.includes('finesse') ? Math.max(strMod, dexMod) : strMod;
+		// D9: a magic weapon's OWN effect tokens fold into THIS attack only (a +1 sword must not
+		// grant +1 to every attack — so it can't ride gatherEffects/global facts). v1 folds LITERAL
+		// flat_bonus:attack / flat_bonus:damage; a dice / expression bonus (a flaming +1d6) needs the
+		// roll path or a ctx and degrades to a VISIBLE note, never a silent drop.
+		const w = weaponBonus(row.data.effects);
 		out.push({
 			name: String(row.data.name_en),
-			toHit: mod + prof,
-			dmg: `${row.data.damage ?? ''} ${signed(mod)} ${row.data.damage_type ?? ''}`.trim(),
-			meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · ')
+			toHit: mod + prof + w.attack,
+			dmg: `${row.data.damage ?? ''} ${signed(mod + w.damage)} ${row.data.damage_type ?? ''}`.trim(),
+			meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · '),
+			...(w.note ? { note: w.note } : {})
 		});
 	}
 	out.push({

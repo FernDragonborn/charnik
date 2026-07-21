@@ -357,10 +357,12 @@ Deep effects-system review, 2026-07-16 (D7–D19):
   to") vs `routes/combat/roll.svelte.ts` RollTray (pool-based, never registers the contract). Two
   roll-request representations, two log paths — violates shared-control-=-one-component in its own
   seam.
-- [ ] **D9 · `computeAttacks` is a data→string→reparse round-trip.** Builds `dmg` as a display
-  string with the mod baked in (helpers.ts:413), then `attackRoll` re-parses it via `parseDamage`
-  (A7's fragility is a symptom). Also no magic-weapon path at all: no bonus column and item effect
-  tokens don't reach rolls (B21) — a +1 sword is mechanically inert.
+- [~] **D9 · `computeAttacks` is a data→string→reparse round-trip.** MAGIC-WEAPON HALF DONE
+  (EFX-D9, 2026-07-21): `weaponBonus` folds a weapon's own literal `flat_bonus:attack/damage` into
+  that attack only (dice/expr → visible note); a +1 sword is no longer inert. STILL OPEN: `dmg` is
+  built as a display string with the mod baked in, then `attackRoll` re-parses it via `parseDamage`
+  (the data→string→reparse round-trip; A7's fragility is a symptom) — folds into the D10/D6
+  mechanics-to-columns pass.
 - [ ] **D10 · Text-heuristics tier where data columns belong** (D6 is one member): `healDice`
   regexes `text_en` for healing dice (helpers.ts:123 — UA-only homebrew heals nothing),
   `durationToRounds` parses duration prose (:220), `castingIcon` regexes casting_time (:351).

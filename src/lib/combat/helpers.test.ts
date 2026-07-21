@@ -16,6 +16,7 @@ import {
 	applyDefense,
 	standardActions,
 	effectiveHpMax,
+	weaponBonus,
 	type EffectInstance
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
@@ -24,6 +25,32 @@ import { computed } from '$lib/rules/pipeline';
 // rollEffectsFor reads the sheet's typed-facts object (D7), built from the RESOLVED effect list
 // (never raw play.effects — B21); collectFacts is that one conversion.
 const fx = (...tokens: string[]) => collectFacts([{ source: 'Test', layer: 'condition', tokens }]);
+
+describe('D9 · weaponBonus (per-weapon magic +X)', () => {
+	it('folds a literal +1 into both attack and damage with a provenance note', () => {
+		const w = weaponBonus(['flat_bonus:attack+1', 'flat_bonus:damage+1']);
+		expect(w).toMatchObject({ attack: 1, damage: 1 });
+		expect(w.note).toMatch(/\+1 attack/);
+		expect(w.note).toMatch(/\+1 damage/);
+	});
+
+	it('a plain weapon (no effect tokens) yields a zero bonus and no note', () => {
+		expect(weaponBonus([])).toEqual({ attack: 0, damage: 0 });
+	});
+
+	it('a dice / expression bonus degrades to a visible note, not a silent fold', () => {
+		const w = weaponBonus(['flat_bonus:damage+1d6']); // flaming — needs the roll path
+		expect(w.damage).toBe(0);
+		expect(w.note).toBeTruthy();
+	});
+
+	it('ignores tokens that are not attack/damage flat bonuses', () => {
+		expect(weaponBonus(['resist_immune:fire', 'grant_resource:ki'])).toEqual({
+			attack: 0,
+			damage: 0
+		});
+	});
+});
 
 describe('A14 · effectiveHpMax (manual override + hp_max effects)', () => {
 	// a sheet max of 30 (base) with Aid stacking +5 at the condition layer

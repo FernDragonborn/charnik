@@ -166,7 +166,8 @@
 		</div>
 	{:else if pid === 'attacks'}
 		{#each attacks as at (at.name)}
-			<button class="combat-row" onclick={(e) => combat.attackRoll(at, e)}>
+			<!-- D9: at.note explains a magic weapon's own +X (already folded into toHit/dmg) on hover -->
+			<button class="combat-row" title={at.note} onclick={(e) => combat.attackRoll(at, e)}>
 				<span class="row-name">{at.name}</span><span class="combat-row-hint"
 					>{signed(at.toHit)}</span
 				>

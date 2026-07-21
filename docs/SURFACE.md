@@ -373,6 +373,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpGroup` — A group of spells (Pinned / by level / by prepared / by school).
 - `function modTargetLabel` — Human label for a custom-modifier target key (for the auto effect name).
 - `function parseDamage` — Parse a weapon/spell damage string ("1d8 +3 slashing", "1d6 −1 bludgeoning") into its dice pool + * flat mod.
+- `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
 - `function standardActions` — The standard combat actions (Dash, Hide, Grapple…); roll ones reference live skills.
 - `function buildSpellGroups` — Group the character's spells for the spell block (Pinned first, then by level / prepared / school), * attaching the c…
@@ -839,4 +840,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 466 exports across 67 modules · 26 duplicate suspects · generated in 135ms._
+_46 tokens · 50 global classes · 36 components · 467 exports across 67 modules · 26 duplicate suspects · generated in 185ms._

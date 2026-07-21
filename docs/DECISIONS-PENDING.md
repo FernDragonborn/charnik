@@ -524,7 +524,7 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
   (knip GREEN + jscpd ratchet). New SRD data only via converters (no hand-authored game data).
 
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4 (grapple family + Rage
-token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ → ~~EFX-G4~~ ✅ + EFX-EXH → EFX-D9 → D8 →
+token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ → ~~EFX-G4~~ ✅ + EFX-EXH → ~~EFX-D9~~ ✅ (v1) → D8 →
 EFX-ROLL → piece 3 (§0.5) → EFX-B17 → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
 
 ## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — ✅ DONE (2026-07-21)
@@ -659,7 +659,17 @@ Free-block affordance under DECIDE-0 — keep manual-max shallow, don't bury its
 derive. (4) Tests: manual 30 + Aid(+5) → 35; Aid expires → 30 AND current clamps; manual-null
 path byte-identical to today.
 
-## EFX-D9 · magic weapon +X reaches attacks — WORK (trap documented)
+## EFX-D9 · magic weapon +X reaches attacks — ✅ DONE (2026-07-21, v1 literals)
+
+**Landed**: pure `weaponBonus(tokens)` folds a weapon's OWN `effects` cell (literal
+`flat_bonus:attack+N` / `flat_bonus:damage+N`) into THAT attack row's to-hit and damage inside
+`computeAttacks` — never through gatherEffects/global facts (the trap: that would grant +N to every
+attack; per-weapon isolation is structural, each row reads only its own tokens). A dice / expression
+bonus (flaming +1d6) degrades to a VISIBLE `Atk.note` (surfaced as the attack row's hover title in
+PanelCard), never a silent drop — it awaits the roll path / a ctx. Tests: literal +1 → attack+damage
++ note; dice → note only; plain weapon byte-identical; non-attack/damage tokens ignored.
+
+**Original plan below (retained for reference):**
 
 **Current**: `computeAttacks` (`lib/combat/helpers.ts:465+`) ignores item effect tokens; global
 `flat_bonus:attack` facts DO reach rolls via `rollEffectsFor` — but those are global.
