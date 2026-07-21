@@ -537,7 +537,7 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
 
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4
 (~~grapple family~~ ✅ + ~~Rage token~~ ✅; ∞ render validated in a derive test) + EFX-B14 → ~~EFX-A14~~ ✅ →
-~~EFX-G4~~ ✅ + ~~EFX-EXH~~ ✅ (both editions) → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ → ~~EFX-ROLL~~ ✅ → piece 3 (§0.5) →
+~~EFX-G4~~ ✅ + ~~EFX-EXH~~ ✅ (both editions) → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ → ~~EFX-ROLL~~ ✅ → ~~piece 3 (§0.5)~~ ✅ (core+content+UI; UI needs visual pass) →
 ~~EFX-B17~~ ✅ → ~~EFX-A7/B9~~ ✅ DONE 2026-07-21 (engine + data) → EFX-B18 (last). EFX-TAIL opportunistic.
 [Also DONE opportunistically: EFX-B15 ✅, EFX-B14 ✅. EFX-E4 grapple slice ✅ 2026-07-21; Rage/exhaustion/
 rollables remain — all blocked on class_features effect-preservation in the class converters.]
@@ -770,6 +770,29 @@ Today every note is baked EN concat (`apply.ts:360, 371-377`; `gatherEffects` na
 **Trigger pinned**: do it BEFORE building any major new note CONSUMER (roll-log rework; EFX-B14
 is fine as-is — it renders tags, not notes). ⚠ Every note-producing site must migrate in ONE pass
 or the UI mixes string/struct shapes; grep `notes.push` across `effects/` + derive first.
+
+**SCOPE MAPPED (2026-07-21) — the ONLY remaining §5 item; still deliberately last:**
+- **Single consumer**: `why(c: Computed): string` (`combat/helpers.ts:182`) — every `title={why(...)}`
+  tooltip goes through it. So the render seam is ONE function (add an optional `translate` param →
+  `t(note.key, note.params)`, EN fallback otherwise).
+- **~12 producers**: `pipeline.ts` (`overriddenSetNotes` "already ≥/≤ N", `ineffective`), `apply.ts`
+  (~8: blocked ×2, unresolved, flat ±, advantage/disadvantage/auto-fail/auto-succeed on `<target>`),
+  `derive.ts` (armor STR-min speed note), `core.ts` (`carryingCapacity` — core, so `formatNote` MUST
+  be i18n-runtime-free / pure).
+- **⚠ DESIGN FORK found**: notes are TWO kinds. **System** notes (engine-generated, the list above) →
+  i18n-able `{key, params}`. **Content/free-text** notes CANNOT be keyed: author `note:<text>` tokens,
+  plugin notes (`{source, text}` — already structured differently), and fixture `notes:['Cursed!']`.
+  → `Note = { text: string; key?: string; params?: Record<string,string|number> }` — `text` is the EN
+  fallback / content string (so `why()` and all core/pure paths keep working by reading `.text`
+  unchanged), `{key,params}` present only on system notes for render-time i18n.
+- **Test surface**: ~15 assertions treat `notes` as `string[]` across 6 files (derive/context/effect/
+  resolve/core.test + plugin) — e.g. `notes.some(n => /disadvantage/.test(n))`, `notes.toEqual([...])`,
+  `/already ≥ 9/` — migrate each to read `n.text`. Mechanical but must all move together.
+- **Invariant to preserve**: the on/off/deleted `{value, trace, notes}` shape must stay identical, and
+  `formatNote(n).text` must reproduce today's EN strings byte-for-byte → `why()` output unchanged →
+  zero behavior/UI regression; i18n then becomes a one-line swap in `why()`.
+- **Why not rushed at end of the 2026-07-21 marathon**: it changes the CORE `Computed` contract
+  consumed everywhere; a partial pass silently breaks explain-on-hover. Do it fresh, in one sitting.
 
 ## EFX-A7/B9 · weapon/armor proficiency model — ✅ ENGINE DONE (2026-07-21); data via converters pending
 
