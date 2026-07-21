@@ -391,8 +391,8 @@ Deep effects-system review, 2026-07-16 (D7–D19):
 - [ ] **E1 · `static/content/srd-2024/` has no `languages_srd.csv`** (2014 has one) → a 5.5e
   character gets an empty language picker. Convert from SRD 5.2.1 via a converter (NEVER
   hand-author — house rule).
-- [ ] **E2 · uk.json violations:** tagline "Твої персонажі — твої" is ти-form (rule: formal
-  «ви» / impersonal); typo "створюте" → "створюйте" in `demo.body`.
+- [x] **E2 · uk.json violations:** FIXED 2026-07-21. Tagline → formal «Ваші персонажі — ваші.»;
+  typo «створюте» → «створюйте» in `demo.body`. No ти-form strings remain in uk.json.
 
 Deep effects-system review, 2026-07-16 (E3–E7):
 
