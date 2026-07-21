@@ -178,6 +178,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const characters`
 - `function loadRoster` — Load the roster; on first ever run seed the demo character so there's something to play.
 - `function loadCharacterBySlug` — Load a saved character by slug WITHOUT making it active (for the builder's edit/level-up).
+- `function activeOrDemo` — The character every view should edit: the one opened from the Roster, or a SHARED demo when none * is open.
 - `function openCharacter` — Open a saved character as the active one (returns null if the save is bad/missing).
 - `function saveCharacterToStore` — Persist a character (create or update) and refresh the roster.
 - `function removeCharacter` — Delete a character and refresh the roster.
@@ -832,4 +833,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 459 exports across 67 modules · 26 duplicate suspects · generated in 139ms._
+_46 tokens · 50 global classes · 36 components · 460 exports across 67 modules · 26 duplicate suspects · generated in 118ms._

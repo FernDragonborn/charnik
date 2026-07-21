@@ -47,6 +47,18 @@ export async function loadCharacterBySlug(slug: string): Promise<Character | nul
 	return res.ok && res.character ? res.character : null;
 }
 
+/** The character every view should edit: the one opened from the Roster, or a SHARED demo when none
+ *  is open. Lazily sets `characters.active` to a single demo so Combat and the Spellbook edit the
+ *  SAME object (otherwise each page spins its own demo and per-character edits — hidden spells,
+ *  prepared, layout — don't sync between them). */
+export function activeOrDemo(): Character {
+	if (!characters.active) {
+		characters.active = demoCharacter();
+		bumpGuid();
+	}
+	return characters.active;
+}
+
 /** Open a saved character as the active one (returns null if the save is bad/missing). */
 export async function openCharacter(slug: string): Promise<Character | null> {
 	characters.active = await loadCharacterBySlug(slug);
