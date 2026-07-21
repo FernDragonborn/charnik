@@ -391,6 +391,15 @@ describe('CombatVM · S2 split net', () => {
 		expect(keys).toContain('1'); // Bless (1st level)
 	});
 
+	it('passive-senses skills persist onto the character ui, defaulting to the trio (D19)', () => {
+		expect(combat.passiveSkills).toEqual(['perception', 'investigation', 'insight']);
+		combat.togglePassive('arcana');
+		expect(combat.passiveSkills).toContain('arcana');
+		expect(character.ui.passiveSkills).toContain('arcana'); // written onto the character, not VM-local
+		combat.togglePassive('perception');
+		expect(combat.passiveSkills).not.toContain('perception');
+	});
+
 	it('ui.spellsHidden filters a spell out of the combat list (Issue #3)', () => {
 		const rowNames = () => combat.spellGroups.flatMap((g) => g.rows.map((r) => r.name));
 		expect(rowNames()).toContain('Fire Bolt');

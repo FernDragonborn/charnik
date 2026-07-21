@@ -44,6 +44,9 @@ import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
 import { slotToSpend, canTogglePrepared, preparedLeveledCount } from '$lib/rules/spellcasting';
 
+/** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
+const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
+
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. */
 	tray = new RollTray();
@@ -90,7 +93,11 @@ class CombatVM {
 	tempHpInput = $state(5);
 	customEffectLabel = $state('');
 	spellGroupBy = $state<GroupMode>('level');
-	passiveSkills = $state<SkillId[]>(['perception', 'investigation', 'insight']);
+	// which skills show in the passive-senses row — PERSISTED per character in ui.passiveSkills
+	// (D19/D3), falling back to the default trio; toggling saves.
+	get passiveSkills(): SkillId[] {
+		return (this.character?.ui.passiveSkills as SkillId[] | undefined) ?? DEFAULT_PASSIVE_SKILLS;
+	}
 
 	load = async () => {
 		await loadContentStore(); // populate the shared graph; `this.graph` derives from it
@@ -221,9 +228,11 @@ class CombatVM {
 		}));
 	});
 	togglePassive = (k: SkillId) => {
-		this.passiveSkills = this.passiveSkills.includes(k)
-			? this.passiveSkills.filter((x) => x !== k)
-			: [...this.passiveSkills, k];
+		const c = this.character;
+		if (!c) return;
+		const cur = this.passiveSkills;
+		c.ui.passiveSkills = cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k];
+		void saveCharacterToStore(c);
 	};
 
 	// --- level-up: advance an existing character's class by one level ---------------------------
