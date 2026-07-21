@@ -1681,14 +1681,15 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   character refs already migrate kebab→snake (v1→v3). WEB needs nothing — it always fetches the fresh
   deploy. Unit-tested over two MemoryStorages (first-run / overwrite-untouched / preserve-edited /
   up-to-date-noop). **Bump `CONTENT_SEED_VERSION` whenever shipped SRD data changes.**
-- [ ] **REL-1 · Linux release build.** `release.yml` is Windows-only (`runs-on: windows-latest`). Add
-  a Linux job (matrix `ubuntu-22.04` + apt webkit2gtk deps) so `tauri-action` publishes Linux artifacts
-  alongside the Windows NSIS. Ship **more than the updater bundle**: AppImage is the only auto-updatable
-  target (its `.sig` feeds `latest.json`), but also emit installable `.deb`/`.rpm` for users who just
-  want to install (those don't self-update — that's fine). NB: `src-tauri/tauri.linux.conf.json`
-  currently pins Linux to **appimage-only** (decided 2026-07-14, "поки що тільки апімадж") and Tauri
-  auto-merges it in CI too — when this item lands, widen its `targets` (or delete the file) to get the
-  `.deb`/`.rpm` back. macOS deferred (needs Apple notarization/signing, $99/yr, else Gatekeeper warns).
+- [x] **REL-1 · Linux release build.** (2026-07-21) `release.yml` is now a `strategy.matrix`
+  (`ubuntu-22.04` + `windows-latest`, `max-parallel: 1` so the two legs merge into one release +
+  `latest.json` instead of racing). The Linux leg apt-installs the Tauri v2 deps
+  (`libwebkit2gtk-4.1-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `libxdo-dev`, `patchelf`,
+  …). Widened `src-tauri/tauri.linux.conf.json` `targets` to `["appimage", "deb"]` (Tauri auto-merges
+  it on the Linux leg) — AppImage is the auto-updatable one (its `.sig` feeds `latest.json`), `.deb` is
+  a plain installer. **rpm omitted**: needs `rpmbuild`, absent on GitHub runners (add it + widen the
+  targets later if Fedora demand appears). macOS still deferred (needs Apple notarization/signing,
+  $99/yr, else Gatekeeper warns).
 - [ ] **A11Y-1 · Dialog focus management pass.** No dialog moves keyboard focus into itself on open or
   traps Tab inside (focus stays on the trigger behind the backdrop; Tab walks the background). The two
   data-move dialogs now set initial focus (DataMigrationDialog/DataConflictDialog) — do the same +
@@ -1702,8 +1703,8 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   - **Flathub** (Linux) — Flatpak manifest; widest cross-distro reach, one channel for all Linux.
     Note the **sandbox**: Charnik reads/writes arbitrary content dataDirs, so wire XDG **portals** /
     `--filesystem` perms or the data-move + custom roots break.
-  - **AppImage** (Linux) — already built (appimage-only via `tauri.linux.conf.json`); the portable,
-    zero-install, self-updating target.
+  - **AppImage** (Linux) — built + PUBLISHED by `release.yml` (REL-1 done); the portable, zero-install,
+    self-updating target. `tauri.linux.conf.json` also emits a `.deb` alongside it.
   - **WinGet** (Windows) — YAML manifest PR to `winget-pkgs`; standard Win10/11 channel.
   - **Chocolatey** (Windows) — nuspec package; broader/older Win audience.
   - **Homebrew Cask** (macOS) — **out of scope for now**: no macOS build host to compile on, so no
