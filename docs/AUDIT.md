@@ -352,11 +352,12 @@ Deep effects-system review, 2026-07-16 (D7–D19):
   (`rollEffectsFor`) and action economy (`slotMax`) read it too — none re-`parseEffect`s the shared
   list. Killed the old per-stat `collectFlags`/`collectResources` re-scans. `parseEffect` no longer
   runs O(stats × tokens) per derive. Cross-ref B21.
-- [ ] **D8 · Two parallel dice-tray stacks.** `lib/dice/tray.svelte.ts` (DiceTrayRequest contract:
-  registry + formula string + roll-instantly fallback; comment claims "the seam every caller talks
-  to") vs `routes/combat/roll.svelte.ts` RollTray (pool-based, never registers the contract). Two
-  roll-request representations, two log paths — violates shared-control-=-one-component in its own
-  seam.
+- [x] **D8 · Two parallel dice-tray stacks.** FIXED (EFX-D8, 2026-07-21, option A): `RollTray` now
+  IMPLEMENTS the `DiceTrayRequest` seam — CombatVM's `handleTrayRequest` (formula↔pool adapter +
+  pre-split pool + queued damage) is registered via `registerDiceTray` on combat mount, so a generic
+  `openDiceTray` opens the rich tray instead of the instant-roll fallback. `DiceTrayRequest` grew
+  optional pool/advantage/mods/queuedDamage (formula-only callers omit them). One representation, one
+  seam. Unblocks EFX-ROLL. See DECISIONS-PENDING §0.6/§5.
 - [~] **D9 · `computeAttacks` is a data→string→reparse round-trip.** MAGIC-WEAPON HALF DONE
   (EFX-D9, 2026-07-21): `weaponBonus` folds a weapon's own literal `flat_bonus:attack/damage` into
   that attack only (dice/expr → visible note); a +1 sword is no longer inert. STILL OPEN: `dmg` is

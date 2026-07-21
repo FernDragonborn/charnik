@@ -215,7 +215,19 @@ Decided; move each into `PLAN.md` under its group when implemented, tick in AUDI
 
 # §0.6 · Context for D8 / E7 / S2
 
-## D8 · Two dice-tray stacks — can it be ONE? YES.
+## D8 · Two dice-tray stacks — can it be ONE? YES. — ✅ DONE (2026-07-21)
+
+**Landed** (option A): `DiceTrayRequest` grew optional `pool`/`mod`/`advantage`/`mods`/`queuedDamage`
+(its documented growth path; `QueuedDamage` type) — a formula-only caller omits them. `CombatVM`
+implements the seam: `handleTrayRequest` prefills the rich `RollTray` (formula↔pool adapter =
+`parseDamage`, or a pre-split pool) + queues damage + opens the dice menu (`openMenuCentered` for the
+anchor-less programmatic case); `registerTray` wires it to `registerDiceTray`, registered via
+`onMount` in `+page.svelte` (auto-unregisters on leave → fallback restored). Net: a generic
+`openDiceTray({label,formula})` anywhere in combat now opens the REAL tray (pool, advantage,
+attack→damage chain), not the instant-roll fallback. Test: the seam carries the rich fields through
+unchanged. Unblocks EFX-ROLL.
+
+**Original analysis below (retained):**
 - **Contract** (`lib/dice/tray.svelte.ts`): `DiceTrayRequest {label, formula}` + `registerDiceTray` /
   `openDiceTray`. A component registers a handler on mount; with none, the fallback rolls instantly +
   toasts. Used by `RollButton.svelte` (the generic roll affordance — works on compendium, anywhere).
@@ -524,7 +536,7 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
   (knip GREEN + jscpd ratchet). New SRD data only via converters (no hand-authored game data).
 
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4 (grapple family + Rage
-token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ → ~~EFX-G4~~ ✅ + EFX-EXH → ~~EFX-D9~~ ✅ (v1) → D8 →
+token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ → ~~EFX-G4~~ ✅ + EFX-EXH → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ →
 EFX-ROLL → piece 3 (§0.5) → EFX-B17 → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
 
 ## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — ✅ DONE (2026-07-21)

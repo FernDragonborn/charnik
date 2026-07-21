@@ -210,6 +210,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/dice/tray.svelte.ts`
 
+- `interface QueuedDamage` — A damage roll queued to fire right after the tray's next Roll (an attack's to-hit → damage).
 - `interface DiceTrayRequest` — * A request to open the tray.
 - `type DiceTrayHandler` — A live tray registers a handler for the request.
 - `function registerDiceTray` — Register the live tray (a DiceTray component calls this on mount); returns an unregister fn.
@@ -840,4 +841,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 467 exports across 67 modules · 26 duplicate suspects · generated in 185ms._
+_46 tokens · 50 global classes · 36 components · 468 exports across 67 modules · 26 duplicate suspects · generated in 196ms._

@@ -5,19 +5,39 @@
  * the affordance already works. Rewriting/expanding the tray means implementing this contract, not
  * touching callers.
  */
-import { rollFormula } from '$lib/rules/dice';
+import { rollFormula, type DieMods } from '$lib/rules/dice';
 import { toast } from 'svelte-sonner';
 
+/** A damage roll queued to fire right after the tray's next Roll (an attack's to-hit → damage). */
+export interface QueuedDamage {
+	label: string;
+	dice: Record<number, number>;
+	mod: number;
+	mods?: DieMods;
+}
+
 /**
- * A request to open the tray. Deliberately minimal + stable; the tray impl can grow richer behind it
- * (advantage/disadvantage, flat modifiers, an attack→damage chain — see
- * charnik-dicetray-attack-damage-concept) without changing any caller.
+ * A request to open the tray. `label` + `formula` are the minimal, stable core every caller uses
+ * (RollButton, the compendium). The rich combat tray (D8) grows it behind the SAME seam with
+ * optional extras — a pre-split pool, advantage, roll-manipulation mods, an attack→damage chain —
+ * which a formula-only caller simply omits (the fallback + the adapter read `formula`). See
+ * charnik-dicetray-attack-damage-concept.
  */
 export interface DiceTrayRequest {
 	/** Human label for the roll ("Fireball", "Acid Splash — to hit", "HP rolled"). */
 	label: string;
 	/** A dice formula string the tray pre-fills ("8d6", "1d20", "16d12 + 80"). */
 	formula: string;
+	/** Optional pre-split pool (sides→count) — when present, used verbatim instead of parsing `formula`. */
+	pool?: Record<number, number>;
+	/** Flat modifier for the pool (paired with `pool`). */
+	mod?: number;
+	/** −1 disadvantage · 0 normal · +1 advantage. */
+	advantage?: number;
+	/** reroll / min_die facts that ride the roll (GWF, Reliable Talent). */
+	mods?: DieMods;
+	/** An attack's damage roll, fired right after the to-hit. */
+	queuedDamage?: QueuedDamage;
 }
 
 /** A live tray registers a handler for the request. */

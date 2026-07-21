@@ -35,6 +35,9 @@
 	const { dndConsider, dndFinalize, releaseDrag } = combat.layout;
 
 	onMount(combat.load);
+	// D8: expose the rich combat tray through the DiceTrayRequest seam while this route is mounted,
+	// so a generic RollButton in a panel opens the real tray (not the instant-roll fallback).
+	onMount(combat.registerTray);
 
 	// A14: when the effective max HP drops (an Aid / hp_max effect expired, or a manual max lowered),
 	// pull current down to it. Idempotent, so it settles in one pass without looping the autosave.
