@@ -13,27 +13,33 @@
 	<span class="bar-label">Resources</span>
 	{#each s.resources as r (r.id)}
 		{@const spent = combat.resources.resourceSpent(r.id)}
-		<span class="resource" title="{r.name} · recharges on {r.recharge} rest ({r.source})">
-			<!-- name = "use one" action (UBUG-8); pips still set the count manually -->
-			<button
-				type="button"
-				class="resource-use"
-				title="Use one {r.name}"
-				onclick={() => combat.resources.useResource(r.id, r.max)}>{r.name}</button
-			>
+		<!-- the whole chip is the "use one" action (UBUG-8); the pips inside still set the count
+		     manually and stop the chip's use-click -->
+		<button
+			type="button"
+			class="resource"
+			title="Use one {r.name} · recharges on {r.recharge} rest ({r.source})"
+			onclick={() => combat.resources.useResource(r.id, r.max)}
+		>
+			{r.name}
 			<span class="respips">
 				{#each range(r.max) as i (i)}
-					<button
-						type="button"
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<span
 						class="resource-pip"
 						class:used={i >= r.max - spent}
-						onclick={() => combat.resources.resourceClick(r.id, r.max, i)}
+						role="button"
+						tabindex="-1"
 						aria-label="{r.name} {i + 1}"
-					></button>
+						onclick={(e) => {
+							e.stopPropagation();
+							combat.resources.resourceClick(r.id, r.max, i);
+						}}
+					></span>
 				{/each}
 			</span>
 			<small>{r.max - spent}/{r.max}</small>
-		</span>
+		</button>
 	{/each}
 </section>
 
@@ -49,6 +55,7 @@
 		padding: 9px 12px;
 		margin-bottom: 12px;
 	}
+	/* the whole chip is the "use one" button (UBUG-8) — clickable + highlighted on hover */
 	.resource-bar .resource {
 		display: inline-flex;
 		align-items: center;
@@ -56,33 +63,26 @@
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 12px;
+		color: var(--color-text);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-full);
 		padding: 5px 11px;
+		cursor: pointer;
 	}
 	.resource-bar .resource small {
 		font-family: var(--font-mono);
 		color: var(--color-text-muted);
 	}
-	/* the whole chip highlights on hover (UBUG-8), like a spell / action row */
 	.resource-bar .resource:hover {
-		background: var(--color-surface-2);
-	}
-	/* the resource NAME is the "use one" action (UBUG-8) — chip shows the hover highlight */
-	.resource-use {
-		font: inherit;
-		color: var(--color-text);
-		padding: 0;
-		border: 0;
-		background: none;
-		cursor: pointer;
+		background: var(--color-border);
 	}
 	.respips {
 		display: inline-flex;
 		gap: 4px;
 	}
 	.resource-pip {
+		display: inline-block;
 		width: 12px;
 		height: 12px;
 		padding: 0;

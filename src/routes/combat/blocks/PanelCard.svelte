@@ -257,33 +257,46 @@
 					</div>
 					{#each effectGroups.resources as r (r.iid)}
 						{@const spent = combat.resources.resourceSpent(r.id)}
-						<div class="resource-row">
-							<!-- name = "use one" action (UBUG-8), the resource analogue of casting a spell row;
-							     pips below still set the count manually (restore / arbitrary) -->
-							<button
-								class="resource-name"
-								title="Use one {r.name}"
-								onclick={() => combat.resources.useResource(r.id, r.max)}>{r.name}</button
-							>
+						<!-- the WHOLE row is the "use one" action (UBUG-8), the resource analogue of casting a
+						     spell row; the pips inside still set the count manually (restore / arbitrary) and
+						     stop the row's use-click, exactly like the prep/pin bits inside a spell row -->
+						<button
+							class="resource-row"
+							title="Use one {r.name}"
+							onclick={() => combat.resources.useResource(r.id, r.max)}
+						>
+							<span class="resource-name">{r.name}</span>
 							<span class="resource-pips">
 								{#each range(r.max) as i (i)}
-									<button
+									<!-- svelte-ignore a11y_click_events_have_key_events -->
+									<span
 										class="resource-pip"
 										class:off={i >= r.max - spent}
+										role="button"
+										tabindex="-1"
 										title="{r.name} {i + 1}"
 										aria-label="{r.name} {i + 1}"
-										onclick={() => combat.resources.resourceClick(r.id, r.max, i)}
-									></button>
+										onclick={(e) => {
+											e.stopPropagation();
+											combat.resources.resourceClick(r.id, r.max, i);
+										}}
+									></span>
 								{/each}
 							</span>
 							<span class="resource-count">{r.max - spent}/{r.max}</span>
 							<span class="recharge-chip">{rechargeLabel(r.recharge)}</span>
-							<button
+							<!-- svelte-ignore a11y_click_events_have_key_events -->
+							<span
 								class="icon-button effect-remove"
+								role="button"
+								tabindex="-1"
 								title="Remove effect"
-								onclick={() => combat.removeEffect(r.iid)}>✕</button
+								onclick={(e) => {
+									e.stopPropagation();
+									combat.removeEffect(r.iid);
+								}}>✕</span
 							>
-						</div>
+						</button>
 					{/each}
 				</div>
 			{/if}
@@ -649,8 +662,8 @@
 		color: var(--color-text);
 		font-weight: 600;
 	}
-	/* resource row: pips + count + recharge chip. The whole row highlights on hover (UBUG-8), like a
-	   spell / action row; margin bleed makes the tint span full width. */
+	/* resource row: the WHOLE row is the "use one" button (UBUG-8) — clickable + highlighted on hover
+	   like a spell / action row; margin bleed makes the tint span full width. */
 	.resource-row {
 		display: flex;
 		align-items: center;
@@ -658,30 +671,30 @@
 		padding: 7px 9px;
 		margin: 0 -9px;
 		width: calc(100% + 18px);
-		border-radius: 9px;
+		border: 0;
 		border-top: 1px solid var(--color-border);
+		border-radius: 9px;
+		background: transparent;
+		color: var(--color-text);
+		text-align: left;
+		cursor: pointer;
 	}
 	.resource-row:hover {
 		background: var(--color-surface-2);
 	}
-	/* the resource NAME is the "use one" action (UBUG-8) — the whole row shows the hover highlight */
 	.resource-name {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 13px;
 		color: var(--color-text);
 		flex: 1;
-		text-align: left;
-		padding: 0;
-		border: 0;
-		background: transparent;
-		cursor: pointer;
 	}
 	.resource-pips {
 		display: inline-flex;
 		gap: 4px;
 	}
 	.resource-pip {
+		display: inline-block;
 		width: 11px;
 		height: 11px;
 		padding: 0;
