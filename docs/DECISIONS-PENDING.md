@@ -866,9 +866,14 @@ at 6) and `…, 17->6, 20->inf):long` (5.1, Unlimited at 20). `class_features_co
 a real barbarian and pins the per-level counts incl. the ∞ (5.1 L20) — the first end-to-end
 validation of the step()/inf/grant_resource path on shipped data.
 
-**REMAINING**: (3) exhaustion rows (author conditions/ladder — EFX-EXH), (4) Bardic/feature
-rollables (`grant_roll` tokens — EFX-ROLL surface exists). Feature-authoring is now unblocked (the
-preservation prerequisite is in).
+**(4) rollables — ✅ DONE (2026-07-21)**: `grant_roll` tokens authored on `rogue_sneak_attack`
+(`ceil(class_level.rogue/2) d 6`), `bard_bardic_inspiration` (`1d step(bard, 1->6,5->8,10->10,15->12)`),
+`monk_martial_arts` — both editions, with the Martial Arts die correctly a step LOWER in 5.1
+(d4-start) than 5.2.1 (d6-start). `class_features_content.test` pins the resolved formulas
+(rogue 6→3d6, rogue 20→10d6, monk 11→1d10 vs 1d8 by edition).
+
+**(3) exhaustion — 2024 ✅ (see EFX-EXH below); 2014 ladder deferred** (guarded tokens + an
+`ability_checks` target — a small engine add). Feature-authoring is unblocked (preservation is in).
 
 Priority: (1) grapple/restrain family (after EFX-A9), both editions; (2) **Rage**
 (`grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6, 20->inf):long`

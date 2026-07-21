@@ -4,7 +4,7 @@
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fd36-72ad-8fc3-f977f1cf41cb
 #content-updated_at: 2026-07-21
-#content-hash: xxh64:c25f3c06d105ebee
+#content-hash: xxh64:8578eae8bbab8bcc
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id
 barbarian_rage,Rage,,"In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.
 While raging, you gain the following benefits if you aren't wearing heavy armor:
@@ -35,7 +35,7 @@ Once within the next 10 minutes, the creature can roll the die and add the numbe
 it rolls the d20 before deciding to use the Bardic Inspiration die, but must decide before the GM says whether the roll succeeds or fails. Once the Bardic Inspiration die is rolled, it is lost. A creature can have only one Bardic Inspiration die at a time.
 You can use this feature a number of times equal to your Charisma modifier (a minimum of once). You regain any expended uses when you finish a long rest.
 Your Bardic Inspiration die changes when you reach certain levels in this class. The die becomes a
-d8 at 5th level, a d10 at 10th level, and a d12 at 15th level.",,,bard,1,,
+d8 at 5th level, a d10 at 10th level, and a d12 at 15th level.",,"grant_roll:bardic_inspiration:1d step(class_level.bard, 1->6, 5->8, 10->10, 15->12)",bard,1,,
 bard_jack_of_all_trades,Jack of All Trades,,"Starting at 2nd level, you can add half your proficiency bonus, rounded down, to any ability check you make that doesn't already include your proficiency bonus.",,,bard,2,,
 bard_song_of_rest,Song of Rest,,"Beginning at 2nd level, you can use soothing music or oration to help revitalize your wounded allies during a short rest. If you or any friendly creatures who can hear your performance regain hit points at the end of the short rest by spending one or more
 Hit Dice, each of those creatures regains an extra 1d6 hit points.
@@ -80,7 +80,7 @@ You gain the following benefits while you are unarmed or wielding only monk weap
 •You can use Dexterity instead of Strength for the attack and damage rolls of your unarmed strike sand monk weapons.
 •You can roll a d4 in place of the normal damage ofyour unarmed strike or monk weapon. This die changes as you gain monk levels, as shown in the Martial Arts column of the Monk table.
 •When you use the Attack action with an unarmed strike or a monk weapon on your turn, you can
-make one unarmed strike as a bonus action. For example, if you take the Attack action and attack with a quarterstaff, you can also make an unarmed strike as a bonus action, assuming you haven't already taken a bonus action this turn. Certain monasteries use specialized forms of the monk weapons. For example, you might use a club that is two lengths of wood connected by a short chain (called a nunchaku) or a sickle with a shorter, straighter blade (called a kama). Whatever name you use for a monk weapon, you can use the game statistics provided for the weapon.",,,monk,1,,
+make one unarmed strike as a bonus action. For example, if you take the Attack action and attack with a quarterstaff, you can also make an unarmed strike as a bonus action, assuming you haven't already taken a bonus action this turn. Certain monasteries use specialized forms of the monk weapons. For example, you might use a club that is two lengths of wood connected by a short chain (called a nunchaku) or a sickle with a shorter, straighter blade (called a kama). Whatever name you use for a monk weapon, you can use the game statistics provided for the weapon.",,"grant_roll:martial_arts:1d step(class_level.monk, 1->4, 5->6, 11->8, 17->10)",monk,1,,
 monk_ki,Ki,,"Starting at 2nd level, your training allows you to harness the mystic energy of ki. Your access to this energy is represented by a number of ki points. Your monk level determines the number of points you have, as shown in the Ki Points column of the Monk table. You can spend these points to fuel various ki features. You start knowing three such features: Flurry of Blows, Patient Defense, and Step of the Wind. You learn more ki features as you gain levels in this class. When you spend a ki point, it is unavailable until you finish a short or long rest, at the end of which you draw all of your expended ki back into yourself. You must spend at least 30 minutes of the rest meditating to regain your ki points. Some of your ki features require your target to make a saving throw to resist the feature's effects. The saving throw DC is calculated as follows:
 KisaveDC =8 + your proficiency bonus + your Wisdom modifier",,,monk,2,,
 monk_unarmored_movement,Unarmored Movement,,"Starting at 2nd level, your speed increases by 10 feet while you are not wearing armor or wielding a shield. This bonus increases when you reach certain monk levels, as shown in the Monk table.
@@ -157,7 +157,7 @@ rogue_expertise,Expertise,,"At 1st level, choose two of your skill proficiencies
 At 6th level, you can choose two more of your proficiencies (in skills or with thieves' tools) to gain this benefit.",,,rogue,1,,
 rogue_sneak_attack,Sneak Attack,,"Beginning at 1st level, you know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack if you have advantage on the attack roll. The attack must use a finesse or a ranged weapon.
 You don't need advantage on the attack roll if another enemy of the target is within 5 feet of it, that enemy isn't incapacitated, and you don't have disadvantage on the attack roll.
-The amount of the extra damage increases as you gain levels in this class, as shown in the Sneak Attack column of the Rogue table.",,,rogue,1,,
+The amount of the extra damage increases as you gain levels in this class, as shown in the Sneak Attack column of the Rogue table.",,grant_roll:sneak_attack:ceil(class_level.rogue/2) d 6,rogue,1,,
 rogue_thieves_cant,Thieves' Cant,,"During your rogue training you learned thieves' cant, a secret mix of dialect, jargon, and code that allows you to hide messages in seemingly normal conversation. Only another creature that knows thieves' cant understands such messages.
 It takes four times longer to convey such a message than it does to speak the same idea plainly.
 In addition, you understand a set of secret signs and symbols used to convey short, simple messages,

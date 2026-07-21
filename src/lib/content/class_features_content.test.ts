@@ -18,10 +18,29 @@ async function loadEdition(dir: string): Promise<ContentGraph> {
 	return loadContent(s, ['c']);
 }
 
-function barbarian(source: string, system: '5e' | '5.5e', level: number): Character {
+function charOf(
+	source: string,
+	system: '5e' | '5.5e',
+	classId: string,
+	level: number
+): Character {
 	const c = newCharacter('grog', 'Grog', system);
-	c.build.classes = [{ class: `class:${source}:barbarian`, level }];
+	c.build.classes = [{ class: `class:${source}:${classId}`, level }];
 	return characterSchema.parse(c);
+}
+const barbarian = (source: string, system: '5e' | '5.5e', level: number) =>
+	charOf(source, system, 'barbarian', level);
+
+function rollFormula(
+	graph: ContentGraph,
+	source: string,
+	system: '5e' | '5.5e',
+	classId: string,
+	level: number,
+	rollId: string
+): string | undefined {
+	const sheet = deriveSheet(charOf(source, system, classId, level), graph);
+	return sheet.facts.rolls.find((r) => r.id === rollId)?.formula;
 }
 
 function rageMax(graph: ContentGraph, source: string, system: '5e' | '5.5e', level: number): number {
@@ -42,6 +61,22 @@ describe('shipped class features · Rage resource (EFX-E4)', () => {
 		expect(rageMax(g, 'SRD 5.1', '5e', 1)).toBe(2);
 		expect(rageMax(g, 'SRD 5.1', '5e', 12)).toBe(5);
 		expect(rageMax(g, 'SRD 5.1', '5e', 20)).toBe(Infinity); // 20->inf terminal
+	});
+});
+
+describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', () => {
+	it('5.5e: Sneak Attack Nd6, Bardic Inspiration + Martial Arts dice scale by class level', async () => {
+		const g = await loadEdition('content/srd-2024');
+		expect(rollFormula(g, 'SRD 5.2.1', '5.5e', 'rogue', 6, 'sneak_attack')).toBe('3d6'); // ceil(6/2)
+		expect(rollFormula(g, 'SRD 5.2.1', '5.5e', 'bard', 5, 'bardic_inspiration')).toBe('1d8');
+		expect(rollFormula(g, 'SRD 5.2.1', '5.5e', 'monk', 11, 'martial_arts')).toBe('1d10'); // 2024: d6-start
+	});
+
+	it('5e: Martial Arts die starts a step lower than 2024 (d4 vs d6)', async () => {
+		const g = await loadEdition('content/srd-2014');
+		expect(rollFormula(g, 'SRD 5.1', '5e', 'rogue', 20, 'sneak_attack')).toBe('10d6');
+		expect(rollFormula(g, 'SRD 5.1', '5e', 'monk', 1, 'martial_arts')).toBe('1d4'); // 2014: d4-start
+		expect(rollFormula(g, 'SRD 5.1', '5e', 'monk', 11, 'martial_arts')).toBe('1d8');
 	});
 });
 
