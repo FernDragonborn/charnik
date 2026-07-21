@@ -296,10 +296,11 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   VALUES — a design call, logged in `docs/DECISIONS-PENDING.md`): gold border `#5a4d28`, teal border
   `#2c4a45`, gold-tinted popover surface `#221c10` / settings `#1a1400`.
 
-- [ ] **C2 · Same class name, different styles across components** (css-name-collisions.mjs,
-  2026-07-14). Svelte scoping prevents runtime bleed, but the names lie to the reader and
-  invite copy-paste drift: `.visually-hidden` (build/+page redefines the app.css GLOBAL util
-  — worst of the set), `.skill-name` + `.category-block` (PanelCard vs CombatMenus), `.spent`
+- [~] **C2 · Same class name, different styles across components** (css-name-collisions.mjs,
+  2026-07-14). PARTIAL 2026-07-21: deleted the `.visually-hidden` local redefine in `build/+page`
+  (the worst — it re-forked the app.css GLOBAL util); the element now uses the global. REMAINING (fold
+  into the combat-class rename pass): Svelte scoping prevents runtime bleed, but the names lie to the
+  reader and invite copy-paste drift: `.skill-name` + `.category-block` (PanelCard vs CombatMenus), `.spent`
   (PanelCard vs Turnbar), `.used` (ResourceBar vs Turnbar), `.bar-label`, `.eyebrow`, `.pick`
   + more (run `node tools/visual/css-name-collisions.mjs` for the live list). Fold into the
   planned combat-class rename pass; `.visually-hidden` local copy should just be deleted.

@@ -449,13 +449,7 @@
 </section>
 
 <style>
-	.visually-hidden {
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		overflow: hidden;
-		clip: rect(0 0 0 0);
-	}
+	/* `.visually-hidden` is the global screen-reader util in app.css — no local copy (C2). */
 	.boost-head {
 		display: flex;
 		align-items: center;
