@@ -25,7 +25,7 @@ import { ordinal, titleCase, signed } from '$lib/util/format';
 // re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
 export { titleCase, signed };
 import { parseToken, EFFECT_KIND, type Recharge } from '$lib/effects/token-parser';
-import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
+import { matchesTarget, type EffectFacts, type NumericFact } from '$lib/effects/apply';
 import { cantripDieMultiplier } from '$lib/rules/spellcasting';
 
 /** A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack —
@@ -201,6 +201,7 @@ function targetLabel(t: string): string {
 	if (t.startsWith('save.')) return `${t.slice(5).toUpperCase()} save`;
 	if (t.startsWith('skill.')) return titleCase(t.slice(6));
 	if (t === 'ac') return 'AC';
+	if ((ABILITY_IDS as readonly string[]).includes(t)) return t.toUpperCase(); // STR/DEX/…
 	return titleCase(t);
 }
 
@@ -237,6 +238,51 @@ export function effectTag(token: string): string {
 	// a handler REFERENCE — the namespace is the readable part; args are opaque (often long) machine input
 	if (p.kind === EFFECT_KIND.plugin && p.plugin) return `plugin · ${p.plugin.namespace}`;
 	return token.replace(/[-:]/g, ' ');
+}
+
+/** One source's derived contributions, as short display tags (B14). */
+export interface DerivedEffectGroup {
+	source: string;
+	tags: string[];
+}
+
+/** A short tag for a numeric fact, formatted from the FACT FIELDS (never re-parsing the token — the
+ *  D7 invariant): "AC +1" / "Speed = 0" / "INT ≥ 19" / "hp_max ×½" / "attack +1d6". */
+function numericFactTag(f: NumericFact): string {
+	const t = targetLabel(f.target);
+	if (f.amount !== undefined) {
+		if (f.op === 'set') return `${t} = ${f.amount}`;
+		if (f.op === 'floor') return `${t} ≥ ${f.amount}`;
+		if (f.op === 'cap') return `${t} ≤ ${f.amount}`;
+		if (f.op === 'mult') return `${t} ×${f.amount === 0.5 ? '½' : f.amount}`;
+		return `${t} ${signed(f.amount)}`;
+	}
+	if (f.diceFormula) return `${t} ${f.diceFormula.startsWith('-') ? '' : '+'}${f.diceFormula}`;
+	return `${t} (unresolved)`;
+}
+
+/**
+ * B14: the effects panel's read-only "from items & features" view. Reads the sheet's ONE typed-facts
+ * object (D7) — NEVER re-parses raw tokens — and surfaces the content-borne NUMERIC contributions
+ * (item/feature layers, so it doesn't duplicate the runtime buff/debuff rows or the conditions the
+ * panel already lists), grouped by source, plus the unknown tokens (distinctly styled inert notes).
+ * Advantage/defense/proficiency facts already surface on their own stats, so they stay out here.
+ */
+export function describeDerivedEffects(facts: EffectFacts): {
+	groups: DerivedEffectGroup[];
+	unknown: { source: string; token: string }[];
+} {
+	const bySource = new Map<string, string[]>();
+	for (const f of facts.numeric) {
+		if (f.layer !== 'item' && f.layer !== 'feature') continue;
+		const cur = bySource.get(f.source);
+		if (cur) cur.push(numericFactTag(f));
+		else bySource.set(f.source, [numericFactTag(f)]);
+	}
+	return {
+		groups: [...bySource.entries()].map(([source, tags]) => ({ source, tags })),
+		unknown: facts.unknown
+	};
 }
 
 /** The display text of a `note:` token (a rules effect shown but NOT auto-applied — attacks against

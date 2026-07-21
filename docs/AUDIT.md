@@ -228,10 +228,11 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   unsupported. Related: `action`/`bonus`/`reaction` targets are honored by `TurnEconomy.slotMax`
   but exist in NO documented vocabulary (PLAN L1 list, PLUGINS.md §4.4) — code extended the vocab
   silently; shipped Haste uses `flat_bonus:action+1`.
-- [ ] **B14 · `collectFlags` has zero production consumers; the effects panel shows only
-  `play.effects`.** The "panel lists ALL active effects (auto-applied vs text-only) so nothing is
-  silently lost" invariant is unimplemented for content-borne effects (item/feature buffs and
-  their unknown tokens are invisible outside stat traces).
+- [x] **B14 · effects panel shows only `play.effects`.** FIXED (EFX-B14, 2026-07-21):
+  `describeDerivedEffects(facts)` (reads the D7 typed-facts, never re-parses) feeds a read-only
+  "From items & features" section + an "Unrecognized" inert-notes section in PanelCard; the panel
+  body no longer hides when `play.effects` is empty. Content-borne item/feature numeric buffs + their
+  unknown tokens are now visible. See DECISIONS-PENDING §5.
 - [x] **B15 · Derive ignores source filtering entirely.** FIXED (EFX-B15, 2026-07-21):
   `deriveSheet` takes an `isActive` predicate (the VMs pass `isRowActive`; derive stays a pure param,
   not a store import). `gatherEffects.resolve()` + the class-feature loop treat a disabled/

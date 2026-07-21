@@ -350,6 +350,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const metres` — Feet → "N m" (metric in parentheses next to imperial).
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
+- `interface DerivedEffectGroup` — One source's derived contributions, as short display tags (B14).
+- `function describeDerivedEffects` — * B14: the effects panel's read-only "from items & features" view.
 - `function noteText` — The display text of a `note:` token (a rules effect shown but NOT auto-applied — attacks against * you, auto-crit, se…
 - `function conditionIdOf` — The condition id an effect applies (its `apply_condition:<id>` token), or null — so the combat * panel can surface a …
 - `re-export EffectInstance` — A runtime effect instance — the character-schema type, re-exported for the combat views.
@@ -842,4 +844,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 469 exports across 67 modules · 26 duplicate suspects · generated in 218ms._
+_46 tokens · 50 global classes · 36 components · 471 exports across 67 modules · 26 duplicate suspects · generated in 133ms._

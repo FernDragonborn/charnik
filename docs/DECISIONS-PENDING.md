@@ -538,7 +538,7 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4 (grapple family + Rage
 token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ → ~~EFX-G4~~ ✅ + EFX-EXH → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ →
 ~~EFX-ROLL~~ ✅ → piece 3 (§0.5) → ~~EFX-B17~~ ✅ → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
-[Also DONE opportunistically: EFX-B15 ✅.]
+[Also DONE opportunistically: EFX-B15 ✅, EFX-B14 ✅.]
 
 ## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — ✅ DONE (2026-07-21)
 
@@ -719,7 +719,19 @@ string; a plain-number result = flat roll, legal). UI: a rollable chip in the AC
 broken. Do D8 first. Validation: Bardic `1d step(class_level.bard, 1->6, 5->8, 10->10, 15->12)`
 (or the dice-valued `step(…, 1->1d6, …)` form), Sneak `ceil(class_level.rogue/2) d 6`.
 
-## EFX-B14 · effects panel completeness — WORK
+## EFX-B14 · effects panel completeness — ✅ DONE (2026-07-21)
+
+**Landed**: pure `describeDerivedEffects(facts)` (helpers) reads the ONE typed-facts object (D7,
+never re-parses tokens) and returns item/feature NUMERIC contributions grouped by source (formatted
+from FACT FIELDS — "AC +1" / "STR ≥ 19" / "hp_max ×½") + the `facts.unknown` tokens. Item/feature
+layer filter so it doesn't duplicate the runtime buff/debuff rows or listed conditions. PanelCard's
+effects panel gained a read-only "From items & features" section + an "Unrecognized" inert-notes
+section, and the whole panel body no longer hides when `play.effects` is empty (a magic item with no
+runtime buff now shows). No remove/spend controls on derived rows (they follow equip/feature state).
+Bonus: `targetLabel` now renders abilities uppercase (STR/DEX). Tests cover grouping/formatting +
+the runtime-exclusion.
+
+**Original plan below (retained for reference):**
 
 `groupEffects` (`lib/combat/helpers.ts:268`) reads ONLY `play.effects`; content-borne item/feature
 buffs and `facts.unknown` are invisible. Plan: PanelCard's effects section gains a READ-ONLY

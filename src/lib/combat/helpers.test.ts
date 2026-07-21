@@ -17,6 +17,7 @@ import {
 	standardActions,
 	effectiveHpMax,
 	weaponBonus,
+	describeDerivedEffects,
 	type EffectInstance
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
@@ -49,6 +50,27 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 			attack: 0,
 			damage: 0
 		});
+	});
+});
+
+describe('B14 · describeDerivedEffects (content-borne facts for the panel)', () => {
+	it('groups item/feature numeric facts by source and formats from FACT FIELDS (not the token)', () => {
+		const facts = collectFacts([
+			{ source: 'Ring of Protection', layer: 'item', tokens: ['flat_bonus:ac+1'] },
+			{ source: 'Belt', layer: 'item', tokens: ['set_override:str:19:floor'] },
+			{ source: 'Homebrew', layer: 'feature', tokens: ['teleport:far'] }
+		]);
+		const d = describeDerivedEffects(facts);
+		expect(d.groups.find((g) => g.source === 'Ring of Protection')?.tags).toContain('AC +1');
+		expect(d.groups.find((g) => g.source === 'Belt')?.tags).toContain('STR ≥ 19');
+		expect(d.unknown).toContainEqual({ source: 'Homebrew', token: 'teleport:far' });
+	});
+
+	it('excludes runtime (condition-layer) facts so it does not duplicate the buff/debuff rows', () => {
+		const facts = collectFacts([
+			{ source: 'Bless', layer: 'condition', tokens: ['flat_bonus:saves+1'] }
+		]);
+		expect(describeDerivedEffects(facts).groups).toHaveLength(0);
 	});
 });
 

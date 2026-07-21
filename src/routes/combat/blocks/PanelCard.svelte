@@ -15,6 +15,7 @@
 		signed,
 		titleCase,
 		effectTag,
+		describeDerivedEffects,
 		noteText,
 		conditionIdOf,
 		groupEffects,
@@ -193,7 +194,8 @@
 			</button>
 		{/each}
 	{:else if pid === 'effects'}
-		{#if !c.play.effects.length}
+		{@const derived = describeDerivedEffects(s.facts)}
+		{#if !c.play.effects.length && !derived.groups.length && !derived.unknown.length && !s.facts.pluginNotes.length}
 			<p class="trace">No active effects.</p>
 		{:else}
 			{@const firstKind = effectGroups.buffs.length
@@ -311,6 +313,30 @@
 								}}>✕</span
 							>
 						</button>
+					{/each}
+				</div>
+			{/if}
+			{#if derived.groups.length}
+				<!-- B14: content-borne item/feature contributions — read-only (they follow equip/feature
+				     state, not user CRUD), read from sheet.facts (D7), never re-parsed here. -->
+				<div class="effect-section">
+					<div class="section-head">From items &amp; features</div>
+					{#each derived.groups as g (g.source)}
+						<div class="derived-effect-row">
+							<span class="row-name">{g.source}</span>
+							<span class="derived-tags">
+								{#each g.tags as tag, i (i)}<span class="effect-tag">{tag}</span>{/each}
+							</span>
+						</div>
+					{/each}
+				</div>
+			{/if}
+			{#if derived.unknown.length}
+				<!-- unknown/unsupported tokens — surfaced as distinctly-styled inert notes (never dropped) -->
+				<div class="effect-section">
+					<div class="section-head">Unrecognized</div>
+					{#each derived.unknown as u, i (i)}
+						<p class="trace"><b>{u.source}</b> — <code>{u.token}</code></p>
 					{/each}
 				</div>
 			{/if}
@@ -587,6 +613,23 @@
 		flex: none;
 	}
 	/* tag pill — pos/neg share the box (identical height); modifier names avoid the row `.r` collision */
+	/* B14: derived (item/feature) contributions row — name left, mechanical tags wrapping right */
+	.derived-effect-row {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+		padding: 3px 4px;
+	}
+	.derived-effect-row .row-name {
+		flex: none;
+	}
+	.derived-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 4px;
+		justify-content: flex-end;
+		flex: 1;
+	}
 	.effect-tag {
 		display: inline-flex;
 		align-items: center;
