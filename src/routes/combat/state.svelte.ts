@@ -516,7 +516,8 @@ class CombatVM {
 
 	hpBar = $derived.by(() => {
 		if (!this.character || !this.sheet) return { cur: 0, tmp: 0 };
-		const max = this.character.play.hp.max ?? this.sheet.maxHp.value;
+		// `|| 1` guards a 0 max (unset HP) so the bar math can't divide → NaN/Infinity (D19)
+		const max = (this.character.play.hp.max ?? this.sheet.maxHp.value) || 1;
 		return {
 			cur: Math.max(0, Math.min(100, (this.character.play.hp.current / max) * 100)),
 			tmp: (this.character.play.hp.temp / max) * 100

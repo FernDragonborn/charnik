@@ -750,7 +750,7 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		defenses,
 		resources: facts.resources,
 		spellcasting,
-		missing,
+		missing: [...new Set(missing)], // dedupe: the same ref can be missing from several scans (D19)
 		deriveIssues: issues,
 		resolvedEffects,
 		facts

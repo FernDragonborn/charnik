@@ -379,11 +379,11 @@ Deep effects-system review, 2026-07-16 (D7–D19):
   for a spell_slots row; wrong option list if lookup types are authorable.
 - [ ] **D18 · `graph.featuresForClass` (loader.ts:397) has no consumer** and diverges from
   derive's inline feature query (no system/level gates). Fold into the B26 fix; one query owner.
-- [ ] **D19 · Minor pile:** `hpBar` divides by max=0 → NaN (state.svelte.ts:418); `missing[]`
-  refs not deduped (derive.ts); `passiveSkills` pins not persisted (belongs in `ui`, cf. D3);
-  `RollEffects.flat` carries a "callers must ignore it for save/skill keys or it double-counts"
-  contract in a comment instead of the type (helpers.ts:66); `exhaustion` hardcoded `max(6)` in
-  the schema (schema.ts:133) vs the decided data-driven ladder.
+- [~] **D19 · Minor pile:** DONE 2026-07-21 (2 of 5): `hpBar` `|| 1` guards a 0 max → no NaN;
+  `missing[]` deduped at derive return (`[...new Set(missing)]`). STILL OPEN: `passiveSkills` pins
+  not persisted (belongs in `ui`, cf. D3); `RollEffects.flat` carries a "callers must ignore it for
+  save/skill keys or it double-counts" contract in a comment instead of the type (helpers.ts:66);
+  `exhaustion` hardcoded `max(6)` in the schema (schema.ts:133) vs the decided data-driven ladder.
 
 ## E · Data / locale content
 
