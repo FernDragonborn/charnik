@@ -22,6 +22,10 @@ export const EFFECT_KIND = {
 	// `block_bonus:<target>` — RAW's "can't benefit from any bonus to its <target>" (grappled/
 	// restrained block ALL speed bonuses). A fact matched by target; drops effect-borne positive adds.
 	blockBonus: 'block_bonus',
+	// `halve:<target>` — a ×½ multiply (G4). The ONE RAW case for a non-integer factor (2014
+	// exhaustion L2 = speed halved, L4 = hp-max halved); a dedicated kind, NOT a generic multiply,
+	// because token value slots lex integers only and a `1/2` expr floors to 0. Targets: speed, hp_max.
+	halve: 'halve',
 	advantage: 'advantage',
 	disadvantage: 'disadvantage',
 	grantProficiency: 'grant_proficiency',
@@ -169,7 +173,8 @@ function classifyToken(token: string): ParsedEffect {
 		if (!ex) return { kind: 'unknown', raw };
 		return withMode({ kind, target: ex[1] ?? '', valueExpr: (ex[2] ?? '').trim(), raw });
 	}
-	if (kind === EFFECT_KIND.blockBonus) return { kind, target: rest.trim(), raw };
+	if (kind === EFFECT_KIND.blockBonus || kind === EFFECT_KIND.halve)
+		return { kind, target: rest.trim(), raw };
 	if (kind === EFFECT_KIND.resistImmune) {
 		// `resist_immune:<type>` (defaults to resistance) or `resist_immune:<bucket>:<type>`
 		const m = /^(?:(resist|immune|vulnerable):)?(.+)$/i.exec(rest);

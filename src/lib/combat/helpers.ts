@@ -200,6 +200,7 @@ export function effectTag(token: string): string {
 		return `${targetLabel(p.target)} ${sym} ${p.amount ?? p.valueExpr ?? '?'}`;
 	}
 	if (p.kind === EFFECT_KIND.blockBonus && p.target) return `block · ${targetLabel(p.target)}`;
+	if (p.kind === EFFECT_KIND.halve && p.target) return `${targetLabel(p.target)} ×½`;
 	if (p.kind === EFFECT_KIND.resistImmune && p.target)
 		return `${p.defense ?? 'resist'} · ${p.target}`;
 	if (p.kind === EFFECT_KIND.advantage && p.target) return `adv · ${targetLabel(p.target)}`;

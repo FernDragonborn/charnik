@@ -145,6 +145,9 @@ const PROFICIENCY_TARGETS = new Set<string>([
 	...Object.keys(SKILL_ABILITY)
 ]);
 
+/** G4 `halve` targets — the only two stats RAW ever halves (2014 exhaustion L2 speed, L4 hp-max). */
+const HALVE_TARGETS = new Set<string>(['speed', 'hp_max']);
+
 /** The candidate target set a kind is checked against, or null for an open-vocab kind. */
 const targetCandidatesFor = (kind: string): Set<string> | null => {
 	switch (kind) {
@@ -153,6 +156,9 @@ const targetCandidatesFor = (kind: string): Set<string> | null => {
 		case EFFECT_KIND.setOverride:
 		case EFFECT_KIND.blockBonus:
 			return NUMERIC_TARGETS;
+		// halve (2014 exhaustion) only ever multiplies speed or hp_max — a tighter closed set.
+		case EFFECT_KIND.halve:
+			return HALVE_TARGETS;
 		case EFFECT_KIND.advantage:
 		case EFFECT_KIND.disadvantage:
 		case EFFECT_KIND.autoFail:

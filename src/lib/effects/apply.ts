@@ -68,7 +68,7 @@ export interface RollMod {
 export interface NumericFact {
 	target: string;
 	/** `add`/`set` from flat_bonus/set_override; `floor`/`cap` from set_override's mode slot (A9);
-	 *  `mult` never comes from content tokens — only plugin `contributions` emit it (PLUGINS.md §4.3). */
+	 *  `mult` from `halve` (G4, ×½) and plugin `contributions` (PLUGINS.md §4.3). */
 	op: 'add' | 'set' | 'mult' | 'floor' | 'cap';
 	layer: Layer;
 	source: string;
@@ -213,6 +213,19 @@ export function collectFacts(
 				case EFFECT_KIND.blockBonus:
 					if (p.target && !rejectTarget(p.kind, p.target.trim(), eff.source, token))
 						facts.blockedBonuses.push({ target: p.target.trim(), source: eff.source });
+					break;
+				case EFFECT_KIND.halve:
+					// G4: a ×½ multiply at the effect's layer. Folds through the pipeline's `mult` op
+					// (one product per layer, then floors once — RAW round-down).
+					if (p.target && !rejectTarget(p.kind, p.target.trim(), eff.source, token))
+						facts.numeric.push({
+							target: p.target.trim(),
+							op: 'mult',
+							amount: 0.5,
+							layer: eff.layer,
+							source: eff.source,
+							token
+						});
 					break;
 				case EFFECT_KIND.advantage:
 					if (p.target && !rejectTarget(p.kind, p.target, eff.source, token))

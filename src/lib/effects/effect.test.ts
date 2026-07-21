@@ -270,6 +270,40 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 	});
 });
 
+describe('G4 · halve op (2014 exhaustion — speed / hp_max ×½)', () => {
+	it('halves the value accumulated from earlier layers, rounding down', () => {
+		const base: { value: number; trace: Contribution[] } = {
+			value: 30,
+			trace: [{ source: 'Base speed', layer: 'base', op: 'set', amount: 30 }]
+		};
+		const boots: ActiveEffect = { source: 'Boots', layer: 'item', tokens: ['flat_bonus:speed+10'] };
+		const exhausted: ActiveEffect = {
+			source: 'Exhausted',
+			layer: 'condition',
+			tokens: ['halve:speed']
+		};
+		// 30 + 10 = 40, then ×½ at the condition layer → 20
+		expect(applyEffects('speed', base, [boots, exhausted]).value).toBe(20);
+	});
+
+	it('halves hp_max (odd → floor)', () => {
+		const base: { value: number; trace: Contribution[] } = {
+			value: 25,
+			trace: [{ source: 'Hit dice', layer: 'base', op: 'add', amount: 25 }]
+		};
+		const exhausted: ActiveEffect = {
+			source: 'Exhausted',
+			layer: 'condition',
+			tokens: ['halve:hp_max']
+		};
+		expect(applyEffects('hp_max', base, [exhausted]).value).toBe(12); // floor(25/2)
+	});
+
+	it('parses halve as its own kind + target', () => {
+		expect(parseToken('halve:speed')).toMatchObject({ kind: 'halve', target: 'speed' });
+	});
+});
+
 describe('collectFacts', () => {
 	it('gathers non-numeric effect facts', () => {
 		const effects: ActiveEffect[] = [

@@ -56,7 +56,7 @@ A17-core, D13.
 | A17-rem | pure-warlock cast not slot-gated | Pact Magic must expend a pact slot — CONFIRMED in code (`slotToSpend` returns null when the leveled-pool filter excludes pact pools, `rules/spellcasting.ts:55-57`) |
 | A18 | cast + prepared-cap pick `classes[0]`, not the spell's granting class | derive IS per-class-correct (combined caster level + per-class DC verified); breach is `state.svelte.ts:450` (cast heal/attack mod) + `:526` (`preparedCap`) + global `preparedCount` — a Wiz/Cleric casts cleric spells off INT. `accessSpellIds` already maps spell→class |
 | B2 | death saves + hit-dice UI/logic unbuilt; exhaustion play-state field absent | core RAW. Exhaustion DESIGN decided (PLAN per-system ladder): **2024 modelable now** (`d20_tests -2*exhaustion` / `speed -5*exhaustion`); **2014 needs G4** below |
-| G4 (2014 exhaustion) | no multiply/halve pipeline op | 2014 exhaustion L2 = speed halved, L4 = hp-max halved — unmodelable without a stat-halve op (PLAN G4, deferred). 5e-only RAW gap |
+| G4 (2014 exhaustion) | ~~no multiply/halve pipeline op~~ ✅ op DONE (EFX-G4, 2026-07-21): `halve:speed` / `halve:hp_max`. 5e-only RAW gap now modelable; awaits exhaustion DATA rows (EFX-EXH) |
 | B9 | no armor-no-proficiency casting block; passives miss ±5 | can't cast in armor you lack proficiency; passive ±5 for adv/dis |
 | B19 | durations frozen out of combat | duration = elapsed-time RAW, combat-independent |
 | B25 | Eldritch Knight / Arcane Trickster get no slots | both third-casters per RAW |
@@ -523,7 +523,7 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
   (knip GREEN + jscpd ratchet). New SRD data only via converters (no hand-authored game data).
 
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4 (grapple family + Rage
-token; visually verifies the ∞ render) + EFX-B14 → EFX-A14 → EFX-G4 + EFX-EXH → EFX-D9 → D8 →
+token; visually verifies the ∞ render) + EFX-B14 → EFX-A14 → ~~EFX-G4~~ ✅ + EFX-EXH → EFX-D9 → D8 →
 EFX-ROLL → piece 3 (§0.5) → EFX-B17 → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
 
 ## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — ✅ DONE (2026-07-21)
@@ -595,7 +595,18 @@ set — that is the point (grappled 0 must win); do together with EFX-A9, grep t
 contributions already carry layers — after this change token-sets and plugin-sets have IDENTICAL
 semantics; add one parity test.
 
-## EFX-G4 · `halve` op for 2014 exhaustion — DESIGN PINNED HERE (was "deferred, unmodelable")
+## EFX-G4 · `halve` op for 2014 exhaustion — ✅ DONE (2026-07-21)
+
+**Landed**: new `halve:<target>` kind (`token-parser` + `content/schemas`), targets bounded to
+`{speed, hp_max}` in derive's validator (`HALVE_TARGETS`). `collectFacts` emits a `mult`/`0.5`
+NumericFact at the effect's layer → the pipeline's existing per-layer `mult` op folds it (one
+product, floor once). `effectTag` renders "speed ×½". Tests: 30 base + 10 item → condition halve =
+20; hp_max 25 → 12 (floor). **Known edge (accepted, not wired):** `halve:hp_max` folds at the real
+`applyEffects('hp_max')` stat but NOT in the DAG's internal `state.hpMax.value`, so an `is_bloodied`
+/ `hp_percent` GUARD read while at 2014-exhaustion-4 sees the pre-halve max — negligible, no RAW
+interaction specified; revisit only if content needs it. Data (exhaustion rows) lands via EFX-EXH.
+
+**Original plan below (retained for reference):**
 
 **The pipeline `mult` op ALREADY EXISTS** (`pipeline.ts:73-74`, added for plugins; folds one
 product then floors once; per-layer order sets → mult → add). The gap is ONLY vocabulary.

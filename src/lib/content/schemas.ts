@@ -27,6 +27,7 @@ export const EFFECT_KINDS = [
 	'flat_bonus',
 	'set_override',
 	'block_bonus',
+	'halve',
 	'advantage',
 	'disadvantage',
 	'grant_proficiency',
