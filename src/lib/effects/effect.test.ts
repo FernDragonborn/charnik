@@ -304,6 +304,55 @@ describe('G4 · halve op (2014 exhaustion — speed / hp_max ×½)', () => {
 	});
 });
 
+describe('EFX-ROLL · grant_roll (feature-granted named rollable)', () => {
+	const build: BuildVars = {
+		level: 6,
+		proficiencyBonus: 3,
+		abilityMods: { str: 0, dex: 3, con: 0, int: 0, wis: 0, cha: 0 },
+		abilityScores: { str: 10, dex: 16, con: 10, int: 10, wis: 10, cha: 10 },
+		classLevels: { rogue: 6 },
+		spellcastingMod: 0,
+		baseSpeed: 30
+	};
+	const ctx = makeExprContext(build);
+
+	it('parses grant_roll into an id + value expression', () => {
+		expect(parseToken('grant_roll:sneak_attack:ceil(class_level.rogue/2) d 6')).toMatchObject({
+			kind: 'grant_roll',
+			target: 'sneak_attack',
+			valueExpr: 'ceil(class_level.rogue/2) d 6'
+		});
+	});
+
+	it('resolves the expr to a dice formula against the character (Sneak Attack at rogue 6 → 3d6)', () => {
+		const facts = collectFacts(
+			[
+				{
+					source: 'Sneak Attack',
+					layer: 'feature',
+					tokens: ['grant_roll:sneak_attack:ceil(class_level.rogue/2) d 6']
+				}
+			],
+			ctx
+		);
+		expect(facts.rolls).toHaveLength(1);
+		expect(facts.rolls[0]).toMatchObject({
+			id: 'sneak_attack',
+			formula: '3d6',
+			label: 'Sneak Attack'
+		});
+	});
+
+	it('dedupes the same (id, source) to one rollable (A11)', () => {
+		const tok = 'grant_roll:sneak_attack:ceil(class_level.rogue/2) d 6';
+		const facts = collectFacts(
+			[{ source: 'Sneak Attack', layer: 'feature', tokens: [tok, tok] }],
+			ctx
+		);
+		expect(facts.rolls).toHaveLength(1);
+	});
+});
+
 describe('collectFacts', () => {
 	it('gathers non-numeric effect facts', () => {
 		const effects: ActiveEffect[] = [

@@ -228,6 +228,7 @@ export function effectTag(token: string): string {
 	if (p.kind === EFFECT_KIND.advantage && p.target) return `adv · ${targetLabel(p.target)}`;
 	if (p.kind === EFFECT_KIND.disadvantage && p.target) return `disadv · ${targetLabel(p.target)}`;
 	if (p.kind === EFFECT_KIND.grantProficiency && p.target) return `prof · ${titleCase(p.target)}`;
+	if (p.kind === EFFECT_KIND.grantRoll && p.target) return `roll · ${titleCase(p.target)}`;
 	if (p.kind === EFFECT_KIND.applyCondition && p.target) return titleCase(p.target);
 	if (p.kind === EFFECT_KIND.autoFail && p.target) return `auto-fail · ${targetLabel(p.target)}`;
 	if (p.kind === EFFECT_KIND.autoSucceed && p.target)

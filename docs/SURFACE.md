@@ -572,6 +572,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
 - `interface FactRef` — A non-numeric fact tied to a target key (`advantage:attack` → {target:'attack', source}).
 - `interface ProficiencyFact`
+- `interface RollFact` — A feature-granted named rollable (EFX-ROLL): `grant_roll:<id>:<expr>` with the L2 expression * already resolved to a …
 - `interface DefenseFact`
 - `interface EffectFacts` — * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and * value-resolved on…
 - `function collectFacts` — * One pass over the RESOLVED effect list → the typed-facts object (D7).
@@ -841,4 +842,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 468 exports across 67 modules · 26 duplicate suspects · generated in 196ms._
+_46 tokens · 50 global classes · 36 components · 469 exports across 67 modules · 26 duplicate suspects · generated in 143ms._

@@ -90,6 +90,14 @@ export interface ProficiencyFact {
 	level: 'proficient' | 'expertise';
 	source: string;
 }
+/** A feature-granted named rollable (EFX-ROLL): `grant_roll:<id>:<expr>` with the L2 expression
+ *  already resolved to a dice `formula` string, ready to hand to the DiceTrayRequest seam. */
+export interface RollFact {
+	id: string;
+	source: string;
+	label: string;
+	formula: string;
+}
 export interface DefenseFact {
 	bucket: Defense;
 	type: string;
@@ -116,6 +124,8 @@ export interface EffectFacts {
 	autoSucceed: FactRef[];
 	proficiencies: ProficiencyFact[];
 	defenses: DefenseFact[];
+	/** Feature-granted named rollables (`grant_roll`), expr resolved to a dice formula (EFX-ROLL). */
+	rolls: RollFact[];
 	/** Fully-specified resource pools (id:max:recharge), expression maxes resolved. */
 	resources: ResourceDef[];
 	/** Every granted resource id, incl. bare `grant_resource:<id>` flags (deduped). */
@@ -139,6 +149,7 @@ const emptyFacts = (): EffectFacts => ({
 	autoSucceed: [],
 	proficiencies: [],
 	defenses: [],
+	rolls: [],
 	resources: [],
 	resourceIds: [],
 	conditions: [],
@@ -251,6 +262,27 @@ export function collectFacts(
 							source: eff.source
 						});
 					break;
+				case EFFECT_KIND.grantRoll: {
+					// resolve the expr to a dice formula (or a flat number = a constant roll) for a
+					// rollable chip; dedupe by (id, source) like A11. An unresolvable expr → an issue
+					// (SPEC10), skipped — a chip with no formula is useless.
+					if (!p.target || !p.valueExpr) break;
+					const rv = resolveEffectValue(p, ctxOf(ctx, eff));
+					const formula =
+						rv.diceFormula ?? (rv.amount !== undefined ? String(rv.amount) : undefined);
+					if (formula === undefined) {
+						issues?.push({ source: eff.source, token, reason: rv.error ?? 'roll has no value' });
+						break;
+					}
+					if (!facts.rolls.some((r) => r.id === p.target && r.source === eff.source))
+						facts.rolls.push({
+							id: p.target,
+							source: eff.source,
+							label: titleCase(p.target),
+							formula
+						});
+					break;
+				}
 				case EFFECT_KIND.resistImmune:
 					if (p.target)
 						facts.defenses.push({
@@ -350,6 +382,8 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.autoSucceed.push(...extra.autoSucceed);
 	base.proficiencies.push(...extra.proficiencies);
 	base.defenses.push(...extra.defenses);
+	for (const r of extra.rolls)
+		if (!base.rolls.some((b) => b.id === r.id && b.source === r.source)) base.rolls.push(r);
 	base.rerolls.push(...extra.rerolls);
 	base.minDie.push(...extra.minDie);
 	base.unknown.push(...extra.unknown);

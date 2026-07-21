@@ -31,6 +31,7 @@ export const EFFECT_KINDS = [
 	'advantage',
 	'disadvantage',
 	'grant_proficiency',
+	'grant_roll',
 	'resist_immune',
 	'apply_condition',
 	'grant_resource',

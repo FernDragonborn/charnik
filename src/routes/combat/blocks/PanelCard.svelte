@@ -184,6 +184,14 @@
 				>
 			</button>
 		{/each}
+		<!-- EFX-ROLL: feature-granted rollables (Sneak Attack Nd6, Bardic Inspiration die). The expr
+		     is already resolved to a formula in derive; tap opens the dice tray via the seam. -->
+		{#each combat.featureRolls as r (r.id + r.source)}
+			<button class="combat-row" onclick={() => combat.rollFeature(r)}>
+				<span class="row-name">{r.label}</span><span class="combat-row-hint">{r.formula}</span>
+				<span class="combat-row-desc">{r.source}</span><span class="combat-row-marker">→ roll</span>
+			</button>
+		{/each}
 	{:else if pid === 'effects'}
 		{#if !c.play.effects.length}
 			<p class="trace">No active effects.</p>

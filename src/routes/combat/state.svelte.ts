@@ -40,7 +40,7 @@ import {
 	type StandardAction
 } from '$lib/combat/helpers';
 import { RollTray } from './roll.svelte';
-import { registerDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
+import { registerDiceTray, openDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
 import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
@@ -175,6 +175,13 @@ class CombatVM {
 	/** Register this tray as the live `DiceTrayRequest` handler; returns an unregister fn (called on
 	 *  combat unmount so leaving the route restores the instant-roll fallback). */
 	registerTray = () => registerDiceTray(this.handleTrayRequest);
+
+	/** EFX-ROLL: feature-granted named rollables (Sneak Attack, Bardic Inspiration die) — the derive
+	 *  already resolved each expr to a dice formula against this character's levels. */
+	featureRolls = $derived(this.sheet?.facts.rolls ?? []);
+	/** Roll a feature rollable through the tray seam (registered above → opens the rich tray). */
+	rollFeature = (r: { label: string; formula: string }) =>
+		openDiceTray({ label: r.label, formula: r.formula });
 
 	setTempHp = () => {
 		if (this.character) this.character.play.hp.temp = Math.max(0, this.tempHpInput);

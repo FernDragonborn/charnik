@@ -29,6 +29,10 @@ export const EFFECT_KIND = {
 	advantage: 'advantage',
 	disadvantage: 'disadvantage',
 	grantProficiency: 'grant_proficiency',
+	// `grant_roll:<id>:<expr>` — a named, feature-granted ROLLABLE (Sneak Attack `Nd6`, Bardic
+	// Inspiration die). The expr is an L2 value expression (composes with `step()`/`d`); derive
+	// resolves it to a dice formula string for a rollable chip → the DiceTrayRequest seam (EFX-ROLL).
+	grantRoll: 'grant_roll',
 	resistImmune: 'resist_immune',
 	applyCondition: 'apply_condition',
 	grantResource: 'grant_resource',
@@ -175,6 +179,12 @@ function classifyToken(token: string): ParsedEffect {
 	}
 	if (kind === EFFECT_KIND.blockBonus || kind === EFFECT_KIND.halve)
 		return { kind, target: rest.trim(), raw };
+	if (kind === EFFECT_KIND.grantRoll) {
+		// `grant_roll:<id>:<expr>` — id is snake (readable), expr is the colon-free L2 value slot.
+		const m = /^([a-z0-9][a-z0-9_]*):(.+)$/i.exec(rest.trim());
+		if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
+		return { kind, target: m[1].toLowerCase(), valueExpr: m[2].trim(), raw };
+	}
 	if (kind === EFFECT_KIND.resistImmune) {
 		// `resist_immune:<type>` (defaults to resistance) or `resist_immune:<bucket>:<type>`
 		const m = /^(?:(resist|immune|vulnerable):)?(.+)$/i.exec(rest);

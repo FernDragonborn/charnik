@@ -537,7 +537,7 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
 
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4 (grapple family + Rage
 token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ → ~~EFX-G4~~ ✅ + EFX-EXH → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ →
-EFX-ROLL → piece 3 (§0.5) → EFX-B17 → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
+~~EFX-ROLL~~ ✅ → piece 3 (§0.5) → EFX-B17 → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
 
 ## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — ✅ DONE (2026-07-21)
 
@@ -695,7 +695,17 @@ the Atk). v1 may accept literal amounts only (covers +1/+2/+3); expression value
 if deferred, degrade to a VISIBLE note, not a silent drop. Mechanics stay out of prose regexes
 (D10/D6 direction). Tests: a +1 longsword bumps ONLY itself; other weapons byte-identical.
 
-## EFX-ROLL · roll surface for scaling dice (piece 2 closer) — OPEN DECIDE (recommend: token)
+## EFX-ROLL · roll surface for scaling dice (piece 2 closer) — ✅ DONE (2026-07-21, token path)
+
+**Landed** (the recommended token path): new `grant_roll:<id>:<expr>` kind (`token-parser` +
+`content/schemas`). Derive resolves the expr to a dice `formula` string once (`collectFacts` →
+`facts.rolls: RollFact[] {id, source, label, formula}`, deduped by `(id, source)` like A11; an
+unresolvable expr → a content-health issue, skipped). `sheet.facts.rolls` flows to the combat view;
+PanelCard's ACTIONS block renders a rollable chip per roll (label · formula · source) → `rollFeature`
+→ `openDiceTray` → the D8 tray. Validated: Sneak Attack `ceil(class_level.rogue/2) d 6` at rogue 6 →
+`3d6` (also confirms the prior-session dice-count lexing). Piece 2 (§0.5) now has a product surface.
+
+**Original plan below (retained for reference):**
 
 **Recommendation**: new kind `grant_roll:<id>:<expr>` in a feature's `effects` cell (consistent
 with mechanics-as-tokens; zero schema change). Derive: `facts.rolls: {id, label, expr, source}`
