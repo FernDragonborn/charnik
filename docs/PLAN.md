@@ -334,12 +334,13 @@ cp/sp/ep/gp/pp. **Optional appearance** (age, height, weight, eyes, skin, hair, 
 **Separate sections — NOT one blob**: Class features · Species traits · Feats ·
 Armor/weapon proficiencies · Tool proficiencies · Languages — each its own section.
 
-**Attacks — deliberate leniency (AUDIT A7):** `computeAttacks` adds the proficiency bonus to
-every equipped weapon's to-hit UNCONDITIONALLY. Weapon/armor proficiency is not modeled in the
-content schema (no `weapon_prof` column, no character store field), so there's nothing to gate on
-— proficiency is granted by class narratively and the sheet trusts the equip. This is accepted
-until a weapon-proficiency data model lands (would also feed the "proficiencies" section above);
-revisit A7 then.
+**Attacks — proficiency model (AUDIT A7/B9 — ✅ RESOLVED 2026-07-21):** `classes` now carry
+`weapon_profs`/`armor_profs` (normalized categories + specific weapon ids), populated RAW from the
+SRD by the converters. Pure `rules/proficiency.ts` gates `computeAttacks` (a non-proficient weapon
+drops the proficiency bonus + a note) and drives B9 (worn armor you lack proficiency with →
+`spellcasting.armorBlock` + a deriveIssue + a red rule-block banner on the spells panel). LENIENT
+fallback preserved: a class (or set of classes) that declares no prof column stays proficient with
+everything — old homebrew is never wrong-downward.
 
 ### Compendium / browser
 - Browse every content type. **Search respects active system, or across both** when the

@@ -535,10 +535,12 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
 - Gates per change: `node tools/surface.mjs`, full `pnpm vitest run`, `pnpm check`, `pnpm lint`
   (knip GREEN + jscpd ratchet). New SRD data only via converters (no hand-authored game data).
 
-**Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4 (grapple family + Rage
-token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ → ~~EFX-G4~~ ✅ + EFX-EXH → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ →
-~~EFX-ROLL~~ ✅ → piece 3 (§0.5) → ~~EFX-B17~~ ✅ → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
-[Also DONE opportunistically: EFX-B15 ✅, EFX-B14 ✅.]
+**Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4
+(~~grapple family~~ ✅ + Rage token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ →
+~~EFX-G4~~ ✅ + EFX-EXH → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ → ~~EFX-ROLL~~ ✅ → piece 3 (§0.5) →
+~~EFX-B17~~ ✅ → ~~EFX-A7/B9~~ ✅ DONE 2026-07-21 (engine + data) → EFX-B18 (last). EFX-TAIL opportunistic.
+[Also DONE opportunistically: EFX-B15 ✅, EFX-B14 ✅. EFX-E4 grapple slice ✅ 2026-07-21; Rage/exhaustion/
+rollables remain — all blocked on class_features effect-preservation in the class converters.]
 
 ## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — ✅ DONE (2026-07-21)
 
