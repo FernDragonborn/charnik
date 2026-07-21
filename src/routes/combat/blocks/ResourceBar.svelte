@@ -65,19 +65,18 @@
 		font-family: var(--font-mono);
 		color: var(--color-text-muted);
 	}
-	/* the resource NAME is a "use one" button (UBUG-8) — hover like a spell row */
+	/* the whole chip highlights on hover (UBUG-8), like a spell / action row */
+	.resource-bar .resource:hover {
+		background: var(--color-surface-2);
+	}
+	/* the resource NAME is the "use one" action (UBUG-8) — chip shows the hover highlight */
 	.resource-use {
 		font: inherit;
 		color: var(--color-text);
-		padding: 1px 5px;
-		margin: -1px -1px -1px -5px;
+		padding: 0;
 		border: 0;
-		border-radius: 6px;
 		background: none;
 		cursor: pointer;
-	}
-	.resource-use:hover {
-		background: var(--color-surface-2);
 	}
 	.respips {
 		display: inline-flex;

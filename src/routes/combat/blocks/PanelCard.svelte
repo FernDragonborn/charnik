@@ -649,15 +649,22 @@
 		color: var(--color-text);
 		font-weight: 600;
 	}
-	/* resource row: pips + count + recharge chip */
+	/* resource row: pips + count + recharge chip. The whole row highlights on hover (UBUG-8), like a
+	   spell / action row; margin bleed makes the tint span full width. */
 	.resource-row {
 		display: flex;
 		align-items: center;
 		gap: 9px;
-		padding: 7px 0;
+		padding: 7px 9px;
+		margin: 0 -9px;
+		width: calc(100% + 18px);
+		border-radius: 9px;
 		border-top: 1px solid var(--color-border);
 	}
-	/* the resource NAME is a "use one" button (UBUG-8) — hover like a spell row (.spell-row:hover) */
+	.resource-row:hover {
+		background: var(--color-surface-2);
+	}
+	/* the resource NAME is the "use one" action (UBUG-8) — the whole row shows the hover highlight */
 	.resource-name {
 		font-family: var(--font-display);
 		font-weight: 600;
@@ -665,15 +672,10 @@
 		color: var(--color-text);
 		flex: 1;
 		text-align: left;
-		padding: 2px 6px;
-		margin-left: -6px;
+		padding: 0;
 		border: 0;
-		border-radius: 7px;
 		background: transparent;
 		cursor: pointer;
-	}
-	.resource-name:hover {
-		background: var(--color-surface-2);
 	}
 	.resource-pips {
 		display: inline-flex;
@@ -887,12 +889,19 @@
 		border-color: var(--color-resource);
 	}
 	.pinstar {
+		display: inline-block;
 		background: transparent;
 		border: 0;
 		color: var(--color-border-strong);
 		margin-left: 7px;
 		cursor: pointer;
 		font-size: 12px;
+		line-height: 1;
+		border-radius: 50%;
+	}
+	/* same hover halo as the prep dot (.prep:hover) — shows you're on the pin target */
+	.pinstar:hover {
+		box-shadow: 0 0 0 6px var(--color-border-strong);
 	}
 	.pinstar.on {
 		color: var(--color-accent-bright);
