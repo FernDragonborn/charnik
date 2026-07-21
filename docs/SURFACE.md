@@ -751,6 +751,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function cantripDieMultiplier` — Cantrip damage-dice multiplier at a CHARACTER level — the 5/11/17 steps (identical in 2014 and * 2024, so no per-syst…
 - `function preparedCap` — The prepared/known set SIZE: the class-table value if present (2024), else a per-share formula * fallback (`ability m…
 - `function slotPools` — Turn a slot-count array into one castable pool per non-empty spell level.
+- `interface PreparableSpell` — A prepared-spell entry (the two flags the cap logic reads).
+- `function preparedLeveledCount` — Spells that count toward the prepared CAP: leveled + toggled-on.
+- `type PrepareAttempt` — Outcome of trying to flip a spell's `prepared` flag.
+- `function canTogglePrepared` — Whether a spell's `prepared` flag may flip, enforcing the leveled cap.
 
 ### `src/lib/schema/version.ts`
 
@@ -834,4 +838,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 461 exports across 67 modules · 26 duplicate suspects · generated in 143ms._
+_46 tokens · 50 global classes · 36 components · 465 exports across 67 modules · 26 duplicate suspects · generated in 123ms._

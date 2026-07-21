@@ -357,11 +357,12 @@ Deep effects-system review, 2026-07-16 (D7–D19):
   ignores `eff.layer`) while the pipeline is designed for layered sets ("an override-layer set
   beats an item-layer one") and PLUGINS.md lets plugin contributions set at feature/item layers.
   Token path and plugin path give the same op different semantics.
-- [ ] **D13 · Prepared-toggle logic duplicated with DIVERGENT semantics.** Combat
-  `togglePrepared` (state.svelte.ts:378) vs spellbook `togglePrepare` (+page.svelte:82): near-
-  identical cap check + toast, but combat's `preparedCount` counts `s.prepared` (may include
-  always-prepared) while spellbook excludes `alwaysPrepared` — the two pages enforce different
-  caps. One shared helper; also both use `classes[0]` (A18).
+- [x] **D13 · Prepared-toggle logic duplicated with DIVERGENT semantics.** DONE 2026-07-21. Two pure
+  helpers in `rules/spellcasting.ts` — `preparedLeveledCount` (leveled prepared only, excludes
+  always-prepared) and `canTogglePrepared` (cantrip / always / cap guard → toast decision) — are now
+  the single source both the combat sheet and the spellbook call. Fixes the divergent count (combat
+  previously counted every `s.prepared`, inflating its cap) and makes the spellbook block cantrips
+  too. Unit-tested. (Both still read `classes[0]` — that's A18, still open.)
 - [ ] **D14 · Character id = `slugify(name)`** (build/state.svelte.ts:663) — two "Hero"s silently
   overwrite each other's save. Violates the GUID-for-shareable-data principle; id should be a
   GUID with the slug as display/folder hint.

@@ -10,6 +10,7 @@
 	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 	import { deriveSheet } from '$lib/character/derive';
+	import { canTogglePrepared, preparedLeveledCount } from '$lib/rules/spellcasting';
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
 	import { buildDetail, groupEntries, toEntryGroups } from '$lib/content/detail';
@@ -84,19 +85,19 @@
 	const selEntry = $derived(selected ? entryOf.get(selected.effectiveId) : undefined);
 	const sheet = $derived(graph && character ? deriveSheet(character, graph) : null);
 	// only LEVELED prepared spells count toward the cap — cantrips are always-known, not prepared
-	const preparedCount = $derived(
-		character ? character.build.spells.filter((s) => s.prepared && !s.alwaysPrepared).length : 0
-	);
+	const preparedCount = $derived(preparedLeveledCount(character?.build.spells ?? []));
 	const preparedCap = $derived(sheet?.spellcasting.classes[0]?.preparedCap ?? 0);
 
 	function togglePrepare(id: string) {
 		const e = entryOf.get(id);
-		if (!e || e.alwaysPrepared) return;
-		if (!e.prepared && preparedCount >= preparedCap) {
-			toast(`Prepared spells full (${preparedCap}) — unprepare one first.`);
+		const row = graph?.get(id);
+		const isCantrip = row?.type === 'spell' && Number(row.data.level) === 0;
+		const res = canTogglePrepared(e, isCantrip, preparedCap, preparedCount);
+		if (!res.ok) {
+			if (res.message) toast(res.message);
 			return;
 		}
-		e.prepared = !e.prepared;
+		if (e) e.prepared = !e.prepared;
 		if (character) void saveCharacterToStore(character);
 	}
 	function toggleSet(set: Set<string>, id: string): Set<string> {

@@ -10,6 +10,8 @@ import {
 	slotPools,
 	cantripDieMultiplier,
 	slotToSpend,
+	preparedLeveledCount,
+	canTogglePrepared,
 	type CastPool,
 	type SlotTable
 } from './spellcasting';
@@ -154,6 +156,36 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 	it('blocks when the caster has leveled slots but none ≥ the level remain', () => {
 		expect(slotToSpend(3, pools, { '3': 2 })).toEqual({
 			block: 'No level-3 spell slot remaining'
+		});
+	});
+});
+
+describe('prepared cap helpers (D13 — shared by combat + spellbook)', () => {
+	const spells = [
+		{ prepared: true, alwaysPrepared: false }, // counts
+		{ prepared: true, alwaysPrepared: true }, // always → free, never counted
+		{ prepared: false, alwaysPrepared: false } // not prepared
+	];
+	it('preparedLeveledCount counts only leveled prepared spells (excludes always-prepared)', () => {
+		expect(preparedLeveledCount(spells)).toBe(1);
+	});
+	it('canTogglePrepared refuses cantrips with a message', () => {
+		const r = canTogglePrepared({ prepared: false, alwaysPrepared: false }, true, 5, 0);
+		expect(r.ok).toBe(false);
+		expect(r).toHaveProperty('message');
+	});
+	it('canTogglePrepared refuses always-prepared silently (no message)', () => {
+		expect(canTogglePrepared({ prepared: true, alwaysPrepared: true }, false, 5, 0)).toEqual({
+			ok: false
+		});
+	});
+	it('canTogglePrepared blocks preparing over the cap but always allows UN-preparing', () => {
+		expect(canTogglePrepared({ prepared: false, alwaysPrepared: false }, false, 3, 3).ok).toBe(
+			false
+		);
+		// already prepared → unprepare is fine even at the cap
+		expect(canTogglePrepared({ prepared: true, alwaysPrepared: false }, false, 3, 3)).toEqual({
+			ok: true
 		});
 	});
 });

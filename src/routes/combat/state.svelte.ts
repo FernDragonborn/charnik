@@ -42,7 +42,7 @@ import { RollTray } from './roll.svelte';
 import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
-import { slotToSpend } from '$lib/rules/spellcasting';
+import { slotToSpend, canTogglePrepared, preparedLeveledCount } from '$lib/rules/spellcasting';
 
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. */
@@ -478,18 +478,13 @@ class CombatVM {
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
 	togglePrepared = (r: SpRow) => {
 		if (!this.character) return;
-		if (r.tm === 'cantrip') {
-			toast('Cantrips are always known — you never prepare them.');
-			return;
-		}
-		if (r.prep === 'always') return;
 		const sp = this.character.build.spells.find((s) => s.spell.endsWith(`:${r.id}`));
-		if (!sp) return;
-		if (!sp.prepared && this.preparedCount >= this.preparedCap) {
-			toast(`Prepared spells full (${this.preparedCap}) — unprepare one first.`);
+		const res = canTogglePrepared(sp, r.tm === 'cantrip', this.preparedCap, this.preparedCount);
+		if (!res.ok) {
+			if (res.message) toast(res.message);
 			return;
 		}
-		sp.prepared = !sp.prepared;
+		if (sp) sp.prepared = !sp.prepared;
 	};
 
 	// attacks (equipped weapons + Unarmed Strike) — pure builder in helpers
@@ -515,7 +510,7 @@ class CombatVM {
 				)
 			: []
 	);
-	preparedCount = $derived(this.character?.build.spells.filter((s) => s.prepared).length ?? 0);
+	preparedCount = $derived(preparedLeveledCount(this.character?.build.spells ?? []));
 	// prepared cap from the primary caster's derived profile (class table / formula), not hardcoded
 	preparedCap = $derived(this.sheet?.spellcasting.classes[0]?.preparedCap ?? 0);
 

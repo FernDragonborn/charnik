@@ -162,3 +162,37 @@ export function slotPools(
 	});
 	return out;
 }
+
+/** A prepared-spell entry (the two flags the cap logic reads). */
+export interface PreparableSpell {
+	prepared: boolean;
+	alwaysPrepared: boolean;
+}
+
+/** Spells that count toward the prepared CAP: leveled + toggled-on. Always-prepared spells (domain,
+ *  feat, subclass) are free and NEVER counted — the single source both the combat sheet and the
+ *  spellbook use, so their caps can't diverge (D13). */
+export function preparedLeveledCount(spells: readonly PreparableSpell[]): number {
+	return spells.filter((s) => s.prepared && !s.alwaysPrepared).length;
+}
+
+/** Outcome of trying to flip a spell's `prepared` flag. `message` (when present) is the toast to show
+ *  on refusal; a silent refusal (`ok:false` with no message) means "nothing to do". */
+export type PrepareAttempt = { ok: true } | { ok: false; message?: string };
+
+/** Whether a spell's `prepared` flag may flip, enforcing the leveled cap. Cantrips are always known
+ *  and always-prepared spells are fixed, so neither can be toggled. Pure — the caller flips on `ok`.
+ *  Shared by the combat sheet and the spellbook so both enforce identical rules (D13). */
+export function canTogglePrepared(
+	entry: PreparableSpell | undefined,
+	isCantrip: boolean,
+	cap: number,
+	count: number
+): PrepareAttempt {
+	if (isCantrip)
+		return { ok: false, message: 'Cantrips are always known — you never prepare them.' };
+	if (!entry || entry.alwaysPrepared) return { ok: false };
+	if (!entry.prepared && count >= cap)
+		return { ok: false, message: `Prepared spells full (${cap}) — unprepare one first.` };
+	return { ok: true };
+}
