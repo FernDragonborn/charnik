@@ -1,0 +1,11 @@
+﻿#content-source: SRD 5.1
+#content-systems: 5e
+#content-url: https://dnd.wizards.com/resources/systems-reference-document
+#content-license: CC-BY-4.0
+#content-id: 019f859d-bfd4-717c-bb8d-cd555a0e6807
+#content-updated_at: 2026-07-21
+#content-hash: xxh64:db47f4a97fe8038b
+id,name_en,name_uk,text_en,text_uk,effects,resource_id,cost,action,action_type
+flurry_of_blows,Flurry of Blows,,"Immediately after the Attack action, make two Unarmed Strikes as a Bonus Action.",,,ki,1,note:Make two Unarmed Strikes,bonus_action
+patient_defense,Patient Defense,,Take the Dodge action as a Bonus Action.,,,ki,1,note:Take the Dodge action,bonus_action
+step_of_the_wind,Step of the Wind,,Take the Disengage or Dash action as a Bonus Action; your jump distance is doubled.,,,ki,1,note:Disengage or Dash; jump distance doubled,bonus_action

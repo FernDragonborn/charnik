@@ -80,6 +80,29 @@ describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', (
 	});
 });
 
+describe('shipped Monk resource + spend-options (piece 3)', () => {
+	it.each([
+		['content/srd-2024', 'SRD 5.2.1', '5.5e', 'focus'] as const,
+		['content/srd-2014', 'SRD 5.1', '5e', 'ki'] as const
+	])('%s: a monk 5 has %s points = level, with Flurry/Patient/Step options at cost 1', async (
+		dir,
+		source,
+		system,
+		resourceId
+	) => {
+		const g = await loadEdition(dir);
+		const sheet = deriveSheet(charOf(source, system as '5e' | '5.5e', 'monk', 5), g);
+		expect(sheet.resources.find((r) => r.id === resourceId)?.max).toBe(5); // = monk level
+		const opts = sheet.resourceOptions.filter((o) => o.resourceId === resourceId);
+		expect(opts.map((o) => o.id).sort()).toEqual([
+			'flurry_of_blows',
+			'patient_defense',
+			'step_of_the_wind'
+		]);
+		expect(opts.every((o) => o.cost === 1 && o.actionType === 'bonus_action')).toBe(true);
+	});
+});
+
 describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {
 	it('scales the d20-test penalty (−2×level) and speed (−5×level) off play.exhaustion', async () => {
 		const g = await loadEdition('content/srd-2024');

@@ -4,7 +4,7 @@
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f9e9-7ad8-b3a8-4511aa623e30
 #content-updated_at: 2026-07-21
-#content-hash: xxh64:ce1171d84f111c48
+#content-hash: xxh64:277e6f7c6661f81c
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id
 barbarian_rage,Rage,,"You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren't wearing Heavy armor.
 You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.
@@ -410,7 +410,7 @@ Some features that use Focus Points require your target to make a saving throw. 
 **_Flurry of Blows._** You can expend 1 Focus Point to make two Unarmed Strikes as a Bonus Action.
 **_Patient Defense._** You can take the Disengage action as a Bonus Action. Alternatively, you can
 expend 1 Focus Point to take both the Disengage and the Dodge actions as a Bonus Action.
-**_Step of the Wind._** You can take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn.",,,monk,2,,
+**_Step of the Wind._** You can take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn.",,grant_resource:focus:class_level.monk:short,monk,2,,
 monk_unarmored_movement,Unarmored Movement,,"Your speed increases by 10 feet while you aren't wearing armor or wielding a Shield. This bonus increases when you reach certain Monk levels, as shown on the Monk Features table.",,,monk,2,,
 monk_uncanny_metabolism,Uncanny Metabolism,,"When you roll Initiative, you can regain all expended Focus Points. When you do so, roll your Martial Arts die, and regain a number of Hit Points equal to your Monk level plus the number rolled.
 Once you use this feature, you can't use it again until you finish a Long Rest.",,,monk,2,,
