@@ -5,8 +5,7 @@
 	// raw HTML (user-owned CSV): parsed with marked, then sanitized with DOMPurify so injected
 	// <script>/on*/javascript: can't run.
 	import { browser } from '$app/environment';
-	import DOMPurify from 'dompurify';
-	import { marked } from 'marked';
+	import { renderContentMarkdown } from '$lib/content/markdown';
 	import type { WikiEditDraft } from './wikiEdit';
 
 	let {
@@ -28,18 +27,7 @@
 		draft?: WikiEditDraft | undefined;
 	} = $props();
 
-	// Some content mixes Markdown with raw HTML tables. marked won't process Markdown that sits
-	// inside/right after an HTML block, so: force blank lines around <table> (so the following text
-	// parses as Markdown), then mop up emphasis left literal inside table cells.
-	function renderBody(md: string): string {
-		const spaced = md.replace(/\n*(<table>)/g, '\n\n$1').replace(/(<\/table>)\n*/g, '$1\n\n');
-		let html = marked.parse(spaced, { async: false }) as string;
-		html = html
-			.replace(/\*\*([^*<>\n]+)\*\*/g, '<strong>$1</strong>')
-			.replace(/\*([^*<>\n]+)\*/g, '<em>$1</em>');
-		return DOMPurify.sanitize(html);
-	}
-	const bodyHtml = $derived(browser ? renderBody(bodyMarkdown) : '');
+	const bodyHtml = $derived(browser ? renderContentMarkdown(bodyMarkdown) : '');
 </script>
 
 {#if editable && draft}

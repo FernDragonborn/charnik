@@ -1632,13 +1632,12 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   is spent in AND out of combat (like HP). A RITUAL cast (the `R` badge, gated on `class.ritual`
   ritual-casting eligibility — E7) spends no slot. STILL OPEN (deferred): a manual upcast picker,
   warlock PACT-slot pips (not UI-wired → pact casts unslotted for now).
-- **UBUG-7 · Effect (i) rules text renders raw, not Markdown/HTML.** The condition/effect description
-  under the ⓘ button (`PanelCard.svelte` — `<p class="effect-info-text">{infoText}</p>`) is plain
-  text interpolation, so Markdown shows literally (and any HTML is escaped). The compendium already
-  renders BOTH Markdown AND sanitized HTML for article prose (`ArticleProse.svelte` = `marked` +
-  `DOMPurify`) — so YES, HTML is supported (sanitized), the user's uncertainty is resolved. Fix: reuse
-  the same sanitize pipeline (ideally the `ArticleProse` component, or its marked+DOMPurify path) for
-  the effect ⓘ text so descriptions render formatted + consistent with the compendium.
+- [x] **UBUG-7 · Effect (i) rules text renders raw, not Markdown/HTML.** DONE 2026-07-21. Extracted the
+  compendium's marked+DOMPurify pipeline into a shared `content/markdown.ts` (`renderContentMarkdown`)
+  reused by `ArticleProse`; the effect ⓘ box (`PanelCard.svelte`) now renders through the `ArticleProse`
+  component itself, so Markdown/sanitized-HTML formatting + styling match the compendium (no dup CSS).
+  Enabled `breaks: true` in the shared renderer so CSV cells that use `•` + hard newlines (conditions,
+  items, feats) keep line-per-bullet layout instead of collapsing (blank-line paragraphs unaffected).
 - **UBUG-8 · Resources should be highlighted + used like spells.** After A17 (spells auto-spend a slot
   on cast + gate when empty), named resources (Rage, Ki, Channel Divinity, N/day features…) should get
   the SAME treatment: presented as first-class ACTIONABLE items (highlighted/clickable like a castable

@@ -250,7 +250,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (55 modules)
+## Library functions & types (56 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -441,6 +441,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const LOCALE_TAG` — A BCP-47-ish locale code (guardrail vs phantom locales): a 2–3 letter base + optional subtags * (`pt-BR`).
 - `interface ContentSource` — One content root paired with the storage it lives in.
 - `function loadContent` — Load + merge content.
+
+### `src/lib/content/markdown.ts`
+
+- `function renderContentMarkdown` — Some content mixes Markdown with raw HTML tables.
 
 ### `src/lib/content/meta.ts`
 
@@ -828,4 +832,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 458 exports across 66 modules · 26 duplicate suspects · generated in 132ms._
+_46 tokens · 50 global classes · 36 components · 459 exports across 67 modules · 26 duplicate suspects · generated in 133ms._

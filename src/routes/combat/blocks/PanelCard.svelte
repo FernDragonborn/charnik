@@ -5,6 +5,7 @@
 	// props. The dnd grid that hosts these cards stays in the page.
 	import { base } from '$app/paths';
 	import { toast } from 'svelte-sonner';
+	import ArticleProse from '$lib/components/ArticleProse.svelte';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
@@ -101,7 +102,9 @@
 		</span>
 	</div>
 	{#if infoText && infoOpen === e.iid}
-		<p class="effect-info-text">{infoText}</p>
+		<!-- reference prose is user-owned CSV: reuse ArticleProse so it renders Markdown/HTML through
+		     the same sanitize pipeline + styling as the compendium (UBUG-7) -->
+		<div class="effect-info-text"><ArticleProse bodyMarkdown={infoText} /></div>
 	{/if}
 {/snippet}
 
@@ -620,13 +623,14 @@
 	.effect-info-text {
 		margin: 0 0 7px;
 		padding: 7px 9px;
-		font-size: 12px;
-		line-height: 1.5;
-		white-space: pre-line;
 		color: var(--color-text-muted);
 		background: var(--color-surface-2);
 		border-radius: 6px;
 		border: 1px solid var(--color-border);
+	}
+	/* ArticleProse's .body trails a bottom margin on its last block — collapse it inside the chip */
+	.effect-info-text :global(.body > :last-child) {
+		margin-bottom: 0;
 	}
 	/* a plugin handler's explanatory note — same reference styling family as the info text */
 	.plugin-note {
