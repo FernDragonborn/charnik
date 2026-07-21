@@ -364,6 +364,11 @@
 			{#if !multi}
 				— every spell{/if}
 		</div>
+		{#if combat.armorBlock}
+			<div class="armor-block" title={combat.armorBlock.note}>
+				⚠ Spellcasting blocked — not proficient with {combat.armorBlock.source}
+			</div>
+		{/if}
 		<div class="spell-rows">
 			{#each spellGroups as g (g.key)}
 				<div class="spgroup">
@@ -990,6 +995,15 @@
 	}
 	.pinstar.on {
 		color: var(--color-accent-bright);
+	}
+	/* B9: worn non-proficient armor blocks spellcasting (RAW rule-block) */
+	.armor-block {
+		margin: 4px 0 6px;
+		padding: 4px 8px;
+		border: 1px solid var(--color-danger);
+		border-radius: 4px;
+		color: var(--color-danger);
+		font-size: 0.85em;
 	}
 	/* ritual-cast badge — only on ritual-tagged spells; casts with no slot */
 	.ritual-cast {

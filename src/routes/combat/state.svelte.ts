@@ -577,6 +577,8 @@ class CombatVM {
 				)
 			: []
 	);
+	// B9: worn non-proficient armor blocks spellcasting (RAW rule-block). Surfaced on the spells panel.
+	armorBlock = $derived(this.sheet?.spellcasting.armorBlock);
 	preparedCount = $derived(preparedLeveledCount(this.character?.build.spells ?? []));
 	// prepared cap from the primary caster's derived profile (class table / formula), not hardcoded
 	preparedCap = $derived(this.sheet?.spellcasting.classes[0]?.preparedCap ?? 0);

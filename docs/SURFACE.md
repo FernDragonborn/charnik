@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (26)
+## Duplicate suspects (27)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -41,6 +41,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `STORAGE_KEY` ×2 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts
+- `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
 **Identical one-liner body, different names:**
@@ -253,7 +254,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (56 modules)
+## Library functions & types (57 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -741,6 +742,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface Clamp`
 - `function computed` — Build a `Computed` from contributions (+ optional clamp/notes).
 
+### `src/lib/rules/proficiency.ts`
+
+- `const WEAPON_CATEGORIES` — Weapon proficiency categories (specific weapon ids also allowed in a class's grant list).
+- `const ARMOR_CATEGORIES` — Armor proficiency categories.
+- `function gatherProfGrants` — * Union the prof grants across a character's classes.
+- `function weaponCategoryOf` — Normalize a weapon item's `item_type` ("martial melee", "simple ranged") to its category.
+- `function armorCategoryOf` — Normalize an armor item to its category.
+- `function isWeaponProficient` — Is the character proficient with this weapon?
+- `function isArmorProficient` — Is the character proficient with this armor/shield?
+
 ### `src/lib/rules/spellcasting.ts`
 
 - `type CasterShare` — Multiclass caster-level contribution + rounding (data value `caster_share`).
@@ -844,4 +855,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 471 exports across 67 modules · 26 duplicate suspects · generated in 133ms._
+_46 tokens · 50 global classes · 36 components · 478 exports across 68 modules · 27 duplicate suspects · generated in 202ms._

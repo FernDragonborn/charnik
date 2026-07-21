@@ -30,6 +30,7 @@ import {
 	ABILITY_SCORE_CLAMP,
 	type Ability
 } from '../rules/core';
+import { gatherProfGrants, isArmorProficient, armorCategoryOf } from '../rules/proficiency';
 import {
 	EFFECT_KIND,
 	type ActiveEffect,
@@ -616,6 +617,28 @@ export function deriveSheet(
 	// spellcasting AFTER the resolve, so DCs/attacks read the EFFECTIVE scores (a Headband of
 	// Intellect moves the wizard's DC, as it should) — and `spell_dc`/`spell_attack` effects fold in.
 	const spellcasting = deriveSpellcasting(character, graph, scores, facts);
+
+	// B9: worn armor you lack proficiency with blocks spellcasting (RAW canonical rule-block). Grants
+	// come from the character's classes; lenient — undeclared classes stay proficient with all armor.
+	const armorGrants = gatherProfGrants(
+		build.classes.map((c) => {
+			const r = graph.get(c.class);
+			return r?.type === 'class' ? r.data.armor_profs : undefined;
+		})
+	);
+	if (
+		equippedArmor &&
+		!isArmorProficient(armorGrants, equippedArmor.data.item_type, equippedArmor.data.category)
+	) {
+		const source = String(equippedArmor.data.name_en);
+		// cat is always defined here — isArmorProficient returns true (no block) on an unclassifiable armor.
+		const cat = armorCategoryOf(equippedArmor.data.item_type, equippedArmor.data.category);
+		spellcasting.armorBlock = {
+			source,
+			note: `Not proficient with ${cat} armor — spellcasting blocked`
+		};
+		issues.push({ source, token: 'armor_proficiency', reason: spellcasting.armorBlock.note });
+	}
 
 	// proficiencies granted by effects (item/feat/feature): `grant_proficiency:[expertise:]<target>`
 	// where target is a save (`con` / `save.con`) or a skill id (`stealth` — the parser already

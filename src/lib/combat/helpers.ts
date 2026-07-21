@@ -4,6 +4,7 @@
  * every area component. Split out of the old monolithic combat/+page.svelte.
  */
 import { ABILITY_IDS, type Ability } from '$lib/rules/core';
+import { gatherProfGrants, isWeaponProficient } from '$lib/rules/proficiency';
 import {
 	computed,
 	type Computed,
@@ -568,6 +569,15 @@ export function computeAttacks(
 	const prof = sheet.proficiencyBonus,
 		strMod = sheet.abilities.str.mod,
 		dexMod = sheet.abilities.dex.mod;
+	// A7: weapon proficiency gate. A weapon you're not proficient with omits the proficiency bonus
+	// from its to-hit (RAW). Grants come from the character's classes; lenient — a class (or set of
+	// classes) that declares no weapon_profs stays proficient with everything.
+	const weaponGrants = gatherProfGrants(
+		character.build.classes.map((c) => {
+			const r = graph.get(c.class);
+			return r?.type === 'class' ? r.data.weapon_profs : undefined;
+		})
+	);
 	const out: Atk[] = [];
 	for (const inv of character.build.inventory) {
 		if (!inv.equipped) continue;
@@ -576,17 +586,20 @@ export function computeAttacks(
 		const props = String(row.data.properties ?? '').toLowerCase();
 		const ranged = String(row.data.item_type ?? '').includes('ranged');
 		const mod = ranged ? dexMod : props.includes('finesse') ? Math.max(strMod, dexMod) : strMod;
+		const proficient = isWeaponProficient(weaponGrants, row.data.item_type, row.id);
 		// D9: a magic weapon's OWN effect tokens fold into THIS attack only (a +1 sword must not
 		// grant +1 to every attack — so it can't ride gatherEffects/global facts). v1 folds LITERAL
 		// flat_bonus:attack / flat_bonus:damage; a dice / expression bonus (a flaming +1d6) needs the
 		// roll path or a ctx and degrades to a VISIBLE note, never a silent drop.
 		const w = weaponBonus(row.data.effects);
+		const notProfNote = proficient ? undefined : 'Not proficient — no proficiency bonus';
+		const note = [w.note, notProfNote].filter(Boolean).join('; ') || undefined;
 		out.push({
 			name: String(row.data.name_en),
-			toHit: mod + prof + w.attack,
+			toHit: mod + (proficient ? prof : 0) + w.attack,
 			dmg: `${row.data.damage ?? ''} ${signed(mod + w.damage)} ${row.data.damage_type ?? ''}`.trim(),
 			meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · '),
-			...(w.note ? { note: w.note } : {})
+			...(note ? { note } : {})
 		});
 	}
 	out.push({

@@ -769,7 +769,23 @@ Today every note is baked EN concat (`apply.ts:360, 371-377`; `gatherEffects` na
 is fine as-is — it renders tags, not notes). ⚠ Every note-producing site must migrate in ONE pass
 or the UI mixes string/struct shapes; grep `notes.push` across `effects/` + derive first.
 
-## EFX-A7 · weapon/armor proficiency model → unblocks B9 — DECIDED B (model sketch)
+## EFX-A7/B9 · weapon/armor proficiency model — ✅ ENGINE DONE (2026-07-21); data via converters pending
+
+**Landed** (engine): new pure `src/lib/rules/proficiency.ts` — `gatherProfGrants` (union of a
+character's class prof columns; blank/no-class → `null` = UNCONSTRAINED, the lenient fallback),
+`weaponCategoryOf`/`armorCategoryOf` (normalize `item_type`→category, never string-match prose),
+`isWeaponProficient` (category OR specific weapon-id grant), `isArmorProficient`. Schema: `classes`
+gained `weapon_profs`/`armor_profs` (optStr comma lists). **A7 gate**: `computeAttacks`
+(`combat/helpers.ts`) omits the proficiency bonus from a non-proficient weapon's to-hit + a visible
+"Not proficient" note. **B9**: `deriveSheet` sets `spellcasting.armorBlock {source,note}` +
+a `deriveIssue` when worn armor's category ∉ the class armor grants; surfaced as a red rule-block
+banner on the combat spells panel (`combat.armorBlock` → PanelCard). Passive ±5 (adv/dis) was
+ALREADY done (derive `passiveOf`). Lenient throughout — undeclared classes never lose proficiency
+downward. Tests: proficiency.test (pure), derive.test (A7 gate omits prof; B9 block + no-block).
+772 green, check 0, lint green. **PENDING**: populate `weapon_profs`/`armor_profs` in the shipped
+SRD class CSVs via converters ([[charnik-no-hallucinated-data]] — per-class SRD facts, both editions).
+
+**Original plan below (retained for reference):**
 
 Schema: `classes` gain `weapon_profs` / `armor_profs` (normalized ENUM categories:
 simple/martial + specific weapon ids; light/medium/heavy/shield). Items already carry `item_type`

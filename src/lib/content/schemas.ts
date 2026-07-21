@@ -230,6 +230,11 @@ const classSchema = baseRow.extend({
 	spell_ability: z.preprocess(blankToUndef, Ability.optional()),
 	skills_choose: optInt,
 	skills_from: optStr, // comma list of skill ids
+	/** Proficiency grants (EFX-A7). Comma lists of normalized categories: weapons =
+	 *  simple/martial (+ specific weapon ids for the Rogue/Bard/Wizard picks); armor =
+	 *  light/medium/heavy/shield. BLANK = unconstrained (lenient — proficient with all). */
+	weapon_profs: optStr,
+	armor_profs: optStr,
 	subclass_level: optInt,
 	/** Levels at which this class grants an ASI-or-feat slot (e.g. "4,6,8,12,14,16,19" for Fighter).
 	 *  Data, not a class-name switch — derived from the SRD progression by the converters. */

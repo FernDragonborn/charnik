@@ -55,6 +55,10 @@ export interface Spellcasting {
 	 *  NOT Warlock by default). Gates the ritual-cast affordance (AUDIT E7/A17). The Book of Ancient
 	 *  Secrets invocation that grants a warlock ritual casting is a choice-group feature — deferred. */
 	ritualCasting: boolean;
+	/** B9: set when the character wears armor they lack proficiency with — RAW you can't cast
+	 *  spells while doing so. The UI shows this as a rule-based block (the PLAN's canonical
+	 *  "why is casting blocked" hover). Absent = not blocked. */
+	armorBlock?: { source: string; note: string };
 }
 
 const num = (v: unknown): number | undefined => (v === '' || v == null ? undefined : Number(v));

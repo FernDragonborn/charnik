@@ -3,6 +3,7 @@ import { MemoryStorage } from '../storage/memory';
 import { loadContent, type ContentGraph } from '../content/loader';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
+import { computeAttacks } from '../combat/helpers';
 import {
 	registerPluginEvaluator,
 	clearPluginEvaluator,
@@ -17,9 +18,9 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/classes_srd.csv',
 		[
-			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,ritual',
-			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,true`,
-			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,false`
+			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,ritual,weapon_profs,armor_profs',
+			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,true,"dagger,quarterstaff",light`,
+			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,false,"simple,martial","light,medium,heavy,shield"`
 		].join('\n')
 	);
 	await st.write(
@@ -39,10 +40,12 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/items_srd.csv',
 		[
-			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap,str_min,stealth_disadvantage',
-			`leather_armor,5.5e,${S},Leather Armor,,armor,light armor,11,,,`,
-			`plate_armor,5.5e,${S},Plate Armor,,armor,heavy armor,18,0,15,true`,
-			`shield,5.5e,${S},Shield,,shield,shield,2,,,`
+			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap,str_min,stealth_disadvantage,damage,damage_type',
+			`leather_armor,5.5e,${S},Leather Armor,,armor,light armor,11,,,,,`,
+			`plate_armor,5.5e,${S},Plate Armor,,armor,heavy armor,18,0,15,true,,`,
+			`shield,5.5e,${S},Shield,,shield,shield,2,,,,,`,
+			`dagger,5.5e,${S},Dagger,,weapon,simple melee,,,,,1d4,piercing`,
+			`greataxe,5.5e,${S},Greataxe,,weapon,martial melee,,,,,1d12,slashing`
 		].join('\n')
 	);
 	await st.write(
@@ -126,6 +129,37 @@ describe('deriveSheet aggregator', () => {
 		expect(deriveSheet(parsed, graph).resources.some((r) => r.id === 'arcane_ward')).toBe(true);
 		const filtered = deriveSheet(parsed, graph, (row) => row.id !== 'arcane_ward');
 		expect(filtered.resources.some((r) => r.id === 'arcane_ward')).toBe(false);
+	});
+
+	it('B9: wearing armor you lack proficiency with blocks spellcasting + flags an issue', () => {
+		const c = wizard(); // wizard declares armor_profs=light
+		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.spellcasting.armorBlock?.source).toBe('Plate Armor');
+		expect(s.spellcasting.armorBlock?.note).toContain('heavy');
+		expect(s.deriveIssues.some((i) => i.token === 'armor_proficiency')).toBe(true);
+	});
+
+	it('B9: armor you ARE proficient with casts fine (no block)', () => {
+		// the base wizard wears leather (light) and is proficient with light armor
+		expect(deriveSheet(wizard(), graph).spellcasting.armorBlock).toBeUndefined();
+	});
+
+	it('A7: a weapon outside the class grants omits the proficiency bonus from to-hit', () => {
+		const c = wizard(); // weapon_profs="dagger,quarterstaff" — no martial/greataxe
+		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 }; // STR +2
+		c.build.inventory = [
+			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false },
+			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		const atks = computeAttacks(characterSchema.parse(c), s, graph);
+		const dagger = atks.find((a) => a.name === 'Dagger')!;
+		const greataxe = atks.find((a) => a.name === 'Greataxe')!;
+		// prof bonus at L3 = +2. Dagger (proficient): STR+2 + prof+2 = +4. Greataxe (not): STR+2 only.
+		expect(dagger.toHit).toBe(4);
+		expect(greataxe.toHit).toBe(2);
+		expect(greataxe.note).toContain('Not proficient');
 	});
 
 	it('B17: a play effect with a catalog ref resolves LIVE (fix propagates), stale bake ignored', () => {
