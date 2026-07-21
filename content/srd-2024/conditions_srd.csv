@@ -4,7 +4,7 @@
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f972-79f0-8cbe-db82843f9ea2
 #content-updated_at: 2026-07-21
-#content-hash: xxh64:6540d0c2e367084e
+#content-hash: xxh64:975c7e589f9a1e36
 id,name_en,name_uk,text_en,text_uk,effects,negative
 blinded,Blinded,,"While you have the Blinded condition, you experience the following effects.
 _Can't See._ You can't see and automatically fail any ability check that requires sight.
@@ -18,7 +18,7 @@ exhaustion,Exhaustion,,"While you have the Exhaustion condition, you experience 
 _Exhaustion Levels._ This condition is cumulative. Each time you receive it, you gain 1 Exhaustion level. You die if your Exhaustion level is 6.
 _D20 Tests Affected._ When you make a D20 Test, the roll is reduced by 2 times your Exhaustion level.
 _Speed Reduced._ Your Speed is reduced by a number of feet equal to 5 times your Exhaustion level.
-_Removing Exhaustion Levels._ Finishing a Long Rest removes 1 of your Exhaustion levels. When your Exhaustion level reaches 0, the condition ends.",,,true
+_Removing Exhaustion Levels._ Finishing a Long Rest removes 1 of your Exhaustion levels. When your Exhaustion level reaches 0, the condition ends.",,flat_bonus:d20_tests-2*exhaustion;flat_bonus:speed-5*exhaustion,true
 frightened,Frightened,,"While you have the Frightened condition, you experience the following effects.
 _Ability Checks and Attacks Affected._ You have Disadvantage on ability checks and attack rolls while the source of fear is within line of sight.
 _Can't Approach._ You can't willingly move closer to the source of fear.",,disadvantage:attack;disadvantage:skills;note:Applies while the source of fear is in line of sight;note:You can't willingly move closer to the source of fear,true

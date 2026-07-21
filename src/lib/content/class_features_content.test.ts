@@ -44,3 +44,20 @@ describe('shipped class features · Rage resource (EFX-E4)', () => {
 		expect(rageMax(g, 'SRD 5.1', '5e', 20)).toBe(Infinity); // 20->inf terminal
 	});
 });
+
+describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {
+	it('scales the d20-test penalty (−2×level) and speed (−5×level) off play.exhaustion', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const at = (level: number) => {
+			const c = barbarian('SRD 5.2.1', '5.5e', 5);
+			c.play.exhaustion = level;
+			return deriveSheet(characterSchema.parse(c), g);
+		};
+		const base = at(0);
+		const ex3 = at(3);
+		// exhaustion 3 → −6 on every d20 test (a save here) and −15 ft speed (RAW 2024)
+		expect(ex3.abilities.con.save.value).toBe(base.abilities.con.save.value - 6);
+		expect(ex3.skills.athletics.value).toBe(base.skills.athletics.value - 6);
+		expect(ex3.speed.value).toBe(base.speed.value - 15);
+	});
+});

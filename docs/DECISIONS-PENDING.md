@@ -537,7 +537,7 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
 
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4
 (~~grapple family~~ ✅ + ~~Rage token~~ ✅; ∞ render validated in a derive test) + EFX-B14 → ~~EFX-A14~~ ✅ →
-~~EFX-G4~~ ✅ + EFX-EXH → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ → ~~EFX-ROLL~~ ✅ → piece 3 (§0.5) →
+~~EFX-G4~~ ✅ + EFX-EXH (2024 ✅, 2014 deferred) → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ → ~~EFX-ROLL~~ ✅ → piece 3 (§0.5) →
 ~~EFX-B17~~ ✅ → ~~EFX-A7/B9~~ ✅ DONE 2026-07-21 (engine + data) → EFX-B18 (last). EFX-TAIL opportunistic.
 [Also DONE opportunistically: EFX-B15 ✅, EFX-B14 ✅. EFX-E4 grapple slice ✅ 2026-07-21; Rage/exhaustion/
 rollables remain — all blocked on class_features effect-preservation in the class converters.]
@@ -815,11 +815,21 @@ prof → pipeline NOTE + spellcasting block (PLAN's canonical rule-block example
 (old homebrew) keep today's always-proficient behavior (never wrong-downward). ⚠ Data via
 converters only.
 
-## EFX-EXH · exhaustion ladder + conditions-as-data — DESIGN DECIDED (2024 now, 2014 after G4)
+## EFX-EXH · exhaustion ladder + conditions-as-data — 2024 ✅ DONE (2026-07-21); 2014 deferred
 
-2024 ladder = tokens already expressible (`flat_bonus:d20_tests-2*exhaustion`,
-`flat_bonus:speed-5*exhaustion` style); 2014 L2/L4 need EFX-G4's `halve`. Ties: D19 (`max(6)`
-hardcode → data), L2R-16 (`RAGE_CONDITION_ID` hardcode dies with conditions-as-data). The B2
+**2024 ✅**: `exhaustion` condition authored `flat_bonus:d20_tests-2*exhaustion;flat_bonus:speed-5*exhaustion`
+(scales off the `exhaustion` ctx var, which reads `play.exhaustion` 0-6). **Wiring**: `gatherEffects`
+now folds the `exhaustion` condition's tokens ONCE when `play.exhaustion > 0` (exhaustion is a LEVEL,
+not a manually-applied condition) — a token-less edition (2014, pending) is a no-op. Test derives a
+barbarian at exhaustion 3 → −6 on saves/skills (a d20-test) + −15 ft speed. `class_features_content.test`.
+
+**2014 DEFERRED** (needs care, flagged not rushed): the 5.1 ladder is CUMULATIVE non-linear per
+level, so it's guarded tokens (`exhaustion >= N ? …`), not one scaling token: L1 disadvantage on
+**ability checks** (NO precise target today — `skills` misses raw ability checks; `d20_tests` is too
+broad → needs an `ability_checks` group target, an engine add), L2 `halve:speed`, L3 disadvantage on
+attacks+saves, L4 `halve:hp_max`, L5 `set_override:speed:0`, L6 death (a note, game-over). The wiring
+above already supports it — only the guarded tokens + the `ability_checks` target remain. Ties: D19
+(`max(6)` hardcode → data), L2R-16 (`RAGE_CONDITION_ID` hardcode dies with conditions-as-data). The B2
 death-saves/hit-dice UI shares the group but is NOT engine work.
 
 ## EFX-B15 · derive respects source filters + collisions — ✅ DONE (2026-07-21)

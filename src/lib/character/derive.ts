@@ -333,6 +333,22 @@ function gatherEffects(
 		const label = liveActive ? String(live.data.name_en) : eff.label;
 		if (tokens.length) active.push({ source: label, layer: 'condition', tokens });
 	}
+	// EFX-EXH: exhaustion is tracked as a LEVEL (play.exhaustion 0-6), not a manually-applied
+	// condition — so fold the exhaustion condition's tokens ONCE when the level is >0. They scale via
+	// the `exhaustion` ctx var (2024: -2×level on d20 tests, -5×level on speed). A token-less row (an
+	// unauthored edition, e.g. 2014's ladder pending) → pushRow-style skip, so this is a no-op there.
+	if (character.play.exhaustion > 0) {
+		const row = graph.rows.find(
+			(r) =>
+				r.type === 'condition' &&
+				r.id === 'exhaustion' &&
+				r.systems.includes(character.system) &&
+				isActive(r)
+		);
+		const tokens = tokensOf(row);
+		if (row && tokens.length)
+			active.push({ source: String(row.data.name_en), layer: 'condition', tokens });
+	}
 	// NOTE: guard evaluation + `apply_condition` expansion happen in the ONE resolve stage
 	// (`resolveActiveEffects`, effects/dependency-graph.ts) — in DEPENDENCY order, so guards gate a token BEFORE
 	// its condition is expanded (SPEC7) and every consumer reads the same resolved list.
