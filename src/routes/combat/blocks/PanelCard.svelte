@@ -889,22 +889,40 @@
 		border-color: var(--color-resource);
 	}
 	.pinstar {
-		display: inline-block;
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
 		background: transparent;
 		border: 0;
 		color: var(--color-border-strong);
-		margin-left: 7px;
+		margin-left: 5px;
 		cursor: pointer;
 		font-size: 12px;
 		line-height: 1;
 		border-radius: 50%;
 	}
-	/* same hover halo as the prep dot (.prep:hover) — shows you're on the pin target */
+	/* big invisible click target so the star is easy to hit (same trick as the prep dot) */
+	.pinstar::before {
+		content: '';
+		position: absolute;
+		inset: -8px;
+		border-radius: 50%;
+	}
+	/* hover = a solid disc + halo (bg and box-shadow merge, so the hollow ☆ has no hole in it) with a
+	   contrasting glyph — reads as the pin target, like the prep dot's hover */
 	.pinstar:hover {
-		box-shadow: 0 0 0 6px var(--color-border-strong);
+		background: var(--color-border-strong);
+		box-shadow: 0 0 0 3px var(--color-border-strong);
+		color: var(--color-surface);
 	}
 	.pinstar.on {
 		color: var(--color-accent-bright);
+	}
+	.pinstar.on:hover {
+		color: var(--color-surface);
 	}
 	/* ritual-cast badge — only on ritual-tagged spells; casts with no slot */
 	.ritual-cast {
