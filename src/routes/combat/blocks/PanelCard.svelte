@@ -258,7 +258,13 @@
 					{#each effectGroups.resources as r (r.iid)}
 						{@const spent = combat.resources.resourceSpent(r.id)}
 						<div class="resource-row">
-							<span class="resource-name">{r.name}</span>
+							<!-- name = "use one" action (UBUG-8), the resource analogue of casting a spell row;
+							     pips below still set the count manually (restore / arbitrary) -->
+							<button
+								class="resource-name"
+								title="Use one {r.name}"
+								onclick={() => combat.resources.useResource(r.id, r.max)}>{r.name}</button
+							>
 							<span class="resource-pips">
 								{#each range(r.max) as i (i)}
 									<button
@@ -651,12 +657,23 @@
 		padding: 7px 0;
 		border-top: 1px solid var(--color-border);
 	}
+	/* the resource NAME is a "use one" button (UBUG-8) — hover like a spell row (.spell-row:hover) */
 	.resource-name {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: 13px;
 		color: var(--color-text);
 		flex: 1;
+		text-align: left;
+		padding: 2px 6px;
+		margin-left: -6px;
+		border: 0;
+		border-radius: 7px;
+		background: transparent;
+		cursor: pointer;
+	}
+	.resource-name:hover {
+		background: var(--color-surface-2);
 	}
 	.resource-pips {
 		display: inline-flex;

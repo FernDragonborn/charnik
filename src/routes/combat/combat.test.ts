@@ -217,6 +217,25 @@ describe('CombatVM · spending a resource (UBUG-5)', () => {
 		expect(combat.resources.resourceSpent('rage')).toBe(1);
 	});
 
+	it('useResource spends one per use and blocks (no change) when the pool is exhausted (UBUG-8)', async () => {
+		const graph = await graphOf();
+		const character = newCharacter('valen', 'Valen', '5.5e');
+		character.play.autoCalc = true;
+		character.play.effects = [
+			{ iid: '1', label: 'Rage', effects: ['grant_resource:rage:2:long'], positive: true }
+		];
+		combat.graph = graph;
+		combat.character = character;
+
+		expect(combat.resources.resourceSpent('rage')).toBe(0);
+		combat.resources.useResource('rage', 2);
+		expect(combat.resources.resourceSpent('rage')).toBe(1);
+		combat.resources.useResource('rage', 2);
+		expect(combat.resources.resourceSpent('rage')).toBe(2); // now exhausted
+		combat.resources.useResource('rage', 2);
+		expect(combat.resources.resourceSpent('rage')).toBe(2); // blocked — stays at max, no overspend
+	});
+
 	it('clamps stale spent state so a shrunk/removed resource never shows negative left', async () => {
 		const graph = await graphOf();
 		const character = newCharacter('valen', 'Valen', '5.5e');

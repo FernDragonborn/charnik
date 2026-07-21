@@ -14,7 +14,13 @@
 	{#each s.resources as r (r.id)}
 		{@const spent = combat.resources.resourceSpent(r.id)}
 		<span class="resource" title="{r.name} · recharges on {r.recharge} rest ({r.source})">
-			{r.name}
+			<!-- name = "use one" action (UBUG-8); pips still set the count manually -->
+			<button
+				type="button"
+				class="resource-use"
+				title="Use one {r.name}"
+				onclick={() => combat.resources.useResource(r.id, r.max)}>{r.name}</button
+			>
 			<span class="respips">
 				{#each range(r.max) as i (i)}
 					<button
@@ -58,6 +64,20 @@
 	.resource-bar .resource small {
 		font-family: var(--font-mono);
 		color: var(--color-text-muted);
+	}
+	/* the resource NAME is a "use one" button (UBUG-8) — hover like a spell row */
+	.resource-use {
+		font: inherit;
+		color: var(--color-text);
+		padding: 1px 5px;
+		margin: -1px -1px -1px -5px;
+		border: 0;
+		border-radius: 6px;
+		background: none;
+		cursor: pointer;
+	}
+	.resource-use:hover {
+		background: var(--color-surface-2);
 	}
 	.respips {
 		display: inline-flex;

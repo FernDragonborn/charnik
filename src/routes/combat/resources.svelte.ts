@@ -33,6 +33,22 @@ export class ResourceTracker {
 		const max = this.getSheet()?.resources.find((r) => r.id === id)?.max ?? 0;
 		return Math.max(0, Math.min(stored, max));
 	};
+	/** Use ONE unit of a resource — the spell-cast analogue for named pools (UBUG-8): spend the next
+	 *  available unit, or BLOCK with a toast when exhausted (mirrors how a cast reserves + gates a spell
+	 *  slot). Fine-grained restore / arbitrary set stays on the pips (`resourceClick`). */
+	useResource = (id: string, max: number) => {
+		const c = this.getCharacter();
+		if (!c) return;
+		const name = this.getSheet()?.resources.find((r) => r.id === id)?.name ?? id;
+		const before = this.resourceSpent(id);
+		if (before >= max) {
+			toast(`${name} — none left`, { description: 'Recharge on a rest' });
+			return;
+		}
+		const after = before + 1;
+		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: after };
+		toast(`${name} used`, { description: `${max - after} of ${max} left` });
+	};
 	resourceClick = (id: string, max: number, i: number) => {
 		const c = this.getCharacter();
 		if (!c) return;

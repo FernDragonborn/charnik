@@ -1638,13 +1638,14 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   component itself, so Markdown/sanitized-HTML formatting + styling match the compendium (no dup CSS).
   Enabled `breaks: true` in the shared renderer so CSV cells that use `•` + hard newlines (conditions,
   items, feats) keep line-per-bullet layout instead of collapsing (blank-line paragraphs unaffected).
-- **UBUG-8 · Resources should be highlighted + used like spells.** After A17 (spells auto-spend a slot
-  on cast + gate when empty), named resources (Rage, Ki, Channel Divinity, N/day features…) should get
-  the SAME treatment: presented as first-class ACTIONABLE items (highlighted/clickable like a castable
-  spell row, not just manual pips), and auto-SPENT on use (decrement `resourcesSpent`, block/feedback
-  when exhausted — ties UBUG-5). I.e. extend the "use → spend + gate + surface" model from spell slots
-  to the resource pools, so using a feature that costs a resource deducts it the way casting deducts a
-  slot. Pure spend logic mirrors `slotToSpend`; the render mirrors the spell-row affordance.
+- [x] **UBUG-8 · Resources should be highlighted + used like spells.** DONE 2026-07-21. Added
+  `ResourceTracker.useResource(id, max)` — the resource analogue of casting a slot: spends the next
+  unit (`resourcesSpent`+1), BLOCKS with a toast when exhausted, and toasts the remaining count on use
+  (ties UBUG-5). The resource NAME is now a clickable "use one" button (highlighted on hover like a
+  spell row — reuses `.spell-row:hover` surface-2) in BOTH render sites (`PanelCard` resources section
+  + top `ResourceBar`); the pips stay for manual restore / arbitrary set (`resourceClick`), exactly as
+  spell-slot pips sit beside a castable spell row. Unit-tested (use spends one, blocks at max, no
+  overspend). Action economy is intentionally NOT wired (resources carry no action-cost data).
 - **UBUG-9 · Spell-block summary caption is weak for non-damage spells (think about).** The bold
   caption per spell row (`SpRow.spe` = `dmg || effectHint(row.data)`) is great for damage (`1d10 fire`)
   but for the rest it's mostly a flat "utility" — except a few HAND-CURATED cases (`effectHint`
