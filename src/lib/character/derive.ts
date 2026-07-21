@@ -321,8 +321,16 @@ function gatherEffects(
 	}
 
 	for (const eff of character.play.effects) {
-		if (eff.effects.length)
-			active.push({ source: eff.label, layer: 'condition', tokens: eff.effects });
+		// B17: prefer the LIVE catalog row when the instance carries a ref (`source`) — so a fix to the
+		// catalog row PROPAGATES and the name re-localizes. Fall back to the baked `effects`/`label` for
+		// a catalog-less custom effect OR an orphaned ref (row deleted / disabled); an orphan is flagged
+		// like any missing ref (still applied from the bake, never silently dropped).
+		const live = eff.source ? graph.get(eff.source) : undefined;
+		const liveActive = live !== undefined && isActive(live);
+		if (eff.source && !liveActive) missing.push(eff.source);
+		const tokens = liveActive ? tokensOf(live) : eff.effects;
+		const label = liveActive ? String(live.data.name_en) : eff.label;
+		if (tokens.length) active.push({ source: label, layer: 'condition', tokens });
 	}
 	// NOTE: guard evaluation + `apply_condition` expansion happen in the ONE resolve stage
 	// (`resolveActiveEffects`, effects/dependency-graph.ts) — in DEPENDENCY order, so guards gate a token BEFORE

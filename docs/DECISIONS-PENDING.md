@@ -537,7 +537,8 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
 
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4 (grapple family + Rage
 token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ → ~~EFX-G4~~ ✅ + EFX-EXH → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ →
-~~EFX-ROLL~~ ✅ → piece 3 (§0.5) → EFX-B17 → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
+~~EFX-ROLL~~ ✅ → piece 3 (§0.5) → ~~EFX-B17~~ ✅ → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
+[Also DONE opportunistically: EFX-B15 ✅.]
 
 ## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — ✅ DONE (2026-07-21)
 
@@ -727,7 +728,20 @@ proficiencies grouped by source via `effectTag`) + unknown tokens as distinctly-
 (`p.raw` — the §4 raw-tokens note). ⚠ Read facts, never re-parse tokens in the component (D7);
 no remove/spend controls on derived rows (they follow equip/feature state, not user CRUD).
 
-## EFX-B17 · `play.effects` live refs + baked fallback — DECIDED B
+## EFX-B17 · `play.effects` live refs + baked fallback — ✅ DONE (2026-07-21)
+
+**Landed — NO schema bump needed** (the plan expected one): `effectInstance` ALREADY carried an
+optional `source: ref` + baked `label`/`effects`, so old saves stay valid and just use the fallback.
+Wired: `effectCatalog` now carries `ref: effectiveId`; `addEffect(…, ref?)` stores it in `source`
+(custom/GM effects omit it → baked-only); the CombatMenus catalog row passes `p.ref`. Derive
+(`gatherEffects`) resolves `eff.source` LIVE (respecting `isActive` — B15 sibling) → uses the row's
+CURRENT tokens + name (fixes propagate, name re-localizes); an orphaned/disabled ref falls back to
+the baked tokens/label AND is flagged in `sheet.missing`. Tests: stale baked `+5` ignored in favour
+of the live `+1`; orphan ref → baked `+2` applied + surfaced in missing. **Follow-up (small):** the
+buffs/debuffs PANEL still shows the baked `eff.label` (groupEffects reads the instance directly) —
+mechanics propagate now; panel-label re-localization is separate UI plumbing.
+
+**Original plan below (retained for reference):**
 
 `EffectInstance` gains optional `ref: {type, source, id}`; keep baked `{label, tokens}` as the
 fallback written at add-time. Derive resolves ref → row first (label re-localizes, catalog fixes

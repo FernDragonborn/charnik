@@ -165,7 +165,10 @@
 			<div class="section">Catalog</div>
 			{#each combat.effectCatalog as p (p.label)}
 				{@const dur = p.durationRounds ?? combat.newEffectDuration}
-				<button class="menu-row" onclick={() => addEffect(p.label, p.tokens, !p.negative, dur)}>
+				<button
+					class="menu-row"
+					onclick={() => addEffect(p.label, p.tokens, !p.negative, dur, p.ref)}
+				>
 					<span class="main"
 						><span class="effect-icon" class:negative={p.negative}>＋</span>{p.label}</span
 					><span class="durpill">{dur > 0 ? `${dur} rds` : '∞'}</span>

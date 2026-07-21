@@ -63,6 +63,13 @@ async function graphOf(): Promise<ContentGraph> {
 		].join('\n')
 	);
 	await st.write(
+		'c/effects_srd.csv',
+		[
+			'id,systems,source,name_en,effects,negative,duration_rounds',
+			`bless,5.5e,${S},Bless,flat_bonus:ac+1,false,10`
+		].join('\n')
+	);
+	await st.write(
 		'c/conditions_srd.csv',
 		[
 			'id,systems,source,name_en,effects,negative',
@@ -119,6 +126,39 @@ describe('deriveSheet aggregator', () => {
 		expect(deriveSheet(parsed, graph).resources.some((r) => r.id === 'arcane_ward')).toBe(true);
 		const filtered = deriveSheet(parsed, graph, (row) => row.id !== 'arcane_ward');
 		expect(filtered.resources.some((r) => r.id === 'arcane_ward')).toBe(false);
+	});
+
+	it('B17: a play effect with a catalog ref resolves LIVE (fix propagates), stale bake ignored', () => {
+		const c = wizard();
+		// baked tokens say +5, but the LIVE catalog row (Bless) says +1 → the live value must win
+		c.play.effects = [
+			{
+				iid: 'b',
+				label: 'Bless (stale label)',
+				effects: ['flat_bonus:ac+5'],
+				positive: true,
+				source: `effect:${S}:bless`
+			}
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.ac.trace.some((t) => t.note === 'flat_bonus:ac+1')).toBe(true);
+		expect(s.ac.trace.some((t) => t.note === 'flat_bonus:ac+5')).toBe(false);
+	});
+
+	it('B17: an orphaned ref falls back to the baked tokens AND is flagged missing', () => {
+		const c = wizard();
+		c.play.effects = [
+			{
+				iid: 'o',
+				label: 'Old Buff',
+				effects: ['flat_bonus:ac+2'],
+				positive: true,
+				source: `effect:${S}:ghost` // no such row
+			}
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.ac.trace.some((t) => t.note === 'flat_bonus:ac+2')).toBe(true); // baked fallback applied
+		expect(s.missing.some((m) => m.includes('ghost'))).toBe(true); // orphan surfaced
 	});
 
 	it('derives saves with class proficiencies', () => {

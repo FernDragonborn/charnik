@@ -243,9 +243,11 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   saved `play.effects` tokens written before it. Wider: the TOKEN GRAMMAR is not versioned at
   all — `schemaVersion` covers JSON shape, not token strings inside play-state; every future DSL
   change (L2!) is silent corruption of saved effects without a migration.
-- [ ] **B17 · `effectInstance` violates refs-not-copies.** `play.effects` stores BAKED tokens +
-  label copied from the catalog at add-time (`character/schema.ts:92-105`); fixing a catalog row
-  doesn't propagate to active buffs, and the baked label doesn't re-localize.
+- [~] **B17 · `effectInstance` violates refs-not-copies.** MECHANICS FIXED (EFX-B17, 2026-07-21):
+  `addEffect` now stores the catalog `source` ref (schema already had the field — no bump);
+  `gatherEffects` resolves it LIVE (isActive-aware) with a baked fallback + orphan flag, so a catalog
+  fix PROPAGATES to active buffs. STILL OPEN (small): the buffs/debuffs panel label reads the baked
+  `eff.label` — mechanics re-localize, the display label doesn't yet. See DECISIONS-PENDING §5.
 - [ ] **B18 · Provenance/notes are baked EN strings — explainability can't localize.**
   `gatherEffects` bakes `name_en` (`derive.ts:138` etc.), `applyEffects` composes English notes
   ("advantage on skill.stealth"), `why()` concatenates them, the roll log too. The

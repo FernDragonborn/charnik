@@ -631,6 +631,9 @@ class CombatVM {
 		const system = this.character?.system;
 		if (!this.graph || !system) return [];
 		return this.graph.list('effect', { system }).map((r) => ({
+			// B17: carry the catalog ref so an added effect resolves LIVE at derive (fixes propagate),
+			// with the baked label/tokens kept as the orphan fallback.
+			ref: r.effectiveId,
 			label: String(r.data.name_en),
 			tokens: r.data.effects,
 			negative: r.data.negative,
@@ -644,7 +647,10 @@ class CombatVM {
 		label: string,
 		tokens: string[],
 		positive = true,
-		durationRounds = this.newEffectDuration
+		durationRounds = this.newEffectDuration,
+		// B17: the catalog ref (effectiveId) when added from the "+" catalog — stored so derive
+		// resolves the effect LIVE (fixes propagate); omitted for custom/GM effects (baked only).
+		ref?: string
 	) => {
 		if (!this.character) return;
 		// 0 / negative → indefinite: omit the duration fields entirely (schema: absent = until removed)
@@ -654,7 +660,14 @@ class CombatVM {
 				: {};
 		this.character.play.effects = [
 			...this.character.play.effects,
-			{ iid: crypto.randomUUID(), label, effects: tokens, positive, ...duration }
+			{
+				iid: crypto.randomUUID(),
+				label,
+				effects: tokens,
+				positive,
+				...(ref !== undefined ? { source: ref } : {}),
+				...duration
+			}
 		];
 		this.overlay = null;
 	};
