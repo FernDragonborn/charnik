@@ -94,13 +94,24 @@ function castingCounts(
 	level: number,
 	systems: string[]
 ): { cantrips: number | undefined; prepared: number | undefined } {
+	// FILL-DOWN (E5): a class_casting table may be sparse (rows only where counts change). Use the
+	// highest defined level ≤ the target — a gap means "unchanged since the last row", NOT zero.
+	let best: { level: number; cantrips: number | undefined; prepared: number | undefined } | null =
+		null;
 	for (const r of graph.rows) {
 		if (r.type !== 'class_casting' || String(r.data.class_id) !== classId) continue;
-		if (Number(r.data.level) !== level) continue;
 		if (!r.systems.some((s) => systems.includes(s))) continue;
-		return { cantrips: num(r.data.cantrips_known), prepared: num(r.data.prepared_known) };
+		const rowLevel = Number(r.data.level);
+		if (rowLevel > level || (best && rowLevel <= best.level)) continue;
+		best = {
+			level: rowLevel,
+			cantrips: num(r.data.cantrips_known),
+			prepared: num(r.data.prepared_known)
+		};
 	}
-	return { cantrips: undefined, prepared: undefined };
+	return best
+		? { cantrips: best.cantrips, prepared: best.prepared }
+		: { cantrips: undefined, prepared: undefined };
 }
 
 /** Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the

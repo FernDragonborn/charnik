@@ -420,9 +420,10 @@ Deep effects-system review, 2026-07-16 (E3–E7):
 - [ ] **E4 · Shipped tokens ahead of the vocabulary.** `effects_srd.csv` Haste row uses
   `flat_bonus:action+1` — a target documented nowhere (B13). Also the EFX note stands: most SRD
   condition/feature rows still carry EMPTY `effects` columns (engine ready, data not encoded).
-- [ ] **E5 · `class_casting` requires a row per EXACT level** (character/spellcasting.ts:94) — a
-  sparse table (rows only where counts change) silently yields caps of 0 and spells vanish.
-  Either fill-down in the lookup or document the density requirement for homebrew.
+- [x] **E5 · `class_casting` requires a row per EXACT level.** FIXED 2026-07-21. `castingCounts` now
+  FILLS DOWN — it takes the highest defined level ≤ the character's level, so a sparse table (rows only
+  where counts change) is read as "unchanged since the last row", not 0. Unit-tested (L4 wizard uses
+  the L3 row). Dense tables are unaffected (exact level is the highest ≤ itself).
 - [ ] **E6 · `classes.saves` schema demands EXACTLY 2** (`z.array(Ability).length(2)`,
   schemas.ts:208-211) — a homebrew class with 1 or 3 save proficiencies fails validation and the
   row is dropped. Arbitrary stiffness against the homebrew-first stance.

@@ -74,6 +74,13 @@ describe('deriveSpellcasting', () => {
 		expect(sc.pools.map((p) => p.spellLevel)).toEqual([1, 2, 3]); // shared long-rest pool
 	});
 
+	it('fills down a sparse class_casting table: L4 wizard uses the L3 row, not 0 (E5)', () => {
+		// the fixture defines wizard rows only at level 3 (prepared 6) and 5 (prepared 9) — no level 4
+		const wiz4 = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:wizard', level: 4 }]));
+		const sc = deriveSheet(wiz4, graph).spellcasting;
+		expect(sc.classes[0]!.preparedCap).toBe(6); // filled down from wizard_3, not a 0/formula gap
+	});
+
 	it('multiclass: TWO DCs (L11), shared pool at summed level, per-class learnable max', () => {
 		const gish = make((c) => {
 			c.build.classes = [
