@@ -42,7 +42,7 @@ jobs:
         os: [ubuntu-22.04, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Tauri v2 Linux build + AppImage bundling deps (webkit2gtk-4.1, appindicator, rsvg, patchelf).
       - name: Install Linux dependencies
