@@ -22,3 +22,33 @@ visual-design call, so they're parked here:
 
 Once you pick the light values (or say "reuse resource-soft / resource-border derived"), I'll add
 the tokens and swap the last ~5 sites, closing C1.
+
+---
+
+## A14 · HP-max semantics: manual override vs `hp_max` effects
+
+`play.hp.max ?? sheet.maxHp.value` means a **manual max override silently disables every `hp_max`
+effect** (Aid stacked on a manual max just vanishes), and when max DROPS (Aid expires) `hp.current`
+stays above the new max until the next heal. Fixing this needs a decision on the model:
+
+- **Option A**: manual override REPLACES the computed max (current behavior, effects ignored while set).
+- **Option B**: effects layer ON TOP of the manual base (`manualBase + Σ hp_max effects`), and
+  `hp.current` clamps to the live max on every derive. More correct, but changes what "manual max" means.
+
+Recommend B (clamp current + layer effects). Parking until you confirm the model.
+
+---
+
+## Per-resource USE effects (e.g. Arcane Recovery restores slots) — the big one
+
+You flagged that "using" a resource should run its real mechanic, and each such resource needs its own
+system (Arcane Recovery = pick which expended slots to recover within a ⌈level/2⌉ budget, no slot ≥6;
+Sorcery Points = convert SP↔slots; Channel Divinity options; …). This is a data-model + UI feature,
+not a refactor: a `recover_slots:<budget>:<maxLevel>`-style effect token (or content columns) + a
+picker dialog + rules math. Deferred by you to build the system deliberately later.
+
+## Pin (spellbook ⇄ combat) end-to-end — ties D3
+
+Spellbook pin is a local set (effectiveId); combat pin is the `CombatVM.pinned` demo hardcode
+(bare id). Making pin persist like hide did (UBUG-10) means one `ui.spellsPinned` field + reconciling
+the two key formats + dropping the demo hardcode (**D3**). Small-medium; say go and I'll do it.
