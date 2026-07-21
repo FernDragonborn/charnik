@@ -9,8 +9,7 @@ their data as plain CSV.
 Desktop app: **Tauri v2 + SvelteKit** (static SPA, TypeScript). No HTTP server — runs
 standalone in the system webview.
 
-> **Status: pre-1.0, in active development.** See [`docs/PLAN.md`](docs/PLAN.md) for the
-> authoritative spec and roadmap.
+> See [`docs/PLAN.md`](docs/PLAN.md) for the authoritative spec and roadmap.
 
 ## Install
 
