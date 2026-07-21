@@ -14,6 +14,7 @@ import {
 	isEffectExpired,
 	parseDamage,
 	applyDefense,
+	standardActions,
 	type EffectInstance
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
@@ -270,5 +271,20 @@ describe('applyDefense — resist / immune / vulnerable applied to damage (B20)'
 	it('leaves an untyped hit or an undefended type unchanged', () => {
 		expect(applyDefense(10, null, d)).toEqual({ final: 10, bucket: null });
 		expect(applyDefense(10, 'radiant', d)).toEqual({ final: 10, bucket: null });
+	});
+});
+
+describe('standardActions — edition-aware terms (D5)', () => {
+	it('2024 has Study + Utilize', () => {
+		const names = standardActions(null, '5.5e').map((a) => a.name);
+		expect(names).toContain('Study');
+		expect(names).toContain('Utilize');
+		expect(names).not.toContain('Use an Object');
+	});
+	it('2014 has no Study and uses "Use an Object" instead of Utilize', () => {
+		const names = standardActions(null, '5e').map((a) => a.name);
+		expect(names).not.toContain('Study');
+		expect(names).not.toContain('Utilize');
+		expect(names).toContain('Use an Object');
 	});
 });

@@ -4,7 +4,7 @@
  * every area component. Split out of the old monolithic combat/+page.svelte.
  */
 import { ABILITY_IDS, type Ability } from '$lib/rules/core';
-import type { Computed } from '$lib/rules/pipeline';
+import type { Computed, System } from '$lib/rules/pipeline';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character, EffectInstance } from '$lib/character/schema';
 import { SKILL_ABILITY, type CharacterSheet, type SkillId } from '$lib/character/derive';
@@ -495,8 +495,9 @@ export function computeAttacks(
 }
 
 /** The standard combat actions (Dash, Hide, Grapple…); roll ones reference live skills. Pure. */
-export function standardActions(sheet: CharacterSheet | null): StandardAction[] {
+export function standardActions(sheet: CharacterSheet | null, system: System): StandardAction[] {
 	const sk = (k: SkillId) => sheet?.skills[k]?.value ?? 0;
+	const is2024 = system === '5.5e';
 	return [
 		{
 			id: 'attack',
@@ -530,14 +531,19 @@ export function standardActions(sheet: CharacterSheet | null): StandardAction[] 
 			marker: '→ roll',
 			roll: ['Search (Perception)', sk('perception')]
 		},
-		{
-			id: 'study',
-			name: 'Study',
-			hint: signed(sk('arcana')),
-			desc: 'recall lore',
-			marker: '→ roll',
-			roll: ['Study (Arcana)', sk('arcana')]
-		},
+		// Study is a 2024 action; 2014 has no separate Study action
+		...(is2024
+			? [
+					{
+						id: 'study',
+						name: 'Study',
+						hint: signed(sk('arcana')),
+						desc: 'recall lore',
+						marker: '→ roll',
+						roll: ['Study (Arcana)', sk('arcana')] as [string, number]
+					}
+				]
+			: []),
 		{
 			id: 'grapple',
 			name: 'Grapple',
@@ -556,7 +562,14 @@ export function standardActions(sheet: CharacterSheet | null): StandardAction[] 
 		},
 		{ id: 'help', name: 'Help', hint: '', desc: 'give an ally advantage', marker: 'action' },
 		{ id: 'ready', name: 'Ready', hint: '', desc: 'prepare a trigger', marker: 'action' },
-		{ id: 'utilize', name: 'Utilize', hint: '', desc: 'use an object', marker: 'action' }
+		// 2024 renamed 2014's "Use an Object" to "Utilize"
+		{
+			id: 'utilize',
+			name: is2024 ? 'Utilize' : 'Use an Object',
+			hint: '',
+			desc: 'use an object',
+			marker: 'action'
+		}
 	];
 }
 

@@ -325,8 +325,9 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   `loadCharacter` now reads `system` best-effort from the raw JSON before migrate/validate and returns
   it on failure; `RosterEntry.system` is optional, so a broken save badges its REAL edition (or none
   if even that's unreadable) instead of always '5e'. The roster hides the badge when absent. Tested.
-- [ ] **D5 · `standardActions` is edition-blind.** One list for both systems using 2024 terms
-  (Utilize, Study); 2014 names differ (Use an Object; no Study action).
+- [x] **D5 · `standardActions` is edition-blind.** FIXED 2026-07-21. Now takes the character's
+  `system`: 2024 keeps Study + Utilize; 2014 drops the Study action and renames Utilize → "Use an
+  Object". The combat VM passes `character.system`. Unit-tested both editions.
 - [ ] **D6 · `effectHint` hardcodes spell names** ('mage hand', 'counter'…, EN-only) as a
   curated fallback — against the data-driven grain; candidate for a content column instead.
 

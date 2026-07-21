@@ -495,7 +495,9 @@ class CombatVM {
 	);
 
 	// standard actions (from d-charnik); roll ones reference live skills — pure builder in helpers
-	actions = $derived.by<StandardAction[]>(() => standardActions(this.sheet));
+	actions = $derived.by<StandardAction[]>(() =>
+		standardActions(this.sheet, this.character?.system ?? '5.5e')
+	);
 	visibleActions = $derived(this.actions.filter((a) => !this.hiddenActions[a.id]));
 
 	spellGroups = $derived.by(() =>
