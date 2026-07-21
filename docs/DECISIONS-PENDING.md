@@ -836,7 +836,18 @@ Arcane-Ward feature stops granting its resource.
 derive's row lookups. ⚠ Filter once at gather (perf), not per-stat. ⚠ A filtered-out row a
 character references = the EXISTING missing-ref path (render + flag), never a crash.
 
-## EFX-E4 · encode SRD effect tokens (content; validates everything above)
+## EFX-E4 · encode SRD effect tokens (content; validates everything above) — PARTIAL
+
+**(1) grapple/restrain family — ✅ DONE (2026-07-21)**: `block_bonus:speed` added to `grappled` +
+`restrained` in both editions' `conditions_srd.csv` (they already had `set_override:speed:0` from
+CONDITIONS-1; the block completes A9's pairing so a later +10 speed can't survive — RAW "can't
+benefit from a bonus to its speed", verbatim in the 5.1 text). `conditions_content.test.ts` pins it.
+Also closed the 2024-conditions converter trap: `convert.mjs convertConditions` now preserves
+authored effects (mirrors the convert-2014 fix). **REMAINING**: (2) Rage, (3) exhaustion rows,
+(4) rollables — all author `class_features` effects, which needs `convert-classes.mjs` /
+`convert-2014.mjs` to PRESERVE authored feature effects first (same trap; class_features has no
+authored effects today so nothing's been lost yet, but the first authoring pass must add preservation
+or a re-run wipes it).
 
 Priority: (1) grapple/restrain family (after EFX-A9), both editions; (2) **Rage**
 (`grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6, 20->inf):long`

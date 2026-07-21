@@ -56,6 +56,12 @@ describe('shipped conditions · effects column is engine-valid', () => {
 				);
 				// prone carries at least one display-only note (attacks against you)
 				expect(effectsOf('prone').some((t) => t.startsWith('note:'))).toBe(true);
+				// EFX-E4: the grapple family zeros speed AND blocks any bonus to it (RAW "can't
+				// benefit from a bonus to its speed") — the 0-set alone lets a later +10 survive.
+				for (const id of ['grappled', 'restrained'])
+					expect(effectsOf(id), id).toEqual(
+						expect.arrayContaining(['set_override:speed:0', 'block_bonus:speed'])
+					);
 			});
 		});
 	}

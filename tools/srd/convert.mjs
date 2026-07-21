@@ -7,9 +7,10 @@
  * asserts its emitted row count against what the source contains, so a parser that drops
  * an entry fails loudly. Run: node tools/srd/convert.mjs
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Papa from 'papaparse';
 import {
 	blocks,
 	field,
@@ -25,6 +26,22 @@ const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const src = (f) => readFileSync(resolve(root, 'tools/srd-src/2024', f), 'utf8');
 const out = (f) => resolve(root, 'content/srd-2024', f);
+
+// Preserve `effects` authored AFTER conversion (condition tokens are curated from SRD rules into the
+// bounded vocab — CONDITIONS-1 — not present in the HTML source). A raw re-run must not wipe them.
+function existingEffectsById(csvFile) {
+	const path = out(csvFile);
+	if (!existsSync(path)) return new Map();
+	const raw = readFileSync(path, 'utf8')
+		.replace(/^﻿/, '') // strip the UTF-8 BOM before the #-filter
+		.split('\n')
+		.filter((l) => !l.startsWith('#'))
+		.join('\n');
+	const map = new Map();
+	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
+		if (r.id && r.effects) map.set(r.id, r.effects);
+	return map;
+}
 
 // --- feats -------------------------------------------------------------------
 const FEAT_SECTIONS = {
@@ -76,6 +93,7 @@ function convertFeats() {
 const POSITIVE_CONDITIONS = new Set(['invisible']); // the only beneficial one in SRD
 function convertConditions() {
 	const all = blocks(src('rules-glossary.md')).filter((b) => /\[Condition\]\s*$/.test(b.name));
+	const authored = existingEffectsById('conditions_srd.csv'); // CONDITIONS-1 tokens, not in the source
 	const rows = all.map((b) => {
 		const name = b.name.replace(/\s*\[Condition\]\s*$/, '');
 		const id = slug(name);
@@ -87,7 +105,7 @@ function convertConditions() {
 			name_uk: '',
 			text_en: description(b.body),
 			text_uk: '',
-			effects: '',
+			effects: authored.get(id) ?? '',
 			negative: String(!POSITIVE_CONDITIONS.has(id))
 		};
 	});

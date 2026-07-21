@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fce9-7a08-a279-ae8d4b1fe0b9
-#content-updated_at: 2026-07-19
-#content-hash: xxh64:d0241d097e54a590
+#content-updated_at: 2026-07-21
+#content-hash: xxh64:7de69f444649bf6c
 id,name_en,name_uk,text_en,text_uk,effects,negative
 blinded,Blinded,,"•A blinded creature can't see and automatically fails any ability check that requires sight.
 •Attack rolls against the creature have advantage,and the creature's attack rolls have disadvantage.",,disadvantage:attack;note:Attacks against you have Advantage;note:You automatically fail any check that requires sight,true
@@ -23,7 +23,7 @@ frightened,Frightened,,"•A frightened creature has disadvantage on ability che
 grappled,Grappled,,"•A grappled creature's speed becomes 0, and itcan't benefit from any bonus to its speed.
 •The condition ends if the grappler is incapacitated(see the condition).
 •The condition also ends if an effect removes the grappled creature from the reach of the grapple ror grappling effect, such as when a creature is hurled away by the
-thunder-wave spell.",,set_override:speed:0;note:Ends if the grappler is Incapacitated or you're moved out of its reach,true
+thunder-wave spell.",,set_override:speed:0;block_bonus:speed;note:Ends if the grappler is Incapacitated or you're moved out of its reach,true
 incapacitated,Incapacitated,,•An incapacitated creature can't take actions or reactions.,,note:You can't take actions or reactions,true
 invisible,Invisible,,"•Aninvisible creature is impossible to see without the aid of magic or a special sense. For the purpose of hiding, the creature is heavily obscured. The creature's location can be detected by any noise it makes or any tracks it leaves.
 •Attack rolls against the creature have disadvantage, and the creature's attack rolls have advantage.",,advantage:attack;note:Attacks against you have Disadvantage;note:Heavily Obscured — you can be detected by noise or tracks,false
@@ -43,7 +43,7 @@ prone,Prone,,"•A prone creature's only movement option is to crawl, unless it 
 •An attack roll against the creature has advantage ifthe attacker is within 5 feet of the creature.Otherwise, the attack roll has disadvantage.",,"disadvantage:attack;note:An attack against you has Advantage if the attacker is within 5 ft, otherwise Disadvantage",true
 restrained,Restrained,,"•A restrained creature's speed becomes 0, and itcan't benefit from any bonus to its speed.
 •Attack rolls against the creature have advantage,and the creature's attack rolls have disadvantage.
-•The creature has disadvantage on Dexterity saving throws.",,set_override:speed:0;disadvantage:save.dex;disadvantage:attack;note:Attacks against you have Advantage,true
+•The creature has disadvantage on Dexterity saving throws.",,set_override:speed:0;block_bonus:speed;disadvantage:save.dex;disadvantage:attack;note:Attacks against you have Advantage,true
 stunned,Stunned,,"•A stunned creature is incapacitated (see the condition), can't move, and can speak onlyfalteringly.
 •The creature automatically fails Strength andDexterity saving throws.
 •Attack rolls against the creature have advantage.",,apply_condition:incapacitated;auto_fail:save.str;auto_fail:save.dex;note:Attacks against you have Advantage,true

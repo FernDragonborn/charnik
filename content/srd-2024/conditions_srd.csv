@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f972-79f0-8cbe-db82843f9ea2
-#content-updated_at: 2026-07-19
-#content-hash: xxh64:f0f0ac176d591b84
+#content-updated_at: 2026-07-21
+#content-hash: xxh64:6540d0c2e367084e
 id,name_en,name_uk,text_en,text_uk,effects,negative
 blinded,Blinded,,"While you have the Blinded condition, you experience the following effects.
 _Can't See._ You can't see and automatically fail any ability check that requires sight.
@@ -25,7 +25,7 @@ _Can't Approach._ You can't willingly move closer to the source of fear.",,disad
 grappled,Grappled,,"While you have the Grappled condition, you experience the following effects.
 _Speed 0._ Your Speed is 0 and can't increase.
 _Attacks Affected._ You have Disadvantage on attack rolls against any target other than the grappler.
-_Movable._ The grappler can drag or carry you when it moves, but every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it.",,set_override:speed:0;note:Ends if the grappler is Incapacitated or you're moved out of its reach,true
+_Movable._ The grappler can drag or carry you when it moves, but every foot of movement costs it 1 extra foot unless you are Tiny or two or more sizes smaller than it.",,set_override:speed:0;block_bonus:speed;note:Ends if the grappler is Incapacitated or you're moved out of its reach,true
 incapacitated,Incapacitated,,"While you have the Incapacitated condition, you experience the following effects.
 _Inactive._ You can't take any action, Bonus Action, or Reaction.
 _No Concentration._ Your Concentration is broken.
@@ -57,7 +57,7 @@ _Attacks Affected._ You have Disadvantage on attack rolls. An attack roll agains
 restrained,Restrained,,"While you have the Restrained condition, you experience the following effects.
 _Speed 0._ Your Speed is 0 and can't increase.
 _Attacks Affected._ Attack rolls against you have Advantage, and your attack rolls have Disadvantage.
-_Saving Throws Affected._ You have Disadvantage on Dexterity saving throws.",,set_override:speed:0;disadvantage:save.dex;disadvantage:attack;note:Attacks against you have Advantage,true
+_Saving Throws Affected._ You have Disadvantage on Dexterity saving throws.",,set_override:speed:0;block_bonus:speed;disadvantage:save.dex;disadvantage:attack;note:Attacks against you have Advantage,true
 stunned,Stunned,,"While you have the Stunned condition, you experience the following effects.
 _Incapacitated._ You have the Incapacitated condition.
 _Saving Throws Affected._ You automatically fail Strength and Dexterity saving throws.
