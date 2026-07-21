@@ -18,7 +18,8 @@ async function graphOf(): Promise<ContentGraph> {
 		'c/classes_srd.csv',
 		[
 			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,ritual',
-			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,true`
+			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,true`,
+			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,false`
 		].join('\n')
 	);
 	await st.write(
@@ -106,6 +107,22 @@ describe('deriveSheet aggregator', () => {
 		const s = deriveSheet(wizard(), graph);
 		expect(s.abilities.int.save.value).toBe(5); // +3 INT + 2 prof (wizard proficient)
 		expect(s.abilities.str.save.value).toBe(0); // not proficient
+	});
+
+	it('multiclass save proficiencies come from the STARTING class only (A8)', () => {
+		const c = wizard();
+		c.build.saves = []; // no builder-written saves → derive falls back to the first class
+		// Fighter 1 (starting) / Wizard 3 — RAW grants Fighter saves only (STR, CON), NOT Wizard's
+		c.build.classes = [
+			{ class: `class:${S}:fighter`, level: 1 },
+			{ class: `class:${S}:wizard`, level: 3 }
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		// level 4 → prof +2. STR 10(+0), CON 14(+2 w/ Hardy), INT 16(+3), WIS 10(+0)
+		expect(s.abilities.str.save.value).toBe(2); // Fighter proficient: 0 + 2
+		expect(s.abilities.con.save.value).toBe(4); // Fighter proficient: +2 + 2
+		expect(s.abilities.int.save.value).toBe(3); // NOT proficient (Wizard is 2nd) — was 5 with the bug
+		expect(s.abilities.wis.save.value).toBe(0); // NOT proficient
 	});
 
 	it('computes AC from equipped armor + a runtime effect, with provenance', () => {

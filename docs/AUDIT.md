@@ -50,10 +50,11 @@ real work, tick it here and (if it grew a design) move the design into PLAN.md p
 
 Deep effects-system review, 2026-07-16 (A8–A18):
 
-- [ ] **A8 · Multiclass saves = union of ALL classes.** `character/derive.ts:287-292` adds every
-  class's save proficiencies; RAW grants saves from the FIRST class only. The builder writes
-  `build.saves` correctly (first class, `build/state.svelte.ts` assemble) — the derive union on top
-  is the bug. Fighter/Wizard gets STR+CON+INT+WIS.
+- [x] **A8 · Multiclass saves = union of ALL classes.** FIXED 2026-07-21. The derive save loop added
+  EVERY class's `saves`; RAW grants save proficiencies from the STARTING class only. Now only
+  `classes[0]` contributes saves (`build.saves` + effect-granted still layer on); the loop still
+  resolves each class row so missing refs stay flagged. Unit-tested: Fighter 1 / Wizard 3 → STR+CON
+  saves, INT/WIS NOT proficient (INT save +3, not +5).
 - [ ] **A9 · Same-layer `set` resolution "highest wins" is wrong for restrictive sets.**
   `rules/pipeline.ts:69` folds competing sets by `Math.max` — grappled (`set_override:speed:0`)
   vs any other same-layer speed set → the character keeps moving. CONFIRMED (user 2026-07-16).

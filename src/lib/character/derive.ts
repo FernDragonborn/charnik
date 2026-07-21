@@ -600,14 +600,19 @@ export function deriveSheet(character: Character, graph: ContentGraph): Characte
 		else grantedSkills.set(p.target, maxProf(grantedSkills.get(p.target) ?? 'none', p.level));
 	}
 
-	// saves: proficient if the ability is in build.saves (or any class's saves), or effect-granted
+	// saves: proficient if the ability is in build.saves, effect-granted, or from the STARTING class.
+	// Multiclass RAW grants save proficiencies from the FIRST class ONLY — NOT every class (A8); the
+	// loop still resolves each class row so missing refs are flagged, but only classes[0] adds saves.
 	const classSaves = new Set<Ability>([...(build.saves as Ability[]), ...grantedSaves]);
-	for (const c of build.classes) {
+	build.classes.forEach((c, i) => {
 		const row = graph.get(c.class);
-		if (!row) missing.push(c.class);
-		const s = row?.type === 'class' ? row.data.saves : undefined;
-		if (Array.isArray(s)) for (const a of s) classSaves.add(a);
-	}
+		if (!row) {
+			missing.push(c.class);
+			return;
+		}
+		if (i === 0 && row.type === 'class' && Array.isArray(row.data.saves))
+			for (const a of row.data.saves as Ability[]) classSaves.add(a);
+	});
 
 	const abilities = {} as Record<Ability, AbilityBlock>;
 	for (const ab of ABILITIES) {
