@@ -1,5 +1,11 @@
 # Full-project audit — 2026-07-14
 
+> **STATUS (2026-07-21):** every remaining `[ ]` / `[~]` item here is now migrated into
+> **`docs/DECISIONS-PENDING.md`** as a DECIDE / CONFIRM / WORK / DEFERRED entry (audit IDs
+> preserved), so the audit is closed as a backlog: each open point has a home and a next step.
+> This file stays as the ARCHIVE — keep its detailed notes; track live status in DECISIONS-PENDING
+> and `PLAN.md`. `[x]` items below are the historical fix record.
+
 Findings from a whole-`src/` correctness audit (rules math verified against SRD 5.1 / 5.2.1,
 invariants checked against CLAUDE.md + PLAN.md, CSS against the token contract, shipped data
 against the schemas). All quality gates were GREEN when these were found — none of this is

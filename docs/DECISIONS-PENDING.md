@@ -1,54 +1,495 @@
 # Decisions pending
 
-Design calls surfaced during autonomous refactoring that need your input before I finish them.
-Each entry: what's blocked, why it's a decision (not just mechanical), and the options.
+Master list of every OPEN / PARTIAL item from `AUDIT.md`, migrated here so the audit can be
+closed one way or another. Each item is tagged:
+
+- **DECIDE** — a real implementation choice; needs your pick. Options given.
+- **CONFIRM** — I have a clear recommendation; just say yes / no / tweak.
+- **WORK** — no design choice, just labour. Routed to a `PLAN.md` group; listed so nothing is lost.
+- **DEFERRED** — parked by an earlier strategy call (pre-release test pass, docs-gated, low-risk).
+
+Audit IDs are preserved. When an item is decided, tick it in `AUDIT.md` and (if it grew a
+design) move the design into `PLAN.md`.
+
+**The questionnaire is the DECIDE + CONFIRM items** (§1–§2). Answer inline: "A9: B", "B26: yes", etc.
 
 ---
 
-## C1 · New design tokens for the last hardcoded colors
+# §0 · GOVERNING · Strict vs Free mode + the RAW-compliance ledger
 
-The zero-risk hardcoded colors are already tokenized (`#fff` → `--color-accent-text`, overlay
-shadows → `--color-overlay`, dropped the pointless `--color-danger` fallbacks). The remaining
-sites are gold/teal accents whose **light-theme values I'd be guessing** — picking those is a
-visual-design call, so they're parked here:
+**Standing rule** ([[charnik-srd-raw-fidelity]]): Charnik's mechanical output must equal SRD RAW for
+the active edition (5e = SRD 5.1, 5.5e = SRD 5.2.1). RAW is often per-effect, not a global rule.
 
-- **Gold border** `#5a4d28` (dark) — `.recharge-chip` (PanelCard), `SpellHead`, and the resource
-  hover tints I added (`rgba(202,162,74,0.08/0.12)`). Needs a `--color-resource-border` token with a
-  dark value (`#5a4d28`) and a **light value TBD** (something like `#d8c48f`? your call).
-- **Teal border** `#2c4a45` (dark) — PanelCard. Needs `--color-good-border`, light value TBD.
-- **Gold-tinted popover surface** `#221c10` (EffectDurationMenu bg) + `#1a1400` (settings text).
-  Reuse `--color-resource-soft` (`#2a2415` dark / `#f1e7cf` light) or add dedicated tokens? The
-  hues differ slightly from resource-soft.
+**DECIDE-0 · Strict vs Free mode — PER BLOCK (decided direction, user 2026-07-21).** RAW fidelity is
+only enforceable if the manual-override paths are GATED by a strict flag. The mode is **per block
+(per modular panel), NOT per character** — a user can be strict on HP but free on custom effects.
+- **Precedent already in the builder**: `draft.strict` (stored `char.ui.strict`) drives a segmented
+  **Strict ("enforce rules") / Free ("change anything")** toggle (`build/+page.svelte:59`), and each
+  build BLOCK reads it to decide enforcement — skills (class cap vs any), spells (access + level caps
+  vs everything, `:322`), abilities (3–20 vs 1–30, can't drop a trained skill / known spell in strict).
+  Mirror this UI + "each block consults its own strict" pattern on the play/combat side.
+- **Gap to close**: build-side `strict` is currently ONE flag governing all build blocks; the decided
+  model is per-block storage (each panel its own strict/free), on both build and play. Sub-call: keep
+  the builder's single top toggle as a "set all blocks" convenience over per-block state.
+- **Strict block** — engine computes/enforces RAW (manual HP-max can't silence `hp_max` effects, slot/
+  pact-slot spend enforced, armor-without-proficiency blocks casting, caps enforced).
+- **Free block** — manual overrides + custom effects + homebrew relaxations may exceed RAW, visibly flagged.
+- Cross-refs: A14 (manual HP-max), custom/temporary effects + manual modifiers, E6 & homebrew schema
+  relaxations, the effects-auto global toggle (CLAUDE.md). Confirm: per-block storage + default strict
+  + keep a top "all blocks" convenience toggle?
 
-Once you pick the light values (or say "reuse resource-soft / resource-border derived"), I'll add
-the tokens and swap the last ~5 sites, closing C1.
+**RAW-compliance ledger** (audited 2026-07-21 against SRD text; RAW-neutral items — CSS/typing/
+storage/tooling/tests — omitted).
+
+*Verified RAW-CORRECT (already fixed):* A1, A2, A3, A4, A5, A6, A8, A10, A11, A13, A15, A16,
+A17-core, D13.
+
+*RAW VIOLATIONS — strict must fix (all open, tracked at their IDs below/in AUDIT):*
+| ID | Breach | SRD basis |
+|----|--------|-----------|
+| A7 | non-proficient weapon still gets prof bonus | no prof bonus if not proficient — KNOWN GAP (needs proficiency data model) |
+| A9 | competing `set` folds by max → grapple loses | grappled = speed 0 + blocks speed bonuses; per-effect direction (re-specced above) |
+| A17-rem | pure-warlock cast not slot-gated | Pact Magic must expend a pact slot — CONFIRMED in code (`slotToSpend` returns null when the leveled-pool filter excludes pact pools, `rules/spellcasting.ts:55-57`) |
+| A18 | cast + prepared-cap pick `classes[0]`, not the spell's granting class | derive IS per-class-correct (combined caster level + per-class DC verified); breach is `state.svelte.ts:450` (cast heal/attack mod) + `:526` (`preparedCap`) + global `preparedCount` — a Wiz/Cleric casts cleric spells off INT. `accessSpellIds` already maps spell→class |
+| B2 | death saves + hit-dice UI/logic unbuilt; exhaustion play-state field absent | core RAW. Exhaustion DESIGN decided (PLAN per-system ladder): **2024 modelable now** (`d20_tests -2*exhaustion` / `speed -5*exhaustion`); **2014 needs G4** below |
+| G4 (2014 exhaustion) | no multiply/halve pipeline op | 2014 exhaustion L2 = speed halved, L4 = hp-max halved — unmodelable without a stat-halve op (PLAN G4, deferred). 5e-only RAW gap |
+| B9 | no armor-no-proficiency casting block; passives miss ±5 | can't cast in armor you lack proficiency; passive ±5 for adv/dis |
+| B19 | durations frozen out of combat | duration = elapsed-time RAW, combat-independent |
+| B25 | Eldritch Knight / Arcane Trickster get no slots | both third-casters per RAW |
+| D9 | magic weapon +X inert | +1 weapon = +1 attack & damage |
+| D16 | half-feat / choice content unrepresentable | can't build those characters to RAW |
+| E1 | no 5.5e languages file → empty picker | content gap |
+| E4 | feature `effects` still sparse; exhaustion excepted | CONDITIONS-1 (2026-07-19, post-audit) wired all 14 mechanical conditions BOTH editions → conditions DONE; remaining = feature rows + exhaustion |
+
+*FREE-MODE-only deviations — allowed, but must be gated by DECIDE-0 so strict enforces RAW:*
+A14 (manual HP-max), custom/temporary effects + manual modifiers, E6 + homebrew schema relaxations.
 
 ---
 
-## A14 · HP-max semantics: manual override vs `hp_max` effects
+# §0.5 · RESOLUTIONS (user, 2026-07-21)
 
-`play.hp.max ?? sheet.maxHp.value` means a **manual max override silently disables every `hp_max`
-effect** (Aid stacked on a manual max just vanishes), and when max DROPS (Aid expires) `hp.current`
-stays above the new max until the next heal. Fixing this needs a decision on the model:
+Decided; move each into `PLAN.md` under its group when implemented, tick in AUDIT.
 
-- **Option A**: manual override REPLACES the computed max (current behavior, effects ignored while set).
-- **Option B**: effects layer ON TOP of the manual base (`manualBase + Σ hp_max effects`), and
-  `hp.current` clamps to the live max on every derive. More correct, but changes what "manual max" means.
+- **DECIDE-0** — strict/free is **per block ONLY** (no top "set-all" convenience toggle). Each modular
+  panel carries its own strict/free; default strict. Build-side `ui.strict` (single flag) migrates to
+  per-block storage.
+- **A9** — RAW per-effect set mode (floor/cap/absolute) + speed-0 condition bonus-block. (token spelling: my call)
+- **A14** — Option B (effects layer on the base + clamp current); manual max = a Free-block affordance.
+- **B19** — **BACKLOG. Stays FROZEN out of combat for now** (durations don't tick outside combat). Revisit later.
+- **B3** — backups = **3 last edits + 3 snapshots taken at the last 3 app starts**. Rationale: a single
+  D&D session writes 100+ changes to `character.json` (HP/slots/resources all live there), so per-edit
+  rotation alone is too churny — pair it with per-launch snapshots.
+- **D16** — **A** (one general player-choice model; unify the existing ASI mechanisms — reuse over new).
+- **B17** — **B + baked fallback** (live ref+resolve, fall back to baked for orphaned refs).
+- **B18** — **BACKLOG; A (accept EN) for NOW, temporary** — revisit before more consumers bake in.
+- **D12** — **A** (honor `eff.layer` for token sets).
+- **B24** — **A** (per-file granular reparse; implement the invariant).
+- **A7** — **B** (build a weapon/armor-proficiency data model; unblocks B9's weapon half). RAW-correct target.
+- **B8** — **A** (real drop-in: load locale JSON from the dataDir via the Storage seam).
+- **D-T** — **A** (write T1/T2/T3 now); **T4/T5 → backlog**.
+- **E6** — **A** (relax `classes.saves` to 0–6). Homebrew support is a core goal — don't restrict it.
+- **RAW ledger → WORK** (no design choice, implement to RAW): A17 warlock slot-gate, A18 spell→granting-class,
+  B9 armor-block + passive ±5, B25 subclass casters, D9 magic-weapon +X, E1 5.5e languages, E4 feature/exhaustion
+  tokens, 2024 exhaustion, G4 (2014 exhaustion halve-op).
+- **D8** — **A** (RollTray implements the `DiceTrayRequest` contract: register on mount + formula↔pool
+  adapter + grow the request to carry pool/mods/queued-damage). One roll representation through one seam.
+- **E7** — **A** (drop the dead `class_feature.resource` column) — but INSIDE the RESOURCE-MODEL
+  COMMITMENT below (user 2026-07-21: "support all SRD + popular homebrew from the start"). Resources are
+  co-located in the feature's own `effects` cell; a friendly homebrew sub-form emits the token.
 
-Recommend B (clamp current + layer effects). Parking until you confirm the model.
+  **RESOURCE-MODEL coverage commitment** (→ PLAN, spellcasting/resources group). Formula maxes already
+  work (`grant_resource:ki:class_level.monk:short` is a tested case). To cover the real catalogue, three
+  pieces must land:
+  1. **Table-max authoring for count pools** — Rage 2→6, Blood Maledict, Infusions-known are step tables,
+     not formulas. **PATH DECIDED — LOW effort (~40 lines, half-day):** add ONE whitelisted expression
+     function `step(index, t1->v1, t2->v2, …)` (breakpoint lookup: value of the highest threshold ≤
+     index; `->` pair syntax decided 2026-07-21 — flat number lists were unreadable) to `FUNCTIONS`
+     (expression-parser) + an evaluator arm + tests. The `grant_resource` max slot ALREADY runs
+     through the L2 evaluator (`grant_resource:ki:class_level.monk:short` is a passing test), so the
+     sugar appears there for free — NO dep-graph / apply.ts changes. Rage becomes
+     `grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6, 20->inf):long`.
+  2. **A scaling-die/value primitive** — Bardic Inspiration d6→d12, Martial Arts die, Sneak Attack Nd6,
+     Crimson Rite die (homebrew). **MOSTLY CLOSED BY THE SAME `step()`**: expressions already compose with
+     the `d` dice operator, so `1d step(class_level.bard, 1->6, 5->8, 10->10, 15->12)` = scaling die
+     SIZE and `step(…) d 6` = scaling die COUNT. One sugar closes pieces 1 AND 2 (language-level; see
+     the REVIEW below for the missing roll surface).
+  3. **Per-resource USE mechanics** (already logged in §4, deferred) — spend-on-options / conversions.
+     **DESIGN SKETCH (2026-07-21):** a resource gains a linked options table `resource_options.csv`
+     (keyed `resource_id`): `resource_id, id, name_*, cost, action`. `cost` = an L2 value expression
+     (`2`, `spell_level`, `step(...)`) reusing the expression layer; `action` = a bounded vocab —
+     mostly the EXISTING effects (`apply_condition` = Stunning Strike, a roll/heal = Lay on Hands,
+     `note:` = descriptive). USE flow mirrors the "+" effect menu: tap resource → picker of options+costs
+     → afford-check (`cost ≤ remaining`, else disabled) → spend → run action (roll into tray / apply
+     effect / heal). Core covers Ki / Channel Divinity / Superiority Dice / Lay-on-Hands. **Deferred hard
+     edges:** (a) cross-pool CONVERSION (SP↔slots) — new `spend:<res>:<n>` / `restore:<slot>:<lvl>`
+     actions with cost tables; (b) context-dependent cost (Twinned = spell level) — couples to the
+     in-flight cast; (c) content-PICK options (Wild Shape) — resolves to a filtered stat-block = its own
+     "alternate form" subsystem. Validate the core against Ki / Channel Divinity / Metamagic / Wild Shape.
+  Separate follow-ups: E4 (encode tokens — Rage's `effects` is empty today), D17 (homebrew form `kind`
+  option list). Coverage matrix lives in this decision; validate any model against Rage / Ki / Bardic
+  Inspiration / Channel Divinity + homebrew Blood Hunter / Artificer.
+
+  **REVIEW 2026-07-21 (design check before implementation).** Findings that amend the above:
+  - **`step()` semantics pinned (+ pair syntax, user 2026-07-21):** pairs are written `t->v` — a
+    flat number list (`1,2, 3,3, …`) was judged unreadable. `->` is a new lexer token; a pair is a
+    special arg form legal ONLY inside `step()` args, so arity is simply "index + ≥1 pair" (no
+    odd/even parity check needed — a pair is ONE argument) and it contains no `:`/`?`, so token- and
+    guard-splitting stay safe. Fold = MAX threshold ≤ index regardless of pair ORDER (robust to
+    unsorted authoring) + a lint warn on unsorted/duplicate literal thresholds; no match (index below
+    first threshold) → **0**, matching the absent-var→0 degrade. Follow-up: `grant_resource` should
+    SKIP a pool whose resolved max ≤ 0 (today `class_level.monk` on a non-monk yields a 0-pip pool,
+    `apply.ts:258` only skips `undefined`; step() makes that case common).
+  - **Dice-count lexing widened (user 2026-07-21, UX):** `(level) d 6` reads weird → the lexer rule
+    becomes "`d` is the dice op after any OPERAND token: a number, `)`, or an identifier that is not
+    a word-operator (`and`/`or`/`not`)", so `level d 6` / `class_level.rogue d 6` parse without
+    parens. No valid expression breaks (the only idents that legally FOLLOW an operand are
+    `and`/`or`, which don't start with `d`); nonsense like `level dex_mod` stays an error (the
+    message shifts to unknown-variable). Bonus sugar via the same rule: a bare `d6`/`d20` with NO
+    preceding operand desugars to `1d6`/`1d20` (tabletop habit; no whitelisted variable matches
+    `d<digits>`, so zero collisions). Plus (user 2026-07-21): an identity function **`var(x)`** in
+    the whitelist (~3 lines) for a glued no-space form — `var(class_level.rogue)d6` — since users
+    instinctively write around `d` without spaces; `(expr)d6` glued already works (after `)` the
+    lexer sees the op), spaces stay supported everywhere. **Fully-glued `leveld6` is NEVER-support
+    (user 2026-07-21)** — an indivisible identifier; guessing a split would be worse. ARTICULATE the
+    supported forms: in authoring docs (the forms table: `2d6+3` / `d20` / `level d6` /
+    `(expr)d6` / `var(x)d6`) AND in-product — the unknown-variable parse error for a name matching
+    `<var>d<digits>` gains a "did you mean `<var> d<digits>`?" hint (PLG-9 did-you-mean family).
+    `var()` passes dice and `inf` through untouched (identity = terminal-safe).
+  - **The examples above carried DATA ERRORS:** Bardic Inspiration die steps at levels 5/10/15
+    (d8/d10/d12), NOT 11/17 (those are Martial Arts levels); and it scales by BARD level
+    (multiclass-correct), not total `level`. Corrected:
+    `1d step(class_level.bard, 1->6, 5->8, 10->10, 15->12)`; Martial Arts (5e) =
+    `1d step(class_level.monk, 1->4, 5->6, 11->8, 17->10)`. **Sneak Attack needs NO step():**
+    `ceil(class_level.rogue/2) d 6` composes today.
+  - **RAW gap → DECIDED v2 (user 2026-07-21): single-token `inf`, as a TERMINAL literal.** (v1 —
+    two tokens with a `class_level.barbarian>=20 ?` guard — rejected: splitting one value off is bad
+    authoring UX.) 5e Rage at barbarian 20 = **Unlimited** (SRD 5.1 table); 5.5e caps at 6 (no pair).
+    Design: `inf` is an expression literal with **terminal-value semantics** — legal to PRODUCE
+    (a step() pair value `20->inf`; an if() branch — both return values through untouched), illegal
+    to COMPUTE WITH: every arithmetic result still flows through the existing finite-guard
+    (`num()`, `expression-evaluator.ts:58`), so `inf+1` / `inf-inf` / `0*inf` stay loud errors and
+    NaN can never escape — ZERO new arithmetic guards; the carve-out is one AST node whose eval
+    bypasses `num()`. Comparisons work naturally (`inf > x`); `min(inf, x)` = x (finite fold —
+    legal AND semantically right); `max(inf, …)` folds to Infinity → errors — compose via step/if. Consumers: the
+    `grant_resource` max slot special-cases Infinity through the `MAX_RESOURCE_MAX` clamp → UI
+    renders **∞** (a dedicated branch — `Array.from({length: Infinity})` would throw; consistent
+    with B10 pips-≤12-else-numeric); every OTHER value slot rejects a non-finite result in
+    `resolveEffectValue` ("inf is only valid as a resource max") → standard degrade. No JSON hazard
+    (`ResourceDef` is derived, never persisted; only `resourcesSpent` lands in character.json).
+  - **Piece 2 is NOT closed by step() alone — the language composes, but no product surface consumes
+    a scaling DIE.** `grant_resource` max must resolve to a NUMBER (`apply.ts:255` errors "resource
+    max is not a number" on dice), and RollButton formulas go through `rules/dice` parseFormula, not
+    the L2 evaluator — `1d step(…)` won't parse there. Missing piece = a roll SURFACE: e.g. a new
+    `grant_roll:<id>:<expr>` effect kind → a facts.rolls entry → a rollable chip that resolves
+    expr→diceFormula→`DiceTrayRequest`. Sequenced AFTER D8 (tray unification) and aligned with the
+    D9/D10 mechanics-to-columns direction. Small DECIDE (token vs feature column) before piece 2
+    counts done.
+  - **Piece 3 catalogue corrections:** (a) **Stunning Strike is NOT `apply_condition`** — the stun
+    lands on the TARGET creature and Charnik has no target model; applying `stunned` to self is a
+    bug. It's `note:` + save-DC display. Valid `apply_condition` use = SELF conditions (Rage).
+    (b) **Lay on Hands / Preserve Life are VARIABLE-spend** ("spend X, heal X") — a fixed `cost`
+    expression can't model them; the cost grammar needs an `x` (player-picked amount, 1..remaining)
+    kind whose action can reference the spent amount. (c) The cost-examples line lists `spell_level`
+    while edge (b) defers it — contradiction; core cost = L2 expr over EXISTING vars + `x` only.
+    (d) `resource_id` links to a grant_resource token id ("ki") — NOT a content row, so it's a FLAT
+    namespace (not source-namespaced). Treat as a feature (homebrew extends core ki options,
+    B26-style) and document deliberately; option-row identity = `(resource_id, id)` via the existing
+    collision UI. Bonus: "largest max wins" (`apply.ts:268`) is RAW-correct for multiclass Channel
+    Divinity (uses don't stack). (e) Superiority-die "add after seeing the roll" is context-coupled
+    like Twinned — v1 = roll the die into the tray, note the limit. (f) An option whose cost fails to
+    evaluate (or resolves to dice) → disabled + content-health issue, the standard degrade.
+    (g) **Placement (user 2026-07-21): combat-action options (Flurry of Blows, Stunning Strike —
+    anything that IS an attack/action) belong in the ACTIONS/attacks block, NOT under the resource
+    pips.** Option rows therefore carry an `action_type` (action / bonus_action / reaction / free) +
+    placement; the actions panel lists them with a cost chip (tap = afford-check + spend), resource
+    pips stay pure counters. Per-resource nuances expected — design the split when building piece 3.
+  - **Implementation order:** 1) `step()` + tests (small, ~half-day holds). 2) the roll-surface
+    DECIDE + wiring (medium; after D8). 3) `resource_options.csv` schema/loader/picker-UI (larger,
+    days; must respect `isRowActive` — B5/B15 apply to the new table too).
+- **S2** — **A** (restrict `allow_data_dir` grants to paths the dialog plugin returned). Non-trivial:
+  thread a Rust-side allowlist of dialog-issued paths, reject others. Security-hardening WORK.
+
+# §0.6 · Context for D8 / E7 / S2
+
+## D8 · Two dice-tray stacks — can it be ONE? YES.
+- **Contract** (`lib/dice/tray.svelte.ts`): `DiceTrayRequest {label, formula}` + `registerDiceTray` /
+  `openDiceTray`. A component registers a handler on mount; with none, the fallback rolls instantly +
+  toasts. Used by `RollButton.svelte` (the generic roll affordance — works on compendium, anywhere).
+  Formula-STRING based. Its doc explicitly says the impl "can grow richer behind it — adv/dis, flat
+  mods, an attack→damage chain — without changing callers".
+- **RollTray** (`routes/combat/roll.svelte.ts`): the rich combat roll builder — pool (`Record<sides,count>`),
+  mod, advantage, reroll/min_die mods, **attack→damage chaining** (`queueDamage`/`pendingDamage`), a
+  200-entry roll log. But it **never registers the contract** — it's a parallel impl inside CombatVM.
+- **Consequence**: RollButton anywhere (even in combat) hits the instant-roll FALLBACK, because the rich
+  tray isn't exposed through the seam. The features the contract promises already EXIST in RollTray.
+- **Verdict — one variant is possible AND sensible (= your instinct)**: pick **A** — RollTray *implements*
+  the contract (registers on mount; a formula↔pool adapter bridges the two representations; grow
+  `DiceTrayRequest` to optionally carry a pool + mods + a queued damage roll, its documented growth path).
+  One representation surfaced through the one seam; every roll button gets the real tray. Work = the
+  adapter + the request-shape growth. Confirm **A**.
+
+## E7 · `class_feature.resource` column — drop vs wire
+- The column (`schemas.ts:252`) is a bare NAME ("rage"/"ki") with **no max, no recharge, no count** —
+  it CANNOT actually grant a working resource. Zero consumers. Real resources come only from a
+  `grant_resource:<id>:<max>:<recharge>` token in the feature's `effects` column (max + recharge encoded).
+- **A · Drop** — one mechanism (the token) is the real, complete path (matches data-driven-classes:
+  mechanics as tokens). The homebrew FORM can render a friendly "resource" sub-form that EMITS the
+  token, so non-technical authors never type it. **Recommend A.**
+- **B · Wire** — to work it would need to grow `resource_max`/`resource_recharge` columns too —
+  duplicating exactly what `grant_resource` already encodes. A bare-name column is a trap (looks like it
+  grants a resource, silently does nothing).
+- Ties **D17** (the homebrew form's `kind` option list bug). Your pick.
+
+## S2 · `allow_data_dir` accepts ANY path — restrict vs document
+- `allow_data_dir(path)` (`src-tauri/src/lib.rs:6`) grants the fs plugin **recursive read/write to any
+  path** the renderer passes; invokable from any renderer JS. Purpose = the folder-picker escape hatch
+  ("own your data" / move the data dir outside the static scope).
+- **Current mitigations (strong)**: CSP + no remote code (SECURITY.md); content is parsed CSV (not eval),
+  effects are interpreted data (not eval), plugins run in a QuickJS zero-cap sandbox. So an attacker needs
+  arbitrary JS in the renderer FIRST — no such path today.
+- **Residual risk**: IF a future content/render XSS ever gives arbitrary renderer JS, `allow_data_dir('C:\\')`
+  escalates from "read app data" to recursive read/write of the whole disk — the single widest capability.
+- **A · Restrict** to paths the dialog plugin actually returned (defence in depth). Non-trivial: Tauri
+  doesn't hand Rust "was this path user-picked" for free — you'd thread a Rust-side set of dialog-issued
+  paths and reject others. Real work.
+- **B · Document** as accepted risk in SECURITY.md §9, gated by CSP/no-RCE.
+- **Recommend B now, A as a hardening backlog item** (do A the moment any content-XSS surface appears).
+  Your call — it's a security posture decision.
 
 ---
 
-## Per-resource USE effects (e.g. Arcane Recovery restores slots) — the big one
+# §1 · DECIDE — real implementation choices
 
-You flagged that "using" a resource should run its real mechanic, and each such resource needs its own
-system (Arcane Recovery = pick which expended slots to recover within a ⌈level/2⌉ budget, no slot ≥6;
-Sorcery Points = convert SP↔slots; Channel Divinity options; …). This is a data-model + UI feature,
-not a refactor: a `recover_slots:<budget>:<maxLevel>`-style effect token (or content columns) + a
-picker dialog + rules math. Deferred by you to build the system deliberately later.
+## D-A9 · Competing `set_override` resolution — must reproduce SRD RAW, not a heuristic — A9
+Same-layer sets fold by `Math.max` (`pipeline.ts:69`) → grappled `set_override:speed:0` loses to
+any other speed set, character keeps moving. **DECIDED framing (user 2026-07-21): Charnik output must
+equal SRD RAW for the active edition — there is no invented "potency" model.** RAW gives no single
+global rule; each set carries its own comparison semantics, and a blanket `max` OR `min` is wrong:
+- **Grappled / Restrained** (SRD 5.1 & 5.2.1): *"speed becomes 0, and it can't benefit from any
+  bonus to its speed"* → hard 0 **and blocks all speed bonuses** (the bonus-block is explicit RAW the
+  pipeline ignores today — a +10 speed effect wrongly survives a grapple). Two → still 0.
+- **Headband of Intellect** (SRD 5.1): *"Intelligence is 19 … no effect if already 19 or higher"* →
+  a **floor = `max(current,19)`**, NOT an absolute set. A `min` rule would break it.
+- Hypothetical "STR becomes X unless already lower" → a **cap = `min`**.
+Same op, opposite directions → the mode must live on the effect.
 
-## Pin (spellbook ⇄ combat) end-to-end — ties D3
+**Model (matches RAW, no author guesswork):** `set_override` gains a comparison mode —
+- **absolute** (default) — plain set / single value.
+- **floor** (`≥`, "unless already higher") — Headband; fold = `max`.
+- **cap** (`≤`, "unless already lower"); fold = `min`.
+Plus a **speed-0 condition rule** for the grappled/restrained/paralyzed/stunned/petrified/unconscious
+family: set 0 **and block speed bonuses** (its own RAW clause, not the generic set-fold).
+This is the accepted direction; remaining sub-call is only the token spelling for the mode
+(e.g. `set_override:int:19:floor`) vs deriving it from the condition/item row. Route to PLAN effects.
 
-Spellbook pin is a local set (effectiveId); combat pin is the `CombatVM.pinned` demo hardcode
-(bare id). Making pin persist like hide did (UBUG-10) means one `ui.spellsPinned` field + reconciling
-the two key formats + dropping the demo hardcode (**D3**). Small-medium; say go and I'll do it.
+## D-A7 · Model weapon/armor proficiency as data? — A7
+`computeAttacks` adds proficiency unconditionally — no schema column to check against (deliberate leniency).
+- **A** — stay lenient forever (never wrong-downward, sometimes wrong-upward). 
+- **B** — add a weapon/armor-proficiency data model (class/species grant lists + item categories) and gate the bonus.
+- **Recommend A for now**, revisit if a proficiency data model lands for another reason. → PLAN if B.
+
+## D-B8 · i18n "drop-in a locale without rebuild" — real or reword? — B8
+Catalogs are bundled via a Vite template import; the module comment's "drop in a JSON, no rebuild" is fiction. Also ~only 10 files use `$_()`.
+- **A** — make it real: load locale JSON from the dataDir at runtime through the Storage seam (matches "own your data").
+- **B** — reword the promise to "bundled locales" and drop the claim; keep coverage work (the hardcoded-EN sweep) separate.
+- **Recommend A** (it's a stated product promise and cheap via the existing seam). Coverage sweep is WORK either way.
+
+## D-B17 · `play.effects` = baked tokens vs live refs — B17
+Active buffs bake tokens+label from the catalog at add-time → fixing a catalog row doesn't propagate, label doesn't re-localize.
+- **A** — keep baked (portable, survives catalog deletion; current).
+- **B** — store a ref + resolve at derive (propagates fixes, re-localizes) with a baked fallback for orphaned refs.
+- **Recommend B with fallback** — pairs with D-B18 (localized provenance) and the refs-not-copies invariant.
+
+## D-B18 · Localizable provenance (structured facts vs baked EN) — B18
+`gatherEffects` bakes `name_en`, notes are English strings ("advantage on skill.stealth"), `why()`/roll-log concat them → explainability can't localize. Every new consumer bakes more in.
+- **A** — accept EN provenance (explain-in-English only).
+- **B** — refactor the `{value,trace,notes}` contract to structured facts (source ref + op + params), localized at render.
+- **Recommend B, and soon** — the cost only grows. Big, cross-cutting; route to PLAN effects group. Ties D-B17.
+
+## D-B19 · Out-of-combat duration expiry model — B19
+`play.round` advances only via `nextTurn`; outside combat a 10-round Bless never expires (only a rest clears it).
+- **A** — real-time wall-clock ticking (rounds = 6s) even out of combat.
+- **B** — a manual "advance round" control usable outside combat.
+- **C** — keep current (durations frozen out of combat; rest-only expiry) and document it.
+- **Recommend B** — deterministic, no background timer, matches tabletop pacing. A is surprising; C is a latent bug.
+
+## D-B24 · Watcher granular reload vs reword — B24
+`watcher.ts` debounces into a full `reloadContent()`; CLAUDE.md promises "reparse only the changed file".
+- **A** — implement per-file reparse (real perf win, matches the invariant).
+- **B** — reword the invariant to "full reload on any change" (perf-only today).
+- **Recommend B now** (perf isn't biting), tag A as a PLAN perf item. Your call on ambition.
+
+## D-D8 · Unify the two dice-tray stacks — D8
+`lib/dice/tray.svelte.ts` (DiceTrayRequest contract) vs `routes/combat/roll.svelte.ts` RollTray (pool-based, never registers the contract). Two representations, two log paths.
+- **A** — RollTray adopts the DiceTrayRequest contract (the seam "every caller talks to").
+- **B** — collapse both into the pool-based RollTray, delete the unused contract.
+- **Recommend A** if the DiceTray contract is the intended public seam (3D-dice, attack/damage chaining plans lean on it); else B. Depends on the DiceTray/attack-damage direction (see memory `dicetray-attack-damage-concept`).
+
+## D-D12 · `set_override` layer: honor `eff.layer` vs force `override` — D12
+`effects/index.ts:178` forces every set to the `override` layer, but the pipeline is designed for layered sets and PLUGINS.md lets plugin contributions set at feature/item layers → token path and plugin path give the same op different semantics.
+- **A** — honor `eff.layer` for token sets too (consistent with plugins + pipeline design).
+- **B** — keep forcing override, document sets as always-top, forbid layered plugin sets.
+- **Recommend A** — the pipeline already supports it; removes a special case.
+
+## D-D16 · Player-choice dimension in the content model — D16
+Half-feat "+1 to an ability of your choice", Magic Initiate spell picks, feat-granted expertise are unrepresentable (tokens static, a feat slot holds only a ref). THREE ASI mechanisms already coexist; a fourth ad-hoc one compounds it.
+- **A** — a general `choice` model (a token/column that declares a choice-group; the character JSON stores the resolved pick), unifying the existing ASI mechanisms.
+- **B** — narrow per-case hacks (a `boost_choice`-style mini-grammar per feature kind).
+- **Recommend A**, designed deliberately — big feature. Route to PLAN (N-group / effects). Not now.
+
+## D-E6 · `classes.saves` exactly-2 constraint — E6
+`z.array(Ability).length(2)` drops a homebrew class with 1 or 3 saves.
+- **A** — relax to `.min(0).max(6)` (homebrew-first).
+- **B** — keep strict (SRD classes all have 2).
+- **Recommend A** — arbitrary stiffness against the homebrew-first stance; near-zero cost.
+
+## D-E7 · `class_feature.resource` column — wire or drop — E7
+Zero consumers; resources come only from `grant_resource` tokens.
+- **A** — drop the column (tokens are the one path).
+- **B** — wire it as an alternate authoring affordance.
+- **Recommend A** — one mechanism (`grant_resource`) is cleaner; deleting a dead column is honest. Ties D-D17.
+
+## D-S2 · `allow_data_dir` accepts ANY path — S2
+Any renderer JS can extend the fs scope to an arbitrary dir (recursive+write) — the single widest capability. By design (folder-picker escape hatch), gated by CSP/no-remote-code.
+- **A** — restrict grants to paths the dialog plugin actually returned (tighten the capability).
+- **B** — document as accepted risk in SECURITY.md §9 and move on.
+- **Recommend A if feasible** (defence in depth), else B with an explicit risk note. Security call is yours.
+
+## D-B3 · Rotating-backups policy — B3
+Backup half of "autosave + rotating backups" is unbuilt (atomic temp→rename exists).
+- Decision is just the policy: **how many** backups + **rotation** (e.g. keep last 5, timestamped) and **when** (every save vs debounced/daily).
+- **Recommend**: keep last 5 timestamped copies per character, written on save (debounced). Confirm or set numbers. Then WORK.
+
+## D-T · Pull test-hardening forward? — T1–T5
+Full coverage pass is deferred to pre-release. But T1 (`content/store` 5% — the "stuck on Loading…" path), T2 (`storage/fetch` 0% — whole web build), T3 (data-move orchestration) guard real user stories TODAY.
+- **A** — write T1/T2/T3 now; keep T4/T5 for the pre-release pass.
+- **B** — hold the whole line until pre-release (current strategy).
+- **Recommend A** — these three are live-user-story risk, not percentage-chasing.
+
+---
+
+# §2 · CONFIRM — I have a recommendation; just say yes/no
+
+## C-A14 · HP-max: manual override vs `hp_max` effects — A14
+`play.hp.max ?? sheet.maxHp.value` → a manual max silently disables ALL `hp_max` effects (Aid on top of a manual max vanishes); when max drops (Aid expires) `hp.current` stays above max until next heal.
+- **Recommend B**: effects layer on top of the manual base (`manualBase + Σ hp_max`), and clamp `hp.current` to the live max every derive. Confirm the model.
+
+## C-B26 (+D18) · Feature source-pinning blocks homebrew SRD extension — B26, D18
+`derive.ts:181` (`f.source !== classRow.source`) means PHB features a user adds for the SRD fighter never match — contradicts "users add their own content".
+- **Recommend**: match on `(class_id, edition)` + respect `isRowActive`; treat same `(class_id, level, id)` from two sources as a COLLISION resolved by the existing keep-one/keep-all UI (warn+apply-one default). Fold the unused `graph.featuresForClass` (test-only consumer) in as the one query owner (**D18**). Confirm the direction.
+
+## C-D14 · Character id = GUID, slug as hint — D14
+`slugify(name)` → two "Hero"s overwrite each other's save. Violates the GUID-for-shareable-data principle.
+- **Recommend**: id = `crypto.randomUUID()`, slug stays as folder/display hint; migrate existing saves (id-add migration). Confirm.
+
+## C-D2 (+G5) · Single source for the editions union — D2, G5
+`pipeline.ts System` literal vs `stores/app SystemId`; F7 already made `rules/pipeline` own `SYSTEMS`. D2's remaining ask + the `character.system as System` no-op cast (G5, still at `derive.ts:320`) resolve together.
+- **Recommend**: finish routing everything through `pipeline.SYSTEMS`/`System`, delete the cast. Confirm (essentially WORK, but it touches the seam).
+
+## C-W1 · `pnpm-workspace.yaml` `allowBuilds` placeholder — W1
+Literal `simple-git-hooks: set this to true or false`.
+- **Recommend `false`** (the project's own postinstall runs the CLI). Confirm true/false.
+
+---
+
+# §3 · WORK — no design choice, routed to PLAN (listed so nothing's lost)
+
+These need labour, not a decision. Grouped; each keeps its audit ID. Confirm the routing or
+re-tag any you'd rather decide on.
+
+**Conditions & play-state ladder** (PLAN → EXPR / play-state)
+- **B2** — build hit-dice spend/restore, death-saves tracker, exhaustion ladder (exhaustion design already DECIDED → data-driven per-system ladder). Ties **D19** (exhaustion `max(6)` hardcoded → data), **L2R-16** (`is_raging` reads hardcoded `RAGE_CONDITION_ID` → dies with the conditions-as-data model).
+
+**Source filtering everywhere** (PLAN → content loading; B6 already decided to move config into dataDir)
+- **B5** — apply `isRowActive` in Ctrl+K search, ALL builder pickers, spellbook (currently one call site).
+- **B15** — `gatherEffects`/`deriveSheet` must respect disabled files/sources + resolved collisions (derive reads raw graph today).
+
+**Spellcasting gaps** (PLAN → Spellcasting model; core is per-class, the collapse is UI)
+- **A18** — cast DC/attack/heal-mod + `preparedCap` + both prepared-togglers use `classes[0]`; wire per-class profiles through the UI.
+- **B25** — `deriveSpellcasting` ignores subclass caster columns (Eldritch Knight / Arcane Trickster get no slots); the homebrew form shouldn't offer dead fields until wired.
+- **A17 remainder** — warlock PACT slots not rendered as pips (pure-warlock cast isn't slot-gated); ritual SOURCE nuance (L13); manual UPCAST picker (L10 — auto-lowest for now). Upcast picker is a small feature.
+
+**Attack/damage as data, not string round-trips** (PLAN → calculators; ties A7/A9)
+- **D9** — `computeAttacks` builds a display string then re-parses it (`parseDamage`); add a magic-weapon bonus path (a +1 sword is inert — item effect tokens don't reach rolls).
+- **D10 / D6** — mechanics parsed out of prose: `healDice` regexes `text_en` (UA-only homebrew heals nothing), `durationToRounds` parses duration prose, `castingIcon` regexes casting_time, `effectHint` hardcodes EN spell names. Move mechanics to columns; prose stays display.
+
+**Effects panel completeness** (PLAN → effects)
+- **B14** — `collectFlags` has zero production consumers; the panel shows only `play.effects`, so content-borne item/feature buffs (and their unknown tokens) are invisible. Ties the panel raw-tokens note (guarded tokens render as unknown in the "what I added" list) from L2R.
+
+**Units** (PLAN → play-state / sheet)
+- **B7** — lb→kg conversion nowhere; `carryingCapacity` computed but never rendered; the optional-capacity toggle doesn't exist.
+
+**Rule-based blocks** (PLAN → effects/rules)
+- **B9** — no rule emits a block (e.g. "spellcasting blocked: armor without proficiency", PLAN's own example); passives never take the ±5 adv/dis adjustment in code.
+
+**Cost caps on untrusted content** (PLAN → PLG cost-cap class)
+- **B10** — resource-pip render is O(max) (data cap `MAX_RESOURCE_MAX=1000` landed; remaining = O(1) threshold: pips ≤~12, else numeric `spent/max`).
+- **B11** — `Storage.read()` has no size cap; add `size` to `FileEntry` (near-free from the same `stat`) and skip over-cap files before reading. Cross-cutting interface change (types + Tauri fs + memory impl + consumers).
+
+**Persistence** (PLAN → storage / logging)
+- **B4** — roll log never persisted (`appendLog`/`readLog` test-only; `log.jsonl` never written; `appendLog` is read-all+rewrite — fix when wiring).
+- **B3** — rotating backups (policy in §1 D-B3).
+
+**Structure / CSS** (PLAN → refactor / house-pattern splits)
+- **D1** — `build/+page.svelte` 1032 lines (next: PanelCard 775, CombatMenus 759, EditContentForm 733) — split per VM+blocks+curated-CSS.
+- **C2** — same class name / different styles across components (`.skill-name`, `.spent`, `.used`, …) — fold into the combat-class rename pass.
+- **C3** — cross-file CSS duplicate clusters — hoist shared vocabulary into `components.css` (same pass as the jscpd ratchet).
+- **D3** — `CombatVM.pinned` demo hardcode → move to `ui`, persist per character (ties the **Pin** entry, §4).
+
+**Homebrew schema correctness** (PLAN → data model)
+- **D17** — `ENUM_OPTS.kind = EFFECT_KINDS` in the homebrew form, but `kind` as a `spell_slots` column should be full/half/third/pact — verify + fix the option list. Ties D-E7.
+
+**Typing gaps** (PLAN → typing group G)
+- **G1** — 37× `String()`/`Number()` coercions over already-typed rows (worst: `String(row.data.concentration)==='true'`).
+- **G2** — `ab as Ability` ×12 in `build/+page.svelte` markup (fix the iterator type once).
+- **G3** — `abilityBoosts`/`spellSlotsSpent`/`panelColumns` keys looser than the domain unions.
+- **G4** — `effectHint(Record<string,unknown>)` / `detail.localized()` accept untyped bags though callers hold typed rows.
+- **G5** — the `character.system as System` no-op cast (dies with C-D2).
+
+**Data content** (convert from CC-BY SRD via converters — NEVER hand-author)
+- **E1** — `srd-2024/` has no `languages_srd.csv` → empty 5.5e language picker.
+- **E4** — most SRD condition/feature rows carry EMPTY `effects` columns (engine ready, tokens not encoded); the Haste `flat_bonus:action+1` target is now documented (B13).
+
+**Small leftovers**
+- **F6** — inline `e instanceof Error ? …` in translate/+page + the updater could adopt the shared `errText`.
+- **F8** — focus-trap + backdrop-dismiss half of the dialog shell (Escape half done) → folds into the planned A11Y-1 dialog-shell.
+- **D19 remainder** — `RollEffects.flat` carries its "ignore for save/skill keys" contract in a comment, not the type (`helpers.ts:66`).
+- **C1** — the last ~5 gold/teal hardcoded colors need light-theme token VALUES (a visual-design call — see §4).
+
+**Working-tree nits** (PLAN → REL/housekeeping)
+- **W2** — `translate/+page` + `spellbook/+page` hang on "Loading…" forever on content-load failure; build page renders empty pickers → adopt the `<Loading error>` pattern.
+- **W3** — version drift: `Cargo.toml` 0.2.0 vs 0.3.0 in package.json + tauri.conf.json — sync.
+- **W4** — `mergeDataDir` comment overclaims "same rollback as migrateDataDir" (merge can't sweep half-copied into a non-empty target); also record that merge+deleteOld intentionally discards the source copy of a collision the target won.
+- **W5** — `walkTree` has no symlink-cycle guard (looped symlink → infinite recurse). Edge, low priority.
+- **S1** — `TauriStorage.abs` traversal check misses backslashes (`read('..\\x')` passes on Windows); normalize `\`→`/` before splitting. fs-scope is the backstop but the seam's own validation is half-broken → security WORK.
+- **B23** — build the `tests/integration/` tier (temp roots, watcher self-write, save/load round-trip) OR stop documenting it as present. Ties D-T.
+
+---
+
+# §4 · Pre-existing entries (kept) + DEFERRED
+
+### C1 · Light-theme values for the last hardcoded colors *(needs your visual call)*
+Zero-risk swaps done. Remaining sites need light-theme token VALUES:
+- **Gold border** `#5a4d28` (dark) — `.recharge-chip`, `SpellHead`, resource hover tints. Needs `--color-resource-border` (dark `#5a4d28`, light **TBD** — `#d8c48f`?).
+- **Teal border** `#2c4a45` (dark) — PanelCard. Needs `--color-good-border`, light **TBD**.
+- **Gold-tinted popover surface** `#221c10` (EffectDurationMenu) + `#1a1400` (settings). Reuse `--color-resource-soft`, or dedicated tokens (hues differ slightly)?
+Pick the light values (or "reuse resource-soft / resource-border derived") and I close C1.
+
+### Per-resource USE effects (Arcane Recovery, Sorcery Points, Channel Divinity…) *(big feature, deferred by you)*
+"Using" a resource should run its real mechanic; each needs its own picker + rules math
+(`recover_slots:<budget>:<maxLevel>`-style token/columns + dialog). Data-model + UI feature,
+not a refactor. Route to PLAN when you want to build it. Ties **A17** (upcast picker sits in the same family).
+
+### Pin (spellbook ⇄ combat) end-to-end — ties D3
+Spellbook pin = local set (effectiveId); combat pin = `CombatVM.pinned` demo hardcode (bare id).
+Persist like hide did: one `ui.spellsPinned` field + reconcile the two key formats + drop the
+demo hardcode (**D3**). Small-medium; say go.
+
+### DEFERRED by standing strategy (no action asked, recorded for closure)
+- **T1–T5** — full test-hardening = pre-release pass (except T1/T2/T3, offered forward in §1 D-T).
+- **PLG-4** — plugin aggregate-budget starvation: a token that always sorts late may never memoize. Documented, unlikely (20 ms = many calls); revisit if real content hits it.
+- **PLG-6 / PLG-7-D** — deep-LINK a plugin issue to the exact affected sheet/stat + a structured `failCounts` read API (per-token reasons already flow via content-health + a Retry button).
+- **PLG-8** — errors carry a doc-section link — BLOCKED on PLUGINS.md being a hostable/linkable target; applies to content/effect authoring errors too.
+- **PLG-9 remainder** — "did you mean?" for unknown effect KIND, plugin contribution bad-target-key, the homebrew FORM, and the `plugin:test` CLI (the two B13/A16 issue sites are wired).
+- **PLG-T1 / PLG-T2** — plugin-store async-flow + generation-guard race tests; memo LRU eviction at `MEMO_MAX`. Part of the test-hardening pass.
+- **W6** — SessionStart surface-hook delivery on Windows (SURFACE.md was stale at one session start) — environment/tooling investigation, not code.
