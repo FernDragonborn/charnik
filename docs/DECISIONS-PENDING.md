@@ -13,6 +13,10 @@ design) move the design into `PLAN.md`.
 
 **The questionnaire is the DECIDE + CONFIRM items** (§1–§2). Answer inline: "A9: B", "B26: yes", etc.
 
+**§5 = the EFFECTS-ENGINE MASTER PLAN** — every remaining engine item consolidated in one place,
+with per-item implementation plans and ⚠ pitfalls pre-verified against the code (2026-07-21,
+at commit `e65f6e9`). Implementer: read §5's checklist FIRST.
+
 ---
 
 # §0 · GOVERNING · Strict vs Free mode + the RAW-compliance ledger
@@ -493,3 +497,214 @@ demo hardcode (**D3**). Small-medium; say go.
 - **PLG-9 remainder** — "did you mean?" for unknown effect KIND, plugin contribution bad-target-key, the homebrew FORM, and the `plugin:test` CLI (the two B13/A16 issue sites are wired).
 - **PLG-T1 / PLG-T2** — plugin-store async-flow + generation-guard race tests; memo LRU eviction at `MEMO_MAX`. Part of the test-hardening pass.
 - **W6** — SessionStart surface-hook delivery on Windows (SURFACE.md was stale at one session start) — environment/tooling investigation, not code.
+
+---
+
+# §5 · EFFECTS-ENGINE MASTER PLAN (consolidated 2026-07-21)
+
+Every remaining effects-engine change in ONE place (migrates the scattered pointers: §0.5 RAW
+ledger, §1/§3 items, PLAN §EXPR deferred tail). Per item: STATUS · DESIGN · IMPL · ⚠ pitfalls.
+File/line refs verified against `main` at `e65f6e9`. Written to be executed by a DIFFERENT model
+session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them.
+
+## §5.0 · Implementer checklist (read before ANY item)
+
+- **Naming seam**: a raw string is a "token", `parseToken`'s object is an "effect" (CLAUDE.md).
+- **D7 invariant**: consumers read the ONE `EffectFacts` from `collectFacts` — NEVER re-scan or
+  re-parse raw tokens in a component or a second derive pass.
+- **Core isolation**: `rules/*` never imports `effects/*`; core tests never import the effects module.
+- **`deriveSheet` is PURE** — never mutate `character` inside derive (clamps/persists live in VMs).
+- Compare kinds via `EFFECT_KIND` consts, never bare strings.
+- SPEC4: absent whitelisted var → 0; unknown token → INERT NOTE (never dropped, never a throw).
+- **B13 trap**: any NEW kind/target must be added to derive's `isTargetSupported` closed-vocab sets
+  AND `effectTag` (panel label) AND `lintEffectTokens` reachability — else tokens fold onto nothing
+  or render as raw strings.
+- Gates per change: `node tools/surface.mjs`, full `pnpm vitest run`, `pnpm check`, `pnpm lint`
+  (knip GREEN + jscpd ratchet). New SRD data only via converters (no hand-authored game data).
+
+**Recommended order**: EFX-A9 + EFX-D12 (one set-semantics pass) → EFX-E4 (grapple family + Rage
+token; visually verifies the ∞ render) + EFX-B14 → EFX-A14 → EFX-G4 + EFX-EXH → EFX-D9 → D8 →
+EFX-ROLL → piece 3 (§0.5) → EFX-B17 → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
+
+## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — DECIDED (spelling pinned here)
+
+**Token spelling (the delegated sub-call)**: optional 4th slot — `set_override:int:19:floor`,
+`set_override:str:10:cap`; absent = absolute. New kind `block_bonus:<target>` for the grapple
+family's "can't benefit from any bonus to its speed".
+
+**DESIGN.** `ParsedEffect` gains `setMode?: 'floor' | 'cap'`; `NumericFact` carries it. Pipeline
+(`rules/pipeline.ts`): `Op` gains `'floor' | 'cap'`; `fold()` per-layer order becomes
+**sets → floors → caps → mult → add** (floors: `value = max(value, maxFloor)`; caps:
+`value = min(value, minCap)`; floor-before-cap is the pinned rule — a floor+cap conflict is
+pathological content). `overriddenSetNotes` extends: a floor that had no effect notes
+"already ≥ N" (explainability — nothing silent).
+`block_bonus`: a fact list; in `applyEffects`, when a block matches the target, DROP effect-borne
+`add` contributions with `amount > 0` + push a note "<source>: bonuses to <target> blocked".
+
+**IMPL.** token-parser (grammar + setMode) → pipeline (`Op`, `fold`, notes) → apply.ts (mode
+pass-through at :185-198; block filter in `applyEffects` :353-369) → dependency-graph (see ⚠1) →
+derive `isTargetSupported` (+`block_bonus` targets) → effectTag → tests.
+
+**⚠ Pitfalls.**
+1. **TWO apply paths, not one.** Abilities (the Headband case that MOTIVATES floor!) resolve via
+   the `dependency-graph.ts` writers (:378-385), NOT via `applyEffects`. Patch BOTH or the
+   flagship example stays broken while plain-stat tests pass.
+2. Blocks drop only POSITIVE effect adds — negative adds (penalties) still apply per RAW; and the
+   BASE-layer trace (base speed, ability mod) is untouched — filter only fact-borne contributions.
+3. The grapple-family data rows (EFX-E4) need TWO tokens: `set_override:speed:0` +
+   `block_bonus:speed` — the 0-set alone does NOT reproduce RAW (a later-layer +10 survives as add).
+4. Mode strings are part of the bounded grammar: `set_override:int:19:bogus` → `unknown` (inert),
+   never a silent absolute.
+5. Tests: floor over the DAG (int 19 vs base 8 → 19; vs 20 → 20 + "already ≥" note); grappled
+   speed 0 with an active +10 speed item (→ 0 + blocked note); cap mode; D12 interplay below.
+
+## EFX-D12 · honor `eff.layer` for token sets — DECIDED A
+
+**Exactly two force-sites** (the older `effects/index.ts:178` pointer is STALE): `apply.ts:358`
+(`layer: f.op === 'set' ? 'override' : f.layer`) and `dependency-graph.ts:381`
+(`layer: isSet ? 'override' : …`). Change both to honor the carried layer (the DAG keeps its
+`condId → 'condition'` refinement).
+
+**⚠ Pitfalls.** (1) Behaviour change BY DESIGN: an item-layer set stops beating a condition-layer
+set — that is the point (grappled 0 must win); do together with EFX-A9, grep tests for
+"overridden by" and re-derive expectations rather than pinning the old fold. (2) Verify the layer
+`gatherEffects` assigns runtime "+"-added effects (condition layer) and document it. (3) Plugin
+contributions already carry layers — after this change token-sets and plugin-sets have IDENTICAL
+semantics; add one parity test.
+
+## EFX-G4 · `halve` op for 2014 exhaustion — DESIGN PINNED HERE (was "deferred, unmodelable")
+
+**The pipeline `mult` op ALREADY EXISTS** (`pipeline.ts:73-74`, added for plugins; folds one
+product then floors once; per-layer order sets → mult → add). The gap is ONLY vocabulary.
+
+**DESIGN**: dedicated kind **`halve:<target>`** (targets: `speed`, `hp_max`) → NumericFact
+`op:'mult', amount:0.5`. NOT a generic `multiply:<target>:<factor>`.
+
+**⚠ Why not generic multiply** (both bite silently): (1) token value slots lex INTEGER literals
+only — `0.5` is unparseable; (2) writing the factor as an expression (`1/2`) evaluates to 0.5 but
+`resolveEffectValue` **Math.floor()s every numeric result → factor 0 → speed 0**. A generic factor
+needs a non-flooring value path = bigger change with zero RAW demand (every RAW case is ×½).
+
+**Fold semantics to pin in a test**: a condition-layer halve multiplies the value accumulated from
+earlier layers (base + item + feature) — RAW-correct; same-layer adds land AFTER the mult
+(accepted; note it). **IMPL**: token-parser kind; apply.ts case; `isTargetSupported` (+2 targets);
+effectTag ("speed ×½"); tests (30 base + 10 item → halve → 20; hp_max halve; trace explains).
+Data lands via EFX-EXH.
+
+## EFX-A14 · hp_max = manual base + effects layer + clamp current — DECIDED B
+
+**Sites**: `routes/combat/state.svelte.ts:152` (hpMax getter) and `:531` (hp bar) — both
+`play.hp.max ?? sheet.maxHp.value`.
+
+**DESIGN**: helper `effectiveHpMax(manualMax: number | null, sheetMaxHp: Computed): number` —
+manual null → `sheetMaxHp.value`; else re-fold via the EXISTING pipeline:
+`computed([{source:'Manual max', layer:'base', op:'set', amount: manual},
+...sheetMaxHp.trace.filter(c => c.layer === 'item' || c.layer === 'feature' ||
+c.layer === 'condition' || c.layer === 'override')]).value` — hp_max effects (Aid; a future halve)
+stack on the manual base with full set/mult semantics preserved.
+
+**⚠ Pitfalls.** (1) `sheet.maxHp.value` ALREADY contains the effect layers — extract them via the
+TRACE filter; the base/ability layers are what the manual value replaces; never re-sum from facts
+(double-count + D7 violation). (2) **No clamping inside deriveSheet** (purity) — clamp
+`hp.current` in CombatVM at every hp write + one reactive check when the effective max drops
+(follow the CH14-verified `$effect` patterns; mind the autosave-debounce loop). (3) This is a
+Free-block affordance under DECIDE-0 — keep manual-max shallow, don't bury its precedence in
+derive. (4) Tests: manual 30 + Aid(+5) → 35; Aid expires → 30 AND current clamps; manual-null
+path byte-identical to today.
+
+## EFX-D9 · magic weapon +X reaches attacks — WORK (trap documented)
+
+**Current**: `computeAttacks` (`lib/combat/helpers.ts:465+`) ignores item effect tokens; global
+`flat_bonus:attack` facts DO reach rolls via `rollEffectsFor` — but those are global.
+
+**⚠ THE CORE TRAP**: a +1 weapon's bonus is **per-weapon** — only attacks made WITH that weapon.
+Do NOT feed equipped-weapon tokens into `gatherEffects`/facts: that grants +1 to EVERY attack, and
+a test that just checks "an attack got +1" still passes. The fix lives INSIDE `computeAttacks`:
+per inventory weapon row, `parseToken` its own `effects` cell; fold `flat_bonus:attack+N` into
+THAT row's to-hit and `flat_bonus:damage+N`/dice into THAT row's damage (+ a provenance note on
+the Atk). v1 may accept literal amounts only (covers +1/+2/+3); expression values need a ctx —
+if deferred, degrade to a VISIBLE note, not a silent drop. Mechanics stay out of prose regexes
+(D10/D6 direction). Tests: a +1 longsword bumps ONLY itself; other weapons byte-identical.
+
+## EFX-ROLL · roll surface for scaling dice (piece 2 closer) — OPEN DECIDE (recommend: token)
+
+**Recommendation**: new kind `grant_roll:<id>:<expr>` in a feature's `effects` cell (consistent
+with mechanics-as-tokens; zero schema change). Derive: `facts.rolls: {id, label, expr, source}`
+(dedupe by `(id, source)` like A11); resolve via `resolveEffectValue` for DISPLAY (dice → formula
+string; a plain-number result = flat roll, legal). UI: a rollable chip in the ACTIONS block
+(placement per §0.5 piece-3 (g)) → `openDiceTray({label, formula})`.
+
+**⚠ SEQUENCING**: BLOCKED by D8 — until RollTray registers the `DiceTrayRequest` contract
+(`lib/dice/tray.svelte.ts`), every chip hits the instant-roll fallback and the feature looks
+broken. Do D8 first. Validation: Bardic `1d step(class_level.bard, 1->6, 5->8, 10->10, 15->12)`
+(or the dice-valued `step(…, 1->1d6, …)` form), Sneak `ceil(class_level.rogue/2) d 6`.
+
+## EFX-B14 · effects panel completeness — WORK
+
+`groupEffects` (`lib/combat/helpers.ts:268`) reads ONLY `play.effects`; content-borne item/feature
+buffs and `facts.unknown` are invisible. Plan: PanelCard's effects section gains a READ-ONLY
+"from items & features" group rendered from `sheet.facts` (numeric / advantage / defenses /
+proficiencies grouped by source via `effectTag`) + unknown tokens as distinctly-styled inert notes
+(`p.raw` — the §4 raw-tokens note). ⚠ Read facts, never re-parse tokens in the component (D7);
+no remove/spend controls on derived rows (they follow equip/feature state, not user CRUD).
+
+## EFX-B17 · `play.effects` live refs + baked fallback — DECIDED B
+
+`EffectInstance` gains optional `ref: {type, source, id}`; keep baked `{label, tokens}` as the
+fallback written at add-time. Derive resolves ref → row first (label re-localizes, catalog fixes
+propagate); orphan → baked + a panel flag. Schema bump + migration (old saves = baked-only,
+valid). ⚠ Resolution must respect `isRowActive` + the character's system/edition (EFX-B15
+sibling); when the ref resolves, the RESOLVED name wins (never show the stale baked label).
+
+## EFX-B18 · structured localizable provenance — DECIDED B, deliberately LAST
+
+Today every note is baked EN concat (`apply.ts:360, 371-377`; `gatherEffects` names). Refactor
+`{value, trace, notes}` notes into structured facts `{sourceRef, op, params}` + render-time i18n.
+**Trigger pinned**: do it BEFORE building any major new note CONSUMER (roll-log rework; EFX-B14
+is fine as-is — it renders tags, not notes). ⚠ Every note-producing site must migrate in ONE pass
+or the UI mixes string/struct shapes; grep `notes.push` across `effects/` + derive first.
+
+## EFX-A7 · weapon/armor proficiency model → unblocks B9 — DECIDED B (model sketch)
+
+Schema: `classes` gain `weapon_profs` / `armor_profs` (normalized ENUM categories:
+simple/martial + specific weapon ids; light/medium/heavy/shield). Items already carry `item_type`
+(`schemas.ts:312`, semi-free text) — ⚠ normalize to categories at parse; don't string-match
+prose. Gate `computeAttacks` prof on category ∈ union of class grants; B9: worn armor without
+prof → pipeline NOTE + spellcasting block (PLAN's canonical rule-block example) + passives take
+±5 when adv/dis facts hit the passive's skill. ⚠ Lenient fallback: rows WITHOUT the new columns
+(old homebrew) keep today's always-proficient behavior (never wrong-downward). ⚠ Data via
+converters only.
+
+## EFX-EXH · exhaustion ladder + conditions-as-data — DESIGN DECIDED (2024 now, 2014 after G4)
+
+2024 ladder = tokens already expressible (`flat_bonus:d20_tests-2*exhaustion`,
+`flat_bonus:speed-5*exhaustion` style); 2014 L2/L4 need EFX-G4's `halve`. Ties: D19 (`max(6)`
+hardcode → data), L2R-16 (`RAGE_CONDITION_ID` hardcode dies with conditions-as-data). The B2
+death-saves/hit-dice UI shares the group but is NOT engine work.
+
+## EFX-B15 · derive respects source filters + collisions — WORK
+
+`gatherEffects`/`deriveSheet` read the raw graph; wire `isRowActive` + resolved collisions into
+derive's row lookups. ⚠ Filter once at gather (perf), not per-stat. ⚠ A filtered-out row a
+character references = the EXISTING missing-ref path (render + flag), never a crash.
+
+## EFX-E4 · encode SRD effect tokens (content; validates everything above)
+
+Priority: (1) grapple/restrain family (after EFX-A9), both editions; (2) **Rage**
+(`grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6, 20->inf):long`
+for 5e; **5.5e WITHOUT the `20->inf` pair** — caps at 6 per SRD 5.2.1) — also the first visual
+verification of the ∞ render; (3) exhaustion rows (after EFX-G4); (4) Bardic/feature rollables
+(after EFX-ROLL). ⚠ Converter scripts only; verify counts/values against SRD tables.
+
+## EFX-TAIL · deferred L2 vocabulary tail (pointer migrated from PLAN §EXPR :1123-1136)
+
+`treat_as` (Reliable-Talent generalization beyond `min_die`), Elven Accuracy (advantage upgrade —
+roll 3 keep 1; needs a roll-path flag beyond adv/dis), Extra Attack (`flat_bonus:attacks+N` →
+action economy, structural). No design yet; pick up when the roll path is next open.
+
+## Parked (Tier E — no action until real demand)
+
+QuickJS-WASM real sandbox swap; onUse/onEvent executor (docs/ACTIONS.md, lands with N2); PLG-4
+budget starvation; PLG-6/7/8/9 diagnostics tail; `plugin:test` CLI polish. Piece 3
+(`resource_options.csv`) stays specced in §0.5 — pin its formal v1 schema (columns + action vocab
++ `x` cost) as its OWN design pass when its turn comes.
