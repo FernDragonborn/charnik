@@ -59,6 +59,9 @@ describe('loader — logic (in-memory)', () => {
 		expect(g.issues.some((i) => i.level === 'error' && /duplicate source:id/.test(i.message))).toBe(
 			true
 		);
+		// B22: the dup is dropped from every scanned collection so its tokens can't apply twice
+		expect(g.list('spell').filter((r) => r.id === 'fireball')).toHaveLength(1);
+		expect(g.rows.filter((r) => r.effectiveId === 'spell:SRD 5.2.1:fireball')).toHaveLength(1);
 	});
 
 	it('flags a malformed locale column but still loads the row', async () => {

@@ -348,8 +348,12 @@ export async function loadContent(
 	const byType = new Map<ContentType, LoadedRow[]>();
 	const byEffectiveId = new Map<string, LoadedRow>();
 	const articles = new Map<string, LoadedRow[]>();
+	const uniqueRows: LoadedRow[] = [];
 	for (const r of rows) {
-		pushMap(byType, r.type, r);
+		// an EXACT source:id duplicate is a real error — and it must not APPLY twice. Drop it from
+		// every collection the derive scans read (rows / byType / articles), keeping only the first;
+		// otherwise the class-feature scan + condition expansion (which iterate `graph.rows`) fold its
+		// tokens ×2 while `get()` sees one row (B22).
 		if (byEffectiveId.has(r.effectiveId)) {
 			issues.push({
 				level: 'error',
@@ -358,9 +362,11 @@ export async function loadContent(
 				id: r.id,
 				message: `duplicate source:id "${r.effectiveId}"`
 			});
-		} else {
-			byEffectiveId.set(r.effectiveId, r);
+			continue;
 		}
+		byEffectiveId.set(r.effectiveId, r);
+		uniqueRows.push(r);
+		pushMap(byType, r.type, r);
 		pushMap(articles, `${r.type}:${r.id}`, r);
 	}
 
@@ -396,10 +402,10 @@ export async function loadContent(
 	}
 
 	// content-health: surface partially-translated rows (mis-filled tables), never throw
-	issues.push(...collectTranslationGaps(rows, [...localeSet]));
+	issues.push(...collectTranslationGaps(uniqueRows, [...localeSet]));
 
 	return {
-		rows,
+		rows: uniqueRows,
 		byType,
 		byEffectiveId,
 		articles,

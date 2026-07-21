@@ -262,10 +262,11 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   panel-applied condition expansion now reach rolls/economy. Remaining (→ D7): the scans still
   re-`parseEffect` the shared list rather than reading typed facts; expression-valued
   attack/damage bonuses still resolve only sheet-side.
-- [ ] **B22 · Duplicate `source:id` rows apply twice.** The loader dedupes only `byEffectiveId`
-  (`loader.ts:327-337`) but keeps both rows in `graph.rows` — the class-feature scan and
-  condition expansion iterate `graph.rows` directly, so a duplicated id contributes its tokens
-  ×2 while `get()` sees one row.
+- [x] **B22 · Duplicate `source:id` rows apply twice.** FIXED 2026-07-21. The loader now drops an
+  exact `effectiveId` duplicate from EVERY collection the derive scans read (`rows` / `byType` /
+  `articles`), keeping only the first — so the class-feature scan + condition expansion (which iterate
+  `graph.rows`) no longer fold its tokens ×2. The duplicate still raises the existing error. Test
+  asserts `list('spell')` + `rows` hold one fireball after two identical rows load.
 - [ ] **B23 · `tests/integration/` doesn't exist.** CLAUDE.md + TESTING.md describe an integration
   tier (temp content roots, watcher self-write test, save/load round-trip…) as a convention;
   the repo has only `tests/fixtures/` with one CSV. Either build the tier or stop documenting it
