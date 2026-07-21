@@ -105,7 +105,11 @@ export type SkillId = keyof typeof SKILL_ABILITY;
 // false positive (flagging a real target scares authors). action/bonus/reaction are the economy
 // targets `TurnEconomy.slotMax` consumes (now documented in PLUGINS.md §4.4).
 const SAVE_TARGETS = ['saves', ...ABILITIES.map((a) => `save.${a}`)];
-const SKILL_TARGETS = ['skills', ...Object.keys(SKILL_ABILITY).map((s) => `skill.${s}`)];
+const SKILL_TARGETS = [
+	'skills',
+	'ability_checks', // group alias for skill checks (2014 exhaustion L1: disadvantage on ability checks)
+	...Object.keys(SKILL_ABILITY).map((s) => `skill.${s}`)
+];
 const NUMERIC_TARGETS = new Set<string>([
 	...ABILITIES,
 	'ac',

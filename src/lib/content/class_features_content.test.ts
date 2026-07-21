@@ -95,4 +95,21 @@ describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {
 		expect(ex3.skills.athletics.value).toBe(base.skills.athletics.value - 6);
 		expect(ex3.speed.value).toBe(base.speed.value - 15);
 	});
+
+	it('5e (SRD 5.1): cumulative ladder — L1 disadv on ability checks, L2 speed halved, L5 speed 0', async () => {
+		const g = await loadEdition('content/srd-2014');
+		const at = (level: number) => {
+			const c = charOf('SRD 5.1', '5e', 'barbarian', 5);
+			c.play.exhaustion = level;
+			return deriveSheet(characterSchema.parse(c), g);
+		};
+		const base = at(0);
+		// L1: disadvantage on ability checks → the passive form of a skill drops 5 (RAW ±5), speed intact
+		expect(at(1).passives.athletics.value).toBe(base.passives.athletics.value - 5);
+		expect(at(1).speed.value).toBe(base.speed.value); // halve is L2, not yet
+		// L2: speed halved (30 → 15)
+		expect(at(2).speed.value).toBe(Math.floor(base.speed.value / 2));
+		// L5: speed reduced to 0 (set_override beats the L2 halve)
+		expect(at(5).speed.value).toBe(0);
+	});
 });

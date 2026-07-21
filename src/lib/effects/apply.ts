@@ -26,13 +26,15 @@ import {
 } from './token-parser';
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
- *  `saves`→`save.*`, `skills`→`skill.*`, and `d20_tests`→every d20-based roll (saves, ability
+ *  `saves`→`save.*`, `skills`/`ability_checks`→`skill.*` (the ability checks the sheet models —
+ *  2014 exhaustion L1 rides `ability_checks`), and `d20_tests`→every d20-based roll (saves, ability
  *  checks/skills, attack, initiative) — the 2024 exhaustion penalty rides this one group. */
 export function matchesTarget(effTarget: string | undefined, key: string): boolean {
 	if (!effTarget) return false;
 	if (effTarget === key) return true;
 	if (effTarget === 'saves' && key.startsWith('save')) return true;
-	if (effTarget === 'skills' && key.startsWith('skill')) return true;
+	if ((effTarget === 'skills' || effTarget === 'ability_checks') && key.startsWith('skill'))
+		return true;
 	if (
 		effTarget === 'd20_tests' &&
 		(key.startsWith('save') || key.startsWith('skill') || key === 'attack' || key === 'initiative')

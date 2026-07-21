@@ -4,7 +4,7 @@
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fce9-7a08-a279-ae8d4b1fe0b9
 #content-updated_at: 2026-07-21
-#content-hash: xxh64:7de69f444649bf6c
+#content-hash: xxh64:c68660bb0cf13fa0
 id,name_en,name_uk,text_en,text_uk,effects,negative
 blinded,Blinded,,"•A blinded creature can't see and automatically fails any ability check that requires sight.
 •Attack rolls against the creature have advantage,and the creature's attack rolls have disadvantage.",,disadvantage:attack;note:Attacks against you have Advantage;note:You automatically fail any check that requires sight,true
@@ -17,7 +17,7 @@ Level Effect
 DeathIf an already exhausted creature suffers another effect that causes exhaustion, its current level of exhaustion increases by the amount specified in the effect's description.
 A creature suffers the effect of its current level of exhaustion as well as all lower levels. For example, a creature suffering level 2 exhaustion has its speed halved and has disadvantage on ability checks.
 An effect that removes exhaustion reduces its level as specified in the effect's description, with all exhaustion effects ending if a creature's exhaustion level is reduced below 1.
-Finishing a long rest reduces a creature's exhaustion level by 1, provided that the creature has also ingested some food and drink.",,,true
+Finishing a long rest reduces a creature's exhaustion level by 1, provided that the creature has also ingested some food and drink.",,exhaustion>=1 ? disadvantage:ability_checks;exhaustion>=2 ? halve:speed;exhaustion>=3 ? disadvantage:attack;exhaustion>=3 ? disadvantage:saves;exhaustion>=4 ? halve:hp_max;exhaustion>=5 ? set_override:speed:0;exhaustion>=6 ? note:Level 6 exhaustion is death,true
 frightened,Frightened,,"•A frightened creature has disadvantage on ability checks and attack rolls while the source of its fear is within line of sight.
 •The creature can't willingly move closer to the source of its fear.",,disadvantage:attack;disadvantage:skills;note:Applies while the source of fear is in line of sight;note:You can't willingly move closer to the source of fear,true
 grappled,Grappled,,"•A grappled creature's speed becomes 0, and itcan't benefit from any bonus to its speed.
