@@ -186,6 +186,17 @@ class CombatVM {
 	rollFeature = (r: { label: string; formula: string }) =>
 		openDiceTray({ label: r.label, formula: r.formula });
 
+	/** Piece 3: spend-options on granted resources (Ki → Flurry of Blows…), shown in the actions
+	 *  block with a cost chip. `left` is the pool remaining so the UI can disable an unaffordable one. */
+	resourceOptions = $derived(
+		(this.sheet?.resourceOptions ?? []).map((o) => ({
+			...o,
+			left:
+				(this.sheet?.resources.find((r) => r.id === o.resourceId)?.max ?? 0) -
+				this.resources.resourceSpent(o.resourceId)
+		}))
+	);
+
 	setTempHp = () => {
 		if (this.character) this.character.play.hp.temp = Math.max(0, this.tempHpInput);
 		this.overlay = null;

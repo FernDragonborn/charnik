@@ -193,6 +193,22 @@
 				<span class="combat-row-desc">{r.source}</span><span class="combat-row-marker">→ roll</span>
 			</button>
 		{/each}
+		<!-- piece 3: resource spend-options (Ki → Flurry of Blows…) with a cost chip; disabled when the
+		     pool can't pay. Tap = afford-check + spend + surface the action. -->
+		{#each combat.resourceOptions as o (o.id)}
+			<button
+				class="combat-row"
+				disabled={o.cost !== 'x' && o.left < o.cost}
+				onclick={() => combat.resources.spendOption(o)}
+			>
+				<span class="row-name">{o.name}</span>
+				<span class="combat-row-hint">
+					<span class="cost-chip">{o.cost === 'x' ? 'X' : o.cost} {o.resourceId}</span>
+				</span>
+				<span class="combat-row-desc">{o.description}</span>
+				<span class="combat-row-marker">{o.actionType.replace('_', ' ')}</span>
+			</button>
+		{/each}
 	{:else if pid === 'effects'}
 		{@const derived = describeDerivedEffects(s.facts)}
 		{#if !c.play.effects.length && !derived.groups.length && !derived.unknown.length && !s.facts.pluginNotes.length}
@@ -995,6 +1011,20 @@
 	}
 	.pinstar.on {
 		color: var(--color-accent-bright);
+	}
+	/* piece 3: resource-option cost chip in the actions block */
+	.cost-chip {
+		display: inline-block;
+		padding: 0 6px;
+		border: 1px solid var(--color-accent);
+		border-radius: 4px;
+		color: var(--color-accent-bright);
+		font-size: 0.8em;
+		text-transform: capitalize;
+	}
+	.combat-row:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
 	}
 	/* B9: worn non-proficient armor blocks spellcasting (RAW rule-block) */
 	.armor-block {

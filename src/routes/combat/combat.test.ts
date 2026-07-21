@@ -8,8 +8,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
+import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { spellRow } from '$lib/combat/helpers';
 import { combat } from './state.svelte';
+import { ResourceTracker } from './resources.svelte';
 
 const S = 'SRD 5.2.1';
 
@@ -473,5 +475,49 @@ describe('CombatVM · S2 split net', () => {
 		expect(dur()).toBe(7);
 		combat.setEffectDuration(iid, 0); // typed 0 → until removed
 		expect(dur()).toBeUndefined();
+	});
+});
+
+describe('ResourceTracker · piece 3 spend-options', () => {
+	const opt = (over: Partial<ResourceOption> = {}): ResourceOption => ({
+		id: 'flurry',
+		resourceId: 'ki',
+		name: 'Flurry of Blows',
+		description: '',
+		action: 'note:Make two Unarmed Strikes',
+		actionType: 'bonus_action',
+		cost: 1,
+		...over
+	});
+	const make = (spent: number, max: number) => {
+		const c = {
+			play: { resourcesSpent: { ki: spent } as Record<string, number> }
+		} as unknown as Character;
+		const sheet = {
+			resources: [{ id: 'ki', name: 'Ki', max, recharge: 'short', source: 'Monk' }]
+		} as unknown as CharacterSheet;
+		return { t: new ResourceTracker(() => c, () => sheet), c };
+	};
+
+	it('affords + spends when the pool can pay, deducting the cost', () => {
+		const { t, c } = make(0, 3);
+		expect(t.canAffordOption(opt())).toBe(true);
+		expect(t.spendOption(opt())).toBe(true);
+		expect(c.play.resourcesSpent.ki).toBe(1);
+	});
+
+	it('blocks + leaves the pool untouched when exhausted', () => {
+		const { t, c } = make(3, 3);
+		expect(t.canAffordOption(opt())).toBe(false);
+		expect(t.spendOption(opt())).toBe(false);
+		expect(c.play.resourcesSpent.ki).toBe(3);
+	});
+
+	it('`x` cost prices at the chosen amount (variable spend)', () => {
+		const { t, c } = make(0, 5);
+		expect(t.canAffordOption(opt({ cost: 'x' }), 3)).toBe(true);
+		expect(t.spendOption(opt({ cost: 'x' }), 3)).toBe(true);
+		expect(c.play.resourcesSpent.ki).toBe(3);
+		expect(t.canAffordOption(opt({ cost: 'x' }), 3)).toBe(false); // only 2 left
 	});
 });

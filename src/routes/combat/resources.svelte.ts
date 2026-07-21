@@ -8,7 +8,7 @@ import { toast } from 'svelte-sonner';
 import { saveCharacterToStore } from '$lib/character/store.svelte';
 import { pipClick, remainingRounds } from '$lib/combat/helpers';
 import type { Character } from '$lib/character/schema';
-import type { CharacterSheet } from '$lib/character/derive';
+import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 
 export class ResourceTracker {
 	constructor(
@@ -63,6 +63,34 @@ export class ResourceTracker {
 		toast(`${name} ${after > before ? 'used' : 'restored'}`, {
 			description: `${max - after} of ${max} left`
 		});
+	};
+
+	/** Units left in the pool backing an option (max − spent). `x`-cost options price at `amount`. */
+	private remainingFor = (resourceId: string): number => {
+		const max = this.getSheet()?.resources.find((r) => r.id === resourceId)?.max ?? 0;
+		return max - this.resourceSpent(resourceId);
+	};
+	/** Piece 3: can this option be paid for right now? (`x` = a player-picked `amount`, ≥1.) */
+	canAffordOption = (opt: ResourceOption, amount = 1): boolean => {
+		const cost = opt.cost === 'x' ? amount : opt.cost;
+		return cost >= 1 && cost <= this.remainingFor(opt.resourceId);
+	};
+	/** Piece 3: spend on an option — afford-check, deduct the cost, surface the action. Returns whether
+	 *  it went through (a blocked spend toasts + returns false). `roll:`/`heal:` actions wire to the
+	 *  dice tray in a follow-up; v1 surfaces the `note:` text. */
+	spendOption = (opt: ResourceOption, amount = 1): boolean => {
+		const c = this.getCharacter();
+		if (!c) return false;
+		const cost = opt.cost === 'x' ? amount : opt.cost;
+		if (!this.canAffordOption(opt, amount)) {
+			toast(`${opt.name} — not enough ${opt.resourceId}`, { description: 'Recharge on a rest' });
+			return false;
+		}
+		const before = this.resourceSpent(opt.resourceId);
+		c.play.resourcesSpent = { ...c.play.resourcesSpent, [opt.resourceId]: before + cost };
+		const desc = opt.action.startsWith('note:') ? opt.action.slice('note:'.length) : opt.description;
+		toast(`${opt.name} — spent ${cost} ${opt.resourceId}`, { description: desc });
+		return true;
 	};
 
 	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges both),
