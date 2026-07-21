@@ -893,8 +893,8 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 16px;
-		height: 16px;
+		width: 18px;
+		height: 18px;
 		background: transparent;
 		border: 0;
 		color: var(--color-border-strong);
@@ -908,21 +908,18 @@
 	.pinstar::before {
 		content: '';
 		position: absolute;
-		inset: -8px;
+		inset: -7px;
 		border-radius: 50%;
 	}
-	/* hover = a solid disc + halo (bg and box-shadow merge, so the hollow ☆ has no hole in it) with a
-	   contrasting glyph — reads as the pin target, like the prep dot's hover */
+	/* hover = a FILLED disc behind the star (bg + halo of the same colour, so it's a solid circle, not
+	   a donut). The glyph itself never changes colour — a pinned ★ stays gold, an unpinned ☆ stays
+	   dim — only the disc appears behind it. */
 	.pinstar:hover {
-		background: var(--color-border-strong);
-		box-shadow: 0 0 0 3px var(--color-border-strong);
-		color: var(--color-surface);
+		background: var(--color-border);
+		box-shadow: 0 0 0 2px var(--color-border);
 	}
 	.pinstar.on {
 		color: var(--color-accent-bright);
-	}
-	.pinstar.on:hover {
-		color: var(--color-surface);
 	}
 	/* ritual-cast badge — only on ritual-tagged spells; casts with no slot */
 	.ritual-cast {
