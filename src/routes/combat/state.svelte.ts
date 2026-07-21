@@ -506,7 +506,14 @@ class CombatVM {
 
 	spellGroups = $derived.by(() =>
 		this.character && this.graph
-			? buildSpellGroups(this.character, this.sheet, this.graph, this.spellGroupBy, this.pinned)
+			? buildSpellGroups(
+					this.character,
+					this.sheet,
+					this.graph,
+					this.spellGroupBy,
+					this.pinned,
+					this.character.ui.spellsHidden
+				)
 			: []
 	);
 	preparedCount = $derived(this.character?.build.spells.filter((s) => s.prepared).length ?? 0);

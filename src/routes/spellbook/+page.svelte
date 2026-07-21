@@ -1,13 +1,15 @@
 <script lang="ts">
 	// Spellbook manager (d-spellmgr) — same two-pane as the Compendium, plus per-spell
 	// management: show-on-sheet (eye), pin, prepare (switch). Reuses EntryList + WikiDetail;
-	// prepare toggles the character's spellEntry, pin/show are UI sets (no schema field yet).
+	// prepare + show-on-sheet edit the ACTIVE character (persisted: prepared on the spellEntry,
+	// hidden in ui.spellsHidden — Issue #3); pin is still a local UI set (D3, no schema field yet).
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { demoCharacter } from '$lib/demo/sheet';
+	import { characters, saveCharacterToStore } from '$lib/character/store.svelte';
 	import { deriveSheet } from '$lib/character/derive';
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
@@ -27,22 +29,31 @@
 	let query = $state('');
 	let selected = $state<LoadedRow | null>(null);
 	let pinned = $state<Set<string>>(new Set());
-	let shown = $state<Set<string>>(new Set());
 	let filter = $state<'all' | 'prepared' | 'pinned'>('all');
 
 	onMount(async () => {
 		const g = await loadContentStore();
 		if (!g) return; // content load failed — error surfaces via the content store
-		character = demoCharacter();
+		// edit the ACTIVE character so show-on-sheet / prepare persist to the same save combat reads;
+		// a demo fallback keeps the page usable on direct navigation (ephemeral, like combat's).
+		character = characters.active ?? demoCharacter();
 		for (const s of character.build.spells) {
 			const row = g.get(s.spell);
-			if (!row) continue;
-			if (s.prepared || s.alwaysPrepared) shown.add(row.effectiveId);
-			if (['fire-bolt', 'shield'].includes(String(row.data.id))) pinned.add(row.effectiveId);
+			if (row && ['fire-bolt', 'shield'].includes(String(row.data.id))) pinned.add(row.effectiveId);
 		}
-		shown = new Set(shown);
 		pinned = new Set(pinned);
 	});
+
+	// show-on-sheet = NOT hidden. The eye writes ui.spellsHidden (effectiveIds) and persists, so the
+	// combat spell list (which filters on the same field) hides it live.
+	const isHidden = (id: string) => character?.ui.spellsHidden.includes(id) ?? false;
+	function toggleHidden(id: string) {
+		if (!character) return;
+		character.ui.spellsHidden = isHidden(id)
+			? character.ui.spellsHidden.filter((x) => x !== id)
+			: [...character.ui.spellsHidden, id];
+		void saveCharacterToStore(character);
+	}
 
 	// resolved {spellEntry, row} pairs + a lookup by effectiveId for the toggles
 	const resolved = $derived.by(() => {
@@ -87,6 +98,7 @@
 			return;
 		}
 		e.prepared = !e.prepared;
+		if (character) void saveCharacterToStore(character);
 	}
 	function toggleSet(set: Set<string>, id: string): Set<string> {
 		const next = new Set(set);
@@ -127,11 +139,7 @@
 				<Chip active={filter === 'pinned'} onclick={() => (filter = 'pinned')}>Pinned</Chip>
 			{/snippet}
 			{#snippet leading(e)}
-				<EyeToggle
-					on={shown.has(e.id)}
-					title="Show on sheet"
-					onclick={() => (shown = toggleSet(shown, e.id))}
-				/>
+				<EyeToggle on={!isHidden(e.id)} title="Show on sheet" onclick={() => toggleHidden(e.id)} />
 				<Pin
 					on={pinned.has(e.id)}
 					title="Pin to quick bar"
@@ -163,8 +171,8 @@
 				<span class="detail-toggle">
 					On sheet
 					<Switch
-						on={selected ? shown.has(selected.effectiveId) : false}
-						onclick={() => selected && (shown = toggleSet(shown, selected.effectiveId))}
+						on={selected ? !isHidden(selected.effectiveId) : false}
+						onclick={() => selected && toggleHidden(selected.effectiveId)}
 					/>
 				</span>
 				<span class="detail-toggle">

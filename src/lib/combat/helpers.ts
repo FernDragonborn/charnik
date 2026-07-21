@@ -567,7 +567,9 @@ export function buildSpellGroups(
 	sheet: CharacterSheet | null,
 	graph: ContentGraph,
 	groupBy: GroupMode,
-	pinned: Record<string, boolean>
+	pinned: Record<string, boolean>,
+	/** effectiveIds hidden from the sheet via the spellbook eye (Issue #3) — filtered out entirely. */
+	hidden: readonly string[] = []
 ): SpGroup[] {
 	const slotsByLevel = new Map<number, number>();
 	for (const p of sheet?.spellcasting.pools ?? [])
@@ -582,7 +584,8 @@ export function buildSpellGroups(
 				sheet?.level ?? 1
 			)
 		}))
-		.filter((x): x is { sp: (typeof character.build.spells)[number]; row: SpRow } => !!x.row);
+		.filter((x): x is { sp: (typeof character.build.spells)[number]; row: SpRow } => !!x.row)
+		.filter((x) => !hidden.includes(x.row.ref));
 	const groups: SpGroup[] = [];
 	const pins = all.filter((x) => pinned[x.row.id]);
 	if (pins.length)

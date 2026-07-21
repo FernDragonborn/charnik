@@ -364,6 +364,14 @@ describe('CombatVM · S2 split net', () => {
 		expect(keys).toContain('1'); // Bless (1st level)
 	});
 
+	it('ui.spellsHidden filters a spell out of the combat list (Issue #3)', () => {
+		const rowNames = () => combat.spellGroups.flatMap((g) => g.rows.map((r) => r.name));
+		expect(rowNames()).toContain('Fire Bolt');
+		character.ui.spellsHidden = [`spell:${S}:fire_bolt`]; // hidden via the spellbook eye
+		expect(rowNames()).not.toContain('Fire Bolt');
+		expect(rowNames()).toContain('Bless'); // others unaffected
+	});
+
 	it('level-up: advances the chosen class by one and stays under the cap', () => {
 		expect(combat.canLevelUp).toBe(true);
 		combat.levelUp(0);

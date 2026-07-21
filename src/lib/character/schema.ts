@@ -166,9 +166,12 @@ const uiSchema = z
 		panelColumns: z.array(z.array(z.string())).optional(),
 		/** Build/edit mode for THIS character: Strict enforces its system's rules, Free lifts them.
 		 *  Stored per character (not a global setting), Strict by default. */
-		strict: z.boolean().default(true)
+		strict: z.boolean().default(true),
+		/** Spells the user hid from the combat sheet via the spellbook's eye toggle (effectiveIds,
+		 *  `source:id`). Additive: absent → shown. The combat spell list filters these out. */
+		spellsHidden: z.array(z.string()).default([])
 	})
-	.default({ strict: true });
+	.default({ strict: true, spellsHidden: [] });
 
 // --- character ----------------------------------------------------------------
 

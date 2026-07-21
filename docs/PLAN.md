@@ -1659,6 +1659,16 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   data-drivenly + localized. Blocked partly by **E4** (most SRD spells still ship EMPTY `effects`
   columns — no tokens to summarize yet); until encoded, a per-spell content `summary_*` column is the
   fallback. Cross-ref D6 + E4.
+- [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing — hidden spells still showed in
+  combat.** DONE 2026-07-21. The spellbook's eye/pin were local `$state` sets on a THROWAWAY
+  `demoCharacter()` (never persisted, never read by combat), and `buildSpellGroups` rendered every
+  `build.spells` row — so hiding a spell had no effect on the sheet. Fixed the HIDE path end-to-end:
+  new persisted field `ui.spellsHidden` (effectiveIds; zod-defaulted so old saves load, no migration);
+  the spellbook now edits the ACTIVE character (`characters.active`, demo fallback on direct nav) and
+  the eye writes/saves `spellsHidden`; `buildSpellGroups` filters those out (matched on `SpRow.ref` =
+  effectiveId). Prepare toggles now persist too. Unit-tested + e2e-verified (hide in spellbook →
+  vanishes from combat, live via the shared store). PIN stays a local set — its combat side is still
+  the `CombatVM.pinned` demo hardcode (**D3**); wiring pin end-to-end is left to D3.
 - [x] **REL-3 · Desktop content re-seed on update (0.4.0 data change).** DONE 2026-07-20. The desktop
   seed (`content/provider.ts`) was skip-if-root-exists → a returning user stayed on their FIRST-run
   SRD copy and never got shipped data changes (0.4.0 redid a lot: snake_case ids, snake `#content-`
