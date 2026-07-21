@@ -11,6 +11,15 @@ fn allow_data_dir(app: tauri::AppHandle, path: String) -> Result<(), String> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // WebKitGTK's DMABUF renderer (webkit2gtk ≥ 2.42) crashes at startup on a range of GPU/driver
+    // combos — notably Nvidia proprietary drivers — taking the whole window down before it paints
+    // (an unsymbolicated ELF backtrace deep in libwebkit2gtk). Forcing the older, universally-stable
+    // renderer avoids it. Must be set BEFORE any webview is created; honour a user-set value.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
