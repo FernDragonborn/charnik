@@ -367,8 +367,10 @@ Deep effects-system review, 2026-07-16 (D7–D19):
 - [ ] **D14 · Character id = `slugify(name)`** (build/state.svelte.ts:663) — two "Hero"s silently
   overwrite each other's save. Violates the GUID-for-shareable-data principle; id should be a
   GUID with the slug as display/folder hint.
-- [ ] **D15 · `assemble` hardcodes `attuned: false`** (build/state.svelte.ts:653) — ANY builder
-  edit/level-up wipes every item's attunement.
+- [x] **D15 · `assemble` hardcodes `attuned: false`.** FIXED 2026-07-21. The build draft dropped the
+  `attuned` flag (its inventory type + the hydrate map omitted it) and assemble forced `false`, so any
+  builder edit / level-up wiped attunement. `attuned` now threads through the draft (type + hydrate +
+  add-item default) and assemble preserves it. Round-trip unit-tested.
 - [ ] **D16 · No "player choice" dimension in the content model.** Half-feat "+1 to one ability of
   your choice" (Resilient), Magic Initiate's spell picks, feat-granted expertise — content with a
   CHOICE is unrepresentable (tokens are static; a feat slot holds only a ref). Related smell:

@@ -84,6 +84,18 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(out.build.spells.map((s) => s.spell)).toContain(`spell:${S}:fireball`);
 	});
 
+	it('preserves item attunement through the hydrate → assemble round-trip (D15)', () => {
+		const saved = savedCharacter();
+		saved.build.inventory = [
+			{ item: `item:${S}:ring_of_protection`, qty: 1, equipped: true, attuned: true }
+		];
+		build.hydrate(characterSchema.parse(saved));
+		const out = build.assembled;
+		expect(out.build.inventory).toEqual([
+			{ item: `item:${S}:ring_of_protection`, qty: 1, equipped: true, attuned: true }
+		]);
+	});
+
 	it('derives ASI/feat slots from the class asi_levels data (Fighter gets 6 & 14)', () => {
 		build.reset();
 		build.graph = graph;

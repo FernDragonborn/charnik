@@ -119,7 +119,7 @@ interface DraftState {
 	slotFeats: Record<string, string>;
 	slotAsi: Record<string, { shape: AsiShape; picks: Ability[] }>;
 	selectedSpells: string[];
-	inventory: { item: string; qty: number; equipped: boolean }[];
+	inventory: { item: string; qty: number; equipped: boolean; attuned: boolean }[];
 }
 
 /** A blank new-character draft. The one source of default choices (reset + the initial state). */
@@ -177,7 +177,8 @@ function draftFromCharacter(char: Character): DraftState {
 		inventory: char.build.inventory.map((i) => ({
 			item: i.item,
 			qty: i.qty,
-			equipped: i.equipped
+			equipped: i.equipped,
+			attuned: i.attuned // preserve attunement through the builder round-trip (D15)
 		}))
 	};
 }
@@ -209,7 +210,10 @@ class BuildVM {
 	};
 	addInventoryItem = (ref: string) => {
 		if (!ref || this.draft.inventory.some((i) => i.item === ref)) return;
-		this.draft.inventory = [...this.draft.inventory, { item: ref, qty: 1, equipped: false }];
+		this.draft.inventory = [
+			...this.draft.inventory,
+			{ item: ref, qty: 1, equipped: false, attuned: false }
+		];
 	};
 	removeInventoryItem = (ref: string) => {
 		this.draft.inventory = this.draft.inventory.filter((i) => i.item !== ref);
@@ -650,7 +654,7 @@ class BuildVM {
 				])
 			],
 			languages: [...this.draft.selectedLanguages],
-			inventory: this.draft.inventory.map((i) => ({ ...i, attuned: false })),
+			inventory: this.draft.inventory.map((i) => ({ ...i })),
 			// cantrips are always-prepared; leveled spells start prepared (tweak in the Spellbook)
 			spells: this.draft.selectedSpells.map((ref) => {
 				const lvl = Number(rowOfType(this.graph?.get(ref), 'spell')?.data.level ?? 0);
