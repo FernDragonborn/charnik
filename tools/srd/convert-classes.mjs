@@ -9,11 +9,61 @@
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Papa from 'papaparse';
 import { blocks, description, abilities, slug, writeCsv, assertCount, dedupeIds } from './lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const md = readFileSync(resolve(root, 'tools/srd-src/2024/classes.md'), 'utf8');
+
+// EFX-A7: the martial-weapon subsets a class's proficiency can restrict to ("Martial weapons that
+// have the Finesse or Light property" — Rogue; "…the Light property" — Monk). Resolved from the
+// ACTUAL converted item set (data-driven, RAW-correct, no hand-authored weapon lists). Reads the
+// already-generated items CSV; the item roster is stable, so run order doesn't matter.
+function martialSubsets(itemsCsvPath) {
+	const raw = readFileSync(itemsCsvPath, 'utf8')
+		.replace(/^﻿/, '') // strip the UTF-8 BOM before the #-filter
+		.split('\n')
+		.filter((l) => !l.startsWith('#'))
+		.join('\n');
+	const weapons = Papa.parse(raw, { header: true, skipEmptyLines: true }).data.filter(
+		(r) => r.category === 'weapon' && /^martial (melee|ranged)$/i.test(r.item_type || '')
+	);
+	return {
+		finesseOrLight: weapons
+			.filter((r) => /finesse|light/i.test(r.properties || ''))
+			.map((r) => r.id),
+		light: weapons.filter((r) => /\blight\b/i.test(r.properties || '')).map((r) => r.id)
+	};
+}
+
+/** Armor Training cell → normalized categories. "None" → blank (proficient with nothing). */
+function parseArmorProfs(cell) {
+	const c = (cell || '').toLowerCase();
+	if (/\bnone\b/.test(c) || !c) return '';
+	const out = [];
+	if (/\blight\b/.test(c)) out.push('light');
+	if (/\bmedium\b/.test(c)) out.push('medium');
+	if (/\bheavy\b/.test(c)) out.push('heavy');
+	if (/shield/.test(c)) out.push('shield');
+	return out.join(',');
+}
+
+/** Weapon Proficiencies cell → categories (simple/martial) + specific ids for the conditional
+ *  "Martial weapons that have the Finesse/Light property" grants (Rogue/Monk). */
+function parseWeaponProfs(cell, subsets) {
+	const c = (cell || '').toLowerCase();
+	const out = [];
+	if (/\bsimple\b/.test(c)) out.push('simple');
+	if (/martial/.test(c)) {
+		if (/finesse/.test(c)) out.push(...subsets.finesseOrLight);
+		else if (/property/.test(c)) out.push(...subsets.light); // "…that have the Light property"
+		else out.push('martial'); // unconditional
+	}
+	return out.join(',');
+}
+
+const subsets = martialSubsets(resolve(root, 'content/srd-2024/items_srd.csv'));
 
 const strip = (s) =>
 	s
@@ -88,6 +138,8 @@ for (const part of parts) {
 		spell_ability,
 		skills_choose: skillsChoose,
 		skills_from: skillsFrom,
+		weapon_profs: parseWeaponProfs(traits['Weapon Proficiencies'], subsets),
+		armor_profs: parseArmorProfs(traits['Armor Training']),
 		subclass_level: subclassLevel,
 		asi_levels: asiLevels.join(',')
 	});
@@ -161,6 +213,8 @@ writeCsv(
 		'spell_ability',
 		'skills_choose',
 		'skills_from',
+		'weapon_profs',
+		'armor_profs',
 		'subclass_level',
 		'asi_levels'
 	],

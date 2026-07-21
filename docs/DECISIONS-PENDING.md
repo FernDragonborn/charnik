@@ -782,8 +782,25 @@ a `deriveIssue` when worn armor's category ∉ the class armor grants; surfaced 
 banner on the combat spells panel (`combat.armorBlock` → PanelCard). Passive ±5 (adv/dis) was
 ALREADY done (derive `passiveOf`). Lenient throughout — undeclared classes never lose proficiency
 downward. Tests: proficiency.test (pure), derive.test (A7 gate omits prof; B9 block + no-block).
-772 green, check 0, lint green. **PENDING**: populate `weapon_profs`/`armor_profs` in the shipped
-SRD class CSVs via converters ([[charnik-no-hallucinated-data]] — per-class SRD facts, both editions).
+772 green, check 0, lint green.
+
+**DATA DONE (2026-07-21)**: both shipped class CSVs now carry RAW-correct prof columns, derived by
+the converters (not hand-authored). `convert-classes.mjs` (2024) parses the Core-Traits "Armor
+Training"/"Weapon Proficiencies" cells; the conditional "Martial weapons that have the Finesse/Light
+property" (Rogue/Monk) resolves to specific weapon ids computed from the ACTUAL item set (data-driven).
+`convert-2014.mjs` (5.1) parses the "Armor:/Weapons:" prose; 5.1's explicit weapon lists
+(Wizard/Rogue/Druid/…) resolve name→id against the item set by unordered word-set match ("hand
+crossbows"→`crossbow_hand`). Verified per class against SRD 5.1 + 5.2.1.
+
+**Converter fixes made along the way (root-cause, prevent recurring churn/data-loss):** (1)
+`lib.mjs writeCsv` is now IDEMPOTENT — preserves each file's stable `#content-id` + BOM + `updated-at`
+key spelling, and SKIPS the write entirely when the body hash is unchanged; a re-run now dirties only
+files whose DATA changed (previously every run regenerated the uuid + date on all ~28 CSVs). (2)
+`convert-2014.mjs convertConditions` PRESERVES authored `effects` (the CONDITIONS-1 tokens live in
+the CSV, not the HTML source; a raw re-run was silently wiping them) — via `existingEffectsById`.
+(3) BOM-strip fixed in the CSV readers (`﻿` before the `#`-filter). **Known latent trap left:**
+`convert.mjs` (2024) `convertConditions` has the same authored-effects clobber risk if 2024 condition
+effects get authored — apply the same preservation when that lands (EFX-E4).
 
 **Original plan below (retained for reference):**
 

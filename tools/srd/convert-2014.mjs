@@ -4,9 +4,10 @@
  * entry is an <h4 id='…'> with bold name, fields are <p><b>Label:</b>value</p>. Monsters
  * come from the pre-structured Monsters JSON. Counts asserted. Run: node tools/srd/convert-2014.mjs
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import Papa from 'papaparse';
 import { slug, writeCsv, assertCount, dedupeIds } from './lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -14,6 +15,23 @@ const root = resolve(here, '../..');
 const src = (f) => readFileSync(resolve(root, 'tools/srd-src/2014', f), 'utf8');
 const out = (f) => resolve(root, 'content/srd-2014', f);
 const SRC = 'SRD5.1-CCBY4.0License-TT';
+
+// Some `effects` are authored AFTER conversion (e.g. the 15 conditions got their tokens in the
+// CONDITIONS-1 pass, not from the HTML source). The converter must PRESERVE those, or re-running it
+// silently wipes hand/tool-authored effect tokens. Reads id→effects from the existing output CSV.
+function existingEffectsById(csvFile) {
+	const path = out(csvFile);
+	if (!existsSync(path)) return new Map();
+	const raw = readFileSync(path, 'utf8')
+		.replace(/^﻿/, '') // written with a UTF-8 BOM (Excel safety) — strip before the #-filter
+		.split('\n')
+		.filter((l) => !l.startsWith('#'))
+		.join('\n');
+	const map = new Map();
+	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
+		if (r.id && r.effects) map.set(r.id, r.effects);
+	return map;
+}
 
 const strip = (s) =>
 	s
@@ -314,6 +332,7 @@ const CONDITIONS = [
 function convertConditions() {
 	const entries = htmlEntries(src(`${SRC}.html`));
 	const want = new Set(CONDITIONS);
+	const authored = existingEffectsById('conditions_srd.csv'); // CONDITIONS-1 tokens, not in the HTML
 	const rows = entries
 		.filter((e) => want.has(e.name))
 		.map((e) => ({
@@ -324,7 +343,7 @@ function convertConditions() {
 			name_uk: '',
 			text_en: e.paras.map(strip).filter(Boolean).join('\n'),
 			text_uk: '',
-			effects: '',
+			effects: authored.get(slug(e.name)) ?? '',
 			negative: String(e.name !== 'Invisible')
 		}));
 	assertCount('conditions', rows.length, 15);
@@ -703,7 +722,65 @@ const norm = (s) =>
 		.replace(/\([^)]*\)/g, '')
 		.replace(/[^a-z0-9]+/g, ' ')
 		.trim();
+
+// EFX-A7: resolve a base-weapon NAME to its item id, matching by unordered singularized word set
+// so prose "hand crossbows" finds the item "Crossbow, hand". Built from the ACTUAL converted item
+// set (data-driven; no hand-authored weapon lists) — only base weapons (simple/martial), so magic
+// items never collide. A named weapon not in the set is dropped with a warning (never guessed).
+const wordKey = (name) =>
+	norm(name)
+		.split(' ')
+		.filter(Boolean)
+		.map((w) => w.replace(/s$/, '')) // crude singularize (crossbows→crossbow, daggers→dagger)
+		.sort()
+		.join(' ');
+function baseWeaponResolver() {
+	const raw = readFileSync(out('items_srd.csv'), 'utf8')
+		.replace(/^﻿/, '') // strip the UTF-8 BOM before the #-filter
+		.split('\n')
+		.filter((l) => !l.startsWith('#'))
+		.join('\n');
+	const map = new Map();
+	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
+		if (r.category === 'weapon' && /^(simple|martial) (melee|ranged)$/i.test(r.item_type || ''))
+			map.set(wordKey(r.name_en), r.id);
+	return map;
+}
+
+/** SRD 5.1 "Armor:" cell → normalized categories. "None" → blank; "All armor" → light/medium/heavy. */
+function parseArmorProfs2014(cell) {
+	const c = (cell || '').toLowerCase();
+	if (/\bnone\b/.test(c) || !c) return '';
+	const out = [];
+	if (/all armor/.test(c)) out.push('light', 'medium', 'heavy');
+	else {
+		if (/\blight\b/.test(c)) out.push('light');
+		if (/\bmedium\b/.test(c)) out.push('medium');
+		if (/\bheavy\b/.test(c)) out.push('heavy');
+	}
+	if (/shield/.test(c)) out.push('shield');
+	return out.join(',');
+}
+
+/** SRD 5.1 "Weapons:" cell → categories (simple/martial) + specific ids for the explicit weapon
+ *  lists 5.1 uses (Wizard/Rogue/Druid…), each resolved against the real item set. */
+function parseWeaponProfs2014(cell, resolver) {
+	const c = (cell || '').toLowerCase();
+	const out = [];
+	if (/simple weapons/.test(c)) out.push('simple');
+	if (/martial weapons/.test(c)) out.push('martial');
+	for (const partRaw of c.split(',')) {
+		const part = partRaw.replace(/\([^)]*\)/g, '').trim();
+		if (!part || /\b(simple|martial) weapons\b/.test(part)) continue; // category phrases handled above
+		const id = resolver.get(wordKey(part));
+		if (id) out.push(id);
+		else console.warn(`2014 weapon prof: "${part.trim()}" not in item set — dropped`);
+	}
+	return [...new Set(out)].join(',');
+}
+
 function convertClasses() {
+	const weaponResolver = baseWeaponResolver();
 	const html = src(`${SRC}.html`);
 	const classRows = [],
 		featureRows = [];
@@ -741,6 +818,15 @@ function convertClasses() {
 			if (hit && !levelOf.has(nn)) levelOf.set(nn, hit.lvl);
 		}
 
+		// EFX-A7: proficiency prose block ("Armor: … Weapons: … Tools: … Saving Throws: …")
+		const armorCell = (/Armor:\s*([^]*?)(?:Weapons:|Tools:|Saving Throws:|Skills:)/i.exec(text) || [
+			,
+			''
+		])[1];
+		const weaponCell = (/Weapons:\s*([^]*?)(?:Tools:|Saving Throws:|Skills:)/i.exec(text) || [
+			,
+			''
+		])[1];
 		const savesM = /Saving Throws:\s*([A-Za-z, ]+?)(?:Skills|Tools|Armor|$)/i.exec(text);
 		const saves = savesM
 			? (
@@ -797,6 +883,8 @@ function convertClasses() {
 			spell_ability: SPELL_ABIL[id] || '',
 			skills_choose: skM ? String(num[skM[2].toLowerCase()] || skM[2]) : '',
 			skills_from: skM ? (skM[1] ? 'any' : skM[3] ? splitSkills(skM[3]).join(',') : '') : '',
+			weapon_profs: parseWeaponProfs2014(weaponCell, weaponResolver),
+			armor_profs: parseArmorProfs2014(armorCell),
 			subclass_level: String(SUBCLASS_LEVEL_2014[id]),
 			asi_levels: asiLevels.join(',')
 		});
@@ -897,6 +985,8 @@ function convertClasses() {
 			'spell_ability',
 			'skills_choose',
 			'skills_from',
+			'weapon_profs',
+			'armor_profs',
 			'subclass_level',
 			'asi_levels'
 		],
@@ -1154,8 +1244,8 @@ const nSpecOpt = convertSpeciesOptions();
 const nLang = convertLanguages();
 const nBg = convertBackgrounds();
 const nFeat = convertFeats();
+const nItems = convertItems(); // before classes: EFX-A7 weapon-prof resolver reads the item set
 const nFeatures = convertClasses();
-const nItems = convertItems();
 console.log(
 	`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nSpecOpt} subraces, ${nLang} languages, ${nBg} backgrounds, ${nFeat} feats, 12 classes, ${nFeatures} class features, ${nItems} items`
 );

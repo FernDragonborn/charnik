@@ -1,5 +1,5 @@
 /* Shared helpers for the SRD markdown → CSV converters. */
-import { writeFileSync } from 'node:fs';
+import { writeFileSync, readFileSync, existsSync } from 'node:fs';
 import Papa from 'papaparse';
 import xxhash from 'xxhash-wasm';
 
@@ -153,17 +153,33 @@ export function writeCsv(path, columns, rows) {
 	const bodyCols = columns.filter((c) => c !== 'source' && c !== 'systems');
 	const bodyRows = rows.map(({ source: _s, systems: _y, ...rest }) => rest);
 	const body = Papa.unparse({ fields: bodyCols, data: bodyRows }, { newline: '\n' }) + '\n';
+	const hash = h64ToString(normalizeBody(body));
+
+	// IDEMPOTENT write (the converters commit their output, so a re-run must not churn unchanged
+	// files): preserve the existing file's stable `#content-id`, its BOM, and its `updated-at` key
+	// spelling; and when the body hash is unchanged, leave the file byte-for-byte alone (no id
+	// regen, no date bump). Only real data changes produce a diff.
+	let contentId = uuidv7();
+	let hasBom = true; // default: write the UTF-8 BOM (Excel/Cyrillic safety, per CLAUDE.md)
+	let dateKey = 'updated_at';
+	if (existsSync(path)) {
+		const prev = readFileSync(path, 'utf8');
+		hasBom = prev.charCodeAt(0) === 0xfeff;
+		contentId = prev.match(/#content-id:\s*(\S+)/)?.[1] ?? contentId;
+		if (/#content-updated-at:/.test(prev)) dateKey = 'updated-at';
+		if (prev.match(/#content-hash:\s*xxh64:(\S+)/)?.[1] === hash) return; // unchanged → don't touch
+	}
 
 	const header = [
 		`#content-source: ${sources[0]}`,
 		`#content-systems: ${systems.join(',')}`,
 		`#content-url: ${SRD_URL}`,
 		`#content-license: CC-BY-4.0`, // both SRD 5.1 and 5.2.1 ship under CC-BY-4.0
-		`#content-id: ${uuidv7()}`,
-		`#content-updated-at: ${TODAY}`,
-		`#content-hash: xxh64:${h64ToString(normalizeBody(body))}`
+		`#content-id: ${contentId}`,
+		`#content-${dateKey}: ${TODAY}`,
+		`#content-hash: xxh64:${hash}`
 	].join('\n');
-	writeFileSync(path, header + '\n' + body, 'utf8');
+	writeFileSync(path, (hasBom ? '﻿' : '') + header + '\n' + body, 'utf8');
 }
 
 /** Throw if the emitted row count doesn't match what the source contains. */
