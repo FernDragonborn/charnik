@@ -1,5 +1,54 @@
 # Changelog
 
+## 0.4.0
+
+- **Conditions actually do things now.** The 15 core conditions carry real mechanics, not just a
+  description: Grappled and Restrained set your speed to 0 (and a later speed bonus can't sneak past
+  it), Prone and Poisoned give the right disadvantage, Paralyzed and Stunned chain in Incapacitated
+  and auto-fail your Strength/Dexterity saves, and so on. The parts a single character sheet can't
+  model on its own — "attacks against you have advantage", auto-crits, sense-gated effects — show up
+  as clearly-marked reference notes so nothing is silently dropped. Each condition also has an ⓘ with
+  its full rules text, and you can apply one from a picker.
+- **Wearing armor you're not trained in has consequences.** Weapon and armor proficiency is now real
+  data on every class (both editions). Swing a weapon your class isn't proficient with and you lose
+  the proficiency bonus on the to-hit (with a note explaining why); put on armor you lack proficiency
+  with and the spellcasting panel tells you casting is blocked — the game's rule, surfaced instead of
+  quietly ignored. Homebrew classes that don't list proficiencies keep working exactly as before.
+- **Spend Ki, Focus, and other resources on what they actually do.** A Monk's Ki (2014) / Focus
+  (2024) pool now offers its options — Flurry of Blows, Patient Defense, Step of the Wind — right in
+  the actions list, each with a cost chip, greyed out when you can't afford it; tapping spends the
+  points. Named pools also spend one-at-a-time like a spell slot, and the whole resource row is the
+  click target.
+- **Exhaustion is tracked for you.** Set your exhaustion level and the sheet applies the ladder
+  automatically — the 2024 −2-per-level penalty to every d20 test and −5-per-level to speed, and the
+  2014 cumulative ladder (disadvantage on ability checks, halved speed, halved max HP, speed 0…).
+- **Features that grow with you — Rage, Sneak Attack, Martial Arts, Bardic Inspiration.** Rage shows
+  its uses per level (including *Unlimited* at Barbarian 20 in the 2014 rules), and scaling dice like
+  Sneak Attack (`Nd6`), the Martial Arts die, and the Bardic Inspiration die appear as rollable chips
+  that already know the right size for your level — the Martial Arts die correctly starts a step lower
+  in the 2014 rules than the 2024 ones.
+- **Casting a spell spends a slot.** Casting now reserves the appropriate slot and blocks when you're
+  out; ritual casting (for classes that have it) doesn't spend one. Slot pips and the spell list stay
+  in sync.
+- **Magic weapons hit harder — but only in the right hand.** A +1 weapon's bonus now folds into *that*
+  weapon's attack and damage, not every attack you make.
+- **Set your max HP by hand.** You can override maximum HP directly (for effects the engine doesn't
+  model yet), and bonuses like *Aid* still stack on top of your manual number; current HP is pulled
+  down safely when a temporary max expires.
+- **Advanced homebrew, safely.** A new opt-in plugin system lets power users script effects the
+  built-in formula language can't express, running in a locked-down sandbox you explicitly consent to,
+  with a health panel that surfaces load errors and lets you retry.
+- **Track your translation progress.** The compendium's translate view now tracks a per-language
+  status for each entry (not started / started / machine / reviewed) so you can see what's left.
+- **Linux builds.** Releases now include a Linux **AppImage** (self-updating, like the Windows build)
+  and a **.deb** package, published alongside the Windows installer.
+- **Fixes & polish.** Multiclass save proficiencies now come only from your starting class; a long
+  rest always ends concentration; standard actions use the right edition's terms; a duplicate
+  `source:id` no longer applies twice; typo'd effect targets get a "did you mean?" suggestion; effect
+  info text renders its Markdown/links; armor with a Strength requirement drops your speed and
+  stealth-disadvantage armor is applied; a zero modifier reads `0` not `+0`; and desktop updates
+  re-seed the shipped SRD content so fixes to it reach you.
+
 ## 0.3.0
 
 - **Effects that think for themselves.** Auto-calc now understands *conditional* and *computed*
