@@ -230,6 +230,9 @@ export interface CharacterSheet {
 	defenses: { resist: string[]; immune: string[]; vulnerable: string[] };
 	/** Trackable resource pools (rage, ki, item N/day…) from `grant_resource` effects. */
 	resources: ResourceDef[];
+	/** Piece 3: spend-options on granted resources (Ki → Flurry of Blows…), resolved from the
+	 *  `resource_option` linked table for the resources this character actually has. */
+	resourceOptions: ResourceOption[];
 	/** Per-class casting profiles + shared/pact slot pools (empty classes = non-caster). */
 	spellcasting: Spellcasting;
 	/** Content refs the character points at that the graph couldn't resolve. */
@@ -258,6 +261,58 @@ function armorWeightOf(row: LoadedRowOf<'item'> | undefined): PlayVars['armorTyp
 const num = (v: unknown, d = 0): number => (typeof v === 'number' ? v : Number(v) || d);
 
 /** Gather every active effect (species/items/runtime) as {source, layer, tokens}. */
+/** Piece 3: a spend-option on a granted resource, resolved for a specific character. `cost` is a
+ *  small integer or `'x'` (player-picked variable spend, 1..remaining); context-dependent costs
+ *  (spell_level etc.) are deferred — an unsupported cost drops the option with a deriveIssue. */
+export interface ResourceOption {
+	id: string;
+	resourceId: string;
+	name: string;
+	description: string;
+	/** A bounded action token (apply_condition / heal / roll / note) the UI runs / displays. */
+	action: string;
+	actionType: 'action' | 'bonus_action' | 'reaction' | 'free';
+	cost: number | 'x';
+}
+
+/** Gather the spend-options for the resources a character has (edition + source filtered). Pure. */
+function resolveResourceOptions(
+	graph: ContentGraph,
+	resourceIds: Set<string>,
+	system: System,
+	isActive: (row: LoadedRow) => boolean,
+	issues: EffectIssue[]
+): ResourceOption[] {
+	const out: ResourceOption[] = [];
+	for (const row of graph.rows) {
+		if (row.type !== 'resource_option' || !row.systems.includes(system) || !isActive(row)) continue;
+		const resourceId = String(row.data.resource_id);
+		if (!resourceIds.has(resourceId)) continue;
+		const raw = String(row.data.cost ?? '').trim();
+		let cost: number | 'x';
+		if (raw === 'x') cost = 'x';
+		else if (/^\d+$/.test(raw)) cost = Number(raw);
+		else {
+			issues.push({
+				source: String(row.data.name_en),
+				token: `cost:${raw}`,
+				reason: 'unsupported resource-option cost (v1 supports an integer or `x`)'
+			});
+			continue;
+		}
+		out.push({
+			id: row.id,
+			resourceId,
+			name: String(row.data.name_en),
+			description: String(row.data.text_en ?? ''),
+			action: String(row.data.action ?? ''),
+			actionType: (row.data.action_type as ResourceOption['actionType']) ?? 'action',
+			cost
+		});
+	}
+	return out;
+}
+
 function gatherEffects(
 	character: Character,
 	graph: ContentGraph,
@@ -827,6 +882,13 @@ export function deriveSheet(
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
 		defenses,
 		resources: facts.resources,
+		resourceOptions: resolveResourceOptions(
+			graph,
+			new Set(facts.resources.map((r) => r.id)),
+			system,
+			isActive,
+			issues
+		),
 		spellcasting,
 		missing: [...new Set(missing)], // dedupe: the same ref can be missing from several scans (D19)
 		deriveIssues: issues,

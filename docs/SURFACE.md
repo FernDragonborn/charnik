@@ -297,6 +297,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const SKILL_ABILITY` — `as const satisfies` so the KEYS form the `SkillId` union (not widened to `string`) while the values are still checke…
 - `type SkillId` — The 18 SRD skill ids.
 - `interface CharacterSheet`
+- `interface ResourceOption` — Piece 3: a spend-option on a granted resource, resolved for a specific character.
 - `function deriveSheet`
 
 ### `src/lib/character/repository.ts`
@@ -855,4 +856,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 478 exports across 68 modules · 27 duplicate suspects · generated in 153ms._
+_46 tokens · 50 global classes · 36 components · 479 exports across 68 modules · 27 duplicate suspects · generated in 127ms._

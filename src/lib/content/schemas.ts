@@ -437,6 +437,19 @@ const spellListsSchema = z.object({
 	spell_id: reqStr
 });
 
+/** Piece 3: a spend-option on a granted resource (Ki → Flurry of Blows, Channel Divinity → …).
+ *  Keyed by `resource_id` (a grant_resource id — a FLAT namespace, not a content ref). `cost` is an
+ *  L2 value expression (`1`, `spell_level`, or `x` = player-picked variable spend); `action` is a
+ *  bounded token (apply_condition / heal / roll / note); `action_type` places it in the turn economy.
+ *  Carries name/text (shown in the picker) but is NOT a browsable article. */
+const ACTION_TYPES = ['action', 'bonus_action', 'reaction', 'free'] as const;
+const resourceOptionSchema = baseRow.extend({
+	resource_id: reqStr,
+	cost: optStr,
+	action: optStr,
+	action_type: z.enum(ACTION_TYPES).default('action')
+});
+
 // --- Registry: type name → { schema, file glob, column order for unparse } -----
 
 export const CONTENT_TYPES = {
@@ -455,14 +468,20 @@ export const CONTENT_TYPES = {
 	subclass: { schema: subclassSchema, filebase: 'subclasses' },
 	spell_slots: { schema: spellSlotsSchema, filebase: 'spell_slots' },
 	class_casting: { schema: classCastingSchema, filebase: 'class_casting' },
-	spell_lists: { schema: spellListsSchema, filebase: 'spell_lists' }
+	spell_lists: { schema: spellListsSchema, filebase: 'spell_lists' },
+	resource_option: { schema: resourceOptionSchema, filebase: 'resource_options' }
 } as const;
 
 export type ContentType = keyof typeof CONTENT_TYPES;
 
 /** Rules/lookup tables — data the engine consumes, NOT browsable articles (no name/text). The
  *  compendium, search and article views skip these. */
-const LOOKUP_TYPES = new Set<ContentType>(['spell_slots', 'class_casting', 'spell_lists']);
+const LOOKUP_TYPES = new Set<ContentType>([
+	'spell_slots',
+	'class_casting',
+	'spell_lists',
+	'resource_option' // named, but a linked spend-table — not a browsable article
+]);
 
 /** A browsable content type (has name/text; shows in compendium + search). */
 export const isBrowsable = (t: ContentType): boolean => !LOOKUP_TYPES.has(t);

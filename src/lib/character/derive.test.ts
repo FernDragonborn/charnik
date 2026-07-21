@@ -80,6 +80,16 @@ async function graphOf(): Promise<ContentGraph> {
 			`frightened,5.5e,${S},Frightened,disadvantage:attack,true`
 		].join('\n')
 	);
+	await st.write(
+		'c/resource_options_srd.csv',
+		[
+			'id,systems,source,name_en,resource_id,cost,action,action_type',
+			`ward_burst,5.5e,${S},Ward Burst,arcane_ward,2,roll:2d6,action`,
+			`ward_shield,5.5e,${S},Ward Shield,arcane_ward,x,note:absorb,reaction`,
+			`ward_bad,5.5e,${S},Bad Cost,arcane_ward,spell_level,note:nope,action`,
+			`ki_flurry,5.5e,${S},Flurry,ki,1,note:two strikes,bonus_action` // a resource the wizard lacks
+		].join('\n')
+	);
 	const g = await loadContent(st, ['c']);
 	expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 	return g;
@@ -160,6 +170,27 @@ describe('deriveSheet aggregator', () => {
 		expect(dagger.toHit).toBe(4);
 		expect(greataxe.toHit).toBe(2);
 		expect(greataxe.note).toContain('Not proficient');
+	});
+
+	it('piece 3: resolves spend-options for a GRANTED resource; int + `x` costs; drops others', () => {
+		const c = wizard();
+		c.build.classes = [{ class: `class:${S}:wizard`, level: 2 }]; // Arcane Ward at L2 grants `arcane_ward`
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		const opts = s.resourceOptions;
+		// only options for a resource the character HAS (arcane_ward), never the wizard-less `ki`
+		expect(opts.map((o) => o.id).sort()).toEqual(['ward_burst', 'ward_shield']);
+		expect(opts.find((o) => o.id === 'ward_burst')?.cost).toBe(2);
+		expect(opts.find((o) => o.id === 'ward_shield')?.cost).toBe('x'); // variable spend
+		expect(opts.find((o) => o.id === 'ward_shield')?.actionType).toBe('reaction');
+		// the unsupported (context-dependent) cost is dropped + flagged, not silently kept
+		expect(opts.some((o) => o.id === 'ward_bad')).toBe(false);
+		expect(s.deriveIssues.some((i) => i.token === 'cost:spell_level')).toBe(true);
+	});
+
+	it('piece 3: no options when the character lacks the resource (autoCalc-empty is safe)', () => {
+		expect(deriveSheet(wizard(), graph).resourceOptions.every((o) => o.resourceId !== 'ki')).toBe(
+			true
+		);
 	});
 
 	it('B17: a play effect with a catalog ref resolves LIVE (fix propagates), stale bake ignored', () => {
