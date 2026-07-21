@@ -21,7 +21,8 @@ import {
 	type ActiveEffect,
 	type EffectCtx,
 	type EffectIssue,
-	type Defense
+	type Defense,
+	type Recharge
 } from './token-parser';
 
 /** Does an effect target apply to this stat key? Exact, plus the group targets that fan out:
@@ -377,7 +378,7 @@ export interface ResourceDef {
 	id: string;
 	name: string; // display label (title-cased from id)
 	max: number;
-	recharge: 'short' | 'long' | 'other';
+	recharge: Recharge;
 	source: string; // the granting effect/feature
 }
 

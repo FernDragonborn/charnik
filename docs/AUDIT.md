@@ -348,9 +348,11 @@ Deep effects-system review, 2026-07-16 (D7–D19):
   regexes `text_en` for healing dice (helpers.ts:123 — UA-only homebrew heals nothing),
   `durationToRounds` parses duration prose (:220), `castingIcon` regexes casting_time (:351).
   Mechanics must be columns; prose is display.
-- [ ] **D11 · Two `Recharge` unions.** `rules/spellcasting.ts:14` (`short|long|day|dawn`) vs
-  `effects/index.ts:33` (`short|long|other`). `rest()` handles short/long only: `day`/`dawn` are
-  unproducible, `other` never recharges (undocumented whether that's intended manual). One owner.
+- [x] **D11 · Two `Recharge` unions.** DONE 2026-07-21. One owner now: `rules/spellcasting.ts`
+  exports `Recharge = 'short' | 'long' | 'other'` (dropped the unproducible `day`/`dawn`; `other` =
+  manual/never, documented on the type). `effects/token-parser.ts` imports + re-exports it (so token
+  consumers keep the same import site) and `apply.ts`'s inline union is gone. Core stays effects-free;
+  effects imports the core type (the allowed direction).
 - [ ] **D12 · `set_override` tokens are forced to the `override` layer** (`effects/index.ts:178`
   ignores `eff.layer`) while the pipeline is designed for layered sets ("an override-layer set
   beats an item-layer one") and PLUGINS.md lets plugin contributions set at feature/item layers.

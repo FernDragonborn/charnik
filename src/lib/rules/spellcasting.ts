@@ -11,7 +11,9 @@
 
 /** Multiclass caster-level contribution + rounding (data value `caster_share`). */
 export type CasterShare = 'full' | 'half' | 'half_up' | 'third' | 'none';
-export type Recharge = 'short' | 'long' | 'day' | 'dawn';
+/** How a limited pool refills: on a short or long rest, or `other` = never auto (manual only).
+ *  The ONE owner of this vocabulary (D11) — the effects layer imports it, never redefines it. */
+export type Recharge = 'short' | 'long' | 'other';
 
 /** A spell-slot table: character level → counts per spell level (index 0 = 1st-level slots). */
 export type SlotTable = ReadonlyMap<number, readonly number[]>;

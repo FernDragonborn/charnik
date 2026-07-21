@@ -12,6 +12,7 @@
  * evaluates a token's value expression. The fold seam that consumes these lives in apply.ts.
  */
 import type { Layer } from '../rules/pipeline';
+import type { Recharge } from '../rules/spellcasting';
 import { evalExpression, diceToFormula, type ExprContext } from './expression-evaluator';
 
 /** The bounded effect vocabulary, as named constants — compare against these, never bare strings. */
@@ -46,7 +47,9 @@ export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 /** The kinds as a list (for schema validation / the `includes` guard). */
 export const EFFECT_KINDS = Object.values(EFFECT_KIND) as readonly EffectKind[];
 
-export type Recharge = 'short' | 'long' | 'other';
+// Recharge's single owner is rules/spellcasting (D11); re-exported here so token consumers keep
+// importing it from the effects surface they already use.
+export type { Recharge };
 export type Defense = 'resist' | 'immune' | 'vulnerable';
 
 /** Numeric caps on token values (cost, not game balance — content is untrusted input). Two classes:

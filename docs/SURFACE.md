@@ -656,7 +656,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const EFFECT_KIND` — The bounded effect vocabulary, as named constants — compare against these, never bare strings.
 - `type EffectKind`
 - `const EFFECT_KINDS` — The kinds as a list (for schema validation / the `includes` guard).
-- `type Recharge`
+- `re-export Recharge` — Recharge's single owner is rules/spellcasting (D11); re-exported here so token consumers keep importing it from the e…
 - `type Defense`
 - `const MAX_RESOURCE_MAX`
 - `interface ParsedEffect`
@@ -738,7 +738,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/rules/spellcasting.ts`
 
 - `type CasterShare` — Multiclass caster-level contribution + rounding (data value `caster_share`).
-- `type Recharge`
+- `type Recharge` — How a limited pool refills: on a short or long rest, or `other` = never auto (manual only).
 - `type SlotTable` — A spell-slot table: character level → counts per spell level (index 0 = 1st-level slots).
 - `interface CastPool` — A castable pool — a slot group (has `spellLevel`) or a generic/limited resource.
 - `type SlotSpend` — What casting a spell should do to the leveled slot pools (AUDIT A17): spend `key` (a * `spellSlotsSpent` key, "1".."9…
@@ -834,4 +834,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 461 exports across 67 modules · 26 duplicate suspects · generated in 117ms._
+_46 tokens · 50 global classes · 36 components · 461 exports across 67 modules · 26 duplicate suspects · generated in 143ms._
