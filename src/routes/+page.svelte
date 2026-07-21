@@ -74,7 +74,7 @@
 						<span class="roster-name">{c.name}</span>
 						<span class="roster-subtitle">
 							{c.classes || 'level ' + c.level}
-							<span class="sysbadge">{c.system}</span>
+							{#if c.system}<span class="sysbadge">{c.system}</span>{/if}
 							{#if c.error}<span class="roster-error">⚠ {c.error}</span>{/if}
 						</span>
 					</button>

@@ -174,6 +174,20 @@ describe('character repository (in-memory)', () => {
 		expect(mirt.classes).toBe('wizard 3');
 	});
 
+	it('a broken save keeps its REAL edition for the roster badge, not a hardcoded default (D4)', async () => {
+		const s = new MemoryStorage();
+		// valid JSON but not a valid character (missing build/play) — its `system` is still readable
+		await s.write(
+			'characters/halfbad/character.json',
+			'{"schemaVersion":3,"system":"5.5e","id":"halfbad"}'
+		);
+		// unreadable edition → no badge at all (never a wrong default)
+		await s.write('characters/noedition/character.json', '{"schemaVersion":3,"id":"noedition"}');
+		const roster = await listCharacters(s);
+		expect(roster.find((r) => r.id === 'halfbad')?.system).toBe('5.5e');
+		expect(roster.find((r) => r.id === 'noedition')?.system).toBeUndefined();
+	});
+
 	it('rejects a save from a newer schema (never silently drops data)', async () => {
 		const s = new MemoryStorage();
 		const c = sample();

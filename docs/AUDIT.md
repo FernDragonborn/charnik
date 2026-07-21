@@ -320,7 +320,10 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   UPDATE: actually four sources — see F7.
 - [ ] **D3 · Demo hardcode in CombatVM:** `pinned = {'fire-bolt': true, shield: true}` — every
   character starts with demo pins; not persisted per character (belongs in `ui`).
-- [ ] **D4 · Roster fallback for broken saves hardcodes `system: '5e'`** (repository.ts).
+- [x] **D4 · Roster fallback for broken saves hardcodes `system: '5e'`.** FIXED 2026-07-21.
+  `loadCharacter` now reads `system` best-effort from the raw JSON before migrate/validate and returns
+  it on failure; `RosterEntry.system` is optional, so a broken save badges its REAL edition (or none
+  if even that's unreadable) instead of always '5e'. The roster hides the badge when absent. Tested.
 - [ ] **D5 · `standardActions` is edition-blind.** One list for both systems using 2024 terms
   (Utilize, Study); 2014 names differ (Use an Object; no Study action).
 - [ ] **D6 · `effectHint` hardcodes spell names** ('mage hand', 'counter'…, EN-only) as a

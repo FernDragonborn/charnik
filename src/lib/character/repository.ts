@@ -16,6 +16,7 @@ import {
 	type Versioned
 } from '../schema/version';
 import { characterSchema, parseCharacter, type Character } from './schema';
+import { SYSTEMS } from '../rules/pipeline';
 
 /** Snake-case the ID segment of a content ref `type:source:id` (only the id part — the `source`
  *  like "SRD 5.1" is display and left alone), or a bare skill id. Non-strings pass through. */
@@ -94,12 +95,17 @@ export interface LoadResult {
 	character?: Character;
 	/** Present when the save couldn't be loaded (missing / bad JSON / invalid / too new). */
 	error?: string;
+	/** Best-effort system read from the raw JSON even when the full parse failed, so the roster can
+	 *  badge a broken save with its REAL edition instead of a hardcoded guess (D4). */
+	system?: Character['system'];
 }
 
 export interface RosterEntry {
 	id: string;
 	name: string;
-	system: Character['system'];
+	/** Optional: a broken save whose edition couldn't even be read has none (D4) — the UI hides the
+	 *  badge rather than showing a wrong default. */
+	system?: Character['system'];
 	level: number;
 	/** e.g. "Wizard 3 / Fighter 1" — best-effort from class refs (id segment). */
 	classes: string;
@@ -132,16 +138,21 @@ export async function loadCharacter(storage: Storage, slug: string): Promise<Loa
 	} catch (e) {
 		return { ok: false, error: `invalid JSON: ${(e as Error).message}` };
 	}
+	// best-effort real edition for a broken save's roster badge (D4) — before migrate/validate
+	const rawSystem = (data as { system?: unknown } | null)?.system;
+	const known = SYSTEMS.includes(rawSystem as Character['system']);
+	const sys = known ? { system: rawSystem as Character['system'] } : {};
 	try {
 		data = migrate(data as Versioned, CHARACTER_MIGRATIONS, CHARACTER_SCHEMA_VERSION);
 	} catch (e) {
-		return { ok: false, error: `migration failed: ${(e as Error).message}` };
+		return { ok: false, error: `migration failed: ${(e as Error).message}`, ...sys };
 	}
 	const res = parseCharacter(data);
 	if (!res.success) {
 		return {
 			ok: false,
-			error: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')
+			error: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; '),
+			...sys
 		};
 	}
 	return { ok: true, character: res.data };
@@ -168,7 +179,7 @@ export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 			out.push({
 				id: slug,
 				name: slug,
-				system: '5e',
+				...(res.system ? { system: res.system } : {}), // real edition if readable, else no badge
 				level: 0,
 				classes: '',
 				error: res.error ?? 'unknown error'
