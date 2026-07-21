@@ -8,7 +8,7 @@
  * correct `this`. Pure helpers live in $lib/combat/helpers.
  */
 import { toast } from 'svelte-sonner';
-import { activeOrDemo, saveCharacterToStore } from '$lib/character/store.svelte';
+import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
@@ -94,8 +94,8 @@ class CombatVM {
 
 	load = async () => {
 		await loadContentStore(); // populate the shared graph; `this.graph` derives from it
-		// the character opened from the Roster, else a SHARED demo (same instance the Spellbook edits)
-		this.character = activeOrDemo();
+		// the character opened from the Roster, else the persisted demo (same instance the Spellbook edits)
+		this.character = await ensureActiveCharacter();
 		// restore this character's saved panel layout (falls back to the default columns)
 		this.layout.restore(this.character.ui.panelColumns);
 	};

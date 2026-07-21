@@ -47,16 +47,34 @@ export async function loadCharacterBySlug(slug: string): Promise<Character | nul
 	return res.ok && res.character ? res.character : null;
 }
 
-/** The character every view should edit: the one opened from the Roster, or a SHARED demo when none
- *  is open. Lazily sets `characters.active` to a single demo so Combat and the Spellbook edit the
- *  SAME object (otherwise each page spins its own demo and per-character edits — hidden spells,
- *  prepared, layout — don't sync between them). */
-export function activeOrDemo(): Character {
+/** The character every view edits: the one opened from the Roster, or the DEMO by default. The demo
+ *  is just a normal seeded character — not a separate code path — LOADED from storage, so its edits
+ *  (hidden spells, prepared, layout) persist across reloads and sync between pages exactly like any
+ *  character. Seeds it on first run if the save is missing. */
+export async function ensureActiveCharacter(): Promise<Character> {
 	if (!characters.active) {
-		characters.active = demoCharacter();
+		const s = getUserStorage();
+		const demo = demoCharacter();
+		let res = await loadCharacter(s, demo.id);
+		if (!res.ok || !res.character) {
+			await saveCharacter(s, demo);
+			res = await loadCharacter(s, demo.id);
+		}
+		characters.active = res.character ?? demo;
 		bumpGuid();
 	}
 	return characters.active;
+}
+
+/** DEV: reset the demo to a fresh build — overwrites the persisted demo save, makes it active, and
+ *  refreshes the roster. Lets a developer wipe accumulated demo edits (hidden spells, HP, layout…). */
+export async function recreateDemoCharacter(): Promise<Character> {
+	const demo = demoCharacter();
+	await saveCharacter(getUserStorage(), demo);
+	characters.active = demo;
+	await loadRoster();
+	bumpGuid();
+	return demo;
 }
 
 /** Open a saved character as the active one (returns null if the save is bad/missing). */

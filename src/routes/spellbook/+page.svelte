@@ -8,7 +8,7 @@
 	import { base } from '$app/paths';
 	import { toast } from 'svelte-sonner';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
-	import { activeOrDemo, saveCharacterToStore } from '$lib/character/store.svelte';
+	import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 	import { deriveSheet } from '$lib/character/derive';
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
@@ -34,8 +34,8 @@
 		const g = await loadContentStore();
 		if (!g) return; // content load failed — error surfaces via the content store
 		// edit the ACTIVE character so show-on-sheet / prepare persist to the same save combat reads;
-		// activeOrDemo shares ONE demo instance with combat so a demo-mode hide syncs across both.
-		character = activeOrDemo();
+		// ensureActiveCharacter returns the persisted demo by default — the same instance combat edits.
+		character = await ensureActiveCharacter();
 		for (const s of character.build.spells) {
 			const row = g.get(s.spell);
 			if (row && ['fire-bolt', 'shield'].includes(String(row.data.id))) pinned.add(row.effectiveId);
