@@ -14,16 +14,12 @@ import { deriveSheet } from '../character/derive';
 async function loadEdition(dir: string): Promise<ContentGraph> {
 	const s = new MemoryStorage();
 	for (const f of readdirSync(`${process.cwd()}/${dir}`))
-		if (f.endsWith('.csv')) await s.write(`c/${f}`, readFileSync(`${process.cwd()}/${dir}/${f}`, 'utf8'));
+		if (f.endsWith('.csv'))
+			await s.write(`c/${f}`, readFileSync(`${process.cwd()}/${dir}/${f}`, 'utf8'));
 	return loadContent(s, ['c']);
 }
 
-function charOf(
-	source: string,
-	system: '5e' | '5.5e',
-	classId: string,
-	level: number
-): Character {
+function charOf(source: string, system: '5e' | '5.5e', classId: string, level: number): Character {
 	const c = newCharacter('grog', 'Grog', system);
 	c.build.classes = [{ class: `class:${source}:${classId}`, level }];
 	return characterSchema.parse(c);
@@ -43,7 +39,12 @@ function rollFormula(
 	return sheet.facts.rolls.find((r) => r.id === rollId)?.formula;
 }
 
-function rageMax(graph: ContentGraph, source: string, system: '5e' | '5.5e', level: number): number {
+function rageMax(
+	graph: ContentGraph,
+	source: string,
+	system: '5e' | '5.5e',
+	level: number
+): number {
 	const sheet = deriveSheet(barbarian(source, system, level), graph);
 	return sheet.resources.find((r) => r.id === 'rage')?.max ?? -1;
 }
@@ -84,23 +85,21 @@ describe('shipped Monk resource + spend-options (piece 3)', () => {
 	it.each([
 		['content/srd-2024', 'SRD 5.2.1', '5.5e', 'focus'] as const,
 		['content/srd-2014', 'SRD 5.1', '5e', 'ki'] as const
-	])('%s: a monk 5 has %s points = level, with Flurry/Patient/Step options at cost 1', async (
-		dir,
-		source,
-		system,
-		resourceId
-	) => {
-		const g = await loadEdition(dir);
-		const sheet = deriveSheet(charOf(source, system as '5e' | '5.5e', 'monk', 5), g);
-		expect(sheet.resources.find((r) => r.id === resourceId)?.max).toBe(5); // = monk level
-		const opts = sheet.resourceOptions.filter((o) => o.resourceId === resourceId);
-		expect(opts.map((o) => o.id).sort()).toEqual([
-			'flurry_of_blows',
-			'patient_defense',
-			'step_of_the_wind'
-		]);
-		expect(opts.every((o) => o.cost === 1 && o.actionType === 'bonus_action')).toBe(true);
-	});
+	])(
+		'%s: a monk 5 has %s points = level, with Flurry/Patient/Step options at cost 1',
+		async (dir, source, system, resourceId) => {
+			const g = await loadEdition(dir);
+			const sheet = deriveSheet(charOf(source, system as '5e' | '5.5e', 'monk', 5), g);
+			expect(sheet.resources.find((r) => r.id === resourceId)?.max).toBe(5); // = monk level
+			const opts = sheet.resourceOptions.filter((o) => o.resourceId === resourceId);
+			expect(opts.map((o) => o.id).sort()).toEqual([
+				'flurry_of_blows',
+				'patient_defense',
+				'step_of_the_wind'
+			]);
+			expect(opts.every((o) => o.cost === 1 && o.actionType === 'bonus_action')).toBe(true);
+		}
+	);
 });
 
 describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {

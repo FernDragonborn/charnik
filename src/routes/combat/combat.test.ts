@@ -496,7 +496,13 @@ describe('ResourceTracker · piece 3 spend-options', () => {
 		const sheet = {
 			resources: [{ id: 'ki', name: 'Ki', max, recharge: 'short', source: 'Monk' }]
 		} as unknown as CharacterSheet;
-		return { t: new ResourceTracker(() => c, () => sheet), c };
+		return {
+			t: new ResourceTracker(
+				() => c,
+				() => sheet
+			),
+			c
+		};
 	};
 
 	it('affords + spends when the pool can pay, deducting the cost', () => {

@@ -88,7 +88,9 @@ export class ResourceTracker {
 		}
 		const before = this.resourceSpent(opt.resourceId);
 		c.play.resourcesSpent = { ...c.play.resourcesSpent, [opt.resourceId]: before + cost };
-		const desc = opt.action.startsWith('note:') ? opt.action.slice('note:'.length) : opt.description;
+		const desc = opt.action.startsWith('note:')
+			? opt.action.slice('note:'.length)
+			: opt.description;
 		toast(`${opt.name} — spent ${cost} ${opt.resourceId}`, { description: desc });
 		return true;
 	};

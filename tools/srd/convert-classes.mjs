@@ -57,7 +57,8 @@ function parseWeaponProfs(cell, subsets) {
 	if (/\bsimple\b/.test(c)) out.push('simple');
 	if (/martial/.test(c)) {
 		if (/finesse/.test(c)) out.push(...subsets.finesseOrLight);
-		else if (/property/.test(c)) out.push(...subsets.light); // "…that have the Light property"
+		else if (/property/.test(c))
+			out.push(...subsets.light); // "…that have the Light property"
 		else out.push('martial'); // unconditional
 	}
 	return out.join(',');
@@ -80,7 +81,9 @@ function existingEffectsById(csvPath) {
 		if (r.id && r.effects) map.set(r.id, r.effects);
 	return map;
 }
-const authoredFeatures = existingEffectsById(resolve(root, 'content/srd-2024/class_features_srd.csv'));
+const authoredFeatures = existingEffectsById(
+	resolve(root, 'content/srd-2024/class_features_srd.csv')
+);
 
 const strip = (s) =>
 	s
