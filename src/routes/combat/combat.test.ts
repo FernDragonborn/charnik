@@ -182,6 +182,33 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 		combat.resources.rest('long');
 		expect(character.play.effects.map((e) => e.iid)).toEqual(['forever']);
 	});
+
+	it('short rest expiry uses REMAINING rounds, not total duration (A12)', () => {
+		character.play.round = 999;
+		character.play.effects = [
+			// 1000 total but only 1 round LEFT → a 1 h short rest outlasts it
+			{
+				iid: 'almost-done',
+				label: 'x',
+				effects: [],
+				positive: true,
+				durationRounds: 1000,
+				startedRound: 0
+			},
+			// just started, 5000 rounds left → survives a short rest
+			{
+				iid: 'fresh-long',
+				label: 'y',
+				effects: [],
+				positive: true,
+				durationRounds: 5000,
+				startedRound: 999
+			}
+		];
+		combat.resources.rest('short');
+		// pre-fix both survived (compared totals > 600); now only the still-running one does
+		expect(character.play.effects.map((e) => e.iid)).toEqual(['fresh-long']);
+	});
 });
 
 describe('CombatVM · round counter is the persisted play.round (CVM-9)', () => {

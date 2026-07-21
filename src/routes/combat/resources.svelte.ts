@@ -6,7 +6,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { saveCharacterToStore } from '$lib/character/store.svelte';
-import { pipClick } from '$lib/combat/helpers';
+import { pipClick, remainingRounds } from '$lib/combat/helpers';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 
@@ -83,8 +83,13 @@ export class ResourceTracker {
 			delete slots.pact; // warlock pact slots return on a short rest
 			c.play.spellSlotsSpent = slots;
 		}
-		const outlived = (e: (typeof c.play.effects)[number]) =>
-			e.durationRounds != null && (kind === 'long' || e.durationRounds <= 600);
+		// a rest expires an effect it OUTLASTS: compare rounds LEFT (not total duration) to the rest's
+		// length — a short rest = 1 h (600 rounds), a long rest outlasts any timed effect (A12).
+		const round = c.play.round;
+		const outlived = (e: (typeof c.play.effects)[number]) => {
+			const left = remainingRounds(e, round);
+			return left != null && (kind === 'long' || left <= 600);
+		};
 		for (const e of c.play.effects.filter(outlived))
 			if (e.source && e.source === c.play.concentration) c.play.concentration = null;
 		c.play.effects = c.play.effects.filter((e) => !outlived(e));
