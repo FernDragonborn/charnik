@@ -88,10 +88,11 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   (only drops concentration whose linked effect it outlasts). Unit-tested. [was:] Concentration clears only via
   an expiring LINKED effect (`resources.svelte.ts:73`); a concentration spell with no self-tokens
   (Hold Person) has no linked effect → concentration survives the night.
-- [ ] **A14 · HP clamp is one-sided.** Heal clamps to max, damage floors at 0
-  (`combat/state.svelte.ts:147-152`), but when `hp_max` DROPS (Aid expires) `hp.current` stays
-  above max until the next heal. Also `play.hp.max ?? sheet.maxHp.value` (:138) — a manual max
-  override silently disables ALL `hp_max` effects (Aid on top of a manual max vanishes).
+- [x] **A14 · HP clamp is one-sided.** FIXED (EFX-A14, 2026-07-21): `effectiveHpMax` (helpers)
+  re-folds hp_max effect layers on top of a manual base so a manual max no longer silences Aid; a
+  reactive, idempotent `clampCurrentHp()` (`+page.svelte` `$effect`) pulls `hp.current` down when
+  the live max drops (Aid expires / manual lowered) without looping the autosave. See
+  DECISIONS-PENDING §5.
 - [x] **A15 · Cantrip scaling absent.** FIXED (EXPR-5, 2026-07-17): `cantripDieMultiplier`
   (rules/spellcasting.ts — 5/11/17 steps, identical both editions) scales a level-0 spell's damage
   dice in `spellRow`, so Fire Bolt shows AND rolls 2d10 at character level 5 (3d10 at 11, 4d10 at

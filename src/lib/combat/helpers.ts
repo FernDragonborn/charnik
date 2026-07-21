@@ -4,7 +4,13 @@
  * every area component. Split out of the old monolithic combat/+page.svelte.
  */
 import { ABILITY_IDS, type Ability } from '$lib/rules/core';
-import type { Computed, Contribution, System } from '$lib/rules/pipeline';
+import {
+	computed,
+	type Computed,
+	type Contribution,
+	type Layer,
+	type System
+} from '$lib/rules/pipeline';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character, EffectInstance } from '$lib/character/schema';
 import { SKILL_ABILITY, type CharacterSheet, type SkillId } from '$lib/character/derive';
@@ -150,6 +156,22 @@ export function applyDefense(
 	if (defenses.vulnerable.includes(type)) return { final: amount * 2, bucket: 'vulnerable' };
 	if (defenses.resist.includes(type)) return { final: Math.floor(amount / 2), bucket: 'resist' };
 	return { final: amount, bucket: null };
+}
+
+/** Effective max HP under an optional manual-max override (A14 — a Free-block affordance).
+ *  `manualMax` null → the sheet's fully-computed max. Otherwise the manual value REPLACES the base/
+ *  ability layers but hp_max EFFECTS still stack on top (Aid; a 2014-exhaustion `halve`): re-fold
+ *  `{Manual max}` (base) + the sheet trace's item/feature/condition/override contributions through
+ *  the SAME pipeline, so set/floor/cap/mult semantics survive. Never re-sum from facts (double-count
+ *  + a D7 violation) — the effect layers are read straight off `sheetMaxHp.trace`. */
+const HP_EFFECT_LAYERS = new Set<Layer>(['item', 'feature', 'condition', 'override']);
+export function effectiveHpMax(manualMax: number | null, sheetMaxHp: Computed): number {
+	if (manualMax === null) return sheetMaxHp.value;
+	const contribs: Contribution[] = [
+		{ source: 'Manual max', layer: 'base', op: 'set', amount: manualMax },
+		...sheetMaxHp.trace.filter((c) => HP_EFFECT_LAYERS.has(c.layer))
+	];
+	return computed(contribs, { min: 1 }).value;
 }
 
 /** Feet → "N m" (metric in parentheses next to imperial). */

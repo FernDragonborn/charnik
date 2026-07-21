@@ -15,13 +15,37 @@ import {
 	parseDamage,
 	applyDefense,
 	standardActions,
+	effectiveHpMax,
 	type EffectInstance
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
+import { computed } from '$lib/rules/pipeline';
 
 // rollEffectsFor reads the sheet's typed-facts object (D7), built from the RESOLVED effect list
 // (never raw play.effects — B21); collectFacts is that one conversion.
 const fx = (...tokens: string[]) => collectFacts([{ source: 'Test', layer: 'condition', tokens }]);
+
+describe('A14 · effectiveHpMax (manual override + hp_max effects)', () => {
+	// a sheet max of 30 (base) with Aid stacking +5 at the condition layer
+	const withAid = computed([
+		{ source: 'Hit dice + CON', layer: 'base', op: 'add', amount: 30 },
+		{ source: 'Aid', layer: 'condition', op: 'add', amount: 5 }
+	]);
+	const noAid = computed([{ source: 'Hit dice + CON', layer: 'base', op: 'add', amount: 30 }]);
+
+	it('manual null → the sheet value verbatim', () => {
+		expect(effectiveHpMax(null, withAid)).toBe(35);
+		expect(effectiveHpMax(null, noAid)).toBe(30);
+	});
+
+	it('a manual max replaces the base but Aid still stacks on top', () => {
+		expect(effectiveHpMax(40, withAid)).toBe(45); // 40 + Aid 5, NOT silently 40
+	});
+
+	it('when Aid expires the effect layer is gone, so the manual max stands alone', () => {
+		expect(effectiveHpMax(40, noAid)).toBe(40);
+	});
+});
 
 describe('pipClick — one click-to-set model (available left, spent right)', () => {
 	it('clicking an available pip spends it + everything to its right', () => {

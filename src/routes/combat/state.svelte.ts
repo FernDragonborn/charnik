@@ -33,6 +33,7 @@ import {
 	parseDamage,
 	modTargetLabel,
 	applyDefense,
+	effectiveHpMax,
 	type Atk,
 	type SpRow,
 	type MenuKind,
@@ -149,8 +150,17 @@ class CombatVM {
 	/** Selected damage type for the next Damage press (B20). Null = untyped (no resist/vuln math). */
 	damageType = $state<string | null>(null);
 	private get hpMax(): number {
-		return this.character?.play.hp.max ?? this.sheet?.maxHp.value ?? 0;
+		if (!this.sheet) return this.character?.play.hp.max ?? 0;
+		// A14: a manual max no longer silences hp_max effects — they re-fold on top of it.
+		return effectiveHpMax(this.character?.play.hp.max ?? null, this.sheet.maxHp);
 	}
+	/** A14: pull play HP current down to the live effective max — call reactively so an expired
+	 *  hp_max effect (Aid) or a dropped manual max reduces current. Idempotent (no-op once
+	 *  current ≤ max), so it can't loop the autosave debounce. */
+	clampCurrentHp = () => {
+		const p = this.character?.play;
+		if (p && p.hp.current > this.hpMax) p.hp.current = this.hpMax;
+	};
 	/** The damage types the character has ANY defense for — the only ones worth offering in the
 	 *  type picker (any other type resolves identically to untyped). Empty → no picker shown. */
 	damageTypeOptions = $derived.by<string[]>(() => {
@@ -528,7 +538,8 @@ class CombatVM {
 	hpBar = $derived.by(() => {
 		if (!this.character || !this.sheet) return { cur: 0, tmp: 0 };
 		// `|| 1` guards a 0 max (unset HP) so the bar math can't divide → NaN/Infinity (D19)
-		const max = (this.character.play.hp.max ?? this.sheet.maxHp.value) || 1;
+		// A14: effectiveHpMax so a manual max still stacks hp_max effects (Aid) on top.
+		const max = effectiveHpMax(this.character.play.hp.max ?? null, this.sheet.maxHp) || 1;
 		return {
 			cur: Math.max(0, Math.min(100, (this.character.play.hp.current / max) * 100)),
 			tmp: (this.character.play.hp.temp / max) * 100

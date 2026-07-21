@@ -374,9 +374,10 @@ Full coverage pass is deferred to pre-release. But T1 (`content/store` 5% — th
 
 # §2 · CONFIRM — I have a recommendation; just say yes/no
 
-## C-A14 · HP-max: manual override vs `hp_max` effects — A14
-`play.hp.max ?? sheet.maxHp.value` → a manual max silently disables ALL `hp_max` effects (Aid on top of a manual max vanishes); when max drops (Aid expires) `hp.current` stays above max until next heal.
-- **Recommend B**: effects layer on top of the manual base (`manualBase + Σ hp_max`), and clamp `hp.current` to the live max every derive. Confirm the model.
+## C-A14 · HP-max: manual override vs `hp_max` effects — A14 — ✅ DONE (2026-07-21, EFX-A14)
+`play.hp.max ?? sheet.maxHp.value` → a manual max silently disabled ALL `hp_max` effects. FIXED:
+`effectiveHpMax` re-folds effect layers on top of the manual base; `clampCurrentHp()` (reactive,
+idempotent) pulls current down when the live max drops. See §5 EFX-A14.
 
 ## C-B26 (+D18) · Feature source-pinning blocks homebrew SRD extension — B26, D18
 `derive.ts:181` (`f.source !== classRow.source`) means PHB features a user adds for the SRD fighter never match — contradicts "users add their own content".
@@ -523,7 +524,7 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
   (knip GREEN + jscpd ratchet). New SRD data only via converters (no hand-authored game data).
 
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4 (grapple family + Rage
-token; visually verifies the ∞ render) + EFX-B14 → EFX-A14 → ~~EFX-G4~~ ✅ + EFX-EXH → EFX-D9 → D8 →
+token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ → ~~EFX-G4~~ ✅ + EFX-EXH → EFX-D9 → D8 →
 EFX-ROLL → piece 3 (§0.5) → EFX-B17 → EFX-A7/B9 → EFX-B18 (last). EFX-TAIL opportunistic.
 
 ## EFX-A9 · `set_override` modes (floor/cap) + speed-bonus block — ✅ DONE (2026-07-21)
@@ -625,7 +626,19 @@ earlier layers (base + item + feature) — RAW-correct; same-layer adds land AFT
 effectTag ("speed ×½"); tests (30 base + 10 item → halve → 20; hp_max halve; trace explains).
 Data lands via EFX-EXH.
 
-## EFX-A14 · hp_max = manual base + effects layer + clamp current — DECIDED B
+## EFX-A14 · hp_max = manual base + effects layer + clamp current — ✅ DONE (2026-07-21)
+
+**Landed**: pure helper `effectiveHpMax(manualMax, sheetMaxHp)` in `lib/combat/helpers.ts` — manual
+null → sheet value; else re-fold `{Manual max, base}` + the sheet trace's item/feature/condition/
+override contributions through the pipeline (effect layers read off the TRACE, never re-summed from
+facts). Both VM sites route through it (`state.svelte.ts` hpMax getter + hpBar). Current-clamp:
+`clampCurrentHp()` (idempotent — no-op once current ≤ max) called from a reactive `$effect` in
+combat `+page.svelte`, so an expired Aid / dropped manual max pulls current down WITHOUT looping the
+800 ms autosave debounce. Tests (helpers.test): manual 30 + Aid → 35; Aid expires → 30; manual-null
+byte-identical. All green, check 0 errors, lint green. (Verified by unit test + idempotency
+reasoning; not driven through the live combat UI this pass.)
+
+**Original plan below (retained for reference):**
 
 **Sites**: `routes/combat/state.svelte.ts:152` (hpMax getter) and `:531` (hp bar) — both
 `play.hp.max ?? sheet.maxHp.value`.

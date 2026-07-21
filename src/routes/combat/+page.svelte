@@ -36,6 +36,12 @@
 
 	onMount(combat.load);
 
+	// A14: when the effective max HP drops (an Aid / hp_max effect expired, or a manual max lowered),
+	// pull current down to it. Idempotent, so it settles in one pass without looping the autosave.
+	$effect(() => {
+		combat.clampCurrentHp();
+	});
+
 	// autosave play-state edits back to storage (debounced), so combat persists per character
 	let saveTimer: ReturnType<typeof setTimeout>;
 	$effect(() => {
