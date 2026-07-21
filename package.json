@@ -64,7 +64,7 @@
 		"typescript-eslint": "^8.62.1",
 		"vite": "^8.0.16",
 		"vitest": "^4.1.9",
-		"vitest-browser-svelte": "^2.2.0"
+		"vitest-browser-svelte": "^3.0.0"
 	},
 	"dependencies": {
 		"@jitl/quickjs-ng-wasmfile-release-sync": "^0.32.0",
