@@ -20,6 +20,16 @@ pub fn run() {
         std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
     }
 
+    // On a Wayland session, EGL platform auto-detection walks the Nvidia Wayland path
+    // (eplWlGetPlatformDisplay in libnvidia-egl-wayland2) which segfaults at startup on the
+    // proprietary driver, killing the app before it paints. Forcing the X11 EGL platform routes
+    // GL through the stable X11/XWayland path instead. Only touch Wayland sessions (X11 sessions
+    // are unaffected by the bug) and honour a user-set value.
+    #[cfg(target_os = "linux")]
+    if std::env::var_os("WAYLAND_DISPLAY").is_some() && std::env::var_os("EGL_PLATFORM").is_none() {
+        std::env::set_var("EGL_PLATFORM", "x11");
+    }
+
     let builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
