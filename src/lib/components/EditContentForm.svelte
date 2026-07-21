@@ -514,14 +514,14 @@
 		color: var(--color-text);
 	}
 	.shipped-warn {
-		border: 1px solid var(--color-danger, #b3452f);
+		border: 1px solid var(--color-danger);
 		background: var(--color-danger-soft, rgba(179, 69, 47, 0.1));
 		border-radius: 10px;
 		padding: 12px 14px;
 		margin-bottom: 12px;
 	}
 	.shipped-warn b {
-		color: var(--color-danger, #d06a52);
+		color: var(--color-danger);
 		font-size: 14px;
 	}
 	.shipped-warn p {
@@ -620,7 +620,7 @@
 	}
 	.bool.on .knob {
 		left: 19px;
-		background: #fff;
+		background: var(--color-accent-text);
 	}
 	.classes-block,
 	.bottom-field,
@@ -695,7 +695,7 @@
 		border-color: var(--color-accent);
 	}
 	.issues {
-		border: 1px solid var(--color-danger, #b3452f);
+		border: 1px solid var(--color-danger);
 		background: var(--color-danger-soft, rgba(179, 69, 47, 0.1));
 		border-radius: 10px;
 		padding: 10px 14px;
@@ -717,7 +717,7 @@
 		font-weight: 600;
 		font-size: 14px;
 		background: var(--color-accent);
-		color: #fff;
+		color: var(--color-accent-text);
 		border: 0;
 		border-radius: 8px;
 		padding: 9px 18px;

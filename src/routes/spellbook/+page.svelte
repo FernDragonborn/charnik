@@ -221,7 +221,7 @@
 		cursor: pointer;
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
-		color: #fff;
+		color: var(--color-accent-text);
 	}
 	.two-column {
 		display: grid;
@@ -241,7 +241,7 @@
 		cursor: pointer;
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
-		color: #fff;
+		color: var(--color-accent-text);
 	}
 	.detail-toggle {
 		display: flex;

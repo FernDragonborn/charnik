@@ -347,7 +347,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 13px;
-		box-shadow: 0 18px 40px #000a;
+		box-shadow: 0 18px 40px var(--color-overlay);
 		padding-bottom: 6px;
 	}
 	.popup-h {
@@ -589,7 +589,7 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 14px;
-		color: #fff;
+		color: var(--color-accent-text);
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
 		border-radius: 9px;

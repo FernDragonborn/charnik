@@ -141,7 +141,7 @@
 		font-size: 13px;
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
-		color: #fff;
+		color: var(--color-accent-text);
 		border-radius: 9px;
 		padding: 7px 15px;
 		cursor: pointer;

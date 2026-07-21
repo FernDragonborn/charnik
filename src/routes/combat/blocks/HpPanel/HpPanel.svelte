@@ -190,8 +190,8 @@
 	}
 	.hp-btn.damage {
 		background: var(--color-danger-soft, rgba(179, 69, 47, 0.12));
-		border: 1px solid var(--color-danger, #b3452f);
-		color: var(--color-danger, #d06a52);
+		border: 1px solid var(--color-danger);
+		color: var(--color-danger);
 	}
 	.hp-btn.heal {
 		background: var(--color-good-soft);
@@ -246,7 +246,7 @@
 		color: var(--color-good);
 	}
 	.death-track-label.bad {
-		color: var(--color-danger, #d06a52);
+		color: var(--color-danger);
 	}
 	.death-pip {
 		width: 15px;
@@ -260,13 +260,13 @@
 		border: 1px solid var(--color-good);
 	}
 	.death-pip.bad {
-		border: 1px solid var(--color-danger, #b3452f);
+		border: 1px solid var(--color-danger);
 	}
 	.death-pip.good.filled {
 		background: var(--color-good);
 	}
 	.death-pip.bad.filled {
-		background: var(--color-danger, #b3452f);
+		background: var(--color-danger);
 	}
 	.death-pip:hover {
 		filter: brightness(1.15);

@@ -287,13 +287,12 @@ Deep effects-system review, 2026-07-16 (B12–B26):
 
 ## C · Design-token / CSS violations
 
-- [ ] **C1 · Hardcoded colors (~15 sites).** `color: #fff` ×8 (should be
-  `--color-accent-text`), `background: #221c10` (EffectDurationMenu — breaks on the light
-  theme), `#1a1400` (settings), borders `#5a4d28`/`#2c4a45` (PanelCard/SpellHead), shadows
-  `#000a` (CombatMenus/EffectDurationMenu). Also pointless fallbacks
-  `var(--color-danger, #d06a52)` — the token exists in tokens.css (drop the fallback or the
-  hardcode). Candidates for missing tokens: a gold border (`#5a4d28`), a teal border
-  (`#2c4a45`), an overlay shadow.
+- [~] **C1 · Hardcoded colors (~15 sites).** PARTIAL 2026-07-21 (zero-risk swaps done): every
+  `color: #fff` → `--color-accent-text` (identical in both themes), the `#000a` popover shadows →
+  `var(--color-overlay)` (theme-aware color, geometry kept), the `.knob` white bg → `--color-accent-text`,
+  and the pointless `var(--color-danger, #…)` fallbacks dropped. REMAINING (need light-theme token
+  VALUES — a design call, logged in `docs/DECISIONS-PENDING.md`): gold border `#5a4d28`, teal border
+  `#2c4a45`, gold-tinted popover surface `#221c10` / settings `#1a1400`.
 
 - [ ] **C2 · Same class name, different styles across components** (css-name-collisions.mjs,
   2026-07-14). Svelte scoping prevents runtime bleed, but the names lie to the reader and

@@ -95,7 +95,7 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 9px;
-		box-shadow: 0 12px 30px #000a;
+		box-shadow: 0 12px 30px var(--color-overlay);
 		padding: 4px;
 		width: max-content;
 	}

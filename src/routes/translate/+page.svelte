@@ -481,7 +481,7 @@
 		padding: 9px 18px;
 		border: 1px solid var(--color-accent-deep);
 		background: var(--color-accent-deep);
-		color: #fff;
+		color: var(--color-accent-text);
 		cursor: pointer;
 	}
 	.save:disabled {

@@ -744,7 +744,7 @@
 	}
 	.mode-picker[open] > summary {
 		background: var(--color-accent);
-		color: #fff;
+		color: var(--color-accent-text);
 	}
 	.mode-menu {
 		position: absolute;

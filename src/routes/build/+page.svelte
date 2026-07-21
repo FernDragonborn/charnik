@@ -830,7 +830,7 @@
 		cursor: pointer;
 	}
 	.icon-button:hover {
-		color: var(--color-danger, #d06a52);
+		color: var(--color-danger);
 	}
 	.pick-chip:focus-visible {
 		outline: 2px solid var(--color-accent);

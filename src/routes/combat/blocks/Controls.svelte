@@ -112,7 +112,7 @@
 	.toggle.dice {
 		background: var(--color-accent-deep);
 		border-color: var(--color-accent-deep);
-		color: #fff;
+		color: var(--color-accent-text);
 		font-size: 13px;
 	}
 	/* Combat mode = gold when tracking (own class: `combat` collides with the stat-grid section) */

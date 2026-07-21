@@ -132,7 +132,7 @@
 		font-weight: 700;
 		font-size: 14px;
 		text-decoration: none;
-		color: #fff;
+		color: var(--color-accent-text);
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
 		border-radius: 8px;
@@ -172,7 +172,7 @@
 		text-decoration: none;
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
-		color: #fff;
+		color: var(--color-accent-text);
 		border-radius: 8px;
 		padding: 8px 16px;
 		white-space: nowrap;
