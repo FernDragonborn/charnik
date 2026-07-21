@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fd36-72ad-8fc3-f977f1cf41cb
-#content-updated_at: 2026-07-16
-#content-hash: xxh64:73a6855a5f52511e
+#content-updated_at: 2026-07-21
+#content-hash: xxh64:c25f3c06d105ebee
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id
 barbarian_rage,Rage,,"In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.
 While raging, you gain the following benefits if you aren't wearing heavy armor:
@@ -13,7 +13,7 @@ While raging, you gain the following benefits if you aren't wearing heavy armor:
 •You have resistance to bludgeoning, piercing, and slashing damage.If you are able to cast spells, you can't cast them or concentrate on them while raging.
 Your rage lasts for 1 minute. It ends early if you are knocked unconscious or if your
 turn ends and you haven't attacked a hostile creature since your last turn or taken damage since then. You can also end your rage on your turn as a bonus action.
-Once you have raged the number of times shown for your barbarian level in the Rages column of the Barbarian table, you must finish a long rest before you can rage again.",,,barbarian,1,,
+Once you have raged the number of times shown for your barbarian level in the Rages column of the Barbarian table, you must finish a long rest before you can rage again.",,"grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6, 20->inf):long",barbarian,1,,
 barbarian_unarmored_defense,Unarmored Defense,,"While you are not wearing any armor, your Armor Class equals 10 + your Dexterity modifier + your Constitution modifier. You can use a shield and still gain this
 benefit.",,,barbarian,1,,
 barbarian_reckless_attack,Reckless Attack,,"Starting at 2nd level, you can throw aside all concern for defense to attack with fierce desperation. When you make your first attack on your turn, you can decide to attack recklessly. Doing so gives you advantage on melee weapon attack rolls using Strength during this turn, but attack rolls against you have advantage until your next turn.",,,barbarian,2,,

@@ -6,7 +6,7 @@
  * in the class's Features table (9 levels → full, ≤5 → half, Pact Magic → pact, none).
  * Counts are asserted against the source. Run: node tools/srd/convert-classes.mjs
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
@@ -64,6 +64,23 @@ function parseWeaponProfs(cell, subsets) {
 }
 
 const subsets = martialSubsets(resolve(root, 'content/srd-2024/items_srd.csv'));
+
+// Feature `effects` are authored AFTER conversion (mechanical tokens curated from the SRD into the
+// bounded vocab — Rage's grant_resource, etc. — NOT present in the prose). Preserve them, or a raw
+// re-run silently wipes the authoring. Keyed by feature id.
+function existingEffectsById(csvPath) {
+	if (!existsSync(csvPath)) return new Map();
+	const raw = readFileSync(csvPath, 'utf8')
+		.replace(/^﻿/, '') // strip the UTF-8 BOM before the #-filter
+		.split('\n')
+		.filter((l) => !l.startsWith('#'))
+		.join('\n');
+	const map = new Map();
+	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
+		if (r.id && r.effects) map.set(r.id, r.effects);
+	return map;
+}
+const authoredFeatures = existingEffectsById(resolve(root, 'content/srd-2024/class_features_srd.csv'));
 
 const strip = (s) =>
 	s
@@ -148,15 +165,16 @@ for (const part of parts) {
 		const m = /^Level (\d+):\s*(.+)$/.exec(b.name);
 		if (!m) return;
 		const featName = m[2].trim();
+		const fid = `${subclass_id || id}_${slug(featName)}`;
 		featureRows.push({
-			id: `${subclass_id || id}_${slug(featName)}`,
+			id: fid,
 			systems: '5.5e',
 			source: 'SRD 5.2.1',
 			name_en: featName,
 			name_uk: '',
 			text_en: description(b.body),
 			text_uk: '',
-			effects: '',
+			effects: authoredFeatures.get(fid) ?? '', // preserve tokens authored post-conversion
 			class_id: id,
 			level: Number(m[1]),
 			resource: '',

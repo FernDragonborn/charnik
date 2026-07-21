@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f9e9-7ad8-b3a8-4511aa623e30
-#content-updated_at: 2026-07-16
-#content-hash: xxh64:5b1dcbe7fead3724
+#content-updated_at: 2026-07-21
+#content-hash: xxh64:438a10846ad442a0
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id
 barbarian_rage,Rage,,"You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren't wearing Heavy armor.
 You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.
@@ -17,7 +17,7 @@ _Duration._ The Rage lasts until the end of your next turn, and it ends early if
 - Make an attack roll against an enemy.
 - Force an enemy to make a saving throw.
 - Take a Bonus Action to extend your Rage.
-Each time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes.",,,barbarian,1,,
+Each time the Rage is extended, it lasts until the end of your next turn. You can maintain a Rage for up to 10 minutes.",,"grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6):long",barbarian,1,,
 barbarian_unarmored_defense,Unarmored Defense,,"While you aren't wearing any armor, your base Armor Class equals 10 plus your Dexterity and Constitution modifiers. You can use a Shield and still gain this benefit.",,,barbarian,1,,
 barbarian_weapon_mastery,Weapon Mastery,,"Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice, such as Greataxes and Handaxes. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices.
 When you reach certain Barbarian levels, you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Barbarian Features table.",,,barbarian,1,,

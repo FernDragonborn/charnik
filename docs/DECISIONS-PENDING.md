@@ -536,7 +536,7 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
   (knip GREEN + jscpd ratchet). New SRD data only via converters (no hand-authored game data).
 
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4
-(~~grapple family~~ ✅ + Rage token; visually verifies the ∞ render) + EFX-B14 → ~~EFX-A14~~ ✅ →
+(~~grapple family~~ ✅ + ~~Rage token~~ ✅; ∞ render validated in a derive test) + EFX-B14 → ~~EFX-A14~~ ✅ →
 ~~EFX-G4~~ ✅ + EFX-EXH → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ → ~~EFX-ROLL~~ ✅ → piece 3 (§0.5) →
 ~~EFX-B17~~ ✅ → ~~EFX-A7/B9~~ ✅ DONE 2026-07-21 (engine + data) → EFX-B18 (last). EFX-TAIL opportunistic.
 [Also DONE opportunistically: EFX-B15 ✅, EFX-B14 ✅. EFX-E4 grapple slice ✅ 2026-07-21; Rage/exhaustion/
@@ -845,11 +845,20 @@ character references = the EXISTING missing-ref path (render + flag), never a cr
 CONDITIONS-1; the block completes A9's pairing so a later +10 speed can't survive — RAW "can't
 benefit from a bonus to its speed", verbatim in the 5.1 text). `conditions_content.test.ts` pins it.
 Also closed the 2024-conditions converter trap: `convert.mjs convertConditions` now preserves
-authored effects (mirrors the convert-2014 fix). **REMAINING**: (2) Rage, (3) exhaustion rows,
-(4) rollables — all author `class_features` effects, which needs `convert-classes.mjs` /
-`convert-2014.mjs` to PRESERVE authored feature effects first (same trap; class_features has no
-authored effects today so nothing's been lost yet, but the first authoring pass must add preservation
-or a re-run wipes it).
+authored effects (mirrors the convert-2014 fix).
+
+**(2) Rage — ✅ DONE (2026-07-21)**: FIRST added authored-feature-effect preservation to
+`convert-classes.mjs` + `convert-2014.mjs` (`existingEffectsById` → `authoredFeatures.get(fid)`; the
+prerequisite that unblocks all feature authoring — a raw re-run no longer wipes feature tokens).
+Then authored `barbarian_rage.effects` in both editions:
+`grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6):long` (5.2.1, caps
+at 6) and `…, 17->6, 20->inf):long` (5.1, Unlimited at 20). `class_features_content.test.ts` derives
+a real barbarian and pins the per-level counts incl. the ∞ (5.1 L20) — the first end-to-end
+validation of the step()/inf/grant_resource path on shipped data.
+
+**REMAINING**: (3) exhaustion rows (author conditions/ladder — EFX-EXH), (4) Bardic/feature
+rollables (`grant_roll` tokens — EFX-ROLL surface exists). Feature-authoring is now unblocked (the
+preservation prerequisite is in).
 
 Priority: (1) grapple/restrain family (after EFX-A9), both editions; (2) **Rage**
 (`grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6, 20->inf):long`

@@ -781,6 +781,7 @@ function parseWeaponProfs2014(cell, resolver) {
 
 function convertClasses() {
 	const weaponResolver = baseWeaponResolver();
+	const authoredFeatures = existingEffectsById('class_features_srd.csv'); // preserve authored tokens
 	const html = src(`${SRC}.html`);
 	const classRows = [],
 		featureRows = [];
@@ -893,15 +894,16 @@ function convertClasses() {
 		for (const e of headings) {
 			const lvl = levelOf.get(norm(e.name));
 			if (!lvl) continue; // archetype/uncharted headings without a base-table level
+			const fid = `${id}_${slug(e.name)}`;
 			featureRows.push({
-				id: `${id}_${slug(e.name)}`,
+				id: fid,
 				systems: '5e',
 				source: 'SRD 5.1',
 				name_en: e.name,
 				name_uk: '',
 				text_en: e.paras.map(strip).filter(Boolean).join('\n'),
 				text_uk: '',
-				effects: '',
+				effects: authoredFeatures.get(fid) ?? '', // preserve tokens authored post-conversion
 				class_id: id,
 				level: lvl,
 				resource: '',
