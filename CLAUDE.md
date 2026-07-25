@@ -17,6 +17,10 @@ GitHub Pages): content pipeline, character build/play views, compendium, homebre
 authoring, effects engine, i18n — with 300+ Vitest tests. **`docs/PLAN.md` is the
 authoritative spec** (index) and tracks what's done vs open (roadmap ticks, UBUG/REL/DEP
 items); companions: **`docs/TESTING.md`**, **`docs/SECURITY.md`**, and `docs/FRONTEND.md`.
+**`docs/AI-CONVENTIONS.md`** is the house working-rules — the settled "how we do things here"
+(data/SRD fidelity, typing & code-quality bar, CSS/theming, testing strategy, refactor
+mechanics, git & tooling hygiene, working style). Read it before coding; it complements these
+architecture invariants with the *practice* around them.
 `docs/research/existing-generators.md` records why design choices were made (what to
 avoid from D&D Beyond / Aurora / Roll20, what to copy). The
 `срншоти для 1го рандун правок/` folder holds reference screenshots (official UA 5.5e
