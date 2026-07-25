@@ -85,7 +85,9 @@ Decided; move each into `PLAN.md` under its group when implemented, tick in AUDI
   rotation alone is too churny — pair it with per-launch snapshots.
 - **D16** — **A** (one general player-choice model; unify the existing ASI mechanisms — reuse over new).
 - **B17** — **B + baked fallback** (live ref+resolve, fall back to baked for orphaned refs).
-- **B18** — **BACKLOG; A (accept EN) for NOW, temporary** — revisit before more consumers bake in.
+- **B18** — ✅ **DONE 2026-07-25 (`252f541`)**: option B shipped — `Computed.notes: Note[]`
+  (`{text; key?; params?}`) + `formatNote`/`NOTE_KEY`; EN byte-for-byte unchanged, i18n = pass
+  `$format` to `why()`. Remaining un-i18n'd surface (baked `name_en`, `Contribution.note`) noted in AUDIT B18.
 - **D12** — **A** (honor `eff.layer` for token sets).
 - **B24** — **A** (per-file granular reparse; implement the invariant).
 - **A7** — **B** (build a weapon/armor-proficiency data model; unblocks B9's weapon half). RAW-correct target.
@@ -538,7 +540,8 @@ session — the ⚠ notes are the reviewer's pre-checked traps; do not skip them
 **Recommended order**: ~~EFX-A9 + EFX-D12 (one set-semantics pass)~~ ✅ DONE 2026-07-21 → EFX-E4
 (~~grapple family~~ ✅ + ~~Rage token~~ ✅; ∞ render validated in a derive test) + EFX-B14 → ~~EFX-A14~~ ✅ →
 ~~EFX-G4~~ ✅ + ~~EFX-EXH~~ ✅ (both editions) → ~~EFX-D9~~ ✅ (v1) → ~~D8~~ ✅ → ~~EFX-ROLL~~ ✅ → ~~piece 3 (§0.5)~~ ✅ (core+content+UI; UI needs visual pass) →
-~~EFX-B17~~ ✅ → ~~EFX-A7/B9~~ ✅ DONE 2026-07-21 (engine + data) → EFX-B18 (last). EFX-TAIL opportunistic.
+~~EFX-B17~~ ✅ → ~~EFX-A7/B9~~ ✅ DONE 2026-07-21 (engine + data) → ~~EFX-B18~~ ✅ DONE 2026-07-25 (`252f541`).
+**§5 CLOSED — all items shipped.** EFX-TAIL (treat_as / Elven Accuracy / Extra Attack) still opportunistic/deferred.
 [Also DONE opportunistically: EFX-B15 ✅, EFX-B14 ✅. EFX-E4 grapple slice ✅ 2026-07-21; Rage/exhaustion/
 rollables remain — all blocked on class_features effect-preservation in the class converters.]
 

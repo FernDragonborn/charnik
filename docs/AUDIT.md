@@ -249,12 +249,18 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   `gatherEffects` resolves it LIVE (isActive-aware) with a baked fallback + orphan flag, so a catalog
   fix PROPAGATES to active buffs. STILL OPEN (small): the buffs/debuffs panel label reads the baked
   `eff.label` — mechanics re-localize, the display label doesn't yet. See DECISIONS-PENDING §5.
-- [ ] **B18 · Provenance/notes are baked EN strings — explainability can't localize.**
-  `gatherEffects` bakes `name_en` (`derive.ts:138` etc.), `applyEffects` composes English notes
-  ("advantage on skill.stealth"), `why()` concatenates them, the roll log too. The
-  `{value, trace, notes}` contract needs structured facts (source ref + op + params) localized at
-  render; strings baked at derive are untranslatable. The longer this waits the more consumers
-  bake in.
+- [x] **B18 · Provenance/notes are baked EN strings — explainability can't localize.** FIXED
+  2026-07-25 (`252f541`). `Computed.notes` is now `Note[]` (`{ text; key?; params? }`): `text` =
+  EN fallback (every pure/core path reads it unchanged → byte-for-byte identical `why()` output,
+  zero regression), system notes also carry `{key, params}` for render-time i18n. New pure
+  `formatNote(note, translate?)` + `NOTE_KEY` map in `pipeline.ts` (translate fn injected by the
+  UI so core stays i18n-runtime-free). All 11 producers migrated (pipeline/apply/core); `why(c,
+  translate?)` renders via `formatNote`; `provenance.*` keys in en/uk (uk uses ICU plural for
+  фунт declension). Locale swap now = pass `$format` at the `why()` call sites (follow-up, not
+  wired — EN stays default). ~15 note assertions migrated to `.text` across 6 test files.
+  **NOTE: `gatherEffects` still bakes `name_en` and `Contribution.note` trace-parentheticals
+  ("DEX 16") stay EN — those are the remaining un-i18n'd surface, out of B18's `Computed.notes`
+  scope; the roll log rework is the next consumer to keep on structured notes.**
 - [ ] **B19 · Durations tick only in combat.** Rounds advance only via `nextTurn`; out of combat
   `play.round` is frozen → a 10-round Bless cast outside combat never expires (only a rest clears
   it). No real-time/out-of-combat expiry model.
