@@ -445,7 +445,7 @@
 	.titlein {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 28px;
+		font-size: var(--font-size-xl);
 		margin: 6px 0 8px;
 		width: 100%;
 		background: transparent;
@@ -467,7 +467,7 @@
 	.id-label,
 	.systems-label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -483,7 +483,7 @@
 	}
 	.id-hint {
 		margin: -8px 0 14px;
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 	.id-input[readonly] {
@@ -523,11 +523,11 @@
 	}
 	.shipped-warn b {
 		color: var(--color-danger);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 	}
 	.shipped-warn p {
 		margin: 6px 0 10px;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		line-height: 1.4;
 		color: var(--color-text-muted);
 	}
@@ -579,7 +579,7 @@
 	.meta-cell select {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		background: transparent;
 		border: 0;
 		border-bottom: 1px solid var(--color-border);
@@ -651,14 +651,14 @@
 	.cell-warn {
 		display: block;
 		margin-top: 4px;
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		line-height: 1.3;
 		color: var(--color-warning);
 	}
 	.block-label {
 		display: block;
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -668,10 +668,10 @@
 		width: 100%;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		color: var(--color-text);
 		padding: 8px 10px;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 	}
 	.bottom-field input:focus {
 		outline: none;
@@ -681,7 +681,7 @@
 		width: 100%;
 		min-height: 120px;
 		font-family: inherit;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		line-height: 1.5;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
@@ -701,7 +701,7 @@
 		border-radius: 10px;
 		padding: 10px 14px;
 		margin-bottom: 12px;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		color: var(--color-text);
 	}
 	.issues ul {
@@ -716,11 +716,11 @@
 	.save {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		background: var(--color-accent);
 		color: var(--color-accent-text);
 		border: 0;
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 9px 18px;
 		cursor: pointer;
 	}
@@ -730,11 +730,11 @@
 	}
 	.cancel {
 		font-family: var(--font-display);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		background: transparent;
 		color: var(--color-text-muted);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 9px 16px;
 		cursor: pointer;
 	}
@@ -745,11 +745,11 @@
 	.delete-entry {
 		margin-left: auto;
 		font-family: var(--font-display);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		background: transparent;
 		color: var(--color-accent-bright);
 		border: 1px solid transparent;
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 9px 16px;
 		cursor: pointer;
 	}

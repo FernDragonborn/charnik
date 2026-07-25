@@ -109,7 +109,7 @@
 	.dur-step-row button {
 		flex: 1;
 		font-family: var(--font-mono);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		color: var(--color-text);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
@@ -126,7 +126,7 @@
 		width: 100%;
 		text-align: left;
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		padding: 5px 9px;
 		border-radius: 6px;
 		color: var(--color-text);
@@ -154,7 +154,7 @@
 	.dur-custom input {
 		width: 52px;
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 6px;
@@ -163,13 +163,13 @@
 	}
 	.dur-custom span {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 	.dur-custom button {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-resource);
 		background: transparent;
 		border: 1px solid var(--color-border-strong);

@@ -167,7 +167,7 @@
 	}
 	h2 {
 		font-family: var(--font-display);
-		font-size: 16px;
+		font-size: var(--font-size-md);
 		color: var(--color-text);
 		margin: var(--space-6) 0 var(--space-3);
 	}

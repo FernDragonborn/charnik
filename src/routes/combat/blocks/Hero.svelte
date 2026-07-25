@@ -49,7 +49,7 @@
 		font-family: var(--font-mono);
 		text-transform: uppercase;
 		letter-spacing: var(--tracking-label);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-accent-bright);
 	}
 	h1 {
@@ -62,7 +62,7 @@
 	}
 	.subline {
 		color: var(--color-text-muted);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 	}
 	.subline b {
 		color: var(--color-resource);
@@ -85,7 +85,7 @@
 	}
 	.system-badge {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-sm);
 		padding: 1px 6px;

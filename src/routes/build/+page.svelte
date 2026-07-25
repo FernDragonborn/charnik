@@ -472,7 +472,7 @@
 		width: 100%;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 16px;
+		font-size: var(--font-size-md);
 		color: var(--color-text);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
@@ -489,7 +489,7 @@
 	.segment-group {
 		display: flex;
 		border: 1px solid var(--color-border-strong);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		overflow: hidden;
 	}
 	.segment-group button {
@@ -514,12 +514,12 @@
 	}
 	.segment-group.small button {
 		padding: 5px 10px;
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 	}
 	.create {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
 		color: var(--color-accent-text);
@@ -563,7 +563,7 @@
 		all: unset;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		letter-spacing: 0;
 		text-transform: none;
 		color: var(--color-text-muted);
@@ -595,7 +595,7 @@
 	}
 	.count {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		letter-spacing: 0;
 	}
 	.gold {
@@ -606,7 +606,7 @@
 	}
 	.subtext {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin: 0 0 8px;
 	}
@@ -637,18 +637,18 @@
 		flex: none;
 		width: 92px;
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--color-text-muted);
 	}
 	select {
 		font-family: var(--font-body);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		color: var(--color-text);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 7px 10px;
 		cursor: pointer;
 	}
@@ -667,7 +667,7 @@
 		border-radius: 6px;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 	}
 	.bare:hover {
 		border-color: var(--color-border);
@@ -730,7 +730,7 @@
 		height: 30px;
 		display: grid;
 		place-items: center;
-		font-size: 16px;
+		font-size: var(--font-size-md);
 	}
 	.stepper button:hover {
 		background: var(--color-border);
@@ -739,13 +739,13 @@
 	.stepper .base {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 16px;
+		font-size: var(--font-size-md);
 		min-width: 32px;
 		text-align: center;
 	}
 	.level .base {
 		color: var(--color-resource);
-		font-size: 20px;
+		font-size: var(--font-size-lg);
 	}
 
 	.chips {
@@ -798,21 +798,21 @@
 		gap: 8px;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 6px 10px;
 	}
 	.invname {
 		flex: 1;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.inventory-qty {
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
 		font-family: var(--font-mono);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.inventory-qty button {
 		width: 22px;
@@ -838,7 +838,7 @@
 	.expertise-toggle {
 		all: unset;
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		font-weight: 700;
 		padding: 0 6px;
 		display: grid;
@@ -876,7 +876,7 @@
 	.field-row .level-tag {
 		flex: none;
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 		border: 1px solid var(--color-border);
 		border-radius: 5px;
@@ -888,7 +888,7 @@
 	}
 	.field-row .feat-line {
 		flex: 1;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.field-row .feat-line b {
 		font-family: var(--font-display);
@@ -919,7 +919,7 @@
 		font-weight: 600;
 		font-size: 12px;
 		padding: 6px 12px;
-		border-radius: 8px;
+		border-radius: var(--radius);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		color: var(--color-text-muted);
@@ -955,7 +955,7 @@
 	}
 	.ability-code {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -965,7 +965,7 @@
 	}
 	.bonus {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 	.total {
@@ -1024,7 +1024,7 @@
 	}
 	.stat small {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--color-text-muted);

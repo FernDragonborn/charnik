@@ -26,6 +26,7 @@
 
 	/* ---- radius ---- */
 	--radius-sm: 6px;
+	--radius: 8px; /* the default/base radius — by far the most common (buttons, inputs, chips, cards) */
 	--radius-md: 11px;
 	--radius-lg: 14px;
 	--radius-full: 999px;
@@ -37,11 +38,13 @@
 	 * the "mono" token now renders in the same sans family — one consistent typeface across locales.
 	 * (True monospace can come back with a bundled Cyrillic-capable mono font at P7.5.) */
 	--font-mono: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-	--font-size-xs: 0.6875rem;
-	--font-size-sm: 0.8125rem;
-	--font-size-md: 1rem;
-	--font-size-lg: 1.25rem;
-	--font-size-xl: 1.75rem;
+	--font-size-micro: 0.625rem; /* 10px — tiny mono labels/eyebrows (9/10px unify here) */
+	--font-size-xs: 0.6875rem; /* 11px (11/12px unify here) */
+	--font-size-sm: 0.8125rem; /* 13px */
+	--font-size-body: 0.875rem; /* 14px — body/control text (14/15px unify here) */
+	--font-size-md: 1rem; /* 16px (16/17px unify here) */
+	--font-size-lg: 1.25rem; /* 20px */
+	--font-size-xl: 1.75rem; /* 28px */
 	--font-size-2xl: 2.75rem;
 	--line-height: 1.5;
 	--tracking-label: 0.12em; /* mono uppercase labels/eyebrows */

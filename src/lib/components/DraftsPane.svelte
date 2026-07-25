@@ -180,12 +180,12 @@
 	}
 	.dp-empty {
 		color: var(--color-text-muted);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		padding: 20px 0;
 	}
 	.dp-group-label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -211,7 +211,7 @@
 		width: 34px;
 		height: 34px;
 		flex: none;
-		border-radius: 8px;
+		border-radius: var(--radius);
 		display: grid;
 		place-items: center;
 		font-size: 15px;
@@ -232,7 +232,7 @@
 		min-width: 0;
 	}
 	.dtitle {
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		font-weight: 600;
 		color: var(--color-text);
 	}
@@ -251,7 +251,7 @@
 	}
 	.tag {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		padding: 1px 7px;
 		border-radius: 20px;
 		border: 1px solid var(--color-border-strong);

@@ -86,7 +86,7 @@
 		align-items: center;
 		gap: 7px;
 		font-family: var(--font-body);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		background: transparent;
 		border: 0;
 		border-bottom: 2px solid transparent;
@@ -104,7 +104,7 @@
 	}
 	.badge {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		min-width: 16px;
 		text-align: center;
 		padding: 1px 5px;

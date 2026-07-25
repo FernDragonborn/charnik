@@ -72,7 +72,7 @@
 	}
 	.ability-block .ability-code {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.08em;
 		color: var(--color-text-muted);
 	}
@@ -102,7 +102,7 @@
 	.meta-cell :global(.meta-value) {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		margin-top: 2px;
 		overflow-wrap: anywhere;
 	}

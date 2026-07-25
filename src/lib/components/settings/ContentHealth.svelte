@@ -142,7 +142,7 @@
 	}
 	.count {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		padding: 3px 10px;
 		border-radius: 20px;
 		border: 1px solid var(--color-border-strong);
@@ -164,7 +164,7 @@
 	}
 	.group-label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -178,7 +178,7 @@
 	}
 	.retry-btn {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
 		color: var(--color-text);
@@ -195,7 +195,7 @@
 	.row {
 		border: 1px solid var(--color-border);
 		border-left-width: 3px;
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 8px 12px;
 		margin-bottom: 6px;
 		background: var(--color-surface-2);
@@ -217,7 +217,7 @@
 		color: var(--color-text-muted);
 	}
 	.row-msg {
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
 		margin-top: 2px;
 	}

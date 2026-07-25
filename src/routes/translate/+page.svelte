@@ -330,7 +330,7 @@
 	}
 	.tlabel {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -351,10 +351,10 @@
 	}
 	.type-sel {
 		font-family: var(--font-body);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 5px 10px;
 		color: var(--color-text);
 	}
@@ -389,7 +389,7 @@
 	}
 	.panelabel {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -424,7 +424,7 @@
 	}
 	.status-label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -432,7 +432,7 @@
 	.status-seg {
 		display: inline-flex;
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		overflow: hidden;
 	}
 	.status-opt {
@@ -476,8 +476,8 @@
 	.save {
 		font-family: var(--font-body);
 		font-weight: 600;
-		font-size: 14px;
-		border-radius: 8px;
+		font-size: var(--font-size-body);
+		border-radius: var(--radius);
 		padding: 9px 18px;
 		border: 1px solid var(--color-accent-deep);
 		background: var(--color-accent-deep);
@@ -489,10 +489,10 @@
 		cursor: default;
 	}
 	.demo-note {
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 10px 12px;
 		margin: 0;
 	}

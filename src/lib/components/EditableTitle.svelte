@@ -22,7 +22,7 @@
 		width: 100%;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 28px;
+		font-size: var(--font-size-xl);
 		padding: 4px 10px;
 		margin: 4px 0 12px;
 	}

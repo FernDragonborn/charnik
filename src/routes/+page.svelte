@@ -104,7 +104,7 @@
 		font-family: var(--font-mono);
 		text-transform: uppercase;
 		letter-spacing: 0.14em;
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		font-weight: 700;
 		color: var(--color-accent-bright);
 		border: 1px solid var(--color-accent);
@@ -130,12 +130,12 @@
 		margin-top: 14px;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		text-decoration: none;
 		color: var(--color-accent-text);
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 9px 16px;
 	}
 	.db-download:hover {
@@ -164,12 +164,12 @@
 	.new-btn {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		text-decoration: none;
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
 		color: var(--color-accent-text);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 8px 16px;
 		white-space: nowrap;
 	}
@@ -209,7 +209,7 @@
 	.roster-name {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 16px;
+		font-size: var(--font-size-md);
 	}
 	.roster-subtitle {
 		display: flex;
@@ -237,7 +237,7 @@
 		color: var(--color-border-strong);
 		cursor: pointer;
 		padding: 0 14px;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.roster-delete:hover {
 		color: var(--color-accent-bright);

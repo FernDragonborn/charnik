@@ -112,7 +112,7 @@
 		height: 28px;
 		cursor: pointer;
 		color: var(--color-text-muted);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 	}
 	.aereset:hover {
 		color: var(--color-text);
@@ -121,7 +121,7 @@
 	.nextturn {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
 		color: var(--color-accent-text);

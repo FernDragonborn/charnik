@@ -216,8 +216,8 @@
 	.cta {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 13px;
-		border-radius: 8px;
+		font-size: var(--font-size-sm);
+		border-radius: var(--radius);
 		padding: 7px 16px;
 		cursor: pointer;
 		background: var(--color-accent-deep);
@@ -239,7 +239,7 @@
 		gap: 8px;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		color: var(--color-text);
 	}
 	@media (max-width: 700px) {

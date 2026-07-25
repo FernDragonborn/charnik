@@ -113,12 +113,12 @@
 	}
 	.source-tag {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 	.source-count {
 		margin-left: auto;
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 	.source.off .source-name {
@@ -148,7 +148,7 @@
 	.file-count {
 		margin-left: auto;
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 	/* toggle switch (mirrors the global .toggle-track pattern; local so the settings page owns sizing) */

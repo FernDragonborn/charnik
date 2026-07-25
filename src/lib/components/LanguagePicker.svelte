@@ -106,10 +106,10 @@
 		gap: 8px;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 16px;
+		font-size: var(--font-size-md);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 6px 12px;
 		color: var(--color-text);
 		cursor: pointer;
@@ -120,11 +120,11 @@
 	}
 	.trigger .code {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 	.trigger .caret {
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 	.menu {
@@ -148,7 +148,7 @@
 		border-radius: 7px;
 		padding: 7px 10px;
 		color: var(--color-text);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		margin-bottom: 6px;
 	}
 	.section {
@@ -180,12 +180,12 @@
 		color: var(--color-accent-bright);
 	}
 	.opt-name {
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		flex: 1;
 	}
 	.opt-code {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 	.opt.add .opt-code {
@@ -193,7 +193,7 @@
 	}
 	.empty {
 		color: var(--color-text-muted);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		padding: 8px;
 		margin: 0;
 	}

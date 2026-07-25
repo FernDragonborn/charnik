@@ -76,7 +76,7 @@
 		gap: 9px;
 		padding: 12px 13px;
 		border-bottom: 1px solid var(--color-border);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.lsearch input {
 		all: unset;
@@ -143,12 +143,12 @@
 	.entry-name b {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.entry-name small {
 		display: block;
 		color: var(--color-text-muted);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		font-family: var(--font-mono);
 	}
 </style>

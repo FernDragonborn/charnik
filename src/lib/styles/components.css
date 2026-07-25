@@ -42,12 +42,12 @@
 }
 .chevron {
 	color: var(--color-text-muted);
-	font-size: 10px;
+	font-size: var(--font-size-micro);
 	margin-right: 4px;
 }
 .drag-handle {
 	color: var(--color-border-strong);
-	font-size: 14px;
+	font-size: var(--font-size-body);
 	cursor: grab;
 	background: transparent;
 	border: 0;
@@ -92,7 +92,7 @@
 	font-family: var(--font-mono);
 	text-transform: uppercase;
 	letter-spacing: var(--tracking-label);
-	font-size: 10px;
+	font-size: var(--font-size-micro);
 	color: var(--color-text-muted);
 	margin: 0 2px 9px;
 	display: flex;
@@ -110,7 +110,7 @@
 	text-transform: none;
 	letter-spacing: 0;
 	font-family: var(--font-body);
-	font-size: 11px;
+	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
 }
 /* whole label clickable to collapse (chev + name), no button box */
@@ -146,7 +146,7 @@
 	font-family: var(--font-mono);
 	text-transform: uppercase;
 	letter-spacing: 0.18em;
-	font-size: 11px;
+	font-size: var(--font-size-xs);
 	color: var(--color-accent-bright);
 }
 /* the two-ended article eyebrow (label left, edition/type right) shared by the spell + monster heads;
@@ -159,7 +159,7 @@
 	font-family: var(--font-mono);
 	text-transform: uppercase;
 	letter-spacing: 0.16em;
-	font-size: 11px;
+	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
 }
 .detail-eyebrow .monster-type {
@@ -167,7 +167,7 @@
 }
 .source-line {
 	font-family: var(--font-mono);
-	font-size: 11px;
+	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
 	border-top: 1px solid var(--color-border);
 	padding-top: 11px;
@@ -186,7 +186,7 @@
 	border: 0;
 	color: var(--color-text-muted);
 	cursor: pointer;
-	font-size: 13px;
+	font-size: var(--font-size-sm);
 }
 
 /* --- content-detail layout (WikiDetail render + EditContentForm edit) --- */
@@ -212,7 +212,7 @@
 }
 .sec-note {
 	color: var(--color-text-muted);
-	font-size: 13px;
+	font-size: var(--font-size-sm);
 	margin: 0 0 16px;
 	max-width: 640px;
 }
@@ -232,7 +232,7 @@
 	flex: 0 0 140px;
 	font-family: var(--font-display);
 	font-weight: 600;
-	font-size: 14px;
+	font-size: var(--font-size-body);
 	color: var(--color-text);
 }
 .setting-options {
@@ -245,7 +245,7 @@
 	flex: 1;
 	min-width: 0;
 	font-family: var(--font-mono);
-	font-size: 13px;
+	font-size: var(--font-size-sm);
 	color: var(--color-text-muted);
 	overflow: hidden;
 	white-space: nowrap;
@@ -253,11 +253,11 @@
 }
 .muted {
 	color: var(--color-text-muted);
-	font-size: 13px;
+	font-size: var(--font-size-sm);
 }
 .all-clear {
 	color: var(--color-good);
-	font-size: 14px;
+	font-size: var(--font-size-body);
 	border: 1px solid var(--color-good);
 	border-radius: 10px;
 	padding: 12px 14px;
@@ -267,13 +267,13 @@
 /* --- small shared bits --- */
 .trace {
 	font-family: var(--font-mono);
-	font-size: 11px;
+	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
 }
 /* duration / generic mono pill */
 .durpill {
 	font-family: var(--font-mono);
-	font-size: 10px;
+	font-size: var(--font-size-micro);
 	color: var(--color-resource);
 	border: 1px solid var(--color-resource);
 	border-radius: 5px;
@@ -414,7 +414,7 @@
 .text-field {
 	background: var(--color-surface);
 	border: 1px solid var(--color-border-strong);
-	border-radius: 8px;
+	border-radius: var(--radius);
 	color: var(--color-text);
 }
 

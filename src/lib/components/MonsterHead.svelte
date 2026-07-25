@@ -123,7 +123,7 @@
 		padding: 5px 0;
 		border-top: 1px solid var(--color-border);
 		font-family: var(--font-mono);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.value-row:first-of-type {
 		border-top: 0;
@@ -154,7 +154,7 @@
 		border-top: 1px solid var(--color-border);
 		align-items: baseline;
 		font-family: var(--font-mono);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.ability-row.has-save {
 		grid-template-columns: 42px 1fr 1fr 1fr;
@@ -164,7 +164,7 @@
 	}
 	.ability-row.head {
 		color: var(--color-text-muted);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 	}
 	.ability-row .ab-n {
 		color: var(--color-accent-bright);
@@ -185,14 +185,14 @@
 		gap: 12px;
 		padding: 6px 0;
 		border-top: 1px solid var(--color-border);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.band-row:first-child {
 		border-top: 0;
 	}
 	.band-row .band-key {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -202,7 +202,7 @@
 	}
 	.band-row .band-value {
 		font-family: var(--font-mono);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.band-row.defenses .band-value {
 		color: var(--color-accent-bright);

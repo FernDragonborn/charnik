@@ -45,8 +45,14 @@ const ROUTES = [
 	{ path: '/', wait: 'main', states: [{ name: 'roster' }] },
 	{ path: '/build', wait: 'main', states: [{ name: 'build' }] },
 	{ path: '/compendium', wait: 'main', states: [{ name: 'compendium' }] },
+	{ path: '/spellbook', wait: 'main', states: [{ name: 'spellbook' }] },
+	{ path: '/settings', wait: 'h1', states: [{ name: 'settings' }] },
+	{ path: '/translate', wait: '.subbar', states: [{ name: 'translate' }] },
 	{ path: '/dev/meta', wait: '[role="dialog"]', states: [{ name: 'dev-meta' }] },
-	{ path: '/dev/drift', wait: '[role="dialog"]', states: [{ name: 'dev-drift' }] }
+	{ path: '/dev/drift', wait: '[role="dialog"]', states: [{ name: 'dev-drift' }] },
+	{ path: '/dev/firstrun', wait: '[role="dialog"]', states: [{ name: 'dev-firstrun' }] },
+	{ path: '/dev/plugins', wait: 'h1', states: [{ name: 'dev-plugins' }] },
+	{ path: '/dev/deathsaves', wait: 'h1', states: [{ name: 'dev-deathsaves' }] }
 ];
 
 function compare(name, buf) {

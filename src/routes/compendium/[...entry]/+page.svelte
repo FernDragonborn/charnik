@@ -682,7 +682,7 @@
 		border: 0;
 		color: var(--color-accent-bright);
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		cursor: pointer;
 	}
 	.homebrew-actions {
@@ -694,9 +694,9 @@
 	}
 	.hb-btn {
 		font-family: var(--font-body);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		font-weight: 600;
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 8px 14px;
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface-2);
@@ -722,7 +722,7 @@
 	}
 	.lang-label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -779,10 +779,10 @@
 	}
 	.mode-item b {
 		font-family: var(--font-display);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 	}
 	.mode-item small {
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 	.mode-item:disabled {
@@ -828,7 +828,7 @@
 	}
 	.epane-label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);

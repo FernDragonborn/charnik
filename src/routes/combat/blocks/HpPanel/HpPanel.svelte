@@ -114,7 +114,7 @@
 	.temptag {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		padding: 3px 9px;
 		border-radius: var(--radius-full);
 		cursor: pointer;
@@ -132,13 +132,13 @@
 	}
 	.hitpoints .hitpoints-value small {
 		color: var(--color-text-muted);
-		font-size: 16px;
+		font-size: var(--font-size-md);
 		font-weight: 500;
 	}
 	.hitpoints .hitpoints-value .temp {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		color: var(--color-good);
 		margin-left: 7px;
 	}
@@ -172,7 +172,7 @@
 		width: 58px;
 		text-align: center;
 		font-family: var(--font-mono);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
@@ -238,7 +238,7 @@
 		gap: 6px;
 	}
 	.death-track-label {
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		font-weight: 600;
 		width: 56px;
 	}

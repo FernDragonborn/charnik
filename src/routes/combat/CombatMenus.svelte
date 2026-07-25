@@ -373,7 +373,7 @@
 		padding: 8px 10px;
 		border: 0;
 		background: transparent;
-		border-radius: 8px;
+		border-radius: var(--radius);
 		cursor: pointer;
 		color: var(--color-text);
 		text-align: left;
@@ -387,11 +387,11 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 8px;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.menu-row .meta {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 	.menu-row .effect-icon {
@@ -455,7 +455,7 @@
 		gap: 10px;
 		padding: 12px 13px;
 		border-bottom: 1px solid var(--color-border);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 	}
 	.search input {
 		all: unset;
@@ -482,7 +482,7 @@
 	.tray-src b {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 	}
 	.pool {
 		display: flex;
@@ -497,7 +497,7 @@
 		gap: 5px;
 		background: var(--color-resource-soft);
 		border: 1px solid var(--color-resource);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 4px 8px;
 		font-family: var(--font-mono);
 		font-size: 12px;
@@ -507,7 +507,7 @@
 		all: unset;
 		cursor: pointer;
 		color: var(--color-resource);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		padding: 0 2px;
 	}
 	.poolchip b {
@@ -515,7 +515,7 @@
 		font-weight: 700;
 	}
 	.gridhint {
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin: 0 0 7px;
 	}
@@ -528,7 +528,7 @@
 	.die-btn {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		text-align: center;
 		padding: 9px 0;
 		border-radius: 9px;
@@ -552,7 +552,7 @@
 		font-weight: 600;
 		font-size: 12px;
 		padding: 7px 0;
-		border-radius: 8px;
+		border-radius: var(--radius);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		color: var(--color-text-muted);
@@ -574,7 +574,7 @@
 		gap: 8px;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 7px 9px;
 		font-family: var(--font-mono);
 		font-size: 12px;
@@ -591,7 +591,7 @@
 		text-align: center;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		color: var(--color-accent-text);
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
@@ -601,7 +601,7 @@
 	}
 	.roll-history {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		border-top: 1px solid var(--color-border);
 		margin-top: 10px;
@@ -627,7 +627,7 @@
 		min-width: 0;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		color: var(--color-text);
 		font: inherit;
 		padding: 8px 10px;
@@ -638,12 +638,12 @@
 		background: var(--color-good-soft);
 		border: 1px solid var(--color-good);
 		color: var(--color-good);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 8px 14px;
 		cursor: pointer;
 	}
 	.note {
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin: 0;
 	}
@@ -661,11 +661,11 @@
 	.modifier-sign {
 		width: 36px;
 		font-family: var(--font-mono);
-		font-size: 16px;
+		font-size: var(--font-size-md);
 		font-weight: 700;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		color: var(--color-text);
 		cursor: pointer;
 	}
@@ -674,7 +674,7 @@
 		text-align: center;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		color: var(--color-text);
 		font: inherit;
 		padding: 8px 6px;
@@ -693,7 +693,7 @@
 		padding: 6px 6px 2px;
 	}
 	.pinwrap .menu-row .skill-name {
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	/* --- roll log --- */
 	.cardhead2 {
@@ -725,7 +725,7 @@
 		gap: 8px;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.lr-top b {
 		flex: 1;
@@ -740,7 +740,7 @@
 	}
 	.lr-sub {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin-top: 2px;
 	}

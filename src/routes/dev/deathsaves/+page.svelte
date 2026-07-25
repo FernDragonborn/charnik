@@ -44,7 +44,7 @@
 	h1 {
 		font-family: var(--font-display);
 		color: var(--color-text);
-		font-size: 20px;
+		font-size: var(--font-size-lg);
 	}
 	p {
 		color: var(--color-text-muted);

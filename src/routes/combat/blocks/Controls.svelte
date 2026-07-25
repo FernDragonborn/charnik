@@ -78,7 +78,7 @@
 	}
 	.toggle .toggle-state {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 5px;
 		padding: 1px 6px;
@@ -113,7 +113,7 @@
 		background: var(--color-accent-deep);
 		border-color: var(--color-accent-deep);
 		color: var(--color-accent-text);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	/* Combat mode = gold when tracking (own class: `combat` collides with the stat-grid section) */
 	.toggle.combatsw.on {

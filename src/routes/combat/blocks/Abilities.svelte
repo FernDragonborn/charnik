@@ -98,7 +98,7 @@
 		color: var(--color-text);
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.ability .ability-mod {
 		display: block;

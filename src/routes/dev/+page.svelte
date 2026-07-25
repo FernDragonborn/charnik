@@ -67,7 +67,7 @@
 		color: var(--color-text);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 9px 14px;
 		cursor: pointer;
 	}

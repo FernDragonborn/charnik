@@ -14,7 +14,7 @@
 	.chip {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
 		padding: 3px 9px;

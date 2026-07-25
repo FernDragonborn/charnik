@@ -98,7 +98,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		border: 1px solid var(--color-border);
 		border-radius: 20px;
 		padding: 4px 12px 4px 8px;
@@ -120,7 +120,7 @@
 		height: 14px;
 		display: grid;
 		place-items: center;
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		border: 1px solid currentColor;
 		border-radius: 4px;
 	}
@@ -145,7 +145,7 @@
 		background: transparent;
 		color: var(--color-text-muted);
 		cursor: pointer;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		line-height: 1;
 		padding: 0 2px;
 	}
@@ -164,10 +164,10 @@
 		border-radius: 7px;
 		padding: 6px 10px;
 		color: var(--color-text);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.add-btn {
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		font-weight: 600;
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface-2);
@@ -181,7 +181,7 @@
 		cursor: default;
 	}
 	.hint {
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin: 8px 0 0;
 	}

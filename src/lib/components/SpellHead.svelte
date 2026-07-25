@@ -96,7 +96,7 @@
 	}
 	.stat-chip {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		border-radius: 5px;
 		padding: 2px 7px;
 		border: 1px solid var(--color-border);
@@ -142,7 +142,7 @@
 	.spell-effect-value {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 28px;
+		font-size: var(--font-size-xl);
 		line-height: 1;
 	}
 	.spell-effect.save .spell-effect-value {
@@ -160,7 +160,7 @@
 	}
 	.spell-effect-sub {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 	.spell-effect-rolls {
@@ -194,7 +194,7 @@
 	.stat-cell .stat-value {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		margin-top: 2px;
 	}
 	.homebrew-mark {

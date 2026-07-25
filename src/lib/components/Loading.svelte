@@ -66,7 +66,7 @@
 		overflow-wrap: anywhere;
 	}
 	.loadsub {
-		font-size: 16px;
+		font-size: var(--font-size-md);
 		color: var(--color-text-muted);
 		margin: 0;
 	}

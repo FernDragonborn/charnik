@@ -81,7 +81,7 @@
 	}
 	.c-id {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 		margin-left: auto;
 	}

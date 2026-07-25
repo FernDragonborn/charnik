@@ -500,7 +500,7 @@
 	}
 	.ability-heading {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -511,10 +511,10 @@
 		align-items: center;
 		gap: 8px;
 		padding: 5px 8px;
-		border-radius: 8px;
+		border-radius: var(--radius);
 		break-inside: avoid;
 		cursor: pointer;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		width: 100%;
 		background: transparent;
 		border: 0;
@@ -573,12 +573,12 @@
 	.combat-row .row-name {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.combat-row .combat-row-hint {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		color: var(--color-resource);
 		justify-self: end;
 	}
@@ -587,7 +587,7 @@
 		font-size: 12px;
 	}
 	.combat-row .combat-row-marker {
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		justify-self: end;
 	}
@@ -641,7 +641,7 @@
 	.effect-name {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		color: var(--color-text);
 	}
 	.effect-ctrl {
@@ -672,7 +672,7 @@
 		align-items: center;
 		line-height: 1.35;
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		border: 1px solid var(--color-border);
 		background: var(--color-surface-2);
 		border-radius: 5px;
@@ -708,7 +708,7 @@
 		align-items: center;
 		gap: 5px;
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-resource);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 7px;
@@ -779,7 +779,7 @@
 	.resource-name {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		color: var(--color-text);
 		flex: 1;
 	}
@@ -803,13 +803,13 @@
 	}
 	.resource-count {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 		min-width: 26px;
 	}
 	.recharge-chip {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-resource);
 		border: 1px solid #5a4d28;
 		background: rgba(202, 162, 74, 0.08);
@@ -820,7 +820,7 @@
 
 	.castline {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin: -2px 0 9px;
 	}
@@ -909,7 +909,7 @@
 		gap: 6px;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.spell-row .row-name .name-main {
 		overflow: hidden;
@@ -930,7 +930,7 @@
 	}
 	.spell-row .resolution-tag {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		border-radius: 5px;
 		padding: 2px 4px;
 		border: 1px solid var(--color-border);
@@ -954,7 +954,7 @@
 	}
 	.spell-row .spell-level {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		text-align: right;
 		white-space: nowrap;
@@ -1059,7 +1059,7 @@
 		border-radius: 4px;
 		color: var(--color-text-muted);
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		line-height: 15px;
 		cursor: pointer;
 	}
@@ -1069,7 +1069,7 @@
 	}
 	.prepared-count {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 </style>

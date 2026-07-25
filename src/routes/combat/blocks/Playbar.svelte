@@ -40,7 +40,7 @@
 		color: var(--color-text);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 6px 11px;
 		cursor: pointer;
 		margin-left: auto;
@@ -55,7 +55,7 @@
 	}
 	.rollout .roll-result {
 		color: var(--color-good);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		font-weight: 700;
 	}
 	.rollout .log-cue {

@@ -319,7 +319,7 @@
 		margin-left: auto;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		white-space: nowrap;
 		text-decoration: none;
 		color: var(--color-accent-bright);

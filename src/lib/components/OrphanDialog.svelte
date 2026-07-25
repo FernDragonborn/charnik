@@ -253,7 +253,7 @@
 	}
 	.panelabel {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -269,7 +269,7 @@
 	}
 	.d-id {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin: 3px 0 12px;
 	}
@@ -283,10 +283,10 @@
 		width: 100%;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 8px 11px;
 		color: var(--color-text);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		margin-bottom: 10px;
 	}
 	.results {
@@ -302,12 +302,12 @@
 		align-items: center;
 		gap: 10px;
 		padding: 7px 10px;
-		border-radius: 8px;
+		border-radius: var(--radius);
 		cursor: pointer;
 		border: 1px solid transparent;
 		background: transparent;
 		color: var(--color-text);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		text-align: left;
 	}
 	.res:hover {
@@ -323,12 +323,12 @@
 	.res .src {
 		margin-left: auto;
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 	.no-res {
 		color: var(--color-text-muted);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		padding: 8px 2px;
 	}
 	.preview {
@@ -348,7 +348,7 @@
 	.pv-title {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 16px;
+		font-size: var(--font-size-md);
 	}
 	.pv-sub {
 		color: var(--color-text-muted);
@@ -368,7 +368,7 @@
 	}
 	.conflict-lead {
 		color: var(--color-text-muted);
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		margin: 0 0 14px;
 	}
 	.cf-panes {
@@ -387,7 +387,7 @@
 	}
 	.cf-label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -395,7 +395,7 @@
 	.cf-name {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 16px;
+		font-size: var(--font-size-md);
 	}
 	.cf-body {
 		font-size: 12.5px;

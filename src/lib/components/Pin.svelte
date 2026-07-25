@@ -15,7 +15,7 @@
 	/* base .icon-toggle is global (components.css); the ★/☆ glyph needs a font-size and the pinned
 	   state uses the crimson accent — both local to Pin */
 	.icon-toggle {
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.icon-toggle.on {
 		color: var(--color-accent-bright);

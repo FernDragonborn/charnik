@@ -60,7 +60,7 @@
 
 <style>
 	.body {
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		line-height: 1.5;
 		color: var(--color-text);
 	}
@@ -72,7 +72,7 @@
 		width: 100%;
 		border-collapse: collapse;
 		margin: 6px 0 14px;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 	}
 	.body :global(th),
 	.body :global(td) {
@@ -83,7 +83,7 @@
 	}
 	.body :global(th) {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -115,9 +115,9 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-left: 3px solid var(--color-resource);
-		border-radius: 8px;
+		border-radius: var(--radius);
 		padding: 10px 13px;
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
 		margin: 6px 0 14px;
 	}
@@ -127,7 +127,7 @@
 		min-height: 180px;
 		resize: vertical;
 		font-family: var(--font-body);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		line-height: 1.5;
 		padding: 10px 12px;
 	}
@@ -150,7 +150,7 @@
 	.edit-inline {
 		width: 100%;
 		font-family: var(--font-body);
-		font-size: 14px;
+		font-size: var(--font-size-body);
 		padding: 7px 10px;
 	}
 	.edit-body:focus,

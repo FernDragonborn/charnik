@@ -55,9 +55,13 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **spacing scale (4px base)** — `--space-0`, `--space-1`, `--space-2`, `--space-3`, `--space-4`, `--space-5`, `--space-6`, `--space-8`
 
-**radius** — `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-full`
+**radius** — `--radius-sm`
 
-**typography** — `--font-display`, `--font-body`, `--font-mono`, `--font-size-xs`, `--font-size-sm`, `--font-size-md`, `--font-size-lg`, `--font-size-xl`, `--font-size-2xl`, `--line-height`
+**the default/base radius — by far the most common (buttons, inputs, chips, cards)** — `--radius-md`, `--radius-lg`, `--radius-full`
+
+**typography** — `--font-display`, `--font-body`, `--font-mono`
+
+**28px** — `--font-size-2xl`, `--line-height`
 
 **elevation** — `--shadow-1`, `--shadow-2`
 
@@ -871,4 +875,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 55 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 316ms._
+_41 tokens · 55 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 134ms._

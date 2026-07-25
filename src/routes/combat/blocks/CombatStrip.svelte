@@ -93,7 +93,7 @@
 	}
 	.tile .tile-key {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-accent-bright);
@@ -106,13 +106,13 @@
 		margin-top: 4px;
 	}
 	.tile .tile-value small {
-		font-size: 13px;
+		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
 		font-weight: 500;
 	}
 	.tile .tile-text {
 		font-family: var(--font-mono);
-		font-size: 11px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin-top: 6px;
 	}
@@ -132,7 +132,7 @@
 	}
 	.senses-strip .bar-label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--font-size-micro);
 		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -140,7 +140,7 @@
 	.senses-strip .ability-save {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 16px;
+		font-size: var(--font-size-md);
 	}
 	.senses-strip .ability-save i {
 		font-style: normal;
