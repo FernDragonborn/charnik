@@ -11,11 +11,6 @@
  * declare its grants can make a weapon/armor non-proficient.
  */
 
-/** Weapon proficiency categories (specific weapon ids also allowed in a class's grant list). */
-export const WEAPON_CATEGORIES = ['simple', 'martial'] as const;
-/** Armor proficiency categories. */
-export const ARMOR_CATEGORIES = ['light', 'medium', 'heavy', 'shield'] as const;
-
 /** Parse one class's comma-list prof column into a lowercased set. Blank/absent → null. */
 function parseProfGrants(raw: string | undefined): Set<string> | null {
 	if (raw == null || raw.trim() === '') return null;

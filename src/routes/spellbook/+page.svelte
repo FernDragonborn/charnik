@@ -125,7 +125,7 @@
 			><PreparedCaps tallies={preparedTallies} /> · spellbook {resolved.length}</span
 		>
 		<span class="spacer"></span>
-		<button class="done" onclick={() => goto(`${base}/combat`)}>Done</button>
+		<button class="cta" onclick={() => goto(`${base}/combat`)}>Done</button>
 	</div>
 
 	<div class="two-column">
@@ -162,7 +162,7 @@
 
 		<WikiDetail {detail}>
 			{#snippet actions()}
-				<button class="cast-btn" onclick={cast}>🎲 Cast</button>
+				<button class="cta" onclick={cast}>🎲 Cast</button>
 				<span class="detail-toggle">
 					Prepared
 					<Switch
@@ -212,7 +212,8 @@
 	.spacer {
 		flex: 1;
 	}
-	.done {
+	/* display-font accent CTA — shared by the Done + Cast buttons (was two identical rules) */
+	.cta {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 13px;
@@ -231,17 +232,6 @@
 		overflow: hidden;
 		height: calc(100vh - 175px);
 		min-height: 560px;
-	}
-	.cast-btn {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: 13px;
-		border-radius: 8px;
-		padding: 7px 14px;
-		cursor: pointer;
-		background: var(--color-accent-deep);
-		border: 1px solid var(--color-accent-deep);
-		color: var(--color-accent-text);
 	}
 	.detail-toggle {
 		display: flex;

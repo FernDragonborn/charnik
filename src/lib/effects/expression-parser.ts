@@ -58,12 +58,12 @@ const ENUM_LITERALS: ReadonlySet<string> = new Set(Object.values(ENUM_VARS).flat
 
 /** Dotted variable families: `<prefix>.<id>`. The id is opaque (a class/condition/resource id).
  *  Exported so the ctx adapter (context.ts) routes off the SAME sets — one grammar owner. */
-export const DOTTED_NUMERIC: ReadonlySet<string> = new Set([
+const DOTTED_NUMERIC: ReadonlySet<string> = new Set([
 	'class_level',
 	'resource',
 	'resource_max'
 ]);
-export const DOTTED_BOOLEAN: ReadonlySet<string> = new Set(['has_condition']);
+const DOTTED_BOOLEAN: ReadonlySet<string> = new Set(['has_condition']);
 
 /** Split a dotted variable name into its family prefix + opaque id, or null when undotted.
  *  Shared by the parser (whitelist check) and the ctx adapter (routing). */

@@ -5,14 +5,20 @@
  * CombatVM composes it as `combat.economy`, passing getters for the reactive character + sheet.
  */
 import { toast } from 'svelte-sonner';
-import { pipClick, isEffectExpired, type ActionSlot, type SpRow } from '$lib/combat/helpers';
+import {
+	pipClick,
+	isEffectExpired,
+	type ActionSlot,
+	type SpRow,
+	type EffectInstance
+} from '$lib/combat/helpers';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 
 /** The condition that zeroes the action economy (no Action, Bonus Action, or Reaction). A named seam
  *  (not a bare string compare) — paralyzed/stunned/petrified/unconscious reach it by chaining
  *  `apply_condition:incapacitated`, so this one id gates them all. */
-export const INCAPACITATED_CONDITION_ID = 'incapacitated';
+const INCAPACITATED_CONDITION_ID = 'incapacitated';
 
 export class TurnEconomy {
 	constructor(
@@ -74,9 +80,12 @@ export class TurnEconomy {
 	private expireTimedEffects = () => {
 		const c = this.getCharacter();
 		if (!c) return;
-		const expired = c.play.effects.filter((e) => isEffectExpired(e, c.play.round));
+		// partition in ONE pass (isEffectExpired was evaluated twice before)
+		const kept: EffectInstance[] = [];
+		const expired: EffectInstance[] = [];
+		for (const e of c.play.effects) (isEffectExpired(e, c.play.round) ? expired : kept).push(e);
 		if (!expired.length) return;
-		c.play.effects = c.play.effects.filter((e) => !isEffectExpired(e, c.play.round));
+		c.play.effects = kept;
 		for (const e of expired) {
 			if (e.source && e.source === c.play.concentration) c.play.concentration = null;
 			toast(`${e.label} — expired`);

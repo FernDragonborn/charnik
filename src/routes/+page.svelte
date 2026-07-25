@@ -141,10 +141,6 @@
 	.db-download:hover {
 		filter: brightness(1.08);
 	}
-	.db-body b {
-		color: var(--color-text);
-		font-weight: 600;
-	}
 	.head {
 		display: flex;
 		justify-content: space-between;

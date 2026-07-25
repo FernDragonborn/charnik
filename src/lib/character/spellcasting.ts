@@ -86,8 +86,8 @@ const SLOT_COLUMNS = [
 /** Build a slot table (charLevel → counts) for a `kind`, scoped to the character's edition. */
 function slotTable(graph: ContentGraph, kind: string, systems: string[]): SlotTable {
 	const m = new Map<number, number[]>();
-	for (const r of graph.rows) {
-		if (r.type !== 'spell_slots' || String(r.data.kind) !== kind) continue;
+	for (const r of graph.list('spell_slots')) {
+		if (String(r.data.kind) !== kind) continue;
 		if (!r.systems.some((s) => systems.includes(s))) continue;
 		m.set(
 			Number(r.data.level),
@@ -108,8 +108,8 @@ function castingCounts(
 	// highest defined level ≤ the target — a gap means "unchanged since the last row", NOT zero.
 	let best: { level: number; cantrips: number | undefined; prepared: number | undefined } | null =
 		null;
-	for (const r of graph.rows) {
-		if (r.type !== 'class_casting' || String(r.data.class_id) !== classId) continue;
+	for (const r of graph.list('class_casting')) {
+		if (String(r.data.class_id) !== classId) continue;
 		if (!r.systems.some((s) => systems.includes(s))) continue;
 		const rowLevel = Number(r.data.level);
 		if (rowLevel > level || (best && rowLevel <= best.level)) continue;

@@ -66,7 +66,7 @@ export type TargetValidator = (kind: string, target: string) => TargetCheck;
 
 /** A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll
  *  threshold (`reroll`) or the die floor (`min_die`). */
-export interface RollMod {
+interface RollMod {
 	target: string;
 	value: number;
 }
@@ -90,24 +90,24 @@ export interface NumericFact {
 	error?: string;
 }
 /** A non-numeric fact tied to a target key (`advantage:attack` → {target:'attack', source}). */
-export interface FactRef {
+interface FactRef {
 	target: string;
 	source: string;
 }
-export interface ProficiencyFact {
+interface ProficiencyFact {
 	target: string;
 	level: 'proficient' | 'expertise';
 	source: string;
 }
 /** A feature-granted named rollable (EFX-ROLL): `grant_roll:<id>:<expr>` with the L2 expression
  *  already resolved to a dice `formula` string, ready to hand to the DiceTrayRequest seam. */
-export interface RollFact {
+interface RollFact {
 	id: string;
 	source: string;
 	label: string;
 	formula: string;
 }
-export interface DefenseFact {
+interface DefenseFact {
 	bucket: Defense;
 	type: string;
 	source: string;

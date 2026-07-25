@@ -217,7 +217,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/dice/tray.svelte.ts`
 
-- `interface QueuedDamage` — A damage roll queued to fire right after the tray's next Roll (an attack's to-hit → damage).
 - `interface DiceTrayRequest` — * A request to open the tray.
 - `type DiceTrayHandler` — A live tray registers a handler for the request.
 - `function registerDiceTray` — Register the live tray (a DiceTray component calls this on mount); returns an unregister fn.
@@ -588,12 +587,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function matchesTarget` — Does an effect target apply to this stat key?
 - `interface TargetCheck` — Result of the derive's target check (B13): whether a consumer reads this (kind, target), plus an * optional "did you …
 - `type TargetValidator` — Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
-- `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
 - `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
-- `interface FactRef` — A non-numeric fact tied to a target key (`advantage:attack` → {target:'attack', source}).
-- `interface ProficiencyFact`
-- `interface RollFact` — A feature-granted named rollable (EFX-ROLL): `grant_roll:<id>:<expr>` with the L2 expression * already resolved to a …
-- `interface DefenseFact`
 - `interface EffectFacts` — * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and * value-resolved on…
 - `function collectFacts` — * One pass over the RESOLVED effect list → the typed-facts object (D7).
 - `function mergeFacts` — * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned * tokens become sy…
@@ -632,8 +626,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const ENUM_VARS` — Enum-typed variables → their allowed literal values.
 - `const ORDERED_ENUMS` — Enums whose members have a meaningful order (so `<`/`>` compare by index).
-- `const DOTTED_NUMERIC` — Dotted variable families: `<prefix>.<id>`.
-- `const DOTTED_BOOLEAN`
 - `function splitDottedName` — Split a dotted variable name into its family prefix + opaque id, or null when undotted.
 - `type BinOp`
 - `type Node`
@@ -764,8 +756,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/rules/proficiency.ts`
 
-- `const WEAPON_CATEGORIES` — Weapon proficiency categories (specific weapon ids also allowed in a class's grant list).
-- `const ARMOR_CATEGORIES` — Armor proficiency categories.
 - `function gatherProfGrants` — * Union the prof grants across a character's classes.
 - `function weaponCategoryOf` — Normalize a weapon item's `item_type` ("martial melee", "simple ranged") to its category.
 - `function armorCategoryOf` — Normalize an armor item to its category.
@@ -878,4 +868,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 52 global classes · 38 components · 493 exports across 69 modules · 28 duplicate suspects · generated in 355ms._
+_46 tokens · 52 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 337ms._

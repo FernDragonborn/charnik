@@ -196,6 +196,8 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   mirroring `metres`) so the conversion exists and is ready. But `carryingCapacity` (the only
   weight value derived) is still rendered NOWHERE — there's no weight/inventory UI yet (N1), so
   there's no current call site. Full application + the optional-capacity toggle land with N1.
+  (2026-07-25 review: confirmed `kilograms` KEPT as planned scaffolding — `@public`-tagged so knip
+  doesn't flag it; it's the seam N1 will wire, not dead code to delete.)
 - [ ] **B8 · i18n drop-in is fiction; coverage narrow.** Catalogs are bundled via a Vite
   template import (`i18n/index.ts`), so "drop in a locale JSON without a rebuild" doesn't work
   despite the module comment claiming it. `$_()` is used in ~10 files; the build page, combat

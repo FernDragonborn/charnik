@@ -186,7 +186,10 @@ export function effectiveHpMax(manualMax: number | null, sheetMaxHp: Computed): 
 /** Feet → "N m" (metric in parentheses next to imperial). */
 export const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/, '')} m`;
 
-/** Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7). */
+/** Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7). NOTE: not yet
+ *  wired to any UI — carrying-capacity IS computed (sheet.carryingCapacity) but not rendered; when its
+ *  tile/toggle lands it MUST use this per the units invariant (lb→kg everywhere). Kept, not deleted.
+ *  @public planned — wiring pending (see AUDIT carrying-capacity display gap). */
 export const kilograms = (lb: number) => `${(lb * 0.4536).toFixed(1).replace(/\.0$/, '')} kg`;
 
 /** Provenance trace of a Computed → a human-readable "why" string for tooltips. Pass `translate`

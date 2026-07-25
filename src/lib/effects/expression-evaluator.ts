@@ -332,6 +332,34 @@ function staticKind(n: Node): 'number' | 'dice' | 'either' {
 	}
 }
 
+/** Depth-first pre-order walk of an expression AST: `visit` fires on every node, then its child
+ *  nodes recurse. The ONE tree-descent seam the linter + variable-collector share, so their
+ *  child-recursion can't drift — each consumer only differs in what `visit` does. */
+function walkAst(node: Node, visit: (n: Node) => void): void {
+	visit(node);
+	switch (node.t) {
+		case 'neg':
+		case 'not':
+			walkAst(node.e, visit);
+			break;
+		case 'dice':
+			walkAst(node.count, visit);
+			walkAst(node.sides, visit);
+			break;
+		case 'bin':
+			walkAst(node.l, visit);
+			walkAst(node.r, visit);
+			break;
+		case 'call':
+			node.args.forEach((a) => walkAst(a, visit));
+			break;
+		case 'pair':
+			walkAst(node.threshold, visit);
+			walkAst(node.value, visit);
+			break;
+	}
+}
+
 /** Authoring-slip warnings the spec promises content-health (PLAN EXPR): a mixed-type `if()`
  *  (dice in one branch, number in the other — legal but usually an accident) and a non-standard
  *  LITERAL die size (`1d7`). Returns [] for an unparseable expression — parse errors are the
@@ -340,7 +368,7 @@ export function lintExpression(src: string): string[] {
 	const p = parseExpression(src);
 	if (!p.ok) return [];
 	const warns: string[] = [];
-	const walk = (n: Node): void => {
+	walkAst(p.ast.root, (n) => {
 		if (n.t === 'call' && n.fn === 'if') {
 			const a = staticKind(n.args[1] as Node);
 			const b = staticKind(n.args[2] as Node);
@@ -349,29 +377,7 @@ export function lintExpression(src: string): string[] {
 		if (n.t === 'call' && n.fn === 'step') lintStepThresholds(n.args, warns);
 		if (n.t === 'dice' && n.sides.t === 'num' && !STANDARD_SIDES.has(n.sides.value))
 			warns.push(`unusual die d${n.sides.value}`);
-		switch (n.t) {
-			case 'neg':
-			case 'not':
-				walk(n.e);
-				break;
-			case 'dice':
-				walk(n.count);
-				walk(n.sides);
-				break;
-			case 'bin':
-				walk(n.l);
-				walk(n.r);
-				break;
-			case 'call':
-				n.args.forEach(walk);
-				break;
-			case 'pair':
-				walk(n.threshold);
-				walk(n.value);
-				break;
-		}
-	};
-	walk(p.ast.root);
+	});
 	return warns;
 }
 
@@ -405,36 +411,9 @@ export function collectExprVariables(src: string): string[] {
 	const p = parseExpression(src);
 	if (!p.ok) return [];
 	const names = new Set<string>();
-	const walk = (n: Node): void => {
-		switch (n.t) {
-			case 'numvar':
-			case 'boolvar':
-				names.add(n.name);
-				break;
-			case 'neg':
-			case 'not':
-				walk(n.e);
-				break;
-			case 'dice':
-				walk(n.count);
-				walk(n.sides);
-				break;
-			case 'bin':
-				walk(n.l);
-				walk(n.r);
-				break;
-			case 'call':
-				n.args.forEach(walk);
-				break;
-			case 'pair':
-				walk(n.threshold);
-				walk(n.value);
-				break;
-			default:
-				break;
-		}
-	};
-	walk(p.ast.root);
+	walkAst(p.ast.root, (n) => {
+		if (n.t === 'numvar' || n.t === 'boolvar') names.add(n.name);
+	});
 	return [...names];
 }
 

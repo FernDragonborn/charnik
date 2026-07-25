@@ -9,7 +9,7 @@ import { rollFormula, type DieMods } from '$lib/rules/dice';
 import { toast } from 'svelte-sonner';
 
 /** A damage roll queued to fire right after the tray's next Roll (an attack's to-hit → damage). */
-export interface QueuedDamage {
+interface QueuedDamage {
 	label: string;
 	dice: Record<number, number>;
 	mod: number;

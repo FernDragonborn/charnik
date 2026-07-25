@@ -38,9 +38,9 @@ const shareEdition = (a: string[], b: string[]) => a.some((s) => b.includes(s));
 
 /** Build the union access index from the content graph (pure). */
 export function buildSpellAccess(graph: ContentGraph): SpellAccess {
-	const classRows = graph.rows.filter((r) => r.type === 'class');
-	const spellRows = graph.rows.filter((r) => r.type === 'spell');
-	const listRows = graph.rows.filter((r) => r.type === 'spell_lists');
+	const classRows = graph.list('class');
+	const spellRows = graph.list('spell');
+	const listRows = graph.list('spell_lists');
 
 	// bare class id → its rows (one per edition/source)
 	const classesById = new Map<string, LoadedRow[]>();

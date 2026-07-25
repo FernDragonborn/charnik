@@ -399,13 +399,11 @@ function gatherEffects(
 	// the `exhaustion` ctx var (2024: -2×level on d20 tests, -5×level on speed). A token-less row (an
 	// unauthored edition, e.g. 2014's ladder pending) → pushRow-style skip, so this is a no-op there.
 	if (character.play.exhaustion > 0) {
-		const row = graph.rows.find(
-			(r) =>
-				r.type === 'condition' &&
-				r.id === 'exhaustion' &&
-				r.systems.includes(character.system) &&
-				isActive(r)
-		);
+		// indexed lookup (byType via list) instead of a full graph.rows scan — derive re-runs on every
+		// reactive play-state change, so scan only condition rows, edition-filtered.
+		const row = graph
+			.list('condition', { system: character.system })
+			.find((r) => r.id === 'exhaustion' && isActive(r));
 		const tokens = tokensOf(row);
 		if (row && tokens.length)
 			active.push({ source: String(row.data.name_en), layer: 'condition', tokens });
@@ -491,9 +489,7 @@ export function deriveSheet(
 		// when both roots are loaded, exactly the `systems` gate the class-feature scan above uses.
 		// A16(b): first match is now deterministic within the edition (load order); a genuine
 		// same-id/same-edition clash across two sources is a collisions.json concern, not resolved here.
-		const cond = graph.rows.find(
-			(r) => r.type === 'condition' && r.id === condId && r.systems.includes(character.system)
-		);
+		const cond = graph.list('condition', { system }).find((r) => r.id === condId);
 		const toks = tokensOf(cond);
 		return cond && toks.length ? { source: String(cond.data.name_en), tokens: toks } : undefined;
 	};
@@ -678,11 +674,7 @@ export function deriveSheet(
 	// column is legitimate (many SRD conditions) — checked by row existence, not by expandCondition
 	// (which also returns undefined for token-less rows). Guard/expansion ordering is already handled
 	// by the resolve stage (A16 e / SPEC7); edition-filter + once-per-id by expandCondition (A16 a/c).
-	const conditionIds = new Set(
-		graph.rows
-			.filter((r) => r.type === 'condition' && r.systems.includes(character.system))
-			.map((r) => r.id)
-	);
+	const conditionIds = new Set(graph.list('condition', { system }).map((r) => r.id));
 	for (const id of facts.conditions)
 		if (!conditionIds.has(id) && id !== RAGE_CONDITION_ID)
 			issues.push({

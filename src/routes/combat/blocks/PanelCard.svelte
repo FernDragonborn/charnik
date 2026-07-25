@@ -131,6 +131,9 @@
 	{/if}
 	<span
 		class="drag-handle"
+		role="button"
+		tabindex="-1"
+		aria-label="drag to reorder"
 		title="drag to reorder"
 		onpointerdown={() => (combat.layout.dragDisabled = false)}>⠿</span
 	>
@@ -430,6 +433,13 @@
 									onclick={(e) => {
 										e.stopPropagation();
 										pinned[r.id] = !pinned[r.id];
+									}}
+									onkeydown={(e) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											e.stopPropagation();
+											pinned[r.id] = !pinned[r.id];
+										}
 									}}>{pinned[r.id] ? '★' : '☆'}</span
 								>
 								{#if r.ritual && s.spellcasting.ritualCasting}
