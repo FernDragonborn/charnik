@@ -291,6 +291,9 @@
 	border: 1px solid var(--color-border);
 	border-radius: 12px;
 	padding: 9px 12px;
+	/* uniform height across every combat bar (Turnbar / ResourceBar / TimeSkip) — the Turnbar's
+	   "Next turn" button is the tallest control, so pin all bars to its height (border-box) */
+	min-height: 56px;
 	margin-bottom: 12px;
 }
 /* the mono uppercase eyebrow that titles a combat bar (Round / Pass time / …) */
