@@ -600,7 +600,7 @@
 		padding: 12px 0 5px;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: 0.13em;
+		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 	}
 	.section-head svg {

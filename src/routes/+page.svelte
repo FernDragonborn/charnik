@@ -103,7 +103,7 @@
 		display: inline-block;
 		font-family: var(--font-mono);
 		text-transform: uppercase;
-		letter-spacing: 0.14em;
+		letter-spacing: var(--tracking-label);
 		font-size: var(--font-size-xs);
 		font-weight: 700;
 		color: var(--color-accent-bright);

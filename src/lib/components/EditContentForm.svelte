@@ -468,7 +468,7 @@
 	.systems-label {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: 0.1em;
+		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
@@ -568,7 +568,7 @@
 	.meta-cell .meta-key {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: 0.1em;
+		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}
@@ -659,7 +659,7 @@
 		display: block;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: 0.1em;
+		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 		margin-bottom: 8px;

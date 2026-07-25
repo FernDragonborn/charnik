@@ -551,7 +551,7 @@
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-xs);
-		letter-spacing: 0.1em;
+		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 		margin: 0 0 14px;
@@ -956,7 +956,7 @@
 	.ability-code {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
-		letter-spacing: 0.1em;
+		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 	}

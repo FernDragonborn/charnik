@@ -100,7 +100,7 @@
 	.section {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: 0.12em;
+		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 		padding: 10px 13px 4px;

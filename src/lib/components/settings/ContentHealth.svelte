@@ -165,7 +165,7 @@
 	.group-label {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: 0.1em;
+		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 		margin: 18px 0 8px;
