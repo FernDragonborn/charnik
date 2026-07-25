@@ -14,7 +14,7 @@
 	] as const;
 </script>
 
-<section class="timeskip">
+<section class="combat-bar">
 	<span class="bar-label">⏱ Pass time</span>
 	{#each STEPS as [label, rounds] (label)}
 		<button
@@ -27,24 +27,7 @@
 </section>
 
 <style>
-	.timeskip {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 8px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
-		padding: 9px 12px;
-		margin-bottom: 12px;
-	}
-	.bar-label {
-		font-family: var(--font-mono);
-		font-size: 9px;
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
-	}
+	/* container + label come from the shared .combat-bar / .bar-label (components.css) */
 	.step {
 		font-family: var(--font-display);
 		font-weight: 600;

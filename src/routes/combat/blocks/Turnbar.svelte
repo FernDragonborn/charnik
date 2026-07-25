@@ -16,7 +16,7 @@
 	] as const;
 </script>
 
-<section class="turnbar">
+<section class="turnbar combat-bar">
 	<span class="bar-label">Round <b>{combat.round}</b></span>
 	{#each SLOTS as [slot, label] (slot)}
 		<span class="turn-slot">
@@ -53,27 +53,10 @@
 </section>
 
 <style>
-	.turnbar {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 8px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
-		padding: 9px 12px;
-		margin-bottom: 12px;
-	}
+	/* container (.combat-bar) + .bar-label are shared (components.css) */
 	.turnbar .spacer {
 		flex: 1 1 auto;
 		min-width: 8px;
-	}
-	.turnbar .bar-label {
-		font-family: var(--font-mono);
-		font-size: 9px;
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.turn-slot {
 		display: inline-flex;

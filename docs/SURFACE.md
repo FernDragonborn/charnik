@@ -71,7 +71,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **teal — positive/confirmation, temp HP, available pips** — `--color-good-soft`, `--color-success`, `--color-warning`, `--color-danger`, `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`
 
-## Global CSS classes (50)
+## Global CSS classes (52)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -79,10 +79,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | --- | --- | --- |
 | `.accent` | components.css |  |
 | `.all-clear` | components.css |  |
+| `.bar-label` | components.css | the mono uppercase eyebrow that titles a combat bar (Round / Pass time / …) |
 | `.btn` | components.css | --- buttons: neutral base + ghost / primary variants (dialog footers, forms) --- |
 | `.card` | components.css | --- card + panel header --- |
 | `.chevron` | components.css |  |
 | `.chip` | components.css | --- chip: small mono bordered toggle (topbar system/theme/lang, filters) --- |
+| `.combat-bar` | components.css | --- combat bar: the horizontal surface strip above the panel grid (Turnbar, ResourceBar, TimeSkip all shared this ide… |
 | `.count-pill` | components.css | The "N of M" counter beside an attention-dialog title — one warning-toned pill shared by every multi-item review dial… |
 | `.detail-body` | components.css | --- content-detail layout (WikiDetail render + EditContentForm edit) --- |
 | `.detail-eyebrow` | components.css | the two-ended article eyebrow (label left, edition/type right) shared by the spell + monster heads; the `.monster-typ… |
@@ -875,4 +877,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 37 components · 493 exports across 69 modules · 28 duplicate suspects · generated in 231ms._
+_46 tokens · 52 global classes · 37 components · 493 exports across 69 modules · 28 duplicate suspects · generated in 197ms._

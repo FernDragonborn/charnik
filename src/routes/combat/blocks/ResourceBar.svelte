@@ -13,7 +13,7 @@
 	const PIP_CAP = 20;
 </script>
 
-<section class="resource-bar">
+<section class="resource-bar combat-bar">
 	<span class="bar-label">Resources</span>
 	{#each s.resources as r (r.id)}
 		{@const spent = combat.resources.resourceSpent(r.id)}
@@ -57,17 +57,7 @@
 </section>
 
 <style>
-	.resource-bar {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 8px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
-		border-radius: 12px;
-		padding: 9px 12px;
-		margin-bottom: 12px;
-	}
+	/* container (.combat-bar) + label (.bar-label) are shared (components.css) */
 	/* the whole chip is the "use one" button (UBUG-8) — clickable + highlighted on hover */
 	.resource-bar .resource {
 		display: inline-flex;

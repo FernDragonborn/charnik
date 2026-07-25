@@ -280,6 +280,28 @@
 	padding: 1px 6px;
 }
 
+/* --- combat bar: the horizontal surface strip above the panel grid (Turnbar, ResourceBar, TimeSkip
+   all shared this identical container; each keeps only its own inner controls as scoped styles) --- */
+.combat-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 8px;
+	background: var(--color-surface);
+	border: 1px solid var(--color-border);
+	border-radius: 12px;
+	padding: 9px 12px;
+	margin-bottom: 12px;
+}
+/* the mono uppercase eyebrow that titles a combat bar (Round / Pass time / …) */
+.bar-label {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	letter-spacing: var(--tracking-label);
+	text-transform: uppercase;
+	color: var(--color-text-muted);
+}
+
 /* --- dialog shell: full-screen dark-backdrop modal (content-review pop-ups) ---
    (only the `.dialog` container's WIDTH is set per-modal — a scoped `.dialog { width }` in the
    component overrides this; everything else is shared) */
