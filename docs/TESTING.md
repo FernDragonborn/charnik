@@ -39,6 +39,17 @@ engine disabled (identical shape; trace = base-only when off).
 - **E2E (deferred)** — **Tauri WebDriver (`tauri-driver`)** smoke flows later (build char,
   level-up, live switches, add homebrew via UI, resolve collision, play loop, print/
   export). Component tests still use Vitest browser mode, independent of Tauri.
+- **Visual regression (present)** — **`tools/visual/shot.mjs`** (Playwright + `pixelmatch`) drives
+  the **web SPA in headless Chromium** against the `pnpm dev` server (`localhost:5173`, `BASE` env
+  overrides), screenshots key route states, and pixel-diffs vs `tools/visual/baseline/` (0-px gate).
+  `node tools/visual/shot.mjs --update` refreshes the baseline BEFORE a change; a bare run compares.
+  Companion CSS tools live beside it (`css-dups.mjs` / `css-classes.mjs` / `css-name-collisions.mjs`
+  / `rename-class.mjs` / `hoist-class.mjs`). **Layer caveat:** this driver reaches the **webview DOM
+  only**. It cannot exercise the Tauri desktop shell (the web build uses FetchStorage/IndexedDB, so
+  `invoke`/Tauri-fs code never runs under it) and it cannot click **native OS dialogs** — e.g. the
+  data-dir **folder picker** (Rust `blocking_pick_folder`, audit S2) lives outside any webview.
+  Verifying that path needs a manual `pnpm tauri dev` run (or a future `tauri-driver` E2E + an
+  OS-level dialog automator). So "no driver for the S2 dialog" means *this layer*, not "no driver".
 
 ## Cross-system
 Parameterize rules/effects tests `describe.each(['5e','5.5e'])`; assert known
