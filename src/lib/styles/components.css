@@ -87,11 +87,25 @@
 	color: #fff;
 }
 
-/* --- section label (mono, uppercase, with trailing rule) --- */
-.sectlab {
+/* --- eyebrow: the mono uppercase micro-label — the single most-reused label primitive. The
+   mono + uppercase + tracking core lives here ONCE (group selector); each label keeps only its own
+   font-size / color / layout. `.eyebrow` is the standalone class scoped views compose in markup. --- */
+.eyebrow,
+.sectlab,
+.dialog-label,
+.deyebrow,
+.detail-eyebrow {
 	font-family: var(--font-mono);
 	text-transform: uppercase;
 	letter-spacing: var(--tracking-label);
+}
+.eyebrow {
+	font-size: var(--font-size-xs);
+	color: var(--color-text-muted);
+}
+
+/* section label (with trailing rule) */
+.sectlab {
 	font-size: var(--font-size-micro);
 	color: var(--color-text-muted);
 	margin: 0 2px 9px;
@@ -132,20 +146,14 @@
 	color: var(--color-text);
 }
 
-/* --- dialog field/section label (mono uppercase eyebrow inside the review modals) --- */
+/* dialog field/section label (mono uppercase eyebrow inside the review modals) */
 .dialog-label {
-	font-family: var(--font-mono);
 	font-size: var(--font-size-xs);
-	letter-spacing: var(--tracking-label);
-	text-transform: uppercase;
 	color: var(--color-text-muted);
 }
 
-/* --- compendium/detail article bits (WikiDetail + the homebrew EditContentForm) --- */
+/* compendium/detail article bits (WikiDetail + the homebrew EditContentForm) */
 .deyebrow {
-	font-family: var(--font-mono);
-	text-transform: uppercase;
-	letter-spacing: var(--tracking-label);
 	font-size: var(--font-size-xs);
 	color: var(--color-accent-bright);
 }
@@ -156,9 +164,6 @@
 	justify-content: space-between;
 	align-items: baseline;
 	gap: 12px;
-	font-family: var(--font-mono);
-	text-transform: uppercase;
-	letter-spacing: var(--tracking-label);
 	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
 }

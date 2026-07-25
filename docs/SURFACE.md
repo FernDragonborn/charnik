@@ -75,7 +75,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **teal — positive/confirmation, temp HP, available pips** — `--color-good-soft`, `--color-success`, `--color-warning`, `--color-danger`, `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`
 
-## Global CSS classes (55)
+## Global CSS classes (56)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -93,7 +93,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.detail-body` | components.css | --- content-detail layout (WikiDetail render + EditContentForm edit) --- |
 | `.detail-eyebrow` | components.css | the two-ended article eyebrow (label left, edition/type right) shared by the spell + monster heads; the `.monster-typ… |
 | `.detail-meta` | components.css |  |
-| `.deyebrow` | components.css | --- compendium/detail article bits (WikiDetail + the homebrew EditContentForm) --- |
+| `.deyebrow` | components.css | compendium/detail article bits (WikiDetail + the homebrew EditContentForm) |
 | `.dialog` | components.css | the centred panel: sized to its CONTENT height (capped at the viewport), never full-height — centring via transform, … |
 | `.dialog-backdrop` | components.css | --- dialog shell: full-screen dark-backdrop modal (content-review pop-ups) --- (only the `.dialog` container's WIDTH … |
 | `.dialog-badge` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
@@ -101,13 +101,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.dialog-card` | components.css | one card/row inside a .dialog-body (a file, a drift row, a discard entry). |
 | `.dialog-foot` | components.css |  |
 | `.dialog-head` | components.css |  |
-| `.dialog-label` | components.css | --- dialog field/section label (mono uppercase eyebrow inside the review modals) --- |
+| `.dialog-label` | components.css | dialog field/section label (mono uppercase eyebrow inside the review modals) |
 | `.dialog-lang-corner` | components.css |  |
 | `.dialog-spacer` | components.css |  |
 | `.dialog-subtitle` | components.css |  |
 | `.dialog-title` | components.css |  |
 | `.drag-handle` | components.css |  |
 | `.durpill` | components.css | duration / generic mono pill |
+| `.eyebrow` | components.css |  |
 | `.ghost` | components.css |  |
 | `.htoggle` | components.css |  |
 | `.icon-button` | components.css | --- ghost icon button (remove / close ✕) --- |
@@ -124,7 +125,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.primary` | components.css |  |
 | `.sec-head` | components.css | --- settings-tab section chrome (shared by every Settings panel: Content-health / Sources / Collisions) — one heading… |
 | `.sec-note` | components.css |  |
-| `.sectlab` | components.css | --- section label (mono, uppercase, with trailing rule) --- |
+| `.sectlab` | components.css | section label (with trailing rule) |
 | `.setting-label` | components.css |  |
 | `.setting-options` | components.css |  |
 | `.setting-row` | components.css | settings option rows (label + pill options / value), shared by the General + Data tabs and the dev previews — one row… |
@@ -875,4 +876,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_41 tokens · 55 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 150ms._
+_41 tokens · 56 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 126ms._
