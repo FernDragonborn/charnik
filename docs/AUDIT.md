@@ -131,8 +131,16 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   class whose `accessSpellIds` grants it (overlap → higher DC; fallback first class), and the cast
   path (`state.svelte.ts`) now uses THAT class's to-hit / DC / heal-mod, not `classes[0]` — RAW: a
   multiclass spell uses its own class's numbers. The top spell summary already listed per-class DCs.
-  STILL `classes[0]`: `preparedCap` (:595 / spellbook :90) and the prepared-toggle cap gate — a
-  smaller follow-up (per-class prepared limits), not the DC bug the user flagged.
+  TAIL FIXED 2026-07-25: per-class prepared limits. New pure `preparedTalliesByClass` (combat/helpers)
+  attributes each prepared leveled spell to the class that grants it (via `casterForSpell` — the SAME
+  access-map binding the builder's picker already uses, so no new heuristic), counting per class. The
+  combat toggle (`togglePrepared`) and the spellbook (`togglePrepare`) now gate against the cap of the
+  spell's OWN class instead of `classes[0]`, and both headers show a per-class figure when multiclass.
+  Unit-tested (attribution + overlap→higher-DC class + always-prepared never counts). NOTE the overlap
+  DC/attribution stays a documented heuristic (higher-DC class wins) — exact RAW would track the source
+  class per prepared instance, which the data model (`spellEntry` = {spell,prepared,alwaysPrepared},
+  no classId) can't express; the established binding IS the access map, so this is consistent, not a
+  new deviation.
   Original finding below:
   Per-class profiles exist
   (L11 core fix, `character/spellcasting.ts`) but: cast uses `spellcasting.classes[0]` for
@@ -168,10 +176,14 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   (injected by CombatVM → `appendLog` for the active character) so every completed roll writes to
   `log.jsonl`; combat load seeds the tray from `readLog` so history survives a reload. `appendLog`
   now rotates (keeps the newest 500 lines) so the file stays bounded.
-- [ ] **B5 · Two-dimensional source filtering applied only in the compendium.** `isRowActive`
-  has exactly one call site. Ctrl+K search (CommandPalette/search docs), ALL builder pickers
-  (species/class/feat/spell/item/language), and the spellbook show rows from disabled
-  files/sources and the losing side of resolved collisions.
+- [x] **B5 · Two-dimensional source filtering applied only in the compendium.** FIXED 2026-07-25.
+  `isRowActive` now gates every content picker, not just the compendium: the builder's ONE `list()`
+  choke point (`build/state.svelte.ts` — species/class/feat/spell/item/language/subclass/species_option)
+  filters through it, and Ctrl+K search (`CommandPalette.svelte`) filters results by resolving each
+  hit back to its row. The spellbook's list is the character's OWN chosen spells (not a content
+  picker), so it's intentionally NOT source-filtered — hiding a spell the character owns would be a
+  regression; the add-spell picker lives in the builder and IS filtered. Reactive over the source
+  config (a live toggle re-derives).
 - [~] **B6 · Source/collision config lives in localStorage, not the dataDir.** DECIDED
   (2026-07-14): move it behind the Storage seam as files in the dataDir
   (`collisions.json` + the source toggles; desktop = real file, web = same code path via
@@ -286,9 +298,13 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   **NOTE: `gatherEffects` still bakes `name_en` and `Contribution.note` trace-parentheticals
   ("DEX 16") stay EN — those are the remaining un-i18n'd surface, out of B18's `Computed.notes`
   scope; the roll log rework is the next consumer to keep on structured notes.**
-- [ ] **B19 · Durations tick only in combat.** Rounds advance only via `nextTurn`; out of combat
-  `play.round` is frozen → a 10-round Bless cast outside combat never expires (only a rest clears
-  it). No real-time/out-of-combat expiry model.
+- [x] **B19 · Durations tick only in combat.** FIXED 2026-07-25. `nextTurn`'s expiry is now a shared
+  core (`expireTimedEffects`) reused by a new `advanceTime(rounds)` (economy.svelte.ts) — an
+  out-of-combat "Pass time" bar (`TimeSkip.svelte`, +1 rd / +1 min=10rd / +10 min / +1 hr; 1 rd = 6 s)
+  advances `play.round` and expires what timed out (ending a cast-linked effect's concentration, same
+  as a turn). Shown only while a round-timed effect is ticking (`combat.hasTimedEffects`), so a
+  10-round Bless cast outside a fight can actually be run down without a rest. (User chose the manual
+  advance-time model over real wall-clock.)
 - [x] **B20 · Defenses are display-only.** FIXED 2026-07-20. `applyDefense(amount, type, defenses)`
   (pure, `combat/helpers.ts`) applies immune→0 / resist→½ (round down, RAW) / vulnerable→×2 BEFORE
   temp-HP soak (RAW ordering); the combat VM's `damage()` runs it with a selected `damageType`, and
@@ -321,18 +337,23 @@ Deep effects-system review, 2026-07-16 (B12–B26):
 - [ ] **B24 · Watcher reloads EVERYTHING on any change** — CLAUDE.md promises "reparse only the
   changed file". `watcher.ts` debounces into a full `reloadContent()`. Perf-only today; the
   invariant should be re-worded or implemented.
-- [ ] **B25 · Subclass casting is a UI lie.** `subclasses.csv` carries caster columns +
-  `caster_from_level` (schemas.ts:252-264) and the homebrew FORM offers them (homebrew.ts:86,113),
-  but `deriveSpellcasting` reads only class rows — Eldritch Knight / Arcane Trickster get no
-  slots, no DC (PLAN L6 designed-not-built; the authoring form shouldn't offer dead fields).
-- [ ] **B26 · Feature source-pinning blocks homebrew extension of SRD classes.**
-  `derive.ts:181` (`f.source !== classRow.source`) means PHB features a user adds for the SRD
-  fighter (their own source tag) never match — contradicts "users add non-SRD content
-  themselves". DIRECTION (discussion 2026-07-16, pending confirm): match on
-  `(class_id, edition)` + respect `isRowActive` (B15), and treat the same `(class_id, level, id)`
-  from two sources as a COLLISION resolved by the existing keep-one/keep-all UI, with a
-  warn+apply-one default. `graph.featuresForClass` (loader.ts:397) is an unused divergent
-  duplicate of this query — fold it in (D18).
+- [~] **B25 · Subclass casting is a UI lie.** WIRED 2026-07-25. `deriveSpellcasting` now normalizes
+  each build class into a `CasterProfile` (`casterProfileFor`): a caster class as before, OR the chosen
+  casting SUBCLASS's caster columns when the base class doesn't cast, gated by `caster_from_level`
+  (RAW: EK/AT come online at level 3). A subclass caster gets slots + INT/… DC + prepared cap, keying
+  its `class_casting`/`slot_table` off the subclass id. Fixture test (a homebrew Eldritch Knight as a
+  one-third caster) covers below/at the grant level. Whole-PHB support goal, per the user's scope call
+  (CLAUDE.md "What this is"). STILL OPEN: subclass spell-LIST access — an EK draws the Wizard list, but
+  `buildSpellAccess` indexes only `class` rows, so a subclass caster's pickable-spell list is empty
+  until a subclass→list data seam exists (B25 follow-up).
+- [x] **B26 · Feature source-pinning blocks homebrew extension of SRD classes.** FIXED 2026-07-25.
+  `graph.featuresForClass` is now the ONE query owner (D18 folded): it matches class_features on
+  `(class_id, edition-overlap)` — NOT source — and derive calls it, layering the per-character gates
+  (exact system, level ≤, `isRowActive`, chosen subclass). A user's PHB/homebrew feature for the SRD
+  fighter (its own source tag) now attaches; a same `(class_id,level,id)` from two overlapping sources
+  is a collision handled by `isRowActive` (keep-one/keep-all), so it can't double-apply. Typed
+  (`LoadedRowByType<'class_feature'>[]`). Regression tests: cross-source attach folds into the sheet,
+  and disabling the homebrew source drops it (B15 still governs).
 
 ## C · Design-token / CSS violations
 

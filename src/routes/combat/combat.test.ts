@@ -146,6 +146,31 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 		expect(character.play.effects.map((e) => e.iid)).toEqual(['b']);
 	});
 
+	it('B19: advanceTime skips rounds out of combat and expires what timed out', () => {
+		character.play.round = 0;
+		character.play.inCombat = false;
+		character.play.effects = [
+			// a 10-round (1 min) Bless cast outside combat + an indefinite effect
+			{ iid: 'bless', label: 'Bless', effects: [], positive: true, durationRounds: 10, startedRound: 0 },
+			{ iid: 'mark', label: 'Mark', effects: [], positive: false }
+		];
+		combat.economy.advanceTime(1); // +1 round → 8 s in, Bless still up
+		expect(character.play.round).toBe(1);
+		expect(character.play.effects.map((e) => e.iid)).toEqual(['bless', 'mark']);
+		combat.economy.advanceTime(10); // +1 min → round 11 ≥ 0 + 10 → Bless expires
+		expect(character.play.round).toBe(11);
+		expect(character.play.effects.map((e) => e.iid)).toEqual(['mark']);
+	});
+
+	it('B19: hasTimedEffects is true only while a round-timed effect is active', () => {
+		character.play.effects = [{ iid: 'x', label: 'X', effects: [], positive: false }];
+		expect(combat.hasTimedEffects).toBe(false); // indefinite only
+		character.play.effects = [
+			{ iid: 'y', label: 'Y', effects: [], positive: true, durationRounds: 5, startedRound: 0 }
+		];
+		expect(combat.hasTimedEffects).toBe(true);
+	});
+
 	it('an expiring cast_linked effect also ends its concentration', () => {
 		character.play.round = 1;
 		character.play.concentration = `spell:${S}:bless`;

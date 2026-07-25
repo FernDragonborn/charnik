@@ -67,14 +67,13 @@ export class TurnEconomy {
 		const c = this.getCharacter();
 		if (c) c.play.turn.move = 0;
 	};
-	/** End the turn: refresh every action-economy slot, advance the round counter, and expire
-	 *  round-timed effects (with a notice — never silently). A cast-linked effect that expires also
-	 *  ends its concentration (the spell's duration IS the concentration's, RAW). */
-	nextTurn = () => {
+	/** Expire whatever round-timed effects have run out at the CURRENT round (with a notice — never
+	 *  silently). A cast-linked effect that expires also ends its concentration (the spell's duration
+	 *  IS the concentration's, RAW). Shared by the in-combat turn advance and the out-of-combat time
+	 *  skip so both expire identically. */
+	private expireTimedEffects = () => {
 		const c = this.getCharacter();
 		if (!c) return;
-		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
-		c.play.round += 1;
 		const expired = c.play.effects.filter((e) => isEffectExpired(e, c.play.round));
 		if (!expired.length) return;
 		c.play.effects = c.play.effects.filter((e) => !isEffectExpired(e, c.play.round));
@@ -82,6 +81,27 @@ export class TurnEconomy {
 			if (e.source && e.source === c.play.concentration) c.play.concentration = null;
 			toast(`${e.label} — expired`);
 		}
+	};
+
+	/** End the turn: refresh every action-economy slot, advance the round counter, and expire
+	 *  round-timed effects. */
+	nextTurn = () => {
+		const c = this.getCharacter();
+		if (!c) return;
+		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+		c.play.round += 1;
+		this.expireTimedEffects();
+	};
+
+	/** B19: pass time OUT of combat — advance `rounds` (1 round = 6 s) and expire timed effects, so a
+	 *  10-round Bless cast outside a fight actually ends instead of hanging until a rest. No
+	 *  action-economy reset (there's no turn being taken). Callers pass 1 / 10 / 100 / 600 for a
+	 *  round / minute / 10 minutes / hour. */
+	advanceTime = (rounds: number) => {
+		const c = this.getCharacter();
+		if (!c || rounds <= 0) return;
+		c.play.round += Math.floor(rounds);
+		this.expireTimedEffects();
 	};
 	/** Enter/leave combat. Entering resets the turn + round so tracking starts clean; leaving hides the
 	 *  turnbar and lifts action-economy enforcement. */

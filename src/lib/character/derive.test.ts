@@ -964,3 +964,52 @@ describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
 		expect(s.deriveIssues.some((i) => i.reason.includes('not available'))).toBe(true);
 	});
 });
+
+describe('B26: class features attach across sources (homebrew extends an SRD class)', () => {
+	// A user adds a PHB/homebrew feature for the SHIPPED SRD wizard — it carries their OWN source tag,
+	// not "SRD 5.2.1". The old source-pin (f.source === classRow.source) dropped it; now the feature
+	// query matches on class_id + edition, so it attaches. This is the whole-PHB support contract.
+	const HB = 'My Homebrew';
+	async function graphWithHomebrewFeature(): Promise<ContentGraph> {
+		const st = new MemoryStorage();
+		await st.write(
+			'c/classes_srd.csv',
+			[
+				'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
+				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`
+			].join('\n')
+		);
+		// a SEPARATE file with a DIFFERENT source tag — the homebrew the user drops in
+		await st.write(
+			'c/class_features_homebrew.csv',
+			[
+				'id,systems,source,name_en,effects,class_id,level,subclass_id',
+				`focused_mind,5.5e,${HB},Focused Mind,flat_bonus:ac+5,wizard,1,`
+			].join('\n')
+		);
+		const g = await loadContent(st, ['c']);
+		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
+		return g;
+	}
+	function plainWizard(): Character {
+		const c = newCharacter('gandalf', 'Gandalf', '5.5e');
+		c.build.classes = [{ class: `class:${S}:wizard`, level: 1 }];
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 16, wis: 10, cha: 10 };
+		return characterSchema.parse(c);
+	}
+
+	it('the homebrew feature (own source) reaches the SRD wizard — old source-pin no longer blocks it', async () => {
+		const g = await graphWithHomebrewFeature();
+		// featuresForClass is the ONE query owner (D18) — it must see the cross-source feature
+		const wizardRow = g.get(`class:${S}:wizard`)!;
+		expect(g.featuresForClass(wizardRow).some((f) => f.id === 'focused_mind')).toBe(true);
+		// and it folds into the sheet: unarmored AC 10 + the feature's +5
+		expect(deriveSheet(plainWizard(), g).ac.value).toBe(15);
+	});
+
+	it('B15 still governs: disabling the homebrew source drops the feature', async () => {
+		const g = await graphWithHomebrewFeature();
+		const filtered = deriveSheet(plainWizard(), g, (row) => row.source !== HB);
+		expect(filtered.ac.value).toBe(10); // feature no longer applied
+	});
+});

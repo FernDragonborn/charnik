@@ -125,7 +125,16 @@
 			<button class="pill-btn" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
 		</span>
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
-		<span class="prepared-count">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
+		{#if combat.preparedTallies.length > 1}
+			<!-- A18-tail: per-class prepared caps for a multiclass caster (one figure per class) -->
+			<span class="prepared-count">
+				{#each combat.preparedTallies as t (t.classId)}
+					<span class="prep-cls">{t.className} <b>{t.count}</b>/{t.cap}</span>
+				{/each}
+			</span>
+		{:else}
+			<span class="prepared-count">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
+		{/if}
 		<button class="pill-btn" onclick={cycleGroupBy} title="Change grouping">{groupByLabel} ▾</button
 		>
 		<a class="pill-btn" href="{base}/spellbook">⛭ Manage all</a>
@@ -1065,5 +1074,8 @@
 	}
 	.prepared-count b {
 		color: var(--color-resource);
+	}
+	.prep-cls + .prep-cls {
+		margin-left: var(--space-2);
 	}
 </style>

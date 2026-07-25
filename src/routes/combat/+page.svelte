@@ -13,6 +13,7 @@
 	import Hero from './blocks/Hero.svelte';
 	import Controls from './blocks/Controls.svelte';
 	import Turnbar from './blocks/Turnbar.svelte';
+	import TimeSkip from './blocks/TimeSkip.svelte';
 	import ResourceBar from './blocks/ResourceBar.svelte';
 	import Playbar from './blocks/Playbar.svelte';
 	import CombatStrip from './blocks/CombatStrip.svelte';
@@ -86,6 +87,8 @@
 
 	{#if c.play.inCombat}
 		<Turnbar {c} />
+	{:else if combat.hasTimedEffects}
+		<TimeSkip />
 	{/if}
 
 	{#if s.resources.length}

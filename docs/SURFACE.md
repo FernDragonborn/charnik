@@ -388,6 +388,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
 - `function standardActions` — The standard combat actions (Dash, Hide, Grapple…); roll ones reference live skills.
 - `function casterForSpell` — The caster class a spell is cast AS — whose DC / attack / ability are the ones actually USED * (RAW: a multiclass cas…
+- `interface PreparedClassTally` — A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its * own cap.
+- `function preparedTalliesByClass` — Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class * that grants it — v…
 - `function buildSpellGroups`
 - `function spellRow` — Build a spell row from the content graph (or null if the ref is missing).
 
@@ -869,4 +871,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 488 exports across 69 modules · 28 duplicate suspects · generated in 122ms._
+_46 tokens · 50 global classes · 36 components · 490 exports across 69 modules · 28 duplicate suspects · generated in 121ms._

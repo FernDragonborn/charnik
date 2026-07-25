@@ -118,7 +118,7 @@ export interface ContentGraph {
 	/** All editions/sources of one article (same type + slug). */
 	editionsOf(type: ContentType, id: string): LoadedRow[];
 	/** Base-class features for a class row (same source, matching class_id). */
-	featuresForClass(classRow: LoadedRow): LoadedRow[];
+	featuresForClass(classRow: LoadedRow): LoadedRowByType<'class_feature'>[];
 	/** Resolve referenced `source:id`s; report which are missing (render-what-you-can). */
 	resolveRefs(effectiveIds: string[]): { found: LoadedRow[]; missing: string[] };
 }
@@ -427,11 +427,16 @@ export async function loadContent(
 			return articles.get(`${type}:${id}`) ?? [];
 		},
 		featuresForClass(classRow) {
+			// The ONE "which class_feature rows belong to this class row" query (D18) — derive's gather
+			// AND tests read it. Matches on class_id + edition OVERLAP, NOT on source: a homebrew/PHB
+			// feature a user adds for an SRD class carries its OWN source tag, and must still attach
+			// (B26 — "users add non-SRD content themselves"). Callers layer the per-character gates
+			// (exact system, level ≤ class level, isRowActive, the chosen subclass) on top.
 			return (byType.get('class_feature') ?? []).filter(
-				(f) =>
+				(f): f is LoadedRowByType<'class_feature'> =>
 					f.type === 'class_feature' &&
-					f.source === classRow.source &&
-					f.data.class_id === classRow.id
+					f.data.class_id === classRow.id &&
+					f.systems.some((s) => classRow.systems.includes(s))
 			);
 		},
 		resolveRefs(effectiveIds) {

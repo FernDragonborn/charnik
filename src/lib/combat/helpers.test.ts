@@ -19,6 +19,7 @@ import {
 	weaponBonus,
 	describeDerivedEffects,
 	casterForSpell,
+	preparedTalliesByClass,
 	type EffectInstance
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
@@ -57,6 +58,58 @@ describe('A18 · casterForSpell (multiclass uses the spell class own DC)', () =>
 		);
 		expect(casterForSpell(sheet, 'spell:x:shield')?.className).toBe('Wizard'); // DC 16 > 13
 		expect(casterForSpell(sheet, 'spell:x:unknown')?.className).toBe('Wizard'); // fallback
+	});
+});
+
+describe('A18-tail · preparedTalliesByClass (per-class prepared accounting)', () => {
+	const cls = (
+		classId: string,
+		className: string,
+		dc: number,
+		cap: number,
+		spells: string[]
+	): SpellcastingClass =>
+		({
+			classId,
+			className,
+			preparedCap: cap,
+			saveDC: computed([{ source: 'x', layer: 'base', op: 'add', amount: dc }]),
+			accessSpellIds: spells
+		}) as unknown as SpellcastingClass;
+	const sheetOf = (...classes: SpellcastingClass[]) =>
+		({ spellcasting: { classes } }) as unknown as CharacterSheet;
+	const prep = (spell: string) => ({ spell, prepared: true, alwaysPrepared: false });
+
+	it('attributes each prepared spell to the class that grants it, counting per class', () => {
+		const sheet = sheetOf(
+			cls('wizard', 'Wizard', 16, 9, ['spell:x:fireball', 'spell:x:mage_armor']),
+			cls('cleric', 'Cleric', 13, 5, ['spell:x:cure_wounds'])
+		);
+		const tallies = preparedTalliesByClass(
+			[prep('spell:x:fireball'), prep('spell:x:mage_armor'), prep('spell:x:cure_wounds')],
+			sheet
+		);
+		expect(tallies).toEqual([
+			{ classId: 'wizard', className: 'Wizard', count: 2, cap: 9 },
+			{ classId: 'cleric', className: 'Cleric', count: 1, cap: 5 }
+		]);
+	});
+
+	it('never counts always-prepared or unprepared spells; an overlap goes to the higher-DC class', () => {
+		const sheet = sheetOf(
+			cls('wizard', 'Wizard', 16, 9, ['spell:x:shield']),
+			cls('cleric', 'Cleric', 13, 5, ['spell:x:shield'])
+		);
+		const tallies = preparedTalliesByClass(
+			[
+				prep('spell:x:shield'), // on both lists → attributed to Wizard (DC 16 > 13)
+				{ spell: 'spell:x:bless', prepared: true, alwaysPrepared: true }, // free, never counts
+				{ spell: 'spell:x:sleep', prepared: false, alwaysPrepared: false } // not prepared
+			],
+			sheet
+		);
+		expect(tallies.find((t) => t.classId === 'wizard')!.count).toBe(1);
+		expect(tallies.find((t) => t.classId === 'cleric')!.count).toBe(0);
 	});
 });
 

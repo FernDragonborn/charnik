@@ -11,6 +11,7 @@
 	import { ui } from '$lib/stores/ui.svelte';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { makeNameIndex, makeTextIndex, searchContent } from '$lib/content/search';
+	import { isRowActive } from '$lib/content/sources.svelte';
 
 	interface PageItem {
 		kind: 'page';
@@ -58,7 +59,15 @@
 			? searchContent(nameIndex, textIndex, query, {
 					editions: app.activeEditions,
 					locale: app.activeLocale
-				}).map((r) => ({
+				})
+					// B5: two-dimensional source filter — hide rows from a disabled file/source or the
+					// losing side of a resolved collision, same as the compendium/builders. Results are
+					// ≤ limit, so resolving each back to its row via the graph is cheap.
+					.filter((r) => {
+						const row = content.graph?.get(r.effectiveId);
+						return row ? isRowActive(row) : true;
+					})
+					.map((r) => ({
 					kind: 'content',
 					key: r.effectiveId,
 					type: r.type,

@@ -721,6 +721,39 @@ export function casterForSpell(
 	);
 }
 
+/** A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its
+ *  own cap. */
+export interface PreparedClassTally {
+	classId: string;
+	className: string;
+	count: number;
+	cap: number;
+}
+
+/** Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class
+ *  that grants it — via `casterForSpell`, the SAME access-map binding the builder's picker uses — and
+ *  count within that class, so a multiclass caster's prepared limit is enforced PER class instead of
+ *  all against `classes[0]`. Always-prepared/cantrip entries never count (they carry `prepared=false`
+ *  or `alwaysPrepared`). One tally per caster profile, in profile order. */
+export function preparedTalliesByClass(
+	spells: readonly { spell: string; prepared: boolean; alwaysPrepared: boolean }[],
+	sheet: CharacterSheet | null
+): PreparedClassTally[] {
+	const classes = sheet?.spellcasting.classes ?? [];
+	const counts = new Map<string, number>();
+	for (const s of spells) {
+		if (!s.prepared || s.alwaysPrepared) continue;
+		const cls = casterForSpell(sheet, s.spell);
+		if (cls) counts.set(cls.classId, (counts.get(cls.classId) ?? 0) + 1);
+	}
+	return classes.map((c) => ({
+		classId: c.classId,
+		className: c.className,
+		count: counts.get(c.classId) ?? 0,
+		cap: c.preparedCap
+	}));
+}
+
 export function buildSpellGroups(
 	character: Character,
 	sheet: CharacterSheet | null,

@@ -64,6 +64,16 @@ roles in one UI — **build & level-up**, **play tracking** (HP, slots, resource
 conditions, concentration, rests, optional XP), and a **compendium browser** over all
 loaded content. Built for non-technical users to own and edit their data as plain CSV.
 
+**Mechanical scope = the whole game, not just the SRD.** The engine must be able to
+represent **the entire PHB, the official rulebooks, and the most popular homebrew** — so
+when a mechanic exists in official/PHB material (multiclass casting subclasses like
+Eldritch Knight / Arcane Trickster, one-third casters, non-SRD feats, etc.), we wire it
+up as data-driven rules rather than punting on it because the *shipped* data happens to be
+SRD-only. This is the support surface; it does NOT change what we ship (see "Content /
+licensing constraint" — shipped data stays SRD-only, users add the rest). The rule of
+thumb: never hardcode a "SRD-only" assumption into the rules core or schemas; a homebrew /
+PHB author dropping in the CSV rows must Just Work.
+
 ## Stack (decided)
 
 - **Tauri v2 desktop app** + **SvelteKit (`adapter-static` SPA, TS)** in the system

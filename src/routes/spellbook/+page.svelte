@@ -12,6 +12,7 @@
 	import { deriveSheet } from '$lib/character/derive';
 	import { isRowActive } from '$lib/content/sources.svelte';
 	import { canTogglePrepared, preparedLeveledCount } from '$lib/rules/spellcasting';
+	import { casterForSpell, preparedTalliesByClass } from '$lib/combat/helpers';
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
 	import { buildDetail, groupEntries, toEntryGroups } from '$lib/content/detail';
@@ -88,12 +89,21 @@
 	// only LEVELED prepared spells count toward the cap — cantrips are always-known, not prepared
 	const preparedCount = $derived(preparedLeveledCount(character?.build.spells ?? []));
 	const preparedCap = $derived(sheet?.spellcasting.classes[0]?.preparedCap ?? 0);
+	// A18-tail: per-class prepared accounting (attribute each prepared spell to the class that grants
+	// it). Single caster collapses to one row; multiclass shows + enforces a cap per class.
+	const preparedTallies = $derived(preparedTalliesByClass(character?.build.spells ?? [], sheet));
 
 	function togglePrepare(id: string) {
 		const e = entryOf.get(id);
 		const row = graph?.get(id);
 		const isCantrip = row?.type === 'spell' && Number(row.data.level) === 0;
-		const res = canTogglePrepared(e, isCantrip, preparedCap, preparedCount);
+		// gate against the cap of the class that grants this spell (per-class), not classes[0]
+		const cls = casterForSpell(sheet, id);
+		const cap = cls?.preparedCap ?? preparedCap;
+		const count = cls
+			? (preparedTallies.find((t) => t.classId === cls.classId)?.count ?? 0)
+			: preparedCount;
+		const res = canTogglePrepared(e, isCantrip, cap, count);
 		if (!res.ok) {
 			if (res.message) toast(res.message);
 			return;
@@ -119,9 +129,13 @@
 {:else}
 	<div class="mgrhead">
 		<h1>Manage spells</h1>
-		<span class="prepared-count"
-			>Prepared <b>{preparedCount}</b>/{preparedCap} · spellbook {resolved.length}</span
-		>
+		<span class="prepared-count">
+			{#if preparedTallies.length > 1}
+				{#each preparedTallies as t (t.classId)}<span class="prep-cls"
+						>{t.className} <b>{t.count}</b>/{t.cap}</span
+					>{/each}
+			{:else}Prepared <b>{preparedCount}</b>/{preparedCap}{/if} · spellbook {resolved.length}
+		</span>
 		<span class="spacer"></span>
 		<button class="done" onclick={() => goto(`${base}/combat`)}>Done</button>
 	</div>
@@ -209,6 +223,9 @@
 	}
 	.prepared-count b {
 		color: var(--color-resource);
+	}
+	.prep-cls + .prep-cls {
+		margin-left: var(--space-2);
 	}
 	.spacer {
 		flex: 1;

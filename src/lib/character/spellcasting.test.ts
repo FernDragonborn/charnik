@@ -108,3 +108,69 @@ describe('deriveSpellcasting', () => {
 		expect(pact).toMatchObject({ spellLevel: 3, max: 2, recharge: 'short' });
 	});
 });
+
+/*
+ * B25: a casting SUBCLASS (Eldritch Knight — a homebrew/PHB drop-in, since the shipped SRD has none)
+ * brings casting online off the SUBCLASS row's caster columns, gated by caster_from_level. The base
+ * class (Fighter) is caster:none, so before that level there's no casting at all.
+ */
+describe('deriveSpellcasting: casting subclass (B25)', () => {
+	let g: ContentGraph;
+	beforeAll(async () => {
+		const s = new MemoryStorage();
+		await s.write(
+			'a/classes_srd.csv',
+			[CLASS, 'fighter,5.5e,SRD 5.2.1,fighter,d10,"str,con",none,'].join('\n')
+		);
+		await s.write(
+			'a/subclasses_srd.csv',
+			[
+				'id,systems,source,name_en,class_id,caster,caster_share,prepare_style,slot_table,spell_ability,caster_from_level',
+				// Eldritch Knight: a one-third INT caster from Fighter level 3
+				'eldritch_knight,5.5e,SRD 5.2.1,Eldritch Knight,fighter,third,third,known,third,int,3'
+			].join('\n')
+		);
+		await s.write(
+			'a/spell_slots_srd.csv',
+			// third-caster table: L3 → two 1st-level slots; L7 → three 1st + one 2nd
+			[SLOTS, slotRow('third', 3, 2), slotRow('third', 7, 4, 2)].join('\n')
+		);
+		await s.write(
+			'a/class_casting_srd.csv',
+			// class_casting keyed by the SUBCLASS id (the owner of the casting progression)
+			[CAST, castRow('eldritch_knight', 3, 2, 3)].join('\n')
+		);
+		g = await loadContent(s, ['a']);
+		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
+	});
+
+	const ek = (level: number): Character =>
+		make((c) => {
+			c.build.classes = [
+				{ class: 'class:SRD 5.2.1:fighter', level, subclass: 'subclass:SRD 5.2.1:eldritch_knight' }
+			];
+		});
+
+	it('below caster_from_level: Fighter 2 EK does not cast', () => {
+		expect(deriveSheet(ek(2), g).spellcasting.classes).toHaveLength(0);
+	});
+
+	it('at caster_from_level: Fighter 3 EK gets slots, an INT DC, and a prepared cap from the subclass', () => {
+		const sc = deriveSheet(ek(3), g).spellcasting;
+		expect(sc.classes).toHaveLength(1);
+		const p = sc.classes[0]!;
+		expect(p.ability).toBe('int');
+		expect(p.saveDC.value).toBe(13); // 8 + 2(prof L3) + 3(int 16)
+		expect(p.maxSpellLevel).toBe(1); // third@3 → [2]
+		expect(p.preparedCap).toBe(3); // class_casting eldritch_knight_3
+		expect(sc.pools.map((x) => x.spellLevel)).toEqual([1]); // one 1st-level slot tier
+		expect(sc.pools[0]!.max).toBe(2);
+	});
+
+	it('a plain Fighter 3 (no EK subclass) still does not cast', () => {
+		const plain = make(
+			(c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 3 }])
+		);
+		expect(deriveSheet(plain, g).spellcasting.classes).toHaveLength(0);
+	});
+});

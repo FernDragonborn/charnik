@@ -350,18 +350,20 @@ function gatherEffects(
 	pushRow(resolve(character.build.background), 'feature');
 
 	// class + subclass: the class row's own tokens, its base features up to the class level, the
-	// chosen subclass row, and that subclass's features (same level gate). Features are matched by
-	// class_id within the CLASS ROW'S source + the character's edition, so a 5e and a 5.5e feature
-	// table for the same class can coexist without double-applying.
+	// chosen subclass row, and that subclass's features (same level gate). Features come from the ONE
+	// query owner (graph.featuresForClass — D18) which matches on class_id + edition, NOT source, so a
+	// user's PHB/homebrew feature for an SRD class attaches (B26). Here we layer the per-character
+	// gates: exact system, level ≤ class level, isRowActive, and the chosen subclass. A same
+	// (class_id,level,id) row from two overlapping sources is a collision handled by isRowActive
+	// (keep-one/keep-all), so it can't double-apply.
 	for (const entry of character.build.classes) {
 		const classRow = resolve(entry.class);
 		pushRow(classRow, 'feature', classRow?.id);
 		const subclassRow = resolve(entry.subclass);
 		pushRow(subclassRow, 'feature', classRow?.id);
 		if (!classRow) continue;
-		for (const f of graph.rows) {
-			if (f.type !== 'class_feature' || f.source !== classRow.source) continue;
-			if (f.data.class_id !== classRow.id || Number(f.data.level) > entry.level) continue;
+		for (const f of graph.featuresForClass(classRow)) {
+			if (Number(f.data.level) > entry.level) continue;
 			if (!f.systems.includes(character.system)) continue;
 			if (!isActive(f)) continue; // B15: a disabled/collision-lost feature row doesn't apply
 			// base feature (no subclass_id) always applies; a subclass feature only for the chosen one

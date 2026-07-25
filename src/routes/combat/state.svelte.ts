@@ -31,6 +31,7 @@ import {
 	standardActions,
 	buildSpellGroups,
 	casterForSpell,
+	preparedTalliesByClass,
 	parseDamage,
 	modTargetLabel,
 	applyDefense,
@@ -96,6 +97,11 @@ class CombatVM {
 	get round(): number {
 		return this.character?.play.round ?? 0;
 	}
+	// B19: any round-timed effect currently ticking. Gates the out-of-combat "pass time" control — a
+	// timed buff cast outside a fight has no turn advance to expire it, so it'd hang until a rest.
+	hasTimedEffects = $derived(
+		(this.character?.play.effects ?? []).some((e) => e.durationRounds != null)
+	);
 	pinned = $state<Record<string, boolean>>({ 'fire-bolt': true, shield: true });
 	// menus open as dropdowns anchored under their trigger button (not centered modals)
 	overlay = $state<null | {
@@ -585,7 +591,13 @@ class CombatVM {
 	togglePrepared = (r: SpRow) => {
 		if (!this.character) return;
 		const sp = this.character.build.spells.find((s) => s.spell.endsWith(`:${r.id}`));
-		const res = canTogglePrepared(sp, r.tm === 'cantrip', this.preparedCap, this.preparedCount);
+		// A18-tail: gate against the cap of the class that GRANTS this spell (per-class), not classes[0]
+		const cls = casterForSpell(this.sheet, r.ref);
+		const cap = cls?.preparedCap ?? this.preparedCap;
+		const count = cls
+			? (this.preparedTallies.find((t) => t.classId === cls.classId)?.count ?? 0)
+			: this.preparedCount;
+		const res = canTogglePrepared(sp, r.tm === 'cantrip', cap, count);
 		if (!res.ok) {
 			if (res.message) toast(res.message);
 			return;
@@ -621,8 +633,14 @@ class CombatVM {
 	// B9: worn non-proficient armor blocks spellcasting (RAW rule-block). Surfaced on the spells panel.
 	armorBlock = $derived(this.sheet?.spellcasting.armorBlock);
 	preparedCount = $derived(preparedLeveledCount(this.character?.build.spells ?? []));
-	// prepared cap from the primary caster's derived profile (class table / formula), not hardcoded
+	// prepared cap from the primary caster's derived profile (class table / formula), not hardcoded.
+	// Single-caster header still reads this; the toggle gate + multiclass header use preparedTallies.
 	preparedCap = $derived(this.sheet?.spellcasting.classes[0]?.preparedCap ?? 0);
+	// A18-tail: per-class prepared accounting (each prepared spell attributed to the class that grants
+	// it). Drives the multiclass header + the per-class toggle cap; single-class collapses to one row.
+	preparedTallies = $derived(
+		preparedTalliesByClass(this.character?.build.spells ?? [], this.sheet)
+	);
 
 	hpBar = $derived.by(() => {
 		if (!this.character || !this.sheet) return { cur: 0, tmp: 0 };

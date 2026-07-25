@@ -9,7 +9,7 @@
  * highest spell level a class can LEARN is its own single-class table's max (a Wizard 1 can't
  * prepare 3rd-level spells even if a Cleric multiclass grants 3rd-level slots).
  */
-import type { ContentGraph, LoadedRowOf } from '../content/loader';
+import type { ContentGraph } from '../content/loader';
 import { getSpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
@@ -134,6 +134,79 @@ export function castingAbilityByClass(
 	return out;
 }
 
+/** A build class normalized into "what casts, and how" — so the slot/DC/prepared pipeline is
+ *  source-agnostic. The caster columns come from the CLASS row for a caster class, or from the chosen
+ *  SUBCLASS row for a casting subclass (Eldritch Knight / Arcane Trickster; B25). `level` is always the
+ *  class level (it drives slots + the effective caster level regardless of which row casts). */
+interface CasterProfile {
+	level: number;
+	caster: string;
+	share: CasterShare;
+	ability: Ability;
+	prepareStyle: 'prepared' | 'known';
+	slotKind: string;
+	className: string;
+	/** Bare id owning the `class_casting` rows (the class, or the subclass for a subclass caster). */
+	ownerId: string;
+	/** The build ref (`class:…`/`subclass:…`) used as identity + for the spell-access lookup. */
+	accessRef: string;
+	ritual: boolean;
+}
+
+/** Resolve a build class into its caster profile, or null if it doesn't cast. A casting SUBCLASS only
+ *  comes online at its `caster_from_level` (RAW: EK/AT gain Spellcasting at Fighter/Rogue level 3). */
+function casterProfileFor(
+	entry: Character['build']['classes'][number],
+	graph: ContentGraph
+): CasterProfile | null {
+	const classRow = graph.get(entry.class);
+	if (classRow?.type !== 'class') return null;
+
+	// base-class caster wins when the class itself casts (Wizard/Cleric/Sorcerer/Warlock/…)
+	if (classRow.data.caster !== 'none') {
+		const caster = String(classRow.data.caster);
+		return {
+			level: entry.level,
+			caster,
+			share: classRow.data.caster_share ?? shareFromCaster(caster),
+			ability: classRow.data.spell_ability ?? 'int',
+			prepareStyle: classRow.data.prepare_style ?? 'prepared',
+			slotKind: String(classRow.data.slot_table || caster),
+			className: String(classRow.data.name_en),
+			ownerId: classRow.id,
+			accessRef: entry.class,
+			ritual: classRow.data.ritual === true
+		};
+	}
+
+	// else a casting SUBCLASS (its caster columns filled) brings casting online at caster_from_level.
+	const subRow = entry.subclass ? graph.get(entry.subclass) : undefined;
+	if (
+		subRow?.type === 'subclass' &&
+		subRow.data.caster != null &&
+		entry.level >= (subRow.data.caster_from_level ?? 1)
+	) {
+		const caster = String(subRow.data.caster);
+		return {
+			level: entry.level,
+			caster,
+			share: subRow.data.caster_share ?? shareFromCaster(caster),
+			ability: subRow.data.spell_ability ?? 'int',
+			prepareStyle: subRow.data.prepare_style ?? 'prepared',
+			slotKind: String(subRow.data.slot_table || caster),
+			className: String(classRow.data.name_en),
+			// class_casting rows for a subclass caster key off the SUBCLASS id (a homebrew author adds
+			// them there). NOTE: subclass spell-LIST access (an EK draws the Wizard list) needs a
+			// subclass→list data seam that doesn't exist yet — tracked as a B25 follow-up; today a
+			// subclass caster gets slots + DC + prepared cap but an empty pickable-spell list.
+			ownerId: subRow.id,
+			accessRef: entry.subclass!,
+			ritual: false
+		};
+	}
+	return null;
+}
+
 export function deriveSpellcasting(
 	character: Character,
 	graph: ContentGraph,
@@ -143,35 +216,25 @@ export function deriveSpellcasting(
 	const systems = [character.system];
 	const totalLevel = character.build.classes.reduce((n, c) => n + c.level, 0) || 1;
 
-	// a build class references a `class` row by id; keep the ones that actually cast. The type
-	// predicate narrows `row` to LoadedRowOf<'class'>, so caster/caster_share/slot_table/spell_ability
-	// below read typed — no casts.
-	const casters = character.build.classes
-		.map((c) => ({ c, row: graph.get(c.class) }))
-		.filter(
-			(x): x is { c: { class: string; level: number }; row: LoadedRowOf<'class'> } =>
-				x.row?.type === 'class' && x.row.data.caster !== 'none'
-		);
+	// each build class → its caster profile (class row, or a casting subclass — B25); drop non-casters
+	const sources = character.build.classes
+		.map((entry) => casterProfileFor(entry, graph))
+		.filter((p): p is CasterProfile => p !== null);
 
-	if (casters.length === 0) return { classes: [], pools: [], casterLevel: 0, ritualCasting: false };
+	if (sources.length === 0)
+		return { classes: [], pools: [], casterLevel: 0, ritualCasting: false };
 
-	// E7: revive the dead `class.ritual` column — the character can ritual-cast iff ANY of its caster
-	// classes carries Ritual Casting (Wizard/Cleric/Druid/Bard; not base Warlock).
-	const ritualCasting = casters.some((x) => x.row.data.ritual === true);
-
-	const shareOf = (row: LoadedRowOf<'class'>): CasterShare =>
-		row.data.caster_share ?? shareFromCaster(String(row.data.caster));
+	// E7: the character can ritual-cast iff ANY caster source carries Ritual Casting (Wizard/Cleric/
+	// Druid/Bard; not base Warlock, and not a subclass caster by default).
+	const ritualCasting = sources.some((p) => p.ritual);
 
 	// shared multiclass caster level (pact excluded) + shared leveled slot pool (L1 branch)
-	const shared = casters.filter((x) => x.row.data.caster !== 'pact');
-	const casterLevel = effectiveCasterLevel(
-		shared.map((x) => ({ share: shareOf(x.row), level: x.c.level }))
-	);
+	const shared = sources.filter((p) => p.caster !== 'pact');
+	const casterLevel = effectiveCasterLevel(shared.map((p) => ({ share: p.share, level: p.level })));
 	let sharedCounts: number[] = [];
 	const only = shared.length === 1 ? shared[0] : undefined;
 	if (only) {
-		const kind = String(only.row.data.slot_table || only.row.data.caster);
-		sharedCounts = slotCountsFor(slotTable(graph, kind, systems), only.c.level);
+		sharedCounts = slotCountsFor(slotTable(graph, only.slotKind, systems), only.level);
 	} else if (shared.length > 1) {
 		sharedCounts = slotCountsFor(slotTable(graph, 'full', systems), casterLevel);
 	}
@@ -181,42 +244,39 @@ export function deriveSpellcasting(
 		facts ? applyEffects(key, base, facts) : base;
 
 	const access = getSpellAccess(graph);
-	const classes: SpellcastingClass[] = casters.map(({ c, row }) => {
-		const caster = String(row.data.caster);
-		const isPact = caster === 'pact';
-		const ability: Ability = row.data.spell_ability ?? 'int';
-		const score = scores[ability];
+	const classes: SpellcastingClass[] = sources.map((p) => {
+		const isPact = p.caster === 'pact';
+		const score = scores[p.ability];
 
-		// the class's OWN table (drives its learnable max) + pact's separate pool
-		const kind = String(row.data.slot_table || caster);
-		const ownCounts = slotCountsFor(slotTable(graph, kind, systems), c.level);
+		// the source's OWN table (drives its learnable max) + pact's separate pool
+		const ownCounts = slotCountsFor(slotTable(graph, p.slotKind, systems), p.level);
 		if (isPact)
 			pools.push(
 				...slotPools(ownCounts, { idPrefix: 'pact', recharge: 'short', forcedUpcast: true })
 			);
 
-		const cc = castingCounts(graph, row.id, c.level, systems);
+		const cc = castingCounts(graph, p.ownerId, p.level, systems);
 		return {
-			classId: row.id,
-			classEffectiveId: c.class,
-			className: String(row.data.name_en),
-			ability,
+			classId: p.ownerId,
+			classEffectiveId: p.accessRef,
+			className: p.className,
+			ability: p.ability,
 			// `spell_dc`/`spell_attack` effects (a Rod-of-the-Pact-Keeper-style item) fold onto every
 			// caster class's numbers — the target is not class-scoped in the L1 vocabulary
-			saveDC: foldSpellStat('spell_dc', spellSaveDC({ ability, score, level: totalLevel })),
+			saveDC: foldSpellStat('spell_dc', spellSaveDC({ ability: p.ability, score, level: totalLevel })),
 			attack: foldSpellStat(
 				'spell_attack',
-				spellAttackBonus({ ability, score, level: totalLevel })
+				spellAttackBonus({ ability: p.ability, score, level: totalLevel })
 			),
-			prepareStyle: row.data.prepare_style ?? 'prepared',
+			prepareStyle: p.prepareStyle,
 			cantripCap: cc.cantrips ?? 0,
 			preparedCap: preparedCap(cc.prepared, {
 				abilityMod: abilityModifier(score),
-				share: shareOf(row),
-				level: c.level
+				share: p.share,
+				level: p.level
 			}),
 			maxSpellLevel: maxSpellLevel(ownCounts),
-			accessSpellIds: access.spellIdsForClass(c.class),
+			accessSpellIds: access.spellIdsForClass(p.accessRef),
 			isPact
 		};
 	});

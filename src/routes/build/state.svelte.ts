@@ -275,11 +275,16 @@ class BuildVM {
 	};
 
 	// --- content option lists (filtered by the draft's system) -----------------
+	// B5: every builder picker (species/class/feat/spell/item/language/subclass/species_option)
+	// flows through here, so the two-dimensional source filter (disabled file OR disabled `source`
+	// tag, plus the losing side of a resolved collision) is applied at this one choke point — a
+	// disabled row must not be offerable for a NEW build, same as it's hidden from the compendium.
+	// Reactive: isRowActive reads the reactive source config, so a live toggle re-derives the lists.
 	private list<T extends ContentType>(type: T): LoadedRowByType<T>[] {
 		if (!this.graph) return [];
-		return [...this.graph.list(type, { system: this.draft.system })].sort((a, b) =>
-			rowName(a).localeCompare(rowName(b))
-		);
+		return [...this.graph.list(type, { system: this.draft.system })]
+			.filter((r) => isRowActive(r))
+			.sort((a, b) => rowName(a).localeCompare(rowName(b)));
 	}
 	speciesList = $derived(this.list('species'));
 	backgroundList = $derived(this.list('background'));
