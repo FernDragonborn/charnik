@@ -79,4 +79,11 @@ describe('buildThemesStylesheet', () => {
 		expect(css).toContain("[data-theme='sand']");
 		expect(css).not.toContain('bad id');
 	});
+
+	it('returns empty (never throws) on a non-array — a corrupt persisted snapshot must not kill reactivity', () => {
+		expect(buildThemesStylesheet({ nope: 1 } as unknown as CustomTheme[])).toEqual({
+			css: '',
+			ids: []
+		});
+	});
 });

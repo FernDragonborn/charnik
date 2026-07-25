@@ -193,7 +193,12 @@ These span many files and are easy to violate; preserve them.
 - **Frontend is a thin shell.** Component logic stays in the pure core; components
   bind to it. Live system/locale/theme switching flows through a few reactive stores
   (`activeSystem`, `activeLocale`, `theme`); style via the **CSS design-token
-  contract** (no hardcoded colors). Detailed component architecture is designed after
+  contract** — **no hardcoded colors OR sizes** (use `var(--color-*)`, `--font-size-*`,
+  `--radius*`, `--space-*`). **Every new UI MUST be theme-able**: the app ships user-authored
+  custom themes (Settings ▸ Themes → runtime injector → `[data-theme=id]`), so any hardcoded
+  literal silently breaks a theme. New shade needed → add a SEMANTIC token to BOTH theme blocks
+  in `tokens.css` (alpha tints via `color-mix(… var(--token) …)`), never an inline literal; the
+  stylelint `color-no-hex` guard enforces the colour half. Detailed component architecture is designed after
   the core types land (plan **P7.5**), not up front — but the store shape, token
   contract, i18n/RTL pattern, and route map are pinned at scaffold (P1).
 

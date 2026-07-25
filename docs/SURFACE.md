@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (29)
+## Duplicate suspects (31)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -17,11 +17,11 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Same name, several files:**
 
+- `persist` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `label` ×3 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
-- `persist` ×3 — src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/state.svelte.ts
@@ -29,11 +29,13 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
+- `fileOf` ×2 — src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
+- `name` ×2 — src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `now` ×2 — src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
@@ -273,7 +275,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (59 modules)
+## Library functions & types (61 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -871,10 +873,28 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type ThemeableToken` — @public a token name the Themes editor can set (drives the editor form's typing).
 - `interface CustomTheme`
 - `const isSafeThemeId` — A safe theme id: a short lowercase slug, so `[data-theme='<id>']` can't be broken out of.
+- `function sanitizeThemeTokens` — Filter an arbitrary token map down to the known themeable tokens with safe values, stripping any * leading `--`.
 - `function themeToCss` — Turn one theme into its `[data-theme='id'] { … }` rule, dropping unknown tokens + unsafe values.
 - `function buildThemesStylesheet` — Build the combined stylesheet for a set of custom themes (pure — the DOM-free core, unit-tested).
-- `function snapshotBaseTokens` — Read the computed value of every themeable token under a built-in base (dark/light), so a NEW * custom theme can be s…
+- `function snapshotBaseTokens` — Read the computed value of every themeable token under a base theme id (dark/light or any injected * theme), so a NEW…
 - `function registerCustomThemes` — Inject/replace the custom-theme stylesheet in <head>.
+
+### `src/lib/styles/presetThemes.ts`
+
+- `const BUNDLED_THEMES` — Themes shipped with the app — selectable directly, like the built-in dark/light.
+
+### `src/lib/styles/themeFiles.ts`
+
+- `function slugifyThemeName` — A selector-safe slug from a display name (the file basename + `data-theme` id).
+- `function uniqueThemeId` — `base`, or `base-2`, `base-3`… — the first id that's selector-safe AND not already taken.
+- `function serializeTheme` — Serialize a theme to its file JSON (tagged + pretty).
+- `function themeFromJson` — Parse + sanitize an untrusted theme object into a CustomTheme, or null if nothing valid survives.
+- `function loadThemeFiles` — Load every theme file from `themes/`, newest-first-agnostic.
+- `function writeThemeFile` — Write one theme to `themes/<id>.json` (atomic in the real impls).
+- `function removeThemeFile` — Delete a theme's file.
+- `function seedBundledThemes` — Seed the shipped themes (Dracula/Catppuccin) as normal theme files, but only those NOT already * seeded once (tracked…
+- `function migrateLegacyThemes` — Migrate themes that only ever lived in the pre-files localStorage cache into real files, so the * upgrade to file-bac…
+- `function initThemes` — Startup reconcile — migrate any legacy (localStorage-only) themes to files, seed not-yet-seeded * bundled themes, the…
 
 ### `src/lib/util/format.ts`
 
@@ -893,4 +913,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 56 global classes · 39 components · 491 exports across 70 modules · 29 duplicate suspects · generated in 204ms._
+_45 tokens · 56 global classes · 39 components · 503 exports across 72 modules · 31 duplicate suspects · generated in 118ms._

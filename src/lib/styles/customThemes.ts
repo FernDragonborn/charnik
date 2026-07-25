@@ -69,16 +69,26 @@ const isSafeValue = (v: string): boolean =>
 export const isSafeThemeId = (id: string): boolean =>
 	/^[a-z0-9][a-z0-9-]{0,40}$/.test(id) && id !== 'dark' && id !== 'light';
 
+/** Filter an arbitrary token map down to the known themeable tokens with safe values, stripping any
+ *  leading `--`. THE security boundary for user-supplied themes — both the injector and file import
+ *  go through this, so an unknown name or an injection-shaped value can never reach the stylesheet.
+ *  Pure. */
+export function sanitizeThemeTokens(tokens: unknown): Record<string, string> {
+	const out: Record<string, string> = {};
+	if (!tokens || typeof tokens !== 'object') return out;
+	for (const [name, value] of Object.entries(tokens as Record<string, unknown>)) {
+		const token = name.replace(/^--/, '');
+		if (THEMEABLE.has(token) && typeof value === 'string' && isSafeValue(value.trim()))
+			out[token] = value.trim();
+	}
+	return out;
+}
+
 /** Turn one theme into its `[data-theme='id'] { … }` rule, dropping unknown tokens + unsafe values.
  *  Returns '' when the id is unsafe or nothing survived (so an empty theme injects nothing). Pure. */
 export function themeToCss(theme: CustomTheme): string {
 	if (!isSafeThemeId(theme.id)) return '';
-	const decls: string[] = [];
-	for (const [name, value] of Object.entries(theme.tokens)) {
-		const token = name.replace(/^--/, '');
-		if (THEMEABLE.has(token) && typeof value === 'string' && isSafeValue(value.trim()))
-			decls.push(`\t--${token}: ${value.trim()};`);
-	}
+	const decls = Object.entries(sanitizeThemeTokens(theme.tokens)).map(([t, v]) => `\t--${t}: ${v};`);
 	return decls.length ? `[data-theme='${theme.id}'] {\n${decls.join('\n')}\n}` : '';
 }
 
@@ -87,6 +97,9 @@ export function themeToCss(theme: CustomTheme): string {
 export function buildThemesStylesheet(themes: CustomTheme[]): { css: string; ids: string[] } {
 	const blocks: string[] = [];
 	const ids: string[] = [];
+	// Defensive: a corrupt/legacy persisted snapshot can hand us a non-array here; a throw would
+	// escape the layout $effect and kill ALL page reactivity (dead theme picker + settings tabs).
+	if (!Array.isArray(themes)) return { css: '', ids };
 	for (const t of themes) {
 		const css = themeToCss(t);
 		if (css) {
@@ -97,11 +110,11 @@ export function buildThemesStylesheet(themes: CustomTheme[]): { css: string; ids
 	return { css: blocks.join('\n\n'), ids };
 }
 
-/** Read the computed value of every themeable token under a built-in base (dark/light), so a NEW
- *  custom theme can be seeded SELF-CONTAINED — a custom `[data-theme]` doesn't inherit another theme
- *  via the cascade, it must carry the tokens it wants. Flips `data-theme` for one synchronous
- *  getComputedStyle read (no paint between set + restore, so no flash), then restores. Browser-only. */
-export function snapshotBaseTokens(base: 'dark' | 'light'): Record<string, string> {
+/** Read the computed value of every themeable token under a base theme id (dark/light or any injected
+ *  theme), so a NEW theme can be seeded SELF-CONTAINED — a custom `[data-theme]` doesn't inherit
+ *  another theme via the cascade, it must carry the tokens it wants. Flips `data-theme` for one
+ *  synchronous getComputedStyle read (no paint between set + restore, so no flash). Browser-only. */
+export function snapshotBaseTokens(base: string): Record<string, string> {
 	const out: Record<string, string> = {};
 	if (typeof document === 'undefined') return out;
 	const root = document.documentElement;

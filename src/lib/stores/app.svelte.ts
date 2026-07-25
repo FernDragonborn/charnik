@@ -25,8 +25,12 @@ interface AppState {
 	/** Shipped default = dark slate (see docs/PLAN.md #18). */
 	theme: ThemeId;
 	/** User-authored themes (token overrides), injected at runtime as `[data-theme=id]` and selectable
-	 *  like the built-ins. Empty by default; managed on the planned Settings ▸ Themes page. */
+	 *  like the built-ins. The source of truth is the `themes/` files; this mirrors them (a fast cache
+	 *  that avoids a first-paint flash). Managed on Settings ▸ Themes. */
 	customThemes: CustomTheme[];
+	/** Bundled-theme ids already seeded to disk once, so a deleted bundled theme (Dracula/…) doesn't
+	 *  come back — but a NEW bundled theme in a later release still seeds. */
+	seededBundledIds: string[];
 }
 
 const STORAGE_KEY = 'charnik:app';
@@ -36,7 +40,8 @@ function defaults(): AppState {
 		activeEditions: ['5e', '5.5e'],
 		activeLocale: 'en',
 		theme: 'dark',
-		customThemes: []
+		customThemes: [],
+		seededBundledIds: []
 	};
 }
 
@@ -49,7 +54,13 @@ function load(): AppState {
 		...base,
 		...saved,
 		// never persist an empty edition set (would hide all content) — fall back to both
-		activeEditions: saved.activeEditions?.length ? saved.activeEditions : base.activeEditions
+		activeEditions: saved.activeEditions?.length ? saved.activeEditions : base.activeEditions,
+		// a corrupt / legacy snapshot may carry a non-array here; force arrays so the theme injector
+		// (and its layout $effect) can never throw on iterate — a throw there kills page reactivity.
+		customThemes: Array.isArray(saved.customThemes) ? saved.customThemes : base.customThemes,
+		seededBundledIds: Array.isArray(saved.seededBundledIds)
+			? saved.seededBundledIds
+			: base.seededBundledIds
 	};
 }
 
@@ -60,7 +71,8 @@ function persist(): void {
 		activeEditions: app.activeEditions,
 		activeLocale: app.activeLocale,
 		theme: app.theme,
-		customThemes: app.customThemes
+		customThemes: app.customThemes,
+		seededBundledIds: app.seededBundledIds
 	});
 }
 

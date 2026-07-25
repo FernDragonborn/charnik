@@ -6,6 +6,8 @@
 	import { page } from '$app/state';
 	import { app } from '$lib/stores/app.svelte';
 	import { registerCustomThemes } from '$lib/styles/customThemes';
+	import { BUNDLED_THEMES } from '$lib/styles/presetThemes';
+	import { initThemes } from '$lib/styles/themeFiles';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { dirFor, locale as i18nLocale, _ } from '$lib/i18n';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
@@ -18,7 +20,7 @@
 	import { Toaster, toast } from 'svelte-sonner';
 	import { takeFlash } from '$lib/stores/flash';
 	import { onMount, onDestroy } from 'svelte';
-	import { detectPlatform, Platform } from '$lib/storage/provider';
+	import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
 	import {
 		applySavedDataDir,
 		defaultDataDir,
@@ -85,7 +87,8 @@
 	// Single source of truth for live switches: mirror the store onto <html>. No reload.
 	$effect(() => {
 		if (!browser) return;
-		// register user themes BEFORE activating one, so `[data-theme=id]` has its rule ready
+		// register all themes BEFORE activating one, so `[data-theme=id]` has its rule ready. Bundled
+		// themes are seeded into app.customThemes as files (see syncThemes), so this one list covers them.
 		registerCustomThemes(app.customThemes);
 		const el = document.documentElement;
 		el.dataset.theme = app.theme;
@@ -111,6 +114,7 @@
 		if (import.meta.env.DEV && page.url.searchParams.has('dev-update')) simulateUpdateAvailable();
 		if (detectPlatform() !== Platform.Desktop) {
 			loadContentStore();
+			void syncThemes(); // web: IndexedDB storage is always ready
 			return;
 		}
 		const saved = await applySavedDataDir(); // Rust re-grants the custom folder from its own pointer
@@ -118,11 +122,30 @@
 			await loadContentStore();
 			startContentWatcher(); // live-refresh when a CSV is edited on disk
 			void loadPlugins(); // desktop-only L3 discovery; consented+enabled plugins wake up
+			void syncThemes(); // load user themes from the data dir now it's granted
 		} else {
 			firstRunDefault = await defaultDataDir(); // first run → show picker, hold content load
 		}
 	});
 	onDestroy(stopContentWatcher);
+
+	/** Reconcile custom themes with the data dir (files are the source of truth; a first launch after
+	 *  the localStorage-only version migrates the cache to files). Best-effort. */
+	async function syncThemes() {
+		if (!browser) return;
+		try {
+			const { themes, newlySeeded } = await initThemes(
+				getUserStorage(),
+				BUNDLED_THEMES,
+				app.seededBundledIds,
+				app.customThemes // migrate any pre-files (localStorage-only) themes into files, once
+			);
+			app.customThemes = themes;
+			if (newlySeeded.length) app.seededBundledIds = [...app.seededBundledIds, ...newlySeeded];
+		} catch {
+			/* keep the localStorage cache if the store isn't reachable */
+		}
+	}
 
 	async function confirmDataDir(dir: string) {
 		await setDataDirOverride(dir); // dir was picker-chosen (already granted in Rust); this persists it
@@ -131,6 +154,7 @@
 		await loadContentStore();
 		startContentWatcher();
 		void loadPlugins();
+		void syncThemes(); // data dir just chosen → load/seed themes there
 	}
 	// Drift is shown first (a quick date/hash confirm), then the metadata prompt.
 	const driftItems = $derived(pendingDriftItems());
