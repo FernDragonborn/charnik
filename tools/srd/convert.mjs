@@ -268,9 +268,68 @@ function convertBackgrounds() {
 	assertCount('backgrounds', rows.length, all.length);
 }
 
+// --- languages (E1: the 2024 Standard + Rare tables in character-creation.md) -----------------
+// SRD 5.2.1 reorganized languages into Standard (10, incl. Common) + Rare (9) and DROPPED the
+// per-language "typical speakers" / "script" columns the 2014 tables carried — so those columns are
+// emitted blank here (never guessed). The only per-language prose the 2024 table gives is the
+// Primordial dialects note, which is carried on that row's text_en.
+function convertLanguages() {
+	const txt = src('character-creation.md');
+	const tableAfter = (marker) => {
+		const at = txt.indexOf(marker);
+		if (at < 0) throw new Error(`languages: "${marker}" not found in source`);
+		const tbl = /<table>([\s\S]*?)<\/table>/i.exec(txt.slice(at));
+		if (!tbl) throw new Error(`languages: no <table> after "${marker}"`);
+		return [...tbl[1].matchAll(/<td>([\s\S]*?)<\/td>/gi)].map((m) => m[1].trim());
+	};
+	// Standard rows are [1d12 roll, Language]; keep the language cells (a roll cell is "—" or digits)
+	const standard = tableAfter('**Standard Languages**').filter((c) => c && !/^(—|\d)/.test(c));
+	// Rare has two Language columns; every non-empty cell is a language name (Primordial carries a *)
+	const rare = tableAfter('**Rare Languages**').filter(Boolean);
+	const primordialNote = (/\*Primordial includes[^\n]*/.exec(txt)?.[0] ?? '')
+		.replace(/^\*/, '')
+		.trim();
+	const mk = (name, category) => {
+		const clean = name.replace(/\*+$/, '').trim(); // strip the Primordial asterisk marker
+		return {
+			id: slug(clean),
+			systems: '5.5e',
+			source: 'SRD 5.2.1',
+			name_en: clean,
+			name_uk: '',
+			text_en: /^Primordial/.test(clean) ? primordialNote : '',
+			text_uk: '',
+			effects: '',
+			category, // 2024 uses Standard / Rare (2014 used Standard / Exotic)
+			speakers: '', // not in the 2024 source
+			script: '' // 2024 dropped per-language scripts
+		};
+	};
+	const rows = [...standard.map((n) => mk(n, 'standard')), ...rare.map((n) => mk(n, 'rare'))];
+	assertCount('languages', rows.length, 19); // 10 Standard + 9 Rare (SRD 5.2.1)
+	writeCsv(
+		out('languages_srd.csv'),
+		[
+			'id',
+			'systems',
+			'source',
+			'name_en',
+			'name_uk',
+			'text_en',
+			'text_uk',
+			'effects',
+			'category',
+			'speakers',
+			'script'
+		],
+		rows
+	);
+}
+
 convertFeats();
 convertConditions();
 convertSpecies();
 convertSpeciesOptions();
 convertBackgrounds();
+convertLanguages();
 console.log('done.');

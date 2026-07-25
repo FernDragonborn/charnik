@@ -470,9 +470,14 @@ Deep effects-system review, 2026-07-16 (D7–D19):
 
 ## E · Data / locale content
 
-- [ ] **E1 · `static/content/srd-2024/` has no `languages_srd.csv`** (2014 has one) → a 5.5e
-  character gets an empty language picker. Convert from SRD 5.2.1 via a converter (NEVER
-  hand-author — house rule).
+- [x] **E1 · `static/content/srd-2024/` has no `languages_srd.csv`.** FIXED 2026-07-25. The SRD 5.2.1
+  Languages tables live in the mirror's `character-creation.md` (which wasn't downloaded before);
+  fetched it into `tools/srd-src/2024/`, added `convertLanguages()` to `convert.mjs` that parses the
+  Standard (10, incl. Common) + Rare (9) HTML tables → 19 rows, count-asserted vs source (NEVER
+  hand-authored). 2024 dropped per-language speakers/scripts, so those columns emit blank; the only
+  prose the table carries (the Primordial dialects note) rides that row's `text_en`. Schema `category`
+  enum extended with `rare` (2024 vocab) alongside `standard`/`exotic` (2014). Regenerated + copied to
+  `static/` via `content:static`; loader test asserts 19 (5.5e) + 16 (5e).
 - [x] **E2 · uk.json violations:** FIXED 2026-07-21. Tagline → formal «Ваші персонажі — ваші.»;
   typo «створюте» → «створюйте» in `demo.body`. No ти-form strings remain in uk.json.
 
@@ -654,15 +659,20 @@ are the "last untyped layer" — places the compiler is blindfolded on top of go
 Overall: 69.8% statements / 55.5% branches. The gates were green while whole modules sat at
 zero — coverage was never part of the loop. Worst first (target the risk, not the percent):
 
-- [ ] **T1 · `content/store.svelte.ts` at 5%.** The freshly-refactored load/reload
-  error-capture paths (content.error, resetContentGraph on failure) have NO tests — the one
-  place a regression would strand users on an endless "Loading…".
-- [ ] **T2 · `storage/fetch.ts` at 0%.** FetchStorage — the ENTIRE web-build content path —
-  is untested (BOM handling, 404s, manifest listing).
-- [ ] **T3 · Data-move orchestration untested.** `storage/tauri.ts` at 2%: pure `migrate.ts`
-  is covered (98%), but `walkTree`/`copyFilesInto`/`migrateDataDir`/`mergeDataDir`/
-  `finalizeMove` — the sequencing, rollback and pointer-swap logic — never run under test.
-  They're Storage-shaped; a node/memory-backed contract test could cover the flow.
+- [x] **T1 · `content/store.svelte.ts` at 5%.** DONE 2026-07-25 (`store.svelte.test.ts`). Mocks the
+  provider so `getContentGraph` succeeds/throws; asserts a failure is RECORDED on `content.error`
+  (never thrown) + drops the rejected cache, a later success CLEARS the error (the recovery path that
+  guards against an endless "Loading…"), reload rotates the guid, and `remount` resets user storage.
+- [x] **T2 · `storage/fetch.ts` at 0%.** DONE 2026-07-25 (`fetch.test.ts`). Drives FetchStorage over a
+  mocked global `fetch`: read/readBytes error→status mapping, manifest-backed list/exists with the
+  network HEAD fallback, the manifest cache (fetched once), the read-only write guards, and
+  base-prefix URL joining.
+- [x] **T3 · Data-move orchestration untested.** DONE 2026-07-25 (`tauri-migrate.test.ts`). An
+  in-memory fs behind the Tauri-fs mocks drives `migrateDataDir`/`mergeDataDir`/`walkTree`/
+  `listDataDirFiles` end-to-end: happy move (copy → verify → repoint → delete-old), the
+  target-inside-source guard, copy-failure rollback (source intact, half-copy swept, pointer
+  untouched), verify-miss rollback, cleanup-only failure (move succeeded, old-folder delete failed),
+  and a real newer-wins merge.
 - [ ] **T4 · View-models thin on tests.** build state.svelte.ts 24% (hydrate/edit/save flows
   untested), combat roll.svelte.ts 38%, panel.svelte.ts 23%, combat state 51%/30% branches.
 - [ ] **T5 · Config/persistence edges.** sources.svelte.ts load/persist (localStorage round-

@@ -1,0 +1,27 @@
+﻿#content-source: SRD 5.2.1
+#content-systems: 5.5e
+#content-url: https://dnd.wizards.com/resources/systems-reference-document
+#content-license: CC-BY-4.0
+#content-id: 019f98cf-c0ad-776a-9f39-71aa2af270d9
+#content-updated_at: 2026-07-25
+#content-hash: xxh64:594468557afdca13
+id,name_en,name_uk,text_en,text_uk,effects,category,speakers,script
+common,Common,,,,,standard,,
+common_sign_language,Common Sign Language,,,,,standard,,
+draconic,Draconic,,,,,standard,,
+dwarvish,Dwarvish,,,,,standard,,
+elvish,Elvish,,,,,standard,,
+giant,Giant,,,,,standard,,
+gnomish,Gnomish,,,,,standard,,
+goblin,Goblin,,,,,standard,,
+halfling,Halfling,,,,,standard,,
+orc,Orc,,,,,standard,,
+abyssal,Abyssal,,,,,rare,,
+primordial,Primordial,,"Primordial includes the Aquan, Auran, Ignan, and Terran dialects. Creatures that know one of these dialects can communicate with those that know a different one.",,,rare,,
+celestial,Celestial,,,,,rare,,
+sylvan,Sylvan,,,,,rare,,
+deep_speech,Deep Speech,,,,,rare,,
+thieves_cant,Thieves' Cant,,,,,rare,,
+druidic,Druidic,,,,,rare,,
+undercommon,Undercommon,,,,,rare,,
+infernal,Infernal,,,,,rare,,

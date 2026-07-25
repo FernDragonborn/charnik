@@ -336,11 +336,13 @@ const itemSchema = baseRow.extend({
 	rarity: z.preprocess(blankToUndef, Rarity.optional())
 });
 
-/** A language (SRD Standard / Exotic). Simple reference content the builder picks from. */
+/** A language. Simple reference content the builder picks from. `category` groups them: 2014 uses
+ *  Standard / Exotic; 2024 (SRD 5.2.1) reorganized into Standard / Rare — both vocabularies are
+ *  allowed so each edition renders its own RAW grouping. */
 const languageSchema = baseRow.extend({
-	category: z.enum(['standard', 'exotic']).default('standard'),
-	speakers: optStr, // typical speakers
-	script: optStr
+	category: z.enum(['standard', 'exotic', 'rare']).default('standard'),
+	speakers: optStr, // typical speakers (2014 only; 2024 dropped this)
+	script: optStr // per-language script (2014 only; 2024 dropped this)
 });
 
 /** Condition (merged with effects on the sheet). Mechanics ride in `effects`. */
