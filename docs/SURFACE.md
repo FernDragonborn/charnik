@@ -334,6 +334,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface SpellcastingClass`
 - `interface Spellcasting`
+- `const classCasts` — Does this class row cast spells at all?
 - `function castingAbilityByClass` — Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the * effects resolve needs BEFO…
 - `function deriveSpellcasting`
 
@@ -874,4 +875,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 37 components · 492 exports across 69 modules · 28 duplicate suspects · generated in 305ms._
+_46 tokens · 50 global classes · 37 components · 493 exports across 69 modules · 28 duplicate suspects · generated in 231ms._

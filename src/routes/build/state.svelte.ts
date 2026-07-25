@@ -17,6 +17,7 @@ import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { ABILITIES, type Character } from '$lib/character/schema';
 import { assembleCharacter } from '$lib/character/assemble';
+import { classCasts } from '$lib/character/spellcasting';
 import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
 import { uniqueCharacterId } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
@@ -381,8 +382,8 @@ class BuildVM {
 
 	isCaster = $derived.by(() =>
 		this.draft.classes.some((c) => {
-			const caster = rowOfType(this.row(c.classId), 'class')?.data.caster;
-			return caster && caster !== 'none';
+			const row = rowOfType(this.row(c.classId), 'class');
+			return !!row && classCasts(row);
 		})
 	);
 	/**

@@ -9,7 +9,7 @@
  * highest spell level a class can LEARN is its own single-class table's max (a Wizard 1 can't
  * prepare 3rd-level spells even if a Cleric multiclass grants 3rd-level slots).
  */
-import type { ContentGraph } from '../content/loader';
+import type { ContentGraph, LoadedRowOf } from '../content/loader';
 import { getSpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
@@ -60,6 +60,12 @@ export interface Spellcasting {
 	 *  "why is casting blocked" hover). Absent = not blocked. */
 	armorBlock?: { source: string; note: string };
 }
+
+/** Does this class row cast spells at all? The ONE place the `caster !== 'none'` sentinel is compared,
+ *  so the "is a caster class" test can't drift across the derive, the builder's `isCaster`, and the
+ *  homebrew form's spellcaster-class list (keeps the bare-string compare in a single seam). */
+export const classCasts = (classRow: LoadedRowOf<'class'>): boolean =>
+	classRow.data.caster !== 'none';
 
 const num = (v: unknown): number | undefined => (v === '' || v == null ? undefined : Number(v));
 
@@ -128,8 +134,7 @@ export function castingAbilityByClass(
 	const out: Record<string, Ability> = {};
 	for (const c of character.build.classes) {
 		const row = graph.get(c.class);
-		if (row?.type === 'class' && row.data.caster !== 'none')
-			out[row.id] = row.data.spell_ability ?? 'int';
+		if (row?.type === 'class' && classCasts(row)) out[row.id] = row.data.spell_ability ?? 'int';
 	}
 	return out;
 }
@@ -153,8 +158,10 @@ interface CasterProfile {
 	ritual: boolean;
 }
 
-/** Resolve a build class into its caster profile, or null if it doesn't cast. A casting SUBCLASS only
- *  comes online at its `caster_from_level` (RAW: EK/AT gain Spellcasting at Fighter/Rogue level 3). */
+/** Resolve a build class into its caster profile, or null if it doesn't cast. Which ROW owns the
+ *  casting differs (the class itself, or a casting SUBCLASS once it's online at `caster_from_level` —
+ *  RAW: EK/AT gain Spellcasting at level 3), but both rows carry the SAME caster-descriptor columns,
+ *  so we pick the owner + its identity fields, then build the profile ONCE (no per-branch dup). */
 function casterProfileFor(
 	entry: Character['build']['classes'][number],
 	graph: ContentGraph
@@ -162,49 +169,48 @@ function casterProfileFor(
 	const classRow = graph.get(entry.class);
 	if (classRow?.type !== 'class') return null;
 
-	// base-class caster wins when the class itself casts (Wizard/Cleric/Sorcerer/Warlock/…)
-	if (classRow.data.caster !== 'none') {
-		const caster = String(classRow.data.caster);
-		return {
-			level: entry.level,
-			caster,
-			share: classRow.data.caster_share ?? shareFromCaster(caster),
-			ability: classRow.data.spell_ability ?? 'int',
-			prepareStyle: classRow.data.prepare_style ?? 'prepared',
-			slotKind: String(classRow.data.slot_table || caster),
-			className: String(classRow.data.name_en),
-			ownerId: classRow.id,
-			accessRef: entry.class,
-			ritual: classRow.data.ritual === true
-		};
+	// the row that OWNS the casting + the identity/ritual bits that DON'T come from the shared columns
+	let owner: LoadedRowOf<'class'> | LoadedRowOf<'subclass'>;
+	let accessRef: string;
+	let ownerId: string;
+	let ritual: boolean;
+	if (classCasts(classRow)) {
+		// base-class caster (Wizard/Cleric/Sorcerer/Warlock/…)
+		owner = classRow;
+		accessRef = entry.class;
+		ownerId = classRow.id;
+		ritual = classRow.data.ritual === true;
+	} else {
+		// else a casting SUBCLASS whose caster columns are filled + which is online at its grant level.
+		// `class_casting`/`slot_table`/spell-list access all key off the SUBCLASS id (a homebrew author
+		// adds them there). NOTE the subclass spell-LIST gap (an EK draws the Wizard list) — B25 follow-up.
+		const subRow = entry.subclass ? graph.get(entry.subclass) : undefined;
+		if (
+			subRow?.type !== 'subclass' ||
+			subRow.data.caster == null ||
+			entry.level < (subRow.data.caster_from_level ?? 1)
+		)
+			return null;
+		owner = subRow;
+		accessRef = entry.subclass!;
+		ownerId = subRow.id;
+		ritual = false; // subclass schema carries no ritual column
 	}
 
-	// else a casting SUBCLASS (its caster columns filled) brings casting online at caster_from_level.
-	const subRow = entry.subclass ? graph.get(entry.subclass) : undefined;
-	if (
-		subRow?.type === 'subclass' &&
-		subRow.data.caster != null &&
-		entry.level >= (subRow.data.caster_from_level ?? 1)
-	) {
-		const caster = String(subRow.data.caster);
-		return {
-			level: entry.level,
-			caster,
-			share: subRow.data.caster_share ?? shareFromCaster(caster),
-			ability: subRow.data.spell_ability ?? 'int',
-			prepareStyle: subRow.data.prepare_style ?? 'prepared',
-			slotKind: String(subRow.data.slot_table || caster),
-			className: String(classRow.data.name_en),
-			// class_casting rows for a subclass caster key off the SUBCLASS id (a homebrew author adds
-			// them there). NOTE: subclass spell-LIST access (an EK draws the Wizard list) needs a
-			// subclass→list data seam that doesn't exist yet — tracked as a B25 follow-up; today a
-			// subclass caster gets slots + DC + prepared cap but an empty pickable-spell list.
-			ownerId: subRow.id,
-			accessRef: entry.subclass!,
-			ritual: false
-		};
-	}
-	return null;
+	// both class + subclass rows share these caster-descriptor columns → one construction
+	const caster = String(owner.data.caster);
+	return {
+		level: entry.level,
+		caster,
+		share: owner.data.caster_share ?? shareFromCaster(caster),
+		ability: owner.data.spell_ability ?? 'int',
+		prepareStyle: owner.data.prepare_style ?? 'prepared',
+		slotKind: String(owner.data.slot_table || caster),
+		className: String(classRow.data.name_en),
+		ownerId,
+		accessRef,
+		ritual
+	};
 }
 
 export function deriveSpellcasting(

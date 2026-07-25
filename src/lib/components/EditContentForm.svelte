@@ -22,6 +22,7 @@
 	import { slugify } from '$lib/util/slug';
 	import type { LoadedRow } from '$lib/content/loader';
 	import { content } from '$lib/content/store.svelte';
+	import { classCasts } from '$lib/character/spellcasting';
 	import ClassPicker from './ClassPicker.svelte';
 	import { SYSTEMS, splitList, type ContentType } from '$lib/content/schemas';
 	import {
@@ -224,7 +225,7 @@
 	const classList = $derived.by(() => {
 		const byId = new Map<string, { id: string; name: string }>();
 		for (const c of content.graph?.list('class') ?? [])
-			if (c.data.caster !== 'none' && !byId.has(c.id))
+			if (classCasts(c) && !byId.has(c.id))
 				byId.set(c.id, { id: c.id, name: String(c.data.name_en) });
 		return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
 	});

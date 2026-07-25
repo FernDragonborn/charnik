@@ -1068,12 +1068,19 @@ speculation). Filed as the input list for a follow-up pass — none is a data-lo
   in both. Extracted to ONE shared `PreparedCaps.svelte` (repo rule: a control used in >1 place = one
   component) that renders from the tallies alone; both callers pass `tallies` and wrap their own
   suffix. Removed the duplicated CSS.
-- Call-chain note (not fixed, low value): `casterProfileFor` (spellcasting.ts) has two near-identical
-  branches (class-caster vs subclass-caster) each building the same `CasterProfile` shape — a small
-  local dup; and `casterProfileFor` re-resolves `graph.get(entry.class)`/`entry.subclass` which
-  gatherEffects (derive.ts) also resolves, so the same rows are looked up a few times per derive
-  (pre-existing pattern, O(small), acceptable). RV1 below is the remaining *semantic* divergence the
-  DUP fixes did NOT close (build-side attribution still differs from the now-unified play-side).
+- [x] **RV8 · `casterProfileFor` two-branch construction dup + scattered `caster !== 'none'`.** FIXED.
+  The two branches (class-caster vs subclass-caster) each rebuilt the same 10-field `CasterProfile`
+  differing in 4 values — collapsed to ONE construction by picking the owner row (+ its identity/ritual
+  bits) then building once. Separately, the "does this class cast?" sentinel (`caster !== 'none'`) was
+  compared raw in 4 places (2× spellcasting.ts, build `isCaster`, the homebrew form's class list) — a
+  small dup AND a bare-string compare (violates the enums-not-literals rule); extracted to one
+  `classCasts(classRow)` seam that all four call.
+- Call-chain note (deliberately NOT changed): `casterProfileFor` re-resolves `graph.get(entry.class)`/
+  `entry.subclass` which gatherEffects (derive.ts) also resolves — but this is repeated O(1) Map
+  lookups, NOT duplicated logic; threading resolved rows between the two independent derive stages would
+  couple them for no real gain. Left as-is on purpose (decoupling > saving a map hit). RV1 below is the
+  remaining *semantic* divergence the DUP fixes did NOT close (build-side attribution still differs from
+  the now-unified play-side).
 
 **Original findings:**
 
