@@ -130,7 +130,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (37)
+## Shared components (38)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -144,6 +144,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ContentMetaModal** | `issues`, `onFillAndSave`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal that reviews content files with missing metadata (DATA-VER-1). |
 | **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` |  |
 | **DataMigrationDialog** | `tone`, `title`, `detail`, `note`, `onclose` | Persistent result dialog for a data-folder move. |
+| **DialogShell** | `titleId`, `title`, `subtitle`, `width`, `badge`, `onDismiss`, `children` | The shared attention-dialog shell: full-screen backdrop + the centred `.dialog` panel + the |
 | **DiceIcon** | `size` | The dice-roll glyph: a d20 (icosahedron, top-down) with a small d4 (tetrahedron) tucked at its |
 | **DraftsPane** | `graph`, `onResume`, `onResolveOrphans` | Pending-drafts list — the full-width pane that replaces the editing block in the compendium right |
 | **EditableTitle** | `value`, `placeholder` | The article title field shown in edit/translate mode. |
@@ -154,7 +155,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **FirstRunModal** | `defaultDir`, `pickFolder`, `onConfirm` | First-run, full-screen modal: asks WHERE to keep the user's data (characters + content) before |
 | **GeneralSettings** | — | Appearance & language settings: theme, UI locale, and the compendium/search edition filter. |
 | **GenericHead** | `detail`, `editable`, `draft` | The "shapka" for every non-spell, non-monster article (species, class, feat, item, …): eyebrow, |
-| **HashDriftModal** | `items`, `onUpdate`, `onSkip`, `onNeverAsk` |  |
+| **HashDriftModal** | `items`, `onUpdate`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal for the DATA-DRIFT case (DATA-VER-1): a file's body no longer |
 | **LangSwitcher** | — | The one canonical language switcher — reused everywhere (topbar, dialogs) so it looks and behaves |
 | **LanguagePicker** | `value`, `locales`, `allowAdd`, `accent` | Searchable language dropdown — one shared control for the translate view's FROM and TO pickers |
 | **Loading** | `message`, `error` | Full-view loading screen shown while the sheet/content is being loaded (the derive can take a |
@@ -877,4 +878,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 52 global classes · 37 components · 493 exports across 69 modules · 28 duplicate suspects · generated in 197ms._
+_46 tokens · 52 global classes · 38 components · 493 exports across 69 modules · 28 duplicate suspects · generated in 142ms._

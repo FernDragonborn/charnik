@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	// Full-screen, dark-backdrop modal for the DATA-DRIFT case (DATA-VER-1): a file's body no longer
 	// matches its recorded #content-hash, i.e. it was hand-edited outside the app. Offers to bump
 	// #content-updated-at to today + recompute the hash. Per-file checkboxes let the user choose which
@@ -7,7 +6,7 @@
 	// the atomic write-back live in the loader/provider (thin-component rule).
 	import { untrack } from 'svelte';
 	import { _ } from '$lib/i18n';
-	import LangSwitcher from './LangSwitcher.svelte';
+	import DialogShell from './DialogShell.svelte';
 	import type { DriftItem } from '$lib/content/meta';
 
 	let {
@@ -34,23 +33,13 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="dialog-backdrop" onclick={onSkip}></div>
-<div
-	class="dialog drift-dialog"
-	role="dialog"
-	aria-modal="true"
-	aria-labelledby="drift-title"
-	tabindex="-1"
-	use:dismissOnEscape={onSkip}
+<DialogShell
+	titleId="drift-title"
+	title={$_('contentDrift.title')}
+	subtitle={$_('contentDrift.subtitle')}
+	width="min(680px, calc(100vw - 2 * var(--space-4)))"
+	onDismiss={onSkip}
 >
-	<header class="dialog-head">
-		<div class="dialog-lang-corner"><LangSwitcher /></div>
-		<span class="dialog-badge">⚑</span>
-		<h2 id="drift-title" class="dialog-title">{$_('contentDrift.title')}</h2>
-		<p class="dialog-subtitle">{$_('contentDrift.subtitle')}</p>
-	</header>
-
 	<div class="files">
 		{#each items as item (item.file)}
 			<label class="file">
@@ -82,13 +71,9 @@
 			>{$_('contentDrift.update')}</button
 		>
 	</footer>
-</div>
+</DialogShell>
 
 <style>
-	/* shared shell = global .dialog (styles/components.css); this only sets THIS dialog's width */
-	.drift-dialog {
-		width: min(680px, calc(100vw - 2 * var(--space-4)));
-	}
 	.files {
 		overflow: auto;
 		padding: var(--space-4) var(--space-6);

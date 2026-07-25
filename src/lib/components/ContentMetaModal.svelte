@@ -4,9 +4,8 @@
 	// inline widgets; machine-fillable keys (id / hash / updated-at / schema) are a reassuring "we'll
 	// add these" FYI. Presentation only — detection + write-back live in the loader (thin-component).
 	import { untrack } from 'svelte';
-	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { _ } from '$lib/i18n';
-	import LangSwitcher from './LangSwitcher.svelte';
+	import DialogShell from './DialogShell.svelte';
 	import { EDITABLE_KEYS, OPTIONAL_KEYS } from '$lib/content/meta';
 	import type { MetaIssue, MetaKey } from '$lib/content/meta';
 
@@ -80,23 +79,13 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="dialog-backdrop" onclick={onSkip}></div>
-<div
-	class="dialog meta-dialog"
-	role="dialog"
-	aria-modal="true"
-	aria-labelledby="cm-title"
-	tabindex="-1"
-	use:dismissOnEscape={onSkip}
+<DialogShell
+	titleId="cm-title"
+	title={$_('contentMeta.title')}
+	subtitle={$_('contentMeta.subtitle')}
+	width="min(760px, calc(100vw - 2 * var(--space-4)))"
+	onDismiss={onSkip}
 >
-	<header class="dialog-head">
-		<div class="dialog-lang-corner"><LangSwitcher /></div>
-		<span class="dialog-badge">⚑</span>
-		<h2 id="cm-title" class="dialog-title">{$_('contentMeta.title')}</h2>
-		<p class="dialog-subtitle">{$_('contentMeta.subtitle')}</p>
-	</header>
-
 	<div class="files">
 		{#each issues as issue (issue.file)}
 			{@const fill = fills[issue.file]}
@@ -195,13 +184,9 @@
 		<button class="btn ghost" onclick={onSkip}>{$_('contentMeta.skip')}</button>
 		<button class="btn primary" onclick={save}>{$_('contentMeta.fillAndSave')}</button>
 	</footer>
-</div>
+</DialogShell>
 
 <style>
-	/* shared shell = global .dialog (styles/components.css); this only sets THIS dialog's width */
-	.meta-dialog {
-		width: min(760px, calc(100vw - 2 * var(--space-4)));
-	}
 	.files {
 		overflow: auto;
 		padding: var(--space-4) var(--space-6);
