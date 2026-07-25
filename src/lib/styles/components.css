@@ -407,6 +407,17 @@
 	padding: var(--space-4);
 }
 
+/* text-input / textarea field base (edit forms, inline editors). The surface + strong border + 8px
+   radius + text color are the shared look; font-size, padding, width, resize stay on the local
+   scoped class composed alongside. NB named `.text-field` (not `.field`) — `.field` is already a
+   scoped form-ROW wrapper in several views; a global with that name would bleed onto them. */
+.text-field {
+	background: var(--color-surface);
+	border: 1px solid var(--color-border-strong);
+	border-radius: 8px;
+	color: var(--color-text);
+}
+
 /* --- toggle-track: the pill on/off switch knob (Switch component, combat menus) --- */
 .toggle-track {
 	width: 34px;

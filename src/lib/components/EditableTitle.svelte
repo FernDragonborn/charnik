@@ -15,7 +15,7 @@
 	} = $props();
 </script>
 
-<input class="edit-title" bind:value {placeholder} />
+<input class="text-field edit-title" bind:value {placeholder} />
 
 <style>
 	.edit-title {
@@ -23,10 +23,6 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: 28px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-strong);
-		border-radius: 8px;
-		color: var(--color-text);
 		padding: 4px 10px;
 		margin: 4px 0 12px;
 	}

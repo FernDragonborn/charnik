@@ -31,7 +31,7 @@
 </script>
 
 {#if editable && draft}
-	<textarea class="edit-body" bind:value={draft.text} placeholder={bodyMarkdown}></textarea>
+	<textarea class="text-field edit-body" bind:value={draft.text} placeholder={bodyMarkdown}></textarea>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
 {:else if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
 
@@ -39,7 +39,7 @@
 	{#if editable && draft}
 		<label class="edit-line">
 			<span>At higher levels</span>
-			<textarea class="edit-body short" bind:value={draft.higher_level} placeholder={higherLevel}
+			<textarea class="text-field edit-body short" bind:value={draft.higher_level} placeholder={higherLevel}
 			></textarea>
 		</label>
 	{:else}
@@ -51,7 +51,7 @@
 	{#if editable && draft}
 		<label class="edit-line">
 			<span>Material</span>
-			<input class="edit-inline" bind:value={draft.material} placeholder={material} />
+			<input class="text-field edit-inline" bind:value={draft.material} placeholder={material} />
 		</label>
 	{:else}
 		<div class="source-line">Material — {material}</div>
@@ -129,10 +129,6 @@
 		font-family: var(--font-body);
 		font-size: 14px;
 		line-height: 1.5;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-strong);
-		border-radius: 8px;
-		color: var(--color-text);
 		padding: 10px 12px;
 	}
 	.edit-body.short {
@@ -155,10 +151,6 @@
 		width: 100%;
 		font-family: var(--font-body);
 		font-size: 14px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border-strong);
-		border-radius: 8px;
-		color: var(--color-text);
 		padding: 7px 10px;
 	}
 	.edit-body:focus,

@@ -71,7 +71,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **teal — positive/confirmation, temp HP, available pips** — `--color-good-soft`, `--color-success`, `--color-warning`, `--color-danger`, `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`
 
-## Global CSS classes (54)
+## Global CSS classes (55)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -127,6 +127,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.skip-link` | app.css | Skip-to-content link: hidden until focused (keyboard users tab to it first). |
 | `.slabtoggle` | components.css | whole label clickable to collapse (chev + name), no button box |
 | `.source-line` | components.css |  |
+| `.text-field` | components.css | text-input / textarea field base (edit forms, inline editors). |
 | `.toggle-track` | components.css | --- toggle-track: the pill on/off switch knob (Switch component, combat menus) --- |
 | `.trace` | components.css | --- small shared bits --- |
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
@@ -870,4 +871,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 54 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 301ms._
+_46 tokens · 55 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 316ms._
