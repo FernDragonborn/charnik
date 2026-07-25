@@ -97,6 +97,23 @@ export function buildThemesStylesheet(themes: CustomTheme[]): { css: string; ids
 	return { css: blocks.join('\n\n'), ids };
 }
 
+/** Read the computed value of every themeable token under a built-in base (dark/light), so a NEW
+ *  custom theme can be seeded SELF-CONTAINED — a custom `[data-theme]` doesn't inherit another theme
+ *  via the cascade, it must carry the tokens it wants. Flips `data-theme` for one synchronous
+ *  getComputedStyle read (no paint between set + restore, so no flash), then restores. Browser-only. */
+export function snapshotBaseTokens(base: 'dark' | 'light'): Record<string, string> {
+	const out: Record<string, string> = {};
+	if (typeof document === 'undefined') return out;
+	const root = document.documentElement;
+	const prev = root.dataset.theme;
+	root.dataset.theme = base;
+	const cs = getComputedStyle(root);
+	for (const t of THEMEABLE_TOKENS) out[t] = cs.getPropertyValue(`--${t}`).trim();
+	if (prev === undefined) delete root.dataset.theme;
+	else root.dataset.theme = prev;
+	return out;
+}
+
 const STYLE_ID = 'charnik-custom-themes';
 
 /** Inject/replace the custom-theme stylesheet in <head>. Idempotent — call whenever the set changes;

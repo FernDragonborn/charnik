@@ -11,9 +11,10 @@
 	import SourceManager from '$lib/components/settings/SourceManager.svelte';
 	import CollisionManager from '$lib/components/settings/CollisionManager.svelte';
 	import PluginsSettings from '$lib/components/settings/PluginsSettings.svelte';
+	import ThemesSettings from '$lib/components/settings/ThemesSettings.svelte';
 	import { _ } from '$lib/i18n';
 
-	type Tab = 'general' | 'data' | 'health' | 'sources' | 'collisions' | 'plugins';
+	type Tab = 'general' | 'themes' | 'data' | 'health' | 'sources' | 'collisions' | 'plugins';
 	let tab = $state<Tab>('general');
 
 	onMount(loadContentStore);
@@ -27,6 +28,7 @@
 
 	const TABS: { id: Tab; label: string; badge?: () => number }[] = [
 		{ id: 'general', label: 'General' },
+		{ id: 'themes', label: 'Themes' },
 		{ id: 'data', label: 'Data' },
 		{ id: 'health', label: 'Content health', badge: () => issueCount },
 		{ id: 'sources', label: 'Sources' },
@@ -51,6 +53,8 @@
 	<div class="panel">
 		{#if tab === 'general'}
 			<GeneralSettings />
+		{:else if tab === 'themes'}
+			<ThemesSettings />
 		{:else if tab === 'data'}
 			<StorageSettings />
 		{:else if tab === 'health'}

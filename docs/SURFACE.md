@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (28)
+## Duplicate suspects (29)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -18,6 +18,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 **Same name, several files:**
 
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
+- `label` ×3 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `persist` ×3 — src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
@@ -29,7 +30,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
-- `label` ×2 — src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
@@ -40,6 +40,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/ResourceBar.svelte
+- `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `STORAGE_KEY` ×2 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts
 - `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
@@ -142,7 +143,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (38)
+## Shared components (39)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -183,6 +184,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **SpellHead** | `detail`, `spell`, `editable`, `draft` | The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration |
 | **StorageSettings** | — | Where Charnik keeps your data (characters + content). |
 | **Switch** | `on`, `lock`, `title`, `onclick` | Toggle switch (d-spellmgr `.tg`). |
+| **ThemesSettings** | — | Settings ▸ Themes — author custom colour themes without a rebuild. |
 | **WikiDetail** | `detail`, `actions`, `footer`, `editable`, `draft` | Right-pane wiki detail: a thin DISPATCHER. |
 
 ## Stores & reactive state (11 modules)
@@ -871,6 +873,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const isSafeThemeId` — A safe theme id: a short lowercase slug, so `[data-theme='<id>']` can't be broken out of.
 - `function themeToCss` — Turn one theme into its `[data-theme='id'] { … }` rule, dropping unknown tokens + unsafe values.
 - `function buildThemesStylesheet` — Build the combined stylesheet for a set of custom themes (pure — the DOM-free core, unit-tested).
+- `function snapshotBaseTokens` — Read the computed value of every themeable token under a built-in base (dark/light), so a NEW * custom theme can be s…
 - `function registerCustomThemes` — Inject/replace the custom-theme stylesheet in <head>.
 
 ### `src/lib/util/format.ts`
@@ -890,4 +893,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 56 global classes · 38 components · 490 exports across 70 modules · 28 duplicate suspects · generated in 162ms._
+_45 tokens · 56 global classes · 39 components · 491 exports across 70 modules · 29 duplicate suspects · generated in 173ms._
