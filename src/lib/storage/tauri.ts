@@ -24,9 +24,8 @@ import {
 	rename as fsRename,
 	watchImmediate
 } from '@tauri-apps/plugin-fs';
-import { appConfigDir, documentDir, join } from '@tauri-apps/api/path';
+import { documentDir, join } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
-import { open } from '@tauri-apps/plugin-dialog';
 import { openPath } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
 import { sandboxRelative } from './path';
@@ -42,33 +41,17 @@ import {
 /** The user's data root is a VISIBLE, self-named folder (not a hidden per-app dir) — see
  *  docs/PLAN.md "Data directory & config". */
 const DATA_DIR_NAME = 'charnik';
-/** Tiny app-managed pointer (in the OS app-config dir) recording a user-chosen data location. */
-const POINTER_FILE = 'config.json';
-
-/** Absolute path of the pointer config — lives in appConfig, OUTSIDE the data root it points at. */
-async function pointerPath(): Promise<string> {
-	return join(await appConfigDir(), POINTER_FILE);
-}
-
-/** The user's saved data-dir choice, or null if none / unreadable. */
+/** The user's saved data-dir choice, or null if none / unreadable. The pointer file
+ *  (`<appConfig>/config.json`) is now owned by Rust — the renderer never reads or writes it, so a
+ *  page can't forge a data-dir to be silently granted at the next launch (audit S2). */
 async function readDataDirOverride(): Promise<string | null> {
-	try {
-		const p = await pointerPath();
-		if (!(await fsExists(p))) return null;
-		const saved = JSON.parse(await readTextFile(p))?.dataDir;
-		return typeof saved === 'string' && saved ? saved : null;
-	} catch {
-		return null;
-	}
+	return (await invoke<string | null>('saved_data_dir')) ?? null;
 }
 
-/** Persist a user-chosen data dir to the pointer (used by the first-run + settings folder picker). */
+/** Persist a user-chosen data dir to the pointer. Rust REFUSES a path that wasn't chosen via the
+ *  native folder picker this session, so this only ever succeeds for a genuine user choice. */
 export async function setDataDirOverride(dir: string): Promise<void> {
-	await fsMkdir(await appConfigDir(), { recursive: true });
-	await writeFile(
-		await pointerPath(),
-		new TextEncoder().encode(JSON.stringify({ dataDir: dir }, null, 2))
-	);
+	await invoke('set_data_dir', { path: dir });
 }
 
 /** Resolve the writable data root: an explicit user choice, else the default `<Documents>/charnik`. */
@@ -76,26 +59,22 @@ async function resolveDataDir(): Promise<string> {
 	return (await readDataDirOverride()) ?? defaultDataDir();
 }
 
-/** The user's previously saved data-dir choice, or null on first run (drives the first-run picker). */
-export async function getSavedDataDir(): Promise<string | null> {
-	return readDataDirOverride();
-}
-
 /** The proposed default data dir (`<Documents>/charnik`) shown in the first-run picker. */
 export async function defaultDataDir(): Promise<string> {
 	return join(await documentDir(), DATA_DIR_NAME);
 }
 
-/** Grant the fs plugin runtime access to `dir` (a user-picked folder outside the static scope);
- *  redundant-but-harmless for the default. Backed by the `allow_data_dir` Rust command. */
-export async function grantDataDirScope(dir: string): Promise<void> {
-	await invoke('allow_data_dir', { path: dir });
+/** Re-grant the saved data folder (outside the static scope) on startup and return it, or null on
+ *  first run. Rust reads the path from its OWN pointer and grants it — the renderer supplies nothing,
+ *  so there's no JS-controlled path to widen the sandbox with (audit S2). */
+export async function applySavedDataDir(): Promise<string | null> {
+	return (await invoke<string | null>('apply_saved_data_dir')) ?? null;
 }
 
-/** Open the OS folder picker; resolves to the chosen directory, or null if cancelled. */
+/** Open the OS folder picker (in Rust) — the pick is grant-scoped there and its path returned, or
+ *  null if cancelled. Granting flows from the real dialog result, never from a renderer-supplied path. */
 export async function pickDataDir(): Promise<string | null> {
-	const chosen = await open({ directory: true, multiple: false });
-	return typeof chosen === 'string' ? chosen : null;
+	return (await invoke<string | null>('pick_data_dir')) ?? null;
 }
 
 /** The active data dir (the saved choice or the default) — for display in settings. */
@@ -103,16 +82,13 @@ export async function currentDataDir(): Promise<string> {
 	return resolveDataDir();
 }
 
-/** Open the folder picker and propose `<picked parent>/charnik` as the move target. Grants fs-scope
- *  for the target right away (session-only — nothing is persisted until the move flow commits): the
- *  dialog plugin auto-extends scope for the PICKED path, but the flow then reads/copies into the
- *  `charnik` child, and we must not bet on that extension being recursive. Null if cancelled. */
+/** Open the folder picker and propose `<picked parent>/charnik` as the move target. `pickDataDir`
+ *  grants the picked parent RECURSIVELY in Rust, so the `charnik` child is already in scope for the
+ *  copy that follows (and `set_data_dir` accepts it as a child of a picked dir). Null if cancelled. */
 export async function pickTargetDataDir(): Promise<string | null> {
 	const parent = await pickDataDir();
 	if (!parent) return null;
-	const target = await join(parent, DATA_DIR_NAME);
-	await grantDataDirScope(target);
-	return target;
+	return join(parent, DATA_DIR_NAME);
 }
 
 /** Open the active data folder in the OS file manager (shows content/ + characters/). */
@@ -121,9 +97,9 @@ export async function openDataDir(): Promise<void> {
 }
 
 /** Persist a chosen data folder WITHOUT moving anything — "just read from here now". Used when the
- *  user has already copied their data across by hand (the repoint-only branch of the change flow). */
+ *  user has already copied their data across by hand (the repoint-only branch of the change flow).
+ *  `setDataDirOverride` grants the dir in Rust as it persists (it was picker-chosen). */
 export async function repointDataDir(dir: string): Promise<void> {
-	await grantDataDirScope(dir);
 	await setDataDirOverride(dir);
 }
 
@@ -195,7 +171,6 @@ async function finalizeMove(
 	newDir: string,
 	deleteOld: boolean
 ): Promise<MigrateOutcome> {
-	await grantDataDirScope(newDir);
 	await setDataDirOverride(newDir);
 	if (deleteOld) {
 		try {

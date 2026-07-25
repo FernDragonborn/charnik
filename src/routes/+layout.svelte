@@ -19,9 +19,8 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { detectPlatform, Platform } from '$lib/storage/provider';
 	import {
-		getSavedDataDir,
+		applySavedDataDir,
 		defaultDataDir,
-		grantDataDirScope,
 		setDataDirOverride,
 		pickDataDir
 	} from '$lib/storage/tauri';
@@ -111,9 +110,8 @@
 			loadContentStore();
 			return;
 		}
-		const saved = await getSavedDataDir();
+		const saved = await applySavedDataDir(); // Rust re-grants the custom folder from its own pointer
 		if (saved) {
-			await grantDataDirScope(saved); // re-allow a custom folder outside the static scope
 			await loadContentStore();
 			startContentWatcher(); // live-refresh when a CSV is edited on disk
 			void loadPlugins(); // desktop-only L3 discovery; consented+enabled plugins wake up
@@ -124,8 +122,8 @@
 	onDestroy(stopContentWatcher);
 
 	async function confirmDataDir(dir: string) {
-		await grantDataDirScope(dir);
-		await setDataDirOverride(dir);
+		await setDataDirOverride(dir); // dir was picker-chosen (already granted in Rust); this persists it
+
 		firstRunDefault = null;
 		await loadContentStore();
 		startContentWatcher();

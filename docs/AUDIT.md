@@ -838,11 +838,20 @@ Second fresh-eyes pass + call-chain walk (2026-07-16, later the same day):
   `MemoryStorage` now call it (killed the near-duplicate `norm` in memory.ts — one guard, one place).
   Unified error message → `path escapes storage root`. New pure `path.test.ts` covers the S1
   backslash cases (`..\secret`, `content\..\..\secret`, mixed separators) + forward-slash traversal.
-- [ ] **S2 · `allow_data_dir` is invokable with ANY path** (lib.rs:6) — any renderer JS can extend
-  the fs scope to an arbitrary directory, recursive+write. By design (the folder-picker escape
-  hatch) and gated by CSP/no-remote-code, but it's the single widest capability: consider
-  restricting to paths returned by the dialog plugin, or at least document it as accepted risk in
-  SECURITY.md §9 (minimal Rust surface).
+- [x] **S2 · `allow_data_dir` is invokable with ANY path.** FIXED 2026-07-25 (option A — Rust owns
+  the trust chain end-to-end, not "document as accepted risk"). Deleted the JS-callable
+  `allow_data_dir(path)`. New Rust commands: `pick_data_dir` opens the native folder dialog IN RUST,
+  grants it recursively + records it in a session `GrantedDirs` set, and returns the path;
+  `set_data_dir(path)` persists the pointer ONLY if the path is (a child of) a picker-chosen dir;
+  `apply_saved_data_dir` re-grants on startup from Rust's OWN read of the pointer. The renderer never
+  hands a path to grant — granting flows only from a real OS dialog pick or the Rust-read pointer, so
+  page JS can no longer widen the sandbox to an arbitrary directory. The pointer (`config.json`) is
+  now Rust-owned; the renderer's `fs:allow-appconfig-write-recursive` capability is dropped so JS
+  can't forge it for a silent next-launch grant either (closes the residual). TS rewired
+  (`tauri.ts` pick/persist via `invoke`; `+layout` startup via `apply_saved_data_dir`;
+  `grantDataDirScope` + the `@tauri-apps/plugin-dialog` JS dep removed). `cargo check` + `pnpm check`
+  + 791 tests + lint green. ⚠ The interactive dialog path itself still wants a manual `pnpm tauri dev`
+  smoke-test (no desktop driver in CI).
 
 ## PLG · L3 plugin implementation review (2026-07-20)
 

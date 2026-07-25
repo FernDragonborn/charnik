@@ -825,11 +825,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/storage/tauri.ts`
 
-- `function setDataDirOverride` — Persist a user-chosen data dir to the pointer (used by the first-run + settings folder picker).
-- `function getSavedDataDir` — The user's previously saved data-dir choice, or null on first run (drives the first-run picker).
+- `function setDataDirOverride` — Persist a user-chosen data dir to the pointer.
 - `function defaultDataDir` — The proposed default data dir (`<Documents>/charnik`) shown in the first-run picker.
-- `function grantDataDirScope` — Grant the fs plugin runtime access to `dir` (a user-picked folder outside the static scope); * redundant-but-harmless…
-- `function pickDataDir` — Open the OS folder picker; resolves to the chosen directory, or null if cancelled.
+- `function applySavedDataDir` — Re-grant the saved data folder (outside the static scope) on startup and return it, or null on * first run.
+- `function pickDataDir` — Open the OS folder picker (in Rust) — the pick is grant-scoped there and its path returned, or * null if cancelled.
 - `function currentDataDir` — The active data dir (the saved choice or the default) — for display in settings.
 - `function pickTargetDataDir` — Open the folder picker and propose `<picked parent>/charnik` as the move target.
 - `function openDataDir` — Open the active data folder in the OS file manager (shows content/ + characters/).
@@ -863,4 +862,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 483 exports across 69 modules · 27 duplicate suspects · generated in 132ms._
+_46 tokens · 50 global classes · 36 components · 482 exports across 69 modules · 27 duplicate suspects · generated in 127ms._
