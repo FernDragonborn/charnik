@@ -30,6 +30,7 @@ import {
 	computeAttacks,
 	standardActions,
 	buildSpellGroups,
+	casterForSpell,
 	parseDamage,
 	modTargetLabel,
 	applyDefense,
@@ -40,6 +41,14 @@ import {
 	type StandardAction
 } from '$lib/combat/helpers';
 import { RollTray } from './roll.svelte';
+import {
+	appendLog,
+	readLog,
+	snapshotCharacterOnLaunch,
+	type LogEntry
+} from '$lib/character/repository';
+import { getUserStorage } from '$lib/storage/provider';
+import type { RollLogEntry } from '$lib/combat/helpers';
 import { registerDiceTray, openDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { PanelLayout } from './panel.svelte';
@@ -51,8 +60,9 @@ import { slotToSpend, canTogglePrepared, preparedLeveledCount } from '$lib/rules
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
 
 class CombatVM {
-	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. */
-	tray = new RollTray();
+	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. Each completed
+	 *  roll is also persisted to the active character's `log.jsonl` (B4). */
+	tray = new RollTray((e) => this.persistRoll(e));
 	/** Panel-layout subsystem (columns, collapse, drag) — persists column order onto the character. */
 	layout = new PanelLayout((cols) => {
 		if (this.character) this.character.ui.panelColumns = cols;
@@ -108,8 +118,26 @@ class CombatVM {
 		await loadContentStore(); // populate the shared graph; `this.graph` derives from it
 		// the character opened from the Roster, else the persisted demo (same instance the Spellbook edits)
 		this.character = await ensureActiveCharacter();
+		// once-per-session snapshot of this character for the rolling backup ring (B3)
+		void snapshotCharacterOnLaunch(getUserStorage(), this.character.id);
 		// restore this character's saved panel layout (falls back to the default columns)
 		this.layout.restore(this.character.ui.panelColumns);
+		// restore the persisted roll history so the log isn't empty after a reload (B4)
+		const hist = await readLog(getUserStorage(), this.character.id);
+		this.tray.seed(
+			hist.map((le) => ({ label: le.label, expr: le.detail ?? '', total: le.result ?? NaN }))
+		);
+	};
+
+	/** Persist one completed roll to the active character's `log.jsonl` (B4). Fire-and-forget: a log
+	 *  write must never block or fail a roll. */
+	private persistRoll = (e: RollLogEntry): void => {
+		const id = this.character?.id;
+		if (!id) return;
+		const entry: LogEntry = { t: Date.now(), kind: 'roll', label: e.label };
+		if (Number.isFinite(e.total)) entry.result = e.total;
+		if (e.expr) entry.detail = e.expr;
+		void appendLog(getUserStorage(), id, entry);
 	};
 
 	openMenu = (kind: MenuKind, e: Event) => {
@@ -514,7 +542,9 @@ class CombatVM {
 		const alt = wantsTray(e);
 		// a spell with dice rolls them: damage (Fire Bolt 1d10, Fireball 8d6) or, for auto
 		// spells, healing (Healing Word 2d4 + spellcasting mod)
-		const caster = this.sheet?.spellcasting.classes[0];
+		// the class this spell is cast AS drives the to-hit / DC / healing mod — its own profile, not
+		// classes[0] (A18: a multiclass spell from the Cleric side must use the Cleric's numbers).
+		const caster = casterForSpell(this.sheet, r.ref) ?? this.sheet?.spellcasting.classes[0];
 		const hasDmg = !!r.dmg && Object.keys(r.dmg).length > 0;
 		if (r.res === 'hit' && caster) {
 			// attack spell → roll the TO-HIT first (attack-keyed effects apply, same as weapons),

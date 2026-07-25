@@ -18,14 +18,47 @@ import {
 	effectiveHpMax,
 	weaponBonus,
 	describeDerivedEffects,
+	casterForSpell,
 	type EffectInstance
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
 import { computed } from '$lib/rules/pipeline';
+import type { CharacterSheet } from '$lib/character/derive';
+import type { SpellcastingClass } from '$lib/character/spellcasting';
 
 // rollEffectsFor reads the sheet's typed-facts object (D7), built from the RESOLVED effect list
 // (never raw play.effects — B21); collectFacts is that one conversion.
 const fx = (...tokens: string[]) => collectFacts([{ source: 'Test', layer: 'condition', tokens }]);
+
+describe('A18 · casterForSpell (multiclass uses the spell class own DC)', () => {
+	// a minimal sheet carrying only what casterForSpell reads
+	const cls = (className: string, dc: number, spells: string[]): SpellcastingClass =>
+		({
+			className,
+			saveDC: computed([{ source: 'x', layer: 'base', op: 'add', amount: dc }]),
+			accessSpellIds: spells
+		}) as unknown as SpellcastingClass;
+	const sheetOf = (...classes: SpellcastingClass[]) =>
+		({ spellcasting: { classes } }) as unknown as CharacterSheet;
+
+	it('returns the caster class whose list grants the spell', () => {
+		const sheet = sheetOf(
+			cls('Wizard', 16, ['spell:x:fireball']),
+			cls('Cleric', 13, ['spell:x:cure_wounds'])
+		);
+		expect(casterForSpell(sheet, 'spell:x:cure_wounds')?.className).toBe('Cleric');
+		expect(casterForSpell(sheet, 'spell:x:fireball')?.className).toBe('Wizard');
+	});
+
+	it('on an overlap the higher save DC wins; unknown spell falls back to the first class', () => {
+		const sheet = sheetOf(
+			cls('Wizard', 16, ['spell:x:shield']),
+			cls('Cleric', 13, ['spell:x:shield'])
+		);
+		expect(casterForSpell(sheet, 'spell:x:shield')?.className).toBe('Wizard'); // DC 16 > 13
+		expect(casterForSpell(sheet, 'spell:x:unknown')?.className).toBe('Wizard'); // fallback
+	});
+});
 
 describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 	it('folds a literal +1 into both attack and damage with a provenance note', () => {

@@ -31,6 +31,10 @@
 
 	let { pid, c, s }: { pid: string; c: Character; s: CharacterSheet } = $props();
 
+	// past this many pips, render a numeric counter instead of a wall of dots — also caps the
+	// render cost so an unbounded/garbage homebrew `max` can't OOM the view (B10).
+	const PIP_CAP = 20;
+
 	// effects grouped into Buffs / Debuffs / Resources sections
 	const effectGroups = $derived(groupEffects(c.play.effects));
 	// the open duration dropdown (which effect + its anchor button); its rounds tracked live
@@ -293,7 +297,7 @@
 							onclick={() => combat.resources.useResource(r.id, r.max)}
 						>
 							<span class="resource-name">{r.name}</span>
-							{#if Number.isFinite(r.max)}
+							{#if Number.isFinite(r.max) && r.max <= PIP_CAP}
 								<span class="resource-pips">
 									{#each range(r.max) as i (i)}
 										<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -311,6 +315,9 @@
 										></span>
 									{/each}
 								</span>
+								<span class="resource-count">{r.max - spent}/{r.max}</span>
+							{:else if Number.isFinite(r.max)}
+								<!-- too many to draw as pips (B10): numeric counter only -->
 								<span class="resource-count">{r.max - spent}/{r.max}</span>
 							{:else}
 								<!-- unlimited pool (`inf` max): no pips, count = uses since recharge -->

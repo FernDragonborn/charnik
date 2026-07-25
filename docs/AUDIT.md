@@ -126,7 +126,15 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   PACT slots aren't UI-rendered as pips (a separate gap — so a pure-warlock cast isn't slot-gated,
   `slotToSpend` → null); ritual SOURCE nuance (L13 — wizard from spellbook unprepared, etc.).
   Cross-ref A18 (cast still uses `classes[0]`).
-- [ ] **A18 · Multiclass caster collapses to `classes[0]` across the UI.** Per-class profiles exist
+- [~] **A18 · Multiclass caster collapses to `classes[0]` across the UI.** CAST PATH FIXED
+  2026-07-25: new `casterForSpell(sheet, ref)` (combat/helpers) resolves each spell to the caster
+  class whose `accessSpellIds` grants it (overlap → higher DC; fallback first class), and the cast
+  path (`state.svelte.ts`) now uses THAT class's to-hit / DC / heal-mod, not `classes[0]` — RAW: a
+  multiclass spell uses its own class's numbers. The top spell summary already listed per-class DCs.
+  STILL `classes[0]`: `preparedCap` (:595 / spellbook :90) and the prepared-toggle cap gate — a
+  smaller follow-up (per-class prepared limits), not the DC bug the user flagged.
+  Original finding below:
+  Per-class profiles exist
   (L11 core fix, `character/spellcasting.ts`) but: cast uses `spellcasting.classes[0]` for
   DC/attack/heal-mod (`state.svelte.ts:342`), `preparedCap` is `classes[0]` (:412), and BOTH
   prepared togglers (combat `togglePrepared`, spellbook `togglePrepare`) gate every spell against
@@ -139,18 +147,27 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   `nextTurn` expires round-timed effects with a toast (an expiring cast-linked effect also ends
   its concentration); rests expire what they outlive (short = ≤ 600 rds, long = all timed);
   the panel shows REMAINING rounds and typed durations re-anchor to "from now".
-- [ ] **B2 · Dead play-state fields: `hitDiceSpent`, `deathSaves`, `exhaustion`.** Schema-only;
+- [~] **B2 · Dead play-state fields: `hitDiceSpent`, `deathSaves`, `exhaustion`.** 2 of 3 now LIVE:
+  `deathSaves` has a tracker (`combat.deathSave` + HP-panel success/failure pips, EXPR-5) and
+  `exhaustion` drives real effects (the per-system ladder folded once in `gatherEffects`/derive,
+  EFX-EXH both editions). STILL dead: `hitDiceSpent` — short rest can't spend hit dice (= UBUG-1,
+  same work) and long rest doesn't restore them. Original finding below:
+  Schema-only;
   no UI, no logic. Short rest can't spend hit dice (see UBUG-1 — same work), long rest doesn't
   restore them, death saves have no tracker, exhaustion levels have no effects. `exhaustion`
   design DECIDED (2026-07-15) → PLAN.md EXPR section: data-driven per-system ladder (effect tokens
   keyed by level, cumulative in 2014 / uniform via the `exhaustion` L2 var in 2024), always
   manually settable; part of the broader conditions-as-data model (closes A4/B9).
-- [ ] **B3 · No rotating backups for character.json.** Atomic temp→rename exists
-  (`storage/tauri.ts writeBytes`); the "autosave + rotating backups" invariant's backup half
-  doesn't.
-- [ ] **B4 · Roll log never persisted.** `appendLog`/`readLog` (repository.ts) are used only by
-  tests; the RollTray log is in-memory, `log.jsonl` is never written. Also `appendLog` is
-  read-all + rewrite, not an append (fine while unused; fix when wiring).
+- [x] **B3 · No rotating backups for character.json.** FIXED 2026-07-25. Two timestamp-named
+  backup rings in the character dir: `save` (checkpoint of the PREVIOUS saved state, throttled to
+  ≥10 min so a busy session doesn't churn — keeps 2) + `launch` (one per app session — keeps 3).
+  Recovery set = current → −10 min → −20 min → this launch → last → 2 launches ago.
+  `saveCharacter` snapshots before overwrite; `snapshotCharacterOnLaunch` runs once/session from
+  combat load. Best-effort (never blocks a save). Tested on MemoryStorage (throttle + ring prune).
+- [x] **B4 · Roll log never persisted.** FIXED 2026-07-25. `RollTray` takes a `persist` sink
+  (injected by CombatVM → `appendLog` for the active character) so every completed roll writes to
+  `log.jsonl`; combat load seeds the tray from `readLog` so history survives a reload. `appendLog`
+  now rotates (keeps the newest 500 lines) so the file stays bounded.
 - [ ] **B5 · Two-dimensional source filtering applied only in the compendium.** `isRowActive`
   has exactly one call site. Ctrl+K search (CommandPalette/search docs), ALL builder pickers
   (species/class/feat/spell/item/language), and the spellbook show rows from disabled
@@ -163,18 +180,26 @@ Deep effects-system review, 2026-07-16 (A8–A18):
   reinstall/webview-data clear, and a plain JSON next to the CSVs matches "own your data".
   Watcher only watches `content/`, so a root-level config file can't cause a reload loop.
   Load becomes async — fold into the existing async startup.
-- [ ] **B7 · Units invariant half-done.** ft→m only for speed (CombatStrip); lb→kg nowhere
-  (no ×0.4536 in the codebase); `carryingCapacity` is computed by derive but rendered NOWHERE,
-  and the optional-capacity toggle doesn't exist.
+- [~] **B7 · Units invariant half-done.** `kilograms(lb)` helper added 2026-07-25 (×0.4536,
+  mirroring `metres`) so the conversion exists and is ready. But `carryingCapacity` (the only
+  weight value derived) is still rendered NOWHERE — there's no weight/inventory UI yet (N1), so
+  there's no current call site. Full application + the optional-capacity toggle land with N1.
 - [ ] **B8 · i18n drop-in is fiction; coverage narrow.** Catalogs are bundled via a Vite
   template import (`i18n/index.ts`), so "drop in a locale JSON without a rebuild" doesn't work
   despite the module comment claiming it. `$_()` is used in ~10 files; the build page, combat
   blocks, most dialogs and `buildIssues` messages are hardcoded EN.
-- [ ] **B9 · Rule-based blocks/penalties absent.** The notes/trace infra exists, but no rule
-  emits a block (e.g. "spellcasting blocked: wearing armor without proficiency" — PLAN's own
-  example). Related: passives never receive the ±5 advantage/disadvantage adjustment
-  (core.ts comment defers it to effects; no code does it).
-- [ ] **B10 · Resource pip render is O(max) — unbounded content can OOM the view.** Both
+- [x] **B9 · Rule-based blocks/penalties absent.** DONE (EFX-A7/B9, 2026-07-21; confirmed still live
+  2026-07-25). `deriveSheet` emits `spellcasting.armorBlock {source, note}` + a deriveIssue when worn
+  armor's category isn't in the class's armor grants (PLAN's canonical "spellcasting blocked: armor
+  without proficiency" example), surfaced as a red rule-block banner on the combat spells panel
+  (`PanelCard`); the attack-proficiency gate drops the prof bonus + notes "Not proficient". Passives
+  DO take the ±5 adv/dis adjustment (`derive.ts passiveOf`). The audit text predated that work.
+- [x] **B10 · Resource pip render is O(max) — unbounded content can OOM the view.** FIXED
+  2026-07-25. Both pip sites (`ResourceBar.svelte` + `PanelCard.svelte`) now render individual pips
+  only up to `PIP_CAP` (20); above it they switch to the compact numeric `spent/max` counter, so a
+  `grant_resource:x:1000000000` cell renders in O(1) instead of allocating a billion pips. Original
+  finding below:
+  Both
   `ResourceBar.svelte:19` and `PanelCard.svelte:229` do `{#each range(r.max) …}`, and
   `range` (`combat/helpers.ts:51`) is `Array.from({length: n})` — so a resource's `max`
   becomes that many allocated array entries + DOM `<button>` pips. `max` comes from a
@@ -395,9 +420,11 @@ Deep effects-system review, 2026-07-16 (D7–D19):
   the single source both the combat sheet and the spellbook call. Fixes the divergent count (combat
   previously counted every `s.prepared`, inflating its cap) and makes the spellbook block cantrips
   too. Unit-tested. (Both still read `classes[0]` — that's A18, still open.)
-- [ ] **D14 · Character id = `slugify(name)`** (build/state.svelte.ts:663) — two "Hero"s silently
-  overwrite each other's save. Violates the GUID-for-shareable-data principle; id should be a
-  GUID with the slug as display/folder hint.
+- [x] **D14 · Character id = `slugify(name)`** — two "Hero"s silently overwrite each other's save.
+  FIXED 2026-07-25. New characters get `slug-<4hex>` (`uniqueCharacterId` in repository, retried
+  against storage so even the suffix can't collide); the readable slug stays as the folder/display
+  hint (user chose the always-suffix variant over a bare GUID). Existing saves untouched (id is
+  stored in JSON; only creation stamps a suffix). Assigned at save time, not in the reactive derive.
 - [x] **D15 · `assemble` hardcodes `attuned: false`.** FIXED 2026-07-21. The build draft dropped the
   `attuned` flag (its inventory type + the hydrate map omitted it) and assemble forced `false`, so any
   builder edit / level-up wiped attunement. `attuned` now threads through the draft (type + hydrate +
@@ -447,9 +474,9 @@ Deep effects-system review, 2026-07-16 (E3–E7):
   FILLS DOWN — it takes the highest defined level ≤ the character's level, so a sparse table (rows only
   where counts change) is read as "unchanged since the last row", not 0. Unit-tested (L4 wizard uses
   the L3 row). Dense tables are unaffected (exact level is the highest ≤ itself).
-- [ ] **E6 · `classes.saves` schema demands EXACTLY 2** (`z.array(Ability).length(2)`,
-  schemas.ts:208-211) — a homebrew class with 1 or 3 save proficiencies fails validation and the
-  row is dropped. Arbitrary stiffness against the homebrew-first stance.
+- [x] **E6 · `classes.saves` schema demands EXACTLY 2.** FIXED 2026-07-25. Relaxed to
+  `z.array(Ability).min(1).max(6)` — a homebrew class with a different save count now validates;
+  every SRD class (exactly 2) still passes. Additive, nothing broken.
 - [~] **E7 · Dead columns shipped in the schema:** `class.ritual` NOW WIRED 2026-07-20 —
   `deriveSpellcasting` reads it into `Spellcasting.ritualCasting` (true iff a caster class has Ritual
   Casting — Wizard/Cleric/Druid/Bard, not base Warlock), which gates the A17 ritual-cast `R` badge
@@ -656,8 +683,8 @@ point at THIS file.
   pattern covers combat + compendium; `translate/+page.svelte` and `spellbook/+page.svelte`
   still hang on "Loading…" forever if the content load fails; the build page silently renders
   empty pickers.
-- [ ] **W3 · Version drift:** `src-tauri/Cargo.toml` = 0.2.0 vs 0.3.0 in package.json +
-  tauri.conf.json (tauri.conf wins at build time; still confusing). Sync.
+- [x] **W3 · Version drift:** FIXED 2026-07-25. `src-tauri/Cargo.toml` bumped 0.2.0 → 0.4.0 to
+  match package.json + tauri.conf.json.
 - [ ] **W4 · `mergeDataDir` doc nit:** comment claims "same failure/rollback contract as
   migrateDataDir", but merge can't sweep half-copied files (non-empty target). Also record in
   PLAN that merge+deleteOld intentionally discards the source copy of a collision the target

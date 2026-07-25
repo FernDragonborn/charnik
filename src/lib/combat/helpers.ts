@@ -16,6 +16,7 @@ import {
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character, EffectInstance } from '$lib/character/schema';
 import { SKILL_ABILITY, type CharacterSheet, type SkillId } from '$lib/character/derive';
+import type { SpellcastingClass } from '$lib/character/spellcasting';
 import {
 	parseDicePool,
 	parseDiceTerm,
@@ -178,6 +179,9 @@ export function effectiveHpMax(manualMax: number | null, sheetMaxHp: Computed): 
 
 /** Feet → "N m" (metric in parentheses next to imperial). */
 export const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/, '')} m`;
+
+/** Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7). */
+export const kilograms = (lb: number) => `${(lb * 0.4536).toFixed(1).replace(/\.0$/, '')} kg`;
 
 /** Provenance trace of a Computed → a human-readable "why" string for tooltips. Pass `translate`
  *  (svelte-i18n's `$format`) to localize the rule notes; without it every note renders its EN text
@@ -701,6 +705,22 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 
 /** Group the character's spells for the spell block (Pinned first, then by level / prepared / school),
  *  attaching the castable slot pool per level. Pure — the VM just wraps it in a `$derived`. */
+/** The caster class a spell is cast AS — whose DC / attack / ability are the ones actually USED
+ *  (RAW: a multiclass caster has one profile PER class, not a single shared DC — A18). Picks the
+ *  caster class whose spell list grants this spell; on an overlap (a spell on two class lists) the
+ *  higher save DC wins. Falls back to the first caster class when the access map has no match. */
+export function casterForSpell(
+	sheet: CharacterSheet | null,
+	spellRef: string
+): SpellcastingClass | undefined {
+	const classes = sheet?.spellcasting.classes ?? [];
+	const owning = classes.filter((c) => c.accessSpellIds.includes(spellRef));
+	return (owning.length ? owning : classes).reduce<SpellcastingClass | undefined>(
+		(best, c) => (!best || c.saveDC.value > best.saveDC.value ? c : best),
+		undefined
+	);
+}
+
 export function buildSpellGroups(
 	character: Character,
 	sheet: CharacterSheet | null,

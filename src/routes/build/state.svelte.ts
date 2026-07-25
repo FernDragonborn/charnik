@@ -18,6 +18,8 @@ import { plugins } from '$lib/effects/plugin-store.svelte';
 import { ABILITIES, type Character } from '$lib/character/schema';
 import { assembleCharacter } from '$lib/character/assemble';
 import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
+import { uniqueCharacterId } from '$lib/character/repository';
+import { getUserStorage } from '$lib/storage/provider';
 import { app, type SystemId } from '$lib/stores/app.svelte';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
 import type { Ability } from '$lib/rules/core';
@@ -701,9 +703,13 @@ class BuildVM {
 		this.saving = true;
 		try {
 			const character = this.assembled;
-			// new character: start play HP at max so it's playable immediately. Editing/level-up:
-			// keep the character's current play state (HP, effects, spent slots…).
-			if (!this.edit) character.play.hp.current = this.sheet?.maxHp.value ?? 0;
+			// new character: start play HP at max so it's playable immediately, AND stamp a
+			// collision-free id (slug + suffix) so two same-named builds don't overwrite (D14).
+			// Editing/level-up: keep the existing id + play state (HP, effects, spent slots…).
+			if (!this.edit) {
+				character.id = await uniqueCharacterId(getUserStorage(), slugify(this.draft.name) || 'hero');
+				character.play.hp.current = this.sheet?.maxHp.value ?? 0;
+			}
 			await saveCharacterToStore(character);
 			// make the freshly-created character the active one so Combat opens IT, not the demo
 			await openCharacter(character.id);

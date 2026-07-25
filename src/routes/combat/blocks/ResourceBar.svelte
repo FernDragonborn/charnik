@@ -7,6 +7,10 @@
 	import { range } from '$lib/combat/helpers';
 
 	let { s }: { s: CharacterSheet } = $props();
+
+	// Above this many pips the row would be a wall of dots (and an unbounded/garbage `max` from
+	// homebrew could OOM the render) — past the cap we show a numeric counter instead of pips (B10).
+	const PIP_CAP = 20;
 </script>
 
 <section class="resource-bar">
@@ -22,7 +26,7 @@
 			onclick={() => combat.resources.useResource(r.id, r.max)}
 		>
 			{r.name}
-			{#if Number.isFinite(r.max)}
+			{#if Number.isFinite(r.max) && r.max <= PIP_CAP}
 				<span class="respips">
 					{#each range(r.max) as i (i)}
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -39,6 +43,9 @@
 						></span>
 					{/each}
 				</span>
+				<small>{r.max - spent}/{r.max}</small>
+			{:else if Number.isFinite(r.max)}
+				<!-- too many to draw as pips (B10): numeric counter only -->
 				<small>{r.max - spent}/{r.max}</small>
 			{:else}
 				<!-- an unlimited pool (`inf` max — 5e Rage at 20): no pips (nothing to exhaust), the

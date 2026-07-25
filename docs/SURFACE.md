@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (27)
+## Duplicate suspects (28)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -39,6 +39,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
+- `PIP_CAP` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/ResourceBar.svelte
 - `STORAGE_KEY` ×2 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts
 - `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
@@ -304,12 +305,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface LoadResult`
 - `interface RosterEntry`
+- `function backupCharacter` — Snapshot the CURRENT `character.json` into the rotating ring for `tier`, then prune to the newest * N.
+- `function snapshotCharacterOnLaunch` — Take the once-per-session launch snapshot of a character (B3).
 - `function saveCharacter` — Write a character (validates first; refuses to persist an invalid one).
+- `function uniqueCharacterId` — A collision-free character id: the readable slug plus a short random suffix (`hero-a3f9`), retried * against storage …
 - `function loadCharacter` — Load one character: parse → migrate → validate.
 - `function listCharacters` — List the roster.
 - `function deleteCharacter` — Delete a character folder (character.json, log, photo).
 - `interface LogEntry`
-- `function appendLog` — Append one roll-log line (`log.jsonl`).
+- `function appendLog` — Append one roll-log line (`log.jsonl`, one JSON object per line), rotating out the oldest lines * past `LOG_MAX_LINES…
 - `function readLog` — Read the whole roll log, newest first.
 
 ### `src/lib/character/schema.ts`
@@ -326,6 +330,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/spellcasting.ts`
 
+- `interface SpellcastingClass`
 - `interface Spellcasting`
 - `function castingAbilityByClass` — Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the * effects resolve needs BEFO…
 - `function deriveSpellcasting`
@@ -350,6 +355,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function applyDefense` — * Apply resist/immune/vulnerable to a raw damage amount given its type (B20).
 - `function effectiveHpMax`
 - `const metres` — Feet → "N m" (metric in parentheses next to imperial).
+- `const kilograms` — Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7).
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
 - `interface DerivedEffectGroup` — One source's derived contributions, as short display tags (B14).
@@ -381,7 +387,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
 - `function standardActions` — The standard combat actions (Dash, Hide, Grapple…); roll ones reference live skills.
-- `function buildSpellGroups` — Group the character's spells for the spell block (Pinned first, then by level / prepared / school), * attaching the c…
+- `function casterForSpell` — The caster class a spell is cast AS — whose DC / attack / ability are the ones actually USED * (RAW: a multiclass cas…
+- `function buildSpellGroups`
 - `function spellRow` — Build a spell row from the content graph (or null if the ref is missing).
 
 ### `src/lib/components/wikiEdit.ts`
@@ -862,4 +869,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 482 exports across 69 modules · 27 duplicate suspects · generated in 127ms._
+_46 tokens · 50 global classes · 36 components · 488 exports across 69 modules · 28 duplicate suspects · generated in 122ms._

@@ -28,6 +28,15 @@ export class RollTray {
 	} | null = null;
 	log = $state<RollLogEntry[]>([]);
 
+	/** Optional sink for completed rolls → the persistent `log.jsonl` (B4). Injected by CombatVM so
+	 *  this module stays storage-agnostic; a no-op when unset (tests / preview). */
+	constructor(private readonly persist?: (entry: RollLogEntry) => void) {}
+
+	/** Restore the log from a prior session's persisted history (newest-first, capped). */
+	seed = (entries: RollLogEntry[]) => {
+		this.log = entries.slice(0, ROLL_LOG_MAX);
+	};
+
 	rollExpr = $derived(
 		Object.entries(this.dice)
 			.sort((a, b) => Number(b[0]) - Number(a[0]))
@@ -107,7 +116,9 @@ export class RollTray {
 	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
 	 *  the roll that follows the to-hit — shown as its own line/part. */
 	pushRoll = (label: string, r: Rolled, damage?: Rolled) => {
-		this.log = [{ label, ...r, ...(damage ? { damage } : {}) }, ...this.log].slice(0, ROLL_LOG_MAX);
+		const entry: RollLogEntry = { label, ...r, ...(damage ? { damage } : {}) };
+		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
+		this.persist?.(entry);
 		const kept = r.advantageRoll ? `d20(${r.advantageRoll.kept}) ` : '';
 		const drop = r.advantageRoll ? ` · drop d20(${r.advantageRoll.dropped})` : '';
 		const dmg = damage ? ` · dmg ${damage.expr} = ${damage.total}` : '';

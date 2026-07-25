@@ -214,9 +214,11 @@ const speciesOptionSchema = baseRow.extend({
 const classSchema = baseRow.extend({
 	hit_die: HitDie,
 	primary_ability: optStr, // comma list of Ability
+	// Every SRD class has exactly 2 save proficiencies, but the schema allows 1..6 so a homebrew
+	// class with a different count isn't rejected (E6 — additive, SRD data still validates).
 	saves: z.preprocess(
 		(v) => (typeof v === 'string' ? v.split(',').map((s) => s.trim()) : v),
-		z.array(Ability).length(2)
+		z.array(Ability).min(1).max(6)
 	),
 	caster: CasterType.default('none'),
 	/** Multiclass share (defaults follow `caster` if blank — resolved in the rules layer). */

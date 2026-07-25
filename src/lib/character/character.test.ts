@@ -8,7 +8,9 @@ import {
 	listCharacters,
 	deleteCharacter,
 	appendLog,
-	readLog
+	readLog,
+	backupCharacter,
+	uniqueCharacterId
 } from './repository';
 
 function sample(): Character {
@@ -220,5 +222,74 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 		// the roll log is not part of the character file
 		const c = (await loadCharacter(s, 'mirt')).character;
 		expect(c).toBeUndefined(); // no character.json written in this test
+	});
+
+	it('rotates the log file so it stays bounded (B4)', async () => {
+		const s = new MemoryStorage();
+		for (let i = 0; i < 550; i++)
+			await appendLog(s, 'mirt', { t: i, kind: 'roll', label: `r${i}`, result: i });
+		const log = await readLog(s, 'mirt');
+		expect(log.length).toBe(500); // capped at LOG_MAX_LINES
+		expect(log.map((e) => e.label).at(0)).toBe('r549'); // newest kept
+		expect(log.map((e) => e.label).at(-1)).toBe('r50'); // oldest 50 dropped
+	});
+});
+
+describe('unique character id (D14)', () => {
+	it('appends a short suffix so two same-named characters never collide', async () => {
+		const s = new MemoryStorage();
+		const a = await uniqueCharacterId(s, 'hero');
+		await saveCharacter(s, newCharacter(a, 'Hero', '5e'));
+		const b = await uniqueCharacterId(s, 'hero');
+		expect(a).toMatch(/^hero-[0-9a-f]{4}$/);
+		expect(b).not.toBe(a); // retried past the existing dir
+		expect(b).toMatch(/^hero-[0-9a-f]{4}$/);
+	});
+});
+
+describe('rotating backups (B3)', () => {
+	const t0 = 1_000_000_000_000;
+	const min = 60_000;
+
+	it('save tier throttles to one checkpoint per 10 min and keeps the newest 2', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, newCharacter('mirt', 'Mirt', '5e')); // first save: nothing to back up yet
+		const bakDir = async () =>
+			(await s.list('characters/mirt'))
+				.filter((e) => e.name.startsWith('character.bak.save.'))
+				.map((e) => e.name)
+				.sort();
+
+		await backupCharacter(s, 'mirt', 'save', t0);
+		await backupCharacter(s, 'mirt', 'save', t0 + 5 * min); // within 10 min → throttled, skipped
+		expect((await bakDir()).length).toBe(1);
+
+		await backupCharacter(s, 'mirt', 'save', t0 + 11 * min); // past throttle → new checkpoint
+		await backupCharacter(s, 'mirt', 'save', t0 + 22 * min); // → 3 written, pruned to newest 2
+		const kept = await bakDir();
+		expect(kept.length).toBe(2);
+		expect(kept).toEqual([
+			`character.bak.save.${t0 + 11 * min}.json`,
+			`character.bak.save.${t0 + 22 * min}.json`
+		]);
+	});
+
+	it('launch tier keeps the newest 3, one per session', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, newCharacter('mirt', 'Mirt', '5e'));
+		for (let i = 0; i < 5; i++) await backupCharacter(s, 'mirt', 'launch', t0 + i * min);
+		const kept = (await s.list('characters/mirt'))
+			.filter((e) => e.name.startsWith('character.bak.launch.'))
+			.map((e) => e.name);
+		expect(kept.length).toBe(3);
+	});
+
+	it('a backup is a faithful copy of character.json', async () => {
+		const s = new MemoryStorage();
+		await saveCharacter(s, newCharacter('mirt', 'Mirt', '5e'));
+		await backupCharacter(s, 'mirt', 'launch', t0);
+		const live = await s.read('characters/mirt/character.json');
+		const bak = await s.read(`characters/mirt/character.bak.launch.${t0}.json`);
+		expect(bak).toBe(live);
 	});
 });

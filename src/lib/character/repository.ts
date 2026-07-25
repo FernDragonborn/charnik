@@ -8,7 +8,7 @@
  * schemaVersion registry, then validated; a corrupt/invalid save is reported, never thrown
  * past the caller (roster keeps listing the others).
  */
-import type { Storage } from '../storage/types';
+import type { Storage, FileEntry } from '../storage/types';
 import {
 	migrate,
 	CHARACTER_SCHEMA_VERSION,
@@ -112,7 +112,84 @@ export interface RosterEntry {
 	error?: string;
 }
 
-/** Write a character (validates first; refuses to persist an invalid one). */
+// --- rotating backups (B3) -----------------------------------------------------
+// No DB → recover a clobbered/corrupted save from a sibling snapshot. Two rings, keyed by the
+// snapshot's epoch-ms IN THE FILENAME (so throttle/prune need no mtime, and it's testable on the
+// in-memory Storage). `save` = a checkpoint of the PREVIOUS saved state, throttled so a busy session
+// doesn't churn near-identical copies; `launch` = one snapshot per app session. Together the recovery
+// set is: current → −10 min → −20 min → this launch → last launch → 2 launches ago.
+const BACKUP_KEEP = { save: 2, launch: 3 } as const;
+const SAVE_BACKUP_THROTTLE_MS = 10 * 60 * 1000;
+type BackupTier = keyof typeof BACKUP_KEEP;
+const backupName = (tier: BackupTier, ts: number) => `character.bak.${tier}.${ts}.json`;
+
+/** Existing backups for one tier, newest-first, timestamp parsed from the filename. */
+async function listBackups(
+	storage: Storage,
+	id: string,
+	tier: BackupTier
+): Promise<{ ts: number; path: string }[]> {
+	let entries: FileEntry[];
+	try {
+		entries = await storage.list(dirOf(id));
+	} catch {
+		return [];
+	}
+	const prefix = `character.bak.${tier}.`;
+	return entries
+		.filter((e) => !e.isDir && e.name.startsWith(prefix) && e.name.endsWith('.json'))
+		.map((e) => ({
+			ts: Number(e.name.slice(prefix.length, -'.json'.length)) || 0,
+			path: `${dirOf(id)}/${e.name}`
+		}))
+		.sort((a, b) => b.ts - a.ts);
+}
+
+/** Snapshot the CURRENT `character.json` into the rotating ring for `tier`, then prune to the newest
+ *  N. The `save` tier skips if the last checkpoint is <10 min old (throttle). Best-effort — a backup
+ *  failure must never break the save itself. */
+export async function backupCharacter(
+	storage: Storage,
+	id: string,
+	tier: BackupTier,
+	now = Date.now()
+): Promise<void> {
+	let current: string;
+	try {
+		current = await storage.read(fileOf(id));
+	} catch {
+		return; // nothing saved yet → nothing to back up
+	}
+	const existing = await listBackups(storage, id, tier);
+	if (tier === 'save' && existing[0] && now - existing[0].ts < SAVE_BACKUP_THROTTLE_MS) return;
+	const path = `${dirOf(id)}/${backupName(tier, now)}`;
+	await storage.write(path, current);
+	// prune: keep the newest N (the just-written one is newest)
+	for (const b of [{ ts: now, path }, ...existing].slice(BACKUP_KEEP[tier])) {
+		try {
+			await storage.remove(b.path);
+		} catch {
+			/* best-effort */
+		}
+	}
+}
+
+/** Character ids already launch-snapshotted this session — one snapshot per app run, not per open. */
+const launchSnapshotted = new Set<string>();
+
+/** Take the once-per-session launch snapshot of a character (B3). No-op after the first call per id. */
+export async function snapshotCharacterOnLaunch(storage: Storage, id: string): Promise<void> {
+	if (launchSnapshotted.has(id)) return;
+	launchSnapshotted.add(id);
+	try {
+		await backupCharacter(storage, id, 'launch');
+	} catch {
+		/* best-effort */
+	}
+}
+
+/** Write a character (validates first; refuses to persist an invalid one). Checkpoints the PREVIOUS
+ *  saved state into the rotating `save` backup ring first (throttled — B3). */
 export async function saveCharacter(storage: Storage, character: Character): Promise<void> {
 	const res = characterSchema.safeParse(character);
 	if (!res.success) {
@@ -120,8 +197,27 @@ export async function saveCharacter(storage: Storage, character: Character): Pro
 			`refusing to save invalid character: ${res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')}`
 		);
 	}
+	// snapshot the state we're about to overwrite (throttled), so a bad save is recoverable
+	try {
+		await backupCharacter(storage, character.id, 'save');
+	} catch {
+		/* best-effort — never block a save on a backup failure */
+	}
 	await storage.mkdir(dirOf(character.id));
 	await storage.write(fileOf(character.id), JSON.stringify(res.data, null, 2));
+}
+
+/** A collision-free character id: the readable slug plus a short random suffix (`hero-a3f9`), retried
+ *  against storage so two same-named characters never silently overwrite each other (D14). Existing
+ *  saves are untouched — only a newly-created character gets a suffix. */
+export async function uniqueCharacterId(storage: Storage, base: string): Promise<string> {
+	const stem = base || 'hero';
+	for (let attempt = 0; attempt < 50; attempt++) {
+		const id = `${stem}-${crypto.randomUUID().replace(/-/g, '').slice(0, 4)}`;
+		if (!(await storage.exists(dirOf(id)))) return id;
+	}
+	// 50 misses is astronomically unlikely; a full uuid then guarantees uniqueness.
+	return `${stem}-${crypto.randomUUID()}`;
 }
 
 /** Load one character: parse → migrate → validate. Never throws for a bad save. */
@@ -204,16 +300,23 @@ export interface LogEntry {
 	detail?: string;
 }
 
-/** Append one roll-log line (`log.jsonl`). One JSON object per line. */
+/** Cap on retained roll-log lines on disk — the log is a rolling history, not an archive, so it
+ *  can't grow without bound (B4). Older lines drop off the front when the file exceeds this. */
+const LOG_MAX_LINES = 500;
+
+/** Append one roll-log line (`log.jsonl`, one JSON object per line), rotating out the oldest lines
+ *  past `LOG_MAX_LINES` so the file stays bounded. */
 export async function appendLog(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
-	const line = JSON.stringify(entry) + '\n';
 	let prev = '';
 	try {
 		prev = await storage.read(logOf(slug));
 	} catch {
 		/* first entry */
 	}
-	await storage.write(logOf(slug), prev + line);
+	const lines = prev ? prev.split('\n').filter((l) => l.trim()) : [];
+	lines.push(JSON.stringify(entry));
+	const kept = lines.length > LOG_MAX_LINES ? lines.slice(lines.length - LOG_MAX_LINES) : lines;
+	await storage.write(logOf(slug), kept.join('\n') + '\n');
 }
 
 /** Read the whole roll log, newest first. Bad lines are skipped. */
