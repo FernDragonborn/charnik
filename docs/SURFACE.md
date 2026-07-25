@@ -739,6 +739,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type System`
 - `type Layer` — Where a stat's math comes from, in pipeline order.
 - `interface Contribution`
+- `interface Note` — * A rule note / block attached to a `Computed` (not numeric), e.g.
+- `function formatNote` — Render a note to a string: localized when a `translate` fn + a `key` are present, else the EN * `text` verbatim.
+- `const NOTE_KEY` — i18n keys for the engine-generated (system) notes — the ONE owner, so producers in pipeline / * apply / core and the …
 - `interface Computed`
 - `interface Clamp`
 - `function computed` — Build a `Computed` from contributions (+ optional clamp/notes).
@@ -856,4 +859,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 479 exports across 68 modules · 27 duplicate suspects · generated in 161ms._
+_46 tokens · 50 global classes · 36 components · 482 exports across 68 modules · 27 duplicate suspects · generated in 129ms._

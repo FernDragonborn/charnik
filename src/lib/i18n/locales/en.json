@@ -197,5 +197,20 @@
 		"srdWarnTitle": "This file ships with Charnik",
 		"srdWarnBody": "Saving here works now, but a Charnik update can overwrite this file and your entry would be lost. Add it to your own file instead.",
 		"srdWarnAction": "Create my own file"
+	},
+	"provenance": {
+		"alreadyAtLeast": "{source}: already ≥ {amount}",
+		"alreadyAtMost": "{source}: already ≤ {amount}",
+		"overriddenSet": "{source}: set {amount} — overridden by {winner}",
+		"bonusBlocked": "{blocker}: +{amount} to {target} blocked ({source})",
+		"diceBonus": "{source}: {amount} to {target}",
+		"unresolved": "{source}: unresolved \"{token}\" ({error})",
+		"advantage": "{source}: advantage on {target}",
+		"disadvantage": "{source}: disadvantage on {target}",
+		"autoFail": "{source}: auto-fail on {target}",
+		"autoSucceed": "{source}: auto-succeed on {target}",
+		"encumbered": "Encumbered at {lb} lb (−10 ft)",
+		"heavilyEncumbered": "Heavily encumbered at {lb} lb (−20 ft)",
+		"overCapacity": "Over capacity → speed 5 ft"
 	}
 }

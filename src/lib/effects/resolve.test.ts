@@ -251,7 +251,7 @@ describe('resolveActiveEffects · dependency order (the DAG)', () => {
 			abilityBase: { int: [{ source: 'Base score', layer: 'base', op: 'add', amount: 20 }] }
 		});
 		expect(high.abilities.int.value).toBe(20);
-		expect(high.abilities.int.notes?.some((n) => /already ≥ 19/.test(n))).toBe(true);
+		expect(high.abilities.int.notes?.some((n) => /already ≥ 19/.test(n.text))).toBe(true);
 	});
 
 	it('A9 cap: a set_override cap lowers only when the value is higher', () => {

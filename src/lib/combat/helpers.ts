@@ -7,6 +7,7 @@ import { ABILITY_IDS, type Ability } from '$lib/rules/core';
 import { gatherProfGrants, isWeaponProficient } from '$lib/rules/proficiency';
 import {
 	computed,
+	formatNote,
 	type Computed,
 	type Contribution,
 	type Layer,
@@ -178,14 +179,22 @@ export function effectiveHpMax(manualMax: number | null, sheetMaxHp: Computed): 
 /** Feet → "N m" (metric in parentheses next to imperial). */
 export const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/, '')} m`;
 
-/** Provenance trace of a Computed → a human-readable "why" string for tooltips. */
-export function why(c: Computed): string {
+/** Provenance trace of a Computed → a human-readable "why" string for tooltips. Pass `translate`
+ *  (svelte-i18n's `$format`) to localize the rule notes; without it every note renders its EN text
+ *  verbatim (the B18 invariant — structure changed, EN output byte-for-byte unchanged). */
+export function why(
+	c: Computed,
+	translate?: (key: string, params?: Record<string, string | number>) => string
+): string {
 	const opSym = (op: Contribution['op']): string =>
 		op === 'set' ? '= ' : op === 'floor' ? '≥ ' : op === 'cap' ? '≤ ' : '';
 	const parts = c.trace
 		.filter((t) => t.amount !== 0 || t.op === 'set' || t.op === 'floor' || t.op === 'cap')
 		.map((t) => `${t.source} ${opSym(t.op)}${signed(t.amount)}${t.note ? ` (${t.note})` : ''}`);
-	return (parts.join(', ') || '—') + (c.notes?.length ? ' · ' + c.notes.join(' · ') : '');
+	return (
+		(parts.join(', ') || '—') +
+		(c.notes?.length ? ' · ' + c.notes.map((n) => formatNote(n, translate)).join(' · ') : '')
+	);
 }
 
 /** Healing dice from a spell's text ("regains Hit Points equal to 2d4 plus …"). */

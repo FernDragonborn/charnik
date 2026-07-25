@@ -7,7 +7,14 @@
  * gated on the `system` argument. Item/feature/condition modifiers are NOT added here —
  * they arrive later through the effects seam.
  */
-import { computed, type Computed, type Contribution, type System } from './pipeline';
+import {
+	computed,
+	NOTE_KEY,
+	type Computed,
+	type Contribution,
+	type Note,
+	type System
+} from './pipeline';
 
 /** The six ability ids — the ONE owning list (AUDIT F3); derive, don't re-declare. */
 export const ABILITY_IDS = ['str', 'dex', 'con', 'int', 'wis', 'cha'] as const;
@@ -233,13 +240,21 @@ export function fullCasterSlots(casterLevel: number): number[] {
 /** Carrying capacity in pounds = STR × 15. The encumbrance tiers (×5 / ×10) are a 5e-only
  *  variant surfaced as notes; 5.5e just drops speed to 5 ft over capacity. */
 export function carryingCapacity(args: { strScore: number; system: System }): Computed {
-	const notes =
+	const notes: Note[] =
 		args.system === '5e'
 			? [
-					`Encumbered at ${args.strScore * 5} lb (−10 ft)`,
-					`Heavily encumbered at ${args.strScore * 10} lb (−20 ft)`
+					{
+						text: `Encumbered at ${args.strScore * 5} lb (−10 ft)`,
+						key: NOTE_KEY.encumbered,
+						params: { lb: args.strScore * 5 }
+					},
+					{
+						text: `Heavily encumbered at ${args.strScore * 10} lb (−20 ft)`,
+						key: NOTE_KEY.heavilyEncumbered,
+						params: { lb: args.strScore * 10 }
+					}
 				]
-			: ['Over capacity → speed 5 ft'];
+			: [{ text: 'Over capacity → speed 5 ft', key: NOTE_KEY.overCapacity }];
 	return computed(
 		[
 			{

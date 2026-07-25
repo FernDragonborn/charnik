@@ -125,11 +125,11 @@ describe.each<System>(['5e', '5.5e'])('system-agnostic formulas (%s)', () => {
 
 describe('edition divergence', () => {
 	it('encumbrance tiers are a 5e-only variant (5.5e drops speed instead)', () => {
-		expect(carryingCapacity({ strScore: 15, system: '5e' }).notes).toEqual([
+		expect(carryingCapacity({ strScore: 15, system: '5e' }).notes?.map((n) => n.text)).toEqual([
 			'Encumbered at 75 lb (−10 ft)',
 			'Heavily encumbered at 150 lb (−20 ft)'
 		]);
-		expect(carryingCapacity({ strScore: 15, system: '5.5e' }).notes).toEqual([
+		expect(carryingCapacity({ strScore: 15, system: '5.5e' }).notes?.map((n) => n.text)).toEqual([
 			'Over capacity → speed 5 ft'
 		]);
 	});

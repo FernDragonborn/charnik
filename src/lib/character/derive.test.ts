@@ -299,7 +299,7 @@ describe('deriveSheet aggregator', () => {
 		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.facts.disadvantage.some((d) => d.target === 'skill.stealth')).toBe(true);
-		expect(s.skills.stealth!.notes?.some((n) => /disadvantage/i.test(n))).toBe(true);
+		expect(s.skills.stealth!.notes?.some((n) => /disadvantage/i.test(n.text))).toBe(true);
 	});
 
 	it('B13: a known-kind token with a dead target is surfaced, not silently dropped', () => {
@@ -887,7 +887,7 @@ describe('deriveSheet · set_override with a dice value degrades to a note', () 
 		];
 		const s = deriveSheet(characterSchema.parse(c), g);
 		expect(s.ac.value).toBe(10); // base unarmored, override NOT applied
-		expect(s.ac.notes?.join(' ')).toContain('unresolved');
+		expect(s.ac.notes?.map((n) => n.text).join(' ')).toContain('unresolved');
 	});
 });
 

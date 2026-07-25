@@ -8,7 +8,14 @@
  * re-scan of raw tokens. The one resolve stage that produces the effect list lives in
  * dependency-graph.ts (`resolveActiveEffects`, in dependency order).
  */
-import { computed, type Computed, type Contribution, type Layer } from '../rules/pipeline';
+import {
+	computed,
+	NOTE_KEY,
+	type Computed,
+	type Contribution,
+	type Layer,
+	type Note
+} from '../rules/pipeline';
 import { titleCase } from '../util/format';
 import { evalExpression, lintExpression } from './expression-evaluator';
 import {
@@ -415,7 +422,7 @@ export function applyEffects(
 ): Computed {
 	const facts = Array.isArray(effects) ? collectFacts(effects, ctx) : effects;
 	const contribs: Contribution[] = [...base.trace];
-	const notes: string[] = [...(base.notes ?? [])];
+	const notes: Note[] = [...(base.notes ?? [])];
 	// A9 speed-bonus block: while a block_bonus matches this target, effect-borne POSITIVE bonuses
 	// are dropped (RAW). Negative adds (penalties) survive; the BASE trace is never touched.
 	const block = facts.blockedBonuses.find((b) => matchesTarget(b.target, targetKey));
@@ -423,7 +430,11 @@ export function applyEffects(
 		if (!matchesTarget(f.target, targetKey)) continue;
 		if (f.amount !== undefined) {
 			if (block && f.op === 'add' && f.amount > 0) {
-				notes.push(`${block.source}: +${f.amount} to ${targetKey} blocked (${f.source})`);
+				notes.push({
+					text: `${block.source}: +${f.amount} to ${targetKey} blocked (${f.source})`,
+					key: NOTE_KEY.bonusBlocked,
+					params: { blocker: block.source, amount: f.amount, target: targetKey, source: f.source }
+				});
 				continue;
 			}
 			// D12: honor the effect's own layer for sets too (no longer forced to `override`) — a
@@ -438,22 +449,56 @@ export function applyEffects(
 		} else if (f.diceFormula) {
 			const d = f.diceFormula;
 			if (block && !d.startsWith('-')) {
-				notes.push(`${block.source}: +${d} to ${targetKey} blocked (${f.source})`);
+				notes.push({
+					text: `${block.source}: +${d} to ${targetKey} blocked (${f.source})`,
+					key: NOTE_KEY.bonusBlocked,
+					params: { blocker: block.source, amount: d, target: targetKey, source: f.source }
+				});
 				continue;
 			}
-			notes.push(`${f.source}: ${d.startsWith('-') ? '' : '+'}${d} to ${targetKey}`);
+			// `amount` param carries its own sign — a positive dice bonus reads "+1d4", a penalty "-1d4"
+			const amount = d.startsWith('-') ? d : `+${d}`;
+			notes.push({
+				text: `${f.source}: ${amount} to ${targetKey}`,
+				key: NOTE_KEY.diceBonus,
+				params: { source: f.source, amount, target: targetKey }
+			});
 		} else if (f.error) {
-			notes.push(`${f.source}: unresolved "${f.token}" (${f.error})`);
+			notes.push({
+				text: `${f.source}: unresolved "${f.token}" (${f.error})`,
+				key: NOTE_KEY.unresolved,
+				params: { source: f.source, token: f.token, error: f.error }
+			});
 		}
 	}
 	for (const a of facts.advantage)
-		if (matchesTarget(a.target, targetKey)) notes.push(`${a.source}: advantage on ${targetKey}`);
+		if (matchesTarget(a.target, targetKey))
+			notes.push({
+				text: `${a.source}: advantage on ${targetKey}`,
+				key: NOTE_KEY.advantage,
+				params: { source: a.source, target: targetKey }
+			});
 	for (const d of facts.disadvantage)
-		if (matchesTarget(d.target, targetKey)) notes.push(`${d.source}: disadvantage on ${targetKey}`);
+		if (matchesTarget(d.target, targetKey))
+			notes.push({
+				text: `${d.source}: disadvantage on ${targetKey}`,
+				key: NOTE_KEY.disadvantage,
+				params: { source: d.source, target: targetKey }
+			});
 	for (const a of facts.autoFail)
-		if (matchesTarget(a.target, targetKey)) notes.push(`${a.source}: auto-fail on ${targetKey}`);
+		if (matchesTarget(a.target, targetKey))
+			notes.push({
+				text: `${a.source}: auto-fail on ${targetKey}`,
+				key: NOTE_KEY.autoFail,
+				params: { source: a.source, target: targetKey }
+			});
 	for (const a of facts.autoSucceed)
-		if (matchesTarget(a.target, targetKey)) notes.push(`${a.source}: auto-succeed on ${targetKey}`);
+		if (matchesTarget(a.target, targetKey))
+			notes.push({
+				text: `${a.source}: auto-succeed on ${targetKey}`,
+				key: NOTE_KEY.autoSucceed,
+				params: { source: a.source, target: targetKey }
+			});
 	return computed(contribs, undefined, notes.length ? notes : undefined);
 }
 

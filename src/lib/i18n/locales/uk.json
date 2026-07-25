@@ -197,5 +197,20 @@
 		"srdWarnTitle": "Цей файл входить до складу Charnik",
 		"srdWarnBody": "Зараз воно збережеться, але оновлення Charnik може перезаписати цей файл — і ваш запис зникне. Краще додайте у власний файл.",
 		"srdWarnAction": "Створити власний файл"
+	},
+	"provenance": {
+		"alreadyAtLeast": "{source}: вже ≥ {amount}",
+		"alreadyAtMost": "{source}: вже ≤ {amount}",
+		"overriddenSet": "{source}: встановлено {amount} — перекрито значенням {winner}",
+		"bonusBlocked": "{blocker}: +{amount} до {target} заблоковано ({source})",
+		"diceBonus": "{source}: {amount} до {target}",
+		"unresolved": "{source}: не вдалося обчислити \"{token}\" ({error})",
+		"advantage": "{source}: перевага на {target}",
+		"disadvantage": "{source}: перешкода на {target}",
+		"autoFail": "{source}: автопровал на {target}",
+		"autoSucceed": "{source}: автоуспіх на {target}",
+		"encumbered": "Обтяження від {lb, plural, one {# фунта} few {# фунтів} many {# фунтів} other {# фунта}} (−10 фт)",
+		"heavilyEncumbered": "Сильне обтяження від {lb, plural, one {# фунта} few {# фунтів} many {# фунтів} other {# фунта}} (−20 фт)",
+		"overCapacity": "Понад ліміт → швидкість 5 фт"
 	}
 }

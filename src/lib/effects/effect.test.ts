@@ -140,7 +140,7 @@ describe('applyEffects seam', () => {
 		const flat: ActiveEffect = { source: 'Cloak', layer: 'item', tokens: ['flat_bonus:saves+1'] };
 		const composed = applyEffects('save.wis', base, [bless, flat]);
 		expect(composed.value).toBe(1); // +1 flat; the 1d4 is a note, not a flat value
-		expect(composed.notes?.some((n) => /1d4/.test(n))).toBe(true);
+		expect(composed.notes?.some((n) => /1d4/.test(n.text))).toBe(true);
 	});
 
 	it('set_override in the override layer wins', () => {
@@ -170,7 +170,7 @@ describe('applyEffects seam', () => {
 		expect(applyEffects('ac', base, [mage, plate]).value).toBe(18);
 		// the superseded override is explained, never silently dropped
 		const notes = applyEffects('ac', base, [mage, plate]).notes ?? [];
-		expect(notes.some((n) => /13.*overridden by 18/.test(n))).toBe(true);
+		expect(notes.some((n) => /13.*overridden by 18/.test(n.text))).toBe(true);
 	});
 
 	it('clamps a hostile resource max (cost cap, not balance)', () => {
@@ -225,7 +225,7 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 		};
 		const r = applyEffects('ac', base, [noop]);
 		expect(r.value).toBe(12);
-		expect(r.notes?.some((n) => /already ≥ 9/.test(n))).toBe(true);
+		expect(r.notes?.some((n) => /already ≥ 9/.test(n.text))).toBe(true);
 	});
 
 	it('block_bonus drops effect-borne positive speed bonuses but not the base', () => {
@@ -237,7 +237,7 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 		const boots: ActiveEffect = { source: 'Boots', layer: 'item', tokens: ['flat_bonus:speed+10'] };
 		const r = applyEffects('speed', speedBase(), [grapple, boots]);
 		expect(r.value).toBe(0); // 0-set wins (condition layer) AND the +10 is blocked
-		expect(r.notes?.some((n) => /blocked/.test(n))).toBe(true);
+		expect(r.notes?.some((n) => /blocked/.test(n.text))).toBe(true);
 	});
 
 	it('block_bonus leaves penalties (negative adds) intact — RAW blocks bonuses only', () => {
@@ -512,7 +512,7 @@ describe('G1 · auto_fail / auto_succeed (forced roll outcome, e.g. paralyzed �
 		};
 		const out = applyEffects('save.str', base, [paralyzed]);
 		expect(out.value).toBe(0); // unchanged — auto-fail is an outcome, not a modifier
-		expect(out.notes?.some((n) => n.includes('auto-fail on save.str'))).toBe(true);
+		expect(out.notes?.some((n) => n.text.includes('auto-fail on save.str'))).toBe(true);
 	});
 	it('the `saves` group auto-fails every save; a different save is untouched', () => {
 		const facts = collectFacts([{ source: 'X', layer: 'condition', tokens: ['auto_fail:saves'] }]);
@@ -521,7 +521,7 @@ describe('G1 · auto_fail / auto_succeed (forced roll outcome, e.g. paralyzed �
 			savingThrow({ ability: 'str', score: 10, level: 1, proficient: false }),
 			facts
 		);
-		expect(strSave.notes?.some((n) => n.includes('auto-fail'))).toBe(true);
+		expect(strSave.notes?.some((n) => n.text.includes('auto-fail'))).toBe(true);
 		const skill = applyEffects(
 			'skill.stealth',
 			savingThrow({ ability: 'dex', score: 10, level: 1, proficient: false }),

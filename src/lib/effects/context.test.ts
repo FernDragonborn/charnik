@@ -168,7 +168,7 @@ describe('applyEffects · expression contributions fold through the seam', () =>
 		];
 		const out = applyEffects('ac', base, effects, ctx);
 		expect(out.value).toBe(10); // unchanged
-		expect(out.notes?.some((n) => n.includes('unresolved'))).toBe(true);
+		expect(out.notes?.some((n) => n.text.includes('unresolved'))).toBe(true);
 	});
 });
 

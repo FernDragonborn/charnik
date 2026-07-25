@@ -31,11 +31,53 @@ export interface Contribution {
 	note?: string;
 }
 
+/**
+ * A rule note / block attached to a `Computed` (not numeric), e.g. "advantage on save.str",
+ * "already ≥ 19". `text` is the English fallback / content string and is ALWAYS present, so every
+ * pure and core path reads `.text` unchanged (the on/off/deleted `{value, trace, notes}` shape is
+ * identical). System (engine-generated) notes ALSO carry `{key, params}` so the UI can localize
+ * them at render (B18); free-text / content notes carry only `text`. Localize via `formatNote`.
+ */
+export interface Note {
+	text: string;
+	/** i18n message key for system notes; absent on free-text/content notes. */
+	key?: string;
+	params?: Record<string, string | number>;
+}
+
+/** Render a note to a string: localized when a `translate` fn + a `key` are present, else the EN
+ *  `text` verbatim. PURE — the `translate` fn is injected by the UI (`svelte-i18n`), so core/rules
+ *  code (which never passes one) stays i18n-runtime-free and every note reproduces its EN text. */
+export function formatNote(
+	note: Note,
+	translate?: (key: string, params?: Record<string, string | number>) => string
+): string {
+	return translate && note.key ? translate(note.key, note.params) : note.text;
+}
+
+/** i18n keys for the engine-generated (system) notes — the ONE owner, so producers in pipeline /
+ *  apply / core and the message catalogs never drift on a bare string ([[one-name-per-fact]]). */
+export const NOTE_KEY = {
+	alreadyAtLeast: 'provenance.alreadyAtLeast',
+	alreadyAtMost: 'provenance.alreadyAtMost',
+	overriddenSet: 'provenance.overriddenSet',
+	bonusBlocked: 'provenance.bonusBlocked',
+	diceBonus: 'provenance.diceBonus',
+	unresolved: 'provenance.unresolved',
+	advantage: 'provenance.advantage',
+	disadvantage: 'provenance.disadvantage',
+	autoFail: 'provenance.autoFail',
+	autoSucceed: 'provenance.autoSucceed',
+	encumbered: 'provenance.encumbered',
+	heavilyEncumbered: 'provenance.heavilyEncumbered',
+	overCapacity: 'provenance.overCapacity'
+} as const;
+
 export interface Computed {
 	value: number;
 	trace: Contribution[];
 	/** Rule notes / blocks (not numeric), e.g. "Spellcasting blocked: non-proficient armor". */
-	notes?: string[];
+	notes?: Note[];
 }
 
 export interface Clamp {
@@ -71,7 +113,7 @@ const LAYER_SEQUENCE: Layer[] = [
  * `ineffectiveNotes` (if given) collects an explanation for any floor/cap that did NOT change the
  * value ("already ≥ N") — the explainability invariant: nothing folds silently.
  */
-function fold(contribs: Contribution[], clamp?: Clamp, ineffectiveNotes?: string[]): number {
+function fold(contribs: Contribution[], clamp?: Clamp, ineffectiveNotes?: Note[]): number {
 	let value = 0;
 	for (const layer of LAYER_SEQUENCE) {
 		const here = contribs.filter((c) => c.layer === layer);
@@ -81,12 +123,22 @@ function fold(contribs: Contribution[], clamp?: Clamp, ineffectiveNotes?: string
 		// floors raise (max), highest-first so the winner lands and the rest are noted "already ≥"
 		for (const f of here.filter((c) => c.op === 'floor').sort((a, b) => b.amount - a.amount)) {
 			if (f.amount > value) value = f.amount;
-			else ineffectiveNotes?.push(`${f.source}: already ≥ ${f.amount}`);
+			else
+				ineffectiveNotes?.push({
+					text: `${f.source}: already ≥ ${f.amount}`,
+					key: NOTE_KEY.alreadyAtLeast,
+					params: { source: f.source, amount: f.amount }
+				});
 		}
 		// caps lower (min), lowest-first
 		for (const c of here.filter((c) => c.op === 'cap').sort((a, b) => a.amount - b.amount)) {
 			if (c.amount < value) value = c.amount;
-			else ineffectiveNotes?.push(`${c.source}: already ≤ ${c.amount}`);
+			else
+				ineffectiveNotes?.push({
+					text: `${c.source}: already ≤ ${c.amount}`,
+					key: NOTE_KEY.alreadyAtMost,
+					params: { source: c.source, amount: c.amount }
+				});
 		}
 		const product = here.filter((c) => c.op === 'mult').reduce((p, c) => p * c.amount, 1);
 		if (product !== 1) value = Math.floor(value * product);
@@ -102,21 +154,26 @@ function fold(contribs: Contribution[], clamp?: Clamp, ineffectiveNotes?: string
 /** When >1 `set` competes within a layer, only the most potent applies — surface each superseded
  *  one as a note so a stomped override is EXPLAINED, never silently dropped (the explainability
  *  invariant). Fires only on a genuine collision (≥2 differing sets in a layer). */
-function overriddenSetNotes(contribs: Contribution[]): string[] {
-	const out: string[] = [];
+function overriddenSetNotes(contribs: Contribution[]): Note[] {
+	const out: Note[] = [];
 	for (const layer of LAYER_SEQUENCE) {
 		const sets = contribs.filter((c) => c.layer === layer && c.op === 'set');
 		if (sets.length < 2) continue;
 		const winner = Math.max(...sets.map((c) => c.amount));
 		for (const s of sets)
-			if (s.amount < winner) out.push(`${s.source}: set ${s.amount} — overridden by ${winner}`);
+			if (s.amount < winner)
+				out.push({
+					text: `${s.source}: set ${s.amount} — overridden by ${winner}`,
+					key: NOTE_KEY.overriddenSet,
+					params: { source: s.source, amount: s.amount, winner }
+				});
 	}
 	return out;
 }
 
 /** Build a `Computed` from contributions (+ optional clamp/notes). */
-export function computed(contribs: Contribution[], clamp?: Clamp, notes?: string[]): Computed {
-	const ineffective: string[] = [];
+export function computed(contribs: Contribution[], clamp?: Clamp, notes?: Note[]): Computed {
+	const ineffective: Note[] = [];
 	const value = fold(contribs, clamp, ineffective);
 	const allNotes = [...(notes ?? []), ...overriddenSetNotes(contribs), ...ineffective];
 	const result: Computed = { value, trace: contribs };
