@@ -186,7 +186,7 @@
 	}
 	.stat-cell .stat-key {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);

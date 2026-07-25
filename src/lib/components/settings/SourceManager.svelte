@@ -109,7 +109,7 @@
 	.source-name {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 15px;
+		font-size: var(--font-size-body);
 	}
 	.source-tag {
 		font-family: var(--font-mono);
@@ -138,7 +138,7 @@
 	}
 	.file-name {
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text);
 	}
 	.file.off .file-name {

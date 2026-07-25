@@ -210,7 +210,7 @@
 	}
 	.row-file {
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text);
 	}
 	.row-id {

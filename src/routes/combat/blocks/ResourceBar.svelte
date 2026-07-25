@@ -65,7 +65,7 @@
 		gap: 7px;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);

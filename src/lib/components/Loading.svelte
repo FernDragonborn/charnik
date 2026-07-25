@@ -56,7 +56,7 @@
 		overflow: auto;
 		text-align: left;
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);

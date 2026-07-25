@@ -99,7 +99,7 @@
 	}
 	.section {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -130,7 +130,7 @@
 	.edition-tag {
 		flex: none;
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.04em;
 		color: var(--color-text-muted);
 		opacity: 0.7;

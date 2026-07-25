@@ -146,7 +146,7 @@
 		font-style: normal;
 		font-family: var(--font-body);
 		font-weight: 400;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin-right: 6px;
 	}
@@ -156,7 +156,7 @@
 	.senses-strip .edit {
 		margin-left: auto;
 		font-family: var(--font-body);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		background: transparent;
 		border: 1px solid transparent;

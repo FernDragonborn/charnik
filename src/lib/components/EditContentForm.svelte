@@ -474,7 +474,7 @@
 	}
 	.id-input {
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 6px;
@@ -492,7 +492,7 @@
 	}
 	.edit-target-note {
 		margin: 18px 0 10px;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		line-height: 1.45;
 		color: var(--color-text-muted);
 		border-left: 2px solid var(--color-border-strong);
@@ -507,7 +507,7 @@
 	}
 	.target-select {
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 6px;
@@ -539,7 +539,7 @@
 	}
 	.syschip {
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		border: 1px solid var(--color-border);
 		border-radius: 6px;
 		padding: 4px 12px;
@@ -567,7 +567,7 @@
 	}
 	.meta-cell .meta-key {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -637,7 +637,7 @@
 		border-radius: 50%;
 		border: 1px solid var(--color-border-strong);
 		color: var(--color-text-muted);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		font-style: italic;
 		font-weight: 700;
 		cursor: help;

@@ -107,7 +107,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin-bottom: 2px;
 	}
@@ -182,7 +182,7 @@
 	.hp-btn {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		padding: 6px 11px;
 		border-radius: 7px;
 		cursor: pointer;
@@ -205,7 +205,7 @@
 		margin-top: 6px;
 		width: 100%;
 		padding: 5px 8px;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		border-radius: 7px;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);

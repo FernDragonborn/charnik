@@ -41,7 +41,7 @@
 <style>
 	.roll.pill {
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-accent-bright);
 		border: 1px solid var(--color-accent);
 		border-radius: 6px;
@@ -57,7 +57,7 @@
 		background: transparent;
 		color: var(--color-accent-bright);
 		cursor: pointer;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		padding: 0 0 0 2px;
 	}
 </style>

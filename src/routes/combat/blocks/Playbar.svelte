@@ -29,14 +29,14 @@
 		margin-bottom: 22px;
 	}
 	.panel-hint {
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		flex: 1;
 		min-width: 220px;
 	}
 	.rollout {
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);

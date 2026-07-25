@@ -660,7 +660,7 @@
 	}
 	.dropdown-section {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);

@@ -360,7 +360,7 @@
 	}
 	.prog {
 		margin-left: auto;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 	.prog b {
@@ -401,7 +401,7 @@
 	.loc-mark {
 		width: 15px;
 		text-align: center;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 	}
 	.loc-mark.not_started {
 		color: var(--color-text-muted);
@@ -437,7 +437,7 @@
 	}
 	.status-opt {
 		font-family: var(--font-body);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		background: var(--color-surface-2);
 		color: var(--color-text-muted);
 		border: 0;

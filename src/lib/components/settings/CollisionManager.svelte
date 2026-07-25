@@ -73,10 +73,10 @@
 	.c-name {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 15px;
+		font-size: var(--font-size-body);
 	}
 	.c-type {
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 	.c-id {
@@ -91,7 +91,7 @@
 		gap: 6px;
 	}
 	.choice {
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		padding: 4px 11px;
 		border-radius: 20px;
 		border: 1px solid var(--color-border-strong);

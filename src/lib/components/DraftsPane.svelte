@@ -171,11 +171,11 @@
 	}
 	.dp-sub {
 		color: var(--color-text-muted);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 	}
 	.dp-hint {
 		color: var(--color-text-muted);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		margin: 4px 0 18px;
 	}
 	.dp-empty {
@@ -214,7 +214,7 @@
 		border-radius: var(--radius);
 		display: grid;
 		place-items: center;
-		font-size: 15px;
+		font-size: var(--font-size-body);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 	}
@@ -241,7 +241,7 @@
 		font-weight: 400;
 	}
 	.dsub {
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin-top: 2px;
 		display: flex;

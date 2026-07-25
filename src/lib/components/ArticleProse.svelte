@@ -97,7 +97,7 @@
 	.body :global(h4),
 	.body :global(h5) {
 		font-family: var(--font-display);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -141,7 +141,7 @@
 	.edit-line > span {
 		display: block;
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);

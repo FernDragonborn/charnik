@@ -496,7 +496,7 @@
 		all: unset;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		padding: 7px 13px;
 		color: var(--color-text-muted);
 		cursor: pointer;
@@ -550,7 +550,7 @@
 	.card :global(h2) {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -581,7 +581,7 @@
 		flex: none;
 		cursor: pointer;
 		color: var(--color-border-strong);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		padding: 0 6px;
 	}
 	.remove-btn:hover {
@@ -590,7 +590,7 @@
 	.subclass-select {
 		display: block;
 		margin-top: 3px;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		font-weight: 500;
 	}
 	.count {
@@ -706,7 +706,7 @@
 	}
 	.class-row .class-name small {
 		color: var(--color-text-muted);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		padding-left: 5px;
 	}
 	.level {
@@ -760,7 +760,7 @@
 		all: unset;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		padding: 5px 11px;
 		border-radius: var(--radius-full);
 		background: var(--color-surface-2);
@@ -917,7 +917,7 @@
 		all: unset;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		padding: 6px 12px;
 		border-radius: var(--radius);
 		background: var(--color-surface-2);
@@ -933,7 +933,7 @@
 	.points {
 		margin-left: auto;
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 	.points b {
@@ -976,7 +976,7 @@
 	}
 	.total small {
 		color: var(--color-text-muted);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		font-weight: 500;
 		margin-left: 4px;
 	}
@@ -1037,7 +1037,7 @@
 	.issues {
 		margin: 0;
 		padding-left: 16px;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 	.issues li {

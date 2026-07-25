@@ -68,7 +68,7 @@
 		gap: 8px;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		padding: 7px 12px;
 		border-radius: var(--radius-full);
 		cursor: pointer;
@@ -129,7 +129,7 @@
 		min-width: 8px;
 	}
 	.toggle.rest {
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 	}
 	/* colored pill buttons keep their semantic colour but brighten on hover */
 	.toggle:hover {

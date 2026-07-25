@@ -89,7 +89,7 @@
 	.ability .ability-name {
 		display: block;
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		letter-spacing: 0.08em;
 		color: var(--color-text-muted);
 		text-transform: uppercase;
@@ -115,7 +115,7 @@
 		gap: 6px;
 		width: 100%;
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		line-height: 1;
 		color: var(--color-text-muted);
 		background: var(--color-surface);
@@ -132,7 +132,7 @@
 	.ability .ability-save b {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		line-height: 1;
 		color: var(--color-text);
 	}

@@ -109,7 +109,7 @@
 	}
 	.panel-header {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);

@@ -72,7 +72,7 @@
 		margin-left: 8px;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-good);
 		background: var(--color-good-soft);
 		border: 1px solid var(--color-good);

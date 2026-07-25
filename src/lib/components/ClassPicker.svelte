@@ -134,7 +134,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		border: 1px dashed var(--color-border-strong);
 		border-radius: 20px;
 		padding: 3px 6px 3px 10px;

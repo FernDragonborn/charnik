@@ -584,7 +584,7 @@
 	}
 	.combat-row .combat-row-desc {
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 	}
 	.combat-row .combat-row-marker {
 		font-size: var(--font-size-xs);
@@ -599,7 +599,7 @@
 		gap: 7px;
 		padding: 12px 0 5px;
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.13em;
 		text-transform: uppercase;
 	}
@@ -748,7 +748,7 @@
 	/* a plugin handler's explanatory note — same reference styling family as the info text */
 	.plugin-note {
 		margin: 0 0 4px;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		line-height: 1.5;
 		color: var(--color-text-muted);
 	}
@@ -843,7 +843,7 @@
 		align-items: center;
 		gap: 9px;
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -921,7 +921,7 @@
 	}
 	.spell-row .spell-summary {
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		font-weight: 600;
 		white-space: nowrap;
 		text-align: right;
@@ -1007,7 +1007,7 @@
 		color: var(--color-border-strong);
 		margin-left: 5px;
 		cursor: pointer;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		line-height: 1;
 		border-radius: 50%;
 	}

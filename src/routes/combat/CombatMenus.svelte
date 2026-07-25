@@ -358,7 +358,7 @@
 		align-items: center;
 		justify-content: space-between;
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -419,7 +419,7 @@
 	/* --- section label + search + divider (d-menus) --- */
 	.section {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -441,7 +441,7 @@
 	.dur-picker .dur-val {
 		flex: 1;
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-resource);
 	}
 	.dur-picker .pill-btn.on {
@@ -500,7 +500,7 @@
 		border-radius: var(--radius);
 		padding: 4px 8px;
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-resource);
 	}
 	.poolchip button {
@@ -550,7 +550,7 @@
 		text-align: center;
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		padding: 7px 0;
 		border-radius: var(--radius);
 		background: var(--color-surface-2);
@@ -577,13 +577,13 @@
 		border-radius: var(--radius);
 		padding: 7px 9px;
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 	}
 	.roll-mod button {
 		all: unset;
 		cursor: pointer;
 		color: var(--color-text-muted);
-		font-size: 15px;
+		font-size: var(--font-size-body);
 		padding: 0 4px;
 	}
 	.rollbtn {
@@ -704,7 +704,7 @@
 	}
 	.cardhead2 .menu-title {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);

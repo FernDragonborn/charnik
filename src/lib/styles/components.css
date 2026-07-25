@@ -25,7 +25,7 @@
 	align-items: center;
 	font-family: var(--font-display);
 	font-weight: 600;
-	font-size: 12px;
+	font-size: var(--font-size-xs);
 	letter-spacing: 0.1em;
 	text-transform: uppercase;
 	color: var(--color-text-muted);
@@ -62,7 +62,7 @@
 .pill-btn {
 	font-family: var(--font-display);
 	font-weight: 600;
-	font-size: 12px;
+	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
 	background: transparent;
 	border: 1px solid var(--color-border);
@@ -299,7 +299,7 @@
 /* the mono uppercase eyebrow that titles a combat bar (Round / Pass time / …) */
 .bar-label {
 	font-family: var(--font-mono);
-	font-size: 9px;
+	font-size: var(--font-size-micro);
 	letter-spacing: var(--tracking-label);
 	text-transform: uppercase;
 	color: var(--color-text-muted);

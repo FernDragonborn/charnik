@@ -339,7 +339,7 @@
 	}
 	.pv-label {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.12em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -352,7 +352,7 @@
 	}
 	.pv-sub {
 		color: var(--color-text-muted);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		margin: 2px 0 8px;
 	}
 	.pv-body {

@@ -241,7 +241,7 @@
 	}
 	.group {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -268,7 +268,7 @@
 	.type-badge {
 		flex: none;
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
@@ -283,7 +283,7 @@
 		flex-direction: column;
 	}
 	.item-snippet {
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -292,7 +292,7 @@
 	.item-edition {
 		flex: none;
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 	}
 	.empty {

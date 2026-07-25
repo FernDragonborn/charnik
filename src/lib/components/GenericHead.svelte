@@ -79,11 +79,11 @@
 	.ability-block .ability-score {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 17px;
+		font-size: var(--font-size-md);
 	}
 	.ability-block .markdown {
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-accent-bright);
 	}
 	.meta-cell {
@@ -94,7 +94,7 @@
 	}
 	.meta-cell :global(.meta-key) {
 		font-family: var(--font-mono);
-		font-size: 9px;
+		font-size: var(--font-size-micro);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);

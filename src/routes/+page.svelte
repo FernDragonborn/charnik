@@ -121,7 +121,7 @@
 	}
 	.db-body {
 		margin: 0;
-		font-size: 15px;
+		font-size: var(--font-size-body);
 		line-height: 1.55;
 		color: var(--color-text-muted);
 	}
@@ -216,7 +216,7 @@
 		align-items: center;
 		gap: 8px;
 		font-family: var(--font-mono);
-		font-size: 12px;
+		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		text-transform: capitalize;
 	}
