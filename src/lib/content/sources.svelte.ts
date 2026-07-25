@@ -26,7 +26,9 @@ interface SourceConfigData {
 	collisions: Record<string, CollisionChoice>;
 }
 
-function load(): SourceConfigData {
+/** Read the persisted config, merged over empty defaults (a missing/corrupt snapshot → all-active).
+ *  Exported so the persistence round-trip is unit-testable without re-importing the whole module. */
+export function loadSourceConfig(): SourceConfigData {
 	const empty: SourceConfigData = { disabledFiles: [], disabledSources: [], collisions: {} };
 	const saved = readStored<Partial<SourceConfigData>>(STORAGE_KEY);
 	return saved ? { ...empty, ...saved } : empty;
@@ -34,7 +36,7 @@ function load(): SourceConfigData {
 
 /** Reactive, persisted config. Read `.disabledFiles`/… in derived state; mutate via the helpers below
  *  (each persists). Kept as flat arrays/records so it serializes straight to JSON. */
-export const sourceConfig = $state<SourceConfigData>(load());
+export const sourceConfig = $state<SourceConfigData>(loadSourceConfig());
 
 function persist(): void {
 	writeStored(STORAGE_KEY, sourceConfig);

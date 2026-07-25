@@ -20,6 +20,7 @@ import {
 	describeDerivedEffects,
 	casterForSpell,
 	preparedTalliesByClass,
+	canTogglePreparedFor,
 	type EffectInstance
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
@@ -110,6 +111,50 @@ describe('A18-tail · preparedTalliesByClass (per-class prepared accounting)', (
 		);
 		expect(tallies.find((t) => t.classId === 'wizard')!.count).toBe(1);
 		expect(tallies.find((t) => t.classId === 'cleric')!.count).toBe(0);
+	});
+});
+
+describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + spellbook)', () => {
+	const cls = (
+		classId: string,
+		className: string,
+		dc: number,
+		cap: number,
+		spells: string[]
+	): SpellcastingClass =>
+		({
+			classId,
+			className,
+			preparedCap: cap,
+			saveDC: computed([{ source: 'x', layer: 'base', op: 'add', amount: dc }]),
+			accessSpellIds: spells
+		}) as unknown as SpellcastingClass;
+	const sheetOf = (...classes: SpellcastingClass[]) =>
+		({ spellcasting: { classes } }) as unknown as CharacterSheet;
+	const prep = (spell: string) => ({ spell, prepared: true, alwaysPrepared: false });
+	const entry = { prepared: false, alwaysPrepared: false };
+
+	it('enforces the cap PER class — a full Wizard blocks a Wizard spell but not a Cleric one', () => {
+		// Wizard cap 1 (already 1 prepared → full); Cleric cap 3 (0 prepared)
+		const sheet = sheetOf(
+			cls('wizard', 'Wizard', 16, 1, ['spell:x:magic_missile', 'spell:x:shield']),
+			cls('cleric', 'Cleric', 13, 3, ['spell:x:cure_wounds'])
+		);
+		const spells = [prep('spell:x:magic_missile')]; // fills the Wizard cap
+
+		// a second Wizard spell is blocked (that class is at cap)…
+		const wiz = canTogglePreparedFor(spells, sheet, entry, 'spell:x:shield', false);
+		expect(wiz.ok).toBe(false);
+		expect(wiz.ok === false && wiz.message).toContain('full');
+		// …but a Cleric spell still toggles (its own cap has room) — the classes[0] bug would block it
+		expect(canTogglePreparedFor(spells, sheet, entry, 'spell:x:cure_wounds', false).ok).toBe(true);
+	});
+
+	it('refuses a cantrip and an always-prepared entry outright', () => {
+		const sheet = sheetOf(cls('wizard', 'Wizard', 16, 5, ['spell:x:fire_bolt']));
+		expect(canTogglePreparedFor([], sheet, entry, 'spell:x:fire_bolt', true).ok).toBe(false);
+		const always = { prepared: true, alwaysPrepared: true };
+		expect(canTogglePreparedFor([], sheet, always, 'spell:x:fire_bolt', false).ok).toBe(false);
 	});
 });
 

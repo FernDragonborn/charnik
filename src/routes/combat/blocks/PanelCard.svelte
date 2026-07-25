@@ -28,6 +28,7 @@
 		PANEL_TITLE
 	} from '$lib/combat/helpers';
 	import EffectDurationMenu from './EffectDurationMenu.svelte';
+	import PreparedCaps from '$lib/components/PreparedCaps.svelte';
 
 	let { pid, c, s }: { pid: string; c: Character; s: CharacterSheet } = $props();
 
@@ -53,8 +54,6 @@
 	const attacks = $derived(combat.attacks);
 	const visibleActions = $derived(combat.visibleActions);
 	const spellGroups = $derived(combat.spellGroups);
-	const preparedCount = $derived(combat.preparedCount);
-	const preparedCap = $derived(combat.preparedCap);
 	const groupByLabel = $derived(combat.groupByLabel);
 	const pinned = $derived(combat.pinned);
 	const { openMenu, roll, cast, cycleGroupBy, togglePrepared } = combat;
@@ -125,16 +124,7 @@
 			<button class="pill-btn" onclick={(e) => openMenu('addeffect', e)}>＋ Add effect</button>
 		</span>
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
-		{#if combat.preparedTallies.length > 1}
-			<!-- A18-tail: per-class prepared caps for a multiclass caster (one figure per class) -->
-			<span class="prepared-count">
-				{#each combat.preparedTallies as t (t.classId)}
-					<span class="prep-cls">{t.className} <b>{t.count}</b>/{t.cap}</span>
-				{/each}
-			</span>
-		{:else}
-			<span class="prepared-count">Prepared <b>{preparedCount}</b> / {preparedCap}</span>
-		{/if}
+		<span class="prepared-count"><PreparedCaps tallies={combat.preparedTallies} /></span>
 		<button class="pill-btn" onclick={cycleGroupBy} title="Change grouping">{groupByLabel} ▾</button
 		>
 		<a class="pill-btn" href="{base}/spellbook">⛭ Manage all</a>
@@ -1071,11 +1061,5 @@
 		font-family: var(--font-mono);
 		font-size: 11px;
 		color: var(--color-text-muted);
-	}
-	.prepared-count b {
-		color: var(--color-resource);
-	}
-	.prep-cls + .prep-cls {
-		margin-left: var(--space-2);
 	}
 </style>

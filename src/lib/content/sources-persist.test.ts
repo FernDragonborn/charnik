@@ -1,12 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import type { LoadedRow } from './loader';
+import {
+	isRowActive,
+	toggleFile,
+	toggleSource,
+	setCollision,
+	loadSourceConfig,
+	sourceConfig
+} from './sources.svelte';
 
 /*
  * T5: the source/collision config PERSISTENCE round-trip (sources.test.ts covers the pure isRowActive
- * / detectCollisions; this covers the reactive toggle helpers + load()). Each test gets a fresh
- * in-memory localStorage AND a fresh module (resetModules), so we can assert both directions: a toggle
- * mutates the live config + writes localStorage, and a re-import reads that persisted config back via
- * load() — the "my disabled sources survive a restart" story.
+ * / detectCollisions). Two halves: the toggle helpers mutate the live config + WRITE localStorage, and
+ * loadSourceConfig READS a persisted snapshot back (merged over defaults; corrupt → all-active). We
+ * stub an in-memory localStorage and reset the shared singleton between tests, so no module re-import
+ * is needed.
  */
 function memLocalStorage() {
 	const m = new Map<string, string>();
@@ -39,13 +47,15 @@ const KEY = 'charnik:sources';
 
 beforeEach(() => {
 	vi.stubGlobal('localStorage', memLocalStorage());
-	vi.resetModules();
+	// reset the shared singleton so one test's toggles don't leak into the next
+	sourceConfig.disabledFiles.length = 0;
+	sourceConfig.disabledSources.length = 0;
+	for (const k of Object.keys(sourceConfig.collisions)) delete sourceConfig.collisions[k];
 });
 afterEach(() => vi.unstubAllGlobals());
 
 describe('source toggles mutate + persist', () => {
-	it('toggleFile hides the row, writes localStorage, and toggles back', async () => {
-		const { isRowActive, toggleFile } = await import('./sources.svelte');
+	it('toggleFile hides the row, writes localStorage, and toggles back', () => {
 		expect(isRowActive(row())).toBe(true);
 		toggleFile(FILE);
 		expect(isRowActive(row())).toBe(false);
@@ -55,16 +65,14 @@ describe('source toggles mutate + persist', () => {
 		expect(localStorage.getItem(KEY)).not.toContain(FILE);
 	});
 
-	it('toggleSource hides every row of a source tag', async () => {
-		const { isRowActive, toggleSource } = await import('./sources.svelte');
+	it('toggleSource hides every row of a source tag', () => {
 		toggleSource('SRD 5.1');
 		expect(isRowActive(row())).toBe(false);
 		expect(isRowActive(row({ source: 'SRD 5.2.1' }))).toBe(true); // a different tag is unaffected
 		expect(localStorage.getItem(KEY)).toContain('SRD 5.1');
 	});
 
-	it('setCollision keeps the chosen source and hides the losers; "all" clears it', async () => {
-		const { isRowActive, setCollision } = await import('./sources.svelte');
+	it('setCollision keeps the chosen source and hides the losers; "all" clears it', () => {
 		const srd = row(); // source SRD 5.1
 		const hb = row({ source: 'Homebrew', effectiveId: 'spell:Homebrew:fireball' });
 		setCollision('spell:fireball', 'SRD 5.1');
@@ -77,29 +85,24 @@ describe('source toggles mutate + persist', () => {
 	});
 });
 
-describe('load() reads persisted config on (re)import', () => {
-	it('a saved disabledSources survives a fresh module load', async () => {
+describe('loadSourceConfig reads a persisted snapshot', () => {
+	it('a saved disabledSources comes back', () => {
 		localStorage.setItem(
 			KEY,
 			JSON.stringify({ disabledSources: ['SRD 5.1'], disabledFiles: [], collisions: {} })
 		);
-		vi.resetModules();
-		const { isRowActive } = await import('./sources.svelte');
-		expect(isRowActive(row())).toBe(false); // config came back from persistence, not defaults
+		expect(isRowActive(row(), loadSourceConfig())).toBe(false); // from persistence, not defaults
 	});
 
-	it('a corrupt snapshot degrades to defaults (all active), never throws', async () => {
+	it('a corrupt snapshot degrades to defaults (all active), never throws', () => {
 		localStorage.setItem(KEY, '{not valid json');
-		vi.resetModules();
-		const { isRowActive } = await import('./sources.svelte');
-		expect(isRowActive(row())).toBe(true); // fell back to empty config
+		expect(isRowActive(row(), loadSourceConfig())).toBe(true);
 	});
 
-	it('a partial snapshot is merged over the defaults (missing keys filled)', async () => {
-		localStorage.setItem(KEY, JSON.stringify({ disabledFiles: [FILE] })); // no sources/collisions keys
-		vi.resetModules();
-		const { isRowActive } = await import('./sources.svelte');
-		expect(isRowActive(row())).toBe(false); // disabledFiles applied
-		expect(isRowActive(row({ root: 'content/srd-2024', file: 'x.csv' }))).toBe(true); // others default-active
+	it('a partial snapshot is merged over defaults (missing keys filled)', () => {
+		localStorage.setItem(KEY, JSON.stringify({ disabledFiles: [FILE] })); // no sources/collisions
+		const cfg = loadSourceConfig();
+		expect(isRowActive(row(), cfg)).toBe(false); // disabledFiles applied
+		expect(isRowActive(row({ root: 'content/srd-2024', file: 'x.csv' }), cfg)).toBe(true); // rest default
 	});
 });

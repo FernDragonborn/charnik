@@ -29,7 +29,13 @@ import { ordinal, titleCase, signed } from '$lib/util/format';
 export { titleCase, signed };
 import { parseToken, EFFECT_KIND, type Recharge } from '$lib/effects/token-parser';
 import { matchesTarget, type EffectFacts, type NumericFact } from '$lib/effects/apply';
-import { cantripDieMultiplier } from '$lib/rules/spellcasting';
+import {
+	cantripDieMultiplier,
+	canTogglePrepared,
+	preparedLeveledCount,
+	type PrepareAttempt,
+	type PreparableSpell
+} from '$lib/rules/spellcasting';
 
 /** A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack —
  *  the damage roll that follows it. Rendered as up to 3 lines: the roll, the dropped adv die, damage. */
@@ -752,6 +758,29 @@ export function preparedTalliesByClass(
 		count: counts.get(c.classId) ?? 0,
 		cap: c.preparedCap
 	}));
+}
+
+/** The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it
+ *  (per-class — A18-tail). The single seam the combat sheet AND the spellbook call, so their
+ *  attribution + cap + count wiring can't drift apart (D13): resolve the spell's class, read that
+ *  class's tally (count vs cap), and defer the actual rule to `canTogglePrepared`. `entry` is the
+ *  spell's play-state row (its prepared flags); a missing/always-prepared/cantrip entry is refused
+ *  inside `canTogglePrepared`. Falls back to the primary class + total count for a spell no class
+ *  claims (mirrors casterForSpell's own fallback). */
+export function canTogglePreparedFor(
+	spells: readonly { spell: string; prepared: boolean; alwaysPrepared: boolean }[],
+	sheet: CharacterSheet | null,
+	entry: PreparableSpell | undefined,
+	spellRef: string,
+	isCantrip: boolean
+): PrepareAttempt {
+	const cls = casterForSpell(sheet, spellRef);
+	const tally = cls
+		? preparedTalliesByClass(spells, sheet).find((t) => t.classId === cls.classId)
+		: undefined;
+	const cap = tally?.cap ?? sheet?.spellcasting.classes[0]?.preparedCap ?? 0;
+	const count = tally?.count ?? preparedLeveledCount(spells);
+	return canTogglePrepared(entry, isCantrip, cap, count);
 }
 
 export function buildSpellGroups(

@@ -18,7 +18,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 **Same name, several files:**
 
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
-- `load` ×3 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `persist` ×3 — src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
@@ -33,6 +32,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `label` ×2 — src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
+- `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `now` ×2 — src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
@@ -128,7 +128,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (36)
+## Shared components (37)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -161,6 +161,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **Pin** | `on`, `title`, `onclick` | Pin toggle (d-spellmgr `.ic.pin`): ★ pinned to the quick bar, ☆ not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
+| **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
 | **SchemaDiscardDialog** | `drafts`, `onDiscard`, `onKeep` |  |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
@@ -195,6 +196,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/sources.svelte.ts`
 
 - `type CollisionChoice` — A collision group's resolution: `'all'` = keep every source (default), else the one source to keep.
+- `function loadSourceConfig` — Read the persisted config, merged over empty defaults (a missing/corrupt snapshot → all-active).
 - `const sourceConfig` — Reactive, persisted config.
 - `function toggleFile` — Toggle a content file (path `root/file`) on/off.
 - `function toggleSource` — Toggle a source tag on/off.
@@ -390,6 +392,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function casterForSpell` — The caster class a spell is cast AS — whose DC / attack / ability are the ones actually USED * (RAW: a multiclass cas…
 - `interface PreparedClassTally` — A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its * own cap.
 - `function preparedTalliesByClass` — Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class * that grants it — v…
+- `function canTogglePreparedFor` — The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it * (per-class — A18-tail).
 - `function buildSpellGroups`
 - `function spellRow` — Build a spell row from the content graph (or null if the ref is missing).
 
@@ -871,4 +874,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 490 exports across 69 modules · 28 duplicate suspects · generated in 201ms._
+_46 tokens · 50 global classes · 37 components · 492 exports across 69 modules · 28 duplicate suspects · generated in 305ms._

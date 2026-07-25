@@ -1054,6 +1054,29 @@ inline (user, 2026-07-20).
 Self-review of THIS session's changes for architectural issues, verified against the code (not
 speculation). Filed as the input list for a follow-up pass — none is a data-loss bug.
 
+**Deeper pass (call chains + duplication), 2026-07-25 — the two DUPES I introduced, now FIXED:**
+
+- [x] **RV6 · Prepared-toggle gate duplicated across combat + spellbook.** FIXED. Both
+  `CombatVM.togglePrepared` and the spellbook's `togglePrepare` had the SAME 5-line block (resolve the
+  spell's class via `casterForSpell`, read its cap, count its tally, defer to `canTogglePrepared`). Now
+  one seam — `canTogglePreparedFor(spells, sheet, entry, ref, isCantrip)` in combat/helpers — that both
+  call, so the per-class attribution + cap + count wiring can't drift (D13). Unit-tested (per-class cap
+  enforcement + cantrip/always-prepared refusal). Also let the now-dead `CombatVM.preparedCount` /
+  `preparedCap` derived be deleted.
+- [x] **RV7 · Per-class prepared HEADER markup duplicated across PanelCard + spellbook.** FIXED. The
+  `{#if tallies>1}…{#each}…{:else}Prepared X/Y{/if}` block + its `.prep-cls` / `b` CSS were copy-pasted
+  in both. Extracted to ONE shared `PreparedCaps.svelte` (repo rule: a control used in >1 place = one
+  component) that renders from the tallies alone; both callers pass `tallies` and wrap their own
+  suffix. Removed the duplicated CSS.
+- Call-chain note (not fixed, low value): `casterProfileFor` (spellcasting.ts) has two near-identical
+  branches (class-caster vs subclass-caster) each building the same `CasterProfile` shape — a small
+  local dup; and `casterProfileFor` re-resolves `graph.get(entry.class)`/`entry.subclass` which
+  gatherEffects (derive.ts) also resolves, so the same rows are looked up a few times per derive
+  (pre-existing pattern, O(small), acceptable). RV1 below is the remaining *semantic* divergence the
+  DUP fixes did NOT close (build-side attribution still differs from the now-unified play-side).
+
+**Original findings:**
+
 - [ ] **RV1 · Two divergent "prepared spell → which class" attribution rules (introduced this session).**
   `buildSpellPicker` (build/derive.ts:92) counts a spell toward EVERY caster class whose list grants it
   (`selectedSpells.filter(inClass)`), but the new play-side `preparedTalliesByClass` (combat/helpers)

@@ -32,6 +32,7 @@ import {
 	buildSpellGroups,
 	casterForSpell,
 	preparedTalliesByClass,
+	canTogglePreparedFor,
 	parseDamage,
 	modTargetLabel,
 	applyDefense,
@@ -55,7 +56,7 @@ import { isRowActive } from '$lib/content/sources.svelte';
 import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
-import { slotToSpend, canTogglePrepared, preparedLeveledCount } from '$lib/rules/spellcasting';
+import { slotToSpend } from '$lib/rules/spellcasting';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
@@ -591,13 +592,14 @@ class CombatVM {
 	togglePrepared = (r: SpRow) => {
 		if (!this.character) return;
 		const sp = this.character.build.spells.find((s) => s.spell.endsWith(`:${r.id}`));
-		// A18-tail: gate against the cap of the class that GRANTS this spell (per-class), not classes[0]
-		const cls = casterForSpell(this.sheet, r.ref);
-		const cap = cls?.preparedCap ?? this.preparedCap;
-		const count = cls
-			? (this.preparedTallies.find((t) => t.classId === cls.classId)?.count ?? 0)
-			: this.preparedCount;
-		const res = canTogglePrepared(sp, r.tm === 'cantrip', cap, count);
+		// A18-tail: per-class cap gate via the ONE shared seam (identical in the spellbook, D13)
+		const res = canTogglePreparedFor(
+			this.character.build.spells,
+			this.sheet,
+			sp,
+			r.ref,
+			r.tm === 'cantrip'
+		);
 		if (!res.ok) {
 			if (res.message) toast(res.message);
 			return;
@@ -632,12 +634,8 @@ class CombatVM {
 	);
 	// B9: worn non-proficient armor blocks spellcasting (RAW rule-block). Surfaced on the spells panel.
 	armorBlock = $derived(this.sheet?.spellcasting.armorBlock);
-	preparedCount = $derived(preparedLeveledCount(this.character?.build.spells ?? []));
-	// prepared cap from the primary caster's derived profile (class table / formula), not hardcoded.
-	// Single-caster header still reads this; the toggle gate + multiclass header use preparedTallies.
-	preparedCap = $derived(this.sheet?.spellcasting.classes[0]?.preparedCap ?? 0);
 	// A18-tail: per-class prepared accounting (each prepared spell attributed to the class that grants
-	// it). Drives the multiclass header + the per-class toggle cap; single-class collapses to one row.
+	// it). Drives the header (via PreparedCaps); the toggle gate uses canTogglePreparedFor directly.
 	preparedTallies = $derived(
 		preparedTalliesByClass(this.character?.build.spells ?? [], this.sheet)
 	);
