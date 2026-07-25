@@ -866,7 +866,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/styles/customThemes.ts`
 
 - `const THEMEABLE_TOKENS` — The design tokens a custom theme may override — the semantic color palette plus the shadow slots.
-- `type ThemeableToken`
+- `type ThemeableToken` — @public a token name the Themes editor can set (drives the editor form's typing).
 - `interface CustomTheme`
 - `const isSafeThemeId` — A safe theme id: a short lowercase slug, so `[data-theme='<id>']` can't be broken out of.
 - `function themeToCss` — Turn one theme into its `[data-theme='id'] { … }` rule, dropping unknown tokens + unsafe values.
@@ -890,4 +890,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 56 global classes · 38 components · 490 exports across 70 modules · 28 duplicate suspects · generated in 267ms._
+_45 tokens · 56 global classes · 38 components · 490 exports across 70 modules · 28 duplicate suspects · generated in 162ms._

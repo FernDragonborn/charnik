@@ -356,6 +356,26 @@ everything — old homebrew is never wrong-downward.
   resolution). Browse-layer only via `sources.svelte`'s persisted `sourceConfig` + pure `isRowActive`/
   `detectCollisions` — the loader/core graph is untouched, so it's live + never drops data. The
   homebrew fork-override (Editor mode) is the same mechanism (keep-all, homebrew sorts on top).
+- **Settings ▸ Themes (custom themes) — foundation DONE, UI PLANNED.** Users author their own
+  color themes without a rebuild. **Architecture (already in place):** the design-token contract
+  (`tokens.css`) is semantic (`--color-surface`/`-text`/`-accent`/`-resource`…), switched by
+  `data-theme` on `<html>`; `ThemeId` is open-typed; the **runtime injector** (`customThemes.ts`,
+  commit `2336546`) turns a `{id, name, tokens}` into a `[data-theme=id]` `<style>` and is wired
+  into the layout effect over the persisted `app.customThemes`, so a registered theme activates
+  live like dark/light. A **strict sanitizer** (unit-tested) allows only known themeable token
+  names + a color/length value grammar — user-file values can't inject CSS. **Still to build:**
+  1. **Themes tab UI** — list built-in + custom themes as swatched cards (active-state like the
+     other Settings tabs, reusing `.setting-row`/`.pill-btn`); pick / duplicate / edit / delete.
+  2. **Editor** — a token→value form (color pickers) over `THEMEABLE_TOKENS`, seeded by cloning
+     dark or light; live preview (it's already reactive). Optionally a base-theme (`dark`/`light`)
+     each custom theme inherits, so a theme only overrides the tokens it changes.
+  3. **Persistence + portability** — save themes as a small file the user owns (a `themes.json`
+     in the data dir via the `Storage` seam, mirroring the app-store pattern), so a theme is
+     shareable/importable like content packs; export/import one theme.
+  4. **Theme scope decision** — colours only (today), or also expose density/roundness/type
+     tokens (now possible since font-size/radius/tracking were tokenized) under `[data-theme]`.
+  5. **Guard already added:** stylelint `color-no-hex` (tokens.css exempt) keeps new hardcoded
+     colours from leaking past the token layer and silently breaking themes.
 
 ### Custom content types (add + persist via UI forms)
 Species (+subraces), Backgrounds, Classes, Subclasses, Class features (per level),

@@ -13,7 +13,8 @@
  */
 
 /** The design tokens a custom theme may override — the semantic color palette plus the shadow slots.
- *  (Sizes/spacing/radius are global scale knobs; expose them here too if per-theme density lands.) */
+ *  (Sizes/spacing/radius are global scale knobs; expose them here too if per-theme density lands.)
+ *  @public the planned Settings ▸ Themes editor renders one field per token from this list. */
 export const THEMEABLE_TOKENS = [
 	'color-bg',
 	'color-surface',
@@ -43,6 +44,7 @@ export const THEMEABLE_TOKENS = [
 	'shadow-2'
 ] as const;
 
+/** @public a token name the Themes editor can set (drives the editor form's typing). */
 export type ThemeableToken = (typeof THEMEABLE_TOKENS)[number];
 const THEMEABLE = new Set<string>(THEMEABLE_TOKENS);
 
