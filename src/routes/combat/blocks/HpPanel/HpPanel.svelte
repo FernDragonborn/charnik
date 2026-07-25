@@ -189,7 +189,7 @@
 		flex: 1;
 	}
 	.hp-btn.damage {
-		background: var(--color-danger-soft, rgba(179, 69, 47, 0.12));
+		background: var(--color-danger-soft);
 		border: 1px solid var(--color-danger);
 		color: var(--color-danger);
 	}

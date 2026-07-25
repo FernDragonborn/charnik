@@ -1,7 +1,11 @@
 {
 	"extends": "stylelint-config-standard",
-	"overrides": [{ "files": ["**/*.svelte"], "customSyntax": "postcss-html" }],
+	"overrides": [
+		{ "files": ["**/*.svelte"], "customSyntax": "postcss-html" },
+		{ "files": ["**/tokens.css"], "rules": { "color-no-hex": null } }
+	],
 	"rules": {
+		"color-no-hex": true,
 		"custom-property-empty-line-before": null,
 		"declaration-empty-line-before": null,
 		"comment-empty-line-before": null,

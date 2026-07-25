@@ -73,7 +73,11 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **gold — spell slots / resource pips / prepared** — `--color-resource-soft`
 
-**teal — positive/confirmation, temp HP, available pips** — `--color-good-soft`, `--color-success`, `--color-warning`, `--color-danger`, `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`
+**teal — positive/confirmation, temp HP, available pips** — `--color-good-soft`
+
+**readable text ON the amber warning bg (count badges)** — `--color-success`, `--color-warning`, `--color-danger`
+
+**faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
 ## Global CSS classes (56)
 
@@ -876,4 +880,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_41 tokens · 56 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 126ms._
+_45 tokens · 56 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 163ms._

@@ -81,7 +81,7 @@
 		border: 1px solid var(--color-good);
 		border-radius: 50%;
 		background: var(--color-good);
-		box-shadow: 0 0 8px rgba(59, 184, 166, 0.45);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--color-good) 45%, transparent);
 		cursor: pointer;
 	}
 	.turn-slot .turn-pip.used {

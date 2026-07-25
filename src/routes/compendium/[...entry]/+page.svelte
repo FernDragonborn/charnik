@@ -759,7 +759,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 10px;
-		box-shadow: 0 10px 30px rgb(0 0 0 / 40%);
+		box-shadow: var(--shadow-2);
 	}
 	.mode-item {
 		display: flex;

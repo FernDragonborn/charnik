@@ -105,7 +105,7 @@
 	}
 	.stat-chip.hit {
 		color: var(--color-resource);
-		border-color: #5a4d28;
+		border-color: var(--color-resource-line);
 	}
 	.stat-chip.save {
 		color: var(--color-accent-bright);

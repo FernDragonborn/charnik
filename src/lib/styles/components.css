@@ -84,7 +84,7 @@
 }
 .pill-btn.accent:hover {
 	background: var(--color-accent);
-	color: #fff;
+	color: var(--color-accent-text);
 }
 
 /* --- eyebrow: the mono uppercase micro-label — the single most-reused label primitive. The

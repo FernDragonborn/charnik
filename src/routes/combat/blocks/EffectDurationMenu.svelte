@@ -140,7 +140,7 @@
 	}
 	.dur-item.on {
 		color: var(--color-resource);
-		background: #221c10;
+		background: color-mix(in srgb, var(--color-resource) 12%, var(--color-bg));
 	}
 	.dur-custom-open {
 		color: var(--color-text-muted);

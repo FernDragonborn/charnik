@@ -683,13 +683,13 @@
 	}
 	.effect-tag--positive {
 		color: var(--color-good);
-		border-color: rgba(59, 184, 166, 0.4);
-		background: rgba(59, 184, 166, 0.08);
+		border-color: color-mix(in srgb, var(--color-good) 40%, transparent);
+		background: color-mix(in srgb, var(--color-good) 8%, transparent);
 	}
 	.effect-tag--negative {
 		color: var(--color-accent-bright);
-		border-color: rgba(207, 43, 64, 0.45);
-		background: rgba(207, 43, 64, 0.08);
+		border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+		background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 	}
 	/* display-only rules note (not engine-computed) — dashed + muted so it reads as reference, and
 	   allowed to wrap since it carries a sentence, not a short tag */
@@ -811,8 +811,8 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-resource);
-		border: 1px solid #5a4d28;
-		background: rgba(202, 162, 74, 0.08);
+		border: 1px solid var(--color-resource-line);
+		background: color-mix(in srgb, var(--color-resource) 8%, transparent);
 		border-radius: 5px;
 		padding: 1px 6px;
 		white-space: nowrap;
@@ -862,13 +862,13 @@
 		height: 12px;
 		padding: 0;
 		border-radius: 50%;
-		border: 1px solid #2c4a45;
+		border: 1px solid var(--color-good-line);
 		cursor: pointer;
 	}
 	.spell-category .slot-pip.full {
 		background: var(--color-good);
 		border-color: var(--color-good);
-		box-shadow: 0 0 8px rgba(59, 184, 166, 0.45);
+		box-shadow: 0 0 8px color-mix(in srgb, var(--color-good) 45%, transparent);
 	}
 	.spell-category .slot-pip.spent {
 		background: transparent;
@@ -942,7 +942,7 @@
 	}
 	.spell-row .resolution-tag.hit {
 		color: var(--color-resource);
-		border-color: #5a4d28;
+		border-color: var(--color-resource-line);
 	}
 	.spell-row .resolution-tag.save {
 		color: var(--color-accent-bright);

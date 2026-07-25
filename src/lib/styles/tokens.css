@@ -75,9 +75,13 @@
 	--color-resource-soft: #2a2415;
 	--color-good: #3bb8a6; /* teal — positive/confirmation, temp HP, available pips */
 	--color-good-soft: #11302c;
+	--color-good-line: #2c4a45; /* dark teal divider/border (slot pips) */
+	--color-resource-line: #5a4d28; /* dark gold divider/border (recharge/resolution chips) */
+	--color-warning-text: #1a1400; /* readable text ON the amber warning bg (count badges) */
 	--color-success: #3fa66a;
 	--color-warning: #e0a44b;
 	--color-danger: #e0635a;
+	--color-danger-soft: #2a1512; /* faint red tint bg (invalid-cell / danger banners) */
 	--color-overlay: rgb(0 0 0 / 0.6);
 }
 
@@ -99,9 +103,13 @@
 	--color-resource-soft: #f1e7cf;
 	--color-good: #1f8a7a;
 	--color-good-soft: #d9efe9;
+	--color-good-line: #a6d5cc;
+	--color-resource-line: #cbb684;
+	--color-warning-text: #ffffff;
 	--color-success: #2e7d4f;
 	--color-warning: #9a6a1f;
 	--color-danger: #a32b22;
+	--color-danger-soft: #f7dedb;
 	--color-overlay: rgb(0 0 0 / 0.4);
 
 	--shadow-1: 0 1px 2px rgb(0 0 0 / 0.08);

@@ -516,7 +516,7 @@
 	}
 	.shipped-warn {
 		border: 1px solid var(--color-danger);
-		background: var(--color-danger-soft, rgba(179, 69, 47, 0.1));
+		background: var(--color-danger-soft);
 		border-radius: 10px;
 		padding: 12px 14px;
 		margin-bottom: 12px;
@@ -697,7 +697,7 @@
 	}
 	.issues {
 		border: 1px solid var(--color-danger);
-		background: var(--color-danger-soft, rgba(179, 69, 47, 0.1));
+		background: var(--color-danger-soft);
 		border-radius: 10px;
 		padding: 10px 14px;
 		margin-bottom: 12px;

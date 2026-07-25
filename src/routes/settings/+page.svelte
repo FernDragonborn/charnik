@@ -110,6 +110,6 @@
 		padding: 1px 5px;
 		border-radius: 20px;
 		background: var(--color-warning);
-		color: #1a1400;
+		color: var(--color-warning-text);
 	}
 </style>
