@@ -9,6 +9,7 @@
 
 import { SYSTEMS } from '$lib/content/schemas';
 import { readStored, writeStored } from '$lib/util/persist';
+import type { CustomTheme } from '$lib/styles/customThemes';
 
 /** Derived from the content-schema SYSTEMS list — ONE source of truth for the editions. */
 export type SystemId = (typeof SYSTEMS)[number];
@@ -23,6 +24,9 @@ interface AppState {
 	activeLocale: string;
 	/** Shipped default = dark slate (see docs/PLAN.md #18). */
 	theme: ThemeId;
+	/** User-authored themes (token overrides), injected at runtime as `[data-theme=id]` and selectable
+	 *  like the built-ins. Empty by default; managed on the planned Settings ▸ Themes page. */
+	customThemes: CustomTheme[];
 }
 
 const STORAGE_KEY = 'charnik:app';
@@ -31,7 +35,8 @@ function defaults(): AppState {
 	return {
 		activeEditions: ['5e', '5.5e'],
 		activeLocale: 'en',
-		theme: 'dark'
+		theme: 'dark',
+		customThemes: []
 	};
 }
 
@@ -54,7 +59,8 @@ function persist(): void {
 	writeStored(STORAGE_KEY, {
 		activeEditions: app.activeEditions,
 		activeLocale: app.activeLocale,
-		theme: app.theme
+		theme: app.theme,
+		customThemes: app.customThemes
 	});
 }
 

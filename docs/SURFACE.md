@@ -271,7 +271,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (58 modules)
+## Library functions & types (59 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -863,6 +863,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface FileEntry` — * The one file-IO seam for the whole app.
 - `interface Storage`
 
+### `src/lib/styles/customThemes.ts`
+
+- `const THEMEABLE_TOKENS` — The design tokens a custom theme may override — the semantic color palette plus the shadow slots.
+- `type ThemeableToken`
+- `interface CustomTheme`
+- `const isSafeThemeId` — A safe theme id: a short lowercase slug, so `[data-theme='<id>']` can't be broken out of.
+- `function themeToCss` — Turn one theme into its `[data-theme='id'] { … }` rule, dropping unknown tokens + unsafe values.
+- `function buildThemesStylesheet` — Build the combined stylesheet for a set of custom themes (pure — the DOM-free core, unit-tested).
+- `function registerCustomThemes` — Inject/replace the custom-theme stylesheet in <head>.
+
 ### `src/lib/util/format.ts`
 
 - `const ordinal` — 1 → "1st", 2 → "2nd", 11 → "11th" … (spell-level labels, feature lists).
@@ -880,4 +890,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 56 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 163ms._
+_45 tokens · 56 global classes · 38 components · 490 exports across 70 modules · 28 duplicate suspects · generated in 267ms._

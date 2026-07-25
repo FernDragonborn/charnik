@@ -5,6 +5,7 @@
 	import { base } from '$app/paths';
 	import { page } from '$app/state';
 	import { app } from '$lib/stores/app.svelte';
+	import { registerCustomThemes } from '$lib/styles/customThemes';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { dirFor, locale as i18nLocale, _ } from '$lib/i18n';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
@@ -84,6 +85,8 @@
 	// Single source of truth for live switches: mirror the store onto <html>. No reload.
 	$effect(() => {
 		if (!browser) return;
+		// register user themes BEFORE activating one, so `[data-theme=id]` has its rule ready
+		registerCustomThemes(app.customThemes);
 		const el = document.documentElement;
 		el.dataset.theme = app.theme;
 		el.lang = app.activeLocale;
