@@ -55,10 +55,10 @@
 		</p>
 	</header>
 
-	<div class="list">
+	<div class="dialog-body list">
 		{#each drafts as env (env.target)}
 			{@const l = draftLabel(env)}
-			<div class="row">
+			<div class="dialog-card row">
 				<div class="meta">
 					<div class="title">{l.title}</div>
 					<div class="sub">{l.sub}</div>
@@ -82,20 +82,14 @@
 	.discard-dialog {
 		width: min(560px, calc(100vw - 2 * var(--space-4)));
 	}
+	/* base look = global .dialog-body / .dialog-card; only the tighter gap + row layout are local */
 	.list {
-		overflow: auto;
-		padding: var(--space-4) var(--space-6);
-		display: flex;
-		flex-direction: column;
 		gap: var(--space-2);
 	}
 	.row {
 		display: flex;
 		align-items: center;
 		gap: var(--space-3);
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
 		padding: var(--space-3) var(--space-4);
 	}
 	.meta {

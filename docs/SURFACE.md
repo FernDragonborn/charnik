@@ -71,7 +71,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **teal — positive/confirmation, temp HP, available pips** — `--color-good-soft`, `--color-success`, `--color-warning`, `--color-danger`, `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`
 
-## Global CSS classes (52)
+## Global CSS classes (54)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -93,6 +93,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.dialog` | components.css | the centred panel: sized to its CONTENT height (capped at the viewport), never full-height — centring via transform, … |
 | `.dialog-backdrop` | components.css | --- dialog shell: full-screen dark-backdrop modal (content-review pop-ups) --- (only the `.dialog` container's WIDTH … |
 | `.dialog-badge` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
+| `.dialog-body` | components.css | scrollable dialog body: the vertical list of file/row cards between head + footer. |
+| `.dialog-card` | components.css | one card/row inside a .dialog-body (a file, a drift row, a discard entry). |
 | `.dialog-foot` | components.css |  |
 | `.dialog-head` | components.css |  |
 | `.dialog-label` | components.css | --- dialog field/section label (mono uppercase eyebrow inside the review modals) --- |
@@ -868,4 +870,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 52 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 337ms._
+_46 tokens · 54 global classes · 38 components · 483 exports across 69 modules · 28 duplicate suspects · generated in 301ms._

@@ -40,9 +40,9 @@
 	width="min(680px, calc(100vw - 2 * var(--space-4)))"
 	onDismiss={onSkip}
 >
-	<div class="files">
+	<div class="dialog-body">
 		{#each items as item (item.file)}
-			<label class="file">
+			<label class="dialog-card file">
 				<input type="checkbox" bind:checked={checked[item.file]} />
 				<span class="body">
 					<span class="file-name">{item.file}</span>
@@ -74,21 +74,11 @@
 </DialogShell>
 
 <style>
-	.files {
-		overflow: auto;
-		padding: var(--space-4) var(--space-6);
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-3);
-	}
+	/* base look = global .dialog-body / .dialog-card; only the checkbox-row layout is local */
 	.file {
 		display: flex;
 		align-items: flex-start;
 		gap: var(--space-3);
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		padding: var(--space-4);
 		cursor: pointer;
 	}
 	.file input {

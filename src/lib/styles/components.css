@@ -389,6 +389,23 @@
 .dialog-spacer {
 	flex: 1;
 }
+/* scrollable dialog body: the vertical list of file/row cards between head + footer. `gap` defaults
+   to space-3; a dialog needing a different rhythm overrides it locally (ContentMetaModal space-4). */
+.dialog-body {
+	overflow: auto;
+	padding: var(--space-4) var(--space-6);
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-3);
+}
+/* one card/row inside a .dialog-body (a file, a drift row, a discard entry). Layout deltas (flex
+   direction, cursor, exact padding) stay on the local scoped class composed alongside this. */
+.dialog-card {
+	background: var(--color-surface-2);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	padding: var(--space-4);
+}
 
 /* --- toggle-track: the pill on/off switch knob (Switch component, combat menus) --- */
 .toggle-track {

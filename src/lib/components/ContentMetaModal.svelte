@@ -86,10 +86,10 @@
 	width="min(760px, calc(100vw - 2 * var(--space-4)))"
 	onDismiss={onSkip}
 >
-	<div class="files">
+	<div class="dialog-body files">
 		{#each issues as issue (issue.file)}
 			{@const fill = fills[issue.file]}
-			<section class="file">
+			<section class="dialog-card file">
 				<h3 class="file-name">{issue.file}</h3>
 
 				<span class="dialog-label section-label">{$_('contentMeta.needFromYou')}</span>
@@ -187,18 +187,9 @@
 </DialogShell>
 
 <style>
+	/* base look = global .dialog-body / .dialog-card; only the wider gap is local */
 	.files {
-		overflow: auto;
-		padding: var(--space-4) var(--space-6);
-		display: flex;
-		flex-direction: column;
 		gap: var(--space-4);
-	}
-	.file {
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-md);
-		padding: var(--space-4);
 	}
 	.file-name {
 		font-family: var(--font-mono);
