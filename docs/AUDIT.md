@@ -1048,3 +1048,48 @@ inline (user, 2026-07-20).
   swap (`clearPluginMemo` on every rebuild); consent bypass / TOCTOU (read-once buffer, exact-hash
   gate, hidden-mutate handlers caught by the in-sandbox `try`); reactivity (both build/combat VMs
   `void plugins.version` inside `$derived.by`, so enable/disable re-derives live).
+
+## REVIEW-0725 · Fresh-eyes review of the 2026-07-25 audit batch (B5/B26/B25/A18-tail/B19/E1)
+
+Self-review of THIS session's changes for architectural issues, verified against the code (not
+speculation). Filed as the input list for a follow-up pass — none is a data-loss bug.
+
+- [ ] **RV1 · Two divergent "prepared spell → which class" attribution rules (introduced this session).**
+  `buildSpellPicker` (build/derive.ts:92) counts a spell toward EVERY caster class whose list grants it
+  (`selectedSpells.filter(inClass)`), but the new play-side `preparedTalliesByClass` (combat/helpers)
+  attributes it to ONE class (`casterForSpell` → higher-DC on overlap). So for a multiclass caster a
+  dual-list spell counts toward BOTH caps at build time and ONE cap at play time — the same question,
+  two answers. Before this session the play side used `classes[0]` (no per-class), so adding per-class
+  play accounting with a different rule than the builder is a fresh semantic-dup (exactly what the repo
+  hunts). FIX: one shared attribution helper both consume. Also note buildSpellPicker in FREE mode
+  (`inClass` always true) counts every spell against every class — per-class caps are meaningless there
+  (pre-existing).
+- [ ] **RV2 · B26 default double-applies a same-`(class_id,level,id)` feature from two overlapping
+  sources.** Dropping the source-pin means both an SRD and a homebrew feature with the SAME id + edition
+  now fold their tokens — UNLESS a collision is resolved. The collision IS surfaced (CollisionManager
+  renders any type incl. class_feature) so it's user-fixable, but the unresolved DEFAULT is keep-all
+  (`isRowActive` → both), whereas the agreed B26 direction called for a **warn + apply-one default**.
+  Needs a same-id cross-source dup to trigger (rare — authors use their own ids), but it deviates from
+  the design. FIX: default a detected feature collision to apply-one, or dedup `(class_id,level,id)` in
+  the feature query keeping the active/first.
+- [ ] **RV3 · A picker no longer shows a selection whose source got disabled (B5; display-only).**
+  `list()` now filters by `isRowActive`, so a species/class/feat picked from a source the user LATER
+  disables disappears from its own picker. No data loss — `assembled` reads the stored draft ref, not
+  `list()`, so the built character keeps it; but EDITING such a character shows the field unselected and
+  it can't be re-picked without re-enabling the source. FIX: union the currently-selected ref into the
+  picker list even when filtered (show it flagged), mirroring how the spellbook keeps owned spells.
+- [ ] **RV4 · B25 subclass casting is half-wired: slots+DC+prepared cap work, spell LIST is empty.**
+  `buildSpellAccess` indexes only `class` rows, so a casting subclass's `accessSpellIds` is `[]` — a
+  homebrew Eldritch Knight can cast (has slots/DC) but the Strict picker offers zero spells. Shipping
+  "casting works" with an empty pickable list is a half-state (documented in B25, restated here as the
+  concrete follow-up). FIX: a subclass→spell-list seam (index subclass rows in buildSpellAccess, or a
+  `list_from` column pointing an EK at the Wizard list).
+- [ ] **RV5 · `advanceTime` lives on `TurnEconomy` though it's an out-of-combat concept (trivial).**
+  The out-of-combat time-skip (B19) shares `nextTurn`'s expiry core, so it sits on the turn-economy
+  subsystem — but "advance time with no turn" muddies that module's boundary a little. Cosmetic;
+  acceptable given the shared `expireTimedEffects`. Note only.
+- Root cause behind RV1 + the overlap-DC heuristic (pre-existing, user-flagged): `spellEntry`
+  (`{spell,prepared,alwaysPrepared}`) records no source class, so neither the cap nor the cast DC can be
+  RAW-exact on a dual-list spell. A `classId` on the entry (with a migration + a "which class?" picker
+  when two offer it) is the real fix — parked pending the user's call (they noted the binding is the
+  access map, so this stays a documented heuristic for now, not a new deviation).
