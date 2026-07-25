@@ -831,11 +831,13 @@ Second fresh-eyes pass + call-chain walk (2026-07-16, later the same day):
 
 ## S · Security / robustness (2026-07-16 review; complements docs/SECURITY.md)
 
-- [ ] **S1 · `TauriStorage.abs` traversal check misses backslashes.** `tauri.ts:289-293` splits on
-  `/` and rejects `..` segments — but on Windows `read('..\\x')` passes the validator (one
-  segment `..\x`) and `join` resolves it. The fs-scope is the remaining line of defence (holds:
-  escapes leave the allowed scope), but the seam's own validation — which is ALL the web/memory
-  impls have conceptually — is half-broken. Normalize `\`→`/` before splitting.
+- [x] **S1 · `TauriStorage.abs` traversal check misses backslashes.** FIXED 2026-07-25. Extracted
+  the sandbox guard into a shared pure `storage/path.ts` `sandboxRelative(path)` that normalizes
+  `\`→`/` BEFORE splitting (so a Windows `..\x` can no longer hide its `..` under a `/`-only split),
+  strips leading slashes + `.` segments, and rejects any `..`. Both `TauriStorage.abs` and
+  `MemoryStorage` now call it (killed the near-duplicate `norm` in memory.ts — one guard, one place).
+  Unified error message → `path escapes storage root`. New pure `path.test.ts` covers the S1
+  backslash cases (`..\secret`, `content\..\..\secret`, mixed separators) + forward-slash traversal.
 - [ ] **S2 · `allow_data_dir` is invokable with ANY path** (lib.rs:6) — any renderer JS can extend
   the fs scope to an arbitrary directory, recursive+write. By design (the folder-picker escape
   hatch) and gated by CSP/no-remote-code, but it's the single widest capability: consider

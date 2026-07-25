@@ -17,9 +17,9 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Same name, several files:**
 
-- `norm` ×4 — src/lib/storage/browser.ts · src/lib/storage/memory.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `load` ×3 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts · src/routes/+layout.ts
+- `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `persist` ×3 — src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
@@ -254,7 +254,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (57 modules)
+## Library functions & types (58 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -812,6 +812,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `class NodeStorage`
 
+### `src/lib/storage/path.ts`
+
+- `function sandboxRelative` — * The sandbox guard shared by every `Storage` impl: normalize a caller-supplied path to * `/`-separated, root-relativ…
+
 ### `src/lib/storage/provider.ts`
 
 - `enum Platform` — * The one runtime environment the app can be executing in.
@@ -859,4 +863,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_46 tokens · 50 global classes · 36 components · 482 exports across 68 modules · 27 duplicate suspects · generated in 119ms._
+_46 tokens · 50 global classes · 36 components · 483 exports across 69 modules · 27 duplicate suspects · generated in 132ms._

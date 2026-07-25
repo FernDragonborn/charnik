@@ -39,7 +39,7 @@ describe('MemoryStorage', () => {
 
 	it('rejects path traversal (sandbox)', async () => {
 		const s = new MemoryStorage();
-		await expect(s.read('../secret')).rejects.toThrow(/escapes root/);
+		await expect(s.read('../secret')).rejects.toThrow(/escapes storage root/);
 	});
 
 	it('watch fires on write and remove, stops after unsubscribe', async () => {

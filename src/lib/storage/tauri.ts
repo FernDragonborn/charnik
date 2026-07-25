@@ -29,6 +29,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
 import { openPath } from '@tauri-apps/plugin-opener';
 import type { Storage, FileEntry } from './types';
+import { sandboxRelative } from './path';
 import { errText } from '../util/format';
 import {
 	copyFailures,
@@ -284,11 +285,10 @@ export class TauriStorage implements Storage {
 		return (this.#root ??= this.resolveRoot());
 	}
 
-	/** dataDir-relative path → absolute, rejecting escapes outside the root. */
+	/** dataDir-relative path → absolute, rejecting escapes outside the root (shared sandbox guard —
+	 *  normalizes `\` too, so a Windows `..\x` can't slip past a `/`-only split). */
 	private async abs(path: string): Promise<string> {
-		const rel = path.replace(/^\/+/, '');
-		if (rel.split('/').includes('..')) throw new Error(`path escapes storage root: ${path}`);
-		return join(await this.#dataDir(), rel);
+		return join(await this.#dataDir(), sandboxRelative(path));
 	}
 
 	private async parent(abs: string): Promise<string> {

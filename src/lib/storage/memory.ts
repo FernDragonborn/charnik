@@ -1,14 +1,5 @@
 import type { FileEntry, Storage } from './types';
-
-/** Normalize to `/`-separated, root-relative; reject traversal (sandbox). */
-function norm(p: string): string {
-	const parts = p
-		.replace(/\\/g, '/')
-		.split('/')
-		.filter((s) => s && s !== '.');
-	if (parts.includes('..')) throw new Error(`path escapes root: ${p}`);
-	return parts.join('/');
-}
+import { sandboxRelative as norm } from './path';
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
