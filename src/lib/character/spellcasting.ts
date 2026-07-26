@@ -184,7 +184,9 @@ function casterProfileFor(
 		// else a casting SUBCLASS whose caster columns are filled + which is online at its grant level.
 		// `class_casting`/`slot_table`/spell-list access all key off the SUBCLASS id (a homebrew author
 		// adds them there). NOTE the subclass spell-LIST gap (an EK draws the Wizard list) — B25 follow-up.
-		const subRow = entry.subclass ? graph.get(entry.subclass) : undefined;
+		const subclassRef = entry.subclass;
+		if (subclassRef == null) return null;
+		const subRow = graph.get(subclassRef);
 		if (
 			subRow?.type !== 'subclass' ||
 			subRow.data.caster == null ||
@@ -192,7 +194,7 @@ function casterProfileFor(
 		)
 			return null;
 		owner = subRow;
-		accessRef = entry.subclass!;
+		accessRef = subclassRef;
 		ownerId = subRow.id;
 		ritual = false; // subclass schema carries no ritual column
 	}
@@ -227,8 +229,7 @@ export function deriveSpellcasting(
 		.map((entry) => casterProfileFor(entry, graph))
 		.filter((p): p is CasterProfile => p !== null);
 
-	if (sources.length === 0)
-		return { classes: [], pools: [], casterLevel: 0, ritualCasting: false };
+	if (sources.length === 0) return { classes: [], pools: [], casterLevel: 0, ritualCasting: false };
 
 	// E7: the character can ritual-cast iff ANY caster source carries Ritual Casting (Wizard/Cleric/
 	// Druid/Bard; not base Warlock, and not a subclass caster by default).
@@ -269,7 +270,10 @@ export function deriveSpellcasting(
 			ability: p.ability,
 			// `spell_dc`/`spell_attack` effects (a Rod-of-the-Pact-Keeper-style item) fold onto every
 			// caster class's numbers — the target is not class-scoped in the L1 vocabulary
-			saveDC: foldSpellStat('spell_dc', spellSaveDC({ ability: p.ability, score, level: totalLevel })),
+			saveDC: foldSpellStat(
+				'spell_dc',
+				spellSaveDC({ ability: p.ability, score, level: totalLevel })
+			),
 			attack: foldSpellStat(
 				'spell_attack',
 				spellAttackBonus({ ability: p.ability, score, level: totalLevel })

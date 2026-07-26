@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+// This test exercises the Tauri storage seam itself, so it legitimately imports
+// (and mocks) the Tauri modules the invariant otherwise confines to lib/storage.
+// eslint-disable-next-line no-restricted-imports
 import * as fs from '@tauri-apps/plugin-fs';
+// eslint-disable-next-line no-restricted-imports
 import { invoke } from '@tauri-apps/api/core';
 
 /*
@@ -45,7 +49,8 @@ vi.mock('@tauri-apps/plugin-opener', () => ({ openPath: vi.fn() }));
 const { migrateDataDir, mergeDataDir, listDataDirFiles } = await import('./tauri');
 
 // --- in-memory fs helpers, re-wired each test so state can't leak -------------------------------
-const seed = (path: string, size: number, mtime = 1000) => h.files.set(h.norm(path), { size, mtime });
+const seed = (path: string, size: number, mtime = 1000) =>
+	h.files.set(h.norm(path), { size, mtime });
 const at = (path: string) => h.files.has(h.norm(path));
 
 const defaultCopy = async (from: string | URL, to: string | URL) => {

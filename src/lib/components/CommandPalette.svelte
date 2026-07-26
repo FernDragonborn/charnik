@@ -68,15 +68,15 @@
 						return row ? isRowActive(row) : true;
 					})
 					.map((r) => ({
-					kind: 'content',
-					key: r.effectiveId,
-					type: r.type,
-					source: r.source,
-					slug: r.id,
-					label: r.name,
-					snippet: r.snippet,
-					systems: r.systems
-				}))
+						kind: 'content',
+						key: r.effectiveId,
+						type: r.type,
+						source: r.source,
+						slug: r.id,
+						label: r.name,
+						snippet: r.snippet,
+						systems: r.systems
+					}))
 			: []
 	);
 	const items = $derived<Item[]>([...pages, ...contentItems]);

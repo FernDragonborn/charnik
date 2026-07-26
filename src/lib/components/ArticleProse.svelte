@@ -31,7 +31,8 @@
 </script>
 
 {#if editable && draft}
-	<textarea class="text-field edit-body" bind:value={draft.text} placeholder={bodyMarkdown}></textarea>
+	<textarea class="text-field edit-body" bind:value={draft.text} placeholder={bodyMarkdown}
+	></textarea>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized above -->
 {:else if bodyHtml}<div class="body">{@html bodyHtml}</div>{/if}
 
@@ -39,8 +40,10 @@
 	{#if editable && draft}
 		<label class="edit-line">
 			<span>At higher levels</span>
-			<textarea class="text-field edit-body short" bind:value={draft.higher_level} placeholder={higherLevel}
-			></textarea>
+			<textarea
+				class="text-field edit-body short"
+				bind:value={draft.higher_level}
+				placeholder={higherLevel}></textarea>
 		</label>
 	{:else}
 		<div class="highlight">At higher levels — {higherLevel}</div>

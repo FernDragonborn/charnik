@@ -8,10 +8,12 @@
 	let { tallies }: { tallies: PreparedClassTally[] } = $props();
 </script>
 
-{#if tallies.length === 1}
-	Prepared <b>{tallies[0]!.count}</b> / {tallies[0]!.cap}
+{#if tallies.length === 1 && tallies[0]}
+	{@const only = tallies[0]}
+	Prepared <b>{only.count}</b> / {only.cap}
 {:else}
-	{#each tallies as t (t.classId)}<span class="prep-cls">{t.className} <b>{t.count}</b>/{t.cap}</span
+	{#each tallies as t (t.classId)}<span class="prep-cls"
+			>{t.className} <b>{t.count}</b>/{t.cap}</span
 		>{/each}
 {/if}
 

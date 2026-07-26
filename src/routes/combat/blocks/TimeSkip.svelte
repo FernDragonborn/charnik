@@ -21,7 +21,8 @@
 			type="button"
 			class="step"
 			onclick={() => combat.economy.advanceTime(rounds)}
-			title="Advance {rounds} round{rounds > 1 ? 's' : ''} and expire what times out">{label}</button
+			title="Advance {rounds} round{rounds > 1 ? 's' : ''} and expire what times out"
+			>{label}</button
 		>
 	{/each}
 </section>

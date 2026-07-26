@@ -151,7 +151,14 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 		character.play.inCombat = false;
 		character.play.effects = [
 			// a 10-round (1 min) Bless cast outside combat + an indefinite effect
-			{ iid: 'bless', label: 'Bless', effects: [], positive: true, durationRounds: 10, startedRound: 0 },
+			{
+				iid: 'bless',
+				label: 'Bless',
+				effects: [],
+				positive: true,
+				durationRounds: 10,
+				startedRound: 0
+			},
 			{ iid: 'mark', label: 'Mark', effects: [], positive: false }
 		];
 		combat.economy.advanceTime(1); // +1 round → 8 s in, Bless still up

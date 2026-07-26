@@ -88,7 +88,9 @@ export function sanitizeThemeTokens(tokens: unknown): Record<string, string> {
  *  Returns '' when the id is unsafe or nothing survived (so an empty theme injects nothing). Pure. */
 export function themeToCss(theme: CustomTheme): string {
 	if (!isSafeThemeId(theme.id)) return '';
-	const decls = Object.entries(sanitizeThemeTokens(theme.tokens)).map(([t, v]) => `\t--${t}: ${v};`);
+	const decls = Object.entries(sanitizeThemeTokens(theme.tokens)).map(
+		([t, v]) => `\t--${t}: ${v};`
+	);
 	return decls.length ? `[data-theme='${theme.id}'] {\n${decls.join('\n')}\n}` : '';
 }
 

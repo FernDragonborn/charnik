@@ -21,7 +21,11 @@ const okText = (body: string): FakeResponse => ({
 	text: () => Promise.resolve(body),
 	arrayBuffer: () => Promise.resolve(new TextEncoder().encode(body).buffer)
 });
-const okJson = (data: unknown): FakeResponse => ({ ok: true, status: 200, json: () => Promise.resolve(data) });
+const okJson = (data: unknown): FakeResponse => ({
+	ok: true,
+	status: 200,
+	json: () => Promise.resolve(data)
+});
 const notFound = (): FakeResponse => ({ ok: false, status: 404 });
 
 let fetchMock: ReturnType<typeof vi.fn>;

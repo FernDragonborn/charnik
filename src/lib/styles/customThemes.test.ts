@@ -1,10 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-	themeToCss,
-	buildThemesStylesheet,
-	isSafeThemeId,
-	type CustomTheme
-} from './customThemes';
+import { themeToCss, buildThemesStylesheet, isSafeThemeId, type CustomTheme } from './customThemes';
 
 const theme = (over: Partial<CustomTheme> = {}): CustomTheme => ({
 	id: 'ocean',
@@ -35,16 +30,16 @@ describe('themeToCss', () => {
 
 	it('accepts color-mix / var values', () => {
 		const css = themeToCss(
-			theme({ tokens: { 'color-good-line': 'color-mix(in srgb, var(--color-good) 40%, transparent)' } })
+			theme({
+				tokens: { 'color-good-line': 'color-mix(in srgb, var(--color-good) 40%, transparent)' }
+			})
 		);
 		expect(css).toContain('color-mix(in srgb, var(--color-good) 40%, transparent)');
 	});
 
 	// --- injection safety (the security contract) ---
 	it('drops a value that tries to close the block / inject a rule', () => {
-		const css = themeToCss(
-			theme({ tokens: { 'color-accent': 'red; } body { display:none' } })
-		);
+		const css = themeToCss(theme({ tokens: { 'color-accent': 'red; } body { display:none' } }));
 		expect(css).not.toContain('display:none');
 		expect(css).not.toContain('color-accent'); // the whole unsafe decl is dropped
 	});

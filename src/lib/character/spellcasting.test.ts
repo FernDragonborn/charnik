@@ -168,9 +168,7 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
 	});
 
 	it('a plain Fighter 3 (no EK subclass) still does not cast', () => {
-		const plain = make(
-			(c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 3 }])
-		);
+		const plain = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 3 }]));
 		expect(deriveSheet(plain, g).spellcasting.classes).toHaveLength(0);
 	});
 });
