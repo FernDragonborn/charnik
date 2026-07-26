@@ -24,7 +24,7 @@ describe('ContentMetaModal (browser)', () => {
 	it('shows the human fields to fill and the auto-fill FYI for the missing keys', async () => {
 		const issue = underfilledIssue();
 		expect(issue.missingHuman).toEqual(['source', 'license']);
-		render(ContentMetaModal, {
+		await render(ContentMetaModal, {
 			issues: [issue],
 			onFillAndSave: () => {},
 			onSkip: () => {},
@@ -39,7 +39,7 @@ describe('ContentMetaModal (browser)', () => {
 
 	it('Escape skips (dismiss without filling)', async () => {
 		const onSkip = vi.fn();
-		render(ContentMetaModal, {
+		await render(ContentMetaModal, {
 			issues: [underfilledIssue()],
 			onFillAndSave: () => {},
 			onSkip,

@@ -6,18 +6,18 @@ import EyeToggle from './EyeToggle.svelte';
 // a click, which the node/logic tests can't reach. One render per test (they share the page).
 describe('EyeToggle (browser)', () => {
 	it('is aria-pressed=true when on', async () => {
-		const screen = render(EyeToggle, { on: true, title: 'Show on sheet' });
+		const screen = await render(EyeToggle, { on: true, title: 'Show on sheet' });
 		await expect.element(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
 	});
 
 	it('is aria-pressed=false when off', async () => {
-		const screen = render(EyeToggle, { on: false });
+		const screen = await render(EyeToggle, { on: false });
 		await expect.element(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'false');
 	});
 
 	it('fires onclick when clicked', async () => {
 		const onclick = vi.fn();
-		const screen = render(EyeToggle, { on: false, onclick });
+		const screen = await render(EyeToggle, { on: false, onclick });
 		await screen.getByRole('button').click();
 		expect(onclick).toHaveBeenCalledOnce();
 	});

@@ -19,7 +19,7 @@ beforeAll(async () => {
 describe('HashDriftModal (browser)', () => {
 	it('lists the drifted files and updates only the checked ones', async () => {
 		const onUpdate = vi.fn();
-		render(HashDriftModal, { items, onUpdate, onSkip: () => {}, onNeverAsk: () => {} });
+		await render(HashDriftModal, { items, onUpdate, onSkip: () => {}, onNeverAsk: () => {} });
 		await expect.element(page.getByRole('dialog')).toBeInTheDocument();
 		await expect.element(page.getByText('spells_homebrew.csv')).toBeInTheDocument();
 		await expect.element(page.getByText('monsters_homebrew.csv')).toBeInTheDocument();
@@ -32,7 +32,7 @@ describe('HashDriftModal (browser)', () => {
 
 	it('Escape skips', async () => {
 		const onSkip = vi.fn();
-		render(HashDriftModal, { items, onUpdate: () => {}, onSkip, onNeverAsk: () => {} });
+		await render(HashDriftModal, { items, onUpdate: () => {}, onSkip, onNeverAsk: () => {} });
 		await page
 			.getByRole('dialog')
 			.element()
