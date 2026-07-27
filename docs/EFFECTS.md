@@ -35,16 +35,16 @@ play-state action model lives in [`ACTIONS.md`](ACTIONS.md), and the threat mode
 
 ### Module layout (per expressiveness layer)
 
-| File | Role |
-|---|---|
-| `token-parser.ts` | **L1** — `parseToken` (string→`ParsedEffect`), `EFFECT_KIND` vocab, `matchesTarget`, `splitGuard`, the `Recharge`/`Defense` types. |
-| `apply.ts` | The fold seam — `collectFacts` (tokens→typed `EffectFacts`), `applyEffects` (fold a stat), `matchesTarget` group fan-out, `mergeFacts`, the `TargetValidator`. |
-| `expression-parser.ts` | **L2** — formula string → AST. |
-| `expression-evaluator.ts` | **L2** — AST → value (integer OR dice term), over an `EffectCtx`. |
-| `dependency-graph.ts` | The ONE resolve stage — `resolveActiveEffects` (gather → guards → expand → dedupe → facts), in dependency order. |
-| `context.ts` | `makeExprContext` / `ctxOf` — the `ctx` a formula reads (build + play vars). |
-| `plugin-registry.ts` · `plugin-host.ts` · `plugin-sandbox.ts` · `plugin-store.svelte.ts` | **L3** — see `PLUGINS.md`. |
-| `suggest.ts` | "did you mean?" fuzzy hints for a typo'd token/target. |
+| File                                                                                     | Role                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `token-parser.ts`                                                                        | **L1** — `parseToken` (string→`ParsedEffect`), `EFFECT_KIND` vocab, `matchesTarget`, `splitGuard`, the `Recharge`/`Defense` types.                             |
+| `apply.ts`                                                                               | The fold seam — `collectFacts` (tokens→typed `EffectFacts`), `applyEffects` (fold a stat), `matchesTarget` group fan-out, `mergeFacts`, the `TargetValidator`. |
+| `expression-parser.ts`                                                                   | **L2** — formula string → AST.                                                                                                                                 |
+| `expression-evaluator.ts`                                                                | **L2** — AST → value (integer OR dice term), over an `EffectCtx`.                                                                                              |
+| `dependency-graph.ts`                                                                    | The ONE resolve stage — `resolveActiveEffects` (gather → guards → expand → dedupe → facts), in dependency order.                                               |
+| `context.ts`                                                                             | `makeExprContext` / `ctxOf` — the `ctx` a formula reads (build + play vars).                                                                                   |
+| `plugin-registry.ts` · `plugin-host.ts` · `plugin-sandbox.ts` · `plugin-store.svelte.ts` | **L3** — see `PLUGINS.md`.                                                                                                                                     |
+| `suggest.ts`                                                                             | "did you mean?" fuzzy hints for a typo'd token/target.                                                                                                         |
 
 ### Naming rule (token vs effect)
 
@@ -60,24 +60,24 @@ string[]`, `parseToken`, `splitGuard(raw)`); object-form identifiers say *effect
 A token is `kind:target[:value]` (`:` is STRUCTURAL — the delimiter and namespacing; an
 expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed set of kinds:
 
-| Kind | Form | Meaning |
-|---|---|---|
-| `flat_bonus` | `flat_bonus:<target>+<value>` | Additive contribution at the effect's layer (value may be an L2 expr or dice term). |
-| `set_override` | `set_override:<target>:<value>` (+ `floor`/`cap` modes) | Force a value; same-target sets combine by D&D "most potent wins" (`overriddenSetNotes`), never silent-stomp. `floor` = raise-to-at-least (Headband INT≥19), `cap` = clamp-down. |
-| `block_bonus` | `block_bonus:<target>` | RAW "can't benefit from any bonus to its `<target>`" (grappled/restrained block ALL speed bonuses): drops effect-borne positive adds; base + penalties survive. |
-| `halve` | `halve:<target>` | ×½ multiply (the ONE non-integer RAW factor — 2014 exhaustion speed/hp-max). Dedicated kind, not a generic multiply. Targets: `speed`, `hp_max`. |
-| `advantage` / `disadvantage` | `advantage:<target>` | Roll adv/dis (a fact + a note); `netAdvantage` cancels one-for-one. Passives take ±5. |
-| `auto_fail` / `auto_succeed` | `auto_fail:<target>` | Force a roll OUTCOME (paralyzed/stunned auto-fail STR & DEX saves) — not a die modifier. |
-| `reroll` | `reroll:<target>:<threshold>` | Reroll a die landing ≤ threshold once (GWF ≤2). |
-| `min_die` | `min_die:<target>:<floor>` | Treat a die below floor AS floor (Reliable Talent d20→10). |
-| `grant_proficiency` | `grant_proficiency:[expertise:]<target>` | Grant proficiency/expertise as ONE ladder level (`none/half/proficient/expertise`). |
-| `grant_resource` | `grant_resource:<id>:<max>:<recharge>` | Define a resource pool (rage/ki/N-per-day…), `recharge ∈ short/long/other`. `max` is cost-capped (`MAX_RESOURCE_MAX`). |
-| `grant_roll` | `grant_roll:<id>:<expr>` | A named feature-granted rollable (Sneak Attack `Nd6`, Bardic Inspiration die); resolves to a dice formula → the DiceTray seam. |
-| `resist_immune` | `resist_immune:<type>` (+ resist/immune/vulnerable) | Damage defense; applied immune→0 / resist→½ / vulnerable→×2 before temp-HP soak. |
-| `apply_condition` | `apply_condition:<id>` | Expand a condition row's own tokens ONE level (the condition's `effects` flow + register `has_condition.<id>`). |
-| `hp_max` | `flat_bonus:hp_max+<value>` | Max-HP contribution (Toughness/Aid), re-folded on a manual base. |
-| `note` | `note:<free text>` | DISPLAY-ONLY: a mechanic the engine can't model on a single-character sheet (attacks AGAINST you, auto-crit, sense/relational). Never folds, matches no target; shown distinctly. `;` separates a list. |
-| `plugin` | `plugin:<namespace>:<handlerName>[:<args>]` | L3 handler REFERENCE (never code). Resolved by the derive pre-pass through the registry (PLUGINS.md). |
+| Kind                         | Form                                                    | Meaning                                                                                                                                                                                                 |
+| ---------------------------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flat_bonus`                 | `flat_bonus:<target>+<value>`                           | Additive contribution at the effect's layer (value may be an L2 expr or dice term).                                                                                                                     |
+| `set_override`               | `set_override:<target>:<value>` (+ `floor`/`cap` modes) | Force a value; same-target sets combine by D&D "most potent wins" (`overriddenSetNotes`), never silent-stomp. `floor` = raise-to-at-least (Headband INT≥19), `cap` = clamp-down.                        |
+| `block_bonus`                | `block_bonus:<target>`                                  | RAW "can't benefit from any bonus to its `<target>`" (grappled/restrained block ALL speed bonuses): drops effect-borne positive adds; base + penalties survive.                                         |
+| `halve`                      | `halve:<target>`                                        | ×½ multiply (the ONE non-integer RAW factor — 2014 exhaustion speed/hp-max). Dedicated kind, not a generic multiply. Targets: `speed`, `hp_max`.                                                        |
+| `advantage` / `disadvantage` | `advantage:<target>`                                    | Roll adv/dis (a fact + a note); `netAdvantage` cancels one-for-one. Passives take ±5.                                                                                                                   |
+| `auto_fail` / `auto_succeed` | `auto_fail:<target>`                                    | Force a roll OUTCOME (paralyzed/stunned auto-fail STR & DEX saves) — not a die modifier.                                                                                                                |
+| `reroll`                     | `reroll:<target>:<threshold>`                           | Reroll a die landing ≤ threshold once (GWF ≤2).                                                                                                                                                         |
+| `min_die`                    | `min_die:<target>:<floor>`                              | Treat a die below floor AS floor (Reliable Talent d20→10).                                                                                                                                              |
+| `grant_proficiency`          | `grant_proficiency:[expertise:]<target>`                | Grant proficiency/expertise as ONE ladder level (`none/half/proficient/expertise`).                                                                                                                     |
+| `grant_resource`             | `grant_resource:<id>:<max>:<recharge>`                  | Define a resource pool (rage/ki/N-per-day…), `recharge ∈ short/long/other`. `max` is cost-capped (`MAX_RESOURCE_MAX`).                                                                                  |
+| `grant_roll`                 | `grant_roll:<id>:<expr>`                                | A named feature-granted rollable (Sneak Attack `Nd6`, Bardic Inspiration die); resolves to a dice formula → the DiceTray seam.                                                                          |
+| `resist_immune`              | `resist_immune:<type>` (+ resist/immune/vulnerable)     | Damage defense; applied immune→0 / resist→½ / vulnerable→×2 before temp-HP soak.                                                                                                                        |
+| `apply_condition`            | `apply_condition:<id>`                                  | Expand a condition row's own tokens ONE level (the condition's `effects` flow + register `has_condition.<id>`).                                                                                         |
+| `hp_max`                     | `flat_bonus:hp_max+<value>`                             | Max-HP contribution (Toughness/Aid), re-folded on a manual base.                                                                                                                                        |
+| `note`                       | `note:<free text>`                                      | DISPLAY-ONLY: a mechanic the engine can't model on a single-character sheet (attacks AGAINST you, auto-crit, sense/relational). Never folds, matches no target; shown distinctly. `;` separates a list. |
+| `plugin`                     | `plugin:<namespace>:<handlerName>[:<args>]`             | L3 handler REFERENCE (never code). Resolved by the derive pre-pass through the registry (PLUGINS.md).                                                                                                   |
 
 ### Targets
 
@@ -125,6 +125,7 @@ class?"). Boolean flags start with `is_`: `is_bloodied`, `is_raging`, `is_concen
 `is_wearing_armor`, `is_wearing_shield`.
 
 **Full var set:**
+
 - **Build/derived numbers:** `level`, `proficiency_bonus`, `<ability>_mod`/`<ability>_score`,
   `class_level.<id>`, `spellcasting_mod` (the active/carrying class's casting stat), `base_speed`
   (species walking speed, pre-effect).
