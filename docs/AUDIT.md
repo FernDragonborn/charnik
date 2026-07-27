@@ -642,7 +642,7 @@ Baseline is HEALTHY: strict + exactOptionalPropertyTypes + noUncheckedIndexedAcc
 clean, zero `any`/`ts-ignore` in src, typed loader (discriminated LoadedRow) real. The gaps
 are the "last untyped layer" — places the compiler is blindfolded on top of good types:
 
-- [~] **G1 · `String()`/`Number()` coercions over already-typed row data.** DONE 2026-07-27 for
+- [x] **G1 · `String()`/`Number()` coercions over already-typed row data.** DONE 2026-07-27 for
   the `Record<string,unknown>`-era leftovers — every coercion over a NARROWED `row.data`
   (`LoadedRowOf<T>`, fully typed): `helpers.ts` (`spellRow`, `computeAttacks`, `buildSpellGroups`),
   `spellcasting.ts` (`slotTable`, `castingCounts`), and `detail.ts` `buildSpell`. The worst offender
@@ -657,15 +657,23 @@ are the "last untyped layer" — places the compiler is blindfolded on top of go
   `build/blocks/AbilityScoresCard.svelte` + `FeatsCard.svelte`; `ABILITY_IDS`/`ABILITIES` is already
   `as const`, so `#each ABILITIES as ab` gives `ab: Ability` — the casts were pure noise. Removed +
   dropped the now-unused `Ability` imports.
-- [ ] **G3 · Character-schema records looser than the domain** — DEFERRED (needs a design call, not
-  a mechanical fix). `abilityBoosts`/`spellSlotsSpent` are PARTIAL maps (only touched keys present).
-  Tightening the zod key to `z.enum(ABILITIES)` / slot-union infers a NON-partial `Record<K,V>`, and
-  under `noUncheckedIndexedAccess` a known literal key then reads as `V` (no `| undefined`) — a LIE
-  for a partial map (type says defined, runtime absent). A correct fix = `Partial<Record<K,V>>` typing
-  + migration tolerance for old-save string keys (`z.record(z.string(), …)` at parse, branded key
-  type for reads). `panelColumns` → `PanelId[][]` would reject old saves with retired panel ids. Park
-  until the partial-record encoding is decided.
-- [~] **G4 · Seams that downgrade typed data.** DONE 2026-07-27 for the real offender:
+- [x] **G3 · Character-schema records looser than the domain** — RESOLVED 2026-07-27 as **WON'T-DO
+  (deliberate; loose `z.record(z.string())` is the correct partial-map encoding).** `abilityBoosts`/
+  `spellSlotsSpent`/`hitDiceSpent`/`resourcesSpent`/`panelColumns` are PARTIAL maps (only touched keys
+  present). The current typing is already honest and safe: under `noUncheckedIndexedAccess`,
+  `Record<string, V>` reads an index as `V | undefined` — exactly right for a map where the key may be
+  absent — and every read site already guards with `?? 0`. So there is **no bug and no unsafe read**
+  to fix. Tightening the zod key to `z.enum(ABILITIES)`/a slot-union would make TS infer a NON-partial
+  `Record<K,V>`, so a known literal key reads as `V` (no `| undefined`) — a LIE for a partial map
+  (type says defined, runtime absent), i.e. the naïve tightening makes the types *less* truthful. The
+  only correct tightening (`Partial<Record<K,V>>` + `z.record(z.string())` kept at parse for old-save
+  key tolerance + branded key type for reads, and `panelColumns` deliberately NOT branded so retired
+  panel ids don't reject old saves) is real work + migration care for a near-zero payoff: the keys are
+  never authored by hand — they come from `ABILITIES`/slot-level numbers that are already typed where
+  they're formed. So the only thing a brand would catch (a literal-key typo like `abilityBoosts['xyz']`)
+  doesn't happen in practice. **Decision: keep the loose string keys; do not brand.** Recorded here (like
+  the "Intentional non-duplicates" box in §F) so a future typing pass doesn't "tighten" it back.
+- [x] **G4 · Seams that downgrade typed data.** DONE 2026-07-27 for the real offender:
   `effectHint(d: Record<string, unknown>)` → `effectHint(d: RowData<'spell'>)` (its one caller passes
   a narrowed spell `row.data`). `detail.ts` `localized()` KEPT as a bag on purpose — it does
   locale-keyed column access (`d[`${base}_${locale}`]`) where the locale is a runtime value, so the

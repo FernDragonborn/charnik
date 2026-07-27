@@ -16,7 +16,9 @@ The app is **built and shipping** (Tauri desktop releases on GitHub + a web demo
 GitHub Pages): content pipeline, character build/play views, compendium, homebrew
 authoring, effects engine, i18n — with 300+ Vitest tests. **`docs/PLAN.md` is the
 authoritative spec** (index) and tracks what's done vs open (roadmap ticks, UBUG/REL/DEP
-items); companions: **`docs/TESTING.md`**, **`docs/SECURITY.md`**, and `docs/FRONTEND.md`.
+items); companions: **`docs/TESTING.md`**, **`docs/SECURITY.md`**, `docs/FRONTEND.md`, and
+**`docs/EFFECTS.md`** (the normative effects-engine spec — L1 vocab, L2 grammar/semantics, the
+derive pipeline; `docs/PLUGINS.md` + `docs/ACTIONS.md` are its L3/action companions).
 **`docs/AI-CONVENTIONS.md`** is the house working-rules — the settled "how we do things here"
 (data/SRD fidelity, typing & code-quality bar, CSS/theming, testing strategy, refactor
 mechanics, git & tooling hygiene, working style). Read it before coding; it complements these
