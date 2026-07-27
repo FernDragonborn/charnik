@@ -9,6 +9,7 @@ import { MemoryStorage } from '$lib/storage/memory';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import { build } from './state.svelte';
+import { toggleSource } from '$lib/content/sources.svelte';
 
 const S = 'SRD 5.2.1';
 
@@ -109,5 +110,22 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		const out = build.assembled;
 		expect(out.build.name).toBeTruthy();
 		expect(out.build.classes).toEqual([]);
+	});
+
+	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {
+		build.hydrate(savedCharacter()); // picks class = wizard (source S); fighter stays unpicked
+		const wizard = `class:${S}:wizard`;
+		const fighter = `class:${S}:fighter`;
+		expect(build.classList.map((r) => r.effectiveId)).toEqual(
+			expect.arrayContaining([wizard, fighter])
+		);
+		try {
+			toggleSource(S); // user disables the whole SRD source AFTER building
+			const ids = build.classList.map((r) => r.effectiveId);
+			expect(ids).toContain(wizard); // picked → kept, still visible + re-pickable
+			expect(ids).not.toContain(fighter); // unpicked → filtered as normal
+		} finally {
+			toggleSource(S); // restore the shared reactive source config for the other tests
+		}
 	});
 });

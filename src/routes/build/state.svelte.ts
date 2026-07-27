@@ -281,10 +281,40 @@ class BuildVM {
 	// tag, plus the losing side of a resolved collision) is applied at this one choke point — a
 	// disabled row must not be offerable for a NEW build, same as it's hidden from the compendium.
 	// Reactive: isRowActive reads the reactive source config, so a live toggle re-derives the lists.
+	/** RV3: the refs currently picked for a content type. `list()` keeps these even when their source
+	 *  is disabled, so a selection the user made BEFORE turning a source off never vanishes from its own
+	 *  picker (and stays re-pickable) — mirroring how the spellbook keeps the character's own spells
+	 *  regardless of the source filter. Refs are stored as `effectiveId` (the picker option values). */
+	private selectedIdsFor(type: ContentType): Set<string> {
+		const d = this.draft;
+		const ids: (string | null)[] =
+			type === 'species'
+				? [d.speciesId]
+				: type === 'species_option'
+					? [d.speciesOptionId]
+					: type === 'background'
+						? [d.backgroundId]
+						: type === 'class'
+							? d.classes.map((c) => c.classId)
+							: type === 'subclass'
+								? d.classes.map((c) => c.subclassId)
+								: type === 'feat'
+									? Object.values(d.slotFeats)
+									: type === 'language'
+										? d.selectedLanguages
+										: type === 'item'
+											? d.inventory.map((i) => i.item)
+											: type === 'spell'
+												? d.selectedSpells
+												: [];
+		return new Set(ids.filter((x): x is string => !!x));
+	}
+
 	private list<T extends ContentType>(type: T): LoadedRowByType<T>[] {
 		if (!this.graph) return [];
+		const keep = this.selectedIdsFor(type); // RV3: never drop a currently-picked ref
 		return [...this.graph.list(type, { system: this.draft.system })]
-			.filter((r) => isRowActive(r))
+			.filter((r) => isRowActive(r) || keep.has(r.effectiveId))
 			.sort((a, b) => rowName(a).localeCompare(rowName(b)));
 	}
 	speciesList = $derived(this.list('species'));
