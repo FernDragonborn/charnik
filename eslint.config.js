@@ -12,7 +12,8 @@ export default ts.config(
 	...svelte.configs.prettier,
 	{
 		languageOptions: {
-			globals: { ...globals.browser, ...globals.node }
+			// __APP_VERSION__ is a Vite `define` compile-time constant (see vite.config.ts / app.d.ts).
+			globals: { ...globals.browser, ...globals.node, __APP_VERSION__: 'readonly' }
 		},
 		rules: {
 			// runtime-tagged unused (leading _) is intentional
@@ -40,10 +41,11 @@ export default ts.config(
 	},
 	{
 		// ARCHITECTURE GATE (PLAN invariant): Tauri is imported ONLY behind the Storage seam
-		// (lib/storage/tauri.ts) and the desktop-only updater module. Everything else talks to the
-		// `Storage` interface / store functions, so the web + test builds never touch Tauri.
+		// (lib/storage/tauri.ts), the desktop-only updater module, and the diagnostics logger (which
+		// dynamically imports tauri-plugin-log). Everything else talks to the `Storage` interface /
+		// store functions, so the web + test builds never touch Tauri.
 		files: ['src/**'],
-		ignores: ['src/lib/storage/tauri.ts', 'src/lib/update/**'],
+		ignores: ['src/lib/storage/tauri.ts', 'src/lib/update/**', 'src/lib/diag/**'],
 		rules: {
 			'no-restricted-imports': [
 				'error',
@@ -104,6 +106,16 @@ export default ts.config(
 			// machine-enforce the "group related args into ONE typed object, don't scatter params"
 			// house rule ([[model-state-as-typed-objects]]); 5+ positional params is the smell.
 			'max-params': ['warn', 4]
+		}
+	},
+	{
+		// All app logging goes through the `$lib/diag` facade (DIAG-1), never raw `console` — so a bug
+		// report actually captures something and the desktop file sink sees it. The facade itself is the
+		// one allowed console site (its dev/web mirror, already inline-disabled). Tests are exempt.
+		files: ['src/**'],
+		ignores: ['src/lib/diag/**', '**/*.test.ts'],
+		rules: {
+			'no-console': 'error'
 		}
 	},
 	{

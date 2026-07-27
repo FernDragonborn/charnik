@@ -12,6 +12,7 @@
 		"opener:allow-reveal-item-in-dir",
 		"updater:default",
 		"process:default",
+		"log:default",
 		"fs:allow-appdata-read-recursive",
 		"fs:allow-appdata-write-recursive",
 		"fs:allow-appdata-meta-recursive",

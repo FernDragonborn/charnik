@@ -150,7 +150,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (39)
+## Shared components (40)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -164,6 +164,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ContentMetaModal** | `issues`, `onFillAndSave`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal that reviews content files with missing metadata (DATA-VER-1). |
 | **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` |  |
 | **DataMigrationDialog** | `tone`, `title`, `detail`, `note`, `onclose` | Persistent result dialog for a data-folder move. |
+| **DiagnosticsModal** | `onDismiss` | The bug-report diagnostics step (audit DIAG-1). |
 | **DialogShell** | `titleId`, `title`, `subtitle`, `width`, `badge`, `onDismiss`, `children` | The shared attention-dialog shell: full-screen backdrop + the centred `.dialog` panel + the |
 | **DiceIcon** | `size` | The dice-roll glyph: a d20 (icosahedron, top-down) with a small d4 (tetrahedron) tucked at its |
 | **DraftsPane** | `graph`, `onResume`, `onResolveOrphans` | Pending-drafts list — the full-width pane that replaces the editing block in the compendium right |
@@ -280,7 +281,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (61 modules)
+## Library functions & types (63 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -587,6 +588,25 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/demo/sheet.ts`
 
 - `function demoCharacter`
+
+### `src/lib/diag/bundle.ts`
+
+- `interface CharacterSummary` — A redacted, shareable summary of the active character — build shape only, zero free-text.
+- `interface DiagnosticsInput`
+- `function summarizeCharacter` — Reduce a character to build-shape identity only.
+- `interface DiagnosticsBundle` — The machine-readable bundle object.
+- `function buildDiagnostics`
+- `function formatBundle` — Pretty JSON for the clipboard — fenced so it pastes cleanly into a GitHub issue body.
+
+### `src/lib/diag/logger.ts`
+
+- `enum LogLevel` — Syslog-ish levels, matching the Tauri plugin.
+- `interface LogEntry` — One recorded log line.
+- `const logger` — The app-wide logger.
+- `function getLogTail` — The recent log tail (newest last), for the bug-report bundle.
+- `function initDiag` — Wire the desktop file sink.
+- `function openLogDir` — Desktop only: reveal the rotating log-file folder (OS app-log dir) in the file manager, so a user * can attach the fu…
+- `function captureGlobalErrors` — Route otherwise-lost uncaught errors + unhandled rejections into the logger.
 
 ### `src/lib/drafts/store.ts`
 
@@ -918,4 +938,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 39 components · 503 exports across 72 modules · 31 duplicate suspects · generated in 351ms._
+_45 tokens · 61 global classes · 40 components · 516 exports across 74 modules · 31 duplicate suspects · generated in 186ms._

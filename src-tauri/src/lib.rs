@@ -146,13 +146,30 @@ pub fn run() {
             apply_saved_data_dir
         ])
         .setup(|app| {
-            if cfg!(debug_assertions) {
-                app.handle().plugin(
-                    tauri_plugin_log::Builder::default()
-                        .level(log::LevelFilter::Info)
-                        .build(),
-                )?;
-            }
+            // Diagnostics logging (audit DIAG-1): a rotating file in the OS app-log dir (Win
+            // %LOCALAPPDATA%\{bundleId}\logs) plus Stdout and the Webview devtools. Verbose in dev
+            // (Debug), quiet in release (Info+). The JS `$lib/diag` facade forwards through this;
+            // `attachConsole()` on the JS side also routes third-party console here.
+            app.handle().plugin(
+                tauri_plugin_log::Builder::new()
+                    .level(if cfg!(debug_assertions) {
+                        log::LevelFilter::Debug
+                    } else {
+                        log::LevelFilter::Info
+                    })
+                    .target(tauri_plugin_log::Target::new(
+                        tauri_plugin_log::TargetKind::Stdout,
+                    ))
+                    .target(tauri_plugin_log::Target::new(
+                        tauri_plugin_log::TargetKind::Webview,
+                    ))
+                    .target(tauri_plugin_log::Target::new(
+                        tauri_plugin_log::TargetKind::LogDir { file_name: None },
+                    ))
+                    .max_file_size(5_000_000 /* 5 MB per file before rotating */)
+                    .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepAll)
+                    .build(),
+            )?;
             Ok(())
         })
         .run(tauri::generate_context!())

@@ -83,7 +83,25 @@
 	},
 	"feedback": {
 		"link": "🐞 Found a bug?",
-		"title": "Report a bug or leave feedback on GitHub"
+		"title": "Report a bug or leave feedback on GitHub",
+		"diag": {
+			"title": "Report a bug",
+			"subtitle": "Copy this diagnostics snapshot and paste it into your GitHub issue. It carries no names, notes, or personal text — only version, platform, and a short technical log.",
+			"version": "Version",
+			"platform": "Platform",
+			"system": "Active system",
+			"locale": "Language",
+			"character": "Active character",
+			"noCharacter": "none",
+			"content": "Content issues",
+			"logLines": "{count} log line(s) captured",
+			"copy": "📋 Copy diagnostics",
+			"copied": "Diagnostics copied — paste it into your GitHub issue",
+			"copyFailed": "Couldn’t copy to clipboard",
+			"openIssue": "Open GitHub issue ↗",
+			"openLogFolder": "Open log folder",
+			"close": "Close"
+		}
 	},
 	"demo": {
 		"badge": "Demo · in active development",

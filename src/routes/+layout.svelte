@@ -38,8 +38,14 @@
 		installUpdate,
 		simulateUpdateAvailable
 	} from '$lib/update/updater.svelte';
+	import { initDiag, captureGlobalErrors, logger } from '$lib/diag/logger';
+	import DiagnosticsModal from '$lib/components/DiagnosticsModal.svelte';
 
 	let { children } = $props();
+
+	// The bug-report flow (audit DIAG-1): the "Found a bug?" chip opens this instead of jumping straight
+	// to GitHub, so the user has a diagnostics bundle to attach.
+	let showDiagnostics = $state(false);
 
 	// The ⟳ button does a no-flash refresh: re-read content + roster from disk into their reactive
 	// stores, so every view re-derives without a page reload. F5 keeps the familiar hard reload
@@ -106,7 +112,11 @@
 	// seeds to the chosen folder; a saved custom folder is re-granted fs-scope each start. Web/headless
 	// just load. Cached — a no-op if a page already loaded it.
 	let firstRunDefault = $state<string | null>(null); // non-null → show the first-run picker
+	let stopErrorCapture: (() => void) | null = null;
 	onMount(async () => {
+		void initDiag(); // wire the desktop file sink (no-op on web); ring buffer works immediately
+		stopErrorCapture = captureGlobalErrors(); // route uncaught errors/rejections into the logger
+		logger.info('app started', { version: __APP_VERSION__, platform: detectPlatform() });
 		const flash = takeFlash(); // a success note stashed before a reload (e.g. data-folder move)
 		if (flash) toast.success(flash);
 		void checkForUpdate(); // fire-and-forget; self-guards to desktop, never blocks the load
@@ -127,7 +137,10 @@
 			firstRunDefault = await defaultDataDir(); // first run → show picker, hold content load
 		}
 	});
-	onDestroy(stopContentWatcher);
+	onDestroy(() => {
+		stopContentWatcher();
+		stopErrorCapture?.();
+	});
 
 	/** Reconcile custom themes with the data dir (files are the source of truth; a first launch after
 	 *  the localStorage-only version migrates the cache to files). Best-effort. */
@@ -204,15 +217,14 @@
 			</a>
 		{/each}
 	</nav>
-	<a
+	<button
+		type="button"
 		class="feedback"
-		href="https://github.com/FernDragonborn/charnik/issues"
-		target="_blank"
-		rel="noopener noreferrer"
+		onclick={() => (showDiagnostics = true)}
 		title={$_('feedback.title')}
 	>
 		{$_('feedback.link')}
-	</a>
+	</button>
 	<div class="chips">
 		<LangSwitcher />
 		<button type="button" class="chip" onclick={toggleTheme} title={$_('settings.theme')}>
@@ -278,6 +290,10 @@
 {/if}
 
 <CommandPalette />
+
+{#if showDiagnostics}
+	<DiagnosticsModal onDismiss={() => (showDiagnostics = false)} />
+{/if}
 
 <!-- DATA-VER-1 startup review: drift first, then missing-metadata. Confirm actions do the write-back
      (task 6); for now they dismiss for the session. Shipped SRD carries full metadata, so a clean
@@ -349,6 +365,8 @@
 		font-size: var(--font-size-sm);
 		white-space: nowrap;
 		text-decoration: none;
+		cursor: pointer;
+		background: transparent;
 		color: var(--color-accent-bright);
 		border: 1px solid var(--color-accent);
 		border-radius: var(--radius-sm);

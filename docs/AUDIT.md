@@ -1131,7 +1131,20 @@ speculation). Filed as the input list for a follow-up pass — none is a data-lo
 Researched the open-source standard first (Tauri's official log plugin + general frontend logging
 practice); this leans on it rather than a DIY logger. User: plan only, build later (own session).
 
-- [ ] **DIAG-1 · Diagnostics logging + bug-report bundle.** **Gap today:** the app has NO app/error
+- [x] **DIAG-1 · Diagnostics logging + bug-report bundle.** DONE 2026-07-27 (all four steps landed +
+  verified: 875 tests, lint/svelte-check green, web build clean = plugin stays dynamic, modal
+  screenshotted). Shipped: `$lib/diag/logger.ts` facade (levels + 500-entry ring, dynamic-imports
+  `@tauri-apps/plugin-log` on desktop → rotating LogDir/Stdout/Webview, `attachConsole()` for
+  third-party console; `src/lib/diag/**` added to the eslint Tauri-fence); global `window.onerror` +
+  `unhandledrejection` capture wired in `+layout`; pure PII-free `$lib/diag/bundle.ts` (build-shape
+  character summary — id/classes/level/counts, never name/notes/photo — with a redaction test);
+  `DiagnosticsModal.svelte` (DialogShell) replacing the bare GitHub link, primary = **Copy
+  diagnostics** to clipboard + a short GitHub-issue skeleton link + desktop "open log folder"; Rust
+  `tauri_plugin_log::Builder` reconfigured (release Info / dev Debug, 5 MB rotation KeepAll) + capability
+  `log:default`; `no-console` eslint rule (allowlist `$lib/diag/**` + tests) so all logging routes
+  through the facade; `__APP_VERSION__` Vite define stamps the bundle. **Phase-2 backlog (deferred):**
+  persist the web ring buffer to IndexedDB/OPFS so a crash/reload survives.
+  **Original gap (for history):** the app had NO app/error
   logging at all (`grep`: 0 `console.*`, 0 logger in `src/`), and "Found a bug?" (`+layout.svelte:209`)
   is a bare link to GitHub issues — a user who hits a bug can only describe it in prose, with **nothing
   captured to attach**, and uncaught errors vanish. (Distinct from `characters/<slug>/log.jsonl`, which
