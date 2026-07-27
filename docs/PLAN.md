@@ -2409,8 +2409,6 @@ curated global CSS · scoped specifics — so logic doesn't pile into one file a
   states** (+ a populated Bard-L5 render checked by eye), lint green.
 - [ ] Audit the remaining big `.svelte`/`.svelte.ts` files one at a time (compendium, spellbook,
   EditContentForm, CombatMenus) and append their findings here before touching code.
-- [ ] Audit the remaining big `.svelte`/`.svelte.ts` files one at a time (compendium, spellbook,
-  EditContentForm, CombatMenus) and append their findings here before touching code.
 
 ### Compendium-editor refactor set (planned 2026-07-09)
 
