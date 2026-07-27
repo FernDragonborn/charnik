@@ -2407,8 +2407,22 @@ curated global CSS · scoped specifics — so logic doesn't pile into one file a
   scoped lookalikes — the css-hoist collision the combat split dodged with scoped copies. Card-LOCAL
   CSS stays scoped per block. Verified: svelte-check 0, 865 tests, **0px shot.mjs drift on all 14
   states** (+ a populated Bard-L5 render checked by eye), lint green.
-- [ ] Audit the remaining big `.svelte`/`.svelte.ts` files one at a time (compendium, spellbook,
-  EditContentForm, CombatMenus) and append their findings here before touching code.
+- [x] **`PanelCard.svelte` (1075 lines — the only >1k-line file, so the strongest split target) —
+  DONE (2026-07-27).** It was a dispatcher: a shared collapsible head + five self-contained `pid`
+  bodies. Now a thin dispatcher (`PanelCard` = head + `{#if !collapsed}` → `<SkillsPanel>` / `<Attacks
+  Panel>` / `<ActionsPanel>` / `<EffectsPanel>` / `<SpellsPanel>`) composing `combat/blocks/panels/*`;
+  `EffectsPanel` took the duration-menu / info-expand local state + the per-row snippet + the
+  `EffectDurationMenu` mount that only it used. CSS partition: the `.combat-row` family (shared by the
+  Attacks + Actions panels, a unique combat name like the already-global `.combat-bar`) was **hoisted
+  to global `styles/components.css`** (grep-verified single-user before hoist); every other panel's CSS
+  is byte-for-byte scoped in its own component. Verified: svelte-check 0, 865 tests, **0px shot.mjs
+  drift on all 14 states** (the combat demo exercises all five panels — skills/attacks/actions/effects
+  w/ Bless/spells), lint green.
+- [ ] Audit the remaining big `.svelte`/`.svelte.ts` files one at a time (compendium 849, EditContent
+  Form 759, CombatMenus 756, and the pure `combat/helpers.ts` 909 / `character/derive.ts` 892) and
+  append findings before touching code. NB all are now UNDER the 1k-line guideline (PanelCard was the
+  only violator, now split); the pure/type-guarded refactor seam is otherwise "exhausted" (see the
+  2026-07-07 note), so these are optional polish, not a correctness/size gate.
 
 ### Compendium-editor refactor set (planned 2026-07-09)
 

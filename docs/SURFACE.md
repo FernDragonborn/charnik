@@ -41,7 +41,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
-- `PIP_CAP` ×2 — src/routes/combat/blocks/PanelCard.svelte · src/routes/combat/blocks/ResourceBar.svelte
+- `PIP_CAP` ×2 — src/routes/combat/blocks/ResourceBar.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `STORAGE_KEY` ×2 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts
@@ -82,7 +82,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (56)
+## Global CSS classes (61)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -96,6 +96,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.chevron` | components.css |  |
 | `.chip` | components.css | --- chip: small mono bordered toggle (topbar system/theme/lang, filters) --- |
 | `.combat-bar` | components.css | --- combat bar: the horizontal surface strip above the panel grid (Turnbar, ResourceBar, TimeSkip all shared this ide… |
+| `.combat-row` | components.css | --- combat action/attack row: the two-line list row shared by the Attacks + Actions panels (name + right-aligned hint… |
+| `.combat-row-desc` | components.css |  |
+| `.combat-row-hint` | components.css |  |
+| `.combat-row-marker` | components.css |  |
 | `.count-pill` | components.css | The "N of M" counter beside an attention-dialog title — one warning-toned pill shared by every multi-item review dial… |
 | `.detail-body` | components.css | --- content-detail layout (WikiDetail render + EditContentForm edit) --- |
 | `.detail-eyebrow` | components.css | the two-ended article eyebrow (label left, edition/type right) shared by the spell + monster heads; the `.monster-typ… |
@@ -130,6 +134,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
 | `.primary` | components.css |  |
+| `.row-name` | components.css |  |
 | `.sec-head` | components.css | --- settings-tab section chrome (shared by every Settings panel: Content-health / Sources / Collisions) — one heading… |
 | `.sec-note` | components.css |  |
 | `.sectlab` | components.css | section label (with trailing rule) |
@@ -913,4 +918,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 56 global classes · 39 components · 503 exports across 72 modules · 31 duplicate suspects · generated in 300ms._
+_45 tokens · 61 global classes · 39 components · 503 exports across 72 modules · 31 duplicate suspects · generated in 350ms._

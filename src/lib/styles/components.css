@@ -310,6 +310,58 @@
 	color: var(--color-text-muted);
 }
 
+/* --- combat action/attack row: the two-line list row shared by the Attacks + Actions panels
+   (name + right-aligned hint on line 1, muted desc + right marker on line 2). A unique combat name
+   (like `.combat-bar` above), so it lives global instead of duplicated across the two panel
+   components split out of PanelCard. `.row-name` here is scoped by the `.combat-row` ancestor, so it
+   never touches the spell/effect panels' own `.row-name`. --- */
+.combat-row {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 1px 10px;
+	padding: 8px 9px;
+	margin: 0 -9px;
+	border-radius: 9px;
+	cursor: pointer;
+	width: calc(100% + 18px);
+	background: transparent;
+	border: 0;
+	color: var(--color-text);
+	text-align: left;
+}
+.combat-row + .combat-row {
+	box-shadow: 0 -1px 0 var(--color-border);
+}
+.combat-row:hover {
+	background: var(--color-surface-2);
+	box-shadow: none;
+}
+.combat-row:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+.combat-row .row-name {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: var(--font-size-sm);
+}
+.combat-row .combat-row-hint {
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: var(--font-size-sm);
+	color: var(--color-resource);
+	justify-self: end;
+}
+.combat-row .combat-row-desc {
+	font-family: var(--font-mono);
+	font-size: var(--font-size-xs);
+}
+.combat-row .combat-row-marker {
+	font-size: var(--font-size-xs);
+	color: var(--color-text-muted);
+	justify-self: end;
+}
+
 /* --- dialog shell: full-screen dark-backdrop modal (content-review pop-ups) ---
    (only the `.dialog` container's WIDTH is set per-modal — a scoped `.dialog { width }` in the
    component overrides this; everything else is shared) */
