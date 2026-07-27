@@ -1,25 +1,21 @@
 <script lang="ts">
-	// Anchored dropdown menus (dice tray / roll builder, add-effect, pin-skills, roll log,
-	// show/hide, temp HP, condition). Reads the shared `combat` view-model.
+	// Anchored dropdown menus dispatcher (temp HP, level-up, add-effect, custom-effect, show/hide,
+	// pin-skills, spellbook, condition). The heavier dice-tray + roll-log bodies are their own
+	// components under menus/. Reads the shared `combat` view-model.
 	import { combat } from './state.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
+	import DiceTray from './menus/DiceTray.svelte';
+	import RollLog from './menus/RollLog.svelte';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
-	import { signed, titleCase, ABIL, ABILITY_NAME, DICE, MOD_TARGETS } from '$lib/combat/helpers';
+	import { titleCase, ABIL, ABILITY_NAME, MOD_TARGETS } from '$lib/combat/helpers';
 
 	const overlay = $derived(combat.overlay);
-	const rollSrc = $derived(combat.tray.rollSrc);
-	const dice = $derived(combat.tray.dice);
-	const rollAdvantage = $derived(combat.tray.rollAdvantage);
-	const rollMod = $derived(combat.tray.rollMod);
-	const rollExpr = $derived(combat.tray.rollExpr);
-	const log = $derived(combat.tray.log);
 	const actions = $derived(combat.actions);
 	const hiddenActions = $derived(combat.hiddenActions);
 	const passiveSkills = $derived(combat.passiveSkills);
 	const conditionList = $derived(combat.conditionList);
 	const character = $derived(combat.character);
 	const { setTempHp, addEffect, addCustomModifier, togglePassive } = combat;
-	const { bumpDie, doRoll } = combat.tray; // roll subsystem lives on combat.tray now
 
 	// Keep the dropdown inside the viewport: after it renders, if it would run off the bottom (or
 	// top) edge, shift it up/down so it fits. `overlay.top` is in document coords (button bottom +
@@ -58,59 +54,7 @@
 			: `right:${overlay.right}px`}"
 	>
 		{#if overlay.kind === 'dice'}
-			<div class="tray">
-				{#if rollSrc}<div class="tray-src"><b>{rollSrc}</b></div>{/if}
-				<div class="pool">
-					{#each Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0])) as [s, c] (s)}
-						<div class="poolchip">
-							<button onclick={() => bumpDie(Number(s), -1)}>−</button><b>{c}</b>×d{s}<button
-								onclick={() => bumpDie(Number(s), 1)}>+</button
-							>
-						</div>
-					{/each}
-				</div>
-				<p class="gridhint">tap a die to add · ± sets the count</p>
-				<div class="dice-grid">
-					{#each DICE as d (d)}<button class="die-btn" onclick={() => bumpDie(d, 1)}>d{d}</button
-						>{/each}
-				</div>
-				<div class="advantage-row">
-					<button
-						class="adv-seg"
-						class:on={rollAdvantage === -1}
-						onclick={() => (combat.tray.rollAdvantage = -1)}>Disadv.</button
-					>
-					<button
-						class="adv-seg"
-						class:on={rollAdvantage === 0}
-						onclick={() => (combat.tray.rollAdvantage = 0)}>Normal</button
-					>
-					<button
-						class="adv-seg"
-						class:on={rollAdvantage === 1}
-						onclick={() => (combat.tray.rollAdvantage = 1)}>Advant.</button
-					>
-				</div>
-				<div class="roll-mod-row">
-					<div class="roll-mod">
-						<button onclick={() => (combat.tray.rollMod -= 1)}>−</button> mod {signed(rollMod)}
-						<button onclick={() => (combat.tray.rollMod += 1)}>+</button>
-					</div>
-					<button class="rollbtn" onclick={doRoll}>Roll {rollExpr}</button>
-				</div>
-				{#if log[0]}{@const r = log[0]}
-					<div class="roll-history">
-						<div>
-							{r.label} · {#if r.advantageRoll}d20 <b class="roll-result">{r.advantageRoll.kept}</b>
-							{/if}{r.expr}
-							= <span class="roll-result">{Number.isNaN(r.total) ? '' : r.total}</span>
-						</div>
-						{#if r.advantageRoll}<div class="drop">drop d20({r.advantageRoll.dropped})</div>{/if}
-						{#if r.damage}<div>
-								dmg {r.damage.expr} = <span class="roll-result">{r.damage.total}</span>
-							</div>{/if}
-					</div>{/if}
-			</div>
+			<DiceTray />
 		{:else if overlay.kind === 'temphp'}
 			<div class="menu-panel">
 				<div class="popup-h" style="border: 0">Set temporary HP</div>
@@ -238,33 +182,7 @@
 				</p>
 			</div>
 		{:else if overlay.kind === 'log'}
-			<div class="cardhead2"><span class="menu-title">Roll log · history</span></div>
-			<div class="logscroll">
-				{#each log as l, i (i)}
-					<div class="log-row">
-						<!-- line 1: the roll (attack roll / check) with the dice that were rolled -->
-						<div class="lr-top">
-							<b>{l.label}</b><span class="lr-tot" class:roll-result={!Number.isNaN(l.total)}
-								>{Number.isNaN(l.total) ? '—' : l.total}</span
-							>
-						</div>
-						{#if l.expr || l.advantageRoll}<div class="lr-sub">
-								{#if l.advantageRoll}d20 <b>{l.advantageRoll.kept}</b>
-								{/if}{l.expr}
-							</div>{/if}
-						<!-- line 2: the dropped advantage/disadvantage die (dimmed), if any -->
-						{#if l.advantageRoll}<div class="lr-sub drop">
-								drop d20({l.advantageRoll.dropped})
-							</div>{/if}
-						<!-- line 3: damage rolled (for an attack) -->
-						{#if l.damage}<div class="lr-sub">
-								dmg {l.damage.expr} = <b class="roll-result">{l.damage.total}</b>
-							</div>{/if}
-					</div>
-				{:else}<p class="note" style="padding: 11px 13px">
-						No rolls yet — tap a stat, skill, save, or attack.
-					</p>{/each}
-			</div>
+			<RollLog />
 		{:else if overlay.kind === 'showhide'}
 			<div class="popup-h">
 				Which actions appear<button class="icon-button" onclick={() => (combat.overlay = null)}
@@ -465,153 +383,7 @@
 	.search .search-icon {
 		color: var(--color-text-muted);
 	}
-	/* --- dice tray / roll builder --- */
-	.tray {
-		padding: 12px;
-	}
-	.tray-src {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: 9px;
-		padding: 8px 11px;
-		margin-bottom: 9px;
-	}
-	.tray-src b {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: var(--font-size-body);
-	}
-	.pool {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 7px;
-		margin-bottom: 9px;
-	}
-	.poolchip {
-		display: flex;
-		align-items: center;
-		gap: 5px;
-		background: var(--color-resource-soft);
-		border: 1px solid var(--color-resource);
-		border-radius: var(--radius);
-		padding: 4px 8px;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-resource);
-	}
-	.poolchip button {
-		all: unset;
-		cursor: pointer;
-		color: var(--color-resource);
-		font-size: var(--font-size-body);
-		padding: 0 2px;
-	}
-	.poolchip b {
-		font-family: var(--font-display);
-		font-weight: 700;
-	}
-	.gridhint {
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-		margin: 0 0 7px;
-	}
-	.dice-grid {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 7px;
-		margin-bottom: 11px;
-	}
-	.die-btn {
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: var(--font-size-sm);
-		text-align: center;
-		padding: 9px 0;
-		border-radius: 9px;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		color: var(--color-text);
-		cursor: pointer;
-	}
-	.die-btn:hover {
-		border-color: var(--color-resource);
-	}
-	.advantage-row {
-		display: flex;
-		gap: 6px;
-		margin-bottom: 11px;
-	}
-	.adv-seg {
-		flex: 1;
-		text-align: center;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: var(--font-size-xs);
-		padding: 7px 0;
-		border-radius: var(--radius);
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		color: var(--color-text-muted);
-		cursor: pointer;
-	}
-	.adv-seg.on {
-		background: var(--color-good-soft);
-		border-color: var(--color-good);
-		color: var(--color-good);
-	}
-	.modifier-row {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-	}
-	.roll-mod {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius);
-		padding: 7px 9px;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-	}
-	.roll-mod button {
-		all: unset;
-		cursor: pointer;
-		color: var(--color-text-muted);
-		font-size: var(--font-size-body);
-		padding: 0 4px;
-	}
-	.rollbtn {
-		flex: 1;
-		text-align: center;
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: var(--font-size-body);
-		color: var(--color-accent-text);
-		background: var(--color-accent-deep);
-		border: 1px solid var(--color-accent-deep);
-		border-radius: 9px;
-		padding: 9px 12px;
-		cursor: pointer;
-	}
-	.roll-history {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-		border-top: 1px solid var(--color-border);
-		margin-top: 10px;
-		padding-top: 9px;
-	}
-	.roll-history .roll-result {
-		color: var(--color-good);
-		font-weight: 700;
-	}
-	/* --- temp HP --- */
+	/* --- temp HP / custom modifier panel --- */
 	.menu-panel {
 		padding: 12px 13px;
 	}
@@ -653,10 +425,10 @@
 	.gold {
 		color: var(--color-resource);
 	}
-	.roll-mod-row {
+	.modifier-row {
 		display: flex;
+		align-items: center;
 		gap: 8px;
-		margin: 8px 0;
 	}
 	.modifier-sign {
 		width: 36px;
@@ -694,63 +466,5 @@
 	}
 	.pinwrap .menu-row .skill-name {
 		font-size: var(--font-size-sm);
-	}
-	/* --- roll log --- */
-	.cardhead2 {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 11px 13px 6px;
-	}
-	.cardhead2 .menu-title {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
-	}
-	.logscroll {
-		padding: 0 6px 4px;
-	}
-	.log-row {
-		padding: 7px 7px;
-		border-top: 1px solid var(--color-border);
-	}
-	.log-row:first-child {
-		border-top: 0;
-	}
-	.lr-top {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: var(--font-size-sm);
-	}
-	.lr-top b {
-		flex: 1;
-		font-weight: 600;
-	}
-	.lr-tot {
-		font-family: var(--font-display);
-		font-weight: 700;
-	}
-	.lr-tot.roll-result {
-		color: var(--color-good);
-	}
-	.lr-sub {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-		margin-top: 2px;
-	}
-	.lr-sub b {
-		color: var(--color-good);
-	}
-	/* the dropped die of an advantage/disadvantage pair */
-	/* the dropped adv/disadv d20 — shown but dimmed (de-emphasized, not struck through) */
-	.drop {
-		color: var(--color-text-muted);
-		opacity: 0.45;
 	}
 </style>
