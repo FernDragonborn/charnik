@@ -45,7 +45,7 @@
 		"eslint-plugin-svelte": "^3.22.0",
 		"fake-indexeddb": "^6.2.5",
 		"fast-check": "^4.9.0",
-		"globals": "^17.7.0",
+		"globals": "^17.8.0",
 		"jscpd": "^5.0.12",
 		"knip": "^6.29.0",
 		"pixelmatch": "^7.2.0",
