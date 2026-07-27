@@ -1013,3 +1013,46 @@ describe('B26: class features attach across sources (homebrew extends an SRD cla
 		expect(filtered.ac.value).toBe(10); // feature no longer applied
 	});
 });
+
+describe('RV2: a same-(class,level,id) feature from two active sources folds ONCE, not twice', () => {
+	const HB = 'My Homebrew';
+	async function graphWithDupFeature(): Promise<ContentGraph> {
+		const st = new MemoryStorage();
+		await st.write(
+			'c/classes_srd.csv',
+			[
+				'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
+				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`
+			].join('\n')
+		);
+		await st.write(
+			'c/class_features_srd.csv',
+			[
+				'id,systems,source,name_en,effects,class_id,level,subclass_id',
+				`ward,5.5e,${S},Ward,flat_bonus:ac+5,wizard,1,`
+			].join('\n')
+		);
+		// a homebrew row with the SAME feature id (an unresolved collision → both stay active)
+		await st.write(
+			'c/class_features_homebrew.csv',
+			[
+				'id,systems,source,name_en,effects,class_id,level,subclass_id',
+				`ward,5.5e,${HB},Ward (buffed),flat_bonus:ac+5,wizard,1,`
+			].join('\n')
+		);
+		return loadContent(st, ['c']);
+	}
+	function plainWizard(): Character {
+		const c = newCharacter('gandalf', 'Gandalf', '5.5e');
+		c.build.classes = [{ class: `class:${S}:wizard`, level: 1 }];
+		c.build.abilities = { str: 10, dex: 10, con: 10, int: 16, wis: 10, cha: 10 };
+		return characterSchema.parse(c);
+	}
+
+	it('applies the feature once (AC 15, not 20) and flags the duplicate', async () => {
+		const g = await graphWithDupFeature();
+		const sheet = deriveSheet(plainWizard(), g); // default: every row active
+		expect(sheet.ac.value).toBe(15); // 10 unarmored + ONE +5, not both
+		expect(sheet.deriveIssues.some((i) => i.token === 'class_feature:ward')).toBe(true);
+	});
+});

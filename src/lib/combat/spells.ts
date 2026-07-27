@@ -8,7 +8,9 @@ import type { ContentGraph } from '$lib/content/loader';
 import type { RowData } from '$lib/content/schemas';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import type { SpellcastingClass } from '$lib/character/spellcasting';
+import { casterForSpell } from '$lib/character/spellcasting';
+// re-exported so `$lib/combat/helpers` (barrel) + existing importers keep the same import site
+export { casterForSpell };
 import { parseDicePool } from '$lib/rules/dice';
 import {
 	cantripDieMultiplier,
@@ -75,22 +77,6 @@ function effectHint(d: RowData<'spell'>): string {
 			}[name.toLowerCase()] ?? 'utility'
 		);
 	return 'utility';
-}
-
-/** The caster class a spell is cast AS — whose DC / attack / ability are the ones actually USED
- *  (RAW: a multiclass caster has one profile PER class, not a single shared DC — A18). Picks the
- *  caster class whose spell list grants this spell; on an overlap (a spell on two class lists) the
- *  higher save DC wins. Falls back to the first caster class when the access map has no match. */
-export function casterForSpell(
-	sheet: CharacterSheet | null,
-	spellRef: string
-): SpellcastingClass | undefined {
-	const classes = sheet?.spellcasting.classes ?? [];
-	const owning = classes.filter((c) => c.accessSpellIds.includes(spellRef));
-	return (owning.length ? owning : classes).reduce<SpellcastingClass | undefined>(
-		(best, c) => (!best || c.saveDC.value > best.saveDC.value ? c : best),
-		undefined
-	);
 }
 
 /** A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its

@@ -317,6 +317,7 @@ function gatherEffects(
 	character: Character,
 	graph: ContentGraph,
 	missing: string[],
+	issues: EffectIssue[],
 	isActive: (row: LoadedRow) => boolean
 ): ActiveEffect[] {
 	const active: ActiveEffect[] = [];
@@ -354,14 +355,16 @@ function gatherEffects(
 	// query owner (graph.featuresForClass — D18) which matches on class_id + edition, NOT source, so a
 	// user's PHB/homebrew feature for an SRD class attaches (B26). Here we layer the per-character
 	// gates: exact system, level ≤ class level, isRowActive, and the chosen subclass. A same
-	// (class_id,level,id) row from two overlapping sources is a collision handled by isRowActive
-	// (keep-one/keep-all), so it can't double-apply.
+	// (class_id,level,id) row from two overlapping ACTIVE sources (an unresolved collision, which
+	// defaults to keep-all) is folded ONCE + flagged here (RV2), so an SRD feature and a homebrew
+	// override of it don't double up before the collision is resolved.
 	for (const entry of character.build.classes) {
 		const classRow = resolve(entry.class);
 		pushRow(classRow, 'feature', classRow?.id);
 		const subclassRow = resolve(entry.subclass);
 		pushRow(subclassRow, 'feature', classRow?.id);
 		if (!classRow) continue;
+		const seenFeatures = new Set<string>(); // RV2: fold each (level, id, subclass) feature ONCE
 		for (const f of graph.featuresForClass(classRow)) {
 			if (Number(f.data.level) > entry.level) continue;
 			if (!f.systems.includes(character.system)) continue;
@@ -370,6 +373,19 @@ function gatherEffects(
 			const forSubclass = f.data.subclass_id;
 			if (forSubclass && forSubclass !== (subclassRow?.type === 'subclass' ? subclassRow.id : ''))
 				continue;
+			// RV2: two active sources with the SAME (level, id, subclass) feature would each fold their
+			// tokens — apply the FIRST, flag the rest (the collision is separately resolvable in Settings).
+			const key = `${f.data.id}:${f.data.level}:${forSubclass ?? ''}`;
+			if (seenFeatures.has(key)) {
+				issues.push({
+					source: String(f.data.name_en),
+					token: `class_feature:${f.data.id}`,
+					reason:
+						'duplicate class feature from another source — applied once; resolve the collision to choose which'
+				});
+				continue;
+			}
+			seenFeatures.add(key);
 			pushRow(f, 'feature', classRow.id);
 		}
 	}
@@ -427,7 +443,9 @@ export function deriveSheet(
 	const missing: string[] = [];
 	const issues: EffectIssue[] = [];
 	// effects-auto global toggle: off → no effect layers (base stats / text only)
-	const active = character.play.autoCalc ? gatherEffects(character, graph, missing, isActive) : [];
+	const active = character.play.autoCalc
+		? gatherEffects(character, graph, missing, issues, isActive)
+		: [];
 
 	const level = build.classes.reduce((n, c) => n + c.level, 0) || 1;
 	const prof = proficiencyBonus(level);

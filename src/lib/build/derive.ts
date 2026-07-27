@@ -7,6 +7,7 @@ import type { Ability } from '../rules/core';
 import { ABILITIES } from '../character/schema';
 import type { ContentGraph, LoadedRow } from '../content/loader';
 import type { CharacterSheet } from '../character/derive';
+import { casterForSpell } from '../character/spellcasting';
 import { parseToken, splitGuard, EFFECT_KIND } from '../effects/token-parser';
 import type { StatMethod } from './rules';
 
@@ -69,7 +70,6 @@ export function buildSpellPicker(
 	};
 	return sheet.spellcasting.classes.map((profile) => {
 		const access = new Set(profile.accessSpellIds);
-		const inClass = (id: string) => !strict || access.has(id);
 		const pool = allSpells.filter((s) => {
 			if (!strict) return true;
 			// class access gate — cantrips are on the class list too, so gate them the same way
@@ -89,9 +89,14 @@ export function buildSpellPicker(
 				label: lvl === 0 ? 'Cantrips' : `Level ${lvl}`,
 				spells: byLevel.get(lvl) ?? []
 			}));
-		const selectedInClass = selectedSpells.filter(inClass);
-		const cantripsChosen = selectedInClass.filter((id) => chosenLevel(id) === 0).length;
-		const leveledChosen = selectedInClass.filter((id) => chosenLevel(id) > 0).length;
+		// RV1: attribute each CHOSEN spell to ONE caster class via `casterForSpell` — the SAME rule the
+		// play sheet uses for prepared tallies — so a dual-list spell counts against ONE class's cap
+		// (identically at build + play time), not against every class whose list happens to include it.
+		const chosenForThisClass = selectedSpells.filter(
+			(id) => casterForSpell(sheet, id)?.classId === profile.classId
+		);
+		const cantripsChosen = chosenForThisClass.filter((id) => chosenLevel(id) === 0).length;
+		const leveledChosen = chosenForThisClass.filter((id) => chosenLevel(id) > 0).length;
 		return { profile, groups, cantripsChosen, leveledChosen };
 	});
 }

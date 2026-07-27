@@ -357,6 +357,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/character/spellcasting.ts`
 
 - `interface SpellcastingClass`
+- `function casterForSpell` — The caster class a spell is cast AS — whose DC / attack / ability are actually used (RAW: a * multiclass caster has o…
 - `interface Spellcasting`
 - `const classCasts` — Does this class row cast spells at all?
 - `function castingAbilityByClass` — Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the * effects resolve needs BEFO…
@@ -431,11 +432,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/spells.ts`
 
+- `re-export casterForSpell` — re-exported so `$lib/combat/helpers` (barrel) + existing importers keep the same import site
 - `const GROUP_MODES`
 - `type GroupMode`
 - `interface SpRow` — A spell row in the spell block.
 - `interface SpGroup` — A group of spells (Pinned / by level / by prepared / by school).
-- `function casterForSpell` — The caster class a spell is cast AS — whose DC / attack / ability are the ones actually USED * (RAW: a multiclass cas…
 - `interface PreparedClassTally` — A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its * own cap.
 - `function preparedTalliesByClass` — Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class * that grants it — v…
 - `function canTogglePreparedFor` — The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it * (per-class — A18-tail).
@@ -959,4 +960,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 516 exports across 81 modules · 31 duplicate suspects · generated in 240ms._
+_45 tokens · 61 global classes · 40 components · 517 exports across 81 modules · 31 duplicate suspects · generated in 365ms._

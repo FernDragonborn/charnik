@@ -44,6 +44,25 @@ export interface SpellcastingClass {
 	isPact: boolean;
 }
 
+/** The caster class a spell is cast AS — whose DC / attack / ability are actually used (RAW: a
+ *  multiclass caster has one profile PER class, not a shared DC — A18). Picks the caster class whose
+ *  spell list grants the spell; on an overlap (a spell on two class lists) the higher save DC wins;
+ *  falls back to the first caster class when no list matches. THE single attribution rule shared by
+ *  the play sheet (prepared tallies, cast) AND the build spell picker (RV1) — so a dual-list spell
+ *  counts the SAME way at build time and play time. Takes only the caster profiles (structural, no
+ *  `CharacterSheet` dependency, so it lives here in the spellcasting core). */
+export function casterForSpell(
+	sheet: { spellcasting: { classes: readonly SpellcastingClass[] } } | null,
+	spellRef: string
+): SpellcastingClass | undefined {
+	const classes = sheet?.spellcasting.classes ?? [];
+	const owning = classes.filter((c) => c.accessSpellIds.includes(spellRef));
+	return (owning.length ? owning : classes).reduce<SpellcastingClass | undefined>(
+		(best, c) => (!best || c.saveDC.value > best.saveDC.value ? c : best),
+		undefined
+	);
+}
+
 export interface Spellcasting {
 	/** One profile per caster class (empty for a non-caster character). */
 	classes: SpellcastingClass[];
