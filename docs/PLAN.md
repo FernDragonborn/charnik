@@ -2393,8 +2393,22 @@ curated global CSS · scoped specifics — so logic doesn't pile into one file a
   **CVM-6** the log-entry shape → the named `RollLogEntry` type + `ROLL_LOG_MAX` constant. What's left
   in `state.svelte.ts` is genuine coordination (load, menus, HP, level-up, spell cast/prepare routing,
   the derived stat aggregates) — cohesive, not a dumping ground.
-- [ ] **S3 · `build/state.svelte.ts` (BuildVM)** similarly large — after R1 (EditContext) audit it the
-  same file-by-file way; likely candidates: statgen, spells picker, feats/ASI slots as their own units.
+- [x] **S3 · Build view split** — DONE (2026-07-27). Findings from auditing `build/state.svelte.ts`
+  (743 lines): the **VM is already cohesive**, not a dumping ground — pure math was long extracted to
+  `build/rules.ts` + `build/derive.ts`, and the draft is ONE `$state<DraftState>` object that every
+  getter derives from, so sub-VM splitting doesn't fit (statgen/spells/feats are `$derived` off the
+  single draft, not independent state machines — the same conclusion the S3 2026-07-06 note reached).
+  The real weight was **`build/+page.svelte` (1053 lines)**, so that is what was split, mirroring
+  `combat/blocks/`: a thin shell composes `build/blocks/` — `BuildHead`, `OriginCard`, `ClassesCard`,
+  `ProficienciesCard`, `FeatsCard`, `AbilityScoresCard`, `SpellsCard`, `InventoryCard`, `ReviewBar`
+  (each binds the shared `build` singleton). Shared builder CSS moved to **`$lib/styles/build.css`**,
+  every selector confined under a `.build-page` root ancestor (NOT global) so the generic names
+  (`.field`/`.chips`/`.pick-chip`/`.subtext`) reach all blocks without leaking onto other routes'
+  scoped lookalikes — the css-hoist collision the combat split dodged with scoped copies. Card-LOCAL
+  CSS stays scoped per block. Verified: svelte-check 0, 865 tests, **0px shot.mjs drift on all 14
+  states** (+ a populated Bard-L5 render checked by eye), lint green.
+- [ ] Audit the remaining big `.svelte`/`.svelte.ts` files one at a time (compendium, spellbook,
+  EditContentForm, CombatMenus) and append their findings here before touching code.
 - [ ] Audit the remaining big `.svelte`/`.svelte.ts` files one at a time (compendium, spellbook,
   EditContentForm, CombatMenus) and append their findings here before touching code.
 

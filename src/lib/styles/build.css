@@ -1,0 +1,224 @@
+/*
+ * Shared styling for the Build (character-creation) view, split across src/routes/build/blocks/*.
+ * Every selector is confined under `.build-page` (set on the route's root <section>) so these
+ * generic builder class names (.field, .chips, .pick-chip, .subtext…) reach every block component
+ * WITHOUT leaking onto other routes' scoped lookalikes — the css-hoist name-collision foot-gun the
+ * combat split avoided by keeping scoped copies. Card-LOCAL classes stay scoped inside their block.
+ *
+ * Imported once (globally, unhashed) by build/+page.svelte; the `.build-page` ancestor does the
+ * confining, not Svelte's per-component hash.
+ */
+
+/* card heading (flex row: label + trailing count/button) */
+.build-page .card h2 {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: var(--font-size-xs);
+	letter-spacing: var(--tracking-label);
+	text-transform: uppercase;
+	color: var(--color-text-muted);
+	margin: 0 0 14px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+/* inline accents / counters */
+.build-page .count {
+	font-family: var(--font-mono);
+	font-size: var(--font-size-xs);
+	letter-spacing: 0;
+}
+.build-page .gold {
+	color: var(--color-resource);
+}
+.build-page .teal {
+	color: var(--color-good);
+}
+
+/* muted sub-labels + their contextual variants */
+.build-page .subtext {
+	font-family: var(--font-mono);
+	font-size: var(--font-size-xs);
+	color: var(--color-text-muted);
+	margin: 0 0 8px;
+}
+.build-page .subtext.note {
+	margin-top: 10px;
+}
+.build-page .subtext.subgroup {
+	margin-top: 10px;
+	color: var(--color-resource);
+}
+.build-page .subtext.warn {
+	color: var(--color-warning);
+}
+.build-page .subtext.ready {
+	color: var(--color-good);
+}
+
+/* labelled field rows (Origin / Inventory selects) */
+.build-page .field {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 11px;
+}
+.build-page .field:last-child {
+	margin-bottom: 0;
+}
+.build-page .field > span {
+	flex: none;
+	width: 92px;
+	font-family: var(--font-mono);
+	font-size: var(--font-size-xs);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--color-text-muted);
+}
+.build-page select {
+	font-family: var(--font-body);
+	font-size: var(--font-size-sm);
+	color: var(--color-text);
+	background: var(--color-surface-2);
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius);
+	padding: 7px 10px;
+	cursor: pointer;
+}
+.build-page .field select {
+	flex: 1;
+}
+.build-page select:focus-visible {
+	outline: 2px solid var(--color-accent);
+	outline-offset: 1px;
+}
+/* a select that reads as inline text inside a row (class/subclass/feat) */
+.build-page .bare {
+	background: transparent;
+	border: 1px solid transparent;
+	padding: 3px 4px;
+	border-radius: 6px;
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: var(--font-size-body);
+}
+.build-page .bare:hover {
+	border-color: var(--color-border);
+	background: var(--color-surface-2);
+}
+
+/* number stepper (class level / ability scores) */
+.build-page .level {
+	flex: none;
+}
+.build-page .stepper {
+	display: flex;
+	align-items: center;
+	background: var(--color-surface-2);
+	border: 1px solid var(--color-border);
+	border-radius: 9px;
+	overflow: hidden;
+	width: max-content;
+}
+.build-page .stepper button {
+	all: unset;
+	cursor: pointer;
+	color: var(--color-text-muted);
+	width: 30px;
+	height: 30px;
+	display: grid;
+	place-items: center;
+	font-size: var(--font-size-md);
+}
+.build-page .stepper button:hover {
+	background: var(--color-border);
+	color: var(--color-text);
+}
+.build-page .stepper .base {
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: var(--font-size-md);
+	min-width: 32px;
+	text-align: center;
+}
+.build-page .level .base {
+	color: var(--color-resource);
+	font-size: var(--font-size-lg);
+}
+
+/* pick chips (skills / languages / spells / boosts) */
+.build-page .chips {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 7px;
+}
+.build-page .chips.spaced {
+	margin-bottom: 12px;
+}
+.build-page .pick-chip {
+	all: unset;
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: var(--font-size-xs);
+	padding: 5px 11px;
+	border-radius: var(--radius-full);
+	background: var(--color-surface-2);
+	border: 1px solid var(--color-border);
+	color: var(--color-text);
+	cursor: pointer;
+}
+.build-page .pick-chip:hover:not(:disabled) {
+	border-color: var(--color-border-strong);
+}
+.build-page .pick-chip.on {
+	background: var(--color-good-soft);
+	border-color: var(--color-good);
+	color: var(--color-good);
+}
+.build-page .pick-chip.locked {
+	background: var(--color-resource-soft);
+	border-color: var(--color-resource);
+	color: var(--color-resource);
+	cursor: default;
+}
+.build-page .pick-chip.dim {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+.build-page .pick-chip:focus-visible {
+	outline: 2px solid var(--color-accent);
+	outline-offset: 1px;
+}
+
+/* segmented toggles (ruleset / enforcement / ASI + boost shapes) */
+.build-page .segment-group {
+	display: flex;
+	border: 1px solid var(--color-border-strong);
+	border-radius: var(--radius);
+	overflow: hidden;
+}
+.build-page .segment-group button {
+	all: unset;
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: var(--font-size-xs);
+	padding: 7px 13px;
+	color: var(--color-text-muted);
+	cursor: pointer;
+}
+.build-page .segment-group button:hover {
+	color: var(--color-text);
+}
+.build-page .segment-group button.on {
+	background: var(--color-good-soft);
+	color: var(--color-good);
+}
+.build-page .segment-group button.free.on {
+	background: var(--color-resource-soft);
+	color: var(--color-resource);
+}
+.build-page .segment-group.small button {
+	padding: 5px 10px;
+	font-size: var(--font-size-xs);
+}

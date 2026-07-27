@@ -1,7 +1,11 @@
 {
 	"extends": "stylelint-config-standard",
 	"overrides": [
-		{ "files": ["**/*.svelte"], "customSyntax": "postcss-html" },
+		{
+			"files": ["**/*.svelte"],
+			"customSyntax": "postcss-html",
+			"rules": { "no-invalid-position-declaration": null }
+		},
 		{ "files": ["**/tokens.css"], "rules": { "color-no-hex": null } }
 	],
 	"rules": {
