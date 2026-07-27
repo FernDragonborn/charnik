@@ -80,6 +80,23 @@ export default ts.config(
 		}
 	},
 	{
+		// SIZE GUARDRAIL — on LOGIC only. `**/*.ts` matches plain modules AND `.svelte.ts` view-models
+		// (pure logic, no markup), but NOT `.svelte` (mostly template + CSS, so a line count there
+		// measures the wrong thing). Industry sweet-spot is ~150-300 lines, split by ~400; these are
+		// WARN (never fail CI — `pnpm lint` runs `eslint .` with no --max-warnings) so growth stays
+		// visible without blocking. Blank lines + comments don't count. Tests are exempt (long
+		// fixtures / index-assertions are a legitimate idiom).
+		files: ['**/*.ts'],
+		ignores: ['**/*.test.ts'],
+		rules: {
+			'max-lines': ['warn', { max: 400, skipBlankLines: true, skipComments: true }],
+			'max-lines-per-function': [
+				'warn',
+				{ max: 80, skipBlankLines: true, skipComments: true, IIFEs: false }
+			]
+		}
+	},
+	{
 		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
 		languageOptions: {
 			parserOptions: {
