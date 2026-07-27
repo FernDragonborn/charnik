@@ -1,0 +1,272 @@
+/*
+ * The Combat/Spellbook spell block: build a spell row from content (with cantrip scaling), group
+ * spells, and the per-class prepared-spell accounting (which caster a spell is cast as, its cap).
+ * Pure. Split out of the old combat/helpers.ts junk-drawer.
+ */
+import { ordinal, titleCase } from '$lib/util/format';
+import type { ContentGraph } from '$lib/content/loader';
+import type { RowData } from '$lib/content/schemas';
+import type { Character } from '$lib/character/schema';
+import type { CharacterSheet } from '$lib/character/derive';
+import type { SpellcastingClass } from '$lib/character/spellcasting';
+import { parseDicePool } from '$lib/rules/dice';
+import {
+	cantripDieMultiplier,
+	canTogglePrepared,
+	preparedLeveledCount,
+	type PrepareAttempt,
+	type PreparableSpell
+} from '$lib/rules/spellcasting';
+
+export const GROUP_MODES = ['level', 'prepared', 'school'] as const;
+export type GroupMode = (typeof GROUP_MODES)[number];
+
+/** A spell row in the spell block. */
+export interface SpRow {
+	id: string;
+	/** The content ref (effectiveId) — used to set play.concentration when cast. */
+	ref: string;
+	name: string;
+	/** Spell level (0 = cantrip). Drives which spell slot a cast spends (AUDIT A17). */
+	level: number;
+	/** Ritual-taggable — only these can be cast as a ritual (no slot). Not all spells qualify (SRD). */
+	ritual: boolean;
+	spe: string;
+	res: '' | 'hit' | 'save' | 'auto';
+	resLabel: string;
+	tm: string;
+	ct: '' | 'react' | 'bonus'; // casting time → icon before the level
+	dmg: Record<number, number> | null; // parsed damage/healing dice (for casting)
+	/** Whether casting this spell requires concentration. */
+	conc: boolean;
+	prep: '' | 'on' | 'always';
+}
+
+/** A group of spells (Pinned / by level / by prepared / by school). */
+export interface SpGroup {
+	key: string;
+	label: string;
+	slots: { full: number; spent: number } | null;
+	rows: SpRow[];
+}
+
+/** Healing dice from a spell's text ("regains Hit Points equal to 2d4 plus …"). */
+const healDice = (text: string): string => {
+	const m = text.match(/(?:equal to|regains?|restores?)[^.]*?(\d+d\d+)/i);
+	return m?.[1] ?? '';
+};
+
+/** Casting-time → the icon shown before the level (↩ reaction, ⚡ bonus). */
+const castingIcon = (ct: string): SpRow['ct'] =>
+	/bonus/i.test(ct) ? 'bonus' : /reaction/i.test(ct) ? 'react' : '';
+
+/** Short effect summary for a non-damage spell (curated, falls back to "utility"). */
+function effectHint(d: RowData<'spell'>): string {
+	const name = d.name_en ?? '';
+	if (/self/i.test(d.range ?? '') && /step|door|teleport/i.test(name)) return 'teleport';
+	if (/counter/i.test(name)) return 'negate spell';
+	if (/mage hand|prestidig|light|message|minor illusion|mage armor|fly|invis|mirror/i.test(name))
+		return (
+			{
+				'mage hand': 'utility',
+				'mage armor': 'set AC 13',
+				fly: 'fly 60 ft',
+				'mirror image': '3 duplicates'
+			}[name.toLowerCase()] ?? 'utility'
+		);
+	return 'utility';
+}
+
+/** The caster class a spell is cast AS — whose DC / attack / ability are the ones actually USED
+ *  (RAW: a multiclass caster has one profile PER class, not a single shared DC — A18). Picks the
+ *  caster class whose spell list grants this spell; on an overlap (a spell on two class lists) the
+ *  higher save DC wins. Falls back to the first caster class when the access map has no match. */
+export function casterForSpell(
+	sheet: CharacterSheet | null,
+	spellRef: string
+): SpellcastingClass | undefined {
+	const classes = sheet?.spellcasting.classes ?? [];
+	const owning = classes.filter((c) => c.accessSpellIds.includes(spellRef));
+	return (owning.length ? owning : classes).reduce<SpellcastingClass | undefined>(
+		(best, c) => (!best || c.saveDC.value > best.saveDC.value ? c : best),
+		undefined
+	);
+}
+
+/** A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its
+ *  own cap. */
+export interface PreparedClassTally {
+	classId: string;
+	className: string;
+	count: number;
+	cap: number;
+}
+
+/** Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class
+ *  that grants it — via `casterForSpell`, the SAME access-map binding the builder's picker uses — and
+ *  count within that class, so a multiclass caster's prepared limit is enforced PER class instead of
+ *  all against `classes[0]`. Always-prepared/cantrip entries never count (they carry `prepared=false`
+ *  or `alwaysPrepared`). One tally per caster profile, in profile order. */
+export function preparedTalliesByClass(
+	spells: readonly { spell: string; prepared: boolean; alwaysPrepared: boolean }[],
+	sheet: CharacterSheet | null
+): PreparedClassTally[] {
+	const classes = sheet?.spellcasting.classes ?? [];
+	const counts = new Map<string, number>();
+	for (const s of spells) {
+		if (!s.prepared || s.alwaysPrepared) continue;
+		const cls = casterForSpell(sheet, s.spell);
+		if (cls) counts.set(cls.classId, (counts.get(cls.classId) ?? 0) + 1);
+	}
+	return classes.map((c) => ({
+		classId: c.classId,
+		className: c.className,
+		count: counts.get(c.classId) ?? 0,
+		cap: c.preparedCap
+	}));
+}
+
+/** The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it
+ *  (per-class — A18-tail). The single seam the combat sheet AND the spellbook call, so their
+ *  attribution + cap + count wiring can't drift apart (D13): resolve the spell's class, read that
+ *  class's tally (count vs cap), and defer the actual rule to `canTogglePrepared`. `entry` is the
+ *  spell's play-state row (its prepared flags); a missing/always-prepared/cantrip entry is refused
+ *  inside `canTogglePrepared`. Falls back to the primary class + total count for a spell no class
+ *  claims (mirrors casterForSpell's own fallback). */
+export function canTogglePreparedFor(
+	spells: readonly { spell: string; prepared: boolean; alwaysPrepared: boolean }[],
+	sheet: CharacterSheet | null,
+	entry: PreparableSpell | undefined,
+	spellRef: string,
+	isCantrip: boolean
+): PrepareAttempt {
+	const cls = casterForSpell(sheet, spellRef);
+	const tally = cls
+		? preparedTalliesByClass(spells, sheet).find((t) => t.classId === cls.classId)
+		: undefined;
+	const cap = tally?.cap ?? sheet?.spellcasting.classes[0]?.preparedCap ?? 0;
+	const count = tally?.count ?? preparedLeveledCount(spells);
+	return canTogglePrepared(entry, isCantrip, cap, count);
+}
+
+/** Group the character's spells for the spell block (Pinned first, then by level / prepared / school),
+ *  attaching the castable slot pool per level. Pure — the VM just wraps it in a `$derived`. */
+export function buildSpellGroups(
+	character: Character,
+	sheet: CharacterSheet | null,
+	graph: ContentGraph,
+	groupBy: GroupMode,
+	pinned: Record<string, boolean>,
+	/** effectiveIds hidden from the sheet via the spellbook eye (Issue #3) — filtered out entirely. */
+	hidden: readonly string[] = []
+): SpGroup[] {
+	const slotsByLevel = new Map<number, number>();
+	for (const p of sheet?.spellcasting.pools ?? [])
+		if (!p.forcedUpcast && p.spellLevel) slotsByLevel.set(p.spellLevel, p.max);
+	const all = character.build.spells
+		.map((sp) => ({
+			sp,
+			row: spellRow(
+				graph,
+				sp.spell,
+				sp.alwaysPrepared ? 'always' : sp.prepared ? 'on' : '',
+				sheet?.level ?? 1
+			)
+		}))
+		.filter((x): x is { sp: (typeof character.build.spells)[number]; row: SpRow } => !!x.row)
+		.filter((x) => !hidden.includes(x.row.ref));
+	const groups: SpGroup[] = [];
+	const pins = all.filter((x) => pinned[x.row.id]);
+	if (pins.length)
+		groups.push({ key: 'pinned', label: '★ Pinned', slots: null, rows: pins.map((x) => x.row) });
+
+	if (groupBy === 'level') {
+		const byLevel = new Map<number, SpRow[]>();
+		for (const x of all) {
+			const spell = graph.get(x.sp.spell);
+			const lvl = spell?.type === 'spell' ? spell.data.level : 0;
+			const bucket = byLevel.get(lvl) ?? [];
+			bucket.push(x.row);
+			byLevel.set(lvl, bucket);
+		}
+		for (const lvl of [...byLevel.keys()].sort((a, b) => a - b)) {
+			groups.push({
+				key: String(lvl),
+				label: lvl === 0 ? 'Cantrips' : ordinal(lvl),
+				slots:
+					lvl === 0
+						? null
+						: {
+								full: slotsByLevel.get(lvl) ?? 0,
+								spent: character.play.spellSlotsSpent[String(lvl)] ?? 0
+							},
+				rows: byLevel.get(lvl) ?? []
+			});
+		}
+	} else if (groupBy === 'prepared') {
+		const prep = all.filter((x) => x.row.prep).map((x) => x.row);
+		const rest = all.filter((x) => !x.row.prep).map((x) => x.row);
+		if (prep.length) groups.push({ key: 'prep', label: 'Prepared', slots: null, rows: prep });
+		if (rest.length) groups.push({ key: 'unprep', label: 'Not prepared', slots: null, rows: rest });
+	} else {
+		const bySchool = new Map<string, SpRow[]>();
+		for (const x of all) {
+			const spell = graph.get(x.sp.spell);
+			const sch = (spell?.type === 'spell' ? spell.data.school : '') || 'Other';
+			const bucket = bySchool.get(sch) ?? [];
+			bucket.push(x.row);
+			bySchool.set(sch, bucket);
+		}
+		for (const sch of [...bySchool.keys()].sort())
+			groups.push({
+				key: 'sch:' + sch,
+				label: titleCase(sch),
+				slots: null,
+				rows: bySchool.get(sch) ?? []
+			});
+	}
+	return groups;
+}
+
+/** Build a spell row from the content graph (or null if the ref is missing). `charLevel` scales
+ *  cantrip damage dice (the 5/11/17 steps, both editions — AUDIT A15): Fire Bolt is 2d10 at
+ *  character level 5, shown AND rolled that way. */
+export function spellRow(
+	graph: ContentGraph,
+	ref: string,
+	prep: SpRow['prep'],
+	charLevel = 1
+): SpRow | null {
+	const row = graph.get(ref);
+	if (row?.type !== 'spell') return null;
+	const lvl = row.data.level;
+	const res = row.data.resolution ?? 'none';
+	// dice for casting: the damage field, or (for auto/healing spells) the "regains …
+	// equal to NdM" dice parsed out of the description
+	let dmg = (row.data.damage ?? '') || (res === 'auto' ? healDice(row.data.text_en ?? '') : '');
+	const scale = lvl === 0 ? cantripDieMultiplier(charLevel) : 1;
+	if (scale > 1)
+		dmg = dmg.replace(/(\d+)d(\d+)/gi, (_, n: string, s: string) => `${Number(n) * scale}d${s}`);
+	return {
+		id: row.data.id,
+		ref,
+		name: row.data.name_en,
+		level: lvl,
+		spe: dmg || effectHint(row.data),
+		res: res === 'attack' ? 'hit' : res === 'save' ? 'save' : res === 'auto' ? 'auto' : '',
+		resLabel:
+			res === 'attack'
+				? 'attack roll'
+				: res === 'save'
+					? `${row.data.save_ability} save`
+					: res === 'auto'
+						? 'auto'
+						: '',
+		tm: lvl === 0 ? 'cantrip' : ordinal(lvl),
+		ct: castingIcon(row.data.casting_time ?? ''),
+		dmg: dmg ? parseDicePool(dmg) : null,
+		conc: row.data.concentration ?? false,
+		ritual: row.data.ritual ?? false,
+		prep
+	};
+}

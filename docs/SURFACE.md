@@ -281,7 +281,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (63 modules)
+## Library functions & types (70 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -362,34 +362,45 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function castingAbilityByClass` — Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the * effects resolve needs BEFO…
 - `function deriveSpellcasting`
 
-### `src/lib/combat/helpers.ts`
+### `src/lib/combat/actions.ts`
 
-- `re-export titleCase` — re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
-- `re-export signed` — re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
-- `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the damage roll t…
-- `type ActionSlot` — The three action-economy slots a turn tracks.
 - `interface StandardAction` — A standard combat action row (Dash, Hide, Grapple…).
+- `function standardActions` — The standard combat actions (Dash, Hide, Grapple…); roll ones reference live skills.
+
+### `src/lib/combat/attacks.ts`
+
+- `interface Atk` — A weapon/unarmed attack row.
+- `function parseDamage` — Parse a weapon/spell damage string ("1d8 +3 slashing", "1d6 −1 bludgeoning") into its dice pool + * flat mod.
+- `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
+- `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
+
+### `src/lib/combat/constants.ts`
+
 - `type MenuKind` — The anchored dropdown menus the Combat view can open (overlay.kind).
-- `const range` — `[0, 1, …, n-1]` — for rendering N pips/dots.
-- `function pipClick` — * Click-to-set for every pip tracker (action economy, spell slots, resources) — ONE model: * available pips on the LE…
-- `interface RollEffects` — What a roll target (e.g.
-- `const NO_ROLL_EFFECTS`
-- `function rollEffectsFor`
-- `function autoOutcome` — A forced roll outcome for `key`, or null to roll normally.
-- `const netAdvantage` — Advantage + disadvantage cancel to a straight roll (5e rule) → the −1/0/+1 the roller takes.
+- `const PANEL_TITLE`
+- `const ABIL` — Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`.
+- `const ABILITY_NAME`
+- `const MOD_TARGETS` — Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.
+- `function modTargetLabel` — Human label for a custom-modifier target key (for the auto effect name).
+- `const metres` — Feet → "N m" (metric in parentheses next to imperial).
+- `const kilograms` — Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7).
+
+### `src/lib/combat/defense.ts`
+
 - `interface Defenses` — The sheet's damage defenses (from `resist_immune` effects) — the three buckets by damage type.
 - `type DefenseBucket` — Which bucket, if any, a damage type hits.
 - `function applyDefense` — * Apply resist/immune/vulnerable to a raw damage amount given its type (B20).
 - `function effectiveHpMax`
-- `const metres` — Feet → "N m" (metric in parentheses next to imperial).
-- `const kilograms` — Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7).
+
+### `src/lib/combat/effects-view.ts`
+
+- `re-export EffectInstance` — A runtime effect instance — the character-schema type, re-exported for the combat views.
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
 - `interface DerivedEffectGroup` — One source's derived contributions, as short display tags (B14).
 - `function describeDerivedEffects` — * B14: the effects panel's read-only "from items & features" view.
 - `function noteText` — The display text of a `note:` token (a rules effect shown but NOT auto-applied — attacks against * you, auto-crit, se…
 - `function conditionIdOf` — The condition id an effect applies (its `apply_condition:<id>` token), or null — so the combat * panel can surface a …
-- `re-export EffectInstance` — A runtime effect instance — the character-schema type, re-exported for the combat views.
 - `interface ResourceView` — A grant_resource effect, resolved for the Resources section (name + charges + recharge).
 - `function parseResourceEffect` — If an effect grants a fully-specified resource pool, resolve it — else null.
 - `function groupEffects` — Split active effects into the three panel sections.
@@ -398,27 +409,37 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const isEffectExpired` — A round-timed effect is expired once the counter has advanced past its duration.
 - `function durationToRounds` — Spell duration text → rounds (1 round = 6 s): "1 minute" → 10, "Concentration, up to 1 hour" → * 600, "2 rounds" → 2.
 - `const EFFECT_DURATION_PRESETS` — The common effect durations offered in the duration dropdown (game terms, no round/minute dup).
-- `const MOD_TARGETS` — Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.
+
+### `src/lib/combat/helpers.ts`
+
+- `re-export titleCase` — re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
+- `re-export signed` — re-exported so existing importers (`$lib/combat/helpers`) keep working after the F1/F2 dedup
+
+### `src/lib/combat/roll.ts`
+
+- `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the damage roll t…
+- `type ActionSlot` — The three action-economy slots a turn tracks.
+- `const DICE` — The dice sizes offered in the roll tray.
+- `const range` — `[0, 1, …, n-1]` — for rendering N pips/dots.
 - `const wantsTray` — A normal tap rolls instantly; Alt/Ctrl/Cmd-click opens the prefilled roll tray.
-- `const PANEL_TITLE`
-- `const ABIL` — Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`.
-- `const ABILITY_NAME`
-- `const DICE`
+- `function pipClick` — * Click-to-set for every pip tracker (action economy, spell slots, resources) — ONE model: * available pips on the LE…
+- `interface RollEffects` — What a roll target (e.g.
+- `const NO_ROLL_EFFECTS`
+- `function rollEffectsFor`
+- `function autoOutcome` — A forced roll outcome for `key`, or null to roll normally.
+- `const netAdvantage` — Advantage + disadvantage cancel to a straight roll (5e rule) → the −1/0/+1 the roller takes.
+
+### `src/lib/combat/spells.ts`
+
 - `const GROUP_MODES`
 - `type GroupMode`
-- `interface Atk` — A weapon/unarmed attack row.
 - `interface SpRow` — A spell row in the spell block.
 - `interface SpGroup` — A group of spells (Pinned / by level / by prepared / by school).
-- `function modTargetLabel` — Human label for a custom-modifier target key (for the auto effect name).
-- `function parseDamage` — Parse a weapon/spell damage string ("1d8 +3 slashing", "1d6 −1 bludgeoning") into its dice pool + * flat mod.
-- `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
-- `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
-- `function standardActions` — The standard combat actions (Dash, Hide, Grapple…); roll ones reference live skills.
 - `function casterForSpell` — The caster class a spell is cast AS — whose DC / attack / ability are the ones actually USED * (RAW: a multiclass cas…
 - `interface PreparedClassTally` — A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its * own cap.
 - `function preparedTalliesByClass` — Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class * that grants it — v…
 - `function canTogglePreparedFor` — The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it * (per-class — A18-tail).
-- `function buildSpellGroups`
+- `function buildSpellGroups` — Group the character's spells for the spell block (Pinned first, then by level / prepared / school), * attaching the c…
 - `function spellRow` — Build a spell row from the content graph (or null if the ref is missing).
 
 ### `src/lib/components/wikiEdit.ts`
@@ -938,4 +959,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 516 exports across 74 modules · 31 duplicate suspects · generated in 261ms._
+_45 tokens · 61 global classes · 40 components · 516 exports across 81 modules · 31 duplicate suspects · generated in 207ms._
