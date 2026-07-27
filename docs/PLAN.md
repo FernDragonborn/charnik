@@ -2418,11 +2418,27 @@ curated global CSS · scoped specifics — so logic doesn't pile into one file a
   is byte-for-byte scoped in its own component. Verified: svelte-check 0, 865 tests, **0px shot.mjs
   drift on all 14 states** (the combat demo exercises all five panels — skills/attacks/actions/effects
   w/ Bless/spells), lint green.
-- [ ] Audit the remaining big `.svelte`/`.svelte.ts` files one at a time (compendium 849, EditContent
-  Form 759, CombatMenus 756, and the pure `combat/helpers.ts` 909 / `character/derive.ts` 892) and
-  append findings before touching code. NB all are now UNDER the 1k-line guideline (PanelCard was the
-  only violator, now split); the pure/type-guarded refactor seam is otherwise "exhausted" (see the
-  2026-07-07 note), so these are optional polish, not a correctness/size gate.
+- [~] Audit the remaining big `.svelte`/`.svelte.ts` files (audit DONE 2026-07-27; splits deferred as
+  optional polish — all are UNDER the 1k-line guideline now that PanelCard is split, and the
+  pure/type-guarded seam is otherwise "exhausted" per the 2026-07-07 note). Per-file findings, in
+  rough value/risk order:
+  - **`combat/helpers.ts` (909)** — the strongest candidate: a genuine junk-drawer of ~40 unrelated
+    exports (roll helpers `rollEffectsFor`/`pipClick`, effect-view `describeDerivedEffects`/`effectTag`/
+    `groupEffects`, `Defenses`/`applyDefense`, unit formatters `metres`/`kilograms`, `why()`, the
+    `MOD_TARGETS`/`PANEL_TITLE`/`ABILITY_NAME` constant tables). Pure + well-tested → low-risk to split
+    by concern (`roll.ts` / `effects-view.ts` / `defense.ts` / `combat-constants.ts`), but it's widely
+    imported (every panel + combat state), so the churn is mechanical-but-wide. Best next refactor if
+    one is wanted.
+  - **`CombatMenus.svelte` (756)** — thin script (39 lines), ~296 template, **~420 CSS**. It's a
+    dispatcher over the `MenuKind` union, so a per-menu-kind component split mirrors the PanelCard win;
+    do it under the shot.mjs gate.
+  - **`compendium/[...entry]/+page.svelte` (849)** — heavy script (333 lines) → a view-model extraction
+    (like BuildVM/CombatVM) is the shape, then thin the template.
+  - **`EditContentForm.svelte` (759)** — bulk is CSS (~315); a shared-form-CSS hoist is the only real
+    lever, low priority.
+  - **`character/derive.ts` (892)** — the core aggregator; `deriveSheet` is a long function but
+    cohesive, and pure sub-derivations were already extracted (build/derive, spellcasting). Splitting
+    further touches the rules core → higher risk, lower priority. Leave unless it grows.
 
 ### Compendium-editor refactor set (planned 2026-07-09)
 
