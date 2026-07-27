@@ -160,6 +160,12 @@ and **NOT** `.svelte` (mostly markup + CSS, so a line count there measures the w
 never errors — CI (`eslint .`, no `--max-warnings`) stays green; the warning is the "time to split by
 concern" signal, not a gate. Tests are exempt.
 
+Three companion rules on the same scope catch what a line count misses: **`complexity` warn 20** (size
+≠ tangle — a short function with 20+ branches is still unreasonable; set at the standard 20, not 12, so
+a clean `switch(kind)` dispatch isn't false-flagged), **`max-depth` warn 4** (deep nesting → invert
+with early returns / extract), **`max-params` warn 4** (machine-enforces §2.2 — 5+ positional params
+means group them into a typed object). All warn-only.
+
 **The 400-line warn is the TRIGGER, not the target.** Once a logic file crosses 400, splitting it so
 each resulting file sits *just under 400* is not enough — split so every result holds **at most ~300
 logic lines, and preferably nearer ~200**. Aim for the ~200 sweet spot; treat 300 as the ceiling, 400
@@ -181,6 +187,41 @@ worst first): `combat/helpers.ts` (junk-drawer → split by concern), `character
 higher risk), `build/state.svelte.ts` + `combat/state.svelte.ts` (VMs), `effects/apply.ts`. Spend
 comments on the non-obvious *why*. (Exception: genuinely over-complex logic warrants a short
 what-it-does note.)
+
+### 2.7 Errors surface, never vanish silently
+**Rule.** An error is either **handled** (recover + carry on) or **surfaced** (returned as a Result /
+pushed to `issues` / shown via `toast`/`notice` / set on `content.error`) — never swallowed into
+nothing. No empty `catch {}`. A **best-effort** swallow (a failure the user genuinely shouldn't be
+bothered with — a backup write, a watcher teardown, an existence probe) is allowed ONLY with a comment
+saying *why it's safe to ignore*, and (once the logger lands — deferred) a `logger.debug`.
+
+**Why.** Silent failure is the worst failure: the app misbehaves and no one — user or developer — can
+tell what went wrong. Audited 2026-07-27: the codebase already follows this (51 `catch`, **0 empty, 0
+`return-null` swallows**; the 3 `.catch(() => …)` are a boolean existence probe, a watcher teardown,
+and a debounced theme write with a localStorage fallback — all justified). This rule **codifies the
+existing practice** so it doesn't regress, it isn't a cleanup task.
+
+**How to apply.** Catch → recover, or return/throw something the caller surfaces. If you must ignore,
+comment the *why*. The missing piece is a real logging story (diagnostics for user bug reports) —
+**deferred to its own session**; until then keep surfacing through `issues`/`toast`/`content.error`.
+
+### 2.8 Options object over positional boolean flags
+**Rule.** Don't pass bare positional booleans/flags — `cast(row, e, true, false)` is unreadable at the
+call site. Use a named **options object** (`cast(row, e, { ritual: true })`) or an enum/union. Same
+family as §2.2 (typed state) and §2.3 (enums over bare strings); `max-params` (§2.6) enforces the count
+half, this covers the readability half.
+
+**Why.** `foo(x, true, false)` tells the reader nothing about what the booleans mean; `{ ritual: true }`
+is self-documenting and order-independent, and new options don't shift positions.
+
+### 2.9 `$derived` is pure; side effects live in `$effect`
+**Rule.** A Svelte `$derived` (and any getter feeding one) is a **pure computation** — it reads reactive
+state and returns a value, with **no side effects** (no mutating other state, no IO, no `toast`, no
+store writes). Anything that *acts* on a change belongs in an `$effect`.
+
+**Why.** Svelte re-runs deriveds whenever their deps change, sometimes more than once; a side effect
+inside one fires unpredictably and creates reactive loops / order bugs that are painful to trace. Pure
+deriveds are the whole reason the `{value, trace}` core is testable and the UI is a thin shell.
 
 ---
 

@@ -93,7 +93,17 @@ export default ts.config(
 			'max-lines-per-function': [
 				'warn',
 				{ max: 80, skipBlankLines: true, skipComments: true, IIFEs: false }
-			]
+			],
+			// size ≠ tangle: a short function with many branches is still hard to reason about. Set at
+			// the standard 20 (not stricter) on purpose — a flat `switch(kind)` dispatch (the parsers /
+			// evaluators here) is legitimately branchy but readable, and flagging those at 12 floods the
+			// signal; 20 targets genuine tangle (deriveSheet, collectFacts, resolveActiveEffects…).
+			complexity: ['warn', { max: 20 }],
+			// nesting: 3+ deep conditionals/loops → invert with early returns / extract.
+			'max-depth': ['warn', 4],
+			// machine-enforce the "group related args into ONE typed object, don't scatter params"
+			// house rule ([[model-state-as-typed-objects]]); 5+ positional params is the smell.
+			'max-params': ['warn', 4]
 		}
 	},
 	{
