@@ -153,12 +153,18 @@ class, i18n key), grep for its existing name first and transliterate the case �
 *what* the code does. If you can't capture a function's essence in its **name**, that's a smell —
 it's doing too much; split it.
 
-**Size limits (machine-enforced, 2026-07-27).** Aligned to industry best practice (sweet spot
-~150–300 lines; split by ~400), applied to **logic only** — `eslint` `max-lines` warns at **400** and
-`max-lines-per-function` at **80** (both skip blank lines + comments), scoped to `**/*.ts` (which
-covers `.svelte.ts` view-models — pure logic) and **NOT** `.svelte` (mostly markup + CSS, so a line
-count there measures the wrong thing). Warnings, never errors — CI (`eslint .`, no `--max-warnings`)
-stays green; the warning is the "time to split by concern" signal, not a gate. Tests are exempt.
+**Size limits (machine-enforced, 2026-07-27).** Aligned to industry best practice, applied to
+**logic only** — `eslint` `max-lines` warns at **400** and `max-lines-per-function` at **80** (both
+skip blank lines + comments), scoped to `**/*.ts` (which covers `.svelte.ts` view-models — pure logic)
+and **NOT** `.svelte` (mostly markup + CSS, so a line count there measures the wrong thing). Warnings,
+never errors — CI (`eslint .`, no `--max-warnings`) stays green; the warning is the "time to split by
+concern" signal, not a gate. Tests are exempt.
+
+**The 400-line warn is the TRIGGER, not the target.** Once a logic file crosses 400, splitting it so
+each resulting file sits *just under 400* is not enough — split so every result holds **at most ~300
+logic lines, and preferably nearer ~200**. Aim for the ~200 sweet spot; treat 300 as the ceiling, 400
+as "should have split already". (Same spirit for functions: 80 warns, but a healthy function is much
+shorter.)
 
 **Svelte files** have **no line rule** — the guideline for components is *single responsibility /
 cohesion*, not a line count (there is no established Svelte max-lines). Keep a component to one job
