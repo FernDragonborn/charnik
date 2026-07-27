@@ -1125,3 +1125,57 @@ speculation). Filed as the input list for a follow-up pass — none is a data-lo
   RAW-exact on a dual-list spell. A `classId` on the entry (with a migration + a "which class?" picker
   when two offer it) is the real fix — parked pending the user's call (they noted the binding is the
   access map, so this stays a documented heuristic for now, not a new deviation).
+
+## DIAG · Diagnostics & logging (planned 2026-07-27)
+
+Researched the open-source standard first (Tauri's official log plugin + general frontend logging
+practice); this leans on it rather than a DIY logger. User: plan only, build later (own session).
+
+- [ ] **DIAG-1 · Diagnostics logging + bug-report bundle.** **Gap today:** the app has NO app/error
+  logging at all (`grep`: 0 `console.*`, 0 logger in `src/`), and "Found a bug?" (`+layout.svelte:209`)
+  is a bare link to GitHub issues — a user who hits a bug can only describe it in prose, with **nothing
+  captured to attach**, and uncaught errors vanish. (Distinct from `characters/<slug>/log.jsonl`, which
+  is the per-character **domain** event log — gameplay history — NOT diagnostics; keep the two separate,
+  do not conflate.)
+  **Design (lean on the standard, not DIY):**
+  - **Facade** `$lib/diag/logger.ts` — `logger.trace/debug/info/warn/error(msg, ctx?)`, the standard
+    syslog-ish levels the Tauri plugin uses. It is the **single module allowed to import the Tauri log
+    plugin** → add `src/lib/diag/**` to the eslint Tauri-fence allowlist (`eslint.config.js:46`, same
+    seam pattern as `storage/tauri.ts` + `update/**`). The facade **picks its impl at runtime and
+    DYNAMICALLY imports the Tauri one** (mirrors `getUserStorage()` in `storage/provider.ts`) so the
+    web/Pages build never statically imports `@tauri-apps/plugin-log` (it doesn't exist there) — a
+    static import would break the web bundle.
+  - **Desktop impl = the official `tauri-plugin-log` v2** (Rust `Builder` in `lib.rs`): targets
+    `Stdout` + `Webview` + `LogDir` (rotating file in the OS app-log dir — Win
+    `%LOCALAPPDATA%\{bundleId}\logs`), `max_file_size` + `rotation_strategy` (KeepAll or keep-N),
+    `level` = Info in release / Debug in dev, `level_for` per-module if a module gets noisy. Capability
+    `log:default`. Call `attachConsole()` on startup so **third-party** `console.*` (svelte-sonner,
+    quickjs, papaparse…) is captured to the file too — complements, not conflicts with, the `no-console`
+    rule below (that rule bans only OUR raw `console`).
+  - **Web impl** (GitHub Pages, no Tauri): the facade falls back to `console` (dev only) + an always-on
+    in-memory **ring buffer** (cap ~500 entries) so there's something to show in a bug report. Same
+    facade signature → call sites are identical (the Storage runtime/web split, again). *Phase 2:*
+    persist the ring buffer to the browser Storage (IndexedDB/OPFS) so a reload/crash survives.
+  - **Global capture:** `window.onerror` + `unhandledrejection` in `+layout` → `logger.error` (today
+    these vanish into nothing).
+  - **Bug-report bundle:** make "Found a bug?" open a Diagnostics step (modal) showing: app version,
+    active system/edition, a **PII-free** state summary (character id / class / level — NEVER names /
+    notes / free-text), the recent log tail (ring buffer / last file lines), and the already-computed
+    content-health `graph.issues` / `metaIssues` / `driftItems` (diagnostic gold, just never surfaced to
+    the bug flow). Primary action = **"Copy diagnostics"** to the clipboard — NOT a prefilled issue URL,
+    because GitHub's `?body=` has a ~URL-length cap the log tail won't fit; the GitHub link carries only
+    a short template skeleton, the user pastes the copied bundle. Desktop also gets "open log folder".
+    **Local-first, no auto-upload** (own-your-data; there's no server anyway) — the user reviews before
+    sending. (content-health bundling can be *phase 2* if the first cut is tight.)
+  - **Redaction:** the plugin has NO built-in redaction, so the facade must never log character names /
+    notes / free-text or raw file contents — only ids, types, levels, counts, error messages + stacks;
+    the bundle summary is explicitly PII-free.
+  - **Levels policy:** `debug` = dev tracing · `info` = notable lifecycle (content loaded N rows, char
+    saved) · `warn` = recoverable/degraded (missing ref, unknown token — already surfaced as `issues`,
+    mirror to `warn`) · `error` = uncaught + failed ops. Release ships Info+.
+  - **Enforcement tie-in (the deferred §2.7 companion):** once the facade exists, add eslint
+    `no-console` (allowlist `$lib/diag/**` + dev) so all logging goes through the facade, not raw
+    `console`.
+  - **Deps:** `@tauri-apps/plugin-log` (JS) + `tauri-plugin-log` (Rust) — both official/minimal.
+  - **Order:** facade + web ring buffer + global capture (cheap, works on web immediately) → desktop
+    plugin wiring (needs Rust) → bug-report bundle UI → `no-console` enforcement.
