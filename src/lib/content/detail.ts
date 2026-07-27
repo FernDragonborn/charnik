@@ -110,8 +110,8 @@ function buildSpell(
 	locale = 'en'
 ): SpellModel {
 	const d = row.data;
-	const res = String(d.resolution ?? 'none');
-	const dmg = String(d.damage ?? '');
+	const res = d.resolution ?? 'none';
+	const dmg = d.damage ?? '';
 	let dice = '';
 	let dmgType = '';
 	const dm = dmg.match(/(\d+d\d+(?:\s*[+-]\s*\d+)?)\s*(.*)/);
@@ -119,7 +119,7 @@ function buildSpell(
 		dice = (dm[1] ?? '').replace(/\s/g, '');
 		dmgType = (dm[2] ?? '').trim();
 	} else if (res === 'auto') {
-		const h = String(d.text_en ?? '').match(/(\d+d\d+)/);
+		const h = (d.text_en ?? '').match(/(\d+d\d+)/);
 		if (h) {
 			dice = h[1] ?? '';
 			dmgType = 'healing';
@@ -131,35 +131,32 @@ function buildSpell(
 		res === 'attack'
 			? 'Attack roll'
 			: res === 'save'
-				? `${String(d.save_ability ?? '').toUpperCase()} save`
+				? `${(d.save_ability ?? '').toUpperCase()} save`
 				: res === 'auto'
 					? 'Automatic'
 					: 'Utility';
-	const components = String(d.components ?? '')
-		.replace(/,/g, ' ')
-		.replace(/\s+/g, ' ')
-		.trim();
-	const conc = String(d.concentration) === 'true';
+	const components = (d.components ?? '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
+	const conc = d.concentration ?? false;
 	return {
 		edition: (Array.isArray(d.systems) ? d.systems : [d.systems]).filter(Boolean).join('/'),
-		ritual: String(d.ritual) === 'true',
+		ritual: d.ritual ?? false,
 		concentration: conc,
 		resChip,
 		resLabel,
 		dice,
 		dmgType,
 		cells: [
-			['Casting', String(d.casting_time ?? '')],
-			['Range', withMetric(String(d.range ?? ''))],
+			['Casting', d.casting_time ?? ''],
+			['Range', withMetric(d.range ?? '')],
 			[
 				'Duration',
-				conc && !/concentration/i.test(String(d.duration))
+				conc && !/concentration/i.test(d.duration ?? '')
 					? `Concentration · ${d.duration}`
-					: String(d.duration ?? '')
+					: (d.duration ?? '')
 			],
 			['Components', components]
 		].filter(([, v]) => v) as [string, string][],
-		classes: String(d.classes ?? '')
+		classes: (d.classes ?? '')
 			.split(',')
 			.map((c) => cap(c.trim()))
 			.filter(Boolean)

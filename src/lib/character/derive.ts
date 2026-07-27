@@ -423,7 +423,7 @@ export function deriveSheet(
 	isActive: (row: LoadedRow) => boolean = () => true
 ): CharacterSheet {
 	const build = character.build;
-	const system = character.system as System;
+	const system = character.system;
 	const missing: string[] = [];
 	const issues: EffectIssue[] = [];
 	// effects-auto global toggle: off → no effect layers (base stats / text only)

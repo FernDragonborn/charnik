@@ -3,7 +3,6 @@
 	// background origin feat (auto), and per-slot ASI allocation (+2 one / +1 two).
 	import { build, rowName, ASI } from '../state.svelte';
 	import { ABILITIES } from '$lib/character/schema';
-	import type { Ability } from '$lib/rules/core';
 	const b = build;
 </script>
 
@@ -42,8 +41,8 @@
 					</div>
 					<div class="chips">
 						{#each ABILITIES as ab (ab)}
-							{@const amt = b.asiBoostFor(slot.key)[ab as Ability]}
-							<button class="pick-chip" class:on={asi.picks.includes(ab as Ability)} onclick={() => b.toggleAsiPick(slot.key, ab as Ability)}>
+							{@const amt = b.asiBoostFor(slot.key)[ab]}
+							<button class="pick-chip" class:on={asi.picks.includes(ab)} onclick={() => b.toggleAsiPick(slot.key, ab)}>
 								{ab.toUpperCase()}{#if amt}<span class="gold"> +{amt}</span>{/if}
 							</button>
 						{/each}

@@ -5,7 +5,6 @@
 	import { build, rowName } from '../state.svelte';
 	import { ABILITIES } from '$lib/character/schema';
 	import { signed } from '$lib/util/format';
-	import type { Ability } from '$lib/rules/core';
 	import type { StatMethod } from '$lib/build/rules';
 	const b = build;
 	const METHODS: { id: StatMethod; label: string }[] = [
@@ -28,24 +27,24 @@
 	</div>
 
 	{#each ABILITIES as ab (ab)}
-		{@const block = b.sheet?.abilities[ab as Ability]}
+		{@const block = b.sheet?.abilities[ab]}
 		<div class="stat-row">
 			<span class="ability-code">{ab}</span>
 			{#if b.draft.method === 'standard_array'}
-				<select class="arraysel bare" value={b.draft.arrayPick[ab as Ability] ?? ''} onchange={(e) => b.assignArray(ab as Ability, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}>
+				<select class="arraysel bare" value={b.draft.arrayPick[ab] ?? ''} onchange={(e) => b.assignArray(ab, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}>
 					<option value="">—</option>
-					{#if b.draft.arrayPick[ab as Ability] != null}<option value={b.draft.arrayPick[ab as Ability]}>{b.draft.arrayPick[ab as Ability]}</option>{/if}
+					{#if b.draft.arrayPick[ab] != null}<option value={b.draft.arrayPick[ab]}>{b.draft.arrayPick[ab]}</option>{/if}
 					{#each b.arrayRemaining as v (v)}<option value={v}>{v}</option>{/each}
 				</select>
 			{:else}
 				<span class="stepper">
-					<button aria-label="lower {ab}" onclick={() => b.bumpAbility(ab as Ability, -1)}>−</button>
-					<span class="base">{b.draft.abilities[ab as Ability]}</span>
-					<button aria-label="raise {ab}" onclick={() => b.bumpAbility(ab as Ability, 1)}>+</button>
+					<button aria-label="lower {ab}" onclick={() => b.bumpAbility(ab, -1)}>−</button>
+					<span class="base">{b.draft.abilities[ab]}</span>
+					<button aria-label="raise {ab}" onclick={() => b.bumpAbility(ab, 1)}>+</button>
 				</span>
 			{/if}
-			<span class="bonus">{b.abilityNote(ab as Ability)}</span>
-			<span class="total">{block?.score.value ?? b.draft.abilities[ab as Ability]} <small>{block ? signed(block.mod) : ''}</small></span>
+			<span class="bonus">{b.abilityNote(ab)}</span>
+			<span class="total">{block?.score.value ?? b.draft.abilities[ab]} <small>{block ? signed(block.mod) : ''}</small></span>
 		</div>
 	{/each}
 

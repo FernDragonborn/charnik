@@ -87,11 +87,11 @@ const SLOT_COLUMNS = [
 function slotTable(graph: ContentGraph, kind: string, systems: string[]): SlotTable {
 	const m = new Map<number, number[]>();
 	for (const r of graph.list('spell_slots')) {
-		if (String(r.data.kind) !== kind) continue;
+		if (r.data.kind !== kind) continue;
 		if (!r.systems.some((s) => systems.includes(s))) continue;
 		m.set(
-			Number(r.data.level),
-			SLOT_COLUMNS.map((col) => Number(r.data[col] || 0))
+			r.data.level,
+			SLOT_COLUMNS.map((col) => r.data[col] || 0)
 		);
 	}
 	return m;
@@ -109,9 +109,9 @@ function castingCounts(
 	let best: { level: number; cantrips: number | undefined; prepared: number | undefined } | null =
 		null;
 	for (const r of graph.list('class_casting')) {
-		if (String(r.data.class_id) !== classId) continue;
+		if (r.data.class_id !== classId) continue;
 		if (!r.systems.some((s) => systems.includes(s))) continue;
-		const rowLevel = Number(r.data.level);
+		const rowLevel = r.data.level;
 		if (rowLevel > level || (best && rowLevel <= best.level)) continue;
 		best = {
 			level: rowLevel,
@@ -208,7 +208,7 @@ function casterProfileFor(
 		ability: owner.data.spell_ability ?? 'int',
 		prepareStyle: owner.data.prepare_style ?? 'prepared',
 		slotKind: String(owner.data.slot_table || caster),
-		className: String(classRow.data.name_en),
+		className: classRow.data.name_en,
 		ownerId,
 		accessRef,
 		ritual

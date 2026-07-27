@@ -642,19 +642,37 @@ Baseline is HEALTHY: strict + exactOptionalPropertyTypes + noUncheckedIndexedAcc
 clean, zero `any`/`ts-ignore` in src, typed loader (discriminated LoadedRow) real. The gaps
 are the "last untyped layer" — places the compiler is blindfolded on top of good types:
 
-- [ ] **G1 · 37× `String()`/`Number()` coercions over already-typed row data** (helpers.ts ×11,
-  character/spellcasting.ts ×9, …) — leftovers from the `Record<string,unknown>` era. Worst:
-  `String(row.data.concentration) === 'true'` (boolean via string compare). Remove the
-  coercions so type changes surface at compile time.
-- [ ] **G2 · `ab as Ability` ×12 in `build/+page.svelte` markup** — one untyped iteration
-  re-cast at every use; fix the iterator's type once.
-- [ ] **G3 · Character-schema records looser than the domain:** `abilityBoosts` keys should be
-  `Ability`; `spellSlotsSpent` keys are `"1".."9" | "pact"` in practice; `panelColumns` ids
-  are a known union. Encode them — wrong states become unrepresentable.
-- [ ] **G4 · Seams that downgrade typed data:** `effectHint(d: Record<string, unknown>)` and
-  detail.ts `localized()` accept untyped bags though callers hold typed rows.
-- [ ] **G5 · No-op cast `character.system as System`** (derive.ts) — masks the SYSTEMS
-  duplication; dies with F7's single-source fix.
+- [~] **G1 · `String()`/`Number()` coercions over already-typed row data.** DONE 2026-07-27 for
+  the `Record<string,unknown>`-era leftovers — every coercion over a NARROWED `row.data`
+  (`LoadedRowOf<T>`, fully typed): `helpers.ts` (`spellRow`, `computeAttacks`, `buildSpellGroups`),
+  `spellcasting.ts` (`slotTable`, `castingCounts`), and `detail.ts` `buildSpell`. The worst offender
+  — `String(row.data.concentration) === 'true'` (boolean-via-string) — is gone (now reads the
+  `boolean` directly). Rule applied: drop the redundant `String()`/`Number()` WRAPPER, keep the
+  `?? ''`/`?? false` null-guards (null-checks are a separate track, and the `test-utils` cast lets
+  a `reqStr` field be `undefined` at runtime even though prod zod-parse guarantees it). REMAINING BY
+  DESIGN (not leftovers): genuinely-dynamic reads — `detail.ts` monster block (`d[k]` over a
+  heterogeneous column union), locale-keyed columns (`row.data[`name_${locale}`]`), and regex-match
+  parsing (`Number(m[1])`). Those stay coerced.
+- [x] **G2 · `ab as Ability` casts** — DONE 2026-07-27. Post-split the ×12 lived in
+  `build/blocks/AbilityScoresCard.svelte` + `FeatsCard.svelte`; `ABILITY_IDS`/`ABILITIES` is already
+  `as const`, so `#each ABILITIES as ab` gives `ab: Ability` — the casts were pure noise. Removed +
+  dropped the now-unused `Ability` imports.
+- [ ] **G3 · Character-schema records looser than the domain** — DEFERRED (needs a design call, not
+  a mechanical fix). `abilityBoosts`/`spellSlotsSpent` are PARTIAL maps (only touched keys present).
+  Tightening the zod key to `z.enum(ABILITIES)` / slot-union infers a NON-partial `Record<K,V>`, and
+  under `noUncheckedIndexedAccess` a known literal key then reads as `V` (no `| undefined`) — a LIE
+  for a partial map (type says defined, runtime absent). A correct fix = `Partial<Record<K,V>>` typing
+  + migration tolerance for old-save string keys (`z.record(z.string(), …)` at parse, branded key
+  type for reads). `panelColumns` → `PanelId[][]` would reject old saves with retired panel ids. Park
+  until the partial-record encoding is decided.
+- [~] **G4 · Seams that downgrade typed data.** DONE 2026-07-27 for the real offender:
+  `effectHint(d: Record<string, unknown>)` → `effectHint(d: RowData<'spell'>)` (its one caller passes
+  a narrowed spell `row.data`). `detail.ts` `localized()` KEPT as a bag on purpose — it does
+  locale-keyed column access (`d[`${base}_${locale}`]`) where the locale is a runtime value, so the
+  key is genuinely dynamic; a typed row doesn't help there.
+- [x] **G5 · No-op cast `character.system as System`** (derive.ts) — DONE 2026-07-27. F7's
+  single-source already landed (schema imports `SYSTEMS` from `rules/pipeline`), so `character.system`
+  is `System` and the cast was a pure no-op. Removed.
 
 ## T · Test-coverage holes (`pnpm test:coverage`, 2026-07-14)
 

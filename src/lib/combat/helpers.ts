@@ -14,6 +14,7 @@ import {
 	type System
 } from '$lib/rules/pipeline';
 import type { ContentGraph } from '$lib/content/loader';
+import type { RowData } from '$lib/content/schemas';
 import type { Character, EffectInstance } from '$lib/character/schema';
 import { SKILL_ABILITY, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import type { SpellcastingClass } from '$lib/character/spellcasting';
@@ -518,22 +519,18 @@ const castingIcon = (ct: string): SpRow['ct'] =>
 	/bonus/i.test(ct) ? 'bonus' : /reaction/i.test(ct) ? 'react' : '';
 
 /** Short effect summary for a non-damage spell (curated, falls back to "utility"). */
-function effectHint(d: Record<string, unknown>): string {
-	const range = String(d.range ?? '');
-	if (/self/i.test(range) && /step|door|teleport/i.test(String(d.name_en))) return 'teleport';
-	if (/counter/i.test(String(d.name_en))) return 'negate spell';
-	if (
-		/mage hand|prestidig|light|message|minor illusion|mage armor|fly|invis|mirror/i.test(
-			String(d.name_en)
-		)
-	)
+function effectHint(d: RowData<'spell'>): string {
+	const name = d.name_en ?? '';
+	if (/self/i.test(d.range ?? '') && /step|door|teleport/i.test(name)) return 'teleport';
+	if (/counter/i.test(name)) return 'negate spell';
+	if (/mage hand|prestidig|light|message|minor illusion|mage armor|fly|invis|mirror/i.test(name))
 		return (
 			{
 				'mage hand': 'utility',
 				'mage armor': 'set AC 13',
 				fly: 'fly 60 ft',
 				'mirror image': '3 duplicates'
-			}[String(d.name_en).toLowerCase()] ?? 'utility'
+			}[name.toLowerCase()] ?? 'utility'
 		);
 	return 'utility';
 }
@@ -605,8 +602,8 @@ export function computeAttacks(
 		if (!inv.equipped) continue;
 		const row = graph.get(inv.item);
 		if (row?.type !== 'item' || row.data.category !== 'weapon') continue;
-		const props = String(row.data.properties ?? '').toLowerCase();
-		const ranged = String(row.data.item_type ?? '').includes('ranged');
+		const props = (row.data.properties ?? '').toLowerCase();
+		const ranged = (row.data.item_type ?? '').includes('ranged');
 		const mod = ranged ? dexMod : props.includes('finesse') ? Math.max(strMod, dexMod) : strMod;
 		const proficient = isWeaponProficient(weaponGrants, row.data.item_type, row.id);
 		// D9: a magic weapon's OWN effect tokens fold into THIS attack only (a +1 sword must not
@@ -617,7 +614,7 @@ export function computeAttacks(
 		const notProfNote = proficient ? undefined : 'Not proficient — no proficiency bonus';
 		const note = [w.note, notProfNote].filter(Boolean).join('; ') || undefined;
 		out.push({
-			name: String(row.data.name_en),
+			name: row.data.name_en,
 			toHit: mod + (proficient ? prof : 0) + w.attack,
 			dmg: `${row.data.damage ?? ''} ${signed(mod + w.damage)} ${row.data.damage_type ?? ''}`.trim(),
 			meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · '),
@@ -819,7 +816,7 @@ export function buildSpellGroups(
 		const byLevel = new Map<number, SpRow[]>();
 		for (const x of all) {
 			const spell = graph.get(x.sp.spell);
-			const lvl = spell?.type === 'spell' ? Number(spell.data.level) : 0;
+			const lvl = spell?.type === 'spell' ? spell.data.level : 0;
 			const bucket = byLevel.get(lvl) ?? [];
 			bucket.push(x.row);
 			byLevel.set(lvl, bucket);
@@ -833,7 +830,7 @@ export function buildSpellGroups(
 						? null
 						: {
 								full: slotsByLevel.get(lvl) ?? 0,
-								spent: Number(character.play.spellSlotsSpent[String(lvl)] ?? 0)
+								spent: character.play.spellSlotsSpent[String(lvl)] ?? 0
 							},
 				rows: byLevel.get(lvl) ?? []
 			});
@@ -847,7 +844,7 @@ export function buildSpellGroups(
 		const bySchool = new Map<string, SpRow[]>();
 		for (const x of all) {
 			const spell = graph.get(x.sp.spell);
-			const sch = String((spell?.type === 'spell' ? spell.data.school : '') || 'Other');
+			const sch = (spell?.type === 'spell' ? spell.data.school : '') || 'Other';
 			const bucket = bySchool.get(sch) ?? [];
 			bucket.push(x.row);
 			bySchool.set(sch, bucket);
@@ -874,20 +871,18 @@ export function spellRow(
 ): SpRow | null {
 	const row = graph.get(ref);
 	if (row?.type !== 'spell') return null;
-	const lvl = Number(row.data.level);
-	const res = String(row.data.resolution ?? 'none');
+	const lvl = row.data.level;
+	const res = row.data.resolution ?? 'none';
 	// dice for casting: the damage field, or (for auto/healing spells) the "regains …
 	// equal to NdM" dice parsed out of the description
-	let dmg =
-		String(row.data.damage ?? '') ||
-		(res === 'auto' ? healDice(String(row.data.text_en ?? '')) : '');
+	let dmg = (row.data.damage ?? '') || (res === 'auto' ? healDice(row.data.text_en ?? '') : '');
 	const scale = lvl === 0 ? cantripDieMultiplier(charLevel) : 1;
 	if (scale > 1)
 		dmg = dmg.replace(/(\d+)d(\d+)/gi, (_, n: string, s: string) => `${Number(n) * scale}d${s}`);
 	return {
-		id: String(row.data.id),
+		id: row.data.id,
 		ref,
-		name: String(row.data.name_en),
+		name: row.data.name_en,
 		level: lvl,
 		spe: dmg || effectHint(row.data),
 		res: res === 'attack' ? 'hit' : res === 'save' ? 'save' : res === 'auto' ? 'auto' : '',
@@ -900,10 +895,10 @@ export function spellRow(
 						? 'auto'
 						: '',
 		tm: lvl === 0 ? 'cantrip' : ordinal(lvl),
-		ct: castingIcon(String(row.data.casting_time ?? '')),
+		ct: castingIcon(row.data.casting_time ?? ''),
 		dmg: dmg ? parseDicePool(dmg) : null,
-		conc: String(row.data.concentration) === 'true',
-		ritual: String(row.data.ritual) === 'true',
+		conc: row.data.concentration ?? false,
+		ritual: row.data.ritual ?? false,
 		prep
 	};
 }
