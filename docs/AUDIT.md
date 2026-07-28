@@ -359,12 +359,11 @@ Deep effects-system review, 2026-07-16 (B12–B26):
 
 ## C · Design-token / CSS violations
 
-- [~] **C1 · Hardcoded colors (~15 sites).** PARTIAL 2026-07-21 (zero-risk swaps done): every
-  `color: #fff` → `--color-accent-text` (identical in both themes), the `#000a` popover shadows →
-  `var(--color-overlay)` (theme-aware color, geometry kept), the `.knob` white bg → `--color-accent-text`,
-  and the pointless `var(--color-danger, #…)` fallbacks dropped. REMAINING (need light-theme token
-  VALUES — a design call, logged in `docs/DECISIONS-PENDING.md`): gold border `#5a4d28`, teal border
-  `#2c4a45`, gold-tinted popover surface `#221c10` / settings `#1a1400`.
+- [x] **C1 · Hardcoded colors.** DONE (confirmed 2026-07-28). The remaining gold/teal borders + gold-
+  tinted surfaces are now semantic tokens defined in BOTH theme blocks: `--color-resource-line`
+  (`#5a4d28` dark / `#cbb684` light), `--color-good-line` (`#2c4a45` / `#a6d5cc`), `--color-warning-text`
+  (`#1a1400` / `#fff`). No raw hex remains in any component (stylelint `color-no-hex` green over `src/`);
+  the only hex left is the token DEFINITIONS in `tokens.css`, which is correct.
 
 - [~] **C2 · Same class name, different styles across components** (css-name-collisions.mjs,
   2026-07-14). PARTIAL 2026-07-21: deleted the `.visually-hidden` local redefine in `build/+page`
@@ -377,8 +376,12 @@ Deep effects-system review, 2026-07-16 (B12–B26):
 - [ ] **C3 · Cross-file CSS duplicate clusters** (css-dups.mjs). Repeated declaration blocks
   across components — hoist candidates for components.css: flex-column page shells
   (compendium vs translate `.page`), chip-on state (Chip vs CombatStrip), warn-tag colors
-  (DraftsPane ×2 vs ContentHealth), `flex:1;min-width:0` truncation trio, etc. Same follow-up
-  as the jscpd CSS ratchet — one pass, hoist the shared vocabulary.
+  (DraftsPane ×2 vs ContentHealth), `flex:1;min-width:0` truncation trio, the mono-uppercase-micro
+  label block (ArticleProse `.edit-line > span` / EditContentForm `.block-label` / CombatMenus — the
+  `.eyebrow` group-selector in `components.css` already owns this primitive; the three holdouts
+  should compose it), etc. Same follow-up as the jscpd CSS ratchet — one pass, hoist the shared
+  vocabulary. NB the holdouts differ in `font-size` (micro vs xs) + margins → each hoist needs
+  shot.mjs visual verification (jscpd is GREEN at 1.38% ≪ 1.8%, so this is DRY hygiene, not urgent).
 
 ## D · Structure / size / smells
 

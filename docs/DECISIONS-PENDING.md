@@ -473,7 +473,7 @@ re-tag any you'd rather decide on.
 - **F6** — inline `e instanceof Error ? …` in translate/+page + the updater could adopt the shared `errText`.
 - **F8** — focus-trap + backdrop-dismiss half of the dialog shell (Escape half done) → folds into the planned A11Y-1 dialog-shell.
 - **D19 remainder** — `RollEffects.flat` carries its "ignore for save/skill keys" contract in a comment, not the type (`helpers.ts:66`).
-- **C1** — the last ~5 gold/teal hardcoded colors need light-theme token VALUES (a visual-design call — see §4).
+- **C1** — ✅ DONE 2026-07-28. Gold/teal borders + gold-tinted surfaces are semantic tokens in both theme blocks; no raw hex left (see §4).
 
 **Working-tree nits** (PLAN → REL/housekeeping)
 - **W2** — ✅ DONE 2026-07-28. `translate`/`spellbook`/`build` all surface `content.error` via the `<Loading error>` pattern now (was: hang forever / silent empty pickers).
@@ -487,12 +487,11 @@ re-tag any you'd rather decide on.
 
 # §4 · Pre-existing entries (kept) + DEFERRED
 
-### C1 · Light-theme values for the last hardcoded colors *(needs your visual call)*
-Zero-risk swaps done. Remaining sites need light-theme token VALUES:
-- **Gold border** `#5a4d28` (dark) — `.recharge-chip`, `SpellHead`, resource hover tints. Needs `--color-resource-border` (dark `#5a4d28`, light **TBD** — `#d8c48f`?).
-- **Teal border** `#2c4a45` (dark) — PanelCard. Needs `--color-good-border`, light **TBD**.
-- **Gold-tinted popover surface** `#221c10` (EffectDurationMenu) + `#1a1400` (settings). Reuse `--color-resource-soft`, or dedicated tokens (hues differ slightly)?
-Pick the light values (or "reuse resource-soft / resource-border derived") and I close C1.
+### C1 · Light-theme values for the last hardcoded colors — ✅ DONE (2026-07-28)
+The light values were supplied and the tokens now exist in BOTH theme blocks (`tokens.css`):
+`--color-resource-line` (`#5a4d28` / `#cbb684`), `--color-good-line` (`#2c4a45` / `#a6d5cc`),
+`--color-warning-text` (`#1a1400` / `#fff`). Components use the tokens; no raw hex remains
+(stylelint `color-no-hex` green). C1 closed.
 
 ### Per-resource USE effects (Arcane Recovery, Sorcery Points, Channel Divinity…) *(big feature, deferred by you)*
 "Using" a resource should run its real mechanic; each needs its own picker + rules math
