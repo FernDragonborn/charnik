@@ -126,14 +126,22 @@ export interface ResourceOption {
 	cost: number | 'x';
 }
 
+interface ResourceOptionsInput {
+	graph: ContentGraph;
+	resourceIds: Set<string>;
+	system: System;
+	isActive: (row: LoadedRow) => boolean;
+	issues: EffectIssue[];
+}
+
 /** Gather the spend-options for the resources a character has (edition + source filtered). Pure. */
-function resolveResourceOptions(
-	graph: ContentGraph,
-	resourceIds: Set<string>,
-	system: System,
-	isActive: (row: LoadedRow) => boolean,
-	issues: EffectIssue[]
-): ResourceOption[] {
+function resolveResourceOptions({
+	graph,
+	resourceIds,
+	system,
+	isActive,
+	issues
+}: ResourceOptionsInput): ResourceOption[] {
 	const out: ResourceOption[] = [];
 	for (const row of graph.rows) {
 		if (row.type !== 'resource_option' || !row.systems.includes(system) || !isActive(row)) continue;
@@ -470,13 +478,13 @@ export function deriveSheet(
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
 		defenses,
 		resources: facts.resources,
-		resourceOptions: resolveResourceOptions(
+		resourceOptions: resolveResourceOptions({
 			graph,
-			new Set(facts.resources.map((r) => r.id)),
+			resourceIds: new Set(facts.resources.map((r) => r.id)),
 			system,
 			isActive,
 			issues
-		),
+		}),
 		spellcasting,
 		missing: [...new Set(missing)], // dedupe: the same ref can be missing from several scans (D19)
 		deriveIssues: issues,

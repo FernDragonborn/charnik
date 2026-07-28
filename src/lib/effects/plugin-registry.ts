@@ -269,7 +269,7 @@ export function expandPluginEffects(
 			};
 			// fail-closed counter is per (namespace, character) — a fail on THIS character only
 			const r = resolvePluginToken(ref, failKey(namespace, scope), keys, budget);
-			if (r.ok) applyResult(out, eff, namespace, token, r.result);
+			if (r.ok) applyResult({ out, eff, namespace, token, result: r.result });
 			else degrade(eff, token, r.reason);
 		}
 	}
@@ -340,14 +340,16 @@ function resolvePluginToken(
 	return { ok: true, result: v.result };
 }
 
+interface ApplyResultInput {
+	out: PluginExpansion;
+	eff: ActiveEffect;
+	namespace: string;
+	token: string;
+	result: PluginResult;
+}
+
 /** Fold one validated result into the expansion, attributed to the CARRYING effect (§4.4a). */
-function applyResult(
-	out: PluginExpansion,
-	eff: ActiveEffect,
-	namespace: string,
-	token: string,
-	result: PluginResult
-): void {
+function applyResult({ out, eff, namespace, token, result }: ApplyResultInput): void {
 	if (result.tokens?.length) {
 		// nested `plugin:` tokens are IGNORED (no recursion — §4.3)
 		const tokens = result.tokens.filter((t) => parseToken(t).kind !== EFFECT_KIND.plugin);

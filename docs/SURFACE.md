@@ -292,7 +292,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function parseSpeciesBoostChoice` — Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null.
 - `function speciesFixedAbilities` — Abilities raised by a species/sub-option's FIXED ASI (its flat_bonus effects) — excluded from the * free choice (5e H…
 - `function asiBoost` — One per-slot ASI allocation (+2 to one ability, or +1 to two) → its ability-boost map.
-- `function buildSpellPicker` — Build the per-caster-class spell picker: the pickable spell pool grouped by level, plus the * cantrip/leveled counts …
+- `interface SpellPickerInput` — Build the per-caster-class spell picker: the pickable spell pool grouped by level, plus the * cantrip/leveled counts …
+- `function buildSpellPicker`
 - `function buildIssues` — The blocking-in-Strict validation messages for a draft.
 
 ### `src/lib/build/rules.ts`
@@ -473,8 +474,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpGroup` — A group of spells (Pinned / by level / by prepared / by school).
 - `interface PreparedClassTally` — A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its * own cap.
 - `function preparedTalliesByClass` — Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class * that grants it — v…
-- `function canTogglePreparedFor` — The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it * (per-class — A18-tail).
-- `function buildSpellGroups` — Group the character's spells for the spell block (Pinned first, then by level / prepared / school), * attaching the c…
+- `interface PrepareToggleInput` — The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it * (per-class — A18-tail).
+- `function canTogglePreparedFor`
+- `interface SpellGroupsInput` — Group the character's spells for the spell block (Pinned first, then by level / prepared / school), * attaching the c…
+- `function buildSpellGroups`
 - `function spellRow` — Build a spell row from the content graph (or null if the ref is missing).
 
 ### `src/lib/components/wikiEdit.ts`
@@ -1005,4 +1008,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 544 exports across 87 modules · 31 duplicate suspects · generated in 166ms._
+_45 tokens · 61 global classes · 40 components · 547 exports across 87 modules · 31 duplicate suspects · generated in 167ms._

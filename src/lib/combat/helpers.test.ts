@@ -143,18 +143,48 @@ describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + 
 		const spells = [prep('spell:x:magic_missile')]; // fills the Wizard cap
 
 		// a second Wizard spell is blocked (that class is at cap)…
-		const wiz = canTogglePreparedFor(spells, sheet, entry, 'spell:x:shield', false);
+		const wiz = canTogglePreparedFor({
+			spells,
+			sheet,
+			entry,
+			spellRef: 'spell:x:shield',
+			isCantrip: false
+		});
 		expect(wiz.ok).toBe(false);
 		expect(wiz.ok === false && wiz.message).toContain('full');
 		// …but a Cleric spell still toggles (its own cap has room) — the classes[0] bug would block it
-		expect(canTogglePreparedFor(spells, sheet, entry, 'spell:x:cure_wounds', false).ok).toBe(true);
+		expect(
+			canTogglePreparedFor({
+				spells,
+				sheet,
+				entry,
+				spellRef: 'spell:x:cure_wounds',
+				isCantrip: false
+			}).ok
+		).toBe(true);
 	});
 
 	it('refuses a cantrip and an always-prepared entry outright', () => {
 		const sheet = sheetOf(cls('wizard', 'Wizard', 16, 5, ['spell:x:fire_bolt']));
-		expect(canTogglePreparedFor([], sheet, entry, 'spell:x:fire_bolt', true).ok).toBe(false);
+		expect(
+			canTogglePreparedFor({
+				spells: [],
+				sheet,
+				entry,
+				spellRef: 'spell:x:fire_bolt',
+				isCantrip: true
+			}).ok
+		).toBe(false);
 		const always = { prepared: true, alwaysPrepared: true };
-		expect(canTogglePreparedFor([], sheet, always, 'spell:x:fire_bolt', false).ok).toBe(false);
+		expect(
+			canTogglePreparedFor({
+				spells: [],
+				sheet,
+				entry: always,
+				spellRef: 'spell:x:fire_bolt',
+				isCantrip: false
+			}).ok
+		).toBe(false);
 	});
 });
 

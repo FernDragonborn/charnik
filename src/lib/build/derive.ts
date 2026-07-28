@@ -56,13 +56,21 @@ export function asiBoost(
 /** Build the per-caster-class spell picker: the pickable spell pool grouped by level, plus the
  *  cantrip/leveled counts already chosen. Strict shows only legally-pickable spells (class access +
  *  ≤ max spell level); Free lifts every gate. */
-export function buildSpellPicker(
-	allSpells: LoadedRow[],
-	sheet: CharacterSheet,
-	graph: ContentGraph,
-	strict: boolean,
-	selectedSpells: string[]
-) {
+export interface SpellPickerInput {
+	allSpells: LoadedRow[];
+	sheet: CharacterSheet;
+	graph: ContentGraph;
+	strict: boolean;
+	selectedSpells: string[];
+}
+
+export function buildSpellPicker({
+	allSpells,
+	sheet,
+	graph,
+	strict,
+	selectedSpells
+}: SpellPickerInput) {
 	const levelOf = (s: LoadedRow) => (s.type === 'spell' ? Number(s.data.level ?? 0) : 0);
 	const chosenLevel = (id: string) => {
 		const r = graph.get(id);

@@ -667,13 +667,13 @@ class CombatVM {
 		if (!this.character) return;
 		const sp = this.character.build.spells.find((s) => s.spell.endsWith(`:${r.id}`));
 		// A18-tail: per-class cap gate via the ONE shared seam (identical in the spellbook, D13)
-		const res = canTogglePreparedFor(
-			this.character.build.spells,
-			this.sheet,
-			sp,
-			r.ref,
-			r.tm === 'cantrip'
-		);
+		const res = canTogglePreparedFor({
+			spells: this.character.build.spells,
+			sheet: this.sheet,
+			entry: sp,
+			spellRef: r.ref,
+			isCantrip: r.tm === 'cantrip'
+		});
 		if (!res.ok) {
 			if (res.message) toast(res.message);
 			return;
@@ -696,14 +696,14 @@ class CombatVM {
 
 	spellGroups = $derived.by(() =>
 		this.character && this.graph
-			? buildSpellGroups(
-					this.character,
-					this.sheet,
-					this.graph,
-					this.spellGroupBy,
-					this.pinned,
-					this.character.ui.spellsHidden
-				)
+			? buildSpellGroups({
+					character: this.character,
+					sheet: this.sheet,
+					graph: this.graph,
+					groupBy: this.spellGroupBy,
+					pinned: this.pinned,
+					hidden: this.character.ui.spellsHidden
+				})
 			: []
 	);
 	// B9: worn non-proficient armor blocks spellcasting (RAW rule-block). Surfaced on the spells panel.

@@ -96,7 +96,13 @@
 		const row = graph?.get(id);
 		const isCantrip = row?.type === 'spell' && Number(row.data.level) === 0;
 		// A18-tail: per-class cap gate via the ONE shared seam (identical in the combat sheet, D13)
-		const res = canTogglePreparedFor(character?.build.spells ?? [], sheet, e, id, isCantrip);
+		const res = canTogglePreparedFor({
+			spells: character?.build.spells ?? [],
+			sheet,
+			entry: e,
+			spellRef: id,
+			isCantrip
+		});
 		if (!res.ok) {
 			if (res.message) toast(res.message);
 			return;

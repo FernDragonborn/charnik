@@ -119,13 +119,21 @@ export function preparedTalliesByClass(
  *  spell's play-state row (its prepared flags); a missing/always-prepared/cantrip entry is refused
  *  inside `canTogglePrepared`. Falls back to the primary class + total count for a spell no class
  *  claims (mirrors casterForSpell's own fallback). */
-export function canTogglePreparedFor(
-	spells: readonly { spell: string; prepared: boolean; alwaysPrepared: boolean }[],
-	sheet: CharacterSheet | null,
-	entry: PreparableSpell | undefined,
-	spellRef: string,
-	isCantrip: boolean
-): PrepareAttempt {
+export interface PrepareToggleInput {
+	spells: readonly { spell: string; prepared: boolean; alwaysPrepared: boolean }[];
+	sheet: CharacterSheet | null;
+	entry: PreparableSpell | undefined;
+	spellRef: string;
+	isCantrip: boolean;
+}
+
+export function canTogglePreparedFor({
+	spells,
+	sheet,
+	entry,
+	spellRef,
+	isCantrip
+}: PrepareToggleInput): PrepareAttempt {
 	const cls = casterForSpell(sheet, spellRef);
 	const tally = cls
 		? preparedTalliesByClass(spells, sheet).find((t) => t.classId === cls.classId)
@@ -192,15 +200,24 @@ function groupBySchool(all: SpEntry[], graph: ContentGraph): SpGroup[] {
 
 /** Group the character's spells for the spell block (Pinned first, then by level / prepared / school),
  *  attaching the castable slot pool per level. Pure — the VM just wraps it in a `$derived`. */
-export function buildSpellGroups(
-	character: Character,
-	sheet: CharacterSheet | null,
-	graph: ContentGraph,
-	groupBy: GroupMode,
-	pinned: Record<string, boolean>,
+export interface SpellGroupsInput {
+	character: Character;
+	sheet: CharacterSheet | null;
+	graph: ContentGraph;
+	groupBy: GroupMode;
+	pinned: Record<string, boolean>;
 	/** effectiveIds hidden from the sheet via the spellbook eye (Issue #3) — filtered out entirely. */
-	hidden: readonly string[] = []
-): SpGroup[] {
+	hidden?: readonly string[];
+}
+
+export function buildSpellGroups({
+	character,
+	sheet,
+	graph,
+	groupBy,
+	pinned,
+	hidden = []
+}: SpellGroupsInput): SpGroup[] {
 	const slotsByLevel = new Map<number, number>();
 	for (const p of sheet?.spellcasting.pools ?? [])
 		if (!p.forcedUpcast && p.spellLevel) slotsByLevel.set(p.spellLevel, p.max);

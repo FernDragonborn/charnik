@@ -311,13 +311,13 @@ class BuildVM {
 	 */
 	spellPicker = $derived.by(() =>
 		this.graph && this.sheet
-			? buildSpellPicker(
-					this.list('spell'),
-					this.sheet,
-					this.graph,
-					this.draft.strict,
-					this.draft.selectedSpells
-				)
+			? buildSpellPicker({
+					allSpells: this.list('spell'),
+					sheet: this.sheet,
+					graph: this.graph,
+					strict: this.draft.strict,
+					selectedSpells: this.draft.selectedSpells
+				})
 			: []
 	);
 	toggleSpell = (ref: string) => {
