@@ -18,18 +18,22 @@ export const content = $state<{ graph: ContentGraph | null; guid: string; error:
 	error: null
 });
 
+/** Load the graph into the store: on success rotate the guid + clear the error; on failure record it
+ *  and drop the rejected cache so a retry can re-run. Shared by the initial load + reload. */
+async function loadGraphIntoStore(): Promise<void> {
+	try {
+		content.graph = await getContentGraph();
+		content.guid = crypto.randomUUID();
+		content.error = null;
+	} catch (e) {
+		content.error = e instanceof Error ? (e.stack ?? e.message) : String(e);
+		resetContentGraph();
+	}
+}
+
 /** Load the graph once into the store (no-op if already loaded). */
 export async function loadContentStore(): Promise<ContentGraph | null> {
-	if (!content.graph) {
-		try {
-			content.graph = await getContentGraph();
-			content.guid = crypto.randomUUID();
-			content.error = null;
-		} catch (e) {
-			content.error = e instanceof Error ? (e.stack ?? e.message) : String(e);
-			resetContentGraph(); // drop the rejected cache so a retry can re-run
-		}
-	}
+	if (!content.graph) await loadGraphIntoStore();
 	return content.graph;
 }
 
@@ -40,13 +44,6 @@ export async function reloadContent(
 ): Promise<ContentGraph | null> {
 	if (opts.remount) resetUserStorage();
 	resetContentGraph();
-	try {
-		content.graph = await getContentGraph();
-		content.guid = crypto.randomUUID();
-		content.error = null;
-	} catch (e) {
-		content.error = e instanceof Error ? (e.stack ?? e.message) : String(e);
-		resetContentGraph();
-	}
+	await loadGraphIntoStore();
 	return content.graph;
 }

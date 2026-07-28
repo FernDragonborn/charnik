@@ -381,22 +381,18 @@ function validateSpellListJoins(
 		(map.get(String(id)) ?? []).some((s) => systems.includes(s));
 	for (const r of byType.get('spell_lists') ?? []) {
 		if (r.type !== 'spell_lists') continue; // byType guarantees it; the guard narrows the union for TS
-		if (!joinResolves(classSystems, r.data.class_id, r.systems))
-			issues.push({
-				level: 'warn',
-				root: r.root,
-				file: r.file,
-				id: r.id,
-				message: `spell_lists: unknown class "${r.data.class_id}" (no class with that id in this edition)`
-			});
-		if (!joinResolves(spellSystems, r.data.spell_id, r.systems))
-			issues.push({
-				level: 'warn',
-				root: r.root,
-				file: r.file,
-				id: r.id,
-				message: `spell_lists: unknown spell "${r.data.spell_id}" (no spell with that id in this edition)`
-			});
+		const checkJoin = (map: Map<string, string[]>, id: unknown, kind: string): void => {
+			if (!joinResolves(map, id, r.systems))
+				issues.push({
+					level: 'warn',
+					root: r.root,
+					file: r.file,
+					id: r.id,
+					message: `spell_lists: unknown ${kind} "${String(id)}" (no ${kind} with that id in this edition)`
+				});
+		};
+		checkJoin(classSystems, r.data.class_id, 'class');
+		checkJoin(spellSystems, r.data.spell_id, 'spell');
 	}
 }
 

@@ -69,6 +69,16 @@ const bool = z.preprocess(
 	z.boolean()
 );
 
+/** A CSV list cell → a validated array: split via the shared `splitList` (trim + drop empties), then
+ *  validate with `schema`. `map` transforms each token before validation (Number for a numeric list).
+ *  An already-parsed array value passes straight to `schema`. */
+const csvList = <T extends z.ZodTypeAny>(schema: T, map: (s: string) => unknown = (s) => s) =>
+	z.preprocess((v) => (typeof v === 'string' ? splitList(v).map(map) : v), schema);
+
+/** A boolean cell that defaults to `d` when the cell is blank/missing (the common flag shape). */
+const boolDefault = (d: boolean) =>
+	z.preprocess((v) => (v === '' || v == null ? d : v), bool).default(d);
+
 /** `id` is a local slug; effective identity is `source:id`, built by the loader. */
 const idField = z
 	.string()
@@ -76,16 +86,7 @@ const idField = z
 	.regex(/^[a-z0-9][a-z0-9_]*$/, 'id must be a lowercase snake_case slug (a-z 0-9 _)');
 
 /** `systems` = comma list over SYSTEMS, e.g. "5e" | "5.5e" | "5e,5.5e". */
-const systemsField = z.preprocess(
-	(v) =>
-		typeof v === 'string'
-			? v
-					.split(',')
-					.map((s) => s.trim())
-					.filter(Boolean)
-			: v,
-	z.array(z.enum(SYSTEMS)).min(1)
-);
+const systemsField = csvList(z.array(z.enum(SYSTEMS)).min(1));
 
 /** A `;`-separated list of effect tokens. The loader NEVER rejects a token (B12): an unknown or
  *  not-yet-understood token (an L2 guard that starts with a condition not a kind, a `plugin:` token,
@@ -218,17 +219,14 @@ const classSchema = baseRow.extend({
 	primary_ability: optStr, // comma list of Ability
 	// Every SRD class has exactly 2 save proficiencies, but the schema allows 1..6 so a homebrew
 	// class with a different count isn't rejected (E6 — additive, SRD data still validates).
-	saves: z.preprocess(
-		(v) => (typeof v === 'string' ? v.split(',').map((s) => s.trim()) : v),
-		z.array(Ability).min(1).max(6)
-	),
+	saves: csvList(z.array(Ability).min(1).max(6)),
 	caster: CasterType.default('none'),
 	/** Multiclass share (defaults follow `caster` if blank — resolved in the rules layer). */
 	caster_share: z.preprocess(blankToUndef, CasterShare.optional()),
 	/** Spellcasting shape: prepared (choose from a set each rest) vs known (fixed learned list). */
 	prepare_style: z.preprocess(blankToUndef, PrepareStyle.optional()),
 	/** Can cast ritual-tagged spells (source of rituals varies by class — see rules layer). */
-	ritual: z.preprocess((v) => (v === '' || v == null ? false : v), bool).default(false),
+	ritual: boolDefault(false),
 	/** Id of the `spell_slots` table this class uses (e.g. `full`, `pact`, or a homebrew id). */
 	slot_table: optStr,
 	spell_ability: z.preprocess(blankToUndef, Ability.optional()),
@@ -242,17 +240,7 @@ const classSchema = baseRow.extend({
 	subclass_level: optInt,
 	/** Levels at which this class grants an ASI-or-feat slot (e.g. "4,6,8,12,14,16,19" for Fighter).
 	 *  Data, not a class-name switch — derived from the SRD progression by the converters. */
-	asi_levels: z.preprocess(
-		(v) =>
-			typeof v === 'string'
-				? v
-						.split(',')
-						.map((s) => s.trim())
-						.filter(Boolean)
-						.map(Number)
-				: v,
-		z.array(z.number().int()).default([])
-	)
+	asi_levels: csvList(z.array(z.number().int()).default([]), Number)
 });
 
 /** Linked table: a class feature granted at a level (incl. ASI/feat slot markers).
@@ -296,7 +284,7 @@ const backgroundSchema = baseRow.extend({
 const featSchema = baseRow.extend({
 	category: z.enum(FEAT_CATEGORIES).default('general'),
 	prereq: optStr,
-	repeatable: z.preprocess((v) => (v === '' || v == null ? false : v), bool).default(false)
+	repeatable: boolDefault(false)
 });
 
 /** Spell. Semi-structured upcasting in `higher_level`; resolution + save_ability drive
@@ -334,7 +322,7 @@ const itemSchema = baseRow.extend({
 	stealth_disadvantage: z
 		.preprocess((v) => (v === '' || v == null ? false : v), bool)
 		.default(false),
-	attunement: z.preprocess((v) => (v === '' || v == null ? false : v), bool).default(false),
+	attunement: boolDefault(false),
 	rarity: z.preprocess(blankToUndef, Rarity.optional())
 });
 
@@ -350,14 +338,14 @@ const languageSchema = baseRow.extend({
 /** Condition (merged with effects on the sheet). Mechanics ride in `effects`. */
 const conditionSchema = baseRow.extend({
 	/** Negative conditions render crimson, beneficial ones teal. */
-	negative: z.preprocess((v) => (v === '' || v == null ? true : v), bool).default(true)
+	negative: boolDefault(true)
 });
 
 /** Catalog row for the runtime "+" effect picker (effects.csv). The mechanics ride in the shared
  *  `effects` token list like every other content type; this row only adds picker metadata. */
 const effectSchema = baseRow.extend({
 	/** Debuffs (Bane, covers against you…) render crimson in the panel, like conditions. */
-	negative: z.preprocess((v) => (v === '' || v == null ? false : v), bool).default(false),
+	negative: boolDefault(false),
 	/** Optional default duration the picker applies; the round counter auto-expires it. */
 	duration_rounds: optInt
 });

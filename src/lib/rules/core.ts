@@ -51,6 +51,23 @@ const abilityContribution = (ability: Ability, score: number): Contribution => (
 	note: `${ability.toUpperCase()} ${score}`
 });
 
+/** A proficiency-layer contribution (Proficiency / Expertise / Jack of All Trades — the source names
+ *  the flavour, the amount is the already-computed bonus). The one shape every prof-granting stat pushes. */
+const profContribution = (source: string, amount: number): Contribution => ({
+	source,
+	layer: 'proficiency',
+	op: 'add',
+	amount
+});
+
+/** The flat base-layer contribution a stat starts from (DC base 8, unarmored/armor base 10/…). */
+const baseContribution = (amount: number): Contribution => ({
+	source: 'Base',
+	layer: 'base',
+	op: 'add',
+	amount
+});
+
 /** A saving throw: ability mod + proficiency (if proficient in that save). */
 export function savingThrow(args: {
 	ability: Ability;
@@ -59,14 +76,7 @@ export function savingThrow(args: {
 	proficient: boolean;
 }): Computed {
 	const c: Contribution[] = [abilityContribution(args.ability, args.score)];
-	if (args.proficient) {
-		c.push({
-			source: 'Proficiency',
-			layer: 'proficiency',
-			op: 'add',
-			amount: proficiencyBonus(args.level)
-		});
-	}
+	if (args.proficient) c.push(profContribution('Proficiency', proficiencyBonus(args.level)));
 	return computed(c);
 }
 
@@ -82,18 +92,10 @@ export function skillCheck(args: {
 }): Computed {
 	const c: Contribution[] = [abilityContribution(args.ability, args.score)];
 	const prof = proficiencyBonus(args.level);
-	if (args.expertise) {
-		c.push({ source: 'Expertise', layer: 'proficiency', op: 'add', amount: prof * 2 });
-	} else if (args.proficient) {
-		c.push({ source: 'Proficiency', layer: 'proficiency', op: 'add', amount: prof });
-	} else if (args.halfProficient) {
-		c.push({
-			source: 'Jack of All Trades',
-			layer: 'proficiency',
-			op: 'add',
-			amount: Math.floor(prof / 2)
-		});
-	}
+	if (args.expertise) c.push(profContribution('Expertise', prof * 2));
+	else if (args.proficient) c.push(profContribution('Proficiency', prof));
+	else if (args.halfProficient)
+		c.push(profContribution('Jack of All Trades', Math.floor(prof / 2)));
 	return computed(c);
 }
 
@@ -113,13 +115,8 @@ export function initiative(args: { dexScore: number }): Computed {
 /** Spell save DC = 8 + proficiency + spellcasting-ability modifier. */
 export function spellSaveDC(args: { ability: Ability; score: number; level: number }): Computed {
 	return computed([
-		{ source: 'Base', layer: 'base', op: 'add', amount: 8 },
-		{
-			source: 'Proficiency',
-			layer: 'proficiency',
-			op: 'add',
-			amount: proficiencyBonus(args.level)
-		},
+		baseContribution(8),
+		profContribution('Proficiency', proficiencyBonus(args.level)),
 		abilityContribution(args.ability, args.score)
 	]);
 }
@@ -131,22 +128,14 @@ export function spellAttackBonus(args: {
 	level: number;
 }): Computed {
 	return computed([
-		{
-			source: 'Proficiency',
-			layer: 'proficiency',
-			op: 'add',
-			amount: proficiencyBonus(args.level)
-		},
+		profContribution('Proficiency', proficiencyBonus(args.level)),
 		abilityContribution(args.ability, args.score)
 	]);
 }
 
 /** Unarmored AC = 10 + DEX modifier. */
 export function unarmoredAC(args: { dexScore: number }): Computed {
-	return computed([
-		{ source: 'Base', layer: 'base', op: 'add', amount: 10 },
-		abilityContribution('dex', args.dexScore)
-	]);
+	return computed([baseContribution(10), abilityContribution('dex', args.dexScore)]);
 }
 
 /** Armored AC = armor base + capped DEX. `dexCap`: null = uncapped (light), 2 = medium,

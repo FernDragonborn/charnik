@@ -282,55 +282,43 @@ export function buildDetail(
 	locale = 'en'
 ): DetailModel {
 	const d = row.data;
-	if (row.type === 'monster') {
-		return {
-			eyebrow: '',
-			title: localized(d, 'name', locale),
-			abilities: [],
-			meta: [],
-			bodyHtml: localized(d, 'text', locale),
-			higherLevel: '',
-			source: `Source: ${sourceLabel(row.source)}`,
-			license: row.license ?? '',
-			monster: buildMonster(row)
-		};
-	}
+	// fields every type's DetailModel shares (title/prose/attribution); the branch adds its own
+	// eyebrow/meta/higherLevel + the dedicated monster/spell block.
+	const common = {
+		title: localized(d, 'name', locale),
+		abilities: [] as AbilityScore[],
+		bodyHtml: localized(d, 'text', locale),
+		source: `Source: ${sourceLabel(row.source)}`,
+		license: row.license ?? ''
+	};
+	if (row.type === 'monster')
+		return { ...common, eyebrow: '', meta: [], higherLevel: '', monster: buildMonster(row) };
 	if (row.type === 'spell') {
 		const spell = row.data;
 		return {
+			...common,
 			eyebrow: [
 				Number(spell.level) === 0 ? 'Cantrip' : `Level ${spell.level}`,
 				spell.school ? cap(String(spell.school)) : ''
 			]
 				.filter(Boolean)
 				.join(' · '),
-			title: localized(d, 'name', locale),
-			abilities: [],
 			meta: [],
-			bodyHtml: localized(d, 'text', locale),
 			higherLevel: localized(d, 'higher_level', locale),
-			source: `Source: ${sourceLabel(row.source)}`,
-			license: row.license ?? '',
 			spell: buildSpell(row, availableTo, locale)
 		};
 	}
 	// generic types carry no ability-score columns (only monster does, handled above), so the meta
 	// grid is the whole story here — every non-identity, non-prose column becomes a k/v cell.
 	const skip = new Set(COMMON);
-	const eyebrow = cap(String(type));
 	const meta = Object.entries(d)
 		.filter(([k, v]) => !skip.has(k) && !PROSE_LOC.test(k) && meaningful(v))
 		.map(([k, v]) => [cap(k), String(v) === 'true' ? 'Yes' : asText(v)] as [string, string]);
-
 	return {
-		eyebrow,
-		title: localized(d, 'name', locale),
-		abilities: [],
+		...common,
+		eyebrow: cap(String(type)),
 		meta,
-		bodyHtml: localized(d, 'text', locale),
-		higherLevel: localized(d, 'higher_level', locale),
-		source: `Source: ${sourceLabel(row.source)}`,
-		license: row.license ?? ''
+		higherLevel: localized(d, 'higher_level', locale)
 	};
 }
 
