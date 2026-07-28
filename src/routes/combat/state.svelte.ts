@@ -62,6 +62,19 @@ import { slotToSpend } from '$lib/rules/spellcasting';
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
 
+/**
+ * D1 EXCEPTION — do NOT split this class further to satisfy the file-lines lint (>400).
+ *
+ * The cleanly-separable concerns are ALREADY out: pure math → `$lib/combat/helpers`, and four
+ * subsystems (`tray` / `layout` / `economy` / `resources`) each own their slice via a callback
+ * accessor. What remains is the tightly-coupled reactive core — spell/cast/attack, HP, effect
+ * add/remove — whose `$state` (e.g. `newEffectDuration`, `cmTarget`, `tempHpInput`) is `bind:`-ed
+ * directly in CombatMenus.svelte / the panels. Extracting any of it means moving reactive state
+ * across the component↔VM seam, which unit tests do NOT catch (reactivity bugs surface only in the
+ * running UI) — a bad trade for a warn-only line count. If a real need arises, split behind a NEW
+ * subsystem following the economy/resources pattern AND verify in the live app (shot.mjs), never
+ * blind. Until then this file stays over the limit ON PURPOSE.
+ */
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. Each completed
 	 *  roll is also persisted to the active character's `log.jsonl` (B4). */
