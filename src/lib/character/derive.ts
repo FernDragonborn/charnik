@@ -48,11 +48,8 @@ import {
 } from '../effects/apply';
 import { didYouMean } from '../effects/suggest';
 import { expandPluginEffects, type PluginCtx } from '../effects/plugin-registry';
-import {
-	resolveActiveEffects,
-	RAGE_CONDITION_ID,
-	type ResolveState
-} from '../effects/dependency-graph';
+import { resolveActiveEffects } from '../effects/resolver';
+import { RAGE_CONDITION_ID, type ResolveState } from '../effects/dependency-graph';
 import { deriveSpellcasting, castingAbilityByClass, type Spellcasting } from './spellcasting';
 import {
 	makeExprContext,

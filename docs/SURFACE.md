@@ -281,7 +281,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (70 modules)
+## Library functions & types (71 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -669,10 +669,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/dependency-graph.ts`
 
 - `const RAGE_CONDITION_ID` — The condition id the `is_raging` L2 flag reads.
+- `type DepKey`
+- `const HP_MAX_KEY`
+- `const abilityKey`
+- `function writeKeyOf` — The value node a token WRITES (null = plain stat token — nothing downstream can read it).
 - `interface ResolveState` — The mutable dependency-resolve state.
 - `interface ResolveArgs`
 - `interface DependencyResolved`
-- `function resolveActiveEffects` — Resolve every active effect in dependency order (see `Resolver`).
+- `interface Inst` — One token occurrence: the carrying effect + guard split + parse + its graph reads/write.
+- `const readsOf`
+- `function buildDependencyOrder` — Build the value-node graph (dep → dependent edges from each writer's reads), order it by SCC * condensation topo (sou…
 
 ### `src/lib/effects/expression-evaluator.ts`
 
@@ -725,6 +731,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface SandboxPluginSpec`
 - `function createSandboxEvaluator` — * Build the `PluginEvaluator` for a set of consented, enabled plugins.
+
+### `src/lib/effects/resolver.ts`
+
+- `function resolveActiveEffects` — Resolve every active effect in dependency order (see `Resolver`).
 
 ### `src/lib/effects/suggest.ts`
 
@@ -961,4 +971,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 518 exports across 81 modules · 31 duplicate suspects · generated in 238ms._
+_45 tokens · 61 global classes · 40 components · 525 exports across 82 modules · 31 duplicate suspects · generated in 187ms._
