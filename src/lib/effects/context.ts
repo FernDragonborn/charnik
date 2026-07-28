@@ -54,6 +54,55 @@ export interface PlayVars {
 const own = <T>(rec: Record<string, T> | undefined, key: string): T | undefined =>
 	rec !== undefined && Object.hasOwn(rec, key) ? rec[key] : undefined;
 
+/** A dotted numeric family (`class_level.monk`, `resource.ki`, `resource_max.ki`) → its value, or
+ *  undefined for an unknown prefix. A dotted name always terminates here (never falls through). */
+function dottedNumber(
+	d: { prefix: string; id: string },
+	build: BuildVars,
+	play?: PlayVars
+): number | undefined {
+	if (d.prefix === 'class_level') return own(build.classLevels, d.id) ?? 0;
+	if (d.prefix === 'resource') return own(play?.resources, d.id) ?? 0;
+	if (d.prefix === 'resource_max') return own(play?.resourceMax, d.id) ?? 0;
+	return undefined;
+}
+
+/** `<abil>_mod` / `<abil>_score` (e.g. `wis_mod`, `dex_score`) → the effective value, or undefined
+ *  when the name isn't that shape or names a non-ability triple. */
+function abilityNumber(name: string, build: BuildVars): number | undefined {
+	const m = /^([a-z]{3})_(mod|score)$/.exec(name);
+	if (!m) return undefined;
+	const ab = m[1] as Ability;
+	if (!(ABILITY_IDS as readonly string[]).includes(ab)) return undefined;
+	return m[2] === 'mod' ? build.abilityMods[ab] : build.abilityScores[ab];
+}
+
+/** The scalar numeric variables (`level`, `hp`, `hp_percent`, …) → value, or undefined. */
+function scalarNumber(name: string, build: BuildVars, play?: PlayVars): number | undefined {
+	switch (name) {
+		case 'level':
+			return build.level;
+		case 'proficiency_bonus':
+			return build.proficiencyBonus;
+		case 'spellcasting_mod':
+			return build.spellcastingMod;
+		case 'base_speed':
+			return build.baseSpeed;
+		case 'hp':
+			return play?.hp ?? 0;
+		case 'hp_max':
+			return play?.hpMax ?? 0;
+		case 'temp_hp':
+			return play?.tempHp ?? 0;
+		case 'exhaustion':
+			return play?.exhaustion ?? 0;
+		case 'hp_percent':
+			return play && play.hpMax > 0 ? Math.floor((play.hp / play.hpMax) * 100) : 0;
+		default:
+			return undefined;
+	}
+}
+
 /**
  * Build the `ExprContext` the evaluator reads. `play` is optional: without it, every guard variable
  * simply resolves to its absent default (0 / false / no enum match), which is exactly the EXPR-2
@@ -62,43 +111,9 @@ const own = <T>(rec: Record<string, T> | undefined, key: string): T | undefined 
 export function makeExprContext(build: BuildVars, play?: PlayVars): ExprContext {
 	return {
 		number(name) {
-			// dotted numeric families first
 			const d = splitDottedName(name);
-			if (d) {
-				if (d.prefix === 'class_level') return own(build.classLevels, d.id) ?? 0;
-				if (d.prefix === 'resource') return own(play?.resources, d.id) ?? 0;
-				if (d.prefix === 'resource_max') return own(play?.resourceMax, d.id) ?? 0;
-				return undefined;
-			}
-			// ability mod / score (e.g. `wis_mod`, `dex_score`)
-			const abilMatch = /^([a-z]{3})_(mod|score)$/.exec(name);
-			if (abilMatch) {
-				const ab = abilMatch[1] as Ability;
-				if ((ABILITY_IDS as readonly string[]).includes(ab))
-					return abilMatch[2] === 'mod' ? build.abilityMods[ab] : build.abilityScores[ab];
-			}
-			switch (name) {
-				case 'level':
-					return build.level;
-				case 'proficiency_bonus':
-					return build.proficiencyBonus;
-				case 'spellcasting_mod':
-					return build.spellcastingMod;
-				case 'base_speed':
-					return build.baseSpeed;
-				case 'hp':
-					return play?.hp ?? 0;
-				case 'hp_max':
-					return play?.hpMax ?? 0;
-				case 'temp_hp':
-					return play?.tempHp ?? 0;
-				case 'exhaustion':
-					return play?.exhaustion ?? 0;
-				case 'hp_percent':
-					return play && play.hpMax > 0 ? Math.floor((play.hp / play.hpMax) * 100) : 0;
-				default:
-					return undefined;
-			}
+			if (d) return dottedNumber(d, build, play);
+			return abilityNumber(name, build) ?? scalarNumber(name, build, play);
 		},
 		boolean(name) {
 			const d = splitDottedName(name);

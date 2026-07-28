@@ -452,31 +452,27 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
  * Preferred input is the derive's ONE `EffectFacts` (built once via `collectFacts` — D7); a raw
  * `ActiveEffect[]` is also accepted (tests / one-off folds) and converted on the spot.
  */
-export function applyEffects(
-	targetKey: string,
-	base: Computed,
-	effects: ActiveEffect[] | EffectFacts,
-	ctx?: EffectCtx
-): Computed {
-	const facts = Array.isArray(effects) ? collectFacts(effects, ctx) : effects;
-	const contribs: Contribution[] = [...base.trace];
-	const notes: Note[] = [...(base.notes ?? [])];
-	// A9 speed-bonus block: while a block_bonus matches this target, effect-borne POSITIVE bonuses
-	// are dropped (RAW). Negative adds (penalties) survive; the BASE trace is never touched.
-	const block = facts.blockedBonuses.find((b) => matchesTarget(b.target, targetKey));
-	for (const f of facts.numeric) {
-		if (!matchesTarget(f.target, targetKey)) continue;
-		if (f.amount !== undefined) {
-			if (block && f.op === 'add' && f.amount > 0) {
-				notes.push({
-					text: `${block.source}: +${f.amount} to ${targetKey} blocked (${f.source})`,
-					key: NOTE_KEY.bonusBlocked,
-					params: { blocker: block.source, amount: f.amount, target: targetKey, source: f.source }
-				});
-				continue;
-			}
-			// D12: honor the effect's own layer for sets too (no longer forced to `override`) — a
-			// condition-layer set (grappled speed 0) now correctly beats a lower item-layer set.
+/** The accumulator a single `applyEffects` fold writes into: the target being folded + the growing
+ *  trace and note lists. Bundled so the fold helpers stay within the param budget. */
+interface FoldCtx {
+	targetKey: string;
+	contribs: Contribution[];
+	notes: Note[];
+}
+
+/** Fold one target-matched numeric fact into the trace (or a degrade note): honors the A9 bonus-block
+ *  (effect-borne POSITIVE adds/dice dropped with a note, penalties kept), D12 layering (the fact's own
+ *  layer, sets no longer forced to `override`), and the dice/error degrade-to-note paths. */
+function foldNumericFact(f: NumericFact, block: FactRef | undefined, acc: FoldCtx): void {
+	const { targetKey, contribs, notes } = acc;
+	if (f.amount !== undefined) {
+		if (block && f.op === 'add' && f.amount > 0)
+			notes.push({
+				text: `${block.source}: +${f.amount} to ${targetKey} blocked (${f.source})`,
+				key: NOTE_KEY.bonusBlocked,
+				params: { blocker: block.source, amount: f.amount, target: targetKey, source: f.source }
+			});
+		else
 			contribs.push({
 				source: f.source,
 				layer: f.layer,
@@ -484,60 +480,63 @@ export function applyEffects(
 				amount: f.amount,
 				note: f.token
 			});
-		} else if (f.diceFormula) {
-			const d = f.diceFormula;
-			if (block && !d.startsWith('-')) {
-				notes.push({
-					text: `${block.source}: +${d} to ${targetKey} blocked (${f.source})`,
-					key: NOTE_KEY.bonusBlocked,
-					params: { blocker: block.source, amount: d, target: targetKey, source: f.source }
-				});
-				continue;
-			}
-			// `amount` param carries its own sign — a positive dice bonus reads "+1d4", a penalty "-1d4"
-			const amount = d.startsWith('-') ? d : `+${d}`;
-			notes.push({
-				text: `${f.source}: ${amount} to ${targetKey}`,
-				key: NOTE_KEY.diceBonus,
-				params: { source: f.source, amount, target: targetKey }
-			});
-		} else if (f.error) {
-			notes.push({
-				text: `${f.source}: unresolved "${f.token}" (${f.error})`,
-				key: NOTE_KEY.unresolved,
-				params: { source: f.source, token: f.token, error: f.error }
-			});
-		}
+		return;
 	}
-	for (const a of facts.advantage)
-		if (matchesTarget(a.target, targetKey))
+	if (f.diceFormula) {
+		const d = f.diceFormula;
+		if (block && !d.startsWith('-'))
 			notes.push({
-				text: `${a.source}: advantage on ${targetKey}`,
-				key: NOTE_KEY.advantage,
-				params: { source: a.source, target: targetKey }
+				text: `${block.source}: +${d} to ${targetKey} blocked (${f.source})`,
+				key: NOTE_KEY.bonusBlocked,
+				params: { blocker: block.source, amount: d, target: targetKey, source: f.source }
 			});
-	for (const d of facts.disadvantage)
-		if (matchesTarget(d.target, targetKey))
+		// `amount` param carries its own sign — a positive dice bonus reads "+1d4", a penalty "-1d4"
+		else
 			notes.push({
-				text: `${d.source}: disadvantage on ${targetKey}`,
-				key: NOTE_KEY.disadvantage,
-				params: { source: d.source, target: targetKey }
+				text: `${f.source}: ${d.startsWith('-') ? d : `+${d}`} to ${targetKey}`,
+				key: NOTE_KEY.diceBonus,
+				params: { source: f.source, amount: d.startsWith('-') ? d : `+${d}`, target: targetKey }
 			});
-	for (const a of facts.autoFail)
-		if (matchesTarget(a.target, targetKey))
-			notes.push({
-				text: `${a.source}: auto-fail on ${targetKey}`,
-				key: NOTE_KEY.autoFail,
-				params: { source: a.source, target: targetKey }
+		return;
+	}
+	if (f.error)
+		notes.push({
+			text: `${f.source}: unresolved "${f.token}" (${f.error})`,
+			key: NOTE_KEY.unresolved,
+			params: { source: f.source, token: f.token, error: f.error }
+		});
+}
+
+/** Push a `<source>: <label> on <target>` note for each target-matched fact (adv/dis/auto-fail/-succeed
+ *  all share this shape). */
+function pushFlagNotes(list: FactRef[], label: string, key: string, acc: FoldCtx): void {
+	for (const a of list)
+		if (matchesTarget(a.target, acc.targetKey))
+			acc.notes.push({
+				text: `${a.source}: ${label} on ${acc.targetKey}`,
+				key,
+				params: { source: a.source, target: acc.targetKey }
 			});
-	for (const a of facts.autoSucceed)
-		if (matchesTarget(a.target, targetKey))
-			notes.push({
-				text: `${a.source}: auto-succeed on ${targetKey}`,
-				key: NOTE_KEY.autoSucceed,
-				params: { source: a.source, target: targetKey }
-			});
-	return computed(contribs, undefined, notes.length ? notes : undefined);
+}
+
+export function applyEffects(
+	targetKey: string,
+	base: Computed,
+	effects: ActiveEffect[] | EffectFacts,
+	ctx?: EffectCtx
+): Computed {
+	const facts = Array.isArray(effects) ? collectFacts(effects, ctx) : effects;
+	const acc: FoldCtx = { targetKey, contribs: [...base.trace], notes: [...(base.notes ?? [])] };
+	// A9 speed-bonus block: while a block_bonus matches this target, effect-borne POSITIVE bonuses
+	// are dropped (RAW). Negative adds (penalties) survive; the BASE trace is never touched.
+	const block = facts.blockedBonuses.find((b) => matchesTarget(b.target, targetKey));
+	for (const f of facts.numeric)
+		if (matchesTarget(f.target, targetKey)) foldNumericFact(f, block, acc);
+	pushFlagNotes(facts.advantage, 'advantage', NOTE_KEY.advantage, acc);
+	pushFlagNotes(facts.disadvantage, 'disadvantage', NOTE_KEY.disadvantage, acc);
+	pushFlagNotes(facts.autoFail, 'auto-fail', NOTE_KEY.autoFail, acc);
+	pushFlagNotes(facts.autoSucceed, 'auto-succeed', NOTE_KEY.autoSucceed, acc);
+	return computed(acc.contribs, undefined, acc.notes.length ? acc.notes : undefined);
 }
 
 /** A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…). */

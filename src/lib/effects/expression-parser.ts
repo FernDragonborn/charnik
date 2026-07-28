@@ -132,6 +132,50 @@ const COMPARE_STARTS = new Set(['<', '>', '=', '!']);
  *  to the next identifier (`is_raging and dex_mod`), never be the dice operator. */
 const WORD_OPERATORS: ReadonlySet<string> = new Set(['and', 'or', 'not']);
 
+const isDigit = (ch: string): boolean => ch >= '0' && ch <= '9';
+const SINGLE_OPS = new Set(['(', ')', ',', '+', '-', '*', '/', '%']);
+
+/** Scan a run of digits from `i` → a num token + the next index. Caller ensures `src[i]` is a digit. */
+function scanNumber(src: string, i: number): { tok: Tok; next: number } {
+	let j = i;
+	while (j < src.length && isDigit(src[j] ?? '')) j++;
+	return { tok: { k: 'num', v: Number(src.slice(i, j)) }, next: j };
+}
+
+/** Scan an identifier word from `i` (a letter/underscore run, `[a-z0-9_.]`). Handles the bare-die
+ *  sugar `d6`/`d20` → `1d6`/`1d20`. Caller ensures `src[i]` starts an ident. */
+function scanWord(src: string, i: number): { toks: Tok[]; next: number } {
+	let j = i;
+	while (j < src.length) {
+		const ch = src[j] ?? '';
+		if (!((ch >= 'a' && ch <= 'z') || isDigit(ch) || ch === '_' || ch === '.')) break;
+		j++;
+	}
+	const word = src.slice(i, j);
+	// bare-die sugar: `d6` with no operand before it → `1d6`. Safe: no whitelisted var matches `d<digits>`.
+	const bareDie = /^d(\d+)$/.exec(word);
+	const toks: Tok[] = bareDie
+		? [{ k: 'num', v: 1 }, { k: 'dice' }, { k: 'num', v: Number(bareDie[1]) }]
+		: [{ k: 'ident', v: word }];
+	return { toks, next: j };
+}
+
+/** Scan an operator/comparison/`->` starting at `i`, or report a lexer error. */
+function scanOperator(src: string, i: number): { toks: Tok[]; next: number } | { error: string } {
+	const c = src[i] ?? '';
+	// `->` (the step() pair separator) must lex before the single-char `-`
+	if (c === '-' && src[i + 1] === '>') return { toks: [{ k: 'op', v: '->' }], next: i + 2 };
+	if (SINGLE_OPS.has(c)) return { toks: [{ k: 'op', v: c }], next: i + 1 };
+	if (COMPARE_STARTS.has(c)) {
+		const two = src.slice(i, i + 2);
+		if (two === '<=' || two === '>=' || two === '==' || two === '!=')
+			return { toks: [{ k: 'op', v: two }], next: i + 2 };
+		if (c === '<' || c === '>') return { toks: [{ k: 'op', v: c }], next: i + 1 };
+		return { error: `stray '${c}' (use ==, !=, <=, >=)` };
+	}
+	return { error: `unexpected character '${c}'` };
+}
+
 /** Split source into tokens. The `d` dice operator is the one hard case: `d` is also a letter, so
  *  `1d6` would lex as num(1)+ident("d6"). We resolve it positionally — a `d` is the dice operator
  *  ONLY when the previous token is an OPERAND: a number, `)`, or a variable identifier (any ident
@@ -152,77 +196,23 @@ function tokenize(src: string): { ok: true; toks: Tok[] } | { ok: false; error: 
 		const c = src[i] ?? '';
 		if (c === ' ' || c === '\t') {
 			i++;
-			continue;
-		}
-		if (c >= '0' && c <= '9') {
-			let j = i;
-			while (j < src.length && (src[j] ?? '') >= '0' && (src[j] ?? '') <= '9') j++;
-			toks.push({ k: 'num', v: Number(src.slice(i, j)) });
-			i = j;
-			continue;
-		}
-		// dice operator: a lone `d` right after an operand
-		if (c === 'd' && prevIsOperand()) {
-			toks.push({ k: 'dice' });
+		} else if (isDigit(c)) {
+			const r = scanNumber(src, i);
+			toks.push(r.tok);
+			i = r.next;
+		} else if (c === 'd' && prevIsOperand()) {
+			toks.push({ k: 'dice' }); // dice operator: a lone `d` right after an operand
 			i++;
-			continue;
+		} else if ((c >= 'a' && c <= 'z') || c === '_') {
+			const r = scanWord(src, i);
+			toks.push(...r.toks);
+			i = r.next;
+		} else {
+			const r = scanOperator(src, i);
+			if ('error' in r) return { ok: false, error: r.error };
+			toks.push(...r.toks);
+			i = r.next;
 		}
-		if ((c >= 'a' && c <= 'z') || c === '_') {
-			let j = i;
-			while (j < src.length) {
-				const ch = src[j] ?? '';
-				const idChar =
-					(ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch === '_' || ch === '.';
-				if (!idChar) break;
-				j++;
-			}
-			const word = src.slice(i, j);
-			// bare-die sugar: `d6`/`d20` with no operand before it desugars to `1d6`/`1d20` (the
-			// tabletop habit). Safe: no whitelisted variable matches `d<digits>`.
-			const bareDie = /^d(\d+)$/.exec(word);
-			if (bareDie) {
-				toks.push({ k: 'num', v: 1 }, { k: 'dice' }, { k: 'num', v: Number(bareDie[1]) });
-			} else {
-				toks.push({ k: 'ident', v: word });
-			}
-			i = j;
-			continue;
-		}
-		// `->` (the step() pair separator) must lex before the single-char `-`
-		if (c === '-' && src[i + 1] === '>') {
-			toks.push({ k: 'op', v: '->' });
-			i += 2;
-			continue;
-		}
-		if (
-			c === '(' ||
-			c === ')' ||
-			c === ',' ||
-			c === '+' ||
-			c === '-' ||
-			c === '*' ||
-			c === '/' ||
-			c === '%'
-		) {
-			toks.push({ k: 'op', v: c });
-			i++;
-			continue;
-		}
-		if (COMPARE_STARTS.has(c)) {
-			const two = src.slice(i, i + 2);
-			if (two === '<=' || two === '>=' || two === '==' || two === '!=') {
-				toks.push({ k: 'op', v: two });
-				i += 2;
-				continue;
-			}
-			if (c === '<' || c === '>') {
-				toks.push({ k: 'op', v: c });
-				i++;
-				continue;
-			}
-			return { ok: false, error: `stray '${c}' (use ==, !=, <=, >=)` };
-		}
-		return { ok: false, error: `unexpected character '${c}'` };
 	}
 	return { ok: true, toks };
 }

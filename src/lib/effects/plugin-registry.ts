@@ -248,8 +248,7 @@ export function expandPluginEffects(
 	const out = emptyExpansion();
 	const buildJson = JSON.stringify(ctx.build);
 	const playJson = JSON.stringify(ctx.play);
-	const t0 = now();
-	let overBudget = false;
+	const budget: BudgetState = { t0: now(), over: false };
 
 	const degrade = (eff: ActiveEffect, token: string, reason: string): void => {
 		out.unknown.push({ source: eff.source, token });
@@ -262,70 +261,83 @@ export function expandPluginEffects(
 			if (p.kind !== EFFECT_KIND.plugin || !p.plugin) continue;
 			const { namespace, handlerName, args } = p.plugin;
 			const ref: PluginTokenRef = { namespace, handlerName, args, raw: token };
+			const keys: TokenKeys = {
+				build: JSON.stringify([token, buildJson]),
+				full: JSON.stringify([token, buildJson, playJson]),
+				buildJson,
+				playJson
+			};
 			// fail-closed counter is per (namespace, character) — a fail on THIS character only
-			const fkey = failKey(namespace, scope);
-
-			if (!evaluator) {
-				degrade(eff, token, 'plugin not available (no plugins enabled)');
-				continue;
-			}
-			if (isDisabled(fkey)) {
-				degrade(eff, token, 'plugin disabled after repeated failures');
-				continue;
-			}
-			if (!evaluator.has(namespace, handlerName)) {
-				// a broken main.js reports its REAL error; otherwise it's a genuine unknown handler
-				const loadErr = evaluator.loadError?.(namespace);
-				degrade(
-					eff,
-					token,
-					loadErr
-						? `plugin "${namespace}": ${loadErr}`
-						: `plugin "${namespace}" missing/disabled or handler "${handlerName}" not registered`
-				);
-				continue;
-			}
-
-			// memo lookup: build-only first (the common, cache-hot case), then the full key
-			const keyB = JSON.stringify([token, buildJson]);
-			const keyF = JSON.stringify([token, buildJson, playJson]);
-			let result = memoGet(memoBuild, keyB) ?? memoGet(memoFull, keyF);
-
-			if (!result) {
-				if (overBudget || now() - t0 > AGGREGATE_BUDGET_MS) {
-					overBudget = true;
-					degrade(eff, token, 'plugin budget for this computation exhausted');
-					continue;
-				}
-				const outcome = evaluator.call(ref, buildJson, playJson);
-				if (!outcome.ok) {
-					noteFailure(fkey);
-					degrade(
-						eff,
-						token,
-						isDisabled(fkey) ? `${outcome.reason}; plugin disabled for the session` : outcome.reason
-					);
-					continue;
-				}
-				const v = validateResult(outcome.resultJson);
-				if (!v.ok) {
-					noteFailure(fkey);
-					degrade(
-						eff,
-						token,
-						isDisabled(fkey) ? `${v.reason}; plugin disabled for the session` : v.reason
-					);
-					continue;
-				}
-				noteSuccess(fkey);
-				result = v.result;
-				memoSet(outcome.readPlay ? memoFull : memoBuild, outcome.readPlay ? keyF : keyB, result);
-			}
-
-			applyResult(out, eff, namespace, token, result);
+			const r = resolvePluginToken(ref, failKey(namespace, scope), keys, budget);
+			if (r.ok) applyResult(out, eff, namespace, token, r.result);
+			else degrade(eff, token, r.reason);
 		}
 	}
 	return out;
+}
+
+/** Aggregate sandbox-call budget state, threaded through one derive's token resolutions. */
+interface BudgetState {
+	t0: number;
+	over: boolean;
+}
+
+/** The two memo keys (build-only + full) for a token plus the ctx JSON the sandbox call needs. */
+interface TokenKeys {
+	build: string;
+	full: string;
+	buildJson: string;
+	playJson: string;
+}
+
+/** Resolve ONE plugin token to its validated result — a memo hit or a fresh sandbox call — or a
+ *  degrade reason. Mutates `budget.over` (aggregate cutoff) and the memo caches, and records
+ *  fail/success on `fkey` (the per-(namespace, character) fail-closed counter). */
+function resolvePluginToken(
+	ref: PluginTokenRef,
+	fkey: string,
+	keys: TokenKeys,
+	budget: BudgetState
+): { ok: true; result: PluginResult } | { ok: false; reason: string } {
+	const { namespace, handlerName } = ref;
+	if (!evaluator) return { ok: false, reason: 'plugin not available (no plugins enabled)' };
+	if (isDisabled(fkey)) return { ok: false, reason: 'plugin disabled after repeated failures' };
+	if (!evaluator.has(namespace, handlerName)) {
+		// a broken main.js reports its REAL error; otherwise it's a genuine unknown handler
+		const loadErr = evaluator.loadError?.(namespace);
+		return {
+			ok: false,
+			reason: loadErr
+				? `plugin "${namespace}": ${loadErr}`
+				: `plugin "${namespace}" missing/disabled or handler "${handlerName}" not registered`
+		};
+	}
+	// memo lookup: build-only first (the common, cache-hot case), then the full key
+	const hit = memoGet(memoBuild, keys.build) ?? memoGet(memoFull, keys.full);
+	if (hit) return { ok: true, result: hit };
+	if (budget.over || now() - budget.t0 > AGGREGATE_BUDGET_MS) {
+		budget.over = true;
+		return { ok: false, reason: 'plugin budget for this computation exhausted' };
+	}
+	const outcome = evaluator.call(ref, keys.buildJson, keys.playJson);
+	if (!outcome.ok) {
+		noteFailure(fkey);
+		const suffix = isDisabled(fkey) ? '; plugin disabled for the session' : '';
+		return { ok: false, reason: `${outcome.reason}${suffix}` };
+	}
+	const v = validateResult(outcome.resultJson);
+	if (!v.ok) {
+		noteFailure(fkey);
+		const suffix = isDisabled(fkey) ? '; plugin disabled for the session' : '';
+		return { ok: false, reason: `${v.reason}${suffix}` };
+	}
+	noteSuccess(fkey);
+	memoSet(
+		outcome.readPlay ? memoFull : memoBuild,
+		outcome.readPlay ? keys.full : keys.build,
+		v.result
+	);
+	return { ok: true, result: v.result };
 }
 
 /** Fold one validated result into the expansion, attributed to the CARRYING effect (§4.4a). */

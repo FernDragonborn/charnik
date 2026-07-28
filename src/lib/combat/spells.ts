@@ -135,6 +135,61 @@ export function canTogglePreparedFor(
 	return canTogglePrepared(entry, isCantrip, cap, count);
 }
 
+/** A castable spell paired with its rendered row — the working unit of the grouping helpers. */
+type SpEntry = { sp: Character['build']['spells'][number]; row: SpRow };
+
+/** Bucket by spell level (0 = cantrips), ascending; leveled groups carry their castable slot pool. */
+function groupByLevel(
+	all: SpEntry[],
+	graph: ContentGraph,
+	slotsByLevel: Map<number, number>,
+	spellSlotsSpent: Record<string, number>
+): SpGroup[] {
+	const byLevel = new Map<number, SpRow[]>();
+	for (const x of all) {
+		const spell = graph.get(x.sp.spell);
+		const lvl = spell?.type === 'spell' ? spell.data.level : 0;
+		byLevel.set(lvl, [...(byLevel.get(lvl) ?? []), x.row]);
+	}
+	return [...byLevel.keys()]
+		.sort((a, b) => a - b)
+		.map((lvl) => ({
+			key: String(lvl),
+			label: lvl === 0 ? 'Cantrips' : ordinal(lvl),
+			slots:
+				lvl === 0
+					? null
+					: { full: slotsByLevel.get(lvl) ?? 0, spent: spellSlotsSpent[String(lvl)] ?? 0 },
+			rows: byLevel.get(lvl) ?? []
+		}));
+}
+
+/** Split into Prepared / Not prepared. */
+function groupByPrepared(all: SpEntry[]): SpGroup[] {
+	const groups: SpGroup[] = [];
+	const prep = all.filter((x) => x.row.prep).map((x) => x.row);
+	const rest = all.filter((x) => !x.row.prep).map((x) => x.row);
+	if (prep.length) groups.push({ key: 'prep', label: 'Prepared', slots: null, rows: prep });
+	if (rest.length) groups.push({ key: 'unprep', label: 'Not prepared', slots: null, rows: rest });
+	return groups;
+}
+
+/** Bucket by school (missing → "Other"), alphabetical. */
+function groupBySchool(all: SpEntry[], graph: ContentGraph): SpGroup[] {
+	const bySchool = new Map<string, SpRow[]>();
+	for (const x of all) {
+		const spell = graph.get(x.sp.spell);
+		const sch = (spell?.type === 'spell' ? spell.data.school : '') || 'Other';
+		bySchool.set(sch, [...(bySchool.get(sch) ?? []), x.row]);
+	}
+	return [...bySchool.keys()].sort().map((sch) => ({
+		key: 'sch:' + sch,
+		label: titleCase(sch),
+		slots: null,
+		rows: bySchool.get(sch) ?? []
+	}));
+}
+
 /** Group the character's spells for the spell block (Pinned first, then by level / prepared / school),
  *  attaching the castable slot pool per level. Pure — the VM just wraps it in a `$derived`. */
 export function buildSpellGroups(
@@ -149,7 +204,7 @@ export function buildSpellGroups(
 	const slotsByLevel = new Map<number, number>();
 	for (const p of sheet?.spellcasting.pools ?? [])
 		if (!p.forcedUpcast && p.spellLevel) slotsByLevel.set(p.spellLevel, p.max);
-	const all = character.build.spells
+	const all: SpEntry[] = character.build.spells
 		.map((sp) => ({
 			sp,
 			row: spellRow(
@@ -159,59 +214,40 @@ export function buildSpellGroups(
 				sheet?.level ?? 1
 			)
 		}))
-		.filter((x): x is { sp: (typeof character.build.spells)[number]; row: SpRow } => !!x.row)
+		.filter((x): x is SpEntry => !!x.row)
 		.filter((x) => !hidden.includes(x.row.ref));
 	const groups: SpGroup[] = [];
 	const pins = all.filter((x) => pinned[x.row.id]);
 	if (pins.length)
 		groups.push({ key: 'pinned', label: '★ Pinned', slots: null, rows: pins.map((x) => x.row) });
 
-	if (groupBy === 'level') {
-		const byLevel = new Map<number, SpRow[]>();
-		for (const x of all) {
-			const spell = graph.get(x.sp.spell);
-			const lvl = spell?.type === 'spell' ? spell.data.level : 0;
-			const bucket = byLevel.get(lvl) ?? [];
-			bucket.push(x.row);
-			byLevel.set(lvl, bucket);
-		}
-		for (const lvl of [...byLevel.keys()].sort((a, b) => a - b)) {
-			groups.push({
-				key: String(lvl),
-				label: lvl === 0 ? 'Cantrips' : ordinal(lvl),
-				slots:
-					lvl === 0
-						? null
-						: {
-								full: slotsByLevel.get(lvl) ?? 0,
-								spent: character.play.spellSlotsSpent[String(lvl)] ?? 0
-							},
-				rows: byLevel.get(lvl) ?? []
-			});
-		}
-	} else if (groupBy === 'prepared') {
-		const prep = all.filter((x) => x.row.prep).map((x) => x.row);
-		const rest = all.filter((x) => !x.row.prep).map((x) => x.row);
-		if (prep.length) groups.push({ key: 'prep', label: 'Prepared', slots: null, rows: prep });
-		if (rest.length) groups.push({ key: 'unprep', label: 'Not prepared', slots: null, rows: rest });
-	} else {
-		const bySchool = new Map<string, SpRow[]>();
-		for (const x of all) {
-			const spell = graph.get(x.sp.spell);
-			const sch = (spell?.type === 'spell' ? spell.data.school : '') || 'Other';
-			const bucket = bySchool.get(sch) ?? [];
-			bucket.push(x.row);
-			bySchool.set(sch, bucket);
-		}
-		for (const sch of [...bySchool.keys()].sort())
-			groups.push({
-				key: 'sch:' + sch,
-				label: titleCase(sch),
-				slots: null,
-				rows: bySchool.get(sch) ?? []
-			});
-	}
+	if (groupBy === 'level')
+		groups.push(...groupByLevel(all, graph, slotsByLevel, character.play.spellSlotsSpent));
+	else if (groupBy === 'prepared') groups.push(...groupByPrepared(all));
+	else groups.push(...groupBySchool(all, graph));
 	return groups;
+}
+
+/** resolution → the combat spell-row chip ('' for utility). */
+const SP_RES_CHIP: Record<string, SpRow['res']> = { attack: 'hit', save: 'save', auto: 'auto' };
+
+/** resolution → the row's result label ('' for utility); a save shows its ability. */
+function spResLabel(res: string, saveAbility: string): string {
+	if (res === 'attack') return 'attack roll';
+	if (res === 'save') return `${saveAbility} save`;
+	if (res === 'auto') return 'auto';
+	return '';
+}
+
+/** Casting dice for a spell: the `damage` field, else (auto/healing) the "regains … equal to NdM"
+ *  dice scraped from the description; cantrips scale by `charLevel` (the 5/11/17 steps — A15). */
+function castingDice(d: RowData<'spell'>, charLevel: number): string {
+	const dmg =
+		(d.damage ?? '') || ((d.resolution ?? 'none') === 'auto' ? healDice(d.text_en ?? '') : '');
+	const scale = d.level === 0 ? cantripDieMultiplier(charLevel) : 1;
+	return scale > 1
+		? dmg.replace(/(\d+)d(\d+)/gi, (_, n: string, s: string) => `${Number(n) * scale}d${s}`)
+		: dmg;
 }
 
 /** Build a spell row from the content graph (or null if the ref is missing). `charLevel` scales
@@ -225,34 +261,23 @@ export function spellRow(
 ): SpRow | null {
 	const row = graph.get(ref);
 	if (row?.type !== 'spell') return null;
-	const lvl = row.data.level;
-	const res = row.data.resolution ?? 'none';
-	// dice for casting: the damage field, or (for auto/healing spells) the "regains …
-	// equal to NdM" dice parsed out of the description
-	let dmg = (row.data.damage ?? '') || (res === 'auto' ? healDice(row.data.text_en ?? '') : '');
-	const scale = lvl === 0 ? cantripDieMultiplier(charLevel) : 1;
-	if (scale > 1)
-		dmg = dmg.replace(/(\d+)d(\d+)/gi, (_, n: string, s: string) => `${Number(n) * scale}d${s}`);
+	const d = row.data;
+	const lvl = d.level;
+	const res = d.resolution ?? 'none';
+	const dmg = castingDice(d, charLevel);
 	return {
-		id: row.data.id,
+		id: d.id,
 		ref,
-		name: row.data.name_en,
+		name: d.name_en,
 		level: lvl,
-		spe: dmg || effectHint(row.data),
-		res: res === 'attack' ? 'hit' : res === 'save' ? 'save' : res === 'auto' ? 'auto' : '',
-		resLabel:
-			res === 'attack'
-				? 'attack roll'
-				: res === 'save'
-					? `${row.data.save_ability} save`
-					: res === 'auto'
-						? 'auto'
-						: '',
+		spe: dmg || effectHint(d),
+		res: SP_RES_CHIP[res] ?? '',
+		resLabel: spResLabel(res, d.save_ability ?? ''),
 		tm: lvl === 0 ? 'cantrip' : ordinal(lvl),
-		ct: castingIcon(row.data.casting_time ?? ''),
+		ct: castingIcon(d.casting_time ?? ''),
 		dmg: dmg ? parseDicePool(dmg) : null,
-		conc: row.data.concentration ?? false,
-		ritual: row.data.ritual ?? false,
+		conc: d.concentration ?? false,
+		ritual: d.ritual ?? false,
 		prep
 	};
 }

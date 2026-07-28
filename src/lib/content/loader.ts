@@ -13,7 +13,7 @@
  *     layer can "render what's possible + flag it" instead of crashing.
  */
 import Papa from 'papaparse';
-import type { Storage } from '../storage/types';
+import type { Storage, FileEntry } from '../storage/types';
 import {
 	CONTENT_TYPES,
 	parseRow,
@@ -197,181 +197,179 @@ export interface ContentSource {
 	root: string;
 }
 
-/** Load + merge content. The 2-arg form (one storage, many roots) is the common case; `extra`
- *  adds roots backed by a DIFFERENT storage (e.g. homebrew in user storage while SRD ships as
- *  fetched assets). All sources merge by type exactly the same way. */
-export async function loadContent(
-	storage: Storage,
-	roots: string[],
-	extra: ContentSource[] = []
-): Promise<ContentGraph> {
-	const rows: LoadedRow[] = [];
-	const issues: ContentIssue[] = [];
-	const metaIssues: MetaIssue[] = [];
-	const driftItems: DriftItem[] = [];
-	const localeSet = new Set<string>(['en']);
-	// longest filebase first, so a specific type wins over a type whose filebase is its prefix
-	// (e.g. `species_options_*` must match `species_option`, not `species`)
-	const typeByFilebase = Object.entries(CONTENT_TYPES)
-		.map(([t, d]) => [d.filebase, t as ContentType] as const)
-		.sort((a, b) => b[0].length - a[0].length);
+/** Mutable accumulators + the read-only type lookup, shared across the per-file load loop. */
+interface LoadAcc {
+	rows: LoadedRow[];
+	issues: ContentIssue[];
+	metaIssues: MetaIssue[];
+	driftItems: DriftItem[];
+	localeSet: Set<string>;
+	/** longest filebase first, so a specific type wins over a type whose filebase is its prefix
+	 *  (e.g. `species_options_*` must match `species_option`, not `species`). */
+	typeByFilebase: readonly (readonly [string, ContentType])[];
+}
 
-	const sources: ContentSource[] = [...roots.map((root) => ({ storage, root })), ...extra];
-	for (const { storage: st, root } of sources) {
-		for (const entry of await st.list(root)) {
-			if (entry.isDir || !entry.name.endsWith('.csv')) continue;
-			const raw = await st.read(`${root}/${entry.name}`);
-			// A `#content-<key>:` header block (any order, before the CSV) declares the file's metadata.
-			// `#content-type:` lets a freely-named file declare its type (the loader is otherwise
-			// filename-only); `#content-source:` / `#content-systems:` are the file-level source tag and
-			// editions, stamped onto every row (the per-row columns are legacy fallbacks). Explicit wins.
-			const { directives, body } = parseContentDirectives(raw);
-			const declaredType = directives.get('type');
-			let type: ContentType;
-			if (declaredType) {
-				if (!(declaredType in CONTENT_TYPES)) {
-					issues.push({
-						level: 'error',
-						root,
-						file: entry.name,
-						message: `#content-type: unknown content type "${declaredType}"`
-					});
-					continue;
-				}
-				type = declaredType as ContentType;
-			} else {
-				const base = entry.name.replace(/\.csv$/, '');
-				// type = the filebase that the name equals or starts with (e.g. species_srd → species)
-				const match = typeByFilebase.find(([fb]) => base === fb || base.startsWith(fb + '_'));
-				if (!match) {
-					issues.push({
-						level: 'warn',
-						root,
-						file: entry.name,
-						message:
-							'unknown content type for file (name matches no type — add a "#content-type: <type>" first line to declare it)'
-					});
-					continue;
-				}
-				type = match[1];
-			}
-			// DATA-VER-1 detection (surfaced, never thrown): (a) a REQUIRED metadata key missing →
-			// ContentMetaModal; (b) a recorded hash that no longer matches the body → HashDriftModal.
-			const fileLabel = `${root}/${entry.name}`;
-			const metaIssue = checkFileMeta(fileLabel, directives);
-			if (metaIssue) metaIssues.push(metaIssue);
-			const storedHash = directives.get('hash');
-			if (storedHash && isHashDrift(storedHash, await hashBody(raw))) {
-				driftItems.push({
-					file: fileLabel,
-					declaredDate: directives.get('updated_at'),
-					changedAt: entry.mtime ? new Date(entry.mtime).toISOString().slice(0, 10) : undefined
-				});
-			}
+/** One CSV file being loaded: the storage it lives in + its root + directory entry. */
+interface FileRef {
+	st: Storage;
+	root: string;
+	entry: FileEntry;
+}
 
-			// file-level source/systems from the header, applied to every row (row columns override for
-			// legacy files that still carry them; else the `#content-` header, else a fallback).
-			const fileSource = directives.get('source');
-			const fileLicense = directives.get('license');
-			// the language this file's rows are authored in (default en) — always "reviewed" for l10n status
-			const fileSourceLang = (directives.get('source_lang') ?? 'en').toLowerCase();
-			const fileSystems = directives
-				.get('systems')
-				?.split(',')
-				.map((s) => s.trim())
-				.filter(Boolean);
-			const parsed = Papa.parse<Record<string, string>>(body, {
-				header: true,
-				skipEmptyLines: true
-			});
+/** File-level `#content-` header values stamped onto every row of the file. */
+interface FileHeader {
+	type: ContentType;
+	source: string | undefined;
+	license: string | undefined;
+	sourceLang: string;
+	systems: string[] | undefined;
+}
 
-			for (const h of parsed.meta.fields ?? []) {
-				const m = LOCALE_COL.exec(h);
-				if (m?.[1]) localeSet.add(m[1].toLowerCase());
-				else if (/^(?:name|text)_/.test(h))
-					issues.push({
-						level: 'warn',
-						root,
-						file: entry.name,
-						message: `malformed locale column "${h}" (expected name_<bcp47>)`
-					});
-			}
-
-			for (const rawRow of parsed.data) {
-				const res = parseRow(type, rawRow);
-				if (!res.success) {
-					issues.push({
-						level: 'error',
-						root,
-						file: entry.name,
-						...(rawRow.id ? { id: String(rawRow.id) } : {}),
-						message: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')
-					});
-					continue;
-				}
-				// `data` shares every type's `base` columns (id/source/systems/name_en/…), so those read
-				// typed with no narrowing; type-specific reads happen after the row is narrowed by `.type`.
-				const data: AnyRowData = res.data;
-				// re-attach the localized columns the strict schema stripped — prose (name_uk, …) and the
-				// tracked translation status (loc_status_uk). Each guard narrows the key to its template
-				// type so the write needs no cast; a blank/absent cell is left off (EN-fallback / unset).
-				for (const [column, value] of Object.entries(rawRow)) {
-					if (value === '' || value == null) continue;
-					if (isProseLocaleColumn(column) && data[column] === undefined) data[column] = value;
-					else if (isLocStatusColumn(column) && data[column] === undefined) data[column] = value;
-				}
-				// precedence: per-row column (legacy) → file `#content-` header → fallback
-				const source = data.source || fileSource || 'unknown';
-				const systems = data.systems?.length ? data.systems : (fileSystems ?? []);
-				const id = data.id;
-				// parseRow already validated `data` against `type`, but TS can't correlate the runtime
-				// `type` union with the per-type `data` union into a single `LoadedRow` member without an
-				// assertion — the same generic-indexing seam as `parseRow`. ONE localized cast at the parse
-				// boundary; every read past here is fully typed.
-				rows.push({
-					type,
-					source,
-					id,
-					effectiveId: `${type}:${source}:${id}`,
-					systems,
-					...(fileLicense ? { license: fileLicense } : {}),
-					sourceLang: fileSourceLang,
-					data,
-					root,
-					file: entry.name
-				} as LoadedRow);
-			}
-		}
+/** Resolve a file's content type from an explicit `#content-type:` directive or (fallback) its
+ *  filename; push an issue + return null when neither yields a known type. */
+function resolveFileType(
+	file: FileRef,
+	directives: Map<string, string>,
+	acc: LoadAcc
+): ContentType | null {
+	const { root, entry } = file;
+	const declaredType = directives.get('type');
+	if (declaredType) {
+		if (declaredType in CONTENT_TYPES) return declaredType as ContentType;
+		acc.issues.push({
+			level: 'error',
+			root,
+			file: entry.name,
+			message: `#content-type: unknown content type "${declaredType}"`
+		});
+		return null;
 	}
+	const base = entry.name.replace(/\.csv$/, '');
+	// type = the filebase that the name equals or starts with (e.g. species_srd → species)
+	const match = acc.typeByFilebase.find(([fb]) => base === fb || base.startsWith(fb + '_'));
+	if (match) return match[1];
+	acc.issues.push({
+		level: 'warn',
+		root,
+		file: entry.name,
+		message:
+			'unknown content type for file (name matches no type — add a "#content-type: <type>" first line to declare it)'
+	});
+	return null;
+}
 
-	// indices
-	const byType = new Map<ContentType, LoadedRow[]>();
-	const byEffectiveId = new Map<string, LoadedRow>();
-	const articles = new Map<string, LoadedRow[]>();
-	const uniqueRows: LoadedRow[] = [];
-	for (const r of rows) {
-		// an EXACT source:id duplicate is a real error — and it must not APPLY twice. Drop it from
-		// every collection the derive scans read (rows / byType / articles), keeping only the first;
-		// otherwise the class-feature scan + condition expansion (which iterate `graph.rows`) fold its
-		// tokens ×2 while `get()` sees one row (B22).
-		if (byEffectiveId.has(r.effectiveId)) {
-			issues.push({
-				level: 'error',
-				root: r.root,
-				file: r.file,
-				id: r.id,
-				message: `duplicate source:id "${r.effectiveId}"`
-			});
-			continue;
-		}
-		byEffectiveId.set(r.effectiveId, r);
-		uniqueRows.push(r);
-		pushMap(byType, r.type, r);
-		pushMap(articles, `${r.type}:${r.id}`, r);
+/** Parse+validate ONE raw CSV row against its type, re-attach the localized prose/status columns the
+ *  strict schema stripped, and assemble the LoadedRow (precedence: row column → file header →
+ *  fallback). Returns a ContentIssue instead when the row fails validation. */
+function buildLoadedRow(
+	rawRow: Record<string, string>,
+	header: FileHeader,
+	file: FileRef
+): LoadedRow | ContentIssue {
+	const res = parseRow(header.type, rawRow);
+	if (!res.success)
+		return {
+			level: 'error',
+			root: file.root,
+			file: file.entry.name,
+			...(rawRow.id ? { id: String(rawRow.id) } : {}),
+			message: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')
+		};
+	// `data` shares every type's `base` columns (id/source/systems/name_en/…), so those read typed
+	// with no narrowing; type-specific reads happen after the row is narrowed by `.type`.
+	const data: AnyRowData = res.data;
+	// re-attach the localized columns the strict schema stripped — prose (name_uk, …) and the tracked
+	// translation status (loc_status_uk); each guard narrows the key to its template type (no cast); a
+	// blank/absent cell is left off (EN-fallback / unset).
+	for (const [column, value] of Object.entries(rawRow)) {
+		if (value === '' || value == null) continue;
+		if (isProseLocaleColumn(column) && data[column] === undefined) data[column] = value;
+		else if (isLocStatusColumn(column) && data[column] === undefined) data[column] = value;
 	}
+	// precedence: per-row column (legacy) → file `#content-` header → fallback
+	const source = data.source || header.source || 'unknown';
+	const systems = data.systems?.length ? data.systems : (header.systems ?? []);
+	const id = data.id;
+	// parseRow validated `data` against `type`; TS can't correlate the runtime `type` union with the
+	// per-type `data` union into one LoadedRow member without an assertion — ONE localized cast here.
+	return {
+		type: header.type,
+		source,
+		id,
+		effectiveId: `${header.type}:${source}:${id}`,
+		systems,
+		...(header.license ? { license: header.license } : {}),
+		sourceLang: header.sourceLang,
+		data,
+		root: file.root,
+		file: file.entry.name
+	} as LoadedRow;
+}
 
-	// validate additive spell_lists joins: an unknown class_id/spell_id is likely a typo → WARN
-	// (the join is harmless — it just resolves to nothing — but surfaced so the user can fix it).
+/** Read + parse one CSV file, resolving its type/meta/header and folding every valid row + any
+ *  content-health issue into `acc`. A non-CSV / directory entry is skipped. */
+async function processFile(file: FileRef, acc: LoadAcc): Promise<void> {
+	const { st, root, entry } = file;
+	if (entry.isDir || !entry.name.endsWith('.csv')) return;
+	const raw = await st.read(`${root}/${entry.name}`);
+	// A `#content-<key>:` header block (any order, before the CSV) declares the file's metadata.
+	// `#content-type:` lets a freely-named file declare its type; `#content-source:` / `-systems:` are
+	// the file-level source tag / editions stamped onto every row. Explicit wins.
+	const { directives, body } = parseContentDirectives(raw);
+	const type = resolveFileType(file, directives, acc);
+	if (!type) return;
+
+	// DATA-VER-1 detection (surfaced, never thrown): (a) a REQUIRED metadata key missing →
+	// ContentMetaModal; (b) a recorded hash that no longer matches the body → HashDriftModal.
+	const fileLabel = `${root}/${entry.name}`;
+	const metaIssue = checkFileMeta(fileLabel, directives);
+	if (metaIssue) acc.metaIssues.push(metaIssue);
+	const storedHash = directives.get('hash');
+	if (storedHash && isHashDrift(storedHash, await hashBody(raw)))
+		acc.driftItems.push({
+			file: fileLabel,
+			declaredDate: directives.get('updated_at'),
+			changedAt: entry.mtime ? new Date(entry.mtime).toISOString().slice(0, 10) : undefined
+		});
+
+	const header: FileHeader = {
+		type,
+		source: directives.get('source'),
+		license: directives.get('license'),
+		// the language this file's rows are authored in (default en) — always "reviewed" for l10n status
+		sourceLang: (directives.get('source_lang') ?? 'en').toLowerCase(),
+		systems: directives
+			.get('systems')
+			?.split(',')
+			.map((s) => s.trim())
+			.filter(Boolean)
+	};
+	const parsed = Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
+	for (const h of parsed.meta.fields ?? []) {
+		const m = LOCALE_COL.exec(h);
+		if (m?.[1]) acc.localeSet.add(m[1].toLowerCase());
+		else if (/^(?:name|text)_/.test(h))
+			acc.issues.push({
+				level: 'warn',
+				root,
+				file: entry.name,
+				message: `malformed locale column "${h}" (expected name_<bcp47>)`
+			});
+	}
+	for (const rawRow of parsed.data) {
+		const built = buildLoadedRow(rawRow, header, file);
+		if ('level' in built) acc.issues.push(built);
+		else acc.rows.push(built);
+	}
+}
+
+/** Validate additive spell_lists joins: an unknown class_id/spell_id (no such row in the row's
+ *  edition) is likely a typo → WARN. The join itself is harmless (it just resolves to nothing), but
+ *  surfaced so the user can fix it. */
+function validateSpellListJoins(
+	byType: Map<ContentType, LoadedRow[]>,
+	issues: ContentIssue[]
+): void {
 	const systemsById = (type: ContentType): Map<string, string[]> => {
 		const m = new Map<string, string[]>();
 		for (const r of byType.get(type) ?? []) m.set(r.id, [...(m.get(r.id) ?? []), ...r.systems]);
@@ -400,6 +398,61 @@ export async function loadContent(
 				message: `spell_lists: unknown spell "${r.data.spell_id}" (no spell with that id in this edition)`
 			});
 	}
+}
+
+/** Load + merge content. The 2-arg form (one storage, many roots) is the common case; `extra`
+ *  adds roots backed by a DIFFERENT storage (e.g. homebrew in user storage while SRD ships as
+ *  fetched assets). All sources merge by type exactly the same way. */
+export async function loadContent(
+	storage: Storage,
+	roots: string[],
+	extra: ContentSource[] = []
+): Promise<ContentGraph> {
+	const acc: LoadAcc = {
+		rows: [],
+		issues: [],
+		metaIssues: [],
+		driftItems: [],
+		localeSet: new Set<string>(['en']),
+		typeByFilebase: Object.entries(CONTENT_TYPES)
+			.map(([t, d]) => [d.filebase, t as ContentType] as const)
+			.sort((a, b) => b[0].length - a[0].length)
+	};
+
+	const sources: ContentSource[] = [...roots.map((root) => ({ storage, root })), ...extra];
+	for (const { storage: st, root } of sources)
+		for (const entry of await st.list(root)) await processFile({ st, root, entry }, acc);
+
+	// same references as `acc.*` — phases below read/push through these bindings unchanged
+	const { rows, issues, metaIssues, driftItems, localeSet } = acc;
+
+	// indices
+	const byType = new Map<ContentType, LoadedRow[]>();
+	const byEffectiveId = new Map<string, LoadedRow>();
+	const articles = new Map<string, LoadedRow[]>();
+	const uniqueRows: LoadedRow[] = [];
+	for (const r of rows) {
+		// an EXACT source:id duplicate is a real error — and it must not APPLY twice. Drop it from
+		// every collection the derive scans read (rows / byType / articles), keeping only the first;
+		// otherwise the class-feature scan + condition expansion (which iterate `graph.rows`) fold its
+		// tokens ×2 while `get()` sees one row (B22).
+		if (byEffectiveId.has(r.effectiveId)) {
+			issues.push({
+				level: 'error',
+				root: r.root,
+				file: r.file,
+				id: r.id,
+				message: `duplicate source:id "${r.effectiveId}"`
+			});
+			continue;
+		}
+		byEffectiveId.set(r.effectiveId, r);
+		uniqueRows.push(r);
+		pushMap(byType, r.type, r);
+		pushMap(articles, `${r.type}:${r.id}`, r);
+	}
+
+	validateSpellListJoins(byType, issues);
 
 	// content-health: surface partially-translated rows (mis-filled tables), never throw
 	issues.push(...collectTranslationGaps(uniqueRows, [...localeSet]));

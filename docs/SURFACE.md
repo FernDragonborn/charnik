@@ -655,7 +655,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface EffectFacts` — * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and * value-resolved on…
 - `function collectFacts` — * One pass over the RESOLVED effect list → the typed-facts object (D7).
 - `function mergeFacts` — * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned * tokens become sy…
-- `function applyEffects` — * The seam: compose effects onto a core-computed stat for `targetKey`.
+- `function applyEffects`
 - `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
 - `function lintEffectTokens` — Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression * slot — guard, value…
 
@@ -971,4 +971,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 525 exports across 82 modules · 31 duplicate suspects · generated in 194ms._
+_45 tokens · 61 global classes · 40 components · 525 exports across 82 modules · 31 duplicate suspects · generated in 128ms._

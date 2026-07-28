@@ -43,39 +43,46 @@ function targetLabel(t: string): string {
 	return titleCase(t);
 }
 
+type ParsedEffect = ReturnType<typeof parseToken>;
+
+/** flat_bonus delta: "+2" / "−1" / "+1d4" / "−1d6" (literal amount OR a dice string). */
+function flatDelta(p: ParsedEffect): string {
+	return p.amount !== undefined
+		? `${p.amount < 0 ? '−' : '+'}${Math.abs(p.amount)}`
+		: `${p.dice?.startsWith('-') ? '−' : '+'}${p.dice?.replace('-', '') ?? ''}`;
+}
+
+/** Per-kind tag formatter (assumes the required field is present — the caller guards on the result).
+ *  Each returns undefined when its token lacks a target/plugin, falling through to the raw fallback. */
+const TAG_FORMATTERS: Partial<
+	Record<ParsedEffect['kind'], (p: ParsedEffect) => string | undefined>
+> = {
+	[EFFECT_KIND.flatBonus]: (p) => p.target && `${targetLabel(p.target)} ${flatDelta(p)}`,
+	[EFFECT_KIND.setOverride]: (p) =>
+		p.target &&
+		`${targetLabel(p.target)} ${p.setMode === 'floor' ? '≥' : p.setMode === 'cap' ? '≤' : '='} ${p.amount ?? p.valueExpr ?? '?'}`,
+	[EFFECT_KIND.blockBonus]: (p) => p.target && `block · ${targetLabel(p.target)}`,
+	[EFFECT_KIND.halve]: (p) => p.target && `${targetLabel(p.target)} ×½`,
+	[EFFECT_KIND.resistImmune]: (p) => p.target && `${p.defense ?? 'resist'} · ${p.target}`,
+	[EFFECT_KIND.advantage]: (p) => p.target && `adv · ${targetLabel(p.target)}`,
+	[EFFECT_KIND.disadvantage]: (p) => p.target && `disadv · ${targetLabel(p.target)}`,
+	[EFFECT_KIND.grantProficiency]: (p) => p.target && `prof · ${titleCase(p.target)}`,
+	[EFFECT_KIND.grantRoll]: (p) => p.target && `roll · ${titleCase(p.target)}`,
+	[EFFECT_KIND.applyCondition]: (p) => p.target && titleCase(p.target),
+	[EFFECT_KIND.autoFail]: (p) => p.target && `auto-fail · ${targetLabel(p.target)}`,
+	[EFFECT_KIND.autoSucceed]: (p) => p.target && `auto-succeed · ${targetLabel(p.target)}`,
+	[EFFECT_KIND.note]: (p) => p.target, // free-form display text, as authored
+	// a handler REFERENCE — the namespace is the readable part; args are opaque machine input
+	[EFFECT_KIND.plugin]: (p) => p.plugin && `plugin · ${p.plugin.namespace}`
+};
+
 /** A bounded-vocab effect token → a short readable tag for the effects panel:
  *  flat_bonus → "AC +2" / "saves +1d4"; set_override → "AC = 13"; resist_immune → "resist · fire";
  *  advantage → "adv · <target>"; grant_proficiency → "prof · <target>"; apply_condition → the name.
  *  grant_resource is NOT tagged here — it gets its own Resources section (see groupEffects). */
 export function effectTag(token: string): string {
 	const p = parseToken(token);
-	if (p.kind === EFFECT_KIND.flatBonus && p.target) {
-		const delta =
-			p.amount !== undefined
-				? `${p.amount < 0 ? '−' : '+'}${Math.abs(p.amount)}`
-				: `${p.dice?.startsWith('-') ? '−' : '+'}${p.dice?.replace('-', '') ?? ''}`;
-		return `${targetLabel(p.target)} ${delta}`;
-	}
-	if (p.kind === EFFECT_KIND.setOverride && p.target) {
-		const sym = p.setMode === 'floor' ? '≥' : p.setMode === 'cap' ? '≤' : '=';
-		return `${targetLabel(p.target)} ${sym} ${p.amount ?? p.valueExpr ?? '?'}`;
-	}
-	if (p.kind === EFFECT_KIND.blockBonus && p.target) return `block · ${targetLabel(p.target)}`;
-	if (p.kind === EFFECT_KIND.halve && p.target) return `${targetLabel(p.target)} ×½`;
-	if (p.kind === EFFECT_KIND.resistImmune && p.target)
-		return `${p.defense ?? 'resist'} · ${p.target}`;
-	if (p.kind === EFFECT_KIND.advantage && p.target) return `adv · ${targetLabel(p.target)}`;
-	if (p.kind === EFFECT_KIND.disadvantage && p.target) return `disadv · ${targetLabel(p.target)}`;
-	if (p.kind === EFFECT_KIND.grantProficiency && p.target) return `prof · ${titleCase(p.target)}`;
-	if (p.kind === EFFECT_KIND.grantRoll && p.target) return `roll · ${titleCase(p.target)}`;
-	if (p.kind === EFFECT_KIND.applyCondition && p.target) return titleCase(p.target);
-	if (p.kind === EFFECT_KIND.autoFail && p.target) return `auto-fail · ${targetLabel(p.target)}`;
-	if (p.kind === EFFECT_KIND.autoSucceed && p.target)
-		return `auto-succeed · ${targetLabel(p.target)}`;
-	if (p.kind === EFFECT_KIND.note && p.target) return p.target; // free-form display text, as authored
-	// a handler REFERENCE — the namespace is the readable part; args are opaque (often long) machine input
-	if (p.kind === EFFECT_KIND.plugin && p.plugin) return `plugin · ${p.plugin.namespace}`;
-	return token.replace(/[-:]/g, ' ');
+	return TAG_FORMATTERS[p.kind]?.(p) || token.replace(/[-:]/g, ' ');
 }
 
 /** One source's derived contributions, as short display tags (B14). */

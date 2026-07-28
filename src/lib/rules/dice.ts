@@ -86,6 +86,53 @@ export interface RollOptions extends DieMods {
 	rng?: Rng;
 }
 
+/** The rolled main pool: running total, rendered parts, and the adv/natural metadata. */
+interface PoolResult {
+	total: number;
+	parts: string[];
+	advantageRoll?: AdvantageRoll;
+	natural?: number;
+}
+
+/** Roll the main pool (all NdM groups, highest die first). The FIRST d20 gets advantage/disadvantage
+ *  — roll two, keep the winner, surface the loser as `advantageRoll`. `rollOne` carries the pool's
+ *  reroll/min_die effects. Split out of `rollPool` (the bonus-dice/mod/formatting stays there). */
+function rollPoolDice(
+	dice: Record<number, number>,
+	advantage: number,
+	rollOne: (sides: number) => { v: number; face: number; label: string }
+): PoolResult {
+	const parts: string[] = [];
+	let total = 0;
+	let advantageRoll: AdvantageRoll | undefined;
+	let natural: number | undefined;
+	for (const [s, c] of Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0]))) {
+		const sides = Number(s);
+		for (let k = 0; k < c; k++) {
+			const r = rollOne(sides);
+			if (sides === 20 && advantage !== 0 && k === 0) {
+				// roll TWO d20 and keep the winner; the loser is surfaced (rendered struck through)
+				const r2 = rollOne(20);
+				const win = advantage > 0 ? Math.max(r.v, r2.v) : Math.min(r.v, r2.v);
+				const winIsFirst = win === r.v;
+				advantageRoll = { kept: win, dropped: winIsFirst ? r2.v : r.v };
+				natural = winIsFirst ? r.face : r2.face; // the kept die's face (pre-floor)
+				total += win;
+				continue; // the advantage detail renders the d20, don't duplicate it in `parts`
+			}
+			if (sides === 20 && natural === undefined) natural = r.face;
+			total += r.v;
+			parts.push(r.label);
+		}
+	}
+	return {
+		total,
+		parts,
+		...(advantageRoll !== undefined ? { advantageRoll } : {}),
+		...(natural !== undefined ? { natural } : {})
+	};
+}
+
 /**
  * Roll a dice pool + flat mod. `advantage` (−1 disadvantage / 0 normal / +1 advantage) applies to
  * the FIRST d20 in the pool: roll two, keep the winner, expose the loser as `advantageRoll`.
@@ -119,29 +166,9 @@ export function rollPool(
 		}
 		return { v, face, label: `d${sides}(${detail})` };
 	};
-	const parts: string[] = [];
-	let total = 0;
-	let advantageRoll: AdvantageRoll | undefined;
-	let natural: number | undefined;
-	for (const [s, c] of Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0]))) {
-		const sides = Number(s);
-		for (let k = 0; k < c; k++) {
-			const r = rollOne(sides);
-			if (sides === 20 && advantage !== 0 && k === 0) {
-				// roll TWO d20 and keep the winner; the loser is surfaced (rendered struck through)
-				const r2 = rollOne(20);
-				const win = advantage > 0 ? Math.max(r.v, r2.v) : Math.min(r.v, r2.v);
-				const winIsFirst = win === r.v;
-				advantageRoll = { kept: win, dropped: winIsFirst ? r2.v : r.v };
-				natural = winIsFirst ? r.face : r2.face; // the kept die's face (pre-floor)
-				total += win;
-				continue; // the advantage detail renders the d20, don't duplicate it in `parts`
-			}
-			if (sides === 20 && natural === undefined) natural = r.face;
-			total += r.v;
-			parts.push(r.label);
-		}
-	}
+	const pool = rollPoolDice(dice, advantage, rollOne);
+	const parts = pool.parts;
+	let total = pool.total;
 	for (const b of bonusDice)
 		for (let k = 0; k < b.count; k++) {
 			const v = rollDie(b.sides, rng);
@@ -153,8 +180,8 @@ export function rollPool(
 	return {
 		total,
 		expr,
-		...(advantageRoll !== undefined ? { advantageRoll } : {}),
-		...(natural !== undefined ? { natural } : {})
+		...(pool.advantageRoll !== undefined ? { advantageRoll: pool.advantageRoll } : {}),
+		...(pool.natural !== undefined ? { natural: pool.natural } : {})
 	};
 }
 

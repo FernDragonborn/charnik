@@ -104,6 +104,35 @@ const withMetric = (range: string): string => {
 	return `${range} (${met} m)`;
 };
 
+type SpellData = LoadedRowOf<'spell'>['data'];
+
+/** resolution → the short chip label (fallback "util"). */
+const RES_CHIP: Record<string, SpellModel['resChip']> = {
+	attack: 'hit',
+	save: 'save',
+	auto: 'auto'
+};
+
+/** resolution → the full label; a save shows its ability. */
+function resolutionLabel(res: string, saveAbility: string): string {
+	if (res === 'attack') return 'Attack roll';
+	if (res === 'save') return `${saveAbility.toUpperCase()} save`;
+	if (res === 'auto') return 'Automatic';
+	return 'Utility';
+}
+
+/** A spell's damage/heal dice + type: the `damage` column ("8d6 fire"), else a heal die scraped from
+ *  an auto-resolution spell's prose ("2d8" → healing). Empty when neither is present. */
+function spellDamage(d: SpellData): { dice: string; dmgType: string } {
+	const dm = (d.damage ?? '').match(/(\d+d\d+(?:\s*[+-]\s*\d+)?)\s*(.*)/);
+	if (dm) return { dice: (dm[1] ?? '').replace(/\s/g, ''), dmgType: (dm[2] ?? '').trim() };
+	if ((d.resolution ?? 'none') === 'auto') {
+		const h = (d.text_en ?? '').match(/(\d+d\d+)/);
+		if (h) return { dice: h[1] ?? '', dmgType: 'healing' };
+	}
+	return { dice: '', dmgType: '' };
+}
+
 function buildSpell(
 	row: LoadedRowOf<'spell'>,
 	availableTo?: SpellModel['availableTo'],
@@ -111,38 +140,15 @@ function buildSpell(
 ): SpellModel {
 	const d = row.data;
 	const res = d.resolution ?? 'none';
-	const dmg = d.damage ?? '';
-	let dice = '';
-	let dmgType = '';
-	const dm = dmg.match(/(\d+d\d+(?:\s*[+-]\s*\d+)?)\s*(.*)/);
-	if (dm) {
-		dice = (dm[1] ?? '').replace(/\s/g, '');
-		dmgType = (dm[2] ?? '').trim();
-	} else if (res === 'auto') {
-		const h = (d.text_en ?? '').match(/(\d+d\d+)/);
-		if (h) {
-			dice = h[1] ?? '';
-			dmgType = 'healing';
-		}
-	}
-	const resChip =
-		res === 'attack' ? 'hit' : res === 'save' ? 'save' : res === 'auto' ? 'auto' : 'util';
-	const resLabel =
-		res === 'attack'
-			? 'Attack roll'
-			: res === 'save'
-				? `${(d.save_ability ?? '').toUpperCase()} save`
-				: res === 'auto'
-					? 'Automatic'
-					: 'Utility';
+	const { dice, dmgType } = spellDamage(d);
 	const components = (d.components ?? '').replace(/,/g, ' ').replace(/\s+/g, ' ').trim();
 	const conc = d.concentration ?? false;
 	return {
 		edition: (Array.isArray(d.systems) ? d.systems : [d.systems]).filter(Boolean).join('/'),
 		ritual: d.ritual ?? false,
 		concentration: conc,
-		resChip,
-		resLabel,
+		resChip: RES_CHIP[res] ?? 'util',
+		resLabel: resolutionLabel(res, d.save_ability ?? ''),
 		dice,
 		dmgType,
 		cells: [
