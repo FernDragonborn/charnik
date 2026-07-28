@@ -281,7 +281,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (72 modules)
+## Library functions & types (75 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -324,10 +324,19 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface GatherInput`
 - `function gatherEffects` — Gather every active effect (species/items/runtime) as {source, layer, tokens}.
 
+### `src/lib/character/derive-plugins.ts`
+
+- `interface PluginPrePassInputs`
+- `function applyPluginPrePass` — L3 plugin PRE-PASS (docs/PLUGINS.md; stage 2½ — between resolve and the fold): resolve every * `plugin:` token agains…
+
+### `src/lib/character/derive-targets.ts`
+
+- `const isEffectTargetSupported` — B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
+
 ### `src/lib/character/derive.ts`
 
-- `const SKILL_ABILITY` — `as const satisfies` so the KEYS form the `SkillId` union (not widened to `string`) while the values are still checke…
-- `type SkillId` — The 18 SRD skill ids.
+- `re-export SKILL_ABILITY`
+- `re-export type SkillId`
 - `interface CharacterSheet`
 - `interface ResourceOption` — Piece 3: a spend-option on a granted resource, resolved for a specific character.
 - `function deriveSheet`
@@ -358,6 +367,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type EffectInstance`
 - `function newCharacter` — A fresh, valid character bound to a system.
 - `function parseCharacter` — Validate a raw parsed character (post-migration).
+
+### `src/lib/character/skills.ts`
+
+- `const SKILL_ABILITY` — `as const satisfies` so the KEYS form the `SkillId` union (not widened to `string`) while the values are still checke…
+- `type SkillId` — The 18 SRD skill ids.
 
 ### `src/lib/character/spellcasting.ts`
 
@@ -976,4 +990,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 527 exports across 83 modules · 31 duplicate suspects · generated in 166ms._
+_45 tokens · 61 global classes · 40 components · 532 exports across 86 modules · 31 duplicate suspects · generated in 172ms._

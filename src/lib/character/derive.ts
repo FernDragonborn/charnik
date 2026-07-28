@@ -16,6 +16,7 @@
 import { tokensOf, type ContentGraph, type LoadedRow, type LoadedRowOf } from '../content/loader';
 import type { Character } from './schema';
 import { gatherEffects } from './derive-gather';
+import { applyPluginPrePass } from './derive-plugins';
 import { ABILITIES } from './schema';
 import {
 	abilityModifier,
@@ -32,23 +33,15 @@ import {
 	type Ability
 } from '../rules/core';
 import { gatherProfGrants, isArmorProficient, armorCategoryOf } from '../rules/proficiency';
-import {
-	EFFECT_KIND,
-	type ActiveEffect,
-	type EffectCtx,
-	type EffectIssue
-} from '../effects/token-parser';
+import { type ActiveEffect, type EffectCtx, type EffectIssue } from '../effects/token-parser';
 import {
 	applyEffects,
 	collectFacts,
-	mergeFacts,
 	matchesTarget,
 	type EffectFacts,
-	type ResourceDef,
-	type TargetCheck
+	type ResourceDef
 } from '../effects/apply';
 import { didYouMean } from '../effects/suggest';
-import { expandPluginEffects, type PluginCtx } from '../effects/plugin-registry';
 import { resolveActiveEffects } from '../effects/resolver';
 import { RAGE_CONDITION_ID, type ResolveState } from '../effects/dependency-graph';
 import { deriveSpellcasting, castingAbilityByClass, type Spellcasting } from './spellcasting';
@@ -61,123 +54,12 @@ import {
 import type { ExprContext } from '../effects/expression-evaluator';
 import { computed, type Computed, type Contribution, type System } from '../rules/pipeline';
 
-/** Skill → its governing ability (the 18 SRD skills). */
-// `as const satisfies` so the KEYS form the `SkillId` union (not widened to `string`) while the
-// values are still checked to be `Ability`. This lets the skills map be keyed by `SkillId`, so
-// indexing it with a known skill id is sound (no `T | undefined`, no non-null assertions).
-export const SKILL_ABILITY = {
-	acrobatics: 'dex',
-	animal_handling: 'wis',
-	arcana: 'int',
-	athletics: 'str',
-	deception: 'cha',
-	history: 'int',
-	insight: 'wis',
-	intimidation: 'cha',
-	investigation: 'int',
-	medicine: 'wis',
-	nature: 'int',
-	perception: 'wis',
-	performance: 'cha',
-	persuasion: 'cha',
-	religion: 'int',
-	sleight_of_hand: 'dex',
-	stealth: 'dex',
-	survival: 'wis'
-} as const satisfies Record<string, Ability>;
-
-/** The 18 SRD skill ids. */
-export type SkillId = keyof typeof SKILL_ABILITY;
-
-// B13 exhaustiveness — the CLOSED-vocab targets each effect kind's consumer actually reads. derive
-// IS the authority (it makes every applyEffects/rollEffectsFor call), so it owns these sets and
-// hands a validator to collectFacts; a known-kind token outside them is surfaced as a content-health
-// issue instead of folding onto nothing (`flat_bonus:armorclass+1` no longer vanishes). Kept as a
-// permissive SUPERSET: a false negative (a rare bogus target slips through) is far better than a
-// false positive (flagging a real target scares authors). action/bonus/reaction are the economy
-// targets `TurnEconomy.slotMax` consumes (now documented in PLUGINS.md §4.4).
-const SAVE_TARGETS = ['saves', ...ABILITIES.map((a) => `save.${a}`)];
-const SKILL_TARGETS = [
-	'skills',
-	'ability_checks', // group alias for skill checks (2014 exhaustion L1: disadvantage on ability checks)
-	...Object.keys(SKILL_ABILITY).map((s) => `skill.${s}`)
-];
-const NUMERIC_TARGETS = new Set<string>([
-	...ABILITIES,
-	'ac',
-	'hp_max',
-	'speed',
-	'speed.fly',
-	'speed.swim',
-	'initiative',
-	'attack',
-	'damage',
-	'spell_dc',
-	'spell_attack',
-	'action',
-	'bonus',
-	'reaction',
-	'd20_tests',
-	// passive score of ANY skill (RAW: any ability check has a passive form — passive Athletics,
-	// passive Stealth…), not only the three senses the strip highlights.
-	...Object.keys(SKILL_ABILITY).map((s) => `passive.${s}`),
-	...SAVE_TARGETS,
-	...SKILL_TARGETS
-]);
-// roll-matched kinds (advantage/disadvantage/auto_*/reroll/min_die): the keys `matchesTarget` fans
-// out over — `damage` included for GWF-style `reroll:damage`.
-const ROLL_TARGETS = new Set<string>([
-	'attack',
-	'damage',
-	'initiative',
-	'd20_tests',
-	...SAVE_TARGETS,
-	...SKILL_TARGETS
-]);
-// grant_proficiency canonical target (token-parser strips `skill.` → bare skill id; saves keep
-// `save.`; a bare ability grants that save).
-const PROFICIENCY_TARGETS = new Set<string>([
-	...ABILITIES,
-	...ABILITIES.map((a) => `save.${a}`),
-	...Object.keys(SKILL_ABILITY)
-]);
-
-/** G4 `halve` targets — the only two stats RAW ever halves (2014 exhaustion L2 speed, L4 hp-max). */
-const HALVE_TARGETS = new Set<string>(['speed', 'hp_max']);
-
-/** The candidate target set a kind is checked against, or null for an open-vocab kind. */
-const targetCandidatesFor = (kind: string): Set<string> | null => {
-	switch (kind) {
-		// block_bonus blocks bonuses to a stat target (grappled → speed) — same closed vocab as sets.
-		case EFFECT_KIND.flatBonus:
-		case EFFECT_KIND.setOverride:
-		case EFFECT_KIND.blockBonus:
-			return NUMERIC_TARGETS;
-		// halve (2014 exhaustion) only ever multiplies speed or hp_max — a tighter closed set.
-		case EFFECT_KIND.halve:
-			return HALVE_TARGETS;
-		case EFFECT_KIND.advantage:
-		case EFFECT_KIND.disadvantage:
-		case EFFECT_KIND.autoFail:
-		case EFFECT_KIND.autoSucceed:
-		case EFFECT_KIND.reroll:
-		case EFFECT_KIND.minDie:
-			return ROLL_TARGETS;
-		case EFFECT_KIND.grantProficiency:
-			return PROFICIENCY_TARGETS;
-		default:
-			return null;
-	}
-};
-
-/** B13 validator handed to collectFacts: is this (kind, target) pair consumed by some stat/roll?
- *  Open-vocab kinds (resist_immune, grant_resource, apply_condition) are always supported —
- *  validated elsewhere or unbounded. An unsupported target carries a PLG-9 "did you mean?" suffix. */
-const isEffectTargetSupported = (kind: string, target: string): TargetCheck => {
-	const candidates = targetCandidatesFor(kind);
-	if (!candidates || candidates.has(target)) return { supported: true };
-	return { supported: false, suggestion: didYouMean(target, candidates) };
-};
+// SKILL_ABILITY / SkillId live in the leaf `./skills` (so derive's sub-modules share them without a
+// cycle); re-exported here so existing `$lib/character/derive` importers keep working.
+import { SKILL_ABILITY, type SkillId } from './skills';
+export { SKILL_ABILITY, type SkillId };
+// B13 target validation moved to ./derive-targets (the closed-vocab check collectFacts runs).
+import { isEffectTargetSupported } from './derive-targets';
 
 /** Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) →
  *  proficient → expertise (×2). */
@@ -572,91 +454,6 @@ function pickPrimaryCaster(
 		}
 	}
 	return primaryAbility;
-}
-
-/** Remaining-count map for the plugin ctx: max − spent per resource, own-or-zero guarded (the id is
- *  content-controlled, so a bare index could read an Object.prototype member — same guard as context). */
-function pluginResources(
-	facts: EffectFacts,
-	resourcesSpent: Readonly<Record<string, number>>
-): Record<string, number> {
-	return Object.fromEntries(
-		facts.resources.map((r) => {
-			const spent = Object.hasOwn(resourcesSpent, r.id) ? (resourcesSpent[r.id] ?? 0) : 0;
-			return [r.id, Math.max(0, r.max - spent)];
-		})
-	);
-}
-
-interface PluginPrePassInputs {
-	character: Character;
-	resolvedEffects: ActiveEffect[];
-	scores: Record<Ability, number>;
-	prof: number;
-	level: number;
-	classLevels: Record<string, number>;
-	facts: EffectFacts;
-	effCtx: EffectCtx | undefined;
-	expandCondition: (condId: string) => { source: string; tokens: string[] } | undefined;
-	maxHpBase: Computed;
-	issues: EffectIssue[];
-}
-
-/** L3 plugin PRE-PASS (docs/PLUGINS.md; stage 2½ — between resolve and the fold): resolve every
- *  `plugin:` token against the registry over the §4.2 least-data ctx. Returned TOKENS merge through a
- *  second collectFacts, CONTRIBUTIONS fold as host-stamped numeric facts, and a plugin-granted
- *  `apply_condition` expands ONE level (PLUGINS.md §4.3). No plugin tokens / no registry → a no-op
- *  (removability invariant). Mutates `facts` + `issues`. `api:1` limit: the ctx hpMax + the granted
- *  condition's sub-tokens read the PRE-plugin state — plugins cannot feed the condition DAG. */
-function applyPluginPrePass(o: PluginPrePassInputs): void {
-	const { character, resolvedEffects, scores, prof, level, classLevels, facts, effCtx } = o;
-	const preHpMax = character.play.hp.max ?? applyEffects('hp_max', o.maxHpBase, facts).value;
-	const pluginCtx: PluginCtx = {
-		api: 1,
-		build: {
-			system: character.system,
-			level,
-			classLevels,
-			proficiencyBonus: prof,
-			abilities: Object.fromEntries(
-				ABILITIES.map((ab) => [ab, { score: scores[ab], mod: abilityModifier(scores[ab]) }])
-			) as Record<Ability, { score: number; mod: number }>
-		},
-		play: {
-			hp: character.play.hp.current,
-			hpMax: preHpMax,
-			tempHp: character.play.hp.temp,
-			flags: {
-				isBloodied: character.play.hp.current <= preHpMax / 2,
-				isRaging: facts.conditions.includes(RAGE_CONDITION_ID),
-				isConcentrating: character.play.concentration != null
-			},
-			conditions: facts.conditions,
-			resources: pluginResources(facts, character.play.resourcesSpent)
-		}
-	};
-	// scope = character id: the fail-closed counter is per (plugin, character), so one character's
-	// ctx can't disable a plugin for another (PLG-3).
-	const expansion = expandPluginEffects(resolvedEffects, pluginCtx, o.issues, character.id);
-	if (!expansion) return;
-	const condsBefore = new Set(facts.conditions);
-	if (expansion.syntheticEffects.length)
-		mergeFacts(
-			facts,
-			collectFacts(expansion.syntheticEffects, effCtx, o.issues, isEffectTargetSupported)
-		);
-	facts.numeric.push(...expansion.numeric);
-	facts.pluginNotes.push(...expansion.notes);
-	facts.unknown.push(...expansion.unknown);
-	// a condition already active pre-plugin was expanded by the resolve stage; only the newly-granted
-	// ones expand here (A11 once-per-id).
-	const condEffects: ActiveEffect[] = [];
-	for (const id of facts.conditions.filter((c) => !condsBefore.has(c))) {
-		const cond = o.expandCondition(id);
-		if (cond) condEffects.push({ source: cond.source, layer: 'condition', tokens: cond.tokens });
-	}
-	if (condEffects.length)
-		mergeFacts(facts, collectFacts(condEffects, effCtx, o.issues, isEffectTargetSupported));
 }
 
 export function deriveSheet(
