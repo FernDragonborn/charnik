@@ -21,7 +21,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `label` ×3 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
-- `num` ×3 — src/lib/character/derive.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
+- `num` ×3 — src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/state.svelte.ts
@@ -281,7 +281,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (75 modules)
+## Library functions & types (76 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -328,6 +328,21 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface PluginPrePassInputs`
 - `function applyPluginPrePass` — L3 plugin PRE-PASS (docs/PLUGINS.md; stage 2½ — between resolve and the fold): resolve every * `plugin:` token agains…
+
+### `src/lib/character/derive-stats.ts`
+
+- `const num` — Coerce a CSV-derived cell to a number (already-number passes through), else the default.
+- `type SkillProficiency` — Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) → * proficient → expertise (×2).
+- `interface AbilityBlock`
+- `interface StatInputs` — The computed inputs every stat-phase helper reads (bundled so the helpers stay ≤4 params).
+- `function gatherGrantedProficiencies` — Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
+- `function resolveClassSaves` — Save-proficient abilities: build.saves + effect-granted + the STARTING class's saves.
+- `function deriveAbilityBlocks`
+- `function deriveSkills` — Skills: the BUILD's chosen level (expertise requires the chosen proficiency) combines with the * effect-granted level…
+- `function deriveAc` — AC: equipped armor (dex-capped) + a raised shield's +2 (the play-state flag, the single source * for it — not the inv…
+- `function deriveSpeed` — Speed from species base; A3: armor whose `str_min` exceeds the wearer's STR drops it 10 ft (RAW, * both editions), tr…
+- `function derivePassives` — Passive score of every skill (10 + mod ± adv/dis, `passive.<skill>` effects folded).
+- `function deriveDefenses` — Damage defenses collected from `resist_immune` facts, deduped per bucket.
 
 ### `src/lib/character/derive-targets.ts`
 
@@ -990,4 +1005,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 532 exports across 86 modules · 31 duplicate suspects · generated in 172ms._
+_45 tokens · 61 global classes · 40 components · 544 exports across 87 modules · 31 duplicate suspects · generated in 158ms._
