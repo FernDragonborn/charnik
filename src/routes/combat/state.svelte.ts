@@ -13,7 +13,7 @@ import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { tokensOf } from '$lib/content/loader';
-import { rollPool, type DieMods } from '$lib/rules/dice';
+import { rollPool } from '$lib/rules/dice';
 import type { Character } from '$lib/character/schema';
 import {
 	titleCase,
@@ -42,7 +42,7 @@ import {
 	type MenuKind,
 	type StandardAction
 } from '$lib/combat/helpers';
-import { RollTray } from './roll.svelte';
+import { RollTray, type RollSpec } from './roll.svelte';
 import {
 	appendLog,
 	readLog,
@@ -180,7 +180,7 @@ class CombatVM {
 		const token = `flat_bonus:${this.cmTarget}${this.cmSign}${amount}`;
 		const label =
 			this.customEffectLabel.trim() || `${this.cmSign}${amount} ${modTargetLabel(this.cmTarget)}`;
-		this.addEffect(label, [token], this.cmSign === '+');
+		this.addEffect({ label, tokens: [token], positive: this.cmSign === '+' });
 		this.customEffectLabel = '';
 		this.cmAmount = 1;
 	};
@@ -210,14 +210,20 @@ class CombatVM {
 		const parsed = req.pool ? null : parseDamage(req.formula);
 		const pool = req.pool ?? parsed?.pool ?? {};
 		const mod = req.mod ?? parsed?.mod ?? 0;
-		this.tray.prefill(req.label, pool, mod, req.advantage ?? 0, req.mods ?? {});
+		this.tray.prefill({
+			label: req.label,
+			dice: pool,
+			mod,
+			advantage: req.advantage ?? 0,
+			mods: req.mods ?? {}
+		});
 		if (req.queuedDamage)
-			this.tray.queueDamage(
-				req.queuedDamage.label,
-				req.queuedDamage.dice,
-				req.queuedDamage.mod,
-				req.queuedDamage.mods
-			);
+			this.tray.queueDamage({
+				label: req.queuedDamage.label,
+				dice: req.queuedDamage.dice,
+				mod: req.queuedDamage.mod,
+				...(req.queuedDamage.mods ? { mods: req.queuedDamage.mods } : {})
+			});
 		this.openMenuCentered('dice');
 	};
 
@@ -397,15 +403,8 @@ class CombatVM {
 	}
 
 	// open the roll builder prefilled + anchored, so the player can pick advantage then Roll
-	openRoll = (
-		label: string,
-		diceObj: Record<number, number>,
-		mod: number,
-		e: Event,
-		advantage = 0,
-		mods: DieMods = {}
-	) => {
-		this.tray.prefill(label, diceObj, mod, advantage, mods);
+	openRoll = (spec: RollSpec, e: Event) => {
+		this.tray.prefill(spec);
 		this.openMenu('dice', e);
 	};
 	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray. `key`
@@ -422,8 +421,17 @@ class CombatVM {
 		}
 		const fx = key ? this.effectsFor(key) : null;
 		const adv = fx ? netAdvantage(fx) : 0;
-		if (wantsTray(e)) this.openRoll(label, { 20: 1 }, mod, e, adv, fx ?? {});
-		else this.tray.rollDiceNow(label, { 20: 1 }, mod, adv, fx?.bonusDice ?? [], fx ?? {});
+		if (wantsTray(e))
+			this.openRoll({ label, dice: { 20: 1 }, mod, advantage: adv, mods: fx ?? {} }, e);
+		else
+			this.tray.rollDiceNow({
+				label,
+				dice: { 20: 1 },
+				mod,
+				advantage: adv,
+				bonusDice: fx?.bonusDice ?? [],
+				mods: fx ?? {}
+			});
 	};
 
 	/** Roll a death save (shown while at 0 HP): a d20 vs 10 — `save.death`-targeted effects (and
@@ -434,7 +442,16 @@ class CombatVM {
 		if (!c) return;
 		const fx = this.effectsFor('save.death');
 		if (wantsTray(e)) {
-			this.openRoll('Death save', { 20: 1 }, fx.flat, e, netAdvantage(fx), fx);
+			this.openRoll(
+				{
+					label: 'Death save',
+					dice: { 20: 1 },
+					mod: fx.flat,
+					advantage: netAdvantage(fx),
+					mods: fx
+				},
+				e
+			);
 			return;
 		}
 		const r = rollPool({ 20: 1 }, fx.flat, netAdvantage(fx), fx.bonusDice, fx);
@@ -478,8 +495,23 @@ class CombatVM {
 		const dmgFx = this.effectsFor('damage');
 		if (wantsTray(e)) {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
-			this.openRoll(at.name, { 20: 1 }, at.toHit + fx.flat, e, netAdvantage(fx), fx);
-			if (hasDice) this.tray.queueDamage(`${at.name} damage`, pool, mod + dmgFx.flat, dmgFx);
+			this.openRoll(
+				{
+					label: at.name,
+					dice: { 20: 1 },
+					mod: at.toHit + fx.flat,
+					advantage: netAdvantage(fx),
+					mods: fx
+				},
+				e
+			);
+			if (hasDice)
+				this.tray.queueDamage({
+					label: `${at.name} damage`,
+					dice: pool,
+					mod: mod + dmgFx.flat,
+					mods: dmgFx
+				});
 			return;
 		}
 		// instant: to-hit (with effect advantage/flat/dice) + damage → one 3-line entry
@@ -546,9 +578,23 @@ class CombatVM {
 		const dmgFx = this.effectsFor('damage');
 		const toHit = caster.attack.value + fx.flat;
 		if (wantsTray(e)) {
-			this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e, netAdvantage(fx), fx);
+			this.openRoll(
+				{
+					label: `${r.name} (spell attack)`,
+					dice: { 20: 1 },
+					mod: toHit,
+					advantage: netAdvantage(fx),
+					mods: fx
+				},
+				e
+			);
 			if (hasDmg)
-				this.tray.queueDamage(`${r.name} damage`, { ...(r.dmg ?? {}) }, dmgFx.flat, dmgFx);
+				this.tray.queueDamage({
+					label: `${r.name} damage`,
+					dice: { ...(r.dmg ?? {}) },
+					mod: dmgFx.flat,
+					mods: dmgFx
+				});
 		} else {
 			this.tray.pushRoll(
 				`${r.name} (spell attack)`,
@@ -569,8 +615,8 @@ class CombatVM {
 			const heal = r.res === 'auto';
 			const label = `${r.name} ${heal ? 'healing' : 'damage'}`;
 			const mod = heal && caster ? (this.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
-			if (alt) this.openRoll(label, r.dmg ?? {}, mod, e);
-			else this.tray.rollDiceNow(label, r.dmg ?? {}, mod);
+			if (alt) this.openRoll({ label, dice: r.dmg ?? {}, mod }, e);
+			else this.tray.rollDiceNow({ label, dice: r.dmg ?? {}, mod });
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
 			const suffix = ritual ? ' (ritual)' : '';
@@ -717,16 +763,19 @@ class CombatVM {
 	/** Duration (in rounds) applied to the NEXT effect added from the add-effect / custom menus.
 	 *  0 = indefinite (lasts until the player removes it). Editable in the add-effect menu. */
 	newEffectDuration = $state(10);
-	addEffect = (
-		label: string,
-		tokens: string[],
-		positive = true,
-		durationRounds = this.newEffectDuration,
-		// B17: the catalog ref (effectiveId) when added from the "+" catalog — stored so derive
-		// resolves the effect LIVE (fixes propagate); omitted for custom/GM effects (baked only).
-		ref?: string
-	) => {
+	addEffect = (spec: {
+		label: string;
+		tokens: string[];
+		/** Buff (true, default) vs debuff (false) — drives the Buffs/Debuffs split. */
+		positive?: boolean;
+		/** Rounds it lasts; 0/omitted → the add-effect menu's `newEffectDuration`. */
+		durationRounds?: number;
+		/** B17: the catalog ref (effectiveId) when added from the "+" catalog — stored so derive
+		 *  resolves the effect LIVE (fixes propagate); omitted for custom/GM effects (baked only). */
+		ref?: string;
+	}) => {
 		if (!this.character) return;
+		const durationRounds = spec.durationRounds ?? this.newEffectDuration;
 		// 0 / negative → indefinite: omit the duration fields entirely (schema: absent = until removed)
 		const duration =
 			durationRounds > 0
@@ -736,10 +785,10 @@ class CombatVM {
 			...this.character.play.effects,
 			{
 				iid: crypto.randomUUID(),
-				label,
-				effects: tokens,
-				positive,
-				...(ref !== undefined ? { source: ref } : {}),
+				label: spec.label,
+				effects: spec.tokens,
+				positive: spec.positive ?? true,
+				...(spec.ref !== undefined ? { source: spec.ref } : {}),
 				...duration
 			}
 		];

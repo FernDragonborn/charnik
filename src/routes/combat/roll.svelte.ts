@@ -11,6 +11,22 @@ import { signed, type RollLogEntry } from '$lib/combat/helpers';
 /** Cap on the retained roll log (newest kept). */
 const ROLL_LOG_MAX = 200;
 
+/** A roll request — the pool + modifier and optional advantage / bonus dice / reroll-min_die mods.
+ *  The ONE shape prefill / rollDiceNow / queueDamage (and the VM's openRoll) all speak, so a roll
+ *  site passes one typed object instead of 5–6 positional args. */
+export interface RollSpec {
+	label: string;
+	dice: Record<number, number>;
+	mod: number;
+	/** −1 disadvantage · 0 normal · +1 advantage (default 0). */
+	advantage?: number;
+	/** Signed effect bonus dice (Bless +1d4) — only rollDiceNow applies these; a prefilled tray Roll
+	 *  does not (it re-rolls the pool interactively). */
+	bonusDice?: BonusDie[];
+	/** reroll/min_die effect facts — apply on the tray's Roll too. */
+	mods?: DieMods;
+}
+
 export class RollTray {
 	// dice tray / roll builder
 	dice = $state<Record<number, number>>({ 20: 1 }); // sides → count in the pool
@@ -62,25 +78,24 @@ export class RollTray {
 	};
 
 	/** Prefill the tray for a specific roll (a stat/attack), so the player can pick advantage then
-	 *  Roll. `mods` = the roll's reroll/min_die effect facts (they survive into the tray's Roll). */
-	prefill = (
-		label: string,
-		diceObj: Record<number, number>,
-		mod: number,
-		advantage = 0,
-		mods: DieMods = {}
-	) => {
-		this.rollSrc = label;
-		this.dice = { ...diceObj };
-		this.rollMod = mod;
-		this.rollAdvantage = advantage;
-		this.rollMods = mods;
+	 *  Roll. `spec.mods` = the roll's reroll/min_die effect facts (they survive into the tray's Roll). */
+	prefill = (spec: RollSpec) => {
+		this.rollSrc = spec.label;
+		this.dice = { ...spec.dice };
+		this.rollMod = spec.mod;
+		this.rollAdvantage = spec.advantage ?? 0;
+		this.rollMods = spec.mods ?? {};
 		this.pendingDamage = null;
 	};
 
 	/** Queue a damage roll to fire right after the tray's next Roll (an attack's to-hit → damage). */
-	queueDamage = (label: string, dice: Record<number, number>, mod: number, mods?: DieMods) => {
-		this.pendingDamage = { label, dice, mod, ...(mods ? { mods } : {}) };
+	queueDamage = (spec: RollSpec) => {
+		this.pendingDamage = {
+			label: spec.label,
+			dice: spec.dice,
+			mod: spec.mod,
+			...(spec.mods ? { mods: spec.mods } : {})
+		};
 	};
 
 	/** The custom roll tray's Roll: rolls the pool + any queued attack damage as ONE combined entry
@@ -100,17 +115,13 @@ export class RollTray {
 		this.pushRoll(this.rollSrc ?? 'Custom roll', primary, damage);
 	};
 
-	/** Roll a dice pool immediately (a tap that "just works"): `advantage` (−1/0/+1), signed
-	 *  `bonusDice` and `mods` (reroll/min_die) come from the stat's active effects. */
-	rollDiceNow = (
-		label: string,
-		diceObj: Record<number, number>,
-		mod: number,
-		advantage = 0,
-		bonusDice: BonusDie[] = [],
-		mods: DieMods = {}
-	) => {
-		this.pushRoll(label, rollPool(diceObj, mod, advantage, bonusDice, mods));
+	/** Roll a dice pool immediately (a tap that "just works"): advantage, signed bonus dice and
+	 *  reroll/min_die mods all come from the stat's active effects (via the RollSpec). */
+	rollDiceNow = (spec: RollSpec) => {
+		this.pushRoll(
+			spec.label,
+			rollPool(spec.dice, spec.mod, spec.advantage ?? 0, spec.bonusDice ?? [], spec.mods ?? {})
+		);
 	};
 
 	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is

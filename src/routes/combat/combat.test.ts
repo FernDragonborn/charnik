@@ -349,7 +349,11 @@ describe('CombatVM · incapacitated zeroes the action economy (G3)', () => {
 		expect(combat.economy.trySpend('action')).toBe(true);
 
 		// apply Incapacitated → the id lands in facts.conditions (the row's own effects are irrelevant here)
-		combat.addEffect('Incapacitated', ['apply_condition:incapacitated'], false);
+		combat.addEffect({
+			label: 'Incapacitated',
+			tokens: ['apply_condition:incapacitated'],
+			positive: false
+		});
 		expect(combat.economy.incapacitated).toBe(true);
 		expect(combat.economy.slotMax).toEqual({ action: 0, bonus: 0, reaction: 0 });
 		expect(combat.economy.trySpend('bonus')).toBe(false); // hard block, not exhaustion
@@ -390,7 +394,7 @@ describe('CombatVM · S2 split net', () => {
 
 	it('roll/log: rollDiceNow prepends a labelled entry with a numeric total', () => {
 		const before = combat.tray.log.length;
-		combat.tray.rollDiceNow('Stealth', { 20: 1 }, 5);
+		combat.tray.rollDiceNow({ label: 'Stealth', dice: { 20: 1 }, mod: 5 });
 		expect(combat.tray.log.length).toBe(before + 1);
 		expect(combat.tray.log[0]!.label).toBe('Stealth');
 		expect(typeof combat.tray.log[0]!.total).toBe('number');
@@ -469,18 +473,18 @@ describe('CombatVM · S2 split net', () => {
 	// the effects panel controls the user asked for: choose duration on add, edit/remove on the panel
 	it('addEffect applies the chosen newEffectDuration; 0 = indefinite (no duration field)', () => {
 		combat.newEffectDuration = 4;
-		combat.addEffect('Haste', ['flat_bonus:ac+2'], true);
+		combat.addEffect({ label: 'Haste', tokens: ['flat_bonus:ac+2'], positive: true });
 		const added = character.play.effects.at(-1)!;
 		expect(added.label).toBe('Haste');
 		expect(added.durationRounds).toBe(4);
 
 		combat.newEffectDuration = 0; // indefinite
-		combat.addEffect('Curse', [], false);
+		combat.addEffect({ label: 'Curse', tokens: [], positive: false });
 		expect(character.play.effects.at(-1)!.durationRounds).toBeUndefined();
 	});
 
 	it('removeEffect drops the effect by its instance id', () => {
-		combat.addEffect('Temp', ['flat_bonus:ac+1']);
+		combat.addEffect({ label: 'Temp', tokens: ['flat_bonus:ac+1'] });
 		const iid = character.play.effects.at(-1)!.iid;
 		const before = character.play.effects.length;
 		combat.removeEffect(iid);
@@ -490,7 +494,7 @@ describe('CombatVM · S2 split net', () => {
 
 	it('bumpEffectDuration nudges rounds, and dropping to 0 makes it indefinite', () => {
 		combat.newEffectDuration = 2;
-		combat.addEffect('Bless2', ['flat_bonus:saves+1d4']);
+		combat.addEffect({ label: 'Bless2', tokens: ['flat_bonus:saves+1d4'] });
 		const iid = character.play.effects.at(-1)!.iid;
 		const dur = () => character.play.effects.find((e) => e.iid === iid)!.durationRounds;
 		combat.bumpEffectDuration(iid, 1);
@@ -500,7 +504,7 @@ describe('CombatVM · S2 split net', () => {
 	});
 
 	it('setEffectDuration sets an exact typed round count; 0/blank → indefinite', () => {
-		combat.addEffect('Typed', ['flat_bonus:ac+1']);
+		combat.addEffect({ label: 'Typed', tokens: ['flat_bonus:ac+1'] });
 		const iid = character.play.effects.at(-1)!.iid;
 		const dur = () => character.play.effects.find((e) => e.iid === iid)!.durationRounds;
 		combat.setEffectDuration(iid, 7);

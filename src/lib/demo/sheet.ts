@@ -8,6 +8,60 @@ import { characterSchema, newCharacter, type Character } from '../character/sche
 
 const S = 'SRD 5.2.1';
 
+/** The demo's runtime effects (buffs/debuffs/conditions/resources) — static play-state, layered
+ *  regardless of content. Module-level to keep `demoCharacter` under the size limit; the final
+ *  `characterSchema.parse` clones it, so the shared array is never mutated. */
+const DEMO_EFFECTS: Character['play']['effects'] = [
+	{
+		iid: 'shield-of-faith',
+		label: 'Shield of Faith',
+		effects: ['flat_bonus:ac+2'],
+		positive: true,
+		durationRounds: 100,
+		startedRound: 0
+	},
+	{
+		iid: 'bless',
+		label: 'Bless',
+		effects: ['flat_bonus:saves+1d4'],
+		positive: true,
+		durationRounds: 10,
+		startedRound: 0
+	},
+	{
+		iid: 'bane',
+		label: 'Bane',
+		effects: ['flat_bonus:saves-1d4'],
+		positive: false,
+		durationRounds: 10,
+		startedRound: 0
+	},
+	{
+		iid: 'poisoned',
+		label: 'Poisoned',
+		effects: ['apply_condition:poisoned'],
+		positive: false
+	},
+	{
+		iid: 'arcane-recovery',
+		label: 'Arcane Recovery',
+		effects: ['grant_resource:arcane_recovery:1:long'], // resource ids snake (E3)
+		positive: true
+	},
+	{
+		iid: 'second-wind',
+		label: 'Second Wind',
+		effects: ['grant_resource:second_wind:1:short'],
+		positive: true
+	},
+	{
+		iid: 'channel-divinity',
+		label: 'Channel Divinity',
+		effects: ['grant_resource:channel_divinity:2:short'],
+		positive: true
+	}
+];
+
 export function demoCharacter(): Character {
 	const c = newCharacter('valen', 'Valen the Blue', '5.5e');
 	// ids are snake_case (E3) — these must match the SHIPPED content ids exactly; the demo is built
@@ -43,55 +97,6 @@ export function demoCharacter(): Character {
 	];
 	c.play.hp = { current: 14, max: undefined, temp: 5 };
 	c.play.spellSlotsSpent = { '1': 1, '2': 0, '3': 1 };
-	c.play.effects = [
-		{
-			iid: 'shield-of-faith',
-			label: 'Shield of Faith',
-			effects: ['flat_bonus:ac+2'],
-			positive: true,
-			durationRounds: 100,
-			startedRound: 0
-		},
-		{
-			iid: 'bless',
-			label: 'Bless',
-			effects: ['flat_bonus:saves+1d4'],
-			positive: true,
-			durationRounds: 10,
-			startedRound: 0
-		},
-		{
-			iid: 'bane',
-			label: 'Bane',
-			effects: ['flat_bonus:saves-1d4'],
-			positive: false,
-			durationRounds: 10,
-			startedRound: 0
-		},
-		{
-			iid: 'poisoned',
-			label: 'Poisoned',
-			effects: ['apply_condition:poisoned'],
-			positive: false
-		},
-		{
-			iid: 'arcane-recovery',
-			label: 'Arcane Recovery',
-			effects: ['grant_resource:arcane_recovery:1:long'], // resource ids snake (E3)
-			positive: true
-		},
-		{
-			iid: 'second-wind',
-			label: 'Second Wind',
-			effects: ['grant_resource:second_wind:1:short'],
-			positive: true
-		},
-		{
-			iid: 'channel-divinity',
-			label: 'Channel Divinity',
-			effects: ['grant_resource:channel_divinity:2:short'],
-			positive: true
-		}
-	];
+	c.play.effects = DEMO_EFFECTS;
 	return characterSchema.parse(c);
 }

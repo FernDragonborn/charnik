@@ -111,7 +111,14 @@
 				{@const dur = p.durationRounds ?? combat.newEffectDuration}
 				<button
 					class="menu-row"
-					onclick={() => addEffect(p.label, p.tokens, !p.negative, dur, p.ref)}
+					onclick={() =>
+						addEffect({
+							label: p.label,
+							tokens: p.tokens,
+							positive: !p.negative,
+							durationRounds: dur,
+							ref: p.ref
+						})}
 				>
 					<span class="main"
 						><span class="effect-icon" class:negative={p.negative}>＋</span>{p.label}</span
@@ -241,7 +248,14 @@
 				{@const added = character?.play.effects.some((e) => e.label === cn.label)}
 				<button
 					class="menu-row"
-					onclick={() => (added ? null : addEffect(cn.label, [`apply_condition:${cn.id}`], false))}
+					onclick={() =>
+						added
+							? null
+							: addEffect({
+									label: cn.label,
+									tokens: [`apply_condition:${cn.id}`],
+									positive: false
+								})}
 				>
 					<span class="main">{cn.label}</span><span class="toggle-track" class:on={added}></span>
 				</button>

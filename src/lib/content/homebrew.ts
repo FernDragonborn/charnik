@@ -312,7 +312,7 @@ export async function upsertHomebrewRow(
 	if (idx >= 0) existing[idx] = finalRow;
 	else existing.push(finalRow);
 
-	await writeStampedHomebrew(storage, targetFile, columns, existing, directives);
+	await writeStampedHomebrew(storage, targetFile, { columns, rows: existing }, directives);
 	return { ok: true, id };
 }
 
@@ -335,7 +335,7 @@ export async function removeHomebrewRow(
 		return;
 	}
 	const columns = columnsWithExtras(type, remaining);
-	await writeStampedHomebrew(storage, targetFile, columns, remaining, directives);
+	await writeStampedHomebrew(storage, targetFile, { columns, rows: remaining }, directives);
 }
 
 /** Default license stamped on app-authored homebrew. "Custom" = the user's own content on their own
@@ -353,11 +353,10 @@ const HOMEBREW_LICENSE = 'Custom';
 async function writeStampedHomebrew(
 	storage: Storage,
 	file: string,
-	columns: string[],
-	rows: Record<string, string>[],
+	table: { columns: string[]; rows: Record<string, string>[] },
 	prior: Map<MetaKey, string>
 ): Promise<void> {
-	const body = Papa.unparse({ fields: columns, data: rows }, { newline: '\r\n' });
+	const body = Papa.unparse({ fields: table.columns, data: table.rows }, { newline: '\r\n' });
 	const d = new Map(prior);
 	if (!d.has('source')) d.set('source', HOMEBREW_SOURCE);
 	if (!d.has('license')) d.set('license', HOMEBREW_LICENSE);
@@ -401,6 +400,11 @@ export async function saveHomebrewRow(
 	if (!built.ok) return { ok: false, issues: built.issues };
 
 	const rows = [...existing, built.row];
-	await writeStampedHomebrew(storage, file, columnsWithExtras(type, rows), rows, directives);
+	await writeStampedHomebrew(
+		storage,
+		file,
+		{ columns: columnsWithExtras(type, rows), rows },
+		directives
+	);
 	return built.row.id ? { ok: true, id: built.row.id } : { ok: true };
 }
