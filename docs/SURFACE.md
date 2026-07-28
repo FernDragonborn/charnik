@@ -281,7 +281,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (71 modules)
+## Library functions & types (72 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -318,6 +318,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface AssembleWrapper` — The character-envelope fields that wrap an assembled build.
 - `function assembleCharacter` — * Validate an assembled build into a Character.
+
+### `src/lib/character/derive-gather.ts`
+
+- `interface GatherInput`
+- `function gatherEffects` — Gather every active effect (species/items/runtime) as {source, layer, tokens}.
 
 ### `src/lib/character/derive.ts`
 
@@ -971,4 +976,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 525 exports across 82 modules · 31 duplicate suspects · generated in 161ms._
+_45 tokens · 61 global classes · 40 components · 527 exports across 83 modules · 31 duplicate suspects · generated in 166ms._
