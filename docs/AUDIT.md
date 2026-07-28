@@ -387,9 +387,13 @@ Deep effects-system review, 2026-07-16 (B12–B26):
 
 - [~] **D1 · Big-file splits — mostly done.** The 1032-line `build/+page.svelte` was split (VM +
   blocks), `PanelCard` → per-panel components, `CombatMenus` → DiceTray + RollLog, `helpers.ts` →
-  concern modules. REMAINING over the eslint 400-line `.ts` warn (warn-only, gate green): the two VMs
-  `build/state.svelte.ts` (~606) + `combat/state.svelte.ts` (~582) and `derive.ts` (~910); the big
-  `.svelte` (EditContentForm 759, compendium 849) are `.svelte`-exempt. Split opportunistically.
+  concern modules. 2026-07-28: the effects-engine complexity monsters split — `classifyToken`/`evalBin`
+  into per-concern helpers, `parse` → a `Parser` class, `resolveActiveEffects` (complexity 74) → a
+  `Resolver` class in a NEW `effects/resolver.ts` (dependency-graph.ts stays the graph + contract);
+  both under 400. REMAINING over the eslint 400-line `.ts` warn (warn-only, gate green): the two VMs
+  `build/state.svelte.ts` (~606) + `combat/state.svelte.ts` (~582) and `derive.ts` (~910, its
+  `deriveSheet` is the last real complexity hotspot); the big `.svelte` (EditContentForm 759,
+  compendium 849) are `.svelte`-exempt. Split opportunistically.
 - [x] **D2 · Two sources of truth for the editions union.** FIXED 2026-07-28. F7 already collapsed the
   consts into `rules/pipeline.SYSTEMS` (`stores/app SystemId` + schema re-derive from it); the last
   artifact — an unsound `s as SystemId` assertion in `inActiveEdition` — is now a string-membership
