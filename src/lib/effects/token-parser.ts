@@ -134,6 +134,125 @@ function parseTokenUncached(token: string): ParsedEffect {
 	return p;
 }
 
+/** A per-kind token body parser: `rest` is everything after the first `:`, `kind` the matched kind
+ *  (shared by the block/halve and reroll/min_die pairs), `raw` the trimmed original for inert notes. */
+type KindParser = (rest: string, raw: string, kind: EffectKind) => ParsedEffect;
+
+const parseFlatBonus: KindParser = (rest, raw, kind) => {
+	// literal fast path — ONE target grammar with the expression path below (snake, single
+	// optional dot; `-` is the L2 minus operator, E3): a literal amount/dice never needs a ctx
+	const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
+	if (lit) {
+		const target = lit[1] ?? '';
+		const sign = lit[2] ?? '';
+		const amount = lit[3] ?? '';
+		if (/d/i.test(amount)) return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw };
+		return { kind, target, amount: clampAmount(Number(sign + amount)), raw };
+	}
+	// L2 expression value: `<target><+|->` then an expression. A `-` sign negates the whole value.
+	const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)\s*([+-])\s*(.+)$/i.exec(rest);
+	if (!ex) return { kind: 'unknown', raw };
+	const valueExpr = ex[2] === '-' ? `-(${(ex[3] ?? '').trim()})` : (ex[3] ?? '').trim();
+	return { kind, target: ex[1] ?? '', valueExpr, raw };
+};
+
+const parseSetOverride: KindParser = (rest, raw, kind) => {
+	// Optional trailing `:floor` / `:cap` (A9). L2 value expressions are colon-free (`:` is
+	// structural, the guard's `?` is stripped upstream), so a final `:(floor|cap)` is unambiguous.
+	let setMode: 'floor' | 'cap' | undefined;
+	let body = rest;
+	const modeM = /:(floor|cap)$/i.exec(rest);
+	if (modeM?.[1]) {
+		setMode = modeM[1].toLowerCase() as 'floor' | 'cap';
+		body = rest.slice(0, modeM.index);
+	}
+	const withMode = (p: ParsedEffect): ParsedEffect => (setMode ? { ...p, setMode } : p);
+	const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(-?\d+)$/i.exec(body);
+	if (lit) return withMode({ kind, target: lit[1] ?? '', amount: clampAmount(Number(lit[2])), raw });
+	const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(.+)$/i.exec(body);
+	if (!ex) return { kind: 'unknown', raw };
+	return withMode({ kind, target: ex[1] ?? '', valueExpr: (ex[2] ?? '').trim(), raw });
+};
+
+// `block_bonus:<target>` / `halve:<target>` — a bare (trimmed) target, no value slot.
+const parseTargetOnly: KindParser = (rest, raw, kind) => ({ kind, target: rest.trim(), raw });
+
+const parseGrantRoll: KindParser = (rest, raw, kind) => {
+	// `grant_roll:<id>:<expr>` — id is snake (readable), expr is the colon-free L2 value slot.
+	const m = /^([a-z0-9][a-z0-9_]*):(.+)$/i.exec(rest.trim());
+	if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
+	return { kind, target: m[1].toLowerCase(), valueExpr: m[2].trim(), raw };
+};
+
+const parseResistImmune: KindParser = (rest, raw, kind) => {
+	// `resist_immune:<type>` (defaults to resistance) or `resist_immune:<bucket>:<type>`
+	const m = /^(?:(resist|immune|vulnerable):)?(.+)$/i.exec(rest);
+	if (!m?.[2]) return { kind: 'unknown', raw };
+	const defense = (m[1]?.toLowerCase() ?? 'resist') as Defense;
+	return { kind, defense, target: m[2].trim(), raw };
+};
+
+const parseGrantResource: KindParser = (rest, raw, kind) => {
+	// `grant_resource:<id>` (bare flag) or `grant_resource:<id>:<max>:<recharge>` where <max> is a
+	// literal OR an L2 expression (`class_level.monk`). The recharge keyword anchors the end, so
+	// the middle (max) can hold expression characters (`*`, `(`, `,`) unambiguously.
+	// Id is snake-only (E3): a kebab pool id would be unreadable from `resource.<id>` expressions.
+	const m = /^([a-z0-9][a-z0-9_]*)(?::(.+):(short|long|other))?$/i.exec(rest.trim());
+	if (!m?.[1]) return { kind: 'unknown', raw };
+	const id = m[1].toLowerCase();
+	const maxSlot = m[2]?.trim();
+	const recharge = m[3]?.toLowerCase() as Recharge | undefined;
+	if (maxSlot && recharge) {
+		const resource = /^\d+$/.test(maxSlot)
+			? { id, max: Math.min(Number(maxSlot), MAX_RESOURCE_MAX), recharge }
+			: { id, maxExpr: maxSlot, recharge };
+		return { kind, target: id, resource, raw };
+	}
+	return { kind, target: id, raw };
+};
+
+const parseGrantProficiency: KindParser = (rest, raw, kind) => {
+	// `grant_proficiency:[expertise:]<target>` — the target is canonicalized here (the ONE place):
+	// a `skill.` prefix strips to the bare skill id (skills are bare in this vocab; only saves
+	// carry their `save.` prefix), so authors can write either form without it silently dropping.
+	const m = /^(expertise:)?(?:skill\.)?(.+)$/i.exec(rest);
+	if (!m?.[2]) return { kind: 'unknown', raw };
+	return { kind, target: m[2].trim(), proficiency: m[1] ? 'expertise' : 'proficient', raw };
+};
+
+const parsePlugin: KindParser = (rest, raw, kind) => {
+	// `plugin:<namespace>:<handlerName>[:<args>]` — grammar + length caps from docs/PLUGINS.md §1. The token is
+	// attacker-controlled content; over-cap or malformed → inert unknown (never a partial parse).
+	// `args` may itself contain `:` — only the first two separators are structural.
+	const m = /^([a-z0-9][a-z0-9-]{0,31}):([a-z0-9][a-z0-9-]{0,31})(?::([\s\S]{0,256}))?$/.exec(rest);
+	if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
+	return { kind, plugin: { namespace: m[1], handlerName: m[2], args: m[3] ?? '' }, raw };
+};
+
+const parseRollMod: KindParser = (rest, raw, kind) => {
+	// `reroll:<target>:<threshold>` / `min_die:<target>:<floor>` — a target plus one integer the
+	// roll path reads. Target may be a group (`d20_tests`) or a specific key (`skill.stealth`).
+	const m = /^(.+):(\d+)$/.exec(rest);
+	if (!m?.[1]) return { kind: 'unknown', raw };
+	return { kind, target: m[1].trim(), amount: Number(m[2]), raw };
+};
+
+/** Body parsers keyed by kind. A kind with no entry (advantage / disadvantage / apply_condition /
+ *  auto_fail / auto_succeed / note) takes the bare-target fallback in `classifyToken`. */
+const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
+	[EFFECT_KIND.flatBonus]: parseFlatBonus,
+	[EFFECT_KIND.setOverride]: parseSetOverride,
+	[EFFECT_KIND.blockBonus]: parseTargetOnly,
+	[EFFECT_KIND.halve]: parseTargetOnly,
+	[EFFECT_KIND.grantRoll]: parseGrantRoll,
+	[EFFECT_KIND.resistImmune]: parseResistImmune,
+	[EFFECT_KIND.grantResource]: parseGrantResource,
+	[EFFECT_KIND.grantProficiency]: parseGrantProficiency,
+	[EFFECT_KIND.plugin]: parsePlugin,
+	[EFFECT_KIND.reroll]: parseRollMod,
+	[EFFECT_KIND.minDie]: parseRollMod
+};
+
 function classifyToken(token: string): ParsedEffect {
 	const raw = token.trim();
 	const sep = raw.indexOf(':');
@@ -141,102 +260,9 @@ function classifyToken(token: string): ParsedEffect {
 	const kind = raw.slice(0, sep) as EffectKind;
 	const rest = raw.slice(sep + 1);
 	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
-
-	if (kind === EFFECT_KIND.flatBonus) {
-		// literal fast path — ONE target grammar with the expression path below (snake, single
-		// optional dot; `-` is the L2 minus operator, E3): a literal amount/dice never needs a ctx
-		const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
-		if (lit) {
-			const target = lit[1] ?? '';
-			const sign = lit[2] ?? '';
-			const amount = lit[3] ?? '';
-			if (/d/i.test(amount)) return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw };
-			return { kind, target, amount: clampAmount(Number(sign + amount)), raw };
-		}
-		// L2 expression value: `<target><+|->` then an expression. A `-` sign negates the whole value.
-		const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)\s*([+-])\s*(.+)$/i.exec(rest);
-		if (!ex) return { kind: 'unknown', raw };
-		const valueExpr = ex[2] === '-' ? `-(${(ex[3] ?? '').trim()})` : (ex[3] ?? '').trim();
-		return { kind, target: ex[1] ?? '', valueExpr, raw };
-	}
-	if (kind === EFFECT_KIND.setOverride) {
-		// Optional trailing `:floor` / `:cap` (A9). L2 value expressions are colon-free (`:` is
-		// structural, the guard's `?` is stripped upstream), so a final `:(floor|cap)` is unambiguous.
-		let setMode: 'floor' | 'cap' | undefined;
-		let body = rest;
-		const modeM = /:(floor|cap)$/i.exec(rest);
-		if (modeM?.[1]) {
-			setMode = modeM[1].toLowerCase() as 'floor' | 'cap';
-			body = rest.slice(0, modeM.index);
-		}
-		const withMode = (p: ParsedEffect): ParsedEffect => (setMode ? { ...p, setMode } : p);
-		const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(-?\d+)$/i.exec(body);
-		if (lit)
-			return withMode({ kind, target: lit[1] ?? '', amount: clampAmount(Number(lit[2])), raw });
-		const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(.+)$/i.exec(body);
-		if (!ex) return { kind: 'unknown', raw };
-		return withMode({ kind, target: ex[1] ?? '', valueExpr: (ex[2] ?? '').trim(), raw });
-	}
-	if (kind === EFFECT_KIND.blockBonus || kind === EFFECT_KIND.halve)
-		return { kind, target: rest.trim(), raw };
-	if (kind === EFFECT_KIND.grantRoll) {
-		// `grant_roll:<id>:<expr>` — id is snake (readable), expr is the colon-free L2 value slot.
-		const m = /^([a-z0-9][a-z0-9_]*):(.+)$/i.exec(rest.trim());
-		if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
-		return { kind, target: m[1].toLowerCase(), valueExpr: m[2].trim(), raw };
-	}
-	if (kind === EFFECT_KIND.resistImmune) {
-		// `resist_immune:<type>` (defaults to resistance) or `resist_immune:<bucket>:<type>`
-		const m = /^(?:(resist|immune|vulnerable):)?(.+)$/i.exec(rest);
-		if (!m?.[2]) return { kind: 'unknown', raw };
-		const defense = (m[1]?.toLowerCase() ?? 'resist') as Defense;
-		return { kind, defense, target: m[2].trim(), raw };
-	}
-	if (kind === EFFECT_KIND.grantResource) {
-		// `grant_resource:<id>` (bare flag) or `grant_resource:<id>:<max>:<recharge>` where <max> is a
-		// literal OR an L2 expression (`class_level.monk`). The recharge keyword anchors the end, so
-		// the middle (max) can hold expression characters (`*`, `(`, `,`) unambiguously.
-		// Id is snake-only (E3): a kebab pool id would be unreadable from `resource.<id>` expressions.
-		const m = /^([a-z0-9][a-z0-9_]*)(?::(.+):(short|long|other))?$/i.exec(rest.trim());
-		if (!m?.[1]) return { kind: 'unknown', raw };
-		const id = m[1].toLowerCase();
-		const maxSlot = m[2]?.trim();
-		const recharge = m[3]?.toLowerCase() as Recharge | undefined;
-		if (maxSlot && recharge) {
-			const resource = /^\d+$/.test(maxSlot)
-				? { id, max: Math.min(Number(maxSlot), MAX_RESOURCE_MAX), recharge }
-				: { id, maxExpr: maxSlot, recharge };
-			return { kind, target: id, resource, raw };
-		}
-		return { kind, target: id, raw };
-	}
-	if (kind === EFFECT_KIND.grantProficiency) {
-		// `grant_proficiency:[expertise:]<target>` — the target is canonicalized here (the ONE place):
-		// a `skill.` prefix strips to the bare skill id (skills are bare in this vocab; only saves
-		// carry their `save.` prefix), so authors can write either form without it silently dropping.
-		const m = /^(expertise:)?(?:skill\.)?(.+)$/i.exec(rest);
-		if (!m?.[2]) return { kind: 'unknown', raw };
-		return { kind, target: m[2].trim(), proficiency: m[1] ? 'expertise' : 'proficient', raw };
-	}
-	if (kind === EFFECT_KIND.plugin) {
-		// `plugin:<namespace>:<handlerName>[:<args>]` — grammar + length caps from docs/PLUGINS.md §1. The token is
-		// attacker-controlled content; over-cap or malformed → inert unknown (never a partial parse).
-		// `args` may itself contain `:` — only the first two separators are structural.
-		const m = /^([a-z0-9][a-z0-9-]{0,31}):([a-z0-9][a-z0-9-]{0,31})(?::([\s\S]{0,256}))?$/.exec(
-			rest
-		);
-		if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
-		return { kind, plugin: { namespace: m[1], handlerName: m[2], args: m[3] ?? '' }, raw };
-	}
-	if (kind === EFFECT_KIND.reroll || kind === EFFECT_KIND.minDie) {
-		// `reroll:<target>:<threshold>` / `min_die:<target>:<floor>` — a target plus one integer the
-		// roll path reads. Target may be a group (`d20_tests`) or a specific key (`skill.stealth`).
-		const m = /^(.+):(\d+)$/.exec(rest);
-		if (!m?.[1]) return { kind: 'unknown', raw };
-		return { kind, target: m[1].trim(), amount: Number(m[2]), raw };
-	}
-	// advantage / disadvantage / apply_condition
-	return { kind, target: rest, raw };
+	// advantage / disadvantage / apply_condition / auto_fail / auto_succeed / note: bare target (rest
+	// kept verbatim — note's free-text casing/spacing must survive; the trimming kinds have parsers).
+	return (KIND_PARSERS[kind] ?? ((r, rw) => ({ kind, target: r, raw: rw })))(rest, raw, kind);
 }
 
 /** A resolved value for a `flat_bonus`/`set_override`/`grant_resource` token: a folded numeric

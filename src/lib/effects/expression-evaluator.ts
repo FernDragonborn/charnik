@@ -127,28 +127,32 @@ function evalDice(n: { count: Node; sides: Node }, ctx: ExprContext): ExprValue 
 	return { type: 'dice', dice: { pool: c > 0 ? { [s]: c } : {}, flat: 0 } };
 }
 
+const COMPARE_OPS = new Set<BinOp>(['==', '!=', '<', '<=', '>', '>=']);
+
 function evalBin(n: { op: BinOp; l: Node; r: Node }, ctx: ExprContext): ExprValue {
 	const { op } = n;
 	// enum comparison: one side an enum var, the other an enum literal
-	if (op === '==' || op === '!=' || op === '<' || op === '<=' || op === '>' || op === '>=') {
-		if (isEnumCompare(n.l, n.r)) return evalEnumCompare(op, n.l, n.r, ctx);
-	}
-	// boolean short-circuit
+	if (COMPARE_OPS.has(op) && isEnumCompare(n.l, n.r)) return evalEnumCompare(op, n.l, n.r, ctx);
+	// boolean short-circuit (before evaluating both sides)
 	if (op === 'and') return num(truthy(evalNode(n.l, ctx)) && truthy(evalNode(n.r, ctx)) ? 1 : 0);
 	if (op === 'or') return num(truthy(evalNode(n.l, ctx)) || truthy(evalNode(n.r, ctx)) ? 1 : 0);
 
 	const l = evalNode(n.l, ctx);
 	const r = evalNode(n.r, ctx);
+	if (COMPARE_OPS.has(op)) return num(numCompare(op, asNumber(l), asNumber(r)) ? 1 : 0);
+	return evalArith(op, l, r);
+}
+
+/** The five arithmetic operators (dice-aware where it applies); a comparison op never reaches here. */
+function evalArith(op: BinOp, l: ExprValue, r: ExprValue): ExprValue {
 	switch (op) {
 		case '+':
 			return addValues(l, r);
 		case '-':
 			return addValues(l, num(-asNumber(r))); // dice - number allowed; number/dice - dice handled by asNumber guard
-		case '*': {
+		case '*':
 			// dice * integer scales the pool; otherwise numeric
-			if (isDice(l) || isDice(r)) return scaleDice(l, r);
-			return num(l.value * r.value);
-		}
+			return isDice(l) || isDice(r) ? scaleDice(l, r) : num(l.value * r.value);
 		case '/': {
 			const rv = asNumber(r);
 			if (rv === 0) throw new EvalError('division by zero');
@@ -159,20 +163,28 @@ function evalBin(n: { op: BinOp; l: Node; r: Node }, ctx: ExprContext): ExprValu
 			if (rv === 0) throw new EvalError('modulo by zero');
 			return num(asNumber(l) % rv);
 		}
-		case '<':
-			return num(asNumber(l) < asNumber(r) ? 1 : 0);
-		case '<=':
-			return num(asNumber(l) <= asNumber(r) ? 1 : 0);
-		case '>':
-			return num(asNumber(l) > asNumber(r) ? 1 : 0);
-		case '>=':
-			return num(asNumber(l) >= asNumber(r) ? 1 : 0);
-		case '==':
-			return num(asNumber(l) === asNumber(r) ? 1 : 0);
-		case '!=':
-			return num(asNumber(l) !== asNumber(r) ? 1 : 0);
 		default:
 			throw new EvalError(`unhandled operator '${op}'`);
+	}
+}
+
+/** Numeric comparison → boolean. `op` is always one of `COMPARE_OPS`. */
+function numCompare(op: BinOp, a: number, b: number): boolean {
+	switch (op) {
+		case '<':
+			return a < b;
+		case '<=':
+			return a <= b;
+		case '>':
+			return a > b;
+		case '>=':
+			return a >= b;
+		case '==':
+			return a === b;
+		case '!=':
+			return a !== b;
+		default:
+			throw new EvalError(`unhandled comparison '${op}'`);
 	}
 }
 
