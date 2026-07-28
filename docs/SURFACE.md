@@ -672,7 +672,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ResolveState` — The mutable dependency-resolve state.
 - `interface ResolveArgs`
 - `interface DependencyResolved`
-- `function resolveActiveEffects`
+- `function resolveActiveEffects` — Resolve every active effect in dependency order (see `Resolver`).
 
 ### `src/lib/effects/expression-evaluator.ts`
 
@@ -961,4 +961,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 518 exports across 81 modules · 31 duplicate suspects · generated in 200ms._
+_45 tokens · 61 global classes · 40 components · 518 exports across 81 modules · 31 duplicate suspects · generated in 238ms._

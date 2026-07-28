@@ -234,68 +234,83 @@ function tokenize(src: string): { ok: true; toks: Tok[] } | { ok: false; error: 
  *  A `ParseError` is thrown INTERNALLY and caught at the entry point — it never escapes the module. */
 class ParseError extends Error {}
 
-function parse(toks: Tok[]): Node {
-	let pos = 0;
-	let depth = 0;
+/** Recursive-descent parser over a token list. The cursor (`pos`) and nesting counter (`depth`) are
+ *  fields so every precedence rule is a small method sharing them (they were closures over one
+ *  `parse()` before — same grammar, one method per rung of the ladder now). */
+class Parser {
+	private pos = 0;
+	private depth = 0;
+	constructor(private readonly toks: Tok[]) {}
 
-	const peek = (): Tok | undefined => toks[pos];
-	const eat = (): Tok => {
-		const t = toks[pos];
+	/** Parse the whole token list to a root node; a trailing token that no rule consumed is an error. */
+	run(): Node {
+		const root = this.parseExpr();
+		if (this.pos !== this.toks.length)
+			throw new ParseError(`unexpected trailing token '${tokText(this.toks[this.pos])}'`);
+		return root;
+	}
+
+	private peek(): Tok | undefined {
+		return this.toks[this.pos];
+	}
+	private eat(): Tok {
+		const t = this.toks[this.pos];
 		if (!t) throw new ParseError('unexpected end of expression');
-		pos++;
+		this.pos++;
 		return t;
-	};
-	const isOp = (v: string): boolean => {
-		const t = peek();
+	}
+	private isOp(v: string): boolean {
+		const t = this.peek();
 		return !!t && t.k === 'op' && t.v === v;
-	};
-	const isIdentWord = (v: string): boolean => {
-		const t = peek();
+	}
+	private isIdentWord(v: string): boolean {
+		const t = this.peek();
 		return !!t && t.k === 'ident' && t.v === v;
-	};
-	const guardDepth = () => {
-		if (++depth > MAX_DEPTH) throw new ParseError('expression nested too deeply');
-	};
+	}
+	private guardDepth(): void {
+		if (++this.depth > MAX_DEPTH) throw new ParseError('expression nested too deeply');
+	}
 
-	const parseExpr = (): Node => parseOr();
-
-	function parseOr(): Node {
-		let l = parseAnd();
-		while (isIdentWord('or')) {
-			eat();
-			l = { t: 'bin', op: 'or', l, r: parseAnd() };
+	private parseExpr(): Node {
+		return this.parseOr();
+	}
+	private parseOr(): Node {
+		let l = this.parseAnd();
+		while (this.isIdentWord('or')) {
+			this.eat();
+			l = { t: 'bin', op: 'or', l, r: this.parseAnd() };
 		}
 		return l;
 	}
-	function parseAnd(): Node {
-		let l = parseNot();
-		while (isIdentWord('and')) {
-			eat();
-			l = { t: 'bin', op: 'and', l, r: parseNot() };
+	private parseAnd(): Node {
+		let l = this.parseNot();
+		while (this.isIdentWord('and')) {
+			this.eat();
+			l = { t: 'bin', op: 'and', l, r: this.parseNot() };
 		}
 		return l;
 	}
-	function parseNot(): Node {
-		if (isIdentWord('not')) {
-			eat();
-			guardDepth();
-			const e = { t: 'not', e: parseNot() } as const;
-			depth--;
+	private parseNot(): Node {
+		if (this.isIdentWord('not')) {
+			this.eat();
+			this.guardDepth();
+			const e = { t: 'not', e: this.parseNot() } as const;
+			this.depth--;
 			return e;
 		}
-		return parseComparison();
+		return this.parseComparison();
 	}
-	function parseComparison(): Node {
+	private parseComparison(): Node {
 		const isCompareOp = (): string | null => {
-			const t = peek();
+			const t = this.peek();
 			if (!t || t.k !== 'op') return null;
 			return ['<', '<=', '>', '>=', '==', '!='].includes(t.v) ? t.v : null;
 		};
-		let l = parseAddSub();
+		let l = this.parseAddSub();
 		const op = isCompareOp();
 		if (op) {
-			eat();
-			l = { t: 'bin', op: op as BinOp, l, r: parseAddSub() };
+			this.eat();
+			l = { t: 'bin', op: op as BinOp, l, r: this.parseAddSub() };
 			// non-associative BY DESIGN: `5<=level<=10` would silently parse as `(5<=level)<=10`
 			// (always true) — an authoring trap, so a chain is a parse error, not a wrong answer.
 			if (isCompareOp())
@@ -303,82 +318,82 @@ function parse(toks: Tok[]): Node {
 		}
 		return l;
 	}
-	function parseAddSub(): Node {
-		let l = parseMulDiv();
-		while (isOp('+') || isOp('-')) {
-			const op = eat() as { k: 'op'; v: '+' | '-' };
-			l = { t: 'bin', op: op.v, l, r: parseMulDiv() };
+	private parseAddSub(): Node {
+		let l = this.parseMulDiv();
+		while (this.isOp('+') || this.isOp('-')) {
+			const op = this.eat() as { k: 'op'; v: '+' | '-' };
+			l = { t: 'bin', op: op.v, l, r: this.parseMulDiv() };
 		}
 		return l;
 	}
-	function parseMulDiv(): Node {
-		let l = parseUnary();
-		while (isOp('*') || isOp('/') || isOp('%')) {
-			const op = eat() as { k: 'op'; v: '*' | '/' | '%' };
-			l = { t: 'bin', op: op.v, l, r: parseUnary() };
+	private parseMulDiv(): Node {
+		let l = this.parseUnary();
+		while (this.isOp('*') || this.isOp('/') || this.isOp('%')) {
+			const op = this.eat() as { k: 'op'; v: '*' | '/' | '%' };
+			l = { t: 'bin', op: op.v, l, r: this.parseUnary() };
 		}
 		return l;
 	}
-	function parseUnary(): Node {
-		if (isOp('-')) {
-			eat();
-			guardDepth();
-			const e = { t: 'neg', e: parseUnary() } as const;
-			depth--;
+	private parseUnary(): Node {
+		if (this.isOp('-')) {
+			this.eat();
+			this.guardDepth();
+			const e = { t: 'neg', e: this.parseUnary() } as const;
+			this.depth--;
 			return e;
 		}
-		return parseDice();
+		return this.parseDice();
 	}
-	function parseDice(): Node {
-		let l = parsePrimary();
-		while (peek()?.k === 'dice') {
-			eat();
-			l = { t: 'dice', count: l, sides: parsePrimary() };
+	private parseDice(): Node {
+		let l = this.parsePrimary();
+		while (this.peek()?.k === 'dice') {
+			this.eat();
+			l = { t: 'dice', count: l, sides: this.parsePrimary() };
 		}
 		return l;
 	}
-	function parsePrimary(): Node {
-		const t = eat();
+	private parsePrimary(): Node {
+		const t = this.eat();
 		if (t.k === 'num') return { t: 'num', value: t.v };
 		if (t.k === 'op' && t.v === '(') {
-			guardDepth();
-			const e = parseExpr();
-			if (!isOp(')')) throw new ParseError("missing ')'");
-			eat();
-			depth--;
+			this.guardDepth();
+			const e = this.parseExpr();
+			if (!this.isOp(')')) throw new ParseError("missing ')'");
+			this.eat();
+			this.depth--;
 			return e;
 		}
-		if (t.k === 'ident') return identNode(t.v);
+		if (t.k === 'ident') return this.identNode(t.v);
 		throw new ParseError(`unexpected token near '${tokText(t)}'`);
 	}
 	/** A call argument: an expression, optionally extended to a `threshold->value` pair. Pairs are
 	 *  parsed for ANY call (one grammar) and rejected below for every function but step(). */
-	function parseArg(): Node {
-		const e = parseExpr();
-		if (isOp('->')) {
-			eat();
-			return { t: 'pair', threshold: e, value: parseExpr() };
+	private parseArg(): Node {
+		const e = this.parseExpr();
+		if (this.isOp('->')) {
+			this.eat();
+			return { t: 'pair', threshold: e, value: this.parseExpr() };
 		}
 		return e;
 	}
-	function identNode(name: string): Node {
+	private identNode(name: string): Node {
 		// function call?
-		if (isOp('(')) {
+		if (this.isOp('(')) {
 			const spec = FUNCTIONS[name];
 			if (!spec) throw new ParseError(`unknown function '${name}'`);
-			eat(); // '('
-			guardDepth();
+			this.eat(); // '('
+			this.guardDepth();
 			const args: Node[] = [];
-			if (!isOp(')')) {
-				args.push(parseArg());
-				while (isOp(',')) {
-					eat();
-					args.push(parseArg());
+			if (!this.isOp(')')) {
+				args.push(this.parseArg());
+				while (this.isOp(',')) {
+					this.eat();
+					args.push(this.parseArg());
 				}
 			}
-			if (!isOp(')')) throw new ParseError(`missing ')' in ${name}(...)`);
-			eat();
-			depth--;
+			if (!this.isOp(')')) throw new ParseError(`missing ')' in ${name}(...)`);
+			this.eat();
+			this.depth--;
 			if (args.length < spec.min || args.length > spec.max)
 				throw new ParseError(`${name}() takes ${arityText(spec)} arguments, got ${args.length}`);
 			validatePairShape(name, args);
@@ -386,49 +401,48 @@ function parse(toks: Tok[]): Node {
 		}
 		return varNode(name);
 	}
-	/** step() takes `index, t->v, t->v, …` — the index must NOT be a pair, everything after MUST be;
-	 *  any other function must have no pairs at all. */
-	function validatePairShape(fn: string, args: Node[]): void {
-		if (fn !== 'step') {
-			if (args.some((a) => a.t === 'pair'))
-				throw new ParseError(`'->' pairs are only valid inside step()`);
-			return;
-		}
-		if (args[0]?.t === 'pair')
-			throw new ParseError(`step()'s first argument is the index, not a 'threshold->value' pair`);
-		const bad = args.slice(1).find((a) => a.t !== 'pair');
-		if (bad)
-			throw new ParseError(`step() arguments after the index must be 'threshold->value' pairs`);
-	}
-	function varNode(name: string): Node {
-		if (name === 'inf') return { t: 'inf' };
-		const d = splitDottedName(name);
-		if (d) {
-			if (!d.id) throw new ParseError(`'${name}' is missing an id after '.'`);
-			if (DOTTED_NUMERIC.has(d.prefix)) return { t: 'numvar', name };
-			if (DOTTED_BOOLEAN.has(d.prefix)) return { t: 'boolvar', name };
-			throw new ParseError(`unknown variable family '${d.prefix}.'`);
-		}
-		if (NUMERIC_VARS.has(name)) return { t: 'numvar', name };
-		if (BOOLEAN_VARS.has(name)) return { t: 'boolvar', name };
-		if (name in ENUM_VARS) return { t: 'enumvar', name };
-		if (ENUM_LITERALS.has(name)) return { t: 'enumlit', name };
-		// a KNOWN variable glued straight onto a die (`leveld6`) is indivisible by design — hint the
-		// supported spelling instead of guessing a split (NEVER-support, decisions doc)
-		const glued = /^(.+?)d(\d+)$/.exec(name);
-		if (glued && glued[1] && isKnownVarName(glued[1]))
-			throw new ParseError(
-				`unknown variable '${name}' — did you mean '${glued[1]} d${glued[2]}'? (a variable needs a space or parens before the dice operator)`
-			);
-		// A bare ability name (`wis`) with no _mod/_score suffix is a deliberate parse error — never
-		// leave "mod or score?" ambiguous (PLAN).
-		throw new ParseError(`unknown variable '${name}'`);
-	}
+}
 
-	const root = parseExpr();
-	if (pos !== toks.length)
-		throw new ParseError(`unexpected trailing token '${tokText(toks[pos])}'`);
-	return root;
+/** step() takes `index, t->v, t->v, …` — the index must NOT be a pair, everything after MUST be;
+ *  any other function must have no pairs at all. (Pure over the parsed args — no cursor needed.) */
+function validatePairShape(fn: string, args: Node[]): void {
+	if (fn !== 'step') {
+		if (args.some((a) => a.t === 'pair'))
+			throw new ParseError(`'->' pairs are only valid inside step()`);
+		return;
+	}
+	if (args[0]?.t === 'pair')
+		throw new ParseError(`step()'s first argument is the index, not a 'threshold->value' pair`);
+	const bad = args.slice(1).find((a) => a.t !== 'pair');
+	if (bad)
+		throw new ParseError(`step() arguments after the index must be 'threshold->value' pairs`);
+}
+
+/** Resolve a bare identifier to its whitelisted variable node (or an authoring-error throw). Pure
+ *  over the name — the whitelist sets are module-level, so this needs no parser cursor. */
+function varNode(name: string): Node {
+	if (name === 'inf') return { t: 'inf' };
+	const d = splitDottedName(name);
+	if (d) {
+		if (!d.id) throw new ParseError(`'${name}' is missing an id after '.'`);
+		if (DOTTED_NUMERIC.has(d.prefix)) return { t: 'numvar', name };
+		if (DOTTED_BOOLEAN.has(d.prefix)) return { t: 'boolvar', name };
+		throw new ParseError(`unknown variable family '${d.prefix}.'`);
+	}
+	if (NUMERIC_VARS.has(name)) return { t: 'numvar', name };
+	if (BOOLEAN_VARS.has(name)) return { t: 'boolvar', name };
+	if (name in ENUM_VARS) return { t: 'enumvar', name };
+	if (ENUM_LITERALS.has(name)) return { t: 'enumlit', name };
+	// a KNOWN variable glued straight onto a die (`leveld6`) is indivisible by design — hint the
+	// supported spelling instead of guessing a split (NEVER-support, decisions doc)
+	const glued = /^(.+?)d(\d+)$/.exec(name);
+	if (glued && glued[1] && isKnownVarName(glued[1]))
+		throw new ParseError(
+			`unknown variable '${name}' — did you mean '${glued[1]} d${glued[2]}'? (a variable needs a space or parens before the dice operator)`
+		);
+	// A bare ability name (`wis`) with no _mod/_score suffix is a deliberate parse error — never
+	// leave "mod or score?" ambiguous (PLAN).
+	throw new ParseError(`unknown variable '${name}'`);
 }
 
 /** Is this name a whitelisted variable (any family)? Used only for the glued-die hint. */
@@ -467,7 +481,7 @@ function parseExpressionUncached(src: string): ParseResult {
 	if (!t.ok) return t;
 	if (t.toks.length === 0) return { ok: false, error: 'empty expression' };
 	try {
-		return { ok: true, ast: { root: parse(t.toks) } };
+		return { ok: true, ast: { root: new Parser(t.toks).run() } };
 	} catch (e) {
 		return { ok: false, error: e instanceof ParseError ? e.message : 'parse failed' };
 	}
