@@ -51,6 +51,7 @@ import {
 } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
 import type { RollLogEntry } from '$lib/combat/helpers';
+import type { SpellcastingClass } from '$lib/character/spellcasting';
 import { registerDiceTray, openDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { PanelLayout } from './panel.svelte';
@@ -521,68 +522,48 @@ class CombatVM {
 		];
 	}
 
-	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit
-	cast = (r: SpRow, e: Event, opts?: { ritual?: boolean }) => {
+	/** Reserve a leveled spell slot for a non-ritual cast (A17): returns the slot key to spend, or
+	 *  null (nothing to spend — cantrip / pure-pact / ritual), or 'blocked' (+ a toast) when none
+	 *  remain. Reserve-before-commit so a block returns BEFORE the action economy is touched. */
+	private reserveSpellSlot(r: SpRow, ritual: boolean): string | null | 'blocked' {
 		const play = this.character?.play;
-		// A17: casting SPENDS a leveled spell slot and is BLOCKED when none remain — UNLESS it's a
-		// RITUAL cast (rituals cost no slot; only ritual-tagged spells qualify — SRD). A slot is a
-		// resource like HP, so this holds in AND out of combat (independent of the action-economy
-		// check below, which stays combat-only). Cantrips + pure pact casters spend nothing
-		// (slotToSpend → null). Reserve first so a block returns BEFORE the action economy is touched;
-		// commit only once both the slot and the action pass.
-		const ritual =
-			opts?.ritual === true && r.ritual && (this.sheet?.spellcasting.ritualCasting ?? false);
-		let slotKey: string | undefined;
-		if (!ritual && play) {
-			const spend = slotToSpend(
-				r.level,
-				this.sheet?.spellcasting.pools ?? [],
-				play.spellSlotsSpent
+		if (ritual || !play) return null;
+		const spend = slotToSpend(r.level, this.sheet?.spellcasting.pools ?? [], play.spellSlotsSpent);
+		if (spend && 'block' in spend) {
+			toast(spend.block);
+			return 'blocked';
+		}
+		return spend && 'key' in spend ? spend.key : null;
+	}
+
+	/** The roll half of a cast: an attack spell rolls its TO-HIT (attack-keyed effects) then queued
+	 *  damage; a damage/heal spell rolls its dice (auto = healing + spellcasting mod); a no-roll cast
+	 *  logs a marker. Uses the class the spell is cast AS (A18), not classes[0]. */
+	/** Attack spell (r.res === 'hit'): roll the TO-HIT (attack-keyed effects) then its damage — tray
+	 *  chains them (to-hit now, damage queued), instant folds both into one 3-line entry. */
+	private rollSpellAttack(r: SpRow, e: Event, caster: SpellcastingClass, hasDmg: boolean): void {
+		const fx = this.effectsFor('attack');
+		const dmgFx = this.effectsFor('damage');
+		const toHit = caster.attack.value + fx.flat;
+		if (wantsTray(e)) {
+			this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e, netAdvantage(fx), fx);
+			if (hasDmg)
+				this.tray.queueDamage(`${r.name} damage`, { ...(r.dmg ?? {}) }, dmgFx.flat, dmgFx);
+		} else {
+			this.tray.pushRoll(
+				`${r.name} (spell attack)`,
+				rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice, fx),
+				hasDmg ? rollPool(r.dmg ?? {}, dmgFx.flat, 0, dmgFx.bonusDice, dmgFx) : undefined
 			);
-			if (spend && 'block' in spend) {
-				toast(spend.block);
-				return;
-			}
-			if (spend && 'key' in spend) slotKey = spend.key;
 		}
-		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
-		if (!this.economy.trySpend(this.economy.ctSlot(r.ct))) return;
-		if (slotKey && play) play.spellSlotsSpent[slotKey] = (play.spellSlotsSpent[slotKey] ?? 0) + 1;
-		// a concentration spell becomes the active concentration (replacing any prior one, 5e rule);
-		// the PRIOR concentration's cast-applied effect goes down with it
-		if (r.conc && this.character) {
-			const prior = this.character.play.concentration;
-			if (prior && prior !== r.ref) this.removeLinkedEffect(prior);
-			this.character.play.concentration = r.ref;
-		}
-		this.applySpellEffect(r);
+	}
+
+	private rollSpellCast(r: SpRow, e: Event, ritual: boolean): void {
 		const alt = wantsTray(e);
-		// a spell with dice rolls them: damage (Fire Bolt 1d10, Fireball 8d6) or, for auto
-		// spells, healing (Healing Word 2d4 + spellcasting mod)
-		// the class this spell is cast AS drives the to-hit / DC / healing mod — its own profile, not
-		// classes[0] (A18: a multiclass spell from the Cleric side must use the Cleric's numbers).
 		const caster = casterForSpell(this.sheet, r.ref) ?? this.sheet?.spellcasting.classes[0];
 		const hasDmg = !!r.dmg && Object.keys(r.dmg).length > 0;
 		if (r.res === 'hit' && caster) {
-			// attack spell → roll the TO-HIT first (attack-keyed effects apply, same as weapons),
-			// then its damage (if any, with damage-keyed effects). Previously a damage-dealing attack
-			// spell (Fire Bolt) rolled only damage and skipped the to-hit entirely.
-			const fx = this.effectsFor('attack');
-			const dmgFx = this.effectsFor('damage');
-			const toHit = caster.attack.value + fx.flat;
-			if (alt) {
-				// tray on the TO-HIT (the spell attack roll); Roll then fires the damage after
-				this.openRoll(`${r.name} (spell attack)`, { 20: 1 }, toHit, e, netAdvantage(fx), fx);
-				if (hasDmg)
-					this.tray.queueDamage(`${r.name} damage`, { ...(r.dmg ?? {}) }, dmgFx.flat, dmgFx);
-			} else {
-				// instant: to-hit + damage → one combined 3-line entry
-				this.tray.pushRoll(
-					`${r.name} (spell attack)`,
-					rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice, fx),
-					hasDmg ? rollPool(r.dmg ?? {}, dmgFx.flat, 0, dmgFx.bonusDice, dmgFx) : undefined
-				);
-			}
+			this.rollSpellAttack(r, e, caster, hasDmg);
 		} else if (hasDmg) {
 			// save / auto spell: damage, or (auto) healing with the spellcasting mod
 			const heal = r.res === 'auto';
@@ -596,6 +577,30 @@ class CombatVM {
 			this.tray.logMarker(`Cast ${r.name}${suffix}`);
 			toast(`Cast ${r.name}${suffix}`);
 		}
+	}
+
+	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit
+	cast = (r: SpRow, e: Event, opts?: { ritual?: boolean }) => {
+		const play = this.character?.play;
+		// A17: casting SPENDS a leveled spell slot and is BLOCKED when none remain — UNLESS it's a
+		// RITUAL cast (rituals cost no slot; only ritual-tagged spells qualify — SRD). Cantrips + pure
+		// pact casters spend nothing; the action-economy check below stays combat-only.
+		const ritual =
+			opts?.ritual === true && r.ritual && (this.sheet?.spellcasting.ritualCasting ?? false);
+		const slot = this.reserveSpellSlot(r, ritual);
+		if (slot === 'blocked') return;
+		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
+		if (!this.economy.trySpend(this.economy.ctSlot(r.ct))) return;
+		if (slot && play) play.spellSlotsSpent[slot] = (play.spellSlotsSpent[slot] ?? 0) + 1;
+		// a concentration spell becomes the active concentration (replacing any prior one, 5e rule);
+		// the PRIOR concentration's cast-applied effect goes down with it
+		if (r.conc && this.character) {
+			const prior = this.character.play.concentration;
+			if (prior && prior !== r.ref) this.removeLinkedEffect(prior);
+			this.character.play.concentration = r.ref;
+		}
+		this.applySpellEffect(r);
+		this.rollSpellCast(r, e, ritual);
 	};
 
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
