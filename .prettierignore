@@ -8,3 +8,5 @@ pnpm-lock.yaml
 *.md
 docs
 срншоти для 1го рандун правок
+# local Claude Code tooling config (not project source)
+.claude
