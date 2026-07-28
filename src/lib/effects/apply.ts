@@ -29,6 +29,7 @@ import {
 	type EffectCtx,
 	type EffectIssue,
 	type Defense,
+	type ParsedEffect,
 	type Recharge
 } from './token-parser';
 
@@ -169,6 +170,236 @@ const emptyFacts = (): EffectFacts => ({
 });
 
 /**
+ * Builds the typed-facts object (D7) in ONE pass over the resolved effect list. State (the facts +
+ * the dedup pools/sets) lives in fields so each effect KIND is a small handler — was one
+ * complexity-76 for/for/switch. Numeric values (incl. L2 expressions) resolve HERE, once — a
+ * resolution failure becomes an `error` fact + an `issues` entry (SPEC10), never a silent drop.
+ */
+class FactsCollector {
+	private readonly facts = emptyFacts();
+	private readonly pools = new Map<string, ResourceDef>();
+	private readonly resourceIds = new Set<string>();
+	private readonly conditions = new Set<string>();
+
+	constructor(
+		private readonly ctx?: EffectCtx,
+		private readonly issues?: EffectIssue[],
+		private readonly isTargetSupported?: TargetValidator
+	) {}
+
+	collect(effects: ActiveEffect[]): EffectFacts {
+		for (const eff of effects)
+			for (const token of eff.tokens) this.collectToken(parseToken(token), eff, token);
+		this.facts.resources = [...this.pools.values()];
+		this.facts.resourceIds = [...this.resourceIds];
+		this.facts.conditions = [...this.conditions];
+		return this.facts;
+	}
+
+	private collectToken(p: ParsedEffect, eff: ActiveEffect, token: string): void {
+		if (this.collectStatFact(p, eff, token)) return;
+		if (this.collectRollFact(p, eff, token)) return;
+		this.collectOtherFact(p, eff, token);
+	}
+
+	// B13 exhaustiveness: a KNOWN kind whose target no consumer reads would fold onto nothing and
+	// vanish silently (`flat_bonus:armorclass+1`). The derive that owns the consumers passes a
+	// validator over the CLOSED-vocab targets; an unsupported one is kept inert AND surfaced as an
+	// issue (content-health) instead of dropped. Returns true = the token was rejected + reported.
+	private rejectTarget(kind: string, target: string, source: string, token: string): boolean {
+		if (!this.isTargetSupported) return false;
+		const check = this.isTargetSupported(kind, target);
+		if (check.supported) return false;
+		this.issues?.push({
+			source,
+			token,
+			reason: `unknown target "${target}" for ${kind}${check.suggestion ?? ''}`
+		});
+		return true;
+	}
+
+	/** flat_bonus / set_override (→ numeric) + block_bonus + halve — the numeric-fold + bonus-block
+	 *  kinds. Returns true iff `p.kind` was one of them. */
+	private collectStatFact(p: ParsedEffect, eff: ActiveEffect, token: string): boolean {
+		switch (p.kind) {
+			case EFFECT_KIND.flatBonus:
+			case EFFECT_KIND.setOverride:
+				this.pushNumeric(p, eff, token);
+				return true;
+			case EFFECT_KIND.blockBonus:
+				if (p.target && !this.rejectTarget(p.kind, p.target.trim(), eff.source, token))
+					this.facts.blockedBonuses.push({ target: p.target.trim(), source: eff.source });
+				return true;
+			case EFFECT_KIND.halve:
+				// G4: a ×½ multiply at the effect's layer. Folds through the pipeline's `mult` op
+				// (one product per layer, then floors once — RAW round-down).
+				if (p.target && !this.rejectTarget(p.kind, p.target.trim(), eff.source, token))
+					this.facts.numeric.push({
+						target: p.target.trim(),
+						op: 'mult',
+						amount: 0.5,
+						layer: eff.layer,
+						source: eff.source,
+						token
+					});
+				return true;
+			default:
+				return false;
+		}
+	}
+
+	private pushNumeric(p: ParsedEffect, eff: ActiveEffect, token: string): void {
+		if (!p.target || this.rejectTarget(p.kind, p.target, eff.source, token)) return;
+		const op: NumericFact['op'] =
+			p.kind === EFFECT_KIND.flatBonus
+				? 'add'
+				: p.setMode === 'floor'
+					? 'floor'
+					: p.setMode === 'cap'
+						? 'cap'
+						: 'set';
+		const v = resolveEffectValue(p, ctxOf(this.ctx, eff));
+		const fact: NumericFact = { target: p.target, op, layer: eff.layer, source: eff.source, token };
+		if (v.amount !== undefined) fact.amount = v.amount;
+		else if (v.diceFormula && op === 'add') fact.diceFormula = v.diceFormula;
+		else if (v.diceFormula) fact.error = 'an override cannot be a dice value';
+		else fact.error = v.error ?? 'no value';
+		this.facts.numeric.push(fact);
+	}
+
+	/** advantage / disadvantage / auto_fail / auto_succeed (→ FactRef) + reroll / min_die (→ RollMod)
+	 *  — the roll-matched flag kinds. Returns true iff `p.kind` was one of them. */
+	private collectRollFact(p: ParsedEffect, eff: ActiveEffect, token: string): boolean {
+		switch (p.kind) {
+			case EFFECT_KIND.advantage:
+				return this.pushFlag(this.facts.advantage, p, eff, token);
+			case EFFECT_KIND.disadvantage:
+				return this.pushFlag(this.facts.disadvantage, p, eff, token);
+			case EFFECT_KIND.autoFail:
+				return this.pushFlag(this.facts.autoFail, p, eff, token);
+			case EFFECT_KIND.autoSucceed:
+				return this.pushFlag(this.facts.autoSucceed, p, eff, token);
+			case EFFECT_KIND.reroll:
+				return this.pushDieMod(this.facts.rerolls, p, eff, token);
+			case EFFECT_KIND.minDie:
+				return this.pushDieMod(this.facts.minDie, p, eff, token);
+			default:
+				return false;
+		}
+	}
+	private pushFlag(list: FactRef[], p: ParsedEffect, eff: ActiveEffect, token: string): boolean {
+		if (p.target && !this.rejectTarget(p.kind, p.target, eff.source, token))
+			list.push({ target: p.target, source: eff.source });
+		return true;
+	}
+	private pushDieMod(list: RollMod[], p: ParsedEffect, eff: ActiveEffect, token: string): boolean {
+		if (
+			p.target &&
+			p.amount !== undefined &&
+			!this.rejectTarget(p.kind, p.target, eff.source, token)
+		)
+			list.push({ target: p.target, value: p.amount });
+		return true;
+	}
+
+	/** The remaining kinds: grant_proficiency / grant_roll / resist_immune / apply_condition /
+	 *  grant_resource / plugin (resolved by the pre-pass) / unknown. */
+	private collectOtherFact(p: ParsedEffect, eff: ActiveEffect, token: string): void {
+		switch (p.kind) {
+			case EFFECT_KIND.grantProficiency:
+				if (p.target && !this.rejectTarget(p.kind, p.target.trim(), eff.source, token))
+					this.facts.proficiencies.push({
+						target: p.target.trim(),
+						level: p.proficiency ?? 'proficient',
+						source: eff.source
+					});
+				break;
+			case EFFECT_KIND.grantRoll:
+				this.pushRoll(p, eff, token);
+				break;
+			case EFFECT_KIND.resistImmune:
+				if (p.target)
+					this.facts.defenses.push({
+						bucket: p.defense ?? 'resist',
+						type: p.target.trim(),
+						source: eff.source
+					});
+				break;
+			case EFFECT_KIND.applyCondition:
+				if (p.target) this.conditions.add(p.target.trim());
+				break;
+			case EFFECT_KIND.grantResource:
+				this.pushResource(p, eff, token);
+				break;
+			case EFFECT_KIND.plugin:
+				// resolved by the derive PRE-PASS (`expandPluginEffects`), not here — the pre-pass reports
+				// every plugin token itself, so counting it as unknown too would double the panel entry.
+				break;
+			case 'unknown':
+				this.facts.unknown.push({ source: eff.source, token });
+				break;
+		}
+	}
+
+	private pushRoll(p: ParsedEffect, eff: ActiveEffect, token: string): void {
+		// resolve the expr to a dice formula (or a flat number = a constant roll) for a rollable chip;
+		// dedupe by (id, source) like A11. An unresolvable expr → an issue (SPEC10), skipped.
+		if (!p.target || !p.valueExpr) return;
+		const rv = resolveEffectValue(p, ctxOf(this.ctx, eff));
+		const formula = rv.diceFormula ?? (rv.amount !== undefined ? String(rv.amount) : undefined);
+		if (formula === undefined) {
+			this.issues?.push({ source: eff.source, token, reason: rv.error ?? 'roll has no value' });
+			return;
+		}
+		if (!this.facts.rolls.some((r) => r.id === p.target && r.source === eff.source))
+			this.facts.rolls.push({
+				id: p.target,
+				source: eff.source,
+				label: titleCase(p.target),
+				formula
+			});
+	}
+
+	private pushResource(p: ParsedEffect, eff: ActiveEffect, token: string): void {
+		if (!p.target) return;
+		this.resourceIds.add(p.target);
+		if (!p.resource) return;
+		// max is either a literal or an L2 expression (`class_level.monk`); an unresolvable expression
+		// means the pool count is unknown → skip the pool (a 0-pip render would be noise) but SURFACE it.
+		let maxVal: number | undefined;
+		if (p.resource.max !== undefined) maxVal = p.resource.max;
+		else if (p.resource.maxExpr) {
+			const c = ctxOf(this.ctx, eff);
+			const r = c
+				? evalExpression(p.resource.maxExpr, c)
+				: ({ ok: false, error: 'expression needs a context' } as const);
+			if (r.ok && r.value.type === 'number') maxVal = Math.floor(r.value.value);
+			else
+				this.issues?.push({
+					source: eff.source,
+					token,
+					reason: r.ok ? 'resource max is not a number' : r.error
+				});
+		}
+		// max ≤ 0 (a shared-pack `class_level.monk` on a non-monk, a step() below its first threshold) →
+		// the pool is benignly ABSENT; the id above still registers so `resource.<id>` reads 0.
+		if (maxVal === undefined || maxVal <= 0) return;
+		const def: ResourceDef = {
+			id: p.resource.id,
+			// `inf` (Rage at barbarian 20 = Unlimited) passes the cost-cap: the cap bounds pip-render
+			// WORK, and the ∞ render draws no pips at all.
+			max: maxVal === Infinity ? Infinity : Math.max(0, Math.min(maxVal, MAX_RESOURCE_MAX)),
+			recharge: p.resource.recharge,
+			name: titleCase(p.resource.id),
+			source: eff.source
+		};
+		const prev = this.pools.get(def.id);
+		// a scaling feature re-granted at a higher tier: the largest max wins
+		if (!prev || def.max > prev.max) this.pools.set(def.id, def);
+	}
+}
+
+/**
  * One pass over the RESOLVED effect list → the typed-facts object (D7). Numeric values (incl. L2
  * expressions) are resolved HERE, once — resolution failures become `error` facts + `issues`
  * entries (SPEC10), never silent drops. Resource pools follow the largest-max-wins rule; condition
@@ -180,200 +411,7 @@ export function collectFacts(
 	issues?: EffectIssue[],
 	isTargetSupported?: TargetValidator
 ): EffectFacts {
-	const facts = emptyFacts();
-	const pools = new Map<string, ResourceDef>();
-	const resourceIds = new Set<string>();
-	const conditions = new Set<string>();
-	// B13 exhaustiveness: a KNOWN kind whose target no consumer reads would fold onto nothing and
-	// vanish silently (`flat_bonus:armorclass+1`). The derive that owns the consumers passes a
-	// validator over the CLOSED-vocab targets; an unsupported one is kept inert AND surfaced as an
-	// issue (content-health) instead of dropped. Returns true = the token was rejected + reported.
-	const rejectTarget = (kind: string, target: string, source: string, token: string): boolean => {
-		if (!isTargetSupported) return false;
-		const check = isTargetSupported(kind, target);
-		if (check.supported) return false;
-		issues?.push({
-			source,
-			token,
-			reason: `unknown target "${target}" for ${kind}${check.suggestion ?? ''}`
-		});
-		return true;
-	};
-	for (const eff of effects) {
-		for (const token of eff.tokens) {
-			const p = parseToken(token);
-			switch (p.kind) {
-				case EFFECT_KIND.flatBonus:
-				case EFFECT_KIND.setOverride: {
-					if (!p.target) break;
-					if (rejectTarget(p.kind, p.target, eff.source, token)) break;
-					const op: NumericFact['op'] =
-						p.kind === EFFECT_KIND.flatBonus
-							? 'add'
-							: p.setMode === 'floor'
-								? 'floor'
-								: p.setMode === 'cap'
-									? 'cap'
-									: 'set';
-					const v = resolveEffectValue(p, ctxOf(ctx, eff));
-					const fact: NumericFact = {
-						target: p.target,
-						op,
-						layer: eff.layer,
-						source: eff.source,
-						token
-					};
-					if (v.amount !== undefined) fact.amount = v.amount;
-					else if (v.diceFormula && op === 'add') fact.diceFormula = v.diceFormula;
-					else if (v.diceFormula) fact.error = 'an override cannot be a dice value';
-					else fact.error = v.error ?? 'no value';
-					facts.numeric.push(fact);
-					break;
-				}
-				case EFFECT_KIND.blockBonus:
-					if (p.target && !rejectTarget(p.kind, p.target.trim(), eff.source, token))
-						facts.blockedBonuses.push({ target: p.target.trim(), source: eff.source });
-					break;
-				case EFFECT_KIND.halve:
-					// G4: a ×½ multiply at the effect's layer. Folds through the pipeline's `mult` op
-					// (one product per layer, then floors once — RAW round-down).
-					if (p.target && !rejectTarget(p.kind, p.target.trim(), eff.source, token))
-						facts.numeric.push({
-							target: p.target.trim(),
-							op: 'mult',
-							amount: 0.5,
-							layer: eff.layer,
-							source: eff.source,
-							token
-						});
-					break;
-				case EFFECT_KIND.advantage:
-					if (p.target && !rejectTarget(p.kind, p.target, eff.source, token))
-						facts.advantage.push({ target: p.target, source: eff.source });
-					break;
-				case EFFECT_KIND.disadvantage:
-					if (p.target && !rejectTarget(p.kind, p.target, eff.source, token))
-						facts.disadvantage.push({ target: p.target, source: eff.source });
-					break;
-				case EFFECT_KIND.autoFail:
-					if (p.target && !rejectTarget(p.kind, p.target, eff.source, token))
-						facts.autoFail.push({ target: p.target, source: eff.source });
-					break;
-				case EFFECT_KIND.autoSucceed:
-					if (p.target && !rejectTarget(p.kind, p.target, eff.source, token))
-						facts.autoSucceed.push({ target: p.target, source: eff.source });
-					break;
-				case EFFECT_KIND.grantProficiency:
-					if (p.target && !rejectTarget(p.kind, p.target.trim(), eff.source, token))
-						facts.proficiencies.push({
-							target: p.target.trim(),
-							level: p.proficiency ?? 'proficient',
-							source: eff.source
-						});
-					break;
-				case EFFECT_KIND.grantRoll: {
-					// resolve the expr to a dice formula (or a flat number = a constant roll) for a
-					// rollable chip; dedupe by (id, source) like A11. An unresolvable expr → an issue
-					// (SPEC10), skipped — a chip with no formula is useless.
-					if (!p.target || !p.valueExpr) break;
-					const rv = resolveEffectValue(p, ctxOf(ctx, eff));
-					const formula =
-						rv.diceFormula ?? (rv.amount !== undefined ? String(rv.amount) : undefined);
-					if (formula === undefined) {
-						issues?.push({ source: eff.source, token, reason: rv.error ?? 'roll has no value' });
-						break;
-					}
-					if (!facts.rolls.some((r) => r.id === p.target && r.source === eff.source))
-						facts.rolls.push({
-							id: p.target,
-							source: eff.source,
-							label: titleCase(p.target),
-							formula
-						});
-					break;
-				}
-				case EFFECT_KIND.resistImmune:
-					if (p.target)
-						facts.defenses.push({
-							bucket: p.defense ?? 'resist',
-							type: p.target.trim(),
-							source: eff.source
-						});
-					break;
-				case EFFECT_KIND.applyCondition:
-					if (p.target) conditions.add(p.target.trim());
-					break;
-				case EFFECT_KIND.grantResource: {
-					if (!p.target) break;
-					resourceIds.add(p.target);
-					if (!p.resource) break;
-					// max is either a literal or an L2 expression (`class_level.monk`); an unresolvable
-					// expression means the pool count is unknown → skip the pool (a 0-pip render would be
-					// noise) but SURFACE the failure (never silently).
-					let maxVal: number | undefined;
-					if (p.resource.max !== undefined) maxVal = p.resource.max;
-					else if (p.resource.maxExpr) {
-						const c = ctxOf(ctx, eff);
-						const r = c
-							? evalExpression(p.resource.maxExpr, c)
-							: ({ ok: false, error: 'expression needs a context' } as const);
-						if (r.ok && r.value.type === 'number') maxVal = Math.floor(r.value.value);
-						else
-							issues?.push({
-								source: eff.source,
-								token,
-								reason: r.ok ? 'resource max is not a number' : r.error
-							});
-					}
-					// max ≤ 0 (a shared-pack `class_level.monk` on a non-monk, a step() below its first
-					// threshold) → the pool is benignly ABSENT, not a 0-pip render; the id above still
-					// registers so `resource.<id>` expressions read 0, not unknown.
-					if (maxVal === undefined || maxVal <= 0) break;
-					const def: ResourceDef = {
-						id: p.resource.id,
-						// `inf` (Rage at barbarian 20 = Unlimited, SRD 5.1) passes the cost-cap: the cap
-						// bounds pip-render WORK, and the ∞ render draws no pips at all.
-						max: maxVal === Infinity ? Infinity : Math.max(0, Math.min(maxVal, MAX_RESOURCE_MAX)),
-						recharge: p.resource.recharge,
-						name: titleCase(p.resource.id),
-						source: eff.source
-					};
-					const prev = pools.get(def.id);
-					// a scaling feature re-granted at a higher tier: the largest max wins
-					if (!prev || def.max > prev.max) pools.set(def.id, def);
-					break;
-				}
-				case EFFECT_KIND.reroll:
-					if (
-						p.target &&
-						p.amount !== undefined &&
-						!rejectTarget(p.kind, p.target, eff.source, token)
-					)
-						facts.rerolls.push({ target: p.target, value: p.amount });
-					break;
-				case EFFECT_KIND.minDie:
-					if (
-						p.target &&
-						p.amount !== undefined &&
-						!rejectTarget(p.kind, p.target, eff.source, token)
-					)
-						facts.minDie.push({ target: p.target, value: p.amount });
-					break;
-				case EFFECT_KIND.plugin:
-					// resolved by the derive PRE-PASS (`expandPluginEffects`), not here — the pre-pass
-					// reports every plugin token itself (result, or degraded inert note), so counting it
-					// as unknown too would double the panel entry.
-					break;
-				case 'unknown':
-					facts.unknown.push({ source: eff.source, token });
-					break;
-			}
-		}
-	}
-	facts.resources = [...pools.values()];
-	facts.resourceIds = [...resourceIds];
-	facts.conditions = [...conditions];
-	return facts;
+	return new FactsCollector(ctx, issues, isTargetSupported).collect(effects);
 }
 
 /**
