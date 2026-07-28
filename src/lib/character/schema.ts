@@ -170,11 +170,14 @@ const uiSchema = z
 		/** Spells the user hid from the combat sheet via the spellbook's eye toggle (effectiveIds,
 		 *  `source:id`). Additive: absent → shown. The combat spell list filters these out. */
 		spellsHidden: z.array(z.string()).default([]),
+		/** Spells pinned to the top of the combat spell list (bare spell ids — the combat key format;
+		 *  D3). Absent → nothing pinned; per character, no demo default. */
+		spellsPinned: z.array(z.string()).default([]),
 		/** Which skills show in the passive-senses row (Pin skills). Absent → the default trio
 		 *  (Perception / Investigation / Insight). Stored per character, not a global. */
 		passiveSkills: z.array(z.string()).optional()
 	})
-	.default({ strict: true, spellsHidden: [] });
+	.default({ strict: true, spellsHidden: [], spellsPinned: [] });
 
 // --- character ----------------------------------------------------------------
 

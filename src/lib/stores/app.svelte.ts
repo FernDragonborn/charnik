@@ -89,5 +89,7 @@ if (typeof window !== 'undefined') {
  *  default), not the raw `data.systems` column — SRD files declare editions in the header, so the
  *  column is absent and would filter everything out. */
 export function inActiveEdition(systems: string[]): boolean {
-	return systems.some((s) => app.activeEditions.includes(s as SystemId));
+	// membership test over external strings — widen the known-good array rather than assert `s` is a
+	// SystemId (an unsound narrowing cast on arbitrary content input).
+	return systems.some((s) => (app.activeEditions as readonly string[]).includes(s));
 }

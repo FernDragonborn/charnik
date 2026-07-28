@@ -103,7 +103,17 @@ class CombatVM {
 	hasTimedEffects = $derived(
 		(this.character?.play.effects ?? []).some((e) => e.durationRounds != null)
 	);
-	pinned = $state<Record<string, boolean>>({ 'fire-bolt': true, shield: true });
+	// D3: pins persist per character in ui.spellsPinned (bare ids), not a demo hardcode. Exposed as a
+	// boolean map for the panel's `pinned[id]` lookup; toggle via togglePin so the array stays the source.
+	pinned = $derived<Record<string, boolean>>(
+		Object.fromEntries((this.character?.ui.spellsPinned ?? []).map((id) => [id, true]))
+	);
+	togglePin = (id: string) => {
+		const ui = this.character?.ui;
+		if (!ui) return;
+		const cur = ui.spellsPinned ?? [];
+		ui.spellsPinned = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
+	};
 	// menus open as dropdowns anchored under their trigger button (not centered modals)
 	overlay = $state<null | {
 		kind: MenuKind;

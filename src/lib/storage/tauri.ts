@@ -117,6 +117,9 @@ async function walkTree(dir: string): Promise<DirFile[]> {
 		for (const e of await readDir(abs)) {
 			const childAbs = await join(abs, e.name);
 			const childRel = rel ? `${rel}/${e.name}` : e.name;
+			// W5: never FOLLOW a symlinked directory — a looped symlink would recurse forever, and a
+			// symlink pointing outside the data dir shouldn't be walked into (traversal safety) anyway.
+			if (e.isSymlink) continue;
 			if (e.isDirectory) await recurse(childAbs, childRel);
 			else {
 				const info = await fsStat(childAbs);
@@ -225,8 +228,12 @@ export async function migrateDataDir(
 
 /** Merge the data folder into a NON-empty target: copy only the files the target lacks or that the
  *  source has a newer copy of (newer-wins; undatable collisions keep the target). Verify every source
- *  file is present afterwards, then repoint and delete the old folder (when `deleteOld`). Same
- *  failure/rollback contract as `migrateDataDir`. */
+ *  file is present afterwards, then repoint and delete the old folder (when `deleteOld`).
+ *  ⚠ Unlike `migrateDataDir`, a failed merge does NOT sweep the partial copy — the target is
+ *  pre-existing/non-empty, so a rollback can't tell copied-in files from the target's own; on `copy`/
+ *  `verify` failure the pointer is left untouched (source intact) and the half-merge stays. And
+ *  merge+`deleteOld` intentionally discards the SOURCE copy of any collision the target won (newer-
+ *  wins, as the dialog promises). */
 export async function mergeDataDir(
 	oldDir: string,
 	newDir: string,

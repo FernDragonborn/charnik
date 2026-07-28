@@ -69,13 +69,13 @@
 								title="pin to top"
 								onclick={(e) => {
 									e.stopPropagation();
-									pinned[r.id] = !pinned[r.id];
+									combat.togglePin(r.id);
 								}}
 								onkeydown={(e) => {
 									if (e.key === 'Enter' || e.key === ' ') {
 										e.preventDefault();
 										e.stopPropagation();
-										pinned[r.id] = !pinned[r.id];
+										combat.togglePin(r.id);
 									}
 								}}>{pinned[r.id] ? '★' : '☆'}</span
 							>

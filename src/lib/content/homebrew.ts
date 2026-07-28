@@ -20,7 +20,7 @@ import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
 import {
 	CONTENT_TYPES,
 	parseRow,
-	EFFECT_KINDS,
+	SPECIES_OPTION_KINDS,
 	SIZES,
 	ABILITIES,
 	HIT_DICE,
@@ -64,7 +64,9 @@ const ENUM_OPTS: Record<string, readonly string[]> = {
 	rarity: RARITIES,
 	save_ability: ABILITIES,
 	spell_ability: ABILITIES,
-	kind: EFFECT_KINDS,
+	// `kind` is a column on TWO types with unrelated vocab, so it's disambiguated below (like
+	// `category`): species_option.kind = these; spell_slots.kind is a free string (rendered as text).
+	kind_species_option: SPECIES_OPTION_KINDS,
 	category_feat: FEAT_CATEGORIES // feat.category (disambiguated below)
 };
 const BOOL_FIELDS = new Set([
@@ -121,6 +123,7 @@ function kindOf(type: ContentType, name: string): FieldKind {
 	if (name === 'id') return 'slug';
 	if (name === 'text_en' || name === 'text_uk') return 'textarea';
 	if (name === 'category' && type === 'feat') return 'enum';
+	if (name === 'kind' && type === 'species_option') return 'enum';
 	if (ENUM_OPTS[name]) return 'enum';
 	if (BOOL_FIELDS.has(name)) return 'bool';
 	if (NUMBER_FIELDS.has(name)) return 'number';
@@ -128,6 +131,7 @@ function kindOf(type: ContentType, name: string): FieldKind {
 }
 function optionsOf(type: ContentType, name: string): readonly string[] | undefined {
 	if (name === 'category' && type === 'feat') return ENUM_OPTS.category_feat;
+	if (name === 'kind' && type === 'species_option') return ENUM_OPTS.kind_species_option;
 	return ENUM_OPTS[name];
 }
 

@@ -202,9 +202,11 @@ const speciesSchema = baseRow.extend({
  *  **lineage / legacy / ancestry** choice. Linked to its parent by `species_id`; carries its own
  *  ASI + traits via the common `effects`/`text`. `option_label` overrides the picker heading
  *  (e.g. "Subrace" vs "Lineage") when the default from `kind` isn't right. */
+/** The kinds a species sub-choice can be (2014 subrace vs 2024 lineage/legacy/ancestry). */
+export const SPECIES_OPTION_KINDS = ['subrace', 'lineage', 'legacy', 'ancestry'] as const;
 const speciesOptionSchema = baseRow.extend({
 	species_id: reqStr,
-	kind: z.enum(['subrace', 'lineage', 'legacy', 'ancestry']).default('subrace'),
+	kind: z.enum(SPECIES_OPTION_KINDS).default('subrace'),
 	option_label: optStr,
 	/** Like `species.boost_choice` — a "+N to M of your choice" ASI carried by the sub-option. */
 	boost_choice: optStr

@@ -557,6 +557,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const RARITIES`
 - `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.
 - `const FEAT_CATEGORIES`
+- `const SPECIES_OPTION_KINDS` — The kinds a species sub-choice can be (2014 subrace vs 2024 lineage/legacy/ancestry).
 - `const CONTENT_TYPES`
 - `type ContentType`
 - `const isBrowsable` — A browsable content type (has name/text; shows in compendium + search).
@@ -960,4 +961,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 517 exports across 81 modules · 31 duplicate suspects · generated in 216ms._
+_45 tokens · 61 global classes · 40 components · 518 exports across 81 modules · 31 duplicate suspects · generated in 200ms._
