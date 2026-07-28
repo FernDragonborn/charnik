@@ -168,7 +168,8 @@ const parseSetOverride: KindParser = (rest, raw, kind) => {
 	}
 	const withMode = (p: ParsedEffect): ParsedEffect => (setMode ? { ...p, setMode } : p);
 	const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(-?\d+)$/i.exec(body);
-	if (lit) return withMode({ kind, target: lit[1] ?? '', amount: clampAmount(Number(lit[2])), raw });
+	if (lit)
+		return withMode({ kind, target: lit[1] ?? '', amount: clampAmount(Number(lit[2])), raw });
 	const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?):(.+)$/i.exec(body);
 	if (!ex) return { kind: 'unknown', raw };
 	return withMode({ kind, target: ex[1] ?? '', valueExpr: (ex[2] ?? '').trim(), raw });
