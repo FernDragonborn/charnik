@@ -401,13 +401,11 @@ idempotent) pulls current down when the live max drops. See §5 EFX-A14.
 `slugify(name)` → two "Hero"s overwrite each other's save. Violates the GUID-for-shareable-data principle.
 - **Recommend**: id = `crypto.randomUUID()`, slug stays as folder/display hint; migrate existing saves (id-add migration). Confirm.
 
-## C-D2 (+G5) · Single source for the editions union — D2, G5
-`pipeline.ts System` literal vs `stores/app SystemId`; F7 already made `rules/pipeline` own `SYSTEMS`. D2's remaining ask + the `character.system as System` no-op cast (G5, still at `derive.ts:320`) resolve together.
-- **Recommend**: finish routing everything through `pipeline.SYSTEMS`/`System`, delete the cast. Confirm (essentially WORK, but it touches the seam).
+## C-D2 (+G5) · Single source for the editions union — D2, G5 — ✅ DONE (2026-07-28)
+F7 collapsed the consts into `rules/pipeline.SYSTEMS`; G5's `character.system as System` no-op cast was already removed; the last artifact — an unsound `s as SystemId` in `inActiveEdition` — is now a string-membership test over the known-good array.
 
-## C-W1 · `pnpm-workspace.yaml` `allowBuilds` placeholder — W1
-Literal `simple-git-hooks: set this to true or false`.
-- **Recommend `false`** (the project's own postinstall runs the CLI). Confirm true/false.
+## C-W1 · `pnpm-workspace.yaml` `allowBuilds` placeholder — W1 — ✅ DONE
+`allowBuilds` carries explicit `simple-git-hooks: true` (+ esbuild/es5-ext); no placeholder remains.
 
 ---
 
@@ -453,10 +451,12 @@ re-tag any you'd rather decide on.
 - **D1** — `build/+page.svelte` 1032 lines (next: PanelCard 775, CombatMenus 759, EditContentForm 733) — split per VM+blocks+curated-CSS.
 - **C2** — same class name / different styles across components (`.skill-name`, `.spent`, `.used`, …) — fold into the combat-class rename pass.
 - **C3** — cross-file CSS duplicate clusters — hoist shared vocabulary into `components.css` (same pass as the jscpd ratchet).
-- **D3** — `CombatVM.pinned` demo hardcode → move to `ui`, persist per character (ties the **Pin** entry, §4).
+- **D3** — ✅ DONE 2026-07-28. Pins persist per character in `ui.spellsPinned` via `togglePin`; demo
+  hardcode dropped. Spellbook⇄combat key reconciliation stays the §4 "Pin end-to-end" feature.
 
 **Homebrew schema correctness** (PLAN → data model)
-- **D17** — `ENUM_OPTS.kind = EFFECT_KINDS` in the homebrew form, but `kind` as a `spell_slots` column should be full/half/third/pact — verify + fix the option list. Ties D-E7.
+- **D17** — ✅ DONE 2026-07-28. `kind` disambiguated by type (species_option = SPECIES_OPTION_KINDS
+  enum; spell_slots = free text); the wrong EFFECT_KINDS option list dropped.
 
 **Typing gaps** (PLAN → typing group G)
 - **G1** — 37× `String()`/`Number()` coercions over already-typed rows (worst: `String(row.data.concentration)==='true'`).
@@ -478,8 +478,8 @@ re-tag any you'd rather decide on.
 **Working-tree nits** (PLAN → REL/housekeeping)
 - **W2** — `translate/+page` + `spellbook/+page` hang on "Loading…" forever on content-load failure; build page renders empty pickers → adopt the `<Loading error>` pattern.
 - **W3** — version drift: `Cargo.toml` 0.2.0 vs 0.3.0 in package.json + tauri.conf.json — sync.
-- **W4** — `mergeDataDir` comment overclaims "same rollback as migrateDataDir" (merge can't sweep half-copied into a non-empty target); also record that merge+deleteOld intentionally discards the source copy of a collision the target won.
-- **W5** — `walkTree` has no symlink-cycle guard (looped symlink → infinite recurse). Edge, low priority.
+- **W4** — ✅ DONE 2026-07-28. `mergeDataDir` doc corrected (no sweep-on-failure rollback; deleteOld discards the source's losing collision copy by design).
+- **W5** — ✅ DONE 2026-07-28. `walkTree` skips symlinked directories (no looped-symlink recursion; traversal safety).
 - **S1** — `TauriStorage.abs` traversal check misses backslashes (`read('..\\x')` passes on Windows); normalize `\`→`/` before splitting. fs-scope is the backstop but the seam's own validation is half-broken → security WORK.
 - **B23** — build the `tests/integration/` tier (temp roots, watcher self-write, save/load round-trip) OR stop documenting it as present. Ties D-T.
 

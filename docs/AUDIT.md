@@ -382,15 +382,19 @@ Deep effects-system review, 2026-07-16 (B12–B26):
 
 ## D · Structure / size / smells
 
-- [ ] **D1 · `routes/build/+page.svelte` is 1032 lines** — violates the "no 1k+ line files"
-  rule. Next worst: PanelCard 775, CombatMenus 759, EditContentForm 733. Split per the
-  house pattern (VM + blocks + curated global CSS).
-- [ ] **D2 · Two sources of truth for the editions union.** `rules/pipeline.ts System`
-  ('5e'|'5.5e' literal) vs `stores/app.svelte.ts SystemId` (derived from schema `SYSTEMS`).
-  Either move the SYSTEMS const into the rules layer or accept + document the pipeline copy.
-  UPDATE: actually four sources — see F7.
-- [ ] **D3 · Demo hardcode in CombatVM:** `pinned = {'fire-bolt': true, shield: true}` — every
-  character starts with demo pins; not persisted per character (belongs in `ui`).
+- [~] **D1 · Big-file splits — mostly done.** The 1032-line `build/+page.svelte` was split (VM +
+  blocks), `PanelCard` → per-panel components, `CombatMenus` → DiceTray + RollLog, `helpers.ts` →
+  concern modules. REMAINING over the eslint 400-line `.ts` warn (warn-only, gate green): the two VMs
+  `build/state.svelte.ts` (~606) + `combat/state.svelte.ts` (~582) and `derive.ts` (~910); the big
+  `.svelte` (EditContentForm 759, compendium 849) are `.svelte`-exempt. Split opportunistically.
+- [x] **D2 · Two sources of truth for the editions union.** FIXED 2026-07-28. F7 already collapsed the
+  consts into `rules/pipeline.SYSTEMS` (`stores/app SystemId` + schema re-derive from it); the last
+  artifact — an unsound `s as SystemId` assertion in `inActiveEdition` — is now a string-membership
+  test over the known-good array. G5's `character.system as System` no-op cast was already removed.
+- [x] **D3 · Demo hardcode in CombatVM.** FIXED 2026-07-28. Pins persist per character in
+  `ui.spellsPinned` (bare ids) via `togglePin`; the `{'fire-bolt', shield}` hardcode is gone — it was
+  stale kebab (never matched snake ids post-E3) AND pinned every character. Spellbook⇄combat key-format
+  reconciliation stays the §4 "Pin end-to-end" feature.
 - [x] **D4 · Roster fallback for broken saves hardcodes `system: '5e'`.** FIXED 2026-07-21.
   `loadCharacter` now reads `system` best-effort from the raw JSON before migrate/validate and returns
   it on failure; `RosterEntry.system` is optional, so a broken save badges its REAL edition (or none
@@ -458,9 +462,11 @@ Deep effects-system review, 2026-07-16 (D7–D19):
   THREE ASI mechanisms already coexist (species effect tokens, `abilityBoosts`, the `boost_choice`
   `NxM` mini-grammar) — a fourth ad-hoc one for feats would compound it. PLAN's "half-feat +1
   handled in source step" has no mechanism behind it.
-- [ ] **D17 · `ENUM_OPTS.kind = EFFECT_KINDS` in the homebrew form** (homebrew.ts) — but `kind` as
-  a COLUMN belongs to `spell_slots` (values full/half/third/pact). Verify what the form renders
-  for a spell_slots row; wrong option list if lookup types are authorable.
+- [x] **D17 · `ENUM_OPTS.kind = EFFECT_KINDS` in the homebrew form.** FIXED 2026-07-28. The only `kind`
+  columns are `species_option.kind` (enum subrace/lineage/legacy/ancestry — now single-sourced as
+  `SPECIES_OPTION_KINDS`, rendered as its dropdown) and `spell_slots.kind` (a free `reqStr` → text).
+  EFFECT_KINDS matched neither. Disambiguated by type like `category`/`category_feat`; the effect-kinds
+  option list is dropped from the form entirely.
 - [ ] **D18 · `graph.featuresForClass` (loader.ts:397) has no consumer** and diverges from
   derive's inline feature query (no system/level gates). Fold into the B26 fix; one query owner.
 - [~] **D19 · Minor pile:** DONE 2026-07-21 (3 of 5): `hpBar` `|| 1` guards a 0 max → no NaN;
@@ -735,21 +741,22 @@ point at THIS file.
 
 ## W · Working-tree findings (2026-07-14 refactor review; uncommitted state)
 
-- [ ] **W1 · `pnpm-workspace.yaml` placeholder:** `simple-git-hooks: set this to true or false`
-  — literal pending-decision string in `allowBuilds`. Set an explicit `false` (the project's
-  own postinstall runs the CLI) or `true`.
+- [x] **W1 · `pnpm-workspace.yaml` placeholder.** DONE. `allowBuilds` now carries explicit
+  `simple-git-hooks: true` (+ esbuild/es5-ext) — no placeholder string remains; the postinstall hook
+  install is approved. (Verified 2026-07-28.)
 - [ ] **W2 · Content-load error surface inconsistent.** The new `<Loading error={content.error}>`
   pattern covers combat + compendium; `translate/+page.svelte` and `spellbook/+page.svelte`
   still hang on "Loading…" forever if the content load fails; the build page silently renders
   empty pickers.
 - [x] **W3 · Version drift:** FIXED 2026-07-25. `src-tauri/Cargo.toml` bumped 0.2.0 → 0.4.0 to
   match package.json + tauri.conf.json.
-- [ ] **W4 · `mergeDataDir` doc nit:** comment claims "same failure/rollback contract as
-  migrateDataDir", but merge can't sweep half-copied files (non-empty target). Also record in
-  PLAN that merge+deleteOld intentionally discards the source copy of a collision the target
-  won (newer-wins is what the dialog promises).
-- [ ] **W5 · `walkTree` has no symlink-cycle guard** (data-dir move would recurse forever on a
-  looped symlink). Edge; low priority.
+- [x] **W4 · `mergeDataDir` doc nit.** FIXED 2026-07-28. The doc comment now states merge does NOT
+  share migrateDataDir's sweep-on-failure rollback (non-empty target can't tell copied-in from the
+  target's own files → pointer untouched, half-merge stays) and that merge+deleteOld intentionally
+  discards the source's losing collision copy (newer-wins, as the dialog promises).
+- [x] **W5 · `walkTree` symlink-cycle guard.** FIXED 2026-07-28. `walkTree` no longer FOLLOWS a
+  symlinked directory (`e.isSymlink` → skip) — a looped symlink can't recurse forever, and it won't
+  walk a symlink pointing outside the data dir (traversal safety, complements S1).
 - [ ] **W6 · SessionStart surface-hook didn't fire/deliver** in a live session (SURFACE.md was
   stale at session start; only the caveman plugin hook's output arrived). Verify project-hook
   delivery on Windows (`claude --debug`; the command uses sh redirects — needs Git Bash).
