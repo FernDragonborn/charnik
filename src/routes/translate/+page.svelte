@@ -21,6 +21,7 @@
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
 	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
+	import Loading from '$lib/components/Loading.svelte';
 	import type { WikiEditDraft } from '$lib/components/wikiEdit';
 	import { writeDraft, readDraft, deleteDraft, type DraftTarget } from '$lib/drafts/store';
 	import { app, inActiveEdition } from '$lib/stores/app.svelte';
@@ -238,7 +239,7 @@
 <svelte:head><title>Translate — Charnik</title></svelte:head>
 
 {#if !graph}
-	<p class="loading">Loading…</p>
+	<Loading message="Loading…" error={content.error} />
 {:else}
 	<div class="page">
 		<div class="subbar">
@@ -496,8 +497,7 @@
 		padding: 10px 12px;
 		margin: 0;
 	}
-	.pick,
-	.loading {
+	.pick {
 		color: var(--color-text-muted);
 		padding: 20px 0;
 	}

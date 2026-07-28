@@ -744,10 +744,10 @@ point at THIS file.
 - [x] **W1 · `pnpm-workspace.yaml` placeholder.** DONE. `allowBuilds` now carries explicit
   `simple-git-hooks: true` (+ esbuild/es5-ext) — no placeholder string remains; the postinstall hook
   install is approved. (Verified 2026-07-28.)
-- [ ] **W2 · Content-load error surface inconsistent.** The new `<Loading error={content.error}>`
-  pattern covers combat + compendium; `translate/+page.svelte` and `spellbook/+page.svelte`
-  still hang on "Loading…" forever if the content load fails; the build page silently renders
-  empty pickers.
+- [x] **W2 · Content-load error surface inconsistent.** FIXED 2026-07-28. `translate/+page` and
+  `spellbook/+page` now render `<Loading error={content.error}>` (instead of a bare "Loading…" that
+  hung forever on failure), and the build page surfaces `content.error` too (was silent empty pickers).
+  All four content views now share the one error-surfacing pattern.
 - [x] **W3 · Version drift:** FIXED 2026-07-25. `src-tauri/Cargo.toml` bumped 0.2.0 → 0.4.0 to
   match package.json + tauri.conf.json.
 - [x] **W4 · `mergeDataDir` doc nit.** FIXED 2026-07-28. The doc comment now states merge does NOT

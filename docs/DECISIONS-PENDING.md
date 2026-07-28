@@ -476,7 +476,7 @@ re-tag any you'd rather decide on.
 - **C1** — the last ~5 gold/teal hardcoded colors need light-theme token VALUES (a visual-design call — see §4).
 
 **Working-tree nits** (PLAN → REL/housekeeping)
-- **W2** — `translate/+page` + `spellbook/+page` hang on "Loading…" forever on content-load failure; build page renders empty pickers → adopt the `<Loading error>` pattern.
+- **W2** — ✅ DONE 2026-07-28. `translate`/`spellbook`/`build` all surface `content.error` via the `<Loading error>` pattern now (was: hang forever / silent empty pickers).
 - **W3** — version drift: `Cargo.toml` 0.2.0 vs 0.3.0 in package.json + tauri.conf.json — sync.
 - **W4** — ✅ DONE 2026-07-28. `mergeDataDir` doc corrected (no sweep-on-failure rollback; deleteOld discards the source's losing collision copy by design).
 - **W5** — ✅ DONE 2026-07-28. `walkTree` skips symlinked directories (no looped-symlink recursion; traversal safety).

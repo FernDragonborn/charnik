@@ -19,6 +19,7 @@
 	import { app } from '$lib/stores/app.svelte';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
+	import Loading from '$lib/components/Loading.svelte';
 	import Chip from '$lib/components/Chip.svelte';
 	import Switch from '$lib/components/Switch.svelte';
 	import EyeToggle from '$lib/components/EyeToggle.svelte';
@@ -117,7 +118,7 @@
 <svelte:head><title>Spellbook — Charnik</title></svelte:head>
 
 {#if !graph || !character}
-	<p class="loading">Loading spellbook…</p>
+	<Loading message="Loading spellbook…" error={content.error} />
 {:else}
 	<div class="mgrhead">
 		<h1>Manage spells</h1>

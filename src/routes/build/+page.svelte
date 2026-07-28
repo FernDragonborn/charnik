@@ -10,6 +10,8 @@
 	import { base } from '$app/paths';
 	import { build } from './state.svelte';
 	import { loadCharacterBySlug } from '$lib/character/store.svelte';
+	import { content } from '$lib/content/store.svelte';
+	import Loading from '$lib/components/Loading.svelte';
 	import '$lib/styles/build.css';
 	import BuildHead from './blocks/BuildHead.svelte';
 	import OriginCard from './blocks/OriginCard.svelte';
@@ -41,6 +43,10 @@
 
 <svelte:head><title>Build — Charnik</title></svelte:head>
 
+{#if content.error}
+	<!-- W2: a content-load failure was silent here (empty pickers) — surface it like the other views. -->
+	<Loading error={content.error} />
+{:else}
 <section class="page build-page">
 	<BuildHead />
 
@@ -61,6 +67,7 @@
 
 	<ReviewBar {create} />
 </section>
+{/if}
 
 <style>
 	.cols {
