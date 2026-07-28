@@ -24,7 +24,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `num` ×3 — src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
-- `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/state.svelte.ts
+- `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
@@ -1005,4 +1005,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 544 exports across 87 modules · 31 duplicate suspects · generated in 158ms._
+_45 tokens · 61 global classes · 40 components · 544 exports across 87 modules · 31 duplicate suspects · generated in 160ms._

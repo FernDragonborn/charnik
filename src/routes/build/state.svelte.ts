@@ -21,7 +21,7 @@ import { classCasts } from '$lib/character/spellcasting';
 import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
 import { uniqueCharacterId } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
-import { app, type SystemId } from '$lib/stores/app.svelte';
+import { app } from '$lib/stores/app.svelte';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
 import type { Ability } from '$lib/rules/core';
 import {
@@ -36,8 +36,7 @@ import {
 	asiFeatLevels,
 	POINT_BUY_BUDGET,
 	STANDARD_ARRAY,
-	type StatMethod,
-	type BoostShape
+	type StatMethod
 } from '$lib/build/rules';
 import {
 	parseSpeciesBoostChoice,
@@ -48,6 +47,15 @@ import {
 } from '$lib/build/derive';
 import { splitList, FEAT_CATEGORY, type ContentType } from '$lib/content/schemas';
 import { slugify } from '$lib/util/slug';
+import {
+	asiPickCount,
+	toggleCapped,
+	blankDraft,
+	draftFromCharacter,
+	type AsiShape,
+	type DraftState,
+	type EditContext
+} from './draft';
 
 /** Type guard: is this row of content type `T`? (A predicate is needed — TS won't narrow a union by a
  *  bare `row.type === type` comparison against a generic `T`.) */
@@ -79,126 +87,6 @@ export function rowName(row: LoadedRow | undefined, locale = app.activeLocale): 
 export const ASI = '__asi__';
 /** The SRD feat id representing an ASI — filtered out of the feat picker (handled as boosts). */
 const ASI_FEAT_ID = 'ability_score_improvement';
-/** ASI allocation shape: +2 to one ability ('2') or +1 to two ('1-1'). */
-type AsiShape = '2' | '1-1';
-/** How many abilities an ASI shape lets you pick ('2' → 1 target, '1-1' → 2 targets). */
-const asiPickCount = (shape: AsiShape): number => (shape === '2' ? 1 : 2);
-
-/** Toggle `item` in a capped multi-select list: drop it if already picked, else add it only while
- *  under `cap`. The shared shape behind every "pick up to N" control in the builder (ability boosts,
- *  ASI targets, …) so they can't drift apart. */
-function toggleCapped<T>(list: T[], item: T, cap: number): T[] {
-	if (list.includes(item)) return list.filter((x) => x !== item);
-	return list.length < cap ? [...list, item] : list;
-}
-
-/** One class row in the draft (pre-resolution: nullable ids while the user is still choosing). */
-interface DraftClass {
-	classId: string | null;
-	subclassId: string | null;
-	level: number;
-}
-
-/** Every user-editable build choice, as ONE typed object (single source of the field set — adding a
- *  field means editing `DraftState` + the two factories below, never three scattered places). */
-interface DraftState {
-	name: string;
-	system: SystemId;
-	/** Strict (rules-enforced) vs Free (lenient) authoring. */
-	strict: boolean;
-	speciesId: string | null;
-	speciesOptionId: string | null;
-	/** Abilities the user picked for a 5e species floating ASI. */
-	speciesBoostPicks: Ability[];
-	backgroundId: string | null;
-	classes: DraftClass[];
-	method: StatMethod;
-	abilities: Record<Ability, number>;
-	arrayPick: Partial<Record<Ability, number>>;
-	boostShape: BoostShape;
-	boostPicks: Ability[];
-	skills: string[];
-	expertise: string[];
-	selectedLanguages: string[];
-	slotFeats: Record<string, string>;
-	slotAsi: Record<string, { shape: AsiShape; picks: Ability[] }>;
-	selectedSpells: string[];
-	inventory: { item: string; qty: number; equipped: boolean; attuned: boolean }[];
-}
-
-/** A blank new-character draft. The one source of default choices (reset + the initial state). */
-function blankDraft(): DraftState {
-	return {
-		name: '',
-		// newest ruleset by default; the build page's 5e/5.5e switcher changes it before saving
-		system: '5.5e',
-		strict: true,
-		speciesId: null,
-		speciesOptionId: null,
-		speciesBoostPicks: [],
-		backgroundId: null,
-		classes: [{ classId: null, subclassId: null, level: 1 }],
-		method: 'point_buy',
-		abilities: baseAbilities(),
-		arrayPick: {},
-		boostShape: '2-1',
-		boostPicks: [],
-		skills: [],
-		expertise: [],
-		selectedLanguages: [],
-		slotFeats: {},
-		slotAsi: {},
-		selectedSpells: [],
-		inventory: []
-	};
-}
-
-/** Load an existing character into a fresh draft (edit / level-up). Straightforward fields map
- *  directly; abilities become manual with prior boosts/feats carried separately (see hydrate). New
- *  per-level picks (slotFeats/slotAsi/boost*) start blank so a prior session can't leak in. */
-function draftFromCharacter(char: Character): DraftState {
-	return {
-		...blankDraft(),
-		name: char.build.name,
-		system: char.system,
-		strict: char.ui.strict,
-		speciesId: char.build.species ?? null,
-		speciesOptionId: char.build.speciesOption ?? null,
-		backgroundId: char.build.background ?? null,
-		classes: char.build.classes.length
-			? char.build.classes.map((c) => ({
-					classId: c.class,
-					subclassId: c.subclass ?? null,
-					level: c.level
-				}))
-			: [{ classId: null, subclassId: null, level: 1 }],
-		method: 'manual',
-		abilities: { ...char.build.abilities },
-		skills: [...char.build.skills],
-		expertise: [...char.build.expertise],
-		selectedLanguages: [...char.build.languages],
-		selectedSpells: char.build.spells.map((s) => s.spell),
-		inventory: char.build.inventory.map((i) => ({
-			item: i.item,
-			qty: i.qty,
-			equipped: i.equipped,
-			attuned: i.attuned // preserve attunement through the builder round-trip (D15)
-		}))
-	};
-}
-
-/** What a level-up / edit carries over from the loaded character (null on the BuildVM = creating). */
-interface EditContext {
-	id: string;
-	play: Character['play'];
-	ui: Character['ui'];
-	/** Ability boosts carried verbatim (not reverse-engineered); new picks add on top. */
-	boosts: Partial<Record<Ability, number>>;
-	feats: string[];
-	/** Spells / skills the character already had — can't be undone in Strict edit. */
-	spells: Set<string>;
-	skills: Set<string>;
-}
 
 class BuildVM {
 	// read the shared reactive content store → a live content refresh re-derives options with no reload
