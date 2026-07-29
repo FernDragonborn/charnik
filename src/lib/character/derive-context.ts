@@ -20,7 +20,7 @@ import type { ActiveEffect, EffectCtx } from '../effects/token-parser';
 import { RAGE_CONDITION_ID, type ResolveState } from '../effects/dependency-graph';
 
 /** Armor weight class of the equipped armor (for the `armor_type` guard variable); no armor → none. */
-export function armorWeightOf(row: LoadedRowOf<'item'> | undefined): PlayVars['armorType'] {
+function armorWeightOf(row: LoadedRowOf<'item'> | undefined): PlayVars['armorType'] {
 	const t = String(row?.data.item_type ?? '').toLowerCase();
 	if (t.includes('heavy')) return 'heavy';
 	if (t.includes('medium')) return 'medium';

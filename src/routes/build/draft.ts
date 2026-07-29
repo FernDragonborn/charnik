@@ -22,7 +22,7 @@ export function toggleCapped<T>(list: T[], item: T, cap: number): T[] {
 }
 
 /** One class row in the draft (pre-resolution: nullable ids while the user is still choosing). */
-export interface DraftClass {
+interface DraftClass {
 	classId: string | null;
 	subclassId: string | null;
 	level: number;

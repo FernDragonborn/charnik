@@ -281,7 +281,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (77 modules)
+## Library functions & types (78 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -322,7 +322,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/derive-context.ts`
 
-- `function armorWeightOf` — Armor weight class of the equipped armor (for the `armor_type` guard variable); no armor → none.
 - `interface EffectCtxDeps` — The static setup a derive ctx closes over — computed once per `deriveSheet`, before the resolve.
 - `function makeEffectCtxFactory` — Build the `(state) => EffectCtx` the resolve stage calls.
 
@@ -691,15 +690,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/effects/apply.ts`
 
-- `function matchesTarget` — Does an effect target apply to this stat key?
-- `interface TargetCheck` — Result of the derive's target check (B13): whether a consumer reads this (kind, target), plus an * optional "did you …
-- `type TargetValidator` — Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
-- `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
-- `interface EffectFacts` — * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and * value-resolved on…
+- `re-export matchesTarget` — re-export the public facts contract so `$lib/effects/apply` import sites are unchanged
+- `re-export EffectFacts`
+- `re-export NumericFact`
+- `re-export TargetValidator`
+- `re-export TargetCheck`
+- `re-export ResourceDef`
 - `function collectFacts` — * One pass over the RESOLVED effect list → the typed-facts object (D7).
 - `function mergeFacts` — * Merge a SECOND `collectFacts` result into `base` (in place) — the plugin pre-pass path: returned * tokens become sy…
 - `function applyEffects`
-- `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
 - `function lintEffectTokens` — Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression * slot — guard, value…
 
 ### `src/lib/effects/context.ts`
@@ -745,6 +744,18 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface Ast`
 - `type ParseResult`
 - `function parseExpression` — Parse an expression string into an AST (memoized).
+
+### `src/lib/effects/facts.ts`
+
+- `function matchesTarget` — Does an effect target apply to this stat key?
+- `interface TargetCheck` — Result of the derive's target check (B13): whether a consumer reads this (kind, target), plus an * optional "did you …
+- `type TargetValidator` — Predicate the derive supplies (B13): does a consumer actually read this (kind, target) pair?
+- `interface RollMod` — A roll-manipulation fact for the roll path: `{target, value}` where value is the reroll * threshold (`reroll`) or the…
+- `interface NumericFact` — A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated * against the derive ctx…
+- `interface FactRef` — A non-numeric fact tied to a target key (`advantage:attack` → {target:'attack', source}).
+- `interface ResourceDef` — A trackable resource pool a feature/effect grants (rage, ki, sorcery points, an item's N/day…).
+- `interface EffectFacts` — * The ONE typed-facts object (AUDIT D7): every token of the resolved effect list, parsed once and * value-resolved on…
+- `const emptyFacts`
 
 ### `src/lib/effects/plugin-host.ts`
 
@@ -1014,4 +1025,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 550 exports across 88 modules · 31 duplicate suspects · generated in 158ms._
+_45 tokens · 61 global classes · 40 components · 558 exports across 89 modules · 31 duplicate suspects · generated in 162ms._

@@ -396,6 +396,41 @@ function validateSpellListJoins(
 	}
 }
 
+interface ContentIndices {
+	byType: Map<ContentType, LoadedRow[]>;
+	byEffectiveId: Map<string, LoadedRow>;
+	articles: Map<string, LoadedRow[]>;
+	uniqueRows: LoadedRow[];
+}
+
+/** Build the id / type / article indices from the loaded rows. An EXACT source:id duplicate is a real
+ *  error AND must not APPLY twice: drop it from every collection the derive scans read (rows / byType /
+ *  articles), keeping only the first — else the class-feature scan + condition expansion (which iterate
+ *  `graph.rows`) fold its tokens ×2 while `get()` sees one row (B22). */
+function buildIndices(rows: LoadedRow[], issues: ContentIssue[]): ContentIndices {
+	const byType = new Map<ContentType, LoadedRow[]>();
+	const byEffectiveId = new Map<string, LoadedRow>();
+	const articles = new Map<string, LoadedRow[]>();
+	const uniqueRows: LoadedRow[] = [];
+	for (const r of rows) {
+		if (byEffectiveId.has(r.effectiveId)) {
+			issues.push({
+				level: 'error',
+				root: r.root,
+				file: r.file,
+				id: r.id,
+				message: `duplicate source:id "${r.effectiveId}"`
+			});
+			continue;
+		}
+		byEffectiveId.set(r.effectiveId, r);
+		uniqueRows.push(r);
+		pushMap(byType, r.type, r);
+		pushMap(articles, `${r.type}:${r.id}`, r);
+	}
+	return { byType, byEffectiveId, articles, uniqueRows };
+}
+
 /** Load + merge content. The 2-arg form (one storage, many roots) is the common case; `extra`
  *  adds roots backed by a DIFFERENT storage (e.g. homebrew in user storage while SRD ships as
  *  fetched assets). All sources merge by type exactly the same way. */
@@ -422,31 +457,7 @@ export async function loadContent(
 	// same references as `acc.*` — phases below read/push through these bindings unchanged
 	const { rows, issues, metaIssues, driftItems, localeSet } = acc;
 
-	// indices
-	const byType = new Map<ContentType, LoadedRow[]>();
-	const byEffectiveId = new Map<string, LoadedRow>();
-	const articles = new Map<string, LoadedRow[]>();
-	const uniqueRows: LoadedRow[] = [];
-	for (const r of rows) {
-		// an EXACT source:id duplicate is a real error — and it must not APPLY twice. Drop it from
-		// every collection the derive scans read (rows / byType / articles), keeping only the first;
-		// otherwise the class-feature scan + condition expansion (which iterate `graph.rows`) fold its
-		// tokens ×2 while `get()` sees one row (B22).
-		if (byEffectiveId.has(r.effectiveId)) {
-			issues.push({
-				level: 'error',
-				root: r.root,
-				file: r.file,
-				id: r.id,
-				message: `duplicate source:id "${r.effectiveId}"`
-			});
-			continue;
-		}
-		byEffectiveId.set(r.effectiveId, r);
-		uniqueRows.push(r);
-		pushMap(byType, r.type, r);
-		pushMap(articles, `${r.type}:${r.id}`, r);
-	}
+	const { byType, byEffectiveId, articles, uniqueRows } = buildIndices(rows, issues);
 
 	validateSpellListJoins(byType, issues);
 
