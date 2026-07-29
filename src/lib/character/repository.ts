@@ -257,31 +257,34 @@ export async function loadCharacter(storage: Storage, slug: string): Promise<Loa
 /** List the roster. Bad saves become entries with an `error` (they still show up). */
 export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 	if (!(await storage.exists(CHARACTERS_DIR))) return [];
-	const out: RosterEntry[] = [];
-	for (const entry of await storage.list(CHARACTERS_DIR)) {
-		if (!entry.isDir) continue;
-		const slug = entry.name;
-		const res = await loadCharacter(storage, slug);
-		if (res.ok && res.character) {
-			const c = res.character;
-			out.push({
-				id: c.id,
-				name: c.build.name,
-				system: c.system,
-				level: c.build.classes.reduce((n, cl) => n + cl.level, 0),
-				classes: c.build.classes.map((cl) => `${cl.class.split(':').pop()} ${cl.level}`).join(' / ')
-			});
-		} else {
-			out.push({
+	// SMELL-5: load rosters in parallel — each is an independent read and the result is sorted by name
+	// at the end, so load order is irrelevant.
+	const slugs = (await storage.list(CHARACTERS_DIR)).filter((e) => e.isDir).map((e) => e.name);
+	const out = await Promise.all(
+		slugs.map(async (slug): Promise<RosterEntry> => {
+			const res = await loadCharacter(storage, slug);
+			if (res.ok && res.character) {
+				const c = res.character;
+				return {
+					id: c.id,
+					name: c.build.name,
+					system: c.system,
+					level: c.build.classes.reduce((n, cl) => n + cl.level, 0),
+					classes: c.build.classes
+						.map((cl) => `${cl.class.split(':').pop()} ${cl.level}`)
+						.join(' / ')
+				};
+			}
+			return {
 				id: slug,
 				name: slug,
 				...(res.system ? { system: res.system } : {}), // real edition if readable, else no badge
 				level: 0,
 				classes: '',
 				error: res.error ?? 'unknown error'
-			});
-		}
-	}
+			};
+		})
+	);
 	return out.sort((a, b) => a.name.localeCompare(b.name));
 }
 

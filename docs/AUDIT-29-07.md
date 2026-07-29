@@ -38,9 +38,9 @@
   не в `collisions.json`. Не переноситься з data-папкою, гине при чистці webview. **Фікс:**
   файл у dataDir через Storage, АБО оновити інваріант у CLAUDE.md. (= B6 `[~]`.)
 
-- **ARCH-3 [ ]** — `routes/+page.svelte:51` `{@html $_('demo.body')}` без санітайзу; каталоги
-  user-droppable = untrusted (PLAN.md:1101). **Фікс:** спільний `sanitizeHtml()` (DOMPurify),
-  як у WikiDetail.
+- **ARCH-3 [x]** — `routes/+page.svelte:51` `{@html $_('demo.body')}` без санітайзу; каталоги
+  user-droppable = untrusted (PLAN.md:1101). **Фікс:** `sanitizeHtml()` (DOMPurify) у
+  `content/markdown.ts` — спільний seam, викликається в `db-body`. `<b>` лишається, скрипти/on* зрізає.
 
 - **ARCH-4 [ ]** — розмір-токени не енфорсяться: stylelint ловить лише кольори, ~958 `Npx` у
   .svelte. **Фікс:** stylelint-правило на числові px (allowlist 1px) + міграція на
@@ -54,12 +54,13 @@
 - **SMELL-2 [~]** — `combat/+page.svelte:71` `deriveHealth.set(c.build.name,…)`. Оцінено:
   стор — single-open (не Map), `characterName` — суто display-лейбл (`ContentHealth.svelte:121`);
   тезки реально НЕ колізять, а `c.id`-поле ніхто не читає → dead flexibility (YAGNI). Лишено.
-- **SMELL-3 [ ]** — `compendium/[...entry]/+page.svelte:52-58` ручний localStorage повз
-  `util/persist` (`readStored`/`writeStored`).
+- **SMELL-3 [x]** — `compendium/[...entry]/+page.svelte:52-58` ручний localStorage → тепер
+  `readStored`/`writeStored` з `util/persist`.
 - **SMELL-4 [ ]** — `combat/state.svelte.ts:668` `s.spell.endsWith(':'+r.id)` — парс ref
   (`type:source:id`) самоочевидніший, не ламається від зміни формату.
-- **SMELL-5 [ ]** — послідовне I/O: `content/loader.ts:455` файли контенту строго послідовно
-  (Promise.all дешевий); `repository.ts:261` `listCharacters` послідовно.
+- **SMELL-5 [x]** — послідовне I/O: `loader` тепер read-ahead (`Promise.all` на body-реди,
+  акумуляція лишається послідовною → детермінізм merge/dedup незмінний); `listCharacters`
+  повністю паралельний (сортується по імені в кінці, порядок неважливий).
 - **SMELL-6 [ ]** — `combat/state.svelte.ts:457-469` death save через трей тільки ролить;
   інстант-шлях пише пипи (nat20→1HP). Є ручні пипи, але непослідовно.
 

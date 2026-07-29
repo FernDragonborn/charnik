@@ -39,6 +39,7 @@
 	import { isRowActive } from '$lib/content/sources.svelte';
 	import { app, inActiveEdition } from '$lib/stores/app.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
+	import { readStored, writeStored } from '$lib/util/persist';
 
 	const inEdition = (r: LoadedRow) => inActiveEdition(r.systems);
 	const showEdition = $derived(app.activeEditions.length > 1);
@@ -50,13 +51,9 @@
 	// CONTENT language — independent of the app UI language: a picker over the locales that actually
 	// exist in the CSVs (graph.locales). Persisted; defaults to the UI locale on first run, then sticks.
 	const LOCALE_KEY = 'charnik:compendium-locale';
-	const storedLocale =
-		typeof localStorage !== 'undefined' ? localStorage.getItem(LOCALE_KEY) : null;
-	let contentLocale = $state(storedLocale ?? app.activeLocale);
+	let contentLocale = $state(readStored<string>(LOCALE_KEY) ?? app.activeLocale);
 	const contentLocales = $derived(graph?.locales ?? ['en']);
-	$effect(() => {
-		if (typeof localStorage !== 'undefined') localStorage.setItem(LOCALE_KEY, contentLocale);
-	});
+	$effect(() => writeStored(LOCALE_KEY, contentLocale));
 	// localized display name for a row (the chosen content locale, English fallback)
 	const localName = (r: LoadedRow) => localizedName(r, contentLocale);
 	let selectedType = $state<ContentType>('spell');

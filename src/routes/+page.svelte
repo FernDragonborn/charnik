@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { isDemo } from '$lib/config/demo';
+	import { sanitizeHtml } from '$lib/content/markdown';
 	import { _ } from '$lib/i18n';
 	import {
 		characters,
@@ -46,9 +47,10 @@
 		<aside class="demobanner">
 			<div class="db-badge">{$_('demo.badge')}</div>
 			<h2 class="db-title">{$_('demo.title')}</h2>
-			<!-- trusted i18n string from our own catalog (not user input), carries <b> emphasis -->
+			<!-- i18n string carries <b> emphasis; sanitized because a user can drop in a locale catalog
+			     at runtime (ARCH-3), so the string is not trusted. -->
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-			<p class="db-body">{@html $_('demo.body')}</p>
+			<p class="db-body">{@html sanitizeHtml($_('demo.body'))}</p>
 			<a
 				class="db-download"
 				href="https://github.com/FernDragonborn/charnik/releases"

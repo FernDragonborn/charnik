@@ -555,6 +555,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/markdown.ts`
 
 - `function renderContentMarkdown` — Some content mixes Markdown with raw HTML tables.
+- `function sanitizeHtml` — Sanitize a raw HTML string (no Markdown pass) — DOMPurify keeps safe inline tags like <b>/<em> and * strips anything …
 
 ### `src/lib/content/meta.ts`
 
@@ -1025,4 +1026,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 558 exports across 89 modules · 31 duplicate suspects · generated in 162ms._
+_45 tokens · 61 global classes · 40 components · 559 exports across 89 modules · 31 duplicate suspects · generated in 171ms._

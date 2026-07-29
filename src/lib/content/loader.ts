@@ -308,10 +308,12 @@ function buildLoadedRow(
 
 /** Read + parse one CSV file, resolving its type/meta/header and folding every valid row + any
  *  content-health issue into `acc`. A non-CSV / directory entry is skipped. */
-async function processFile(file: FileRef, acc: LoadAcc): Promise<void> {
+async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promise<void> {
 	const { st, root, entry } = file;
 	if (entry.isDir || !entry.name.endsWith('.csv')) return;
-	const raw = await st.read(`${root}/${entry.name}`);
+	// the caller reads bodies ahead in parallel (SMELL-5); fall back to a direct read for any caller
+	// that doesn't (keeps this callable standalone).
+	const raw = preRead ?? (await st.read(`${root}/${entry.name}`));
 	// A `#content-<key>:` header block (any order, before the CSV) declares the file's metadata.
 	// `#content-type:` lets a freely-named file declare its type; `#content-source:` / `-systems:` are
 	// the file-level source tag / editions stamped onto every row. Explicit wins.
@@ -451,8 +453,21 @@ export async function loadContent(
 	};
 
 	const sources: ContentSource[] = [...roots.map((root) => ({ storage, root })), ...extra];
+	// SMELL-5: overlap the per-file READS (I/O) but keep ACCUMULATION sequential in list order — the
+	// dedup / source:id merge is order-sensitive, so processing order must stay identical to before.
+	const files: FileRef[] = [];
 	for (const { storage: st, root } of sources)
-		for (const entry of await st.list(root)) await processFile({ st, root, entry }, acc);
+		for (const entry of await st.list(root)) files.push({ st, root, entry });
+	const withRaw = await Promise.all(
+		files.map(async (file) => ({
+			file,
+			raw:
+				file.entry.isDir || !file.entry.name.endsWith('.csv')
+					? null
+					: await file.st.read(`${file.root}/${file.entry.name}`)
+		}))
+	);
+	for (const { file, raw } of withRaw) if (raw != null) await processFile(file, acc, raw);
 
 	// same references as `acc.*` — phases below read/push through these bindings unchanged
 	const { rows, issues, metaIssues, driftItems, localeSet } = acc;

@@ -20,3 +20,11 @@ export function renderContentMarkdown(md: string): string {
 		.replace(/\*([^*<>\n]+)\*/g, '<em>$1</em>');
 	return DOMPurify.sanitize(html);
 }
+
+/** Sanitize a raw HTML string (no Markdown pass) — DOMPurify keeps safe inline tags like <b>/<em> and
+ *  strips anything executable (<script>, on* handlers, javascript:). The shared seam for `{@html …}`
+ *  of any string that could be user-authored — incl. i18n catalog strings, since a user can drop in a
+ *  new locale JSON at runtime (the i18n invariant), so those are NOT trusted (ARCH-3). */
+export function sanitizeHtml(html: string): string {
+	return DOMPurify.sanitize(html);
+}
