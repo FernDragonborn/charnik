@@ -52,9 +52,9 @@
 							<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 							<i
 								class="prep"
-								class:on={r.prep === 'on'}
-								class:always={r.prep === 'always'}
-								title={r.prep === 'always' ? 'always prepared' : 'tap to prepare / unprepare'}
+								class:on={r.prepState === 'on'}
+								class:always={r.prepState === 'always'}
+								title={r.prepState === 'always' ? 'always prepared' : 'tap to prepare / unprepare'}
 								onclick={(e) => {
 									e.stopPropagation();
 									togglePrepared(r);
@@ -95,18 +95,20 @@
 								>
 							{/if}
 						</span>
-						<span class="spell-summary">{r.spe}</span>
-						{#if r.res}<span class="resolution-tag {r.res}">{r.resLabel}</span>{:else}<span
-							></span>{/if}
+						<span class="spell-summary">{r.summary}</span>
+						{#if r.resolution}<span class="resolution-tag {r.resolution}">{r.resolutionLabel}</span
+							>{:else}<span></span>{/if}
 						<span class="spell-level"
-							>{#if r.ct}<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions --><i
+							>{#if r.castTimeIcon}<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions --><i
 									class="cast-icon"
-									title={r.ct === 'react' ? 'reaction' : 'bonus action'}
+									title={r.castTimeIcon === 'react' ? 'reaction' : 'bonus action'}
 									onclick={(e) => {
 										e.stopPropagation();
-										toast(`Casting time: ${r.ct === 'react' ? 'reaction' : 'bonus action'}`);
-									}}>{r.ct === 'react' ? '↩' : '⚡'}</i
-								>{/if}{r.tm}</span
+										toast(
+											`Casting time: ${r.castTimeIcon === 'react' ? 'reaction' : 'bonus action'}`
+										);
+									}}>{r.castTimeIcon === 'react' ? '↩' : '⚡'}</i
+								>{/if}{r.levelTag}</span
 						>
 					</button>
 				{/each}

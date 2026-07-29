@@ -68,9 +68,12 @@
 
 ## 🏷️ Неймінг
 
-- **NAME-1 [ ]** — комбат-типи повз verbose-naming: `combat/spells.ts:27-45` `SpRow` поля
-  `spe/res/tm/ct/prep/conc/dmg`; типи `Atk/SpRow/SpGroup`; VM `cmTarget/cmSign/cmAmount`
-  (`state.svelte.ts:188-190`); локалки `fx/r/at`. Запланований rename-pass не зроблений.
+- **NAME-1 [x]** — rename-pass зроблено: типи `Atk/SpRow/SpGroup` → `Attack/SpellRow/SpellGroup`;
+  VM `cmTarget/cmSign/cmAmount` → `customModTarget/Sign/Amount`; усі криптик-поля `SpellRow`:
+  `spe→summary`, `res→resolution`, `resLabel→resolutionLabel`, `tm→levelTag`, `ct→castTimeIcon`,
+  `dmg→damagePool`, `conc→concentration`, `prep→prepState` (+ `economy.ctSlot` параметр).
+  Ультра-локалки `fx/r/at` лишено навмисно (конвенційні loop/param-вари; rename кожного `r` по
+  шаблонах = багато churn / ризик за копійки ясності).
 
 ## 📝 D1 exception-коментарі
 

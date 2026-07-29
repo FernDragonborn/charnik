@@ -12,7 +12,7 @@ import { parseToken, EFFECT_KIND } from '$lib/effects/token-parser';
 import { effectTag } from './effects-view';
 
 /** A weapon/unarmed attack row. */
-export interface Atk {
+export interface Attack {
 	name: string;
 	toHit: number;
 	dmg: string;
@@ -63,7 +63,7 @@ export function computeAttacks(
 	character: Character,
 	sheet: CharacterSheet,
 	graph: ContentGraph
-): Atk[] {
+): Attack[] {
 	const prof = sheet.proficiencyBonus,
 		strMod = sheet.abilities.str.mod,
 		dexMod = sheet.abilities.dex.mod;
@@ -76,7 +76,7 @@ export function computeAttacks(
 			return r?.type === 'class' ? r.data.weapon_profs : undefined;
 		})
 	);
-	const out: Atk[] = [];
+	const out: Attack[] = [];
 	for (const inv of character.build.inventory) {
 		if (!inv.equipped) continue;
 		const row = graph.get(inv.item);

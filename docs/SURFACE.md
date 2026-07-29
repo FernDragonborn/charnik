@@ -410,7 +410,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/attacks.ts`
 
-- `interface Atk` — A weapon/unarmed attack row.
+- `interface Attack` — A weapon/unarmed attack row.
 - `function parseDamage` — Parse a weapon/spell damage string ("1d8 +3 slashing", "1d6 −1 bludgeoning") into its dice pool + * flat mod.
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
@@ -475,8 +475,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export casterForSpell` — re-exported so `$lib/combat/helpers` (barrel) + existing importers keep the same import site
 - `const GROUP_MODES`
 - `type GroupMode`
-- `interface SpRow` — A spell row in the spell block.
-- `interface SpGroup` — A group of spells (Pinned / by level / by prepared / by school).
+- `interface SpellRow` — A spell row in the spell block.
+- `interface SpellGroup` — A group of spells (Pinned / by level / by prepared / by school).
 - `interface PreparedClassTally` — A caster class's prepared-spell accounting: how many leveled spells are prepared AGAINST it vs its * own cap.
 - `function preparedTalliesByClass` — Per-class prepared tallies (A18-tail): attribute each prepared leveled spell to the caster class * that grants it — v…
 - `interface PrepareToggleInput` — The prepared-toggle attempt for ONE spell, gated against the cap of the class that GRANTS it * (per-class — A18-tail).
@@ -1026,4 +1026,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 559 exports across 89 modules · 31 duplicate suspects · generated in 158ms._
+_45 tokens · 61 global classes · 40 components · 559 exports across 89 modules · 31 duplicate suspects · generated in 171ms._

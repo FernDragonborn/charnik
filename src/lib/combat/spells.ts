@@ -24,7 +24,7 @@ export const GROUP_MODES = ['level', 'prepared', 'school'] as const;
 export type GroupMode = (typeof GROUP_MODES)[number];
 
 /** A spell row in the spell block. */
-export interface SpRow {
+export interface SpellRow {
 	id: string;
 	/** The content ref (effectiveId) — used to set play.concentration when cast. */
 	ref: string;
@@ -33,23 +33,23 @@ export interface SpRow {
 	level: number;
 	/** Ritual-taggable — only these can be cast as a ritual (no slot). Not all spells qualify (SRD). */
 	ritual: boolean;
-	spe: string;
-	res: '' | 'hit' | 'save' | 'auto';
-	resLabel: string;
-	tm: string;
-	ct: '' | 'react' | 'bonus'; // casting time → icon before the level
-	dmg: Record<number, number> | null; // parsed damage/healing dice (for casting)
+	summary: string;
+	resolution: '' | 'hit' | 'save' | 'auto';
+	resolutionLabel: string;
+	levelTag: string;
+	castTimeIcon: '' | 'react' | 'bonus'; // casting time → icon before the level
+	damagePool: Record<number, number> | null; // parsed damage/healing dice (for casting)
 	/** Whether casting this spell requires concentration. */
-	conc: boolean;
-	prep: '' | 'on' | 'always';
+	concentration: boolean;
+	prepState: '' | 'on' | 'always';
 }
 
 /** A group of spells (Pinned / by level / by prepared / by school). */
-export interface SpGroup {
+export interface SpellGroup {
 	key: string;
 	label: string;
 	slots: { full: number; spent: number } | null;
-	rows: SpRow[];
+	rows: SpellRow[];
 }
 
 /** Healing dice from a spell's text ("regains Hit Points equal to 2d4 plus …"). */
@@ -59,7 +59,7 @@ const healDice = (text: string): string => {
 };
 
 /** Casting-time → the icon shown before the level (↩ reaction, ⚡ bonus). */
-const castingIcon = (ct: string): SpRow['ct'] =>
+const castingIcon = (ct: string): SpellRow['castTimeIcon'] =>
 	/bonus/i.test(ct) ? 'bonus' : /reaction/i.test(ct) ? 'react' : '';
 
 /** Short effect summary for a non-damage spell (curated, falls back to "utility"). */
@@ -144,7 +144,7 @@ export function canTogglePreparedFor({
 }
 
 /** A castable spell paired with its rendered row — the working unit of the grouping helpers. */
-type SpEntry = { sp: Character['build']['spells'][number]; row: SpRow };
+type SpEntry = { sp: Character['build']['spells'][number]; row: SpellRow };
 
 /** Bucket by spell level (0 = cantrips), ascending; leveled groups carry their castable slot pool. */
 function groupByLevel(
@@ -152,8 +152,8 @@ function groupByLevel(
 	graph: ContentGraph,
 	slotsByLevel: Map<number, number>,
 	spellSlotsSpent: Record<string, number>
-): SpGroup[] {
-	const byLevel = new Map<number, SpRow[]>();
+): SpellGroup[] {
+	const byLevel = new Map<number, SpellRow[]>();
 	for (const x of all) {
 		const spell = graph.get(x.sp.spell);
 		const lvl = spell?.type === 'spell' ? spell.data.level : 0;
@@ -173,18 +173,18 @@ function groupByLevel(
 }
 
 /** Split into Prepared / Not prepared. */
-function groupByPrepared(all: SpEntry[]): SpGroup[] {
-	const groups: SpGroup[] = [];
-	const prep = all.filter((x) => x.row.prep).map((x) => x.row);
-	const rest = all.filter((x) => !x.row.prep).map((x) => x.row);
+function groupByPrepared(all: SpEntry[]): SpellGroup[] {
+	const groups: SpellGroup[] = [];
+	const prep = all.filter((x) => x.row.prepState).map((x) => x.row);
+	const rest = all.filter((x) => !x.row.prepState).map((x) => x.row);
 	if (prep.length) groups.push({ key: 'prep', label: 'Prepared', slots: null, rows: prep });
 	if (rest.length) groups.push({ key: 'unprep', label: 'Not prepared', slots: null, rows: rest });
 	return groups;
 }
 
 /** Bucket by school (missing → "Other"), alphabetical. */
-function groupBySchool(all: SpEntry[], graph: ContentGraph): SpGroup[] {
-	const bySchool = new Map<string, SpRow[]>();
+function groupBySchool(all: SpEntry[], graph: ContentGraph): SpellGroup[] {
+	const bySchool = new Map<string, SpellRow[]>();
 	for (const x of all) {
 		const spell = graph.get(x.sp.spell);
 		const sch = (spell?.type === 'spell' ? spell.data.school : '') || 'Other';
@@ -217,7 +217,7 @@ export function buildSpellGroups({
 	groupBy,
 	pinned,
 	hidden = []
-}: SpellGroupsInput): SpGroup[] {
+}: SpellGroupsInput): SpellGroup[] {
 	const slotsByLevel = new Map<number, number>();
 	for (const p of sheet?.spellcasting.pools ?? [])
 		if (!p.forcedUpcast && p.spellLevel) slotsByLevel.set(p.spellLevel, p.max);
@@ -233,7 +233,7 @@ export function buildSpellGroups({
 		}))
 		.filter((x): x is SpEntry => !!x.row)
 		.filter((x) => !hidden.includes(x.row.ref));
-	const groups: SpGroup[] = [];
+	const groups: SpellGroup[] = [];
 	const pins = all.filter((x) => pinned[x.row.id]);
 	if (pins.length)
 		groups.push({ key: 'pinned', label: '★ Pinned', slots: null, rows: pins.map((x) => x.row) });
@@ -246,7 +246,11 @@ export function buildSpellGroups({
 }
 
 /** resolution → the combat spell-row chip ('' for utility). */
-const SP_RES_CHIP: Record<string, SpRow['res']> = { attack: 'hit', save: 'save', auto: 'auto' };
+const SP_RES_CHIP: Record<string, SpellRow['resolution']> = {
+	attack: 'hit',
+	save: 'save',
+	auto: 'auto'
+};
 
 /** resolution → the row's result label ('' for utility); a save shows its ability. */
 function spResLabel(res: string, saveAbility: string): string {
@@ -273,9 +277,9 @@ function castingDice(d: RowData<'spell'>, charLevel: number): string {
 export function spellRow(
 	graph: ContentGraph,
 	ref: string,
-	prep: SpRow['prep'],
+	prep: SpellRow['prepState'],
 	charLevel = 1
-): SpRow | null {
+): SpellRow | null {
 	const row = graph.get(ref);
 	if (row?.type !== 'spell') return null;
 	const d = row.data;
@@ -287,14 +291,14 @@ export function spellRow(
 		ref,
 		name: d.name_en,
 		level: lvl,
-		spe: dmg || effectHint(d),
-		res: SP_RES_CHIP[res] ?? '',
-		resLabel: spResLabel(res, d.save_ability ?? ''),
-		tm: lvl === 0 ? 'cantrip' : ordinal(lvl),
-		ct: castingIcon(d.casting_time ?? ''),
-		dmg: dmg ? parseDicePool(dmg) : null,
-		conc: d.concentration ?? false,
+		summary: dmg || effectHint(d),
+		resolution: SP_RES_CHIP[res] ?? '',
+		resolutionLabel: spResLabel(res, d.save_ability ?? ''),
+		levelTag: lvl === 0 ? 'cantrip' : ordinal(lvl),
+		castTimeIcon: castingIcon(d.casting_time ?? ''),
+		damagePool: dmg ? parseDicePool(dmg) : null,
+		concentration: d.concentration ?? false,
 		ritual: d.ritual ?? false,
-		prep
+		prepState: prep
 	};
 }

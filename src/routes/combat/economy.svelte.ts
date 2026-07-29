@@ -9,7 +9,7 @@ import {
 	pipClick,
 	isEffectExpired,
 	type ActionSlot,
-	type SpRow,
+	type SpellRow,
 	type EffectInstance
 } from '$lib/combat/helpers';
 import type { Character } from '$lib/character/schema';
@@ -124,9 +124,9 @@ export class TurnEconomy {
 		}
 	};
 
-	/** Which turn slot an activity consumes, from its casting time (default = the Action). */
-	ctSlot(ct: SpRow['ct']): ActionSlot {
-		return ct === 'react' ? 'reaction' : ct === 'bonus' ? 'bonus' : 'action';
+	/** Which turn slot an activity consumes, from its casting-time icon (default = the Action). */
+	ctSlot(castTimeIcon: SpellRow['castTimeIcon']): ActionSlot {
+		return castTimeIcon === 'react' ? 'reaction' : castTimeIcon === 'bonus' ? 'bonus' : 'action';
 	}
 	/** In combat, spend one pip of `slot`; block (return false) + warn when it's exhausted. Out of
 	 *  combat there is no economy → always allowed. */

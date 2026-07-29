@@ -138,7 +138,11 @@
 			<div class="menu-panel">
 				<div class="popup-h" style="border: 0">Custom modifier</div>
 				<div class="modifier-row">
-					<select class="modifier-target" bind:value={combat.cmTarget} aria-label="Modifier target">
+					<select
+						class="modifier-target"
+						bind:value={combat.customModTarget}
+						aria-label="Modifier target"
+					>
 						{#each MOD_TARGETS as g (g.group)}
 							<optgroup label={g.group}>
 								{#each g.opts as o (o.v)}<option value={o.v}>{o.l}</option>{/each}
@@ -147,14 +151,14 @@
 					</select>
 					<button
 						class="modifier-sign"
-						onclick={() => (combat.cmSign = combat.cmSign === '+' ? '-' : '+')}
-						title="Toggle bonus / penalty">{combat.cmSign}</button
+						onclick={() => (combat.customModSign = combat.customModSign === '+' ? '-' : '+')}
+						title="Toggle bonus / penalty">{combat.customModSign}</button
 					>
 					<input
 						class="modifier-amount"
 						type="number"
 						min="1"
-						bind:value={combat.cmAmount}
+						bind:value={combat.customModAmount}
 						aria-label="Amount"
 					/>
 				</div>
@@ -184,8 +188,8 @@
 					<button class="submit-btn" onclick={addCustomModifier}>Add</button>
 				</div>
 				<p class="note">
-					Adds a <b>{combat.cmSign}{Math.abs(combat.cmAmount) || 1}</b> modifier — applied live to the
-					chosen stat and listed in the effects panel.
+					Adds a <b>{combat.customModSign}{Math.abs(combat.customModAmount) || 1}</b> modifier — applied
+					live to the chosen stat and listed in the effects panel.
 				</p>
 			</div>
 		{:else if overlay.kind === 'log'}

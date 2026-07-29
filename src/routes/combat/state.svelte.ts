@@ -37,8 +37,8 @@ import {
 	modTargetLabel,
 	applyDefense,
 	effectiveHpMax,
-	type Atk,
-	type SpRow,
+	type Attack,
+	type SpellRow,
 	type MenuKind,
 	type StandardAction
 } from '$lib/combat/helpers';
@@ -68,7 +68,7 @@ const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insig
  *
  * Already out: pure math → `$lib/combat/helpers`; four subsystems (`tray`/`layout`/`economy`/
  * `resources`) each own their slice behind a callback accessor. The remaining `bind:`-surface is
- * actually small — a handful of scalars (`cmTarget`/`cmSign`/`cmAmount`, `tempHpInput`,
+ * actually small — a handful of scalars (`customModTarget`/`customModSign`/`customModAmount`, `tempHpInput`,
  * `customEffectLabel`, `newEffectDuration`) `bind:`-ed in CombatMenus / the panels — so a split is
  * mostly re-threading those, and reactivity bugs across the component↔VM seam don't show up in unit
  * tests (only in the running UI). If we DO cut, the cleanest next slice is spell/cast (~200 lines,
@@ -185,17 +185,18 @@ class CombatVM {
 
 	// structured custom modifier (GM "+1 AC" in a few clicks): target · sign · amount → a
 	// flat_bonus token the effects engine already applies (now live, via the reactive sheet).
-	cmTarget = $state('ac');
-	cmSign = $state<'+' | '-'>('+');
-	cmAmount = $state(1);
+	customModTarget = $state('ac');
+	customModSign = $state<'+' | '-'>('+');
+	customModAmount = $state(1);
 	addCustomModifier = () => {
-		const amount = Math.abs(Math.round(this.cmAmount)) || 1;
-		const token = `flat_bonus:${this.cmTarget}${this.cmSign}${amount}`;
+		const amount = Math.abs(Math.round(this.customModAmount)) || 1;
+		const token = `flat_bonus:${this.customModTarget}${this.customModSign}${amount}`;
 		const label =
-			this.customEffectLabel.trim() || `${this.cmSign}${amount} ${modTargetLabel(this.cmTarget)}`;
-		this.addEffect({ label, tokens: [token], positive: this.cmSign === '+' });
+			this.customEffectLabel.trim() ||
+			`${this.customModSign}${amount} ${modTargetLabel(this.customModTarget)}`;
+		this.addEffect({ label, tokens: [token], positive: this.customModSign === '+' });
 		this.customEffectLabel = '';
-		this.cmAmount = 1;
+		this.customModAmount = 1;
 	};
 
 	openDice = (e: Event) => {
@@ -491,7 +492,7 @@ class CombatVM {
 	/** Roll a weapon/unarmed attack (the Attack action → spends an action in combat). A normal tap
 	 *  rolls the to-hit (picks up attack advantage/flat/dice effects) THEN the weapon damage (with
 	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Alt/Ctrl-click opens the roll tray. */
-	attackRoll = (at: Atk, e: Event) => {
+	attackRoll = (at: Attack, e: Event) => {
 		if (!this.economy.trySpend('action')) return;
 		const { pool, mod } = parseDamage(at.dmg);
 		const hasDice = Object.keys(pool).length > 0;
@@ -538,7 +539,7 @@ class CombatVM {
 	/** Casting applies the spell's OWN effect tokens (EFX-2): they become a runtime effect on self,
 	 *  expiring per the spell's duration text; linked via `source: r.ref` so dropping/replacing
 	 *  concentration (or re-casting = refresh) removes/replaces it. No tokens → no-op. */
-	private applySpellEffect(r: SpRow) {
+	private applySpellEffect(r: SpellRow) {
 		const c = this.character;
 		const spell = this.graph?.get(r.ref);
 		const tokens = tokensOf(spell);
@@ -561,7 +562,7 @@ class CombatVM {
 	/** Reserve a leveled spell slot for a non-ritual cast (A17): returns the slot key to spend, or
 	 *  null (nothing to spend — cantrip / pure-pact / ritual), or 'blocked' (+ a toast) when none
 	 *  remain. Reserve-before-commit so a block returns BEFORE the action economy is touched. */
-	private reserveSpellSlot(r: SpRow, ritual: boolean): string | null | 'blocked' {
+	private reserveSpellSlot(r: SpellRow, ritual: boolean): string | null | 'blocked' {
 		const play = this.character?.play;
 		if (ritual || !play) return null;
 		const spend = slotToSpend(r.level, this.sheet?.spellcasting.pools ?? [], play.spellSlotsSpent);
@@ -575,9 +576,9 @@ class CombatVM {
 	/** The roll half of a cast: an attack spell rolls its TO-HIT (attack-keyed effects) then queued
 	 *  damage; a damage/heal spell rolls its dice (auto = healing + spellcasting mod); a no-roll cast
 	 *  logs a marker. Uses the class the spell is cast AS (A18), not classes[0]. */
-	/** Attack spell (r.res === 'hit'): roll the TO-HIT (attack-keyed effects) then its damage — tray
+	/** Attack spell (r.resolution === 'hit'): roll the TO-HIT (attack-keyed effects) then its damage — tray
 	 *  chains them (to-hit now, damage queued), instant folds both into one 3-line entry. */
-	private rollSpellAttack(r: SpRow, e: Event, caster: SpellcastingClass, hasDmg: boolean): void {
+	private rollSpellAttack(r: SpellRow, e: Event, caster: SpellcastingClass, hasDmg: boolean): void {
 		const fx = this.effectsFor('attack');
 		const dmgFx = this.effectsFor('damage');
 		const toHit = caster.attack.value + fx.flat;
@@ -595,7 +596,7 @@ class CombatVM {
 			if (hasDmg)
 				this.tray.queueDamage({
 					label: `${r.name} damage`,
-					dice: { ...(r.dmg ?? {}) },
+					dice: { ...(r.damagePool ?? {}) },
 					mod: dmgFx.flat,
 					mods: dmgFx
 				});
@@ -603,24 +604,24 @@ class CombatVM {
 			this.tray.pushRoll(
 				`${r.name} (spell attack)`,
 				rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice, fx),
-				hasDmg ? rollPool(r.dmg ?? {}, dmgFx.flat, 0, dmgFx.bonusDice, dmgFx) : undefined
+				hasDmg ? rollPool(r.damagePool ?? {}, dmgFx.flat, 0, dmgFx.bonusDice, dmgFx) : undefined
 			);
 		}
 	}
 
-	private rollSpellCast(r: SpRow, e: Event, ritual: boolean): void {
+	private rollSpellCast(r: SpellRow, e: Event, ritual: boolean): void {
 		const alt = wantsTray(e);
 		const caster = casterForSpell(this.sheet, r.ref) ?? this.sheet?.spellcasting.classes[0];
-		const hasDmg = !!r.dmg && Object.keys(r.dmg).length > 0;
-		if (r.res === 'hit' && caster) {
+		const hasDmg = !!r.damagePool && Object.keys(r.damagePool).length > 0;
+		if (r.resolution === 'hit' && caster) {
 			this.rollSpellAttack(r, e, caster, hasDmg);
 		} else if (hasDmg) {
 			// save / auto spell: damage, or (auto) healing with the spellcasting mod
-			const heal = r.res === 'auto';
+			const heal = r.resolution === 'auto';
 			const label = `${r.name} ${heal ? 'healing' : 'damage'}`;
 			const mod = heal && caster ? (this.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
-			if (alt) this.openRoll({ label, dice: r.dmg ?? {}, mod }, e);
-			else this.tray.rollDiceNow({ label, dice: r.dmg ?? {}, mod });
+			if (alt) this.openRoll({ label, dice: r.damagePool ?? {}, mod }, e);
+			else this.tray.rollDiceNow({ label, dice: r.damagePool ?? {}, mod });
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
 			const suffix = ritual ? ' (ritual)' : '';
@@ -630,7 +631,7 @@ class CombatVM {
 	}
 
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit
-	cast = (r: SpRow, e: Event, opts?: { ritual?: boolean }) => {
+	cast = (r: SpellRow, e: Event, opts?: { ritual?: boolean }) => {
 		const play = this.character?.play;
 		// A17: casting SPENDS a leveled spell slot and is BLOCKED when none remain — UNLESS it's a
 		// RITUAL cast (rituals cost no slot; only ritual-tagged spells qualify — SRD). Cantrips + pure
@@ -640,11 +641,11 @@ class CombatVM {
 		const slot = this.reserveSpellSlot(r, ritual);
 		if (slot === 'blocked') return;
 		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
-		if (!this.economy.trySpend(this.economy.ctSlot(r.ct))) return;
+		if (!this.economy.trySpend(this.economy.ctSlot(r.castTimeIcon))) return;
 		if (slot && play) play.spellSlotsSpent[slot] = (play.spellSlotsSpent[slot] ?? 0) + 1;
 		// a concentration spell becomes the active concentration (replacing any prior one, 5e rule);
 		// the PRIOR concentration's cast-applied effect goes down with it
-		if (r.conc && this.character) {
+		if (r.concentration && this.character) {
 			const prior = this.character.play.concentration;
 			if (prior && prior !== r.ref) this.removeLinkedEffect(prior);
 			this.character.play.concentration = r.ref;
@@ -654,7 +655,7 @@ class CombatVM {
 	};
 
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
-	togglePrepared = (r: SpRow) => {
+	togglePrepared = (r: SpellRow) => {
 		if (!this.character) return;
 		// SMELL-4: match by the ref's parsed id segment, not a string suffix — self-evident and stable
 		// if the `type:source:id` ref format ever changes. (`s.spell` is a full ref; `r.id` is the id.)
@@ -666,7 +667,7 @@ class CombatVM {
 			sheet: this.sheet,
 			entry: sp,
 			spellRef: r.ref,
-			isCantrip: r.tm === 'cantrip'
+			isCantrip: r.levelTag === 'cantrip'
 		});
 		if (!res.ok) {
 			if (res.message) toast(res.message);
@@ -676,7 +677,7 @@ class CombatVM {
 	};
 
 	// attacks (equipped weapons + Unarmed Strike) — pure builder in helpers
-	attacks = $derived.by<Atk[]>(() =>
+	attacks = $derived.by<Attack[]>(() =>
 		this.character && this.sheet && this.graph
 			? computeAttacks(this.character, this.sheet, this.graph)
 			: []
