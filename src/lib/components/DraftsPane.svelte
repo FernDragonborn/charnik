@@ -115,7 +115,7 @@
 
 	{#snippet group(label: string, items: DraftRow[], resolvable: boolean)}
 		{#if items.length}
-			<div class="dp-group-label">{label}</div>
+			<div class="dp-group-label eyebrow">{label}</div>
 			{#each items as r (r.env.target)}
 				<div class="draft" class:is-orphan={r.isOrphan}>
 					<div class="dkind {r.kind}">{r.icon}</div>
@@ -184,11 +184,7 @@
 		padding: 20px 0;
 	}
 	.dp-group-label {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		margin: 18px 0 8px;
 	}
 	.draft {

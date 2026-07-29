@@ -58,13 +58,13 @@
 	<div class="stat-cells">
 		{#each spell.cells as [k, v] (k)}
 			<div class="stat-cell">
-				<div class="stat-key">{k}</div>
+				<div class="stat-key eyebrow">{k}</div>
 				<div class="stat-value">{v}</div>
 			</div>
 		{/each}
 		{#if spell.availableTo?.length}
 			<div class="stat-cell span">
-				<div class="stat-key">Available to</div>
+				<div class="stat-key eyebrow">Available to</div>
 				<div class="stat-value">
 					{#each spell.availableTo as c, i (c.name)}{i ? ', ' : ''}{c.name}{#if c.homebrew}<span
 								class="homebrew-mark"
@@ -74,7 +74,7 @@
 			</div>
 		{:else if spell.classes}
 			<div class="stat-cell span">
-				<div class="stat-key">Available to</div>
+				<div class="stat-key eyebrow">Available to</div>
 				<div class="stat-value">{spell.classes}</div>
 			</div>
 		{/if}
@@ -185,11 +185,7 @@
 		grid-column: span 2;
 	}
 	.stat-cell .stat-key {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.stat-cell .stat-value {
 		font-family: var(--font-display);

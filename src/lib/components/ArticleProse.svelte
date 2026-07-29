@@ -39,7 +39,7 @@
 {#if higherLevel}
 	{#if editable && draft}
 		<label class="edit-line">
-			<span>At higher levels</span>
+			<span class="eyebrow">At higher levels</span>
 			<textarea
 				class="text-field edit-body short"
 				bind:value={draft.higher_level}
@@ -53,7 +53,7 @@
 {#if material}
 	{#if editable && draft}
 		<label class="edit-line">
-			<span>Material</span>
+			<span class="eyebrow">Material</span>
 			<input class="text-field edit-inline" bind:value={draft.material} placeholder={material} />
 		</label>
 	{:else}
@@ -143,11 +143,7 @@
 	}
 	.edit-line > span {
 		display: block;
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		margin-bottom: 4px;
 	}
 	.edit-inline {

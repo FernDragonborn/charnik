@@ -269,7 +269,7 @@
 
 			<div class="pane source">
 				<div class="pane-head">
-					<span class="panelabel">Translate from</span>
+					<span class="panelabel eyebrow">Translate from</span>
 					<LanguagePicker bind:value={sourceLocale} {locales} />
 				</div>
 				<WikiDetail detail={sourceDetail} />
@@ -277,7 +277,7 @@
 
 			<div class="pane target">
 				<div class="pane-head">
-					<span class="panelabel target-label">Into</span>
+					<span class="panelabel eyebrow target-label">Into</span>
 					<LanguagePicker bind:value={targetLocale} {locales} allowAdd accent />
 				</div>
 				{#if targetLocale === sourceLocale}
@@ -288,7 +288,7 @@
 				{:else if selected}
 					{@const st = locStatus(selected.data, selected.sourceLang, targetLocale)}
 					<div class="status-row">
-						<span class="status-label">{$_('translate.status.label')}</span>
+						<span class="status-label eyebrow">{$_('translate.status.label')}</span>
 						<div class="status-seg" role="group" aria-label={$_('translate.status.label')}>
 							{#each LOC_STATUS_ORDER as s (s)}
 								<button
@@ -330,11 +330,7 @@
 		flex-wrap: wrap;
 	}
 	.tlabel {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.pane-head {
 		display: flex;
@@ -389,11 +385,7 @@
 		min-height: 0;
 	}
 	.panelabel {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		margin-bottom: 10px;
 	}
 	.panelabel.target-label {
@@ -424,11 +416,7 @@
 		margin-bottom: 14px;
 	}
 	.status-label {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.status-seg {
 		display: inline-flex;

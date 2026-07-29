@@ -170,7 +170,7 @@
 			{#each items as it, i (it.key)}
 				{@const prev = items[i - 1]}
 				{#if i === 0 || (prev && groupOf(prev) !== groupOf(it))}
-					<li class="group" role="presentation">{groupOf(it)}</li>
+					<li class="group eyebrow" role="presentation">{groupOf(it)}</li>
 				{/if}
 				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<li
@@ -240,11 +240,7 @@
 		overflow: auto;
 	}
 	.group {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		padding: 8px 10px 4px;
 	}
 	.item {

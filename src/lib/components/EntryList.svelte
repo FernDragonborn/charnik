@@ -38,7 +38,7 @@
 	{#if filters}<div class="lfilter">{@render filters()}</div>{/if}
 	<div class="rows">
 		{#each groups as g (g.label)}
-			{#if g.label}<div class="section"><span>{g.label}</span></div>{/if}
+			{#if g.label}<div class="section eyebrow"><span>{g.label}</span></div>{/if}
 			{#each g.entries as e (e.id)}
 				<div
 					class="entry-row"
@@ -56,7 +56,7 @@
 					{#if trailing}{@render trailing(e)}{/if}
 				</div>
 			{:else}
-				<div class="section"><span>No matches.</span></div>
+				<div class="section eyebrow"><span>No matches.</span></div>
 			{/each}
 		{/each}
 	</div>
@@ -98,11 +98,7 @@
 		flex: 1;
 	}
 	.section {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		padding: 10px 13px 4px;
 		display: flex;
 		justify-content: space-between;

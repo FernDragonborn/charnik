@@ -375,7 +375,7 @@
 					<summary class="pill-btn">Filter{activeFilters ? ` · ${activeFilters}` : ''}</summary>
 					<div class="dropdown-menu wide">
 						{#if sources.length > 1}
-							<div class="dropdown-section">Source</div>
+							<div class="dropdown-section eyebrow">Source</div>
 							<div class="ddchips">
 								{#each sources as s (s)}
 									<Chip
@@ -386,7 +386,7 @@
 							</div>
 						{/if}
 						{#if facet && facetValues.length}
-							<div class="dropdown-section">{facet.label}</div>
+							<div class="dropdown-section eyebrow">{facet.label}</div>
 							<div class="ddchips scroll">
 								{#each facetValues as v (v)}
 									<Chip
@@ -411,7 +411,7 @@
 
 			{#if contentLocales.length > 1}
 				<label class="lang-control">
-					<span class="lang-label">Language</span>
+					<span class="lang-label eyebrow">Language</span>
 					<LanguagePicker bind:value={contentLocale} locales={contentLocales} />
 				</label>
 			{/if}
@@ -497,11 +497,11 @@
 				{#key editRow.effectiveId}
 					<div class="editor-2pane">
 						<div class="epane before">
-							<div class="epane-label">Current</div>
+							<div class="epane-label eyebrow">Current</div>
 							<WikiDetail detail={editorBefore} />
 						</div>
 						<div class="epane after">
-							<div class="epane-label edit">Your edit</div>
+							<div class="epane-label eyebrow edit">Your edit</div>
 							<EditContentForm
 								type={editRow.type}
 								editRow={editRow ?? undefined}
@@ -656,11 +656,7 @@
 		color: var(--color-accent-bright);
 	}
 	.dropdown-section {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		margin: 6px 4px 5px;
 	}
 	.ddchips {
@@ -718,11 +714,7 @@
 		margin-left: auto;
 	}
 	.lang-label {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	/* both the back button and mode-picker summary use .pill-btn.accent for the crimson look; only
 	   their right-alignment / marker-removal / open-state stay local */
@@ -824,11 +816,7 @@
 		border-right: 1px solid var(--color-border);
 	}
 	.epane-label {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		margin-bottom: 10px;
 	}
 	.epane-label.edit {

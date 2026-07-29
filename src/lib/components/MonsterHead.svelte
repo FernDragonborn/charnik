@@ -30,7 +30,7 @@
 {/if}
 <div class="content-cols">
 	<div class="detail-panel">
-		<div class="panel-header">Vitals</div>
+		<div class="panel-header eyebrow">Vitals</div>
 		<div class="value-row challenge-rating">
 			<span class="value-key">CR</span><span class="challenge-rating-value"
 				>{monster.cr || '—'}</span
@@ -59,7 +59,7 @@
 			</div>{/if}
 	</div>
 	<div class="detail-panel">
-		<div class="panel-header">Abilities</div>
+		<div class="panel-header eyebrow">Abilities</div>
 		<div class="ability-row head" class:has-save={monster.hasSaves}>
 			<span></span><span>score</span><span>mod</span>{#if monster.hasSaves}<span>save</span>{/if}
 		</div>
@@ -108,11 +108,7 @@
 		padding: 11px 14px;
 	}
 	.panel-header {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		margin-bottom: 6px;
 	}
 	.value-row {

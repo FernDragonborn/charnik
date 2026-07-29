@@ -169,13 +169,13 @@
 			</p>
 			<div class="cf-panes">
 				<div class="cf-pane">
-					<div class="cf-label">Your orphan draft</div>
+					<div class="cf-label eyebrow">Your orphan draft</div>
 					<div class="cf-name">{draftName || '(no name)'}</div>
 					<div class="cf-body">{draftText}</div>
 					<button class="btn primary" onclick={keepIncoming}>Keep this one</button>
 				</div>
 				<div class="cf-pane">
-					<div class="cf-label">Existing draft at that entry</div>
+					<div class="cf-label eyebrow">Existing draft at that entry</div>
 					<div class="cf-name">{String(conflict.existing.data.name ?? '(no name)')}</div>
 					<div class="cf-body">{String(conflict.existing.data.text ?? '')}</div>
 					<button class="btn" onclick={keepExisting}>Keep the existing one</button>
@@ -187,7 +187,7 @@
 		<div class="panes">
 			<!-- LEFT: the orphan draft, read-only -->
 			<div class="pane">
-				<div class="panelabel">Orphaned draft · your work</div>
+				<div class="panelabel eyebrow">Orphaned draft · your work</div>
 				<div class="d-title">{draftName || '(no name yet)'}</div>
 				<div class="d-id">was: {oldId}</div>
 				<div class="d-prose">{draftText}</div>
@@ -195,7 +195,7 @@
 
 			<!-- RIGHT: searchable reassign picker + preview -->
 			<div class="pane target">
-				<div class="panelabel t">Reassign to…</div>
+				<div class="panelabel eyebrow t">Reassign to…</div>
 				<input class="search" placeholder="Search entries…" bind:value={query} />
 				<div class="results">
 					{#each candidates as row (row.effectiveId)}
@@ -213,7 +213,7 @@
 				</div>
 				{#if preview}
 					<div class="preview">
-						<div class="pv-label">Preview · target</div>
+						<div class="pv-label eyebrow">Preview · target</div>
 						<div class="pv-title">{preview.title}</div>
 						<div class="pv-sub">{preview.sub}</div>
 						<div class="pv-body">{preview.body}…</div>
@@ -252,11 +252,7 @@
 		border-left: 1px solid var(--color-border);
 	}
 	.panelabel {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		margin-bottom: 12px;
 	}
 	.panelabel.t {
@@ -338,11 +334,7 @@
 		padding: 12px 14px;
 	}
 	.pv-label {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		margin-bottom: 6px;
 	}
 	.pv-title {
@@ -386,11 +378,7 @@
 		gap: 8px;
 	}
 	.cf-label {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.cf-name {
 		font-family: var(--font-display);

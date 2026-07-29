@@ -39,7 +39,7 @@
 	<div class="detail-meta">
 		{#each detail.meta as [k, v] (k)}
 			<div class="meta-cell">
-				<div class="meta-key">{k}</div>
+				<div class="meta-key eyebrow">{k}</div>
 				<div class="meta-value">{v}</div>
 			</div>
 		{/each}
@@ -93,11 +93,7 @@
 		padding: 7px 11px;
 	}
 	.meta-cell :global(.meta-key) {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.meta-cell :global(.meta-value) {
 		font-family: var(--font-display);

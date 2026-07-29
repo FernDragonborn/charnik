@@ -164,7 +164,7 @@
 			<div class="theme-card" class:active={app.theme === b.id}>
 				<button class="theme-pick" onclick={() => activate(b.id)}>
 					<span class="theme-name">{b.name}</span>
-					<span class="theme-tag">built-in</span>
+					<span class="theme-tag eyebrow">built-in</span>
 				</button>
 				<div class="theme-actions">
 					<button class="btn ghost" onclick={() => cloneTheme(b.id, b.clean)}>Clone</button>
@@ -216,7 +216,7 @@
 		{#each THEMEABLE_TOKENS as token (token)}
 			{@const value = editing.tokens[token] ?? ''}
 			<div class="token-row">
-				<span class="token-label">{label(token)}</span>
+				<span class="token-label eyebrow">{label(token)}</span>
 				{#if isColorToken(token) && isHex6(value)}
 					<input
 						class="color-input"
@@ -283,11 +283,7 @@
 		font-size: var(--font-size-body);
 	}
 	.theme-tag {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		text-transform: uppercase;
-		letter-spacing: var(--tracking-label);
-		color: var(--color-text-muted);
 	}
 	.theme-swatches {
 		display: flex;
@@ -342,11 +338,7 @@
 	}
 	.token-label {
 		flex: 0 0 96px;
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		text-transform: uppercase;
-		letter-spacing: var(--tracking-label);
-		color: var(--color-text-muted);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;

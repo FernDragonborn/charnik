@@ -290,7 +290,7 @@
 	<p class="id-hint">{editing ? $_('homebrewForm.editIdHint') : $_('homebrewForm.idHint')}</p>
 
 	<div class="systems-row">
-		<span class="systems-label">Editions</span>
+		<span class="systems-label eyebrow">Editions</span>
 		{#each SYSTEMS as sys (sys)}
 			<button
 				type="button"
@@ -305,7 +305,7 @@
 		<div class="detail-meta">
 			{#each metaFields as f (f.name)}
 				<label class="meta-cell">
-					<span class="meta-key">
+					<span class="meta-key eyebrow">
 						{fieldLabel(f.name, f.label)}{#if f.required}<span class="required-mark">*</span>{/if}
 						{@render infoBadge(f.name)}
 					</span>
@@ -340,7 +340,7 @@
 
 	{#if hasClasses}
 		<div class="classes-block">
-			<span class="block-label"
+			<span class="block-label eyebrow"
 				>{fieldLabel('classes', 'Available to')} {@render infoBadge('classes')}</span
 			>
 			<ClassPicker
@@ -355,7 +355,9 @@
 	     textarea-kind bottom fields (higher_level), so it lives in one snippet -->
 	{#snippet textareaBlock(f: (typeof bodyFields)[number])}
 		<label class="body-block">
-			<span class="block-label">{fieldLabel(f.name, f.label)} {@render infoBadge(f.name)}</span>
+			<span class="block-label eyebrow"
+				>{fieldLabel(f.name, f.label)} {@render infoBadge(f.name)}</span
+			>
 			<textarea
 				class="body-input"
 				placeholder={fieldLabel(f.name, f.label)}
@@ -372,7 +374,9 @@
 			{@render textareaBlock(f)}
 		{:else}
 			<label class="bottom-field">
-				<span class="block-label">{fieldLabel(f.name, f.label)} {@render infoBadge(f.name)}</span>
+				<span class="block-label eyebrow"
+					>{fieldLabel(f.name, f.label)} {@render infoBadge(f.name)}</span
+				>
 				<input type="text" bind:value={draft[f.name]} />
 			</label>
 		{/if}
@@ -385,7 +389,7 @@
 		</p>
 	{:else}
 		<div class="target-row">
-			<span class="systems-label">{$_('homebrewForm.targetLabel')}</span>
+			<span class="systems-label eyebrow">{$_('homebrewForm.targetLabel')}</span>
 			<select class="target-select" bind:value={sel}>
 				<option value={homebrewFile(type)}>{$_('homebrewForm.targetHomebrew')}</option>
 				{#each targets.filter((t) => t.file !== homebrewFile(type)) as t (t.file)}
@@ -466,11 +470,7 @@
 	}
 	.id-label,
 	.systems-label {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.id-input {
 		font-family: var(--font-mono);
@@ -566,11 +566,7 @@
 		padding: 7px 11px;
 	}
 	.meta-cell .meta-key {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.required-mark {
 		color: var(--color-accent-bright);
@@ -657,11 +653,7 @@
 	}
 	.block-label {
 		display: block;
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		margin-bottom: 8px;
 	}
 	.bottom-field input {

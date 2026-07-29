@@ -69,7 +69,7 @@
 
 		{#snippet issueGroup(label: string, rows: typeof issues, cls: string)}
 			{#if rows.length}
-				<div class="group-label {cls}">{label}</div>
+				<div class="group-label eyebrow {cls}">{label}</div>
 				{#each rows as it, i (fileLabel(it.root, it.file) + i)}
 					<div class="row {cls}">
 						<div class="row-file">
@@ -85,7 +85,7 @@
 		{@render issueGroup('Warnings', warnings, 'warn')}
 
 		{#if metaIssues.length}
-			<div class="group-label meta">Missing metadata (source / license)</div>
+			<div class="group-label eyebrow meta">Missing metadata (source / license)</div>
 			{#each metaIssues as m (m.file)}
 				<div class="row meta">
 					<div class="row-file">{m.file}</div>
@@ -95,7 +95,7 @@
 		{/if}
 
 		{#if driftItems.length}
-			<div class="group-label drift">Edited outside the app (hash no longer matches)</div>
+			<div class="group-label eyebrow drift">Edited outside the app (hash no longer matches)</div>
 			{#each driftItems as d (d.file)}
 				<div class="row drift">
 					<div class="row-file">{d.file}</div>
@@ -107,7 +107,7 @@
 		{/if}
 
 		{#if tokenLints.length}
-			<div class="group-label warn">Effect-token warnings (authoring)</div>
+			<div class="group-label eyebrow warn">Effect-token warnings (authoring)</div>
 			{#each tokenLints as l, i (l.id + i)}
 				<div class="row warn">
 					<div class="row-file">{l.id}</div>
@@ -117,7 +117,7 @@
 		{/if}
 
 		{#if deriveIssues.length}
-			<div class="group-label warn plugin-retry-row">
+			<div class="group-label eyebrow warn plugin-retry-row">
 				<span>Effect problems for “{deriveHealth.characterName}” (this character only)</span>
 				{#if hasPluginIssue}
 					<button class="retry-btn" onclick={retryPlugins}>Retry plugins</button>
@@ -163,11 +163,7 @@
 		border-color: var(--color-warning);
 	}
 	.group-label {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		margin: 18px 0 8px;
 	}
 	.plugin-retry-row {

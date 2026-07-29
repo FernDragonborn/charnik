@@ -73,7 +73,7 @@
 				onkeydown={(e) => e.key === 'Escape' && (open = false)}
 			/>
 			{#if current.length}
-				<div class="section">Loaded</div>
+				<div class="section eyebrow">Loaded</div>
 				{#each current as o (o.code)}
 					<button class="opt" class:sel={o.code === value} onclick={() => choose(o.code)}>
 						<span class="opt-name">{o.name}</span><span class="opt-code">{o.code}</span>
@@ -81,7 +81,7 @@
 				{/each}
 			{/if}
 			{#if addable.length}
-				<div class="section">Add a language</div>
+				<div class="section eyebrow">Add a language</div>
 				{#each addable as o (o.code)}
 					<button class="opt add" onclick={() => choose(o.code)}>
 						<span class="opt-name">{o.name}</span><span class="opt-code">＋ {o.code}</span>
@@ -152,11 +152,7 @@
 		margin-bottom: 6px;
 	}
 	.section {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		padding: 8px 8px 4px;
 	}
 	.opt {

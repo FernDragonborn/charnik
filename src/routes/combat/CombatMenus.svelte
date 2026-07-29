@@ -57,7 +57,7 @@
 			<DiceTray />
 		{:else if overlay.kind === 'temphp'}
 			<div class="menu-panel">
-				<div class="popup-h" style="border: 0">Set temporary HP</div>
+				<div class="popup-h eyebrow" style="border: 0">Set temporary HP</div>
 				<div class="field">
 					<input type="number" bind:value={combat.tempHpInput} />
 					<button class="submit-btn" onclick={setTempHp}>Set</button>
@@ -67,7 +67,7 @@
 				</p>
 			</div>
 		{:else if overlay.kind === 'levelup'}
-			<div class="popup-h" style="border: 0">Level up · which class</div>
+			<div class="popup-h eyebrow" style="border: 0">Level up · which class</div>
 			{#each combat.levelUpClasses as cl (cl.index)}
 				<button class="menu-row" onclick={() => combat.levelUp(cl.index)}>
 					<span class="main">{cl.name} <b class="gold">{cl.level} → {cl.level + 1}</b></span>
@@ -82,7 +82,7 @@
 			<div class="search">
 				<span class="search-icon">🔍</span><input placeholder="Search effects…" />
 			</div>
-			<div class="section">Duration · applied to what you add</div>
+			<div class="section eyebrow">Duration · applied to what you add</div>
 			<div class="dur-picker">
 				<button
 					class="pill-btn"
@@ -106,7 +106,7 @@
 					onclick={() => (combat.newEffectDuration = 0)}>∞</button
 				>
 			</div>
-			<div class="section">Catalog</div>
+			<div class="section eyebrow">Catalog</div>
 			{#each combat.effectCatalog as p (p.label)}
 				{@const dur = p.durationRounds ?? combat.newEffectDuration}
 				<button
@@ -136,7 +136,7 @@
 			</button>
 		{:else if overlay.kind === 'customeffect'}
 			<div class="menu-panel">
-				<div class="popup-h" style="border: 0">Custom modifier</div>
+				<div class="popup-h eyebrow" style="border: 0">Custom modifier</div>
 				<div class="modifier-row">
 					<select
 						class="modifier-target"
@@ -162,7 +162,7 @@
 						aria-label="Amount"
 					/>
 				</div>
-				<div class="section" style="padding-left: 0">Duration</div>
+				<div class="section eyebrow" style="padding-left: 0">Duration</div>
 				<div class="dur-picker">
 					<button
 						class="dur-step"
@@ -195,7 +195,7 @@
 		{:else if overlay.kind === 'log'}
 			<RollLog />
 		{:else if overlay.kind === 'showhide'}
-			<div class="popup-h">
+			<div class="popup-h eyebrow">
 				Which actions appear<button class="icon-button" onclick={() => (combat.overlay = null)}
 					>✕</button
 				>
@@ -210,7 +210,7 @@
 				</button>
 			{/each}
 		{:else if overlay.kind === 'pinskills'}
-			<div class="popup-h">
+			<div class="popup-h eyebrow">
 				Passive senses · 👁 = shown<button
 					class="icon-button"
 					onclick={() => (combat.overlay = null)}>✕</button
@@ -223,7 +223,7 @@
 					)}
 					{#if list.length}
 						<div class="category-block">
-							<div class="section">{ABILITY_NAME[ab]}</div>
+							<div class="section eyebrow">{ABILITY_NAME[ab]}</div>
 							{#each list as skill (skill)}
 								<button class="menu-row" onclick={() => togglePassive(skill)}>
 									<span class="passive-eye" class:on={passiveSkills.includes(skill)}
@@ -236,14 +236,14 @@
 				{/each}
 			</div>
 		{:else if overlay.kind === 'manage'}
-			<div class="popup-h">
+			<div class="popup-h eyebrow">
 				Spellbook<button class="icon-button" onclick={() => (combat.overlay = null)}>✕</button>
 			</div>
 			<p class="note" style="padding: 11px 13px">
 				Full spellbook manager arrives with the spell-manager view (d-spellmgr).
 			</p>
 		{:else if overlay.kind === 'condition'}
-			<div class="popup-h">
+			<div class="popup-h eyebrow">
 				Conditions · multi-select<button class="icon-button" onclick={() => (combat.overlay = null)}
 					>✕</button
 				>
@@ -293,11 +293,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		padding: 11px 13px;
 		border-bottom: 1px solid var(--color-border);
 	}
@@ -354,11 +350,7 @@
 	}
 	/* --- section label + search + divider (d-menus) --- */
 	.section {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		padding: 8px 13px 3px;
 	}
 	.divlite {

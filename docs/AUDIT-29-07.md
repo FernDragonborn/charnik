@@ -65,12 +65,15 @@
 
 ## 🧹 Смели
 
-- **SMELL-1 [~]** — CSS-дублікати. Найбільший кластер = 5-рядковий micro-uppercase-label,
-  ~29 блоків у 18 файлах, дублює вже-існуючий примітив `.eyebrow` (components.css). Хостнув
-  чисті combat-сайти (RollLog/CombatStrip×2/SpellsPanel) через композицію `.eyebrow` у розмітці
-  (computed-style ідентичний: Svelte-scoped `font-size:micro` б'є глобальний xs). Решту (18 файлів,
-  generic-імена `.section`/`.group` = collision-ризик у глобальному селекторі) ЛИШЕНО: гейт зелений
-  (jscpd 1.26% < 1.8%), а масовий markup-sweep по CSS потребує візуальної верифікації (working-style).
+- **SMELL-1 [x]** — CSS-дублікати. Найбільший кластер = 5-рядковий micro-uppercase-label, дублював
+  вже-існуючий примітив `.eyebrow` (components.css). **Хостнуто ПОВНІСТЮ** через композицію `.eyebrow`
+  у розмітці (~25 блоків, 16 файлів): клас у розмітку, з локального CSS зрізано 4 спільні рядки
+  (mono/uppercase/tracking/muted), лишено `font-size:micro` + layout. Computed-style ідентичний
+  (Svelte-scoped селектор б'є глобальний `.eyebrow`). **Верифіковано браузер-драйвером** (shot.mjs):
+  14 baseline-станів = **0px drift**; інтеракційні стани (combat popup-h, Ctrl+K palette, compendium
+  lang-label/section, SpellHead stat-key) заскрінено й переглянуто. `.tlabel` = мертвий CSS (без розмітки).
+  jscpd clones 119→93, dup-рядки →616 (1.03%). Generic-імена БЕЗ collision-ризику — compose-in-markup не
+  чіпає глобальні селектори (мій попередній caveat стосувався іншого підходу).
 - **SMELL-2 [~]** — `combat/+page.svelte:71` `deriveHealth.set(c.build.name,…)`. Оцінено:
   стор — single-open (не Map), `characterName` — суто display-лейбл (`ContentHealth.svelte:121`);
   тезки реально НЕ колізять, а `c.id`-поле ніхто не читає → dead flexibility (YAGNI). Лишено.
@@ -121,10 +124,10 @@ ARCH-1 (стратегічний борг).
 ## 🏁 Прогін 2026-07-29 (автономний) — підсумок
 
 **Закрито [x]:** BUG-1, BUG-2, BUG-3, BUG-4 (+тести на кожен); ARCH-2 (config→файл через Storage),
-ARCH-3 (sanitizeHtml); SMELL-3, SMELL-4, SMELL-5, SMELL-6; NAME-1 (rename-pass); D1-коментарі.
-**Частково [~]:** SMELL-1 (хостнув чисті combat-label-сайти через `.eyebrow`; решта = green-gate
-follow-up, потребує візуальної верифікації); ARCH-4 (правило готове, але блоковане на дизайн-рішенні
-про font-шкалу — не комічу шум на 753 warning); SMELL-2 (оцінено = не баг, dead flexibility).
+ARCH-3 (sanitizeHtml); SMELL-1 (повний `.eyebrow`-хост, driver-verified 0px + скріни), SMELL-3, SMELL-4,
+SMELL-5, SMELL-6; NAME-1 (rename-pass); D1-коментарі.
+**Частково [~]:** ARCH-4 (правило готове, але блоковане на дизайн-рішенні про font-шкалу — не комічу
+шум на 753 warning); SMELL-2 (оцінено = не баг, dead flexibility).
 **Лишено [ ]:** ARCH-1 (i18n-sweep — фіча на окремий фокус, план записано вище) + усі великі фічі
 (B25/D16/B7) і decisions-pending-хвіст (поза обсягом прогону — тільки Баги/Арх/Смели/Неймінг).
 **Гейти на кінець прогону:** 878 тестів зелені, svelte-check 0 errors, knip clean, jscpd 1.26%.
