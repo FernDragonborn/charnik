@@ -151,6 +151,18 @@ DECISIONS-PENDING + фікс хибного D3). Реально ще не зро
 
 **Attack/damage as data**
 - **D9-tail** — magic-weapon +X зроблено; `parseDamage` string round-trip відкритий.
+  - **BUG-DMG-1 (знахідка 2026-07-29, підтверджено трасуванням)** — мульти-тип damage НЕ моделюється
+    як rollable. Меч «1d6 slashing + 1d4 radiant»: база (1d6 slashing) ок, але друга кістка іншого типу
+    або (а) через ефект-токен `flat_bonus:damage+1d4` → degrade у ТЕКСТ-ноту, у кидок не входить + **тип
+    radiant губиться** (у токена нема слота типу); або (б) втиснута в один рядок `"1d6+1d4 radiant"` →
+    `parseDicePool` пулить обидві {6:1,4:1}, але `damage_type` одна колонка → обидві стають radiant.
+    Корінь: damage = рядок + одна `damage_type`, а не `[{dice, type}]`.
+  - **Бажаний вивід кидка (user, 2026-07-29):** розбивка по типах, напр.
+    `1d6 фізичний: 4 + 1d4 світло: 2 = 6` (формат орієнтовний). → структурна модель damage
+    `[{dice, type}]`, кожен під-кид котиться+показується окремо, тотал у кінці.
+  - **Фікс-напрям:** item.damage → structured `[{dice, type}]` (кол. `damage`/`damage_type` = мульти
+    через роздільник АБО linked-таблиця); `computeAttacks`/`parseDamage`/roll-path котять і рендерять
+    пер-тип; weapon-`flat_bonus:damage+<dice>:<type>` дістає слот типу. Фіча (не швидкий фікс) = D9-tail.
 - **D6 / D10** — механіка з прози (`healDice`/`durationToRounds`/`castingIcon`/`effectHint`)
   → у колонки.
 

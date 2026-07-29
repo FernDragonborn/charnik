@@ -526,12 +526,16 @@ The repo ships its own tooling under `tools/` — check there BEFORE hand-rollin
   (tokens, global CSS classes, shared components, stores, lib exports) + a "Duplicate suspects"
   section. Consult it + grep BEFORE writing any `src/` code. A SessionStart hook auto-regens it;
   a pre-commit hook regens + `git add`s it. Never hand-edit it.
-- **Visual regression:** `tools/visual/shot.mjs` — Playwright screenshots of key routes/states,
-  pixel-diffed vs a saved baseline. `--update` captures the baseline (run BEFORE changes); no-arg
-  compares. Use it for **every** CSS/layout change. Notes: the dev server is often NOT on 5173
-  (read `pnpm dev`'s output and pass `BASE=http://localhost:PORT`); the shot **clips at viewport
-  height, not true fullPage**, so below-the-fold UI (effects panel, column bottoms) is a blind spot
-  — capture the specific element instead.
+- **Visual regression:** `tools/visual/shot.mjs` — Playwright **full-page** screenshots of key
+  routes/states, pixel-diffed vs a saved baseline. `--update` captures the baseline (run BEFORE
+  changes); no-arg compares (exit 1 + a per-state drift summary on any change); `--filter=<substr>`
+  runs/updates a subset. Use it for **every** CSS/layout change. Each state gets a fresh page load
+  (no cross-state leakage) and animations/transitions/caret are frozen, so captures are deterministic.
+  Coverage includes **interaction states** (open menu, command palette, selected compendium entry) via
+  per-state `prep` fns with a self-validating `ready` selector — add more by following the pattern in
+  the file (covering the exact UI a change touches beats eyeballing). Baselines are machine/font-
+  specific → gitignored, so regenerate locally. Note: the dev server is often NOT on 5173 — read
+  `pnpm dev`'s output and pass `BASE=http://localhost:PORT`.
 - **CSS analysis:** `tools/visual/css-dups.mjs`, `css-name-collisions.mjs`, `css-classes.mjs`;
   refactor helpers `hoist-class.mjs`, `rename-class.mjs`.
 - **`pnpm knip`** — GREEN and a hard gate (part of `pnpm lint`). Don't reintroduce unused exports;
@@ -552,6 +556,15 @@ fast. They will not accept "looks roughly right."
 - **Verify visual work by RENDERING a screenshot** — don't just describe. Headless Chrome works;
   render tall enough (content clips), keep image width ≤ 2000px to view it back, crop regions to
   inspect detail.
+- **Never punt a CSS/visual task as "I can't verify it visually."** You can, end to end: run
+  `shot.mjs` for the covered states, and for anything it doesn't cover (a menu, dialog, edit-mode,
+  a selected entry) write a one-off Playwright `.mjs` **inside the repo** (e.g. `tools/visual/_x.mjs`
+  so `import { chromium } from 'playwright'` resolves `node_modules` — a script in a tmp dir throws
+  module-not-found), drive to the state, `page.screenshot(...)`, then **open the PNG** to actually
+  see it; delete the script after. A compose-a-shared-class-in-markup CSS refactor is
+  computed-style-identical, so the pixel-diff is a safety net for a slip, not a sign change is
+  expected — and composing a shared class in markup has **no** global-selector collision risk (that
+  risk is only for adding a generic name like `.section`/`.group` to a global group-selector).
 - **Offer 2–3 rendered variants** when a design choice is open (ability tile, inventory, tags) — the
   maintainer picks from *seeing* them, not from names/ASCII.
 - Global CSS keeps colliding in the mocks — when baking a mock, use **Svelte scoped styles** (or
