@@ -88,6 +88,20 @@ export const ASI = '__asi__';
 /** The SRD feat id representing an ASI — filtered out of the feat picker (handled as boosts). */
 const ASI_FEAT_ID = 'ability_score_improvement';
 
+/**
+ * D1 EXCEPTION — do NOT split this class further to satisfy the file-lines lint (>400), same call
+ * as CombatVM.
+ *
+ * The cleanly-separable concerns are ALREADY out: the draft model + factories → `build/draft.ts`,
+ * and every pure derivation (spell picker, ability boosts, feat slots, `assembleCharacter`,
+ * `draftFromCharacter`, issues) → `build/derive.ts`. What remains is the tightly-coupled reactive
+ * core: ONE `draft` `$state` object whose fields are `bind:`-ed directly in the build/blocks/*
+ * components, plus ~40 thin `$derived`/mutators over it. There are no sub-VMs to peel off — a
+ * draft-centric VM (unlike combat's four subsystems) has one state object, so splitting it means
+ * moving `bind:`-ed reactive state across the component↔VM seam, which unit tests do NOT catch
+ * (reactivity bugs surface only in the running UI). Prior sessions reached this same conclusion
+ * twice. Until a real need arises (verify live via shot.mjs, never blind), this stays over on purpose.
+ */
 class BuildVM {
 	// read the shared reactive content store → a live content refresh re-derives options with no reload
 	graph = $derived(content.graph);
