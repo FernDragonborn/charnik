@@ -8,6 +8,7 @@
  */
 import { getContentGraph, resetContentGraph } from './provider';
 import { resetUserStorage } from '$lib/storage/provider';
+import { initSourceConfig } from './sources.svelte';
 import type { ContentGraph } from './loader';
 
 export const content = $state<{ graph: ContentGraph | null; guid: string; error: string | null }>({
@@ -31,9 +32,13 @@ async function loadGraphIntoStore(): Promise<void> {
 	}
 }
 
-/** Load the graph once into the store (no-op if already loaded). */
+/** Load the graph once into the store (no-op if already loaded). Loads the browse-config from its
+ *  file FIRST (ARCH-2), so source/collision filtering is ready before anything derives. */
 export async function loadContentStore(): Promise<ContentGraph | null> {
-	if (!content.graph) await loadGraphIntoStore();
+	if (!content.graph) {
+		await initSourceConfig();
+		await loadGraphIntoStore();
+	}
 	return content.graph;
 }
 
@@ -42,7 +47,10 @@ export async function loadContentStore(): Promise<ContentGraph | null> {
 export async function reloadContent(
 	opts: { remount?: boolean } = {}
 ): Promise<ContentGraph | null> {
-	if (opts.remount) resetUserStorage();
+	if (opts.remount) {
+		resetUserStorage();
+		await initSourceConfig(); // the browse-config lives in the (now new) data folder
+	}
 	resetContentGraph();
 	await loadGraphIntoStore();
 	return content.graph;

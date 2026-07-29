@@ -1,18 +1,25 @@
 /*
  * Source & collision configuration — the user's browse-layer filtering of loaded content, persisted
- * across sessions (localStorage; standalone/offline-safe). This does NOT touch the loader/core graph:
- * the full graph always loads, and `isRowActive` filters what the compendium / search / creation
- * pickers SHOW. So toggling a source or resolving a collision is live (a reactive `$state`), needs no
- * reload, and never drops data — re-enabling brings a row straight back.
+ * across sessions as a FILE in the data root via the Storage seam (ARCH-2 / B6). On desktop & mobile
+ * (Tauri) that's a real `collisions.json` in dataDir — portable with the data folder and surviving a
+ * webview cache wipe; on the web build the same seam backs it with IndexedDB (no filesystem there).
+ * The invariant names `collisions.json`; it carries the source/file toggles too (one browse-config,
+ * no reason to split). This does NOT touch the loader/core graph: the full graph always loads, and
+ * `isRowActive` filters what the compendium / search / creation pickers SHOW. So toggling a source or
+ * resolving a collision is live (a reactive `$state`), needs no reload, and never drops data.
  *
  * Two-dimensional source filtering (PLAN invariant): a row is shown iff its FILE is enabled AND its
  * SOURCE tag is enabled. Plus collision resolution: when the same `type:id` exists in several sources
  * that overlap an edition, the user can keep just one source (keep-one) or show them all (keep-all).
  */
 import type { ContentGraph, LoadedRow } from './loader';
-import { readStored, writeStored } from '$lib/util/persist';
+import { readStored } from '$lib/util/persist';
+import { getUserStorage } from '$lib/storage/provider';
 
-const STORAGE_KEY = 'charnik:sources';
+/** The browse-config file in the data root (Tauri fs on desktop/mobile; IndexedDB on web). */
+const CONFIG_PATH = 'collisions.json';
+/** The pre-ARCH-2 localStorage key; read once to migrate an existing config into the file. */
+const LEGACY_KEY = 'charnik:sources';
 
 /** A collision group's resolution: `'all'` = keep every source (default), else the one source to keep. */
 export type CollisionChoice = 'all' | string;
@@ -26,20 +33,68 @@ interface SourceConfigData {
 	collisions: Record<string, CollisionChoice>;
 }
 
-/** Read the persisted config, merged over empty defaults (a missing/corrupt snapshot → all-active).
- *  Exported so the persistence round-trip is unit-testable without re-importing the whole module. */
-export function loadSourceConfig(): SourceConfigData {
-	const empty: SourceConfigData = { disabledFiles: [], disabledSources: [], collisions: {} };
-	const saved = readStored<Partial<SourceConfigData>>(STORAGE_KEY);
-	return saved ? { ...empty, ...saved } : empty;
+const emptyConfig = (): SourceConfigData => ({
+	disabledFiles: [],
+	disabledSources: [],
+	collisions: {}
+});
+
+/** Parse a stored JSON blob into a config, merged over empty defaults (a missing/corrupt snapshot →
+ *  all-active). Pure — exported so the merge is unit-testable without touching Storage. */
+export function parseSourceConfig(raw: string | null): SourceConfigData {
+	if (!raw) return emptyConfig();
+	try {
+		return { ...emptyConfig(), ...(JSON.parse(raw) as Partial<SourceConfigData>) };
+	} catch {
+		return emptyConfig();
+	}
 }
 
-/** Reactive, persisted config. Read `.disabledFiles`/… in derived state; mutate via the helpers below
- *  (each persists). Kept as flat arrays/records so it serializes straight to JSON. */
-export const sourceConfig = $state<SourceConfigData>(loadSourceConfig());
+/** Reactive, persisted config. Starts empty (all-active) and is populated by `initSourceConfig` at
+ *  app start; mutate via the helpers below (each persists to the file). Kept as flat arrays/records
+ *  so it serializes straight to JSON. */
+export const sourceConfig = $state<SourceConfigData>(emptyConfig());
 
+/** Copy a parsed config INTO the shared reactive singleton (in place, so existing readers stay bound). */
+function adoptConfig(cfg: SourceConfigData): void {
+	sourceConfig.disabledFiles = cfg.disabledFiles;
+	sourceConfig.disabledSources = cfg.disabledSources;
+	sourceConfig.collisions = cfg.collisions;
+}
+
+/** Load the persisted browse-config from the data root (once, at app start). If the file is absent
+ *  but an old localStorage blob exists, migrate it into the file. Never throws — a read failure just
+ *  leaves the all-active defaults. */
+export async function initSourceConfig(): Promise<void> {
+	const storage = getUserStorage();
+	let raw: string | null = null;
+	try {
+		raw = await storage.read(CONFIG_PATH);
+	} catch {
+		/* no file yet */
+	}
+	if (raw === null) {
+		// one-time migration from the pre-ARCH-2 localStorage blob (desktop users keep their config)
+		const legacy = readStored<Partial<SourceConfigData>>(LEGACY_KEY);
+		if (legacy) {
+			adoptConfig({ ...emptyConfig(), ...legacy });
+			persist();
+			return;
+		}
+	}
+	adoptConfig(parseSourceConfig(raw));
+}
+
+// Persist writes the WHOLE blob; chain them so two quick toggles can't land out of order, and
+// stringify at execution time so the last write always reflects the latest state.
+let writeChain: Promise<void> = Promise.resolve();
 function persist(): void {
-	writeStored(STORAGE_KEY, sourceConfig);
+	writeChain = writeChain
+		.catch(() => {})
+		.then(() => getUserStorage().write(CONFIG_PATH, JSON.stringify(sourceConfig)))
+		// a persist failure (quota, or no backing store in tests/SSR) must not crash the session or
+		// surface as an unhandled rejection — the session continues, the change just isn't saved.
+		.catch(() => {});
 }
 
 function toggleIn(list: string[], value: string): void {

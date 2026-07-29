@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (31)
+## Duplicate suspects (30)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -43,7 +43,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/ResourceBar.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
-- `STORAGE_KEY` ×2 — src/lib/content/sources.svelte.ts · src/lib/stores/app.svelte.ts
 - `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts
 - `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
@@ -221,8 +220,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/sources.svelte.ts`
 
 - `type CollisionChoice` — A collision group's resolution: `'all'` = keep every source (default), else the one source to keep.
-- `function loadSourceConfig` — Read the persisted config, merged over empty defaults (a missing/corrupt snapshot → all-active).
+- `function parseSourceConfig` — Parse a stored JSON blob into a config, merged over empty defaults (a missing/corrupt snapshot → * all-active).
 - `const sourceConfig` — Reactive, persisted config.
+- `function initSourceConfig` — Load the persisted browse-config from the data root (once, at app start).
 - `function toggleFile` — Toggle a content file (path `root/file`) on/off.
 - `function toggleSource` — Toggle a source tag on/off.
 - `function setCollision` — Set a collision group's resolution (which source wins, or 'all').
@@ -1026,4 +1026,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 559 exports across 89 modules · 31 duplicate suspects · generated in 171ms._
+_45 tokens · 61 global classes · 40 components · 560 exports across 89 modules · 30 duplicate suspects · generated in 162ms._

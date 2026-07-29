@@ -34,9 +34,11 @@
   CombatVM хардкод EN (тости, лейбли, `combat/constants.ts`); svelte-i18n у ~16/160 файлів.
   Найбільший розрив з «i18n is data-driven».
 
-- **ARCH-2 [ ]** — `content/sources.svelte.ts:15` колізії/сорси в localStorage (`charnik:sources`),
-  не в `collisions.json`. Не переноситься з data-папкою, гине при чистці webview. **Фікс:**
-  файл у dataDir через Storage, АБО оновити інваріант у CLAUDE.md. (= B6 `[~]`.)
+- **ARCH-2 [x]** — `content/sources.svelte.ts` колізії/сорси тепер у `collisions.json` (data root)
+  через Storage-seam: десктоп/мобайл (Tauri fs) = справжній файл, портативний з data-папкою й
+  переживає чистку webview; веб = IndexedDB (нема ФС). `initSourceConfig()` вантажить файл на старті
+  (перед першим derive), + одноразова міграція старого localStorage-блоба. persist = chained async
+  write, помилка сейву не валить сесію. (= B6 закрито.)
 
 - **ARCH-3 [x]** — `routes/+page.svelte:51` `{@html $_('demo.body')}` без санітайзу; каталоги
   user-droppable = untrusted (PLAN.md:1101). **Фікс:** `sanitizeHtml()` (DOMPurify) у
