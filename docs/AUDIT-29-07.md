@@ -56,13 +56,15 @@
   тезки реально НЕ колізять, а `c.id`-поле ніхто не читає → dead flexibility (YAGNI). Лишено.
 - **SMELL-3 [x]** — `compendium/[...entry]/+page.svelte:52-58` ручний localStorage → тепер
   `readStored`/`writeStored` з `util/persist`.
-- **SMELL-4 [ ]** — `combat/state.svelte.ts:668` `s.spell.endsWith(':'+r.id)` — парс ref
-  (`type:source:id`) самоочевидніший, не ламається від зміни формату.
+- **SMELL-4 [x]** — `combat/state.svelte.ts:668` `s.spell.endsWith(':'+r.id)` → `idOf(s.spell)
+  === r.id` (парсить id-сегмент рефа) — самоочевидно й стабільно до зміни `type:source:id`.
 - **SMELL-5 [x]** — послідовне I/O: `loader` тепер read-ahead (`Promise.all` на body-реди,
   акумуляція лишається послідовною → детермінізм merge/dedup незмінний); `listCharacters`
   повністю паралельний (сортується по імені в кінці, порядок неважливий).
-- **SMELL-6 [ ]** — `combat/state.svelte.ts:457-469` death save через трей тільки ролить;
-  інстант-шлях пише пипи (nat20→1HP). Є ручні пипи, але непослідовно.
+- **SMELL-6 [x]** — `combat/state.svelte.ts:457-469` death save через трей лише ролив, не
+  застосовував наслідок (пипи/nat20→1HP), бо tray-контракт не має result-callback. **Фікс:**
+  death save завжди інстант + авто-apply (трей-гілку прибрано — нема що кастомізувати: d20-vs-10,
+  adv/ефекти вже фолдяться через `fx`). Ручні пипи лишились для корекцій.
 
 ## 🏷️ Неймінг
 
@@ -72,7 +74,7 @@
 
 ## 📝 D1 exception-коментарі
 
-- **[ ]** переписати exception-коментарі `CombatVM` (`state.svelte.ts:66-77`) і `BuildVM`
+- **[x]** переписані exception-коментарі `CombatVM` (`state.svelte.ts:66-77`) і `BuildVM`
   (`build/state.svelte.ts:92-104`): завищують небезпеку («extracting any means moving reactive
   state»). Реально bind:-surface — 7-9 і 3 скаляри; найбільший виносний шматок (spell/cast-слайс
   ~200р) має 0 bound-стану, виноситься через доведений тут subsystem-патерн (tray/economy/resources).

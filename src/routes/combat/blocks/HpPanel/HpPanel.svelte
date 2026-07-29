@@ -57,11 +57,7 @@
 	{/if}
 	{#if downed}
 		<div class="death-saves">
-			<button
-				class="hp-btn deathroll"
-				onclick={(e) => combat.deathSave(e)}
-				title="Roll a death save"
-			>
+			<button class="hp-btn deathroll" onclick={() => combat.deathSave()} title="Roll a death save">
 				🎲 Death save
 			</button>
 			<div class="death-tracks">

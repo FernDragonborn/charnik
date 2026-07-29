@@ -89,18 +89,17 @@ export const ASI = '__asi__';
 const ASI_FEAT_ID = 'ability_score_improvement';
 
 /**
- * D1 EXCEPTION — do NOT split this class further to satisfy the file-lines lint (>400), same call
- * as CombatVM.
+ * D1 EXCEPTION — file over the 400-line lint (warn-only). Split DEFERRED, like CombatVM: not
+ * forbidden, just low return for the churn/regression risk.
  *
- * The cleanly-separable concerns are ALREADY out: the draft model + factories → `build/draft.ts`,
- * and every pure derivation (spell picker, ability boosts, feat slots, `assembleCharacter`,
- * `draftFromCharacter`, issues) → `build/derive.ts`. What remains is the tightly-coupled reactive
- * core: ONE `draft` `$state` object whose fields are `bind:`-ed directly in the build/blocks/*
- * components, plus ~40 thin `$derived`/mutators over it. There are no sub-VMs to peel off — a
- * draft-centric VM (unlike combat's four subsystems) has one state object, so splitting it means
- * moving `bind:`-ed reactive state across the component↔VM seam, which unit tests do NOT catch
- * (reactivity bugs surface only in the running UI). Prior sessions reached this same conclusion
- * twice. Until a real need arises (verify live via shot.mjs, never blind), this stays over on purpose.
+ * Already out: the draft model + factories → `build/draft.ts`; every pure derivation (spell picker,
+ * ability boosts, feat slots, `assembleCharacter`, `draftFromCharacter`, issues) → `build/derive.ts`.
+ * What remains is draft-centric: ONE `draft` `$state` object whose fields are `bind:`-ed across
+ * build/blocks/*, plus ~40 thin `$derived`/mutators over it. Unlike combat (which has an extractable
+ * spell/cast slice with no bound state), there's no clean sub-VM to peel off here — the single
+ * bind:-ed draft is the whole state, so a split mostly relocates `bind:`-surface across the
+ * component↔VM seam, where reactivity bugs escape unit tests (only the running UI catches them).
+ * Prior sessions reached this twice. If a real need arises, verify live via shot.mjs, never blind.
  */
 class BuildVM {
 	// read the shared reactive content store → a live content refresh re-derives options with no reload

@@ -63,17 +63,17 @@ import { slotToSpend } from '$lib/rules/spellcasting';
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
 
 /**
- * D1 EXCEPTION — do NOT split this class further to satisfy the file-lines lint (>400).
+ * D1 EXCEPTION — file over the 400-line lint (warn-only). Split DEFERRED, not forbidden: it's not
+ * worth the churn / reactivity-regression risk right now, not that it can't be done.
  *
- * The cleanly-separable concerns are ALREADY out: pure math → `$lib/combat/helpers`, and four
- * subsystems (`tray` / `layout` / `economy` / `resources`) each own their slice via a callback
- * accessor. What remains is the tightly-coupled reactive core — spell/cast/attack, HP, effect
- * add/remove — whose `$state` (e.g. `newEffectDuration`, `cmTarget`, `tempHpInput`) is `bind:`-ed
- * directly in CombatMenus.svelte / the panels. Extracting any of it means moving reactive state
- * across the component↔VM seam, which unit tests do NOT catch (reactivity bugs surface only in the
- * running UI) — a bad trade for a warn-only line count. If a real need arises, split behind a NEW
- * subsystem following the economy/resources pattern AND verify in the live app (shot.mjs), never
- * blind. Until then this file stays over the limit ON PURPOSE.
+ * Already out: pure math → `$lib/combat/helpers`; four subsystems (`tray`/`layout`/`economy`/
+ * `resources`) each own their slice behind a callback accessor. The remaining `bind:`-surface is
+ * actually small — a handful of scalars (`cmTarget`/`cmSign`/`cmAmount`, `tempHpInput`,
+ * `customEffectLabel`, `newEffectDuration`) `bind:`-ed in CombatMenus / the panels — so a split is
+ * mostly re-threading those, and reactivity bugs across the component↔VM seam don't show up in unit
+ * tests (only in the running UI). If we DO cut, the cleanest next slice is spell/cast (~200 lines,
+ * zero bound state → extractable via the proven subsystem pattern like economy/resources), then the
+ * HP slice; verify in the live app (shot.mjs), never blind. Until a real need, staying over is fine.
  */
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. Each completed
@@ -450,23 +450,14 @@ class CombatVM {
 	/** Roll a death save (shown while at 0 HP): a d20 vs 10 — `save.death`-targeted effects (and
 	 *  the `saves`/`d20_tests` groups: Bless, exhaustion) apply. Outcomes per RAW: nat 20 → back up
 	 *  at 1 HP; nat 1 → two failures; 10+ → success; three successes → stable (counters reset). */
-	deathSave = (e: Event) => {
+	deathSave = () => {
 		const c = this.character;
 		if (!c) return;
 		const fx = this.effectsFor('save.death');
-		if (wantsTray(e)) {
-			this.openRoll(
-				{
-					label: 'Death save',
-					dice: { 20: 1 },
-					mod: fx.flat,
-					advantage: netAdvantage(fx),
-					mods: fx
-				},
-				e
-			);
-			return;
-		}
+		// SMELL-6: always roll instantly + auto-apply the outcome. Unlike other rolls, a death save
+		// MUTATES play-state (pips / nat20→1 HP), and the tray contract has no result callback — a tray
+		// roll couldn't apply it. A death save is a fixed d20-vs-10 with nothing to customize
+		// (advantage/effects already fold via `fx`), so there's no reason to offer the tray here.
 		const r = rollPool({ 20: 1 }, fx.flat, netAdvantage(fx), fx.bonusDice, fx);
 		this.tray.pushRoll('Death save', r);
 		const ds = c.play.deathSaves;
@@ -665,7 +656,10 @@ class CombatVM {
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
 	togglePrepared = (r: SpRow) => {
 		if (!this.character) return;
-		const sp = this.character.build.spells.find((s) => s.spell.endsWith(`:${r.id}`));
+		// SMELL-4: match by the ref's parsed id segment, not a string suffix — self-evident and stable
+		// if the `type:source:id` ref format ever changes. (`s.spell` is a full ref; `r.id` is the id.)
+		const idOf = (ref: string) => ref.split(':').pop();
+		const sp = this.character.build.spells.find((s) => idOf(s.spell) === r.id);
 		// A18-tail: per-class cap gate via the ONE shared seam (identical in the spellbook, D13)
 		const res = canTogglePreparedFor({
 			spells: this.character.build.spells,
