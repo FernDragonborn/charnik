@@ -398,10 +398,15 @@ Deep effects-system review, 2026-07-16 (B12–B26):
   consts into `rules/pipeline.SYSTEMS` (`stores/app SystemId` + schema re-derive from it); the last
   artifact — an unsound `s as SystemId` assertion in `inActiveEdition` — is now a string-membership
   test over the known-good array. G5's `character.system as System` no-op cast was already removed.
-- [x] **D3 · Demo hardcode in CombatVM.** FIXED 2026-07-28. Pins persist per character in
-  `ui.spellsPinned` (bare ids) via `togglePin`; the `{'fire-bolt', shield}` hardcode is gone — it was
-  stale kebab (never matched snake ids post-E3) AND pinned every character. Spellbook⇄combat key-format
-  reconciliation stays the §4 "Pin end-to-end" feature.
+- [~] **D3 · Demo hardcode in CombatVM.** DEMO-HARDCODE HALF DONE 2026-07-28: the `{'fire-bolt',
+  shield}` hardcode is gone (`togglePin` mutates `ui.spellsPinned`, bare ids) — it was stale kebab
+  (never matched snake ids post-E3) AND pinned every character. **STILL OPEN (downgraded from [x]
+  2026-07-29 audit): pins DON'T actually persist.** The combat autosave `$effect`
+  (`combat/+page.svelte:54`) deep-tracks only `JSON.stringify(c.play)`, never `c.ui`, so a pin toggle
+  (ui-only mutation) never fires a save → lost on restart. = audit-29-07 BUG-2 (same gap hits
+  `panelColumns` + combat `togglePrepared`). FIX: track `c.ui` in the autosave effect or save
+  explicitly in `togglePin`/`layout`. Spellbook⇄combat key-format reconciliation stays the §4 "Pin
+  end-to-end" feature.
 - [x] **D4 · Roster fallback for broken saves hardcodes `system: '5e'`.** FIXED 2026-07-21.
   `loadCharacter` now reads `system` best-effort from the raw JSON before migrate/validate and returns
   it on failure; `RosterEntry.system` is optional, so a broken save badges its REAL edition (or none
