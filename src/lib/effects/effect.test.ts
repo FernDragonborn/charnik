@@ -10,7 +10,7 @@ import { applyEffects, collectFacts, lintEffectTokens } from './apply';
 import { makeExprContext, type BuildVars } from './context';
 import { EFFECT_KINDS as SCHEMA_EFFECT_KINDS } from '../content/schemas';
 import { unarmoredAC, savingThrow } from '../rules/core';
-import type { Contribution } from '../rules/pipeline';
+import { computed, type Contribution } from '../rules/pipeline';
 
 describe('effect vocabulary', () => {
 	it('the engine and the content schema list the same kinds (guard against drift)', () => {
@@ -195,6 +195,27 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 	const speedBase = (): { value: number; trace: Contribution[] } => ({
 		value: 30,
 		trace: [{ source: 'Base speed', layer: 'base', op: 'set', amount: 30 }]
+	});
+
+	it('BUG-3: a clamped base keeps its floor through applyEffects (on/off/deleted invariant)', () => {
+		// base folds to -10 raw but is floored to 0 by its clamp (like deriveSpeed `{min:0}`)
+		const clampedBase = computed(
+			[
+				{ source: 'Base speed', layer: 'base', op: 'set', amount: 30 },
+				{ source: 'Heavy penalty', layer: 'item', op: 'add', amount: -40 }
+			],
+			{ min: 0 }
+		);
+		expect(clampedBase.value).toBe(0);
+		// zero effects must reproduce the clamped value, not re-fold the trace to -10
+		expect(applyEffects('speed', clampedBase, []).value).toBe(0);
+		// a real speed penalty still applies, still floored at 0 (never negative)
+		const slow: ActiveEffect = {
+			source: 'Slow',
+			layer: 'condition',
+			tokens: ['flat_bonus:speed-5']
+		};
+		expect(applyEffects('speed', clampedBase, [slow]).value).toBe(0);
 	});
 
 	it('parses the floor/cap mode slot', () => {

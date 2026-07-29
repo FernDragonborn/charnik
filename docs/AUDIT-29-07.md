@@ -5,26 +5,28 @@
 
 ## 🐞 Баги
 
-- **BUG-1 [ ]** — `combat/attacks.ts:32` — regex `([+\-−])\s*(\d+)(?!d)` бектрекає на
-  багатоцифрових die-count: `"2d6+10d4"`→мод `+1` (має бути null). **Фікс:** `(?!\d*d)`.
-  (A7 в AUDIT.md зве це «FIXED» — неповно.)
+- **BUG-1 [x]** — `combat/attacks.ts:32` — regex `([+\-−])\s*(\d+)(?!d)` бектрекав на
+  багатоцифрових die-count: `"2d6+10d4"`→мод `+1` (мав бути 0). **Фікс:** `(?!\d*d)` +
+  тест `2d6+10d4`. (A7 в AUDIT.md звав це «FIXED» — було неповно.)
 
-- **BUG-2 [ ]** — `combat/+page.svelte:54` автосейв deep-track лише `c.play`; без сейву
-  мутують `togglePin` (`state.svelte.ts:125` `ui.spellsPinned`), `togglePrepared` (:666
+- **BUG-2 [x]** — `combat/+page.svelte:54` автосейв deep-track лише `c.play`; без сейву
+  мутували `togglePin` (`state.svelte.ts:125` `ui.spellsPinned`), `togglePrepared` (:666
   `build.spells[].prepared`), layout-колбек (:83 `ui.panelColumns`). Втрата даних на
-  рестарті. **Фікс:** трекати `c.ui`+`c.build` в автосейв-ефекті або явний save у цих
-  трьох. (= хибний `[x]` D3 в AUDIT.md, знижено до `[~]`.)
+  рестарті. **Фікс:** автосейв-ефект тепер deep-track `c.play`+`c.ui`+`c.build`. (= хибний
+  `[x]` D3 в AUDIT.md, тепер реально закрито.)
 
-- **BUG-3 [ ]** — `effects/apply.ts:406` — `Computed` не носить свій `Clamp`, тож
+- **BUG-3 [x]** — `effects/apply.ts:406` — `Computed` не носив свій `Clamp`, тож
   `applyEffects` re-folds без клампа бази: `deriveSpeed {min:0}` (`derive-stats.ts:198`) →
   від'ємна швидкість від `flat_bonus:speed-40`; `maxHp {min:1}` (`derive.ts:374,419`) → ≤0.
-  Навіть порожній список ефектів може дати інше значення, ніж клампнута база — порушує
-  інваріант «`{value,trace,notes}` ідентичний on/off/deleted». **Фікс:** носити clamp у
-  `Computed` (або параметром) і застосовувати після фолду.
+  Навіть порожній список ефектів давав інше значення, ніж клампнута база — порушувало
+  інваріант «`{value,trace,notes}` ідентичний on/off/deleted». **Фікс:** `Computed.clamp`
+  (опційне поле, `computed()` його зберігає), `applyEffects` re-folds під `base.clamp` + тест.
 
-- **BUG-4 [ ]** — `repository.ts:309` `appendLog` read-modify-write, fire-and-forget з
-  `combat/state.svelte.ts:171`. Два швидкі роли читають той самий `prev` → другий затирає
-  перший. **Фікс:** черга-ланцюжок промісів на слаг (заодно прибирає O(файл) на апенд).
+- **BUG-4 [x]** — `repository.ts:309` `appendLog` read-modify-write, fire-and-forget з
+  `combat/state.svelte.ts:171`. Два швидкі роли читали той самий `prev` → другий затирав
+  перший. **Фікс:** per-slug promise-chain (`appendChains` Map) серіалізує read→write; тест
+  на 20 конкурентних апендів. (O(файл)-читання лишив — черга вже прибирає гонку; кеш tail =
+  зайвий стан, ризик drift із зовн. правками файлу.)
 
 ## 🏛️ Архітектура
 
@@ -49,8 +51,9 @@
 - **SMELL-1 [ ]** — CSS-дублікати гаряча точка: jscpd CSS 4.5% рядків / 9.1% токенів (TS
   0.14%). Панелі комбату повторюють блоки → хостити в `styles/components.css` (grep імен
   перед хойстом — css-hoist-name-collision).
-- **SMELL-2 [ ]** — `combat/+page.svelte:71` `deriveHealth.set(c.build.name,…)` — тезки
-  перезаписуються. Є `c.id`.
+- **SMELL-2 [~]** — `combat/+page.svelte:71` `deriveHealth.set(c.build.name,…)`. Оцінено:
+  стор — single-open (не Map), `characterName` — суто display-лейбл (`ContentHealth.svelte:121`);
+  тезки реально НЕ колізять, а `c.id`-поле ніхто не читає → dead flexibility (YAGNI). Лишено.
 - **SMELL-3 [ ]** — `compendium/[...entry]/+page.svelte:52-58` ручний localStorage повз
   `util/persist` (`readStored`/`writeStored`).
 - **SMELL-4 [ ]** — `combat/state.svelte.ts:668` `s.spell.endsWith(':'+r.id)` — парс ref

@@ -26,10 +26,11 @@ export interface Atk {
  *  flat mod. Handles the unicode minus `signed()` emits. Pure. */
 export function parseDamage(dmg: string): { pool: Record<number, number>; mod: number } {
 	const pool = parseDicePool(dmg);
-	// A7: a die's count must not be read as a flat mod — in "2d6+1d4" the `+1` precedes `d4`, so match
-	// a signed number only when NOT immediately followed by `d` (a die is `<count>d<sides>`, never
-	// spaced). Damage-type words never start with `d`, so a real "+3 slashing" mod still parses.
-	const m = /([+\-−])\s*(\d+)(?!d)/i.exec(dmg);
+	// A7: a die's count must not be read as a flat mod — in "2d6+10d4" the `+10` precedes `d4`, so match
+	// a signed number only when NOT followed by (more digits then) `d` (a die is `<count>d<sides>`,
+	// never spaced). `(?!\d*d)` — not just `(?!d)` — else the regex backtracks a multi-digit count
+	// ("+10d4" → matches "+1"). Damage-type words never start with `d`, so a real "+3 slashing" parses.
+	const m = /([+\-−])\s*(\d+)(?!\d*d)/i.exec(dmg);
 	const mod = m ? (m[1] === '+' ? 1 : -1) * Number(m[2]) : 0;
 	return { pool, mod };
 }

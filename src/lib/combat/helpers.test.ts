@@ -486,6 +486,10 @@ describe('parseDamage — dice pool + flat mod (A7: a bonus die is not a flat mo
 		expect(parseDamage('2d6+1d4 fire')).toEqual({ pool: { 6: 2, 4: 1 }, mod: 0 });
 	});
 
+	it('does NOT read a MULTI-DIGIT bonus die count as a flat mod (BUG-1: 2d6+10d4)', () => {
+		expect(parseDamage('2d6+10d4 fire')).toEqual({ pool: { 6: 2, 4: 10 }, mod: 0 });
+	});
+
 	it('keeps a real flat mod alongside a bonus die (1d8+1d6+2)', () => {
 		expect(parseDamage('1d8+1d6+2 radiant')).toEqual({ pool: { 8: 1, 6: 1 }, mod: 2 });
 	});

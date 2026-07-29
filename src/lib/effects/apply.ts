@@ -403,7 +403,9 @@ export function applyEffects(
 	pushFlagNotes(facts.disadvantage, 'disadvantage', NOTE_KEY.disadvantage, acc);
 	pushFlagNotes(facts.autoFail, 'auto-fail', NOTE_KEY.autoFail, acc);
 	pushFlagNotes(facts.autoSucceed, 'auto-succeed', NOTE_KEY.autoSucceed, acc);
-	return computed(acc.contribs, undefined, acc.notes.length ? acc.notes : undefined);
+	// BUG-3: re-fold under the base's OWN clamp — a clamped base (speed `{min:0}`, maxHp `{min:1}`)
+	// must keep its floor even when zero effects fold, or the on/off/deleted invariant breaks.
+	return computed(acc.contribs, base.clamp, acc.notes.length ? acc.notes : undefined);
 }
 
 /** Authoring-slip warnings for one row's effect tokens (content-health): lints every L2 expression

@@ -304,9 +304,26 @@ export interface LogEntry {
  *  can't grow without bound (B4). Older lines drop off the front when the file exceeds this. */
 const LOG_MAX_LINES = 500;
 
+/** Per-slug append chain (BUG-4): `appendLog` is read-modify-write and fire-and-forget from the
+ *  combat view, so two fast rolls would both read the same `prev` and the second write would clobber
+ *  the first. Chaining each slug's appends serializes the read→write so entries can't race. */
+const appendChains = new Map<string, Promise<void>>();
+
 /** Append one roll-log line (`log.jsonl`, one JSON object per line), rotating out the oldest lines
- *  past `LOG_MAX_LINES` so the file stays bounded. */
-export async function appendLog(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
+ *  past `LOG_MAX_LINES` so the file stays bounded. Serialized per slug so concurrent appends don't
+ *  lose entries (BUG-4). */
+export function appendLog(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
+	const prior = appendChains.get(slug) ?? Promise.resolve();
+	const next = prior.catch(() => {}).then(() => writeLogLine(storage, slug, entry));
+	appendChains.set(slug, next);
+	// drop the chain once it drains so the map doesn't retain a slug forever
+	void next.finally(() => {
+		if (appendChains.get(slug) === next) appendChains.delete(slug);
+	});
+	return next;
+}
+
+async function writeLogLine(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
 	let prev = '';
 	try {
 		prev = await storage.read(logOf(slug));

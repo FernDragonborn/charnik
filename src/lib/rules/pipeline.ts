@@ -78,6 +78,10 @@ export interface Computed {
 	trace: Contribution[];
 	/** Rule notes / blocks (not numeric), e.g. "Spellcasting blocked: non-proficient armor". */
 	notes?: Note[];
+	/** The clamp this value was folded under, carried so `applyEffects` can re-fold the trace under
+	 *  the SAME bound (else a clamped base — speed `{min:0}`, maxHp `{min:1}` — loses its floor when
+	 *  effects re-fold, breaking the on/off/deleted invariant). Absent = no clamp. */
+	clamp?: Clamp;
 }
 
 export interface Clamp {
@@ -178,5 +182,6 @@ export function computed(contribs: Contribution[], clamp?: Clamp, notes?: Note[]
 	const allNotes = [...(notes ?? []), ...overriddenSetNotes(contribs), ...ineffective];
 	const result: Computed = { value, trace: contribs };
 	if (allNotes.length) result.notes = allNotes;
+	if (clamp) result.clamp = clamp;
 	return result;
 }

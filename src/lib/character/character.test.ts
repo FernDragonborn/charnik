@@ -224,6 +224,19 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 		expect(c).toBeUndefined(); // no character.json written in this test
 	});
 
+	it('BUG-4: concurrent appends all survive (per-slug serialization, no clobber)', async () => {
+		const s = new MemoryStorage();
+		// fire without awaiting each — the old read-modify-write would let later writes clobber earlier
+		await Promise.all(
+			Array.from({ length: 20 }, (_, i) =>
+				appendLog(s, 'mirt', { t: i, kind: 'roll', label: `r${i}`, result: i })
+			)
+		);
+		const log = await readLog(s, 'mirt');
+		expect(log.length).toBe(20);
+		expect(new Set(log.map((e) => e.label)).size).toBe(20); // every entry kept, none lost
+	});
+
 	it('rotates the log file so it stays bounded (B4)', async () => {
 		const s = new MemoryStorage();
 		for (let i = 0; i < 550; i++)

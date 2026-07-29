@@ -51,7 +51,12 @@
 	$effect(() => {
 		const c = combat.character;
 		if (!c) return;
-		JSON.stringify(c.play); // deep-track play changes
+		// BUG-2: deep-track play AND ui AND build — combat mutates all three (togglePin/panelColumns →
+		// c.ui, togglePrepared → c.build.spells), and saveCharacterToStore writes the whole character.
+		// Tracking only c.play meant pin/prepared/layout edits never scheduled a save → lost on restart.
+		JSON.stringify(c.play);
+		JSON.stringify(c.ui);
+		JSON.stringify(c.build);
 		clearTimeout(saveTimer);
 		saveTimer = setTimeout(() => void saveCharacterToStore(c), 800);
 	});
