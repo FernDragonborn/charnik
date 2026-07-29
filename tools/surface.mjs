@@ -408,10 +408,12 @@ renderModules(libModules);
 
 const ms = Date.now() - t0;
 out.push('---');
+// NB no generation time in the FILE footer — it changes every run and would stage a spurious
+// SURFACE.md diff on every commit (the pre-commit hook regenerates + `git add`s this). The timing
+// stays in the console log below, where it's useful without polluting version control.
 out.push(
 	`_${tokenCount} tokens · ${classes.size} global classes · ${components.length} components · ` +
-		`${exportCount} exports across ${exportsByModule.size} modules · ${dupCount} duplicate suspects · ` +
-		`generated in ${ms}ms._`
+		`${exportCount} exports across ${exportsByModule.size} modules · ${dupCount} duplicate suspects._`
 );
 out.push('');
 
