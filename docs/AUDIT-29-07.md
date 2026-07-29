@@ -32,7 +32,15 @@
 
 - **ARCH-1 [ ]** — i18n не покриває combat/build: `en.json` не має цих секцій, увесь
   CombatVM хардкод EN (тости, лейбли, `combat/constants.ts`); svelte-i18n у ~16/160 файлів.
-  Найбільший розрив з «i18n is data-driven».
+  Найбільший розрив з «i18n is data-driven». **Оцінено — це ФІЧА, не механічний swap, лишено на
+  окремий фокус-прохід:** (1) архітектурне питання — тости живуть у VM (`state.svelte.ts`, 10+build 3),
+  а дім-патерн навмисно тримає logic-layer без `$_`, ін'єктить `translate` з UI (`formatNote(note,
+  translate?)` у pipeline.ts). Треба рішення: інжект-translate у VM АБО дозволити `get(_)` у VM
+  (view-model = UI-шар, не rules-core, тож `get(_)` ок — але це НЕ усталений патерн). (2) обсяг —
+  сотні рядків combat+build (тости, `constants.ts` лейбли, панель-заголовки, кнопки) + автор UA
+  (формальне «ви», [[uk-formal-vy]]). Частковий прохід НЕ ламає (EN-fallback = контракт), тож можна
+  інкрементально. **План:** namespace `combat.*`/`build.*` у en/uk.json → почати з component-level
+  static labels (у `.svelte` `$_` працює нативно, без VM-плюмбінгу) → тоді VM-тости після рішення (1).
 
 - **ARCH-2 [x]** — `content/sources.svelte.ts` колізії/сорси тепер у `collisions.json` (data root)
   через Storage-seam: десктоп/мобайл (Tauri fs) = справжній файл, портативний з data-папкою й
@@ -109,6 +117,17 @@ BOM/CRLF; loader dup `source:id` (B22); fold-порядок детермінов
 
 **Пріоритет:** BUG-2, BUG-3 (втрата даних / зламаний інваріант) → BUG-1, BUG-4 (точкові) →
 ARCH-1 (стратегічний борг).
+
+## 🏁 Прогін 2026-07-29 (автономний) — підсумок
+
+**Закрито [x]:** BUG-1, BUG-2, BUG-3, BUG-4 (+тести на кожен); ARCH-2 (config→файл через Storage),
+ARCH-3 (sanitizeHtml); SMELL-3, SMELL-4, SMELL-5, SMELL-6; NAME-1 (rename-pass); D1-коментарі.
+**Частково [~]:** SMELL-1 (хостнув чисті combat-label-сайти через `.eyebrow`; решта = green-gate
+follow-up, потребує візуальної верифікації); ARCH-4 (правило готове, але блоковане на дизайн-рішенні
+про font-шкалу — не комічу шум на 753 warning); SMELL-2 (оцінено = не баг, dead flexibility).
+**Лишено [ ]:** ARCH-1 (i18n-sweep — фіча на окремий фокус, план записано вище) + усі великі фічі
+(B25/D16/B7) і decisions-pending-хвіст (поза обсягом прогону — тільки Баги/Арх/Смели/Неймінг).
+**Гейти на кінець прогону:** 878 тестів зелені, svelte-check 0 errors, knip clean, jscpd 1.26%.
 
 ---
 
