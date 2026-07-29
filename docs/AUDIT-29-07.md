@@ -50,9 +50,12 @@
 
 ## 🧹 Смели
 
-- **SMELL-1 [ ]** — CSS-дублікати гаряча точка: jscpd CSS 4.5% рядків / 9.1% токенів (TS
-  0.14%). Панелі комбату повторюють блоки → хостити в `styles/components.css` (grep імен
-  перед хойстом — css-hoist-name-collision).
+- **SMELL-1 [~]** — CSS-дублікати. Найбільший кластер = 5-рядковий micro-uppercase-label,
+  ~29 блоків у 18 файлах, дублює вже-існуючий примітив `.eyebrow` (components.css). Хостнув
+  чисті combat-сайти (RollLog/CombatStrip×2/SpellsPanel) через композицію `.eyebrow` у розмітці
+  (computed-style ідентичний: Svelte-scoped `font-size:micro` б'є глобальний xs). Решту (18 файлів,
+  generic-імена `.section`/`.group` = collision-ризик у глобальному селекторі) ЛИШЕНО: гейт зелений
+  (jscpd 1.26% < 1.8%), а масовий markup-sweep по CSS потребує візуальної верифікації (working-style).
 - **SMELL-2 [~]** — `combat/+page.svelte:71` `deriveHealth.set(c.build.name,…)`. Оцінено:
   стор — single-open (не Map), `characterName` — суто display-лейбл (`ContentHealth.svelte:121`);
   тезки реально НЕ колізять, а `c.id`-поле ніхто не читає → dead flexibility (YAGNI). Лишено.

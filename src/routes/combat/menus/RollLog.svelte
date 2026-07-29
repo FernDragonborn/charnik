@@ -6,7 +6,7 @@
 	const log = $derived(combat.tray.log);
 </script>
 
-<div class="cardhead2"><span class="menu-title">Roll log · history</span></div>
+<div class="cardhead2"><span class="menu-title eyebrow">Roll log · history</span></div>
 <div class="logscroll">
 	{#each log as l, i (i)}
 		<div class="log-row">
@@ -42,12 +42,9 @@
 		justify-content: space-between;
 		padding: 11px 13px 6px;
 	}
+	/* mono/uppercase/tracking/muted come from the shared .eyebrow primitive; keep only the micro size */
 	.cardhead2 .menu-title {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.logscroll {
 		padding: 0 6px 4px;

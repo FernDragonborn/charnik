@@ -43,7 +43,7 @@
 		</div>
 	</section>
 	<div class="senses-strip">
-		<span class="bar-label">Passive senses</span>
+		<span class="bar-label eyebrow">Passive senses</span>
 		{#each passives as p, i (p.key)}
 			{#if i > 0}<span class="separator-dot">·</span>{/if}
 			<span class="ability-save" title={why(p.comp)}><i>{p.name}</i>{p.comp.value}</span>
@@ -54,7 +54,7 @@
 	</div>
 	{#if s.defenses.resist.length || s.defenses.immune.length || s.defenses.vulnerable.length}
 		<div class="senses-strip">
-			<span class="bar-label">Defenses</span>
+			<span class="bar-label eyebrow">Defenses</span>
 			{#if s.defenses.resist.length}<span class="ability-save"
 					><i>Resist</i>{s.defenses.resist.join(', ')}</span
 				>{/if}
@@ -130,12 +130,9 @@
 		padding: 11px 16px;
 		margin-bottom: 22px;
 	}
+	/* mono/uppercase/tracking/muted come from the shared .eyebrow primitive; keep only the micro size */
 	.senses-strip .bar-label {
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 	}
 	.senses-strip .ability-save {
 		font-family: var(--font-display);

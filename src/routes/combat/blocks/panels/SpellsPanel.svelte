@@ -34,7 +34,7 @@
 	<div class="spell-rows">
 		{#each spellGroups as g (g.key)}
 			<div class="spgroup">
-				<div class="spell-category" class:star={g.key === 'pinned'}>
+				<div class="spell-category eyebrow" class:star={g.key === 'pinned'}>
 					{g.label}
 					{#if g.slots}{@const sl = g.slots}<span class="pips"
 							>{#each Array(sl.full) as _, i (i)}<button
@@ -138,15 +138,12 @@
 	.spell-rows {
 		margin-top: 2px;
 	}
+	/* mono/uppercase/tracking/muted come from the shared .eyebrow primitive; keep layout + micro size */
 	.spell-category {
 		display: flex;
 		align-items: center;
 		gap: 9px;
-		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		letter-spacing: var(--tracking-label);
-		text-transform: uppercase;
-		color: var(--color-text-muted);
 		padding: 11px 0 3px;
 		break-inside: avoid;
 	}
