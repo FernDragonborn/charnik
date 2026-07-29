@@ -281,7 +281,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (76 modules)
+## Library functions & types (77 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -320,6 +320,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface AssembleWrapper` — The character-envelope fields that wrap an assembled build.
 - `function assembleCharacter` — * Validate an assembled build into a Character.
 
+### `src/lib/character/derive-context.ts`
+
+- `function armorWeightOf` — Armor weight class of the equipped armor (for the `armor_type` guard variable); no armor → none.
+- `interface EffectCtxDeps` — The static setup a derive ctx closes over — computed once per `deriveSheet`, before the resolve.
+- `function makeEffectCtxFactory` — Build the `(state) => EffectCtx` the resolve stage calls.
+
 ### `src/lib/character/derive-gather.ts`
 
 - `interface GatherInput`
@@ -355,7 +361,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export type SkillId`
 - `interface CharacterSheet`
 - `interface ResourceOption` — Piece 3: a spend-option on a granted resource, resolved for a specific character.
-- `function deriveSheet`
+- `function deriveSheet` — Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM.
 
 ### `src/lib/character/repository.ts`
 
@@ -1008,4 +1014,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 547 exports across 87 modules · 31 duplicate suspects · generated in 167ms._
+_45 tokens · 61 global classes · 40 components · 550 exports across 88 modules · 31 duplicate suspects · generated in 158ms._

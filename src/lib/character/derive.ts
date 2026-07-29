@@ -45,15 +45,9 @@ import { type ActiveEffect, type EffectCtx, type EffectIssue } from '../effects/
 import { applyEffects, collectFacts, type EffectFacts, type ResourceDef } from '../effects/apply';
 import { didYouMean } from '../effects/suggest';
 import { resolveActiveEffects } from '../effects/resolver';
-import { RAGE_CONDITION_ID, type ResolveState } from '../effects/dependency-graph';
+import { RAGE_CONDITION_ID } from '../effects/dependency-graph';
 import { deriveSpellcasting, castingAbilityByClass, type Spellcasting } from './spellcasting';
-import {
-	makeExprContext,
-	withSpellcastingMod,
-	type BuildVars,
-	type PlayVars
-} from '../effects/context';
-import type { ExprContext } from '../effects/expression-evaluator';
+import { makeEffectCtxFactory } from './derive-context';
 import { computed, type Computed, type Contribution, type System } from '../rules/pipeline';
 
 // SKILL_ABILITY / SkillId live in the leaf `./skills` (so derive's sub-modules share them without a
@@ -101,15 +95,6 @@ export interface CharacterSheet {
 	/** The typed-facts view of `resolvedEffects` (parsed once, values resolved once — D7): what
 	 *  every consumer outside the stat folds reads (roll path, action economy, panels). */
 	facts: EffectFacts;
-}
-
-/** Armor weight class of the equipped armor (for the `armor_type` guard variable); no armor → none. */
-function armorWeightOf(row: LoadedRowOf<'item'> | undefined): PlayVars['armorType'] {
-	const t = String(row?.data.item_type ?? '').toLowerCase();
-	if (t.includes('heavy')) return 'heavy';
-	if (t.includes('medium')) return 'medium';
-	if (t.includes('light')) return 'light';
-	return 'none';
 }
 
 /** Piece 3: a spend-option on a granted resource, resolved for a specific character. `cost` is a
@@ -247,6 +232,47 @@ function pickPrimaryCaster(
 	return primaryAbility;
 }
 
+interface ArmorSpellBlockInput {
+	spellcasting: Spellcasting;
+	equippedArmor: LoadedRowOf<'item'> | undefined;
+	build: Character['build'];
+	graph: ContentGraph;
+	issues: EffectIssue[];
+}
+
+/** B9: worn armor you lack proficiency with blocks spellcasting (RAW canonical rule-block). Grants
+ *  come from the character's classes; lenient — undeclared classes stay proficient with all armor. */
+function applyArmorSpellBlock({
+	spellcasting,
+	equippedArmor,
+	build,
+	graph,
+	issues
+}: ArmorSpellBlockInput): void {
+	if (!equippedArmor) return;
+	const armorGrants = gatherProfGrants(
+		build.classes.map((c) => {
+			const r = graph.get(c.class);
+			return r?.type === 'class' ? r.data.armor_profs : undefined;
+		})
+	);
+	if (isArmorProficient(armorGrants, equippedArmor.data.item_type, equippedArmor.data.category))
+		return;
+	const source = String(equippedArmor.data.name_en);
+	// cat is always defined here — isArmorProficient returns true (no block) on an unclassifiable armor.
+	const cat = armorCategoryOf(equippedArmor.data.item_type, equippedArmor.data.category);
+	spellcasting.armorBlock = {
+		source,
+		note: `Not proficient with ${cat} armor — spellcasting blocked`
+	};
+	issues.push({ source, token: 'armor_proficiency', reason: spellcasting.armorBlock.note });
+}
+
+// Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM. The
+// separable phases are already pure helpers (setup slices, the ctx factory, resolve, gather, the
+// stat/spell/armor phases); what remains is orchestration + the final assembly, whose length is
+// intrinsic. Complexity is already <20. Splitting further would thread big param bundles through glue
+// code for no readability gain.
 export function deriveSheet(
 	character: Character,
 	graph: ContentGraph,
@@ -307,63 +333,19 @@ export function deriveSheet(
 		return cond && toks.length ? { source: String(cond.data.name_en), tokens: toks } : undefined;
 	};
 
-	/** The ONE ctx (makeExprContext) over the LIVE resolve state: records/Set are the state's own
-	 *  mutable containers, scalars go through getters — so a guard evaluated mid-resolve reads
-	 *  exactly the values the DAG has already resolved (and the final ctx reads the final state). */
-	const makeCtx = (state: ResolveState): EffectCtx => {
-		const buildVars: BuildVars = {
-			level,
-			proficiencyBonus: prof,
-			abilityMods: state.mods,
-			abilityScores: state.scores,
-			classLevels,
-			get spellcastingMod() {
-				return primaryAbility !== undefined ? state.mods[primaryAbility] : 0;
-			},
-			baseSpeed
-		};
-		// a manual play-state max (play.hp.max) wins over the computed one, as everywhere
-		const hpMaxLive = (): number => character.play.hp.max ?? state.hpMax.value;
-		const playVars: PlayVars = {
-			hp: character.play.hp.current,
-			get hpMax() {
-				return hpMaxLive();
-			},
-			tempHp: character.play.hp.temp,
-			exhaustion: character.play.exhaustion,
-			flags: {
-				get is_bloodied() {
-					return character.play.hp.current <= hpMaxLive() / 2;
-				},
-				is_concentrating: character.play.concentration != null,
-				is_wearing_shield: character.play.shieldRaised,
-				is_wearing_armor: !!equippedArmor,
-				get is_raging() {
-					return state.conditions.has(RAGE_CONDITION_ID);
-				}
-			},
-			conditions: state.conditions,
-			resources: state.resources,
-			resourceMax: state.resourceMax,
-			armorType: armorWeightOf(equippedArmor),
-			size: String(speciesRow?.type === 'species' ? speciesRow.data.size : 'medium')
-		};
-		const base = makeExprContext(buildVars, playVars);
-		// per-class `spellcasting_mod` (SPEC4): a token carried by a class's row/feature reads THAT
-		// class's casting mod (live — scores may still be resolving); anything else the primary's.
-		const scoped = new Map<string, ExprContext>();
-		return (eff: ActiveEffect): ExprContext => {
-			const id = eff.classId;
-			const ability = id !== undefined ? abilityByClass[id] : undefined;
-			if (id === undefined || ability === undefined) return base;
-			let c = scoped.get(id);
-			if (!c) {
-				c = withSpellcastingMod(base, () => state.mods[ability]);
-				scoped.set(id, c);
-			}
-			return c;
-		};
-	};
+	// The ctx factory (derive-context.ts): closes over the static setup, returns `(state) => EffectCtx`
+	// with live getters over the resolve state (see that file for the mid-resolve read contract).
+	const makeCtx = makeEffectCtxFactory({
+		character,
+		level,
+		proficiencyBonus: prof,
+		classLevels,
+		primaryAbility,
+		baseSpeed,
+		equippedArmor,
+		speciesRow,
+		abilityByClass
+	});
 
 	// The ONE resolve stage (effects/dependency-graph.ts): dependency-ordered guards, A10 ability pipeline,
 	// condition expansion — every consumer below reads its output.
@@ -421,27 +403,7 @@ export function deriveSheet(
 	// Intellect moves the wizard's DC, as it should) — and `spell_dc`/`spell_attack` effects fold in.
 	const spellcasting = deriveSpellcasting(character, graph, scores, facts);
 
-	// B9: worn armor you lack proficiency with blocks spellcasting (RAW canonical rule-block). Grants
-	// come from the character's classes; lenient — undeclared classes stay proficient with all armor.
-	const armorGrants = gatherProfGrants(
-		build.classes.map((c) => {
-			const r = graph.get(c.class);
-			return r?.type === 'class' ? r.data.armor_profs : undefined;
-		})
-	);
-	if (
-		equippedArmor &&
-		!isArmorProficient(armorGrants, equippedArmor.data.item_type, equippedArmor.data.category)
-	) {
-		const source = String(equippedArmor.data.name_en);
-		// cat is always defined here — isArmorProficient returns true (no block) on an unclassifiable armor.
-		const cat = armorCategoryOf(equippedArmor.data.item_type, equippedArmor.data.category);
-		spellcasting.armorBlock = {
-			source,
-			note: `Not proficient with ${cat} armor — spellcasting blocked`
-		};
-		issues.push({ source, token: 'armor_proficiency', reason: spellcasting.armorBlock.note });
-	}
+	applyArmorSpellBlock({ spellcasting, equippedArmor, build, graph, issues }); // B9
 
 	// stat phases — each reads the shared computed inputs (build/scores/level/facts); see the pure
 	// helpers above. Grouped so deriveSheet stays an orchestrator, not a 300-line body.
