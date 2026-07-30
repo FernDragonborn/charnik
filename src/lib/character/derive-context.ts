@@ -17,7 +17,7 @@ import {
 } from '../effects/context';
 import type { ExprContext } from '../effects/expression-evaluator';
 import type { ActiveEffect, EffectCtx } from '../effects/token-parser';
-import { RAGE_CONDITION_ID, type ResolveState } from '../effects/dependency-graph';
+import { type ResolveState } from '../effects/dependency-graph';
 
 /** Armor weight class of the equipped armor (for the `armor_type` guard variable); no armor → none. */
 function armorWeightOf(row: LoadedRowOf<'item'> | undefined): PlayVars['armorType'] {
@@ -83,10 +83,9 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 				},
 				is_concentrating: character.play.concentration != null,
 				is_wearing_shield: character.play.shieldRaised,
-				is_wearing_armor: !!equippedArmor,
-				get is_raging() {
-					return state.conditions.has(RAGE_CONDITION_ID);
-				}
+				is_wearing_armor: !!equippedArmor
+				// `is_raging` intentionally absent: it resolves via CONDITION_FLAG_ALIASES →
+				// has_condition.rage against the live conditions set (see effects/context.ts).
 			},
 			conditions: state.conditions,
 			resources: state.resources,

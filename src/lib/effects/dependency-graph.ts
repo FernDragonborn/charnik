@@ -13,7 +13,7 @@
  */
 import { ABILITY_IDS, type Ability } from '../rules/core';
 import { type Computed, type Contribution } from '../rules/pipeline';
-import { splitDottedName } from './expression-parser';
+import { splitDottedName, CONDITION_FLAG_ALIASES } from './expression-parser';
 import { collectExprVariables } from './expression-evaluator';
 import {
 	EFFECT_KIND,
@@ -22,10 +22,6 @@ import {
 	type EffectIssue,
 	type ParsedEffect
 } from './token-parser';
-
-/** The condition id the `is_raging` L2 flag reads. A named seam, not scattered string compares —
- *  goes away when conditions-as-data lands a var→condition mapping (PLAN EXPR, AUDIT B2). */
-export const RAGE_CONDITION_ID = 'rage';
 
 /* ─────────────────────── value nodes (what effects can write AND expressions read) ─────────────────────── */
 
@@ -49,7 +45,8 @@ function varDepKeys(name: string): DepKey[] {
 	if (abil?.[1] !== undefined && ABILITY_KEYSET.has(abil[1])) return [abilityKey(abil[1])];
 	if (name === 'spellcasting_mod') return ABILITY_IDS.map(abilityKey);
 	if (name === 'hp_max' || name === 'hp_percent' || name === 'is_bloodied') return [HP_MAX_KEY];
-	if (name === 'is_raging') return [conditionKey(RAGE_CONDITION_ID)];
+	const aliasCond = CONDITION_FLAG_ALIASES[name];
+	if (aliasCond) return [conditionKey(aliasCond)];
 	return [];
 }
 

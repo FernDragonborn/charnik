@@ -10,7 +10,7 @@
  * resolver returns `undefined` for a name it doesn't carry rather than guessing.
  */
 import { ABILITY_IDS, type Ability, type ArmorType, type Size } from '../rules/core';
-import { splitDottedName } from './expression-parser';
+import { splitDottedName, CONDITION_FLAG_ALIASES } from './expression-parser';
 import { type ExprContext } from './expression-evaluator';
 
 /** Build-lifetime numbers (always available; the EXPR-2 subset of the ctx). */
@@ -119,7 +119,13 @@ export function makeExprContext(build: BuildVars, play?: PlayVars): ExprContext 
 			const d = splitDottedName(name);
 			if (d)
 				return d.prefix === 'has_condition' ? (play?.conditions.has(d.id) ?? false) : undefined;
-			return own(play?.flags, name) ?? false;
+			// an explicitly-set flag wins; otherwise a sugar flag (`is_raging`) resolves as its
+			// `has_condition.<id>` alias — so the flag needs no bespoke getter in the derive ctx.
+			const direct = own(play?.flags, name);
+			if (direct !== undefined) return direct;
+			const aliasCond = CONDITION_FLAG_ALIASES[name];
+			if (aliasCond) return play?.conditions.has(aliasCond) ?? false;
+			return false;
 		},
 		enum(name) {
 			if (name === 'armor_type') return play?.armorType;

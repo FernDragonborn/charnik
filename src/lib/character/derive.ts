@@ -45,7 +45,6 @@ import { type ActiveEffect, type EffectCtx, type EffectIssue } from '../effects/
 import { applyEffects, collectFacts, type EffectFacts, type ResourceDef } from '../effects/apply';
 import { didYouMean } from '../effects/suggest';
 import { resolveActiveEffects } from '../effects/resolver';
-import { RAGE_CONDITION_ID } from '../effects/dependency-graph';
 import { deriveSpellcasting, castingAbilityByClass, type Spellcasting } from './spellcasting';
 import { makeEffectCtxFactory } from './derive-context';
 import { computed, type Computed, type Contribution, type System } from '../rules/pipeline';
@@ -180,7 +179,7 @@ function flagPhantomConditions(
 ): void {
 	const conditionIds = new Set(graph.list('condition', { system }).map((r) => r.id));
 	for (const id of facts.conditions)
-		if (!conditionIds.has(id) && id !== RAGE_CONDITION_ID)
+		if (!conditionIds.has(id))
 			issues.push({
 				source: 'apply_condition',
 				token: `apply_condition:${id}`,

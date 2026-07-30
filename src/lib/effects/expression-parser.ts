@@ -44,6 +44,14 @@ const BOOLEAN_VARS: ReadonlySet<string> = new Set<string>([
 	'is_wearing_shield'
 ]);
 
+/** Sugar boolean flags that are pure aliases for `has_condition.<id>`. The ONE hardcoded
+ *  flag→condition-id table — kept in a single place so no bare id string scatters through the
+ *  engine (was `RAGE_CONDITION_ID` in three files). Homebrew can skip the sugar entirely and guard
+ *  on `has_condition.<id>` directly, so adding a rage-like state needs a CSV row, not code. */
+export const CONDITION_FLAG_ALIASES: Readonly<{ is_raging: string } & Record<string, string>> = {
+	is_raging: 'rage'
+};
+
 /** Enum-typed variables → their allowed literal values. A literal is valid ONLY when compared
  *  (`==`/`!=`, plus ordinal `<`/`<=`/`>`/`>=` for ORDERED enums) against a variable of its enum. */
 export const ENUM_VARS: Readonly<Record<string, readonly string[]>> = {

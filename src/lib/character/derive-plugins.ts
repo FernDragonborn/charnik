@@ -10,7 +10,7 @@ import type { Character } from './schema';
 import { applyEffects, mergeFacts, collectFacts, type EffectFacts } from '../effects/apply';
 import type { ActiveEffect, EffectCtx, EffectIssue } from '../effects/token-parser';
 import { expandPluginEffects, type PluginCtx } from '../effects/plugin-registry';
-import { RAGE_CONDITION_ID } from '../effects/dependency-graph';
+import { CONDITION_FLAG_ALIASES } from '../effects/expression-parser';
 import { isEffectTargetSupported } from './derive-targets';
 import type { Computed } from '../rules/pipeline';
 
@@ -68,7 +68,7 @@ export function applyPluginPrePass(o: PluginPrePassInputs): void {
 			tempHp: character.play.hp.temp,
 			flags: {
 				isBloodied: character.play.hp.current <= preHpMax / 2,
-				isRaging: facts.conditions.includes(RAGE_CONDITION_ID),
+				isRaging: facts.conditions.includes(CONDITION_FLAG_ALIASES.is_raging),
 				isConcentrating: character.play.concentration != null
 			},
 			conditions: facts.conditions,
