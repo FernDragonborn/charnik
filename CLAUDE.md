@@ -23,6 +23,12 @@ derive pipeline; `docs/PLUGINS.md` + `docs/ACTIONS.md` are its L3/action compani
 (data/SRD fidelity, typing & code-quality bar, CSS/theming, testing strategy, refactor
 mechanics, git & tooling hygiene, working style). Read it before coding; it complements these
 architecture invariants with the *practice* around them.
+**`docs/compatibility.md`** is the multi-system foot-gun ledger — the ~5 shared chokepoints
+(fold/stacking algebra, build schema, `system ===` branching, effect-token grammar,
+per-source license) where a 5e-only assumption would block a future 3.5 / Pathfinder engine.
+**Consult it before touching the rules core, the fold pipeline, the effect grammar, or the
+character/content schemas** — the point is to not bake 5e-isms into shared code, NOT to
+pre-build any multi-system abstraction (that's YAGNI).
 `docs/research/existing-generators.md` records why design choices were made (what to
 avoid from D&D Beyond / Aurora / Roll20, what to copy). The
 `срншоти для 1го рандун правок/` folder holds reference screenshots (official UA 5.5e
