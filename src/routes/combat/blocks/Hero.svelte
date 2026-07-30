@@ -44,15 +44,18 @@
 <style>
 	.hero {
 		display: grid;
-		grid-template-columns: 1.5fr 1fr;
+		grid-template-columns: 1fr 1.35fr;
 		gap: 22px;
 		align-items: end;
 		margin-bottom: 16px;
 	}
+	/* HP panel (primary) + Exhaustion block (its own component) side by side — read left→right.
+	   `wrap` is the narrow-screen fallback: exhaustion drops below HP instead of overflowing. */
 	.hp-col {
 		display: flex;
-		flex-direction: column;
+		flex-wrap: wrap;
 		gap: 12px;
+		align-items: stretch;
 	}
 	.eyebrow {
 		font-family: var(--font-mono);

@@ -15,31 +15,36 @@
 </script>
 
 <div class="hitpoints">
-	<div class="hitpoints-label">
-		<span>Hit points</span>
-		<button class="temptag" onclick={(e) => openMenu('temphp', e)}>＋ Temp HP</button>
-	</div>
-	<div class="hitpoints-value" title={why(s.maxHp)}>
-		{c.play.hp.current}<small>
-			/ {c.play.hp.max ?? s.maxHp.value}</small
-		>{#if c.play.hp.temp > 0}<span class="temp">+{c.play.hp.temp} temp</span>{/if}
-	</div>
-	<div class="hitpoints-bar">
-		<i class="hitpoints-bar-current" style="width:{hpBar.cur}%"></i><i
-			class="hitpoints-bar-temp"
-			style="width:{hpBar.tmp}%"
-		></i>
-	</div>
-	<div class="hp-adjust">
-		<button class="hp-btn damage" onclick={combat.damage} title="Apply damage">− Damage</button>
-		<input
-			class="hp-number"
-			type="number"
-			min="0"
-			bind:value={combat.hpAmount}
-			aria-label="HP amount"
-		/>
-		<button class="hp-btn heal" onclick={combat.heal} title="Apply healing">Heal ＋</button>
+	<!-- redesigned main row: readout (label · number · bar) LEFT, adjust controls RIGHT -->
+	<div class="hp-main">
+		<div class="hp-readout">
+			<div class="hitpoints-label">
+				<span>Hit points</span>
+				<button class="temptag" onclick={(e) => openMenu('temphp', e)}>＋ Temp HP</button>
+			</div>
+			<div class="hitpoints-value" title={why(s.maxHp)}>
+				{c.play.hp.current}<small>
+					/ {c.play.hp.max ?? s.maxHp.value}</small
+				>{#if c.play.hp.temp > 0}<span class="temp">+{c.play.hp.temp} temp</span>{/if}
+			</div>
+			<div class="hitpoints-bar">
+				<i class="hitpoints-bar-current" style="width:{hpBar.cur}%"></i><i
+					class="hitpoints-bar-temp"
+					style="width:{hpBar.tmp}%"
+				></i>
+			</div>
+		</div>
+		<div class="hp-controls">
+			<button class="hp-btn heal" onclick={combat.heal} title="Apply healing">＋ Heal</button>
+			<input
+				class="hp-number"
+				type="number"
+				min="0"
+				bind:value={combat.hpAmount}
+				aria-label="HP amount"
+			/>
+			<button class="hp-btn damage" onclick={combat.damage} title="Apply damage">− Damage</button>
+		</div>
 	</div>
 	{#if combat.damageTypeOptions.length}
 		<!-- B20: only shown when the sheet HAS a defense — picks the incoming damage's type so
@@ -94,18 +99,47 @@
 
 <style>
 	.hitpoints {
+		flex: 1;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
-		padding: 15px 17px;
+		padding: 12px 16px;
+	}
+	/* main row: HP readout (label · number · bar) left, adjust controls right */
+	.hp-main {
+		display: flex;
+		gap: 15px;
+	}
+	.hp-readout {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+	}
+	.hp-controls {
+		flex: none;
+		width: 120px;
+		display: flex;
+		flex-direction: column;
+		gap: 5px;
+		justify-content: space-between;
+		border-left: 1px solid var(--color-border);
+		padding-left: 15px;
 	}
 	.hitpoints .hitpoints-label {
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin-bottom: 2px;
+	}
+	/* UPPERCASE mono eyebrow (app label convention) — the label text only, not the Temp HP button */
+	.hitpoints-label span {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		letter-spacing: var(--tracking-label);
+		text-transform: uppercase;
 	}
 	.temptag {
 		font-family: var(--font-display);
@@ -158,14 +192,9 @@
 		background: var(--color-good);
 		box-shadow: -1px 0 0 var(--color-surface);
 	}
-	.hp-adjust {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-		margin-top: 10px;
-	}
 	.hp-number {
-		width: 58px;
+		width: 100%;
+		box-sizing: border-box;
 		text-align: center;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-body);
@@ -173,16 +202,15 @@
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
 		color: var(--color-text);
-		padding: 5px 4px;
+		padding: 4px;
 	}
 	.hp-btn {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-xs);
-		padding: 6px 11px;
+		padding: 5px 11px;
 		border-radius: 7px;
 		cursor: pointer;
-		flex: 1;
 	}
 	.hp-btn.damage {
 		background: var(--color-danger-soft);
