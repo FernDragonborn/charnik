@@ -10,6 +10,7 @@
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
 	import { signed } from '$lib/combat/helpers';
 	import HpPanel from './HpPanel/HpPanel.svelte';
+	import Exhaustion from './Exhaustion.svelte';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 	const className = $derived(combat.className);
@@ -34,7 +35,10 @@
 			{/if}
 		</div>
 	</div>
-	<HpPanel {c} {s} />
+	<div class="hp-col">
+		<HpPanel {c} {s} />
+		<Exhaustion {c} />
+	</div>
 </section>
 
 <style>
@@ -44,6 +48,11 @@
 		gap: 22px;
 		align-items: end;
 		margin-bottom: 16px;
+	}
+	.hp-col {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
 	}
 	.eyebrow {
 		font-family: var(--font-mono);

@@ -741,10 +741,29 @@ class CombatVM {
 	conditionList = $derived.by<{ id: string; label: string }[]>(() => {
 		const system = this.character?.system;
 		if (!this.graph || !system) return [];
-		return this.graph
-			.list('condition', { system })
-			.map((r) => ({ id: r.id, label: String(r.data.name_en) }));
+		return (
+			this.graph
+				.list('condition', { system })
+				// leveled conditions (exhaustion, max_level>1) are a stepper, not a binary toggle — they
+				// don't belong in this multi-select (they'd double-count with gatherExhaustion). D19.
+				.filter((r) => Number(r.data.max_level ?? 1) <= 1)
+				.map((r) => ({ id: r.id, label: String(r.data.name_en) }))
+		);
 	});
+	/** The exhaustion ladder height for this character's system (0 = no exhaustion row loaded → the
+	 *  stepper hides). Data-driven cap (the row's `max_level`); a taller homebrew ladder Just Works. */
+	exhaustionMax = $derived.by<number>(() => {
+		const system = this.character?.system;
+		if (!this.graph || !system) return 0;
+		const row = this.graph.list('condition', { system }).find((r) => r.id === 'exhaustion');
+		return row ? Number(row.data.max_level ?? 1) : 0;
+	});
+	/** Set the exhaustion level, clamped to [0, max]. Play-state mutation (autosaves like HP). */
+	setExhaustion = (level: number): void => {
+		const p = this.character?.play;
+		if (!p) return;
+		p.exhaustion = Math.max(0, Math.min(this.exhaustionMax, Math.round(level)));
+	};
 	/** A condition's rules text (English, consistent with the panel's other content labels), looked up
 	 *  by id — the G2 info channel: the "attacks against you have advantage", concealed, auto-crit
 	 *  parts a single-character sheet can't fold onto any stat still reach the player as reference. */

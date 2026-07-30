@@ -337,7 +337,18 @@ const languageSchema = baseRow.extend({
 /** Condition (merged with effects on the sheet). Mechanics ride in `effects`. */
 const conditionSchema = baseRow.extend({
 	/** Negative conditions render crimson, beneficial ones teal. */
-	negative: boolDefault(true)
+	negative: boolDefault(true),
+	/** Ladder height for a LEVELED condition (exhaustion). 1 = a plain binary condition (a toggle in
+	 *  the conditions picker); >1 = a level 0..max_level shown as a stepper, its `effects` scaling off
+	 *  the `exhaustion`/level var. The play cap is DATA — a homebrew 10-rung exhaustion sets
+	 *  max_level=10 and Just Works (D19), no code change. Generalizes to PF2e valued conditions. */
+	max_level: z
+		.preprocess((v) => (v === '' || v == null ? 1 : v), z.coerce.number().int().min(1))
+		.default(1)
+	// ponytail: `derived_when` (a predicate that auto-activates a state, e.g. bloodied = hp_percent<50)
+	// is deliberately NOT added yet — `is_bloodied` already works as a computed flag exposed via the
+	// unified read vocab, and a derived predicate would need DAG-ordering against hp_max with no second
+	// consumer to justify it. Add the column when a second derived state actually needs it (A2 defer).
 });
 
 /** Catalog row for the runtime "+" effect picker (effects.csv). The mechanics ride in the shared

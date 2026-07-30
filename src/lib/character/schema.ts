@@ -138,7 +138,10 @@ const playSchema = z.object({
 	deathSaves: z
 		.object({ successes: z.number().int().min(0).max(3), failures: z.number().int().min(0).max(3) })
 		.default({ successes: 0, failures: 0 }),
-	exhaustion: z.number().int().min(0).max(6).default(0),
+	/** Exhaustion level. The real ceiling is DATA (the exhaustion condition row's `max_level`, 6 in
+	 *  both editions) and the stepper clamps to it; this is only a generous sanity bound so a homebrew
+	 *  ladder taller than 6 still validates (D19). */
+	exhaustion: z.number().int().min(0).max(20).default(0),
 	/** Whether the action-economy is being tracked. Off → no turnbar, no action/bonus/reaction
 	 *  enforcement (rolls always go through); on → attacks/spells spend their slot and are blocked
 	 *  when the slot is exhausted. */
