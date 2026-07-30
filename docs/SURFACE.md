@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (30)
+## Duplicate suspects (31)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -39,6 +39,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `now` ×2 — src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
+- `onKeydown` ×2 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/trapFocus.ts
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/ResourceBar.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
@@ -281,11 +282,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (78 modules)
+## Library functions & types (79 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
 - `const dismissOnEscape` — * Call `onEscape` when the Escape key is pressed while the node is mounted (AUDIT F8) — the one home * for the `<svel…
+
+### `src/lib/actions/trapFocus.ts`
+
+- `const trapFocus` — * Trap keyboard focus inside a modal dialog (AUDIT F8) — the accessibility half the `.dialog` shell * was missing: ba…
 
 ### `src/lib/build/derive.ts`
 
@@ -1033,4 +1038,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 567 exports across 89 modules · 30 duplicate suspects._
+_45 tokens · 61 global classes · 40 components · 568 exports across 90 modules · 31 duplicate suspects._

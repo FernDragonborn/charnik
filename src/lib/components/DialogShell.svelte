@@ -6,6 +6,7 @@
 	// the global `.dialog*` classes (components.css) so the render is identical to the old inline shells.
 	import type { Snippet } from 'svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import { trapFocus } from '$lib/actions/trapFocus';
 	import LangSwitcher from './LangSwitcher.svelte';
 
 	let {
@@ -38,6 +39,7 @@
 	aria-labelledby={titleId}
 	tabindex="-1"
 	use:dismissOnEscape={onDismiss}
+	use:trapFocus
 >
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>

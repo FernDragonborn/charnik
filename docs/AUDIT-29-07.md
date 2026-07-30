@@ -186,9 +186,18 @@ DECISIONS-PENDING + фікс хибного D3). Реально ще не зро
 - **D1** (спліт VM-ів + `derive.ts`), **C2** (css name-collisions), **C3** (css dup-кластери),
   **ARCH-4** (stylelint px-гард — нова знахідка).
 
-**Дрібне:** F6 (`errText` inline), F8 (focus-trap/backdrop діалогу), D19-rem
-(`RollEffects.flat` контракт у тип), B17/B18 residual (baked EN label / `name_en` +
-`Contribution.note`).
+**Дрібне:** ~~F6 (`errText` inline)~~ **[x]** (translate/+page.svelte 2 інлайни → `errText`);
+~~F8 (focus-trap/backdrop діалогу)~~ **[x]** (backdrop+Escape вже були; додано `trapFocus` action —
+sibling до `dismissOnEscape` — на DialogShell: авто-фокус усередину, Tab/Shift+Tab wrap, restore на
+destroy; 4 browser-тести); D19-rem (`RollEffects.flat` контракт у тип), B17/B18 residual (baked EN
+label / `name_en` + `Contribution.note`).
+
+**Green-run 2026-07-30 (переоцінка):** із запропонованого «чистого» батчу лише F6+F8 виявились
+справді decision-free. Решта несуть рішення/дослідження, НЕ роблені наосліп: **D19** (exhaustion
+max 6 → дані) = YAGNI, `6` — RAW-універсальна константа в обох едиціях, не data-driven виграш;
+**L2R-16** (`RAGE_CONDITION_ID='rage'`) потребує дизайн-рішення про data-driven `is_raging`→condition
+seam; **B11** (read size-cap) потребує рішення про cap-значення + 5 storage-impl + ризик зламати
+легітимні великі homebrew-CSV; **B24** (гранульований reparse) — глибше в watcher, не one-liner.
 
 **Відкладене за стратегією:** B23 + T4/T5 (integration-tier/coverage → pre-release);
 PLG-4/6/7-D/8/9-rem + PLG-T1/T2; EFX-TAIL (`treat_as`/Elven Accuracy/Extra Attack);

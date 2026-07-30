@@ -26,6 +26,7 @@
 	import { writeDraft, readDraft, deleteDraft, type DraftTarget } from '$lib/drafts/store';
 	import { app, inActiveEdition } from '$lib/stores/app.svelte';
 	import { isReadOnlyContent } from '$lib/config/demo';
+	import { errText } from '$lib/util/format';
 	import { _ } from '$lib/i18n';
 
 	// A demo build is read-only for content: browse + preview edits, but saving is blocked (the
@@ -204,7 +205,7 @@
 			await reloadContent();
 			toast('Translation saved');
 		} catch (e) {
-			toast(`Could not save: ${e instanceof Error ? e.message : String(e)}`);
+			toast(`Could not save: ${errText(e)}`);
 		} finally {
 			saving = false;
 		}
@@ -229,7 +230,7 @@
 			await reloadContent();
 			selected = content.graph?.get(selected.effectiveId) ?? selected;
 		} catch (e) {
-			toast(`Could not save: ${e instanceof Error ? e.message : String(e)}`);
+			toast(`Could not save: ${errText(e)}`);
 		} finally {
 			saving = false;
 		}
