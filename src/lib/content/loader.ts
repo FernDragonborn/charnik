@@ -306,6 +306,13 @@ function buildLoadedRow(
 	} as LoadedRow;
 }
 
+/** B11: byte cap per CSV, checked BEFORE `Papa.parse` (the freeze/OOM step — parse builds an object
+ *  graph, read is a flat buffer). A char-length proxy for a row cap: rows only exist post-parse, so
+ *  we can't count them without running the parse we're guarding. Generous — a DoS backstop against a
+ *  corrupt/hostile file, not a functional limit (our whole SRD is ~2.7k rows; homebrew may be large).
+ *  Over cap → skip the file with a visible content-health error, never a silent truncate. */
+const MAX_CSV_BYTES = 20 * 1024 * 1024;
+
 /** Read + parse one CSV file, resolving its type/meta/header and folding every valid row + any
  *  content-health issue into `acc`. A non-CSV / directory entry is skipped. */
 async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promise<void> {
@@ -314,6 +321,15 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 	// the caller reads bodies ahead in parallel (SMELL-5); fall back to a direct read for any caller
 	// that doesn't (keeps this callable standalone).
 	const raw = preRead ?? (await st.read(`${root}/${entry.name}`));
+	if (raw.length > MAX_CSV_BYTES) {
+		acc.issues.push({
+			level: 'error',
+			root,
+			file: entry.name,
+			message: `CSV exceeds ${MAX_CSV_BYTES / (1024 * 1024)} MB cap — skipped (likely corrupt or not a content file)`
+		});
+		return;
+	}
 	// A `#content-<key>:` header block (any order, before the CSV) declares the file's metadata.
 	// `#content-type:` lets a freely-named file declare its type; `#content-source:` / `-systems:` are
 	// the file-level source tag / editions stamped onto every row. Explicit wins.

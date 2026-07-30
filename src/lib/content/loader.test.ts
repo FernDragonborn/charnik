@@ -78,6 +78,15 @@ describe('loader — logic (in-memory)', () => {
 		expect(g.list('spell').length).toBe(1);
 	});
 
+	it('B11: skips a CSV over the 20 MB byte cap with a visible error (not silent truncate)', async () => {
+		const s = new MemoryStorage();
+		// cap check runs before parse, so the body needn't be valid CSV — just over 20 MB
+		await s.write('a/spells_srd.csv', 'x'.repeat(20 * 1024 * 1024 + 1));
+		const g = await loadContent(s, ['a']);
+		expect(g.list('spell').length).toBe(0); // skipped whole file, no partial load
+		expect(g.issues.some((i) => i.level === 'error' && /cap/.test(i.message))).toBe(true);
+	});
+
 	it('flags an invalid row without crashing the rest', async () => {
 		const s = new MemoryStorage();
 		await s.write(

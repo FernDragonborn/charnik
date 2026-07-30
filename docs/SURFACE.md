@@ -722,7 +722,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/effects/dependency-graph.ts`
 
-- `const RAGE_CONDITION_ID` — The condition id the `is_raging` L2 flag reads.
 - `type DepKey`
 - `const HP_MAX_KEY`
 - `const abilityKey`
@@ -748,6 +747,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/effects/expression-parser.ts`
 
+- `const CONDITION_FLAG_ALIASES` — Sugar boolean flags that are pure aliases for `has_condition.<id>`.
 - `const ENUM_VARS` — Enum-typed variables → their allowed literal values.
 - `const ORDERED_ENUMS` — Enums whose members have a meaningful order (so `<`/`>` compare by index).
 - `function splitDottedName` — Split a dotted variable name into its family prefix + opaque id, or null when undotted.
