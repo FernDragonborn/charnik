@@ -11,6 +11,11 @@
 		"skipToContent": "Skip to content",
 		"openCommandPalette": "Open command palette"
 	},
+	"mobile": {
+		"title": "No mobile version yet",
+		"body": "What you see on a phone has never been tested or designed for small screens — there's no responsive layout at all right now. A mobile version will come later, once the core features are done. Charnik works best on a desktop.",
+		"continue": "Continue anyway"
+	},
 	"command": {
 		"placeholder": "Jump to a character, spell, item, or rule…",
 		"empty": "No matches.",

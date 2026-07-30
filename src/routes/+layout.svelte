@@ -28,6 +28,7 @@
 		pickDataDir
 	} from '$lib/storage/tauri';
 	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
+	import MobileWarning from '$lib/components/MobileWarning.svelte';
 	import { reloadApp } from '$lib/content/reload';
 	import { reloadContent } from '$lib/content/store.svelte';
 	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
@@ -288,6 +289,8 @@
 {#if firstRunDefault}
 	<FirstRunModal defaultDir={firstRunDefault} pickFolder={pickDataDir} onConfirm={confirmDataDir} />
 {/if}
+
+<MobileWarning />
 
 <CommandPalette />
 

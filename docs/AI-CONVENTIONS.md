@@ -302,6 +302,13 @@ single source of truth.
 topbar and dialogs. Every attention dialog shows it top-right so the user can switch language to
 read the dialog. Before inlining a button/toggle that already exists, extract or reuse it.
 
+**MANDATORY — full-screen dialogs carry a language switcher.** Any dialog/modal/banner that
+covers the whole viewport (backdrop overlay, `alertdialog`/`dialog`, first-run, mobile warning,
+…) MUST include `LangSwitcher` top-right. Rationale: it can appear *before* the user has reached
+the topbar switch (or while covering it), so it may be the only text on screen — a user who can't
+read the current locale must still be able to switch. `DialogShell` already bakes it in
+(`.dialog-lang-corner`); a bespoke full-screen component adds it by hand. No exceptions.
+
 ### 4.5 Semantic colours & design discipline
 **Rule.** Keep semantic colours consistent: **crimson** = important/danger, **teal** =
 good/confirmation, **gold** = neutral marker. Visibility = open/closed **eye** (teal = shown);

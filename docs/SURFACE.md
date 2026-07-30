@@ -150,7 +150,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (40)
+## Shared components (41)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -180,6 +180,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **LangSwitcher** | — | The one canonical language switcher — reused everywhere (topbar, dialogs) so it looks and behaves |
 | **LanguagePicker** | `value`, `locales`, `allowAdd`, `accent` | Searchable language dropdown — one shared control for the translate view's FROM and TO pickers |
 | **Loading** | `message`, `error` | Full-view loading screen shown while the sheet/content is being loaded (the derive can take a |
+| **MobileWarning** | — |  |
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle (d-spellmgr `.ic.pin`): ★ pinned to the quick bar, ☆ not. |
@@ -1038,4 +1039,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 568 exports across 90 modules · 31 duplicate suspects._
+_45 tokens · 61 global classes · 41 components · 568 exports across 90 modules · 31 duplicate suspects._
