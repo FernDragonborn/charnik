@@ -12,6 +12,7 @@ import { casterForSpell } from '$lib/character/spellcasting';
 // re-exported so `$lib/combat/helpers` (barrel) + existing importers keep the same import site
 export { casterForSpell };
 import { parseDicePool } from '$lib/rules/dice';
+import { parseDamageParts } from './attacks';
 import {
 	cantripDieMultiplier,
 	canTogglePrepared,
@@ -39,6 +40,7 @@ export interface SpellRow {
 	levelTag: string;
 	castTimeIcon: '' | 'react' | 'bonus'; // casting time → icon before the level
 	damagePool: Record<number, number> | null; // parsed damage/healing dice (for casting)
+	damageType: string; // damage type from the `damage` column ("fire"); "" for typeless / healing
 	/** Whether casting this spell requires concentration. */
 	concentration: boolean;
 	prepState: '' | 'on' | 'always';
@@ -297,6 +299,7 @@ export function spellRow(
 		levelTag: lvl === 0 ? 'cantrip' : ordinal(lvl),
 		castTimeIcon: castingIcon(d.casting_time ?? ''),
 		damagePool: dmg ? parseDicePool(dmg) : null,
+		damageType: dmg ? (parseDamageParts(dmg)[0]?.type ?? '') : '',
 		concentration: d.concentration ?? false,
 		ritual: d.ritual ?? false,
 		prepState: prep

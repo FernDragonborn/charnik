@@ -3,12 +3,42 @@
  * advantage math, pip click-to-set, and the small roll-UI constants. Pure — the caller gates on
  * the effects-auto toggle. Split out of the old combat/helpers.ts junk-drawer.
  */
-import { parseDiceTerm, type BonusDie, type DieMods, type Rolled } from '$lib/rules/dice';
+import { parseDiceTerm, rollPool, type BonusDie, type DieMods, type Rolled } from '$lib/rules/dice';
 import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
 
+/** A rolled damage slice carrying its damage type ("slashing", "radiant"). A single-type hit is one
+ *  of these; a multi-type weapon rolls several, each shown separately with its own total (BUG-DMG-1). */
+export type TypedRoll = Rolled & { type: string };
+
+/** One damage part to roll: its dice pool + flat mod + type, plus any effect bonus dice / mods that
+ *  ride it (folded onto the primary part by the caller). Fed to `rollDamageParts`. */
+export interface DamagePartSpec {
+	dice: Record<number, number>;
+	mod: number;
+	type: string;
+	bonusDice?: BonusDie[];
+	mods?: DieMods;
+}
+
+/** Roll each damage part into a `TypedRoll`, preserving order (primary part first). Pure — the rng is
+ *  injectable for tests; each part carries its own type through so the tray can show the breakdown. */
+export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): TypedRoll[] {
+	return parts.map((p) => ({
+		...rollPool(p.dice, p.mod, 0, p.bonusDice ?? [], {
+			...(p.mods ?? {}),
+			...(rng ? { rng } : {})
+		}),
+		type: p.type
+	}));
+}
+
 /** A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack —
- *  the damage roll that follows it. Rendered as up to 3 lines: the roll, the dropped adv die, damage. */
-export type RollLogEntry = Rolled & { label: string; damage?: Rolled };
+ *  the per-type damage rolls that follow it. Rendered as the roll, the dropped adv die, then one line
+ *  per damage type plus a combined total. */
+export type RollLogEntry = Rolled & { label: string; damage?: TypedRoll[] };
+
+/** Combined total across every typed damage part. */
+export const damageTotal = (parts: TypedRoll[]): number => parts.reduce((n, p) => n + p.total, 0);
 
 /** The three action-economy slots a turn tracks. */
 export type ActionSlot = 'action' | 'bonus' | 'reaction';

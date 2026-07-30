@@ -81,6 +81,15 @@ export function parseDicePool(s: string): Record<number, number> {
 	return out;
 }
 
+/** Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first. Inverse of
+ *  `parseDicePool` for display; empty pool → "". */
+export function formatDicePool(pool: Record<number, number>): string {
+	return Object.entries(pool)
+		.sort((a, b) => Number(b[0]) - Number(a[0]))
+		.map(([sides, count]) => `${count}d${sides}`)
+		.join(' + ');
+}
+
 /** Options for `rollPool` beyond the pool itself: injectable rng + roll-manipulation effects. */
 export interface RollOptions extends DieMods {
 	rng?: Rng;

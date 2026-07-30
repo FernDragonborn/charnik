@@ -12,7 +12,8 @@ import {
 	netAdvantage,
 	remainingRounds,
 	isEffectExpired,
-	parseDamage,
+	parseDamageParts,
+	formatDamageParts,
 	applyDefense,
 	standardActions,
 	effectiveHpMax,
@@ -473,25 +474,53 @@ describe('durationToRounds — spell duration text → rounds (1 round = 6 s)', 
 	});
 });
 
-describe('parseDamage — dice pool + flat mod (A7: a bonus die is not a flat mod)', () => {
-	it('splits a single die and its flat mod', () => {
-		expect(parseDamage('1d8 +3 slashing')).toEqual({ pool: { 8: 1 }, mod: 3 });
+describe('parseDamageParts — typed dice pool + flat mod (A7: a bonus die is not a flat mod)', () => {
+	it('splits a single die, its flat mod, and its type', () => {
+		expect(parseDamageParts('1d8 +3 slashing')).toEqual([
+			{ pool: { 8: 1 }, mod: 3, type: 'slashing' }
+		]);
 	});
 
 	it('handles the unicode minus signed() emits', () => {
-		expect(parseDamage('1d6 −1 bludgeoning')).toEqual({ pool: { 6: 1 }, mod: -1 });
+		expect(parseDamageParts('1d6 −1 bludgeoning')).toEqual([
+			{ pool: { 6: 1 }, mod: -1, type: 'bludgeoning' }
+		]);
 	});
 
 	it('does NOT read a bonus die count as a flat mod (2d6+1d4)', () => {
-		expect(parseDamage('2d6+1d4 fire')).toEqual({ pool: { 6: 2, 4: 1 }, mod: 0 });
+		expect(parseDamageParts('2d6+1d4 fire')).toEqual([
+			{ pool: { 6: 2, 4: 1 }, mod: 0, type: 'fire' }
+		]);
 	});
 
 	it('does NOT read a MULTI-DIGIT bonus die count as a flat mod (BUG-1: 2d6+10d4)', () => {
-		expect(parseDamage('2d6+10d4 fire')).toEqual({ pool: { 6: 2, 4: 10 }, mod: 0 });
+		expect(parseDamageParts('2d6+10d4 fire')).toEqual([
+			{ pool: { 6: 2, 4: 10 }, mod: 0, type: 'fire' }
+		]);
 	});
 
 	it('keeps a real flat mod alongside a bonus die (1d8+1d6+2)', () => {
-		expect(parseDamage('1d8+1d6+2 radiant')).toEqual({ pool: { 8: 1, 6: 1 }, mod: 2 });
+		expect(parseDamageParts('1d8+1d6+2 radiant')).toEqual([
+			{ pool: { 8: 1, 6: 1 }, mod: 2, type: 'radiant' }
+		]);
+	});
+
+	it('splits a MULTI-TYPE weapon into one part per type (BUG-DMG-1)', () => {
+		expect(parseDamageParts('1d6 slashing; 1d4 radiant')).toEqual([
+			{ pool: { 6: 1 }, mod: 0, type: 'slashing' },
+			{ pool: { 4: 1 }, mod: 0, type: 'radiant' }
+		]);
+	});
+
+	it('round-trips back to a display string via formatDamageParts', () => {
+		expect(formatDamageParts(parseDamageParts('1d6 slashing; 1d4 radiant'))).toBe(
+			'1d6 slashing + 1d4 radiant'
+		);
+		expect(formatDamageParts(parseDamageParts('1d8 +3 slashing'))).toBe('1d8 +3 slashing');
+	});
+
+	it('empty damage → no parts', () => {
+		expect(parseDamageParts('')).toEqual([]);
 	});
 });
 

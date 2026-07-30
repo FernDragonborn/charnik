@@ -33,11 +33,13 @@ import {
 	casterForSpell,
 	preparedTalliesByClass,
 	canTogglePreparedFor,
-	parseDamage,
+	parseDamageParts,
+	rollDamageParts,
 	modTargetLabel,
 	applyDefense,
 	effectiveHpMax,
 	type Attack,
+	type DamagePartSpec,
 	type SpellRow,
 	type MenuKind,
 	type StandardAction
@@ -219,9 +221,9 @@ class CombatVM {
 	/** D8: the ONE dice-tray seam, implemented by the rich combat tray. Registered on mount (see
 	 *  +page), so a generic `openDiceTray({label, formula})` anywhere in combat opens THIS tray (pool,
 	 *  advantage, attack→damage chain) instead of the instant-roll fallback. A caller may pass a
-	 *  pre-split `pool`/`mod`; otherwise the formula↔pool adapter (`parseDamage`) fills the tray. */
+	 *  pre-split `pool`/`mod`; otherwise the formula↔pool adapter (`parseDamageParts`) fills the tray. */
 	handleTrayRequest = (req: DiceTrayRequest) => {
-		const parsed = req.pool ? null : parseDamage(req.formula);
+		const [parsed] = req.pool ? [] : parseDamageParts(req.formula);
 		const pool = req.pool ?? parsed?.pool ?? {};
 		const mod = req.mod ?? parsed?.mod ?? 0;
 		this.tray.prefill({
@@ -234,9 +236,14 @@ class CombatVM {
 		if (req.queuedDamage)
 			this.tray.queueDamage({
 				label: req.queuedDamage.label,
-				dice: req.queuedDamage.dice,
-				mod: req.queuedDamage.mod,
-				...(req.queuedDamage.mods ? { mods: req.queuedDamage.mods } : {})
+				parts: [
+					{
+						dice: req.queuedDamage.dice,
+						mod: req.queuedDamage.mod,
+						type: '',
+						...(req.queuedDamage.mods ? { mods: req.queuedDamage.mods } : {})
+					}
+				]
 			});
 		this.openMenuCentered('dice');
 	};
@@ -494,10 +501,17 @@ class CombatVM {
 	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Alt/Ctrl-click opens the roll tray. */
 	attackRoll = (at: Attack, e: Event) => {
 		if (!this.economy.trySpend('action')) return;
-		const { pool, mod } = parseDamage(at.dmg);
-		const hasDice = Object.keys(pool).length > 0;
+		const hasDice = at.damageParts.some((p) => Object.keys(p.pool).length > 0);
 		const fx = this.effectsFor('attack');
 		const dmgFx = this.effectsFor('damage');
+		// Damage effects (Bless-style flat/dice, reroll/min_die) fold onto the PRIMARY part only — RAW
+		// adds them to the weapon's base damage, not to a second damage type's dice.
+		const parts: DamagePartSpec[] = at.damageParts.map((p, i) => ({
+			dice: p.pool,
+			mod: p.mod + (i === 0 ? dmgFx.flat : 0),
+			type: p.type,
+			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dmgFx } : {})
+		}));
 		if (wantsTray(e)) {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
 			this.openRoll(
@@ -510,22 +524,12 @@ class CombatVM {
 				},
 				e
 			);
-			if (hasDice)
-				this.tray.queueDamage({
-					label: `${at.name} damage`,
-					dice: pool,
-					mod: mod + dmgFx.flat,
-					mods: dmgFx
-				});
+			if (hasDice) this.tray.queueDamage({ label: `${at.name} damage`, parts });
 			return;
 		}
-		// instant: to-hit (with effect advantage/flat/dice) + damage → one 3-line entry
+		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
 		const toHit = rollPool({ 20: 1 }, at.toHit + fx.flat, netAdvantage(fx), fx.bonusDice, fx);
-		this.tray.pushRoll(
-			at.name,
-			toHit,
-			hasDice ? rollPool(pool, mod + dmgFx.flat, 0, dmgFx.bonusDice, dmgFx) : undefined
-		);
+		this.tray.pushRoll(at.name, toHit, hasDice ? rollDamageParts(parts) : undefined);
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
@@ -578,6 +582,18 @@ class CombatVM {
 	 *  logs a marker. Uses the class the spell is cast AS (A18), not classes[0]. */
 	/** Attack spell (r.resolution === 'hit'): roll the TO-HIT (attack-keyed effects) then its damage — tray
 	 *  chains them (to-hit now, damage queued), instant folds both into one 3-line entry. */
+	/** A spell's single typed damage part: its pool + type, with damage effects (flat/dice/mods) folded
+	 *  in. A spell deals one damage type, so it's always exactly one part. */
+	private spellDamagePart(r: SpellRow, dmgFx: RollEffects): DamagePartSpec {
+		return {
+			dice: r.damagePool ?? {},
+			mod: dmgFx.flat,
+			type: r.damageType,
+			bonusDice: dmgFx.bonusDice,
+			mods: dmgFx
+		};
+	}
+
 	private rollSpellAttack(r: SpellRow, e: Event, caster: SpellcastingClass, hasDmg: boolean): void {
 		const fx = this.effectsFor('attack');
 		const dmgFx = this.effectsFor('damage');
@@ -596,15 +612,13 @@ class CombatVM {
 			if (hasDmg)
 				this.tray.queueDamage({
 					label: `${r.name} damage`,
-					dice: { ...(r.damagePool ?? {}) },
-					mod: dmgFx.flat,
-					mods: dmgFx
+					parts: [this.spellDamagePart(r, dmgFx)]
 				});
 		} else {
 			this.tray.pushRoll(
 				`${r.name} (spell attack)`,
 				rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice, fx),
-				hasDmg ? rollPool(r.damagePool ?? {}, dmgFx.flat, 0, dmgFx.bonusDice, dmgFx) : undefined
+				hasDmg ? rollDamageParts([this.spellDamagePart(r, dmgFx)]) : undefined
 			);
 		}
 	}

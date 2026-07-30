@@ -50,7 +50,6 @@ const COLUMNS = [
 	'weight_lb',
 	'properties',
 	'damage',
-	'damage_type',
 	'range',
 	'ac',
 	'armor_dex_cap',
@@ -67,7 +66,6 @@ const blank = {
 	weight_lb: '',
 	properties: '',
 	damage: '',
-	damage_type: '',
 	range: '',
 	ac: '',
 	armor_dex_cap: '',
@@ -116,8 +114,7 @@ let nWeapon = 0,
 				properties: (
 					propList + (mastery && mastery !== '—' ? `; mastery: ${mastery}` : '')
 				).replace(/^; /, ''),
-				damage: dm ? dm[1] : '',
-				damage_type: dm ? dm[2].toLowerCase() : '',
+				damage: dm ? `${dm[1]} ${dm[2].toLowerCase()}` : '',
 				range: rng ? rng[1] : ''
 			})
 		);

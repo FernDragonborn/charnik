@@ -2,7 +2,7 @@
 	// The dice tray / roll builder (overlay.kind === 'dice'). Reads the shared combat view-model's
 	// roll subsystem (combat.tray). Split out of CombatMenus.svelte.
 	import { combat } from '../state.svelte';
-	import { signed, DICE } from '$lib/combat/helpers';
+	import { signed, DICE, damageTotal } from '$lib/combat/helpers';
 
 	const rollSrc = $derived(combat.tray.rollSrc);
 	const dice = $derived(combat.tray.dice);
@@ -61,7 +61,11 @@
 			</div>
 			{#if r.advantageRoll}<div class="drop">drop d20({r.advantageRoll.dropped})</div>{/if}
 			{#if r.damage}<div>
-					dmg {r.damage.expr} = <span class="roll-result">{r.damage.total}</span>
+					dmg {#each r.damage as part, i (i)}{#if i > 0}
+							+
+						{/if}{part.expr}{#if part.type}
+							{part.type}{/if}: <span class="roll-result">{part.total}</span>{/each}
+					{#if r.damage.length > 1}= <span class="roll-result">{damageTotal(r.damage)}</span>{/if}
 				</div>{/if}
 		</div>{/if}
 </div>

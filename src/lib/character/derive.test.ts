@@ -40,12 +40,13 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/items_srd.csv',
 		[
-			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap,str_min,stealth_disadvantage,damage,damage_type',
-			`leather_armor,5.5e,${S},Leather Armor,,armor,light armor,11,,,,,`,
-			`plate_armor,5.5e,${S},Plate Armor,,armor,heavy armor,18,0,15,true,,`,
-			`shield,5.5e,${S},Shield,,shield,shield,2,,,,,`,
-			`dagger,5.5e,${S},Dagger,,weapon,simple melee,,,,,1d4,piercing`,
-			`greataxe,5.5e,${S},Greataxe,,weapon,martial melee,,,,,1d12,slashing`
+			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap,str_min,stealth_disadvantage,damage',
+			`leather_armor,5.5e,${S},Leather Armor,,armor,light armor,11,,,,`,
+			`plate_armor,5.5e,${S},Plate Armor,,armor,heavy armor,18,0,15,true,`,
+			`shield,5.5e,${S},Shield,,shield,shield,2,,,,`,
+			`dagger,5.5e,${S},Dagger,,weapon,simple melee,,,,,1d4 piercing`,
+			`greataxe,5.5e,${S},Greataxe,,weapon,martial melee,,,,,1d12 slashing`,
+			`sunblade,5.5e,${S},Sun Blade,,weapon,martial melee,,,,,1d6 slashing; 1d4 radiant`
 		].join('\n')
 	);
 	await st.write(
@@ -170,6 +171,22 @@ describe('deriveSheet aggregator', () => {
 		expect(dagger.toHit).toBe(4);
 		expect(greataxe.toHit).toBe(2);
 		expect(greataxe.note).toContain('Not proficient');
+	});
+
+	it('BUG-DMG-1: a multi-type weapon yields one damage part per type; the ability mod folds into the primary part only', () => {
+		const c = wizard();
+		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 }; // STR +2
+		c.build.inventory = [{ item: `item:${S}:sunblade`, qty: 1, equipped: true, attuned: false }];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		const sunblade = computeAttacks(characterSchema.parse(c), s, graph).find(
+			(a) => a.name === 'Sun Blade'
+		)!;
+		// "1d6 slashing; 1d4 radiant": STR+2 lands on the slashing (primary) part; radiant carries none.
+		expect(sunblade.damageParts).toEqual([
+			{ pool: { 6: 1 }, mod: 2, type: 'slashing' },
+			{ pool: { 4: 1 }, mod: 0, type: 'radiant' }
+		]);
+		expect(sunblade.dmg).toBe('1d6 +2 slashing + 1d4 radiant');
 	});
 
 	it('piece 3: resolves spend-options for a GRANTED resource; int + `x` costs; drops others', () => {

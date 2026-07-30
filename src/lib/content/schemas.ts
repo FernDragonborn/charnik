@@ -313,8 +313,7 @@ const itemSchema = baseRow.extend({
 	cost: optStr, // "15 gp"
 	weight_lb: optNum,
 	properties: optStr, // weapon props / notes, comma list
-	damage: optStr, // "1d8"
-	damage_type: optStr, // "slashing"
+	damage: optStr, // "1d8 slashing" — dice + type, multi-type as "1d6 slashing; 1d4 radiant"
 	range: optStr, // "80/320" thrown/ranged
 	ac: optInt, // armor base AC
 	armor_dex_cap: optStr, // "" full | "2" medium cap | "0" none (heavy)

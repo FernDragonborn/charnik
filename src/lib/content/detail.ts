@@ -25,7 +25,6 @@ const COMMON = new Set([
 const LABELS: Record<string, string> = {
 	item_type: 'Type',
 	weight_lb: 'Weight (lb)',
-	damage_type: 'Damage type',
 	armor_dex_cap: 'Dex cap',
 	str_min: 'Str min',
 	stealth_disadvantage: 'Stealth',

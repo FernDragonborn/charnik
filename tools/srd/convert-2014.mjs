@@ -1049,7 +1049,6 @@ const ITEM_COLS = [
 	'weight_lb',
 	'properties',
 	'damage',
-	'damage_type',
 	'range',
 	'ac',
 	'armor_dex_cap',
@@ -1069,7 +1068,6 @@ const irow = (o) => ({
 	weight_lb: '',
 	properties: '',
 	damage: '',
-	damage_type: '',
 	range: '',
 	ac: '',
 	armor_dex_cap: '',
@@ -1121,8 +1119,7 @@ function convertItems() {
 				cost,
 				weight_lb: wlb(weight),
 				properties: p === '-' ? '' : p,
-				damage: dm ? dm[1] : '',
-				damage_type: dm ? dm[2].toLowerCase() : '',
+				damage: dm ? `${dm[1]} ${dm[2].toLowerCase()}` : '',
 				range: (/range\s+(\d+\/\d+)/i.exec(props || '') || [, ''])[1]
 			})
 		);

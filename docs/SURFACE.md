@@ -410,8 +410,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/attacks.ts`
 
+- `interface DamagePart` — One typed slice of a weapon's damage: its dice pool, flat mod, and damage type.
 - `interface Attack` — A weapon/unarmed attack row.
-- `function parseDamage` — Parse a weapon/spell damage string ("1d8 +3 slashing", "1d6 −1 bludgeoning") into its dice pool + * flat mod.
+- `function parseDamageParts` — Parse a weapon/spell damage string into its typed parts.
+- `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
 - `function computeAttacks` — Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet.
 
@@ -458,7 +460,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/combat/roll.ts`
 
-- `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the damage roll t…
+- `type TypedRoll` — A rolled damage slice carrying its damage type ("slashing", "radiant").
+- `interface DamagePartSpec` — One damage part to roll: its dice pool + flat mod + type, plus any effect bonus dice / mods that * ride it (folded on…
+- `function rollDamageParts` — Roll each damage part into a `TypedRoll`, preserving order (primary part first).
+- `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the per-type dama…
+- `const damageTotal` — Combined total across every typed damage part.
 - `type ActionSlot` — The three action-economy slots a turn tracks.
 - `const DICE` — The dice sizes offered in the roll tray.
 - `const range` — `[0, 1, …, n-1]` — for rendering N pips/dots.
@@ -866,6 +872,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MAX_DIE_SIDES`
 - `function parseDiceTerm` — Parse a single signed dice term ("1d4" / "-2d4" / "+1d6") into a `BonusDie`, or null if it * isn't one.
 - `function parseDicePool` — Parse every `NdM` token in a string into a pool ({sides: count}).
+- `function formatDicePool` — Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first.
 - `interface RollOptions` — Options for `rollPool` beyond the pool itself: injectable rng + roll-manipulation effects.
 - `function rollPool` — * Roll a dice pool + flat mod.
 - `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat * mod, then `rollPool`.
@@ -1026,4 +1033,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 40 components · 560 exports across 89 modules · 30 duplicate suspects._
+_45 tokens · 61 global classes · 40 components · 567 exports across 89 modules · 30 duplicate suspects._

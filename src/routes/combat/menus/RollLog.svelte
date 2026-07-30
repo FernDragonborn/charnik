@@ -2,6 +2,7 @@
 	// The roll-log history menu (overlay.kind === 'log'). Reads the shared combat view-model's roll
 	// subsystem (combat.tray.log). Split out of CombatMenus.svelte.
 	import { combat } from '../state.svelte';
+	import { damageTotal } from '$lib/combat/helpers';
 
 	const log = $derived(combat.tray.log);
 </script>
@@ -24,9 +25,13 @@
 			{#if l.advantageRoll}<div class="lr-sub drop">
 					drop d20({l.advantageRoll.dropped})
 				</div>{/if}
-			<!-- line 3: damage rolled (for an attack) -->
+			<!-- line 3: damage rolled (for an attack) — one part per damage type, plus a combined total -->
 			{#if l.damage}<div class="lr-sub">
-					dmg {l.damage.expr} = <b class="roll-result">{l.damage.total}</b>
+					dmg {#each l.damage as part, di (di)}{#if di > 0}
+							+
+						{/if}{part.expr}{#if part.type}
+							{part.type}{/if}: <b class="roll-result">{part.total}</b>{/each}
+					{#if l.damage.length > 1}= <b class="roll-result">{damageTotal(l.damage)}</b>{/if}
 				</div>{/if}
 		</div>
 	{:else}<p class="note" style="padding: 11px 13px">

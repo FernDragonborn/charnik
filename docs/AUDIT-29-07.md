@@ -150,19 +150,20 @@ DECISIONS-PENDING + фікс хибного D3). Реально ще не зро
   (`exhaustion max(6)` хардкод→дані), **L2R-16** (`RAGE_CONDITION_ID` хардкод).
 
 **Attack/damage as data**
-- **D9-tail** — magic-weapon +X зроблено; `parseDamage` string round-trip відкритий.
-  - **BUG-DMG-1 (знахідка 2026-07-29, підтверджено трасуванням)** — мульти-тип damage НЕ моделюється
-    як rollable. Меч «1d6 slashing + 1d4 radiant»: база (1d6 slashing) ок, але друга кістка іншого типу
-    або (а) через ефект-токен `flat_bonus:damage+1d4` → degrade у ТЕКСТ-ноту, у кидок не входить + **тип
-    radiant губиться** (у токена нема слота типу); або (б) втиснута в один рядок `"1d6+1d4 radiant"` →
-    `parseDicePool` пулить обидві {6:1,4:1}, але `damage_type` одна колонка → обидві стають radiant.
-    Корінь: damage = рядок + одна `damage_type`, а не `[{dice, type}]`.
-  - **Бажаний вивід кидка (user, 2026-07-29):** розбивка по типах, напр.
-    `1d6 фізичний: 4 + 1d4 світло: 2 = 6` (формат орієнтовний). → структурна модель damage
-    `[{dice, type}]`, кожен під-кид котиться+показується окремо, тотал у кінці.
-  - **Фікс-напрям:** item.damage → structured `[{dice, type}]` (кол. `damage`/`damage_type` = мульти
-    через роздільник АБО linked-таблиця); `computeAttacks`/`parseDamage`/roll-path котять і рендерять
-    пер-тип; weapon-`flat_bonus:damage+<dice>:<type>` дістає слот типу. Фіча (не швидкий фікс) = D9-tail.
+- **D9-tail [~]** — magic-weapon +X зроблено; структурна damage-модель **зроблена** (2026-07-30);
+  token `:type`-слот лишається (див. нижче).
+  - **BUG-DMG-1 [x] (знахідка 2026-07-29, фікс 2026-07-30)** — мульти-тип damage тепер rollable.
+    **Рішення (user):** об'єднати `damage`+`damage_type` в ОДНУ колонку `damage` формату
+    `"1d6 slashing; 1d4 radiant"` (уніфікує зі спелами, що вже так пишуть «8d6 fire»); `damage_type`
+    викинуто зі схеми/конвертерів; SRD-дані перегенеровано (single-type → `"1d8 slashing"`, нуль
+    легасі-фолбеків — pre-release). **Модель:** `parseDamageParts(): DamagePart[]` (`{pool,mod,type}`,
+    `;`-split); `Attack.damageParts` + `SpellRow.damageType`; roll-path типізований per-part
+    (`TypedRoll`/`DamagePartSpec`/`rollDamageParts`) аж до DiceTray+RollLog (пер-тип рядок + тотал);
+    ability/magic mod → лише PRIMARY part (RAW). Тести: parseDamageParts (multi-type + round-trip) +
+    computeAttacks multi-type (Sun Blade).
+  - **Лишилось (token `:type`-слот) [ ]:** weapon-ефект `flat_bonus:damage+1d6` (flaming) досі
+    degrade-ить у видиму текст-ноту (тип не записати — у токена нема слота типу). Напрям:
+    `flat_bonus:damage+<dice>:<type>` грамматика (B13-trap: derive/effectTag/lint). Окремий прохід.
 - **D6 / D10** — механіка з прози (`healDice`/`durationToRounds`/`castingIcon`/`effectHint`)
   → у колонки.
 
