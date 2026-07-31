@@ -82,7 +82,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (61)
+## Global CSS classes (63)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -94,7 +94,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.btn` | components.css | --- buttons: neutral base + ghost / primary variants (dialog footers, forms) --- |
 | `.card` | components.css | --- card + panel header --- |
 | `.chevron` | components.css |  |
-| `.chip` | components.css | --- chip: small mono bordered toggle (topbar system/theme/lang, filters) --- |
+| `.chip` | components.css | A plain grey chip is easy to miss in a dialog corner — give the language switcher a teal outline so it reads as an of… |
 | `.combat-bar` | components.css | --- combat bar: the horizontal surface strip above the panel grid (Turnbar, ResourceBar, TimeSkip all shared this ide… |
 | `.combat-row` | components.css | --- combat action/attack row: the two-line list row shared by the Attacks + Actions panels (name + right-aligned hint… |
 | `.combat-row-desc` | components.css |  |
@@ -113,7 +113,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.dialog-foot` | components.css |  |
 | `.dialog-head` | components.css |  |
 | `.dialog-label` | components.css | dialog field/section label (mono uppercase eyebrow inside the review modals) |
-| `.dialog-lang-corner` | components.css |  |
+| `.dialog-lang-corner` | components.css | A plain grey chip is easy to miss in a dialog corner — give the language switcher a teal outline so it reads as an of… |
 | `.dialog-spacer` | components.css |  |
 | `.dialog-subtitle` | components.css |  |
 | `.dialog-title` | components.css |  |
@@ -127,6 +127,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.loading` | components.css | --- full-view loading / empty state --- |
 | `.meta-key` | GenericHead.svelte :global |  |
 | `.meta-value` | GenericHead.svelte :global |  |
+| `.mobile-blocked` | MobileWarning.svelte :global |  |
 | `.mono-path` | components.css | a filesystem path shown inline (settings Data row) — mono, muted, ellipsized |
 | `.monster-type` | components.css |  |
 | `.muted` | components.css |  |
@@ -146,6 +147,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.source-line` | components.css |  |
 | `.text-field` | components.css | text-input / textarea field base (edit forms, inline editors). |
 | `.toggle-track` | components.css | --- toggle-track: the pill on/off switch knob (Switch component, combat menus) --- |
+| `.topbar` | MobileWarning.svelte :global |  |
 | `.trace` | components.css | --- small shared bits --- |
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
@@ -1039,4 +1041,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 61 global classes · 41 components · 568 exports across 90 modules · 31 duplicate suspects._
+_45 tokens · 63 global classes · 41 components · 568 exports across 90 modules · 31 duplicate suspects._

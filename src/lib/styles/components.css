@@ -400,6 +400,18 @@
 	top: var(--space-4);
 	right: var(--space-4);
 }
+/* A plain grey chip is easy to miss in a dialog corner — give the language switcher a teal outline so
+   it reads as an offered action (the one control you reach for when the copy isn't in your language).
+   Teal, not the crimson accent, so it doesn't read as a warning/destructive control. */
+.dialog-lang-corner .chip {
+	color: var(--color-good);
+	border-color: var(--color-good);
+	font-weight: 600;
+}
+.dialog-lang-corner .chip:hover {
+	color: var(--color-good);
+	background: var(--color-good-soft);
+}
 .dialog-badge {
 	display: inline-block;
 	color: var(--color-accent-bright);

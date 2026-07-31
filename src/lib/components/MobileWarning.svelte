@@ -22,6 +22,15 @@
 		return () => mq.removeEventListener('change', onChange);
 	});
 
+	// While the warning is up, hide the non-responsive chrome (topbar/main). It overflows horizontally on
+	// a phone, which expands the LAYOUT viewport past the screen and pushes a `position: fixed` overlay
+	// off-side. Removing that overflow collapses the layout viewport to device width, so `inset: 0` tracks
+	// the visible screen — and it stays pure CSS, so it re-fits live as the viewport resizes. The class
+	// goes on <html> (see the :global rules below); the reactive statement keeps it in sync.
+	$effect(() => {
+		document.documentElement.classList.toggle('mobile-blocked', narrow && !dismissed);
+	});
+
 	function dismiss() {
 		dismissed = true;
 	}
@@ -47,7 +56,7 @@
 			tabindex="-1"
 			onanimationend={() => (shaking = false)}
 		>
-			<div class="lang-corner"><LangSwitcher /></div>
+			<div class="dialog-lang-corner"><LangSwitcher /></div>
 			<h2 id="mw-title">{$_('mobile.title')}</h2>
 			<p id="mw-body">{$_('mobile.body')}</p>
 			<button type="button" class="continue" onclick={dismiss}>{$_('mobile.continue')}</button>
@@ -56,6 +65,12 @@
 {/if}
 
 <style>
+	/* Hide the non-responsive chrome while the warning is up, so the layout viewport collapses to device
+	   width and the fixed overlay below covers exactly the visible screen (see the script comment). */
+	:global(html.mobile-blocked .topbar),
+	:global(html.mobile-blocked main) {
+		display: none;
+	}
 	.mobile-warning {
 		position: fixed;
 		inset: 0;
@@ -73,11 +88,10 @@
 	}
 	.card {
 		position: relative;
-		/* Size to the content (the body's 60ch measure sets the natural width), never wider than the
-		   viewport. On a phone the text wraps to the available width so the card is near-full; on a
-		   wider screen it stays a content-sized, centred card instead of stretching edge to edge. */
-		width: fit-content;
-		max-width: 100%;
+		/* One fixed measure (~30 chars), never wider than the viewport. Both the title and the body wrap
+		   to THIS width — so a long title (e.g. the Ukrainian one) wraps onto a new line instead of
+		   stretching the card and leaving the shorter body with dead space on the right. */
+		width: min(100%, 22rem);
 		/* Never taller than the viewport — its own content scrolls if it must, so the button stays
 		   reachable on the shortest screens. */
 		max-height: 100%;
@@ -85,9 +99,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
-		/* Small horizontal padding — the banner is for small screens, so give the (larger) text the
-		   width and don't waste it on side gutters. */
-		padding: var(--space-5) var(--space-3);
+		padding: var(--space-6) var(--space-5);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
 		background: var(--color-surface);
@@ -96,15 +108,11 @@
 		   ordinary words like "функціоналу"). */
 		overflow-wrap: break-word;
 	}
-	.lang-corner {
-		position: absolute;
-		top: var(--space-3);
-		inset-inline-end: var(--space-3);
-	}
 	h2 {
 		margin: 0;
-		/* Keep the title clear of the language switcher in the corner. */
-		padding-inline-end: var(--space-7, var(--space-6));
+		/* Keep the title clear of the language switcher in the corner: its offset (--space-4) plus room
+		   for the chip itself, so a full-width title wraps before it instead of sliding under it. */
+		padding-inline-end: calc(var(--space-4) + var(--space-8));
 		font-family: var(--font-display);
 		/* Big and fixed — readability first on the small screens this banner is FOR (28px). */
 		font-size: var(--font-size-xl);
@@ -115,10 +123,9 @@
 		/* Larger body too (20px), so the warning is easy to read on a phone. */
 		font-size: var(--font-size-lg);
 		line-height: 1.5;
+		/* Honour the \n\n between sentences in the message (one line per sentence) while still wrapping. */
+		white-space: pre-line;
 		color: var(--color-text);
-		/* Cap the measure at 60 characters — comfortable reading length; on wider cards lines stop
-		   there instead of running the full width. */
-		max-width: 60ch;
 	}
 	.continue {
 		align-self: flex-start;

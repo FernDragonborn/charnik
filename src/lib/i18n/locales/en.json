@@ -13,7 +13,7 @@
 	},
 	"mobile": {
 		"title": "No mobile version yet",
-		"body": "What you see on a phone has never been tested or designed for small screens — there's no responsive layout at all right now. A mobile version will come later, once the core features are done. Charnik works best on a desktop.",
+		"body": "What you see on a phone has never been tested or designed for small screens — there's no responsive layout at all right now.\n\nA mobile version will come later, once the core features are done.\n\nCharnik works best on a desktop.",
 		"continue": "Continue anyway"
 	},
 	"command": {
