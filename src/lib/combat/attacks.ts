@@ -73,24 +73,48 @@ export function formatDamageParts(parts: DamagePart[]): string {
 /** D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus. Only LITERAL
  *  `flat_bonus:attack` / `flat_bonus:damage` fold in v1; a dice / expression bonus becomes a visible
  *  note (it rides the roll path / needs a ctx — deferred, never silently dropped). Pure. */
-export function weaponBonus(tokens: string[]): { attack: number; damage: number; note?: string } {
+export function weaponBonus(tokens: string[]): {
+	attack: number;
+	damage: number;
+	/** D9-tail: typed extra damage a magic weapon adds as its OWN part(s) — a flaming sword's
+	 *  `flat_bonus:damage:fire+1d6`. Rolled + shown separately, never given the ability mod. Omitted
+	 *  (undefined) when there are none, so a plain weapon's return stays `{attack, damage}`. */
+	extraParts?: DamagePart[];
+	note?: string;
+} {
 	let attack = 0;
 	let damage = 0;
+	const extraParts: DamagePart[] = [];
 	const deferred: string[] = [];
 	for (const tok of tokens) {
 		const p = parseToken(tok);
 		if (p.kind !== EFFECT_KIND.flatBonus || (p.target !== 'attack' && p.target !== 'damage'))
 			continue;
+		// a TYPED damage bonus becomes its own part (the roll path + panel already render multi-type
+		// damage); only an untyped dice/expression bonus still degrades to a note (nowhere to type it)
+		if (p.target === 'damage' && p.damageType) {
+			if (p.dice) extraParts.push({ pool: parseDicePool(p.dice), mod: 0, type: p.damageType });
+			else if (p.amount !== undefined)
+				extraParts.push({ pool: {}, mod: p.amount, type: p.damageType });
+			else deferred.push(effectTag(tok)); // expression-valued typed bonus needs a ctx → note
+			continue;
+		}
 		if (p.amount !== undefined) {
 			if (p.target === 'attack') attack += p.amount;
 			else damage += p.amount;
-		} else deferred.push(effectTag(tok)); // dice / expression → visible degrade
+		} else deferred.push(effectTag(tok)); // untyped dice / expression → visible degrade
 	}
 	const parts: string[] = [];
 	if (attack) parts.push(`${signed(attack)} attack`);
 	if (damage) parts.push(`${signed(damage)} damage`);
 	parts.push(...deferred);
-	return parts.length ? { attack, damage, note: parts.join(', ') } : { attack, damage };
+	const note = parts.length ? parts.join(', ') : undefined;
+	return {
+		attack,
+		damage,
+		...(extraParts.length ? { extraParts } : {}),
+		...(note ? { note } : {})
+	};
 }
 
 /** Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet. Pure. */
@@ -131,9 +155,11 @@ export function computeAttacks(
 		// only — RAW adds the ability modifier once, to the weapon's base damage, never to a second
 		// damage type's dice. A weapon with no damage string still gets a part to carry that mod.
 		const parts = parseDamageParts(row.data.damage ?? '');
-		const damageParts = (parts.length ? parts : [{ pool: {}, mod: 0, type: '' }]).map((p, i) =>
+		const baseParts = (parts.length ? parts : [{ pool: {}, mod: 0, type: '' }]).map((p, i) =>
 			i === 0 ? { ...p, mod: p.mod + mod + w.damage } : p
 		);
+		// typed magic damage (flaming +1d6 fire) rides as extra part(s) after the weapon's own types
+		const damageParts = [...baseParts, ...(w.extraParts ?? [])];
 		out.push({
 			name: row.data.name_en,
 			toHit: mod + (proficient ? prof : 0) + w.attack,

@@ -79,6 +79,10 @@ export interface ParsedEffect {
 	amount?: number;
 	/** Dice bonus (e.g. "1d4" / "-1d4") — a roll modifier, not a flat number. */
 	dice?: string;
+	/** flat_bonus:damage:<type> — the damage-type slot (D9-tail). A flaming weapon's
+	 *  `flat_bonus:damage:fire+1d6` carries `damageType: 'fire'`; a weapon folds it into its OWN
+	 *  extra typed damage part (rolled + shown separately), never onto the base type. */
+	damageType?: string;
 	/** set_override comparison mode (A9): `floor` = "unless already higher" (Headband → INT ≥ 19),
 	 *  `cap` = "unless already lower". Absent = a plain absolute set. */
 	setMode?: 'floor' | 'cap';
@@ -141,19 +145,29 @@ type KindParser = (rest: string, raw: string, kind: EffectKind) => ParsedEffect;
 const parseFlatBonus: KindParser = (rest, raw, kind) => {
 	// literal fast path — ONE target grammar with the expression path below (snake, single
 	// optional dot; `-` is the L2 minus operator, E3): a literal amount/dice never needs a ctx
-	const lit = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(rest);
+	// optional `:<type>` slot between target and sign (D9-tail flaming damage): `damage:fire+1d6`.
+	// `:` is structural (never inside an L2 expression), so this is unambiguous ahead of the `[+-]`.
+	const lit =
+		/^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)(?::([a-z][a-z0-9_]*))?\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(
+			rest
+		);
 	if (lit) {
 		const target = lit[1] ?? '';
-		const sign = lit[2] ?? '';
-		const amount = lit[3] ?? '';
-		if (/d/i.test(amount)) return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw };
-		return { kind, target, amount: clampAmount(Number(sign + amount)), raw };
+		const typed = lit[2] ? { damageType: lit[2].toLowerCase() } : {};
+		const sign = lit[3] ?? '';
+		const amount = lit[4] ?? '';
+		if (/d/i.test(amount))
+			return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw, ...typed };
+		return { kind, target, amount: clampAmount(Number(sign + amount)), raw, ...typed };
 	}
-	// L2 expression value: `<target><+|->` then an expression. A `-` sign negates the whole value.
-	const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)\s*([+-])\s*(.+)$/i.exec(rest);
+	// L2 expression value: `<target>[:<type>]<+|->` then an expression. A `-` sign negates the value.
+	const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)(?::([a-z][a-z0-9_]*))?\s*([+-])\s*(.+)$/i.exec(
+		rest
+	);
 	if (!ex) return { kind: 'unknown', raw };
-	const valueExpr = ex[2] === '-' ? `-(${(ex[3] ?? '').trim()})` : (ex[3] ?? '').trim();
-	return { kind, target: ex[1] ?? '', valueExpr, raw };
+	const typed = ex[2] ? { damageType: ex[2].toLowerCase() } : {};
+	const valueExpr = ex[3] === '-' ? `-(${(ex[4] ?? '').trim()})` : (ex[4] ?? '').trim();
+	return { kind, target: ex[1] ?? '', valueExpr, raw, ...typed };
 };
 
 const parseSetOverride: KindParser = (rest, raw, kind) => {

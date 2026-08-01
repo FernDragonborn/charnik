@@ -39,6 +39,22 @@ describe('parseToken (bounded vocabulary)', () => {
 			dice: '1d4'
 		});
 	});
+	it('parses the D9-tail damage `:type` slot (flaming), leaving untyped tokens type-less', () => {
+		expect(parseToken('flat_bonus:damage:fire+1d6')).toMatchObject({
+			kind: 'flat_bonus',
+			target: 'damage',
+			dice: '1d6',
+			damageType: 'fire'
+		});
+		expect(parseToken('flat_bonus:damage:radiant+2')).toMatchObject({
+			target: 'damage',
+			amount: 2,
+			damageType: 'radiant'
+		});
+		expect(parseToken('flat_bonus:damage:Cold+1d4').damageType).toBe('cold'); // normalized
+		expect(parseToken('flat_bonus:damage+1d6').damageType).toBeUndefined();
+		expect(parseToken('flat_bonus:ac+2').damageType).toBeUndefined();
+	});
 	it('parses the non-numeric kinds', () => {
 		expect(parseToken('resist_immune:poison')).toMatchObject({
 			kind: 'resist_immune',

@@ -150,8 +150,8 @@ DECISIONS-PENDING + фікс хибного D3). Реально ще не зро
   (`exhaustion max(6)` хардкод→дані), **L2R-16** (`RAGE_CONDITION_ID` хардкод).
 
 **Attack/damage as data**
-- **D9-tail [~]** — magic-weapon +X зроблено; структурна damage-модель **зроблена** (2026-07-30);
-  token `:type`-слот лишається (див. нижче).
+- **D9-tail [x]** — magic-weapon +X зроблено; структурна damage-модель **зроблена** (2026-07-30);
+  token `:type`-слот **зроблено** (2026-08-02, див. нижче).
   - **BUG-DMG-1 [x] (знахідка 2026-07-29, фікс 2026-07-30)** — мульти-тип damage тепер rollable.
     **Рішення (user):** об'єднати `damage`+`damage_type` в ОДНУ колонку `damage` формату
     `"1d6 slashing; 1d4 radiant"` (уніфікує зі спелами, що вже так пишуть «8d6 fire»); `damage_type`
@@ -161,9 +161,14 @@ DECISIONS-PENDING + фікс хибного D3). Реально ще не зро
     (`TypedRoll`/`DamagePartSpec`/`rollDamageParts`) аж до DiceTray+RollLog (пер-тип рядок + тотал);
     ability/magic mod → лише PRIMARY part (RAW). Тести: parseDamageParts (multi-type + round-trip) +
     computeAttacks multi-type (Sun Blade).
-  - **Лишилось (token `:type`-слот) [ ]:** weapon-ефект `flat_bonus:damage+1d6` (flaming) досі
-    degrade-ить у видиму текст-ноту (тип не записати — у токена нема слота типу). Напрям:
-    `flat_bonus:damage+<dice>:<type>` грамматика (B13-trap: derive/effectTag/lint). Окремий прохід.
+  - **`:type`-слот [x] (2026-08-02)** — грамматика `flat_bonus:damage:<type>+<value>` (тип у
+    TARGET-слоті, не після value — value лишається суто значенням/виразом, а `:type` семантично
+    кваліфікує target; `:` структурний, тож однозначно перед `[+-]`). `ParsedEffect.damageType`
+    (нормалізований у lowercase). `weaponBonus` тепер повертає `extraParts: DamagePart[]` для
+    типізованих бонусів (dice → `{pool,mod:0,type}`, flat → `{pool:{},mod,type}`); `computeAttacks`
+    додає їх ПІСЛЯ базових частин (без ability-mod). Untyped `flat_bonus:damage+1d6` досі degrade-ить
+    у ноту (нема куди записати тип). effectTag/lint не спотикаються (читають parseToken → damageType
+    їм байдужий). Тести: parseToken `:type` + case-норм + weaponBonus typed dice/flat.
 - **D6 / D10** — механіка з прози (`healDice`/`durationToRounds`/`castingIcon`/`effectHint`)
   → у колонки.
 

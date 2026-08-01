@@ -201,10 +201,23 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 		expect(weaponBonus([])).toEqual({ attack: 0, damage: 0 });
 	});
 
-	it('a dice / expression bonus degrades to a visible note, not a silent fold', () => {
-		const w = weaponBonus(['flat_bonus:damage+1d6']); // flaming — needs the roll path
+	it('an UNtyped dice bonus degrades to a visible note, not a silent fold', () => {
+		const w = weaponBonus(['flat_bonus:damage+1d6']); // no type slot → nowhere to put the part
 		expect(w.damage).toBe(0);
+		expect(w.extraParts).toBeUndefined();
 		expect(w.note).toBeTruthy();
+	});
+
+	it('D9-tail · a TYPED dice bonus (flaming) becomes its own extra damage part', () => {
+		const w = weaponBonus(['flat_bonus:damage:fire+1d6']);
+		expect(w.damage).toBe(0); // not folded into the weapon's base type
+		expect(w.extraParts).toEqual([{ pool: { 6: 1 }, mod: 0, type: 'fire' }]);
+	});
+
+	it('D9-tail · a TYPED flat bonus becomes its own extra part (not folded into base damage)', () => {
+		const w = weaponBonus(['flat_bonus:damage:radiant+2']);
+		expect(w.damage).toBe(0);
+		expect(w.extraParts).toEqual([{ pool: {}, mod: 2, type: 'radiant' }]);
 	});
 
 	it('ignores tokens that are not attack/damage flat bonuses', () => {
