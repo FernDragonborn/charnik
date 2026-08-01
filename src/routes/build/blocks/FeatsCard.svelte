@@ -48,6 +48,22 @@
 						{/each}
 					</div>
 				</div>
+			{:else if chosen && chosen !== ASI}
+				{@const halfOpts = b.halfFeatOptionsFor(slot.key)}
+				{#if halfOpts.length}
+					<div class="asi-block">
+						<span class="subtext"
+							>+1 ability {halfOpts.length === ABILITIES.length ? '(any)' : ''}</span
+						>
+						<div class="chips">
+							{#each halfOpts as ab (ab)}
+								<button class="pick-chip" class:on={b.draft.slotFeatAbility[slot.key] === ab} onclick={() => b.setSlotFeatAbility(slot.key, ab)}>
+									{ab.toUpperCase()}
+								</button>
+							{/each}
+						</div>
+					</div>
+				{/if}
 			{/if}
 		{/each}
 		<p class="subtext note">↻ = repeatable — take it in more than one slot. ASI &amp; feats apply to the preview.</p>

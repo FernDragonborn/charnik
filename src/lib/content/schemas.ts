@@ -289,7 +289,11 @@ const backgroundSchema = baseRow.extend({
 const featSchema = baseRow.extend({
 	category: z.enum(FEAT_CATEGORIES).default('general'),
 	prereq: optStr,
-	repeatable: boolDefault(false)
+	repeatable: boolDefault(false),
+	/** Half-feat ability choice (curated from SRD): the abilities this feat's +1 may go to, as a
+	 *  comma list (`str,dex` — Grappler) or `any` (all six — Epic Boons). Empty = not a half-feat.
+	 *  The builder shows an ability picker and folds the +1 into `abilityBoosts`. */
+	ability_choice: optStr
 });
 
 /** Spell. Semi-structured upcasting in `higher_level`; resolution + save_ability drive

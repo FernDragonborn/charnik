@@ -11,6 +11,17 @@ import { casterForSpell } from '../character/spellcasting';
 import { parseToken, splitGuard, EFFECT_KIND } from '../effects/token-parser';
 import type { StatMethod } from './rules';
 
+/** The abilities a half-feat's +1 may be assigned to, from its `ability_choice` column: `any` → all
+ *  six (Epic Boons), else the listed subset (`str,dex` → Grappler). Empty/absent → `[]` (not a
+ *  half-feat). Order follows ABILITIES for a stable picker. Pure. */
+export function halfFeatAbilities(spec: string | undefined): Ability[] {
+	if (!spec) return [];
+	const raw = spec.trim().toLowerCase();
+	if (raw === 'any') return [...ABILITIES];
+	const wanted = new Set(raw.split(',').map((s) => s.trim()));
+	return ABILITIES.filter((a) => wanted.has(a));
+}
+
 /** Sum the `level:count` expertise pairs (`"1:2,6:2"`) whose unlock level ≤ the class level. A single
  *  feature row can thus carry a progressive grant (Rogue's L1 row also grants +2 at L6). Pure. */
 export function expertiseSlotsAtLevel(spec: string | undefined, classLevel: number): number {

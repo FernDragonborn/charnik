@@ -51,6 +51,9 @@ export interface DraftState {
 	selectedLanguages: string[];
 	slotFeats: Record<string, string>;
 	slotAsi: Record<string, { shape: AsiShape; picks: Ability[] }>;
+	/** Half-feat ability choice per slot: the +1 a feat like Grappler (STR/DEX) or an Epic Boon
+	 *  (any) grants, keyed by slot. Folds into `abilityBoosts` at assemble. */
+	slotFeatAbility: Record<string, Ability>;
 	selectedSpells: string[];
 	inventory: { item: string; qty: number; equipped: boolean; attuned: boolean }[];
 }
@@ -77,6 +80,7 @@ export function blankDraft(): DraftState {
 		selectedLanguages: [],
 		slotFeats: {},
 		slotAsi: {},
+		slotFeatAbility: {},
 		selectedSpells: [],
 		inventory: []
 	};

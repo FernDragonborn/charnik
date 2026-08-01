@@ -5,7 +5,8 @@ import {
 	speciesFixedAbilities,
 	buildIssues,
 	expertiseSlotsAtLevel,
-	expertiseBudget
+	expertiseBudget,
+	halfFeatAbilities
 } from './derive';
 import { makeRow } from '../content/test-utils';
 import type { ContentGraph } from '../content/loader';
@@ -29,6 +30,17 @@ describe('asiBoost', () => {
 	it('undefined / empty picks → no boost', () => {
 		expect(asiBoost(undefined)).toEqual({});
 		expect(asiBoost({ shape: '2', picks: [] })).toEqual({});
+	});
+});
+
+describe('halfFeatAbilities (half-feat +1 targets)', () => {
+	it('parses a comma list, "any" → all six, and empty → none', () => {
+		expect(halfFeatAbilities('str,dex')).toEqual(['str', 'dex']);
+		expect(halfFeatAbilities('any')).toEqual(['str', 'dex', 'con', 'int', 'wis', 'cha']);
+		expect(halfFeatAbilities('DEX, STR')).toEqual(['str', 'dex']); // normalized + stable order
+		expect(halfFeatAbilities('')).toEqual([]);
+		expect(halfFeatAbilities(undefined)).toEqual([]);
+		expect(halfFeatAbilities('bogus')).toEqual([]);
 	});
 });
 

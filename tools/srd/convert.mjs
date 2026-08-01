@@ -50,10 +50,10 @@ const FEAT_SECTIONS = {
 	'Fighting Style Feats': 'fighting_style',
 	'Epic Boon Feats': 'epic_boon'
 };
-// Feat `effects` (mechanical tokens) are authored AFTER conversion — curated from the SRD text into
-// the bounded vocab (Alert's initiative bonus, etc.), NOT present as tokens in the prose. Preserve
-// them by id, or a raw re-run silently wipes the authoring (same pattern as class_features).
-function existingFeatEffects() {
+// Feat `effects` (mechanical tokens) and `ability_choice` (half-feat +1 targets) are authored AFTER
+// conversion — curated from the SRD text, NOT present as such in the prose. Preserve them by id, or a
+// raw re-run silently wipes the authoring (same pattern as class_features).
+function existingFeatCol(col) {
 	const path = out('feats_srd.csv');
 	if (!existsSync(path)) return new Map();
 	const raw = readFileSync(path, 'utf8')
@@ -63,12 +63,13 @@ function existingFeatEffects() {
 		.join('\n');
 	const map = new Map();
 	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
-		if (r.id && r.effects) map.set(r.id, r.effects);
+		if (r.id && r[col]) map.set(r.id, r[col]);
 	return map;
 }
 
 function convertFeats() {
-	const authored = existingFeatEffects();
+	const authored = existingFeatCol('effects');
+	const authoredAbility = existingFeatCol('ability_choice');
 	const all = blocks(src('feats.md')).filter((b) => FEAT_SECTIONS[b.h3]);
 	const rows = all.map((b) => {
 		const text = b.body.join('\n');
@@ -84,7 +85,8 @@ function convertFeats() {
 			effects: authored.get(slug(b.name)) ?? '', // preserve tokens authored post-conversion
 			category: FEAT_SECTIONS[b.h3],
 			prereq: prereqM ? prereqM[1].trim() : '',
-			repeatable: String(/_Repeatable\._/.test(text))
+			repeatable: String(/_Repeatable\._/.test(text)),
+			ability_choice: authoredAbility.get(slug(b.name)) ?? '' // half-feat +1 targets, preserved
 		};
 	});
 	writeCsv(
@@ -100,7 +102,8 @@ function convertFeats() {
 			'effects',
 			'category',
 			'prereq',
-			'repeatable'
+			'repeatable',
+			'ability_choice'
 		],
 		rows
 	);

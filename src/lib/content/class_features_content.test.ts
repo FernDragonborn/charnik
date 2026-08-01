@@ -4,7 +4,7 @@ import { MemoryStorage } from '../storage/memory';
 import { loadContent, type ContentGraph } from './loader';
 import { newCharacter, characterSchema, type Character } from '../character/schema';
 import { deriveSheet } from '../character/derive';
-import { expertiseBudget } from '../build/derive';
+import { expertiseBudget, halfFeatAbilities } from '../build/derive';
 
 /*
  * Guards SHIPPED class-feature effect tokens (EFX-E4 authoring): a barbarian must derive the Rage
@@ -149,6 +149,17 @@ describe('shipped feat effects (real content)', () => {
 		const base = sheetWith([]);
 		const alert = sheetWith(['feat:SRD 5.2.1:alert']);
 		expect(alert.initiative.value).toBe(base.initiative.value + 3); // + proficiency bonus
+	});
+
+	it('2024 half-feats carry their ability_choice (Grappler STR/DEX, Epic Boons any)', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const choiceOf = (id: string) => {
+			const row = g.get(`feat:SRD 5.2.1:${id}`);
+			return row?.type === 'feat' ? halfFeatAbilities(row.data.ability_choice) : null;
+		};
+		expect(choiceOf('grappler')).toEqual(['str', 'dex']);
+		expect(choiceOf('boon_of_combat_prowess')).toEqual(['str', 'dex', 'con', 'int', 'wis', 'cha']);
+		expect(choiceOf('alert')).toEqual([]); // not a half-feat
 	});
 });
 

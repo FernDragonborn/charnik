@@ -1176,11 +1176,12 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   re-run, like class_features); **Alert (2024)** encoded faithfully =
   `flat_bonus:initiative+proficiency_bonus` (real-content test). **The honest remainder is BLOCKED,
   not just unauthored** — most shipped SRD feats don't map onto the bounded vocab:
-  - **Needs a half-feat ability-CHOICE UI** (the real subproject): Grappler (+1 STR/DEX) and the 7
-    Epic Boons (+1 any, to max **30** — also needs the 20-cap bypassed). A feat slot is today EITHER
-    a feat OR an ASI; a half-feat is both. Design: a `ability_choice` feat column (`str,dex` / `any`),
-    a `slotFeatAbility[slotKey]` draft field, an ability picker shown when a slot holds a half-feat,
-    and a +1 fold into `abilityBoosts`.
+  - **Half-feat ability-CHOICE UI — DONE (2026-08-02):** `ability_choice` feat column (`str,dex`
+    Grappler / `any` Epic Boons, converter-preserved), `slotFeatAbility[slotKey]` draft field, an
+    ability picker under a slot that holds a half-feat (defaults to the first option), +1 folded into
+    `abilityBoosts`. Epic Boons reach 30 for free — the derive already clamps ability scores at 30
+    (A10), so no bespoke cap-override was needed (regular ASI is equally un-20-capped in this lenient
+    model). Live-verified (Grappler L4 → STR/DEX picker). Grappler's grapple mechanics stay text.
   - **Needs vocab the L1 grammar lacks** → left as text (engine already surfaces it): weapon-type-
     conditional bonuses (Archery +2 ranged attack), armor-gated bonuses (Defense +1 AC while armored),
     once-per-turn damage rerolls (Savage Attacker / Great Weapon Fighting), spell grants (Magic

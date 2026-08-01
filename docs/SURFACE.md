@@ -299,6 +299,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/build/derive.ts`
 
+- `function halfFeatAbilities` — The abilities a half-feat's +1 may be assigned to, from its `ability_choice` column: `any` → all * six (Epic Boons), …
 - `function expertiseSlotsAtLevel` — Sum the `level:count` expertise pairs (`"1:2,6:2"`) whose unlock level ≤ the class level.
 - `function expertiseBudget` — N4a: how many skill-expertise choices the drafted character has unlocked — the sum of each class's * active features'…
 - `function parseSpeciesBoostChoice` — Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null.
@@ -1045,4 +1046,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 41 components · 570 exports across 90 modules · 31 duplicate suspects._
+_45 tokens · 63 global classes · 41 components · 571 exports across 90 modules · 31 duplicate suspects._

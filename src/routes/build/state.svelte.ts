@@ -44,7 +44,8 @@ import {
 	asiBoost,
 	buildSpellPicker,
 	buildIssues,
-	expertiseBudget
+	expertiseBudget,
+	halfFeatAbilities
 } from '$lib/build/derive';
 import { splitList, FEAT_CATEGORY, type ContentType } from '$lib/content/schemas';
 import { slugify } from '$lib/util/slug';
@@ -491,6 +492,11 @@ class BuildVM {
 			for (const ab of this.draft.speciesBoostPicks)
 				out[ab] = (out[ab] ?? 0) + this.speciesBoostChoice.amount;
 		for (const s of this.featSlots) if (this.draft.slotFeats[s.key] === ASI) add(this.asiBoostFor(s.key));
+		// half-feat +1 (Grappler STR/DEX, Epic Boon any) — the chosen ability of each half-feat slot
+		for (const s of this.featSlots) {
+			const ab = this.draft.slotFeatAbility[s.key];
+			if (ab && this.halfFeatOptionsFor(s.key).includes(ab)) out[ab] = (out[ab] ?? 0) + 1;
+		}
 		return out;
 	});
 	toggleBoostPick = (ab: Ability) => {
@@ -553,6 +559,23 @@ class BuildVM {
 			delete asi[key];
 			this.draft.slotAsi = asi;
 		}
+		// a half-feat defaults its +1 to the first offered ability; a non-half-feat clears any choice
+		const first = this.halfFeatOptionsFor(key)[0];
+		const featAb = { ...this.draft.slotFeatAbility };
+		if (first) featAb[key] ??= first;
+		else delete featAb[key];
+		this.draft.slotFeatAbility = featAb;
+	};
+	/** The abilities a slot's chosen feat lets you raise by +1 (a half-feat like Grappler / an Epic
+	 *  Boon), or `[]` if the slot holds no half-feat. Reads the feat row's `ability_choice`. */
+	halfFeatOptionsFor = (key: string): Ability[] => {
+		const ref = this.draft.slotFeats[key];
+		if (!ref || ref === ASI) return [];
+		const feat = rowOfType(this.graph?.get(ref), 'feat');
+		return halfFeatAbilities(feat?.data.ability_choice);
+	};
+	setSlotFeatAbility = (key: string, ab: Ability) => {
+		this.draft.slotFeatAbility = { ...this.draft.slotFeatAbility, [key]: ab };
 	};
 	filledSlots = $derived(this.featSlots.filter((s) => this.draft.slotFeats[s.key]).length);
 
