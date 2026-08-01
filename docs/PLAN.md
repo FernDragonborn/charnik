@@ -83,7 +83,8 @@ trust what happened.
   engine seam: first-party/signed handlers = trusted; **community plugins run in a
   QuickJS-in-WASM sandbox** (`quickjs-emscripten`) with a narrow host API returning
   `{value, trace}`, hard time/memory limits, no DOM/Tauri/fs/network. **Design the plugin
-  registry seam early** (cheap) even though the sandbox itself is deferred until demand.
+  registry seam early** (cheap). **UPDATE: the sandbox is now BUILT** (PLG-1..3, 2026-07-19 —
+  see the "PLG · Plugin sandbox" section below); this "deferred until demand" note is historical.
   Seam prep (decided 2026-07-15, doc-only — no dead code, knip is a hard gate): the token
   namespace **`plugin:<ns>:<rest>` is RESERVED** (today such tokens parse as `unknown` → inert
   text note, which is exactly the safe default); the handler contract is pinned as a pure
@@ -1184,7 +1185,10 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
     conditional bonuses (Archery +2 ranged attack), armor-gated bonuses (Defense +1 AC while armored),
     once-per-turn damage rerolls (Savage Attacker / Great Weapon Fighting), spell grants (Magic
     Initiate), skill/tool CHOICE grants (Skilled — needs a choice UI too).
-- [ ] **Plugin sandbox** (QuickJS-WASM) for exotic homebrew logic — far future (decided, not built).
+- [x] **Plugin sandbox** (QuickJS-WASM) for exotic homebrew logic — **BUILT** (PLG-1..3, 2026-07-19;
+  full QuickJS-NG-in-WASM host with PLG-SEC containment, 58 tests). Details in the "PLG · Plugin
+  sandbox (L3 expressiveness) — BUILT" section above. Open tails are only the plugin-dependency
+  notification view + portability/version awareness — NOT the sandbox itself.
 
 **Spellcasting follow-ups:**
 - [~] **Resource subsystem** — engine + tracker DONE. `grant_resource:<id>:<max>:<recharge>` parsed
