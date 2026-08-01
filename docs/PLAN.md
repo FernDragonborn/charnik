@@ -1170,9 +1170,20 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   skill/save proficiency; `resist_immune` collects damage defenses (shown on the sheet);
   `apply_condition` expands to the referenced condition's own tokens. All gated on the effects-auto
   toggle. (flat_bonus / set_override were already applied.)
-- [ ] **Feat stat/skill bonuses** — the engine applies feat effect tokens already, but the shipped
-  feat rows carry no `effects` yet (must be encoded from SRD text, no hand-authoring) + half-feat
-  ability-choice UI is still needed.
+- [~] **Feat stat/skill bonuses** — engine folds feat `effects` already (derive-gather pushes feat
+  rows). **Started (2026-08-02):** convert.mjs now PRESERVES authored feat `effects` (was wiped on
+  re-run, like class_features); **Alert (2024)** encoded faithfully =
+  `flat_bonus:initiative+proficiency_bonus` (real-content test). **The honest remainder is BLOCKED,
+  not just unauthored** — most shipped SRD feats don't map onto the bounded vocab:
+  - **Needs a half-feat ability-CHOICE UI** (the real subproject): Grappler (+1 STR/DEX) and the 7
+    Epic Boons (+1 any, to max **30** — also needs the 20-cap bypassed). A feat slot is today EITHER
+    a feat OR an ASI; a half-feat is both. Design: a `ability_choice` feat column (`str,dex` / `any`),
+    a `slotFeatAbility[slotKey]` draft field, an ability picker shown when a slot holds a half-feat,
+    and a +1 fold into `abilityBoosts`.
+  - **Needs vocab the L1 grammar lacks** → left as text (engine already surfaces it): weapon-type-
+    conditional bonuses (Archery +2 ranged attack), armor-gated bonuses (Defense +1 AC while armored),
+    once-per-turn damage rerolls (Savage Attacker / Great Weapon Fighting), spell grants (Magic
+    Initiate), skill/tool CHOICE grants (Skilled — needs a choice UI too).
 - [ ] **Plugin sandbox** (QuickJS-WASM) for exotic homebrew logic — far future (decided, not built).
 
 **Spellcasting follow-ups:**

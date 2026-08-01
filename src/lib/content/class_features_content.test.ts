@@ -137,6 +137,21 @@ describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {
 	});
 });
 
+describe('shipped feat effects (real content)', () => {
+	it('2024 Alert adds the proficiency bonus to initiative', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const sheetWith = (feats: string[]) => {
+			const c = newCharacter('grog', 'Grog', '5.5e');
+			c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 5 }]; // PB +3 at level 5
+			c.build.feats = feats;
+			return deriveSheet(characterSchema.parse(c), g);
+		};
+		const base = sheetWith([]);
+		const alert = sheetWith(['feat:SRD 5.2.1:alert']);
+		expect(alert.initiative.value).toBe(base.initiative.value + 3); // + proficiency bonus
+	});
+});
+
 describe('N4a · shipped expertise_slots grants (real content)', () => {
 	const budgetAt =
 		(g: ContentGraph, source: string, system: '5e' | '5.5e') => (classId: string, level: number) =>

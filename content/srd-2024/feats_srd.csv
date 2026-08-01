@@ -3,13 +3,13 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f968-7fd0-88fc-dbf43af3ecc8
-#content-updated_at: 2026-07-16
-#content-hash: xxh64:f02b6e5eb6ebc9e2
+#content-updated_at: 2026-08-01
+#content-hash: xxh64:13fb10e99ae6fda1
 id,name_en,name_uk,text_en,text_uk,effects,category,prereq,repeatable
 alert,Alert,,"_Origin Feat_
 You gain the following benefits.
 _Initiative Proficiency._ When you roll Initiative, you can add your Proficiency Bonus to the roll.
-_Initiative Swap._ Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can't make this swap if you or the ally has the Incapacitated condition.",,,origin,,false
+_Initiative Swap._ Immediately after you roll Initiative, you can swap your Initiative with the Initiative of one willing ally in the same combat. You can't make this swap if you or the ally has the Incapacitated condition.",,flat_bonus:initiative+proficiency_bonus,origin,,false
 magic_initiate,Magic Initiate,,"_Origin Feat_
 You gain the following benefits.
 _Two Cantrips._ You learn two cantrips of your choice from the Cleric, Druid, or Wizard spell list. Intelligence, Wisdom, or Charisma is your spellcasting ability for this feat's spells (choose when you select this feat).

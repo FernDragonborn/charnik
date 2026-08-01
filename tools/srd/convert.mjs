@@ -50,7 +50,25 @@ const FEAT_SECTIONS = {
 	'Fighting Style Feats': 'fighting_style',
 	'Epic Boon Feats': 'epic_boon'
 };
+// Feat `effects` (mechanical tokens) are authored AFTER conversion — curated from the SRD text into
+// the bounded vocab (Alert's initiative bonus, etc.), NOT present as tokens in the prose. Preserve
+// them by id, or a raw re-run silently wipes the authoring (same pattern as class_features).
+function existingFeatEffects() {
+	const path = out('feats_srd.csv');
+	if (!existsSync(path)) return new Map();
+	const raw = readFileSync(path, 'utf8')
+		.replace(/^﻿/, '')
+		.split('\n')
+		.filter((l) => !l.startsWith('#'))
+		.join('\n');
+	const map = new Map();
+	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
+		if (r.id && r.effects) map.set(r.id, r.effects);
+	return map;
+}
+
 function convertFeats() {
+	const authored = existingFeatEffects();
 	const all = blocks(src('feats.md')).filter((b) => FEAT_SECTIONS[b.h3]);
 	const rows = all.map((b) => {
 		const text = b.body.join('\n');
@@ -63,7 +81,7 @@ function convertFeats() {
 			name_uk: '',
 			text_en: description(b.body),
 			text_uk: '',
-			effects: '',
+			effects: authored.get(slug(b.name)) ?? '', // preserve tokens authored post-conversion
 			category: FEAT_SECTIONS[b.h3],
 			prereq: prereqM ? prereqM[1].trim() : '',
 			repeatable: String(/_Repeatable\._/.test(text))
