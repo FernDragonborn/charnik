@@ -4,6 +4,7 @@ import { MemoryStorage } from '../storage/memory';
 import { loadContent, type ContentGraph } from './loader';
 import { newCharacter, characterSchema, type Character } from '../character/schema';
 import { deriveSheet } from '../character/derive';
+import { expertiseBudget } from '../build/derive';
 
 /*
  * Guards SHIPPED class-feature effect tokens (EFX-E4 authoring): a barbarian must derive the Rage
@@ -133,5 +134,34 @@ describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {
 		expect(at(2).speed.value).toBe(Math.floor(base.speed.value / 2));
 		// L5: speed reduced to 0 (set_override beats the L2 halve)
 		expect(at(5).speed.value).toBe(0);
+	});
+});
+
+describe('N4a · shipped expertise_slots grants (real content)', () => {
+	const budgetAt =
+		(g: ContentGraph, source: string, system: '5e' | '5.5e') => (classId: string, level: number) =>
+			expertiseBudget(
+				[{ classId: `class:${source}:${classId}`, subclassId: null, level }],
+				g,
+				system
+			);
+
+	it('2024: Rogue 2@L1 +2@L6, Bard 2@L2 +2@L9, Ranger 2@L9', async () => {
+		const b = budgetAt(await loadEdition('content/srd-2024'), 'SRD 5.2.1', '5.5e');
+		expect(b('rogue', 1)).toBe(2);
+		expect(b('rogue', 5)).toBe(2);
+		expect(b('rogue', 6)).toBe(4);
+		expect(b('bard', 2)).toBe(2);
+		expect(b('bard', 9)).toBe(4);
+		expect(b('ranger', 8)).toBe(0);
+		expect(b('ranger', 9)).toBe(2);
+	});
+	it('2014: Rogue 2@L1 +2@L6, Bard 2@L3 +2@L10 (no Ranger expertise)', async () => {
+		const b = budgetAt(await loadEdition('content/srd-2014'), 'SRD 5.1', '5e');
+		expect(b('rogue', 1)).toBe(2);
+		expect(b('rogue', 6)).toBe(4);
+		expect(b('bard', 3)).toBe(2);
+		expect(b('bard', 10)).toBe(4);
+		expect(b('ranger', 20)).toBe(0);
 	});
 });

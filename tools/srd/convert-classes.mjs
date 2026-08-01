@@ -66,10 +66,10 @@ function parseWeaponProfs(cell, subsets) {
 
 const subsets = martialSubsets(resolve(root, 'content/srd-2024/items_srd.csv'));
 
-// Feature `effects` are authored AFTER conversion (mechanical tokens curated from the SRD into the
-// bounded vocab — Rage's grant_resource, etc. — NOT present in the prose). Preserve them, or a raw
-// re-run silently wipes the authoring. Keyed by feature id.
-function existingEffectsById(csvPath) {
+// Feature `effects` (mechanical tokens) and `expertise_slots` (N4a level:count grants) are authored
+// AFTER conversion — curated from the SRD into a bounded annotation, NOT present as such in the prose.
+// Preserve them by id, or a raw re-run silently wipes the authoring.
+function existingColById(csvPath, col) {
 	if (!existsSync(csvPath)) return new Map();
 	const raw = readFileSync(csvPath, 'utf8')
 		.replace(/^﻿/, '') // strip the UTF-8 BOM before the #-filter
@@ -78,12 +78,12 @@ function existingEffectsById(csvPath) {
 		.join('\n');
 	const map = new Map();
 	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
-		if (r.id && r.effects) map.set(r.id, r.effects);
+		if (r.id && r[col]) map.set(r.id, r[col]);
 	return map;
 }
-const authoredFeatures = existingEffectsById(
-	resolve(root, 'content/srd-2024/class_features_srd.csv')
-);
+const featuresCsv = resolve(root, 'content/srd-2024/class_features_srd.csv');
+const authoredFeatures = existingColById(featuresCsv, 'effects');
+const authoredExpertise = existingColById(featuresCsv, 'expertise_slots');
 
 const strip = (s) =>
 	s
@@ -181,7 +181,8 @@ for (const part of parts) {
 			class_id: id,
 			level: Number(m[1]),
 			resource: '',
-			subclass_id: subclass_id || ''
+			subclass_id: subclass_id || '',
+			expertise_slots: authoredExpertise.get(fid) ?? '' // preserve N4a grants authored post-conversion
 		});
 	};
 
@@ -255,7 +256,8 @@ writeCsv(
 		'class_id',
 		'level',
 		'resource',
-		'subclass_id'
+		'subclass_id',
+		'expertise_slots'
 	],
 	featureRows
 );

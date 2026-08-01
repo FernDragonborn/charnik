@@ -11,6 +11,50 @@ import { casterForSpell } from '../character/spellcasting';
 import { parseToken, splitGuard, EFFECT_KIND } from '../effects/token-parser';
 import type { StatMethod } from './rules';
 
+/** Sum the `level:count` expertise pairs (`"1:2,6:2"`) whose unlock level ≤ the class level. A single
+ *  feature row can thus carry a progressive grant (Rogue's L1 row also grants +2 at L6). Pure. */
+export function expertiseSlotsAtLevel(spec: string | undefined, classLevel: number): number {
+	if (!spec) return 0;
+	let total = 0;
+	for (const pair of spec.split(',')) {
+		const [lvl, count] = pair.split(':');
+		const atLevel = Number(lvl);
+		const n = Number(count);
+		if (Number.isFinite(atLevel) && Number.isFinite(n) && atLevel <= classLevel) total += n;
+	}
+	return total;
+}
+
+/** N4a: how many skill-expertise choices the drafted character has unlocked — the sum of each class's
+ *  active features' `expertise_slots` (a `level:count` spec resolved against that class's level, for
+ *  the matching system and either a base feature or one under the chosen subclass). Mirrors the
+ *  derive-gather feature gates. The builder caps expertise picks at this. Pure. */
+export function expertiseBudget(
+	classes: readonly { classId: string | null; subclassId: string | null; level: number }[],
+	graph: ContentGraph,
+	system: string
+): number {
+	let total = 0;
+	const seen = new Set<string>(); // fold each (id, level, subclass) feature once across sources
+	for (const entry of classes) {
+		if (!entry.classId) continue;
+		const classRow = graph.get(entry.classId);
+		if (classRow?.type !== 'class') continue;
+		for (const f of graph.featuresForClass(classRow)) {
+			const spec = f.data.expertise_slots;
+			if (!spec || Number(f.data.level) > entry.level) continue;
+			if (!f.systems.includes(system)) continue;
+			const forSubclass = f.data.subclass_id;
+			if (forSubclass && forSubclass !== (entry.subclassId ?? '')) continue;
+			const key = `${f.data.id}:${f.data.level}:${forSubclass ?? ''}`;
+			if (seen.has(key)) continue;
+			seen.add(key);
+			total += expertiseSlotsAtLevel(spec, entry.level);
+		}
+	}
+	return total;
+}
+
 /** Parse a species free-choice ASI spec ("1x2" = +1 to 2 abilities) → `{amount, count}`, or null. */
 export function parseSpeciesBoostChoice(raw: string): { amount: number; count: number } | null {
 	const m = /^(\d+)x(\d+)$/.exec(raw.trim());

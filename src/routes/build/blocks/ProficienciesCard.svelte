@@ -21,6 +21,8 @@
 	<p class="subtext">
 		Skills — choose <b class="teal">{b.skillChosenCount}/{b.classSkillCount}</b> from class
 		{#if b.autoSkills.length}· <span class="gold">{b.autoSkills.length} from background</span>{/if}
+		{#if b.expertiseCap > 0}· <span class="gold">expertise {b.expertiseUsed}/{b.expertiseCap}</span
+			>{/if}
 	</p>
 	<div class="chips spaced">
 		{#each Object.keys(SKILL_ABILITY) as skill (skill)}
@@ -32,7 +34,9 @@
 					{titleCase(skill)}
 				</button>
 				{#if on}
-					<button class="expertise-toggle" class:on={b.draft.expertise.includes(skill)} title="Expertise (×2 proficiency)" onclick={() => b.toggleExpertise(skill)}>×2</button>
+					{@const exp = b.draft.expertise.includes(skill)}
+					{@const capped = !exp && b.draft.strict && b.expertiseUsed >= b.expertiseCap}
+					<button class="expertise-toggle" class:on={exp} class:dim={capped} disabled={capped} title="Expertise (×2 proficiency)" onclick={() => b.toggleExpertise(skill)}>×2</button>
 				{/if}
 			</span>
 		{/each}
@@ -75,6 +79,10 @@
 	}
 	.expertise-toggle:hover {
 		border-color: var(--color-border-strong);
+	}
+	.expertise-toggle.dim {
+		opacity: 0.4;
+		cursor: not-allowed;
 	}
 	.expertise-toggle.on {
 		background: var(--color-resource-soft);

@@ -250,7 +250,12 @@ const classFeatureSchema = baseRow.extend({
 	level: z.coerce.number().int().min(1).max(20),
 	/** Optional named resource the feature grants (e.g. "rage", "ki"); count via effects. */
 	resource: optStr,
-	subclass_id: optStr
+	subclass_id: optStr,
+	/** N4a: skill-expertise CHOICES this feature unlocks, as `level:count` pairs so ONE feature row can
+	 *  carry a progressive grant (SRD models Rogue Expertise as a single L1 row that also grants +2 at
+	 *  L6 → `"1:2,6:2"`; Bard 2024 `"2:2,9:2"`, 2014 `"3:2,10:2"`). The builder sums the counts whose
+	 *  level ≤ the class level. Curated onto the row like `effects` (not in the prose); empty → 0. */
+	expertise_slots: optStr
 });
 
 /** A subclass (one per class in SRD 5.2.1). Its features live in class_features with

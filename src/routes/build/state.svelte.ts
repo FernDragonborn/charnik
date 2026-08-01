@@ -43,7 +43,8 @@ import {
 	speciesFixedAbilities as fixedAbilitiesFromRows,
 	asiBoost,
 	buildSpellPicker,
-	buildIssues
+	buildIssues,
+	expertiseBudget
 } from '$lib/build/derive';
 import { splitList, FEAT_CATEGORY, type ContentType } from '$lib/content/schemas';
 import { slugify } from '$lib/util/slug';
@@ -396,10 +397,18 @@ class BuildVM {
 	/** Proficient = chosen or background-granted (a prerequisite for expertise). */
 	isProficient = (skill: string): boolean =>
 		this.autoSkills.includes(skill) || this.draft.skills.includes(skill);
-	/** Toggle expertise (×2) on a proficient skill. */
+	/** N4a: expertise slots the drafted classes' features unlock (Rogue L1+L6, Bard L3+L10). */
+	expertiseCap = $derived(
+		this.graph ? expertiseBudget(this.draft.classes, this.graph, this.draft.system) : 0
+	);
+	expertiseUsed = $derived(this.draft.expertise.filter((s) => this.isProficient(s)).length);
+	/** Toggle expertise (×2) on a proficient skill. Strict enforces the class-granted cap (Free lets
+	 *  you exceed it — same policy as skill picks); removing is always allowed. */
 	toggleExpertise = (skill: string) => {
 		if (!this.isProficient(skill)) return;
-		this.draft.expertise = this.draft.expertise.includes(skill)
+		const has = this.draft.expertise.includes(skill);
+		if (!has && this.draft.strict && this.expertiseUsed >= this.expertiseCap) return;
+		this.draft.expertise = has
 			? this.draft.expertise.filter((s) => s !== skill)
 			: [...this.draft.expertise, skill];
 	};

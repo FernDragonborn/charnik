@@ -907,9 +907,15 @@ stay semi-manual.
   STRAIGHT to an HTML mock in design-preview/ (no ASCII drafts — too big a piece), approve,
   bake — and split the 1032-line build page (D1) while baking. Choice groups (N2 shape 3)
   render here.
-- [ ] **N4 · Skills system fixes.** (a) BUG: `toggleExpertise` is uncapped — cap from data
-  (`expertise_slots` per-level class_features rows: Rogue 2@1+2@6, Bard 2@3+2@10), Strict
-  enforces, Free doesn't; (b) effects integration: `grant:expertise` missing (EFX-1),
+- [~] **N4 · Skills system fixes.** (a) **DONE (2026-08-02):** `toggleExpertise` capped from data
+  — a curated `expertise_slots` `level:count` column on class_features (ONE row carries the
+  progressive grant: Rogue `1:2,6:2`, Bard `3:2,10:2` 2014 / `2:2,9:2` 2024, 2024 Ranger `9:2`;
+  converter-preserved like `effects`). Build sums the active-feature grants → `expertiseCap`;
+  Strict enforces (Free doesn't), UI shows `expertise N/M` + disables ×2 at cap. Wizard "Scholar"
+  (1 restricted-list expertise) deliberately NOT encoded — the count model can't express the skill
+  restriction, so encoding it would over-permit. Unit + real-content tests both editions. **UI not
+  screenshot-verified in a Rogue state** (needs a build-flow drive). (b) effects integration:
+  `grant:expertise` missing (EFX-1),
   effect-granted skills not shown as locked-on in the builder; (c) 'half' (Jack of All
   Trades) is a dead branch — type + `skillCheck(halfProficient)` exist, nothing calls them;
   wire via a bard feature token; (d) combat view renders only a binary prof dot though

@@ -16,10 +16,10 @@ const src = (f) => readFileSync(resolve(root, 'tools/srd-src/2014', f), 'utf8');
 const out = (f) => resolve(root, 'content/srd-2014', f);
 const SRC = 'SRD5.1-CCBY4.0License-TT';
 
-// Some `effects` are authored AFTER conversion (e.g. the 15 conditions got their tokens in the
-// CONDITIONS-1 pass, not from the HTML source). The converter must PRESERVE those, or re-running it
-// silently wipes hand/tool-authored effect tokens. Reads id→effects from the existing output CSV.
-function existingEffectsById(csvFile) {
+// Some columns are authored AFTER conversion (`effects` tokens got their values in the CONDITIONS-1 /
+// class-feature passes, not from the HTML source; `expertise_slots` is the N4a level:count grant).
+// The converter must PRESERVE those, or re-running it silently wipes the authoring. Reads id→column.
+function existingColById(csvFile, col) {
 	const path = out(csvFile);
 	if (!existsSync(path)) return new Map();
 	const raw = readFileSync(path, 'utf8')
@@ -29,9 +29,10 @@ function existingEffectsById(csvFile) {
 		.join('\n');
 	const map = new Map();
 	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
-		if (r.id && r.effects) map.set(r.id, r.effects);
+		if (r.id && r[col]) map.set(r.id, r[col]);
 	return map;
 }
+const existingEffectsById = (csvFile) => existingColById(csvFile, 'effects');
 
 const strip = (s) =>
 	s
@@ -782,6 +783,7 @@ function parseWeaponProfs2014(cell, resolver) {
 function convertClasses() {
 	const weaponResolver = baseWeaponResolver();
 	const authoredFeatures = existingEffectsById('class_features_srd.csv'); // preserve authored tokens
+	const authoredExpertise = existingColById('class_features_srd.csv', 'expertise_slots'); // N4a grants
 	const html = src(`${SRC}.html`);
 	const classRows = [],
 		featureRows = [];
@@ -907,7 +909,8 @@ function convertClasses() {
 				class_id: id,
 				level: lvl,
 				resource: '',
-				subclass_id: ''
+				subclass_id: '',
+				expertise_slots: authoredExpertise.get(fid) ?? '' // N4a grants (Rogue L1+L6, Bard L3+L10)
 			});
 		}
 	}
@@ -961,7 +964,8 @@ function convertClasses() {
 				class_id: classId,
 				level: lm ? Number(lm[1]) : SUBCLASS_LEVEL_2014[classId],
 				resource: '',
-				subclass_id: subId
+				subclass_id: subId,
+				expertise_slots: authoredExpertise.get(`${subId}_${slug(e.name)}`) ?? ''
 			});
 		}
 	}
@@ -1008,7 +1012,8 @@ function convertClasses() {
 			'class_id',
 			'level',
 			'resource',
-			'subclass_id'
+			'subclass_id',
+			'expertise_slots'
 		],
 		featureRows
 	);

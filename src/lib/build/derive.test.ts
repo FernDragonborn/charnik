@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { parseSpeciesBoostChoice, asiBoost, speciesFixedAbilities, buildIssues } from './derive';
+import {
+	parseSpeciesBoostChoice,
+	asiBoost,
+	speciesFixedAbilities,
+	buildIssues,
+	expertiseSlotsAtLevel,
+	expertiseBudget
+} from './derive';
 import { makeRow } from '../content/test-utils';
+import type { ContentGraph } from '../content/loader';
 
 describe('parseSpeciesBoostChoice', () => {
 	it('parses "AxB" into { amount: A, count: B } and rejects junk', () => {
@@ -21,6 +29,44 @@ describe('asiBoost', () => {
 	it('undefined / empty picks → no boost', () => {
 		expect(asiBoost(undefined)).toEqual({});
 		expect(asiBoost({ shape: '2', picks: [] })).toEqual({});
+	});
+});
+
+describe('expertiseSlotsAtLevel (N4a level:count grants)', () => {
+	it('sums the pairs whose unlock level ≤ the class level', () => {
+		expect(expertiseSlotsAtLevel('1:2,6:2', 1)).toBe(2);
+		expect(expertiseSlotsAtLevel('1:2,6:2', 5)).toBe(2);
+		expect(expertiseSlotsAtLevel('1:2,6:2', 6)).toBe(4);
+		expect(expertiseSlotsAtLevel('3:2,10:2', 20)).toBe(4);
+	});
+	it('is 0 for empty / undefined / garbage', () => {
+		expect(expertiseSlotsAtLevel(undefined, 20)).toBe(0);
+		expect(expertiseSlotsAtLevel('', 20)).toBe(0);
+		expect(expertiseSlotsAtLevel('junk', 20)).toBe(0);
+	});
+});
+
+describe('expertiseBudget (drafted-class expertise cap)', () => {
+	const feat = (over: Record<string, unknown>) => ({
+		...makeRow('class_feature', { class_id: 'rogue', ...over }),
+		systems: ['5.5e']
+	});
+	const graph = {
+		get: (id: string) => (id === 'rogue' ? makeRow('class', { id: 'rogue' }) : undefined),
+		featuresForClass: () => [feat({ id: 'rogue_expertise', level: 1, expertise_slots: '1:2,6:2' })]
+	} as unknown as ContentGraph;
+
+	it("sums a class's active-feature grants at the class level", () => {
+		expect(expertiseBudget([{ classId: 'rogue', subclassId: null, level: 1 }], graph, '5.5e')).toBe(
+			2
+		);
+		expect(expertiseBudget([{ classId: 'rogue', subclassId: null, level: 6 }], graph, '5.5e')).toBe(
+			4
+		);
+	});
+	it('drops a feature of another system, and an unset class', () => {
+		expect(expertiseBudget([{ classId: 'rogue', subclassId: null, level: 6 }], graph, '5e')).toBe(0);
+		expect(expertiseBudget([{ classId: null, subclassId: null, level: 6 }], graph, '5.5e')).toBe(0);
 	});
 });
 
