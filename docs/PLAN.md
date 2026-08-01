@@ -1183,8 +1183,10 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   Remaining: 2014 **class_casting** counts (cantrips/prepared differ by edition — 2024 uses table
   columns, 2014 uses per-class formulas → the rules layer needs the 2014 formula), and backfilling
   the truncated 2014 class-feature prose.
-- [ ] **Combat UI**: multiclass shows only the first class's DC (data has per-class); pact pool as a
-  distinct short-rest pip section; spell picker preview (EntryList+WikiDetail on pick).
+- [~] **Combat UI**: multiclass DC + header **DONE** — `SpellsPanel` renders every caster class's
+  save DC / attack (A18-tail), and the sheet header (`combat.className`) now joins all classes
+  ("Wizard 2 / Fighter 3") instead of `classes[0]`. **Still open [ ]:** pact pool as a distinct
+  short-rest pip section; spell picker preview (EntryList+WikiDetail on pick).
 
 **Platform / content:**
 - [x] **Tauri fs Storage** impl + platform factory (task #6) — DONE. `TauriStorage` over plugin-fs

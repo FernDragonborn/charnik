@@ -325,10 +325,16 @@ class CombatVM {
 
 	className = $derived.by(() => {
 		if (!this.character || !this.graph) return '';
-		const c = this.character.build.classes[0];
-		if (!c) return `Level ${this.sheet?.level ?? ''}`;
-		const row = this.graph.get(c.class);
-		return row ? `${row.data.name_en} ${c.level}` : `Level ${this.sheet?.level ?? ''}`;
+		const graph = this.graph;
+		const classes = this.character.build.classes;
+		if (classes.length === 0) return `Level ${this.sheet?.level ?? ''}`;
+		// multiclass renders every class ("Wizard 2 / Fighter 3"), not just classes[0]
+		return classes
+			.map((c) => {
+				const row = graph.get(c.class);
+				return row ? `${row.data.name_en} ${c.level}` : `Level ${c.level}`;
+			})
+			.join(' / ');
 	});
 	speciesName = $derived.by(() =>
 		this.character?.build.species && this.graph
