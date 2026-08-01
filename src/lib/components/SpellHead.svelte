@@ -85,7 +85,7 @@
 	h1 {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 30px;
+		font-size: var(--font-size-h2);
 		margin: 0;
 	}
 	.stat-title {
@@ -156,7 +156,7 @@
 	}
 	.spell-effect-value.none {
 		color: var(--color-text-muted);
-		font-size: 18px;
+		font-size: var(--font-size-h6);
 	}
 	.spell-effect-sub {
 		font-family: var(--font-mono);

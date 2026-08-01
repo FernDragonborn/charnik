@@ -582,7 +582,7 @@
 	}
 	.empty-content h2 {
 		font-family: var(--font-display);
-		font-size: 22px;
+		font-size: var(--font-size-h5);
 		color: var(--color-text);
 		margin: 0 0 12px;
 	}

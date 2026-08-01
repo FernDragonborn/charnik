@@ -76,7 +76,7 @@
 	h1 {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 24px;
+		font-size: var(--font-size-h4);
 		margin: 0 0 16px;
 	}
 	.tabs {

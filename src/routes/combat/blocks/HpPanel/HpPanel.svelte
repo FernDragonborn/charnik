@@ -158,7 +158,7 @@
 	.hitpoints .hitpoints-value {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 30px;
+		font-size: var(--font-size-h2);
 	}
 	.hitpoints .hitpoints-value small {
 		color: var(--color-text-muted);

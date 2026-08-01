@@ -103,7 +103,7 @@
 		border: 1px solid var(--color-border);
 		display: grid;
 		place-items: center;
-		font-size: 18px;
+		font-size: var(--font-size-h6);
 		flex: none;
 		color: var(--color-accent-bright);
 	}

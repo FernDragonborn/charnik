@@ -104,7 +104,7 @@
 		display: block;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 34px;
+		font-size: var(--font-size-h1);
 		line-height: 1;
 		margin: 6px 0 9px;
 	}

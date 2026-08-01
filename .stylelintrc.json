@@ -10,6 +10,7 @@
 	],
 	"rules": {
 		"color-no-hex": true,
+		"declaration-property-unit-disallowed-list": { "font-size": ["px"] },
 		"custom-property-empty-line-before": null,
 		"declaration-empty-line-before": null,
 		"comment-empty-line-before": null,

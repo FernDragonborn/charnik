@@ -92,7 +92,7 @@
 	h1 {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 30px;
+		font-size: var(--font-size-h2);
 		margin: 6px 0 12px;
 	}
 	.content-cols {
@@ -139,7 +139,7 @@
 	.value-row.challenge-rating .challenge-rating-value {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 26px;
+		font-size: var(--font-size-h3);
 		color: var(--color-accent-bright);
 	}
 	.ability-row {

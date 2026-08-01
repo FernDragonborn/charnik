@@ -64,7 +64,9 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **typography** — `--font-display`, `--font-body`, `--font-mono`
 
-**28px** — `--font-size-2xl`, `--line-height`
+**28px** — `--font-size-2xl`
+
+**34px** — `--line-height`
 
 **elevation** — `--shadow-1`, `--shadow-2`
 

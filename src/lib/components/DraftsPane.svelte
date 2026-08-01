@@ -166,7 +166,7 @@
 	.dp-title {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 22px;
+		font-size: var(--font-size-h5);
 		margin: 0;
 	}
 	.dp-sub {

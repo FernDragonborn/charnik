@@ -261,7 +261,7 @@
 	.d-title {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 22px;
+		font-size: var(--font-size-h5);
 	}
 	.d-id {
 		font-family: var(--font-mono);
@@ -270,7 +270,7 @@
 		margin: 3px 0 12px;
 	}
 	.d-prose {
-		font-size: 13.5px;
+		font-size: var(--font-size-sm);
 		line-height: 1.55;
 		color: var(--color-text);
 		white-space: pre-wrap;
@@ -348,7 +348,7 @@
 		margin: 2px 0 8px;
 	}
 	.pv-body {
-		font-size: 12.5px;
+		font-size: var(--font-size-sm);
 		line-height: 1.5;
 		color: var(--color-text-muted);
 		white-space: pre-wrap;
@@ -386,7 +386,7 @@
 		font-size: var(--font-size-md);
 	}
 	.cf-body {
-		font-size: 12.5px;
+		font-size: var(--font-size-sm);
 		line-height: 1.5;
 		color: var(--color-text-muted);
 		white-space: pre-wrap;

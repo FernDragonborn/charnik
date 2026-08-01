@@ -43,7 +43,7 @@
 	.loadbig {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 30px;
+		font-size: var(--font-size-h2);
 		color: var(--color-text);
 		margin: 4px 0 0;
 	}

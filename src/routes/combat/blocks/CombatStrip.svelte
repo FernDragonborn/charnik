@@ -101,7 +101,7 @@
 	.tile .tile-value {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 26px;
+		font-size: var(--font-size-h3);
 		line-height: 1.05;
 		margin-top: 4px;
 	}

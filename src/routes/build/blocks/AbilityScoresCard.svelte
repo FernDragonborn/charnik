@@ -157,7 +157,7 @@
 		text-align: right;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 18px;
+		font-size: var(--font-size-h6);
 	}
 	.total small {
 		color: var(--color-text-muted);

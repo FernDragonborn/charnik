@@ -50,7 +50,7 @@
 	h1 {
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 30px;
+		font-size: var(--font-size-h2);
 		margin: 6px 0 12px;
 	}
 	.abilities {

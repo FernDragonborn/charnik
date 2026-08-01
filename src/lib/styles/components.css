@@ -212,7 +212,7 @@
    visually identical without each re-declaring them --- */
 .sec-head h2 {
 	font-family: var(--font-display);
-	font-size: 18px;
+	font-size: var(--font-size-h6);
 	margin: 0 0 4px;
 }
 .sec-note {

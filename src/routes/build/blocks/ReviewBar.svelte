@@ -72,7 +72,7 @@
 		display: block;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: 22px;
+		font-size: var(--font-size-h5);
 	}
 	.stat small {
 		font-family: var(--font-mono);
