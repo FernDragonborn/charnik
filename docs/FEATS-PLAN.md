@@ -44,7 +44,7 @@ hatch for the procedural tail is **L3 plugins** (QuickJS-WASM sandbox, already B
 | `archery` | 2 | [x] | `flat_bonus:attack:ranged+2` (2026-08-02). Vocab §A attack-scope built; folds into ranged weapons' to-hit in `computeAttacks`, skipped in the generic roll path (no double-count). Derive-tested: longbow +2 / dagger +0. |
 | `great_weapon_fighting` | 2 | [x] | §B DONE (2026-08-02). **2024 SRD = "treat 1–2 as 3" = `min_die:damage:…:3` (a FLOOR, NOT the 2014 reroll)** — RAW-fidelity correction to this row's old note. The OR (Two-Handed **or** Versatile) = two AND-scoped tokens: `min_die:damage:two_handed,melee:3;min_die:damage:versatile,melee:3` (min_die takes the max of whichever matches, both floor 3). Reachable in the build (fighting-style feats are slot-selectable). **⚠ grip untracked:** RAW needs a two-hand grip; a Versatile weapon held one-handed still gets it (over-applies) — flagged. |
 | `two_weapon_fighting` | 3 | [~] | **ASSESSED 2026-08-02: currently a NO-OP → stays text.** RAW removes the off-hand penalty (add the ability mod to the off-hand attack's damage). But `computeAttacks` ALREADY adds the ability mod to EVERY equipped weapon's damage (`mod: p.mod + mod + w.damage`) — the off-hand penalty was never modelled, so there's nothing for TWF to remove. Encoding it would change nothing observable. Revisit only if/when an off-hand/light-weapon bonus-action attack model is built (would also need grip/hand designation on inventory). |
-| `savage_attacker` | 3 | [ ] | **ASSESSED 2026-08-02: a real multi-part feature (not data).** "Roll the weapon's damage dice twice, keep either" = damage-roll ADVANTAGE (roll the whole pool twice, keep the higher total) — no existing token expresses it (`reroll`/`min_die` are per-die; advantage is d20-only in `rollPool`). Needs (1) a new pool-advantage roll primitive, (2) a once-per-turn play-state flag (reset on Next Turn — new `play` field ⇒ schemaVersion bump + migration), (3) a damage-roll toggle UI. Bounded (no plugin required) but ~4 subsystems. Not a quick win. |
+| `savage_attacker` | 3 | [ ] | **ASSESSED 2026-08-02: BLOCKED on the onUse action executor (roadmap N2, unbuilt).** It's an ACTIVE, on-hit, once-per-turn CHOICE ("roll the damage dice twice, use either" = pool-advantage on damage). The architecturally-correct home is a plugin `onUse` hook — but the sandbox is **passive-only** (`plugin-sandbox.ts:62` "the only `api: 1` hook"); there is NO onUse/onEvent executor yet. So the only routes are (a) build the onUse action executor (N2 — a foundational project), or (b) a feat-specific bounded hack (pool-advantage primitive in `rollPool` + a once-per-turn toggle/flag in the combat VM + UI) that drifts from data-driven. Neither is a quick win. Recommend it rides on N2. |
 | `skilled` | 3 (choice) | [x] | §C choice-grant DONE (2026-08-02, skills-only). `skill_choice=3` CSV col → per-slot/origin-feat skill picker in FeatsCard → `build.featSkills` → proficiency. **⚠ RAW deviation:** SRD reads "skills OR tools"; tools unmodelled → skills-only, flagged in UI + here. Reachable only via a homebrew background/feat (no shipped BG grants it — engine-support). |
 | `magic_initiate` | 3 (spells) | [ ] | 2 cantrips + 1 L1 spell (list choice) + once/long-rest free cast → spell-learning + limited-cast mechanic. Biggest; own subproject. |
 
@@ -124,12 +124,15 @@ the CSV + a sandboxed handler. **Not urgent** — text fallback is honest until 
    declarative wins remain. The four open items and their real nature:
    - `two_weapon_fighting` — **[~] NO-OP → stays text** (off-hand penalty never modelled; nothing to remove).
    - 2014 `grappler` — **stays text** (advantage-vs-grappled + pin; relational, not single-sheet).
-   - `savage_attacker` — a real feature (~4 subsystems): pool-advantage roll primitive + once-per-turn
-     play-state (schemaVersion bump) + toggle UI. Bounded (no plugin) but not small.
+   - `savage_attacker` — an ACTIVE once-per-turn on-hit ability. Its proper home is a plugin `onUse`
+     hook, but the sandbox is **passive-only** (verified: `plugin-sandbox.ts:62`) — the onUse action
+     executor is roadmap **N2, UNBUILT**. So it's BLOCKED on N2 (or a data-drifting hack).
    - `magic_initiate` — the biggest: spell-learning + once/long-rest free cast. Own subproject.
-   **⇒ The tier-1/tier-2 encodable feat work is COMPLETE.** Tier-3 is a new PHASE requiring an
-   architecture call (commit to the plugin pipeline? build the off-hand/spell-learning subsystems?) —
-   the user's decision, per [[charnik-status]]. Until then, RAW text fallback is honest.
+   **⇒ The tier-1/tier-2 encodable feat work is COMPLETE, and every remaining feat is BLOCKED on a
+   foundational subsystem that is its own project** — not on "authoring a plugin" (the passive sandbox
+   can't host an active ability), but on **N2 (the onUse/onEvent action executor)** for savage_attacker
+   and a **spell-learning subsystem** for magic_initiate. These are roadmap projects, the user's call to
+   open (see `docs/PLAN.md` N2). Until then, RAW text fallback is honest. See [[charnik-status]].
 
 ## Conventions (do not drift)
 - **CSV-only data**: author values into `content/**/feats_srd.csv` (and class_features etc.); converters
