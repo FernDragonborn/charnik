@@ -25,7 +25,7 @@
 	<button
 		class="combat-row"
 		disabled={o.cost !== 'x' && o.left < o.cost}
-		onclick={() => combat.resources.spendOption(o)}
+		onclick={() => combat.activateResourceOption(o)}
 	>
 		<span class="row-name">{o.name}</span>
 		<span class="combat-row-hint">

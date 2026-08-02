@@ -37,21 +37,26 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
 ## First slice — complete the executor + Second Wind
 
 ### In (v1)
-1. `[ ]` **Executor, all-or-nothing.** New `CombatVM.activateResourceOption(opt)` (in
+1. `[~]` **Executor, all-or-nothing — DONE in code 2026-08-02 (`<this commit>`), tests pending.** Also
+   added `TurnEconomy.canSpend(slot)` (silent check-half of `trySpend`) + `ACTION_TYPE_SLOT` map. **This
+   closed the piece-3 gap — activating an option now actually costs its turn slot** (Flurry etc.
+   previously spent Ki but not the bonus action). `CombatVM.activateResourceOption(opt)` (in
    `state.svelte.ts`, where HP + tray + economy are all reachable): validate (`canAffordOption` AND the
    turn slot is free) → then deduct (`spendOption`, the resource math it already does) + spend the turn
    slot (`economy.trySpend`, `action_type`→slot; `free`=none) + execute the action token. Validate
    EVERYTHING before any mutation (ACTIONS.md core rule).
-2. `[ ]` **Action-token execution via existing systems:** `heal:<formula>` → `rollFormula`
+2. `[~]` **Action-token execution — `heal:` DONE (`runActionToken`); roll/apply_condition/gain_action next.** `heal:<formula>` → `rollFormula`
    (`dice.ts:199`) → `hp.current` clamped to `hpMax` + log; `roll:<formula>` → `rollFormula` →
    `tray.pushRoll` + log; `apply_condition:<id>` → `addEffect`; `note:` → toast (done); + a small new
    `gain_action` (Action Surge → refund one `play.turn.action`). Parse via the existing `parseToken`
    vocab, not a new ad-hoc parser.
-3. `[ ]` **Resolve the action formula's L2 at derive** — `resolveResourceOptions` resolves
+3. `[x]` **Resolve the action formula's L2 at derive — DONE** (`resolveActionFormula`) — `resolveResourceOptions` resolves
    `heal:1d10+class_level.fighter` → `heal:1d10+5` (mirror resource-max / `grant_roll` resolution), so
    the option carries a ready dice formula.
-4. `[ ]` **Wire the UI** — `ActionsPanel.svelte:28` `spendOption(o)` → `activateResourceOption(o)`.
-5. `[ ]` **Ship Second Wind (+ Action Surge), both editions, RAW-faithful.** Rows already exist as
+4. `[x]` **Wire the UI — DONE** — `ActionsPanel.svelte` `spendOption(o)` → `activateResourceOption(o)`.
+5. `[ ]` **← RESUME HERE: tests + Second Wind data.** Tests (combat: heal adds HP + costs the bonus +
+   all-or-nothing block; derive: `heal:1d10+class_level.fighter`→`heal:1d10+5`). Then **ship Second Wind
+   (+ Action Surge), both editions, RAW-faithful.** Rows already exist as
    TEXT-ONLY features (`fighter_second_wind`, `fighter_action_surge`, 2024 + 2014). Add
    `grant_resource:second_wind:<uses>:short` (+ `action_surge`) to their `effects`, and
    `resource_options` rows (Second Wind → `cost=1, action=heal:1d10+class_level.fighter,

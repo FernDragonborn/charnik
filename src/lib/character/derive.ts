@@ -41,7 +41,13 @@ import {
 	type Ability
 } from '../rules/core';
 import { gatherProfGrants, isArmorProficient, armorCategoryOf } from '../rules/proficiency';
-import { type ActiveEffect, type EffectCtx, type EffectIssue } from '../effects/token-parser';
+import {
+	type ActiveEffect,
+	type EffectCtx,
+	type EffectIssue,
+	ctxOf
+} from '../effects/token-parser';
+import { evalExpression, diceToFormula, type ExprContext } from '../effects/expression-evaluator';
 import { applyEffects, collectFacts, type EffectFacts, type ResourceDef } from '../effects/apply';
 import { didYouMean } from '../effects/suggest';
 import { resolveActiveEffects } from '../effects/resolver';
@@ -116,6 +122,33 @@ interface ResourceOptionsInput {
 	system: System;
 	isActive: (row: LoadedRow) => boolean;
 	issues: EffectIssue[];
+	/** The L2 context (base), so a `heal:`/`roll:` action's formula resolves to concrete dice HERE
+	 *  (once, like resource maxes) instead of at spend time; absent when auto-calc is off (manual). */
+	ctx: ExprContext | undefined;
+}
+
+/** Resolve the L2 value inside a resource-option `action` so the executor can just roll it: `heal:` /
+ *  `roll:` carry a formula (`1d10+class_level.fighter` → `1d10+5`); `apply_condition:` / `note:` pass
+ *  through unchanged. A resolution failure keeps the raw token + flags a deriveIssue (executor no-ops). */
+function resolveActionFormula(
+	action: string,
+	ctx: ExprContext | undefined,
+	name: string,
+	issues: EffectIssue[]
+): string {
+	const i = action.indexOf(':');
+	if (i === -1) return action;
+	const verb = action.slice(0, i);
+	const rest = action.slice(i + 1).trim();
+	if ((verb !== 'heal' && verb !== 'roll') || !rest || !ctx) return action;
+	const r = evalExpression(rest, ctx);
+	if (!r.ok) {
+		issues.push({ source: name, token: action, reason: r.error });
+		return action;
+	}
+	const formula =
+		r.value.type === 'number' ? String(Math.floor(r.value.value)) : diceToFormula(r.value.dice);
+	return `${verb}:${formula}`;
 }
 
 /** Gather the spend-options for the resources a character has (edition + source filtered). Pure. */
@@ -124,7 +157,8 @@ function resolveResourceOptions({
 	resourceIds,
 	system,
 	isActive,
-	issues
+	issues,
+	ctx
 }: ResourceOptionsInput): ResourceOption[] {
 	const out: ResourceOption[] = [];
 	for (const row of graph.rows) {
@@ -148,7 +182,12 @@ function resolveResourceOptions({
 			resourceId,
 			name: String(row.data.name_en),
 			description: String(row.data.text_en ?? ''),
-			action: String(row.data.action ?? ''),
+			action: resolveActionFormula(
+				String(row.data.action ?? ''),
+				ctx,
+				String(row.data.name_en),
+				issues
+			),
 			actionType: (row.data.action_type as ResourceOption['actionType']) ?? 'action',
 			cost
 		});
@@ -444,7 +483,10 @@ export function deriveSheet(
 			resourceIds: new Set(facts.resources.map((r) => r.id)),
 			system,
 			isActive,
-			issues
+			issues,
+			// the base L2 ctx (a bare synthetic effect — resource-option formulas don't use per-effect
+			// spellcasting scoping), so `heal:`/`roll:` formulas resolve once here like resource maxes
+			ctx: ctxOf(effCtx, { source: '', layer: 'feature', tokens: [] })
 		}),
 		spellcasting,
 		missing: [...new Set(missing)], // dedupe: the same ref can be missing from several scans (D19)

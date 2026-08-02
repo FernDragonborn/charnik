@@ -10,10 +10,15 @@
 import { toast } from 'svelte-sonner';
 import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
-import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
+import {
+	deriveSheet,
+	type CharacterSheet,
+	type SkillId,
+	type ResourceOption
+} from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { tokensOf } from '$lib/content/loader';
-import { rollPool } from '$lib/rules/dice';
+import { rollPool, rollFormula } from '$lib/rules/dice';
 import type { Character } from '$lib/character/schema';
 import {
 	titleCase,
@@ -42,7 +47,8 @@ import {
 	type DamagePartSpec,
 	type SpellRow,
 	type MenuKind,
-	type StandardAction
+	type StandardAction,
+	type ActionSlot
 } from '$lib/combat/helpers';
 import { RollTray, type RollSpec } from './roll.svelte';
 import {
@@ -63,6 +69,14 @@ import { slotToSpend } from '$lib/rules/spellcasting';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
+
+/** A resource-option's `action_type` → the turn-economy slot it consumes (`free` = none). */
+const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> = {
+	action: 'action',
+	bonus_action: 'bonus',
+	reaction: 'reaction',
+	free: null
+};
 
 /**
  * D1 EXCEPTION — file over the 400-line lint (warn-only). Split DEFERRED, not forbidden: it's not
@@ -315,6 +329,42 @@ class CombatVM {
 		if (!p) return;
 		p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, Math.round(this.hpAmount)));
 	};
+
+	/** N2 executor (first slice): activate a resource spend-option. Validate the resource cost AND the
+	 *  turn slot ALL-OR-NOTHING (ACTIONS.md), then deduct both and run the action token. The turn cost
+	 *  was the piece-3 gap — spending an option (Flurry, Second Wind…) now actually consumes its
+	 *  action/bonus/reaction, not just the resource. */
+	activateResourceOption = (opt: ResourceOption, amount = 1) => {
+		if (!this.character) return;
+		const slot = ACTION_TYPE_SLOT[opt.actionType]; // null for a free action
+		if (!this.resources.canAffordOption(opt, amount)) {
+			toast(`${opt.name} — not enough ${opt.resourceId}`, { description: 'Recharge on a rest' });
+			return;
+		}
+		if (slot && !this.economy.canSpend(slot)) {
+			toast(`No ${slot} left this turn`, { description: 'Press “Next turn” to refresh.' });
+			return;
+		}
+		if (slot) this.economy.trySpend(slot); // both spends succeed — validated above
+		this.resources.spendOption(opt, amount); // deduct the resource (+ its own toast)
+		this.runActionToken(opt);
+	};
+
+	/** Run a resource-option's RESOLVED action token (formula already L2-resolved at derive). v1:
+	 *  `heal:<formula>` rolls + adds HP (clamped to max), logged; `roll:` / `apply_condition:` land as
+	 *  they're built; `note:` is surfaced by `spendOption`. */
+	private runActionToken(opt: ResourceOption) {
+		const p = this.character?.play;
+		if (!p) return;
+		const sep = opt.action.indexOf(':');
+		const verb = sep === -1 ? opt.action : opt.action.slice(0, sep);
+		const rest = sep === -1 ? '' : opt.action.slice(sep + 1);
+		if (verb === 'heal' && rest) {
+			const r = rollFormula(rest);
+			p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, r.total));
+			this.tray.pushRoll(`${opt.name} — heal`, r);
+		}
+	}
 
 	groupByLabel = $derived(
 		{ level: 'By level', prepared: 'Prepared', school: 'By school' }[this.spellGroupBy]

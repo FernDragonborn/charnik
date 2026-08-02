@@ -128,6 +128,16 @@ export class TurnEconomy {
 	ctSlot(castTimeIcon: SpellRow['castTimeIcon']): ActionSlot {
 		return castTimeIcon === 'react' ? 'reaction' : castTimeIcon === 'bonus' ? 'bonus' : 'action';
 	}
+	/** Silent gate for `slot` — is a pip free right now? (out of combat → always; incapacitated →
+	 *  never). The check half of `trySpend`, exposed so an all-or-nothing activation can validate the
+	 *  turn cost BEFORE mutating anything (it spends the resource + slot together or not at all). */
+	canSpend(slot: ActionSlot): boolean {
+		const c = this.getCharacter();
+		if (!c || !c.play.inCombat) return true;
+		if (this.incapacitated) return false;
+		return c.play.turn[slot] < this.slotMax[slot];
+	}
+
 	/** In combat, spend one pip of `slot`; block (return false) + warn when it's exhausted. Out of
 	 *  combat there is no economy → always allowed. */
 	trySpend(slot: ActionSlot): boolean {
