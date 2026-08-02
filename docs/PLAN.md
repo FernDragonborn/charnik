@@ -919,9 +919,12 @@ stay semi-manual.
   `grant:expertise` missing (EFX-1),
   effect-granted skills not shown as locked-on in the builder; (c) 'half' (Jack of All
   Trades) is a dead branch — type + `skillCheck(halfProficient)` exist, nothing calls them;
-  wire via a bard feature token; (d) combat view renders only a binary prof dot though
-  `sheet.skills[k].prof` already carries none/half/proficient/expertise — tiered indicator
-  + `why()` source.
+  wire via a bard feature token (needs a `half` grant the L1 vocab lacks — vocab extension);
+  (d) **DONE (2026-08-02):** the combat SkillsPanel already showed the proficient/expertise
+  tiers (filled / ringed dot) with `why()` provenance on the row hover; added the 4th tier —
+  a faded `half` dot (color-mix on `--color-resource`, scaffolding until a half-prof producer
+  lands per (c)) — and a friendly per-tier tooltip on the dot. Combat baseline 0px (reachable
+  tiers render identically; the `on` split is behaviour-identical for none/proficient/expertise).
 - [ ] **N5 · Adjacent gaps (assistant's additions).** (1) **Features panel on the combat
   sheet** — a character can't READ their own features/traits anywhere; read-only prose list,
   cheapest big win, zero prereqs. (2) Concentration check prompt on damage (CON save DC

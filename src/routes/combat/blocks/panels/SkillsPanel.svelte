@@ -1,12 +1,19 @@
 <script lang="ts">
 	// Skills panel body: two columns of skills grouped by governing ability; each row rolls the check
-	// and shows proficiency state (none / proficient / expertise) + provenance on hover.
+	// and shows proficiency tier (none / half / proficient / expertise) + provenance on hover.
 	import { SKILL_ABILITY, type SkillId, type CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../state.svelte';
 	import { why, signed, titleCase, ABIL, ABILITY_NAME } from '$lib/combat/helpers';
 
 	let { s }: { s: CharacterSheet } = $props();
 	const { roll } = combat;
+	// friendly label per proficiency tier (the dot's own hover; the row hover keeps the full why())
+	const PROF_LABEL = {
+		none: 'Not proficient',
+		half: 'Half proficiency',
+		proficient: 'Proficient',
+		expertise: 'Expertise (×2)'
+	} as const;
 </script>
 
 <div class="sklgrid">
@@ -25,9 +32,10 @@
 						>
 							<i
 								class="prof-dot"
-								class:on={sk.prof !== 'none'}
+								class:on={sk.prof === 'proficient' || sk.prof === 'expertise'}
+								class:half={sk.prof === 'half'}
 								class:expertise={sk.prof === 'expertise'}
-								title={sk.prof}
+								title={PROF_LABEL[sk.prof]}
 							></i>
 							<span class="skill-name">{titleCase(skill)}</span>
 							<b class="skill-mod">{signed(sk.value)}</b>
@@ -84,6 +92,11 @@
 	}
 	.skill-row .prof-dot.on {
 		background: var(--color-resource);
+		border-color: var(--color-resource);
+	}
+	/* half proficiency (Jack of All Trades) = a faded fill, between empty and proficient */
+	.skill-row .prof-dot.half {
+		background: color-mix(in srgb, var(--color-resource) 45%, transparent);
 		border-color: var(--color-resource);
 	}
 	/* expertise = a ringed dot (double proficiency) */
