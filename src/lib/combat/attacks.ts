@@ -29,6 +29,9 @@ export interface Attack {
 	 *  separately (BUG-DMG-1). The ability/magic mod is folded into the first (primary) part only. */
 	damageParts: DamagePart[];
 	meta: string;
+	/** §A/§B weapon-category tags (item_type + property words) the roll path matches a scoped effect
+	 *  against — Archery (attack:ranged) and GWF (min_die:damage:two_handed,melee) read these. */
+	scopes: string[];
 	/** D9 provenance — a magic weapon's own bonus folded into THIS attack ("+1 attack & damage"),
 	 *  or a visible degrade note for a bonus v1 can't fold yet (dice / expression). */
 	note?: string;
@@ -185,7 +188,8 @@ export function computeAttacks(
 		const w = weaponBonus(row.data.effects);
 		// §A: character-level weapon-category-scoped attack bonuses (Archery → ranged weapons) fold
 		// into THIS weapon's to-hit only when it carries the matching category tag.
-		const scoped = scopedAttackBonus(sheet.facts, weaponScopeSet(row.data.item_type ?? '', props));
+		const scopeSet = weaponScopeSet(row.data.item_type ?? '', props);
+		const scoped = scopedAttackBonus(sheet.facts, scopeSet);
 		const notProfNote = proficient ? undefined : 'Not proficient — no proficiency bonus';
 		const note = [w.note, scoped.note, notProfNote].filter(Boolean).join('; ') || undefined;
 		// The ability mod + a magic weapon's flat damage bonus land on the PRIMARY (first) damage part
@@ -203,12 +207,14 @@ export function computeAttacks(
 			dmg: formatDamageParts(damageParts),
 			damageParts,
 			meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · '),
+			scopes: [...scopeSet],
 			...(note ? { note } : {})
 		});
 	}
 	out.push({
 		name: 'Unarmed Strike',
 		toHit: strMod + prof,
+		scopes: ['melee'], // an unarmed strike is a melee attack, but carries no weapon properties
 		dmg: `${1 + strMod} bludgeoning`,
 		damageParts: [{ pool: {}, mod: 1 + strMod, type: 'bludgeoning' }],
 		meta: 'melee'

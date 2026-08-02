@@ -5,6 +5,7 @@
  */
 import { parseDiceTerm, rollPool, type BonusDie, type DieMods, type Rolled } from '$lib/rules/dice';
 import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
+import type { RollMod } from '$lib/effects/facts';
 
 /** A rolled damage slice carrying its damage type ("slashing", "radiant"). A single-type hit is one
  *  of these; a multi-type weapon rolls several, each shown separately with its own total (BUG-DMG-1). */
@@ -88,7 +89,11 @@ export const NO_ROLL_EFFECTS: RollEffects = {
 	flat: 0,
 	bonusDice: []
 };
-export function rollEffectsFor(facts: EffectFacts, key: string): RollEffects {
+export function rollEffectsFor(
+	facts: EffectFacts,
+	key: string,
+	weaponScopes?: Set<string>
+): RollEffects {
 	const out: RollEffects = { ...NO_ROLL_EFFECTS, bonusDice: [] };
 	out.advantage = facts.advantage.some((a) => matchesTarget(a.target, key));
 	out.disadvantage = facts.disadvantage.some((d) => matchesTarget(d.target, key));
@@ -101,11 +106,16 @@ export function rollEffectsFor(facts: EffectFacts, key: string): RollEffects {
 			if (die) out.bonusDice.push(die);
 		}
 	}
+	// §B: a weapon-scoped roll-manip (GWF `two_handed,melee`) applies only when the rolling weapon
+	// carries EVERY tag; a non-weapon roll (no scope set) skips scoped facts. Unscoped facts always apply.
+	const scopeOk = (mod: RollMod): boolean =>
+		!mod.weaponScope ||
+		(weaponScopes ? mod.weaponScope.split(',').every((t) => weaponScopes.has(t)) : false);
 	// several sources → the most generous single value applies (they don't stack — one reroll pass)
 	for (const r of facts.rerolls)
-		if (matchesTarget(r.target, key)) out.reroll = Math.max(out.reroll ?? 0, r.value);
+		if (matchesTarget(r.target, key) && scopeOk(r)) out.reroll = Math.max(out.reroll ?? 0, r.value);
 	for (const m of facts.minDie)
-		if (matchesTarget(m.target, key)) out.minDie = Math.max(out.minDie ?? 0, m.value);
+		if (matchesTarget(m.target, key) && scopeOk(m)) out.minDie = Math.max(out.minDie ?? 0, m.value);
 	return out;
 }
 

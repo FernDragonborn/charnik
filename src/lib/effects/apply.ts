@@ -166,7 +166,11 @@ class FactsCollector {
 			p.amount !== undefined &&
 			!this.rejectTarget(p.kind, p.target, eff.source, token)
 		)
-			list.push({ target: p.target, value: p.amount });
+			list.push({
+				target: p.target,
+				value: p.amount,
+				...(p.weaponScope ? { weaponScope: p.weaponScope } : {}) // §B per-weapon scope (GWF)
+			});
 		return true;
 	}
 

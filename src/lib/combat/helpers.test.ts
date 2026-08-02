@@ -450,6 +450,19 @@ describe('rollEffectsFor — disadvantage + flat (EFX-1)', () => {
 			rollEffectsFor(fx('flat_bonus:attack:ranged+2', 'flat_bonus:attack+1'), 'attack').flat
 		).toBe(1);
 	});
+	it('§B: a weapon-scoped min_die (GWF) applies only when the weapon carries EVERY scope tag', () => {
+		const gwf = fx('min_die:damage:two_handed,melee:3');
+		// a two-handed melee weapon (greatsword) → the floor applies
+		expect(rollEffectsFor(gwf, 'damage', new Set(['two_handed', 'melee', 'martial'])).minDie).toBe(
+			3
+		);
+		// a two-handed RANGED weapon (longbow) is missing 'melee' → no floor
+		expect(rollEffectsFor(gwf, 'damage', new Set(['two_handed', 'ranged'])).minDie).toBeUndefined();
+		// a non-weapon roll (no scope set supplied) never picks up a scoped fact
+		expect(rollEffectsFor(gwf, 'damage').minDie).toBeUndefined();
+		// an UNscoped min_die still applies everywhere (no regression)
+		expect(rollEffectsFor(fx('min_die:damage:3'), 'damage').minDie).toBe(3);
+	});
 	it('netAdvantage: advantage and disadvantage cancel to a straight roll', () => {
 		expect(netAdvantage({ advantage: true, disadvantage: false })).toBe(1);
 		expect(netAdvantage({ advantage: false, disadvantage: true })).toBe(-1);

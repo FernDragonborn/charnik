@@ -110,6 +110,28 @@ describe('parseToken (bounded vocabulary)', () => {
 		expect(parseToken('teleport:far').kind).toBe('unknown');
 		expect(parseToken('garbage').kind).toBe('unknown');
 	});
+	it('§B: reroll/min_die parse an optional weapon-scope list (GWF); plain forms stay unscoped', () => {
+		expect(parseToken('min_die:damage:two_handed,melee:3')).toMatchObject({
+			kind: 'min_die',
+			target: 'damage',
+			amount: 3,
+			weaponScope: 'two_handed,melee'
+		});
+		expect(parseToken('reroll:damage:versatile,melee:2')).toMatchObject({
+			kind: 'reroll',
+			target: 'damage',
+			amount: 2,
+			weaponScope: 'versatile,melee'
+		});
+		// unscoped forms unchanged: a group target and a dotted key both keep the 2-segment grammar
+		expect(parseToken('reroll:d20_tests:2')).toMatchObject({ target: 'd20_tests', amount: 2 });
+		expect(parseToken('reroll:d20_tests:2').weaponScope).toBeUndefined();
+		expect(parseToken('min_die:skill.stealth:10')).toMatchObject({
+			target: 'skill.stealth',
+			amount: 10
+		});
+		expect(parseToken('min_die:skill.stealth:10').weaponScope).toBeUndefined();
+	});
 	it('parses disadvantage like advantage (its own kind + target)', () => {
 		expect(parseToken('disadvantage:skill.stealth')).toMatchObject({
 			kind: 'disadvantage',

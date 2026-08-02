@@ -42,7 +42,7 @@ hatch for the procedural tail is **L3 plugins** (QuickJS-WASM sandbox, already B
 | `defense` | 1 | [x] | `armor_type != none ? flat_bonus:ac+1` (2026-08-02). Guard verified: +1 AC while armored, 0 unarmored (derive test w/ leather armor). |
 | `ability_score_improvement` | — | [x] | the ASI itself; handled by the ASI slot system, not a feat effect. Leave. |
 | `archery` | 2 | [x] | `flat_bonus:attack:ranged+2` (2026-08-02). Vocab §A attack-scope built; folds into ranged weapons' to-hit in `computeAttacks`, skipped in the generic roll path (no double-count). Derive-tested: longbow +2 / dagger +0. |
-| `great_weapon_fighting` | 2 | [ ] | reroll 1–2 on damage dice of a two-handed **melee** weapon → weapon-scope + `reroll:damage:2` scoped to a property. Needs Vocab §A + a property filter. |
+| `great_weapon_fighting` | 2 | [x] | §B DONE (2026-08-02). **2024 SRD = "treat 1–2 as 3" = `min_die:damage:…:3` (a FLOOR, NOT the 2014 reroll)** — RAW-fidelity correction to this row's old note. The OR (Two-Handed **or** Versatile) = two AND-scoped tokens: `min_die:damage:two_handed,melee:3;min_die:damage:versatile,melee:3` (min_die takes the max of whichever matches, both floor 3). Reachable in the build (fighting-style feats are slot-selectable). **⚠ grip untracked:** RAW needs a two-hand grip; a Versatile weapon held one-handed still gets it (over-applies) — flagged. |
 | `two_weapon_fighting` | 3 | [ ] | add the ability mod to the OFF-HAND attack's damage. Off-hand attacks aren't modelled distinctly → needs the attack model to know main/off hand. |
 | `savage_attacker` | 3 | [ ] | once-per-turn: roll the weapon's damage dice twice, keep either. Roll-time, once-per-turn state → plugin or a dedicated roll-manip mechanic. |
 | `skilled` | 3 (choice) | [x] | §C choice-grant DONE (2026-08-02, skills-only). `skill_choice=3` CSV col → per-slot/origin-feat skill picker in FeatsCard → `build.featSkills` → proficiency. **⚠ RAW deviation:** SRD reads "skills OR tools"; tools unmodelled → skills-only, flagged in UI + here. Reachable only via a homebrew background/feat (no shipped BG grants it — engine-support). |
@@ -66,16 +66,27 @@ words, `two-handed`→`two_handed`) and folds a scoped bonus into to-hit only wh
 (`scopedAttackBonus`); `rollEffectsFor` SKIPS scoped facts so the roll path doesn't double-count what
 `computeAttacks` already baked into `at.toHit`. Only literal `add` amounts fold; a scoped dice/expr
 bonus would ride the roll path (none shipped). Unblocks Archery.
-**DAMAGE side DEFERRED to GWF/Dueling (step 4):** for `target=damage` a qualifier still means damage
-TYPE (flaming-weapon extra part — unchanged). When Dueling (`flat_bonus:damage:melee+2`, one-handed
-melee) / GWF land, resolve the damage collision by having `computeAttacks` (weapon-aware) check the
-qualifier against the weapon's scope set: in-set → scoped damage fold; else → typed extra part. That
-keeps the vocab out of L1 (compatibility.md — no weapon-category enum baked into the parser).
+**flat-DAMAGE-scope side STILL DEFERRED (Dueling):** GWF (step 4) turned out to need the §B roll-manip
+path (`min_die:damage:<scope>:3`), NOT a `flat_bonus:damage:<scope>` — so the flat-damage-scope
+collision is still unresolved (no shipped feat needs it yet; Dueling `flat_bonus:damage:melee+2` would).
+For `target=damage` a qualifier still means damage TYPE (flaming-weapon extra part — unchanged). When
+Dueling lands, resolve the collision by having `computeAttacks` (weapon-aware) check the qualifier
+against the weapon's scope set: in-set → scoped damage fold; else → typed extra part. That keeps the
+vocab out of L1 (compatibility.md — no weapon-category enum baked into the parser). NB §B already proved
+the multi-tag scoped-token pattern for the roll-manip half.
 
 ### §B · Roll-manip scoping + once-per-turn (GWF / Savage Attacker)
-`reroll:damage:<threshold>` exists (L1). Needs: (1) scope it to a weapon category (§A machinery), (2) a
-once-per-turn gate for Savage Attacker. Once-per-turn is play-state (a per-turn used-flag) — likely a
-plugin (onEvent) or a small combat-state mechanic. Assess vs plugin.
+**(1) Weapon-category scope — [x] DONE 2026-08-02 (GWF).** `reroll`/`min_die` grammar gained an
+OPTIONAL middle scope segment: `<kind>:<target>[:<scope-list>]:<int>` where `<scope-list>` is a comma
+list of weapon-category tags, ALL required (`min_die:damage:two_handed,melee:3`). `RollMod.weaponScope`
+carries it; `rollEffectsFor(facts, key, weaponScopes?)` applies a scoped fact only when the rolling
+weapon's tag set ⊇ the list (unscoped facts always apply; a non-weapon roll skips scoped ones).
+`Attack.scopes` (built by `weaponScopeSet` in `computeAttacks`) is threaded from `attackRoll` →
+`effectsFor` → `rollEffectsFor`. An OR across properties = several AND-scoped tokens (GWF's
+two_handed/versatile). Tests: parser, roll-path gate, derive-integration (greataxe floors, longbow
+doesn't). The final die-flooring (`rollPool` minDie) was already unit-tested.
+**(2) once-per-turn gate for Savage Attacker — [ ] STILL OPEN.** Once-per-turn is play-state (a
+per-turn used-flag) — likely a plugin (onEvent) or a small combat-state mechanic. Assess vs plugin.
 
 ### §C · Choice-grant UI (Skilled, Prodigy, etc.) — **[x] DONE 2026-08-02 (skills-only)**
 Data-driven `skill_choice=N` feat column (author-set count, NO feat-id hardcode → homebrew Skilled/
@@ -107,7 +118,8 @@ the CSV + a sandboxed handler. **Not urgent** — text fallback is honest until 
    for GWF (step 4). Tests: parser, `rollEffectsFor` skip, derive (longbow +2 / dagger +0).
 3. ~~**§C choice-grant UI + `skilled`**~~ **[x] DONE 2026-08-02** — `skill_choice=N` col + skill picker
    → `build.featSkills`. Skills-only (tools deferred). Reusable for Prodigy etc.
-4. **GWF** on top of §A+§B (reroll scoped to two-handed melee). ← **NEXT**
+4. ~~**GWF** on top of §A+§B~~ **[x] DONE 2026-08-02** — `min_die:damage:<scope>:3` (2024 = floor, not
+   reroll); weapon-scoped roll-manip grammar + `rollEffectsFor` gate + `Attack.scopes` threading.
 5. Tier-3 plugins (magic_initiate, TWF off-hand, savage_attacker) — only when we commit to authoring
    sandboxed plugins; until then keep RAW text.
 

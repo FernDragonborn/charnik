@@ -192,6 +192,16 @@ describe('shipped feat effects (real content)', () => {
 		expect(skillChoiceOf('skilled')).toBe(3);
 		expect(skillChoiceOf('alert')).toBeUndefined();
 	});
+
+	it('§B: Great Weapon Fighting encodes a two-handed/versatile-melee damage floor (min_die 3)', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const row = g.get('feat:SRD 5.2.1:great_weapon_fighting');
+		const tokens = row?.type === 'feat' ? row.data.effects : [];
+		// "treat any 1 or 2 as a 3" = min_die floor 3; the OR (two-handed OR versatile) = two AND-scoped
+		// tokens (min_die takes the max of whichever matches). Both require melee.
+		expect(tokens).toContain('min_die:damage:two_handed,melee:3');
+		expect(tokens).toContain('min_die:damage:versatile,melee:3');
+	});
 });
 
 describe('N4a · shipped expertise_slots grants (real content)', () => {

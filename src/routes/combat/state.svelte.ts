@@ -415,10 +415,10 @@ class CombatVM {
 	/** Advantage/disadvantage + flat + bonus dice + reroll/min_die a roll picks up from active
 	 *  effects (gated on the effects-auto toggle). Reads the sheet's typed-facts object (D7: guards
 	 *  evaluated, conditions expanded, expression values resolved — B21), not raw `play.effects`. */
-	private effectsFor(key: string): RollEffects {
+	private effectsFor(key: string, weaponScopes?: Set<string>): RollEffects {
 		const c = this.character;
 		if (!c || !c.play.autoCalc || !this.sheet) return NO_ROLL_EFFECTS; // effects-auto off → plain rolls
-		return rollEffectsFor(this.sheet.facts, key);
+		return rollEffectsFor(this.sheet.facts, key, weaponScopes);
 	}
 
 	/** A forced outcome (paralyzed → auto-fail STR/DEX saves) for a roll key, or null. Gated on the
@@ -508,8 +508,11 @@ class CombatVM {
 	attackRoll = (at: Attack, e: Event) => {
 		if (!this.economy.trySpend('action')) return;
 		const hasDice = at.damageParts.some((p) => Object.keys(p.pool).length > 0);
-		const fx = this.effectsFor('attack');
-		const dmgFx = this.effectsFor('damage');
+		// §A/§B: pass this weapon's category tags so a scoped effect (GWF's min_die on two-handed melee
+		// damage) applies only to matching weapons; unscoped effects (Bless, Rage) apply regardless.
+		const scopes = new Set(at.scopes);
+		const fx = this.effectsFor('attack', scopes);
+		const dmgFx = this.effectsFor('damage', scopes);
 		// Damage effects (Bless-style flat/dice, reroll/min_die) fold onto the PRIMARY part only — RAW
 		// adds them to the weapon's base damage, not to a second damage type's dice.
 		const parts: DamagePartSpec[] = at.damageParts.map((p, i) => ({

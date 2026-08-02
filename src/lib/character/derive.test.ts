@@ -3,7 +3,7 @@ import { MemoryStorage } from '../storage/memory';
 import { loadContent, type ContentGraph } from '../content/loader';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
-import { computeAttacks } from '../combat/helpers';
+import { computeAttacks, rollEffectsFor } from '../combat/helpers';
 import {
 	registerPluginEvaluator,
 	clearPluginEvaluator,
@@ -40,21 +40,22 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/items_srd.csv',
 		[
-			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap,str_min,stealth_disadvantage,damage',
-			`leather_armor,5.5e,${S},Leather Armor,,armor,light armor,11,,,,`,
-			`plate_armor,5.5e,${S},Plate Armor,,armor,heavy armor,18,0,15,true,`,
-			`shield,5.5e,${S},Shield,,shield,shield,2,,,,`,
-			`dagger,5.5e,${S},Dagger,,weapon,simple melee,,,,,1d4 piercing`,
-			`greataxe,5.5e,${S},Greataxe,,weapon,martial melee,,,,,1d12 slashing`,
-			`sunblade,5.5e,${S},Sun Blade,,weapon,martial melee,,,,,1d6 slashing; 1d4 radiant`,
-			`longbow,5.5e,${S},Longbow,,weapon,martial ranged,,,,,1d8 piercing`
+			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap,str_min,stealth_disadvantage,damage,properties',
+			`leather_armor,5.5e,${S},Leather Armor,,armor,light armor,11,,,,,`,
+			`plate_armor,5.5e,${S},Plate Armor,,armor,heavy armor,18,0,15,true,,`,
+			`shield,5.5e,${S},Shield,,shield,shield,2,,,,,`,
+			`dagger,5.5e,${S},Dagger,,weapon,simple melee,,,,,1d4 piercing,`,
+			`greataxe,5.5e,${S},Greataxe,,weapon,martial melee,,,,,1d12 slashing,two-handed`,
+			`sunblade,5.5e,${S},Sun Blade,,weapon,martial melee,,,,,1d6 slashing; 1d4 radiant,`,
+			`longbow,5.5e,${S},Longbow,,weapon,martial ranged,,,,,1d8 piercing,two-handed`
 		].join('\n')
 	);
 	await st.write(
 		'c/feats_srd.csv',
 		[
 			'id,systems,source,name_en,effects,category',
-			`archery,5.5e,${S},Archery,flat_bonus:attack:ranged+2,fighting_style`
+			`archery,5.5e,${S},Archery,flat_bonus:attack:ranged+2,fighting_style`,
+			`great_weapon_fighting,5.5e,${S},Great Weapon Fighting,"min_die:damage:two_handed,melee:3;min_die:damage:versatile,melee:3",fighting_style`
 		].join('\n')
 	);
 	await st.write(
@@ -200,6 +201,24 @@ describe('deriveSheet aggregator', () => {
 		// dagger is melee → archery does NOT apply: STR+2 + prof 2 = +4, no scoped note.
 		expect(dagger.toHit).toBe(4);
 		expect(dagger.note).toBeUndefined();
+	});
+
+	it('§B: Great Weapon Fighting floors the damage dice of a two-handed melee weapon only', () => {
+		const c = newCharacter('greta', 'Greta', '5.5e'); // fighter — martial weapon proficiency
+		c.build.classes = [{ class: `class:${S}:fighter`, level: 3 }];
+		c.build.abilities = { str: 16, dex: 14, con: 12, int: 10, wis: 10, cha: 10 };
+		c.build.feats = [`feat:${S}:great_weapon_fighting`];
+		c.build.inventory = [
+			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }, // two-handed melee
+			{ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false } // two-handed RANGED
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		const atks = computeAttacks(characterSchema.parse(c), s, graph);
+		const greataxe = atks.find((a) => a.name === 'Greataxe')!;
+		const longbow = atks.find((a) => a.name === 'Longbow')!;
+		// the full chain: computeAttacks tags the weapon → rollEffectsFor gates the min_die on its scopes
+		expect(rollEffectsFor(s.facts, 'damage', new Set(greataxe.scopes)).minDie).toBe(3); // 1/2 → 3
+		expect(rollEffectsFor(s.facts, 'damage', new Set(longbow.scopes)).minDie).toBeUndefined(); // ranged
 	});
 
 	it('BUG-DMG-1: a multi-type weapon yields one damage part per type; the ability mod folds into the primary part only', () => {

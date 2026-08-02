@@ -261,10 +261,20 @@ const parsePlugin: KindParser = (rest, raw, kind) => {
 
 const parseRollMod: KindParser = (rest, raw, kind) => {
 	// `reroll:<target>:<threshold>` / `min_die:<target>:<floor>` — a target plus one integer the
-	// roll path reads. Target may be a group (`d20_tests`) or a specific key (`skill.stealth`).
-	const m = /^(.+):(\d+)$/.exec(rest);
+	// roll path reads. Target may be a group (`d20_tests`) or a specific key (`skill.stealth`). §B
+	// adds an OPTIONAL middle weapon-category scope list (ALL tags required, comma-separated) for a
+	// per-weapon damage manip: GWF `min_die:damage:two_handed,melee:3` (floors dice only on a
+	// two-handed melee weapon). The trailing int always anchors the end.
+	const m = /^([a-z0-9_.]+)(?::([a-z0-9_,]+))?:(\d+)$/i.exec(rest.trim());
 	if (!m?.[1]) return { kind: 'unknown', raw };
-	return { kind, target: m[1].trim(), amount: Number(m[2]), raw };
+	const scope = m[2]?.toLowerCase();
+	return {
+		kind,
+		target: m[1].trim(),
+		amount: Number(m[3]),
+		raw,
+		...(scope ? { weaponScope: scope } : {})
+	};
 };
 
 /** Body parsers keyed by kind. A kind with no entry (advantage / disadvantage / apply_condition /

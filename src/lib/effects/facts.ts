@@ -45,6 +45,10 @@ export type TargetValidator = (kind: string, target: string) => TargetCheck;
 export interface RollMod {
 	target: string;
 	value: number;
+	/** §B weapon-category scope (comma list, ALL required) from a scoped `reroll`/`min_die` — GWF's
+	 *  `two_handed,melee`. The roll path applies the fact only for a weapon carrying every tag; a
+	 *  non-weapon roll (no scope set supplied) skips scoped facts entirely. */
+	weaponScope?: string;
 }
 
 /** A resolved numeric token (`flat_bonus`/`set_override`) — its L2 expression already evaluated
