@@ -647,3 +647,30 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		expect(combat.resources.resourceSpent('action_surge')).toBe(1);
 	});
 });
+
+/*
+ * short_one recharge (2024 Second Wind: regain ONE use on a short rest, all on a long rest). An open
+ * enum member — not a boolean partial-recharge column (docs/AI-CONVENTIONS §1.5). Drives the real
+ * rest() so the sheet resource carries the recharge policy end-to-end.
+ */
+describe('ResourceTracker · short_one partial recharge', () => {
+	it('regains one use per short rest, all on a long rest', async () => {
+		const graph = await graphOf();
+		const character = newCharacter('rook', 'Rook', '5.5e');
+		character.play.autoCalc = true;
+		character.play.effects = [
+			{ iid: '1', label: 'SW', effects: ['grant_resource:second_wind:3:short_one'], positive: true }
+		];
+		character.play.resourcesSpent = { second_wind: 3 }; // all three uses expended
+		combat.graph = graph;
+		combat.character = character;
+		expect(combat.sheet?.resources.find((r) => r.id === 'second_wind')?.recharge).toBe('short_one');
+
+		combat.resources.rest('short');
+		expect(combat.resources.resourceSpent('second_wind')).toBe(2); // regained ONE, not all
+		combat.resources.rest('short');
+		expect(combat.resources.resourceSpent('second_wind')).toBe(1); // and one more
+		combat.resources.rest('long');
+		expect(combat.resources.resourceSpent('second_wind')).toBe(0); // long rest = all back
+	});
+});

@@ -914,7 +914,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/rules/spellcasting.ts`
 
 - `type CasterShare` — Multiclass caster-level contribution + rounding (data value `caster_share`).
-- `type Recharge` — How a limited pool refills: on a short or long rest, or `other` = never auto (manual only).
+- `type Recharge` — How a limited pool refills: fully on a `short` rest, fully on a `long` rest, `short_one` = regain * ONE use per short…
 - `type SlotTable` — A spell-slot table: character level → counts per spell level (index 0 = 1st-level slots).
 - `interface CastPool` — A castable pool — a slot group (has `spellLevel`) or a generic/limited resource.
 - `type SlotSpend` — What casting a spell should do to the leveled slot pools (AUDIT A17): spend `key` (a * `spellSlotsSpent` key, "1".."9…

@@ -105,8 +105,14 @@ export class ResourceTracker {
 		const sheet = this.getSheet();
 		if (!c || !sheet) return;
 		const spent = { ...c.play.resourcesSpent };
-		for (const r of sheet.resources)
-			if (r.recharge === 'short' || (kind === 'long' && r.recharge === 'long')) spent[r.id] = 0;
+		for (const r of sheet.resources) {
+			// full recharge: a `short` pool refills on ANY rest; everything but manual-only `other` refills
+			// on a long rest. `short_one` only regains ONE use per short rest (2024 Second Wind).
+			const full = r.recharge === 'short' || (kind === 'long' && r.recharge !== 'other');
+			if (full) spent[r.id] = 0;
+			else if (kind === 'short' && r.recharge === 'short_one')
+				spent[r.id] = Math.max(0, (spent[r.id] ?? 0) - 1);
+		}
 		c.play.resourcesSpent = spent;
 		if (kind === 'long') {
 			c.play.spellSlotsSpent = {};

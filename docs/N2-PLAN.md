@@ -63,10 +63,12 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
    2014 SW=1, AS=1(2@L17); 2024 SW=2→3@L4→4@L10 (via `step()`, not per-level rows — the rage pattern),
    AS=1(2@L17). Drove the app (demo Valen carries `second_wind`): click → rolls 1d10, raises HP, spends
    the bonus + the one use, then the row disables. Screenshots in `design-preview/n2-second-wind-*.png`.
-   - **RAW DEVIATION (flagged, [[charnik-srd-raw-fidelity]]):** 2024 Second Wind RAW restores ONE use on
-     a Short Rest + all on a Long Rest; our recharge model is binary (`short` = full recharge on a short
-     rest), so a short rest OVER-restores it. Needs a per-resource partial-recharge amount the engine
-     lacks — out of this slice. 2014 SW/AS + 2024 AS ("short or long rest" = full) are RAW-exact.
+   - **2024 Second Wind short-rest recharge — FIXED (`<this commit>`).** RAW: regain ONE use on a Short
+     Rest + all on a Long Rest. Extended the `Recharge` enum with `short_one` (an open enum member, NOT a
+     boolean partial-recharge flag — the rule this triggered, docs/AI-CONVENTIONS §1.5 / CLAUDE.md): one
+     new member in `spellcasting.ts`, one alternation in the token parser, one branch in `rest()`, one
+     `rechargeLabel` case. 2024 SW row now `...:short_one`. 2014 SW/AS + 2024 AS ("short or long rest" =
+     full) stay `short` (RAW-exact). Tested: short rest regains one, long rest regains all.
 
 ### Deferred (OUT — keep the slice small)
 - `savage_attacker` — needs a **damage roll-mode** ("roll pool twice, keep higher") intent field + a

@@ -198,7 +198,13 @@ export function groupEffects(effects: EffectInstance[]): {
 
 /** Recharge id → the label shown on a resource's recharge chip. */
 export const rechargeLabel = (r: Recharge): string =>
-	r === 'long' ? 'long rest' : r === 'short' ? 'short rest' : 'special';
+	r === 'long'
+		? 'long rest'
+		: r === 'short'
+			? 'short rest'
+			: r === 'short_one'
+				? 'short rest (+1)'
+				: 'special';
 
 /** Rounds an effect has left at the given round counter (null = indefinite, floor 0). */
 export const remainingRounds = (e: EffectInstance, round: number): number | null =>

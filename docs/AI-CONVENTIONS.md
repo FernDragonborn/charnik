@@ -83,6 +83,23 @@ arbitrary `spell_slots` table), `prepare_style`, `spell_ability`, `ritual`. Non-
 (Infusions, Crimson Rite, Rage, Ki) = **resources** via `grant-resource` tokens. Truly exotic logic
 the bounded vocab can't express → the future plugin sandbox, never baked-in code.
 
+### 1.5 CSV columns are OPEN enums, never binary/boolean flags
+**Rule.** When a data column expresses a *policy* or *kind*, model it as a **named-member enum**
+(`as const` union), not a two-state boolean or an implicit binary. Add a new policy as a new enum
+member; never fork the model with a second boolean.
+
+**Why.** Game rules grow in unforeseen ways. A boolean bakes in the assumption that there are exactly
+two cases — the moment RAW needs a third (and it always does), you either mis-model it or bolt on a
+second flag and the combinations explode. An enum extends by one readable member with zero schema
+churn, and the TS union makes every consumer's `switch` re-check exhaustiveness. Concrete case
+(2026-08-02): resource `recharge` looked binary (`short|long`), but 2024 Second Wind is "regain ONE
+use on a short rest, all on a long rest" — a third policy. Because `Recharge` was already an enum, the
+fix was one member (`short_one`) + one `rest()` branch, not a new `partialRecharge` boolean column.
+
+**How to apply.** Pick descriptive member names that name the *behaviour* (`short_one`, `half_up`),
+keep the union in ONE owner module (D11), and handle the new member everywhere the compiler flags.
+A future different amount → another member (or generalize *then*, YAGNI), still not a boolean.
+
 ---
 
 ## 2. TypeScript & code quality

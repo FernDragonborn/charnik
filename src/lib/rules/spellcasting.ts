@@ -11,9 +11,12 @@
 
 /** Multiclass caster-level contribution + rounding (data value `caster_share`). */
 export type CasterShare = 'full' | 'half' | 'half_up' | 'third' | 'none';
-/** How a limited pool refills: on a short or long rest, or `other` = never auto (manual only).
+/** How a limited pool refills: fully on a `short` rest, fully on a `long` rest, `short_one` = regain
+ *  ONE use per short rest + all on a long rest (2024 Second Wind), or `other` = never auto (manual
+ *  only). An OPEN enum on purpose — add a policy member, never a boolean flag, so a new recharge
+ *  rule extends the vocabulary instead of forking the model (see docs/AI-CONVENTIONS.md).
  *  The ONE owner of this vocabulary (D11) — the effects layer imports it, never redefines it. */
-export type Recharge = 'short' | 'long' | 'other';
+export type Recharge = 'short' | 'long' | 'short_one' | 'other';
 
 /** A spell-slot table: character level → counts per spell level (index 0 = 1st-level slots). */
 export type SlotTable = ReadonlyMap<number, readonly number[]>;
