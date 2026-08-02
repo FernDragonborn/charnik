@@ -74,12 +74,20 @@ Verified in `tools/srd-src`:
 saves — 2014 RAW is explicitly **per source**, 2024 dropped it (one-save-leaning). The **Magic Missile**
 case (3 darts, one spell) is the famous ambiguous sub-case tables rule differently in BOTH editions.
 
-**⇒ multi-save feature (maintainer's idea — no surveyed tracker does it):** because the count is
-edition-divergent AND table-dependent, this is exactly a "surface + let the player decide" case
-([[play-tracker-surfaces-never-forces]]). Variant-A call-out defaults to ONE save on the entered
-amount, plus an optional **"+ add source"** — each added row has its own damage → its own DC, and
-"Roll all" rolls each. Magic Missile → 3 rows ~4 dmg → 3× DC 10; arrow + breath → 2 rows. Faithful to
-2014 RAW, available in 2024 for tables that rule per-dart. DC helper is per-system (cap 30 / uncapped).
+**⇒ DC scaling (SRD-verified):** `DC = max(10, floor(dmg/2))`, capped 30 (2024) / uncapped (2014). It
+only rises above 10 at **22+ on a SINGLE hit** (21 → floor 10.5 = 10). So sub-22 hits are a flat DC 10.
+
+**⇒ multi-save — REFRAMED after design review (2026-08-02).** Rejected the rich "+ add source /
+per-source DC / split-and-divide" ideas: we're **not a VTT**, we have no per-source data, and nobody
+types attack names — that's friction with no data behind it. Two real cases:
+- **Different sources** (arrow + dragon breath, different amounts) → handled by SEPARATE Damage presses;
+  each press raises its own variant-A save with its own DC. **No special UI.**
+- **One lump of EQUAL projectiles** (Magic Missile, Scorching Ray) → the maintainer's **split-button**:
+  a segmented `1 (wide) · 2 · 3` control that picks HOW MANY saves. Because the projectiles are equal
+  AND small (<22 each), **all saves share ONE flat DC 10** (editable) — do NOT divide the entered
+  damage (it doesn't feed a per-dart DC; that was a wrong turn in the prototype). Prototype:
+  `design-preview/concentration-split-button.html`. Niche → **parked nice-to-have**, ship single-save
+  (variant A) first.
 
 ## Other-tracker survey — concentration save (2026-08-02, informs variant A)
 
