@@ -191,6 +191,18 @@ These span many files and are easy to violate; preserve them.
   **UTF-8 BOM + CRLF** (Excel/Cyrillic safety). The file watcher **ignores the app's own
   writes** (no write→reload loop).
 
+- **Editing a content CSV → RE-STAMP its hash (or content-health flags drift).** Every
+  `content/**/*.csv` carries a `#content-hash: xxh64:…` over its normalised body; the
+  content-health panel recomputes it on load and shows **"changed · declared \<date\>"**
+  drift when the stored hash ≠ the body. So **after ANY hand-edit to a content CSV**
+  (adding an effect token to a feat, tweaking a row), you MUST re-stamp before committing:
+  run **`pnpm restamp <file.csv>`** (`tools/restamp.ts` — reuses the app's own `hashBody`,
+  rewrites only the `#content-hash` + `updated_at` lines, preserves BOM/EOL). **Do NOT
+  re-run a converter just to re-stamp** — `convert.mjs`'s row-regen drops
+  `conditions_srd.csv`'s `max_level` column (stale-converter bug); if you *do* run a
+  converter for a real content change, `git checkout` any file it touched that you didn't
+  mean to change. A converter run stamps its own output; `pnpm restamp` is for hand-edits.
+
 - **Everything is doable from the UI.** Users are never required to touch files: adding
   content writes rows into a homebrew CSV via forms (`papaparse.unparse`); enabling
   sources, resolving collisions, switching language/system/theme all happen in-app and
