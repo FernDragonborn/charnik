@@ -54,12 +54,65 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
    but as **event → reminder/highlight**, rarely as silent state-mutation. A full auto-mutating
    event-bus is *rarely* correct in a tracker.
 
-6. **OPEN — do FIRST:** prototype BOTH concentration-save UX variants in `design-preview/` HTML (reusing
-   the app look), let the maintainer choose (something may surface on seeing it), THEN build. Variants:
-   **(A)** smart — highlight + suggested editable DC after damage; **(B)** minimal — a plain
-   always-available "Concentration save" button, DC entered by the player. HP has **no pips** — only
-   Heal/Damage buttons + an amount field (so "an instance" = a Damage press's amount, but corrections
-   use the same button → don't force).
+6. **Concentration UX — CHOSEN: variant A** (smart — after a Damage press while concentrating, a
+   highlighted call-out with a suggested but EDITABLE DC = `max(10, ½ damage)` + one-click Roll save;
+   corrections just update the suggestion, no modal; fail → OFFER to drop concentration). Prototype:
+   `design-preview/concentration-ux.html`. HP has **no pips** — only Heal/Damage buttons + an amount
+   field, so "an instance" = a Damage press's amount (but corrections reuse the button → never force).
+   Rejected B (plain always-present button, manual DC). **Next:** survey how other trackers do it (see
+   §"Other-tracker survey" below) before finalizing the build.
+
+## Concentration DC — EDITION DIVERGENCE + the multi-save idea (SRD-verified 2026-08-02)
+
+Verified in `tools/srd-src`:
+- **2014 (SRD 5.1):** "If you take damage from **multiple sources, such as an arrow and a dragon's
+  breath, you make a separate saving throw for each source of damage.**" DC = 10 or ½ damage, **no cap**.
+- **2024 (SRD 5.2.1):** the multiple-sources sentence is **GONE**. "If you take damage… DC 10 or half
+  the damage taken (round down)… **up to a maximum DC of 30**." Leans to one save on the instance.
+
+**⇒ two faithful divergences to encode:** DC cap = 30 in 2024, uncapped in 2014; and the *number* of
+saves — 2014 RAW is explicitly **per source**, 2024 dropped it (one-save-leaning). The **Magic Missile**
+case (3 darts, one spell) is the famous ambiguous sub-case tables rule differently in BOTH editions.
+
+**⇒ multi-save feature (maintainer's idea — no surveyed tracker does it):** because the count is
+edition-divergent AND table-dependent, this is exactly a "surface + let the player decide" case
+([[play-tracker-surfaces-never-forces]]). Variant-A call-out defaults to ONE save on the entered
+amount, plus an optional **"+ add source"** — each added row has its own damage → its own DC, and
+"Roll all" rolls each. Magic Missile → 3 rows ~4 dmg → 3× DC 10; arrow + breath → 2 rows. Faithful to
+2014 RAW, available in 2024 for tables that rule per-dart. DC helper is per-system (cap 30 / uncapped).
+
+## Other-tracker survey — concentration save (2026-08-02, informs variant A)
+
+How existing tools handle "concentrating creature takes damage". Two camps:
+
+**Auto-roll (app rolls the save for you):**
+- **Foundry dnd5e (native):** auto-rolls the CON save when a concentrating token takes damage, DC
+  `max(10, ½ dmg)`; config toggle.
+- **Foundry Midi-QOL:** detects damage → rolls the CON save (DC 10 / half) → auto-removes the effect on
+  a fail. Deepest automation, wired into its damage pipeline.
+- **Roll20 Concentration API (`Auto Roll Save` mode):** marks the token on cast, auto-rolls CON on
+  applied damage. Caveat: misses spell-*attack* damage (no concentration info sent).
+
+**Notify + click (app surfaces, player rolls) — this is OUR variant A:**
+- **Foundry Concentration Notifier:** does NOT auto-roll — posts a message with **buttons** ("roll
+  save" + "remove concentration"), **shows the computed DC** (½ dmg, min 10), links the concentrated
+  item. Popular precisely because it doesn't steal the roll. Flags worth stealing: `concentrationAbility`
+  (WIS instead of CON), `concentrationAdvantage` (War Caster!), `concentrationBonus`, `concentrationReliable`
+  (min-10). Fail → OFFER remove (a button), doesn't force.
+- **Roll20 (reminder mode):** just reminds to do a check.
+- **D&D Beyond / mobile (Fight Club, Game Master 5e):** lighter — track concentration as a tag; the
+  save is largely manual (no auto-prompt-on-damage).
+
+**Takeaways for our build (variant A = the notify+click camp, validated):**
+1. Everyone computes + SHOWS `max(10, ½ dmg)`. Standard.
+2. The save is a normal **CON save** → route it through our existing save path so `save.con` effects
+   fold automatically: **Bless**, **War Caster** (advantage on concentration saves), etc. Don't special-case.
+3. Steal Concentration Notifier's flags as effect targets we likely already have or can add:
+   advantage on concentration saves (War Caster), an ability override, a bonus, min-10 (reliable).
+4. Fail → **offer** to drop concentration (a button/dialog), never auto-drop — matches our principle
+   and Concentration Notifier; Midi's auto-drop is the more-aggressive end we deliberately avoid.
+5. Our edge over the VTTs: damage flows through ONE Damage button with an explicit amount → clean
+   instance/DC; the only nuance is corrections reuse the button (→ suggest, don't force; variant A).
 
 ## Slice 1 — Hit Dice subsystem (no deps) `[x]` DONE + app-verified 2026-08-02
 

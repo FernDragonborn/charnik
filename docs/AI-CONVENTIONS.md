@@ -36,25 +36,37 @@ skill lists, 5e/5.5e divergences) that schema tests do NOT catch — they valida
 - Converters assert row count vs source (`assertCount`). Always tag rows by their SRD edition;
   never claim both editions unverified. Applies to ANY reference/factual data task.
 
-### 1.2 SRD RAW fidelity
-**Rule.** Charnik's mechanical output MUST equal the SRD rules for the active edition
-(5e = SRD 5.1, 5.5e = SRD 5.2.1). This is the correctness bar for every rules/effects/derive
-decision.
+### 1.2 SRD fidelity — RAW by default, RAI when RAW is silly, always surface
+**Rule.** Charnik's mechanical output defaults to the SRD **RAW** (Rules As Written) for the active
+edition (5e = SRD 5.1, 5.5e = SRD 5.2.1). **BUT** where RAW is ambiguous, self-contradictory, or an
+obvious artifact of the ruleset's sheer volume (a dumb/unintended literal result), follow **RAI**
+(Rules As Intended — the designers' clear intent: official Sage Advice / errata / obvious design
+purpose) instead of a robotic literal reading. Either way, **surface the interpretation** so the
+table can override; where RAW and RAI genuinely diverge as a real table choice, **offer both**, don't
+hardcode one. (Maintainer's stance, 2026-08-02.)
 
-**Why.** It's a tracking tool — a wrong number is a broken tool, not a preference. RAW is the
-spec, not a heuristic to invent around.
+**Why.** It's a tracking tool — a wrong number is a broken tool. RAW is the spec, not a heuristic to
+invent around — but a huge ruleset has genuine cracks, and blindly shipping a dumb literal result
+serves no one. RAI resolves the cracks toward what the game means.
+
+**The hard boundary — RAI interprets RULES, it never invents DATA.** §1.1 [never hallucinate game
+data] is UNCHANGED and absolute: spells/items/stats/costs always come from a real SRD source, never
+from memory. RAI is "how to interpret a mechanic", never "fabricate content." RAI is not "because I
+prefer it" — it triggers only on ambiguous/contradictory/clearly-unintended RAW, not taste.
 
 **How to apply.**
-- Derive answers from actual SRD RAW text of BOTH editions, not intuition or a convenient global
-  rule. RAW is often per-effect (e.g. Headband of Intellect = set-to-19 "unless already higher";
-  grappled = speed 0 AND blocks speed bonuses) — there is no single universal max/min rule.
-- If the maintainer proposes something that **deviates from RAW**, say so immediately and explain
-  why it's a deviation. Do NOT start implementing it. Proceed only on an explicit override with a
-  stated reason.
-- A RAW-correct behavior that's currently unimplementable → log it as a **KNOWN RAW GAP**, not a
+- Derive answers from actual SRD text of BOTH editions, not intuition or a convenient global rule.
+  RAW is often per-effect (Headband of Intellect = set-to-19 "unless already higher"; grappled =
+  speed 0 AND blocks speed bonuses) — no single universal rule.
+- Clean RAW → follow it. Ambiguous/contradictory/obviously-unintended RAW → follow RAI **and say so**
+  (note the interpretation + why). Never silently pick an interpretation.
+- Where RAW and RAI diverge as a legitimate table decision (e.g. Magic Missile = one save vs per-dart;
+  2014 "separate save per source" vs 2024 dropping it) → **offer the choice** ([[play-tracker-surfaces-never-forces]]),
+  don't bake one in.
+- A RAW/RAI-correct behavior that's currently unimplementable → log it as a **KNOWN GAP**, not a
   design choice.
-- When answering rules questions, tag options as RAW-forced (no real choice) vs free
-  architectural choice, so decisions are only asked where SRD genuinely leaves room.
+- When answering rules questions, tag options as RAW-forced (no real choice) / RAI-resolved (RAW was
+  silly) / free architectural choice, so decisions are asked only where the rules genuinely leave room.
 
 ### 1.3 Engine scope = the whole game; shipped data = SRD-only
 **Rule.** The engine must be able to represent the **entire PHB, official rulebooks, and popular
