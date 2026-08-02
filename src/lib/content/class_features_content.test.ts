@@ -211,4 +211,16 @@ describe('N4a · shipped expertise_slots grants (real content)', () => {
 		expect(b('bard', 10)).toBe(4);
 		expect(b('ranger', 20)).toBe(0);
 	});
+	it('a multiclass sums each class independently (Rogue 6 / Bard 10 → 4 + 4 = 8)', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const budget = expertiseBudget(
+			[
+				{ classId: 'class:SRD 5.2.1:rogue', subclassId: null, level: 6 },
+				{ classId: 'class:SRD 5.2.1:bard', subclassId: null, level: 10 }
+			],
+			g,
+			'5.5e'
+		);
+		expect(budget).toBe(8); // Rogue L6 (2+2) + Bard 2024 L10 (2+2)
+	});
 });
