@@ -123,7 +123,8 @@ export function deriveSkills(
 	{ build, scores, level, facts }: StatInputs,
 	grantedSkills: Map<string, SkillProficiency>
 ): Record<SkillId, Computed & { prof: SkillProficiency }> {
-	const chosenProf = new Set(build.skills);
+	// class/background picks + §C feat-granted skill choices (Skilled) — both are plain proficiency
+	const chosenProf = new Set([...build.skills, ...(build.featSkills ?? [])]);
 	const chosenExpert = new Set(build.expertise ?? []);
 	const skills = {} as Record<SkillId, Computed & { prof: SkillProficiency }>;
 	for (const [skill, ab] of Object.entries(SKILL_ABILITY) as [SkillId, Ability][]) {

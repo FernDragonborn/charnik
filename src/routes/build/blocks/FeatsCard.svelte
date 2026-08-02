@@ -3,7 +3,10 @@
 	// background origin feat (auto), and per-slot ASI allocation (+2 one / +1 two).
 	import { build, rowName, ASI } from '../state.svelte';
 	import { ABILITIES } from '$lib/character/schema';
+	import { SKILL_ABILITY } from '$lib/character/derive';
+	import { titleCase } from '$lib/util/format';
 	const b = build;
+	const SKILLS = Object.keys(SKILL_ABILITY);
 </script>
 
 <div class="card">
@@ -16,6 +19,8 @@
 				<span class="level-tag gold">BG</span>
 				<span class="feat-line"><b>Origin feat</b> — {rowName(b.graph?.get(b.originFeatRef))} <span class="subtext">(granted)</span></span>
 			</div>
+			{@const originSkills = b.featSkillCountOf(b.originFeatRef)}
+			{#if originSkills > 0}{@render skillPicker('origin', originSkills)}{/if}
 		{/if}
 		{#each b.featSlots as slot (slot.key)}
 			{@const chosen = b.draft.slotFeats[slot.key] ?? ''}
@@ -64,11 +69,32 @@
 						</div>
 					</div>
 				{/if}
+				{@const skillCount = b.featSkillCountOf(chosen)}
+				{#if skillCount > 0}{@render skillPicker(slot.key, skillCount)}{/if}
 			{/if}
 		{/each}
 		<p class="subtext note">↻ = repeatable — take it in more than one slot. ASI &amp; feats apply to the preview.</p>
 	{/if}
 </div>
+
+{#snippet skillPicker(key: string, cap: number)}
+	{@const picks = b.slotFeatSkillsFor(key)}
+	<div class="asi-block">
+		<span class="subtext"
+			>Skills — choose <b class="teal">{Math.min(picks.length, cap)}/{cap}</b>
+			<span class="gold">(tools not yet supported)</span></span
+		>
+		<div class="chips">
+			{#each SKILLS as skill (skill)}
+				{@const on = picks.includes(skill)}
+				{@const blocked = (b.draft.strict && b.featSkillTakenElsewhere(key, skill) && !on) || (!on && picks.length >= cap)}
+				<button class="pick-chip" class:on class:dim={blocked} disabled={blocked} onclick={() => b.toggleSlotFeatSkill(key, skill, cap)}>
+					{titleCase(skill)}
+				</button>
+			{/each}
+		</div>
+	</div>
+{/snippet}
 
 <style>
 	.field-row {

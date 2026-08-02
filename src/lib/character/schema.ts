@@ -72,6 +72,10 @@ const buildSchema = z.object({
 	abilities: abilityScores,
 	/** Proficient skill ids (e.g. "athletics"). */
 	skills: z.array(z.string()).default([]),
+	/** Skill proficiencies granted by a feat's §C choice-grant (Skilled), kept SEPARATE from `skills`
+	 *  (class/background picks) so the builder's class-skill cap counter isn't inflated on edit. Merged
+	 *  into skill proficiency at derive, exactly like a class-chosen skill. */
+	featSkills: z.array(z.string()).default([]),
 	/** Skill ids with **expertise** (double proficiency — Rogue/Bard). Subset of `skills`. */
 	expertise: z.array(z.string()).default([]),
 	/** Allocated ability boosts (5.5e background / ASIs), applied at the feature layer on top

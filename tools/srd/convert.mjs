@@ -70,6 +70,7 @@ function existingFeatCol(col) {
 function convertFeats() {
 	const authored = existingFeatCol('effects');
 	const authoredAbility = existingFeatCol('ability_choice');
+	const authoredSkill = existingFeatCol('skill_choice');
 	const all = blocks(src('feats.md')).filter((b) => FEAT_SECTIONS[b.h3]);
 	const rows = all.map((b) => {
 		const text = b.body.join('\n');
@@ -86,7 +87,8 @@ function convertFeats() {
 			category: FEAT_SECTIONS[b.h3],
 			prereq: prereqM ? prereqM[1].trim() : '',
 			repeatable: String(/_Repeatable\._/.test(text)),
-			ability_choice: authoredAbility.get(slug(b.name)) ?? '' // half-feat +1 targets, preserved
+			ability_choice: authoredAbility.get(slug(b.name)) ?? '', // half-feat +1 targets, preserved
+			skill_choice: authoredSkill.get(slug(b.name)) ?? '' // §C skill choice-grant count, preserved
 		};
 	});
 	writeCsv(
@@ -103,7 +105,8 @@ function convertFeats() {
 			'category',
 			'prereq',
 			'repeatable',
-			'ability_choice'
+			'ability_choice',
+			'skill_choice'
 		],
 		rows
 	);

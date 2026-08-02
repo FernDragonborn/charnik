@@ -182,6 +182,16 @@ describe('shipped feat effects (real content)', () => {
 		expect(choiceOf('boon_of_combat_prowess')).toEqual(['str', 'dex', 'con', 'int', 'wis', 'cha']);
 		expect(choiceOf('alert')).toEqual([]); // not a half-feat
 	});
+
+	it('§C: Skilled carries skill_choice=3 (the choice-grant count); other feats have none', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const skillChoiceOf = (id: string) => {
+			const row = g.get(`feat:SRD 5.2.1:${id}`);
+			return row?.type === 'feat' ? row.data.skill_choice : null;
+		};
+		expect(skillChoiceOf('skilled')).toBe(3);
+		expect(skillChoiceOf('alert')).toBeUndefined();
+	});
 });
 
 describe('N4a · shipped expertise_slots grants (real content)', () => {

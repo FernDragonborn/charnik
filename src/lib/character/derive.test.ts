@@ -487,6 +487,15 @@ describe('deriveSheet aggregator', () => {
 		expect(s.abilities.con.save.trace.some((t) => t.layer === 'proficiency')).toBe(true);
 	});
 
+	it('§C: build.featSkills (Skilled choice-grant) makes a skill proficient like a class pick', () => {
+		const c = wizard();
+		c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 10, cha: 10 }; // DEX +2
+		c.build.featSkills = ['stealth']; // chosen via a Skilled-style feat
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.skills.stealth!.prof).toBe('proficient');
+		expect(s.skills.stealth!.value).toBe(4); // DEX +2 + prof +2 (L3)
+	});
+
 	it('collects damage defenses from resist_immune effects (mode + bare default)', () => {
 		const c = wizard();
 		c.play.effects = [

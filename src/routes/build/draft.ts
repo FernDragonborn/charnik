@@ -54,6 +54,9 @@ export interface DraftState {
 	/** Half-feat ability choice per slot: the +1 a feat like Grappler (STR/DEX) or an Epic Boon
 	 *  (any) grants, keyed by slot. Folds into `abilityBoosts` at assemble. */
 	slotFeatAbility: Record<string, Ability>;
+	/** §C skill choice-grant per slot: the chosen skill ids for a feat that grants N picks (Skilled),
+	 *  keyed by slot (the origin-feat picker uses the `'origin'` key). Folds into `build.featSkills`. */
+	slotFeatSkills: Record<string, string[]>;
 	selectedSpells: string[];
 	inventory: { item: string; qty: number; equipped: boolean; attuned: boolean }[];
 }
@@ -81,6 +84,7 @@ export function blankDraft(): DraftState {
 		slotFeats: {},
 		slotAsi: {},
 		slotFeatAbility: {},
+		slotFeatSkills: {},
 		selectedSpells: [],
 		inventory: []
 	};
@@ -128,6 +132,9 @@ export interface EditContext {
 	/** Ability boosts carried verbatim (not reverse-engineered); new picks add on top. */
 	boosts: Partial<Record<Ability, number>>;
 	feats: string[];
+	/** Feat-granted skill choices (§C) carried verbatim on edit — new slot picks add on top, mirroring
+	 *  `boosts` (feat sub-choices aren't reverse-mapped to slots, so they can't be re-picked, only kept). */
+	featSkills: string[];
 	/** Spells / skills the character already had — can't be undone in Strict edit. */
 	spells: Set<string>;
 	skills: Set<string>;

@@ -45,7 +45,7 @@ hatch for the procedural tail is **L3 plugins** (QuickJS-WASM sandbox, already B
 | `great_weapon_fighting` | 2 | [ ] | reroll 1–2 on damage dice of a two-handed **melee** weapon → weapon-scope + `reroll:damage:2` scoped to a property. Needs Vocab §A + a property filter. |
 | `two_weapon_fighting` | 3 | [ ] | add the ability mod to the OFF-HAND attack's damage. Off-hand attacks aren't modelled distinctly → needs the attack model to know main/off hand. |
 | `savage_attacker` | 3 | [ ] | once-per-turn: roll the weapon's damage dice twice, keep either. Roll-time, once-per-turn state → plugin or a dedicated roll-manip mechanic. |
-| `skilled` | 3 (choice) | [ ] | +3 skill/tool proficiencies of choice → a choice UI like skills (repeatable). |
+| `skilled` | 3 (choice) | [x] | §C choice-grant DONE (2026-08-02, skills-only). `skill_choice=3` CSV col → per-slot/origin-feat skill picker in FeatsCard → `build.featSkills` → proficiency. **⚠ RAW deviation:** SRD reads "skills OR tools"; tools unmodelled → skills-only, flagged in UI + here. Reachable only via a homebrew background/feat (no shipped BG grants it — engine-support). |
 | `magic_initiate` | 3 (spells) | [ ] | 2 cantrips + 1 L1 spell (list choice) + once/long-rest free cast → spell-learning + limited-cast mechanic. Biggest; own subproject. |
 
 ### 2014 (SRD 5.1) — 1 feat
@@ -77,9 +77,22 @@ keeps the vocab out of L1 (compatibility.md — no weapon-category enum baked in
 once-per-turn gate for Savage Attacker. Once-per-turn is play-state (a per-turn used-flag) — likely a
 plugin (onEvent) or a small combat-state mechanic. Assess vs plugin.
 
-### §C · Choice-grant UI (Skilled, Prodigy, etc.)
-A reusable "pick N proficiencies from a set" the way expertise/skills already work. Store in a draft
-field; fold as `grant_proficiency` facts. Skilled = 3 from any skill+tool. Generalizes Prodigy, etc.
+### §C · Choice-grant UI (Skilled, Prodigy, etc.) — **[x] DONE 2026-08-02 (skills-only)**
+Data-driven `skill_choice=N` feat column (author-set count, NO feat-id hardcode → homebrew Skilled/
+Prodigy Just Works). Draft field `slotFeatSkills: Record<key, string[]>` (key = a feat-slot key, or
+`'origin'` for the background-granted feat); a reusable `skillPicker` snippet in `FeatsCard` shows
+"pick N skills" reusing `.pick-chip`/`.asi-block`. **Strict** disables an already-proficient skill
+(wasted pick) + enforces the N cap; **Free** is lenient. Folds into a NEW `build.featSkills` field
+(kept SEPARATE from `build.skills` so the class-skill cap counter isn't inflated on edit; merged into
+proficiency at derive via `deriveSkills`' `chosenProf`, carried verbatim on edit like `abilityBoosts`).
+**Deviation from the original plan:** folded into `build.featSkills` (a resolved list), NOT synthetic
+`grant_proficiency` facts — simpler, reuses the existing skill-proficiency derive, no synthetic-effect
+machinery. **TOOLS DEFERRED:** SRD Skilled is "skills OR tools"; tools aren't modelled anywhere (no
+schema/content/UI) → skills-only, a flagged RAW deviation (strict/free is about ENFORCEMENT, not which
+proficiency TYPES exist — tools are a separate content-modelling gap). Tools = own subproject.
+**Unexercised by shipped SRD** (no background grants Skilled; origin feats aren't slot-selectable) →
+UI verified by svelte-check + proven-component composition + logic tests, not a live screenshot;
+reachable via homebrew. Generalizes to Prodigy etc.
 
 ## L3 plugin candidates (tier 3, after the sandbox demand justifies authoring plugins)
 `magic_initiate` (spell grants), `two_weapon_fighting` (off-hand), `savage_attacker` (once/turn reroll),
@@ -92,8 +105,9 @@ the CSV + a sandboxed handler. **Not urgent** — text fallback is honest until 
 2. ~~**Vocab §A attack-scope + `archery`**~~ **[x] DONE 2026-08-02** — `flat_bonus:attack:ranged+2`;
    `weaponScope` field + per-weapon fold in `computeAttacks`, roll-path skip. Damage-scope side left
    for GWF (step 4). Tests: parser, `rollEffectsFor` skip, derive (longbow +2 / dagger +0).
-3. **§C choice-grant UI** + **`skilled`**: reusable, unblocks a class of feats.
-4. **GWF** on top of §A+§B (reroll scoped to two-handed melee).
+3. ~~**§C choice-grant UI + `skilled`**~~ **[x] DONE 2026-08-02** — `skill_choice=N` col + skill picker
+   → `build.featSkills`. Skills-only (tools deferred). Reusable for Prodigy etc.
+4. **GWF** on top of §A+§B (reroll scoped to two-handed melee). ← **NEXT**
 5. Tier-3 plugins (magic_initiate, TWF off-hand, savage_attacker) — only when we commit to authoring
    sandboxed plugins; until then keep RAW text.
 

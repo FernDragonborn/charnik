@@ -293,7 +293,11 @@ const featSchema = baseRow.extend({
 	/** Half-feat ability choice (curated from SRD): the abilities this feat's +1 may go to, as a
 	 *  comma list (`str,dex` — Grappler) or `any` (all six — Epic Boons). Empty = not a half-feat.
 	 *  The builder shows an ability picker and folds the +1 into `abilityBoosts`. */
-	ability_choice: optStr
+	ability_choice: optStr,
+	/** §C choice-grant: how many SKILL proficiencies of the player's choice this feat grants (Skilled
+	 *  = 3). The builder shows a "pick N skills" picker, folded into `build.featSkills`. NB SRD Skilled
+	 *  reads "skills OR tools"; tools aren't modelled yet (skills-only — flagged deviation). */
+	skill_choice: optInt
 });
 
 /** Spell. Semi-structured upcasting in `higher_level`; resolution + save_ability drive

@@ -173,6 +173,7 @@ class BuildVM {
 			ui: char.ui,
 			boosts: { ...(char.build.abilityBoosts as Partial<Record<Ability, number>>) },
 			feats: [...char.build.feats],
+			featSkills: [...(char.build.featSkills ?? [])],
 			skills: new Set(char.build.skills),
 			spells: new Set(this.draft.selectedSpells)
 		};
@@ -565,6 +566,10 @@ class BuildVM {
 		if (first) featAb[key] ??= first;
 		else delete featAb[key];
 		this.draft.slotFeatAbility = featAb;
+		// §C: a feat swap clears the slot's skill choice-grant picks (stale for the new feat)
+		const featSk = { ...this.draft.slotFeatSkills };
+		delete featSk[key];
+		this.draft.slotFeatSkills = featSk;
 	};
 	/** The abilities a slot's chosen feat lets you raise by +1 (a half-feat like Grappler / an Epic
 	 *  Boon), or `[]` if the slot holds no half-feat. Reads the feat row's `ability_choice`. */
@@ -578,6 +583,44 @@ class BuildVM {
 		this.draft.slotFeatAbility = { ...this.draft.slotFeatAbility, [key]: ab };
 	};
 	filledSlots = $derived(this.featSlots.filter((s) => this.draft.slotFeats[s.key]).length);
+
+	// --- §C skill choice-grant (Skilled: pick N skill proficiencies) ------------
+	// Data-driven off the feat's `skill_choice` column (author-set count, no feat-id hardcode), so a
+	// homebrew Skilled/Prodigy Just Works. NB SRD Skilled is "skills OR tools"; tools aren't modelled
+	// yet → skills-only (a flagged RAW deviation, docs/FEATS-PLAN §C).
+	/** How many skills a feat REF grants by choice (0 = not a choice-grant feat). */
+	featSkillCountOf = (ref: string | null | undefined): number => {
+		if (!ref || ref === ASI) return 0;
+		return Number(rowOfType(this.graph?.get(ref), 'feat')?.data.skill_choice ?? 0) || 0;
+	};
+	/** The chosen skills for a choice-grant key (a feat slot key, or `'origin'` for the BG feat). */
+	slotFeatSkillsFor = (key: string): string[] => this.draft.slotFeatSkills[key] ?? [];
+	/** Toggle a skill in a slot's §C picks, capped at the feat's grant count. */
+	toggleSlotFeatSkill = (key: string, skill: string, cap: number) => {
+		this.draft.slotFeatSkills = {
+			...this.draft.slotFeatSkills,
+			[key]: toggleCapped(this.slotFeatSkillsFor(key), skill, cap)
+		};
+	};
+	/** Strict-mode guard: a skill already proficient from ANOTHER source (class/background pick or a
+	 *  different feat's grant) is a wasted pick — disable it in Strict, allow it in Free. */
+	featSkillTakenElsewhere = (key: string, skill: string): boolean => {
+		if (this.autoSkills.includes(skill) || this.draft.skills.includes(skill)) return true;
+		return Object.entries(this.draft.slotFeatSkills).some(
+			([k, list]) => k !== key && list.includes(skill)
+		);
+	};
+	/** Every §C-granted skill across all slots + the origin feat (deduped, each capped to its grant),
+	 *  folded into `build.featSkills` at assemble. Stale picks (feat/count changed) are trimmed here. */
+	featSkillPicks = $derived.by<string[]>(() => {
+		const out = new Set<string>();
+		const take = (key: string, count: number) => {
+			for (const s of this.slotFeatSkillsFor(key).slice(0, count)) out.add(s);
+		};
+		for (const s of this.featSlots) take(s.key, this.featSkillCountOf(this.draft.slotFeats[s.key]));
+		take('origin', this.featSkillCountOf(this.originFeatRef));
+		return [...out];
+	});
 
 	// --- per-slot ASI allocation (+2 to one ability, or +1 to two) --------------
 	asiBoostFor = (key: string): Partial<Record<Ability, number>> =>
@@ -614,6 +657,9 @@ class BuildVM {
 			abilities: { ...this.draft.abilities },
 			abilityBoosts: this.abilityBoosts as Record<string, number>,
 			skills: [...new Set([...this.autoSkills, ...this.draft.skills])],
+			// §C feat-granted skills (Skilled) kept in their OWN field so the class-skill cap counter isn't
+			// inflated on edit; carried verbatim on edit (like abilityBoosts) + new slot picks on top
+			featSkills: [...new Set([...(this.edit?.featSkills ?? []), ...this.featSkillPicks])],
 			expertise: this.draft.expertise.filter((s) => this.isProficient(s)),
 			saves: this.classRow?.data.saves ?? [],
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
