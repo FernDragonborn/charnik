@@ -151,6 +151,27 @@ describe('shipped feat effects (real content)', () => {
 		expect(alert.initiative.value).toBe(base.initiative.value + 3); // + proficiency bonus
 	});
 
+	it('2024 Defense fighting style grants +1 AC only while wearing armor', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const ac = (feats: string[], armored: boolean) => {
+			const c = newCharacter('grog', 'Grog', '5.5e');
+			c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 1 }];
+			c.build.feats = feats;
+			if (armored)
+				c.build.inventory = [
+					{ item: 'item:SRD 5.2.1:leather_armor', qty: 1, equipped: true, attuned: false }
+				];
+			return deriveSheet(characterSchema.parse(c), g).ac;
+		};
+		const withDef = ac(['feat:SRD 5.2.1:defense'], true);
+		const noDef = ac([], true);
+		expect(withDef.value).toBe(noDef.value + 1); // +1 AC while armored
+		expect(withDef.trace.some((t) => t.note === 'flat_bonus:ac+1')).toBe(true);
+		// unarmored → the armor_type guard is false → no bonus
+		const unarmored = ac(['feat:SRD 5.2.1:defense'], false);
+		expect(unarmored.trace.some((t) => t.note === 'flat_bonus:ac+1')).toBe(false);
+	});
+
 	it('2024 half-feats carry their ability_choice (Grappler STR/DEX, Epic Boons any)', async () => {
 		const g = await loadEdition('content/srd-2024');
 		const choiceOf = (id: string) => {

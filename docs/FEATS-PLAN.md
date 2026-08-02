@@ -39,7 +39,7 @@ hatch for the procedural tail is **L3 plugins** (QuickJS-WASM sandbox, already B
 | `alert` | 1 (+3 text) | [x] | `flat_bonus:initiative+proficiency_bonus`. Initiative Swap = text (relational). |
 | `grappler` | 1 (+3 text) | [x] | half-feat `ability_choice=str,dex`. Grapple advantage/punch-grab/fast-wrestler = text. |
 | 7× `boon_of_*` | 1 (+3 text) | [x] | half-feat `ability_choice=any` (+1 to 30). Each boon's POWER = text (mostly plugin later). |
-| `defense` | 1 | [ ] | ENCODABLE NOW: `armor_type != none ? flat_bonus:ac+1` (verify enum-guard eval). |
+| `defense` | 1 | [x] | `armor_type != none ? flat_bonus:ac+1` (2026-08-02). Guard verified: +1 AC while armored, 0 unarmored (derive test w/ leather armor). |
 | `ability_score_improvement` | — | [x] | the ASI itself; handled by the ASI slot system, not a feat effect. Leave. |
 | `archery` | 2 | [ ] | `flat_bonus:attack:ranged+2` — needs the weapon-category attack slot (see Vocab §A). |
 | `great_weapon_fighting` | 2 | [ ] | reroll 1–2 on damage dice of a two-handed **melee** weapon → weapon-scope + `reroll:damage:2` scoped to a property. Needs Vocab §A + a property filter. |
@@ -81,7 +81,7 @@ Weapon Master, Fey Touched, Metamagic Adept, War Caster, …). Each: a `plugin:<
 the CSV + a sandboxed handler. **Not urgent** — text fallback is honest until then.
 
 ## Execution order (recommended)
-1. **`defense`** (tier 1, trivial): author the armor-guard token; verify enum-guard eval works. Quick win.
+1. ~~**`defense`**~~ **[x] DONE 2026-08-02** — `armor_type != none ? flat_bonus:ac+1`, derive-tested.
 2. **Vocab §A** (weapon-category attack/damage scope) + **`archery`**: the highest-value extension; also
    the seam GWF/TWF need. Tests + a driven attack check.
 3. **§C choice-grant UI** + **`skilled`**: reusable, unblocks a class of feats.

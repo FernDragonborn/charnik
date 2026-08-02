@@ -4,7 +4,7 @@
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f968-7fd0-88fc-dbf43af3ecc8
 #content-updated_at: 2026-08-01
-#content-hash: xxh64:c2005f32fc5e57cf
+#content-hash: xxh64:f7d2c138f040cfa5
 id,name_en,name_uk,text_en,text_uk,effects,category,prereq,repeatable,ability_choice
 alert,Alert,,"_Origin Feat_
 You gain the following benefits.
@@ -33,7 +33,7 @@ _Fast Wrestler._ You don't have to spend extra movement to move a creature Grapp
 archery,Archery,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
 You gain a +2 bonus to attack rolls you make with Ranged weapons.",,,fighting_style,Fighting Style Feature,false,
 defense,Defense,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
-While you're wearing Light, Medium, or Heavy armor, you gain a +1 bonus to Armor Class.",,,fighting_style,Fighting Style Feature,false,
+While you're wearing Light, Medium, or Heavy armor, you gain a +1 bonus to Armor Class.",,armor_type != none ? flat_bonus:ac+1,fighting_style,Fighting Style Feature,false,
 great_weapon_fighting,Great Weapon Fighting,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
 When you roll damage for an attack you make with a Melee weapon that you are holding with two hands, you can treat any 1 or 2 on a damage die as a 3. The weapon must have the Two-Handed or Versatile property to gain this benefit.",,,fighting_style,Fighting Style Feature,false,
 two_weapon_fighting,Two-Weapon Fighting,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
