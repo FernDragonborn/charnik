@@ -442,6 +442,14 @@ describe('rollEffectsFor — disadvantage + flat (EFX-1)', () => {
 		expect(rollEffectsFor(fx('flat_bonus:attack+2'), 'attack').flat).toBe(2);
 		expect(rollEffectsFor(fx('flat_bonus:damage+2', 'flat_bonus:damage+1'), 'damage').flat).toBe(3);
 	});
+	it('§A: a weapon-scoped attack bonus is SKIPPED here (it folds per-weapon in computeAttacks)', () => {
+		// Archery would otherwise double-count: computeAttacks bakes it into at.toHit, then attackRoll
+		// adds fx.flat on top — so the roll path must ignore scoped facts.
+		expect(rollEffectsFor(fx('flat_bonus:attack:ranged+2'), 'attack').flat).toBe(0);
+		expect(
+			rollEffectsFor(fx('flat_bonus:attack:ranged+2', 'flat_bonus:attack+1'), 'attack').flat
+		).toBe(1);
+	});
 	it('netAdvantage: advantage and disadvantage cancel to a straight roll', () => {
 		expect(netAdvantage({ advantage: true, disadvantage: false })).toBe(1);
 		expect(netAdvantage({ advantage: false, disadvantage: true })).toBe(-1);

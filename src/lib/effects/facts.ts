@@ -62,6 +62,10 @@ export interface NumericFact {
 	amount?: number;
 	/** A dice quantity (`1d4`, `-2d6`) — rides the roll path; folds as a note on stats. */
 	diceFormula?: string;
+	/** §A: weapon-category scope from `flat_bonus:attack:<category>` (Archery). A scoped fact folds
+	 *  per-weapon in `computeAttacks` (matched against a weapon's category tags), NOT into the generic
+	 *  `attack` roll path — so the roll path skips it to avoid double-counting. */
+	weaponScope?: string;
 	/** The value failed to resolve — the token degrades to a note (the inert-fallback contract). */
 	error?: string;
 }

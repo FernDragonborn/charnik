@@ -41,7 +41,7 @@ hatch for the procedural tail is **L3 plugins** (QuickJS-WASM sandbox, already B
 | 7× `boon_of_*` | 1 (+3 text) | [x] | half-feat `ability_choice=any` (+1 to 30). Each boon's POWER = text (mostly plugin later). |
 | `defense` | 1 | [x] | `armor_type != none ? flat_bonus:ac+1` (2026-08-02). Guard verified: +1 AC while armored, 0 unarmored (derive test w/ leather armor). |
 | `ability_score_improvement` | — | [x] | the ASI itself; handled by the ASI slot system, not a feat effect. Leave. |
-| `archery` | 2 | [ ] | `flat_bonus:attack:ranged+2` — needs the weapon-category attack slot (see Vocab §A). |
+| `archery` | 2 | [x] | `flat_bonus:attack:ranged+2` (2026-08-02). Vocab §A attack-scope built; folds into ranged weapons' to-hit in `computeAttacks`, skipped in the generic roll path (no double-count). Derive-tested: longbow +2 / dagger +0. |
 | `great_weapon_fighting` | 2 | [ ] | reroll 1–2 on damage dice of a two-handed **melee** weapon → weapon-scope + `reroll:damage:2` scoped to a property. Needs Vocab §A + a property filter. |
 | `two_weapon_fighting` | 3 | [ ] | add the ability mod to the OFF-HAND attack's damage. Off-hand attacks aren't modelled distinctly → needs the attack model to know main/off hand. |
 | `savage_attacker` | 3 | [ ] | once-per-turn: roll the weapon's damage dice twice, keep either. Roll-time, once-per-turn state → plugin or a dedicated roll-manip mechanic. |
@@ -56,14 +56,21 @@ hatch for the procedural tail is **L3 plugins** (QuickJS-WASM sandbox, already B
 
 ## Vocab extensions to design (bounded, general — not per-feat)
 
-### §A · Weapon-category-scoped attack/damage bonuses
-Mirror the `flat_bonus:damage:<type>` slot I already added. Grammar: `flat_bonus:attack:<category>+N` /
-`flat_bonus:damage:<category>+N` where `<category>` ∈ {ranged, melee, thrown, two_handed, finesse, …}
-(weapon properties/kinds). `computeAttacks` filters character-level effects with a category qualifier
-and applies to matching weapons only (it already has weapon props/`item_type`). Unblocks Archery, and is
-the seam for GWF/TWF. **Design carefully in `token-parser.ts` (the `:type`-vs-`:category` collision — a
-`damage` target's slot means damage TYPE, an `attack` target's slot means weapon CATEGORY). Keep them
-distinct.** Consider a dedicated field (`weaponScope`) rather than overloading `damageType`.
+### §A · Weapon-category-scoped attack/damage bonuses — **[~] attack side done (2026-08-02)**
+**Attack scope BUILT:** `flat_bonus:attack:<category>+N` → `ParsedEffect.weaponScope` (dedicated
+field, not overloaded `damageType`). The `:type`-vs-`:category` collision is resolved by TARGET in
+`qualifierSlot` (`token-parser.ts`): an `attack` bonus is never damage-typed → its qualifier is always
+a `weaponScope`; every other target keeps the qualifier as `damageType`. `NumericFact` carries it;
+`computeAttacks` builds each weapon's category tag set (`weaponScopeSet` = item_type words + property
+words, `two-handed`→`two_handed`) and folds a scoped bonus into to-hit only when the weapon matches
+(`scopedAttackBonus`); `rollEffectsFor` SKIPS scoped facts so the roll path doesn't double-count what
+`computeAttacks` already baked into `at.toHit`. Only literal `add` amounts fold; a scoped dice/expr
+bonus would ride the roll path (none shipped). Unblocks Archery.
+**DAMAGE side DEFERRED to GWF/Dueling (step 4):** for `target=damage` a qualifier still means damage
+TYPE (flaming-weapon extra part — unchanged). When Dueling (`flat_bonus:damage:melee+2`, one-handed
+melee) / GWF land, resolve the damage collision by having `computeAttacks` (weapon-aware) check the
+qualifier against the weapon's scope set: in-set → scoped damage fold; else → typed extra part. That
+keeps the vocab out of L1 (compatibility.md — no weapon-category enum baked into the parser).
 
 ### §B · Roll-manip scoping + once-per-turn (GWF / Savage Attacker)
 `reroll:damage:<threshold>` exists (L1). Needs: (1) scope it to a weapon category (§A machinery), (2) a
@@ -82,8 +89,9 @@ the CSV + a sandboxed handler. **Not urgent** — text fallback is honest until 
 
 ## Execution order (recommended)
 1. ~~**`defense`**~~ **[x] DONE 2026-08-02** — `armor_type != none ? flat_bonus:ac+1`, derive-tested.
-2. **Vocab §A** (weapon-category attack/damage scope) + **`archery`**: the highest-value extension; also
-   the seam GWF/TWF need. Tests + a driven attack check.
+2. ~~**Vocab §A attack-scope + `archery`**~~ **[x] DONE 2026-08-02** — `flat_bonus:attack:ranged+2`;
+   `weaponScope` field + per-weapon fold in `computeAttacks`, roll-path skip. Damage-scope side left
+   for GWF (step 4). Tests: parser, `rollEffectsFor` skip, derive (longbow +2 / dagger +0).
 3. **§C choice-grant UI** + **`skilled`**: reusable, unblocks a class of feats.
 4. **GWF** on top of §A+§B (reroll scoped to two-handed melee).
 5. Tier-3 plugins (magic_initiate, TWF off-hand, savage_attacker) — only when we commit to authoring

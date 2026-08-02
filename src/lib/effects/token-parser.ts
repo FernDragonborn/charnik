@@ -83,6 +83,12 @@ export interface ParsedEffect {
 	 *  `flat_bonus:damage:fire+1d6` carries `damageType: 'fire'`; a weapon folds it into its OWN
 	 *  extra typed damage part (rolled + shown separately), never onto the base type. */
 	damageType?: string;
+	/** §A weapon-category scope on `flat_bonus:attack:<category>` (Archery `attack:ranged+2`): the
+	 *  bonus applies only to weapons carrying this category tag (item_type/property word, e.g.
+	 *  ranged / melee / two_handed / finesse). The `:type`-vs-`:category` slot collision is resolved
+	 *  by TARGET — an `attack` bonus is never damage-typed, so its qualifier is always a scope; a
+	 *  `damage` qualifier stays a damageType (the scoped-damage case — GWF/Dueling — is deferred). */
+	weaponScope?: string;
 	/** set_override comparison mode (A9): `floor` = "unless already higher" (Headband → INT ≥ 19),
 	 *  `cap` = "unless already lower". Absent = a plain absolute set. */
 	setMode?: 'floor' | 'cap';
@@ -142,6 +148,15 @@ function parseTokenUncached(token: string): ParsedEffect {
  *  (shared by the block/halve and reroll/min_die pairs), `raw` the trimmed original for inert notes. */
 type KindParser = (rest: string, raw: string, kind: EffectKind) => ParsedEffect;
 
+/** The `:<qualifier>` slot of a flat_bonus, routed by TARGET (the §A collision resolver): an
+ *  `attack` bonus is never damage-typed → the qualifier is a weapon-category `weaponScope`; any
+ *  other target keeps the qualifier as a `damageType` (flaming-weapon extra part). Absent → {}. */
+function qualifierSlot(target: string, slot: string | undefined): Partial<ParsedEffect> {
+	if (!slot) return {};
+	const q = slot.toLowerCase();
+	return target.toLowerCase() === 'attack' ? { weaponScope: q } : { damageType: q };
+}
+
 const parseFlatBonus: KindParser = (rest, raw, kind) => {
 	// literal fast path — ONE target grammar with the expression path below (snake, single
 	// optional dot; `-` is the L2 minus operator, E3): a literal amount/dice never needs a ctx
@@ -153,21 +168,21 @@ const parseFlatBonus: KindParser = (rest, raw, kind) => {
 		);
 	if (lit) {
 		const target = lit[1] ?? '';
-		const typed = lit[2] ? { damageType: lit[2].toLowerCase() } : {};
+		const qual = qualifierSlot(target, lit[2]);
 		const sign = lit[3] ?? '';
 		const amount = lit[4] ?? '';
 		if (/d/i.test(amount))
-			return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw, ...typed };
-		return { kind, target, amount: clampAmount(Number(sign + amount)), raw, ...typed };
+			return { kind, target, dice: (sign === '-' ? '-' : '') + amount, raw, ...qual };
+		return { kind, target, amount: clampAmount(Number(sign + amount)), raw, ...qual };
 	}
-	// L2 expression value: `<target>[:<type>]<+|->` then an expression. A `-` sign negates the value.
+	// L2 expression value: `<target>[:<qualifier>]<+|->` then an expression. A `-` sign negates it.
 	const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)(?::([a-z][a-z0-9_]*))?\s*([+-])\s*(.+)$/i.exec(
 		rest
 	);
 	if (!ex) return { kind: 'unknown', raw };
-	const typed = ex[2] ? { damageType: ex[2].toLowerCase() } : {};
+	const qual = qualifierSlot(ex[1] ?? '', ex[2]);
 	const valueExpr = ex[3] === '-' ? `-(${(ex[4] ?? '').trim()})` : (ex[4] ?? '').trim();
-	return { kind, target: ex[1] ?? '', valueExpr, raw, ...typed };
+	return { kind, target: ex[1] ?? '', valueExpr, raw, ...qual };
 };
 
 const parseSetOverride: KindParser = (rest, raw, kind) => {

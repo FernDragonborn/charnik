@@ -94,6 +94,7 @@ export function rollEffectsFor(facts: EffectFacts, key: string): RollEffects {
 	out.disadvantage = facts.disadvantage.some((d) => matchesTarget(d.target, key));
 	for (const f of facts.numeric) {
 		if (f.op !== 'add' || !matchesTarget(f.target, key)) continue;
+		if (f.weaponScope) continue; // §A: weapon-scoped bonus folds per-weapon in computeAttacks
 		if (f.amount !== undefined) out.flat += f.amount;
 		else if (f.diceFormula) {
 			const die = parseDiceTerm(f.diceFormula);

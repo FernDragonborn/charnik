@@ -55,6 +55,19 @@ describe('parseToken (bounded vocabulary)', () => {
 		expect(parseToken('flat_bonus:damage+1d6').damageType).toBeUndefined();
 		expect(parseToken('flat_bonus:ac+2').damageType).toBeUndefined();
 	});
+	it('§A: an attack `:category` slot is a weaponScope, not a damageType (Archery)', () => {
+		expect(parseToken('flat_bonus:attack:ranged+2')).toMatchObject({
+			kind: 'flat_bonus',
+			target: 'attack',
+			amount: 2,
+			weaponScope: 'ranged'
+		});
+		expect(parseToken('flat_bonus:attack:ranged+2').damageType).toBeUndefined();
+		expect(parseToken('flat_bonus:attack:Two_Handed+1').weaponScope).toBe('two_handed'); // normalized
+		// a damage qualifier stays a damageType (scope collision resolved by TARGET, GWF deferred)
+		expect(parseToken('flat_bonus:damage:fire+1d6').weaponScope).toBeUndefined();
+		expect(parseToken('flat_bonus:attack+1').weaponScope).toBeUndefined();
+	});
 	it('parses the non-numeric kinds', () => {
 		expect(parseToken('resist_immune:poison')).toMatchObject({
 			kind: 'resist_immune',

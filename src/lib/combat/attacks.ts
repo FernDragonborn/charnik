@@ -117,6 +117,40 @@ export function weaponBonus(tokens: string[]): {
 	};
 }
 
+/** §A: a weapon's category tags for scope matching — its item_type words (`simple`, `martial`,
+ *  `melee`, `ranged`) plus its property words (`finesse`, `two_handed`, `thrown`, …; "two-handed" →
+ *  `two_handed`, "versatile (1d10)" → `versatile`). A scoped bonus applies iff its scope is in here. */
+function weaponScopeSet(itemType: string, properties: string): Set<string> {
+	const scopes = new Set<string>();
+	for (const w of itemType.toLowerCase().split(/\s+/)) if (w) scopes.add(w);
+	for (const p of properties.toLowerCase().split(/[,;]/)) {
+		const first = p.trim().split(/[\s(]/)[0];
+		if (first) scopes.add(first.replace(/-/g, '_'));
+	}
+	return scopes;
+}
+
+/** §A: sum the character-level weapon-scoped `flat_bonus:attack:<category>` bonuses (Archery
+ *  `attack:ranged+2`, later Dueling/GWF) that match a weapon in `scopes`. Only LITERAL `add` amounts
+ *  fold (a scoped dice/expression bonus rides the roll path — none shipped). Returns bonus + a note. */
+function scopedAttackBonus(
+	facts: CharacterSheet['facts'],
+	scopes: Set<string>
+): {
+	attack: number;
+	note?: string;
+} {
+	let attack = 0;
+	const tags: string[] = [];
+	for (const f of facts.numeric) {
+		if (f.op !== 'add' || f.target !== 'attack' || !f.weaponScope) continue;
+		if (!scopes.has(f.weaponScope) || f.amount === undefined) continue;
+		attack += f.amount;
+		tags.push(`${signed(f.amount)} attack (${f.source})`);
+	}
+	return { attack, ...(tags.length ? { note: tags.join(', ') } : {}) };
+}
+
 /** Equipped weapons (+ Unarmed Strike) as attack rows, with to-hit/damage from the sheet. Pure. */
 export function computeAttacks(
 	character: Character,
@@ -149,8 +183,11 @@ export function computeAttacks(
 		// flat_bonus:attack / flat_bonus:damage; a dice / expression bonus (a flaming +1d6) needs the
 		// roll path or a ctx and degrades to a VISIBLE note, never a silent drop.
 		const w = weaponBonus(row.data.effects);
+		// §A: character-level weapon-category-scoped attack bonuses (Archery → ranged weapons) fold
+		// into THIS weapon's to-hit only when it carries the matching category tag.
+		const scoped = scopedAttackBonus(sheet.facts, weaponScopeSet(row.data.item_type ?? '', props));
 		const notProfNote = proficient ? undefined : 'Not proficient — no proficiency bonus';
-		const note = [w.note, notProfNote].filter(Boolean).join('; ') || undefined;
+		const note = [w.note, scoped.note, notProfNote].filter(Boolean).join('; ') || undefined;
 		// The ability mod + a magic weapon's flat damage bonus land on the PRIMARY (first) damage part
 		// only — RAW adds the ability modifier once, to the weapon's base damage, never to a second
 		// damage type's dice. A weapon with no damage string still gets a part to carry that mod.
@@ -162,7 +199,7 @@ export function computeAttacks(
 		const damageParts = [...baseParts, ...(w.extraParts ?? [])];
 		out.push({
 			name: row.data.name_en,
-			toHit: mod + (proficient ? prof : 0) + w.attack,
+			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.attack,
 			dmg: formatDamageParts(damageParts),
 			damageParts,
 			meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · '),

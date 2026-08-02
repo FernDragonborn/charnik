@@ -127,6 +127,7 @@ class FactsCollector {
 						: 'set';
 		const v = resolveEffectValue(p, ctxOf(this.ctx, eff));
 		const fact: NumericFact = { target: p.target, op, layer: eff.layer, source: eff.source, token };
+		if (p.weaponScope) fact.weaponScope = p.weaponScope; // §A: scoped per-weapon in computeAttacks
 		if (v.amount !== undefined) fact.amount = v.amount;
 		else if (v.diceFormula && op === 'add') fact.diceFormula = v.diceFormula;
 		else if (v.diceFormula) fact.error = 'an override cannot be a dice value';

@@ -46,7 +46,15 @@ async function graphOf(): Promise<ContentGraph> {
 			`shield,5.5e,${S},Shield,,shield,shield,2,,,,`,
 			`dagger,5.5e,${S},Dagger,,weapon,simple melee,,,,,1d4 piercing`,
 			`greataxe,5.5e,${S},Greataxe,,weapon,martial melee,,,,,1d12 slashing`,
-			`sunblade,5.5e,${S},Sun Blade,,weapon,martial melee,,,,,1d6 slashing; 1d4 radiant`
+			`sunblade,5.5e,${S},Sun Blade,,weapon,martial melee,,,,,1d6 slashing; 1d4 radiant`,
+			`longbow,5.5e,${S},Longbow,,weapon,martial ranged,,,,,1d8 piercing`
+		].join('\n')
+	);
+	await st.write(
+		'c/feats_srd.csv',
+		[
+			'id,systems,source,name_en,effects,category',
+			`archery,5.5e,${S},Archery,flat_bonus:attack:ranged+2,fighting_style`
 		].join('\n')
 	);
 	await st.write(
@@ -171,6 +179,27 @@ describe('deriveSheet aggregator', () => {
 		expect(dagger.toHit).toBe(4);
 		expect(greataxe.toHit).toBe(2);
 		expect(greataxe.note).toContain('Not proficient');
+	});
+
+	it('§A: Archery (`flat_bonus:attack:ranged+2`) folds into ranged weapons only, not melee', () => {
+		const c = newCharacter('robin', 'Robin', '5.5e'); // fighter — proficient with martial weapons
+		c.build.classes = [{ class: `class:${S}:fighter`, level: 3 }];
+		c.build.abilities = { str: 14, dex: 14, con: 12, int: 10, wis: 10, cha: 10 }; // STR +2, DEX +2
+		c.build.feats = [`feat:${S}:archery`];
+		c.build.inventory = [
+			{ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false },
+			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false }
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		const atks = computeAttacks(characterSchema.parse(c), s, graph);
+		const longbow = atks.find((a) => a.name === 'Longbow')!;
+		const dagger = atks.find((a) => a.name === 'Dagger')!;
+		// prof +2. Longbow (ranged, DEX+2): 2 + prof 2 + archery 2 = +6, note shows the bonus.
+		expect(longbow.toHit).toBe(6);
+		expect(longbow.note).toContain('+2 attack');
+		// dagger is melee → archery does NOT apply: STR+2 + prof 2 = +4, no scoped note.
+		expect(dagger.toHit).toBe(4);
+		expect(dagger.note).toBeUndefined();
 	});
 
 	it('BUG-DMG-1: a multi-type weapon yields one damage part per type; the ability mod folds into the primary part only', () => {

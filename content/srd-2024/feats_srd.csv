@@ -31,7 +31,7 @@ _Punch and Grab._ When you hit a creature with an Unarmed Strike as part of the 
 _Attack Advantage._ You have Advantage on attack rolls against a creature Grappled by you.
 _Fast Wrestler._ You don't have to spend extra movement to move a creature Grappled by you if the creature is your size or smaller.",,,general,"Level 4+, Strength or Dexterity 13+",false,"str,dex"
 archery,Archery,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
-You gain a +2 bonus to attack rolls you make with Ranged weapons.",,,fighting_style,Fighting Style Feature,false,
+You gain a +2 bonus to attack rolls you make with Ranged weapons.",,flat_bonus:attack:ranged+2,fighting_style,Fighting Style Feature,false,
 defense,Defense,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
 While you're wearing Light, Medium, or Heavy armor, you gain a +1 bonus to Armor Class.",,armor_type != none ? flat_bonus:ac+1,fighting_style,Fighting Style Feature,false,
 great_weapon_fighting,Great Weapon Fighting,,"_Fighting Style Feat (Prerequisite: Fighting Style Feature)_
