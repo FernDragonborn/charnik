@@ -17,6 +17,50 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
 
 ---
 
+## Design findings (2026-08-02) — WIP, RESHAPES slices 2-3, refine before building
+
+> Captured from the design thread with the maintainer. **Not final** — to review/edit together, then
+> rewrite slices 2-3 under it. A prototype must be chosen first (see §6). [[sync-plan-with-code-on-drift]]
+
+1. **CORE PRINCIPLE (emerged across 3 cases): a play-tracker SURFACES & SUGGESTS — it never
+   auto-applies or forces a player decision.** It highlights / reminds / pre-fills a smart default; the
+   PLAYER clicks. Why: (a) most RAW features are "you *can*" = a choice; (b) a tracker doesn't hold full
+   game state (what counts as one *instance* of damage; whether you "attacked an enemy" this turn), so
+   it can't correctly auto-decide; (c) forcing is bad UX — a concentration prompt on every Damage press
+   breaks on corrections (took 72, enter 71, then +1 to fix → must not re-prompt). [[play-tracker-surfaces-never-forces]]
+
+2. **Slice 2 (initiative regain) REFRAMED — NOT an auto event-bus.** Conditional activated abilities are
+   ALWAYS listed, greyed when unavailable, highlighted + a notice when their window opens; the action
+   stays a player click (onUse). Reuse: onUse executor + an L2 **availability guard** on the option + a
+   new `is_combat_start` ctx var + a new verb **`restore_resource:<id>`** (regain ALL of a pool).
+   Consumers: Persistent Rage (Barbarian L15), Uncanny Metabolism (Monk L2) — player-choice, each gated
+   by its own once-per-long-rest resource (a `:1:long` pool the activation spends).
+
+3. **Concentration-save-on-damage = a SEPARATE, more valuable slice** (universal — every caster; today
+   `damage()` does NOT handle it). Must follow the principle: **NOT** an auto-prompt per Damage press.
+   UX = an on-demand "Concentration save" affordance by the concentration indicator (like the death-save
+   button at 0 HP), highlighted after damage, with a suggested-but-EDITABLE DC = `max(10, ½ last
+   damage)`; player clicks when the instance is done; fail → OFFER to drop concentration. **Two UX
+   variants to prototype + choose (§6).**
+
+4. **SRD facts locked (verified in tools/srd-src):** 2024 Rage lasts *until the end of your next turn*,
+   extend by (attack an enemy / force a save / Bonus Action); ends on Heavy armor or Incapacitated. 2014
+   Rage = 1 min, ends if no attack-on-hostile AND no damage-taken since last turn. Persistent Rage /
+   Uncanny Metabolism = "you can, once per long rest, regain ALL". Concentration save = per damage
+   instance, DC `max(10, floor(instance/2))`.
+
+5. **Genuinely-automatic (no-choice) features DO exist** (concentration save is *mandatory*; Rage
+   auto-ends; regeneration / "start of your turn gain X"). So an event layer is eventually justified —
+   but as **event → reminder/highlight**, rarely as silent state-mutation. A full auto-mutating
+   event-bus is *rarely* correct in a tracker.
+
+6. **OPEN — do FIRST:** prototype BOTH concentration-save UX variants in `design-preview/` HTML (reusing
+   the app look), let the maintainer choose (something may surface on seeing it), THEN build. Variants:
+   **(A)** smart — highlight + suggested editable DC after damage; **(B)** minimal — a plain
+   always-available "Concentration save" button, DC entered by the player. HP has **no pips** — only
+   Heal/Damage buttons + an amount field (so "an instance" = a Damage press's amount, but corrections
+   use the same button → don't force).
+
 ## Slice 1 — Hit Dice subsystem (no deps) `[x]` DONE + app-verified 2026-08-02
 
 **Goal:** the play-tracking staple. Spend Hit Dice on a short rest to heal; regain half your level on a
