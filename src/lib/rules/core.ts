@@ -162,7 +162,15 @@ export function armoredAC(args: {
 	]);
 }
 
-const DIE_MAX: Record<string, number> = { d6: 6, d8: 8, d10: 10, d12: 12 };
+export const DIE_MAX: Record<string, number> = { d6: 6, d8: 8, d10: 10, d12: 12 };
+
+/** Hit Dice recovered at the end of a LONG rest — an SRD-verified EDITION divergence: 5e (SRD 5.1)
+ *  regains half the total (round down, min 1); 5.5e (SRD 5.2.1) regains ALL spent Hit Dice. `total`
+ *  is the character's total number of Hit Dice (= total level). Returns the max dice to un-spend. */
+export function hitDiceRecoveredOnLongRest(system: System, total: number): number {
+	if (total <= 0) return 0;
+	return system === '5.5e' ? total : Math.max(1, Math.floor(total / 2));
+}
 
 /** Max HP for one class (SRD fixed values). The **max hit die** is granted ONCE per character —
  *  for the class taken at CHARACTER level 1; every other level (including the 1st level of a class

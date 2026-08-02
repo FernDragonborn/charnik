@@ -4,7 +4,7 @@
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../state.svelte';
-	import { why } from '$lib/combat/helpers';
+	import { why, range } from '$lib/combat/helpers';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 	const hpBar = $derived(combat.hpBar);
@@ -59,6 +59,32 @@
 				<option value={t}>{t}</option>
 			{/each}
 		</select>
+	{/if}
+	{#if combat.hitDice.length}
+		<!-- Hit Dice: spend one on a short rest to heal (roll the die + CON). The chip spends one; pips
+		     show remaining. Regained on a long rest (2014 half / 2024 all). -->
+		<div class="hit-dice">
+			<span class="hd-label">Hit dice</span>
+			{#each combat.hitDice as h (h.die)}
+				<button
+					type="button"
+					class="hd-pool"
+					disabled={h.left <= 0}
+					title="Spend one {h.die} Hit Die — roll {h.die} + CON to heal (short rest)"
+					onclick={() => combat.spendHitDie(h.die)}
+				>
+					{h.die}
+					{#if h.max <= 20}
+						<span class="hd-pips">
+							{#each range(h.max) as i (i)}
+								<span class="hd-pip" class:used={i >= h.left}></span>
+							{/each}
+						</span>
+					{/if}
+					<small>{h.left}/{h.max}</small>
+				</button>
+			{/each}
+		</div>
 	{/if}
 	{#if downed}
 		<div class="death-saves">
@@ -235,6 +261,62 @@
 		border: 1px solid var(--color-border);
 		color: var(--color-text);
 		cursor: pointer;
+	}
+	.hit-dice {
+		margin-top: 12px;
+		padding-top: 11px;
+		border-top: 1px solid var(--color-border);
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 8px;
+	}
+	.hd-label {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		letter-spacing: var(--tracking-label);
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+	}
+	.hd-pool {
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: var(--font-size-xs);
+		color: var(--color-text);
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-full);
+		padding: 5px 11px;
+		cursor: pointer;
+	}
+	.hd-pool small {
+		font-family: var(--font-mono);
+		color: var(--color-text-muted);
+	}
+	.hd-pool:hover:not(:disabled) {
+		filter: brightness(1.14);
+	}
+	.hd-pool:disabled {
+		opacity: 0.5;
+		cursor: default;
+	}
+	.hd-pips {
+		display: inline-flex;
+		gap: 3px;
+	}
+	.hd-pip {
+		width: 9px;
+		height: 9px;
+		border-radius: var(--radius-full);
+		background: var(--color-accent);
+		border: 1px solid var(--color-accent);
+	}
+	.hd-pip.used {
+		background: transparent;
+		border-color: var(--color-border-strong);
 	}
 	.death-saves {
 		margin-top: 12px;

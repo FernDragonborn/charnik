@@ -649,6 +649,56 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 });
 
 /*
+ * Hit Dice — spend on a short rest to heal (roll die + CON, min 1); regain on a long rest, EDITION-
+ * divergent (2014 half / 2024 all). The class ref isn't in this fixture graph, so the die defaults to
+ * d8 (fine — we assert the mechanics: HP up, pool decrement, block, and the regain amount).
+ */
+describe('CombatVM · Hit Dice', () => {
+	const charAt = (system: '5e' | '5.5e', level: number): Character => {
+		const c = newCharacter('rook', 'Rook', system);
+		c.build.classes = [{ class: `class:SRD:${'fighter'}`, level }]; // no row → d8 pool of `level`
+		c.play.hp = { current: 5, max: 30, temp: 0 };
+		return c;
+	};
+
+	it('spendHitDie heals (min 1) and decrements the pool; blocks when empty', async () => {
+		const graph = await graphOf();
+		const character = charAt('5.5e', 3); // d8 × 3
+		combat.graph = graph;
+		combat.character = character;
+		expect(combat.hitDice).toEqual([{ die: 'd8', max: 3, spent: 0, left: 3 }]);
+
+		combat.spendHitDie('d8');
+		expect(character.play.hp.current).toBeGreaterThan(5); // healed d8 + CON (min 1)
+		expect(combat.resources.hitDiceSpent('d8')).toBe(1);
+
+		character.play.hitDiceSpent = { d8: 3 }; // exhaust the pool
+		const hpBefore = character.play.hp.current;
+		combat.spendHitDie('d8');
+		expect(character.play.hp.current).toBe(hpBefore); // blocked — no heal
+		expect(combat.resources.hitDiceSpent('d8')).toBe(3); // no overspend
+	});
+
+	it('long rest regains ALL Hit Dice in 5.5e, HALF (min 1) in 5e', async () => {
+		const graph = await graphOf();
+		// 2024: all spent dice come back
+		const c24 = charAt('5.5e', 8); // d8 × 8
+		c24.play.hitDiceSpent = { d8: 6 };
+		combat.graph = graph;
+		combat.character = c24;
+		combat.resources.rest('long');
+		expect(combat.resources.hitDiceSpent('d8')).toBe(0); // all 6 back
+
+		// 2014: half the total (floor(8/2) = 4) come back → 6 spent − 4 = 2
+		const c14 = charAt('5e', 8);
+		c14.play.hitDiceSpent = { d8: 6 };
+		combat.character = c14;
+		combat.resources.rest('long');
+		expect(combat.resources.hitDiceSpent('d8')).toBe(2);
+	});
+});
+
+/*
  * short_one recharge (2024 Second Wind: regain ONE use on a short rest, all on a long rest). An open
  * enum member — not a boolean partial-recharge column (docs/AI-CONVENTIONS §1.5). Drives the real
  * rest() so the sheet resource carries the recharge policy end-to-end.

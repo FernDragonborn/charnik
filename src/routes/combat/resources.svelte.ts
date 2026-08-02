@@ -7,6 +7,7 @@
 import { toast } from 'svelte-sonner';
 import { saveCharacterToStore } from '$lib/character/store.svelte';
 import { pipClick, remainingRounds } from '$lib/combat/helpers';
+import { hitDiceRecoveredOnLongRest } from '$lib/rules/core';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 
@@ -65,6 +66,14 @@ export class ResourceTracker {
 		});
 	};
 
+	/** Spent count for a hit-die pool, CLAMPED to the live max (same stale-state guard as
+	 *  `resourceSpent`: a shrunk/removed class can leave `hitDiceSpent` above the current max). */
+	hitDiceSpent = (die: string): number => {
+		const stored = this.getCharacter()?.play.hitDiceSpent[die] ?? 0;
+		const max = this.getSheet()?.hitDice.find((h) => h.die === die)?.max ?? 0;
+		return Math.max(0, Math.min(stored, max));
+	};
+
 	/** Units left in the pool backing an option (max − spent). `x`-cost options price at `amount`. */
 	private remainingFor = (resourceId: string): number => {
 		const max = this.getSheet()?.resources.find((r) => r.id === resourceId)?.max ?? 0;
@@ -119,6 +128,22 @@ export class ResourceTracker {
 			c.play.hp = { ...c.play.hp, current: c.play.hp.max ?? sheet.maxHp.value, temp: 0 };
 			c.play.concentration = null; // a long rest ALWAYS ends concentration, even with no linked
 			// effect in play.effects (e.g. Hold Person on an enemy) — A13
+			// Hit Dice regained — edition-divergent (2014 half total, min 1; 2024 all). Recover
+			// largest-die-first (pools are sorted so) up to the recovered count; a deterministic v1 of
+			// the "player picks which" RAW choice (upgrade to a picker later).
+			const totalHd = sheet.hitDice.reduce((n, h) => n + h.max, 0);
+			let recover = hitDiceRecoveredOnLongRest(c.system, totalHd);
+			const hdSpent = { ...c.play.hitDiceSpent };
+			for (const h of sheet.hitDice) {
+				if (recover <= 0) break;
+				const spent = Math.max(0, Math.min(hdSpent[h.die] ?? 0, h.max));
+				const back = Math.min(spent, recover);
+				if (back > 0) {
+					hdSpent[h.die] = spent - back;
+					recover -= back;
+				}
+			}
+			c.play.hitDiceSpent = hdSpent;
 		} else {
 			const slots = { ...c.play.spellSlotsSpent };
 			delete slots.pact; // warlock pact slots return on a short rest

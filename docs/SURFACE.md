@@ -373,6 +373,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export type SkillId`
 - `interface CharacterSheet`
 - `interface ResourceOption` — Piece 3: a spend-option on a granted resource, resolved for a specific character.
+- `interface HitDiePool` — A hit-dice pool: one die size + how many of it the character has (= summed levels of classes with * that die).
+- `function hitDicePools` — Group the character's classes into hit-dice pools by die size (RAW multiclass: pool same-size dice, * keep different …
 - `function deriveSheet` — Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM.
 
 ### `src/lib/character/repository.ts`
@@ -871,6 +873,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function spellAttackBonus` — Spell attack bonus = proficiency + spellcasting-ability modifier.
 - `function unarmoredAC` — Unarmored AC = 10 + DEX modifier.
 - `function armoredAC` — Armored AC = armor base + capped DEX.
+- `const DIE_MAX`
+- `function hitDiceRecoveredOnLongRest` — Hit Dice recovered at the end of a LONG rest — an SRD-verified EDITION divergence: 5e (SRD 5.1) * regains half the to…
 - `function maxHpForClass` — Max HP for one class (SRD fixed values).
 - `function fullCasterSlots` — Full-caster spell slots per spell level (index 0 = 1st) at a given caster level.
 - `function carryingCapacity` — Carrying capacity in pounds = STR × 15.
@@ -1046,4 +1050,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 41 components · 571 exports across 90 modules · 31 duplicate suspects._
+_45 tokens · 63 global classes · 41 components · 575 exports across 90 modules · 31 duplicate suspects._

@@ -13,6 +13,7 @@ import {
 	armoredAC,
 	maxHpForClass,
 	carryingCapacity,
+	hitDiceRecoveredOnLongRest,
 	ABILITY_SCORE_CLAMP
 } from './core';
 import type { System } from './pipeline';
@@ -132,6 +133,17 @@ describe('edition divergence', () => {
 		expect(carryingCapacity({ strScore: 15, system: '5.5e' }).notes?.map((n) => n.text)).toEqual([
 			'Over capacity → speed 5 ft'
 		]);
+	});
+
+	it('long-rest Hit Dice recovery: 5e = half (min 1), 5.5e = all', () => {
+		// SRD 5.1: "half of the character's total number of them (minimum of one die)"
+		expect(hitDiceRecoveredOnLongRest('5e', 8)).toBe(4);
+		expect(hitDiceRecoveredOnLongRest('5e', 5)).toBe(2); // floor
+		expect(hitDiceRecoveredOnLongRest('5e', 1)).toBe(1); // min one die
+		// SRD 5.2.1: "regain all lost Hit Points and all spent Hit Point Dice"
+		expect(hitDiceRecoveredOnLongRest('5.5e', 8)).toBe(8);
+		expect(hitDiceRecoveredOnLongRest('5.5e', 1)).toBe(1);
+		expect(hitDiceRecoveredOnLongRest('5e', 0)).toBe(0); // no dice → nothing
 	});
 });
 

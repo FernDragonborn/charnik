@@ -262,6 +262,24 @@ describe('deriveSheet aggregator', () => {
 		expect(s.resourceOptions.find((o) => o.id === 'ward_mend')?.action).toBe('heal:1d10+2');
 	});
 
+	it('hit-dice pools: single class = one pool sized to level', () => {
+		const s = deriveSheet(wizard(), graph); // L3 wizard, d6
+		expect(s.hitDice).toEqual([{ die: 'd6', max: 3 }]);
+	});
+
+	it('hit-dice pools: multiclass pools same die size, keeps different sizes separate, largest first', () => {
+		const c = wizard();
+		c.build.classes = [
+			{ class: `class:${S}:wizard`, level: 3 }, // d6
+			{ class: `class:${S}:fighter`, level: 5 } // d10
+		];
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		expect(s.hitDice).toEqual([
+			{ die: 'd10', max: 5 }, // largest die first (deterministic recover order)
+			{ die: 'd6', max: 3 }
+		]);
+	});
+
 	it('piece 3: no options when the character lacks the resource (autoCalc-empty is safe)', () => {
 		expect(deriveSheet(wizard(), graph).resourceOptions.every((o) => o.resourceId !== 'ki')).toBe(
 			true

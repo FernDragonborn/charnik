@@ -284,6 +284,32 @@ class CombatVM {
 		}))
 	);
 
+	/** Hit-dice pools for the panel: each die size with its spent/left counts (left disables the spend
+	 *  button when the pool is empty — refilled on a long rest). */
+	hitDice = $derived(
+		(this.sheet?.hitDice ?? []).map((h) => ({
+			...h,
+			spent: this.resources.hitDiceSpent(h.die),
+			left: h.max - this.resources.hitDiceSpent(h.die)
+		}))
+	);
+	/** Spend one Hit Die of the given size (short-rest healing): roll the die + CON mod, heal a MINIMUM
+	 *  of 1 HP (RAW) clamped to max, log it, and mark the die spent. Blocked when that pool is empty. */
+	spendHitDie = (die: string) => {
+		const c = this.character;
+		const pool = this.sheet?.hitDice.find((h) => h.die === die);
+		if (!c || !pool) return;
+		if (pool.max - this.resources.hitDiceSpent(die) <= 0) {
+			toast(`No ${die} Hit Dice left`, { description: 'Regain some on a long rest' });
+			return;
+		}
+		const conMod = this.sheet?.abilities.con.mod ?? 0;
+		const r = rollFormula(`1${die}${conMod >= 0 ? `+${conMod}` : conMod}`);
+		c.play.hp.current = Math.min(this.hpMax, c.play.hp.current + Math.max(1, r.total)); // min 1 HP/die
+		c.play.hitDiceSpent = { ...c.play.hitDiceSpent, [die]: this.resources.hitDiceSpent(die) + 1 };
+		this.tray.pushRoll(`Hit Die ${die}`, r);
+	};
+
 	setTempHp = () => {
 		if (this.character) this.character.play.hp.temp = Math.max(0, this.tempHpInput);
 		this.overlay = null;

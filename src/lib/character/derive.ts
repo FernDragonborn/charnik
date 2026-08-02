@@ -38,6 +38,7 @@ import {
 	maxHpForClass,
 	carryingCapacity,
 	ABILITY_SCORE_CLAMP,
+	DIE_MAX,
 	type Ability
 } from '../rules/core';
 import { gatherProfGrants, isArmorProficient, armorCategoryOf } from '../rules/proficiency';
@@ -75,6 +76,9 @@ export interface CharacterSheet {
 	flySpeed: Computed;
 	swimSpeed: Computed;
 	maxHp: Computed;
+	/** Hit-dice pools grouped by die size (paladin 5 / fighter 5 → one d10 pool of 10; different die
+	 *  sizes stay separate — RAW multiclass rule). Spent counts live in `play.hitDiceSpent` keyed by die. */
+	hitDice: HitDiePool[];
 	/** Passive score of every skill (10 + mod ± adv/dis, `passive.<skill>` effects folded). The play
 	 *  view can pin any skill as a passive sense; the strip highlights perception/investigation/insight. */
 	passives: Record<SkillId, Computed>;
@@ -306,6 +310,28 @@ function applyArmorSpellBlock({
 	issues.push({ source, token: 'armor_proficiency', reason: spellcasting.armorBlock.note });
 }
 
+/** A hit-dice pool: one die size + how many of it the character has (= summed levels of classes with
+ *  that die). Spent counts live in `play.hitDiceSpent`, keyed by `die`. */
+export interface HitDiePool {
+	die: string;
+	max: number;
+}
+
+/** Group the character's classes into hit-dice pools by die size (RAW multiclass: pool same-size dice,
+ *  keep different sizes separate). Sorted largest die first — a deterministic recover order for the
+ *  2014 half-recovery. Pure. */
+export function hitDicePools(build: Character['build'], graph: ContentGraph): HitDiePool[] {
+	const byDie = new Map<string, number>();
+	for (const c of build.classes) {
+		const row = graph.get(c.class);
+		const die = String((row?.type === 'class' ? row.data.hit_die : undefined) || 'd8');
+		byDie.set(die, (byDie.get(die) ?? 0) + c.level);
+	}
+	return [...byDie]
+		.map(([die, max]) => ({ die, max }))
+		.sort((a, b) => (DIE_MAX[b.die] ?? 0) - (DIE_MAX[a.die] ?? 0));
+}
+
 // Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM. The
 // separable phases are already pure helpers (setup slices, the ctx factory, resolve, gather, the
 // stat/spell/armor phases); what remains is orchestration + the final assembly, whose length is
@@ -474,6 +500,7 @@ export function deriveSheet(
 		flySpeed: movementOf('speed.fly'),
 		swimSpeed: movementOf('speed.swim'),
 		maxHp,
+		hitDice: hitDicePools(build, graph),
 		passives: derivePassives(skills, facts),
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
 		defenses,
