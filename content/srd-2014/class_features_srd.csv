@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fd36-72ad-8fc3-f977f1cf41cb
-#content-updated_at: 2026-08-01
-#content-hash: xxh64:af23b4091f9880da
+#content-updated_at: 2026-08-02
+#content-hash: xxh64:acec335dc0c58fab
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id,expertise_slots
 barbarian_rage,Rage,,"In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.
 While raging, you gain the following benefits if you aren't wearing heavy armor:
@@ -68,8 +68,8 @@ druid_beast_spells,Beast Spells,,"Beginning at 18th level, you can cast many of 
 druid_archdruid,Archdruid,,"At 20th level, you can use your Wild Shape an unlimited number of times.
 Additionally, you can ignore the verbal and somatic components of your druid spells, as well as any material components that lack a cost and aren't consumed by a spell. You gain this benefit in both your normal shape and your beast shape from Wild Shape.",,,druid,20,,,
 fighter_fighting_style,Fighting Style,,"You adopt a particular style of fighting as your specialty. Choose one of the following options. You can't take a Fighting Style option more than once, even if you later get to choose again.",,,fighter,1,,,
-fighter_second_wind,Second Wind,,"You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level. Once you use this feature, you must finish a short or long rest before you can use it again.",,,fighter,1,,,
-fighter_action_surge,Action Surge,,"Starting at 2nd level, you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action on top of your regular action and a possible bonus action. Once you use this feature, you must finish a short or long rest before you can use it again. Starting at 17th level, you can use it twice before a rest, but only once on the same turn.",,,fighter,2,,,
+fighter_second_wind,Second Wind,,"You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level. Once you use this feature, you must finish a short or long rest before you can use it again.",,grant_resource:second_wind:1:short,fighter,1,,,
+fighter_action_surge,Action Surge,,"Starting at 2nd level, you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action on top of your regular action and a possible bonus action. Once you use this feature, you must finish a short or long rest before you can use it again. Starting at 17th level, you can use it twice before a rest, but only once on the same turn.",,"grant_resource:action_surge:step(class_level.fighter, 2->1, 17->2):short",fighter,2,,,
 fighter_martial_archetype,Martial Archetype,,"At 3rd level, you choose an archetype that you strive to emulate in your combat styles and techniques, such as Champion. The archetype you choose grants you features at 3rd level and again at 7th, 10th, 15th, and 18th level.",,,fighter,3,,,
 fighter_ability_score_improvement,Ability Score Improvement,,"When you reach 4th level, and again at 6th, 8th, 12th, 14th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",,,fighter,4,,,
 fighter_extra_attack,Extra Attack,,"Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn. The number of attacks increases to three when you reach 11th level in this class and to four when you reach 20th level in this class.",,,fighter,5,,,

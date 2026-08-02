@@ -350,9 +350,10 @@ class CombatVM {
 		this.runActionToken(opt);
 	};
 
-	/** Run a resource-option's RESOLVED action token (formula already L2-resolved at derive). v1:
-	 *  `heal:<formula>` rolls + adds HP (clamped to max), logged; `roll:` / `apply_condition:` land as
-	 *  they're built; `note:` is surfaced by `spendOption`. */
+	/** Run a resource-option's RESOLVED action token (a `heal:`/`roll:` formula is already L2-resolved
+	 *  at derive). Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths):
+	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,
+	 *  `gain_action` → refund one action this turn (Action Surge), `note:` → the spendOption toast. */
 	private runActionToken(opt: ResourceOption) {
 		const p = this.character?.play;
 		if (!p) return;
@@ -363,6 +364,12 @@ class CombatVM {
 			const r = rollFormula(rest);
 			p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, r.total));
 			this.tray.pushRoll(`${opt.name} — heal`, r);
+		} else if (verb === 'roll' && rest) {
+			this.tray.pushRoll(opt.name, rollFormula(rest));
+		} else if (verb === 'apply_condition' && rest) {
+			this.addEffect({ label: opt.name, tokens: [opt.action], positive: false });
+		} else if (verb === 'gain_action') {
+			p.turn.action = Math.max(0, p.turn.action - 1); // one additional action this turn
 		}
 	}
 

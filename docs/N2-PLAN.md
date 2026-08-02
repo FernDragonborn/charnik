@@ -36,34 +36,37 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
 
 ## First slice — complete the executor + Second Wind
 
-### In (v1)
-1. `[~]` **Executor, all-or-nothing — DONE in code 2026-08-02 (`<this commit>`), tests pending.** Also
+### In (v1) — DONE + VERIFIED 2026-08-02
+1. `[x]` **Executor, all-or-nothing — DONE + tested.** Also
    added `TurnEconomy.canSpend(slot)` (silent check-half of `trySpend`) + `ACTION_TYPE_SLOT` map. **This
    closed the piece-3 gap — activating an option now actually costs its turn slot** (Flurry etc.
    previously spent Ki but not the bonus action). `CombatVM.activateResourceOption(opt)` (in
    `state.svelte.ts`, where HP + tray + economy are all reachable): validate (`canAffordOption` AND the
    turn slot is free) → then deduct (`spendOption`, the resource math it already does) + spend the turn
    slot (`economy.trySpend`, `action_type`→slot; `free`=none) + execute the action token. Validate
-   EVERYTHING before any mutation (ACTIONS.md core rule).
-2. `[~]` **Action-token execution — `heal:` DONE (`runActionToken`); roll/apply_condition/gain_action next.** `heal:<formula>` → `rollFormula`
-   (`dice.ts:199`) → `hp.current` clamped to `hpMax` + log; `roll:<formula>` → `rollFormula` →
-   `tray.pushRoll` + log; `apply_condition:<id>` → `addEffect`; `note:` → toast (done); + a small new
-   `gain_action` (Action Surge → refund one `play.turn.action`). Parse via the existing `parseToken`
-   vocab, not a new ad-hoc parser.
+   EVERYTHING before any mutation (ACTIONS.md core rule). Tests: `combat.test.ts` "N2 executor" —
+   both all-or-nothing directions (no bonus left / pool exhausted → nothing applied).
+2. `[x]` **Action-token execution — ALL DONE (`runActionToken`).** `heal:<formula>` → `rollFormula`
+   → `hp.current` clamped to `hpMax` + log; `roll:<formula>` → `rollFormula` → `tray.pushRoll` + log;
+   `apply_condition:<id>` → `addEffect`; `note:` → toast; `gain_action` (Action Surge → refund one
+   `play.turn.action`). Ad-hoc `indexOf(':')` split (these are ACTION verbs, not L1 effect tokens, so
+   `parseToken`'s effect-vocab doesn't cover heal/roll/gain_action — a 2-line split is right here).
 3. `[x]` **Resolve the action formula's L2 at derive — DONE** (`resolveActionFormula`) — `resolveResourceOptions` resolves
    `heal:1d10+class_level.fighter` → `heal:1d10+5` (mirror resource-max / `grant_roll` resolution), so
-   the option carries a ready dice formula.
-4. `[x]` **Wire the UI — DONE** — `ActionsPanel.svelte` `spendOption(o)` → `activateResourceOption(o)`.
-5. `[ ]` **← RESUME HERE: tests + Second Wind data.** Tests (combat: heal adds HP + costs the bonus +
-   all-or-nothing block; derive: `heal:1d10+class_level.fighter`→`heal:1d10+5`). Then **ship Second Wind
-   (+ Action Surge), both editions, RAW-faithful.** Rows already exist as
-   TEXT-ONLY features (`fighter_second_wind`, `fighter_action_surge`, 2024 + 2014). Add
-   `grant_resource:second_wind:<uses>:short` (+ `action_surge`) to their `effects`, and
-   `resource_options` rows (Second Wind → `cost=1, action=heal:1d10+class_level.fighter,
-   action_type=bonus_action`; Action Surge → `action=gain_action, action_type=free`). **Verify exact
-   uses/recharge per SRD table** (2014: SW 1/rest, AS 1 (2@L17); 2024: SW 2→+1@L4/L10 via per-level
-   re-grant rows, AS 1 (2@L17)). Convert from real SRD text — [[charnik-no-hallucinated-data]].
-   Re-stamp with `pnpm restamp <file>` after the hand-edit — [[content-csv-hash-restamp]].
+   the option carries a ready dice formula. Tested in `derive.test.ts` (piece 3 heal-formula case).
+4. `[x]` **Wire the UI — DONE** — `ActionsPanel.svelte` `spendOption(o)` → `activateResourceOption(o)`;
+   cost chip humanizes the resourceId (`second_wind` → "Second Wind").
+5. `[x]` **Second Wind + Action Surge SHIPPED, both editions, RAW-faithful + app-verified.** Added
+   `grant_resource:second_wind:<uses>:short` / `action_surge` to the feature `effects`, and
+   `resource_options` rows (SW → `cost=1, action=heal:1d10+class_level.fighter, action_type=bonus_action`;
+   AS → `action=gain_action, action_type=free`). Uses/recharge confirmed against real content at L1/5/17:
+   2014 SW=1, AS=1(2@L17); 2024 SW=2→3@L4→4@L10 (via `step()`, not per-level rows — the rage pattern),
+   AS=1(2@L17). Drove the app (demo Valen carries `second_wind`): click → rolls 1d10, raises HP, spends
+   the bonus + the one use, then the row disables. Screenshots in `design-preview/n2-second-wind-*.png`.
+   - **RAW DEVIATION (flagged, [[charnik-srd-raw-fidelity]]):** 2024 Second Wind RAW restores ONE use on
+     a Short Rest + all on a Long Rest; our recharge model is binary (`short` = full recharge on a short
+     rest), so a short rest OVER-restores it. Needs a per-resource partial-recharge amount the engine
+     lacks — out of this slice. 2014 SW/AS + 2024 AS ("short or long rest" = full) are RAW-exact.
 
 ### Deferred (OUT — keep the slice small)
 - `savage_attacker` — needs a **damage roll-mode** ("roll pool twice, keep higher") intent field + a

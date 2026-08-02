@@ -563,3 +563,87 @@ describe('ResourceTracker · piece 3 spend-options', () => {
 		expect(t.canAffordOption(opt({ cost: 'x' }), 3)).toBe(false); // only 2 left
 	});
 });
+
+/*
+ * N2 executor — activateResourceOption composes resource + turn-slot spend + the action token,
+ * ALL-OR-NOTHING (ACTIONS.md). Drives the real VM (economy + HP + resources). RNG unseeded → the heal
+ * asserts a range, never an exact total. A `second_wind`/`action_surge` pool is granted via a play
+ * effect (the same path the shipped fighter feature uses), so canAfford reads a real sheet resource.
+ */
+describe('CombatVM · N2 executor (activateResourceOption)', () => {
+	const grant = (token: string): Character => {
+		const c = newCharacter('rook', 'Rook', '5.5e');
+		c.play.autoCalc = true;
+		c.play.inCombat = true;
+		c.play.hp = { current: 5, max: 20, temp: 0 };
+		c.play.effects = [{ iid: '1', label: 'grant', effects: [token], positive: true }];
+		return c;
+	};
+	const secondWind = (over: Partial<ResourceOption> = {}): ResourceOption => ({
+		id: 'fighter_second_wind',
+		resourceId: 'second_wind',
+		name: 'Second Wind',
+		description: '',
+		action: 'heal:1d10+5',
+		actionType: 'bonus_action',
+		cost: 1,
+		...over
+	});
+
+	it('heals, spends the resource AND costs the bonus action (composition)', async () => {
+		const graph = await graphOf();
+		const character = grant('grant_resource:second_wind:2:short');
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.activateResourceOption(secondWind());
+		expect(character.play.hp.current).toBeGreaterThan(5); // healed (1d10+5), clamped to max
+		expect(character.play.hp.current).toBeLessThanOrEqual(20);
+		expect(combat.resources.resourceSpent('second_wind')).toBe(1); // one use spent
+		expect(character.play.turn.bonus).toBe(1); // the bonus action was consumed
+	});
+
+	it('all-or-nothing: no bonus action left → nothing applied (HP, resource, slot untouched)', async () => {
+		const graph = await graphOf();
+		const character = grant('grant_resource:second_wind:2:short');
+		character.play.turn.bonus = 1; // bonus already used this turn
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.activateResourceOption(secondWind());
+		expect(character.play.hp.current).toBe(5); // no heal
+		expect(combat.resources.resourceSpent('second_wind')).toBe(0); // resource NOT spent
+	});
+
+	it('all-or-nothing: pool exhausted → the bonus action is NOT spent', async () => {
+		const graph = await graphOf();
+		const character = grant('grant_resource:second_wind:1:short');
+		character.play.resourcesSpent = { second_wind: 1 }; // the only use is gone
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.activateResourceOption(secondWind());
+		expect(character.play.hp.current).toBe(5); // no heal
+		expect(character.play.turn.bonus).toBe(0); // slot preserved (validated before any mutation)
+	});
+
+	it('gain_action refunds one action this turn (Action Surge), free action costs no slot', async () => {
+		const graph = await graphOf();
+		const character = grant('grant_resource:action_surge:1:short');
+		character.play.turn.action = 1; // the regular action is already used
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.activateResourceOption({
+			id: 'fighter_action_surge',
+			resourceId: 'action_surge',
+			name: 'Action Surge',
+			description: '',
+			action: 'gain_action',
+			actionType: 'free',
+			cost: 1
+		});
+		expect(character.play.turn.action).toBe(0); // one additional action granted back
+		expect(combat.resources.resourceSpent('action_surge')).toBe(1);
+	});
+});

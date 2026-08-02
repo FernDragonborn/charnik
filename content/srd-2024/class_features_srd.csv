@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f9e9-7ad8-b3a8-4511aa623e30
-#content-updated_at: 2026-08-01
-#content-hash: xxh64:ea6e77a4845a2091
+#content-updated_at: 2026-08-02
+#content-hash: xxh64:9dc3bf827a1cd20e
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id,expertise_slots
 barbarian_rage,Rage,,"You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren't wearing Heavy armor.
 You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.
@@ -369,11 +369,11 @@ fighter_fighting_style,Fighting Style,,"You have honed your martial prowess and 
 Whenever you gain a Fighter level, you can replace the feat you chose with a different Fighting Style feat.",,,fighter,1,,,
 fighter_second_wind,Second Wind,,"You have a limited well of physical and mental stamina that you can draw on. As a Bonus Action, you can use it to regain Hit Points equal to 1d10 plus your Fighter level.
 You can use this feature twice. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.
-When you reach certain Fighter levels, you gain more uses of this feature, as shown in the Second Wind column of the Fighter Features table.",,,fighter,1,,,
+When you reach certain Fighter levels, you gain more uses of this feature, as shown in the Second Wind column of the Fighter Features table.",,"grant_resource:second_wind:step(class_level.fighter, 1->2, 4->3, 10->4):short",fighter,1,,,
 fighter_weapon_mastery,Weapon Mastery,,"Your training with weapons allows you to use the mastery properties of three kinds of Simple or Martial weapons of your choice. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices.
 When you reach certain Fighter levels, you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Fighter Features table.",,,fighter,1,,,
 fighter_action_surge,Action Surge,,"You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action, except the Magic action.
-Once you use this feature, you can't do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn.",,,fighter,2,,,
+Once you use this feature, you can't do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn.",,"grant_resource:action_surge:step(class_level.fighter, 2->1, 17->2):short",fighter,2,,,
 fighter_tactical_mind,Tactical Mind,,"You have a mind for tactics on and off the battlefield. When you fail an ability check, you can expend a use of your Second Wind to push yourself toward success. Rather than regaining Hit Points, you roll 1d10 and add the number rolled to the ability check, potentially turning it into a success. If the check still fails, this use of Second Wind isn't expended.",,,fighter,2,,,
 fighter_fighter_subclass,Fighter Subclass,,"You gain a Fighter subclass of your choice. The Champion subclass is detailed after this class's description. A subclass is a specialization that grants you features at certain Fighter levels. For the rest of your career, you gain each of your subclass's features that are of your Fighter level or lower.",,,fighter,3,,,
 fighter_ability_score_improvement,Ability Score Improvement,,"You gain the Ability Score Improvement feat (see ""Feats"") or another feat of your choice for which you qualify. You gain this feature again at Fighter levels 6, 8, 12, 14, and 16.",,,fighter,4,,,
