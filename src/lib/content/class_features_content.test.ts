@@ -64,6 +64,17 @@ describe('shipped class features · Rage resource (EFX-E4)', () => {
 		expect(rageMax(g, 'SRD 5.1', '5e', 12)).toBe(5);
 		expect(rageMax(g, 'SRD 5.1', '5e', 20)).toBe(Infinity); // 20->inf terminal
 	});
+
+	it('recharge per edition: 2024 Rage regains one on a short rest (short_one), 2014 on a long rest', async () => {
+		const rechargeOf = (g: ContentGraph, source: string, system: '5e' | '5.5e') =>
+			deriveSheet(barbarian(source, system, 3), g).resources.find((r) => r.id === 'rage')?.recharge;
+		// SRD 5.2.1: "regain one expended use when you finish a Short Rest, all on a Long Rest"
+		expect(rechargeOf(await loadEdition('content/srd-2024'), 'SRD 5.2.1', '5.5e')).toBe(
+			'short_one'
+		);
+		// SRD 5.1: "must finish a long rest before you can rage again"
+		expect(rechargeOf(await loadEdition('content/srd-2014'), 'SRD 5.1', '5e')).toBe('long');
+	});
 });
 
 describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', () => {

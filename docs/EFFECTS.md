@@ -71,7 +71,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `reroll`                     | `reroll:<target>:<threshold>`                           | Reroll a die landing ≤ threshold once (GWF ≤2).                                                                                                                                                         |
 | `min_die`                    | `min_die:<target>:<floor>`                              | Treat a die below floor AS floor (Reliable Talent d20→10).                                                                                                                                              |
 | `grant_proficiency`          | `grant_proficiency:[expertise:]<target>`                | Grant proficiency/expertise as ONE ladder level (`none/half/proficient/expertise`).                                                                                                                     |
-| `grant_resource`             | `grant_resource:<id>:<max>:<recharge>`                  | Define a resource pool (rage/ki/N-per-day…), `recharge ∈ short/long/other`. `max` is cost-capped (`MAX_RESOURCE_MAX`).                                                                                  |
+| `grant_resource`             | `grant_resource:<id>:<max>:<recharge>`                  | Define a resource pool (rage/ki/N-per-day…), `recharge ∈ short/long/short_one/other` (`short_one` = regain ONE use per short rest + all on a long rest, the 2024 pattern). `max` is cost-capped (`MAX_RESOURCE_MAX`). Recharge is an OPEN enum — see §Recharge-model roadmap below. |
 | `grant_roll`                 | `grant_roll:<id>:<expr>`                                | A named feature-granted rollable (Sneak Attack `Nd6`, Bardic Inspiration die); resolves to a dice formula → the DiceTray seam.                                                                          |
 | `resist_immune`              | `resist_immune:<type>` (+ resist/immune/vulnerable)     | Damage defense; applied immune→0 / resist→½ / vulnerable→×2 before temp-HP soak.                                                                                                                        |
 | `apply_condition`            | `apply_condition:<id>`                                  | Expand a condition row's own tokens ONE level (the condition's `effects` flow + register `has_condition.<id>`).                                                                                         |
@@ -194,6 +194,30 @@ is_raging ? flat_bonus:damage+cha_mod                          Zealot: CHA to da
 **Failure = the L1 fallback, never a throw.** A malformed expression / undefined variable /
 div-by-zero degrades the token to inert text + optional manual modifier, WITH the parse detail in
 content-health (reason + offending token), never a bare "invalid".
+
+### Recharge-model roadmap (recharge is an OPEN enum, extend by member)
+
+`recharge` currently covers the rest-based policies: `short` (full on any rest), `long` (full on a
+long rest), `short_one` (regain ONE per short rest + all on long — the recurring 2024 pattern:
+verified in SRD for Rage, Second Wind, Channel Divinity Cleric/Paladin, Wild Shape), `other` (manual).
+A new *rest*-policy = one more enum member (cheap, TS re-checks every `switch`), NEVER a boolean flag
+([[csv-open-enums-not-binary]] / CONVENTIONS §1.5).
+
+Three patterns the current enum can't express — **planned, not rejected** (the "when" for each):
+
+1. **Partial-on-long** — Hit Dice regain HALF your level (round down) on a long rest. **When:** rides
+   the dedicated **hit-dice subsystem** (PLAN B2 short-rest HP), NOT the generic resource enum — its
+   spend/restore math is its own.
+2. **Formula recharge at a non-rest trigger** — magic items "regain 1d6+1 charges at **dawn**",
+   "recharge 5 (1d6) on a short rest". Needs a two-axis model `{trigger: dawn|dusk|short|long, amount:
+   full|<formula>}`, with `short`/`long`/`short_one` becoming sugar over it. **When:** the moment we
+   model **item charges as resources** (no consumer exists today → building it now is YAGNI).
+3. **Event-based regain** — 2024 "when you roll Initiative and have no uses, regain one"
+   (Barbarian/Monk). This is **`onEvent` (N2), not a recharge policy** — a `turnStart`/`initiative`
+   handler returning a `spend`-negative intent.
+
+Do the enum-member path for each new rest policy now; introduce `{trigger, amount}` only when axis 2
+(item charges) lands, and keep axes 1 and 3 in their own subsystems.
 
 **Displaying an expression:** auto-generating prose from a formula is rejected as unreliable. The
 player sees the **resolved value + the effect's name** ("+4 · Sneak Attack"); an optional
