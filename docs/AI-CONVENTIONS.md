@@ -505,6 +505,21 @@ explanation + the exact change, then stop. Only edit if they explicitly ask you 
 **Why.** They often want to try the change themselves after understanding it; a preemptive edit
 takes that away.
 
+### 8.6 Plan diverges from reality → sync it with the code, in the same change
+**Rule.** Whenever you notice a plan / spec / status line that **contradicts what the code (or the
+SRD source) actually does** — a `[x]` that isn't really wired, a design note the implementation
+outgrew, a "binary recharge" claim after the enum gained a member, a feature described one way but
+built another — **fix the doc in the same change** that surfaces the divergence. Don't leave the
+stale line "for later"; either correct it now or, if it's out of the current scope, add a dated note
+flagging the drift. The plan is only useful while it tells the truth.
+
+**Why.** A plan that lies is worse than no plan — the next session (you or the maintainer) trusts it
+and builds on a false premise. This is the same discipline as §8.3 (status honesty) and CLAUDE.md's
+"update `docs/PLAN.md` in the same change when a decision proves wrong", generalized: docs track
+impl, always. Concrete cases this session: `recharge` "is binary" → corrected once `short_one` landed
+(EFFECTS.md); N2-PLAN's onEvent sketch "regain one, auto" → corrected to the SRD reality (player
+choice, regain-all, own long-rest gate) the moment the SRD was checked.
+
 ---
 
 ## 9. i18n, UX details & identity
