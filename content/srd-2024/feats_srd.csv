@@ -4,7 +4,7 @@
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f968-7fd0-88fc-dbf43af3ecc8
 #content-updated_at: 2026-08-02
-#content-hash: xxh64:0e24e6ea610e9467
+#content-hash: xxh64:4d2e8df87e3c4ef2
 id,name_en,name_uk,text_en,text_uk,effects,category,prereq,repeatable,ability_choice,skill_choice
 alert,Alert,,"_Origin Feat_
 You gain the following benefits.
