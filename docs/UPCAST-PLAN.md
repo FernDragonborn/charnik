@@ -27,6 +27,15 @@ Model C): `applySpellEffect` завжди створює carrier для conc-с�
 `carrierRounds` бере duration-kind апкаст (абсолютні раунди, inf→null) або базу. Далі §319 slice 2
 (count/area чіпи=UI, hp_max/temp_hp=глибша діра), slice 4 (кантрип), slice 5 (roller-цикл).
 
+**DATA BACKFILL зроблено 2026-08-03:** усі лінійні single-damage спели з базовою `damage`-колонкою
+(46: Fireball-родина, smites, 2024-конджури) + ті, що потребували й базу (disintegrate 10d6+40,
+delayed_blast_fireball 12d6, flame_blade per-1/per-2, conjure_fey 2024 3d12); healers усі 7.
+prayer_of_healing 2024 → `resolution=auto` (2d8 котиться; short-rest-бонус лишається прозою).
+**Лишились НЕзроблені (свідомо):** `heal` (флет-only 70+10 — треба N2 флет-хіл path, [[csv-open-enums-not-binary]]-стиль),
+`ice_knife` (апкаст качає ВТОРИННИЙ Cold, не piercing-колонку → треба typed sub-slot + база Cold),
+conjure_fey 2014 (масштаб = CR, проза), і **дискретні step()-спели** (~19: Magic Weapon +2/+3,
+Hunter's Mark, Geas, Dominate — кожен окремий кейс, частина не-damage).
+
 **healDice ВИДАЛЕНО** (юзер: «не має бути парсингу тексту спелу»): усі 5 auto-healers (cure/healing_word/
 prayer_of_healing/mass_*) тепер несуть базу в `damage`-колонці + `heal:per_slot(...)`; `castingDice` читає
 ЛИШЕ структуровану колонку, нуль скрейпу прози.
