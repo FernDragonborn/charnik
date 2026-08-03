@@ -65,7 +65,7 @@ import { isRowActive } from '$lib/content/sources.svelte';
 import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
-import { slotToSpend } from '$lib/rules/spellcasting';
+import { slotToSpend, castableSlotLevels } from '$lib/rules/spellcasting';
 import { withCastSlot } from '$lib/effects/context';
 import { evalUpcast, combinePools } from '$lib/effects/upcast';
 
@@ -665,10 +665,19 @@ class CombatVM {
 	/** Reserve a leveled spell slot for a non-ritual cast (A17): returns the slot key to spend, or
 	 *  null (nothing to spend — cantrip / pure-pact / ritual), or 'blocked' (+ a toast) when none
 	 *  remain. Reserve-before-commit so a block returns BEFORE the action economy is touched. */
-	private reserveSpellSlot(r: SpellRow, ritual: boolean): string | null | 'blocked' {
+	private reserveSpellSlot(
+		r: SpellRow,
+		ritual: boolean,
+		chosenLevel?: number
+	): string | null | 'blocked' {
 		const play = this.character?.play;
 		if (ritual || !play) return null;
-		const spend = slotToSpend(r.level, this.sheet?.spellcasting.pools ?? [], play.spellSlotsSpent);
+		const spend = slotToSpend(
+			r.level,
+			this.sheet?.spellcasting.pools ?? [],
+			play.spellSlotsSpent,
+			chosenLevel
+		);
 		if (spend && 'block' in spend) {
 			toast(spend.block);
 			return 'blocked';
@@ -776,15 +785,26 @@ class CombatVM {
 		}
 	}
 
-	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit
-	cast = (r: SpellRow, e: Event, opts?: { ritual?: boolean }) => {
+	/** Every slot level this spell can be cast from right now (the upcast picker's options; a UI can
+	 *  offer these and pass the choice as `cast(r, e, { slot })`). Empty = no choice (cantrip / single
+	 *  option / no open slot). */
+	castableSlots = (r: SpellRow): number[] =>
+		castableSlotLevels(
+			r.level,
+			this.sheet?.spellcasting.pools ?? [],
+			this.character?.play.spellSlotsSpent ?? {}
+		);
+
+	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit. `opts.slot`
+	// overrides the auto-lowest slot (the upcast picker, §6) — honoured or blocked, never downshifted.
+	cast = (r: SpellRow, e: Event, opts?: { ritual?: boolean; slot?: number }) => {
 		const play = this.character?.play;
 		// A17: casting SPENDS a leveled spell slot and is BLOCKED when none remain — UNLESS it's a
 		// RITUAL cast (rituals cost no slot; only ritual-tagged spells qualify — SRD). Cantrips + pure
 		// pact casters spend nothing; the action-economy check below stays combat-only.
 		const ritual =
 			opts?.ritual === true && r.ritual && (this.sheet?.spellcasting.ritualCasting ?? false);
-		const slot = this.reserveSpellSlot(r, ritual);
+		const slot = this.reserveSpellSlot(r, ritual, opts?.slot);
 		if (slot === 'blocked') return;
 		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
 		if (!this.economy.trySpend(this.economy.ctSlot(r.castTimeIcon))) return;

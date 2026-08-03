@@ -199,6 +199,14 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		combat.cast(spellRow(graph, `spell:${S}:bad_bolt`, 'on')!, noModifiers);
 		expect(diceOf(6)).toBe(2); // base 2d6 only — the broken delta is dropped
 	});
+
+	it('an explicit slot choice (picker) upcasts from that level even with lower slots free', () => {
+		const r = spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!;
+		expect(combat.castableSlots(r)).toEqual([1, 2, 3]); // all open slot levels offered
+		combat.cast(r, noModifiers, { slot: 3 }); // deliberately burn a level-3 slot
+		expect(character.play.spellSlotsSpent['3']).toBe(1);
+		expect(diceOf(8)).toBe(5); // 3d8 base + 2d8 (slot 3 vs base 1)
+	});
 });
 
 describe('CombatVM · effect lifecycle (EFX-4)', () => {

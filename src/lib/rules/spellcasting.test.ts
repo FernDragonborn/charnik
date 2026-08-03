@@ -10,6 +10,7 @@ import {
 	slotPools,
 	cantripDieMultiplier,
 	slotToSpend,
+	castableSlotLevels,
 	preparedLeveledCount,
 	canTogglePrepared,
 	type CastPool,
@@ -157,6 +158,54 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 		expect(slotToSpend(3, pools, { '3': 2 })).toEqual({
 			block: 'No level-3 spell slot remaining'
 		});
+	});
+
+	it('honours an explicit chosen slot (upcast picker) — spends THAT level, not the auto-lowest', () => {
+		expect(slotToSpend(1, pools, {}, 3)).toEqual({ key: '3' }); // cast a lvl-1 spell from a lvl-3 slot
+		expect(slotToSpend(2, pools, {}, 2)).toEqual({ key: '2' }); // choosing the base level is fine
+	});
+
+	it('blocks a chosen slot below the spell level, or a chosen-but-empty level (never downshifts)', () => {
+		expect(slotToSpend(3, pools, {}, 1)).toEqual({
+			block: "A level-1 slot can't cast a level-3 spell"
+		});
+		expect(slotToSpend(1, pools, { '3': 2 }, 3)).toEqual({
+			block: 'No level-3 spell slot remaining'
+		});
+	});
+});
+
+describe('castableSlotLevels — the upcast picker options', () => {
+	const pool = (spellLevel: number, max: number): CastPool => ({
+		id: `slot-${spellLevel}`,
+		label: `Level ${spellLevel}`,
+		spellLevel,
+		max,
+		recharge: 'long'
+	});
+	const pools = [pool(1, 4), pool(2, 3), pool(3, 2)];
+
+	it('lists every open slot level ≥ the spell level, ascending', () => {
+		expect(castableSlotLevels(1, pools, {})).toEqual([1, 2, 3]);
+		expect(castableSlotLevels(2, pools, {})).toEqual([2, 3]);
+	});
+
+	it('drops an exhausted level and returns [] when nothing ≥ the level is open', () => {
+		expect(castableSlotLevels(1, pools, { '1': 4 })).toEqual([2, 3]);
+		expect(castableSlotLevels(3, pools, { '3': 2 })).toEqual([]);
+	});
+
+	it('is empty for a cantrip and excludes pact/forcedUpcast pools', () => {
+		expect(castableSlotLevels(0, pools, {})).toEqual([]);
+		const pact: CastPool = {
+			id: 'pact-1',
+			label: 'Pact',
+			spellLevel: 3,
+			max: 2,
+			recharge: 'short',
+			forcedUpcast: true
+		};
+		expect(castableSlotLevels(1, [pact], {})).toEqual([]);
 	});
 });
 

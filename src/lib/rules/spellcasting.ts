@@ -51,19 +51,53 @@ export type SlotSpend = { key: string } | { block: string } | null;
 export function slotToSpend(
 	spellLevel: number,
 	pools: readonly CastPool[],
-	spent: Readonly<Record<string, number>>
+	spent: Readonly<Record<string, number>>,
+	chosenLevel?: number
 ): SlotSpend {
 	if (spellLevel <= 0) return null; // cantrip
 	const leveled = pools.filter(
 		(p): p is CastPool & { spellLevel: number } => !p.forcedUpcast && p.spellLevel !== undefined
 	);
 	if (!leveled.length) return null; // no leveled pool (pure warlock / non-caster) — don't gate
+	const isOpen = (lvl: number) =>
+		leveled.some((p) => p.spellLevel === lvl && p.max - (spent[String(p.spellLevel)] ?? 0) > 0);
+	// UPCAST picker (§6): an explicit slot choice is HONOURED or blocked — never silently downshifted to
+	// the auto slot (a below-level pick can't cast the spell; a chosen-but-empty level is a real block).
+	if (chosenLevel !== undefined) {
+		if (chosenLevel < spellLevel)
+			return { block: `A level-${chosenLevel} slot can't cast a level-${spellLevel} spell` };
+		return isOpen(chosenLevel)
+			? { key: String(chosenLevel) }
+			: { block: `No level-${chosenLevel} spell slot remaining` };
+	}
 	const open = leveled
 		.filter((p) => p.spellLevel >= spellLevel && p.max - (spent[String(p.spellLevel)] ?? 0) > 0)
 		.sort((a, b) => a.spellLevel - b.spellLevel)[0];
 	return open
 		? { key: String(open.spellLevel) }
 		: { block: `No level-${spellLevel} spell slot remaining` };
+}
+
+/** Every leveled slot level a spell of `spellLevel` can be cast from RIGHT NOW — each level ≥ the
+ *  spell's own with at least one use left (the upcast picker's options; a SUPERSET of the auto
+ *  `slotToSpend` pick). Ascending, deduped. Pact/forcedUpcast pools are excluded (warlock has its own
+ *  always-max path). Empty for a cantrip or when no open slot ≥ the spell level exists. Pure. */
+export function castableSlotLevels(
+	spellLevel: number,
+	pools: readonly CastPool[],
+	spent: Readonly<Record<string, number>>
+): number[] {
+	if (spellLevel <= 0) return [];
+	const levels = new Set<number>();
+	for (const p of pools)
+		if (
+			!p.forcedUpcast &&
+			p.spellLevel !== undefined &&
+			p.spellLevel >= spellLevel &&
+			p.max - (spent[String(p.spellLevel)] ?? 0) > 0
+		)
+			levels.add(p.spellLevel);
+	return [...levels].sort((a, b) => a - b);
 }
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
