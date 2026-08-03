@@ -287,7 +287,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (79 modules)
+## Library functions & types (80 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -837,6 +837,17 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function splitGuard`
 - `interface EffectIssue` — A derive-time problem with one token — the SPEC10 shape ({token, reason} + the carrying source) * content-health merg…
 
+### `src/lib/effects/upcast.ts`
+
+- `const UPCAST_KINDS` — The upcast kinds (§8).
+- `type UpcastKind`
+- `interface ParsedUpcastToken` — One parsed upcast token — grammar only, not yet evaluated.
+- `interface UpcastParseError` — A parse failure for one token (surfaced as prose fallback + content-health, H11).
+- `function parseUpcast` — Parse a whole `upcast` cell into its tokens (`;`-separated).
+- `interface UpcastResult` — An evaluated upcast contribution for ONE kind.
+- `function evalUpcast` — * Evaluate an `upcast` cell against a CAST ctx (must already carry `slot`/`spell_level` — build it * with `withCastSl…
+- `function combinePools` — Merge a delta pool + flat onto a base pool + flat (the damage/heal `base + delta` combine).
+
 ### `src/lib/i18n/index.ts`
 
 - `type Dir`
@@ -1051,4 +1062,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 41 components · 576 exports across 90 modules · 31 duplicate suspects._
+_45 tokens · 63 global classes · 41 components · 584 exports across 91 modules · 31 duplicate suspects._
