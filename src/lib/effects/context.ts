@@ -135,6 +135,19 @@ export function makeExprContext(build: BuildVars, play?: PlayVars): ExprContext 
 	};
 }
 
+/** Wrap a sheet ctx with the CAST-EPHEMERAL upcast vars (UPCAST §4): the `slot` a spell is cast from
+ *  and its own `spell_level`. These live ONLY here, never in the persistent derive ctx (B1: a slot in
+ *  the derive ctx would make every passive feature read a garbage slot→0). Every other variable passes
+ *  through to `base`, so an upcast formula can still read `spellcasting_mod`, ability mods, etc. */
+export function withCastSlot(base: ExprContext, slot: number, spellLevel: number): ExprContext {
+	return {
+		number: (name) =>
+			name === 'slot' ? slot : name === 'spell_level' ? spellLevel : base.number(name),
+		boolean: (name) => base.boolean(name),
+		enum: (name) => base.enum(name)
+	};
+}
+
 /** The same ctx with `spellcasting_mod` re-pointed at a specific class's casting mod — SPEC4: a
  *  token carried by a class's own feature reads THAT class, not the primary caster. Every other
  *  variable passes through. `mod` may be a thunk so the value tracks a LIVE score (the DAG resolve

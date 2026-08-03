@@ -242,6 +242,7 @@ function evalCall(n: { fn: string; args: Node[] }, ctx: ExprContext): ExprValue 
 	// `var` is identity — readability sugar that must pass dice and `inf` through untouched.
 	if (n.fn === 'var') return evalNode(n.args[0] as Node, ctx);
 	if (n.fn === 'step') return evalStep(n.args, ctx);
+	if (n.fn === 'per_slot') return evalPerSlot(n.args, ctx);
 	const a = n.args.map((x) => asNumber(evalNode(x, ctx)));
 	switch (n.fn) {
 		case 'min':
@@ -288,6 +289,21 @@ function evalStep(args: Node[], ctx: ExprContext): ExprValue {
 	return bestValue === undefined ? num(0) : evalNode(bestValue, ctx);
 }
 
+/** per_slot(amount[, step]): the upcast DELTA — `amount` × the count of slot levels above the spell's
+ *  base (`floor((slot - spell_level) / step)`, step defaults to 1). `amount` may be dice (scales the
+ *  pool) or a number. Reads the cast-ephemeral `slot`/`spell_level` vars; outside a cast both resolve
+ *  to 0, so the delta is 0 (an empty dice pool / the number 0) — a benign no-op, never an error. A
+ *  non-positive step is an authoring error (a floor over a 0/negative divisor is meaningless). */
+function evalPerSlot(args: Node[], ctx: ExprContext): ExprValue {
+	const above = (ctx.number('slot') ?? 0) - (ctx.number('spell_level') ?? 0);
+	const step = args.length > 1 ? asNumber(evalNode(args[1] as Node, ctx)) : 1;
+	if (step <= 0) throw new EvalError('per_slot() step must be positive');
+	const mult = Math.max(0, Math.floor(above / step));
+	// reuse the *-operator (dice×int scales the pool, number×number multiplies) so per_slot(1d6) and
+	// per_slot(10) route through the SAME scaling the grammar already guarantees.
+	return evalArith('*', evalNode(args[0] as Node, ctx), num(mult));
+}
+
 /** Evaluate a parsed expression against a context. Never throws — an undefined-var (handled as 0),
  *  a type misuse, or a division by zero returns `{ok:false, error}` for the caller to degrade. */
 export function evaluate(ast: Ast, ctx: ExprContext): EvalResult {
@@ -327,7 +343,7 @@ function staticKind(n: Node): 'number' | 'dice' | 'either' {
 		case 'pair':
 			return staticKind(n.value);
 		case 'call': {
-			if (n.fn === 'var') return staticKind(n.args[0] as Node);
+			if (n.fn === 'var' || n.fn === 'per_slot') return staticKind(n.args[0] as Node);
 			if (n.fn === 'step') {
 				// step yields one of its pair VALUES (or the number 0) — fold their kinds
 				const kinds = new Set(n.args.slice(1).map(staticKind));

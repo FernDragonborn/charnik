@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { makeExprContext, withSpellcastingMod, type BuildVars, type PlayVars } from './context';
+import {
+	makeExprContext,
+	withSpellcastingMod,
+	withCastSlot,
+	type BuildVars,
+	type PlayVars
+} from './context';
 import { parseToken, resolveEffectValue, EFFECT_KIND, type ActiveEffect } from './token-parser';
 import { applyEffects, collectFacts, matchesTarget } from './apply';
 import { computed } from '../rules/pipeline';
@@ -58,6 +64,22 @@ describe('withSpellcastingMod · per-class scoping (SPEC4)', () => {
 		expect(scoped.number('spellcasting_mod')).toBe(2);
 		modNow = 5;
 		expect(scoped.number('spellcasting_mod')).toBe(5); // re-evaluated, not frozen at 2
+	});
+});
+
+describe('withCastSlot · cast-ephemeral upcast vars (UPCAST §4)', () => {
+	it('provides slot / spell_level, passing every other variable through', () => {
+		const cast = withCastSlot(ctx, 5, 3);
+		expect(cast.number('slot')).toBe(5);
+		expect(cast.number('spell_level')).toBe(3);
+		expect(cast.number('level')).toBe(7); // sheet vars still resolve
+		expect(cast.boolean('is_raging')).toBe(false);
+	});
+
+	it('does NOT leak the slot into the base ctx (B1: derive ctx stays slot-free)', () => {
+		withCastSlot(ctx, 9, 1);
+		expect(ctx.number('slot')).toBeUndefined();
+		expect(ctx.number('spell_level')).toBeUndefined();
 	});
 });
 

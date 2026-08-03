@@ -717,6 +717,57 @@ describe('EXPR · step() breakpoint tables', () => {
 	});
 });
 
+describe('EXPR · per_slot() upcast sugar (UPCAST §2)', () => {
+	// the ephemeral cast ctx: a spell of base level `sl` cast from slot `s`
+	const at = (s: number, sl: number) => ctx({ numbers: { slot: s, spell_level: sl } });
+
+	it('scales a DICE amount by slot levels above base (Fireball: 8d6 base + per_slot(1d6))', () => {
+		expect(dice('per_slot(1d6)', at(3, 3))).toEqual({ pool: {}, flat: 0 }); // at base → 0 delta
+		expect(dice('per_slot(1d6)', at(5, 3))).toEqual({ pool: { 6: 2 }, flat: 0 }); // +2d6 at slot 5
+		expect(dice('per_slot(1d6)', at(9, 3))).toEqual({ pool: { 6: 6 }, flat: 0 }); // +6d6 at slot 9
+	});
+
+	it('adds cleanly onto a base pool (the delta combine: base + delta)', () => {
+		expect(dice('8d6 + per_slot(1d6)', at(5, 3))).toEqual({ pool: { 6: 10 }, flat: 0 });
+	});
+
+	it('scales a NUMBER amount (a flat +10/slot heal delta)', () => {
+		expect(n('per_slot(10)', at(6, 6))).toBe(0);
+		expect(n('per_slot(10)', at(8, 6))).toBe(20);
+	});
+
+	it('takes an optional step: per_slot(amount, k) = amount * floor(above / k)', () => {
+		// Flame Blade "above 2nd, per TWO levels": +1d6 per 2 slots above 2
+		const flame = 'per_slot(1d6, 2)';
+		expect(dice(flame, at(2, 2))).toEqual({ pool: {}, flat: 0 });
+		expect(dice(flame, at(3, 2))).toEqual({ pool: {}, flat: 0 }); // 1 above / 2 → 0
+		expect(dice(flame, at(4, 2))).toEqual({ pool: { 6: 1 }, flat: 0 }); // 2 above / 2 → 1
+		expect(dice(flame, at(6, 2))).toEqual({ pool: { 6: 2 }, flat: 0 });
+	});
+
+	it('degrades to a 0 delta outside a cast (no slot vars → absent → 0), never an error', () => {
+		expect(dice('per_slot(1d6)', ctx())).toEqual({ pool: {}, flat: 0 });
+		expect(n('per_slot(10)', ctx())).toBe(0);
+		expect(evalExpression('8d6 + per_slot(1d6)', ctx()).ok).toBe(true);
+	});
+
+	it('rejects a non-positive step at eval (authoring error)', () => {
+		expect(evalExpression('per_slot(1d6, 0)', at(5, 3)).ok).toBe(false);
+		expect(evalExpression('per_slot(1d6, -1)', at(5, 3)).ok).toBe(false);
+	});
+
+	it('parses (arity 1..2) and reports its static type as its amount', () => {
+		expect(parseExpression('per_slot(1d6)').ok).toBe(true);
+		expect(parseExpression('per_slot(10, 2)').ok).toBe(true);
+		expect(parseExpression('per_slot()').ok).toBe(false);
+		expect(parseExpression('per_slot(1, 2, 3)').ok).toBe(false);
+		// a dice amount makes an if() branch "dice" for the mixed-branch lint
+		expect(lintExpression('if(slot>3, per_slot(1d6), 5)')).toContain(
+			'if() branches differ in type (dice vs number)'
+		);
+	});
+});
+
 describe('EXPR · the `inf` terminal literal', () => {
 	it('passes through the pass-through positions (step value, if branch, var)', () => {
 		expect(n('inf')).toBe(Infinity);

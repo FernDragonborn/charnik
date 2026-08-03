@@ -728,6 +728,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface BuildVars` — Build-lifetime numbers (always available; the EXPR-2 subset of the ctx).
 - `interface PlayVars` — Play-lifetime state (the EXPR-3 half; optional so EXPR-2 can omit it entirely).
 - `function makeExprContext` — * Build the `ExprContext` the evaluator reads.
+- `function withCastSlot` — Wrap a sheet ctx with the CAST-EPHEMERAL upcast vars (UPCAST §4): the `slot` a spell is cast from * and its own `spel…
 - `function withSpellcastingMod` — The same ctx with `spellcasting_mod` re-pointed at a specific class's casting mod — SPEC4: a * token carried by a cla…
 
 ### `src/lib/effects/dependency-graph.ts`
@@ -1050,4 +1051,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 41 components · 575 exports across 90 modules · 31 duplicate suspects._
+_45 tokens · 63 global classes · 41 components · 576 exports across 90 modules · 31 duplicate suspects._

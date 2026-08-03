@@ -25,6 +25,11 @@ const NUMERIC_VARS: ReadonlySet<string> = new Set<string>([
 	'proficiency_bonus',
 	'spellcasting_mod',
 	'base_speed',
+	// CAST-EPHEMERAL upcast vars (UPCAST §4/B1/B2): the slot a spell is cast from and the spell's own
+	// base level. Only ever provided by the ephemeral cast ctx (`withCastSlot`); the persistent derive
+	// ctx never resolves them, so a stray `slot` in an `effects` token degrades to 0 like any absent var.
+	'slot',
+	'spell_level',
 	// play-state numbers (read by guards; EXPR-3 resolves them, EXPR-1 just accepts the names)
 	'hp',
 	'hp_max',
@@ -93,7 +98,12 @@ const FUNCTIONS: Readonly<Record<string, { min: number; max: number }>> = {
 	step: { min: 2, max: Infinity },
 	// identity — pure readability sugar (`var(class_level.rogue)d6` reads better glued than bare
 	// parens); passes dice and `inf` through untouched.
-	var: { min: 1, max: 1 }
+	var: { min: 1, max: 1 },
+	// UPCAST sugar (§2 "Синтаксичний цукор"): `per_slot(amount[, step])` = amount × the number of slot
+	// levels above the spell's base level (`floor((slot - spell_level) / step)`, step defaults to 1).
+	// `amount` may be dice (`per_slot(1d6)`) — it scales the pool. Reads the cast-ephemeral slot vars;
+	// outside a cast both are 0, so it degrades to a 0 delta.
+	per_slot: { min: 1, max: 2 }
 };
 
 /* ─────────────────────────── AST ─────────────────────────── */
