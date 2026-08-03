@@ -115,9 +115,11 @@ export class ResourceTracker {
 		if (!c || !sheet) return;
 		const spent = { ...c.play.resourcesSpent };
 		for (const r of sheet.resources) {
-			// full recharge: a `short` pool refills on ANY rest; everything but manual-only `other` refills
-			// on a long rest. `short_one` only regains ONE use per short rest (2024 Second Wind).
-			const full = r.recharge === 'short' || (kind === 'long' && r.recharge !== 'other');
+			// full recharge: a `short` pool refills on ANY rest; a long rest refills everything EXCEPT the
+			// two never-auto policies — manual-only `other` and one-use `consumable` (a spent potion charge
+			// stays spent). `short_one` only regains ONE use per short rest (2024 Second Wind).
+			const neverAuto = r.recharge === 'other' || r.recharge === 'consumable';
+			const full = r.recharge === 'short' || (kind === 'long' && !neverAuto);
 			if (full) spent[r.id] = 0;
 			else if (kind === 'short' && r.recharge === 'short_one')
 				spent[r.id] = Math.max(0, (spent[r.id] ?? 0) - 1);

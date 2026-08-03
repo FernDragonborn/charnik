@@ -196,15 +196,16 @@ export function groupEffects(effects: EffectInstance[]): {
 	return { buffs, debuffs, resources };
 }
 
-/** Recharge id → the label shown on a resource's recharge chip. */
-export const rechargeLabel = (r: Recharge): string =>
-	r === 'long'
-		? 'long rest'
-		: r === 'short'
-			? 'short rest'
-			: r === 'short_one'
-				? 'short rest (+1)'
-				: 'special';
+/** Recharge id → the label shown on a resource's recharge chip. A `Record<Recharge, …>` so adding a
+ *  recharge policy is a compile error here until it gets a label (no silent 'special' fallthrough). */
+const RECHARGE_LABEL: Record<Recharge, string> = {
+	long: 'long rest',
+	short: 'short rest',
+	short_one: 'short rest (+1)',
+	consumable: 'consumable',
+	other: 'special'
+};
+export const rechargeLabel = (r: Recharge): string => RECHARGE_LABEL[r] ?? 'special';
 
 /** Rounds an effect has left at the given round counter (null = indefinite, floor 0). */
 export const remainingRounds = (e: EffectInstance, round: number): number | null =>

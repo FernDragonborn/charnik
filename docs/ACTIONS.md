@@ -65,10 +65,12 @@ still landing on an existing system per the table above:
 | `note:<text>` | a log/toast line |
 
 > **`rest` constraint.** A consumable that GRANTS a rest (a potion = a `grant_resource` with charges +
-> a `resource_option` whose `action` is `rest:short|long`) MUST use recharge **`other`** — otherwise the
-> long rest it triggers recharges the potion's own charge and refunds the use (infinite potions).
-> Delivery beyond resource-options (a spell casting an action token, a dedicated item-use path) is a
-> follow-up; the `rest` verb itself is edition-agnostic and reachable today via the option path.
+> a `resource_option` whose `action` is `rest:short|long`) uses recharge **`consumable`** — a one-use /
+> N-charge item whose charges are consumed and never refill on a rest (so the long rest it triggers
+> can't refund its own charge → no infinite potions). `consumable` self-documents "one-use" where bare
+> `other` (manual/special recharge) didn't. Delivery beyond resource-options (a spell casting an action
+> token, a dedicated item-use path) is a follow-up; the `rest` verb itself is edition-agnostic and
+> reachable today via the option path.
 
 Core rules (owned HERE, restated for authors in PLUGINS.md):
 

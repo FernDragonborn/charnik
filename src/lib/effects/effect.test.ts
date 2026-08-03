@@ -106,6 +106,13 @@ describe('parseToken (bounded vocabulary)', () => {
 		});
 		expect(parseToken('grant_resource:ki').resource).toBeUndefined();
 	});
+	it('accepts the `consumable` recharge (a one-use / N-charge potion pool)', () => {
+		expect(parseToken('grant_resource:angelic_slumber:1:consumable').resource).toEqual({
+			id: 'angelic_slumber',
+			max: 1,
+			recharge: 'consumable'
+		});
+	});
 	it('flags unknown / malformed tokens instead of dropping them', () => {
 		expect(parseToken('teleport:far').kind).toBe('unknown');
 		expect(parseToken('garbage').kind).toBe('unknown');

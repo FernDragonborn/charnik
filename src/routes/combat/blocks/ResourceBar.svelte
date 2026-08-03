@@ -4,7 +4,7 @@
 	// resource definitions come from the derived sheet, passed in as a prop.
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../state.svelte';
-	import { range } from '$lib/combat/helpers';
+	import { range, rechargeLabel } from '$lib/combat/helpers';
 
 	let { s }: { s: CharacterSheet } = $props();
 
@@ -22,7 +22,7 @@
 		<button
 			type="button"
 			class="resource"
-			title="Use one {r.name} · recharges on {r.recharge} rest ({r.source})"
+			title="Use one {r.name} · {rechargeLabel(r.recharge)} ({r.source})"
 			onclick={() => combat.resources.useResource(r.id, r.max)}
 		>
 			{r.name}

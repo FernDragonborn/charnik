@@ -462,7 +462,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ResourceView` — A grant_resource effect, resolved for the Resources section (name + charges + recharge).
 - `function parseResourceEffect` — If an effect grants a fully-specified resource pool, resolve it — else null.
 - `function groupEffects` — Split active effects into the three panel sections.
-- `const rechargeLabel` — Recharge id → the label shown on a resource's recharge chip.
+- `const rechargeLabel`
 - `const remainingRounds` — Rounds an effect has left at the given round counter (null = indefinite, floor 0).
 - `const isEffectExpired` — A round-timed effect is expired once the counter has advanced past its duration.
 - `function durationToRounds` — Spell duration text → rounds (1 round = 6 s): "1 minute" → 10, "Concentration, up to 1 hour" → * 600, "2 rounds" → 2.

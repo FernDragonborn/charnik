@@ -227,7 +227,9 @@ const parseGrantResource: KindParser = (rest, raw, kind) => {
 	// literal OR an L2 expression (`class_level.monk`). The recharge keyword anchors the end, so
 	// the middle (max) can hold expression characters (`*`, `(`, `,`) unambiguously.
 	// Id is snake-only (E3): a kebab pool id would be unreadable from `resource.<id>` expressions.
-	const m = /^([a-z0-9][a-z0-9_]*)(?::(.+):(short_one|short|long|other))?$/i.exec(rest.trim());
+	const m = /^([a-z0-9][a-z0-9_]*)(?::(.+):(short_one|short|long|consumable|other))?$/i.exec(
+		rest.trim()
+	);
 	if (!m?.[1]) return { kind: 'unknown', raw };
 	const id = m[1].toLowerCase();
 	const maxSlot = m[2]?.trim();
