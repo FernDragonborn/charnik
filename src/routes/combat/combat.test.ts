@@ -211,6 +211,10 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			`flat_heal,5.5e,${S},Flat Heal,1,evocation,action,Touch,Instantaneous,V S,false,auto,,70,heal:per_slot(10),`,
 			// a COUNT spell (Scorching Ray-style): its ray count scales as an absolute total (items 1/8)
 			`scorch,5.5e,${S},Scorch,2,evocation,action,120 ft,Instantaneous,V S,false,attack,,2d6 fire,count:slot+1,`,
+			// a COUNT cantrip (Eldritch Blast): scales BEAMS not die size → must not die-multiply (item 9)
+			`blast,5.5e,${S},Blast,0,evocation,action,120 ft,Instantaneous,V S,false,attack,,1d10 force,"count:step(level, 1->1, 5->2, 11->3, 17->4)",`,
+			// a DIE-scaling cantrip (Fire Bolt): its die DOES multiply at 5/11/17 (unchanged, item 9)
+			`fbolt,5.5e,${S},FBolt,0,evocation,action,120 ft,Instantaneous,V S,false,attack,,1d10 fire,,`,
 			// an hp_max spell (Aid): base +5 hp_max token, upcast adds +5 per slot as ANOTHER fold token (item 3)
 			`aid,5.5e,${S},Aid,2,abjuration,action,30 ft,8 hours,V S M,false,none,,,hp_max:per_slot(5),flat_bonus:hp_max+5`,
 			// a temp-HP spell (False Life): rolls its dice + upcast delta, NEVER adds the spellcasting mod (item 3)
@@ -335,6 +339,20 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		const r = spellRow(graph, `spell:${S}:scorch`, 'on')!;
 		expect(combat.castPreview(r, 2)).toContain('3'); // count:slot+1 at slot 2 = 3
 		expect(combat.castPreview(r, 3)).toContain('4'); // …4 at slot 3
+	});
+
+	it('a count cantrip (EB) does NOT die-multiply; a damage cantrip (Fire Bolt) still does (item 9)', () => {
+		combat.cast(spellRow(graph, `spell:${S}:fbolt`, 'on', 5)!, noModifiers); // char level 5
+		expect(partDiceOf('fire', 10)).toBe(2); // die-scaling: 1d10 → 2d10 at level 5
+		combat.cast(spellRow(graph, `spell:${S}:blast`, 'on', 5)!, noModifiers);
+		expect(partDiceOf('force', 10)).toBe(1); // count-scaling: stays 1d10 (2nd beam = separate roll)
+	});
+
+	it('the upcast roll label names the slot AND what it added (B8 provenance, item 4)', () => {
+		character.play.spellSlotsSpent = { '1': 4, '2': 3 }; // spill to slot 3
+		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
+		expect(combat.tray.log[0]?.label).toContain('slot 3');
+		expect(combat.tray.log[0]?.label).toContain('+2d8'); // the delta is named, not just the slot
 	});
 
 	it('the picker casts at the chosen slot via castAtSlot (item 1)', () => {

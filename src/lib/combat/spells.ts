@@ -265,10 +265,15 @@ function spResLabel(res: string, saveAbility: string): string {
 }
 
 /** Casting dice for a spell: the STRUCTURED `damage` column (healing spells now carry their base dice
- *  there too — never scraped from prose); cantrips scale by `charLevel` (the 5/11/17 steps — A15). */
+ *  there too — never scraped from prose). A DAMAGE cantrip scales its dice by `charLevel` (the 5/11/17
+ *  steps — A15: Fire Bolt 1d10 → 2d10 at level 5). A COUNT cantrip (Eldritch Blast: scales BEAMS, not
+ *  die size — `count:` upcast) must NOT die-multiply — its extra beams are separate rolls (item 9); its
+ *  dice stay at the base 1d10 and the beam count surfaces as a chip + a cast reminder (the per-beam
+ *  roller is deferred). */
 function castingDice(d: RowData<'spell'>, charLevel: number): string {
 	const dmg = d.damage ?? '';
-	const scale = d.level === 0 ? cantripDieMultiplier(charLevel) : 1;
+	const countScaled = /(^|;)\s*count\b/.test(d.upcast ?? ''); // beams/instances, not bigger dice
+	const scale = d.level === 0 && !countScaled ? cantripDieMultiplier(charLevel) : 1;
 	return scale > 1
 		? dmg.replace(/(\d+)d(\d+)/gi, (_, n: string, s: string) => `${Number(n) * scale}d${s}`)
 		: dmg;

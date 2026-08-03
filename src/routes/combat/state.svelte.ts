@@ -896,10 +896,13 @@ class CombatVM {
 	private rollSpellCast(r: SpellRow, e: Event, ritual: boolean, slotLevel: number): void {
 		const alt = wantsTray(e);
 		const caster = casterForSpell(this.sheet, r.ref) ?? this.sheet?.spellcasting.classes[0];
-		// the upcast contribution + its provenance tag (B8, v1: a "(slot N)" label when actually upcast)
+		// the upcast contribution + its provenance tag (B8): when actually upcast, the suffix names the
+		// slot AND what it added ("(slot 5 · +2d6)") — reusing castPreview — so the roll log / toast
+		// explains the boosted total instead of a bare number.
+		const preview = slotLevel > r.level ? this.castPreview(r, slotLevel) : '';
 		const up: UpcastCast = {
 			deltas: this.upcastDamageParts(r, slotLevel),
-			suffix: slotLevel > r.level ? ` (slot ${slotLevel})` : ''
+			suffix: slotLevel > r.level ? ` (slot ${slotLevel}${preview ? ` · ${preview}` : ''})` : ''
 		};
 		if (r.resolution === 'hit' && caster) {
 			this.rollSpellAttack(r, e, caster, up);
@@ -1015,7 +1018,21 @@ class CombatVM {
 		}
 		this.applySpellEffect(r, slotLevel);
 		this.rollSpellCast(r, e, ritual, slotLevel);
+		this.remindCountScaling(r, slotLevel);
 	};
+
+	/** A cantrip that scales by COUNT (Eldritch Blast's beams) fires N separate rolls at higher levels.
+	 *  The per-instance roller is deferred (D14), so casting rolls ONE instance and surfaces the count as
+	 *  a reminder to roll the rest — never a silently-wrong single big die (item 9). Leveled count spells
+	 *  surface their total through the slot-picker preview instead, so this is cantrip-only. */
+	private remindCountScaling(r: SpellRow, slotLevel: number): void {
+		if (r.level !== 0) return;
+		for (const res of this.evalUpcastAt(r, slotLevel)) {
+			if ('error' in res || res.kind !== 'count') continue;
+			if (res.flat > 1)
+				toast(`${r.name} — ${res.flat}×: make ${res.flat} separate rolls at this level`);
+		}
+	}
 
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
 	togglePrepared = (r: SpellRow) => {
