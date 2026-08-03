@@ -396,6 +396,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `re-export SYSTEMS`
 - `re-export ABILITIES`
+- `const SHORT_REST_MODES` — Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the * ½-max-HP video-ga…
+- `type ShortRestMode`
 - `const characterSchema`
 - `type Character`
 - `type CharacterPlay`
@@ -887,6 +889,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function armoredAC` — Armored AC = armor base + capped DEX.
 - `const DIE_MAX`
 - `function hitDiceRecoveredOnLongRest` — Hit Dice recovered at the end of a LONG rest — an SRD-verified EDITION divergence: 5e (SRD 5.1) * regains half the to…
+- `function shortRestHalfHeal` — HP restored by a `half` short rest (the ½-max-HP house/video-game variant): half the maximum, * rounded down.
 - `function maxHpForClass` — Max HP for one class (SRD fixed values).
 - `function fullCasterSlots` — Full-caster spell slots per spell level (index 0 = 1st) at a given caster level.
 - `function carryingCapacity` — Carrying capacity in pounds = STR × 15.
@@ -1063,4 +1066,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 41 components · 585 exports across 91 modules · 31 duplicate suspects._
+_45 tokens · 63 global classes · 41 components · 588 exports across 91 modules · 31 duplicate suspects._

@@ -5,7 +5,7 @@
  */
 import type { SystemId } from '$lib/stores/app.svelte';
 import type { Ability } from '$lib/rules/core';
-import type { Character } from '$lib/character/schema';
+import type { Character, ShortRestMode } from '$lib/character/schema';
 import { baseAbilities, type StatMethod, type BoostShape } from '$lib/build/rules';
 
 /** ASI allocation shape: +2 to one ability ('2') or +1 to two ('1-1'). */
@@ -35,6 +35,8 @@ export interface DraftState {
 	system: SystemId;
 	/** Strict (rules-enforced) vs Free (lenient) authoring. */
 	strict: boolean;
+	/** Short-rest healing model (rules variant): `dice` (RAW) or `half` (½ max HP). */
+	shortRestMode: ShortRestMode;
 	speciesId: string | null;
 	speciesOptionId: string | null;
 	/** Abilities the user picked for a 5e species floating ASI. */
@@ -68,6 +70,7 @@ export function blankDraft(): DraftState {
 		// newest ruleset by default; the build page's 5e/5.5e switcher changes it before saving
 		system: '5.5e',
 		strict: true,
+		shortRestMode: 'dice',
 		speciesId: null,
 		speciesOptionId: null,
 		speciesBoostPicks: [],
@@ -99,6 +102,7 @@ export function draftFromCharacter(char: Character): DraftState {
 		name: char.build.name,
 		system: char.system,
 		strict: char.ui.strict,
+		shortRestMode: char.ui.shortRestMode,
 		speciesId: char.build.species ?? null,
 		speciesOptionId: char.build.speciesOption ?? null,
 		backgroundId: char.build.background ?? null,

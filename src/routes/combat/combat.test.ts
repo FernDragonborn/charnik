@@ -964,6 +964,42 @@ describe('CombatVM · Hit Dice', () => {
 		expect(combat.resources.hitDiceSpent('d8')).toBe(3); // no overspend
 	});
 
+	it('half mode: a short rest heals ½ max HP + recharges, no Hit Dice spent', async () => {
+		const graph = await graphOf();
+		const character = charAt('5.5e', 3); // max 30, current 5, d8×3
+		character.ui.shortRestMode = 'half';
+		combat.graph = graph;
+		combat.character = character;
+		combat.startShortRest(noModifiers);
+		expect(character.play.hp.current).toBe(20); // 5 + floor(30/2) = 15
+		expect(combat.resources.hitDiceSpent('d8')).toBe(0); // no dice consumed in half mode
+	});
+
+	it('dice mode: committing the picker spends the chosen Hit Dice + heals', async () => {
+		const graph = await graphOf();
+		const character = charAt('5.5e', 3);
+		character.ui.shortRestMode = 'dice';
+		combat.graph = graph;
+		combat.character = character;
+		combat.hdPick = { d8: 2 };
+		combat.commitShortRest();
+		expect(combat.resources.hitDiceSpent('d8')).toBe(2); // both chosen dice spent
+		expect(character.play.hp.current).toBeGreaterThan(5); // healed from the rolls
+		expect(combat.hdPick).toEqual({}); // selection reset after the rest
+	});
+
+	it('hdPickInc clamps the selection to the pool remaining', async () => {
+		const graph = await graphOf();
+		const character = charAt('5.5e', 3); // 3 dice
+		combat.graph = graph;
+		combat.character = character;
+		combat.hdPick = {};
+		combat.hdPickInc('d8', 5); // try to over-pick
+		expect(combat.hdPick.d8).toBe(3); // capped at left = 3
+		combat.hdPickInc('d8', -10);
+		expect(combat.hdPick.d8).toBe(0); // floored at 0
+	});
+
 	it('long rest regains ALL Hit Dice in 5.5e, HALF (min 1) in 5e', async () => {
 		const graph = await graphOf();
 		// 2024: all spent dice come back

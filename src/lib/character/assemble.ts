@@ -5,7 +5,13 @@
  * live preview never crashes on a half-finished build. Pure + unit-testable — no Svelte, no graph.
  */
 import { CHARACTER_SCHEMA_VERSION } from '../schema/version';
-import { characterSchema, type Character, type CharacterPlay, type CharacterUi } from './schema';
+import {
+	characterSchema,
+	type Character,
+	type CharacterPlay,
+	type CharacterUi,
+	type ShortRestMode
+} from './schema';
 import type { SystemId } from '../stores/app.svelte';
 
 /** The character-envelope fields that wrap an assembled build. */
@@ -15,6 +21,8 @@ export interface AssembleWrapper {
 	system: SystemId;
 	/** Free/Strict authoring mode — folded into `ui.strict`. */
 	strict: boolean;
+	/** Short-rest healing model — folded into `ui.shortRestMode`. */
+	shortRestMode: ShortRestMode;
 	/** Existing play-state to preserve when editing (null = a fresh, blank play-state). */
 	play: CharacterPlay | null;
 	/** Existing ui prefs to preserve when editing (null = none). */
@@ -37,8 +45,8 @@ export function assembleCharacter(build: BuildInput, w: AssembleWrapper): Charac
 		build,
 		// editing keeps the original play-state; creating starts blank
 		play: w.play ?? { hp: { current: 0, temp: 0 } },
-		// persist the Free/Strict choice per character (keep any other ui prefs like panelColumns)
-		ui: { ...(w.ui ?? {}), strict: w.strict }
+		// persist the Free/Strict + short-rest-model choices per character (keep other ui prefs)
+		ui: { ...(w.ui ?? {}), strict: w.strict, shortRestMode: w.shortRestMode }
 	});
 	if (res.success) return res.data;
 	// last-resort: a bare valid character so the preview never crashes

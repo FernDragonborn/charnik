@@ -685,6 +685,7 @@ class BuildVM {
 			id: this.edit?.id ?? (slugify(this.draft.name) || 'hero'),
 			system: this.draft.system,
 			strict: this.draft.strict,
+			shortRestMode: this.draft.shortRestMode,
 			play: this.edit?.play ?? null,
 			ui: this.edit?.ui ?? null
 		});

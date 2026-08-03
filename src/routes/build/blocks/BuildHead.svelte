@@ -20,6 +20,19 @@
 		<button class:on={b.draft.strict} onclick={() => (b.draft.strict = true)} title="enforce rules">Strict</button>
 		<button class:free={true} class:on={!b.draft.strict} onclick={() => (b.draft.strict = false)} title="change anything">Free</button>
 	</div>
+	<div class="segment-group" role="group" aria-label="Short rest healing">
+		<!-- per-character rules variant: Dice = RAW (spend Hit Dice), Half = ½ max HP (BG3/house style) -->
+		<button
+			class:on={b.draft.shortRestMode === 'dice'}
+			onclick={() => (b.draft.shortRestMode = 'dice')}
+			title="Short rest: spend Hit Dice to heal (RAW)">☾ Dice</button
+		>
+		<button
+			class:on={b.draft.shortRestMode === 'half'}
+			onclick={() => (b.draft.shortRestMode = 'half')}
+			title="Short rest: heal half your max HP (house/video-game style)">☾ ½ HP</button
+		>
+	</div>
 </div>
 
 <style>

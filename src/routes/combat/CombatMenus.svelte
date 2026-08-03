@@ -248,6 +248,45 @@
 				{/each}
 				<p class="note" style="padding: 6px 13px 2px">Upcasting spends the higher-level slot.</p>
 			{/if}
+		{:else if overlay.kind === 'restshort'}
+			<div class="popup-h eyebrow" style="border: 0">Short rest · spend Hit Dice</div>
+			{#if combat.hitDice.length}
+				{#each combat.hitDice as h (h.die)}
+					<div class="hd-row">
+						<span class="hd-name">{h.die} <small>{h.left}/{h.max}</small></span>
+						<div class="hd-steppers">
+							<button
+								class="pill-btn"
+								disabled={(combat.hdPick[h.die] ?? 0) <= 0}
+								onclick={() => combat.hdPickInc(h.die, -1)}>−</button
+							>
+							<span class="hd-pick">{combat.hdPick[h.die] ?? 0}</span>
+							<button
+								class="pill-btn"
+								disabled={(combat.hdPick[h.die] ?? 0) >= h.left}
+								onclick={() => combat.hdPickInc(h.die, 1)}>＋</button
+							>
+						</div>
+					</div>
+				{/each}
+				<p class="note" style="padding: 4px 13px">
+					Each die heals its roll <b>+ CON</b> (min 1). Rolls show in the log.
+				</p>
+				<div class="field" style="padding: 0 13px 4px">
+					<button class="submit-btn" onclick={() => combat.commitShortRest()}>
+						Take short rest{combat.hdPickCount ? ` · spend ${combat.hdPickCount}` : ''}
+					</button>
+				</div>
+			{:else}
+				<p class="note" style="padding: 8px 13px">
+					No Hit Dice — a short rest still refreshes pools.
+				</p>
+				<div class="field" style="padding: 0 13px 4px">
+					<button class="submit-btn" onclick={() => combat.commitShortRest()}
+						>Take short rest</button
+					>
+				</div>
+			{/if}
 		{:else if overlay.kind === 'manage'}
 			<div class="popup-h eyebrow">
 				Spellbook<button class="icon-button" onclick={() => (combat.overlay = null)}>✕</button>
@@ -473,6 +512,37 @@
 		color: var(--color-text);
 		font: inherit;
 		padding: 8px 6px;
+	}
+	/* --- short-rest Hit-Dice picker --- */
+	.hd-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 9px;
+		padding: 5px 13px;
+	}
+	.hd-name {
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: var(--font-size-sm);
+	}
+	.hd-name small {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		color: var(--color-text-muted);
+		margin-left: 4px;
+	}
+	.hd-steppers {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+	.hd-pick {
+		min-width: 18px;
+		text-align: center;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-sm);
+		color: var(--color-good);
 	}
 	/* --- pin skills (two-column) --- */
 	.pinwrap {

@@ -11,6 +11,7 @@ describe('assembleCharacter', () => {
 			id: 'valen',
 			system: '5.5e',
 			strict: true,
+			shortRestMode: 'dice',
 			play: null,
 			ui: null
 		});
@@ -29,6 +30,7 @@ describe('assembleCharacter', () => {
 			id: 'valen',
 			system: '5.5e',
 			strict: false,
+			shortRestMode: 'dice',
 			play,
 			ui
 		});
@@ -43,6 +45,7 @@ describe('assembleCharacter', () => {
 			id: 'broken',
 			system: '5e',
 			strict: true,
+			shortRestMode: 'dice',
 			play: null,
 			ui: null
 		});

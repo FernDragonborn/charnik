@@ -166,6 +166,11 @@ const playSchema = z.object({
 
 // --- ui / per-character view preferences --------------------------------------
 
+/** Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the
+ *  ½-max-HP video-game/house variant. An OPEN enum — a new model is a member, not a boolean. */
+export const SHORT_REST_MODES = ['dice', 'half'] as const;
+export type ShortRestMode = (typeof SHORT_REST_MODES)[number];
+
 /** Per-character sheet preferences (not build, not play — resetting play keeps these). */
 const uiSchema = z
 	.object({
@@ -182,9 +187,13 @@ const uiSchema = z
 		spellsPinned: z.array(z.string()).default([]),
 		/** Which skills show in the passive-senses row (Pin skills). Absent → the default trio
 		 *  (Perception / Investigation / Insight). Stored per character, not a global. */
-		passiveSkills: z.array(z.string()).optional()
+		passiveSkills: z.array(z.string()).optional(),
+		/** Short-rest healing model (a per-character rules variant). `dice` = RAW (spend Hit Dice via
+		 *  the short-rest popover); `half` = the popular non-book variant (heal ½ max HP, no dice — the
+		 *  Baldur's Gate 3 model). Default `dice` (ship SRD-faithful); old saves without it migrate there. */
+		shortRestMode: z.enum(SHORT_REST_MODES).default('dice')
 	})
-	.default({ strict: true, spellsHidden: [], spellsPinned: [] });
+	.default({ strict: true, spellsHidden: [], spellsPinned: [], shortRestMode: 'dice' });
 
 // --- character ----------------------------------------------------------------
 

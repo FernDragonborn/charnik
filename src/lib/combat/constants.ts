@@ -19,6 +19,7 @@ export type MenuKind =
 	| 'showhide'
 	| 'condition'
 	| 'upcast'
+	| 'restshort'
 	| 'manage';
 
 export const PANEL_TITLE: Record<string, string> = {

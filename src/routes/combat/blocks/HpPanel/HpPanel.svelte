@@ -60,18 +60,16 @@
 			{/each}
 		</select>
 	{/if}
-	{#if combat.hitDice.length}
-		<!-- Hit Dice: spend one on a short rest to heal (roll the die + CON). The chip spends one; pips
-		     show remaining. Regained on a long rest (2014 half / 2024 all). -->
+	{#if combat.shortRestMode === 'dice' && combat.hitDice.length}
+		<!-- Hit Dice: a READ-ONLY reserve display (pips show remaining). Spending happens in the "☾ Short"
+		     rest popover, not here. Regained on a long rest (2014 half / 2024 all). In the `half` short-rest
+		     model Hit Dice aren't a short-rest resource, so this block hides entirely. -->
 		<div class="hit-dice">
 			<span class="hd-label">Hit dice</span>
 			{#each combat.hitDice as h (h.die)}
-				<button
-					type="button"
+				<span
 					class="hd-pool"
-					disabled={h.left <= 0}
-					title="Spend one {h.die} Hit Die — roll {h.die} + CON to heal (short rest)"
-					onclick={() => combat.spendHitDie(h.die)}
+					title="{h.die}: {h.left}/{h.max} left — spend on a short rest (☾ Short)"
 				>
 					{h.die}
 					{#if h.max <= 20}
@@ -82,7 +80,7 @@
 						</span>
 					{/if}
 					<small>{h.left}/{h.max}</small>
-				</button>
+				</span>
 			{/each}
 		</div>
 	{/if}
@@ -290,18 +288,11 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-full);
 		padding: 5px 11px;
-		cursor: pointer;
+		cursor: default; /* read-only reserve display — spending is in the short-rest popover */
 	}
 	.hd-pool small {
 		font-family: var(--font-mono);
 		color: var(--color-text-muted);
-	}
-	.hd-pool:hover:not(:disabled) {
-		filter: brightness(1.14);
-	}
-	.hd-pool:disabled {
-		opacity: 0.5;
-		cursor: default;
 	}
 	.hd-pips {
 		display: inline-flex;

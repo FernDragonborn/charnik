@@ -172,6 +172,12 @@ export function hitDiceRecoveredOnLongRest(system: System, total: number): numbe
 	return system === '5.5e' ? total : Math.max(1, Math.floor(total / 2));
 }
 
+/** HP restored by a `half` short rest (the ½-max-HP house/video-game variant): half the maximum,
+ *  rounded down. Not RAW — a per-character opt-in (`ui.shortRestMode === 'half'`). Pure. */
+export function shortRestHalfHeal(maxHp: number): number {
+	return Math.floor(Math.max(0, maxHp) / 2);
+}
+
 /** Max HP for one class (SRD fixed values). The **max hit die** is granted ONCE per character —
  *  for the class taken at CHARACTER level 1; every other level (including the 1st level of a class
  *  multiclassed INTO later) uses the die average rounded up. So only the caller that owns the

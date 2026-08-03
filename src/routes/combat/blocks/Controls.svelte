@@ -38,8 +38,12 @@
 		>✦ Inspiration <span class="toggle-state">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
 	>
 	<span class="spacer"></span>
-	<button class="toggle rest" onclick={() => combat.resources.rest('short')} title="Short rest"
-		>☾ Short</button
+	<button
+		class="toggle rest"
+		onclick={(e) => combat.startShortRest(e)}
+		title={combat.shortRestMode === 'half'
+			? 'Short rest — heal half your max HP'
+			: 'Short rest — spend Hit Dice to heal'}>☾ Short</button
 	>
 	<button class="toggle rest" onclick={() => combat.resources.rest('long')} title="Long rest"
 		>🌙 Long</button

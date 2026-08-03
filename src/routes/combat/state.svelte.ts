@@ -19,7 +19,8 @@ import {
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { rollPool, rollFormula } from '$lib/rules/dice';
-import type { Character } from '$lib/character/schema';
+import { shortRestHalfHeal } from '$lib/rules/core';
+import type { Character, ShortRestMode } from '$lib/character/schema';
 import {
 	titleCase,
 	wantsTray,
@@ -318,6 +319,51 @@ class CombatVM {
 		c.play.hp.current = Math.min(this.hpMax, c.play.hp.current + Math.max(1, r.total)); // min 1 HP/die
 		c.play.hitDiceSpent = { ...c.play.hitDiceSpent, [die]: this.resources.hitDiceSpent(die) + 1 };
 		this.tray.pushRoll(`Hit Die ${die}`, r);
+	};
+
+	/** The character's short-rest healing model (per-character rules variant; `dice` = RAW default). */
+	get shortRestMode(): ShortRestMode {
+		return this.character?.ui.shortRestMode ?? 'dice';
+	}
+	/** Hit dice chosen to spend in the short-rest popover (die size → count). Reset when it opens. */
+	hdPick = $state<Record<string, number>>({});
+	/** Total hit dice currently selected in the popover. */
+	hdPickCount = $derived(Object.values(this.hdPick).reduce((n, v) => n + v, 0));
+	/** Bump the chosen count of one die size, clamped to [0, the pool's remaining]. */
+	hdPickInc = (die: string, delta: number) => {
+		const left = this.hitDice.find((h) => h.die === die)?.left ?? 0;
+		this.hdPick = {
+			...this.hdPick,
+			[die]: Math.max(0, Math.min(left, (this.hdPick[die] ?? 0) + delta))
+		};
+	};
+	/** Press "☾ Short": the `half` model heals ½ max HP right away; the `dice` model opens the picker
+	 *  popover (choose how many Hit Dice to spend). Both run the shared short-rest recharge (pools /
+	 *  pact slots / effect expiry). */
+	startShortRest = (e: Event) => {
+		if (this.shortRestMode === 'half') return this.doHalfShortRest();
+		this.hdPick = {}; // a fresh selection each time the picker opens
+		this.openMenu('restshort', e);
+	};
+	/** The `half` short rest (BG3 / house variant): recharge + heal ½ max HP, no Hit Dice spent. */
+	private doHalfShortRest() {
+		const p = this.character?.play;
+		if (!p) return;
+		this.resources.rest('short');
+		const heal = shortRestHalfHeal(this.hpMax);
+		p.hp.current = Math.min(this.hpMax, p.hp.current + heal);
+		this.tray.logMarker(`Short rest — +${heal} HP (½ max)`);
+		toast(`Short rest — healed ${heal} HP`);
+	}
+	/** Commit the `dice` short rest: recharge, then spend each chosen Hit Die (roll + CON, min 1 HP —
+	 *  each shows its own roll in the log), and close the picker. */
+	commitShortRest = () => {
+		this.resources.rest('short');
+		for (const [die, count] of Object.entries(this.hdPick))
+			for (let i = 0; i < count; i++) this.spendHitDie(die);
+		this.hdPick = {};
+		this.overlay = null;
+		toast('Short rest taken');
 	};
 
 	setTempHp = () => {
