@@ -19,8 +19,8 @@
 - Дані: колонка `upcast` в ОБИДВІ spells.csv + 9 курованих спелів (both editions), звірено з
   прозою; healers дістали `damage`-колонку. Restamp'нуто.
 
-**Лишилось у slice 1:** слот-ПІКЕР (D13, зараз лише auto-upcast найнижчого) — headline-UX,
-UI-важкий (енумерація валідних слотів + вибір).
+**Лишилось у slice 1:** слот-ПІКЕР **UI** (чиста логіка ГОТОВА: `castableSlotLevels`/`castableSlots(r)`
+дають валідні рівні, `cast(r,e,{slot})` приймає вибір, тести є — див. §«Незавершене» п.1).
 
 **Slice 3 duration-апкаст + концентрація-carrier ЗРОБЛЕНО 2026-08-03** ([[CONCENTRATION-PLAN.md]]
 Model C): `applySpellEffect` завжди створює carrier для conc-спелів (токенлес контроль дістав таймер);
@@ -43,11 +43,58 @@ Hunter's Mark, Geas, Dominate — кожен окремий кейс, части
 prayer_of_healing/mass_*) тепер несуть базу в `damage`-колонці + `heal:per_slot(...)`; `castingDice` читає
 ЛИШЕ структуровану колонку, нуль скрейпу прози.
 
-**Відкладені хвости (свідомо):** повний backfill решти лінійних damage-спелів; B8 багатший трейс
-(зараз лише лейбл-суфікс); castCtx `spellcasting_mod` = primary caster, не spell-каст-клас (SRD не читає).
+## Незавершене — ЧОМУ частково + ЩО треба доробити
+
+Кожен пункт: чому лишився + конкретні кроки на доробку.
+
+1. **Слот-пікер UI.** ЧОМУ: логіка ГОТОВА (`castableSlots(r)`, `cast(r,e,{slot})`, тести), але немає
+   віджета + форма — UX-рішення (дропдаун/степер/лонг-прес). ТРЕБА: контрол у `SpellsPanel.svelte`, що
+   показує `combat.castableSlots(r)` і кличе `cast(r,e,{slot})`; verify в браузері (shot.mjs).
+
+2. **Мультитип-дамаг** (ice_knife, base-cold Ice Storm; N4/N9). ЧОМУ: дані лягли б в одну `damage`-колонку
+   через `;` + `damage:cold:per_slot(...)`, АЛЕ `SpellRow` однотиповий — `damagePool=parseDicePool` сплющує
+   всі кубики в один пул, `damageType`=перша частина, а `upcastDamageDelta` зливає дельти в безтиповий пул.
+   ТРЕБА: `SpellRow.damageParts: DamagePart[]` (як `Attack.damageParts`); `spellRow`→`parseDamageParts`
+   замість `parseDicePool`; `upcastDamageDelta` роутить typed sub-slot у ВІДПОВІДНУ частину; тоді ice_knife.
+
+3. **hp_max/temp_hp-апкаст** (B3, «найглибша діра» §5). ЧОМУ: нуль shipped-даних + невизначений дизайн
+   (апкаст скейлить окремий kind ЧИ effects-колонку токена?). ТРЕБА: рішення; тоді в `applySpellEffect` при
+   hp_max/temp_hp-дельті ДОДАТИ дельта-токен (`flat_bonus:hp_max+N`) у carrier — hp_max уже fold-ціль, тож
+   сумується чисто (без string-хірургії над токеном); тест на фікстурі (Aid). temp_hp: спершу перевірити,
+   чи це fold-ціль (мabуть ні → set-path).
+
+4. **B8 багатший трейс.** ЧОМУ: зараз лише суфікс «(slot N)» у лейблі, не рядок «8d6 база +2d6 @slot5».
+   ТРЕБА: cast-шар синтезує labeled-внесок `{source:"Upcast (slot N)", op:add, amount}`; roll-log/tray
+   рендерить окремий рядок (як damage-parts). Трохи чіпає roll-log UI.
+
+5. **castCtx `spellcasting_mod` scoping.** ЧОМУ: зараз = primary caster, не клас, яким каститься спел
+   (SRD-формули цього не читають → латентно). ТРЕБА: у cast-шарі загорнути castCtx через
+   `withSpellcastingMod(base, mod)` за `casterForSpell(sheet, r.ref)` перед eval.
+
+6. **Флет-only `heal`** (70 + 10/слот). ЧОМУ: база — флет без кубиків; `parseDamageParts("70")` дає mod=0
+   (regex вимагає знак) → 70 губиться. ТРЕБА: N2-стиль флет-хіл — база-флет на SpellRow (парс «NN» без
+   знаку) + heal-флет-дельта у `mod`; тоді заповнити heal.
+
+7. **Дискретні step()-спели** (~19). ЧОМУ: не лінійні (порогові таблиці), частина — не damage. ТРЕБА
+   per-спел: Hunter's Mark `damage:step(...)`+`duration:step(...)`; Geas/Dominate `duration:step`; Magic
+   Weapon — потребує **attack-kind** в апкасті (наразі нема; `attack:step(...)`+`damage:step(...)`).
+
+8. **count/area-чіпи** (slice 2 показ). ЧОМУ: `evalUpcast` рахує count/area (absolute), але cast-шар їх
+   ІГНОРУЄ (фолдить лише damage/heal); показ — UI. ТРЕБА: чіп у `SpellsPanel` «N променів / area N ft (M m)»
+   з `evalUpcast` count/area + метрика-в-дужках (H10); реальний N-кидок — count-роллер (slice 5, D14).
+
+9. **Кантрип-уніфікація** (slice 4). ЧОМУ: `cantripDieMultiplier` (regex 5/11/17) — окрема система від
+   апкасту. ТРЕБА: кантрип-скейл як формула на `char_level`, ретайр `cantripDieMultiplier`; EB = `count`
+   (фіксить die-multiply баг), потребує count-роллер.
+
+10. **Concentration-хвости** ([[CONCENTRATION-PLAN.md]] §4/§7). (a) порожній carrier рендериться як пустий
+    баф, а не маркер «Концентрація: X» — UI-доробка в `EffectsPanel`. (b) incapacitated/0-hp → кінець
+    концентрації (§7): реактивний `$effect` на `economy.incapacitated`/hp≤0 → `clearConcentration`; verify
+    в браузері (реактивні ефекти bug-prone). (c) CON-сейв від урону — окремий сиблінг (§6).
 
 Резюме-вказівник для повернення: код у `effects/upcast.ts` + `routes/combat/state.svelte.ts`
-(`upcastDamageDelta`); почати з пікера АБО slice 2.
+(`upcastDamageDelta`/`carrierRounds`/`applySpellEffect`); почати з пікера (п.1, найдешевше) АБО
+мультитип-дамагу (п.2, розблоковує ice_knife + чесний показ типів).
 
 ## 0. Що є в коді зараз (база, від якої відштовхуємось)
 
