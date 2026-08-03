@@ -20,8 +20,12 @@
   прозою; healers дістали `damage`-колонку. Restamp'нуто.
 
 **Лишилось у slice 1:** слот-ПІКЕР (D13, зараз лише auto-upcast найнижчого) — headline-UX,
-UI-важкий (енумерація валідних слотів + вибір). Далі §319 slice 2+ (count/area/duration чіпи,
-hp_max/temp_hp, концентрація, кантрип-уніфікація, roller-цикл).
+UI-важкий (енумерація валідних слотів + вибір).
+
+**Slice 3 duration-апкаст + концентрація-carrier ЗРОБЛЕНО 2026-08-03** ([[CONCENTRATION-PLAN.md]]
+Model C): `applySpellEffect` завжди створює carrier для conc-спелів (токенлес контроль дістав таймер);
+`carrierRounds` бере duration-kind апкаст (абсолютні раунди, inf→null) або базу. Далі §319 slice 2
+(count/area чіпи=UI, hp_max/temp_hp=глибша діра), slice 4 (кантрип), slice 5 (roller-цикл).
 
 **healDice ВИДАЛЕНО** (юзер: «не має бути парсингу тексту спелу»): усі 5 auto-healers (cure/healing_word/
 prayer_of_healing/mass_*) тепер несуть базу в `damage`-колонці + `heal:per_slot(...)`; `castingDice` читає

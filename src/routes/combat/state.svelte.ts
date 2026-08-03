@@ -17,7 +17,7 @@ import {
 	type ResourceOption
 } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
-import { tokensOf } from '$lib/content/loader';
+import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { rollPool, rollFormula } from '$lib/rules/dice';
 import type { Character } from '$lib/character/schema';
 import {
@@ -651,13 +651,18 @@ class CombatVM {
 	/** Casting applies the spell's OWN effect tokens (EFX-2): they become a runtime effect on self,
 	 *  expiring per the spell's duration text; linked via `source: r.ref` so dropping/replacing
 	 *  concentration (or re-casting = refresh) removes/replaces it. No tokens → no-op. */
-	private applySpellEffect(r: SpellRow) {
+	private applySpellEffect(r: SpellRow, slotLevel: number) {
 		const c = this.character;
 		const spell = this.graph?.get(r.ref);
 		const tokens = tokensOf(spell);
-		if (!c || !tokens.length) return;
+		// Model C (CONCENTRATION-PLAN): a CONCENTRATION spell ALWAYS gets a carrier effect — even
+		// token-less — so its duration is TIMED (the carrier owns the clock; `play.concentration` is a
+		// ref to it, and the carrier expiring ends concentration). Before, a token-less control spell
+		// (Hold Person, Web…) had no carrier → its concentration hung until a long rest. A
+		// NON-concentration spell with no tokens has nothing to track → still a no-op.
+		if (!c || (!tokens.length && !r.concentration)) return;
 		this.removeLinkedEffect(r.ref); // re-cast refreshes instead of stacking a duplicate
-		const rounds = spell?.type === 'spell' ? durationToRounds(String(spell.data.duration)) : null;
+		const rounds = this.carrierRounds(r, spell, slotLevel);
 		c.play.effects = [
 			...c.play.effects,
 			{
@@ -669,6 +674,27 @@ class CombatVM {
 				...(rounds ? { durationRounds: rounds, startedRound: this.round } : {})
 			}
 		];
+	}
+
+	/** The carrier effect's duration in ROUNDS. A `duration` upcast (an ABSOLUTE total — Hunter's Mark
+	 *  8 h → 24 h) wins over the spell's base duration text; `inf` (permanent) → null (no expiry). No
+	 *  duration upcast (or effects-auto off) → the base `durationToRounds`. Units are the rounds canon
+	 *  (CONCENTRATION-PLAN §8). */
+	private carrierRounds(
+		r: SpellRow,
+		spell: ReturnType<ContentGraph['get']>,
+		slotLevel: number
+	): number | null {
+		const base = spell?.type === 'spell' ? durationToRounds(String(spell.data.duration)) : null;
+		const ctxBase = this.sheet?.castCtx;
+		if (!r.upcast || !ctxBase) return base;
+		const ctx = withCastSlot(ctxBase, slotLevel, r.level);
+		for (const res of evalUpcast(r.upcast, ctx)) {
+			if ('error' in res || res.kind !== 'duration') continue;
+			if (res.isInfinite) return null; // permanent → no timer
+			if (res.flat > 0) return res.flat; // absolute total rounds (0 = below first tier → keep base)
+		}
+		return base;
 	}
 
 	/** Reserve a leveled spell slot for a non-ritual cast (A17): returns the slot key to spend, or
@@ -828,7 +854,7 @@ class CombatVM {
 			if (prior && prior !== r.ref) this.removeLinkedEffect(prior);
 			this.character.play.concentration = r.ref;
 		}
-		this.applySpellEffect(r);
+		this.applySpellEffect(r, slotLevel);
 		this.rollSpellCast(r, e, ritual, slotLevel);
 	};
 

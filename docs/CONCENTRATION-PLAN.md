@@ -6,8 +6,16 @@
 
 ## Статус
 
-DESIGN. Не кодимо. Рішення = **Model C** (carrier-ефект володіє таймером, концентрація = ref на
-нього). Резюме-вказівник: почати з §2 (модель) + §4 (єдина зміна коду).
+**Model C ЗАКОДЖЕНО 2026-08-03** (`applySpellEffect` у `routes/combat/state.svelte.ts`). Єдина зміна
+з §4 зроблена: рання відмова тепер `!tokens.length && !r.concentration` → **conc-спел ЗАВЖДИ дістає
+carrier** (навіть token-less), тож токенлес-контроль (Hold Person, Web) отримав таймер і згасання
+природньо гасить концентрацію (наявний `expireTimedEffects`). Duration-апкаст теж влитий: новий
+`carrierRounds` бере абсолютні раунди з `duration`-kind апкасту (Hunter's Mark 8h→24h), inf→null,
+інакше базовий `durationToRounds`. Тести: token-less carrier + expiry→conc-null + duration-upcast@slot.
+
+**Лишилось (не-код / UI / окреме):** порожній carrier рендериться як пустий баф, а не маркер
+«Концентрація: X» (§4 UI-хвіст — НЕ роблю); incapacitated/0-hp→кінець концентрації (§7, реактивний
+$effect — окремо); CON-сейв від урону (§6 сиблінг). Старе DESIGN-тіло нижче — довідка.
 
 ## 0. Що є в коді зараз (перевірено 2026-08-03)
 

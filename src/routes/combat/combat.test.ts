@@ -23,7 +23,9 @@ async function graphOf(): Promise<ContentGraph> {
 			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,effects',
 			`bless,5.5e,${S},Bless,1,enchantment,action,30 ft,"Concentration, up to 1 minute",V S M,true,flat_bonus:saves+1d4`,
 			`shield_of_faith,5.5e,${S},Shield of Faith,1,abjuration,bonus,60 ft,"Concentration, up to 10 minutes",V S M,true,flat_bonus:ac+2`,
-			`fire_bolt,5.5e,${S},Fire Bolt,0,evocation,action,120 ft,instant,V S,false,`
+			`fire_bolt,5.5e,${S},Fire Bolt,0,evocation,action,120 ft,instant,V S,false,`,
+			// a token-less CONCENTRATION control spell (Model C: must still get a timed carrier)
+			`hold_person,5.5e,${S},Hold Person,2,enchantment,action,60 ft,"Concentration, up to 1 minute",V S M,true,`
 		].join('\n')
 	);
 	await st.write(
@@ -102,9 +104,27 @@ describe('CombatVM · casting applies the spell effect (EFX-2)', () => {
 		expect(eff?.durationRounds).toBe(10); // "up to 1 minute"
 	});
 
-	it('a spell with no tokens applies nothing', () => {
+	it('a NON-concentration spell with no tokens applies nothing', () => {
 		combat.cast(spellRow(graph, `spell:${S}:fire_bolt`, 'on')!, noModifiers);
 		expect(character.play.effects).toEqual([]);
+	});
+
+	it('a token-less CONCENTRATION spell still gets a timed carrier (Model C — CONCENTRATION-PLAN)', () => {
+		combat.cast(spellRow(graph, `spell:${S}:hold_person`, 'on')!, noModifiers);
+		const carrier = character.play.effects.find((e) => e.source === `spell:${S}:hold_person`);
+		expect(carrier).toBeTruthy();
+		expect(carrier?.effects).toEqual([]); // no tokens — just the concentration timer
+		expect(carrier?.durationRounds).toBe(10); // "up to 1 minute" = 10 rounds
+		expect(character.play.concentration).toBe(`spell:${S}:hold_person`);
+	});
+
+	it('the token-less carrier expiring ENDS concentration (the timer fix, Model C)', () => {
+		character.play.round = 0;
+		combat.cast(spellRow(graph, `spell:${S}:hold_person`, 'on')!, noModifiers);
+		expect(character.play.concentration).toBe(`spell:${S}:hold_person`);
+		combat.economy.advanceTime(10); // 1 minute → the carrier times out
+		expect(character.play.effects).toEqual([]); // carrier gone
+		expect(character.play.concentration).toBeNull(); // …and concentration ended with it
 	});
 
 	it('re-casting refreshes instead of stacking a duplicate', () => {
@@ -151,7 +171,9 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			// level-1 healing spell: base 1d8 + spellcasting mod, +1d8 per slot above 1st
 			`cure_wounds,5.5e,${S},Cure Wounds,1,evocation,action,Touch,Instantaneous,V S,false,auto,,1d8,heal:per_slot(1d8)`,
 			// a spell whose upcast formula is broken → must degrade (base only), never wrong dice
-			`bad_bolt,5.5e,${S},Bad Bolt,1,evocation,action,120 ft,Instantaneous,V S,false,save,dex,2d6 fire,damage:per_slot(`
+			`bad_bolt,5.5e,${S},Bad Bolt,1,evocation,action,120 ft,Instantaneous,V S,false,save,dex,2d6 fire,damage:per_slot(`,
+			// a token-less concentration spell whose DURATION upcasts (absolute rounds) — Hunter's Mark-style
+			`entangle,5.5e,${S},Entangle,1,conjuration,action,90 ft,"Concentration, up to 1 minute",V S,true,save,str,,"duration:step(slot, 1->10, 3->30)"`
 		].join('\n')
 	);
 	const g = await loadContent(st, ['c']);
@@ -198,6 +220,16 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		character.play.spellSlotsSpent = { '1': 4 };
 		combat.cast(spellRow(graph, `spell:${S}:bad_bolt`, 'on')!, noModifiers);
 		expect(diceOf(6)).toBe(2); // base 2d6 only — the broken delta is dropped
+	});
+
+	it('a duration upcast sets the concentration carrier timer (absolute rounds) at the cast slot', () => {
+		const cast = (spent: Record<string, number>) => {
+			character.play.spellSlotsSpent = { ...spent };
+			combat.cast(spellRow(graph, `spell:${S}:entangle`, 'on')!, noModifiers);
+			return character.play.effects.find((e) => e.source === `spell:${S}:entangle`);
+		};
+		expect(cast({})?.durationRounds).toBe(10); // base slot 1 → step(1,…) = 10
+		expect(cast({ '1': 4, '2': 3 })?.durationRounds).toBe(30); // spills to slot 3 → step(3,…) = 30
 	});
 
 	it('an explicit slot choice (picker) upcasts from that level even with lower slots free', () => {
