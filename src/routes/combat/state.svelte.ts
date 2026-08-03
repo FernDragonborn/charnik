@@ -386,23 +386,32 @@ class CombatVM {
 	/** Run a resource-option's RESOLVED action token (a `heal:`/`roll:` formula is already L2-resolved
 	 *  at derive). Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths):
 	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,
-	 *  `gain_action` → refund one action this turn (Action Surge), `note:` → the spendOption toast. */
+	 *  `gain_action` → refund one action this turn (Action Surge), `rest:short|long` → take that rest
+	 *  (recharge pools / reset slots / restore HP — a Potion of Angelic Slumber, 2024 short-rest
+	 *  spells), `note:` → the spendOption toast. */
 	private runActionToken(opt: ResourceOption) {
 		const p = this.character?.play;
 		if (!p) return;
 		const sep = opt.action.indexOf(':');
 		const verb = sep === -1 ? opt.action : opt.action.slice(0, sep);
-		const rest = sep === -1 ? '' : opt.action.slice(sep + 1);
-		if (verb === 'heal' && rest) {
-			const r = rollFormula(rest);
+		const arg = sep === -1 ? '' : opt.action.slice(sep + 1);
+		if (verb === 'heal' && arg) {
+			const r = rollFormula(arg);
 			p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, r.total));
 			this.tray.pushRoll(`${opt.name} — heal`, r);
-		} else if (verb === 'roll' && rest) {
-			this.tray.pushRoll(opt.name, rollFormula(rest));
-		} else if (verb === 'apply_condition' && rest) {
+		} else if (verb === 'roll' && arg) {
+			this.tray.pushRoll(opt.name, rollFormula(arg));
+		} else if (verb === 'apply_condition' && arg) {
 			this.addEffect({ label: opt.name, tokens: [opt.action], positive: false });
 		} else if (verb === 'gain_action') {
 			p.turn.action = Math.max(0, p.turn.action - 1); // one additional action this turn
+		} else if (verb === 'rest' && (arg === 'short' || arg === 'long')) {
+			// grant a rest: lands on the SAME rest system the rest buttons use (recharge pools by type,
+			// reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). A
+			// consumable that grants a rest MUST have recharge `other` so the rest it triggers doesn't
+			// refund its own charge (see ACTIONS.md §2).
+			this.resources.rest(arg);
+			toast(`${opt.name} — ${arg} rest taken`);
 		}
 	}
 

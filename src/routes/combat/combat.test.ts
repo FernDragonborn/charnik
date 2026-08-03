@@ -731,6 +731,43 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		expect(character.play.turn.action).toBe(0); // one additional action granted back
 		expect(combat.resources.resourceSpent('action_surge')).toBe(1);
 	});
+
+	it('rest:long grants a long rest — restores HP, resets slots, recharges pools; the consumable (recharge=other) is NOT refunded', async () => {
+		const graph = await graphOf();
+		const character = newCharacter('rook', 'Rook', '5.5e');
+		character.play.autoCalc = true;
+		character.play.hp = { current: 5, max: 20, temp: 0 };
+		character.play.spellSlotsSpent = { '1': 2 };
+		character.play.resourcesSpent = { sorcery: 4 }; // a long-recharge pool, fully spent
+		character.play.effects = [
+			{
+				iid: '1',
+				label: 'grant',
+				effects: [
+					'grant_resource:angelic_slumber:1:other', // the potion — manual-only recharge
+					'grant_resource:sorcery:4:long'
+				],
+				positive: true
+			}
+		];
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.activateResourceOption({
+			id: 'potion_angelic_slumber',
+			resourceId: 'angelic_slumber',
+			name: 'Potion of Angelic Slumber',
+			description: '',
+			action: 'rest:long',
+			actionType: 'free',
+			cost: 1
+		});
+
+		expect(character.play.hp.current).toBe(20); // long rest restored HP to max
+		expect(character.play.spellSlotsSpent).toEqual({}); // all slots back
+		expect(combat.resources.resourceSpent('sorcery')).toBe(0); // long-recharge pool refilled
+		expect(combat.resources.resourceSpent('angelic_slumber')).toBe(1); // the charge stays spent (recharge=other)
+	});
 });
 
 /*

@@ -51,6 +51,25 @@ Host execution mapping (each field lands on an EXISTING system — no new mutati
 | `cost`    | the turn economy tracker (`action \| bonus \| reaction \| free`)                  |
 | `notes`   | plain-text log/tooltip lines (never markup)                                       |
 
+**Implemented executor verbs (N2 first slice, `runActionToken`).** Until the full JSON intent lands,
+a native action is ONE bounded token in a `resource_options.action` column, dispatched by verb — each
+still landing on an existing system per the table above:
+
+| Token | Executes |
+| --- | --- |
+| `heal:<formula>` | HP path, clamped to max (L2-resolved to dice at derive) |
+| `roll:<formula>` | the dice path + roll log |
+| `apply_condition:<id>` | the `play.effects` add path |
+| `gain_action` | refund one action this turn (Action Surge) |
+| `rest:short` / `rest:long` | **take that rest** — the SAME system the rest buttons use (recharge pools by type, reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). Models a Potion of Angelic Slumber / a rest-granting spell. |
+| `note:<text>` | a log/toast line |
+
+> **`rest` constraint.** A consumable that GRANTS a rest (a potion = a `grant_resource` with charges +
+> a `resource_option` whose `action` is `rest:short|long`) MUST use recharge **`other`** — otherwise the
+> long rest it triggers recharges the potion's own charge and refunds the use (infinite potions).
+> Delivery beyond resource-options (a spell casting an action token, a dedicated item-use path) is a
+> follow-up; the `rest` verb itself is edition-agnostic and reachable today via the option path.
+
 Core rules (owned HERE, restated for authors in PLUGINS.md):
 
 - **All-or-nothing.** Validate the entire intent (affordability, caps, well-formedness) first;
