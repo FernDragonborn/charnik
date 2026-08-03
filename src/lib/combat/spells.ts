@@ -11,8 +11,7 @@ import type { CharacterSheet } from '$lib/character/derive';
 import { casterForSpell } from '$lib/character/spellcasting';
 // re-exported so `$lib/combat/helpers` (barrel) + existing importers keep the same import site
 export { casterForSpell };
-import { parseDicePool } from '$lib/rules/dice';
-import { parseDamageParts } from './attacks';
+import { parseDamageParts, type DamagePart } from './attacks';
 import {
 	cantripDieMultiplier,
 	canTogglePrepared,
@@ -39,11 +38,11 @@ export interface SpellRow {
 	resolutionLabel: string;
 	levelTag: string;
 	castTimeIcon: '' | 'react' | 'bonus'; // casting time → icon before the level
-	damagePool: Record<number, number> | null; // parsed damage/healing dice (for casting)
-	damageType: string; // damage type from the `damage` column ("fire"); "" for typeless / healing
-	/** Base flat modifier on the `damage` column (e.g. Magic Missile's "+1"): a spell's OWN flat that
-	 *  isn't the caster mod, so upcast/effect flats fold onto it instead of losing it (N2). */
-	damageFlat: number;
+	/** The spell's base damage/healing as typed parts (`parseDamageParts` of the `damage` column) — one
+	 *  per damage type so a multi-type spell (Ice Knife's piercing + cold) keeps its types through the
+	 *  cast (item 2). Each part carries its own dice pool, flat mod (Magic Missile's "+1", Heal's flat
+	 *  70 — so upcast/effect flats fold onto it, not over it, N2), and type. Empty = no damage. */
+	damageParts: DamagePart[];
 	/** The raw structured `upcast` cell (`kind[:type]:formula;…`), evaluated at cast time against the
 	 *  ephemeral slot ctx — NOT here (the slot isn't known until cast). Empty when the spell doesn't
 	 *  scale structurally (its `higher_level` prose is the fallback). See src/lib/effects/upcast.ts. */
@@ -288,9 +287,6 @@ export function spellRow(
 	const lvl = d.level;
 	const res = d.resolution ?? 'none';
 	const dmg = castingDice(d, charLevel);
-	// the base `damage` column's first typed part gives BOTH the type and the spell's own flat (Magic
-	// Missile's "+1"): the flat rides `damageFlat` so an upcast/effect flat folds onto it, not over it.
-	const basePart = dmg ? parseDamageParts(dmg)[0] : undefined;
 	return {
 		id: d.id,
 		ref,
@@ -301,9 +297,8 @@ export function spellRow(
 		resolutionLabel: spResLabel(res, d.save_ability ?? ''),
 		levelTag: lvl === 0 ? 'cantrip' : ordinal(lvl),
 		castTimeIcon: castingIcon(d.casting_time ?? ''),
-		damagePool: dmg ? parseDicePool(dmg) : null,
-		damageType: basePart?.type ?? '',
-		damageFlat: basePart?.mod ?? 0,
+		// typed parts keep a multi-type spell's types through the cast (Ice Knife piercing + cold, item 2)
+		damageParts: dmg ? parseDamageParts(dmg) : [],
 		upcast: d.upcast ?? '',
 		concentration: d.concentration ?? false,
 		ritual: d.ritual ?? false,

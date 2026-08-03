@@ -52,6 +52,15 @@ function segmentType(segment: string): string {
 	return (/([a-z][a-z ]*?)\s*$/i.exec(segment.trim())?.[1] ?? '').trim();
 }
 
+/** A dice-less segment's flat base as an UNSIGNED leading integer (Heal's "70", a fixed "1 bludgeoning"
+ *  weapon). `segmentMod` only reads a SIGNED number — so it can't misread a die's count ("1d10" → +10) —
+ *  which silently drops a bare fixed value; recover it here. Only ever called on a segment with NO dice,
+ *  so there's no die count to confuse it with. */
+function segmentFlatBase(segment: string): number {
+	const m = /^\s*(\d+)\b/.exec(segment);
+	return m ? Number(m[1]) : 0;
+}
+
 /** Parse a weapon/spell damage string into its typed parts. Multiple types are `;`-separated
  *  ("1d6 slashing; 1d4 radiant"); a plain weapon is one part ("1d8 slashing"). Each part carries its
  *  own dice pool, flat mod, and type. Empty string → no parts. Pure. */
@@ -60,7 +69,14 @@ export function parseDamageParts(dmg: string): DamagePart[] {
 		.split(';')
 		.map((s) => s.trim())
 		.filter(Boolean)
-		.map((seg) => ({ pool: parseDicePool(seg), mod: segmentMod(seg), type: segmentType(seg) }));
+		.map((seg) => {
+			const pool = parseDicePool(seg);
+			// a dice-less segment ("70" for Heal) carries its value as an unsigned flat base — segmentMod
+			// only reads a signed one, so recover it here (never when there are dice, N2 / item 6).
+			const mod =
+				Object.keys(pool).length === 0 ? segmentMod(seg) || segmentFlatBase(seg) : segmentMod(seg);
+			return { pool, mod, type: segmentType(seg) };
+		});
 }
 
 /** Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4

@@ -173,7 +173,12 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			// a spell whose upcast formula is broken → must degrade (base only), never wrong dice
 			`bad_bolt,5.5e,${S},Bad Bolt,1,evocation,action,120 ft,Instantaneous,V S,false,save,dex,2d6 fire,damage:per_slot(`,
 			// a token-less concentration spell whose DURATION upcasts (absolute rounds) — Hunter's Mark-style
-			`entangle,5.5e,${S},Entangle,1,conjuration,action,90 ft,"Concentration, up to 1 minute",V S,true,save,str,,"duration:step(slot, 1->10, 3->30)"`
+			`entangle,5.5e,${S},Entangle,1,conjuration,action,90 ft,"Concentration, up to 1 minute",V S,true,save,str,,"duration:step(slot, 1->10, 3->30)"`,
+			// a MULTI-TYPE attack spell (Ice Knife): 1d10 piercing base + 2d6 cold base; upcast scales ONLY
+			// the cold sub-slot (item 2) — the delta must route to the cold part, not a typeless pool
+			`ice_knife,5.5e,${S},Ice Knife,1,conjuration,action,60 ft,Instantaneous,S M,false,attack,,1d10 piercing; 2d6 cold,damage:cold:per_slot(1d6)`,
+			// a FLAT heal (Heal-style): 70 hit points, +10 per slot, NO dice → no spellcasting mod (item 6)
+			`flat_heal,5.5e,${S},Flat Heal,1,evocation,action,Touch,Instantaneous,V S,false,auto,,70,heal:per_slot(10)`
 		].join('\n')
 	);
 	const g = await loadContent(st, ['c']);
@@ -230,6 +235,40 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		};
 		expect(cast({})?.durationRounds).toBe(10); // base slot 1 → step(1,…) = 10
 		expect(cast({ '1': 4, '2': 3 })?.durationRounds).toBe(30); // spills to slot 3 → step(3,…) = 30
+	});
+
+	/** The typed damage part of a given type in the newest roll's damage lines, or undefined. */
+	const dmgPartOf = (type: string) => combat.tray.log[0]?.damage?.find((p) => p.type === type);
+	/** Count of `dN(` dice in a specific damage-part's expr (the multi-type breakdown). */
+	const partDiceOf = (type: string, sides: number) =>
+		(dmgPartOf(type)?.expr.match(new RegExp(`d${sides}\\(`, 'g')) ?? []).length;
+
+	it('Ice Knife: the cold upcast delta routes to the COLD part, piercing untouched (item 2)', () => {
+		// at slot 2 the cold sub-slot gains +1d6 → 3d6 cold; piercing stays 1d10 base
+		character.play.spellSlotsSpent = { '1': 4 };
+		combat.cast(spellRow(graph, `spell:${S}:ice_knife`, 'on')!, noModifiers);
+		expect(partDiceOf('piercing', 10)).toBe(1); // piercing 1d10 base — its own damage part, unscaled
+		expect(partDiceOf('cold', 6)).toBe(3); // 2d6 base + 1d6 upcast, ONLY on the cold part
+	});
+
+	it('Ice Knife at the base slot keeps both types unscaled (no phantom empty part)', () => {
+		combat.cast(spellRow(graph, `spell:${S}:ice_knife`, 'on')!, noModifiers);
+		expect(partDiceOf('cold', 6)).toBe(2); // base 2d6 cold, no delta
+		expect((combat.tray.log[0]?.damage ?? []).map((p) => p.type).sort()).toEqual([
+			'cold',
+			'piercing'
+		]);
+	});
+
+	it('a FLAT heal (Heal 70) applies its base + upcast delta with NO spellcasting mod (item 6)', () => {
+		character.play.spellSlotsSpent = { '1': 4 }; // spill to a level-2 slot → +10
+		combat.cast(spellRow(graph, `spell:${S}:flat_heal`, 'on')!, noModifiers);
+		expect(combat.tray.log[0]?.total).toBe(80); // 70 base + 10 upcast, NOT + int mod
+	});
+
+	it('a flat heal at the base slot heals exactly its flat value (70)', () => {
+		combat.cast(spellRow(graph, `spell:${S}:flat_heal`, 'on')!, noModifiers);
+		expect(combat.tray.log[0]?.total).toBe(70);
 	});
 
 	it('an explicit slot choice (picker) upcasts from that level even with lower slots free', () => {

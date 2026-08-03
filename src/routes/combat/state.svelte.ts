@@ -44,6 +44,7 @@ import {
 	applyDefense,
 	effectiveHpMax,
 	type Attack,
+	type DamagePart,
 	type DamagePartSpec,
 	type SpellRow,
 	type MenuKind,
@@ -66,7 +67,8 @@ import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
 import { slotToSpend, castableSlotLevels } from '$lib/rules/spellcasting';
-import { withCastSlot } from '$lib/effects/context';
+import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
+import type { ExprContext } from '$lib/effects/expression-evaluator';
 import { evalUpcast, combinePools } from '$lib/effects/upcast';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
@@ -93,10 +95,9 @@ const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> 
  * zero bound state → extractable via the proven subsystem pattern like economy/resources), then the
  * HP slice; verify in the live app (shot.mjs), never blind. Until a real need, staying over is fine.
  */
-/** A folded upcast damage/heal contribution: extra dice pool + flat, added onto the base (UPCAST). */
-type UpcastDelta = { pool: Record<number, number>; flat: number };
-/** The upcast contribution to ONE cast: the folded delta + a provenance label suffix ("(slot 5)"). */
-type UpcastCast = { delta: UpcastDelta; suffix: string };
+/** The upcast contribution to ONE cast: the folded damage/heal deltas as typed parts (item 2 —
+ *  `damage:cold:…` routes to the cold part), plus a provenance label suffix ("(slot 5)"). */
+type UpcastCast = { deltas: DamagePart[]; suffix: string };
 
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. Each completed
@@ -688,7 +689,7 @@ class CombatVM {
 		const base = spell?.type === 'spell' ? durationToRounds(String(spell.data.duration)) : null;
 		const ctxBase = this.sheet?.castCtx;
 		if (!r.upcast || !ctxBase) return base;
-		const ctx = withCastSlot(ctxBase, slotLevel, r.level);
+		const ctx = this.castCtxFor(r, ctxBase, slotLevel);
 		for (const res of evalUpcast(r.upcast, ctx)) {
 			if ('error' in res || res.kind !== 'duration') continue;
 			if (res.isInfinite) return null; // permanent → no timer
@@ -725,47 +726,81 @@ class CombatVM {
 	 *  logs a marker. Uses the class the spell is cast AS (A18), not classes[0]. */
 	/** Attack spell (r.resolution === 'hit'): roll the TO-HIT (attack-keyed effects) then its damage — tray
 	 *  chains them (to-hit now, damage queued), instant folds both into one 3-line entry. */
-	/** A spell's single typed damage part: its pool + type, with damage effects (flat/dice/mods) folded
-	 *  in. A spell deals one damage type, so it's always exactly one part. */
-	private spellDamagePart(r: SpellRow, dmgFx: RollEffects, up: UpcastDelta): DamagePartSpec {
-		// fold the base pool + the spell's own flat (Magic Missile's +1) + the upcast delta into ONE
-		// pool/flat, then add the effect flat on top (N2: base flat no longer lost).
-		const merged = combinePools(r.damagePool ?? {}, r.damageFlat, up.pool, up.flat);
-		return {
-			dice: merged.pool,
-			mod: merged.flat + dmgFx.flat,
-			type: r.damageType,
-			bonusDice: dmgFx.bonusDice,
-			mods: dmgFx
-		};
+	/** A spell's typed damage parts for the roll path (item 2): base parts (`r.damageParts`) with the
+	 *  upcast deltas folded in BY TYPE — an untyped delta (`damage:per_slot`) onto the primary part, a
+	 *  typed one (`damage:cold:per_slot` — Ice Knife) onto the part sharing its type, or as its OWN new
+	 *  part when the base can't supply that type (N4/N9: Web adds fire to a fire-less base). `primaryFx`
+	 *  (damage effects, or the heal's spellcasting-mod flat) rides the PRIMARY part only — RAW adds a
+	 *  damage bonus / the ability mod once, to the base, never to a second type's dice. */
+	private spellDamageParts(
+		r: SpellRow,
+		primaryFx: RollEffects,
+		deltas: DamagePart[]
+	): DamagePartSpec[] {
+		const parts: DamagePart[] = r.damageParts.map((p) => ({
+			pool: { ...p.pool },
+			mod: p.mod,
+			type: p.type
+		}));
+		for (const d of deltas) {
+			const idx = d.type ? parts.findIndex((p) => p.type === d.type) : 0;
+			const hit = idx >= 0 ? parts[idx] : undefined;
+			if (hit) {
+				const merged = combinePools(hit.pool, hit.mod, d.pool, d.mod);
+				parts[idx] = { pool: merged.pool, mod: merged.flat, type: hit.type };
+			} else parts.push({ pool: { ...d.pool }, mod: d.mod, type: d.type });
+		}
+		return parts.map((p, i) => ({
+			dice: p.pool,
+			mod: p.mod + (i === 0 ? primaryFx.flat : 0),
+			type: p.type,
+			...(i === 0 ? { bonusDice: primaryFx.bonusDice, mods: primaryFx } : {})
+		}));
 	}
 
-	/** The damage/heal upcast DELTA for a cast from `slotLevel` (UPCAST slice 1): evaluate the spell's
-	 *  `upcast` cell against the ephemeral cast ctx (post-derive snapshot + {slot, spell_level}) and sum
-	 *  the delta (damage/heal) kinds. Zero delta when there's no `upcast`, no cast ctx (effects-auto off
-	 *  — N6 respects the toggle), or the slot equals the base level. count/area/duration are slice 2+.
-	 *  A broken formula degrades (toast + base only, H11), never silently-wrong dice. */
-	private upcastDamageDelta(r: SpellRow, slotLevel: number): UpcastDelta {
+	/** The ephemeral cast ctx for evaluating a spell's `upcast` (§4/§5): the post-derive sheet ctx
+	 *  wrapped with the cast-only `{slot, spell_level}` vars, AND `spellcasting_mod` re-pointed at the
+	 *  class the spell is CAST AS (`casterForSpell`) rather than the primary caster — so a formula
+	 *  reading `spellcasting_mod` (an upcast that scales with the caster's ability) picks up the right
+	 *  class's mod on a multiclass sheet (item 5, SPEC4). Falls back to the sheet's primary
+	 *  `spellcasting_mod` when no class claims the spell. */
+	private castCtxFor(r: SpellRow, base: ExprContext, slotLevel: number): ExprContext {
+		const withSlot = withCastSlot(base, slotLevel, r.level);
+		const caster = casterForSpell(this.sheet, r.ref);
+		if (!caster) return withSlot;
+		return withSpellcastingMod(withSlot, this.sheet?.abilities[caster.ability]?.mod ?? 0);
+	}
+
+	/** The damage/heal upcast deltas as typed parts for a cast from `slotLevel` (item 2): evaluate the
+	 *  spell's `upcast` cell against the ephemeral cast ctx (post-derive snapshot + {slot, spell_level})
+	 *  and keep each damage/heal delta with its own type (`damage:cold:…` → a cold-typed delta the roll
+	 *  path routes to the cold part). Empty when there's no `upcast`, no cast ctx (effects-auto off — N6
+	 *  respects the toggle), or the slot equals the base level. count/area/duration are handled
+	 *  elsewhere. A zero delta (base slot) is dropped so it adds no phantom part. A broken formula
+	 *  degrades (toast + base only, H11), never silently-wrong dice. */
+	private upcastDamageParts(r: SpellRow, slotLevel: number): DamagePart[] {
 		const base = this.sheet?.castCtx;
-		if (!r.upcast || !base) return { pool: {}, flat: 0 };
-		const ctx = withCastSlot(base, slotLevel, r.level);
-		let acc: UpcastDelta = { pool: {}, flat: 0 };
+		if (!r.upcast || !base) return [];
+		const ctx = this.castCtxFor(r, base, slotLevel);
+		const out: DamagePart[] = [];
 		for (const res of evalUpcast(r.upcast, ctx)) {
 			if ('error' in res) {
 				toast(`Upcast: ${res.error}`);
 				continue;
 			}
-			if ((res.kind === 'damage' || res.kind === 'heal') && res.combine === 'delta')
-				acc = combinePools(acc.pool, acc.flat, res.pool, res.flat);
+			if ((res.kind !== 'damage' && res.kind !== 'heal') || res.combine !== 'delta') continue;
+			if (Object.keys(res.pool).length === 0 && res.flat === 0) continue; // base slot → no delta
+			out.push({ pool: res.pool, mod: res.flat, type: res.type ?? '' });
 		}
-		return acc;
+		return out;
 	}
 
 	private rollSpellAttack(r: SpellRow, e: Event, caster: SpellcastingClass, up: UpcastCast): void {
 		const fx = this.effectsFor('attack');
 		const dmgFx = this.effectsFor('damage');
 		const toHit = caster.attack.value + fx.flat;
-		const hasDmg = !!r.damagePool && Object.keys(r.damagePool).length > 0;
+		const parts = this.spellDamageParts(r, dmgFx, up.deltas);
+		const hasDmg = parts.some((p) => Object.keys(p.dice).length > 0 || p.mod !== 0);
 		if (wantsTray(e)) {
 			this.openRoll(
 				{
@@ -777,16 +812,12 @@ class CombatVM {
 				},
 				e
 			);
-			if (hasDmg)
-				this.tray.queueDamage({
-					label: `${r.name} damage${up.suffix}`,
-					parts: [this.spellDamagePart(r, dmgFx, up.delta)]
-				});
+			if (hasDmg) this.tray.queueDamage({ label: `${r.name} damage${up.suffix}`, parts });
 		} else {
 			this.tray.pushRoll(
 				`${r.name} (spell attack)`,
 				rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice, fx),
-				hasDmg ? rollDamageParts([this.spellDamagePart(r, dmgFx, up.delta)]) : undefined
+				hasDmg ? rollDamageParts(parts) : undefined
 			);
 		}
 	}
@@ -794,29 +825,61 @@ class CombatVM {
 	private rollSpellCast(r: SpellRow, e: Event, ritual: boolean, slotLevel: number): void {
 		const alt = wantsTray(e);
 		const caster = casterForSpell(this.sheet, r.ref) ?? this.sheet?.spellcasting.classes[0];
-		const hasDmg = !!r.damagePool && Object.keys(r.damagePool).length > 0;
 		// the upcast contribution + its provenance tag (B8, v1: a "(slot N)" label when actually upcast)
 		const up: UpcastCast = {
-			delta: this.upcastDamageDelta(r, slotLevel),
+			deltas: this.upcastDamageParts(r, slotLevel),
 			suffix: slotLevel > r.level ? ` (slot ${slotLevel})` : ''
 		};
 		if (r.resolution === 'hit' && caster) {
 			this.rollSpellAttack(r, e, caster, up);
-		} else if (hasDmg) {
-			// save / auto spell: damage, or (auto) healing with the spellcasting mod. Fold base flat +
-			// upcast delta into the pool/mod (N2 + upcast).
-			const heal = r.resolution === 'auto';
-			const label = `${r.name} ${heal ? 'healing' : 'damage'}${up.suffix}`;
-			const healMod = heal && caster ? (this.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
-			const merged = combinePools(r.damagePool ?? {}, r.damageFlat, up.delta.pool, up.delta.flat);
-			const mod = healMod + merged.flat;
-			if (alt) this.openRoll({ label, dice: merged.pool, mod }, e);
-			else this.tray.rollDiceNow({ label, dice: merged.pool, mod });
+			return;
+		}
+		// save / auto spell: damage, or (auto) healing. A DICE heal (Cure Wounds "1d8 + mod") adds the
+		// spellcasting mod; a FLAT heal (Heal's 70) does not — in SRD the ability mod rides dice-valued
+		// healing only, so gate the mod on there being healing dice (item 6). Damage effects never ride a
+		// heal, so the heal's "primary fx" is just that mod as a flat.
+		const heal = r.resolution === 'auto';
+		const healDice = r.damageParts.some((p) => Object.keys(p.pool).length > 0);
+		const healMod =
+			heal && healDice && caster ? (this.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
+		const primaryFx: RollEffects = heal
+			? { ...NO_ROLL_EFFECTS, flat: healMod }
+			: this.effectsFor('damage');
+		const parts = this.spellDamageParts(r, primaryFx, up.deltas);
+		if (parts.some((p) => Object.keys(p.dice).length > 0 || p.mod !== 0)) {
+			this.rollDamageEntry(`${r.name} ${heal ? 'healing' : 'damage'}${up.suffix}`, parts, e, alt);
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
 			const suffix = ritual ? ' (ritual)' : '';
 			this.tray.logMarker(`Cast ${r.name}${suffix}`);
 			toast(`Cast ${r.name}${suffix}`);
+		}
+	}
+
+	/** Roll a spell's damage/heal from its typed parts: the FIRST part is the primary (rolled + shown as
+	 *  the entry); the rest are typed damage lines under it (Ice Knife's cold under its piercing). `alt`
+	 *  opens the prefilled tray instead of rolling instantly (queuing the rest as its follow-up). */
+	private rollDamageEntry(label: string, parts: DamagePartSpec[], e: Event, alt: boolean): void {
+		const [primary, ...rest] = parts;
+		if (!primary) return;
+		if (alt) {
+			this.openRoll(
+				{
+					label,
+					dice: primary.dice,
+					mod: primary.mod,
+					...(primary.bonusDice ? { bonusDice: primary.bonusDice } : {}),
+					...(primary.mods ? { mods: primary.mods } : {})
+				},
+				e
+			);
+			if (rest.length) this.tray.queueDamage({ label, parts: rest });
+		} else {
+			this.tray.pushRoll(
+				label,
+				rollPool(primary.dice, primary.mod, 0, primary.bonusDice ?? [], primary.mods ?? {}),
+				rest.length ? rollDamageParts(rest) : undefined
+			);
 		}
 	}
 
