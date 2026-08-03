@@ -144,6 +144,36 @@ describe('CombatVM · casting applies the spell effect (EFX-2)', () => {
 	});
 });
 
+describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATION-PLAN §7/§6)', () => {
+	let graph: ContentGraph;
+	let character: Character;
+	beforeEach(async () => {
+		graph = await graphOf();
+		character = newCharacter('valen', 'Valen', '5.5e');
+		combat.graph = graph;
+		combat.character = character;
+	});
+
+	it('dropping to 0 HP ends concentration (endConcentrationIfBroken, §7)', () => {
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		expect(character.play.concentration).toBe(`spell:${S}:bless`);
+		character.play.hp.current = 0;
+		combat.endConcentrationIfBroken();
+		expect(character.play.concentration).toBeNull();
+		expect(character.play.effects).toEqual([]); // the carrier goes down with it
+	});
+
+	it('surviving damage does NOT auto-drop concentration — it only reminds (§6)', () => {
+		character.play.hp = { current: 20, max: 20, temp: 0 };
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		combat.hpAmount = 6;
+		combat.damage();
+		expect(character.play.hp.current).toBe(14);
+		combat.endConcentrationIfBroken(); // still up → nothing ends
+		expect(character.play.concentration).toBe(`spell:${S}:bless`);
+	});
+});
+
 /** A caster graph (wizard with a full slot table) + a level-1 damage spell that upcasts, so an
  *  end-to-end cast folds the structured `upcast` delta into the rolled dice (UPCAST slice 1). */
 async function casterGraphOf(): Promise<ContentGraph> {

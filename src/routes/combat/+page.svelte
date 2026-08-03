@@ -46,6 +46,12 @@
 		combat.clampCurrentHp();
 	});
 
+	// CONCENTRATION-PLAN §7: reactively end concentration the instant HP hits 0 or an incapacitating
+	// condition lands (RAW). Reads hp + economy.incapacitated → re-runs when either changes.
+	$effect(() => {
+		combat.endConcentrationIfBroken();
+	});
+
 	// autosave play-state edits back to storage (debounced), so combat persists per character
 	let saveTimer: ReturnType<typeof setTimeout>;
 	$effect(() => {

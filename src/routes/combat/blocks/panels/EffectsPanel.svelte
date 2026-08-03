@@ -50,9 +50,19 @@
 	<!-- a condition instance only carries `apply_condition:<id>`; show what the condition DOES by
 	     rendering the condition row's own tokens (mechanical tags + display-only notes) instead -->
 	{@const tags = condId ? combat.conditionTokens(condId) : e.effects}
+	{@const isConc = !!e.source && c.play.concentration === e.source}
 	<div class="effect-row">
 		<div class="effect-main">
 			<span class="effect-name">{e.label}</span>
+			{#if isConc}
+				<!-- CONCENTRATION-PLAN §4: the concentration carrier (often token-less: Hold Person, Web)
+				     reads as a "Concentration" marker, not a blank buff. Tap to drop it. -->
+				<button
+					class="conc-badge"
+					title="Concentrating — tap to drop"
+					onclick={combat.clearConcentration}>◎ Concentration</button
+				>
+			{/if}
 			{#each tags as tok (tok)}
 				{@const note = noteText(tok)}
 				{#if note}
@@ -352,6 +362,25 @@
 		color: var(--color-text-muted);
 		white-space: nowrap;
 		flex: none;
+	}
+	/* concentration marker on the carrier row — a tappable badge (accent-tinted) that reads as
+	   "this is your concentration" even when the carrier has no mechanical tags */
+	.conc-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		color: var(--color-accent-bright);
+		border: 1px solid var(--color-accent);
+		background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+		border-radius: 5px;
+		padding: 1px 6px;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+	.conc-badge:hover {
+		background: color-mix(in srgb, var(--color-accent) 20%, transparent);
 	}
 	.effect-tag--positive {
 		color: var(--color-good);

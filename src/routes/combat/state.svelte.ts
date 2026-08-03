@@ -354,11 +354,21 @@ class CombatVM {
 		const raw = Math.max(0, Math.round(this.hpAmount));
 		// B20: resist/immune/vulnerable modify the damage BEFORE temp HP soaks it (RAW ordering).
 		const defenses = this.sheet?.defenses ?? { resist: [], immune: [], vulnerable: [] };
-		let n = applyDefense(raw, this.damageType, defenses).final;
+		const taken = applyDefense(raw, this.damageType, defenses).final;
+		let n = taken;
 		const soaked = Math.min(p.hp.temp, n); // temp HP absorbs first (5e rule)
 		p.hp.temp -= soaked;
 		n -= soaked;
 		p.hp.current = Math.max(0, p.hp.current - n);
+		// §6: taking damage while concentrating prompts a CON save (DC = max(10, ⌊damage/2⌋)) — a
+		// REMINDER, not an auto-drop (play-tracker surfaces, never forces). 0-HP already ends it via
+		// endConcentrationIfBroken, so only remind while still up.
+		if (taken > 0 && p.concentration && p.hp.current > 0) {
+			const dc = Math.max(10, Math.floor(taken / 2));
+			toast(`Concentration — roll a CON save (DC ${dc})`, {
+				description: 'Fail → the spell ends. Tap the concentration indicator to drop it.'
+			});
+		}
 	};
 	heal = () => {
 		const p = this.character?.play;
@@ -463,6 +473,14 @@ class CombatVM {
 		if (!c) return;
 		if (c.play.concentration) this.removeLinkedEffect(c.play.concentration);
 		c.play.concentration = null;
+	};
+	/** RAW: dropping to 0 HP or becoming incapacitated ENDS concentration (CONCENTRATION-PLAN §7).
+	 *  Called reactively from the combat page so it fires the instant HP hits 0 (Damage) or an
+	 *  incapacitating condition lands. Idempotent — a no-op once concentration is already gone. */
+	endConcentrationIfBroken = () => {
+		const c = this.character;
+		if (!c?.play.concentration) return;
+		if (c.play.hp.current <= 0 || this.economy.incapacitated) this.clearConcentration();
 	};
 
 	// configurable passive-sense skills (Pin skills)
