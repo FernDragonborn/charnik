@@ -41,6 +41,13 @@ export interface SpellRow {
 	castTimeIcon: '' | 'react' | 'bonus'; // casting time → icon before the level
 	damagePool: Record<number, number> | null; // parsed damage/healing dice (for casting)
 	damageType: string; // damage type from the `damage` column ("fire"); "" for typeless / healing
+	/** Base flat modifier on the `damage` column (e.g. Magic Missile's "+1"): a spell's OWN flat that
+	 *  isn't the caster mod, so upcast/effect flats fold onto it instead of losing it (N2). */
+	damageFlat: number;
+	/** The raw structured `upcast` cell (`kind[:type]:formula;…`), evaluated at cast time against the
+	 *  ephemeral slot ctx — NOT here (the slot isn't known until cast). Empty when the spell doesn't
+	 *  scale structurally (its `higher_level` prose is the fallback). See src/lib/effects/upcast.ts. */
+	upcast: string;
 	/** Whether casting this spell requires concentration. */
 	concentration: boolean;
 	prepState: '' | 'on' | 'always';
@@ -288,6 +295,9 @@ export function spellRow(
 	const lvl = d.level;
 	const res = d.resolution ?? 'none';
 	const dmg = castingDice(d, charLevel);
+	// the base `damage` column's first typed part gives BOTH the type and the spell's own flat (Magic
+	// Missile's "+1"): the flat rides `damageFlat` so an upcast/effect flat folds onto it, not over it.
+	const basePart = dmg ? parseDamageParts(dmg)[0] : undefined;
 	return {
 		id: d.id,
 		ref,
@@ -299,7 +309,9 @@ export function spellRow(
 		levelTag: lvl === 0 ? 'cantrip' : ordinal(lvl),
 		castTimeIcon: castingIcon(d.casting_time ?? ''),
 		damagePool: dmg ? parseDicePool(dmg) : null,
-		damageType: dmg ? (parseDamageParts(dmg)[0]?.type ?? '') : '',
+		damageType: basePart?.type ?? '',
+		damageFlat: basePart?.mod ?? 0,
+		upcast: d.upcast ?? '',
 		concentration: d.concentration ?? false,
 		ritual: d.ritual ?? false,
 		prepState: prep

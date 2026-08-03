@@ -316,7 +316,12 @@ const spellSchema = baseRow.extend({
 	resolution: Resolution.default('none'),
 	save_ability: z.preprocess(blankToUndef, Ability.optional()),
 	damage: optStr, // "8d6 fire" base damage/effect summary
-	higher_level: optStr // upcast / cantrip-scaling text
+	higher_level: optStr, // upcast / cantrip-scaling PROSE (the fallback for non-scalar upcasts)
+	// Structured upcast (docs/UPCAST-PLAN.md): a `;`-list of `kind[:type]:formula` tokens
+	// (`damage:per_slot(1d6)`, `count:slot+1`) evaluated at cast time. Language-agnostic (a formula,
+	// NOT prose — no locale siblings). Optional: old user CSVs without it load, falling back to
+	// `higher_level` prose. See src/lib/effects/upcast.ts.
+	upcast: optStr
 });
 
 /** Item / equipment. Weapon, armor, shield, gear, tool, pack, ammunition. */
