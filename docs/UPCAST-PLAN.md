@@ -6,9 +6,29 @@
 
 ## Статус
 
-DESIGN — ще НЕ кодимо. Схема стабілізувалась (одна колонка, токени), але перед
-імплементацією треба провалити крізь рішення діри §5 (особливо B1-B3, B8, B9, B11).
-Резюме-вказівник для повернення: почати з §5 порядку вирішення, не з коду.
+**SLICE 1 (damage/heal лінійний) — ЗАКОДЖЕНО + закомічено 2026-08-03.** 951 тестів зелені.
+Що зроблено (LOCKED §8 реалізовано для damage/heal-гілки):
+- Движок: `per_slot(amount[, step])` цукор + `slot`/`spell_level` cast-ефемерні вари +
+  `withCastSlot` ctx-обгортка (`effects/expression-*.ts`, `context.ts`). B1/B2 закриті.
+- Модуль `effects/upcast.ts`: `parseUpcast`/`evalUpcast`/`combinePools`; combine per-kind
+  (delta для damage/heal/hp_max/temp_hp, absolute для count/area/duration); `inf`-guard (N3);
+  degrade на битій формулі (H11). SpellRow несе `upcast`+`damageFlat` (N2).
+- Каст: `deriveSheet` віддає `castCtx` (post-derive знімок; undefined коли auto-effects off → N6);
+  VM `upcastDamageDelta` фолдить delta у `spellDamagePart` + save/auto-гілку; провенанс = «(slot N)»
+  лейбл (B8 v1); слот = auto-найнижчий `slotToSpend` (пікера ЩЕ нема — див. нижче).
+- Дані: колонка `upcast` в ОБИДВІ spells.csv + 9 курованих спелів (both editions), звірено з
+  прозою; healers дістали `damage`-колонку. Restamp'нуто.
+
+**Лишилось у slice 1:** слот-ПІКЕР (D13, зараз лише auto-upcast найнижчого) — headline-UX,
+UI-важкий (енумерація валідних слотів + вибір). Далі §319 slice 2+ (count/area/duration чіпи,
+hp_max/temp_hp, концентрація, кантрип-уніфікація, roller-цикл).
+
+**Відкладені хвости (свідомо):** healDice-скрейп ЛИШАЄТЬСЯ fallback'ом доки всі healers не
+дістануть damage-колонку (інакше регрес); повний backfill 68 лінійних спелів; B8 багатший трейс
+(зараз лише лейбл-суфікс); castCtx `spellcasting_mod` = primary caster, не spell-каст-клас (SRD не читає).
+
+Резюме-вказівник для повернення: код у `effects/upcast.ts` + `routes/combat/state.svelte.ts`
+(`upcastDamageDelta`); почати з пікера АБО slice 2.
 
 ## 0. Що є в коді зараз (база, від якої відштовхуємось)
 
@@ -52,13 +72,15 @@ DESIGN — ще НЕ кодимо. Схема стабілізувалась (о
 **Одна колонка `upcast` у `spells.csv`. Токен = `kind:formula`, кілька через `;`.**
 
 ```
-Fireball       damage:8d6+per_slot(1d6)
+Fireball       damage:per_slot(1d6)                 ← ДЕЛЬТА (база 8d6 з damage-колонки); combine=база+дельта
 Web            duration:...; damage:per_slot(1d4)
 Zone of Truth  area:per_slot(10); duration:per_slot(300)
-Scorching Ray  projectiles:slot+1
+Scorching Ray  count:slot+1                          ← count=АБСОЛЮТ (kind перейменовано з projectiles, §8)
 Geas           duration:step(slot, 5->30, 9->inf)
 Ice Storm      damage:bludgeoning:per_slot(1d8)      ← typed-damage під-слот (мульти-тип)
 ```
+> ⚠ Раніше приклад Fireball писався `damage:8d6+per_slot(1d6)` (база в формулі). LOCKED §8 = **дельта**
+> (формула НЕ повторює базу), тому реалізовано `damage:per_slot(1d6)`. Приклад виправлено (sync §8.6).
 
 - Реюз наявної грамматики: `;`-split (`splitGuard`/токен-парсер), `:`-структурний,
   typed-damage під-слот. НЕ JSON-in-cell (заборонено CLAUDE.md) — дозволена `;`-мульти-клітинка.
@@ -317,8 +339,8 @@ Eval через **опційний seam-хук** (як `applyEffects`), не п�
   = fallback для не-скалярних (виклик-таблиці, мета-правила).
 
 **Секвенція (MVP-слайс)**
-1. Схема `upcast` + zod optional + пікер слоту + damage/heal лінійний (лягає в наявні
-   `spellDamagePart.mod/dice`).
+1. ✅ **ЗРОБЛЕНО (окрім пікера)** — Схема `upcast` + zod optional + damage/heal лінійний (лягло в
+   `spellDamagePart.mod/dice` + save/auto-гілку). Пікер слоту — ЛИШИВСЯ (зараз auto-найнижчий).
 2. count/area-чіпи (display) → effect-granting (hp_max/temp_hp крізь applySpellEffect).
 3. Concentration-годинник-контракт (rounds-канон, string→object, ефект-як-залежний) + duration-
    апкаст. **Nб: це чіпає concentration-систему — може бути ОКРЕМИЙ item, апкаст у нього плагіниться.**
