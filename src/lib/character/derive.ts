@@ -104,6 +104,11 @@ export interface CharacterSheet {
 	/** The typed-facts view of `resolvedEffects` (parsed once, values resolved once — D7): what
 	 *  every consumer outside the stat folds reads (roll path, action economy, panels). */
 	facts: EffectFacts;
+	/** The post-derive L2 snapshot ctx (final build vars + live play getters), for CAST-TIME evaluation
+	 *  that needs sheet vars plus the ephemeral `slot`/`spell_level` — upcast wraps it with
+	 *  `withCastSlot` (UPCAST §4/§5). `undefined` when effects-auto is off (N6: no auto-scaling — the
+	 *  cast falls back to base damage + prose), so a consumer gates on its presence. */
+	castCtx?: ExprContext;
 }
 
 /** Piece 3: a spend-option on a granted resource, resolved for a specific character. `cost` is a
@@ -489,6 +494,11 @@ export function deriveSheet(
 
 	const defenses = deriveDefenses(facts);
 
+	// the base L2 ctx (a bare synthetic effect — no per-effect spellcasting scoping): resource-option
+	// formulas resolve against it here, AND it's the post-derive snapshot the cast layer wraps for
+	// upcast (UPCAST §5). `undefined` when auto-calc is off → no auto-scaling (N6).
+	const baseCtx = ctxOf(effCtx, { source: '', layer: 'feature', tokens: [] });
+
 	return {
 		level,
 		proficiencyBonus: prof,
@@ -511,14 +521,15 @@ export function deriveSheet(
 			system,
 			isActive,
 			issues,
-			// the base L2 ctx (a bare synthetic effect — resource-option formulas don't use per-effect
-			// spellcasting scoping), so `heal:`/`roll:` formulas resolve once here like resource maxes
-			ctx: ctxOf(effCtx, { source: '', layer: 'feature', tokens: [] })
+			// the base L2 ctx (resource-option formulas don't use per-effect spellcasting scoping), so
+			// `heal:`/`roll:` formulas resolve once here like resource maxes
+			ctx: baseCtx
 		}),
 		spellcasting,
 		missing: [...new Set(missing)], // dedupe: the same ref can be missing from several scans (D19)
 		deriveIssues: issues,
 		resolvedEffects,
-		facts
+		facts,
+		...(baseCtx ? { castCtx: baseCtx } : {})
 	};
 }

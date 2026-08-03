@@ -124,6 +124,83 @@ describe('CombatVM · casting applies the spell effect (EFX-2)', () => {
 	});
 });
 
+/** A caster graph (wizard with a full slot table) + a level-1 damage spell that upcasts, so an
+ *  end-to-end cast folds the structured `upcast` delta into the rolled dice (UPCAST slice 1). */
+async function casterGraphOf(): Promise<ContentGraph> {
+	const st = new MemoryStorage();
+	await st.write(
+		'c/classes_srd.csv',
+		[
+			'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
+			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`
+		].join('\n')
+	);
+	await st.write(
+		'c/spell_slots_srd.csv',
+		[
+			'id,systems,source,kind,level,slot_1,slot_2,slot_3,slot_4,slot_5,slot_6,slot_7,slot_8,slot_9',
+			`full_5,5.5e,${S},full,5,4,3,2,0,0,0,0,0,0`
+		].join('\n')
+	);
+	await st.write(
+		'c/spells_srd.csv',
+		[
+			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,resolution,save_ability,damage,upcast',
+			// level-1 save-damage spell: base 3d8, +1d8 per slot above 1st
+			`chromatic_orb,5.5e,${S},Chromatic Orb,1,evocation,action,90 ft,Instantaneous,V S M,false,save,dex,3d8 fire,damage:per_slot(1d8)`,
+			// level-1 healing spell: base 1d8 + spellcasting mod, +1d8 per slot above 1st
+			`cure_wounds,5.5e,${S},Cure Wounds,1,evocation,action,Touch,Instantaneous,V S,false,auto,,1d8,heal:per_slot(1d8)`,
+			// a spell whose upcast formula is broken → must degrade (base only), never wrong dice
+			`bad_bolt,5.5e,${S},Bad Bolt,1,evocation,action,120 ft,Instantaneous,V S,false,save,dex,2d6 fire,damage:per_slot(`
+		].join('\n')
+	);
+	const g = await loadContent(st, ['c']);
+	return g;
+}
+
+describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1)', () => {
+	let graph: ContentGraph;
+	let character: Character;
+	/** Number of `dN(` dice of a given size in the newest roll-log entry's expr. */
+	const diceOf = (sides: number) =>
+		(combat.tray.log[0]?.expr.match(new RegExp(`d${sides}\\(`, 'g')) ?? []).length;
+
+	beforeEach(async () => {
+		graph = await casterGraphOf();
+		character = newCharacter('mage', 'Mage', '5.5e');
+		character.build.abilities = { str: 10, dex: 10, con: 10, int: 16, wis: 16, cha: 10 };
+		character.build.classes = [{ class: `class:${S}:wizard`, level: 5 }];
+		combat.graph = graph;
+		combat.character = character;
+	});
+
+	it('at the base slot the delta is 0 (Chromatic Orb rolls its base 3d8)', () => {
+		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
+		expect(character.play.spellSlotsSpent['1']).toBe(1); // spent the level-1 slot
+		expect(diceOf(8)).toBe(3);
+	});
+
+	it('auto-upcast (level-1 slots exhausted → cast from level 2) adds +1d8 → 4d8', () => {
+		character.play.spellSlotsSpent = { '1': 4 }; // no level-1 slots left
+		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
+		expect(character.play.spellSlotsSpent['2']).toBe(1); // spilled up to a level-2 slot
+		expect(diceOf(8)).toBe(4); // 3d8 base + 1d8 upcast
+	});
+
+	it('a healing upcast folds base + delta + spellcasting mod (int +3) at slot 2', () => {
+		character.play.spellSlotsSpent = { '1': 4 };
+		combat.cast(spellRow(graph, `spell:${S}:cure_wounds`, 'on')!, noModifiers);
+		expect(diceOf(8)).toBe(2); // 1d8 base + 1d8 upcast
+		expect(combat.tray.log[0]?.expr).toContain('+3'); // spellcasting mod still added
+	});
+
+	it('a broken upcast formula degrades to base dice, never silently-wrong dice (H11)', () => {
+		character.play.spellSlotsSpent = { '1': 4 };
+		combat.cast(spellRow(graph, `spell:${S}:bad_bolt`, 'on')!, noModifiers);
+		expect(diceOf(6)).toBe(2); // base 2d6 only — the broken delta is dropped
+	});
+});
+
 describe('CombatVM · effect lifecycle (EFX-4)', () => {
 	let graph: ContentGraph;
 	let character: Character;

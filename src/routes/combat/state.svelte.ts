@@ -66,6 +66,8 @@ import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
 import { slotToSpend } from '$lib/rules/spellcasting';
+import { withCastSlot } from '$lib/effects/context';
+import { evalUpcast, combinePools } from '$lib/effects/upcast';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
@@ -91,6 +93,11 @@ const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> 
  * zero bound state → extractable via the proven subsystem pattern like economy/resources), then the
  * HP slice; verify in the live app (shot.mjs), never blind. Until a real need, staying over is fine.
  */
+/** A folded upcast damage/heal contribution: extra dice pool + flat, added onto the base (UPCAST). */
+type UpcastDelta = { pool: Record<number, number>; flat: number };
+/** The upcast contribution to ONE cast: the folded delta + a provenance label suffix ("(slot 5)"). */
+type UpcastCast = { delta: UpcastDelta; suffix: string };
+
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. Each completed
 	 *  roll is also persisted to the active character's `log.jsonl` (B4). */
@@ -676,20 +683,45 @@ class CombatVM {
 	 *  chains them (to-hit now, damage queued), instant folds both into one 3-line entry. */
 	/** A spell's single typed damage part: its pool + type, with damage effects (flat/dice/mods) folded
 	 *  in. A spell deals one damage type, so it's always exactly one part. */
-	private spellDamagePart(r: SpellRow, dmgFx: RollEffects): DamagePartSpec {
+	private spellDamagePart(r: SpellRow, dmgFx: RollEffects, up: UpcastDelta): DamagePartSpec {
+		// fold the base pool + the spell's own flat (Magic Missile's +1) + the upcast delta into ONE
+		// pool/flat, then add the effect flat on top (N2: base flat no longer lost).
+		const merged = combinePools(r.damagePool ?? {}, r.damageFlat, up.pool, up.flat);
 		return {
-			dice: r.damagePool ?? {},
-			mod: dmgFx.flat,
+			dice: merged.pool,
+			mod: merged.flat + dmgFx.flat,
 			type: r.damageType,
 			bonusDice: dmgFx.bonusDice,
 			mods: dmgFx
 		};
 	}
 
-	private rollSpellAttack(r: SpellRow, e: Event, caster: SpellcastingClass, hasDmg: boolean): void {
+	/** The damage/heal upcast DELTA for a cast from `slotLevel` (UPCAST slice 1): evaluate the spell's
+	 *  `upcast` cell against the ephemeral cast ctx (post-derive snapshot + {slot, spell_level}) and sum
+	 *  the delta (damage/heal) kinds. Zero delta when there's no `upcast`, no cast ctx (effects-auto off
+	 *  — N6 respects the toggle), or the slot equals the base level. count/area/duration are slice 2+.
+	 *  A broken formula degrades (toast + base only, H11), never silently-wrong dice. */
+	private upcastDamageDelta(r: SpellRow, slotLevel: number): UpcastDelta {
+		const base = this.sheet?.castCtx;
+		if (!r.upcast || !base) return { pool: {}, flat: 0 };
+		const ctx = withCastSlot(base, slotLevel, r.level);
+		let acc: UpcastDelta = { pool: {}, flat: 0 };
+		for (const res of evalUpcast(r.upcast, ctx)) {
+			if ('error' in res) {
+				toast(`Upcast: ${res.error}`);
+				continue;
+			}
+			if ((res.kind === 'damage' || res.kind === 'heal') && res.combine === 'delta')
+				acc = combinePools(acc.pool, acc.flat, res.pool, res.flat);
+		}
+		return acc;
+	}
+
+	private rollSpellAttack(r: SpellRow, e: Event, caster: SpellcastingClass, up: UpcastCast): void {
 		const fx = this.effectsFor('attack');
 		const dmgFx = this.effectsFor('damage');
 		const toHit = caster.attack.value + fx.flat;
+		const hasDmg = !!r.damagePool && Object.keys(r.damagePool).length > 0;
 		if (wantsTray(e)) {
 			this.openRoll(
 				{
@@ -703,31 +735,39 @@ class CombatVM {
 			);
 			if (hasDmg)
 				this.tray.queueDamage({
-					label: `${r.name} damage`,
-					parts: [this.spellDamagePart(r, dmgFx)]
+					label: `${r.name} damage${up.suffix}`,
+					parts: [this.spellDamagePart(r, dmgFx, up.delta)]
 				});
 		} else {
 			this.tray.pushRoll(
 				`${r.name} (spell attack)`,
 				rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice, fx),
-				hasDmg ? rollDamageParts([this.spellDamagePart(r, dmgFx)]) : undefined
+				hasDmg ? rollDamageParts([this.spellDamagePart(r, dmgFx, up.delta)]) : undefined
 			);
 		}
 	}
 
-	private rollSpellCast(r: SpellRow, e: Event, ritual: boolean): void {
+	private rollSpellCast(r: SpellRow, e: Event, ritual: boolean, slotLevel: number): void {
 		const alt = wantsTray(e);
 		const caster = casterForSpell(this.sheet, r.ref) ?? this.sheet?.spellcasting.classes[0];
 		const hasDmg = !!r.damagePool && Object.keys(r.damagePool).length > 0;
+		// the upcast contribution + its provenance tag (B8, v1: a "(slot N)" label when actually upcast)
+		const up: UpcastCast = {
+			delta: this.upcastDamageDelta(r, slotLevel),
+			suffix: slotLevel > r.level ? ` (slot ${slotLevel})` : ''
+		};
 		if (r.resolution === 'hit' && caster) {
-			this.rollSpellAttack(r, e, caster, hasDmg);
+			this.rollSpellAttack(r, e, caster, up);
 		} else if (hasDmg) {
-			// save / auto spell: damage, or (auto) healing with the spellcasting mod
+			// save / auto spell: damage, or (auto) healing with the spellcasting mod. Fold base flat +
+			// upcast delta into the pool/mod (N2 + upcast).
 			const heal = r.resolution === 'auto';
-			const label = `${r.name} ${heal ? 'healing' : 'damage'}`;
-			const mod = heal && caster ? (this.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
-			if (alt) this.openRoll({ label, dice: r.damagePool ?? {}, mod }, e);
-			else this.tray.rollDiceNow({ label, dice: r.damagePool ?? {}, mod });
+			const label = `${r.name} ${heal ? 'healing' : 'damage'}${up.suffix}`;
+			const healMod = heal && caster ? (this.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
+			const merged = combinePools(r.damagePool ?? {}, r.damageFlat, up.delta.pool, up.delta.flat);
+			const mod = healMod + merged.flat;
+			if (alt) this.openRoll({ label, dice: merged.pool, mod }, e);
+			else this.tray.rollDiceNow({ label, dice: merged.pool, mod });
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
 			const suffix = ritual ? ' (ritual)' : '';
@@ -749,6 +789,9 @@ class CombatVM {
 		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
 		if (!this.economy.trySpend(this.economy.ctSlot(r.castTimeIcon))) return;
 		if (slot && play) play.spellSlotsSpent[slot] = (play.spellSlotsSpent[slot] ?? 0) + 1;
+		// the slot LEVEL the spell is actually cast from drives upcast (§4). No leveled slot spent
+		// (cantrip / ritual / free / pure-pact) → cast at the base level, delta 0 (N7).
+		const slotLevel = slot != null ? Number(slot) : r.level;
 		// a concentration spell becomes the active concentration (replacing any prior one, 5e rule);
 		// the PRIOR concentration's cast-applied effect goes down with it
 		if (r.concentration && this.character) {
@@ -757,7 +800,7 @@ class CombatVM {
 			this.character.play.concentration = r.ref;
 		}
 		this.applySpellEffect(r);
-		this.rollSpellCast(r, e, ritual);
+		this.rollSpellCast(r, e, ritual, slotLevel);
 	};
 
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)
