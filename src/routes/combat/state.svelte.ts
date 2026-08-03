@@ -763,8 +763,7 @@ class CombatVM {
 
 	/** The carrier effect's duration in ROUNDS. A `duration` upcast (an ABSOLUTE total — Hunter's Mark
 	 *  8 h → 24 h) wins over the spell's base duration text; `inf` (permanent) → null (no expiry). No
-	 *  duration upcast (or effects-auto off) → the base `durationToRounds`. Units are the rounds canon
-	 *  (CONCENTRATION-PLAN §8). */
+	 *  duration upcast → the base `durationToRounds`. Units are the rounds canon (CONCENTRATION-PLAN §8). */
 	private carrierRounds(
 		r: SpellRow,
 		spell: ReturnType<ContentGraph['get']>,
@@ -854,8 +853,9 @@ class CombatVM {
 
 	/** Evaluate a spell's `upcast` cell against its cast ctx at `slotLevel` — the ONE place the ephemeral
 	 *  ctx is built, so the damage / duration / hp_max / temp_hp consumers below all read the same
-	 *  evaluation. Empty when there's no `upcast` or no cast ctx (effects-auto off — N6 respects the
-	 *  toggle). Pure read; each caller picks the kinds it cares about. */
+	 *  evaluation. Empty only when there's no `upcast` (castCtx is always present now — upcast is a spell
+	 *  mechanic, NOT gated on the auto-calc toggle; N6 revised 2026-08-04). Pure read; each caller picks
+	 *  the kinds it cares about. */
 	private evalUpcastAt(r: SpellRow, slotLevel: number): ReturnType<typeof evalUpcast> {
 		const base = this.sheet?.castCtx;
 		if (!r.upcast || !base) return [];
@@ -886,8 +886,8 @@ class CombatVM {
 	/** The damage/heal upcast deltas as typed parts for a cast from `slotLevel` (item 2): evaluate the
 	 *  spell's `upcast` cell against the ephemeral cast ctx (post-derive snapshot + {slot, spell_level})
 	 *  and keep each damage/heal delta with its own type (`damage:cold:…` → a cold-typed delta the roll
-	 *  path routes to the cold part). Empty when there's no `upcast`, no cast ctx (effects-auto off — N6
-	 *  respects the toggle), or the slot equals the base level. count/area/duration are handled
+	 *  path routes to the cold part). Empty when there's no `upcast` or the slot equals the base level
+	 *  (castCtx is always present — upcast isn't gated on auto-calc). count/area/duration are handled
 	 *  elsewhere. A zero delta (base slot) is dropped so it adds no phantom part. A broken formula
 	 *  degrades (toast + base only, H11), never silently-wrong dice. */
 	private upcastDamageParts(r: SpellRow, slotLevel: number): DamagePart[] {
@@ -961,7 +961,6 @@ class CombatVM {
 	}
 
 	private rollSpellCast(r: SpellRow, e: Event, ritual: boolean, slotLevel: number): void {
-		const alt = wantsTray(e);
 		const caster = casterForSpell(this.sheet, r.ref) ?? this.sheet?.spellcasting.classes[0];
 		// the upcast contribution + its provenance tag (B8): when actually upcast, the suffix names the
 		// slot AND what it added ("(slot 5 · +2d6)") — reusing castPreview — so the roll log / toast
@@ -985,7 +984,7 @@ class CombatVM {
 		}
 		const { parts, kind } = this.spellOutcomeParts(r, caster, up, slotLevel);
 		if (parts.some((p) => Object.keys(p.dice).length > 0 || p.mod !== 0)) {
-			this.rollDamageEntry(`${r.name} ${kind}${up.suffix}`, parts, e, alt, up.note);
+			this.rollDamageEntry(`${r.name} ${kind}${up.suffix}`, parts, e, up.note);
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
 			const suffix = ritual ? ' (ritual)' : '';
@@ -995,18 +994,13 @@ class CombatVM {
 	}
 
 	/** Roll a spell's damage/heal from its typed parts: the FIRST part is the primary (rolled + shown as
-	 *  the entry); the rest are typed damage lines under it (Ice Knife's cold under its piercing). `alt`
-	 *  opens the prefilled tray instead of rolling instantly (queuing the rest as its follow-up). */
-	private rollDamageEntry(
-		label: string,
-		parts: DamagePartSpec[],
-		e: Event,
-		alt: boolean,
-		note?: string
-	): void {
+	 *  the entry); the rest are typed damage lines under it (Ice Knife's cold under its piercing). A tray
+	 *  intent (`wantsTray(e)` — Alt/Ctrl-click) opens the prefilled tray instead of rolling instantly
+	 *  (queuing the rest as its follow-up). */
+	private rollDamageEntry(label: string, parts: DamagePartSpec[], e: Event, note?: string): void {
 		const [primary, ...rest] = parts;
 		if (!primary) return;
-		if (alt) {
+		if (wantsTray(e)) {
 			this.openRoll(
 				{
 					label,

@@ -53,7 +53,7 @@ import { applyEffects, collectFacts, type EffectFacts, type ResourceDef } from '
 import { didYouMean } from '../effects/suggest';
 import { resolveActiveEffects } from '../effects/resolver';
 import { deriveSpellcasting, castingAbilityByClass, type Spellcasting } from './spellcasting';
-import { makeEffectCtxFactory } from './derive-context';
+import { makeEffectCtxFactory, baseResolveState } from './derive-context';
 import { computed, type Computed, type Contribution, type System } from '../rules/pipeline';
 
 // SKILL_ABILITY / SkillId live in the leaf `./skills` (so derive's sub-modules share them without a
@@ -445,6 +445,11 @@ export function deriveSheet(
 	}
 	const scores = {} as Record<Ability, number>;
 	for (const ab of ABILITIES) scores[ab] = abilityComputed[ab].value;
+	// Auto-calc OFF gates the effect LAYERS (Bless / Rage / conditions), NOT the spell's OWN mechanics:
+	// with no resolve stage there's no `effCtx`, but upcast + resource-option formulas still need the L2
+	// ctx (so a higher-slot cast scales its dice in manual mode, like cantrip die-scaling already does).
+	// Build it from the base state — the same `makeCtx` factory, fed base scores.
+	if (!effCtx) effCtx = makeCtx(baseResolveState(scores, maxHpBase.value));
 
 	// the ONE typed-facts object (D7): every token parsed + value-resolved once; every consumer
 	// below (and the roll path / action economy through the sheet) reads THIS, never a re-scan.
@@ -497,7 +502,8 @@ export function deriveSheet(
 
 	// the base L2 ctx (a bare synthetic effect — no per-effect spellcasting scoping): resource-option
 	// formulas resolve against it here, AND it's the post-derive snapshot the cast layer wraps for
-	// upcast (UPCAST §5). `undefined` when auto-calc is off → no auto-scaling (N6).
+	// upcast (UPCAST §5). Always present now — built from base state even with auto-calc off (the toggle
+	// gates effect LAYERS, not spell mechanics like upcast; N6 revised 2026-08-04).
 	const baseCtx = ctxOf(effCtx, { source: '', layer: 'feature', tokens: [] });
 
 	return {

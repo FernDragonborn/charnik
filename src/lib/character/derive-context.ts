@@ -7,7 +7,7 @@
  * an orchestrator.
  */
 import type { Character } from './schema';
-import type { Ability } from '../rules/core';
+import { ABILITY_IDS, abilityModifier, type Ability } from '../rules/core';
 import type { LoadedRow, LoadedRowOf } from '../content/loader';
 import {
 	makeExprContext,
@@ -26,6 +26,25 @@ function armorWeightOf(row: LoadedRowOf<'item'> | undefined): PlayVars['armorTyp
 	if (t.includes('medium')) return 'medium';
 	if (t.includes('light')) return 'light';
 	return 'none';
+}
+
+/** The BASE (pre-effect) resolve state, for building `castCtx` when auto-calc is OFF: no effects were
+ *  gathered, so scores are base, mods derive from them, and conditions/resources are empty. Lets a
+ *  spell's own mechanics (upcast) evaluate in manual mode while the effect layers stay gated. */
+export function baseResolveState(
+	scores: Record<Ability, number>,
+	hpMaxValue: number
+): ResolveState {
+	const mods = {} as Record<Ability, number>;
+	for (const ab of ABILITY_IDS) mods[ab] = abilityModifier(scores[ab]);
+	return {
+		scores,
+		mods,
+		hpMax: { value: hpMaxValue },
+		conditions: new Set(),
+		resources: {},
+		resourceMax: {}
+	};
 }
 
 /** The static setup a derive ctx closes over — computed once per `deriveSheet`, before the resolve. */

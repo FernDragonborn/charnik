@@ -257,6 +257,13 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		expect(diceOf(8)).toBe(4); // 3d8 base + 1d8 upcast
 	});
 
+	it('upcast still scales with auto-calc OFF — it is a spell mechanic, not an effect layer (N6 revised)', () => {
+		character.play.autoCalc = false; // manual mode: effect modifiers off, but spell mechanics stay
+		character.play.spellSlotsSpent = { '1': 4 }; // spill to a level-2 slot
+		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
+		expect(diceOf(8)).toBe(4); // 3d8 base + 1d8 upcast — dice still boosted in manual mode
+	});
+
 	it('a healing upcast folds base + delta + spellcasting mod (int +3) at slot 2', () => {
 		character.play.spellSlotsSpent = { '1': 4 };
 		combat.cast(spellRow(graph, `spell:${S}:cure_wounds`, 'on')!, noModifiers);

@@ -28,7 +28,8 @@ spellcasting_mod scoping, B8-суфікс, count/area-показ, concentration-
 - Модуль `effects/upcast.ts`: `parseUpcast`/`evalUpcast`/`combinePools`; combine per-kind
   (delta для damage/heal/hp_max/temp_hp, absolute для count/area/duration); `inf`-guard (N3);
   degrade на битій формулі (H11). SpellRow несе `upcast`+`damageFlat` (N2).
-- Каст: `deriveSheet` віддає `castCtx` (post-derive знімок; undefined коли auto-effects off → N6);
+- Каст: `deriveSheet` віддає `castCtx` (post-derive знімок; ЗАВЖДИ present — апкаст не гейтиться на
+  auto-calc, N6 переглянуто 2026-08-04, див. нижче);
   VM `upcastDamageDelta` фолдить delta у `spellDamagePart` + save/auto-гілку; провенанс = «(slot N)»
   лейбл (B8 v1); слот = auto-найнижчий `slotToSpend` (пікера ЩЕ нема — див. нижче).
 - Дані: колонка `upcast` в ОБИДВІ spells.csv + 9 курованих спелів (both editions), звірено з
@@ -318,9 +319,14 @@ Eval через **опційний seam-хук** (як `applyEffects`), не п�
 - **N5 · Preview vs commit.** Гравець хоче БАЧИТИ «5-й:10d6, 6-й:12d6» ДО касту (вибір слоту).
   Апкаст — **функція від слоту** для preview-тултипа, не лише one-shot обрахунок у commit-екшені.
   Eval потрібен і в read-only preview, не тільки в cast-action.
-- **N6 · Апкаст юзає EVALUATOR (чиста L2), не effects-APPLICATION toggle.** Вимикач auto-effects
-  вимикає *застосування* модифікаторів; evaluator — окрема чиста утиліта. Апкаст залежить від
-  **наявності модуля-evaluator**, не від toggle on/off. Розрізнити (sharpens B6/H7).
+- **N6 · Апкаст НЕ гейтиться на auto-calc toggle (РІШЕННЯ 2026-08-04, юзер).** Вимикач auto-calc
+  вимикає *шари ефект-МОДИФІКАТОРІВ* (Bless/Rage/кондишени), а НЕ власну механіку спела. Апкаст (і
+  cantrip die-scaling, що вже завжди-он) масштабуються **незалежно від тумблера**. Реалізація: `castCtx`
+  тепер будується з БАЗОВОГО стану навіть коли auto-calc off (`derive.ts` else-гілка через `makeCtx`) →
+  завжди present. Раніше було навпаки (castCtx undefined off) — ПЕРЕВЕРНУТО. Наслідок за конструкцією:
+  dice-апкаст (Fireball +2d6, False Life temp) працює off; effect-магнітудний (Aid hp_max, Magic Weapon
+  enhancement) не «застосовується» off бо самі спавнені токени — ефекти, які тумблер і має гейтити
+  (консистентно: effect-granting спели потребують ефектів увімкненими).
 - **N7 · Free/innate/ritual каст → default `slot`.** Безслотовий/ритуальний каст → RAW базовий
   рівень, апкаст=0. `slot` мусить бути визначений навіть коли пул не чіпається:
   default `slot = spell_level`, delta 0.
@@ -355,8 +361,9 @@ Eval через **опційний seam-хук** (як `applyEffects`), не п�
   (`spellcasting.ts:58`), пакт негейтиться (L1006-1008). Апкаст-слот варлока = `spellLevel`
   forcedUpcast-пулу (`spellcasting.ts:33`).
 - **B8 ПІДТВЕРДЖЕНО.** `EvalResult = {ok,value}|{ok,error}` (`expression-evaluator.ts:47`), 0 трейсу.
-- **N6 ПІДТВЕРДЖЕНО.** Effects-auto toggle гейтить шари в derive (`derive.ts:352`, `roll.ts:75`,
-  `schema.ts:140`); evaluator окремий. Відкрите: чи апкаст поважає toggle «base only».
+- **N6 ВИРІШЕНО (2026-08-04): апкаст НЕ поважає toggle.** Auto-calc гейтить лише шари ефект-модифікаторів
+  (`derive.ts` gather-гілка, `roll.ts`, `schema.ts:141` `autoCalc`); `castCtx` тепер завжди present
+  (будується з базового стану в off-гілці). Спел-механіка (апкаст, cantrip-скейл) — завжди-он.
 - **H12 ПІДТВЕРДЖЕНО, гап БІЛЬШИЙ.** `play.concentration` = лише ref-рядок, **без таймера**.
   duration-апкаст conc-спела нема куди годувати (концентрація не таймиться зараз).
 - **N1 ЗНЯТО** (грамматика перевірена: нема `?:`).
@@ -418,8 +425,10 @@ Eval через **опційний seam-хук** (як `applyEffects`), не п�
   `damagePool` dice-only, флет губиться — фікс).
 - B3 (hp_max/temp_hp): `applySpellEffect` рахує `base+delta`, переписує amount токена.
 - B8 трейс: cast-шар СИНТЕЗУЄ `{source:"Upcast (slot N)", op:add, amount}`, evaluator не чіпаємо.
-- N6: апкаст ПОВАЖАЄ effects-auto toggle (off → база+проза). Evaluator окремий від toggle, але як
-  політика — поважає.
+- N6 (ПЕРЕГЛЯНУТО 2026-08-04): апкаст НЕ гейтиться на auto-calc — спел-механіка, не ефект-модифікатор.
+  `castCtx` завжди present (будується з базового стану навіть off). Тумблер гейтить лише Bless/Rage/
+  кондишени. Dice-апкаст працює off; effect-магнітудний (Aid/Magic Weapon) не застосовується off бо самі
+  спавнені токени — ефекти (консистентно).
 
 **Дані — нічого з тракту в прозі**
 - База хілу: `healDice` регекс-скрейп → **вбити**, класти в колонку `damage` (resolution=auto),

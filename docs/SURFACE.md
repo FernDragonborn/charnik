@@ -335,6 +335,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/derive-context.ts`
 
+- `function baseResolveState` — The BASE (pre-effect) resolve state, for building `castCtx` when auto-calc is OFF: no effects were * gathered, so sco…
 - `interface EffectCtxDeps` — The static setup a derive ctx closes over — computed once per `deriveSheet`, before the resolve.
 - `function makeEffectCtxFactory` — Build the `(state) => EffectCtx` the resolve stage calls.
 
@@ -1067,4 +1068,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 41 components · 589 exports across 91 modules · 31 duplicate suspects._
+_45 tokens · 63 global classes · 41 components · 590 exports across 91 modules · 31 duplicate suspects._
