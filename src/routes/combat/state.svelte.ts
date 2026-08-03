@@ -36,6 +36,7 @@ import {
 	computeAttacks,
 	standardActions,
 	buildSpellGroups,
+	enhancementTokens,
 	casterForSpell,
 	preparedTalliesByClass,
 	canTogglePreparedFor,
@@ -99,8 +100,9 @@ const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> 
  * HP slice; verify in the live app (shot.mjs), never blind. Until a real need, staying over is fine.
  */
 /** The upcast contribution to ONE cast: the folded damage/heal deltas as typed parts (item 2 —
- *  `damage:cold:…` routes to the cold part), plus a provenance label suffix ("(slot 5)"). */
-type UpcastCast = { deltas: DamagePart[]; suffix: string };
+ *  `damage:cold:…` routes to the cold part), a provenance label suffix ("(slot 5 · +2d6)"), and — when
+ *  the cast actually adds dice — a fuller roll-log `note` ("8d6 base + 2d6 @ slot 5", item 4). */
+type UpcastCast = { deltas: DamagePart[]; suffix: string; note?: string };
 
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. Each completed
@@ -731,7 +733,18 @@ class CombatVM {
 		// `flat_bonus:hp_max+5` gets an ADDITIONAL `flat_bonus:hp_max+delta` per slot above base. hp_max
 		// is a fold target, so the two tokens sum cleanly (no string-surgery over the base token).
 		const hpMaxDelta = this.upcastFlatDelta(r, slotLevel, 'hp_max');
-		const effects = hpMaxDelta > 0 ? [...tokens, `flat_bonus:hp_max+${hpMaxDelta}`] : tokens;
+		// Item 7 (Magic Weapon): an `enhancement` upcast is the whole magic-weapon bonus (+1/+2/+3 by
+		// slot). The engine has no per-instance weapon target, so the buff is spawned as WEAPON-SCOPED
+		// flat_bonus:attack/damage (melee+ranged → every weapon, but NOT spell attacks); the scope also
+		// routes the flat through computeAttacks' scoped-fold (rollEffectsFor skips weapon-scoped flats).
+		// Limitation: it lands on ALL the caster's weapons, not just the one touched (per-instance targeting
+		// is the deferred roller work) — surfaced as a labelled effect the player sees.
+		const enhance = this.upcastFlatDelta(r, slotLevel, 'enhancement');
+		const effects = [
+			...tokens,
+			...(hpMaxDelta > 0 ? [`flat_bonus:hp_max+${hpMaxDelta}`] : []),
+			...(enhance > 0 ? enhancementTokens(enhance) : [])
+		];
 		if (!c || (!effects.length && !r.concentration)) return;
 		this.removeLinkedEffect(r.ref); // re-cast refreshes instead of stacking a duplicate
 		const rounds = this.carrierRounds(r, spell, slotLevel);
@@ -849,10 +862,16 @@ class CombatVM {
 		return evalUpcast(r.upcast, this.castCtxFor(r, base, slotLevel));
 	}
 
-	/** The summed FLAT upcast delta for one magnitude kind (`hp_max` / `temp_hp`) at a cast slot — the
-	 *  extra hit-point-max / temp-HP a spell grants per slot above its base (Aid, False Life). Broken
-	 *  tokens degrade (toast), never a wrong number (H11). */
-	private upcastFlatDelta(r: SpellRow, slotLevel: number, kind: 'hp_max' | 'temp_hp'): number {
+	/** The summed FLAT upcast value for one magnitude kind at a cast slot: the extra hit-point-max /
+	 *  temp-HP a spell grants per slot above its base (Aid, False Life — a `delta` kind), or the whole
+	 *  `enhancement` bonus a magic-weapon buff confers at this slot (Magic Weapon +1/+2/+3 — an
+	 *  `absolute` kind, so the formula already gives the full value). Broken tokens degrade (toast),
+	 *  never a wrong number (H11). */
+	private upcastFlatDelta(
+		r: SpellRow,
+		slotLevel: number,
+		kind: 'hp_max' | 'temp_hp' | 'enhancement'
+	): number {
 		let acc = 0;
 		for (const res of this.evalUpcastAt(r, slotLevel)) {
 			if ('error' in res) {
@@ -898,7 +917,8 @@ class CombatVM {
 					dice: { 20: 1 },
 					mod: toHit,
 					advantage: netAdvantage(fx),
-					mods: fx
+					mods: fx,
+					...(up.note ? { note: up.note } : {})
 				},
 				e
 			);
@@ -907,7 +927,8 @@ class CombatVM {
 			this.tray.pushRoll(
 				`${r.name} (spell attack)`,
 				rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice, fx),
-				hasDmg ? rollDamageParts(parts) : undefined
+				hasDmg ? rollDamageParts(parts) : undefined,
+				up.note
 			);
 		}
 	}
@@ -946,9 +967,17 @@ class CombatVM {
 		// slot AND what it added ("(slot 5 · +2d6)") — reusing castPreview — so the roll log / toast
 		// explains the boosted total instead of a bare number.
 		const preview = slotLevel > r.level ? this.castPreview(r, slotLevel) : '';
+		const deltas = this.upcastDamageParts(r, slotLevel);
+		// item 4: a fuller provenance line for the roll log — the boosted dice split into base + upcast,
+		// so a bigger total is explained ("8d6 fire base + 2d6 fire @ slot 5"), not just tagged with the slot.
+		const note =
+			deltas.length && r.damageParts.length
+				? `${formatDamageParts(r.damageParts)} base + ${formatDamageParts(deltas)} @ slot ${slotLevel}`
+				: undefined;
 		const up: UpcastCast = {
-			deltas: this.upcastDamageParts(r, slotLevel),
-			suffix: slotLevel > r.level ? ` (slot ${slotLevel}${preview ? ` · ${preview}` : ''})` : ''
+			deltas,
+			suffix: slotLevel > r.level ? ` (slot ${slotLevel}${preview ? ` · ${preview}` : ''})` : '',
+			...(note ? { note } : {})
 		};
 		if (r.resolution === 'hit' && caster) {
 			this.rollSpellAttack(r, e, caster, up);
@@ -956,7 +985,7 @@ class CombatVM {
 		}
 		const { parts, kind } = this.spellOutcomeParts(r, caster, up, slotLevel);
 		if (parts.some((p) => Object.keys(p.dice).length > 0 || p.mod !== 0)) {
-			this.rollDamageEntry(`${r.name} ${kind}${up.suffix}`, parts, e, alt);
+			this.rollDamageEntry(`${r.name} ${kind}${up.suffix}`, parts, e, alt, up.note);
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
 			const suffix = ritual ? ' (ritual)' : '';
@@ -968,7 +997,13 @@ class CombatVM {
 	/** Roll a spell's damage/heal from its typed parts: the FIRST part is the primary (rolled + shown as
 	 *  the entry); the rest are typed damage lines under it (Ice Knife's cold under its piercing). `alt`
 	 *  opens the prefilled tray instead of rolling instantly (queuing the rest as its follow-up). */
-	private rollDamageEntry(label: string, parts: DamagePartSpec[], e: Event, alt: boolean): void {
+	private rollDamageEntry(
+		label: string,
+		parts: DamagePartSpec[],
+		e: Event,
+		alt: boolean,
+		note?: string
+	): void {
 		const [primary, ...rest] = parts;
 		if (!primary) return;
 		if (alt) {
@@ -978,7 +1013,8 @@ class CombatVM {
 					dice: primary.dice,
 					mod: primary.mod,
 					...(primary.bonusDice ? { bonusDice: primary.bonusDice } : {}),
-					...(primary.mods ? { mods: primary.mods } : {})
+					...(primary.mods ? { mods: primary.mods } : {}),
+					...(note ? { note } : {})
 				},
 				e
 			);
@@ -987,7 +1023,8 @@ class CombatVM {
 			this.tray.pushRoll(
 				label,
 				rollPool(primary.dice, primary.mod, 0, primary.bonusDice ?? [], primary.mods ?? {}),
-				rest.length ? rollDamageParts(rest) : undefined
+				rest.length ? rollDamageParts(rest) : undefined,
+				note
 			);
 		}
 	}
@@ -1033,6 +1070,7 @@ class CombatVM {
 			else if (res.kind === 'area') bits.push(`area ${res.flat} ft (${metres(res.flat)})`);
 			else if (res.kind === 'hp_max' && res.flat) bits.push(`+${res.flat} HP max`);
 			else if (res.kind === 'temp_hp' && res.flat) bits.push(`+${res.flat} temp HP`);
+			else if (res.kind === 'enhancement' && res.flat) bits.push(`+${res.flat} attack & damage`);
 			else if (res.kind === 'duration') bits.push(res.isInfinite ? 'permanent' : `${res.flat} rds`);
 		}
 		return bits.join(' · ');

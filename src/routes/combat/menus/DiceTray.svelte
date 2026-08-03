@@ -67,6 +67,7 @@
 							{part.type}{/if}: <span class="roll-result">{part.total}</span>{/each}
 					{#if r.damage.length > 1}= <span class="roll-result">{damageTotal(r.damage)}</span>{/if}
 				</div>{/if}
+			{#if r.note}<div class="prov">⇡ {r.note}</div>{/if}
 		</div>{/if}
 </div>
 
@@ -221,5 +222,9 @@
 	.drop {
 		color: var(--color-text-muted);
 		opacity: 0.45;
+	}
+	/* upcast provenance line — accented so the base+delta breakdown reads as a distinct annotation */
+	.prov {
+		color: var(--color-accent);
 	}
 </style>

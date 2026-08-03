@@ -32,6 +32,9 @@ export interface RollSpec {
 	bonusDice?: BonusDie[];
 	/** reroll/min_die effect facts — apply on the tray's Roll too. */
 	mods?: DieMods;
+	/** Optional provenance line recorded with the completed roll (item 4: an upcast's "Xd base + Yd @
+	 *  slot N"), so a boosted roll explains where the extra dice came from. */
+	note?: string;
 }
 
 export class RollTray {
@@ -42,6 +45,8 @@ export class RollTray {
 	rollSrc = $state<string | null>(null);
 	/** reroll/min_die effect facts riding a prefilled roll (they apply on the tray's Roll too). */
 	private rollMods: DieMods = {};
+	/** Provenance line carried from a prefilled roll into its logged entry (item 4). */
+	private rollNote: string | null = null;
 	/** A follow-up roll fired right after the tray's Roll (an attack's damage after its to-hit) — one
 	 *  typed part per damage type. */
 	private pendingDamage: { label: string; parts: DamagePartSpec[] } | null = null;
@@ -77,6 +82,7 @@ export class RollTray {
 		this.rollAdvantage = 0;
 		this.rollSrc = null;
 		this.rollMods = {};
+		this.rollNote = null;
 		this.pendingDamage = null;
 	};
 
@@ -88,6 +94,7 @@ export class RollTray {
 		this.rollMod = spec.mod;
 		this.rollAdvantage = spec.advantage ?? 0;
 		this.rollMods = spec.mods ?? {};
+		this.rollNote = spec.note ?? null;
 		this.pendingDamage = null;
 	};
 
@@ -103,7 +110,7 @@ export class RollTray {
 		const primary = rollPool(this.dice, this.rollMod, this.rollAdvantage, [], this.rollMods);
 		const damage = this.pendingDamage ? rollDamageParts(this.pendingDamage.parts) : undefined;
 		this.pendingDamage = null;
-		this.pushRoll(this.rollSrc ?? 'Custom roll', primary, damage);
+		this.pushRoll(this.rollSrc ?? 'Custom roll', primary, damage, this.rollNote ?? undefined);
 	};
 
 	/** Roll a dice pool immediately (a tap that "just works"): advantage, signed bonus dice and
@@ -117,8 +124,13 @@ export class RollTray {
 
 	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
 	 *  the per-type rolls that follow the to-hit — each shown as its own line, plus a combined total. */
-	pushRoll = (label: string, r: Rolled, damage?: TypedRoll[]) => {
-		const entry: RollLogEntry = { label, ...r, ...(damage ? { damage } : {}) };
+	pushRoll = (label: string, r: Rolled, damage?: TypedRoll[], note?: string) => {
+		const entry: RollLogEntry = {
+			label,
+			...r,
+			...(damage ? { damage } : {}),
+			...(note ? { note } : {})
+		};
 		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
 		this.persist?.(entry);
 		const kept = r.advantageRoll ? `d20(${r.advantageRoll.kept}) ` : '';

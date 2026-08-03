@@ -6,6 +6,15 @@
 
 ## Статус
 
+**ФІНАЛ 2026-08-04 — 10/10 пунктів закрито (985 тестів зелені).** Остання сесія добила три відкриті
+хвости: **(7) Magic Weapon** — новий `enhancement` upcast-kind (абсолют, +1/+2/+3 за слотом) спавнить
+`flat_bonus:attack/damage` ефект-токени через ту саму магнітудну-seam, що hp_max/temp_hp;
+**(4) roll-log трейс-рядок** — «Xd base + Yd @ slot N» на записі кидка (`RollLogEntry.note`,
+провенанс поза лейбл-суфіксом); **(9) кантрип** — РІШЕННЯ: `cantripDieMultiplier` ЛИШАЄТЬСЯ (це
+єдиний дім УНІФОРМНОГО системного правила скейлу кантрипів 5/11/17, НЕ дуп per-spell upcast-системи —
+див. §9 нижче). Далі лишаються тільки СВІДОМО-scoped follow-up (Geas/Dominate day-year тривалості,
+per-instance роллер D14, guided authoring-UI) — не блокери апкасту.
+
 **ДОРОБКИ 2026-08-03 — 8/10 незавершених пунктів закрито, 2 частково (975 тестів зелені).** Повний
 розбір у секції «Незавершене» нижче: пікер+preview, мультитип-дамаг, hp_max/temp_hp, флет-heal,
 spellcasting_mod scoping, B8-суфікс, count/area-показ, concentration-хвости — ЗРОБЛЕНО; step-спели (7) +
@@ -67,9 +76,12 @@ prayer_of_healing/mass_*) тепер несуть базу в `damage`-коло�
    у carrier (fold-ціль → сумується чисто). temp_hp (False Life): нова `resolution=temp` — котить базу-кубики
    + `temp_hp`-дельту, лейбл «temp HP», БЕЗ spellcasting-mod. Дані: Aid + False Life обидві редакції.
 
-4. **[x] B8 трейс (label-рівень).** Суфікс тепер називає слот І що додав: «(slot 5 · +2d6)» (реюз
-   `castPreview`). ⚠ ЛИШИЛОСЬ (опційно): окремий roll-log РЯДОК «8d6 база +2d6 @slot5» замість суфікса —
-   потребує проброс base/delta крізь `rollPool`/`TypedRoll`; суфікс дає ту саму інфу без розколу ролу.
+4. **[x] B8 трейс — ПОВНІСТЮ (label-суфікс + roll-log рядок).** Суфікс називає слот І що додав:
+   «(slot 5 · +2d6)» (реюз `castPreview`). **Окремий roll-log РЯДОК ДОДАНО (2026-08-04):**
+   `RollLogEntry.note` несе «8d6 fire base + 2d6 @ slot 5» (base з `r.damageParts`, delta з
+   `upcastDamageParts`), проброшений крізь `RollSpec.note`/`pushRoll`/`rollDamageEntry` до tray;
+   рендериться `.prov`-рядком (⇡, `--color-accent`) у `RollLog.svelte` + `DiceTray.svelte`. Так base/delta
+   явно розколоті у логу, а суфікс лишається компактним тегом для тоста/Playbar.
 
 5. **[x] spellcasting_mod scoping.** `castCtxFor` загортає cast-ctx через `withSpellcastingMod` за
    `casterForSpell(sheet, r.ref)`; `carrierRounds`/`upcastDamageParts`/`upcastFlatDelta` усі йдуть через
@@ -79,30 +91,44 @@ prayer_of_healing/mass_*) тепер несуть базу в `damage`-коло�
    кубиків. Правило mod-на-хіл: spellcasting-mod рідиться ЛИШЕ dice-valued healing (Cure Wounds), не флет
    (Heal). Дані: Heal (70+10/слот) + Mass Heal (700) обидві редакції → `resolution=auto`.
 
-7. **[~] Дискретні step()-спели.** ЗРОБЛЕНО «одна дод. ціль/слот» через `count` — Hold Person
-   (`count:slot-1`, обидві), Hold Monster (`count:slot-4`, 2024). ЛИШИЛОСЬ (свідомо): **Magic Weapon
-   +1/+2/+3** — потребує НОВОГО `attack`/`enhancement` upcast-kind + механізму magic-weapon ефекту (нема в
-   движку); **Geas/Dominate** day/year-тривалості виразні через `duration:step`, але в rounds-каноні
-   (30 днів = 432000 раундів) низька цінність — курований follow-up, не блокер.
+7. **[x] Дискретні step()-спели.** «одна дод. ціль/слот» через `count` — Hold Person (`count:slot-1`,
+   обидві), Hold Monster (`count:slot-4`, 2024). **Magic Weapon +1/+2/+3 ЗРОБЛЕНО (2026-08-04):** новий
+   `enhancement` upcast-kind (АБСОЛЮТ — формула дає повний +n, `enhancement:step(slot, 2->1, 4->2, 6->3)`
+   2014 / `2->1, 3->2, 6->3` 2024). `applySpellEffect` рахує +n і спавнить ефект-токени через
+   `enhancementTokens(n)` (`combat/spells.ts`) — reuse тієї ж магнітудної seam, що hp_max/temp_hp
+   (`upcastFlatDelta` розширено на `'enhancement'`). castPreview показує «+n attack & damage».
+   **Токени UNTYPED** (`flat_bonus:attack+n; flat_bonus:damage+n`): движок НЕ має per-instance цілі-зброї,
+   а грамматика `flat_bonus:damage:<q>` трактує `<q>` як damage-ТИП, не weapon-scope (weapon-scoped flat
+   damage не виразна без зміни L1-грамматики — compatibility-чокпоінт, свідомо НЕ чіпав). Наслідок
+   (задокументований ліміт, сюрфейситься як лейбл-ефект): бонус тикає ВСІ зброї кастера + трохи його
+   spell-атаки/дамаг. Точна per-weapon ціль = відкладений роллер (D14). **ЛИШИЛОСЬ (свідомо):**
+   Geas/Dominate day/year-тривалості виразні через `duration:step`, але в rounds-каноні (30 днів =
+   432000 раундів) низька цінність — курований follow-up, не блокер.
 
 8. **[x] count/area-показ.** Пікер-preview (`castPreview`) рендерить count («N×») + area («N ft (M m)»,
    метрика H10) + hp_max/temp_hp/duration за слотом. Реальний N-кидок — count-роллер (deferred, D14).
 
-9. **[~] Кантрип-уніфікація.** ЗРОБЛЕНО справжній баг: EB die-multiply (`1d10`→`2d10`) ПРИБРАНО — EB тепер
-   `count:step(level, …)` (промені), `castingDice` не множить кубик count-кантрипу, каст нагадує к-сть
-   променів (per-beam роллер deferred → чіп/нагадування, як юзер прийняв). ЛИШИЛОСЬ (свідомо):
-   `cantripDieMultiplier` НЕ ретайрнуто повністю — для dice-scaling кантрипів (Fire Bolt) регекс
-   коректний+тестований, а перенос у формулу на `char_level` регресив би display (spellRow чистий, без
-   evaluator) заради нуль-зміни поведінки.
+9. **[x] Кантрип-уніфікація — РІШЕННЯ: `cantripDieMultiplier` ЛИШАЄТЬСЯ (не ретайр).** Справжній баг
+   закрито: EB die-multiply (`1d10`→`2d10`) ПРИБРАНО — EB тепер `count:step(level, …)` (промені),
+   `castingDice` не множить кубик count-кантрипу, каст нагадує к-сть променів (per-beam роллер deferred →
+   чіп/нагадування). **«Повний ретайр» — свідомо НЕ робимо, бо це була б РЕГРЕСІЯ, не дедуп** (перегляд
+   2026-08-04): скейл кантрипів на 5/11/17 — це УНІФОРМНЕ системне ПРАВИЛО (однакове для ВСІХ damage-
+   кантрипів обох редакцій), тож його єдиний дім — rules-core функція (`spellcasting.ts:165`), а НЕ
+   per-spell дані. `upcast`-система — для скейлу, що РІЗНИЙ на спел; кантрип-tier — один на систему. Це
+   різні речі, не дуп (H7 переоцінено). Розкидати правило по N рядках (`damage:step(char_level,…)` на
+   кожному кантрипі) запросило б неузгодженість і зчепило б чистий `spellRow` з evaluator'ом заради
+   нуль-зміни поведінки. → лишаємо як є, з цим обґрунтуванням (sync-plan-with-code: доганяємо H7).
 
 10. **[x] Concentration-хвости** ([[CONCENTRATION-PLAN.md]] §4/§6/§7). (a) carrier-рядок показує тап-badge
     «◎ Concentration» (навіть token-less: Hold Person, Web) — `EffectsPanel`. (b) `endConcentrationIfBroken`
     — реактивний `$effect` на combat-сторінці: hp≤0 АБО `economy.incapacitated` → кінець концентрації.
     (c) CON-сейв від урону = toast-НАГАДУВАННЯ (DC max(10,⌊dmg/2⌋)) у `damage()`, не авто-скид.
 
-Резюме-вказівник для повернення: відкрите = (7) Magic Weapon `attack`-kind + magic-weapon-ефект-магнітуда;
-(9) повний ретайр `cantripDieMultiplier` разом із multi-instance роллером (D14); (4) окремий roll-log
-рядок трейсу. Усе решта в коді + тестах.
+Резюме-вказівник для повернення: **усі 10 пунктів закриті (985 тестів).** Відкриті лише свідомо-scoped
+follow-up, НЕ хвости апкасту: (7-tail) Geas/Dominate day/year-тривалості (низька цінність у rounds-каноні);
+(D14) multi-instance per-instance роллер-цикл — доти `count` деградує в чіп, а Magic Weapon enhancement
+тикає всі зброї кастера (untyped, per-instance цілі нема); (N8) guided authoring-UI для `upcast`-токенів.
+Усе решта в коді + тестах.
 
 ## 0. Що є в коді зараз (база, від якої відштовхуємось)
 
@@ -181,7 +207,7 @@ Base=власний `spell_level` майже завжди (Animate Dead «above 
 | kind | що робить число | маршрут |
 | --- | --- | --- |
 | `damage` `heal` `projectiles` | кістки/інстанси кидка | dice-roller (damagePool / instance-count) |
-| `hp_max` `temp_hp` | магнітуда наспавненого ефекту | рантайм-ефект+duration seam, НЕ чіп |
+| `hp_max` `temp_hp` `enhancement` | магнітуда наспавненого ефекту | рантайм-ефект+duration seam, НЕ чіп |
 | `targets` `duration` `area` | сам ефект (= опис) | дисплей-чіп |
 
 - `targets` (гравець сам обирає кого) ≠ `projectiles` (кожен = окрема атака+ціль). Різні kind.
@@ -240,9 +266,11 @@ Eval через **опційний seam-хук** (як `applyEffects`), не п�
 - **H5 · мульти-тип дамагу** → typed під-слот `damage:bludgeoning:per_slot(1d8)`
   (грамматика вже є, `helpers.test.ts:212`).
 - **B6 · removability seam** → опційний хук, fallback база+проза при effects=off. (§4)
-- **H7 · дві системи скейлу** → кантрип-скейл (`cantripDieMultiplier`, регекс 5/11/17) — той
-  самий шейп. Або підвести під ту саму формулу keyed на `char_level`, або лишити з
-  обґрунтуванням. НЕ вдавати, що дупи нема (don't-dismiss-small-dups).
+- **H7 · дві системи скейлу — ЗАКРИТО (2026-08-04): лишаємо `cantripDieMultiplier`, обґрунтовано.**
+  Спершу здавалось дупом із upcast-системою; переоцінено — це НЕ дуп: кантрип-tier (5/11/17) — уніформне
+  СИСТЕМНЕ правило (rules-core), а `upcast` — per-spell дані. Різні осі (char_level vs slot), різний момент
+  (display vs cast). Підводити під формулу = регресія (розкид правила + зчеплення `spellRow` з evaluator).
+  Деталі = «Незавершене» п.9. (don't-dismiss-small-dups тут не діє — це не дуп, а один дім одного правила.)
 
 ### Друга хвиля — теж інваріантні
 - **B8 · провенанс.** Eval повертає {value,error} без `{source,op,amount}`-трейсу. Апкаст-
@@ -356,7 +384,9 @@ Eval через **опційний seam-хук** (як `applyEffects`), не п�
   `step(char_level, 1->1, 5->2, 11->3, 17->4)`. Не покладатись на «нижче порогу → 0».
 
 **kind-enum + combine**
-- kind: `damage, heal, hp_max, temp_hp, count, area, duration`. `targets`+`projectiles`→**`count`**
+- kind: `damage, heal, hp_max, temp_hp, count, area, duration, enhancement`. `enhancement` (додано
+  2026-08-04, п.7) — абсолютний +n magic-weapon бонус, спавнить `flat_bonus:attack/damage`-токени через
+  ту саму магнітудну seam, що hp_max/temp_hp. `targets`+`projectiles`→**`count`**
   (мультиплікатив), різницю дає наявна колонка `resolution` (attack→N кидків / save→N сейвів /
   auto→N уронів / none→N застосувань). `count` і `area` ОРТОГОНАЛЬНІ (Meteor Swarm = count×area),
   НЕ виключні; `base_count`/`base_area` — незалежні опц. колонки, без exclusivity-валідації.
@@ -365,10 +395,12 @@ Eval через **опційний seam-хук** (як `applyEffects`), не п�
   → ніколи `base+inf` → N3-краш не існує by construction. typed під-слот для мульти-типу:
   `damage:bludgeoning:per_slot(1d8)`.
 
-**Кантрип уніфікація (фіксить баг)**
-- Кантрип-скейл ВХОДИТЬ у формулу (індекс `char_level`). `cantripDieMultiplier` регекс — на пенсію.
-- Eldritch Blast = `count` (промені), НЕ die-multiply — фіксить наявний баг (`spells.ts:270` робить
-  «1d10»→«2d10» замість 2× кидків).
+**Кантрип уніфікація (фіксить баг)** — ⚠ ПЕРЕГЛЯНУТО 2026-08-04 (див. «Незавершене» п.9 + H7)
+- ~~Кантрип-скейл ВХОДИТЬ у формулу (індекс `char_level`); `cantripDieMultiplier` — на пенсію.~~
+  **СКАСОВАНО:** `cantripDieMultiplier` ЛИШАЄТЬСЯ — 5/11/17 це уніформне системне правило (rules-core),
+  не per-spell дані; перенос у формулу = регресія, не дедуп.
+- Eldritch Blast = `count` (промені), НЕ die-multiply — фіксить наявний баг (`spells.ts:270` робив
+  «1d10»→«2d10» замість 2× кидків). ✅ ЗРОБЛЕНО (це і був справжній баг у п.9).
 - Інвокації (Agonizing Blast +cha_mod/beam, Eldritch Spear range) = **ефекти scoped на spell_id,
   per-instance**, НЕ скейл/апкаст. Реюз наявного scope-механізму (`attacks.ts` §A/§B scope-на-
   категорію → розширити на spell_id). Перелічувати фіти НЕ треба — усі вони «scoped ефект на спел».
@@ -419,7 +451,9 @@ Eval через **опційний seam-хук** (як `applyEffects`), не п�
    temp_hp крізь `resolution=temp`).
 3. ✅ **ЗРОБЛЕНО** (у [[CONCENTRATION-PLAN.md]] Model C + цій сесії) — carrier-таймер + duration-апкаст +
    concentration-хвости (0-hp/incapacitated end, CON-save reminder, carrier-badge).
-4. **[~] Частково** — EB-count фікс ЗРОБЛЕНО (die-multiply баг прибрано); повний ретайр
-   `cantripDieMultiplier` (dice-scaling кантрипи) лишився з обґрунтуванням (див. «Незавершене» п.9).
-5. **Відкладено** — Roller-цикл (per-instance) + invocations scoped-на-spell (окремі великі items).
-   `count` доти деградує в чіп/нагадування.
+4. ✅ **ЗРОБЛЕНО** — EB-count фікс (die-multiply баг прибрано); `cantripDieMultiplier` ЛИШАЄТЬСЯ за
+   рішенням (уніформне системне правило, не дуп — «Незавершене» п.9). + Magic Weapon `enhancement`-kind
+   (п.7) і roll-log трейс-рядок (п.4) закриті цією сесією.
+5. **Відкладено (scoped, не блокери)** — Roller-цикл (per-instance D14) + invocations scoped-на-spell +
+   guided authoring-UI. `count` доти деградує в чіп/нагадування; Magic Weapon enhancement — untyped
+   (тикає всі зброї кастера) доти, доки нема per-instance цілі.

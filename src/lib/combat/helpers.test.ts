@@ -18,6 +18,7 @@ import {
 	standardActions,
 	effectiveHpMax,
 	weaponBonus,
+	enhancementTokens,
 	describeDerivedEffects,
 	casterForSpell,
 	preparedTalliesByClass,
@@ -32,6 +33,16 @@ import type { SpellcastingClass } from '$lib/character/spellcasting';
 // rollEffectsFor reads the sheet's typed-facts object (D7), built from the RESOLVED effect list
 // (never raw play.effects — B21); collectFacts is that one conversion.
 const fx = (...tokens: string[]) => collectFacts([{ source: 'Test', layer: 'condition', tokens }]);
+
+describe('enhancementTokens — a magic-weapon buff (item 7)', () => {
+	it('spawns a +n attack AND damage bonus (untyped — v1 has no per-instance weapon target)', () => {
+		expect(enhancementTokens(2)).toEqual(['flat_bonus:attack+2', 'flat_bonus:damage+2']);
+	});
+	it('produces nothing for a non-positive bonus', () => {
+		expect(enhancementTokens(0)).toEqual([]);
+		expect(enhancementTokens(-1)).toEqual([]);
+	});
+});
 
 describe('A18 · casterForSpell (multiclass uses the spell class own DC)', () => {
 	// a minimal sheet carrying only what casterForSpell reads

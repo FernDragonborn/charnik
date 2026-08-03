@@ -218,7 +218,10 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			// an hp_max spell (Aid): base +5 hp_max token, upcast adds +5 per slot as ANOTHER fold token (item 3)
 			`aid,5.5e,${S},Aid,2,abjuration,action,30 ft,8 hours,V S M,false,none,,,hp_max:per_slot(5),flat_bonus:hp_max+5`,
 			// a temp-HP spell (False Life): rolls its dice + upcast delta, NEVER adds the spellcasting mod (item 3)
-			`false_life,5.5e,${S},False Life,1,necromancy,action,Self,1 hour,V S M,false,temp,,1d4 +4,temp_hp:per_slot(5),`
+			`false_life,5.5e,${S},False Life,1,necromancy,action,Self,1 hour,V S M,false,temp,,1d4 +4,temp_hp:per_slot(5),`,
+			// a magic-weapon buff (Magic Weapon): an `enhancement` upcast is the WHOLE +n bonus by slot (item 7),
+			// spawned as weapon-scoped attack+damage effect tokens (base +1 at slot 2, +2 at 4, +3 at 6)
+			`magic_weapon,5.5e,${S},Magic Weapon,2,transmutation,bonus,Touch,"Concentration, up to 1 hour",V S,true,none,,,"enhancement:step(slot, 2->1, 4->2, 6->3)",`
 		].join('\n')
 	);
 	const g = await loadContent(st, ['c']);
@@ -327,6 +330,32 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		character.play.spellSlotsSpent = { '1': 4 }; // spill to slot 2 → +5 delta
 		combat.cast(spellRow(graph, `spell:${S}:false_life`, 'on')!, noModifiers);
 		expect(combat.tray.log[0]?.expr).toContain('+9'); // 4 base + 5 upcast
+	});
+
+	it('Magic Weapon: casting at the base slot spawns +1 attack&damage effect tokens (item 7)', () => {
+		combat.cast(spellRow(graph, `spell:${S}:magic_weapon`, 'on')!, noModifiers); // base slot 2 → +1
+		const carrier = character.play.effects.find((ef) => ef.source === `spell:${S}:magic_weapon`);
+		expect(carrier?.effects).toEqual(['flat_bonus:attack+1', 'flat_bonus:damage+1']);
+	});
+
+	it('Magic Weapon: the enhancement step scales +1/+2/+3 by slot (item 7)', () => {
+		const r = spellRow(graph, `spell:${S}:magic_weapon`, 'on')!;
+		// castPreview evaluates the enhancement at an explicit slot (no real slot needed) — the same value
+		// the cast layer feeds enhancementTokens, so this covers the +2/+3 tiers the level-5 slot table can't reach
+		expect(combat.castPreview(r, 2)).toContain('+1 attack & damage'); // absolute: base slot 2 → +1
+		expect(combat.castPreview(r, 4)).toContain('+2 attack & damage'); // slot 4 → +2
+		expect(combat.castPreview(r, 6)).toContain('+3 attack & damage'); // slot 6 → +3
+	});
+
+	it('an upcast damage roll records a base+delta provenance note; a base-slot cast records none (item 4)', () => {
+		character.play.spellSlotsSpent = { '1': 4 }; // spill to slot 2 → +1d8 delta
+		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
+		expect(combat.tray.log[0]?.note).toBe('3d8 fire base + 1d8 @ slot 2'); // untyped delta merges into the fire pool
+		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers); // still a level-2 slot → +1d8
+		expect(combat.tray.log[0]?.note).toContain('@ slot 2');
+		character.play.spellSlotsSpent = {}; // a base-slot cast has no upcast → no provenance note
+		combat.cast(spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!, noModifiers);
+		expect(combat.tray.log[0]?.note).toBeUndefined();
 	});
 
 	it('castPreview: a damage upcast shows the extra dice at a slot, nothing at base (items 1/8)', () => {

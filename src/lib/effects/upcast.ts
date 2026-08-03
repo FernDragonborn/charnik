@@ -23,13 +23,16 @@ export const UPCAST_KINDS = [
 	'temp_hp',
 	'count',
 	'area',
-	'duration'
+	'duration',
+	'enhancement'
 ] as const;
 export type UpcastKind = (typeof UPCAST_KINDS)[number];
 
 /** Kinds whose base value is STRUCTURED (already on the sheet), so the formula is a DELTA folded as
- *  `base + delta` (§8). Every other kind (count / area / duration) has no structured base to add onto,
- *  so its formula is the ABSOLUTE total. */
+ *  `base + delta` (§8). Every other kind (count / area / duration / enhancement) has no structured base
+ *  to add onto, so its formula is the ABSOLUTE total — e.g. an `enhancement` step gives the whole +N
+ *  bonus a magic-weapon buff confers (Magic Weapon +1/+2/+3), which the cast layer spawns as a
+ *  weapon-scoped `flat_bonus:attack/damage` effect. */
 const DELTA_KINDS: ReadonlySet<UpcastKind> = new Set<UpcastKind>([
 	'damage',
 	'heal',

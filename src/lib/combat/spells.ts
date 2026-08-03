@@ -23,6 +23,17 @@ import {
 export const GROUP_MODES = ['level', 'prepared', 'school'] as const;
 export type GroupMode = (typeof GROUP_MODES)[number];
 
+/** The effect tokens a magic-weapon buff (Magic Weapon, item 7) spawns for a `+n` enhancement bonus:
+ *  `+n` to attack AND damage rolls. Untyped (global) — the engine has no per-instance weapon target,
+ *  and the flat_bonus grammar routes a `damage:<qualifier>` to a damage TYPE, not a weapon scope, so a
+ *  weapon-only damage bonus isn't expressible without an L1 grammar change (a compatibility chokepoint).
+ *  v1 limitation, surfaced as a labelled effect: the bonus also touches the caster's OTHER weapons and
+ *  their spell attacks/damage. Precise per-weapon targeting is the deferred roller work. `n<=0` → none. */
+export function enhancementTokens(n: number): string[] {
+	if (n <= 0) return [];
+	return [`flat_bonus:attack+${n}`, `flat_bonus:damage+${n}`];
+}
+
 /** A spell row in the spell block. */
 export interface SpellRow {
 	id: string;

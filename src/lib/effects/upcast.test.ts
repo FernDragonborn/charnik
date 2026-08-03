@@ -47,6 +47,13 @@ describe('UPCAST · parseUpcast — grammar', () => {
 		expect(kindOf('heal:per_slot(1d8)')).toBe('delta');
 		expect(kindOf('hp_max:per_slot(5)')).toBe('delta');
 		expect(kindOf('temp_hp:per_slot(5)')).toBe('delta');
+		expect(kindOf('enhancement:step(slot, 2->1, 4->2, 6->3)')).toBe('absolute');
+	});
+
+	it('rejects a `:type` sub-slot on enhancement (only damage/heal are typed)', () => {
+		expect(parseUpcast('enhancement:melee:slot+1')[0]).toMatchObject({
+			error: expect.stringContaining('cannot carry a type')
+		});
 	});
 
 	it('splits a multi-dimension cell on `;` (Web: duration + damage)', () => {
@@ -86,6 +93,14 @@ describe('UPCAST · evalUpcast — evaluation against a cast ctx', () => {
 			combine: 'delta',
 			pool: { 8: 1 }
 		});
+	});
+
+	it('Magic Weapon: enhancement is the ABSOLUTE +n bonus stepped by slot (2->1, 4->2, 6->3)', () => {
+		const f = 'enhancement:step(slot, 2->1, 4->2, 6->3)';
+		expect(one(f, at(2, 2))).toMatchObject({ kind: 'enhancement', combine: 'absolute', flat: 1 });
+		expect(one(f, at(3, 2)).flat).toBe(1); // slot 3 still +1 (below the +2 tier)
+		expect(one(f, at(4, 2)).flat).toBe(2);
+		expect(one(f, at(6, 2)).flat).toBe(3);
 	});
 
 	it('Scorching Ray: count is the ABSOLUTE total slot+1', () => {

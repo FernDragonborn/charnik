@@ -33,6 +33,8 @@
 							{part.type}{/if}: <b class="roll-result">{part.total}</b>{/each}
 					{#if l.damage.length > 1}= <b class="roll-result">{damageTotal(l.damage)}</b>{/if}
 				</div>{/if}
+			<!-- upcast provenance (item 4): the boosted dice split into base + what the slot added -->
+			{#if l.note}<div class="lr-sub prov">⇡ {l.note}</div>{/if}
 		</div>
 	{:else}<p class="note" style="padding: 11px 13px">
 			No rolls yet — tap a stat, skill, save, or attack.
@@ -93,6 +95,10 @@
 	.drop {
 		color: var(--color-text-muted);
 		opacity: 0.45;
+	}
+	/* upcast provenance line — accented so the base+delta breakdown reads as a distinct annotation */
+	.prov {
+		color: var(--color-accent);
 	}
 	.note {
 		font-size: var(--font-size-xs);

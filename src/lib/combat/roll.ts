@@ -35,8 +35,10 @@ export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): Ty
 
 /** A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack —
  *  the per-type damage rolls that follow it. Rendered as the roll, the dropped adv die, then one line
- *  per damage type plus a combined total. */
-export type RollLogEntry = Rolled & { label: string; damage?: TypedRoll[] };
+ *  per damage type plus a combined total. `note` is an optional provenance line (item 4): an upcast
+ *  cast records "Xd base + Yd @ slot N" so the boosted dice are explained (value + provenance), not a
+ *  bare bigger total. */
+export type RollLogEntry = Rolled & { label: string; damage?: TypedRoll[]; note?: string };
 
 /** Combined total across every typed damage part. */
 export const damageTotal = (parts: TypedRoll[]): number => parts.reduce((n, p) => n + p.total, 0);
