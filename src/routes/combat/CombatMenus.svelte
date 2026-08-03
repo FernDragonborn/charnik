@@ -235,6 +235,19 @@
 					{/if}
 				{/each}
 			</div>
+		{:else if overlay.kind === 'upcast'}
+			{@const r = combat.upcastSpell}
+			{#if r}
+				<div class="popup-h eyebrow" style="border: 0">Cast {r.name} · at which slot</div>
+				{#each combat.castableSlots(r) as lvl (lvl)}
+					{@const preview = combat.castPreview(r, lvl)}
+					<button class="menu-row" onclick={(e) => combat.castAtSlot(lvl, e)}>
+						<span class="main">Level {lvl}{lvl === r.level ? ' · base' : ''}</span>
+						{#if preview}<span class="meta">{preview}</span>{/if}
+					</button>
+				{/each}
+				<p class="note" style="padding: 6px 13px 2px">Upcasting spends the higher-level slot.</p>
+			{/if}
 		{:else if overlay.kind === 'manage'}
 			<div class="popup-h eyebrow">
 				Spellbook<button class="icon-button" onclick={() => (combat.overlay = null)}>✕</button>

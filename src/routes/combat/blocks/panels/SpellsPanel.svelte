@@ -108,6 +108,15 @@
 											`Casting time: ${r.castTimeIcon === 'react' ? 'reaction' : 'bonus action'}`
 										);
 									}}>{r.castTimeIcon === 'react' ? '↩' : '⚡'}</i
+								>{/if}{#if r.level > 0 && combat.castableSlots(r).length > 1}<!-- upcast picker: a leveled spell with >1 open slot level can be cast higher (item 1) --><!-- svelte-ignore a11y_click_events_have_key_events --><span
+									class="upcast-btn"
+									role="button"
+									tabindex="-1"
+									title="Cast at a higher slot (upcast)"
+									onclick={(e) => {
+										e.stopPropagation();
+										combat.openUpcast(r, e);
+									}}>⇡</span
 								>{/if}{r.levelTag}</span
 						>
 					</button>
@@ -261,6 +270,26 @@
 		margin-right: 6px;
 		color: var(--color-accent-bright);
 		cursor: help;
+	}
+	/* upcast affordance (⇡): opens the slot-picker. Dim until the row is hovered/focused so it doesn't
+	   clutter, then reads as clickable (interactive-affordance invariant). */
+	.spell-row .spell-level .upcast-btn {
+		display: inline-block;
+		margin-right: 5px;
+		padding: 0 3px;
+		border-radius: 4px;
+		color: var(--color-resource);
+		opacity: 0;
+		cursor: pointer;
+		transition: opacity 0.12s;
+	}
+	.spell-row:hover .spell-level .upcast-btn,
+	.spell-row:focus-within .spell-level .upcast-btn {
+		opacity: 0.85;
+	}
+	.spell-row .spell-level .upcast-btn:hover {
+		opacity: 1;
+		background: var(--color-resource-soft);
 	}
 	.prep {
 		position: relative;

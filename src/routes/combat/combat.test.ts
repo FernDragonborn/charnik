@@ -179,6 +179,8 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			`ice_knife,5.5e,${S},Ice Knife,1,conjuration,action,60 ft,Instantaneous,S M,false,attack,,1d10 piercing; 2d6 cold,damage:cold:per_slot(1d6)`,
 			// a FLAT heal (Heal-style): 70 hit points, +10 per slot, NO dice → no spellcasting mod (item 6)
 			`flat_heal,5.5e,${S},Flat Heal,1,evocation,action,Touch,Instantaneous,V S,false,auto,,70,heal:per_slot(10),`,
+			// a COUNT spell (Scorching Ray-style): its ray count scales as an absolute total (items 1/8)
+			`scorch,5.5e,${S},Scorch,2,evocation,action,120 ft,Instantaneous,V S,false,attack,,2d6 fire,count:slot+1,`,
 			// an hp_max spell (Aid): base +5 hp_max token, upcast adds +5 per slot as ANOTHER fold token (item 3)
 			`aid,5.5e,${S},Aid,2,abjuration,action,30 ft,8 hours,V S M,false,none,,,hp_max:per_slot(5),flat_bonus:hp_max+5`,
 			// a temp-HP spell (False Life): rolls its dice + upcast delta, NEVER adds the spellcasting mod (item 3)
@@ -291,6 +293,26 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		character.play.spellSlotsSpent = { '1': 4 }; // spill to slot 2 → +5 delta
 		combat.cast(spellRow(graph, `spell:${S}:false_life`, 'on')!, noModifiers);
 		expect(combat.tray.log[0]?.expr).toContain('+9'); // 4 base + 5 upcast
+	});
+
+	it('castPreview: a damage upcast shows the extra dice at a slot, nothing at base (items 1/8)', () => {
+		const r = spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!;
+		expect(combat.castPreview(r, 1)).toBe(''); // base slot → no upcast
+		expect(combat.castPreview(r, 3)).toContain('+2d8'); // 2 slots up → +2d8
+	});
+
+	it('castPreview: a count spell shows its scaled total (Scorching Ray-style, item 8)', () => {
+		const r = spellRow(graph, `spell:${S}:scorch`, 'on')!;
+		expect(combat.castPreview(r, 2)).toContain('3'); // count:slot+1 at slot 2 = 3
+		expect(combat.castPreview(r, 3)).toContain('4'); // …4 at slot 3
+	});
+
+	it('the picker casts at the chosen slot via castAtSlot (item 1)', () => {
+		const r = spellRow(graph, `spell:${S}:chromatic_orb`, 'on')!;
+		combat.upcastSpell = r; // openUpcast arms this + anchors the menu (DOM); here we set it directly
+		combat.castAtSlot(3, noModifiers); // pick a level-3 slot
+		expect(character.play.spellSlotsSpent['3']).toBe(1);
+		expect(diceOf(8)).toBe(5); // 3d8 base + 2d8 (slot 3 vs base 1)
 	});
 
 	it('an explicit slot choice (picker) upcasts from that level even with lower slots free', () => {

@@ -18,6 +18,7 @@ export type MenuKind =
 	| 'pinskills'
 	| 'showhide'
 	| 'condition'
+	| 'upcast'
 	| 'manage';
 
 export const PANEL_TITLE: Record<string, string> = {

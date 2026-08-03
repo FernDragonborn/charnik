@@ -39,8 +39,10 @@ import {
 	preparedTalliesByClass,
 	canTogglePreparedFor,
 	parseDamageParts,
+	formatDamageParts,
 	rollDamageParts,
 	modTargetLabel,
+	metres,
 	applyDefense,
 	effectiveHpMax,
 	type Attack,
@@ -932,6 +934,42 @@ class CombatVM {
 			this.sheet?.spellcasting.pools ?? [],
 			this.character?.play.spellSlotsSpent ?? {}
 		);
+
+	/** The spell whose upcast slot-picker is open (drives the `upcast` overlay menu — item 1). */
+	upcastSpell = $state<SpellRow | null>(null);
+	/** Open the slot-picker for a leveled spell (the ⇡ affordance), anchored under the click. */
+	openUpcast = (r: SpellRow, e: Event) => {
+		this.upcastSpell = r;
+		this.openMenu('upcast', e);
+	};
+	/** Cast the picker's spell at the chosen slot, then close the picker. */
+	castAtSlot = (slot: number, e: Event) => {
+		const r = this.upcastSpell;
+		if (!r) return;
+		this.overlay = null;
+		this.cast(r, e, { slot });
+	};
+	/** A short human summary of what casting `r` from `slotLevel` yields BEYOND its base — the extra
+	 *  damage/heal dice, the scaled count / area / duration / HP-max (items 1 + 8). Empty at the base
+	 *  slot or a non-scaling spell. Area shows metric next to imperial (H10); the real count-roll is the
+	 *  roller (deferred), so count is a display total for now. */
+	castPreview = (r: SpellRow, slotLevel: number): string => {
+		const bits: string[] = [];
+		for (const res of this.evalUpcastAt(r, slotLevel)) {
+			if ('error' in res) continue;
+			if (res.kind === 'damage' || res.kind === 'heal') {
+				if (Object.keys(res.pool).length === 0 && res.flat === 0) continue;
+				bits.push(
+					`+${formatDamageParts([{ pool: res.pool, mod: res.flat, type: res.type ?? '' }])}`
+				);
+			} else if (res.kind === 'count') bits.push(`${res.flat}×`);
+			else if (res.kind === 'area') bits.push(`area ${res.flat} ft (${metres(res.flat)})`);
+			else if (res.kind === 'hp_max' && res.flat) bits.push(`+${res.flat} HP max`);
+			else if (res.kind === 'temp_hp' && res.flat) bits.push(`+${res.flat} temp HP`);
+			else if (res.kind === 'duration') bits.push(res.isInfinite ? 'permanent' : `${res.flat} rds`);
+		}
+		return bits.join(' · ');
+	};
 
 	// casting a spell: damage/healing spells roll their dice; attack spells roll to hit. `opts.slot`
 	// overrides the auto-lowest slot (the upcast picker, §6) — honoured or blocked, never downshifted.
