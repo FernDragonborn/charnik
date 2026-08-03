@@ -165,7 +165,7 @@ async function casterGraphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/spells_srd.csv',
 		[
-			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,resolution,save_ability,damage,upcast',
+			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,resolution,save_ability,damage,upcast,effects',
 			// level-1 save-damage spell: base 3d8, +1d8 per slot above 1st
 			`chromatic_orb,5.5e,${S},Chromatic Orb,1,evocation,action,90 ft,Instantaneous,V S M,false,save,dex,3d8 fire,damage:per_slot(1d8)`,
 			// level-1 healing spell: base 1d8 + spellcasting mod, +1d8 per slot above 1st
@@ -178,7 +178,11 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			// the cold sub-slot (item 2) — the delta must route to the cold part, not a typeless pool
 			`ice_knife,5.5e,${S},Ice Knife,1,conjuration,action,60 ft,Instantaneous,S M,false,attack,,1d10 piercing; 2d6 cold,damage:cold:per_slot(1d6)`,
 			// a FLAT heal (Heal-style): 70 hit points, +10 per slot, NO dice → no spellcasting mod (item 6)
-			`flat_heal,5.5e,${S},Flat Heal,1,evocation,action,Touch,Instantaneous,V S,false,auto,,70,heal:per_slot(10)`
+			`flat_heal,5.5e,${S},Flat Heal,1,evocation,action,Touch,Instantaneous,V S,false,auto,,70,heal:per_slot(10),`,
+			// an hp_max spell (Aid): base +5 hp_max token, upcast adds +5 per slot as ANOTHER fold token (item 3)
+			`aid,5.5e,${S},Aid,2,abjuration,action,30 ft,8 hours,V S M,false,none,,,hp_max:per_slot(5),flat_bonus:hp_max+5`,
+			// a temp-HP spell (False Life): rolls its dice + upcast delta, NEVER adds the spellcasting mod (item 3)
+			`false_life,5.5e,${S},False Life,1,necromancy,action,Self,1 hour,V S M,false,temp,,1d4 +4,temp_hp:per_slot(5),`
 		].join('\n')
 	);
 	const g = await loadContent(st, ['c']);
@@ -269,6 +273,24 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 	it('a flat heal at the base slot heals exactly its flat value (70)', () => {
 		combat.cast(spellRow(graph, `spell:${S}:flat_heal`, 'on')!, noModifiers);
 		expect(combat.tray.log[0]?.total).toBe(70);
+	});
+
+	it('Aid: the hp_max upcast adds ANOTHER fold token to the carrier per slot above base (item 3)', () => {
+		const carrier = () => character.play.effects.find((ef) => ef.source === `spell:${S}:aid`);
+		combat.cast(spellRow(graph, `spell:${S}:aid`, 'on')!, noModifiers); // base slot 2 → no delta
+		expect(carrier()?.effects).toEqual(['flat_bonus:hp_max+5']);
+		character.play.spellSlotsSpent = { '2': 3 }; // level-2 gone → spill to slot 3 → +5 delta
+		combat.cast(spellRow(graph, `spell:${S}:aid`, 'on')!, noModifiers);
+		expect(carrier()?.effects).toEqual(['flat_bonus:hp_max+5', 'flat_bonus:hp_max+5']);
+	});
+
+	it('False Life: temp HP rolls its dice + upcast delta, NO spellcasting mod (item 3)', () => {
+		combat.cast(spellRow(graph, `spell:${S}:false_life`, 'on')!, noModifiers); // base slot 1
+		expect(combat.tray.log[0]?.label).toContain('temp HP');
+		expect(combat.tray.log[0]?.expr).toContain('+4'); // 1d4 + 4 base, int mod NOT added
+		character.play.spellSlotsSpent = { '1': 4 }; // spill to slot 2 → +5 delta
+		combat.cast(spellRow(graph, `spell:${S}:false_life`, 'on')!, noModifiers);
+		expect(combat.tray.log[0]?.expr).toContain('+9'); // 4 base + 5 upcast
 	});
 
 	it('an explicit slot choice (picker) upcasts from that level even with lower slots free', () => {

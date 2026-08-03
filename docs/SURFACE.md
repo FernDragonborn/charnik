@@ -616,7 +616,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const CASTER_SHARES`
 - `const PREPARE_STYLES`
 - `const SCHOOLS`
-- `const RESOLUTIONS`
+- `const RESOLUTIONS` — `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled "temp HP" and never…
 - `const ITEM_CATEGORIES`
 - `const RARITIES`
 - `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.

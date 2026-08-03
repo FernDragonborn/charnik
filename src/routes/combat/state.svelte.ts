@@ -661,7 +661,12 @@ class CombatVM {
 		// ref to it, and the carrier expiring ends concentration). Before, a token-less control spell
 		// (Hold Person, Web…) had no carrier → its concentration hung until a long rest. A
 		// NON-concentration spell with no tokens has nothing to track → still a no-op.
-		if (!c || (!tokens.length && !r.concentration)) return;
+		// B3 (item 3): an hp_max upcast scales the magnitude of the effect the spell grants — Aid's base
+		// `flat_bonus:hp_max+5` gets an ADDITIONAL `flat_bonus:hp_max+delta` per slot above base. hp_max
+		// is a fold target, so the two tokens sum cleanly (no string-surgery over the base token).
+		const hpMaxDelta = this.upcastFlatDelta(r, slotLevel, 'hp_max');
+		const effects = hpMaxDelta > 0 ? [...tokens, `flat_bonus:hp_max+${hpMaxDelta}`] : tokens;
+		if (!c || (!effects.length && !r.concentration)) return;
 		this.removeLinkedEffect(r.ref); // re-cast refreshes instead of stacking a duplicate
 		const rounds = this.carrierRounds(r, spell, slotLevel);
 		c.play.effects = [
@@ -670,7 +675,7 @@ class CombatVM {
 				iid: crypto.randomUUID(),
 				label: r.name,
 				source: r.ref,
-				effects: tokens,
+				effects,
 				positive: true,
 				...(rounds ? { durationRounds: rounds, startedRound: this.round } : {})
 			}
@@ -687,10 +692,7 @@ class CombatVM {
 		slotLevel: number
 	): number | null {
 		const base = spell?.type === 'spell' ? durationToRounds(String(spell.data.duration)) : null;
-		const ctxBase = this.sheet?.castCtx;
-		if (!r.upcast || !ctxBase) return base;
-		const ctx = this.castCtxFor(r, ctxBase, slotLevel);
-		for (const res of evalUpcast(r.upcast, ctx)) {
+		for (const res of this.evalUpcastAt(r, slotLevel)) {
 			if ('error' in res || res.kind !== 'duration') continue;
 			if (res.isInfinite) return null; // permanent → no timer
 			if (res.flat > 0) return res.flat; // absolute total rounds (0 = below first tier → keep base)
@@ -771,6 +773,31 @@ class CombatVM {
 		return withSpellcastingMod(withSlot, this.sheet?.abilities[caster.ability]?.mod ?? 0);
 	}
 
+	/** Evaluate a spell's `upcast` cell against its cast ctx at `slotLevel` — the ONE place the ephemeral
+	 *  ctx is built, so the damage / duration / hp_max / temp_hp consumers below all read the same
+	 *  evaluation. Empty when there's no `upcast` or no cast ctx (effects-auto off — N6 respects the
+	 *  toggle). Pure read; each caller picks the kinds it cares about. */
+	private evalUpcastAt(r: SpellRow, slotLevel: number): ReturnType<typeof evalUpcast> {
+		const base = this.sheet?.castCtx;
+		if (!r.upcast || !base) return [];
+		return evalUpcast(r.upcast, this.castCtxFor(r, base, slotLevel));
+	}
+
+	/** The summed FLAT upcast delta for one magnitude kind (`hp_max` / `temp_hp`) at a cast slot — the
+	 *  extra hit-point-max / temp-HP a spell grants per slot above its base (Aid, False Life). Broken
+	 *  tokens degrade (toast), never a wrong number (H11). */
+	private upcastFlatDelta(r: SpellRow, slotLevel: number, kind: 'hp_max' | 'temp_hp'): number {
+		let acc = 0;
+		for (const res of this.evalUpcastAt(r, slotLevel)) {
+			if ('error' in res) {
+				if (res.raw.startsWith(kind)) toast(`Upcast: ${res.error}`);
+				continue;
+			}
+			if (res.kind === kind) acc += res.flat;
+		}
+		return acc;
+	}
+
 	/** The damage/heal upcast deltas as typed parts for a cast from `slotLevel` (item 2): evaluate the
 	 *  spell's `upcast` cell against the ephemeral cast ctx (post-derive snapshot + {slot, spell_level})
 	 *  and keep each damage/heal delta with its own type (`damage:cold:…` → a cold-typed delta the roll
@@ -779,11 +806,8 @@ class CombatVM {
 	 *  elsewhere. A zero delta (base slot) is dropped so it adds no phantom part. A broken formula
 	 *  degrades (toast + base only, H11), never silently-wrong dice. */
 	private upcastDamageParts(r: SpellRow, slotLevel: number): DamagePart[] {
-		const base = this.sheet?.castCtx;
-		if (!r.upcast || !base) return [];
-		const ctx = this.castCtxFor(r, base, slotLevel);
 		const out: DamagePart[] = [];
-		for (const res of evalUpcast(r.upcast, ctx)) {
+		for (const res of this.evalUpcastAt(r, slotLevel)) {
 			if ('error' in res) {
 				toast(`Upcast: ${res.error}`);
 				continue;
@@ -822,6 +846,33 @@ class CombatVM {
 		}
 	}
 
+	/** The typed roll parts + kind label for a non-attack cast: a `save` deals damage, `auto` heals,
+	 *  `temp` grants temporary HP. A DICE heal (Cure Wounds "1d8 + mod") adds the spellcasting mod; a
+	 *  FLAT heal (Heal's 70) and temp HP (False Life) do NOT — in SRD the ability mod rides dice-valued
+	 *  HEALING only (item 6). Damage effects never ride a heal / temp-HP roll, so its "primary fx" is
+	 *  just that mod (0 for temp) as a flat. temp HP scales via its OWN `temp_hp` upcast delta, damage /
+	 *  heal via the typed damage/heal delta pool (item 3). */
+	private spellOutcomeParts(
+		r: SpellRow,
+		caster: SpellcastingClass | undefined,
+		up: UpcastCast,
+		slotLevel: number
+	): { parts: DamagePartSpec[]; kind: string } {
+		const heal = r.resolution === 'auto';
+		const temp = r.resolution === 'temp';
+		const healDice = r.damageParts.some((p) => Object.keys(p.pool).length > 0);
+		const healMod =
+			heal && healDice && caster ? (this.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
+		const primaryFx: RollEffects =
+			heal || temp ? { ...NO_ROLL_EFFECTS, flat: healMod } : this.effectsFor('damage');
+		const tempDelta = temp ? this.upcastFlatDelta(r, slotLevel, 'temp_hp') : 0;
+		const deltas = temp ? (tempDelta ? [{ pool: {}, mod: tempDelta, type: '' }] : []) : up.deltas;
+		return {
+			parts: this.spellDamageParts(r, primaryFx, deltas),
+			kind: temp ? 'temp HP' : heal ? 'healing' : 'damage'
+		};
+	}
+
 	private rollSpellCast(r: SpellRow, e: Event, ritual: boolean, slotLevel: number): void {
 		const alt = wantsTray(e);
 		const caster = casterForSpell(this.sheet, r.ref) ?? this.sheet?.spellcasting.classes[0];
@@ -834,20 +885,9 @@ class CombatVM {
 			this.rollSpellAttack(r, e, caster, up);
 			return;
 		}
-		// save / auto spell: damage, or (auto) healing. A DICE heal (Cure Wounds "1d8 + mod") adds the
-		// spellcasting mod; a FLAT heal (Heal's 70) does not — in SRD the ability mod rides dice-valued
-		// healing only, so gate the mod on there being healing dice (item 6). Damage effects never ride a
-		// heal, so the heal's "primary fx" is just that mod as a flat.
-		const heal = r.resolution === 'auto';
-		const healDice = r.damageParts.some((p) => Object.keys(p.pool).length > 0);
-		const healMod =
-			heal && healDice && caster ? (this.sheet?.abilities[caster.ability]?.mod ?? 0) : 0;
-		const primaryFx: RollEffects = heal
-			? { ...NO_ROLL_EFFECTS, flat: healMod }
-			: this.effectsFor('damage');
-		const parts = this.spellDamageParts(r, primaryFx, up.deltas);
+		const { parts, kind } = this.spellOutcomeParts(r, caster, up, slotLevel);
 		if (parts.some((p) => Object.keys(p.dice).length > 0 || p.mod !== 0)) {
-			this.rollDamageEntry(`${r.name} ${heal ? 'healing' : 'damage'}${up.suffix}`, parts, e, alt);
+			this.rollDamageEntry(`${r.name} ${kind}${up.suffix}`, parts, e, alt);
 		} else {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
 			const suffix = ritual ? ' (ritual)' : '';

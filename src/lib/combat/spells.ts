@@ -34,7 +34,7 @@ export interface SpellRow {
 	/** Ritual-taggable — only these can be cast as a ritual (no slot). Not all spells qualify (SRD). */
 	ritual: boolean;
 	summary: string;
-	resolution: '' | 'hit' | 'save' | 'auto';
+	resolution: '' | 'hit' | 'save' | 'auto' | 'temp';
 	resolutionLabel: string;
 	levelTag: string;
 	castTimeIcon: '' | 'react' | 'bonus'; // casting time → icon before the level
@@ -251,7 +251,8 @@ export function buildSpellGroups({
 const SP_RES_CHIP: Record<string, SpellRow['resolution']> = {
 	attack: 'hit',
 	save: 'save',
-	auto: 'auto'
+	auto: 'auto',
+	temp: 'temp'
 };
 
 /** resolution → the row's result label ('' for utility); a save shows its ability. */
@@ -259,6 +260,7 @@ function spResLabel(res: string, saveAbility: string): string {
 	if (res === 'attack') return 'attack roll';
 	if (res === 'save') return `${saveAbility} save`;
 	if (res === 'auto') return 'auto';
+	if (res === 'temp') return 'temp HP';
 	return '';
 }
 

@@ -142,7 +142,9 @@ export const SCHOOLS = [
 	'necromancy',
 	'transmutation'
 ] as const;
-export const RESOLUTIONS = ['attack', 'save', 'auto', 'none'] as const;
+// `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled
+// "temp HP" and never adds the spellcasting mod (temp HP is a flat/dice value, no ability mod — item 3).
+export const RESOLUTIONS = ['attack', 'save', 'auto', 'temp', 'none'] as const;
 export const ITEM_CATEGORIES = [
 	'weapon',
 	'armor',
