@@ -32,7 +32,10 @@ Model C): `applySpellEffect` завжди створює carrier для conc-с�
 delayed_blast_fireball 12d6, flame_blade per-1/per-2, conjure_fey 2024 3d12); healers усі 7.
 prayer_of_healing 2024 → `resolution=auto` (2d8 котиться; short-rest-бонус лишається прозою).
 **Лишились НЕзроблені (свідомо):** `heal` (флет-only 70+10 — треба N2 флет-хіл path, [[csv-open-enums-not-binary]]-стиль),
-`ice_knife` (апкаст качає ВТОРИННИЙ Cold, не piercing-колонку → треба typed sub-slot + база Cold),
+`ice_knife` (мультитип у ОДНІЙ колонці через `;`: `"1d10 piercing; 2d6 cold"`, апкаст качає Cold →
+`damage:cold:per_slot(1d6)`. Дані так лягли б, АЛЕ `SpellRow` сплющує: `damagePool=parseDicePool` зливає
+всі кубики в один пул, `damageType`=перша частина → cast-шар однотиповий. Реальний блокер = мультипарт-
+дамаг у cast/upcast-фолді (як `Attack.damageParts`), не дані. Те саме чіпає Ice Storm base cold, N4/N9),
 conjure_fey 2014 (масштаб = CR, проза), і **дискретні step()-спели** (~19: Magic Weapon +2/+3,
 Hunter's Mark, Geas, Dominate — кожен окремий кейс, частина не-damage).
 
