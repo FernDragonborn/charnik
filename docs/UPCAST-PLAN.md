@@ -23,8 +23,11 @@
 UI-важкий (енумерація валідних слотів + вибір). Далі §319 slice 2+ (count/area/duration чіпи,
 hp_max/temp_hp, концентрація, кантрип-уніфікація, roller-цикл).
 
-**Відкладені хвости (свідомо):** healDice-скрейп ЛИШАЄТЬСЯ fallback'ом доки всі healers не
-дістануть damage-колонку (інакше регрес); повний backfill 68 лінійних спелів; B8 багатший трейс
+**healDice ВИДАЛЕНО** (юзер: «не має бути парсингу тексту спелу»): усі 5 auto-healers (cure/healing_word/
+prayer_of_healing/mass_*) тепер несуть базу в `damage`-колонці + `heal:per_slot(...)`; `castingDice` читає
+ЛИШЕ структуровану колонку, нуль скрейпу прози.
+
+**Відкладені хвости (свідомо):** повний backfill решти лінійних damage-спелів; B8 багатший трейс
 (зараз лише лейбл-суфікс); castCtx `spellcasting_mod` = primary caster, не spell-каст-клас (SRD не читає).
 
 Резюме-вказівник для повернення: код у `effects/upcast.ts` + `routes/combat/state.svelte.ts`

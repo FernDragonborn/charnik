@@ -61,12 +61,6 @@ export interface SpellGroup {
 	rows: SpellRow[];
 }
 
-/** Healing dice from a spell's text ("regains Hit Points equal to 2d4 plus …"). */
-const healDice = (text: string): string => {
-	const m = text.match(/(?:equal to|regains?|restores?)[^.]*?(\d+d\d+)/i);
-	return m?.[1] ?? '';
-};
-
 /** Casting-time → the icon shown before the level (↩ reaction, ⚡ bonus). */
 const castingIcon = (ct: string): SpellRow['castTimeIcon'] =>
 	/bonus/i.test(ct) ? 'bonus' : /reaction/i.test(ct) ? 'react' : '';
@@ -269,11 +263,10 @@ function spResLabel(res: string, saveAbility: string): string {
 	return '';
 }
 
-/** Casting dice for a spell: the `damage` field, else (auto/healing) the "regains … equal to NdM"
- *  dice scraped from the description; cantrips scale by `charLevel` (the 5/11/17 steps — A15). */
+/** Casting dice for a spell: the STRUCTURED `damage` column (healing spells now carry their base dice
+ *  there too — never scraped from prose); cantrips scale by `charLevel` (the 5/11/17 steps — A15). */
 function castingDice(d: RowData<'spell'>, charLevel: number): string {
-	const dmg =
-		(d.damage ?? '') || ((d.resolution ?? 'none') === 'auto' ? healDice(d.text_en ?? '') : '');
+	const dmg = d.damage ?? '';
 	const scale = d.level === 0 ? cantripDieMultiplier(charLevel) : 1;
 	return scale > 1
 		? dmg.replace(/(\d+)d(\d+)/gi, (_, n: string, s: string) => `${Number(n) * scale}d${s}`)
