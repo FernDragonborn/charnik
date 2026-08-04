@@ -472,7 +472,10 @@ const resourceOptionSchema = baseRow.extend({
 	resource_id: reqStr,
 	cost: optStr,
 	action: optStr,
-	action_type: z.enum(ACTION_TYPES).default('action')
+	action_type: z.enum(ACTION_TYPES).default('action'),
+	// optional L2 boolean guard: the option is greyed/unrunnable unless it evaluates true (e.g.
+	// `is_combat_start` for Persistent Rage — offerable only at initiative). Empty → always available.
+	available: optStr
 });
 
 // --- Registry: type name → { schema, file glob, column order for unparse } -----

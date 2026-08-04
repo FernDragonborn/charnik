@@ -102,7 +102,12 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 				},
 				is_concentrating: character.play.concentration != null,
 				is_wearing_shield: character.play.shieldRaised,
-				is_wearing_armor: !!equippedArmor
+				is_wearing_armor: !!equippedArmor,
+				// "When you roll Initiative" — the first combat round. The once/long-rest gate on an
+				// initiative-regain option keeps it from re-firing later, so a round-wide window is fine (v1).
+				get is_combat_start() {
+					return character.play.inCombat && character.play.round <= 1;
+				}
 				// `is_raging` intentionally absent: it resolves via CONDITION_FLAG_ALIASES →
 				// has_condition.rage against the live conditions set (see effects/context.ts).
 			},

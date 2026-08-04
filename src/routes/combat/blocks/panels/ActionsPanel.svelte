@@ -24,7 +24,8 @@
 {#each combat.resourceOptions as o (o.id)}
 	<button
 		class="combat-row"
-		disabled={o.cost !== 'x' && o.left < o.cost}
+		disabled={!o.available || (o.cost !== 'x' && o.left < o.cost)}
+		title={o.available ? o.description : 'Not available right now'}
 		onclick={() => combat.activateResourceOption(o)}
 	>
 		<span class="row-name">{o.name}</span>

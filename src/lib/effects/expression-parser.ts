@@ -46,7 +46,8 @@ const BOOLEAN_VARS: ReadonlySet<string> = new Set<string>([
 	'is_raging',
 	'is_concentrating',
 	'is_wearing_armor',
-	'is_wearing_shield'
+	'is_wearing_shield',
+	'is_combat_start'
 ]);
 
 /** Sugar boolean flags that are pure aliases for `has_condition.<id>`. The ONE hardcoded

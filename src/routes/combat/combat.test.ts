@@ -807,6 +807,7 @@ describe('ResourceTracker · piece 3 spend-options', () => {
 		action: 'note:Make two Unarmed Strikes',
 		actionType: 'bonus_action',
 		cost: 1,
+		available: true,
 		...over
 	});
 	const make = (spent: number, max: number) => {
@@ -871,6 +872,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		action: 'heal:1d10+5',
 		actionType: 'bonus_action',
 		cost: 1,
+		available: true,
 		...over
 	});
 
@@ -925,7 +927,8 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 			description: '',
 			action: 'gain_action',
 			actionType: 'free',
-			cost: 1
+			cost: 1,
+			available: true
 		});
 		expect(character.play.turn.action).toBe(0); // one additional action granted back
 		expect(combat.resources.resourceSpent('action_surge')).toBe(1);
@@ -959,7 +962,8 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 			description: '',
 			action: 'rest:long',
 			actionType: 'free',
-			cost: 1
+			cost: 1,
+			available: true
 		});
 
 		expect(character.play.hp.current).toBe(20); // long rest restored HP to max
@@ -994,7 +998,8 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 			description: '',
 			action: 'restore_resource:rage',
 			actionType: 'free',
-			cost: 1
+			cost: 1,
+			available: true
 		});
 		expect(combat.resources.resourceSpent('rage')).toBe(0); // all rage back
 		expect(combat.resources.resourceSpent('persistent_rage')).toBe(1); // the gate is now used
@@ -1008,7 +1013,8 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 			description: '',
 			action: 'restore_resource:rage',
 			actionType: 'free',
-			cost: 1
+			cost: 1,
+			available: true
 		});
 		expect(combat.resources.resourceSpent('rage')).toBe(2); // NOT restored (gate was empty)
 	});

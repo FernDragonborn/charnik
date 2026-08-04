@@ -93,12 +93,13 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/resource_options_srd.csv',
 		[
-			'id,systems,source,name_en,resource_id,cost,action,action_type',
-			`ward_burst,5.5e,${S},Ward Burst,arcane_ward,2,roll:2d6,action`,
-			`ward_mend,5.5e,${S},Ward Mend,arcane_ward,1,heal:1d10+class_level.wizard,bonus_action`,
-			`ward_shield,5.5e,${S},Ward Shield,arcane_ward,x,note:absorb,reaction`,
-			`ward_bad,5.5e,${S},Bad Cost,arcane_ward,spell_level,note:nope,action`,
-			`ki_flurry,5.5e,${S},Flurry,ki,1,note:two strikes,bonus_action` // a resource the wizard lacks
+			'id,systems,source,name_en,resource_id,cost,action,action_type,available',
+			`ward_burst,5.5e,${S},Ward Burst,arcane_ward,2,roll:2d6,action,`,
+			`ward_mend,5.5e,${S},Ward Mend,arcane_ward,1,heal:1d10+class_level.wizard,bonus_action,`,
+			`ward_shield,5.5e,${S},Ward Shield,arcane_ward,x,note:absorb,reaction,`,
+			`ward_bad,5.5e,${S},Bad Cost,arcane_ward,spell_level,note:nope,action,`,
+			`ward_ready,5.5e,${S},Ward Ready,arcane_ward,1,note:ready,action,is_combat_start`, // gated to combat start
+			`ki_flurry,5.5e,${S},Flurry,ki,1,note:two strikes,bonus_action,` // a resource the wizard lacks
 		].join('\n')
 	);
 	const g = await loadContent(st, ['c']);
@@ -244,13 +245,33 @@ describe('deriveSheet aggregator', () => {
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const opts = s.resourceOptions;
 		// only options for a resource the character HAS (arcane_ward), never the wizard-less `ki`
-		expect(opts.map((o) => o.id).sort()).toEqual(['ward_burst', 'ward_mend', 'ward_shield']);
+		expect(opts.map((o) => o.id).sort()).toEqual([
+			'ward_burst',
+			'ward_mend',
+			'ward_ready',
+			'ward_shield'
+		]);
 		expect(opts.find((o) => o.id === 'ward_burst')?.cost).toBe(2);
 		expect(opts.find((o) => o.id === 'ward_shield')?.cost).toBe('x'); // variable spend
 		expect(opts.find((o) => o.id === 'ward_shield')?.actionType).toBe('reaction');
 		// the unsupported (context-dependent) cost is dropped + flagged, not silently kept
 		expect(opts.some((o) => o.id === 'ward_bad')).toBe(false);
 		expect(s.deriveIssues.some((i) => i.token === 'cost:spell_level')).toBe(true);
+	});
+
+	it('slice 2: an `available` guard (is_combat_start) greys the option out of combat, opens it at initiative', () => {
+		const c = wizard();
+		c.build.classes = [{ class: `class:${S}:wizard`, level: 2 }]; // grants arcane_ward + its options
+		// out of combat → the gated option is present but NOT available (greyed); ungated ones are
+		const out = deriveSheet(characterSchema.parse(c), graph);
+		expect(out.resourceOptions.find((o) => o.id === 'ward_ready')?.available).toBe(false);
+		expect(out.resourceOptions.find((o) => o.id === 'ward_burst')?.available).toBe(true);
+		// first combat round → the window opens
+		const inCombat = structuredClone(c);
+		inCombat.play.inCombat = true;
+		inCombat.play.round = 1;
+		const s = deriveSheet(characterSchema.parse(inCombat), graph);
+		expect(s.resourceOptions.find((o) => o.id === 'ward_ready')?.available).toBe(true);
 	});
 
 	it('piece 3: resolves a heal:/roll: action formula at derive (heal:1d10+class_level.X → concrete dice)', () => {

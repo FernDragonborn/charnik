@@ -124,6 +124,9 @@ export interface ResourceOption {
 	action: string;
 	actionType: 'action' | 'bonus_action' | 'reaction' | 'free';
 	cost: number | 'x';
+	/** Whether the option's `available` L2 guard passes right now (no guard → always true). A false
+	 *  guard greys the option out — e.g. Persistent Rage is offerable only at combat start. */
+	available: boolean;
 }
 
 interface ResourceOptionsInput {
@@ -159,6 +162,27 @@ function resolveActionFormula(
 	const formula =
 		r.value.type === 'number' ? String(Math.floor(r.value.value)) : diceToFormula(r.value.dice);
 	return `${verb}:${formula}`;
+}
+
+/** Evaluate an option's `available` L2 boolean guard → is it offerable right now? Empty → always
+ *  available; a malformed guard fails OPEN (available) + a deriveIssue, so a bad guard surfaces
+ *  rather than silently hiding the option (SPEC4-style: surface, never swallow). */
+function resolveAvailable(
+	expr: string,
+	ctx: ExprContext | undefined,
+	name: string,
+	issues: EffectIssue[]
+): boolean {
+	const src = expr.trim();
+	if (!src || !ctx) return true;
+	const r = evalExpression(src, ctx);
+	if (r.ok && r.value.type === 'number') return r.value.value !== 0;
+	issues.push({
+		source: name,
+		token: `available:${src}`,
+		reason: r.ok ? 'available guard is not a condition' : r.error
+	});
+	return true;
 }
 
 /** Gather the spend-options for the resources a character has (edition + source filtered). Pure. */
@@ -199,7 +223,13 @@ function resolveResourceOptions({
 				issues
 			),
 			actionType: (row.data.action_type as ResourceOption['actionType']) ?? 'action',
-			cost
+			cost,
+			available: resolveAvailable(
+				String(row.data.available ?? ''),
+				ctx,
+				String(row.data.name_en),
+				issues
+			)
 		});
 	}
 	return out;
