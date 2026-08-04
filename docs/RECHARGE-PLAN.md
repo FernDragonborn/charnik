@@ -36,7 +36,8 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
    Consumers: Persistent Rage (Barbarian L15), Uncanny Metabolism (Monk L2) — player-choice, each gated
    by its own once-per-long-rest resource (a `:1:long` pool the activation spends).
 
-3. **Concentration-save-on-damage = a SEPARATE, more valuable slice** (universal — every caster).
+3. **Concentration-save-on-damage — BUILT + app-verified 2026-08-04** (`1b7a4f0`). A SEPARATE, more
+   valuable slice (universal — every caster).
    Must follow the principle: **NOT** an auto-prompt per Damage press. UX = an on-demand "Concentration
    save" affordance by the concentration indicator (like the death-save button at 0 HP), highlighted
    after damage, with a suggested-but-EDITABLE DC = `max(10, ½ last damage)`; player clicks when the
@@ -60,7 +61,12 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
    but as **event → reminder/highlight**, rarely as silent state-mutation. A full auto-mutating
    event-bus is *rarely* correct in a tracker.
 
-6. **Concentration UX — BEHAVIOR = variant A, SURFACE = B4 (CHOSEN 2026-08-04).** The BEHAVIOR is
+6. **Concentration UX — BEHAVIOR = variant A, SURFACE = B4. BUILT + app-verified 2026-08-04 (`1b7a4f0`).**
+   `pendingConcentrationSave` VM state (set in `damage()`, replacing the old toast) → the HpPanel banner;
+   `rollConcentrationSave` (instant `rollPool` over `effectsFor('save.con')` + the sheet CON-save mod,
+   Bless/War Caster fold; pass clears, fail marks the banner failed) + `dropConcentrationFromSave`.
+   Editable DC, 2024 cap 30. Both states screenshotted (normal crimson / failed red, never auto-drops).
+   The BEHAVIOR is
    variant A (smart — after a Damage press while concentrating, a suggested but EDITABLE DC =
    `max(10, ½ damage)` + one-click Roll save; corrections just update the suggestion, no modal; fail →
    OFFER to drop concentration). The SURFACE is **B4 · Slim inline banner** — a thin, **persistent**
