@@ -211,6 +211,20 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		expect(character.play.concentration).toBeNull();
 		expect(combat.pendingConcentrationSave).toBeNull();
 	});
+
+	it('Dismiss (✕) clears the banner but KEEPS concentration, and a new hit re-arms it', () => {
+		// regression: Drop ends the spell; the reminder must ALSO be dismissable WITHOUT losing
+		// concentration, else waving it off once silently kills the spell and the banner never returns.
+		character.play.hp = { current: 20, max: 20, temp: 0 };
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		combat.hpAmount = 6;
+		combat.damage();
+		combat.dismissConcentrationSave();
+		expect(combat.pendingConcentrationSave).toBeNull(); // banner gone
+		expect(character.play.concentration).toBe(`spell:${S}:bless`); // STILL concentrating
+		combat.damage(); // a new hit
+		expect(combat.pendingConcentrationSave).not.toBeNull(); // banner re-arms
+	});
 });
 
 /** A caster graph (wizard with a full slot table) + a level-1 damage spell that upcasts, so an

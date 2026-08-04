@@ -462,10 +462,16 @@ class CombatVM {
 			this.pendingConcentrationSave = { dc: pend.dc, failed: true };
 		}
 	};
-	/** The B4 banner's Drop (either "drop instead of rolling", or confirm the drop after a failed save):
-	 *  end concentration and dismiss the banner. */
+	/** The B4 banner's "Drop spell" — deliberately END concentration (either instead of rolling, or to
+	 *  confirm the RAW consequence of a failed save). Ends the spell AND dismisses the banner. */
 	dropConcentrationFromSave = () => {
 		this.clearConcentration();
+		this.pendingConcentrationSave = null;
+	};
+	/** The B4 banner's ✕ — dismiss the reminder WITHOUT ending concentration. Unlike Drop, the spell
+	 *  keeps going: the player is waving off the check (they'll roll physically, have a feature that
+	 *  ignores it, or just don't care). Surface, never force — a reminder must be dismissable. */
+	dismissConcentrationSave = () => {
 		this.pendingConcentrationSave = null;
 	};
 

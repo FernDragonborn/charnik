@@ -69,7 +69,6 @@
 			{#if pend.failed}
 				<span class="conc-warn">✖ Save failed</span>
 				<span class="conc-detail">{combat.conc.label} ends</span>
-				<button class="conc-btn drop" onclick={combat.dropConcentrationFromSave}>Drop</button>
 			{:else}
 				<span class="conc-warn">⚠ Concentration check</span>
 				<span class="conc-detail">
@@ -83,9 +82,23 @@
 					/>
 					· d20 + CON ({combat.concentrationSaveMod >= 0 ? '+' : ''}{combat.concentrationSaveMod})
 				</span>
-				<button class="conc-btn roll" onclick={combat.rollConcentrationSave}>🎲 Roll</button>
-				<button class="conc-btn drop" onclick={combat.dropConcentrationFromSave}>Drop</button>
 			{/if}
+			<span class="conc-actions">
+				{#if !pend.failed}
+					<button class="conc-btn roll" onclick={combat.rollConcentrationSave}>🎲 Roll</button>
+				{/if}
+				<button
+					class="conc-btn drop"
+					title="End concentration on {combat.conc.label}"
+					onclick={combat.dropConcentrationFromSave}>Drop spell</button
+				>
+				<button
+					class="conc-btn dismiss"
+					title="Dismiss — keep concentrating"
+					aria-label="Dismiss, keep concentrating"
+					onclick={combat.dismissConcentrationSave}>✕</button
+				>
+			</span>
 		</div>
 	{/if}
 	<!-- Hit Dice live entirely in the "☾ Short" rest popover now (spend + remaining), not on this panel. -->
@@ -318,14 +331,29 @@
 		background: var(--color-surface-2);
 		color: var(--color-text);
 	}
-	.conc-btn.roll {
+	.conc-actions {
 		margin-left: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.conc-btn.roll {
 		background: var(--color-accent-soft);
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
 	}
+	.conc-btn.dismiss {
+		padding: 4px 8px;
+		background: transparent;
+		border-color: transparent;
+		color: var(--color-text-muted);
+	}
 	.conc-btn:hover {
 		filter: brightness(1.12);
+	}
+	.conc-btn.dismiss:hover {
+		background: var(--color-surface-2);
+		filter: none;
 	}
 
 	.death-saves {
