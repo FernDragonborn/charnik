@@ -43,9 +43,9 @@ describe('BrowserStorage (IndexedDB)', () => {
 	it('persists a character through the repository', async () => {
 		const s = fresh();
 		await saveCharacter(s, demoCharacter());
-		expect((await listCharacters(s)).map((r) => r.id)).toContain('valen');
-		const res = await loadCharacter(s, 'valen');
+		expect((await listCharacters(s)).map((r) => r.id)).toContain('karroth');
+		const res = await loadCharacter(s, 'karroth');
 		expect(res.ok).toBe(true);
-		expect(res.character?.build.name).toBe('Valen the Blue');
+		expect(res.character?.build.name).toBe('Karroth the Red');
 	});
 });

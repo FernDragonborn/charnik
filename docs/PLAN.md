@@ -864,15 +864,32 @@ stay semi-manual.
   re-derive reactively. MIGRATIONS: decided 2026-07-15 — 0 users yet, so NO migration work
   now; schema may change freely (breaking) until release; the schemaVersion machinery stays
   for post-release.
-- [ ] **DEMO-1 · Showcase demo character: warlock/barbarian multiclass (user-decided
-  2026-07-19).** The seeded demo (`src/lib/demo/sheet.ts`, Wizard 3) under-demonstrates the
-  system. Rebuild it as a **warlock × barbarian multiclass** — deliberately the widest
-  coverage in one sheet: pact magic pool alongside the shared-slot math (multiclass caster
-  level), Rage as a `grant_resource` + `apply_condition` with while-raging guards (L2), CON/STR
-  meets CHA casting (per-class `spellcasting_mod`, SPEC4), equipped armor vs unarmored,
-  invocations as choice-group features, resources + conditions + concentration on one sheet.
-  Keep it SRD-only. Update the demo-dependent tests/screenshots; the demo seeds first-run on
-  web + desktop, so it IS the first impression of the system's scope.
+- [~] **DEMO-1 · Showcase demo character: warlock/barbarian multiclass (user-decided
+  2026-07-19).** SEED REBUILT 2026-08-04 (`src/lib/demo/sheet.ts`): **Karroth the Red** —
+  Tiefling (Infernal) · Soldier · **Warlock 5 (Fiend Patron) × Barbarian 3 (Path of the
+  Berserker)**, id `karroth`. Verified deriving against the REAL shipped SRD 5.2.1 graph
+  (`missing: []`, `deriveIssues: []`): Rage max 3 (live `barbarian_rage` grant_resource token),
+  Alert feat token (init +prof works), pact pool `pact-3`×2 forcedUpcast + warlock DC 13/+5,
+  abilityBoosts (str/con), mixed Hit-Dice d12×3+d8×5, AC 14 (Shield of Faith +2 live), attuned
+  Cloak of Protection, active concentration on Hex, inspiration. SRD-only. `browser.test.ts`
+  updated (id/name). The demo is a normal seeded character; `recreateDemoCharacter()` already
+  restores it → **still TODO: duplicate that "Restore demo" button in Settings** (exists on
+  `/dev`; user wants it in Settings ▸ Data — a small StorageSettings row + confirm). expertise
+  intentionally DROPPED (no SRD producer on this pairing — Rogue/Bard only). The demo seeds
+  first-run on web + desktop, so it IS the first impression of the system's scope.
+  - **Gap ledger — derives cleanly but the UI/data won't fully SHOW these (fix targets):**
+    (1) **Pact pips not tracked in combat** — pool derives, but pure-pact casting "spends nothing"
+    (`combat/state.svelte.ts:1088`) and pips "aren't wired to the UI yet" (`rules/spellcasting.ts:49`),
+    so the spent pact slot (`spellSlotsSpent.pact`) won't visibly decrement. (2) **Attuned magic items
+    are mechanically inert** — every SRD magic-item row ships with an EMPTY `effects` column, so the
+    attuned Cloak of Protection shows the attunement slot + prose but gives NO derived +1 AC/saves
+    (item mechanics aren't tokenized). (3) **Unarmored Defense not tokenized** (`barbarian_unarmored_defense`
+    empty) → the DEMO-1 "armor vs unarmored" contrast can't be shown; moot while armored. (4) **Invocations
+    have no choice-group** (N2 unbuilt; `warlock_eldritch_invocations` empty) → renders as prose, not
+    pickable. (5) **Fiend-patron features not tokenized** (Dark One's Blessing temp HP etc.). (6) **`casterLevel`
+    is 0** (barbarian non-caster) → the "pact pool ALONGSIDE shared-slot math" DEMO-1 goal is NOT exercised
+    by this pairing (accepted 2026-08-04 — kept warlock×barbarian over swapping barbarian for a caster).
+    (7) Screenshots not yet regenerated for the new persona.
   - **Ritual demo caveat (user 2026-07-20):** a base **Warlock does NOT have Ritual Casting** — only
     via the Pact of the Tome *Book of Ancient Secrets* invocation (then any-class rituals). So the
     A17 `R` badge (now gated on `class.ritual` — E7) won't appear on the warlock×barbarian build
