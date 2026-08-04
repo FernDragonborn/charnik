@@ -36,12 +36,18 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
    Consumers: Persistent Rage (Barbarian L15), Uncanny Metabolism (Monk L2) — player-choice, each gated
    by its own once-per-long-rest resource (a `:1:long` pool the activation spends).
 
-3. **Concentration-save-on-damage = a SEPARATE, more valuable slice** (universal — every caster; today
-   `damage()` does NOT handle it). Must follow the principle: **NOT** an auto-prompt per Damage press.
-   UX = an on-demand "Concentration save" affordance by the concentration indicator (like the death-save
-   button at 0 HP), highlighted after damage, with a suggested-but-EDITABLE DC = `max(10, ½ last
-   damage)`; player clicks when the instance is done; fail → OFFER to drop concentration. **Two UX
-   variants to prototype + choose (§6).**
+3. **Concentration-save-on-damage = a SEPARATE, more valuable slice** (universal — every caster).
+   Must follow the principle: **NOT** an auto-prompt per Damage press. UX = an on-demand "Concentration
+   save" affordance by the concentration indicator (like the death-save button at 0 HP), highlighted
+   after damage, with a suggested-but-EDITABLE DC = `max(10, ½ last damage)`; player clicks when the
+   instance is done; fail → OFFER to drop concentration. **SURFACE CHOSEN: B4 (§6).**
+   **STATUS NOTE (verified in code 2026-08-04):** the earlier "today `damage()` does NOT handle it" is
+   STALE — `damage()` (`state.svelte.ts:425`) ALREADY fires a CON-save **toast reminder** with the
+   DC. So this slice is an **upgrade** of that ephemeral toast → the persistent B4 banner + a real
+   roll, not a from-scratch build. Build template = **`deathSave()`** (`state.svelte.ts:646`): roll
+   instantly via `rollPool` over `effectsFor('save.con')` + auto-apply the outcome — the SAME reason as
+   the death save (the tray contract has no result callback, and `save.con` effects — Bless, War
+   Caster advantage — already fold through `effectsFor`). Route the B4 Roll through that path.
 
 4. **SRD facts locked (verified in tools/srd-src):** 2024 Rage lasts *until the end of your next turn*,
    extend by (attack an enemy / force a save / Bonus Action); ends on Heavy armor or Incapacitated. 2014
@@ -54,13 +60,20 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
    but as **event → reminder/highlight**, rarely as silent state-mutation. A full auto-mutating
    event-bus is *rarely* correct in a tracker.
 
-6. **Concentration UX — CHOSEN: variant A** (smart — after a Damage press while concentrating, a
-   highlighted call-out with a suggested but EDITABLE DC = `max(10, ½ damage)` + one-click Roll save;
-   corrections just update the suggestion, no modal; fail → OFFER to drop concentration). Prototype:
-   `design-preview/concentration-ux.html`. HP has **no pips** — only Heal/Damage buttons + an amount
-   field, so "an instance" = a Damage press's amount (but corrections reuse the button → never force).
-   Rejected B (plain always-present button, manual DC). **Next:** survey how other trackers do it (see
-   §"Other-tracker survey" below) before finalizing the build.
+6. **Concentration UX — BEHAVIOR = variant A, SURFACE = B4 (CHOSEN 2026-08-04).** The BEHAVIOR is
+   variant A (smart — after a Damage press while concentrating, a suggested but EDITABLE DC =
+   `max(10, ½ damage)` + one-click Roll save; corrections just update the suggestion, no modal; fail →
+   OFFER to drop concentration). The SURFACE is **B4 · Slim inline banner** — a thin, **persistent**
+   (won't vanish) bar **under the HP panel** while a check is due: `⚠ Concentration check due · <spell>
+   · DC <n> · d20 + CON (+m)` + **Roll** + **Drop** right in the bar. Not floating, not modal, not a
+   toast. Prototype: `design-preview/concentration-popover-variants.html` (B4). Chosen over the floating
+   popovers (A1–A3), the indicator badge (B1), the auto-dismiss toast (B2), and the dice-tray hand-off
+   (B3) — the banner can't be missed and stays put through corrections, matching "surface, don't force."
+   HP has **no pips** — only Heal/Damage + an amount field, so "an instance" = one Damage press's amount
+   (corrections reuse the button → never force). (The earlier "wide call-out" surface + the plain
+   manual-DC button are both superseded by B4.)
+   **Render site:** the banner lives under `HpPanel.svelte`, driven by a `pendingConcentrationSave`
+   VM field set in `damage()` (replacing the toast) and cleared on Roll / Drop / when concentration ends.
 
 ## Concentration DC — EDITION DIVERGENCE + the multi-save idea (SRD-verified 2026-08-02)
 

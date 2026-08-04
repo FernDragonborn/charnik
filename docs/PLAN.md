@@ -1015,6 +1015,25 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
 
 Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority within each.
 
+### Implementation order (current focus — set 2026-08-04)
+
+Dependency-forced across the play-tracking ledgers. The linchpin is **N2 `onEvent`** — it gates every
+event-driven recharge. **Decision 2026-08-04: start with N2** (it's needed by the later waves anyway,
+so getting it ready first avoids a stall); **Concentration-save B4 is unblocked and can slot in at any
+point** (it depends on nothing).
+
+1. **N2 · `savage_attacker`** — small extension of the SHIPPED `onUse` executor: a damage roll-mode
+   ("roll the pool twice, keep the higher") intent field + a once-per-turn `turn`-recharge gate. Warms
+   up the onUse path with reusable primitives (`docs/N2-PLAN.md`).
+2. **N2 · `onEvent` write-half** — the deferred half of the intent model (`docs/ACTIONS.md` §1/§4).
+   Build it WITH its first consumer (below) so the executor isn't speculative.
+3. **RECHARGE slice 2 · onEvent regain** — Persistent Rage / Uncanny Metabolism (initiative-regain);
+   the first `onEvent` consumer, so 2+3 land together (`docs/RECHARGE-PLAN.md` slice 2).
+4. **Concentration-save B4** — unblocked, universal, UX decided (`RECHARGE-PLAN` §6); do anytime.
+5. **B25 subclass casters** → **D16 choice-UI → `magic_initiate`** → **RECHARGE slice 3** (item charges).
+6. Content passes (MAGIC-ITEM-EFX, D6/D10/E4); **ARCH-1 i18n sweep**; then low/YAGNI (ARCH-4 spacing,
+   B11, B24).
+
 - [ ] **AUDIT-1 · Full-project audit backlog (2026-07-14) → [`docs/AUDIT.md`](AUDIT.md).**
   Whole-`src/` correctness pass: rules-math bugs (A1 heavy-armor AC, A2 multiclass HP —
   verified vs both editions), unfinished invariants (B1 effect expiry, B2 dead play fields,
