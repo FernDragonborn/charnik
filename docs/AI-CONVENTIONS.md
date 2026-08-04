@@ -7,7 +7,7 @@ starts with the same rules the maintainer already taught, without needing a priv
 
 **How to read it.** Each rule is stated as **Rule → Why → How to apply**. These complement, and
 never override, `CLAUDE.md` (architecture invariants) and the spec docs (`docs/PLAN.md` is
-authoritative; companions `TESTING.md`, `SECURITY.md`, `FRONTEND.md`). Where a rule touches
+authoritative; companions `TESTING.md`, `SECURITY.md`). Where a rule touches
 architecture, `CLAUDE.md` wins; this file adds the *practice* around it.
 
 > Terminology: "the maintainer" / "the user" = the single developer who owns the project. Many
@@ -347,6 +347,43 @@ slate + heraldic crimson + gold; Space Grotesk / Inter / JetBrains Mono.
 **How to apply.** Record durable design decisions in `docs/PLAN.md` (authoritative) in the same
 change. Throwaway mocks live in `design-preview/`. Icons: bundle SVGs from flaticon.com /
 streamlinehq.com (not emoji — emoji render as boxes in headless tests); keep CC-BY attribution.
+
+### 4.6 Frontend architecture & UX pattern contract
+**Rule.** Components are a **thin shell** — no D&D math in a `.svelte` file; they bind to the pure
+core's `{value, trace, notes}` and render. A view's reactive state + actions live in ONE typed
+`state.svelte.ts` VM class exported as a singleton (e.g. `combat`); components read via
+`const x = $derived(vm.x)` (bare names in markup) and write through `vm.*`. Pure stateless
+helpers/constants/types sit in sibling `*.ts` (unit-testable). Live switches
+(`activeSystem`/`activeLocale`/`theme` + per-character `layout`) flow through reactive stores,
+never a reload. Then apply these cross-cutting UX invariants in **every** component:
+1. **State on/off → a toggle `Switch`** (teal when on), never a checkbox.
+2. **Visibility (show/hide on the sheet) → an eye icon** (`EyeToggle`, teal = shown) — distinct
+   from a state switch.
+3. **Every auto-calc value → a hover/focus provenance popover** listing each `{source, op, amount}`
+   + rule notes (AC, DCs, attack bonus, mods, passives, max HP, capacity…). A manually-overridden
+   value shows a `manual` marker instead of a breakdown.
+4. **Any value is click-to-edit** (manual override, anytime, independent of auto-calc).
+5. **Lists are keyboard-navigable** — ↑/↓ highlight, **Enter = left-click**, Home/End, type-ahead
+   (palette, spell/attack lists, roll log, compendium, every dropdown).
+6. **Units** — imperial primary, **metric in parentheses** (`30 ft (9 m)`).
+7. **Resource/slot/economy pips are click-to-set** — click a filled pip → empties it + all after;
+   click an empty pip → fills it + all before (available-left / spent-right).
+8. **Panels** — header = collapse chevron (▾) + title + right-aligned actions + drag-handle (⠿);
+   panels collapse, show/hide, and drag-reorder **within the two-column area only** (never a free
+   canvas).
+9. **Icon slots take emoji OR image** — SRD ships no art (emoji/SVG fallback); homebrew/user
+   entities may set an image.
+
+**Why.** These are cross-cutting *conventions of intent* — which control means "state" vs
+"visibility", how provenance surfaces, how pips fill — that can't be read out of the code or made
+executable (there's no test for "teal = good"). Pinning them keeps every new panel consistent with
+the shipped sheet instead of re-deciding per component. (Folded 2026-08-04 from the retired
+`FRONTEND.md`; its component *inventory* is now the generated `docs/SURFACE.md`.)
+
+**How to apply.** Reuse the existing primitives (`Switch`, `EyeToggle`, `RollButton`,
+`DialogShell`, …) — grep `SURFACE.md` first (§4.4; CLAUDE.md "Reuse before you write"). Colours
+follow the semantic roles in **§4.5**. The Combat view is the reference implementation
+(`src/routes/combat/state.svelte.ts` + its `blocks/panels/*`).
 
 ---
 

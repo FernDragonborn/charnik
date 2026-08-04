@@ -1,7 +1,9 @@
 # Charnik — D&D Character Tracking System (Plan)
 
 > Index doc. Companions: [TESTING.md](./TESTING.md) · [SECURITY.md](./SECURITY.md) ·
-> `FRONTEND.md` (written at roadmap P7.5) · [research/existing-generators.md](./research/existing-generators.md)
+> [research/existing-generators.md](./research/existing-generators.md). Frontend UX pattern
+> contract → [AI-CONVENTIONS.md](./AI-CONVENTIONS.md) §4.6; live component inventory → generated
+> [SURFACE.md](./SURFACE.md).
 
 ## Context
 
@@ -420,7 +422,7 @@ items. Each may carry **effects** (bounded vocab).
   arrow-key navigable**: ↑/↓ move a highlighted item, **Enter activates it (identical to a
   left-click)**, Home/End jump, type-ahead where useful — applies uniformly to the command
   palette, spell/attack lists, roll log, compendium, and every dropdown. Cheaper now than
-  retrofitting; details in `FRONTEND.md` (P7.5).
+  retrofitting; UX pattern contract in `AI-CONVENTIONS.md` §4.6.
 - **Content-pack sharing (in scope)**: export a whole **`source`** as a portable set
   (its CSVs, optionally zipped) so users can share homebrew packs; import re-uses the
   collision/health flow. (Distinct from per-character bundle export.)
@@ -787,7 +789,7 @@ Libs (minimal): `papaparse`, `svelte-i18n`, `zod`; **Tauri v2** + plugins
     (data·labels). Layout = grimoire sheet: HP hero, combat tiles (AC/initiative/speed/
     passive), 6 ability tiles, **spell slots as gold "sigil" pips** (filled=available,
     dashed=spent), effects+provenance panel. Just the default token *values*; the token
-    contract + light/dark/custom themes are unchanged. Detailed spec → `FRONTEND.md` (P7.5).
+    contract + light/dark/custom themes are unchanged. UX pattern contract → `AI-CONVENTIONS.md` §4.6.
     **Semantic color roles (consistent everywhere):** **crimson = important / danger**
     (pinned/favourite, negative effects, destructive, primary actions like Roll/Next-turn),
     **teal/cyan = good / confirmation / positive** (available resources & slot pips, positive
@@ -1374,8 +1376,8 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
 ### Compendium-editor refactor set (planned 2026-07-09)
 
 A coordinated set: split the wiki detail into components, type the loader properly, and harden
-the lint gate. Detailed component shapes live in `docs/FRONTEND.md` §4.3 (WikiDetail
-decomposition + RollButton). Ordering + open decisions below.
+the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below; live shapes in
+`docs/SURFACE.md`). Ordering + open decisions below.
 
 - [x] **WD-1 · Split `WikiDetail` (~740 lines)** — DONE (dispatcher + SpellHead/MonsterHead/GenericHead
   + ArticleProse + wikiEdit types; actions moved to dispatcher; read + translate verified via
@@ -1550,8 +1552,10 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
    diagnostics (broken refs, missing translations, collisions, bad rows).
 7. **Character schema** (build/runtime split, `schemaVersion`) + store (load/save, photo,
    `log.jsonl`, autosave/backups, bundle, missing-content) + tests.
-7.5 **Frontend architecture** (`docs/FRONTEND.md`) — component tree, sheet layout, props
-   from core types, store/`$derived` wiring for live switches.
+7.5 **Frontend architecture** — component tree, sheet layout, props from core types,
+   store/`$derived` wiring for live switches. (UX pattern contract → `AI-CONVENTIONS.md` §4.6;
+   live component inventory → generated `docs/SURFACE.md`. `FRONTEND.md` retired 2026-08-04, its
+   living contract folded into AI-CONVENTIONS, its inventory superseded by SURFACE.md.)
    **Layout model = modular panels + preset views (HYBRID, decided P1).** The UI is built
    from discrete **panels** (HP, combat stats, abilities, skills, attacks, spells,
    actions/maneuvers, conditions/effects, inventory, notes, …). It ships **named views** —
