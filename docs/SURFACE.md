@@ -42,7 +42,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `onKeydown` ×2 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/trapFocus.ts
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
-- `PIP_CAP` ×2 — src/routes/combat/blocks/ResourceBar.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
+- `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts

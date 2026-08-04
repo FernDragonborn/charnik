@@ -14,7 +14,6 @@
 	import Controls from './blocks/Controls.svelte';
 	import Turnbar from './blocks/Turnbar.svelte';
 	import TimeSkip from './blocks/TimeSkip.svelte';
-	import ResourceBar from './blocks/ResourceBar.svelte';
 	import Playbar from './blocks/Playbar.svelte';
 	import CombatStrip from './blocks/CombatStrip.svelte';
 	import Abilities from './blocks/Abilities.svelte';
@@ -110,10 +109,6 @@
 	<CombatStrip {s} />
 
 	<Abilities {s} />
-
-	{#if s.resources.length}
-		<ResourceBar {s} />
-	{/if}
 
 	<section class="panels">
 		{#each columns as col, ci (ci)}
