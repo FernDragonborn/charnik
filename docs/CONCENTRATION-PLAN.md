@@ -1,8 +1,9 @@
 # CONCENTRATION-PLAN.md
 
 Робочі нотатки по таймеру/контракту концентрації. Для себе — щільно, з file:line.
-Винесено з [[UPCAST-PLAN.md]] (duration-апкаст плагіниться сюди), бо це чіпає concentration-
-систему НЕЗАЛЕЖНО від апкасту. Оновлювати при зміні рішення (§8.6 conventions).
+Винесено з апкаст-роботи (duration-апкаст плагіниться сюди; той план закрито й згорнуто в
+`docs/PLAN.md` пункт **UPCAST**), бо це чіпає concentration-систему НЕЗАЛЕЖНО від апкасту.
+Оновлювати при зміні рішення (§8.6 conventions).
 
 ## Статус
 
@@ -97,7 +98,7 @@ conc-спелів** — завжди створювати carrier (з durationRo
 
 ## 6. Перетини
 
-- **Duration-апкаст** ([[UPCAST-PLAN.md]]): conc-cap пише `carrier.durationRounds` (через
+- **Duration-апкаст** (PLAN.md пункт **UPCAST**): conc-cap пише `carrier.durationRounds` (через
   `eval(upcast duration, slot)` замість `durationToRounds(база)`); таймований НЕ-conc ефект — свій
   `durationRounds`. Цей план — передумова.
 - **CON-сейв від урону** — СИБЛІНГ, не тут. `TESTING.md:73`. Принцип play-tracker «surfaces, never

@@ -1042,8 +1042,54 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   (AUDIT A17). `cast()` auto-spends the lowest available leveled slot (pure `slotToSpend`, unit-tested)
   via `play.spellSlotsSpent` and blocks with a toast when none remain; cantrips spend nothing; a slot
   is spent in AND out of combat (like HP). A RITUAL cast (the `R` badge, gated on `class.ritual`
-  ritual-casting eligibility — E7) spends no slot. STILL OPEN (deferred): a manual upcast picker,
-  warlock PACT-slot pips (not UI-wired → pact casts unslotted for now).
+  ritual-casting eligibility — E7) spends no slot. **Both former tails now CLOSED:** the manual upcast
+  picker landed with the structured-upcast work (slot-picker overlay + ⇡ affordance, browser-verified);
+  warlock PACT-slot pips landed 2026-08-04 (`031c944`, DEMO-1 gap 1) — the pact pool is spent on a
+  pure-pact cast (`slotToSpend` → `{key:'pact'}`) and rendered as a "Pact Magic" pip strip.
+- [x] **UPCAST · Structured spell-upcasting engine — DONE (was `docs/UPCAST-PLAN.md`, closed 10/10, folded
+  in here 2026-08-04 when that plan doc was retired).** Whole vertical slice engine→data→UI, ~985 tests.
+  **What shipped:** one `upcast` column on `spells.csv`, token = `kind:formula` (several via `;`), parsed
+  by the existing effect grammar (`splitGuard` on `?` + the token-parser slot-discipline — NO naive
+  `split(':')`, verified there's no `?:` ternary so `:` is structural-only); `per_slot(amount[,step])`
+  sugar over the effect evaluator; eval is CAST-EPHEMERAL (`{slot, spell_level}` ctx built in the VM
+  cast methods, NEVER in derive — a persistent `slot` would break BUILD/PLAY separation). Slot picker
+  (overlay + ⇡ affordance + per-slot `castPreview`); multitype damage via `SpellRow.damageParts`
+  (ice_knife done — the old "SpellRow flattens" note was superseded); hp_max/temp_hp/`enhancement`
+  (Magic Weapon +n) scale a spawned effect's magnitude through the same seam; count/area chips; roll-log
+  provenance line ("Xd base + Yd @ slot N"); concentration timer + tails (see `docs/CONCENTRATION-PLAN.md`
+  Model C). **Key LOCKED decisions (kept here so the "why" survives the doc's deletion):** (1) combine =
+  DELTA for structured kinds (`base+delta`, base is the single source), ABSOLUTE for count/duration; `inf`
+  only ever in `duration` so `base+inf` can't happen by construction. (2) `cantripDieMultiplier`
+  (`spellcasting.ts`, the 5/11/17 tier) is RETAINED, NOT folded into `upcast` — the cantrip tier is a
+  UNIFORM system rule (rules-core), `upcast` is per-spell data; different axes (char_level vs slot),
+  merging would be a regression not a dedup (H7 reappraised). (3) N6 — upcast is NOT gated on the
+  auto-calc toggle: that toggle gates effect-MODIFIER layers (Bless/Rage/conditions), not a spell's own
+  mechanic, so `castCtx` is always built (from base state even when auto-calc is off). Dice-upcast works
+  off; effect-magnitude upcast (Aid, Magic Weapon) is inert off because its spawned tokens are effects.
+  (4) Conjure* tables + meta-rules (Dispel Magic, Globe) stay prose `higher_level` — not number-scaling,
+  a permanent exclusion, not a bug. **OPEN tails (deferred, NOT blockers — the reason this became a
+  backlog entry rather than staying closed-in-its-own-doc):**
+  - [ ] **UPCAST-ROLLER (was D14) · multi-instance per-instance roller.** The `DiceTrayRequest.instances`
+    contract is fixed but the roller loop is unbuilt, so `count`-scaling spells (Scorching Ray, Magic
+    Missile, Chain Lightning, Eldritch Blast beams) degrade to an "N×" chip + a manual roll rather than N
+    independent to-hit+damage sub-rolls with per-target assignment. Same gap makes the Magic Weapon
+    `enhancement` tokens UNTYPED (`flat_bonus:attack/damage+n` buffs ALL the caster's weapons + slightly
+    their spell rolls) — a weapon-scoped flat DAMAGE bonus isn't expressible without an L1 grammar change
+    (a `compatibility.md` chokepoint), and there's no per-instance weapon target yet. Ties
+    [[charnik-dicetray-attack-damage-concept]]; the roller rework is its own item.
+  - [ ] **UPCAST-AUTHORING (was N8) · guided upcast-token builder** in `EditContentForm` (form → token),
+    so a non-technical author never hand-writes `per_slot(1d6)` (CLAUDE.md "everything from the UI"). v1
+    ships a raw `upcast` text field (like the effect-token field); prose `higher_level` stays the fallback.
+  - [ ] **UPCAST-INVOCATION-SCOPE · invocation effects scoped to a spell** (Agonizing Blast +CHA/beam,
+    Eldritch Spear range) — NOT upcast/scaling but a per-instance effect keyed on `spell_id`, reusing the
+    `attacks.ts` §A/§B scope mechanism extended from weapon-category to `spell_id` (no need to enumerate
+    feats — each is "a scoped effect on a spell"). Rides the roller's per-instance path; also the
+    mechanical half of DEMO-1 gap 4 / N2 invocations.
+  - [ ] **UPCAST-DURATION-TAIL · Geas/Dominate multi-day durations.** Expressible via `duration:step`, but
+    low value in the rounds canon (30 days = 432000 rounds) — a curated follow-up, not a blocker.
+  - [ ] **UPCAST-PREVIEW-TOOLTIP · pre-cast per-slot preview** ("5th: 10d6, 6th: 12d6") before choosing a
+    slot. v1 ships the picker + an on-select `castPreview` only; a hover tooltip over the whole ladder is
+    the nicety left.
 - [x] **UBUG-7 · Effect (i) rules text renders raw, not Markdown/HTML.** DONE 2026-07-21. Extracted the
   compendium's marked+DOMPurify pipeline into a shared `content/markdown.ts` (`renderContentMarkdown`)
   reused by `ArticleProse`; the effect ⓘ box (`PanelCard.svelte`) now renders through the `ArticleProse`
