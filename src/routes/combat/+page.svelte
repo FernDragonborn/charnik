@@ -105,15 +105,15 @@
 		<TimeSkip />
 	{/if}
 
-	{#if s.resources.length}
-		<ResourceBar {s} />
-	{/if}
-
 	<Playbar />
 
 	<CombatStrip {s} />
 
 	<Abilities {s} />
+
+	{#if s.resources.length}
+		<ResourceBar {s} />
+	{/if}
 
 	<section class="panels">
 		{#each columns as col, ci (ci)}
