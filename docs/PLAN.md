@@ -965,8 +965,8 @@ stay semi-manual.
   tiers render identically; the `on` split is behaviour-identical for none/proficient/expertise).
 - [ ] **N5 · Adjacent gaps (assistant's additions).** (1) **Features panel on the combat
   sheet** — a character can't READ their own features/traits anywhere; read-only prose list,
-  cheapest big win, zero prereqs. (2) Concentration check prompt on damage (CON save DC
-  max(10, dmg/2)) — `damage()` doesn't even hint. (3) Death saves + exhaustion UI (→ B2).
+  cheapest big win, zero prereqs. (2) **DONE** — concentration check prompt on damage (CON save DC
+  max(10, ⌊dmg/2⌋)) now toasts a reminder in `damage()` (see the CONCENTRATION entry). (3) Death saves + exhaustion UI (→ B2).
   (4) Ammunition as consumable — decided 2026-07-15: tracking OFF by default (a toggle
   that exists but is never enforced; ~99% of tables don't track ammo). (5) Short-rest
   hit-dice UI (→ UBUG-1/B2). (6) Search/filter in builder pickers — SRD lists are already
@@ -1056,8 +1056,8 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   (overlay + ⇡ affordance + per-slot `castPreview`); multitype damage via `SpellRow.damageParts`
   (ice_knife done — the old "SpellRow flattens" note was superseded); hp_max/temp_hp/`enhancement`
   (Magic Weapon +n) scale a spawned effect's magnitude through the same seam; count/area chips; roll-log
-  provenance line ("Xd base + Yd @ slot N"); concentration timer + tails (see `docs/CONCENTRATION-PLAN.md`
-  Model C). **Key LOCKED decisions (kept here so the "why" survives the doc's deletion):** (1) combine =
+  provenance line ("Xd base + Yd @ slot N"); concentration timer + tails (see the CONCENTRATION entry
+  below, Model C). **Key LOCKED decisions (kept here so the "why" survives the doc's deletion):** (1) combine =
   DELTA for structured kinds (`base+delta`, base is the single source), ABSOLUTE for count/duration; `inf`
   only ever in `duration` so `base+inf` can't happen by construction. (2) `cantripDieMultiplier`
   (`spellcasting.ts`, the 5/11/17 tier) is RETAINED, NOT folded into `upcast` — the cantrip tier is a
@@ -1090,6 +1090,22 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   - [ ] **UPCAST-PREVIEW-TOOLTIP · pre-cast per-slot preview** ("5th: 10d6, 6th: 12d6") before choosing a
     slot. v1 ships the picker + an on-select `castPreview` only; a hover tooltip over the whole ladder is
     the nicety left.
+- [x] **CONCENTRATION · Concentration timer + end-points — DONE (was `docs/CONCENTRATION-PLAN.md`,
+  fully implemented, folded in here 2026-08-04 when that doc was retired).** **Model C** (the load-bearing
+  decision worth keeping): `play.concentration` stays a `string | null` **ref** — the timer lives on a
+  **carrier effect** in `play.effects` (`source = ref`, `durationRounds` + `startedRound`), so concentration
+  is "a ref to its own timer-effect", NOT a separate clock. This reuses the existing effect-expiry +
+  duration-UI (editing the carrier's `durationRounds` IS editing the concentration) — zero migration, no
+  `schemaVersion` bump. The one code change was: **always create a carrier for a concentration spell, even
+  token-less** (empty `effects: []`, just timer + source), which gave token-less control spells (Hold
+  Person, Web) a timer. (Rejected Model A — concentration owns a separate clock — needed a display/edit
+  proxy + a new expiry path; C added ~1 line.) **All end-points shipped:** timer expiry → `concentration =
+  null` (`economy.svelte.ts`); replace on a new conc-cast; manual drop (tap the `◎ Concentration` badge,
+  `EffectsPanel.svelte`); long rest; **0-hp / incapacitated → `endConcentrationIfBroken`** (reactive
+  `$effect`, `state.svelte.ts` + `combat/+page.svelte`); **CON-save-on-damage = a toast REMINDER** (DC
+  `max(10, ⌊dmg/2⌋)`), never an auto-drop — the play-tracker "surfaces, never forces" principle
+  ([[play-tracker-surfaces-never-forces]]). Duration-upcast feeds `carrier.durationRounds` (Hunter's Mark
+  8h→24h). Duration canon = **rounds** (`rounds→human` is a display formatter); `inf` → indefinite (null).
 - [x] **UBUG-7 · Effect (i) rules text renders raw, not Markdown/HTML.** DONE 2026-07-21. Extracted the
   compendium's marked+DOMPurify pipeline into a shared `content/markdown.ts` (`renderContentMarkdown`)
   reused by `ArticleProse`; the effect ⓘ box (`PanelCard.svelte`) now renders through the `ArticleProse`

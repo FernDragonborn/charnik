@@ -555,8 +555,9 @@ vanish from the roadmap. Grepping just `[ ]` misses the partials; trusting the h
 This is §8.6 (docs track truth) applied at the moment a doc dies. Concrete case: retiring
 `UPCAST-PLAN.md` — its five deferred tails (roller, authoring-UI, duration day-tail, preview tooltip,
 invocation-scope) were lifted into `PLAN.md` as backlog items, the delta-combine / cantrip-retained /
-N6 decisions were preserved as the "why", and the two `CONCENTRATION-PLAN.md` links were re-pointed,
-all BEFORE the `git rm`.
+N6 decisions were preserved as the "why", and every cross-doc link into it was re-pointed, all BEFORE
+the `git rm`. (`CONCENTRATION-PLAN.md` was retired the same way right after — fully implemented, its
+Model C + CON-save-reminder principle folded into `PLAN.md`, no open items to lift.)
 
 ---
 
