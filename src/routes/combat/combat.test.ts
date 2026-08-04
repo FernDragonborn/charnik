@@ -152,6 +152,7 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		character = newCharacter('valen', 'Valen', '5.5e');
 		combat.graph = graph;
 		combat.character = character;
+		combat.pendingConcentrationSave = null; // reset the singleton's transient UI between tests
 	});
 
 	it('dropping to 0 HP ends concentration (endConcentrationIfBroken, §7)', () => {
@@ -163,14 +164,52 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 		expect(character.play.effects).toEqual([]); // the carrier goes down with it
 	});
 
-	it('surviving damage does NOT auto-drop concentration — it only reminds (§6)', () => {
+	it('surviving damage opens the B4 save banner (DC max(10,½dmg)) and does NOT auto-drop (§6/B4)', () => {
 		character.play.hp = { current: 20, max: 20, temp: 0 };
 		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
 		combat.hpAmount = 6;
 		combat.damage();
 		expect(character.play.hp.current).toBe(14);
-		combat.endConcentrationIfBroken(); // still up → nothing ends
+		expect(combat.pendingConcentrationSave).toEqual({ dc: 10 }); // 6 dmg → DC max(10, 3) = 10
+		expect(character.play.concentration).toBe(`spell:${S}:bless`); // never auto-dropped
+	});
+
+	it('DC is ⌊dmg/2⌋ over 21, capped at 30 in 2024 (RAW)', () => {
+		character.play.hp = { current: 100, max: 100, temp: 0 };
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		combat.hpAmount = 70; // ⌊70/2⌋ = 35 → capped to 30
+		combat.damage();
+		expect(combat.pendingConcentrationSave?.dc).toBe(30);
+	});
+
+	it('no banner when not concentrating', () => {
+		character.play.hp = { current: 20, max: 20, temp: 0 };
+		combat.hpAmount = 6;
+		combat.damage();
+		expect(combat.pendingConcentrationSave).toBeNull();
+	});
+
+	it('rolling the save resolves the check and NEVER auto-drops (fail → offers Drop)', () => {
+		character.play.hp = { current: 20, max: 20, temp: 0 };
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		combat.hpAmount = 6;
+		combat.damage();
+		combat.rollConcentrationSave();
+		// resolved: either held (cleared) or failed (banner offers Drop) — never a still-unrolled {dc}
+		const pend = combat.pendingConcentrationSave;
+		expect(pend === null || pend.failed === true).toBe(true);
+		// the roll itself never ends the spell — only Drop does
 		expect(character.play.concentration).toBe(`spell:${S}:bless`);
+	});
+
+	it('Drop from the banner ends concentration and dismisses the banner', () => {
+		character.play.hp = { current: 20, max: 20, temp: 0 };
+		combat.cast(spellRow(graph, `spell:${S}:bless`, 'on')!, noModifiers);
+		combat.hpAmount = 6;
+		combat.damage();
+		combat.dropConcentrationFromSave();
+		expect(character.play.concentration).toBeNull();
+		expect(combat.pendingConcentrationSave).toBeNull();
 	});
 });
 

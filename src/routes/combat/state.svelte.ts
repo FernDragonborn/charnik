@@ -386,6 +386,14 @@ class CombatVM {
 
 	// --- HP: apply damage / healing to the play-state (temp HP soaks damage first) -------------
 	hpAmount = $state(1);
+	/** B4 concentration-save banner: a CON save the player owes after taking damage while concentrating.
+	 *  `dc` is the suggested-but-editable DC; `failed` is set once a rolled save misses (the banner then
+	 *  offers Drop). Null = no check due. Set in `damage()`, cleared on a passed roll / drop / when
+	 *  concentration ends. */
+	pendingConcentrationSave = $state<{ dc: number; failed?: boolean } | null>(null);
+	/** The CON saving-throw bonus a concentration save rolls (d20 + this); already folds save.con flat
+	 *  effects, so the roll must NOT re-add `fx.flat` (roll.ts: saves are pre-folded into the sheet). */
+	concentrationSaveMod = $derived(this.sheet?.abilities.con.save.value ?? 0);
 	/** Selected damage type for the next Damage press (B20). Null = untyped (no resist/vuln math). */
 	damageType = $state<string | null>(null);
 	private get hpMax(): number {
@@ -419,20 +427,46 @@ class CombatVM {
 		p.hp.temp -= soaked;
 		n -= soaked;
 		p.hp.current = Math.max(0, p.hp.current - n);
-		// §6: taking damage while concentrating prompts a CON save (DC = max(10, ⌊damage/2⌋)) — a
-		// REMINDER, not an auto-drop (play-tracker surfaces, never forces). 0-HP already ends it via
-		// endConcentrationIfBroken, so only remind while still up.
+		// B4: taking damage while concentrating opens the "check due" banner — a CON save at DC
+		// max(10, ⌊dmg/2⌋), capped 30 in 2024 (RAW). Suggested-but-editable DC, PLAYER-rolled, never an
+		// auto-drop (play-tracker surfaces, never forces). 0 HP already ends it via endConcentrationIfBroken.
 		if (taken > 0 && p.concentration && p.hp.current > 0) {
-			const dc = Math.max(10, Math.floor(taken / 2));
-			toast(`Concentration — roll a CON save (DC ${dc})`, {
-				description: 'Fail → the spell ends. Tap the concentration indicator to drop it.'
-			});
+			const cap = this.character?.system === '5.5e' ? 30 : Number.POSITIVE_INFINITY;
+			this.pendingConcentrationSave = { dc: Math.min(cap, Math.max(10, Math.floor(taken / 2))) };
 		}
 	};
 	heal = () => {
 		const p = this.character?.play;
 		if (!p) return;
 		p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, Math.round(this.hpAmount)));
+	};
+
+	/** Roll the owed concentration save (B4 banner). Instant + auto-applied like a death save — the tray
+	 *  has no result callback, and save.con effects (Bless bonus dice, War Caster advantage) already fold
+	 *  through `effectsFor`. `mod` is the sheet CON-save value (flat effects pre-folded → do NOT add
+	 *  `fx.flat`, roll.ts). Pass → the check clears. Fail → RAW the spell ends, but we mark the banner
+	 *  `failed` and OFFER Drop rather than auto-dropping (surface, never force). */
+	rollConcentrationSave = () => {
+		const pend = this.pendingConcentrationSave;
+		if (!pend || pend.failed || !this.character?.play.concentration) return;
+		const fx = this.effectsFor('save.con');
+		const r = rollPool({ 20: 1 }, this.concentrationSaveMod, netAdvantage(fx), fx.bonusDice, fx);
+		this.tray.pushRoll('Concentration save', r);
+		if (r.total >= pend.dc) {
+			toast(`Concentration held — ${r.total} ≥ DC ${pend.dc}`);
+			this.pendingConcentrationSave = null;
+		} else {
+			toast(`Concentration save failed — ${r.total} < DC ${pend.dc}`, {
+				description: 'The spell ends — tap Drop to confirm.'
+			});
+			this.pendingConcentrationSave = { dc: pend.dc, failed: true };
+		}
+	};
+	/** The B4 banner's Drop (either "drop instead of rolling", or confirm the drop after a failed save):
+	 *  end concentration and dismiss the banner. */
+	dropConcentrationFromSave = () => {
+		this.clearConcentration();
+		this.pendingConcentrationSave = null;
 	};
 
 	/** N2 executor (first slice): activate a resource spend-option. Validate the resource cost AND the
@@ -535,6 +569,7 @@ class CombatVM {
 		if (!c) return;
 		if (c.play.concentration) this.removeLinkedEffect(c.play.concentration);
 		c.play.concentration = null;
+		this.pendingConcentrationSave = null; // no spell → no owed save (B4 banner dismisses)
 	};
 	/** RAW: dropping to 0 HP or becoming incapacitated ENDS concentration (CONCENTRATION-PLAN §7).
 	 *  Called reactively from the combat page so it fires the instant HP hits 0 (Damage) or an

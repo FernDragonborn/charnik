@@ -60,6 +60,34 @@
 			{/each}
 		</select>
 	{/if}
+	<!-- B4: concentration-save banner — a thin, persistent bar shown while a CON save is DUE after
+	     taking damage while concentrating. Suggested-but-editable DC, player-rolled (surface, never
+	     force); a failed roll offers Drop rather than auto-ending the spell. -->
+	{#if combat.pendingConcentrationSave && combat.conc}
+		{@const pend = combat.pendingConcentrationSave}
+		<div class="conc-banner" class:failed={pend.failed} role="status">
+			{#if pend.failed}
+				<span class="conc-warn">✖ Save failed</span>
+				<span class="conc-detail">{combat.conc.label} ends</span>
+				<button class="conc-btn drop" onclick={combat.dropConcentrationFromSave}>Drop</button>
+			{:else}
+				<span class="conc-warn">⚠ Concentration check</span>
+				<span class="conc-detail">
+					{combat.conc.label} · DC
+					<input
+						class="conc-dc"
+						type="number"
+						min="1"
+						bind:value={pend.dc}
+						aria-label="Concentration save DC"
+					/>
+					· d20 + CON ({combat.concentrationSaveMod >= 0 ? '+' : ''}{combat.concentrationSaveMod})
+				</span>
+				<button class="conc-btn roll" onclick={combat.rollConcentrationSave}>🎲 Roll</button>
+				<button class="conc-btn drop" onclick={combat.dropConcentrationFromSave}>Drop</button>
+			{/if}
+		</div>
+	{/if}
 	<!-- Hit Dice live entirely in the "☾ Short" rest popover now (spend + remaining), not on this panel. -->
 	{#if downed}
 		<div class="death-saves">
@@ -237,6 +265,69 @@
 		color: var(--color-text);
 		cursor: pointer;
 	}
+	/* B4 concentration-save banner — thin inline bar (not floating, not modal) */
+	.conc-banner {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 9px;
+		margin-top: 10px;
+		padding: 7px 10px;
+		border-radius: var(--radius-md);
+		background: var(--color-accent-soft);
+		border: 1px solid var(--color-accent);
+		font-size: var(--font-size-xs);
+	}
+	.conc-banner.failed {
+		background: var(--color-danger-soft);
+		border-color: var(--color-danger);
+	}
+	.conc-warn {
+		font-family: var(--font-display);
+		font-weight: 600;
+		color: var(--color-accent-bright);
+	}
+	.conc-banner.failed .conc-warn {
+		color: var(--color-danger);
+	}
+	.conc-detail {
+		color: var(--color-text-muted);
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+	}
+	.conc-dc {
+		width: 44px;
+		text-align: center;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-sm);
+		color: var(--color-text);
+		padding: 2px 3px;
+	}
+	.conc-btn {
+		font-family: var(--font-display);
+		font-weight: 600;
+		font-size: var(--font-size-xs);
+		padding: 4px 10px;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface-2);
+		color: var(--color-text);
+	}
+	.conc-btn.roll {
+		margin-left: auto;
+		background: var(--color-accent-soft);
+		border-color: var(--color-accent);
+		color: var(--color-accent-bright);
+	}
+	.conc-btn:hover {
+		filter: brightness(1.12);
+	}
+
 	.death-saves {
 		margin-top: 12px;
 		padding-top: 11px;
