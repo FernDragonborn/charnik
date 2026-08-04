@@ -20,6 +20,7 @@
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
 	import Loading from '$lib/components/Loading.svelte';
+	import NoCharacter from '$lib/components/NoCharacter.svelte';
 	import Chip from '$lib/components/Chip.svelte';
 	import Switch from '$lib/components/Switch.svelte';
 	import EyeToggle from '$lib/components/EyeToggle.svelte';
@@ -33,6 +34,9 @@
 	let selected = $state<LoadedRow | null>(null);
 	let pinned = $state<Set<string>>(new Set());
 	let filter = $state<'all' | 'prepared' | 'pinned'>('all');
+	// true once onMount resolves — lets the markup tell "still loading" apart from "loaded, no
+	// character" (the user deleted the demo and has none of their own → the empty state).
+	let loaded = $state(false);
 
 	onMount(async () => {
 		const g = await loadContentStore();
@@ -40,11 +44,12 @@
 		// edit the ACTIVE character so show-on-sheet / prepare persist to the same save combat reads;
 		// ensureActiveCharacter returns the persisted demo by default — the same instance combat edits.
 		character = await ensureActiveCharacter();
-		for (const s of character.build.spells) {
+		for (const s of character?.build.spells ?? []) {
 			const row = g.get(s.spell);
 			if (row && ['fire-bolt', 'shield'].includes(String(row.data.id))) pinned.add(row.effectiveId);
 		}
 		pinned = new Set(pinned);
+		loaded = true;
 	});
 
 	// show-on-sheet = NOT hidden. The eye writes ui.spellsHidden (effectiveIds) and persists, so the
@@ -123,7 +128,9 @@
 
 <svelte:head><title>Spellbook — Charnik</title></svelte:head>
 
-{#if !graph || !character}
+{#if loaded && !character}
+	<NoCharacter />
+{:else if !graph || !character}
 	<Loading message="Loading spellbook…" error={content.error} />
 {:else}
 	<div class="mgrhead">

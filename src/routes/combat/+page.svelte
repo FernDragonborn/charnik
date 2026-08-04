@@ -20,6 +20,7 @@
 	import Abilities from './blocks/Abilities.svelte';
 	import PanelCard from './blocks/PanelCard.svelte';
 	import Loading from '$lib/components/Loading.svelte';
+	import NoCharacter from '$lib/components/NoCharacter.svelte';
 
 	// The page is a thin shell: it renders the area blocks and owns only the draggable panel grid
 	// (which needs the dnd wiring). Everything else lives in the `combat` view-model + blocks/.
@@ -87,7 +88,9 @@
 <svelte:head><title>Combat — Charnik</title></svelte:head>
 <svelte:window onpointerup={releaseDrag} />
 
-{#if !sheet || !character}
+{#if combat.noCharacter}
+	<NoCharacter />
+{:else if !sheet || !character}
 	<Loading message={loadingMessage} error={content.error} />
 {:else}
 	{@const s = sheet}

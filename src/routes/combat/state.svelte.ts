@@ -174,16 +174,27 @@ class CombatVM {
 		return (this.character?.ui.passiveSkills as SkillId[] | undefined) ?? DEFAULT_PASSIVE_SKILLS;
 	}
 
+	// true once `load` resolves with NO active character (empty roster / the user deleted the demo) →
+	// the page shows the shared <NoCharacter> empty state instead of the sheet. Distinct from the
+	// still-loading state (character null but load not finished).
+	noCharacter = $state(false);
+
 	load = async () => {
 		await loadContentStore(); // populate the shared graph; `this.graph` derives from it
-		// the character opened from the Roster, else the persisted demo (same instance the Spellbook edits)
-		this.character = await ensureActiveCharacter();
+		// the character opened from the Roster, else a sensible default (demo on first run, else the
+		// user's first save, else none → the empty state)
+		const c = await ensureActiveCharacter();
+		if (!c) {
+			this.noCharacter = true;
+			return;
+		}
+		this.character = c;
 		// once-per-session snapshot of this character for the rolling backup ring (B3)
-		void snapshotCharacterOnLaunch(getUserStorage(), this.character.id);
+		void snapshotCharacterOnLaunch(getUserStorage(), c.id);
 		// restore this character's saved panel layout (falls back to the default columns)
-		this.layout.restore(this.character.ui.panelColumns);
+		this.layout.restore(c.ui.panelColumns);
 		// restore the persisted roll history so the log isn't empty after a reload (B4)
-		const hist = await readLog(getUserStorage(), this.character.id);
+		const hist = await readLog(getUserStorage(), c.id);
 		this.tray.seed(
 			hist.map((le) => ({ label: le.label, expr: le.detail ?? '', total: le.result ?? NaN }))
 		);

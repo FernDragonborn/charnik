@@ -10,9 +10,17 @@ import {
 	loadRoster,
 	saveCharacterToStore,
 	openCharacter,
-	removeCharacter
+	removeCharacter,
+	ensureActiveCharacter,
+	recreateDemoCharacter
 } from './store.svelte';
 import { newCharacter } from './schema';
+import { getUserStorage } from '$lib/storage/provider';
+import { DEMO_ID } from '$lib/demo/sheet';
+
+// mirrors the internal marker path in store.svelte.ts (not exported — the persistent "demo already
+// seeded once" flag). Tests drop it to simulate a pristine first run.
+const DEMO_SEEDED_MARKER = 'demo-seeded.json';
 
 // each test starts from an empty roster (the store is a shared singleton + IndexedDB persists)
 beforeEach(async () => {
@@ -57,5 +65,44 @@ describe('character store · roster CRUD (CH10)', () => {
 		await removeCharacter('drop');
 		expect(characters.active?.id).toBe('keep');
 		expect(characters.roster.map((e) => e.id)).toEqual(['keep']);
+	});
+});
+
+describe('character store · demo seed-once lifecycle', () => {
+	it('seeds the demo on the FIRST run (no marker), and records the marker', async () => {
+		const s = getUserStorage();
+		// simulate a pristine first run: drop the marker + any characters
+		await s.remove(DEMO_SEEDED_MARKER).catch(() => {});
+		for (const e of [...characters.roster]) await removeCharacter(e.id);
+		await loadRoster();
+		expect(characters.roster.map((e) => e.id)).toContain(DEMO_ID);
+		expect(await s.exists(DEMO_SEEDED_MARKER)).toBe(true);
+	});
+
+	it('deleting the demo does NOT resurrect it, and an empty roster yields no active character', async () => {
+		await recreateDemoCharacter(); // demo present + marker set + active = demo
+		await removeCharacter(DEMO_ID); // also clears active (it was the demo)
+		// neither a roster reload nor ensureActiveCharacter brings the demo back
+		await loadRoster();
+		expect(characters.roster.map((e) => e.id)).not.toContain(DEMO_ID);
+		const active = await ensureActiveCharacter();
+		expect(active).toBeNull();
+		expect(characters.roster.map((e) => e.id)).not.toContain(DEMO_ID);
+	});
+
+	it('with the demo gone, ensureActiveCharacter opens the first OWN character', async () => {
+		// beforeEach leaves an empty roster with the marker set (no demo)
+		await saveCharacterToStore(newCharacter('mira', 'Mira', '5.5e'));
+		characters.active = null;
+		const active = await ensureActiveCharacter();
+		expect(active?.id).toBe('mira'); // the user's own character, NOT a resurrected demo
+	});
+
+	it('Restore demo re-seeds it and makes it active', async () => {
+		// beforeEach already left active null; recreate must set it to the demo
+		const demo = await recreateDemoCharacter();
+		expect(demo.id).toBe(DEMO_ID);
+		expect(characters.roster.map((e) => e.id)).toContain(DEMO_ID);
+		expect(characters.active?.id).toBe(DEMO_ID);
 	});
 });

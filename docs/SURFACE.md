@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (31)
+## Duplicate suspects (32)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -44,6 +44,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/ResourceBar.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
+- `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts
 - `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
@@ -154,7 +155,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (41)
+## Shared components (42)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -186,6 +187,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **Loading** | `message`, `error` | Full-view loading screen shown while the sheet/content is being loaded (the derive can take a |
 | **MobileWarning** | — |  |
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
+| **NoCharacter** | — | Shared empty state for the play views (Combat / Spellbook) when there's no active character — |
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle (d-spellmgr `.ic.pin`): ★ pinned to the quick bar, ☆ not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
@@ -209,10 +211,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/character/store.svelte.ts`
 
 - `const characters`
-- `function loadRoster` — Load the roster; on first ever run seed the demo character so there's something to play.
+- `function loadRoster` — Load the roster; seeds the demo character on the FIRST ever run so there's something to play.
 - `function loadCharacterBySlug` — Load a saved character by slug WITHOUT making it active (for the builder's edit/level-up).
-- `function ensureActiveCharacter` — The character every view edits: the one opened from the Roster, or the DEMO by default.
-- `function recreateDemoCharacter` — DEV: reset the demo to a fresh build — overwrites the persisted demo save, makes it active, and * refreshes the roster.
+- `function ensureActiveCharacter` — The character every view (Combat / Spellbook) edits: the one opened from the Roster, or a sensible * default.
+- `function recreateDemoCharacter` — Reset the demo to a fresh build — overwrites the persisted demo save, makes it active, refreshes * the roster (also (…
 - `function openCharacter` — Open a saved character as the active one (returns null if the save is bad/missing).
 - `function saveCharacterToStore` — Persist a character (create or update) and refresh the roster.
 - `function removeCharacter` — Delete a character and refresh the roster.
@@ -678,6 +680,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/demo/sheet.ts`
 
+- `const DEMO_ID` — The demo character's stable id — referenced by the seeding logic (`seedDemoIfFirstRun`, * `ensureActiveCharacter`) wi…
 - `function demoCharacter`
 
 ### `src/lib/diag/bundle.ts`
@@ -1070,4 +1073,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 41 components · 592 exports across 91 modules · 31 duplicate suspects._
+_45 tokens · 63 global classes · 42 components · 593 exports across 91 modules · 32 duplicate suspects._

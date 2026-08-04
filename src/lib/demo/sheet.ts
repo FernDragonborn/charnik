@@ -16,6 +16,10 @@ import { PACT_SLOT_KEY } from '../rules/spellcasting';
 
 const S = 'SRD 5.2.1';
 
+/** The demo character's stable id — referenced by the seeding logic (`seedDemoIfFirstRun`,
+ *  `ensureActiveCharacter`) without having to build the whole character just to read its id. */
+export const DEMO_ID = 'karroth';
+
 /** The demo's runtime effects (buffs/debuffs/conditions) — static play-state, layered by the effects
  *  engine regardless of content, so they demonstrate the token vocabulary (flat bonus, dice bonus,
  *  condition) live. Module-level to keep `demoCharacter` under the size limit; the final
@@ -55,7 +59,7 @@ const DEMO_EFFECTS: Character['play']['effects'] = [
 ];
 
 export function demoCharacter(): Character {
-	const c = newCharacter('karroth', 'Karroth the Red', '5.5e');
+	const c = newCharacter(DEMO_ID, 'Karroth the Red', '5.5e');
 	// ids are snake_case (E3) and must match the SHIPPED SRD 5.2.1 content ids exactly; the demo is
 	// built fresh at the current schemaVersion, so the v1→v2 ref migration never rewrites it.
 	c.build.species = `species:${S}:tiefling`;

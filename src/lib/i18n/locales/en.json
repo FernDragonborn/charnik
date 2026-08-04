@@ -86,6 +86,12 @@
 		"newCharacter": "+ New character",
 		"delete": "Delete {name}"
 	},
+	"noCharacter": {
+		"title": "No character here yet",
+		"body": "There's no character open on this page. Create one to start playing — or bring back the demo.",
+		"create": "+ Create character",
+		"restoreDemo": "Restore demo character"
+	},
 	"feedback": {
 		"link": "🐞 Found a bug?",
 		"title": "Report a bug or leave feedback on GitHub",
