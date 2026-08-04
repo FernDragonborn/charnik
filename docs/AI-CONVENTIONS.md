@@ -532,6 +532,32 @@ impl, always. Concrete cases this session: `recharge` "is binary" → corrected 
 (EFFECTS.md); N2-PLAN's onEvent sketch "regain one, auto" → corrected to the SRD reality (player
 choice, regain-all, own long-rest gate) the moment the SRD was checked.
 
+### 8.7 Retiring / migrating a plan doc — grep `[ ]` AND `[~]`, verify transfer before deleting
+**Rule.** Before deleting or folding a plan/status doc into another — or whenever you answer "what's
+still open in X?" — enumerate the unfinished work by grepping for **both `[ ]` (open) AND `[~]`
+(partial/in-flight)**, not just unchecked boxes: a `[~]` is unfinished work too (§8.3). Also sweep the
+prose for non-checkbox deferral markers (`deferred`, `відкладено`, `лишилось`, `follow-up`, `TODO`,
+`блокер`) — not every open item is a checkbox. Then, before the doc is deleted:
+1. **Lift every open/partial item** into its new home (roadmap backlog entries), plus any non-obvious
+   design rationale ("why we chose X / rejected Y") that isn't already captured in code, tests, or
+   another spec. The *done-work* record and the full design archaeology stay recoverable in **git
+   history**, so only the OPEN tails + the load-bearing "why" need to travel.
+2. **Watch for STALE notes superseded by a later `[x]`** — an early "this is blocked / not done" line
+   that a subsequent item already closed. Don't re-lift already-done work as if it were open (this
+   session: an old "SpellRow flattens → ice_knife blocked" note had been superseded by the `[x]`
+   multitype-damage item; the `heal` "not done" note likewise).
+3. **Re-point every cross-reference** (other docs' `[[wikilinks]]` / markdown links, memory pointers)
+   off the doomed doc so nothing dangles, then delete with `git rm`.
+
+**Why.** "Closed 10/10" on the header doesn't mean *nothing* is left — deliberately-scoped follow-ups
+and `[~]` partials still represent real backlog, and if they live only in a doc you delete, they
+vanish from the roadmap. Grepping just `[ ]` misses the partials; trusting the header misses both.
+This is §8.6 (docs track truth) applied at the moment a doc dies. Concrete case: retiring
+`UPCAST-PLAN.md` — its five deferred tails (roller, authoring-UI, duration day-tail, preview tooltip,
+invocation-scope) were lifted into `PLAN.md` as backlog items, the delta-combine / cantrip-retained /
+N6 decisions were preserved as the "why", and the two `CONCENTRATION-PLAN.md` links were re-pointed,
+all BEFORE the `git rm`.
+
 ---
 
 ## 9. i18n, UX details & identity
