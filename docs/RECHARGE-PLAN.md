@@ -204,11 +204,14 @@ just adds the gate + a regain verb. This keeps the whole thing on the SHIPPED on
    both places, caught by the derive test). Tested (greyed out of combat, open at round 1).
 4. `[x]` **UI** — ActionsPanel greys/disables an unavailable option + a title. (Highlight-when-open
    pulse = later polish.)
-5. `[ ]` **Data** (SRD-verified): `barbarian_persistent_rage` (gate `persistent_rage:1:long`, action
-   `restore_resource:rage`, `available=is_combat_start`); then `monk_uncanny_metabolism` — needs a
-   MULTI-action (heal Martial-Arts-die + Monk level AND `restore_resource:focus`); single `action` is one
-   token today, so multi-action (or the full intent) is a follow-up. Auto siblings (Superior Inspiration,
-   Perfect Focus) are "you regain" (no choice) → the genuinely-automatic tail (§5), later.
+5. `[x]` **Data — Persistent Rage DONE + verified vs the real shipped SRD-2024 graph.**
+   `barbarian_persistent_rage` carries `grant_resource:persistent_rage:1:long`; a `resource_options` row
+   `barbarian_persistent_rage_regain` (`restore_resource:rage`, `available=is_combat_start`, free). Test
+   (`class_features_content.test.ts`): Barb 15 → the gate (max 1, long recharge) + the option greyed out
+   of combat, open at round 1; a Barb 5 has neither. Restamped both CSVs. **`[ ]` Uncanny Metabolism** —
+   needs a MULTI-action (heal Martial-Arts-die + Monk level AND `restore_resource:focus`); single `action`
+   is one token today → multi-action (or the full intent) is a follow-up. Auto siblings (Superior
+   Inspiration, Perfect Focus) are "you regain" (no choice) → the genuinely-automatic tail (§5), later.
 
 **Verify:** unit (restore_resource regains all + gate blocks — DONE; available-guard greys the option);
 app-drive an initiative regain on a Barb 11.

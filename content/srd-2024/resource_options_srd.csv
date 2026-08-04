@@ -3,11 +3,12 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f859d-bfcf-791e-b63f-372e93596042
-#content-updated_at: 2026-08-02
-#content-hash: xxh64:615cb0cf078bf5f7
-id,name_en,name_uk,text_en,text_uk,effects,resource_id,cost,action,action_type
-flurry_of_blows,Flurry of Blows,,"Immediately after the Attack action, make two Unarmed Strikes as a Bonus Action.",,,focus,1,note:Make two Unarmed Strikes,bonus_action
-patient_defense,Patient Defense,,Take the Dodge action as a Bonus Action.,,,focus,1,note:Take the Dodge action,bonus_action
-step_of_the_wind,Step of the Wind,,Take the Disengage or Dash action as a Bonus Action; your jump distance is doubled.,,,focus,1,note:Disengage or Dash; jump distance doubled,bonus_action
-fighter_second_wind,Second Wind,,Regain Hit Points equal to 1d10 plus your Fighter level.,,,second_wind,1,heal:1d10+class_level.fighter,bonus_action
-fighter_action_surge,Action Surge,,Take one additional action on your turn.,,,action_surge,1,gain_action,free
+#content-updated_at: 2026-08-04
+#content-hash: xxh64:0d0033f257fb6991
+id,name_en,name_uk,text_en,text_uk,effects,resource_id,cost,action,action_type,available
+flurry_of_blows,Flurry of Blows,,"Immediately after the Attack action, make two Unarmed Strikes as a Bonus Action.",,,focus,1,note:Make two Unarmed Strikes,bonus_action,
+patient_defense,Patient Defense,,Take the Dodge action as a Bonus Action.,,,focus,1,note:Take the Dodge action,bonus_action,
+step_of_the_wind,Step of the Wind,,Take the Disengage or Dash action as a Bonus Action; your jump distance is doubled.,,,focus,1,note:Disengage or Dash; jump distance doubled,bonus_action,
+fighter_second_wind,Second Wind,,Regain Hit Points equal to 1d10 plus your Fighter level.,,,second_wind,1,heal:1d10+class_level.fighter,bonus_action,
+fighter_action_surge,Action Surge,,Take one additional action on your turn.,,,action_surge,1,gain_action,free,
+barbarian_persistent_rage_regain,Persistent Rage,,"When you roll Initiative, regain all expended uses of Rage (once per Long Rest).",,,persistent_rage,1,restore_resource:rage,free,is_combat_start

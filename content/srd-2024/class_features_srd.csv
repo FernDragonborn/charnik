@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f9e9-7ad8-b3a8-4511aa623e30
-#content-updated_at: 2026-08-02
-#content-hash: xxh64:920f55c9f3039bd9
+#content-updated_at: 2026-08-04
+#content-hash: xxh64:172ab7b20638a7de
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id,expertise_slots
 barbarian_rage,Rage,,"You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren't wearing Heavy armor.
 You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.
@@ -40,7 +40,7 @@ barbarian_improved_brutal_strike,Improved Brutal Strike,,"You have honed new way
 _Staggering Blow._ The target has Disadvantage on the next saving throw it makes, and it can't make Opportunity Attacks until the start of your next turn.
 _Sundering Blow._ Before the start of your next turn, the next attack roll made by another creature against the target gains a +5 bonus to the roll. An attack roll can gain only one Sundering Blow bonus.",,,barbarian,13,,,
 barbarian_persistent_rage,Persistent Rage,,"When you roll Initiative, you can regain all expended uses of Rage. After you regain uses of Rage in this way, you can't do so again until you finish a Long Rest.
-In addition, your Rage is so fierce that it now lasts for 10 minutes without you needing to do anything to extend it from round to round. Your Rage ends early if you have the Unconscious condition (not just the Incapacitated condition) or don Heavy armor.",,,barbarian,15,,,
+In addition, your Rage is so fierce that it now lasts for 10 minutes without you needing to do anything to extend it from round to round. Your Rage ends early if you have the Unconscious condition (not just the Incapacitated condition) or don Heavy armor.",,grant_resource:persistent_rage:1:long,barbarian,15,,,
 barbarian_improved_brutal_strike_2,Improved Brutal Strike,,"The extra damage of your Brutal Strike increases to 2d10. In addition, you can use two different Brutal Strike effects whenever you use your Brutal Strike feature.",,,barbarian,17,,,
 barbarian_indomitable_might,Indomitable Might,,"If your total for a Strength check or Strength saving throw is less than your Strength score, you can use that score in place of the total.",,,barbarian,18,,,
 barbarian_epic_boon,Epic Boon,,"You gain an Epic Boon feat (see ""Feats"") or another feat of your choice for which you qualify. Boon of Irresistible Offense is recommended.",,,barbarian,19,,,

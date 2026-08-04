@@ -77,6 +77,36 @@ describe('shipped class features · Rage resource (EFX-E4)', () => {
 	});
 });
 
+describe('shipped class features · Persistent Rage regain (RECHARGE slice 2)', () => {
+	it('5.5e: Barb 15 grants the once/long-rest gate + a restore_resource:rage option gated to combat start', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const c = barbarian('SRD 5.2.1', '5.5e', 15);
+		const out = deriveSheet(c, g);
+		// the "once per Long Rest" gate resource
+		const gate = out.resources.find((r) => r.id === 'persistent_rage');
+		expect(gate?.max).toBe(1);
+		expect(gate?.recharge).toBe('long');
+		// the regain option restores ALL rage, spends the gate, and is greyed OUTSIDE combat
+		const opt = out.resourceOptions.find((o) => o.id === 'barbarian_persistent_rage_regain');
+		expect(opt?.resourceId).toBe('persistent_rage');
+		expect(opt?.action).toBe('restore_resource:rage');
+		expect(opt?.available).toBe(false); // not at initiative
+		// at initiative (first combat round) the window opens
+		c.play.inCombat = true;
+		c.play.round = 1;
+		const inCombat = deriveSheet(c, g).resourceOptions.find(
+			(o) => o.id === 'barbarian_persistent_rage_regain'
+		);
+		expect(inCombat?.available).toBe(true);
+	});
+
+	it('5.5e: a barbarian below level 15 has neither the gate nor the regain option', async () => {
+		const s = deriveSheet(barbarian('SRD 5.2.1', '5.5e', 5), await loadEdition('content/srd-2024'));
+		expect(s.resources.some((r) => r.id === 'persistent_rage')).toBe(false);
+		expect(s.resourceOptions.some((o) => o.id === 'barbarian_persistent_rage_regain')).toBe(false);
+	});
+});
+
 describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', () => {
 	it('5.5e: Sneak Attack Nd6, Bardic Inspiration + Martial Arts dice scale by class level', async () => {
 		const g = await loadEdition('content/srd-2024');
