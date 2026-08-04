@@ -460,7 +460,8 @@ class CombatVM {
 	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,
 	 *  `gain_action` → refund one action this turn (Action Surge), `rest:short|long` → take that rest
 	 *  (recharge pools / reset slots / restore HP — a Potion of Angelic Slumber, 2024 short-rest
-	 *  spells), `note:` → the spendOption toast. */
+	 *  spells), `restore_resource:<id>` → regain ALL uses of a pool (Persistent Rage, Uncanny
+	 *  Metabolism), `note:` → the spendOption toast. */
 	private runActionToken(opt: ResourceOption) {
 		const p = this.character?.play;
 		if (!p) return;
@@ -477,6 +478,8 @@ class CombatVM {
 			this.addEffect({ label: opt.name, tokens: [opt.action], positive: false });
 		} else if (verb === 'gain_action') {
 			p.turn.action = Math.max(0, p.turn.action - 1); // one additional action this turn
+		} else if (verb === 'restore_resource' && arg) {
+			this.resources.restoreAll(arg); // regain all uses of the pool (Persistent Rage / Uncanny Metabolism)
 		} else if (verb === 'rest' && (arg === 'short' || arg === 'long')) {
 			// grant a rest: lands on the SAME rest system the rest buttons use (recharge pools by type,
 			// reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). A

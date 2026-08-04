@@ -180,25 +180,36 @@ long rest. The "½-on-long" pattern lives HERE (its own math), not on the generi
 dieSize+CON clamped & decrements the pool, empty pool blocks; long rest regains floor(level/2)); drive
 the app (spend a die on short rest → HP up + pip spent; long rest → pips return). Screenshot.
 
-## Slice 2 — onEvent regain (needs the N2 write-half) `[ ]`
+## Slice 2 — initiative-regain (`[~]` in progress) — REFRAMED: onUse resource-options, NOT an event bus
 
-**Goal:** "when you roll Initiative and have no uses left, regain one" (2024 Barbarian Rage / Monk Focus).
+**Goal:** "When you roll Initiative, you can regain all uses of Rage / all Focus Points" — Persistent
+Rage (Barb 11), Uncanny Metabolism (Monk 2), + the auto siblings (Superior Inspiration, Perfect Focus,
+Evergreen Wild Shape). All SHIPPED in `content/srd-2024/class_features_srd.csv`.
 
-**Blocker:** the `onEvent` executor is the N2 deferred write-half (`docs/ACTIONS.md` §1/§4; only `onUse`
-is started). Event vocab is PINNED (`turnStart`/`turnEnd`/`attackMade`/`damageTaken`/`rest`/… ACTIONS.md
-§3) — NB "roll initiative" ≈ combat start / round-1 `turnStart`; decide the mapping (a `combatStart`
-member or reuse `turnStart` gated on round 1).
+**KEY REFRAME (per Design-findings §2 — do NOT build an auto event-bus).** "When you roll Initiative,
+you *can*…" is a **player choice at a window**, so it's an **onUse resource-option**, availability-gated
+to combat start — NOT an onEvent handler. The onUse executor (N2 first slice) already exists; this slice
+just adds the gate + a regain verb. This keeps the whole thing on the SHIPPED onUse path.
 
-**In (sketch — detail when reached):**
-1. `[ ]` **A data-driven onEvent handler** on a feature: `{trigger, guard?, intent}` read from content,
-   fired by the host on the event. Reuses the ACTIONS.md intent + validation (all-or-nothing, formulas).
-2. `[ ]` **Fire `turnStart`/combat-start** from `TurnEconomy` (nextTurn / toggleCombat) → run matching
-   handlers → apply intents (here a negative `spend` = regain a use).
-3. `[ ]` **Guards:** post-hoc (fires AFTER), no recursive cascade, deterministic order (ACTIONS.md §3).
-4. `[ ]` **Data:** the 2024 initiative-regain features (Rage line 329, Focus line 5172 in the SRD md) as
-   onEvent rows — SRD-verified.
+**In:**
+1. `[x]` **`restore_resource:<id>` verb** — regain ALL uses of a pool. `ResourceTracker.restoreAll(id)`
+   + the executor branch in `runActionToken`; tested (Persistent Rage: regains all Rage, spends its
+   once/long-rest gate; blocked when the gate is empty). The "once per long rest" is modelled by a
+   companion `grant_resource:<gate>:1:long` pool the option's `cost` spends (reuses `canAffordOption`).
+2. `[ ]` **`available` L2-guard column on `resource_option`** — an option evaluated false is rendered
+   greyed/disabled (never runnable). Resolved in `resolveResourceOptions` → `ResourceOption.available`.
+3. `[ ]` **`is_combat_start` ctx var** (`effects/context.ts`) — true during the first combat round so the
+   guard `available=is_combat_start` opens only at initiative. `play.round` + `play.inCombat` already
+   exist; map "roll initiative" to entering combat / round 1 (a `round<=1 && inCombat` read is the v1).
+4. `[ ]` **UI** — grey the option when `!available`, highlight when it opens (ActionsPanel).
+5. `[ ]` **Data** (SRD-verified): `barbarian_persistent_rage` (gate `persistent_rage:1:long`, action
+   `restore_resource:rage`, `available=is_combat_start`); then `monk_uncanny_metabolism` — needs a
+   MULTI-action (heal Martial-Arts-die + Monk level AND `restore_resource:focus`); single `action` is one
+   token today, so multi-action (or the full intent) is a follow-up. Auto siblings (Superior Inspiration,
+   Perfect Focus) are "you regain" (no choice) → the genuinely-automatic tail (§5), later.
 
-**Verify:** unit (event fires → intent applied; 0-uses guard; no cascade); app-drive an initiative regain.
+**Verify:** unit (restore_resource regains all + gate blocks — DONE; available-guard greys the option);
+app-drive an initiative regain on a Barb 11.
 
 ## Slice 3 — item charges + `{trigger, amount}` recharge (needs item-charge tracking) `[ ]`
 

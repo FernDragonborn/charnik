@@ -105,6 +105,17 @@ export class ResourceTracker {
 		return true;
 	};
 
+	/** Regain ALL expended uses of a pool (spent → 0) — the `restore_resource:<id>` action verb.
+	 *  RAW: Persistent Rage "regain all expended uses of Rage", Uncanny Metabolism "regain all expended
+	 *  Focus Points". `id` is a flat resource id (not a content ref), like `grant_resource`'s. */
+	restoreAll = (id: string) => {
+		const c = this.getCharacter();
+		if (!c) return;
+		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: 0 };
+		const name = this.getSheet()?.resources.find((r) => r.id === id)?.name ?? id;
+		toast(`${name} — fully restored`);
+	};
+
 	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges both),
 	 *  reset spell slots (long = all, short = pact only), restore HP on a long rest, and expire
 	 *  round-timed effects the rest outlives: a short rest is 1 h (600 rounds), a long rest outlives

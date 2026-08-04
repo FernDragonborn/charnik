@@ -119,8 +119,8 @@ export interface ResourceOption {
 	resourceId: string;
 	name: string;
 	description: string;
-	/** A bounded action token (apply_condition / heal / roll / gain_action / rest:short|long / note) the
-	 *  UI runs / displays. */
+	/** A bounded action token (apply_condition / heal / roll / gain_action / rest:short|long /
+	 *  restore_resource:<id> / note) the UI runs / displays. */
 	action: string;
 	actionType: 'action' | 'bonus_action' | 'reaction' | 'free';
 	cost: number | 'x';

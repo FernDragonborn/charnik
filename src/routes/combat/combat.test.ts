@@ -967,6 +967,51 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		expect(combat.resources.resourceSpent('sorcery')).toBe(0); // long-recharge pool refilled
 		expect(combat.resources.resourceSpent('angelic_slumber')).toBe(1); // the charge stays spent (consumable)
 	});
+
+	it('restore_resource regains ALL uses of a pool and spends its once/long-rest gate (Persistent Rage)', async () => {
+		const graph = await graphOf();
+		const character = newCharacter('rook', 'Rook', '5.5e');
+		character.play.autoCalc = true;
+		character.play.effects = [
+			{
+				iid: '1',
+				label: 'grant',
+				effects: [
+					'grant_resource:rage:3:short_one', // the pool being restored
+					'grant_resource:persistent_rage:1:long' // the "once per long rest" gate
+				],
+				positive: true
+			}
+		];
+		character.play.resourcesSpent = { rage: 3 }; // all rage spent
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.activateResourceOption({
+			id: 'barbarian_persistent_rage',
+			resourceId: 'persistent_rage',
+			name: 'Persistent Rage',
+			description: '',
+			action: 'restore_resource:rage',
+			actionType: 'free',
+			cost: 1
+		});
+		expect(combat.resources.resourceSpent('rage')).toBe(0); // all rage back
+		expect(combat.resources.resourceSpent('persistent_rage')).toBe(1); // the gate is now used
+
+		// gate exhausted → activating again is a no-op (can't afford), rage stays as-is
+		character.play.resourcesSpent = { rage: 2, persistent_rage: 1 };
+		combat.activateResourceOption({
+			id: 'barbarian_persistent_rage',
+			resourceId: 'persistent_rage',
+			name: 'Persistent Rage',
+			description: '',
+			action: 'restore_resource:rage',
+			actionType: 'free',
+			cost: 1
+		});
+		expect(combat.resources.resourceSpent('rage')).toBe(2); // NOT restored (gate was empty)
+	});
 });
 
 /*

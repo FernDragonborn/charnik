@@ -464,7 +464,7 @@ const spellListsSchema = z.object({
 /** Piece 3: a spend-option on a granted resource (Ki → Flurry of Blows, Channel Divinity → …).
  *  Keyed by `resource_id` (a grant_resource id — a FLAT namespace, not a content ref). `cost` is an
  *  L2 value expression (`1`, `spell_level`, or `x` = player-picked variable spend); `action` is a
- *  bounded token (apply_condition / heal / roll / gain_action / rest:short|long / note); `action_type`
+ *  bounded token (apply_condition / heal / roll / gain_action / rest:short|long / restore_resource:<id> / note); `action_type`
  *  places it in the turn economy.
  *  Carries name/text (shown in the picker) but is NOT a browsable article. */
 const ACTION_TYPES = ['action', 'bonus_action', 'reaction', 'free'] as const;
