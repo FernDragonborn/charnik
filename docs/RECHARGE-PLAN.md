@@ -196,12 +196,14 @@ just adds the gate + a regain verb. This keeps the whole thing on the SHIPPED on
    + the executor branch in `runActionToken`; tested (Persistent Rage: regains all Rage, spends its
    once/long-rest gate; blocked when the gate is empty). The "once per long rest" is modelled by a
    companion `grant_resource:<gate>:1:long` pool the option's `cost` spends (reuses `canAffordOption`).
-2. `[ ]` **`available` L2-guard column on `resource_option`** — an option evaluated false is rendered
-   greyed/disabled (never runnable). Resolved in `resolveResourceOptions` → `ResourceOption.available`.
-3. `[ ]` **`is_combat_start` ctx var** (`effects/context.ts`) — true during the first combat round so the
-   guard `available=is_combat_start` opens only at initiative. `play.round` + `play.inCombat` already
-   exist; map "roll initiative" to entering combat / round 1 (a `round<=1 && inCombat` read is the v1).
-4. `[ ]` **UI** — grey the option when `!available`, highlight when it opens (ActionsPanel).
+2. `[x]` **`available` L2-guard column on `resource_option`** — resolved in `resolveResourceOptions`
+   (`resolveAvailable`) → `ResourceOption.available`; empty → always available; a malformed guard fails
+   OPEN + a deriveIssue (surface, never silently hide). Tested.
+3. `[x]` **`is_combat_start` ctx var** — a `flags` getter in `derive-context.ts`
+   (`play.inCombat && play.round <= 1`) + added to the parser `BOOLEAN_VARS` whitelist (the B13-trap:
+   both places, caught by the derive test). Tested (greyed out of combat, open at round 1).
+4. `[x]` **UI** — ActionsPanel greys/disables an unavailable option + a title. (Highlight-when-open
+   pulse = later polish.)
 5. `[ ]` **Data** (SRD-verified): `barbarian_persistent_rage` (gate `persistent_rage:1:long`, action
    `restore_resource:rage`, `available=is_combat_start`); then `monk_uncanny_metabolism` — needs a
    MULTI-action (heal Martial-Arts-die + Monk level AND `restore_resource:focus`); single `action` is one
