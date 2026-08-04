@@ -70,7 +70,7 @@ import { isRowActive } from '$lib/content/sources.svelte';
 import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
-import { slotToSpend, castableSlotLevels } from '$lib/rules/spellcasting';
+import { slotToSpend, castableSlotLevels, pactPool, PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
 import type { ExprContext } from '$lib/effects/expression-evaluator';
 import { evalUpcast, combinePools } from '$lib/effects/upcast';
@@ -801,6 +801,15 @@ class CombatVM {
 		return spend && 'key' in spend ? spend.key : null;
 	}
 
+	/** The slot LEVEL a cast resolves at (drives upcast, §4): a pact slot forces the cast up to the
+	 *  pool's slot level; a leveled slot ("1".."9") casts at that level; no slot spent (cantrip /
+	 *  ritual / free / non-caster) → the spell's own base level, delta 0 (N7). */
+	private castSlotLevel(slot: string | null, baseLevel: number): number {
+		if (slot === PACT_SLOT_KEY)
+			return pactPool(this.sheet?.spellcasting.pools ?? [])?.spellLevel ?? baseLevel;
+		return slot != null ? Number(slot) : baseLevel;
+	}
+
 	/** The roll half of a cast: an attack spell rolls its TO-HIT (attack-keyed effects) then queued
 	 *  damage; a damage/heal spell rolls its dice (auto = healing + spellcasting mod); a no-roll cast
 	 *  logs a marker. Uses the class the spell is cast AS (A18), not classes[0]. */
@@ -1084,9 +1093,8 @@ class CombatVM {
 		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
 		if (!this.economy.trySpend(this.economy.ctSlot(r.castTimeIcon))) return;
 		if (slot && play) play.spellSlotsSpent[slot] = (play.spellSlotsSpent[slot] ?? 0) + 1;
-		// the slot LEVEL the spell is actually cast from drives upcast (§4). No leveled slot spent
-		// (cantrip / ritual / free / pure-pact) → cast at the base level, delta 0 (N7).
-		const slotLevel = slot != null ? Number(slot) : r.level;
+		// the slot LEVEL the spell is actually cast from drives upcast (§4).
+		const slotLevel = this.castSlotLevel(slot, r.level);
 		// a concentration spell becomes the active concentration (replacing any prior one, 5e rule);
 		// the PRIOR concentration's cast-applied effect goes down with it
 		if (r.concentration && this.character) {

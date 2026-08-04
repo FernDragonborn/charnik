@@ -12,6 +12,7 @@
  * `recreateDemoCharacter()` restores it to this canonical state (the "Restore demo" action).
  */
 import { characterSchema, newCharacter, type Character } from '../character/schema';
+import { PACT_SLOT_KEY } from '../rules/spellcasting';
 
 const S = 'SRD 5.2.1';
 
@@ -94,7 +95,7 @@ export function demoCharacter(): Character {
 	];
 	c.play.hp = { current: 38, max: undefined, temp: 6 };
 	c.play.hitDiceSpent = { d8: 1, d12: 1 }; // mixed pool (warlock d8 + barbarian d12), one of each spent
-	c.play.spellSlotsSpent = { pact: 1 }; // one of the two 3rd-level pact slots spent
+	c.play.spellSlotsSpent = { [PACT_SLOT_KEY]: 1 }; // one of the two 3rd-level pact slots spent
 	c.play.resourcesSpent = { rage: 1 }; // one of three rages used (barbarian_rage grants 3 at level 3)
 	c.play.concentration = `spell:${S}:hex`;
 	c.play.inspiration = true;

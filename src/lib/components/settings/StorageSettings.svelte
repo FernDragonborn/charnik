@@ -22,10 +22,23 @@
 	import { startContentWatcher, stopContentWatcher } from '$lib/content/watcher';
 	import { reloadApp } from '$lib/content/reload';
 	import { flashAfterReload } from '$lib/stores/flash';
+	import { toast } from 'svelte-sonner';
+	import { recreateDemoCharacter } from '$lib/character/store.svelte';
 	import DataMigrationDialog from './DataMigrationDialog.svelte';
 	import DataConflictDialog from './DataConflictDialog.svelte';
+	import ConfirmDialog from '../ConfirmDialog.svelte';
 
 	const isDesktop = detectPlatform() === Platform.Desktop;
+
+	// The seeded demo character (Karroth) is a normal editable save — restoring rebuilds it to its
+	// canonical state, wiping any edits made while playing with it. It's destructive, so it goes behind
+	// a confirm. Available on web + desktop (the demo seeds first-run on both). Mirrors the /dev action.
+	let confirmRestore = $state(false);
+	async function restoreDemo() {
+		confirmRestore = false;
+		const demo = await recreateDemoCharacter();
+		toast(`Demo character restored — ${demo.build.name}`);
+	}
 
 	// A failed move is important — it must NOT be a toast that flashes past. It goes in this persistent
 	// dialog (stays until the user closes it), with a reassurance line about the original data. `then`
@@ -215,6 +228,32 @@
 		On the web version your data lives in this browser's storage — there's no folder to move. Use
 		Export to take a copy with you.
 	</p>
+{/if}
+
+<section class="sec-head">
+	<h2>Demo character</h2>
+	<p class="sec-note">
+		Charnik ships with a demo character (Karroth the Red) to show the sheet at a glance. Restoring
+		rebuilds it to its original state — this wipes any changes you made to it (HP, spells, layout).
+		Your other characters aren't touched.
+	</p>
+</section>
+<div class="setting-row">
+	<span class="setting-label"></span>
+	<div class="setting-options">
+		<button class="pill-btn" onclick={() => (confirmRestore = true)}>Restore demo character</button>
+	</div>
+</div>
+
+{#if confirmRestore}
+	<ConfirmDialog
+		title="Restore the demo character?"
+		message="This rebuilds Karroth the Red to the original demo and discards any edits you made to it. Your other characters aren't affected."
+		confirmLabel="Restore demo"
+		danger
+		onConfirm={restoreDemo}
+		onCancel={() => (confirmRestore = false)}
+	/>
 {/if}
 
 {#if conflict}

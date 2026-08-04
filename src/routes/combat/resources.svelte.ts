@@ -8,6 +8,7 @@ import { toast } from 'svelte-sonner';
 import { saveCharacterToStore } from '$lib/character/store.svelte';
 import { pipClick, remainingRounds } from '$lib/combat/helpers';
 import { hitDiceRecoveredOnLongRest } from '$lib/rules/core';
+import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 
@@ -148,7 +149,7 @@ export class ResourceTracker {
 			c.play.hitDiceSpent = hdSpent;
 		} else {
 			const slots = { ...c.play.spellSlotsSpent };
-			delete slots.pact; // warlock pact slots return on a short rest
+			delete slots[PACT_SLOT_KEY]; // warlock pact slots return on a short rest
 			c.play.spellSlotsSpent = slots;
 		}
 		// a rest expires an effect it OUTLASTS: compare rounds LEFT (not total duration) to the rest's

@@ -142,16 +142,25 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 		expect(slotToSpend(0, pools, {})).toBeNull();
 	});
 
-	it('a caster with NO leveled pool (pure warlock) is not gated here', () => {
+	it('a pure-pact caster (warlock) spends from the Pact Magic pool', () => {
 		const pact: CastPool = {
-			id: 'pact-1',
+			id: 'pact-3',
 			label: 'Pact',
-			spellLevel: 1,
+			spellLevel: 3,
 			max: 2,
 			recharge: 'short',
 			forcedUpcast: true
 		};
-		expect(slotToSpend(1, [pact], {})).toBeNull();
+		// a warlock spell of any level ≤ the pact slot level spends one pact slot
+		expect(slotToSpend(1, [pact], {})).toEqual({ key: 'pact' });
+		expect(slotToSpend(3, [pact], {})).toEqual({ key: 'pact' });
+		// exhausted → blocked; above the pact slot level → blocked
+		expect(slotToSpend(1, [pact], { pact: 2 })).toEqual({ block: 'No Pact Magic slots remaining' });
+		expect(slotToSpend(4, [pact], {})).toEqual({ block: 'Your pact slots only reach level 3' });
+	});
+
+	it('a true non-caster (no pool at all) is not gated', () => {
+		expect(slotToSpend(1, [], {})).toBeNull();
 	});
 
 	it('blocks when the caster has leveled slots but none ≥ the level remain', () => {

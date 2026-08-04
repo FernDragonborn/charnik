@@ -16,6 +16,8 @@ import {
 	cantripDieMultiplier,
 	canTogglePrepared,
 	preparedLeveledCount,
+	pactPool,
+	PACT_SLOT_KEY,
 	type PrepareAttempt,
 	type PreparableSpell
 } from '$lib/rules/spellcasting';
@@ -250,6 +252,18 @@ export function buildSpellGroups({
 	const pins = all.filter((x) => pinned[x.row.id]);
 	if (pins.length)
 		groups.push({ key: 'pinned', label: '★ Pinned', slots: null, rows: pins.map((x) => x.row) });
+
+	// Pact Magic (warlock): ONE forced-upcast pool shared by every warlock spell regardless of its own
+	// level, so it renders as its own pip strip (a rowless header) rather than per-level pips — clicking
+	// a pip spends / restores a pact slot. Excluded from the per-level `slotsByLevel` map above.
+	const pact = pactPool(sheet?.spellcasting.pools ?? []);
+	if (pact)
+		groups.push({
+			key: PACT_SLOT_KEY,
+			label: `Pact Magic · ${ordinal(pact.spellLevel)}`,
+			slots: { full: pact.max, spent: character.play.spellSlotsSpent[PACT_SLOT_KEY] ?? 0 },
+			rows: []
+		});
 
 	if (groupBy === 'level')
 		groups.push(...groupByLevel(all, graph, slotsByLevel, character.play.spellSlotsSpent));

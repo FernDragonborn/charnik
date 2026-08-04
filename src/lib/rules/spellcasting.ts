@@ -38,17 +38,21 @@ export interface CastPool {
 	castsSpell?: string;
 }
 
+/** The `spellSlotsSpent` key for the Warlock Pact Magic pool. Its pips share ONE pool regardless of
+ *  the spell's own level (forced upcast), so it isn't keyed by level like the "1".."9" leveled slots.
+ *  Referenced everywhere the pact pool is spent / reset / rendered (one-name-per-fact). */
+export const PACT_SLOT_KEY = 'pact';
+
 /** What casting a spell should do to the leveled slot pools (AUDIT A17): spend `key` (a
- *  `spellSlotsSpent` key, "1".."9"), do nothing (`null`), or refuse with `block`. */
+ *  `spellSlotsSpent` key, "1".."9" or `pact`), do nothing (`null`), or refuse with `block`. */
 export type SlotSpend = { key: string } | { block: string } | null;
 
 /**
- * Which leveled spell slot a cast of `spellLevel` consumes. The LOWEST leveled slot ≥ the spell's
- * level that still has a use left (basic auto-fill — no manual upcast picker yet). Returns:
- *   - `null` when nothing is consumed: a cantrip (level 0), OR a caster with NO leveled pool (a pure
- *     warlock — pact pips aren't wired to the UI yet, so casting isn't gated on them).
- *   - `{ key }` — the `spellSlotsSpent` key to increment.
- *   - `{ block }` — the caster HAS leveled slots but none ≥ the spell's level remain (cast refused).
+ * Which spell slot a cast of `spellLevel` consumes. The LOWEST leveled slot ≥ the spell's level that
+ * still has a use left; a caster with no leveled pool falls back to the Pact Magic pool. Returns:
+ *   - `null` when nothing is consumed: a cantrip (level 0), OR a true non-caster (no pool at all).
+ *   - `{ key }` — the `spellSlotsSpent` key to increment (a level "1".."9", or `pact`).
+ *   - `{ block }` — the caster HAS a pool but none ≥ the spell's level remain (cast refused).
  * Pure; the play-state map is read, never mutated.
  */
 export function slotToSpend(
@@ -61,7 +65,11 @@ export function slotToSpend(
 	const leveled = pools.filter(
 		(p): p is CastPool & { spellLevel: number } => !p.forcedUpcast && p.spellLevel !== undefined
 	);
-	if (!leveled.length) return null; // no leveled pool (pure warlock / non-caster) — don't gate
+	// No leveled pool: a pure-pact caster (warlock) spends from the Pact Magic pool, which forces every
+	// cast up to its own slot level; a true non-caster has no pool at all → nothing to spend. (A mixed
+	// warlock+leveled caster keeps the leveled path below and casts pact spells from either pool — that
+	// pool choice is a richer UI, out of scope; the shared leveled slots gate first.)
+	if (!leveled.length) return pactSpend(spellLevel, pools, spent);
 	const isOpen = (lvl: number) =>
 		leveled.some((p) => p.spellLevel === lvl && p.max - (spent[String(p.spellLevel)] ?? 0) > 0);
 	// UPCAST picker (§6): an explicit slot choice is HONOURED or blocked — never silently downshifted to
@@ -79,6 +87,32 @@ export function slotToSpend(
 	return open
 		? { key: String(open.spellLevel) }
 		: { block: `No level-${spellLevel} spell slot remaining` };
+}
+
+/** The Warlock Pact Magic pool among a set of pools (the forced-upcast slot pool), or undefined. */
+export function pactPool(
+	pools: readonly CastPool[]
+): (CastPool & { spellLevel: number }) | undefined {
+	return pools.find(
+		(p): p is CastPool & { spellLevel: number } => !!p.forcedUpcast && p.spellLevel !== undefined
+	);
+}
+
+/** Spend a Pact Magic slot for a cast of `spellLevel`: `{key:'pact'}` when the pool has a use left,
+ *  `{block}` when it's exhausted or the spell outranks the pact slot level, `null` when there's no
+ *  pact pool (a true non-caster). Every pact cast is forced up to the pool's slot level. */
+function pactSpend(
+	spellLevel: number,
+	pools: readonly CastPool[],
+	spent: Readonly<Record<string, number>>
+): SlotSpend {
+	const pact = pactPool(pools);
+	if (!pact) return null; // non-caster — don't gate
+	if (spellLevel > pact.spellLevel)
+		return { block: `Your pact slots only reach level ${pact.spellLevel}` };
+	return pact.max - (spent[PACT_SLOT_KEY] ?? 0) > 0
+		? { key: PACT_SLOT_KEY }
+		: { block: 'No Pact Magic slots remaining' };
 }
 
 /** Every leveled slot level a spell of `spellLevel` can be cast from RIGHT NOW — each level ≥ the

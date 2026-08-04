@@ -864,32 +864,53 @@ stay semi-manual.
   re-derive reactively. MIGRATIONS: decided 2026-07-15 — 0 users yet, so NO migration work
   now; schema may change freely (breaking) until release; the schemaVersion machinery stays
   for post-release.
-- [~] **DEMO-1 · Showcase demo character: warlock/barbarian multiclass (user-decided
-  2026-07-19).** SEED REBUILT 2026-08-04 (`src/lib/demo/sheet.ts`): **Karroth the Red** —
-  Tiefling (Infernal) · Soldier · **Warlock 5 (Fiend Patron) × Barbarian 3 (Path of the
-  Berserker)**, id `karroth`. Verified deriving against the REAL shipped SRD 5.2.1 graph
+- [ ] **MAGIC-ITEM-EFX · Tokenize the shipped SRD magic-item effects (GLOBAL content task,
+  surfaced by DEMO-1 gap 2, 2026-08-04).** The `item` schema already carries an `effects` column and
+  equipped/attuned effects already flow through `gatherEffects` → AC/attacks/saves re-derive — but
+  **every shipped SRD magic-item row leaves `effects` EMPTY**, so an attuned item (e.g. Cloak of
+  Protection, Ring of Protection) shows its attunement slot + prose yet gives NO derived bonus. Task =
+  author the bounded-vocab tokens on the SRD magic items whose mechanics ARE expressible today
+  (`flat_bonus:ac+1`, `flat_bonus:saves+1`, resist/immune, `set_override`, `grant_resource`…), leaving
+  the procedural ones as text fallback. Converter must PRESERVE authored item effects on re-run (same
+  invariant as class_features / conditions) + re-stamp the content hash. RAW-faithful values only (never
+  invent). This is what makes the demo's attuned Cloak actually read +1 AC/+1 saves; it's whole-content,
+  not demo-specific.
+- [x] **DEMO-1 · Showcase demo character: warlock/barbarian multiclass (user-decided
+  2026-07-19; DEMO-SPECIFIC scope DONE 2026-08-04).** SEED REBUILT 2026-08-04 (`src/lib/demo/sheet.ts`):
+  **Karroth the Red** — Tiefling (Infernal) · Soldier · **Warlock 5 (Fiend Patron) × Barbarian 3
+  (Path of the Berserker)**, id `karroth`. Verified deriving against the REAL shipped SRD 5.2.1 graph
   (`missing: []`, `deriveIssues: []`): Rage max 3 (live `barbarian_rage` grant_resource token),
   Alert feat token (init +prof works), pact pool `pact-3`×2 forcedUpcast + warlock DC 13/+5,
   abilityBoosts (str/con), mixed Hit-Dice d12×3+d8×5, AC 14 (Shield of Faith +2 live), attuned
   Cloak of Protection, active concentration on Hex, inspiration. SRD-only. `browser.test.ts`
-  updated (id/name). The demo is a normal seeded character; `recreateDemoCharacter()` already
-  restores it → **still TODO: duplicate that "Restore demo" button in Settings** (exists on
-  `/dev`; user wants it in Settings ▸ Data — a small StorageSettings row + confirm). expertise
-  intentionally DROPPED (no SRD producer on this pairing — Rogue/Bard only). The demo seeds
-  first-run on web + desktop, so it IS the first impression of the system's scope.
-  - **Gap ledger — derives cleanly but the UI/data won't fully SHOW these (fix targets):**
-    (1) **Pact pips not tracked in combat** — pool derives, but pure-pact casting "spends nothing"
-    (`combat/state.svelte.ts:1088`) and pips "aren't wired to the UI yet" (`rules/spellcasting.ts:49`),
-    so the spent pact slot (`spellSlotsSpent.pact`) won't visibly decrement. (2) **Attuned magic items
-    are mechanically inert** — every SRD magic-item row ships with an EMPTY `effects` column, so the
-    attuned Cloak of Protection shows the attunement slot + prose but gives NO derived +1 AC/saves
-    (item mechanics aren't tokenized). (3) **Unarmored Defense not tokenized** (`barbarian_unarmored_defense`
-    empty) → the DEMO-1 "armor vs unarmored" contrast can't be shown; moot while armored. (4) **Invocations
-    have no choice-group** (N2 unbuilt; `warlock_eldritch_invocations` empty) → renders as prose, not
-    pickable. (5) **Fiend-patron features not tokenized** (Dark One's Blessing temp HP etc.). (6) **`casterLevel`
-    is 0** (barbarian non-caster) → the "pact pool ALONGSIDE shared-slot math" DEMO-1 goal is NOT exercised
-    by this pairing (accepted 2026-08-04 — kept warlock×barbarian over swapping barbarian for a caster).
-    (7) Screenshots not yet regenerated for the new persona.
+  updated (id/name). The demo is a normal seeded character; `recreateDemoCharacter()` restores it.
+  **DONE this pass:** (a) **"Restore demo" button in Settings ▸ Data** (`StorageSettings.svelte` — a
+  `pill-btn` row + `ConfirmDialog`, web + desktop; mirrors the `/dev` action). (b) **Gap 1 CLOSED** —
+  pact pips now tracked in combat (see below). (c) **Visual baseline regenerated** for the Karroth
+  persona (`tools/visual/baseline/*` — gitignored/local; the prior baseline still showed Valen, which
+  is why roster/combat/spellbook all drifted). expertise intentionally DROPPED (no SRD producer on this
+  pairing — Rogue/Bard only). The demo seeds first-run on web + desktop, so it IS the first impression
+  of the system's scope.
+  - **Gap ledger — status after the 2026-08-04 finish pass:**
+    (1) ✅ **DONE — Pact pips tracked in combat.** `PACT_SLOT_KEY` const + `pactPool()`/`pactSpend()`
+    in `rules/spellcasting.ts`; `slotToSpend` now spends the pact pool for a pure-pact caster
+    (`{key:'pact'}` / block when empty / block above pact level). `buildSpellGroups` renders a rowless
+    "Pact Magic · Nth" pip strip (excluded from `slotsByLevel`); `cast()` computes the forced-upcast
+    slot level (no NaN). Browser-verified: strip shows 1 full + 1 spent; pip-click AND casting Hold
+    Person both decrement. Tests updated (pure-pact spends; non-caster still null).
+    (2) ⏭ **MOVED TO GLOBAL — magic-item effect tokenization (see MAGIC-ITEM-EFX below).** Every SRD
+    magic-item row ships an EMPTY `effects` column, so the attuned Cloak of Protection shows the
+    attunement slot + prose but gives NO derived +1 AC/saves. NOT demo-specific (the schema +
+    `gatherEffects` flow already support it — only the shipped data is unpopulated).
+    (3) **Unarmored Defense not tokenized** (`barbarian_unarmored_defense` empty) → the "armor vs
+    unarmored" contrast can't be shown; moot while armored — folds into N2 (features-as-data).
+    (4) **Invocations have no choice-group** (`warlock_eldritch_invocations` empty) → renders as prose,
+    not pickable — N2 (choice groups, shape 3).
+    (5) ⏭ **MOVED TO GLOBAL — subclass-feature tokenization = N2.** Fiend-patron features (Dark One's
+    Blessing temp HP etc.) render as prose only until class/subclass features are authored as data (N2).
+    (6) **`casterLevel` is 0** (barbarian non-caster) → the "pact pool ALONGSIDE shared-slot math" goal
+    is NOT exercised by this pairing (accepted 2026-08-04 — kept warlock×barbarian over a caster swap).
+    (7) ✅ **DONE — visual baseline regenerated** for Karroth (local; no committed screenshots exist).
   - **Ritual demo caveat (user 2026-07-20):** a base **Warlock does NOT have Ritual Casting** — only
     via the Pact of the Tome *Book of Ancient Secrets* invocation (then any-class rituals). So the
     A17 `R` badge (now gated on `class.ritual` — E7) won't appear on the warlock×barbarian build
