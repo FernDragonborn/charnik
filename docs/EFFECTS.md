@@ -266,6 +266,15 @@ settable (the automatic long-rest −1 is a default convenience, not a lock).
 The roll path (`rollEffectsFor`) and action economy (`slotMax`) read the SAME `EffectFacts` — one
 resolve stage, no split-brain scans.
 
+**Maintenance traps (learned the hard way):**
+- **`deriveSheet` is PURE — it NEVER mutates the `character`.** Clamps and persistence
+  (e.g. `clampCurrentHp`) live in the VM `$effect`s, not inside derive. (CLAUDE.md "core is pure"
+  made concrete: derive reads state and returns `{value, trace, notes}`; it does not write it back.)
+- **A new kind/target must be added in THREE places or the token folds into nowhere / renders raw:**
+  (1) the derive `isTargetSupported` closed-vocab set (`effects/apply.ts`), (2) `effectTag` (the panel
+  label), and (3) `lintEffectTokens` (reachability). Miss (1) → the token is inert; miss (2)/(3) → it
+  works but shows as a raw string / passes lint silently.
+
 ---
 
 ## 5 · L3 — plugins (summary; see PLUGINS.md)

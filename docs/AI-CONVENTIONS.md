@@ -129,6 +129,13 @@ If `undefined` seems truly needed, **consult the maintainer first**.
 `| undefined`, stop and either type it properly or ask. Null-checks are their own track (expect a
 separate pass). Lean on the compiler — it catches a lot.
 
+**Exception — don't over-tighten loose partial-map keys (WON'T-DO).** The play-state partial maps
+(`abilityBoosts`, `spellSlotsSpent`, `hitDiceSpent`, `resourcesSpent`, `panelColumns`) stay
+`z.record(z.string())` + `noUncheckedIndexedAccess` (so a read is `V | undefined`) — that is the
+*honest* type. Branding the key to a finite union would make the type LIE (claim a value is defined
+when the runtime slot is absent) for a near-zero gain and a migration. This is a deliberate carve-out,
+not debt to "fix" later.
+
 ### 2.2 Model related state as ONE typed object
 **Rule.** Group related state into a single **typed object with an interface**, not a spray of
 separate fields. This is TypeScript — model the domain, don't write it like loose JS.
@@ -274,6 +281,24 @@ to ONE seam — even a one-liner.
 O(1) Map lookups** across decoupled stages (NOT a dup — deduping there just couples modules; leave
 it, but *say why*, don't hand-wave). A scattered bare-string compare is both a dup and a
 literal-compare (see 2.3).
+
+### 3.3 Deliberate non-duplicates — do NOT merge these
+**Rule.** A handful of look-alikes are kept separate ON PURPOSE. `surface.mjs`/`knip` still flag them
+as suspects, and every session runs "Reuse before you write" (3.1) — so each is a standing risk of a
+well-meaning wrong merge. Do NOT collapse:
+- **`EFFECT_KINDS`** (`content/schemas`) vs the effect-vocab in **`effects/token-parser`** — SEPARATE so
+  content validation doesn't depend on the removable effects module; a drift test in `effects.test.ts`
+  keeps them aligned, NOT a shared import.
+- **`formatModifier`** (`rules/dice`, pure core) vs **`signed`** (`util/format`) — same body, but the
+  hot roll-path core must not pull `util`; the duplication is the accepted cost.
+- **`displayNamesByLocale`** / translate name-reads vs **`localizedName`** — DIFFERENT semantics: search
+  indexes ALL locales with no fallback; translate uses `?? ''` (empty = "not translated", NOT EN
+  fallback). Merging breaks both.
+- The **`cap`/`label` LABELS maps** in `content/detail`, `homebrew`, `grouping` — they share only the
+  `titleCase` fallback (already factored out); the maps themselves are genuinely different.
+
+**Why.** "One thing in one place" (CLAUDE.md) is about *shared logic*, not incidental body-similarity;
+merging a same-shaped-but-differently-purposed pair couples modules or silently changes behavior.
 
 ---
 

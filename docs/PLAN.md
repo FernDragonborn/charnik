@@ -1024,6 +1024,41 @@ Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority
   buildout plan (EFX-1..4)** — the vocab/gathering/catalog/lifecycle gaps behind "effects
   account for too little". Stable letter+number IDs; tick items THERE, graduate designs here.
 
+**From AUDIT-29-07 (retired 2026-08-04 — its Bugs/Smells/Naming were all closed + verified; git
+holds the done-work log; these are the OPEN tails it carried):**
+- [ ] **ARCH-1 / B8 · i18n sweep of combat + build.** `en.json` has no `combat.*`/`build.*` sections;
+  CombatVM/BuildVM hardcode EN (toasts, `combat/constants.ts` labels, panel headers, buttons) — the
+  biggest gap from "i18n is data-driven". Partial is safe (EN-fallback is the contract). **Plan:**
+  namespace `combat.*`/`build.*` in en/uk.json → start with component-level static labels (`$_` works
+  natively in `.svelte`, no VM plumbing) → then VM toasts, which need a decision: inject a `translate`
+  into the VM (the house pattern — logic-layer stays `$_`-free, UI injects, cf. `formatNote(note,
+  translate?)`) OR allow `get(_)` in a VM (a VM is the UI layer, not rules-core, so `get(_)` is
+  defensible — but it's not the established pattern). UA copy uses formal «ви» ([[uk-formal-vy]]).
+- [ ] **ARCH-4 · stylelint spacing px-guard.** The `font-size:["px"]` guard is DONE + enforced (green).
+  The spacing half (`padding`/`margin`/`gap` px → `--space-*`) is ~523 warnings: blocked on a design
+  call — either add spacing-scale tokens for the off-scale values or migrate-with-screenshot-verify,
+  not a blind sweep. Warn-only on 523 = noise that trains people to ignore stylelint, so it stays out
+  until the migration is done as its own pass.
+- [ ] **B25 / RV4 · subclass-caster spell list.** EK/Arcane-Trickster get slots/DC/cap, but their
+  spell list is EMPTY — `buildSpellAccess` indexes only `class` rows. Add the subclass→list seam
+  (the character-level access layer already designed under "Caster profile" / L6 / L12 above).
+- [ ] **D16 · generalized player-choice model.** Half-feat ability-choice is DONE (§ Builder, 2026-08-02);
+  still open: Magic Initiate spell picks + Skilled skill/tool-choice grants — both need the shared
+  choice UI (see `docs/N2-PLAN.md` feat tail). One "player choice at a slot" abstraction covers all.
+- [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
+  `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
+  so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
+- [ ] **B11 · size-cap on `Storage.read()`** (`size` on `FileEntry`). Needs a cap-value decision + 5
+  storage impls, and risks rejecting legitimately-large homebrew CSVs — likely YAGNI; recorded, not queued.
+- [ ] **B24 · granular per-file watcher reparse.** The watcher reparses coarsely; per-file is deeper in
+  the watcher plumbing, not a one-liner. Low priority.
+- **A17 ritual/pact residual** — pact-slot pips + upcast picker SHIPPED (see UBUG-6). Residual is only
+  the pure-warlock slot-gating nuance + ritual-source (`L13` in the hazards above). Minor.
+- **Won't-do (recorded so they aren't re-audited as bugs):** **D19** exhaustion `max 6` stays a RAW
+  constant (identical both editions — not a data-driven win, YAGNI); **SMELL-2** `deriveHealth` is
+  single-open + `characterName` is a display-only label — keying it by `c.id` is dead flexibility;
+  loose `z.record` play-state keys stay un-branded (see `docs/AI-CONVENTIONS.md` §2.1).
+
 **User-reported bugs (2026-07-05, desktop test — verify + fix):**
 - **UBUG-1 · Short rest doesn't heal.** `combat.rest('short')` restores resources/pact slots but not
   HP. Also the heal mechanic DIFFERS by edition — check both: 5e short rest = spend Hit Dice (roll
@@ -1585,8 +1620,12 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
    visibility is chosen, distinct from the state switch.
 8. **Build/level-up + statgen** — point-buy/array/manual; **level-up flow**;
    **multiclass (+spellcasting)**; XP toggle; free-feat mode.
-   **Two edit modes — STRICT vs FREE** (per character, stored, switchable anytime; Strict
-   default). **Strict** enforces the rules of the **character's OWN system** (point-buy caps,
+   **Two edit modes — STRICT vs FREE** (**per-block granularity, state stored per character**
+   — DECIDE-0: each character carries its own `{block → strict/free}` map in the JSON, default
+   strict, and there is **no top-level "set-all" toggle**; rejected both a single per-character flag
+   and a per-app global. The current single build-side `ui.strict` migrates onto that per-block map).
+   Switchable anytime; Strict default. **Strict** enforces the rules of the **character's OWN system**
+   (point-buy caps,
    skill-choice counts, class/subclass/feat prereqs, ASI rules, prepared caps, **multiclass
    prereqs which are PER-CLASS** (Wizard INT 13, Fighter STR *or* DEX 13, Cleric WIS 13,
    Sorcerer CHA 13, …; you must meet your current class(es)' AND the new class's — read from

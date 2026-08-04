@@ -92,6 +92,16 @@ Core rules (owned HERE, restated for authors in PLUGINS.md):
 - **Fail-closed.** A handler throw / invalid intent applies NOTHING; write handlers never run
   during derive or render — only on a gesture/event.
 
+**`resource_options` surfacing + identity (design decisions):**
+- **A combat action-option (Flurry of Blows, Stunning Strike) surfaces in the ACTIONS block with a
+  cost-chip — NOT under the resource pips.** Pips are pure counters (how many ki are left); *spending
+  ki to DO something* is an action, and lives where actions live. Keep the two separate.
+- **`resource_options.resource_id` links a `grant_resource` token's id through a FLAT namespace**
+  (`"ki"`, not source-namespaced), and a row's identity is `(resource_id, id)` resolved via the
+  collision UI. `isRowActive` (file+source filtering) applies to this table too.
+- **`apply_condition` in an action is self-only** — there is no TARGET model, so an on-enemy effect
+  (Stunning Strike's condition on the target) degrades to `note:` + the DC, not an applied condition.
+
 ## 3. The event vocabulary (pinned)
 
 `turnStart` · `turnEnd` · `attackMade` · `damageTaken` · `rest` · `wentUnconscious` ·
