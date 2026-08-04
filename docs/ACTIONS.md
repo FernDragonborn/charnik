@@ -1,12 +1,16 @@
 # Charnik core action / event / state-channel model
 
-> **STATUS: NORMATIVE SPECIFICATION (core executor not yet implemented).** This document OWNS the
-> play-state mutation model that PLUGINS.md §8 previously pinned from the plugin side — the
-> fresh-eyes #1 correction (2026-07-15, PLAN.md): using an ability, reacting to a game event, and
-> the action economy are things the TRACKING app needs with or without plugins, so the model is a
-> CORE concern and plugin hooks are THIN adapters returning this same shape. Where PLUGINS.md §8
-> and this document disagree, THIS document wins. Implementation lands with the core "activatable
-> actions" feature (N2 shape 2); plugin `onUse`/`onEvent` (`api: 2`) hook in after.
+> **STATUS: NORMATIVE SPECIFICATION — `onUse` executor implemented (first slice); `onEvent` +
+> plugin hooks deferred.** This document OWNS the play-state mutation model that PLUGINS.md §8
+> previously pinned from the plugin side — the fresh-eyes #1 correction (2026-07-15, PLAN.md):
+> using an ability, reacting to a game event, and the action economy are things the TRACKING app
+> needs with or without plugins, so the model is a CORE concern and plugin hooks are THIN adapters
+> returning this same shape. Where PLUGINS.md §8 and this document disagree, THIS document wins.
+> **Implementation:** the `onUse` write-half shipped with N2 (activatable actions, shape 2) —
+> `CombatVM.activateResourceOption` + `runActionToken` (`src/routes/combat/state.svelte.ts`),
+> all-or-nothing validate→execute, verified 2026-08-02 (see `docs/N2-PLAN.md`). **Still deferred:**
+> the `onEvent` write-half (`docs/RECHARGE-PLAN.md` slice 2) and plugin `onUse`/`onEvent`
+> (`api: 2`), which hook in after.
 
 ## 1. The three state channels
 
@@ -19,7 +23,9 @@ Every state transition in play maps to exactly one channel:
 | `onEvent` | a game event        | WRITES state, once            | the LIVE state at the event        |
 
 `passive` is implemented (the derive pipeline: DAG resolve → facts → fold; the L3 plugin
-`passive` hook rides it as a pre-pass). `onUse` / `onEvent` are the deferred write half.
+`passive` hook rides it as a pre-pass). `onUse` is implemented for the native first slice (N2:
+`activateResourceOption` + `runActionToken`); `onEvent` (and both plugin hooks) remain the deferred
+write half.
 
 ## 2. The declarative intent — the ONE play-state mutation language
 
