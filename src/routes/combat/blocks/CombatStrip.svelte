@@ -296,10 +296,12 @@
 	.senses-strip .advdis {
 		font-size: var(--font-size-xs);
 		margin-left: 3px;
-		color: var(--color-good);
+		/* muted toward the surface so the arrow recedes (darker on dark, lighter on light) — a hint,
+		   not an attention-grabber; the direction still reads adv/dis, tooltip has the detail */
+		color: color-mix(in srgb, var(--color-good) 45%, var(--color-surface));
 	}
 	.senses-strip .advdis.dis {
-		color: var(--color-danger);
+		color: color-mix(in srgb, var(--color-danger) 45%, var(--color-surface));
 	}
 	.senses-strip .edit {
 		margin-left: auto;
