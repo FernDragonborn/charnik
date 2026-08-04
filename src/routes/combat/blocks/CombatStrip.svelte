@@ -99,7 +99,16 @@
 			<span class="bar-label eyebrow">Passive senses</span>
 			{#each passives as p, i (p.key)}
 				{#if i > 0}<span class="separator-dot">·</span>{/if}
-				<span class="ability-save" title={why(p.comp)}><i>{p.name}</i>{p.comp.value}</span>
+				{@const advDis = p.comp.trace.find(
+					(t) => t.source === 'Advantage' || t.source === 'Disadvantage'
+				)}
+				<span class="ability-save" title={why(p.comp)}>
+					<i>{p.name}</i>{p.comp.value}{#if advDis}<span
+							class="advdis"
+							class:dis={advDis.source === 'Disadvantage'}
+							title={advDis.source}>{advDis.source === 'Advantage' ? '▲' : '▼'}</span
+						>{/if}
+				</span>
 			{:else}
 				<span class="ability-save"><i>none pinned</i></span>
 			{/each}
@@ -281,6 +290,16 @@
 	}
 	.senses-strip .separator-dot {
 		color: var(--color-border-strong);
+	}
+	/* a passive is ±5 under advantage/disadvantage (RAW) — mark it so a low number reads as
+	   "reduced by a debuff", not a bug. ▲ green = advantage, ▼ red = disadvantage. */
+	.senses-strip .advdis {
+		font-size: var(--font-size-xs);
+		margin-left: 3px;
+		color: var(--color-good);
+	}
+	.senses-strip .advdis.dis {
+		color: var(--color-danger);
 	}
 	.senses-strip .edit {
 		margin-left: auto;
