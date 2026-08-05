@@ -498,7 +498,9 @@ class CombatVM {
 	/** Run a resource-option's RESOLVED action token (a `heal:`/`roll:` formula is already L2-resolved
 	 *  at derive). Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths):
 	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,
-	 *  `gain_action` → refund one action this turn (Action Surge), `rest:short|long` → take that rest
+	 *  `apply_effect:<id>` → apply a NAMED effects.csv buff/debuff (Rage) via the "+"-catalog add path
+	 *  (ref/negative/duration all read from the row), `gain_action` → refund one action this turn
+	 *  (Action Surge), `rest:short|long` → take that rest
 	 *  (recharge pools / reset slots / restore HP — a Potion of Angelic Slumber, 2024 short-rest
 	 *  spells), `restore_resource:<id>` → regain ALL uses of a pool (Persistent Rage, Uncanny
 	 *  Metabolism), `note:` → the spendOption toast. */
@@ -516,6 +518,21 @@ class CombatVM {
 			this.tray.pushRoll(opt.name, rollFormula(arg));
 		} else if (verb === 'apply_condition' && arg) {
 			this.addEffect({ label: opt.name, tokens: [opt.action], positive: false });
+		} else if (verb === 'apply_effect' && arg) {
+			// Apply a NAMED catalog buff/debuff (Rage, Bless-as-action…) via the SAME add path the "+"
+			// picker uses: its `ref` re-resolves the tokens LIVE at derive, `negative` sets buff/debuff,
+			// `duration_rounds` gives the timer (round-counter auto-expires it). Missing id → surface, not
+			// a silent no-op.
+			const cat = this.effectCatalog.find((eff) => eff.ref.split(':').pop() === arg);
+			if (cat)
+				this.addEffect({
+					label: cat.label,
+					tokens: cat.tokens,
+					positive: !cat.negative,
+					ref: cat.ref,
+					...(cat.durationRounds != null ? { durationRounds: cat.durationRounds } : {})
+				});
+			else toast(`${opt.name} — effect “${arg}” not found`, { description: 'Check effects.csv' });
 		} else if (verb === 'gain_action') {
 			p.turn.action = Math.max(0, p.turn.action - 1); // one additional action this turn
 		} else if (verb === 'restore_resource' && arg) {

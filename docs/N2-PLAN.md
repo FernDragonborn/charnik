@@ -70,6 +70,24 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
      `rechargeLabel` case. 2024 SW row now `...:short_one`. 2014 SW/AS + 2024 AS ("short or long rest" =
      full) stay `short` (RAW-exact). Tested: short rest regains one, long rest regains all.
 
+### Shipped after the first slice — Enter Rage (N2 shape 2: an activated buff)
+- `[x]` **`apply_effect:<id>` executor verb + Enter Rage — DONE + app-verified.** The applied-effect-with-
+  duration case the first slice deferred: a resource-option activation that turns a STATE on. New verb
+  `apply_effect:<catalog-id>` in `runActionToken` applies a NAMED `effects.csv` buff via the SAME
+  "+"-catalog add path (`effectCatalog` → `addEffect` with `ref`/`negative`→positive/`duration_rounds`),
+  so no new mutation path. **Content (both editions):** an `effects.csv` `rage` row (`apply_condition:rage`,
+  `negative=false`, `duration_rounds=10`) = the timed positive wrapper; a `conditions.csv` `rage` row
+  carries the mechanics (`resist_immune:resist:{b,p,s}`, `advantage:save.str`,
+  `flat_bonus:damage+step(class_level.barbarian, 1->2, 9->3, 16->4)`, `note:` for the STR-check + melee
+  caveat) AND registers `has_condition.rage` → flips the existing `is_raging` flag (so subclass riders
+  like Zealot's `is_raging ? flat_bonus:damage+cha_mod` fire off the SAME state). A `resource_options`
+  `barbarian_rage_enter` row (`cost=1`, `apply_effect:rage`, `bonus_action`) surfaces it in the Actions
+  block. Rage damage folds at ROLL time via `effectsFor('damage')` (gated on the auto-calc toggle, per the
+  maintainer's call: auto-add only when auto-calc is on); RAW-faithful STR-melee scoping is the open §A
+  `damage:<qualifier>` tail, so v1 applies broadly + a note. Verified: Karroth (Barb 3) → Enter Rage →
+  buff panel shows Rage with b/p/s resist + adv STR-save + damage chips + 10-rd timer, one rage use spent.
+  Tests in `class_features_content.test.ts` (option shape + resist/adv + damage scaling 2/3/4, both editions).
+
 ### Deferred (OUT — keep the slice small)
 - `savage_attacker` — needs a **damage roll-mode** ("roll pool twice, keep higher") intent field + a
   `turn`-recharge once-per-turn gate; a later small extension once this executor lands.

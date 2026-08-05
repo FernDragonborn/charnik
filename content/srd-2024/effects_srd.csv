@@ -10,3 +10,4 @@ guidance,Guidance,,"+1d4 to one ability check from the Guidance cantrip (concent
 haste,Haste,,"+2 AC, advantage on Dexterity saving throws and one additional action while hasted (concentration, up to 1 minute).",,flat_bonus:ac+2;advantage:save.dex;flat_bonus:action+1,false,10
 half_cover,Half cover,,"+2 to AC and Dexterity saving throws while behind half cover.",,flat_bonus:ac+2;flat_bonus:save.dex+2,false,
 three_quarters_cover,Three-quarters cover,,"+5 to AC and Dexterity saving throws while behind three-quarters cover.",,flat_bonus:ac+5;flat_bonus:save.dex+5,false,
+rage,Rage,,"Raging: resistance to bludgeoning, piercing, and slashing; advantage on Strength checks and saves; bonus damage on Strength attacks. Lasts up to 1 minute.",,apply_condition:rage,false,10

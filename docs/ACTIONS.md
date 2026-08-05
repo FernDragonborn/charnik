@@ -66,6 +66,7 @@ still landing on an existing system per the table above:
 | `heal:<formula>` | HP path, clamped to max (L2-resolved to dice at derive) |
 | `roll:<formula>` | the dice path + roll log |
 | `apply_condition:<id>` | the `play.effects` add path |
+| `apply_effect:<id>` | a NAMED `effects.csv` buff/debuff (Rage) → the `play.effects` add path via the "+"-catalog seam (its `ref` re-resolves LIVE, `negative`→buff/debuff, `duration_rounds`→timer). The multi-token, timed, positive analogue of `apply_condition` — a class-feature ACTIVATION that turns a state on (Enter Rage). |
 | `gain_action` | refund one action this turn (Action Surge) |
 | `rest:short` / `rest:long` | **take that rest** — the SAME system the rest buttons use (recharge pools by type, reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). Models a Potion of Angelic Slumber / a rest-granting spell. |
 | `note:<text>` | a log/toast line |

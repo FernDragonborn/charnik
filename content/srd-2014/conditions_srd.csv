@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fce9-7a08-a279-ae8d4b1fe0b9
-#content-updated_at: 2026-07-30
-#content-hash: xxh64:4bfc2da9adc28695
+#content-updated_at: 2026-08-05
+#content-hash: xxh64:315a6c92db5e652a
 id,name_en,name_uk,text_en,text_uk,effects,negative,max_level
 blinded,Blinded,,"•A blinded creature can't see and automatically fails any ability check that requires sight.
 •Attack rolls against the creature have advantage,and the creature's attack rolls have disadvantage.",,disadvantage:attack;note:Attacks against you have Advantage;note:You automatically fail any check that requires sight,true,1
@@ -53,3 +53,4 @@ unconscious,Unconscious,,"•An unconscious creature is incapacitated (see the c
 •Attack rolls against the creature have advantage.
 •Any attack that hits the creature is a critical hit ifthe attacker is within 5 feet of the creature.
 The Celtic, Egyptian, Greek, and Norse pantheons are fantasy interpretations of historical religions from our world's ancient times. They include deities that are most appropriate for use in a game, divorced from their historical context in the real world and united into pantheons that serve the needs of the game.",,apply_condition:incapacitated;apply_condition:prone;set_override:speed:0;auto_fail:save.str;auto_fail:save.dex;note:Attacks against you have Advantage;note:Any hit from within 5 ft is a critical hit;note:You drop what you're holding,true,1
+rage,Rage,,"While raging, you have resistance to bludgeoning, piercing, and slashing damage, advantage on Strength checks and Strength saving throws, and deal bonus damage with Strength attacks.",,"resist_immune:resist:bludgeoning;resist_immune:resist:piercing;resist_immune:resist:slashing;advantage:save.str;flat_bonus:damage+step(class_level.barbarian, 1->2, 9->3, 16->4);note:Advantage on Strength checks;note:Rage damage applies to Strength melee attacks",false,1

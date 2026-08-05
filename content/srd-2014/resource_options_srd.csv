@@ -3,11 +3,12 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f859d-bfd4-717c-bb8d-cd555a0e6807
-#content-updated_at: 2026-08-02
-#content-hash: xxh64:dcd3c5bac2e905b8
+#content-updated_at: 2026-08-05
+#content-hash: xxh64:770bfe0526f80f1c
 id,name_en,name_uk,text_en,text_uk,effects,resource_id,cost,action,action_type
 flurry_of_blows,Flurry of Blows,,"Immediately after the Attack action, make two Unarmed Strikes as a Bonus Action.",,,ki,1,note:Make two Unarmed Strikes,bonus_action
 patient_defense,Patient Defense,,Take the Dodge action as a Bonus Action.,,,ki,1,note:Take the Dodge action,bonus_action
 step_of_the_wind,Step of the Wind,,Take the Disengage or Dash action as a Bonus Action; your jump distance is doubled.,,,ki,1,note:Disengage or Dash; jump distance doubled,bonus_action
 fighter_second_wind,Second Wind,,Regain hit points equal to 1d10 + your fighter level.,,,second_wind,1,heal:1d10+class_level.fighter,bonus_action
 fighter_action_surge,Action Surge,,Take one additional action on your turn.,,,action_surge,1,gain_action,free
+barbarian_rage_enter,Enter Rage,,"On your turn, you can enter a rage as a bonus action.",,,rage,1,apply_effect:rage,bonus_action

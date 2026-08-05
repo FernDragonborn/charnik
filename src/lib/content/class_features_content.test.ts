@@ -107,6 +107,57 @@ describe('shipped class features · Persistent Rage regain (RECHARGE slice 2)', 
 	});
 });
 
+describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
+	// Derive a barbarian WITH the rage condition applied (what "Enter Rage" → apply_effect:rage does).
+	const raging = (g: ContentGraph, source: string, system: '5e' | '5.5e', level: number) => {
+		const c = barbarian(source, system, level);
+		c.play.effects = [
+			{ iid: 'r1', label: 'Rage', effects: ['apply_condition:rage'], positive: true }
+		];
+		return deriveSheet(characterSchema.parse(c), g);
+	};
+
+	it.each([
+		['content/srd-2024', 'SRD 5.2.1', '5.5e'] as const,
+		['content/srd-2014', 'SRD 5.1', '5e'] as const
+	])(
+		'%s: a barbarian has an "Enter Rage" bonus-action option that spends a rage use',
+		async (dir, source, system) => {
+			const sheet = deriveSheet(
+				barbarian(source, system as '5e' | '5.5e', 1),
+				await loadEdition(dir)
+			);
+			const opt = sheet.resourceOptions.find((o) => o.id === 'barbarian_rage_enter');
+			expect(opt?.resourceId).toBe('rage');
+			expect(opt?.action).toBe('apply_effect:rage');
+			expect(opt?.actionType).toBe('bonus_action');
+			expect(opt?.cost).toBe(1);
+		}
+	);
+
+	it.each([
+		['content/srd-2024', 'SRD 5.2.1', '5.5e'] as const,
+		['content/srd-2014', 'SRD 5.1', '5e'] as const
+	])(
+		'%s: raging grants b/p/s resistance + advantage on Strength saves',
+		async (dir, source, system) => {
+			const s = raging(await loadEdition(dir), source, system as '5e' | '5.5e', 1);
+			expect([...s.defenses.resist].sort()).toEqual(['bludgeoning', 'piercing', 'slashing']);
+			expect(s.facts.advantage.some((a) => a.target === 'save.str')).toBe(true);
+		}
+	);
+
+	it('5.5e: rage damage bonus scales +2 → +3 (L9) → +4 (L16) as a damage roll fact', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const rageDamage = (level: number) =>
+			raging(g, 'SRD 5.2.1', '5.5e', level).facts.numeric.find((f) => f.target === 'damage')
+				?.amount;
+		expect(rageDamage(1)).toBe(2);
+		expect(rageDamage(9)).toBe(3);
+		expect(rageDamage(16)).toBe(4);
+	});
+});
+
 describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', () => {
 	it('5.5e: Sneak Attack Nd6, Bardic Inspiration + Martial Arts dice scale by class level', async () => {
 		const g = await loadEdition('content/srd-2024');
