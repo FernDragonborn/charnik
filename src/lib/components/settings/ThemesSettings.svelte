@@ -126,6 +126,12 @@
 	}
 
 	const activate = (id: string) => (app.theme = id);
+	function onCardKeydown(e: KeyboardEvent, id: string) {
+		if (e.key === 'Enter' || e.key === ' ') {
+			e.preventDefault();
+			activate(id);
+		}
+	}
 	const label = (token: ThemeableToken) => token.replace(/^color-/, '').replace(/-/g, ' ');
 
 	// dark/light are the only truly built-in themes (from tokens.css) — always present, not deletable.
@@ -161,34 +167,77 @@
 	<div class="theme-grid">
 		<!-- dark / light: the only non-deletable themes (they live in tokens.css) -->
 		{#each BUILT_INS as b (b.id)}
-			<div class="theme-card" class:active={app.theme === b.id}>
-				<button class="theme-pick" onclick={() => activate(b.id)}>
+			<div
+				class="theme-card"
+				class:active={app.theme === b.id}
+				role="button"
+				tabindex="0"
+				onclick={() => activate(b.id)}
+				onkeydown={(e) => onCardKeydown(e, b.id)}
+			>
+				<div class="theme-pick">
 					<span class="theme-name">{b.name}</span>
 					<span class="theme-tag eyebrow">built-in</span>
-				</button>
+				</div>
 				<div class="theme-actions">
-					<button class="btn ghost" onclick={() => cloneTheme(b.id, b.clean)}>Clone</button>
+					<button
+						class="btn ghost"
+						onclick={(e) => {
+							e.stopPropagation();
+							cloneTheme(b.id, b.clean);
+						}}>Clone</button
+					>
 				</div>
 			</div>
 		{/each}
 
 		<!-- every other theme: the seeded bundled palettes + the user's own — all editable + deletable -->
 		{#each app.customThemes as t (t.id)}
-			<div class="theme-card" class:active={app.theme === t.id}>
-				<button class="theme-pick" onclick={() => activate(t.id)}>
+			<div
+				class="theme-card"
+				class:active={app.theme === t.id}
+				role="button"
+				tabindex="0"
+				onclick={() => activate(t.id)}
+				onkeydown={(e) => onCardKeydown(e, t.id)}
+			>
+				<div class="theme-pick">
 					<span class="theme-name">{t.name}</span>
 					<span class="theme-swatches">
 						{#each SWATCHES as s (s)}
 							<span class="swatch" style="background: {t.tokens[s] ?? 'transparent'}"></span>
 						{/each}
 					</span>
-				</button>
+				</div>
 				<div class="theme-actions">
-					<button class="btn ghost" onclick={() => (mode = { view: 'edit', id: t.id })}>Edit</button
+					<button
+						class="btn ghost"
+						onclick={(e) => {
+							e.stopPropagation();
+							mode = { view: 'edit', id: t.id };
+						}}>Edit</button
 					>
-					<button class="btn ghost" onclick={() => duplicate(t)}>Duplicate</button>
-					<button class="btn ghost" onclick={() => exportTheme(t)}>Export</button>
-					<button class="btn ghost danger" onclick={() => remove(t.id)}>Delete</button>
+					<button
+						class="btn ghost"
+						onclick={(e) => {
+							e.stopPropagation();
+							duplicate(t);
+						}}>Duplicate</button
+					>
+					<button
+						class="btn ghost"
+						onclick={(e) => {
+							e.stopPropagation();
+							exportTheme(t);
+						}}>Export</button
+					>
+					<button
+						class="btn ghost danger"
+						onclick={(e) => {
+							e.stopPropagation();
+							remove(t.id);
+						}}>Delete</button
+					>
 				</div>
 			</div>
 		{/each}
@@ -261,20 +310,22 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
 		padding: 12px;
+		cursor: pointer;
 	}
 	.theme-card.active {
 		border-color: var(--color-accent);
 	}
+	.theme-card:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+	}
 	.theme-pick {
 		display: flex;
+		flex: 1;
+		width: 100%;
 		flex-direction: column;
 		align-items: flex-start;
 		gap: 8px;
-		background: transparent;
-		border: 0;
-		cursor: pointer;
-		text-align: left;
-		padding: 0;
 		color: var(--color-text);
 	}
 	.theme-name {
