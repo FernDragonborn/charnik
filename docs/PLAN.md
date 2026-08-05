@@ -1079,21 +1079,22 @@ holds the done-work log; these are the OPEN tails it carried):**
   loose `z.record` play-state keys stay un-branded (see `docs/AI-CONVENTIONS.md` §2.1).
 
 **User-reported bugs (2026-07-05, desktop test — verify + fix):**
-- **UBUG-1 · Short rest doesn't heal.** `combat.rest('short')` restores resources/pact slots but not
-  HP. Also the heal mechanic DIFFERS by edition — check both: 5e short rest = spend Hit Dice (roll
-  HD + CON to regain HP); 5.5e similar but confirm the exact rule. Wire short-rest HP (Hit Dice pool)
-  per the character's system.
-- **UBUG-2 · No to-hit roll shown when casting an attack/weapon.** Casting a spell/attack only shows
-  the DAMAGE roll in the UI — the attack (to-hit d20) roll isn't surfaced. Trace `cast`/`attackRoll`
-  (combat/state): attack spells (`res === 'hit'`) and weapon attacks should roll + display the to-hit,
-  then damage. Make the to-hit visible (toast/log/tray), not just damage.
-- **UBUG-3 · Adv/disadv doesn't show the cancelled (dropped) roll everywhere.** The dropped d20 should
-  show: BRIEF on the card, FULL in the log + dice tray. `advantageRoll.{kept,dropped}` exists and the
-  CombatMenus log/tray render it — but the card/attack/spell roll paths may not pass advantage, or the
-  card doesn't render the dropped die. Audit every roll site passes advantage + renders kept+dropped.
-- **UBUG-5 · Spending a resource gives no feedback.** Clicking a resource pip (`resourceClick`) spends
-  it silently — using a resource should raise a toast (e.g. "Rage — 2 left" / "Ki used"), like rolls
-  do. Add a toast on spend (and probably on restore too), naming the resource + remaining count.
+- [x] **UBUG-1 · Short rest doesn't heal.** DONE. Short rest now heals via Hit Dice — `spendHitDie(die)`
+  rolls `1d<die> + CON` (min 1 HP, clamped to max), logs the roll, marks the die spent; the `☾ Short`
+  picker (`state.svelte.ts`) lets the player choose how many/which dice (per-character `shortRestMode`:
+  RAW `dice` picker, or a `half` = ½-max-HP variant). Long rest recovers dice edition-divergently
+  (`hitDiceRecoveredOnLongRest`: 5e half total min 1, 5.5e all). Tested (combat.test.ts).
+- [x] **UBUG-2 · No to-hit roll shown when casting an attack/weapon.** DONE. `attackRoll` rolls the
+  to-hit (`at.toHit + fx.flat`, effect advantage/flat/dice via `netAdvantage(fx)`) THEN the per-type
+  damage, pushed as ONE combined log/toast entry; attack spells (`res === 'hit'`) do the same in `cast`.
+  The to-hit is surfaced in the toast, roll log, and dice tray — not just damage.
+- [x] **UBUG-3 · Adv/disadv doesn't show the cancelled (dropped) roll everywhere.** DONE. Every roll
+  site (attack/spell/stat) passes `netAdvantage(fx)`; the dropped d20 renders in ALL three surfaces —
+  the toast (`· drop d20(N)`), the roll log (`RollLog.svelte`, dimmed `.drop` line), and the dice tray
+  (`DiceTray.svelte`). `advantageRoll.{kept,dropped}` flows through `pushRoll`.
+- [x] **UBUG-5 · Spending a resource gives no feedback.** DONE (with UBUG-8). `resourceClick` (pip) and
+  `useResource` (the "use one" button) both toast the resource name + remaining count on spend AND on
+  restore; `spendOption`/`restoreAll` toast too. No resource change is silent.
 - [x] **UBUG-6 · Casting a spell doesn't consume a spell slot (reported 2026-07-19).** DONE 2026-07-20
   (AUDIT A17). `cast()` auto-spends the lowest available leveled slot (pure `slotToSpend`, unit-tested)
   via `play.spellSlotsSpent` and blocks with a toast when none remain; cantrips spend nothing; a slot
@@ -1203,11 +1204,16 @@ holds the done-work log; these are the OPEN tails it carried):**
   totals are cramped and hard to parse at a glance. Redesign the roll output for readability (a clearer
   roll-result card / dice-tray result / restructured toast) so a to-hit, its dropped die, and typed
   damage read cleanly. Some toasts elsewhere likely want the same pass. Cross-ref the roll log + DiceTray.
-- [ ] **UBUG-13 · Level-up re-offers ASI and DOUBLE-applies it (not filled/persisted; 2026-08-05).** On
-  the level-up page an ASI/feat slot opens EMPTY every time, so re-selecting an ASI adds its ability
-  increase AGAIN (stacking on the sheet) and lets you re-pick a slot already spent. The chosen ASI/feat
-  per level-slot must be PERSISTED (shown filled on open, applied once) so re-opening level-up can't
-  re-grant it. Relates to the build ASI → `abilityBoosts` flow + the per-class feat-slot model.
+- [x] **UBUG-13 · Level-up re-offers ASI and DOUBLE-applies it (not filled/persisted; 2026-08-05).** DONE.
+  Root cause: only the FLATTENED `abilityBoosts`/`feats` were persisted, never the per-slot mapping — so
+  hydrate couldn't repopulate slots (all opened blank) and `abilityBoosts = edit.boosts (carried flat) +
+  new slot ASI` double-counted a re-picked slot. Fix: a new `build.slotPicks` (feats/asi/featAbility/
+  featSkills keyed by slot key) is persisted at assemble and restored in `draftFromCharacter`, so slots
+  open FILLED. Split the slot part of boosts into a `slotBoosts` derived; `hydrate` now carries only the
+  RESIDUE (`build.abilityBoosts − slotBoosts` — species/background boosts survive, old slot-less saves
+  keep their flat boost unchanged) so a restored slot re-derives its own boost once, never twice. Zod
+  defaults the field so pre-fix saves load (slots blank, old flat-carry path) and self-heal on next save.
+  Behavioral test in build.test.ts (re-hydrate a +2-CON ASI slot → still +2, slot shown filled).
 - [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing — hidden spells still showed in
   combat.** DONE 2026-07-21. The spellbook's eye/pin were local `$state` sets on a THROWAWAY
   `demoCharacter()` (never persisted, never read by combat), and `buildSpellGroups` rendered every

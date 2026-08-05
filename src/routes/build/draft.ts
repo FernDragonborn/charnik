@@ -119,6 +119,13 @@ export function draftFromCharacter(char: Character): DraftState {
 		expertise: [...char.build.expertise],
 		selectedLanguages: [...char.build.languages],
 		selectedSpells: char.build.spells.map((s) => s.spell),
+		// restore the per-slot ASI/feat picks so a level-up shows already-filled slots and re-derives
+		// their boosts from the slots (never re-offers + double-applies them — UBUG-13). Old saves have
+		// empty maps → slots open blank and their boosts stay carried flat via `edit.boosts`.
+		slotFeats: { ...char.build.slotPicks.feats },
+		slotAsi: { ...char.build.slotPicks.asi },
+		slotFeatAbility: { ...char.build.slotPicks.featAbility },
+		slotFeatSkills: { ...char.build.slotPicks.featSkills },
 		inventory: char.build.inventory.map((i) => ({
 			item: i.item,
 			qty: i.qty,

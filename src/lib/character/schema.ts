@@ -61,6 +61,26 @@ const spellEntry = z.object({
 	alwaysPrepared: z.boolean().default(false)
 });
 
+/** Per-slot ASI/feat picks, keyed by slot key (`"<classIndex>:<level>"`, plus `"origin"` for the
+ *  background feat's skill grant). Mirrors the builder's draft maps so a level-up can RESTORE the
+ *  slots it already filled (shown filled, applied once) instead of re-offering + double-applying them
+ *  (UBUG-13). Absent on pre-UBUG-13 saves → slots open blank and boosts stay carried flat (old path). */
+const slotPicksSchema = z.object({
+	/** slot key → feat ref, or the `__asi__` sentinel for a plain ASI. */
+	feats: z.record(z.string(), z.string()).default({}),
+	/** slot key → ASI allocation (+2 one, or +1 two). */
+	asi: z
+		.record(
+			z.string(),
+			z.object({ shape: z.enum(['2', '1-1']), picks: z.array(z.enum(ABILITIES)) })
+		)
+		.default({}),
+	/** slot key → the half-feat +1 ability choice (Grappler STR/DEX, Epic Boon any). */
+	featAbility: z.record(z.string(), z.enum(ABILITIES)).default({}),
+	/** slot key → §C feat skill-grant picks (Skilled). */
+	featSkills: z.record(z.string(), z.array(z.string())).default({})
+});
+
 const buildSchema = z.object({
 	name: z.string().min(1),
 	species: ref.optional(),
@@ -86,6 +106,8 @@ const buildSchema = z.object({
 	/** Chosen saving-throw proficiencies (usually from class; stored explicitly). */
 	saves: z.array(z.enum(ABILITIES)).default([]),
 	feats: z.array(ref).default([]),
+	/** Per-slot ASI/feat picks so level-up restores filled slots (UBUG-13); see `slotPicksSchema`. */
+	slotPicks: slotPicksSchema.default({ feats: {}, asi: {}, featAbility: {}, featSkills: {} }),
 	/** Known languages, as `language:source:id` refs. */
 	languages: z.array(ref).default([]),
 	inventory: z.array(inventoryEntry).default([]),

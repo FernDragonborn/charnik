@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
-import { build } from './state.svelte';
+import { build, ASI } from './state.svelte';
 import { toggleSource } from '$lib/content/sources.svelte';
 
 const S = 'SRD 5.2.1';
@@ -102,6 +102,30 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.graph = graph;
 		build.draft.classes = [{ classId: `class:${S}:fighter`, subclassId: null, level: 14 }];
 		expect(build.featSlots.map((s) => s.level)).toEqual([4, 6, 8, 12, 14]);
+	});
+
+	it('level-up restores filled ASI slots and applies each boost ONCE, not twice (UBUG-13)', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.name = 'Asi';
+		build.draft.classes = [{ classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
+		build.draft.abilities = { str: 8, dex: 14, con: 14, int: 15, wis: 10, cha: 12 };
+		const slot = build.featSlots[0]; // the level-4 ASI slot
+		expect(slot).toBeDefined();
+		const key = slot?.key ?? '';
+		build.setSlotFeat(key, ASI);
+		build.toggleAsiPick(key, 'con'); // shape '2' → +2 CON
+		const saved = characterSchema.parse(build.assembled);
+		expect(saved.build.abilityBoosts.con).toBe(2);
+		expect(saved.build.slotPicks.feats[key]).toBe(ASI); // slot persisted
+
+		// re-open the SAME character (a level-up entry): the slot restores FILLED and its boost is
+		// applied once — re-hydrating must not stack a second +2 on top of the carried flat boost.
+		build.reset();
+		build.graph = graph;
+		build.hydrate(saved);
+		expect(build.draft.slotFeats[key]).toBe(ASI); // shown filled, not blank
+		expect(build.assembled.build.abilityBoosts.con).toBe(2); // once, not 4
 	});
 
 	it('a blank reset produces a minimal valid character (no crash on empty draft)', () => {

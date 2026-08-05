@@ -166,13 +166,24 @@ class BuildVM {
 	 *  directly (via `draftFromCharacter`); abilities become manual (base scores) with boosts carried
 	 *  in `hydratedBoosts`, and the existing feats/skills/spells carried for Strict-edit locking. */
 	hydrate = (char: Character) => {
-		this.draft = draftFromCharacter(char);
+		this.draft = draftFromCharacter(char); // restores the per-slot picks (UBUG-13)
+		// The restored slots now RE-DERIVE their own ASI/half-feat boosts, so carrying those flat too
+		// would double-count. Carry only the residue (species/background boosts + old saves that stored
+		// no slots → nothing subtracts, so their whole flat boost survives, unchanged old behaviour).
+		const carried: Partial<Record<Ability, number>> = { ...char.build.abilityBoosts };
+		for (const [ab, n] of Object.entries(this.slotBoosts)) {
+			const left = (carried[ab as Ability] ?? 0) - (n as number);
+			if (left > 0) carried[ab as Ability] = left;
+			else delete carried[ab as Ability];
+		}
 		this.edit = {
 			id: char.id,
 			play: char.play,
 			ui: char.ui,
-			boosts: { ...(char.build.abilityBoosts as Partial<Record<Ability, number>>) },
-			feats: [...char.build.feats],
+			boosts: carried,
+			// slot feats re-derive from the restored slots; carry only NON-slot feats (origin/auto) so
+			// they aren't lost. (Feats dedup via Set, so this is belt-and-braces vs the boost double.)
+			feats: char.build.feats.filter((f) => !Object.values(char.build.slotPicks.feats).includes(f)),
 			featSkills: [...(char.build.featSkills ?? [])],
 			skills: new Set(char.build.skills),
 			spells: new Set(this.draft.selectedSpells)
@@ -480,24 +491,35 @@ class BuildVM {
 			? allocateBackgroundBoost(this.draft.boostShape, this.draft.boostPicks, this.backgroundBoostChoices)
 			: {}
 	);
-	/** All ability boosts folded together: 5.5e background choice + every ASI slot allocation. */
-	abilityBoosts = $derived.by<Partial<Record<Ability, number>>>(() => {
+	/** Ability boosts derived PURELY from the ASI/feat slots (per-slot +2/+1 ASI + each half-feat's +1).
+	 *  Split out of `abilityBoosts` so `hydrate` can subtract them from the carried flat boosts — a
+	 *  restored slot re-derives its own boost, so carrying it flat too would double-apply (UBUG-13). */
+	slotBoosts = $derived.by<Partial<Record<Ability, number>>>(() => {
 		const out: Partial<Record<Ability, number>> = {};
 		const add = (m: Partial<Record<Ability, number>>) => {
 			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
 		};
-		add(this.edit?.boosts ?? {}); // boosts carried over from a loaded character (level-up)
-		add(this.backgroundBoosts); // 5.5e background choice (empty unless the guard in backgroundBoosts holds)
-		// species free-choice ASI (5e Half-Elf +1/+1)
-		if (this.speciesBoostChoice)
-			for (const ab of this.draft.speciesBoostPicks)
-				out[ab] = (out[ab] ?? 0) + this.speciesBoostChoice.amount;
 		for (const s of this.featSlots) if (this.draft.slotFeats[s.key] === ASI) add(this.asiBoostFor(s.key));
 		// half-feat +1 (Grappler STR/DEX, Epic Boon any) — the chosen ability of each half-feat slot
 		for (const s of this.featSlots) {
 			const ab = this.draft.slotFeatAbility[s.key];
 			if (ab && this.halfFeatOptionsFor(s.key).includes(ab)) out[ab] = (out[ab] ?? 0) + 1;
 		}
+		return out;
+	});
+	/** All ability boosts folded together: 5.5e background choice + species free-choice + every ASI slot. */
+	abilityBoosts = $derived.by<Partial<Record<Ability, number>>>(() => {
+		const out: Partial<Record<Ability, number>> = {};
+		const add = (m: Partial<Record<Ability, number>>) => {
+			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
+		};
+		add(this.edit?.boosts ?? {}); // NON-slot boosts carried from a loaded character (species/background)
+		add(this.backgroundBoosts); // 5.5e background choice (empty unless the guard in backgroundBoosts holds)
+		// species free-choice ASI (5e Half-Elf +1/+1)
+		if (this.speciesBoostChoice)
+			for (const ab of this.draft.speciesBoostPicks)
+				out[ab] = (out[ab] ?? 0) + this.speciesBoostChoice.amount;
+		add(this.slotBoosts);
 		return out;
 	});
 	toggleBoostPick = (ab: Ability) => {
@@ -671,6 +693,13 @@ class BuildVM {
 					...this.featSlots.map((s) => this.draft.slotFeats[s.key]).filter((r) => r && r !== ASI)
 				])
 			],
+			// persist the per-slot picks so a later level-up restores filled slots (UBUG-13)
+			slotPicks: {
+				feats: { ...this.draft.slotFeats },
+				asi: { ...this.draft.slotAsi },
+				featAbility: { ...this.draft.slotFeatAbility },
+				featSkills: { ...this.draft.slotFeatSkills }
+			},
 			languages: [...this.draft.selectedLanguages],
 			inventory: this.draft.inventory.map((i) => ({ ...i })),
 			// cantrips are always-prepared; leveled spells start prepared (tweak in the Spellbook)
