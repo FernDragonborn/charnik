@@ -15,7 +15,7 @@
 	<button
 		class="toggle combatsw"
 		class:on={c.play.inCombat}
-		onclick={combat.economy.toggleCombat}
+		onclick={combat.toggleCombat}
 		title="Track the action economy (rounds, action/bonus/reaction)"
 		>⚔ Combat <span class="toggle-state">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
 	>

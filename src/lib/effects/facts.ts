@@ -142,6 +142,10 @@ export interface EffectFacts {
 	 *  reroll labelled from the feature itself — no id/string hardcoded (data-driven). Empty = no such
 	 *  feature; the once-per-turn cadence + keep-higher live in the combat layer. */
 	damageReroll: { source: string }[];
+	/** `regain_on_initiative` auto features (Perfect Focus, Superior Inspiration): at combat start the
+	 *  combat layer restores `id` up to `upTo` uses and NOTIFIES (auto-apply + toast, the maintainer's
+	 *  call for these no-choice features). `source` = the feature name, for the notice. Empty = none. */
+	initiativeRegain: { id: string; upTo: number; source: string }[];
 	rerolls: RollMod[];
 	minDie: RollMod[];
 	unknown: { source: string; token: string }[];
@@ -165,6 +169,7 @@ export const emptyFacts = (): EffectFacts => ({
 	conditions: [],
 	breaksConcentration: false,
 	damageReroll: [],
+	initiativeRegain: [],
 	rerolls: [],
 	minDie: [],
 	unknown: [],

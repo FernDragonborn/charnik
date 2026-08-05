@@ -1029,18 +1029,21 @@ point** (it depends on nothing).
    to **onUse resource-options gated on combat-start** (a player choice at a window, not auto-mutation).
    Persistent Rage shipped 2026-08-04; **Uncanny Metabolism 2026-08-05 via a new MULTI-action** (`;`-list
    `action`, run in order) — regain Focus AND heal (`docs/RECHARGE-PLAN.md` slice 2).
-3. **N2 · `onEvent` (event → reminder) — the genuinely-automatic tail. DEFERRED on a modeling fork.**
-   The player-choice initiative-regain (Persistent Rage, Uncanny Metabolism) is done via onUse (above).
-   What remains is the NO-CHOICE, EVERY-initiative auto-regain-UP-TO-N features — shipped SRD consumers
-   DO exist but are niche (all L15-18): `bard_superior_inspiration` (Bardic Inspiration → 2),
-   `monk_perfect_focus` (Focus → 4), Druid Evergreen Wild Shape (+1 if 0 left), plus start-of-turn
-   regen (Champion Heroic Rally). **Blocker (2026-08-05):** unlike Persistent Rage, these have NO
-   once/rest gate, so the onUse-reframe has no clean FEATURE-PRESENCE signal — a marker resource that's
-   never spent is a permanent noise pip (Persistent Rage's pip is meaningful because it depletes), and a
-   level-gated `available` shows a greyed future-feature to low-level chars. Resolving it = a design
-   pick (a hidden feature-presence flag / a `min_level` option column / a real event→reminder layer per
-   `RECHARGE-PLAN` §1/§5 — "rarely silent mutation"). Low value (niche high-level) → parked for a steer.
-   Evergreen Wild Shape also waits on Wild Shape itself (unimplemented, N2 stat-block piece).
+3. **N2 · `onEvent` auto-tail — MECHANISM BUILT (2026-08-05), Perfect Focus shipped.** The NO-CHOICE,
+   EVERY-initiative auto-regain-UP-TO-N features. **Decision (maintainer):** AUTO-APPLY on combat-enter +
+   NOTIFY (toast) — NOT a player click, NOT deferred. This is the tracker's **first event-driven
+   auto-mutation** — a deliberate, narrow exception to "surface, never force", justified because these
+   are *automatic* in RAW (no "you can"); the toast IS the surfacing. The clean model sidesteps the
+   feature-presence fork entirely: the token lives on the FEATURE (gathered only when the char has it),
+   so no marker pip / no level-gated option. Delivered: L1 token `regain_on_initiative:<id>:<n>` →
+   `facts.initiativeRegain` → `CombatVM.toggleCombat` fires `fireInitiativeRegen` (restore up to N +
+   toast, gated on auto-calc). **`monk_perfect_focus` (Focus → 4) shipped + app-verified.** Still open —
+   both are POOL-modeling gaps, not the mechanism: `bard_superior_inspiration` needs Bardic Inspiration
+   tracked as a uses-POOL (today it's only a `grant_roll` die); Evergreen Wild Shape needs Wild Shape
+   tracked (unimplemented). **Architecture (settled with maintainer):** a bounded token is the *common
+   declarative* case; **"any action on any event" belongs in L3 plugin `onEvent` (scripting), NOT a
+   broader L1 token** — the trigger dimension generalizes only when a 2nd declarative event-action ships
+   (e.g. Champion Heroic Rally = heal on turn-start), decided then, not pre-built (YAGNI).
 4. **Concentration-save B4** — DONE 2026-08-04 (`RECHARGE-PLAN` §6); universal.
 5. **B25 subclass casters** → **D16 choice-UI → `magic_initiate`** → **RECHARGE slice 3** (item charges).
 6. Content passes (MAGIC-ITEM-EFX, D6/D10/E4); **ARCH-1 i18n sweep**; then low/YAGNI (ARCH-4 spacing,

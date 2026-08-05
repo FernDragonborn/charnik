@@ -60,6 +60,14 @@ export const EFFECT_KIND = {
 	// data-driven — any CSV feature carrying the token gets the affordance, labelled from the feature's
 	// own name (never an id/string hardcoded in code).
 	damageReroll: 'damage_reroll',
+	// AUTO EVENT (`regain_on_initiative:<resource>:<n>`): a no-choice feature that, WHEN YOU ROLL
+	// INITIATIVE, regains expended uses of <resource> until you have <n> (2024 Perfect Focus → Focus 4,
+	// Superior Inspiration → Bardic Inspiration 2, Evergreen Wild Shape → 1). Same `kind:target:int`
+	// shape as `reroll`/`min_die`. Surfaced as a fact the combat layer AUTO-APPLIES on entering combat +
+	// notifies (the maintainer's call: auto + notification, not a player click — these are automatic in
+	// RAW). Fully data-driven; the notice is labelled from the feature's own name. First event trigger —
+	// the seam for future ones (turn-start regen, etc.) is a new token, not a general event bus (YAGNI).
+	regainOnInitiative: 'regain_on_initiative',
 	// L3 handler REFERENCE (`plugin:<namespace>:<handlerName>[:<args>]`) — content never contains code, only this
 	// pointer; the derive pre-pass resolves it through the plugin registry (docs/PLUGINS.md §1).
 	// Missing/disabled/errored plugin → the token degrades to an inert note like any unknown.
@@ -306,7 +314,10 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 	[EFFECT_KIND.grantProficiency]: parseGrantProficiency,
 	[EFFECT_KIND.plugin]: parsePlugin,
 	[EFFECT_KIND.reroll]: parseRollMod,
-	[EFFECT_KIND.minDie]: parseRollMod
+	[EFFECT_KIND.minDie]: parseRollMod,
+	// `regain_on_initiative:<resource>:<n>` is the same `kind:target:int` shape (resource + the floor
+	// to top up to), so it reuses the roll-mod parser — no scope segment is ever present.
+	[EFFECT_KIND.regainOnInitiative]: parseRollMod
 };
 
 function classifyToken(token: string): ParsedEffect {

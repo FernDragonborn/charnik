@@ -60,15 +60,17 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
    auto-ends; regeneration / "start of your turn gain X"). So an event layer is eventually justified —
    but as **event → reminder/highlight**, rarely as silent state-mutation. A full auto-mutating
    event-bus is *rarely* correct in a tracker.
-   **Consumers + blocker (2026-08-05, assessed):** the shipped auto-regain-at-initiative features are
-   `bard_superior_inspiration` (Bardic Inspiration → 2), `monk_perfect_focus` (Focus → 4), Druid
-   Evergreen Wild Shape (+1 if 0 left); start-of-turn = Champion Heroic Rally. All L15-18 → niche. They
-   need a **"restore UP TO N"** verb (`restore_resource:<id>:<n>` — a small extension) AND, because they
-   fire EVERY initiative with no once/rest gate, a clean FEATURE-PRESENCE signal the onUse-reframe lacks:
-   a never-spent marker resource is a permanent noise pip (Persistent Rage's pip works only because it
-   *depletes*), and a level-gated `available` shows a greyed future-feature to low-level chars. **DEFERRED**
-   pending a design pick (hidden presence flag / `min_level` option column / a real event→reminder layer).
-   Evergreen also waits on Wild Shape (unimplemented). See PLAN.md implementation-order item 3.
+   **BUILT 2026-08-05 — auto-apply + notify.** Maintainer chose: these fire AUTOMATICALLY on
+   combat-enter and TOAST what happened (not a player click). The tracker's first event-driven
+   auto-mutation — narrow, deliberate exception to "surface, never force" (these are *automatic* in RAW;
+   the toast is the surfacing). Model that avoids the feature-presence fork: an L1 token
+   `regain_on_initiative:<id>:<n>` on the FEATURE (gathered only for feature-bearers) → `facts.
+   initiativeRegain` → `CombatVM.toggleCombat`→`fireInitiativeRegen` (`ResourceTracker.restoreUpTo` +
+   toast, gated on auto-calc). **`monk_perfect_focus` (Focus → 4) shipped + app-verified.** Still open
+   (POOL gaps, not the mechanism): `bard_superior_inspiration` needs Bardic Inspiration as a tracked
+   uses-pool (today only a `grant_roll`); Evergreen Wild Shape needs Wild Shape tracked. Champion Heroic
+   Rally is a different trigger (turn-start heal) → a future token. **Arbitrary "any action on any
+   event" = L3 plugin `onEvent` (scripting), NOT a wider L1 token.** See PLAN.md item 3.
 
 6. **Concentration UX — BEHAVIOR = variant A, SURFACE = B4. BUILT + app-verified 2026-08-04 (`1b7a4f0`).**
    `pendingConcentrationSave` VM state (set in `damage()`, replacing the old toast) → the HpPanel banner;

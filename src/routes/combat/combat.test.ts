@@ -1138,6 +1138,41 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		expect(combat.resources.resourceSpent('uncanny_metabolism')).toBe(1); // gate spent
 		expect(character.play.hp.current).toBeGreaterThan(5); // token 2: healed 1d6+2 (min +3)
 	});
+
+	it('entering combat AUTO-restores a regain_on_initiative pool up to N (Perfect Focus), never beyond, gated on auto-calc', async () => {
+		const graph = await graphOf();
+		const character = newCharacter('kai', 'Kai', '5.5e');
+		character.play.autoCalc = true;
+		character.play.effects = [
+			{
+				iid: '1',
+				label: 'grant',
+				effects: ['grant_resource:focus:6:short', 'regain_on_initiative:focus:4'],
+				positive: true
+			}
+		];
+		character.play.resourcesSpent = { focus: 5 }; // only 1 available (below 4)
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.toggleCombat(); // enter combat = "roll Initiative" → auto-fires the regen
+		expect(character.play.inCombat).toBe(true);
+		expect(combat.resources.resourceSpent('focus')).toBe(2); // restored to 4 available (6 − 4)
+
+		// already above 4 → re-entering combat does NOT reduce/regain further
+		character.play.resourcesSpent = { focus: 1 }; // 5 available (> 4)
+		combat.economy.toggleCombat(); // leave
+		combat.toggleCombat(); // re-enter
+		expect(combat.resources.resourceSpent('focus')).toBe(1); // untouched (already ≥ 4)
+
+		// auto-calc OFF → the app doesn't touch pools (player manages them). Assert the RAW stored spend
+		// (the clamped accessor reads 0 here anyway — with auto-calc off the pool itself isn't derived).
+		character.play.autoCalc = false;
+		character.play.resourcesSpent = { focus: 6 };
+		combat.economy.toggleCombat(); // leave
+		combat.toggleCombat(); // re-enter
+		expect(character.play.resourcesSpent.focus).toBe(6); // untouched — regen didn't fire
+	});
 });
 
 /*

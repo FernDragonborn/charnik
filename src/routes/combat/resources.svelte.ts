@@ -116,6 +116,20 @@ export class ResourceTracker {
 		toast(`${name} — fully restored`);
 	};
 
+	/** Regain expended uses until at least `upTo` are AVAILABLE — never reduces what's there ("regain
+	 *  expended until you have N", Perfect Focus → Focus 4). Returns the resulting available count (for
+	 *  the caller's notice); no toast here (the auto-initiative path notifies with the feature name).
+	 *  No-op returning 0 when the pool is unknown. Silent unlike `restoreAll` — it's a system event. */
+	restoreUpTo = (id: string, upTo: number): number => {
+		const c = this.getCharacter();
+		const def = this.getSheet()?.resources.find((r) => r.id === id);
+		if (!c || !def) return 0;
+		const spent = c.play.resourcesSpent?.[id] ?? 0;
+		const newSpent = Math.min(spent, Math.max(0, def.max - upTo)); // only restores (never raises spent)
+		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: newSpent };
+		return def.max - newSpent;
+	};
+
 	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges both),
 	 *  reset spell slots (long = all, short = pact only), restore HP on a long rest, and expire
 	 *  round-timed effects the rest outlives: a short rest is 1 h (600 rounds), a long rest outlives

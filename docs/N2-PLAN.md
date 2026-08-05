@@ -117,6 +117,22 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
   `1d6+2`, Monk 11 → `1d10+11`) + a combat executor test (both tokens run). Ceiling: a `note:` in a
   multi-action can't contain `;`. Completes RECHARGE slice 2.
 
+### Shipped next — AUTO event: regain-on-initiative (the tracker's first event trigger)
+- `[x]` **`regain_on_initiative:<id>:<n>` — auto-apply + notify — DONE 2026-08-05.** NO-CHOICE features
+  that regain a pool "when you roll Initiative" (Perfect Focus → Focus 4). Maintainer chose AUTO-APPLY on
+  combat-enter + a TOAST (not a player click, not deferred) — the FIRST event-driven auto-mutation, a
+  deliberate narrow exception to "surface, never force" (these are automatic in RAW; the toast is the
+  surfacing). Bounded L1 token (same `kind:target:int` shape as `reroll`, reuses `parseRollMod`) on the
+  FEATURE (so presence is automatic — no marker pip, no level-gated option) → `facts.initiativeRegain` →
+  `CombatVM.toggleCombat`→`fireInitiativeRegen` (`ResourceTracker.restoreUpTo` + toast, auto-calc-gated).
+  `monk_perfect_focus` shipped + app-verified (enter combat → Focus tops to 4 + toast). Tests: parser
+  drift, content fact (Monk 15 / not Monk 5), combat auto-restore-up-to-N + no-further + auto-calc gate.
+  - **Open (POOL gaps, NOT the mechanism):** Superior Inspiration needs Bardic Inspiration as a tracked
+    uses-pool (today a `grant_roll` only); Evergreen Wild Shape needs Wild Shape tracked.
+  - **Architecture (settled):** a bounded token is the common declarative case; **"any action on any
+    event" = L3 plugin `onEvent` (scripting), NOT a wider L1 token** — L1 stays a bounded vocab (security
+    property). Generalize the trigger dimension only when a 2nd declarative event-action ships (YAGNI).
+
 ### Deferred (OUT — keep the slice small)
 - Roll-dependent LOGIC (read the die, then decide) — ACTIONS.md marks it a later API.
 - Plugin `onUse` (`api:2`), `onEvent`, choice groups (N2 shape 3), Wild Shape, the rest of N2.

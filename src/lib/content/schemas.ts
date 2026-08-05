@@ -42,6 +42,7 @@ export const EFFECT_KINDS = [
 	'note',
 	'blocks_concentration',
 	'damage_reroll',
+	'regain_on_initiative',
 	'plugin'
 ] as const;
 

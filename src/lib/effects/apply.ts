@@ -207,6 +207,16 @@ class FactsCollector {
 				// carry the feature's name so the combat layer can label the offered reroll from data
 				this.facts.damageReroll.push({ source: eff.source });
 				break;
+			case EFFECT_KIND.regainOnInitiative:
+				// auto-regain-at-initiative: id (target) + the floor to top up to (amount); the combat layer
+				// applies it on entering combat + notifies, labelled from the feature's name
+				if (p.target && p.amount !== undefined)
+					this.facts.initiativeRegain.push({
+						id: p.target.trim(),
+						upTo: p.amount,
+						source: eff.source
+					});
+				break;
 			case EFFECT_KIND.grantResource:
 				this.pushResource(p, eff, token);
 				break;
@@ -317,6 +327,7 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.conditions = [...new Set([...base.conditions, ...extra.conditions])];
 	base.breaksConcentration ||= extra.breaksConcentration;
 	base.damageReroll.push(...extra.damageReroll);
+	base.initiativeRegain.push(...extra.initiativeRegain);
 	base.resourceIds = [...new Set([...base.resourceIds, ...extra.resourceIds])];
 	for (const def of extra.resources) {
 		const prev = base.resources.find((r) => r.id === def.id);

@@ -4,7 +4,7 @@
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f9e9-7ad8-b3a8-4511aa623e30
 #content-updated_at: 2026-08-05
-#content-hash: xxh64:b61c5425a43f6d48
+#content-hash: xxh64:ed9fb6f81d7e6fbe
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id,expertise_slots
 barbarian_rage,Rage,,"You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren't wearing Heavy armor.
 You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.
@@ -434,7 +434,7 @@ In addition, forgoing food and drink doesn't give you levels of Exhaustion.",,,m
 monk_deflect_energy,Deflect Energy,,"You can now use your Deflect Attacks feature against attacks that deal any damage type, not just Bludgeoning, Piercing, or Slashing.",,,monk,13,,,
 monk_disciplined_survivor,Disciplined Survivor,,"Your physical and mental discipline grant you proficiency in all saving throws.
 Additionally, whenever you make a saving throw and fail, you can expend 1 Focus Point to reroll it, and you must use the new roll.",,,monk,14,,,
-monk_perfect_focus,Perfect Focus,,"When you roll Initiative and don't use Uncanny Metabolism, you regain expended Focus Points until you have 4 if you have 3 or fewer.",,,monk,15,,,
+monk_perfect_focus,Perfect Focus,,"When you roll Initiative and don't use Uncanny Metabolism, you regain expended Focus Points until you have 4 if you have 3 or fewer.",,regain_on_initiative:focus:4,monk,15,,,
 monk_superior_defense,Superior Defense,,"At the start of your turn, you can expend 3 Focus Points to bolster yourself against harm for 1 minute or until you have the Incapacitated condition. During that time, you have Resistance to all damage except Force damage.",,,monk,18,,,
 monk_epic_boon,Epic Boon,,"You gain an Epic Boon feat (see ""Feats"") or another feat of your choice for which you qualify. Boon of Irresistible Offense is recommended.",,,monk,19,,,
 monk_body_and_mind,Body and Mind,,"You have developed your body and mind to new heights. Your Dexterity and Wisdom scores increase by 4, to a maximum of 25.",,,monk,20,,,

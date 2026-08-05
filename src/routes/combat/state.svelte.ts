@@ -532,6 +532,31 @@ class CombatVM {
 		else this.resources.useResource(id, max);
 	};
 
+	/** Enter/leave combat. Wraps `economy.toggleCombat` (which flips `inCombat` + resets the round) so
+	 *  that ENTERING combat = "rolling Initiative" also fires the auto event features. */
+	toggleCombat = () => {
+		this.economy.toggleCombat();
+		if (this.character?.play.inCombat) this.fireInitiativeRegen();
+	};
+
+	/** AUTO event on combat start ("when you roll Initiative"): every `regain_on_initiative` feature
+	 *  restores its pool up to N and NOTIFIES what happened — auto-apply + toast, the maintainer's call
+	 *  for these NO-CHOICE features (Perfect Focus → Focus 4, etc.), the tracker's first event-driven
+	 *  auto-mutation. Data-driven (any feature carrying the token fires; notice labelled from its name).
+	 *  Gated on auto-calc: with it OFF the player manages pools by hand, so the app doesn't touch them. */
+	private fireInitiativeRegen() {
+		const c = this.character;
+		if (!c?.play.autoCalc) return;
+		for (const r of this.sheet?.facts.initiativeRegain ?? []) {
+			const def = this.sheet?.resources.find((x) => x.id === r.id);
+			if (!def) continue;
+			const before = def.max - (c.play.resourcesSpent?.[r.id] ?? 0);
+			const after = this.resources.restoreUpTo(r.id, r.upTo);
+			if (after > before)
+				toast(r.source, { description: `${titleCase(r.id)} restored — now ${after}` });
+		}
+	}
+
 	/** Run a resource-option's RESOLVED action token (a `heal:`/`roll:` formula is already L2-resolved
 	 *  at derive). Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths):
 	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,

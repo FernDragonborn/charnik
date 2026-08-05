@@ -201,6 +201,27 @@ describe('shipped feat · Savage Attacker damage-reroll marker (N2)', () => {
 	});
 });
 
+describe('shipped class feature · Perfect Focus auto-regain on initiative (regain_on_initiative)', () => {
+	it('5.5e: Monk 15 carries a regain_on_initiative fact restoring Focus up to 4', async () => {
+		const s = deriveSheet(
+			charOf('SRD 5.2.1', '5.5e', 'monk', 15),
+			await loadEdition('content/srd-2024')
+		);
+		expect(s.facts.initiativeRegain).toContainEqual({
+			id: 'focus',
+			upTo: 4,
+			source: 'Perfect Focus'
+		});
+	});
+	it('5.5e: a monk below level 15 has no initiative-regain', async () => {
+		const s = deriveSheet(
+			charOf('SRD 5.2.1', '5.5e', 'monk', 5),
+			await loadEdition('content/srd-2024')
+		);
+		expect(s.facts.initiativeRegain).toEqual([]);
+	});
+});
+
 describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', () => {
 	it('5.5e: Sneak Attack Nd6, Bardic Inspiration + Martial Arts dice scale by class level', async () => {
 		const g = await loadEdition('content/srd-2024');

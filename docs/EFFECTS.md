@@ -212,9 +212,14 @@ Three patterns the current enum can't express — **planned, not rejected** (the
    "recharge 5 (1d6) on a short rest". Needs a two-axis model `{trigger: dawn|dusk|short|long, amount:
    full|<formula>}`, with `short`/`long`/`short_one` becoming sugar over it. **When:** the moment we
    model **item charges as resources** (no consumer exists today → building it now is YAGNI).
-3. **Event-based regain** — 2024 "when you roll Initiative and have no uses, regain one"
-   (Barbarian/Monk). This is **`onEvent` (N2), not a recharge policy** — a `turnStart`/`initiative`
-   handler returning a `spend`-negative intent.
+3. **Event-based regain** — 2024 "when you roll Initiative, regain … until you have N" (Monk Perfect
+   Focus, Bard Superior Inspiration). This is **`onEvent`, not a recharge policy**. **BUILT 2026-08-05**
+   for the NO-CHOICE case as the bounded L1 token **`regain_on_initiative:<resource>:<n>`** (restore the
+   pool up to N when you roll Initiative): a fact the combat layer AUTO-APPLIES on combat-enter + toasts
+   (the maintainer's call — auto + notify, not a player click). The token lives on the FEATURE, so
+   presence needs no gate. Perfect Focus (Focus → 4) shipped. The *player-choice* initiative-regain
+   (Persistent Rage, Uncanny Metabolism) stays an onUse resource-option, NOT this token. Arbitrary
+   event-triggered LOGIC (read state, branch) is L3 plugin `onEvent`, never a wider L1 token.
 
 Do the enum-member path for each new rest policy now; introduce `{trigger, amount}` only when axis 2
 (item charges) lands, and keep axes 1 and 3 in their own subsystems.
