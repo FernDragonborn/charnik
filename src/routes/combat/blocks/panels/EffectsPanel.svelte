@@ -183,7 +183,7 @@
 				<button
 					class="resource-row"
 					title="Use one {r.name}"
-					onclick={() => combat.resources.useResource(r.id, r.max)}
+					onclick={() => combat.useResourceOrEnter(r.id, r.max)}
 				>
 					<span class="resource-name">{r.name}</span>
 					{#if Number.isFinite(r.max) && r.max <= PIP_CAP}

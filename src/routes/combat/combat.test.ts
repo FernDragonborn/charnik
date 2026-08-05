@@ -5,6 +5,7 @@
  */
 import 'fake-indexeddb/auto'; // the VM's saveCharacterToStore hits IndexedDB (rest/level-up) — provide it
 import { describe, it, expect, beforeEach } from 'vitest';
+import { readdirSync, readFileSync } from 'node:fs';
 import { MemoryStorage } from '$lib/storage/memory';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
@@ -1183,5 +1184,46 @@ describe('ResourceTracker · short_one partial recharge', () => {
 		expect(combat.resources.resourceSpent('second_wind')).toBe(1); // and one more
 		combat.resources.rest('long');
 		expect(combat.resources.resourceSpent('second_wind')).toBe(0); // long rest = all back
+	});
+});
+
+/** Load a whole real edition into a graph (like the content tests) — the Rage buff spans the real
+ *  effects.csv / conditions.csv / resource_options.csv rows, so a hand-stub wouldn't exercise them. */
+async function realGraph(dir: string): Promise<ContentGraph> {
+	const st = new MemoryStorage();
+	for (const f of readdirSync(`${process.cwd()}/${dir}`))
+		if (f.endsWith('.csv'))
+			await st.write(`c/${f}`, readFileSync(`${process.cwd()}/${dir}/${f}`, 'utf8'));
+	return loadContent(st, ['c']);
+}
+
+describe('CombatVM · using the Rage resource ENTERS Rage (chip → buff, not a bare counter)', () => {
+	let character: Character;
+	beforeEach(async () => {
+		combat.graph = await realGraph('content/srd-2024');
+		character = newCharacter('grog', 'Grog', '5.5e');
+		character.build.classes = [{ class: `class:${S}:barbarian`, level: 3 }];
+		combat.character = character;
+	});
+
+	it('clicking the Rage chip applies the Rage buff AND spends one use', () => {
+		expect(combat.sheet?.resources.find((r) => r.id === 'rage')?.max).toBe(3);
+		expect(character.play.effects).toHaveLength(0);
+		combat.useResourceOrEnter('rage', 3);
+		expect(character.play.effects.some((e) => e.label === 'Rage')).toBe(true);
+		expect(combat.resources.resourceSpent('rage')).toBe(1);
+	});
+
+	it('re-entering Rage refreshes, never STACKS a second Rage effect (state, not a pool)', () => {
+		combat.useResourceOrEnter('rage', 3);
+		combat.useResourceOrEnter('rage', 3);
+		expect(character.play.effects.filter((e) => e.label === 'Rage')).toHaveLength(1);
+	});
+
+	it('the Rage buff carries the STR-check advantage as a LIVE fact (Athletics), not just a note', () => {
+		combat.useResourceOrEnter('rage', 3);
+		const sheet = combat.sheet;
+		expect(sheet?.facts.advantage.some((a) => a.target === 'skill.athletics')).toBe(true);
+		expect(sheet?.facts.advantage.some((a) => a.target === 'save.str')).toBe(true);
 	});
 });

@@ -495,6 +495,20 @@ class CombatVM {
 		this.runActionToken(opt);
 	};
 
+	/** The resource CHIP's primary "use one" gesture. A resource with a single activated-BUFF option
+	 *  (an `apply_effect` — Enter Rage / a stance) IS entered by using it, so route the chip to that
+	 *  option (spend + apply the buff + turn cost) — otherwise clicking "Rage" just decremented a counter
+	 *  and the player saw no effect. A resource spent on distinct action-options (ki → Flurry/Patient/…)
+	 *  or with none has no single buff to enter, so it falls back to a plain pool decrement. */
+	useResourceOrEnter = (id: string, max: number) => {
+		const enters = (this.sheet?.resourceOptions ?? []).filter(
+			(o) => o.resourceId === id && o.action.startsWith('apply_effect:')
+		);
+		const [only] = enters;
+		if (enters.length === 1 && only) this.activateResourceOption(only);
+		else this.resources.useResource(id, max);
+	};
+
 	/** Run a resource-option's RESOLVED action token (a `heal:`/`roll:` formula is already L2-resolved
 	 *  at derive). Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths):
 	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,
@@ -524,7 +538,10 @@ class CombatVM {
 			// `duration_rounds` gives the timer (round-counter auto-expires it). Missing id → surface, not
 			// a silent no-op.
 			const cat = this.effectCatalog.find((eff) => eff.ref.split(':').pop() === arg);
-			if (cat)
+			if (cat) {
+				// a named STATE doesn't stack — you're raging or you're not (RAW/RAI). Re-entering refreshes
+				// (drop any live instance of the same catalog ref first), never adds a second Rage.
+				p.effects = p.effects.filter((e) => e.source !== cat.ref);
 				this.addEffect({
 					label: cat.label,
 					tokens: cat.tokens,
@@ -532,7 +549,7 @@ class CombatVM {
 					ref: cat.ref,
 					...(cat.durationRounds != null ? { durationRounds: cat.durationRounds } : {})
 				});
-			else toast(`${opt.name} — effect “${arg}” not found`, { description: 'Check effects.csv' });
+			} else toast(`${opt.name} — effect “${arg}” not found`, { description: 'Check effects.csv' });
 		} else if (verb === 'gain_action') {
 			p.turn.action = Math.max(0, p.turn.action - 1); // one additional action this turn
 		} else if (verb === 'restore_resource' && arg) {

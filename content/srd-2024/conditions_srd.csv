@@ -4,7 +4,7 @@
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f972-79f0-8cbe-db82843f9ea2
 #content-updated_at: 2026-08-05
-#content-hash: xxh64:ec989533595a8ef1
+#content-hash: xxh64:583db6086c6c13ef
 id,name_en,name_uk,text_en,text_uk,effects,negative,max_level
 blinded,Blinded,,"While you have the Blinded condition, you experience the following effects.
 _Can't See._ You can't see and automatically fail any ability check that requires sight.
@@ -69,4 +69,4 @@ _Attacks Affected._ Attack rolls against you have Advantage.
 _Saving Throws Affected._ You automatically fail Strength and Dexterity saving throws.
 _Automatic Critical Hits._ Any attack roll that hits you is a Critical Hit if the attacker is within 5 feet of you.
 _Unaware._ You're unaware of your surroundings.",,apply_condition:incapacitated;apply_condition:prone;set_override:speed:0;auto_fail:save.str;auto_fail:save.dex;note:Attacks against you have Advantage;note:Any hit from within 5 ft is a critical hit;note:You drop what you're holding,true,1
-rage,Rage,,"While raging, you have resistance to bludgeoning, piercing, and slashing damage, advantage on Strength checks and Strength saving throws, and deal bonus damage with Strength attacks.",,"resist_immune:resist:bludgeoning;resist_immune:resist:piercing;resist_immune:resist:slashing;advantage:save.str;flat_bonus:damage+step(class_level.barbarian, 1->2, 9->3, 16->4);note:Advantage on Strength checks;note:Rage damage applies to Strength melee attacks",false,1
+rage,Rage,,"While raging, you have resistance to bludgeoning, piercing, and slashing damage, advantage on Strength checks and Strength saving throws, and deal bonus damage with Strength attacks.",,"resist_immune:resist:bludgeoning;resist_immune:resist:piercing;resist_immune:resist:slashing;advantage:save.str;advantage:skill.athletics;flat_bonus:damage+step(class_level.barbarian, 1->2, 9->3, 16->4);note:Rage damage applies to Strength melee attacks",false,1

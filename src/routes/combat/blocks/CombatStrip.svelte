@@ -55,13 +55,14 @@
 				<div class="resource-chips">
 					{#each s.resources as r (r.id)}
 						{@const spent = combat.resources.resourceSpent(r.id)}
-						<!-- the whole chip is the "use one" action (UBUG-8); the pips inside still set the
-						     count manually and stop the chip's use-click -->
+						<!-- the whole chip is the "use one" action (UBUG-8): for a resource with an
+						     activated-buff option (Rage) it ENTERS that state, else it decrements the pool;
+						     the pips inside still set the count manually and stop the chip's use-click -->
 						<button
 							type="button"
 							class="resource"
 							title="Use one {r.name} · {rechargeLabel(r.recharge)} ({r.source})"
-							onclick={() => combat.resources.useResource(r.id, r.max)}
+							onclick={() => combat.useResourceOrEnter(r.id, r.max)}
 						>
 							{r.name}
 							{#if Number.isFinite(r.max) && r.max <= PIP_CAP}
