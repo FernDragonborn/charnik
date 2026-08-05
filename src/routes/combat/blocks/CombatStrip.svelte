@@ -17,6 +17,16 @@
 	// Above this many pips a row is a wall of dots (and a garbage homebrew `max` could OOM the
 	// render) — past the cap we show a numeric counter instead of pips (B10).
 	const PIP_CAP = 20;
+
+	// Defenses as chip groups (resist / immune / vulnerable), only the non-empty ones — rendered as
+	// per-type pills instead of a bold run-on list.
+	const defenseGroups = $derived(
+		[
+			{ bucket: 'resist', label: 'Resist', types: s.defenses.resist },
+			{ bucket: 'immune', label: 'Immune', types: s.defenses.immune },
+			{ bucket: 'vulnerable', label: 'Vulnerable', types: s.defenses.vulnerable }
+		].filter((g) => g.types.length)
+	);
 </script>
 
 <div class="sectlab">
@@ -116,18 +126,15 @@
 			<button class="edit" onclick={(e) => openMenu('pinskills', e)}>✎ Pin skills</button>
 		</div>
 
-		{#if s.defenses.resist.length || s.defenses.immune.length || s.defenses.vulnerable.length}
+		{#if defenseGroups.length}
 			<div class="senses-strip defenses-strip">
 				<span class="bar-label eyebrow">Defenses</span>
-				{#if s.defenses.resist.length}<span class="ability-save"
-						><i>Resist</i>{s.defenses.resist.join(', ')}</span
-					>{/if}
-				{#if s.defenses.immune.length}<span class="ability-save"
-						><i>Immune</i>{s.defenses.immune.join(', ')}</span
-					>{/if}
-				{#if s.defenses.vulnerable.length}<span class="ability-save"
-						><i>Vulnerable</i>{s.defenses.vulnerable.join(', ')}</span
-					>{/if}
+				{#each defenseGroups as g (g.bucket)}
+					<span class="def-group">
+						<span class="def-label">{g.label}</span>
+						{#each g.types as t (t)}<span class="def-chip def-chip--{g.bucket}">{t}</span>{/each}
+					</span>
+				{/each}
 			</div>
 		{/if}
 	</section>
@@ -321,5 +328,42 @@
 		color: var(--color-text);
 		border-color: var(--color-border-strong);
 		background: var(--color-surface-2);
+	}
+	/* Defenses: per-type PILLS, not a bold run-on list. One group per bucket (a muted label + its
+	   chips); the chip colour encodes protection — resist (teal outline) → immune (teal filled) →
+	   vulnerable (danger). Regular weight, semantic tokens only (theme-safe). */
+	.defenses-strip .def-group {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.defenses-strip .def-label {
+		font-family: var(--font-body);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+	}
+	.defenses-strip .def-chip {
+		font-family: var(--font-body);
+		font-weight: 400;
+		font-size: var(--font-size-xs);
+		line-height: 1.6;
+		padding: 1px 8px;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--color-border-strong);
+		color: var(--color-text);
+		text-transform: capitalize;
+	}
+	.defenses-strip .def-chip--resist {
+		border-color: var(--color-good-line);
+		color: var(--color-good);
+	}
+	.defenses-strip .def-chip--immune {
+		border-color: var(--color-good-line);
+		background: var(--color-good-soft);
+		color: var(--color-good);
+	}
+	.defenses-strip .def-chip--vulnerable {
+		border-color: color-mix(in srgb, var(--color-danger) 45%, var(--color-surface));
+		color: var(--color-danger);
 	}
 </style>
