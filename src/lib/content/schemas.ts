@@ -41,6 +41,7 @@ export const EFFECT_KINDS = [
 	'auto_succeed',
 	'note',
 	'blocks_concentration',
+	'damage_reroll',
 	'plugin'
 ] as const;
 

@@ -50,6 +50,7 @@ import {
 	type Attack,
 	type DamagePart,
 	type DamagePartSpec,
+	type TypedRoll,
 	type SpellRow,
 	type MenuKind,
 	type StandardAction,
@@ -146,6 +147,28 @@ class CombatVM {
 	hasTimedEffects = $derived(
 		(this.character?.play.effects ?? []).some((e) => e.durationRounds != null)
 	);
+	// Savage Attacker (N2, `damage_reroll` fact): the last weapon-damage roll the player MAY reroll,
+	// keeping the higher weapon-dice total — once per turn (2024). Held until used or superseded by the
+	// next attack. The per-turn gate is `savageUsedRound` vs `round`: `round` advances on Next turn, so
+	// the use auto-frees each turn with no reset hook. Whether it's OFFERED is fully data-driven — only
+	// when a feature contributes a `damage_reroll` fact, and the button is labelled from that feature's
+	// own name (see the `damage_reroll` token in token-parser.ts; no feat id/string is hardcoded here).
+	private savagePending = $state<{
+		spec: DamagePartSpec;
+		roll: TypedRoll;
+		entry: RollLogEntry;
+	} | null>(null);
+	private savageUsedRound = $state<number | null>(null);
+	/** The feature name offering a once-per-turn weapon-damage reroll RIGHT NOW, or null when none is
+	 *  pending / the per-turn use is spent / no `damage_reroll` feature is active. Drives the offer UI. */
+	get savageLabel(): string | null {
+		if (!this.savagePending || this.savageUsedRound === this.round) return null;
+		return this.sheet?.facts.damageReroll[0]?.source ?? null;
+	}
+	/** The log entry the pending reroll would rewrite — so the roll log can put the button on that row. */
+	get savagePendingEntry(): RollLogEntry | null {
+		return this.savagePending?.entry ?? null;
+	}
 	// D3: pins persist per character in ui.spellsPinned (bare ids), not a demo hardcode. Exposed as a
 	// boolean map for the panel's `pinned[id]` lookup; toggle via togglePin so the array stays the source.
 	pinned = $derived<Record<string, boolean>>(
@@ -801,7 +824,59 @@ class CombatVM {
 		}
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
 		const toHit = rollPool({ 20: 1 }, at.toHit + fx.flat, netAdvantage(fx), fx.bonusDice, fx);
-		this.tray.pushRoll(at.name, toHit, hasDice ? rollDamageParts(parts) : undefined);
+		const dmgRolls = hasDice ? rollDamageParts(parts) : undefined;
+		const entry = this.tray.pushRoll(at.name, toHit, dmgRolls);
+		// N2 Savage Attacker: offer a post-roll reroll of THIS weapon damage (the Alt-click tray path
+		// rolls damage later, so the offer rides the instant tap — the common case; noted as a v1 gap).
+		this.offerSavage(parts[0], dmgRolls, entry);
+	};
+
+	/** Offer a Savage Attacker reroll on the just-completed weapon attack — ONLY when a feature
+	 *  contributes a `damage_reroll` fact, the attack rolled damage dice, and the per-turn use is free.
+	 *  Stores the PRIMARY damage part (so the reroll reproduces it) and toasts an actionable prompt; the
+	 *  reroll also persists on the roll-log row. Fully data-driven — no feat id/name in code. */
+	private offerSavage(
+		primary: DamagePartSpec | undefined,
+		dmgRolls: TypedRoll[] | undefined,
+		entry: RollLogEntry
+	): void {
+		const primaryRoll = dmgRolls?.[0];
+		if (!primary || !primaryRoll) return;
+		const label = this.sheet?.facts.damageReroll[0]?.source;
+		if (!label || this.savageUsedRound === this.round) return;
+		this.savagePending = { spec: primary, roll: primaryRoll, entry };
+		toast(`${label} available`, {
+			duration: 8000,
+			description: 'Reroll this weapon damage — keep the higher (once per turn).',
+			action: { label: '↻ Reroll', onClick: () => this.savageReroll() }
+		});
+	}
+
+	/** Savage Attacker: reroll the pending weapon damage and KEEP THE HIGHER total, rewriting the log
+	 *  entry in place (truthful record) and spending the once-per-turn use. Rerolls the whole PRIMARY
+	 *  damage part — RAW rerolls only the weapon's own dice, so any bonus die riding that part (Bless) is
+	 *  rerolled too: a negligible, arguably-faithful deviation ("use either roll"). */
+	savageReroll = () => {
+		const p = this.savagePending;
+		const label = this.savageLabel;
+		if (!p || !label) return;
+		const re = rollDamageParts([p.spec])[0];
+		if (!re) return;
+		const keptRe = re.total > p.roll.total;
+		const keep = keptRe ? re : p.roll;
+		const dropped = keptRe ? p.roll : re;
+		this.tray.reviseEntry(p.entry, {
+			...p.entry,
+			damage: [keep, ...(p.entry.damage ?? []).slice(1)],
+			note: `${label}: kept ${keep.total} (other roll ${dropped.total})`
+		});
+		this.savageUsedRound = this.round;
+		this.savagePending = null;
+		toast(`${label} — kept ${keep.total} dmg`, {
+			description: keptRe
+				? `rerolled ${p.roll.total} → ${re.total}`
+				: `kept ${p.roll.total} (reroll was ${re.total})`
+		});
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */

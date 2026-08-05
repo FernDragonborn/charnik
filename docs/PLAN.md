@@ -1022,9 +1022,9 @@ event-driven recharge. **Decision 2026-08-04: start with N2** (it's needed by th
 so getting it ready first avoids a stall); **Concentration-save B4 is unblocked and can slot in at any
 point** (it depends on nothing).
 
-1. **N2 · `savage_attacker`** — small extension of the SHIPPED `onUse` executor: a damage roll-mode
-   ("roll the pool twice, keep the higher") intent field + a once-per-turn `turn`-recharge gate. Warms
-   up the onUse path with reusable primitives (`docs/N2-PLAN.md`).
+1. ~~**N2 · `savage_attacker`**~~ — **DONE 2026-08-05** (`docs/N2-PLAN.md`): data-driven `damage_reroll`
+   marker → a post-roll "reroll the weapon damage, keep the higher" offer, once per turn (toast + a
+   roll-log pill, labelled from the feature). App-verified on demo Karroth.
 2. **N2 · `onEvent` write-half** — the deferred half of the intent model (`docs/ACTIONS.md` §1/§4).
    Build it WITH its first consumer (below) so the executor isn't speculative.
 3. **RECHARGE slice 2 · onEvent regain** — Persistent Rage / Uncanny Metabolism (initiative-regain);

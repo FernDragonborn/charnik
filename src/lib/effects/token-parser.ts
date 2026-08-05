@@ -53,6 +53,13 @@ export const EFFECT_KIND = {
 	// RAW Rage ("you can't maintain Concentration"), a homebrew trance, etc. Surfaced as a fact flag the
 	// combat layer reads to drop/withhold concentration; data-driven, so any CSV state can carry it.
 	blocksConcentration: 'blocks_concentration',
+	// MARKER (`damage_reroll`, no target/value): the carrying feature lets you, ONCE PER TURN, reroll a
+	// WEAPON's damage dice and use either roll (2024 Savage Attacker). Distinct from `reroll:` (a
+	// per-die threshold that always applies) — this is a whole-pool, player-invoked "roll twice, keep
+	// higher". Surfaced as a fact the combat layer reads to OFFER a post-roll reroll button; fully
+	// data-driven — any CSV feature carrying the token gets the affordance, labelled from the feature's
+	// own name (never an id/string hardcoded in code).
+	damageReroll: 'damage_reroll',
 	// L3 handler REFERENCE (`plugin:<namespace>:<handlerName>[:<args>]`) — content never contains code, only this
 	// pointer; the derive pre-pass resolves it through the plugin registry (docs/PLUGINS.md §1).
 	// Missing/disabled/errored plugin → the token degrades to an inert note like any unknown.
@@ -63,7 +70,7 @@ export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 export const EFFECT_KINDS = Object.values(EFFECT_KIND) as readonly EffectKind[];
 /** MARKER kinds carry no `:target` — a bare token IS the whole effect (`blocks_concentration`). Every
  *  other kind bare (`flat_bonus` with no target) stays malformed → `unknown`. */
-const MARKER_KINDS = new Set<string>([EFFECT_KIND.blocksConcentration]);
+const MARKER_KINDS = new Set<string>([EFFECT_KIND.blocksConcentration, EFFECT_KIND.damageReroll]);
 
 // Recharge's single owner is rules/spellcasting (D11); re-exported here so token consumers keep
 // importing it from the effects surface they already use.

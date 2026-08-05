@@ -88,9 +88,27 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
   buff panel shows Rage with b/p/s resist + adv STR-save + damage chips + 10-rd timer, one rage use spent.
   Tests in `class_features_content.test.ts` (option shape + resist/adv + damage scaling 2/3/4, both editions).
 
+### Shipped next — Savage Attacker (post-roll damage reroll, once/turn)
+- `[x]` **`damage_reroll` marker + post-roll reroll offer — DONE + app-verified.** 2024 Savage Attacker:
+  once per turn, reroll a weapon's damage dice and use either roll. Maintainer chose the **post-roll**
+  model (see roll #1, then decide) over a pre-armed toggle. Fully **data-driven** (no feat id/string in
+  code): a bounded MARKER token `damage_reroll` (token-parser `MARKER_KINDS`, schema `EFFECT_KINDS`) →
+  `facts.damageReroll: {source}[]` (carries the feature NAME for the button label). The combat layer
+  (`state.svelte.ts`): after an INSTANT weapon attack that rolled damage dice, `offerSavage` stores the
+  primary damage part + toasts an actionable offer; `savageReroll` rerolls that part, KEEPS THE HIGHER
+  total, rewrites the log entry in place (truthful record) + spends the use. Once-per-turn gate =
+  `savageUsedRound` vs `round` (round advances on Next turn → auto-frees, no reset hook). Surfaced twice:
+  the toast action AND a persistent `.savage-reroll` pill on the roll-log row (labelled from the fact
+  source). Content: `savage_attacker` feat row carries `damage_reroll` (restamped); demo Karroth (Soldier)
+  now carries the feat (its RAW origin feat) so the demo exercises it. Tests: parser drift guard, content
+  fact (`class_features_content.test.ts`), combat once-per-turn + keep-higher-never-lowers invariant
+  (`combat.test.ts`). App-verified: Greataxe d12(1)+3=4 → reroll → d12(12)+3=15, offer then gone.
+  - **v1 gaps (noted):** rerolls the WHOLE primary part (any Bless die on it too), not strictly the
+    weapon dice — negligible / arguably "use either roll". Offer rides the INSTANT tap only (the
+    Alt-click tray-damage path rolls damage later — no offer there yet). `min_die`-style per-die
+    `reroll:` is unchanged and orthogonal.
+
 ### Deferred (OUT — keep the slice small)
-- `savage_attacker` — needs a **damage roll-mode** ("roll pool twice, keep higher") intent field + a
-  `turn`-recharge once-per-turn gate; a later small extension once this executor lands.
 - Roll-dependent LOGIC (read the die, then decide) — ACTIONS.md marks it a later API.
 - Plugin `onUse` (`api:2`), `onEvent`, choice groups (N2 shape 3), Wild Shape, the rest of N2.
 
@@ -105,7 +123,7 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
   bonus action + one use; blocked when out of uses / no bonus action. Screenshot to `design-preview/`.
 
 ## Carried over from FEATS-PLAN (the feat tail that rides this phase)
-- `savage_attacker` — **[ ] blocked on N2** (this phase) + a later damage roll-mode extension.
+- `savage_attacker` — **[x] DONE** (post-roll damage reroll, once/turn — see the shipped slice above).
 - `magic_initiate` — **[ ] own subproject:** spell-learning (2 cantrips + 1 L1 from a chosen list) +
   once/long-rest free cast. Not N2 — a separate spell-learning subsystem.
 - `two_weapon_fighting` — **[~] NO-OP → stays text.** `computeAttacks` already adds the ability mod to

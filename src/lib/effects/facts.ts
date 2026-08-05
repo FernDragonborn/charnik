@@ -137,6 +137,11 @@ export interface EffectFacts {
 	/** RAW `blocks_concentration` marker present on some active state (Rage) — the combat layer drops
 	 *  and withholds Concentration while true. */
 	breaksConcentration: boolean;
+	/** `damage_reroll` markers (2024 Savage Attacker): the feature(s) that let you reroll a weapon's
+	 *  damage dice once per turn. Carries the source NAME so the combat layer can OFFER a post-roll
+	 *  reroll labelled from the feature itself — no id/string hardcoded (data-driven). Empty = no such
+	 *  feature; the once-per-turn cadence + keep-higher live in the combat layer. */
+	damageReroll: { source: string }[];
 	rerolls: RollMod[];
 	minDie: RollMod[];
 	unknown: { source: string; token: string }[];
@@ -159,6 +164,7 @@ export const emptyFacts = (): EffectFacts => ({
 	resourceIds: [],
 	conditions: [],
 	breaksConcentration: false,
+	damageReroll: [],
 	rerolls: [],
 	minDie: [],
 	unknown: [],

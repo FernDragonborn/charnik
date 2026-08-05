@@ -124,7 +124,7 @@ export class RollTray {
 
 	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
 	 *  the per-type rolls that follow the to-hit — each shown as its own line, plus a combined total. */
-	pushRoll = (label: string, r: Rolled, damage?: TypedRoll[], note?: string) => {
+	pushRoll = (label: string, r: Rolled, damage?: TypedRoll[], note?: string): RollLogEntry => {
 		const entry: RollLogEntry = {
 			label,
 			...r,
@@ -142,6 +142,17 @@ export class RollTray {
 		toast(`${label} — ${r.total}${damage ? ` / ${total} dmg` : ''}`, {
 			description: `${kept}${r.expr} = ${r.total}${drop}${dmg}`.trim()
 		});
+		// return the STORED element, not the local literal: assigning into the $state array wraps it in a
+		// reactive proxy, so a caller holding the entry (Savage Attacker's pending reroll) must hold the
+		// SAME proxy the `{#each}` iterates — else an `entry === log[i]` identity check would never match.
+		return this.log[0]!;
+	};
+
+	/** Replace an existing log entry (identity match) with a revised copy — used by the Savage Attacker
+	 *  reroll to rewrite a completed damage roll in place so the log stays truthful. No-op if the entry
+	 *  has rolled off the capped log. */
+	reviseEntry = (old: RollLogEntry, revised: RollLogEntry) => {
+		this.log = this.log.map((e) => (e === old ? revised : e));
 	};
 
 	/** A no-roll cast (buff/utility): a bare log marker, not a rolled total. */

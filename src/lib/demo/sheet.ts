@@ -77,7 +77,10 @@ export function demoCharacter(): Character {
 	c.build.abilityBoosts = { con: 2, str: 1 }; // Soldier (2024): +2/+1 across STR/DEX/CON
 	c.build.skills = ['arcana', 'deception', 'athletics', 'intimidation'];
 	c.build.saves = ['wis', 'cha']; // warlock (first class) saving-throw proficiencies
-	c.build.feats = [`feat:${S}:alert`]; // live token: flat_bonus:initiative+proficiency_bonus
+	// alert = a live derive token (flat_bonus:initiative+proficiency_bonus); savage_attacker = the
+	// Soldier background's origin feat (RAW) and the demo vehicle for the N2 once-per-turn weapon-damage
+	// reroll (its `damage_reroll` marker → the post-roll Savage Attacker offer in combat).
+	c.build.feats = [`feat:${S}:alert`, `feat:${S}:savage_attacker`];
 	c.build.inventory = [
 		{ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false },
 		{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }, // barbarian martial

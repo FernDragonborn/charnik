@@ -808,6 +808,37 @@ describe('CombatVM · S2 split net', () => {
 		expect(combat.tray.log.length).toBe(before + 1);
 	});
 
+	it('Savage Attacker: a data-driven `damage_reroll` fact offers a once-per-turn reroll that never lowers the kept damage', () => {
+		character.play.inCombat = true;
+		character.play.round = 1;
+		character.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+		// a runtime effect carrying the data-driven marker (in real content a feat's `effects` column
+		// carries it); its LABEL becomes the offer label — nothing feat-specific is hardcoded in the VM.
+		combat.addEffect({ label: 'Savage Attacker', tokens: ['damage_reroll'], positive: true });
+
+		combat.attackRoll(combat.attacks[0]!, noModifiers); // Dagger (1d4) — rolls damage dice
+		expect(combat.savageLabel).toBe('Savage Attacker');
+		const entry = combat.savagePendingEntry!;
+		expect(entry).toBe(combat.tray.log[0]);
+		const keptBefore = entry.damage![0]!.total;
+
+		combat.savageReroll();
+		expect(combat.tray.log[0]!.damage![0]!.total).toBeGreaterThanOrEqual(keptBefore); // keep-higher never lowers
+		expect(combat.tray.log[0]!.note).toContain('Savage Attacker');
+		expect(combat.savageLabel).toBeNull(); // once-per-turn use spent
+
+		// a second attack the SAME turn does NOT re-offer (use already spent this round)
+		character.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 }; // free the action for a 2nd attack
+		combat.attackRoll(combat.attacks[0]!, noModifiers);
+		expect(combat.savageLabel).toBeNull();
+
+		// Next turn frees the use again
+		combat.economy.nextTurn();
+		character.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+		combat.attackRoll(combat.attacks[0]!, noModifiers);
+		expect(combat.savageLabel).toBe('Savage Attacker');
+	});
+
 	// the effects panel controls the user asked for: choose duration on add, edit/remove on the panel
 	it('addEffect applies the chosen newEffectDuration; 0 = indefinite (no duration field)', () => {
 		combat.newEffectDuration = 4;

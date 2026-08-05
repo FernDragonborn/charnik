@@ -35,6 +35,13 @@
 				</div>{/if}
 			<!-- upcast provenance (item 4): the boosted dice split into base + what the slot added -->
 			{#if l.note}<div class="lr-sub prov">⇡ {l.note}</div>{/if}
+			<!-- N2 Savage Attacker: a once-per-turn reroll offered on the pending weapon-damage row. The
+			     label comes from the granting feature (combat.savageLabel), never hardcoded. -->
+			{#if combat.savageLabel && l === combat.savagePendingEntry}<button
+					type="button"
+					class="savage-reroll"
+					onclick={combat.savageReroll}>↻ {combat.savageLabel} — reroll damage</button
+				>{/if}
 		</div>
 	{:else}<p class="note" style="padding: 11px 13px">
 			No rolls yet — tap a stat, skill, save, or attack.
@@ -99,6 +106,22 @@
 	/* upcast provenance line — accented so the base+delta breakdown reads as a distinct annotation */
 	.prov {
 		color: var(--color-accent);
+	}
+	/* Savage Attacker reroll offer — an accent-outlined pill the player taps to reroll the weapon
+	   damage; disappears once used (per-turn) or superseded by the next attack. */
+	.savage-reroll {
+		margin-top: 5px;
+		padding: 3px 9px;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		color: var(--color-accent);
+		background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+		border: 1px solid var(--color-accent);
+		border-radius: var(--radius);
+		cursor: pointer;
+	}
+	.savage-reroll:hover {
+		background: color-mix(in srgb, var(--color-accent) 22%, transparent);
 	}
 	.note {
 		font-size: var(--font-size-xs);

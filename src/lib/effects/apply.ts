@@ -203,6 +203,10 @@ class FactsCollector {
 			case EFFECT_KIND.blocksConcentration:
 				this.facts.breaksConcentration = true;
 				break;
+			case EFFECT_KIND.damageReroll:
+				// carry the feature's name so the combat layer can label the offered reroll from data
+				this.facts.damageReroll.push({ source: eff.source });
+				break;
 			case EFFECT_KIND.grantResource:
 				this.pushResource(p, eff, token);
 				break;
@@ -312,6 +316,7 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.pluginNotes.push(...extra.pluginNotes);
 	base.conditions = [...new Set([...base.conditions, ...extra.conditions])];
 	base.breaksConcentration ||= extra.breaksConcentration;
+	base.damageReroll.push(...extra.damageReroll);
 	base.resourceIds = [...new Set([...base.resourceIds, ...extra.resourceIds])];
 	for (const def of extra.resources) {
 		const prev = base.resources.find((r) => r.id === def.id);

@@ -158,6 +158,18 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 	});
 });
 
+describe('shipped feat · Savage Attacker damage-reroll marker (N2)', () => {
+	it('grants a data-driven `damage_reroll` fact labelled from the feat name (2024 origin feat)', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const c = charOf('SRD 5.2.1', '5.5e', 'fighter', 1);
+		c.build.feats = ['feat:SRD 5.2.1:savage_attacker'];
+		const sheet = deriveSheet(c, g);
+		// the combat layer reads THIS to offer the once-per-turn reroll; the source is the feat's own
+		// name (name_en), so the button label is data-driven — no id/string hardcoded in code.
+		expect(sheet.facts.damageReroll.map((d) => d.source)).toEqual(['Savage Attacker']);
+	});
+});
+
 describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', () => {
 	it('5.5e: Sneak Attack Nd6, Bardic Inspiration + Martial Arts dice scale by class level', async () => {
 		const g = await loadEdition('content/srd-2024');
