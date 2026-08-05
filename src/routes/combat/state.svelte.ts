@@ -611,13 +611,19 @@ class CombatVM {
 		c.play.concentration = null;
 		this.pendingConcentrationSave = null; // no spell → no owed save (B4 banner dismisses)
 	};
-	/** RAW: dropping to 0 HP or becoming incapacitated ENDS concentration (CONCENTRATION-PLAN §7).
-	 *  Called reactively from the combat page so it fires the instant HP hits 0 (Damage) or an
-	 *  incapacitating condition lands. Idempotent — a no-op once concentration is already gone. */
+	/** A state forbids Concentration — a `blocks_concentration` marker is live on the sheet (RAW Rage:
+	 *  "you can't maintain Concentration"). DATA-DRIVEN (the token, authored on the Rage condition), not a
+	 *  hardcoded id, so any homebrew state carrying the marker behaves the same. */
+	cantConcentrate = $derived(this.sheet?.facts.breaksConcentration ?? false);
+	/** RAW: dropping to 0 HP, becoming incapacitated, OR gaining a `blocks_concentration` state (Rage)
+	 *  ENDS concentration (CONCENTRATION-PLAN §7). Called reactively from the combat page so it fires the
+	 *  instant HP hits 0 (Damage), an incapacitating condition lands, or Rage is entered. Idempotent —
+	 *  a no-op once concentration is already gone. */
 	endConcentrationIfBroken = () => {
 		const c = this.character;
 		if (!c?.play.concentration) return;
-		if (c.play.hp.current <= 0 || this.economy.incapacitated) this.clearConcentration();
+		if (c.play.hp.current <= 0 || this.economy.incapacitated || this.cantConcentrate)
+			this.clearConcentration();
 	};
 
 	// configurable passive-sense skills (Pin skills)
@@ -1185,8 +1191,14 @@ class CombatVM {
 		// the slot LEVEL the spell is actually cast from drives upcast (§4).
 		const slotLevel = this.castSlotLevel(slot, r.level);
 		// a concentration spell becomes the active concentration (replacing any prior one, 5e rule);
-		// the PRIOR concentration's cast-applied effect goes down with it
-		if (r.concentration && this.character) {
+		// the PRIOR concentration's cast-applied effect goes down with it. EXCEPT while raging — RAW: a
+		// Barbarian can't maintain Concentration while the Rage is active, so the spell casts but never
+		// establishes concentration (surfaced, not silently swallowed).
+		if (r.concentration && this.character && this.cantConcentrate) {
+			toast(`${r.name} cast, but you can't hold Concentration right now`, {
+				description: 'A Rage (or similar state) ends Concentration — RAW'
+			});
+		} else if (r.concentration && this.character) {
 			const prior = this.character.play.concentration;
 			if (prior && prior !== r.ref) this.removeLinkedEffect(prior);
 			this.character.play.concentration = r.ref;

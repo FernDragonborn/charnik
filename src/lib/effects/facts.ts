@@ -134,6 +134,9 @@ export interface EffectFacts {
 	resourceIds: string[];
 	/** Applied condition ids (deduped). */
 	conditions: string[];
+	/** RAW `blocks_concentration` marker present on some active state (Rage) — the combat layer drops
+	 *  and withholds Concentration while true. */
+	breaksConcentration: boolean;
 	rerolls: RollMod[];
 	minDie: RollMod[];
 	unknown: { source: string; token: string }[];
@@ -155,6 +158,7 @@ export const emptyFacts = (): EffectFacts => ({
 	resources: [],
 	resourceIds: [],
 	conditions: [],
+	breaksConcentration: false,
 	rerolls: [],
 	minDie: [],
 	unknown: [],

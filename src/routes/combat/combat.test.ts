@@ -1226,4 +1226,12 @@ describe('CombatVM · using the Rage resource ENTERS Rage (chip → buff, not a 
 		expect(sheet?.facts.advantage.some((a) => a.target === 'skill.athletics')).toBe(true);
 		expect(sheet?.facts.advantage.some((a) => a.target === 'save.str')).toBe(true);
 	});
+
+	it('entering Rage marks is_raging and ENDS concentration (RAW: cannot maintain while raging)', () => {
+		character.play.concentration = `spell:${S}:hold_person`; // pretend a prior concentration spell
+		combat.useResourceOrEnter('rage', 3);
+		expect(combat.cantConcentrate).toBe(true); // the Rage condition's blocks_concentration marker (data-driven)
+		combat.endConcentrationIfBroken(); // the reactive call the combat page fires on state change
+		expect(character.play.concentration).toBeNull();
+	});
 });

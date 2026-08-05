@@ -200,6 +200,9 @@ class FactsCollector {
 			case EFFECT_KIND.applyCondition:
 				if (p.target) this.conditions.add(p.target.trim());
 				break;
+			case EFFECT_KIND.blocksConcentration:
+				this.facts.breaksConcentration = true;
+				break;
 			case EFFECT_KIND.grantResource:
 				this.pushResource(p, eff, token);
 				break;
@@ -308,6 +311,7 @@ export function mergeFacts(base: EffectFacts, extra: EffectFacts): void {
 	base.unknown.push(...extra.unknown);
 	base.pluginNotes.push(...extra.pluginNotes);
 	base.conditions = [...new Set([...base.conditions, ...extra.conditions])];
+	base.breaksConcentration ||= extra.breaksConcentration;
 	base.resourceIds = [...new Set([...base.resourceIds, ...extra.resourceIds])];
 	for (const def of extra.resources) {
 		const prev = base.resources.find((r) => r.id === def.id);

@@ -49,6 +49,10 @@ export const EFFECT_KIND = {
 	// folds and matches no target — it's shown, distinctly styled, so the mechanic is visible even
 	// though it isn't auto-applied. Text is free-form (keeps its casing; `;` is the list separator).
 	note: 'note',
+	// MARKER (`blocks_concentration`, no target/value): the carrying state forbids Concentration —
+	// RAW Rage ("you can't maintain Concentration"), a homebrew trance, etc. Surfaced as a fact flag the
+	// combat layer reads to drop/withhold concentration; data-driven, so any CSV state can carry it.
+	blocksConcentration: 'blocks_concentration',
 	// L3 handler REFERENCE (`plugin:<namespace>:<handlerName>[:<args>]`) — content never contains code, only this
 	// pointer; the derive pre-pass resolves it through the plugin registry (docs/PLUGINS.md §1).
 	// Missing/disabled/errored plugin → the token degrades to an inert note like any unknown.
@@ -57,6 +61,9 @@ export const EFFECT_KIND = {
 export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 /** The kinds as a list (for schema validation / the `includes` guard). */
 export const EFFECT_KINDS = Object.values(EFFECT_KIND) as readonly EffectKind[];
+/** MARKER kinds carry no `:target` — a bare token IS the whole effect (`blocks_concentration`). Every
+ *  other kind bare (`flat_bonus` with no target) stays malformed → `unknown`. */
+const MARKER_KINDS = new Set<string>([EFFECT_KIND.blocksConcentration]);
 
 // Recharge's single owner is rules/spellcasting (D11); re-exported here so token consumers keep
 // importing it from the effects surface they already use.
@@ -298,7 +305,10 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 function classifyToken(token: string): ParsedEffect {
 	const raw = token.trim();
 	const sep = raw.indexOf(':');
-	if (sep === -1) return { kind: 'unknown', raw };
+	// a colon-less token is valid ONLY for a MARKER kind (no target/value — `blocks_concentration`);
+	// every other kind bare (`flat_bonus`) is malformed → unknown.
+	if (sep === -1)
+		return MARKER_KINDS.has(raw) ? { kind: raw as EffectKind, raw } : { kind: 'unknown', raw };
 	const kind = raw.slice(0, sep) as EffectKind;
 	const rest = raw.slice(sep + 1);
 	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
