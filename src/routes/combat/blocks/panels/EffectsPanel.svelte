@@ -8,7 +8,7 @@
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../state.svelte';
 	import {
-		effectTag,
+		effectTagResolved,
 		describeDerivedEffects,
 		noteText,
 		conditionIdOf,
@@ -70,7 +70,7 @@
 						>ⓘ {note}</span
 					>
 				{:else}
-					<span class="effect-tag effect-tag--{polarity}">{effectTag(tok)}</span>
+					<span class="effect-tag effect-tag--{polarity}">{effectTagResolved(tok, s.facts)}</span>
 				{/if}
 			{/each}
 		</div>

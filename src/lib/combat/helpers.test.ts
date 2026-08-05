@@ -4,6 +4,7 @@ import {
 	autoOutcome,
 	conditionIdOf,
 	effectTag,
+	effectTagResolved,
 	pipClick,
 	groupEffects,
 	parseResourceEffect,
@@ -257,6 +258,34 @@ describe('B14 · describeDerivedEffects (content-borne facts for the panel)', ()
 			{ source: 'Bless', layer: 'condition', tokens: ['flat_bonus:saves+1'] }
 		]);
 		expect(describeDerivedEffects(facts).groups).toHaveLength(0);
+	});
+});
+
+describe('effectTagResolved — resolved value for an expression-valued token (the "Damage +" fix)', () => {
+	const rageDamage = 'flat_bonus:damage+step(class_level.barbarian, 1->2, 9->3, 16->4)';
+
+	it('effectTag alone can only show a bare "Damage +" for an expression value', () => {
+		expect(effectTag(rageDamage)).toBe('Damage +');
+	});
+
+	it('with the derive-resolved fact it shows the concrete amount ("Damage +2")', () => {
+		const facts = {
+			numeric: [
+				{
+					target: 'damage',
+					op: 'add' as const,
+					layer: 'condition' as const,
+					source: 'Rage',
+					token: rageDamage,
+					amount: 2
+				}
+			]
+		};
+		expect(effectTagResolved(rageDamage, facts)).toBe('Damage +2');
+	});
+
+	it('falls back to the literal tag when no matching fact', () => {
+		expect(effectTagResolved('flat_bonus:ac+2', { numeric: [] })).toBe('AC +2');
 	});
 });
 

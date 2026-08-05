@@ -85,6 +85,17 @@ export function effectTag(token: string): string {
 	return TAG_FORMATTERS[p.kind]?.(p) || token.replace(/[-:]/g, ' ');
 }
 
+/** Panel tag for a token, preferring the DERIVE-RESOLVED value when the token's value is an L2
+ *  EXPRESSION — `effectTag` alone can only show a literal, so an expression-valued numeric renders as
+ *  a bare "Damage +". Match the resolved `NumericFact` (by its guard-stripped token) and render its
+ *  concrete amount ("Damage +2"). Falls back to the literal tag for everything else. */
+export function effectTagResolved(token: string, facts: { numeric: NumericFact[] }): string {
+	const f = facts.numeric.find(
+		(n) => n.token === token && (n.amount !== undefined || n.diceFormula)
+	);
+	return f ? numericFactTag(f) : effectTag(token);
+}
+
 /** One source's derived contributions, as short display tags (B14). */
 export interface DerivedEffectGroup {
 	source: string;

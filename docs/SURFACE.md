@@ -460,6 +460,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export EffectInstance` — A runtime effect instance — the character-schema type, re-exported for the combat views.
 - `function why` — Provenance trace of a Computed → a human-readable "why" string for tooltips.
 - `function effectTag` — A bounded-vocab effect token → a short readable tag for the effects panel: * flat_bonus → "AC +2" / "saves +1d4"; set…
+- `function effectTagResolved` — Panel tag for a token, preferring the DERIVE-RESOLVED value when the token's value is an L2 * EXPRESSION — `effectTag…
 - `interface DerivedEffectGroup` — One source's derived contributions, as short display tags (B14).
 - `function describeDerivedEffects` — * B14: the effects panel's read-only "from items & features" view.
 - `function noteText` — The display text of a `note:` token (a rules effect shown but NOT auto-applied — attacks against * you, auto-crit, se…
@@ -1073,4 +1074,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 42 components · 593 exports across 91 modules · 32 duplicate suspects._
+_45 tokens · 63 global classes · 42 components · 594 exports across 91 modules · 32 duplicate suspects._
