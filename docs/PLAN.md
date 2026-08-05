@@ -1029,11 +1029,18 @@ point** (it depends on nothing).
    to **onUse resource-options gated on combat-start** (a player choice at a window, not auto-mutation).
    Persistent Rage shipped 2026-08-04; **Uncanny Metabolism 2026-08-05 via a new MULTI-action** (`;`-list
    `action`, run in order) — regain Focus AND heal (`docs/RECHARGE-PLAN.md` slice 2).
-3. **N2 · `onEvent` (event → reminder) — the genuinely-automatic tail only.** The initiative-regain
-   consumers are done via onUse (above); what remains for onEvent is the NO-CHOICE auto features
-   (Superior Inspiration / Perfect Focus auto-regain, "start of turn gain X", regeneration). Per the
-   core principle (`RECHARGE-PLAN` §1/§5) build it as **event → reminder/highlight, rarely silent
-   mutation** (`docs/ACTIONS.md` §1/§4). Lower priority — no shipped SRD consumer forces it yet.
+3. **N2 · `onEvent` (event → reminder) — the genuinely-automatic tail. DEFERRED on a modeling fork.**
+   The player-choice initiative-regain (Persistent Rage, Uncanny Metabolism) is done via onUse (above).
+   What remains is the NO-CHOICE, EVERY-initiative auto-regain-UP-TO-N features — shipped SRD consumers
+   DO exist but are niche (all L15-18): `bard_superior_inspiration` (Bardic Inspiration → 2),
+   `monk_perfect_focus` (Focus → 4), Druid Evergreen Wild Shape (+1 if 0 left), plus start-of-turn
+   regen (Champion Heroic Rally). **Blocker (2026-08-05):** unlike Persistent Rage, these have NO
+   once/rest gate, so the onUse-reframe has no clean FEATURE-PRESENCE signal — a marker resource that's
+   never spent is a permanent noise pip (Persistent Rage's pip is meaningful because it depletes), and a
+   level-gated `available` shows a greyed future-feature to low-level chars. Resolving it = a design
+   pick (a hidden feature-presence flag / a `min_level` option column / a real event→reminder layer per
+   `RECHARGE-PLAN` §1/§5 — "rarely silent mutation"). Low value (niche high-level) → parked for a steer.
+   Evergreen Wild Shape also waits on Wild Shape itself (unimplemented, N2 stat-block piece).
 4. **Concentration-save B4** — DONE 2026-08-04 (`RECHARGE-PLAN` §6); universal.
 5. **B25 subclass casters** → **D16 choice-UI → `magic_initiate`** → **RECHARGE slice 3** (item charges).
 6. Content passes (MAGIC-ITEM-EFX, D6/D10/E4); **ARCH-1 i18n sweep**; then low/YAGNI (ARCH-4 spacing,

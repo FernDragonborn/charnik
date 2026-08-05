@@ -60,6 +60,15 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
    auto-ends; regeneration / "start of your turn gain X"). So an event layer is eventually justified —
    but as **event → reminder/highlight**, rarely as silent state-mutation. A full auto-mutating
    event-bus is *rarely* correct in a tracker.
+   **Consumers + blocker (2026-08-05, assessed):** the shipped auto-regain-at-initiative features are
+   `bard_superior_inspiration` (Bardic Inspiration → 2), `monk_perfect_focus` (Focus → 4), Druid
+   Evergreen Wild Shape (+1 if 0 left); start-of-turn = Champion Heroic Rally. All L15-18 → niche. They
+   need a **"restore UP TO N"** verb (`restore_resource:<id>:<n>` — a small extension) AND, because they
+   fire EVERY initiative with no once/rest gate, a clean FEATURE-PRESENCE signal the onUse-reframe lacks:
+   a never-spent marker resource is a permanent noise pip (Persistent Rage's pip works only because it
+   *depletes*), and a level-gated `available` shows a greyed future-feature to low-level chars. **DEFERRED**
+   pending a design pick (hidden presence flag / `min_level` option column / a real event→reminder layer).
+   Evergreen also waits on Wild Shape (unimplemented). See PLAN.md implementation-order item 3.
 
 6. **Concentration UX — BEHAVIOR = variant A, SURFACE = B4. BUILT + app-verified 2026-08-04 (`1b7a4f0`).**
    `pendingConcentrationSave` VM state (set in `damage()`, replacing the old toast) → the HpPanel banner;
