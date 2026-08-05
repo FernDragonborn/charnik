@@ -1,5 +1,73 @@
 # Changelog
 
+## 0.5.0
+
+The play-tracking release: the sheet now runs spellcasting at higher levels, concentration, rests,
+and activated abilities for you — plus rage, feats that carry their mechanics, custom themes, and a
+demo character to explore.
+
+### Playing your character
+
+- **Cast at a higher level, and see the difference.** Upcasting is built in: cast a spell from a
+  bigger slot and its damage, healing, extra targets, area, or duration scale automatically (Fireball
+  `+1d6`/slot, Magic Missile's darts, Aid's hit points, and so on) — both editions. A slot picker on
+  each spell previews exactly what you gain before you commit, and the roll log records where the
+  extra dice came from. Cantrips still scale on their own at levels 5/11/17.
+- **Concentration is fully tracked.** Casting a concentration spell marks it, with a timer that
+  counts down and drops the spell's buff when it ends. Take damage while concentrating and a slim
+  banner appears under your HP with the save you owe — a suggested (editable) DC, one-click **Roll**
+  that reads any effects that help (Bless, War Caster), and **Drop** if you fail — never forcing the
+  roll or auto-dropping the spell. Dropping to 0 HP, becoming incapacitated, or **entering a Rage**
+  ends concentration for you; re-casting the same spell refreshes rather than stacking.
+- **Rage.** Entering a Rage is now a real state, not just a counter: click it (or the *Enter Rage*
+  action) and you gain resistance to bludgeoning/piercing/slashing, advantage on Strength checks and
+  saves, and the level-scaled bonus damage — for ten rounds, and you can't hold concentration while
+  it's active. It won't stack if you tap it twice.
+- **Abilities that actually do their thing.** Data-defined abilities now resolve when you use them,
+  not just spend a pool. Second Wind heals `1d10 + level`, Action Surge hands you another action, and
+  a Monk's Ki/Focus options each spend their resource *and* the right part of your turn,
+  all-or-nothing, greying out when you can't afford it. Persistent Rage's "regain all uses when you
+  roll Initiative" appears at the start of combat.
+- **Rests that heal.** Spend Hit Dice on a short rest to roll back hit points; a long rest restores
+  HP, resources, and Hit Dice (half your total in 2014, all of them in 2024) and ends concentration.
+- **Warlock Pact Magic** is tracked as its own pip strip, alongside ordinary slots.
+- **Structured multi-type damage.** A weapon or spell that deals more than one damage type (a
+  flaming sword's `+1d6 fire`, ice knife's cold burst) rolls and shows each type separately, with the
+  ability modifier landing only on the primary part.
+- **A refreshed combat sheet.** The HP/exhaustion header, the resources block, and the effects panel
+  were redesigned; passive senses mark advantage/disadvantage; damage resistances / immunities /
+  vulnerabilities read as coloured pills; and effect chips show their resolved value.
+
+### Building your character
+
+- **Feats that carry their mechanics.** Alert (initiative), the Defense / Archery / Great Weapon
+  Fighting fighting styles, Skilled (pick your skill proficiencies), and Epic Boons are wired up as
+  data — including feats that grant an ability increase, where you pick which score in the builder.
+  In 2024, your **Background grants its Origin Feat** automatically.
+- **Expertise, capped correctly.** The number of skills you can double-up on comes from your class
+  features (Rogue, Bard, 2024 Ranger…), and the skills panel shows each skill's tier — proficient,
+  expertise, or half-proficiency.
+
+### Making it yours
+
+- **Custom colour themes.** A new **Settings ▸ Themes** page lets you author your own theme — every
+  colour is a live control — saved to your data folder, with a few bundled presets to start from.
+- **A demo character to explore.** First run seeds a showcase multiclass character (Warlock ×
+  Barbarian) so the app isn't empty; delete it and it stays gone, or bring it back any time from
+  **Settings ▸ Data ▸ Restore demo**.
+- **A 2024 languages list** ships so language proficiencies resolve in the newer edition.
+
+### Fixes & robustness
+
+- **Security.** Path-traversal in file access is rejected, and the data-folder grant is owned by the
+  app's trusted core rather than exposed to page scripts.
+- Multiclass save proficiencies come only from your starting class, and the header lists every class;
+  content-load failures are surfaced on every view instead of showing an empty screen; dialogs trap
+  keyboard focus; over-large CSVs are guarded before parsing; and a picked entry stays selected even
+  when its source is toggled off.
+- **Easier bug reports.** A diagnostics log and a one-click "copy a bug-report bundle" capture the
+  context needed to fix a problem.
+
 ## 0.4.0
 
 - **Conditions actually do things now.** The 15 core conditions carry real mechanics, not just a
