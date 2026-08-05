@@ -108,6 +108,15 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
     Alt-click tray-damage path rolls damage later — no offer there yet). `min_die`-style per-die
     `reroll:` is unchanged and orthogonal.
 
+### Shipped next — MULTI-action resource options (Uncanny Metabolism)
+- `[x]` **A `;`-separated `action` list runs every token on ONE activation — DONE 2026-08-05.** The
+  executor was single-token; `resolveActionFormula` now resolves each `;`-part and `runActionToken`
+  splits + loops `runOneAction`. First consumer: **Uncanny Metabolism (Monk L2)** =
+  `restore_resource:focus;heal:1d step(class_level.monk,…)+class_level.monk`, gated once/long-rest +
+  combat-start like Persistent Rage (RECHARGE slice 2). Verified vs real shipped content (Monk 2 → heal
+  `1d6+2`, Monk 11 → `1d10+11`) + a combat executor test (both tokens run). Ceiling: a `note:` in a
+  multi-action can't contain `;`. Completes RECHARGE slice 2.
+
 ### Deferred (OUT — keep the slice small)
 - Roll-dependent LOGIC (read the die, then decide) — ACTIONS.md marks it a later API.
 - Plugin `onUse` (`api:2`), `onEvent`, choice groups (N2 shape 3), Wild Shape, the rest of N2.

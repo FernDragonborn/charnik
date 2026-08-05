@@ -119,8 +119,9 @@ export interface ResourceOption {
 	resourceId: string;
 	name: string;
 	description: string;
-	/** A bounded action token (apply_condition / heal / roll / gain_action / rest:short|long /
-	 *  restore_resource:<id> / note) the UI runs / displays. */
+	/** Bounded action token(s) the UI runs / displays: apply_condition / heal / roll / apply_effect /
+	 *  gain_action / rest:short|long / restore_resource:<id> / note. A `;`-separated LIST is a
+	 *  multi-action (Uncanny Metabolism = regain focus AND heal) — run in order on one activation. */
 	action: string;
 	actionType: 'action' | 'bonus_action' | 'reaction' | 'free';
 	cost: number | 'x';
@@ -140,10 +141,28 @@ interface ResourceOptionsInput {
 	ctx: ExprContext | undefined;
 }
 
-/** Resolve the L2 value inside a resource-option `action` so the executor can just roll it: `heal:` /
- *  `roll:` carry a formula (`1d10+class_level.fighter` → `1d10+5`); `apply_condition:` / `note:` pass
- *  through unchanged. A resolution failure keeps the raw token + flags a deriveIssue (executor no-ops). */
+/** Resolve the L2 value inside a resource-option `action` so the executor can just roll it. Supports a
+ *  `;`-separated MULTI-action (Uncanny Metabolism = `restore_resource:focus;heal:<MA die>+monk_level`):
+ *  each sub-token is resolved independently and rejoined with `;`, so the executor runs them in order.
+ *  Ceiling: a `note:` inside a multi-action can't contain `;` (it's the action separator) — no shipped
+ *  option needs one. A single-token action (the common case) is unchanged (split of one = itself). */
 function resolveActionFormula(
+	action: string,
+	ctx: ExprContext | undefined,
+	name: string,
+	issues: EffectIssue[]
+): string {
+	return action
+		.split(';')
+		.map((tok) => resolveOneActionFormula(tok.trim(), ctx, name, issues))
+		.filter(Boolean)
+		.join(';');
+}
+
+/** Resolve ONE action sub-token's L2 value: `heal:` / `roll:` carry a formula
+ *  (`1d10+class_level.fighter` → `1d10+5`); `apply_condition:` / `note:` / `restore_resource:` pass
+ *  through unchanged. A resolution failure keeps the raw token + flags a deriveIssue (executor no-ops). */
+function resolveOneActionFormula(
 	action: string,
 	ctx: ExprContext | undefined,
 	name: string,

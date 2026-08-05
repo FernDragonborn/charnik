@@ -542,11 +542,22 @@ class CombatVM {
 	 *  spells), `restore_resource:<id>` → regain ALL uses of a pool (Persistent Rage, Uncanny
 	 *  Metabolism), `note:` → the spendOption toast. */
 	private runActionToken(opt: ResourceOption) {
+		// a `;`-separated action is a MULTI-action (Uncanny Metabolism = restore focus AND heal): run each
+		// sub-token in order on the ONE activation (cost + turn slot were validated once, up front).
+		for (const token of opt.action.split(';')) {
+			const t = token.trim();
+			if (t) this.runOneAction(opt, t);
+		}
+	}
+
+	/** Run ONE resolved action verb (`opt.action` may hold several, `;`-joined — see `runActionToken`).
+	 *  Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths). */
+	private runOneAction(opt: ResourceOption, action: string) {
 		const p = this.character?.play;
 		if (!p) return;
-		const sep = opt.action.indexOf(':');
-		const verb = sep === -1 ? opt.action : opt.action.slice(0, sep);
-		const arg = sep === -1 ? '' : opt.action.slice(sep + 1);
+		const sep = action.indexOf(':');
+		const verb = sep === -1 ? action : action.slice(0, sep);
+		const arg = sep === -1 ? '' : action.slice(sep + 1);
 		if (verb === 'heal' && arg) {
 			const r = rollFormula(arg);
 			p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, r.total));
@@ -554,25 +565,9 @@ class CombatVM {
 		} else if (verb === 'roll' && arg) {
 			this.tray.pushRoll(opt.name, rollFormula(arg));
 		} else if (verb === 'apply_condition' && arg) {
-			this.addEffect({ label: opt.name, tokens: [opt.action], positive: false });
+			this.addEffect({ label: opt.name, tokens: [action], positive: false });
 		} else if (verb === 'apply_effect' && arg) {
-			// Apply a NAMED catalog buff/debuff (Rage, Bless-as-action…) via the SAME add path the "+"
-			// picker uses: its `ref` re-resolves the tokens LIVE at derive, `negative` sets buff/debuff,
-			// `duration_rounds` gives the timer (round-counter auto-expires it). Missing id → surface, not
-			// a silent no-op.
-			const cat = this.effectCatalog.find((eff) => eff.ref.split(':').pop() === arg);
-			if (cat) {
-				// a named STATE doesn't stack — you're raging or you're not (RAW/RAI). Re-entering refreshes
-				// (drop any live instance of the same catalog ref first), never adds a second Rage.
-				p.effects = p.effects.filter((e) => e.source !== cat.ref);
-				this.addEffect({
-					label: cat.label,
-					tokens: cat.tokens,
-					positive: !cat.negative,
-					ref: cat.ref,
-					...(cat.durationRounds != null ? { durationRounds: cat.durationRounds } : {})
-				});
-			} else toast(`${opt.name} — effect “${arg}” not found`, { description: 'Check effects.csv' });
+			this.applyCatalogEffect(opt, arg);
 		} else if (verb === 'gain_action') {
 			p.turn.action = Math.max(0, p.turn.action - 1); // one additional action this turn
 		} else if (verb === 'restore_resource' && arg) {
@@ -585,6 +580,30 @@ class CombatVM {
 			this.resources.rest(arg);
 			toast(`${opt.name} — ${arg} rest taken`);
 		}
+	}
+
+	/** `apply_effect:<id>` — apply a NAMED catalog buff/debuff (Rage, Bless-as-action…) via the SAME add
+	 *  path the "+" picker uses: its `ref` re-resolves the tokens LIVE at derive, `negative` sets
+	 *  buff/debuff, `duration_rounds` gives the timer (round-counter auto-expires it). Missing id →
+	 *  surface, not a silent no-op. Split out of `runOneAction` to keep its verb-dispatch under budget. */
+	private applyCatalogEffect(opt: ResourceOption, arg: string) {
+		const p = this.character?.play;
+		if (!p) return;
+		const cat = this.effectCatalog.find((eff) => eff.ref.split(':').pop() === arg);
+		if (!cat) {
+			toast(`${opt.name} — effect “${arg}” not found`, { description: 'Check effects.csv' });
+			return;
+		}
+		// a named STATE doesn't stack — you're raging or you're not (RAW/RAI). Re-entering refreshes
+		// (drop any live instance of the same catalog ref first), never adds a second Rage.
+		p.effects = p.effects.filter((e) => e.source !== cat.ref);
+		this.addEffect({
+			label: cat.label,
+			tokens: cat.tokens,
+			positive: !cat.negative,
+			ref: cat.ref,
+			...(cat.durationRounds != null ? { durationRounds: cat.durationRounds } : {})
+		});
 	}
 
 	groupByLabel = $derived(

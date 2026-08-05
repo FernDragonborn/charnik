@@ -186,7 +186,7 @@ long rest. The "½-on-long" pattern lives HERE (its own math), not on the generi
 dieSize+CON clamped & decrements the pool, empty pool blocks; long rest regains floor(level/2)); drive
 the app (spend a die on short rest → HP up + pip spent; long rest → pips return). Screenshot.
 
-## Slice 2 — initiative-regain (`[~]` in progress) — REFRAMED: onUse resource-options, NOT an event bus
+## Slice 2 — initiative-regain (`[x]` DONE 2026-08-05) — REFRAMED: onUse resource-options, NOT an event bus
 
 **Goal:** "When you roll Initiative, you can regain all uses of Rage / all Focus Points" — Persistent
 Rage (Barb 11), Uncanny Metabolism (Monk 2), + the auto siblings (Superior Inspiration, Perfect Focus,
@@ -214,13 +214,22 @@ just adds the gate + a regain verb. This keeps the whole thing on the SHIPPED on
    `barbarian_persistent_rage` carries `grant_resource:persistent_rage:1:long`; a `resource_options` row
    `barbarian_persistent_rage_regain` (`restore_resource:rage`, `available=is_combat_start`, free). Test
    (`class_features_content.test.ts`): Barb 15 → the gate (max 1, long recharge) + the option greyed out
-   of combat, open at round 1; a Barb 5 has neither. Restamped both CSVs. **`[ ]` Uncanny Metabolism** —
-   needs a MULTI-action (heal Martial-Arts-die + Monk level AND `restore_resource:focus`); single `action`
-   is one token today → multi-action (or the full intent) is a follow-up. Auto siblings (Superior
-   Inspiration, Perfect Focus) are "you regain" (no choice) → the genuinely-automatic tail (§5), later.
+   of combat, open at round 1; a Barb 5 has neither. Restamped both CSVs.
+6. `[x]` **Uncanny Metabolism DONE (2026-08-05) — via MULTI-action.** The `action` cell now accepts a
+   `;`-separated LIST run in order on ONE activation (`resolveActionFormula` resolves each sub-token;
+   `runActionToken` splits + loops `runOneAction`). `monk_uncanny_metabolism` carries the gate
+   `grant_resource:uncanny_metabolism:1:long`; a `resource_options` row `monk_uncanny_metabolism_regain`
+   (`available=is_combat_start`, `free`) runs `restore_resource:focus;heal:1d step(class_level.monk,
+   1->6,5->8,11->10,17->12)+class_level.monk` — regain all Focus AND heal the Martial-Arts die + Monk
+   level. Verified vs the real shipped graph: Monk 2 → gate + option, heal resolves to `1d6+2`; Monk 11 →
+   `1d10+11`; combat executor test asserts BOTH tokens run (focus back + HP up). Restamped both CSVs.
+   Ceiling: a `note:` in a multi-action can't contain `;`. Auto siblings (Superior Inspiration, Perfect
+   Focus) are "you regain" (no choice) → the genuinely-automatic **onEvent tail (§5), still open**, its
+   own piece (event → reminder/highlight, per the core principle — NOT auto-mutation).
 
-**Verify:** unit (restore_resource regains all + gate blocks — DONE; available-guard greys the option);
-app-drive an initiative regain on a Barb 11.
+**Verify:** unit (restore_resource regains all + gate blocks — DONE; available-guard greys the option;
+multi-action runs every token — DONE). UI is the SAME resource-option path as the app-verified Persistent
+Rage (greyed out of combat, open at combat start), so the Monk option renders identically.
 
 ## Slice 3 — item charges + `{trigger, amount}` recharge (needs item-charge tracking) `[ ]`
 

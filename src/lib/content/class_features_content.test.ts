@@ -107,6 +107,37 @@ describe('shipped class features · Persistent Rage regain (RECHARGE slice 2)', 
 	});
 });
 
+describe('shipped class feature · Uncanny Metabolism MULTI-action regain (RECHARGE slice 2 / N2)', () => {
+	it('5.5e: Monk 2 gets the once/long gate + a combat-start option that regains focus AND heals (MA die + level)', async () => {
+		const g = await loadEdition('content/srd-2024');
+		const c = charOf('SRD 5.2.1', '5.5e', 'monk', 2);
+		const out = deriveSheet(c, g);
+		const gate = out.resources.find((r) => r.id === 'uncanny_metabolism');
+		expect(gate?.max).toBe(1);
+		expect(gate?.recharge).toBe('long');
+		// the MULTI-action: `;`-separated → regain all focus THEN heal Martial-Arts-die (d6 @ L2) + level
+		const opt = out.resourceOptions.find((o) => o.id === 'monk_uncanny_metabolism_regain');
+		expect(opt?.resourceId).toBe('uncanny_metabolism');
+		expect(opt?.action).toBe('restore_resource:focus;heal:1d6+2');
+		expect(opt?.actionType).toBe('free');
+		expect(opt?.available).toBe(false); // not at initiative
+		c.play.inCombat = true;
+		c.play.round = 1;
+		const inCombat = deriveSheet(c, g).resourceOptions.find(
+			(o) => o.id === 'monk_uncanny_metabolism_regain'
+		);
+		expect(inCombat?.available).toBe(true);
+	});
+
+	it('5.5e: the Martial-Arts die in the multi-action heal scales with monk level (d10 + 11 at L11)', async () => {
+		const opt = deriveSheet(
+			charOf('SRD 5.2.1', '5.5e', 'monk', 11),
+			await loadEdition('content/srd-2024')
+		).resourceOptions.find((o) => o.id === 'monk_uncanny_metabolism_regain');
+		expect(opt?.action).toBe('restore_resource:focus;heal:1d10+11');
+	});
+});
+
 describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 	// Derive a barbarian WITH the rage condition applied (what "Enter Rage" → apply_effect:rage does).
 	const raging = (g: ContentGraph, source: string, system: '5e' | '5.5e', level: number) => {

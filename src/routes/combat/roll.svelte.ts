@@ -145,7 +145,8 @@ export class RollTray {
 		// return the STORED element, not the local literal: assigning into the $state array wraps it in a
 		// reactive proxy, so a caller holding the entry (Savage Attacker's pending reroll) must hold the
 		// SAME proxy the `{#each}` iterates — else an `entry === log[i]` identity check would never match.
-		return this.log[0]!;
+		// `?? entry` only guards the type (log[0] is always the just-pushed element after the assignment).
+		return this.log[0] ?? entry;
 	};
 
 	/** Replace an existing log entry (identity match) with a revised copy — used by the Savage Attacker

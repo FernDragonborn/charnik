@@ -1025,11 +1025,16 @@ point** (it depends on nothing).
 1. ~~**N2 · `savage_attacker`**~~ — **DONE 2026-08-05** (`docs/N2-PLAN.md`): data-driven `damage_reroll`
    marker → a post-roll "reroll the weapon damage, keep the higher" offer, once per turn (toast + a
    roll-log pill, labelled from the feature). App-verified on demo Karroth.
-2. **N2 · `onEvent` write-half** — the deferred half of the intent model (`docs/ACTIONS.md` §1/§4).
-   Build it WITH its first consumer (below) so the executor isn't speculative.
-3. **RECHARGE slice 2 · onEvent regain** — Persistent Rage / Uncanny Metabolism (initiative-regain);
-   the first `onEvent` consumer, so 2+3 land together (`docs/RECHARGE-PLAN.md` slice 2).
-4. **Concentration-save B4** — unblocked, universal, UX decided (`RECHARGE-PLAN` §6); do anytime.
+2. ~~**RECHARGE slice 2 · initiative-regain**~~ — **DONE.** REFRAMED (2026-08-02) away from an event-bus
+   to **onUse resource-options gated on combat-start** (a player choice at a window, not auto-mutation).
+   Persistent Rage shipped 2026-08-04; **Uncanny Metabolism 2026-08-05 via a new MULTI-action** (`;`-list
+   `action`, run in order) — regain Focus AND heal (`docs/RECHARGE-PLAN.md` slice 2).
+3. **N2 · `onEvent` (event → reminder) — the genuinely-automatic tail only.** The initiative-regain
+   consumers are done via onUse (above); what remains for onEvent is the NO-CHOICE auto features
+   (Superior Inspiration / Perfect Focus auto-regain, "start of turn gain X", regeneration). Per the
+   core principle (`RECHARGE-PLAN` §1/§5) build it as **event → reminder/highlight, rarely silent
+   mutation** (`docs/ACTIONS.md` §1/§4). Lower priority — no shipped SRD consumer forces it yet.
+4. **Concentration-save B4** — DONE 2026-08-04 (`RECHARGE-PLAN` §6); universal.
 5. **B25 subclass casters** → **D16 choice-UI → `magic_initiate`** → **RECHARGE slice 3** (item charges).
 6. Content passes (MAGIC-ITEM-EFX, D6/D10/E4); **ARCH-1 i18n sweep**; then low/YAGNI (ARCH-4 spacing,
    B11, B24).

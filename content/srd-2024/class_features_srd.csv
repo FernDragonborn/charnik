@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-f9e9-7ad8-b3a8-4511aa623e30
-#content-updated_at: 2026-08-04
-#content-hash: xxh64:172ab7b20638a7de
+#content-updated_at: 2026-08-05
+#content-hash: xxh64:b61c5425a43f6d48
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id,expertise_slots
 barbarian_rage,Rage,,"You can imbue yourself with a primal power called Rage, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren't wearing Heavy armor.
 You can enter your Rage the number of times shown for your Barbarian level in the Rages column of the Barbarian Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.
@@ -413,7 +413,7 @@ expend 1 Focus Point to take both the Disengage and the Dodge actions as a Bonus
 **_Step of the Wind._** You can take the Dash action as a Bonus Action. Alternatively, you can expend 1 Focus Point to take both the Disengage and Dash actions as a Bonus Action, and your jump distance is doubled for the turn.",,grant_resource:focus:class_level.monk:short,monk,2,,,
 monk_unarmored_movement,Unarmored Movement,,"Your speed increases by 10 feet while you aren't wearing armor or wielding a Shield. This bonus increases when you reach certain Monk levels, as shown on the Monk Features table.",,,monk,2,,,
 monk_uncanny_metabolism,Uncanny Metabolism,,"When you roll Initiative, you can regain all expended Focus Points. When you do so, roll your Martial Arts die, and regain a number of Hit Points equal to your Monk level plus the number rolled.
-Once you use this feature, you can't use it again until you finish a Long Rest.",,,monk,2,,,
+Once you use this feature, you can't use it again until you finish a Long Rest.",,grant_resource:uncanny_metabolism:1:long,monk,2,,,
 monk_deflect_attacks,Deflect Attacks,,"When an attack roll hits you and its damage includes Bludgeoning, Piercing, or Slashing damage, you can take a Reaction to reduce the attack's total damage against you. The reduction equals 1d10 plus your Dexterity modifier and Monk level.
 If you reduce the damage to 0, you can expend 1 Focus Point to redirect some of the attack's force. If you do so, choose a creature you can see within 5 feet of yourself if the attack was a melee attack or a creature you can see within 60 feet of yourself that isn't behind Total Cover if the attack was a ranged attack. That creature must succeed on a Dexterity saving throw or take damage equal to two rolls of your Martial Arts die plus your Dexterity modifier. The damage is the same type dealt by the attack.",,,monk,3,,,
 monk_monk_subclass,Monk Subclass,,"You gain a Monk subclass of your choice. The Warrior of the Open Hand subclass is detailed after this class's description. A subclass is a specialization that grants you features at certain Monk levels. For the rest of your career, you gain each of your subclass's features that are of your Monk level or lower.",,,monk,3,,,

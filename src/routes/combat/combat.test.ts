@@ -1103,6 +1103,41 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		});
 		expect(combat.resources.resourceSpent('rage')).toBe(2); // NOT restored (gate was empty)
 	});
+
+	it('a MULTI-action option runs every `;`-token on one activation — Uncanny Metabolism regains ALL focus AND heals', async () => {
+		const graph = await graphOf();
+		const character = newCharacter('kai', 'Kai', '5.5e');
+		character.play.autoCalc = true;
+		character.play.hp = { current: 5, max: 40, temp: 0 };
+		character.play.effects = [
+			{
+				iid: '1',
+				label: 'grant',
+				effects: [
+					'grant_resource:focus:6:short', // the pool the multi-action restores
+					'grant_resource:uncanny_metabolism:1:long' // the once/long-rest gate its cost spends
+				],
+				positive: true
+			}
+		];
+		character.play.resourcesSpent = { focus: 6 }; // all focus spent
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.activateResourceOption({
+			id: 'monk_uncanny_metabolism_regain',
+			resourceId: 'uncanny_metabolism',
+			name: 'Uncanny Metabolism',
+			description: '',
+			action: 'restore_resource:focus;heal:1d6+2', // TWO tokens, run in order
+			actionType: 'free',
+			cost: 1,
+			available: true
+		});
+		expect(combat.resources.resourceSpent('focus')).toBe(0); // token 1: all focus back
+		expect(combat.resources.resourceSpent('uncanny_metabolism')).toBe(1); // gate spent
+		expect(character.play.hp.current).toBeGreaterThan(5); // token 2: healed 1d6+2 (min +3)
+	});
 });
 
 /*
