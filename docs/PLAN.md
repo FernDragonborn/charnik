@@ -1189,6 +1189,25 @@ holds the done-work log; these are the OPEN tails it carried):**
   data-drivenly + localized. Blocked partly by **E4** (most SRD spells still ship EMPTY `effects`
   columns — no tokens to summarize yet); until encoded, a per-spell content `summary_*` column is the
   fallback. Cross-ref D6 + E4.
+- [ ] **UBUG-11 · Class-granted actions must DO their mechanical effect, not just toast a note
+  (reported 2026-08-05, tested on a Monk).** A Monk's Flurry of Blows only toasts "Make two Unarmed
+  Strikes" — its `resource_options.action` is a `note:`, so nothing rolls. That's meaningless when the
+  app can roll attacks. The N2 executor (`runActionToken`) resolves heal/roll/apply_effect/apply_condition/
+  gain_action/rest, but a "make N attacks" action degrades to text. **Rework how class actions resolve:**
+  let an action fire ATTACK sub-rolls (to-hit + damage) through the existing `attackRoll` path — Flurry =
+  2× Unarmed Strike, and the general case for any "make an attack" ability. Ties into ACTIONS.md (the
+  `rolls` intent field) + [[charnik-dicetray-attack-damage-concept]]. The whole "action from a class
+  feature" model is the target, not just Flurry.
+- [ ] **UBUG-12 · Roll feedback is hard to read — rework the toasts / roll surface (2026-08-05).** Rolls
+  report through svelte-sonner toasts; the kept/dropped advantage dice + per-type damage breakdown +
+  totals are cramped and hard to parse at a glance. Redesign the roll output for readability (a clearer
+  roll-result card / dice-tray result / restructured toast) so a to-hit, its dropped die, and typed
+  damage read cleanly. Some toasts elsewhere likely want the same pass. Cross-ref the roll log + DiceTray.
+- [ ] **UBUG-13 · Level-up re-offers ASI and DOUBLE-applies it (not filled/persisted; 2026-08-05).** On
+  the level-up page an ASI/feat slot opens EMPTY every time, so re-selecting an ASI adds its ability
+  increase AGAIN (stacking on the sheet) and lets you re-pick a slot already spent. The chosen ASI/feat
+  per level-slot must be PERSISTED (shown filled on open, applied once) so re-opening level-up can't
+  re-grant it. Relates to the build ASI → `abilityBoosts` flow + the per-class feat-slot model.
 - [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing — hidden spells still showed in
   combat.** DONE 2026-07-21. The spellbook's eye/pin were local `$state` sets on a THROWAWAY
   `demoCharacter()` (never persisted, never read by combat), and `buildSpellGroups` rendered every
