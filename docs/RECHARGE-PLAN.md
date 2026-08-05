@@ -68,8 +68,11 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
    initiativeRegain` → `CombatVM.toggleCombat`→`fireInitiativeRegen` (`ResourceTracker.restoreUpTo` +
    toast, gated on auto-calc). **`monk_perfect_focus` (Focus → 4) shipped + app-verified.** Still open
    (POOL gaps, not the mechanism): `bard_superior_inspiration` needs Bardic Inspiration as a tracked
-   uses-pool (today only a `grant_roll`); Evergreen Wild Shape needs Wild Shape tracked. Champion Heroic
-   Rally is a different trigger (turn-start heal) → a future token. **Arbitrary "any action on any
+   uses-pool (today only a `grant_roll`) — with a wrinkle: **Font of Inspiration** (bard L5) flips BI
+   recharge long→short, but a re-grant with equal max won't override the base under `pushResource`'s
+   largest-MAX-wins rule → needs a **recharge-precedence tweak (short beats long at equal max)**. Evergreen
+   Wild Shape needs Wild Shape tracked. Champion Heroic Rally is a different trigger (turn-start heal) → a
+   future token. **Arbitrary "any action on any
    event" = L3 plugin `onEvent` (scripting), NOT a wider L1 token.** See PLAN.md item 3.
 
 6. **Concentration UX — BEHAVIOR = variant A, SURFACE = B4. BUILT + app-verified 2026-08-04 (`1b7a4f0`).**
