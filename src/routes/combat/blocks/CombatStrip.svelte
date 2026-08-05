@@ -264,6 +264,7 @@
 
 	.senses-strip {
 		display: flex;
+		flex-wrap: wrap;
 		align-items: baseline;
 		gap: 14px;
 		background: var(--color-surface);
