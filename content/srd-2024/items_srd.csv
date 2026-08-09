@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fa92-7ecb-9807-4042842f8ba9
-#content-updated_at: 2026-07-30
-#content-hash: xxh64:5d862f2d9e089e57
+#content-updated_at: 2026-08-09
+#content-hash: xxh64:7263be6654dfbb3c
 id,name_en,name_uk,text_en,text_uk,effects,category,item_type,cost,weight_lb,properties,damage,range,ac,armor_dex_cap,str_min,stealth_disadvantage,attunement,rarity
 club,Club,,,,,weapon,simple melee,1 SP,2,Light; mastery: Slow,1d4 bludgeoning,,,,,false,false,
 dagger,Dagger,,,,,weapon,simple melee,2 GP,1,"Finesse, Light, Thrown (Range 20/60); mastery: Nick",1d4 piercing,20/60,,,,false,false,
@@ -772,7 +772,7 @@ After dealing its extra damage to a creature, the ammunition becomes nonmagical.
 </tbody>
 </table>",,,weapon,weapon (any ammunition),,,,,,,,,false,false,very_rare
 amulet_of_health,Amulet of Health,,"_Wondrous Item, Rare (Requires Attunement)_
-Your Constitution is 19 while you wear this amulet. It has no effect on you if your Constitution is 19 or higher without it.",,,gear,wondrous item,,,,,,,,,false,true,rare
+Your Constitution is 19 while you wear this amulet. It has no effect on you if your Constitution is 19 or higher without it.",,set_override:con:19:floor,gear,wondrous item,,,,,,,,,false,true,rare
 amulet_of_proof_against_detection_and_location,Amulet of Proof against Detection and Location,,"_Wondrous Item, Uncommon (Requires Attunement)_
 While wearing this amulet, you can't be targeted by Divination spells or perceived through magical scrying sensors unless you allow it.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
 amulet_of_the_planes,Amulet of the Planes,,"_Wondrous Item, Very Rare (Requires Attunement)_
@@ -1179,7 +1179,7 @@ _Curse._ This weapon is cursed, and becoming attuned to it extends the curse to 
 Whenever another creature damages you while the weapon is in your possession, you must succeed on a DC 15 Wisdom saving throw or go berserk. This berserk state ends when you start your turn and there are no creatures within 60 feet of you that you can see or hear.
 While berserk, you regard the creature nearest to you that you can see or hear as your enemy. If there are multiple possible creatures, choose one at random. On each of your turns, you must move as close to the creature as possible and take the Attack action, targeting the creature. If you're unable to get close enough to the creature to attack it with the weapon, your turn ends after you've used up all your available movement. If the creature dies or can no longer be seen or heard by you, the next nearest creature that you can see or hear becomes your new target.",,,weapon,weapon (battleaxe,,,,,,,,,false,true,rare
 boots_of_elvenkind,Boots of Elvenkind,,"_Wondrous Item, Uncommon_
-While you wear these boots, your steps make no sound, regardless of the surface you are moving across. You also have Advantage on Dexterity (Stealth) checks.",,,gear,wondrous item,,,,,,,,,false,false,uncommon
+While you wear these boots, your steps make no sound, regardless of the surface you are moving across. You also have Advantage on Dexterity (Stealth) checks.",,advantage:skill.stealth,gear,wondrous item,,,,,,,,,false,false,uncommon
 boots_of_levitation,Boots of Levitation,,"_Wondrous Item, Rare (Requires Attunement)_
 While you wear these boots, you can cast _Levitate_ on yourself.",,,gear,wondrous item,,,,,,,,,false,true,rare
 boots_of_speed,Boots of Speed,,"_Wondrous Item, Rare (Requires Attunement)_
@@ -1191,14 +1191,14 @@ Once on each of your turns, you can jump up to 30 feet by spending only 10 feet 
 boots_of_the_winterlands,Boots of the Winterlands,,"_Wondrous Item, Uncommon (Requires Attunement)_
 These furred boots are snug and feel warm. While wearing them, you gain the following benefits.
 _Cold Resistance._ You have Resistance to Cold damage and can tolerate temperatures of 0 degrees Fahrenheit or lower without any additional protection.
-_Winter Strider._ You ignore Difficult Terrain created by ice or snow.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
+_Winter Strider._ You ignore Difficult Terrain created by ice or snow.",,resist_immune:resist:cold,gear,wondrous item,,,,,,,,,false,true,uncommon
 bowl_of_commanding_water_elementals,Bowl of Commanding Water Elementals,,"_Wondrous Item, Rare_
 While this bowl is filled with water and you are within 5 feet of it, you can take a Magic action to summon a Water Elemental. The elemental appears in an unoccupied space as close to the bowl as possible, understands your languages, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The bowl can't be used this way again until the next dawn.
 The bowl is about 1 foot in diameter and half as deep. It holds about 3 gallons.",,,gear,wondrous item,,,,,,,,,false,false,rare
 bracers_of_archery,Bracers of Archery,,"_Wondrous Item, Uncommon (Requires Attunement)_
 While wearing these bracers, you have proficiency with the Longbow and Shortbow, and you gain a +2 bonus to damage rolls made with such weapons.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
 bracers_of_defense,Bracers of Defense,,"_Wondrous Item, Rare (Requires Attunement)_
-While wearing these bracers, you gain a +2 bonus to Armor Class if you are wearing no armor and using no Shield.",,,gear,wondrous item,,,,,,,,,false,true,rare
+While wearing these bracers, you gain a +2 bonus to Armor Class if you are wearing no armor and using no Shield.",,not is_wearing_armor and not is_wearing_shield ? flat_bonus:ac+2,gear,wondrous item,,,,,,,,,false,true,rare
 brazier_of_commanding_fire_elementals,Brazier of Commanding Fire Elementals,,"_Wondrous Item, Rare_
 While you are within 5 feet of this brazier, you can take a Magic action to summon a Fire Elemental. The elemental appears in an unoccupied space as close to the brazier as possible, understands your languages, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The brazier can't be used this way again until the next dawn.",,,gear,wondrous item,,,,,,,,,false,false,rare
 brooch_of_shielding,Brooch of Shielding,,"_Wondrous Item, Uncommon (Requires Attunement)_
@@ -1329,12 +1329,12 @@ _Web._ You can cast _Web_ (save DC 13). The web created by the spell fills twice
 cloak_of_displacement,Cloak of Displacement,,"_Wondrous Item, Rare (Requires Attunement)_
 While you wear this cloak, it magically projects an illusion that makes you appear to be standing in a place near your actual location, causing any creature to have Disadvantage on attack rolls against you. If you take damage, the property ceases to function until the start of your next turn. This property is suppressed while your Speed is 0.",,,gear,wondrous item,,,,,,,,,false,true,rare
 cloak_of_elvenkind,Cloak of Elvenkind,,"_Wondrous Item, Uncommon (Requires Attunement)_
-While you wear this cloak, Wisdom (Perception) checks made to perceive you have Disadvantage, and you have Advantage on Dexterity (Stealth) checks.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
+While you wear this cloak, Wisdom (Perception) checks made to perceive you have Disadvantage, and you have Advantage on Dexterity (Stealth) checks.",,advantage:skill.stealth;note:Wisdom (Perception) checks to perceive you have Disadvantage,gear,wondrous item,,,,,,,,,false,true,uncommon
 cloak_of_invisibility,Cloak of Invisibility,,"_Wondrous Item, Legendary (Requires Attunement)_
 This cloak has 3 charges and regains 1d3 expended charges daily at dawn. While wearing the cloak, you can take a Magic action to pull its hood over your
 head and expend 1 charge to give yourself the Invisible condition for 1 hour. The effect ends early if you pull the hood down (no action required) or cease wearing the cloak.",,,gear,wondrous item,,,,,,,,,false,true,legendary
 cloak_of_protection,Cloak of Protection,,"_Wondrous Item, Uncommon (Requires Attunement)_
-You gain a +1 bonus to Armor Class and saving throws while you wear this cloak.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
+You gain a +1 bonus to Armor Class and saving throws while you wear this cloak.",,flat_bonus:ac+1;flat_bonus:saves+1,gear,wondrous item,,,,,,,,,false,true,uncommon
 cloak_of_the_bat,Cloak of the Bat,,"_Wondrous Item, Rare (Requires Attunement)_
 While wearing this cloak, you have Advantage on Dexterity (Stealth) checks. In an area of Dim Light or Darkness, you can grip the edges of the cloak and use it to gain a Fly Speed of 40 feet. If you ever fail to grip the cloak's edges while flying in this way, or if you are no longer in Dim Light or Darkness, you lose this Fly Speed.
 While wearing the cloak in an area of Dim Light or Darkness, you can cast _Polymorph_ on yourself, shape-shifting into a Bat. While in that form, you retain your Intelligence, Wisdom, and Charisma scores. The cloak can't be used this way again until the next dawn.",,,gear,wondrous item,,,,,,,,,false,true,rare
@@ -1737,7 +1737,7 @@ These crystal lenses fit over the eyes. They have 3 charges. While wearing them,
 eyes_of_minute_seeing,Eyes of Minute Seeing,,"_Wondrous Item, Uncommon_
 These crystal lenses fit over the eyes. While wearing them, your vision improves significantly out to a range of 1 foot, granting you Darkvision within that range and Advantage on Intelligence (Investigation) checks made to examine something within that range.",,,gear,wondrous item,,,,,,,,,false,false,uncommon
 eyes_of_the_eagle,Eyes of the Eagle,,"_Wondrous Item, Uncommon_
-These crystal lenses fit over the eyes. While wearing them, you have Advantage on Wisdom (Perception) checks that rely on sight. In conditions of clear visibility, you can make out details of even extremely distant creatures and objects as small as 2 feet across.",,,gear,wondrous item,,,,,,,,,false,false,uncommon
+These crystal lenses fit over the eyes. While wearing them, you have Advantage on Wisdom (Perception) checks that rely on sight. In conditions of clear visibility, you can make out details of even extremely distant creatures and objects as small as 2 feet across.",,advantage:skill.perception;note:Only checks that rely on sight,gear,wondrous item,,,,,,,,,false,false,uncommon
 feather_token,Feather Token,,"_Wondrous Item, Rarity Varies_
 This object looks like a feather. Different types of feather tokens exist, each with a different single-use effect. The GM chooses the kind of token or determines it randomly by rolling on the Feather Tokens table. The type of token determines its rarity.
 _Anchor (Uncommon)._ You can take a Magic action to touch the token to a boat or ship. For the next 24 hours, the vessel can't be moved by any means. Touching the token to the vessel again ends the effect. When the effect ends, the token disappears.
@@ -1810,7 +1810,7 @@ When you hit with an attack roll using this magic weapon, the target takes an ex
 In freezing temperatures, the weapon sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet.
 When you draw this weapon, you can extinguish all nonmagical flames within 30 feet of yourself. Once used, this property can't be used again for 1 hour.",,,weapon,weapon (glaive,,,,,,,,,false,true,very_rare
 gauntlets_of_ogre_power,Gauntlets of Ogre Power,,"_Wondrous Item, Uncommon (Requires Attunement)_
-Your Strength is 19 while you wear these gauntlets. They have no effect on you if your Strength is 19 or higher without them.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
+Your Strength is 19 while you wear these gauntlets. They have no effect on you if your Strength is 19 or higher without them.",,set_override:str:19:floor,gear,wondrous item,,,,,,,,,false,true,uncommon
 gem_of_brightness,Gem of Brightness,,"_Wondrous Item, Uncommon_
 This prism has 50 charges. While you are holding it, you can take a Magic action and use one of three command words to cause one of the following effects:
 **First Command Word.** The gem sheds Bright Light in a 30-foot radius and Dim Light for an additional 30 feet. This effect doesn't expend a charge. It lasts until you take a Bonus Action to repeat the command word or until you use another function of the gem.
@@ -1908,7 +1908,7 @@ Any spell you cast from the hat uses your spell save DC and spell attack bonus.
 </tbody>
 </table>",,,gear,wondrous item,,,,,,,,,false,true,very_rare
 headband_of_intellect,Headband of Intellect,,"_Wondrous Item, Uncommon (Requires Attunement)_
-Your Intelligence is 19 while you wear this headband. It has no effect on you if your Intelligence is 19 or higher without it.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
+Your Intelligence is 19 while you wear this headband. It has no effect on you if your Intelligence is 19 or higher without it.",,set_override:int:19:floor,gear,wondrous item,,,,,,,,,false,true,uncommon
 helm_of_brilliance,Helm of Brilliance,,"_Wondrous Item, Very Rare (Requires Attunement)_
 This helm is set with 1d10 diamonds, 2d10 rubies, 3d10 fire opals, and 4d10 opals. Any gem pried from the helm crumbles to dust. When all the gems are removed or destroyed, the helm loses its magic.
 You gain the following benefits while wearing the helm.
@@ -2034,7 +2034,7 @@ mace_of_terror,Mace of Terror,,"_Weapon (Mace), Rare (Requires Attunement)_
 This magic weapon has 3 charges and regains 1d3 expended charges daily at dawn. While holding the weapon, you can take a Magic action and expend 1 charge to release a wave of terror from it. Each creature of your choice within 30 feet of you must succeed on a DC 15 Wisdom saving throw or have the Frightened condition for 1 minute. While
 Frightened in this way, a creature must spend its turns trying to move as far away from you as it can, and it can't make Opportunity Attacks. For its action, it can use only the Dash action or try to escape from an effect that prevents it from moving. If it has nowhere it can move, the creature can take the Dodge action. At the end of each of its turns, a creature repeats the save, ending the effect on itself on a success.",,,weapon,weapon (mace),,,,,,,,,false,true,rare
 mantle_of_spell_resistance,Mantle of Spell Resistance,,"_Wondrous Item, Rare (Requires Attunement)_
-You have Advantage on saving throws against spells while you wear this cloak.",,,gear,wondrous item,,,,,,,,,false,true,rare
+You have Advantage on saving throws against spells while you wear this cloak.",,note:Advantage on saving throws against spells,gear,wondrous item,,,,,,,,,false,true,rare
 manual_of_bodily_health,Manual of Bodily Health,,"_Wondrous Item, Very Rare_
 This book contains health and nutrition tips, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Constitution increases by 2, to a maximum of 30. The manual then loses its magic but regains it in a century.",,,gear,wondrous item,,,,,,,,,false,false,very_rare
 manual_of_gainful_exercise,Manual of Gainful Exercise,,"_Wondrous Item, Very Rare_
@@ -2589,7 +2589,7 @@ While wearing this ring, you are immune to magic that allows other creatures to 
 You can take a Magic action to cause the ring to become imperceptible until you take another Magic action to make it perceptible, until you remove the ring, or until you die.
 If you die while wearing the ring, your soul enters it, unless it already houses a soul. You can remain in the ring or depart for the afterlife. As long as your soul is in the ring, you can telepathically communicate with any creature wearing it. A wearer can't prevent this telepathic communication.",,,gear,ring,,,,,,,,,false,true,uncommon
 ring_of_protection,Ring of Protection,,"_Ring, Rare (Requires Attunement)_
-You gain a +1 bonus to Armor Class and saving throws while wearing this ring.",,,gear,ring,,,,,,,,,false,true,rare
+You gain a +1 bonus to Armor Class and saving throws while wearing this ring.",,flat_bonus:ac+1;flat_bonus:saves+1,gear,ring,,,,,,,,,false,true,rare
 ring_of_regeneration,Ring of Regeneration,,"_Ring, Very Rare (Requires Attunement)_
 While wearing this ring, you regain 1d6 Hit Points every 10 minutes if you have at least 1 Hit Point. If you lose a body part, the ring causes the missing part to regrow and return to full functionality after 1d6 + 1 days if you have at least 1 Hit Point the whole time.",,,gear,ring,,,,,,,,,false,true,very_rare
 ring_of_resistance,Ring of Resistance,,"_Ring, Rare_
@@ -2691,9 +2691,9 @@ This ring stores spells cast into it, holding them until the attuned wearer uses
 Any creature can cast a spell of level 1 through 5 into the ring by touching the ring as the spell is cast. The spell has no effect other than to be stored in the ring. If the ring can't hold the spell, the spell is expended without effect. The level of the slot used to cast the spell determines how much space it uses.
 While wearing this ring, you can cast any spell stored in it. The spell uses the slot level, spell save DC, spell attack bonus, and spellcasting ability of the original caster but is otherwise treated as if you cast the spell. The spell cast from the ring is no longer stored in it, freeing up space.",,,gear,ring,,,,,,,,,false,true,rare
 ring_of_spell_turning,Ring of Spell Turning,,"_Ring, Legendary (Requires Attunement)_
-While wearing this ring, you have Advantage on saving throws against spells. If you succeed on the save for a spell of level 7 or lower, the spell has no effect on you. If that spell targeted only you and didn't create an area of effect, you can take a Reaction to deflect the spell back at the spell's caster; the caster must make a saving throw against the spell using their own spell save DC.",,,gear,ring,,,,,,,,,false,true,legendary
+While wearing this ring, you have Advantage on saving throws against spells. If you succeed on the save for a spell of level 7 or lower, the spell has no effect on you. If that spell targeted only you and didn't create an area of effect, you can take a Reaction to deflect the spell back at the spell's caster; the caster must make a saving throw against the spell using their own spell save DC.",,note:Advantage on saving throws against spells,gear,ring,,,,,,,,,false,true,legendary
 ring_of_swimming,Ring of Swimming,,"_Ring, Uncommon_
-You have a Swim Speed of 40 feet while wearing this ring.",,,gear,ring,,,,,,,,,false,false,uncommon
+You have a Swim Speed of 40 feet while wearing this ring.",,set_override:speed.swim:40,gear,ring,,,,,,,,,false,false,uncommon
 ring_of_telekinesis,Ring of Telekinesis,,"_Ring, Very Rare (Requires Attunement)_
 While wearing this ring, you can cast _Telekinesis_ from it.",,,gear,ring,,,,,,,,,false,true,very_rare
 ring_of_the_ram,Ring of the Ram,,"_Ring, Rare (Requires Attunement)_
@@ -3293,7 +3293,7 @@ The staff can be wielded as a magic Quarterstaff. On a hit, it deals damage as a
 stone_of_controlling_earth_elementals,Stone of Controlling Earth Elementals,,"_Wondrous Item, Rare_
 While touching this 5-pound stone to the ground, you can take a Magic action to summon an **Earth Elemental**. The elemental appears in an unoccupied space you choose within 30 feet of yourself, obeys your commands, and takes its turn immediately after you on your Initiative count. The elemental disappears after 1 hour, when it dies, or when you dismiss it as a Bonus Action. The stone can't be used this way again until the next dawn.",,,gear,wondrous item,,,,,,,,,false,false,rare
 stone_of_good_luck,Stone of Good Luck (Luckstone),,"_Wondrous Item, Uncommon (Requires Attunement)_
-While this polished agate is on your person, you gain a +1 bonus to ability checks and saving throws.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
+While this polished agate is on your person, you gain a +1 bonus to ability checks and saving throws.",,flat_bonus:ability_checks+1;flat_bonus:saves+1,gear,wondrous item,,,,,,,,,false,true,uncommon
 sun_blade,Sun Blade,,"_Weapon (Longsword), Rare (Requires Attunement)_
 This item appears to be a sword hilt.
 _Blade of Radiance._ While grasping the hilt, you can take a Bonus Action to cause a blade of pure radiance to spring into existence or make the blade disappear. While the blade exists, this magic weapon functions as a Longsword with the Finesse property. If you are proficient with Longswords or Shortswords, you are proficient with the _Sun Blade_.

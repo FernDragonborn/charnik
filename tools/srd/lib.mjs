@@ -124,6 +124,26 @@ export function skillList(s) {
  * model). On collision, append `_2`, `_3`… deterministically by input order (snake, E3). Rare —
  * e.g. "Spell Scroll" appears both as adventuring gear and as a magic item in SRD 5.2.1.
  */
+/**
+ * Read `id → <col>` out of an already-written content CSV, so a converter re-run PRESERVES columns
+ * that were authored AFTER conversion rather than derived from the SRD prose — effect tokens
+ * (conditions, class features, magic items), `expertise_slots`, half-feat ability choices. Without
+ * this a raw re-run silently wipes the authoring, which has bitten this repo before. Missing file or
+ * blank cell → absent from the map, so the caller's `?? ''` default takes over.
+ */
+export function existingColById(csvPath, col) {
+	if (!existsSync(csvPath)) return new Map();
+	const raw = readFileSync(csvPath, 'utf8')
+		.replace(/^﻿/, '') // written with a UTF-8 BOM (Excel safety) — strip before the #-filter
+		.split('\n')
+		.filter((l) => !l.startsWith('#'))
+		.join('\n');
+	const map = new Map();
+	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
+		if (r.id && r[col]) map.set(r.id, r[col]);
+	return map;
+}
+
 export function dedupeIds(rows) {
 	const seen = new Set();
 	for (const r of rows) {

@@ -866,17 +866,30 @@ stay semi-manual.
   re-derive reactively. MIGRATIONS: decided 2026-07-15 — 0 users yet, so NO migration work
   now; schema may change freely (breaking) until release; the schemaVersion machinery stays
   for post-release.
-- [ ] **MAGIC-ITEM-EFX · Tokenize the shipped SRD magic-item effects (GLOBAL content task,
-  surfaced by DEMO-1 gap 2, 2026-08-04).** The `item` schema already carries an `effects` column and
-  equipped/attuned effects already flow through `gatherEffects` → AC/attacks/saves re-derive — but
-  **every shipped SRD magic-item row leaves `effects` EMPTY**, so an attuned item (e.g. Cloak of
-  Protection, Ring of Protection) shows its attunement slot + prose yet gives NO derived bonus. Task =
-  author the bounded-vocab tokens on the SRD magic items whose mechanics ARE expressible today
-  (`flat_bonus:ac+1`, `flat_bonus:saves+1`, resist/immune, `set_override`, `grant_resource`…), leaving
-  the procedural ones as text fallback. Converter must PRESERVE authored item effects on re-run (same
-  invariant as class_features / conditions) + re-stamp the content hash. RAW-faithful values only (never
-  invent). This is what makes the demo's attuned Cloak actually read +1 AC/+1 saves; it's whole-content,
-  not demo-specific.
+- [~] **MAGIC-ITEM-EFX · Tokenize the shipped SRD magic-item effects (GLOBAL content task,
+  surfaced by DEMO-1 gap 2, 2026-08-04).** **FIRST TRANCHE DONE 2026-08-09 — 14 items × both editions,
+  each read off that edition's own SRD text.** The plumbing was already there (an `effects` column,
+  equipped/attuned rows flowing through `gatherEffects`); every magic-item row simply shipped EMPTY.
+  Authored: Cloak/Ring of Protection (`flat_bonus:ac+1;flat_bonus:saves+1`), Stone of Good Luck
+  (`ability_checks`+`saves`), Amulet of Health / Headband of Intellect / Gauntlets of Ogre Power
+  (**`set_override:<abil>:19:floor`** — the FLOOR mode matters: RAW "no effect if already 19 or higher",
+  and a plain set would drag a 20 down), Ring of Swimming (`set_override:speed.swim:40`), Boots of the
+  Winterlands (`resist_immune:resist:cold`), Boots/Cloak of Elvenkind + Eyes of the Eagle (Stealth /
+  Perception advantage), Bracers of Defense (the guard `not is_wearing_armor and not is_wearing_shield ?
+  flat_bonus:ac+2`), Mantle of Spell Resistance + Ring of Spell Turning (`note:` — the vocabulary has no
+  "against spells" save qualifier, so they stay text rather than fold too broadly). **Edition
+  divergences kept:** 2014 Boots of Elvenkind are qualified ("checks that rely on moving silently" —
+  folded, qualifier noted) and the 2014 Cloak needs its hood UP (an action), so it stays text while the
+  2024 one folds. **Converter preservation FIXED** — `convert-items.mjs` and the 2014 converter emitted
+  `effects: ''`, so a re-run wiped the authoring (verified by doing exactly that, then re-running to
+  prove the fix: byte-identical output, same hash). The `existingColById` helper the other two
+  converters had each copied is now one export in `tools/srd/lib.mjs`. Hashes re-stamped;
+  `items_content.test.ts` pins the values + drift. **App-verified:** demo Karroth's attuned Cloak now
+  reads AC 14 → **15** with "Cloak of Protection +1" in the trace, and every save +1
+  (`design-preview/magic-item-efx.png`). **REMAINING (the `[~]`):** the other ~240 magic items — mostly
+  charges/activated procedures (RECHARGE slice 3), GM-chosen variants (Ring/Armor of Resistance),
+  weapon-scoped bonuses (the open §A `damage:<qualifier>` gap) and the generic +1/+2/+3 rows that need
+  one row per tier.
 - [x] **DEMO-1 · Showcase demo character: warlock/barbarian multiclass (user-decided
   2026-07-19; DEMO-SPECIFIC scope DONE 2026-08-04).** SEED REBUILT 2026-08-04 (`src/lib/demo/sheet.ts`):
   **Karroth the Red** — Tiefling (Infernal) · Soldier · **Warlock 5 (Fiend Patron) × Barbarian 3

@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fd4e-7cbd-ab16-da8d50473527
-#content-updated_at: 2026-07-30
-#content-hash: xxh64:0154ef8de6ee086d
+#content-updated_at: 2026-08-09
+#content-hash: xxh64:4df1d933ea950b7f
 id,name_en,name_uk,text_en,text_uk,effects,category,item_type,cost,weight_lb,properties,damage,range,ac,armor_dex_cap,str_min,stealth_disadvantage,attunement,rarity
 club,Club,,,,,weapon,simple melee,1 sp,2,Light,1d4 bludgeoning,,,,,false,false,
 dagger,Dagger,,,,,weapon,simple melee,2 gp,1,"Finesse, light, thrown (range 20/60)",1d4 piercing,20/60,,,,false,false,
@@ -157,7 +157,7 @@ waterskin,Waterskin,,,,,gear,adventuring gear,2 sp,5,,,,,,,false,false,
 whetstone,Whetstone,,,,,gear,adventuring gear,1 cp,1,,,,,,,false,false,
 adamantine_armor,Adamantine Armor,,"This suit of armor is reinforced with adamantine, one of the hardest substances in existence. While you're wearing it, any critical hit against you becomes a normal hit.",,,armor,armor (medium or heavy,,,,,,,,,false,false,uncommon
 ammunition_1_2_or_3,"Ammunition, +1, +2, or +3",,"You have a bonus to attack and damage rolls made with this piece of magic ammunition. The bonus is determined by the rarity of the ammunition. Once it hits a target, the ammunition is no longer magical.",,,weapon,weapon (any ammunition),,,,,,,,,false,false,very_rare
-amulet_of_health,Amulet of Health,,Your Constitution score is 19 while you wear this amulet. It has no effect on you if your Constitution is already 19 or higher.,,,gear,wondrous item,,,,,,,,,false,true,rare
+amulet_of_health,Amulet of Health,,Your Constitution score is 19 while you wear this amulet. It has no effect on you if your Constitution is already 19 or higher.,,set_override:con:19:floor,gear,wondrous item,,,,,,,,,false,true,rare
 location,Location,,"While wearing this amulet, you are hidden from divination magic. You can't be targeted by such magic or perceived through magical scrying sensors.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
 amulet_of_the_planes,Amulet of the Planes,,"While wearing this amulet, you can use an action to name a location that you are familiar with on another plane of existence. Then make a DC 15 Intelligence check. On a successful check, you cast the",,,gear,wondrous item,,,,,,,,,false,true,very_rare
 animated_shield,Animated Shield,,,,,armor,armor (shield),,,,,,,,,false,true,very_rare
@@ -196,18 +196,18 @@ If you aren't a dwarf, you gain the following additional benefits while wearing 
 berserker_axe,Berserker Axe,,"You gain a +1 bonus to attack and damage rolls made
 with this magic weapon. In addition, while you are attuned to this weapon, your hit point maximum increases by 1 for each level you have attained.
 than this one, unless no foe is within 60 feet of you that you can see or hear. Whenever a hostile creature damages you while the axe is in your possession, you must succeed on a DC 15 Wisdom saving throw or go berserk. While berserk, you must use your action each round to attack the creature nearest to you with the axe. If you can make extra attacks as part of the Attack action, you use those extra attacks, moving to attack the next nearest creature after you fell your current target. If you have multiple possible targets, you attack one at random. You are berserk until you start your turn with no creatures within 60 feet of you that you can see or hear.",,,weapon,weapon (any axe),,,,,,,,,false,true,rare
-boots_of_elvenkind,Boots of Elvenkind,,,,,gear,wondrous item,,,,,,,,,false,false,uncommon
+boots_of_elvenkind,Boots of Elvenkind,,,,advantage:skill.stealth;note:Only checks that rely on moving silently,gear,wondrous item,,,,,,,,,false,false,uncommon
 boots_of_levitation,Boots of Levitation,,,,,gear,wondrous item,,,,,,,,,false,true,rare
 boots_of_speed,Boots of Speed,,,,,gear,wondrous item,,,,,,,,,false,true,rare
 boots_of_striding_and_springing,Boots of Striding and Springing,,,,,gear,wondrous item,,,,,,,,,false,true,uncommon
 boots_of_the_winterlands,Boots of the Winterlands,,"These furred boots are snug and feel quite warm. While you wear them, you gain the following benefits:
 •You have resistance to cold damage.
 •You ignore difficult terrain created by ice or snow.
-•You can tolerate temperatures as low as −50degrees Fahrenheit without any additional protection. If you wear heavy clothes, you can tolerate temperatures as low as −100 degreesFahrenheit.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
+•You can tolerate temperatures as low as −50degrees Fahrenheit without any additional protection. If you wear heavy clothes, you can tolerate temperatures as low as −100 degreesFahrenheit.",,resist_immune:resist:cold,gear,wondrous item,,,,,,,,,false,true,uncommon
 bowl_of_commanding_water_elementals,Bowl of Commanding Water Elementals,,"While this bowl is filled with water, you can use an action to speak the bowl's command word and summon a water elemental, as if you had cast the
 The bowl is about 1 foot in diameter and half as deep. It weighs 3 pounds and holds about 3 gallons.",,,gear,wondrous item,,,,,,,,,false,false,rare
 bracers_of_archery,Bracers of Archery,,"While wearing these bracers, you have proficiency with the longbow and shortbow, and you gain a +2 bonus to damage rolls on ranged attacks made with such weapons.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
-bracers_of_defense,Bracers of Defense,,"While wearing these bracers, you gain a +2 bonus to AC if you are wearing no armor and using no shield.",,,gear,wondrous item,,,,,,,,,false,true,rare
+bracers_of_defense,Bracers of Defense,,"While wearing these bracers, you gain a +2 bonus to AC if you are wearing no armor and using no shield.",,not is_wearing_armor and not is_wearing_shield ? flat_bonus:ac+2,gear,wondrous item,,,,,,,,,false,true,rare
 brazier_of_commanding_fire_elementals,Brazier of Commanding Fire Elementals,,"While a fire burns in this brass brazier, you can use an action to speak the brazier's command word and summon a fire elemental, as if you had cast the
 The brazier weighs 5 pounds.",,,gear,wondrous item,,,,,,,,,false,false,rare
 brooch_of_shielding,Brooch of Shielding,,"While wearing this brooch, you have resistance to force damage, and you have immunity to damage from the",,,gear,wondrous item,,,,,,,,,false,true,uncommon
@@ -228,8 +228,8 @@ cloak_of_arachnida,Cloak of Arachnida,,"•You have resistance to poison damage.
 •You can move up, down, and across vertical surfaces and upside down along ceilings, while leaving your hands free.
 •You can't be caught in webs of any sort and can move through webs as if they were difficult terrain.",,,gear,wondrous item,,,,,,,,,false,true,very_rare
 cloak_of_displacement,Cloak of Displacement,,,,,gear,wondrous item,,,,,,,,,false,true,rare
-cloak_of_elvenkind,Cloak of Elvenkind,,,,,gear,wondrous item,,,,,,,,,false,true,uncommon
-cloak_of_protection,Cloak of Protection,,You gain a +1 bonus to AC and saving throws while you wear this cloak.,,,gear,wondrous item,,,,,,,,,false,true,uncommon
+cloak_of_elvenkind,Cloak of Elvenkind,,,,"note:With the hood up: Advantage on Stealth, and Perception checks to see you have Disadvantage",gear,wondrous item,,,,,,,,,false,true,uncommon
+cloak_of_protection,Cloak of Protection,,You gain a +1 bonus to AC and saving throws while you wear this cloak.,,flat_bonus:ac+1;flat_bonus:saves+1,gear,wondrous item,,,,,,,,,false,true,uncommon
 cloak_of_thebat,Cloak of theBat,,"While wearing this cloak, you have advantage on Dexterity (Stealth) checks. In an area of dim light or darkness, you can grip the edges of the cloak with both hands and use it to fly at a speed of 40 feet. If you ever fail to grip the cloak's edges while flying in this way, or if you are no longer in dim light or darkness, you lose this flying speed.
 While wearing the cloak in an area of dim light or darkness, you can use your action to cast
 on yourself, transforming into a bat. While you are in the form of the bat, you retain your Intelligence, Wisdom, and Charisma scores. The cloak can't be used this way again until the next dawn.",,,gear,wondrous item,,,,,,,,,false,true,rare
@@ -285,14 +285,14 @@ The cloud persists as long as the bottle is open. Closing the bottle requires yo
 eyes_of_charming,Eyes of Charming,,"These crystal lenses fit over the eyes. They have 3 charges. While wearing them, you can expend 1 charge as an action to cast the
 (save DC 13) on a humanoid within 30 feet of you, provided that you and the target can see each other. The lenses regain all expended charges daily at dawn.",,,gear,wondrous item,,,,,,,,,false,true,uncommon
 eyes_of_minute_seeing,Eyes of Minute Seeing,,,,,gear,wondrous item,,,,,,,,,false,false,uncommon
-eyes_of_the_eagle,Eyes of the Eagle,,,,,gear,wondrous item,,,,,,,,,false,true,uncommon
+eyes_of_the_eagle,Eyes of the Eagle,,,,advantage:skill.perception;note:Only checks that rely on sight,gear,wondrous item,,,,,,,,,false,true,uncommon
 feather_token,Feather Token,,"As a bonus action on your turn, you can direct the whip to fly up to 20 feet and repeat the attack against a creature within 10 feet of it. The whip disappears after
 1 hour, when you use an action to dismiss it, or when you are incapacitated or die.",,,gear,wondrous item,,,,,,,,,false,false,rare
 flame_tongue,Flame Tongue,,,,,weapon,weapon (any sword),,,,,,,,,false,true,rare
 folding_boat,Folding Boat,,,,,gear,wondrous item,,,,,,,,,false,false,rare
 frost_brand,Frost Brand,,"In freezing temperatures, the blade sheds bright light in a 10-foot radius and dim light for an additional 10 feet.
 When you draw this weapon, you can extinguish all nonmagical flames within 30 feet of you. This property can be used no more than once per hour.",,,weapon,weapon (any sword),,,,,,,,,false,true,very_rare
-gauntlets_of_ogre_power,Gauntlets of Ogre Power,,Your Strength score is 19 while you wear these gauntlets. They have no effect on you if your Strength is already 19 or higher.,,,gear,wondrous item,,,,,,,,,false,true,uncommon
+gauntlets_of_ogre_power,Gauntlets of Ogre Power,,Your Strength score is 19 while you wear these gauntlets. They have no effect on you if your Strength is already 19 or higher.,,set_override:str:19:floor,gear,wondrous item,,,,,,,,,false,true,uncommon
 gem_of_brightness,Gem of Brightness,,"This prism has 50 charges. While you are holding it, you can use an action to speak one of three command words to cause one of the following effects:
 •The first command word causes the gem to shed bright light in a 30-foot radius and dim light for an additional 30 feet. This effect doesn't expend a charge. It lasts until you use a bonus action to repeat the command word or until you use another function of the gem.
 •The second command word expends 1 charge and causes the gem to fire a brilliant beam of light atone creature you can see within 60 feet of you. Thecreature must succeed on a DC 15 Constitutionsaving throw or become blinded for 1 minute. Thecreature can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success.
@@ -311,7 +311,7 @@ Placing an object in the haversack follows the normal rules for interacting with
 The haversack has a few limitations. If it is overloaded, or if a sharp object pierces it or tears it, the haversack ruptures and is destroyed. If the haversack is destroyed, its contents are lost forever, although an artifact always turns up again somewhere. If the haversack is turned inside out, its contents spill forth, unharmed, and the haversack must be put right
 before it can be used again. If a breathing creature is placed within the haversack, the creature can survive for up to 10 minutes, after which time it begins to suffocate.",,,gear,wondrous item,,,,,,,,,false,false,rare
 hat_of_disguise,Hat of Disguise,,,,,gear,wondrous item,,,,,,,,,false,true,uncommon
-headband_of_intellect,Headband of Intellect,,,,,gear,wondrous item,,,,,,,,,false,true,uncommon
+headband_of_intellect,Headband of Intellect,,,,set_override:int:19:floor,gear,wondrous item,,,,,,,,,false,true,uncommon
 helm_of_brilliance,Helm of Brilliance,,"•You can use an action to cast one of the following spells (save DC 18), using one of the helm's gems of the specified type as a component:
 •As long as it has at least one diamond, the helm emits dim light in a 30-foot radius when at least one undead is within that area. Any undead that starts its turn in that area takes 1d6 radiant damage.
 •As long as the helm has at least one ruby, you have resistance to fire damage.
@@ -341,7 +341,7 @@ luck_blade,Luck Blade,,,,,weapon,weapon (any sword),,,,,,,,,false,true,legendary
 mace_of_disruption,Mace of Disruption,,,,,weapon,weapon (mace),,,,,,,,,false,true,rare
 mace_of_smiting,Mace of Smiting,,,,,weapon,weapon (mace),,,,,,,,,false,false,rare
 mace_of_terror,Mace of Terror,,The mace regains 1d3 expended charges daily at dawn.,,,weapon,weapon (mace),,,,,,,,,false,true,rare
-mantle_of_spell_resistance,Mantle of Spell Resistance,,You have advantage on saving throws against spells while you wear this cloak.,,,gear,wondrous item,,,,,,,,,false,true,rare
+mantle_of_spell_resistance,Mantle of Spell Resistance,,You have advantage on saving throws against spells while you wear this cloak.,,note:Advantage on saving throws against spells,gear,wondrous item,,,,,,,,,false,true,rare
 manual_of_bodily_health,Manual of Bodily Health,,"This book contains health and diet tips, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Constitution score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",,,gear,wondrous item,,,,,,,,,false,false,very_rare
 manual_of_gainful_exercise,Manual of Gainful Exercise,,"This book describes fitness exercises, and its words are charged with magic. If you spend 48 hours over a period of 6 days or fewer studying the book's contents and practicing its guidelines, your Strength score increases by 2, as does your maximum for that score. The manual then loses its magic, but regains it in a century.",,,gear,wondrous item,,,,,,,,,false,false,very_rare
 manual_of_golems,Manual of Golems,,"This tome contains information and incantations necessary to make a particular type of golem. The GM chooses the type or determines it randomly. To decipher and use the manual, you must be a spellcaster with at least two 5th-level spell slots. A creature that can't use a
@@ -429,7 +429,7 @@ ring_of_jumping,Ring of Jumping,,,,,gear,ring,,,,,,,,,false,true,uncommon
 ring_of_mind_shielding,Ring of Mind Shielding,,"While wearing this ring, you are immune to magic that allows other creatures to read your thoughts, determine whether you are lying, know your alignment, or know your creature type. Creatures can telepathically communicate with you only if you allow it.
 You can use an action to cause the ring to become invisible until you use another action to make it visible, until you remove the ring, or until you die.
 If you die while wearing the ring, your soul enters it, unless it already houses a soul. You can remain in the ring or depart for the afterlife. As long as your soul is in the ring, you can telepathically communicate with any creature wearing it. A wearer can't prevent this telepathic communication.",,,gear,ring,,,,,,,,,false,true,uncommon
-ring_of_protection,Ring of Protection,,,,,gear,ring,,,,,,,,,false,true,rare
+ring_of_protection,Ring of Protection,,,,flat_bonus:ac+1;flat_bonus:saves+1,gear,ring,,,,,,,,,false,true,rare
 ring_of_regeneration,Ring of Regeneration,,,,,gear,ring,,,,,,,,,false,true,very_rare
 ring_of_resistance,Ring of Resistance,,,,,gear,ring,,,,,,,,,false,true,rare
 ring_of_shooting_stars,Ring of Shooting Stars,,"As a bonus action, you can move each sphere up to 30 feet, but no farther than 120 feet away from you. When a creature other than you comes within 5 feet of a sphere, the sphere discharges lightning at that creature and disappears. That creature must make a DC 15 Dexterity saving throw. On a failed save, the creature takes lightning damage based on the number of spheres you created.",,,gear,ring,,,,,,,,,false,true,very_rare
@@ -437,8 +437,8 @@ ring_of_spell_storing,Ring of Spell Storing,,"This ring stores spells cast into 
 Any creature can cast a spell of 1st through 5th level into the ring by touching the ring as the spell
 is cast. The spell has no effect, other than to be stored in the ring. If the ring can't hold the spell, the spell is expended without effect. The level of the slot used to cast the spell determines how much space it uses.
 While wearing this ring, you can cast any spell stored in it. The spell uses the slot level, spell save DC, spell attack bonus, and spellcasting ability of the original caster, but is otherwise treated as if you cast the spell. The spell cast from the ring is no longer stored in it, freeing up space.",,,gear,ring,,,,,,,,,false,true,rare
-ring_of_spell_turning,Ring of Spell Turning,,"While wearing this ring, you have advantage on saving throws against any spell that targets only you (not in an area of effect). In addition, if you roll a 20 for the save and the spell is 7th level or lower, the spell has no effect on you and instead targets the caster, using the slot level, spell save DC, attack bonus, and spellcasting ability of the caster.",,,gear,ring,,,,,,,,,false,true,legendary
-ring_of_swimming,Ring of Swimming,,,,,gear,ring,,,,,,,,,false,false,uncommon
+ring_of_spell_turning,Ring of Spell Turning,,"While wearing this ring, you have advantage on saving throws against any spell that targets only you (not in an area of effect). In addition, if you roll a 20 for the save and the spell is 7th level or lower, the spell has no effect on you and instead targets the caster, using the slot level, spell save DC, attack bonus, and spellcasting ability of the caster.",,note:Advantage on saving throws against spells,gear,ring,,,,,,,,,false,true,legendary
+ring_of_swimming,Ring of Swimming,,,,set_override:speed.swim:40,gear,ring,,,,,,,,,false,false,uncommon
 ring_of_telekinesis,Ring of Telekinesis,,,,,gear,ring,,,,,,,,,false,true,very_rare
 ring_of_the_ram,Ring of the Ram,,,,,gear,ring,,,,,,,,,false,true,rare
 ring_of_three_wishes,Ring of Three Wishes,,,,,gear,ring,,,,,,,,,false,false,legendary
@@ -517,7 +517,7 @@ staff_of_thunder_and_lightning,Staff of Thunder and Lightning,,"This staff can b
 taking 9d6 lightning damage on a failed save, or half as much damage on a successful one.",,,gear,staff,,,,,,,,,false,true,very_rare
 staff_of_withering,Staff of Withering,,,,,gear,staff,,,,,,,,,false,true,rare
 stone_of_controlling_earth_elementals,Stone of Controlling Earth Elementals,,,,,gear,wondrous item,,,,,,,,,false,false,rare
-stone_of_good_luck,Stone of Good Luck (Luckstone),,,,,gear,wondrous item,,,,,,,,,false,true,uncommon
+stone_of_good_luck,Stone of Good Luck (Luckstone),,,,flat_bonus:ability_checks+1;flat_bonus:saves+1,gear,wondrous item,,,,,,,,,false,true,uncommon
 sun_blade,Sun Blade,,"You gain a +2 bonus to attack and damage rolls made with this weapon, which deals radiant damage instead of slashing damage. When you hit an undead with it, that target takes an extra 1d8 radiant damage.
 The sword's luminous blade emits bright light in a 15-foot radius and dim light for an additional 15 feet. The light is sunlight. While the blade persists, you can use an action to expand or reduce its radius of bright and dim light by 5 feet each, to a maximum of 30 feet each or a minimum of 10 feet each.",,,weapon,weapon (longsword),,,,,,,,,false,true,rare
 sword_of_life_stealing,Sword of Life Stealing,,"When you attack a creature with this magic weapon and roll a 20 on the attack roll, that target takes an extra 3d6 necrotic damage, provided that the target isn't a construct or an undead. You gain temporary hit points equal to the extra damage dealt.",,,weapon,weapon (any sword),,,,,,,,,false,true,rare

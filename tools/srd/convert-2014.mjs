@@ -1200,6 +1200,9 @@ function convertItems() {
 	}
 
 	// magic items: h4 entries with an <em>Type, rarity (requires attunement)</em> meta.
+	// Their `effects` tokens are authored AFTER conversion (MAGIC-ITEM-EFX) — preserve by id, or a
+	// re-run silently wipes the authoring (the same trap class_features already carries).
+	const authoredItems = existingEffectsById('items_srd.csv');
 	let nM = 0;
 	const RAR = ['very rare', 'uncommon', 'common', 'rare', 'legendary', 'artifact'];
 	const magSlice = html.slice(html.indexOf("id='MagicItemsAZ'"));
@@ -1216,15 +1219,17 @@ function convertItems() {
 				: type.startsWith('ammunition')
 					? 'ammunition'
 					: 'gear';
+		const id = slug(e.name);
 		rows.push(
 			irow({
-				id: slug(e.name),
+				id,
 				name_en: e.name,
 				text_en: e.paras
 					.filter((p) => !/<em>/i.test(p))
 					.map(strip)
 					.filter(Boolean)
 					.join('\n'),
+				effects: authoredItems.get(id) ?? '', // preserve tokens authored post-conversion
 				category,
 				item_type: type,
 				attunement: String(/requires attunement/.test(inner)),

@@ -7,7 +7,15 @@
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { blocks, description, slug, writeCsv, assertCount, dedupeIds } from './lib.mjs';
+import {
+	blocks,
+	description,
+	slug,
+	writeCsv,
+	assertCount,
+	dedupeIds,
+	existingColById
+} from './lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -179,6 +187,11 @@ for (const b of blocks(src('equipment.md')).filter((b) => b.h2 === 'Adventuring 
 assertCount('gear', nGear, 81);
 
 // --- magic items -------------------------------------------------------------
+// Magic-item `effects` tokens are authored AFTER conversion (MAGIC-ITEM-EFX) — curated from the SRD
+// text into the bounded vocabulary, not present as such in the prose. Preserve them by id, or a raw
+// re-run silently wipes the authoring (the failure class_features/conditions already hit).
+const authoredEffects = existingColById(resolve(root, 'content/srd-2024/items_srd.csv'), 'effects');
+
 // A magic item is a `####` block whose first italic meta line carries a rarity
 // (or "Rarity Varies"). Excludes the intro sections (no italic meta) and the embedded
 // creature stat blocks (meta begins with a creature size, e.g. "_Large Beast,…_").
@@ -205,11 +218,13 @@ for (const b of blocks(src('magic-items.md'))) {
 				: head.startsWith('ammunition')
 					? 'ammunition'
 					: 'gear';
+	const id = slug(b.name);
 	rows.push(
 		row({
-			id: slug(b.name),
+			id,
 			name_en: b.name,
 			text_en: description(b.body),
+			effects: authoredEffects.get(id) ?? '', // preserve tokens authored post-conversion
 			category,
 			item_type: head,
 			attunement: String(/requires attunement/i.test(b.body.join('\n'))),

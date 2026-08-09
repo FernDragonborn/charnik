@@ -6,11 +6,20 @@
  * in the class's Features table (9 levels → full, ≤5 → half, Pact Magic → pact, none).
  * Counts are asserted against the source. Run: node tools/srd/convert-classes.mjs
  */
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
-import { blocks, description, abilities, slug, writeCsv, assertCount, dedupeIds } from './lib.mjs';
+import {
+	blocks,
+	description,
+	abilities,
+	slug,
+	writeCsv,
+	assertCount,
+	dedupeIds,
+	existingColById
+} from './lib.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -68,19 +77,7 @@ const subsets = martialSubsets(resolve(root, 'content/srd-2024/items_srd.csv'));
 
 // Feature `effects` (mechanical tokens) and `expertise_slots` (N4a level:count grants) are authored
 // AFTER conversion — curated from the SRD into a bounded annotation, NOT present as such in the prose.
-// Preserve them by id, or a raw re-run silently wipes the authoring.
-function existingColById(csvPath, col) {
-	if (!existsSync(csvPath)) return new Map();
-	const raw = readFileSync(csvPath, 'utf8')
-		.replace(/^﻿/, '') // strip the UTF-8 BOM before the #-filter
-		.split('\n')
-		.filter((l) => !l.startsWith('#'))
-		.join('\n');
-	const map = new Map();
-	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
-		if (r.id && r[col]) map.set(r.id, r[col]);
-	return map;
-}
+// `existingColById` (lib.mjs) preserves them by id, or a raw re-run silently wipes the authoring.
 const featuresCsv = resolve(root, 'content/srd-2024/class_features_srd.csv');
 const authoredFeatures = existingColById(featuresCsv, 'effects');
 const authoredExpertise = existingColById(featuresCsv, 'expertise_slots');
