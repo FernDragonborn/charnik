@@ -5,6 +5,9 @@
  *   - spell-side: the spell row's `classes` column (shipped SRD tags its classes inline), or
  *   - class-side: an additive `spell_lists` row (`class_id`,`spell_id`) — a homebrew class grants
  *     access to existing spells without touching them.
+ * A casting SUBCLASS is indexed as its own access key, because RAW it draws another class's list
+ * (Eldritch Knight / Arcane Trickster cast from the Wizard list — B25). Which list is DATA: the
+ * subclass row's `spell_list` column, so no class name is ever branched on in code.
  * We union both into `class → spells` and the reverse `spell → classes`, carrying provenance
  * (`via`) for the explainable invariant. Edition-scoped: a class only reaches spells it shares a
  * system with (a 2024 wizard doesn't get 2014 spells).
@@ -15,12 +18,12 @@
 import type { ContentGraph, LoadedRow } from './loader';
 import { splitList } from './schemas';
 
-type AccessVia = 'class_list' | 'spell_list';
+type AccessVia = 'class_list' | 'spell_list' | 'subclass_list';
 
 interface AccessEntry {
-	/** Bare class id (e.g. "wizard"). */
+	/** Bare class id (e.g. "wizard") — or subclass id for a `subclass_list` entry. */
 	classId: string;
-	/** The class row's effectiveId (`class:source:id`) — edition/source-specific. */
+	/** The row's effectiveId (`class:source:id`, or `subclass:source:id`) — edition/source-specific. */
 	classEffectiveId: string;
 	via: AccessVia;
 }
@@ -86,6 +89,20 @@ export function buildSpellAccess(graph: ContentGraph): SpellAccess {
 		const cls = classesById.get(String(row.data.class_id)) ?? [];
 		const sp = spellsById.get(String(row.data.spell_id)) ?? [];
 		for (const c of cls) for (const s of sp) link(c, s, 'spell_list');
+	}
+
+	// subclass-side: a casting subclass draws the spell LIST of the class(es) its `spell_list` column
+	// names (B25). Runs last so it can copy whatever the two passes above resolved for that class —
+	// including `spell_lists` grants, so a homebrew class's additive rows reach its subclasses too.
+	for (const sub of graph.list('subclass')) {
+		for (const bareClass of csv(sub.data.spell_list))
+			for (const cls of classesById.get(bareClass) ?? []) {
+				if (!shareEdition(cls.systems, sub.systems)) continue;
+				for (const spellEid of forClass.get(cls.effectiveId) ?? []) {
+					const spell = graph.get(spellEid);
+					if (spell) link(sub, spell, 'subclass_list');
+				}
+			}
 	}
 
 	return {

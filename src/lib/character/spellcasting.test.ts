@@ -120,14 +120,28 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
 		const s = new MemoryStorage();
 		await s.write(
 			'a/classes_srd.csv',
-			[CLASS, 'fighter,5.5e,SRD 5.2.1,fighter,d10,"str,con",none,'].join('\n')
+			[
+				CLASS,
+				'fighter,5.5e,SRD 5.2.1,fighter,d10,"str,con",none,',
+				// a wizard, so the subclass has a real list to draw from
+				'wizard,5.5e,SRD 5.2.1,wizard,d6,"int,wis",full,int'
+			].join('\n')
 		);
 		await s.write(
 			'a/subclasses_srd.csv',
 			[
-				'id,systems,source,name_en,class_id,caster,caster_share,prepare_style,slot_table,spell_ability,caster_from_level',
-				// Eldritch Knight: a one-third INT caster from Fighter level 3
-				'eldritch_knight,5.5e,SRD 5.2.1,Eldritch Knight,fighter,third,third,known,third,int,3'
+				'id,systems,source,name_en,class_id,caster,caster_share,prepare_style,slot_table,spell_ability,caster_from_level,spell_list',
+				// Eldritch Knight: a one-third INT caster from Fighter level 3, off the WIZARD list
+				'eldritch_knight,5.5e,SRD 5.2.1,Eldritch Knight,fighter,third,third,known,third,int,3,wizard'
+			].join('\n')
+		);
+		// two spells: one on the wizard list the subclass names, one that must stay out of reach
+		await s.write(
+			'a/spells_srd.csv',
+			[
+				'id,systems,source,name_en,level,school,casting_time,range,components,duration,concentration,ritual,classes',
+				'shield,5.5e,SRD 5.2.1,Shield,1,abjuration,reaction,self,V S,1 round,false,false,wizard',
+				'cure_wounds,5.5e,SRD 5.2.1,Cure Wounds,1,abjuration,action,touch,V S,instant,false,false,cleric'
 			].join('\n')
 		);
 		await s.write(
@@ -165,6 +179,12 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
 		expect(p.preparedCap).toBe(3); // class_casting eldritch_knight_3
 		expect(sc.pools.map((x) => x.spellLevel)).toEqual([1]); // one 1st-level slot tier
 		expect(sc.pools[0]!.max).toBe(2);
+	});
+
+	it('B25 tail: the EK reaches the WIZARD spell list its subclass row names, not the cleric one', () => {
+		const p = deriveSheet(ek(3), g).spellcasting.classes[0]!;
+		expect(p.accessSpellIds).toContain('spell:SRD 5.2.1:shield');
+		expect(p.accessSpellIds).not.toContain('spell:SRD 5.2.1:cure_wounds');
 	});
 
 	it('a plain Fighter 3 (no EK subclass) still does not cast', () => {

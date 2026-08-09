@@ -202,7 +202,8 @@ function casterProfileFor(
 	} else {
 		// else a casting SUBCLASS whose caster columns are filled + which is online at its grant level.
 		// `class_casting`/`slot_table`/spell-list access all key off the SUBCLASS id (a homebrew author
-		// adds them there). NOTE the subclass spell-LIST gap (an EK draws the Wizard list) — B25 follow-up.
+		// adds them there). Which LIST it draws is the subclass row's `spell_list` column — RAW an EK
+		// casts off the Wizard list, and the access index resolves that (B25, spellAccess.ts).
 		const subclassRef = entry.subclass;
 		if (subclassRef == null) return null;
 		const subRow = graph.get(subclassRef);

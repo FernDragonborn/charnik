@@ -14,6 +14,10 @@ const cls = (id: string, systems: string, source: string, caster = 'full') =>
 
 const LIST_HEAD = 'id,systems,source,class_id,spell_id';
 
+const SUB_HEAD = 'id,systems,source,name_en,class_id,caster,caster_from_level,spell_list';
+const subclass = (id: string, classId: string, spellList: string) =>
+	`${id},5.5e,Homebrew,${id},${classId},third,3,"${spellList}"`;
+
 async function seed() {
 	const s = new MemoryStorage();
 	// 2024 root
@@ -35,6 +39,17 @@ async function seed() {
 	await s.write(
 		'hb/spell_lists_hb.csv',
 		[LIST_HEAD, 'artificer_fireball,5.5e,Homebrew,artificer,fireball'].join('\n')
+	);
+	// a PHB-shaped casting subclass (B25): a Fighter subclass casting off the WIZARD list, plus one
+	// that names no list at all. Neither ships in the SRD — this is the engine seam a homebrew/PHB
+	// author fills in, so it lives in the fixture.
+	await s.write(
+		'hb/subclasses_hb.csv',
+		[
+			SUB_HEAD,
+			subclass('eldritch_knight', 'wizard', 'wizard'),
+			subclass('listless_knight', 'wizard', '')
+		].join('\n')
 	);
 	// 2014 root — a wizard + a 5e-only spell, to prove edition scoping
 	await s.write(
@@ -76,6 +91,27 @@ describe('spell↔class access (union index)', () => {
 		expect(byClass.artificer).toBe('spell_list'); // from the additive join
 		// sorcerer is on fireball's list but has no class row → not linked
 		expect(byClass.sorcerer).toBeUndefined();
+	});
+
+	it('B25: a casting subclass draws the list its `spell_list` column names', async () => {
+		const g = await loadContent(await seed(), ['a', 'hb', 'b']);
+		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
+		const access = buildSpellAccess(g);
+
+		// the subclass is its own access key and reaches the WIZARD list, not its parent class's
+		const ek = access.spellIdsForClass('subclass:Homebrew:eldritch_knight');
+		expect(ek).toContain('spell:SRD 5.2.1:fireball');
+		expect(ek).not.toContain('spell:SRD 5.2.1:cure_wounds'); // cleric-only
+		expect(ek).not.toContain('spell:SRD 5.1:magic_missile'); // other edition
+
+		// naming no list keeps a subclass out of the index entirely (it isn't silently given one)
+		expect(access.spellIdsForClass('subclass:Homebrew:listless_knight')).toEqual([]);
+
+		// provenance survives the extra hop
+		const via = access
+			.classesForSpell('spell:SRD 5.2.1:fireball')
+			.find((e) => e.classId === 'eldritch_knight')?.via;
+		expect(via).toBe('subclass_list');
 	});
 
 	it('warns on an orphan spell_lists join (likely a typo)', async () => {

@@ -1073,9 +1073,19 @@ holds the done-work log; these are the OPEN tails it carried):**
   call — either add spacing-scale tokens for the off-scale values or migrate-with-screenshot-verify,
   not a blind sweep. Warn-only on 523 = noise that trains people to ignore stylelint, so it stays out
   until the migration is done as its own pass.
-- [ ] **B25 / RV4 · subclass-caster spell list.** EK/Arcane-Trickster get slots/DC/cap, but their
-  spell list is EMPTY — `buildSpellAccess` indexes only `class` rows. Add the subclass→list seam
-  (the character-level access layer already designed under "Caster profile" / L6 / L12 above).
+- [x] **B25 / RV4 · subclass-caster spell list.** DONE 2026-08-09. EK/Arcane-Trickster got slots/DC/cap
+  but an EMPTY spell list: `buildSpellAccess` indexed only `class` rows, while the caster profile looks
+  access up by the SUBCLASS ref. Added the seam as DATA, not a class-name branch
+  ([[charnik-data-driven-classes]]): a **`spell_list` column on the `subclass` row** — a comma list of
+  bare class ids whose list it draws (RAW an EK/AT casts off the **Wizard** list, which can't be inferred
+  from `class_id`, since Fighter/Rogue have no list). `buildSpellAccess` now indexes casting subclasses
+  as their own access key in a third pass that runs AFTER the class passes, so a subclass also inherits
+  whatever `spell_lists` join rows granted its source class; provenance is a new `via: 'subclass_list'`.
+  A blank column keeps the subclass out of the index (never silently given a list). **No shipped data
+  changes — EK/AT are PHB, not SRD** (verified: neither appears in either SRD source), so this is
+  engine support for a homebrew/PHB drop-in and the coverage lives in fixtures: unit tests on the index
+  (edition scoping, the not-my-parent's-list case, provenance) plus an end-to-end derive test that a
+  Fighter 3 / EK reaches `shield` and not `cure_wounds`.
 - [ ] **D16 · generalized player-choice model.** Half-feat ability-choice is DONE (§ Builder, 2026-08-02);
   still open: Magic Initiate spell picks + Skilled skill/tool-choice grants — both need the shared
   choice UI (see `docs/N2-PLAN.md` feat tail). One "player choice at a slot" abstraction covers all.

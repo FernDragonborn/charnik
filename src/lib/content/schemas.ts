@@ -276,7 +276,13 @@ const subclassSchema = baseRow.extend({
 	slot_table: optStr,
 	spell_ability: z.preprocess(blankToUndef, Ability.optional()),
 	/** Class level at which this subclass's spellcasting comes online (e.g. 3 for EK/AT). */
-	caster_from_level: optInt
+	caster_from_level: optInt,
+	/** Which class's spell LIST this subclass draws from — a comma list of bare class ids (B25).
+	 *  RAW an Eldritch Knight / Arcane Trickster learns from the WIZARD list, not the Fighter's or
+	 *  Rogue's (they have none), so access can't be inferred from `class_id`. Data, never a class-name
+	 *  branch in code: a homebrew subclass naming two lists gets their union. Blank → the subclass
+	 *  reaches only what `spell_lists` rows grant it directly. */
+	spell_list: optStr
 });
 
 /** Background. 5.5e backgrounds carry the ability boosts + an origin feat. */
