@@ -1087,6 +1087,30 @@ holds the done-work log; these are the OPEN tails it carried):**
   into the VM (the house pattern — logic-layer stays `$_`-free, UI injects, cf. `formatNote(note,
   translate?)`) OR allow `get(_)` in a VM (a VM is the UI layer, not rules-core, so `get(_)` is
   defensible — but it's not the established pattern). UA copy uses formal «ви» ([[uk-formal-vy]]).
+  **Do UX-1 first** — translating copy that's about to be rewritten costs the UA pass twice.
+- [ ] **UX-1 · Error copy pass — audit every user-facing message and rewrite what a non-technical
+  person can't act on (maintainer request 2026-08-09).** The app is explicitly built for people who
+  own their data as plain CSV, not for developers (CLAUDE.md), but most of our messages are written
+  from the ENGINE's point of view: they name internal identifiers and assume the reader knows the data
+  model. Real examples, all currently shipped:
+  - `no prepared/known count for warlock at level 5 in 5.5e, and this system states no formula — add a
+    class_casting row` (mine, 2026-08-09) — says `class_casting`, a file the user has never heard of,
+    and `5.5e` instead of the friendly "D&D 5.5e (2024)" label we already have a helper for.
+  - `unknown target "armorclass" for flat_bonus` · `spell_lists: unknown class "warlock-typo"` ·
+    `#content-type: unknown content type` · `malformed locale column` · `duplicate source:id`.
+  - `plugin budget for this computation exhausted` · `result too large` · `invalid result: bad target key`.
+  - Row headers render as `Warlock · class_casting:warlock` — a raw token as the primary label.
+  **The standard to apply:** each message answers three things in the user's words — *what happened*,
+  *what it means for their sheet*, *what to do next* (which file, which row, what to type). Keep the
+  exact technical detail (token, id, file:line) but demote it to a secondary line, because the
+  content-health panel is ALSO the homebrew author's debugging tool — this is a rewrite for a second
+  audience, never a deletion of detail. Use the friendly edition/source labels ([[friendly-source-labels]]),
+  never raw `5e`/`SRD 5.2.1` in prose.
+  **Scope:** the content-health panel (loader issues, missing metadata, hash drift, token lints, derive
+  issues), toasts across combat/build, dialog copy, homebrew-form validation, plugin failures.
+  **Sequencing:** do this BEFORE **ARCH-1**'s i18n sweep — otherwise every bad string gets translated
+  into UA and has to be redone twice. Ties [[play-tracker-surfaces-never-forces]] (a message the player
+  can't act on is the same failure as a silent one) and AI-CONVENTIONS §2.7.
 - [ ] **ARCH-4 · stylelint spacing px-guard.** The `font-size:["px"]` guard is DONE + enforced (green).
   The spacing half (`padding`/`margin`/`gap` px → `--space-*`) is ~523 warnings: blocked on a design
   call — either add spacing-scale tokens for the off-scale values or migrate-with-screenshot-verify,
