@@ -1,12 +1,22 @@
 packages:
   - '.'
 
-# Force patched versions of transitive deps flagged by advisories (both dev/build-only):
+# Force patched versions of transitive deps flagged by advisories (all dev/build-only — none of
+# these ship in the app bundle; the app's own direct deps are bumped in package.json instead):
 #   esbuild <=0.24.2  → dev-server request SSRF (GHSA-67mh-4wv8-2f99), via svelte-i18n
 #   cookie  <0.7.0    → name/path/domain parsing (GHSA-pxg6-pf52-xh8x), via @sveltejs/kit
+#   postcss, nanoid   → via vite / stylelint
+#   js-yaml           → via stylelint / eslint config loading
+#   brace-expansion   → via minimatch/glob
+#   fast-uri          → via ajv
 overrides:
   esbuild@<=0.24.2: '>=0.25.0'
   cookie@<0.7.0: '~0.7.2'
+  postcss@<8.5.23: '>=8.5.23'
+  nanoid@<3.3.17: '>=3.3.17'
+  js-yaml@<4.3.1: '>=4.3.1'
+  brace-expansion@<5.0.9: '>=5.0.9'
+  fast-uri@<3.1.5: '>=3.1.5'
 
 # Approve install/postinstall build scripts (pnpm 11 blocks the rest by default for
 # supply-chain safety). esbuild builds its native binary, simple-git-hooks installs the

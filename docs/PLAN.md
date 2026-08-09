@@ -1375,17 +1375,18 @@ holds the done-work log; these are the OPEN tails it carried):**
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
-- **SEC-2 · route every `{@html}` through a sanitizer — no manual eslint-disable bypass.** GitHub
-  raised security warnings (XSS) after `{@html}` was hand-waved past the lint. `dompurify` is ALREADY
-  a dep and WikiDetail uses it correctly (`DOMPurify.sanitize`), but `src/routes/+page.svelte:55`
-  (`demo.body`) renders `{@html $_('demo.body')}` with a bare `eslint-disable svelte/no-at-html-tags`
-  and NO sanitize — "trusted own catalog" is wrong: **locale catalogs are user-droppable** (CLAUDE.md
-  lets a user add a locale with no rebuild), so any i18n HTML string is untrusted input. Fix: (1) one
-  shared `sanitizeHtml()` helper wrapping DOMPurify; (2) pipe demo.body + any i18n `{@html}` through
-  it; (3) forbid raw `{@html}` without going through the helper (the only allowed disables cite a
-  sanitize call on the same value, like WikiDetail's). Also check the actual Dependabot/code-scanning
-  alert — bump `dompurify` if the advisory is on the lib itself. Ties to the "add a proven lib beats
-  DIY" rule — do not hand-roll HTML escaping. See docs/SECURITY.md.
+- [x] **SEC-2 · route every `{@html}` through a sanitizer — no manual eslint-disable bypass.** DONE
+  (the helper landed with UBUG-7's markdown work; **verified end-to-end + closed 2026-08-09**). Both
+  `{@html}` sites in `src/` are sanitized: `ArticleProse` renders `renderContentMarkdown` (marked →
+  DOMPurify) and the demo body goes through the shared `sanitizeHtml()` (`content/markdown.ts`) — which
+  exists precisely because **locale catalogs are user-droppable** (a user adds a locale with no rebuild),
+  so an i18n HTML string is untrusted input. Both `eslint-disable svelte/no-at-html-tags` comments now
+  cite the sanitize call on the same value, the only allowed form. **Advisory half done too:**
+  `pnpm audit` was NOT clean (9 findings — the older "audit clean" line below was stale). Bumped
+  **dompurify 3.4.12 → 3.4.13** (the advisory WAS on the lib) and `@sveltejs/kit` 2.70.1 → 2.70.2;
+  the remaining transitive dev/build-only ones (postcss, nanoid, js-yaml, brace-expansion, fast-uri)
+  are pinned via `pnpm-workspace.yaml` overrides, following the esbuild/cookie precedent. `pnpm audit`
+  → **no known vulnerabilities**; full gate green after the bumps. See docs/SECURITY.md.
 
 **Data versioning (DECIDED 2026-07-06 — design below; surfaced in the refactor, 2026-07-05):**
 - **DATA-VER-1 · content versioning — BUILT (2026-07-06, tasks 1–5).** Design-of-record: a
@@ -1496,7 +1497,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   new row opens in the compendium). Remaining: **spell/monster get the generic grid** (their fancy
   read layouts aren't editable yet), **edit/delete existing homebrew**, and linked-table authoring
   (a subclass's `class_features` rows) — so homebrew subclasses are only half-covered.
-- [x] Dependabot: DONE — esbuild + cookie pinned via pnpm-workspace overrides (`pnpm audit` clean).
+- [x] Dependabot: DONE — esbuild + cookie pinned via pnpm-workspace overrides; **re-audited 2026-08-09**
+  (it had drifted to 9 findings): dompurify + @sveltejs/kit bumped, five more transitive dev-only
+  packages pinned the same way → `pnpm audit` clean again. Re-check it periodically; it drifts silently.
   Pages deploy recovery still open.
 
 **Code quality:**

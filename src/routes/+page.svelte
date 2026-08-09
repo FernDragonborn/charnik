@@ -49,7 +49,7 @@
 			<h2 class="db-title">{$_('demo.title')}</h2>
 			<!-- i18n string carries <b> emphasis; sanitized because a user can drop in a locale catalog
 			     at runtime (ARCH-3), so the string is not trusted. -->
-			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitizeHtml on the same value -->
 			<p class="db-body">{@html sanitizeHtml($_('demo.body'))}</p>
 			<a
 				class="db-download"
