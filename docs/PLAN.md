@@ -1050,10 +1050,16 @@ point** (it depends on nothing).
    feature-presence fork entirely: the token lives on the FEATURE (gathered only when the char has it),
    so no marker pip / no level-gated option. Delivered: L1 token `regain_on_initiative:<id>:<n>` →
    `facts.initiativeRegain` → `CombatVM.toggleCombat` fires `fireInitiativeRegen` (restore up to N +
-   toast, gated on auto-calc). **`monk_perfect_focus` (Focus → 4) shipped + app-verified.** Still open —
-   both are POOL-modeling gaps, not the mechanism: `bard_superior_inspiration` needs Bardic Inspiration
-   tracked as a uses-POOL (today it's only a `grant_roll` die); Evergreen Wild Shape needs Wild Shape
-   tracked (unimplemented). **Architecture (settled with maintainer):** a bounded token is the *common
+   toast, gated on auto-calc). **`monk_perfect_focus` (Focus → 4) shipped + app-verified.**
+   **`bard_superior_inspiration` DONE 2026-08-09** — Bardic Inspiration became a tracked uses-POOL
+   (`grant_resource:bardic_inspiration:max(1,cha_mod):long` next to its existing `grant_roll` die), and
+   the **Font of Inspiration** blocker was fixed at the seam rather than worked around: `pushResource`
+   kept the largest MAX and nothing else, so an upgrade that changes only the RECHARGE could never win.
+   It now breaks an equal-max tie on **recharge generosity** (`short > short_one > long > other >
+   consumable`) — the general "same uses, better recovery" rule, not a bard special case. Regain N is
+   edition-divergent (2024 "until you have two" → 2; 2014 "if you have none left, regain one" → 1, which
+   `restoreUpTo` expresses identically). Still open: Evergreen Wild Shape needs Wild Shape tracked
+   (unimplemented). **Architecture (settled with maintainer):** a bounded token is the *common
    declarative* case; **"any action on any event" belongs in L3 plugin `onEvent` (scripting), NOT a
    broader L1 token** — the trigger dimension generalizes only when a 2nd declarative event-action ships
    (e.g. Champion Heroic Rally = heal on turn-start), decided then, not pre-built (YAGNI).

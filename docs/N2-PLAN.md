@@ -127,13 +127,17 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
   `CombatVM.toggleCombat`→`fireInitiativeRegen` (`ResourceTracker.restoreUpTo` + toast, auto-calc-gated).
   `monk_perfect_focus` shipped + app-verified (enter combat → Focus tops to 4 + toast). Tests: parser
   drift, content fact (Monk 15 / not Monk 5), combat auto-restore-up-to-N + no-further + auto-calc gate.
-  - **Open (POOL gaps, NOT the mechanism):** Superior Inspiration needs Bardic Inspiration as a tracked
-    uses-pool (today a `grant_roll` die only) — and there's a wrinkle: its **Font of Inspiration** upgrade
-    (bard L5) changes BI recharge long→short, but a re-grant `grant_resource:bardic_inspiration:cha_mod:short`
-    won't win over the base `:…:long` because `pushResource` (apply.ts) keeps the **largest MAX** and the max
-    is identical → needs a **recharge-precedence rule (short beats long at equal max)**, or model it another
-    way. Evergreen Wild Shape needs Wild Shape tracked (unimplemented). Both are separate content+engine
-    pieces, not the onEvent mechanism.
+  - **Superior Inspiration — `[x]` DONE 2026-08-09.** Bardic Inspiration is now a tracked uses-POOL
+    (`grant_resource:bardic_inspiration:max(1,cha_mod):long` beside the existing `grant_roll` die — RAW
+    "a number of times equal to your Charisma modifier, minimum once"), so the onEvent verb has a pool to
+    restore: `regain_on_initiative:bardic_inspiration:2` (2024 "until you have two") /
+    `:1` (2014 "if you have none left, regain one" — the same `restoreUpTo` semantics, different N).
+    The **Font of Inspiration wrinkle is fixed at the seam**: `pushResource` (apply.ts) kept the largest
+    MAX and nothing else, so a re-grant that changes only the RECHARGE could never win. It now breaks an
+    equal-max tie on **recharge generosity** (`short > short_one > long > other > consumable`), which is
+    the general rule for any "same uses, better recovery" upgrade — not a bard special case.
+  - **Still open (a POOL gap, not the mechanism):** Evergreen Wild Shape needs Wild Shape tracked
+    (unimplemented) — its own content+engine piece.
   - **Architecture (settled):** a bounded token is the common declarative case; **"any action on any
     event" = L3 plugin `onEvent` (scripting), NOT a wider L1 token** — L1 stays a bounded vocab (security
     property). Generalize the trigger dimension only when a 2nd declarative event-action ships (YAGNI).

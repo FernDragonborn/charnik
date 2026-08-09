@@ -36,6 +36,18 @@ import type {
 export { matchesTarget };
 export type { EffectFacts, NumericFact, TargetValidator, TargetCheck, ResourceDef } from './facts';
 
+/** How GENEROUS a recharge policy is, for the equal-max tie-break in `pushResource`. Ordered by how
+ *  often the pool comes back: every short rest (full) → one use per short rest → every long rest →
+ *  never automatically. A new `Recharge` member must be ranked here, or it ties with `other`. */
+const RECHARGE_RANK: Record<string, number> = {
+	short: 4,
+	short_one: 3,
+	long: 2,
+	other: 1,
+	consumable: 0
+};
+const rechargeRank = (d: ResourceDef): number => RECHARGE_RANK[d.recharge] ?? 1;
+
 /**
  * Builds the typed-facts object (D7) in ONE pass over the resolved effect list. State (the facts +
  * the dedup pools/sets) lives in fields so each effect KIND is a small handler — was one
@@ -283,8 +295,16 @@ class FactsCollector {
 			source: eff.source
 		};
 		const prev = this.pools.get(def.id);
-		// a scaling feature re-granted at a higher tier: the largest max wins
-		if (!prev || def.max > prev.max) this.pools.set(def.id, def);
+		// a scaling feature re-granted at a higher tier: the largest max wins. At an EQUAL max the
+		// FASTER recharge wins — an upgrade feature that only changes how you get the pool back
+		// (Font of Inspiration: Bardic Inspiration returns on a Short Rest too) grants the same count,
+		// so a plain `>` would silently keep the base grant's slower policy.
+		if (
+			!prev ||
+			def.max > prev.max ||
+			(def.max === prev.max && rechargeRank(def) > rechargeRank(prev))
+		)
+			this.pools.set(def.id, def);
 	}
 }
 

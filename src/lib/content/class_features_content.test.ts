@@ -222,6 +222,61 @@ describe('shipped class feature · Perfect Focus auto-regain on initiative (rega
 	});
 });
 
+/*
+ * Bardic Inspiration is BOTH a die (grant_roll) and a uses-POOL (grant_resource) — the pool was the
+ * gap that blocked Superior Inspiration. Font of Inspiration re-grants the SAME max with a faster
+ * recharge, which only lands because pushResource breaks an equal-max tie on recharge generosity.
+ */
+describe('shipped class feature · Bardic Inspiration pool + Font of Inspiration recharge', () => {
+	const bard = (source: string, system: '5e' | '5.5e', level: number, cha: number) => {
+		const c = charOf(source, system, 'bard', level);
+		c.build.abilities.cha = cha;
+		return c;
+	};
+	const pool = (s: ReturnType<typeof deriveSheet>) =>
+		s.resources.find((r) => r.id === 'bardic_inspiration');
+
+	for (const [system, source, dir] of [
+		['5.5e', 'SRD 5.2.1', 'content/srd-2024'],
+		['5e', 'SRD 5.1', 'content/srd-2014']
+	] as const) {
+		it(`${system}: uses = CHA modifier, on a LONG rest before Font of Inspiration`, async () => {
+			const s = deriveSheet(bard(source, system, 4, 16), await loadEdition(dir));
+			expect(pool(s)?.max).toBe(3); // CHA 16 → +3
+			expect(pool(s)?.recharge).toBe('long');
+		});
+
+		it(`${system}: minimum ONE use even with a negative CHA modifier`, async () => {
+			const s = deriveSheet(bard(source, system, 4, 8), await loadEdition(dir));
+			expect(pool(s)?.max).toBe(1); // RAW "minimum of once", not −1
+		});
+
+		it(`${system}: Font of Inspiration (level 5) flips the recharge to SHORT at the same max`, async () => {
+			const s = deriveSheet(bard(source, system, 5, 16), await loadEdition(dir));
+			expect(pool(s)?.max).toBe(3); // unchanged — the feature only changes recovery
+			expect(pool(s)?.recharge).toBe('short');
+		});
+	}
+
+	it('5.5e: Superior Inspiration (18) regains up to TWO on initiative', async () => {
+		const s = deriveSheet(bard('SRD 5.2.1', '5.5e', 18, 16), await loadEdition('content/srd-2024'));
+		expect(s.facts.initiativeRegain).toContainEqual({
+			id: 'bardic_inspiration',
+			upTo: 2,
+			source: 'Superior Inspiration'
+		});
+	});
+
+	it('5e: Superior Inspiration (20) regains up to ONE — "if you have none left, regain one"', async () => {
+		const s = deriveSheet(bard('SRD 5.1', '5e', 20, 16), await loadEdition('content/srd-2014'));
+		expect(s.facts.initiativeRegain).toContainEqual({
+			id: 'bardic_inspiration',
+			upTo: 1,
+			source: 'Superior Inspiration'
+		});
+	});
+});
+
 describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', () => {
 	it('5.5e: Sneak Attack Nd6, Bardic Inspiration + Martial Arts dice scale by class level', async () => {
 		const g = await loadEdition('content/srd-2024');

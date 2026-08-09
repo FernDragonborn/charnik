@@ -3,8 +3,8 @@
 #content-url: https://dnd.wizards.com/resources/systems-reference-document
 #content-license: CC-BY-4.0
 #content-id: 019f6ae3-fd36-72ad-8fc3-f977f1cf41cb
-#content-updated_at: 2026-08-02
-#content-hash: xxh64:acec335dc0c58fab
+#content-updated_at: 2026-08-09
+#content-hash: xxh64:88fc4eb1199ae7e4
 id,name_en,name_uk,text_en,text_uk,effects,class_id,level,resource,subclass_id,expertise_slots
 barbarian_rage,Rage,,"In battle, you fight with primal ferocity. On your turn, you can enter a rage as a bonus action.
 While raging, you gain the following benefits if you aren't wearing heavy armor:
@@ -35,7 +35,7 @@ Once within the next 10 minutes, the creature can roll the die and add the numbe
 it rolls the d20 before deciding to use the Bardic Inspiration die, but must decide before the GM says whether the roll succeeds or fails. Once the Bardic Inspiration die is rolled, it is lost. A creature can have only one Bardic Inspiration die at a time.
 You can use this feature a number of times equal to your Charisma modifier (a minimum of once). You regain any expended uses when you finish a long rest.
 Your Bardic Inspiration die changes when you reach certain levels in this class. The die becomes a
-d8 at 5th level, a d10 at 10th level, and a d12 at 15th level.",,"grant_roll:bardic_inspiration:1d step(class_level.bard, 1->6, 5->8, 10->10, 15->12)",bard,1,,,
+d8 at 5th level, a d10 at 10th level, and a d12 at 15th level.",,"grant_roll:bardic_inspiration:1d step(class_level.bard, 1->6, 5->8, 10->10, 15->12);grant_resource:bardic_inspiration:max(1,cha_mod):long",bard,1,,,
 bard_jack_of_all_trades,Jack of All Trades,,"Starting at 2nd level, you can add half your proficiency bonus, rounded down, to any ability check you make that doesn't already include your proficiency bonus.",,,bard,2,,,
 bard_song_of_rest,Song of Rest,,"Beginning at 2nd level, you can use soothing music or oration to help revitalize your wounded allies during a short rest. If you or any friendly creatures who can hear your performance regain hit points at the end of the short rest by spending one or more
 Hit Dice, each of those creatures regains an extra 1d6 hit points.
@@ -43,10 +43,10 @@ The extra hit points increase when you reach certain levels in this class: to 1d
 bard_bard_college,Bard College,,"At 3rd level, you delve intothe advanced techniques of a bard college of your choice, such as the College of Lore. Your choice grants you features at 3rd level and again at 6th and 14th level.",,,bard,3,,,
 bard_expertise,Expertise,,"At 3rd level, choose two of your skill proficiencies. Your proficiency bonus is doubled for any ability check you make that uses either of the chosen proficiencies. At 10th level, you can choose another two skill proficiencies to gain this benefit.",,,bard,3,,,"3:2,10:2"
 bard_ability_score_improvement,Ability Score Improvement,,"When you reach 4th level, and again at 8th, 12th, 16th, and 19th level, you can increase one ability score of your choice by 2, or you can increase two ability scores of your choice by 1. As normal, you can't increase an ability score above 20 using this feature.",,,bard,4,,,
-bard_font_of_inspiration,Font of Inspiration,,"Beginning when you reach 5th level, you regain all of your expended uses of Bardic Inspiration when you finish a short or long rest.",,,bard,5,,,
+bard_font_of_inspiration,Font of Inspiration,,"Beginning when you reach 5th level, you regain all of your expended uses of Bardic Inspiration when you finish a short or long rest.",,"grant_resource:bardic_inspiration:max(1,cha_mod):short",bard,5,,,
 bard_countercharm,Countercharm,,"At 6th level, you gain the ability to use musical notes or words of power to disrupt mind-influencing effects. As an action, you can start a performance that lasts until the end of your next turn. During that time, you and any friendly creatures within 30 feet of you have advantage on saving throws against being frightened or charmed. A creature must be able to hear you to gain this benefit. The performance ends early if you are incapacitated or silenced or if you voluntarily end it (no action required).",,,bard,6,,,
 bard_magical_secrets,Magical Secrets,,"By 10th level, you have plundered magical knowledge from a wide spectrum of disciplines. Choose two spells from any class, including this one. A spell you choose must be of a level you can cast, as shown on the Bard table, or a cantrip. The chosen spells count as bard spells for you and are included in the number in the Spells Known column of the Bard table. You learn two additional spells from any class at 14th level and again at 18th level.",,,bard,10,,,
-bard_superior_inspiration,Superior Inspiration,,"At 20th level, when you roll initiative and have no uses of Bardic Inspiration left, you regain one use.",,,bard,20,,,
+bard_superior_inspiration,Superior Inspiration,,"At 20th level, when you roll initiative and have no uses of Bardic Inspiration left, you regain one use.",,regain_on_initiative:bardic_inspiration:1,bard,20,,,
 cleric_spellcasting,Spellcasting,,"As a conduit for divine power, you can cast cleric spells.",,,cleric,1,,,
 cleric_divine_domain,Divine Domain,,"Choose one domain related to your deity, such as Life. Each domain is detailed at the end of the class description, and each one provides examples of gods associated with it. Your choice grants you domain spells and other features when you choose it at 1st level. It also grants you additional ways to use Channel Divinity when you gain that feature at 2nd level, and additional benefits at 6th, 8th, and 17th levels.",,,cleric,1,,,
 cleric_channel_divinity,Channel Divinity,,"At 2nd level, you gain the ability to channel divine energy directly from your deity, using that energy to fuel magical effects. You start with two such effects: Turn Undead and an effect determined by your domain. Some domains grant you additional effects as you advance in levels, as noted in the domain description.
