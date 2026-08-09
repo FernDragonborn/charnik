@@ -1202,6 +1202,10 @@ holds the done-work log; these are the OPEN tails it carried):**
     their spell rolls) — a weapon-scoped flat DAMAGE bonus isn't expressible without an L1 grammar change
     (a `compatibility.md` chokepoint), and there's no per-instance weapon target yet. Ties
     [[charnik-dicetray-attack-damage-concept]]; the roller rework is its own item.
+    **Shared with UBUG-11** (a class action that makes N attacks — Flurry of Blows): same roller, two
+    callers. The user-visible symptom here is the `remindCountScaling` toast ("N×: make N separate rolls
+    at this level") — a reminder standing in for the rolls, per item 9 (never a silently-wrong single
+    big die). Agonizing Blast's per-beam CHA rides the same per-instance path (UPCAST-INVOCATION-SCOPE).
   - [ ] **UPCAST-AUTHORING (was N8) · guided upcast-token builder** in `EditContentForm` (form → token),
     so a non-technical author never hand-writes `per_slot(1d6)` (CLAUDE.md "everything from the UI"). v1
     ships a raw `upcast` text field (like the effect-token field); prose `higher_level` stays the fallback.
@@ -1267,6 +1271,13 @@ holds the done-work log; these are the OPEN tails it carried):**
   2× Unarmed Strike, and the general case for any "make an attack" ability. Ties into ACTIONS.md (the
   `rolls` intent field) + [[charnik-dicetray-attack-damage-concept]]. The whole "action from a class
   feature" model is the target, not just Flurry.
+  **Same missing capability as UPCAST-ROLLER, reached from the other side** (re-reported 2026-08-09 on a
+  Warlock: casting Eldritch Blast at level 5 just toasts "Eldritch Blast — 2×: make 2 separate rolls at
+  this level", from `remindCountScaling` in `combat/state.svelte.ts`). A class action asking for N attacks
+  and a `count`-scaling cantrip firing N beams both need ONE thing: a roller that fires N independent
+  to-hit+damage sub-rolls. **Build it once, in the roller** (`DiceTrayRequest.instances`), and let both
+  call it — do NOT grow a second per-feature path. The `note:`/reminder text stays as the fallback for
+  anything the roller can't express.
 - [x] **UBUG-12 · Roll feedback is hard to read — rework the toasts / roll surface (2026-08-05).** DONE
   (2026-08-09, design **5A** from `design-preview/toast-update/`). Root cause: the roll toast was a
   formatted STRING (`label — total` + a `d20(14) + d6(3) · dmg …` description line), built three
