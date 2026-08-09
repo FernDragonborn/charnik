@@ -60,8 +60,11 @@
 			grid-template-columns: repeat(3, 1fr);
 		}
 	}
+	/* UBUG-18: the ability cards are panels like every other block on the sheet, so they sit on
+	   --color-surface with their inner controls on --color-surface-2 (the HpPanel relationship), not
+	   the other way round — the inverted pair read as a different, darker kind of block. */
 	.ability {
-		background: var(--color-surface-2);
+		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 11px;
 		padding: 12px 8px;
@@ -84,7 +87,7 @@
 	}
 	.ability:hover {
 		border-color: var(--color-border-strong);
-		background: var(--color-surface);
+		background: var(--color-surface-2);
 	}
 	.ability .ability-name {
 		display: block;
@@ -118,7 +121,7 @@
 		font-size: var(--font-size-xs);
 		line-height: 1;
 		color: var(--color-text-muted);
-		background: var(--color-surface);
+		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
 		padding: 5px 6px;
@@ -126,7 +129,6 @@
 	}
 	.ability .ability-save:hover {
 		border-color: var(--color-accent);
-		background: var(--color-surface-2);
 		color: var(--color-text);
 	}
 	.ability .ability-save b {

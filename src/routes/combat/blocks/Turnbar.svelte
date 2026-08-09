@@ -19,22 +19,37 @@
 <section class="turnbar combat-bar">
 	<span class="bar-label">Round <b>{combat.round}</b></span>
 	{#each SLOTS as [slot, label] (slot)}
-		<span class="turn-slot">
+		<!-- UBUG-17: the WHOLE pill is the hit area ("spend one {label}"), not just the 12px dot; the
+		     pips inside still set the count exactly (click a spent one to restore) and stop the
+		     pill's click, the same nesting the resource chips use. A button can't nest a button, so the
+		     pips are role=button/tabindex=-1: by keyboard you spend via the pill and refresh with
+		     "Next turn" — restoring ONE pip stays mouse-only, as on the resource chips. -->
+		<button
+			type="button"
+			class="turn-slot"
+			onclick={() => combat.economy.trySpend(slot)}
+			title="Spend one {label}"
+		>
 			{label}
 			<span class="turn-pips">
 				{#each range(combat.economy.slotMax[slot]) as i (i)}
 					{@const used = i >= combat.economy.slotMax[slot] - c.play.turn[slot]}
-					<button
-						type="button"
+					<!-- svelte-ignore a11y_click_events_have_key_events -->
+					<span
 						class="turn-pip"
 						class:used
-						onclick={() => combat.economy.usePip(slot, i)}
+						role="button"
+						tabindex="-1"
+						onclick={(e) => {
+							e.stopPropagation();
+							combat.economy.usePip(slot, i);
+						}}
 						title="{label}: {used ? 'used — click to restore' : 'available'}"
 						aria-label="{label} pip {i + 1}"
-					></button>
+					></span>
 				{/each}
 			</span>
-		</span>
+		</button>
 	{/each}
 	<button
 		type="button"
@@ -58,6 +73,8 @@
 		flex: 1 1 auto;
 		min-width: 8px;
 	}
+	/* every pill in this bar is a button; they all signal it the same way (hover + pointer + the
+	   global focus ring) — a pill that looked inert was the UBUG-17 complaint */
 	.turn-slot {
 		display: inline-flex;
 		align-items: center;
@@ -69,6 +86,11 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-full);
 		padding: 5px 11px;
+		color: var(--color-text);
+		cursor: pointer;
+	}
+	.turn-slot:hover {
+		border-color: var(--color-accent);
 	}
 	.turn-slot .turn-pips {
 		display: inline-flex;
@@ -95,13 +117,11 @@
 	.turn-slot b.spent {
 		color: var(--color-text-muted);
 	}
-	/* the Move slot + reset are buttons but wear the same chip look */
-	button.turn-slot {
-		cursor: pointer;
+	/* the Move readout is quieter than the three economy slots until hovered */
+	.turn-slot.move {
 		color: var(--color-text-muted);
 	}
-	button.turn-slot:hover {
-		border-color: var(--color-border-strong);
+	.turn-slot.move:hover {
 		color: var(--color-text);
 	}
 	.aereset {

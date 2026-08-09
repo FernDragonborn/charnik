@@ -514,6 +514,13 @@ class CombatVM {
 	activateResourceOption = (opt: ResourceOption, amount = 1) => {
 		if (!this.character) return;
 		const slot = ACTION_TYPE_SLOT[opt.actionType]; // null for a free action
+		// the `available` L2 guard is a RULE, not a UI state: ActionsPanel greys the row, but the
+		// resource chip reaches the same option, so the check belongs here where every caller passes
+		// (else a chip could fire Persistent Rage outside its combat-start window).
+		if (!opt.available) {
+			toast(`${opt.name} — not available right now`);
+			return;
+		}
 		if (!this.resources.canAffordOption(opt, amount)) {
 			toast(`${opt.name} — not enough ${opt.resourceId}`, { description: 'Recharge on a rest' });
 			return;
@@ -527,17 +534,18 @@ class CombatVM {
 		this.runActionToken(opt);
 	};
 
-	/** The resource CHIP's primary "use one" gesture. A resource with a single activated-BUFF option
-	 *  (an `apply_effect` — Enter Rage / a stance) IS entered by using it, so route the chip to that
-	 *  option (spend + apply the buff + turn cost) — otherwise clicking "Rage" just decremented a counter
-	 *  and the player saw no effect. A resource spent on distinct action-options (ki → Flurry/Patient/…)
-	 *  or with none has no single buff to enter, so it falls back to a plain pool decrement. */
+	/** The resource CHIP's primary "use one" gesture. When the pool has exactly ONE action-option, using
+	 *  the resource IS that action — so the chip runs it through the executor (validate → spend the pool
+	 *  → charge the turn slot → run the action token), identical to clicking the row in Actions. Any
+	 *  other split would lie: it was `apply_effect`-only before, so the Second Wind chip silently ticked
+	 *  a counter down while healing nothing and charging no Bonus Action (UBUG-16).
+	 *  A pool with SEVERAL options (Focus → Flurry / Patient Defense / Step of the Wind) has no single
+	 *  action to infer, and a pool with none has nothing to run: both stay a plain decrement, which is
+	 *  also the honest escape hatch for spending a point on something the app doesn't model. */
 	useResourceOrEnter = (id: string, max: number) => {
-		const enters = (this.sheet?.resourceOptions ?? []).filter(
-			(o) => o.resourceId === id && o.action.startsWith('apply_effect:')
-		);
-		const [only] = enters;
-		if (enters.length === 1 && only) this.activateResourceOption(only);
+		const options = (this.sheet?.resourceOptions ?? []).filter((o) => o.resourceId === id);
+		const [only] = options;
+		if (options.length === 1 && only) this.activateResourceOption(only);
 		else this.resources.useResource(id, max);
 	};
 

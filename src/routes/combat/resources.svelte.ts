@@ -130,6 +130,37 @@ export class ResourceTracker {
 		return def.max - newSpent;
 	};
 
+	/** The long-rest-only half of `rest`: slots, HP, concentration, Hit Dice and Exhaustion. Split out
+	 *  because it's the only branch that touches five subsystems, and inlining it pushed `rest` past the
+	 *  complexity budget. */
+	private applyLongRest = (c: Character, sheet: CharacterSheet) => {
+		c.play.spellSlotsSpent = {};
+		c.play.hp = { ...c.play.hp, current: c.play.hp.max ?? sheet.maxHp.value, temp: 0 };
+		c.play.concentration = null; // a long rest ALWAYS ends concentration, even with no linked
+		// effect in play.effects (e.g. Hold Person on an enemy) — A13
+		// Hit Dice regained — edition-divergent (2014 half total, min 1; 2024 all). Recover
+		// largest-die-first (pools are sorted so) up to the recovered count; a deterministic v1 of
+		// the "player picks which" RAW choice (upgrade to a picker later).
+		const totalHd = sheet.hitDice.reduce((n, h) => n + h.max, 0);
+		let recover = hitDiceRecoveredOnLongRest(c.system, totalHd);
+		const hdSpent = { ...c.play.hitDiceSpent };
+		for (const h of sheet.hitDice) {
+			if (recover <= 0) break;
+			const spent = Math.max(0, Math.min(hdSpent[h.die] ?? 0, h.max));
+			const back = Math.min(spent, recover);
+			if (back > 0) {
+				hdSpent[h.die] = spent - back;
+				recover -= back;
+			}
+		}
+		c.play.hitDiceSpent = hdSpent;
+		// RAW both editions: a Long Rest removes ONE Exhaustion level (2024 glossary "Removing
+		// Exhaustion Levels"; 2014 "reduces a creature's exhaustion level by 1"). 2014 adds "provided
+		// the creature has also ingested some food and drink" — a tracker doesn't model rations, so we
+		// apply it unconditionally (RAI, the universal reading). Automatic in RAW → no player click.
+		c.play.exhaustion = Math.max(0, c.play.exhaustion - 1);
+	};
+
 	/** Take a rest: recharge resources by type (short recharges short-rest pools; long recharges both),
 	 *  reset spell slots (long = all, short = pact only), restore HP on a long rest, and expire
 	 *  round-timed effects the rest outlives: a short rest is 1 h (600 rounds), a long rest outlives
@@ -153,31 +184,7 @@ export class ResourceTracker {
 		}
 		c.play.resourcesSpent = spent;
 		if (kind === 'long') {
-			c.play.spellSlotsSpent = {};
-			c.play.hp = { ...c.play.hp, current: c.play.hp.max ?? sheet.maxHp.value, temp: 0 };
-			c.play.concentration = null; // a long rest ALWAYS ends concentration, even with no linked
-			// effect in play.effects (e.g. Hold Person on an enemy) — A13
-			// Hit Dice regained — edition-divergent (2014 half total, min 1; 2024 all). Recover
-			// largest-die-first (pools are sorted so) up to the recovered count; a deterministic v1 of
-			// the "player picks which" RAW choice (upgrade to a picker later).
-			const totalHd = sheet.hitDice.reduce((n, h) => n + h.max, 0);
-			let recover = hitDiceRecoveredOnLongRest(c.system, totalHd);
-			const hdSpent = { ...c.play.hitDiceSpent };
-			for (const h of sheet.hitDice) {
-				if (recover <= 0) break;
-				const spent = Math.max(0, Math.min(hdSpent[h.die] ?? 0, h.max));
-				const back = Math.min(spent, recover);
-				if (back > 0) {
-					hdSpent[h.die] = spent - back;
-					recover -= back;
-				}
-			}
-			c.play.hitDiceSpent = hdSpent;
-			// RAW both editions: a Long Rest removes ONE Exhaustion level (2024 glossary "Removing
-			// Exhaustion Levels"; 2014 "reduces a creature's exhaustion level by 1"). 2014 adds "provided
-			// the creature has also ingested some food and drink" — a tracker doesn't model rations, so we
-			// apply it unconditionally (RAI, the universal reading). Automatic in RAW → no player click.
-			c.play.exhaustion = Math.max(0, c.play.exhaustion - 1);
+			this.applyLongRest(c, sheet);
 		} else {
 			const slots = { ...c.play.spellSlotsSpent };
 			delete slots[PACT_SLOT_KEY]; // warlock pact slots return on a short rest

@@ -1415,11 +1415,67 @@ describe('CombatVM · using the Rage resource ENTERS Rage (chip → buff, not a 
 		expect(sheet?.facts.advantage.some((a) => a.target === 'save.str')).toBe(true);
 	});
 
+	it('UBUG-16: the Rage chip costs its Bonus Action in combat', () => {
+		combat.economy.toggleCombat();
+		combat.useResourceOrEnter('rage', 3);
+		expect(character.play.turn.bonus).toBe(1);
+	});
+
 	it('entering Rage marks is_raging and ENDS concentration (RAW: cannot maintain while raging)', () => {
 		character.play.concentration = `spell:${S}:hold_person`; // pretend a prior concentration spell
 		combat.useResourceOrEnter('rage', 3);
 		expect(combat.cantConcentrate).toBe(true); // the Rage condition's blocks_concentration marker (data-driven)
 		combat.endConcentrationIfBroken(); // the reactive call the combat page fires on state change
 		expect(character.play.concentration).toBeNull();
+	});
+});
+
+describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a bare counter', () => {
+	let character: Character;
+	beforeEach(async () => {
+		combat.graph = await realGraph('content/srd-2024');
+		character = newCharacter('valen', 'Valen', '5.5e');
+		character.build.classes = [{ class: `class:${S}:fighter`, level: 5 }];
+		character.play.hp = { current: 4, max: 40, temp: 0 };
+		combat.character = character;
+	});
+
+	it('the Second Wind chip HEALS and spends the Bonus Action, not just a use', () => {
+		combat.economy.toggleCombat();
+		expect(combat.sheet?.resources.some((r) => r.id === 'second_wind')).toBe(true);
+		combat.useResourceOrEnter('second_wind', 2);
+		expect(character.play.hp.current).toBeGreaterThan(4); // 1d10 + fighter level actually rolled
+		expect(character.play.turn.bonus).toBe(1); // the RAW Bonus Action was charged
+		expect(combat.resources.resourceSpent('second_wind')).toBe(1);
+	});
+
+	it('all-or-nothing: with the Bonus Action gone, the chip heals nothing and spends nothing', () => {
+		combat.economy.toggleCombat();
+		combat.economy.usePip('bonus', 0); // bonus action already used this turn
+		combat.useResourceOrEnter('second_wind', 2);
+		expect(character.play.hp.current).toBe(4);
+		expect(combat.resources.resourceSpent('second_wind')).toBe(0);
+	});
+
+	it('the `available` guard is enforced by the EXECUTOR, not just greyed in the panel', () => {
+		character.build.classes = [{ class: `class:${S}:barbarian`, level: 15 }];
+		const gate = (combat.sheet?.resourceOptions ?? []).find(
+			(o) => o.resourceId === 'persistent_rage'
+		);
+		expect(gate?.available).toBe(false); // out of combat, its window is shut
+		combat.resources.useResource('rage', 3); // spend one so a restore would be visible
+		combat.useResourceOrEnter('persistent_rage', 1);
+		expect(combat.resources.resourceSpent('rage')).toBe(1); // nothing was restored
+		expect(combat.resources.resourceSpent('persistent_rage')).toBe(0); // and nothing was charged
+	});
+
+	it('a pool with SEVERAL actions stays a manual counter — the player picks in Actions', () => {
+		character.build.classes = [{ class: `class:${S}:monk`, level: 5 }];
+		combat.economy.toggleCombat();
+		const opts = (combat.sheet?.resourceOptions ?? []).filter((o) => o.resourceId === 'focus');
+		expect(opts.length).toBeGreaterThan(1); // Flurry / Patient Defense / Step of the Wind
+		combat.useResourceOrEnter('focus', 5);
+		expect(combat.resources.resourceSpent('focus')).toBe(1); // decremented…
+		expect(character.play.turn.bonus).toBe(0); // …but no action was picked, so none was charged
 	});
 });

@@ -1267,25 +1267,37 @@ holds the done-work log; these are the OPEN tails it carried):**
   `design-preview/death-screen.png`. **Related RAW tail, not done:** taking damage at 0 HP should also
   add a death-save failure (two on a crit) — we don't know crit-ness at the Damage button, so it needs
   its own think.
-- [ ] **UBUG-16 · Some abilities don't cost their action/bonus action when used (2026-08-09; Rage,
-  Second Wind — audit the rest).** Root-cause lead (verified in code): the resource **chip** path
-  `useResourceOrEnter` (`state.svelte.ts:526`) only routes to `activateResourceOption` when the pool has
-  exactly ONE `apply_effect:` option; **anything else falls back to a bare `resources.useResource`** —
-  which decrements the pool but runs no action token and spends no turn slot. So Second Wind from the
-  chip = a silent counter tick (no heal, no Bonus Action), and any pool with 2+ options degrades the same
-  way. The pip path (`resourceClick`) is raw pip math and bypasses options entirely. Also confirm the
-  economy gate: `canSpend`/`trySpend` (`economy`) return true out of combat BY DESIGN (no turn tracking
-  outside combat) — verify the report wasn't just an out-of-combat activation before changing that.
-  Fix at the chip seam so every activation goes through `activateResourceOption` (which already validates
-  + costs the slot), and sweep every ability with an `action_type` to confirm it charges.
-- [ ] **UBUG-17 · Action / Bonus Action / Reaction pips aren't interactive-looking, and only the dot is
-  clickable (2026-08-09).** The turn-economy strip in combat doesn't get the hover/cursor/focus treatment
-  the other clickable elements have ([[charnik-interactive-affordance]]), and the hit area is the little
-  circle instead of the whole pill. Make the whole pill the button (label + dot) and reuse the existing
-  interactive-pill styling rather than inventing a third look.
-- [ ] **UBUG-18 · Abilities block uses a different background than the other panels (2026-08-09).**
-  Swap it to the same panel-surface token every other block uses — a semantic token, never a literal
-  ([[new-ui-must-support-themes]]).
+- [x] **UBUG-16 · Some abilities don't cost their action/bonus action when used (2026-08-09; Rage,
+  Second Wind — audit the rest).** DONE. Root cause: the resource **chip** (`useResourceOrEnter`) routed
+  to the executor only when the pool had exactly one **`apply_effect:`** option — every other pool fell
+  back to a bare `resources.useResource`, which decrements the counter and runs NOTHING. So the Second
+  Wind chip ticked a use down while healing nothing and charging no Bonus Action; Action Surge likewise
+  granted no action. (Rage was fine — it *is* an `apply_effect`. Note `trySpend` returns true without
+  spending OUT of combat, by design: no turn tracking there.) Fix: drop the verb condition — with
+  exactly ONE option, using the resource IS that action, so the chip runs it through
+  `activateResourceOption` (validate → spend → charge the turn slot → run the token), identical to the
+  Actions row. Several options (Focus → Flurry / Patient Defense / Step of the Wind) or none stay a plain
+  decrement — no single action to infer, and it doubles as the honest escape hatch for spending a point
+  on something unmodelled. **Second bug the audit exposed:** the `available` L2 guard was enforced only
+  in `ActionsPanel`'s `disabled` attribute, so the chip could fire Persistent Rage outside its
+  combat-start window — the check moved INTO `activateResourceOption`, where every caller passes. Swept
+  all shipped `resource_options` rows in both editions (focus/ki ×3, second_wind, action_surge, rage,
+  persistent_rage, uncanny_metabolism). 4 behavioral tests incl. all-or-nothing with the Bonus Action
+  already spent.
+- [x] **UBUG-17 · Action / Bonus Action / Reaction pips aren't interactive-looking, and only the dot is
+  clickable (2026-08-09).** DONE. The three slots were inert `<span>`s wrapping a 12px pip button, so
+  the label was dead space and nothing signalled clickability. Each slot is now the button — the whole
+  pill is "spend one <slot>" (routed through the existing `trySpend`, which already blocks + warns when
+  the slot is gone), with the pills sharing one hover/cursor rule + the global focus ring
+  ([[charnik-interactive-affordance]]). The pips stay INSIDE as click-to-set (spend up to / restore down
+  to) and stop the pill's click — the same nesting the resource chips use. Known ceiling (identical to
+  those chips): a button can't nest a button, so pips are `role=button`/`tabindex=-1` — by keyboard you
+  spend on the pill and refresh with "Next turn"; restoring ONE pip stays mouse-only.
+- [x] **UBUG-18 · Abilities block uses a different background than the other panels (2026-08-09).**
+  DONE. The ability cards had the panel relationship INVERTED — card on `--color-surface-2` with the
+  save chip on `--color-surface`, while every other block (HP, the combat strip cards, panel cards) is
+  a `--color-surface` panel with `--color-surface-2` controls inside. Flipped both, hover now goes to
+  surface-2 like the sibling controls. Tokens only, no literals ([[new-ui-must-support-themes]]).
 - [ ] **UBUG-19 · Replace the remaining emoji icons with drawn outline icons (2026-08-09).** Three known
   sites: the **speed/movement** field in combat (→ an outline footprint), the **lightning** next to Bonus
   Action, and the **bug** on the "report a bug" button. Bundle SVGs locally with attribution

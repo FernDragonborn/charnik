@@ -65,9 +65,10 @@
 				<div class="resource-chips">
 					{#each s.resources as r (r.id)}
 						{@const spent = combat.resources.resourceSpent(r.id)}
-						<!-- the whole chip is the "use one" action (UBUG-8): for a resource with an
-						     activated-buff option (Rage) it ENTERS that state, else it decrements the pool;
-						     the pips inside still set the count manually and stop the chip's use-click -->
+						<!-- the whole chip is the "use one" action (UBUG-8): when the pool has exactly ONE
+						     action-option it RUNS it (Second Wind heals, Rage enters the state — cost + turn
+						     slot included, UBUG-16); with several or none it decrements the pool. The pips
+						     inside still set the count manually and stop the chip's use-click -->
 						<button
 							type="button"
 							class="resource"
