@@ -4,12 +4,11 @@
  * is one cohesive unit; CombatVM composes it as `combat.tray` and the higher-level actions
  * (attack/cast/action) call into it. Pure dice math lives in $lib/rules/dice.
  */
-import { toast } from 'svelte-sonner';
 import { rollPool, type BonusDie, type DieMods, type Rolled } from '$lib/rules/dice';
+import { toastRoll } from '$lib/dice/roll-toast';
 import {
 	signed,
 	rollDamageParts,
-	damageTotal,
 	type RollLogEntry,
 	type TypedRoll,
 	type DamagePartSpec
@@ -133,15 +132,7 @@ export class RollTray {
 		};
 		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
 		this.persist?.(entry);
-		const kept = r.advantageRoll ? `d20(${r.advantageRoll.kept}) ` : '';
-		const drop = r.advantageRoll ? ` · drop d20(${r.advantageRoll.dropped})` : '';
-		const total = damage ? damageTotal(damage) : 0;
-		const dmg = damage
-			? ` · dmg ${damage.map((p) => `${p.expr}${p.type ? ` ${p.type}` : ''} = ${p.total}`).join(' + ')}`
-			: '';
-		toast(`${label} — ${r.total}${damage ? ` / ${total} dmg` : ''}`, {
-			description: `${kept}${r.expr} = ${r.total}${drop}${dmg}`.trim()
-		});
+		toastRoll(entry);
 		// return the STORED element, not the local literal: assigning into the $state array wraps it in a
 		// reactive proxy, so a caller holding the entry (Savage Attacker's pending reroll) must hold the
 		// SAME proxy the `{#each}` iterates — else an `entry === log[i]` identity check would never match.

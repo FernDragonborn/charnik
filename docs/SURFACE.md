@@ -155,7 +155,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (42)
+## Shared components (43)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -194,6 +194,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
+| **RollToast** | `model`, `closeToast` | The dice-roll toast (design 5A, "the toast grows with the roll"). |
 | **SchemaDiscardDialog** | `drafts`, `onDiscard`, `onKeep` |  |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
 | **SpellHead** | `detail`, `spell`, `editable`, `draft` | The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration |
@@ -289,7 +290,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (80 modules)
+## Library functions & types (81 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -706,6 +707,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function openLogDir` — Desktop only: reveal the rotating log-file folder (OS app-log dir) in the file manager, so a user * can attach the fu…
 - `function captureGlobalErrors` — Route otherwise-lost uncaught errors + unhandled rejections into the logger.
 
+### `src/lib/dice/roll-toast.ts`
+
+- `interface RollToastRow` — One rolled line: its dice, the flat mod folded into it, and what it came to.
+- `interface RollToastModel`
+- `function rollToastModel` — Build the toast model from a completed roll (the same shape the roll log stores).
+- `function toastRoll` — Toast a completed roll.
+
 ### `src/lib/drafts/store.ts`
 
 - `type DraftTarget` — What a draft is editing.
@@ -916,6 +924,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function formatDicePool` — Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first.
 - `interface RollOptions` — Options for `rollPool` beyond the pool itself: injectable rng + roll-manipulation effects.
 - `function rollPool` — * Roll a dice pool + flat mod.
+- `interface DieChip` — One die as the UI shows it: the face it ended on, how many sides it had, its sign (a Bane die is * −1d4) and the raw …
+- `function parseRollExpr` — Read an `expr` back into per-die chips + the trailing flat modifier.
 - `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat * mod, then `rollPool`.
 
 ### `src/lib/rules/pipeline.ts`
@@ -1077,4 +1087,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 42 components · 597 exports across 91 modules · 32 duplicate suspects._
+_45 tokens · 63 global classes · 43 components · 603 exports across 92 modules · 32 duplicate suspects._

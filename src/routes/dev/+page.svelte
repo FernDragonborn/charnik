@@ -35,6 +35,7 @@
 			<li><a href="drift">Hash-drift review</a></li>
 			<li><a href="firstrun">First-run flow</a></li>
 			<li><a href="deathsaves">Death saves</a></li>
+			<li><a href="rolltoast">Roll toast</a></li>
 			<li><a href="plugins">Plugins</a></li>
 			<li><a href="storage">Storage</a></li>
 		</ul>

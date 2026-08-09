@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { registerDiceTray, openDiceTray, type DiceTrayRequest } from './tray.svelte';
 
 // the no-handler fallback rolls + toasts; stub the toast so the test asserts only the routing
-vi.mock('svelte-sonner', () => ({ toast: () => {} }));
+vi.mock('svelte-sonner', () => ({ toast: Object.assign(() => {}, { custom: () => {} }) }));
 
 describe('dice tray contract', () => {
 	it('routes requests to a registered handler, then stops after unregister', () => {

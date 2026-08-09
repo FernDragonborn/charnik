@@ -6,7 +6,7 @@
  * touching callers.
  */
 import { rollFormula, type DieMods } from '$lib/rules/dice';
-import { toast } from 'svelte-sonner';
+import { toastRoll } from './roll-toast';
 
 /** A damage roll queued to fire right after the tray's next Roll (an attack's to-hit → damage). */
 interface QueuedDamage {
@@ -60,6 +60,5 @@ export function openDiceTray(request: DiceTrayRequest): void {
 		registry.handler(request);
 		return;
 	}
-	const { total, expr } = rollFormula(request.formula);
-	toast(`${request.label} — ${total}`, { description: expr });
+	toastRoll({ label: request.label, ...rollFormula(request.formula) });
 }

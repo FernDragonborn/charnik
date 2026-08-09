@@ -136,7 +136,9 @@ export default ts.config(
 			'node_modules/',
 			'src-tauri/',
 			'tools/',
-			'coverage/'
+			'coverage/',
+			// gitignored scratch: design mocks + their vendored support scripts, not our code to lint
+			'design-preview/'
 		]
 	}
 );

@@ -194,6 +194,38 @@ export function rollPool(
 	};
 }
 
+/** One die as the UI shows it: the face it ended on, how many sides it had, its sign (a Bane die is
+ *  −1d4) and the raw detail ("1↻4", "3→10") so a reroll/floor is still explainable on hover. */
+export interface DieChip {
+	sides: number;
+	value: number;
+	sign: number;
+	detail: string;
+}
+
+/** Read an `expr` back into per-die chips + the trailing flat modifier. The roll toast/log render one
+ *  chip per die, and `expr` is the only per-die record that survives into a persisted `log.jsonl`
+ *  entry — so the display parses its own format rather than the roller carrying a second payload.
+ *  Inverse of the `expr` built by `rollPool`; the adv/disadv d20 is NOT in here (it lives in
+ *  `advantageRoll`). */
+export function parseRollExpr(expr: string): { chips: DieChip[]; mod: number } {
+	const chips: DieChip[] = [];
+	for (const m of expr.matchAll(/([+−])?d(\d+)\(([^)]*)\)/g)) {
+		const detail = m[3] ?? '';
+		const faces = detail.match(/\d+/g) ?? [];
+		chips.push({
+			sides: Number(m[2]),
+			// the LAST number is what the die finally counted as (post reroll ↻ and post floor →)
+			value: Number(faces[faces.length - 1] ?? 0),
+			sign: m[1] === '−' ? -1 : 1,
+			detail
+		});
+	}
+	// no die ever ends in a bare signed number (they all close with `)`), so the tail is the flat mod
+	const mod = /([+−])(\d+)\s*$/.exec(expr);
+	return { chips, mod: mod ? (mod[1] === '−' ? -1 : 1) * Number(mod[2]) : 0 };
+}
+
 /** Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat
  *  mod, then `rollPool`. Rolls EVERY dice group (the old compendium roller only did the first). */
 export function rollFormula(formula: string, rng: Rng = Math.random): Rolled {

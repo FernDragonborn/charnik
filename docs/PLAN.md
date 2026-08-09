@@ -1267,11 +1267,23 @@ holds the done-work log; these are the OPEN tails it carried):**
   2× Unarmed Strike, and the general case for any "make an attack" ability. Ties into ACTIONS.md (the
   `rolls` intent field) + [[charnik-dicetray-attack-damage-concept]]. The whole "action from a class
   feature" model is the target, not just Flurry.
-- [ ] **UBUG-12 · Roll feedback is hard to read — rework the toasts / roll surface (2026-08-05).** Rolls
-  report through svelte-sonner toasts; the kept/dropped advantage dice + per-type damage breakdown +
-  totals are cramped and hard to parse at a glance. Redesign the roll output for readability (a clearer
-  roll-result card / dice-tray result / restructured toast) so a to-hit, its dropped die, and typed
-  damage read cleanly. Some toasts elsewhere likely want the same pass. Cross-ref the roll log + DiceTray.
+- [x] **UBUG-12 · Roll feedback is hard to read — rework the toasts / roll surface (2026-08-05).** DONE
+  (2026-08-09, design **5A** from `design-preview/toast-update/`). Root cause: the roll toast was a
+  formatted STRING (`label — total` + a `d20(14) + d6(3) · dmg …` description line), built three
+  different ways at three call sites — so the dice, the dropped adv die and the per-type damage all
+  competed in one run-on line at one type size. Now a component: `RollToast.svelte` renders one die per
+  chip, the dropped adv/disadv die struck through beside the kept one, one row per damage type, and the
+  summary in its OWN fixed-width full-height right column — so a stack of toasts lines its totals up at
+  different heights. Uppercase row labels only switch on from the second row (a lone roll stays a
+  one-liner). Model + the single toast seam = `$lib/dice/roll-toast.ts` (`toastRoll`); the three call
+  sites (`RollTray.pushRoll`, `RollButton`, the no-tray `openDiceTray` fallback) now all go through it.
+  Per-die values are recovered by `parseRollExpr` (rules/dice.ts) rather than a second payload on
+  `Rolled`, because `expr` is the only per-die record that survives into a persisted `log.jsonl` entry.
+  A nat 20 / nat 1 re-tints the card, the summary and the die — labelled "nat 20", NOT "crit" (the same
+  d20 is a crit on an attack and just a 20 on a check; the tracker surfaces, it doesn't rule).
+  Dismiss = the card itself (sonner drops its close button for a custom-component toast).
+  Preview: `/dev/rolltoast` (every shape from fixed rolls). **Tail:** the roll LOG + DiceTray still
+  render their own breakdown, and the non-roll toasts elsewhere are still plain strings.
 - [x] **UBUG-13 · Level-up re-offers ASI and DOUBLE-applies it (not filled/persisted; 2026-08-05).** DONE.
   Root cause: only the FLATTENED `abilityBoosts`/`feats` were persisted, never the per-slot mapping — so
   hydrate couldn't repopulate slots (all opened blank) and `abilityBoosts = edit.boosts (carried flat) +

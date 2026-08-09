@@ -5,7 +5,7 @@
 	// place. Content (the label/emoji) is the caller's; `variant` picks the look.
 	import type { Snippet } from 'svelte';
 	import { rollFormula } from '$lib/rules/dice';
-	import { toast } from 'svelte-sonner';
+	import { toastRoll } from '$lib/dice/roll-toast';
 	import { openDiceTray } from '$lib/dice/tray.svelte';
 
 	let {
@@ -31,8 +31,7 @@
 			openDiceTray({ label, formula });
 			return;
 		}
-		const { total, expr } = rollFormula(formula);
-		toast(`${label} — ${total}`, { description: expr });
+		toastRoll({ label, ...rollFormula(formula) });
 	}
 </script>
 

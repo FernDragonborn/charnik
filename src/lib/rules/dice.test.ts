@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { rollPool, rollFormula, parseDicePool, parseDiceTerm, type Rng } from './dice';
+import {
+	rollPool,
+	rollFormula,
+	parseDicePool,
+	parseDiceTerm,
+	parseRollExpr,
+	type Rng
+} from './dice';
 
 /** RNG that yields the given [0,1) values in order (then throws if over-drawn — catches extra draws). */
 function rngSequence(...values: number[]): Rng {
@@ -138,5 +145,46 @@ describe('rollFormula', () => {
 	it('handles a monster HP formula', () => {
 		const r = rollFormula('16d12 + 80', rngSequence(...Array(16).fill(0.5)));
 		expect(r.total).toBe(16 * 7 + 80); // d12 at 0.5 → 7
+	});
+});
+
+describe('parseRollExpr (the toast/log chip breakdown)', () => {
+	it('round-trips a rolled expr into per-die chips + the flat modifier', () => {
+		const r = rollPool({ 8: 1, 6: 1 }, 3, 0, [], rngSequence(0.5, 0.5));
+		const { chips, mod } = parseRollExpr(r.expr); // "d8(5) + d6(4) +3"
+		expect(chips.map((c) => [c.sides, c.value, c.sign])).toEqual([
+			[8, 5, 1],
+			[6, 4, 1]
+		]);
+		expect(mod).toBe(3);
+		expect(chips.reduce((n, c) => n + c.sign * c.value, 0) + mod).toBe(r.total);
+	});
+
+	it('takes the FINAL face of a rerolled/floored die and keeps the detail', () => {
+		const r = rollPool({ 20: 1 }, 0, 0, [], { rng: rngSequence(0, 0.15), reroll: 1, minDie: 10 });
+		expect(parseRollExpr(r.expr).chips).toEqual([
+			{ sides: 20, value: 10, sign: 1, detail: '1↻4→10' }
+		]);
+	});
+
+	it('signs a negative bonus die and reads a negative modifier', () => {
+		const r = rollPool({ 20: 1 }, -2, 0, [{ sides: 4, count: 1, sign: -1 }], rngSequence(0.5, 0.5));
+		const { chips, mod } = parseRollExpr(r.expr); // "d20(11) + −d4(3) −2"
+		expect(chips.map((c) => c.sign)).toEqual([1, -1]);
+		expect(mod).toBe(-2);
+		expect(chips.reduce((n, c) => n + c.sign * c.value, 0) + mod).toBe(r.total);
+	});
+
+	it('is empty for a marker entry with no expr', () => {
+		expect(parseRollExpr('')).toEqual({ chips: [], mod: 0 });
+	});
+});
+
+describe('parseRollExpr · advantage-only pool', () => {
+	it('still reads the modifier when the kept d20 lives outside expr', () => {
+		// an advantage roll's d20 is surfaced as `advantageRoll`, so expr is just the mod
+		const r = rollPool({ 20: 1 }, 5, 1, [], rngSequence(0.65, 0.3));
+		expect(r.expr).toBe(' +5');
+		expect(parseRollExpr(r.expr)).toEqual({ chips: [], mod: 5 });
 	});
 });
