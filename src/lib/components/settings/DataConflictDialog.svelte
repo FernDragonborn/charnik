@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import { trapFocus } from '$lib/actions/trapFocus';
 	// Shown when the folder chosen for a data move ISN'T empty (an automatic move needs an empty one).
 	// Offers three ways out: pick another folder, just repoint (the user already copied their data
 	// here), or merge the two. The table lists every file across both folders — collisions (a name in
@@ -28,8 +29,8 @@
 	const fmt = (ms?: number) => (ms == null ? '—' : new Date(ms).toLocaleString());
 
 	// Move keyboard focus INTO the dialog on open — onto the safe choice, not the merging one.
+	// Handed to `trapFocus` as its initial target (it also contains Tab + restores focus on close).
 	let safeBtn = $state<HTMLButtonElement | null>(null);
-	$effect(() => safeBtn?.focus());
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
@@ -41,6 +42,7 @@
 	aria-labelledby="cf-title"
 	tabindex="-1"
 	use:dismissOnEscape={onclose}
+	use:trapFocus={safeBtn}
 >
 	<header class="dialog-head">
 		<span class="dialog-badge warn">⚠</span>

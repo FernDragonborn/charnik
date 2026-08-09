@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import { trapFocus } from '$lib/actions/trapFocus';
 	// Schema-discard warning — the house attention-dialog template
 	// (charnik-dialog-design-template), single-pane notice variant. Fires when the draft cache holds
 	// drafts saved under a DIFFERENT content-schema version: ephemeral WIP that can't be migrated, so it
@@ -39,7 +40,9 @@
 	role="dialog"
 	aria-modal="true"
 	aria-labelledby="discard-title"
+	tabindex="-1"
 	use:dismissOnEscape={onKeep}
+	use:trapFocus
 >
 	<header class="dialog-head">
 		<span class="dialog-badge warn">⚑</span>

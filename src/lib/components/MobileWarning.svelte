@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { _ } from '$lib/i18n';
 	import LangSwitcher from './LangSwitcher.svelte';
+	import { trapFocus } from '$lib/actions/trapFocus';
 
 	// The layout has NO responsive/mobile styling yet (docs/PLAN.md — mobile comes after the core).
 	// A narrow viewport is the honest signal that the layout is broken here — not user-agent, which
@@ -55,6 +56,7 @@
 			aria-describedby="mw-body"
 			tabindex="-1"
 			onanimationend={() => (shaking = false)}
+			use:trapFocus
 		>
 			<div class="dialog-lang-corner"><LangSwitcher /></div>
 			<h2 id="mw-title">{$_('mobile.title')}</h2>

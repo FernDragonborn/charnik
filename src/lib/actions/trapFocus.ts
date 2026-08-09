@@ -13,8 +13,12 @@ const FOCUSABLE =
  * inside; Tab / Shift+Tab wrap at the ends instead of escaping; on destroy it restores focus to
  * whatever was focused before the dialog opened (so the trigger regains focus). Pairs with
  * `dismissOnEscape` on the same node.
+ *
+ * Pass an element to start focus THERE instead of on the first control — a dialog whose first button
+ * isn't the one to land on (the data-move dialogs open on the safe choice, not the merging one).
+ * Declaring it here beats a separate `$effect(() => btn.focus())` racing the action for the focus.
  */
-export const trapFocus: Action<HTMLElement> = (node) => {
+export const trapFocus: Action<HTMLElement, HTMLElement | null | undefined> = (node, initial) => {
 	const previouslyFocused = document.activeElement as HTMLElement | null;
 
 	// ponytail: no visibility filter (offsetParent/getClientRects) — the attention dialogs here never
@@ -22,8 +26,8 @@ export const trapFocus: Action<HTMLElement> = (node) => {
 	// visibility check if a dialog ever renders hidden focusable elements.
 	const focusable = (): HTMLElement[] => [...node.querySelectorAll<HTMLElement>(FOCUSABLE)];
 
-	// start inside the dialog: the first focusable control, else the panel (tabindex="-1")
-	(focusable()[0] ?? node).focus();
+	// start inside the dialog: the caller's choice, else the first focusable control, else the panel
+	(initial ?? focusable()[0] ?? node).focus();
 
 	const onKeydown = (e: KeyboardEvent) => {
 		if (e.key !== 'Tab') return;

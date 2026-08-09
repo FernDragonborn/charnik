@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import { trapFocus } from '$lib/actions/trapFocus';
 	// Orphan-draft reassign dialog — fires when the draft cache is read and a draft's target row no longer
 	// exists (deleted / renamed / source disabled). The house attention-dialog template
 	// (charnik-dialog-design-template): ⚑ badge header, "N of M" step-through, two-pane body (your draft
@@ -148,7 +149,9 @@
 	role="dialog"
 	aria-modal="true"
 	aria-labelledby="orphan-title"
+	tabindex="-1"
 	use:dismissOnEscape={onDone}
+	use:trapFocus
 >
 	<header class="dialog-head">
 		<span class="dialog-badge warn">⚑</span>

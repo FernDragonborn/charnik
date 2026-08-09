@@ -2,6 +2,7 @@
 	// Generic confirm dialog — the house attention-dialog template (charnik-dialog-design-template),
 	// for a destructive/irreversible action that needs an explicit yes. Shared `.dialog` shell.
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import { trapFocus } from '$lib/actions/trapFocus';
 
 	let {
 		title,
@@ -28,7 +29,9 @@
 	role="dialog"
 	aria-modal="true"
 	aria-labelledby="confirm-title"
+	tabindex="-1"
 	use:dismissOnEscape={onCancel}
+	use:trapFocus
 >
 	<header class="dialog-head">
 		<span class="dialog-badge" class:danger>⚑</span>

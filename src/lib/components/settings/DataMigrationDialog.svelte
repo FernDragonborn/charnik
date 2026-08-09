@@ -3,6 +3,8 @@
 	// needs time to read what went wrong and the reassurance that their original data is safe — so it
 	// stays on screen until dismissed (never a toast that flashes past). Uses the shared global .dialog
 	// shell (styles/components.css); this only sets its width.
+	import { trapFocus } from '$lib/actions/trapFocus';
+
 	let {
 		tone,
 		title,
@@ -25,8 +27,8 @@
 	// like that". Toggling `shaking` off→on restarts the animation on repeated attempts.
 	let shaking = $state(false);
 	// Move keyboard focus INTO the dialog on open, else it stays on the button behind the backdrop.
+	// `trapFocus` takes it from here: initial focus + Tab containment + restore on close.
 	let closeBtn = $state<HTMLButtonElement | null>(null);
-	$effect(() => closeBtn?.focus());
 	function refuseClose() {
 		shaking = false;
 		requestAnimationFrame(() => (shaking = true));
@@ -49,6 +51,7 @@
 	aria-modal="true"
 	aria-labelledby="mig-title"
 	tabindex="-1"
+	use:trapFocus={closeBtn}
 >
 	<header class="dialog-head">
 		<span class="dialog-badge" class:err={tone === 'error'} class:warn={tone === 'warning'}

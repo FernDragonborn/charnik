@@ -1333,12 +1333,18 @@ holds the done-work log; these are the OPEN tails it carried):**
   a plain installer. **rpm omitted**: needs `rpmbuild`, absent on GitHub runners (add it + widen the
   targets later if Fedora demand appears). macOS still deferred (needs Apple notarization/signing,
   $99/yr, else Gatekeeper warns).
-- [ ] **A11Y-1 · Dialog focus management pass.** No dialog moves keyboard focus into itself on open or
-  traps Tab inside (focus stays on the trigger behind the backdrop; Tab walks the background). The two
-  data-move dialogs now set initial focus (DataMigrationDialog/DataConflictDialog) — do the same +
-  a shared focus-trap for the rest (ConfirmDialog, OrphanDialog, ContentMetaModal, HashDriftModal,
-  SchemaDiscardDialog, FirstRunModal), ideally as one action/helper on the shared `.dialog` shell,
-  and return focus to the trigger on close. (CLAUDE.md "accessibility from day 1" invariant.)
+- [x] **A11Y-1 · Dialog focus management pass.** DONE 2026-08-09. The `trapFocus` action already
+  existed but only reached the three modals built on `DialogShell`; every hand-rolled dialog still let
+  Tab walk the page behind the backdrop. Applied it to all of them — ConfirmDialog, OrphanDialog,
+  SchemaDiscardDialog, PluginConsentDialog, FirstRunModal, MobileWarning, DataConflictDialog,
+  DataMigrationDialog — so each moves focus in on open, cycles Tab/Shift+Tab inside, and returns focus
+  to the trigger on close. The two data-move dialogs wanted a SPECIFIC initial control (the safe choice,
+  the close button) and hand-rolled it as `$effect(() => btn.focus())` racing the action, so `trapFocus`
+  now takes an optional initial element and both declare it instead. **Verified by driving the app**
+  (Settings ▸ Data ▸ Restore demo): focus starts inside, 12 Tabs never escape, Shift+Tab wraps, Escape
+  returns focus to "Restore demo character". **Deliberately NOT trapped:** `CommandPalette` already
+  focuses its input and restores focus itself (a second restorer would fight it), and the combat
+  popovers (`CombatMenus`, `EffectDurationMenu`) are anchored menus, not modals.
 - [ ] **REL-2 · Package-repo distribution channels.** Beyond GitHub Releases, ship Charnik through
   the platform package managers so users install/update the native way. Target set (decided):
   - **AUR** (Arch) — a `charnik-bin` PKGBUILD pulling the Release AppImage; `git push` to

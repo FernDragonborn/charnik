@@ -5,6 +5,7 @@
 	// plain browser (see /dev/firstrun) and the Tauri wiring stays out of the component.
 	import { untrack } from 'svelte';
 	import { _ } from '$lib/i18n';
+	import { trapFocus } from '$lib/actions/trapFocus';
 	import LangSwitcher from './LangSwitcher.svelte';
 
 	let {
@@ -48,6 +49,7 @@
 	aria-modal="true"
 	aria-labelledby="fr-title"
 	tabindex="-1"
+	use:trapFocus
 >
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
+	import { trapFocus } from '$lib/actions/trapFocus';
 	// Plugin consent — the house attention-dialog template, single-pane notice variant
 	// (charnik-dialog-design-template). Shown before a plugin is FIRST enabled, and again whenever
 	// its code hash changed (docs/PLUGINS.md §6). Every manifest field renders as PLAIN TEXT
@@ -31,7 +32,9 @@
 	role="dialog"
 	aria-modal="true"
 	aria-labelledby="plg-title"
+	tabindex="-1"
 	use:dismissOnEscape={onCancel}
+	use:trapFocus
 >
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>
