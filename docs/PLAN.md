@@ -1135,6 +1135,31 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
+- [ ] **ROLLER-N · one roller that fires N independent sub-rolls (promoted to its own item 2026-08-09).**
+  Was filed as a sub-tail of UPCAST (`UPCAST-ROLLER`, was D14) — the wrong home, because upcast is only
+  one of its callers. **The capability:** N sub-rolls from one action, each its OWN to-hit + damage (own
+  advantage, own crit, own target), rendered as one grouped result. **Callers, all blocked on this and
+  nothing else:** (1) `count`-scaling cantrips — Eldritch Blast beams, Scorching Ray, Magic Missile,
+  Chain Lightning; today `remindCountScaling` (`combat/state.svelte.ts`) casts ONE instance and toasts
+  "N×: make N separate rolls at this level", a reminder standing in for the rolls (item 9: never a
+  silently-wrong single big die). (2) **UBUG-11** — a class action that makes N attacks (Flurry of Blows
+  = 2× Unarmed Strike); that item keeps its own half, the `rolls` intent in ACTIONS.md that lets a
+  feature CALL this. (3) any future multiattack. **Build it once here** — a second per-feature path is
+  the failure mode to avoid. Contract `DiceTrayRequest.instances` is already fixed; the loop + the
+  grouped roll/toast/log rendering are unbuilt. The reminder text stays the fallback for what the roller
+  can't express. Ties [[charnik-dicetray-attack-damage-concept]] + the RollToast row model (UBUG-12).
+- [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from
+  `UPCAST-INVOCATION-SCOPE` + the Magic Weapon `enhancement` tail of UPCAST-ROLLER — they were the same
+  problem written twice).** L1 can say `flat_bonus:damage+n` but not "…only for this weapon / only for
+  this spell / only on this instance", so: **Magic Weapon** buffs ALL the caster's weapons (and leaks
+  into spell rolls), and **Agonizing Blast** (+CHA per beam) / **Eldritch Spear** can't be expressed at
+  all. Both need the same thing — a scope key on the bonus. `attacks.ts` §A/§B already scopes by weapon
+  CATEGORY; the extension is a general scope (`weapon_id` / `spell_id` / per-instance), NOT a feat
+  enumeration — every invocation is then just "a scoped effect on a spell". **This is an L1 grammar
+  change and a `docs/compatibility.md` chokepoint** (effect-token grammar) — decide it there, not
+  ad-hoc in the fold. Independent of ROLLER-N (each ships without the other), but the per-beam case
+  only becomes visible once N beams actually roll. Also the mechanical half of DEMO-1 gap 4 / N2
+  invocations.
 - [ ] **B11 · size-cap on `Storage.read()`** (`size` on `FileEntry`). Needs a cap-value decision + 5
   storage impls, and risks rejecting legitimately-large homebrew CSVs — likely YAGNI; recorded, not queued.
 - [ ] **B24 · granular per-file watcher reparse.** The watcher reparses coarsely; per-file is deeper in
@@ -1194,26 +1219,16 @@ holds the done-work log; these are the OPEN tails it carried):**
   (4) Conjure* tables + meta-rules (Dispel Magic, Globe) stay prose `higher_level` — not number-scaling,
   a permanent exclusion, not a bug. **OPEN tails (deferred, NOT blockers — the reason this became a
   backlog entry rather than staying closed-in-its-own-doc):**
-  - [ ] **UPCAST-ROLLER (was D14) · multi-instance per-instance roller.** The `DiceTrayRequest.instances`
-    contract is fixed but the roller loop is unbuilt, so `count`-scaling spells (Scorching Ray, Magic
-    Missile, Chain Lightning, Eldritch Blast beams) degrade to an "N×" chip + a manual roll rather than N
-    independent to-hit+damage sub-rolls with per-target assignment. Same gap makes the Magic Weapon
-    `enhancement` tokens UNTYPED (`flat_bonus:attack/damage+n` buffs ALL the caster's weapons + slightly
-    their spell rolls) — a weapon-scoped flat DAMAGE bonus isn't expressible without an L1 grammar change
-    (a `compatibility.md` chokepoint), and there's no per-instance weapon target yet. Ties
-    [[charnik-dicetray-attack-damage-concept]]; the roller rework is its own item.
-    **Shared with UBUG-11** (a class action that makes N attacks — Flurry of Blows): same roller, two
-    callers. The user-visible symptom here is the `remindCountScaling` toast ("N×: make N separate rolls
-    at this level") — a reminder standing in for the rolls, per item 9 (never a silently-wrong single
-    big die). Agonizing Blast's per-beam CHA rides the same per-instance path (UPCAST-INVOCATION-SCOPE).
+  - [ ] **`count`-scaling spells don't roll their N instances → MOVED OUT to `ROLLER-N`** (2026-08-09;
+    was `UPCAST-ROLLER`, was D14). Upcast turned out to be one caller of a general roller, not its owner,
+    so the spec lives in the backlog item — not duplicated here. Scorching Ray / Magic Missile / Chain
+    Lightning / Eldritch Blast beams are its spell-side callers.
   - [ ] **UPCAST-AUTHORING (was N8) · guided upcast-token builder** in `EditContentForm` (form → token),
     so a non-technical author never hand-writes `per_slot(1d6)` (CLAUDE.md "everything from the UI"). v1
     ships a raw `upcast` text field (like the effect-token field); prose `higher_level` stays the fallback.
-  - [ ] **UPCAST-INVOCATION-SCOPE · invocation effects scoped to a spell** (Agonizing Blast +CHA/beam,
-    Eldritch Spear range) — NOT upcast/scaling but a per-instance effect keyed on `spell_id`, reusing the
-    `attacks.ts` §A/§B scope mechanism extended from weapon-category to `spell_id` (no need to enumerate
-    feats — each is "a scoped effect on a spell"). Rides the roller's per-instance path; also the
-    mechanical half of DEMO-1 gap 4 / N2 invocations.
+  - [ ] **invocation effects scoped to a spell → MERGED INTO `SCOPED-BONUS`** (2026-08-09; was
+    `UPCAST-INVOCATION-SCOPE`). Agonizing Blast / Eldritch Spear are the spell-side face of the same L1
+    scope gap as Magic Weapon's untyped `enhancement`; both now specified once, in that backlog item.
   - [ ] **UPCAST-DURATION-TAIL · Geas/Dominate multi-day durations.** Expressible via `duration:step`, but
     low value in the rounds canon (30 days = 432000 rounds) — a curated follow-up, not a blocker.
   - [ ] **UPCAST-PREVIEW-TOOLTIP · pre-cast per-slot preview** ("5th: 10d6, 6th: 12d6") before choosing a
@@ -1271,13 +1286,11 @@ holds the done-work log; these are the OPEN tails it carried):**
   2× Unarmed Strike, and the general case for any "make an attack" ability. Ties into ACTIONS.md (the
   `rolls` intent field) + [[charnik-dicetray-attack-damage-concept]]. The whole "action from a class
   feature" model is the target, not just Flurry.
-  **Same missing capability as UPCAST-ROLLER, reached from the other side** (re-reported 2026-08-09 on a
-  Warlock: casting Eldritch Blast at level 5 just toasts "Eldritch Blast — 2×: make 2 separate rolls at
-  this level", from `remindCountScaling` in `combat/state.svelte.ts`). A class action asking for N attacks
-  and a `count`-scaling cantrip firing N beams both need ONE thing: a roller that fires N independent
-  to-hit+damage sub-rolls. **Build it once, in the roller** (`DiceTrayRequest.instances`), and let both
-  call it — do NOT grow a second per-feature path. The `note:`/reminder text stays as the fallback for
-  anything the roller can't express.
+  **Split 2026-08-09:** the "fire N sub-rolls" half is `ROLLER-N` (a general roller, also what a
+  `count`-scaling cantrip needs — re-reported the same day on a Warlock: Eldritch Blast at level 5 just
+  toasts "2×: make 2 separate rolls at this level"). **What stays UBUG-11** is the action half: the
+  `rolls` intent in ACTIONS.md that lets a class feature CALL that roller with the right weapon, instead
+  of degrading to `note:` text. Don't build a Flurry-shaped roller here.
 - [x] **UBUG-12 · Roll feedback is hard to read — rework the toasts / roll surface (2026-08-05).** DONE
   (2026-08-09, design **5A** from `design-preview/toast-update/`). Root cause: the roll toast was a
   formatted STRING (`label — total` + a `d20(14) + d6(3) · dmg …` description line), built three

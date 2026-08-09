@@ -1377,7 +1377,8 @@ class CombatVM {
 	};
 
 	/** A cantrip that scales by COUNT (Eldritch Blast's beams) fires N separate rolls at higher levels.
-	 *  The per-instance roller is deferred (D14), so casting rolls ONE instance and surfaces the count as
+	 *  The per-instance roller is deferred (PLAN `ROLLER-N`; NB the other D14 in this repo is the unique
+	 *  character id — same number, different item), so casting rolls ONE instance and surfaces the count as
 	 *  a reminder to roll the rest — never a silently-wrong single big die (item 9). Leveled count spells
 	 *  surface their total through the slot-picker preview instead, so this is cantrip-only. */
 	private remindCountScaling(r: SpellRow, slotLevel: number): void {
