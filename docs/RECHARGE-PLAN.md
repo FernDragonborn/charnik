@@ -127,12 +127,12 @@ types attack names — that's friction with no data behind it. Two real cases:
 Surfaced during the concentration design; both fire on taking damage, so do them alongside/after the
 concentration work rather than as their own visits.
 
-- **Overkill instant death — RAW (SRD), a real gap. LOW priority.** SRD 2014 (verified,
-  `tools/srd-src/2014/…:3642`): when damage reduces you to 0 AND the **leftover damage ≥ your FULL
-  Hit-Point maximum** (100%, not half), you die instantly — skip death saves. Example: max 12, at 6,
-  take 18 → 0 with 12 leftover = max → dead. Our `damage()` currently just clamps to 0 (no instant-death
-  check). 2024 keeps the same threshold (full max). Cheap to add in `damage()`: after applying, if
-  `leftover ≥ effectiveHpMax` → mark dead (not dying). [[charnik-srd-raw-fidelity]]
+- **Overkill instant death — DONE 2026-08-09** (with UBUG-15's death rules; see `docs/PLAN.md`). SRD
+  2014 (verified, `tools/srd-src/2014/…:3642`): damage reduces you to 0 AND the **leftover ≥ your FULL
+  Hit-Point maximum** (100%, not half) → instant death, no death saves. Shipped in `damage()` against
+  `hpMax` (so hp_max effects count), landing on the shared `die('massive_damage')` seam; the SRD's own
+  example (max 12, at 6, take 18) is a test. Temp HP soaks first, so it can pull the leftover under the
+  threshold. [[charnik-srd-raw-fidelity]]
 - **Massive Damage / System Shock — DMG OPTIONAL, not SRD. Future toggle, not shipped data.** ≥ half
   max HP in one instance → DC 15 CON save → roll on the System Shock table (drop to 0 / stunned / no
   reactions — NOT exhaustion). A DMG variant many tables ignore; support later as an optional toggle

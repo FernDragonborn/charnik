@@ -6,6 +6,7 @@
 import { ABILITY_IDS, type Ability } from '$lib/rules/core';
 import { titleCase } from '$lib/util/format';
 import { SKILL_ABILITY, type SkillId } from '$lib/character/derive';
+import type { DeathCause } from '$lib/character/schema';
 
 /** The anchored dropdown menus the Combat view can open (overlay.kind). */
 export type MenuKind =
@@ -28,6 +29,13 @@ export const PANEL_TITLE: Record<string, string> = {
 	spells: 'Spells',
 	actions: 'Actions',
 	effects: 'Effects & conditions'
+};
+
+/** Why the character died — the dead banner's subtitle, one phrase per `play.death.cause`. */
+export const DEATH_CAUSE_LABEL: Record<DeathCause, string> = {
+	massive_damage: 'Massive damage — the leftover met your hit-point maximum',
+	death_saves: 'Three failed death saves',
+	exhaustion: 'The last level of Exhaustion'
 };
 
 /** Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`. */

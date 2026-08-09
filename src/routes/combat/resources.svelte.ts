@@ -139,6 +139,7 @@ export class ResourceTracker {
 		const c = this.getCharacter();
 		const sheet = this.getSheet();
 		if (!c || !sheet) return;
+		const exhaustionBefore = c.play.exhaustion;
 		const spent = { ...c.play.resourcesSpent };
 		for (const r of sheet.resources) {
 			// full recharge: a `short` pool refills on ANY rest; a long rest refills everything EXCEPT the
@@ -172,6 +173,11 @@ export class ResourceTracker {
 				}
 			}
 			c.play.hitDiceSpent = hdSpent;
+			// RAW both editions: a Long Rest removes ONE Exhaustion level (2024 glossary "Removing
+			// Exhaustion Levels"; 2014 "reduces a creature's exhaustion level by 1"). 2014 adds "provided
+			// the creature has also ingested some food and drink" — a tracker doesn't model rations, so we
+			// apply it unconditionally (RAI, the universal reading). Automatic in RAW → no player click.
+			c.play.exhaustion = Math.max(0, c.play.exhaustion - 1);
 		} else {
 			const slots = { ...c.play.spellSlotsSpent };
 			delete slots[PACT_SLOT_KEY]; // warlock pact slots return on a short rest
@@ -188,6 +194,11 @@ export class ResourceTracker {
 			if (e.source && e.source === c.play.concentration) c.play.concentration = null;
 		c.play.effects = c.play.effects.filter((e) => !outlived(e));
 		void saveCharacterToStore(c);
-		toast(`${kind === 'long' ? 'Long' : 'Short'} rest — resources restored`);
+		const lostExhaustion = exhaustionBefore > c.play.exhaustion;
+		toast(`${kind === 'long' ? 'Long' : 'Short'} rest — resources restored`, {
+			...(lostExhaustion
+				? { description: `Exhaustion ${exhaustionBefore} → ${c.play.exhaustion}` }
+				: {})
+		});
 	};
 }

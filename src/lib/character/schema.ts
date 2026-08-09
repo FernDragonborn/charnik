@@ -138,6 +138,11 @@ const effectInstance = z.object({
 	startedRound: z.number().int().min(0).optional()
 });
 
+/** What killed the character. An OPEN enum — a new lethal rule (drowning, a homebrew doom clock) is a
+ *  member, never another boolean on play-state. [[csv-open-enums-not-binary]] */
+export const DEATH_CAUSES = ['massive_damage', 'death_saves', 'exhaustion'] as const;
+export type DeathCause = (typeof DEATH_CAUSES)[number];
+
 const playSchema = z.object({
 	hp: z.object({
 		current: z.number().int(),
@@ -164,6 +169,14 @@ const playSchema = z.object({
 	deathSaves: z
 		.object({ successes: z.number().int().min(0).max(3), failures: z.number().int().min(0).max(3) })
 		.default({ successes: 0, failures: 0 }),
+	/** The character is DEAD, and what killed them (null = alive). One object rather than a bare
+	 *  `dead` boolean + a sibling cause, so the state can't disagree with itself; `cause` is an OPEN
+	 *  enum — a new lethal rule is a member, not another flag. Cleared only by `revive()` (a revival
+	 *  effect), never by healing: RAW, hit points don't un-kill you. */
+	death: z
+		.object({ cause: z.enum(DEATH_CAUSES) })
+		.nullable()
+		.default(null),
 	/** Exhaustion level. The real ceiling is DATA (the exhaustion condition row's `max_level`, 6 in
 	 *  both editions) and the stepper clamps to it; this is only a generous sanity bound so a homebrew
 	 *  ladder taller than 6 still validates (D19). */

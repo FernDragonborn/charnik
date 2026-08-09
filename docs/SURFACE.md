@@ -399,6 +399,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `re-export SYSTEMS`
 - `re-export ABILITIES`
+- `const DEATH_CAUSES` — What killed the character.
+- `type DeathCause`
 - `const SHORT_REST_MODES` — Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the * ½-max-HP video-ga…
 - `type ShortRestMode`
 - `const characterSchema`
@@ -441,6 +443,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type MenuKind` — The anchored dropdown menus the Combat view can open (overlay.kind).
 - `const PANEL_TITLE`
+- `const DEATH_CAUSE_LABEL` — Why the character died — the dead banner's subtitle, one phrase per `play.death.cause`.
 - `const ABIL` — Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`.
 - `const ABILITY_NAME`
 - `const MOD_TARGETS` — Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.
@@ -1074,4 +1077,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 42 components · 594 exports across 91 modules · 32 duplicate suspects._
+_45 tokens · 63 global classes · 42 components · 597 exports across 91 modules · 32 duplicate suspects._

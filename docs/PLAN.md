@@ -1229,6 +1229,60 @@ holds the done-work log; these are the OPEN tails it carried):**
   keep their flat boost unchanged) so a restored slot re-derives its own boost once, never twice. Zod
   defaults the field so pre-fix saves load (slots blank, old flat-carry path) and self-heal on next save.
   Behavioral test in build.test.ts (re-hydrate a +2-CON ASI slot → still +2, slot shown filled).
+- [x] **UBUG-14 · A long rest doesn't clear a level of Exhaustion (2026-08-09).** DONE. Root cause:
+  `ResourceTracker.rest` (`resources.svelte.ts`) recharged pools / slots / HP / hit dice and expired
+  timed effects but **never touched `play.exhaustion`**. Fixed in that one `rest` seam — the long-rest
+  branch does `exhaustion = max(0, exhaustion − 1)` and the rest toast reports the drop. SRD-verified
+  both editions (2024 glossary "Removing Exhaustion Levels"; 2014 "Finishing a long rest reduces a
+  creature's exhaustion level by 1"). **Interpretation surfaced:** 2014 adds "provided that the creature
+  has also ingested some food and drink" — we don't model rations, so it applies unconditionally (RAI,
+  the universal tracker reading). Automatic in RAW → auto-applied + toasted, like the initiative regain.
+  `describe.each` test over both editions (short rest removes none, long removes one, never negative).
+- [~] **UBUG-15 · Exhaustion 6 doesn't kill — and there's no "character is dead" screen (2026-08-09).**
+  **RULE HALF DONE; the dead-SCREEN design is still open (that's the `[~]`).** Nothing modelled death at
+  all — three failed death saves only toasted. Shipped: one typed play field
+  `play.death: { cause } | null` (an OPEN cause enum — `massive_damage | death_saves | exhaustion` —
+  not a `dead` boolean plus a sibling; a new lethal rule is a member) and ONE `die(cause)` seam every
+  lethal rule lands on, so "what happens when you die" is in one place. The three rules wired:
+  (1) **instant death** — damage reduces you to 0 AND the leftover ≥ your FULL hit-point maximum
+  (SRD 5.1 "Instant Death", verified; also covers "Damage at 0 Hit Points". The 2024 SRD 5.2.1 omits
+  the "Playing the Game" chapter carrying it, so both editions run the 5.1 text — this closes the
+  overkill item carried in `docs/RECHARGE-PLAN.md`); (2) **three death-save failures**, now checked once
+  after every branch so a natural 1's DOUBLE failure is lethal too (it wasn't); (3) **the top of the
+  exhaustion ladder**, thresholded on the DATA cap (`max_level`) so a homebrew ladder kills at its own
+  top. `revive()` = the "I was revived" way back: clears the death, floors HP at 1 (never TAKES hit
+  points — a character who died of Exhaustion at full HP keeps them), resets the death-save track, and
+  drops one exhaustion level (2024 glossary "returns with 1 fewer level"; applied in 2014 too, where RAW
+  is silent, because reviving onto a lethal 6 would kill you on the spot — RAI, surfaced). Healing never
+  un-kills you. UI = a slim danger banner in `HpPanel` (cause + the revive button), the same shape as
+  the B4 concentration bar. 6 behavioral tests. **STILL OPEN:** the real **dead-screen design** — what
+  the whole sheet looks like when the character is dead (the banner is a placeholder, deliberately not
+  a design). **Related RAW tail, not done:** taking damage at 0 HP should also add a death-save failure
+  (two on a crit) — we don't know crit-ness at the Damage button, so it needs its own think.
+- [ ] **UBUG-16 · Some abilities don't cost their action/bonus action when used (2026-08-09; Rage,
+  Second Wind — audit the rest).** Root-cause lead (verified in code): the resource **chip** path
+  `useResourceOrEnter` (`state.svelte.ts:526`) only routes to `activateResourceOption` when the pool has
+  exactly ONE `apply_effect:` option; **anything else falls back to a bare `resources.useResource`** —
+  which decrements the pool but runs no action token and spends no turn slot. So Second Wind from the
+  chip = a silent counter tick (no heal, no Bonus Action), and any pool with 2+ options degrades the same
+  way. The pip path (`resourceClick`) is raw pip math and bypasses options entirely. Also confirm the
+  economy gate: `canSpend`/`trySpend` (`economy`) return true out of combat BY DESIGN (no turn tracking
+  outside combat) — verify the report wasn't just an out-of-combat activation before changing that.
+  Fix at the chip seam so every activation goes through `activateResourceOption` (which already validates
+  + costs the slot), and sweep every ability with an `action_type` to confirm it charges.
+- [ ] **UBUG-17 · Action / Bonus Action / Reaction pips aren't interactive-looking, and only the dot is
+  clickable (2026-08-09).** The turn-economy strip in combat doesn't get the hover/cursor/focus treatment
+  the other clickable elements have ([[charnik-interactive-affordance]]), and the hit area is the little
+  circle instead of the whole pill. Make the whole pill the button (label + dot) and reuse the existing
+  interactive-pill styling rather than inventing a third look.
+- [ ] **UBUG-18 · Abilities block uses a different background than the other panels (2026-08-09).**
+  Swap it to the same panel-surface token every other block uses — a semantic token, never a literal
+  ([[new-ui-must-support-themes]]).
+- [ ] **UBUG-19 · Replace the remaining emoji icons with drawn outline icons (2026-08-09).** Three known
+  sites: the **speed/movement** field in combat (→ an outline footprint), the **lightning** next to Bonus
+  Action, and the **bug** on the "report a bug" button. Bundle SVGs locally with attribution
+  ([[charnik-icon-sources]]) — no emoji, no icon-font dep. Sweep for other emoji-as-icon uses while
+  in there.
 - [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing — hidden spells still showed in
   combat.** DONE 2026-07-21. The spellbook's eye/pin were local `$state` sets on a THROWAWAY
   `demoCharacter()` (never persisted, never read by combat), and `buildSpellGroups` rendered every

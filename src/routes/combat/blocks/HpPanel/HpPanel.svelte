@@ -4,7 +4,7 @@
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../state.svelte';
-	import { why } from '$lib/combat/helpers';
+	import { why, DEATH_CAUSE_LABEL } from '$lib/combat/helpers';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();
 	const hpBar = $derived(combat.hpBar);
@@ -102,7 +102,21 @@
 		</div>
 	{/if}
 	<!-- Hit Dice live entirely in the "☾ Short" rest popover now (spend + remaining), not on this panel. -->
-	{#if downed}
+	{#if c.play.death}
+		<!-- Dead: the three lethal rules all land here. A minimal, honest surface — the full dead-screen
+		     design is still open (UBUG-15); the one certain element is the way back. -->
+		<div class="dead-banner" role="status">
+			<span class="dead-mark">💀 Dead</span>
+			<span class="dead-cause">{DEATH_CAUSE_LABEL[c.play.death.cause]}</span>
+			<button
+				class="hp-btn revive"
+				onclick={combat.revive}
+				title="A revival effect brought you back"
+			>
+				I was revived
+			</button>
+		</div>
+	{:else if downed}
 		<div class="death-saves">
 			<button class="hp-btn deathroll" onclick={() => combat.deathSave()} title="Roll a death save">
 				🎲 Death save
@@ -354,6 +368,34 @@
 	.conc-btn.dismiss:hover {
 		background: var(--color-surface-2);
 		filter: none;
+	}
+
+	/* Dead banner — same slim inline shape as the B4 concentration bar, in the danger palette. */
+	.dead-banner {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 9px;
+		margin-top: 12px;
+		padding: 8px 10px;
+		border-radius: var(--radius-md);
+		background: var(--color-danger-soft);
+		border: 1px solid var(--color-danger);
+		font-size: var(--font-size-xs);
+	}
+	.dead-mark {
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--color-danger);
+	}
+	.dead-cause {
+		color: var(--color-text-muted);
+	}
+	.hp-btn.revive {
+		margin-left: auto;
+		background: var(--color-good-soft);
+		border: 1px solid var(--color-good);
+		color: var(--color-good);
 	}
 
 	.death-saves {

@@ -32,9 +32,10 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/conditions_srd.csv',
 		[
-			'id,systems,source,name_en',
-			`prone,5.5e,${S},Prone`,
-			`grappled,5e,${S},Grappled` // a DIFFERENT edition — must NOT appear for a 5.5e character
+			'id,systems,source,name_en,max_level',
+			`prone,5.5e,${S},Prone,`,
+			`grappled,5e,${S},Grappled,`, // a DIFFERENT edition — must NOT appear for a 5.5e character
+			`exhaustion,5.5e,${S},Exhaustion,6` // the leveled one — its max_level is the lethal rung
 		].join('\n')
 	);
 	await st.write(
@@ -1287,6 +1288,92 @@ describe('ResourceTracker · short_one partial recharge', () => {
 		expect(combat.resources.resourceSpent('second_wind')).toBe(0); // long rest = all back
 	});
 });
+
+describe('CombatVM · death (UBUG-15: instant death, three failures, the exhaustion ladder)', () => {
+	let character: Character;
+	beforeEach(async () => {
+		combat.graph = await graphOf();
+		character = newCharacter('mort', 'Mort', '5.5e');
+		combat.character = character;
+		character.play.hp = { current: 6, max: 12, temp: 0 };
+	});
+
+	it('kills instantly when the LEFTOVER damage meets the hit-point maximum (SRD example)', () => {
+		combat.hpAmount = 18; // max 12, at 6 → 0 with 12 leftover = max → dead
+		combat.damage();
+		expect(character.play.hp.current).toBe(0);
+		expect(character.play.death).toEqual({ cause: 'massive_damage' });
+	});
+
+	it('does NOT kill when the leftover is short of the maximum — you just drop to 0', () => {
+		combat.hpAmount = 17; // 11 leftover < 12 max
+		combat.damage();
+		expect(character.play.hp.current).toBe(0);
+		expect(character.play.death).toBeNull();
+	});
+
+	it('temp HP soaks first, so it can keep the leftover under the lethal threshold', () => {
+		character.play.hp.temp = 3;
+		combat.hpAmount = 18; // 3 soaked → 15 hits: 6 to zero, 9 leftover < 12
+		combat.damage();
+		expect(character.play.death).toBeNull();
+	});
+
+	it('three death-save failures kill — including a natural 1 that lands the third', () => {
+		character.play.hp.current = 0;
+		character.play.deathSaves = { successes: 0, failures: 2 };
+		combat.toggleDeathSave('failures', 2); // manual pip → third failure
+		expect(character.play.death).toEqual({ cause: 'death_saves' });
+	});
+
+	it('the top of the exhaustion ladder is lethal, and lower rungs are not', () => {
+		combat.setExhaustion(5);
+		expect(character.play.death).toBeNull();
+		combat.setExhaustion(6); // the data cap (exhaustion row max_level) = death
+		expect(character.play.death).toEqual({ cause: 'exhaustion' });
+	});
+
+	it('“I was revived” lifts you off 0 HP, clears the track and drops one exhaustion level', () => {
+		combat.setExhaustion(6);
+		character.play.hp.current = 0;
+		character.play.deathSaves = { successes: 1, failures: 3 };
+		combat.revive();
+		expect(character.play.death).toBeNull();
+		expect(character.play.hp.current).toBe(1);
+		expect(character.play.deathSaves).toEqual({ successes: 0, failures: 0 });
+		expect(character.play.exhaustion).toBe(5); // else you'd revive straight back onto a lethal 6
+	});
+
+	it('reviving is a FLOOR of 1 HP — it never takes hit points away', () => {
+		character.play.hp.current = 9; // died of exhaustion at 9 HP
+		combat.setExhaustion(6);
+		combat.revive();
+		expect(character.play.hp.current).toBe(9);
+	});
+});
+
+describe.each(['5e', '5.5e'] as const)(
+	'ResourceTracker · exhaustion on rest (UBUG-14, %s)',
+	(sys) => {
+		it('a long rest removes ONE exhaustion level; a short rest removes none', async () => {
+			const graph = await graphOf();
+			const character = newCharacter('worn', 'Worn', sys);
+			character.play.exhaustion = 3;
+			combat.graph = graph;
+			combat.character = character;
+
+			combat.resources.rest('short');
+			expect(character.play.exhaustion).toBe(3); // RAW: only a LONG rest removes a level
+			combat.resources.rest('long');
+			expect(character.play.exhaustion).toBe(2);
+			combat.resources.rest('long');
+			combat.resources.rest('long');
+			expect(character.play.exhaustion).toBe(0);
+			combat.resources.rest('long'); // never goes negative
+			expect(character.play.exhaustion).toBe(0);
+		});
+	}
+);
 
 /** Load a whole real edition into a graph (like the content tests) — the Rage buff spans the real
  *  effects.csv / conditions.csv / resource_options.csv rows, so a hand-stub wouldn't exercise them. */

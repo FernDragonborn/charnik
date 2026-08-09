@@ -20,7 +20,7 @@ import { plugins } from '$lib/effects/plugin-store.svelte';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { rollPool, rollFormula } from '$lib/rules/dice';
 import { shortRestHalfHeal } from '$lib/rules/core';
-import type { Character, ShortRestMode } from '$lib/character/schema';
+import type { Character, DeathCause, ShortRestMode } from '$lib/character/schema';
 import {
 	titleCase,
 	wantsTray,
@@ -47,6 +47,7 @@ import {
 	metres,
 	applyDefense,
 	effectiveHpMax,
+	DEATH_CAUSE_LABEL,
 	type Attack,
 	type DamagePart,
 	type DamagePartSpec,
@@ -449,7 +450,15 @@ class CombatVM {
 		const soaked = Math.min(p.hp.temp, n); // temp HP absorbs first (5e rule)
 		p.hp.temp -= soaked;
 		n -= soaked;
-		p.hp.current = Math.max(0, p.hp.current - n);
+		const before = p.hp.current;
+		p.hp.current = Math.max(0, before - n);
+		// INSTANT DEATH (SRD 5.1 "Instant Death", verified): damage reduces you to 0 AND the damage
+		// REMAINING equals/exceeds your hit-point MAXIMUM (the FULL max, not half) → you die outright,
+		// no death saves. The same threshold also covers "Damage at 0 Hit Points" (already at 0 → the
+		// leftover is the whole hit). The 2024 SRD 5.2.1 omits the "Playing the Game" chapter that
+		// carries this rule (it only cross-references it), so both editions run the 5.1 text — the 2024
+		// PHB keeps the same threshold. [[charnik-srd-raw-fidelity]]
+		if (p.hp.current === 0 && n - before >= this.hpMax) this.die('massive_damage');
 		// B4: taking damage while concentrating opens the "check due" banner — a CON save at DC
 		// max(10, ⌊dmg/2⌋), capped 30 in 2024 (RAW). Suggested-but-editable DC, PLAYER-rolled, never an
 		// auto-drop (play-tracker surfaces, never forces). 0 HP already ends it via endConcentrationIfBroken.
@@ -820,8 +829,10 @@ class CombatVM {
 			}
 		} else {
 			ds.failures = Math.min(3, ds.failures + 1);
-			if (ds.failures >= 3) toast('Three failures — the character has died', { description: '💀' });
 		}
+		// "On your third failure, you die" — checked once, after every branch, so a natural 1's DOUBLE
+		// failure is as lethal as a third single one (it wasn't, before).
+		if (c.play.deathSaves.failures >= 3) this.die('death_saves');
 	};
 
 	/** Manually set a death-save track (players track by hand too): clicking pip `index` fills to it,
@@ -830,6 +841,35 @@ class CombatVM {
 		const ds = this.character?.play.deathSaves;
 		if (!ds) return;
 		ds[kind] = ds[kind] === index + 1 ? index : index + 1;
+		if (kind === 'failures' && ds.failures >= 3) this.die('death_saves');
+	};
+
+	/** Record a death. The three lethal rules (massive damage · three death-save failures · the top of
+	 *  the exhaustion ladder) all land HERE, so "what happens when you die" is one place. Idempotent —
+	 *  the first cause sticks, so re-entering the same state doesn't re-toast. Death is AUTOMATIC in
+	 *  RAW (no "you can"), so like the initiative regain it auto-applies and NOTIFIES; the player still
+	 *  owns the way back (`revive`). */
+	private die = (cause: DeathCause) => {
+		const p = this.character?.play;
+		if (!p || p.death) return;
+		p.death = { cause };
+		toast('The character has died', { description: DEATH_CAUSE_LABEL[cause] });
+	};
+	/** "I was revived" — the way back from the dead screen. RAW leaves the HP to the revival effect, so
+	 *  we apply the Revivify FLOOR (at least 1 HP, never taking hit points away — a character who died
+	 *  of Exhaustion at full HP keeps them) and clear the death-save track (it resets on regaining HP).
+	 *  Exhaustion drops by one, per the 2024 glossary ("If the creature died with any Exhaustion levels,
+	 *  it returns with 1 fewer level") — applied in BOTH editions because reviving straight back onto a
+	 *  lethal exhaustion 6 would kill you again on the spot; RAW is silent in 2014, so RAI wins
+	 *  ([[charnik-srd-raw-fidelity]]). Everything else (conditions, curses) survives death per RAW. */
+	revive = () => {
+		const p = this.character?.play;
+		if (!p) return;
+		p.death = null;
+		p.deathSaves = { successes: 0, failures: 0 };
+		p.exhaustion = Math.max(0, p.exhaustion - 1);
+		p.hp = { ...p.hp, current: Math.max(1, p.hp.current) };
+		toast('Back from the dead — 1 HP');
 	};
 
 	/** Roll a weapon/unarmed attack (the Attack action → spends an action in combat). A normal tap
@@ -1430,11 +1470,16 @@ class CombatVM {
 		const row = this.graph.list('condition', { system }).find((r) => r.id === 'exhaustion');
 		return row ? Number(row.data.max_level ?? 1) : 0;
 	});
-	/** Set the exhaustion level, clamped to [0, max]. Play-state mutation (autosaves like HP). */
+	/** Set the exhaustion level, clamped to [0, max]. Play-state mutation (autosaves like HP). The TOP
+	 *  of the ladder is lethal — RAW "You die if your Exhaustion level is 6" (2024 glossary; 2014's
+	 *  level-6 row is likewise "Death"). The threshold is the DATA cap (`max_level`), so a homebrew
+	 *  ladder of a different height still kills at its own top. */
 	setExhaustion = (level: number): void => {
 		const p = this.character?.play;
 		if (!p) return;
-		p.exhaustion = Math.max(0, Math.min(this.exhaustionMax, Math.round(level)));
+		const max = this.exhaustionMax;
+		p.exhaustion = Math.max(0, Math.min(max, Math.round(level)));
+		if (max > 0 && p.exhaustion >= max) this.die('exhaustion');
 	};
 	/** A condition's rules text (English, consistent with the panel's other content labels), looked up
 	 *  by id — the G2 info channel: the "attacks against you have advantage", concealed, auto-crit
