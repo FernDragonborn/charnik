@@ -28,7 +28,8 @@ beforeAll(async () => {
 			CLASS,
 			cls('wizard', 'full', 'int'),
 			cls('cleric', 'full', 'wis'),
-			cls('warlock', 'pact', 'cha')
+			cls('warlock', 'pact', 'cha'),
+			cls('bard', 'full', 'cha') // deliberately ships NO class_casting rows — see the 5.5e test
 		].join('\n')
 	);
 	await s.write(
@@ -190,5 +191,36 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
 	it('a plain Fighter 3 (no EK subclass) still does not cast', () => {
 		const plain = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 3 }]));
 		expect(deriveSheet(plain, g).spellcasting.classes).toHaveLength(0);
+	});
+});
+
+/*
+ * Systems must never silently mix. 5e states the prepared count as a FORMULA (ability mod + level);
+ * 5.5e states no formula at all — its table is the only source. So a 5.5e class with no
+ * `class_casting` row is missing DATA, and the engine must SAY so (content health) rather than quietly
+ * applying the other edition's math. See docs/compatibility.md.
+ */
+describe('deriveSpellcasting: a missing 5.5e casting table surfaces, never falls back to 5e math', () => {
+	const bard = (level: number) =>
+		make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:bard', level }]));
+
+	it('caps at 0 instead of the 5e formula (CHA 16 + level 3 would have read 6)', () => {
+		const sheet = deriveSheet(bard(3), graph);
+		expect(sheet.spellcasting.classes[0]?.preparedCap).toBe(0);
+	});
+
+	it('reports it as a derive issue, so the content-health panel shows it', () => {
+		const sheet = deriveSheet(bard(3), graph);
+		const issue = sheet.deriveIssues.find((i) => i.token.startsWith('class_casting:'));
+		expect(issue?.token).toBe('class_casting:bard');
+		expect(issue?.reason).toMatch(/no prepared\/known count for bard at level 3 in 5\.5e/);
+		expect(issue?.reason).toMatch(/add a class_casting row/);
+	});
+
+	it('a class that DOES declare the table is untouched', () => {
+		const wiz = make((c) => (c.build.classes = [{ class: 'class:SRD 5.2.1:wizard', level: 5 }]));
+		const sheet = deriveSheet(wiz, graph);
+		expect(sheet.spellcasting.classes[0]?.preparedCap).toBe(9);
+		expect(sheet.deriveIssues.filter((i) => i.token.startsWith('class_casting:'))).toEqual([]);
 	});
 });

@@ -118,7 +118,9 @@
 
 		{#if deriveIssues.length}
 			<div class="group-label eyebrow warn plugin-retry-row">
-				<span>Effect problems for “{deriveHealth.characterName}” (this character only)</span>
+				<!-- not only EFFECT problems any more: a missing per-system data row (e.g. no class_casting
+			     for the active edition) is reported through the same channel -->
+				<span>Problems deriving “{deriveHealth.characterName}” (this character only)</span>
 				{#if hasPluginIssue}
 					<button class="retry-btn" onclick={retryPlugins}>Retry plugins</button>
 				{/if}

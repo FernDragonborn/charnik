@@ -8,6 +8,7 @@
  * SUM of caster contributions into ONE full table (not the senior class); warlock Pact Magic is a
  * separate pool and contributes NOTHING to the shared caster level.
  */
+import type { System } from './pipeline';
 
 /** Multiclass caster-level contribution + rounding (data value `caster_share`). */
 export type CasterShare = 'full' | 'half' | 'half_up' | 'third' | 'none';
@@ -200,13 +201,27 @@ export function cantripDieMultiplier(charLevel: number): number {
 	return charLevel >= 17 ? 4 : charLevel >= 11 ? 3 : charLevel >= 5 ? 2 : 1;
 }
 
-/** The prepared/known set SIZE: the class-table value if present (2024), else a per-share formula
- *  fallback (`ability mod + effective level`, floored at 1) for editions lacking a table count. */
+/**
+ * The prepared/known set SIZE. A class-table count (`class_casting`) always wins; with no row, we
+ * fall back ONLY to a formula the ACTIVE system actually states.
+ *
+ * The two editions express this rule in different SHAPES, not just different numbers:
+ *   - **5e (2014)** states it as a formula — "a number of cleric spells equal to your Wisdom
+ *     modifier + your cleric level (minimum of one spell)" — so the formula IS that system's rule,
+ *     and it scales with the ability score.
+ *   - **5.5e (2024)** has NO such formula: the Prepared Spells column is the only source, and the
+ *     count is independent of the ability score. A missing row there is missing DATA, not a rule.
+ *
+ * So `null` = "this system can't answer" — the caller must surface that, never silently borrow the
+ * other edition's math. **Systems must not mix, ever** (docs/compatibility.md); a shared fallback
+ * that happened to be 2014's rule is exactly that kind of silent bleed.
+ */
 export function preparedCap(
 	tableValue: number | undefined,
-	opts: { abilityMod: number; share: CasterShare; level: number }
-): number {
+	opts: { system: System; abilityMod: number; share: CasterShare; level: number }
+): number | null {
 	if (tableValue != null) return tableValue;
+	if (opts.system !== '5e') return null; // 2024 (and any future system) declares no formula
 	const eff = opts.share === 'none' ? opts.level : shareContribution(opts.share, opts.level);
 	return Math.max(1, opts.abilityMod + eff);
 }

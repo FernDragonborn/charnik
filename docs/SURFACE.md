@@ -956,7 +956,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slotCountsFor` — Slot counts (per spell level, index 0 = 1st) at a character level, clamped to 1..20.
 - `function maxSpellLevel` — Highest spell level with at least one slot (0 = no leveled slots).
 - `function cantripDieMultiplier` — Cantrip damage-dice multiplier at a CHARACTER level — the 5/11/17 steps (identical in 2014 and * 2024, so no per-syst…
-- `function preparedCap` — The prepared/known set SIZE: the class-table value if present (2024), else a per-share formula * fallback (`ability m…
+- `function preparedCap` — * The prepared/known set SIZE.
 - `function slotPools` — Turn a slot-count array into one castable pool per non-empty spell level.
 - `interface PreparableSpell` — A prepared-spell entry (the two flags the cap logic reads).
 - `function preparedLeveledCount` — Spells that count toward the prepared CAP: leveled + toggled-on.

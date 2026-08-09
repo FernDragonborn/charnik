@@ -92,10 +92,29 @@ describe('slots + caps', () => {
 		expect(maxSpellLevel(slotCountsFor(pact, 9))).toBe(5); // warlock L9 → 5th max
 	});
 
-	it('preparedCap uses the table value, else the formula fallback', () => {
-		expect(preparedCap(9, { abilityMod: 3, share: 'full', level: 5 })).toBe(9); // 2024 table
-		expect(preparedCap(undefined, { abilityMod: 3, share: 'full', level: 5 })).toBe(8); // 3+5
-		expect(preparedCap(undefined, { abilityMod: 3, share: 'half', level: 6 })).toBe(6); // 3+⌊6/2⌋
+	it('preparedCap prefers the class table, in either system', () => {
+		expect(preparedCap(9, { system: '5.5e', abilityMod: 3, share: 'full', level: 5 })).toBe(9);
+		expect(preparedCap(9, { system: '5e', abilityMod: 3, share: 'full', level: 5 })).toBe(9);
+	});
+
+	it('with no table row, 5e falls back to ITS formula (ability mod + effective level)', () => {
+		expect(preparedCap(undefined, { system: '5e', abilityMod: 3, share: 'full', level: 5 })).toBe(
+			8
+		);
+		expect(preparedCap(undefined, { system: '5e', abilityMod: 3, share: 'half', level: 6 })).toBe(
+			6
+		);
+		// "minimum of one spell" — a dump-stat caster still prepares one
+		expect(preparedCap(undefined, { system: '5e', abilityMod: -2, share: 'full', level: 1 })).toBe(
+			1
+		);
+	});
+
+	it('5.5e states NO formula, so a missing row is UNKNOWN — never 2014 math', () => {
+		// the whole point: silently reusing the 5e formula would mix the systems (compatibility.md)
+		expect(preparedCap(undefined, { system: '5.5e', abilityMod: 3, share: 'full', level: 5 })).toBe(
+			null
+		);
 	});
 
 	it('slotPools → one pool per non-empty level; warlock forces upcast', () => {

@@ -94,6 +94,29 @@ Inline edition branch in `carryingCapacity`. Fine for two close editions; turns 
   file you'll write when B begins.
 - **Do NOT build:** the `RulesEngine` interface now (two impls sharing 95%).
 
+### 3b. A shared FALLBACK is a silent system mix — the worst kind `rules/spellcasting.ts`
+
+**Maintainer's rule (2026-08-09), non-negotiable: systems must never silently mix, no matter what.**
+A `system ===` branch is at least *visible*. The dangerous shape is a fallback that reads like a
+neutral default but is actually one edition's rule:
+
+```ts
+// BEFORE — looks system-agnostic, IS 2014
+if (tableValue != null) return tableValue;
+return Math.max(1, abilityMod + effectiveLevel); // ← the 5e prepared-spells FORMULA
+```
+
+5e states the prepared count as a formula (scales with the ability modifier); 5.5e states **no
+formula at all** — its table is the only source, and the count is score-independent. So the old
+fallback silently gave any 5.5e class without a `class_casting` row 2014 math, and the number looked
+plausible enough never to be questioned.
+
+- **The shape that's correct:** the fallback returns **`null` = "this system can't answer"**, and
+  the caller SURFACES it (a `deriveIssue` → the content-health panel, "add a class_casting row")
+  instead of substituting. Missing data must read as missing, never as a different edition's answer.
+- **Generalize:** before adding any `?? default` on a rules value, ask *whose rule is that default*.
+  If the answer names an edition, it belongs behind the per-system seam with an explicit "unknown".
+
 ### 4. `flat_bonus` has no bonus-type slot `effects/token-parser.ts`
 
 Grammar `kind:target[:value]`; `flat_bonus:ac+2` doesn't say enhancement vs deflection —

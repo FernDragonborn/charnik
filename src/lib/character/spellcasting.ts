@@ -15,6 +15,7 @@ import type { Character } from './schema';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
 import type { Computed } from '../rules/pipeline';
 import { applyEffects, type EffectFacts } from '../effects/apply';
+import type { EffectIssue } from '../effects/token-parser';
 import {
 	effectiveCasterLevel,
 	shareFromCaster,
@@ -239,9 +240,29 @@ export function deriveSpellcasting(
 	character: Character,
 	graph: ContentGraph,
 	scores: Record<Ability, number>,
-	facts?: EffectFacts
+	facts?: EffectFacts,
+	issues?: EffectIssue[]
 ): Spellcasting {
 	const systems = [character.system];
+	/** The prepared/known cap, with the "this system has no answer" case SURFACED rather than filled
+	 *  in from another edition's rule. Only 5e states a formula; a 5.5e class with no `class_casting`
+	 *  row is missing DATA, so we report it and cap at 0 instead of silently applying 2014 math
+	 *  (systems must never mix — docs/compatibility.md). */
+	const cappedPrepared = (p: CasterProfile, tableValue: number | undefined, abilityMod: number) => {
+		const cap = preparedCap(tableValue, {
+			system: character.system,
+			abilityMod,
+			share: p.share,
+			level: p.level
+		});
+		if (cap !== null) return cap;
+		issues?.push({
+			source: p.className,
+			token: `class_casting:${p.ownerId}`,
+			reason: `no prepared/known count for ${p.ownerId} at level ${p.level} in ${character.system}, and this system states no formula — add a class_casting row`
+		});
+		return 0;
+	};
 	const totalLevel = character.build.classes.reduce((n, c) => n + c.level, 0) || 1;
 
 	// each build class → its caster profile (class row, or a casting subclass — B25); drop non-casters
@@ -300,11 +321,7 @@ export function deriveSpellcasting(
 			),
 			prepareStyle: p.prepareStyle,
 			cantripCap: cc.cantrips ?? 0,
-			preparedCap: preparedCap(cc.prepared, {
-				abilityMod: abilityModifier(score),
-				share: p.share,
-				level: p.level
-			}),
+			preparedCap: cappedPrepared(p, cc.prepared, abilityModifier(score)),
 			maxSpellLevel: maxSpellLevel(ownCounts),
 			accessSpellIds: access.spellIdsForClass(p.accessRef),
 			isPact

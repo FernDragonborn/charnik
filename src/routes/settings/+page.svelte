@@ -13,6 +13,7 @@
 	import PluginsSettings from '$lib/components/settings/PluginsSettings.svelte';
 	import ThemesSettings from '$lib/components/settings/ThemesSettings.svelte';
 	import { _ } from '$lib/i18n';
+	import { deriveHealth } from '$lib/character/health.svelte';
 
 	type Tab = 'general' | 'themes' | 'data' | 'health' | 'sources' | 'collisions' | 'plugins';
 	let tab = $state<Tab>('general');
@@ -21,8 +22,11 @@
 
 	const graph = $derived(content.graph);
 	// badge counts on the tabs
+	// the badge must count EVERYTHING the panel shows, derive-time issues included — otherwise a
+	// per-character content problem sits in a tab with no hint that it's worth opening
 	const issueCount = $derived(
-		graph ? graph.issues.length + graph.metaIssues.length + graph.driftItems.length : 0
+		(graph ? graph.issues.length + graph.metaIssues.length + graph.driftItems.length : 0) +
+			deriveHealth.issues.length
 	);
 	const collisionCount = $derived(graph ? detectCollisions(graph).length : 0);
 

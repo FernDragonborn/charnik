@@ -76,12 +76,15 @@
 		})
 	);
 
-	// publish this character's derive-time issues to content-health (SPEC10); cleared on leave
+	// Publish this character's derive-time issues to content-health (SPEC10). It must NOT clear on
+	// unmount: the health panel lives in Settings — a different route — so wiping on leave meant these
+	// issues could never actually be read. The next derive overwrites them, and the panel labels whose
+	// character they belong to; only "no character at all" clears.
 	$effect(() => {
 		const c = combat.character;
 		const s = combat.sheet;
 		if (c && s) deriveHealth.set(c.build.name, s.deriveIssues);
-		return () => deriveHealth.clear();
+		else deriveHealth.clear();
 	});
 </script>
 

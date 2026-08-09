@@ -525,7 +525,7 @@ export function deriveSheet(
 
 	// spellcasting AFTER the resolve, so DCs/attacks read the EFFECTIVE scores (a Headband of
 	// Intellect moves the wizard's DC, as it should) — and `spell_dc`/`spell_attack` effects fold in.
-	const spellcasting = deriveSpellcasting(character, graph, scores, facts);
+	const spellcasting = deriveSpellcasting(character, graph, scores, facts, issues);
 
 	applyArmorSpellBlock({ spellcasting, equippedArmor, build, graph, issues }); // B9
 
