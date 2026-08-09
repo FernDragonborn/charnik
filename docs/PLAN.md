@@ -1313,6 +1313,10 @@ holds the done-work log; these are the OPEN tails it carried):**
   all shipped `resource_options` rows in both editions (focus/ki ×3, second_wind, action_surge, rage,
   persistent_rage, uncanny_metabolism). 4 behavioral tests incl. all-or-nothing with the Bonus Action
   already spent.
+  - **Tail the sweep surfaced (pre-existing, now more reachable):** `gain_action` REFUNDS a spent
+    action (`turn.action − 1`), so using Action Surge BEFORE you've acted burns a use for nothing.
+    RAW it grants an ADDITIONAL action, i.e. it should raise the slot MAX for the turn. Fixing it means
+    a per-turn max bump rather than a spent-counter nudge — small, but its own change.
 - [x] **UBUG-17 · Action / Bonus Action / Reaction pips aren't interactive-looking, and only the dot is
   clickable (2026-08-09).** DONE. The three slots were inert `<span>`s wrapping a 12px pip button, so
   the label was dead space and nothing signalled clickability. Each slot is now the button — the whole
@@ -1511,9 +1515,16 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [~] **2014 casting data** — 2014 **spell_slots** now emitted (the full/half/pact matrices are
   edition-identical — spell_slots.test asserts `full`==core — so re-tagged 5e). 2014 casters
   (caster=full/half/pact → the derive's `slot_table ?? caster` lookup) now get their slots.
-  Remaining: 2014 **class_casting** counts (cantrips/prepared differ by edition — 2024 uses table
-  columns, 2014 uses per-class formulas → the rules layer needs the 2014 formula), and backfilling
-  the truncated 2014 class-feature prose.
+  Remaining: 2014 **class_casting** counts — **scoped 2026-08-09, and it's smaller than written.** The
+  PREPARED half already works: `preparedCap` falls back to the 2014 formula (`abilityMod + effective
+  level`, min 1) whenever a table value is absent, so a 2014 cleric/druid/wizard is already right. What's
+  missing is purely DATA: `content/srd-2014/class_casting_srd.csv` **doesn't exist**, so every 2014 caster
+  reports **cantripCap 0**, and known-casters (bard/sorcerer/warlock/ranger) get the prepared FORMULA
+  instead of their table's "Spells Known" (a 2014 bard 1 should read 2 cantrips / 4 known, not 0 / CHA+1).
+  Fix = teach `convert-2014.mjs` to parse the per-class Features tables' "Cantrips Known" / "Spells Known"
+  columns and emit the rows (the same shape 2024 already ships). Fiddly only because those tables are
+  space-aligned text — assert per-class counts against the source, since wrong numbers here ship silently.
+  Also still open: backfilling the truncated 2014 class-feature prose.
 - [~] **Combat UI**: multiclass DC + header **DONE** — `SpellsPanel` renders every caster class's
   save DC / attack (A18-tail), and the sheet header (`combat.className`) now joins all classes
   ("Wizard 2 / Fighter 3") instead of `classes[0]`. **Still open [ ]:** pact pool as a distinct
