@@ -35,68 +35,92 @@
 	</span>
 {/snippet}
 
-<!-- a real <button>, not a div with a role: the card IS the dismiss target (see closeToast above) -->
-<button
-	type="button"
+<div
 	class="rolltoast"
-	class:gold={model.tag?.tone === 'gold'}
-	class:bad={model.tag?.tone === 'danger'}
-	class:dismissible={closeToast}
-	aria-label="{model.label} — {model.total}{closeToast ? '. Dismiss' : ''}"
-	title={closeToast ? 'Dismiss' : undefined}
-	onclick={closeToast}
+	class:gold={model.emphasis === 'gold'}
+	class:bad={model.emphasis === 'danger'}
 >
-	<div class="rt-body">
-		{#if compact}
-			<div class="rt-line">
-				<span class="rt-name">{model.label}</span>
-				{#if first}{@render dice(first)}{/if}
-			</div>
-		{:else}
-			<div class="rt-title">
-				<span class="rt-name">{model.label}</span>
-				{#if model.tag}<span class="rt-tag eyebrow {model.tag.tone}">{model.tag.text}</span>{/if}
-			</div>
-			{#if rows.length === 1 && first}
-				{@render dice(first)}
-			{:else}
-				<div class="rt-rows">
-					{#each rows as row, i (i)}
-						<span class="rt-rowlabel eyebrow">{row.label}</span>
-						{@render dice(row)}
-						<span class="rt-sub">{row.subtotal}</span>
-					{/each}
+	<!-- the roll itself is a real <button>, not a div with a role: it IS the dismiss target (see
+	     closeToast above). The offer below is its sibling — a button can't nest inside a button. -->
+	<button
+		type="button"
+		class="rt-main"
+		class:dismissible={closeToast}
+		aria-label="{model.label} — {model.total}{closeToast ? '. Dismiss' : ''}"
+		title={closeToast ? 'Dismiss' : undefined}
+		onclick={closeToast}
+	>
+		<div class="rt-body">
+			{#if compact}
+				<div class="rt-line">
+					<span class="rt-name">{model.label}</span>
+					{#if first}{@render dice(first)}{/if}
 				</div>
+			{:else}
+				<div class="rt-title">
+					<span class="rt-name">{model.label}</span>
+					{#if model.tag}<span class="rt-tag eyebrow {model.tag.tone}">{model.tag.text}</span>{/if}
+				</div>
+				{#if rows.length === 1 && first}
+					{@render dice(first)}
+				{:else}
+					<div class="rt-rows">
+						{#each rows as row, i (i)}
+							<span class="rt-rowlabel eyebrow">{row.label}</span>
+							{@render dice(row)}
+							<span class="rt-sub">{row.subtotal}</span>
+						{/each}
+					</div>
+				{/if}
+				{#if model.note}<div class="rt-note">⇡ {model.note}</div>{/if}
 			{/if}
-			{#if model.note}<div class="rt-note">⇡ {model.note}</div>{/if}
-		{/if}
-	</div>
-	<div class="rt-total">
-		<span class="rt-num" class:big={rows.length > 1}>{model.total}</span>
-		{#if model.caption}<span class="rt-cap eyebrow">{model.caption}</span>{/if}
-	</div>
-</button>
+		</div>
+		<div class="rt-total">
+			<span class="rt-num" class:big={rows.length > 1}>{model.total}</span>
+			{#if model.caption}<span class="rt-cap eyebrow">{model.caption}</span>{/if}
+		</div>
+	</button>
+	{#if model.action}
+		<button
+			type="button"
+			class="rt-action"
+			onclick={() => {
+				model.action?.run();
+				closeToast?.();
+			}}>{model.action.label}</button
+		>
+	{/if}
+</div>
 
 <style>
 	.rolltoast {
 		display: flex;
+		flex-direction: column;
 		/* sonner only sizes toasts it styles itself, and a custom component opts out of that — so take
 		   its `--width` directly, or the card shrink-wraps and a stack stops lining its totals up */
 		width: var(--width, 356px);
 		max-width: 100%;
-		padding: 0;
-		font: inherit;
-		text-align: left;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
 		box-shadow: var(--shadow-2);
 	}
-	/* the card IS the close button (sonner hides its own on a custom toast) — say so on hover */
-	.rolltoast.dismissible {
+	/* the roll row: body + summary column, and the close button (sonner hides its own here) */
+	.rt-main {
+		display: flex;
+		width: 100%;
+		padding: 0;
+		font: inherit;
+		text-align: left;
+		background: transparent;
+		border: 0;
+		border-radius: inherit;
+		color: inherit;
+	}
+	.rt-main.dismissible {
 		cursor: pointer;
 	}
-	.rolltoast.dismissible:hover {
+	.rolltoast:has(.rt-main.dismissible:hover) {
 		border-color: var(--color-border-strong);
 	}
 	/* a natural 20 / 1 re-tints the card edge + the summary; nothing else moves */
@@ -263,5 +287,23 @@
 	}
 	.rt-cap {
 		font-size: var(--font-size-micro);
+	}
+	/* the roll's own follow-up offer (Savage Attacker's reroll) — a full-width bar under the roll it
+	   belongs to, so the damage being judged stays on screen instead of behind a second toast */
+	.rt-action {
+		border: 0;
+		border-top: 1px solid var(--color-border);
+		border-radius: 0 0 var(--radius) var(--radius);
+		padding: 7px 14px;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		text-align: left;
+		color: var(--color-accent-bright);
+		background: var(--color-accent-soft);
+		cursor: pointer;
+	}
+	.rt-action:hover {
+		color: var(--color-text);
+		background: var(--color-accent);
 	}
 </style>

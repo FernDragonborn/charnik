@@ -710,6 +710,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/dice/roll-toast.ts`
 
 - `interface RollToastRow` — One rolled line: its dice, the flat mod folded into it, and what it came to.
+- `interface RollToastAction` — A follow-up the roll itself offers (Savage Attacker's "reroll this damage").
 - `interface RollToastModel`
 - `function rollToastModel` — Build the toast model from a completed roll (the same shape the roll log stores).
 - `function toastRoll` — Toast a completed roll.
@@ -1087,4 +1088,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 43 components · 603 exports across 92 modules · 32 duplicate suspects._
+_45 tokens · 63 global classes · 43 components · 604 exports across 92 modules · 32 duplicate suspects._

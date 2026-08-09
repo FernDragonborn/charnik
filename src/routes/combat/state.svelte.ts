@@ -68,6 +68,7 @@ import { getUserStorage } from '$lib/storage/provider';
 import type { RollLogEntry } from '$lib/combat/helpers';
 import type { SpellcastingClass } from '$lib/character/spellcasting';
 import { registerDiceTray, openDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
+import { toastRoll, type RollToastAction } from '$lib/dice/roll-toast';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
@@ -917,31 +918,32 @@ class CombatVM {
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
 		const toHit = rollPool({ 20: 1 }, at.toHit + fx.flat, netAdvantage(fx), fx.bonusDice, fx);
 		const dmgRolls = hasDice ? rollDamageParts(parts) : undefined;
+		// N2 Savage Attacker: offer a reroll of THIS weapon damage. Decided BEFORE the roll is toasted so
+		// the offer rides that toast — as its own toast it stacked on top and hid the damage being judged.
+		// (The Alt-click tray path rolls damage later, so the offer rides the instant tap; a v1 gap.)
+		const savage = this.savageOffer(parts[0], dmgRolls);
+		if (savage) this.tray.offerOnNextRoll(savage.action);
 		const entry = this.tray.pushRoll(at.name, toHit, dmgRolls);
-		// N2 Savage Attacker: offer a post-roll reroll of THIS weapon damage (the Alt-click tray path
-		// rolls damage later, so the offer rides the instant tap — the common case; noted as a v1 gap).
-		this.offerSavage(parts[0], dmgRolls, entry);
+		if (savage) this.savagePending = { spec: savage.spec, roll: savage.roll, entry };
 	};
 
-	/** Offer a Savage Attacker reroll on the just-completed weapon attack — ONLY when a feature
+	/** Does the attack about to be toasted qualify for a Savage Attacker reroll? ONLY when a feature
 	 *  contributes a `damage_reroll` fact, the attack rolled damage dice, and the per-turn use is free.
-	 *  Stores the PRIMARY damage part (so the reroll reproduces it) and toasts an actionable prompt; the
-	 *  reroll also persists on the roll-log row. Fully data-driven — no feat id/name in code. */
-	private offerSavage(
+	 *  Returns the PRIMARY damage part (so the reroll reproduces it) + the offer the roll's toast
+	 *  carries; the caller pairs it with the log entry. Fully data-driven — no feat id/name in code. */
+	private savageOffer(
 		primary: DamagePartSpec | undefined,
-		dmgRolls: TypedRoll[] | undefined,
-		entry: RollLogEntry
-	): void {
+		dmgRolls: TypedRoll[] | undefined
+	): { spec: DamagePartSpec; roll: TypedRoll; action: RollToastAction } | null {
 		const primaryRoll = dmgRolls?.[0];
-		if (!primary || !primaryRoll) return;
+		if (!primary || !primaryRoll) return null;
 		const label = this.sheet?.facts.damageReroll[0]?.source;
-		if (!label || this.savageUsedRound === this.round) return;
-		this.savagePending = { spec: primary, roll: primaryRoll, entry };
-		toast(`${label} available`, {
-			duration: 8000,
-			description: 'Reroll this weapon damage — keep the higher (once per turn).',
-			action: { label: '↻ Reroll', onClick: () => this.savageReroll() }
-		});
+		if (!label || this.savageUsedRound === this.round) return null;
+		return {
+			spec: primary,
+			roll: primaryRoll,
+			action: { label: `↻ ${label} — reroll damage, keep the higher`, run: this.savageReroll }
+		};
 	}
 
 	/** Savage Attacker: reroll the pending weapon damage and KEEP THE HIGHER total, rewriting the log
@@ -957,18 +959,17 @@ class CombatVM {
 		const keptRe = re.total > p.roll.total;
 		const keep = keptRe ? re : p.roll;
 		const dropped = keptRe ? p.roll : re;
-		this.tray.reviseEntry(p.entry, {
+		const revised: RollLogEntry = {
 			...p.entry,
 			damage: [keep, ...(p.entry.damage ?? []).slice(1)],
 			note: `${label}: kept ${keep.total} (other roll ${dropped.total})`
-		});
+		};
+		this.tray.reviseEntry(p.entry, revised);
 		this.savageUsedRound = this.round;
 		this.savagePending = null;
-		toast(`${label} — kept ${keep.total} dmg`, {
-			description: keptRe
-				? `rerolled ${p.roll.total} → ${re.total}`
-				: `kept ${p.roll.total} (reroll was ${re.total})`
-		});
+		// re-toast the REVISED roll, not a summary line: the reroll changed the damage, so the player
+		// should see the same card again with the kept dice in it
+		toastRoll(revised);
 	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */

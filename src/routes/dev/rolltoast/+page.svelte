@@ -4,11 +4,12 @@
 	// from fixed rolls as a static ladder, plus buttons that fire the real thing through toastRoll.
 	// Not linked from the app; gated to dev builds by /dev/+layout.
 	import RollToast from '$lib/components/RollToast.svelte';
-	import { rollToastModel, toastRoll } from '$lib/dice/roll-toast';
+	import { rollToastModel, toastRoll, type RollToastAction } from '$lib/dice/roll-toast';
+	import { toast } from 'svelte-sonner';
 	import type { RollLogEntry } from '$lib/combat/helpers';
 
 	// hand-built entries in exactly the shape pushRoll stores (expr strings straight from rollPool)
-	const CASES: { title: string; entry: RollLogEntry }[] = [
+	const CASES: { title: string; entry: RollLogEntry; action?: RollToastAction }[] = [
 		{
 			title: 'one roll, no types — the one-liner',
 			entry: { label: 'Perception', expr: 'd20(14) +4', total: 18 }
@@ -60,6 +61,21 @@
 			}
 		},
 		{
+			title: 'a roll that offers a follow-up — the offer rides the roll it belongs to',
+			entry: {
+				label: 'Greataxe',
+				expr: ' +6',
+				total: 15,
+				advantageRoll: { kept: 9, dropped: 14 },
+				natural: 9,
+				damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }]
+			},
+			action: {
+				label: '↻ Savage Attacker — reroll damage, keep the higher',
+				run: () => toast('(preview) the offer ran')
+			}
+		},
+		{
 			title: 'rerolled / floored dice + an upcast note',
 			entry: {
 				label: 'Fireball',
@@ -83,8 +99,8 @@
 		{#each CASES as c, i (i)}
 			<div class="case">
 				<div class="cap">{c.title}</div>
-				<div class="slot"><RollToast model={rollToastModel(c.entry)} /></div>
-				<button class="action" onclick={() => toastRoll(c.entry)}>Fire it →</button>
+				<div class="slot"><RollToast model={rollToastModel(c.entry, c.action)} /></div>
+				<button class="action" onclick={() => toastRoll(c.entry, c.action)}>Fire it →</button>
 			</div>
 		{/each}
 	</div>

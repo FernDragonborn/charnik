@@ -30,9 +30,21 @@ interface RollToastTag {
 	tone: 'good' | 'gold' | 'danger';
 }
 
+/** A follow-up the roll itself offers (Savage Attacker's "reroll this damage"). It rides the roll's
+ *  OWN toast on purpose: fired as a second toast it would stack on top and hide the damage the player
+ *  is deciding on. */
+export interface RollToastAction {
+	label: string;
+	run: () => void;
+}
+
 export interface RollToastModel {
 	label: string;
 	rows: RollToastRow[];
+	action?: RollToastAction;
+	/** Re-tints the whole card — reserved for a NATURAL 20/1. Advantage colours its tag and nothing
+	 *  else: how a roll was made is not news, what the die landed on is. */
+	emphasis?: 'gold' | 'danger';
 	/** The big number in the right column: the damage sum for an attack, else the roll total. */
 	total: number;
 	/** Caption under the big number — set when it is NOT what the label rolled (an attack's damage). */
@@ -61,7 +73,7 @@ const damageRows = (damage: TypedRoll[]): RollToastRow[] =>
 	});
 
 /** Build the toast model from a completed roll (the same shape the roll log stores). */
-export function rollToastModel(entry: RollLogEntry): RollToastModel {
+export function rollToastModel(entry: RollLogEntry, action?: RollToastAction): RollToastModel {
 	const { chips, mod } = parseRollExpr(entry.expr);
 	const adv = entry.advantageRoll;
 	// the kept adv/disadv d20 never made it into `expr` (the roller surfaces it separately) — put it
@@ -81,11 +93,14 @@ export function rollToastModel(entry: RollLogEntry): RollToastModel {
 		total: damage.length ? damageTotal(damage) : entry.total,
 		...(damage.length ? { caption: 'damage' } : {}),
 		...(tag ? { tag } : {}),
-		...(entry.note ? { note: entry.note } : {})
+		...(entry.natural === 20 ? { emphasis: 'gold' as const } : {}),
+		...(entry.natural === 1 ? { emphasis: 'danger' as const } : {}),
+		...(entry.note ? { note: entry.note } : {}),
+		...(action ? { action } : {})
 	};
 }
 
 /** Toast a completed roll. The one roll-toast call site — pass the roll, not a formatted string. */
-export function toastRoll(entry: RollLogEntry): void {
-	toast.custom(RollToast, { componentProps: { model: rollToastModel(entry) } });
+export function toastRoll(entry: RollLogEntry, action?: RollToastAction): void {
+	toast.custom(RollToast, { componentProps: { model: rollToastModel(entry, action) } });
 }

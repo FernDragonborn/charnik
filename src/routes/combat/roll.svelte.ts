@@ -5,7 +5,7 @@
  * (attack/cast/action) call into it. Pure dice math lives in $lib/rules/dice.
  */
 import { rollPool, type BonusDie, type DieMods, type Rolled } from '$lib/rules/dice';
-import { toastRoll } from '$lib/dice/roll-toast';
+import { toastRoll, type RollToastAction } from '$lib/dice/roll-toast';
 import {
 	signed,
 	rollDamageParts,
@@ -49,6 +49,10 @@ export class RollTray {
 	/** A follow-up roll fired right after the tray's Roll (an attack's damage after its to-hit) — one
 	 *  typed part per damage type. */
 	private pendingDamage: { label: string; parts: DamagePartSpec[] } | null = null;
+	/** An offer the NEXT completed roll's toast carries (Savage Attacker's reroll). Same queue-then-fire
+	 *  shape as `pendingDamage`: the offer has to ride the roll's own toast, because a second toast
+	 *  stacks on top and hides the damage the player is deciding on. */
+	private pendingAction: RollToastAction | null = null;
 	log = $state<RollLogEntry[]>([]);
 
 	/** Optional sink for completed rolls → the persistent `log.jsonl` (B4). Injected by CombatVM so
@@ -103,6 +107,11 @@ export class RollTray {
 		this.pendingDamage = { label: spec.label, parts: spec.parts };
 	};
 
+	/** Attach a follow-up offer to the next completed roll's toast. Set it right before the roll. */
+	offerOnNextRoll = (action: RollToastAction) => {
+		this.pendingAction = action;
+	};
+
 	/** The custom roll tray's Roll: rolls the pool + any queued attack damage as ONE combined entry
 	 *  (line 1 = the roll, line 2 = the dropped adv die, then one line per damage type + a total). */
 	doRoll = () => {
@@ -132,7 +141,9 @@ export class RollTray {
 		};
 		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
 		this.persist?.(entry);
-		toastRoll(entry);
+		const action = this.pendingAction;
+		this.pendingAction = null;
+		toastRoll(entry, action ?? undefined);
 		// return the STORED element, not the local literal: assigning into the $state array wraps it in a
 		// reactive proxy, so a caller holding the entry (Savage Attacker's pending reroll) must hold the
 		// SAME proxy the `{#each}` iterates — else an `entry === log[i]` identity check would never match.

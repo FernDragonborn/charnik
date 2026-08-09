@@ -1282,6 +1282,12 @@ holds the done-work log; these are the OPEN tails it carried):**
   A nat 20 / nat 1 re-tints the card, the summary and the die — labelled "nat 20", NOT "crit" (the same
   d20 is a crit on an attack and just a 20 on a check; the tracker surfaces, it doesn't rule).
   Dismiss = the card itself (sonner drops its close button for a custom-component toast).
+  **A roll's own follow-up rides that roll's card, never a second toast** — Savage Attacker fired its
+  offer as a separate toast, which stacked on top and hid the very damage the player was judging it on.
+  `RollToastAction` + `RollTray.offerOnNextRoll` (same queue-then-fire shape as `queueDamage`, so
+  `pushRoll` keeps its arity) put the button in the card; taking it re-toasts the REVISED roll through
+  the same component instead of a summary string. Card re-tint is reserved for a natural 20/1
+  (`emphasis`): how a roll was made (advantage) colours its tag only.
   Preview: `/dev/rolltoast` (every shape from fixed rolls). **Tail:** the roll LOG + DiceTray still
   render their own breakdown, and the non-roll toasts elsewhere are still plain strings.
 - [x] **UBUG-13 · Level-up re-offers ASI and DOUBLE-applies it (not filled/persisted; 2026-08-05).** DONE.
