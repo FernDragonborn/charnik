@@ -1238,8 +1238,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   has also ingested some food and drink" — we don't model rations, so it applies unconditionally (RAI,
   the universal tracker reading). Automatic in RAW → auto-applied + toasted, like the initiative regain.
   `describe.each` test over both editions (short rest removes none, long removes one, never negative).
-- [~] **UBUG-15 · Exhaustion 6 doesn't kill — and there's no "character is dead" screen (2026-08-09).**
-  **RULE HALF DONE; the dead-SCREEN design is still open (that's the `[~]`).** Nothing modelled death at
+- [x] **UBUG-15 · Exhaustion 6 doesn't kill — and there's no "character is dead" screen (2026-08-09).**
+  DONE, both halves. Nothing modelled death at
   all — three failed death saves only toasted. Shipped: one typed play field
   `play.death: { cause } | null` (an OPEN cause enum — `massive_damage | death_saves | exhaustion` —
   not a `dead` boolean plus a sibling; a new lethal rule is a member) and ONE `die(cause)` seam every
@@ -1254,11 +1254,19 @@ holds the done-work log; these are the OPEN tails it carried):**
   points — a character who died of Exhaustion at full HP keeps them), resets the death-save track, and
   drops one exhaustion level (2024 glossary "returns with 1 fewer level"; applied in 2014 too, where RAW
   is silent, because reviving onto a lethal 6 would kill you on the spot — RAI, surfaced). Healing never
-  un-kills you. UI = a slim danger banner in `HpPanel` (cause + the revive button), the same shape as
-  the B4 concentration bar. 6 behavioral tests. **STILL OPEN:** the real **dead-screen design** — what
-  the whole sheet looks like when the character is dead (the banner is a placeholder, deliberately not
-  a design). **Related RAW tail, not done:** taking damage at 0 HP should also add a death-save failure
-  (two on a crit) — we don't know crit-ness at the Damage button, so it needs its own think.
+  un-kills you. 8 behavioral tests. **THE DEAD SCREEN (maintainer's call 2026-08-09): a modal that
+  CANNOT be dismissed by clicking the backdrop** — `DeathScreen.svelte` over the combat sheet, reusing
+  the shared `DialogShell` (its `onDismiss` is now OPTIONAL: omitted → the backdrop isn't clickable and
+  `dismissOnEscape` stays inert, the FirstRunModal pattern, so there's no second shell to maintain).
+  Skull badge, cause as the subtitle, and two ways out: **"I was revived"** and a roster link (without
+  it a permanently dead character would lock the player out — the nav is behind the backdrop). Death
+  gets a heavier backdrop, scoped in TIME (a `:global` rule that only exists while the component is
+  mounted, i.e. exactly while dead). Fixed on the way: `.btn` kept the link underline on an
+  `<a class="btn">` (also fixes DiagnosticsModal's). App-verified by driving the real app — backdrop
+  click and Escape both leave it open; revive closes it and drops exhaustion 6 → 5;
+  `design-preview/death-screen.png`. **Related RAW tail, not done:** taking damage at 0 HP should also
+  add a death-save failure (two on a crit) — we don't know crit-ness at the Damage button, so it needs
+  its own think.
 - [ ] **UBUG-16 · Some abilities don't cost their action/bonus action when used (2026-08-09; Rage,
   Second Wind — audit the rest).** Root-cause lead (verified in code): the resource **chip** path
   `useResourceOrEnter` (`state.svelte.ts:526`) only routes to `activateResourceOption` when the pool has

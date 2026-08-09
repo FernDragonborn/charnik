@@ -24,7 +24,10 @@
 		/** CSS width for the panel (e.g. "min(760px, calc(100vw - 2 * var(--space-4)))"). */
 		width: string;
 		badge?: string;
-		onDismiss: () => void;
+		/** Omit for a dialog with NO way out but its own buttons: the backdrop stops being clickable and
+		 *  Escape stops closing it (the FirstRunModal pattern). For a state the player must resolve —
+		 *  being dead — a stray click must not silently dismiss the only way back. */
+		onDismiss?: () => void;
 		children: Snippet;
 	} = $props();
 </script>

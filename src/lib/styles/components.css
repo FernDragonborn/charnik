@@ -560,6 +560,8 @@
 	background: var(--color-surface-2);
 	color: var(--color-text);
 	cursor: pointer;
+	/* an <a class="btn"> (a nav action in a dialog footer) must not keep the link underline */
+	text-decoration: none;
 }
 .btn:hover {
 	border-color: var(--color-accent);
