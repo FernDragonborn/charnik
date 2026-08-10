@@ -69,7 +69,7 @@ import { getUserStorage } from '$lib/storage/provider';
 import type { RollLogEntry } from '$lib/combat/helpers';
 import type { SpellcastingClass } from '$lib/character/spellcasting';
 import { registerDiceTray, openDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
-import { toastRoll, type RollToastAction } from '$lib/dice/roll-toast';
+import { toastRoll } from '$lib/dice/roll-toast';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { PanelLayout } from './panel.svelte';
 import { TurnEconomy } from './economy.svelte';
@@ -920,34 +920,30 @@ class CombatVM {
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
 		const toHit = rollPool({ 20: 1 }, at.toHit + fx.flat, netAdvantage(fx), fx.bonusDice, fx);
 		const dmgRolls = hasDmg ? rollDamageParts(parts) : undefined;
-		// N2 Savage Attacker: offer a reroll of THIS weapon damage. Decided BEFORE the roll is toasted so
-		// the offer rides that toast — as its own toast it stacked on top and hid the damage being judged.
+		// N2 Savage Attacker: does THIS weapon damage qualify for a reroll? The offer itself is not
+		// attached to the toast — a toast expires mid-decision, so it announces and the always-visible
+		// Playbar (and the log, forever) carries the control, as the ↻ on the damage pill it rerolls.
 		// (The Alt-click tray path rolls damage later, so the offer rides the instant tap; a v1 gap.)
 		const savage = this.savageOffer(parts[0], dmgRolls);
-		if (savage) this.tray.offerOnNextRoll(savage.action);
 		const entry = this.tray.pushRoll(at.name, toHit, dmgRolls);
 		if (savage) this.savagePending = { spec: savage.spec, roll: savage.roll, entry };
 	};
 
 	/** Does the attack about to be toasted qualify for a Savage Attacker reroll? ONLY when a feature
 	 *  contributes a `damage_reroll` fact, the attack rolled damage dice, and the per-turn use is free.
-	 *  Returns the PRIMARY damage part (so the reroll reproduces it) + the offer the roll's toast
-	 *  carries; the caller pairs it with the log entry. Fully data-driven — no feat id/name in code. */
+	 *  Returns the PRIMARY damage part (so the reroll reproduces it) + the roll it made; the caller
+	 *  pairs it with the log entry. Fully data-driven — no feat id/name in code. */
 	private savageOffer(
 		primary: DamagePartSpec | undefined,
 		dmgRolls: TypedRoll[] | undefined
-	): { spec: DamagePartSpec; roll: TypedRoll; action: RollToastAction } | null {
+	): { spec: DamagePartSpec; roll: TypedRoll } | null {
 		const primaryRoll = dmgRolls?.[0];
 		// there must be DICE to reroll — a flat-damage attack (Unarmed Strike) now rolls and toasts its
 		// damage too, so "damage was rolled" no longer implies "dice were rolled" for this caller
 		if (!primary || !primaryRoll || Object.keys(primary.dice).length === 0) return null;
 		const label = this.sheet?.facts.damageReroll[0]?.source;
 		if (!label || this.savageUsedRound === this.round) return null;
-		return {
-			spec: primary,
-			roll: primaryRoll,
-			action: { label: `↻ ${label} — reroll damage, keep the higher`, run: this.savageReroll }
-		};
+		return { spec: primary, roll: primaryRoll };
 	}
 
 	/** Savage Attacker: reroll the pending weapon damage and KEEP THE HIGHER total, rewriting the log

@@ -41,14 +41,6 @@ export interface RollToastAttack {
 	damageTotal: number;
 }
 
-/** A follow-up the roll itself offers (Savage Attacker's "reroll this damage"). It rides the roll's
- *  OWN toast on purpose: fired as a second toast it would stack on top and hide the damage the player
- *  is deciding on. */
-export interface RollToastAction {
-	label: string;
-	run: () => void;
-}
-
 export interface RollToastModel {
 	label: string;
 	attacks: RollToastAttack[];
@@ -60,7 +52,6 @@ export interface RollToastModel {
 	/** The big number on the right: total damage when there is any, else the roll total. */
 	total: number;
 	note?: string;
-	action?: RollToastAction;
 }
 
 /** A nat 1 is the ONE miss the app can call without knowing the target's AC — so its damage is shown
@@ -105,10 +96,7 @@ function sumByType(attacks: RollToastAttack[]): { type: string; total: number }[
  * several attacks resolved as one action (Extra Attack / Flurry of Blows): they share one card, one
  * line each, and a per-type footer under them. The label comes from the first roll.
  */
-export function rollToastModel(
-	rolled: RollLogEntry | RollLogEntry[],
-	action?: RollToastAction
-): RollToastModel {
+export function rollToastModel(rolled: RollLogEntry | RollLogEntry[]): RollToastModel {
 	const entries = Array.isArray(rolled) ? rolled : [rolled];
 	const attacks = entries.map((e) => attackLine(e, e.damage ?? []));
 	const damaging = attacks.some((a) => a.damage.length > 0);
@@ -121,20 +109,18 @@ export function rollToastModel(
 		total: damaging
 			? attacks.filter(landed).reduce((n, a) => n + a.damageTotal, 0)
 			: (attacks[0]?.subtotal ?? 0),
-		...(note ? { note } : {}),
-		...(action ? { action } : {})
+		...(note ? { note } : {})
 	};
 }
 
 /** Toast a completed roll. The one roll-toast call site — pass the roll, not a formatted string.
  *
- *  A roll carrying an unresolved DECISION (Savage Attacker's once-per-turn reroll) does not expire:
- *  a self-dismissing surface is the wrong home for a choice with an opportunity cost, and the player
- *  who looked away for six seconds shouldn't have to know the offer survives in the roll log. It
- *  stays until taken or dismissed — the card is one click either way. */
-export function toastRoll(rolled: RollLogEntry | RollLogEntry[], action?: RollToastAction): void {
-	toast.custom(RollToast, {
-		componentProps: { model: rollToastModel(rolled, action) },
-		...(action ? { duration: Number.POSITIVE_INFINITY } : {})
-	});
+ *  The toast ANNOUNCES; it never controls (UX-3). A toast is a bad host for an edit: it expires
+ *  mid-decision, older ones get buried by the stack, and making its pills interactive would collide
+ *  with click-anywhere-to-dismiss. So the live controls (retroactive advantage, a damage reroll) live
+ *  on the always-visible Playbar for the last roll and in the log for any roll, forever — the same
+ *  `RollRow` in each, so they arrive in both for free. With no decision to hold open, a roll toast has
+ *  no reason to outlive the normal duration either. */
+export function toastRoll(rolled: RollLogEntry | RollLogEntry[]): void {
+	toast.custom(RollToast, { componentProps: { model: rollToastModel(rolled) } });
 }

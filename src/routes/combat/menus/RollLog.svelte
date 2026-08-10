@@ -18,14 +18,23 @@
 <div class="logscroll">
 	{#each log as l, i (i)}
 		<div class="log-row">
-			<RollRow model={rollToastModel(l)} />
-			<!-- N2 Savage Attacker: a once-per-turn reroll offered on the pending weapon-damage row. The
-			     label comes from the granting feature (combat.savageLabel), never hardcoded. -->
-			{#if combat.savageLabel && l === combat.savagePendingEntry}<button
-					type="button"
-					class="savage-reroll"
-					onclick={combat.savageReroll}>↻ {combat.savageLabel} — reroll damage</button
-				>{/if}
+			<!-- the log carries the same live controls as the Playbar, on EVERY roll and forever: tap the
+			     d20 to apply advantage after the fact, tap a ↻ damage pill to reroll it. N2 Savage
+			     Attacker's offer is one of those pills — the label comes from the granting feature
+			     (combat.savageLabel), never hardcoded — instead of the bar that used to sit under the row,
+			     which could not say WHICH damage it meant once a roll has several parts. -->
+			<RollRow
+				model={rollToastModel(l)}
+				onAdvantage={() => combat.tray.amendAdvantage(l)}
+				rerollDamage={combat.savageLabel && l === combat.savagePendingEntry
+					? {
+							attack: 0,
+							part: 0,
+							label: `↻ ${combat.savageLabel} — reroll damage, keep the higher`,
+							run: combat.savageReroll
+						}
+					: undefined}
+			/>
 		</div>
 	{:else}<p class="note" style="padding: 11px 13px">
 			No rolls yet — tap a stat, skill, save, or attack.
@@ -56,23 +65,6 @@
 	}
 	.log-row:first-child {
 		border-top: 0;
-	}
-	/* Savage Attacker reroll offer — an accent-outlined pill the player taps to reroll the weapon
-	   damage; disappears once used (per-turn) or superseded by the next attack. */
-	.savage-reroll {
-		align-self: flex-start;
-		margin: 0 0 7px 16px;
-		padding: 3px 9px;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-accent);
-		background: color-mix(in srgb, var(--color-accent) 12%, transparent);
-		border: 1px solid var(--color-accent);
-		border-radius: var(--radius);
-		cursor: pointer;
-	}
-	.savage-reroll:hover {
-		background: color-mix(in srgb, var(--color-accent) 22%, transparent);
 	}
 	.note {
 		font-size: var(--font-size-xs);

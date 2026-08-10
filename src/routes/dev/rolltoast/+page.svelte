@@ -4,135 +4,151 @@
 	// three) is rendered here from fixed rolls as a static ladder, plus buttons that fire the real
 	// thing through toastRoll. Not linked from the app; gated to dev builds by /dev/+layout.
 	import RollToast from '$lib/components/RollToast.svelte';
-	import { rollToastModel, toastRoll, type RollToastAction } from '$lib/dice/roll-toast';
+	import RollRow from '$lib/components/RollRow.svelte';
+	import { rollToastModel, toastRoll } from '$lib/dice/roll-toast';
+	import { amendWithAdvantage } from '$lib/rules/dice';
 	import { toast } from 'svelte-sonner';
 	import type { RollLogEntry } from '$lib/combat/helpers';
 
+	// a live entry the controls actually act on, so the preview exercises the real amend path
+	let live = $state<RollLogEntry>({
+		label: 'Greataxe',
+		expr: 'd20(9) +6',
+		total: 15,
+		natural: 9,
+		damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }]
+	});
+	const onAdvantage = () => {
+		const revised = amendWithAdvantage(live);
+		if (revised) live = { ...revised, note: `advantage applied after the roll` };
+	};
+	const rerollDamage = {
+		attack: 0,
+		part: 0,
+		label: '↻ Savage Attacker — reroll damage, keep the higher',
+		run: () => toast('(preview) the damage reroll ran')
+	};
+
 	// hand-built entries in exactly the shape pushRoll stores (expr strings straight from rollPool);
 	// an array of them is one action that resolved several attacks (Extra Attack / Flurry of Blows)
-	const CASES: { title: string; entry: RollLogEntry | RollLogEntry[]; action?: RollToastAction }[] =
-		[
-			{
-				title: 'one roll, no damage — the toast has no damage half at all',
-				entry: { label: 'Perception', expr: 'd20(14) +4', total: 18 }
-			},
-			{
-				title: 'a plain attack — one line, one damage type',
-				entry: {
-					label: 'Longsword',
-					expr: 'd20(14) +7',
-					total: 21,
-					natural: 14,
-					damage: [{ type: 'slashing', expr: 'd8(8) +4', total: 12 }]
-				}
-			},
-			{
-				title: 'advantage — the die that lost stays visible, struck through',
-				entry: {
-					label: 'Longsword',
-					expr: ' +5',
-					total: 19,
-					advantageRoll: { kept: 14, dropped: 7 },
-					natural: 14,
-					damage: [{ type: 'slashing', expr: 'd8(6) +3', total: 9 }]
-				}
-			},
-			{
-				title: 'nat 20 — the line goes gold, the doubled dice share one pill',
-				entry: {
-					label: 'Rapier',
-					expr: 'd20(20) +9',
-					total: 29,
-					natural: 20,
-					damage: [{ type: 'piercing', expr: 'd8(7) + d8(5) +5', total: 17 }]
-				}
-			},
-			{
-				title: 'a second damage type — its own glyph in the same line, not a second line',
-				entry: {
-					label: 'Flame Tongue',
-					expr: 'd20(11) +8',
-					total: 19,
-					natural: 11,
+	const CASES: { title: string; entry: RollLogEntry | RollLogEntry[] }[] = [
+		{
+			title: 'one roll, no damage — the toast has no damage half at all',
+			entry: { label: 'Perception', expr: 'd20(14) +4', total: 18 }
+		},
+		{
+			title: 'a plain attack — one line, one damage type',
+			entry: {
+				label: 'Longsword',
+				expr: 'd20(14) +7',
+				total: 21,
+				natural: 14,
+				damage: [{ type: 'slashing', expr: 'd8(8) +4', total: 12 }]
+			}
+		},
+		{
+			title: 'advantage — the die that lost stays visible, struck through',
+			entry: {
+				label: 'Longsword',
+				expr: ' +5',
+				total: 19,
+				advantageRoll: { kept: 14, dropped: 7 },
+				natural: 14,
+				damage: [{ type: 'slashing', expr: 'd8(6) +3', total: 9 }]
+			}
+		},
+		{
+			title: 'nat 20 — the line goes gold, the doubled dice share one pill',
+			entry: {
+				label: 'Rapier',
+				expr: 'd20(20) +9',
+				total: 29,
+				natural: 20,
+				damage: [{ type: 'piercing', expr: 'd8(7) + d8(5) +5', total: 17 }]
+			}
+		},
+		{
+			title: 'a second damage type — its own glyph in the same line, not a second line',
+			entry: {
+				label: 'Flame Tongue',
+				expr: 'd20(11) +8',
+				total: 19,
+				natural: 11,
+				damage: [
+					{ type: 'slashing', expr: 'd8(6) +4', total: 10 },
+					{ type: 'fire', expr: 'd6(4) + d6(5)', total: 9 }
+				]
+			}
+		},
+		{
+			title: 'nat 1 — the one miss callable without knowing the target’s AC',
+			entry: {
+				label: 'Shortbow',
+				expr: 'd20(1) +6',
+				total: 7,
+				natural: 1,
+				damage: [{ type: 'piercing', expr: 'd6(5) +4', total: 9 }]
+			}
+		},
+		{
+			title: 'a flurry — a line per attack, then the per-type footer and the one big number',
+			entry: [
+				{
+					label: 'Flurry of Blows',
+					expr: 'd20(13) +7',
+					total: 20,
+					natural: 13,
 					damage: [
-						{ type: 'slashing', expr: 'd8(6) +4', total: 10 },
-						{ type: 'fire', expr: 'd6(4) + d6(5)', total: 9 }
+						{ type: 'bludgeoning', expr: 'd6(5) +4', total: 9 },
+						{ type: 'radiant', expr: 'd4(3)', total: 3 },
+						{ type: 'psychic', expr: 'd4(4)', total: 4 }
+					]
+				},
+				{
+					label: 'Flurry of Blows',
+					expr: 'd20(4) +7',
+					total: 11,
+					natural: 4,
+					damage: [
+						{ type: 'bludgeoning', expr: 'd6(7) +4', total: 11 },
+						{ type: 'radiant', expr: 'd4(2)', total: 2 },
+						{ type: 'psychic', expr: 'd4(1)', total: 1 }
+					]
+				},
+				{
+					label: 'Flurry of Blows',
+					expr: 'd20(20) +7',
+					total: 27,
+					natural: 20,
+					damage: [
+						{ type: 'bludgeoning', expr: 'd6(6) + d6(2) +4', total: 12 },
+						{ type: 'radiant', expr: 'd4(4) + d4(1)', total: 5 },
+						{ type: 'psychic', expr: 'd4(6) + d4(3)', total: 9 }
 					]
 				}
-			},
-			{
-				title: 'nat 1 — the one miss callable without knowing the target’s AC',
-				entry: {
-					label: 'Shortbow',
-					expr: 'd20(1) +6',
-					total: 7,
-					natural: 1,
-					damage: [{ type: 'piercing', expr: 'd6(5) +4', total: 9 }]
-				}
-			},
-			{
-				title: 'a flurry — a line per attack, then the per-type footer and the one big number',
-				entry: [
-					{
-						label: 'Flurry of Blows',
-						expr: 'd20(13) +7',
-						total: 20,
-						natural: 13,
-						damage: [
-							{ type: 'bludgeoning', expr: 'd6(5) +4', total: 9 },
-							{ type: 'radiant', expr: 'd4(3)', total: 3 },
-							{ type: 'psychic', expr: 'd4(4)', total: 4 }
-						]
-					},
-					{
-						label: 'Flurry of Blows',
-						expr: 'd20(4) +7',
-						total: 11,
-						natural: 4,
-						damage: [
-							{ type: 'bludgeoning', expr: 'd6(7) +4', total: 11 },
-							{ type: 'radiant', expr: 'd4(2)', total: 2 },
-							{ type: 'psychic', expr: 'd4(1)', total: 1 }
-						]
-					},
-					{
-						label: 'Flurry of Blows',
-						expr: 'd20(20) +7',
-						total: 27,
-						natural: 20,
-						damage: [
-							{ type: 'bludgeoning', expr: 'd6(6) + d6(2) +4', total: 12 },
-							{ type: 'radiant', expr: 'd4(4) + d4(1)', total: 5 },
-							{ type: 'psychic', expr: 'd4(6) + d4(3)', total: 9 }
-						]
-					}
-				]
-			},
-			{
-				title: 'a roll that offers a follow-up — the offer rides the roll it belongs to',
-				entry: {
-					label: 'Greataxe',
-					expr: ' +6',
-					total: 15,
-					advantageRoll: { kept: 9, dropped: 14 },
-					natural: 9,
-					damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }]
-				},
-				action: {
-					label: '↻ Savage Attacker — reroll damage, keep the higher',
-					run: () => toast('(preview) the offer ran')
-				}
-			},
-			{
-				title: 'rerolled / floored dice + an upcast note',
-				entry: {
-					label: 'Fireball',
-					expr: 'd6(1↻5) + d6(4) + d6(6) + d6(2) + d6(1↻3) + d6(5) + d6(6) + d6(1)',
-					total: 32,
-					note: '8d6 base + 1d6 @ slot 4'
-				}
+			]
+		},
+		{
+			title: 'a roll already decided by two dice — the loser struck through',
+			entry: {
+				label: 'Greataxe',
+				expr: ' +6',
+				total: 15,
+				advantageRoll: { kept: 9, dropped: 14 },
+				natural: 9,
+				damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }]
 			}
-		];
+		},
+		{
+			title: 'rerolled / floored dice + an upcast note',
+			entry: {
+				label: 'Fireball',
+				expr: 'd6(1↻5) + d6(4) + d6(6) + d6(2) + d6(1↻3) + d6(5) + d6(6) + d6(1)',
+				total: 32,
+				note: '8d6 base + 1d6 @ slot 4'
+			}
+		}
+	];
 </script>
 
 <div class="page">
@@ -143,12 +159,23 @@
 		<code>toastRoll</code> (top-center, the app's Toaster).
 	</p>
 
+	<div class="case">
+		<div class="cap">
+			the SAME row mounted with controls — how the Playbar and the log show it. The toast above
+			never gets these: it expires mid-decision, so it announces and these two control. Tap the d20
+			to apply advantage after the fact; tap the ↻ damage pill to reroll it.
+		</div>
+		<div class="slot live">
+			<RollRow model={rollToastModel(live)} {onAdvantage} {rerollDamage} />
+		</div>
+	</div>
+
 	<div class="ladder">
 		{#each CASES as c, i (i)}
 			<div class="case">
 				<div class="cap">{c.title}</div>
-				<div class="slot"><RollToast model={rollToastModel(c.entry, c.action)} /></div>
-				<button class="action" onclick={() => toastRoll(c.entry, c.action)}>Fire it →</button>
+				<div class="slot"><RollToast model={rollToastModel(c.entry)} /></div>
+				<button class="action" onclick={() => toastRoll(c.entry)}>Fire it →</button>
 			</div>
 		{/each}
 	</div>
@@ -189,6 +216,9 @@
 	.slot {
 		display: flex;
 		width: 400px;
+	}
+	.slot.live {
+		border-color: var(--color-accent);
 	}
 	.action {
 		margin-top: 8px;

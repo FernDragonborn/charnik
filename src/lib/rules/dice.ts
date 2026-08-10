@@ -226,6 +226,50 @@ export function parseRollExpr(expr: string): { chips: DieChip[]; mod: number } {
 	return { chips, mod: mod ? (mod[1] === '−' ? -1 : 1) * Number(mod[2]) : 0 };
 }
 
+/** Chips + flat mod → an `expr`, the inverse of what `rollPool` joins. Not byte-identical to the
+ *  original for a POSITIVE bonus die (the roller writes `+d4(3)`, this writes `d4(3)`) because the
+ *  parse can't tell a pool die from one — but it round-trips through `parseRollExpr` to the same
+ *  chips, which is all `expr` is for (the display parses its own format). */
+const formatExpr = (chips: DieChip[], mod: number): string =>
+	chips.map((c) => `${c.sign < 0 ? '−' : ''}d${c.sides}(${c.detail})`).join(' + ') +
+	(mod ? ` ${formatModifier(mod)}` : '');
+
+/**
+ * Apply advantage to a roll that ALREADY happened: roll one more d20 and keep the better of the two.
+ *
+ * RAW-exact rather than a fudge — the rule is "roll a second d20 and take the higher", and rolling it
+ * after the first is on the table changes nothing mechanically. It also matches how tables actually
+ * play: the DM says "that has advantage" once the die is already down.
+ *
+ * Returns null when the roll can't take it: no d20 in the pool, or two dice already decided it.
+ *
+ * The two dice are compared by what they CONTRIBUTE, not by their raw faces. A die floored by
+ * `min_die` (Reliable Talent's 3→10) contributed 10, and RAW would floor the new die the same way —
+ * so the higher contribution is the right outcome either way, and the log entry doesn't have to carry
+ * the roll's effect facts for this to be correct.
+ */
+export function amendWithAdvantage<T extends Rolled>(r: T, rng: Rng = Math.random): T | null {
+	if (r.advantageRoll) return null;
+	const { chips, mod } = parseRollExpr(r.expr);
+	const index = chips.findIndex((c) => c.sides === 20 && c.sign > 0);
+	const d20 = chips[index];
+	if (!d20) return null;
+	const fresh = rollDie(20, rng);
+	const keptIsFresh = fresh > d20.value;
+	const kept = keptIsFresh ? fresh : d20.value;
+	return {
+		...r,
+		total: r.total - d20.value + kept,
+		// the kept d20 renders from `advantageRoll`, so it must leave `expr` or it would show twice
+		expr: formatExpr(
+			chips.filter((_, k) => k !== index),
+			mod
+		),
+		advantageRoll: { kept, dropped: keptIsFresh ? d20.value : fresh },
+		natural: keptIsFresh ? fresh : (r.natural ?? d20.value)
+	};
+}
+
 /** Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat
  *  mod, then `rollPool`. Rolls EVERY dice group (the old compendium roller only did the first). */
 export function rollFormula(formula: string, rng: Rng = Math.random): Rolled {

@@ -196,7 +196,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
-| **RollRow** | `model` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
+| **RollRow** | `model`, `onAdvantage`, `rerollDamage` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
 | **RollToast** | `model`, `closeToast` | The dice-roll toast — CHROME around a `RollRow`, nothing more. |
 | **SchemaDiscardDialog** | `drafts`, `onDiscard`, `onKeep` |  |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
@@ -716,7 +716,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface RollToastDamage` — One damage type inside an attack: its glyph key, the dice it rolled (a crit's doubled dice ride * ONE pill, divided),…
 - `interface RollToastAttack` — One attack line: the d20 that decided it plus the damage it rolled.
-- `interface RollToastAction` — A follow-up the roll itself offers (Savage Attacker's "reroll this damage").
 - `interface RollToastModel`
 - `function rollToastModel` — * Build the toast model from completed rolls (the same shape the roll log stores).
 - `function toastRoll` — Toast a completed roll.
@@ -933,6 +932,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function rollPool` — * Roll a dice pool + flat mod.
 - `interface DieChip` — One die as the UI shows it: the face it ended on, how many sides it had, its sign (a Bane die is * −1d4) and the raw …
 - `function parseRollExpr` — Read an `expr` back into per-die chips + the trailing flat modifier.
+- `function amendWithAdvantage` — * Apply advantage to a roll that ALREADY happened: roll one more d20 and keep the better of the two.
 - `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat * mod, then `rollPool`.
 
 ### `src/lib/rules/pipeline.ts`

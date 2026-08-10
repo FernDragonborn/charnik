@@ -2,8 +2,9 @@
 	// The dice-roll toast — CHROME around a `RollRow`, nothing more. The roll itself (label, the grid
 	// with a line per attack, the provenance note) is rendered by the shared component so the toast,
 	// the Playbar, the roll log and the dice tray all show a roll identically (UBUG-20). What lives
-	// here is what only a toast has: the card is the dismiss target, sonner needs its own sizing, and
-	// a roll may carry a follow-up offer as a bar underneath.
+	// here is what only a toast has: the card is the dismiss target and sonner needs its own sizing.
+	// It mounts RollRow with NO action props, so every pill is inert: a toast announces, the Playbar
+	// and the log control (UX-3) — which is also why it no longer has to stay open indefinitely.
 	import type { RollToastModel } from '$lib/dice/roll-toast';
 	import RollRow from './RollRow.svelte';
 
@@ -14,7 +15,7 @@
 
 <div class="rolltoast">
 	<!-- the roll itself is a real <button>, not a div with a role: it IS the dismiss target (see
-	     closeToast above). The offer below is its sibling — a button can't nest inside a button. -->
+	     closeToast above), which is exactly why no control may live inside it. -->
 	<button
 		type="button"
 		class="rt-card"
@@ -25,16 +26,6 @@
 	>
 		<RollRow {model} />
 	</button>
-	{#if model.action}
-		<button
-			type="button"
-			class="rt-action"
-			onclick={() => {
-				model.action?.run();
-				closeToast?.();
-			}}>{model.action.label}</button
-		>
-	{/if}
 </div>
 
 <style>
@@ -85,23 +76,5 @@
 	}
 	.rolltoast:has(.rt-card.dismissible:hover) {
 		border-color: var(--color-border-strong);
-	}
-	/* the roll's own follow-up offer (Savage Attacker's reroll) — a full-width bar under the roll it
-	   belongs to, so the damage being judged stays on screen instead of behind a second toast */
-	.rt-action {
-		border: 0;
-		border-top: 1px solid var(--color-border);
-		border-radius: 0 0 var(--radius) var(--radius);
-		padding: 7px 14px;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		text-align: left;
-		color: var(--color-accent-bright);
-		background: var(--color-accent-soft);
-		cursor: pointer;
-	}
-	.rt-action:hover {
-		color: var(--color-text);
-		background: var(--color-accent);
 	}
 </style>

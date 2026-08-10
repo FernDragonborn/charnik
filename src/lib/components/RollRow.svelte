@@ -15,7 +15,23 @@
 	import DamageIcon from './DamageIcon.svelte';
 	import { signed } from '$lib/util/format';
 
-	let { model }: { model: RollToastModel } = $props();
+	let {
+		model,
+		onAdvantage,
+		rerollDamage
+	}: {
+		model: RollToastModel;
+		/** Present → the d20 pill becomes a control that applies advantage AFTER the fact (UX-3): tap
+		 *  it and a second d20 joins the first. Absent → every pill is inert, which is how the toast
+		 *  mounts it (a toast expires mid-decision, so it announces and the Playbar/log control). No
+		 *  attack index: a volley can't offer a per-attack chooser until something rolls more than one
+		 *  attack (blocked on ROLLER-N), and shipping one that can't be exercised is how it goes wrong. */
+		onAdvantage?: (() => void) | undefined;
+		/** The ONE damage pill that can be rerolled right now, and what taking it does. Names the pill
+		 *  by position because that is the RAW unit — "reroll the weapon's damage dice" is one damage
+		 *  part is one pill — rather than a bar under a row that can't say which row it means. */
+		rerollDamage?: { attack: number; part: number; label: string; run: () => void } | undefined;
+	} = $props();
 
 	const attacks = $derived(model.attacks);
 	const multi = $derived(attacks.length > 1 && model.damaging);
@@ -23,14 +39,30 @@
 	const tone = (c: DieChip) =>
 		c.value === c.sides ? 'max' : c.value === 1 ? 'min' : ('' as const);
 	const face = (c: DieChip) => `${c.sign < 0 ? '−' : ''}${c.value}`;
+
+	/** Which chip of an attack is THE d20 that decided it — the first positive one, matching what
+	 *  `amendWithAdvantage` picks. -1 when the roll has no d20 to amend. */
+	const d20Index = (a: RollToastAttack) => a.chips.findIndex((c) => c.sides === 20 && c.sign > 0);
+	/** A roll already decided by two dice can't take advantage again. */
+	const canAmend = (a: RollToastAttack) =>
+		!!onAdvantage && a.dropped === undefined && d20Index(a) >= 0;
 </script>
 
 {#snippet hitDice(a: RollToastAttack)}
 	<span class="rt-hit">
 		{#each a.chips as c, i (i)}
-			<span class="rt-die {tone(c)}" class:d20={c.sides === 20} title="d{c.sides} · {c.detail}"
-				>{face(c)}</span
-			>
+			{#if i === d20Index(a) && canAmend(a)}
+				<button
+					type="button"
+					class="rt-die d20 control {tone(c)}"
+					title="d{c.sides} · {c.detail} — roll a second d20 and keep the better (advantage)"
+					onclick={() => onAdvantage?.()}>{face(c)}<span class="rt-cue">⇈</span></button
+				>
+			{:else}
+				<span class="rt-die {tone(c)}" class:d20={c.sides === 20} title="d{c.sides} · {c.detail}"
+					>{face(c)}</span
+				>
+			{/if}
 		{/each}
 		{#if a.dropped !== undefined}
 			<span class="rt-die dropped" title="dropped d20">{a.dropped}</span>
@@ -41,10 +73,22 @@
 
 <!-- one damage type: glyph, then its dice in a SINGLE pill (a crit's doubled dice share it, divided),
      then the flat mod. A dice-less part (a fixed "1 bludgeoning") puts its value in the pill. -->
-{#snippet damagePart(d: RollToastDamage)}
+{#snippet damagePart(d: RollToastDamage, attack: number, part: number)}
+	{@const re =
+		rerollDamage && rerollDamage.attack === attack && rerollDamage.part === part
+			? rerollDamage
+			: undefined}
 	<span class="rt-part" title={d.type || undefined}>
 		<DamageIcon type={d.type} />
-		<span class="rt-die">
+		<svelte:element
+			this={re ? 'button' : 'span'}
+			role={re ? 'button' : undefined}
+			type={re ? 'button' : undefined}
+			class="rt-die"
+			class:control={re}
+			title={re ? re.label : undefined}
+			onclick={re ? () => re.run() : undefined}
+		>
 			{#if d.chips.length}
 				{#each d.chips as c, i (i)}
 					{#if i}<span class="rt-div"></span>{/if}
@@ -53,7 +97,8 @@
 			{:else}
 				<span>{d.total}</span>
 			{/if}
-		</span>
+			{#if re}<span class="rt-cue">↻</span>{/if}
+		</svelte:element>
 		{#if d.mod && d.chips.length}<span class="rt-mod">{signed(d.mod)}</span>{/if}
 	</span>
 {/snippet}
@@ -78,7 +123,7 @@
 				{#if a.natural === 1}
 					<span class="rt-none">—</span>
 				{:else}
-					{#each a.damage as d, j (j)}{@render damagePart(d)}{/each}
+					{#each a.damage as d, j (j)}{@render damagePart(d, i, j)}{/each}
 				{/if}
 			</span>
 		{/if}
@@ -211,6 +256,29 @@
 		background: transparent;
 		color: var(--color-text-muted);
 		text-decoration: line-through;
+	}
+	/* An interactive pill must LOOK like one ([[charnik-interactive-affordance]]): its own accent
+	   edge, a cursor, a hover, a focus ring and a glyph saying what tapping does. Inert pills are
+	   untouched, so there is never a false affordance — that distinction is the whole reason a pill
+	   can carry an action without reading as "a click somewhere in the card". */
+	.rt-die.control {
+		gap: 2px;
+		padding-right: 4px;
+		border-color: var(--color-accent);
+		color: var(--color-accent-bright);
+		cursor: pointer;
+	}
+	.rt-die.control:hover {
+		background: var(--color-accent-soft);
+	}
+	.rt-die.control:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 1px;
+	}
+	.rt-cue {
+		font-size: var(--font-size-micro);
+		line-height: 1;
+		opacity: 0.8;
 	}
 	.rt-mod {
 		font-size: var(--font-size-xs);

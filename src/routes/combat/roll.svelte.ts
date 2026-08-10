@@ -4,8 +4,14 @@
  * is one cohesive unit; CombatVM composes it as `combat.tray` and the higher-level actions
  * (attack/cast/action) call into it. Pure dice math lives in $lib/rules/dice.
  */
-import { rollPool, type BonusDie, type DieMods, type Rolled } from '$lib/rules/dice';
-import { toastRoll, type RollToastAction } from '$lib/dice/roll-toast';
+import {
+	amendWithAdvantage,
+	rollPool,
+	type BonusDie,
+	type DieMods,
+	type Rolled
+} from '$lib/rules/dice';
+import { toastRoll } from '$lib/dice/roll-toast';
 import {
 	signed,
 	rollDamageParts,
@@ -49,10 +55,6 @@ export class RollTray {
 	/** A follow-up roll fired right after the tray's Roll (an attack's damage after its to-hit) — one
 	 *  typed part per damage type. */
 	private pendingDamage: { label: string; parts: DamagePartSpec[] } | null = null;
-	/** An offer the NEXT completed roll's toast carries (Savage Attacker's reroll). Same queue-then-fire
-	 *  shape as `pendingDamage`: the offer has to ride the roll's own toast, because a second toast
-	 *  stacks on top and hides the damage the player is deciding on. */
-	private pendingAction: RollToastAction | null = null;
 	log = $state<RollLogEntry[]>([]);
 
 	/** Optional sink for completed rolls → the persistent `log.jsonl` (B4). Injected by CombatVM so
@@ -107,11 +109,6 @@ export class RollTray {
 		this.pendingDamage = { label: spec.label, parts: spec.parts };
 	};
 
-	/** Attach a follow-up offer to the next completed roll's toast. Set it right before the roll. */
-	offerOnNextRoll = (action: RollToastAction) => {
-		this.pendingAction = action;
-	};
-
 	/** The custom roll tray's Roll: rolls the pool + any queued attack damage as ONE combined entry
 	 *  (line 1 = the roll, line 2 = the dropped adv die, then one line per damage type + a total). */
 	doRoll = () => {
@@ -141,9 +138,7 @@ export class RollTray {
 		};
 		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
 		this.persist?.(entry);
-		const action = this.pendingAction;
-		this.pendingAction = null;
-		toastRoll(entry, action ?? undefined);
+		toastRoll(entry);
 		// return the STORED element, not the local literal: assigning into the $state array wraps it in a
 		// reactive proxy, so a caller holding the entry (Savage Attacker's pending reroll) must hold the
 		// SAME proxy the `{#each}` iterates — else an `entry === log[i]` identity check would never match.
@@ -156,6 +151,25 @@ export class RollTray {
 	 *  has rolled off the capped log. */
 	reviseEntry = (old: RollLogEntry, revised: RollLogEntry) => {
 		this.log = this.log.map((e) => (e === old ? revised : e));
+	};
+
+	/**
+	 * UX-3: apply advantage to a roll that already landed — roll one more d20, keep the better, and
+	 * rewrite the entry in place. The player rolls first and amends only if it turns out the roll was
+	 * advantaged, which is how tables actually play ("that has advantage" once the die is down) and is
+	 * RAW-exact, not a fudge. Whether they were ENTITLED to it is table trust, not ours to police.
+	 *
+	 * The record stays truthful: the amended entry says it was changed after the fact and names the
+	 * die that lost, the same shape the Savage Attacker reroll writes.
+	 */
+	amendAdvantage = (entry: RollLogEntry) => {
+		const revised = amendWithAdvantage(entry);
+		if (!revised) return;
+		const adv = revised.advantageRoll;
+		this.reviseEntry(entry, {
+			...revised,
+			note: `advantage applied after the roll — kept ${adv?.kept}, other die ${adv?.dropped}`
+		});
 	};
 
 	/** A no-roll cast (buff/utility): a bare log marker, not a rolled total. */

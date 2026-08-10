@@ -18,13 +18,33 @@
 	const { openMenu } = combat;
 	const log = $derived(combat.tray.log);
 	const last = $derived(log[0]);
+
+	// The live controls on this roll (UX-3). They exist HERE and in the log, never in the toast: a
+	// toast expires mid-decision and click-anywhere dismisses it, so it announces and these two act.
+	// `savagePendingEntry` is the one roll whose weapon damage can still be rerolled this turn.
+	const rerollDamage = $derived(
+		last && combat.savageLabel && last === combat.savagePendingEntry
+			? {
+					attack: 0,
+					part: 0,
+					label: `↻ ${combat.savageLabel} — reroll damage, keep the higher`,
+					run: combat.savageReroll
+				}
+			: undefined
+	);
 </script>
 
 <div class="playbar">
 	<div class="lastroll" class:empty={!last}>
 		{#if last}
 			<!-- RollRow renders sibling spans (name · grid · note); they stack, as in the toast card -->
-			<div class="rollwrap"><RollRow model={rollToastModel(last)} /></div>
+			<div class="rollwrap">
+				<RollRow
+					model={rollToastModel(last)}
+					onAdvantage={() => combat.tray.amendAdvantage(last)}
+					{rerollDamage}
+				/>
+			</div>
 		{:else}
 			<span class="noroll">Tap any check · save · attack · spell to roll it.</span>
 		{/if}

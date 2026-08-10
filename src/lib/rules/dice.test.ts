@@ -5,7 +5,9 @@ import {
 	parseDicePool,
 	parseDiceTerm,
 	parseRollExpr,
-	type Rng
+	amendWithAdvantage,
+	type Rng,
+	type Rolled
 } from './dice';
 
 /** RNG that yields the given [0,1) values in order (then throws if over-drawn — catches extra draws). */
@@ -186,5 +188,57 @@ describe('parseRollExpr · advantage-only pool', () => {
 		const r = rollPool({ 20: 1 }, 5, 1, [], rngSequence(0.65, 0.3));
 		expect(r.expr).toBe(' +5');
 		expect(parseRollExpr(r.expr)).toEqual({ chips: [], mod: 5 });
+	});
+});
+
+/*
+ * UX-3 retroactive advantage: a roll that already landed can take a second d20 after the fact. The
+ * cases that matter are the two outcomes (the new die wins / loses), the two ineligible shapes, and
+ * that the kept die leaves `expr` so it can't render twice.
+ */
+describe('amendWithAdvantage', () => {
+	/** A d20 roll as `rollPool` would have recorded it. */
+	const rolled = (expr: string, total: number, natural?: number): Rolled => ({
+		expr,
+		total,
+		...(natural !== undefined ? { natural } : {})
+	});
+
+	it('keeps the fresh die when it beats the original, and raises the total by the difference', () => {
+		const out = amendWithAdvantage(rolled('d20(7) +4', 11, 7), () => 0.9); // → 19
+		expect(out).not.toBeNull();
+		expect(out?.advantageRoll).toEqual({ kept: 19, dropped: 7 });
+		expect(out?.total).toBe(23);
+		expect(out?.natural).toBe(19);
+	});
+
+	it('keeps the original when the fresh die loses, and the total does not move', () => {
+		const out = amendWithAdvantage(rolled('d20(18) +4', 22, 18), () => 0.1); // → 3
+		expect(out?.advantageRoll).toEqual({ kept: 18, dropped: 3 });
+		expect(out?.total).toBe(22);
+		expect(out?.natural).toBe(18);
+	});
+
+	it('takes the kept d20 out of `expr` (it renders from advantageRoll — else it shows twice)', () => {
+		const out = amendWithAdvantage(rolled('d20(7) + d6(3) +4', 14, 7), () => 0.9);
+		expect(parseRollExpr(out?.expr ?? '').chips.map((c) => c.sides)).toEqual([6]);
+		expect(parseRollExpr(out?.expr ?? '').mod).toBe(4);
+	});
+
+	it('compares what the dice CONTRIBUTE, so a min_die floor is not undone', () => {
+		// Reliable Talent: a natural 3 was floored to 10 and contributed 10; a fresh 7 must not win
+		const out = amendWithAdvantage(rolled('d20(3→10) +5', 15, 3), () => 0.31); // → 7
+		expect(out?.advantageRoll).toEqual({ kept: 10, dropped: 7 });
+		expect(out?.total).toBe(15);
+	});
+
+	it('refuses a roll that two dice already decided', () => {
+		expect(
+			amendWithAdvantage({ expr: '+4', total: 18, advantageRoll: { kept: 14, dropped: 3 } })
+		).toBeNull();
+	});
+
+	it('refuses a roll with no d20 in it (damage)', () => {
+		expect(amendWithAdvantage(rolled('d8(5) + d6(2) +3', 10))).toBeNull();
 	});
 });

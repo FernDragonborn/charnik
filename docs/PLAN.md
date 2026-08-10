@@ -1081,8 +1081,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   translate?)`) OR allow `get(_)` in a VM (a VM is the UI layer, not rules-core, so `get(_)` is
   defensible — but it's not the established pattern). UA copy uses formal «ви» ([[uk-formal-vy]]).
   **Do UX-1 first** — translating copy that's about to be rewritten costs the UA pass twice.
-- [ ] **UX-3 · Roll access: retroactive advantage instead of a pre-roll gesture (design settled
-  2026-08-10, evidence in [`docs/research/roll-surfaces.md`](research/roll-surfaces.md)).** The problem:
+- [x] **UX-3 · Roll access: retroactive advantage instead of a pre-roll gesture — BUILT 2026-08-10,
+  see UBUG-20 below for what shipped (design settled 2026-08-10, evidence in
+  [`docs/research/roll-surfaces.md`](research/roll-surfaces.md)).** The problem:
   `Alt/Ctrl-click` on a stat opens the roll tray, and the app is explicitly used on a phone where
   modifiers do not exist — so the tray's contents are unreachable on touch. Three findings reshaped the
   answer, in order:
@@ -1498,8 +1499,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   Action, and the **bug** on the "report a bug" button. Bundle SVGs locally with attribution
   ([[charnik-icon-sources]]) — no emoji, no icon-font dep. Sweep for other emoji-as-icon uses while
   in there.
-- [~] **UBUG-20 · The roll LOG and the dice tray still render rolls as raw `expr` strings — bring them
-  to the toast's shape.** **RENDERING HALF DONE 2026-08-10.** `RollRow` (label · grid · note) was
+- [x] **UBUG-20 + UX-3 · One roll card everywhere, and the live controls live on it — DONE 2026-08-10.** `RollRow` (label · grid · note) was
   extracted out of `RollToast` and is now mounted by all four surfaces — toast, `Playbar`, `RollLog`,
   `DiceTray` — with the chrome (dismiss target, action bar, savage-reroll offer, log cue, sonner
   sizing) left outside it, so the contract really is identical rather than a lookalike. Verified the
@@ -1511,6 +1511,28 @@ holds the done-work log; these are the OPEN tails it carried):**
   re-rollable damage pill + UX-3's retroactive-advantage d20 pill, the toast's `duration: Infinity`
   → normal expiry + a ↻ marker, and the toast's missing labelled close control (which stays its own
   a11y item — the card IS a labelled dismiss button today, so this is polish, not a blocker).
+
+  **Part 2 (the interactive half) DONE 2026-08-10.** `amendWithAdvantage` (pure, in `rules/dice.ts`,
+  6 unit tests) rolls one more d20 on a roll that already landed and keeps the better. Two details
+  worth keeping: the kept die must LEAVE `expr` (the row renders it from `advantageRoll`, so it would
+  otherwise show twice), and the two dice are compared by what they CONTRIBUTE, not by raw face — a
+  die floored by `min_die` contributed 10, and RAW would floor the new one too, so the higher
+  contribution is right either way and the log entry never has to carry the roll's effect facts.
+  `tray.amendAdvantage` rewrites the entry through the existing `reviseEntry` seam with a note saying
+  it was changed after the fact (same shape the Savage Attacker reroll writes). RollRow gained two
+  optional props — `onAdvantage` and `rerollDamage: {attack, part, label, run}` — so a pill is a
+  control only where one is passed; the toast passes neither and stays entirely inert. The Savage
+  Attacker BAR is gone: it is now the ↻ on the damage pill it rerolls, in the Playbar and the log.
+  The toast lost its action bar and its `duration: Infinity` with it — `RollToastAction`,
+  `offerOnNextRoll` and `pendingAction` were deleted outright.
+  **Known gap, deliberate:** `reviseEntry` (both callers) does not rewrite the persisted `log.jsonl`,
+  which is append-only — the in-session log is truthful, the persisted history keeps the pre-amend
+  copy. Pre-existing with the Savage reroll, not introduced here.
+  **Not done:** the inert ↻ MARKER on the toast's pill (UX-3 consequence (a)). It needs eligibility in
+  the toast model, and with the always-visible Playbar carrying the live control on the same roll it
+  is a cue, not a capability. The volley case stays blocked on ROLLER-N as specified — `onAdvantage`
+  deliberately takes no attack index, so a per-attack chooser cannot ship before something rolls more
+  than one attack.
   (2026-08-10; lifted out of UBUG-12's tail, where it had been sitting as one
   sentence inside a closed item).** UBUG-12 replaced the toast's formatted string with a real component,
   but **three** other surfaces were left on the OLD rendering — they print the roller's internal `expr`
