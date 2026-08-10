@@ -1436,14 +1436,20 @@ holds the done-work log; these are the OPEN tails it carried):**
   same roll now reads two different ways depending on where you look at it, and the log — the surface
   you go to precisely to re-read a roll — is the WORSE of the two. Wanted: the same vocabulary as the
   toast — a chip per die, the dropped adv/disadv die struck through beside the kept one, damage as
-  glyph + pill per type (`DamageIcon`), nat 20/nat 1 tinting, the upcast `note`. **The design question
-  to settle first** is whether the log row IS a `RollToast` (extract the card's inner grid into a shared
-  `RollRow` and let both mount it — one shape, one place to change) or only borrows its parts: a log row
-  is denser, has no dismiss affordance, needs a timestamp/round column the toast doesn't, and already
-  carries the Savage Attacker reroll button in its own layout. Prefer the shared `RollRow` if those fit
-  as row-level slots — a second near-duplicate renderer of the same model is exactly the duplication
-  `docs/SURFACE.md` exists to prevent. Model side is already done and pure (`rollToastModel` takes a
-  `RollLogEntry`, which is what the log stores), so this is a rendering job, not a data one.
+  glyph + pill per type (`DamageIcon`), nat 20/nat 1 tinting, the upcast `note`.
+  **DECIDED (maintainer, 2026-08-10): ONE shared renderer, and the contract is 100% identical** — the log
+  row is the same component as the toast, not a lookalike that borrows its parts. So extract the card's
+  inner grid as a shared `RollRow` over `RollToastModel` and let both mount it; everything that differs
+  is CHROME around the row (the toast adds the dismiss button + the follow-up action bar, the log adds
+  its own affordances) and belongs outside the shared piece, never as a variant flag inside it. Model
+  side is already done and pure (`rollToastModel` takes a `RollLogEntry`, which is what the log stores),
+  so this is a rendering job, not a data one.
+  **Consequence to resolve when the volley roller lands (UBUG-11):** the toast groups several attacks
+  into ONE card, but the log stores one `RollLogEntry` PER roll — so a Flurry that reads as a single
+  card with a per-type footer would read as three unrelated rows in the log. An identical contract makes
+  that mismatch structural, not cosmetic: the log needs a grouping key on the entry (the volley's id) to
+  rebuild the same model, or it renders one-attack models and the two surfaces disagree about what "a
+  roll" is. Decide it with the roller, not before — but don't design the grouping key out.
 - [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing — hidden spells still showed in
   combat.** DONE 2026-07-21. The spellbook's eye/pin were local `$state` sets on a THROWAWAY
   `demoCharacter()` (never persisted, never read by combat), and `buildSpellGroups` rendered every
