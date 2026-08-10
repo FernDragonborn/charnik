@@ -125,9 +125,22 @@ produced a whole family of independent fixes:
 - **Better Rolls 5e** (now unmaintained) — attack grouped with damage in one card.
 - **Minimal Rolling Enhancements (MRE)** — configurable modifier keys for the same.
 
-**This validates Charnik's existing default rather than challenging it:** tap = roll instantly, and
-the to-hit + every damage type arrive in ONE card. That is the destination four separate modules are
-trying to reach from the other direction. Do not regress toward a pre-roll dialog.
+**Careful with the credit here — two different things are being conflated, and only one of them is
+uncommon:**
+
+| | roll fires on | attack + damage |
+|---|---|---|
+| **D&D Beyond** | instant tap | **two separate taps** (to-hit, then damage) |
+| **Roll20 5E** | instant (default even rolls 2d20 and shows both) | separate buttons |
+| **Foundry dnd5e** | **a dialog first** | separate: attack card → damage button in chat |
+| **Charnik** | instant tap | **one tap → one card carrying both** |
+
+1. **Instant rolling is the NORM, not an edge** — D&D Beyond and Roll20 both fire on tap. Foundry is
+   the outlier, and the modules above exist to make Foundry behave like the other two. So "don't
+   regress toward a pre-roll dialog" is sound advice, but it is *staying normal*, not leading.
+2. **Grouping the to-hit and every damage type into ONE action and ONE card is the uncommon part.**
+   Foundry needs a module for it; D&D Beyond and Roll20 keep them as separate rolls. That is where
+   Charnik is actually ahead, and it is the thing worth protecting.
 
 ### The genuinely important find: RETROACTIVE advantage
 
@@ -181,8 +194,11 @@ player is *entitled* to the advantage is a table-trust question, not ours to pol
 4. **Do not hardcode one strategy.** Roll20 needed four settings; Foundry needed rebindable keys. The
    lesson is not "add settings" but "pick a default that is harmless when the user does nothing" — and
    a roll that can be amended afterwards is exactly that.
-5. **Don't regress toward a pre-roll dialog.** Four separate Foundry modules exist to escape one
-   (Part 3). Charnik's instant tap + one combined card is already where they are heading.
+5. **Don't regress toward a pre-roll dialog** — but that is staying normal, not leading: instant
+   rolling is already the norm (D&D Beyond, Roll20), and Foundry is the outlier its own modules are
+   fixing. **The part actually worth protecting is the GROUPING** — one tap producing one card that
+   carries the to-hit and every damage type. Foundry needs a module for that and the other two don't
+   do it at all (Part 3).
 
 ## Sources
 

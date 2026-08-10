@@ -1118,8 +1118,11 @@ holds the done-work log; these are the OPEN tails it carried):**
   fact (the existing `savageReroll` "kept X, other roll Y" note is the pattern). Whether the player was
   *entitled* to the advantage is table trust, not ours to police
   ([[play-tracker-surfaces-never-forces]]). The manual-modifier case stays rare and stays in the
-  context menu. **Do not regress toward a pre-roll dialog** — four separate Foundry modules exist to
-  escape one, and Charnik's instant tap into one combined card is already where they are heading.
+  context menu. **Do not regress toward a pre-roll dialog** — but note that is staying normal, not
+  leading: instant rolling is already what D&D Beyond and Roll20 do, and Foundry (which prompts) is the
+  outlier its own modules exist to fix. What IS uncommon, and the thing actually worth protecting, is
+  the **grouping** — one tap producing one card carrying the to-hit and every damage type. Foundry
+  needs a module for that; D&D Beyond and Roll20 keep to-hit and damage as separate rolls entirely.
 - [ ] **UX-2 · First-run onboarding — DEFERRED, not a priority (maintainer, 2026-08-10; recorded so the
   need doesn't get re-derived from scratch each time a non-obvious affordance ships).** The trigger: the
   app keeps accumulating things a first-time user cannot deduce (Alt/Ctrl-click a stat to open the roll
