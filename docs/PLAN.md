@@ -1207,6 +1207,27 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
+- [ ] **UBUG-21 · The dice tray edits the TO-HIT while claiming to be the attack — dice and modifier
+  you add for damage land on the d20 instead (reported by the maintainer 2026-08-10, long-standing;
+  `design-preview/dice-bug.png`). Fix WITH `ROLLER-N`, below — same seam, and pointless to build twice.**
+  Alt/Ctrl-clicking an attack prefills the tray from `attackRoll`'s tray branch: `dice: {20:1}`,
+  `mod: at.toHit + fx.flat`, and the damage goes to `queueDamage`, where it is INVISIBLE and
+  unadjustable — `doRoll` rolls the shown pool, then rolls the queued parts from their fixed specs.
+  So everything the tray shows, and everything it lets you change, belongs to the to-hit, under a
+  heading that says "Greataxe".
+  **Why this is worse than a missing control:** the pool is editable, so a player adding "+1d6" for a
+  damage rider gets it summed into the ATTACK roll — the card reads `Roll 1d20 + 1d6 +6` and resolves
+  `13 · 5 · 20(dropped) · +6 = 24`. A silently-wrong number, which is exactly the failure mode item 9
+  exists to prevent, not merely an absent feature. The `− mod +6 +` stepper is the same problem one
+  step quieter: it is the ATTACK bonus, and the damage modifier cannot be reached at all.
+  **A spec gap, not an open design question — the roadmap already describes the right shape** (§9:
+  "opens the roll builder in **attack mode**: (1) to-hit (d20 + attack bonus, adv/dis) vs AC, then
+  (2) damage (weapon/spell dice + mod) with a **Crit toggle**"). Only stage 1 was ever built. The tray
+  needs the two-part structure the ROLL CARD already renders — to-hit and damage as separate,
+  separately-adjustable sub-rolls — which is the model `ROLLER-N` must introduce anyway
+  ([[charnik-dicetray-attack-damage-concept]]). Building it here first would build it twice.
+  **Interim honesty option if the roller slips:** label the pool "to hit" and render the queued damage
+  visible-but-read-only. Cheap, stops the silent-wrong-roll, and pre-builds no structure.
 - [ ] **ROLLER-N · one roller that fires N independent sub-rolls (promoted to its own item 2026-08-09).**
   Was filed as a sub-tail of UPCAST (`UPCAST-ROLLER`, was D14) — the wrong home, because upcast is only
   one of its callers. **The capability:** N sub-rolls from one action, each its OWN to-hit + damage (own
@@ -1217,7 +1238,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   silently-wrong single big die). (2) **UBUG-11** — a class action that makes N attacks (Flurry of Blows
   = 2× Unarmed Strike); that item keeps its own half, the `rolls` intent in ACTIONS.md that lets a
   feature CALL this. (3) any future multiattack. **Build it once here** — a second per-feature path is
-  the failure mode to avoid. Contract `DiceTrayRequest.instances` is already fixed; the loop + the
+  the failure mode to avoid. **Carries `UBUG-21` with it** (above): the tray only ever built the
+  to-hit half, so the sub-roll model this item introduces is the same one that fixes it — close them
+  together. Contract `DiceTrayRequest.instances` is already fixed; the loop + the
   grouped roll/toast/log rendering are unbuilt. The reminder text stays the fallback for what the roller
   can't express. Ties [[charnik-dicetray-attack-damage-concept]] + the RollToast row model (UBUG-12).
 - [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from
