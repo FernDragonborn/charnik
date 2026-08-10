@@ -1088,6 +1088,33 @@ holds the done-work log; these are the OPEN tails it carried):**
   translate?)`) OR allow `get(_)` in a VM (a VM is the UI layer, not rules-core, so `get(_)` is
   defensible — but it's not the established pattern). UA copy uses formal «ви» ([[uk-formal-vy]]).
   **Do UX-1 first** — translating copy that's about to be rewritten costs the UA pass twice.
+- [ ] **UX-2 · First-run onboarding — DEFERRED, not a priority (maintainer, 2026-08-10; recorded so the
+  need doesn't get re-derived from scratch each time a non-obvious affordance ships).** The trigger: the
+  app keeps accumulating things a first-time user cannot deduce (Alt/Ctrl-click a stat to open the roll
+  tray instead of rolling it, `Ctrl+K`, the fact that all content is CSV on disk they may edit live,
+  and — once UBUG-20 lands — that an eligible damage pill is clickable). **Maintainer constraints:**
+  minimum text, maximum interactivity, because (a) less to translate, (b) long tutorials actively repel
+  people from a new app.
+  **Design position to start from (not yet agreed, argue it when it's picked up):**
+  1. A tutorial that teaches individual CONTROLS is usually a patch over a discoverability bug — the
+     first fix is the affordance ([[charnik-interactive-affordance]]), not a screen explaining it.
+     Otherwise onboarding becomes the dumping ground for every place we skimped on signalling.
+  2. What legitimately needs teaching is what *cannot* be made self-evident: a modifier-click, a global
+     shortcut, and the data model (your character is a folder of files you own). That is a handful of
+     facts, not a walkthrough.
+  3. **Prefer just-in-time over up-front.** One line surfaced ONCE at the moment it first becomes
+     relevant (first roll, first attack, first level-up) beats any front-loaded flow: nothing to click
+     through before reaching the app, near-zero text per moment, and no separate screen to keep in sync
+     with a UI that moves. What repels people is the wall between them and the app, not its length — so
+     a *shorter* wall is the wrong answer to the maintainer's own objection.
+  4. **The demo character already does much of this job** and is a shipped asset: it seeds first-run on
+     web and desktop and "IS the first impression of the system's scope" (DEMO-1 above). A pre-built
+     sheet you can immediately poke beats a walkthrough describing one. Build on it rather than beside it.
+  **Factual correction to the translation argument:** text volume is not the binding reason to prefer
+  interactive. The whole combat/play surface is currently **un-localized** — `$_(` appears in exactly
+  zero files under `src/routes/combat/`, and en.json has no `combat.*` namespace at all (see ARCH-1
+  above). Onboarding would add on the order of ten strings; localizing combat is hundreds. Constraint
+  (b) — tutorials repel — stands on its own and is the real reason.
 - [ ] **UX-1 · Error copy pass — audit every user-facing message and rewrite what a non-technical
   person can't act on (maintainer request 2026-08-09).** The app is explicitly built for people who
   own their data as plain CSV, not for developers (CLAUDE.md), but most of our messages are written
@@ -1468,9 +1495,20 @@ holds the done-work log; these are the OPEN tails it carried):**
   die-manipulation family (Lucky rerolls a d20 → click the d20 pill; a row-click could never express
   "the d20 but not the damage"). Discoverability is the standard [[charnik-interactive-affordance]]
   job — hover/cursor/focus plus a ↻ on eligible pills, and non-eligible pills stay inert so there is no
-  false affordance. **Known structural cost:** the card is currently a `<button>` (it IS the dismiss
-  target) and a button cannot nest in a button, so interactive pills force dismissal to move — a
-  root-level rework of the component, not a tweak. Budget for it.
+  false affordance. **The maintainer's objection (2026-08-10) — "a toast normally closes on click" — is
+  right about the convention but locates the line one step off.** A toast carrying an ACTION is entirely
+  standard (Gmail's "Undo send", every snackbar with a button); nobody expects the action to dismiss.
+  What is non-standard is making something that *looks like static content* interactive. So the binding
+  requirement is not "don't make pills clickable" but **"a re-rollable pill must look like a control"** —
+  its own border, hover, cursor, ↻; non-eligible pills stay inert and unchanged. Then it reads as a
+  button standing ON the object it acts on, not as a click somewhere in the toast.
+  **Known structural cost:** the card is currently a `<button>` and IS the dismiss target, and a button
+  cannot nest in a button — so interactive pills force the card to become a container whose click
+  handler ignores clicks on interactive descendants, PLUS a real close button (there is none today; the
+  whole card was it, which also leaves keyboard/AT users with no labelled dismiss). Click-anywhere-to-
+  dismiss survives. This is a root-level rework of the component, not a tweak — budget for it.
+  Teaching the pill affordance is explicitly NOT onboarding's job (see UX-2 §1): if it needs explaining,
+  the styling failed.
   **Blocked on UBUG-11** for the volley roller: a per-attack chooser cannot be exercised, and must not
   ship, while nothing in the app rolls more than one attack. Moving `action?` from `RollToastModel` down
   onto `RollToastAttack` is cheap and unblocked, and the interaction can be prototyped in
