@@ -1030,7 +1030,42 @@ plugin-dependency notification view + portability / version awareness (fresh-eye
 
 Flagged during the persistence/build/spellcasting work. Grouped; ~rough priority within each.
 
-### Implementation order (current focus — set 2026-08-04)
+### Implementation order (current focus — WAVES, set 2026-08-10)
+
+The order the maintainer and Claude are actually working to. Wave = a coherent chunk, not a sprint;
+the SEQUENCING REASONS matter more than the numbering and are given per wave, because most of them
+were learned the hard way.
+
+- **W0 · REL-4 content packs — IN PROGRESS.** The maintainer's priority: get SRD content out of the
+  app so rules data updates without an app release. Slice 1 done (`ccd247c`, a pack is a folder,
+  discovered by scanning). Slice 0 (split SRD into its own repo) needs the maintainer to create the
+  remote — do not do it unasked. **Consequence worth planning around:** after W0 the content passes
+  (MAGIC-ITEM-EFX, E4, D6/D10) leave the app roadmap entirely; they ship from the content repo.
+- **W1 · Roll card (UBUG-20 + UX-3) — DONE 2026-08-10.** One `RollRow` across toast / Playbar / log /
+  tray, retroactive advantage as a three-state pill, the reroll pill, the one-line strip. Tails are
+  listed on UBUG-20 itself.
+- **W2 · The roller → ROLLER-N → UBUG-11.** Now has its own ledger, **[`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md)**,
+  after the 2026-08-10 audit turned "add a loop for N attacks" into "the result SHAPE is what aged".
+  Carries `UBUG-21` (the tray edits the to-hit while claiming to be the attack) and `UBUG-22`.
+- **W3 · UX-1 error-copy pass → ARCH-1 i18n sweep.** After W0, because REL-4 adds a whole class of
+  new user-facing messages that would otherwise be written twice. UX-1 before ARCH-1, or bad copy
+  gets translated and then rewritten. **And after W2** — this reason is new and load-bearing: the
+  roller currently writes an English SENTENCE into `log.jsonl`, and prose already on disk cannot be
+  localised afterwards. The roller has to start recording facts before the i18n pass has anything
+  worth localising (ROLLER-PLAN, "the record holds facts").
+- **W4 · N1 Inventory → RECHARGE slice 3 (item charges) → D16 choice-UI (→ `magic_initiate`) →
+  SCOPED-BONUS.** Slice 3 wants item charges, which want an inventory. SCOPED-BONUS is an L1 grammar
+  change and a `docs/compatibility.md` chokepoint, so it stays its own piece rather than riding
+  another wave.
+- **W5 · tail:** REL-2 packaging channels, UBUG-19 (icons are drawn, not typed — ~100 sites),
+  UBUG-4's real `.msi` verify (attach to the next release), ARCH-4 / B11 / B24 / R7 / TYPE-2 /
+  LINT-1 / the CSS rename pass. UX-2 onboarding stays deferred.
+
+**Out of band — do these when next in the area, don't schedule them into a wave:** `UBUG-22`
+(`rollFormula` drops a mid-string modifier — an hour, and it is silently wrong numbers reachable
+from content AND the plugin API).
+
+### Previous focus (set 2026-08-04) — CLOSED, kept for the reasoning
 
 Dependency-forced across the play-tracking ledgers. The linchpin is **N2 `onEvent`** — it gates every
 event-driven recharge. **Decision 2026-08-04: start with N2** (it's needed by the later waves anyway,
