@@ -1276,8 +1276,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   a player who keeps cycling keeps getting new dice to pick from. That defeats the exact property the
   control was justified with. The fix is that a roll records the dice it drew and the mode merely
   selects which counts — NOT pre-rolling two batches for every roll, which would draw dice nobody
-  asked for and change the RNG consumption of every roll in the app (`ROLLER-PLAN.md` has the shape). Contract `DiceTrayRequest.instances` is already fixed; the loop + the
-  grouped roll/toast/log rendering are unbuilt. The reminder text stays the fallback for what the roller
+  asked for and change the RNG consumption of every roll in the app (`ROLLER-PLAN.md` has the shape). ~~Contract `DiceTrayRequest.instances` is already fixed~~ — **WRONG, corrected
+  2026-08-10: no such field exists anywhere in `src`.** Nothing of the contract is settled; the loop,
+  the grouped roll/toast/log rendering and the request shape are all unbuilt. The reminder text stays the fallback for what the roller
   can't express. Ties [[charnik-dicetray-attack-damage-concept]] + the RollToast row model (UBUG-12).
 - [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from
   `UPCAST-INVOCATION-SCOPE` + the Magic Weapon `enhancement` tail of UPCAST-ROLLER — they were the same

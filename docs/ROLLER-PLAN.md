@@ -84,6 +84,74 @@ The interface said "post reroll/floor"; the implementation is post-reroll, **pre
 implementation is right (Reliable Talent's "treat as 10" must not erase a natural 1). Comment
 corrected in place — no behaviour change.
 
+### G · The PERSISTED roll is a far poorer record than the in-session one — two schemas, silently
+
+Bigger than A, and it is data loss rather than awkward encoding. `persistRoll`
+(`state.svelte.ts`) writes `{t, kind, label, result, detail: expr}` and **drops everything else**:
+`damage[]` (the whole per-type damage array), `advantageRoll` (both dice and the mode) and `note`
+(upcast provenance, amendment records). `tray.seed` rehydrates `{label, expr, total}`.
+
+So after a reload the log is not the log you were looking at:
+- every attack has lost its damage — the number the player actually cared about;
+- every advantage/disadvantage roll has lost its pair, so no frame and no struck-through die;
+- an upcast's "Xd base + Yd @ slot N" and any amendment record are gone.
+
+And it interacts badly with what shipped 2026-08-10: the d20 pill will cheerfully offer to amend a
+REHYDRATED roll, computing from a partial record — and `reviseEntry` never writes back, so the
+correction dies with the session anyway. **Any rewrite must make the persisted entry and the
+in-session entry the same shape**, and decide the write-back question rather than inherit it.
+
+### H · `LogEntry.kind` is a dead taxonomy, and a bare string
+
+The interface documents `"attack" | "save" | "check" | "damage" | "custom"`; every write hardcodes
+`'roll'`. So the field costs bytes and buys nothing, and when it is revived it should be a named
+member, not a free string (AI-CONVENTIONS §1.5).
+
+### I · PLAN §9 promises a roll log the code does not deliver
+
+The spec says the panel is backed by `log.jsonl` for a "full persistent history across sessions,
+grouped by session/date and searchable — **NOT capped to recent rolls**", scrolling the whole history
+(virtualized), with a hover-delete per row. Reality: capped at `LOG_MAX_LINES = 500` on disk and
+`ROLL_LOG_MAX = 200` in memory, no grouping, no search, no virtualization, no per-row delete.
+Not a bug in itself — but the rewrite is when to either build it or move the spec, because both
+numbers are the roller's own contract.
+
+### J · The plugin contract makes the FORMULA STRING a public API and a trust boundary
+
+`PLUGINS.md`: *"Randomness belongs to the host. You never roll dice — you return dice FORMULAS …
+Charnik's single dice path rolls them, so the roll log stays honest"*, with `rolls: [{label,
+formula}]` on the action contract. So `rollFormula` — the function with **UBUG-22**'s silent
+modifier loss — is the sandboxed-plugin entry point. That raises UBUG-22 from "a content bug" to
+"the plugin API quietly miscomputes and the plugin cannot tell", and it sets a rule for the rewrite:
+**a formula the parser cannot fully account for must SURFACE, never roll the part it understood.**
+The existing cost caps guard cost; nothing currently guards meaning.
+
+### K · `DiceTrayRequest.instances` does not exist, though PLAN says the contract is fixed
+
+ROLLER-N reads "Contract `DiceTrayRequest.instances` is already fixed; the loop … unbuilt". There is
+no such field anywhere in `src`. Corrected in PLAN. Also note `formula: string` is REQUIRED even when
+`pool` is supplied, so the string sits on the critical path of every tray roll too.
+
+### L · "This is a d20 test" is implied, not stated — and a plugin hook depends on it
+
+`PLUGINS.md` defines the hook group `d20_tests`, which "fans out to every d20 roll (saves,
+checks/skills, attack, initiative)". Today that concept exists only as `{20: 1}` happening to be in
+the pool. Once a roll can carry sub-rolls, "which of these is the d20 test, and which kind" has to be
+explicit in the model or the hook has nothing reliable to bind to.
+
+### M · Changing the draw ORDER breaks every seeded expectation — do it in one deliberate commit
+
+TESTING.md pins a seeded RNG for the dice roller as a determinism contract. Any reshuffle (rolling
+the advantage die at a different moment, pre-rolling anything) changes what a seeded sequence
+produces. Harmless live, noisy in tests — so it must be one intentional change, not a drift across
+slices. Keep `rngSequence`'s over-draw throw: it is what catches an accidental extra draw.
+
+**Property tests are missing for the roller specifically.** TESTING.md's fast-check list covers the
+mod formula, capacity, stacking order-stability and save/load identity — nothing for dice. The
+rewrite is the moment to pin: total = Σ contributing dice + mod; a kept advantage die is never worse
+than the dropped one; **cycling the advantage state never changes the multiset of dice drawn** (the
+property the current leak violates); and amend→flip→clear returns the original roll exactly.
+
 ---
 
 ## The dice must survive a state change (maintainer, 2026-08-10) — and today they don't
@@ -131,16 +199,20 @@ projections of the pair.
 
 1. `[ ]` **UBUG-22 first, on its own** — the `rollFormula` mid-string modifier bug. Independent of
    everything below, reachable from content, cheap.
-2. `[ ]` **Structured result.** `Rolled` carries dice, not prose: per-die `{sides, value, face,
+2. `[ ]` **One record, persisted and in-session (finding G).** Today the disk entry silently drops
+   damage, the advantage pair and the note. Make the persisted shape the same shape, decide whether
+   an amendment writes back, and keep old lines loadable. Do this EARLY: every slice below makes the
+   in-session record richer, which widens the gap if the disk side is left behind.
+3. `[ ]` **Structured result.** `Rolled` carries dice, not prose: per-die `{sides, value, face,
    detail, source?}`. Keep emitting `expr` as a rendered view for entries already on disk; nothing
    new reads it. `parseRollExpr` survives only as a **legacy log reader** and is documented as such.
-3. `[ ]` **Advantage as recorded dice + a mode** (the section above). Kills the re-roll leak, folds
+4. `[ ]` **Advantage as recorded dice + a mode** (the section above). Kills the re-roll leak, folds
    `mode`/`advantageMode`/`dropped`/`original` into one representation, and makes Elven Accuracy a
    data point rather than a feature.
-4. `[ ]` **Sub-rolls.** A roll becomes a tree: one action → N attacks → each a to-hit + damage parts.
+5. `[ ]` **Sub-rolls.** A roll becomes a tree: one action → N attacks → each a to-hit + damage parts.
    Moves `RollToastAttack[]` out of the view layer. This is `ROLLER-N` proper, and it is also what
    `UBUG-21` needs (the dice tray can finally show and edit the damage half, not just the to-hit).
-5. `[ ]` **Crits.** The `natural === 20` hook exists; the toggle, the per-roll override and the
+6. `[ ]` **Crits.** The `natural === 20` hook exists; the toggle, the per-roll override and the
    *classic* / *loyal* rule-option (PLAN §9) do not. Needs slice 2's structure to mark which dice are
    the doubled ones.
 
