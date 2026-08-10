@@ -6,7 +6,7 @@
 	import RollToast from '$lib/components/RollToast.svelte';
 	import RollRow from '$lib/components/RollRow.svelte';
 	import { rollToastModel, toastRoll } from '$lib/dice/roll-toast';
-	import { amendWithAdvantage } from '$lib/rules/dice';
+	import { cycleAdvantage } from '$lib/rules/dice';
 	import { toast } from 'svelte-sonner';
 	import type { RollLogEntry } from '$lib/combat/helpers';
 
@@ -18,9 +18,15 @@
 		natural: 9,
 		damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }]
 	});
+	// the same one call the combat VM makes — the preview must exercise the real cycle, not a copy
 	const onAdvantage = () => {
-		const revised = amendWithAdvantage(live);
-		if (revised) live = { ...revised, note: `advantage applied after the roll` };
+		const revised = cycleAdvantage(live);
+		if (!revised) return;
+		const mode = revised.advantageRoll?.mode;
+		const { note: _replaced, ...rest } = revised;
+		live = mode
+			? { ...rest, note: `${mode === -1 ? 'disadvantage' : 'advantage'} after the roll` }
+			: rest;
 	};
 	const rerollDamage = {
 		attack: 0,

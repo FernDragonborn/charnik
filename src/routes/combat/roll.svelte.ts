@@ -5,7 +5,7 @@
  * (attack/cast/action) call into it. Pure dice math lives in $lib/rules/dice.
  */
 import {
-	amendWithAdvantage,
+	cycleAdvantage,
 	rollPool,
 	type BonusDie,
 	type DieMods,
@@ -19,6 +19,11 @@ import {
 	type TypedRoll,
 	type DamagePartSpec
 } from '$lib/combat/helpers';
+
+/** The amendment sentence we write onto a roll's note. Matched so re-amending REPLACES it instead of
+ *  stacking, and so undoing removes it without eating a note the roll already carried (an upcast's
+ *  "8d6 base + 1d6 @ slot 4" is provenance, and amending the d20 must not destroy it). */
+const AMEND_NOTE = /(?:^\s*|\s·\s)(?:dis)?advantage after the roll[^·]*/;
 
 /** Cap on the retained roll log (newest kept). */
 const ROLL_LOG_MAX = 200;
@@ -154,22 +159,30 @@ export class RollTray {
 	};
 
 	/**
-	 * UX-3: apply advantage to a roll that already landed — roll one more d20, keep the better, and
-	 * rewrite the entry in place. The player rolls first and amends only if it turns out the roll was
-	 * advantaged, which is how tables actually play ("that has advantage" once the die is down) and is
-	 * RAW-exact, not a fudge. Whether they were ENTITLED to it is table trust, not ours to police.
+	 * UX-3: change how a roll that already landed was rolled. First tap rolls one more d20 and keeps
+	 * the better; every tap after that switches between advantage and disadvantage, which only picks
+	 * the OTHER die of the pair already on the table — so the toggle can never manufacture a better
+	 * result, and a mis-tap is one tap from corrected.
+	 *
+	 * The player rolls first and amends only if the roll turns out to have been advantaged, which is
+	 * how tables actually play ("that has advantage" once the die is down) and is RAW-exact rather
+	 * than a fudge. Whether they were ENTITLED to it is table trust, not ours to police.
 	 *
 	 * The record stays truthful: the amended entry says it was changed after the fact and names the
 	 * die that lost, the same shape the Savage Attacker reroll writes.
 	 */
 	amendAdvantage = (entry: RollLogEntry) => {
-		const revised = amendWithAdvantage(entry);
+		const revised = cycleAdvantage(entry);
 		if (!revised) return;
 		const adv = revised.advantageRoll;
-		this.reviseEntry(entry, {
-			...revised,
-			note: `advantage after the roll · kept ${adv?.kept} over ${adv?.dropped}`
-		});
+		const kept = (entry.note ?? '').replace(AMEND_NOTE, '').trim();
+		const amendment = adv
+			? `${adv.mode === -1 ? 'disadvantage' : 'advantage'} after the roll · kept ${adv.kept} over ${adv.dropped}`
+			: '';
+		const note = [kept, amendment].filter(Boolean).join(' · ');
+		// a spread can't REMOVE a key, and a roll cycled back to neutral must lose the amendment line
+		const { note: _replaced, ...rest } = revised;
+		this.reviseEntry(entry, note ? { ...rest, note } : rest);
 	};
 
 	/** A no-roll cast (buff/utility): a bare log marker, not a rolled total. */

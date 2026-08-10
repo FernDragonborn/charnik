@@ -933,6 +933,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface DieChip` — One die as the UI shows it: the face it ended on, how many sides it had, its sign (a Bane die is * −1d4) and the raw …
 - `function parseRollExpr` — Read an `expr` back into per-die chips + the trailing flat modifier.
 - `function amendWithAdvantage` — * Apply advantage to a roll that ALREADY happened: roll one more d20 and keep the better of the two.
+- `function flipAdvantage` — * Flip a roll that two d20 already decided: what was kept is dropped and what was dropped is kept.
+- `function clearAdvantage` — * Undo a pair: back to the single die that was rolled first, as if advantage had never applied.
+- `function cycleAdvantage` — * One tap on the d20, cycling **advantage → disadvantage → neither**.
 - `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat * mod, then `rollPool`.
 
 ### `src/lib/rules/pipeline.ts`
@@ -1094,4 +1097,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 45 components · 607 exports across 92 modules · 32 duplicate suspects._
+_45 tokens · 64 global classes · 45 components · 610 exports across 92 modules · 32 duplicate suspects._

@@ -24,6 +24,11 @@ interface AdvantageRoll {
 	kept: number;
 	dropped: number;
 	mode?: 1 | -1;
+	/** The die that was rolled FIRST. Recorded so the pair can be undone — a tap too many has to be
+	 *  recoverable, and "no advantage" means "the die that stood before the second one", which the
+	 *  kept/dropped pair alone can't say. Absent on entries logged before it existed; those simply
+	 *  can't return to neutral. */
+	original?: number;
 }
 
 /** Result of a roll: the total, a human-readable breakdown, and the two d20 if adv/disadv applied. */
@@ -131,7 +136,8 @@ function rollPoolDice(
 				advantageRoll = {
 					kept: win,
 					dropped: winIsFirst ? r2.v : r.v,
-					mode: advantage > 0 ? 1 : -1
+					mode: advantage > 0 ? 1 : -1,
+					original: r.v
 				};
 				natural = winIsFirst ? r.face : r2.face; // the kept die's face (pre-floor)
 				total += win;
@@ -273,9 +279,71 @@ export function amendWithAdvantage<T extends Rolled>(r: T, rng: Rng = Math.rando
 			chips.filter((_, k) => k !== index),
 			mod
 		),
-		advantageRoll: { kept, dropped: keptIsFresh ? d20.value : fresh, mode: 1 },
+		advantageRoll: { kept, dropped: keptIsFresh ? d20.value : fresh, mode: 1, original: d20.value },
 		natural: keptIsFresh ? fresh : (r.natural ?? d20.value)
 	};
+}
+
+/**
+ * Flip a roll that two d20 already decided: what was kept is dropped and what was dropped is kept.
+ * No new die — both were rolled the moment advantage was applied, so switching between advantage and
+ * disadvantage is a REINTERPRETATION of dice already on the table, not a re-roll. That is what makes
+ * the d20 pill safe to tap twice: the second tap can't manufacture a better outcome, it can only pick
+ * the other die that was already there.
+ *
+ * Returns null for a roll no pair decided (nothing to flip).
+ */
+export function flipAdvantage<T extends Rolled>(r: T): T | null {
+	const adv = r.advantageRoll;
+	if (!adv) return null;
+	return {
+		...r,
+		total: r.total - adv.kept + adv.dropped,
+		advantageRoll: {
+			kept: adv.dropped,
+			dropped: adv.kept,
+			mode: (adv.mode ?? (adv.kept >= adv.dropped ? 1 : -1)) === 1 ? -1 : 1,
+			...(adv.original !== undefined ? { original: adv.original } : {})
+		},
+		natural: adv.dropped
+	};
+}
+
+/**
+ * Undo a pair: back to the single die that was rolled first, as if advantage had never applied. The
+ * second die really was rolled, and the log entry says the roll was amended — but a control you can
+ * tap by accident has to be recoverable, and being stuck with an advantage you didn't mean is a worse
+ * record than one corrected. Null when there is no pair, or when the entry predates `original`.
+ */
+export function clearAdvantage<T extends Rolled>(r: T): T | null {
+	const adv = r.advantageRoll;
+	if (!adv || adv.original === undefined) return null;
+	const { chips, mod } = parseRollExpr(r.expr);
+	const d20: DieChip = { sides: 20, value: adv.original, sign: 1, detail: `${adv.original}` };
+	const { advantageRoll: _dropped, ...rest } = r;
+	return {
+		...(rest as T),
+		total: r.total - adv.kept + adv.original,
+		expr: formatExpr([d20, ...chips], mod),
+		natural: adv.original
+	};
+}
+
+/**
+ * One tap on the d20, cycling **advantage → disadvantage → neither**. The first tap rolls a second
+ * die and keeps the better; the next picks the other die of that pair; the third puts the roll back
+ * the way it landed. Only the first tap draws a die — the rest reinterpret two that are already on
+ * the table — so tapping can never manufacture a better outcome, and a mis-tap is always one lap from
+ * undone. The whole control in one call, so a caller can't implement half the cycle.
+ *
+ * Null when the roll has no d20 to amend.
+ */
+export function cycleAdvantage<T extends Rolled>(r: T, rng: Rng = Math.random): T | null {
+	if (!r.advantageRoll) return amendWithAdvantage(r, rng);
+	// advantage → disadvantage → neither; an entry with no recorded `original` can only flip
+	return (r.advantageRoll.mode ?? 1) === 1
+		? flipAdvantage(r)
+		: (clearAdvantage(r) ?? flipAdvantage(r));
 }
 
 /** Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat

@@ -6,6 +6,8 @@ import {
 	parseDiceTerm,
 	parseRollExpr,
 	amendWithAdvantage,
+	flipAdvantage,
+	cycleAdvantage,
 	type Rng,
 	type Rolled
 } from './dice';
@@ -59,13 +61,13 @@ describe('rollPool', () => {
 	it('advantage rolls two d20 and keeps the higher, exposing the loser', () => {
 		const r = rollPool({ 20: 1 }, 0, 1, [], rngSequence(0.1, 0.9)); // d20 → 3, then 19
 		expect(r.total).toBe(19);
-		expect(r.advantageRoll).toEqual({ kept: 19, dropped: 3, mode: 1 });
+		expect(r.advantageRoll).toMatchObject({ kept: 19, dropped: 3, mode: 1 });
 	});
 
 	it('disadvantage keeps the lower', () => {
 		const r = rollPool({ 20: 1 }, 0, -1, [], rngSequence(0.1, 0.9));
 		expect(r.total).toBe(3);
-		expect(r.advantageRoll).toEqual({ kept: 3, dropped: 19, mode: -1 });
+		expect(r.advantageRoll).toMatchObject({ kept: 3, dropped: 19, mode: -1 });
 	});
 
 	it('adds signed bonus dice (Bless +1d4 / Bane −1d4)', () => {
@@ -207,14 +209,14 @@ describe('amendWithAdvantage', () => {
 	it('keeps the fresh die when it beats the original, and raises the total by the difference', () => {
 		const out = amendWithAdvantage(rolled('d20(7) +4', 11, 7), () => 0.9); // → 19
 		expect(out).not.toBeNull();
-		expect(out?.advantageRoll).toEqual({ kept: 19, dropped: 7, mode: 1 });
+		expect(out?.advantageRoll).toMatchObject({ kept: 19, dropped: 7, mode: 1 });
 		expect(out?.total).toBe(23);
 		expect(out?.natural).toBe(19);
 	});
 
 	it('keeps the original when the fresh die loses, and the total does not move', () => {
 		const out = amendWithAdvantage(rolled('d20(18) +4', 22, 18), () => 0.1); // → 3
-		expect(out?.advantageRoll).toEqual({ kept: 18, dropped: 3, mode: 1 });
+		expect(out?.advantageRoll).toMatchObject({ kept: 18, dropped: 3, mode: 1 });
 		expect(out?.total).toBe(22);
 		expect(out?.natural).toBe(18);
 	});
@@ -228,7 +230,7 @@ describe('amendWithAdvantage', () => {
 	it('compares what the dice CONTRIBUTE, so a min_die floor is not undone', () => {
 		// Reliable Talent: a natural 3 was floored to 10 and contributed 10; a fresh 7 must not win
 		const out = amendWithAdvantage(rolled('d20(3→10) +5', 15, 3), () => 0.31); // → 7
-		expect(out?.advantageRoll).toEqual({ kept: 10, dropped: 7, mode: 1 });
+		expect(out?.advantageRoll).toMatchObject({ kept: 10, dropped: 7, mode: 1 });
 		expect(out?.total).toBe(15);
 	});
 
@@ -258,5 +260,80 @@ describe('advantageRoll.mode', () => {
 
 	it('a roll amended after the fact is advantage by construction', () => {
 		expect(amendWithAdvantage(rolled('d20(7) +4', 11))?.advantageRoll?.mode).toBe(1);
+	});
+});
+
+/*
+ * Tapping the d20 a second time switches advantage to disadvantage. It reinterprets the pair already
+ * rolled rather than drawing a new die, so the toggle can never manufacture a better result.
+ */
+describe('flipAdvantage', () => {
+	const plain = (expr: string, total: number): Rolled => ({ expr, total });
+
+	it('swaps which of the two dice counted, and moves the total with it', () => {
+		const advantaged = amendWithAdvantage(plain('d20(7) +4', 11), () => 0.9); // 19 kept
+		const flipped = flipAdvantage(advantaged!);
+		expect(flipped?.advantageRoll).toMatchObject({ kept: 7, dropped: 19, mode: -1 });
+		expect(flipped?.total).toBe(11); // back to what the original die scored
+		expect(flipped?.natural).toBe(7);
+	});
+
+	it('flips back, so the control is a toggle and not a one-way door', () => {
+		const once = amendWithAdvantage(plain('d20(7) +4', 11), () => 0.9);
+		const twice = flipAdvantage(flipAdvantage(once!)!);
+		expect(twice?.advantageRoll).toMatchObject({ kept: 19, dropped: 7, mode: 1 });
+		expect(twice?.total).toBe(23);
+	});
+
+	it('still flips the MODE when the two dice tied (the numbers alone can never say which)', () => {
+		const tied = rollPool({ 20: 1 }, 0, 1, [], () => 0.5);
+		const flipped = flipAdvantage(tied);
+		expect(flipped?.advantageRoll?.mode).toBe(-1);
+		expect(flipped?.total).toBe(tied.total);
+	});
+
+	it('refuses a roll no pair decided', () => {
+		expect(flipAdvantage(plain('d20(7) +4', 11))).toBeNull();
+	});
+});
+
+/*
+ * The d20 pill is a three-state control: advantage → disadvantage → neither. Only the first tap draws
+ * a die, so a lap round the cycle can never improve a roll, and a mis-tap is always undoable.
+ */
+describe('cycleAdvantage', () => {
+	const plain = (expr: string, total: number): Rolled => ({ expr, total });
+
+	it('goes advantage → disadvantage → neither, and back to the roll as it landed', () => {
+		const start = plain('d20(7) + d6(3) +4', 14);
+		const adv = cycleAdvantage(start, () => 0.9); // fresh 19 beats 7
+		expect(adv?.advantageRoll).toMatchObject({ kept: 19, dropped: 7, mode: 1, original: 7 });
+		expect(adv?.total).toBe(26);
+
+		const dis = cycleAdvantage(adv!);
+		expect(dis?.advantageRoll).toMatchObject({ kept: 7, dropped: 19, mode: -1 });
+		expect(dis?.total).toBe(14);
+
+		const none = cycleAdvantage(dis!);
+		expect(none?.advantageRoll).toBeUndefined();
+		expect(none?.total).toBe(14); // exactly the roll we started from
+		expect(parseRollExpr(none?.expr ?? '')).toEqual(parseRollExpr(start.expr));
+	});
+
+	it('undoes a NATIVE disadvantage back to the die that was rolled first', () => {
+		const rolled = rollPool({ 20: 1 }, 2, -1, [], rngSequence(0.9, 0.1)); // 19 then 3, keeps 3
+		expect(rolled.advantageRoll).toMatchObject({ kept: 3, dropped: 19, original: 19 });
+		const none = cycleAdvantage(rolled);
+		expect(none?.advantageRoll).toBeUndefined();
+		expect(none?.total).toBe(21); // 19 + 2
+	});
+
+	it('an entry with no recorded original flips instead of getting stuck', () => {
+		const legacy: Rolled = {
+			expr: '+4',
+			total: 7,
+			advantageRoll: { kept: 3, dropped: 18, mode: -1 }
+		};
+		expect(cycleAdvantage(legacy)?.advantageRoll).toMatchObject({ kept: 18, mode: 1 });
 	});
 });

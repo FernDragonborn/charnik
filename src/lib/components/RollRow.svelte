@@ -49,9 +49,21 @@
 	/** Which chip of an attack is THE d20 that decided it — the first positive one, matching what
 	 *  `amendWithAdvantage` picks. -1 when the roll has no d20 to amend. */
 	const d20Index = (a: RollToastAttack) => a.chips.findIndex((c) => c.sides === 20 && c.sign > 0);
-	/** A roll already decided by two dice can't take advantage again. */
-	const canAmend = (a: RollToastAttack) =>
-		!!onAdvantage && a.dropped === undefined && d20Index(a) >= 0;
+	/** Any roll with a d20 can be told how it was rolled — including one a pair already decided, which
+	 *  is the toggle: tapping again switches advantage and disadvantage. */
+	const canAmend = (a: RollToastAttack) => !!onAdvantage && d20Index(a) >= 0;
+	/** The glyph says what the roll IS, not what a tap would make it: a solid triangle pointing the way
+	 *  the advantage goes, or a plain diamond when neither applies. In the neutral state the diamond is
+	 *  also the only thing marking the pill as a control, since there is no frame yet. Single solid
+	 *  shapes on purpose — a two-arrow glyph rendered its arrows at different heights when zoomed. */
+	const cue = (a: RollToastAttack) =>
+		a.advantageMode === 1 ? '▲' : a.advantageMode === -1 ? '▼' : '◆';
+	const cueTitle = (a: RollToastAttack) =>
+		a.advantageMode === 1
+			? 'rolled with advantage — tap for disadvantage'
+			: a.advantageMode === -1
+				? 'rolled with disadvantage — tap to undo'
+				: 'roll a second d20 and keep the better — advantage';
 
 	/**
 	 * One line can hold a bounded number of pills, and a pool is NOT bounded — a Fireball is 8d6, a
@@ -91,8 +103,13 @@
 				<button
 					type="button"
 					class="rt-die d20 control {tone(c)}"
-					title="d{c.sides} · {c.detail} — roll a second d20 and keep the better (advantage)"
-					onclick={() => onAdvantage?.()}>{face(c)}<span class="rt-cue">⇈</span></button
+					title={cueTitle(a)}
+					onclick={() => onAdvantage?.()}
+					>{face(c)}<span
+						class="rt-cue"
+						class:up={a.advantageMode === 1}
+						class:down={a.advantageMode === -1}>{cue(a)}</span
+					></button
 				>
 			{:else}
 				<span class="rt-die {tone(c)}" class:d20={c.sides === 20} title="d{c.sides} · {c.detail}"
@@ -332,9 +349,9 @@
 	.rt-hit.adv,
 	.rt-hit.dis {
 		margin: 2px 0;
-		padding: 3px 6px;
-		border-radius: var(--radius-sm);
-		border: 1px solid var(--color-good);
+		padding: 2px 6px;
+		border-radius: var(--radius-full);
+		border: 2px solid var(--color-good);
 	}
 	.rt-hit.dis {
 		border-color: var(--color-danger);
@@ -401,8 +418,18 @@
 		border-color: var(--color-border-strong);
 		cursor: pointer;
 	}
-	.rt-die.control .rt-cue {
-		color: var(--color-accent-bright);
+	/* No third colour: the glyph takes the colour of the state it reports, so teal and red keep meaning
+	   exactly what they mean on the frame — advantage and disadvantage. The neutral diamond stays
+	   uncoloured, which is why it can be the affordance marker without claiming a state. */
+	.rt-die.control .rt-cue.up {
+		color: var(--color-good);
+	}
+	.rt-die.control .rt-cue.down {
+		color: var(--color-danger);
+	}
+	.rt-cue.up,
+	.rt-cue.down {
+		font-size: 9px;
 	}
 	.rt-die.control:hover {
 		border-color: var(--color-accent);
