@@ -1111,9 +1111,25 @@ holds the done-work log; these are the OPEN tails it carried):**
   patch that failure, retroactive removes its cause.
   **This is the same affordance as UBUG-20's reroll, and that is the point:** the pill is not a one-off
   for one feat, it is the roll card's general interaction model — tap the d20 to change how it was
-  rolled, tap a damage pill to reroll what it dealt. It also pays back the shared toast/log renderer: a
-  transient toast is a poor host for an after-the-fact edit, and the log inherits every pill control for
-  free and permanently, because it is the same component.
+  rolled, tap a damage pill to reroll what it dealt.
+  **WHERE the controls live — settled 2026-08-10, and NOT in the toast.** A toast is a bad host for an
+  edit: it expires mid-decision, older ones get buried by the stack, a 23×22px pill is under the touch
+  target minimum, and making pills interactive collides with click-anywhere-to-dismiss. The maintainer's
+  instinct ("a toast normally closes on click") was right and should be honoured rather than argued
+  around. The host already exists and was overlooked: **`blocks/Playbar.svelte`, the always-visible
+  "last roll" chip.** So — **toast = announcement (no controls, stays a plain dismiss button), Playbar =
+  the live controls on the last roll, log = the same controls on any roll, forever.** All three are the
+  same shared row from UBUG-20, so the controls arrive in each for free.
+  This kills every one of the four toast problems at once rather than mitigating them, and it **deletes
+  the "root-level rework, budget for it" cost recorded in UBUG-20** — with no actions in the toast there
+  is no dismiss collision, so `RollToast` keeps its current structure.
+  **Two consequences to carry:**
+  (a) It partly undoes `1dd9f23` (a roll carrying an action gets `duration: Infinity`). Once the action
+  bar leaves the toast, an endless toast has no reason to exist: the right shape is a non-interactive
+  ↻ MARKER on the pill saying "this can still be amended", and the toast expiring normally at 6s.
+  (b) Playbar is currently a compact 35px line whose left half is the hint *"**Alt + click** (or Ctrl)
+  for advantage / custom dice"* — the very mechanism this item removes. So the space needed to host a
+  roll row is freed by the same decision that needs it. Still a re-layout, not free.
   **Carry:** an amended roll must stay a truthful record — the log entry says it was changed after the
   fact (the existing `savageReroll` "kept X, other roll Y" note is the pattern). Whether the player was
   *entitled* to the advantage is table trust, not ours to police
@@ -1492,13 +1508,22 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [ ] **UBUG-20 · The roll LOG and the dice tray still render rolls as raw `expr` strings — bring them
   to the toast's shape (2026-08-10; lifted out of UBUG-12's tail, where it had been sitting as one
   sentence inside a closed item).** UBUG-12 replaced the toast's formatted string with a real component,
-  but `menus/RollLog.svelte` and `menus/DiceTray.svelte` were left on the OLD rendering — they print the
-  roller's internal `expr` verbatim (`d20(14) +4`, `dmg d8(6) +3 slashing: 9`, a separate dimmed
-  `drop d20(N)` line), which is the exact run-on-string problem the toast was rebuilt to fix. So the
-  same roll now reads two different ways depending on where you look at it, and the log — the surface
-  you go to precisely to re-read a roll — is the WORSE of the two. Wanted: the same vocabulary as the
-  toast — a chip per die, the dropped adv/disadv die struck through beside the kept one, damage as
-  glyph + pill per type (`DamageIcon`), nat 20/nat 1 tinting, the upcast `note`.
+  but **three** other surfaces were left on the OLD rendering — they print the roller's internal `expr`
+  verbatim (`d20(14) +4`, `dmg d8(6) +3 slashing: 9`, a separate dimmed `drop d20(N)` line), which is
+  the exact run-on-string problem the toast was rebuilt to fix. So the same roll now reads several
+  different ways depending on where you look at it, and the log — the surface you go to precisely to
+  re-read a roll — is worse than the toast. Wanted: the same vocabulary as the toast — a chip per die,
+  the dropped adv/disadv die struck through beside the kept one, damage as glyph + pill per type
+  (`DamageIcon`), nat 20/nat 1 tinting, the upcast `note`.
+  **The three surfaces, worst first:**
+  1. **`blocks/Playbar.svelte`** — the always-visible "last roll" chip, and the worst of the three
+     because it doesn't merely render badly, it **loses the roll**. It prints `label + expr + total`,
+     and on an advantage/disadvantage roll the d20 is NOT in `expr` (it lives in `advantageRoll`), so
+     the chip reads `Last · Greataxe +6 = 9` — the die that decided the attack is simply absent.
+     It also ignores `entry.damage` entirely, so for an attack it shows the to-hit total and never the
+     damage, which is the number the player actually wants. Screenshot-confirmed 2026-08-10.
+  2. **`menus/RollLog.svelte`** — the history menu; raw `expr` per line plus a dimmed `drop d20(N)`.
+  3. **`menus/DiceTray.svelte`** — the tray's own result readout; same raw `expr` shape.
   **DECIDED (maintainer, 2026-08-10): ONE shared renderer, and the contract is 100% identical** — the log
   row is the same component as the toast, not a lookalike that borrows its parts. So extract the card's
   inner grid as a shared `RollRow` over `RollToastModel` and let both mount it; everything that differs
@@ -1537,11 +1562,13 @@ holds the done-work log; these are the OPEN tails it carried):**
   requirement is not "don't make pills clickable" but **"a re-rollable pill must look like a control"** —
   its own border, hover, cursor, ↻; non-eligible pills stay inert and unchanged. Then it reads as a
   button standing ON the object it acts on, not as a click somewhere in the toast.
-  **Known structural cost:** the card is currently a `<button>` and IS the dismiss target, and a button
-  cannot nest in a button — so interactive pills force the card to become a container whose click
-  handler ignores clicks on interactive descendants, PLUS a real close button (there is none today; the
-  whole card was it, which also leaves keyboard/AT users with no labelled dismiss). Click-anywhere-to-
-  dismiss survives. This is a root-level rework of the component, not a tweak — budget for it.
+  ~~**Known structural cost:** the card is a `<button>` and IS the dismiss target, and a button cannot
+  nest in a button, so interactive pills force a root-level rework.~~ **WITHDRAWN 2026-08-10** — UX-3
+  settled that the controls live in the Playbar and the log, NOT in the toast, so the toast keeps no
+  interactive descendants and its structure is untouched. **One real finding survives from that
+  analysis:** the toast has **no labelled close control at all** — the whole card is the button — so
+  keyboard and screen-reader users have no dismiss affordance. Fix that on its own merits, independent
+  of anything here.
   Teaching the pill affordance is explicitly NOT onboarding's job (see UX-2 §1): if it needs explaining,
   the styling failed.
   **Blocked on UBUG-11** for the volley roller: a per-attack chooser cannot be exercised, and must not
