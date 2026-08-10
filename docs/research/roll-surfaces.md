@@ -105,6 +105,68 @@ both), *Advantage Toggle*, *Query Advantage* (prompt on every roll), *Never Roll
 **right-click on desktop or long-press on mobile**, then picking the option from the menu. Same
 mental model on both inputs, no per-row control, no modifier.
 
+## Part 3 — what the Foundry module ecosystem is actually fixing
+
+A caveat on popularity first: **no reliable install-count ranking was obtainable.** Foundry's own
+year-in-review reports only that a typical user runs ~19 modules, and names Midi-QOL and Dice So Nice
+among the popular ones. What follows is therefore read from *what the modules do and how many
+independently attack the same problem* — which is itself the signal, not a substitute for it.
+
+### The complaint: too many clicks, in too many places
+
+Core dnd5e takes roughly **four clicks in three different locations** to resolve one attack: click
+the attack on the sheet → pick normal/advantage/disadvantage in a dialog → find the result in chat →
+click "damage" there → pick normal/critical. This is the ecosystem's central grievance and it has
+produced a whole family of independent fixes:
+
+- **Faster Rolling by Default** — *inverts the prompt*: never ask, unless Shift is held.
+- **RSReforged** (maintained fork of **Ready Set Roll**) — skill/save/attack/damage straight to chat,
+  no dialog; attack and damage in one card with per-target apply buttons.
+- **Better Rolls 5e** (now unmaintained) — attack grouped with damage in one card.
+- **Minimal Rolling Enhancements (MRE)** — configurable modifier keys for the same.
+
+**This validates Charnik's existing default rather than challenging it:** tap = roll instantly, and
+the to-hit + every damage type arrive in ONE card. That is the destination four separate modules are
+trying to reach from the other direction. Do not regress toward a pre-roll dialog.
+
+### The genuinely important find: RETROACTIVE advantage
+
+There is a dedicated, actively maintained module — **Retroactive Advantage DnD5e** — whose entire
+purpose is buttons **on the result card** that change a d20 roll's advantage state *after* it was
+rolled, reusing the dice already rolled. The same feature is built into **Ready Set Roll** and
+**RSReforged**, the latter also offering "promote a hit to a critical" and "change which die is kept".
+Three independent implementations of one idea is a strong demand signal.
+
+**Why this matters more than it first looks: retroactive advantage is not a fudge, it is RAW-exact.**
+The rule says roll a second d20 and use the higher. Rolling that second d20 *after* the first changes
+nothing mechanically — so a player who learns mid-resolution that they had advantage (which is how
+tables actually play; the DM says it after the die is already on the table) can have it applied with
+no fiction broken and no re-roll of the original.
+
+### What that does to the advantage problem
+
+It **dissolves** it rather than solving it. The armed three-state toggle proposed earlier (Roll20's
+"Advantage Toggle") exists to capture a decision *before* the roll — and its documented failure mode
+is that people forget it is armed. If advantage can be applied *after*, there is nothing to arm,
+nothing to forget, no per-row control, no mode, and no pre-roll gesture at all:
+
+> Roll. If it turns out to have been advantaged, tap the d20 pill and a second d20 joins it.
+
+That is zero interface space, works identically with a mouse and a finger, needs no modifier key, and
+needs no tutorial provided the pill looks like a control. **It also unifies with the Savage Attacker
+reroll already designed** (PLAN UBUG-20): the pill is not a one-off affordance for one feat, it is the
+general interaction model of a roll card — click the d20 to change how it was rolled, click a damage
+pill to reroll what it dealt.
+
+**And it retroactively justifies the shared toast/log renderer.** A transient toast is a poor host for
+an after-the-fact edit; the log is permanent and, being the same component, inherits every pill
+control for free and forever. The decision to share the renderer pays for itself here.
+
+**Caveat to carry:** an edited roll must stay a truthful record — the log entry should say the roll was
+changed after the fact (the existing `savageReroll` note pattern, "kept X, other roll Y"). Whether a
+player is *entitled* to the advantage is a table-trust question, not ours to police
+([[play-tracker-surfaces-never-forces]]).
+
 ## What this settles for Charnik
 
 1. **The touch question has an industry answer and it is not a per-row button.** Long-press is the
@@ -112,14 +174,15 @@ mental model on both inputs, no per-row control, no modifier.
    proposal costs zero interface space on either input.
 2. **A modifier should map to an outcome, not to a configurator.** If a modifier survives at all it
    should be "roll with advantage", not "open the tray".
-3. **The armed three-state control is proven** (Roll20 "Advantage Toggle"). Charnik's intended
-   deviation is that it should **auto-reset after one roll** — a charge, not a mode — which Roll20's
-   version does not do; theirs is persistent and users do forget it is on (their forums carry
-   "keeps rolling with advantage" threads). Auto-reset is the fix for the failure mode their design
-   demonstrably has.
-4. **Do not hardcode one strategy.** Roll20 needed four; Foundry needed rebindable keys. Charnik does
-   not need four settings, but it should pick a default that is safe when forgotten — which again
-   argues for the auto-resetting charge over a persistent mode.
+3. **The armed three-state control is proven but SUPERSEDED — see Part 3.** Roll20's "Advantage
+   Toggle" ships it, and its documented failure is that people forget it is armed ("keeps rolling with
+   advantage" threads). An auto-resetting charge would patch that failure; **retroactive advantage
+   removes the failure's cause instead**, and costs no interface at all. Prefer retroactive.
+4. **Do not hardcode one strategy.** Roll20 needed four settings; Foundry needed rebindable keys. The
+   lesson is not "add settings" but "pick a default that is harmless when the user does nothing" — and
+   a roll that can be amended afterwards is exactly that.
+5. **Don't regress toward a pre-roll dialog.** Four separate Foundry modules exist to escape one
+   (Part 3). Charnik's instant tap + one combined card is already where they are heading.
 
 ## Sources
 
@@ -154,3 +217,21 @@ Part 2:
   <https://www.dndbeyond.com/forums/d-d-beyond-general/d-d-beyond-feedback/digital-dice-feedback/66074-roll-with-advantage-or-disadvantage>
 - D&D Beyond — Digital Dice on the mobile app:
   <https://www.dndbeyond.com/posts/920-digital-dice-are-now-live-on-the-mobile-app>
+
+Part 3:
+
+- dnd5e issue — redundant clicks rolling items from the sheet:
+  <https://github.com/foundryvtt/dnd5e/issues/4459>
+- dnd5e issue — attack/damage buttons on the inventory tab:
+  <https://github.com/foundryvtt/dnd5e/issues/3022>
+- Faster Rolling by Default (invert the prompt; Shift to ask):
+  <https://foundryvtt.com/packages/faster-rolling-by-default-5e>
+- RSReforged (maintained fork of Ready Set Roll): <https://foundryvtt.com/packages/rsreforged> ·
+  <https://github.com/arrowedisgaming/RSReforged>
+- Better Rolls 5e (unmaintained; attack grouped with damage):
+  <https://github.com/RedReign/FoundryVTT-BetterRolls5e>
+- **Retroactive Advantage DnD5e** — change a d20 roll's advantage state from the chat card:
+  <https://foundryvtt.com/packages/retroactive-advantage-5e> ·
+  <https://github.com/ElfFriend-DnD/foundryvtt-retroactive-advantage-5e>
+- Foundry VTT Year in Review 2026 (module counts; no per-module install ranking published):
+  <https://www.enworld.org/threads/foundry-vtt-year-in-review-2026-most-popular-game-systems.719217/>

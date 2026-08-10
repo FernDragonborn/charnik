@@ -1088,6 +1088,38 @@ holds the done-work log; these are the OPEN tails it carried):**
   translate?)`) OR allow `get(_)` in a VM (a VM is the UI layer, not rules-core, so `get(_)` is
   defensible — but it's not the established pattern). UA copy uses formal «ви» ([[uk-formal-vy]]).
   **Do UX-1 first** — translating copy that's about to be rewritten costs the UA pass twice.
+- [ ] **UX-3 · Roll access: retroactive advantage instead of a pre-roll gesture (design settled
+  2026-08-10, evidence in [`docs/research/roll-surfaces.md`](research/roll-surfaces.md)).** The problem:
+  `Alt/Ctrl-click` on a stat opens the roll tray, and the app is explicitly used on a phone where
+  modifiers do not exist — so the tray's contents are unreachable on touch. Three findings reshaped the
+  answer, in order:
+  1. **Nobody binds a gesture to "open the configurator"** — Foundry, Roll20 and D&D Beyond all bind it
+     to the OUTCOME (roll with advantage / disadvantage). For a skill/save/ability row the pool is
+     always 1d20, so the tray holds exactly two things, advantage and a manual modifier, and advantage
+     dominates. Access belongs to the frequent OPTION, not to the box holding it.
+  2. **The touch answer is settled and needs no interface space**: right-click on desktop = long-press
+     on touch, one menu, which is exactly what D&D Beyond ships for exactly this. No per-row control.
+  3. **Retroactive advantage dissolves the problem entirely.** A dedicated Foundry module exists for
+     nothing else, and two more bundle it. It is **RAW-exact, not a fudge** — the rule says roll a
+     second d20 and take the higher, and rolling it after the first changes nothing mechanically. Which
+     matches how tables actually play: the DM says "that has advantage" once the die is already down.
+  **Decision:** no armed toggle, no mode, no pre-roll gesture, no per-row button. **Roll. If it turns
+  out to have been advantaged, tap the d20 pill and a second d20 joins it.** Zero interface space,
+  identical on mouse and finger, no modifier, and nothing to teach provided the pill looks like a
+  control. This supersedes the armed three-state charge considered earlier: Roll20 ships that (their
+  "Advantage Toggle") and its documented failure is that people forget it is armed — auto-reset would
+  patch that failure, retroactive removes its cause.
+  **This is the same affordance as UBUG-20's reroll, and that is the point:** the pill is not a one-off
+  for one feat, it is the roll card's general interaction model — tap the d20 to change how it was
+  rolled, tap a damage pill to reroll what it dealt. It also pays back the shared toast/log renderer: a
+  transient toast is a poor host for an after-the-fact edit, and the log inherits every pill control for
+  free and permanently, because it is the same component.
+  **Carry:** an amended roll must stay a truthful record — the log entry says it was changed after the
+  fact (the existing `savageReroll` "kept X, other roll Y" note is the pattern). Whether the player was
+  *entitled* to the advantage is table trust, not ours to police
+  ([[play-tracker-surfaces-never-forces]]). The manual-modifier case stays rare and stays in the
+  context menu. **Do not regress toward a pre-roll dialog** — four separate Foundry modules exist to
+  escape one, and Charnik's instant tap into one combined card is already where they are heading.
 - [ ] **UX-2 · First-run onboarding — DEFERRED, not a priority (maintainer, 2026-08-10; recorded so the
   need doesn't get re-derived from scratch each time a non-obvious affordance ships).** The trigger: the
   app keeps accumulating things a first-time user cannot deduce (Alt/Ctrl-click a stat to open the roll
