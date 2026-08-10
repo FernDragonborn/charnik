@@ -1207,6 +1207,17 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
+- [ ] **UBUG-22 · `rollFormula` silently drops a flat modifier that isn't at the end of the formula
+  (found in the roller audit 2026-08-10).** `rollFormula('1d6+3+1d4')` totals **10, not 13** — proven
+  with maximal dice. `parseDicePool` collects every `NdM` group, but the flat modifier is read by a
+  TAIL regex (`/([+-]\s*\d+)\s*$/`), so any `+N` with a dice term after it is simply lost.
+  **Why it matters: it is reachable from CONTENT, not just from a typed formula.** `RollButton` rolls
+  formulas straight out of compendium CSVs, and `heal:<formula>` arrives from a `resource_option.action`
+  cell — so a homebrew author writing `heal:1d8+2+1d4` gets a quietly smaller heal with no warning.
+  Same failure class as UBUG-21 and the reason for the never-a-silently-wrong-number rule.
+  **Fix independently of the roller rewrite** — it is a parse bug, not a shape problem: sum every
+  signed standalone term instead of reading only the tail, and cover `1d6+3+1d4`, `2d6-1`, a bare
+  `+3`, and a modifier before any dice. Listed as slice 1 in [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md).
 - [ ] **UBUG-21 · The dice tray edits the TO-HIT while claiming to be the attack — dice and modifier
   you add for damage land on the d20 instead (reported by the maintainer 2026-08-10, long-standing;
   `design-preview/dice-bug.png`). Fix WITH `ROLLER-N`, below — same seam, and pointless to build twice.**
@@ -1228,7 +1239,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   ([[charnik-dicetray-attack-damage-concept]]). Building it here first would build it twice.
   **Interim honesty option if the roller slips:** label the pool "to hit" and render the queued damage
   visible-but-read-only. Cheap, stops the silent-wrong-roll, and pre-builds no structure.
-- [ ] **ROLLER-N · one roller that fires N independent sub-rolls (promoted to its own item 2026-08-09).**
+- [ ] **ROLLER-N · one roller that fires N independent sub-rolls (promoted to its own item 2026-08-09;
+  working ledger + the 2026-08-10 audit behind it → [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md)).**
   Was filed as a sub-tail of UPCAST (`UPCAST-ROLLER`, was D14) — the wrong home, because upcast is only
   one of its callers. **The capability:** N sub-rolls from one action, each its OWN to-hit + damage (own
   advantage, own crit, own target), rendered as one grouped result. **Callers, all blocked on this and
@@ -1241,7 +1253,11 @@ holds the done-work log; these are the OPEN tails it carried):**
   the failure mode to avoid. **Carries `UBUG-21` with it** (above): the tray only ever built the
   to-hit half, so the sub-roll model this item introduces is the same one that fixes it — close them
   together.
-  **Also fold the advantage two-state while in here (maintainer, 2026-08-10).** One fact is currently
+  **The audit says the shape itself is what aged** — the roller answers with a formatted STRING that
+  the UI parses back, so provenance, damage type and crit-doubling have nowhere to live, and the
+  advantage amend/undo does string surgery. Details, decisions and slices are in `ROLLER-PLAN.md`;
+  the two items below are the ones already agreed.
+  **Fold the advantage two-state while in here (maintainer, 2026-08-10).** One fact is currently
   spelled twice under two names — `AdvantageRoll.mode?: 1 | -1` on the rolled result and
   `RollToastAttack.advantageMode?: 1 | -1` on the view model, the second re-derived from the first
   with a legacy fallback. That breaks [[one-name-per-fact]], and both are two-state where a named
@@ -1254,7 +1270,13 @@ holds the done-work log; these are the OPEN tails it carried):**
     into `log.jsonl`, where `-1` tells a reader nothing.
   **Do NOT convert the input axis with it.** `rollPool(advantage)` / `netAdvantage(fx)` use −1 · 0 ·
   +1 as arithmetic that sums and clamps across effects; that is a different fact from "how this roll
-  was decided", and it stays numeric. Only the RESULT's record becomes a named member. Contract `DiceTrayRequest.instances` is already fixed; the loop + the
+  was decided", and it stays numeric. Only the RESULT's record becomes a named member.
+  **The rolled dice must SURVIVE a state change (maintainer, 2026-08-10) — and today they don't.**
+  Cycling back to neutral drops the second d20 from the record, so the next tap draws a fresh one and
+  a player who keeps cycling keeps getting new dice to pick from. That defeats the exact property the
+  control was justified with. The fix is that a roll records the dice it drew and the mode merely
+  selects which counts — NOT pre-rolling two batches for every roll, which would draw dice nobody
+  asked for and change the RNG consumption of every roll in the app (`ROLLER-PLAN.md` has the shape). Contract `DiceTrayRequest.instances` is already fixed; the loop + the
   grouped roll/toast/log rendering are unbuilt. The reminder text stays the fallback for what the roller
   can't express. Ties [[charnik-dicetray-attack-damage-concept]] + the RollToast row model (UBUG-12).
 - [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from

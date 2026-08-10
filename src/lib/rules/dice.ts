@@ -38,8 +38,9 @@ export interface Rolled {
 	expr: string;
 	/** Present only when an advantage/disadvantage d20 was rolled. */
 	advantageRoll?: AdvantageRoll;
-	/** The NATURAL face of the first d20 (post reroll/floor, pre modifiers) — for nat-1/nat-20
-	 *  outcomes (death saves, crits). Present only when the pool rolled a d20. */
+	/** The NATURAL face of the first d20 — after a reroll, BEFORE a `min_die` floor, before modifiers.
+	 *  Pre-floor on purpose: Reliable Talent's "treat a d20 below 10 as 10" must not erase a natural 1.
+	 *  Drives nat-1/nat-20 outcomes (death saves, crits). Present only when the pool rolled a d20. */
 	natural?: number;
 }
 
