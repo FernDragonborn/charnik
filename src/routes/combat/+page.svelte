@@ -102,13 +102,16 @@
 
 	<Controls {c} />
 
-	{#if c.play.inCombat}
-		<Turnbar {c} />
-	{:else if combat.hasTimedEffects}
-		<TimeSkip />
-	{/if}
-
-	<Playbar />
+	<!-- the turn/time bar and the last-roll strip share ONE row: both are one-line status strips, and
+	     stacked they left a wide empty band down the middle of an already-crowded screen -->
+	<div class="statusrow">
+		{#if c.play.inCombat}
+			<Turnbar {c} />
+		{:else if combat.hasTimedEffects}
+			<TimeSkip />
+		{/if}
+		<Playbar />
+	</div>
 
 	<CombatStrip {s} />
 
@@ -141,6 +144,17 @@
 {/if}
 
 <style>
+	/* one line: whichever bar is showing takes the space it needs, the last roll takes the rest */
+	.statusrow {
+		display: flex;
+		align-items: stretch;
+		flex-wrap: wrap;
+		gap: 10px;
+		margin-bottom: 18px;
+	}
+	.statusrow > :global(:first-child:not(:last-child)) {
+		flex: 1 1 320px;
+	}
 	/* Two flex columns (not multicol): drag-safe with svelte-dnd-action, packs tight
 	   top-to-bottom so a block's height never bumps another into the next column. */
 	.panels {

@@ -37,14 +37,12 @@
 <div class="playbar">
 	<div class="lastroll" class:empty={!last}>
 		{#if last}
-			<!-- RollRow renders sibling spans (name · grid · note); they stack, as in the toast card -->
-			<div class="rollwrap">
-				<RollRow
-					model={rollToastModel(last)}
-					onAdvantage={() => combat.tray.amendAdvantage(last)}
-					{rerollDamage}
-				/>
-			</div>
+			<RollRow
+				model={rollToastModel(last)}
+				onAdvantage={() => combat.tray.amendAdvantage(last)}
+				{rerollDamage}
+				line
+			/>
 		{:else}
 			<span class="noroll">Tap any check · save · attack · spell to roll it.</span>
 		{/if}
@@ -55,27 +53,21 @@
 </div>
 
 <style>
+	/* the page puts this in a row beside the turn/time bar, so the strip owns no outer spacing and
+	   takes only the width its roll needs (the bar beside it absorbs the rest) */
 	.playbar {
 		display: flex;
-		align-items: flex-start;
-		justify-content: flex-end;
-		margin-bottom: 22px;
+		min-width: 0;
 	}
-	/* sizes to the roll it holds, exactly like the toast card — same content, same shape */
 	.lastroll {
 		display: flex;
 		align-items: stretch;
+		min-width: 0;
 		max-width: 100%;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
 		overflow: hidden;
-	}
-	.rollwrap {
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		min-width: 0;
 	}
 	.noroll {
 		display: flex;

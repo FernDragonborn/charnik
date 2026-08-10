@@ -18,7 +18,8 @@
 	let {
 		model,
 		onAdvantage,
-		rerollDamage
+		rerollDamage,
+		line = false
 	}: {
 		model: RollToastModel;
 		/** Present → the d20 pill becomes a control that applies advantage AFTER the fact (UX-3): tap
@@ -31,6 +32,11 @@
 		 *  by position because that is the RAW unit — "reroll the weapon's damage dice" is one damage
 		 *  part is one pill — rather than a bar under a row that can't say which row it means. */
 		rerollDamage?: { attack: number; part: number; label: string; run: () => void } | undefined;
+		/** Lay the SAME content out on one line instead of as a card. This is not the density variant
+		 *  the design rejected — nothing is dropped or summarised, the identical DOM just flows in a row
+		 *  with the column captions folded away, because a caption row can't exist in a 35px strip. The
+		 *  Playbar is one line of an already-crowded screen; the toast and the log have room for a card. */
+		line?: boolean;
 	} = $props();
 
 	const attacks = $derived(model.attacks);
@@ -103,54 +109,106 @@
 	</span>
 {/snippet}
 
-<span class="rt-name">{model.label}</span>
-<span class="rt-grid" class:damaging={model.damaging} class:multi>
-	<!-- the captions name the two NUMBERS, not the dice: "to hit" spans the dice columns so its
-	     own width can't widen them, and lands on the to-hit total's right edge. -->
-	{#if model.damaging}
-		<span class="rt-cap hit eyebrow">to hit</span>
-		<span></span>
-		<span class="rt-cap eyebrow">damage</span>
-	{/if}
-	{#each attacks as a, i (i)}
-		{#if multi}<span class="rt-idx" class:gold={a.natural === 20}>{i + 1}</span>{/if}
-		{@render hitDice(a)}
+<div class="rollrow" class:line>
+	<span class="rt-name">{model.label}</span>
+	<span class="rt-grid" class:damaging={model.damaging} class:multi>
+		<!-- the captions name the two NUMBERS, not the dice: "to hit" spans the dice columns so its
+		     own width can't widen them, and lands on the to-hit total's right edge. -->
 		{#if model.damaging}
-			<span class="rt-sub" class:gold={a.natural === 20} class:bad={a.natural === 1}
-				>{a.subtotal}</span
-			>
-			<span class="rt-dmg">
-				{#if a.natural === 1}
-					<span class="rt-none">—</span>
-				{:else}
-					{#each a.damage as d, j (j)}{@render damagePart(d, i, j)}{/each}
-				{/if}
-			</span>
+			<span class="rt-cap hit eyebrow">to hit</span>
+			<span></span>
+			<span class="rt-cap eyebrow">damage</span>
 		{/if}
-		<span
-			class="rt-tot"
-			class:big={!multi}
-			class:gold={a.natural === 20}
-			class:bad={a.natural === 1}
-		>
-			{#if !model.damaging}{a.subtotal}{:else if a.natural === 1}<span class="rt-miss">miss</span
-				>{:else}{a.damageTotal}{/if}
-		</span>
-	{/each}
-	{#if multi}
-		<span class="rt-bytype">
-			{#each model.byType as t, i (i)}
-				<span class="rt-typesum" title={t.type || undefined}>
-					<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
+		{#each attacks as a, i (i)}
+			{#if multi}<span class="rt-idx" class:gold={a.natural === 20}>{i + 1}</span>{/if}
+			{@render hitDice(a)}
+			{#if model.damaging}
+				<span class="rt-sub" class:gold={a.natural === 20} class:bad={a.natural === 1}
+					>{a.subtotal}</span
+				>
+				<span class="rt-dmg">
+					{#if a.natural === 1}
+						<span class="rt-none">—</span>
+					{:else}
+						{#each a.damage as d, j (j)}{@render damagePart(d, i, j)}{/each}
+					{/if}
 				</span>
-			{/each}
-		</span>
-		<span class="rt-tot big grand">{model.total}</span>
-	{/if}
-</span>
-{#if model.note}<span class="rt-note">⇡ {model.note}</span>{/if}
+			{/if}
+			<span
+				class="rt-tot"
+				class:big={!multi}
+				class:gold={a.natural === 20}
+				class:bad={a.natural === 1}
+			>
+				{#if !model.damaging}{a.subtotal}{:else if a.natural === 1}<span class="rt-miss">miss</span
+					>{:else}{a.damageTotal}{/if}
+			</span>
+		{/each}
+		{#if multi}
+			<span class="rt-bytype">
+				{#each model.byType as t, i (i)}
+					<span class="rt-typesum" title={t.type || undefined}>
+						<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
+					</span>
+				{/each}
+			</span>
+			<span class="rt-tot big grand">{model.total}</span>
+		{/if}
+	</span>
+	{#if model.note}<span class="rt-note">⇡ {model.note}</span>{/if}
+</div>
 
 <style>
+	/* the roll owns its own stacking now — a mounting surface just gives it a box, it doesn't have to
+	   know that a roll is three sibling spans */
+	.rollrow {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+	}
+	/* one line: the label sits beside the numbers, the column captions fold away (they title columns
+	   that no longer exist as a grid), and the totals stop being display-sized */
+	.rollrow.line {
+		flex-direction: row;
+		align-items: center;
+	}
+	.line .rt-name {
+		flex: none;
+		padding: 8px 4px 8px 13px;
+	}
+	.line .rt-grid,
+	.line .rt-grid.damaging,
+	.line .rt-grid.multi {
+		display: flex;
+		align-items: center;
+		gap: 9px;
+		padding: 0 4px;
+	}
+	.line .rt-cap {
+		display: none;
+	}
+	.line .rt-hit,
+	.line .rt-dmg {
+		padding: 0;
+		border-left: 0;
+	}
+	.line .rt-sub {
+		padding-right: 0;
+	}
+	.line .rt-tot,
+	.line .rt-tot.big {
+		padding: 0 0 0 9px;
+		font-size: var(--font-size-body);
+		border-left: 1px solid var(--color-border);
+	}
+	.line .rt-note {
+		flex: 1;
+		min-width: 0;
+		padding: 0 12px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 	.rt-name {
 		padding: 11px 16px 9px;
 		font-family: var(--font-display);

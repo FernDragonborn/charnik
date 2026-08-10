@@ -56,10 +56,7 @@
 	.logscroll {
 		padding: 0 6px 4px;
 	}
-	/* one entry: the shared roll row (a flex column of spans) plus whatever this surface adds to it */
 	.log-row {
-		display: flex;
-		flex-direction: column;
 		padding: 2px 0;
 		border-top: 1px solid var(--color-border);
 	}

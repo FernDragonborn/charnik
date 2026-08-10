@@ -196,7 +196,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
-| **RollRow** | `model`, `onAdvantage`, `rerollDamage` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
+| **RollRow** | `model`, `onAdvantage`, `rerollDamage`, `line` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
 | **RollToast** | `model`, `closeToast` | The dice-roll toast — CHROME around a `RollRow`, nothing more. |
 | **SchemaDiscardDialog** | `drafts`, `onDiscard`, `onKeep` |  |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |

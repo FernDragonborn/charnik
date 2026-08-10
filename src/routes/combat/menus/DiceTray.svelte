@@ -197,10 +197,8 @@
 		padding: 9px 12px;
 		cursor: pointer;
 	}
-	/* the readout is a flex column of the row's spans, ruled off from the builder above it */
+	/* the readout, ruled off from the builder above it */
 	.roll-history {
-		display: flex;
-		flex-direction: column;
 		border-top: 1px solid var(--color-border);
 		margin: 10px -12px -12px;
 		padding-top: 3px;
