@@ -1,98 +1,146 @@
 <script lang="ts">
-	// DEV-ONLY preview of the roll toast (design 5A). Toasts are transient and RNG-driven, so every
-	// shape (one-liner → attack with advantage → multi-type damage → nat 20 / nat 1) is rendered here
-	// from fixed rolls as a static ladder, plus buttons that fire the real thing through toastRoll.
-	// Not linked from the app; gated to dev builds by /dev/+layout.
+	// DEV-ONLY preview of the roll toast (final design — design-preview/toast-update). Toasts are
+	// transient and RNG-driven, so every shape (bare check → attack → crit → miss → a flurry of
+	// three) is rendered here from fixed rolls as a static ladder, plus buttons that fire the real
+	// thing through toastRoll. Not linked from the app; gated to dev builds by /dev/+layout.
 	import RollToast from '$lib/components/RollToast.svelte';
 	import { rollToastModel, toastRoll, type RollToastAction } from '$lib/dice/roll-toast';
 	import { toast } from 'svelte-sonner';
 	import type { RollLogEntry } from '$lib/combat/helpers';
 
-	// hand-built entries in exactly the shape pushRoll stores (expr strings straight from rollPool)
-	const CASES: { title: string; entry: RollLogEntry; action?: RollToastAction }[] = [
-		{
-			title: 'one roll, no types — the one-liner',
-			entry: { label: 'Perception', expr: 'd20(14) +4', total: 18 }
-		},
-		{
-			title: 'attack with advantage — the dropped die stays visible',
-			entry: {
-				label: 'Longsword — to hit',
-				expr: ' +5',
-				total: 19,
-				advantageRoll: { kept: 14, dropped: 7 },
-				natural: 14
-			}
-		},
-		{
-			title: 'two damage types — labels switch on, subtotals go subordinate',
-			entry: {
-				label: 'Flame Tongue',
-				expr: 'd20(11) +6',
-				total: 17,
-				damage: [
-					{ type: 'slashing', expr: 'd8(6) +3', total: 9 },
-					{ type: 'fire', expr: 'd6(3)', total: 3 }
-				]
-			}
-		},
-		{
-			title: 'nat 20 — the card, the summary and the die all re-tint',
-			entry: {
-				label: 'Divine Smite',
-				expr: ' +7',
-				total: 27,
-				advantageRoll: { kept: 20, dropped: 9 },
-				natural: 20,
-				damage: [
-					{ type: 'slashing', expr: 'd8(6) + d8(2) +4', total: 12 },
-					{ type: 'radiant', expr: 'd8(7) + d8(5) + d8(2) + d8(8)', total: 22 }
-				]
-			}
-		},
-		{
-			title: 'nat 1',
-			entry: {
-				label: 'Stealth',
-				expr: ' +3',
-				total: 4,
-				advantageRoll: { kept: 1, dropped: 11 },
-				natural: 1
-			}
-		},
-		{
-			title: 'a roll that offers a follow-up — the offer rides the roll it belongs to',
-			entry: {
-				label: 'Greataxe',
-				expr: ' +6',
-				total: 15,
-				advantageRoll: { kept: 9, dropped: 14 },
-				natural: 9,
-				damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }]
+	// hand-built entries in exactly the shape pushRoll stores (expr strings straight from rollPool);
+	// an array of them is one action that resolved several attacks (Extra Attack / Flurry of Blows)
+	const CASES: { title: string; entry: RollLogEntry | RollLogEntry[]; action?: RollToastAction }[] =
+		[
+			{
+				title: 'one roll, no damage — the toast has no damage half at all',
+				entry: { label: 'Perception', expr: 'd20(14) +4', total: 18 }
 			},
-			action: {
-				label: '↻ Savage Attacker — reroll damage, keep the higher',
-				run: () => toast('(preview) the offer ran')
+			{
+				title: 'a plain attack — one line, one damage type',
+				entry: {
+					label: 'Longsword',
+					expr: 'd20(14) +7',
+					total: 21,
+					natural: 14,
+					damage: [{ type: 'slashing', expr: 'd8(8) +4', total: 12 }]
+				}
+			},
+			{
+				title: 'advantage — the die that lost stays visible, struck through',
+				entry: {
+					label: 'Longsword',
+					expr: ' +5',
+					total: 19,
+					advantageRoll: { kept: 14, dropped: 7 },
+					natural: 14,
+					damage: [{ type: 'slashing', expr: 'd8(6) +3', total: 9 }]
+				}
+			},
+			{
+				title: 'nat 20 — the line goes gold, the doubled dice share one pill',
+				entry: {
+					label: 'Rapier',
+					expr: 'd20(20) +9',
+					total: 29,
+					natural: 20,
+					damage: [{ type: 'piercing', expr: 'd8(7) + d8(5) +5', total: 17 }]
+				}
+			},
+			{
+				title: 'a second damage type — its own glyph in the same line, not a second line',
+				entry: {
+					label: 'Flame Tongue',
+					expr: 'd20(11) +8',
+					total: 19,
+					natural: 11,
+					damage: [
+						{ type: 'slashing', expr: 'd8(6) +4', total: 10 },
+						{ type: 'fire', expr: 'd6(4) + d6(5)', total: 9 }
+					]
+				}
+			},
+			{
+				title: 'nat 1 — the one miss callable without knowing the target’s AC',
+				entry: {
+					label: 'Shortbow',
+					expr: 'd20(1) +6',
+					total: 7,
+					natural: 1,
+					damage: [{ type: 'piercing', expr: 'd6(5) +4', total: 9 }]
+				}
+			},
+			{
+				title: 'a flurry — a line per attack, then the per-type footer and the one big number',
+				entry: [
+					{
+						label: 'Flurry of Blows',
+						expr: 'd20(13) +7',
+						total: 20,
+						natural: 13,
+						damage: [
+							{ type: 'bludgeoning', expr: 'd6(5) +4', total: 9 },
+							{ type: 'radiant', expr: 'd4(3)', total: 3 },
+							{ type: 'psychic', expr: 'd4(4)', total: 4 }
+						]
+					},
+					{
+						label: 'Flurry of Blows',
+						expr: 'd20(4) +7',
+						total: 11,
+						natural: 4,
+						damage: [
+							{ type: 'bludgeoning', expr: 'd6(7) +4', total: 11 },
+							{ type: 'radiant', expr: 'd4(2)', total: 2 },
+							{ type: 'psychic', expr: 'd4(1)', total: 1 }
+						]
+					},
+					{
+						label: 'Flurry of Blows',
+						expr: 'd20(20) +7',
+						total: 27,
+						natural: 20,
+						damage: [
+							{ type: 'bludgeoning', expr: 'd6(6) + d6(2) +4', total: 12 },
+							{ type: 'radiant', expr: 'd4(4) + d4(1)', total: 5 },
+							{ type: 'psychic', expr: 'd4(6) + d4(3)', total: 9 }
+						]
+					}
+				]
+			},
+			{
+				title: 'a roll that offers a follow-up — the offer rides the roll it belongs to',
+				entry: {
+					label: 'Greataxe',
+					expr: ' +6',
+					total: 15,
+					advantageRoll: { kept: 9, dropped: 14 },
+					natural: 9,
+					damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }]
+				},
+				action: {
+					label: '↻ Savage Attacker — reroll damage, keep the higher',
+					run: () => toast('(preview) the offer ran')
+				}
+			},
+			{
+				title: 'rerolled / floored dice + an upcast note',
+				entry: {
+					label: 'Fireball',
+					expr: 'd6(1↻5) + d6(4) + d6(6) + d6(2) + d6(1↻3) + d6(5) + d6(6) + d6(1)',
+					total: 32,
+					note: '8d6 base + 1d6 @ slot 4'
+				}
 			}
-		},
-		{
-			title: 'rerolled / floored dice + an upcast note',
-			entry: {
-				label: 'Fireball',
-				expr: 'd6(1↻5) + d6(4) + d6(6) + d6(2) + d6(1↻3) + d6(5) + d6(6) + d6(1)',
-				total: 32,
-				note: '8d6 base + 1d6 @ slot 4'
-			}
-		}
-	];
+		];
 </script>
 
 <div class="page">
-	<h1>Dev preview · Roll toast (5A)</h1>
+	<h1>Dev preview · Roll toast</h1>
 	<p>
-		The summary owns a fixed-width column on the right whatever the height, so a stack of toasts
-		lines its numbers up. Uppercase row labels only switch on from the second row. Buttons fire the
-		real toast through <code>toastRoll</code> (top-center, the app's Toaster).
+		The card shrinks to its content; every roll is one grid row (dice · to hit · damage · the big
+		number), and only what the die did gets colour. Buttons fire the real toast through
+		<code>toastRoll</code> (top-center, the app's Toaster).
 	</p>
 
 	<div class="ladder">
@@ -137,9 +185,10 @@
 		color: var(--color-text-muted);
 		margin-bottom: 7px;
 	}
-	/* the real toast width, so wrapping is what the app will actually show */
+	/* the toaster column, so wrapping is what the app will actually show */
 	.slot {
-		width: 356px;
+		display: flex;
+		width: 400px;
 	}
 	.action {
 		margin-top: 8px;

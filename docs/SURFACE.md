@@ -85,7 +85,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (63)
+## Global CSS classes (64)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -138,6 +138,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
 | `.primary` | components.css |  |
+| `.rolltoast` | RollToast.svelte :global |  |
 | `.row-name` | components.css |  |
 | `.sec-head` | components.css | --- settings-tab section chrome (shared by every Settings panel: Content-health / Sources / Collisions) — one heading… |
 | `.sec-note` | components.css |  |
@@ -155,7 +156,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (43)
+## Shared components (44)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -167,6 +168,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ConfirmDialog** | `title`, `message`, `confirmLabel`, `danger`, `onConfirm`, `onCancel` | Generic confirm dialog — the house attention-dialog template (charnik-dialog-design-template), |
 | **ContentHealth** | — | Content-health diagnostics — surfaces the loader's findings to the USER (not just the dev |
 | **ContentMetaModal** | `issues`, `onFillAndSave`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal that reviews content files with missing metadata (DATA-VER-1). |
+| **DamageIcon** | `type`, `size` | The damage-type glyphs — Lucide (ISC), carried as bare path data so all thirteen types are ONE |
 | **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` |  |
 | **DataMigrationDialog** | `tone`, `title`, `detail`, `note`, `onclose` | Persistent result dialog for a data-folder move. |
 | **DiagnosticsModal** | `onDismiss` | The bug-report diagnostics step (audit DIAG-1). |
@@ -194,7 +196,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
-| **RollToast** | `model`, `closeToast` | The dice-roll toast (design 5A, "the toast grows with the roll"). |
+| **RollToast** | `model`, `closeToast` | The dice-roll toast (final design — design-preview/toast-update/"Roll Toasts Final"). |
 | **SchemaDiscardDialog** | `drafts`, `onDiscard`, `onKeep` |  |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
 | **SpellHead** | `detail`, `spell`, `editable`, `draft` | The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration |
@@ -709,10 +711,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/dice/roll-toast.ts`
 
-- `interface RollToastRow` — One rolled line: its dice, the flat mod folded into it, and what it came to.
+- `interface RollToastDamage` — One damage type inside an attack: its glyph key, the dice it rolled (a crit's doubled dice ride * ONE pill, divided),…
+- `interface RollToastAttack` — One attack line: the d20 that decided it plus the damage it rolled.
 - `interface RollToastAction` — A follow-up the roll itself offers (Savage Attacker's "reroll this damage").
 - `interface RollToastModel`
-- `function rollToastModel` — Build the toast model from a completed roll (the same shape the roll log stores).
+- `function rollToastModel` — * Build the toast model from completed rolls (the same shape the roll log stores).
 - `function toastRoll` — Toast a completed roll.
 
 ### `src/lib/drafts/store.ts`
@@ -1088,4 +1091,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 63 global classes · 43 components · 604 exports across 92 modules · 32 duplicate suspects._
+_45 tokens · 64 global classes · 44 components · 605 exports across 92 modules · 32 duplicate suspects._

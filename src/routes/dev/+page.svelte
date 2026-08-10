@@ -2,7 +2,12 @@
 	// Dev toolbox index (dev-server only — gated by the /dev layout). Small maintenance actions that
 	// don't belong in the shipped UI. Links to the design-preview pages live here too.
 	import { toast } from 'svelte-sonner';
+	import { base } from '$app/paths';
 	import { recreateDemoCharacter } from '$lib/character/store.svelte';
+
+	// `/dev` has no trailing slash, so a RELATIVE href resolved to `/<page>` and 404'd — these are
+	// absolute, through `base` like every other internal link.
+	const dev = (page: string) => `${base}/dev/${page}`;
 
 	let busy = $state(false);
 	async function recreateDemo() {
@@ -31,13 +36,13 @@
 	<section>
 		<h2>Design previews</h2>
 		<ul>
-			<li><a href="meta">Content-metadata modal</a></li>
-			<li><a href="drift">Hash-drift review</a></li>
-			<li><a href="firstrun">First-run flow</a></li>
-			<li><a href="deathsaves">Death saves</a></li>
-			<li><a href="rolltoast">Roll toast</a></li>
-			<li><a href="plugins">Plugins</a></li>
-			<li><a href="storage">Storage</a></li>
+			<li><a href={dev('meta')}>Content-metadata modal</a></li>
+			<li><a href={dev('drift')}>Hash-drift review</a></li>
+			<li><a href={dev('firstrun')}>First-run flow</a></li>
+			<li><a href={dev('deathsaves')}>Death saves</a></li>
+			<li><a href={dev('rolltoast')}>Roll toast</a></li>
+			<li><a href={dev('plugins')}>Plugins</a></li>
+			<li><a href={dev('storage')}>Storage</a></li>
 		</ul>
 	</section>
 </div>

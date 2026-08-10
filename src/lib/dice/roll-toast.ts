@@ -4,30 +4,41 @@
  * the same roll rendered three different ways. They now all call `toastRoll`, which mounts the
  * RollToast component with the model built here.
  *
- * The model is the "toast grows with the roll" shape (design 5A): a fixed-width total column on the
- * right whatever the height, one row per thing rolled, and uppercase row labels only once there IS
- * more than one row. Pure — the component just renders it.
+ * The shape is the final toast design (design-preview/toast-update): the card shrinks to its
+ * content, one grid row per ATTACK, and the damage half of the row only exists when something was
+ * damaged. A plain check is that same row minus the damage half. Pure — the component just renders.
  */
 import { toast } from 'svelte-sonner';
 import { parseRollExpr, type DieChip, type Rolled } from '$lib/rules/dice';
 import { damageTotal, type RollLogEntry, type TypedRoll } from '$lib/combat/roll';
 import RollToast from '$lib/components/RollToast.svelte';
 
-/** One rolled line: its dice, the flat mod folded into it, and what it came to. */
-export interface RollToastRow {
-	/** Uppercase row label ("to hit", "fire") — rendered only when the toast has 2+ rows. */
-	label?: string;
+/** One damage type inside an attack: its glyph key, the dice it rolled (a crit's doubled dice ride
+ *  ONE pill, divided), the flat mod folded in, and what the part came to. */
+export interface RollToastDamage {
+	/** Damage-type key ("fire") → glyph. "" when the content row carried no type. */
+	type: string;
+	chips: DieChip[];
+	mod: number;
+	total: number;
+}
+
+/** One attack line: the d20 that decided it plus the damage it rolled. A plain check/save is the
+ *  same line with an empty `damage` — the toast then simply has no damage half. */
+export interface RollToastAttack {
 	chips: DieChip[];
 	/** The adv/disadv d20 that lost — shown struck through next to the kept one. */
 	dropped?: number;
 	mod: number;
+	/** What the to-hit (or, with no damage, the roll itself) came to. */
 	subtotal: number;
-}
-
-/** A short state marker in the toast's title row (nat 20 / advantage). Tone picks the accent. */
-interface RollToastTag {
-	text: string;
-	tone: 'good' | 'gold' | 'danger';
+	/** The natural face of the d20. 20 tints the line gold, 1 calls it a miss. Deliberately NOT
+	 *  called a crit: the same 20 is a crit on an attack and just a 20 on a check, and the toast
+	 *  doesn't know which (play-tracker surfaces, never rules). */
+	natural?: number;
+	damage: RollToastDamage[];
+	/** This line's damage sum — shown per line only when several attacks share the toast. */
+	damageTotal: number;
 }
 
 /** A follow-up the roll itself offers (Savage Attacker's "reroll this damage"). It rides the roll's
@@ -40,67 +51,82 @@ export interface RollToastAction {
 
 export interface RollToastModel {
 	label: string;
-	rows: RollToastRow[];
-	action?: RollToastAction;
-	/** Re-tints the whole card — reserved for a NATURAL 20/1. Advantage colours its tag and nothing
-	 *  else: how a roll was made is not news, what the die landed on is. */
-	emphasis?: 'gold' | 'danger';
-	/** The big number in the right column: the damage sum for an attack, else the roll total. */
+	attacks: RollToastAttack[];
+	/** True once anything was damaged: the "to hit"/"damage" captions, the damage column and the
+	 *  per-type footer all hang off this. */
+	damaging: boolean;
+	/** Damage summed per type across the attacks — the footer of a multi-attack toast. */
+	byType: { type: string; total: number }[];
+	/** The big number on the right: total damage when there is any, else the roll total. */
 	total: number;
-	/** Caption under the big number — set when it is NOT what the label rolled (an attack's damage). */
-	caption?: string;
-	tag?: RollToastTag;
 	note?: string;
+	action?: RollToastAction;
 }
 
-/** "nat 20"/"nat 1" beat adv/disadv: a natural is about the outcome, adv only about how it was got.
- *  Deliberately NOT called a crit — the same d20 is a crit on an attack and just a 20 on a check, and
- *  the toast doesn't know which (play-tracker surfaces, never rules on it). */
-function tagFor(r: Rolled): RollToastTag | undefined {
-	if (r.natural === 20) return { text: 'nat 20', tone: 'gold' };
-	if (r.natural === 1) return { text: 'nat 1', tone: 'danger' };
-	if (!r.advantageRoll) return undefined;
-	return r.advantageRoll.kept >= r.advantageRoll.dropped
-		? { text: 'advantage', tone: 'good' }
-		: { text: 'disadvantage', tone: 'danger' };
-}
+/** A nat 1 is the ONE miss the app can call without knowing the target's AC — so its damage is shown
+ *  struck and left out of every total. Anything else is the DM's call, not the toast's. */
+const landed = (a: RollToastAttack): boolean => a.natural !== 1;
 
-/** Damage rows for an attack — one per damage type, labelled with the type. */
-const damageRows = (damage: TypedRoll[]): RollToastRow[] =>
-	damage.map((part) => {
-		const { chips, mod } = parseRollExpr(part.expr);
-		return { label: part.type || 'damage', chips, mod, subtotal: part.total };
-	});
+/** A damage part → its toast row: the type keeps its glyph, `expr` gives back the dice + flat mod. */
+const damagePart = (part: TypedRoll): RollToastDamage => ({
+	type: part.type,
+	...parseRollExpr(part.expr),
+	total: part.total
+});
 
-/** Build the toast model from a completed roll (the same shape the roll log stores). */
-export function rollToastModel(entry: RollLogEntry, action?: RollToastAction): RollToastModel {
-	const { chips, mod } = parseRollExpr(entry.expr);
-	const adv = entry.advantageRoll;
+/** One completed roll (+ the damage that followed it) → one attack line. */
+function attackLine(roll: Rolled, damage: TypedRoll[]): RollToastAttack {
+	const { chips, mod } = parseRollExpr(roll.expr);
+	const adv = roll.advantageRoll;
 	// the kept adv/disadv d20 never made it into `expr` (the roller surfaces it separately) — put it
-	// back at the front so the row reads left-to-right as the dice were rolled
-	const primary: RollToastRow = {
+	// back at the front so the line reads left-to-right as the dice were rolled
+	return {
 		chips: adv ? [{ sides: 20, value: adv.kept, sign: 1, detail: `${adv.kept}` }, ...chips] : chips,
 		...(adv ? { dropped: adv.dropped } : {}),
 		mod,
-		subtotal: entry.total
+		subtotal: roll.total,
+		...(roll.natural !== undefined ? { natural: roll.natural } : {}),
+		damage: damage.map(damagePart),
+		damageTotal: damageTotal(damage)
 	};
-	const damage = entry.damage ?? [];
-	if (damage.length) primary.label = 'to hit';
-	const tag = tagFor(entry);
+}
+
+/** Damage summed per type across the landed attacks, in first-seen order (the footer's reading
+ *  order should follow the lines above it, not an alphabet). */
+function sumByType(attacks: RollToastAttack[]): { type: string; total: number }[] {
+	const totals = new Map<string, number>();
+	for (const a of attacks.filter(landed))
+		for (const d of a.damage) totals.set(d.type, (totals.get(d.type) ?? 0) + d.total);
+	return [...totals].map(([type, total]) => ({ type, total }));
+}
+
+/**
+ * Build the toast model from completed rolls (the same shape the roll log stores). Pass an ARRAY for
+ * several attacks resolved as one action (Extra Attack / Flurry of Blows): they share one card, one
+ * line each, and a per-type footer under them. The label comes from the first roll.
+ */
+export function rollToastModel(
+	rolled: RollLogEntry | RollLogEntry[],
+	action?: RollToastAction
+): RollToastModel {
+	const entries = Array.isArray(rolled) ? rolled : [rolled];
+	const attacks = entries.map((e) => attackLine(e, e.damage ?? []));
+	const damaging = attacks.some((a) => a.damage.length > 0);
+	const note = entries.find((e) => e.note)?.note;
 	return {
-		label: entry.label,
-		rows: [primary, ...damageRows(damage)],
-		total: damage.length ? damageTotal(damage) : entry.total,
-		...(damage.length ? { caption: 'damage' } : {}),
-		...(tag ? { tag } : {}),
-		...(entry.natural === 20 ? { emphasis: 'gold' as const } : {}),
-		...(entry.natural === 1 ? { emphasis: 'danger' as const } : {}),
-		...(entry.note ? { note: entry.note } : {}),
+		label: entries[0]?.label ?? '',
+		attacks,
+		damaging,
+		byType: attacks.length > 1 ? sumByType(attacks) : [],
+		total: damaging
+			? attacks.filter(landed).reduce((n, a) => n + a.damageTotal, 0)
+			: (attacks[0]?.subtotal ?? 0),
+		...(note ? { note } : {}),
 		...(action ? { action } : {})
 	};
 }
 
 /** Toast a completed roll. The one roll-toast call site — pass the roll, not a formatted string. */
-export function toastRoll(entry: RollLogEntry, action?: RollToastAction): void {
-	toast.custom(RollToast, { componentProps: { model: rollToastModel(entry, action) } });
+export function toastRoll(rolled: RollLogEntry | RollLogEntry[], action?: RollToastAction): void {
+	toast.custom(RollToast, { componentProps: { model: rollToastModel(rolled, action) } });
 }

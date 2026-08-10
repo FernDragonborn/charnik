@@ -1314,6 +1314,22 @@ holds the done-work log; these are the OPEN tails it carried):**
   (`emphasis`): how a roll was made (advantage) colours its tag only.
   Preview: `/dev/rolltoast` (every shape from fixed rolls). **Tail:** the roll LOG + DiceTray still
   render their own breakdown, and the non-roll toasts elsewhere are still plain strings.
+  **Final layout (2026-08-10, `design-preview/toast-update/Roll Toasts Final.dc.html`)** — 5A's
+  row-per-damage-type stack became a row-per-ATTACK grid, because on an attack the interesting unit is
+  the swing, not the damage type. One line = `dice · to hit · damage · the big number`; a second damage
+  type is another glyph in the SAME line, never a second line. Damage types carry a **glyph**
+  (`DamageIcon.svelte`, all thirteen, Lucide/ISC) instead of a word, which is what let the types share
+  one line. A crit's doubled dice share ONE pill with a divider — doubled d8s are one thing, not two.
+  Colour is now reserved for what the DIE did: **nat 20 → the line's numbers go gold, nat 1 → the one
+  miss the app can call without knowing the target's AC** (damage struck, "miss" in the total column,
+  and left out of every sum). The card no longer re-tints and the `advantage`/`nat 20` tag is gone —
+  the struck-through dropped die already says how the roll was made. The card **shrinks to its own
+  content** (260px floor, the toaster column as ceiling) rather than sitting at a fixed width; sonner
+  leaves a custom-component toast unsized, so the `<li>` gets the band back and centres the card
+  (one `:global` rule inside RollToast, not leaked into the layout's `<Toaster>`).
+  `rollToastModel` also takes an ARRAY of rolls = several attacks resolved as one action (Extra Attack
+  / Flurry of Blows): a line each, a per-type footer, one grand total. The renderer is ready; the
+  roller that fires a volley is UBUG-11's half (`rolls` intent in ACTIONS.md) and is still open.
 - [x] **UBUG-13 · Level-up re-offers ASI and DOUBLE-applies it (not filled/persisted; 2026-08-05).** DONE.
   Root cause: only the FLATTENED `abilityBoosts`/`feats` were persisted, never the per-slot mapping — so
   hydrate couldn't repopulate slots (all opened blank) and `abilityBoosts = edit.boosts (carried flat) +

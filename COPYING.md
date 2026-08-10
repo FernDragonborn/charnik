@@ -9,6 +9,15 @@ are governed separately.
 | **Bundled data** | Everything under `content/` (SRD CSVs, catalogs) | **CC-BY-4.0** | `content/LICENSE` + `content/ATTRIBUTION.md` |
 | **User homebrew** | Content a user adds to their own homebrew CSVs | **owned by its author** — Charnik imposes none | per-`source` metadata |
 
+## Third-party assets
+
+| Asset | Source | License |
+|-------|--------|---------|
+| The damage-type glyphs in `src/lib/components/DamageIcon.svelte` | [Lucide](https://github.com/lucide-icons/lucide) | **ISC** |
+
+The paths are carried inline (one component, not thirteen files); the ISC notice is
+reproduced with Lucide upstream and permits redistribution with attribution.
+
 ## Code — AGPL-3.0-or-later
 
 Free for everyone, modification allowed, but **modifications must be disclosed** —
