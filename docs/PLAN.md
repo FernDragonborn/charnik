@@ -1517,11 +1517,26 @@ holds the done-work log; these are the OPEN tails it carried):**
   save chip on `--color-surface`, while every other block (HP, the combat strip cards, panel cards) is
   a `--color-surface` panel with `--color-surface-2` controls inside. Flipped both, hover now goes to
   surface-2 like the sibling controls. Tokens only, no literals ([[new-ui-must-support-themes]]).
-- [ ] **UBUG-19 · Replace the remaining emoji icons with drawn outline icons (2026-08-09).** Three known
-  sites: the **speed/movement** field in combat (→ an outline footprint), the **lightning** next to Bonus
-  Action, and the **bug** on the "report a bug" button. Bundle SVGs locally with attribution
-  ([[charnik-icon-sources]]) — no emoji, no icon-font dep. Sweep for other emoji-as-icon uses while
-  in there.
+- [ ] **UBUG-19 · Icons are DRAWN, never typed — replace every font glyph doing an icon's job
+  (2026-08-09; scope and rationale corrected 2026-08-10).** It was filed as "three emoji to swap": the
+  speed/movement field, the lightning by Bonus Action, the bug on the report button. A census says
+  otherwise — roughly a hundred glyph-as-icon uses across `src/**/*.svelte`, led by `↻` (14), `∞` (13),
+  `✕` (11), `⚠` (8), `🎲` (7), `☾` (7), `▾`/`▸` (12), `★`/`☆` (9), `⚑` (5), `✓` (4), `✎` (4), `✦` (4),
+  `☀` (3), `⚙` (3), `🔍` (2). Bundle SVGs locally with attribution ([[charnik-icon-sources]]) — no
+  emoji, no icon-font dep.
+  **Why it is a correctness issue and not taste — three distinct failure modes, two of them hit for
+  real while building the roll card (2026-08-10):** (1) **rasterisation** — a small filled glyph with
+  no vertical stem has nothing to hint against, so `◆` at cue size came out a rounded blob; (2) **font
+  fallback** — a glyph absent from the app's fonts is substituted from whatever the OS has, with
+  different metrics, which is why `⇈` drew its two arrows at different heights; (3) **presentation
+  drift** — codepoints like `⚠`, `☀`, `✦` render as colour emoji on one platform and monochrome on
+  another, so the same UI is not the same UI. All three get worse as the display gets smaller or the
+  page is zoomed out, which is exactly where a tracker gets used.
+  **The rule (see AI-CONVENTIONS §4.7):** a character that is TEXT stays text — `−`, `≥`, `∞` inside a
+  sentence are set at text size and the font was designed for them. A character standing in for an
+  ICON is drawn instead: an inline SVG, or CSS geometry when the shape is trivial. The roll card's
+  advantage cues are the worked example — three `clip-path` polygons in `currentColor`, exact
+  geometry at a size we choose, no font in the path at all.
 - [x] **UBUG-20 + UX-3 · One roll card everywhere, and the live controls live on it — DONE 2026-08-10.** `RollRow` (label · grid · note) was
   extracted out of `RollToast` and is now mounted by all four surfaces — toast, `Playbar`, `RollLog`,
   `DiceTray` — with the chrome (dismiss target, action bar, savage-reroll offer, log cue, sonner

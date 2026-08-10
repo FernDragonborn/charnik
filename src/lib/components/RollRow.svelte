@@ -52,12 +52,13 @@
 	/** Any roll with a d20 can be told how it was rolled — including one a pair already decided, which
 	 *  is the toggle: tapping again switches advantage and disadvantage. */
 	const canAmend = (a: RollToastAttack) => !!onAdvantage && d20Index(a) >= 0;
-	/** The glyph says what the roll IS, not what a tap would make it: a solid triangle pointing the way
-	 *  the advantage goes, or a plain diamond when neither applies. In the neutral state the diamond is
-	 *  also the only thing marking the pill as a control, since there is no frame yet. Single solid
-	 *  shapes on purpose — a two-arrow glyph rendered its arrows at different heights when zoomed. */
-	const cue = (a: RollToastAttack) =>
-		a.advantageMode === 1 ? '▲' : a.advantageMode === -1 ? '▼' : '◆';
+	/** The cue says what the roll IS, not what a tap would make it: a triangle pointing the way the
+	 *  advantage goes, or a diamond when neither applies. In the neutral state the diamond is also the
+	 *  only thing marking the pill as a control, since there is no frame yet. Drawn in CSS rather than
+	 *  set as a character — at cue size a font glyph has no stem to snap to and the rasteriser turns
+	 *  its diagonals to mush (`◆` came out a blob, `⇈` drew its two arrows at different heights). */
+	const cueShape = (a: RollToastAttack) =>
+		a.advantageMode === 1 ? 'up' : a.advantageMode === -1 ? 'down' : 'none';
 	const cueTitle = (a: RollToastAttack) =>
 		a.advantageMode === 1
 			? 'rolled with advantage — tap for disadvantage'
@@ -105,11 +106,7 @@
 					class="rt-die d20 control {tone(c)}"
 					title={cueTitle(a)}
 					onclick={() => onAdvantage?.()}
-					>{face(c)}<span
-						class="rt-cue"
-						class:up={a.advantageMode === 1}
-						class:down={a.advantageMode === -1}>{cue(a)}</span
-					></button
+					>{face(c)}<span class="rt-cue {cueShape(a)}"></span></button
 				>
 			{:else}
 				<span class="rt-die {tone(c)}" class:d20={c.sides === 20} title="d{c.sides} · {c.detail}"
@@ -418,18 +415,30 @@
 		border-color: var(--color-border-strong);
 		cursor: pointer;
 	}
-	/* No third colour: the glyph takes the colour of the state it reports, so teal and red keep meaning
-	   exactly what they mean on the frame — advantage and disadvantage. The neutral diamond stays
-	   uncoloured, which is why it can be the affordance marker without claiming a state. */
-	.rt-die.control .rt-cue.up {
+	/* The three cue shapes, clipped out of a solid box rather than typed as a character: at this size a
+	   font glyph has no vertical stem for the rasteriser to align to, so its diagonals blur into a lump.
+	   A clipped box is the exact geometry we asked for, at a size we control, in currentColor.
+	   No third colour: each shape wears the colour of the state it reports, so teal and red keep meaning
+	   exactly what they mean on the frame. The neutral diamond stays uncoloured, which is why it can be
+	   the affordance marker without claiming a state. */
+	.rt-cue.up,
+	.rt-cue.down,
+	.rt-cue.none {
+		width: 8px;
+		height: 8px;
+		background: currentColor;
+	}
+	.rt-cue.up {
+		clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
 		color: var(--color-good);
 	}
-	.rt-die.control .rt-cue.down {
+	.rt-cue.down {
+		clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
 		color: var(--color-danger);
 	}
-	.rt-cue.up,
-	.rt-cue.down {
-		font-size: 9px;
+	.rt-cue.none {
+		clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+		color: var(--color-text-muted);
 	}
 	.rt-die.control:hover {
 		border-color: var(--color-accent);

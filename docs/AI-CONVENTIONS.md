@@ -452,6 +452,28 @@ the shipped sheet instead of re-deciding per component. (Folded 2026-08-04 from 
 follow the semantic roles in **§4.5**. The Combat view is the reference implementation
 (`src/routes/combat/state.svelte.ts` + its `blocks/panels/*`).
 
+### 4.7 Icons are drawn, never typed
+
+**Rule.** A character that is **text** stays text — `−`, `≥`, `∞`, an arrow inside a sentence are set
+at text size and the font was designed for them. A character standing in for an **icon** is DRAWN: an
+inline SVG bundled locally ([[charnik-icon-sources]]), or plain CSS geometry when the shape is trivial.
+No emoji-as-icon, no icon-font dependency.
+
+**Why.** A font glyph doing an icon's job fails three different ways, and all three get worse as the
+display shrinks or the page is zoomed out — which is where this app gets used (phone, laptop at
+1920×1080 zoomed out):
+- **Rasterisation.** A small filled glyph with no vertical stem has nothing to hint against, so its
+  diagonals blur together. `◆` at cue size rendered as a rounded blob (maintainer, 2026-08-10).
+- **Font fallback.** A glyph the app's fonts don't carry is substituted from whatever the OS has, at
+  that font's metrics — `⇈` drew its two arrows at visibly different heights for exactly this reason.
+- **Presentation drift.** `⚠`, `☀`, `✦` and friends render as colour emoji on one platform and
+  monochrome on another, so the same build is not the same UI on two machines.
+
+**How to apply.** Reach for the existing SVG components first (`DamageIcon`, the Lucide set). For a
+trivial geometric indicator, CSS is lighter than an SVG and exact: the roll card's advantage cues are
+three `clip-path` polygons filled with `currentColor` at a size we choose, with no font in the path
+(`RollRow.svelte`). The outstanding sweep of ~100 existing glyph-as-icon sites is **PLAN · UBUG-19**.
+
 ---
 
 ## 5. Dependencies
