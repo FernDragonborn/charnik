@@ -195,6 +195,78 @@ projections of the pair.
 
 ---
 
+## What the programmatic interface should look like (agreed with the maintainer 2026-08-10)
+
+The one sentence the rest follows from: **the roller should return what HAPPENED, not how to show
+it.** Today it returns a rendering, and every gap in the audit above is a consequence.
+
+### 1. One typed request in, not five positional arguments
+
+`rollPool(dice, mod, advantage, bonusDice, opts)` puts a magic `−1 / 0 / +1` in the third position.
+AI-CONVENTIONS §2.8 forbids exactly this, and the best evidence is that `RollSpec` in the tray
+**already exists** with the motivation spelled out in its own comment — "so a roll site passes one
+typed object instead of 5–6 positional args". The right request was invented one layer up; the
+roller should take it directly.
+
+### 2. Every die carries where it came from
+
+```ts
+// sketch
+interface RolledDie {
+	sides: number;
+	face: number;   // what it showed — after a reroll, BEFORE a min_die floor
+	value: number;  // what it contributed
+	sign: 1 | -1;
+	source?: string; // "Greataxe" · "Bless" · "Rage" — the provenance a string can never hold
+	role?: 'pool' | 'bonus' | 'alternate' | 'crit';
+}
+```
+
+`source` IS the house contract ("value + provenance trace") in one field — right now nothing can say
+the d4 came from Bless and the d8 from the weapon. `role` is what lets crits and advantage stop being
+side channels: "these dice are the doubled set" and "this die is the alternate" become properties of
+a die instead of extra fields beside it.
+
+### 3. Amendments are STRUCTURE, not prose
+
+The current wart, and it is self-inflicted (2026-08-10): `amendWithAdvantage` returns the roll and
+lets the CALLER compose the note sentence — which forced an `AMEND_NOTE` regex in `roll.svelte.ts`
+to find and replace that sentence inside a note so cycling back to neutral wouldn't eat an upcast's
+provenance. A regex that parses a sentence we ourselves wrote is the same sin as `parseRollExpr`, one
+floor up.
+
+Want instead: `amendments: [{ kind: 'advantage', from, to, dice }]`. Then "the record stays truthful"
+is a structure, not a sentence that has to be parsed back out.
+
+### 4. The record holds FACTS; the UI writes the sentences
+
+Direct consequence of §3, and it converges with **ARCH-1**: today an English sentence is written into
+`log.jsonl`. Prose already on disk cannot be localised later, so the UA pass would have nothing to
+work with. Facts on disk render in any locale for free.
+
+### 5. `{ roll, issues }`, never a bare roll (§2.7)
+
+`rollFormula` currently has no way to say "I did not understand part of this", which is precisely why
+**UBUG-22** is silent. Since the formula string is the plugin API (finding J), this is a trust
+boundary: an unparsed fragment must surface as an issue, not be dropped while the understood part
+rolls. The content loader is the house precedent — collect `issues[]`, never throw.
+
+### 6. Two levels, not a general tree
+
+Action → instances → parts (a to-hit plus damage parts). The pull toward "arbitrary depth, just in
+case" should be refused: ROLLER-N needs exactly two levels and nobody has asked for a third.
+
+### Explicitly NOT wanted
+
+- A formatted string as the RECORD. Rendering is a pure function OF the record, computed at display
+  time — so `expr` survives only as a reader for logs already on disk, renamed to say so
+  (`parseLegacyExpr`), and nothing new reads it.
+- The roller drawing anything the caller did not ask for (no pre-rolled second dice — see the
+  section above on why the "two batches up front" shape was rejected).
+- Any knowledge of toasts, storage or language inside the roller. It stays pure.
+
+---
+
 ## Slices (draft — sequence, not yet estimates)
 
 1. `[ ]` **UBUG-22 first, on its own** — the `rollFormula` mid-string modifier bug. Independent of
