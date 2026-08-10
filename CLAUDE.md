@@ -10,6 +10,27 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠ TWO REPOS — the SRD content lives outside this one (decided 2026-08-11)
+
+**If you are a developer: you need TWO clones, side by side.** The shipped SRD content is its own
+repository, `charnik-content-srd`, precisely so rules data can be corrected and released WITHOUT
+shipping an app build — that independence is the whole point of the split (PLAN · REL-4).
+
+```
+some-folder/
+├─ charnik/               ← this repo (the app)
+└─ charnik-content-srd/   ← the content (srd-2014/ + srd-2024/)
+```
+
+Clone them as siblings and everything resolves with **no configuration** — that layout is the
+default. A different location goes in `charnik.config.json`. If the content is missing the app says
+so, prints the clone URL and offers to write the config; it never starts up silently empty.
+
+Content edits (CSV fixes, re-stamping a `#content-hash`, running a converter) are commits in the
+CONTENT repo. App code is commits here. A release vendors the content in as the bundled floor.
+
+---
+
 ## Project status: active development
 
 The app is **built and shipping** (Tauri desktop releases on GitHub + a web demo on

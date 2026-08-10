@@ -26,6 +26,19 @@ version is out, an **Update** button appears in the top bar; click it to update 
 
 ## Develop
 
+> ### ⚠ You need TWO repositories
+>
+> The SRD content is a **separate repo** — that is what lets rules data be corrected and published
+> without shipping a new app build. Clone them **side by side**; that layout needs no configuration:
+>
+> ```sh
+> git clone https://github.com/FernDragonborn/charnik.git
+> git clone https://github.com/FernDragonborn/charnik-content-srd.git
+> ```
+>
+> A different location goes in `charnik.config.json`. Start the app without content and it tells you
+> what is missing and offers to set it up. Content fixes are commits in the CONTENT repo.
+
 Requires Node 22 + pnpm. The TS side runs without Rust; the Tauri desktop build also needs
 Rust + platform toolchain (MSVC C++ Build Tools + WebView2 on Windows; webkit2gtk on Linux).
 

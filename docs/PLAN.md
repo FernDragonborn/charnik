@@ -1442,9 +1442,30 @@ holds the done-work log; these are the OPEN tails it carried):**
 
 
   **Slices, and where the work stands (2026-08-10).**
-  0. `[ ]` **Split the SRD into its own repo** (`charnik-content-srd`), vendored into the build as the
-     bundled floor. **Needs the maintainer to create the remote — never do this unasked.** Nothing
-     below is blocked on it: slices 1–3 can be built against the local folders and any URL.
+  0. `[ ]` **Split the SRD into its own repo — TWO INDEPENDENT REPOS (maintainer, 2026-08-11).**
+     `charnik-content-srd` holds `srd-2014/` + `srd-2024/` at its root and is cloned SEPARATELY,
+     beside the app repo. **Not a submodule** — the footguns land on the one person operating this:
+     a clone without `--recursive` gives empty content and confusing test failures, the working copy
+     sits on a detached HEAD by default, and committing needs a push in the inner repo BEFORE the
+     pointer bump in the outer one, which fails silently and breaks everyone else's clone. Two plain
+     repos have none of that.
+     - **The app finds content through config, and defaults to the sibling folder.** Default
+       `../charnik-content-srd`, so cloning the two side by side needs NO config at all; the config
+       is only for a different location. Prerequisite: `charnik.config.json` custom roots — claimed
+       as an architecture invariant in CLAUDE.md and **never built** (zero references in `src`).
+     - **Missing content must be LOUD and actionable, never a silent empty app:** say what is
+       missing, print the clone URL, and offer to write the config. This is a dev-time path — a
+       release still bundles the content as the floor, so the RELEASE BUILD must fail loudly if it
+       cannot vendor it, rather than shipping an app with no rules in it.
+     - **ONE resolver seam, because three places hardcode `content/srd-*` today** and the third is
+       the one that will actually bite: the app (`discoverContentRoots`), the web build
+       (`tools/build-static-content.mjs`), and **the content TESTS** —
+       `class_features_content.test.ts`, `items_content.test.ts`, `conditions_content.test.ts` and
+       friends do `readdirSync(process.cwd() + '/content/srd-2024')` in a copy-pasted helper. Move
+       them onto the resolver in the same change or `pnpm test` fails on every fresh clone.
+     - Do the split with `git subtree split` so the folders keep their history instead of arriving
+       as one "initial commit". **Creating the remote is the maintainer's to do — never unasked.**
+     - Nothing below is blocked on this: slices 1–3 build against the local folders and any URL.
   1. `[~]` **A pack is a FOLDER, discovered by scanning** — DONE (`ccd247c`, described above).
      **Still open in this slice:** the installed-pack REGISTRY — the URL, `ETag`, `lastCheckedAt`,
      pin and per-pack update mode. That is local state about an install, so it belongs in app config,
