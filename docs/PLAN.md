@@ -367,10 +367,8 @@ everything — old homebrew is never wrong-downward.
   user-file values can't inject CSS.
   - [x] **Themes tab UI** (commit `4423e9d`) — `ThemesSettings.svelte`: lists built-in + custom
     themes as swatched cards; clone a built-in → editable custom theme; pick / duplicate / delete.
-  - [x] **Editor** (`4423e9d`) — token→value form over `THEMEABLE_TOKENS` (native color picker for
-    color tokens, free-form text for overlay/shadow), seeded self-contained from the base via
-    `snapshotBaseTokens` (a custom `[data-theme]` can't inherit another theme by cascade); live
-    preview (verified: edit accent → applies with no reload).
+  - [x] **Editor** — token→value form over `THEMEABLE_TOKENS`, seeded self-contained from the base
+    via `snapshotBaseTokens` (a custom `[data-theme]` cannot inherit another theme by cascade).
   - [ ] **Persistence + portability** — themes live in `localStorage` (app-store) today; move to a
     user-owned `themes.json` in the data dir via the `Storage` seam so a theme is
     shareable/importable like content packs; export/import one theme.
@@ -1104,19 +1102,10 @@ holds the done-work log; these are the OPEN tails it carried):**
   call — either add spacing-scale tokens for the off-scale values or migrate-with-screenshot-verify,
   not a blind sweep. Warn-only on 523 = noise that trains people to ignore stylelint, so it stays out
   until the migration is done as its own pass.
-- [x] **B25 / RV4 · subclass-caster spell list.** DONE 2026-08-09. EK/Arcane-Trickster got slots/DC/cap
-  but an EMPTY spell list: `buildSpellAccess` indexed only `class` rows, while the caster profile looks
-  access up by the SUBCLASS ref. Added the seam as DATA, not a class-name branch
-  ([[charnik-data-driven-classes]]): a **`spell_list` column on the `subclass` row** — a comma list of
-  bare class ids whose list it draws (RAW an EK/AT casts off the **Wizard** list, which can't be inferred
-  from `class_id`, since Fighter/Rogue have no list). `buildSpellAccess` now indexes casting subclasses
-  as their own access key in a third pass that runs AFTER the class passes, so a subclass also inherits
-  whatever `spell_lists` join rows granted its source class; provenance is a new `via: 'subclass_list'`.
-  A blank column keeps the subclass out of the index (never silently given a list). **No shipped data
-  changes — EK/AT are PHB, not SRD** (verified: neither appears in either SRD source), so this is
-  engine support for a homebrew/PHB drop-in and the coverage lives in fixtures: unit tests on the index
-  (edition scoping, the not-my-parent's-list case, provenance) plus an end-to-end derive test that a
-  Fighter 3 / EK reaches `shield` and not `cure_wounds`.
+- [x] **B25 / RV4 · Subclass-caster spell list.** The seam is DATA, not a class-name branch: a
+  `spell_list` column on the `subclass` row naming the class lists it draws from (RAW an EK/AT casts
+  off the WIZARD list, which cannot be inferred from `class_id`). A blank column keeps a subclass out
+  of the index — never silently given a list. EK/AT are PHB, not SRD, so coverage lives in fixtures.
 - [ ] **D16 · generalized player-choice model.** Half-feat ability-choice is DONE (§ Builder, 2026-08-02);
   still open: Magic Initiate spell picks + Skilled skill/tool-choice grants — both need the shared
   choice UI (see `docs/N2-PLAN.md` feat tail). One "player choice at a slot" abstraction covers all.
@@ -1220,98 +1209,45 @@ holds the done-work log; these are the OPEN tails it carried):**
   loose `z.record` play-state keys stay un-branded (see `docs/AI-CONVENTIONS.md` §2.1).
 
 **User-reported bugs (2026-07-05, desktop test — verify + fix):**
-- [x] **UBUG-1 · Short rest doesn't heal.** DONE. Short rest now heals via Hit Dice — `spendHitDie(die)`
-  rolls `1d<die> + CON` (min 1 HP, clamped to max), logs the roll, marks the die spent; the `☾ Short`
-  picker (`state.svelte.ts`) lets the player choose how many/which dice (per-character `shortRestMode`:
-  RAW `dice` picker, or a `half` = ½-max-HP variant). Long rest recovers dice edition-divergently
-  (`hitDiceRecoveredOnLongRest`: 5e half total min 1, 5.5e all). Tested (combat.test.ts).
-- [x] **UBUG-2 · No to-hit roll shown when casting an attack/weapon.** DONE. `attackRoll` rolls the
-  to-hit (`at.toHit + fx.flat`, effect advantage/flat/dice via `netAdvantage(fx)`) THEN the per-type
-  damage, pushed as ONE combined log/toast entry; attack spells (`res === 'hit'`) do the same in `cast`.
-  The to-hit is surfaced in the toast, roll log, and dice tray — not just damage.
-- [x] **UBUG-3 · Adv/disadv doesn't show the cancelled (dropped) roll everywhere.** DONE. Every roll
-  site (attack/spell/stat) passes `netAdvantage(fx)`; the dropped d20 renders in ALL three surfaces —
-  the toast (`· drop d20(N)`), the roll log (`RollLog.svelte`, dimmed `.drop` line), and the dice tray
-  (`DiceTray.svelte`). `advantageRoll.{kept,dropped}` flows through `pushRoll`.
-- [x] **UBUG-5 · Spending a resource gives no feedback.** DONE (with UBUG-8). `resourceClick` (pip) and
-  `useResource` (the "use one" button) both toast the resource name + remaining count on spend AND on
-  restore; `spendOption`/`restoreAll` toast too. No resource change is silent.
-- [x] **UBUG-6 · Casting a spell doesn't consume a spell slot (reported 2026-07-19).** DONE 2026-07-20
-  (AUDIT A17). `cast()` auto-spends the lowest available leveled slot (pure `slotToSpend`, unit-tested)
-  via `play.spellSlotsSpent` and blocks with a toast when none remain; cantrips spend nothing; a slot
-  is spent in AND out of combat (like HP). A RITUAL cast (the `R` badge, gated on `class.ritual`
-  ritual-casting eligibility — E7) spends no slot. **Both former tails now CLOSED:** the manual upcast
-  picker landed with the structured-upcast work (slot-picker overlay + ⇡ affordance, browser-verified);
-  warlock PACT-slot pips landed 2026-08-04 (`031c944`, DEMO-1 gap 1) — the pact pool is spent on a
-  pure-pact cast (`slotToSpend` → `{key:'pact'}`) and rendered as a "Pact Magic" pip strip.
-- [x] **UPCAST · Structured spell-upcasting engine — DONE (was `docs/UPCAST-PLAN.md`, closed 10/10, folded
-  in here 2026-08-04 when that plan doc was retired).** Whole vertical slice engine→data→UI, ~985 tests.
-  **What shipped:** one `upcast` column on `spells.csv`, token = `kind:formula` (several via `;`), parsed
-  by the existing effect grammar (`splitGuard` on `?` + the token-parser slot-discipline — NO naive
-  `split(':')`, verified there's no `?:` ternary so `:` is structural-only); `per_slot(amount[,step])`
-  sugar over the effect evaluator; eval is CAST-EPHEMERAL (`{slot, spell_level}` ctx built in the VM
-  cast methods, NEVER in derive — a persistent `slot` would break BUILD/PLAY separation). Slot picker
-  (overlay + ⇡ affordance + per-slot `castPreview`); multitype damage via `SpellRow.damageParts`
-  (ice_knife done — the old "SpellRow flattens" note was superseded); hp_max/temp_hp/`enhancement`
-  (Magic Weapon +n) scale a spawned effect's magnitude through the same seam; count/area chips; roll-log
-  provenance line ("Xd base + Yd @ slot N"); concentration timer + tails (see the CONCENTRATION entry
-  below, Model C). **Key LOCKED decisions (kept here so the "why" survives the doc's deletion):** (1) combine =
-  DELTA for structured kinds (`base+delta`, base is the single source), ABSOLUTE for count/duration; `inf`
-  only ever in `duration` so `base+inf` can't happen by construction. (2) `cantripDieMultiplier`
-  (`spellcasting.ts`, the 5/11/17 tier) is RETAINED, NOT folded into `upcast` — the cantrip tier is a
-  UNIFORM system rule (rules-core), `upcast` is per-spell data; different axes (char_level vs slot),
-  merging would be a regression not a dedup (H7 reappraised). (3) N6 — upcast is NOT gated on the
-  auto-calc toggle: that toggle gates effect-MODIFIER layers (Bless/Rage/conditions), not a spell's own
-  mechanic, so `castCtx` is always built (from base state even when auto-calc is off). Dice-upcast works
-  off; effect-magnitude upcast (Aid, Magic Weapon) is inert off because its spawned tokens are effects.
-  (4) Conjure* tables + meta-rules (Dispel Magic, Globe) stay prose `higher_level` — not number-scaling,
-  a permanent exclusion, not a bug. **OPEN tails (deferred, NOT blockers — the reason this became a
-  backlog entry rather than staying closed-in-its-own-doc):**
-  - [ ] **`count`-scaling spells don't roll their N instances → MOVED OUT to `ROLLER-N`** (2026-08-09;
-    was `UPCAST-ROLLER`, was D14). Upcast turned out to be one caller of a general roller, not its owner,
-    so the spec lives in the backlog item — not duplicated here. Scorching Ray / Magic Missile / Chain
-    Lightning / Eldritch Blast beams are its spell-side callers.
+- [x] **UBUG-1 · Short rest heals via Hit Dice** — `1d<die> + CON`, min 1 HP, player picks how
+  many. Long-rest HD recovery is edition-divergent (2014 half, 2024 all).
+- [x] **UBUG-2 · An attack/spell shows its to-hit roll**, combined with its damage in one entry.
+- [x] **UBUG-3 · The dropped adv/disadv die shows on every roll surface.**
+- [x] **UBUG-5 · Every resource change is announced** — spend and restore both toast.
+- [x] **UBUG-6 · Casting spends a slot.** Lowest available leveled slot, blocked with a toast when
+  none remain, in and out of combat; cantrips spend nothing and a RITUAL cast spends none (gated on
+  the class's ritual-casting eligibility). Warlock pact slots are their own pool + pip strip.
+- [x] **UPCAST · Structured spell-upcasting engine — DONE (was `docs/UPCAST-PLAN.md`).** One
+  `upcast` column on `spells.csv`, `kind:formula` tokens parsed by the existing effect grammar.
+  **Locked decisions, kept because later work could undo them by accident:** (1) combining is a
+  DELTA for structured kinds (`base+delta`, base is the single source) and ABSOLUTE for
+  count/duration; `inf` only ever appears in `duration`, so `base+inf` cannot happen by construction.
+  (2) `cantripDieMultiplier` (the 5/11/17 tier) is NOT folded into `upcast` — the cantrip tier is a
+  uniform system rule keyed on character level, `upcast` is per-spell data keyed on slot; merging
+  them would be a regression dressed as a dedup. (3) Upcast is NOT gated on the auto-calc toggle:
+  that toggle gates effect-MODIFIER layers, not a spell's own mechanic. (4) Conjure* tables and
+  meta-rules (Dispel Magic, Globe) stay prose `higher_level` — a permanent exclusion, not a gap.
+  **Open tails that had no other home:**
   - [ ] **UPCAST-AUTHORING (was N8) · guided upcast-token builder** in `EditContentForm` (form → token),
     so a non-technical author never hand-writes `per_slot(1d6)` (CLAUDE.md "everything from the UI"). v1
     ships a raw `upcast` text field (like the effect-token field); prose `higher_level` stays the fallback.
-  - [ ] **invocation effects scoped to a spell → MERGED INTO `SCOPED-BONUS`** (2026-08-09; was
-    `UPCAST-INVOCATION-SCOPE`). Agonizing Blast / Eldritch Spear are the spell-side face of the same L1
-    scope gap as Magic Weapon's untyped `enhancement`; both now specified once, in that backlog item.
   - [ ] **UPCAST-DURATION-TAIL · Geas/Dominate multi-day durations.** Expressible via `duration:step`, but
     low value in the rounds canon (30 days = 432000 rounds) — a curated follow-up, not a blocker.
   - [ ] **UPCAST-PREVIEW-TOOLTIP · pre-cast per-slot preview** ("5th: 10d6, 6th: 12d6") before choosing a
     slot. v1 ships the picker + an on-select `castPreview` only; a hover tooltip over the whole ladder is
     the nicety left.
-- [x] **CONCENTRATION · Concentration timer + end-points — DONE (was `docs/CONCENTRATION-PLAN.md`,
-  fully implemented, folded in here 2026-08-04 when that doc was retired).** **Model C** (the load-bearing
-  decision worth keeping): `play.concentration` stays a `string | null` **ref** — the timer lives on a
-  **carrier effect** in `play.effects` (`source = ref`, `durationRounds` + `startedRound`), so concentration
-  is "a ref to its own timer-effect", NOT a separate clock. This reuses the existing effect-expiry +
-  duration-UI (editing the carrier's `durationRounds` IS editing the concentration) — zero migration, no
-  `schemaVersion` bump. The one code change was: **always create a carrier for a concentration spell, even
-  token-less** (empty `effects: []`, just timer + source), which gave token-less control spells (Hold
-  Person, Web) a timer. (Rejected Model A — concentration owns a separate clock — needed a display/edit
-  proxy + a new expiry path; C added ~1 line.) **All end-points shipped:** timer expiry → `concentration =
-  null` (`economy.svelte.ts`); replace on a new conc-cast; manual drop (tap the `◎ Concentration` badge,
-  `EffectsPanel.svelte`); long rest; **0-hp / incapacitated → `endConcentrationIfBroken`** (reactive
-  `$effect`, `state.svelte.ts` + `combat/+page.svelte`); **CON-save-on-damage = a toast REMINDER** (DC
-  `max(10, ⌊dmg/2⌋)`), never an auto-drop — the play-tracker "surfaces, never forces" principle
-  ([[play-tracker-surfaces-never-forces]]). Duration-upcast feeds `carrier.durationRounds` (Hunter's Mark
-  8h→24h). Duration canon = **rounds** (`rounds→human` is a display formatter); `inf` → indefinite (null).
-- [x] **UBUG-7 · Effect (i) rules text renders raw, not Markdown/HTML.** DONE 2026-07-21. Extracted the
-  compendium's marked+DOMPurify pipeline into a shared `content/markdown.ts` (`renderContentMarkdown`)
-  reused by `ArticleProse`; the effect ⓘ box (`PanelCard.svelte`) now renders through the `ArticleProse`
-  component itself, so Markdown/sanitized-HTML formatting + styling match the compendium (no dup CSS).
-  Enabled `breaks: true` in the shared renderer so CSV cells that use `•` + hard newlines (conditions,
-  items, feats) keep line-per-bullet layout instead of collapsing (blank-line paragraphs unaffected).
-- [x] **UBUG-8 · Resources should be highlighted + used like spells.** DONE 2026-07-21. Added
-  `ResourceTracker.useResource(id, max)` — the resource analogue of casting a slot: spends the next
-  unit (`resourcesSpent`+1), BLOCKS with a toast when exhausted, and toasts the remaining count on use
-  (ties UBUG-5). The resource NAME is now a clickable "use one" button (highlighted on hover like a
-  spell row — reuses `.spell-row:hover` surface-2) in BOTH render sites (`PanelCard` resources section
-  + top `ResourceBar`); the pips stay for manual restore / arbitrary set (`resourceClick`), exactly as
-  spell-slot pips sit beside a castable spell row. Unit-tested (use spends one, blocks at max, no
-  overspend). Action economy is intentionally NOT wired (resources carry no action-cost data).
+- [x] **CONCENTRATION · Timer + end-points — DONE (was `docs/CONCENTRATION-PLAN.md`).** **Model C**
+  is the load-bearing decision: `play.concentration` is a `string | null` REF, and the timer lives on
+  a carrier effect in `play.effects` — concentration is "a ref to its own timer-effect", not a
+  separate clock. That reuses the existing expiry + duration UI (editing the carrier's
+  `durationRounds` IS editing the concentration) and cost ~1 line, where giving concentration its own
+  clock needed a display proxy and a second expiry path. A concentration spell ALWAYS gets a carrier,
+  even token-less, which is what gave Hold Person and Web a timer. The CON save on damage is a toast
+  REMINDER, never an auto-drop ([[play-tracker-surfaces-never-forces]]). Duration canon = rounds.
+- [x] **UBUG-7 · Effect (i) rules text renders as Markdown**, not raw.
+- [x] **UBUG-8 · Resources are used like spells** — the name is a "use one" button, the pips stay
+  for manual restore. Action economy is deliberately not wired here (resources carry no action-cost
+  data); see UBUG-16 for where that landed.
 - **UBUG-9 · Spell-block summary caption is weak for non-damage spells (think about).** The bold
   caption per spell row (`SpRow.spe` = `dmg || effectHint(row.data)`) is great for damage (`1d10 fire`)
   but for the rest it's mostly a flat "utility" — except a few HAND-CURATED cases (`effectHint`
@@ -1346,89 +1282,33 @@ holds the done-work log; these are the OPEN tails it carried):**
   just a 20 on a check and the tracker surfaces rather than rules (`dice/roll-toast.ts`); and an
   attack "deals damage" on **dice OR a flat value**, since Unarmed Strike's flat `1 + STR` silently
   rolled nothing while the gate asked for dice (`dealsDamage`, `combat/roll.ts`).
-- [x] **UBUG-13 · Level-up re-offers ASI and DOUBLE-applies it (not filled/persisted; 2026-08-05).** DONE.
-  Root cause: only the FLATTENED `abilityBoosts`/`feats` were persisted, never the per-slot mapping — so
-  hydrate couldn't repopulate slots (all opened blank) and `abilityBoosts = edit.boosts (carried flat) +
-  new slot ASI` double-counted a re-picked slot. Fix: a new `build.slotPicks` (feats/asi/featAbility/
-  featSkills keyed by slot key) is persisted at assemble and restored in `draftFromCharacter`, so slots
-  open FILLED. Split the slot part of boosts into a `slotBoosts` derived; `hydrate` now carries only the
-  RESIDUE (`build.abilityBoosts − slotBoosts` — species/background boosts survive, old slot-less saves
-  keep their flat boost unchanged) so a restored slot re-derives its own boost once, never twice. Zod
-  defaults the field so pre-fix saves load (slots blank, old flat-carry path) and self-heal on next save.
-  Behavioral test in build.test.ts (re-hydrate a +2-CON ASI slot → still +2, slot shown filled).
-- [x] **UBUG-14 · A long rest doesn't clear a level of Exhaustion (2026-08-09).** DONE. Root cause:
-  `ResourceTracker.rest` (`resources.svelte.ts`) recharged pools / slots / HP / hit dice and expired
-  timed effects but **never touched `play.exhaustion`**. Fixed in that one `rest` seam — the long-rest
-  branch does `exhaustion = max(0, exhaustion − 1)` and the rest toast reports the drop. SRD-verified
-  both editions (2024 glossary "Removing Exhaustion Levels"; 2014 "Finishing a long rest reduces a
-  creature's exhaustion level by 1"). **Interpretation surfaced:** 2014 adds "provided that the creature
-  has also ingested some food and drink" — we don't model rations, so it applies unconditionally (RAI,
-  the universal tracker reading). Automatic in RAW → auto-applied + toasted, like the initiative regain.
-  `describe.each` test over both editions (short rest removes none, long removes one, never negative).
-- [x] **UBUG-15 · Exhaustion 6 doesn't kill — and there's no "character is dead" screen (2026-08-09).**
-  DONE, both halves. Nothing modelled death at
-  all — three failed death saves only toasted. Shipped: one typed play field
-  `play.death: { cause } | null` (an OPEN cause enum — `massive_damage | death_saves | exhaustion` —
-  not a `dead` boolean plus a sibling; a new lethal rule is a member) and ONE `die(cause)` seam every
-  lethal rule lands on, so "what happens when you die" is in one place. The three rules wired:
-  (1) **instant death** — damage reduces you to 0 AND the leftover ≥ your FULL hit-point maximum
-  (SRD 5.1 "Instant Death", verified; also covers "Damage at 0 Hit Points". The 2024 SRD 5.2.1 omits
-  the "Playing the Game" chapter carrying it, so both editions run the 5.1 text — this closes the
-  overkill item carried in `docs/RECHARGE-PLAN.md`); (2) **three death-save failures**, now checked once
-  after every branch so a natural 1's DOUBLE failure is lethal too (it wasn't); (3) **the top of the
-  exhaustion ladder**, thresholded on the DATA cap (`max_level`) so a homebrew ladder kills at its own
-  top. `revive()` = the "I was revived" way back: clears the death, floors HP at 1 (never TAKES hit
-  points — a character who died of Exhaustion at full HP keeps them), resets the death-save track, and
-  drops one exhaustion level (2024 glossary "returns with 1 fewer level"; applied in 2014 too, where RAW
-  is silent, because reviving onto a lethal 6 would kill you on the spot — RAI, surfaced). Healing never
-  un-kills you. 8 behavioral tests. **THE DEAD SCREEN (maintainer's call 2026-08-09): a modal that
-  CANNOT be dismissed by clicking the backdrop** — `DeathScreen.svelte` over the combat sheet, reusing
-  the shared `DialogShell` (its `onDismiss` is now OPTIONAL: omitted → the backdrop isn't clickable and
-  `dismissOnEscape` stays inert, the FirstRunModal pattern, so there's no second shell to maintain).
-  Skull badge, cause as the subtitle, and two ways out: **"I was revived"** and a roster link (without
-  it a permanently dead character would lock the player out — the nav is behind the backdrop). Death
-  gets a heavier backdrop, scoped in TIME (a `:global` rule that only exists while the component is
-  mounted, i.e. exactly while dead). Fixed on the way: `.btn` kept the link underline on an
-  `<a class="btn">` (also fixes DiagnosticsModal's). App-verified by driving the real app — backdrop
-  click and Escape both leave it open; revive closes it and drops exhaustion 6 → 5;
-  `design-preview/death-screen.png`. **Related RAW tail, not done:** taking damage at 0 HP should also
-  add a death-save failure (two on a crit) — we don't know crit-ness at the Damage button, so it needs
-  its own think.
-- [x] **UBUG-16 · Some abilities don't cost their action/bonus action when used (2026-08-09; Rage,
-  Second Wind — audit the rest).** DONE. Root cause: the resource **chip** (`useResourceOrEnter`) routed
-  to the executor only when the pool had exactly one **`apply_effect:`** option — every other pool fell
-  back to a bare `resources.useResource`, which decrements the counter and runs NOTHING. So the Second
-  Wind chip ticked a use down while healing nothing and charging no Bonus Action; Action Surge likewise
-  granted no action. (Rage was fine — it *is* an `apply_effect`. Note `trySpend` returns true without
-  spending OUT of combat, by design: no turn tracking there.) Fix: drop the verb condition — with
-  exactly ONE option, using the resource IS that action, so the chip runs it through
-  `activateResourceOption` (validate → spend → charge the turn slot → run the token), identical to the
-  Actions row. Several options (Focus → Flurry / Patient Defense / Step of the Wind) or none stay a plain
-  decrement — no single action to infer, and it doubles as the honest escape hatch for spending a point
-  on something unmodelled. **Second bug the audit exposed:** the `available` L2 guard was enforced only
-  in `ActionsPanel`'s `disabled` attribute, so the chip could fire Persistent Rage outside its
-  combat-start window — the check moved INTO `activateResourceOption`, where every caller passes. Swept
-  all shipped `resource_options` rows in both editions (focus/ki ×3, second_wind, action_surge, rage,
-  persistent_rage, uncanny_metabolism). 4 behavioral tests incl. all-or-nothing with the Bonus Action
-  already spent.
-  - **Tail the sweep surfaced (pre-existing, now more reachable):** `gain_action` REFUNDS a spent
-    action (`turn.action − 1`), so using Action Surge BEFORE you've acted burns a use for nothing.
-    RAW it grants an ADDITIONAL action, i.e. it should raise the slot MAX for the turn. Fixing it means
-    a per-turn max bump rather than a spent-counter nudge — small, but its own change.
-- [x] **UBUG-17 · Action / Bonus Action / Reaction pips aren't interactive-looking, and only the dot is
-  clickable (2026-08-09).** DONE. The three slots were inert `<span>`s wrapping a 12px pip button, so
-  the label was dead space and nothing signalled clickability. Each slot is now the button — the whole
-  pill is "spend one <slot>" (routed through the existing `trySpend`, which already blocks + warns when
-  the slot is gone), with the pills sharing one hover/cursor rule + the global focus ring
-  ([[charnik-interactive-affordance]]). The pips stay INSIDE as click-to-set (spend up to / restore down
-  to) and stop the pill's click — the same nesting the resource chips use. Known ceiling (identical to
-  those chips): a button can't nest a button, so pips are `role=button`/`tabindex=-1` — by keyboard you
-  spend on the pill and refresh with "Next turn"; restoring ONE pip stays mouse-only.
-- [x] **UBUG-18 · Abilities block uses a different background than the other panels (2026-08-09).**
-  DONE. The ability cards had the panel relationship INVERTED — card on `--color-surface-2` with the
-  save chip on `--color-surface`, while every other block (HP, the combat strip cards, panel cards) is
-  a `--color-surface` panel with `--color-surface-2` controls inside. Flipped both, hover now goes to
-  surface-2 like the sibling controls. Tokens only, no literals ([[new-ui-must-support-themes]]).
+- [x] **UBUG-13 · Level-up re-offered an ASI and double-applied it.** Root cause worth remembering:
+  only the FLATTENED `abilityBoosts`/`feats` were persisted, never the per-slot mapping, so a
+  restored slot could re-derive its boost a second time.
+- [x] **UBUG-14 · A long rest clears one level of Exhaustion.** SRD-verified; the 2024 text's "has
+  also ingested some food and drink" applies unconditionally because rations are not modelled.
+- [x] **UBUG-15 · Death is modelled, and there is a dead screen.** One typed `play.death: {cause}`
+  (an OPEN cause enum, not a `dead` boolean) and ONE `die(cause)` seam every lethal rule lands on.
+  The two SRD interpretations behind it live at that seam in code (`state.svelte.ts`): instant death
+  runs the 5.1 text in BOTH editions because 5.2.1 omits the chapter carrying it, and revive drops
+  one exhaustion level in 2014 too, where RAW is silent, since reviving onto a lethal 6 would kill
+  you again on the spot. The dead screen is deliberately **not dismissible by backdrop or Escape** —
+  a roster link is the other way out, so a dead character cannot lock the player out.
+  - [ ] **RAW tail:** taking damage at 0 HP should add a death-save failure (two on a crit); we do
+    not know crit-ness at the Damage button, so it needs its own think.
+- [x] **UBUG-16 · Abilities now cost their action / bonus action.** The rule, since it decides what
+  a resource chip DOES: with exactly ONE spend option, using the resource IS that action, so the chip
+  runs it through `activateResourceOption` (validate → spend → charge the turn slot → run the
+  token). With several options or none it only decrements — there is no single action to infer, and
+  that doubles as the honest escape hatch for spending a resource on something unmodelled. An L2
+  `available` guard is enforced INSIDE `activateResourceOption`, not in a `disabled` attribute, so no
+  caller can route around it.
+  - [ ] **Tail, pre-existing:** `gain_action` REFUNDS a spent action (`turn.action − 1`), so using
+    Action Surge BEFORE you have acted burns a use for nothing. RAW it grants an ADDITIONAL action —
+    a per-turn max bump, not a spent-counter nudge.
+- [x] **UBUG-17 · Action/Bonus/Reaction pips look interactive, and all of them are** — every pill
+  in that bar signals it the same way (hover + pointer + the global focus ring).
+- [x] **UBUG-18 · Abilities block used a different background** than the panels around it.
 - [ ] **UBUG-19 · Icons are DRAWN, never typed — replace every font glyph doing an icon's job
   (2026-08-09; scope and rationale corrected 2026-08-10).** It was filed as "three emoji to swap": the
   speed/movement field, the lightning by Bonus Action, the bug on the report button. A census says
@@ -1464,27 +1344,11 @@ holds the done-work log; these are the OPEN tails it carried):**
   is its own a11y nit since the card IS a labelled dismiss button today; the volley chooser waits on
   `ROLLER-N`. That an amendment never reaches the append-only `log.jsonl` is finding G in
   [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md), not a tail of this item.
-- [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing — hidden spells still showed in
-  combat.** DONE 2026-07-21. The spellbook's eye/pin were local `$state` sets on a THROWAWAY
-  `demoCharacter()` (never persisted, never read by combat), and `buildSpellGroups` rendered every
-  `build.spells` row — so hiding a spell had no effect on the sheet. Fixed the HIDE path end-to-end:
-  new persisted field `ui.spellsHidden` (effectiveIds; zod-defaulted so old saves load, no migration);
-  the spellbook now edits the ACTIVE character (`characters.active`, demo fallback on direct nav) and
-  the eye writes/saves `spellsHidden`; `buildSpellGroups` filters those out (matched on `SpRow.ref` =
-  effectiveId). Prepare toggles now persist too. Unit-tested + e2e-verified (hide in spellbook →
-  vanishes from combat, live via the shared store). PIN was wired end-to-end afterwards (D3):
-  pins persist per character in `ui.spellsPinned`, no demo hardcode.
-- [x] **REL-3 · Desktop content re-seed on update (0.4.0 data change).** DONE 2026-07-20. The desktop
-  seed (`content/provider.ts`) was skip-if-root-exists → a returning user stayed on their FIRST-run
-  SRD copy and never got shipped data changes (0.4.0 redid a lot: snake_case ids, snake `#content-`
-  headers, regenerated CSVs). Fixed with a `CONTENT_SEED_VERSION` marker (`content/.seed-version`,
-  outside the scanned roots): on an install whose on-disk version is older (or absent — every pre-0.4.0
-  install), `seedShippedContent` REWRITES each shipped file with the new bundled copy, EXCEPT one the
-  user hand-edited (its body no longer matches its own `#content-hash` → drift → preserved, and the
-  existing HashDrift flow still surfaces it). Homebrew + characters are never touched (different roots);
-  character refs already migrate kebab→snake (v1→v3). WEB needs nothing — it always fetches the fresh
-  deploy. Unit-tested over two MemoryStorages (first-run / overwrite-untouched / preserve-edited /
-  up-to-date-noop). **Bump `CONTENT_SEED_VERSION` whenever shipped SRD data changes.**
+- [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing.** Fixed end-to-end via a persisted
+  `ui.spellsHidden`; pins likewise persist in `ui.spellsPinned` (D3), no demo hardcode.
+- [x] **REL-3 · Desktop content re-seed on update.** A `CONTENT_SEED_VERSION` marker re-seeds
+  shipped files on update, preserving any the user hand-edited (hash drift). The "bump it whenever
+  shipped SRD data changes" rule lives on the constant itself (`schema/version.ts`).
 - [ ] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
   2026-08-10; design settled in conversation, nothing built).** The ask: a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
@@ -1599,27 +1463,12 @@ holds the done-work log; these are the OPEN tails it carried):**
     (colliding with the user's own packs through `source:id`) or a character-scoped overlay? Leaning
     overlay plus an explicit "add to my content" action — silently injecting foreign rows into the shared
     pool is a surprise.
-- [x] **REL-1 · Linux release build.** (2026-07-21) `release.yml` is now a `strategy.matrix`
-  (`ubuntu-22.04` + `windows-latest`, `max-parallel: 1` so the two legs merge into one release +
-  `latest.json` instead of racing). The Linux leg apt-installs the Tauri v2 deps
-  (`libwebkit2gtk-4.1-dev`, `libayatana-appindicator3-dev`, `librsvg2-dev`, `libxdo-dev`, `patchelf`,
-  …). Widened `src-tauri/tauri.linux.conf.json` `targets` to `["appimage", "deb"]` (Tauri auto-merges
-  it on the Linux leg) — AppImage is the auto-updatable one (its `.sig` feeds `latest.json`), `.deb` is
-  a plain installer. **rpm omitted**: needs `rpmbuild`, absent on GitHub runners (add it + widen the
-  targets later if Fedora demand appears). macOS still deferred (needs Apple notarization/signing,
-  $99/yr, else Gatekeeper warns).
-- [x] **A11Y-1 · Dialog focus management pass.** DONE 2026-08-09. The `trapFocus` action already
-  existed but only reached the three modals built on `DialogShell`; every hand-rolled dialog still let
-  Tab walk the page behind the backdrop. Applied it to all of them — ConfirmDialog, OrphanDialog,
-  SchemaDiscardDialog, PluginConsentDialog, FirstRunModal, MobileWarning, DataConflictDialog,
-  DataMigrationDialog — so each moves focus in on open, cycles Tab/Shift+Tab inside, and returns focus
-  to the trigger on close. The two data-move dialogs wanted a SPECIFIC initial control (the safe choice,
-  the close button) and hand-rolled it as `$effect(() => btn.focus())` racing the action, so `trapFocus`
-  now takes an optional initial element and both declare it instead. **Verified by driving the app**
-  (Settings ▸ Data ▸ Restore demo): focus starts inside, 12 Tabs never escape, Shift+Tab wraps, Escape
-  returns focus to "Restore demo character". **Deliberately NOT trapped:** `CommandPalette` already
-  focuses its input and restores focus itself (a second restorer would fight it), and the combat
-  popovers (`CombatMenus`, `EffectDurationMenu`) are anchored menus, not modals.
+- [x] **REL-1 · Linux release build** — `release.yml` matrix (ubuntu + windows, `max-parallel: 1`
+  so the legs merge into one release). AppImage is the auto-updatable target, `.deb` a plain
+  installer; rpm omitted (no `rpmbuild` on the runners), macOS deferred on notarization.
+- [x] **A11Y-1 · Dialog focus management.** `trapFocus` on every dialog. **Deliberately NOT
+  trapped:** `CommandPalette` (it restores focus itself — a second restorer fights it) and the
+  combat popovers, which are anchored menus rather than modals.
 - [ ] **REL-2 · Package-repo distribution channels.** Beyond GitHub Releases, ship Charnik through
   the platform package managers so users install/update the native way. Target set (decided):
   - **AUR** (Arch) — a `charnik-bin` PKGBUILD pulling the Release AppImage; `git push` to
@@ -1656,19 +1505,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   Tauri's Linux webkit2gtk/wry backend; fix is `glib 0.20` (a gtk-rs major, pinned by Tauri, not a
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
-- [x] **SEC-2 · route every `{@html}` through a sanitizer — no manual eslint-disable bypass.** DONE
-  (the helper landed with UBUG-7's markdown work; **verified end-to-end + closed 2026-08-09**). Both
-  `{@html}` sites in `src/` are sanitized: `ArticleProse` renders `renderContentMarkdown` (marked →
-  DOMPurify) and the demo body goes through the shared `sanitizeHtml()` (`content/markdown.ts`) — which
-  exists precisely because **locale catalogs are user-droppable** (a user adds a locale with no rebuild),
-  so an i18n HTML string is untrusted input. Both `eslint-disable svelte/no-at-html-tags` comments now
-  cite the sanitize call on the same value, the only allowed form. **Advisory half done too:**
-  `pnpm audit` was NOT clean (9 findings — the older "audit clean" line below was stale). Bumped
-  **dompurify 3.4.12 → 3.4.13** (the advisory WAS on the lib) and `@sveltejs/kit` 2.70.1 → 2.70.2;
-  the remaining transitive dev/build-only ones (postcss, nanoid, js-yaml, brace-expansion, fast-uri)
-  are pinned via `pnpm-workspace.yaml` overrides, following the esbuild/cookie precedent. `pnpm audit`
-  → **no known vulnerabilities**; full gate green after the bumps. See docs/SECURITY.md.
-
+- [x] **SEC-2 · Every `{@html}` goes through the sanitizer** — no hand-rolled escaping; see
+  `docs/SECURITY.md`.
 **Data versioning (DECIDED 2026-07-06 — design below; surfaced in the refactor, 2026-07-05):**
 - **DATA-VER-1 · content versioning — BUILT (2026-07-06, tasks 1–5).** Design-of-record: a
   `#content-<key>:` directive header block (leading comment lines before the CSV column row) carries
@@ -1698,34 +1536,21 @@ holds the done-work log; these are the OPEN tails it carried):**
   Chthonic/Infernal) parsed from character-origins.md tables. Remaining: 2024 **Dragonborn draconic
   ancestry** (paired damage-type table) + **Gnome/Goliath** (prose-list choices), and encoding the
   lineage benefits as effects (currently text-only — fine, since 2024 species carry no ASI).
-- [x] **Half-Elf +1/+1 choice** (5e) — DONE. Data-driven `boost_choice` column (`NxM`, converter
-  parses "M ability scores of your choice increase by N" → Half-Elf `1x2`); builder shows a chip
-  picker excluding the fixed-boosted ability (CHA), folded into `abilityBoosts`. Generalizes to any
-  species/sub-option with a free-choice ASI.
+- [x] **Half-Elf +1/+1 choice** (5e) — data-driven, no class-name branching.
 - [x] **Expertise** — DONE. `build.expertise[]`, derive exposes a `prof` **enum**
   (`none|half|proficient|expertise`, not two booleans), builder ×2 toggle on proficient skills,
   combat shows a ringed dot. (Strict cap by class-feature count still TODO.)
-- [x] **Languages** — DONE. New `language` content type (16 SRD Standard+Exotic, converted from the
-  appendix tables) + `build.languages` ref array; builder shows a language chip picker (lenient —
-  pick any), stored on the character. (Auto-granting fixed languages from species/background text is
-  a later refinement.)
+- [x] **Languages** — a `language` content type (16 SRD rows), granted by species/background.
 - [~] **Level-up flow** — minimal DONE: a "▲ Level up" control on the combat sheet advances a chosen
   class by +1 on the open character and saves; the reactive sheet recomputes HP / proficiency / spell
   slots / features live. Remaining: **guided choices at the new level** (ASI/feat pick, new spells,
   subclass at its level) — needs the builder to hydrate from an existing character (edit mode), also
   the prereq for full editing. Add-a-class-while-levelling also via the builder.
-- [x] **Inventory/equipment at build** — DONE. An Inventory card: add items from the compendium,
-  set quantity, toggle equipped (armor/shield/weapon); stored in `build.inventory` (derive already
-  uses equipped armor/shield for AC). The play-view card-grid inventory management is separate.
-
+- [x] **Inventory/equipment at build** — an Inventory card on the build page.
 **Effects engine (finish the vocab, add authoring):**
 - [x] **Custom-modifier UI** — DONE. Combat "Custom modifier" builder (grouped target · +/− ·
   amount) → `flat_bonus` token, applied live via the reactive sheet.
-- [x] **Mechanically apply the rest of the vocab** — DONE. `advantage` presets adv on the roll;
-  dice bonus (`+1d4` Bless / `−1d4` Bane) is rolled into the total; `grant_proficiency` grants
-  skill/save proficiency; `resist_immune` collects damage defenses (shown on the sheet);
-  `apply_condition` expands to the referenced condition's own tokens. All gated on the effects-auto
-  toggle. (flat_bonus / set_override were already applied.)
+- [x] **The rest of the L1 vocab is mechanically applied** — see `docs/EFFECTS.md`.
 - [~] **Feat stat/skill bonuses** — engine folds feat `effects` already (derive-gather pushes feat
   rows). **Started (2026-08-02):** convert.mjs now PRESERVES authored feat `effects` (was wiped on
   re-run, like class_features); **Alert (2024)** encoded faithfully =
@@ -1741,11 +1566,7 @@ holds the done-work log; these are the OPEN tails it carried):**
     conditional bonuses (Archery +2 ranged attack), armor-gated bonuses (Defense +1 AC while armored),
     once-per-turn damage rerolls (Savage Attacker / Great Weapon Fighting), spell grants (Magic
     Initiate), skill/tool CHOICE grants (Skilled — needs a choice UI too).
-- [x] **Plugin sandbox** (QuickJS-WASM) for exotic homebrew logic — **BUILT** (PLG-1..3, 2026-07-19;
-  full QuickJS-NG-in-WASM host with PLG-SEC containment, 58 tests). Details in the "PLG · Plugin
-  sandbox (L3 expressiveness) — BUILT" section above. Open tails are only the plugin-dependency
-  notification view + portability/version awareness — NOT the sandbox itself.
-
+- [x] **Plugin sandbox** (QuickJS-WASM) — see `docs/PLUGINS.md`.
 **Spellcasting follow-ups:**
 - [~] **Resource subsystem** — engine + tracker DONE. `grant_resource:<id>:<max>:<recharge>` parsed
   into resource pools (`collectResources`, data-driven / class-agnostic — rage, ki, sorcery points,
@@ -1773,9 +1594,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   short-rest pip section; spell picker preview (EntryList+WikiDetail on pick).
 
 **Platform / content:**
-- [x] **Tauri fs Storage** impl + platform factory (task #6) — DONE. `TauriStorage` over plugin-fs
-  behind the seam (atomic temp→rename, lazy appDataDir root, `..`-rejection); `provider.ts` factory
-  picks it inside a Tauri webview, IndexedDB elsewhere; capabilities scope `$APPDATA` recursive.
+- [x] **Tauri fs Storage** impl + platform factory.
 - [~] **Content-type identification** — loader `#charnik-type: <type>` first-line directive DONE
   (freely-named files declare their type; explicit wins over filename; unknown type → error).
   Remaining: **UI type-assign** (a form that writes the directive) — folds into homebrew authoring.
@@ -1791,11 +1610,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   Pages deploy recovery still open.
 
 **Code quality:**
-- [x] **Friendly source labels** — DONE. `sourceLabel()` maps "SRD 5.1"→"D&D 5e",
-  "SRD 5.2.1"→"D&D 5.5e" (homebrew/third-party pass through), applied to the compendium article
-  source line, the source filter chips, and the "By source" grouping. The raw `source` tag stays
-  exact (CC-BY attribution + `type:source:id` identity) — display map only. (Any other future
-  source-display site should route through the same helper.)
+- [x] **Friendly source labels** — `sourceLabel()` shows "D&D 5e (2014)", never the raw SRD tag;
+  the `source` value itself stays exact for attribution ([[friendly-source-labels]]).
 - [ ] **CSS class-naming rename pass** — the combat sheet has cryptic classes (`.ae`, `.aedot`,
   `.mcell`, `.sk`, `.atk`, `.an/.ah/.ad/.am`, `.hpadj/.hpbtn`, `.combatsw`, …) that read poorly and
   invite collisions (already hit `.combat`, `.modrow`). Rename to verbose, self-evident, kebab-case
@@ -1803,25 +1619,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   already follows this (`modifier-row`, `modifier-amount`).
 
 **Refactoring debt (self-flagged — patterns that drifted from "this is TypeScript, model it"):**
-- [x] **R1 · Group edit/level-up state into `EditContext`** — BuildVM scattered the level-up state
-  across 7 fields (`editId`, `editPlay`, `editUi`, `hydratedBoosts`, `hydratedFeats`,
-  `hydratedSpells`, `hydratedSkills`). Collapse to one `edit: EditContext | null` (a typed object);
-  `edit === null` means "creating". Every `this.editId ? …` becomes `this.edit`.
-- [x] **R2 (CVM-4) · Type `overlay.kind`** — CombatVM's overlay uses `kind: string`, compared against ~15
-  bare string literals (`'dice'`, `'levelup'`, `'customeffect'`, …) spread over state + CombatMenus.
-  Make a `MenuKind` union and type the overlay; kills typos + enables exhaustiveness.
-- [x] **R3 (CVM-3) · Name the action-economy slot type** — `'action' | 'bonus' | 'reaction'` appears ~13×
-  as bare strings (slotMax, usePip, trySpend, the page's SLOTS). One `type ActionSlot` + a single
-  source of the slot list. (Relates to the enums-not-string-literals rule.)
-- [x] **R4 (CH2) · Centralise effect-token parsing** — the bounded-vocab regexes (`flat_bonus:…`,
-  `grant_resource:…`, `grant_proficiency:…`, advantage/dice) are re-implemented in `effects/index.ts`
-  (parseEffect/collectResources), `derive.ts` (abilityBonus + grant_proficiency scan), `combat/
-  state.svelte.ts` (action-pip scan) and `combat/helpers.ts` (rollEffectsFor). Parse ONCE in the
-  effects module and have every consumer read the structured result — the token grammar must live
-  in one place (it's also the security surface, docs/SECURITY.md).
-- [x] **R5 (CH3) · Extract the click-to-set pip helper** — `slotClick`, `resourceClick` and `usePip` each
-  re-derive the same "click a filled pip → spend to it; click a spent pip → restore to it" math.
-  One pure `pipClick(count, spent, index) → newSpent`, unit-tested, used by all three.
+- [x] **R1–R5 · Typing/extraction refactors.** `EditContext` for edit/level-up state; typed
+  `overlay.kind`; a named action-economy slot type; effect-token parsing centralised on the bounded
+  vocab; the click-to-set pip helper extracted (`pipClick`).
 - [~] **R6 · Source-tag constants** — mostly MOOT. App code already uses consts (`HOMEBREW_SOURCE`,
   `SOURCE_LABELS` keys, a local `S` in demo/sheet); the raw `'SRD 5.x'` strings that remain live in the
   edition-SCOPED converters (each `.mjs` emits one edition, declared once) + per-file test `S` consts,
@@ -1838,22 +1638,10 @@ A coordinated set: split the wiki detail into components, type the loader proper
 the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below; live shapes in
 `docs/SURFACE.md`). Ordering + open decisions below.
 
-- [x] **WD-1 · Split `WikiDetail` (~740 lines)** — DONE (dispatcher + SpellHead/MonsterHead/GenericHead
-  + ArticleProse + wikiEdit types; actions moved to dispatcher; read + translate verified via
-  screenshots — spell/monster/generic + editable path pixel-faithful). Original notes: split into: dispatcher (`WikiDetail`) + per-type
-  `SpellHead`/`MonsterHead`/`GenericHead` (mode-aware: `read | translate | editor`) + shared
-  `ArticleProse` (body/higher_level/material). `actions` slot moves to the dispatcher (fixes:
-  today it only renders in the generic branch, so Spellbook's Cast never shows on a spell).
-  Scope THIS pass = **read + translate parity only**; `editor` mode stays the WIP stub.
-  Safety net: `WikiDetail.browser.test.ts` (P9 infra) asserting each type/mode renders the right
-  fields + inputs, plus per-type screenshots for CSS (moving ~470 scoped lines into 4 files is
-  the regression risk).
-- [x] **WD-2 · Extract `RollButton`** — DONE. shared roll affordance (plain click = `rollFormula` +
-  toast; ctrl/alt-click = `openDiceTray(request)` CONTRACT — `$lib/dice/tray.svelte`, a registry with an
-  instant-roll fallback until a real tray registers, so callers aren't nailed to a concrete tray).
-  Pill/icon variants own the styling; replaced the inline spell-effect (d20/Dmg/Heal) + monster HP 🎲.
-  Spellbook Cast left alone (it's a play-state action, not a dice roll). Verified by screenshot + a
-  contract test.
+- [x] **WD-1 · Split `WikiDetail`.** Read + translate parity only; `editor` mode stayed a stub.
+  **Unverified note carried from that pass, worth checking when next in there:** the Cast action was
+  said to render only in the generic branch, so a spell in the Spellbook may never show it.
+- [x] **WD-2 · Extract `RollButton`** — the shared roll affordance.
 - [ ] **TYPE-2 · Typed `LoadedRow` (the loader keeps the type it already knew)** — the loader
   reads `#content-type:` (or filename) and runs the typed `parseRow(type, raw)`, then **discards
   the type** into `data: Record<string, unknown>`. Make `LoadedRow` a discriminated union on
@@ -1929,32 +1717,11 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   - Staleness: `sourceHash` differs from the row's current `#content-hash` → keep but flag "source
     changed since your draft."
   - Demo/read-only: caching is harmless but saving is blocked, so skip caching there.
-- [x] **LOC-CHECK · Flag partial/mis-filled translations (loader content-health)** — DONE. the loader
-  discovers locales but doesn't verify a locale's rows are actually complete. Add a check that emits a
-  WARN `issue` (never throws — same channel as bad rows) when a row is **partially** translated for a
-  locale: it has SOME `<base>_<loc>` filled but is MISSING a `<base>_<loc>` whose `<base>_en` is
-  non-empty. That's the "someone mis-filled the table" signal (started a translation, missed a field);
-  a fully-untranslated row is NOT flagged (normal — EN fallback). Keyed off `PROSE_BASES`; surfaced in
-  content-health. Low-noise by construction. (A mis-fill signal — orthogonal to the tracked **LOC-STATUS**
-  below, which is a per-locale workflow state the user sets, not a completeness check.)
-- [x] **LOC-STATUS · Tracked per-locale localization status (translate view)** — DONE 2026-07-19. Each
-  content row carries a tracked localization status PER target language, set + shown in `/translate`:
-  **not_started / started / machine / reviewed** (UA «Не почато» / «Почато» / «Машинний переклад» /
-  «Вичитано»). Stored **in-file** in a `loc_status_<loc>` column via the SAME write-path as prose
-  (`saveLocStatus`, re-stamps `#content-hash`; the loader re-attaches it like the prose columns). The
-  vocabulary is a `LOC_STATUS` const (schemas.ts) — **extensible**: a new member + a marker glyph + a
-  `translate.status.<x>` i18n key auto-appears in the control + list marker (both iterate
-  `LOC_STATUS_ORDER`). `reviewed` and `machine` are set **only explicitly**; an UNSET column DERIVES a
-  default from prose coverage (no prose → not_started, some → started), so legacy already-translated rows
-  read right and pristine rows need no write. The **source language is always `reviewed`** (virtual),
-  read from a per-file `#content-source-lang` directive (default `en`) threaded onto `LoadedRow.sourceLang`
-  — so "en isn't always the source" needs no data write. The old `translationStatus` coverage fn was
-  renamed `translationCoverage` (now the private default-deriver + content-health helper); the list
-  marker + header switched from coverage (○~✓) to the tracked status. Tests: loader (col re-attach,
-  source-lang, no phantom locale) + translate (`locStatus` precedence, `saveLocStatus` write/re-stamp).
-  **Boundary:** single-value column (one status per locale); orthogonal flags (e.g. `outdated` AND
-  `reviewed`) would be a later multi-column change. Chrome copy in the view stays hardcoded-EN (pre-
-  existing; only the status labels went through i18n).
+- [x] **LOC-CHECK · Flag partial/mis-filled translations.** A loader WARN issue, never a throw —
+  the same channel as a bad row. A fully-untranslated row stays silent: EN fallback is the contract.
+- [x] **LOC-STATUS · Tracked per-locale localization status.** `loc_status_<loc>` column, an open
+  enum (`not_started|machine|started|reviewed`) whose members drive the marker + control
+  automatically — add a member and it appears (`content/schemas.ts`).
 - [ ] **LINT-1 · Ban type-escape hatches** — tsconfig is already max-strict (`strict` +
   `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`); the hole is lint. Add:
   `@typescript-eslint/no-non-null-assertion`, keep `no-explicit-any` + `ban-ts-comment` (errors),
