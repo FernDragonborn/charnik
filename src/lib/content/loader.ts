@@ -99,6 +99,10 @@ interface ListOptions {
 
 export interface ContentGraph {
 	rows: LoadedRow[];
+	/** The content-pack roots this graph was loaded from — every root EXCEPT the writable homebrew
+	 *  one (that arrives as an `extra` source). A file under one of these is managed by a pack and an
+	 *  update may overwrite it, so homebrew authoring must fork rather than write into it. */
+	packRoots: string[];
 	byType: Map<ContentType, LoadedRow[]>;
 	byEffectiveId: Map<string, LoadedRow>;
 	/** `${type}:${id}` → every version (across sources/editions) — powers the 5e/5.5e toggle. */
@@ -497,6 +501,7 @@ export async function loadContent(
 
 	return {
 		rows: uniqueRows,
+		packRoots: roots,
 		byType,
 		byEffectiveId,
 		articles,

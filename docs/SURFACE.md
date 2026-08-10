@@ -607,7 +607,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/provider.ts`
 
-- `const CONTENT_ROOTS` — The content roots that ship with the app (both editions).
+- `function discoverContentRoots` — * Every installed content pack, discovered by SCANNING `content/` — a pack is a folder, so the * folder listing is th…
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
 - `function seedShippedContent` — * Seed / UPDATE the shipped SRD roots on disk (desktop).
 - `function copyMissingRoots` — Copy each root's files from `from` to `to`, byte-for-byte, but skip a root that already exists in * `to` (so we never…

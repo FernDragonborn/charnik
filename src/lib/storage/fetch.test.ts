@@ -67,6 +67,22 @@ describe('FetchStorage.list / exists (manifest-backed)', () => {
 		]);
 	});
 
+	it('reports the manifest roots under a dir as SUBDIRECTORIES (pack discovery scans for these)', async () => {
+		fetchMock.mockResolvedValueOnce(
+			okJson({ roots: { 'content/srd-2024': ['spells_srd.csv'], 'content/srd-2014': [] } })
+		);
+		expect(await new FetchStorage().list('content')).toEqual([
+			{ path: 'content/srd-2024', name: 'srd-2024', isDir: true },
+			{ path: 'content/srd-2014', name: 'srd-2014', isDir: true }
+		]);
+	});
+
+	it('does not report a root as a subdirectory of itself', async () => {
+		fetchMock.mockResolvedValueOnce(okJson(manifest));
+		const entries = await new FetchStorage().list('content/srd-2024');
+		expect(entries.every((e) => !e.isDir)).toBe(true);
+	});
+
 	it('an unknown dir lists empty (no throw)', async () => {
 		fetchMock.mockResolvedValueOnce(okJson(manifest));
 		await expect(new FetchStorage().list('content/nope')).resolves.toEqual([]);

@@ -184,8 +184,8 @@ export function newHomebrewFile(type: ContentType, namePart: string): string {
 }
 
 /** True when `file` ships with the app (lives under a seeded content root), so an update can
- *  overwrite it → unsafe to write. Root-based on the passed `shippedRoots` (provider's CONTENT_ROOTS),
- *  so it extends to any FUTURE default pack we ship — not hardcoded to SRD. */
+ *  overwrite it → unsafe to write. Root-based on the passed `shippedRoots` (`graph.packRoots`), so it
+ *  covers every installed pack — the bundled SRD and anything the user added — not just SRD. */
 export function isShippedFile(file: string, shippedRoots: readonly string[]): boolean {
 	return shippedRoots.some((r) => file === r || file.startsWith(`${r}/`));
 }

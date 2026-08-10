@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
-import { copyMissingRoots, seedShippedContent } from './provider';
+import { copyMissingRoots, discoverContentRoots, seedShippedContent } from './provider';
 import { stampDirectives, type MetaKey } from './meta';
 import { hashBody } from './hash';
 
@@ -10,6 +10,44 @@ async function stamped(body: string): Promise<string> {
 }
 const ROOTS = ['content/srd-2024'];
 const P = 'content/srd-2024/spells_srd.csv';
+
+/** A pack is a FOLDER under `content/` and the roots are found by scanning for those folders — no
+ *  index file to keep in sync (AI-CONVENTIONS §1.6). These pin the three things that scan must get
+ *  right: user-added packs appear, homebrew never does, and the order is deterministic. */
+describe('discoverContentRoots (a pack is a folder)', () => {
+	async function withPacks(): Promise<MemoryStorage> {
+		const st = new MemoryStorage();
+		await st.write('content/srd-2024/spells_srd.csv', 'id\nfireball');
+		await st.write('content/srd-2014/spells_srd.csv', 'id\nfireball');
+		await st.write('content/homebrew/spells_hb.csv', 'id\nmy_spell');
+		await st.write('content/.seed-version', '5');
+		return st;
+	}
+
+	it('finds every pack folder, excludes homebrew, and ignores loose files', async () => {
+		expect(await discoverContentRoots(await withPacks())).toEqual([
+			'content/srd-2024',
+			'content/srd-2014'
+		]);
+	});
+
+	// the compendium renders rows in graph order, so root order decides which edition heads every
+	// list; 2024 must stay ahead of 2014 as it was when the roots were hardcoded
+	it('puts the newer SRD first', async () => {
+		const roots = await discoverContentRoots(await withPacks());
+		expect(roots.indexOf('content/srd-2024')).toBeLessThan(roots.indexOf('content/srd-2014'));
+	});
+
+	it('picks up a pack the user installed, with no code change', async () => {
+		const st = await withPacks();
+		await st.write('content/phb-homebrew/feats_phb.csv', 'id\nalert');
+		expect(await discoverContentRoots(st)).toContain('content/phb-homebrew');
+	});
+
+	it('returns nothing (instead of throwing) when content/ does not exist yet', async () => {
+		expect(await discoverContentRoots(new MemoryStorage())).toEqual([]);
+	});
+});
 
 /** The seed step for the desktop first-run: copy shipped content onto disk. Tested over the Storage
  *  seam (two MemoryStorages) so the risky copy/skip logic is covered without Tauri or fetch. */

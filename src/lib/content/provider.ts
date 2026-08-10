@@ -13,6 +13,9 @@
  * files are overwritten, hand-edited ones (hash drift) are preserved; homebrew/characters untouched.
  * WEB needs none of this — it always fetches the freshly-deployed static content.
  *
+ * The set of roots is NOT a constant: each folder under `content/` is one content PACK (the shipped
+ * SRD is simply the pack we bundle), discovered by scanning — see `discoverContentRoots`.
+ *
  * Everything above this uses `getContentGraph()` and never touches Storage directly.
  */
 import { base } from '$app/paths';
@@ -29,8 +32,30 @@ import { CONTENT_SEED_VERSION } from '$lib/schema/version';
  *  but OUTSIDE them (the loader only scans the `srd-*` roots), so it's never parsed as content. */
 const SEED_VERSION_FILE = 'content/.seed-version';
 
-/** The content roots that ship with the app (both editions). */
-export const CONTENT_ROOTS = ['content/srd-2024', 'content/srd-2014'];
+/** Where content packs live. Each direct SUBFOLDER is one pack. */
+const CONTENT_DIR = 'content';
+
+/**
+ * Every installed content pack, discovered by SCANNING `content/` — a pack is a folder, so the
+ * folder listing is the file list and there is no index to keep in sync (AI-CONVENTIONS §1.6).
+ * The shipped SRD is just the pack the app happens to bundle. Excludes the writable homebrew root
+ * (loaded separately as the user's own source).
+ *
+ * Order matters and is NOT cosmetic: the compendium list does not dedupe an article across editions,
+ * it just renders rows in graph order, so the FIRST root is the edition a reader sees at the top of
+ * every list. Descending keeps `srd-2024` ahead of `srd-2014` — the current edition of the game leads,
+ * which is what the app did when these roots were a hardcoded array.
+ * ponytail: name-ordering is a stand-in for a real "which edition leads" rule; the actual fix is for
+ * the browse list to pick an edition explicitly instead of inheriting root order (PLAN · REL-4).
+ */
+export async function discoverContentRoots(storage: Storage): Promise<string[]> {
+	// a missing `content/` (fresh install, before the seed) must not blank the app
+	const entries = await storage.list(CONTENT_DIR).catch(() => []);
+	return entries
+		.filter((e) => e.isDir && e.path !== HOMEBREW_ROOT)
+		.map((e) => e.path)
+		.sort((a, b) => b.localeCompare(a));
+}
 
 let cache: Promise<ContentGraph> | null = null;
 
@@ -46,14 +71,21 @@ async function buildGraph(): Promise<ContentGraph> {
 	const homebrew: ContentSource[] =
 		platform === Platform.Headless ? [] : [{ storage: getUserStorage(), root: HOMEBREW_ROOT }];
 
+	const bundled = new FetchStorage(base);
 	if (platform === Platform.Desktop) {
-		// desktop: seed/UPDATE the shipped content on disk (first run + version bumps), then read it
+		// desktop: seed/UPDATE the BUNDLED packs on disk (first run + version bumps), then read every
+		// pack that is actually installed there — which is the bundled set plus anything the user added.
 		const user = getUserStorage();
-		await seedShippedContent(new FetchStorage(base), user, CONTENT_ROOTS, CONTENT_SEED_VERSION);
-		return loadContent(user, CONTENT_ROOTS, homebrew);
+		await seedShippedContent(
+			bundled,
+			user,
+			await discoverContentRoots(bundled),
+			CONTENT_SEED_VERSION
+		);
+		return loadContent(user, await discoverContentRoots(user), homebrew);
 	}
 	// web + headless (build-time prerender / tests): read the bundled CSVs over fetch
-	return loadContent(new FetchStorage(base), CONTENT_ROOTS, homebrew);
+	return loadContent(bundled, await discoverContentRoots(bundled), homebrew);
 }
 
 /** The CONTENT_SEED_VERSION last written to disk, or null if never seeded / unreadable. */

@@ -57,7 +57,25 @@ export class FetchStorage implements Storage {
 	}
 	async list(dir: string): Promise<FileEntry[]> {
 		const m = await this.loadManifest();
-		return (m.roots[dir] ?? []).map((name) => ({ path: `${dir}/${name}`, name, isDir: false }));
+		const files = (m.roots[dir] ?? []).map((name) => ({
+			path: `${dir}/${name}`,
+			name,
+			isDir: false
+		}));
+		// HTTP has no directory listing, so the manifest's KEYS stand in for one: a root that sits
+		// under `dir` reports as a SUBDIRECTORY. Without this, listing `content/` came back empty and
+		// pack discovery (which scans for folders) saw nothing on the web build.
+		const prefix = dir === '' ? '' : `${dir}/`;
+		const subdirs = new Set<string>();
+		for (const root of Object.keys(m.roots)) {
+			if (root === dir || !root.startsWith(prefix)) continue;
+			const name = root.slice(prefix.length).split('/')[0];
+			if (name) subdirs.add(name);
+		}
+		return [
+			...[...subdirs].map((name) => ({ path: `${prefix}${name}`, name, isDir: true })),
+			...files
+		];
 	}
 
 	async write(): Promise<void> {

@@ -5,7 +5,7 @@
 	// (schema-checked, UTF-8-BOM/CRLF, atomic), then hands the new id back to the caller.
 	import { onMount } from 'svelte';
 	import { getUserStorage } from '$lib/storage/provider';
-	import { resetContentGraph, CONTENT_ROOTS } from '$lib/content/provider';
+	import { resetContentGraph } from '$lib/content/provider';
 	import {
 		fieldsFor,
 		blankDraft,
@@ -72,14 +72,17 @@
 		ondelete?: (() => void) | undefined;
 	} = $props();
 
+	// The installed content packs (SRD + anything the user added). A file under one of them is
+	// pack-managed, so an edit there must fork into homebrew instead. The graph is loaded before
+	// this form can exist — the row being edited came out of it.
+	const packRoots = $derived(content.graph?.packRoots ?? []);
+
 	// Editor mode is captured once (the parent remounts via {#key editRow.effectiveId}). Its save
 	// target = the row's own homebrew file, or a fork into the homebrew file when the row ships.
 	// svelte-ignore state_referenced_locally
 	const editing = !!editRow;
 	// svelte-ignore state_referenced_locally
-	const editShipped = editRow
-		? isShippedFile(`${editRow.root}/${editRow.file}`, CONTENT_ROOTS)
-		: false;
+	const editShipped = editRow ? isShippedFile(`${editRow.root}/${editRow.file}`, packRoots) : false;
 	// svelte-ignore state_referenced_locally
 	const editTarget = editRow
 		? editShipped
@@ -135,9 +138,9 @@
 	let sel = $state(homebrewFile(type));
 	let newFileName = $state('');
 	const target = $derived(sel === NEW_FILE ? newHomebrewFile(type, newFileName) : sel);
-	const targetShipped = $derived(isShippedFile(target, CONTENT_ROOTS));
+	const targetShipped = $derived(isShippedFile(target, packRoots));
 	onMount(async () => {
-		targets = await listTypeTargets(getUserStorage(), type, CONTENT_ROOTS);
+		targets = await listTypeTargets(getUserStorage(), type, packRoots);
 		// resume the most-recent unsaved add-draft for this type (unless the parent already handed us a
 		// specific one to resume, we're editing an existing row, or content is read-only).
 		if (!resumeGuid && !editing && !readOnly) {

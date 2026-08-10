@@ -1595,6 +1595,24 @@ holds the done-work log; these are the OPEN tails it carried):**
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
   updated without shipping an app release.
 
+  **Slice 1 SHIPPED 2026-08-10 — a pack is a folder, roots are discovered, not declared.** The
+  hardcoded `CONTENT_ROOTS = ['content/srd-2024','content/srd-2014']` is gone: `discoverContentRoots`
+  scans `content/` for folders (excluding the writable homebrew root), so the bundled SRD is simply
+  the pack we ship and a folder dropped in beside it loads with no code change. Desktop scans the real
+  directory; the web build's `FetchStorage.list` now reports the manifest's roots as SUBdirectories
+  (it previously could not see a directory at all, so a `list('content')` came back empty);
+  `tools/build-static-content.mjs` scans instead of listing roots too. `graph.packRoots` carries the
+  discovered set so homebrew authoring still knows which files are pack-managed (it read the constant
+  before). **Two findings worth keeping:**
+  - **Root ORDER is load-bearing and was accidental.** The compendium never dedupes an article across
+    editions — `groupRows` sorts stably, so the first root's rows head every list. Sorting roots
+    alphabetically silently flipped every list from 5.5e to 5e (caught by `tools/visual/shot.mjs`, not
+    by the 1084 unit tests). Discovery now sorts DESCENDING to keep 2024 ahead of 2014, which is a
+    stand-in, not a rule: **the real fix is for the browse list to choose an edition explicitly rather
+    than inherit filesystem order** — do that before packs can define overlapping articles.
+  - Deleting a bundled pack still re-seeds it on next launch (`copyMissingRoots`), which is the
+    "deleting or downgrading the SRD pack needs an answer" item below, now reachable from the UI-side.
+
   **Manifest-free by design** (the case that produced the general rule — **AI-CONVENTIONS §1.6**, "no
   manifests or index files: discover by scanning, describe in-band"). A sidecar `pack.json` was proposed
   and REJECTED: the project deliberately

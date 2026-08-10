@@ -10,7 +10,12 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const ROOTS = ['content/srd-2024', 'content/srd-2014'];
+// one folder under content/ = one content pack; scan for them rather than listing them here, so a
+// pack added to the repo ships on the web with no edit to this script (AI-CONVENTIONS §1.6)
+const ROOTS = readdirSync(resolve(root, 'content'), { withFileTypes: true })
+	.filter((e) => e.isDirectory() && e.name !== 'homebrew')
+	.map((e) => `content/${e.name}`)
+	.sort();
 const destBase = resolve(root, 'static/content');
 
 if (existsSync(destBase)) rmSync(destBase, { recursive: true, force: true });
