@@ -112,6 +112,44 @@ fix was one member (`short_one`) + one `rest()` branch, not a new `partialRechar
 keep the union in ONE owner module (D11), and handle the new member everywhere the compiler flags.
 A future different amount → another member (or generalize *then*, YAGNI), still not a boolean.
 
+### 1.6 No manifests or index files — discover by scanning, describe in-band
+
+**Rule.** A set of things on disk is discovered by **scanning the folder**, and each thing describes
+**itself**, in itself. Do not add a sidecar file that lists, indexes or versions other files.
+For content that means the `#content-*` header block inside each CSV; for anything else it means the
+metadata rides the artefact.
+
+**Why.** A manifest is a second source of truth that immediately starts drifting from the files it
+claims to describe: rename a file and you edit two places, delete one and the index lies, hand-edit a
+row and the manifest's version is stale. It also taxes the *author* — this project's whole premise is
+that a non-technical person owns their data as plain CSV, and "also remember to bump the JSON" is
+exactly the tax that premise exists to remove. Prior art already in the tree: `drafts/store.ts`
+("ONE self-contained JSON per draft, **NO manifest/index** — discover by scanning"), and every content
+CSV carrying its own `#content-source` / `-license` / `-id` / `-hash`.
+
+**The case that settled it (2026-08-10, REL-4).** Designing content packs fetched from a URL, a
+`pack.json` manifest was proposed — version, file list, license, source tag — and rejected. Going
+in-band turned out **strictly better**, not merely equal:
+- a pack is a **folder**, so the folder listing IS the file list — no format to keep in sync;
+- matching by the in-band **`#content-id`** GUID makes a rename a no-op, where a path-keyed manifest
+  would have produced a duplicate;
+- **per-file `#content-hash`** answers "did *this* file change", which is finer-grained than a
+  pack-level semver *and* lines up exactly with the per-file hand-edit check REL-3 already does.
+
+**How to apply.** Reach for scanning + in-band metadata first, every time — the pull toward "just add a
+small index" is constant and it is what this rule exists to resist. If a new sidecar looks unavoidable,
+say why in the PR: the bar is that the fact genuinely cannot live inside any single artefact.
+
+**Legitimate exceptions — these are NOT the artefact this rule is aimed at, do not "clean them up":**
+- **`plugins/<ns>/plugin.json`** — a plugin is *code*, not data, and its manifest carries the **consent
+  hash**, a security artefact that needs a stable, non-executable subject to hash (§4 / SECURITY.md).
+- **`collisions.json`** — records a decision *between* several sources. It cannot live in one of them
+  without making that file authoritative over the others; PLAN keeps it deliberately separate from
+  `charnik.config.json` for the same reason.
+- **Single-field markers** (`demo-seeded.json`, `content/.seed-version`) — these state one fact about
+  the install, they do not index anything.
+- **`charnik.config.json`** — app configuration (which roots are enabled), not a description of data.
+
 ---
 
 ## 2. TypeScript & code quality

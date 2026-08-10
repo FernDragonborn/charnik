@@ -1602,7 +1602,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
   updated without shipping an app release.
 
-  **Manifest-free by design.** A sidecar `pack.json` was proposed and REJECTED: the project deliberately
+  **Manifest-free by design** (the case that produced the general rule — **AI-CONVENTIONS §1.6**, "no
+  manifests or index files: discover by scanning, describe in-band"). A sidecar `pack.json` was proposed
+  and REJECTED: the project deliberately
   keeps data in CSV, and every `#content-*` header already carries what a manifest would —
   `#content-source` (pack identity, and the namespacing key), `#content-license` + `#content-url`
   (attribution), `#content-id` (a GUID), `#content-updated_at`, `#content-hash`, `#content-systems`.
