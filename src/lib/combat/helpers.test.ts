@@ -14,6 +14,7 @@ import {
 	remainingRounds,
 	isEffectExpired,
 	parseDamageParts,
+	dealsDamage,
 	formatDamageParts,
 	applyDefense,
 	standardActions,
@@ -595,6 +596,29 @@ describe('parseDamageParts — typed dice pool + flat mod (A7: a bonus die is no
 
 	it('empty damage → no parts', () => {
 		expect(parseDamageParts('')).toEqual([]);
+	});
+});
+
+describe('dealsDamage — does an attack have damage worth rolling?', () => {
+	it('dice count', () => {
+		expect(dealsDamage([{ dice: { 8: 1 }, mod: 0, type: 'slashing' }])).toBe(true);
+	});
+
+	it('a FLAT-only part counts — Unarmed Strike is "1 + STR mod", no dice at all', () => {
+		expect(dealsDamage([{ dice: {}, mod: 4, type: 'bludgeoning' }])).toBe(true);
+	});
+
+	it('the empty placeholder part a damage-less weapon falls back to does NOT', () => {
+		expect(dealsDamage([{ dice: {}, mod: 0, type: '' }])).toBe(false);
+	});
+
+	it('any real part in the set is enough', () => {
+		expect(
+			dealsDamage([
+				{ dice: {}, mod: 0, type: '' },
+				{ dice: { 4: 1 }, mod: 0, type: 'radiant' }
+			])
+		).toBe(true);
 	});
 });
 

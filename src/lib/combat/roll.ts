@@ -21,6 +21,13 @@ export interface DamagePartSpec {
 	mods?: DieMods;
 }
 
+/** Does this set of parts actually deal damage? "Has a part" is NOT the question: `parseDamageParts`
+ *  always yields at least one, falling back to an empty `{pool:{}, mod:0, type:''}` placeholder for a
+ *  weapon with no damage line. Nor is "has dice" — Unarmed Strike's "1 + STR mod" is entirely FLAT,
+ *  and gating on dice alone dropped it from the roll and the toast altogether. Dice OR a flat value. */
+export const dealsDamage = (parts: DamagePartSpec[]): boolean =>
+	parts.some((p) => Object.keys(p.dice).length > 0 || p.mod !== 0);
+
 /** Roll each damage part into a `TypedRoll`, preserving order (primary part first). Pure — the rng is
  *  injectable for tests; each part carries its own type through so the tray can show the breakdown. */
 export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): TypedRoll[] {

@@ -1330,6 +1330,15 @@ holds the done-work log; these are the OPEN tails it carried):**
   `rollToastModel` also takes an ARRAY of rolls = several attacks resolved as one action (Extra Attack
   / Flurry of Blows): a line each, a per-type footer, one grand total. The renderer is ready; the
   roller that fires a volley is UBUG-11's half (`rolls` intent in ACTIONS.md) and is still open.
+  **Flat damage never rolled at all** (found while verifying the layout on a real Unarmed Strike):
+  `attackRoll` gated the damage roll on `hasDice`, so an attack whose damage is entirely FLAT — Unarmed
+  Strike's "1 + STR mod" — silently produced no damage and no damage half in the toast. The gate can't
+  be "has a part" either: `parseDamageParts` always yields at least one, falling back to an empty
+  `{pool:{}, mod:0, type:''}` placeholder. The predicate is **dice OR a flat value**, now one exported
+  `dealsDamage(parts)` in `combat/roll.ts` — the spell path had already written it correctly inline, so
+  the two had drifted. Asked AFTER the damage effects fold in, so a flat effect on a damage-less weapon
+  counts. `savageOffer` gained the dice check its own doc claimed ("the attack rolled damage dice"),
+  which until now it got for free from the caller's gate: there is nothing to reroll in a fixed 4.
 - [x] **UBUG-13 · Level-up re-offers ASI and DOUBLE-applies it (not filled/persisted; 2026-08-05).** DONE.
   Root cause: only the FLATTENED `abilityBoosts`/`feats` were persisted, never the per-slot mapping — so
   hydrate couldn't repopulate slots (all opened blank) and `abilityBoosts = edit.boosts (carried flat) +

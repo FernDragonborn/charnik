@@ -43,6 +43,7 @@ import {
 	parseDamageParts,
 	formatDamageParts,
 	rollDamageParts,
+	dealsDamage,
 	modTargetLabel,
 	metres,
 	applyDefense,
@@ -886,7 +887,6 @@ class CombatVM {
 	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Alt/Ctrl-click opens the roll tray. */
 	attackRoll = (at: Attack, e: Event) => {
 		if (!this.economy.trySpend('action')) return;
-		const hasDice = at.damageParts.some((p) => Object.keys(p.pool).length > 0);
 		// §A/§B: pass this weapon's category tags so a scoped effect (GWF's min_die on two-handed melee
 		// damage) applies only to matching weapons; unscoped effects (Bless, Rage) apply regardless.
 		const scopes = new Set(at.scopes);
@@ -900,6 +900,8 @@ class CombatVM {
 			type: p.type,
 			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dmgFx } : {})
 		}));
+		// asked AFTER the effects fold in, so a flat damage effect on a damage-less weapon still counts
+		const hasDmg = dealsDamage(parts);
 		if (wantsTray(e)) {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
 			this.openRoll(
@@ -912,12 +914,12 @@ class CombatVM {
 				},
 				e
 			);
-			if (hasDice) this.tray.queueDamage({ label: `${at.name} damage`, parts });
+			if (hasDmg) this.tray.queueDamage({ label: `${at.name} damage`, parts });
 			return;
 		}
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
 		const toHit = rollPool({ 20: 1 }, at.toHit + fx.flat, netAdvantage(fx), fx.bonusDice, fx);
-		const dmgRolls = hasDice ? rollDamageParts(parts) : undefined;
+		const dmgRolls = hasDmg ? rollDamageParts(parts) : undefined;
 		// N2 Savage Attacker: offer a reroll of THIS weapon damage. Decided BEFORE the roll is toasted so
 		// the offer rides that toast — as its own toast it stacked on top and hid the damage being judged.
 		// (The Alt-click tray path rolls damage later, so the offer rides the instant tap; a v1 gap.)
@@ -936,7 +938,9 @@ class CombatVM {
 		dmgRolls: TypedRoll[] | undefined
 	): { spec: DamagePartSpec; roll: TypedRoll; action: RollToastAction } | null {
 		const primaryRoll = dmgRolls?.[0];
-		if (!primary || !primaryRoll) return null;
+		// there must be DICE to reroll — a flat-damage attack (Unarmed Strike) now rolls and toasts its
+		// damage too, so "damage was rolled" no longer implies "dice were rolled" for this caller
+		if (!primary || !primaryRoll || Object.keys(primary.dice).length === 0) return null;
 		const label = this.sheet?.facts.damageReroll[0]?.source;
 		if (!label || this.savageUsedRound === this.round) return null;
 		return {
@@ -1181,7 +1185,7 @@ class CombatVM {
 		const dmgFx = this.effectsFor('damage');
 		const toHit = caster.attack.value + fx.flat;
 		const parts = this.spellDamageParts(r, dmgFx, up.deltas);
-		const hasDmg = parts.some((p) => Object.keys(p.dice).length > 0 || p.mod !== 0);
+		const hasDmg = dealsDamage(parts);
 		if (wantsTray(e)) {
 			this.openRoll(
 				{

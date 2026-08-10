@@ -489,6 +489,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type TypedRoll` — A rolled damage slice carrying its damage type ("slashing", "radiant").
 - `interface DamagePartSpec` — One damage part to roll: its dice pool + flat mod + type, plus any effect bonus dice / mods that * ride it (folded on…
+- `const dealsDamage` — Does this set of parts actually deal damage?
 - `function rollDamageParts` — Roll each damage part into a `TypedRoll`, preserving order (primary part first).
 - `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the per-type dama…
 - `const damageTotal` — Combined total across every typed damage part.
@@ -1091,4 +1092,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 44 components · 605 exports across 92 modules · 32 duplicate suspects._
+_45 tokens · 64 global classes · 44 components · 606 exports across 92 modules · 32 duplicate suspects._
