@@ -891,50 +891,16 @@ stay semi-manual.
   charges/activated procedures (RECHARGE slice 3), GM-chosen variants (Ring/Armor of Resistance),
   weapon-scoped bonuses (the open §A `damage:<qualifier>` gap) and the generic +1/+2/+3 rows that need
   one row per tier.
-- [x] **DEMO-1 · Showcase demo character: warlock/barbarian multiclass (user-decided
-  2026-07-19; DEMO-SPECIFIC scope DONE 2026-08-04).** SEED REBUILT 2026-08-04 (`src/lib/demo/sheet.ts`):
-  **Karroth the Red** — Tiefling (Infernal) · Soldier · **Warlock 5 (Fiend Patron) × Barbarian 3
-  (Path of the Berserker)**, id `karroth`. Verified deriving against the REAL shipped SRD 5.2.1 graph
-  (`missing: []`, `deriveIssues: []`): Rage max 3 (live `barbarian_rage` grant_resource token),
-  Alert feat token (init +prof works), pact pool `pact-3`×2 forcedUpcast + warlock DC 13/+5,
-  abilityBoosts (str/con), mixed Hit-Dice d12×3+d8×5, AC 14 (Shield of Faith +2 live), attuned
-  Cloak of Protection, active concentration on Hex, inspiration. SRD-only. `browser.test.ts`
-  updated (id/name). The demo is a normal seeded character; `recreateDemoCharacter()` restores it.
-  **DONE this pass:** (a) **"Restore demo" button in Settings ▸ Data** (`StorageSettings.svelte` — a
-  `pill-btn` row + `ConfirmDialog`, web + desktop; mirrors the `/dev` action). (b) **Gap 1 CLOSED** —
-  pact pips now tracked in combat (see below). (c) **Visual baseline regenerated** for the Karroth
-  persona (`tools/visual/baseline/*` — gitignored/local; the prior baseline still showed Valen, which
-  is why roster/combat/spellbook all drifted). expertise intentionally DROPPED (no SRD producer on this
-  pairing — Rogue/Bard only). The demo seeds first-run on web + desktop, so it IS the first impression
-  of the system's scope.
-  - **Gap ledger — status after the 2026-08-04 finish pass:**
-    (1) ✅ **DONE — Pact pips tracked in combat.** `PACT_SLOT_KEY` const + `pactPool()`/`pactSpend()`
-    in `rules/spellcasting.ts`; `slotToSpend` now spends the pact pool for a pure-pact caster
-    (`{key:'pact'}` / block when empty / block above pact level). `buildSpellGroups` renders a rowless
-    "Pact Magic · Nth" pip strip (excluded from `slotsByLevel`); `cast()` computes the forced-upcast
-    slot level (no NaN). Browser-verified: strip shows 1 full + 1 spent; pip-click AND casting Hold
-    Person both decrement. Tests updated (pure-pact spends; non-caster still null).
-    (2) ⏭ **MOVED TO GLOBAL — magic-item effect tokenization (see MAGIC-ITEM-EFX below).** Every SRD
-    magic-item row ships an EMPTY `effects` column, so the attuned Cloak of Protection shows the
-    attunement slot + prose but gives NO derived +1 AC/saves. NOT demo-specific (the schema +
-    `gatherEffects` flow already support it — only the shipped data is unpopulated).
-    (3) **Unarmored Defense not tokenized** (`barbarian_unarmored_defense` empty) → the "armor vs
-    unarmored" contrast can't be shown; moot while armored — folds into N2 (features-as-data).
-    (4) **Invocations have no choice-group** (`warlock_eldritch_invocations` empty) → renders as prose,
-    not pickable — N2 (choice groups, shape 3).
-    (5) ⏭ **MOVED TO GLOBAL — subclass-feature tokenization = N2.** Fiend-patron features (Dark One's
-    Blessing temp HP etc.) render as prose only until class/subclass features are authored as data (N2).
-    (6) **`casterLevel` is 0** (barbarian non-caster) → the "pact pool ALONGSIDE shared-slot math" goal
-    is NOT exercised by this pairing (accepted 2026-08-04 — kept warlock×barbarian over a caster swap).
-    (7) ✅ **DONE — visual baseline regenerated** for Karroth (local; no committed screenshots exist).
-  - **Ritual demo caveat (user 2026-07-20):** a base **Warlock does NOT have Ritual Casting** — only
-    via the Pact of the Tome *Book of Ancient Secrets* invocation (then any-class rituals). So the
-    A17 `R` badge (now gated on `class.ritual` — E7) won't appear on the warlock×barbarian build
-    unless it takes that invocation. Either give the demo Book of Ancient Secrets, OR demo rituals on
-    a Wizard/Cleric-flavored aspect; a ritual-tagged spell alone isn't enough. Use a REAL shipped SRD
-    ritual (verify id ships + `ritual` tag; NEVER hand-author). Also fix the stale `fire-bolt` demo
-    pin → `fire_bolt` (kebab, post-E3 never matches — ties D3: move the pin hardcode to persisted
-    per-character `ui`).
+- [x] **DEMO-1 · Showcase demo character — DONE 2026-08-04.** **Karroth the Red**, id `karroth` —
+  Tiefling · Soldier · **Warlock 5 (Fiend) × Barbarian 3 (Berserker)**, SRD-only, derives clean
+  against the real shipped SRD 5.2.1 graph. It seeds first-run on web AND desktop, so it IS the first
+  impression of the system's scope — keep it deriving clean. `recreateDemoCharacter()` restores it;
+  Settings ▸ Data has the button.
+  **What this pairing does NOT exercise** (so nobody assumes the demo covers it): `casterLevel` is 0
+  for the barbarian half, so pact-pool-alongside-shared-slot math is never hit; Unarmored Defense and
+  the Eldritch Invocations are untokenized, both waiting on N2; and a base Warlock has **no Ritual
+  Casting**, so the `R` badge cannot appear here without Book of Ancient Secrets — demo rituals on a
+  Wizard/Cleric aspect instead, and with a REAL shipped SRD ritual, never a hand-authored one.
 - [ ] **N2 · Class-feature engine ("features as data").** The three shapes above + the hard
   case: **Wild Shape = stat-block replacement** (USER-RECONFIRMED 2026-07-19: still fully
   unimplemented — a druid has no working Wild Shape at all; the complexity + the 5e↔5.5e
@@ -1077,57 +1043,12 @@ holds the done-work log; these are the OPEN tails it carried):**
   defensible — but it's not the established pattern). UA copy uses formal «ви» ([[uk-formal-vy]]).
   **Do UX-1 first** — translating copy that's about to be rewritten costs the UA pass twice.
 - [x] **UX-3 · Roll access: retroactive advantage instead of a pre-roll gesture — BUILT 2026-08-10,
-  see UBUG-20 below for what shipped (design settled 2026-08-10, evidence in
-  [`docs/research/roll-surfaces.md`](research/roll-surfaces.md)).** The problem:
-  `Alt/Ctrl-click` on a stat opens the roll tray, and the app is explicitly used on a phone where
-  modifiers do not exist — so the tray's contents are unreachable on touch. Three findings reshaped the
-  answer, in order:
-  1. **Nobody binds a gesture to "open the configurator"** — Foundry, Roll20 and D&D Beyond all bind it
-     to the OUTCOME (roll with advantage / disadvantage). For a skill/save/ability row the pool is
-     always 1d20, so the tray holds exactly two things, advantage and a manual modifier, and advantage
-     dominates. Access belongs to the frequent OPTION, not to the box holding it.
-  2. **The touch answer is settled and needs no interface space**: right-click on desktop = long-press
-     on touch, one menu, which is exactly what D&D Beyond ships for exactly this. No per-row control.
-  3. **Retroactive advantage dissolves the problem entirely.** A dedicated Foundry module exists for
-     nothing else, and two more bundle it. It is **RAW-exact, not a fudge** — the rule says roll a
-     second d20 and take the higher, and rolling it after the first changes nothing mechanically. Which
-     matches how tables actually play: the DM says "that has advantage" once the die is already down.
-  **Decision:** no armed toggle, no mode, no pre-roll gesture, no per-row button. **Roll. If it turns
-  out to have been advantaged, tap the d20 pill and a second d20 joins it.** Zero interface space,
-  identical on mouse and finger, no modifier, and nothing to teach provided the pill looks like a
-  control. This supersedes the armed three-state charge considered earlier: Roll20 ships that (their
-  "Advantage Toggle") and its documented failure is that people forget it is armed — auto-reset would
-  patch that failure, retroactive removes its cause.
-  **This is the same affordance as UBUG-20's reroll, and that is the point:** the pill is not a one-off
-  for one feat, it is the roll card's general interaction model — tap the d20 to change how it was
-  rolled, tap a damage pill to reroll what it dealt.
-  **WHERE the controls live — settled 2026-08-10, and NOT in the toast.** A toast is a bad host for an
-  edit: it expires mid-decision, older ones get buried by the stack, a 23×22px pill is under the touch
-  target minimum, and making pills interactive collides with click-anywhere-to-dismiss. The maintainer's
-  instinct ("a toast normally closes on click") was right and should be honoured rather than argued
-  around. The host already exists and was overlooked: **`blocks/Playbar.svelte`, the always-visible
-  "last roll" chip.** So — **toast = announcement (no controls, stays a plain dismiss button), Playbar =
-  the live controls on the last roll, log = the same controls on any roll, forever.** All three are the
-  same shared row from UBUG-20, so the controls arrive in each for free.
-  This kills every one of the four toast problems at once rather than mitigating them, and it **deletes
-  the "root-level rework, budget for it" cost recorded in UBUG-20** — with no actions in the toast there
-  is no dismiss collision, so `RollToast` keeps its current structure.
-  **Two consequences to carry:**
-  (a) It partly undoes `1dd9f23` (a roll carrying an action gets `duration: Infinity`). Once the action
-  bar leaves the toast, an endless toast has no reason to exist: the right shape is a non-interactive
-  ↻ MARKER on the pill saying "this can still be amended", and the toast expiring normally at 6s.
-  (b) Playbar is currently a compact 35px line whose left half is the hint *"**Alt + click** (or Ctrl)
-  for advantage / custom dice"* — the very mechanism this item removes. So the space needed to host a
-  roll row is freed by the same decision that needs it. Still a re-layout, not free.
-  **Carry:** an amended roll must stay a truthful record — the log entry says it was changed after the
-  fact (the existing `savageReroll` "kept X, other roll Y" note is the pattern). Whether the player was
-  *entitled* to the advantage is table trust, not ours to police
-  ([[play-tracker-surfaces-never-forces]]). The manual-modifier case stays rare and stays in the
-  context menu. **Do not regress toward a pre-roll dialog** — but note that is staying normal, not
-  leading: instant rolling is already what D&D Beyond and Roll20 do, and Foundry (which prompts) is the
-  outlier its own modules exist to fix. What IS uncommon, and the thing actually worth protecting, is
-  the **grouping** — one tap producing one card carrying the to-hit and every damage type. Foundry
-  needs a module for that; D&D Beyond and Roll20 keep to-hit and damage as separate rolls entirely.
+  see UBUG-20 for what shipped.** The problem was that `Alt/Ctrl-click` opened the roll tray, on an app
+  explicitly used on a phone where modifiers do not exist. The answer: don't bind a gesture to opening
+  a configurator at all — roll, and if it turns out to have been advantaged, tap the d20. RAW-exact
+  (the rule says roll a second d20 and take the higher; rolling it late changes nothing) and identical
+  on mouse and finger. Full survey + the three findings behind it:
+  [`docs/research/roll-surfaces.md`](research/roll-surfaces.md).
 - [ ] **UX-2 · First-run onboarding — DEFERRED, not a priority (maintainer, 2026-08-10; recorded so the
   need doesn't get re-derived from scratch each time a non-obvious affordance ships).** The trigger: the
   app keeps accumulating things a first-time user cannot deduce (Alt/Ctrl-click a stat to open the roll
@@ -1418,54 +1339,13 @@ holds the done-work log; these are the OPEN tails it carried):**
   toasts "2×: make 2 separate rolls at this level"). **What stays UBUG-11** is the action half: the
   `rolls` intent in ACTIONS.md that lets a class feature CALL that roller with the right weapon, instead
   of degrading to `note:` text. Don't build a Flurry-shaped roller here.
-- [x] **UBUG-12 · Roll feedback is hard to read — rework the toasts / roll surface (2026-08-05).** DONE
-  (2026-08-09, design **5A** from `design-preview/toast-update/`). Root cause: the roll toast was a
-  formatted STRING (`label — total` + a `d20(14) + d6(3) · dmg …` description line), built three
-  different ways at three call sites — so the dice, the dropped adv die and the per-type damage all
-  competed in one run-on line at one type size. Now a component: `RollToast.svelte` renders one die per
-  chip, the dropped adv/disadv die struck through beside the kept one, one row per damage type, and the
-  summary in its OWN fixed-width full-height right column — so a stack of toasts lines its totals up at
-  different heights. Uppercase row labels only switch on from the second row (a lone roll stays a
-  one-liner). Model + the single toast seam = `$lib/dice/roll-toast.ts` (`toastRoll`); the three call
-  sites (`RollTray.pushRoll`, `RollButton`, the no-tray `openDiceTray` fallback) now all go through it.
-  Per-die values are recovered by `parseRollExpr` (rules/dice.ts) rather than a second payload on
-  `Rolled`, because `expr` is the only per-die record that survives into a persisted `log.jsonl` entry.
-  A nat 20 / nat 1 re-tints the card, the summary and the die — labelled "nat 20", NOT "crit" (the same
-  d20 is a crit on an attack and just a 20 on a check; the tracker surfaces, it doesn't rule).
-  Dismiss = the card itself (sonner drops its close button for a custom-component toast).
-  **A roll's own follow-up rides that roll's card, never a second toast** — Savage Attacker fired its
-  offer as a separate toast, which stacked on top and hid the very damage the player was judging it on.
-  `RollToastAction` + `RollTray.offerOnNextRoll` (same queue-then-fire shape as `queueDamage`, so
-  `pushRoll` keeps its arity) put the button in the card; taking it re-toasts the REVISED roll through
-  the same component instead of a summary string. Card re-tint is reserved for a natural 20/1
-  (`emphasis`): how a roll was made (advantage) colours its tag only.
-  Preview: `/dev/rolltoast` (every shape from fixed rolls). **Tail:** lifted to **UBUG-20** (the roll
-  LOG + DiceTray still render raw `expr` strings); the non-roll toasts elsewhere are still plain strings.
-  **Final layout (2026-08-10, `design-preview/toast-update/Roll Toasts Final.dc.html`)** — 5A's
-  row-per-damage-type stack became a row-per-ATTACK grid, because on an attack the interesting unit is
-  the swing, not the damage type. One line = `dice · to hit · damage · the big number`; a second damage
-  type is another glyph in the SAME line, never a second line. Damage types carry a **glyph**
-  (`DamageIcon.svelte`, all thirteen, Lucide/ISC) instead of a word, which is what let the types share
-  one line. A crit's doubled dice share ONE pill with a divider — doubled d8s are one thing, not two.
-  Colour is now reserved for what the DIE did: **nat 20 → the line's numbers go gold, nat 1 → the one
-  miss the app can call without knowing the target's AC** (damage struck, "miss" in the total column,
-  and left out of every sum). The card no longer re-tints and the `advantage`/`nat 20` tag is gone —
-  the struck-through dropped die already says how the roll was made. The card **shrinks to its own
-  content** (260px floor, the toaster column as ceiling) rather than sitting at a fixed width; sonner
-  leaves a custom-component toast unsized, so the `<li>` gets the band back and centres the card
-  (one `:global` rule inside RollToast, not leaked into the layout's `<Toaster>`).
-  `rollToastModel` also takes an ARRAY of rolls = several attacks resolved as one action (Extra Attack
-  / Flurry of Blows): a line each, a per-type footer, one grand total. The renderer is ready; the
-  roller that fires a volley is UBUG-11's half (`rolls` intent in ACTIONS.md) and is still open.
-  **Flat damage never rolled at all** (found while verifying the layout on a real Unarmed Strike):
-  `attackRoll` gated the damage roll on `hasDice`, so an attack whose damage is entirely FLAT — Unarmed
-  Strike's "1 + STR mod" — silently produced no damage and no damage half in the toast. The gate can't
-  be "has a part" either: `parseDamageParts` always yields at least one, falling back to an empty
-  `{pool:{}, mod:0, type:''}` placeholder. The predicate is **dice OR a flat value**, now one exported
-  `dealsDamage(parts)` in `combat/roll.ts` — the spell path had already written it correctly inline, so
-  the two had drifted. Asked AFTER the damage effects fold in, so a flat effect on a damage-less weapon
-  counts. `savageOffer` gained the dice check its own doc claimed ("the attack rolled damage dice"),
-  which until now it got for free from the caller's gate: there is nothing to reroll in a fixed 4.
+- [x] **UBUG-12 · Roll feedback is hard to read — the toast became a component (2026-08-09, design
+  5A from `design-preview/toast-update/`).** Superseded by UBUG-20, which made that component the ONE
+  renderer for all four roll surfaces. Two rules from it are still load-bearing and both live in code:
+  a natural 20 is labelled "nat 20" and never "crit", because the same 20 is a crit on an attack and
+  just a 20 on a check and the tracker surfaces rather than rules (`dice/roll-toast.ts`); and an
+  attack "deals damage" on **dice OR a flat value**, since Unarmed Strike's flat `1 + STR` silently
+  rolled nothing while the gate asked for dice (`dealsDamage`, `combat/roll.ts`).
 - [x] **UBUG-13 · Level-up re-offers ASI and DOUBLE-applies it (not filled/persisted; 2026-08-05).** DONE.
   Root cause: only the FLATTENED `abilityBoosts`/`feats` were persisted, never the per-slot mapping — so
   hydrate couldn't repopulate slots (all opened blank) and `abilityBoosts = edit.boosts (carried flat) +
@@ -1569,109 +1449,21 @@ holds the done-work log; these are the OPEN tails it carried):**
   ICON is drawn instead: an inline SVG, or CSS geometry when the shape is trivial. The roll card's
   advantage cues are the worked example — three `clip-path` polygons in `currentColor`, exact
   geometry at a size we choose, no font in the path at all.
-- [x] **UBUG-20 + UX-3 · One roll card everywhere, and the live controls live on it — DONE 2026-08-10.** `RollRow` (label · grid · note) was
-  extracted out of `RollToast` and is now mounted by all four surfaces — toast, `Playbar`, `RollLog`,
-  `DiceTray` — with the chrome (dismiss target, action bar, savage-reroll offer, log cue, sonner
-  sizing) left outside it, so the contract really is identical rather than a lookalike. Verified the
-  extraction changed nothing by diffing `/dev/rolltoast` before/after: **0 pixels**. The Playbar no
-  longer loses the roll (it showed `label + expr + total`, which omitted the adv/disadv d20 entirely
-  and ignored `damage`); it is not wrapped in a button so the pills stay free to become controls, and
-  the log cue is its own control. `/dev/rolltoast` joined the `shot.mjs` baseline set — the gallery is
-  the cheapest guard on a component four surfaces share. **STILL OPEN (the interactive half):** the
-  re-rollable damage pill + UX-3's retroactive-advantage d20 pill, the toast's `duration: Infinity`
-  → normal expiry + a ↻ marker, and the toast's missing labelled close control (which stays its own
-  a11y item — the card IS a labelled dismiss button today, so this is polish, not a blocker).
-
-  **Part 2 (the interactive half) DONE 2026-08-10.** `amendWithAdvantage` (pure, in `rules/dice.ts`,
-  6 unit tests) rolls one more d20 on a roll that already landed and keeps the better. Two details
-  worth keeping: the kept die must LEAVE `expr` (the row renders it from `advantageRoll`, so it would
-  otherwise show twice), and the two dice are compared by what they CONTRIBUTE, not by raw face — a
-  die floored by `min_die` contributed 10, and RAW would floor the new one too, so the higher
-  contribution is right either way and the log entry never has to carry the roll's effect facts.
-  `tray.amendAdvantage` rewrites the entry through the existing `reviseEntry` seam with a note saying
-  it was changed after the fact (same shape the Savage Attacker reroll writes). RollRow gained two
-  optional props — `onAdvantage` and `rerollDamage: {attack, part, label, run}` — so a pill is a
-  control only where one is passed; the toast passes neither and stays entirely inert. The Savage
-  Attacker BAR is gone: it is now the ↻ on the damage pill it rerolls, in the Playbar and the log.
-  The toast lost its action bar and its `duration: Infinity` with it — `RollToastAction`,
-  `offerOnNextRoll` and `pendingAction` were deleted outright.
-  **Known gap, deliberate:** `reviseEntry` (both callers) does not rewrite the persisted `log.jsonl`,
-  which is append-only — the in-session log is truthful, the persisted history keeps the pre-amend
-  copy. Pre-existing with the Savage reroll, not introduced here.
-  **Not done:** the inert ↻ MARKER on the toast's pill (UX-3 consequence (a)). It needs eligibility in
-  the toast model, and with the always-visible Playbar carrying the live control on the same roll it
-  is a cue, not a capability. The volley case stays blocked on ROLLER-N as specified — `onAdvantage`
-  deliberately takes no attack index, so a per-attack chooser cannot ship before something rolls more
-  than one attack.
-  (2026-08-10; lifted out of UBUG-12's tail, where it had been sitting as one
-  sentence inside a closed item).** UBUG-12 replaced the toast's formatted string with a real component,
-  but **three** other surfaces were left on the OLD rendering — they print the roller's internal `expr`
-  verbatim (`d20(14) +4`, `dmg d8(6) +3 slashing: 9`, a separate dimmed `drop d20(N)` line), which is
-  the exact run-on-string problem the toast was rebuilt to fix. So the same roll now reads several
-  different ways depending on where you look at it, and the log — the surface you go to precisely to
-  re-read a roll — is worse than the toast. Wanted: the same vocabulary as the toast — a chip per die,
-  the dropped adv/disadv die struck through beside the kept one, damage as glyph + pill per type
-  (`DamageIcon`), nat 20/nat 1 tinting, the upcast `note`.
-  **The three surfaces, worst first:**
-  1. **`blocks/Playbar.svelte`** — the always-visible "last roll" chip, and the worst of the three
-     because it doesn't merely render badly, it **loses the roll**. It prints `label + expr + total`,
-     and on an advantage/disadvantage roll the d20 is NOT in `expr` (it lives in `advantageRoll`), so
-     the chip reads `Last · Greataxe +6 = 9` — the die that decided the attack is simply absent.
-     It also ignores `entry.damage` entirely, so for an attack it shows the to-hit total and never the
-     damage, which is the number the player actually wants. Screenshot-confirmed 2026-08-10.
-  2. **`menus/RollLog.svelte`** — the history menu; raw `expr` per line plus a dimmed `drop d20(N)`.
-  3. **`menus/DiceTray.svelte`** — the tray's own result readout; same raw `expr` shape.
-  **DECIDED (maintainer, 2026-08-10): ONE shared renderer, and the contract is 100% identical** — the log
-  row is the same component as the toast, not a lookalike that borrows its parts. So extract the card's
-  inner grid as a shared `RollRow` over `RollToastModel` and let both mount it; everything that differs
-  is CHROME around the row (the toast adds the dismiss button + the follow-up action bar, the log adds
-  its own affordances) and belongs outside the shared piece, never as a variant flag inside it. Model
-  side is already done and pure (`rollToastModel` takes a `RollLogEntry`, which is what the log stores),
-  so this is a rendering job, not a data one.
-  **Density — RESOLVED 2026-08-10, and it needs no variant flag.** A volley row is dense: a real Flurry
-  line is `1 · 13 · +7 · 20 · 🔨5 · +4 · ☀3 · 🧠4 · 16` = 9 numbers + 3 glyphs, **twelve units**, three
-  times over. What a player actually reads off a volley is **whether each attack hit, and what each one
-  dealt** — the die-by-die breakdown is audit information. So a multi-attack card shows SUMMARY rows
-  (`to-hit dice · to-hit total · damage total`, ~5 units) and drops the per-type chips; nothing is lost
-  at card level because the per-type footer already carries the type sums. The rule derives from data
-  the component ALREADY branches on — `attacks.length > 1`, the same test that switches on the index
-  column and the footer — so there is no `detail`/`compact` prop and the identical-contract decision
-  above survives intact. **A single-attack card stays fully detailed** (it is small, there is room).
-  **This also settles the log's granularity, the opposite way to what was first assumed:** the toast
-  GROUPS a volley, the log does NOT — it renders one `RollLogEntry` per row, i.e. always a one-attack
-  model, i.e. always the full-detail case. "The log is the complete version" then falls out for free,
-  with no grouping key and no second code path. (Visually bracketing a volley in the log is later
-  chrome, not a model concern.)
-  **The reroll affordance is the damage PILL, not a button and not the row.** Camp 2 in
-  `docs/research/roll-surfaces.md` proves the negative on a button: once a card has N rows, one bar
-  underneath cannot say which row it means, and N bars is not a design. A row-click is the same
-  compromise wearing a disguise — a row holds both the to-hit and several damage parts, so "reroll this
-  row" is ambiguous by construction. The pill is unambiguous, it matches the RAW unit exactly ("reroll
-  the weapon's damage dice" = one damage part = one pill), it scales to N rows for free, it arrives in
-  the toast and the log together because they are the same component, and it generalises to the whole
-  die-manipulation family (Lucky rerolls a d20 → click the d20 pill; a row-click could never express
-  "the d20 but not the damage"). Discoverability is the standard [[charnik-interactive-affordance]]
-  job — hover/cursor/focus plus a ↻ on eligible pills, and non-eligible pills stay inert so there is no
-  false affordance. **The maintainer's objection (2026-08-10) — "a toast normally closes on click" — is
-  right about the convention but locates the line one step off.** A toast carrying an ACTION is entirely
-  standard (Gmail's "Undo send", every snackbar with a button); nobody expects the action to dismiss.
-  What is non-standard is making something that *looks like static content* interactive. So the binding
-  requirement is not "don't make pills clickable" but **"a re-rollable pill must look like a control"** —
-  its own border, hover, cursor, ↻; non-eligible pills stay inert and unchanged. Then it reads as a
-  button standing ON the object it acts on, not as a click somewhere in the toast.
-  ~~**Known structural cost:** the card is a `<button>` and IS the dismiss target, and a button cannot
-  nest in a button, so interactive pills force a root-level rework.~~ **WITHDRAWN 2026-08-10** — UX-3
-  settled that the controls live in the Playbar and the log, NOT in the toast, so the toast keeps no
-  interactive descendants and its structure is untouched. **One real finding survives from that
-  analysis:** the toast has **no labelled close control at all** — the whole card is the button — so
-  keyboard and screen-reader users have no dismiss affordance. Fix that on its own merits, independent
-  of anything here.
-  Teaching the pill affordance is explicitly NOT onboarding's job (see UX-2 §1): if it needs explaining,
-  the styling failed.
-  **Blocked on UBUG-11** for the volley roller: a per-attack chooser cannot be exercised, and must not
-  ship, while nothing in the app rolls more than one attack. Moving `action?` from `RollToastModel` down
-  onto `RollToastAttack` is cheap and unblocked, and the interaction can be prototyped in
-  `/dev/rolltoast` — do those first, ship after the roller.
+- [x] **UBUG-20 + UX-3 · One roll card everywhere, and its live controls — DONE 2026-08-10.** One
+  `RollRow` is mounted by the toast, the Playbar, the roll log and the dice tray; the d20 pill cycles
+  advantage → disadvantage → neither after the fact, and the damage pill rerolls.
+  **Constraints later work must not undo** — each is stated at its own seam in code, listed here so
+  nobody has to rediscover them: controls live in the Playbar and the log and NEVER in the toast (a
+  toast expires mid-decision and click-anywhere dismisses it — `RollToast.svelte`); the reroll
+  affordance is the damage PILL, not a bar or a row-click, because neither can say WHICH damage it
+  means once a card has several (`RollLog.svelte`); and `onAdvantage` deliberately takes no attack
+  index, so a per-attack chooser cannot ship before something actually rolls more than one attack
+  (`RollRow.svelte`). Survey evidence: [`docs/research/roll-surfaces.md`](research/roll-surfaces.md).
+  **Open tails:** an inert ↻ MARKER on the toast's pill (a cue, not a capability — the always-visible
+  Playbar carries the live control on the same roll); the toast has no labelled close control, which
+  is its own a11y nit since the card IS a labelled dismiss button today; the volley chooser waits on
+  `ROLLER-N`. That an amendment never reaches the append-only `log.jsonl` is finding G in
+  [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md), not a tail of this item.
 - [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing — hidden spells still showed in
   combat.** DONE 2026-07-21. The spellbook's eye/pin were local `$state` sets on a THROWAWAY
   `demoCharacter()` (never persisted, never read by combat), and `buildSpellGroups` rendered every
@@ -1680,8 +1472,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   the spellbook now edits the ACTIVE character (`characters.active`, demo fallback on direct nav) and
   the eye writes/saves `spellsHidden`; `buildSpellGroups` filters those out (matched on `SpRow.ref` =
   effectiveId). Prepare toggles now persist too. Unit-tested + e2e-verified (hide in spellbook →
-  vanishes from combat, live via the shared store). PIN stays a local set — its combat side is still
-  the `CombatVM.pinned` demo hardcode (**D3**); wiring pin end-to-end is left to D3.
+  vanishes from combat, live via the shared store). PIN was wired end-to-end afterwards (D3):
+  pins persist per character in `ui.spellsPinned`, no demo hardcode.
 - [x] **REL-3 · Desktop content re-seed on update (0.4.0 data change).** DONE 2026-07-20. The desktop
   seed (`content/provider.ts`) was skip-if-root-exists → a returning user stayed on their FIRST-run
   SRD copy and never got shipped data changes (0.4.0 redid a lot: snake_case ids, snake `#content-`
