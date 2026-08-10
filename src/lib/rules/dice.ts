@@ -16,10 +16,14 @@ export interface BonusDie {
 	sign: number;
 }
 
-/** The two d20 of an advantage/disadvantage roll: the one kept and the one dropped. */
+/** The two d20 of an advantage/disadvantage roll: the one kept and the one dropped, and WHICH of the
+ *  two it was. The mode can't be recovered from the numbers — two d20 that both land on 12 look the
+ *  same either way — and the UI frames the pair green or red by it. Optional so an entry persisted
+ *  before it existed still loads; those fall back to comparing kept against dropped. */
 interface AdvantageRoll {
 	kept: number;
 	dropped: number;
+	mode?: 1 | -1;
 }
 
 /** Result of a roll: the total, a human-readable breakdown, and the two d20 if adv/disadv applied. */
@@ -124,7 +128,11 @@ function rollPoolDice(
 				const r2 = rollOne(20);
 				const win = advantage > 0 ? Math.max(r.v, r2.v) : Math.min(r.v, r2.v);
 				const winIsFirst = win === r.v;
-				advantageRoll = { kept: win, dropped: winIsFirst ? r2.v : r.v };
+				advantageRoll = {
+					kept: win,
+					dropped: winIsFirst ? r2.v : r.v,
+					mode: advantage > 0 ? 1 : -1
+				};
 				natural = winIsFirst ? r.face : r2.face; // the kept die's face (pre-floor)
 				total += win;
 				continue; // the advantage detail renders the d20, don't duplicate it in `parts`
@@ -265,7 +273,7 @@ export function amendWithAdvantage<T extends Rolled>(r: T, rng: Rng = Math.rando
 			chips.filter((_, k) => k !== index),
 			mod
 		),
-		advantageRoll: { kept, dropped: keptIsFresh ? d20.value : fresh },
+		advantageRoll: { kept, dropped: keptIsFresh ? d20.value : fresh, mode: 1 },
 		natural: keptIsFresh ? fresh : (r.natural ?? d20.value)
 	};
 }

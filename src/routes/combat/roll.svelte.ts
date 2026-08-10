@@ -168,7 +168,7 @@ export class RollTray {
 		const adv = revised.advantageRoll;
 		this.reviseEntry(entry, {
 			...revised,
-			note: `advantage applied after the roll — kept ${adv?.kept}, other die ${adv?.dropped}`
+			note: `advantage after the roll · kept ${adv?.kept} over ${adv?.dropped}`
 		});
 	};
 

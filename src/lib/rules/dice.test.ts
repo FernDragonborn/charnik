@@ -59,13 +59,13 @@ describe('rollPool', () => {
 	it('advantage rolls two d20 and keeps the higher, exposing the loser', () => {
 		const r = rollPool({ 20: 1 }, 0, 1, [], rngSequence(0.1, 0.9)); // d20 → 3, then 19
 		expect(r.total).toBe(19);
-		expect(r.advantageRoll).toEqual({ kept: 19, dropped: 3 });
+		expect(r.advantageRoll).toEqual({ kept: 19, dropped: 3, mode: 1 });
 	});
 
 	it('disadvantage keeps the lower', () => {
 		const r = rollPool({ 20: 1 }, 0, -1, [], rngSequence(0.1, 0.9));
 		expect(r.total).toBe(3);
-		expect(r.advantageRoll).toEqual({ kept: 3, dropped: 19 });
+		expect(r.advantageRoll).toEqual({ kept: 3, dropped: 19, mode: -1 });
 	});
 
 	it('adds signed bonus dice (Bless +1d4 / Bane −1d4)', () => {
@@ -207,14 +207,14 @@ describe('amendWithAdvantage', () => {
 	it('keeps the fresh die when it beats the original, and raises the total by the difference', () => {
 		const out = amendWithAdvantage(rolled('d20(7) +4', 11, 7), () => 0.9); // → 19
 		expect(out).not.toBeNull();
-		expect(out?.advantageRoll).toEqual({ kept: 19, dropped: 7 });
+		expect(out?.advantageRoll).toEqual({ kept: 19, dropped: 7, mode: 1 });
 		expect(out?.total).toBe(23);
 		expect(out?.natural).toBe(19);
 	});
 
 	it('keeps the original when the fresh die loses, and the total does not move', () => {
 		const out = amendWithAdvantage(rolled('d20(18) +4', 22, 18), () => 0.1); // → 3
-		expect(out?.advantageRoll).toEqual({ kept: 18, dropped: 3 });
+		expect(out?.advantageRoll).toEqual({ kept: 18, dropped: 3, mode: 1 });
 		expect(out?.total).toBe(22);
 		expect(out?.natural).toBe(18);
 	});
@@ -228,7 +228,7 @@ describe('amendWithAdvantage', () => {
 	it('compares what the dice CONTRIBUTE, so a min_die floor is not undone', () => {
 		// Reliable Talent: a natural 3 was floored to 10 and contributed 10; a fresh 7 must not win
 		const out = amendWithAdvantage(rolled('d20(3→10) +5', 15, 3), () => 0.31); // → 7
-		expect(out?.advantageRoll).toEqual({ kept: 10, dropped: 7 });
+		expect(out?.advantageRoll).toEqual({ kept: 10, dropped: 7, mode: 1 });
 		expect(out?.total).toBe(15);
 	});
 
@@ -240,5 +240,23 @@ describe('amendWithAdvantage', () => {
 
 	it('refuses a roll with no d20 in it (damage)', () => {
 		expect(amendWithAdvantage(rolled('d8(5) + d6(2) +3', 10))).toBeNull();
+	});
+});
+
+/*
+ * `mode` records advantage vs disadvantage on the pair itself. It cannot be recovered from the two
+ * numbers — a tie looks identical either way — and the roll row frames the pair green or red by it.
+ */
+describe('advantageRoll.mode', () => {
+	const rolled = (expr: string, total: number): Rolled => ({ expr, total });
+
+	it('is +1 for advantage and −1 for disadvantage even when both dice tie', () => {
+		const tie = () => 0.5; // both d20 land on the same face
+		expect(rollPool({ 20: 1 }, 0, 1, [], tie).advantageRoll?.mode).toBe(1);
+		expect(rollPool({ 20: 1 }, 0, -1, [], tie).advantageRoll?.mode).toBe(-1);
+	});
+
+	it('a roll amended after the fact is advantage by construction', () => {
+		expect(amendWithAdvantage(rolled('d20(7) +4', 11))?.advantageRoll?.mode).toBe(1);
 	});
 });

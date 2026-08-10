@@ -155,6 +155,11 @@
 	.statusrow > :global(:first-child:not(:last-child)) {
 		flex: 1 1 320px;
 	}
+	/* .combat-bar carries its own 12px bottom margin for the stacked case; inside this row it would
+	   end the bar's box 12px above the strip beside it and read as two different heights */
+	.statusrow > :global(.combat-bar) {
+		margin-bottom: 0;
+	}
 	/* Two flex columns (not multicol): drag-safe with svelte-dnd-action, packs tight
 	   top-to-bottom so a block's height never bumps another into the next column. */
 	.panels {

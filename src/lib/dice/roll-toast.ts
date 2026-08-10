@@ -29,6 +29,9 @@ export interface RollToastAttack {
 	chips: DieChip[];
 	/** The adv/disadv d20 that lost — shown struck through next to the kept one. */
 	dropped?: number;
+	/** Was the pair rolled at advantage (1) or disadvantage (−1)? Frames the two d20 green or red —
+	 *  the one thing about a roll you can't read off the numbers (two 12s look identical either way). */
+	advantageMode?: 1 | -1;
 	mod: number;
 	/** What the to-hit (or, with no damage, the roll itself) came to. */
 	subtotal: number;
@@ -71,9 +74,13 @@ function attackLine(roll: Rolled, damage: TypedRoll[]): RollToastAttack {
 	const adv = roll.advantageRoll;
 	// the kept adv/disadv d20 never made it into `expr` (the roller surfaces it separately) — put it
 	// back at the front so the line reads left-to-right as the dice were rolled
+	// `mode` is absent on rolls logged before it was recorded — fall back to what the pair implies,
+	// which is right except on a tie (where nothing could tell them apart anyway)
+	const mode = adv ? (adv.mode ?? (adv.kept >= adv.dropped ? 1 : -1)) : undefined;
 	return {
 		chips: adv ? [{ sides: 20, value: adv.kept, sign: 1, detail: `${adv.kept}` }, ...chips] : chips,
 		...(adv ? { dropped: adv.dropped } : {}),
+		...(mode ? { advantageMode: mode } : {}),
 		mod,
 		subtotal: roll.total,
 		...(roll.natural !== undefined ? { natural: roll.natural } : {}),

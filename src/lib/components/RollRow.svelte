@@ -52,12 +52,42 @@
 	/** A roll already decided by two dice can't take advantage again. */
 	const canAmend = (a: RollToastAttack) =>
 		!!onAdvantage && a.dropped === undefined && d20Index(a) >= 0;
+
+	/**
+	 * One line can hold a bounded number of pills, and a pool is NOT bounded — a Fireball is 8d6, a
+	 * Meteor Swarm 40. So the strip keeps the dice that are load-bearing and folds the rest into a
+	 * count: the d20 stays because it decides the roll AND is the advantage control, everything else
+	 * becomes `8d6`, which is what a player would say out loud anyway. The card keeps every die, and
+	 * the log is one tap away — the die-by-die breakdown is audit information, the same reasoning the
+	 * design already applies to a volley's rows.
+	 */
+	const shownChips = (a: RollToastAttack) =>
+		line ? a.chips.filter((c) => c.sides === 20) : a.chips;
+	const foldedDice = (a: RollToastAttack): string => {
+		if (!line) return '';
+		const counts = new Map<number, number>();
+		for (const c of a.chips)
+			if (c.sides !== 20) counts.set(c.sides, (counts.get(c.sides) ?? 0) + 1);
+		return [...counts]
+			.sort((x, y) => y[0] - x[0])
+			.map(([sides, n]) => `${n}d${sides}`)
+			.join(' + ');
+	};
 </script>
 
 {#snippet hitDice(a: RollToastAttack)}
-	<span class="rt-hit">
-		{#each a.chips as c, i (i)}
-			{#if i === d20Index(a) && canAmend(a)}
+	<span
+		class="rt-hit"
+		class:adv={a.advantageMode === 1}
+		class:dis={a.advantageMode === -1}
+		title={a.advantageMode === 1
+			? 'rolled with advantage'
+			: a.advantageMode === -1
+				? 'rolled with disadvantage'
+				: undefined}
+	>
+		{#each shownChips(a) as c, i (i)}
+			{#if c.sides === 20 && i === 0 && canAmend(a)}
 				<button
 					type="button"
 					class="rt-die d20 control {tone(c)}"
@@ -72,6 +102,11 @@
 		{/each}
 		{#if a.dropped !== undefined}
 			<span class="rt-die dropped" title="dropped d20">{a.dropped}</span>
+		{/if}
+		{#if foldedDice(a)}
+			<span class="rt-die folded" title={a.chips.map((c) => c.detail).join(' + ')}
+				>{foldedDice(a)}</span
+			>
 		{/if}
 		{#if a.mod}<span class="rt-mod">{signed(a.mod)}</span>{/if}
 	</span>
@@ -92,10 +127,17 @@
 			type={re ? 'button' : undefined}
 			class="rt-die"
 			class:control={re}
-			title={re ? re.label : undefined}
+			title={re
+				? re.label
+				: `${d.chips.map((c) => c.detail).join(' + ')}${d.mod ? ` ${signed(d.mod)}` : ''}`}
 			onclick={re ? () => re.run() : undefined}
 		>
-			{#if d.chips.length}
+			{#if line}
+				<!-- one line has no room for a die-by-die breakdown, and that breakdown is audit
+				     information: the same rule the design already applies to a volley's rows. The part's
+				     TOTAL is what a player reads here; the log, one tap away, renders every die. -->
+				<span>{d.total}</span>
+			{:else if d.chips.length}
 				{#each d.chips as c, i (i)}
 					{#if i}<span class="rt-div"></span>{/if}
 					<span title="d{c.sides} · {c.detail}">{face(c)}</span>
@@ -105,57 +147,79 @@
 			{/if}
 			{#if re}<span class="rt-cue">↻</span>{/if}
 		</svelte:element>
-		{#if d.mod && d.chips.length}<span class="rt-mod">{signed(d.mod)}</span>{/if}
+		{#if d.mod && d.chips.length && !line}<span class="rt-mod">{signed(d.mod)}</span>{/if}
 	</span>
 {/snippet}
 
-<div class="rollrow" class:line>
+<div class="rollrow" class:line title={line && model.note ? model.note : undefined}>
 	<span class="rt-name">{model.label}</span>
-	<span class="rt-grid" class:damaging={model.damaging} class:multi>
-		<!-- the captions name the two NUMBERS, not the dice: "to hit" spans the dice columns so its
-		     own width can't widen them, and lands on the to-hit total's right edge. -->
-		{#if model.damaging}
-			<span class="rt-cap hit eyebrow">to hit</span>
-			<span></span>
-			<span class="rt-cap eyebrow">damage</span>
-		{/if}
-		{#each attacks as a, i (i)}
-			{#if multi}<span class="rt-idx" class:gold={a.natural === 20}>{i + 1}</span>{/if}
-			{@render hitDice(a)}
-			{#if model.damaging}
-				<span class="rt-sub" class:gold={a.natural === 20} class:bad={a.natural === 1}
-					>{a.subtotal}</span
-				>
-				<span class="rt-dmg">
-					{#if a.natural === 1}
-						<span class="rt-none">—</span>
-					{:else}
-						{#each a.damage as d, j (j)}{@render damagePart(d, i, j)}{/each}
-					{/if}
+	{#if line && multi}
+		<!-- a volley cannot flow inline: three attacks each with their own dice and damage types is a
+		     two-dimensional thing, and forcing it onto one line is exactly the overlap this layout
+		     exists to avoid. A strip says WHAT happened and how much; the card and the log carry the
+		     attack-by-attack breakdown. (Nothing rolls a volley yet — blocked on ROLLER-N — but the
+		     gallery renders one, and it must not be the shape that ships.) -->
+		<span class="rt-grid volley">
+			<span class="rt-mod">{attacks.length} attacks</span>
+			{#each model.byType as t, i (i)}
+				<span class="rt-typesum" title={t.type || undefined}>
+					<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
 				</span>
+			{/each}
+			<span class="rt-tot big">{model.total}</span>
+		</span>
+	{:else}
+		<span class="rt-grid" class:damaging={model.damaging} class:multi>
+			<!-- the captions name the two NUMBERS, not the dice: "to hit" spans the dice columns so its
+		     own width can't widen them, and lands on the to-hit total's right edge. -->
+			{#if model.damaging}
+				<span class="rt-cap hit eyebrow">to hit</span>
+				<span></span>
+				<span class="rt-cap eyebrow">damage</span>
 			{/if}
-			<span
-				class="rt-tot"
-				class:big={!multi}
-				class:gold={a.natural === 20}
-				class:bad={a.natural === 1}
-			>
-				{#if !model.damaging}{a.subtotal}{:else if a.natural === 1}<span class="rt-miss">miss</span
-					>{:else}{a.damageTotal}{/if}
-			</span>
-		{/each}
-		{#if multi}
-			<span class="rt-bytype">
-				{#each model.byType as t, i (i)}
-					<span class="rt-typesum" title={t.type || undefined}>
-						<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
+			{#each attacks as a, i (i)}
+				{#if multi}<span class="rt-idx" class:gold={a.natural === 20}>{i + 1}</span>{/if}
+				{@render hitDice(a)}
+				{#if model.damaging}
+					<span class="rt-sub" class:gold={a.natural === 20} class:bad={a.natural === 1}
+						>{a.subtotal}</span
+					>
+					<span class="rt-dmg">
+						{#if a.natural === 1}
+							<span class="rt-none">—</span>
+						{:else}
+							{#each a.damage as d, j (j)}{@render damagePart(d, i, j)}{/each}
+						{/if}
 					</span>
-				{/each}
-			</span>
-			<span class="rt-tot big grand">{model.total}</span>
-		{/if}
-	</span>
-	{#if model.note}<span class="rt-note">⇡ {model.note}</span>{/if}
+				{/if}
+				<span
+					class="rt-tot"
+					class:big={!multi}
+					class:gold={a.natural === 20}
+					class:bad={a.natural === 1}
+				>
+					{#if !model.damaging}{a.subtotal}{:else if a.natural === 1}<span class="rt-miss"
+							>miss</span
+						>{:else}{a.damageTotal}{/if}
+				</span>
+			{/each}
+			{#if multi}
+				<span class="rt-bytype">
+					{#each model.byType as t, i (i)}
+						<span class="rt-typesum" title={t.type || undefined}>
+							<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
+						</span>
+					{/each}
+				</span>
+				<span class="rt-tot big grand">{model.total}</span>
+			{/if}
+		</span>
+	{/if}
+	<!-- the note is a RECORD (an upcast's provenance, an amendment) and records belong in the log,
+	     which is one tap away and renders it in full. On a one-line strip it is permanent space for a
+	     few seconds of value, and for an amendment it is redundant besides: the green/red frame and
+	     the struck-through die already say the roll was changed. Kept as the strip's tooltip. -->
+	{#if model.note && !line}<span class="rt-note">⇡ {model.note}</span>{/if}
 </div>
 
 <style>
@@ -172,13 +236,17 @@
 		flex-direction: row;
 		align-items: center;
 	}
+	/* the label yields FIRST when the strip runs out of room: you just rolled it, and the log keeps it
+	   in full. Everything to its right is either a control or a number, and neither can be ellipsised. */
 	.line .rt-name {
-		flex: none;
+		flex: 0 1 auto;
+		min-width: 3ch;
 		padding: 8px 4px 8px 13px;
 	}
 	.line .rt-grid,
 	.line .rt-grid.damaging,
-	.line .rt-grid.multi {
+	.line .rt-grid.multi,
+	.line .rt-grid.volley {
 		display: flex;
 		align-items: center;
 		gap: 9px;
@@ -197,18 +265,11 @@
 	}
 	.line .rt-tot,
 	.line .rt-tot.big {
-		padding: 0 0 0 9px;
+		padding: 0 11px;
 		font-size: var(--font-size-body);
 		border-left: 1px solid var(--color-border);
 	}
-	.line .rt-note {
-		flex: 1;
-		min-width: 0;
-		padding: 0 12px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
+
 	.rt-name {
 		padding: 11px 16px 9px;
 		font-family: var(--font-display);
@@ -265,6 +326,19 @@
 		gap: 4px;
 		padding: 6px 0;
 	}
+	/* HOW the d20 was rolled is the one thing you cannot read off the numbers, so it frames the pair
+	   rather than tinting a die — the dice keep their own nat-20 gold / nat-1 red, which says what the
+	   die DID. Green for advantage, red for disadvantage. */
+	.rt-hit.adv,
+	.rt-hit.dis {
+		margin: 2px 0;
+		padding: 3px 6px;
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--color-good);
+	}
+	.rt-hit.dis {
+		border-color: var(--color-danger);
+	}
 	.rt-die {
 		display: inline-flex;
 		align-items: center;
@@ -315,18 +389,23 @@
 		color: var(--color-text-muted);
 		text-decoration: line-through;
 	}
-	/* An interactive pill must LOOK like one ([[charnik-interactive-affordance]]): its own accent
-	   edge, a cursor, a hover, a focus ring and a glyph saying what tapping does. Inert pills are
-	   untouched, so there is never a false affordance — that distinction is the whole reason a pill
-	   can carry an action without reading as "a click somewhere in the card". */
+	/* An interactive pill must LOOK like one ([[charnik-interactive-affordance]]): its own edge, a
+	   cursor, a hover, a focus ring and a glyph saying what tapping does. The edge is DASHED rather
+	   than coloured, because green and red are spoken for — they say how the d20 was rolled — and a
+	   third meaning in the same palette would read as a roll outcome. Inert pills are untouched, so
+	   there is never a false affordance. */
 	.rt-die.control {
 		gap: 2px;
 		padding-right: 4px;
-		border-color: var(--color-accent);
-		color: var(--color-accent-bright);
+		border-style: dashed;
+		border-color: var(--color-border-strong);
 		cursor: pointer;
 	}
+	.rt-die.control .rt-cue {
+		color: var(--color-accent-bright);
+	}
 	.rt-die.control:hover {
+		border-color: var(--color-accent);
 		background: var(--color-accent-soft);
 	}
 	.rt-die.control:focus-visible {
@@ -337,6 +416,13 @@
 		font-size: var(--font-size-micro);
 		line-height: 1;
 		opacity: 0.8;
+	}
+	/* the folded pool ("8d6") is a count, not a result — it reads as a caption, not as a die face */
+	.rt-die.folded {
+		background: transparent;
+		border-style: dashed;
+		color: var(--color-text-muted);
+		font-weight: 500;
 	}
 	.rt-mod {
 		font-size: var(--font-size-xs);

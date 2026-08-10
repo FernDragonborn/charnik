@@ -170,6 +170,20 @@
 		</div>
 	</div>
 
+	<div class="case">
+		<div class="cap">
+			the same rolls in the PLAYBAR's one-line layout. A strip has room for a bounded number of
+			pills and a pool has no bound (Fireball is 8d6, Meteor Swarm 40), so the d20 stays — it
+			decides the roll and it is the advantage control — and the rest folds into a count. Damage
+			shows its part total. The card above and the log keep every die.
+		</div>
+		<div class="strips">
+			{#each CASES as c, i (i)}
+				<div class="strip"><RollRow model={rollToastModel(c.entry)} line /></div>
+			{/each}
+		</div>
+	</div>
+
 	<div class="ladder">
 		{#each CASES as c, i (i)}
 			<div class="case">
@@ -216,6 +230,19 @@
 	.slot {
 		display: flex;
 		width: 400px;
+	}
+	.strips {
+		display: flex;
+		flex-direction: column;
+		gap: 7px;
+	}
+	.strip {
+		display: flex;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 12px;
+		min-height: 56px;
+		overflow: hidden;
 	}
 	.slot.live {
 		border-color: var(--color-accent);

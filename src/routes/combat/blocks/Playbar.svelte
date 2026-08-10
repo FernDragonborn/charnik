@@ -59,14 +59,17 @@
 		display: flex;
 		min-width: 0;
 	}
+	/* matches the combat bars it sits beside — same surface, same 12px radius, same 56px floor — so
+	   the row reads as two halves of one strip rather than two unrelated widgets */
 	.lastroll {
 		display: flex;
 		align-items: stretch;
 		min-width: 0;
 		max-width: 100%;
+		min-height: 56px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: var(--radius);
+		border-radius: 12px;
 		overflow: hidden;
 	}
 	.noroll {
