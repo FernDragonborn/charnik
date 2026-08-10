@@ -1240,7 +1240,21 @@ holds the done-work log; these are the OPEN tails it carried):**
   feature CALL this. (3) any future multiattack. **Build it once here** — a second per-feature path is
   the failure mode to avoid. **Carries `UBUG-21` with it** (above): the tray only ever built the
   to-hit half, so the sub-roll model this item introduces is the same one that fixes it — close them
-  together. Contract `DiceTrayRequest.instances` is already fixed; the loop + the
+  together.
+  **Also fold the advantage two-state while in here (maintainer, 2026-08-10).** One fact is currently
+  spelled twice under two names — `AdvantageRoll.mode?: 1 | -1` on the rolled result and
+  `RollToastAttack.advantageMode?: 1 | -1` on the view model, the second re-derived from the first
+  with a legacy fallback. That breaks [[one-name-per-fact]], and both are two-state where a named
+  member belongs (AI-CONVENTIONS §1.5 — the same reasoning that turned `RollRow`'s `line: boolean`
+  into `ROLL_LAYOUT`). Two changes, and the FOLD is the bigger one:
+  - **Collapse, don't just rename.** `RollToastAttack` carries `dropped` AND `advantageMode` — both
+    are projections of the one `AdvantageRoll`. Carry the object itself and the two fields become
+    one, along with the fallback that re-derives the mode.
+  - **Name the members** (`advantage` / `disadvantage`) rather than `1 | -1`. This field is persisted
+    into `log.jsonl`, where `-1` tells a reader nothing.
+  **Do NOT convert the input axis with it.** `rollPool(advantage)` / `netAdvantage(fx)` use −1 · 0 ·
+  +1 as arithmetic that sums and clamps across effects; that is a different fact from "how this roll
+  was decided", and it stays numeric. Only the RESULT's record becomes a named member. Contract `DiceTrayRequest.instances` is already fixed; the loop + the
   grouped roll/toast/log rendering are unbuilt. The reminder text stays the fallback for what the roller
   can't express. Ties [[charnik-dicetray-attack-damage-concept]] + the RollToast row model (UBUG-12).
 - [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from

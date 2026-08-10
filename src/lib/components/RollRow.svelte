@@ -10,7 +10,13 @@
 	// button and follow-up action bar, the log's per-row affordances, the Playbar's log cue. There is
 	// no `variant`/`compact` prop — a difference that needs one belongs in the chrome, not here.
 	// Density is decided from the model itself (a volley drops its per-type chips, see `multi`).
-	import type { RollToastModel, RollToastAttack, RollToastDamage } from '$lib/dice/roll-toast';
+	import {
+		ROLL_LAYOUT,
+		type RollLayout,
+		type RollToastModel,
+		type RollToastAttack,
+		type RollToastDamage
+	} from '$lib/dice/roll-toast';
 	import type { DieChip } from '$lib/rules/dice';
 	import DamageIcon from './DamageIcon.svelte';
 	import { signed } from '$lib/util/format';
@@ -19,7 +25,7 @@
 		model,
 		onAdvantage,
 		rerollDamage,
-		line = false
+		layout = ROLL_LAYOUT.card
 	}: {
 		model: RollToastModel;
 		/** Present → the d20 pill becomes a control that applies advantage AFTER the fact (UX-3): tap
@@ -32,12 +38,14 @@
 		 *  by position because that is the RAW unit — "reroll the weapon's damage dice" is one damage
 		 *  part is one pill — rather than a bar under a row that can't say which row it means. */
 		rerollDamage?: { attack: number; part: number; label: string; run: () => void } | undefined;
-		/** Lay the SAME content out on one line instead of as a card. This is not the density variant
-		 *  the design rejected — nothing is dropped or summarised, the identical DOM just flows in a row
-		 *  with the column captions folded away, because a caption row can't exist in a 35px strip. The
-		 *  Playbar is one line of an already-crowded screen; the toast and the log have room for a card. */
-		line?: boolean;
+		/** Card (every die, captions, a row per attack) or strip (one line, bounded content). See
+		 *  ROLL_LAYOUT — the strip is not a smaller card, it answers a different question, so the two
+		 *  differ in what they show and not only in how it is arranged. */
+		layout?: RollLayout;
 	} = $props();
+
+	/** The one place the layout is compared; everything below reads this. */
+	const strip = $derived(layout === ROLL_LAYOUT.strip);
 
 	const attacks = $derived(model.attacks);
 	const multi = $derived(attacks.length > 1 && model.damaging);
@@ -75,9 +83,9 @@
 	 * design already applies to a volley's rows.
 	 */
 	const shownChips = (a: RollToastAttack) =>
-		line ? a.chips.filter((c) => c.sides === 20) : a.chips;
+		strip ? a.chips.filter((c) => c.sides === 20) : a.chips;
 	const foldedDice = (a: RollToastAttack): string => {
-		if (!line) return '';
+		if (!strip) return '';
 		const counts = new Map<number, number>();
 		for (const c of a.chips)
 			if (c.sides !== 20) counts.set(c.sides, (counts.get(c.sides) ?? 0) + 1);
@@ -146,7 +154,7 @@
 				: `${d.chips.map((c) => c.detail).join(' + ')}${d.mod ? ` ${signed(d.mod)}` : ''}`}
 			onclick={re ? () => re.run() : undefined}
 		>
-			{#if line}
+			{#if strip}
 				<!-- one line has no room for a die-by-die breakdown, and that breakdown is audit
 				     information: the same rule the design already applies to a volley's rows. The part's
 				     TOTAL is what a player reads here; the log, one tap away, renders every die. -->
@@ -161,13 +169,13 @@
 			{/if}
 			{#if re}<span class="rt-cue">↻</span>{/if}
 		</svelte:element>
-		{#if d.mod && d.chips.length && !line}<span class="rt-mod">{signed(d.mod)}</span>{/if}
+		{#if d.mod && d.chips.length && !strip}<span class="rt-mod">{signed(d.mod)}</span>{/if}
 	</span>
 {/snippet}
 
-<div class="rollrow" class:line title={line && model.note ? model.note : undefined}>
+<div class="rollrow" class:strip title={strip && model.note ? model.note : undefined}>
 	<span class="rt-name">{model.label}</span>
-	{#if line && multi}
+	{#if strip && multi}
 		<!-- a volley cannot flow inline: three attacks each with their own dice and damage types is a
 		     two-dimensional thing, and forcing it onto one line is exactly the overlap this layout
 		     exists to avoid. A strip says WHAT happened and how much; the card and the log carry the
@@ -233,7 +241,7 @@
 	     which is one tap away and renders it in full. On a one-line strip it is permanent space for a
 	     few seconds of value, and for an amendment it is redundant besides: the green/red frame and
 	     the struck-through die already say the roll was changed. Kept as the strip's tooltip. -->
-	{#if model.note && !line}<span class="rt-note">⇡ {model.note}</span>{/if}
+	{#if model.note && !strip}<span class="rt-note">⇡ {model.note}</span>{/if}
 </div>
 
 <style>
@@ -246,39 +254,39 @@
 	}
 	/* one line: the label sits beside the numbers, the column captions fold away (they title columns
 	   that no longer exist as a grid), and the totals stop being display-sized */
-	.rollrow.line {
+	.rollrow.strip {
 		flex-direction: row;
 		align-items: center;
 	}
 	/* the label yields FIRST when the strip runs out of room: you just rolled it, and the log keeps it
 	   in full. Everything to its right is either a control or a number, and neither can be ellipsised. */
-	.line .rt-name {
+	.strip .rt-name {
 		flex: 0 1 auto;
 		min-width: 3ch;
 		padding: 8px 4px 8px 13px;
 	}
-	.line .rt-grid,
-	.line .rt-grid.damaging,
-	.line .rt-grid.multi,
-	.line .rt-grid.volley {
+	.strip .rt-grid,
+	.strip .rt-grid.damaging,
+	.strip .rt-grid.multi,
+	.strip .rt-grid.volley {
 		display: flex;
 		align-items: center;
 		gap: 9px;
 		padding: 0 4px;
 	}
-	.line .rt-cap {
+	.strip .rt-cap {
 		display: none;
 	}
-	.line .rt-hit,
-	.line .rt-dmg {
+	.strip .rt-hit,
+	.strip .rt-dmg {
 		padding: 0;
 		border-left: 0;
 	}
-	.line .rt-sub {
+	.strip .rt-sub {
 		padding-right: 0;
 	}
-	.line .rt-tot,
-	.line .rt-tot.big {
+	.strip .rt-tot,
+	.strip .rt-tot.big {
 		padding: 0 11px;
 		font-size: var(--font-size-body);
 		border-left: 1px solid var(--color-border);

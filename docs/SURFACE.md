@@ -196,7 +196,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
-| **RollRow** | `model`, `onAdvantage`, `rerollDamage`, `line` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
+| **RollRow** | `model`, `onAdvantage`, `rerollDamage`, `layout` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
 | **RollToast** | `model`, `closeToast` | The dice-roll toast — CHROME around a `RollRow`, nothing more. |
 | **SchemaDiscardDialog** | `drafts`, `onDiscard`, `onKeep` |  |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
@@ -716,6 +716,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface RollToastDamage` — One damage type inside an attack: its glyph key, the dice it rolled (a crit's doubled dice ride * ONE pill, divided),…
 - `interface RollToastAttack` — One attack line: the d20 that decided it plus the damage it rolled.
+- `const ROLL_LAYOUT` — How a roll is presented.
+- `type RollLayout`
 - `interface RollToastModel`
 - `function rollToastModel` — * Build the toast model from completed rolls (the same shape the roll log stores).
 - `function toastRoll` — Toast a completed roll.
@@ -1097,4 +1099,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 45 components · 610 exports across 92 modules · 32 duplicate suspects._
+_45 tokens · 64 global classes · 45 components · 612 exports across 92 modules · 32 duplicate suspects._

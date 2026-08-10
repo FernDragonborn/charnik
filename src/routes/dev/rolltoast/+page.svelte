@@ -5,7 +5,7 @@
 	// thing through toastRoll. Not linked from the app; gated to dev builds by /dev/+layout.
 	import RollToast from '$lib/components/RollToast.svelte';
 	import RollRow from '$lib/components/RollRow.svelte';
-	import { rollToastModel, toastRoll } from '$lib/dice/roll-toast';
+	import { rollToastModel, toastRoll, ROLL_LAYOUT } from '$lib/dice/roll-toast';
 	import { cycleAdvantage } from '$lib/rules/dice';
 	import { toast } from 'svelte-sonner';
 	import type { RollLogEntry } from '$lib/combat/helpers';
@@ -185,7 +185,9 @@
 		</div>
 		<div class="strips">
 			{#each CASES as c, i (i)}
-				<div class="strip"><RollRow model={rollToastModel(c.entry)} line /></div>
+				<div class="strip">
+					<RollRow model={rollToastModel(c.entry)} layout={ROLL_LAYOUT.strip} />
+				</div>
 			{/each}
 		</div>
 	</div>

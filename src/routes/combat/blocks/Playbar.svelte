@@ -12,7 +12,7 @@
 	// pills free to become controls (UX-3's retroactive advantage) without nesting a button in a
 	// button — the constraint that shaped the toast.
 	import { combat } from '../state.svelte';
-	import { rollToastModel } from '$lib/dice/roll-toast';
+	import { rollToastModel, ROLL_LAYOUT } from '$lib/dice/roll-toast';
 	import RollRow from '$lib/components/RollRow.svelte';
 
 	const { openMenu } = combat;
@@ -41,7 +41,7 @@
 				model={rollToastModel(last)}
 				onAdvantage={() => combat.tray.amendAdvantage(last)}
 				{rerollDamage}
-				line
+				layout={ROLL_LAYOUT.strip}
 			/>
 		{:else}
 			<span class="noroll">Tap any check · save · attack · spell to roll it.</span>
