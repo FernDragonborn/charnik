@@ -60,6 +60,67 @@ reroll" flow was found.
    people actually play than sequential cards are; the information gain is a deviation from RAW
    procedure, not from RAW outcome. (Maintainer decision 2026-08-10: acceptable, surfaced.)
 
+---
+
+# Part 2 — how a roll gets CONFIGURED (advantage, modifiers) before it fires
+
+Researched 2026-08-10 for a separate question: Charnik binds Alt/Ctrl-click on a stat to "open the
+roll tray", and the app is explicitly used on a phone, where modifiers do not exist. What do the
+others bind, and how do they reach it on touch?
+
+## The single most useful finding: nobody binds a modifier to "open the configurator"
+
+Every tool surveyed binds the gesture to the **outcome** — roll with advantage, roll with
+disadvantage — not to "open a thing where you can choose". Charnik's `Alt-click → tray` is the odd
+one out, and it costs an extra step for the case that dominates play.
+
+That is independent confirmation of the decomposition argued in PLAN (UX/tray discussion): for a
+skill/save/ability row the pool is always 1d20, so the tray offers exactly two things — advantage and
+a manual modifier — and advantage is the frequent one by a wide margin. Access should be to the
+frequent OPTION, not to the configurator holding it.
+
+## The three shipped strategies
+
+**Foundry dnd5e — dialog by default, modifiers as accelerators.** A click opens the roll dialog;
+holding **Shift** fast-forwards using whatever advantage mode is already in play, **Alt** adds a
+source of advantage, **Control** adds a source of disadvantage. Skipping the dialog is exposed as a
+*named key binding* rather than a hardcoded key — and a small industry of modules (MRE, Ready Set
+Roll, Advantage Reminder) exists to reconfigure these. That modules exist at all is the finding: no
+default modifier set satisfies everyone, which matches the collision analysis (Foundry's
+`Ctrl` = disadvantage is macOS's secondary click). Desktop-only culture — no touch story.
+
+**Roll20 — four user-selectable strategies, because tables differ.** The 5E sheet's Settings tab has
+a "Roll Queries" option with: *Always Roll Advantage* (the default — roll two d20 every time and show
+both), *Advantage Toggle*, *Query Advantage* (prompt on every roll), *Never Roll Advantage*.
+- **"Advantage Toggle" is precisely the three-state armed control** proposed for Charnik: it adds
+  Advantage / Normal / Disadvantage buttons **at the top of the sheet**, and you then click rows
+  normally. So the idea is shipped and load-bearing in the largest VTT, not speculative.
+- Roll20's *default*, though, is a fourth idea worth keeping in mind: **ask nothing, roll 2d20 always,
+  show both**. Zero UI cost and zero gestures — but noisy, and it has no answer for "what is the
+  total", which matters for a toast built around one big number.
+- Shipping four is itself a caution in both directions: no single strategy fits every table, but four
+  settings for one question is a lot of surface.
+
+**D&D Beyond — one gesture, identical on desktop and touch.** Advantage/disadvantage is reached by
+**right-click on desktop or long-press on mobile**, then picking the option from the menu. Same
+mental model on both inputs, no per-row control, no modifier.
+
+## What this settles for Charnik
+
+1. **The touch question has an industry answer and it is not a per-row button.** Long-press is the
+   touch equivalent of right-click, and DDB ships exactly that for exactly this. So the context-menu
+   proposal costs zero interface space on either input.
+2. **A modifier should map to an outcome, not to a configurator.** If a modifier survives at all it
+   should be "roll with advantage", not "open the tray".
+3. **The armed three-state control is proven** (Roll20 "Advantage Toggle"). Charnik's intended
+   deviation is that it should **auto-reset after one roll** — a charge, not a mode — which Roll20's
+   version does not do; theirs is persistent and users do forget it is on (their forums carry
+   "keeps rolling with advantage" threads). Auto-reset is the fix for the failure mode their design
+   demonstrably has.
+4. **Do not hardcode one strategy.** Roll20 needed four; Foundry needed rebindable keys. Charnik does
+   not need four settings, but it should pick a default that is safe when forgotten — which again
+   argues for the auto-resetting charge over a persistent mode.
+
 ## Sources
 
 - Multiattack 5e — module that condenses several attacks into one chat card:
@@ -73,3 +134,23 @@ reroll" flow was found.
 - DDB forum — Savage Attacker automation + the once-per-turn / Extra Attack conflict:
   <https://www.dndbeyond.com/forums/dungeons-dragons-discussion/rules-game-mechanics/205817-savage-attacker>
 - Midi Quality of Life Improvements: <https://foundryvtt.com/packages/midi-qol>
+
+Part 2:
+
+- Foundry dnd5e — advantage/disadvantage modifier keys + skip-dialog binding:
+  <https://github.com/foundryvtt/dnd5e/issues/4515> ·
+  <https://github.com/foundryvtt/dnd5e/issues/5338>
+- Minimal Rolling Enhancements (configurable modifier keys):
+  <https://foundryvtt.com/packages/mre-dnd5e>
+- Ready Set Roll for D&D5e: <https://github.com/MangoFVTT/fvtt-ready-set-roll-5e>
+- Advantage Reminder for dnd5e (hold Ctrl/Alt/Shift/Meta to fast-forward):
+  <https://foundryvtt.com/packages/adv-reminder>
+- Roll20 5E sheet — Roll Queries setting (Always / Advantage Toggle / Query / Never):
+  <https://help.roll20.net/hc/en-us/articles/360037773573-D-D-5E-by-Roll20> ·
+  <https://wiki.roll20.net/D%26D_5E_by_Roll20>
+- Roll20 forums — the persistent-toggle failure mode ("keeps rolling with advantage"):
+  <https://app.roll20.net/forum/post/7296302/keeps-rolling-with-advantage>
+- D&D Beyond — right-click / long-press for advantage & disadvantage:
+  <https://www.dndbeyond.com/forums/d-d-beyond-general/d-d-beyond-feedback/digital-dice-feedback/66074-roll-with-advantage-or-disadvantage>
+- D&D Beyond — Digital Dice on the mobile app:
+  <https://www.dndbeyond.com/posts/920-digital-dice-are-now-live-on-the-mobile-app>
