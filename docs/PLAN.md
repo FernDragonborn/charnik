@@ -827,12 +827,13 @@ Config files: `charnik.config.json` (dataDir, roots, toggles, rule-options, sett
 
 ## Planned feature systems (N1–N6, planning drafts 2026-07-14/15)
 
-Feature designs from the audit-session planning discussions (moved here from docs/AUDIT.md —
-these are roadmap work, not defects). Cross-refs: `EFX-*` / `B*` / `D*` / `A*` = items in
-[`docs/AUDIT.md`](AUDIT.md); `UBUG-*` = the backlog below. Stable IDs — don't renumber.
+Feature designs from the audit-session planning discussions (they are roadmap work, not defects).
+Cross-refs: `B*` / `D*` / `UBUG-*` = items in the backlog below. Stable IDs — don't renumber.
+(The old `docs/AUDIT.md` was retired 2026-07-29 — its surviving items live in the backlog; any
+`EFX-*` / `A*` code left in this file has been rewritten in plain terms, don't reintroduce them.)
 
 Core insight: PHB class features reduce to THREE data shapes, and the engine for two of them
-already exists — (1) passive modifier tokens (blocked only on EFX-2 gathering), (2) activatable
+already exists — (1) passive modifier tokens (blocked only on the fold gathering them), (2) activatable
 actions = COMPOSITION of existing systems (`economy.trySpend` + `resourcesSpent` + `addEffect`
 with duration + `rollPool` — no new engine, new `class_features` columns: activation slot,
 resource cost, applied tokens, duration, roll), (3) choice groups (`choice_group` + `choose_n`
@@ -951,7 +952,8 @@ stay semi-manual.
   optional and shape-distinguishable (`d\d+` vs `short|long|other`), so existing 3-segment
   tokens (`grant_resource:rage:2:long`) keep parsing unchanged. Spending rolls the die into
   attacks via the existing `bonusDice` path. Extra Attack: `flat_bonus:attacks+N` →
-  Attacks panel shows ×N. Prereq: EFX-2; content-schema columns bump + converter updates.
+  Attacks panel shows ×N. Prereq: the fold must gather these feature tokens; content-schema
+  columns bump + converter updates.
   Order: shapes 1→3→2, Wild Shape last as its own item.
 - [ ] **N3 · Builder/level-up redesign — descriptions everywhere.** Requirement: NOTHING is
   picked blind (spells, feats, subclasses, maneuvers, features). UI thesis: master–detail
@@ -969,7 +971,7 @@ stay semi-manual.
   (1 restricted-list expertise) deliberately NOT encoded — the count model can't express the skill
   restriction, so encoding it would over-permit. Unit + real-content tests both editions. **UI not
   screenshot-verified in a Rogue state** (needs a build-flow drive). (b) effects integration:
-  `grant:expertise` missing (EFX-1),
+  `grant:expertise` missing from the L1 vocab,
   effect-granted skills not shown as locked-on in the builder; (c) 'half' (Jack of All
   Trades) is a dead branch — type + `skillCheck(halfProficient)` exist, nothing calls them;
   wire via a bard feature token (needs a `half` grant the L1 vocab lacks — vocab extension);
@@ -1067,15 +1069,6 @@ point** (it depends on nothing).
 5. **B25 subclass casters** → **D16 choice-UI → `magic_initiate`** → **RECHARGE slice 3** (item charges).
 6. Content passes (MAGIC-ITEM-EFX, D6/D10/E4); **ARCH-1 i18n sweep**; then low/YAGNI (ARCH-4 spacing,
    B11, B24).
-
-- [ ] **AUDIT-1 · Full-project audit backlog (2026-07-14) → [`docs/AUDIT.md`](AUDIT.md).**
-  Whole-`src/` correctness pass: rules-math bugs (A1 heavy-armor AC, A2 multiclass HP —
-  verified vs both editions), unfinished invariants (B1 effect expiry, B2 dead play fields,
-  B5 source filtering only in compendium, B6 config → dataDir file, DECIDED), token/CSS
-  violations, structure/size, data gaps (no 2024 languages CSV), semantic duplicates jscpd
-  can't see (F1–F9: titleCase ×6, signed ×4, ability-list ×5…), plus the **effects-engine
-  buildout plan (EFX-1..4)** — the vocab/gathering/catalog/lifecycle gaps behind "effects
-  account for too little". Stable letter+number IDs; tick items THERE, graduate designs here.
 
 **From AUDIT-29-07 (retired 2026-08-04 — its Bugs/Smells/Naming were all closed + verified; git
 holds the done-work log; these are the OPEN tails it carried):**

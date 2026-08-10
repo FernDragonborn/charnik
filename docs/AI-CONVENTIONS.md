@@ -592,7 +592,7 @@ commits.
 8.1.)
 
 ### 8.3 Mark status done only when implemented
-**Rule.** In `AUDIT.md` (and any todo/status list), a fix may be proposed / designed / written up,
+**Rule.** In `PLAN.md` (and any todo/status list), a fix may be proposed / designed / written up,
 but the checkbox stays `[ ]` (open) or `[~]` (decided/in-flight) until the change is **actually in
 code and verified**. Only then flip to `[x]`.
 
