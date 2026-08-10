@@ -1312,8 +1312,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   `pushRoll` keeps its arity) put the button in the card; taking it re-toasts the REVISED roll through
   the same component instead of a summary string. Card re-tint is reserved for a natural 20/1
   (`emphasis`): how a roll was made (advantage) colours its tag only.
-  Preview: `/dev/rolltoast` (every shape from fixed rolls). **Tail:** the roll LOG + DiceTray still
-  render their own breakdown, and the non-roll toasts elsewhere are still plain strings.
+  Preview: `/dev/rolltoast` (every shape from fixed rolls). **Tail:** lifted to **UBUG-20** (the roll
+  LOG + DiceTray still render raw `expr` strings); the non-roll toasts elsewhere are still plain strings.
   **Final layout (2026-08-10, `design-preview/toast-update/Roll Toasts Final.dc.html`)** — 5A's
   row-per-damage-type stack became a row-per-ATTACK grid, because on an attack the interesting unit is
   the swing, not the damage type. One line = `dice · to hit · damage · the big number`; a second damage
@@ -1427,6 +1427,23 @@ holds the done-work log; these are the OPEN tails it carried):**
   Action, and the **bug** on the "report a bug" button. Bundle SVGs locally with attribution
   ([[charnik-icon-sources]]) — no emoji, no icon-font dep. Sweep for other emoji-as-icon uses while
   in there.
+- [ ] **UBUG-20 · The roll LOG and the dice tray still render rolls as raw `expr` strings — bring them
+  to the toast's shape (2026-08-10; lifted out of UBUG-12's tail, where it had been sitting as one
+  sentence inside a closed item).** UBUG-12 replaced the toast's formatted string with a real component,
+  but `menus/RollLog.svelte` and `menus/DiceTray.svelte` were left on the OLD rendering — they print the
+  roller's internal `expr` verbatim (`d20(14) +4`, `dmg d8(6) +3 slashing: 9`, a separate dimmed
+  `drop d20(N)` line), which is the exact run-on-string problem the toast was rebuilt to fix. So the
+  same roll now reads two different ways depending on where you look at it, and the log — the surface
+  you go to precisely to re-read a roll — is the WORSE of the two. Wanted: the same vocabulary as the
+  toast — a chip per die, the dropped adv/disadv die struck through beside the kept one, damage as
+  glyph + pill per type (`DamageIcon`), nat 20/nat 1 tinting, the upcast `note`. **The design question
+  to settle first** is whether the log row IS a `RollToast` (extract the card's inner grid into a shared
+  `RollRow` and let both mount it — one shape, one place to change) or only borrows its parts: a log row
+  is denser, has no dismiss affordance, needs a timestamp/round column the toast doesn't, and already
+  carries the Savage Attacker reroll button in its own layout. Prefer the shared `RollRow` if those fit
+  as row-level slots — a second near-duplicate renderer of the same model is exactly the duplication
+  `docs/SURFACE.md` exists to prevent. Model side is already done and pure (`rollToastModel` takes a
+  `RollLogEntry`, which is what the log stores), so this is a rendering job, not a data one.
 - [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing — hidden spells still showed in
   combat.** DONE 2026-07-21. The spellbook's eye/pin were local `$state` sets on a THROWAWAY
   `demoCharacter()` (never persisted, never read by combat), and `buildSpellGroups` rendered every
