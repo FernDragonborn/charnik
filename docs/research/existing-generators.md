@@ -2,6 +2,9 @@
 
 Research collected for Charnik. Goal: know what to avoid and what to copy.
 
+This file covers **builders**. For the play/roll surface — how a rolled attack is displayed and
+where a per-roll decision lives — see [`roll-surfaces.md`](roll-surfaces.md).
+
 ## D&D Beyond
 - **Forces rules updates** with no toggle to stay on old rules → breaks existing
   character sheets.
