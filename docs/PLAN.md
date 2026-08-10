@@ -1350,7 +1350,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   shipped files on update, preserving any the user hand-edited (hash drift). The "bump it whenever
   shipped SRD data changes" rule lives on the constant itself (`schema/version.ts`).
 - [ ] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
-  2026-08-10; design settled in conversation, nothing built).** The ask: a Settings field where you paste
+  2026-08-10; design settled, SLICE 1 of 5 built).** The ask: a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
   updated without shipping an app release.
@@ -1364,12 +1364,15 @@ holds the done-work log; these are the OPEN tails it carried):**
   `tools/build-static-content.mjs` scans instead of listing roots too. `graph.packRoots` carries the
   discovered set so homebrew authoring still knows which files are pack-managed (it read the constant
   before). **Two findings worth keeping:**
-  - **Root ORDER is load-bearing and was accidental.** The compendium never dedupes an article across
-    editions — `groupRows` sorts stably, so the first root's rows head every list. Sorting roots
-    alphabetically silently flipped every list from 5.5e to 5e (caught by `tools/visual/shot.mjs`, not
-    by the 1084 unit tests). Discovery now sorts DESCENDING to keep 2024 ahead of 2014, which is a
-    stand-in, not a rule: **the real fix is for the browse list to choose an edition explicitly rather
-    than inherit filesystem order** — do that before packs can define overlapping articles.
+  - **Root ORDER was load-bearing by accident — now it is not, and must stay that way.** The
+    compendium never deduped an article across editions and `groupRows` sorts stably, so whichever
+    root loaded first headed every list; changing the scan order silently flipped the whole
+    compendium from 5.5e to 5e. Caught by `tools/visual/shot.mjs`, NOT by the 1084 unit tests — so
+    anything touching load order or layout has to be DRIVEN, not just unit-tested. **Fixed properly
+    in `5177cf7`:** the browse lists sort by displayed name themselves (`byDisplayName`, newest
+    edition first within an article), so `discoverContentRoots` is back to a plain deterministic sort
+    and **no consumer may read meaning into pack order** — installing a pack must never be able to
+    reorder someone's compendium.
   - Deleting a bundled pack still re-seeds it on next launch (`copyMissingRoots`), which is the
     "deleting or downgrading the SRD pack needs an answer" item below, now reachable from the UI-side.
 
@@ -1420,6 +1423,32 @@ holds the done-work log; these are the OPEN tails it carried):**
     passenger inside a content pack.
   - **No built-in pack directory.** "Paste a URL" is a tool; "browse popular packs" is a piracy index —
     PHB-as-CSV would appear in week one. Show `#content-license`, never host, mirror or aggregate a list.
+
+  **Slices, and where the work stands (2026-08-10).**
+  0. `[ ]` **Split the SRD into its own repo** (`charnik-content-srd`), vendored into the build as the
+     bundled floor. **Needs the maintainer to create the remote — never do this unasked.** Nothing
+     below is blocked on it: slices 1–3 can be built against the local folders and any URL.
+  1. `[~]` **A pack is a FOLDER, discovered by scanning** — DONE (`ccd247c`, described above).
+     **Still open in this slice:** the installed-pack REGISTRY — the URL, `ETag`, `lastCheckedAt`,
+     pin and per-pack update mode. That is local state about an install, so it belongs in app config,
+     NOT in the CSVs (§1.6's exception list already covers `charnik.config.json`).
+  2. `[ ]` **The fetcher, in Rust** — `@tauri-apps/plugin-http` with a host allowlist in capabilities,
+     never webview `fetch` (SECURITY.md §5). **Desktop only:** the web build always serves the content
+     of its own deploy, so there is nothing for it to update and half this work does not apply there.
+  3. `[ ]` **check → diff → apply.** Reuse `isUserModified` (`content/provider.ts`) for the
+     hand-edit rule rather than inventing a merge; list the rows that would DISAPPEAR and which
+     characters reference them BEFORE applying, not after.
+  4. `[ ]` **The shipped SRD becomes a pack** sitting above the bundled floor.
+
+  **Two decisions taken on Claude's assumption, flag them if either is wrong:**
+  - **The SRD keeps a bundled floor.** A fresh install with no network still needs content, and the
+    demo character depends on it, so "get SRD out of the app" was read as "out of the release cycle",
+    not "out of the binary". If a full removal is actually wanted, slice 0 and slice 4 both change.
+  - **Manifest-free leaves no file listing for a generic HTTPS host.** The `#content-*` headers carry
+    everything except *which files exist*. GitHub's tree API supplies that in one request; a plain
+    static host only can if it serves an autoindex. So v1 = GitHub as the fast path, any static host
+    with autoindex as the general case, and still no `pack.json`.
+
 
   **Settings shape (maintainer-specified).** A dropdown that governs the NETWORK only — *don't check* /
   *check and notify* / *check and pre-download* — plus a manual button (global **and** per-pack, since
