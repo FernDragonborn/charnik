@@ -1596,6 +1596,100 @@ holds the done-work log; these are the OPEN tails it carried):**
   character refs already migrate kebab→snake (v1→v3). WEB needs nothing — it always fetches the fresh
   deploy. Unit-tested over two MemoryStorages (first-run / overwrite-untouched / preserve-edited /
   up-to-date-noop). **Bump `CONTENT_SEED_VERSION` whenever shipped SRD data changes.**
+- [ ] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
+  2026-08-10; design settled in conversation, nothing built).** The ask: a Settings field where you paste
+  a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
+  unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
+  updated without shipping an app release.
+
+  **Manifest-free by design.** A sidecar `pack.json` was proposed and REJECTED: the project deliberately
+  keeps data in CSV, and every `#content-*` header already carries what a manifest would —
+  `#content-source` (pack identity, and the namespacing key), `#content-license` + `#content-url`
+  (attribution), `#content-id` (a GUID), `#content-updated_at`, `#content-hash`, `#content-systems`.
+  Consequences worth stating because they are BETTER than the manifest version, not merely equal:
+  - **A pack is a FOLDER.** The one thing headers can't give is the file list; a folder listing filtered
+    to files that parse as content gives it, with no new format. (Folder-per-pack also makes uninstall a
+    delete, keeps the file × `source` two-dimensional filtering intact, and never mixes with homebrew.)
+  - **Match remote↔local by `#content-id`, not by filename** — a pack that renames a file is still the
+    same file, so a rename can't produce a duplicate.
+  - **There is no pack version and none is needed.** `#content-hash` answers "did THIS file change",
+    which is finer-grained than a pack semver AND lines up exactly with the per-file hand-edit check.
+
+  **Network channel: Rust, not the webview.** `SECURITY.md` §5 states "No remote content loading" and
+  the CSP governs the webview's network. The precedent to copy is §1's updater: an outbound HTTP
+  *client* in Rust (`plugin-updater`), never webview `fetch`. Host allowlist in capabilities. Doing this
+  via webview fetch would require relaxing a shipped security invariant — don't.
+
+  **Applying is always a user action** (`SECURITY.md` §7, "never silent overwrite"). Content is rules;
+  changing them mid-campaign unasked is the worst thing a tracker can do.
+
+  **Hand-edited files: the rule already exists and is unit-tested — reuse REL-3.** This was flagged as
+  the biggest risk in the design conversation and turns out to be solved: `seedShippedContent` rewrites
+  each shipped file EXCEPT one whose body no longer matches its own `#content-hash` (drift ⇒ the user
+  edited it ⇒ preserve, and HashDrift surfaces it). The pack updater must reuse that rule, ideally the
+  same code path, not reinvent a merge strategy.
+
+  **Other correctness items:**
+  - **SRD keeps a bundled floor.** A fresh install with no network must still have content, so SRD ships
+    in the bundle at `CONTENT_SEED_VERSION` (REL-3) and packs update *above* that floor. Deleting or
+    downgrading the SRD pack needs an answer — the demo character depends on it.
+  - **Removals break characters, additions don't.** Before applying, list the rows that disappear and
+    which characters reference them. "Render what's possible + flag it" already exists, but the warning
+    belongs BEFORE the update, not after.
+  - **`#content-source` must be stable.** Identity is `source:id`; a pack that changes its source tag
+    re-namespaces everything and breaks every character reference at once. Treat a changed source as a
+    NEW pack, never an update.
+  - **Atomicity + the watcher.** Per-file temp→rename exists, but a 12-file update that dies on file 7
+    leaves an unresolvable root — needs pack-level all-or-nothing (or resumability), and the watcher must
+    ignore the app's own writes (existing invariant) or a bulk update triggers a reload storm.
+  - **No plugins in packs (v1).** Otherwise "paste a URL" becomes "run third-party code". The QuickJS
+    sandbox and `PluginConsentDialog` exist, but a plugin is a separate consent category, not a silent
+    passenger inside a content pack.
+  - **No built-in pack directory.** "Paste a URL" is a tool; "browse popular packs" is a piracy index —
+    PHB-as-CSV would appear in week one. Show `#content-license`, never host, mirror or aggregate a list.
+
+  **Settings shape (maintainer-specified).** A dropdown that governs the NETWORK only — *don't check* /
+  *check and notify* / *check and pre-download* — plus a manual button (global **and** per-pack, since
+  "I want to test this one" is the real use) that deliberately bypasses the throttle. Config text states
+  it plainly: **at most one update request per repo per day.** Naming matters: *download ≠ apply*;
+  applying stays a click. If auto-apply is ever wanted it should be **per-pack**, for a pack the user
+  explicitly trusts, never a global toggle. **Pins:** "don't update this pack" — a campaign in progress
+  must not have its rules shift under it.
+
+  **Rate limits are a non-issue if done right.** GitHub unauthenticated = **60 req/hr per IP**, but a
+  `304` from `If-None-Match` **does not count against it** — so steady state (nothing changed) costs
+  **zero quota for any number of packs**. One API call per repo
+  (`GET /repos/{o}/{r}/git/trees/{branch}?recursive=1`) returns every path with its blob SHA, so one
+  request says what changed; the CSVs themselves come from `raw.githubusercontent.com`, which is not the
+  REST API and not on that budget. GraphQL could batch several repos into one request but **requires a
+  token** — a dead end for an unauthenticated desktop app; don't re-propose it.
+  The residual costs are NOT quota: a shared IP (office / CGNAT) burns first-run checks for everyone
+  behind it; the check must never block startup or first paint; offline must fail **silently** after the
+  first failure (no toasts — see UX-1: an error the user can't act on shouldn't jump at them); and
+  **privacy** — pinging a third party on every launch contradicts the offline-first, no-account posture.
+  **Privacy, not quota, is why the default is manual.** `ETag` / `lastCheckedAt` are local state and do
+  NOT belong in the CSVs.
+
+  **Don't build a GitHub client — build a fetcher for an HTTPS URL.** Self-hosting is a stated project
+  value, and coupling the model to one forge breaks it for nothing. GitHub is then a convenience case:
+  recognise `github.com/owner/repo`, derive the raw URLs, use the tree API as a per-host *optimisation*.
+  The semantics stay in the CSV headers, so a plain static file server works too.
+
+  **Interaction with the (still unbuilt) bundle export.** Bundle export is designed but NOT implemented
+  (P7 `TODO`; the `character/schema.ts` comment says "a bundle export (later) embeds the rows") — so
+  shape it already knowing about packs:
+  - **A bundle that embeds rows redistributes third-party content, invisibly inside a JSON.** Worse than
+    a pack directory because nobody sees it. `#content-license` makes the right behaviour automatic PER
+    SOURCE: CC-BY / CC0 → embed, attribution preserved; unknown / all-rights-reserved / author-owned →
+    record a *reference* to the pack instead and tell the user why. The sharer's own homebrew is theirs
+    and gets embedded knowingly.
+  - **Reference-mode bundles can pin `#content-hash`**, so import can report "built against SRD 5.2.1 @
+    `abc`, you have `def`, 3 referenced rows differ". Real reproducibility, free, because the hashes are
+    already there.
+  - **Open question, decide when building:** do embedded rows on import become a real content source
+    (colliding with the user's own packs through `source:id`) or a character-scoped overlay? Leaning
+    overlay plus an explicit "add to my content" action — silently injecting foreign rows into the shared
+    pool is a surprise.
 - [x] **REL-1 · Linux release build.** (2026-07-21) `release.yml` is now a `strategy.matrix`
   (`ubuntu-22.04` + `windows-latest`, `max-parallel: 1` so the two legs merge into one release +
   `latest.json` instead of racing). The Linux leg apt-installs the Tauri v2 deps

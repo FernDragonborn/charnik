@@ -59,6 +59,16 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
 7. **Bundle / content-pack import = data only.** Parsed, **validated (zod) against the
    schema**, surfaced via collision/health UI before use; never executed, never silent
    overwrite.
+
+   > **Planned (REL-4, not built): fetching content packs from a URL.** When it lands it MUST
+   > go through **Rust**, the same shape as the updater in §1 — an outbound HTTP *client* with
+   > a host allowlist in capabilities — and **NOT** webview `fetch`. Implementing it in the
+   > webview would mean relaxing §5's `connect-src`, i.e. trading a shipped invariant for
+   > convenience. Everything else in this rule still binds the feature: fetched CSVs are data,
+   > validated before use, and **applying an update is always a user action** — a pack may be
+   > downloaded automatically, never applied automatically. Packs carry **no plugins** in v1;
+   > a plugin stays a separate, consent-gated category (§4), never a silent passenger inside a
+   > content pack.
 8. **Parsing safety.** Vetted parsers (`papaparse`, `JSON.parse`); row/cell/file **size
    caps** to avoid memory blowups; malformed rows → health view, not a crash.
 9. **Minimal Rust surface.** Prefer official audited plugins; keep custom Tauri commands
