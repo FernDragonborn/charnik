@@ -1065,46 +1065,6 @@ were learned the hard way.
 (`rollFormula` drops a mid-string modifier — an hour, and it is silently wrong numbers reachable
 from content AND the plugin API).
 
-### Previous focus (set 2026-08-04) — CLOSED, kept for the reasoning
-
-Dependency-forced across the play-tracking ledgers. The linchpin is **N2 `onEvent`** — it gates every
-event-driven recharge. **Decision 2026-08-04: start with N2** (it's needed by the later waves anyway,
-so getting it ready first avoids a stall); **Concentration-save B4 is unblocked and can slot in at any
-point** (it depends on nothing).
-
-1. ~~**N2 · `savage_attacker`**~~ — **DONE 2026-08-05** (`docs/N2-PLAN.md`): data-driven `damage_reroll`
-   marker → a post-roll "reroll the weapon damage, keep the higher" offer, once per turn (toast + a
-   roll-log pill, labelled from the feature). App-verified on demo Karroth.
-2. ~~**RECHARGE slice 2 · initiative-regain**~~ — **DONE.** REFRAMED (2026-08-02) away from an event-bus
-   to **onUse resource-options gated on combat-start** (a player choice at a window, not auto-mutation).
-   Persistent Rage shipped 2026-08-04; **Uncanny Metabolism 2026-08-05 via a new MULTI-action** (`;`-list
-   `action`, run in order) — regain Focus AND heal (`docs/RECHARGE-PLAN.md` slice 2).
-3. **N2 · `onEvent` auto-tail — MECHANISM BUILT (2026-08-05), Perfect Focus shipped.** The NO-CHOICE,
-   EVERY-initiative auto-regain-UP-TO-N features. **Decision (maintainer):** AUTO-APPLY on combat-enter +
-   NOTIFY (toast) — NOT a player click, NOT deferred. This is the tracker's **first event-driven
-   auto-mutation** — a deliberate, narrow exception to "surface, never force", justified because these
-   are *automatic* in RAW (no "you can"); the toast IS the surfacing. The clean model sidesteps the
-   feature-presence fork entirely: the token lives on the FEATURE (gathered only when the char has it),
-   so no marker pip / no level-gated option. Delivered: L1 token `regain_on_initiative:<id>:<n>` →
-   `facts.initiativeRegain` → `CombatVM.toggleCombat` fires `fireInitiativeRegen` (restore up to N +
-   toast, gated on auto-calc). **`monk_perfect_focus` (Focus → 4) shipped + app-verified.**
-   **`bard_superior_inspiration` DONE 2026-08-09** — Bardic Inspiration became a tracked uses-POOL
-   (`grant_resource:bardic_inspiration:max(1,cha_mod):long` next to its existing `grant_roll` die), and
-   the **Font of Inspiration** blocker was fixed at the seam rather than worked around: `pushResource`
-   kept the largest MAX and nothing else, so an upgrade that changes only the RECHARGE could never win.
-   It now breaks an equal-max tie on **recharge generosity** (`short > short_one > long > other >
-   consumable`) — the general "same uses, better recovery" rule, not a bard special case. Regain N is
-   edition-divergent (2024 "until you have two" → 2; 2014 "if you have none left, regain one" → 1, which
-   `restoreUpTo` expresses identically). Still open: Evergreen Wild Shape needs Wild Shape tracked
-   (unimplemented). **Architecture (settled with maintainer):** a bounded token is the *common
-   declarative* case; **"any action on any event" belongs in L3 plugin `onEvent` (scripting), NOT a
-   broader L1 token** — the trigger dimension generalizes only when a 2nd declarative event-action ships
-   (e.g. Champion Heroic Rally = heal on turn-start), decided then, not pre-built (YAGNI).
-4. **Concentration-save B4** — DONE 2026-08-04 (`RECHARGE-PLAN` §6); universal.
-5. **B25 subclass casters** → **D16 choice-UI → `magic_initiate`** → **RECHARGE slice 3** (item charges).
-6. Content passes (MAGIC-ITEM-EFX, D6/D10/E4); **ARCH-1 i18n sweep**; then low/YAGNI (ARCH-4 spacing,
-   B11, B24).
-
 **From AUDIT-29-07 (retired 2026-08-04 — its Bugs/Smells/Naming were all closed + verified; git
 holds the done-work log; these are the OPEN tails it carried):**
 - [ ] **ARCH-1 / B8 · i18n sweep of combat + build.** `en.json` has no `combat.*`/`build.*` sections;

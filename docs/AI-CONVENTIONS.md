@@ -658,6 +658,27 @@ impl, always. Concrete cases this session: `recharge` "is binary" → corrected 
 (EFFECTS.md); N2-PLAN's onEvent sketch "regain one, auto" → corrected to the SRD reality (player
 choice, regain-all, own long-rest gate) the moment the SRD was checked.
 
+### 8.6b A superseded section is DELETED, not demoted — git is the history
+
+**Rule.** When a roadmap section is replaced (a "current focus" that is no longer current, a design
+supplanted by a later decision), run the §8.7 sweep and then **delete it**. Do not keep it renamed to
+"Previous / CLOSED / kept for the reasoning". The sweep is the safeguard; the deletion is the point.
+
+**Why.** A plan people stop reading is worse than a short one. Every kept-for-history section is one
+more thing a future reader must classify as live or dead, and the classification is not free — it is
+exactly how PLAN ended up with two competing "what's next" lists, the stale one sitting above the
+real one. Git holds the full text forever, so "we might want the reasoning" costs one `git log -p`,
+not a permanent tax on every read. (Maintainer, 2026-08-11: *"давай хоча б спробуємо"* not to bloat
+the plan — recorded because the reflex to keep is strong and mine defaulted to keeping.)
+
+**How to apply.** Run §8.7 exactly as for a whole doc: grep `[ ]` AND `[~]`, sweep the prose for
+deferral words, and **verify each unique item survives somewhere that is not this section** — its
+own ledger, a code comment, a test. In the case that produced this rule the two load-bearing bits
+were already elsewhere (the L3-`onEvent` decision in `N2-PLAN.md`, the recharge-generosity tie-break
+in `effects/apply.ts` with a test pinning it), and one prose-only tail — "Evergreen Wild Shape needs
+Wild Shape tracked" — was already carried by `N2-PLAN.md`. Then delete. If something is unique,
+MOVE it first; the rule is not licence to drop content, only to stop shelving it.
+
 ### 8.7 Retiring / migrating a plan doc — grep `[ ]` AND `[~]`, verify transfer before deleting
 **Rule.** Before deleting or folding a plan/status doc into another — or whenever you answer "what's
 still open in X?" — enumerate the unfinished work by grepping for **both `[ ]` (open) AND `[~]`
