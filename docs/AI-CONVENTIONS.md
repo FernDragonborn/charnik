@@ -710,6 +710,30 @@ prose for non-checkbox deferral markers (`deferred`, `відкладено`, `л
    multitype-damage item; the `heal` "not done" note likewise).
 3. **Re-point every cross-reference** (other docs' `[[wikilinks]]` / markdown links, memory pointers)
    off the doomed doc so nothing dangles, then delete with `git rm`.
+4. **Verify by COUNTING, never by reading.** Before committing a bulk edit, diff the structure
+   against `HEAD` and expect every number to match except the one you meant to change:
+
+   ```sh
+   for pat in '^- \*\*' '^\*\*' '^#' '^- \[ \]' '^- \[~\]' '^  - \[ \]' '^- \[x\]'; do
+     echo "$pat  $(git show HEAD:docs/PLAN.md | grep -c "$pat")  ->  $(grep -c "$pat" docs/PLAN.md)"
+   done
+   # and the ids themselves, not just the totals
+   diff <(git show HEAD:docs/PLAN.md | grep -o '^- \[ \] \*\*[A-Za-z0-9-]*' | sort)         <(grep -o '^- \[ \] \*\*[A-Za-z0-9-]*' docs/PLAN.md | sort)
+   ```
+
+   Any unexplained delta is content you dropped. Explain each one out loud before committing — "44→40
+   because R2–R5 merged into one line" is fine; a number you cannot account for is not.
+5. **An item does NOT end at the next `- [`.** A block runs until the next construct at the same
+   level — which in PLAN also means a bold-heading paragraph (`^\*\*Data versioning …**`), a
+   non-checkbox bullet (`^- \*\*DATA-VER-1 …`), or a markdown heading. And a `[x]` item may own
+   NESTED `  - [ ]` tails that are live backlog. Stop at `^- |^\*\*|^#`, and check the nested count
+   separately — `^- \[ \]` will not see them.
+
+**Why (4 and 5 specifically, learned the hard way 2026-08-11).** Pruning ~40 closed items from PLAN
+dropped content TWICE — first a bold-heading paragraph plus the `DATA-VER-1` item below it, then
+three nested `[ ]` UPCAST tails that had no other home. Both times the sweep had been "done" by
+reading, and both times the loss was caught only by the count diff. Reading does not scale past a few
+blocks; counting does, and it is three seconds.
 
 **Why.** "Closed 10/10" on the header doesn't mean *nothing* is left — deliberately-scoped follow-ups
 and `[~]` partials still represent real backlog, and if they live only in a doc you delete, they
