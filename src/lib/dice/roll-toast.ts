@@ -126,7 +126,15 @@ export function rollToastModel(
 	};
 }
 
-/** Toast a completed roll. The one roll-toast call site — pass the roll, not a formatted string. */
+/** Toast a completed roll. The one roll-toast call site — pass the roll, not a formatted string.
+ *
+ *  A roll carrying an unresolved DECISION (Savage Attacker's once-per-turn reroll) does not expire:
+ *  a self-dismissing surface is the wrong home for a choice with an opportunity cost, and the player
+ *  who looked away for six seconds shouldn't have to know the offer survives in the roll log. It
+ *  stays until taken or dismissed — the card is one click either way. */
 export function toastRoll(rolled: RollLogEntry | RollLogEntry[], action?: RollToastAction): void {
-	toast.custom(RollToast, { componentProps: { model: rollToastModel(rolled, action) } });
+	toast.custom(RollToast, {
+		componentProps: { model: rollToastModel(rolled, action) },
+		...(action ? { duration: Number.POSITIVE_INFINITY } : {})
+	});
 }

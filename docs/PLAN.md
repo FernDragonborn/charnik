@@ -1444,12 +1444,37 @@ holds the done-work log; these are the OPEN tails it carried):**
   its own affordances) and belongs outside the shared piece, never as a variant flag inside it. Model
   side is already done and pure (`rollToastModel` takes a `RollLogEntry`, which is what the log stores),
   so this is a rendering job, not a data one.
-  **Consequence to resolve when the volley roller lands (UBUG-11):** the toast groups several attacks
-  into ONE card, but the log stores one `RollLogEntry` PER roll — so a Flurry that reads as a single
-  card with a per-type footer would read as three unrelated rows in the log. An identical contract makes
-  that mismatch structural, not cosmetic: the log needs a grouping key on the entry (the volley's id) to
-  rebuild the same model, or it renders one-attack models and the two surfaces disagree about what "a
-  roll" is. Decide it with the roller, not before — but don't design the grouping key out.
+  **Density — RESOLVED 2026-08-10, and it needs no variant flag.** A volley row is dense: a real Flurry
+  line is `1 · 13 · +7 · 20 · 🔨5 · +4 · ☀3 · 🧠4 · 16` = 9 numbers + 3 glyphs, **twelve units**, three
+  times over. What a player actually reads off a volley is **whether each attack hit, and what each one
+  dealt** — the die-by-die breakdown is audit information. So a multi-attack card shows SUMMARY rows
+  (`to-hit dice · to-hit total · damage total`, ~5 units) and drops the per-type chips; nothing is lost
+  at card level because the per-type footer already carries the type sums. The rule derives from data
+  the component ALREADY branches on — `attacks.length > 1`, the same test that switches on the index
+  column and the footer — so there is no `detail`/`compact` prop and the identical-contract decision
+  above survives intact. **A single-attack card stays fully detailed** (it is small, there is room).
+  **This also settles the log's granularity, the opposite way to what was first assumed:** the toast
+  GROUPS a volley, the log does NOT — it renders one `RollLogEntry` per row, i.e. always a one-attack
+  model, i.e. always the full-detail case. "The log is the complete version" then falls out for free,
+  with no grouping key and no second code path. (Visually bracketing a volley in the log is later
+  chrome, not a model concern.)
+  **The reroll affordance is the damage PILL, not a button and not the row.** Camp 2 in
+  `docs/research/roll-surfaces.md` proves the negative on a button: once a card has N rows, one bar
+  underneath cannot say which row it means, and N bars is not a design. A row-click is the same
+  compromise wearing a disguise — a row holds both the to-hit and several damage parts, so "reroll this
+  row" is ambiguous by construction. The pill is unambiguous, it matches the RAW unit exactly ("reroll
+  the weapon's damage dice" = one damage part = one pill), it scales to N rows for free, it arrives in
+  the toast and the log together because they are the same component, and it generalises to the whole
+  die-manipulation family (Lucky rerolls a d20 → click the d20 pill; a row-click could never express
+  "the d20 but not the damage"). Discoverability is the standard [[charnik-interactive-affordance]]
+  job — hover/cursor/focus plus a ↻ on eligible pills, and non-eligible pills stay inert so there is no
+  false affordance. **Known structural cost:** the card is currently a `<button>` (it IS the dismiss
+  target) and a button cannot nest in a button, so interactive pills force dismissal to move — a
+  root-level rework of the component, not a tweak. Budget for it.
+  **Blocked on UBUG-11** for the volley roller: a per-attack chooser cannot be exercised, and must not
+  ship, while nothing in the app rolls more than one attack. Moving `action?` from `RollToastModel` down
+  onto `RollToastAttack` is cheap and unblocked, and the interaction can be prototyped in
+  `/dev/rolltoast` — do those first, ship after the roller.
 - [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing — hidden spells still showed in
   combat.** DONE 2026-07-21. The spellbook's eye/pin were local `$state` sets on a THROWAWAY
   `demoCharacter()` (never persisted, never read by combat), and `buildSpellGroups` rendered every
