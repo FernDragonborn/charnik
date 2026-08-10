@@ -2,7 +2,10 @@
 	// The dice tray / roll builder (overlay.kind === 'dice'). Reads the shared combat view-model's
 	// roll subsystem (combat.tray). Split out of CombatMenus.svelte.
 	import { combat } from '../state.svelte';
-	import { signed, DICE, damageTotal } from '$lib/combat/helpers';
+	import { DICE } from '$lib/combat/helpers';
+	import { signed } from '$lib/util/format';
+	import { rollToastModel } from '$lib/dice/roll-toast';
+	import RollRow from '$lib/components/RollRow.svelte';
 
 	const rollSrc = $derived(combat.tray.rollSrc);
 	const dice = $derived(combat.tray.dice);
@@ -52,23 +55,11 @@
 		</div>
 		<button class="rollbtn" onclick={doRoll}>Roll {rollExpr}</button>
 	</div>
-	{#if log[0]}{@const r = log[0]}
-		<div class="roll-history">
-			<div>
-				{r.label} · {#if r.advantageRoll}d20 <b class="roll-result">{r.advantageRoll.kept}</b>
-				{/if}{r.expr}
-				= <span class="roll-result">{Number.isNaN(r.total) ? '' : r.total}</span>
-			</div>
-			{#if r.advantageRoll}<div class="drop">drop d20({r.advantageRoll.dropped})</div>{/if}
-			{#if r.damage}<div>
-					dmg {#each r.damage as part, i (i)}{#if i > 0}
-							+
-						{/if}{part.expr}{#if part.type}
-							{part.type}{/if}: <span class="roll-result">{part.total}</span>{/each}
-					{#if r.damage.length > 1}= <span class="roll-result">{damageTotal(r.damage)}</span>{/if}
-				</div>{/if}
-			{#if r.note}<div class="prov">⇡ {r.note}</div>{/if}
-		</div>{/if}
+	<!-- the tray's own result readout: the same RollRow the toast and the log mount, so the roll you
+	     just built reads identically to the roll you re-read later (UBUG-20) -->
+	{#if log[0]}
+		<div class="roll-history"><RollRow model={rollToastModel(log[0])} /></div>
+	{/if}
 </div>
 
 <style>
@@ -206,25 +197,12 @@
 		padding: 9px 12px;
 		cursor: pointer;
 	}
+	/* the readout is a flex column of the row's spans, ruled off from the builder above it */
 	.roll-history {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
+		display: flex;
+		flex-direction: column;
 		border-top: 1px solid var(--color-border);
-		margin-top: 10px;
-		padding-top: 9px;
-	}
-	.roll-history .roll-result {
-		color: var(--color-good);
-		font-weight: 700;
-	}
-	/* the dropped adv/disadv d20 — shown but dimmed (de-emphasized, not struck through) */
-	.drop {
-		color: var(--color-text-muted);
-		opacity: 0.45;
-	}
-	/* upcast provenance line — accented so the base+delta breakdown reads as a distinct annotation */
-	.prov {
-		color: var(--color-accent);
+		margin: 10px -12px -12px;
+		padding-top: 3px;
 	}
 </style>

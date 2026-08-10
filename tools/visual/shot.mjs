@@ -91,7 +91,10 @@ const ROUTES = [
 	{ path: '/dev/drift', wait: '[role="dialog"]', states: [{ name: 'dev-drift' }] },
 	{ path: '/dev/firstrun', wait: '[role="dialog"]', states: [{ name: 'dev-firstrun' }] },
 	{ path: '/dev/plugins', wait: 'h1', states: [{ name: 'dev-plugins' }] },
-	{ path: '/dev/deathsaves', wait: 'h1', states: [{ name: 'dev-deathsaves' }] }
+	{ path: '/dev/deathsaves', wait: 'h1', states: [{ name: 'dev-deathsaves' }] },
+	// the roll-card gallery: every shape RollRow has to render (check, attack, crit, volley, nat 1),
+	// on one page — the cheapest guard there is on the component four surfaces now share
+	{ path: '/dev/rolltoast', wait: 'h1', states: [{ name: 'dev-rolltoast' }] }
 ];
 
 function compare(name, buf) {

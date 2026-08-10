@@ -1,65 +1,86 @@
 <script lang="ts">
-	// The roll hint line + the "last roll" button that opens the roll log. Reads the `combat`
-	// view-model singleton (the log lives on the dice tray).
+	// The always-visible "last roll" strip + the way into the roll log. Reads the `combat` view-model
+	// singleton (the log lives on the dice tray).
+	//
+	// It used to print `label + expr + total`, which LOST the roll: on an advantage roll the d20 is
+	// not in `expr` (it rides `advantageRoll`), so the chip read "Last · Greataxe +6 = 9" with the die
+	// that decided the attack simply absent, and `damage` was ignored entirely — for an attack it
+	// showed the to-hit and never the number the player wanted (UBUG-20). It now mounts the same
+	// `RollRow` the toast does, so the last roll reads identically wherever you look at it.
+	//
+	// The row is NOT wrapped in a button: the log cue is its own control. That keeps the roll's own
+	// pills free to become controls (UX-3's retroactive advantage) without nesting a button in a
+	// button — the constraint that shaped the toast.
 	import { combat } from '../state.svelte';
+	import { rollToastModel } from '$lib/dice/roll-toast';
+	import RollRow from '$lib/components/RollRow.svelte';
 
 	const { openMenu } = combat;
 	const log = $derived(combat.tray.log);
+	const last = $derived(log[0]);
 </script>
 
 <div class="playbar">
-	<span class="panel-hint"
-		>Tap any check · save · attack · spell to roll it · <b>Alt + click</b> (or Ctrl) for advantage / custom
-		dice.</span
-	>
-	<button class="rollout" onclick={(e) => openMenu('log', e)}>
-		🎲 {#if log[0]}Last · <b>{log[0].label}</b> <i>{log[0].expr}</i> =
-			<span class="roll-result">{log[0].total}</span>{:else}<i>no rolls yet</i>{/if}<span
-			class="log-cue">▸ log</span
+	<div class="lastroll" class:empty={!last}>
+		{#if last}
+			<!-- RollRow renders sibling spans (name · grid · note); they stack, as in the toast card -->
+			<div class="rollwrap"><RollRow model={rollToastModel(last)} /></div>
+		{:else}
+			<span class="noroll">Tap any check · save · attack · spell to roll it.</span>
+		{/if}
+		<button class="log-cue" onclick={(e) => openMenu('log', e)} title="Roll log · history"
+			>🎲 log ▸</button
 		>
-	</button>
+	</div>
 </div>
 
 <style>
 	.playbar {
 		display: flex;
-		align-items: center;
-		flex-wrap: wrap;
-		gap: 12px;
+		align-items: flex-start;
+		justify-content: flex-end;
 		margin-bottom: 22px;
 	}
-	.panel-hint {
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-		flex: 1;
-		min-width: 220px;
-	}
-	.rollout {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-text);
+	/* sizes to the roll it holds, exactly like the toast card — same content, same shape */
+	.lastroll {
+		display: flex;
+		align-items: stretch;
+		max-width: 100%;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
-		padding: 6px 11px;
-		cursor: pointer;
-		margin-left: auto;
+		overflow: hidden;
+	}
+	.rollwrap {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		min-width: 0;
+	}
+	.noroll {
+		display: flex;
+		align-items: center;
+		padding: 9px 14px;
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+	}
+	.log-cue {
+		align-self: stretch;
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		padding: 0 11px;
+		border: 0;
+		border-left: 1px solid var(--color-border);
+		background: var(--color-surface-2);
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
 		white-space: nowrap;
+		cursor: pointer;
 	}
-	.rollout:hover {
-		border-color: var(--color-border-strong);
-	}
-	.rollout i {
-		font-style: normal;
-		color: var(--color-text-muted);
-	}
-	.rollout .roll-result {
-		color: var(--color-good);
-		font-size: var(--font-size-body);
-		font-weight: 700;
-	}
-	.rollout .log-cue {
-		color: var(--color-text-muted);
-		margin-left: 8px;
+	.log-cue:hover {
+		color: var(--color-text);
+		background: var(--color-surface);
 	}
 </style>

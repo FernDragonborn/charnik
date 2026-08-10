@@ -1498,8 +1498,20 @@ holds the done-work log; these are the OPEN tails it carried):**
   Action, and the **bug** on the "report a bug" button. Bundle SVGs locally with attribution
   ([[charnik-icon-sources]]) — no emoji, no icon-font dep. Sweep for other emoji-as-icon uses while
   in there.
-- [ ] **UBUG-20 · The roll LOG and the dice tray still render rolls as raw `expr` strings — bring them
-  to the toast's shape (2026-08-10; lifted out of UBUG-12's tail, where it had been sitting as one
+- [~] **UBUG-20 · The roll LOG and the dice tray still render rolls as raw `expr` strings — bring them
+  to the toast's shape.** **RENDERING HALF DONE 2026-08-10.** `RollRow` (label · grid · note) was
+  extracted out of `RollToast` and is now mounted by all four surfaces — toast, `Playbar`, `RollLog`,
+  `DiceTray` — with the chrome (dismiss target, action bar, savage-reroll offer, log cue, sonner
+  sizing) left outside it, so the contract really is identical rather than a lookalike. Verified the
+  extraction changed nothing by diffing `/dev/rolltoast` before/after: **0 pixels**. The Playbar no
+  longer loses the roll (it showed `label + expr + total`, which omitted the adv/disadv d20 entirely
+  and ignored `damage`); it is not wrapped in a button so the pills stay free to become controls, and
+  the log cue is its own control. `/dev/rolltoast` joined the `shot.mjs` baseline set — the gallery is
+  the cheapest guard on a component four surfaces share. **STILL OPEN (the interactive half):** the
+  re-rollable damage pill + UX-3's retroactive-advantage d20 pill, the toast's `duration: Infinity`
+  → normal expiry + a ↻ marker, and the toast's missing labelled close control (which stays its own
+  a11y item — the card IS a labelled dismiss button today, so this is polish, not a blocker).
+  (2026-08-10; lifted out of UBUG-12's tail, where it had been sitting as one
   sentence inside a closed item).** UBUG-12 replaced the toast's formatted string with a real component,
   but **three** other surfaces were left on the OLD rendering — they print the roller's internal `expr`
   verbatim (`d20(14) +4`, `dmg d8(6) +3 slashing: 9`, a separate dimmed `drop d20(N)` line), which is
