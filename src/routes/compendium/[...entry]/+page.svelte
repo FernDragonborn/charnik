@@ -16,7 +16,13 @@
 		localizedName
 	} from '$lib/content/detail';
 	import { getSpellAccess } from '$lib/content/spellAccess';
-	import { groupingsFor, facetFor, groupRows, distinctValues } from '$lib/content/grouping';
+	import {
+		groupingsFor,
+		facetFor,
+		groupRows,
+		distinctValues,
+		byDisplayName
+	} from '$lib/content/grouping';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
 	import Loading from '$lib/components/Loading.svelte';
@@ -201,15 +207,17 @@
 
 	const rows = $derived.by(() => {
 		const q = query.trim().toLowerCase();
-		return pool.filter((r) => {
-			if (sourceFilter.size && !sourceFilter.has(r.source)) return false;
-			if (facet && facetFilter.size) {
-				// facet.key is a runtime config string; scan entries to read the cell off the union (no cast)
-				const v = Object.entries(r.data).find(([k]) => k === facet.key)?.[1];
-				if (!facetFilter.has(v == null ? '' : String(v))) return false;
-			}
-			return !q || localName(r).toLowerCase().includes(q);
-		});
+		return pool
+			.filter((r) => {
+				if (sourceFilter.size && !sourceFilter.has(r.source)) return false;
+				if (facet && facetFilter.size) {
+					// facet.key is a runtime config string; scan entries to read the cell off the union (no cast)
+					const v = Object.entries(r.data).find(([k]) => k === facet.key)?.[1];
+					if (!facetFilter.has(v == null ? '' : String(v))) return false;
+				}
+				return !q || localName(r).toLowerCase().includes(q);
+			})
+			.sort(byDisplayName(localName, contentLocale));
 	});
 
 	const groups = $derived(

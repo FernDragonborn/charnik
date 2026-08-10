@@ -26,16 +26,17 @@ describe('discoverContentRoots (a pack is a folder)', () => {
 
 	it('finds every pack folder, excludes homebrew, and ignores loose files', async () => {
 		expect(await discoverContentRoots(await withPacks())).toEqual([
-			'content/srd-2024',
-			'content/srd-2014'
+			'content/srd-2014',
+			'content/srd-2024'
 		]);
 	});
 
-	// the compendium renders rows in graph order, so root order decides which edition heads every
-	// list; 2024 must stay ahead of 2014 as it was when the roots were hardcoded
-	it('puts the newer SRD first', async () => {
-		const roots = await discoverContentRoots(await withPacks());
-		expect(roots.indexOf('content/srd-2024')).toBeLessThan(roots.indexOf('content/srd-2014'));
+	// deterministic only — no consumer is allowed to read meaning into the order (the fold is
+	// order-independent, a character filters to its own edition, the compendium sorts by name)
+	it('returns the same order whatever order the folders came back in', async () => {
+		const a = await discoverContentRoots(await withPacks());
+		const b = await discoverContentRoots(await withPacks());
+		expect(a).toEqual(b);
 	});
 
 	it('picks up a pack the user installed, with no code change', async () => {

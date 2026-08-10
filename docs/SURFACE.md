@@ -546,6 +546,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/grouping.ts`
 
+- `const byDisplayName` — * Comparator for a BROWSE list: by displayed name, newest edition first within an article's pair.
 - `interface Grouping`
 - `function groupingsFor`
 - `function facetFor`
@@ -1092,4 +1093,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 44 components · 606 exports across 92 modules · 32 duplicate suspects._
+_45 tokens · 64 global classes · 44 components · 607 exports across 92 modules · 32 duplicate suspects._

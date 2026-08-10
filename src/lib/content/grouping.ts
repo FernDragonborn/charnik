@@ -6,7 +6,7 @@
  */
 import type { LoadedRow } from './loader';
 import { ordinal, titleCase } from '$lib/util/format';
-import type { ContentType } from './schemas';
+import { SYSTEMS, type ContentType } from './schemas';
 import { sourceLabel } from './detail';
 import { HOMEBREW_SOURCE } from './homebrew';
 
@@ -23,6 +23,27 @@ const compareRows = (a: LoadedRow, b: LoadedRow): number =>
  *  the shipped order. */
 const homebrewFirst = (rows: LoadedRow[]): LoadedRow[] =>
 	[...rows].sort((a, b) => homebrewRank(a) - homebrewRank(b));
+
+/** How new a row's edition is. SYSTEMS is ordered oldest→newest, so its index IS the ranking and no
+ *  edition id is named here — a `'5.5e' ===` test would be the 5e-ism docs/COMPATIBILITY.md warns of. */
+const editionRank = (r: LoadedRow): number =>
+	Math.max(-1, ...r.systems.map((s) => (SYSTEMS as readonly string[]).indexOf(s)));
+
+/**
+ * Comparator for a BROWSE list: by displayed name, newest edition first within an article's pair.
+ *
+ * A list view must apply this itself. `groupRows` only sorts stably on one key, so a list that skips
+ * it renders raw graph order — which is file order, and that looks alphabetical only by accident of
+ * how the SRD CSVs happen to be written; a homebrew file (rows appended as authored) or any content
+ * pack ordered differently renders unsorted. Newest-edition-first used to fall out of the order the
+ * content roots happened to load in; it is said out loud here instead, in the layer that cares.
+ * Sort the whole pool BEFORE any cap, so the visible window is the first N by name, not a slice of
+ * an arbitrary order.
+ */
+export const byDisplayName =
+	(nameOf: (row: LoadedRow) => string, locale?: string) =>
+	(a: LoadedRow, b: LoadedRow): number =>
+		nameOf(a).localeCompare(nameOf(b), locale) || editionRank(b) - editionRank(a);
 
 export interface Grouping {
 	key: string;

@@ -14,7 +14,7 @@
 	import { getUserStorage } from '$lib/storage/provider';
 	import { isBrowsable, type ContentType } from '$lib/content/schemas';
 	import { buildDetail, entryMeta, editionLabel, type Entry } from '$lib/content/detail';
-	import { groupingsFor, groupRows } from '$lib/content/grouping';
+	import { groupingsFor, groupRows, byDisplayName } from '$lib/content/grouping';
 	import { saveTranslation, saveLocStatus, locStatus } from '$lib/content/translate';
 	import { LOC_STATUS, LOC_STATUS_ORDER, type LocStatus } from '$lib/content/schemas';
 	import type { LoadedRow } from '$lib/content/loader';
@@ -93,9 +93,13 @@
 	const inEdition = (r: LoadedRow) => inActiveEdition(r.systems);
 
 	const pool = $derived(graph ? graph.list(selectedType).filter(inEdition) : []);
+	// this pane always shows the SOURCE-language name, so it sorts on `name_en` rather than a locale
+	const sourceName = (r: LoadedRow) => String(r.data.name_en);
 	const rows = $derived.by(() => {
 		const q = query.trim().toLowerCase();
-		return q ? pool.filter((r) => String(r.data.name_en).toLowerCase().includes(q)) : pool;
+		return (q ? pool.filter((r) => sourceName(r).toLowerCase().includes(q)) : [...pool]).sort(
+			byDisplayName(sourceName)
+		);
 	});
 	const groupBy = $derived(groupingsFor(selectedType)[0]?.key ?? '');
 	const groups = $derived(

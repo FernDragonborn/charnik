@@ -41,12 +41,11 @@ const CONTENT_DIR = 'content';
  * The shipped SRD is just the pack the app happens to bundle. Excludes the writable homebrew root
  * (loaded separately as the user's own source).
  *
- * Order matters and is NOT cosmetic: the compendium list does not dedupe an article across editions,
- * it just renders rows in graph order, so the FIRST root is the edition a reader sees at the top of
- * every list. Descending keeps `srd-2024` ahead of `srd-2014` — the current edition of the game leads,
- * which is what the app did when these roots were a hardcoded array.
- * ponytail: name-ordering is a stand-in for a real "which edition leads" rule; the actual fix is for
- * the browse list to pick an edition explicitly instead of inheriting root order (PLAN · REL-4).
+ * Sorted only so the scan is deterministic — nothing downstream is allowed to MEAN anything by the
+ * order. The fold is order-independent by construction (`rules/pipeline.ts`), a character filters to
+ * its own edition, and the one place that did inherit this order (the compendium list) now sorts by
+ * name itself. An exact `type:source:id` clash is first-wins, but that can only happen inside a single
+ * source, so pack order can't decide it.
  */
 export async function discoverContentRoots(storage: Storage): Promise<string[]> {
 	// a missing `content/` (fresh install, before the seed) must not blank the app
@@ -54,7 +53,7 @@ export async function discoverContentRoots(storage: Storage): Promise<string[]> 
 	return entries
 		.filter((e) => e.isDir && e.path !== HOMEBREW_ROOT)
 		.map((e) => e.path)
-		.sort((a, b) => b.localeCompare(a));
+		.sort();
 }
 
 let cache: Promise<ContentGraph> | null = null;
