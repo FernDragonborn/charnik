@@ -30,6 +30,7 @@ import { parseContentDirectives, isHashDrift } from './meta';
 import { hashBody } from './hash';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
 import {
+	forgetPack,
 	missingBundled,
 	packConfig,
 	registerPack,
@@ -87,6 +88,7 @@ async function buildGraph(): Promise<ContentGraph> {
 		const shipped = await discoverContentRoots(bundled);
 		await seedShippedContent(bundled, user, shipped, CONTENT_SEED_VERSION);
 		const installed = await discoverContentRoots(user);
+		forgetUninstalledPacks(installed);
 		adoptShippedPacks(shipped.filter((root) => installed.includes(root)));
 		// deleting a bundled pack is allowed and sticks — but it is the rules the app runs on, so the
 		// absence is REPORTED (layout prompt + a restore button in Settings), never silently endured
@@ -115,6 +117,21 @@ function adoptShippedPacks(shipped: string[]): void {
 
 /** `content/srd-2024` → `srd-2024`: the folder IS the pack, so its name is its last segment. */
 const packNameOf = (root: string): string => root.slice(root.lastIndexOf('/') + 1);
+
+/**
+ * The registry describes what is INSTALLED, and a folder can leave without asking it: deleting the
+ * pack in a file manager is a supported way to do anything here. An entry with no folder behind it
+ * would list a pack that isn't there, offer to check it for updates, and — for a bundled one — show
+ * it twice, once as installed and once as deleted-but-restorable.
+ *
+ * Forgetting is safe because it is self-healing: a bundled pack re-registers itself the moment its
+ * files are back (`adoptShippedPacks`, right below), and a third-party one is re-registered by the
+ * install that brings it back.
+ */
+export function forgetUninstalledPacks(installed: string[]): void {
+	const onDisk = new Set(installed.map(packNameOf));
+	for (const pack of Object.keys(packConfig.packs)) if (!onDisk.has(pack)) forgetPack(pack);
+}
 
 /**
  * Put a bundled pack back, from the copy inside the app — the undo for a deletion, offered both at

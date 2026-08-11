@@ -656,6 +656,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function discoverContentRoots` — * Every installed content pack, discovered by SCANNING `content/` — a pack is a folder, so the * folder listing is th…
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
+- `function forgetUninstalledPacks` — * The registry describes what is INSTALLED, and a folder can leave without asking it: deleting the * pack in a file m…
 - `function restoreBundledPacks` — * Put a bundled pack back, from the copy inside the app — the undo for a deletion, offered both at * launch (when the…
 - `function isUserModified` — Is an on-disk shipped file USER-modified?
 - `function seedShippedContent` — * Seed / UPDATE the shipped SRD roots on disk (desktop).
@@ -1196,4 +1197,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 682 exports across 99 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 683 exports across 99 modules · 36 duplicate suspects._

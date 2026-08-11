@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
-import { discoverContentRoots, seedShippedContent } from './provider';
+import { discoverContentRoots, forgetUninstalledPacks, seedShippedContent } from './provider';
+import { emptyPackConfig, packConfig, registerPack } from './packs.svelte';
 import { stampDirectives, type MetaKey } from './meta';
 import { hashBody } from './hash';
 
@@ -78,6 +79,22 @@ describe('seedShippedContent (an uninstalled pack stays uninstalled)', () => {
 
 		expect(await to.read('content/srd-2024/classes_srd.csv')).toContain('wizard'); // refreshed
 		expect(await to.exists('content/srd-2014/classes_srd.csv')).toBe(false); // stays gone
+	});
+});
+
+/** The registry says what is installed; a folder can leave without telling it (deleting the pack in
+ *  a file manager is a supported way to do anything here). */
+describe('forgetUninstalledPacks', () => {
+	it('drops an entry whose folder is gone, and keeps the ones still on disk', () => {
+		Object.assign(packConfig, emptyPackConfig());
+		registerPack('srd-2024', 'https://github.com/o/r');
+		registerPack('dark-sun', 'https://github.com/someone/dark-sun');
+
+		forgetUninstalledPacks(['content/srd-2024']);
+
+		expect(Object.keys(packConfig.packs)).toEqual(['srd-2024']);
+		// the repo's check state goes with the last pack that used it
+		expect(packConfig.repos['https://github.com/someone/dark-sun']).toBeUndefined();
 	});
 });
 

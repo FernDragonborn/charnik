@@ -13,6 +13,7 @@
 		UPDATE_MODE
 	} from '$lib/content/packs.svelte';
 	import { restoreBundledPacks } from '$lib/content/provider';
+	import { refreshPlugins } from '$lib/effects/plugin-store.svelte';
 	import {
 		updates,
 		checkNow,
@@ -32,9 +33,14 @@
 	let restoring = $state(false);
 
 	/** Anything that changes what is on disk must be followed by a re-read, or the compendium keeps
-	 *  showing the old rows until the watcher happens to fire. */
+	 *  showing the old rows until the watcher happens to fire — and a pack carries CODE as well as
+	 *  rows (`content/<pack>/plugins/<ns>/`, PLUGINS §2). Without the re-scan, the installer says
+	 *  "this pack contains N plugins, they arrive switched off and need your review" and then the
+	 *  review list stays empty until the next launch. Discovery only; consent is untouched, so
+	 *  nothing new can run because of this. */
 	async function afterDiskChange() {
 		await reloadContent();
+		await refreshPlugins();
 	}
 
 	/** Files this update would write / preserve / delete, as a count per kind. */
