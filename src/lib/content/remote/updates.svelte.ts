@@ -211,7 +211,11 @@ async function whoBreaks(removedRows: string[]): Promise<{ slug: string; keys: s
  */
 export async function applyUpdate(
 	pack: string,
-	opts: { removeDeleted?: boolean; fetcher?: RemoteFetcher } = {}
+	opts: {
+		removeDeleted?: boolean;
+		acceptRowRemovals?: boolean;
+		fetcher?: RemoteFetcher;
+	} = {}
 ): Promise<ApplyResult | null> {
 	const pending = updates.pending[pack];
 	if (!pending) return null;
@@ -223,10 +227,19 @@ export async function applyUpdate(
 		fetcher: opts.fetcher ?? tauriFetcher,
 		repo,
 		diff: pending.diff,
-		removeDeleted: opts.removeDeleted === true
+		removeDeleted: opts.removeDeleted === true,
+		graph: content.graph,
+		acceptRowRemovals: opts.acceptRowRemovals === true
 	});
 	if (res.error !== undefined) {
 		updates.error = res.error;
+		// It stopped to ask about rows disappearing from inside changed files — which is only knowable
+		// once the bytes are here. Fold them into the pending entry so the panel can name them, and
+		// say who they break, before the second click.
+		if (res.rowRemovals !== undefined) {
+			pending.removedRows = [...new Set([...pending.removedRows, ...res.rowRemovals])].sort();
+			pending.affected = await whoBreaks(pending.removedRows);
+		}
 		return res;
 	}
 	// An update whose only entries are REMOVALS applies nothing unless removals were asked for.

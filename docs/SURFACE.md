@@ -692,6 +692,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const sourceOf` — The `#content-source` a CSV declares, or null if it declares none.
 - `function localPackSource` — * The source tag this pack currently claims ON DISK — the identity half of `source:id`.
 - `function rowsRemovedBy` — The content rows that would DISAPPEAR if this diff were applied — every row the loader read from * a file the update …
+- `function rowsDroppedFromFile` — * The rows a CHANGED file would drop: present in the graph for that file, absent from the incoming * bytes.
 - `function charactersReferencing` — * Which saved characters mention any of those row keys.
 
 ### `src/lib/content/remote/github.ts`
@@ -1220,4 +1221,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 703 exports across 100 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 704 exports across 100 modules · 36 duplicate suspects._

@@ -121,6 +121,8 @@
 			"restore": "Put it back",
 			"contentMoved": "“{path}” changed on the server while it was being downloaded. Nothing was written; check again in a moment.",
 			"localChanged": "These files changed on your disk after this update was prepared: {files}. Nothing was written, because the summary you approved no longer describes them. Check for updates again to see the current picture.",
+			"rowsWouldVanish": "This update deletes {count, plural, one {# entry} other {# entries}} from inside the files it rewrites. Nothing was written yet — check the list below, then apply again to accept it.",
+			"applyAnyway": "Apply and accept the deletions",
 			"undo": "Undo this update",
 			"undoDone": "“{pack}” is back to the version it had before the last update.",
 			"uninstallWarn": "Deletes its files from your disk, and the {count} entries it gives you with them. Characters using any of those go blank there. You can get it back any time from {repo}.",

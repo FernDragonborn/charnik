@@ -12,6 +12,7 @@
  * Comparison is by GIT BLOB SHA, because that is what a repo tree listing gives us — so "did this
  * file change?" is answered without downloading a single byte.
  */
+import Papa from 'papaparse';
 import type { Storage } from '$lib/storage/types';
 import type { ContentGraph } from '../loader';
 import { isProtectedFromOverwrite } from '../provider';
@@ -160,6 +161,32 @@ export function rowsRemovedBy(graph: ContentGraph, diff: PackDiff): string[] {
 	if (doomed.size === 0) return [];
 	return graph.rows
 		.filter((row) => doomed.has(`${row.root}/${row.file}`))
+		.map((row) => `${row.type}:${row.source}:${row.id}`)
+		.sort();
+}
+
+/**
+ * The rows a CHANGED file would drop: present in the graph for that file, absent from the incoming
+ * bytes. This is the common shape of a breaking update and the one `rowsRemovedBy` cannot see —
+ * upstream rarely deletes a whole CSV, it deletes or re-ids a row inside one, which arrives looking
+ * like any other changed file.
+ *
+ * Identity comes from the graph, which already knows each row's `type:source:id`; the new bytes only
+ * have to answer "is this id still in here". Parsed with the same CSV library the loader uses, over
+ * the body with the directive block stripped.
+ */
+export function rowsDroppedFromFile(
+	graph: ContentGraph,
+	localFilePath: string,
+	incoming: string
+): string[] {
+	const before = graph.rows.filter((row) => `${row.root}/${row.file}` === localFilePath);
+	if (before.length === 0) return [];
+	const { body } = parseContentDirectives(incoming);
+	const parsed = Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
+	const stillThere = new Set(parsed.data.map((row) => row['id']).filter(Boolean));
+	return before
+		.filter((row) => !stillThere.has(row.id))
 		.map((row) => `${row.type}:${row.source}:${row.id}`)
 		.sort();
 }

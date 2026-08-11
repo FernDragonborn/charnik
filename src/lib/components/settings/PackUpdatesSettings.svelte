@@ -33,6 +33,8 @@
 
 	let repoUrl = $state('');
 	let uninstalling = $state<string | null>(null);
+	/** The pack whose apply stopped to show rows that would vanish; its second button accepts them. */
+	let rowsToAccept = $state<string | null>(null);
 	let restoring = $state(false);
 
 	/** Anything that changes what is on disk must be followed by a re-read, or the compendium keeps
@@ -330,19 +332,34 @@
 							<button
 								class="pill-btn accent"
 								onclick={async () => {
-									await applyUpdate(pack);
+									const res = await applyUpdate(pack);
+									// it stopped to show rows that would vanish from inside changed files — the
+									// second click is the one that accepts them
+									rowsToAccept = res?.rowRemovals !== undefined ? pack : null;
 									await afterDiskChange();
 								}}
 							>
 								{$_('settings.packs.apply')}
 							</button>
+							{#if rowsToAccept === pack}
+								<button
+									class="pill-btn"
+									onclick={async () => {
+										rowsToAccept = null;
+										await applyUpdate(pack, { acceptRowRemovals: true });
+										await afterDiskChange();
+									}}
+								>
+									{$_('settings.packs.applyAnyway')}
+								</button>
+							{/if}
 							<!-- accepting a removal is its OWN action: it deletes content a character may be
 							     using, so it never rides along with the ordinary update button -->
 							{#if pending.diff.changes.some((c) => c.kind === FILE_CHANGE.removed)}
 								<button
 									class="pill-btn"
 									onclick={async () => {
-										await applyUpdate(pack, { removeDeleted: true });
+										await applyUpdate(pack, { removeDeleted: true, acceptRowRemovals: true });
 										await afterDiskChange();
 									}}
 								>

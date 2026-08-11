@@ -19,6 +19,7 @@
  * write coalesces into one reload — which is the correct reaction to content having changed.
  */
 import type { Storage } from '$lib/storage/types';
+import type { ContentGraph } from '../loader';
 import { rawUrl, type GithubRepo, type RemotePack } from './github';
 import type { RemoteFetcher, UpdateError } from './types';
 import {
@@ -27,6 +28,7 @@ import {
 	listFiles,
 	localPath,
 	localPackSource,
+	rowsDroppedFromFile,
 	sourceOf,
 	type FileChange,
 	type PackDiff
@@ -61,6 +63,9 @@ export interface ApplyResult {
 	removed: string[];
 	/** set when NOTHING was written: the disk is exactly as it was */
 	error?: UpdateError;
+	/** `type:source:id` keys this update would drop from INSIDE a changed file. Set when the apply
+	 *  stopped to ask about them; the same list is what `acceptRowRemovals` then approves. */
+	rowRemovals?: string[];
 }
 
 export interface ApplyRequest {
@@ -73,6 +78,11 @@ export interface ApplyRequest {
 	/** Delete files the remote no longer has. Off by default: a removal can orphan a character's
 	 *  reference, so it stays an explicit choice made after seeing the impact preview. */
 	removeDeleted?: boolean;
+	/** The loaded content graph, so the apply can name the ROWS this update drops. Without it the
+	 *  check is skipped (a fresh install has no graph to lose anything from). */
+	graph?: ContentGraph | null;
+	/** The user has now seen the row-level losses and said yes. */
+	acceptRowRemovals?: boolean;
 }
 
 /**
@@ -84,7 +94,9 @@ export async function applyPackUpdate({
 	fetcher,
 	repo,
 	diff,
-	removeDeleted = false
+	removeDeleted = false,
+	graph = null,
+	acceptRowRemovals = false
 }: ApplyRequest): Promise<ApplyResult> {
 	const wanted = diff.changes.filter(
 		(c) => c.kind === FILE_CHANGE.added || c.kind === FILE_CHANGE.changed
@@ -118,6 +130,23 @@ export async function applyPackUpdate({
 			}
 		};
 
+	// phase 1⅞ — what would DISAPPEAR from inside the files being rewritten. The file-level preview
+	// shown before this point can only see whole files the remote dropped, which upstream rarely
+	// does; deleting or re-iding a row inside a CSV is the ordinary case, and it arrives looking
+	// exactly like any other changed file. The bytes are only here, so this is the first moment the
+	// question can be answered at all — and it is still before anything is written.
+	const rowRemovals = graph ? rowsDroppedByUpdate(graph, staged) : [];
+	if (rowRemovals.length > 0 && !acceptRowRemovals)
+		return {
+			...nothing,
+			rowRemovals,
+			error: {
+				kind: 'i18n',
+				key: 'settings.packs.rowsWouldVanish',
+				values: { count: rowRemovals.length }
+			}
+		};
+
 	// phase 2 — commit through a full replacement folder. Per-file writes are atomic on their own,
 	// but a 12-file update that dies on file 7 leaves a root that is half old and half new and
 	// unresolvable by inspection. Building the whole tree beside the live one and swapping it in with
@@ -128,6 +157,16 @@ export async function applyPackUpdate({
 	// the pre-download did its job; the cache is pruned as a whole after a check, so nothing is
 	// deleted here — two packs can legitimately share a blob (the cache is content-addressed)
 	return { written: staged.map((f) => f.path), preserved, removed };
+}
+
+/** Every row the incoming bytes drop, across every file being rewritten. Decoded as text because
+ *  that is what a CSV is; a `plugin.json`/`main.js` in the same set simply yields nothing. */
+function rowsDroppedByUpdate(graph: ContentGraph, staged: StagedFile[]): string[] {
+	const decoder = new TextDecoder();
+	const dropped = staged.flatMap((file) =>
+		rowsDroppedFromFile(graph, localPath(file.path), decoder.decode(file.bytes))
+	);
+	return [...new Set(dropped)].sort();
 }
 
 /** Where a replacement tree is built, and where the one it replaces is kept. Both live beside the

@@ -32,4 +32,6 @@ export const MAX_REMOTE_BYTES = 8 * 1024 * 1024;
  * leaking into the UI, and leaves the UX-1 copy sweep dealing with keys only.
  */
 export type UpdateError =
-	{ kind: 'i18n'; key: string; values: Record<string, string> } | { kind: 'raw'; message: string };
+	// numbers stay numbers: a plural rule can't work on "3"
+	| { kind: 'i18n'; key: string; values: Record<string, string | number> }
+	| { kind: 'raw'; message: string };

@@ -312,6 +312,61 @@ describe('apply is a folder swap', () => {
 	});
 });
 
+/** The impact preview that runs before this could only see whole FILES the remote dropped — which
+ *  upstream rarely does. Deleting or re-iding a row inside a CSV is the ordinary case, and it
+ *  arrives looking exactly like any other changed file. */
+describe('rows that would vanish from inside a changed file', () => {
+	const row = (id: string): LoadedRow =>
+		({
+			type: 'spell',
+			source: 'Test',
+			id,
+			root: 'content/p',
+			file: 'spells.csv'
+		}) as LoadedRow;
+	const graph = { rows: [row('fireball'), row('shield')] } as ContentGraph;
+	const applying = async (s: MemoryStorage, csv: string, opts = {}) =>
+		applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/spells.csv': csv }),
+			repo: REPO,
+			diff: { pack: 'p', changes: [{ path: 'p/spells.csv', kind: FILE_CHANGE.changed }] },
+			graph,
+			...opts
+		});
+
+	it('stops and names them instead of writing — nothing is lost silently', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/spells.csv', enc('id\nfireball\nshield'));
+
+		const res = await applying(s, 'id\nfireball'); // upstream dropped `shield`
+
+		expect(res.rowRemovals).toEqual(['spell:Test:shield']);
+		expect(res.written).toEqual([]);
+		expect(await s.read('content/p/spells.csv')).toContain('shield'); // untouched
+	});
+
+	it('applies once the user has accepted them', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/spells.csv', enc('id\nfireball\nshield'));
+
+		const res = await applying(s, 'id\nfireball', { acceptRowRemovals: true });
+
+		expect(res.error).toBeUndefined();
+		expect(await s.read('content/p/spells.csv')).not.toContain('shield');
+	});
+
+	it('says nothing when the update only ADDS rows — additions can not break anyone', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/spells.csv', enc('id\nfireball\nshield'));
+
+		const res = await applying(s, 'id\nfireball\nshield\nmage_hand');
+
+		expect(res.error).toBeUndefined();
+		expect(res.written).toEqual(['p/spells.csv']);
+	});
+});
+
 /** A kill between the two renames is the one moment the pack can be missing. Each in-between state
  *  is distinguishable from the folders left on disk, which is why no journal is needed. */
 describe('recovering an interrupted apply', () => {
