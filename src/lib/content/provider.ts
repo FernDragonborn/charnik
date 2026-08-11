@@ -26,8 +26,8 @@ import { getUserStorage, detectPlatform, Platform } from '$lib/storage/provider'
 import type { Storage } from '$lib/storage/types';
 import { loadContent, type ContentGraph, type ContentSource } from './loader';
 import { HOMEBREW_ROOT } from './homebrew';
-import { parseContentDirectives, isHashDrift } from './meta';
-import { hashBody } from './hash';
+import { HASH_STATE } from './meta';
+import { fileHashState } from './hash';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
 import {
 	forgetPack,
@@ -173,17 +173,29 @@ async function readSeedVersion(store: Storage): Promise<number | null> {
 	}
 }
 
-/** Is an on-disk shipped file USER-modified? True iff its body no longer matches its own recorded
- *  `#content-hash` (the app never re-stamps shipped SRD files, so a mismatch means a hand-edit). Such
- *  a file is PRESERVED on re-seed; an untouched one is overwritten with the newly-shipped copy.
- *  Exported because a pack UPDATE must obey exactly this rule — reuse it rather than invent a second
- *  merge strategy (REL-4 slice 3). */
-export async function isUserModified(store: Storage, path: string): Promise<boolean> {
+/**
+ * May the app overwrite this on-disk file, or is it the user's now? The ONE rule behind both the
+ * shipped re-seed and a pack update — reuse it rather than invent a second merge strategy.
+ *
+ * A file is protected when its body no longer matches its own `#content-hash` (the app never
+ * re-stamps shipped files, so a mismatch means a hand-edit) **and equally when it carries no hash at
+ * all**: "I cannot verify this" and "I verified it changed" are the same instruction to a writer.
+ * The old boolean said `false` for unstamped, which quietly meant "overwrite anything you can't
+ * check" — the exact case a user's own file added to a pack folder falls into.
+ *
+ * ONE exception, by path: a pack's `plugins/` subtree is always overwritable. Code has a stronger
+ * guarantee than this one — new bytes void the consent hash, so nothing runs unapproved (PLUGINS
+ * §6.3) — and the alternative is worse than the risk: an unstamped `main.js` can never carry a hash
+ * (a `plugin.json` cannot either; its schema rejects unknown keys), so protecting it would freeze
+ * every pack-shipped plugin at the version it was installed at, forever. Editing a plugin in place
+ * is not the supported path anyway: `<dataDir>/plugins/<ns>/` exists for that and WINS the namespace.
+ */
+export async function isProtectedFromOverwrite(store: Storage, path: string): Promise<boolean> {
+	if (path.includes('/plugins/')) return false;
 	try {
-		const { directives, body } = parseContentDirectives(await store.read(path));
-		return isHashDrift(directives.get('hash'), await hashBody(body));
+		return (await fileHashState(await store.read(path))) !== HASH_STATE.match;
 	} catch {
-		return false; // unreadable / no header → treat as unmodified (safe to overwrite)
+		return false; // unreadable — there is nothing here to preserve
 	}
 }
 
@@ -212,7 +224,7 @@ export async function seedShippedContent(
 		// exactly as deletable as any other and an app update can't quietly put it back.
 		if (!firstRun && !(await to.exists(root))) continue;
 		for (const f of await from.list(root)) {
-			if ((await to.exists(f.path)) && (await isUserModified(to, f.path))) {
+			if ((await to.exists(f.path)) && (await isProtectedFromOverwrite(to, f.path))) {
 				preserved.push(f.path); // user hand-edited this shipped file → keep their version
 				continue;
 			}

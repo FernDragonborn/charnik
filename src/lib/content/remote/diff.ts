@@ -3,7 +3,7 @@
  *
  * Two rules from the plan land here, and both are about not surprising the user:
  *  - **A hand-edited file is never overwritten.** That rule already exists and is unit-tested for
- *    the shipped-content re-seed (REL-3), so this reuses `isUserModified` rather than inventing a
+ *    the shipped-content re-seed (REL-3), so this reuses `isProtectedFromOverwrite` rather than inventing a
  *    merge strategy: a file whose body no longer matches its own `#content-hash` was edited by the
  *    user, and their version wins.
  *  - **Removals are listed BEFORE applying, with what they would break.** Additions can't hurt
@@ -14,7 +14,7 @@
  */
 import type { Storage } from '$lib/storage/types';
 import type { ContentGraph } from '../loader';
-import { isUserModified } from '../provider';
+import { isProtectedFromOverwrite } from '../provider';
 import { parseContentDirectives } from '../meta';
 import { isPackFile, type RemotePack } from './github';
 
@@ -80,7 +80,7 @@ export async function diffPack(storage: Storage, remote: RemotePack): Promise<Pa
 			changes.push({ path: file.path, kind: FILE_CHANGE.added, sha: file.sha });
 			continue;
 		}
-		if (await isUserModified(storage, path)) {
+		if (await isProtectedFromOverwrite(storage, path)) {
 			changes.push({ path: file.path, kind: FILE_CHANGE.preserved, sha: file.sha });
 			continue;
 		}

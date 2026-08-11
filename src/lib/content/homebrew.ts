@@ -12,8 +12,8 @@
 import Papa from 'papaparse';
 import type { Storage } from '$lib/storage/types';
 import type { LoadedRow } from './loader';
-import { parseContentDirectives, stampDirectives, type MetaKey } from './meta';
-import { hashBody } from './hash';
+import { parseContentDirectives, type MetaKey } from './meta';
+import { stampWithHash } from './hash';
 import { slugify } from '$lib/util/slug';
 import { titleCase } from '$lib/util/format';
 import { CONTENT_SCHEMA_VERSION } from '$lib/schema/version';
@@ -363,8 +363,8 @@ async function writeStampedHomebrew(
 	if (!d.has('id')) d.set('id', crypto.randomUUID());
 	d.set('schema', String(CONTENT_SCHEMA_VERSION));
 	d.set('updated_at', new Date().toISOString().slice(0, 10));
-	d.set('hash', await hashBody(body));
-	await storage.write(file, stampDirectives(d, body));
+	// the hash covers the header too, so building the file and stamping it is ONE step
+	await storage.write(file, await stampWithHash(d, body));
 }
 
 /** Read a homebrew CSV's existing rows + header directives (the directive block is stripped before

@@ -9,8 +9,8 @@ import {
 	COVERAGE
 } from './translate';
 import { LOC_STATUS } from './schemas';
-import { hashBody } from './hash';
-import { stampDirectives, type MetaKey } from './meta';
+import { stampWithHash } from './hash';
+import { type MetaKey } from './meta';
 
 const HEAD =
 	'id,systems,source,name_en,name_uk,text_en,material,level,school,casting_time,range,components,duration,concentration,ritual';
@@ -22,10 +22,9 @@ async function seed(s: MemoryStorage, rows: string[]): Promise<void> {
 	const body = [HEAD, ...rows].join('\n');
 	const dir = new Map<MetaKey, string>([
 		['source', 'SRD 5.2.1'],
-		['license', 'CC-BY-4.0'],
-		['hash', await hashBody(body)]
+		['license', 'CC-BY-4.0']
 	]);
-	await s.write('a/spells_srd.csv', stampDirectives(dir, body));
+	await s.write('a/spells_srd.csv', await stampWithHash(dir, body));
 }
 
 describe('saveTranslation', () => {

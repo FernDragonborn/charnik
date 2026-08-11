@@ -20,8 +20,8 @@ import {
 	type ProseBase,
 	type LocStatus
 } from './schemas';
-import { parseContentDirectives, stampDirectives } from './meta';
-import { hashBody } from './hash';
+import { parseContentDirectives } from './meta';
+import { stampWithHash } from './hash';
 
 /** Prose COVERAGE of a row into `locale` — purely "is the prose physically there?", derived from the
  *  cells. Feeds the l10n-status default (unset status → not_started/started) and the content-health
@@ -99,9 +99,8 @@ async function patchRowColumns(
 
 	const newBody = Papa.unparse({ fields, data: rows }, { newline: '\r\n' });
 	// re-stamp: the app edited the data on purpose, so the recorded hash should follow (no drift nag)
-	directives.set('hash', await hashBody(newBody));
 	directives.set('updated_at', new Date().toISOString().slice(0, 10));
-	await storage.write(path, stampDirectives(directives, newBody));
+	await storage.write(path, await stampWithHash(directives, newBody));
 }
 
 /** Write `prose` for `locale` into `row`'s CSV file, in place (only the provided bases). */

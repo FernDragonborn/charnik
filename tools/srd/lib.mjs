@@ -24,12 +24,16 @@ function uuidv7() {
 	return `${h.slice(0, 4).join('')}-${h.slice(4, 6).join('')}-${h.slice(6, 8).join('')}-${h.slice(8, 10).join('')}-${h.slice(10, 16).join('')}`;
 }
 
-/** Must match src/lib/content/hash.ts so the stored hash equals what the app recomputes at load. */
-function normalizeBody(body) {
-	const noBom = body.charCodeAt(0) === 0xfeff ? body.slice(1) : body;
+/** Must match `hashInput` in src/lib/content/hash.ts so the stored hash equals what the app
+ *  recomputes at load: the WHOLE file — header included, because `#content-source` is the identity
+ *  half of `source:id` — minus the two stamp lines the write itself produces. */
+const UNHASHED_DIRECTIVE = /^\s*#\s*content-(hash|updated[_-]at)\s*:/i;
+function hashInput(file) {
+	const noBom = file.charCodeAt(0) === 0xfeff ? file.slice(1) : file;
 	return noBom
 		.replace(/\r\n?/g, '\n')
 		.split('\n')
+		.filter((l) => !UNHASHED_DIRECTIVE.test(l))
 		.map((l) => l.replace(/[ \t]+$/, ''))
 		.join('\n')
 		.replace(/\n+$/, '');
@@ -173,7 +177,6 @@ export function writeCsv(path, columns, rows) {
 	const bodyCols = columns.filter((c) => c !== 'source' && c !== 'systems');
 	const bodyRows = rows.map(({ source: _s, systems: _y, ...rest }) => rest);
 	const body = Papa.unparse({ fields: bodyCols, data: bodyRows }, { newline: '\n' }) + '\n';
-	const hash = h64ToString(normalizeBody(body));
 
 	// IDEMPOTENT write (the converters commit their output, so a re-run must not churn unchanged
 	// files): preserve the existing file's stable `#content-id`, its BOM, and its `updated-at` key
@@ -182,23 +185,33 @@ export function writeCsv(path, columns, rows) {
 	let contentId = uuidv7();
 	let hasBom = true; // default: write the UTF-8 BOM (Excel/Cyrillic safety, per CLAUDE.md)
 	let dateKey = 'updated_at';
+	let prevHash = null;
 	if (existsSync(path)) {
 		const prev = readFileSync(path, 'utf8');
 		hasBom = prev.charCodeAt(0) === 0xfeff;
 		contentId = prev.match(/#content-id:\s*(\S+)/)?.[1] ?? contentId;
 		if (/#content-updated-at:/.test(prev)) dateKey = 'updated-at';
-		if (prev.match(/#content-hash:\s*xxh64:(\S+)/)?.[1] === hash) return; // unchanged → don't touch
+		prevHash = prev.match(/#content-hash:\s*(xxh64:\S+)/)?.[1] ?? null;
 	}
 
-	const header = [
+	// The hash covers these header lines too, so it can only be computed once `#content-id` is
+	// settled (preserved from the existing file, or freshly generated). The two stamp lines are the
+	// ones it does NOT cover — which is what keeps this write idempotent: re-running on unchanged
+	// data yields the same hash even though the date line would say today.
+	const hashedHeader = [
 		`#content-source: ${sources[0]}`,
 		`#content-systems: ${systems.join(',')}`,
 		`#content-url: ${SRD_URL}`,
 		`#content-license: CC-BY-4.0`, // both SRD 5.1 and 5.2.1 ship under CC-BY-4.0
-		`#content-id: ${contentId}`,
-		`#content-${dateKey}: ${TODAY}`,
-		`#content-hash: xxh64:${hash}`
-	].join('\n');
+		`#content-id: ${contentId}`
+	];
+	const hash = `xxh64:${h64ToString(hashInput(hashedHeader.join('\n') + '\n' + body))}`;
+	if (prevHash === hash) return; // unchanged → don't touch (no id regen, no date bump)
+
+	// the stamp is written FIRST, so verifying a file is "drop the top line and hash the rest"
+	const header = [`#content-hash: ${hash}`, ...hashedHeader, `#content-${dateKey}: ${TODAY}`].join(
+		'\n'
+	);
 	writeFileSync(path, (hasBom ? '﻿' : '') + header + '\n' + body, 'utf8');
 }
 

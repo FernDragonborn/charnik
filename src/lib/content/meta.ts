@@ -122,9 +122,21 @@ export interface DriftItem {
 	changedAt?: string | undefined;
 }
 
-/** Drift = a hash was recorded AND it no longer matches the freshly-recomputed body hash. An ABSENT
- *  stored hash is "missing" (auto-filled silently), NOT drift — so this returns false for it. This is
- *  the single detector; the recompute lives with the hasher, this just compares. */
-export function isHashDrift(storedHash: string | undefined, recomputedHash: string): boolean {
-	return storedHash !== undefined && storedHash !== recomputedHash;
-}
+/**
+ * The three states a file's `#content-hash` can be in. THREE, not two: the two consumers want
+ * opposite defaults for the missing case, and a boolean forced one of them to be wrong.
+ *
+ * The drift detector wants "no hash yet" to be quiet — it is an unstamped file, auto-filled without
+ * a word (see `checkFileMeta`), not data that changed. The overwrite guard wants the opposite: it
+ * cannot verify the file, so it must not touch it. Naming the third state lets each say what it
+ * means at the call site instead of one of them living with the wrong default.
+ */
+export const HASH_STATE = {
+	/** the body still hashes to what the header claims */
+	match: 'match',
+	/** a hash was recorded and no longer matches — the DATA was edited after the last stamp */
+	drift: 'drift',
+	/** no `#content-hash` at all: nothing to compare, so nothing is known */
+	unstamped: 'unstamped'
+} as const;
+export type HashState = (typeof HASH_STATE)[keyof typeof HASH_STATE];

@@ -6,7 +6,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
-import { hashBody } from '../hash';
+import { stampWithHash } from '../hash';
 import { diffPack, gitBlobSha, rowsRemovedBy, charactersReferencing, FILE_CHANGE } from './diff';
 import {
 	applyPackUpdate,
@@ -25,7 +25,7 @@ const enc = (s: string) => new TextEncoder().encode(s);
 
 /** A shipped file exactly as the app writes one: body + a matching `#content-hash` (no drift). */
 async function shippedFile(body: string): Promise<string> {
-	return `#content-source: Test\n#content-hash: ${await hashBody(body)}\n${body}`;
+	return stampWithHash(new Map([['source', 'Test']]), body);
 }
 
 const fetcherOf = (files: Record<string, string>): RemoteFetcher => ({
@@ -80,6 +80,32 @@ describe('diffPack', () => {
 		});
 		expect(diff.changes).toEqual([
 			{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved, sha: 'upstream' }
+		]);
+	});
+
+	it('preserves a file with NO hash at all — "I cannot verify this" is not "overwrite it"', async () => {
+		// the case this closes: a CSV the user dropped into a pack folder themselves, which an update
+		// then happens to ship under the same name
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/mine.csv', enc('id\nMY OWN FILE'));
+		const diff = await diffPack(s, { pack: 'p', files: [{ path: 'p/mine.csv', sha: 'upstream' }] });
+		expect(diff.changes).toEqual([
+			{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved, sha: 'upstream' }
+		]);
+	});
+
+	it('but plugin CODE is always overwritable — it can never carry a hash to be verified by', async () => {
+		// `main.js`/`plugin.json` have nowhere to put a `#content-hash`, so the rule above would freeze
+		// every pack-shipped plugin at its installed version forever. Code has a stronger guarantee
+		// instead: new bytes void the consent hash, so nothing runs unapproved (PLUGINS §6.3).
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/plugins/ns/main.js', enc('globalThis.x = 1;'));
+		const diff = await diffPack(s, {
+			pack: 'p',
+			files: [{ path: 'p/plugins/ns/main.js', sha: 'upstream' }]
+		});
+		expect(diff.changes).toEqual([
+			{ path: 'p/plugins/ns/main.js', kind: FILE_CHANGE.changed, sha: 'upstream' }
 		]);
 	});
 

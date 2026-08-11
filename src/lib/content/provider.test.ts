@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { discoverContentRoots, forgetUninstalledPacks, seedShippedContent } from './provider';
 import { emptyPackConfig, packConfig, registerPack } from './packs.svelte';
-import { stampDirectives, type MetaKey } from './meta';
-import { hashBody } from './hash';
+import { type MetaKey } from './meta';
+import { stampWithHash } from './hash';
 
 /** A CSV with a correct `#content-hash` header for its body — an "untouched, app-seeded" file. */
 async function stamped(body: string): Promise<string> {
-	return stampDirectives(new Map<MetaKey, string>([['hash', await hashBody(body)]]), body);
+	return stampWithHash(new Map<MetaKey, string>([['source', 'Test']]), body);
 }
 const ROOTS = ['content/srd-2024'];
 const P = 'content/srd-2024/spells_srd.csv';

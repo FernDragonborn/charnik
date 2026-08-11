@@ -169,17 +169,17 @@ describe('loader — logic (in-memory)', () => {
 
 	it('a correct #content-hash produces no drift', async () => {
 		const s = new MemoryStorage();
-		const { hashBody } = await import('./hash');
+		const { stampWithHash } = await import('./hash');
 		const body = [SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n') + '\n';
-		const hash = await hashBody(body);
 		await s.write(
 			'a/spells_srd.csv',
-			[
-				`#content-source: Homebrew`,
-				`#content-license: CC-BY-4.0`,
-				`#content-hash: ${hash}`,
+			await stampWithHash(
+				new Map([
+					['source', 'Homebrew'],
+					['license', 'CC-BY-4.0']
+				]),
 				body
-			].join('\n')
+			)
 		);
 		const g = await loadContent(s, ['a']);
 		expect(g.driftItems).toEqual([]);

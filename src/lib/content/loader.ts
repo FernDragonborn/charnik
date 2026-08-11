@@ -26,11 +26,11 @@ import {
 import {
 	parseContentDirectives,
 	checkFileMeta,
-	isHashDrift,
+	HASH_STATE,
 	type MetaIssue,
 	type DriftItem
 } from './meta';
-import { hashBody } from './hash';
+import { fileHashState } from './hash';
 
 /** Identity + provenance a loaded row carries regardless of its content type. */
 interface LoadedRowCommon {
@@ -346,8 +346,9 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 	const fileLabel = `${root}/${entry.name}`;
 	const metaIssue = checkFileMeta(fileLabel, directives);
 	if (metaIssue) acc.metaIssues.push(metaIssue);
-	const storedHash = directives.get('hash');
-	if (storedHash && isHashDrift(storedHash, await hashBody(raw)))
+	// only DRIFT belongs in this list: an unstamped file has nothing to have drifted from, and it is
+	// already reported (and silently auto-filled) as missing metadata above
+	if ((await fileHashState(raw)) === HASH_STATE.drift)
 		acc.driftItems.push({
 			file: fileLabel,
 			declaredDate: directives.get('updated_at'),

@@ -17,13 +17,19 @@ import {
 	uninstallPack
 } from './updates.svelte';
 import { gitBlobSha } from './diff';
+import { stampWithHash } from '../hash';
 import type { RemoteFetcher } from './types';
 
 const REPO = 'https://github.com/someone/dark-sun';
 const enc = (s: string) => new TextEncoder().encode(s);
 
+/** A CSV exactly as a pack ships one: body + a matching `#content-hash`. It has to be stamped, or
+ *  the overwrite guard can't verify it and (rightly) refuses to touch it — see `diffPack`. */
 const ALL = {
-	'dark-sun/classes_srd.csv': '#content-source: Dark Sun\nid\nathasian',
+	'dark-sun/classes_srd.csv': await stampWithHash(
+		new Map([['source', 'Dark Sun']]),
+		'id\nathasian'
+	),
 	'dark-sun/plugins/dark-sun-rules/main.js': 'globalThis.handlers = {};',
 	'dark-sun/plugins/dark-sun-rules/plugin.json': '{"api":1}'
 };

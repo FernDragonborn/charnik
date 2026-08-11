@@ -608,8 +608,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/hash.ts`
 
 - `const HASH_PREFIX`
-- `function normalizeBody` — The canonical form we hash: directive block removed, BOM stripped, CRLF/CR→LF, trailing * whitespace per line trimmed…
-- `function hashBody` — `xxh64:<hex>` of the normalised body.
+- `function hashInput` — The canonical form we hash: BOM stripped, CRLF/CR→LF, the two stamp lines dropped, trailing * whitespace per line tri…
+- `function hashFile` — `xxh64:<hex>` of the normalised file.
+- `function fileHashState` — * Does this file still hash to what its own header claims?
+- `function stampWithHash` — * Assemble a content file and stamp its `#content-hash` in one step — the only supported way to * write one, because …
 
 ### `src/lib/content/homebrew.ts`
 
@@ -656,7 +658,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface MetaIssue`
 - `function checkFileMeta` — Classify a file's directives.
 - `interface DriftItem` — A file whose body no longer matches its recorded `#content-hash:` — the DATA was edited outside the * app after the h…
-- `function isHashDrift` — Drift = a hash was recorded AND it no longer matches the freshly-recomputed body hash.
+- `const HASH_STATE` — * The three states a file's `#content-hash` can be in.
+- `type HashState`
 
 ### `src/lib/content/provider.ts`
 
@@ -664,7 +667,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
 - `function forgetUninstalledPacks` — * The registry describes what is INSTALLED, and a folder can leave without asking it: deleting the * pack in a file m…
 - `function restoreBundledPacks` — * Put a bundled pack back, from the copy inside the app — the undo for a deletion, offered both at * launch (when the…
-- `function isUserModified` — Is an on-disk shipped file USER-modified?
+- `function isProtectedFromOverwrite` — * May the app overwrite this on-disk file, or is it the user's now?
 - `function seedShippedContent` — * Seed / UPDATE the shipped SRD roots on disk (desktop).
 - `function resetContentGraph` — Drop the cache (e.g.
 
@@ -1211,4 +1214,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 694 exports across 100 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 697 exports across 100 modules · 36 duplicate suspects._

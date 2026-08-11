@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { parseContentDirectives, checkFileMeta, isHashDrift } from './meta';
+import { parseContentDirectives, checkFileMeta } from './meta';
 
 const fixture = (rel: string) =>
 	readFileSync(
@@ -70,15 +70,5 @@ describe('content meta directives', () => {
 			url: 'https://example.test',
 			systems: '5e'
 		});
-	});
-});
-
-describe('isHashDrift', () => {
-	it('is true only when a recorded hash differs from the recomputed one', () => {
-		expect(isHashDrift('xxh64:aaa', 'xxh64:bbb')).toBe(true); // stale
-		expect(isHashDrift('xxh64:aaa', 'xxh64:aaa')).toBe(false); // matches
-	});
-	it('treats an absent recorded hash as missing (auto-fill), NOT drift', () => {
-		expect(isHashDrift(undefined, 'xxh64:bbb')).toBe(false);
 	});
 });
