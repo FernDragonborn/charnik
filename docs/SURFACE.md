@@ -239,6 +239,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const emptyPackConfig`
 - `const CHECK_INTERVAL_MS` — At most one update request per repo per day — stated plainly in the settings copy, so the * number lives here and now…
 - `const SHIPPED_PACK_REPO` — * Where the packs Charnik itself publishes come from.
+- `function isReservedPackName`
 - `function parsePackConfig` — Parse a stored section over the defaults.
 - `function isRepoDue` — * Is this repo due for an automatic check?
 - `function reposDueForCheck` — Every repo that automatic checking may contact right now: the update mode allows the network, * the throttle has elap…
@@ -1204,4 +1205,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 687 exports across 100 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 688 exports across 100 modules · 36 duplicate suspects._

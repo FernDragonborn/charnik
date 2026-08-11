@@ -49,6 +49,23 @@ describe('discoverContentRoots (a pack is a folder)', () => {
 	it('returns nothing (instead of throwing) when content/ does not exist yet', async () => {
 		expect(await discoverContentRoots(new MemoryStorage())).toEqual([]);
 	});
+
+	// The registry is reconciled against this list, so "unreadable" answering "" would read as
+	// "the user uninstalled everything" and take pins + repo URLs with it. Absent → empty is fine;
+	// present-but-unreadable has to be loud.
+	it('a folder that is THERE but unreadable throws — it must not look like "nothing installed"', async () => {
+		const st = await withPacks();
+		st.list = () => Promise.reject(new Error('EACCES'));
+		await expect(discoverContentRoots(st)).rejects.toThrow('EACCES');
+	});
+
+	it('never treats a staging folder or a dotfolder as a pack', async () => {
+		const st = await withPacks();
+		await st.write('content/srd-2024.prev/spells_srd.csv', 'id\nfireball');
+		await st.write('content/srd-2024.new/spells_srd.csv', 'id\nfireball');
+		await st.write('content/.pack-cache/abc123', 'bytes');
+		expect(await discoverContentRoots(st)).toEqual(['content/srd-2014', 'content/srd-2024']);
+	});
 });
 
 /** The bundled SRD is a PACK LIKE ANY OTHER, which above all means uninstalling it sticks: the seed

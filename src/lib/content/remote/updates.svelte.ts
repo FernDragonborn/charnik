@@ -11,6 +11,7 @@ import { readCharacterFiles } from '$lib/character/repository';
 import { content } from '../store.svelte';
 import {
 	forgetPack,
+	isReservedPackName,
 	packConfig,
 	recordCheck,
 	registerPack,
@@ -238,14 +239,19 @@ export async function discoverPacks(
 		}
 		// `unchanged` can't happen here — a first look sends no ETag
 		if (res.kind !== 'packs') return;
-		updates.discovered = res.packs.map((remote) => ({
-			pack: remote.pack,
-			repo,
-			remote,
-			files: remote.files.length,
-			plugins: pluginsIn(remote),
-			installed: packConfig.packs[remote.pack] !== undefined
-		}));
+		// A folder name the app owns is never an installable pack, however the repo spells it —
+		// `homebrew` above all, which would install straight into the user's own authoring root and
+		// make "uninstall that pack" delete everything they ever wrote (`isReservedPackName`).
+		updates.discovered = res.packs
+			.filter((remote) => !isReservedPackName(remote.pack))
+			.map((remote) => ({
+				pack: remote.pack,
+				repo,
+				remote,
+				files: remote.files.length,
+				plugins: pluginsIn(remote),
+				installed: packConfig.packs[remote.pack] !== undefined
+			}));
 		if (updates.discovered.length === 0)
 			updates.error = { kind: 'i18n', key: 'settings.packs.noPacksFound', values: { repo } };
 	} finally {
@@ -264,7 +270,9 @@ export async function installPack(
 	opts: { fetcher?: RemoteFetcher } = {}
 ): Promise<ApplyResult | null> {
 	const found = updates.discovered.find((d) => d.pack === pack);
-	if (!found) return null;
+	// belt-and-braces: `discoverPacks` already filtered these out, but this is the function that
+	// WRITES, and a reserved name is the one input that turns an install into data loss
+	if (!found || isReservedPackName(pack)) return null;
 	const repo = parseGithubRepo(found.repo);
 	if (!repo) return null;
 
@@ -292,6 +300,13 @@ export async function installPack(
  * the caller decides, and the bundled floor re-seeds it on next launch anyway.
  */
 export async function uninstallPack(pack: string): Promise<void> {
+	// This deletes a folder recursively, so a reserved name reaching it is the worst outcome in the
+	// module: `homebrew` here would erase everything the user ever authored. An older build could
+	// have registered one before `isReservedPackName` existed — drop the entry, keep the files.
+	if (isReservedPackName(pack)) {
+		forgetPack(pack);
+		return;
+	}
 	await getUserStorage().remove(`content/${pack}`);
 	forgetPack(pack);
 	delete updates.pending[pack];

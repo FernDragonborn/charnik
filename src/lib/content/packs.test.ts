@@ -5,6 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
+	isReservedPackName,
 	parsePackConfig,
 	emptyPackConfig,
 	isRepoDue,
@@ -83,6 +84,24 @@ describe('the missing-content prompt', () => {
 		expect(parsePackConfig({ dismissedMissing: [1, 'srd-2014'] }).dismissedMissing).toEqual([
 			'srd-2014'
 		]);
+	});
+});
+
+/** "A pack is a folder" has no exceptions, so the folders the APP owns have to be defended by name
+ *  — the alternative is a third-party repo shipping a folder called `homebrew` and installing into
+ *  the user's own authoring root. */
+describe('reserved pack names', () => {
+	it('refuses the folders the app owns, case-insensitively (Windows folds case)', () => {
+		expect(isReservedPackName('homebrew')).toBe(true);
+		expect(isReservedPackName('HomeBrew')).toBe(true);
+		expect(isReservedPackName('.pack-cache')).toBe(true);
+		expect(isReservedPackName('srd-2024.new')).toBe(true);
+		expect(isReservedPackName('srd-2024.prev')).toBe(true);
+	});
+	it('leaves an ordinary pack alone, including one that merely mentions homebrew', () => {
+		expect(isReservedPackName('srd-2024')).toBe(false);
+		expect(isReservedPackName('phb-homebrew')).toBe(false);
+		expect(isReservedPackName('my-homebrew-pack')).toBe(false);
 	});
 });
 

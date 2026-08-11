@@ -15,6 +15,7 @@
  * whole blob would erase every other section (rule-options, settings) the moment a pack is pinned.
  */
 import { readConfigFile, writeConfigSection } from '$lib/storage/json-config';
+import { HOMEBREW_ROOT } from './homebrew';
 
 /** The app-config file in the data root. Named by the architecture invariant (CLAUDE.md). */
 const CONFIG_PATH = 'charnik.config.json';
@@ -90,6 +91,30 @@ export const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
  * self-reference to keep in sync.
  */
 export const SHIPPED_PACK_REPO = 'https://github.com/FernDragonborn/charnik-content-srd';
+
+/**
+ * Folder names under `content/` that a remote pack may NOT claim.
+ *
+ * "A pack is a folder" is the whole model, and it has no exceptions anywhere else — so every folder
+ * we treat specially has to be defended HERE rather than filtered in the one place that happens to
+ * know about it. `homebrew` is the sharp one: it is the user's own authoring root, so a repo
+ * publishing a folder by that name would install straight into it, and uninstalling "that pack"
+ * would delete everything the user ever wrote. The update staging folders are reserved for the
+ * opposite reason — they exist for milliseconds during an apply, and a content load that caught
+ * them mid-swap would load every row twice.
+ *
+ * Compared case-INSENSITIVELY: on Windows `Homebrew/` and `homebrew/` are the same folder, so a
+ * case-sensitive check would be a bypass rather than a check.
+ */
+const RESERVED_PACK_NAMES = new Set([HOMEBREW_ROOT.slice(HOMEBREW_ROOT.lastIndexOf('/') + 1)]);
+/** Staging suffixes used by an apply (`<pack>.new` → swap → `<pack>.prev`). */
+const STAGING_SUFFIX = /\.(new|prev)$/i;
+
+export function isReservedPackName(pack: string): boolean {
+	const name = pack.toLowerCase();
+	// a leading dot is ours by convention (`.seed-version`, `.pack-cache`) — never an installable pack
+	return name.startsWith('.') || STAGING_SUFFIX.test(name) || RESERVED_PACK_NAMES.has(name);
+}
 
 /** Parse a stored section over the defaults. Pure, so the merge is unit-testable without Storage;
  *  anything that isn't a well-formed section degrades to "nothing installed, never check". */

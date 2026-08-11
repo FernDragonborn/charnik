@@ -31,6 +31,7 @@ import { hashBody } from './hash';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
 import {
 	forgetPack,
+	isReservedPackName,
 	missingBundled,
 	packConfig,
 	registerPack,
@@ -58,10 +59,20 @@ const CONTENT_DIR = 'content';
  * source, so pack order can't decide it.
  */
 export async function discoverContentRoots(storage: Storage): Promise<string[]> {
-	// a missing `content/` (fresh install, before the seed) must not blank the app
-	const entries = await storage.list(CONTENT_DIR).catch(() => []);
+	let entries;
+	try {
+		entries = await storage.list(CONTENT_DIR);
+	} catch (e) {
+		// A missing `content/` (fresh install, before the seed) is legitimately "nothing installed".
+		// PRESENT BUT UNREADABLE IS NOT: `[]` there reads as "the user deleted every pack", and
+		// `forgetUninstalledPacks` would act on it and wipe the registry — pins and repo URLs with it.
+		// One transient listing failure must not be able to do that, so it fails loudly instead
+		// (the content store turns a throw into the diagnosable error screen).
+		if (await storage.exists(CONTENT_DIR).catch(() => false)) throw e;
+		return [];
+	}
 	return entries
-		.filter((e) => e.isDir && e.path !== HOMEBREW_ROOT)
+		.filter((e) => e.isDir && !isReservedPackName(e.name))
 		.map((e) => e.path)
 		.sort();
 }
