@@ -1351,7 +1351,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   shipped files on update, preserving any the user hand-edited (hash drift). The "bump it whenever
   shipped SRD data changes" rule lives on the constant itself (`schema/version.ts`).
 - [~] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
-  2026-08-10; all five slices BUILT 2026-08-11, unverified end-to-end against a live desktop app).** The ask: a Settings field where you paste
+  2026-08-10; slices 0–4 BUILT 2026-08-11, slice 5 partial — see STILL OPEN below, and note the
+  live desktop path has never been run).** The ask: a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
   updated without shipping an app release.
@@ -1525,12 +1526,41 @@ holds the done-work log; these are the OPEN tails it carried):**
      updates through the SAME path as any third-party pack. Its repo is a constant, not a
      `#content-*` header — `#content-url` already means "where the DATA came from" (Wizards), and a
      file stating which repository publishes it is a self-reference to keep in sync.
-  5. `[x]` **Settings UI** — inside the (renamed) **Content** tab, above the source/file filters,
+  5. `[~]` **Settings UI** — inside the (renamed) **Content** tab, above the source/file filters,
      because a pack is the container of exactly those files; four tabs on one concept was the
      smell. Network dropdown (*don't check* / *notify* / *pre-download*), a manual check that
-     deliberately bypasses the throttle (global and per-pack), pins, and the pre-apply summary.
-     Dev preview at **`/dev/packs`** (the panel is desktop-gated, so this is how it gets driven).
-     The startup check is fire-and-forget AFTER content load, gated on the mode + throttle.
+     deliberately bypasses the throttle (global and per-pack), pins, and the pre-apply summary
+     (files to write · files preserved · rows that would DISAPPEAR + the characters that use them ·
+     plugins the pack carries). Dev preview at **`/dev/packs`** (the panel is desktop-gated, so
+     this is how it gets driven). The startup check is fire-and-forget AFTER content load, gated on
+     the mode + throttle. GitHub-only is stated in the description, not just in a failure.
+
+  **STILL OPEN (2026-08-11) — what the five slices do NOT cover.** Written down because the feature
+  reads finished from the outside and is not:
+  - `[ ]` **Install a NEW pack from a pasted URL — the headline ask, not built.** Everything under
+    it exists (registry, fetcher, diff, apply); what is missing is the field and the flow.
+    `registerPack` currently has exactly one caller, `adoptShippedPacks`, so today the feature
+    UPDATES the bundled SRD and cannot ADD a third-party pack. Install = register + a diff where
+    every file is `added` + apply, so this is wiring, not new machinery. Its dialog is also where
+    "this pack contains N plugins" belongs (`pluginsIn` already computes it, PLUGINS §2).
+  - `[ ]` **`#content-source` is not checked before applying — a correctness hole, not a UI gap.**
+    This item's own rule says a pack that changes its source tag is a NEW pack, never an update,
+    because identity is `source:id` and re-namespacing breaks every character reference at once.
+    The diff compares paths and blob SHAs and never reads the header, so an upstream re-tag would
+    be applied silently. Fix belongs in `diffPack` (compare the remote file's `#content-source`
+    against the local one; a mismatch is a REFUSAL with an explanation, not a diff).
+  - `[ ]` **Uninstalling a pack has no UI** — `forgetPack` is written and has no caller. Deleting
+    the folder must also drop the registry entry, and (per the plugins decision) takes the pack's
+    plugins with it.
+  - `[ ]` **A removal can never be accepted.** The panel always calls `applyUpdate` without
+    `removeDeleted`, so a file deleted upstream stays local forever and is re-reported on every
+    check. Safe default, missing second half.
+  - `[ ]` **Deleting or downgrading the SRD pack** still needs the answer the item below asks for —
+    the demo character depends on that content existing.
+  - `[ ]` **Unverified end to end**: no headless way to drive a Tauri webview here, so the live
+    network path (real 304, real download, real write into the data dir) has never run. Everything
+    below it is unit-tested against a fake fetcher, and `cargo check` proves the plugin + capability
+    compile.
 
   **Two decisions taken on Claude's assumption, flag them if either is wrong:**
   - **The SRD keeps a bundled floor.** A fresh install with no network still needs content, and the
