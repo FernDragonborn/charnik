@@ -62,6 +62,7 @@
 			{
 				pack: 'dark-sun',
 				repo: THIRD_PARTY,
+				branch: 'main',
 				remote: { pack: 'dark-sun', files: [] },
 				files: 7,
 				plugins: ['dark-sun-rules'],
@@ -73,6 +74,7 @@
 			{
 				pack: 'srd-2024',
 				repo: THIRD_PARTY,
+				branch: 'main',
 				remote: { pack: 'srd-2024', files: [] },
 				files: 16,
 				plugins: [],

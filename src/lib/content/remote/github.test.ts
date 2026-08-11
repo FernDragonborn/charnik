@@ -59,7 +59,7 @@ describe('the two URLs', () => {
 
 describe('packsFromTree — a pack is a TOP-LEVEL folder, same rule as locally', () => {
 	it('groups files under their pack folder, sorted and deterministic', () => {
-		const packs = packsFromTree(
+		const { packs } = packsFromTree(
 			tree([
 				['srd-2024/spells_srd.csv', 'aaa'],
 				['srd-2014/items_srd.csv', 'bbb'],
@@ -82,12 +82,12 @@ describe('packsFromTree — a pack is a TOP-LEVEL folder, same rule as locally',
 				{ path: 'srd-2024/spells_srd.csv', sha: 'w', type: 'blob' }
 			]
 		});
-		expect(packsFromTree(json)).toEqual([
+		expect(packsFromTree(json).packs).toEqual([
 			{ pack: 'srd-2024', files: [{ path: 'srd-2024/spells_srd.csv', sha: 'w' }] }
 		]);
 	});
 	it('a pack may ship plugin files too (PLUGINS §2) — they are part of the same unit', () => {
-		const packs = packsFromTree(
+		const { packs } = packsFromTree(
 			tree([
 				['dark-sun/plugins/my-homebrew/plugin.json', 'a'],
 				['dark-sun/plugins/my-homebrew/main.js', 'b']
@@ -97,9 +97,9 @@ describe('packsFromTree — a pack is a TOP-LEVEL folder, same rule as locally',
 		expect(packs[0]?.files).toHaveLength(2);
 	});
 	it('garbage in → empty, never a throw at startup', () => {
-		expect(packsFromTree('{oops')).toEqual([]);
-		expect(packsFromTree('{}')).toEqual([]);
-		expect(packsFromTree(JSON.stringify({ tree: 'nope' }))).toEqual([]);
+		expect(packsFromTree('{oops').packs).toEqual([]);
+		expect(packsFromTree('{}').packs).toEqual([]);
+		expect(packsFromTree(JSON.stringify({ tree: 'nope' })).packs).toEqual([]);
 	});
 });
 
@@ -145,7 +145,7 @@ describe('a pack too big to download is refused off the tree, before the first b
 		const json = JSON.stringify({
 			tree: [{ path: 'p/a.csv', sha: 'a', type: 'blob', size: 4096 }]
 		});
-		expect(packsFromTree(json)[0]?.files[0]?.size).toBe(4096);
+		expect(packsFromTree(json).packs[0]?.files[0]?.size).toBe(4096);
 	});
 });
 
@@ -166,6 +166,7 @@ describe('checkRepo', () => {
 		expect(res).toEqual({
 			kind: 'packs',
 			etag: 'W/"2"',
+			branch: 'main',
 			packs: [{ pack: 'srd-2024', files: [{ path: 'srd-2024/spells_srd.csv', sha: 'a' }] }]
 		});
 	});
@@ -180,5 +181,61 @@ describe('checkRepo', () => {
 			'https://github.com/a/b'
 		);
 		expect(res).toEqual({ kind: 'error', message: 'network unreachable' });
+	});
+});
+
+/* GitHub cuts a tree at ~7 MB / 100k entries and still answers 200. `MAX_REMOTE_BYTES` is 8 MB, so
+   the response sails through — and `diffPack` reads every unlisted local file as `removed`. Half a
+   list must therefore never reach the diff at all. */
+describe('a truncated listing is refused, not used', () => {
+	const big = (paths: [string, string][]) =>
+		JSON.stringify({
+			truncated: true,
+			tree: paths.map(([path, sha]) => ({ path, sha, type: 'blob' }))
+		});
+
+	it('says so instead of returning the part it got', async () => {
+		const res = await checkRepo(
+			fakeFetcher({ kind: 'ok', body: big([['srd-2024/spells_srd.csv', 'a']]), etag: 'W/"1"' }),
+			'https://github.com/a/b'
+		);
+		expect(res).toEqual({ kind: 'truncated' });
+	});
+
+	it('parses the packs anyway — the flag is what the caller must not ignore', () => {
+		const { packs, truncated } = packsFromTree(big([['srd-2024/spells_srd.csv', 'a']]));
+		expect(truncated).toBe(true);
+		expect(packs).toHaveLength(1);
+	});
+
+	it('an ordinary tree is not truncated', () => {
+		expect(packsFromTree(tree([['p/a.csv', 'a']])).truncated).toBe(false);
+	});
+});
+
+/* A pasted URL without `/tree/<branch>` is a GUESS, and it is wrong for every repo still on
+   `master` — which today 404s on every check forever, with `Not Found` as the whole explanation. */
+describe('the branch we guessed is not the branch the repo has', () => {
+	const answering = (ok: string): RemoteFetcher => ({
+		getText: async (url) =>
+			url.includes(`/${ok}?`)
+				? { kind: 'ok', body: tree([['srd-2024/spells_srd.csv', 'a']]) }
+				: { kind: 'error', status: 404, message: 'Not Found' },
+		getBytes: async () => ({ kind: 'error', message: 'not used' })
+	});
+
+	it('falls back to master on a 404 and says which branch answered', async () => {
+		const res = await checkRepo(answering('master'), 'https://github.com/a/b');
+		expect(res).toMatchObject({ kind: 'packs', branch: 'master' });
+	});
+
+	it('does not second-guess a branch the USER named', async () => {
+		const res = await checkRepo(answering('master'), 'https://github.com/a/b/tree/dev');
+		expect(res).toEqual({ kind: 'error', message: 'Not Found' });
+	});
+
+	it('a 404 that is not about the branch still surfaces once main is tried', async () => {
+		const res = await checkRepo(answering('nothing-matches'), 'https://github.com/a/b');
+		expect(res).toEqual({ kind: 'error', message: 'Not Found' });
 	});
 });

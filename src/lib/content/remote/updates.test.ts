@@ -8,7 +8,7 @@
 import 'fake-indexeddb/auto';
 import { describe, it, expect, afterAll, beforeAll, beforeEach } from 'vitest';
 import { getUserStorage } from '$lib/storage/provider';
-import { packConfig, emptyPackConfig } from '../packs.svelte';
+import { packConfig, emptyPackConfig, UPDATE_MODE } from '../packs.svelte';
 import {
 	updates,
 	checkNow,
@@ -307,6 +307,39 @@ describe('the check runs alone', () => {
 		]);
 
 		expect(log).toEqual(['start 1', 'end 1', 'start 2', 'end 2']);
+	});
+
+	/* The ETag means "I have seen this remote state", and what makes that claim true is the pending
+	   offer written from it. Recorded FIRST, a check that died in between (a quit, or a throw from
+	   the pre-download it does in `download` mode) left the claim on disk with nothing behind it: the
+	   next launch replays the ETag, gets a 304, and returns before it looks at a single pack. The
+	   update is then invisible until some later upstream commit moves the tree — the exact failure
+	   `PendingRemote` exists to prevent, one layer down. */
+	it('does not claim to have seen a repo whose packs it never got through', async () => {
+		packConfig.packs['dark-sun'] = { repo: REPO };
+		packConfig.updates = UPDATE_MODE.download; // …so the check itself reaches the network for bytes
+		const movedTree = JSON.stringify({
+			tree: (await remoteFiles({ csvMoved: true })).map((f) => ({ ...f, type: 'blob' }))
+		});
+		const diesMidDownload: RemoteFetcher = {
+			getText: async () => ({ kind: 'ok', body: movedTree, etag: 'W/"9"' }),
+			getBytes: async () => {
+				throw new Error('killed mid pre-download');
+			}
+		};
+
+		await expect(checkNow({ manual: true, fetcher: diesMidDownload })).rejects.toThrow();
+
+		expect(packConfig.repos[REPO]?.etag).toBeUndefined();
+		expect(packConfig.repos[REPO]?.lastCheckedAt).toBeUndefined();
+		expect(packConfig.pending['dark-sun']).toBeUndefined();
+	});
+
+	it('records it once the packs ARE through, so tomorrow is free', async () => {
+		packConfig.packs['dark-sun'] = { repo: REPO };
+		await checkNow({ manual: true, fetcher: fetcher(ALL) });
+		expect(packConfig.repos[REPO]?.etag).toBe('W/"1"');
+		expect(packConfig.repos[REPO]?.lastCheckedAt).toBeDefined();
 	});
 
 	/* The prune used to sit BEHIND the "nothing is due" return, so bytes staged in `download` mode

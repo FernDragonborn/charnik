@@ -8,6 +8,7 @@
  */
 import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
 import { readCharacterFiles } from '$lib/character/repository';
+import { revokePackPlugins } from '$lib/effects/plugin-store.svelte';
 import { draftEffectiveId, draftsTargeting } from '$lib/drafts/store';
 import { content } from '../store.svelte';
 import {
@@ -24,6 +25,7 @@ import {
 	remoteNameOf,
 	renamePackEntry,
 	reposDueForCheck,
+	setRepoBranch,
 	unDismissMissing,
 	UPDATE_MODE,
 	type PackConfigData
@@ -34,6 +36,8 @@ import {
 	packSizeRefusal,
 	packTooLarge,
 	parseGithubRepo,
+	type CheckResult,
+	type GithubRepo,
 	type RemotePack
 } from './github';
 import { diffPack, hasWrites, rowsRemovedBy, charactersReferencing, type PackDiff } from './diff';
@@ -77,6 +81,8 @@ export interface PendingUpdate {
 export interface DiscoveredPack {
 	pack: string;
 	repo: string;
+	/** The branch its listing came off — `main` unless the repo turned out to live on `master`. */
+	branch: string;
 	remote: RemotePack;
 	files: number;
 	/** plugin namespaces it ships — said out loud BEFORE installing, never discovered afterwards */
@@ -191,20 +197,38 @@ function stagedShas(): Set<string> {
 	return keep;
 }
 
+/** A check that came back with no listing to work from. */
+type CheckFailure = Exclude<CheckResult, { kind: 'packs' } | { kind: 'unchanged' }>;
+const noListing = (res: CheckResult): res is CheckFailure =>
+	res.kind !== 'packs' && res.kind !== 'unchanged';
+
+/**
+ * How such a failure reads to the user. One function because BOTH callers ask it — the automatic
+ * check and the paste-a-URL lookup — and a reason that only one of them explains is a reason the
+ * other silently swallows. `raw` for what the network stack said, `i18n` for copy we author (see
+ * {@link UpdateError}).
+ */
+function checkFailure(res: CheckFailure, repo: string): UpdateError {
+	if (res.kind === 'error') return { kind: 'raw', message: res.message };
+	if (res.kind === 'unsupported')
+		return { kind: 'i18n', key: 'settings.packs.hostUnsupported', values: { repo } };
+	return { kind: 'i18n', key: 'settings.packs.repoTooBig', values: { repo } };
+}
+
 async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void> {
 	const stored = packConfig.repos[repo]?.etag;
 	const res = await checkRepo(fetcher, repo, stored);
-	if (res.kind === 'error') {
-		updates.error = { kind: 'raw', message: res.message };
+	if (noListing(res)) {
+		updates.error = checkFailure(res, repo);
 		return;
 	}
-	if (res.kind === 'unsupported') {
-		updates.error = { kind: 'i18n', key: 'settings.packs.hostUnsupported', values: { repo } };
+	if (res.kind === 'unchanged') {
+		// a 304 still counts as "asked today" — that is exactly the check we want to skip tomorrow,
+		// and it certifies nothing we still have to write down
+		recordCheck(repo, new Date());
 		return;
 	}
-	// a 304 still counts as "asked today" — that is exactly the check we want to skip tomorrow
-	recordCheck(repo, new Date(), res.kind === 'packs' ? res.etag : undefined);
-	if (res.kind === 'unchanged') return;
+	setRepoBranch(repo, res.branch);
 
 	for (const remote of res.packs) {
 		// The repo only knows what IT calls this pack; the registry is keyed by the folder it lives in
@@ -222,7 +246,7 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 		}
 		// `download` mode fetches the bytes NOW so applying is instant and works offline. It is still
 		// only a download: nothing under `content/` is touched until the user clicks (SECURITY.md §7).
-		const parsed = parseGithubRepo(repo);
+		const parsed = fetchRepo(repo);
 		if (packConfig.updates === UPDATE_MODE.download && parsed && hasWrites(pending.diff)) {
 			await stagePackUpdate({
 				storage: getUserStorage(),
@@ -235,6 +259,30 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 		updates.pending[pack] = pending;
 		rememberPending(pack, { repo, files: remote.files });
 	}
+
+	/*
+	 * LAST, not first. The `ETag` means "I have seen this remote state", and everything above is what
+	 * that claim certifies — a diff over the whole pack, and in `download` mode the byte transfer
+	 * itself. Recorded up front, a quit or a throw anywhere in that window left the claim on disk with
+	 * no pending offer behind it: the next launch replays the `ETag`, gets `304`, returns before it
+	 * looks at a single pack, and the update is invisible until some LATER upstream commit moves the
+	 * tree again. The manual button replays it too, so nothing recovers it.
+	 *
+	 * This is the failure `PendingRemote` exists to prevent, one layer down. Not recording is the safe
+	 * side of the trade: the repo simply stays due and the next check asks again.
+	 */
+	recordCheck(repo, new Date(), res.etag);
+}
+
+/**
+ * The repo to FETCH from: the pasted URL, plus the branch a check actually found the tree on.
+ * `parseGithubRepo` alone guesses `main`, which is wrong for every repo still on `master` — and a
+ * wrong branch here doesn't fail once, it 404s every file of the download.
+ */
+function fetchRepo(repoUrl: string): GithubRepo | null {
+	const parsed = parseGithubRepo(repoUrl);
+	const branch = packConfig.repos[repoUrl]?.branch;
+	return parsed !== null && branch !== undefined ? { ...parsed, branch } : parsed;
 }
 
 /**
@@ -326,7 +374,7 @@ async function runApply(
 ): Promise<ApplyResult | null> {
 	const pending = updates.pending[pack];
 	if (!pending) return null;
-	const repo = parseGithubRepo(pending.repo);
+	const repo = fetchRepo(pending.repo);
 	if (!repo) return null;
 
 	const res = await applyPackUpdate({
@@ -370,7 +418,15 @@ async function runApply(
  * check returns before it looks at any pack, so nothing would ever put the offer back (see
  * `PendingRemote`). Call it after the content graph is up — the impact preview reads it.
  */
-export async function restorePendingUpdates(): Promise<void> {
+export function restorePendingUpdates(): Promise<void> {
+	// On the check's queue, because this is the OTHER rebuilder of `updates.pending` — and a check
+	// that finishes while this is half-way through prunes the staging cache against a half-built set
+	// and deletes bytes a pre-download had already fetched (see `serialised`). Startup happens to
+	// sequence the two by hand today; anything else that calls `checkNow` would not.
+	return serialised(runRestore);
+}
+
+async function runRestore(): Promise<void> {
 	// No platform gate: only a check writes `pending`, and only desktop checks — so on web this loop
 	// has nothing to walk. Gating anyway would just make the one function worth testing untestable.
 	for (const [pack, remembered] of Object.entries(packConfig.pending)) {
@@ -433,12 +489,8 @@ export async function discoverPacks(
 	updates.discovered = [];
 	try {
 		const res = await checkRepo(opts.fetcher ?? tauriFetcher, repo);
-		if (res.kind === 'error') {
-			updates.error = { kind: 'raw', message: res.message };
-			return;
-		}
-		if (res.kind === 'unsupported') {
-			updates.error = { kind: 'i18n', key: 'settings.packs.hostUnsupported', values: { repo } };
+		if (noListing(res)) {
+			updates.error = checkFailure(res, repo);
 			return;
 		}
 		// `unchanged` can't happen here — a first look sends no ETag
@@ -462,6 +514,9 @@ export async function discoverPacks(
 				return {
 					pack: remote.pack,
 					repo,
+					// carried rather than re-derived: nothing is registered yet, so `fetchRepo` has nowhere
+					// to read it from, and the install downloads off this branch
+					branch: res.branch,
 					remote,
 					files: remote.files.length,
 					plugins: pluginsIn(remote),
@@ -516,8 +571,9 @@ export async function installPack(
 		};
 		return null;
 	}
-	const repo = parseGithubRepo(found.repo);
-	if (!repo) return null;
+	const parsed = parseGithubRepo(found.repo);
+	if (!parsed) return null;
+	const repo: GithubRepo = { ...parsed, branch: found.branch };
 
 	const storage = getUserStorage();
 	const res = await applyPackUpdate({
@@ -531,6 +587,9 @@ export async function installPack(
 		return res;
 	}
 	registerPack(local, found.repo, pack);
+	// …and how to reach it again: the next check and every later download resolve the branch through
+	// the registry, not by guessing `main` off the URL a second time
+	setRepoBranch(found.repo, found.branch);
 	// "I meant to delete it, stop asking" was an answer about a pack that is now BACK. Leaving the
 	// flag set means deleting it a second time never prompts again — `restoreBundledPacks` already
 	// clears it, and re-installing from the URL is the other way the same pack returns.
@@ -590,18 +649,26 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 }
 
 /**
- * Uninstall a pack: delete its folder (which takes its plugins with it — they live inside it,
- * PLUGINS §2) and drop the registry entry. The shipped SRD is deliberately NOT special-cased here;
- * the caller decides, and the bundled floor re-seeds it on next launch anyway.
+ * Uninstall a pack: revoke what its plugins were granted, delete its folder (which takes their code
+ * with it — it lives inside the pack, PLUGINS §2) and drop the registry entry. The shipped SRD is
+ * deliberately NOT special-cased here; the caller decides, and the bundled floor re-seeds it on next
+ * launch anyway.
+ *
+ * The revoke belongs HERE and not in the button that used to do it: consent lives outside the data
+ * dir (PLG-SEC 12), so it outlives the files, and an invariant that depends on one component calling
+ * two functions in the right order is one caller away from being false. It runs BEFORE the delete,
+ * while the folder is still there to say which namespaces were this pack's.
  */
 export async function uninstallPack(pack: string): Promise<void> {
 	// This deletes a folder recursively, so a reserved name reaching it is the worst outcome in the
 	// module: `homebrew` here would erase everything the user ever authored. An older build could
 	// have registered one before `isReservedPackName` existed — drop the entry, keep the files.
+	// Nothing is revoked on this path either: the code stays on disk, so its permission should too.
 	if (isReservedPackName(pack)) {
 		forgetPack(pack);
 		return;
 	}
+	await revokePackPlugins(pack);
 	await getUserStorage().remove(`content/${pack}`);
 	forgetPack(pack);
 	delete updates.pending[pack];

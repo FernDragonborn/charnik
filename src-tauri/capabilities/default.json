@@ -26,7 +26,6 @@
 		"fs:allow-rename",
 		"fs:allow-mkdir",
 		"fs:allow-remove",
-		"http:default",
 		{
 			"identifier": "http:default",
 			"allow": [

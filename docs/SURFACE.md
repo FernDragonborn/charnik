@@ -264,6 +264,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function forgetPack` — Forget a pack (it was uninstalled).
 - `function setPinned` — Freeze / unfreeze a pack.
 - `function setUpdateMode`
+- `function setRepoBranch` — Remember which branch this repo's listing came off (see {@link RepoEntry.branch}).
 - `function recordCheck` — Remember that we asked this repo — including a `304`, which is exactly the case worth recording * (it cost nothing an…
 
 ### `src/lib/content/remote/updates.svelte.ts`
@@ -281,7 +282,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function discoverPacks` — * Ask a pasted repo URL what packs it holds.
 - `function installPack` — * Install one discovered pack.
 - `function renamePack` — * Move a pack into a different folder, files and bookkeeping together — the way a name chosen at * install time (or a…
-- `function uninstallPack` — * Uninstall a pack: delete its folder (which takes its plugins with it — they live inside it, * PLUGINS §2) and drop …
+- `function uninstallPack` — * Uninstall a pack: revoke what its plugins were granted, delete its folder (which takes their code * with it — it li…
 
 ### `src/lib/content/review.svelte.ts`
 
@@ -1241,4 +1242,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 718 exports across 101 modules · 39 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 719 exports across 101 modules · 39 duplicate suspects._

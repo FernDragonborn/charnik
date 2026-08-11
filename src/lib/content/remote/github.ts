@@ -32,6 +32,10 @@ export interface GithubRepo {
 }
 
 const DEFAULT_BRANCH = 'main';
+/** Tried when the URL named no branch and `main` isn't there — an older repo keeps its default on
+ *  `master`, and for a feature whose whole point is "somebody ELSE publishes content" that is the
+ *  primary failure path, surfacing today as an opaque `Not Found` on every check forever. */
+const FALLBACK_BRANCH = 'master';
 
 /**
  * Recognise a GitHub repo URL. Deliberately narrow; anything it doesn't recognise yields
@@ -97,17 +101,25 @@ export const isPackFile = (path: string): boolean =>
  * scan the TOP LEVEL for folders that contain content — so a third-party author can publish one
  * repo holding several packs and nothing new has to be declared anywhere.
  *
- * Unparseable JSON, a truncated tree, or a tree with no packs all yield `[]`: a repo that says
- * nothing useful is not an error the user can act on.
+ * Unparseable JSON or a tree with no packs yields `[]`: a repo that says nothing useful is not an
+ * error the user can act on.
+ *
+ * **`truncated` is carried out rather than ignored**, because an incomplete listing is not a small
+ * version of a complete one: `diffPack` reads "local file the remote doesn't list" as `removed`, so
+ * a partial tree manufactures removals for files that are alive upstream — and with `removeDeleted`
+ * that deletes real content. GitHub cuts the response at ~7 MB / 100k entries and still answers
+ * `200`, and `MAX_REMOTE_BYTES` (8 MB) sits ABOVE that, so nothing else in the stack would notice.
  */
-export function packsFromTree(json: string): RemotePack[] {
-	let entries: unknown;
+export function packsFromTree(json: string): { packs: RemotePack[]; truncated: boolean } {
+	let parsed: { tree?: unknown; truncated?: unknown };
 	try {
-		entries = (JSON.parse(json) as { tree?: unknown }).tree;
+		parsed = JSON.parse(json) as { tree?: unknown; truncated?: unknown };
 	} catch {
-		return [];
+		return { packs: [], truncated: false };
 	}
-	if (!Array.isArray(entries)) return [];
+	const truncated = parsed.truncated === true;
+	const entries: unknown = parsed.tree;
+	if (!Array.isArray(entries)) return { packs: [], truncated };
 
 	const byPack = new Map<string, RemoteFile[]>();
 	for (const raw of entries as TreeEntry[]) {
@@ -121,9 +133,12 @@ export function packsFromTree(json: string): RemotePack[] {
 		list.push(typeof size === 'number' ? { path, sha, size } : { path, sha });
 		byPack.set(pack, list);
 	}
-	return [...byPack.entries()]
-		.map(([pack, files]) => ({ pack, files: files.sort((a, b) => a.path.localeCompare(b.path)) }))
-		.sort((a, b) => a.pack.localeCompare(b.pack));
+	return {
+		packs: [...byPack.entries()]
+			.map(([pack, files]) => ({ pack, files: files.sort((a, b) => a.path.localeCompare(b.path)) }))
+			.sort((a, b) => a.pack.localeCompare(b.pack)),
+		truncated
+	};
 }
 
 /**
@@ -162,11 +177,13 @@ export function packSizeRefusal(remote: RemotePack): UpdateError | null {
 			};
 }
 
-/** What a check found. `unchanged` is the `304` path — free, and the common one. */
+/** What a check found. `unchanged` is the `304` path — free, and the common one. `branch` says which
+ *  branch the listing actually came off, so the file downloads that follow ask the same one. */
 export type CheckResult =
-	| { kind: 'packs'; packs: RemotePack[]; etag?: string }
+	| { kind: 'packs'; packs: RemotePack[]; branch: string; etag?: string }
 	| { kind: 'unchanged' }
 	| { kind: 'unsupported' } // not a host we have a fast path for
+	| { kind: 'truncated' } // the repo is too big for one listing — see `packsFromTree`
 	| { kind: 'error'; message: string };
 
 /**
@@ -180,11 +197,19 @@ export async function checkRepo(
 ): Promise<CheckResult> {
 	const repo = parseGithubRepo(repoUrl);
 	if (!repo) return { kind: 'unsupported' };
-	const res = await fetcher.getText(treeUrl(repo), etag);
+	let branch = repo.branch;
+	let res = await fetcher.getText(treeUrl(repo), etag);
+	// Only on the failing path, and only when the branch was OUR guess rather than the user's: a URL
+	// that named `/tree/<branch>` is answered as asked, right or wrong.
+	if (res.kind === 'error' && res.status === 404 && branch === DEFAULT_BRANCH) {
+		branch = FALLBACK_BRANCH;
+		res = await fetcher.getText(treeUrl({ ...repo, branch }), etag);
+	}
 	if (res.kind === 'notModified') return { kind: 'unchanged' };
 	if (res.kind === 'error') return { kind: 'error', message: res.message };
-	const packs = packsFromTree(res.body);
+	const { packs, truncated } = packsFromTree(res.body);
+	if (truncated) return { kind: 'truncated' };
 	return res.etag === undefined
-		? { kind: 'packs', packs }
-		: { kind: 'packs', packs, etag: res.etag };
+		? { kind: 'packs', packs, branch }
+		: { kind: 'packs', packs, branch, etag: res.etag };
 }

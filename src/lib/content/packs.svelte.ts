@@ -69,6 +69,16 @@ export interface RepoEntry {
 	etag?: string;
 	/** ISO instant of the last completed check (success OR 304) — the throttle reads this. */
 	lastCheckedAt?: string;
+	/**
+	 * The branch the tree listing actually came off, when it isn't the one the URL implies.
+	 *
+	 * A URL without `/tree/<branch>` is a guess (`main`), and the guess is wrong for every repo still
+	 * on `master`. Resolving it at check time is not enough: the file downloads that follow are a
+	 * SEPARATE host (`raw.githubusercontent.com`) built from the same URL, and a restart rebuilds the
+	 * pending offer from this file with no network at all — so the answer has to be remembered here,
+	 * or every byte of the apply 404s on a branch nobody asked for.
+	 */
+	branch?: string;
 }
 
 /**
@@ -376,6 +386,16 @@ export function setPinned(pack: string, pinned: boolean): void {
 
 export function setUpdateMode(mode: UpdateMode): void {
 	packConfig.updates = mode;
+	persist();
+}
+
+/** Remember which branch this repo's listing came off (see {@link RepoEntry.branch}). Separate from
+ *  `recordCheck` because the two answer different questions and one of them — an install straight
+ *  after pasting a URL — has a branch to record and no check to claim. */
+export function setRepoBranch(repo: string, branch: string): void {
+	const prev = packConfig.repos[repo] ?? {};
+	if (prev.branch === branch) return;
+	packConfig.repos[repo] = { ...prev, branch };
 	persist();
 }
 

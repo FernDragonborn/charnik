@@ -15,7 +15,7 @@
 		UPDATE_MODE
 	} from '$lib/content/packs.svelte';
 	import { restoreBundledPacks } from '$lib/content/provider';
-	import { refreshPlugins, revokePackPlugins } from '$lib/effects/plugin-store.svelte';
+	import { refreshPlugins } from '$lib/effects/plugin-store.svelte';
 	import {
 		updates,
 		checkNow,
@@ -452,9 +452,8 @@
 							<button
 								class="pill-btn accent"
 								onclick={async () => {
-									// consent lives outside the data dir, so it outlives the files — revoke while
-									// the folder is still there to say which namespaces were this pack's
-									await revokePackPlugins(pack);
+									// the plugin revoke is PART of uninstalling (it happens inside), not a step this
+									// button remembers: consent outlives the files, so it can't hang off one caller
 									await uninstallPack(pack);
 									uninstalling = null;
 									await afterDiskChange();
