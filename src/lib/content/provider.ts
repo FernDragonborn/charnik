@@ -30,7 +30,7 @@ import { HOMEBREW_ROOT } from './homebrew';
 import { HASH_STATE } from './meta';
 import { fileHashState } from './hash';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
-import { recoverInterruptedApply } from './remote/install';
+import { isApplyInFlight, recoverInterruptedApply } from './remote/install';
 import {
 	bundledPacks,
 	forgetPack,
@@ -140,6 +140,10 @@ function adoptShippedPacks(shipped: string[]): void {
  * `.prev` beside a live folder is not an interruption; it is the kept undo copy, and stays.
  */
 async function recoverInterruptedApplies(storage: Storage): Promise<void> {
+	// An apply in flight owns those folders; they are evidence of a DEAD run only between runs. This
+	// is reached on every content rebuild, including the one the watcher fires from an apply's own
+	// writes — so without this guard a long apply sweeps its own staging tree (see `isApplyInFlight`).
+	if (isApplyInFlight()) return;
 	const entries = await storage.list(CONTENT_DIR).catch(() => []);
 	const interrupted = new Set(
 		entries

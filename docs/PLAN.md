@@ -1667,35 +1667,92 @@ holds the done-work log; these are the OPEN tails it carried):**
     section to land there would have been erased by the next pin. Sections via
     `storage/json-config.ts`; the dev-only content pointer moved to `charnik.dev.json`.
 
-  **STILL OPEN (2026-08-11).**
-  - `[ ]` **A generic (non-GitHub) HTTPS host.** Deferred by decision, not by omission — see the
-    capability finding in slice 2 and SECURITY.md §7. Next rung: a per-host user grant (paste URL →
-    "allow this host?" → allow-list checked in Rust), at which point `unsupported` grows a fallback.
-  - `[ ]` **A bundled pack cannot carry plugins.** `tools/build-static-content.mjs` walks one level
-    and filters to `.csv`/`.json`, and `seedShippedContent` / `restoreBundledPacks` list one level —
-    so the code is dropped silently, while the diff walks the local side recursively. Fix: one shared
-    recursive `listFiles` over the Storage seam (it lives in `remote/diff.ts` today), the same
-    `isPackFile` filter in the vendoring step, and a manifest key per subdirectory (`FetchStorage`
-    already synthesises subdirectories from those keys).
-  - `[ ]` **No cap on file count or total bytes.** `MAX_REMOTE_BYTES` is per FILE, and `download` mode
-    fetches automatically — so a repo with 50k files is an automatic unbounded download. Check both
-    before the first request.
-  - `[ ]` **`installPack` doesn't clear `dismissedMissing`**, so re-installing a bundled pack and
-    deleting it again never prompts (`restoreBundledPacks` does clear it).
-  - `[ ]` **Pack identity is the folder name alone**, so two repos can't both publish `srd-2024` and
-    `registerPack` silently re-points. Should be `repo#pack`; the destructive half is caught by the
-    source-clash check.
-  - `[ ]` **`pruneCache` never runs when updates are off** — the early return on "no repos due" sits
-    before it, so a cache filled in `download` mode is never cleaned after switching to `off`.
-  - `[ ]` **The impact preview doesn't scan `drafts/`** — a draft references rows the same way a
-    saved character does.
-  - `[ ]` **`checkNow` has an indicator, not a lock**: the startup check and a manual click run
-    concurrently, and whichever finishes first prunes the cache against a half-built pending set.
-  - `[ ]` **Every content reload rewrites the config** (`forgetUninstalledPacks` persists per pack,
-    `adoptShippedPacks` again) — batch one write at the end of the reconcile.
-  - `[ ]` **The new apply path is not verified live on desktop.** Tests cover the swap, the recovery
-    states, the compare-and-set and the row confirmation; the real filesystem, the watcher and the
-    `.prev` folder are the parts a fake can't speak for (the same reason slice 11 exists).
+  **THE AUDIT'S OPEN LIST, CLOSED (2026-08-11, `59ffc26`..`bdac8ed`).** Nine of the ten items below
+  are done; the tenth is deferred by decision, not by omission.
+  - `[ ]` **A generic (non-GitHub) HTTPS host — STILL DEFERRED**, and re-confirmed by the maintainer
+    on 2026-08-11 rather than merely left alone. See the capability finding in slice 2 and
+    SECURITY.md §7. Next rung: a per-host user grant (paste URL → "allow this host?" → allow-list
+    checked in Rust), at which point `unsupported` grows a fallback. Until then GitHub is the fast
+    path AND the only path, said in the description rather than in a failure.
+  - `[x]` **A bundled pack can carry plugins** (`e8f5bd6`). The vendoring step, the desktop seed and
+    the restore button all listed ONE level while the pack differ walked the folder recursively — so
+    the half that writes a bundled pack and the half that compares it disagreed about what was in it.
+    One recursive walk now, in `storage/walk.ts` rather than in the differ that happened to need it
+    first (`Storage.list` is non-recursive on purpose — every impl can answer "immediate children"
+    honestly, including the read-only web one). The vendoring step applies the same `isPackFile` test
+    as the remote side and emits one manifest key per DIRECTORY, which is what lets `FetchStorage`
+    synthesise the levels down to `plugins/<ns>/`. `contentPacks()` now counts a `plugins/` subtree as
+    a pack too, so a code-only pack is shippable and not merely installable.
+    - **Known limitation, deliberate:** on the WEB build `discoverPlugins` reads the user store, so a
+      bundled pack's plugins are not discovered there. Desktop seeds them to disk and finds them; web
+      would need discovery across two storages, which is a feature rather than this fix.
+  - `[x]` **File-count and byte caps, read off the tree before the first request** (`2901754`).
+    `MAX_REMOTE_BYTES` bounds one RESPONSE, so fifty thousand small files cleared it fifty thousand
+    times over — on the one path (`download` mode) that runs unattended. **200 files / 50 MB per pack**
+    (maintainer), about thirty times the SRD pack, in `remote/types.ts`. Enforced at `describeUpdate`
+    (which covers both a check and an offer restored after a restart) and at `discoverPacks` (install).
+    Sizes ride through as an OPTIONAL field: a remembered listing carries only what identifies a file,
+    and a future non-GitHub adapter may have no sizes — refusing on absent metadata would break the
+    adapter the host split exists to allow.
+  - `[x]` **`installPack` clears `dismissedMissing`** (`59ffc26`) — "I meant to delete it" was an
+    answer about a pack that is now back.
+  - `[x]` **Two repos can both publish `srd-2024`, and both get installed** (`bdac8ed`). NOT keyed
+    `repo#pack`, which was the proposal: on disk the folder is one folder either way, so the fix is a
+    local folder that may differ from the repo's name for it. **The folder name is the pack's identity
+    here** — it is what `content/` scanning finds, what a character's rows are attributed to and what a
+    pin names — and `PackEntry.remotePack` records what to ask the repo for, absent whenever the two
+    agree (so nothing migrates). `localPathIn(localPack, repoRelative)` is the one mapping, removals
+    included; a check looks its pack up by `(repo, remote name)`.
+    **Resolve, don't forbid** (maintainer): a collision is offered `srd-2024-2`, said out loud, with
+    the name editable before installing; a folder already on disk counts as taken even with no
+    registry entry, and typing somebody else's name is refused rather than merged. `renamePack` moves
+    the folder, its `.prev` undo copy, the entry and any pending offer together.
+    - **A BUNDLED pack cannot be renamed**, which this exposed rather than created: it is identified
+      by the folder the app ships it under and nothing else (the seed refreshes `content/<name>`,
+      "missing" means the bundle has it and the disk doesn't, restore copies it back there). Moving
+      one would leave the app calling its own content deleted while it sat right there, and offering a
+      restore that would then load every row twice. `bundledPacks` is the state that says which those
+      are.
+  - `[x]` **`pruneCache` runs even when nothing is due** (`59ffc26`) — the prune sat behind the "no
+    repos due" return, which is the one branch it was needed on.
+  - `[x]` **The impact preview sees drafts** (`b411190`). Matched by TARGET, not by scanning the file
+    the way a character save is: a draft's target is a structured field naming the row, while its data
+    holds edited cells that reference content by bare id, never by the composite `type:source:id` the
+    quoted-string scan looks for — so the scan would have found nothing and said so honestly.
+    `findOrphanDrafts` already asked almost this question, so both run through one predicate now.
+  - `[x]` **`checkNow` has a lock** (`59ffc26`) — serialised, not deduplicated, because the manual
+    check may name a repo the automatic one skipped. Apply shares the queue: it prunes the same cache
+    for the same reason.
+  - `[x]` **One config write per content reload** (`59ffc26`). Fixed at the seam rather than at the
+    caller that was noticed: `writeConfigSection` coalesces calls made before its queued flush starts.
+    The value is read at execution time, so those writes already produced identical bytes.
+  - `[x]` **The apply path is verified live on desktop** (`/dev/packs-write`, run in the Tauri window
+    2026-08-11 — 18/18 assertions passed, report in `packs-write-probe.txt`). It writes inside a
+    throwaway `.probe-pack` (leading dot ⇒ pack discovery ignores it) and deletes it after, and never
+    touches the network: the fetcher is local bytes because the DISK is what a fake cannot speak for.
+    Confirmed on the real filesystem: the swap goes all-old to all-new, a README and a plugin two
+    levels down are carried across, `.prev` holds the old bytes, rollback restores them and leaves
+    nothing to roll back to, a file edited after the diff was computed refuses the whole update, and
+    each of the three interrupted states is settled correctly from the folders alone.
+    - **The Windows trap is real, and the code already handles it: renaming a directory onto an
+      existing one is REFUSED by the OS.** `Storage.rename` never promised to overwrite and the apply
+      removes the target first — but the guarantee was untested, and a `MemoryStorage` that happily
+      overwrites would never have said otherwise. That line of the probe exists to keep it that way.
+    - **The probe found a REAL bug, and not in the pack code: the file watcher had never worked on
+      desktop.** Counting watcher events during an apply reported zero — and the Rust log said why:
+      `Unknown Error: Command watch not found`. `fs:allow-watch` was in the capability, but
+      `tauri-plugin-fs`'s `watch`/`unwatch` commands are behind a CARGO FEATURE, so the permission
+      granted access to a command that was never compiled in. `startContentWatcher` is built, wired
+      and correct; every call it made rejected as an unhandled promise nobody sees. **So "CSV edits
+      made directly on disk are picked up in real time" (CLAUDE.md) had never once happened**, on any
+      build, and no unit test could say so — a `MemoryStorage` watch works fine. Fixed by enabling the
+      feature (`features = ["watch"]`); the permission was already there.
+      **A permission is not a feature** — anything else gated this way will fail exactly as quietly.
+    - Also worth keeping: `watch` returns its unsubscribe synchronously but ATTACHES asynchronously,
+      so a probe that writes immediately measures nothing and reports a reassuring zero for the wrong
+      reason. The app attaches at startup, long before any apply; the probe now waits.
+    - `/dev` had no link from anywhere, so both live probes were unreachable from inside the desktop
+      app (there is no address bar). The dev index lists them now.
 
   **A decision taken on Claude's assumption, flag it if it is wrong:**
   - **Manifest-free leaves no file listing for a generic HTTPS host.** The `#content-*` headers carry

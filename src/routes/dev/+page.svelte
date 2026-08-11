@@ -43,7 +43,23 @@
 			<li><a href={dev('rolltoast')}>Roll toast</a></li>
 			<li><a href={dev('plugins')}>Plugins</a></li>
 			<li><a href={dev('storage')}>Storage</a></li>
+			<li><a href={dev('packs')}>Content packs (fixture)</a></li>
 		</ul>
+	</section>
+
+	<!-- The two that only mean something inside the desktop app: the network client and the disk
+	     swap both live in the shell, so a browser tab can say nothing about either. Listed here
+	     because a probe nobody can find is a probe nobody runs. -->
+	<section>
+		<h2>Live probes — desktop only</h2>
+		<ul>
+			<li><a href={dev('packs-live')}>Pack update · network (read-only)</a></li>
+			<li><a href={dev('packs-write')}>Pack update · apply on the real filesystem</a></li>
+		</ul>
+		<p class="hint">
+			The first only reads and reaches GitHub. The second writes, inside a throwaway pack it deletes
+			afterwards, and never touches the network. Both leave a report in your data folder.
+		</p>
 	</section>
 </div>
 

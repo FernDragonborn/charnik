@@ -23,7 +23,11 @@ serde = { version = "1.0", features = ["derive"] }
 log = "0.4"
 tauri = { version = "2.11.3", features = [] }
 tauri-plugin-log = "2"
-tauri-plugin-fs = "2"
+# `watch` is a CARGO FEATURE, not just a permission: the plugin registers its `watch`/`unwatch`
+# commands behind it, so without this the capability's `fs:allow-watch` grants access to a command
+# that was never compiled in — and `startContentWatcher` fails as an unhandled rejection nobody sees.
+# That is the whole of "CSV edits on disk are picked up in real time" (CLAUDE.md), so it must stay on.
+tauri-plugin-fs = { version = "2", features = ["watch"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
 # Content-pack updates fetch over HTTPS from Rust, never webview `fetch` (docs/SECURITY.md §5).

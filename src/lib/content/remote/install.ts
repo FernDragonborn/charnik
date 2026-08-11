@@ -233,6 +233,20 @@ async function swapInNewTree(
 	dropping: Set<string>
 ): Promise<void> {
 	if (staged.length === 0 && dropping.size === 0) return; // nothing to do — don't churn a .prev
+	applying += 1; // …so a content rebuild triggered by these very writes can't sweep the staging folder
+	try {
+		await buildAndSwap(storage, pack, staged, dropping);
+	} finally {
+		applying -= 1;
+	}
+}
+
+async function buildAndSwap(
+	storage: Storage,
+	pack: string,
+	staged: StagedFile[],
+	dropping: Set<string>
+): Promise<void> {
 	const live = localPath(pack);
 	const next = stagingDir(pack);
 	await storage.remove(next).catch(() => {}); // a leftover from an interrupted attempt
@@ -259,8 +273,24 @@ async function swapInNewTree(
 }
 
 /**
- * Finish or undo an apply that was interrupted (crash, kill, power loss) — call once at startup,
- * before content is discovered. The staging folders say where it stopped:
+ * Is a pack being swapped in RIGHT NOW? Recovery must not run while one is.
+ *
+ * Recovery reads the staging folders as evidence of a run that DIED — and a `<pack>.new` beside a
+ * live folder means "the swap never started, this tree is junk", so it deletes it. That reading is
+ * only true between runs. During an apply the very same folders are the work in progress, and
+ * deleting `.new` pulls the tree out from under the rename that is about to promote it.
+ *
+ * Reachable in production, not a theoretical race: the content watcher fires while the apply writes
+ * (measured at 28 events for a three-file pack), and its debounced `reloadContent` rebuilds the
+ * graph — which is where recovery is called from. An apply that outlasts the 300 ms debounce would
+ * have its staging folder swept by its own writes.
+ */
+let applying = 0;
+export const isApplyInFlight = (): boolean => applying > 0;
+
+/**
+ * Finish or undo an apply that was interrupted (crash, kill, power loss) — call at startup and on
+ * every content rebuild, never while one is in flight. The staging folders say where it stopped:
  *
  *  - live + `.new`  → the swap never started; the half-built tree is junk.
  *  - `.prev` only   → it died between the two renames; the pack is intact under `.prev`.

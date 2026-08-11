@@ -12,6 +12,7 @@ import {
 	applyPackUpdate,
 	cachePath,
 	hasRollback,
+	isApplyInFlight,
 	isStaged,
 	pluginsIn,
 	pruneCache,
@@ -399,6 +400,38 @@ describe('recovering an interrupted apply', () => {
 		await recoverInterruptedApply(s, 'p');
 
 		expect(await s.read('content/p/a.csv')).toBe('id\nnew');
+	});
+
+	/* Found on a real desktop once the file watcher was fixed: an apply's OWN writes make the watcher
+	   fire (28 events for a three-file pack), whose debounced reload rebuilds the content graph — and
+	   that is where recovery runs from. Reading `<pack>.new` as a dead run's litter is only true
+	   BETWEEN runs; during one it is the tree the next rename is about to promote. */
+	it('says an apply is in flight, so a rebuild triggered by its own writes leaves it alone', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/a.csv', enc('id\nold'));
+		expect(isApplyInFlight()).toBe(false);
+
+		let sawInFlight = false;
+		const watching: RemoteFetcher = {
+			getText: async () => ({ kind: 'error', message: 'not used' }),
+			getBytes: async () => ({ kind: 'ok', bytes: enc('id\nnew') })
+		};
+		// the write phase is where the staging folder exists; sample the flag from inside it
+		const spy = s.writeBytes.bind(s);
+		s.writeBytes = async (path: string, data: Uint8Array) => {
+			if (path.startsWith('content/p.new')) sawInFlight ||= isApplyInFlight();
+			return spy(path, data);
+		};
+
+		await applyPackUpdate({
+			storage: s,
+			fetcher: watching,
+			repo: REPO,
+			diff: { pack: 'p', changes: [{ path: 'p/a.csv', kind: FILE_CHANGE.changed }] }
+		});
+
+		expect(sawInFlight).toBe(true);
+		expect(isApplyInFlight()).toBe(false); // …and cleared once the swap is done
 	});
 });
 
