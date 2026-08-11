@@ -70,9 +70,9 @@ jobs:
             wget \
             file
 
-      - uses: pnpm/action-setup@v4 # version comes from packageManager in package.json
+      - uses: pnpm/action-setup@v6 # version comes from packageManager in package.json
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm

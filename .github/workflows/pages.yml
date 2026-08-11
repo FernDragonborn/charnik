@@ -43,9 +43,9 @@ jobs:
           repository: FernDragonborn/charnik-content-srd
           path: .content-srd
 
-      - uses: pnpm/action-setup@v4 # version comes from packageManager in package.json
+      - uses: pnpm/action-setup@v6 # version comes from packageManager in package.json
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -61,7 +61,9 @@ jobs:
 
       - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      # upload-pages-artifact and deploy-pages are a PAIR — the upload side changed artifact
+      # backends, so a v3 upload with a v5 deploy fails to find the artifact. Bump them together.
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: build
 
@@ -73,4 +75,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
