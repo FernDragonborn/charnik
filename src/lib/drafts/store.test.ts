@@ -6,6 +6,7 @@ import {
 	deleteDraft,
 	listDrafts,
 	draftEffectiveId,
+	draftsTargeting,
 	findOrphanDrafts,
 	repointDraft,
 	findStaleDrafts,
@@ -88,6 +89,25 @@ describe('draft store', () => {
 		const present = new Set(['spell:SRD 5.2.1:fireball']);
 		const orphans = await findOrphanDrafts(s, (eid) => present.has(eid));
 		expect(orphans.map((o) => o.data.name)).toEqual(['orphan']);
+	});
+
+	/* The mirror of the orphan scan, and what the content-pack update preview asks: a draft pointed
+	   at a row an update is about to delete is orphaned exactly as a character's reference is — and
+	   unlike a character, it is unsaved work that is listed nowhere else. */
+	it('finds drafts pointed at rows that are ABOUT to go', async () => {
+		const s = new MemoryStorage();
+		await writeDraft(s, translateTarget, { name: 'doomed', text: '' });
+		await writeDraft(
+			s,
+			{ kind: 'editor', type: 'monster', source: 'SRD 5.1', id: 'goblin' },
+			{ name: 'safe' }
+		);
+		await writeDraft(s, { kind: 'add', type: 'spell', addGuid: 'g1' }, { id: 'x' });
+
+		const hit = await draftsTargeting(s, ['spell:SRD 5.2.1:fireball', 'spell:SRD 5.2.1:absent']);
+
+		expect(hit.map((d) => d.data.name)).toEqual(['doomed']);
+		expect(await draftsTargeting(s, [])).toEqual([]); // no removals, no scan
 	});
 
 	it('re-points an orphan onto a new target, moving its data and clearing the old file', async () => {

@@ -845,6 +845,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function deleteDraft` — Delete the draft for `target` (called on a successful save).
 - `function draftEffectiveId` — The content row a draft points at (`type:source:id`), or null for an `add` draft (no row yet).
 - `function findOrphanDrafts` — Drafts whose target row no longer exists (deleted / renamed / source disabled) — the orphan set the * reassign dialog…
+- `function draftsTargeting` — * Drafts pointed at any of these rows — the same question `findOrphanDrafts` asks, aimed at rows * that are about to …
 - `type RepointResult` — Outcome of a re-point: the move happened, or the destination already holds a draft (the caller must * let the user ch…
 - `function repointDraft` — Re-target an (orphan) draft onto a different entry: copy its data under the new key, delete the old * file.
 - `function listDrafts` — Every current-version draft on disk (for the pending-drafts / orphan surface).
@@ -1221,4 +1222,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 704 exports across 100 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 705 exports across 100 modules · 36 duplicate suspects._

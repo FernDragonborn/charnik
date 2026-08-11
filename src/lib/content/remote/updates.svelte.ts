@@ -8,6 +8,7 @@
  */
 import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
 import { readCharacterFiles } from '$lib/character/repository';
+import { draftEffectiveId, draftsTargeting } from '$lib/drafts/store';
 import { content } from '../store.svelte';
 import {
 	forgetPack,
@@ -48,6 +49,9 @@ export interface PendingUpdate {
 	removedRows: string[];
 	/** characters that reference those rows, so "this breaks Grog" is visible up front */
 	affected: { slug: string; keys: string[] }[];
+	/** …and the unfinished edits pointed at them (`type:source:id`). A draft is unsaved work with
+	 *  nowhere else it is listed, so it is the reference MOST worth warning about, not the least. */
+	affectedDrafts: string[];
 	/** plugin namespaces this pack would add — code always gets said out loud (PLUGINS §2) */
 	plugins: string[];
 	/** …and the ones THIS update rewrites, which is the sharper warning: they stop running until
@@ -229,18 +233,35 @@ async function describeUpdate(repo: string, remote: RemotePack): Promise<Pending
 		remote,
 		diff,
 		removedRows,
-		affected: await whoBreaks(removedRows),
+		...(await whoBreaks(removedRows)),
 		plugins: pluginsIn(remote),
 		pluginsChanged: pluginsTouchedBy(diff),
 		staged: await isStaged(storage, diff)
 	};
 }
 
-/** Characters that reference rows an update would remove. Reads the saved JSON as-is — the point is
- *  to warn BEFORE applying, so it must not depend on anything the update would change. */
-async function whoBreaks(removedRows: string[]): Promise<{ slug: string; keys: string[] }[]> {
-	if (removedRows.length === 0) return [];
-	return charactersReferencing(await readCharacterFiles(getUserStorage()), removedRows);
+/**
+ * What an update's removals would orphan. Reads what is on disk as-is — the point is to warn BEFORE
+ * applying, so it must not depend on anything the update would change.
+ *
+ * Both halves, because both are references the user made and neither is visible from the other: a
+ * saved character is scanned for the composite key it stores, and a DRAFT is matched by its target
+ * row. Leaving drafts out was the quieter failure of the two — a character survives with a flagged
+ * missing reference, while an unfinished translation of a deleted row has nothing left to attach to.
+ */
+async function whoBreaks(
+	removedRows: string[]
+): Promise<{ affected: { slug: string; keys: string[] }[]; affectedDrafts: string[] }> {
+	if (removedRows.length === 0) return { affected: [], affectedDrafts: [] };
+	const storage = getUserStorage();
+	const drafts = await draftsTargeting(storage, removedRows);
+	return {
+		affected: charactersReferencing(await readCharacterFiles(storage), removedRows),
+		affectedDrafts: drafts
+			.map((d) => draftEffectiveId(d.target))
+			.filter((eid): eid is string => eid !== null)
+			.sort()
+	};
 }
 
 /**
@@ -289,7 +310,7 @@ async function runApply(
 		// say who they break, before the second click.
 		if (res.rowRemovals !== undefined) {
 			pending.removedRows = [...new Set([...pending.removedRows, ...res.rowRemovals])].sort();
-			pending.affected = await whoBreaks(pending.removedRows);
+			Object.assign(pending, await whoBreaks(pending.removedRows));
 		}
 		return res;
 	}

@@ -270,6 +270,15 @@
 											})}
 										</div>
 									{/if}
+									<!-- A draft is unsaved work listed nowhere else, so a removal that orphans one is
+									     the loss the user can least afford to discover afterwards. -->
+									{#if pending.affectedDrafts.length > 0}
+										<div class="pack-warn">
+											{$_('settings.packs.draftsAffected', {
+												values: { who: pending.affectedDrafts.join(', ') }
+											})}
+										</div>
+									{/if}
 								{/if}
 								{#if pending.staged}
 									<div>{$_('settings.packs.readyOffline')}</div>

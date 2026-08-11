@@ -104,18 +104,42 @@ export function draftEffectiveId(target: DraftTarget): string | null {
 	return target.kind === 'add' ? null : `${target.type}:${target.source}:${target.id}`;
 }
 
+/** Drafts whose target row matches `predicate`. An `add` draft has no target row yet, so it never
+ *  matches — the two callers below both mean "a draft pointing at an existing entry". */
+async function draftsWhoseRow(
+	storage: Storage,
+	predicate: (effectiveId: string) => boolean
+): Promise<DraftEnvelope[]> {
+	return (await listDrafts(storage)).filter((d) => {
+		const eid = draftEffectiveId(d.target);
+		return eid !== null && predicate(eid);
+	});
+}
+
 /** Drafts whose target row no longer exists (deleted / renamed / source disabled) — the orphan set the
  *  reassign dialog resolves. `rowExists` is the content graph's membership test (`(eid) => !!graph.get`).
  *  `add` drafts are never orphans (they have no row yet; they're reached via the drafts list). */
-export async function findOrphanDrafts(
+export function findOrphanDrafts(
 	storage: Storage,
 	rowExists: (effectiveId: string) => boolean
 ): Promise<DraftEnvelope[]> {
-	const drafts = await listDrafts(storage);
-	return drafts.filter((d) => {
-		const eid = draftEffectiveId(d.target);
-		return eid !== null && !rowExists(eid);
-	});
+	return draftsWhoseRow(storage, (eid) => !rowExists(eid));
+}
+
+/**
+ * Drafts pointed at any of these rows — the same question `findOrphanDrafts` asks, aimed at rows
+ * that are about to GO rather than rows already gone. The content-pack update preview needs it: an
+ * unfinished translation of a spell an update deletes is orphaned exactly as a character's reference
+ * to it is, and unlike a character it is unsaved work with nowhere else to be seen.
+ *
+ * A draft is matched by its TARGET, not by scanning its bytes the way a character save is. That is
+ * not a shortcut — a draft's target is a structured field, and its data holds edited cells, which
+ * reference other content by bare id and never by the composite `type:source:id` a save uses.
+ */
+export function draftsTargeting(storage: Storage, rowKeys: string[]): Promise<DraftEnvelope[]> {
+	if (rowKeys.length === 0) return Promise.resolve([]);
+	const doomed = new Set(rowKeys);
+	return draftsWhoseRow(storage, (eid) => doomed.has(eid));
 }
 
 /** Outcome of a re-point: the move happened, or the destination already holds a draft (the caller must

@@ -96,6 +96,7 @@
 			"filesPreserved": "{count} file(s) you edited will be kept as they are",
 			"rowsRemoved": "{count} entries would DISAPPEAR from your content",
 			"charactersAffected": "Characters that use them: {who}",
+			"draftsAffected": "Unfinished edits that would be left with nothing to edit: {who}",
 			"carriesPlugins": "This pack also contains plugins: {list}. They arrive switched off and need your review.",
 			"changesPlugins": "This update rewrites plugin code: {list}. Applying it stops those plugins until you approve the new code, and any stats they calculate will change.",
 			"hostUnsupported": "Charnik can’t check {repo} — update checks currently work with GitHub repository links only.",
