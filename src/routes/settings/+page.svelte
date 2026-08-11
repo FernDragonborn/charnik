@@ -14,6 +14,7 @@
 	import ThemesSettings from '$lib/components/settings/ThemesSettings.svelte';
 	import { _ } from '$lib/i18n';
 	import { deriveHealth } from '$lib/character/health.svelte';
+	import { updates } from '$lib/content/remote/updates.svelte';
 
 	type Tab = 'general' | 'themes' | 'data' | 'health' | 'sources' | 'collisions' | 'plugins';
 	let tab = $state<Tab>('general');
@@ -35,7 +36,8 @@
 		{ id: 'themes', label: 'Themes' },
 		{ id: 'data', label: 'Data' },
 		{ id: 'health', label: 'Content health', badge: () => issueCount },
-		{ id: 'sources', label: 'Content' },
+		// the pack panel lives in this tab, so a waiting update is a reason to open it
+		{ id: 'sources', label: 'Content', badge: () => Object.keys(updates.pending).length },
 		{ id: 'collisions', label: 'Collisions', badge: () => collisionCount },
 		{ id: 'plugins', label: 'Plugins' }
 	];

@@ -11,10 +11,12 @@ import { readCharacterFiles } from '$lib/character/repository';
 import { content } from '../store.svelte';
 import {
 	forgetPack,
+	forgetPending,
 	isReservedPackName,
 	packConfig,
 	recordCheck,
 	registerPack,
+	rememberPending,
 	reposDueForCheck,
 	UPDATE_MODE,
 	type PackConfigData
@@ -142,28 +144,39 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 		const entry = packConfig.packs[remote.pack];
 		// only packs this user actually installed FROM THIS REPO, and not ones they froze
 		if (entry?.repo !== repo || entry.pinned === true) continue;
-		const pending = await describeUpdate(fetcher, repo, remote);
-		if (pending) updates.pending[remote.pack] = pending;
-		else delete updates.pending[remote.pack];
+		const pending = await describeUpdate(repo, remote);
+		if (!pending) {
+			delete updates.pending[remote.pack];
+			forgetPending(remote.pack);
+			continue;
+		}
+		// `download` mode fetches the bytes NOW so applying is instant and works offline. It is still
+		// only a download: nothing under `content/` is touched until the user clicks (SECURITY.md §7).
+		const parsed = parseGithubRepo(repo);
+		if (packConfig.updates === UPDATE_MODE.download && parsed && hasWrites(pending.diff)) {
+			await stagePackUpdate({
+				storage: getUserStorage(),
+				fetcher,
+				repo: parsed,
+				diff: pending.diff
+			});
+			pending.staged = await isStaged(getUserStorage(), pending.diff);
+		}
+		updates.pending[remote.pack] = pending;
+		rememberPending(remote.pack, { repo, files: remote.files });
 	}
 }
 
-/** Build the full picture for one pack, or null when it is already up to date. */
-async function describeUpdate(
-	fetcher: RemoteFetcher,
-	repo: string,
-	remote: RemotePack
-): Promise<PendingUpdate | null> {
+/**
+ * Build the full picture for one pack, or null when it is already up to date. Deliberately
+ * NETWORK-FREE — everything here is the remote file list compared against the local disk — so the
+ * same function can rebuild the panel at launch from the remembered list, with no request at all.
+ */
+async function describeUpdate(repo: string, remote: RemotePack): Promise<PendingUpdate | null> {
 	const storage = getUserStorage();
 	const diff = await diffPack(storage, remote);
 	const removals = diff.changes.filter((c) => c.kind === 'removed');
 	if (!hasWrites(diff) && removals.length === 0) return null;
-
-	// `download` mode fetches the bytes NOW so applying is instant and works offline. It is still
-	// only a download: nothing under `content/` is touched until the user clicks (SECURITY.md §7).
-	const parsed = parseGithubRepo(repo);
-	if (packConfig.updates === UPDATE_MODE.download && parsed && hasWrites(diff))
-		await stagePackUpdate({ storage, fetcher, repo: parsed, diff });
 
 	const removedRows = content.graph ? rowsRemovedBy(content.graph, diff) : [];
 	return {
@@ -205,9 +218,36 @@ export async function applyUpdate(
 		diff: pending.diff,
 		removeDeleted: opts.removeDeleted === true
 	});
-	if (res.error === undefined) delete updates.pending[pack];
-	else updates.error = res.error;
+	if (res.error === undefined) {
+		delete updates.pending[pack];
+		forgetPending(pack);
+	} else updates.error = res.error;
 	return res;
+}
+
+/**
+ * Rebuild the pending set at launch from what the last check remembered — no network, no throttle,
+ * no update-mode gate: this is not a check, it is reading back a conclusion we already reached.
+ *
+ * Without it an update found yesterday is invisible today: the repo's `ETag` answers `304` and the
+ * check returns before it looks at any pack, so nothing would ever put the offer back (see
+ * `PendingRemote`). Call it after the content graph is up — the impact preview reads it.
+ */
+export async function restorePendingUpdates(): Promise<void> {
+	// No platform gate: only a check writes `pending`, and only desktop checks — so on web this loop
+	// has nothing to walk. Gating anyway would just make the one function worth testing untestable.
+	for (const [pack, remembered] of Object.entries(packConfig.pending)) {
+		const entry = packConfig.packs[pack];
+		// the pack was uninstalled, re-pointed at another repo, or frozen since we found this
+		if (entry?.repo !== remembered.repo || entry.pinned === true) {
+			forgetPending(pack);
+			continue;
+		}
+		const pending = await describeUpdate(remembered.repo, { pack, files: remembered.files });
+		// applied (or hand-edited) in the meantime: the disk already matches, so there is no offer
+		if (pending) updates.pending[pack] = pending;
+		else forgetPending(pack);
+	}
 }
 
 /** Should the app check by itself at startup? Only when the user asked it to. */

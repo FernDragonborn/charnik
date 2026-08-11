@@ -15,7 +15,12 @@
 	import ContentMetaModal from '$lib/components/ContentMetaModal.svelte';
 	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
 	import { loadContentStore } from '$lib/content/store.svelte';
-	import { autoCheckAllowed, checkNow } from '$lib/content/remote/updates.svelte';
+	import {
+		autoCheckAllowed,
+		checkNow,
+		restorePendingUpdates,
+		updates
+	} from '$lib/content/remote/updates.svelte';
 	import { missingUnanswered } from '$lib/content/packs.svelte';
 	import MissingContentModal from '$lib/components/MissingContentModal.svelte';
 	import { loadPlugins } from '$lib/effects/plugin-store.svelte';
@@ -137,10 +142,14 @@
 			startContentWatcher(); // live-refresh when a CSV is edited on disk
 			void loadPlugins(); // desktop-only L3 discovery; consented+enabled plugins wake up
 			void syncThemes(); // load user themes from the data dir now it's granted
-			// Content-pack update check (REL-4). Fire-and-forget, AFTER content is up: it must never
-			// block startup or first paint, it self-gates on the user's update mode + the once-a-day
-			// throttle, and it only ever CHECKS — applying stays a click in Settings.
-			if (autoCheckAllowed()) void checkNow();
+			// Content-pack updates (REL-4). First put back what the last check already found — that
+			// costs nothing and needs no permission, it is a conclusion we reached, not a new request.
+			// Then check, which self-gates on the user's update mode + the once-a-day throttle. Both
+			// fire-and-forget, AFTER content is up (the impact preview reads the graph), and neither
+			// ever APPLIES anything — that stays a click in Settings.
+			void restorePendingUpdates().then(() => {
+				if (autoCheckAllowed()) return checkNow();
+			});
 		} else {
 			firstRunDefault = await defaultDataDir(); // first run → show picker, hold content load
 		}
@@ -186,6 +195,9 @@
 	}
 	// svelte-sonner only accepts light/dark/system; custom theme ids render on the dark base.
 	const toasterTheme = $derived(app.theme === 'light' ? 'light' : 'dark');
+
+	/** Content packs with an update waiting — the count the header chip shows. */
+	const pendingPacks = $derived(Object.keys(updates.pending).length);
 
 	// The update chip only exists once a newer build is found; it stays gold-lit until installed, shows
 	// live % while downloading, and is inert (no re-trigger) mid-install.
@@ -246,6 +258,19 @@
 			title={isDesktop ? `${$_('refresh.title')} (Ctrl+R)` : $_('refresh.title')}
 			aria-label={isDesktop ? `${$_('refresh.title')} (Ctrl+R)` : $_('refresh.title')}>⟳</button
 		>
+		<!-- Content packs with an update waiting. "Check and notify" has to NOTIFY somewhere the user
+		     actually is: the panel that knows about it lives three clicks deep in Settings, so without
+		     this the mode only worked for someone who happened to open that tab. Rules data, unlike an
+		     app build, is what a session runs on — hence its own chip rather than a shared one. -->
+		{#if pendingPacks > 0}
+			<a
+				class="chip chip-packs"
+				href="{base}/settings"
+				title={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
+				aria-label={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
+				>⭳ {$_('settings.packs.chip')}</a
+			>
+		{/if}
 		{#if updater.status !== 'idle'}
 			<button
 				type="button"
@@ -409,6 +434,15 @@
 	.chip-update.is-busy {
 		cursor: default;
 		opacity: 0.85;
+	}
+	/* Content-pack updates: accent, not the app-update gold — new RULES and a new BUILD are different
+	   errands, and two chips in the same colour would read as one thing shown twice. */
+	.chip-packs,
+	.chip-packs:hover {
+		color: var(--color-accent-bright);
+		border-color: var(--color-accent);
+		background: var(--color-accent-soft);
+		text-decoration: none;
 	}
 	/* search chip = the Ctrl+K hint, now a clickable button (magnifier + label) that opens the palette */
 	.search-chip {

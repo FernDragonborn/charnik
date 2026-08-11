@@ -9,7 +9,13 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { getUserStorage } from '$lib/storage/provider';
 import { packConfig, emptyPackConfig } from '../packs.svelte';
-import { updates, discoverPacks, installPack, uninstallPack } from './updates.svelte';
+import {
+	updates,
+	discoverPacks,
+	installPack,
+	restorePendingUpdates,
+	uninstallPack
+} from './updates.svelte';
 import { gitBlobSha } from './diff';
 import type { RemoteFetcher } from './types';
 
@@ -37,6 +43,17 @@ beforeAll(async () => {
 		)
 	});
 });
+
+/** The same listing a check would have remembered: every file with its real blob SHA. `csvMoved`
+ *  puts one file at a SHA the disk doesn't have — i.e. upstream changed it since we installed. */
+async function remoteFiles({ csvMoved = false } = {}): Promise<{ path: string; sha: string }[]> {
+	return Promise.all(
+		Object.entries(ALL).map(async ([path, body]) => ({
+			path,
+			sha: csvMoved && path.endsWith('.csv') ? 'f'.repeat(40) : await gitBlobSha(enc(body))
+		}))
+	);
+}
 
 const fetcher = (files: Record<string, string>): RemoteFetcher => ({
 	getText: async () => ({ kind: 'ok', body: tree, etag: 'W/"1"' }),
@@ -84,6 +101,49 @@ describe('install a pack from a pasted URL', () => {
 		expect(res?.error).toBeDefined();
 		expect(packConfig.packs['dark-sun']).toBeUndefined();
 		expect(await getUserStorage().exists('content/dark-sun/classes_srd.csv')).toBe(false);
+	});
+
+	/* The failure this pins: the ETag is recorded when the repo answers, so a relaunch replays it,
+	   gets a 304 and returns before it looks at any pack. If the pending set only lived in memory,
+	   an update found today was invisible tomorrow — and nothing brought it back, not even the
+	   manual button, until some later upstream commit changed the tree again. */
+	it('an update found before a restart is still offered after one', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		// what the check remembered: the whole remote listing, with the CSV at a SHA the disk lacks
+		packConfig.pending['dark-sun'] = { repo: REPO, files: await remoteFiles({ csvMoved: true }) };
+		updates.pending = {}; // a fresh process: memory knows nothing
+
+		await restorePendingUpdates();
+
+		expect(updates.pending['dark-sun']?.diff.changes).toEqual([
+			{ path: 'dark-sun/classes_srd.csv', kind: 'changed', sha: 'f'.repeat(40) }
+		]);
+	});
+
+	it('drops a remembered update the disk already satisfies — no phantom offer', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		packConfig.pending['dark-sun'] = { repo: REPO, files: await remoteFiles() };
+		updates.pending = {};
+
+		await restorePendingUpdates();
+
+		expect(updates.pending['dark-sun']).toBeUndefined();
+		expect(packConfig.pending['dark-sun']).toBeUndefined(); // and it stops being remembered
+	});
+
+	it('drops it for a pack the user has since frozen — a pin is not "ask me again later"', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		packConfig.packs['dark-sun'] = { repo: REPO, pinned: true };
+		packConfig.pending['dark-sun'] = { repo: REPO, files: await remoteFiles({ csvMoved: true }) };
+		updates.pending = {};
+
+		await restorePendingUpdates();
+
+		expect(updates.pending['dark-sun']).toBeUndefined();
+		expect(packConfig.pending['dark-sun']).toBeUndefined();
 	});
 
 	it('uninstalling removes the folder and forgets the entry', async () => {

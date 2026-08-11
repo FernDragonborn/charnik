@@ -56,12 +56,31 @@ export interface RepoEntry {
 	lastCheckedAt?: string;
 }
 
+/**
+ * An update that was FOUND and not yet applied, in the smallest form that survives a restart: the
+ * remote file list. Everything the panel shows is derived from it against the local disk, so a
+ * relaunch rebuilds the whole picture with no network at all.
+ *
+ * **Why it must be persisted.** The `ETag` is recorded the moment a repo answers, and it means "I
+ * have seen this remote state" — but the pending set lived only in memory. So: find an update,
+ * close the app, relaunch → the check replays the `ETag`, gets `304`, returns before it ever looks
+ * at the pack, and the update is invisible until some LATER upstream commit changes the tree again.
+ * Nothing recovered it, not even the manual button. Keeping the file list is what makes the two
+ * halves agree about what "already seen" means.
+ */
+export interface PendingRemote {
+	repo: string;
+	files: { path: string; sha: string }[];
+}
+
 export interface PackConfigData {
 	updates: UpdateMode;
 	/** pack FOLDER name → entry. The folder is the pack (REL-4 slice 1). */
 	packs: Record<string, PackEntry>;
 	/** repo URL → check state. */
 	repos: Record<string, RepoEntry>;
+	/** pack → an update found and not yet applied. */
+	pending: Record<string, PendingRemote>;
 	/** Bundled packs the user deleted ON PURPOSE. Persisted because the "your rules are gone" prompt
 	 *  fires at every launch, and a decision you have to re-make every launch is a nag. It suppresses
 	 *  the PROMPT only — restoring stays one click in Settings. */
@@ -72,6 +91,7 @@ export const emptyPackConfig = (): PackConfigData => ({
 	updates: UPDATE_MODE.off,
 	packs: {},
 	repos: {},
+	pending: {},
 	dismissedMissing: []
 });
 
@@ -125,10 +145,30 @@ export function parsePackConfig(raw: unknown): PackConfigData {
 		updates: isUpdateMode(parsed.updates) ? parsed.updates : UPDATE_MODE.off,
 		packs: isRecord(parsed.packs) ? parsed.packs : {},
 		repos: isRecord(parsed.repos) ? parsed.repos : {},
+		pending: parsePending(parsed.pending),
 		dismissedMissing: Array.isArray(parsed.dismissedMissing)
 			? parsed.dismissedMissing.filter((p): p is string => typeof p === 'string')
 			: []
 	};
+}
+
+/** A remembered update drives what we OVERWRITE on disk, so it is validated field by field rather
+ *  than trusted for being in our own file — a half-written or hand-edited entry is dropped, not
+ *  half-believed. (`sha` absent is meaningful elsewhere in the diff; here it is malformed.) */
+function parsePending(raw: unknown): Record<string, PendingRemote> {
+	if (!isRecord<unknown>(raw)) return {};
+	const out: Record<string, PendingRemote> = {};
+	for (const [pack, value] of Object.entries(raw)) {
+		if (!isRecord<unknown>(value)) continue;
+		const { repo, files } = value as Partial<PendingRemote>;
+		if (typeof repo !== 'string' || !Array.isArray(files)) continue;
+		const clean = files.filter(
+			(f): f is { path: string; sha: string } =>
+				isRecord<unknown>(f) && typeof f.path === 'string' && typeof f.sha === 'string'
+		);
+		if (clean.length === files.length) out[pack] = { repo, files: clean };
+	}
+	return out;
 }
 
 const isUpdateMode = (v: unknown): v is UpdateMode => typeof v === 'string' && v in UPDATE_MODE;
@@ -167,6 +207,7 @@ function adopt(cfg: PackConfigData): void {
 	packConfig.updates = cfg.updates;
 	packConfig.packs = cfg.packs;
 	packConfig.repos = cfg.repos;
+	packConfig.pending = cfg.pending;
 	packConfig.dismissedMissing = cfg.dismissedMissing;
 }
 
@@ -220,9 +261,23 @@ export function registerPack(pack: string, repo: string): void {
 	persist();
 }
 
+/** Remember an update we found, so a relaunch doesn't lose it (see {@link PendingRemote}). */
+export function rememberPending(pack: string, remote: PendingRemote): void {
+	packConfig.pending[pack] = remote;
+	persist();
+}
+
+/** It was applied, refused, or the pack is gone — either way there is nothing left to offer. */
+export function forgetPending(pack: string): void {
+	if (packConfig.pending[pack] === undefined) return;
+	delete packConfig.pending[pack];
+	persist();
+}
+
 /** Forget a pack (it was uninstalled). Its repo's check state is dropped once nothing uses it. */
 export function forgetPack(pack: string): void {
 	delete packConfig.packs[pack];
+	delete packConfig.pending[pack];
 	const stillUsed = new Set(Object.values(packConfig.packs).map((p) => p.repo));
 	for (const repo of Object.keys(packConfig.repos))
 		if (!stillUsed.has(repo)) delete packConfig.repos[repo];

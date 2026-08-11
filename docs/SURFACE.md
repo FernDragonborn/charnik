@@ -235,6 +235,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type UpdateMode`
 - `interface PackEntry` — One installed pack: which repo it came from, and whether the user froze it.
 - `interface RepoEntry` — Per-REPO check state.
+- `interface PendingRemote` — * An update that was FOUND and not yet applied, in the smallest form that survives a restart: the * remote file list.
 - `interface PackConfigData`
 - `const emptyPackConfig`
 - `const CHECK_INTERVAL_MS` — At most one update request per repo per day — stated plainly in the settings copy, so the * number lives here and now…
@@ -250,6 +251,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function unDismissMissing` — A restored pack is no longer missing, so it must not stay on the "don't ask" list either — it * would silence the pro…
 - `function initPackConfig` — Load the registry from the data root (once, at app start).
 - `function registerPack` — Record an installed pack (the installer calls this), or re-point an existing one at a new repo.
+- `function rememberPending` — Remember an update we found, so a relaunch doesn't lose it (see {@link PendingRemote}).
+- `function forgetPending` — It was applied, refused, or the pack is gone — either way there is nothing left to offer.
 - `function forgetPack` — Forget a pack (it was uninstalled).
 - `function setPinned` — Freeze / unfreeze a pack.
 - `function setUpdateMode`
@@ -263,6 +266,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const dueRepos` — Which repos an AUTOMATIC check may contact right now (mode + throttle + pins).
 - `function checkNow` — * Ask the repos what they have.
 - `function applyUpdate` — * Apply ONE pack's pending update.
+- `function restorePendingUpdates` — * Rebuild the pending set at launch from what the last check remembered — no network, no throttle, * no update-mode g…
 - `const autoCheckAllowed` — Should the app check by itself at startup?
 - `function discoverPacks` — * Ask a pasted repo URL what packs it holds.
 - `function installPack` — * Install one discovered pack.
@@ -1205,4 +1209,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 688 exports across 100 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 692 exports across 100 modules · 36 duplicate suspects._

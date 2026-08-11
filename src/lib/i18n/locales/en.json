@@ -83,6 +83,8 @@
 			},
 			"checkNow": "Check now",
 			"checking": "Checking…",
+			"chip": "Rules update",
+			"chipTitle": "{count, plural, one {# content pack has} other {# content packs have}} newer rules data. Open Settings to see what would change.",
 			"checkThis": "Check this pack",
 			"none": "No content packs are registered yet.",
 			"pinned": "pinned",
