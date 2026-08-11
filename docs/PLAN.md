@@ -1357,8 +1357,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   shipped files on update, preserving any the user hand-edited (hash drift). The "bump it whenever
   shipped SRD data changes" rule lives on the constant itself (`schema/version.ts`).
 - [x] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
-  2026-08-10; slices 0–11 BUILT and verified against the real GitHub 2026-08-11. One deferral, by
-  decision not omission: a generic non-GitHub HTTPS host — see STILL OPEN).** The ask: a Settings field where you paste
+  2026-08-10; slices 0–11 BUILT and verified against the real GitHub 2026-08-11, then audited
+  architecturally the same day — see ARCHITECTURAL AUDIT + STILL OPEN below, which is where the
+  remaining work lives).** The ask: a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
   updated without shipping an app release.
@@ -1625,9 +1626,76 @@ holds the done-work log; these are the OPEN tails it carried):**
           applies the same `isPackFile` test as the remote one, so only files the pack format covers
           can ever be deleted.
 
+  **ARCHITECTURAL AUDIT of the whole module (2026-08-11, `681771f`..`4537ea4` + content-repo
+  `560139b`).** REL-4 read finished from the outside; a pass over the call CHAINS rather than the
+  files found where it wasn't. What the audit fixed, each with the reason it mattered:
+  - `[x]` **The registry could be wiped by a listing failure.** `discoverContentRoots` caught every
+    error into `[]`, and the next line reconciles the registry against that list — so one transient
+    failure read as "the user uninstalled everything" and took pins and repo URLs with it. Absent is
+    still empty (fresh install); present-but-unreadable now throws into the error screen.
+  - `[x]` **Reserved pack names.** "A pack is a folder" had no exceptions, so a repo shipping a
+    folder called `homebrew` installed straight into the user's own authoring root — and
+    "uninstall that pack" then deleted everything they had ever written.
+  - `[x]` **An update found today was invisible tomorrow.** The `ETag` was recorded when the repo
+    answered, but the pending set lived only in memory: after a relaunch the check got its `304` and
+    returned before looking at any pack, and nothing brought the offer back — not even the manual
+    button. The remote file list is now persisted and the panel is rebuilt at launch with no network.
+  - `[x]` **"Check and notify" had nowhere to notify.** `updates.pending` was read by one panel three
+    clicks deep in Settings. Now a chip in the header + a badge on the tab.
+  - `[x]` **Uninstall left the plugin permission behind**, so re-installing the same pack silently
+    started running its code again; and the preview said "this pack contains plugins" whether or not
+    the update touched them — the sentence that matters is that new bytes STOP a running plugin.
+  - `[x]` **"I cannot verify this file" was treated as "overwrite it."** `isHashDrift` answered a
+    three-state question with a boolean and gave the drift panel its default, so the overwrite guard
+    silently overwrote anything unstamped. `HASH_STATE` + `isProtectedFromOverwrite`, with `plugins/`
+    excluded by path (code can't carry a hash, and consent-hashing already covers tampering).
+  - `[x]` **The content hash left `#content-source` outside it** — the identity half of `source:id`,
+    and the value the re-tag guard compares. It now covers the whole file minus its own stamp and
+    `updated_at` (excluding the date is what keeps the converters idempotent), written FIRST.
+  - `[x]` **"All-or-nothing" was true of the network only.** The write was a per-file loop. Now the
+    pack is rebuilt beside the live folder and swapped in by rename, the replaced folder is kept one
+    generation as `<pack>.prev` (the undo an applied update never had), and an interrupted swap is
+    settled at startup from the folders themselves — no journal.
+  - `[x]` **The diff was acted on minutes after it was read.** Each change now records the disk state
+    it was computed against, re-checked immediately before the swap; anything moved refuses the whole
+    update rather than overwriting an edit made in between.
+  - `[x]` **The impact preview only saw whole FILES.** Upstream almost never deletes a CSV; it deletes
+    a row inside one, which arrives looking like any other changed file — so the warning that
+    justifies the flow was silent in exactly its case. Row-level diffing now runs at apply (the first
+    moment the bytes exist), stops, and names the rows plus the characters that use them.
+  - `[x]` **`charnik.config.json` had one writer that owned the whole file**, so the first other
+    section to land there would have been erased by the next pin. Sections via
+    `storage/json-config.ts`; the dev-only content pointer moved to `charnik.dev.json`.
+
   **STILL OPEN (2026-08-11).**
   - `[ ]` **A generic (non-GitHub) HTTPS host.** Deferred by decision, not by omission — see the
-    capability finding in slice 2 and SECURITY.md §7.
+    capability finding in slice 2 and SECURITY.md §7. Next rung: a per-host user grant (paste URL →
+    "allow this host?" → allow-list checked in Rust), at which point `unsupported` grows a fallback.
+  - `[ ]` **A bundled pack cannot carry plugins.** `tools/build-static-content.mjs` walks one level
+    and filters to `.csv`/`.json`, and `seedShippedContent` / `restoreBundledPacks` list one level —
+    so the code is dropped silently, while the diff walks the local side recursively. Fix: one shared
+    recursive `listFiles` over the Storage seam (it lives in `remote/diff.ts` today), the same
+    `isPackFile` filter in the vendoring step, and a manifest key per subdirectory (`FetchStorage`
+    already synthesises subdirectories from those keys).
+  - `[ ]` **No cap on file count or total bytes.** `MAX_REMOTE_BYTES` is per FILE, and `download` mode
+    fetches automatically — so a repo with 50k files is an automatic unbounded download. Check both
+    before the first request.
+  - `[ ]` **`installPack` doesn't clear `dismissedMissing`**, so re-installing a bundled pack and
+    deleting it again never prompts (`restoreBundledPacks` does clear it).
+  - `[ ]` **Pack identity is the folder name alone**, so two repos can't both publish `srd-2024` and
+    `registerPack` silently re-points. Should be `repo#pack`; the destructive half is caught by the
+    source-clash check.
+  - `[ ]` **`pruneCache` never runs when updates are off** — the early return on "no repos due" sits
+    before it, so a cache filled in `download` mode is never cleaned after switching to `off`.
+  - `[ ]` **The impact preview doesn't scan `drafts/`** — a draft references rows the same way a
+    saved character does.
+  - `[ ]` **`checkNow` has an indicator, not a lock**: the startup check and a manual click run
+    concurrently, and whichever finishes first prunes the cache against a half-built pending set.
+  - `[ ]` **Every content reload rewrites the config** (`forgetUninstalledPacks` persists per pack,
+    `adoptShippedPacks` again) — batch one write at the end of the reconcile.
+  - `[ ]` **The new apply path is not verified live on desktop.** Tests cover the swap, the recovery
+    states, the compare-and-set and the row confirmation; the real filesystem, the watcher and the
+    `.prev` folder are the parts a fake can't speak for (the same reason slice 11 exists).
 
   **A decision taken on Claude's assumption, flag it if it is wrong:**
   - **Manifest-free leaves no file listing for a generic HTTPS host.** The `#content-*` headers carry
