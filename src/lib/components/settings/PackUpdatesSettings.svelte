@@ -55,7 +55,11 @@
 	</div>
 
 	{#if updates.error}
-		<p class="pack-problem">{updates.error}</p>
+		<p class="pack-problem">
+			{updates.error.kind === 'i18n'
+				? $_(updates.error.key, { values: { repo: updates.error.repo } })
+				: updates.error.message}
+		</p>
 	{/if}
 
 	{#if packs.length === 0}

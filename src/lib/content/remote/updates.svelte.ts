@@ -36,6 +36,15 @@ export interface PendingUpdate {
 	plugins: string[];
 }
 
+/**
+ * A failure the panel can show. Two kinds on purpose: `i18n` is copy WE author (translatable),
+ * `raw` is a message from the network stack (a machine string we must not pretend to have written).
+ * Keeping them apart is what stops new untranslated English leaking into the UI — the UX-1 / ARCH-1
+ * copy sweep only has to deal with keys.
+ */
+export type UpdateError =
+	{ kind: 'i18n'; key: string; repo: string } | { kind: 'raw'; message: string };
+
 interface UpdateState {
 	/** desktop-only feature; kept in the state (not computed in the component) so the dev preview at
 	 *  /dev/packs can force it on in a plain browser — same trick the plugin store uses */
@@ -44,7 +53,7 @@ interface UpdateState {
 	/** pack → what is waiting for a decision */
 	pending: Record<string, PendingUpdate>;
 	/** last failure, kept for the Settings panel — never toasted: offline is not actionable (UX-1) */
-	error: string | null;
+	error: UpdateError | null;
 }
 
 export const updates = $state<UpdateState>({
@@ -89,11 +98,11 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 	const stored = packConfig.repos[repo]?.etag;
 	const res = await checkRepo(fetcher, repo, stored);
 	if (res.kind === 'error') {
-		updates.error = res.message;
+		updates.error = { kind: 'raw', message: res.message };
 		return;
 	}
 	if (res.kind === 'unsupported') {
-		updates.error = `no update support for ${repo} yet (GitHub repos only)`;
+		updates.error = { kind: 'i18n', key: 'settings.packs.hostUnsupported', repo };
 		return;
 	}
 	// a 304 still counts as "asked today" — that is exactly the check we want to skip tomorrow
@@ -157,7 +166,7 @@ export async function applyUpdate(
 		removeDeleted: opts.removeDeleted === true
 	});
 	if (res.error === undefined) delete updates.pending[pack];
-	else updates.error = res.error;
+	else updates.error = { kind: 'raw', message: res.error };
 	return res;
 }
 

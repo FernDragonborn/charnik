@@ -34,6 +34,12 @@
 		};
 
 		updates.supported = true;
+		// the GitHub-only limit, as the panel actually reports it
+		updates.error = {
+			kind: 'i18n',
+			key: 'settings.packs.hostUnsupported',
+			repo: 'https://my-server.example/packs'
+		};
 		updates.pending = {
 			'srd-2024': {
 				pack: 'srd-2024',

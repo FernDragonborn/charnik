@@ -249,6 +249,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/remote/updates.svelte.ts`
 
 - `interface PendingUpdate` — One pack with an update waiting, and everything the user needs to decide about it.
+- `type UpdateError` — * A failure the panel can show.
 - `const updates`
 - `const dueRepos` — Which repos an AUTOMATIC check may contact right now (mode + throttle + pins).
 - `function checkNow` — * Ask the repos what they have.
@@ -1176,4 +1177,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 46 components · 665 exports across 99 modules · 34 duplicate suspects._
+_45 tokens · 64 global classes · 46 components · 666 exports across 99 modules · 34 duplicate suspects._
