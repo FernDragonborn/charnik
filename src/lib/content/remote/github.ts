@@ -71,8 +71,11 @@ interface TreeEntry {
 	sha?: unknown;
 }
 
-/** A file a pack actually ships: content CSVs, plus the plugin files a pack may carry (§ PLUGINS 2). */
-const isPackFile = (path: string): boolean =>
+/** A file a pack actually ships: content CSVs, plus the plugin files a pack may carry (§ PLUGINS 2).
+ *  The DIFF applies the same test to the local side, so a file the pack format doesn't cover — a
+ *  README, a leftover from an older layout, notes the user keeps beside the data — is never
+ *  proposed for deletion just because the remote doesn't list it. */
+export const isPackFile = (path: string): boolean =>
 	path.endsWith('.csv') || path.endsWith('plugin.json') || path.endsWith('main.js');
 
 /**

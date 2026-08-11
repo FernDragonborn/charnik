@@ -8,7 +8,14 @@ import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { hashBody } from '../hash';
 import { diffPack, gitBlobSha, rowsRemovedBy, charactersReferencing, FILE_CHANGE } from './diff';
-import { applyPackUpdate, pluginsIn } from './install';
+import {
+	applyPackUpdate,
+	cachePath,
+	isStaged,
+	pluginsIn,
+	pruneCache,
+	stagePackUpdate
+} from './install';
 import type { RemotePack } from './github';
 import type { RemoteFetcher } from './types';
 import type { ContentGraph, LoadedRow } from '../loader';
@@ -54,8 +61,8 @@ describe('diffPack', () => {
 		const diff = await diffPack(s, remote);
 		expect(diff.changes).toEqual(
 			expect.arrayContaining([
-				{ path: 'p/old.csv', kind: FILE_CHANGE.changed },
-				{ path: 'p/new.csv', kind: FILE_CHANGE.added },
+				{ path: 'p/old.csv', kind: FILE_CHANGE.changed, sha: 'different-sha' },
+				{ path: 'p/new.csv', kind: FILE_CHANGE.added, sha: 'whatever' },
 				{ path: 'p/gone.csv', kind: FILE_CHANGE.removed }
 			])
 		);
@@ -71,7 +78,27 @@ describe('diffPack', () => {
 			pack: 'p',
 			files: [{ path: 'p/mine.csv', sha: 'upstream' }]
 		});
-		expect(diff.changes).toEqual([{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved }]);
+		expect(diff.changes).toEqual([
+			{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved, sha: 'upstream' }
+		]);
+	});
+
+	it("never proposes deleting a file the pack format doesn't cover — it isn't the update's", async () => {
+		// a README, notes the user keeps beside the data, a leftover from an older layout
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/NOTES.md', enc('my house rules'));
+		expect((await diffPack(s, { pack: 'p', files: [] })).changes).toEqual([]);
+	});
+
+	it('notices a plugin file the pack no longer ships — code, nested two levels down', async () => {
+		// a pack's plugins live in `plugins/<ns>/`; a flat listing would leave deleted executable code
+		// sitting on disk forever
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/plugins/old-rules/main.js', enc('globalThis.x = 1;'));
+		const diff = await diffPack(s, { pack: 'p', files: [] });
+		expect(diff.changes).toEqual([
+			{ path: 'p/plugins/old-rules/main.js', kind: FILE_CHANGE.removed }
+		]);
 	});
 });
 
@@ -182,6 +209,81 @@ describe('applyPackUpdate', () => {
 		const dropped = await applyPackUpdate({ ...args, removeDeleted: true });
 		expect(dropped.removed).toEqual(['p/gone.csv']);
 		expect(await s.exists('content/p/gone.csv')).toBe(false);
+	});
+});
+
+/** "Check and pre-download" only means anything if the bytes it fetched are still there, and still
+ *  the right bytes, when the user finally clicks Apply — possibly offline, possibly next week. */
+describe('the pre-download staging cache', () => {
+	const bodyA = 'id\na';
+	const offline: RemoteFetcher = {
+		getText: async () => ({ kind: 'error', message: 'offline' }),
+		getBytes: async () => ({ kind: 'error', message: 'offline' })
+	};
+	const stagedDiff = async () => ({
+		pack: 'p',
+		changes: [{ path: 'p/a.csv', kind: FILE_CHANGE.added, sha: await gitBlobSha(enc(bodyA)) }]
+	});
+
+	it('a staged update applies with NO network at all', async () => {
+		const s = new MemoryStorage();
+		const diff = await stagedDiff();
+		await stagePackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/a.csv': bodyA }),
+			repo: REPO,
+			diff
+		});
+		expect(await isStaged(s, diff)).toBe(true);
+
+		const res = await applyPackUpdate({ storage: s, fetcher: offline, repo: REPO, diff });
+		expect(res.error).toBeUndefined();
+		expect(await s.read('content/p/a.csv')).toBe(bodyA);
+		// applied ⇒ the staged copy is now just a duplicate of what is on disk
+		expect(await isStaged(s, diff)).toBe(false);
+	});
+
+	it('a cache entry whose bytes do not match its name is a MISS, not a shortcut', async () => {
+		const s = new MemoryStorage();
+		const diff = await stagedDiff();
+		const sha = diff.changes[0]?.sha ?? '';
+		await s.writeBytes(cachePath(sha), enc('id\nTRUNCATED'));
+
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/a.csv': bodyA }),
+			repo: REPO,
+			diff
+		});
+		expect(res.error).toBeUndefined();
+		expect(await s.read('content/p/a.csv')).toBe(bodyA); // re-fetched, not the corrupt copy
+	});
+
+	it('bytes that do not match the SHA we diffed against are refused, not written', async () => {
+		// raw.githubusercontent.com serving a different revision than the tree listing did: writing it
+		// would leave content whose SHA still differs, i.e. an update that never stops reappearing
+		const s = new MemoryStorage();
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/a.csv': 'id\nSOMETHING ELSE' }),
+			repo: REPO,
+			diff: await stagedDiff()
+		});
+		expect(res.error).toEqual({
+			kind: 'i18n',
+			key: 'settings.packs.contentMoved',
+			values: { path: 'p/a.csv' }
+		});
+		expect(await s.exists('content/p/a.csv')).toBe(false);
+	});
+
+	it('prune keeps what is still pending and drops the rest', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes(cachePath('keep-me'), enc('x'));
+		await s.writeBytes(cachePath('stale'), enc('y'));
+		await pruneCache(s, new Set(['keep-me']));
+		expect(await s.exists(cachePath('keep-me'))).toBe(true);
+		expect(await s.exists(cachePath('stale'))).toBe(false);
 	});
 });
 

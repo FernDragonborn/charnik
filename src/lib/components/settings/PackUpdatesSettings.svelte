@@ -13,7 +13,7 @@
 		installPack,
 		uninstallPack
 	} from '$lib/content/remote/updates.svelte';
-	import { reloadContent } from '$lib/content/store.svelte';
+	import { content, reloadContent } from '$lib/content/store.svelte';
 	import { FILE_CHANGE } from '$lib/content/remote/diff';
 
 	const packs = $derived(Object.entries(packConfig.packs).sort(([a], [b]) => a.localeCompare(b)));
@@ -39,6 +39,12 @@
 	}
 
 	const lastChecked = (repo: string): string | undefined => packConfig.repos[repo]?.lastCheckedAt;
+
+	/** How much of the loaded content this pack IS. Deleting the shipped SRD is allowed — it is a pack
+	 *  like any other — but "you are about to remove 1,842 of your 2,010 entries" is the honest way to
+	 *  say "nothing will work without this", and it needs no special case to say it. */
+	const entriesFrom = (pack: string): number =>
+		content.graph?.rows.filter((row) => row.root === `content/${pack}`).length ?? 0;
 </script>
 
 <section class="sec-head">
@@ -188,6 +194,9 @@
 										</div>
 									{/if}
 								{/if}
+								{#if pending.staged}
+									<div>{$_('settings.packs.readyOffline')}</div>
+								{/if}
 								{#if pending.plugins.length > 0}
 									<div class="pack-warn">
 										{$_('settings.packs.carriesPlugins', {
@@ -195,6 +204,17 @@
 										})}
 									</div>
 								{/if}
+							</div>
+						{/if}
+
+						<!-- said at the moment of deciding, and quantified: a pack IS the rules it carries -->
+						{#if uninstalling === pack}
+							<div class="pack-warn">
+								{entriesFrom(pack) === 0
+									? $_('settings.packs.uninstallWarnEmpty', { values: { repo: entry.repo } })
+									: $_('settings.packs.uninstallWarn', {
+											values: { count: entriesFrom(pack), repo: entry.repo }
+										})}
 							</div>
 						{/if}
 					</div>

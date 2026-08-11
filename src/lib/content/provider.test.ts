@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
-import { copyMissingRoots, discoverContentRoots, seedShippedContent } from './provider';
+import { discoverContentRoots, seedShippedContent } from './provider';
 import { stampDirectives, type MetaKey } from './meta';
 import { hashBody } from './hash';
 
@@ -50,43 +50,34 @@ describe('discoverContentRoots (a pack is a folder)', () => {
 	});
 });
 
-/** The seed step for the desktop first-run: copy shipped content onto disk. Tested over the Storage
- *  seam (two MemoryStorages) so the risky copy/skip logic is covered without Tauri or fetch. */
-describe('copyMissingRoots (desktop content seed)', () => {
+/** The bundled SRD is a PACK LIKE ANY OTHER, which above all means uninstalling it sticks: the seed
+ *  fills a fresh data dir and refreshes what is still installed, and never resurrects what the user
+ *  deleted. Tested over the Storage seam (two MemoryStorages) — no Tauri, no fetch. */
+describe('seedShippedContent (an uninstalled pack stays uninstalled)', () => {
+	const BOTH = ['content/srd-2024', 'content/srd-2014'];
 	async function bundled() {
 		const from = new MemoryStorage();
-		await from.writeBytes(
-			'content/srd-2024/classes_srd.csv',
-			new TextEncoder().encode('id\nwizard')
-		);
-		await from.writeBytes(
-			'content/srd-2024/spells_srd.csv',
-			new TextEncoder().encode('id\nfireball')
-		);
-		await from.writeBytes(
-			'content/srd-2014/classes_srd.csv',
-			new TextEncoder().encode('id\nfighter')
-		);
+		await from.write('content/srd-2024/classes_srd.csv', await stamped('id\nwizard'));
+		await from.write('content/srd-2014/classes_srd.csv', await stamped('id\nfighter'));
 		return from;
 	}
 
-	it('copies every root byte-for-byte into an empty destination', async () => {
+	it('a fresh data dir gets every bundled pack', async () => {
 		const to = new MemoryStorage();
-		await copyMissingRoots(await bundled(), to, ['content/srd-2024', 'content/srd-2014']);
+		await seedShippedContent(await bundled(), to, BOTH, 1);
 		expect(await to.exists('content/srd-2024/classes_srd.csv')).toBe(true);
-		expect(await to.read('content/srd-2024/spells_srd.csv')).toBe('id\nfireball');
-		expect(await to.read('content/srd-2014/classes_srd.csv')).toBe('id\nfighter');
+		expect(await to.exists('content/srd-2014/classes_srd.csv')).toBe(true);
 	});
 
-	it('skips a root that already exists (never clobbers the user copy)', async () => {
+	it('an app update refreshes installed packs but does not bring back a deleted one', async () => {
 		const to = new MemoryStorage();
-		await to.writeBytes(
-			'content/srd-2024/classes_srd.csv',
-			new TextEncoder().encode('id\nMY EDIT')
-		);
-		await copyMissingRoots(await bundled(), to, ['content/srd-2024', 'content/srd-2014']);
-		expect(await to.read('content/srd-2024/classes_srd.csv')).toBe('id\nMY EDIT'); // untouched
-		expect(await to.exists('content/srd-2014/classes_srd.csv')).toBe(true); // the other root seeded
+		await to.write('content/srd-2024/classes_srd.csv', await stamped('id\nOLD'));
+		await to.write('content/.seed-version', '1'); // seeded before; srd-2014 was uninstalled since
+
+		await seedShippedContent(await bundled(), to, BOTH, 2);
+
+		expect(await to.read('content/srd-2024/classes_srd.csv')).toContain('wizard'); // refreshed
+		expect(await to.exists('content/srd-2014/classes_srd.csv')).toBe(false); // stays gone
 	});
 });
 
@@ -133,7 +124,7 @@ describe('seedShippedContent (versioned re-seed on update)', () => {
 		expect(await to.read(P)).not.toContain('fireball_v2');
 	});
 
-	it('already at the current version: does not rewrite (only fills a missing root)', async () => {
+	it('already at the current version: does not rewrite anything', async () => {
 		const from = new MemoryStorage();
 		await from.write(P, await stamped('id\nfireball_v2'));
 		const to = new MemoryStorage();

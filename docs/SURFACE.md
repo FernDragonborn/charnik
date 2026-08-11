@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (35)
+## Duplicate suspects (36)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -46,6 +46,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
+- `REPO` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs/+page.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `sourceOf` ×2 — src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts
@@ -651,7 +652,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
 - `function isUserModified` — Is an on-disk shipped file USER-modified?
 - `function seedShippedContent` — * Seed / UPDATE the shipped SRD roots on disk (desktop).
-- `function copyMissingRoots` — Copy each root's files from `from` to `to`, byte-for-byte, but skip a root that already exists in * `to` (so we never…
 - `function resetContentGraph` — Drop the cache (e.g.
 
 ### `src/lib/content/reload.ts`
@@ -682,15 +682,20 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const rawUrl` — Where one file's bytes live.
 - `interface RemoteFile` — One remote file: its repo-relative path and the blob SHA that says whether it changed.
 - `interface RemotePack` — A remote pack: a TOP-LEVEL folder holding content files — the same test as the local * `discoverContentRoots`, applie…
+- `const isPackFile` — A file a pack actually ships: content CSVs, plus the plugin files a pack may carry (§ PLUGINS 2).
 - `function packsFromTree` — * Group a GitHub tree response into packs.
 - `type CheckResult` — What a check found.
 - `function checkRepo` — * Ask ONE repo what it holds.
 
 ### `src/lib/content/remote/install.ts`
 
+- `const cachePath`
 - `interface ApplyResult`
 - `interface ApplyRequest`
 - `function applyPackUpdate` — * Fetch everything this diff wants, then write it.
+- `function stagePackUpdate` — * Pre-download an update's bytes into the cache, so applying it later is instant and works offline * (the `download` …
+- `function isStaged` — Is this whole update already downloaded?
+- `function pruneCache` — * Throw away staged bytes nothing is waiting for.
 - `function pluginsIn` — Does this pack ship executable code?
 
 ### `src/lib/content/remote/tauri-fetch.ts`
@@ -1184,4 +1189,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 46 components · 672 exports across 99 modules · 35 duplicate suspects._
+_45 tokens · 64 global classes · 46 components · 676 exports across 99 modules · 36 duplicate suspects._

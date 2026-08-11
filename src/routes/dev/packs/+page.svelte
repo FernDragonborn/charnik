@@ -76,7 +76,8 @@
 				},
 				removedRows: ['language:SRD 5.2.1:draconic', 'language:SRD 5.2.1:goblin'],
 				affected: [{ slug: 'karroth', keys: ['language:SRD 5.2.1:draconic'] }],
-				plugins: []
+				plugins: [],
+				staged: true
 			},
 			'dark-sun': {
 				pack: 'dark-sun',
@@ -88,7 +89,8 @@
 				},
 				removedRows: [],
 				affected: [],
-				plugins: ['dark-sun-rules']
+				plugins: ['dark-sun-rules'],
+				staged: false
 			}
 		};
 	}

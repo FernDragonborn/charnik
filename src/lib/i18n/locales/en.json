@@ -109,7 +109,11 @@
 			"cancel": "Cancel",
 			"applyWithRemovals": "Apply, including deletions",
 			"foundIn": "Found in {repo}",
-			"installedLabel": "Installed"
+			"installedLabel": "Installed",
+			"readyOffline": "Downloaded and ready — applying it works offline",
+			"contentMoved": "“{path}” changed on the server while it was being downloaded. Nothing was written; check again in a moment.",
+			"uninstallWarn": "This deletes the pack’s files from your disk, including the {count} entries it currently provides. Characters that use them will show those entries as missing. You can install it again later from {repo}.",
+			"uninstallWarnEmpty": "This deletes the pack’s files from your disk. Characters that use anything from it will show those entries as missing. You can install it again later from {repo}."
 		}
 	},
 	"sheet": {

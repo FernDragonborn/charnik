@@ -75,6 +75,14 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > wildcard capability and a Rust-side dynamic check — decide it when someone actually needs it,
    > don't widen the manifest speculatively.
    >
+   > **Downloaded bytes are checked against the SHA they were diffed against** — the git blob SHA
+   > the repo tree published, verified before a single file is written and again on anything read
+   > back from the pre-download cache (`.pack-cache/<sha>`, content-addressed, so a tampered or
+   > truncated entry simply fails to be its own name). This is integrity, not authenticity: it
+   > proves the bytes are the ones the tree listing described, not that the publisher is honest —
+   > that is what per-source licence display, the plugin consent hash, and "applying is your click"
+   > are for.
+   >
    > **Packs DO carry plugins** (decided 2026-08-11, reversing "no plugins in v1"): code and the
    > data it serves ship as one unit, in `content/<pack>/plugins/<namespace>/`, because a plugin
    > with no distribution channel is a feature nobody can use. The v1 ban was guarding a hole the

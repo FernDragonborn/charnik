@@ -11,6 +11,8 @@
  * inside the app bundle. A `CONTENT_SEED_VERSION` marker makes an app UPDATE re-seed the shipped
  * files when their data changed (else a returning user would be stuck on the old SRD): untouched
  * files are overwritten, hand-edited ones (hash drift) are preserved; homebrew/characters untouched.
+ * A pack the user UNINSTALLED is never re-seeded — the bundled SRD is a pack like any other, so
+ * deleting it sticks, and re-installing it is the same paste-a-URL flow as any pack.
  * WEB needs none of this — it always fetches the freshly-deployed static content.
  *
  * The set of roots is NOT a constant: each folder under `content/` is one content PACK (the shipped
@@ -78,8 +80,9 @@ async function buildGraph(): Promise<ContentGraph> {
 		const user = getUserStorage();
 		const shipped = await discoverContentRoots(bundled);
 		await seedShippedContent(bundled, user, shipped, CONTENT_SEED_VERSION);
-		adoptShippedPacks(shipped);
-		return loadContent(user, await discoverContentRoots(user), homebrew);
+		const installed = await discoverContentRoots(user);
+		adoptShippedPacks(shipped.filter((root) => installed.includes(root)));
+		return loadContent(user, installed, homebrew);
 	}
 	// web + headless (build-time prerender / tests): read the bundled CSVs over fetch
 	return loadContent(bundled, await discoverContentRoots(bundled), homebrew);
@@ -98,7 +101,8 @@ async function buildGraph(): Promise<ContentGraph> {
 const SHIPPED_PACK_REPO = 'https://github.com/FernDragonborn/charnik-content-srd';
 
 /** Give every bundled pack a registry entry, unless the user already has one (theirs wins — they
- *  may have re-pointed it at a fork). Never overwrites a pin. */
+ *  may have re-pointed it at a fork). Never overwrites a pin. Called with the packs that are
+ *  actually ON DISK: one the user uninstalled must not reappear in the list as an install offer. */
 function adoptShippedPacks(shipped: string[]): void {
 	for (const root of shipped) {
 		const pack = root.slice(root.lastIndexOf('/') + 1);
@@ -145,12 +149,16 @@ export async function seedShippedContent(
 	roots: string[],
 	shippedVersion: number
 ): Promise<{ preserved: string[] }> {
-	if ((await readSeedVersion(to)) === shippedVersion) {
-		await copyMissingRoots(from, to, roots);
-		return { preserved: [] };
-	}
+	const onDisk = await readSeedVersion(to);
+	if (onDisk === shippedVersion) return { preserved: [] };
+	const firstRun = onDisk === null;
+
 	const preserved: string[] = [];
 	for (const root of roots) {
+		// A pack the user UNINSTALLED stays uninstalled. A fresh data dir gets every bundled pack;
+		// after that the bundle only ever REFRESHES packs that are still there, so a bundled pack is
+		// exactly as deletable as any other and an app update can't quietly put it back.
+		if (!firstRun && !(await to.exists(root))) continue;
 		for (const f of await from.list(root)) {
 			if ((await to.exists(f.path)) && (await isUserModified(to, f.path))) {
 				preserved.push(f.path); // user hand-edited this shipped file → keep their version
@@ -162,17 +170,6 @@ export async function seedShippedContent(
 	}
 	await to.write(SEED_VERSION_FILE, String(shippedVersion));
 	return { preserved };
-}
-
-/** Copy each root's files from `from` to `to`, byte-for-byte, but skip a root that already exists in
- *  `to` (so we never clobber the user's copy). The first-run/missing-root path. Unit-testable. */
-export async function copyMissingRoots(from: Storage, to: Storage, roots: string[]): Promise<void> {
-	for (const root of roots) {
-		if (await to.exists(root)) continue; // already seeded / user-managed → don't clobber
-		for (const f of await from.list(root)) {
-			await to.writeBytes(f.path, await from.readBytes(f.path));
-		}
-	}
 }
 
 /** Drop the cache (e.g. after the user adds/edits homebrew and wants a reload). */

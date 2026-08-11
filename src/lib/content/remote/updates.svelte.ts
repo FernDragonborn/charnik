@@ -20,7 +20,14 @@ import {
 } from '../packs.svelte';
 import { checkRepo, parseGithubRepo, type RemotePack } from './github';
 import { diffPack, hasWrites, rowsRemovedBy, charactersReferencing, type PackDiff } from './diff';
-import { applyPackUpdate, pluginsIn, type ApplyResult } from './install';
+import {
+	applyPackUpdate,
+	isStaged,
+	pluginsIn,
+	pruneCache,
+	stagePackUpdate,
+	type ApplyResult
+} from './install';
 import { tauriFetcher } from './tauri-fetch';
 import type { RemoteFetcher, UpdateError } from './types';
 
@@ -36,6 +43,8 @@ export interface PendingUpdate {
 	affected: { slug: string; keys: string[] }[];
 	/** plugin namespaces this pack would add — code always gets said out loud (PLUGINS §2) */
 	plugins: string[];
+	/** every byte is already downloaded (update mode `download`), so applying works offline */
+	staged: boolean;
 }
 
 /** A pack found in a repo the user just pasted, and what installing it would bring. */
@@ -97,9 +106,20 @@ export async function checkNow(
 	updates.error = null;
 	try {
 		for (const repo of repos) await checkOneRepo(fetcher, repo);
+		// the pending set is now complete, so it is also authoritative about what the pre-download
+		// cache is still holding for a reason
+		await pruneCache(getUserStorage(), stagedShas());
 	} finally {
 		updates.checking = false;
 	}
+}
+
+/** Every blob SHA some pending update still wants; anything else in the cache is litter. */
+function stagedShas(): Set<string> {
+	const keep = new Set<string>();
+	for (const pending of Object.values(updates.pending))
+		for (const change of pending.diff.changes) if (change.sha !== undefined) keep.add(change.sha);
+	return keep;
 }
 
 async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void> {
@@ -121,18 +141,28 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 		const entry = packConfig.packs[remote.pack];
 		// only packs this user actually installed FROM THIS REPO, and not ones they froze
 		if (entry?.repo !== repo || entry.pinned === true) continue;
-		const pending = await describeUpdate(repo, remote);
+		const pending = await describeUpdate(fetcher, repo, remote);
 		if (pending) updates.pending[remote.pack] = pending;
 		else delete updates.pending[remote.pack];
 	}
 }
 
 /** Build the full picture for one pack, or null when it is already up to date. */
-async function describeUpdate(repo: string, remote: RemotePack): Promise<PendingUpdate | null> {
+async function describeUpdate(
+	fetcher: RemoteFetcher,
+	repo: string,
+	remote: RemotePack
+): Promise<PendingUpdate | null> {
 	const storage = getUserStorage();
 	const diff = await diffPack(storage, remote);
 	const removals = diff.changes.filter((c) => c.kind === 'removed');
 	if (!hasWrites(diff) && removals.length === 0) return null;
+
+	// `download` mode fetches the bytes NOW so applying is instant and works offline. It is still
+	// only a download: nothing under `content/` is touched until the user clicks (SECURITY.md §7).
+	const parsed = parseGithubRepo(repo);
+	if (packConfig.updates === UPDATE_MODE.download && parsed && hasWrites(diff))
+		await stagePackUpdate({ storage, fetcher, repo: parsed, diff });
 
 	const removedRows = content.graph ? rowsRemovedBy(content.graph, diff) : [];
 	return {
@@ -142,7 +172,8 @@ async function describeUpdate(repo: string, remote: RemotePack): Promise<Pending
 		diff,
 		removedRows,
 		affected: await whoBreaks(removedRows),
-		plugins: pluginsIn(remote)
+		plugins: pluginsIn(remote),
+		staged: await isStaged(storage, diff)
 	};
 }
 

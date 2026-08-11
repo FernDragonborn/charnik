@@ -6,21 +6,36 @@
  * takes both the files and the entry.
  */
 import 'fake-indexeddb/auto';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
 import { getUserStorage } from '$lib/storage/provider';
 import { packConfig, emptyPackConfig } from '../packs.svelte';
 import { updates, discoverPacks, installPack, uninstallPack } from './updates.svelte';
+import { gitBlobSha } from './diff';
 import type { RemoteFetcher } from './types';
 
 const REPO = 'https://github.com/someone/dark-sun';
 const enc = (s: string) => new TextEncoder().encode(s);
 
-const tree = JSON.stringify({
-	tree: [
-		{ path: 'dark-sun/classes_srd.csv', sha: 'a', type: 'blob' },
-		{ path: 'dark-sun/plugins/dark-sun-rules/main.js', sha: 'b', type: 'blob' },
-		{ path: 'dark-sun/plugins/dark-sun-rules/plugin.json', sha: 'c', type: 'blob' }
-	]
+const ALL = {
+	'dark-sun/classes_srd.csv': '#content-source: Dark Sun\nid\nathasian',
+	'dark-sun/plugins/dark-sun-rules/main.js': 'globalThis.handlers = {};',
+	'dark-sun/plugins/dark-sun-rules/plugin.json': '{"api":1}'
+};
+
+/** The tree always advertises the whole pack (that is what the repo holds); which files the fetcher
+ *  can actually serve is what a test varies. The SHAs are REAL git blob ids of the bodies below,
+ *  because apply verifies every downloaded byte against them — as GitHub's own tree does. */
+let tree = '';
+beforeAll(async () => {
+	tree = JSON.stringify({
+		tree: await Promise.all(
+			Object.entries(ALL).map(async ([path, body]) => ({
+				path,
+				sha: await gitBlobSha(enc(body)),
+				type: 'blob'
+			}))
+		)
+	});
 });
 
 const fetcher = (files: Record<string, string>): RemoteFetcher => ({
@@ -30,12 +45,6 @@ const fetcher = (files: Record<string, string>): RemoteFetcher => ({
 		return hit ? { kind: 'ok', bytes: enc(hit[1]) } : { kind: 'error', message: `404 ${url}` };
 	}
 });
-
-const ALL = {
-	'dark-sun/classes_srd.csv': '#content-source: Dark Sun\nid\nathasian',
-	'dark-sun/plugins/dark-sun-rules/main.js': 'globalThis.handlers = {};',
-	'dark-sun/plugins/dark-sun-rules/plugin.json': '{"api":1}'
-};
 
 describe('install a pack from a pasted URL', () => {
 	beforeEach(async () => {

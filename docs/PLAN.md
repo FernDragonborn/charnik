@@ -1350,9 +1350,9 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [x] **REL-3 · Desktop content re-seed on update.** A `CONTENT_SEED_VERSION` marker re-seeds
   shipped files on update, preserving any the user hand-edited (hash drift). The "bump it whenever
   shipped SRD data changes" rule lives on the constant itself (`schema/version.ts`).
-- [~] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
-  2026-08-10; slices 0–8 BUILT 2026-08-11 — the live desktop network path has still never been RUN,
-  and two decisions stay open; see STILL OPEN below).** The ask: a Settings field where you paste
+- [x] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
+  2026-08-10; slices 0–11 BUILT and verified against the real GitHub 2026-08-11. One deferral, by
+  decision not omission: a generic non-GitHub HTTPS host — see STILL OPEN).** The ask: a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
   updated without shipping an app release.
@@ -1553,22 +1553,63 @@ holds the done-work log; these are the OPEN tails it carried):**
      the ordinary apply, and only shown when the diff actually has removals. Default stays "keep",
      because a deleted row can orphan a reference inside a character mid-campaign.
 
-  **STILL OPEN (2026-08-11).** Written down because the feature reads finished from the outside:
-  - `[ ]` **Deleting or downgrading the SRD pack** still needs the answer the item below asks for —
-    the demo character depends on that content existing. Uninstall currently treats it like any
-    other pack; the bundled floor re-seeds it on next launch, which is a defensible answer but not
-    a decided one.
+  9. `[x]` **"Check and pre-download" actually pre-downloads** — the mode existed in the dropdown
+     and did nothing, which is worse than not offering it. Staging is a **content-addressed cache**
+     (`.pack-cache/<git blob sha>`, outside `content/` because every folder in there is a pack):
+     the file NAME is the SHA, so there is no invalidation rule to get wrong, two packs shipping one
+     file cost one entry, and a truncated entry is caught by re-hashing rather than trusted for
+     existing. A staged update applies **offline**. `pruneCache` runs once a check has finished,
+     when the pending set is complete and therefore authoritative about what is still wanted.
+     - **Every downloaded byte is verified against the SHA the diff was computed from**, cached or
+       fresh. It costs one hash of data already in hand and closes a failure that would otherwise be
+       invisible: `raw.githubusercontent.com` serving a different revision than the tree listing
+       named, which writes content whose SHA still differs — an update that reappears at every
+       check and can never be cleared. Refused with `contentMoved`, disk untouched.
+  10. `[x]` **The bundled SRD is a pack like any other, INCLUDING deletion (maintainer, 2026-08-11,
+     overruling the tombstone proposal).** Uninstall used to be undone by the next launch, because
+     `copyMissingRoots` re-seeded any missing root. That function is **deleted**: a fresh data dir
+     (no `.seed-version`) gets every bundled pack, and after that the bundle only ever REFRESHES
+     packs that are still installed. So deleting sticks, an app update can't put it back, and
+     re-installing is the same paste-a-URL flow as any pack — the repo is public.
+     **No new state was added to achieve it** (that was the objection to a tombstone file: machinery
+     that exists only for bundled packs is exactly what makes them not-like-other-packs). The
+     existing seed marker already distinguishes "fresh data dir" from "this is yours now".
+     `adoptShippedPacks` is likewise called with the packs that are ON DISK, so an uninstalled one
+     doesn't reappear in the list as an offer.
+     - **Warned, not prevented** (maintainer: "we can and probably should warn that nothing will
+       work without them"). The confirm step says how many of the entries you currently have come
+       from this pack — quantified from the loaded graph, so it needs no special case to say
+       "without this there are no rules" — plus which characters lose what, and where to get it back.
+  11. `[x]` **Verified against the real thing, on both sides of the seam.**
+      - `tests/live-github.test.ts` — opt-in (`CHARNIK_LIVE_NETWORK=1`), because a suite that fails
+        when the wifi drops is a suite people learn to ignore. It proves what no fake can: the tree
+        call returns `srd-2014` + `srd-2024` as two packs, the `ETag` really does come back `304`,
+        and **the tree's blob SHA equals `gitBlobSha` of the bytes `raw` serves** — the assumption
+        the entire download-free diff rests on.
+      - `/dev/packs-live` — the same path through the RUST client and the capability allowlist,
+        which only exist inside the desktop app. Read-only; writes its report to
+        `packs-live-probe.txt` in the data dir so a run can be read after the window closes.
+      - **It paid for itself on the first run, with two bugs no unit test could have seen** — both
+        invisible to a fake fetcher because both live in what the REAL world does to the bytes:
+        - **`core.autocrlf` silently broke the entire diff.** The converters write LF (`srd/lib.mjs`;
+          `restamp.ts` says so out loud), but a Windows checkout of the content repo rewrites every
+          LF to CRLF, so the vendored → seeded copy could never equal the published blob and **all 15
+          files of a pack reported as changed, forever, against a repo where nothing had moved.**
+          Fixed at the source with `* -text` in `charnik-content-srd` (+ `CONTENT_SEED_VERSION` 2 to
+          re-seed the mangled copies; the `#content-hash` is EOL-normalised, so no hand-edit is
+          mistaken for one). **Any repo publishing packs needs that `.gitattributes`** — comparison is
+          by blob SHA, so a byte the checkout invents is a change the user can never apply away.
+        - **The removal scan proposed deleting files that were not the pack's.** It listed everything
+          in the folder and called anything the remote didn't list `removed` — a README, a leftover
+          `_pack.json` from an older layout, notes a user keeps beside their data. Now the local walk
+          applies the same `isPackFile` test as the remote one, so only files the pack format covers
+          can ever be deleted.
+
+  **STILL OPEN (2026-08-11).**
   - `[ ]` **A generic (non-GitHub) HTTPS host.** Deferred by decision, not by omission — see the
     capability finding in slice 2 and SECURITY.md §7.
-  - `[ ]` **Unverified end to end**: no headless way to drive a Tauri webview here, so the live
-    network path (real 304, real download, real write into the data dir) has never run. Everything
-    below it is unit-tested against a fake fetcher, and `cargo check` proves the plugin + capability
-    compile.
 
-  **Two decisions taken on Claude's assumption, flag them if either is wrong:**
-  - **The SRD keeps a bundled floor.** A fresh install with no network still needs content, and the
-    demo character depends on it, so "get SRD out of the app" was read as "out of the release cycle",
-    not "out of the binary". If a full removal is actually wanted, slice 0 and slice 4 both change.
+  **A decision taken on Claude's assumption, flag it if it is wrong:**
   - **Manifest-free leaves no file listing for a generic HTTPS host.** The `#content-*` headers carry
     everything except *which files exist*. GitHub's tree API supplies that in one request; a plain
     static host only can if it serves an autoindex. So v1 = GitHub as the fast path, any static host
