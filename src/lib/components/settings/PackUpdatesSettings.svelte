@@ -4,7 +4,15 @@
 	// deliberately bypasses the once-a-day throttle, because "I want to test this one" is the real
 	// use. Desktop-only: the web build serves the content of its own deploy.
 	import { _ } from '$lib/i18n';
-	import { packConfig, setPinned, setUpdateMode, UPDATE_MODE } from '$lib/content/packs.svelte';
+	import {
+		missingBundled,
+		packConfig,
+		setPinned,
+		setUpdateMode,
+		SHIPPED_PACK_REPO,
+		UPDATE_MODE
+	} from '$lib/content/packs.svelte';
+	import { restoreBundledPacks } from '$lib/content/provider';
 	import {
 		updates,
 		checkNow,
@@ -21,6 +29,7 @@
 
 	let repoUrl = $state('');
 	let uninstalling = $state<string | null>(null);
+	let restoring = $state(false);
 
 	/** Anything that changes what is on disk must be followed by a re-read, or the compendium keeps
 	 *  showing the old rows until the watcher happens to fire. */
@@ -99,6 +108,23 @@
 		</div>
 	</div>
 
+	<!-- Deleting a pack forgets its entry, and the URL with it — so the content Charnik itself
+	     publishes has to be reachable from here, or the one pack everyone starts with is gone behind
+	     a link nobody memorised. -->
+	<p class="sec-note repo-hint">
+		<span>{$_('settings.packs.ownRepoHint')} <span class="mono">{SHIPPED_PACK_REPO}</span></span>
+		<button
+			class="pill-btn"
+			disabled={updates.checking}
+			onclick={() => {
+				repoUrl = SHIPPED_PACK_REPO;
+				discoverPacks(SHIPPED_PACK_REPO);
+			}}
+		>
+			{$_('settings.packs.ownRepoLoad')}
+		</button>
+	</p>
+
 	{#if updates.error}
 		<p class="pack-problem">
 			{updates.error.kind === 'i18n'
@@ -141,6 +167,40 @@
 								{$_('settings.packs.install')}
 							</button>
 						{/if}
+					</div>
+				</div>
+			{/each}
+		</div>
+	{/if}
+
+	<!-- A bundled pack that isn't on disk. Listed whether or not the launch prompt was silenced:
+	     "I meant to delete it" answers a QUESTION, it does not take the undo away. -->
+	{#if missingBundled.packs.length > 0}
+		<p class="list-label">{$_('settings.packs.missingLabel')}</p>
+		<div class="pack-list">
+			{#each missingBundled.packs as pack (pack)}
+				<div class="pack-row">
+					<div class="pack-meta">
+						<div class="pack-name">{pack}</div>
+						<div class="pack-sub">{$_('settings.packs.missingNote')}</div>
+					</div>
+					<div class="pack-actions">
+						<button
+							class="pill-btn accent"
+							disabled={restoring}
+							onclick={async () => {
+								restoring = true;
+								try {
+									await restoreBundledPacks([pack]);
+									missingBundled.packs = missingBundled.packs.filter((p) => p !== pack);
+									await afterDiskChange();
+								} finally {
+									restoring = false;
+								}
+							}}
+						>
+							{$_('settings.packs.restore')}
+						</button>
 					</div>
 				</div>
 			{/each}
@@ -333,6 +393,13 @@
 		margin-top: var(--space-2);
 		font-size: var(--font-size-sm);
 		color: var(--color-warning);
+	}
+	.repo-hint {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		align-items: center;
+		margin-top: var(--space-2);
 	}
 	.add-row {
 		flex: 1;

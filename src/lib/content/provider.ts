@@ -29,7 +29,13 @@ import { HOMEBREW_ROOT } from './homebrew';
 import { parseContentDirectives, isHashDrift } from './meta';
 import { hashBody } from './hash';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
-import { packConfig, registerPack } from './packs.svelte';
+import {
+	missingBundled,
+	packConfig,
+	registerPack,
+	SHIPPED_PACK_REPO,
+	unDismissMissing
+} from './packs.svelte';
 
 /** Records which CONTENT_SEED_VERSION was last written to the data dir. Lives beside the seeded roots
  *  but OUTSIDE them (the loader only scans the `srd-*` roots), so it's never parsed as content. */
@@ -82,6 +88,9 @@ async function buildGraph(): Promise<ContentGraph> {
 		await seedShippedContent(bundled, user, shipped, CONTENT_SEED_VERSION);
 		const installed = await discoverContentRoots(user);
 		adoptShippedPacks(shipped.filter((root) => installed.includes(root)));
+		// deleting a bundled pack is allowed and sticks — but it is the rules the app runs on, so the
+		// absence is REPORTED (layout prompt + a restore button in Settings), never silently endured
+		missingBundled.packs = shipped.filter((root) => !installed.includes(root)).map(packNameOf);
 		return loadContent(user, installed, homebrew);
 	}
 	// web + headless (build-time prerender / tests): read the bundled CSVs over fetch
@@ -91,23 +100,38 @@ async function buildGraph(): Promise<ContentGraph> {
 /**
  * The shipped SRD is A PACK, not a special case (REL-4 slice 4) — it just happens to be the one we
  * bundle, so it has a floor no download can take away. Registering it against the repo it is
- * released from is what lets it be updated on the SAME path as any third-party pack: rules data
- * ships without an app build, which is the entire point of REL-4.
+ * released from (`SHIPPED_PACK_REPO`) is what lets it be updated on the SAME path as any
+ * third-party pack: rules data ships without an app build, which is the entire point of REL-4.
  *
- * The repo is a constant rather than a `#content-*` header on purpose: `#content-url` already means
- * something else (where the DATA came from — Wizards, for the SRD), and a file cannot state which
- * repository publishes it without that becoming a self-referential thing to keep in sync.
+ * Give every bundled pack a registry entry, unless the user already has one (theirs wins — they may
+ * have re-pointed it at a fork). Never overwrites a pin. Called with the packs that are actually ON
+ * DISK: one the user uninstalled must not reappear in the list as an install offer.
  */
-const SHIPPED_PACK_REPO = 'https://github.com/FernDragonborn/charnik-content-srd';
-
-/** Give every bundled pack a registry entry, unless the user already has one (theirs wins — they
- *  may have re-pointed it at a fork). Never overwrites a pin. Called with the packs that are
- *  actually ON DISK: one the user uninstalled must not reappear in the list as an install offer. */
 function adoptShippedPacks(shipped: string[]): void {
-	for (const root of shipped) {
-		const pack = root.slice(root.lastIndexOf('/') + 1);
-		if (packConfig.packs[pack] === undefined) registerPack(pack, SHIPPED_PACK_REPO);
+	for (const root of shipped)
+		if (packConfig.packs[packNameOf(root)] === undefined)
+			registerPack(packNameOf(root), SHIPPED_PACK_REPO);
+}
+
+/** `content/srd-2024` → `srd-2024`: the folder IS the pack, so its name is its last segment. */
+const packNameOf = (root: string): string => root.slice(root.lastIndexOf('/') + 1);
+
+/**
+ * Put a bundled pack back, from the copy inside the app — the undo for a deletion, offered both at
+ * launch (when the rules are simply gone) and in Settings. It re-copies rather than downloading, so
+ * it works with no network: the bundle is the floor a fresh install starts from, and this is the
+ * same copy step, asked for explicitly instead of happening behind the user's back.
+ */
+export async function restoreBundledPacks(packs: string[]): Promise<void> {
+	const bundled = new FetchStorage(base);
+	const user = getUserStorage();
+	for (const pack of packs) {
+		const root = `${CONTENT_DIR}/${pack}`;
+		for (const f of await bundled.list(root))
+			await user.writeBytes(f.path, await bundled.readBytes(f.path));
 	}
+	unDismissMissing(packs);
+	resetContentGraph();
 }
 
 /** The CONTENT_SEED_VERSION last written to disk, or null if never seeded / unreadable. */

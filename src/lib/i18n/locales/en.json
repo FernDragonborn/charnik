@@ -111,9 +111,14 @@
 			"foundIn": "Found in {repo}",
 			"installedLabel": "Installed",
 			"readyOffline": "Downloaded and ready — applying it works offline",
+			"ownRepoHint": "Charnik’s own packs — the SRD ones it ships with — live at",
+			"ownRepoLoad": "Look them up",
+			"missingLabel": "Deleted, but still in the app",
+			"missingNote": "Not on your disk. The copy inside the app can go back any time — no internet needed.",
+			"restore": "Put it back",
 			"contentMoved": "“{path}” changed on the server while it was being downloaded. Nothing was written; check again in a moment.",
-			"uninstallWarn": "This deletes the pack’s files from your disk, including the {count} entries it currently provides. Characters that use them will show those entries as missing. You can install it again later from {repo}.",
-			"uninstallWarnEmpty": "This deletes the pack’s files from your disk. Characters that use anything from it will show those entries as missing. You can install it again later from {repo}."
+			"uninstallWarn": "Deletes its files from your disk, and the {count} entries it gives you with them. Characters using any of those go blank there. You can get it back any time from {repo}.",
+			"uninstallWarnEmpty": "Deletes its files from your disk. Characters using anything from it go blank there. You can get it back any time from {repo}."
 		}
 	},
 	"sheet": {
@@ -132,6 +137,14 @@
 		"empty": "No characters yet. Create one to get started.",
 		"newCharacter": "+ New character",
 		"delete": "Delete {name}"
+	},
+	"missingContent": {
+		"title": "There are no rules on disk",
+		"subtitle": "Gone: {packs}",
+		"body": "Deleting it is allowed — but if nothing has taken its place, there are no species, no classes, no spells and no items, and anything your characters took from it shows up blank. Another pack covering the same ground is fine. If there isn’t one, put this back — it lives inside the app, no internet needed.",
+		"restore": "Put it back",
+		"restoring": "Putting it back…",
+		"keepDeleted": "I meant to — don’t ask again"
 	},
 	"noCharacter": {
 		"title": "No character here yet",

@@ -16,6 +16,8 @@
 	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
 	import { loadContentStore } from '$lib/content/store.svelte';
 	import { autoCheckAllowed, checkNow } from '$lib/content/remote/updates.svelte';
+	import { missingUnanswered } from '$lib/content/packs.svelte';
+	import MissingContentModal from '$lib/components/MissingContentModal.svelte';
 	import { loadPlugins } from '$lib/effects/plugin-store.svelte';
 	import { review, pendingMetaIssues, pendingDriftItems } from '$lib/content/review.svelte';
 	import { Toaster, toast } from 'svelte-sonner';
@@ -301,6 +303,12 @@
 
 {#if showDiagnostics}
 	<DiagnosticsModal onDismiss={() => (showDiagnostics = false)} />
+{/if}
+
+<!-- The rules themselves are missing — asked BEFORE the content-review prompts, since those review
+     content this install doesn't have. -->
+{#if missingUnanswered().length > 0}
+	<MissingContentModal />
 {/if}
 
 <!-- DATA-VER-1 startup review: drift first, then missing-metadata. Confirm actions do the write-back

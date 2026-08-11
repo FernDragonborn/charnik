@@ -57,17 +57,35 @@ export interface PackConfigData {
 	packs: Record<string, PackEntry>;
 	/** repo URL → check state. */
 	repos: Record<string, RepoEntry>;
+	/** Bundled packs the user deleted ON PURPOSE. Persisted because the "your rules are gone" prompt
+	 *  fires at every launch, and a decision you have to re-make every launch is a nag. It suppresses
+	 *  the PROMPT only — restoring stays one click in Settings. */
+	dismissedMissing: string[];
 }
 
 export const emptyPackConfig = (): PackConfigData => ({
 	updates: UPDATE_MODE.off,
 	packs: {},
-	repos: {}
+	repos: {},
+	dismissedMissing: []
 });
 
 /** At most one update request per repo per day — stated plainly in the settings copy, so the
  *  number lives here and nowhere else. */
 export const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Where the packs Charnik itself publishes come from. Lives here, next to the registry, because two
+ * unrelated places need it and for opposite reasons: the desktop seed registers the bundled packs
+ * against it, and Settings offers it as a starting point — a pack you deleted has no registry entry
+ * left to read the URL off, so without this the only content the app ships would be gone for good
+ * behind a URL nobody memorised.
+ *
+ * A constant rather than a `#content-*` header on purpose: `#content-url` already means "where the
+ * DATA came from" (Wizards, for the SRD), and a file naming the repository that publishes it is a
+ * self-reference to keep in sync.
+ */
+export const SHIPPED_PACK_REPO = 'https://github.com/FernDragonborn/charnik-content-srd';
 
 /** Parse a stored blob over the defaults. Pure, so the merge is unit-testable without Storage; a
  *  missing/corrupt file degrades to "nothing installed, never check", never throws. */
@@ -78,7 +96,10 @@ export function parsePackConfig(raw: string | null): PackConfigData {
 		return {
 			updates: isUpdateMode(parsed.updates) ? parsed.updates : UPDATE_MODE.off,
 			packs: isRecord(parsed.packs) ? parsed.packs : {},
-			repos: isRecord(parsed.repos) ? parsed.repos : {}
+			repos: isRecord(parsed.repos) ? parsed.repos : {},
+			dismissedMissing: Array.isArray(parsed.dismissedMissing)
+				? parsed.dismissedMissing.filter((p): p is string => typeof p === 'string')
+				: []
 		};
 	} catch {
 		return emptyPackConfig();
@@ -121,6 +142,33 @@ function adopt(cfg: PackConfigData): void {
 	packConfig.updates = cfg.updates;
 	packConfig.packs = cfg.packs;
 	packConfig.repos = cfg.repos;
+	packConfig.dismissedMissing = cfg.dismissedMissing;
+}
+
+/**
+ * Bundled packs that are NOT on disk right now — the app ships them, this install doesn't have them.
+ * Recomputed at every content load and never persisted: it is a fact about the disk, not a setting.
+ * Deleting a pack is allowed (it is a pack like any other), but content is what the whole app runs
+ * on, so its absence is stated rather than discovered later as everything rendering empty.
+ */
+export const missingBundled = $state<{ packs: string[] }>({ packs: [] });
+
+/** Which of them still deserve the launch prompt — the rest the user has already answered for. */
+export const missingUnanswered = (): string[] =>
+	missingBundled.packs.filter((pack) => !packConfig.dismissedMissing.includes(pack));
+
+/** "I meant to delete it, stop asking." Suppresses the prompt for these packs; Settings still offers
+ *  to restore them, because a decision is not a door that locks behind you. */
+export function keepMissingPacks(packs: string[]): void {
+	packConfig.dismissedMissing = [...new Set([...packConfig.dismissedMissing, ...packs])];
+	persist();
+}
+
+/** A restored pack is no longer missing, so it must not stay on the "don't ask" list either — it
+ *  would silence the prompt if the user deleted it again later. */
+export function unDismissMissing(packs: string[]): void {
+	packConfig.dismissedMissing = packConfig.dismissedMissing.filter((p) => !packs.includes(p));
+	persist();
 }
 
 /** Load the registry from the data root (once, at app start). Never throws — a read failure leaves

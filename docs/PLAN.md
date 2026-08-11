@@ -1580,6 +1580,19 @@ holds the done-work log; these are the OPEN tails it carried):**
        work without them"). The confirm step says how many of the entries you currently have come
        from this pack — quantified from the loaded graph, so it needs no special case to say
        "without this there are no rules" — plus which characters lose what, and where to get it back.
+     - **And if it IS gone, that is said at launch, once.** A bundled pack missing from disk raises an
+       un-dismissable prompt (`MissingContentModal`, `DialogShell` with no `onDismiss` — a stray click
+       must not close the only offer to put your rules back) with exactly two answers: put it back, or
+       "I meant to — don't ask again", which persists as `dismissedMissing` in the pack config. That
+       flag silences the PROMPT only: **Settings always lists a deleted bundled pack with a one-click
+       restore**, because an answer is not a door that locks behind you. Restore re-copies from the
+       bundle, so it needs no network, and it clears the flag — deleting it again asks again.
+       - The copy is deliberately conditional ("if nothing has taken its place…"): we do NOT check
+         whether another installed pack covers the same ground, so the prompt must not claim it.
+       - This is the ONE piece of persisted state the tombstone proposal would have added — but it
+         is the user's own answer to a question, not seed machinery, and it changes nothing about
+         what gets seeded. `restoreBundledPacks` is the deleted `copyMissingRoots`, brought back as
+         a BUTTON: the same copy step, asked for instead of happening behind the user's back.
   11. `[x]` **Verified against the real thing, on both sides of the seam.**
       - `tests/live-github.test.ts` — opt-in (`CHARNIK_LIVE_NETWORK=1`), because a suite that fails
         when the wifi drops is a suite people learn to ignore. It proves what no fake can: the tree

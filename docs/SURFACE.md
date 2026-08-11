@@ -160,7 +160,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (46)
+## Shared components (47)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -191,6 +191,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **LangSwitcher** | — | The one canonical language switcher — reused everywhere (topbar, dialogs) so it looks and behaves |
 | **LanguagePicker** | `value`, `locales`, `allowAdd`, `accent` | Searchable language dropdown — one shared control for the translate view's FROM and TO pickers |
 | **Loading** | `message`, `error` | Full-view loading screen shown while the sheet/content is being loaded (the derive can take a |
+| **MissingContentModal** | — | The rules are gone (REL-4). |
 | **MobileWarning** | — |  |
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
 | **NoCharacter** | — | Shared empty state for the play views (Combat / Spellbook) when there's no active character — |
@@ -237,10 +238,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PackConfigData`
 - `const emptyPackConfig`
 - `const CHECK_INTERVAL_MS` — At most one update request per repo per day — stated plainly in the settings copy, so the * number lives here and now…
+- `const SHIPPED_PACK_REPO` — * Where the packs Charnik itself publishes come from.
 - `function parsePackConfig` — Parse a stored blob over the defaults.
 - `function isRepoDue` — * Is this repo due for an automatic check?
 - `function reposDueForCheck` — Every repo that automatic checking may contact right now: the update mode allows the network, * the throttle has elap…
 - `const packConfig` — Reactive, persisted registry.
+- `const missingBundled` — * Bundled packs that are NOT on disk right now — the app ships them, this install doesn't have them.
+- `const missingUnanswered` — Which of them still deserve the launch prompt — the rest the user has already answered for.
+- `function keepMissingPacks` — "I meant to delete it, stop asking." Suppresses the prompt for these packs; Settings still offers * to restore them, …
+- `function unDismissMissing` — A restored pack is no longer missing, so it must not stay on the "don't ask" list either — it * would silence the pro…
 - `function initPackConfig` — Load the registry from the data root (once, at app start).
 - `function registerPack` — Record an installed pack (the installer calls this), or re-point an existing one at a new repo.
 - `function forgetPack` — Forget a pack (it was uninstalled).
@@ -650,6 +656,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function discoverContentRoots` — * Every installed content pack, discovered by SCANNING `content/` — a pack is a folder, so the * folder listing is th…
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
+- `function restoreBundledPacks` — * Put a bundled pack back, from the copy inside the app — the undo for a deletion, offered both at * launch (when the…
 - `function isUserModified` — Is an on-disk shipped file USER-modified?
 - `function seedShippedContent` — * Seed / UPDATE the shipped SRD roots on disk (desktop).
 - `function resetContentGraph` — Drop the cache (e.g.
@@ -1189,4 +1196,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 46 components · 676 exports across 99 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 682 exports across 99 modules · 36 duplicate suspects._

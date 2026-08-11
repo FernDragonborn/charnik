@@ -7,11 +7,17 @@
 	import { onMount } from 'svelte';
 	import PackUpdatesSettings from '$lib/components/settings/PackUpdatesSettings.svelte';
 	import { loadContentStore } from '$lib/content/store.svelte';
-	import { packConfig, UPDATE_MODE } from '$lib/content/packs.svelte';
+	import { page } from '$app/state';
+	import {
+		missingBundled,
+		packConfig,
+		SHIPPED_PACK_REPO,
+		UPDATE_MODE
+	} from '$lib/content/packs.svelte';
 	import { updates } from '$lib/content/remote/updates.svelte';
 	import { FILE_CHANGE } from '$lib/content/remote/diff';
 
-	const REPO = 'https://github.com/FernDragonborn/charnik-content-srd';
+	const REPO = SHIPPED_PACK_REPO;
 	const THIRD_PARTY = 'https://github.com/someone/dark-sun';
 
 	// seed AFTER the layout's content load: it runs `initPackConfig`, which would otherwise adopt the
@@ -22,6 +28,11 @@
 	});
 
 	function seed() {
+		// `?missing` = the pack was deleted: the launch prompt (rendered by the LAYOUT, so it shows in a
+		// plain browser too) plus the restore row in the panel. Behind a flag because the prompt is
+		// deliberately un-dismissable and would sit on top of everything else this page previews.
+		missingBundled.packs = page.url.searchParams.has('missing') ? ['srd-2014'] : [];
+
 		packConfig.updates = UPDATE_MODE.notify;
 		packConfig.packs = {
 			'srd-2024': { repo: REPO },

@@ -8,7 +8,12 @@ import {
 	parsePackConfig,
 	emptyPackConfig,
 	isRepoDue,
+	keepMissingPacks,
+	missingBundled,
+	missingUnanswered,
+	packConfig,
 	reposDueForCheck,
+	unDismissMissing,
 	CHECK_INTERVAL_MS,
 	UPDATE_MODE,
 	type PackConfigData
@@ -42,6 +47,40 @@ describe('parsePackConfig', () => {
 		const parsed = parsePackConfig(raw);
 		expect(parsed.packs['srd-2014']?.pinned).toBe(true);
 		expect(parsed.repos[REPO]?.etag).toBe('W/"abc"');
+	});
+});
+
+/** Deleting a bundled pack is allowed, so the app has to say the rules are gone — once, and then
+ *  stop, because a prompt you must answer at every launch is a nag rather than a warning. */
+describe('the missing-content prompt', () => {
+	it('prompts for a bundled pack that is not on disk', () => {
+		missingBundled.packs = ['srd-2014'];
+		Object.assign(packConfig, emptyPackConfig());
+		expect(missingUnanswered()).toEqual(['srd-2014']);
+	});
+
+	it('"I deleted it on purpose" silences it, and survives a reload', () => {
+		missingBundled.packs = ['srd-2014'];
+		Object.assign(packConfig, emptyPackConfig());
+		keepMissingPacks(['srd-2014']);
+		expect(missingUnanswered()).toEqual([]);
+		// what persistence would write, read back
+		expect(parsePackConfig(JSON.stringify(packConfig)).dismissedMissing).toEqual(['srd-2014']);
+	});
+
+	it('restoring clears the answer, so deleting it AGAIN asks again', () => {
+		missingBundled.packs = ['srd-2014'];
+		Object.assign(packConfig, emptyPackConfig());
+		keepMissingPacks(['srd-2014']);
+		unDismissMissing(['srd-2014']);
+		expect(missingUnanswered()).toEqual(['srd-2014']);
+	});
+
+	it('a corrupt dismissal list is ignored, not trusted into the prompt logic', () => {
+		expect(parsePackConfig('{"dismissedMissing":"srd-2014"}').dismissedMissing).toEqual([]);
+		expect(parsePackConfig('{"dismissedMissing":[1,"srd-2014"]}').dismissedMissing).toEqual([
+			'srd-2014'
+		]);
 	});
 });
 
