@@ -1351,8 +1351,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   shipped files on update, preserving any the user hand-edited (hash drift). The "bump it whenever
   shipped SRD data changes" rule lives on the constant itself (`schema/version.ts`).
 - [~] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
-  2026-08-10; slices 0–4 BUILT 2026-08-11, slice 5 partial — see STILL OPEN below, and note the
-  live desktop path has never been run).** The ask: a Settings field where you paste
+  2026-08-10; slices 0–8 BUILT 2026-08-11 — the live desktop network path has still never been RUN,
+  and two decisions stay open; see STILL OPEN below).** The ask: a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
   updated without shipping an app release.
@@ -1526,7 +1526,7 @@ holds the done-work log; these are the OPEN tails it carried):**
      updates through the SAME path as any third-party pack. Its repo is a constant, not a
      `#content-*` header — `#content-url` already means "where the DATA came from" (Wizards), and a
      file stating which repository publishes it is a self-reference to keep in sync.
-  5. `[~]` **Settings UI** — inside the (renamed) **Content** tab, above the source/file filters,
+  5. `[x]` **Settings UI** — inside the (renamed) **Content** tab, above the source/file filters,
      because a pack is the container of exactly those files; four tabs on one concept was the
      smell. Network dropdown (*don't check* / *notify* / *pre-download*), a manual check that
      deliberately bypasses the throttle (global and per-pack), pins, and the pre-apply summary
@@ -1535,28 +1535,31 @@ holds the done-work log; these are the OPEN tails it carried):**
      this is how it gets driven). The startup check is fire-and-forget AFTER content load, gated on
      the mode + throttle. GitHub-only is stated in the description, not just in a failure.
 
-  **STILL OPEN (2026-08-11) — what the five slices do NOT cover.** Written down because the feature
-  reads finished from the outside and is not:
-  - `[ ]` **Install a NEW pack from a pasted URL — the headline ask, not built.** Everything under
-    it exists (registry, fetcher, diff, apply); what is missing is the field and the flow.
-    `registerPack` currently has exactly one caller, `adoptShippedPacks`, so today the feature
-    UPDATES the bundled SRD and cannot ADD a third-party pack. Install = register + a diff where
-    every file is `added` + apply, so this is wiring, not new machinery. Its dialog is also where
-    "this pack contains N plugins" belongs (`pluginsIn` already computes it, PLUGINS §2).
-  - `[ ]` **`#content-source` is not checked before applying — a correctness hole, not a UI gap.**
-    This item's own rule says a pack that changes its source tag is a NEW pack, never an update,
-    because identity is `source:id` and re-namespacing breaks every character reference at once.
-    The diff compares paths and blob SHAs and never reads the header, so an upstream re-tag would
-    be applied silently. Fix belongs in `diffPack` (compare the remote file's `#content-source`
-    against the local one; a mismatch is a REFUSAL with an explanation, not a diff).
-  - `[ ]` **Uninstalling a pack has no UI** — `forgetPack` is written and has no caller. Deleting
-    the folder must also drop the registry entry, and (per the plugins decision) takes the pack's
-    plugins with it.
-  - `[ ]` **A removal can never be accepted.** The panel always calls `applyUpdate` without
-    `removeDeleted`, so a file deleted upstream stays local forever and is re-reported on every
-    check. Safe default, missing second half.
+  6. `[x]` **Install / uninstall a pack from a pasted URL** (the headline ask). Two steps on
+     purpose — `discoverPacks(url)` only LOOKS (nothing written, nothing registered) and lists what
+     the repo holds with the code it carries, then `installPack` commits one. Install runs the SAME
+     diff+apply path as an update, which is what makes a folder that already exists behave
+     correctly (hand-edits preserved, a re-tagged source refused) instead of being blindly
+     overwritten. The registry entry is written only AFTER the files land, so a failed install
+     leaves no trace. `uninstallPack` deletes the folder — taking the pack's plugins with it, since
+     they live inside it — and forgets the entry.
+  7. `[x]` **`#content-source` is checked before applying — the correctness hole, closed.** A pack
+     that re-tags its source is a NEW pack, never an update: identity is `source:id`, so applying it
+     would rename every row at once and every character reference into that pack would resolve to
+     nothing. **It can only be checked at apply time** — the diff compares blob SHAs precisely so it
+     does not download, so the remote's header is unknown until the bytes are in hand. That is still
+     before anything is written, so the refusal costs nothing and the disk is untouched.
+  8. `[x]` **Accepting a removal is its own button** ("Apply, including deletions"), separate from
+     the ordinary apply, and only shown when the diff actually has removals. Default stays "keep",
+     because a deleted row can orphan a reference inside a character mid-campaign.
+
+  **STILL OPEN (2026-08-11).** Written down because the feature reads finished from the outside:
   - `[ ]` **Deleting or downgrading the SRD pack** still needs the answer the item below asks for —
-    the demo character depends on that content existing.
+    the demo character depends on that content existing. Uninstall currently treats it like any
+    other pack; the bundled floor re-seeds it on next launch, which is a defensible answer but not
+    a decided one.
+  - `[ ]` **A generic (non-GitHub) HTTPS host.** Deferred by decision, not by omission — see the
+    capability finding in slice 2 and SECURITY.md §7.
   - `[ ]` **Unverified end to end**: no headless way to drive a Tauri webview here, so the live
     network path (real 304, real download, real write into the data dir) has never run. Everything
     below it is unit-tested against a fake fetcher, and `cargo check` proves the plugin + capability

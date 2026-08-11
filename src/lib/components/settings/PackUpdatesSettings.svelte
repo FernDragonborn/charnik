@@ -5,11 +5,28 @@
 	// use. Desktop-only: the web build serves the content of its own deploy.
 	import { _ } from '$lib/i18n';
 	import { packConfig, setPinned, setUpdateMode, UPDATE_MODE } from '$lib/content/packs.svelte';
-	import { updates, checkNow, applyUpdate } from '$lib/content/remote/updates.svelte';
+	import {
+		updates,
+		checkNow,
+		applyUpdate,
+		discoverPacks,
+		installPack,
+		uninstallPack
+	} from '$lib/content/remote/updates.svelte';
+	import { reloadContent } from '$lib/content/store.svelte';
 	import { FILE_CHANGE } from '$lib/content/remote/diff';
 
 	const packs = $derived(Object.entries(packConfig.packs).sort(([a], [b]) => a.localeCompare(b)));
 	const modes = [UPDATE_MODE.off, UPDATE_MODE.notify, UPDATE_MODE.download];
+
+	let repoUrl = $state('');
+	let uninstalling = $state<string | null>(null);
+
+	/** Anything that changes what is on disk must be followed by a re-read, or the compendium keeps
+	 *  showing the old rows until the watcher happens to fire. */
+	async function afterDiskChange() {
+		await reloadContent();
+	}
 
 	/** Files this update would write / preserve / delete, as a count per kind. */
 	function counts(changes: { kind: string }[]) {
@@ -54,17 +71,80 @@
 		</div>
 	</div>
 
+	<!-- ADD a pack: paste a repo URL, see what it holds, then install one. Deliberately two steps —
+	     a repo can hold several packs, and a pack may carry plugins the user must see first. -->
+	<div class="setting-row">
+		<span class="setting-label">{$_('settings.packs.addLabel')}</span>
+		<div class="setting-options add-row">
+			<input
+				class="add-url"
+				type="url"
+				bind:value={repoUrl}
+				placeholder={$_('settings.packs.addPlaceholder')}
+				onkeydown={(e) => e.key === 'Enter' && repoUrl && discoverPacks(repoUrl)}
+			/>
+			<button
+				class="pill-btn"
+				disabled={updates.checking || repoUrl.trim() === ''}
+				onclick={() => discoverPacks(repoUrl.trim())}
+			>
+				{$_('settings.packs.lookUp')}
+			</button>
+		</div>
+	</div>
+
 	{#if updates.error}
 		<p class="pack-problem">
 			{updates.error.kind === 'i18n'
-				? $_(updates.error.key, { values: { repo: updates.error.repo } })
+				? $_(updates.error.key, { values: updates.error.values })
 				: updates.error.message}
 		</p>
+	{/if}
+
+	{#if updates.discovered.length > 0}
+		<p class="list-label">
+			{$_('settings.packs.foundIn', { values: { repo: updates.discovered[0]?.repo ?? '' } })}
+		</p>
+		<div class="pack-list">
+			{#each updates.discovered as found (found.pack)}
+				<div class="pack-row">
+					<div class="pack-meta">
+						<div class="pack-name">{found.pack}</div>
+						<div class="pack-sub">
+							{$_('settings.packs.filesInPack', { values: { count: found.files } })}
+						</div>
+						{#if found.plugins.length > 0}
+							<div class="pack-warn">
+								{$_('settings.packs.carriesPlugins', {
+									values: { list: found.plugins.join(', ') }
+								})}
+							</div>
+						{/if}
+					</div>
+					<div class="pack-actions">
+						{#if found.installed}
+							<span class="pack-sub">{$_('settings.packs.alreadyInstalled')}</span>
+						{:else}
+							<button
+								class="pill-btn accent"
+								onclick={async () => {
+									await installPack(found.pack);
+									await afterDiskChange();
+								}}
+							>
+								{$_('settings.packs.install')}
+							</button>
+						{/if}
+					</div>
+				</div>
+			{/each}
+		</div>
 	{/if}
 
 	{#if packs.length === 0}
 		<p class="empty">{$_('settings.packs.none')}</p>
 	{:else}
+		<p class="list-label">{$_('settings.packs.installedLabel')}</p>
 		<div class="pack-list">
 			{#each packs as [pack, entry] (pack)}
 				{@const pending = updates.pending[pack]}
@@ -127,8 +207,46 @@
 							{$_('settings.packs.checkThis')}
 						</button>
 						{#if pending}
-							<button class="pill-btn accent" onclick={() => applyUpdate(pack)}>
+							<button
+								class="pill-btn accent"
+								onclick={async () => {
+									await applyUpdate(pack);
+									await afterDiskChange();
+								}}
+							>
 								{$_('settings.packs.apply')}
+							</button>
+							<!-- accepting a removal is its OWN action: it deletes content a character may be
+							     using, so it never rides along with the ordinary update button -->
+							{#if pending.diff.changes.some((c) => c.kind === FILE_CHANGE.removed)}
+								<button
+									class="pill-btn"
+									onclick={async () => {
+										await applyUpdate(pack, { removeDeleted: true });
+										await afterDiskChange();
+									}}
+								>
+									{$_('settings.packs.applyWithRemovals')}
+								</button>
+							{/if}
+						{/if}
+						{#if uninstalling === pack}
+							<button
+								class="pill-btn accent"
+								onclick={async () => {
+									await uninstallPack(pack);
+									uninstalling = null;
+									await afterDiskChange();
+								}}
+							>
+								{$_('settings.packs.uninstallConfirm')}
+							</button>
+							<button class="pill-btn" onclick={() => (uninstalling = null)}>
+								{$_('settings.packs.cancel')}
+							</button>
+						{:else}
+							<button class="pill-btn" onclick={() => (uninstalling = pack)}>
+								{$_('settings.packs.uninstall')}
 							</button>
 						{/if}
 					</div>
@@ -139,6 +257,13 @@
 {/if}
 
 <style>
+	.list-label {
+		margin: var(--space-4) 0 0;
+		font-size: var(--font-size-xs);
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--color-text-muted);
+	}
 	.pack-list {
 		display: flex;
 		flex-direction: column;
@@ -189,9 +314,25 @@
 		font-size: var(--font-size-sm);
 		color: var(--color-warning);
 	}
+	.add-row {
+		flex: 1;
+	}
+	.add-url {
+		flex: 1;
+		min-width: 280px;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-sm);
+		padding: 6px 10px;
+		color: var(--color-text);
+		background: var(--color-surface-2);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+	}
 	.pack-actions {
 		display: flex;
 		flex-shrink: 0;
+		flex-wrap: wrap;
+		justify-content: flex-end;
 		gap: var(--space-2);
 	}
 </style>

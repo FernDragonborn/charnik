@@ -24,3 +24,12 @@ export interface RemoteFetcher {
 /** Bytes above this are refused rather than buffered — a content CSV is measured in hundreds of KB,
  *  and an unbounded read of a remote body is a memory-blowup waiting to happen (SECURITY.md §8). */
 export const MAX_REMOTE_BYTES = 8 * 1024 * 1024;
+
+/**
+ * A failure the UI can show. Two kinds on purpose: `i18n` is copy WE author (translatable, values
+ * interpolated by the component), `raw` is what the network stack handed us — a machine string we
+ * must not pretend to have written. Keeping them apart is what stops new untranslated English
+ * leaking into the UI, and leaves the UX-1 copy sweep dealing with keys only.
+ */
+export type UpdateError =
+	{ kind: 'i18n'; key: string; values: Record<string, string> } | { kind: 'raw'; message: string };

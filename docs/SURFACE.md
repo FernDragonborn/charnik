@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (34)
+## Duplicate suspects (35)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -47,6 +47,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
+- `sourceOf` ×2 — src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts
 - `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
@@ -249,12 +250,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/remote/updates.svelte.ts`
 
 - `interface PendingUpdate` — One pack with an update waiting, and everything the user needs to decide about it.
-- `type UpdateError` — * A failure the panel can show.
+- `interface DiscoveredPack` — A pack found in a repo the user just pasted, and what installing it would bring.
 - `const updates`
 - `const dueRepos` — Which repos an AUTOMATIC check may contact right now (mode + throttle + pins).
 - `function checkNow` — * Ask the repos what they have.
 - `function applyUpdate` — * Apply ONE pack's pending update.
 - `const autoCheckAllowed` — Should the app check by itself at startup?
+- `function discoverPacks` — * Ask a pasted repo URL what packs it holds.
+- `function installPack` — * Install one discovered pack.
+- `function uninstallPack` — * Uninstall a pack: delete its folder (which takes its plugins with it — they live inside it, * PLUGINS §2) and drop …
 
 ### `src/lib/content/review.svelte.ts`
 
@@ -665,6 +669,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PackDiff`
 - `const hasWrites` — Does this diff actually ask to write anything?
 - `function diffPack` — * Compare one remote pack against what is on disk.
+- `const sourceOf` — The `#content-source` a CSV declares, or null if it declares none.
+- `function localPackSource` — * The source tag this pack currently claims ON DISK — the identity half of `source:id`.
 - `function rowsRemovedBy` — The content rows that would DISAPPEAR if this diff were applied — every row the loader read from * a file the update …
 - `function charactersReferencing` — * Which saved characters mention any of those row keys.
 
@@ -696,6 +702,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type FetchResult` — A conditional GET result.
 - `interface RemoteFetcher`
 - `const MAX_REMOTE_BYTES` — Bytes above this are refused rather than buffered — a content CSV is measured in hundreds of KB, * and an unbounded r…
+- `type UpdateError` — * A failure the UI can show.
 
 ### `src/lib/content/schemas.ts`
 
@@ -1177,4 +1184,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 46 components · 666 exports across 99 modules · 34 duplicate suspects._
+_45 tokens · 64 global classes · 46 components · 672 exports across 99 modules · 35 duplicate suspects._

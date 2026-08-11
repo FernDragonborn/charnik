@@ -106,10 +106,65 @@ describe('applyPackUpdate', () => {
 			repo: REPO,
 			diff
 		});
-		expect(res.error).toMatch(/b\.csv/);
+		expect(res.error).toEqual({ kind: 'raw', message: expect.stringMatching(/b\.csv/) });
 		expect(res.written).toEqual([]);
 		expect(await s.exists('content/p/a.csv')).toBe(false); // the one that DID download
 		expect(await s.read('content/p/b.csv')).toBe('id\nOLD BUT INTACT');
+	});
+
+	it('REFUSES a pack that re-tags its #content-source — that is a new pack, not an update', async () => {
+		// identity is `source:id`, so applying this would rename every row at once and every
+		// character reference into the pack would resolve to nothing
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/a.csv', enc('#content-source: Old Name\nid\na'));
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({
+				'p/a.csv': '#content-source: New Name\nid\na',
+				'p/b.csv': '#content-source: New Name\nid\nb'
+			}),
+			repo: REPO,
+			diff
+		});
+		expect(res.error).toEqual({
+			kind: 'i18n',
+			key: 'settings.packs.sourceChanged',
+			values: { pack: 'p', from: 'Old Name', to: 'New Name' }
+		});
+		expect(res.written).toEqual([]);
+		expect(await s.read('content/p/a.csv')).toContain('Old Name'); // untouched
+		expect(await s.exists('content/p/b.csv')).toBe(false);
+	});
+
+	it('the same source tag applies normally — the check must not block ordinary updates', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/a.csv', enc('#content-source: Same\nid\nold'));
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({
+				'p/a.csv': '#content-source: Same\nid\nnew',
+				'p/b.csv': '#content-source: Same\nid\nb'
+			}),
+			repo: REPO,
+			diff
+		});
+		expect(res.error).toBeUndefined();
+		expect(res.written).toEqual(['p/a.csv', 'p/b.csv']);
+	});
+
+	it('a FRESH install has no local source to clash with, so it proceeds', async () => {
+		const s = new MemoryStorage();
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({
+				'p/a.csv': '#content-source: Brand New\nid\na',
+				'p/b.csv': '#content-source: Brand New\nid\nb'
+			}),
+			repo: REPO,
+			diff
+		});
+		expect(res.error).toBeUndefined();
+		expect(res.written).toHaveLength(2);
 	});
 
 	it('a removal is only applied when explicitly asked for', async () => {

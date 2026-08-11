@@ -38,8 +38,27 @@
 		updates.error = {
 			kind: 'i18n',
 			key: 'settings.packs.hostUnsupported',
-			repo: 'https://my-server.example/packs'
+			values: { repo: 'https://my-server.example/packs' }
 		};
+		// what a pasted URL turns up, including the code disclosure before you commit
+		updates.discovered = [
+			{
+				pack: 'dark-sun',
+				repo: THIRD_PARTY,
+				remote: { pack: 'dark-sun', files: [] },
+				files: 7,
+				plugins: ['dark-sun-rules'],
+				installed: false
+			},
+			{
+				pack: 'srd-2024',
+				repo: THIRD_PARTY,
+				remote: { pack: 'srd-2024', files: [] },
+				files: 16,
+				plugins: [],
+				installed: true
+			}
+		];
 		updates.pending = {
 			'srd-2024': {
 				pack: 'srd-2024',

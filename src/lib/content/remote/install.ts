@@ -14,8 +14,8 @@
  */
 import type { Storage } from '$lib/storage/types';
 import { rawUrl, type GithubRepo, type RemotePack } from './github';
-import type { RemoteFetcher } from './types';
-import { FILE_CHANGE, localPath, type PackDiff } from './diff';
+import type { RemoteFetcher, UpdateError } from './types';
+import { FILE_CHANGE, localPath, localPackSource, sourceOf, type PackDiff } from './diff';
 
 export interface ApplyResult {
 	/** repo-relative paths written */
@@ -25,7 +25,7 @@ export interface ApplyResult {
 	/** present locally, gone upstream — deleted only when `removeDeleted` is asked for */
 	removed: string[];
 	/** set when NOTHING was written: the disk is exactly as it was */
-	error?: string;
+	error?: UpdateError;
 }
 
 export interface ApplyRequest {
@@ -66,10 +66,16 @@ export async function applyPackUpdate({
 				written: [],
 				preserved,
 				removed: [],
-				error: `${change.path}: ${res.message}`
+				error: { kind: 'raw', message: `${change.path}: ${res.message}` }
 			};
 		staged.push({ path: change.path, bytes: res.bytes });
 	}
+
+	// phase 1½ — REFUSE a re-tagged pack. This is the only place it can be checked: the diff
+	// compares blob SHAs without downloading, so the remote's `#content-source` is unknown until
+	// now — and now is still before anything is written.
+	const clash = await sourceClash(storage, diff.pack, staged);
+	if (clash) return { written: [], preserved, removed: [], error: clash };
 
 	// phase 2 — commit. writeBytes is temp→rename and creates parents, and preserves the exact
 	// bytes (a content CSV's BOM/CRLF are load-bearing for Excel + the hash).
@@ -83,6 +89,34 @@ export async function applyPackUpdate({
 		}
 	}
 	return { written: staged.map((f) => f.path), preserved, removed };
+}
+
+/**
+ * Does the incoming pack claim a DIFFERENT `#content-source` than the one on disk? If so this is a
+ * new pack wearing an old pack's folder name, and applying it would silently re-namespace every row
+ * (identity is `source:id`) — every character reference into this pack would resolve to nothing at
+ * once. Refuse and say so; installing it as a separate pack is the honest path.
+ *
+ * A pack with nothing local to compare against (a fresh install) has nothing to break.
+ */
+async function sourceClash(
+	storage: Storage,
+	pack: string,
+	staged: { path: string; bytes: Uint8Array }[]
+): Promise<UpdateError | null> {
+	const local = await localPackSource(storage, pack);
+	if (local === null) return null;
+	const decoder = new TextDecoder();
+	for (const file of staged) {
+		const incoming = sourceOf(decoder.decode(file.bytes));
+		if (incoming !== null && incoming !== local)
+			return {
+				kind: 'i18n',
+				key: 'settings.packs.sourceChanged',
+				values: { pack, from: local, to: incoming }
+			};
+	}
+	return null;
 }
 
 /** Does this pack ship executable code? A pack may carry plugins (PLUGINS §2), and the installer

@@ -95,7 +95,21 @@
 			"rowsRemoved": "{count} entries would DISAPPEAR from your content",
 			"charactersAffected": "Characters that use them: {who}",
 			"carriesPlugins": "This pack also contains plugins: {list}. They arrive switched off and need your review.",
-			"hostUnsupported": "Charnik can’t check {repo} — update checks currently work with GitHub repository links only."
+			"hostUnsupported": "Charnik can’t check {repo} — update checks currently work with GitHub repository links only.",
+			"sourceChanged": "“{pack}” now claims to be a different source (“{from}” → “{to}”). That makes it a NEW pack, not an update: every entry would be renamed and any character using them would lose the link. Nothing was changed — install it as a separate pack instead.",
+			"addLabel": "Add a pack",
+			"addPlaceholder": "https://github.com/owner/repo",
+			"lookUp": "Look up",
+			"filesInPack": "{count} file(s)",
+			"install": "Install",
+			"alreadyInstalled": "already installed",
+			"noPacksFound": "No content packs found in {repo} — a pack is a top-level folder holding CSV files.",
+			"uninstall": "Uninstall",
+			"uninstallConfirm": "Delete this pack",
+			"cancel": "Cancel",
+			"applyWithRemovals": "Apply, including deletions",
+			"foundIn": "Found in {repo}",
+			"installedLabel": "Installed"
 		}
 	},
 	"sheet": {

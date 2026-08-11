@@ -15,6 +15,7 @@
 import type { Storage } from '$lib/storage/types';
 import type { ContentGraph } from '../loader';
 import { isUserModified } from '../provider';
+import { parseContentDirectives } from '../meta';
 import type { RemotePack } from './github';
 
 /** Where a pack's files live locally. The runtime layout is `content/<pack>/…` regardless of which
@@ -89,6 +90,33 @@ export async function diffPack(storage: Storage, remote: RemotePack): Promise<Pa
 			changes.push({ path: `${remote.pack}/${entry.name}`, kind: FILE_CHANGE.removed });
 
 	return { pack: remote.pack, changes };
+}
+
+/** The `#content-source` a CSV declares, or null if it declares none. */
+export const sourceOf = (csv: string): string | null =>
+	parseContentDirectives(csv).directives.get('source') ?? null;
+
+/**
+ * The source tag this pack currently claims ON DISK — the identity half of `source:id`.
+ *
+ * **Why this exists:** a pack that changes its `#content-source` is a NEW pack, never an update.
+ * Identity is `source:id`, so a re-tag re-namespaces every row at once and breaks every character
+ * reference that points at them — silently, since the files would otherwise look like ordinary
+ * changed bytes. Comparing tags is the only thing standing between an upstream typo and a save
+ * whose class, species and spells all resolve to nothing.
+ *
+ * Takes the first declared source in the pack; a pack whose files disagree is already malformed,
+ * and the two-dimensional source filter is what surfaces that.
+ */
+export async function localPackSource(storage: Storage, pack: string): Promise<string | null> {
+	const entries = (await storage.list(localPath(pack)).catch(() => []))
+		.filter((e) => !e.isDir && e.name.endsWith('.csv'))
+		.sort((a, b) => a.name.localeCompare(b.name));
+	for (const entry of entries) {
+		const source = sourceOf(await storage.read(entry.path).catch(() => ''));
+		if (source !== null) return source;
+	}
+	return null;
 }
 
 /** The content rows that would DISAPPEAR if this diff were applied — every row the loader read from
