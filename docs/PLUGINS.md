@@ -51,10 +51,29 @@ it as a format string. Malformed args should return `{ notes: ["…what went wro
 ## 2. Packaging: what a plugin IS on disk
 
 ```
-<dataDir>/plugins/<namespace>/
+<namespace>/
 ├── plugin.json     # manifest (below)
 └── main.js         # the code; THE only entry, ≤ 256 KB
 ```
+
+That folder lives in one of two places, and they mean different things:
+
+| Location | Who put it there | Wins a namespace conflict |
+| -------- | ---------------- | ------------------------- |
+| `<dataDir>/plugins/<namespace>/` | you, by hand | yes — unambiguously yours |
+| `<dataDir>/content/<pack>/plugins/<namespace>/` | a content pack | no; packs are ordered by name |
+
+**A pack ships code and data as ONE unit** — a homebrew class is usually a CSV *and* the handler
+that makes it work, and two separate installs is how a user ends up with half of it. A pack may
+also be plugins only. Code always sits in the pack's `plugins/` subfolder, never loose beside the
+CSVs, so "does this pack contain code?" is one directory listing — for the user and for the
+installer, which must say so BEFORE installing. Arriving inside a pack grants nothing: consent
+(§6) is per-plugin and hash-pinned either way.
+
+**A namespace is globally unique**, because `plugin:<namespace>:<handlerName>` is how content
+refers to a handler (§1) and a token cannot name a pack. A second claimant is therefore *reported*
+as a broken entry in Settings ▸ Plugins, never silently shadowed — a plugin that mysteriously
+isn't running is worse than one that says why.
 
 `plugin.json` (validated strictly; unknown keys rejected):
 
@@ -294,7 +313,9 @@ object by these keys.
 
 ## 6. Lifecycle: install, consent, enable
 
-1. **Install** = put the folder under `<dataDir>/plugins/`. Discovery is automatic.
+1. **Install** = put the folder under `<dataDir>/plugins/`, or install a content pack that carries
+   one in its own `plugins/` subfolder (§2). Discovery is automatic for both; uninstalling a pack
+   takes its plugins with it, because they are inside it.
 2. **Everything is disabled by default.** Enabling happens per plugin in Settings → Plugins,
    behind a consent dialog showing the manifest.
 3. **Consent is per-machine and pinned to a CRYPTOGRAPHIC code hash**
@@ -311,7 +332,10 @@ object by these keys.
    can't swap in a phishing `url`/`author` after consent. Consequences: moving/merging a data
    folder carries plugin CODE but never its permission; ANY change to `main.js` OR `plugin.json`
    disables the plugin until re-consented. This is deliberate — a "campaign backup" must not be
-   able to arrive pre-enabled.
+   able to arrive pre-enabled, and **the same property is what makes plugins-in-packs safe**: a
+   pack update that changes plugin bytes changes the hash, so it lands disabled and waits, even if
+   the download itself was automatic. Because the manifest is hashed too, the `url`/`author` a
+   user consented to cannot be swapped afterwards — which is why provenance needs no new field.
 4. **Kill switch:** a global "disable all plugins" toggle exists and always works.
 5. **Desktop only.** Plugins run on the Tauri desktop build. The web demo (GitHub Pages) has no
    plugin discovery and does not bundle the QuickJS runtime — so the "consent outside the dataDir"

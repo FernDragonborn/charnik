@@ -66,9 +66,18 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > webview would mean relaxing §5's `connect-src`, i.e. trading a shipped invariant for
    > convenience. Everything else in this rule still binds the feature: fetched CSVs are data,
    > validated before use, and **applying an update is always a user action** — a pack may be
-   > downloaded automatically, never applied automatically. Packs carry **no plugins** in v1;
-   > a plugin stays a separate, consent-gated category (§4), never a silent passenger inside a
-   > content pack.
+   > downloaded automatically, never applied automatically.
+   >
+   > **Packs DO carry plugins** (decided 2026-08-11, reversing "no plugins in v1"): code and the
+   > data it serves ship as one unit, in `content/<pack>/plugins/<namespace>/`, because a plugin
+   > with no distribution channel is a feature nobody can use. The v1 ban was guarding a hole the
+   > consent model (§4, PLUGINS §6) already closes: consent is per-plugin, pinned to a SHA-256 of
+   > the code AND manifest, and stored **outside** the data folder — so a plugin cannot arrive
+   > pre-enabled no matter how it got onto disk, exactly as a restored "campaign backup" can't.
+   > A pack update that changes plugin bytes changes the hash, which **disables** it until
+   > re-consented; not even auto-download can swap code silently. What the installer owes the user
+   > is disclosure: "this pack contains N plugins" BEFORE it installs, and the consent dialog names
+   > the pack, since the user did not place that folder themselves.
 8. **Parsing safety.** Vetted parsers (`papaparse`, `JSON.parse`); row/cell/file **size
    caps** to avoid memory blowups; malformed rows → health view, not a crash.
 9. **Minimal Rust surface.** Prefer official audited plugins; keep custom Tauri commands

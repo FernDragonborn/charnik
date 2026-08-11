@@ -14,7 +14,7 @@
 		pluginStatus,
 		type PluginStatus
 	} from '$lib/effects/plugin-store.svelte';
-	import type { DiscoveredPlugin } from '$lib/effects/plugin-host';
+	import { LOCAL_ORIGIN, type DiscoveredPlugin } from '$lib/effects/plugin-host';
 	import PluginConsentDialog from './PluginConsentDialog.svelte';
 
 	let consentFor = $state<DiscoveredPlugin | null>(null);
@@ -68,7 +68,9 @@
 		<p class="empty">{$_('settings.plugins.none')}</p>
 	{:else}
 		<div class="plugin-list">
-			{#each plugins.discovered as p (p.namespace)}
+			<!-- keyed by origin TOO: a namespace claimed by two providers is listed twice on purpose
+			     (the loser carries the conflict), so the namespace alone is no longer unique -->
+			{#each plugins.discovered as p (`${p.origin}/${p.namespace}`)}
 				{@const status = pluginStatus(p, plugins.prefs)}
 				{@const loadErr = plugins.loadErrors[p.namespace]}
 				<div class="plugin-row" class:dim={status === 'broken' || plugins.prefs.killSwitch}>
@@ -80,6 +82,8 @@
 						<div class="plugin-sub">
 							<span class="mono">{p.namespace}</span>
 							{#if p.manifest?.author}· {p.manifest.author}{/if}
+							{#if p.origin !== LOCAL_ORIGIN}·
+								{$_('settings.plugins.originPack', { values: { pack: p.origin } })}{/if}
 						</div>
 						{#if p.problem}
 							<div class="plugin-problem">{p.problem}</div>

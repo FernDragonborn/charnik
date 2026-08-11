@@ -7,7 +7,7 @@
 	// (PLG-SEC 15) and the url is display-only — never a clickable in-app link (PLG-SEC 7).
 	import { _ } from '$lib/i18n';
 	import LangSwitcher from '$lib/components/LangSwitcher.svelte';
-	import type { DiscoveredPlugin } from '$lib/effects/plugin-host';
+	import { LOCAL_ORIGIN, type DiscoveredPlugin } from '$lib/effects/plugin-host';
 
 	let {
 		plugin,
@@ -53,6 +53,14 @@
 			<span class="val">{m?.name ?? plugin.namespace}</span>
 			<span class="dialog-label">{$_('settings.plugins.consent.namespace')}</span>
 			<span class="val mono">{plugin.namespace}</span>
+			<!-- WHERE it came from: with a plugin that arrived inside a content pack the user never
+			     placed the folder themselves, so say so before they grant it anything. -->
+			<span class="dialog-label">{$_('settings.plugins.consent.origin')}</span>
+			<span class="val">
+				{plugin.origin === LOCAL_ORIGIN
+					? $_('settings.plugins.originLocal')
+					: $_('settings.plugins.originPack', { values: { pack: plugin.origin } })}
+			</span>
 			<span class="dialog-label">{$_('settings.plugins.consent.version')}</span>
 			<span class="val mono">{m?.version ?? '—'}</span>
 			{#if m?.author}

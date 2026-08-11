@@ -1419,9 +1419,29 @@ holds the done-work log; these are the OPEN tails it carried):**
   - **Atomicity + the watcher.** Per-file temp→rename exists, but a 12-file update that dies on file 7
     leaves an unresolvable root — needs pack-level all-or-nothing (or resumability), and the watcher must
     ignore the app's own writes (existing invariant) or a bulk update triggers a reload storm.
-  - **No plugins in packs (v1).** Otherwise "paste a URL" becomes "run third-party code". The QuickJS
-    sandbox and `PluginConsentDialog` exist, but a plugin is a separate consent category, not a silent
-    passenger inside a content pack.
+  - **Plugins DO ride in packs — `content/<pack>/plugins/<ns>/` (maintainer, 2026-08-11, reversing
+    "no plugins in v1").** The objection that overturned it: packs are how a user installs anything,
+    so banning plugins from them leaves the whole L3 layer with no distribution channel. On review
+    the ban was guarding a hole the consent model already closes — consent is per-plugin, pinned to
+    `sha256(main.js ‖ plugin.json)` and stored OUTSIDE the dataDir, so a plugin **cannot arrive
+    pre-enabled** however it got onto disk (PLUGINS §6.3 already argues exactly this for a restored
+    campaign backup), and changed bytes ⇒ changed hash ⇒ disabled until re-consented, so even
+    auto-download can't swap code silently. **One unit, one folder:** code and the data it serves
+    install and uninstall together, which also deleted the "removing a pack must hunt down its
+    plugins" problem the split-roots version created. BUILT in discovery (`plugin-host.ts` scans
+    `plugins/` ∪ `content/*/plugins/*`); what the pack INSTALLER still owes: "this pack contains N
+    plugins" before installing.
+    - **`namespace` stays globally unique — do NOT key the registry by `pack:namespace`.** That was
+      proposed and is wrong: `plugin:<namespace>:<handler>` is a token in CSV content and a token
+      cannot name a pack, so two providers of one namespace leave the dispatch ambiguous no matter
+      how the registry is keyed. A second claimant is reported as a broken entry (hand-placed wins,
+      then packs by name). Consent keys are unchanged, so nothing migrates.
+    - **Provenance needs no new field, and the data format does NOT change.** A plugin's pack is
+      known structurally (it sits inside it); after a folder rename it is recoverable from that
+      pack's CSV headers (`#content-source`, per-file `#content-id`); for a plugins-only pack the
+      manifest's own `url`/`author` answer it — and the manifest is inside the consent hash, so they
+      can't be swapped post-consent. (Checked when a pack-level GUID was proposed: `#content-id` is
+      per FILE — `spells_srd.csv` and `items_srd.csv` in one pack carry different UUIDs.)
   - **No built-in pack directory.** "Paste a URL" is a tool; "browse popular packs" is a piracy index —
     PHB-as-CSV would appear in week one. Show `#content-license`, never host, mirror or aggregate a list.
 

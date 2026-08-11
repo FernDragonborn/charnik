@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (32)
+## Duplicate suspects (33)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -27,6 +27,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
+- `CONTENT_DIR` ×2 — src/lib/content/provider.ts · src/lib/effects/plugin-host.ts
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
 - `fileOf` ×2 — src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
@@ -810,9 +811,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/effects/plugin-host.ts`
 
 - `const pluginManifestSchema` — Strict manifest schema (§2): unknown keys REJECTED, every field capped, url https-only.
+- `const LOCAL_ORIGIN` — Where a plugin folder was found.
 - `interface DiscoveredPlugin` — One discovered plugin folder.
 - `function consentHash` — `sha256(len(mainJs) ‖ mainJs ‖ len(manifestRaw) ‖ manifestRaw)` as lowercase hex.
-- `function discoverPlugins` — * Discover every plugin folder under `<dataDir>/plugins/`.
+- `function discoverPlugins` — * Discover every plugin folder — hand-placed under `<dataDir>/plugins/`, plus the ones content * packs ship in `<data…
 - `interface PluginPrefs`
 - `const emptyPrefs`
 - `function loadPluginPrefs`
@@ -1099,4 +1101,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 45 components · 612 exports across 92 modules · 32 duplicate suspects._
+_45 tokens · 64 global classes · 45 components · 613 exports across 92 modules · 33 duplicate suspects._

@@ -6,10 +6,11 @@
  */
 import { describe, it, expect } from 'vitest';
 import { pluginStatus, retryPlugins, plugins } from './plugin-store.svelte';
-import { emptyPrefs, type DiscoveredPlugin, type PluginPrefs } from './plugin-host';
+import { emptyPrefs, LOCAL_ORIGIN, type DiscoveredPlugin, type PluginPrefs } from './plugin-host';
 
 const disc = (over: Partial<DiscoveredPlugin> = {}): DiscoveredPlugin => ({
 	namespace: 'p1',
+	origin: LOCAL_ORIGIN,
 	ok: true,
 	hash: 'HASH',
 	...over
@@ -37,7 +38,7 @@ describe('pluginStatus — the Settings status label', () => {
 		);
 	});
 	it('a missing hash (ok but unhashable) is treated as not-consented → "needs_consent"', () => {
-		const noHash: DiscoveredPlugin = { namespace: 'p1', ok: true };
+		const noHash: DiscoveredPlugin = { namespace: 'p1', origin: LOCAL_ORIGIN, ok: true };
 		expect(pluginStatus(noHash, emptyPrefs())).toBe('needs_consent');
 	});
 });

@@ -10,6 +10,7 @@ import {
 	consentHash,
 	isRunnable,
 	emptyPrefs,
+	LOCAL_ORIGIN,
 	loadPluginPrefs,
 	savePluginPrefs,
 	pluginManifestSchema,
@@ -64,6 +65,47 @@ describe('discoverPlugins', () => {
 		expect(p?.ok).toBe(false);
 		expect(p?.problem).toMatch(problemRe);
 	});
+	it('a plugin shipped INSIDE a content pack is discovered, and says which pack', async () => {
+		const s = new MemoryStorage();
+		await s.write('content/dark-sun/spells_srd.csv', 'id\nx'); // a pack carrying data AND code
+		await s.write('content/dark-sun/plugins/my-homebrew/plugin.json', JSON.stringify(MANIFEST));
+		await s.write('content/dark-sun/plugins/my-homebrew/main.js', MAIN);
+		const [p] = await discoverPlugins(s);
+		expect(p?.ok).toBe(true);
+		expect(p?.origin).toBe('dark-sun');
+		// arriving inside a pack grants nothing — consent is still per-plugin and hash-pinned
+		expect(isRunnable(p as DiscoveredPlugin, emptyPrefs())).toBe(false);
+	});
+	it('a pack with ONLY plugins works — a pack need not carry CSVs', async () => {
+		const s = new MemoryStorage();
+		await s.write('content/just-code/plugins/my-homebrew/plugin.json', JSON.stringify(MANIFEST));
+		await s.write('content/just-code/plugins/my-homebrew/main.js', MAIN);
+		expect((await discoverPlugins(s))[0]?.origin).toBe('just-code');
+	});
+	it('a namespace claimed twice is REPORTED, never silently shadowed', async () => {
+		// the same namespace from the user's own folder and from a pack: a `plugin:<ns>:<h>` token
+		// cannot name a pack, so only one may answer it
+		const s = await seeded(); // plugins/my-homebrew
+		await s.write('content/dark-sun/plugins/my-homebrew/plugin.json', JSON.stringify(MANIFEST));
+		await s.write('content/dark-sun/plugins/my-homebrew/main.js', MAIN);
+		const found = await discoverPlugins(s);
+		expect(found).toHaveLength(2);
+		const own = found.find((p) => p.origin === LOCAL_ORIGIN);
+		const packed = found.find((p) => p.origin === 'dark-sun');
+		expect(own?.ok).toBe(true); // the hand-placed folder wins — unambiguously the user's own
+		expect(packed?.ok).toBe(false);
+		expect(packed?.problem).toMatch(/already provided by/);
+	});
+	it('precedence between two packs is by name, not filesystem order', async () => {
+		const s = new MemoryStorage();
+		for (const pack of ['zeta', 'alpha']) {
+			await s.write(`content/${pack}/plugins/my-homebrew/plugin.json`, JSON.stringify(MANIFEST));
+			await s.write(`content/${pack}/plugins/my-homebrew/main.js`, MAIN);
+		}
+		const found = await discoverPlugins(s);
+		expect(found.find((p) => p.origin === 'alpha')?.ok).toBe(true);
+		expect(found.find((p) => p.origin === 'zeta')?.ok).toBe(false);
+	});
 	it('a folder missing main.js is reported, not skipped', async () => {
 		const s = new MemoryStorage();
 		await s.mkdir('plugins/lonely');
@@ -97,6 +139,7 @@ describe('consentHash — length-prefixed SHA-256 (§6.3)', () => {
 describe('isRunnable — consent × enabled × kill switch', () => {
 	const plugin = (hash: string): DiscoveredPlugin => ({
 		namespace: 'ns1',
+		origin: LOCAL_ORIGIN,
 		ok: true,
 		code: MAIN,
 		hash

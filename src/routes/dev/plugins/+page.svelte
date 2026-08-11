@@ -5,10 +5,11 @@
 	// exercise the list AND the consent dialog in a plain browser. Open /dev/plugins.
 	import PluginsSettings from '$lib/components/settings/PluginsSettings.svelte';
 	import { plugins } from '$lib/effects/plugin-store.svelte';
-	import type { DiscoveredPlugin } from '$lib/effects/plugin-host';
+	import { LOCAL_ORIGIN, type DiscoveredPlugin } from '$lib/effects/plugin-host';
 	import { titleCase } from '$lib/util/format';
 
 	const fake = (over: Partial<DiscoveredPlugin> & { namespace: string }): DiscoveredPlugin => ({
+		origin: LOCAL_ORIGIN,
 		ok: true,
 		manifest: {
 			api: 1,
@@ -31,10 +32,21 @@
 		fake({ namespace: 'exploit-dice', hash: 'b'.repeat(64) }), // enabled below
 		fake({ namespace: 'old-friend', hash: 'c'.repeat(64) }), // code changed (stale consent)
 		fake({ namespace: 'sleepy', hash: 'd'.repeat(64) }), // consented but disabled
+		// shipped INSIDE a content pack — the row must say where it came from, and it is still off
+		fake({ namespace: 'dark-sun-rules', origin: 'dark-sun', hash: 'e'.repeat(64) }),
 		{
 			namespace: 'broken-one',
+			origin: LOCAL_ORIGIN,
 			ok: false,
 			problem: 'plugin.json invalid: version — not a semver version'
+		},
+		// two providers of one namespace: the loser is shown WITH the reason, never hidden
+		{
+			namespace: 'my-homebrew',
+			origin: 'dark-sun',
+			ok: false,
+			problem:
+				'namespace "my-homebrew" is already provided by your own plugins folder — rename one, they cannot both answer the same plugin token'
 		}
 	];
 	plugins.prefs = {

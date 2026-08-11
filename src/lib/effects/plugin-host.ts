@@ -3,8 +3,11 @@
  * live in plugin-store.svelte.ts). Normative contract: docs/PLUGINS.md §2 (packaging) + §6
  * (lifecycle/consent) and the PLG-SEC checklist in docs/PLAN.md.
  *
- * A plugin is a folder `<dataDir>/plugins/<namespace>/` with `plugin.json` + `main.js`, read through the
- * Storage seam (own-your-data: a plugin is a folder you can read; tests use MemoryStorage).
+ * A plugin is a folder `<namespace>/` with `plugin.json` + `main.js`, read through the Storage seam
+ * (own-your-data: a plugin is a folder you can read; tests use MemoryStorage). It lives EITHER in
+ * `<dataDir>/plugins/` (placed by hand) or inside a content pack, `<dataDir>/content/<pack>/plugins/`
+ * — code and the data it serves ship as ONE unit, so installing or removing a pack can't leave half
+ * of it behind. Arriving via a pack grants nothing: consent is per-plugin and hash-pinned below.
  * Everything read here is UNTRUSTED input: the folder name is grammar-checked, the manifest is
  * strictly zod-validated (unknown keys rejected, length caps, https-only url), `main.js` is read
  * ONCE into the same buffer that gets consent-hashed AND evaluated (closes TOCTOU — PLG-SEC 12).
@@ -47,10 +50,16 @@ export const pluginManifestSchema = z.strictObject({
 });
 type PluginManifest = z.infer<typeof pluginManifestSchema>;
 
+/** Where a plugin folder was found. A pack ships code and data as ONE unit, so `pack` is also the
+ *  provenance the consent dialog shows — the user didn't place this folder themselves. */
+export const LOCAL_ORIGIN = 'local';
+
 /** One discovered plugin folder. `ok` plugins are loadable (pending consent); broken ones carry
  *  the reason — surfaced in Settings/content-health, never silently skipped. */
 export interface DiscoveredPlugin {
 	namespace: string;
+	/** `LOCAL_ORIGIN` for a hand-placed folder, else the content pack that ships it. */
+	origin: string;
 	ok: boolean;
 	manifest?: PluginManifest;
 	/** The full `main.js` source — the ONE buffer that is hashed and later evaluated. */
@@ -83,69 +92,125 @@ export async function consentHash(mainJs: string, manifestRaw: string): Promise<
 	return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** The plugins root inside the dataDir. */
+/** The legacy plugins root, directly inside the dataDir: where a hand-placed plugin has always
+ *  gone, and still may. Kept because it shipped (CHANGELOG 0.4) — installs must not break. */
 const PLUGINS_DIR = 'plugins';
+/** Content packs live here, and a pack carries its plugins in its own `plugins/` subfolder. */
+const CONTENT_DIR = 'content';
+
+/** Every folder that may hold plugin folders, in PRECEDENCE order (see `discoverPlugins`). */
+async function pluginRoots(storage: Storage): Promise<{ dir: string; origin: string }[]> {
+	// a pack is a folder; its code lives in a fixed `plugins/` subfolder so "does this pack contain
+	// code?" is one listing, both for the user and for the installer that offers it. Sorted because
+	// precedence on a duplicate namespace must not depend on filesystem enumeration order.
+	const packs = (await storage.list(CONTENT_DIR).catch(() => []))
+		.filter((e) => e.isDir)
+		.map((e) => ({ dir: `${e.path}/plugins`, origin: e.name }))
+		.sort((a, b) => a.origin.localeCompare(b.origin));
+	return [{ dir: PLUGINS_DIR, origin: LOCAL_ORIGIN }, ...packs];
+}
 
 /**
- * Discover every plugin folder under `<dataDir>/plugins/`. Never throws: a missing root yields
- * `[]`; a broken folder yields an entry with `problem` (shown to the user, never silent).
+ * Discover every plugin folder — hand-placed under `<dataDir>/plugins/`, plus the ones content
+ * packs ship in `<dataDir>/content/<pack>/plugins/`. Never throws: a missing root yields nothing;
+ * a broken folder yields an entry with `problem` (shown to the user, never silent).
+ *
+ * **A namespace is globally unique**, because it is the identity a `plugin:<namespace>:<handler>`
+ * token refers to (§1) — a token cannot name a pack, so two providers of one namespace would leave
+ * the dispatch ambiguous. A second claimant is therefore REPORTED, not silently shadowed: the
+ * hand-placed folder wins (it is unambiguously the user's own), packs are ordered by name, and
+ * every loser becomes a visible `problem` row rather than a plugin that mysteriously isn't running.
  */
 export async function discoverPlugins(storage: Storage): Promise<DiscoveredPlugin[]> {
-	if (!(await storage.exists(PLUGINS_DIR))) return [];
 	const out: DiscoveredPlugin[] = [];
-	for (const entry of await storage.list(PLUGINS_DIR)) {
-		if (!entry.isDir) continue;
-		const namespace = entry.name;
-		if (!NAMESPACE_RE.test(namespace)) {
-			out.push({ namespace, ok: false, problem: 'folder name is not a valid plugin namespace' });
-			continue;
+	const claimed = new Map<string, string>(); // namespace → the origin that got it
+	for (const { dir, origin } of await pluginRoots(storage)) {
+		if (!(await storage.exists(dir))) continue;
+		for (const entry of await storage.list(dir)) {
+			if (!entry.isDir) continue;
+			const namespace = entry.name;
+			if (!NAMESPACE_RE.test(namespace)) {
+				out.push({
+					namespace,
+					origin,
+					ok: false,
+					problem: 'folder name is not a valid plugin namespace'
+				});
+				continue;
+			}
+			const taken = claimed.get(namespace);
+			if (taken !== undefined) {
+				out.push({
+					namespace,
+					origin,
+					ok: false,
+					problem: `namespace "${namespace}" is already provided by ${taken} — rename one, they cannot both answer the same plugin token`
+				});
+				continue;
+			}
+			claimed.set(
+				namespace,
+				origin === LOCAL_ORIGIN ? 'your own plugins folder' : `pack "${origin}"`
+			);
+			out.push(await readPlugin(storage, `${dir}/${namespace}`, namespace, origin));
 		}
-		out.push(await readPlugin(storage, namespace));
 	}
 	return out;
 }
 
-async function readPlugin(storage: Storage, namespace: string): Promise<DiscoveredPlugin> {
-	const dir = `${PLUGINS_DIR}/${namespace}`;
+async function readPlugin(
+	storage: Storage,
+	dir: string,
+	namespace: string,
+	origin: string
+): Promise<DiscoveredPlugin> {
 	let manifestRaw: string;
 	let code: string;
 	try {
 		manifestRaw = await storage.read(`${dir}/plugin.json`);
 		code = await storage.read(`${dir}/main.js`);
 	} catch {
-		return { namespace, ok: false, problem: 'plugin.json or main.js is missing/unreadable' };
+		return {
+			namespace,
+			origin,
+			ok: false,
+			problem: 'plugin.json or main.js is missing/unreadable'
+		};
 	}
 	if (enc.encode(code).length > MAX_MAIN_JS_BYTES)
-		return { namespace, ok: false, problem: 'main.js exceeds the 256 KB cap' };
+		return { namespace, origin, ok: false, problem: 'main.js exceeds the 256 KB cap' };
 	if (enc.encode(manifestRaw).length > MAX_MANIFEST_BYTES)
-		return { namespace, ok: false, problem: 'plugin.json is implausibly large' };
+		return { namespace, origin, ok: false, problem: 'plugin.json is implausibly large' };
 
 	let parsed: unknown;
 	try {
 		parsed = JSON.parse(manifestRaw);
 	} catch {
-		return { namespace, ok: false, problem: 'plugin.json is not valid JSON' };
+		return { namespace, origin, ok: false, problem: 'plugin.json is not valid JSON' };
 	}
 	const m = pluginManifestSchema.safeParse(parsed);
 	if (!m.success) {
 		const first = m.error.issues[0];
 		return {
 			namespace,
+			origin,
 			ok: false,
 			problem: `plugin.json invalid: ${first ? `${first.path.join('.')} — ${first.message}` : 'shape'}`
 		};
 	}
 	if (m.data.api !== 1)
-		return { namespace, ok: false, problem: 'requires a newer Charnik (api > 1)' };
+		return { namespace, origin, ok: false, problem: 'requires a newer Charnik (api > 1)' };
 	if (m.data.namespace !== namespace)
 		return {
 			namespace,
+			origin,
 			ok: false,
 			problem: `manifest namespace "${m.data.namespace}" ≠ folder name "${namespace}"`
 		};
 
 	return {
 		namespace,
+		origin,
 		ok: true,
 		manifest: m.data,
 		code,
