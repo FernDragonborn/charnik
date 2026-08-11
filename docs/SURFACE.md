@@ -312,6 +312,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function refreshPlugins` — Re-scan `<dataDir>/plugins/` (user added/edited a folder) and rebuild the evaluator.
 - `function retryPlugins` — Give plugins that auto-disabled (3 failures) another chance on THIS character without a full * re-scan: clearing the …
 - `function consentAndEnable` — The user accepted the consent dialog for THIS plugin at THIS code hash → record + enable.
+- `function revokePackPlugins` — * Drop consent + enablement for every plugin a content pack shipped.
 - `function disablePlugin`
 - `function enableConsented` — Re-enable a plugin whose consent is still valid (no dialog needed).
 - `function setKillSwitch` — The global "disable all plugins" kill switch (§6.4) — always works, survives restarts.
@@ -710,6 +711,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function isStaged` — Is this whole update already downloaded?
 - `function pruneCache` — * Throw away staged bytes nothing is waiting for.
 - `function pluginsIn` — Does this pack ship executable code?
+- `function pluginsTouchedBy` — * Plugin namespaces whose CODE this update would rewrite — a much sharper thing to say than "this * pack contains plu…
 
 ### `src/lib/content/remote/tauri-fetch.ts`
 
@@ -1209,4 +1211,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 692 exports across 100 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 694 exports across 100 modules · 36 duplicate suspects._

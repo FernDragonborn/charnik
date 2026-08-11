@@ -27,6 +27,7 @@ import {
 	applyPackUpdate,
 	isStaged,
 	pluginsIn,
+	pluginsTouchedBy,
 	pruneCache,
 	stagePackUpdate,
 	type ApplyResult
@@ -46,6 +47,9 @@ export interface PendingUpdate {
 	affected: { slug: string; keys: string[] }[];
 	/** plugin namespaces this pack would add — code always gets said out loud (PLUGINS §2) */
 	plugins: string[];
+	/** …and the ones THIS update rewrites, which is the sharper warning: they stop running until
+	 *  the user re-approves the new bytes */
+	pluginsChanged: string[];
 	/** every byte is already downloaded (update mode `download`), so applying works offline */
 	staged: boolean;
 }
@@ -187,6 +191,7 @@ async function describeUpdate(repo: string, remote: RemotePack): Promise<Pending
 		removedRows,
 		affected: await whoBreaks(removedRows),
 		plugins: pluginsIn(remote),
+		pluginsChanged: pluginsTouchedBy(diff),
 		staged: await isStaged(storage, diff)
 	};
 }

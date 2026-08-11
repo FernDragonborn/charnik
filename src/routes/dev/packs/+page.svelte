@@ -88,6 +88,7 @@
 				removedRows: ['language:SRD 5.2.1:draconic', 'language:SRD 5.2.1:goblin'],
 				affected: [{ slug: 'karroth', keys: ['language:SRD 5.2.1:draconic'] }],
 				plugins: [],
+				pluginsChanged: [],
 				staged: true
 			},
 			'dark-sun': {
@@ -101,6 +102,8 @@
 				removedRows: [],
 				affected: [],
 				plugins: ['dark-sun-rules'],
+				// the sharper warning: this update rewrites the plugin's code, so it stops until re-approved
+				pluginsChanged: ['dark-sun-rules'],
 				staged: false
 			}
 		};

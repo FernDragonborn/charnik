@@ -254,9 +254,29 @@ async function sourceClash(
  *  owes the user that fact BEFORE it installs — arriving inside a pack grants nothing, but it must
  *  never be a surprise either. Returns the namespaces it would add. */
 export function pluginsIn(remote: RemotePack): string[] {
+	return namespacesOf(remote.files.map((f) => f.path));
+}
+
+/**
+ * Plugin namespaces whose CODE this update would rewrite — a much sharper thing to say than "this
+ * pack contains plugins", and the one the user has to hear: new bytes void the consent hash
+ * (PLUGINS §6.3), so an enabled plugin STOPS running the moment this is applied and stays stopped
+ * until the user approves it again. Sheet numbers change with it. Silence there would read as the
+ * app breaking by itself.
+ */
+export function pluginsTouchedBy(diff: PackDiff): string[] {
+	return namespacesOf(
+		diff.changes
+			.filter((c) => c.kind === FILE_CHANGE.added || c.kind === FILE_CHANGE.changed)
+			.map((c) => c.path)
+	);
+}
+
+/** `<pack>/plugins/<namespace>/…` — the packaging layout (PLUGINS §2), read off repo-relative paths. */
+function namespacesOf(paths: string[]): string[] {
 	const namespaces = new Set<string>();
-	for (const file of remote.files) {
-		const [, dir, namespace] = file.path.split('/');
+	for (const path of paths) {
+		const [, dir, namespace] = path.split('/');
 		if (dir === 'plugins' && namespace !== undefined) namespaces.add(namespace);
 	}
 	return [...namespaces].sort();

@@ -13,7 +13,7 @@
 		UPDATE_MODE
 	} from '$lib/content/packs.svelte';
 	import { restoreBundledPacks } from '$lib/content/provider';
-	import { refreshPlugins } from '$lib/effects/plugin-store.svelte';
+	import { refreshPlugins, revokePackPlugins } from '$lib/effects/plugin-store.svelte';
 	import {
 		updates,
 		checkNow,
@@ -263,7 +263,17 @@
 								{#if pending.staged}
 									<div>{$_('settings.packs.readyOffline')}</div>
 								{/if}
-								{#if pending.plugins.length > 0}
+								<!-- New code bytes void the consent hash, so an enabled plugin STOPS at apply and
+								     stays stopped until re-approved — and the sheet's numbers move with it. That
+								     is a different sentence from "this pack contains plugins", and the one that
+								     has to be said here. -->
+								{#if pending.pluginsChanged.length > 0}
+									<div class="pack-warn">
+										{$_('settings.packs.changesPlugins', {
+											values: { list: pending.pluginsChanged.join(', ') }
+										})}
+									</div>
+								{:else if pending.plugins.length > 0}
 									<div class="pack-warn">
 										{$_('settings.packs.carriesPlugins', {
 											values: { list: pending.plugins.join(', ') }
@@ -320,6 +330,9 @@
 							<button
 								class="pill-btn accent"
 								onclick={async () => {
+									// consent lives outside the data dir, so it outlives the files — revoke while
+									// the folder is still there to say which namespaces were this pack's
+									await revokePackPlugins(pack);
 									await uninstallPack(pack);
 									uninstalling = null;
 									await afterDiskChange();

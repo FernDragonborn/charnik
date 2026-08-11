@@ -134,6 +134,28 @@ export async function consentAndEnable(p: DiscoveredPlugin): Promise<void> {
 	await rebuildEvaluator();
 }
 
+/**
+ * Drop consent + enablement for every plugin a content pack shipped. Call it as the pack is being
+ * uninstalled, while its folder is still there to be read.
+ *
+ * Consent is keyed by `(namespace, hash)` and lives outside the data dir, so it OUTLIVES the files
+ * it was granted for. Without this, re-installing the same pack later would silently start running
+ * its code again — technically consented (the bytes match) but never said out loud, and "I removed
+ * that pack" is the clearest possible statement that the permission is over. A namespace the pack
+ * doesn't provide is untouched: a hand-placed plugin of the same name is the user's own.
+ */
+export async function revokePackPlugins(pack: string): Promise<void> {
+	if (!plugins.supported) return;
+	const mine = plugins.discovered.filter((p) => p.origin === pack).map((p) => p.namespace);
+	if (mine.length === 0) return;
+	for (const namespace of mine) {
+		delete plugins.prefs.consent[namespace];
+		delete plugins.prefs.enabled[namespace];
+	}
+	persist();
+	await rebuildEvaluator();
+}
+
 export async function disablePlugin(namespace: string): Promise<void> {
 	plugins.prefs.enabled[namespace] = false;
 	persist();
