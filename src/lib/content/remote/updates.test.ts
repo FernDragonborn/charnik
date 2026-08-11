@@ -6,11 +6,12 @@
  * takes both the files and the entry.
  */
 import 'fake-indexeddb/auto';
-import { describe, it, expect, beforeAll, beforeEach } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll, beforeEach } from 'vitest';
 import { getUserStorage } from '$lib/storage/provider';
 import { packConfig, emptyPackConfig } from '../packs.svelte';
 import {
 	updates,
+	checkNow,
 	discoverPacks,
 	installPack,
 	restorePendingUpdates,
@@ -160,5 +161,64 @@ describe('install a pack from a pasted URL', () => {
 		expect(await getUserStorage().exists('content/dark-sun/classes_srd.csv')).toBe(false);
 		// the repo's check state goes too, once nothing uses it
 		expect(packConfig.repos[REPO]).toBeUndefined();
+	});
+
+	it('re-installing clears "stop asking" — deleting it a second time must prompt again', async () => {
+		packConfig.dismissedMissing = ['dark-sun'];
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		expect(packConfig.dismissedMissing).toEqual([]);
+	});
+});
+
+describe('the check runs alone', () => {
+	beforeAll(() => {
+		// `checkNow` is desktop-gated, and desktop is "a window carrying Tauri's marker". The storage
+		// seam is already resolved (to IndexedDB) by the block above and cached, so planting the marker
+		// now reaches the platform gate and nothing else.
+		getUserStorage();
+		Object.assign(globalThis, { window: { __TAURI_INTERNALS__: {} } });
+	});
+	afterAll(() => {
+		Reflect.deleteProperty(globalThis, 'window');
+	});
+	beforeEach(() => {
+		Object.assign(packConfig, emptyPackConfig());
+		updates.pending = {};
+	});
+
+	/* Both a check and an apply finish by pruning the shared pre-download cache against
+	   `updates.pending`, which is only authoritative once nothing is mid-way through rebuilding it.
+	   Overlapping runs mean the first to finish prunes against a half-built set. */
+	it('a second check waits for the first instead of interleaving with it', async () => {
+		packConfig.packs['dark-sun'] = { repo: REPO };
+		const log: string[] = [];
+		let n = 0;
+		const slow: RemoteFetcher = {
+			getText: async () => {
+				const id = ++n;
+				log.push(`start ${id}`);
+				await new Promise((r) => setTimeout(r, 5));
+				log.push(`end ${id}`);
+				return { kind: 'ok', body: tree, etag: 'W/"1"' };
+			},
+			getBytes: async () => ({ kind: 'error', message: 'not asked' })
+		};
+
+		await Promise.all([
+			checkNow({ manual: true, fetcher: slow }),
+			checkNow({ manual: true, fetcher: slow })
+		]);
+
+		expect(log).toEqual(['start 1', 'end 1', 'start 2', 'end 2']);
+	});
+
+	/* The prune used to sit BEHIND the "nothing is due" return, so bytes staged in `download` mode
+	   and then abandoned (mode switched to `off`, or the last pack pinned) stayed on disk forever —
+	   the one thing that cleans them only ran after a check that could no longer happen. */
+	it('sweeps the pre-download cache even when there is nothing to check', async () => {
+		await getUserStorage().writeBytes('.pack-cache/deadbeef', enc('bytes nobody is waiting for'));
+		await checkNow(); // automatic, mode `off` → no repo is due
+		expect(await getUserStorage().exists('.pack-cache/deadbeef')).toBe(false);
 	});
 });

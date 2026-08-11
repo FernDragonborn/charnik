@@ -34,15 +34,38 @@ export async function readConfigSection(file: string, key: string): Promise<unkn
 }
 
 const chains = new Map<string, Promise<void>>();
+/** Sections written since the last flush was queued and before it started — see below. */
+const dirty = new Map<string, Map<string, unknown>>();
 
-/** Replace one section, preserving every other key in the file. Fire-and-forget (queued); a write
- *  failure never crashes the session or surfaces as an unhandled rejection — the change simply
- *  isn't saved, which is the same posture the rest of the config layer takes. */
+/**
+ * Replace one section, preserving every other key in the file. Fire-and-forget (queued); a write
+ * failure never crashes the session or surfaces as an unhandled rejection — the change simply
+ * isn't saved, which is the same posture the rest of the config layer takes.
+ *
+ * **Calls made before the queued flush starts COALESCE into it.** The natural way to call this is
+ * once per changed thing, and the callers do exactly that: reconciling the pack registry against the
+ * disk forgets each uninstalled pack and adopts each bundled one, so every content load used to
+ * read-merge-write `charnik.config.json` a dozen times over to persist one final state. The value is
+ * read at EXECUTION time, so all of those writes were already producing identical bytes — collapsing
+ * them changes nothing but the number of times the file is rewritten. Different sections written in
+ * the same tick merge into the one write too, which is the case the per-file chain existed for.
+ */
 export function writeConfigSection(file: string, key: string, value: unknown): void {
+	const queued = dirty.get(file);
+	if (queued) {
+		queued.set(key, value); // a flush is already scheduled and will pick this up
+		return;
+	}
+	dirty.set(file, new Map([[key, value]]));
 	const next = (chains.get(file) ?? Promise.resolve())
 		.catch(() => {})
 		.then(async () => {
-			const merged = { ...(await readConfigFile(file)), [key]: value };
+			// taken BEFORE the first await, so anything written from here on schedules its own flush
+			// rather than riding on one that may already have read the file
+			const sections = dirty.get(file) ?? new Map<string, unknown>();
+			dirty.delete(file);
+			const merged = { ...(await readConfigFile(file)) };
+			for (const [k, v] of sections) merged[k] = v;
 			await getUserStorage().write(file, JSON.stringify(merged, null, 2));
 		})
 		.catch(() => {});

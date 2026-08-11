@@ -1121,7 +1121,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function readConfigFile` — The whole file as a plain object — `{}` when it is missing, unreadable, or not a JSON object.
 - `function readConfigSection` — One section, or `undefined` when absent.
-- `function writeConfigSection` — Replace one section, preserving every other key in the file.
+- `function writeConfigSection` — * Replace one section, preserving every other key in the file.
 - `function configWritesSettled` — Resolves when every queued write for this file has landed.
 
 ### `src/lib/storage/memory.ts`

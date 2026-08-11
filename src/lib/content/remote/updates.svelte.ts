@@ -18,6 +18,7 @@ import {
 	registerPack,
 	rememberPending,
 	reposDueForCheck,
+	unDismissMissing,
 	UPDATE_MODE,
 	type PackConfigData
 } from '../packs.svelte';
@@ -94,13 +95,43 @@ export const dueRepos = (cfg: PackConfigData = packConfig, now = Date.now()): st
 	reposDueForCheck(cfg, now);
 
 /**
+ * Everything that rebuilds the pending set or sweeps the pre-download cache runs ONE AT A TIME.
+ *
+ * Serialised, not deduplicated: the startup check and a click on "check now" are two different
+ * questions — the manual one may name a repo the automatic one skipped — so neither may be dropped
+ * in favour of the other. But they must not interleave, because both a check and an apply finish by
+ * pruning the cache against `updates.pending`, and that set is only authoritative when nothing else
+ * is mid-way through rebuilding it. Two at once means whichever finishes first prunes against a
+ * half-built set and deletes bytes the other had just downloaded — an "already staged" update that
+ * silently has to fetch itself again.
+ *
+ * `updates.checking` stays what it always was, a spinner; this is the actual mutual exclusion.
+ */
+let packQueue: Promise<unknown> = Promise.resolve();
+
+function serialised<T>(run: () => Promise<T>): Promise<T> {
+	// a failure must not poison the queue for everything behind it
+	const next = packQueue.catch(() => {}).then(run);
+	packQueue = next.catch(() => {});
+	return next;
+}
+
+/**
  * Ask the repos what they have. `manual` deliberately bypasses the once-a-day throttle and the
  * update-mode gate — "I want to test this one now" is the real use of the button; automatic runs
  * respect both. Silent on failure by design: an offline user can do nothing about it.
  */
-export async function checkNow(
+export function checkNow(
 	opts: { manual?: boolean; repo?: string; fetcher?: RemoteFetcher } = {}
 ): Promise<void> {
+	return serialised(() => runCheck(opts));
+}
+
+async function runCheck(opts: {
+	manual?: boolean;
+	repo?: string;
+	fetcher?: RemoteFetcher;
+}): Promise<void> {
 	if (detectPlatform() !== Platform.Desktop) return;
 	const fetcher = opts.fetcher ?? tauriFetcher;
 	const repos =
@@ -109,7 +140,14 @@ export async function checkNow(
 			: opts.manual === true
 				? [...new Set(Object.values(packConfig.packs).map((p) => p.repo))]
 				: dueRepos();
-	if (repos.length === 0) return;
+	// Nothing to ask — but the cache still needs sweeping, and the prune used to sit BEHIND this
+	// return. Switching from `download` back to `off` (or pinning the last pack) then left every
+	// staged byte on disk forever, because the one thing that cleans them only ran after a check that
+	// could no longer happen. The pending set is restored at launch, so it is authoritative here too.
+	if (repos.length === 0) {
+		await pruneCache(getUserStorage(), stagedShas());
+		return;
+	}
 
 	updates.checking = true;
 	updates.error = null;
@@ -209,13 +247,26 @@ async function whoBreaks(removedRows: string[]): Promise<{ slug: string; keys: s
  * Apply ONE pack's pending update. Always called from a click — never from `checkNow`, never on a
  * timer (SECURITY.md §7). Returns what happened; on failure nothing was written.
  */
-export async function applyUpdate(
+export function applyUpdate(
 	pack: string,
 	opts: {
 		removeDeleted?: boolean;
 		acceptRowRemovals?: boolean;
 		fetcher?: RemoteFetcher;
 	} = {}
+): Promise<ApplyResult | null> {
+	// shares the check's queue: it ends by pruning the same shared cache, and a check running
+	// alongside it would be rebuilding the very set that prune consults
+	return serialised(() => runApply(pack, opts));
+}
+
+async function runApply(
+	pack: string,
+	opts: {
+		removeDeleted?: boolean;
+		acceptRowRemovals?: boolean;
+		fetcher?: RemoteFetcher;
+	}
 ): Promise<ApplyResult | null> {
 	const pending = updates.pending[pack];
 	if (!pending) return null;
@@ -379,6 +430,10 @@ export async function installPack(
 		return res;
 	}
 	registerPack(pack, found.repo);
+	// "I meant to delete it, stop asking" was an answer about a pack that is now BACK. Leaving the
+	// flag set means deleting it a second time never prompts again — `restoreBundledPacks` already
+	// clears it, and re-installing from the URL is the other way the same pack returns.
+	unDismissMissing([pack]);
 	updates.discovered = updates.discovered.map((d) =>
 		d.pack === pack ? { ...d, installed: true } : d
 	);

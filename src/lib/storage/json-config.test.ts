@@ -48,4 +48,27 @@ describe('a config file with several owners', () => {
 		writeConfigSection(FILE, 'contentPacks', { updates: 'notify' });
 		expect(await settled()).toEqual({ contentPacks: { updates: 'notify' } });
 	});
+
+	it('a burst collapses into ONE file write — reconciling the pack registry persists once', async () => {
+		const write = vi.spyOn(storage, 'write');
+		// what a content load does: forget each uninstalled pack, adopt each bundled one
+		for (let n = 0; n < 10; n++) writeConfigSection(FILE, 'contentPacks', { packs: n });
+		writeConfigSection(FILE, 'ruleOptions', { capacity: true });
+		expect(await settled()).toEqual({
+			contentPacks: { packs: 9 },
+			ruleOptions: { capacity: true }
+		});
+		expect(write).toHaveBeenCalledTimes(1);
+		write.mockRestore();
+	});
+
+	it('a write made after the flush has started is not swallowed by it', async () => {
+		writeConfigSection(FILE, 'contentPacks', { updates: 'notify' });
+		await Promise.resolve(); // the flush may or may not have read the file yet — neither may lose a write
+		writeConfigSection(FILE, 'ruleOptions', { capacity: true });
+		expect(await settled()).toEqual({
+			contentPacks: { updates: 'notify' },
+			ruleOptions: { capacity: true }
+		});
+	});
 });
