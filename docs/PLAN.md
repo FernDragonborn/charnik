@@ -1360,15 +1360,9 @@ holds the done-work log; these are the OPEN tails it carried):**
   2026-08-11** (maintainer 2026-08-10; slices 0–11 built and verified against the real GitHub, then
   audited architecturally, and that audit's own list closed the same day — `0cf0c4c`). Nothing here
   is open: reaching a NON-GitHub host was carved out to **REL-5** as a separate, much-later feature.
-  **A SECOND read-only pass (2026-08-12) found seven more — `docs/AUDIT-PACKS-12-08.md`, the live
-  ledger for them.** Five are fixed there and then: the `ETag` is now recorded AFTER the packs it
-  certifies (recorded first, a check that died mid-pre-download claimed to have seen a state whose
-  offer was never written — a `304` then hid the update forever); a `truncated` tree is refused
-  instead of diffed as if it were complete; `restorePendingUpdates` joined the check's queue; the
-  plugin revoke moved out of the uninstall BUTTON into `uninstallPack`; and a repo on `master` is
-  reachable at all (the branch was guessed as `main` and never resolved — it is now remembered per
-  repo, because the downloads and a post-restart apply need it too). Still OPEN there: an unguarded
-  `forgetUninstalledPacks` racing a folder swap, and the `provider ↔ remote/*` import cycle.
+  A second read-only pass (2026-08-12) found seven more; five are fixed in `001a9dc` (ETag ordering,
+  truncated trees, the restore queue, the plugin revoke, branch resolution). Two stay open —
+  `docs/AUDIT-PACKS-12-08.md` is their ledger.
   **The ask:** a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
