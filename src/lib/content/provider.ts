@@ -24,6 +24,7 @@ import { base } from '$app/paths';
 import { FetchStorage } from '$lib/storage/fetch';
 import { getUserStorage, detectPlatform, Platform } from '$lib/storage/provider';
 import type { Storage } from '$lib/storage/types';
+import { listFilesRecursive } from '$lib/storage/walk';
 import { loadContent, type ContentGraph, type ContentSource } from './loader';
 import { HOMEBREW_ROOT } from './homebrew';
 import { HASH_STATE } from './meta';
@@ -175,8 +176,8 @@ export async function restoreBundledPacks(packs: string[]): Promise<void> {
 	const user = getUserStorage();
 	for (const pack of packs) {
 		const root = `${CONTENT_DIR}/${pack}`;
-		for (const f of await bundled.list(root))
-			await user.writeBytes(f.path, await bundled.readBytes(f.path));
+		for (const path of await listFilesRecursive(bundled, root))
+			await user.writeBytes(path, await bundled.readBytes(path));
 	}
 	unDismissMissing(packs);
 	resetContentGraph();
@@ -243,13 +244,16 @@ export async function seedShippedContent(
 		// after that the bundle only ever REFRESHES packs that are still there, so a bundled pack is
 		// exactly as deletable as any other and an app update can't quietly put it back.
 		if (!firstRun && !(await to.exists(root))) continue;
-		for (const f of await from.list(root)) {
-			if ((await to.exists(f.path)) && (await isProtectedFromOverwrite(to, f.path))) {
-				preserved.push(f.path); // user hand-edited this shipped file → keep their version
+		// RECURSIVE, because a pack may carry plugins in `plugins/<ns>/` (PLUGINS §2) and a one-level
+		// listing dropped their code silently — while the pack DIFFER walked the same folder in full,
+		// so the two halves of "what is in this pack" disagreed about a bundled one.
+		for (const path of await listFilesRecursive(from, root)) {
+			if ((await to.exists(path)) && (await isProtectedFromOverwrite(to, path))) {
+				preserved.push(path); // user hand-edited this shipped file → keep their version
 				continue;
 			}
 			// writeBytes creates parent dirs + preserves exact bytes (BOM/CRLF intact)
-			await to.writeBytes(f.path, await from.readBytes(f.path));
+			await to.writeBytes(path, await from.readBytes(path));
 		}
 	}
 	await to.write(SEED_VERSION_FILE, String(shippedVersion));

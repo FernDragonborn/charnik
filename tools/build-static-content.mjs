@@ -27,16 +27,45 @@ try {
 if (existsSync(destBase)) rmSync(destBase, { recursive: true, force: true });
 mkdirSync(destBase, { recursive: true });
 
+/**
+ * Which files a pack actually ships. The TS twin is `isPackFile` in `content/remote/github.ts`, and
+ * the two must agree: that one decides what an installed pack contains, this one decides what a
+ * BUNDLED pack contains, and a pack is supposed to be the same thing however it arrived.
+ * @param {string} name
+ */
+const isPackFile = (name) => name.endsWith('.csv') || name === 'plugin.json' || name === 'main.js';
+
+/**
+ * Directory → its files, at every depth, keyed the way the manifest wants them (one entry per
+ * DIRECTORY, since that is what stands in for a listing over HTTP). Recursive because a pack may
+ * carry plugins in `plugins/<ns>/` (PLUGINS §2) — a flat walk vendored the data and silently
+ * dropped the code, so a bundled pack could not carry a plugin at all.
+ * @param {string} dir @param {string} rel @param {Record<string, string[]>} into
+ */
+function collect(dir, rel, into) {
+	const files = [];
+	for (const entry of readdirSync(dir, { withFileTypes: true })) {
+		if (entry.isDirectory()) collect(join(dir, entry.name), `${rel}/${entry.name}`, into);
+		else if (isPackFile(entry.name)) files.push(entry.name);
+	}
+	// a directory of nothing we ship gets no manifest key — an empty one would report as a
+	// subdirectory of its parent and pack discovery scans for exactly those
+	if (files.length > 0) into[rel] = files.sort();
+	return into;
+}
+
 const manifest = { roots: {} };
 for (const pack of contentPacks()) {
 	const srcDir = packDir(pack);
-	const files = readdirSync(srcDir).filter((f) => f.endsWith('.csv') || f.endsWith('.json'));
 	// the runtime path stays `content/<pack>` — where it came from is a build-time detail
 	const rel = `content/${pack}`;
-	const outDir = resolve(root, 'static', rel);
-	mkdirSync(outDir, { recursive: true });
-	for (const f of files) copyFileSync(join(srcDir, f), resolve(outDir, f));
-	manifest.roots[rel] = files;
+	for (const [dirRel, files] of Object.entries(collect(srcDir, rel, {}))) {
+		const outDir = resolve(root, 'static', dirRel);
+		mkdirSync(outDir, { recursive: true });
+		const from = join(srcDir, dirRel.slice(rel.length));
+		for (const f of files) copyFileSync(join(from, f), resolve(outDir, f));
+		manifest.roots[dirRel] = files;
+	}
 }
 writeFileSync(resolve(destBase, 'manifest.json'), JSON.stringify(manifest, null, 2));
 console.log(

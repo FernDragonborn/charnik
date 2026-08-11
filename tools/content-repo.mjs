@@ -63,12 +63,18 @@ export function packDir(pack) {
 
 /** Every installed pack, by folder name — discovered by scanning, since a folder listing IS the
  *  file list and there is no manifest to keep in sync (AI-CONVENTIONS §1.6). Sorted only for
- *  determinism: nothing may read meaning into pack order. */
+ *  determinism: nothing may read meaning into pack order.
+ *
+ *  A pack qualifies on holding a CSV **or** a `plugins/` subtree, matching what the remote side
+ *  counts as a pack (`packsFromTree`): a pack may be code only (PLUGINS §2), and a rule that only
+ *  the bundling step disagrees with would make such a pack installable but not shippable. */
 export function contentPacks() {
 	const dir = requireContentRepo();
 	return readdirSync(dir, { withFileTypes: true })
 		.filter(
-			(e) => e.isDirectory() && readdirSync(join(dir, e.name)).some((f) => f.endsWith('.csv'))
+			(e) =>
+				e.isDirectory() &&
+				readdirSync(join(dir, e.name)).some((f) => f.endsWith('.csv') || f === 'plugins')
 		)
 		.map((e) => e.name)
 		.sort();

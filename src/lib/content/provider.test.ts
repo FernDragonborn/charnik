@@ -97,6 +97,21 @@ describe('seedShippedContent (an uninstalled pack stays uninstalled)', () => {
 		expect(await to.read('content/srd-2024/classes_srd.csv')).toContain('wizard'); // refreshed
 		expect(await to.exists('content/srd-2014/classes_srd.csv')).toBe(false); // stays gone
 	});
+
+	/* A pack may carry plugins in `plugins/<ns>/` (PLUGINS §2), and the seed listed ONE level while
+	   the pack differ walked the folder in full — so a bundled pack's code was dropped on the way to
+	   disk, and the half that compares packs then saw files the half that writes them never wrote. */
+	it('carries a bundled pack’s plugins onto disk, not just its CSVs', async () => {
+		const from = await bundled();
+		await from.write('content/srd-2024/plugins/house-rules/plugin.json', '{"api":1}');
+		await from.write('content/srd-2024/plugins/house-rules/main.js', 'globalThis.h = {};');
+		const to = new MemoryStorage();
+
+		await seedShippedContent(from, to, BOTH, 1);
+
+		expect(await to.read('content/srd-2024/plugins/house-rules/main.js')).toContain('globalThis');
+		expect(await to.exists('content/srd-2024/plugins/house-rules/plugin.json')).toBe(true);
+	});
 });
 
 /** The registry says what is installed; a folder can leave without telling it (deleting the pack in

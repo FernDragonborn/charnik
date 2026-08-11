@@ -14,6 +14,7 @@
  */
 import Papa from 'papaparse';
 import type { Storage } from '$lib/storage/types';
+import { listFilesRecursive } from '$lib/storage/walk';
 import type { ContentGraph } from '../loader';
 import { isProtectedFromOverwrite } from '../provider';
 import { parseContentDirectives } from '../meta';
@@ -104,7 +105,7 @@ export async function diffPack(storage: Storage, remote: RemotePack): Promise<Pa
 	// a flat listing would never notice upstream deleting executable code — it would sit there forever.
 	// Only files the PACK FORMAT covers can be "removed": anything else in that folder is the user's,
 	// not the update's business (a README, notes, a leftover from an older layout).
-	for (const path of await listFiles(storage, localPath(remote.pack)))
+	for (const path of await listFilesRecursive(storage, localPath(remote.pack)))
 		if (!seen.has(path) && isPackFile(path))
 			changes.push({
 				path: path.slice('content/'.length),
@@ -113,16 +114,6 @@ export async function diffPack(storage: Storage, remote: RemotePack): Promise<Pa
 			});
 
 	return { pack: remote.pack, changes };
-}
-
-/** Every file under `dir`, at any depth, as dataDir-relative paths. The `Storage` seam lists one
- *  level (that is all a pack's CSVs need); a pack with plugins is two levels deeper. */
-export async function listFiles(storage: Storage, dir: string): Promise<string[]> {
-	const out: string[] = [];
-	for (const entry of await storage.list(dir).catch(() => []))
-		if (entry.isDir) out.push(...(await listFiles(storage, entry.path)));
-		else out.push(entry.path);
-	return out;
 }
 
 /** The `#content-source` a CSV declares, or null if it declares none. */

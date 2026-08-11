@@ -22,10 +22,10 @@ import type { Storage } from '$lib/storage/types';
 import type { ContentGraph } from '../loader';
 import { rawUrl, type GithubRepo, type RemotePack } from './github';
 import type { RemoteFetcher, UpdateError } from './types';
+import { listFilesRecursive } from '$lib/storage/walk';
 import {
 	FILE_CHANGE,
 	gitBlobSha,
-	listFiles,
 	localPath,
 	localPackSource,
 	rowsDroppedFromFile,
@@ -230,7 +230,7 @@ async function swapInNewTree(
 	// carry over everything not being written or dropped — including files the pack format doesn't
 	// cover (a README, the user's notes) and hand-edited ones the update preserves
 	const written = new Set(staged.map((f) => localPath(f.path)));
-	for (const path of await listFiles(storage, live)) {
+	for (const path of await listFilesRecursive(storage, live)) {
 		if (written.has(path) || dropping.has(path)) continue;
 		await storage.writeBytes(
 			`${next}/${path.slice(live.length + 1)}`,

@@ -345,7 +345,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (87 modules)
+## Library functions & types (88 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -688,7 +688,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PackDiff`
 - `const hasWrites` — Does this diff actually ask to write anything?
 - `function diffPack` — * Compare one remote pack against what is on disk.
-- `function listFiles` — Every file under `dir`, at any depth, as dataDir-relative paths.
 - `const sourceOf` — The `#content-source` a CSV declares, or null if it declares none.
 - `function localPackSource` — * The source tag this pack currently claims ON DISK — the identity half of `source:id`.
 - `function rowsRemovedBy` — The content rows that would DISAPPEAR if this diff were applied — every row the loader read from * a file the update …
@@ -1180,6 +1179,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface FileEntry` — * The one file-IO seam for the whole app.
 - `interface Storage`
 
+### `src/lib/storage/walk.ts`
+
+- `function listFilesRecursive` — Every file under `dir`, at any depth, as dataDir-relative paths.
+
 ### `src/lib/styles/customThemes.ts`
 
 - `const THEMEABLE_TOKENS` — The design tokens a custom theme may override — the semantic color palette plus the shadow slots.
@@ -1226,4 +1229,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 709 exports across 100 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 709 exports across 101 modules · 36 duplicate suspects._

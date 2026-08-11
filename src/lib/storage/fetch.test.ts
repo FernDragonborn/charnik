@@ -77,6 +77,28 @@ describe('FetchStorage.list / exists (manifest-backed)', () => {
 		]);
 	});
 
+	/* A bundled pack may carry plugins in `plugins/<ns>/`, which the vendoring step emits as its own
+	   manifest key. Walking down to them over HTTP only works if each level reports the next. */
+	it('walks a pack’s nested plugin folders, one manifest key per level', async () => {
+		const nested = {
+			roots: {
+				'content/dark-sun': ['classes_srd.csv'],
+				'content/dark-sun/plugins/rules': ['main.js', 'plugin.json']
+			}
+		};
+		fetchMock.mockResolvedValue(okJson(nested));
+		const s = new FetchStorage();
+		expect(await s.list('content')).toEqual([
+			{ path: 'content/dark-sun', name: 'dark-sun', isDir: true }
+		]);
+		expect(await s.list('content/dark-sun')).toEqual([
+			{ path: 'content/dark-sun/plugins', name: 'plugins', isDir: true },
+			{ path: 'content/dark-sun/classes_srd.csv', name: 'classes_srd.csv', isDir: false }
+		]);
+		expect(await s.list('content/dark-sun/plugins/rules')).toHaveLength(2);
+		expect(await s.exists('content/dark-sun/plugins/rules/main.js')).toBe(true);
+	});
+
 	it('does not report a root as a subdirectory of itself', async () => {
 		fetchMock.mockResolvedValueOnce(okJson(manifest));
 		const entries = await new FetchStorage().list('content/srd-2024');
