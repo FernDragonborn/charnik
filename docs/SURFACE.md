@@ -21,6 +21,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `label` ×3 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
+- `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `num` ×3 — src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
@@ -38,7 +39,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `name` ×2 — src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
-- `now` ×2 — src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `onKeydown` ×2 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/trapFocus.ts
@@ -267,6 +267,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function checkNow` — * Ask the repos what they have.
 - `function applyUpdate` — * Apply ONE pack's pending update.
 - `function restorePendingUpdates` — * Rebuild the pending set at launch from what the last check remembered — no network, no throttle, * no update-mode g…
+- `function undoUpdate` — * Undo the last applied update for one pack, from the copy the swap kept beside it.
+- `function rollbackablePacks` — Which installed packs have a previous version on disk — drives the undo button.
 - `const autoCheckAllowed` — Should the app check by itself at startup?
 - `function discoverPacks` — * Ask a pasted repo URL what packs it holds.
 - `function installPack` — * Install one discovered pack.
@@ -686,6 +688,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PackDiff`
 - `const hasWrites` — Does this diff actually ask to write anything?
 - `function diffPack` — * Compare one remote pack against what is on disk.
+- `function listFiles` — Every file under `dir`, at any depth, as dataDir-relative paths.
 - `const sourceOf` — The `#content-source` a CSV declares, or null if it declares none.
 - `function localPackSource` — * The source tag this pack currently claims ON DISK — the identity half of `source:id`.
 - `function rowsRemovedBy` — The content rows that would DISAPPEAR if this diff were applied — every row the loader read from * a file the update …
@@ -710,6 +713,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ApplyResult`
 - `interface ApplyRequest`
 - `function applyPackUpdate` — * Fetch everything this diff wants, then write it.
+- `function recoverInterruptedApply` — * Finish or undo an apply that was interrupted (crash, kill, power loss) — call once at startup, * before content is …
+- `function rollbackPack` — Roll one applied update back to the copy the swap kept.
+- `const hasRollback` — Is there something to roll back to?
 - `function stagePackUpdate` — * Pre-download an update's bytes into the cache, so applying it later is instant and works offline * (the `download` …
 - `function isStaged` — Is this whole update already downloaded?
 - `function pruneCache` — * Throw away staged bytes nothing is waiting for.
@@ -1214,4 +1220,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 697 exports across 100 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 703 exports across 100 modules · 36 duplicate suspects._

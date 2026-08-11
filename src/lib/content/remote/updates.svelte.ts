@@ -25,10 +25,12 @@ import { checkRepo, parseGithubRepo, type RemotePack } from './github';
 import { diffPack, hasWrites, rowsRemovedBy, charactersReferencing, type PackDiff } from './diff';
 import {
 	applyPackUpdate,
+	hasRollback,
 	isStaged,
 	pluginsIn,
 	pluginsTouchedBy,
 	pruneCache,
+	rollbackPack,
 	stagePackUpdate,
 	type ApplyResult
 } from './install';
@@ -223,10 +225,20 @@ export async function applyUpdate(
 		diff: pending.diff,
 		removeDeleted: opts.removeDeleted === true
 	});
-	if (res.error === undefined) {
+	if (res.error !== undefined) {
+		updates.error = res.error;
+		return res;
+	}
+	// An update whose only entries are REMOVALS applies nothing unless removals were asked for.
+	// Clearing it then would report success for a no-op and hide the offer until the next check
+	// re-derived the very same one.
+	if (res.written.length > 0 || res.removed.length > 0) {
 		delete updates.pending[pack];
 		forgetPending(pack);
-	} else updates.error = res.error;
+	}
+	// The staging cache is content-addressed and SHARED, so an apply must not delete entries by SHA:
+	// another pending pack can be waiting on the same blob. Prune against everything still pending.
+	await pruneCache(getUserStorage(), stagedShas());
 	return res;
 }
 
@@ -253,6 +265,27 @@ export async function restorePendingUpdates(): Promise<void> {
 		if (pending) updates.pending[pack] = pending;
 		else forgetPending(pack);
 	}
+}
+
+/**
+ * Undo the last applied update for one pack, from the copy the swap kept beside it. One generation
+ * only — the next apply replaces it — so this is "put back what I had an hour ago", not a history.
+ * Returns false when there is nothing to go back to.
+ */
+export async function undoUpdate(pack: string): Promise<boolean> {
+	const done = await rollbackPack(getUserStorage(), pack);
+	// the rolled-back files are older than the remote again, so the offer is live once more; the next
+	// check re-derives it, and until then the pack simply reads as up to date
+	if (done) forgetPending(pack);
+	return done;
+}
+
+/** Which installed packs have a previous version on disk — drives the undo button. */
+export async function rollbackablePacks(): Promise<string[]> {
+	const storage = getUserStorage();
+	const packs = Object.keys(packConfig.packs);
+	const flags = await Promise.all(packs.map((pack) => hasRollback(storage, pack)));
+	return packs.filter((_, i) => flags[i] === true);
 }
 
 /** Should the app check by itself at startup? Only when the user asked it to. */

@@ -4,6 +4,7 @@
 	// deliberately bypasses the once-a-day throttle, because "I want to test this one" is the real
 	// use. Desktop-only: the web build serves the content of its own deploy.
 	import { _ } from '$lib/i18n';
+	import { toast } from 'svelte-sonner';
 	import {
 		missingBundled,
 		packConfig,
@@ -20,6 +21,8 @@
 		applyUpdate,
 		discoverPacks,
 		installPack,
+		rollbackablePacks,
+		undoUpdate,
 		uninstallPack
 	} from '$lib/content/remote/updates.svelte';
 	import { content, reloadContent } from '$lib/content/store.svelte';
@@ -41,7 +44,13 @@
 	async function afterDiskChange() {
 		await reloadContent();
 		await refreshPlugins();
+		rollbackable = await rollbackablePacks();
 	}
+
+	/** Packs with a previous version still on disk (kept by the last apply). Read from the disk
+	 *  rather than tracked in state — a `.prev` also survives a restart, and so must the offer. */
+	let rollbackable = $state<string[]>([]);
+	$effect(() => void rollbackablePacks().then((packs) => (rollbackable = packs)));
 
 	/** Files this update would write / preserve / delete, as a count per kind. */
 	function counts(changes: { kind: string }[]) {
@@ -296,6 +305,21 @@
 					</div>
 
 					<div class="pack-actions">
+						<!-- The applied-update undo. The swap keeps ONE previous copy beside the pack, so this
+						     is "put back what I had before the last update" — the only way back once an update
+						     is in, since a pin only prevents. -->
+						{#if rollbackable.includes(pack)}
+							<button
+								class="pill-btn"
+								onclick={async () => {
+									if (await undoUpdate(pack))
+										toast.success($_('settings.packs.undoDone', { values: { pack } }));
+									await afterDiskChange();
+								}}
+							>
+								{$_('settings.packs.undo')}
+							</button>
+						{/if}
 						<button class="pill-btn" onclick={() => setPinned(pack, entry.pinned !== true)}>
 							{entry.pinned ? $_('settings.packs.unpin') : $_('settings.packs.pin')}
 						</button>

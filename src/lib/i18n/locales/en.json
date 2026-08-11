@@ -120,6 +120,9 @@
 			"missingNote": "Not on your disk. The copy inside the app can go back any time — no internet needed.",
 			"restore": "Put it back",
 			"contentMoved": "“{path}” changed on the server while it was being downloaded. Nothing was written; check again in a moment.",
+			"localChanged": "These files changed on your disk after this update was prepared: {files}. Nothing was written, because the summary you approved no longer describes them. Check for updates again to see the current picture.",
+			"undo": "Undo this update",
+			"undoDone": "“{pack}” is back to the version it had before the last update.",
 			"uninstallWarn": "Deletes its files from your disk, and the {count} entries it gives you with them. Characters using any of those go blank there. You can get it back any time from {repo}.",
 			"uninstallWarnEmpty": "Deletes its files from your disk. Characters using anything from it go blank there. You can get it back any time from {repo}."
 		}

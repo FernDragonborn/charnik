@@ -11,9 +11,12 @@ import { diffPack, gitBlobSha, rowsRemovedBy, charactersReferencing, FILE_CHANGE
 import {
 	applyPackUpdate,
 	cachePath,
+	hasRollback,
 	isStaged,
 	pluginsIn,
 	pruneCache,
+	recoverInterruptedApply,
+	rollbackPack,
 	stagePackUpdate
 } from './install';
 import type { RemotePack } from './github';
@@ -59,13 +62,15 @@ describe('diffPack', () => {
 			]
 		};
 		const diff = await diffPack(s, remote);
-		expect(diff.changes).toEqual(
+		// `expectLocal` is the disk state each decision was made against — re-checked at apply time
+		expect(diff.changes.map(({ path, kind }) => ({ path, kind }))).toEqual(
 			expect.arrayContaining([
-				{ path: 'p/old.csv', kind: FILE_CHANGE.changed, sha: 'different-sha' },
-				{ path: 'p/new.csv', kind: FILE_CHANGE.added, sha: 'whatever' },
+				{ path: 'p/old.csv', kind: FILE_CHANGE.changed },
+				{ path: 'p/new.csv', kind: FILE_CHANGE.added },
 				{ path: 'p/gone.csv', kind: FILE_CHANGE.removed }
 			])
 		);
+		expect(diff.changes.find((c) => c.path === 'p/new.csv')?.expectLocal).toBeNull();
 		// an unchanged file produces no entry at all
 		expect(diff.changes.some((c) => c.path === 'p/same.csv')).toBe(false);
 	});
@@ -78,7 +83,7 @@ describe('diffPack', () => {
 			pack: 'p',
 			files: [{ path: 'p/mine.csv', sha: 'upstream' }]
 		});
-		expect(diff.changes).toEqual([
+		expect(diff.changes).toMatchObject([
 			{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved, sha: 'upstream' }
 		]);
 	});
@@ -89,7 +94,7 @@ describe('diffPack', () => {
 		const s = new MemoryStorage();
 		await s.writeBytes('content/p/mine.csv', enc('id\nMY OWN FILE'));
 		const diff = await diffPack(s, { pack: 'p', files: [{ path: 'p/mine.csv', sha: 'upstream' }] });
-		expect(diff.changes).toEqual([
+		expect(diff.changes).toMatchObject([
 			{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved, sha: 'upstream' }
 		]);
 	});
@@ -104,7 +109,7 @@ describe('diffPack', () => {
 			pack: 'p',
 			files: [{ path: 'p/plugins/ns/main.js', sha: 'upstream' }]
 		});
-		expect(diff.changes).toEqual([
+		expect(diff.changes).toMatchObject([
 			{ path: 'p/plugins/ns/main.js', kind: FILE_CHANGE.changed, sha: 'upstream' }
 		]);
 	});
@@ -122,7 +127,7 @@ describe('diffPack', () => {
 		const s = new MemoryStorage();
 		await s.writeBytes('content/p/plugins/old-rules/main.js', enc('globalThis.x = 1;'));
 		const diff = await diffPack(s, { pack: 'p', files: [] });
-		expect(diff.changes).toEqual([
+		expect(diff.changes).toMatchObject([
 			{ path: 'p/plugins/old-rules/main.js', kind: FILE_CHANGE.removed }
 		]);
 	});
@@ -238,6 +243,110 @@ describe('applyPackUpdate', () => {
 	});
 });
 
+/** Applying replaces the pack's FOLDER, so the properties worth pinning are about the folder as a
+ *  whole: everything the update didn't mention survives, the approved picture is re-checked against
+ *  the disk first, and the copy it replaced is still there to go back to. */
+describe('apply is a folder swap', () => {
+	const diffFor = async (s: MemoryStorage, path: string) => ({
+		pack: 'p',
+		changes: [
+			{
+				path,
+				kind: FILE_CHANGE.changed,
+				expectLocal: await gitBlobSha(await s.readBytes(`content/${path}`))
+			}
+		]
+	});
+
+	it('keeps every file the update never mentioned — a README, notes, a preserved edit', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/a.csv', enc('id\nold'));
+		await s.writeBytes('content/p/NOTES.md', enc('my house rules'));
+		await s.writeBytes('content/p/plugins/ns/main.js', enc('globalThis.x = 1;'));
+
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
+			repo: REPO,
+			diff: await diffFor(s, 'p/a.csv')
+		});
+
+		expect(res.error).toBeUndefined();
+		expect(await s.read('content/p/a.csv')).toBe('id\nnew');
+		expect(await s.read('content/p/NOTES.md')).toBe('my house rules'); // carried across the swap
+		expect(await s.read('content/p/plugins/ns/main.js')).toBe('globalThis.x = 1;'); // nested too
+	});
+
+	it('REFUSES when a file moved on disk after the diff was shown — the approval is stale', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/a.csv', enc('id\nold'));
+		const diff = await diffFor(s, 'p/a.csv');
+		await s.writeBytes('content/p/a.csv', enc('id\nMY EDIT, made while the panel was open'));
+
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
+			repo: REPO,
+			diff
+		});
+
+		expect(res.error).toMatchObject({ key: 'settings.packs.localChanged' });
+		expect(res.written).toEqual([]);
+		expect(await s.read('content/p/a.csv')).toContain('MY EDIT'); // untouched
+	});
+
+	it('leaves the previous version behind, and can roll back to it', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/a.csv', enc('id\nold'));
+		await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
+			repo: REPO,
+			diff: await diffFor(s, 'p/a.csv')
+		});
+		expect(await hasRollback(s, 'p')).toBe(true);
+
+		expect(await rollbackPack(s, 'p')).toBe(true);
+		expect(await s.read('content/p/a.csv')).toBe('id\nold');
+		expect(await hasRollback(s, 'p')).toBe(false); // one generation only, and it was just used
+	});
+});
+
+/** A kill between the two renames is the one moment the pack can be missing. Each in-between state
+ *  is distinguishable from the folders left on disk, which is why no journal is needed. */
+describe('recovering an interrupted apply', () => {
+	it('discards a half-built replacement when the pack is still live', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/a.csv', enc('id\nlive'));
+		await s.writeBytes('content/p.new/a.csv', enc('id\nhalf-built'));
+
+		await recoverInterruptedApply(s, 'p');
+
+		expect(await s.read('content/p/a.csv')).toBe('id\nlive');
+		expect(await s.exists('content/p.new')).toBe(false);
+	});
+
+	it('puts the pack back when it died between the two renames', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p.prev/a.csv', enc('id\nold'));
+		await s.writeBytes('content/p.new/a.csv', enc('id\nnew'));
+
+		await recoverInterruptedApply(s, 'p');
+
+		expect(await s.read('content/p/a.csv')).toBe('id\nold'); // the version that was live
+		expect(await s.exists('content/p.new')).toBe(false);
+	});
+
+	it('promotes the replacement when there is no old copy to go back to', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p.new/a.csv', enc('id\nnew'));
+
+		await recoverInterruptedApply(s, 'p');
+
+		expect(await s.read('content/p/a.csv')).toBe('id\nnew');
+	});
+});
+
 /** "Check and pre-download" only means anything if the bytes it fetched are still there, and still
  *  the right bytes, when the user finally clicks Apply — possibly offline, possibly next week. */
 describe('the pre-download staging cache', () => {
@@ -265,7 +374,10 @@ describe('the pre-download staging cache', () => {
 		const res = await applyPackUpdate({ storage: s, fetcher: offline, repo: REPO, diff });
 		expect(res.error).toBeUndefined();
 		expect(await s.read('content/p/a.csv')).toBe(bodyA);
-		// applied ⇒ the staged copy is now just a duplicate of what is on disk
+		// the cache is content-addressed and SHARED, so apply does not delete by SHA — another pending
+		// pack can be waiting on the same blob. `pruneCache` clears it against everything still pending.
+		expect(await isStaged(s, diff)).toBe(true);
+		await pruneCache(s, new Set());
 		expect(await isStaged(s, diff)).toBe(false);
 	});
 

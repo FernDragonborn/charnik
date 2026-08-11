@@ -65,6 +65,10 @@ export class NodeStorage implements Storage {
 	async remove(path: string): Promise<void> {
 		await rm(this.abs(path), { recursive: true, force: true });
 	}
+	async rename(from: string, to: string): Promise<void> {
+		await fsMkdir(dirname(this.abs(to)), { recursive: true });
+		await rename(this.abs(from), this.abs(to));
+	}
 	watch(dir: string, onChange: (path: string) => void): () => void {
 		const w = fsWatch(this.abs(dir), { recursive: true }, (_e, name) => {
 			if (name) onChange((dir ? join(dir, name.toString()) : name.toString()).split(sep).join('/'));

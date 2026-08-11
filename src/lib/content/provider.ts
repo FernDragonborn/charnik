@@ -29,6 +29,7 @@ import { HOMEBREW_ROOT } from './homebrew';
 import { HASH_STATE } from './meta';
 import { fileHashState } from './hash';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
+import { recoverInterruptedApply } from './remote/install';
 import {
 	forgetPack,
 	isReservedPackName,
@@ -96,6 +97,9 @@ async function buildGraph(): Promise<ContentGraph> {
 		// desktop: seed/UPDATE the BUNDLED packs on disk (first run + version bumps), then read every
 		// pack that is actually installed there — which is the bundled set plus anything the user added.
 		const user = getUserStorage();
+		// an apply that was killed mid-swap left staging folders behind; settle them before anything
+		// looks at `content/`, or a half-swapped pack is what gets loaded
+		await recoverInterruptedApplies(user);
 		const shipped = await discoverContentRoots(bundled);
 		await seedShippedContent(bundled, user, shipped, CONTENT_SEED_VERSION);
 		const installed = await discoverContentRoots(user);
@@ -124,6 +128,22 @@ function adoptShippedPacks(shipped: string[]): void {
 	for (const root of shipped)
 		if (packConfig.packs[packNameOf(root)] === undefined)
 			registerPack(packNameOf(root), SHIPPED_PACK_REPO);
+}
+
+/**
+ * Settle any pack left mid-apply (crash, kill, power loss). The staging folders are their own
+ * evidence — `<pack>.new` / `<pack>.prev` next to `content/` — so this needs no journal to read:
+ * find the base names, and let `recoverInterruptedApply` decide per pack which state it is in.
+ * `.prev` beside a live folder is not an interruption; it is the kept undo copy, and stays.
+ */
+async function recoverInterruptedApplies(storage: Storage): Promise<void> {
+	const entries = await storage.list(CONTENT_DIR).catch(() => []);
+	const interrupted = new Set(
+		entries
+			.filter((e) => e.isDir && /\.(new|prev)$/i.test(e.name))
+			.map((e) => e.name.replace(/\.(new|prev)$/i, ''))
+	);
+	for (const pack of interrupted) await recoverInterruptedApply(storage, pack);
 }
 
 /** `content/srd-2024` → `srd-2024`: the folder IS the pack, so its name is its last segment. */

@@ -98,6 +98,28 @@ export class MemoryStorage implements Storage {
 		this.emit(k);
 	}
 
+	async rename(from: string, to: string): Promise<void> {
+		const src = norm(from);
+		const dst = norm(to);
+		if (!this.files.has(src) && !this.dirs.has(src)) throw new Error(`no such path: ${src}`);
+		const moved = (key: string) => dst + key.slice(src.length);
+		for (const [key, value] of [...this.files])
+			if (key === src || key.startsWith(src + '/')) {
+				this.files.delete(key);
+				this.mtimes.delete(key);
+				this.ensureAncestors(moved(key));
+				this.files.set(moved(key), value);
+				this.mtimes.set(moved(key), Date.now());
+			}
+		for (const dir of [...this.dirs])
+			if (dir === src || dir.startsWith(src + '/')) {
+				this.dirs.delete(dir);
+				this.dirs.add(moved(dir));
+			}
+		this.emit(src);
+		this.emit(dst);
+	}
+
 	watch(dir: string, onChange: (path: string) => void): () => void {
 		const k = norm(dir);
 		let set = this.watchers.get(k);

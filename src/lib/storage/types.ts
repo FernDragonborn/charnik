@@ -32,6 +32,11 @@ export interface Storage {
 	list(dir: string): Promise<FileEntry[]>;
 	mkdir(path: string): Promise<void>;
 	remove(path: string): Promise<void>;
+	/** Move a file OR a whole directory. The one operation that can swap a folder's contents in a
+	 *  single step, which is what makes applying a pack update all-or-nothing on disk rather than
+	 *  only over the network (a per-file write loop dies half-applied). Overwriting an existing
+	 *  target is not promised — remove it first. */
+	rename(from: string, to: string): Promise<void>;
 	/** Watch a directory subtree; returns an unsubscribe function. */
 	watch(dir: string, onChange: (path: string) => void): () => void;
 }

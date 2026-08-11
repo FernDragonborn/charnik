@@ -326,6 +326,12 @@ export class TauriStorage implements Storage {
 	async remove(path: string): Promise<void> {
 		await fsRemove(await this.abs(path), { recursive: true });
 	}
+	async rename(from: string, to: string): Promise<void> {
+		const target = await this.abs(to);
+		const lastSep = Math.max(target.lastIndexOf('/'), target.lastIndexOf('\\'));
+		if (lastSep > 0) await fsMkdir(target.slice(0, lastSep), { recursive: true });
+		await fsRename(await this.abs(from), target);
+	}
 	/** Watch a subtree. The plugin's unwatch is async; bridge it to the sync unsubscribe the
 	 *  `Storage` contract returns (calls detach once the watcher has attached). */
 	watch(dir: string, onChange: (path: string) => void): () => void {

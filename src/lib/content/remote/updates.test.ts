@@ -122,7 +122,7 @@ describe('install a pack from a pasted URL', () => {
 
 		await restorePendingUpdates();
 
-		expect(updates.pending['dark-sun']?.diff.changes).toEqual([
+		expect(updates.pending['dark-sun']?.diff.changes).toMatchObject([
 			{ path: 'dark-sun/classes_srd.csv', kind: 'changed', sha: 'f'.repeat(40) }
 		]);
 	});

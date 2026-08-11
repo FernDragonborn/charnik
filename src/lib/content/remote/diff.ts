@@ -53,6 +53,16 @@ export interface FileChange {
 	/** The remote's git blob SHA. Absent only for `removed`, which by definition has no remote file.
 	 *  Carried through because it is both the download's integrity check and the staging cache's key. */
 	sha?: string;
+	/**
+	 * What was on disk WHEN THIS DIFF WAS COMPUTED: the local file's blob SHA, or `null` for a file
+	 * that wasn't there. The apply re-checks it immediately before writing (a compare-and-set) and
+	 * refuses the whole update if anything moved.
+	 *
+	 * Why: a diff is shown, then sits until the user clicks — minutes, or across a restart. Acting on
+	 * a stale reading means overwriting an edit made in between, silently, having just told the user
+	 * that file would be preserved.
+	 */
+	expectLocal?: string | null;
 }
 
 export interface PackDiff {
@@ -77,16 +87,16 @@ export async function diffPack(storage: Storage, remote: RemotePack): Promise<Pa
 		const path = localPath(file.path);
 		seen.add(path);
 		if (!(await storage.exists(path))) {
-			changes.push({ path: file.path, kind: FILE_CHANGE.added, sha: file.sha });
+			changes.push({ path: file.path, kind: FILE_CHANGE.added, sha: file.sha, expectLocal: null });
 			continue;
 		}
+		const expectLocal = await gitBlobSha(await storage.readBytes(path));
 		if (await isProtectedFromOverwrite(storage, path)) {
-			changes.push({ path: file.path, kind: FILE_CHANGE.preserved, sha: file.sha });
+			changes.push({ path: file.path, kind: FILE_CHANGE.preserved, sha: file.sha, expectLocal });
 			continue;
 		}
-		const local = await gitBlobSha(await storage.readBytes(path));
-		if (local !== file.sha)
-			changes.push({ path: file.path, kind: FILE_CHANGE.changed, sha: file.sha });
+		if (expectLocal !== file.sha)
+			changes.push({ path: file.path, kind: FILE_CHANGE.changed, sha: file.sha, expectLocal });
 	}
 
 	// The local side is walked RECURSIVELY: a pack's plugins live in `plugins/<ns>/` (PLUGINS §2), so
@@ -95,14 +105,18 @@ export async function diffPack(storage: Storage, remote: RemotePack): Promise<Pa
 	// not the update's business (a README, notes, a leftover from an older layout).
 	for (const path of await listFiles(storage, localPath(remote.pack)))
 		if (!seen.has(path) && isPackFile(path))
-			changes.push({ path: path.slice('content/'.length), kind: FILE_CHANGE.removed });
+			changes.push({
+				path: path.slice('content/'.length),
+				kind: FILE_CHANGE.removed,
+				expectLocal: await gitBlobSha(await storage.readBytes(path))
+			});
 
 	return { pack: remote.pack, changes };
 }
 
 /** Every file under `dir`, at any depth, as dataDir-relative paths. The `Storage` seam lists one
  *  level (that is all a pack's CSVs need); a pack with plugins is two levels deeper. */
-async function listFiles(storage: Storage, dir: string): Promise<string[]> {
+export async function listFiles(storage: Storage, dir: string): Promise<string[]> {
 	const out: string[] = [];
 	for (const entry of await storage.list(dir).catch(() => []))
 		if (entry.isDir) out.push(...(await listFiles(storage, entry.path)));

@@ -90,6 +90,9 @@ export class FetchStorage implements Storage {
 	async remove(): Promise<void> {
 		throw new Error('FetchStorage is read-only');
 	}
+	async rename(): Promise<void> {
+		throw new Error('FetchStorage is read-only');
+	}
 	watch(): () => void {
 		return () => {};
 	}

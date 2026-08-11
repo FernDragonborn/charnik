@@ -106,6 +106,24 @@ export class BrowserStorage implements Storage {
 		await tx.done;
 		this.#notify(p);
 	}
+	/** Key-prefix move: IndexedDB has no directories, so "renaming a folder" is re-keying every
+	 *  entry under it. One transaction, so a half-moved tree can't be observed. */
+	async rename(from: string, to: string): Promise<void> {
+		const src = norm(from);
+		const dst = norm(to);
+		const db = await this.#db;
+		const keys = (await db.getAllKeys(STORE)) as string[];
+		const tx = db.transaction(STORE, 'readwrite');
+		for (const key of keys) {
+			if (key !== src && !key.startsWith(`${src}/`)) continue;
+			const value = await tx.store.get(key);
+			await tx.store.delete(key);
+			await tx.store.put(value, dst + key.slice(src.length));
+		}
+		await tx.done;
+		this.#notify(src);
+		this.#notify(dst);
+	}
 	watch(dir: string, onChange: (path: string) => void): () => void {
 		const l: Listener = { dir: norm(dir), fn: onChange };
 		this.#listeners.add(l);
