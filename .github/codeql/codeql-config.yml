@@ -1,0 +1,12 @@
+# Scan what SHIPS. Nothing excluded here reaches a user: `tools/` are node scripts run by pnpm
+# (vendoring, the SRD converters, surface/visual tooling), `src/test-support/` exists only for
+# Vitest, and `*.test.ts` isn't an entry point — verified against a real `pnpm build`, whose output
+# contains no reference to any of them.
+#
+# They were producing the bulk of the open alerts: `js/path-injection` on build scripts that take a
+# path from argv or an env var, which is what a build script is FOR. Triaging those one by one
+# trains the habit of dismissing CodeQL, which is the actual risk to the code that does ship.
+paths-ignore:
+  - tools
+  - src/test-support
+  - '**/*.test.ts'

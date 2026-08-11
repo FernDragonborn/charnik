@@ -1,0 +1,51 @@
+name: CodeQL
+
+# ADVANCED setup, for exactly one reason: path filters. Default setup can only take exclusions from
+# a config file pointed at by the `github-codeql-config-file` repository property, and custom
+# properties are an ORGANISATION feature — this repo is user-owned, so that API 404s. Everything
+# else here reproduces what default setup was already running: the same languages
+# (actions + javascript-typescript + rust), the default query suite, a weekly schedule.
+#
+# ⚠ This does nothing until default setup is turned OFF — leave both on and they fight over the
+# same alerts. Settings → Code security → CodeQL analysis → Disable, or:
+#   gh api -X PATCH repos/FernDragonborn/charnik/code-scanning/default-setup -f state=not-configured
+#
+# The exclusions live in .github/codeql/codeql-config.yml, next to their reasoning.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # weekly, as default setup ran it
+    - cron: '17 4 * * 1'
+
+permissions:
+  contents: read
+  security-events: write # upload the results
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [actions, javascript-typescript, rust]
+    steps:
+      - uses: actions/checkout@v7
+
+      # build-mode: none for all three — CodeQL builds the database from source, so no toolchain is
+      # needed (this is also why default setup analysed the Rust side without a cargo build). Path
+      # filters only apply in this mode, which is the other reason not to switch it.
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          config-file: .github/codeql/codeql-config.yml
+
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
