@@ -239,7 +239,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const emptyPackConfig`
 - `const CHECK_INTERVAL_MS` — At most one update request per repo per day — stated plainly in the settings copy, so the * number lives here and now…
 - `const SHIPPED_PACK_REPO` — * Where the packs Charnik itself publishes come from.
-- `function parsePackConfig` — Parse a stored blob over the defaults.
+- `function parsePackConfig` — Parse a stored section over the defaults.
 - `function isRepoDue` — * Is this repo due for an automatic check?
 - `function reposDueForCheck` — Every repo that automatic checking may contact right now: the update mode allows the network, * the throttle has elap…
 - `const packConfig` — Reactive, persisted registry.
@@ -337,7 +337,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (86 modules)
+## Library functions & types (87 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1100,6 +1100,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `class FetchStorage`
 
+### `src/lib/storage/json-config.ts`
+
+- `function readConfigFile` — The whole file as a plain object — `{}` when it is missing, unreadable, or not a JSON object.
+- `function readConfigSection` — One section, or `undefined` when absent.
+- `function writeConfigSection` — Replace one section, preserving every other key in the file.
+- `function configWritesSettled` — Resolves when every queued write for this file has landed.
+
 ### `src/lib/storage/memory.ts`
 
 - `class MemoryStorage` — * In-memory `Storage` for tests (and a reference impl).
@@ -1197,4 +1204,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 683 exports across 99 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 687 exports across 100 modules · 36 duplicate suspects._

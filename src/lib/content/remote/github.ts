@@ -11,6 +11,14 @@
  *
  * Everything here is pure string/JSON work so it can be tested without a network. Coupling the
  * MODEL to one forge would break self-hosting, which is a stated project value — hence the split.
+ *
+ * ponytail: GitHub is RUNG ONE of content distribution, not the whole ladder — and today it is the
+ * only rung that exists. There is no generic-HTTPS fallback behind `unsupported`: the reachable
+ * hosts are pinned in `src-tauri/capabilities/default.json` (api.github.com + raw.githubusercontent),
+ * a capability is compiled in, and widening it wholesale would hand any pasted URL the network. The
+ * next rung is a per-host user grant (paste URL → "allow this host?" → stored allow-list checked in
+ * Rust), at which point the `unsupported` branch grows a real fallback. Until then this file is the
+ * fast path AND the only path — deliberately.
  */
 import type { RemoteFetcher } from './types';
 
@@ -25,8 +33,8 @@ export interface GithubRepo {
 const DEFAULT_BRANCH = 'main';
 
 /**
- * Recognise a GitHub repo URL. Deliberately narrow: anything it doesn't recognise is NOT an error,
- * it just means "no fast path for this host" — the caller falls back to a generic HTTPS fetch.
+ * Recognise a GitHub repo URL. Deliberately narrow; anything it doesn't recognise yields
+ * `unsupported`, which today the callers surface as "GitHub only" (see the ladder note above).
  * Accepts `https://github.com/owner/repo`, a `.git` suffix, a trailing slash, and `/tree/<branch>`.
  */
 export function parseGithubRepo(url: string): GithubRepo | null {

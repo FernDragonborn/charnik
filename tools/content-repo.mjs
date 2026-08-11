@@ -7,7 +7,12 @@
  * shipped CSVs from disk — the static-content vendoring step, the SRD converters, the content tests
  * — comes through here, so the location is stated in exactly one place.
  *
- * Resolution order: `$CHARNIK_CONTENT` (CI) → `charnik.config.json` `contentRepo` → the sibling.
+ * Resolution order: `$CHARNIK_CONTENT` (CI) → `charnik.dev.json` `contentRepo` → the sibling.
+ *
+ * The dev pointer is `charnik.dev.json` and NOT `charnik.config.json`, even though this key used to
+ * live there: `charnik.config.json` is also the name of the app's RUNTIME config in the user's data
+ * folder, with a completely different schema. One name for two unrelated files is a question
+ * ("which one do you mean?") that gets asked forever; renaming the dev-only one costs nothing.
  */
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
@@ -17,7 +22,7 @@ const appRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export const CONTENT_REPO_URL = 'https://github.com/FernDragonborn/charnik-content-srd.git';
 const DEFAULT_DIR = '../charnik-content-srd';
-const CONFIG_FILE = 'charnik.config.json';
+const CONFIG_FILE = 'charnik.dev.json';
 
 /** The configured `contentRepo`, or null when there's no config / no such key / unreadable JSON. */
 function configuredDir() {

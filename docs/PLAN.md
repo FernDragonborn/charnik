@@ -429,8 +429,10 @@ items. Each may carry **effects** (bounded vocab).
 
 ## Content sources & loading
 
-- `charnik.config.json` lists **content root folders** (e.g. `<dataDir>/content/core/`,
-  `<dataDir>/content/homebrew/`); app scans + merges. Any number of CSVs per type
+- **Content root folders are the subfolders of `<dataDir>/content/`** (e.g.
+  `content/srd-2024/`, `content/homebrew/`), **discovered by scanning** — one folder is one pack
+  and no config lists them (superseded REL-4; the registry records where a pack CAME FROM, not
+  that it exists). Any number of CSVs per type
   (`species_srd.csv`, `species_phb.csv`…), merged by type.
 - **Enable/disable BOTH per-file AND per-`source`-tag** (independent toggles in UI):
   `enabled(row) = fileEnabled AND sourceEnabled`. Add/remove roots in UI.
@@ -795,8 +797,12 @@ Libs (minimal): `papaparse`, `svelte-i18n`, `zod`; **Tauri v2** + plugins
     prepared dots, resource counters). On/off **dots are filled when active, hollow when
     inactive** — never a dimmed fill.
 
-Config files: `charnik.config.json` (dataDir, roots, toggles, rule-options, settings) +
-`collisions.json` (collision resolutions) — separate.
+Config files: `charnik.config.json` (dataDir, toggles, rule-options, settings) +
+`collisions.json` (collision resolutions) — separate. `charnik.config.json` has SEVERAL owners, so
+each writes ONE top-level section through `storage/json-config.ts` (read-merge-write, queued per
+file): a whole-blob write would make the first writer the owner and erase every other section.
+Today's sections: `contentPacks` (the REL-4 registry). The dev-only content-repo pointer is a
+different file, `charnik.dev.json` in the APP repo — same name for both was a standing trap.
 
 ---
 
@@ -1473,7 +1479,7 @@ holds the done-work log; these are the OPEN tails it carried):**
      default, and committing needs a push in the inner repo BEFORE the pointer bump in the outer one,
      which fails silently and breaks everyone else's clone. Two plain repos have none of that.
      - **ONE resolver seam: `tools/content-repo.mjs`.** Resolution order is `$CHARNIK_CONTENT` →
-       `charnik.config.json`'s `contentRepo` → the sibling `../charnik-content-srd`, so the
+       `charnik.dev.json`'s `contentRepo` → the sibling `../charnik-content-srd`, so the
        side-by-side layout needs NO config. Its three consumers are exactly the three places that
        used to hardcode `content/srd-*`: the vendoring step (`tools/build-static-content.mjs`), the
        SRD converters (they live in the app repo but now WRITE into the content clone), and the
@@ -1499,10 +1505,11 @@ holds the done-work log; these are the OPEN tails it carried):**
        `README.md` point at the content repo for them.
      - Nothing below is blocked on this: slices 1–3 build against the local folders and any URL.
   1. `[x]` **A pack is a FOLDER, discovered by scanning** (`ccd247c`) **+ the installed-pack
-     REGISTRY** (`content/packs.svelte.ts`): `charnik.config.json` in the data root, holding the
-     update mode, `packs` (folder → repo + pin) and `repos` (url → `ETag` + `lastCheckedAt`).
-     Persistence copies `sources.svelte.ts` (pure parse + chained writes), and a corrupt config
-     degrades to "nothing installed, never check" rather than throwing at startup.
+     REGISTRY** (`content/packs.svelte.ts`): the `contentPacks` SECTION of `charnik.config.json` in
+     the data root, holding the update mode, `packs` (folder → repo + pin) and `repos` (url →
+     `ETag` + `lastCheckedAt`). Persistence goes through `storage/json-config.ts` so the other
+     sections of that file survive a write, and a corrupt config degrades to "nothing installed,
+     never check" rather than throwing at startup.
      **The repo/pack split is load-bearing and is now in the types:** the repo is the unit of
      CHECKING (one throttle, one `ETag` — two SRD packs from one repo cost ONE request) and the
      pack is the unit of INSTALLING (one pin, one uninstall). `reposDueForCheck` also skips a repo

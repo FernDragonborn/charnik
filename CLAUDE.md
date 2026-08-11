@@ -23,7 +23,7 @@ some-folder/
 ```
 
 Clone them as siblings and everything resolves with **no configuration** — that layout is the
-default. A different location goes in `charnik.config.json` (`{ "contentRepo": "…" }`, gitignored)
+default. A different location goes in `charnik.dev.json` (`{ "contentRepo": "…" }`, gitignored)
 or `$CHARNIK_CONTENT` (how CI points at its own checkout).
 
 **`tools/content-repo.mjs` is the ONE seam that knows where the content is** — the vendoring step
@@ -182,8 +182,9 @@ These span many files and are easy to violate; preserve them.
   the UI can explain any stat on **hover/tap** — including rule-based blocks (e.g. why
   spellcasting is blocked by non-proficient worn armor), not just flat bonuses.
 
-- **Content = CSV, merged from many files/roots.** `charnik.config.json` lists content
-  **root folders**; each root may hold **any number of CSVs per type**
+- **Content = CSV, merged from many files/roots.** Content **root folders** are the
+  subfolders of `<dataDir>/content/` — one folder = one pack, **discovered by scanning**
+  (no list in any config); each root may hold **any number of CSVs per type**
   (`species_srd.csv`, `species_phb.csv`, …), all merged by type. Every row carries
   common columns `id`, `systems` (`5e,5.5e`), `source`, plus **L2 localization
   columns** `name_en/name_uk/text_en/text_uk/…` (all languages side-by-side in one

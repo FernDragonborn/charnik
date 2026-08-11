@@ -10,14 +10,18 @@
  * the unit of INSTALLING (one pin, one uninstall). Modelling them as one thing would either
  * multiply requests per pack or make a pin unable to name what it pins.
  *
- * Persistence copies `sources.svelte.ts`: a JSON file in the data root through the Storage seam
- * (Tauri fs on desktop, IndexedDB on web), a pure parse over defaults, and a chained write so two
- * quick changes can't land out of order.
+ * Persistence: a pure parse over defaults, plus ONE SECTION of the shared app-config file
+ * (`storage/json-config.ts`). The registry is a tenant of that file, not its owner — writing the
+ * whole blob would erase every other section (rule-options, settings) the moment a pack is pinned.
  */
-import { getUserStorage } from '$lib/storage/provider';
+import { readConfigFile, writeConfigSection } from '$lib/storage/json-config';
 
 /** The app-config file in the data root. Named by the architecture invariant (CLAUDE.md). */
 const CONFIG_PATH = 'charnik.config.json';
+/** Our top-level key inside it. Deliberately NOT `packs` — that name is already taken one level
+ *  down (`PackConfigData.packs`), and a section whose name shadows one of its own fields is a trap
+ *  for both the reader and the legacy-shape check in `initPackConfig`. */
+const SECTION = 'contentPacks';
 
 /**
  * What the app may do over the NETWORK on its own. Applying is never in here — that is always a
@@ -87,23 +91,19 @@ export const CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
  */
 export const SHIPPED_PACK_REPO = 'https://github.com/FernDragonborn/charnik-content-srd';
 
-/** Parse a stored blob over the defaults. Pure, so the merge is unit-testable without Storage; a
- *  missing/corrupt file degrades to "nothing installed, never check", never throws. */
-export function parsePackConfig(raw: string | null): PackConfigData {
-	if (!raw) return emptyPackConfig();
-	try {
-		const parsed = JSON.parse(raw) as Partial<PackConfigData>;
-		return {
-			updates: isUpdateMode(parsed.updates) ? parsed.updates : UPDATE_MODE.off,
-			packs: isRecord(parsed.packs) ? parsed.packs : {},
-			repos: isRecord(parsed.repos) ? parsed.repos : {},
-			dismissedMissing: Array.isArray(parsed.dismissedMissing)
-				? parsed.dismissedMissing.filter((p): p is string => typeof p === 'string')
-				: []
-		};
-	} catch {
-		return emptyPackConfig();
-	}
+/** Parse a stored section over the defaults. Pure, so the merge is unit-testable without Storage;
+ *  anything that isn't a well-formed section degrades to "nothing installed, never check". */
+export function parsePackConfig(raw: unknown): PackConfigData {
+	if (!isRecord<unknown>(raw)) return emptyPackConfig();
+	const parsed = raw as Partial<PackConfigData>;
+	return {
+		updates: isUpdateMode(parsed.updates) ? parsed.updates : UPDATE_MODE.off,
+		packs: isRecord(parsed.packs) ? parsed.packs : {},
+		repos: isRecord(parsed.repos) ? parsed.repos : {},
+		dismissedMissing: Array.isArray(parsed.dismissedMissing)
+			? parsed.dismissedMissing.filter((p): p is string => typeof p === 'string')
+			: []
+	};
 }
 
 const isUpdateMode = (v: unknown): v is UpdateMode => typeof v === 'string' && v in UPDATE_MODE;
@@ -174,23 +174,17 @@ export function unDismissMissing(packs: string[]): void {
 /** Load the registry from the data root (once, at app start). Never throws — a read failure leaves
  *  the defaults, which are "nothing installed, never check". */
 export async function initPackConfig(): Promise<void> {
-	let raw: string | null = null;
-	try {
-		raw = await getUserStorage().read(CONFIG_PATH);
-	} catch {
-		/* no config yet — defaults */
-	}
-	adopt(parsePackConfig(raw));
+	const cfg = await readConfigFile(CONFIG_PATH);
+	// The pre-sections layout, where the registry owned the whole file (REL-4 dev builds). Detected
+	// by a field only the registry ever wrote at top level; drop this once a release has shipped.
+	const legacy = cfg.updates !== undefined || cfg.repos !== undefined ? cfg : undefined;
+	adopt(parsePackConfig(cfg[SECTION] ?? legacy));
 }
 
-// Chained like the browse-config: whole-blob writes, stringified at execution time so the last
-// write reflects the latest state, and a failure never crashes the session.
-let writeChain: Promise<void> = Promise.resolve();
+/** Persist through the shared section writer: read-merge-write, queued per file, and stringified at
+ *  execution time so the last write reflects the latest state. */
 function persist(): void {
-	writeChain = writeChain
-		.catch(() => {})
-		.then(() => getUserStorage().write(CONFIG_PATH, JSON.stringify(packConfig, null, 2)))
-		.catch(() => {});
+	writeConfigSection(CONFIG_PATH, SECTION, packConfig);
 }
 
 /** Record an installed pack (the installer calls this), or re-point an existing one at a new repo. */

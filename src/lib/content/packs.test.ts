@@ -29,22 +29,22 @@ const cfg = (over: Partial<PackConfigData> = {}): PackConfigData => ({
 });
 
 describe('parsePackConfig', () => {
-	it('a missing or corrupt config is "nothing installed, never check" — never a throw', () => {
+	it('a missing or malformed section is "nothing installed, never check" — never a throw', () => {
+		expect(parsePackConfig(undefined)).toEqual(emptyPackConfig());
 		expect(parsePackConfig(null)).toEqual(emptyPackConfig());
-		expect(parsePackConfig('{oops')).toEqual(emptyPackConfig());
-		expect(parsePackConfig('[]').packs).toEqual({}); // an array is not a record
+		expect(parsePackConfig('a string is not a section')).toEqual(emptyPackConfig());
+		expect(parsePackConfig([]).packs).toEqual({}); // an array is not a record
 	});
 	it('an unknown update mode falls back to off — the private default, not the last one written', () => {
-		expect(parsePackConfig('{"updates":"yolo"}').updates).toBe(UPDATE_MODE.off);
-		expect(parsePackConfig('{"updates":"download"}').updates).toBe(UPDATE_MODE.download);
+		expect(parsePackConfig({ updates: 'yolo' }).updates).toBe(UPDATE_MODE.off);
+		expect(parsePackConfig({ updates: 'download' }).updates).toBe(UPDATE_MODE.download);
 	});
 	it('keeps a real registry', () => {
-		const raw = JSON.stringify({
+		const parsed = parsePackConfig({
 			updates: 'notify',
 			packs: { 'srd-2024': { repo: REPO }, 'srd-2014': { repo: REPO, pinned: true } },
 			repos: { [REPO]: { etag: 'W/"abc"', lastCheckedAt: '2026-08-11T00:00:00.000Z' } }
 		});
-		const parsed = parsePackConfig(raw);
 		expect(parsed.packs['srd-2014']?.pinned).toBe(true);
 		expect(parsed.repos[REPO]?.etag).toBe('W/"abc"');
 	});
@@ -65,7 +65,9 @@ describe('the missing-content prompt', () => {
 		keepMissingPacks(['srd-2014']);
 		expect(missingUnanswered()).toEqual([]);
 		// what persistence would write, read back
-		expect(parsePackConfig(JSON.stringify(packConfig)).dismissedMissing).toEqual(['srd-2014']);
+		expect(parsePackConfig(JSON.parse(JSON.stringify(packConfig))).dismissedMissing).toEqual([
+			'srd-2014'
+		]);
 	});
 
 	it('restoring clears the answer, so deleting it AGAIN asks again', () => {
@@ -77,8 +79,8 @@ describe('the missing-content prompt', () => {
 	});
 
 	it('a corrupt dismissal list is ignored, not trusted into the prompt logic', () => {
-		expect(parsePackConfig('{"dismissedMissing":"srd-2014"}').dismissedMissing).toEqual([]);
-		expect(parsePackConfig('{"dismissedMissing":[1,"srd-2014"]}').dismissedMissing).toEqual([
+		expect(parsePackConfig({ dismissedMissing: 'srd-2014' }).dismissedMissing).toEqual([]);
+		expect(parsePackConfig({ dismissedMissing: [1, 'srd-2014'] }).dismissedMissing).toEqual([
 			'srd-2014'
 		]);
 	});

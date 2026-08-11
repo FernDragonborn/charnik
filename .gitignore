@@ -39,6 +39,7 @@ tools/srd-src/
 static/content/
 
 # local: where THIS machine keeps the content repo, when it isn't the sibling default
+charnik.dev.json
 charnik.config.json
 
 # CI: where the workflows check the content repo out (a sibling path is outside the workspace)
