@@ -1350,8 +1350,8 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [x] **REL-3 · Desktop content re-seed on update.** A `CONTENT_SEED_VERSION` marker re-seeds
   shipped files on update, preserving any the user hand-edited (hash drift). The "bump it whenever
   shipped SRD data changes" rule lives on the constant itself (`schema/version.ts`).
-- [ ] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
-  2026-08-10; design settled, SLICE 1 of 5 built).** The ask: a Settings field where you paste
+- [~] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
+  2026-08-10; all five slices BUILT 2026-08-11, unverified end-to-end against a live desktop app).** The ask: a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
   updated without shipping an app release.
@@ -1497,17 +1497,40 @@ holds the done-work log; these are the OPEN tails it carried):**
      - Bundled-data licence + attribution moved WITH the data (they describe it); `COPYING.md` and
        `README.md` point at the content repo for them.
      - Nothing below is blocked on this: slices 1–3 build against the local folders and any URL.
-  1. `[~]` **A pack is a FOLDER, discovered by scanning** — DONE (`ccd247c`, described above).
-     **Still open in this slice:** the installed-pack REGISTRY — the URL, `ETag`, `lastCheckedAt`,
-     pin and per-pack update mode. That is local state about an install, so it belongs in app config,
-     NOT in the CSVs (§1.6's exception list already covers `charnik.config.json`).
-  2. `[ ]` **The fetcher, in Rust** — `@tauri-apps/plugin-http` with a host allowlist in capabilities,
-     never webview `fetch` (SECURITY.md §5). **Desktop only:** the web build always serves the content
-     of its own deploy, so there is nothing for it to update and half this work does not apply there.
-  3. `[ ]` **check → diff → apply.** Reuse `isUserModified` (`content/provider.ts`) for the
-     hand-edit rule rather than inventing a merge; list the rows that would DISAPPEAR and which
-     characters reference them BEFORE applying, not after.
-  4. `[ ]` **The shipped SRD becomes a pack** sitting above the bundled floor.
+  1. `[x]` **A pack is a FOLDER, discovered by scanning** (`ccd247c`) **+ the installed-pack
+     REGISTRY** (`content/packs.svelte.ts`): `charnik.config.json` in the data root, holding the
+     update mode, `packs` (folder → repo + pin) and `repos` (url → `ETag` + `lastCheckedAt`).
+     Persistence copies `sources.svelte.ts` (pure parse + chained writes), and a corrupt config
+     degrades to "nothing installed, never check" rather than throwing at startup.
+     **The repo/pack split is load-bearing and is now in the types:** the repo is the unit of
+     CHECKING (one throttle, one `ETag` — two SRD packs from one repo cost ONE request) and the
+     pack is the unit of INSTALLING (one pin, one uninstall). `reposDueForCheck` also skips a repo
+     whose every pack is pinned: a request whose answer we'd refuse to use.
+  2. `[x]` **The fetcher, in Rust** — `tauri-plugin-http` behind a `RemoteFetcher` seam
+     (`content/remote/`), never webview `fetch` (SECURITY.md §5). GitHub is a HOST ADAPTER over a
+     plain HTTPS fetcher, not the model: `checkRepo` sends `If-None-Match` and a `304` means the
+     whole check cost nothing. **Finding worth keeping: a static capability allowlist and "paste any
+     URL" are mutually exclusive** — a capability is compiled in and cannot be widened at runtime —
+     so v1 allows the two GitHub hosts, and an arbitrary self-hosted URL is a decision deferred to
+     whoever needs it (SECURITY.md §7 states the two options). **Desktop only.**
+  3. `[x]` **check → diff → apply.** `diffPack` compares by GIT BLOB SHA (what a tree listing
+     gives), so "did this change?" needs no download; `isUserModified` is reused verbatim for the
+     hand-edit rule, so a file you edited is `preserved`, never overwritten. Applying is
+     **pack-level all-or-nothing**: every byte is fetched before anything is written, so a download
+     that dies half-way leaves the disk untouched. Removals are listed BEFORE applying together
+     with `rowsRemovedBy` + `charactersReferencing` ("2 entries would DISAPPEAR · characters that
+     use them: karroth") and are only deleted when explicitly asked for.
+  4. `[x]` **The shipped SRD becomes a pack** sitting above the bundled floor: after the desktop
+     seed, `adoptShippedPacks` registers each bundled root against the content repo, so the SRD
+     updates through the SAME path as any third-party pack. Its repo is a constant, not a
+     `#content-*` header — `#content-url` already means "where the DATA came from" (Wizards), and a
+     file stating which repository publishes it is a self-reference to keep in sync.
+  5. `[x]` **Settings UI** — inside the (renamed) **Content** tab, above the source/file filters,
+     because a pack is the container of exactly those files; four tabs on one concept was the
+     smell. Network dropdown (*don't check* / *notify* / *pre-download*), a manual check that
+     deliberately bypasses the throttle (global and per-pack), pins, and the pre-apply summary.
+     Dev preview at **`/dev/packs`** (the panel is desktop-gated, so this is how it gets driven).
+     The startup check is fire-and-forget AFTER content load, gated on the mode + throttle.
 
   **Two decisions taken on Claude's assumption, flag them if either is wrong:**
   - **The SRD keeps a bundled floor.** A fresh install with no network still needs content, and the

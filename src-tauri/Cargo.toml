@@ -26,6 +26,8 @@ tauri-plugin-log = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
+# Content-pack updates fetch over HTTPS from Rust, never webview `fetch` (docs/SECURITY.md §5).
+tauri-plugin-http = "2"
 
 # Desktop-only: self-update from signed GitHub-release artifacts + relaunch after install.
 [target.'cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))'.dependencies]

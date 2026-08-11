@@ -5,6 +5,7 @@
 	// reload). Disabling never drops data — re-enabling brings rows straight back.
 	import { content } from '$lib/content/store.svelte';
 	import { sourceLabel } from '$lib/content/detail';
+	import PackUpdatesSettings from './PackUpdatesSettings.svelte';
 	import {
 		sourceConfig,
 		toggleFile,
@@ -37,6 +38,11 @@
 	const fileOff = (p: string) => sourceConfig.disabledFiles.includes(p);
 	const shortFile = (p: string) => p.split('/').pop() ?? p;
 </script>
+
+<!-- Packs come FIRST because they are the layer below: a pack is the folder the files below arrive
+     in, so "what is installed" belongs above "what is shown". Splitting them into their own tab put
+     four tabs on one concept. -->
+<PackUpdatesSettings />
 
 <section>
 	<header class="sec-head">

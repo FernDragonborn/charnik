@@ -15,6 +15,7 @@
 	import ContentMetaModal from '$lib/components/ContentMetaModal.svelte';
 	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
 	import { loadContentStore } from '$lib/content/store.svelte';
+	import { autoCheckAllowed, checkNow } from '$lib/content/remote/updates.svelte';
 	import { loadPlugins } from '$lib/effects/plugin-store.svelte';
 	import { review, pendingMetaIssues, pendingDriftItems } from '$lib/content/review.svelte';
 	import { Toaster, toast } from 'svelte-sonner';
@@ -134,6 +135,10 @@
 			startContentWatcher(); // live-refresh when a CSV is edited on disk
 			void loadPlugins(); // desktop-only L3 discovery; consented+enabled plugins wake up
 			void syncThemes(); // load user themes from the data dir now it's granted
+			// Content-pack update check (REL-4). Fire-and-forget, AFTER content is up: it must never
+			// block startup or first paint, it self-gates on the user's update mode + the once-a-day
+			// throttle, and it only ever CHECKS — applying stays a click in Settings.
+			if (autoCheckAllowed()) void checkNow();
 		} else {
 			firstRunDefault = await defaultDataDir(); // first run → show picker, hold content load
 		}

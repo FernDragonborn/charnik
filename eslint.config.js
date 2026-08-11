@@ -45,7 +45,14 @@ export default ts.config(
 		// dynamically imports tauri-plugin-log). Everything else talks to the `Storage` interface /
 		// store functions, so the web + test builds never touch Tauri.
 		files: ['src/**'],
-		ignores: ['src/lib/storage/tauri.ts', 'src/lib/update/**', 'src/lib/diag/**'],
+		ignores: [
+			'src/lib/storage/tauri.ts',
+			'src/lib/update/**',
+			'src/lib/diag/**',
+			// the content-pack fetcher: an HTTP client in Rust behind the RemoteFetcher seam, for the
+			// same reason storage/tauri.ts is exempt (SECURITY.md §5 — never webview fetch)
+			'src/lib/content/remote/tauri-fetch.ts'
+		],
 		rules: {
 			'no-restricted-imports': [
 				'error',

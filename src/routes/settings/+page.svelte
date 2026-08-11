@@ -35,7 +35,7 @@
 		{ id: 'themes', label: 'Themes' },
 		{ id: 'data', label: 'Data' },
 		{ id: 'health', label: 'Content health', badge: () => issueCount },
-		{ id: 'sources', label: 'Sources' },
+		{ id: 'sources', label: 'Content' },
 		{ id: 'collisions', label: 'Collisions', badge: () => collisionCount },
 		{ id: 'plugins', label: 'Plugins' }
 	];

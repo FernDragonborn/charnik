@@ -70,6 +70,31 @@
 				"cancel": "Cancel",
 				"accept": "Enable plugin"
 			}
+		},
+		"packs": {
+			"title": "Content updates",
+			"desc": "Content packs are folders of CSVs — the shipped SRD is simply the one Charnik bundles. Charnik can check whether a pack’s repository has newer rules data, so a correction reaches you without a new app version. Checking is one request per repository per day at most; APPLYING an update is always your click.",
+			"desktopOnly": "Content updates are a desktop feature — the web demo always serves the content of its own deploy.",
+			"mode": "Checking for updates",
+			"modes": {
+				"off": "Don’t check",
+				"notify": "Check and notify",
+				"download": "Check and pre-download"
+			},
+			"checkNow": "Check now",
+			"checking": "Checking…",
+			"checkThis": "Check this pack",
+			"none": "No content packs are registered yet.",
+			"pinned": "pinned",
+			"pin": "Pin",
+			"unpin": "Unpin",
+			"apply": "Apply update",
+			"lastChecked": "Last checked {when}",
+			"filesToWrite": "{count} file(s) would be updated",
+			"filesPreserved": "{count} file(s) you edited will be kept as they are",
+			"rowsRemoved": "{count} entries would DISAPPEAR from your content",
+			"charactersAffected": "Characters that use them: {who}",
+			"carriesPlugins": "This pack also contains plugins: {list}. They arrive switched off and need your review."
 		}
 	},
 	"sheet": {

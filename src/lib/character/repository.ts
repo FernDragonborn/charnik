@@ -254,6 +254,26 @@ export async function loadCharacter(storage: Storage, slug: string): Promise<Loa
 	return { ok: true, character: res.data };
 }
 
+/**
+ * Every saved character as RAW json, keyed by slug. Deliberately unparsed: the one caller (the
+ * content-pack update preview, REL-4 slice 3) asks "does any character mention this content id",
+ * and a broken or older-schema save must still answer that question honestly — parsing it first
+ * would drop exactly the saves most at risk. Path knowledge stays here, not at the call site.
+ */
+export async function readCharacterFiles(
+	storage: Storage
+): Promise<{ slug: string; json: string }[]> {
+	if (!(await storage.exists(CHARACTERS_DIR))) return [];
+	const slugs = (await storage.list(CHARACTERS_DIR)).filter((e) => e.isDir).map((e) => e.name);
+	const files = await Promise.all(
+		slugs.map(async (slug) => ({
+			slug,
+			json: await storage.read(fileOf(slug)).catch(() => '')
+		}))
+	);
+	return files.filter((f) => f.json !== '');
+}
+
 /** List the roster. Bad saves become entries with an `error` (they still show up). */
 export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 	if (!(await storage.exists(CHARACTERS_DIR))) return [];

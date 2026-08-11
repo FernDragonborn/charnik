@@ -9,6 +9,7 @@
 import { getContentGraph, resetContentGraph } from './provider';
 import { resetUserStorage } from '$lib/storage/provider';
 import { initSourceConfig } from './sources.svelte';
+import { initPackConfig } from './packs.svelte';
 import type { ContentGraph } from './loader';
 
 export const content = $state<{ graph: ContentGraph | null; guid: string; error: string | null }>({
@@ -37,6 +38,7 @@ async function loadGraphIntoStore(): Promise<void> {
 export async function loadContentStore(): Promise<ContentGraph | null> {
 	if (!content.graph) {
 		await initSourceConfig();
+		await initPackConfig(); // the pack registry lives beside it, and settings read it immediately
 		await loadGraphIntoStore();
 	}
 	return content.graph;
@@ -50,6 +52,7 @@ export async function reloadContent(
 	if (opts.remount) {
 		resetUserStorage();
 		await initSourceConfig(); // the browse-config lives in the (now new) data folder
+		await initPackConfig(); // …and so does the pack registry
 	}
 	resetContentGraph();
 	await loadGraphIntoStore();

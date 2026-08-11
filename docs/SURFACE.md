@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (33)
+## Duplicate suspects (34)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -17,7 +17,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Same name, several files:**
 
-- `persist` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
+- `persist` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `label` ×3 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
@@ -27,6 +27,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
+- `CONFIG_PATH` ×2 — src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts
 - `CONTENT_DIR` ×2 — src/lib/content/provider.ts · src/lib/effects/plugin-host.ts
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
@@ -157,7 +158,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (45)
+## Shared components (46)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -192,6 +193,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
 | **NoCharacter** | — | Shared empty state for the play views (Combat / Spellbook) when there's no active character — |
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
+| **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/PLAN.md · REL-4). |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle (d-spellmgr `.ic.pin`): ★ pinned to the quick bar, ☆ not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
@@ -207,7 +209,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ThemesSettings** | — | Settings ▸ Themes — author custom colour themes without a rebuild. |
 | **WikiDetail** | `detail`, `actions`, `footer`, `editable`, `draft` | Right-pane wiki detail: a thin DISPATCHER. |
 
-## Stores & reactive state (11 modules)
+## Stores & reactive state (13 modules)
 
 ### `src/lib/character/health.svelte.ts`
 
@@ -223,6 +225,35 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function openCharacter` — Open a saved character as the active one (returns null if the save is bad/missing).
 - `function saveCharacterToStore` — Persist a character (create or update) and refresh the roster.
 - `function removeCharacter` — Delete a character and refresh the roster.
+
+### `src/lib/content/packs.svelte.ts`
+
+- `const UPDATE_MODE` — * What the app may do over the NETWORK on its own.
+- `type UpdateMode`
+- `interface PackEntry` — One installed pack: which repo it came from, and whether the user froze it.
+- `interface RepoEntry` — Per-REPO check state.
+- `interface PackConfigData`
+- `const emptyPackConfig`
+- `const CHECK_INTERVAL_MS` — At most one update request per repo per day — stated plainly in the settings copy, so the * number lives here and now…
+- `function parsePackConfig` — Parse a stored blob over the defaults.
+- `function isRepoDue` — * Is this repo due for an automatic check?
+- `function reposDueForCheck` — Every repo that automatic checking may contact right now: the update mode allows the network, * the throttle has elap…
+- `const packConfig` — Reactive, persisted registry.
+- `function initPackConfig` — Load the registry from the data root (once, at app start).
+- `function registerPack` — Record an installed pack (the installer calls this), or re-point an existing one at a new repo.
+- `function forgetPack` — Forget a pack (it was uninstalled).
+- `function setPinned` — Freeze / unfreeze a pack.
+- `function setUpdateMode`
+- `function recordCheck` — Remember that we asked this repo — including a `304`, which is exactly the case worth recording * (it cost nothing an…
+
+### `src/lib/content/remote/updates.svelte.ts`
+
+- `interface PendingUpdate` — One pack with an update waiting, and everything the user needs to decide about it.
+- `const updates`
+- `const dueRepos` — Which repos an AUTOMATIC check may contact right now (mode + throttle + pins).
+- `function checkNow` — * Ask the repos what they have.
+- `function applyUpdate` — * Apply ONE pack's pending update.
+- `const autoCheckAllowed` — Should the app check by itself at startup?
 
 ### `src/lib/content/review.svelte.ts`
 
@@ -294,7 +325,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (81 modules)
+## Library functions & types (86 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -394,6 +425,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function saveCharacter` — Write a character (validates first; refuses to persist an invalid one).
 - `function uniqueCharacterId` — A collision-free character id: the readable slug plus a short random suffix (`hero-a3f9`), retried * against storage …
 - `function loadCharacter` — Load one character: parse → migrate → validate.
+- `function readCharacterFiles` — * Every saved character as RAW json, keyed by slug.
 - `function listCharacters` — List the roster.
 - `function deleteCharacter` — Delete a character folder (character.json, log, photo).
 - `interface LogEntry`
@@ -612,6 +644,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function discoverContentRoots` — * Every installed content pack, discovered by SCANNING `content/` — a pack is a folder, so the * folder listing is th…
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
+- `function isUserModified` — Is an on-disk shipped file USER-modified?
 - `function seedShippedContent` — * Seed / UPDATE the shipped SRD roots on disk (desktop).
 - `function copyMissingRoots` — Copy each root's files from `from` to `to`, byte-for-byte, but skip a root that already exists in * `to` (so we never…
 - `function resetContentGraph` — Drop the cache (e.g.
@@ -620,6 +653,48 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function onBeforeReload` — Register a flush callback; returns an unregister fn (hand it to `onMount` for auto-cleanup).
 - `function reloadApp` — Flush pending writes, then reload the webview so every view re-reads fresh data from disk.
+
+### `src/lib/content/remote/diff.ts`
+
+- `const localPath` — Where a pack's files live locally.
+- `function gitBlobSha` — `sha1("blob <byteLength>\0" + bytes)` — git's own object id, so it can be compared with the SHA * in a tree listing d…
+- `const FILE_CHANGE`
+- `type FileChangeKind`
+- `interface FileChange`
+- `interface PackDiff`
+- `const hasWrites` — Does this diff actually ask to write anything?
+- `function diffPack` — * Compare one remote pack against what is on disk.
+- `function rowsRemovedBy` — The content rows that would DISAPPEAR if this diff were applied — every row the loader read from * a file the update …
+- `function charactersReferencing` — * Which saved characters mention any of those row keys.
+
+### `src/lib/content/remote/github.ts`
+
+- `interface GithubRepo` — `owner/repo` parsed out of any reasonable GitHub URL the user might paste.
+- `function parseGithubRepo` — * Recognise a GitHub repo URL.
+- `const treeUrl` — The ONE request that answers for a whole repo.
+- `const rawUrl` — Where one file's bytes live.
+- `interface RemoteFile` — One remote file: its repo-relative path and the blob SHA that says whether it changed.
+- `interface RemotePack` — A remote pack: a TOP-LEVEL folder holding content files — the same test as the local * `discoverContentRoots`, applie…
+- `function packsFromTree` — * Group a GitHub tree response into packs.
+- `type CheckResult` — What a check found.
+- `function checkRepo` — * Ask ONE repo what it holds.
+
+### `src/lib/content/remote/install.ts`
+
+- `interface ApplyResult`
+- `interface ApplyRequest`
+- `function applyPackUpdate` — * Fetch everything this diff wants, then write it.
+- `function pluginsIn` — Does this pack ship executable code?
+
+### `src/lib/content/remote/tauri-fetch.ts`
+
+- `const tauriFetcher`
+
+### `src/lib/content/remote/types.ts`
+
+- `type FetchResult` — A conditional GET result.
+- `interface RemoteFetcher`
+- `const MAX_REMOTE_BYTES` — Bytes above this are refused rather than buffered — a content CSV is measured in hundreds of KB, * and an unbounded r…
 
 ### `src/lib/content/schemas.ts`
 
@@ -1101,4 +1176,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 45 components · 613 exports across 92 modules · 33 duplicate suspects._
+_45 tokens · 64 global classes · 46 components · 665 exports across 99 modules · 34 duplicate suspects._

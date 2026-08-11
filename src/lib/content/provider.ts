@@ -27,6 +27,7 @@ import { HOMEBREW_ROOT } from './homebrew';
 import { parseContentDirectives, isHashDrift } from './meta';
 import { hashBody } from './hash';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
+import { packConfig, registerPack } from './packs.svelte';
 
 /** Records which CONTENT_SEED_VERSION was last written to the data dir. Lives beside the seeded roots
  *  but OUTSIDE them (the loader only scans the `srd-*` roots), so it's never parsed as content. */
@@ -75,16 +76,34 @@ async function buildGraph(): Promise<ContentGraph> {
 		// desktop: seed/UPDATE the BUNDLED packs on disk (first run + version bumps), then read every
 		// pack that is actually installed there — which is the bundled set plus anything the user added.
 		const user = getUserStorage();
-		await seedShippedContent(
-			bundled,
-			user,
-			await discoverContentRoots(bundled),
-			CONTENT_SEED_VERSION
-		);
+		const shipped = await discoverContentRoots(bundled);
+		await seedShippedContent(bundled, user, shipped, CONTENT_SEED_VERSION);
+		adoptShippedPacks(shipped);
 		return loadContent(user, await discoverContentRoots(user), homebrew);
 	}
 	// web + headless (build-time prerender / tests): read the bundled CSVs over fetch
 	return loadContent(bundled, await discoverContentRoots(bundled), homebrew);
+}
+
+/**
+ * The shipped SRD is A PACK, not a special case (REL-4 slice 4) — it just happens to be the one we
+ * bundle, so it has a floor no download can take away. Registering it against the repo it is
+ * released from is what lets it be updated on the SAME path as any third-party pack: rules data
+ * ships without an app build, which is the entire point of REL-4.
+ *
+ * The repo is a constant rather than a `#content-*` header on purpose: `#content-url` already means
+ * something else (where the DATA came from — Wizards, for the SRD), and a file cannot state which
+ * repository publishes it without that becoming a self-referential thing to keep in sync.
+ */
+const SHIPPED_PACK_REPO = 'https://github.com/FernDragonborn/charnik-content-srd';
+
+/** Give every bundled pack a registry entry, unless the user already has one (theirs wins — they
+ *  may have re-pointed it at a fork). Never overwrites a pin. */
+function adoptShippedPacks(shipped: string[]): void {
+	for (const root of shipped) {
+		const pack = root.slice(root.lastIndexOf('/') + 1);
+		if (packConfig.packs[pack] === undefined) registerPack(pack, SHIPPED_PACK_REPO);
+	}
 }
 
 /** The CONTENT_SEED_VERSION last written to disk, or null if never seeded / unreadable. */
@@ -100,8 +119,10 @@ async function readSeedVersion(store: Storage): Promise<number | null> {
 
 /** Is an on-disk shipped file USER-modified? True iff its body no longer matches its own recorded
  *  `#content-hash` (the app never re-stamps shipped SRD files, so a mismatch means a hand-edit). Such
- *  a file is PRESERVED on re-seed; an untouched one is overwritten with the newly-shipped copy. */
-async function isUserModified(store: Storage, path: string): Promise<boolean> {
+ *  a file is PRESERVED on re-seed; an untouched one is overwritten with the newly-shipped copy.
+ *  Exported because a pack UPDATE must obey exactly this rule — reuse it rather than invent a second
+ *  merge strategy (REL-4 slice 3). */
+export async function isUserModified(store: Storage, path: string): Promise<boolean> {
 	try {
 		const { directives, body } = parseContentDirectives(await store.read(path));
 		return isHashDrift(directives.get('hash'), await hashBody(body));

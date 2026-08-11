@@ -60,13 +60,20 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    schema**, surfaced via collision/health UI before use; never executed, never silent
    overwrite.
 
-   > **Planned (REL-4, not built): fetching content packs from a URL.** When it lands it MUST
-   > go through **Rust**, the same shape as the updater in §1 — an outbound HTTP *client* with
-   > a host allowlist in capabilities — and **NOT** webview `fetch`. Implementing it in the
-   > webview would mean relaxing §5's `connect-src`, i.e. trading a shipped invariant for
-   > convenience. Everything else in this rule still binds the feature: fetched CSVs are data,
-   > validated before use, and **applying an update is always a user action** — a pack may be
-   > downloaded automatically, never applied automatically.
+   > **BUILT (REL-4 slices 2–3): fetching content packs from a URL.** It goes through **Rust**
+   > (`tauri-plugin-http`, behind the `RemoteFetcher` seam), the same shape as the updater in §1,
+   > and **NOT** webview `fetch` — that would have meant relaxing §5's `connect-src`, i.e. trading
+   > a shipped invariant for convenience. Fetched CSVs are data, validated before use, and
+   > **applying an update is always a user action**: a pack may be downloaded automatically, never
+   > applied automatically, and nothing on a timer writes to disk.
+   >
+   > **The host allowlist is in capabilities, and that has a consequence worth stating: a compiled
+   > capability cannot be widened at runtime, so "paste any URL" and a static allowlist are
+   > mutually exclusive.** v1 therefore allows exactly `api.github.com/repos/*` and
+   > `raw.githubusercontent.com/*` (with `http://**` denied), which covers the shipped SRD pack and
+   > any GitHub-published one. Supporting an arbitrary self-hosted URL means choosing between a
+   > wildcard capability and a Rust-side dynamic check — decide it when someone actually needs it,
+   > don't widen the manifest speculatively.
    >
    > **Packs DO carry plugins** (decided 2026-08-11, reversing "no plugins in v1"): code and the
    > data it serves ship as one unit, in `content/<pack>/plugins/<namespace>/`, because a plugin
