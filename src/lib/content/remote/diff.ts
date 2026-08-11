@@ -24,6 +24,19 @@ import { isPackFile, type RemotePack } from './github';
  *  repo or folder they came from. */
 export const localPath = (repoRelative: string): string => `content/${repoRelative}`;
 
+/** The part of a repo-relative path BELOW the pack folder (`srd-2024/spells.csv` → `spells.csv`). */
+export const withinPack = (repoRelative: string): string =>
+	repoRelative.slice(repoRelative.indexOf('/') + 1);
+
+/**
+ * Where one of a pack's files lives on THIS disk. The first segment is replaced rather than kept,
+ * because a pack's local folder can differ from the folder name in its repo: folder names are not
+ * the publisher's to reserve, two repos may both publish `srd-2024`, and one of them has to land
+ * somewhere else. Everything above this works in local names; only the fetch works in remote ones.
+ */
+export const localPathIn = (localPack: string, repoRelative: string): string =>
+	`content/${localPack}/${withinPack(repoRelative)}`;
+
 /** `sha1("blob <byteLength>\0" + bytes)` — git's own object id, so it can be compared with the SHA
  *  in a tree listing directly. Uses WebCrypto; SHA-1 is not a trust decision here (that is the
  *  consent hash's job), it is the identifier the remote already published. */
@@ -68,6 +81,8 @@ export interface FileChange {
 }
 
 export interface PackDiff {
+	/** The pack's LOCAL folder name — what is on disk, and what the registry is keyed by. Every
+	 *  `FileChange.path` is repo-relative, so `localPathIn(pack, …)` is what maps one onto the other. */
 	pack: string;
 	changes: FileChange[];
 }
@@ -81,12 +96,18 @@ export const hasWrites = (diff: PackDiff): boolean =>
  * Compare one remote pack against what is on disk. Never writes. Files present locally but absent
  * from the remote are reported as `removed` — reported, not deleted here.
  */
-export async function diffPack(storage: Storage, remote: RemotePack): Promise<PackDiff> {
+export async function diffPack(
+	storage: Storage,
+	remote: RemotePack,
+	/** The folder it occupies HERE. Differs from `remote.pack` when the name was already taken by a
+	 *  pack from another repo, so the install landed beside it instead of on top of it. */
+	localPack: string = remote.pack
+): Promise<PackDiff> {
 	const changes: FileChange[] = [];
 	const seen = new Set<string>();
 
 	for (const file of remote.files) {
-		const path = localPath(file.path);
+		const path = localPathIn(localPack, file.path);
 		seen.add(path);
 		if (!(await storage.exists(path))) {
 			changes.push({ path: file.path, kind: FILE_CHANGE.added, sha: file.sha, expectLocal: null });
@@ -105,15 +126,18 @@ export async function diffPack(storage: Storage, remote: RemotePack): Promise<Pa
 	// a flat listing would never notice upstream deleting executable code — it would sit there forever.
 	// Only files the PACK FORMAT covers can be "removed": anything else in that folder is the user's,
 	// not the update's business (a README, notes, a leftover from an older layout).
-	for (const path of await listFilesRecursive(storage, localPath(remote.pack)))
+	const localRoot = localPath(localPack);
+	for (const path of await listFilesRecursive(storage, localRoot))
 		if (!seen.has(path) && isPackFile(path))
 			changes.push({
-				path: path.slice('content/'.length),
+				// stated the way every other change is — repo-relative — so one mapping serves them all,
+				// even though a removed file is by definition not in the repo any more
+				path: `${remote.pack}/${path.slice(localRoot.length + 1)}`,
 				kind: FILE_CHANGE.removed,
 				expectLocal: await gitBlobSha(await storage.readBytes(path))
 			});
 
-	return { pack: remote.pack, changes };
+	return { pack: localPack, changes };
 }
 
 /** The `#content-source` a CSV declares, or null if it declares none. */
@@ -147,7 +171,9 @@ export async function localPackSource(storage: Storage, pack: string): Promise<s
  *  a file the update removes. Keyed the way a character references content: `type:source:id`. */
 export function rowsRemovedBy(graph: ContentGraph, diff: PackDiff): string[] {
 	const doomed = new Set(
-		diff.changes.filter((c) => c.kind === FILE_CHANGE.removed).map((c) => localPath(c.path))
+		diff.changes
+			.filter((c) => c.kind === FILE_CHANGE.removed)
+			.map((c) => localPathIn(diff.pack, c.path))
 	);
 	if (doomed.size === 0) return [];
 	return graph.rows

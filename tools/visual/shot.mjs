@@ -91,6 +91,21 @@ const ROUTES = [
 	{ path: '/dev/drift', wait: '[role="dialog"]', states: [{ name: 'dev-drift' }] },
 	{ path: '/dev/firstrun', wait: '[role="dialog"]', states: [{ name: 'dev-firstrun' }] },
 	{ path: '/dev/plugins', wait: 'h1', states: [{ name: 'dev-plugins' }] },
+	// the content-pack panel, which is desktop-gated and so only reachable here. Every warning it
+	// exists to show is on the fixture at once: rows that would vanish, the drafts they orphan, a
+	// pack whose folder name is already taken, and plugin code an update would stop.
+	{
+		path: '/dev/packs',
+		wait: 'h1',
+		states: [
+			{ name: 'dev-packs' },
+			{
+				name: 'dev-packs-rename',
+				prep: clickBtn(/Rename folder/i),
+				ready: 'input[type="text"]'
+			}
+		]
+	},
 	{ path: '/dev/deathsaves', wait: 'h1', states: [{ name: 'dev-deathsaves' }] },
 	// the roll-card gallery: every shape RollRow has to render (check, attack, crit, volley, nat 1),
 	// on one page — the cheapest guard there is on the component four surfaces now share

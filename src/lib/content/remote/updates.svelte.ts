@@ -11,18 +11,24 @@ import { readCharacterFiles } from '$lib/character/repository';
 import { draftEffectiveId, draftsTargeting } from '$lib/drafts/store';
 import { content } from '../store.svelte';
 import {
+	bundledPacks,
 	forgetPack,
 	forgetPending,
+	freeLocalPackName,
 	isReservedPackName,
+	localPackFor,
 	packConfig,
 	recordCheck,
 	registerPack,
 	rememberPending,
+	remoteNameOf,
+	renamePackEntry,
 	reposDueForCheck,
 	unDismissMissing,
 	UPDATE_MODE,
 	type PackConfigData
 } from '../packs.svelte';
+import { discoverContentRoots } from '../provider';
 import {
 	checkRepo,
 	packSizeRefusal,
@@ -75,8 +81,14 @@ export interface DiscoveredPack {
 	files: number;
 	/** plugin namespaces it ships — said out loud BEFORE installing, never discovered afterwards */
 	plugins: string[];
-	/** already in the registry: offer nothing, it is an update case, not an install */
+	/** already in the registry FROM THIS REPO: an update case, not an install */
 	installed: boolean;
+	/**
+	 * The local folder it would be installed into. Its own name unless that is taken — by another
+	 * repo's pack, by a folder the user copied in, or by a name the app reserves — in which case this
+	 * is the suggestion (`srd-2024-2`), which the user may overrule before installing.
+	 */
+	localName: string;
 }
 
 interface UpdateState {
@@ -195,13 +207,17 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 	if (res.kind === 'unchanged') return;
 
 	for (const remote of res.packs) {
-		const entry = packConfig.packs[remote.pack];
+		// The repo only knows what IT calls this pack; the registry is keyed by the folder it lives in
+		// here, which can differ (another repo may have claimed the name first). Looking the remote
+		// name up directly would find the other repo's entry and compare it against the wrong URL.
+		const pack = localPackFor(repo, remote.pack);
+		const entry = pack === undefined ? undefined : packConfig.packs[pack];
 		// only packs this user actually installed FROM THIS REPO, and not ones they froze
-		if (entry?.repo !== repo || entry.pinned === true) continue;
-		const pending = await describeUpdate(repo, remote);
+		if (pack === undefined || entry === undefined || entry.pinned === true) continue;
+		const pending = await describeUpdate(repo, remote, pack);
 		if (!pending) {
-			delete updates.pending[remote.pack];
-			forgetPending(remote.pack);
+			delete updates.pending[pack];
+			forgetPending(pack);
 			continue;
 		}
 		// `download` mode fetches the bytes NOW so applying is instant and works offline. It is still
@@ -216,8 +232,8 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 			});
 			pending.staged = await isStaged(getUserStorage(), pending.diff);
 		}
-		updates.pending[remote.pack] = pending;
-		rememberPending(remote.pack, { repo, files: remote.files });
+		updates.pending[pack] = pending;
+		rememberPending(pack, { repo, files: remote.files });
 	}
 }
 
@@ -226,7 +242,12 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
  * NETWORK-FREE — everything here is the remote file list compared against the local disk — so the
  * same function can rebuild the panel at launch from the remembered list, with no request at all.
  */
-async function describeUpdate(repo: string, remote: RemotePack): Promise<PendingUpdate | null> {
+async function describeUpdate(
+	repo: string,
+	remote: RemotePack,
+	/** the folder it occupies HERE, which the repo has no say in */
+	localPack: string
+): Promise<PendingUpdate | null> {
 	// Before anything downstream can fetch a byte. Both callers reach the network from here — a check
 	// in `download` mode stages the whole diff immediately, and a restored offer is one click from
 	// doing the same — so the count/size ceiling belongs at this fork rather than at either of them.
@@ -236,13 +257,13 @@ async function describeUpdate(repo: string, remote: RemotePack): Promise<Pending
 		return null;
 	}
 	const storage = getUserStorage();
-	const diff = await diffPack(storage, remote);
+	const diff = await diffPack(storage, remote, localPack);
 	const removals = diff.changes.filter((c) => c.kind === 'removed');
 	if (!hasWrites(diff) && removals.length === 0) return null;
 
 	const removedRows = content.graph ? rowsRemovedBy(content.graph, diff) : [];
 	return {
-		pack: remote.pack,
+		pack: localPack,
 		repo,
 		remote,
 		diff,
@@ -359,7 +380,13 @@ export async function restorePendingUpdates(): Promise<void> {
 			forgetPending(pack);
 			continue;
 		}
-		const pending = await describeUpdate(remembered.repo, { pack, files: remembered.files });
+		// the remembered listing is repo-relative, so the RemotePack it rebuilds must wear the repo's
+		// name for this pack, not the folder name it happens to have here
+		const pending = await describeUpdate(
+			remembered.repo,
+			{ pack: remoteNameOf(pack, entry), files: remembered.files },
+			pack
+		);
 		// applied (or hand-edited) in the meantime: the disk already matches, so there is no offer
 		if (pending) updates.pending[pack] = pending;
 		else forgetPending(pack);
@@ -423,16 +450,29 @@ export async function discoverPacks(
 		// the tree is the only place the whole file list exists before the first byte is asked for.
 		const oversized = res.packs.map(packSizeRefusal).find((e) => e !== null);
 		if (oversized) updates.error = oversized;
+		// a folder that already exists but belongs to no registry entry is still TAKEN — a pack copied
+		// in by hand must not be overwritten by a stranger that happens to share its name
+		const onDisk = (await discoverContentRoots(getUserStorage()).catch(() => [])).map((root) =>
+			root.slice(root.lastIndexOf('/') + 1)
+		);
 		updates.discovered = res.packs
 			.filter((remote) => !isReservedPackName(remote.pack) && packTooLarge(remote) === null)
-			.map((remote) => ({
-				pack: remote.pack,
-				repo,
-				remote,
-				files: remote.files.length,
-				plugins: pluginsIn(remote),
-				installed: packConfig.packs[remote.pack] !== undefined
-			}));
+			.map((remote) => {
+				const already = localPackFor(repo, remote.pack);
+				return {
+					pack: remote.pack,
+					repo,
+					remote,
+					files: remote.files.length,
+					plugins: pluginsIn(remote),
+					installed: already !== undefined,
+					// Where it would land: its own name normally, something else when that name is already
+					// somebody's. Folder names are not the publisher's to reserve, and two repos both
+					// publishing `srd-2024` is a thing to resolve rather than refuse — so the second one
+					// gets a suggestion the user can overrule before installing.
+					localName: already ?? freeLocalPackName(remote.pack, onDisk)
+				};
+			});
 		// "nothing here" is the wrong thing to say when we found something and refused it for size
 		if (updates.discovered.length === 0 && !oversized)
 			updates.error = { kind: 'i18n', key: 'settings.packs.noPacksFound', values: { repo } };
@@ -446,15 +486,36 @@ export async function discoverPacks(
  * folder that already exists locally behave correctly (hand-edited files preserved, a re-tagged
  * `#content-source` refused) instead of being blindly overwritten by a "fresh" install.
  * The registry entry is written only after the files land, so a failed install leaves no trace.
+ *
+ * `pack` names it as the REPO does; `localName` is the folder it lands in here, and the two differ
+ * whenever that name was already claimed. The registry then remembers both, so the next check still
+ * asks the repo for the path the repo has.
  */
 export async function installPack(
 	pack: string,
-	opts: { fetcher?: RemoteFetcher } = {}
+	opts: { fetcher?: RemoteFetcher; localName?: string } = {}
 ): Promise<ApplyResult | null> {
 	const found = updates.discovered.find((d) => d.pack === pack);
-	// belt-and-braces: `discoverPacks` already filtered these out, but this is the function that
-	// WRITES, and a reserved name is the one input that turns an install into data loss
-	if (!found || isReservedPackName(pack)) return null;
+	if (!found) return null;
+	const local = (opts.localName ?? found.localName).trim();
+	// belt-and-braces: `discoverPacks` already filtered the remote name, but this is the function that
+	// WRITES, and a reserved name is the one input that turns an install into data loss — and `local`
+	// can be anything the user typed into the rename box
+	if (local === '' || local.includes('/') || isReservedPackName(local)) {
+		updates.error = { kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: local } };
+		return null;
+	}
+	// …and it must not be somebody else's folder. Only the entry this repo already owns may be
+	// written over; anything else is the collision the suggested name exists to step around.
+	const owner = packConfig.packs[local];
+	if (owner !== undefined && localPackFor(found.repo, pack) !== local) {
+		updates.error = {
+			kind: 'i18n',
+			key: 'settings.packs.folderTaken',
+			values: { name: local, repo: owner.repo }
+		};
+		return null;
+	}
 	const repo = parseGithubRepo(found.repo);
 	if (!repo) return null;
 
@@ -463,21 +524,69 @@ export async function installPack(
 		storage,
 		fetcher: opts.fetcher ?? tauriFetcher,
 		repo,
-		diff: await diffPack(storage, found.remote)
+		diff: await diffPack(storage, found.remote, local)
 	});
 	if (res.error !== undefined) {
 		updates.error = res.error;
 		return res;
 	}
-	registerPack(pack, found.repo);
+	registerPack(local, found.repo, pack);
 	// "I meant to delete it, stop asking" was an answer about a pack that is now BACK. Leaving the
 	// flag set means deleting it a second time never prompts again — `restoreBundledPacks` already
 	// clears it, and re-installing from the URL is the other way the same pack returns.
-	unDismissMissing([pack]);
+	unDismissMissing([local]);
 	updates.discovered = updates.discovered.map((d) =>
-		d.pack === pack ? { ...d, installed: true } : d
+		d.pack === pack ? { ...d, installed: true, localName: local } : d
 	);
 	return res;
+}
+
+/**
+ * Move a pack into a different folder, files and bookkeeping together — the way a name chosen at
+ * install time (or a suggested `-2`) is corrected later without hand-editing the config.
+ *
+ * The folder name is the pack's identity here: it is what `content/` scanning finds and what a pin
+ * names, so the entry moves with it and the repo's own name for the pack is remembered. Refuses
+ * rather than merges when the destination exists — two packs in one folder is the state this whole
+ * mechanism exists to prevent.
+ */
+export async function renamePack(from: string, to: string): Promise<boolean> {
+	const target = to.trim();
+	if (target === from) return true;
+	if (target === '' || target.includes('/') || isReservedPackName(target)) {
+		updates.error = { kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: to } };
+		return false;
+	}
+	// A BUNDLED pack is identified by the folder the app ships it under and by nothing else — the seed
+	// refreshes `content/<name>`, the missing-pack prompt is "the bundle has it and the disk doesn't",
+	// and restore copies it back there. Moving it would leave the app reporting its own content as
+	// deleted while it sits right there under another name, and offering a restore that would then
+	// load every row twice.
+	if (bundledPacks.packs.includes(from)) {
+		updates.error = { kind: 'i18n', key: 'settings.packs.renameBundled', values: { name: from } };
+		return false;
+	}
+	const storage = getUserStorage();
+	if (packConfig.packs[target] !== undefined || (await storage.exists(`content/${target}`))) {
+		updates.error = {
+			kind: 'i18n',
+			key: 'settings.packs.folderTaken',
+			values: { name: target, repo: packConfig.packs[target]?.repo ?? '' }
+		};
+		return false;
+	}
+	await storage.rename(`content/${from}`, `content/${target}`);
+	// the kept undo copy belongs to the pack, not to the name it had — leaving it behind would make
+	// `<from>.prev` look like an interrupted apply at the next launch and get promoted back
+	if (await storage.exists(`content/${from}.prev`))
+		await storage.rename(`content/${from}.prev`, `content/${target}.prev`);
+	renamePackEntry(from, target);
+	const pending = updates.pending[from];
+	if (pending) {
+		delete updates.pending[from];
+		updates.pending[target] = { ...pending, pack: target, diff: { ...pending.diff, pack: target } };
+	}
+	return true;
 }
 
 /**

@@ -14,6 +14,7 @@ import {
 	checkNow,
 	discoverPacks,
 	installPack,
+	renamePack,
 	restorePendingUpdates,
 	uninstallPack
 } from './updates.svelte';
@@ -168,6 +169,101 @@ describe('install a pack from a pasted URL', () => {
 		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
 		await installPack('dark-sun', { fetcher: fetcher(ALL) });
 		expect(packConfig.dismissedMissing).toEqual([]);
+	});
+});
+
+/* Folder names are not the publisher's to reserve: two repos can both publish `dark-sun`, and the
+   registry keyed by folder name alone let the second silently re-point the first's entry — so one
+   repo's files landed in the other repo's folder and every later check compared the wrong pair. */
+describe('two repos publishing the same folder name', () => {
+	const OTHER = 'https://github.com/rival/dark-sun';
+
+	beforeEach(async () => {
+		Object.assign(packConfig, emptyPackConfig());
+		updates.discovered = [];
+		updates.error = null;
+		updates.pending = {};
+		await getUserStorage().remove('content/dark-sun');
+		await getUserStorage().remove('content/dark-sun-2');
+	});
+
+	it('the second one is offered a folder beside the first, not on top of it', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+
+		await discoverPacks(OTHER, { fetcher: fetcher(ALL) });
+
+		// same pack name, and the app has already decided where it can go
+		expect(updates.discovered[0]).toMatchObject({ pack: 'dark-sun', installed: false });
+		expect(updates.discovered[0]?.localName).toBe('dark-sun-2');
+	});
+
+	it('installs into that folder and remembers what the repo calls it', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		await discoverPacks(OTHER, { fetcher: fetcher(ALL) });
+
+		const res = await installPack('dark-sun', { fetcher: fetcher(ALL) });
+
+		expect(res?.error).toBeUndefined();
+		// both packs exist, each under its own folder, each pointing at its own repo
+		expect(packConfig.packs['dark-sun']).toEqual({ repo: REPO });
+		expect(packConfig.packs['dark-sun-2']).toEqual({ repo: OTHER, remotePack: 'dark-sun' });
+		expect(await getUserStorage().read('content/dark-sun-2/classes_srd.csv')).toContain('athasian');
+		// …including the plugin two levels down, which the fetch asks for by its REPO path
+		expect(await getUserStorage().exists('content/dark-sun-2/plugins/dark-sun-rules/main.js')).toBe(
+			true
+		);
+	});
+
+	it('refuses a folder name the user types over somebody else’s pack', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		await discoverPacks(OTHER, { fetcher: fetcher(ALL) });
+
+		const res = await installPack('dark-sun', { fetcher: fetcher(ALL), localName: 'dark-sun' });
+
+		expect(res).toBeNull();
+		expect(packConfig.packs['dark-sun']?.repo).toBe(REPO); // still the first repo's
+	});
+
+	it('a check asks the repo for ITS name and offers the update against OUR folder', async () => {
+		await discoverPacks(OTHER, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL), localName: 'dark-sun-2' });
+		// upstream moved the CSV; the remembered listing is repo-relative (`dark-sun/…`)
+		packConfig.pending['dark-sun-2'] = {
+			repo: OTHER,
+			files: await remoteFiles({ csvMoved: true })
+		};
+
+		await restorePendingUpdates();
+
+		expect(updates.pending['dark-sun-2']?.diff).toMatchObject({
+			pack: 'dark-sun-2',
+			changes: [{ path: 'dark-sun/classes_srd.csv', kind: 'changed' }]
+		});
+	});
+
+	it('renaming moves the files and the entry together, and remembers the repo’s name', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+
+		expect(await renamePack('dark-sun', 'athas')).toBe(true);
+
+		expect(packConfig.packs['dark-sun']).toBeUndefined();
+		expect(packConfig.packs['athas']).toEqual({ repo: REPO, remotePack: 'dark-sun' });
+		expect(await getUserStorage().read('content/athas/classes_srd.csv')).toContain('athasian');
+		expect(await getUserStorage().exists('content/dark-sun/classes_srd.csv')).toBe(false);
+	});
+
+	it('renaming refuses a name that is already a folder, rather than merging two packs', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		await getUserStorage().writeBytes('content/athas/notes.txt', enc('mine'));
+
+		expect(await renamePack('dark-sun', 'athas')).toBe(false);
+		expect(packConfig.packs['dark-sun']?.repo).toBe(REPO);
+		await getUserStorage().remove('content/athas');
 	});
 });
 

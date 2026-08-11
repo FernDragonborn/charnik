@@ -6,6 +6,7 @@
 	import { _ } from '$lib/i18n';
 	import { toast } from 'svelte-sonner';
 	import {
+		bundledPacks,
 		missingBundled,
 		packConfig,
 		setPinned,
@@ -21,6 +22,7 @@
 		applyUpdate,
 		discoverPacks,
 		installPack,
+		renamePack,
 		rollbackablePacks,
 		undoUpdate,
 		uninstallPack
@@ -33,6 +35,13 @@
 
 	let repoUrl = $state('');
 	let uninstalling = $state<string | null>(null);
+	/** Folder name typed for a pack whose own name is already taken — keyed by its REMOTE name, which
+	 *  is the one thing that doesn't change while the user edits the other one. */
+	const folderName = $state<Record<string, string>>({});
+	/** The installed pack being renamed, and the name typed for it. Renaming is here rather than in
+	 *  the config file because the suggested `-2` is a guess, and correcting a guess should not mean
+	 *  opening JSON. */
+	let renaming = $state<{ pack: string; to: string } | null>(null);
 	/** The pack whose apply stopped to show rows that would vanish; its second button accepts them. */
 	let rowsToAccept = $state<string | null>(null);
 	let restoring = $state(false);
@@ -169,6 +178,23 @@
 								})}
 							</div>
 						{/if}
+						<!-- The name this repo uses is already somebody's folder. Two repos may both publish
+						     `srd-2024` and folder names are not theirs to reserve, so it gets one beside it —
+						     said out loud, with the name editable, rather than decided silently. -->
+						{#if !found.installed && found.localName !== found.pack}
+							<div class="pack-warn">
+								{$_('settings.packs.nameTaken', { values: { name: found.pack } })}
+							</div>
+							<label class="pack-rename">
+								<span class="pack-sub">{$_('settings.packs.folderLabel')}</span>
+								<input
+									class="add-url"
+									type="text"
+									value={folderName[found.pack] ?? found.localName}
+									oninput={(e) => (folderName[found.pack] = e.currentTarget.value)}
+								/>
+							</label>
+						{/if}
 					</div>
 					<div class="pack-actions">
 						{#if found.installed}
@@ -177,7 +203,9 @@
 							<button
 								class="pill-btn accent"
 								onclick={async () => {
-									await installPack(found.pack);
+									await installPack(found.pack, {
+										localName: folderName[found.pack] ?? found.localName
+									});
 									await afterDiskChange();
 								}}
 							>
@@ -238,6 +266,26 @@
 							{#if entry.pinned}<span class="pack-tag">{$_('settings.packs.pinned')}</span>{/if}
 						</div>
 						<div class="pack-sub mono">{entry.repo}</div>
+						<!-- Only worth saying when the two disagree: the repo calls it something else, and
+						     that is the name the next check asks for. -->
+						{#if entry.remotePack}
+							<div class="pack-sub">
+								{$_('settings.packs.publishedAs', { values: { name: entry.remotePack } })}
+							</div>
+						{/if}
+						{#if renaming?.pack === pack}
+							<label class="pack-rename">
+								<span class="pack-sub">{$_('settings.packs.folderLabel')}</span>
+								<!-- svelte-ignore a11y_autofocus -->
+								<input
+									class="add-url"
+									type="text"
+									autofocus
+									bind:value={renaming.to}
+									onkeydown={(e) => e.key === 'Escape' && (renaming = null)}
+								/>
+							</label>
+						{/if}
 						{#if lastChecked(entry.repo)}
 							<div class="pack-sub">
 								{$_('settings.packs.lastChecked', {
@@ -329,6 +377,30 @@
 								}}
 							>
 								{$_('settings.packs.undo')}
+							</button>
+						{/if}
+						<!-- The folder name IS the pack's identity here, and it may have been chosen for it
+						     (a `-2` suggested when another repo held the name). Correcting that should not
+						     mean opening the config file. -->
+						{#if renaming?.pack === pack}
+							{@const target = renaming.to}
+							<button
+								class="pill-btn accent"
+								onclick={async () => {
+									renaming = null;
+									if (await renamePack(pack, target)) await afterDiskChange();
+								}}
+							>
+								{$_('settings.packs.renameConfirm')}
+							</button>
+							<button class="pill-btn" onclick={() => (renaming = null)}>
+								{$_('settings.packs.cancel')}
+							</button>
+						{:else if !bundledPacks.packs.includes(pack)}
+							<!-- not offered for a pack the app ships: its folder is how the seed finds it and
+							     how "you deleted it, want it back?" knows what to put where -->
+							<button class="pill-btn" onclick={() => (renaming = { pack, to: pack })}>
+								{$_('settings.packs.rename')}
 							</button>
 						{/if}
 						<button class="pill-btn" onclick={() => setPinned(pack, entry.pinned !== true)}>
@@ -483,6 +555,21 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
+	}
+	/* The folder a pack lands in, editable inline — on a collision before installing, and afterwards
+	   from the installed row. Narrower than the URL field it borrows its look from: it holds one
+	   folder name, not a link. */
+	.pack-rename {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2);
+		align-items: center;
+		margin-top: var(--space-2);
+	}
+	.pack-rename .add-url {
+		flex: 0 1 auto;
+		min-width: 0;
+		width: 18ch;
 	}
 	.pack-actions {
 		display: flex;

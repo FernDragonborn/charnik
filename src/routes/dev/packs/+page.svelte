@@ -9,6 +9,7 @@
 	import { loadContentStore } from '$lib/content/store.svelte';
 	import { page } from '$app/state';
 	import {
+		bundledPacks,
 		missingBundled,
 		packConfig,
 		SHIPPED_PACK_REPO,
@@ -32,6 +33,8 @@
 		// plain browser too) plus the restore row in the panel. Behind a flag because the prompt is
 		// deliberately un-dismissable and would sit on top of everything else this page previews.
 		missingBundled.packs = page.url.searchParams.has('missing') ? ['srd-2014'] : [];
+		// the shipped pair — so the panel hides "rename folder" on them, as it does in the real app
+		bundledPacks.packs = ['srd-2014', 'srd-2024'];
 
 		packConfig.updates = UPDATE_MODE.notify;
 		packConfig.packs = {
@@ -39,9 +42,12 @@
 			'srd-2014': { repo: REPO, pinned: true },
 			'dark-sun': { repo: THIRD_PARTY }
 		};
+		// FIXED instants, not `Date.now() - 3h`: the panel renders them with `toLocaleString`, so a
+		// relative fixture makes every screenshot differ from the last by a minute and the visual
+		// baseline can never be clean. A preview page seeded for looking at has to be deterministic.
 		packConfig.repos = {
-			[REPO]: { lastCheckedAt: new Date(Date.now() - 3 * 3600_000).toISOString(), etag: 'W/"a"' },
-			[THIRD_PARTY]: { lastCheckedAt: new Date(Date.now() - 26 * 3600_000).toISOString() }
+			[REPO]: { lastCheckedAt: '2026-08-11T09:20:00.000Z', etag: 'W/"a"' },
+			[THIRD_PARTY]: { lastCheckedAt: '2026-08-10T06:20:00.000Z' }
 		};
 
 		updates.supported = true;
@@ -59,15 +65,19 @@
 				remote: { pack: 'dark-sun', files: [] },
 				files: 7,
 				plugins: ['dark-sun-rules'],
-				installed: false
+				installed: false,
+				localName: 'dark-sun'
 			},
+			// the COLLISION case: this repo also publishes an `srd-2024`, and the name is already the
+			// shipped pack's — so it is offered a folder beside it, with the name editable first
 			{
 				pack: 'srd-2024',
 				repo: THIRD_PARTY,
 				remote: { pack: 'srd-2024', files: [] },
 				files: 16,
 				plugins: [],
-				installed: true
+				installed: false,
+				localName: 'srd-2024-2'
 			}
 		];
 		updates.pending = {

@@ -27,9 +27,11 @@ import {
 	FILE_CHANGE,
 	gitBlobSha,
 	localPath,
+	localPathIn,
 	localPackSource,
 	rowsDroppedFromFile,
 	sourceOf,
+	withinPack,
 	type FileChange,
 	type PackDiff
 } from './diff';
@@ -135,7 +137,7 @@ export async function applyPackUpdate({
 	// does; deleting or re-iding a row inside a CSV is the ordinary case, and it arrives looking
 	// exactly like any other changed file. The bytes are only here, so this is the first moment the
 	// question can be answered at all — and it is still before anything is written.
-	const rowRemovals = graph ? rowsDroppedByUpdate(graph, staged) : [];
+	const rowRemovals = graph ? rowsDroppedByUpdate(graph, diff.pack, staged) : [];
 	if (rowRemovals.length > 0 && !acceptRowRemovals)
 		return {
 			...nothing,
@@ -152,7 +154,12 @@ export async function applyPackUpdate({
 	// unresolvable by inspection. Building the whole tree beside the live one and swapping it in with
 	// a rename makes the visible state jump from all-old to all-new.
 	const removed = removeDeleted ? removable : [];
-	await swapInNewTree(storage, diff.pack, staged, new Set(removed.map(localPath)));
+	await swapInNewTree(
+		storage,
+		diff.pack,
+		staged,
+		new Set(removed.map((p) => localPathIn(diff.pack, p)))
+	);
 
 	// the pre-download did its job; the cache is pruned as a whole after a check, so nothing is
 	// deleted here — two packs can legitimately share a blob (the cache is content-addressed)
@@ -161,10 +168,14 @@ export async function applyPackUpdate({
 
 /** Every row the incoming bytes drop, across every file being rewritten. Decoded as text because
  *  that is what a CSV is; a `plugin.json`/`main.js` in the same set simply yields nothing. */
-function rowsDroppedByUpdate(graph: ContentGraph, staged: StagedFile[]): string[] {
+function rowsDroppedByUpdate(
+	graph: ContentGraph,
+	localPack: string,
+	staged: StagedFile[]
+): string[] {
 	const decoder = new TextDecoder();
 	const dropped = staged.flatMap((file) =>
-		rowsDroppedFromFile(graph, localPath(file.path), decoder.decode(file.bytes))
+		rowsDroppedFromFile(graph, localPathIn(localPack, file.path), decoder.decode(file.bytes))
 	);
 	return [...new Set(dropped)].sort();
 }
@@ -194,7 +205,7 @@ async function localChangesSince(
 	);
 	const moved: string[] = [];
 	for (const change of guarded) {
-		const path = localPath(change.path);
+		const path = localPathIn(diff.pack, change.path);
 		const now = (await storage.exists(path))
 			? await gitBlobSha(await storage.readBytes(path))
 			: null;
@@ -229,7 +240,7 @@ async function swapInNewTree(
 
 	// carry over everything not being written or dropped — including files the pack format doesn't
 	// cover (a README, the user's notes) and hand-edited ones the update preserves
-	const written = new Set(staged.map((f) => localPath(f.path)));
+	const written = new Set(staged.map((f) => localPathIn(pack, f.path)));
 	for (const path of await listFilesRecursive(storage, live)) {
 		if (written.has(path) || dropping.has(path)) continue;
 		await storage.writeBytes(
@@ -239,7 +250,7 @@ async function swapInNewTree(
 	}
 	// writeBytes preserves the exact bytes (a content CSV's BOM/CRLF are load-bearing for Excel + the hash)
 	for (const file of staged)
-		await storage.writeBytes(`${next}/${file.path.slice(pack.length + 1)}`, file.bytes);
+		await storage.writeBytes(`${next}/${withinPack(file.path)}`, file.bytes);
 
 	const prev = previousDir(pack);
 	await storage.remove(prev).catch(() => {});

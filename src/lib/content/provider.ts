@@ -32,6 +32,7 @@ import { fileHashState } from './hash';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
 import { recoverInterruptedApply } from './remote/install';
 import {
+	bundledPacks,
 	forgetPack,
 	isReservedPackName,
 	missingBundled,
@@ -108,6 +109,7 @@ async function buildGraph(): Promise<ContentGraph> {
 		adoptShippedPacks(shipped.filter((root) => installed.includes(root)));
 		// deleting a bundled pack is allowed and sticks — but it is the rules the app runs on, so the
 		// absence is REPORTED (layout prompt + a restore button in Settings), never silently endured
+		bundledPacks.packs = shipped.map(packNameOf);
 		missingBundled.packs = shipped.filter((root) => !installed.includes(root)).map(packNameOf);
 		return loadContent(user, installed, homebrew);
 	}

@@ -46,7 +46,22 @@ export interface PackEntry {
 	repo: string;
 	/** "Don't update this pack": a campaign in progress must not have its rules shift under it. */
 	pinned?: boolean;
+	/**
+	 * The folder name this pack has IN ITS REPO, when that differs from the folder it lives in here.
+	 *
+	 * A pack is a folder, and folder names are not the publisher's to reserve: two repos may both
+	 * offer `srd-2024`, and one of them has to live somewhere else on disk. So the local folder is
+	 * the identity everywhere in the app (it is what `content/` scanning finds, what a character's
+	 * rows are attributed to, and what a pin names), and this records what to ask the repo for.
+	 *
+	 * Absent means the two agree, which is the normal case and what every pre-existing entry says —
+	 * so nothing migrates.
+	 */
+	remotePack?: string;
 }
+
+/** What this pack is CALLED in its repo — the path prefix the remote listing uses. */
+export const remoteNameOf = (pack: string, entry: PackEntry): string => entry.remotePack ?? pack;
 
 /** Per-REPO check state. `etag` is what makes steady state free: a `304` costs no rate-limit quota. */
 export interface RepoEntry {
@@ -219,6 +234,17 @@ function adopt(cfg: PackConfigData): void {
  */
 export const missingBundled = $state<{ packs: string[] }>({ packs: [] });
 
+/**
+ * The packs the APP SHIPS, by the folder name it ships them under. Recomputed at every content load
+ * from the bundle itself, never persisted — it is a fact about this build.
+ *
+ * It exists because a bundled pack is identified by that folder name and by nothing else: the seed
+ * refreshes `content/<name>`, `missingBundled` is "the bundle has it and the disk doesn't", and the
+ * restore button copies it back to the same place. So the folder is not free to move the way a
+ * downloaded pack's is, and `renamePack` needs to know which packs those are in order to say so.
+ */
+export const bundledPacks = $state<{ packs: string[] }>({ packs: [] });
+
 /** Which of them still deserve the launch prompt — the rest the user has already answered for. */
 export const missingUnanswered = (): string[] =>
 	missingBundled.packs.filter((pack) => !packConfig.dismissedMissing.includes(pack));
@@ -253,11 +279,67 @@ function persist(): void {
 	writeConfigSection(CONFIG_PATH, SECTION, packConfig);
 }
 
-/** Record an installed pack (the installer calls this), or re-point an existing one at a new repo. */
-export function registerPack(pack: string, repo: string): void {
+/** Record an installed pack (the installer calls this), or re-point an existing one at a new repo.
+ *  `remotePack` is only stored when the repo calls it something else than the folder it landed in. */
+export function registerPack(pack: string, repo: string, remotePack?: string): void {
 	const existing = packConfig.packs[pack];
-	packConfig.packs[pack] = existing ? { ...existing, repo } : { repo };
+	const remote = remotePack !== undefined && remotePack !== pack ? { remotePack } : {};
+	packConfig.packs[pack] = { ...existing, repo, ...remote };
 	packConfig.repos[repo] ??= {};
+	persist();
+}
+
+/**
+ * Which local folder holds this repo's `<remotePack>`, if any. The registry is keyed by the LOCAL
+ * folder, so a check — which only knows what the repo calls things — has to come back this way.
+ *
+ * Looking the remote name up directly was the bug: two repos can both publish `srd-2024`, and the
+ * lookup would find the other one's entry, compare it against the wrong URL, and either skip a real
+ * update or offer one repo's files for the other repo's folder.
+ */
+export function localPackFor(repo: string, remotePack: string): string | undefined {
+	return Object.keys(packConfig.packs)
+		.sort()
+		.find((pack) => {
+			const entry = packConfig.packs[pack];
+			return entry !== undefined && entry.repo === repo && remoteNameOf(pack, entry) === remotePack;
+		});
+}
+
+/**
+ * A folder name that is free to install into: `preferred`, or `preferred-2`, `-3`… A name is taken
+ * if the registry claims it or if `onDisk` holds it (a folder can exist without an entry — the user
+ * may have copied one in by hand, and overwriting it would be the data loss this whole check exists
+ * to avoid). Reserved names never win either, so a repo publishing `homebrew` gets `homebrew-2`
+ * rather than the user's authoring root.
+ */
+export function freeLocalPackName(preferred: string, onDisk: string[] = []): string {
+	const taken = new Set([...Object.keys(packConfig.packs), ...onDisk]);
+	const free = (name: string) => !taken.has(name) && !isReservedPackName(name);
+	if (free(preferred)) return preferred;
+	for (let n = 2; ; n++) if (free(`${preferred}-${n}`)) return `${preferred}-${n}`;
+}
+
+/** Rename the folder a pack lives in, keeping its repo, its pin and where it came from. The caller
+ *  moves the files; this moves the bookkeeping. Remembers the repo's own name for it, so the next
+ *  check still asks for the right path. */
+export function renamePackEntry(from: string, to: string): void {
+	const entry = packConfig.packs[from];
+	if (!entry || from === to) return;
+	const remotePack = remoteNameOf(from, entry);
+	delete packConfig.packs[from];
+	// rebuilt rather than spread, so renaming a folder BACK to what the repo calls it drops the
+	// override instead of leaving a `remotePack` that redundantly repeats the key
+	packConfig.packs[to] = {
+		repo: entry.repo,
+		...(entry.pinned === undefined ? {} : { pinned: entry.pinned }),
+		...(remotePack === to ? {} : { remotePack })
+	};
+	const pending = packConfig.pending[from];
+	if (pending) {
+		delete packConfig.pending[from];
+		packConfig.pending[to] = pending;
+	}
 	persist();
 }
 

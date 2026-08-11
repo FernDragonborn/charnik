@@ -234,6 +234,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const UPDATE_MODE` — * What the app may do over the NETWORK on its own.
 - `type UpdateMode`
 - `interface PackEntry` — One installed pack: which repo it came from, and whether the user froze it.
+- `const remoteNameOf` — What this pack is CALLED in its repo — the path prefix the remote listing uses.
 - `interface RepoEntry` — Per-REPO check state.
 - `interface PendingRemote` — * An update that was FOUND and not yet applied, in the smallest form that survives a restart: the * remote file list.
 - `interface PackConfigData`
@@ -246,11 +247,15 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function reposDueForCheck` — Every repo that automatic checking may contact right now: the update mode allows the network, * the throttle has elap…
 - `const packConfig` — Reactive, persisted registry.
 - `const missingBundled` — * Bundled packs that are NOT on disk right now — the app ships them, this install doesn't have them.
+- `const bundledPacks` — * The packs the APP SHIPS, by the folder name it ships them under.
 - `const missingUnanswered` — Which of them still deserve the launch prompt — the rest the user has already answered for.
 - `function keepMissingPacks` — "I meant to delete it, stop asking." Suppresses the prompt for these packs; Settings still offers * to restore them, …
 - `function unDismissMissing` — A restored pack is no longer missing, so it must not stay on the "don't ask" list either — it * would silence the pro…
 - `function initPackConfig` — Load the registry from the data root (once, at app start).
 - `function registerPack` — Record an installed pack (the installer calls this), or re-point an existing one at a new repo.
+- `function localPackFor` — * Which local folder holds this repo's `<remotePack>`, if any.
+- `function freeLocalPackName` — * A folder name that is free to install into: `preferred`, or `preferred-2`, `-3`… A name is taken * if the registry …
+- `function renamePackEntry` — Rename the folder a pack lives in, keeping its repo, its pin and where it came from.
 - `function rememberPending` — Remember an update we found, so a relaunch doesn't lose it (see {@link PendingRemote}).
 - `function forgetPending` — It was applied, refused, or the pack is gone — either way there is nothing left to offer.
 - `function forgetPack` — Forget a pack (it was uninstalled).
@@ -272,6 +277,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const autoCheckAllowed` — Should the app check by itself at startup?
 - `function discoverPacks` — * Ask a pasted repo URL what packs it holds.
 - `function installPack` — * Install one discovered pack.
+- `function renamePack` — * Move a pack into a different folder, files and bookkeeping together — the way a name chosen at * install time (or a…
 - `function uninstallPack` — * Uninstall a pack: delete its folder (which takes its plugins with it — they live inside it, * PLUGINS §2) and drop …
 
 ### `src/lib/content/review.svelte.ts`
@@ -681,6 +687,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/remote/diff.ts`
 
 - `const localPath` — Where a pack's files live locally.
+- `const withinPack` — The part of a repo-relative path BELOW the pack folder (`srd-2024/spells.csv` → `spells.csv`).
+- `const localPathIn` — * Where one of a pack's files lives on THIS disk.
 - `function gitBlobSha` — `sha1("blob <byteLength>\0" + bytes)` — git's own object id, so it can be compared with the SHA * in a tree listing d…
 - `const FILE_CHANGE`
 - `type FileChangeKind`
@@ -1229,4 +1237,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 709 exports across 101 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 717 exports across 101 modules · 36 duplicate suspects._
