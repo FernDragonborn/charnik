@@ -41,8 +41,17 @@ jobs:
         # because rpmbuild isn't on the runners) and tauri.conf.json's defaults on Windows (NSIS).
         os: [ubuntu-22.04, windows-latest]
     runs-on: ${{ matrix.os }}
+    # the SRD content is its own repo and the release VENDORS it in as the bundled floor — a build
+    # that can't find it fails loudly rather than shipping an app with no rules in it
+    env:
+      CHARNIK_CONTENT: .content-srd
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/checkout@v7
+        with:
+          repository: FernDragonborn/charnik-content-srd
+          path: .content-srd
 
       # Tauri v2 Linux build + AppImage bundling deps (webkit2gtk-4.1, appindicator, rsvg, patchelf).
       - name: Install Linux dependencies

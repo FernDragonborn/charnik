@@ -1,5 +1,5 @@
 /*
- * SRD 5.2.1 (CC-BY-4.0) classes.md → content/srd-2024/classes_srd.csv + class_features_srd.csv
+ * SRD 5.2.1 (CC-BY-4.0) classes.md → srd-2024/classes_srd.csv + class_features_srd.csv
  * All tagged 5.5e. Class-level fields come from each "Core <Class> Traits" table; features
  * are the `#### Level N: Name` blocks BEFORE the subclass section (subclasses are a
  * separate concept, not seeded here). caster type is derived from the spell-slot columns
@@ -20,6 +20,7 @@ import {
 	dedupeIds,
 	existingColById
 } from './lib.mjs';
+import { packDir } from '../content-repo.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -73,12 +74,12 @@ function parseWeaponProfs(cell, subsets) {
 	return out.join(',');
 }
 
-const subsets = martialSubsets(resolve(root, 'content/srd-2024/items_srd.csv'));
+const subsets = martialSubsets(resolve(packDir('srd-2024'), 'items_srd.csv'));
 
 // Feature `effects` (mechanical tokens) and `expertise_slots` (N4a level:count grants) are authored
 // AFTER conversion — curated from the SRD into a bounded annotation, NOT present as such in the prose.
 // `existingColById` (lib.mjs) preserves them by id, or a raw re-run silently wipes the authoring.
-const featuresCsv = resolve(root, 'content/srd-2024/class_features_srd.csv');
+const featuresCsv = resolve(packDir('srd-2024'), 'class_features_srd.csv');
 const authoredFeatures = existingColById(featuresCsv, 'effects');
 const authoredExpertise = existingColById(featuresCsv, 'expertise_slots');
 
@@ -215,7 +216,7 @@ dedupeIds(featureRows);
 dedupeIds(subclassRows);
 
 writeCsv(
-	resolve(root, 'content/srd-2024/classes_srd.csv'),
+	resolve(packDir('srd-2024'), 'classes_srd.csv'),
 	[
 		'id',
 		'systems',
@@ -240,7 +241,7 @@ writeCsv(
 	classRows
 );
 writeCsv(
-	resolve(root, 'content/srd-2024/class_features_srd.csv'),
+	resolve(packDir('srd-2024'), 'class_features_srd.csv'),
 	[
 		'id',
 		'systems',
@@ -259,7 +260,7 @@ writeCsv(
 	featureRows
 );
 writeCsv(
-	resolve(root, 'content/srd-2024/subclasses_srd.csv'),
+	resolve(packDir('srd-2024'), 'subclasses_srd.csv'),
 	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id'],
 	subclassRows
 );

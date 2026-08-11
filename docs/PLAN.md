@@ -566,7 +566,7 @@ the rest — but a few things sit in text that would be better structured. Add v
 5. **`resource`** on class features (rage/ki counts) — currently unparsed.
 None block the loader; they raise fidelity where the UI later wants structured filters.
 
-### Shipped SRD content (P3 — `content/srd/*.csv`, GENERATED not hand-written)
+### Shipped SRD content (P3 — the `charnik-content-srd` repo's CSVs, GENERATED not hand-written)
 **Hard rule: content is never authored from memory.** Every row is parsed from the
 official **CC-BY-4.0 SRD 5.2.1** markdown by converters in `tools/srd/` (source mirror:
 downfallx/dnd-5e-srd-markdown; see `tools/srd/README.md`). Each converter **asserts its
@@ -1002,8 +1002,9 @@ were learned the hard way.
 
 - **W0 · REL-4 content packs — IN PROGRESS.** The maintainer's priority: get SRD content out of the
   app so rules data updates without an app release. Slice 1 done (`ccd247c`, a pack is a folder,
-  discovered by scanning). Slice 0 (split SRD into its own repo) needs the maintainer to create the
-  remote — do not do it unasked. **Consequence worth planning around:** after W0 the content passes
+  discovered by scanning) and slice 0 done 2026-08-11 (the content is its own repo; everything that
+  reads it goes through `tools/content-repo.mjs`). Next is slice 2, the Rust fetcher.
+  **Consequence worth planning around:** after W0 the content passes
   (MAGIC-ITEM-EFX, E4, D6/D10) leave the app roadmap entirely; they ship from the content repo.
 - **W1 · Roll card (UBUG-20 + UX-3) — DONE 2026-08-10.** One `RollRow` across toast / Playbar / log /
   tray, retroactive advantage as a three-state pill, the reroll pill, the one-line strip. Tails are
@@ -1442,29 +1443,39 @@ holds the done-work log; these are the OPEN tails it carried):**
 
 
   **Slices, and where the work stands (2026-08-10).**
-  0. `[ ]` **Split the SRD into its own repo — TWO INDEPENDENT REPOS (maintainer, 2026-08-11).**
-     `charnik-content-srd` holds `srd-2014/` + `srd-2024/` at its root and is cloned SEPARATELY,
-     beside the app repo. **Not a submodule** — the footguns land on the one person operating this:
-     a clone without `--recursive` gives empty content and confusing test failures, the working copy
-     sits on a detached HEAD by default, and committing needs a push in the inner repo BEFORE the
-     pointer bump in the outer one, which fails silently and breaks everyone else's clone. Two plain
-     repos have none of that.
-     - **The app finds content through config, and defaults to the sibling folder.** Default
-       `../charnik-content-srd`, so cloning the two side by side needs NO config at all; the config
-       is only for a different location. Prerequisite: `charnik.config.json` custom roots — claimed
-       as an architecture invariant in CLAUDE.md and **never built** (zero references in `src`).
-     - **Missing content must be LOUD and actionable, never a silent empty app:** say what is
-       missing, print the clone URL, and offer to write the config. This is a dev-time path — a
-       release still bundles the content as the floor, so the RELEASE BUILD must fail loudly if it
-       cannot vendor it, rather than shipping an app with no rules in it.
-     - **ONE resolver seam, because three places hardcode `content/srd-*` today** and the third is
-       the one that will actually bite: the app (`discoverContentRoots`), the web build
-       (`tools/build-static-content.mjs`), and **the content TESTS** —
-       `class_features_content.test.ts`, `items_content.test.ts`, `conditions_content.test.ts` and
-       friends do `readdirSync(process.cwd() + '/content/srd-2024')` in a copy-pasted helper. Move
-       them onto the resolver in the same change or `pnpm test` fails on every fresh clone.
-     - Do the split with `git subtree split` so the folders keep their history instead of arriving
-       as one "initial commit". **Creating the remote is the maintainer's to do — never unasked.**
+  0. `[x]` **Split the SRD into its own repo — TWO INDEPENDENT REPOS (maintainer, 2026-08-11).**
+     SHIPPED. [`charnik-content-srd`](https://github.com/FernDragonborn/charnik-content-srd) holds
+     `srd-2014/` + `srd-2024/` at its root, split with `git subtree split -P content` so all 72
+     content commits kept their history, and is cloned SEPARATELY beside the app repo. **Not a
+     submodule** — the footguns land on the one person operating this: a clone without `--recursive`
+     gives empty content and confusing test failures, the working copy sits on a detached HEAD by
+     default, and committing needs a push in the inner repo BEFORE the pointer bump in the outer one,
+     which fails silently and breaks everyone else's clone. Two plain repos have none of that.
+     - **ONE resolver seam: `tools/content-repo.mjs`.** Resolution order is `$CHARNIK_CONTENT` →
+       `charnik.config.json`'s `contentRepo` → the sibling `../charnik-content-srd`, so the
+       side-by-side layout needs NO config. Its three consumers are exactly the three places that
+       used to hardcode `content/srd-*`: the vendoring step (`tools/build-static-content.mjs`), the
+       SRD converters (they live in the app repo but now WRITE into the content clone), and the
+       content tests via `src/test-support/real-content.ts`. Nothing in `src/lib` changed — the
+       runtime still reads `content/<pack>` out of the built assets / dataDir, because vendoring
+       puts them there. **Add any future content path to that seam, never inline.**
+     - **The env var exists because CI cannot use a sibling:** `actions/checkout` refuses a path
+       outside the workspace, so all three workflows check the content out into `.content-srd/` and
+       set `CHARNIK_CONTENT`. Both are gitignored.
+     - **Missing content is LOUD at BUILD time, not run time** (the one deviation from the original
+       wording, which said the app would say so and offer to write the config): the content is
+       vendored into `static/content/` by `predev`/`prebuild`, so by the time the app runs the
+       question is already settled. `requireContentRepo()` fails with the clone command and both
+       config routes, and `pnpm build` exits non-zero — a release can't ship an app with no rules.
+       An interactive "shall I write the config?" prompt was rejected: a prebuild step that blocks
+       on stdin hangs CI.
+     - **The test helper is `loadPacks(...packs)`**, which replaced two copy-pasted
+       `readdirSync(process.cwd() + '/content/srd-2024')` loaders (`class_features_content.test.ts`,
+       `combat.test.ts`) and reads packs straight off disk through `NodeStorage`. Only
+       `loader.test.ts`'s real-content case is conditional (`hasContentRepo`); every other content
+       test now fails with the actionable message rather than skipping silently.
+     - Bundled-data licence + attribution moved WITH the data (they describe it); `COPYING.md` and
+       `README.md` point at the content repo for them.
      - Nothing below is blocked on this: slices 1–3 build against the local folders and any URL.
   1. `[~]` **A pack is a FOLDER, discovered by scanning** — DONE (`ccd247c`, described above).
      **Still open in this slice:** the installed-pack REGISTRY — the URL, `ETag`, `lastCheckedAt`,

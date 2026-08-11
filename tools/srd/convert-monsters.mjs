@@ -1,5 +1,5 @@
 /*
- * SRD 5.2.1 (CC-BY-4.0) monsters-A-Z.md + animals.md → content/srd/monsters_srd.csv
+ * SRD 5.2.1 (CC-BY-4.0) monsters-A-Z.md + animals.md → srd/monsters_srd.csv
  * The whole stat-block header is parsed into columns (size/type/alignment/AC/initiative/HP/
  * speed/abilities/CR/resistances/immunities/vulnerabilities/gear/senses/languages/skills) —
  * including the HTML ability <table> — so nothing has to be scraped from text at runtime.
@@ -12,6 +12,7 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { slug, writeCsv, assertCount, dedupeIds } from './lib.mjs';
+import { packDir } from '../content-repo.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -149,7 +150,7 @@ assertCount('monsters', rows.length, 330); // monsters-A-Z 235 + animals 95
 dedupeIds(rows);
 
 writeCsv(
-	resolve(root, 'content/srd-2024/monsters_srd.csv'),
+	resolve(packDir('srd-2024'), 'monsters_srd.csv'),
 	[
 		'id',
 		'systems',

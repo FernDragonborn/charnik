@@ -32,11 +32,17 @@ build.ps1
 # local design mocks + renders (kept on disk, not tracked)
 design-preview/
 
-# downloaded SRD source (re-fetchable; converter in tools/srd/ reads it → content/srd/*.csv)
+# downloaded SRD source (re-fetchable; converters in tools/srd/ read it → the CONTENT repo's CSVs)
 tools/srd-src/
 
-# generated: content copied into static/ for the web build (source of truth = content/)
+# generated: content vendored into static/ for the build (source of truth = the charnik-content-srd repo)
 static/content/
+
+# local: where THIS machine keeps the content repo, when it isn't the sibling default
+charnik.config.json
+
+# CI: where the workflows check the content repo out (a sibling path is outside the workspace)
+.content-srd/
 
 # vitest browser-mode failure screenshots + test attachments
 __screenshots__/

@@ -1,5 +1,5 @@
 /*
- * SRD 5.1 (CC-BY-4.0, Tabyltop) → content/srd-2014/*.csv  (tagged 5e, source "SRD 5.1")
+ * SRD 5.1 (CC-BY-4.0, Tabyltop) → srd-2014/*.csv  (tagged 5e, source "SRD 5.1")
  * Prose types are parsed from the semantic HTML (SRD5.1-CCBY4.0License-TT.html): each
  * entry is an <h4 id='…'> with bold name, fields are <p><b>Label:</b>value</p>. Monsters
  * come from the pre-structured Monsters JSON. Counts asserted. Run: node tools/srd/convert-2014.mjs
@@ -9,11 +9,12 @@ import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
 import { slug, writeCsv, assertCount, dedupeIds } from './lib.mjs';
+import { packDir } from '../content-repo.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const src = (f) => readFileSync(resolve(root, 'tools/srd-src/2014', f), 'utf8');
-const out = (f) => resolve(root, 'content/srd-2014', f);
+const out = (f) => resolve(packDir('srd-2014'), f);
 const SRC = 'SRD5.1-CCBY4.0License-TT';
 
 // Some columns are authored AFTER conversion (`effects` tokens got their values in the CONDITIONS-1 /

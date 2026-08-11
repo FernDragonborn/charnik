@@ -1,5 +1,5 @@
 /*
- * SRD 5.2.1 (CC-BY-4.0) markdown → content/srd/*.csv  —  ALL types except spells
+ * SRD 5.2.1 (CC-BY-4.0) markdown → srd/*.csv  —  ALL types except spells
  * (spells have their own script). Source: tools/srd-src/2024/ (downfallx mirror).
  *
  * Every row is GENERATED from the official document, tagged `5.5e`. Structured columns
@@ -21,11 +21,12 @@ import {
 	writeCsv,
 	assertCount
 } from './lib.mjs';
+import { packDir } from '../content-repo.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const src = (f) => readFileSync(resolve(root, 'tools/srd-src/2024', f), 'utf8');
-const out = (f) => resolve(root, 'content/srd-2024', f);
+const out = (f) => resolve(packDir('srd-2024'), f);
 
 // Preserve `effects` authored AFTER conversion (condition tokens are curated from SRD rules into the
 // bounded vocab — CONDITIONS-1 — not present in the HTML source). A raw re-run must not wipe them.

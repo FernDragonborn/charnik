@@ -13,12 +13,13 @@ import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { writeCsv, assertCount } from './lib.mjs';
+import { packDir } from '../content-repo.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const md = readFileSync(resolve(root, 'tools/srd-src/2024/classes.md'), 'utf8');
-const out = (f) => resolve(root, 'content/srd-2024', f);
-const out2014 = (f) => resolve(root, 'content/srd-2014', f);
+const out = (f) => resolve(packDir('srd-2024'), f);
+const out2014 = (f) => resolve(packDir('srd-2014'), f);
 
 const SYSTEMS = '5.5e';
 const SOURCE = 'SRD 5.2.1';

@@ -36,8 +36,10 @@ version is out, an **Update** button appears in the top bar; click it to update 
 > git clone https://github.com/FernDragonborn/charnik-content-srd.git
 > ```
 >
-> A different location goes in `charnik.config.json`. Start the app without content and it tells you
-> what is missing and offers to set it up. Content fixes are commits in the CONTENT repo.
+> A different location goes in `charnik.config.json` (`{ "contentRepo": "…" }`) or the
+> `CHARNIK_CONTENT` environment variable. Without the content, `pnpm dev` / `pnpm build` stop with
+> the clone command rather than starting an app with no rules in it. The build **vendors** the CSVs
+> into the app, so a release still ships them. Content fixes are commits in the CONTENT repo.
 
 Requires Node 22 + pnpm. The TS side runs without Rust; the Tauri desktop build also needs
 Rust + platform toolchain (MSVC C++ Build Tools + WebView2 on Windows; webkit2gtk on Linux).
@@ -63,9 +65,9 @@ Charnik separates **code**, **bundled data**, and **user content** — see
 
 - **Code → [AGPL-3.0-or-later](LICENSE).** Free for everyone, modification allowed, but
   changes must be disclosed (including over a network).
-- **Bundled data → [CC-BY-4.0](content/LICENSE).** Rules data derives from the WotC
-  **SRD 5.1** and **SRD 5.2.1**; attribution is kept in
-  [`content/ATTRIBUTION.md`](content/ATTRIBUTION.md). Charnik ships **SRD-only** — add
-  non-SRD material yourself into homebrew CSVs.
+- **Bundled data → CC-BY-4.0.** Rules data derives from the WotC **SRD 5.1** and **SRD 5.2.1** and
+  lives in its own repo, [charnik-content-srd](https://github.com/FernDragonborn/charnik-content-srd),
+  with the licence and attribution beside it. Charnik ships **SRD-only** — add non-SRD material
+  yourself into homebrew CSVs.
 - **Your homebrew → yours.** Content you add stays author-owned; each `source` carries its
   own license + attribution. The app relicenses nothing.

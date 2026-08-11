@@ -1,20 +1,26 @@
-# SRD converters — `content/srd/*.csv` are GENERATED, never hand-written
+# SRD converters — the content CSVs are GENERATED, never hand-written
 
-**Hard rule:** content data is never authored from memory. Every row in `content/srd/`
-is parsed from an official **CC-BY-4.0 SRD** source by a script here. If a value is wrong,
-fix the parser or the source mapping — do not edit the CSV by hand.
+**Hard rule:** content data is never authored from memory. Every shipped row is parsed from an
+official **CC-BY-4.0 SRD** source by a script here. If a value is wrong, fix the parser or the
+source mapping — do not edit the CSV by hand.
+
+**These scripts write into the CONTENT repo** (`charnik-content-srd`, resolved by
+`tools/content-repo.mjs` — the sibling clone unless configured otherwise), so a regeneration shows
+up as a diff THERE, and gets committed there. The converters stay here because they share the app's
+`hashBody` stamping and its pnpm dependencies.
 
 ## Sources (CC-BY-4.0, SRD-only)
 
-| System | SRD | Output root | Source repo | Local (gitignored) |
+| System | SRD | Output pack | Source repo | Local (gitignored) |
 |--------|-----|-------------|-------------|--------------------|
-| 5.5e (2024) | SRD 5.2.1 | `content/srd-2024/` | [downfallx/dnd-5e-srd-markdown](https://github.com/downfallx/dnd-5e-srd-markdown) | `tools/srd-src/2024/` |
-| 5e (2014) | SRD 5.1 | `content/srd-2014/` | [Tabyltop/CC-SRD](https://github.com/Tabyltop/CC-SRD) | `tools/srd-src/2014/` |
+| 5.5e (2024) | SRD 5.2.1 | `srd-2024/` | [downfallx/dnd-5e-srd-markdown](https://github.com/downfallx/dnd-5e-srd-markdown) | `tools/srd-src/2024/` |
+| 5e (2014) | SRD 5.1 | `srd-2014/` | [Tabyltop/CC-SRD](https://github.com/Tabyltop/CC-SRD) | `tools/srd-src/2014/` |
 
 **Two edition roots, edition-specific `source`.** SRD 5.1 and 5.2.1 are different documents,
 so their rows carry distinct `source` tags (`SRD 5.1` vs `SRD 5.2.1`) → the same slug never
-collides on `source:id` across editions (`SRD 5.1:fireball` ≠ `SRD 5.2.1:fireball`). Each
-root has its own `_pack.json`. Both carry canonical WotC CC-BY-4.0 attribution.
+collides on `source:id` across editions (`SRD 5.1:fireball` ≠ `SRD 5.2.1:fireball`). There is no
+per-pack manifest — every CSV declares its own `#content-*` header (AI-CONVENTIONS §1.6). Both
+carry canonical WotC CC-BY-4.0 attribution.
 **Rejected:** BTMorton/dnd-5e-srd (OGL 1.0a, not CC-BY; SRD 5.0); normalized JSON
 compilations like 5e-bits (OGL provenance) — incompatible with our CC-BY-only rule.
 

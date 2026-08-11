@@ -1,9 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { resolve } from 'node:path';
-import { existsSync } from 'node:fs';
 import { MemoryStorage } from '../storage/memory';
-import { NodeStorage } from '../storage/node';
 import { loadContent } from './loader';
+import { hasContentRepo, loadPacks } from '../../test-support/real-content';
 
 const SPELL_HEAD =
 	'id,systems,source,name_en,name_uk,level,school,casting_time,range,components,duration,concentration,ritual';
@@ -220,14 +218,10 @@ describe('loader — logic (in-memory)', () => {
 
 // Integration: load the real shipped content and assert it indexes cleanly.
 describe('loader — real content', () => {
-	const cwd = process.cwd();
-	const has =
-		existsSync(resolve(cwd, 'content/srd-2024')) && existsSync(resolve(cwd, 'content/srd-2014'));
-
-	it.runIf(has)(
+	it.runIf(hasContentRepo)(
 		'loads both edition roots with zero errors and wires cross-edition articles',
 		async () => {
-			const g = await loadContent(new NodeStorage(cwd), ['content/srd-2024', 'content/srd-2014']);
+			const g = await loadPacks('srd-2024', 'srd-2014');
 			expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 			expect(g.list('spell').length).toBe(339 + 319);
 			expect(g.list('monster').length).toBe(330 + 201);

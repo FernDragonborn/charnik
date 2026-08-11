@@ -1,5 +1,5 @@
 /*
- * SRD 5.2.1 spells → content/srd/spells_srd.csv
+ * SRD 5.2.1 spells → srd/spells_srd.csv
  *
  * Reads the CC-BY-4.0 SRD 5.2.1 markdown (tools/srd-src/2024/spells.md, from
  * github.com/downfallx/dnd-5e-srd-markdown) and emits rows matching the spell schema.
@@ -15,11 +15,12 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
+import { packDir } from '../content-repo.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
 const SRC = resolve(root, 'tools/srd-src/2024/spells.md');
-const OUT = resolve(root, 'content/srd-2024/spells_srd.csv');
+const OUT = resolve(packDir('srd-2024'), 'spells_srd.csv');
 
 const SCHOOLS = [
 	'abjuration',

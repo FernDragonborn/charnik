@@ -5,7 +5,7 @@
  */
 import 'fake-indexeddb/auto'; // the VM's saveCharacterToStore hits IndexedDB (rest/level-up) — provide it
 import { describe, it, expect, beforeEach } from 'vitest';
-import { readdirSync, readFileSync } from 'node:fs';
+import { loadPacks } from '../../test-support/real-content';
 import { MemoryStorage } from '$lib/storage/memory';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
@@ -1377,18 +1377,12 @@ describe.each(['5e', '5.5e'] as const)(
 
 /** Load a whole real edition into a graph (like the content tests) — the Rage buff spans the real
  *  effects.csv / conditions.csv / resource_options.csv rows, so a hand-stub wouldn't exercise them. */
-async function realGraph(dir: string): Promise<ContentGraph> {
-	const st = new MemoryStorage();
-	for (const f of readdirSync(`${process.cwd()}/${dir}`))
-		if (f.endsWith('.csv'))
-			await st.write(`c/${f}`, readFileSync(`${process.cwd()}/${dir}/${f}`, 'utf8'));
-	return loadContent(st, ['c']);
-}
+const realGraph = (pack: string): Promise<ContentGraph> => loadPacks(pack);
 
 describe('CombatVM · using the Rage resource ENTERS Rage (chip → buff, not a bare counter)', () => {
 	let character: Character;
 	beforeEach(async () => {
-		combat.graph = await realGraph('content/srd-2024');
+		combat.graph = await realGraph('srd-2024');
 		character = newCharacter('grog', 'Grog', '5.5e');
 		character.build.classes = [{ class: `class:${S}:barbarian`, level: 3 }];
 		combat.character = character;
@@ -1433,7 +1427,7 @@ describe('CombatVM · using the Rage resource ENTERS Rage (chip → buff, not a 
 describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a bare counter', () => {
 	let character: Character;
 	beforeEach(async () => {
-		combat.graph = await realGraph('content/srd-2024');
+		combat.graph = await realGraph('srd-2024');
 		character = newCharacter('valen', 'Valen', '5.5e');
 		character.build.classes = [{ class: `class:${S}:fighter`, level: 5 }];
 		character.play.hp = { current: 4, max: 40, temp: 0 };

@@ -1,23 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { MemoryStorage } from '../storage/memory';
 import { loadContent } from './loader';
 import { parseToken, splitGuard } from '../effects/token-parser';
+import { readPackFile } from '../../test-support/real-content';
 
 /*
  * Guards the SHIPPED condition data (CONDITIONS-1 authoring): the `effects` column we filled must
  * load cleanly, re-hash without drift, and contain only KNOWN effect tokens — a typo'd token would
- * silently become an inert note, so pin it here. Reads the real content/ files, not a fixture.
+ * silently become an inert note, so pin it here. Reads the real shipped files, not a fixture.
  */
 const EDITIONS = [
-	['5.5e', 'content/srd-2024/conditions_srd.csv'],
-	['5e', 'content/srd-2014/conditions_srd.csv']
+	['5.5e', 'srd-2024'],
+	['5e', 'srd-2014']
 ] as const;
 
-async function loadEdition(path: string) {
-	const csv = readFileSync(`${process.cwd()}/${path}`, 'utf8');
+async function loadEdition(pack: string) {
 	const s = new MemoryStorage();
-	await s.write('c/conditions_srd.csv', csv);
+	await s.write('c/conditions_srd.csv', readPackFile(pack, 'conditions_srd.csv'));
 	return loadContent(s, ['c']);
 }
 

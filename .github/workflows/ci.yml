@@ -13,8 +13,18 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # the SRD content is its own repo (docs/PLAN.md REL-4 slice 0) — tests and the build both read
+    # it. Locally it's the sibling folder; here it can't be (actions/checkout refuses a path outside
+    # the workspace), so check it out inside and point the resolver at it.
+    env:
+      CHARNIK_CONTENT: .content-srd
     steps:
       - uses: actions/checkout@v7
+
+      - uses: actions/checkout@v7
+        with:
+          repository: FernDragonborn/charnik-content-srd
+          path: .content-srd
 
       - uses: pnpm/action-setup@v4 # version comes from packageManager in package.json
 

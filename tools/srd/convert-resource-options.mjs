@@ -1,5 +1,6 @@
 /*
- * Curated resource spend-options (piece 3) → content/srd-{2024,2014}/resource_options_srd.csv.
+ * Curated resource spend-options (piece 3) → srd-{2024,2014}/resource_options_srd.csv in the
+ * content repo.
  * These are app-specific option rows that encode SRD mechanics (Flurry of Blows costs 1 Focus/Ki
  * point, etc.) — authored, not parsed from a prose table (there's no table to parse), analogous to
  * the CONDITIONS-1 effect tokens. `resource_id` links to a `grant_resource` id (a FLAT namespace —
@@ -7,12 +8,9 @@
  * bounded token (v1: `note:` display); `action_type` places it in the turn economy.
  * Run: node tools/srd/convert-resource-options.mjs
  */
-import { resolve, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve } from 'node:path';
 import { writeCsv } from './lib.mjs';
-
-const here = dirname(fileURLToPath(import.meta.url));
-const root = resolve(here, '../..');
+import { packDir } from '../content-repo.mjs';
 
 const COLUMNS = [
 	'id',
@@ -68,12 +66,12 @@ const row = (source, systems, resourceId, o) => ({
 });
 
 writeCsv(
-	resolve(root, 'content/srd-2024/resource_options_srd.csv'),
+	resolve(packDir('srd-2024'), 'resource_options_srd.csv'),
 	COLUMNS,
 	MONK_OPTIONS.map((o) => row('SRD 5.2.1', '5.5e', 'focus', o))
 );
 writeCsv(
-	resolve(root, 'content/srd-2014/resource_options_srd.csv'),
+	resolve(packDir('srd-2014'), 'resource_options_srd.csv'),
 	COLUMNS,
 	MONK_OPTIONS.map((o) => row('SRD 5.1', '5e', 'ki', o))
 );

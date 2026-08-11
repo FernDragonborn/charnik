@@ -23,11 +23,18 @@ some-folder/
 ```
 
 Clone them as siblings and everything resolves with **no configuration** — that layout is the
-default. A different location goes in `charnik.config.json`. If the content is missing the app says
-so, prints the clone URL and offers to write the config; it never starts up silently empty.
+default. A different location goes in `charnik.config.json` (`{ "contentRepo": "…" }`, gitignored)
+or `$CHARNIK_CONTENT` (how CI points at its own checkout).
+
+**`tools/content-repo.mjs` is the ONE seam that knows where the content is** — the vendoring step
+(`tools/build-static-content.mjs`), the SRD converters, and the content tests
+(`src/test-support/real-content.ts`) all resolve through it. Never hardcode a content path again;
+add it there. Missing content fails **loudly and actionably** (the clone command + both config
+routes) at `pnpm dev` / `pnpm build`, so no build can ship an app with no rules in it.
 
 Content edits (CSV fixes, re-stamping a `#content-hash`, running a converter) are commits in the
-CONTENT repo. App code is commits here. A release vendors the content in as the bundled floor.
+CONTENT repo — the converters live here but WRITE there. App code is commits here. A build vendors
+the content into `static/content/`, which is what makes a release carry it as the bundled floor.
 
 ---
 
@@ -213,7 +220,7 @@ These span many files and are easy to violate; preserve them.
   writes** (no write→reload loop).
 
 - **Editing a content CSV → RE-STAMP its hash (or content-health flags drift).** Every
-  `content/**/*.csv` carries a `#content-hash: xxh64:…` over its normalised body; the
+  CSV in the content repo carries a `#content-hash: xxh64:…` over its normalised body; the
   content-health panel recomputes it on load and shows **"changed · declared \<date\>"**
   drift when the stored hash ≠ the body. So **after ANY hand-edit to a content CSV**
   (adding an effect token to a feat, tweaking a row), you MUST re-stamp before committing:
@@ -222,7 +229,8 @@ These span many files and are easy to violate; preserve them.
   re-run a converter just to re-stamp** — `convert.mjs`'s row-regen drops
   `conditions_srd.csv`'s `max_level` column (stale-converter bug); if you *do* run a
   converter for a real content change, `git checkout` any file it touched that you didn't
-  mean to change. A converter run stamps its own output; `pnpm restamp` is for hand-edits.
+  mean to change — **in the CONTENT repo, which is where all of this shows up as a diff**.
+  A converter run stamps its own output; `pnpm restamp` is for hand-edits.
 
 - **Everything is doable from the UI.** Users are never required to touch files: adding
   content writes rows into a homebrew CSV via forms (`papaparse.unparse`); enabling

@@ -5,8 +5,8 @@ are governed separately.
 
 | Layer | Covers | License | Where |
 |-------|--------|---------|-------|
-| **Code** | Everything except `content/` (TS, Svelte, Rust, config, docs) | **AGPL-3.0-or-later** | root `LICENSE` |
-| **Bundled data** | Everything under `content/` (SRD CSVs, catalogs) | **CC-BY-4.0** | `content/LICENSE` + `content/ATTRIBUTION.md` |
+| **Code** | This whole repository (TS, Svelte, Rust, config, docs) | **AGPL-3.0-or-later** | root `LICENSE` |
+| **Bundled data** | The SRD CSVs + catalogs, which live in their own repo ([charnik-content-srd](https://github.com/FernDragonborn/charnik-content-srd)) and are vendored into a build | **CC-BY-4.0** | that repo's `LICENSE` + `ATTRIBUTION.md` |
 | **User homebrew** | Content a user adds to their own homebrew CSVs | **owned by its author** — Charnik imposes none | per-`source` metadata |
 
 ## Third-party assets
@@ -30,7 +30,7 @@ including over a network (the Affero clause). Source files declare it machine-re
 ## Data — CC-BY-4.0
 
 Bundled rules data derives from the WotC **SRD 5.1** and **SRD 5.2.1**, both CC-BY-4.0.
-Reuse is free; **attribution must be kept** (`content/ATTRIBUTION.md`). Charnik ships
+Reuse is free; **attribution must be kept** (the content repo's `ATTRIBUTION.md`). Charnik ships
 SRD-only — users add non-SRD material themselves.
 
 ## Homebrew — author-owned

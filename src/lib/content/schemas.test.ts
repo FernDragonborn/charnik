@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'node:fs';
-import { resolve } from 'node:path';
 import Papa from 'papaparse';
 import { CONTENT_TYPES, parseRow, type ContentType } from './schemas';
 import { parseContentDirectives } from './meta';
+import { packFile } from '../../test-support/real-content';
 
 describe('content schemas — unit', () => {
 	it('accepts a well-formed species row and namespaced systems', () => {
@@ -105,13 +105,13 @@ describe('content schemas — unit', () => {
 // The seeded SRD pack is the canonical fixture (docs/TESTING.md): every shipped row must
 // validate against its schema. This gate keeps data and schema from drifting apart.
 describe('seeded SRD packs validate', () => {
-	// Both edition roots (SRD 5.2.1 = 5.5e, SRD 5.1 = 5e). Every shipped row must validate.
-	const roots = ['content/srd-2024', 'content/srd-2014'];
+	// Both edition packs (SRD 5.2.1 = 5.5e, SRD 5.1 = 5e). Every shipped row must validate.
+	const packs = ['srd-2024', 'srd-2014'];
 
-	for (const root of roots) {
+	for (const pack of packs) {
 		for (const [type, def] of Object.entries(CONTENT_TYPES)) {
-			const file = resolve(process.cwd(), root, `${def.filebase}_srd.csv`);
-			it(`${root}/${def.filebase}: every row parses as ${type}`, () => {
+			const file = packFile(pack, `${def.filebase}_srd.csv`);
+			it(`${pack}/${def.filebase}: every row parses as ${type}`, () => {
 				if (!existsSync(file)) {
 					// a type may not exist in a given edition yet; skip
 					return;

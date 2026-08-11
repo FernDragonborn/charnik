@@ -1,5 +1,5 @@
 /*
- * SRD 5.2.1 (CC-BY-4.0) → content/srd/items_srd.csv
+ * SRD 5.2.1 (CC-BY-4.0) → srd/items_srd.csv
  * Weapons + armor from the HTML tables in equipment.md, adventuring gear from its
  * `#### Name (cost)` blocks, and magic items from magic-items.md. All tagged 5.5e.
  * Counts are asserted against the source. Run: node tools/srd/convert-items.mjs
@@ -16,6 +16,7 @@ import {
 	dedupeIds,
 	existingColById
 } from './lib.mjs';
+import { packDir } from '../content-repo.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -190,7 +191,7 @@ assertCount('gear', nGear, 81);
 // Magic-item `effects` tokens are authored AFTER conversion (MAGIC-ITEM-EFX) — curated from the SRD
 // text into the bounded vocabulary, not present as such in the prose. Preserve them by id, or a raw
 // re-run silently wipes the authoring (the failure class_features/conditions already hit).
-const authoredEffects = existingColById(resolve(root, 'content/srd-2024/items_srd.csv'), 'effects');
+const authoredEffects = existingColById(resolve(packDir('srd-2024'), 'items_srd.csv'), 'effects');
 
 // A magic item is a `####` block whose first italic meta line carries a rarity
 // (or "Rarity Varies"). Excludes the intro sections (no italic meta) and the embedded
@@ -236,7 +237,7 @@ for (const b of blocks(src('magic-items.md'))) {
 assertCount('magic items', nMagic, 258);
 
 dedupeIds(rows);
-writeCsv(resolve(root, 'content/srd-2024/items_srd.csv'), COLUMNS, rows);
+writeCsv(resolve(packDir('srd-2024'), 'items_srd.csv'), COLUMNS, rows);
 console.log(
 	`wrote ${rows.length} items (weapons ${nWeapon}, armor ${nArmor}, gear ${nGear}, magic ${nMagic})`
 );

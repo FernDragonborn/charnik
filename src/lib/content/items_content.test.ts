@@ -1,26 +1,25 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
 import { MemoryStorage } from '../storage/memory';
 import { loadContent } from './loader';
 import { parseToken, splitGuard } from '../effects/token-parser';
+import { readPackFile } from '../../test-support/real-content';
 
 /*
  * Guards the SHIPPED magic-item data (MAGIC-ITEM-EFX authoring): the `effects` tokens we filled must
  * load cleanly, re-hash without drift, and be KNOWN kinds — a typo'd token silently degrades to an
- * inert note, which is exactly the failure this data is meant to fix. Reads the real content/ files.
+ * inert note, which is exactly the failure this data is meant to fix. Reads the real shipped files.
  *
  * The VALUES are hand-checked against each edition's own SRD text, so they're asserted literally: a
  * converter re-run that wipes the column (the class_features/conditions failure mode) fails here.
  */
 const EDITIONS = [
-	['5.5e', 'content/srd-2024/items_srd.csv'],
-	['5e', 'content/srd-2014/items_srd.csv']
+	['5.5e', 'srd-2024'],
+	['5e', 'srd-2014']
 ] as const;
 
-async function loadEdition(path: string) {
-	const csv = readFileSync(`${process.cwd()}/${path}`, 'utf8');
+async function loadEdition(pack: string) {
 	const s = new MemoryStorage();
-	await s.write('c/items_srd.csv', csv);
+	await s.write('c/items_srd.csv', readPackFile(pack, 'items_srd.csv'));
 	return loadContent(s, ['c']);
 }
 

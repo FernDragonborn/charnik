@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { readdirSync, readFileSync } from 'node:fs';
-import { MemoryStorage } from '../storage/memory';
-import { loadContent, type ContentGraph } from './loader';
+import { type ContentGraph } from './loader';
+import { loadPacks } from '../../test-support/real-content';
 import { newCharacter, characterSchema, type Character } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { expertiseBudget, halfFeatAbilities } from '../build/derive';
@@ -10,15 +9,9 @@ import { expertiseBudget, halfFeatAbilities } from '../build/derive';
  * Guards SHIPPED class-feature effect tokens (EFX-E4 authoring): a barbarian must derive the Rage
  * uses pool from `barbarian_rage`'s authored `grant_resource:rage:step(...)`. Pins the RAW use
  * counts per level in BOTH editions — including the 5.1-only `20->inf` → ∞ (the ∞-render case).
- * Reads the real content/ files, so a wiped/typo'd token fails here.
+ * Reads the real shipped files, so a wiped/typo'd token fails here.
  */
-async function loadEdition(dir: string): Promise<ContentGraph> {
-	const s = new MemoryStorage();
-	for (const f of readdirSync(`${process.cwd()}/${dir}`))
-		if (f.endsWith('.csv'))
-			await s.write(`c/${f}`, readFileSync(`${process.cwd()}/${dir}/${f}`, 'utf8'));
-	return loadContent(s, ['c']);
-}
+const loadEdition = (pack: string): Promise<ContentGraph> => loadPacks(pack);
 
 function charOf(source: string, system: '5e' | '5.5e', classId: string, level: number): Character {
 	const c = newCharacter('grog', 'Grog', system);
@@ -52,14 +45,14 @@ function rageMax(
 
 describe('shipped class features · Rage resource (EFX-E4)', () => {
 	it('5.5e (SRD 5.2.1): Rage uses step 1→2, 3→3, 6→4, 12→5, 17→6, capped at 6', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		expect(rageMax(g, 'SRD 5.2.1', '5.5e', 1)).toBe(2);
 		expect(rageMax(g, 'SRD 5.2.1', '5.5e', 6)).toBe(4);
 		expect(rageMax(g, 'SRD 5.2.1', '5.5e', 20)).toBe(6); // no unlimited in 2024
 	});
 
 	it('5e (SRD 5.1): same ladder but level 20 = Unlimited (∞)', async () => {
-		const g = await loadEdition('content/srd-2014');
+		const g = await loadEdition('srd-2014');
 		expect(rageMax(g, 'SRD 5.1', '5e', 1)).toBe(2);
 		expect(rageMax(g, 'SRD 5.1', '5e', 12)).toBe(5);
 		expect(rageMax(g, 'SRD 5.1', '5e', 20)).toBe(Infinity); // 20->inf terminal
@@ -69,17 +62,15 @@ describe('shipped class features · Rage resource (EFX-E4)', () => {
 		const rechargeOf = (g: ContentGraph, source: string, system: '5e' | '5.5e') =>
 			deriveSheet(barbarian(source, system, 3), g).resources.find((r) => r.id === 'rage')?.recharge;
 		// SRD 5.2.1: "regain one expended use when you finish a Short Rest, all on a Long Rest"
-		expect(rechargeOf(await loadEdition('content/srd-2024'), 'SRD 5.2.1', '5.5e')).toBe(
-			'short_one'
-		);
+		expect(rechargeOf(await loadEdition('srd-2024'), 'SRD 5.2.1', '5.5e')).toBe('short_one');
 		// SRD 5.1: "must finish a long rest before you can rage again"
-		expect(rechargeOf(await loadEdition('content/srd-2014'), 'SRD 5.1', '5e')).toBe('long');
+		expect(rechargeOf(await loadEdition('srd-2014'), 'SRD 5.1', '5e')).toBe('long');
 	});
 });
 
 describe('shipped class features · Persistent Rage regain (RECHARGE slice 2)', () => {
 	it('5.5e: Barb 15 grants the once/long-rest gate + a restore_resource:rage option gated to combat start', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const c = barbarian('SRD 5.2.1', '5.5e', 15);
 		const out = deriveSheet(c, g);
 		// the "once per Long Rest" gate resource
@@ -101,7 +92,7 @@ describe('shipped class features · Persistent Rage regain (RECHARGE slice 2)', 
 	});
 
 	it('5.5e: a barbarian below level 15 has neither the gate nor the regain option', async () => {
-		const s = deriveSheet(barbarian('SRD 5.2.1', '5.5e', 5), await loadEdition('content/srd-2024'));
+		const s = deriveSheet(barbarian('SRD 5.2.1', '5.5e', 5), await loadEdition('srd-2024'));
 		expect(s.resources.some((r) => r.id === 'persistent_rage')).toBe(false);
 		expect(s.resourceOptions.some((o) => o.id === 'barbarian_persistent_rage_regain')).toBe(false);
 	});
@@ -109,7 +100,7 @@ describe('shipped class features · Persistent Rage regain (RECHARGE slice 2)', 
 
 describe('shipped class feature · Uncanny Metabolism MULTI-action regain (RECHARGE slice 2 / N2)', () => {
 	it('5.5e: Monk 2 gets the once/long gate + a combat-start option that regains focus AND heals (MA die + level)', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const c = charOf('SRD 5.2.1', '5.5e', 'monk', 2);
 		const out = deriveSheet(c, g);
 		const gate = out.resources.find((r) => r.id === 'uncanny_metabolism');
@@ -132,7 +123,7 @@ describe('shipped class feature · Uncanny Metabolism MULTI-action regain (RECHA
 	it('5.5e: the Martial-Arts die in the multi-action heal scales with monk level (d10 + 11 at L11)', async () => {
 		const opt = deriveSheet(
 			charOf('SRD 5.2.1', '5.5e', 'monk', 11),
-			await loadEdition('content/srd-2024')
+			await loadEdition('srd-2024')
 		).resourceOptions.find((o) => o.id === 'monk_uncanny_metabolism_regain');
 		expect(opt?.action).toBe('restore_resource:focus;heal:1d10+11');
 	});
@@ -148,10 +139,7 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 		return deriveSheet(characterSchema.parse(c), g);
 	};
 
-	it.each([
-		['content/srd-2024', 'SRD 5.2.1', '5.5e'] as const,
-		['content/srd-2014', 'SRD 5.1', '5e'] as const
-	])(
+	it.each([['srd-2024', 'SRD 5.2.1', '5.5e'] as const, ['srd-2014', 'SRD 5.1', '5e'] as const])(
 		'%s: a barbarian has an "Enter Rage" bonus-action option that spends a rage use',
 		async (dir, source, system) => {
 			const sheet = deriveSheet(
@@ -166,10 +154,7 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 		}
 	);
 
-	it.each([
-		['content/srd-2024', 'SRD 5.2.1', '5.5e'] as const,
-		['content/srd-2014', 'SRD 5.1', '5e'] as const
-	])(
+	it.each([['srd-2024', 'SRD 5.2.1', '5.5e'] as const, ['srd-2014', 'SRD 5.1', '5e'] as const])(
 		'%s: raging grants b/p/s resistance + advantage on Strength saves',
 		async (dir, source, system) => {
 			const s = raging(await loadEdition(dir), source, system as '5e' | '5.5e', 1);
@@ -179,7 +164,7 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 	);
 
 	it('5.5e: rage damage bonus scales +2 → +3 (L9) → +4 (L16) as a damage roll fact', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const rageDamage = (level: number) =>
 			raging(g, 'SRD 5.2.1', '5.5e', level).facts.numeric.find((f) => f.target === 'damage')
 				?.amount;
@@ -191,7 +176,7 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 
 describe('shipped feat · Savage Attacker damage-reroll marker (N2)', () => {
 	it('grants a data-driven `damage_reroll` fact labelled from the feat name (2024 origin feat)', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const c = charOf('SRD 5.2.1', '5.5e', 'fighter', 1);
 		c.build.feats = ['feat:SRD 5.2.1:savage_attacker'];
 		const sheet = deriveSheet(c, g);
@@ -203,10 +188,7 @@ describe('shipped feat · Savage Attacker damage-reroll marker (N2)', () => {
 
 describe('shipped class feature · Perfect Focus auto-regain on initiative (regain_on_initiative)', () => {
 	it('5.5e: Monk 15 carries a regain_on_initiative fact restoring Focus up to 4', async () => {
-		const s = deriveSheet(
-			charOf('SRD 5.2.1', '5.5e', 'monk', 15),
-			await loadEdition('content/srd-2024')
-		);
+		const s = deriveSheet(charOf('SRD 5.2.1', '5.5e', 'monk', 15), await loadEdition('srd-2024'));
 		expect(s.facts.initiativeRegain).toContainEqual({
 			id: 'focus',
 			upTo: 4,
@@ -214,10 +196,7 @@ describe('shipped class feature · Perfect Focus auto-regain on initiative (rega
 		});
 	});
 	it('5.5e: a monk below level 15 has no initiative-regain', async () => {
-		const s = deriveSheet(
-			charOf('SRD 5.2.1', '5.5e', 'monk', 5),
-			await loadEdition('content/srd-2024')
-		);
+		const s = deriveSheet(charOf('SRD 5.2.1', '5.5e', 'monk', 5), await loadEdition('srd-2024'));
 		expect(s.facts.initiativeRegain).toEqual([]);
 	});
 });
@@ -237,8 +216,8 @@ describe('shipped class feature · Bardic Inspiration pool + Font of Inspiration
 		s.resources.find((r) => r.id === 'bardic_inspiration');
 
 	for (const [system, source, dir] of [
-		['5.5e', 'SRD 5.2.1', 'content/srd-2024'],
-		['5e', 'SRD 5.1', 'content/srd-2014']
+		['5.5e', 'SRD 5.2.1', 'srd-2024'],
+		['5e', 'SRD 5.1', 'srd-2014']
 	] as const) {
 		it(`${system}: uses = CHA modifier, on a LONG rest before Font of Inspiration`, async () => {
 			const s = deriveSheet(bard(source, system, 4, 16), await loadEdition(dir));
@@ -259,7 +238,7 @@ describe('shipped class feature · Bardic Inspiration pool + Font of Inspiration
 	}
 
 	it('5.5e: Superior Inspiration (18) regains up to TWO on initiative', async () => {
-		const s = deriveSheet(bard('SRD 5.2.1', '5.5e', 18, 16), await loadEdition('content/srd-2024'));
+		const s = deriveSheet(bard('SRD 5.2.1', '5.5e', 18, 16), await loadEdition('srd-2024'));
 		expect(s.facts.initiativeRegain).toContainEqual({
 			id: 'bardic_inspiration',
 			upTo: 2,
@@ -268,7 +247,7 @@ describe('shipped class feature · Bardic Inspiration pool + Font of Inspiration
 	});
 
 	it('5e: Superior Inspiration (20) regains up to ONE — "if you have none left, regain one"', async () => {
-		const s = deriveSheet(bard('SRD 5.1', '5e', 20, 16), await loadEdition('content/srd-2014'));
+		const s = deriveSheet(bard('SRD 5.1', '5e', 20, 16), await loadEdition('srd-2014'));
 		expect(s.facts.initiativeRegain).toContainEqual({
 			id: 'bardic_inspiration',
 			upTo: 1,
@@ -279,14 +258,14 @@ describe('shipped class feature · Bardic Inspiration pool + Font of Inspiration
 
 describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', () => {
 	it('5.5e: Sneak Attack Nd6, Bardic Inspiration + Martial Arts dice scale by class level', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		expect(rollFormula(g, 'SRD 5.2.1', '5.5e', 'rogue', 6, 'sneak_attack')).toBe('3d6'); // ceil(6/2)
 		expect(rollFormula(g, 'SRD 5.2.1', '5.5e', 'bard', 5, 'bardic_inspiration')).toBe('1d8');
 		expect(rollFormula(g, 'SRD 5.2.1', '5.5e', 'monk', 11, 'martial_arts')).toBe('1d10'); // 2024: d6-start
 	});
 
 	it('5e: Martial Arts die starts a step lower than 2024 (d4 vs d6)', async () => {
-		const g = await loadEdition('content/srd-2014');
+		const g = await loadEdition('srd-2014');
 		expect(rollFormula(g, 'SRD 5.1', '5e', 'rogue', 20, 'sneak_attack')).toBe('10d6');
 		expect(rollFormula(g, 'SRD 5.1', '5e', 'monk', 1, 'martial_arts')).toBe('1d4'); // 2014: d4-start
 		expect(rollFormula(g, 'SRD 5.1', '5e', 'monk', 11, 'martial_arts')).toBe('1d8');
@@ -295,8 +274,8 @@ describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', (
 
 describe('shipped Monk resource + spend-options (piece 3)', () => {
 	it.each([
-		['content/srd-2024', 'SRD 5.2.1', '5.5e', 'focus'] as const,
-		['content/srd-2014', 'SRD 5.1', '5e', 'ki'] as const
+		['srd-2024', 'SRD 5.2.1', '5.5e', 'focus'] as const,
+		['srd-2014', 'SRD 5.1', '5e', 'ki'] as const
 	])(
 		'%s: a monk 5 has %s points = level, with Flurry/Patient/Step options at cost 1',
 		async (dir, source, system, resourceId) => {
@@ -316,7 +295,7 @@ describe('shipped Monk resource + spend-options (piece 3)', () => {
 
 describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {
 	it('scales the d20-test penalty (−2×level) and speed (−5×level) off play.exhaustion', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const at = (level: number) => {
 			const c = barbarian('SRD 5.2.1', '5.5e', 5);
 			c.play.exhaustion = level;
@@ -331,7 +310,7 @@ describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {
 	});
 
 	it('5e (SRD 5.1): cumulative ladder — L1 disadv on ability checks, L2 speed halved, L5 speed 0', async () => {
-		const g = await loadEdition('content/srd-2014');
+		const g = await loadEdition('srd-2014');
 		const at = (level: number) => {
 			const c = charOf('SRD 5.1', '5e', 'barbarian', 5);
 			c.play.exhaustion = level;
@@ -350,7 +329,7 @@ describe('shipped 2024 Exhaustion ladder (EFX-EXH)', () => {
 
 describe('shipped feat effects (real content)', () => {
 	it('2024 Alert adds the proficiency bonus to initiative', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const sheetWith = (feats: string[]) => {
 			const c = newCharacter('grog', 'Grog', '5.5e');
 			c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 5 }]; // PB +3 at level 5
@@ -363,7 +342,7 @@ describe('shipped feat effects (real content)', () => {
 	});
 
 	it('2024 Defense fighting style grants +1 AC only while wearing armor', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const ac = (feats: string[], armored: boolean) => {
 			const c = newCharacter('grog', 'Grog', '5.5e');
 			c.build.classes = [{ class: 'class:SRD 5.2.1:fighter', level: 1 }];
@@ -384,7 +363,7 @@ describe('shipped feat effects (real content)', () => {
 	});
 
 	it('2024 half-feats carry their ability_choice (Grappler STR/DEX, Epic Boons any)', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const choiceOf = (id: string) => {
 			const row = g.get(`feat:SRD 5.2.1:${id}`);
 			return row?.type === 'feat' ? halfFeatAbilities(row.data.ability_choice) : null;
@@ -395,7 +374,7 @@ describe('shipped feat effects (real content)', () => {
 	});
 
 	it('§C: Skilled carries skill_choice=3 (the choice-grant count); other feats have none', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const skillChoiceOf = (id: string) => {
 			const row = g.get(`feat:SRD 5.2.1:${id}`);
 			return row?.type === 'feat' ? row.data.skill_choice : null;
@@ -405,7 +384,7 @@ describe('shipped feat effects (real content)', () => {
 	});
 
 	it('§B: Great Weapon Fighting encodes a two-handed/versatile-melee damage floor (min_die 3)', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const row = g.get('feat:SRD 5.2.1:great_weapon_fighting');
 		const tokens = row?.type === 'feat' ? row.data.effects : [];
 		// "treat any 1 or 2 as a 3" = min_die floor 3; the OR (two-handed OR versatile) = two AND-scoped
@@ -425,7 +404,7 @@ describe('N4a · shipped expertise_slots grants (real content)', () => {
 			);
 
 	it('2024: Rogue 2@L1 +2@L6, Bard 2@L2 +2@L9, Ranger 2@L9', async () => {
-		const b = budgetAt(await loadEdition('content/srd-2024'), 'SRD 5.2.1', '5.5e');
+		const b = budgetAt(await loadEdition('srd-2024'), 'SRD 5.2.1', '5.5e');
 		expect(b('rogue', 1)).toBe(2);
 		expect(b('rogue', 5)).toBe(2);
 		expect(b('rogue', 6)).toBe(4);
@@ -435,7 +414,7 @@ describe('N4a · shipped expertise_slots grants (real content)', () => {
 		expect(b('ranger', 9)).toBe(2);
 	});
 	it('2014: Rogue 2@L1 +2@L6, Bard 2@L3 +2@L10 (no Ranger expertise)', async () => {
-		const b = budgetAt(await loadEdition('content/srd-2014'), 'SRD 5.1', '5e');
+		const b = budgetAt(await loadEdition('srd-2014'), 'SRD 5.1', '5e');
 		expect(b('rogue', 1)).toBe(2);
 		expect(b('rogue', 6)).toBe(4);
 		expect(b('bard', 3)).toBe(2);
@@ -443,7 +422,7 @@ describe('N4a · shipped expertise_slots grants (real content)', () => {
 		expect(b('ranger', 20)).toBe(0);
 	});
 	it('a multiclass sums each class independently (Rogue 6 / Bard 10 → 4 + 4 = 8)', async () => {
-		const g = await loadEdition('content/srd-2024');
+		const g = await loadEdition('srd-2024');
 		const budget = expertiseBudget(
 			[
 				{ classId: 'class:SRD 5.2.1:rogue', subclassId: null, level: 6 },
