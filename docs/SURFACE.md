@@ -705,6 +705,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface RemotePack` — A remote pack: a TOP-LEVEL folder holding content files — the same test as the local * `discoverContentRoots`, applie…
 - `const isPackFile` — A file a pack actually ships: content CSVs, plus the plugin files a pack may carry (§ PLUGINS 2).
 - `function packsFromTree` — * Group a GitHub tree response into packs.
+- `function packTooLarge` — * Is this pack too big to touch?
+- `function packSizeRefusal` — The refusal as the UI states it: which pack, how big it is, and what the ceiling was.
 - `type CheckResult` — What a check found.
 - `function checkRepo` — * Ask ONE repo what it holds.
 
@@ -732,6 +734,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type FetchResult` — A conditional GET result.
 - `interface RemoteFetcher`
 - `const MAX_REMOTE_BYTES` — Bytes above this are refused rather than buffered — a content CSV is measured in hundreds of KB, * and an unbounded r…
+- `const MAX_PACK_FILES` — * …and the same question asked of a whole PACK, which `MAX_REMOTE_BYTES` cannot answer: it bounds one * response, so …
+- `const MAX_PACK_BYTES`
 - `type UpdateError` — * A failure the UI can show.
 
 ### `src/lib/content/schemas.ts`
@@ -1222,4 +1226,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 705 exports across 100 modules · 36 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 709 exports across 100 modules · 36 duplicate suspects._

@@ -23,7 +23,13 @@ import {
 	UPDATE_MODE,
 	type PackConfigData
 } from '../packs.svelte';
-import { checkRepo, parseGithubRepo, type RemotePack } from './github';
+import {
+	checkRepo,
+	packSizeRefusal,
+	packTooLarge,
+	parseGithubRepo,
+	type RemotePack
+} from './github';
 import { diffPack, hasWrites, rowsRemovedBy, charactersReferencing, type PackDiff } from './diff';
 import {
 	applyPackUpdate,
@@ -221,6 +227,14 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
  * same function can rebuild the panel at launch from the remembered list, with no request at all.
  */
 async function describeUpdate(repo: string, remote: RemotePack): Promise<PendingUpdate | null> {
+	// Before anything downstream can fetch a byte. Both callers reach the network from here — a check
+	// in `download` mode stages the whole diff immediately, and a restored offer is one click from
+	// doing the same — so the count/size ceiling belongs at this fork rather than at either of them.
+	const tooLarge = packSizeRefusal(remote);
+	if (tooLarge) {
+		updates.error = tooLarge;
+		return null;
+	}
 	const storage = getUserStorage();
 	const diff = await diffPack(storage, remote);
 	const removals = diff.changes.filter((c) => c.kind === 'removed');
@@ -405,8 +419,12 @@ export async function discoverPacks(
 		// A folder name the app owns is never an installable pack, however the repo spells it —
 		// `homebrew` above all, which would install straight into the user's own authoring root and
 		// make "uninstall that pack" delete everything they ever wrote (`isReservedPackName`).
+		// …and one that would be an unbounded download is refused here rather than half-way through it:
+		// the tree is the only place the whole file list exists before the first byte is asked for.
+		const oversized = res.packs.map(packSizeRefusal).find((e) => e !== null);
+		if (oversized) updates.error = oversized;
 		updates.discovered = res.packs
-			.filter((remote) => !isReservedPackName(remote.pack))
+			.filter((remote) => !isReservedPackName(remote.pack) && packTooLarge(remote) === null)
 			.map((remote) => ({
 				pack: remote.pack,
 				repo,
@@ -415,7 +433,8 @@ export async function discoverPacks(
 				plugins: pluginsIn(remote),
 				installed: packConfig.packs[remote.pack] !== undefined
 			}));
-		if (updates.discovered.length === 0)
+		// "nothing here" is the wrong thing to say when we found something and refused it for size
+		if (updates.discovered.length === 0 && !oversized)
 			updates.error = { kind: 'i18n', key: 'settings.packs.noPacksFound', values: { repo } };
 	} finally {
 		updates.checking = false;

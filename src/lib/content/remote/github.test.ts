@@ -10,10 +10,13 @@ import {
 	treeUrl,
 	rawUrl,
 	packsFromTree,
+	packSizeRefusal,
+	packTooLarge,
 	checkRepo,
-	type GithubRepo
+	type GithubRepo,
+	type RemotePack
 } from './github';
-import type { RemoteFetcher, FetchResult } from './types';
+import { MAX_PACK_BYTES, MAX_PACK_FILES, type RemoteFetcher, type FetchResult } from './types';
 
 const REPO: GithubRepo = { owner: 'FernDragonborn', repo: 'charnik-content-srd', branch: 'main' };
 
@@ -97,6 +100,52 @@ describe('packsFromTree — a pack is a TOP-LEVEL folder, same rule as locally',
 		expect(packsFromTree('{oops')).toEqual([]);
 		expect(packsFromTree('{}')).toEqual([]);
 		expect(packsFromTree(JSON.stringify({ tree: 'nope' }))).toEqual([]);
+	});
+});
+
+/* `MAX_REMOTE_BYTES` bounds one RESPONSE, so fifty thousand small files clear it fifty thousand
+   times over — and `download` mode fetches without asking. The tree is the only moment a runaway
+   repo is still just a list. */
+describe('a pack too big to download is refused off the tree, before the first byte', () => {
+	const sized = (count: number, size: number): RemotePack => ({
+		pack: 'huge',
+		files: Array.from({ length: count }, (_, i) => ({ path: `huge/${i}.csv`, sha: `${i}`, size }))
+	});
+
+	it('passes a pack the size of the one we ship', () => {
+		expect(packTooLarge(sized(15, 150_000))).toBeNull();
+	});
+
+	it('refuses on file COUNT even when every file is tiny', () => {
+		expect(packTooLarge(sized(MAX_PACK_FILES + 1, 1))).toEqual({
+			files: MAX_PACK_FILES + 1,
+			bytes: MAX_PACK_FILES + 1
+		});
+	});
+
+	it('refuses on total BYTES even when there are few files', () => {
+		expect(packTooLarge(sized(3, MAX_PACK_BYTES))?.files).toBe(3);
+	});
+
+	it('counts an unstated size as zero — a listing without sizes still gets the count cap', () => {
+		const noSizes: RemotePack = { pack: 'p', files: [{ path: 'p/a.csv', sha: 'a' }] };
+		expect(packTooLarge(noSizes)).toBeNull();
+		expect(packSizeRefusal(noSizes)).toBeNull();
+	});
+
+	it('says which pack, how big, and what the ceiling was', () => {
+		expect(packSizeRefusal(sized(4, 20 * 1024 * 1024))).toEqual({
+			kind: 'i18n',
+			key: 'settings.packs.packTooLarge',
+			values: { pack: 'huge', files: 4, mb: 80, maxFiles: MAX_PACK_FILES, maxMb: 50 }
+		});
+	});
+
+	it('the tree carries the sizes through, so the cap has something to read', () => {
+		const json = JSON.stringify({
+			tree: [{ path: 'p/a.csv', sha: 'a', type: 'blob', size: 4096 }]
+		});
+		expect(packsFromTree(json)[0]?.files[0]?.size).toBe(4096);
 	});
 });
 

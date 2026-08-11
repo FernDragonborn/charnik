@@ -20,7 +20,7 @@
  * Rust), at which point the `unsupported` branch grows a real fallback. Until then this file is the
  * fast path AND the only path — deliberately.
  */
-import type { RemoteFetcher } from './types';
+import { MAX_PACK_BYTES, MAX_PACK_FILES, type RemoteFetcher, type UpdateError } from './types';
 
 /** `owner/repo` parsed out of any reasonable GitHub URL the user might paste. */
 export interface GithubRepo {
@@ -64,6 +64,10 @@ export const rawUrl = ({ owner, repo, branch }: GithubRepo, path: string): strin
 export interface RemoteFile {
 	path: string;
 	sha: string;
+	/** Byte length, as the tree listing states it. Optional because a REMEMBERED listing (read back
+	 *  from the registry after a restart) carries only what identifies a file, and because a future
+	 *  non-GitHub adapter may not know sizes before downloading. */
+	size?: number;
 }
 
 /** A remote pack: a TOP-LEVEL folder holding content files — the same test as the local
@@ -77,6 +81,7 @@ interface TreeEntry {
 	path?: unknown;
 	type?: unknown;
 	sha?: unknown;
+	size?: unknown;
 }
 
 /** A file a pack actually ships: content CSVs, plus the plugin files a pack may carry (§ PLUGINS 2).
@@ -105,19 +110,55 @@ export function packsFromTree(json: string): RemotePack[] {
 
 	const byPack = new Map<string, RemoteFile[]>();
 	for (const raw of entries as TreeEntry[]) {
-		const { path, type, sha } = raw;
+		const { path, type, sha, size } = raw;
 		if (typeof path !== 'string' || typeof sha !== 'string' || type !== 'blob') continue;
 		if (!isPackFile(path)) continue;
 		const [pack, ...rest] = path.split('/');
 		// a file at the repo root belongs to no pack (README, LICENSE); a pack needs a folder
 		if (pack === undefined || rest.length === 0) continue;
 		const list = byPack.get(pack) ?? [];
-		list.push({ path, sha });
+		list.push(typeof size === 'number' ? { path, sha, size } : { path, sha });
 		byPack.set(pack, list);
 	}
 	return [...byPack.entries()]
 		.map(([pack, files]) => ({ pack, files: files.sort((a, b) => a.path.localeCompare(b.path)) }))
 		.sort((a, b) => a.pack.localeCompare(b.pack));
+}
+
+/**
+ * Is this pack too big to touch? Answered from the TREE — the listing that arrives in one request,
+ * states every path and size, and is the last thing we see before the first file is asked for.
+ *
+ * That timing is the whole point. `MAX_REMOTE_BYTES` bounds one response, so fifty thousand small
+ * files clear it fifty thousand times over, and `download` mode fetches without asking anyone. The
+ * only moment to refuse a runaway repo is while it is still a list.
+ *
+ * A file whose size the listing didn't state counts as zero rather than blocking the pack: the count
+ * cap still applies, and the per-response cap is still there behind it. Refusing on missing metadata
+ * would break every future adapter that has a file list but no sizes.
+ */
+export function packTooLarge(remote: RemotePack): { files: number; bytes: number } | null {
+	const files = remote.files.length;
+	const bytes = remote.files.reduce((sum, f) => sum + (f.size ?? 0), 0);
+	return files > MAX_PACK_FILES || bytes > MAX_PACK_BYTES ? { files, bytes } : null;
+}
+
+/** The refusal as the UI states it: which pack, how big it is, and what the ceiling was. */
+export function packSizeRefusal(remote: RemotePack): UpdateError | null {
+	const over = packTooLarge(remote);
+	return over === null
+		? null
+		: {
+				kind: 'i18n',
+				key: 'settings.packs.packTooLarge',
+				values: {
+					pack: remote.pack,
+					files: over.files,
+					mb: Math.ceil(over.bytes / (1024 * 1024)),
+					maxFiles: MAX_PACK_FILES,
+					maxMb: MAX_PACK_BYTES / (1024 * 1024)
+				}
+			};
 }
 
 /** What a check found. `unchanged` is the `304` path — free, and the common one. */

@@ -26,6 +26,21 @@ export interface RemoteFetcher {
 export const MAX_REMOTE_BYTES = 8 * 1024 * 1024;
 
 /**
+ * …and the same question asked of a whole PACK, which `MAX_REMOTE_BYTES` cannot answer: it bounds one
+ * response, so fifty thousand small files pass it fifty thousand times over. `download` mode fetches
+ * without asking, so a repo like that is an automatic unbounded download — the cap has to be read off
+ * the tree listing, which arrives in one request and states every path and size, and it has to be
+ * read BEFORE the first file is asked for.
+ *
+ * Sized against the thing we ship: the SRD pack is 15 files and about 2 MB, so this leaves roughly a
+ * factor of thirty for a large third-party compendium with illustrations or plugins. Raise them here
+ * if a legitimate pack ever hits one — they are a guard against a runaway, not a statement about how
+ * big content is allowed to be.
+ */
+export const MAX_PACK_FILES = 200;
+export const MAX_PACK_BYTES = 50 * 1024 * 1024;
+
+/**
  * A failure the UI can show. Two kinds on purpose: `i18n` is copy WE author (translatable, values
  * interpolated by the component), `raw` is what the network stack handed us — a machine string we
  * must not pretend to have written. Keeping them apart is what stops new untranslated English
