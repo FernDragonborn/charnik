@@ -73,7 +73,10 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > `raw.githubusercontent.com/*` (with `http://**` denied), which covers the shipped SRD pack and
    > any GitHub-published one. Supporting an arbitrary self-hosted URL means choosing between a
    > wildcard capability and a Rust-side dynamic check — decide it when someone actually needs it,
-   > don't widen the manifest speculatively.
+   > don't widen the manifest speculatively. **That decision is now its own backlog item, PLAN
+   > REL-5**, scheduled for much later: the intended answer is a per-host user GRANT checked in Rust
+   > (paste URL → "allow this host?" → stored outside the dataDir, so a restored backup cannot
+   > arrive pre-authorised), never a wildcard on its own.
    >
    > **Downloaded bytes are checked against the SHA they were diffed against** — the git blob SHA
    > the repo tree published, verified before a single file is written and again on anything read

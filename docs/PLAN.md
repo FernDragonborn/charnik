@@ -1006,12 +1006,12 @@ The order the maintainer and Claude are actually working to. Wave = a coherent c
 the SEQUENCING REASONS matter more than the numbering and are given per wave, because most of them
 were learned the hard way.
 
-- **W0 · REL-4 content packs — IN PROGRESS.** The maintainer's priority: get SRD content out of the
-  app so rules data updates without an app release. Slice 1 done (`ccd247c`, a pack is a folder,
-  discovered by scanning) and slice 0 done 2026-08-11 (the content is its own repo; everything that
-  reads it goes through `tools/content-repo.mjs`). Next is slice 2, the Rust fetcher.
-  **Consequence worth planning around:** after W0 the content passes
-  (MAGIC-ITEM-EFX, E4, D6/D10) leave the app roadmap entirely; they ship from the content repo.
+- **W0 · REL-4 content packs — DONE 2026-08-11** (slices 0–11, then an architectural audit whose own
+  open list is closed too; `0cf0c4c` is the tip). SRD content is out of the app and updates without a
+  release. The one thing carved OFF rather than finished is a generic non-GitHub HTTPS host, now
+  **REL-5**, deliberately not in any wave.
+  **Consequence, now live:** the content passes (MAGIC-ITEM-EFX, E4, D6/D10) have left the app
+  roadmap entirely; they ship from the content repo.
 - **W1 · Roll card (UBUG-20 + UX-3) — DONE 2026-08-10.** One `RollRow` across toast / Playbar / log /
   tray, retroactive advantage as a three-state pill, the reroll pill, the one-line strip. Tails are
   listed on UBUG-20 itself.
@@ -1356,10 +1356,11 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [x] **REL-3 · Desktop content re-seed on update.** A `CONTENT_SEED_VERSION` marker re-seeds
   shipped files on update, preserving any the user hand-edited (hash drift). The "bump it whenever
   shipped SRD data changes" rule lives on the constant itself (`schema/version.ts`).
-- [x] **REL-4 · Content packs from a URL — update content independently of the app (maintainer
-  2026-08-10; slices 0–11 BUILT and verified against the real GitHub 2026-08-11, then audited
-  architecturally the same day — see ARCHITECTURAL AUDIT + STILL OPEN below, which is where the
-  remaining work lives).** The ask: a Settings field where you paste
+- [x] **REL-4 · Content packs from a URL — update content independently of the app. CLOSED
+  2026-08-11** (maintainer 2026-08-10; slices 0–11 built and verified against the real GitHub, then
+  audited architecturally, and that audit's own list closed the same day — `0cf0c4c`). Nothing here
+  is open: reaching a NON-GitHub host was carved out to **REL-5** as a separate, much-later feature.
+  **The ask:** a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
   updated without shipping an app release.
@@ -1667,13 +1668,12 @@ holds the done-work log; these are the OPEN tails it carried):**
     section to land there would have been erased by the next pin. Sections via
     `storage/json-config.ts`; the dev-only content pointer moved to `charnik.dev.json`.
 
-  **THE AUDIT'S OPEN LIST, CLOSED (2026-08-11, `59ffc26`..`bdac8ed`).** Nine of the ten items below
-  are done; the tenth is deferred by decision, not by omission.
-  - `[ ]` **A generic (non-GitHub) HTTPS host — STILL DEFERRED**, and re-confirmed by the maintainer
-    on 2026-08-11 rather than merely left alone. See the capability finding in slice 2 and
-    SECURITY.md §7. Next rung: a per-host user grant (paste URL → "allow this host?" → allow-list
-    checked in Rust), at which point `unsupported` grows a fallback. Until then GitHub is the fast
-    path AND the only path, said in the description rather than in a failure.
+  **THE AUDIT'S OPEN LIST, CLOSED (2026-08-11, `59ffc26`..`0cf0c4c`).** Every item below is done.
+  The audit's tenth entry — a generic, non-GitHub HTTPS host — was never a defect in this work and is
+  not a tail of it: it is a separate feature with its own security surface, moved out to **REL-5** on
+  the maintainer's instruction (2026-08-11) so REL-4 closes clean instead of carrying a permanent
+  open box. GitHub stays the fast path AND the only path, said in the description rather than in a
+  failure.
   - `[x]` **A bundled pack can carry plugins** (`e8f5bd6`). The vendoring step, the desktop seed and
     the restore button all listed ONE level while the pack differ walked the folder recursively — so
     the half that writes a bundled pack and the half that compares it disagreed about what was in it.
@@ -1754,11 +1754,9 @@ holds the done-work log; these are the OPEN tails it carried):**
     - `/dev` had no link from anywhere, so both live probes were unreachable from inside the desktop
       app (there is no address bar). The dev index lists them now.
 
-  **A decision taken on Claude's assumption, flag it if it is wrong:**
-  - **Manifest-free leaves no file listing for a generic HTTPS host.** The `#content-*` headers carry
-    everything except *which files exist*. GitHub's tree API supplies that in one request; a plain
-    static host only can if it serves an autoindex. So v1 = GitHub as the fast path, any static host
-    with autoindex as the general case, and still no `pack.json`.
+  **A decision taken on Claude's assumption, flag it if it is wrong:** manifest-free leaves no file
+  listing for a generic HTTPS host, so v1 is GitHub-only. That consequence now lives with the feature
+  it constrains — **REL-5** — rather than here, since it is the thing to decide when that is built.
 
 
   **Settings shape (maintainer-specified).** A dropdown that governs the NETWORK only — *don't check* /
@@ -1824,6 +1822,33 @@ holds the done-work log; these are the OPEN tails it carried):**
     artifact to ship. Revisit if a mac runner/notarization appears (blocked on same as REL-1 macOS).
   Most of these consume the Release artifacts, so they hang off REL-1 (need Linux + eventual mac
   builds published first). Sequence by effort/reach: AppImage (done) → Flathub + WinGet → AUR → Choco.
+- [ ] **REL-5 · A content pack from ANY HTTPS host, not only GitHub — MUCH LATER (maintainer,
+  2026-08-11).** Carved out of REL-4's audit list so that item closes clean: this was never a defect
+  in the pack updater, it is a separate feature with its own security surface, and it is not
+  scheduled into a wave. **Deliberately deferred, not forgotten** — REL-4 was designed so this stays
+  possible: `RemoteFetcher` takes an HTTPS URL and GitHub is a HOST ADAPTER over it, the semantics
+  live in the `#content-*` headers rather than in any forge's API, and file `size` is already an
+  optional field precisely so an adapter that cannot state one still works. Self-hosting is a stated
+  project value; coupling the model to one forge would break it for nothing.
+  - **What actually blocks it is the capability, and no amount of TS solves that.** A Tauri
+    capability is compiled into the binary and cannot be widened at runtime by config, by a pasted
+    URL, or by a bug in the webview — which is exactly why it is the boundary (SECURITY.md §5/§7).
+    So today `src-tauri/capabilities/default.json` allows `api.github.com` +
+    `raw.githubusercontent.com` and nothing else, and `checkRepo` answers `unsupported` for anything
+    else. Widening it wholesale would hand any pasted URL the network, which is the one thing the
+    seam exists to prevent.
+  - **Next rung, when it comes: a per-host user GRANT.** Paste a URL → "allow Charnik to reach
+    `packs.example.org`?" → the answer is stored and the allow-list is checked **in Rust**, not in
+    the webview. The static capability then widens to "any https host, subject to the grant list"
+    and the grant becomes the real gate. At that point `unsupported` grows a fallback instead of
+    being a dead end. Store the grants OUTSIDE the dataDir, for the same reason plugin consent is
+    (PLUGINS §6.3): a restored backup must not be able to arrive pre-authorised.
+  - **And the manifest-free design leaves one genuine gap to answer first.** The `#content-*` headers
+    carry everything except *which files exist*. GitHub's tree API supplies that in one request; a
+    plain static host can only do it if it serves an autoindex. So the general case is "any static
+    host with an autoindex", the answer is still NOT a `pack.json` (AI-CONVENTIONS §1.6), and
+    deciding what to do about a host with neither is part of this item rather than a surprise inside
+    it.
 - [~] **UBUG-4 · Tauri .msi install has no content folders.** CODE DONE (needs a real `.msi` verify).
   The content was bundled inside the app (loaded over fetch) but never written to disk, so there was
   no editable folder. Now `content/provider.ts`: on desktop (`isTauri`), `getContentGraph` SEEDS the
