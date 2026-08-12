@@ -23,6 +23,10 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    Path traversal is blocked by the fs scope *and* validated in the `Storage` interface.
 3. **All IO via the `Storage` interface.** One audited seam; no scattered raw fs; nothing
    above it imports Tauri. The node/in-memory test impl exercises the same validation.
+   > **Half true today** (found 2026-08-12, PLAN · REL-4 "the third pass"): `MemoryStorage` and the
+   > Tauri impl both call `sandboxRelative`; **`NodeStorage` does not** — it resolves straight off
+   > its root. Test/tooling-only for now, but the sentence above is the invariant, so fix the impl,
+   > not the sentence.
 4. **Effects are data, never code.** The effects engine is a **fixed-vocabulary
    interpreter**, not `eval`/a DSL (incl. user-entered custom effects; free text is inert
    display). Malicious content can't execute — worst case it's flagged in content-health.
@@ -54,11 +58,23 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    low-risk — content is data, never HTML, so there's no injection path to abuse it. No remote content loading; no inline
    script; external links open in the OS browser, not the app webview. CSP governs the
    **webview's** network only; it does **not** cover the updater (see below).
+   > **"External links open in the OS browser" is the intent, NOT the code** (found 2026-08-12,
+   > PLAN · REL-4 "the third pass"). Content prose IS rendered as HTML — `ArticleProse` runs
+   > `{@html}` over marked+DOMPurify output, which correctly strips scripts and correctly KEEPS
+   > `<a href>` — and nothing intercepts the click, so a link in a third-party pack's spell text
+   > replaces the whole window with a remote page (no address bar, no back). One delegated handler
+   > → `plugin-opener` closes it; until then this line describes a control that does not exist.
 6. **Image upload hardening.** Allowlist types (png/jpg/webp); size cap; **re-encode**
    (strip EXIF / prevent polyglots); store only inside the character folder (in scope).
 7. **Bundle / content-pack import = data only.** Parsed, **validated (zod) against the
    schema**, surfaced via collision/health UI before use; never executed, never silent
    overwrite.
+   > **The gap validation cannot close is IDENTITY** (found 2026-08-12, PLAN · REL-4 "the third
+   > pass"). A pack declares its own `#content-source`, that tag IS the namespace half of
+   > `source:id`, and it is the only provenance the UI shows — so a pack stamping `SRD 5.2.1`
+   > renders as "D&D 5.5e", shares the official pack's source toggle, and collides ids with it.
+   > Schema validation says the row is well-formed, not that the publisher is who it says. The fix
+   > is a claimed-tag check at install plus showing the PACK in article meta, not more zod.
 
    > **BUILT (REL-4 slices 2–3): fetching content packs from a URL.** It goes through **Rust**
    > (`tauri-plugin-http`, behind the `RemoteFetcher` seam), the same shape as the updater in §1,
