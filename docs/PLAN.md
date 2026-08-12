@@ -1927,6 +1927,45 @@ holds the done-work log; these are the OPEN tails it carried):**
     host with an autoindex", the answer is still NOT a `pack.json` (AI-CONVENTIONS §1.6), and
     deciding what to do about a host with neither is part of this item rather than a surprise inside
     it.
+  - **REL-5a · Pack AUTHENTICITY — the design question, not a task (raised 2026-08-12, third audit
+    pass).** Downloaded bytes are verified against the git blob SHA the tree listing published. That
+    is INTEGRITY against a truncated or swapped transfer; it says nothing about the publisher. A
+    typo-squatted URL, a compromised repo, or an account takeover serves whatever it likes and every
+    check passes. This is stated honestly in SECURITY.md §7 and is the right v1 posture, but it is
+    the last real "the user can be fooled" gap in the external-content chain, and it belongs HERE
+    because a pack from any HTTPS host is exactly when "GitHub told us" stops being an answer.
+
+    **Size the risk before designing for it.** The only thing that EXECUTES is a plugin, and code
+    already has a stronger control than a signature would give it: consent is pinned to a SHA-256 of
+    the exact bytes and stored outside the dataDir, so new code stops running until the user says yes
+    again (PLUGINS §6.3). What unsigned CONTENT can do is quieter — wrong numbers in someone's rules,
+    prose, and a claimed `#content-source` (now warned about, REL-4 third pass). So this is not
+    urgent; it is unfinished.
+
+    **Decisions to take, in the order they block each other:**
+    1. **What is signed?** Per-file signatures need no new file list; one signature over a
+       `path → blob SHA` map is cheaper to verify but IS a manifest, which §1.6 rejects for content.
+       Whether a *signature* sidecar counts as a manifest is the first call, and everything else
+       depends on it.
+    2. **Whose key, and how does it arrive?** A key committed beside the pack is worthless on its own
+       (whoever owns the repo owns the key file). The real options are TOFU — pin the key at install,
+       shout when it changes — or a key pasted out of band with the URL. A Charnik-curated registry
+       of blessed publishers is a THIRD thing and probably not wanted: it makes us the gatekeeper of
+       other people's homebrew.
+    3. **What happens to an unsigned pack?** Almost certainly "install, and say so" rather than
+       refuse — the project ships SRD-only and expects users to add everything else by hand, so a
+       posture that treats unsigned as hostile fights the product. But then the badge has to mean
+       something in the UI, which is design work, not a checkbox.
+    4. **Rotation and revocation.** A pack that arrives signed by a NEW key is either a rotation or an
+       impostor, and nothing in the bytes distinguishes them. The shape of the answer already exists
+       in this codebase: it is the `#content-source` claim check — stop, name both sides, make the
+       user choose once.
+    5. **Where the trust record lives.** Outside the dataDir, for exactly the reason plugin consent
+       is (PLG-SEC 12): a restored "campaign backup" must never arrive pre-trusted.
+
+    **Format, when it gets that far:** minisign — the updater already carries a minisign public key
+    (`tauri.conf.json` ▸ `plugins.updater.pubkey`), so the verification story and the key format are
+    already in the binary. Do not invent one.
 - [~] **UBUG-4 · Tauri .msi install has no content folders.** CODE DONE (needs a real `.msi` verify).
   The content was bundled inside the app (loaded over fetch) but never written to disk, so there was
   no editable folder. Now `content/provider.ts`: on desktop (`isTauri`), `getContentGraph` SEEDS the

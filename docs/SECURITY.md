@@ -100,6 +100,11 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > (paste URL → "allow this host?" → stored outside the dataDir, so a restored backup cannot
    > arrive pre-authorised), never a wildcard on its own.
    >
+   > **The open question this leaves is written down: PLAN ▸ REL-5a (pack authenticity).** It is a
+   > design decision — what is signed, whose key, what an unsigned pack looks like, rotation — not a
+   > task waiting to be typed, and it is filed with the feature where "GitHub told us" stops being
+   > an answer.
+   >
    > **Downloaded bytes are checked against the SHA they were diffed against** — the git blob SHA
    > the repo tree published, verified before a single file is written and again on anything read
    > back from the pre-download cache (`.pack-cache/<sha>`, content-addressed, so a tampered or
