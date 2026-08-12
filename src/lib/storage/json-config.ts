@@ -50,7 +50,21 @@ const dirty = new Map<string, Map<string, unknown>>();
  * them changes nothing but the number of times the file is rewritten. Different sections written in
  * the same tick merge into the one write too, which is the case the per-file chain existed for.
  */
-export function writeConfigSection(file: string, key: string, value: unknown): void {
+export function writeConfigSection(
+	file: string,
+	key: string,
+	value: unknown,
+	/**
+	 * Told how the write actually went: `null` for landed, the failure otherwise.
+	 *
+	 * The fire-and-forget posture above is right for most sections — a lost theme preference is not
+	 * worth a dialog. It is NOT right for every one: the pack registry's contents are promises ("do
+	 * not update this pack mid-campaign"), and a pin that failed to persist still reads as pinned in
+	 * this session and is simply gone at the next launch. So the failure is available to any tenant
+	 * that has something to say about it, and ignored by the ones that don't.
+	 */
+	onWrite?: (error: unknown) => void
+): void {
 	const queued = dirty.get(file);
 	if (queued) {
 		queued.set(key, value); // a flush is already scheduled and will pick this up
@@ -67,8 +81,11 @@ export function writeConfigSection(file: string, key: string, value: unknown): v
 			const merged = { ...(await readConfigFile(file)) };
 			for (const [k, v] of sections) merged[k] = v;
 			await getUserStorage().write(file, JSON.stringify(merged, null, 2));
+			onWrite?.(null);
 		})
-		.catch(() => {});
+		.catch((e: unknown) => {
+			onWrite?.(e);
+		});
 	chains.set(file, next);
 }
 

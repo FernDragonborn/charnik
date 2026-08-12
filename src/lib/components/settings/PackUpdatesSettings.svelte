@@ -9,6 +9,7 @@
 		bundledPacks,
 		missingBundled,
 		packConfig,
+		packConfigError,
 		setPinned,
 		setUpdateMode,
 		SHIPPED_PACK_REPO,
@@ -154,6 +155,15 @@
 			{$_('settings.packs.ownRepoLoad')}
 		</button>
 	</p>
+
+	<!-- Saving the registry failed. Louder than an update error and shown ABOVE it: an update that
+	     didn't happen leaves the disk as it was, while a pin that didn't save is a promise this
+	     session is still pretending to keep. -->
+	{#if packConfigError.message}
+		<p class="pack-problem strong">
+			{$_('settings.packs.saveFailed', { values: { message: packConfigError.message } })}
+		</p>
+	{/if}
 
 	{#if updates.error}
 		<p class="pack-problem">
@@ -556,6 +566,13 @@
 		margin-top: var(--space-2);
 		font-size: var(--font-size-sm);
 		color: var(--color-warning);
+	}
+	/* a failed SAVE is not a failed update: the disk is fine, the promise is not */
+	.pack-problem.strong {
+		border: 1px solid var(--color-danger);
+		border-radius: var(--radius);
+		padding: var(--space-2) var(--space-3);
+		color: var(--color-danger);
 	}
 	.repo-hint {
 		display: flex;

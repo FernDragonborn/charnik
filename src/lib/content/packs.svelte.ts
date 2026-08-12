@@ -345,10 +345,25 @@ export async function initPackConfig(): Promise<void> {
 	adopt(parsePackConfig(cfg[SECTION] ?? legacy));
 }
 
+/**
+ * The last time saving the registry FAILED, or null.
+ *
+ * Config writes are otherwise fire-and-forget, which is the right posture for a theme preference and
+ * the wrong one here: everything in this section is a promise made to the user. A pin says "do not
+ * change these rules mid-campaign" — and a pin that never reached the disk still reads as pinned for
+ * the rest of the session, then is simply absent at the next launch, at which point the update it
+ * was holding back can arrive. That is the one failure the user has to hear about, because the fix
+ * (a full disk, a read-only or disconnected data folder) is entirely on their side.
+ */
+export const packConfigError = $state<{ message: string | null }>({ message: null });
+
 /** Persist through the shared section writer: read-merge-write, queued per file, and stringified at
  *  execution time so the last write reflects the latest state. */
 function persist(): void {
-	writeConfigSection(CONFIG_PATH, SECTION, packConfig);
+	writeConfigSection(CONFIG_PATH, SECTION, packConfig, (error) => {
+		packConfigError.message =
+			error === null ? null : error instanceof Error ? error.message : String(error);
+	});
 }
 
 /** Record an installed pack (the installer calls this), or re-point an existing one at a new repo.

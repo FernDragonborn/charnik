@@ -258,6 +258,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function keepMissingPacks` — "I meant to delete it, stop asking." Suppresses the prompt for these packs; Settings still offers * to restore them, …
 - `function unDismissMissing` — A restored pack is no longer missing, so it must not stay on the "don't ask" list either — it * would silence the pro…
 - `function initPackConfig` — Load the registry from the data root (once, at app start).
+- `const packConfigError` — * The last time saving the registry FAILED, or null.
 - `function registerPack` — Record an installed pack (the installer calls this), or re-point an existing one at a new repo.
 - `function localPackFor` — * Which local folder holds this repo's `<remotePack>`, if any.
 - `function freeLocalPackName` — * A folder name that is free to install into: `preferred`, or `preferred-2`, `-3`… A name is taken * if the registry …
@@ -1258,4 +1259,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 732 exports across 102 modules · 39 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 733 exports across 102 modules · 39 duplicate suspects._

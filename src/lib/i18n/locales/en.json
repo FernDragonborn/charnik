@@ -105,6 +105,7 @@
 			"repoTooBig": "{repo} holds too many files for GitHub to list in one go, so Charnik only ever sees part of it — and acting on half a list could delete content that is still there. Nothing was changed.",
 			"sourceChanged": "“{pack}” now claims to be a different source (“{from}” → “{to}”). That makes it a NEW pack, not an update: every entry would be renamed and any character using them would lose the link. Nothing was changed — install it as a separate pack instead.",
 			"sourceClaimed": "“{pack}” publishes its entries as “{source}” — the same name “{owner}” already uses here. That name is what the app shows as an entry’s origin, so this pack’s entries would look like they came from “{owner}”, and the two would share one on/off switch. That’s normal for a fork of the same content, and a red flag for anything else. Nothing was installed.",
+			"saveFailed": "Charnik couldn’t save your content-pack settings. Pins, repository links and the update mode are still in force for now, but they will be gone when you close the app — and a pinned pack could then be updated. This is almost always the data folder being full, read-only, or on a drive that has gone away: check it, then flip any pack setting to try saving again. ({message})",
 			"installAnyway": "Install it anyway",
 			"addLabel": "Add a pack",
 			"addPlaceholder": "https://github.com/owner/repo",

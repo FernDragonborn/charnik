@@ -72,3 +72,30 @@ describe('a config file with several owners', () => {
 		});
 	});
 });
+
+/* Most sections can lose a write in silence — a theme preference is not worth a dialog. The pack
+   registry cannot: a pin says "do not update this pack mid-campaign", and one that never reached the
+   disk still reads as pinned for the rest of the session and is gone at the next launch. So the
+   writer reports how it went, and the tenant decides whether that matters. */
+describe('a write that fails tells whoever asked', () => {
+	beforeEach(() => storage.remove(FILE));
+
+	it('reports null when it landed', async () => {
+		const told: unknown[] = [];
+		writeConfigSection(FILE, 'contentPacks', { updates: 'off' }, (e) => told.push(e));
+		await configWritesSettled(FILE);
+		expect(told).toEqual([null]);
+	});
+
+	it('reports the failure, and the session does not crash on it', async () => {
+		const boom = new Error('disk full');
+		const write = vi.spyOn(storage, 'write').mockRejectedValueOnce(boom);
+		const told: unknown[] = [];
+
+		writeConfigSection(FILE, 'contentPacks', { updates: 'off' }, (e) => told.push(e));
+		await configWritesSettled(FILE);
+
+		expect(told).toEqual([boom]);
+		write.mockRestore();
+	});
+});

@@ -202,7 +202,7 @@ per-pack ceiling reads like a total and is not one.
 estimated up front: a tree listing may state no sizes, and an estimate that reads zero is not a
 budget. Running out stops the FETCH, not the offer.
 
-### [ ] 11. A registry write that fails is swallowed, so a PIN can silently not exist
+### [x] 11. A registry write that fails is swallowed, so a PIN can silently not exist
 
 `writeConfigSection` (`storage/json-config.ts`) ends `.catch(() => {})`, deliberately — "a config
 failure must not crash the session". But the pack registry is a tenant of that file, and its
@@ -212,6 +212,13 @@ shows it pinned, the UI agrees, and the next launch quietly does not.
 
 **Decided 2026-08-12 (maintainer):** the user has to be told what happened and what to do about it,
 so this is not a log line — it surfaces in the pack panel.
+
+**Fixed:** `writeConfigSection` takes an optional `onWrite(error)` — `null` when it landed — so the
+fire-and-forget posture stays the default for tenants that have nothing to say (a theme preference is
+not worth a dialog) and the registry opts in. `packConfigError` carries it, and the packs panel shows
+it ABOVE any update error, framed harder: an update that failed left the disk as it was, while a pin
+that failed to save is a promise the session is still pretending to keep. The copy names the likely
+cause (full / read-only / disconnected data folder) and the retry (flip any pack setting).
 
 ### [x] 12. `restoreBundledPacks` writes outside both rules the other writers obey
 
