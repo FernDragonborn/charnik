@@ -27,13 +27,20 @@ try {
 if (existsSync(destBase)) rmSync(destBase, { recursive: true, force: true });
 mkdirSync(destBase, { recursive: true });
 
+/** A plugin is only a plugin at `<pack>/plugins/<namespace>/` (PLUGINS §2) — code anywhere else in
+ *  a pack is loaded by nothing and disclosed by nothing. */
+const PLUGIN_DIR = /\/plugins\/[^/]+$/;
+
 /**
  * Which files a pack actually ships. The TS twin is `isPackFile` in `content/remote/github.ts`, and
  * the two must agree: that one decides what an installed pack contains, this one decides what a
- * BUNDLED pack contains, and a pack is supposed to be the same thing however it arrived.
- * @param {string} name
+ * BUNDLED pack contains, and a pack is supposed to be the same thing however it arrived. Hence the
+ * directory argument — the twin reads the same rule off a full path.
+ * @param {string} dirRel @param {string} name
  */
-const isPackFile = (name) => name.endsWith('.csv') || name === 'plugin.json' || name === 'main.js';
+const isPackFile = (dirRel, name) =>
+	name.endsWith('.csv') ||
+	(PLUGIN_DIR.test(dirRel) && (name === 'plugin.json' || name === 'main.js'));
 
 /**
  * Directory → its files, at every depth, keyed the way the manifest wants them (one entry per
@@ -46,7 +53,7 @@ function collect(dir, rel, into) {
 	const files = [];
 	for (const entry of readdirSync(dir, { withFileTypes: true })) {
 		if (entry.isDirectory()) collect(join(dir, entry.name), `${rel}/${entry.name}`, into);
-		else if (isPackFile(entry.name)) files.push(entry.name);
+		else if (isPackFile(rel, entry.name)) files.push(entry.name);
 	}
 	// a directory of nothing we ship gets no manifest key — an empty one would report as a
 	// subdirectory of its parent and pack discovery scans for exactly those
