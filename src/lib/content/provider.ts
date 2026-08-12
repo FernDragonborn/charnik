@@ -30,7 +30,7 @@ import { HOMEBREW_ROOT } from './homebrew';
 import { HASH_STATE } from './meta';
 import { fileHashState } from './hash';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
-import { isApplyInFlight, recoverInterruptedApply } from './remote/install';
+import { isPackWriteInFlight, recoverInterruptedApply } from './remote/install';
 import {
 	bundledPacks,
 	forgetPack,
@@ -105,12 +105,16 @@ async function buildGraph(): Promise<ContentGraph> {
 		const shipped = await discoverContentRoots(bundled);
 		await seedShippedContent(bundled, user, shipped, CONTENT_SEED_VERSION);
 		const installed = await discoverContentRoots(user);
+		// Mid-write (apply / rename / rollback / uninstall) a pack folder is briefly absent, and
+		// "absent" is what both statements below read. `forgetUninstalledPacks` guards itself — it is
+		// the destructive one; the same flag here keeps a swap from flashing "your rules are gone".
 		forgetUninstalledPacks(installed);
 		adoptShippedPacks(shipped.filter((root) => installed.includes(root)));
 		// deleting a bundled pack is allowed and sticks — but it is the rules the app runs on, so the
 		// absence is REPORTED (layout prompt + a restore button in Settings), never silently endured
 		bundledPacks.packs = shipped.map(packNameOf);
-		missingBundled.packs = shipped.filter((root) => !installed.includes(root)).map(packNameOf);
+		if (!isPackWriteInFlight())
+			missingBundled.packs = shipped.filter((root) => !installed.includes(root)).map(packNameOf);
 		return loadContent(user, installed, homebrew);
 	}
 	// web + headless (build-time prerender / tests): read the bundled CSVs over fetch
@@ -142,8 +146,8 @@ function adoptShippedPacks(shipped: string[]): void {
 async function recoverInterruptedApplies(storage: Storage): Promise<void> {
 	// An apply in flight owns those folders; they are evidence of a DEAD run only between runs. This
 	// is reached on every content rebuild, including the one the watcher fires from an apply's own
-	// writes — so without this guard a long apply sweeps its own staging tree (see `isApplyInFlight`).
-	if (isApplyInFlight()) return;
+	// writes — so without this guard a long apply sweeps its own staging tree (`isPackWriteInFlight`).
+	if (isPackWriteInFlight()) return;
 	const entries = await storage.list(CONTENT_DIR).catch(() => []);
 	const interrupted = new Set(
 		entries
@@ -164,9 +168,14 @@ const packNameOf = (root: string): string => root.slice(root.lastIndexOf('/') + 
  *
  * Forgetting is safe because it is self-healing: a bundled pack re-registers itself the moment its
  * files are back (`adoptShippedPacks`, right below), and a third-party one is re-registered by the
- * install that brings it back.
+ * install that brings it back — WHICH IS WHY the in-flight guard is here rather than at the caller.
+ * A pack being applied, renamed, rolled back or uninstalled has no folder for a moment
+ * (`isPackWriteInFlight`), and a listing taken then says "uninstalled" about a pack that is merely
+ * between two renames. Self-healing does not reach it: only a BUNDLED pack re-adopts itself, so a
+ * third-party pack loses its repo URL and its pin with nothing left that knows where they came from.
  */
 export function forgetUninstalledPacks(installed: string[]): void {
+	if (isPackWriteInFlight()) return;
 	const onDisk = new Set(installed.map(packNameOf));
 	for (const pack of Object.keys(packConfig.packs)) if (!onDisk.has(pack)) forgetPack(pack);
 }

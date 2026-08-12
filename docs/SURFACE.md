@@ -727,7 +727,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface ApplyResult`
 - `interface ApplyRequest`
 - `function applyPackUpdate` — * Fetch everything this diff wants, then write it.
-- `const isApplyInFlight`
+- `const isPackWriteInFlight`
+- `function duringPackWrite` — Run something that moves or deletes a pack folder, with the flag raised for its whole duration.
 - `function recoverInterruptedApply` — * Finish or undo an apply that was interrupted (crash, kill, power loss) — call at startup and on * every content reb…
 - `function rollbackPack` — Roll one applied update back to the copy the swap kept.
 - `const hasRollback` — Is there something to roll back to?
@@ -1242,4 +1243,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 719 exports across 101 modules · 39 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 720 exports across 101 modules · 39 duplicate suspects._

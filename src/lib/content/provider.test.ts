@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { discoverContentRoots, forgetUninstalledPacks, seedShippedContent } from './provider';
 import { emptyPackConfig, packConfig, registerPack } from './packs.svelte';
+import { duringPackWrite } from './remote/install';
 import { type MetaKey } from './meta';
 import { stampWithHash } from './hash';
 
@@ -127,6 +128,21 @@ describe('forgetUninstalledPacks', () => {
 		expect(Object.keys(packConfig.packs)).toEqual(['srd-2024']);
 		// the repo's check state goes with the last pack that used it
 		expect(packConfig.repos['https://github.com/someone/dark-sun']).toBeUndefined();
+	});
+
+	/* …but "the folder is gone" is also what an apply, a rename and a rollback look like while they
+	   are running, and the watcher reloads throughout. Acting on that listing deletes the repo URL
+	   and the pin of a pack that is merely between two renames — and only a BUNDLED pack re-adopts
+	   itself afterwards, so a third-party one loses them for good. */
+	it('keeps every entry while a pack write is in flight — mid-move is not uninstalled', async () => {
+		Object.assign(packConfig, emptyPackConfig());
+		registerPack('dark-sun', 'https://github.com/someone/dark-sun');
+
+		await duringPackWrite(async () => {
+			forgetUninstalledPacks([]); // the listing a reload takes mid-swap: no pack folder at all
+		});
+
+		expect(packConfig.packs['dark-sun']?.repo).toBe('https://github.com/someone/dark-sun');
 	});
 });
 

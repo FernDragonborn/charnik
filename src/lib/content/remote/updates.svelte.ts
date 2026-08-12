@@ -43,6 +43,7 @@ import {
 import { diffPack, hasWrites, rowsRemovedBy, charactersReferencing, type PackDiff } from './diff';
 import {
 	applyPackUpdate,
+	duringPackWrite,
 	hasRollback,
 	isStaged,
 	pluginsIn,
@@ -634,12 +635,17 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 		};
 		return false;
 	}
-	await storage.rename(`content/${from}`, `content/${target}`);
-	// the kept undo copy belongs to the pack, not to the name it had — leaving it behind would make
-	// `<from>.prev` look like an interrupted apply at the next launch and get promoted back
-	if (await storage.exists(`content/${from}.prev`))
-		await storage.rename(`content/${from}.prev`, `content/${target}.prev`);
-	renamePackEntry(from, target);
+	// Files and bookkeeping move under one raised flag: in between, NEITHER name has a folder, and a
+	// content reload landing there would read the old one as uninstalled and drop the entry this is
+	// about to rewrite — leaving a renamed folder with no repo, no pin and a `true` returned for it.
+	await duringPackWrite(async () => {
+		await storage.rename(`content/${from}`, `content/${target}`);
+		// the kept undo copy belongs to the pack, not to the name it had — leaving it behind would make
+		// `<from>.prev` look like an interrupted apply at the next launch and get promoted back
+		if (await storage.exists(`content/${from}.prev`))
+			await storage.rename(`content/${from}.prev`, `content/${target}.prev`);
+		renamePackEntry(from, target);
+	});
 	const pending = updates.pending[from];
 	if (pending) {
 		delete updates.pending[from];
@@ -669,7 +675,12 @@ export async function uninstallPack(pack: string): Promise<void> {
 		return;
 	}
 	await revokePackPlugins(pack);
-	await getUserStorage().remove(`content/${pack}`);
-	forgetPack(pack);
+	// The folder goes first and the entry second, so a reload in between sees a pack that is gone
+	// and forgets it — harmless here (that is what we are doing anyway), except that it would race
+	// the very write that removes it. One flag, one order, one writer.
+	await duringPackWrite(async () => {
+		await getUserStorage().remove(`content/${pack}`);
+		forgetPack(pack);
+	});
 	delete updates.pending[pack];
 }

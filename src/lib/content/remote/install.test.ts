@@ -12,7 +12,7 @@ import {
 	applyPackUpdate,
 	cachePath,
 	hasRollback,
-	isApplyInFlight,
+	isPackWriteInFlight,
 	isStaged,
 	pluginsIn,
 	pruneCache,
@@ -409,7 +409,7 @@ describe('recovering an interrupted apply', () => {
 	it('says an apply is in flight, so a rebuild triggered by its own writes leaves it alone', async () => {
 		const s = new MemoryStorage();
 		await s.writeBytes('content/p/a.csv', enc('id\nold'));
-		expect(isApplyInFlight()).toBe(false);
+		expect(isPackWriteInFlight()).toBe(false);
 
 		let sawInFlight = false;
 		const watching: RemoteFetcher = {
@@ -419,7 +419,7 @@ describe('recovering an interrupted apply', () => {
 		// the write phase is where the staging folder exists; sample the flag from inside it
 		const spy = s.writeBytes.bind(s);
 		s.writeBytes = async (path: string, data: Uint8Array) => {
-			if (path.startsWith('content/p.new')) sawInFlight ||= isApplyInFlight();
+			if (path.startsWith('content/p.new')) sawInFlight ||= isPackWriteInFlight();
 			return spy(path, data);
 		};
 
@@ -431,7 +431,32 @@ describe('recovering an interrupted apply', () => {
 		});
 
 		expect(sawInFlight).toBe(true);
-		expect(isApplyInFlight()).toBe(false); // …and cleared once the swap is done
+		expect(isPackWriteInFlight()).toBe(false); // …and cleared once the swap is done
+	});
+
+	/* A rollback is the same two renames in reverse, so the pack is just as absent — and the reader
+	   that matters there is not recovery but `forgetUninstalledPacks`, which reads an absent folder
+	   as an uninstall and drops the registry entry. Same flag, raised by every pack write. */
+	it('says so during a rollback too, not only during an apply', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/a.csv', enc('id\nold'));
+		await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
+			repo: REPO,
+			diff: { pack: 'p', changes: [{ path: 'p/a.csv', kind: FILE_CHANGE.changed }] }
+		});
+
+		let sawInFlight = false;
+		const spy = s.rename.bind(s);
+		s.rename = async (from: string, to: string) => {
+			sawInFlight ||= isPackWriteInFlight();
+			return spy(from, to);
+		};
+		expect(await rollbackPack(s, 'p')).toBe(true);
+
+		expect(sawInFlight).toBe(true);
+		expect(isPackWriteInFlight()).toBe(false);
 	});
 });
 

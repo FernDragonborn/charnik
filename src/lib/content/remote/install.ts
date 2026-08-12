@@ -233,12 +233,8 @@ async function swapInNewTree(
 	dropping: Set<string>
 ): Promise<void> {
 	if (staged.length === 0 && dropping.size === 0) return; // nothing to do — don't churn a .prev
-	applying += 1; // …so a content rebuild triggered by these very writes can't sweep the staging folder
-	try {
-		await buildAndSwap(storage, pack, staged, dropping);
-	} finally {
-		applying -= 1;
-	}
+	// …so a content rebuild triggered by these very writes can't sweep the staging folder
+	await duringPackWrite(() => buildAndSwap(storage, pack, staged, dropping));
 }
 
 async function buildAndSwap(
@@ -273,20 +269,37 @@ async function buildAndSwap(
 }
 
 /**
- * Is a pack being swapped in RIGHT NOW? Recovery must not run while one is.
+ * Is a pack folder being written RIGHT NOW — swapped in, renamed, rolled back or deleted? Anything
+ * that DRAWS CONCLUSIONS FROM THE `content/` LISTING must stand back while one is.
  *
- * Recovery reads the staging folders as evidence of a run that DIED — and a `<pack>.new` beside a
- * live folder means "the swap never started, this tree is junk", so it deletes it. That reading is
- * only true between runs. During an apply the very same folders are the work in progress, and
- * deleting `.new` pulls the tree out from under the rename that is about to promote it.
+ * The listing is the only record of what is installed (there is no manifest, AI-CONVENTIONS §1.6),
+ * and every one of these operations makes a pack folder briefly absent — between the two renames of
+ * a swap, between `rename` and `renamePackEntry`, for the length of a rollback. The watcher reloads
+ * throughout. Two readers act on that listing and both do damage with it:
  *
- * Reachable in production, not a theoretical race: the content watcher fires while the apply writes
- * (measured at 28 events for a three-file pack), and its debounced `reloadContent` rebuilds the
- * graph — which is where recovery is called from. An apply that outlasts the 300 ms debounce would
- * have its staging folder swept by its own writes.
+ *  - `recoverInterruptedApply` reads `<pack>.new` beside a live folder as "the swap never started,
+ *    this tree is junk" and deletes it — true between runs, fatal during one. Reachable in
+ *    production, not theoretical: an apply's own writes fire the watcher (28 events for a
+ *    three-file pack), whose debounced reload rebuilds the graph, which is where recovery runs.
+ *  - `forgetUninstalledPacks` reads a missing folder as "the user deleted this pack" and drops its
+ *    registry entry — the repo URL and the pin with it. A bundled pack re-adopts itself; a
+ *    third-party one has nothing left to say where it came from.
+ *
+ * So the flag is raised by every pack WRITE, not only by apply, and it is a counter rather than a
+ * boolean because two of them can legitimately overlap.
  */
-let applying = 0;
-export const isApplyInFlight = (): boolean => applying > 0;
+let packWrites = 0;
+export const isPackWriteInFlight = (): boolean => packWrites > 0;
+
+/** Run something that moves or deletes a pack folder, with the flag raised for its whole duration. */
+export async function duringPackWrite<T>(run: () => Promise<T>): Promise<T> {
+	packWrites += 1;
+	try {
+		return await run();
+	} finally {
+		packWrites -= 1;
+	}
+}
 
 /**
  * Finish or undo an apply that was interrupted (crash, kill, power loss) — call at startup and on
@@ -320,12 +333,15 @@ export async function rollbackPack(storage: Storage, pack: string): Promise<bool
 	const live = localPath(pack);
 	const prev = previousDir(pack);
 	if (!(await storage.exists(prev))) return false;
-	const scratch = stagingDir(pack);
-	await storage.remove(scratch).catch(() => {});
-	if (await storage.exists(live)) await storage.rename(live, scratch);
-	await storage.rename(prev, live);
-	await storage.remove(scratch).catch(() => {});
-	return true;
+	// the pack is absent between the two renames below, exactly as it is during an apply
+	return duringPackWrite(async () => {
+		const scratch = stagingDir(pack);
+		await storage.remove(scratch).catch(() => {});
+		if (await storage.exists(live)) await storage.rename(live, scratch);
+		await storage.rename(prev, live);
+		await storage.remove(scratch).catch(() => {});
+		return true;
+	});
 }
 
 /** Is there something to roll back to? Drives the "undo this update" button. */

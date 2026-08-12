@@ -19,6 +19,7 @@ import {
 	uninstallPack
 } from './updates.svelte';
 import { gitBlobSha } from './diff';
+import { discoverContentRoots, forgetUninstalledPacks } from '../provider';
 import { stampWithHash } from '../hash';
 import type { RemoteFetcher } from './types';
 
@@ -254,6 +255,31 @@ describe('two repos publishing the same folder name', () => {
 		expect(packConfig.packs['athas']).toEqual({ repo: REPO, remotePack: 'dark-sun' });
 		expect(await getUserStorage().read('content/athas/classes_srd.csv')).toContain('athasian');
 		expect(await getUserStorage().exists('content/dark-sun/classes_srd.csv')).toBe(false);
+	});
+
+	/* The window this closes: between `rename` and `renamePackEntry` the OLD folder is gone and the
+	   new one has no entry, and the watcher's debounced reload rebuilds the graph right there. It
+	   concluded "uninstalled", dropped the entry — repo URL, pin and all — and the rename then wrote
+	   nothing and still reported success. */
+	it('survives a content reload landing mid-rename, when neither folder is a whole pack', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		const storage = getUserStorage();
+		await storage.remove('content/athas'); // an earlier rename in this block left one behind
+		const realRename = storage.rename.bind(storage);
+		storage.rename = async (from: string, to: string) => {
+			await realRename(from, to);
+			forgetUninstalledPacks(await discoverContentRoots(storage));
+		};
+
+		try {
+			expect(await renamePack('dark-sun', 'athas')).toBe(true);
+		} finally {
+			storage.rename = realRename;
+		}
+
+		expect(packConfig.packs['athas']).toEqual({ repo: REPO, remotePack: 'dark-sun' });
+		expect(await getUserStorage().read('content/athas/classes_srd.csv')).toContain('athasian');
 	});
 
 	it('renaming refuses a name that is already a folder, rather than merging two packs', async () => {
