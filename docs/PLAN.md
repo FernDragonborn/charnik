@@ -1012,11 +1012,11 @@ were learned the hard way.
   **REL-5**, deliberately not in any wave.
   **Consequence, now live:** the content passes (MAGIC-ITEM-EFX, E4, D6/D10) have left the app
   roadmap entirely; they ship from the content repo.
-  **Reopened in part 2026-08-12:** a third, security-angled read (REL-4 · "THE THIRD PASS") left nine
-  OPEN items — two of them silent data loss reachable without any hostility (a `.prev` that
-  resurrects an uninstalled pack; case-folded folder collisions on NTFS/APFS). Unscheduled; the
-  cheap half is out-of-band work, the identity half (source spoofing + per-pack provenance) is a
-  real chunk and wants its own slot.
+  **Reopened in part 2026-08-12:** a third, security-angled read left nine OPEN items with their own
+  ledger, **[`docs/AUDIT-PACKS-12-08.md`](AUDIT-PACKS-12-08.md)** — two of them silent data loss
+  reachable without any hostility (a `.prev` that resurrects an uninstalled pack; case-folded folder
+  collisions on NTFS/APFS). Unscheduled; the cheap half is out-of-band work, the identity half
+  (source spoofing + per-pack provenance) is a real chunk and wants its own slot.
 - **W1 · Roll card (UBUG-20 + UX-3) — DONE 2026-08-10.** One `RollRow` across toast / Playbar / log /
   tray, retroactive advantage as a three-state pill, the reroll pill, the one-line strip. Tails are
   listed on UBUG-20 itself.
@@ -1790,91 +1790,24 @@ holds the done-work log; these are the OPEN tails it carried):**
     only if a real pack near the 50 MB ceiling turns up: key on `path|mtime|size`, invalidate from
     the watcher.
 
-  **THE THIRD PASS, OPEN (found 2026-08-12, nothing fixed yet).** The first two passes read the
-  module for correctness. This one read the whole external-content CHAIN — capability → Rust fetcher
-  → GitHub adapter → diff → swap-in → loader → prose render → plugins — asking one question instead:
-  *what can a hostile pack do to a user who is not reading the code?* The shape of the answer is that
-  the transport and the plugin model hold up, and the gaps are about **identity** (who a pack claims
-  to be) and about **the folder-name/staging model** on a real filesystem. Ordered by what it costs
-  the user, not by effort.
+  **THE THIRD PASS, OPEN — its ledger is [`docs/AUDIT-PACKS-12-08.md`](AUDIT-PACKS-12-08.md)**
+  (found 2026-08-12, nothing fixed yet; the file reclaims the name the second pass's ledger had
+  before `1ddb102` retired it, since its identity is the module and not the pass). The first two
+  passes read the module for correctness; this one followed the whole chain — capability → fetcher →
+  adapter → diff → swap-in → loader → prose render → plugins — asking what a hostile pack can do to
+  a user who is not reading the code. **Nine items.** The transport and the plugin model hold; the
+  gaps are **identity** (a pack declares its own `#content-source`, and that tag is the only
+  provenance the UI shows) and the **folder-name/staging model** on a case-folding filesystem (an
+  uninstall's `.prev` gets resurrected by startup recovery; `SRD-2024` installs over `srd-2024`).
+  Read the ledger for the list; it is deleted when empty, so anything that must outlive it is below
+  or already in SECURITY.md.
 
-  - [ ] **A pack declares its OWN `#content-source`, so it can wear another pack's identity.**
-    Identity is `source:id`, the tag comes out of the file the pack ships, and `sourceLabel`
-    (`content/detail.ts`) renders `SRD 5.2.1` as the friendly **"D&D 5.5e"**. A third-party pack that
-    stamps that tag therefore reads as official in every article card, merges into the SAME group in
-    `SourceManager` (so it cannot be switched off separately), and collides `type:id` with the real
-    SRD as if it were the same publisher disagreeing with itself. `sourceClash` (`remote/install.ts`)
-    is the only defence and it compares the incoming tag with the tag ALREADY IN THAT FOLDER — which
-    is null on a first install, i.e. exactly when the spoof happens. **Fix:** compare against a
-    `source → pack` map over every installed pack, not against the one folder being written; a tag
-    already claimed by another pack is a refusal (or at minimum a stated confirmation).
-    **And the reason it works at all is A2 below** — the UI never shows which PACK a row came from,
-    so the spoofable tag is the only provenance the user is given.
-  - [ ] **A `.prev` outlives the pack it belonged to, and startup recovery puts the pack back.**
-    `uninstallPack` (`remote/updates.svelte.ts`) removes `content/<pack>` and leaves
-    `content/<pack>.prev` — which the next content rebuild reads through `recoverInterruptedApplies`
-    (`content/provider.ts`) as "died between the two renames" and RENAMES BACK INTO PLACE. A pack the
-    user uninstalled (or deleted in a file manager — a supported route) returns on the next launch,
-    plugin code included; consent was revoked so nothing runs, but the files are back and the rows
-    load. `renamePack` already handles the same trap for the same reason; uninstall was missed, and
-    no test covers it. **Fix:** drop `.prev`/`.new` inside the same `duringPackWrite` as the delete.
-  - [ ] **Pack folder names collide case-insensitively on both platforms we ship to.**
-    `freeLocalPackName` (`content/packs.svelte.ts`) and the owner check in `installPack` compare
-    EXACT strings, while `isReservedPackName` deliberately lowercases — so the code already knows the
-    problem exists and only half-applies it. On NTFS/APFS a repo publishing `SRD-2024` beside an
-    installed `srd-2024` is judged "free"; `storage.exists` then answers about the OTHER pack's
-    files, the diff is computed against them, and `buildAndSwap` renames that pack to `<name>.prev`
-    and swaps its own tree in. The user's pack is gone with no message. **Fix:** case-fold the
-    `taken` set, the owner check, and `renamePack`'s destination test.
-  - [ ] **A link in content prose navigates the whole window.** `ArticleProse.svelte` renders
-    `{@html renderContentMarkdown(...)}`; DOMPurify with no config strips scripts but KEEPS
-    `<a href>`. A hostile pack's spell description is one click from replacing the app with a remote
-    page — in a webview with no address bar, no back button and nothing to say it happened. It is
-    also the one claim in **SECURITY.md §5 that is not true**: "external links open in the OS
-    browser, not the app webview" is the intent, and no code implements it (`plugin-opener` is only
-    wired for the log folder and the data dir). **Fix:** one delegated click handler on the rendered
-    body → `preventDefault` + `openUrl` (the `opener` capability is already granted).
-  - [ ] **The apply path has no error boundary, and a throw mid-swap can cost the registry entry.**
-    Neither `runApply` nor `installPack` wraps `applyPackUpdate`, and `buildAndSwap` throws on a full
-    disk, on `EBUSY` (a content CSV open in Excel — the ordinary Windows case), and on a folder name
-    the OS refuses. That surfaces as an unhandled rejection rather than `updates.error`; worse, a
-    throw BETWEEN the two renames leaves the pack absent while `duringPackWrite`'s `finally` lowers
-    the in-flight flag, so the next content rebuild is free to read "uninstalled" and
-    `forgetUninstalledPacks` drops the repo URL and the pin. `recoverInterruptedApply` restores the
-    FILES at the next launch; nothing restores those two. This is the same failure `9f28d52` closed
-    for the success path, reachable again through the failure path.
-  - [ ] **The response size cap is enforced after the body is already in memory.**
-    `remote/tauri-fetch.ts` checks `Content-Length`, then `await res.text()` / `arrayBuffer()`, then
-    re-checks against the actual length — so a response with no declared length (or a lying one) is
-    fully buffered before anything refuses it, which is precisely the case the comment says must not
-    get a free pass. **Fix:** read through `res.body.getReader()` with a running byte count and abort
-    at `MAX_REMOTE_BYTES`. (Also: `body.length` counts UTF-16 units, not bytes.)
-  - [ ] **No total request timeout, and everything queues behind one.** Only `connectTimeout` is set,
-    so a host that accepts the connection and then says nothing hangs the request forever — and
-    because `checkNow` / `applyUpdate` / `restorePendingUpdates` share one `serialised()` queue, that
-    single hung request wedges every check, install, apply and restore until the app restarts.
-    **Fix:** `signal: AbortSignal.timeout(…)` on both fetcher methods.
-  - [ ] **The tail (three one-liners).** `assertHttps` tests `protocol.startsWith('https')`, so
-    `httpsx:` passes the layer that exists to be the second line of defence (`=== 'https:'`).
-    `NodeStorage` (`storage/node.ts`) resolves paths WITHOUT `sandboxRelative`, while **SECURITY.md
-    §3** states the node impl exercises the same validation — true of `memory.ts`, not of this one.
-    And the local folder name is validated only against `''`, `/` and the reserved set: `\`, `:`,
-    `*`, `?`, `<`, `>`, `|`, control characters, trailing dot/space and the Windows device names
-    (`CON`, `NUL`, `AUX`, `COM1`) all reach `mkdir` and throw there — see the missing error boundary
-    above for what that then costs.
-  - **A2 · Provenance never reaches the user, and there is no per-PACK filter.** `LoadedRow` carries
-    `root` (the pack) all the way through the loader, and the UI drops it: `entryMeta` shows the
-    `source` label only, and the two-dimensional filter is file × source with no pack dimension — so
-    a pack cannot be switched off without deleting it, and cannot be told apart from a pack claiming
-    its tag. Not a defect on its own; it is the mechanism the first item exploits, and both are
-    fixed by the same small change (show the pack in the article meta, group `SourceManager` by
-    `(pack, source)`).
-  - **NOT a defect, stated so it stops being re-found:** downloaded bytes are verified against the
-    blob SHA from the same tree listing, which is INTEGRITY and not AUTHENTICITY — a typo-squatted
-    URL or a compromised repo yields whatever it likes, and only the plugin consent hash stands
-    between that and executing code. This is already stated in SECURITY.md §7 and is the honest
-    posture for v1. If it is ever raised: an optional **minisign signature per pack** reuses the
-    format the updater already carries, and belongs with **REL-5**, not here.
+  **Decided there, kept here because the ledger is temporary:** blob-SHA verification is INTEGRITY,
+  not AUTHENTICITY — a typo-squatted URL or a compromised repo yields whatever it likes, and only the
+  plugin consent hash stands between that and executing code. That is the honest v1 posture
+  (SECURITY.md §7). The answer when it is finally wanted is an optional **minisign signature per
+  pack**, reusing the format the updater already carries, and it belongs with **REL-5** — a pack from
+  any HTTPS host is exactly when publisher trust stops being "GitHub told us".
 
   **A decision taken on Claude's assumption, flag it if it is wrong:** manifest-free leaves no file
   listing for a generic HTTPS host, so v1 is GitHub-only. That consequence now lives with the feature

@@ -23,7 +23,7 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    Path traversal is blocked by the fs scope *and* validated in the `Storage` interface.
 3. **All IO via the `Storage` interface.** One audited seam; no scattered raw fs; nothing
    above it imports Tauri. The node/in-memory test impl exercises the same validation.
-   > **Half true today** (found 2026-08-12, PLAN · REL-4 "the third pass"): `MemoryStorage` and the
+   > **Half true today** (found 2026-08-12, ledger: `docs/AUDIT-PACKS-12-08.md`): `MemoryStorage` and the
    > Tauri impl both call `sandboxRelative`; **`NodeStorage` does not** — it resolves straight off
    > its root. Test/tooling-only for now, but the sentence above is the invariant, so fix the impl,
    > not the sentence.
@@ -59,7 +59,7 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    script; external links open in the OS browser, not the app webview. CSP governs the
    **webview's** network only; it does **not** cover the updater (see below).
    > **"External links open in the OS browser" is the intent, NOT the code** (found 2026-08-12,
-   > PLAN · REL-4 "the third pass"). Content prose IS rendered as HTML — `ArticleProse` runs
+   > ledger: `docs/AUDIT-PACKS-12-08.md`). Content prose IS rendered as HTML — `ArticleProse` runs
    > `{@html}` over marked+DOMPurify output, which correctly strips scripts and correctly KEEPS
    > `<a href>` — and nothing intercepts the click, so a link in a third-party pack's spell text
    > replaces the whole window with a remote page (no address bar, no back). One delegated handler
@@ -69,8 +69,8 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
 7. **Bundle / content-pack import = data only.** Parsed, **validated (zod) against the
    schema**, surfaced via collision/health UI before use; never executed, never silent
    overwrite.
-   > **The gap validation cannot close is IDENTITY** (found 2026-08-12, PLAN · REL-4 "the third
-   > pass"). A pack declares its own `#content-source`, that tag IS the namespace half of
+   > **The gap validation cannot close is IDENTITY** (found 2026-08-12, ledger:
+   > `docs/AUDIT-PACKS-12-08.md`). A pack declares its own `#content-source`, that tag IS the namespace half of
    > `source:id`, and it is the only provenance the UI shows — so a pack stamping `SRD 5.2.1`
    > renders as "D&D 5.5e", shares the official pack's source toggle, and collides ids with it.
    > Schema validation says the row is well-formed, not that the publisher is who it says. The fix
