@@ -9,18 +9,28 @@
  *    write→reload→write loop — at worst one redundant re-read (already coalesced by the debounce).
  */
 import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
+import { isPackWriteInFlight } from './remote/install';
 import { reloadContent } from './store.svelte';
 
 let stop: (() => void) | null = null;
 let timer: ReturnType<typeof setTimeout> | undefined;
 
+function scheduleReload(): void {
+	clearTimeout(timer);
+	timer = setTimeout(() => {
+		// These events are an apply's / rename's / rollback's OWN writes, and the tree they are
+		// swapping is not one to build a graph from — a pack folder is briefly absent, so the reload
+		// would drop that pack's rows and flag every reference to them, for the ~300 ms until the next
+		// one. Wait it out; each of those paths ends with a reload of its own anyway.
+		if (isPackWriteInFlight()) return scheduleReload();
+		void reloadContent();
+	}, 300);
+}
+
 /** Start watching `<dataDir>/content` (desktop only; no-op off desktop or if already watching). */
 export function startContentWatcher(): void {
 	if (stop || detectPlatform() !== Platform.Desktop) return;
-	stop = getUserStorage().watch('content', () => {
-		clearTimeout(timer);
-		timer = setTimeout(() => void reloadContent(), 300);
-	});
+	stop = getUserStorage().watch('content', scheduleReload);
 }
 
 /** Stop watching (call on teardown / before re-pointing at a new data folder). */

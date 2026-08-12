@@ -250,8 +250,9 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 		// bookkeeping below. `describeUpdate` would raise it too, but only its caller can tell the two
 		// apart, and treating them alike buried this: the offer was dropped and the ETag recorded, so
 		// every later check answered 304 and the user saw the message exactly once, ever.
-		if (packTooLarge(remote)) {
-			updates.error = packSizeRefusal(remote);
+		const oversized = packSizeRefusal(remote);
+		if (oversized) {
+			updates.error = oversized;
 			refused = true;
 			continue;
 		}
