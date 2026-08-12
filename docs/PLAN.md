@@ -1360,9 +1360,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   2026-08-11** (maintainer 2026-08-10; slices 0–11 built and verified against the real GitHub, then
   audited architecturally, and that audit's own list closed the same day — `0cf0c4c`). Nothing here
   is open: reaching a NON-GitHub host was carved out to **REL-5** as a separate, much-later feature.
-  A second read-only pass (2026-08-12) found seven more; five are fixed in `001a9dc` (ETag ordering,
-  truncated trees, the restore queue, the plugin revoke, branch resolution). Two stay open —
-  `docs/AUDIT-PACKS-12-08.md` is their ledger.
+  A second read-only pass (2026-08-12) found seven more, all fixed the same day (`001a9dc`,
+  `9f28d52`..`54d0bb6` — see "the second pass" below).
   **The ask:** a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
@@ -1756,6 +1755,33 @@ holds the done-work log; these are the OPEN tails it carried):**
       reason. The app attaches at startup, long before any apply; the probe now waits.
     - `/dev` had no link from anywhere, so both live probes were unreachable from inside the desktop
       app (there is no address bar). The dev index lists them now.
+
+  **THE SECOND PASS, CLOSED (2026-08-12, `001a9dc` + `9f28d52`..`54d0bb6`).** A read of the module
+  from the outside once it had shipped, over the call chains again. Seven findings; five are in
+  `001a9dc` (that commit is their record). The two that needed structure, plus the tail:
+  - `[x]` **A pack between two renames is not a pack the user deleted** (`9f28d52`). Every pack
+    write makes its folder briefly absent — the two renames of a swap, a rollback, the gap between
+    `rename` and `renamePackEntry`, an uninstall — and the watcher reloads throughout.
+    `forgetUninstalledPacks` read that listing as "uninstalled" and dropped the registry entry: repo
+    URL, pin, `remotePack`. Invisible with the shipped SRD (a bundled pack re-adopts itself), silent
+    data loss for a third-party one. The flag recovery already used is now raised by every pack
+    WRITE (`isPackWriteInFlight` + `duringPackWrite`), and the guard sits INSIDE the destructive
+    function so a second caller cannot reintroduce it.
+  - `[x]` **`provider ↔ remote/*` import cycle** (`cefab1e`). `provider.ts` was both low-level file
+    policy and the orchestration above it, so the remote half had to import the module that imports
+    it. The policy moved to a leaf (`content/disk.ts`); `madge --circular src` joins `pnpm lint` as
+    the back-stop (AI-CONVENTIONS §10).
+  - `[x]` **The tail** (`54d0bb6`): a cap on the number of packs in a REPO (the per-pack caps let a
+    thousand tiny folders through); a pack refused for size no longer buried by the ETag recorded
+    beside it (`recordCheck(…, null)` drops the stored one, so the next check re-lists and refuses
+    again); `isPackFile` now matches only `plugins/<ns>/{main.js,plugin.json}` — anywhere else it
+    was installing executable code no screen in the app would ever mention.
+  - **Left undone on purpose:** `diffPack` still hashes every local file of a pack on each check and
+    at each launch. The double READ is gone (one `readBytes` answers both the blob SHA and the
+    hash-state check), which was the half worth having. Removing the rest means a cache keyed on
+    mtime — a staleness footgun in exchange for ~10 ms on the shipped pack (15 files, 2 MB). Revisit
+    only if a real pack near the 50 MB ceiling turns up: key on `path|mtime|size`, invalidate from
+    the watcher.
 
   **A decision taken on Claude's assumption, flag it if it is wrong:** manifest-free leaves no file
   listing for a generic HTTPS host, so v1 is GitHub-only. That consequence now lives with the feature

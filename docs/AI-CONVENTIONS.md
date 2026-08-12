@@ -810,6 +810,11 @@ The repo ships its own tooling under `tools/` — check there BEFORE hand-rollin
 - **`pnpm jscpd`** — copy-paste detector, threshold 1.8% (part of `pnpm lint` + pre-commit).
 - **eslint `no-restricted-imports`** gates two invariants: `@tauri-apps/*` only in
   `lib/storage/tauri.ts` + `lib/update/**`; `src/lib/rules/**` must not import effects.
+- **`madge --circular src`** (part of `pnpm lint`) — no import cycles. A cycle is usually a module
+  doing two jobs (a leaf's policy plus the orchestration on top of it): split the leaf out rather
+  than reordering imports. The `$lib`/`$app` aliases live in `.madgerc` — without them madge
+  silently SKIPS every aliased import and reports "no cycles" for a repo full of them, so check the
+  skipped-file count if you ever touch that config.
 - Also: `tools/srd/*` (SRD converters), `tools/build-static-content.mjs` (predev/prebuild).
 
 ---
