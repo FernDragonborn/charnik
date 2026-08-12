@@ -117,8 +117,16 @@ interface UpdateState {
 	pending: Record<string, PendingUpdate>;
 	/** what the last pasted URL turned out to hold (empty until someone pastes one) */
 	discovered: DiscoveredPack[];
-	/** last failure, kept for the Settings panel — never toasted: offline is not actionable (UX-1) */
-	error: UpdateError | null;
+	/**
+	 * Failures from the LAST action, in the order they happened — kept for the Settings panel, never
+	 * toasted (offline is not actionable, UX-1).
+	 *
+	 * A list rather than a slot because one action is not one failure: a check walks every repo and
+	 * every pack in it, and each of those can refuse for its own reason. With a single slot the last
+	 * write silently erased the rest, so a user with three repos saw one of three problems and no
+	 * sign that the others existed — the two they could not see were the ones that never got fixed.
+	 */
+	errors: UpdateError[];
 }
 
 export const updates = $state<UpdateState>({
@@ -126,8 +134,19 @@ export const updates = $state<UpdateState>({
 	checking: false,
 	pending: {},
 	discovered: [],
-	error: null
+	errors: []
 });
+
+/** Record a failure. APPENDS: within one action every reason is worth saying, and the caller that
+ *  starts the action is the one that clears (`clearErrors`). */
+function fail(error: UpdateError): void {
+	updates.errors = [...updates.errors, error];
+}
+
+/** Start a fresh action — the previous run's reasons are no longer about anything. */
+function clearErrors(): void {
+	updates.errors = [];
+}
 
 /** Which repos an AUTOMATIC check may contact right now (mode + throttle + pins). */
 export const dueRepos = (cfg: PackConfigData = packConfig, now = Date.now()): string[] =>
@@ -189,7 +208,7 @@ async function runCheck(opts: {
 	}
 
 	updates.checking = true;
-	updates.error = null;
+	clearErrors();
 	try {
 		// ONE budget for the whole run — the per-pack and per-repo caps say nothing about the total,
 		// and `download` mode fetches without asking anyone
@@ -243,7 +262,7 @@ async function checkOneRepo(
 	const stored = packConfig.repos[repo]?.etag;
 	const res = await checkRepo(fetcher, repo, stored);
 	if (noListing(res)) {
-		updates.error = checkFailure(res, repo);
+		fail(checkFailure(res, repo));
 		return;
 	}
 	if (res.kind === 'unchanged') {
@@ -269,7 +288,7 @@ async function checkOneRepo(
 		// every later check answered 304 and the user saw the message exactly once, ever.
 		const oversized = packSizeRefusal(remote);
 		if (oversized) {
-			updates.error = oversized;
+			fail(oversized);
 			refused = true;
 			continue;
 		}
@@ -341,7 +360,7 @@ async function describeUpdate(
 	// doing the same — so the count/size ceiling belongs at this fork rather than at either of them.
 	const tooLarge = packSizeRefusal(remote);
 	if (tooLarge) {
-		updates.error = tooLarge;
+		fail(tooLarge);
 		return null;
 	}
 	const storage = getUserStorage();
@@ -436,6 +455,7 @@ async function runApply(
 		fetcher?: RemoteFetcher;
 	}
 ): Promise<ApplyResult | null> {
+	clearErrors();
 	const pending = updates.pending[pack];
 	if (!pending) return null;
 	const repo = fetchRepo(pending.repo);
@@ -454,7 +474,7 @@ async function runApply(
 		})
 	);
 	if (res.error !== undefined) {
-		updates.error = res.error;
+		fail(res.error);
 		// It stopped to ask about rows disappearing from inside changed files — which is only knowable
 		// once the bytes are here. Fold them into the pending entry so the panel can name them, and
 		// say who they break, before the second click.
@@ -552,12 +572,12 @@ export async function discoverPacks(
 	opts: { fetcher?: RemoteFetcher } = {}
 ): Promise<void> {
 	updates.checking = true;
-	updates.error = null;
+	clearErrors();
 	updates.discovered = [];
 	try {
 		const res = await checkRepo(opts.fetcher ?? tauriFetcher, repo);
 		if (noListing(res)) {
-			updates.error = checkFailure(res, repo);
+			fail(checkFailure(res, repo));
 			return;
 		}
 		// `unchanged` can't happen here — a first look sends no ETag
@@ -568,7 +588,7 @@ export async function discoverPacks(
 		// …and one that would be an unbounded download is refused here rather than half-way through it:
 		// the tree is the only place the whole file list exists before the first byte is asked for.
 		const oversized = res.packs.map(packSizeRefusal).find((e) => e !== null);
-		if (oversized) updates.error = oversized;
+		if (oversized) fail(oversized);
 		// a folder that already exists but belongs to no registry entry is still TAKEN — a pack copied
 		// in by hand must not be overwritten by a stranger that happens to share its name
 		const onDisk = (await discoverContentRoots(getUserStorage()).catch(() => [])).map(packNameOf);
@@ -595,7 +615,7 @@ export async function discoverPacks(
 			});
 		// "nothing here" is the wrong thing to say when we found something and refused it for size
 		if (updates.discovered.length === 0 && !oversized)
-			updates.error = { kind: 'i18n', key: 'settings.packs.noPacksFound', values: { repo } };
+			fail({ kind: 'i18n', key: 'settings.packs.noPacksFound', values: { repo } });
 	} finally {
 		updates.checking = false;
 	}
@@ -615,6 +635,7 @@ export async function installPack(
 	pack: string,
 	opts: { fetcher?: RemoteFetcher; localName?: string; acceptSourceClaim?: boolean } = {}
 ): Promise<ApplyResult | null> {
+	clearErrors();
 	const found = updates.discovered.find((d) => d.pack === pack);
 	if (!found) return null;
 	const typed = (opts.localName ?? found.localName).trim();
@@ -622,7 +643,7 @@ export async function installPack(
 	// WRITES, and a reserved name is the one input that turns an install into data loss — and `local`
 	// can be anything the user typed into the rename box
 	if (!isUsablePackFolderName(typed)) {
-		updates.error = { kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: typed } };
+		fail({ kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: typed } });
 		return null;
 	}
 	// …and it must not be somebody else's folder. Only the entry this repo already owns may be
@@ -633,11 +654,11 @@ export async function installPack(
 	const ownerName = claimedPackName(typed);
 	const owner = ownerName === undefined ? undefined : packConfig.packs[ownerName];
 	if (owner !== undefined && localPackFor(found.repo, pack) !== ownerName) {
-		updates.error = {
+		fail({
 			kind: 'i18n',
 			key: 'settings.packs.folderTaken',
 			values: { name: typed, repo: owner.repo }
-		};
+		});
 		return null;
 	}
 	// our own pack under a differently-cased name is ONE folder, so write to the name the registry
@@ -662,7 +683,7 @@ export async function installPack(
 		})
 	);
 	if (res.error !== undefined) {
-		updates.error = res.error;
+		fail(res.error);
 		return res;
 	}
 	registerPack(local, found.repo, pack);
@@ -689,10 +710,11 @@ export async function installPack(
  * mechanism exists to prevent.
  */
 export async function renamePack(from: string, to: string): Promise<boolean> {
+	clearErrors();
 	const target = to.trim();
 	if (target === from) return true;
 	if (!isUsablePackFolderName(target)) {
-		updates.error = { kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: to } };
+		fail({ kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: to } });
 		return false;
 	}
 	// A BUNDLED pack is identified by the folder the app ships it under and by nothing else — the seed
@@ -701,7 +723,7 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 	// deleted while it sits right there under another name, and offering a restore that would then
 	// load every row twice.
 	if (bundledPacks.packs.includes(from)) {
-		updates.error = { kind: 'i18n', key: 'settings.packs.renameBundled', values: { name: from } };
+		fail({ kind: 'i18n', key: 'settings.packs.renameBundled', values: { name: from } });
 		return false;
 	}
 	const storage = getUserStorage();
@@ -711,14 +733,14 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 	const caseOnly = target.toLowerCase() === from.toLowerCase();
 	const claimed = claimedPackName(target);
 	if (!caseOnly && (claimed !== undefined || (await storage.exists(`content/${target}`)))) {
-		updates.error = {
+		fail({
 			kind: 'i18n',
 			key: 'settings.packs.folderTaken',
 			values: {
 				name: target,
 				repo: (claimed === undefined ? undefined : packConfig.packs[claimed])?.repo ?? ''
 			}
-		};
+		});
 		return false;
 	}
 	// Files and bookkeeping move under one raised flag: in between, NEITHER name has a folder, and a

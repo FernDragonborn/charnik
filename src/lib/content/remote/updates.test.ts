@@ -78,7 +78,7 @@ describe('install a pack from a pasted URL', () => {
 	beforeEach(async () => {
 		Object.assign(packConfig, emptyPackConfig());
 		updates.discovered = [];
-		updates.error = null;
+		updates.errors = [];
 		await getUserStorage().remove('content/dark-sun');
 	});
 
@@ -184,7 +184,7 @@ describe('two repos publishing the same folder name', () => {
 	beforeEach(async () => {
 		Object.assign(packConfig, emptyPackConfig());
 		updates.discovered = [];
-		updates.error = null;
+		updates.errors = [];
 		updates.pending = {};
 		await getUserStorage().remove('content/dark-sun');
 		await getUserStorage().remove('content/dark-sun-2');
@@ -405,7 +405,7 @@ describe('the check runs alone', () => {
 
 		await checkNow({ manual: true, fetcher: serving });
 
-		expect(updates.error).toMatchObject({ key: 'settings.packs.packTooLarge' });
+		expect(updates.errors).toMatchObject([{ key: 'settings.packs.packTooLarge' }]);
 		// neither the new ETag nor the stale one: the next check must re-list and refuse out loud again
 		expect(packConfig.repos[REPO]?.etag).toBeUndefined();
 	});

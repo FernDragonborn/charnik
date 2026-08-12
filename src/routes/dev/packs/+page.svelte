@@ -52,11 +52,13 @@
 
 		updates.supported = true;
 		// the GitHub-only limit, as the panel actually reports it
-		updates.error = {
-			kind: 'i18n',
-			key: 'settings.packs.hostUnsupported',
-			values: { repo: 'https://my-server.example/packs' }
-		};
+		updates.errors = [
+			{
+				kind: 'i18n',
+				key: 'settings.packs.hostUnsupported',
+				values: { repo: 'https://my-server.example/packs' }
+			}
+		];
 		// what a pasted URL turns up, including the code disclosure before you commit
 		updates.discovered = [
 			{

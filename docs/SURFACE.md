@@ -723,6 +723,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface GithubRepo` — `owner/repo` parsed out of any reasonable GitHub URL the user might paste.
 - `function parseGithubRepo` — * Recognise a GitHub repo URL.
+- `function branchCandidates` — * The branches a URL could have meant, most specific first.
 - `const treeUrl` — The ONE request that answers for a whole repo.
 - `const rawUrl` — Where one file's bytes live.
 - `interface RemoteFile` — One remote file: its repo-relative path and the blob SHA that says whether it changed.
@@ -1265,4 +1266,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 735 exports across 103 modules · 40 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 736 exports across 103 modules · 40 duplicate suspects._

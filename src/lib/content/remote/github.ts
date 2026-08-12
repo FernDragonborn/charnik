@@ -50,20 +50,42 @@ const FALLBACK_BRANCH = 'master';
  */
 export function parseGithubRepo(url: string): GithubRepo | null {
 	const u = URL.parse(url);
-	if (u?.hostname !== 'github.com') return null;
+	// `www.` because that is what some browsers put in the address bar, and the URL a user pastes is
+	// the one they copied from there
+	if (u?.hostname !== 'github.com' && u?.hostname !== 'www.github.com') return null;
 	const parts = u.pathname.split('/').filter(Boolean);
-	const [owner, rawRepo, kind, branch] = parts;
+	const [owner, rawRepo, kind] = parts;
 	if (owner === undefined || rawRepo === undefined) return null;
 	const repo = rawRepo.replace(/\.git$/, '');
 	if (repo === '') return null;
-	return {
-		owner,
-		repo,
-		branch: kind === 'tree' && branch !== undefined ? branch : DEFAULT_BRANCH
-	};
+	const rest = kind === 'tree' ? parts.slice(3) : [];
+	return { owner, repo, branch: rest.join('/') || DEFAULT_BRANCH };
 }
 
-/** The ONE request that answers for a whole repo. `recursive=1` returns every path in one response. */
+/**
+ * The branches a URL could have meant, most specific first.
+ *
+ * `/tree/<...>` is ambiguous and the URL cannot resolve it: `tree/feature/x` is a branch called
+ * `feature/x` — slashes in branch names are ordinary — and `tree/main/srd-2024` is the branch `main`
+ * plus a folder inside it, which is what you get by clicking a directory on github.com. Both are
+ * URLs a user will paste, and taking the first segment (what we did) turned every slashed branch
+ * into a 404 on every file, forever, explained as "Not Found".
+ *
+ * So try the whole thing, then progressively shorter prefixes, and let the repo say which one
+ * exists. Costs nothing in the common case — the first candidate is the answer — and only the
+ * FAILING path pays for the rest.
+ */
+export function branchCandidates(repo: GithubRepo): string[] {
+	const parts = repo.branch.split('/');
+	const nested = parts.map((_, i) => parts.slice(0, parts.length - i).join('/'));
+	// a URL that named no branch is a GUESS, and the guess is wrong for every repo still on `master`
+	return repo.branch === DEFAULT_BRANCH ? [DEFAULT_BRANCH, FALLBACK_BRANCH] : nested;
+}
+
+/** The ONE request that answers for a whole repo. `recursive=1` returns every path in one response.
+ *  A branch containing slashes goes in AS IS, not percent-encoded: both hosts resolve the ref
+ *  greedily across path segments, and `raw` below does not decode `%2F` — so encoding it would turn
+ *  `feature/packs` into a ref no server has. */
 export const treeUrl = ({ owner, repo, branch }: GithubRepo): string =>
 	`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`;
 
@@ -212,12 +234,15 @@ export async function checkRepo(
 ): Promise<CheckResult> {
 	const repo = parseGithubRepo(repoUrl);
 	if (!repo) return { kind: 'unsupported' };
-	let branch = repo.branch;
-	let res = await fetcher.getText(treeUrl(repo), etag);
-	// Only on the failing path, and only when the branch was OUR guess rather than the user's: a URL
-	// that named `/tree/<branch>` is answered as asked, right or wrong.
-	if (res.kind === 'error' && res.status === 404 && branch === DEFAULT_BRANCH) {
-		branch = FALLBACK_BRANCH;
+	// Each candidate is tried ONLY when the one before it 404s, so the ordinary URL costs one request
+	// and nothing else changes. Both fallbacks — `main`→`master` for a URL that named no branch, and
+	// the shorter prefixes of one that named a slashed path — are the same "ask which exists" step.
+	const candidates = branchCandidates(repo);
+	let branch = candidates[0] ?? DEFAULT_BRANCH;
+	let res = await fetcher.getText(treeUrl({ ...repo, branch }), etag);
+	for (const next of candidates.slice(1)) {
+		if (!(res.kind === 'error' && res.status === 404)) break;
+		branch = next;
 		res = await fetcher.getText(treeUrl({ ...repo, branch }), etag);
 	}
 	if (res.kind === 'notModified') return { kind: 'unchanged' };

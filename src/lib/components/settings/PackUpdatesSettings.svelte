@@ -165,13 +165,13 @@
 		</p>
 	{/if}
 
-	{#if updates.error}
+	<!-- every reason, not just the last: one check walks several repos and several packs, and each can
+	     refuse for its own -->
+	{#each updates.errors as problem, i (i)}
 		<p class="pack-problem">
-			{updates.error.kind === 'i18n'
-				? $_(updates.error.key, { values: updates.error.values })
-				: updates.error.message}
+			{problem.kind === 'i18n' ? $_(problem.key, { values: problem.values }) : problem.message}
 		</p>
-	{/if}
+	{/each}
 
 	{#if updates.discovered.length > 0}
 		<p class="list-label">

@@ -39,7 +39,11 @@ describe('parseGithubRepo', () => {
 		['https://github.com/FernDragonborn/charnik-content-srd', 'main'],
 		['https://github.com/FernDragonborn/charnik-content-srd.git', 'main'],
 		['https://github.com/FernDragonborn/charnik-content-srd/', 'main'],
-		['https://github.com/FernDragonborn/charnik-content-srd/tree/dev', 'dev']
+		['https://github.com/FernDragonborn/charnik-content-srd/tree/dev', 'dev'],
+		// a branch name may contain slashes; taking the first segment 404s every file, forever
+		['https://github.com/FernDragonborn/charnik-content-srd/tree/feature/packs', 'feature/packs'],
+		// …and this is what the address bar hands you in some browsers
+		['https://www.github.com/FernDragonborn/charnik-content-srd', 'main']
 	])('%s → branch %s', (url, branch) => {
 		expect(parseGithubRepo(url)).toEqual({ ...REPO, branch });
 	});
@@ -279,6 +283,44 @@ describe('the branch we guessed is not the branch the repo has', () => {
 	it('does not second-guess a branch the USER named', async () => {
 		const res = await checkRepo(answering('master'), 'https://github.com/a/b/tree/dev');
 		expect(res).toEqual({ kind: 'error', message: 'Not Found' });
+	});
+
+	/* `/tree/a/b` is genuinely ambiguous — a branch called `a/b`, or the branch `a` with a folder `b`
+	   inside it (what clicking a directory on github.com gives you). Only the repo can say. */
+	it('tries a slashed path as a branch first, then as branch + folder', async () => {
+		const asked: string[] = [];
+		const onlyMain: RemoteFetcher = {
+			getText: async (url) => {
+				asked.push(url);
+				return url.includes('/main?')
+					? { kind: 'ok', body: tree([['srd-2024/spells_srd.csv', 'a']]) }
+					: { kind: 'error', status: 404, message: 'Not Found' };
+			},
+			getBytes: async () => ({ kind: 'error', message: 'not used' })
+		};
+
+		const res = await checkRepo(onlyMain, 'https://github.com/a/b/tree/main/srd-2024');
+
+		expect(res).toMatchObject({ kind: 'packs', branch: 'main' });
+		expect(asked[0]).toContain('trees/main/srd-2024?'); // the whole thing, asked first
+	});
+
+	it('a slashed BRANCH answers on the first try and costs one request', async () => {
+		let calls = 0;
+		const slashed: RemoteFetcher = {
+			getText: async (url) => {
+				calls += 1;
+				return url.includes('feature/packs?')
+					? { kind: 'ok', body: tree([['srd-2024/spells_srd.csv', 'a']]) }
+					: { kind: 'error', status: 404, message: 'Not Found' };
+			},
+			getBytes: async () => ({ kind: 'error', message: 'not used' })
+		};
+
+		const res = await checkRepo(slashed, 'https://github.com/a/b/tree/feature/packs');
+
+		expect(res).toMatchObject({ kind: 'packs', branch: 'feature/packs' });
+		expect(calls).toBe(1);
 	});
 
 	it('a 404 that is not about the branch still surfaces once main is tried', async () => {
