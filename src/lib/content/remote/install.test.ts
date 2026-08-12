@@ -296,6 +296,36 @@ describe('apply is a folder swap', () => {
 		expect(await s.read('content/p/a.csv')).toContain('MY EDIT'); // untouched
 	});
 
+	/* The disk half can throw where the network half returns a value — a full disk, `EBUSY` from a
+	   CSV open in Excel. Landing between the two renames leaves the pack folder ABSENT, and once the
+	   in-flight flag drops the next rebuild reads that as an uninstall and takes the registry entry
+	   (repo URL + pin) with it. So the swap settles itself before the throw escapes. */
+	it('puts the pack back when the swap itself fails, before anyone can read it as uninstalled', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p/a.csv', enc('id\nold'));
+		const diff = await diffFor(s, 'p/a.csv');
+		// fail the LAST rename — `.new` → live — which is the moment the pack does not exist
+		const realRename = s.rename.bind(s);
+		s.rename = async (from: string, to: string) => {
+			if (from === 'content/p.new') throw new Error('EBUSY');
+			return realRename(from, to);
+		};
+
+		await expect(
+			applyPackUpdate({
+				storage: s,
+				fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
+				repo: REPO,
+				diff
+			})
+		).rejects.toThrow('EBUSY');
+
+		s.rename = realRename;
+		expect(await s.exists('content/p')).toBe(true); // …not a hole where the pack used to be
+		expect(await s.read('content/p/a.csv')).toBe('id\nold'); // and it is the version we started with
+		expect(await s.exists('content/p.new')).toBe(false);
+	});
+
 	it('leaves the previous version behind, and can roll back to it', async () => {
 		const s = new MemoryStorage();
 		await s.writeBytes('content/p/a.csv', enc('id\nold'));
@@ -506,6 +536,51 @@ describe('the pre-download staging cache', () => {
 		expect(await isStaged(s, diff)).toBe(true);
 		await pruneCache(s, new Set());
 		expect(await isStaged(s, diff)).toBe(false);
+	});
+
+	/* The per-pack and per-repo caps say nothing about the TOTAL a check may fetch, and `download`
+	   mode fetches without asking anyone. Running out is not an error — the offer stands, it just
+	   pays for its bytes at the click. */
+	it('stops pre-downloading when the run is out of budget, and still offers the update', async () => {
+		const s = new MemoryStorage();
+		const diff = await stagedDiff();
+		const budget = { left: 0 };
+
+		const complete = await stagePackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/a.csv': bodyA }),
+			repo: REPO,
+			diff,
+			budget
+		});
+
+		expect(complete).toBe(false);
+		expect(await isStaged(s, diff)).toBe(false); // nothing cached…
+		// …and the update still applies, off the network, exactly as an un-staged one always did
+		const res = await applyPackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/a.csv': bodyA }),
+			repo: REPO,
+			diff
+		});
+		expect(res.error).toBeUndefined();
+		expect(await s.read('content/p/a.csv')).toBe(bodyA);
+	});
+
+	it('spends the budget as it fetches, so a later pack in the same run sees less of it', async () => {
+		const s = new MemoryStorage();
+		const diff = await stagedDiff();
+		const budget = { left: 1024 };
+
+		await stagePackUpdate({
+			storage: s,
+			fetcher: fetcherOf({ 'p/a.csv': bodyA }),
+			repo: REPO,
+			diff,
+			budget
+		});
+
+		expect(budget.left).toBe(1024 - enc(bodyA).byteLength);
 	});
 
 	it('a cache entry whose bytes do not match its name is a MISS, not a shortcut', async () => {

@@ -52,6 +52,27 @@ export const MAX_PACK_BYTES = 50 * 1024 * 1024;
 export const MAX_REPO_PACKS = 50;
 
 /**
+ * …and what ONE automatic check may pre-download IN TOTAL, which none of the caps above bound.
+ *
+ * They are per pack (200 files / 50 MB) and per repo (50 packs), so a check that walks several repos
+ * can legitimately clear every one of them and still fetch multiple gigabytes — with nobody asked,
+ * because `download` mode's whole promise is fetching ahead of the click. A per-pack ceiling READS
+ * like a total and is not one.
+ *
+ * Spent across packs and repos within a single check. Running out is not an error: the update is
+ * still found, still offered, and still applies — it just fetches its bytes at that point instead of
+ * in advance. Sized as "a few big packs", well above the shipped 2 MB and well below "my evening".
+ */
+export const MAX_PREFETCH_BYTES = 100 * 1024 * 1024;
+
+/** What is left of {@link MAX_PREFETCH_BYTES} for this check. A mutable object rather than a return
+ *  value because it is spent by a loop inside a loop — packs within repos — and every level has to
+ *  see the same remainder. */
+export interface PrefetchBudget {
+	left: number;
+}
+
+/**
  * A failure the UI can show. Two kinds on purpose: `i18n` is copy WE author (translatable, values
  * interpolated by the component), `raw` is what the network stack handed us — a machine string we
  * must not pretend to have written. Keeping them apart is what stops new untranslated English

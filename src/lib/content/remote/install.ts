@@ -21,7 +21,7 @@
 import type { Storage } from '$lib/storage/types';
 import type { ContentGraph } from '../loader';
 import { rawUrl, type GithubRepo, type RemotePack } from './github';
-import type { RemoteFetcher, UpdateError } from './types';
+import type { PrefetchBudget, RemoteFetcher, UpdateError } from './types';
 import { listFilesRecursive } from '$lib/storage/walk';
 import {
 	FILE_CHANGE,
@@ -234,7 +234,20 @@ async function swapInNewTree(
 ): Promise<void> {
 	if (staged.length === 0 && dropping.size === 0) return; // nothing to do — don't churn a .prev
 	// …so a content rebuild triggered by these very writes can't sweep the staging folder
-	await duringPackWrite(() => buildAndSwap(storage, pack, staged, dropping));
+	await duringPackWrite(async () => {
+		try {
+			await buildAndSwap(storage, pack, staged, dropping);
+		} catch (e) {
+			// A THROW mid-swap (a full disk, `EBUSY` from a CSV open in Excel, a name the OS refuses)
+			// can land between the two renames, where the pack folder does not exist. Settling it here
+			// — while the in-flight flag is still up — is the difference between "the update failed"
+			// and losing the registry entry: once the flag drops, the next content rebuild reads the
+			// missing folder as an uninstall and `forgetUninstalledPacks` takes the repo URL and the
+			// pin with it. Recovery restores the files at the next launch; nothing restores those.
+			await recoverInterruptedApply(storage, pack);
+			throw e;
+		}
+	});
 }
 
 async function buildAndSwap(
@@ -432,24 +445,36 @@ export async function stagePackUpdate({
 	storage,
 	fetcher,
 	repo,
-	diff
+	diff,
+	budget
 }: {
 	storage: Storage;
 	fetcher: RemoteFetcher;
 	repo: GithubRepo;
 	diff: PackDiff;
+	/** What the whole check may still pre-download. Absent = unmetered (a caller doing one pack on
+	 *  purpose). Spending it here rather than estimating up front keeps the accounting honest for a
+	 *  listing that states no file sizes. */
+	budget?: PrefetchBudget;
 }): Promise<boolean> {
 	let complete = true;
 	for (const change of diff.changes) {
 		if (change.kind !== FILE_CHANGE.added && change.kind !== FILE_CHANGE.changed) continue;
 		if (change.sha === undefined) continue;
 		if ((await readCached(storage, change.sha)) !== null) continue;
+		// out of budget: stop FETCHING, don't stop offering. The update is still found and still
+		// applies — it just pays for its bytes at the click instead of ahead of it.
+		if (budget !== undefined && budget.left <= 0) {
+			complete = false;
+			continue;
+		}
 		const res = await fetcher.getBytes(rawUrl(repo, change.path));
 		if (res.kind === 'error' || (await gitBlobSha(res.bytes)) !== change.sha) {
 			complete = false;
 			continue;
 		}
 		await storage.writeBytes(cachePath(change.sha), res.bytes);
+		if (budget !== undefined) budget.left -= res.bytes.byteLength;
 	}
 	return complete;
 }

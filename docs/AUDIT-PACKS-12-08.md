@@ -102,7 +102,7 @@ only for the log folder and the data dir.
 `opener` capability is already granted). Same handler serves `PanelCard`, the other consumer of
 `renderContentMarkdown`.
 
-### [ ] 5. The apply path has no error boundary, and a throw mid-swap costs the registry entry
+### [x] 5. The apply path has no error boundary, and a throw mid-swap costs the registry entry
 
 Neither `runApply` (`remote/updates.svelte.ts:390`) nor `installPack` wraps `applyPackUpdate`, and
 `buildAndSwap` (`remote/install.ts:240`) throws on a full disk, on `EBUSY` (a content CSV open in
@@ -116,17 +116,25 @@ is free to read "uninstalled", and `forgetUninstalledPacks` drops the repo URL a
 
 This is the failure `9f28d52` closed for the success path, reachable again through the failure path.
 
-**Fix:** catch → `UpdateError`; and hold the in-flight flag across the recovery, not just the write.
+**Fixed, in that order of importance.** `swapInNewTree` now settles a half-done swap
+(`recoverInterruptedApply`) BEFORE the throw escapes, while the in-flight flag is still up — so no
+reload can ever see the gap, which is the half that cost the registry entry. The callers then wrap
+the whole apply in `guarded()`, so a disk failure reads as an ordinary `UpdateError` in the panel
+instead of an unhandled rejection and a silent no-op. Test: the last rename fails, the pack is still
+there afterwards holding the version it started with.
 
-### [ ] 6. The response size cap is enforced after the body is already in memory
+### [x] 6. The response size cap is enforced after the body is already in memory
 
 `remote/tauri-fetch.ts:23` checks `Content-Length`, then `await res.text()` / `arrayBuffer()`, then
 re-checks against the actual length. So a response with no declared length — or a lying one — is
 **fully buffered before anything refuses it**, which is precisely the case the comment says must not
 get a free pass. `MAX_REMOTE_BYTES` currently bounds what we will *use*, not what we will *hold*.
 
-**Fix:** read through `res.body.getReader()` with a running byte count, abort at the ceiling. (Also:
-`body.length` counts UTF-16 units, not bytes — a cosmetic under/over-count next to the real issue.)
+**Fixed:** `readCapped` counts as the body arrives and cancels the stream at the ceiling — which is
+worth doing rather than cosmetic, because `plugin-http` pulls the body over IPC chunk by chunk and
+releases the Rust-side resources on cancel, so the transfer really stops. The `Content-Length` check
+stays in front of it as the cheap refusal. The UTF-16 `body.length` miscount is gone with it (bytes
+are counted as bytes, then decoded once). Tests: `tauri-fetch.test.ts`.
 
 ### [x] 7. No total request timeout, and everything queues behind one
 
@@ -169,15 +177,17 @@ show the pack in the article meta, group `SourceManager` by `(pack, source)`.
 
 ---
 
-### [ ] 10. `download` mode has no AGGREGATE budget
+### [x] 10. `download` mode has no AGGREGATE budget
 
 The caps are per pack (200 files / 50 MB) and per repo (50 packs). Nothing bounds ONE CHECK: fifty
 packs of fifty megabytes across several repos is an automatic multi-gigabyte download in `download`
 mode, which is the mode whose whole promise is "we fetch ahead of time so applying is instant". The
 per-pack ceiling reads like a total and is not one.
 
-**Fix:** a byte budget for a whole check run, spent by `stagePackUpdate` and stopping the
-pre-download when it is exhausted (the update is still offered; it just fetches on apply).
+**Fixed:** `MAX_PREFETCH_BYTES` (100 MB), one `PrefetchBudget` per check run, threaded through
+`checkOneRepo` into `stagePackUpdate` and spent per file as it lands. Deliberately spent rather than
+estimated up front: a tree listing may state no sizes, and an estimate that reads zero is not a
+budget. Running out stops the FETCH, not the offer.
 
 ### [ ] 11. A registry write that fails is swallowed, so a PIN can silently not exist
 
@@ -190,7 +200,7 @@ shows it pinned, the UI agrees, and the next launch quietly does not.
 **Decided 2026-08-12 (maintainer):** the user has to be told what happened and what to do about it,
 so this is not a log line — it surfaces in the pack panel.
 
-### [ ] 12. `restoreBundledPacks` writes outside both rules the other writers obey
+### [x] 12. `restoreBundledPacks` writes outside both rules the other writers obey
 
 `provider.ts:150` copies every bundled file over whatever is there: no `duringPackWrite` flag (so a
 watcher reload can build a graph from a half-restored pack, and `forgetUninstalledPacks` can run mid-
@@ -200,6 +210,10 @@ without exception.
 
 Harmless TODAY only because restore is offered for a pack that is entirely absent, so there is
 nothing to clobber. That constraint is written down nowhere, and the function does not enforce it.
+
+**Fixed:** the copy runs inside `duringPackWrite`, and skips any file that is protected from
+overwrite — the same rule the seed obeys, so "a hand-edited file is the user's" now has no writer
+that ignores it.
 
 ---
 

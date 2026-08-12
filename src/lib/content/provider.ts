@@ -29,7 +29,7 @@ import { loadContent, type ContentGraph, type ContentSource } from './loader';
 import { HOMEBREW_ROOT } from './homebrew';
 import { CONTENT_DIR, discoverContentRoots, isProtectedFromOverwrite, packNameOf } from './disk';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
-import { isPackWriteInFlight, recoverInterruptedApply } from './remote/install';
+import { duringPackWrite, isPackWriteInFlight, recoverInterruptedApply } from './remote/install';
 import {
 	bundledPacks,
 	forgetPack,
@@ -150,11 +150,22 @@ export function forgetUninstalledPacks(installed: string[]): void {
 export async function restoreBundledPacks(packs: string[]): Promise<void> {
 	const bundled = new FetchStorage(base);
 	const user = getUserStorage();
-	for (const pack of packs) {
-		const root = `${CONTENT_DIR}/${pack}`;
-		for (const path of await listFilesRecursive(bundled, root))
-			await user.writeBytes(path, await bundled.readBytes(path));
-	}
+	// Under the in-flight flag, like every other writer of `content/`: this brings a pack back file by
+	// file, and a watcher-driven rebuild landing in the middle would build a graph from half of it —
+	// while `forgetUninstalledPacks` reads the same still-changing listing to decide what was removed.
+	await duringPackWrite(async () => {
+		for (const pack of packs) {
+			const root = `${CONTENT_DIR}/${pack}`;
+			for (const path of await listFilesRecursive(bundled, root)) {
+				// …and under the rule the seed obeys: a file whose body no longer matches its own
+				// `#content-hash` is the user's, and no writer of ours overwrites it. Restore is offered
+				// for a pack that is ABSENT, so this normally finds nothing — but "normally" is not a
+				// guard, and a folder half-deleted by hand is exactly when it stops being true.
+				if ((await user.exists(path)) && (await isProtectedFromOverwrite(user, path))) continue;
+				await user.writeBytes(path, await bundled.readBytes(path));
+			}
+		}
+	});
 	unDismissMissing(packs);
 	resetContentGraph();
 }

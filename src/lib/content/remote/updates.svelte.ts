@@ -58,7 +58,13 @@ import {
 	type ApplyResult
 } from './install';
 import { tauriFetcher } from './tauri-fetch';
-import { MAX_REPO_PACKS, type RemoteFetcher, type UpdateError } from './types';
+import {
+	MAX_PREFETCH_BYTES,
+	MAX_REPO_PACKS,
+	type PrefetchBudget,
+	type RemoteFetcher,
+	type UpdateError
+} from './types';
 
 /** One pack with an update waiting, and everything the user needs to decide about it. */
 export interface PendingUpdate {
@@ -185,7 +191,10 @@ async function runCheck(opts: {
 	updates.checking = true;
 	updates.error = null;
 	try {
-		for (const repo of repos) await checkOneRepo(fetcher, repo);
+		// ONE budget for the whole run — the per-pack and per-repo caps say nothing about the total,
+		// and `download` mode fetches without asking anyone
+		const budget: PrefetchBudget = { left: MAX_PREFETCH_BYTES };
+		for (const repo of repos) await checkOneRepo(fetcher, repo, budget);
 		// the pending set is now complete, so it is also authoritative about what the pre-download
 		// cache is still holding for a reason
 		await pruneCache(getUserStorage(), stagedShas());
@@ -226,7 +235,11 @@ function checkFailure(res: CheckFailure, repo: string): UpdateError {
 	return { kind: 'i18n', key: 'settings.packs.repoTooBig', values: { repo } };
 }
 
-async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void> {
+async function checkOneRepo(
+	fetcher: RemoteFetcher,
+	repo: string,
+	budget?: PrefetchBudget
+): Promise<void> {
 	const stored = packConfig.repos[repo]?.etag;
 	const res = await checkRepo(fetcher, repo, stored);
 	if (noListing(res)) {
@@ -274,7 +287,8 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 				storage: getUserStorage(),
 				fetcher,
 				repo: parsed,
-				diff: pending.diff
+				diff: pending.diff,
+				...(budget === undefined ? {} : { budget })
 			});
 			pending.staged = await isStaged(getUserStorage(), pending.diff);
 		}
@@ -374,6 +388,28 @@ async function whoBreaks(
 }
 
 /**
+ * The disk half of an apply can THROW where the network half returns a value: a full disk, `EBUSY`
+ * from a content CSV someone left open in Excel, a folder the OS refuses. Every one of those is an
+ * ordinary failure the panel should state, and without this they surfaced as an unhandled rejection
+ * and a silent no-op — the one shape of failure the user cannot even see.
+ *
+ * The disk is left consistent by `swapInNewTree`, which settles a half-done swap before rethrowing;
+ * this only decides how the failure READS.
+ */
+async function guarded(run: () => Promise<ApplyResult>): Promise<ApplyResult> {
+	try {
+		return await run();
+	} catch (e) {
+		return {
+			written: [],
+			preserved: [],
+			removed: [],
+			error: { kind: 'raw', message: e instanceof Error ? e.message : String(e) }
+		};
+	}
+}
+
+/**
  * Apply ONE pack's pending update. Always called from a click — never from `checkNow`, never on a
  * timer (SECURITY.md §7). Returns what happened; on failure nothing was written.
  */
@@ -403,15 +439,17 @@ async function runApply(
 	const repo = fetchRepo(pending.repo);
 	if (!repo) return null;
 
-	const res = await applyPackUpdate({
-		storage: getUserStorage(),
-		fetcher: opts.fetcher ?? tauriFetcher,
-		repo,
-		diff: pending.diff,
-		removeDeleted: opts.removeDeleted === true,
-		graph: content.graph,
-		acceptRowRemovals: opts.acceptRowRemovals === true
-	});
+	const res = await guarded(() =>
+		applyPackUpdate({
+			storage: getUserStorage(),
+			fetcher: opts.fetcher ?? tauriFetcher,
+			repo,
+			diff: pending.diff,
+			removeDeleted: opts.removeDeleted === true,
+			graph: content.graph,
+			acceptRowRemovals: opts.acceptRowRemovals === true
+		})
+	);
 	if (res.error !== undefined) {
 		updates.error = res.error;
 		// It stopped to ask about rows disappearing from inside changed files — which is only knowable
@@ -607,12 +645,15 @@ export async function installPack(
 	const repo: GithubRepo = { ...parsed, branch: found.branch };
 
 	const storage = getUserStorage();
-	const res = await applyPackUpdate({
-		storage,
-		fetcher: opts.fetcher ?? tauriFetcher,
-		repo,
-		diff: await diffPack(storage, found.remote, local)
-	});
+	const res = await guarded(async () =>
+		applyPackUpdate({
+			storage,
+			fetcher: opts.fetcher ?? tauriFetcher,
+			repo,
+			// inside the guard too: a first install reads the disk before it writes to it
+			diff: await diffPack(storage, found.remote, local)
+		})
+	);
 	if (res.error !== undefined) {
 		updates.error = res.error;
 		return res;

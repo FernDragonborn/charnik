@@ -761,6 +761,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MAX_PACK_FILES` — * …and the same question asked of a whole PACK, which `MAX_REMOTE_BYTES` cannot answer: it bounds one * response, so …
 - `const MAX_PACK_BYTES`
 - `const MAX_REPO_PACKS` — * …and the same question asked of the REPO, which the per-pack caps cannot answer: they are applied * pack by pack, s…
+- `const MAX_PREFETCH_BYTES` — * …and what ONE automatic check may pre-download IN TOTAL, which none of the caps above bound.
+- `interface PrefetchBudget` — What is left of {@link MAX_PREFETCH_BYTES} for this check.
 - `type UpdateError` — * A failure the UI can show.
 
 ### `src/lib/content/schemas.ts`
@@ -1255,4 +1257,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 729 exports across 102 modules · 39 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 731 exports across 102 modules · 39 duplicate suspects._

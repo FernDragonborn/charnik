@@ -30,12 +30,45 @@ function assertHttps(url: string): void {
  */
 const REQUEST_TIMEOUT_MS = 60_000;
 
-/** Guard against a body that would blow memory up, using the declared length when there is one and
- *  the actual size when there isn't (a lying or absent `Content-Length` must not get a free pass). */
-function tooLarge(res: Response, actual?: number): boolean {
+/** The cheap refusal: a body that ADMITS to being too big never gets read at all. */
+function declaredTooLarge(res: Response): boolean {
 	const declared = Number(res.headers.get('content-length'));
-	if (Number.isFinite(declared) && declared > MAX_REMOTE_BYTES) return true;
-	return actual !== undefined && actual > MAX_REMOTE_BYTES;
+	return Number.isFinite(declared) && declared > MAX_REMOTE_BYTES;
+}
+
+/**
+ * Read a body with a hard ceiling, `null` when it is crossed.
+ *
+ * The header check above is a courtesy — `Content-Length` can be absent (chunked) or simply a lie,
+ * and the previous version answered that by buffering the WHOLE body and refusing it afterwards,
+ * which bounds what we use and not what we hold. This counts as it goes and cancels the stream.
+ *
+ * Cancelling is worth something here: `plugin-http` pulls the body over IPC chunk by chunk and
+ * releases the Rust-side resources when the stream is dropped, so the transfer actually stops rather
+ * than finishing into a buffer nobody wanted.
+ */
+async function readCapped(res: Response): Promise<Uint8Array | null> {
+	const reader = res.body?.getReader();
+	if (!reader) return new Uint8Array(); // a null-body status (204/304) is legitimately empty
+	const chunks: Uint8Array[] = [];
+	let total = 0;
+	for (;;) {
+		const { done, value } = await reader.read();
+		if (done || value === undefined) break;
+		total += value.byteLength;
+		if (total > MAX_REMOTE_BYTES) {
+			await reader.cancel().catch(() => {});
+			return null;
+		}
+		chunks.push(value);
+	}
+	const out = new Uint8Array(total);
+	let at = 0;
+	for (const chunk of chunks) {
+		out.set(chunk, at);
+		at += chunk.byteLength;
+	}
+	return out;
 }
 
 export const tauriFetcher: RemoteFetcher = {
@@ -52,9 +85,10 @@ export const tauriFetcher: RemoteFetcher = {
 			});
 			if (res.status === 304) return { kind: 'notModified' };
 			if (!res.ok) return { kind: 'error', status: res.status, message: res.statusText };
-			if (tooLarge(res)) return { kind: 'error', message: 'response too large' };
-			const body = await res.text();
-			if (tooLarge(res, body.length)) return { kind: 'error', message: 'response too large' };
+			if (declaredTooLarge(res)) return { kind: 'error', message: 'response too large' };
+			const bytes = await readCapped(res);
+			if (bytes === null) return { kind: 'error', message: 'response too large' };
+			const body = new TextDecoder().decode(bytes);
 			const next = res.headers.get('etag');
 			return next === null ? { kind: 'ok', body } : { kind: 'ok', body, etag: next };
 		} catch (e) {
@@ -73,10 +107,9 @@ export const tauriFetcher: RemoteFetcher = {
 				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
 			});
 			if (!res.ok) return { kind: 'error' as const, message: `${res.status} ${res.statusText}` };
-			if (tooLarge(res)) return { kind: 'error' as const, message: 'response too large' };
-			const bytes = new Uint8Array(await res.arrayBuffer());
-			if (tooLarge(res, bytes.length))
-				return { kind: 'error' as const, message: 'response too large' };
+			if (declaredTooLarge(res)) return { kind: 'error' as const, message: 'response too large' };
+			const bytes = await readCapped(res);
+			if (bytes === null) return { kind: 'error' as const, message: 'response too large' };
 			return { kind: 'ok' as const, bytes };
 		} catch (e) {
 			return { kind: 'error' as const, message: e instanceof Error ? e.message : String(e) };
