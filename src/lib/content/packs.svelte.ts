@@ -399,14 +399,21 @@ export function setRepoBranch(repo: string, branch: string): void {
 	persist();
 }
 
-/** Remember that we asked this repo — including a `304`, which is exactly the case worth recording
- *  (it cost nothing and means "still current"). */
-export function recordCheck(repo: string, at: Date, etag?: string): void {
-	const prev = packConfig.repos[repo] ?? {};
-	packConfig.repos[repo] = {
-		...prev,
-		lastCheckedAt: at.toISOString(),
-		...(etag === undefined ? {} : { etag })
-	};
+/**
+ * Remember that we asked this repo — including a `304`, which is exactly the case worth recording
+ * (it cost nothing and means "still current").
+ *
+ * The `etag` argument has three states, because the caller has three things to say: a string is a
+ * new listing to remember, `undefined` keeps whatever we had (the `304` path — the stored one is
+ * still the current one), and **`null` throws it away**. That last one is for a listing that
+ * arrived and was NOT fully acted on: the ETag means "I have seen this remote state", and while it
+ * is on disk the next check is a free `304` that returns before it looks at a single pack. So a
+ * refusal recorded alongside one is a refusal the user is told about exactly once, ever.
+ */
+export function recordCheck(repo: string, at: Date, etag?: string | null): void {
+	const next = { ...(packConfig.repos[repo] ?? {}), lastCheckedAt: at.toISOString() };
+	if (etag === null) delete next.etag;
+	else if (etag !== undefined) next.etag = etag;
+	packConfig.repos[repo] = next;
 	persist();
 }

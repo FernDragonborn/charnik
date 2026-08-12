@@ -21,7 +21,13 @@
  * scheduled for much later and deliberately not a tail of REL-4. Until then this file is the fast
  * path AND the only path — deliberately.
  */
-import { MAX_PACK_BYTES, MAX_PACK_FILES, type RemoteFetcher, type UpdateError } from './types';
+import {
+	MAX_PACK_BYTES,
+	MAX_PACK_FILES,
+	MAX_REPO_PACKS,
+	type RemoteFetcher,
+	type UpdateError
+} from './types';
 
 /** `owner/repo` parsed out of any reasonable GitHub URL the user might paste. */
 export interface GithubRepo {
@@ -89,12 +95,20 @@ interface TreeEntry {
 	size?: unknown;
 }
 
+/**
+ * Executable code, in the ONE layout that means anything: `<pack>/plugins/<namespace>/main.js`
+ * beside its `plugin.json` (PLUGINS §2). Anywhere else — a `main.js` at the pack root, one nested
+ * under `plugins/ns/vendor/` — nothing loads it and nothing discloses it, so installing it was
+ * writing a script onto the user's disk that no screen in the app would ever mention.
+ */
+const PLUGIN_FILE = /(^|\/)plugins\/[^/]+\/(plugin\.json|main\.js)$/;
+
 /** A file a pack actually ships: content CSVs, plus the plugin files a pack may carry (§ PLUGINS 2).
  *  The DIFF applies the same test to the local side, so a file the pack format doesn't cover — a
  *  README, a leftover from an older layout, notes the user keeps beside the data — is never
  *  proposed for deletion just because the remote doesn't list it. */
 export const isPackFile = (path: string): boolean =>
-	path.endsWith('.csv') || path.endsWith('plugin.json') || path.endsWith('main.js');
+	path.endsWith('.csv') || PLUGIN_FILE.test(path);
 
 /**
  * Group a GitHub tree response into packs. The rule is deliberately the same one used locally —
@@ -184,6 +198,7 @@ export type CheckResult =
 	| { kind: 'unchanged' }
 	| { kind: 'unsupported' } // not a host we have a fast path for
 	| { kind: 'truncated' } // the repo is too big for one listing — see `packsFromTree`
+	| { kind: 'tooManyPacks'; packs: number } // …or too many packs to walk — see `MAX_REPO_PACKS`
 	| { kind: 'error'; message: string };
 
 /**
@@ -209,6 +224,9 @@ export async function checkRepo(
 	if (res.kind === 'error') return { kind: 'error', message: res.message };
 	const { packs, truncated } = packsFromTree(res.body);
 	if (truncated) return { kind: 'truncated' };
+	// Refused as a whole rather than trimmed to the first fifty: which packs a repo offers is not
+	// ours to pick, and the caller would then diff and list a silently partial repo.
+	if (packs.length > MAX_REPO_PACKS) return { kind: 'tooManyPacks', packs: packs.length };
 	return res.etag === undefined
 		? { kind: 'packs', packs, branch }
 		: { kind: 'packs', packs, branch, etag: res.etag };

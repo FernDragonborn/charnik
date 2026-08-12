@@ -16,7 +16,13 @@ import {
 	type GithubRepo,
 	type RemotePack
 } from './github';
-import { MAX_PACK_BYTES, MAX_PACK_FILES, type RemoteFetcher, type FetchResult } from './types';
+import {
+	MAX_PACK_BYTES,
+	MAX_PACK_FILES,
+	MAX_REPO_PACKS,
+	type RemoteFetcher,
+	type FetchResult
+} from './types';
 
 const REPO: GithubRepo = { owner: 'FernDragonborn', repo: 'charnik-content-srd', branch: 'main' };
 
@@ -96,6 +102,24 @@ describe('packsFromTree — a pack is a TOP-LEVEL folder, same rule as locally',
 		expect(packs[0]?.pack).toBe('dark-sun');
 		expect(packs[0]?.files).toHaveLength(2);
 	});
+	/* `<pack>/plugins/<ns>/` is the only layout that means anything: it is what the loader loads and
+	   what the installer discloses. A `main.js` anywhere else would be installed as executable code
+	   the app never mentions and never runs — a script written to the user's disk for nothing. */
+	it('takes plugin code only where a plugin actually lives', () => {
+		const { packs } = packsFromTree(
+			tree([
+				['dark-sun/main.js', 'a'],
+				['dark-sun/plugins/ns/vendor/main.js', 'b'],
+				['dark-sun/plugins/ns/main.js', 'c'],
+				['dark-sun/spells.csv', 'd']
+			])
+		);
+		expect(packs[0]?.files.map((f) => f.path)).toEqual([
+			'dark-sun/plugins/ns/main.js',
+			'dark-sun/spells.csv'
+		]);
+	});
+
 	it('garbage in → empty, never a throw at startup', () => {
 		expect(packsFromTree('{oops').packs).toEqual([]);
 		expect(packsFromTree('{}').packs).toEqual([]);
@@ -210,6 +234,29 @@ describe('a truncated listing is refused, not used', () => {
 
 	it('an ordinary tree is not truncated', () => {
 		expect(packsFromTree(tree([['p/a.csv', 'a']])).truncated).toBe(false);
+	});
+});
+
+/* The per-PACK caps are applied pack by pack, so a repo of a thousand tiny folders passes every one
+   of them and still asks the app to diff a thousand packs against the disk and list them all. */
+describe('a repo with more packs than we will walk', () => {
+	const manyPacks = (count: number) =>
+		tree(Array.from({ length: count }, (_, i): [string, string] => [`pack-${i}/a.csv`, `${i}`]));
+
+	it('is refused as a whole, and says how many it had', async () => {
+		const res = await checkRepo(
+			fakeFetcher({ kind: 'ok', body: manyPacks(MAX_REPO_PACKS + 1), etag: 'W/"1"' }),
+			'https://github.com/a/b'
+		);
+		expect(res).toEqual({ kind: 'tooManyPacks', packs: MAX_REPO_PACKS + 1 });
+	});
+
+	it('a repo at the ceiling still works — this is a runaway guard, not a policy', async () => {
+		const res = await checkRepo(
+			fakeFetcher({ kind: 'ok', body: manyPacks(MAX_REPO_PACKS), etag: 'W/"1"' }),
+			'https://github.com/a/b'
+		);
+		expect(res).toMatchObject({ kind: 'packs' });
 	});
 });
 

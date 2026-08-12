@@ -265,7 +265,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function setPinned` — Freeze / unfreeze a pack.
 - `function setUpdateMode`
 - `function setRepoBranch` — Remember which branch this repo's listing came off (see {@link RepoEntry.branch}).
-- `function recordCheck` — Remember that we asked this repo — including a `304`, which is exactly the case worth recording * (it cost nothing an…
+- `function recordCheck` — * Remember that we asked this repo — including a `304`, which is exactly the case worth recording * (it cost nothing …
 
 ### `src/lib/content/remote/updates.svelte.ts`
 
@@ -755,6 +755,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MAX_REMOTE_BYTES` — Bytes above this are refused rather than buffered — a content CSV is measured in hundreds of KB, * and an unbounded r…
 - `const MAX_PACK_FILES` — * …and the same question asked of a whole PACK, which `MAX_REMOTE_BYTES` cannot answer: it bounds one * response, so …
 - `const MAX_PACK_BYTES`
+- `const MAX_REPO_PACKS` — * …and the same question asked of the REPO, which the per-pack caps cannot answer: they are applied * pack by pack, s…
 - `type UpdateError` — * A failure the UI can show.
 
 ### `src/lib/content/schemas.ts`
@@ -1249,4 +1250,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 723 exports across 102 modules · 39 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 724 exports across 102 modules · 39 duplicate suspects._

@@ -54,7 +54,7 @@ import {
 	type ApplyResult
 } from './install';
 import { tauriFetcher } from './tauri-fetch';
-import type { RemoteFetcher, UpdateError } from './types';
+import { MAX_REPO_PACKS, type RemoteFetcher, type UpdateError } from './types';
 
 /** One pack with an update waiting, and everything the user needs to decide about it. */
 export interface PendingUpdate {
@@ -213,6 +213,12 @@ function checkFailure(res: CheckFailure, repo: string): UpdateError {
 	if (res.kind === 'error') return { kind: 'raw', message: res.message };
 	if (res.kind === 'unsupported')
 		return { kind: 'i18n', key: 'settings.packs.hostUnsupported', values: { repo } };
+	if (res.kind === 'tooManyPacks')
+		return {
+			kind: 'i18n',
+			key: 'settings.packs.tooManyPacks',
+			values: { repo, packs: res.packs, max: MAX_REPO_PACKS }
+		};
 	return { kind: 'i18n', key: 'settings.packs.repoTooBig', values: { repo } };
 }
 
@@ -231,6 +237,7 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 	}
 	setRepoBranch(repo, res.branch);
 
+	let refused = false;
 	for (const remote of res.packs) {
 		// The repo only knows what IT calls this pack; the registry is keyed by the folder it lives in
 		// here, which can differ (another repo may have claimed the name first). Looking the remote
@@ -239,6 +246,15 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 		const entry = pack === undefined ? undefined : packConfig.packs[pack];
 		// only packs this user actually installed FROM THIS REPO, and not ones they froze
 		if (pack === undefined || entry === undefined || entry.pinned === true) continue;
+		// A pack over the size ceiling is REFUSED, not "up to date" — and the refusal must survive the
+		// bookkeeping below. `describeUpdate` would raise it too, but only its caller can tell the two
+		// apart, and treating them alike buried this: the offer was dropped and the ETag recorded, so
+		// every later check answered 304 and the user saw the message exactly once, ever.
+		if (packTooLarge(remote)) {
+			updates.error = packSizeRefusal(remote);
+			refused = true;
+			continue;
+		}
 		const pending = await describeUpdate(repo, remote, pack);
 		if (!pending) {
 			delete updates.pending[pack];
@@ -271,8 +287,12 @@ async function checkOneRepo(fetcher: RemoteFetcher, repo: string): Promise<void>
 	 *
 	 * This is the failure `PendingRemote` exists to prevent, one layer down. Not recording is the safe
 	 * side of the trade: the repo simply stays due and the next check asks again.
+	 *
+	 * A pack refused for size is the same shape of claim and the same fix: `null` drops the stored
+	 * ETag, so the next check re-lists the repo and refuses out loud again instead of being answered
+	 * `304` before it ever looks.
 	 */
-	recordCheck(repo, new Date(), res.etag);
+	recordCheck(repo, new Date(), refused ? null : res.etag);
 }
 
 /**

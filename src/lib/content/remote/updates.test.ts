@@ -22,7 +22,7 @@ import { gitBlobSha } from './diff';
 import { discoverContentRoots } from '../disk';
 import { forgetUninstalledPacks } from '../provider';
 import { stampWithHash } from '../hash';
-import type { RemoteFetcher } from './types';
+import { MAX_PACK_FILES, type RemoteFetcher } from './types';
 
 const REPO = 'https://github.com/someone/dark-sun';
 const enc = (s: string) => new TextEncoder().encode(s);
@@ -367,6 +367,32 @@ describe('the check runs alone', () => {
 		await checkNow({ manual: true, fetcher: fetcher(ALL) });
 		expect(packConfig.repos[REPO]?.etag).toBe('W/"1"');
 		expect(packConfig.repos[REPO]?.lastCheckedAt).toBeDefined();
+	});
+
+	/* A pack over the size ceiling is refused — but the refusal was recorded alongside the ETag that
+	   says "I have seen this remote state", so every later check answered 304 and returned before it
+	   looked at a pack. The user was told once, ever, and the pack quietly stopped updating. */
+	it('does not bury a pack it refused for size behind an ETag', async () => {
+		packConfig.packs['dark-sun'] = { repo: REPO };
+		packConfig.repos[REPO] = { etag: 'W/"from an earlier, smaller version"' };
+		const huge = JSON.stringify({
+			tree: Array.from({ length: MAX_PACK_FILES + 1 }, (_, i) => ({
+				path: `dark-sun/f${i}.csv`,
+				sha: `${i}`.padStart(40, '0'),
+				type: 'blob',
+				size: 10
+			}))
+		});
+		const serving: RemoteFetcher = {
+			getText: async () => ({ kind: 'ok', body: huge, etag: 'W/"huge"' }),
+			getBytes: async () => ({ kind: 'error', message: 'never asked — it was refused' })
+		};
+
+		await checkNow({ manual: true, fetcher: serving });
+
+		expect(updates.error).toMatchObject({ key: 'settings.packs.packTooLarge' });
+		// neither the new ETag nor the stale one: the next check must re-list and refuse out loud again
+		expect(packConfig.repos[REPO]?.etag).toBeUndefined();
 	});
 
 	/* The prune used to sit BEHIND the "nothing is due" return, so bytes staged in `download` mode

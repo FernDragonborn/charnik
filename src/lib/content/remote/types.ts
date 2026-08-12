@@ -41,6 +41,17 @@ export const MAX_PACK_FILES = 200;
 export const MAX_PACK_BYTES = 50 * 1024 * 1024;
 
 /**
+ * …and the same question asked of the REPO, which the per-pack caps cannot answer: they are applied
+ * pack by pack, so a repo of a thousand small folders passes every one of them and still asks the
+ * app to walk a thousand packs, diff each against the disk and list them all in the install panel.
+ *
+ * The shipped content repo publishes two. Fifty is "a compendium collection with room to grow",
+ * well past anything a person browses through, and it is read off the same tree listing as the
+ * others — before the first byte is fetched.
+ */
+export const MAX_REPO_PACKS = 50;
+
+/**
  * A failure the UI can show. Two kinds on purpose: `i18n` is copy WE author (translatable, values
  * interpolated by the component), `raw` is what the network stack handed us — a machine string we
  * must not pretend to have written. Keeping them apart is what stops new untranslated English
