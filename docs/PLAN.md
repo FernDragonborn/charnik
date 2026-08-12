@@ -1012,12 +1012,10 @@ were learned the hard way.
   **REL-5**, deliberately not in any wave.
   **Consequence, now live:** the content passes (MAGIC-ITEM-EFX, E4, D6/D10) have left the app
   roadmap entirely; they ship from the content repo.
-  **Reopened and closed again 2026-08-12:** a third, security-angled read found twelve items
-  (ledger **[`docs/AUDIT-PACKS-12-08.md`](AUDIT-PACKS-12-08.md)**), of which two were silent data
-  loss reachable without any hostility — a `.prev` that resurrected an uninstalled pack, and
-  case-folded folder collisions on NTFS/APFS. Eleven are fixed; the one left is a compendium-render
-  finding (a link in content prose navigates the whole window) that the pack manager does not
-  reach.
+  **Reopened and closed again 2026-08-12:** a third, security-angled read found twelve items, two of
+  them silent data loss reachable without any hostility — a `.prev` that resurrected an uninstalled
+  pack, and case-folded folder collisions on NTFS/APFS. All fixed and live-verified (REL-4 · "THE
+  THIRD PASS").
 - **W1 · Roll card (UBUG-20 + UX-3) — DONE 2026-08-10.** One `RollRow` across toast / Playbar / log /
   tray, retroactive advantage as a three-state pill, the reroll pill, the one-line strip. Tails are
   listed on UBUG-20 itself.
@@ -1791,27 +1789,48 @@ holds the done-work log; these are the OPEN tails it carried):**
     only if a real pack near the 50 MB ceiling turns up: key on `path|mtime|size`, invalidate from
     the watcher.
 
-  **THE THIRD PASS, OPEN — its ledger is [`docs/AUDIT-PACKS-12-08.md`](AUDIT-PACKS-12-08.md)**
-  (found 2026-08-12, nothing fixed yet; the file reclaims the name the second pass's ledger had
-  before `1ddb102` retired it, since its identity is the module and not the pass). The first two
-  passes read the module for correctness; this one followed the whole chain — capability → fetcher →
-  adapter → diff → swap-in → loader → prose render → plugins — asking what a hostile pack can do to
-  a user who is not reading the code. **Twelve items; eleven are CLOSED the same day** (`20b38ad`,
-  `d6ada03`, `c65c039`, `980b457`). The transport and the plugin model held; the gaps were
-  **identity** (a pack declares its own `#content-source`, and that tag was the only provenance the
-  UI showed — now it warns on a claimed tag and names the PACK in both the article and the source
-  filter) and the **folder-name/staging model** on a case-folding filesystem (an uninstall's `.prev`
-  was resurrected by startup recovery; `SRD-2024` installed over `srd-2024`). The twelfth — a link
-  in content prose navigating the whole window — is real and OPEN, but it lives in `ArticleProse`,
-  which the pack manager does not call. Read the ledger for the list; it is deleted when empty, so
-  anything that must outlive it is below or already in SECURITY.md.
+  **THE THIRD PASS, CLOSED (2026-08-12, `20b38ad` + `d6ada03` + `c65c039` + `980b457` + `5b819c0`;
+  probe `dcd5530`).** The first two passes read the module for correctness. This one followed the
+  whole chain — capability → fetcher → adapter → diff → swap-in → loader → prose render → plugins —
+  asking what a hostile pack can do to a user who is not reading the code. **Twelve findings, all
+  fixed.** The transport and the plugin model held; the gaps were IDENTITY and the FOLDER/STAGING
+  model on a real filesystem. Its ledger is retired (§8.7); what has to outlive it:
 
-  **Decided there, kept here because the ledger is temporary:** blob-SHA verification is INTEGRITY,
-  not AUTHENTICITY — a typo-squatted URL or a compromised repo yields whatever it likes, and only the
-  plugin consent hash stands between that and executing code. That is the honest v1 posture
-  (SECURITY.md §7). The answer when it is finally wanted is an optional **minisign signature per
-  pack**, reusing the format the updater already carries, and it belongs with **REL-5** — a pack from
-  any HTTPS host is exactly when publisher trust stops being "GitHub told us".
+  - **A pack declares its own `#content-source`, and that was the ONLY provenance the UI showed.** A
+    third-party pack stamping `SRD 5.2.1` rendered as "D&D 5.5e" beside the shipped SRD, shared its
+    source toggle and collided ids with it. Now: installing under a tag another pack already
+    publishes under stops and asks for an explicit second click (**warn, not refuse** — a fork of the
+    SRD repo legitimately carries the SRD's tag, maintainer 2026-08-12), and the PACK — a folder on
+    disk, the one thing here the app knows rather than believes — is named in the article's
+    attribution line and heads its group in the source filter, with its own switch built on the
+    existing FILE dimension.
+  - **A lone `<pack>.prev` is not an interrupted apply.** Both writers keep the replacement tree
+    until the very last rename, so at the only moment the pack is missing BOTH staging folders
+    exist. Recovery read a lone `.prev` as a dead swap and renamed it back — resurrecting a pack the
+    user had deleted, plugin code included. The rule is in `recoverInterruptedApply`'s doc comment;
+    do not "fix" it back.
+  - **Folder names are compared case-INSENSITIVELY** (`claimedPackName`), because NTFS and APFS fold
+    case and an exact compare installed one pack over another. Two consequences worth keeping: a
+    case-only rename is exempted from the taken-checks, and `freeLocalPackName` must sanitise before
+    it suffixes `-2`, `-3`… or a name unusable for its CHARACTERS spins forever.
+  - **A failing apply settles the disk before the throw escapes**, while the in-flight flag is up:
+    once it drops, a missing folder reads as an uninstall and takes the repo URL and the pin with it.
+  - **Bounds that were missing:** a streaming size cap (the old one buffered the body, then refused
+    it), a total request timeout (every pack operation shares one queue, so one hung request wedged
+    all of them), and an aggregate pre-download budget per check (the per-pack and per-repo caps say
+    nothing about the total, and `download` mode fetches unasked).
+  - **A registry write that fails now reaches the user.** Config writes are fire-and-forget, which is
+    right for a theme preference and wrong for a pin: everything in this section is a promise.
+  - **Checked and found fine — do not re-audit:** path traversal from the remote side, the
+    content-addressed `.pack-cache` (re-hashed on read), the whole plugin consent/sandbox chain,
+    every parser bound (L2 512/depth 32, CSV 20 MB, pack 200 files/50 MB, repo 50 packs, tree
+    `truncated`), the CSP, "applying is always a click", git-tree symlink blobs, and the four narrow
+    Rust commands. `NodeStorage` validates differently from the shared guard but contains just as
+    well (SECURITY.md §3).
+  - **Verified live**, not only in tests: `/dev/packs-write` extended with the new invariants and run
+    inside the Tauri app on Windows — 24/24, and it reports that this filesystem folds case. Note the
+    probe had been asserting the OLD, wrong state machine and passing; a probe is only as good as the
+    rule it encodes.
 
   **A decision taken on Claude's assumption, flag it if it is wrong:** manifest-free leaves no file
   listing for a generic HTTPS host, so v1 is GitHub-only. That consequence now lives with the feature

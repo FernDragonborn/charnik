@@ -59,19 +59,21 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    low-risk — content is data, never HTML, so there's no injection path to abuse it. No remote content loading; no inline
    script; external links open in the OS browser, not the app webview. CSP governs the
    **webview's** network only; it does **not** cover the updater (see below).
-   > **"External links open in the OS browser" is the intent, NOT the code** (found 2026-08-12,
-   > ledger: `docs/AUDIT-PACKS-12-08.md`). Content prose IS rendered as HTML — `ArticleProse` runs
-   > `{@html}` over marked+DOMPurify output, which correctly strips scripts and correctly KEEPS
-   > `<a href>` — and nothing intercepts the click, so a link in a third-party pack's spell text
-   > replaces the whole window with a remote page (no address bar, no back). One delegated handler
-   > → `plugin-opener` closes it; until then this line describes a control that does not exist.
+   > **How, since content prose IS rendered HTML** (`ArticleProse` runs `{@html}` over
+   > marked+DOMPurify, which strips anything executable and correctly keeps `<a href>`): ONE
+   > capture-phase click listener in the root layout sends every cross-origin link to
+   > `plugin-opener` and cancels the navigation — including one in a scheme the capability won't
+   > take, which is cancelled without being opened. A per-renderer handler would be a rule with a
+   > hole in it; the policy itself is a pure function (`$lib/util/links.ts`) with tests. Desktop
+   > only — on the web the browser owns this. **Stated here from the start and only implemented
+   > 2026-08-12**, which is why it is spelled out rather than assumed.
 6. **Image upload hardening.** Allowlist types (png/jpg/webp); size cap; **re-encode**
    (strip EXIF / prevent polyglots); store only inside the character folder (in scope).
 7. **Bundle / content-pack import = data only.** Parsed, **validated (zod) against the
    schema**, surfaced via collision/health UI before use; never executed, never silent
    overwrite.
-   > **The gap validation cannot close is IDENTITY** (found 2026-08-12, ledger:
-   > `docs/AUDIT-PACKS-12-08.md`). A pack declares its own `#content-source`, that tag IS the namespace half of
+   > **The gap validation cannot close is IDENTITY** (found and closed 2026-08-12; PLAN · REL-4
+   > "the third pass"). A pack declares its own `#content-source`, that tag IS the namespace half of
    > `source:id`, and it is the only provenance the UI shows — so a pack stamping `SRD 5.2.1`
    > renders as "D&D 5.5e", shares the official pack's source toggle, and collides ids with it.
    > Schema validation says the row is well-formed, not that the publisher is who it says. **Closed
