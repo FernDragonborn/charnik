@@ -21,6 +21,7 @@
 		applyPackUpdate,
 		hasRollback,
 		recoverInterruptedApply,
+		removeStaging,
 		rollbackPack
 	} from '$lib/content/remote/install';
 	import { stampWithHash } from '$lib/content/hash';
@@ -184,11 +185,24 @@
 		);
 		check('…and the live pack is untouched', (await s.read(`${ROOT}/a.csv`)).includes('live'));
 
+		// the GENUINE mid-swap state is `.prev` AND `.new`: both writers keep the replacement tree on
+		// disk until the very last rename, so at the only moment the pack is missing both exist
 		await cleanup();
 		await s.writeBytes(`${ROOT}.prev/a.csv`, enc('id\nrescued'));
+		await s.writeBytes(`${ROOT}.new/a.csv`, enc('id\nnever made it'));
 		await recoverInterruptedApply(s, PACK);
 		check('killed BETWEEN the two renames: the pack comes back from .prev', await s.exists(ROOT));
 		check('…with its bytes', (await s.read(`${ROOT}/a.csv`)).includes('rescued'));
+		check('…and the tree that never landed is gone', !(await s.exists(`${ROOT}.new`)));
+
+		// …and a `.prev` ALONE is not that state at all — it is a pack whose live folder left by some
+		// other route (a file manager, an older build's uninstall). Renaming it back handed the user a
+		// pack they had deleted, one launch later.
+		await cleanup();
+		await s.writeBytes(`${ROOT}.prev/a.csv`, enc('id\ndeleted on purpose'));
+		await recoverInterruptedApply(s, PACK);
+		check('an ORPHANED .prev does not resurrect the pack', !(await s.exists(ROOT)));
+		check('…and is not left lying around either', !(await s.exists(`${ROOT}.prev`)));
 
 		await cleanup();
 		await s.writeBytes(`${ROOT}.new/a.csv`, enc('id\npromoted'));
@@ -208,6 +222,31 @@
 			.catch(() => false);
 		say(
 			`rename onto an existing directory: ${overwrote ? 'SUCCEEDED (the apply removes it first anyway)' : 'refused — which is why the apply removes the target first'}`
+		);
+
+		// --- 6. uninstall takes the staging folders with it -----------------------------------------
+		// `uninstallPack` itself refuses a reserved name (this probe pack starts with a dot), so what is
+		// under test is the helper it calls. Leaving a `.prev` behind is what made an uninstall
+		// un-uninstall itself at the next launch, via the recovery above.
+		await cleanup();
+		await seedPack('id\nlive');
+		await s.writeBytes(`${ROOT}.prev/a.csv`, enc('id\nan older version'));
+		await s.writeBytes(`${ROOT}.new/a.csv`, enc('id\nleftover'));
+		await s.remove(ROOT);
+		await removeStaging(s, PACK);
+		check('uninstall clears .prev', !(await s.exists(`${ROOT}.prev`)));
+		check('…and .new', !(await s.exists(`${ROOT}.new`)));
+		await recoverInterruptedApply(s, PACK);
+		check('…so the next launch finds nothing to put back', !(await s.exists(ROOT)));
+
+		// --- 7. does THIS filesystem fold case? ------------------------------------------------------
+		// The registry compares folder names case-insensitively because NTFS/APFS do. No MemoryStorage
+		// can answer this, and getting it wrong installs one pack on top of another.
+		await cleanup();
+		await seedPack('id\nlive');
+		const folds = await s.exists(`content/${PACK.toUpperCase()}`);
+		say(
+			`this filesystem ${folds ? 'FOLDS case (as assumed — the registry compares names case-insensitively)' : 'is case-SENSITIVE (the case-folded compare is then merely conservative)'}`
 		);
 	}
 </script>

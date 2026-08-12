@@ -7,6 +7,13 @@ file reclaims the name because its identity is the MODULE, not the pass.
 **Progress (2026-08-12): everything in the pack manager and what it calls is CLOSED — 1, 2, 3, 5,
 6, 7, 8, 9, 10, 11, 12.** Commits `20b38ad`, `d6ada03`, `c65c039`, `980b457`.
 
+**Verified on the real desktop, not just in tests:** `/dev/packs-write` extended with the new
+invariants and run inside the Tauri app on Windows — **24/24**, including "an orphaned `.prev` does
+not resurrect the pack", "uninstall clears `.prev`/`.new` so the next launch finds nothing to put
+back", and a line that settles the premise of finding 3: *this filesystem FOLDS case*. The probe
+also carried the OLD state machine as an assertion ("a lone `.prev` comes back") — it was passing
+against the wrong rule, which is worth remembering about probes.
+
 **Still open: 4 only**, and it is out of the scope the maintainer set for this pass ("the pack
 manager and whatever it calls"): a link in content prose is rendered by `ArticleProse`, which the
 pack manager does not call — it is the compendium, downstream of it. Left here rather than moved so
