@@ -1,0 +1,19 @@
+# Line endings, settled in the repo rather than per machine.
+#
+# Git for Windows ships `core.autocrlf=true` (set system-wide on this machine), so EVERY checkout,
+# `git stash pop`, merge or `git checkout -- <file>` rewrites the working tree to CRLF — while
+# prettier's `endOfLine` default is `lf`, and both `pnpm lint` and the pre-commit hook demand LF.
+# That is the whole "prettier suddenly fails on files nobody edited" loop, and the reason `git add`
+# printed "LF will be replaced by CRLF" on every commit. A file in the repo fixes it for every
+# clone and for CI; a local git config fixes it for one machine and forgets.
+#
+# The repo has ALWAYS stored LF (368 of 368 text files), so this normalises nothing — it only stops
+# the working tree from being handed something else.
+* text=auto eol=lf
+
+# CSVs are exempt, because for content files the bytes ARE the format: BOM + CRLF for Excel and
+# Cyrillic safety, and a `#content-hash` computed over them. The packs we ship live in the content
+# repo (which pins `* -text` so blob-SHA diffing works at all); the only CSV tracked here is a test
+# fixture standing in for a user's file, and a fixture that quietly loses its CRLF is a test that
+# proves the opposite of what it claims.
+*.csv -text
