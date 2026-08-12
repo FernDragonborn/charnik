@@ -108,6 +108,21 @@ export function toggleFile(path: string): void {
 	toggleIn(sourceConfig.disabledFiles, path);
 	persist();
 }
+/**
+ * A pack moved to another folder, so every one of its files has a new path — and the per-file
+ * toggles are stored BY PATH. Without this a rename silently switches back on every file the user
+ * had switched off, which is the fourth thing keyed by the folder name (`renamePack` already moves
+ * the registry entry, the `.prev` undo copy and any pending offer).
+ */
+export function renameFileRoot(fromRoot: string, toRoot: string): void {
+	const within = (path: string) => path === fromRoot || path.startsWith(`${fromRoot}/`);
+	if (!sourceConfig.disabledFiles.some(within)) return;
+	sourceConfig.disabledFiles = sourceConfig.disabledFiles.map((path) =>
+		within(path) ? `${toRoot}${path.slice(fromRoot.length)}` : path
+	);
+	persist();
+}
+
 /** Toggle a source tag on/off. */
 export function toggleSource(source: string): void {
 	toggleIn(sourceConfig.disabledSources, source);

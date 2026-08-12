@@ -297,6 +297,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const sourceConfig` — Reactive, persisted config.
 - `function initSourceConfig` — Load the persisted browse-config from the data root (once, at app start).
 - `function toggleFile` — Toggle a content file (path `root/file`) on/off.
+- `function renameFileRoot` — * A pack moved to another folder, so every one of its files has a new path — and the per-file * toggles are stored BY…
 - `function toggleSource` — Toggle a source tag on/off.
 - `function setCollision` — Set a collision group's resolution (which source wins, or 'all').
 - `const filePath`
@@ -1250,4 +1251,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 724 exports across 102 modules · 39 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 725 exports across 102 modules · 39 duplicate suspects._

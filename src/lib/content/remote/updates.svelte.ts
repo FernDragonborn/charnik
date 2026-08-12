@@ -31,6 +31,7 @@ import {
 	type PackConfigData
 } from '../packs.svelte';
 import { discoverContentRoots, packNameOf } from '../disk';
+import { renameFileRoot } from '../sources.svelte';
 import {
 	checkRepo,
 	packSizeRefusal,
@@ -664,6 +665,9 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 		if (await storage.exists(`content/${from}.prev`))
 			await storage.rename(`content/${from}.prev`, `content/${target}.prev`);
 		renamePackEntry(from, target);
+		// …and the browse-config, which disables content FILES by path: leaving those behind would
+		// turn every file the user had switched off back on, as a side effect of a rename
+		renameFileRoot(`content/${from}`, `content/${target}`);
 	});
 	const pending = updates.pending[from];
 	if (pending) {

@@ -21,6 +21,7 @@ import {
 import { gitBlobSha } from './diff';
 import { discoverContentRoots } from '../disk';
 import { forgetUninstalledPacks } from '../provider';
+import { sourceConfig, toggleFile } from '../sources.svelte';
 import { stampWithHash } from '../hash';
 import { MAX_PACK_FILES, type RemoteFetcher } from './types';
 
@@ -281,6 +282,20 @@ describe('two repos publishing the same folder name', () => {
 
 		expect(packConfig.packs['athas']).toEqual({ repo: REPO, remotePack: 'dark-sun' });
 		expect(await getUserStorage().read('content/athas/classes_srd.csv')).toContain('athasian');
+	});
+
+	/* The browse-config disables content FILES by path, so it is the fourth thing keyed by the folder
+	   name — and the one nobody moved. A rename switched every file the user had turned off back on. */
+	it('carries the user’s per-file toggles across a rename', async () => {
+		await discoverPacks(REPO, { fetcher: fetcher(ALL) });
+		await installPack('dark-sun', { fetcher: fetcher(ALL) });
+		await getUserStorage().remove('content/athas');
+		sourceConfig.disabledFiles = [];
+		toggleFile('content/dark-sun/classes_srd.csv');
+
+		expect(await renamePack('dark-sun', 'athas')).toBe(true);
+
+		expect(sourceConfig.disabledFiles).toEqual(['content/athas/classes_srd.csv']);
 	});
 
 	it('renaming refuses a name that is already a folder, rather than merging two packs', async () => {
