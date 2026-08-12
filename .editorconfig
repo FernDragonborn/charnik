@@ -1,0 +1,21 @@
+# The editor half of the line-ending rule. `.gitattributes` pins LF on the way OUT of git
+# (checkout, stash pop); this pins it on the way IN — a file born CRLF in an editor is normalised
+# only in the INDEX, so its working-tree copy still fails the `prettier --check` in pre-commit.
+#
+# The values mirror .prettierrc, which wins wherever the two overlap (prettier reads this file too).
+# Keep them in step rather than adding new ones here.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = tab
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Content CSVs are data, not source: their bytes carry a BOM, deliberate line endings and a
+# `#content-hash` computed over them, so nothing here may rewrite one on save. (The packs we ship
+# live in the content repo; the CSV tracked here is a fixture standing in for a user's file.)
+[*.csv]
+insert_final_newline = unset
+trim_trailing_whitespace = false
