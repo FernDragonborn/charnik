@@ -13,12 +13,26 @@
  */
 import type { Storage } from './types';
 
-/** Every file under `dir`, at any depth, as dataDir-relative paths. Directories that cannot be read
- *  contribute nothing — a walk is used to decide what to copy or compare, and neither of those is
- *  improved by throwing half-way through. */
+/**
+ * Every file under `dir`, at any depth, as dataDir-relative paths.
+ *
+ * **Absent is empty; present-but-unreadable throws** — the same rule `discoverContentRoots` needed,
+ * for the same reason. Callers ask this to decide what to COPY: a pack being installed for the
+ * first time has no folder yet and legitimately walks to nothing, but a folder that IS there and
+ * cannot be listed answering `[]` means `buildAndSwap` carries nothing across and the replacement
+ * tree silently loses every file the update never mentioned — a README, notes, the hand-edited
+ * files the diff promised to preserve. Loud is recoverable; empty is not.
+ */
 export async function listFilesRecursive(storage: Storage, dir: string): Promise<string[]> {
+	let entries;
+	try {
+		entries = await storage.list(dir);
+	} catch (e) {
+		if (await storage.exists(dir).catch(() => false)) throw e;
+		return [];
+	}
 	const out: string[] = [];
-	for (const entry of await storage.list(dir).catch(() => []))
+	for (const entry of entries)
 		if (entry.isDir) out.push(...(await listFilesRecursive(storage, entry.path)));
 		else out.push(entry.path);
 	return out;

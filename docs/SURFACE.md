@@ -1202,7 +1202,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/storage/walk.ts`
 
-- `function listFilesRecursive` — Every file under `dir`, at any depth, as dataDir-relative paths.
+- `function listFilesRecursive` — * Every file under `dir`, at any depth, as dataDir-relative paths.
 
 ### `src/lib/styles/customThemes.ts`
 
