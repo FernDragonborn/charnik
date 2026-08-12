@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (39)
+## Duplicate suspects (40)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -41,6 +41,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `name` ×2 — src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
+- `onClick` ×2 — src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `onKeydown` ×2 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/trapFocus.ts
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
@@ -361,7 +362,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (89 modules)
+## Library functions & types (90 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1249,6 +1250,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const errText` — An unknown thrown value → its message string (`e.message` or `String(e)`).
 - `const signed` — A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "0" (a zero modifier reads plain, no * sign — the sheet's con…
 
+### `src/lib/util/links.ts`
+
+- `function externalLinkToOpen` — * What to do with a click on `href` from a page served at `origin`: * - a URL string → open it in the OS browser (and…
+- `function shouldCancelNavigation` — …and whether the click must be CANCELLED even when nothing gets opened.
+
 ### `src/lib/util/persist.ts`
 
 - `function readStored` — Read + JSON-parse a localStorage key.
@@ -1259,4 +1265,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 733 exports across 102 modules · 39 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 735 exports across 103 modules · 40 duplicate suspects._

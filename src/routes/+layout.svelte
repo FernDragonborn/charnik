@@ -27,6 +27,7 @@
 	import { review, pendingMetaIssues, pendingDriftItems } from '$lib/content/review.svelte';
 	import { Toaster, toast } from 'svelte-sonner';
 	import { takeFlash } from '$lib/stores/flash';
+	import { externalLinkToOpen, shouldCancelNavigation } from '$lib/util/links';
 	import { onMount, onDestroy } from 'svelte';
 	import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
 	import {
@@ -114,6 +115,40 @@
 	// Keep svelte-i18n's active locale in sync with the store.
 	$effect(() => {
 		i18nLocale.set(app.activeLocale);
+	});
+
+	/**
+	 * A link OUT of the app opens in the OS browser, never in the app's own window.
+	 *
+	 * SECURITY.md §5 has stated this as a control for a long time and nothing implemented it. It
+	 * matters because content prose is rendered HTML from CSVs a stranger may have written: DOMPurify
+	 * strips anything executable and correctly keeps `<a href>`, so one click on a spell description
+	 * replaced the whole app with a remote page — in a window with no address bar, no back button and
+	 * nothing to say what happened.
+	 *
+	 * ONE listener in the layout rather than a handler per renderer: this has to hold for every link
+	 * the app ever shows — content prose, a translated UI string (a user can drop in a locale file),
+	 * a dialog's "report a bug" — and a rule enforced at each call site is a rule with a hole in it.
+	 * Capture phase, so it runs before SvelteKit's own router or any component handler.
+	 *
+	 * Desktop only: on the web the browser already owns this, tabs and address bar included.
+	 */
+	$effect(() => {
+		if (!browser || detectPlatform() !== Platform.Desktop) return;
+		const onClick = (event: MouseEvent): void => {
+			const anchor = (event.target as Element | null)?.closest?.('a[href]');
+			if (!(anchor instanceof HTMLAnchorElement) || event.defaultPrevented) return;
+			const { href } = anchor;
+			if (!shouldCancelNavigation(href, location.origin)) return; // in-app: that is the router
+			event.preventDefault();
+			const target = externalLinkToOpen(href, location.origin);
+			if (target === null) return; // cancelled, but not a scheme we hand to the OS either
+			void import('@tauri-apps/plugin-opener')
+				.then(({ openUrl }) => openUrl(target))
+				.catch((e: unknown) => logger.warn('could not open link', { href, e }));
+		};
+		document.addEventListener('click', onClick, true);
+		return () => document.removeEventListener('click', onClick, true);
 	});
 
 	// Content loads once at startup so the DATA-VER-1 review surfaces app-wide. On desktop the FIRST
