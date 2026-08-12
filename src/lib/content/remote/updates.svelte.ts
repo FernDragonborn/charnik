@@ -418,6 +418,7 @@ export function applyUpdate(
 	opts: {
 		removeDeleted?: boolean;
 		acceptRowRemovals?: boolean;
+		acceptSourceClaim?: boolean;
 		fetcher?: RemoteFetcher;
 	} = {}
 ): Promise<ApplyResult | null> {
@@ -431,6 +432,7 @@ async function runApply(
 	opts: {
 		removeDeleted?: boolean;
 		acceptRowRemovals?: boolean;
+		acceptSourceClaim?: boolean;
 		fetcher?: RemoteFetcher;
 	}
 ): Promise<ApplyResult | null> {
@@ -447,7 +449,8 @@ async function runApply(
 			diff: pending.diff,
 			removeDeleted: opts.removeDeleted === true,
 			graph: content.graph,
-			acceptRowRemovals: opts.acceptRowRemovals === true
+			acceptRowRemovals: opts.acceptRowRemovals === true,
+			acceptSourceClaim: opts.acceptSourceClaim === true
 		})
 	);
 	if (res.error !== undefined) {
@@ -610,7 +613,7 @@ export async function discoverPacks(
  */
 export async function installPack(
 	pack: string,
-	opts: { fetcher?: RemoteFetcher; localName?: string } = {}
+	opts: { fetcher?: RemoteFetcher; localName?: string; acceptSourceClaim?: boolean } = {}
 ): Promise<ApplyResult | null> {
 	const found = updates.discovered.find((d) => d.pack === pack);
 	if (!found) return null;
@@ -651,7 +654,11 @@ export async function installPack(
 			fetcher: opts.fetcher ?? tauriFetcher,
 			repo,
 			// inside the guard too: a first install reads the disk before it writes to it
-			diff: await diffPack(storage, found.remote, local)
+			diff: await diffPack(storage, found.remote, local),
+			// …and the graph, so a pack claiming a source another pack already publishes under is
+			// caught HERE — a first install is exactly when that claim gets made
+			graph: content.graph,
+			acceptSourceClaim: opts.acceptSourceClaim === true
 		})
 	);
 	if (res.error !== undefined) {

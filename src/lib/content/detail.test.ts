@@ -31,7 +31,9 @@ describe('buildDetail', () => {
 		expect(cantrip.eyebrow).toBe('Cantrip · Evocation');
 		expect(cantrip.title).toBe('Fire Bolt');
 		expect(cantrip.spell).toBeDefined();
-		expect(cantrip.source).toBe('Source: D&D 5.5e');
+		// the PACK is named beside the tag: a pack declares its own `#content-source`, so the tag
+		// alone cannot say where a row came from
+		expect(cantrip.source).toBe('Source: D&D 5.5e · test');
 
 		const leveled = buildDetail(
 			row({ name_en: 'Fireball', level: '3', school: 'evocation' }),

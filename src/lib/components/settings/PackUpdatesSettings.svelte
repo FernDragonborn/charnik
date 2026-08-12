@@ -44,6 +44,10 @@
 	let renaming = $state<{ pack: string; to: string } | null>(null);
 	/** The pack whose apply stopped to show rows that would vanish; its second button accepts them. */
 	let rowsToAccept = $state<string | null>(null);
+	/** …and the pack whose install stopped because it publishes under a source another pack already
+	 *  claims. Same two-click shape, and for the same reason: the first click is not consent to
+	 *  something the user has not been told yet. */
+	let claimToAccept = $state<string | null>(null);
 	let restoring = $state(false);
 
 	/** Anything that changes what is on disk must be followed by a re-read, or the compendium keeps
@@ -203,14 +207,33 @@
 							<button
 								class="pill-btn accent"
 								onclick={async () => {
-									await installPack(found.pack, {
+									const res = await installPack(found.pack, {
 										localName: folderName[found.pack] ?? found.localName
 									});
+									// it stopped to say this pack publishes under a source name another pack
+									// already uses — the message is in `updates.error`, and the button below is
+									// the click that accepts it
+									claimToAccept = res?.sourceClaim !== undefined ? found.pack : null;
 									await afterDiskChange();
 								}}
 							>
 								{$_('settings.packs.install')}
 							</button>
+							{#if claimToAccept === found.pack}
+								<button
+									class="pill-btn"
+									onclick={async () => {
+										claimToAccept = null;
+										await installPack(found.pack, {
+											localName: folderName[found.pack] ?? found.localName,
+											acceptSourceClaim: true
+										});
+										await afterDiskChange();
+									}}
+								>
+									{$_('settings.packs.installAnyway')}
+								</button>
+							{/if}
 						{/if}
 					</div>
 				</div>

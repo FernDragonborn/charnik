@@ -123,6 +123,21 @@ export function renameFileRoot(fromRoot: string, toRoot: string): void {
 	persist();
 }
 
+/**
+ * Switch a whole GROUP of files at once — the affordance behind "hide this pack".
+ *
+ * Deliberately built on the file dimension instead of a third stored dimension: a pack IS its
+ * folder, so "every file under `content/<pack>/`" already names it exactly, `renameFileRoot` already
+ * moves those paths when the folder moves, and there is nothing new to persist or migrate. One state
+ * change and one write, rather than N of each through `toggleFile`.
+ */
+export function setFilesEnabled(paths: string[], enabled: boolean): void {
+	const affected = new Set(paths);
+	const kept = sourceConfig.disabledFiles.filter((p) => !affected.has(p));
+	sourceConfig.disabledFiles = enabled ? kept : [...kept, ...paths];
+	persist();
+}
+
 /** Toggle a source tag on/off. */
 export function toggleSource(source: string): void {
 	toggleIn(sourceConfig.disabledSources, source);

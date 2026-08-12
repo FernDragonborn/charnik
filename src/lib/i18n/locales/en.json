@@ -104,6 +104,8 @@
 			"tooManyPacks": "{repo} offers {packs} content packs — more than Charnik will list at once (limit {max}). Nothing was changed; a repository this large is more likely a mistake in the link than a collection you meant to browse.",
 			"repoTooBig": "{repo} holds too many files for GitHub to list in one go, so Charnik only ever sees part of it — and acting on half a list could delete content that is still there. Nothing was changed.",
 			"sourceChanged": "“{pack}” now claims to be a different source (“{from}” → “{to}”). That makes it a NEW pack, not an update: every entry would be renamed and any character using them would lose the link. Nothing was changed — install it as a separate pack instead.",
+			"sourceClaimed": "“{pack}” publishes its entries as “{source}” — the same name “{owner}” already uses here. That name is what the app shows as an entry’s origin, so this pack’s entries would look like they came from “{owner}”, and the two would share one on/off switch. That’s normal for a fork of the same content, and a red flag for anything else. Nothing was installed.",
+			"installAnyway": "Install it anyway",
 			"addLabel": "Add a pack",
 			"addPlaceholder": "https://github.com/owner/repo",
 			"lookUp": "Look up",

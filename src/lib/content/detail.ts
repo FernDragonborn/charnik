@@ -7,6 +7,7 @@ import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loade
 import { ordinal, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
+import { packNameOf } from './disk';
 
 /** Columns never shown as a meta cell (identity / localization / rendered elsewhere). */
 const COMMON = new Set([
@@ -287,7 +288,10 @@ export function buildDetail(
 		title: localized(d, 'name', locale),
 		abilities: [] as AbilityScore[],
 		bodyHtml: localized(d, 'text', locale),
-		source: `Source: ${sourceLabel(row.source)}`,
+		// The PACK is named beside the source tag, because the tag is not proof of anything: a pack
+		// declares its own `#content-source`, so one stamping `SRD 5.2.1` renders as "D&D 5.5e" exactly
+		// like the shipped SRD does. The folder it came from is the fact the app actually knows.
+		source: `Source: ${sourceLabel(row.source)} · ${packNameOf(row.root)}`,
 		license: row.license ?? ''
 	};
 	if (row.type === 'monster')

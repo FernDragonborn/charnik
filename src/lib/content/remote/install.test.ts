@@ -195,6 +195,67 @@ describe('applyPackUpdate', () => {
 		expect(await s.exists('content/p/b.csv')).toBe(false);
 	});
 
+	/* The sibling question, asked of the same bytes at the same moment: the test above catches a pack
+	   CHANGING its identity, this one catches a pack WEARING another's. `#content-source` is what the
+	   compendium prints as an entry's origin, and nothing in the format stops a publisher writing
+	   whatever they like there — so a pack stamping the SRD's tag renders as official beside it. */
+	describe('a pack claiming a source another pack already publishes under', () => {
+		const installed = {
+			rows: [{ type: 'spell', source: 'SRD 5.2.1', id: 'fireball', root: 'content/srd-2024' }]
+		} as ContentGraph;
+		const impostor = () =>
+			fetcherOf({ 'p/a.csv': '#content-source: SRD 5.2.1\nid\na', 'p/b.csv': 'id\nb' });
+
+		it('stops and names both packs, writing nothing', async () => {
+			const s = new MemoryStorage();
+			const res = await applyPackUpdate({
+				storage: s,
+				fetcher: impostor(),
+				repo: REPO,
+				diff,
+				graph: installed
+			});
+
+			expect(res.sourceClaim).toEqual({ source: 'SRD 5.2.1', owner: 'srd-2024' });
+			expect(res.error).toMatchObject({ key: 'settings.packs.sourceClaimed' });
+			expect(res.written).toEqual([]);
+			expect(await s.exists('content/p/a.csv')).toBe(false);
+		});
+
+		it('installs on the second click — a fork of the same content legitimately carries its tag', async () => {
+			const s = new MemoryStorage();
+			const res = await applyPackUpdate({
+				storage: s,
+				fetcher: impostor(),
+				repo: REPO,
+				diff,
+				graph: installed,
+				acceptSourceClaim: true
+			});
+
+			expect(res.error).toBeUndefined();
+			expect(await s.read('content/p/a.csv')).toContain('SRD 5.2.1');
+		});
+
+		it('says nothing when the pack UPDATING is the one that owns the tag', async () => {
+			const s = new MemoryStorage();
+			const own = {
+				rows: [{ type: 'spell', source: 'SRD 5.2.1', id: 'fireball', root: 'content/p' }]
+			} as ContentGraph;
+
+			const res = await applyPackUpdate({
+				storage: s,
+				fetcher: impostor(),
+				repo: REPO,
+				diff,
+				graph: own
+			});
+
+			expect(res.sourceClaim).toBeUndefined();
+			expect(res.error).toBeUndefined();
+		});
+	});
+
 	it('the same source tag applies normally — the check must not block ordinary updates', async () => {
 		const s = new MemoryStorage();
 		await s.writeBytes('content/p/a.csv', enc('#content-source: Same\nid\nold'));

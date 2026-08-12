@@ -8,6 +8,7 @@
 	import PackUpdatesSettings from './PackUpdatesSettings.svelte';
 	import {
 		sourceConfig,
+		setFilesEnabled,
 		toggleFile,
 		toggleSource,
 		filePath as filePathOf
@@ -15,24 +16,35 @@
 
 	const graph = $derived(content.graph);
 
-	// source → its files (path → row count), for the grouped list
+	// (pack, source) → its files (path → row count), for the grouped list.
+	//
+	// Grouped by PACK as well as source, because the source tag is self-declared: a pack writes its
+	// own `#content-source`, so two packs can claim one tag and a source-only list would fold them
+	// into a single row with a single switch. The pack is the folder on disk — the one thing here the
+	// app knows rather than believes — so it heads the group and can be switched off on its own.
 	const groups = $derived.by(() => {
-		const m = new Map<string, Map<string, number>>();
+		const m = new Map<string, { pack: string; source: string; files: Map<string, number> }>();
 		for (const r of graph?.rows ?? []) {
-			const files = m.get(r.source) ?? new Map<string, number>();
+			const pack = r.root.slice(r.root.lastIndexOf('/') + 1);
+			const key = JSON.stringify([pack, r.source]);
+			const g = m.get(key) ?? { pack, source: r.source, files: new Map<string, number>() };
 			const fp = filePathOf(r);
-			files.set(fp, (files.get(fp) ?? 0) + 1);
-			m.set(r.source, files);
+			g.files.set(fp, (g.files.get(fp) ?? 0) + 1);
+			m.set(key, g);
 		}
-		return [...m.entries()]
-			.map(([source, files]) => ({
-				source,
-				files: [...files.entries()]
+		return [...m.values()]
+			.map((g) => ({
+				...g,
+				files: [...g.files.entries()]
 					.map(([path, count]) => ({ path, count }))
 					.sort((a, b) => a.path.localeCompare(b.path))
 			}))
-			.sort((a, b) => a.source.localeCompare(b.source));
+			.sort((a, b) => a.pack.localeCompare(b.pack) || a.source.localeCompare(b.source));
 	});
+
+	/** A group is OFF when every file in it is off — so the group switch reads the files it governs
+	 *  rather than a state of its own, and stays honest when they are toggled one by one. */
+	const groupOff = (files: { path: string }[]) => files.every((f) => fileOff(f.path));
 
 	const sourceOff = (s: string) => sourceConfig.disabledSources.includes(s);
 	const fileOff = (p: string) => sourceConfig.disabledFiles.includes(p);
@@ -57,21 +69,35 @@
 	{#if !graph}
 		<p class="muted">Loading…</p>
 	{:else}
-		{#each groups as g (g.source)}
-			<div class="source" class:off={sourceOff(g.source)}>
+		{#each groups as g (JSON.stringify([g.pack, g.source]))}
+			<div class="source" class:off={sourceOff(g.source) || groupOff(g.files)}>
 				<div class="source-head">
+					<!-- governs THIS pack's files only; the source tag next to it is what the pack calls
+					     itself, and its own switch below still covers every pack that claims it -->
 					<button
 						class="toggle"
-						class:on={!sourceOff(g.source)}
+						class:on={!groupOff(g.files)}
 						role="switch"
-						aria-checked={!sourceOff(g.source)}
-						aria-label="Toggle source {g.source}"
-						onclick={() => toggleSource(g.source)}
+						aria-checked={!groupOff(g.files)}
+						aria-label="Toggle pack {g.pack}"
+						disabled={sourceOff(g.source)}
+						onclick={() =>
+							setFilesEnabled(
+								g.files.map((f) => f.path),
+								groupOff(g.files)
+							)}
 					>
 						<span class="knob"></span>
 					</button>
-					<span class="source-name">{sourceLabel(g.source)}</span>
-					<span class="source-tag">{g.source}</span>
+					<span class="source-name">{g.pack}</span>
+					<button
+						class="source-tag as-toggle"
+						title="Turn “{g.source}” off everywhere it appears"
+						aria-pressed={sourceOff(g.source)}
+						onclick={() => toggleSource(g.source)}
+					>
+						{sourceLabel(g.source)}
+					</button>
 					<span class="source-count">{g.files.length} files</span>
 				</div>
 				<div class="files">
@@ -121,6 +147,24 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
+	}
+	/* the tag doubles as the SOURCE switch (the pack switch is the one on the left), so it has to
+	   look pressable — an element that acts on click and says nothing about it is the affordance
+	   rule's exact failure case */
+	.source-tag.as-toggle {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+		background: transparent;
+		padding: 2px 7px;
+		cursor: pointer;
+	}
+	.source-tag.as-toggle:hover {
+		border-color: var(--color-border-strong);
+		color: var(--color-text);
+	}
+	.source-tag.as-toggle[aria-pressed='true'] {
+		text-decoration: line-through;
+		opacity: 0.7;
 	}
 	.source-count {
 		margin-left: auto;

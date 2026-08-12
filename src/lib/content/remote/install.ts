@@ -23,6 +23,7 @@ import type { ContentGraph } from '../loader';
 import { rawUrl, type GithubRepo, type RemotePack } from './github';
 import type { PrefetchBudget, RemoteFetcher, UpdateError } from './types';
 import { listFilesRecursive } from '$lib/storage/walk';
+import { packNameOf } from '../disk';
 import {
 	FILE_CHANGE,
 	gitBlobSha,
@@ -68,6 +69,9 @@ export interface ApplyResult {
 	/** `type:source:id` keys this update would drop from INSIDE a changed file. Set when the apply
 	 *  stopped to ask about them; the same list is what `acceptRowRemovals` then approves. */
 	rowRemovals?: string[];
+	/** The pack publishes rows under a `#content-source` ANOTHER pack already claims. Set when the
+	 *  apply stopped to ask; `acceptSourceClaim` is what then approves it. */
+	sourceClaim?: { source: string; owner: string };
 }
 
 export interface ApplyRequest {
@@ -85,6 +89,8 @@ export interface ApplyRequest {
 	graph?: ContentGraph | null;
 	/** The user has now seen the row-level losses and said yes. */
 	acceptRowRemovals?: boolean;
+	/** …and the same for a `#content-source` another pack already publishes under. */
+	acceptSourceClaim?: boolean;
 }
 
 /**
@@ -98,7 +104,8 @@ export async function applyPackUpdate({
 	diff,
 	removeDeleted = false,
 	graph = null,
-	acceptRowRemovals = false
+	acceptRowRemovals = false,
+	acceptSourceClaim = false
 }: ApplyRequest): Promise<ApplyResult> {
 	const wanted = diff.changes.filter(
 		(c) => c.kind === FILE_CHANGE.added || c.kind === FILE_CHANGE.changed
@@ -117,6 +124,23 @@ export async function applyPackUpdate({
 	// now — and now is still before anything is written.
 	const clash = await sourceClash(storage, diff.pack, staged);
 	if (clash) return { ...nothing, error: clash };
+
+	// phase 1⅝ — and does it claim a source that belongs to somebody ELSE? Same moment, same bytes,
+	// opposite question: the check above catches a pack CHANGING its identity, this one catches a pack
+	// WEARING another's. Asked rather than refused, because the legitimate case is real (a fork of the
+	// SRD repo carries the SRD's tag by definition) — but it must be said out loud, since the tag is
+	// what the compendium prints as the row's provenance.
+	const claim = sourceClaimedElsewhere(graph, diff.pack, staged);
+	if (claim && !acceptSourceClaim)
+		return {
+			...nothing,
+			sourceClaim: claim,
+			error: {
+				kind: 'i18n',
+				key: 'settings.packs.sourceClaimed',
+				values: { pack: diff.pack, source: claim.source, owner: claim.owner }
+			}
+		};
 
 	// phase 1¾ — the disk must still be what the diff was computed against. The user approved a
 	// specific change to specific files; if any of them moved since (an edit in another window, a
@@ -526,6 +550,39 @@ async function sourceClash(
 				key: 'settings.packs.sourceChanged',
 				values: { pack, from: local, to: incoming }
 			};
+	}
+	return null;
+}
+
+/**
+ * Is this pack about to publish rows under a `#content-source` that ANOTHER installed pack already
+ * publishes under?
+ *
+ * Why it matters: the tag is not just a label, it is the namespace half of `source:id` AND the only
+ * provenance the compendium prints — a pack stamping `SRD 5.2.1` renders as "D&D 5.5e" beside the
+ * real thing, lands in the same source toggle, and collides ids with it. Nothing in the format stops
+ * a publisher writing whatever they like there, so the app has to notice that two of them wrote the
+ * same thing.
+ *
+ * Read off the loaded graph, which already knows the source and the pack for every row. No graph
+ * (a fresh data dir, tests) means nothing is claimed yet and there is nothing to warn about.
+ */
+function sourceClaimedElsewhere(
+	graph: ContentGraph | null,
+	localPack: string,
+	staged: StagedFile[]
+): { source: string; owner: string } | null {
+	if (!graph) return null;
+	const owners = new Map<string, string>();
+	for (const row of graph.rows) {
+		const pack = packNameOf(row.root);
+		if (pack !== localPack && !owners.has(row.source)) owners.set(row.source, pack);
+	}
+	const decoder = new TextDecoder();
+	for (const file of staged) {
+		const incoming = sourceOf(decoder.decode(file.bytes));
+		const owner = incoming === null ? undefined : owners.get(incoming);
+		if (incoming !== null && owner !== undefined) return { source: incoming, owner };
 	}
 	return null;
 }

@@ -20,7 +20,7 @@ it costs the user, not by effort.
 
 ---
 
-### [ ] 1. A pack declares its OWN `#content-source`, so it can wear another pack's identity
+### [x] 1. A pack declares its OWN `#content-source`, so it can wear another pack's identity
 
 Identity is `source:id`; the tag comes out of a file the pack ships; and `sourceLabel`
 (`content/detail.ts:200`) renders `SRD 5.2.1` as the friendly **"D&D 5.5e"**. So a third-party pack
@@ -36,10 +36,15 @@ incoming tag against the tag **already in that folder** — which is `null` on a
 exactly when a spoof happens. It was written to catch an upstream RE-TAG, and it does that well; it
 was never a claim check.
 
-**Fix:** build a `source → pack` map over every installed pack and compare against that, not against
-the one folder being written. A tag already claimed by another pack is a refusal, or at the very
-least a stated confirmation ("this pack publishes rows as *D&D 5.5e*, which is what *srd-2024*
-already provides"). Needs finding 9 to be worth much.
+**Fixed as a WARN + explicit second click** (maintainer's call — a fork of the SRD repo legitimately
+carries the SRD's tag, so a refusal would block a real workflow). `sourceClaimedElsewhere` reads a
+`source → pack` map off the loaded graph and compares the incoming tag against every OTHER pack, at
+the same moment `sourceClash` runs — bytes in hand, nothing written. It returns through the same
+shape the row-removal question already used (`sourceClaim` on the result, `acceptSourceClaim` to
+approve), so the panel grew one button rather than a new mechanism.
+
+**Note for whoever touches `installPack` next:** it was not passing `graph` at all, so the check
+could not have fired on a FIRST install — which is precisely the case it exists for. It does now.
 
 ### [x] 2. A `.prev` outlives the pack it belonged to, and startup recovery puts the pack back
 
@@ -165,15 +170,23 @@ check, install, apply and restore until the app restarts.
   dot or space, and the Windows device names (`CON`, `NUL`, `AUX`, `COM1`) all reach `mkdir` and
   throw there — see finding 5 for what that then costs.
 
-### [ ] 9. Provenance never reaches the user, and there is no per-PACK filter
+### [x] 9. Provenance never reaches the user, and there is no per-PACK filter
 
 `LoadedRow` carries `root` (the pack) all the way through the loader, and the UI drops it:
 `entryMeta` shows the `source` label only, and the two-dimensional filter is file × source with **no
 pack dimension**. So a pack cannot be switched off without deleting it, and cannot be told apart
 from a pack claiming its tag.
 
-Not a defect standing alone — it is the mechanism finding 1 exploits, and one change fixes both:
-show the pack in the article meta, group `SourceManager` by `(pack, source)`.
+Not a defect standing alone — it is the mechanism finding 1 exploits.
+
+**Fixed, both halves.** The article's attribution line names the pack beside the friendly label
+(`Source: D&D 5.5e · srd-2024`), and `SourceManager` groups by `(pack, source)`: the PACK heads the
+group and carries the switch, while the source tag sits beside it as a secondary pill that still
+toggles that tag everywhere it appears. Two packs claiming one tag are therefore two rows with two
+switches, which is the whole point. The pack switch is built on the existing FILE dimension
+(`setFilesEnabled` over `content/<pack>/…`) rather than a third stored dimension — a pack IS its
+folder, `renameFileRoot` already moves those paths, and nothing new has to be persisted or migrated.
+Verified in the running app (`design-preview/sources-pack-groups.png`).
 
 ---
 
