@@ -4,11 +4,18 @@ Temp doc, `git rm` when empty (AI-CONVENTIONS §8.7). This is the **third pass**
 same day: the ledger for passes one and two was retired in `1ddb102` once its items closed, and this
 file reclaims the name because its identity is the MODULE, not the pass.
 
-**Progress:** 2, 3, 7 and two thirds of 8 are done (`[x]`/`[~]`); 1, 4, 5, 6, 9 and the new 10–12
-are open. Decisions taken with the maintainer 2026-08-12: a duplicate `#content-source` WARNS and
-asks for an explicit confirmation rather than refusing (a fork of the SRD repo legitimately carries
-the same tag); the UI provenance half (9) is IN this pass, because 1 is half a fix without it; and a
-config write that fails must reach the user, not just a log.
+**Progress (2026-08-12): everything in the pack manager and what it calls is CLOSED — 1, 2, 3, 5,
+6, 7, 8, 9, 10, 11, 12.** Commits `20b38ad`, `d6ada03`, `c65c039`, `980b457`.
+
+**Still open: 4 only**, and it is out of the scope the maintainer set for this pass ("the pack
+manager and whatever it calls"): a link in content prose is rendered by `ArticleProse`, which the
+pack manager does not call — it is the compendium, downstream of it. Left here rather than moved so
+the finding does not evaporate; move it to a UI ledger when someone next opens that file.
+
+Decisions taken with the maintainer 2026-08-12: a duplicate `#content-source` WARNS and asks for an
+explicit confirmation rather than refusing (a fork of the SRD repo legitimately carries the same
+tag); the UI provenance half (9) was IN scope, because 1 is half a fix without it; and a config write
+that fails must reach the user, not just a log.
 
 The first two passes read the module for correctness. This one followed the whole chain —
 capability → Rust fetcher → GitHub adapter → diff → swap-in → loader → prose render → plugins —
@@ -151,7 +158,7 @@ check, install, apply and restore until the app restarts.
 **Fixed:** `AbortSignal.timeout(60_000)` on both fetcher methods, next to the existing
 `connectTimeout`.
 
-### [~] 8. Tail
+### [x] 8. Tail
 
 - `[x]` `assertHttps` tested `protocol.startsWith('https')`, so `httpsx:` passed the layer whose
   whole job is to be the second line of defence. Now an exact `=== 'https:'`.

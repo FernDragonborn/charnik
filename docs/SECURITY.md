@@ -74,8 +74,11 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > `docs/AUDIT-PACKS-12-08.md`). A pack declares its own `#content-source`, that tag IS the namespace half of
    > `source:id`, and it is the only provenance the UI shows — so a pack stamping `SRD 5.2.1`
    > renders as "D&D 5.5e", shares the official pack's source toggle, and collides ids with it.
-   > Schema validation says the row is well-formed, not that the publisher is who it says. The fix
-   > is a claimed-tag check at install plus showing the PACK in article meta, not more zod.
+   > Schema validation says the row is well-formed, not that the publisher is who it says. **Closed
+   > 2026-08-12** the way that implies, not with more zod: installing a pack whose tag another pack
+   > already publishes under stops and asks for an explicit second click, and the PACK (a folder on
+   > disk — a fact, unlike the tag) is now named in the article's attribution line and heads its
+   > group in the source filter, with its own switch.
 
    > **BUILT (REL-4 slices 2–3): fetching content packs from a URL.** It goes through **Rust**
    > (`tauri-plugin-http`, behind the `RemoteFetcher` seam), the same shape as the updater in §1,

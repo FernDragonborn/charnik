@@ -1012,11 +1012,12 @@ were learned the hard way.
   **REL-5**, deliberately not in any wave.
   **Consequence, now live:** the content passes (MAGIC-ITEM-EFX, E4, D6/D10) have left the app
   roadmap entirely; they ship from the content repo.
-  **Reopened in part 2026-08-12:** a third, security-angled read left nine OPEN items with their own
-  ledger, **[`docs/AUDIT-PACKS-12-08.md`](AUDIT-PACKS-12-08.md)** — two of them silent data loss
-  reachable without any hostility (a `.prev` that resurrects an uninstalled pack; case-folded folder
-  collisions on NTFS/APFS). Unscheduled; the cheap half is out-of-band work, the identity half
-  (source spoofing + per-pack provenance) is a real chunk and wants its own slot.
+  **Reopened and closed again 2026-08-12:** a third, security-angled read found twelve items
+  (ledger **[`docs/AUDIT-PACKS-12-08.md`](AUDIT-PACKS-12-08.md)**), of which two were silent data
+  loss reachable without any hostility — a `.prev` that resurrected an uninstalled pack, and
+  case-folded folder collisions on NTFS/APFS. Eleven are fixed; the one left is a compendium-render
+  finding (a link in content prose navigates the whole window) that the pack manager does not
+  reach.
 - **W1 · Roll card (UBUG-20 + UX-3) — DONE 2026-08-10.** One `RollRow` across toast / Playbar / log /
   tray, retroactive advantage as a three-state pill, the reroll pill, the one-line strip. Tails are
   listed on UBUG-20 itself.
@@ -1795,12 +1796,15 @@ holds the done-work log; these are the OPEN tails it carried):**
   before `1ddb102` retired it, since its identity is the module and not the pass). The first two
   passes read the module for correctness; this one followed the whole chain — capability → fetcher →
   adapter → diff → swap-in → loader → prose render → plugins — asking what a hostile pack can do to
-  a user who is not reading the code. **Nine items.** The transport and the plugin model hold; the
-  gaps are **identity** (a pack declares its own `#content-source`, and that tag is the only
-  provenance the UI shows) and the **folder-name/staging model** on a case-folding filesystem (an
-  uninstall's `.prev` gets resurrected by startup recovery; `SRD-2024` installs over `srd-2024`).
-  Read the ledger for the list; it is deleted when empty, so anything that must outlive it is below
-  or already in SECURITY.md.
+  a user who is not reading the code. **Twelve items; eleven are CLOSED the same day** (`20b38ad`,
+  `d6ada03`, `c65c039`, `980b457`). The transport and the plugin model held; the gaps were
+  **identity** (a pack declares its own `#content-source`, and that tag was the only provenance the
+  UI showed — now it warns on a claimed tag and names the PACK in both the article and the source
+  filter) and the **folder-name/staging model** on a case-folding filesystem (an uninstall's `.prev`
+  was resurrected by startup recovery; `SRD-2024` installed over `srd-2024`). The twelfth — a link
+  in content prose navigating the whole window — is real and OPEN, but it lives in `ArticleProse`,
+  which the pack manager does not call. Read the ledger for the list; it is deleted when empty, so
+  anything that must outlive it is below or already in SECURITY.md.
 
   **Decided there, kept here because the ledger is temporary:** blob-SHA verification is INTEGRITY,
   not AUTHENTICITY — a typo-squatted URL or a compromised repo yields whatever it likes, and only the
