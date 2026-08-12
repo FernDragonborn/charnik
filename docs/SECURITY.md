@@ -23,10 +23,11 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    Path traversal is blocked by the fs scope *and* validated in the `Storage` interface.
 3. **All IO via the `Storage` interface.** One audited seam; no scattered raw fs; nothing
    above it imports Tauri. The node/in-memory test impl exercises the same validation.
-   > **Half true today** (found 2026-08-12, ledger: `docs/AUDIT-PACKS-12-08.md`): `MemoryStorage` and the
-   > Tauri impl both call `sandboxRelative`; **`NodeStorage` does not** — it resolves straight off
-   > its root. Test/tooling-only for now, but the sentence above is the invariant, so fix the impl,
-   > not the sentence.
+   > **Precisely** (checked 2026-08-12): the Tauri and memory impls call the shared
+   > `sandboxRelative`; `NodeStorage` validates differently — it resolves the path and then requires
+   > the result to be inside its root — so containment holds in all three, but the node one accepts
+   > inputs the seam rejects (`a/../b` resolves back inside). "The same validation" means the same
+   > guarantee, not the same function.
 4. **Effects are data, never code.** The effects engine is a **fixed-vocabulary
    interpreter**, not `eval`/a DSL (incl. user-entered custom effects; free text is inert
    display). Malicious content can't execute — worst case it's flagged in content-health.

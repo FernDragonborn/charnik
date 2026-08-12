@@ -393,6 +393,20 @@ describe('recovering an interrupted apply', () => {
 		expect(await s.exists('content/p.new')).toBe(false);
 	});
 
+	/* A lone `.prev` is NOT reachable from either writer: both keep the replacement tree on disk
+	   until the very last rename, so at the only moment the pack is missing BOTH staging folders
+	   exist. On its own it means the live folder left by another route — a file-manager delete —
+	   and renaming it back handed the user a pack they had deleted, one launch later. */
+	it('drops an orphaned .prev instead of resurrecting a pack the user deleted', async () => {
+		const s = new MemoryStorage();
+		await s.writeBytes('content/p.prev/a.csv', enc('id\nold'));
+
+		await recoverInterruptedApply(s, 'p');
+
+		expect(await s.exists('content/p')).toBe(false);
+		expect(await s.exists('content/p.prev')).toBe(false);
+	});
+
 	it('promotes the replacement when there is no old copy to go back to', async () => {
 		const s = new MemoryStorage();
 		await s.writeBytes('content/p.new/a.csv', enc('id\nnew'));

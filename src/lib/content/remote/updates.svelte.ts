@@ -16,7 +16,9 @@ import {
 	forgetPack,
 	forgetPending,
 	freeLocalPackName,
+	claimedPackName,
 	isReservedPackName,
+	isUsablePackFolderName,
 	localPackFor,
 	packConfig,
 	recordCheck,
@@ -50,6 +52,7 @@ import {
 	pluginsIn,
 	pluginsTouchedBy,
 	pruneCache,
+	removeStaging,
 	rollbackPack,
 	stagePackUpdate,
 	type ApplyResult
@@ -573,25 +576,32 @@ export async function installPack(
 ): Promise<ApplyResult | null> {
 	const found = updates.discovered.find((d) => d.pack === pack);
 	if (!found) return null;
-	const local = (opts.localName ?? found.localName).trim();
+	const typed = (opts.localName ?? found.localName).trim();
 	// belt-and-braces: `discoverPacks` already filtered the remote name, but this is the function that
 	// WRITES, and a reserved name is the one input that turns an install into data loss — and `local`
 	// can be anything the user typed into the rename box
-	if (local === '' || local.includes('/') || isReservedPackName(local)) {
-		updates.error = { kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: local } };
+	if (!isUsablePackFolderName(typed)) {
+		updates.error = { kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: typed } };
 		return null;
 	}
 	// …and it must not be somebody else's folder. Only the entry this repo already owns may be
 	// written over; anything else is the collision the suggested name exists to step around.
-	const owner = packConfig.packs[local];
-	if (owner !== undefined && localPackFor(found.repo, pack) !== local) {
+	// Matched case-INSENSITIVELY, because NTFS/APFS fold case: `SRD-2024` typed beside an installed
+	// `srd-2024` is the same directory, and an exact lookup calling it free is how the swap renames
+	// somebody else's pack away to `.prev`.
+	const ownerName = claimedPackName(typed);
+	const owner = ownerName === undefined ? undefined : packConfig.packs[ownerName];
+	if (owner !== undefined && localPackFor(found.repo, pack) !== ownerName) {
 		updates.error = {
 			kind: 'i18n',
 			key: 'settings.packs.folderTaken',
-			values: { name: local, repo: owner.repo }
+			values: { name: typed, repo: owner.repo }
 		};
 		return null;
 	}
+	// our own pack under a differently-cased name is ONE folder, so write to the name the registry
+	// already knows rather than minting a second entry for the same directory
+	const local = ownerName ?? typed;
 	const parsed = parseGithubRepo(found.repo);
 	if (!parsed) return null;
 	const repo: GithubRepo = { ...parsed, branch: found.branch };
@@ -633,7 +643,7 @@ export async function installPack(
 export async function renamePack(from: string, to: string): Promise<boolean> {
 	const target = to.trim();
 	if (target === from) return true;
-	if (target === '' || target.includes('/') || isReservedPackName(target)) {
+	if (!isUsablePackFolderName(target)) {
 		updates.error = { kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: to } };
 		return false;
 	}
@@ -647,11 +657,19 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 		return false;
 	}
 	const storage = getUserStorage();
-	if (packConfig.packs[target] !== undefined || (await storage.exists(`content/${target}`))) {
+	// A case-ONLY rename (`srd-2024` → `SRD-2024`) is one folder changing its spelling, not a move
+	// onto somebody else's — so neither taken-check applies to it, and both would otherwise refuse it
+	// with "that folder is taken" naming the very pack being renamed.
+	const caseOnly = target.toLowerCase() === from.toLowerCase();
+	const claimed = claimedPackName(target);
+	if (!caseOnly && (claimed !== undefined || (await storage.exists(`content/${target}`)))) {
 		updates.error = {
 			kind: 'i18n',
 			key: 'settings.packs.folderTaken',
-			values: { name: target, repo: packConfig.packs[target]?.repo ?? '' }
+			values: {
+				name: target,
+				repo: (claimed === undefined ? undefined : packConfig.packs[claimed])?.repo ?? ''
+			}
 		};
 		return false;
 	}
@@ -702,7 +720,13 @@ export async function uninstallPack(pack: string): Promise<void> {
 	// and forgets it — harmless here (that is what we are doing anyway), except that it would race
 	// the very write that removes it. One flag, one order, one writer.
 	await duringPackWrite(async () => {
-		await getUserStorage().remove(`content/${pack}`);
+		const storage = getUserStorage();
+		await storage.remove(`content/${pack}`);
+		// …and the staging folders WITH it. A `<pack>.prev` left behind is not inert: startup recovery
+		// reads a lone `.prev` as an apply that died between its two renames and renames it back, so an
+		// uninstall that leaves one uninstalls nothing — the pack (and its plugin code) is on disk again
+		// at the next launch, and only the revoke above keeps that code from running.
+		await removeStaging(storage, pack);
 		forgetPack(pack);
 	});
 	delete updates.pending[pack];

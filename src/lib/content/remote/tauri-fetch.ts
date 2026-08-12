@@ -13,10 +13,22 @@ import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { MAX_REMOTE_BYTES, type FetchResult, type RemoteFetcher } from './types';
 
 /** Refuse anything that isn't plain `https:` before it reaches the client — the capability denies
- *  `http://` too, but failing here gives a message instead of an opaque plugin error. */
+ *  `http://` too, but failing here gives a message instead of an opaque plugin error.
+ *  An EXACT scheme match: `startsWith` also accepted `httpsx:`, in the one function whose whole job
+ *  is to be the second line of defence. */
 function assertHttps(url: string): void {
-	if (!URL.parse(url)?.protocol.startsWith('https')) throw new Error(`not an https URL: ${url}`);
+	if (URL.parse(url)?.protocol !== 'https:') throw new Error(`not an https URL: ${url}`);
 }
+
+/**
+ * Wall-clock ceiling for one request, not just for the handshake.
+ *
+ * `connectTimeout` covers reaching the host; a server that ACCEPTS the connection and then says
+ * nothing is not covered by it, and the request never settles. That is not one slow check: every
+ * pack operation shares a single queue (`serialised` in updates.svelte.ts), so one hung request
+ * wedges checking, installing, applying and the launch-time restore until the app is restarted.
+ */
+const REQUEST_TIMEOUT_MS = 60_000;
 
 /** Guard against a body that would blow memory up, using the declared length when there is one and
  *  the actual size when there isn't (a lying or absent `Content-Length` must not get a free pass). */
@@ -35,7 +47,8 @@ export const tauriFetcher: RemoteFetcher = {
 				// a conditional request: 304 costs no rate-limit quota, which is what makes checking
 				// several packs from one repo effectively free in the steady state
 				headers: etag === undefined ? {} : { 'If-None-Match': etag },
-				connectTimeout: 15_000
+				connectTimeout: 15_000,
+				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
 			});
 			if (res.status === 304) return { kind: 'notModified' };
 			if (!res.ok) return { kind: 'error', status: res.status, message: res.statusText };
@@ -54,7 +67,11 @@ export const tauriFetcher: RemoteFetcher = {
 	async getBytes(url: string) {
 		try {
 			assertHttps(url);
-			const res = await tauriFetch(url, { method: 'GET', connectTimeout: 15_000 });
+			const res = await tauriFetch(url, {
+				method: 'GET',
+				connectTimeout: 15_000,
+				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+			});
 			if (!res.ok) return { kind: 'error' as const, message: `${res.status} ${res.statusText}` };
 			if (tooLarge(res)) return { kind: 'error' as const, message: 'response too large' };
 			const bytes = new Uint8Array(await res.arrayBuffer());

@@ -245,6 +245,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const CHECK_INTERVAL_MS` — At most one update request per repo per day — stated plainly in the settings copy, so the * number lives here and now…
 - `const SHIPPED_PACK_REPO` — * Where the packs Charnik itself publishes come from.
 - `function isReservedPackName`
+- `function isUsablePackFolderName` — Can a pack be installed into a folder of this name?
+- `function sanitisePackFolderName` — * A folder name the app can actually create, derived from one it cannot.
+- `const claimedPackName` — * The registry key that already OWNS this folder name, compared the way the filesystem compares it.
 - `function parsePackConfig` — Parse a stored section over the defaults.
 - `function isRepoDue` — * Is this repo due for an automatic check?
 - `function reposDueForCheck` — Every repo that automatic checking may contact right now: the update mode allows the network, * the throttle has elap…
@@ -737,6 +740,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const isPackWriteInFlight`
 - `function duringPackWrite` — Run something that moves or deletes a pack folder, with the flag raised for its whole duration.
 - `function recoverInterruptedApply` — * Finish or undo an apply that was interrupted (crash, kill, power loss) — call at startup and on * every content reb…
+- `function removeStaging` — Delete a pack's staging folders.
 - `function rollbackPack` — Roll one applied update back to the copy the swap kept.
 - `const hasRollback` — Is there something to roll back to?
 - `function stagePackUpdate` — * Pre-download an update's bytes into the cache, so applying it later is instant and works offline * (the `download` …
@@ -1251,4 +1255,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 725 exports across 102 modules · 39 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 729 exports across 102 modules · 39 duplicate suspects._

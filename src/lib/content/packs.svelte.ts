@@ -161,6 +161,68 @@ export function isReservedPackName(pack: string): boolean {
 	return name.startsWith('.') || STAGING_SUFFIX.test(name) || RESERVED_PACK_NAMES.has(name);
 }
 
+/**
+ * Shapes a folder name cannot have, on top of the names we reserve.
+ *
+ * A separator would NEST the pack rather than name it — and `\` is the quiet one, because the
+ * Storage seam normalises it before splitting, so `a\b` becomes a subfolder instead of an error. The
+ * rest are refused by Windows itself, which is the problem: the refusal arrives as a throw from
+ * `mkdir` in the middle of a swap, where the pack folder has already been renamed away, instead of
+ * as a message before anything moved.
+ */
+const ILLEGAL_CHAR = /[\\/:*?"<>|]/;
+/** A trailing dot or space is the quiet one: Windows strips it, so `srd ` and `srd` would be one
+ *  folder wearing two registry entries. */
+const TRAILING_DOT_OR_SPACE = /[. ]$/;
+/** …and the DOS device names, which Windows still refuses as directory names, with or without an
+ *  extension (`nul`, `nul.csv`). */
+const DEVICE_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+/** …and any control character, which no filesystem wants in a name and every UI mis-renders.
+ *  Tested by code point rather than a regex range, so the escape can't be flattened into a raw byte
+ *  by anything editing this file. */
+const hasControlChar = (name: string): boolean => [...name].some((c) => c.charCodeAt(0) < 32);
+
+/** Can a pack be installed into a folder of this name? The ONE gate — install and rename both ask
+ *  it, so a name that is refused in one place cannot be accepted in the other. */
+export function isUsablePackFolderName(name: string): boolean {
+	if (name === '' || ILLEGAL_CHAR.test(name) || TRAILING_DOT_OR_SPACE.test(name)) return false;
+	if (hasControlChar(name) || DEVICE_NAME.test(name.split('.')[0] ?? '')) return false;
+	return !isReservedPackName(name);
+}
+
+/**
+ * A folder name the app can actually create, derived from one it cannot.
+ *
+ * Publishers do not owe us Windows-safe folder names, and refusing such a pack outright would hide
+ * it from the install list with no way to say why. Correcting the name and letting the user overrule
+ * the suggestion is the same shape as the `-2` collision path right below.
+ *
+ * It must also TERMINATE that path: `freeLocalPackName` suffixes `-2`, `-3`… until a name is free,
+ * and a base that is unusable for its CHARACTERS stays unusable however many suffixes it gets — so
+ * without this the loop would spin forever on `foo:bar` or `.git`.
+ */
+export function sanitisePackFolderName(name: string): string {
+	const cleaned = [...name]
+		.map((c) => (ILLEGAL_CHAR.test(c) || c.charCodeAt(0) < 32 ? '-' : c))
+		.join('')
+		.replace(/^\.+/, '') // a leading dot is ours by convention, and no suffix ever clears it
+		.replace(/[. ]+$/, '')
+		.trim();
+	// a name that is STILL unusable can only be reserved or a device name, both of which a prefix
+	// settles — and `pack` alone covers a name that sanitised down to nothing
+	return isUsablePackFolderName(cleaned) ? cleaned : `pack${cleaned === '' ? '' : `-${cleaned}`}`;
+}
+
+/**
+ * The registry key that already OWNS this folder name, compared the way the filesystem compares it.
+ *
+ * NTFS and APFS fold case, so `SRD-2024` and `srd-2024` are one directory — and an exact-string
+ * lookup answering "free" is how a stranger's pack ends up installed ON TOP of one the user already
+ * had: the diff reads the other pack's files, and the swap renames it away to `.prev`.
+ */
+export const claimedPackName = (name: string): string | undefined =>
+	Object.keys(packConfig.packs).find((pack) => pack.toLowerCase() === name.toLowerCase());
+
 /** Parse a stored section over the defaults. Pure, so the merge is unit-testable without Storage;
  *  anything that isn't a well-formed section degrades to "nothing installed, never check". */
 export function parsePackConfig(raw: unknown): PackConfigData {
@@ -324,10 +386,14 @@ export function localPackFor(repo: string, remotePack: string): string | undefin
  * rather than the user's authoring root.
  */
 export function freeLocalPackName(preferred: string, onDisk: string[] = []): string {
-	const taken = new Set([...Object.keys(packConfig.packs), ...onDisk]);
-	const free = (name: string) => !taken.has(name) && !isReservedPackName(name);
-	if (free(preferred)) return preferred;
-	for (let n = 2; ; n++) if (free(`${preferred}-${n}`)) return `${preferred}-${n}`;
+	// case-FOLDED, because that is how the filesystem answers: on NTFS/APFS `SRD-2024` and
+	// `srd-2024` are one directory, so an exact-string "free" is how one pack lands on another
+	const taken = new Set([...Object.keys(packConfig.packs), ...onDisk].map((n) => n.toLowerCase()));
+	const free = (name: string) => !taken.has(name.toLowerCase()) && isUsablePackFolderName(name);
+	// sanitised FIRST, so the suffix loop below is guaranteed to reach a usable name
+	const base = sanitisePackFolderName(preferred);
+	if (free(base)) return base;
+	for (let n = 2; ; n++) if (free(`${base}-${n}`)) return `${base}-${n}`;
 }
 
 /** Rename the folder a pack lives in, keeping its repo, its pin and where it came from. The caller

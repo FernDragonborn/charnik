@@ -5,7 +5,11 @@
  */
 import { describe, it, expect } from 'vitest';
 import {
+	claimedPackName,
+	freeLocalPackName,
 	isReservedPackName,
+	isUsablePackFolderName,
+	sanitisePackFolderName,
 	parsePackConfig,
 	emptyPackConfig,
 	isRepoDue,
@@ -102,6 +106,53 @@ describe('reserved pack names', () => {
 		expect(isReservedPackName('srd-2024')).toBe(false);
 		expect(isReservedPackName('phb-homebrew')).toBe(false);
 		expect(isReservedPackName('my-homebrew-pack')).toBe(false);
+	});
+});
+
+/** A publisher owes us nothing about folder names, and the OS refuses several of them — as a throw
+ *  from `mkdir` half-way through a swap, which is the worst possible moment to find out. */
+describe('folder names the app can actually create', () => {
+	it('accepts ordinary names, spaces and dashes included', () => {
+		expect(isUsablePackFolderName('srd-2024')).toBe(true);
+		expect(isUsablePackFolderName('My Homebrew Pack')).toBe(true);
+	});
+	it('refuses separators, the characters Windows reserves, and control characters', () => {
+		for (const bad of ['', 'a/b', 'a\\b', 'a:b', 'a*b', 'a?b', 'a"b', 'a<b', 'a>b', 'a|b'])
+			expect(isUsablePackFolderName(bad)).toBe(false);
+		expect(isUsablePackFolderName(`a${String.fromCharCode(7)}b`)).toBe(false);
+	});
+	it('refuses a trailing dot or space — Windows strips them, so two names become one folder', () => {
+		expect(isUsablePackFolderName('srd ')).toBe(false);
+		expect(isUsablePackFolderName('srd.')).toBe(false);
+	});
+	it('refuses the DOS device names, with or without an extension', () => {
+		for (const bad of ['nul', 'CON', 'aux.csv', 'com1', 'LPT9'])
+			expect(isUsablePackFolderName(bad)).toBe(false);
+		expect(isUsablePackFolderName('nullify')).toBe(true); // only the exact name is a device
+	});
+
+	it('sanitises an unusable name into one that IS usable — and always terminates', () => {
+		for (const raw of ['foo:bar', '.git', 'homebrew', 'nul', '???', 'trailing.'])
+			expect(isUsablePackFolderName(sanitisePackFolderName(raw))).toBe(true);
+		expect(sanitisePackFolderName('foo:bar')).toBe('foo-bar');
+		expect(sanitisePackFolderName('srd-2024')).toBe('srd-2024'); // a good name is left alone
+	});
+});
+
+/** NTFS and APFS fold case, so `SRD-2024` and `srd-2024` are ONE directory. An exact-string "that
+ *  name is free" is how a stranger's pack lands on top of one the user already had. */
+describe('a folder name is claimed the way the filesystem claims it', () => {
+	it('finds the registry entry whose case differs', () => {
+		packConfig.packs = { 'srd-2024': { repo: 'r' } };
+		expect(claimedPackName('SRD-2024')).toBe('srd-2024');
+		expect(claimedPackName('other')).toBeUndefined();
+		packConfig.packs = {};
+	});
+	it('never suggests a name that only differs from an installed one by case', () => {
+		packConfig.packs = { 'srd-2024': { repo: 'r' } };
+		expect(freeLocalPackName('SRD-2024')).toBe('SRD-2024-2');
+		expect(freeLocalPackName('srd-2024', ['SRD-2024-2'])).toBe('srd-2024-3');
+		packConfig.packs = {};
 	});
 });
 

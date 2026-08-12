@@ -305,11 +305,21 @@ export async function duringPackWrite<T>(run: () => Promise<T>): Promise<T> {
  * Finish or undo an apply that was interrupted (crash, kill, power loss) — call at startup and on
  * every content rebuild, never while one is in flight. The staging folders say where it stopped:
  *
- *  - live + `.new`  → the swap never started; the half-built tree is junk.
- *  - `.prev` only   → it died between the two renames; the pack is intact under `.prev`.
- *  - `.new` only    → it died after the second rename with no old copy; promote it.
+ *  - live + `.new`      → the swap never started; the half-built tree is junk.
+ *  - `.prev` + `.new`   → it died between the two renames; the pack is intact under `.prev`.
+ *  - `.new` only        → it died before there was ever a live folder (a first install); promote it.
+ *  - `.prev` only       → NOT an interruption. See below.
  *
- * `.prev` alongside a live folder is NOT a leftover — that is the deliberate one-generation undo.
+ * `.prev` alongside a live folder is NOT a leftover either — that is the deliberate one-generation
+ * undo.
+ *
+ * **Why a lone `.prev` cannot be an interrupted run.** Both writers build the replacement tree
+ * FIRST and rename it in LAST (`buildAndSwap`: remove `.prev` → live→`.prev` → `.new`→live;
+ * `rollbackPack`: live→`.new` → `.prev`→live), so at the only moment the pack is missing, BOTH
+ * staging folders exist. A `.prev` on its own therefore means the live folder left by some other
+ * route — deleted in a file manager, or by an older build's uninstall, which did not clean up after
+ * itself. Renaming it back "restored" a pack the user had deleted (plugin code included, one launch
+ * later), so it is dropped instead: an undo copy for a pack that is gone has nothing left to undo.
  */
 export async function recoverInterruptedApply(storage: Storage, pack: string): Promise<void> {
 	const live = localPath(pack);
@@ -319,12 +329,22 @@ export async function recoverInterruptedApply(storage: Storage, pack: string): P
 		await storage.remove(next).catch(() => {});
 		return;
 	}
+	const halfSwapped = await storage.exists(next);
 	if (await storage.exists(prev)) {
+		if (!halfSwapped) return void (await storage.remove(prev).catch(() => {}));
 		await storage.rename(prev, live);
 		await storage.remove(next).catch(() => {});
 		return;
 	}
-	if (await storage.exists(next)) await storage.rename(next, live);
+	if (halfSwapped) await storage.rename(next, live);
+}
+
+/** Delete a pack's staging folders. An UNINSTALL must take them with it: `<pack>.prev` is dead
+ *  weight the moment the pack is gone, and a later install of the same name would inherit it as its
+ *  "undo", putting a stranger's files back under a rollback. */
+export async function removeStaging(storage: Storage, pack: string): Promise<void> {
+	await storage.remove(stagingDir(pack)).catch(() => {});
+	await storage.remove(previousDir(pack)).catch(() => {});
 }
 
 /** Roll one applied update back to the copy the swap kept. One generation only — the next apply

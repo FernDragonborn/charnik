@@ -2,7 +2,13 @@
 
 Temp doc, `git rm` when empty (AI-CONVENTIONS §8.7). This is the **third pass** on the same module,
 same day: the ledger for passes one and two was retired in `1ddb102` once its items closed, and this
-file reclaims the name because its identity is the MODULE, not the pass. Nothing here is fixed yet.
+file reclaims the name because its identity is the MODULE, not the pass.
+
+**Progress:** 2, 3, 7 and two thirds of 8 are done (`[x]`/`[~]`); 1, 4, 5, 6, 9 and the new 10–12
+are open. Decisions taken with the maintainer 2026-08-12: a duplicate `#content-source` WARNS and
+asks for an explicit confirmation rather than refusing (a fork of the SRD repo legitimately carries
+the same tag); the UI provenance half (9) is IN this pass, because 1 is half a fix without it; and a
+config write that fails must reach the user, not just a log.
 
 The first two passes read the module for correctness. This one followed the whole chain —
 capability → Rust fetcher → GitHub adapter → diff → swap-in → loader → prose render → plugins —
@@ -35,7 +41,7 @@ the one folder being written. A tag already claimed by another pack is a refusal
 least a stated confirmation ("this pack publishes rows as *D&D 5.5e*, which is what *srd-2024*
 already provides"). Needs finding 9 to be worth much.
 
-### [ ] 2. A `.prev` outlives the pack it belonged to, and startup recovery puts the pack back
+### [x] 2. A `.prev` outlives the pack it belonged to, and startup recovery puts the pack back
 
 `uninstallPack` (`remote/updates.svelte.ts:691`) removes `content/<pack>` and leaves
 `content/<pack>.prev` sitting beside it. The next content rebuild runs
@@ -50,9 +56,16 @@ folder deleted in a file manager, which is a supported way to do anything here.
 `renamePack` (`:665`) already moves `<from>.prev` for precisely this reason — the trap was known and
 uninstall was missed. No test covers it (`install.test.ts` has `.prev` cases, none after a delete).
 
-**Fix:** drop `.prev` and `.new` inside the same `duringPackWrite` as the folder delete.
+**Fixed, and deeper than the report.** Uninstall now drops both staging folders (`removeStaging`),
+but the patch alone would have left the file-manager route open — so the recovery rule itself was
+wrong. Both writers keep the replacement tree on disk until the very last rename (`buildAndSwap`:
+live→`.prev`, then `.new`→live; `rollbackPack`: live→`.new`, then `.prev`→live), so at the only
+moment the pack is missing **both** staging folders exist. A lone `.prev` is unreachable from either
+— it can only mean the live folder left by another route — and is now dropped instead of promoted.
+Tests: the orphan case in `install.test.ts`; the genuine `prev + new` mid-swap case already existed
+and still passes.
 
-### [ ] 3. Pack folder names collide case-insensitively on both platforms we ship to
+### [x] 3. Pack folder names collide case-insensitively on both platforms we ship to
 
 `freeLocalPackName` (`content/packs.svelte.ts:326`) and the owner check in `installPack`
 (`remote/updates.svelte.ts:586`) compare **exact** strings. `isReservedPackName` right above them
@@ -64,7 +77,14 @@ On NTFS/APFS, a repo publishing `SRD-2024` beside an installed `srd-2024` is jud
 `buildAndSwap` renames that pack to `SRD-2024.prev` and swaps its own tree in. The user's pack is
 gone, with no message, and the registry now holds two entries for one folder.
 
-**Fix:** case-fold the `taken` set, the owner check, and `renamePack`'s destination test.
+**Fixed:** `claimedPackName` (case-folded registry lookup) behind the `taken` set, the install owner
+check and `renamePack`'s destination test; an install into an existing pack's name under a different
+spelling now writes to the entry that already exists instead of minting a second one for the same
+directory. A case-ONLY rename is exempted, or both checks would refuse it while naming the pack being
+renamed. **Also caught while fixing it:** `freeLocalPackName` suffixes `-2`, `-3`… until a name is
+free, and a name unusable for its CHARACTERS never becomes usable that way — the loop would have spun
+forever on `foo:bar` or `.git` once finding 8 tightened the test. `sanitisePackFolderName` runs first
+and guarantees termination.
 
 ### [ ] 4. A link in content prose navigates the whole window
 
@@ -108,22 +128,30 @@ get a free pass. `MAX_REMOTE_BYTES` currently bounds what we will *use*, not wha
 **Fix:** read through `res.body.getReader()` with a running byte count, abort at the ceiling. (Also:
 `body.length` counts UTF-16 units, not bytes — a cosmetic under/over-count next to the real issue.)
 
-### [ ] 7. No total request timeout, and everything queues behind one
+### [x] 7. No total request timeout, and everything queues behind one
 
 Only `connectTimeout: 15_000` is set. A host that accepts the connection and then says nothing hangs
 the request forever — and because `checkNow` / `applyUpdate` / `restorePendingUpdates` share one
 `serialised()` queue (`remote/updates.svelte.ts:140`), that single hung request wedges **every**
 check, install, apply and restore until the app restarts.
 
-**Fix:** `signal: AbortSignal.timeout(…)` on both fetcher methods.
+**Fixed:** `AbortSignal.timeout(60_000)` on both fetcher methods, next to the existing
+`connectTimeout`.
 
-### [ ] 8. Tail — three one-liners
+### [~] 8. Tail
 
-- `assertHttps` (`remote/tauri-fetch.ts:17`) tests `protocol.startsWith('https')`, so `httpsx:`
-  passes the layer whose whole job is to be the second line of defence. `=== 'https:'`.
-- `NodeStorage` (`storage/node.ts:18`) resolves straight off its root, **without** `sandboxRelative`
-  — while **SECURITY.md §3** states the node impl exercises the same validation. True of
-  `memory.ts`, not of this one. Test/tooling-only today; the invariant is the point.
+- `[x]` `assertHttps` tested `protocol.startsWith('https')`, so `httpsx:` passed the layer whose
+  whole job is to be the second line of defence. Now an exact `=== 'https:'`.
+- `[x]` The local folder name was validated against `''`, `/` and the reserved set only. One gate
+  now — `isUsablePackFolderName`, asked by install AND rename — covering separators (incl. `\`,
+  which the Storage seam would silently turn into a subfolder), the characters Windows reserves,
+  control characters, a trailing dot or space, and the DOS device names. Unusable names from a repo
+  are corrected rather than hidden (`sanitisePackFolderName`).
+- `[ ]` **WITHDRAWN — not a defect.** I reported `NodeStorage` as having no sandbox guard and that
+  is wrong: it resolves and then checks the result is inside its root (`node.ts:17-23`), which
+  contains just as well. It does not share `sandboxRelative`, so it accepts paths the seam rejects
+  (`a/../b` resolves back inside), but nothing escapes. SECURITY.md §3's note was corrected to say
+  this rather than claim a hole.
 - The local folder name is validated only against `''`, `/` and the reserved set
   (`remote/updates.svelte.ts:580`). `\`, `:`, `*`, `?`, `<`, `>`, `|`, control characters, a trailing
   dot or space, and the Windows device names (`CON`, `NUL`, `AUX`, `COM1`) all reach `mkdir` and
@@ -138,6 +166,40 @@ from a pack claiming its tag.
 
 Not a defect standing alone — it is the mechanism finding 1 exploits, and one change fixes both:
 show the pack in the article meta, group `SourceManager` by `(pack, source)`.
+
+---
+
+### [ ] 10. `download` mode has no AGGREGATE budget
+
+The caps are per pack (200 files / 50 MB) and per repo (50 packs). Nothing bounds ONE CHECK: fifty
+packs of fifty megabytes across several repos is an automatic multi-gigabyte download in `download`
+mode, which is the mode whose whole promise is "we fetch ahead of time so applying is instant". The
+per-pack ceiling reads like a total and is not one.
+
+**Fix:** a byte budget for a whole check run, spent by `stagePackUpdate` and stopping the
+pre-download when it is exhausted (the update is still offered; it just fetches on apply).
+
+### [ ] 11. A registry write that fails is swallowed, so a PIN can silently not exist
+
+`writeConfigSection` (`storage/json-config.ts`) ends `.catch(() => {})`, deliberately — "a config
+failure must not crash the session". But the pack registry is a tenant of that file, and its
+contents are promises to the user: a pin says *don't change these rules mid-campaign*. If that write
+fails (disk full, permission, the data dir moved out from under it) the in-memory `$state` still
+shows it pinned, the UI agrees, and the next launch quietly does not.
+
+**Decided 2026-08-12 (maintainer):** the user has to be told what happened and what to do about it,
+so this is not a log line — it surfaces in the pack panel.
+
+### [ ] 12. `restoreBundledPacks` writes outside both rules the other writers obey
+
+`provider.ts:150` copies every bundled file over whatever is there: no `duringPackWrite` flag (so a
+watcher reload can build a graph from a half-restored pack, and `forgetUninstalledPacks` can run mid-
+write), and no `isProtectedFromOverwrite` check — which its sibling `seedShippedContent` applies
+carefully, and which the memory rule "an unstamped or drifted file is never overwritten" states
+without exception.
+
+Harmless TODAY only because restore is offered for a pack that is entirely absent, so there is
+nothing to clobber. That constraint is written down nowhere, and the function does not enforce it.
 
 ---
 
