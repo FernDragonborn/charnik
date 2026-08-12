@@ -30,7 +30,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
 - `CONFIG_PATH` ×2 — src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts
-- `CONTENT_DIR` ×2 — src/lib/content/provider.ts · src/lib/effects/plugin-host.ts
+- `CONTENT_DIR` ×2 — src/lib/content/disk.ts · src/lib/effects/plugin-host.ts
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
 - `fileOf` ×2 — src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
@@ -355,7 +355,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (88 modules)
+## Library functions & types (89 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -608,6 +608,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function toEntryGroups` — Project grouped rows into the EntryList model: each group's rows become display Entries (id, name * via `nameOf`, met…
 - `function groupEntries` — Group entries for the list — spells by level, everything else as one flat group.
 
+### `src/lib/content/disk.ts`
+
+- `const CONTENT_DIR` — Where content packs live.
+- `const packNameOf` — `content/srd-2024` → `srd-2024`: the folder IS the pack, so its name is its last segment.
+- `function discoverContentRoots` — * Every installed content pack, discovered by SCANNING `content/` — a pack is a folder, so the * folder listing is th…
+- `function isProtectedFromOverwrite` — * May the app overwrite this on-disk file, or is it the user's now?
+- `function isProtectedText` — The same question asked of bytes already in hand — for a caller that has just read the file for * another reason (the…
+
 ### `src/lib/content/grouping.ts`
 
 - `const byDisplayName` — * Comparator for a BROWSE list: by displayed name, newest edition first within an article's pair.
@@ -675,11 +683,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/provider.ts`
 
-- `function discoverContentRoots` — * Every installed content pack, discovered by SCANNING `content/` — a pack is a folder, so the * folder listing is th…
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
 - `function forgetUninstalledPacks` — * The registry describes what is INSTALLED, and a folder can leave without asking it: deleting the * pack in a file m…
 - `function restoreBundledPacks` — * Put a bundled pack back, from the copy inside the app — the undo for a deletion, offered both at * launch (when the…
-- `function isProtectedFromOverwrite` — * May the app overwrite this on-disk file, or is it the user's now?
 - `function seedShippedContent` — * Seed / UPDATE the shipped SRD roots on disk (desktop).
 - `function resetContentGraph` — Drop the cache (e.g.
 
@@ -1243,4 +1249,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 720 exports across 101 modules · 39 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 723 exports across 102 modules · 39 duplicate suspects._

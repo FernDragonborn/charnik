@@ -19,7 +19,8 @@ import {
 	uninstallPack
 } from './updates.svelte';
 import { gitBlobSha } from './diff';
-import { discoverContentRoots, forgetUninstalledPacks } from '../provider';
+import { discoverContentRoots } from '../disk';
+import { forgetUninstalledPacks } from '../provider';
 import { stampWithHash } from '../hash';
 import type { RemoteFetcher } from './types';
 

@@ -30,7 +30,7 @@ import {
 	UPDATE_MODE,
 	type PackConfigData
 } from '../packs.svelte';
-import { discoverContentRoots } from '../provider';
+import { discoverContentRoots, packNameOf } from '../disk';
 import {
 	checkRepo,
 	packSizeRefusal,
@@ -505,9 +505,7 @@ export async function discoverPacks(
 		if (oversized) updates.error = oversized;
 		// a folder that already exists but belongs to no registry entry is still TAKEN — a pack copied
 		// in by hand must not be overwritten by a stranger that happens to share its name
-		const onDisk = (await discoverContentRoots(getUserStorage()).catch(() => [])).map((root) =>
-			root.slice(root.lastIndexOf('/') + 1)
-		);
+		const onDisk = (await discoverContentRoots(getUserStorage()).catch(() => [])).map(packNameOf);
 		updates.discovered = res.packs
 			.filter((remote) => !isReservedPackName(remote.pack) && packTooLarge(remote) === null)
 			.map((remote) => {

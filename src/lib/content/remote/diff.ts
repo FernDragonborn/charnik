@@ -3,9 +3,9 @@
  *
  * Two rules from the plan land here, and both are about not surprising the user:
  *  - **A hand-edited file is never overwritten.** That rule already exists and is unit-tested for
- *    the shipped-content re-seed (REL-3), so this reuses `isProtectedFromOverwrite` rather than inventing a
- *    merge strategy: a file whose body no longer matches its own `#content-hash` was edited by the
- *    user, and their version wins.
+ *    the shipped-content re-seed (REL-3), so this reuses that rule (`isProtectedText`, the same one
+ *    behind `isProtectedFromOverwrite`) rather than inventing a merge strategy: a file whose body no
+ *    longer matches its own `#content-hash` was edited by the user, and their version wins.
  *  - **Removals are listed BEFORE applying, with what they would break.** Additions can't hurt
  *    anyone; a removed row can orphan a reference inside a character that is mid-campaign.
  *
@@ -16,7 +16,7 @@ import Papa from 'papaparse';
 import type { Storage } from '$lib/storage/types';
 import { listFilesRecursive } from '$lib/storage/walk';
 import type { ContentGraph } from '../loader';
-import { isProtectedFromOverwrite } from '../provider';
+import { isProtectedText } from '../disk';
 import { parseContentDirectives } from '../meta';
 import { isPackFile, type RemotePack } from './github';
 
@@ -105,6 +105,7 @@ export async function diffPack(
 ): Promise<PackDiff> {
 	const changes: FileChange[] = [];
 	const seen = new Set<string>();
+	const decoder = new TextDecoder();
 
 	for (const file of remote.files) {
 		const path = localPathIn(localPack, file.path);
@@ -113,8 +114,12 @@ export async function diffPack(
 			changes.push({ path: file.path, kind: FILE_CHANGE.added, sha: file.sha, expectLocal: null });
 			continue;
 		}
-		const expectLocal = await gitBlobSha(await storage.readBytes(path));
-		if (await isProtectedFromOverwrite(storage, path)) {
+		// ONE read, two questions: the blob SHA the remote is compared against, and whether the body
+		// still matches its own `#content-hash`. Asking the second one through the Storage seam read
+		// every file of every pack a second time, on every check and at every launch.
+		const bytes = await storage.readBytes(path);
+		const expectLocal = await gitBlobSha(bytes);
+		if (await isProtectedText(path, decoder.decode(bytes))) {
 			changes.push({ path: file.path, kind: FILE_CHANGE.preserved, sha: file.sha, expectLocal });
 			continue;
 		}

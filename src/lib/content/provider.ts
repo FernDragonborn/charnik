@@ -27,14 +27,12 @@ import type { Storage } from '$lib/storage/types';
 import { listFilesRecursive } from '$lib/storage/walk';
 import { loadContent, type ContentGraph, type ContentSource } from './loader';
 import { HOMEBREW_ROOT } from './homebrew';
-import { HASH_STATE } from './meta';
-import { fileHashState } from './hash';
+import { CONTENT_DIR, discoverContentRoots, isProtectedFromOverwrite, packNameOf } from './disk';
 import { CONTENT_SEED_VERSION } from '$lib/schema/version';
 import { isPackWriteInFlight, recoverInterruptedApply } from './remote/install';
 import {
 	bundledPacks,
 	forgetPack,
-	isReservedPackName,
 	missingBundled,
 	packConfig,
 	registerPack,
@@ -45,40 +43,6 @@ import {
 /** Records which CONTENT_SEED_VERSION was last written to the data dir. Lives beside the seeded roots
  *  but OUTSIDE them (the loader only scans the `srd-*` roots), so it's never parsed as content. */
 const SEED_VERSION_FILE = 'content/.seed-version';
-
-/** Where content packs live. Each direct SUBFOLDER is one pack. */
-const CONTENT_DIR = 'content';
-
-/**
- * Every installed content pack, discovered by SCANNING `content/` — a pack is a folder, so the
- * folder listing is the file list and there is no index to keep in sync (AI-CONVENTIONS §1.6).
- * The shipped SRD is just the pack the app happens to bundle. Excludes the writable homebrew root
- * (loaded separately as the user's own source).
- *
- * Sorted only so the scan is deterministic — nothing downstream is allowed to MEAN anything by the
- * order. The fold is order-independent by construction (`rules/pipeline.ts`), a character filters to
- * its own edition, and the one place that did inherit this order (the compendium list) now sorts by
- * name itself. An exact `type:source:id` clash is first-wins, but that can only happen inside a single
- * source, so pack order can't decide it.
- */
-export async function discoverContentRoots(storage: Storage): Promise<string[]> {
-	let entries;
-	try {
-		entries = await storage.list(CONTENT_DIR);
-	} catch (e) {
-		// A missing `content/` (fresh install, before the seed) is legitimately "nothing installed".
-		// PRESENT BUT UNREADABLE IS NOT: `[]` there reads as "the user deleted every pack", and
-		// `forgetUninstalledPacks` would act on it and wipe the registry — pins and repo URLs with it.
-		// One transient listing failure must not be able to do that, so it fails loudly instead
-		// (the content store turns a throw into the diagnosable error screen).
-		if (await storage.exists(CONTENT_DIR).catch(() => false)) throw e;
-		return [];
-	}
-	return entries
-		.filter((e) => e.isDir && !isReservedPackName(e.name))
-		.map((e) => e.path)
-		.sort();
-}
 
 let cache: Promise<ContentGraph> | null = null;
 
@@ -157,9 +121,6 @@ async function recoverInterruptedApplies(storage: Storage): Promise<void> {
 	for (const pack of interrupted) await recoverInterruptedApply(storage, pack);
 }
 
-/** `content/srd-2024` → `srd-2024`: the folder IS the pack, so its name is its last segment. */
-const packNameOf = (root: string): string => root.slice(root.lastIndexOf('/') + 1);
-
 /**
  * The registry describes what is INSTALLED, and a folder can leave without asking it: deleting the
  * pack in a file manager is a supported way to do anything here. An entry with no folder behind it
@@ -206,32 +167,6 @@ async function readSeedVersion(store: Storage): Promise<number | null> {
 		return Number.isFinite(n) ? n : null;
 	} catch {
 		return null;
-	}
-}
-
-/**
- * May the app overwrite this on-disk file, or is it the user's now? The ONE rule behind both the
- * shipped re-seed and a pack update — reuse it rather than invent a second merge strategy.
- *
- * A file is protected when its body no longer matches its own `#content-hash` (the app never
- * re-stamps shipped files, so a mismatch means a hand-edit) **and equally when it carries no hash at
- * all**: "I cannot verify this" and "I verified it changed" are the same instruction to a writer.
- * The old boolean said `false` for unstamped, which quietly meant "overwrite anything you can't
- * check" — the exact case a user's own file added to a pack folder falls into.
- *
- * ONE exception, by path: a pack's `plugins/` subtree is always overwritable. Code has a stronger
- * guarantee than this one — new bytes void the consent hash, so nothing runs unapproved (PLUGINS
- * §6.3) — and the alternative is worse than the risk: an unstamped `main.js` can never carry a hash
- * (a `plugin.json` cannot either; its schema rejects unknown keys), so protecting it would freeze
- * every pack-shipped plugin at the version it was installed at, forever. Editing a plugin in place
- * is not the supported path anyway: `<dataDir>/plugins/<ns>/` exists for that and WINS the namespace.
- */
-export async function isProtectedFromOverwrite(store: Storage, path: string): Promise<boolean> {
-	if (path.includes('/plugins/')) return false;
-	try {
-		return (await fileHashState(await store.read(path))) !== HASH_STATE.match;
-	} catch {
-		return false; // unreadable — there is nothing here to preserve
 	}
 }
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
-import { discoverContentRoots, forgetUninstalledPacks, seedShippedContent } from './provider';
+import { forgetUninstalledPacks, seedShippedContent } from './provider';
+import { discoverContentRoots } from './disk';
 import { emptyPackConfig, packConfig, registerPack } from './packs.svelte';
 import { duringPackWrite } from './remote/install';
 import { type MetaKey } from './meta';
