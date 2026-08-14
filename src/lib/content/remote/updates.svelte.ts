@@ -57,6 +57,22 @@ import {
 	stagePackUpdate,
 	type ApplyResult
 } from './install';
+import {
+	updates,
+	fail,
+	clearErrors,
+	serialised,
+	guarded,
+	stagedShas,
+	noListing,
+	checkFailure,
+	fetchRepo,
+	type PendingUpdate,
+	type DiscoveredPack
+} from './update-state.svelte';
+// re-exported: `updates` is the state every panel and test reads, and moving its implementation is
+// no reason to move the import everyone writes (§6.1).
+export { updates, type PendingUpdate, type DiscoveredPack };
 import { tauriFetcher } from './tauri-fetch';
 import {
 	MAX_PREFETCH_BYTES,
@@ -66,113 +82,9 @@ import {
 	type UpdateError
 } from './types';
 
-/** One pack with an update waiting, and everything the user needs to decide about it. */
-export interface PendingUpdate {
-	pack: string;
-	repo: string;
-	remote: RemotePack;
-	diff: PackDiff;
-	/** content rows that would DISAPPEAR — listed before applying, never after */
-	removedRows: string[];
-	/** characters that reference those rows, so "this breaks Grog" is visible up front */
-	affected: { slug: string; keys: string[] }[];
-	/** …and the unfinished edits pointed at them (`type:source:id`). A draft is unsaved work with
-	 *  nowhere else it is listed, so it is the reference MOST worth warning about, not the least. */
-	affectedDrafts: string[];
-	/** plugin namespaces this pack would add — code always gets said out loud (PLUGINS §2) */
-	plugins: string[];
-	/** …and the ones THIS update rewrites, which is the sharper warning: they stop running until
-	 *  the user re-approves the new bytes */
-	pluginsChanged: string[];
-	/** every byte is already downloaded (update mode `download`), so applying works offline */
-	staged: boolean;
-}
-
-/** A pack found in a repo the user just pasted, and what installing it would bring. */
-export interface DiscoveredPack {
-	pack: string;
-	repo: string;
-	/** The branch its listing came off — `main` unless the repo turned out to live on `master`. */
-	branch: string;
-	remote: RemotePack;
-	files: number;
-	/** plugin namespaces it ships — said out loud BEFORE installing, never discovered afterwards */
-	plugins: string[];
-	/** already in the registry FROM THIS REPO: an update case, not an install */
-	installed: boolean;
-	/**
-	 * The local folder it would be installed into. Its own name unless that is taken — by another
-	 * repo's pack, by a folder the user copied in, or by a name the app reserves — in which case this
-	 * is the suggestion (`srd-2024-2`), which the user may overrule before installing.
-	 */
-	localName: string;
-}
-
-interface UpdateState {
-	/** desktop-only feature; kept in the state (not computed in the component) so the dev preview at
-	 *  /dev/packs can force it on in a plain browser — same trick the plugin store uses */
-	supported: boolean;
-	checking: boolean;
-	/** pack → what is waiting for a decision */
-	pending: Record<string, PendingUpdate>;
-	/** what the last pasted URL turned out to hold (empty until someone pastes one) */
-	discovered: DiscoveredPack[];
-	/**
-	 * Failures from the LAST action, in the order they happened — kept for the Settings panel, never
-	 * toasted (offline is not actionable, UX-1).
-	 *
-	 * A list rather than a slot because one action is not one failure: a check walks every repo and
-	 * every pack in it, and each of those can refuse for its own reason. With a single slot the last
-	 * write silently erased the rest, so a user with three repos saw one of three problems and no
-	 * sign that the others existed — the two they could not see were the ones that never got fixed.
-	 */
-	errors: UpdateError[];
-}
-
-export const updates = $state<UpdateState>({
-	supported: detectPlatform() === Platform.Desktop,
-	checking: false,
-	pending: {},
-	discovered: [],
-	errors: []
-});
-
-/** Record a failure. APPENDS: within one action every reason is worth saying, and the caller that
- *  starts the action is the one that clears (`clearErrors`). */
-function fail(error: UpdateError): void {
-	updates.errors = [...updates.errors, error];
-}
-
-/** Start a fresh action — the previous run's reasons are no longer about anything. */
-function clearErrors(): void {
-	updates.errors = [];
-}
-
 /** Which repos an AUTOMATIC check may contact right now (mode + throttle + pins). */
 export const dueRepos = (cfg: PackConfigData = packConfig, now = Date.now()): string[] =>
 	reposDueForCheck(cfg, now);
-
-/**
- * Everything that rebuilds the pending set or sweeps the pre-download cache runs ONE AT A TIME.
- *
- * Serialised, not deduplicated: the startup check and a click on "check now" are two different
- * questions — the manual one may name a repo the automatic one skipped — so neither may be dropped
- * in favour of the other. But they must not interleave, because both a check and an apply finish by
- * pruning the cache against `updates.pending`, and that set is only authoritative when nothing else
- * is mid-way through rebuilding it. Two at once means whichever finishes first prunes against a
- * half-built set and deletes bytes the other had just downloaded — an "already staged" update that
- * silently has to fetch itself again.
- *
- * `updates.checking` stays what it always was, a spinner; this is the actual mutual exclusion.
- */
-let packQueue: Promise<unknown> = Promise.resolve();
-
-function serialised<T>(run: () => Promise<T>): Promise<T> {
-	// a failure must not poison the queue for everything behind it
-	const next = packQueue.catch(() => {}).then(run);
-	packQueue = next.catch(() => {});
-	return next;
-}
 
 /**
  * Ask the repos what they have. `manual` deliberately bypasses the once-a-day throttle and the
@@ -220,38 +132,6 @@ async function runCheck(opts: {
 	} finally {
 		updates.checking = false;
 	}
-}
-
-/** Every blob SHA some pending update still wants; anything else in the cache is litter. */
-function stagedShas(): Set<string> {
-	const keep = new Set<string>();
-	for (const pending of Object.values(updates.pending))
-		for (const change of pending.diff.changes) if (change.sha !== undefined) keep.add(change.sha);
-	return keep;
-}
-
-/** A check that came back with no listing to work from. */
-type CheckFailure = Exclude<CheckResult, { kind: 'packs' } | { kind: 'unchanged' }>;
-const noListing = (res: CheckResult): res is CheckFailure =>
-	res.kind !== 'packs' && res.kind !== 'unchanged';
-
-/**
- * How such a failure reads to the user. One function because BOTH callers ask it — the automatic
- * check and the paste-a-URL lookup — and a reason that only one of them explains is a reason the
- * other silently swallows. `raw` for what the network stack said, `i18n` for copy we author (see
- * {@link UpdateError}).
- */
-function checkFailure(res: CheckFailure, repo: string): UpdateError {
-	if (res.kind === 'error') return { kind: 'raw', message: res.message };
-	if (res.kind === 'unsupported')
-		return { kind: 'i18n', key: 'settings.packs.hostUnsupported', values: { repo } };
-	if (res.kind === 'tooManyPacks')
-		return {
-			kind: 'i18n',
-			key: 'settings.packs.tooManyPacks',
-			values: { repo, packs: res.packs, max: MAX_REPO_PACKS }
-		};
-	return { kind: 'i18n', key: 'settings.packs.repoTooBig', values: { repo } };
 }
 
 async function checkOneRepo(
@@ -334,17 +214,6 @@ async function checkOneRepo(
 }
 
 /**
- * The repo to FETCH from: the pasted URL, plus the branch a check actually found the tree on.
- * `parseGithubRepo` alone guesses `main`, which is wrong for every repo still on `master` — and a
- * wrong branch here doesn't fail once, it 404s every file of the download.
- */
-function fetchRepo(repoUrl: string): GithubRepo | null {
-	const parsed = parseGithubRepo(repoUrl);
-	const branch = packConfig.repos[repoUrl]?.branch;
-	return parsed !== null && branch !== undefined ? { ...parsed, branch } : parsed;
-}
-
-/**
  * Build the full picture for one pack, or null when it is already up to date. Deliberately
  * NETWORK-FREE — everything here is the remote file list compared against the local disk — so the
  * same function can rebuild the panel at launch from the remembered list, with no request at all.
@@ -404,28 +273,6 @@ async function whoBreaks(
 			.filter((eid): eid is string => eid !== null)
 			.sort()
 	};
-}
-
-/**
- * The disk half of an apply can THROW where the network half returns a value: a full disk, `EBUSY`
- * from a content CSV someone left open in Excel, a folder the OS refuses. Every one of those is an
- * ordinary failure the panel should state, and without this they surfaced as an unhandled rejection
- * and a silent no-op — the one shape of failure the user cannot even see.
- *
- * The disk is left consistent by `swapInNewTree`, which settles a half-done swap before rethrowing;
- * this only decides how the failure READS.
- */
-async function guarded(run: () => Promise<ApplyResult>): Promise<ApplyResult> {
-	try {
-		return await run();
-	} catch (e) {
-		return {
-			written: [],
-			preserved: [],
-			removed: [],
-			error: { kind: 'raw', message: e instanceof Error ? e.message : String(e) }
-		};
-	}
 }
 
 /**

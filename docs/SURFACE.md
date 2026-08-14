@@ -216,7 +216,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ThemesSettings** | — | Settings ▸ Themes — author custom colour themes without a rebuild. |
 | **WikiDetail** | `detail`, `actions`, `footer`, `editable`, `draft` | Right-pane wiki detail: a thin DISPATCHER. |
 
-## Stores & reactive state (13 modules)
+## Stores & reactive state (14 modules)
 
 ### `src/lib/character/health.svelte.ts`
 
@@ -272,11 +272,27 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function setRepoBranch` — Remember which branch this repo's listing came off (see {@link RepoEntry.branch}).
 - `function recordCheck` — * Remember that we asked this repo — including a `304`, which is exactly the case worth recording * (it cost nothing …
 
-### `src/lib/content/remote/updates.svelte.ts`
+### `src/lib/content/remote/update-state.svelte.ts`
 
 - `interface PendingUpdate` — One pack with an update waiting, and everything the user needs to decide about it.
 - `interface DiscoveredPack` — A pack found in a repo the user just pasted, and what installing it would bring.
+- `interface UpdateState`
 - `const updates`
+- `function fail` — Record a failure.
+- `function clearErrors` — Start a fresh action — the previous run's reasons are no longer about anything.
+- `function serialised`
+- `function stagedShas` — Every blob SHA some pending update still wants; anything else in the cache is litter.
+- `type CheckFailure` — A check that came back with no listing to work from.
+- `const noListing`
+- `function checkFailure` — * How such a failure reads to the user.
+- `function fetchRepo` — * The repo to FETCH from: the pasted URL, plus the branch a check actually found the tree on.
+- `function guarded` — * The disk half of an apply can THROW where the network half returns a value: a full disk, `EBUSY` * from a content C…
+
+### `src/lib/content/remote/updates.svelte.ts`
+
+- `re-export updates` — re-exported: `updates` is the state every panel and test reads, and moving its implementation is no reason to move th…
+- `re-export type PendingUpdate` — re-exported: `updates` is the state every panel and test reads, and moving its implementation is no reason to move th…
+- `re-export type DiscoveredPack` — re-exported: `updates` is the state every panel and test reads, and moving its implementation is no reason to move th…
 - `const dueRepos` — Which repos an AUTOMATIC check may contact right now (mode + throttle + pins).
 - `function checkNow` — * Ask the repos what they have.
 - `function applyUpdate` — * Apply ONE pack's pending update.
@@ -1288,4 +1304,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 752 exports across 105 modules · 40 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 765 exports across 106 modules · 40 duplicate suspects._
