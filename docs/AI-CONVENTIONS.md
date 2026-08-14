@@ -580,6 +580,23 @@ before committing (script-spliced files aren't prettier-clean, and CI lint is `p
 this broke CI once). When prefixing state refs in JS scopes, never touch `<style>`/`class="…"`
 (`\bdice\b` would hit `.dice-grid`).
 
+### 7.2b The comment-revision pass — a SEPARATE commit, after the split lands
+
+**Rule.** §7.1 lets you fix only the comments the split itself made stale, and otherwise says don't
+churn. Bringing a file's comments up to the CURRENT conventions is a different job: do it as its own
+commit, after the extraction is green — never inside it.
+
+**Why.** A reworded comment inside a byte-preserving move hides whether the code changed too. Split
+the commits and each diff answers one question: this one moved lines, that one only touched prose.
+
+**What the pass revises** (in a file you were already in — this is not a repo-wide sweep):
+- a comment that narrates WHAT the code does → make it WHY, or delete it (§2.6);
+- a comment naming a function, file, flag or directive that no longer exists;
+- a comment written before a convention existed and now contradicting it (§1.5 open enums, §2.5 one
+  name per fact, §4.7 drawn icons).
+
+A comment that is still correct is left alone. The pass fixes lies and noise, not style.
+
 ### 7.3 Lean on TS + Svelte tooling for cross-scope wiring
 **Rule.** Maximally use TypeScript types and Svelte's own tooling so scopes/modules wire together
 correctly — especially around classes, `.svelte.ts` rune modules, context, and cross-component
