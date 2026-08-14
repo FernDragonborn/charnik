@@ -854,8 +854,15 @@ The repo ships its own tooling under `tools/` — check there BEFORE hand-rollin
   `pnpm dev`'s output and pass `BASE=http://localhost:PORT`.
 - **CSS analysis:** `tools/visual/css-dups.mjs`, `css-name-collisions.mjs`, `css-classes.mjs`;
   refactor helpers `hoist-class.mjs`, `rename-class.mjs`.
-- **`pnpm knip`** — GREEN and a hard gate (part of `pnpm lint`). Don't reintroduce unused exports;
-  un-export rather than exporting "just in case".
+- **`pnpm knip`** — part of `pnpm lint`, but its rules are set to `warn`, so it reports and exits 0:
+  it is a REPORT, not the gate this line used to claim. Don't reintroduce unused exports; un-export
+  rather than exporting "just in case", and triage what it lists (§8.4 — in active dev an unused
+  export is sometimes scaffolding, so read before deleting).
+- **The pre-commit hook runs `eslint .`** (added 2026-08-14, +21 s — the hook is ~38 s). It was
+  prettier + jscpd only, and that gap was not theoretical: three splitting commits went in green over
+  a red `pnpm lint`, 35 unused imports left behind by the carves, because nothing between the commit
+  and `pre-push` ever looked. A gate you only meet at push time is a gate you meet with five commits
+  already written on top of the break.
 - **`pnpm jscpd`** — copy-paste detector, threshold 1.8% (part of `pnpm lint` + pre-commit). The
   CONFIG reporter is `silent`, i.e. the one-line verdict ("108 clones, 0.92% duplicated") and nothing
   else, because a pre-commit hook that prints two hundred lines of other people's CSS on every
