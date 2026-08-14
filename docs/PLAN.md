@@ -1208,8 +1208,13 @@ holds the done-work log; these are the OPEN tails it carried):**
   ad-hoc in the fold. Independent of ROLLER-N (each ships without the other), but the per-beam case
   only becomes visible once N beams actually roll. Also the mechanical half of DEMO-1 gap 4 / N2
   invocations.
-- [ ] **B11 · size-cap on `Storage.read()`** (`size` on `FileEntry`). Needs a cap-value decision + 5
-  storage impls, and risks rejecting legitimately-large homebrew CSVs — likely YAGNI; recorded, not queued.
+- [ ] **B11 · size-cap on `Storage.read()` — LOCAL reads only, which is why it stays YAGNI.** The
+  path that mattered is already capped, by REL-4: `MAX_REMOTE_BYTES` (8 MB, one response),
+  `MAX_PACK_FILES` (200) + `MAX_PACK_BYTES` (50 MB) read off the tree listing before a byte is
+  fetched, and a whole-run `MAX_PREFETCH_BYTES` budget (`content/remote/types.ts`). What B11 would
+  add on top is `size` on `FileEntry` (still absent, `storage/types.ts`) plus a cap in every storage
+  impl — guarding a file the USER put in their own dataDir, which is not a trust boundary and is
+  precisely where a cap rejects legitimately-large homebrew. Recorded, not queued.
 - [ ] **B24 · granular per-file watcher reparse.** The watcher reparses coarsely; per-file is deeper in
   the watcher plumbing, not a one-liner. Low priority.
 - **A17 ritual/pact residual** — pact-slot pips + upcast picker SHIPPED (see UBUG-6). Residual is only
@@ -1964,8 +1969,11 @@ holds the done-work log; these are the OPEN tails it carried):**
   exists so user edits aren't clobbered) and then loads the graph FROM that writable folder via
   TauriStorage; web still reads the bundle over fetch. No capability change needed (`$APPDATA/**` is
   already scoped; `writeBytes` mkdirs recursively). Seed logic unit-tested over MemoryStorage. STILL
-  TODO: build a `.msi` and confirm the folder appears + is read; a file-watcher for live disk edits
-  and a `charnik.config.json` for custom roots are the follow-ups (per the loader TODO).
+  TODO — and it is the ONLY thing left here: build a `.msi` and confirm the folder appears + is read.
+  The two follow-ups this item used to name have since shipped: the file watcher
+  (`storage/tauri.ts` ▸ `watch`, which a live desktop run then proved had never actually fired — the
+  capability was granted but the Cargo feature was never compiled in) and `charnik.config.json` for
+  custom roots (`storage/json-config.ts`, read by `content/packs.svelte.ts`).
   Original report:
 - **UBUG-4b · Tauri .msi install has no content folders.** After installing the built `.msi`, there's
   no `content/` (CSV) directory created, so the app has no data. First-run on desktop must create the
