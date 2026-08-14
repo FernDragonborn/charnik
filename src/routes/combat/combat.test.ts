@@ -667,10 +667,10 @@ describe('CombatVM · conditionList uses the character system (CVM-bug2)', () =>
 		const graph = await graphOf();
 		combat.graph = graph;
 		combat.character = newCharacter('valen', 'Valen', '5.5e');
-		const labels = combat.conditionList.map((c) => c.label);
+		const labels = combat.effects.conditionList.map((c) => c.label);
 		expect(labels).toContain('Prone'); // 5.5e
 		expect(labels).not.toContain('Grappled'); // 5e-only
-		expect(combat.conditionList.find((c) => c.label === 'Prone')?.id).toBe('prone'); // carries the id
+		expect(combat.effects.conditionList.find((c) => c.label === 'Prone')?.id).toBe('prone'); // carries the id
 	});
 });
 
@@ -688,7 +688,7 @@ describe('CombatVM · incapacitated zeroes the action economy (G3)', () => {
 		expect(combat.economy.trySpend('action')).toBe(true);
 
 		// apply Incapacitated → the id lands in facts.conditions (the row's own effects are irrelevant here)
-		combat.addEffect({
+		combat.effects.addEffect({
 			label: 'Incapacitated',
 			tokens: ['apply_condition:incapacitated'],
 			positive: false,
@@ -700,7 +700,7 @@ describe('CombatVM · incapacitated zeroes the action economy (G3)', () => {
 
 		// remove it → economy restored
 		const iid = character.play.effects.find((e) => e.label === 'Incapacitated')?.iid;
-		if (iid) combat.removeEffect(iid);
+		if (iid) combat.effects.removeEffect(iid);
 		expect(combat.economy.incapacitated).toBe(false);
 		expect(combat.economy.slotMax).toEqual({ action: 1, bonus: 1, reaction: 1 });
 	});
@@ -815,7 +815,11 @@ describe('CombatVM · S2 split net', () => {
 		character.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
 		// a runtime effect carrying the data-driven marker (in real content a feat's `effects` column
 		// carries it); its LABEL becomes the offer label — nothing feat-specific is hardcoded in the VM.
-		combat.addEffect({ label: 'Savage Attacker', tokens: ['damage_reroll'], positive: true });
+		combat.effects.addEffect({
+			label: 'Savage Attacker',
+			tokens: ['damage_reroll'],
+			positive: true,
+		});
 
 		combat.attackRoll(combat.attacks[0]!, noModifiers); // Dagger (1d4) — rolls damage dice
 		expect(combat.savageLabel).toBe('Savage Attacker');
@@ -842,44 +846,44 @@ describe('CombatVM · S2 split net', () => {
 
 	// the effects panel controls the user asked for: choose duration on add, edit/remove on the panel
 	it('addEffect applies the chosen newEffectDuration; 0 = indefinite (no duration field)', () => {
-		combat.newEffectDuration = 4;
-		combat.addEffect({ label: 'Haste', tokens: ['flat_bonus:ac+2'], positive: true });
+		combat.effects.newEffectDuration = 4;
+		combat.effects.addEffect({ label: 'Haste', tokens: ['flat_bonus:ac+2'], positive: true });
 		const added = character.play.effects.at(-1)!;
 		expect(added.label).toBe('Haste');
 		expect(added.durationRounds).toBe(4);
 
-		combat.newEffectDuration = 0; // indefinite
-		combat.addEffect({ label: 'Curse', tokens: [], positive: false });
+		combat.effects.newEffectDuration = 0; // indefinite
+		combat.effects.addEffect({ label: 'Curse', tokens: [], positive: false });
 		expect(character.play.effects.at(-1)!.durationRounds).toBeUndefined();
 	});
 
 	it('removeEffect drops the effect by its instance id', () => {
-		combat.addEffect({ label: 'Temp', tokens: ['flat_bonus:ac+1'] });
+		combat.effects.addEffect({ label: 'Temp', tokens: ['flat_bonus:ac+1'] });
 		const iid = character.play.effects.at(-1)!.iid;
 		const before = character.play.effects.length;
-		combat.removeEffect(iid);
+		combat.effects.removeEffect(iid);
 		expect(character.play.effects.length).toBe(before - 1);
 		expect(character.play.effects.some((e) => e.iid === iid)).toBe(false);
 	});
 
 	it('bumpEffectDuration nudges rounds, and dropping to 0 makes it indefinite', () => {
-		combat.newEffectDuration = 2;
-		combat.addEffect({ label: 'Bless2', tokens: ['flat_bonus:saves+1d4'] });
+		combat.effects.newEffectDuration = 2;
+		combat.effects.addEffect({ label: 'Bless2', tokens: ['flat_bonus:saves+1d4'] });
 		const iid = character.play.effects.at(-1)!.iid;
 		const dur = () => character.play.effects.find((e) => e.iid === iid)!.durationRounds;
-		combat.bumpEffectDuration(iid, 1);
+		combat.effects.bumpEffectDuration(iid, 1);
 		expect(dur()).toBe(3);
-		combat.bumpEffectDuration(iid, -3); // past 1 → indefinite
+		combat.effects.bumpEffectDuration(iid, -3); // past 1 → indefinite
 		expect(dur()).toBeUndefined();
 	});
 
 	it('setEffectDuration sets an exact typed round count; 0/blank → indefinite', () => {
-		combat.addEffect({ label: 'Typed', tokens: ['flat_bonus:ac+1'] });
+		combat.effects.addEffect({ label: 'Typed', tokens: ['flat_bonus:ac+1'] });
 		const iid = character.play.effects.at(-1)!.iid;
 		const dur = () => character.play.effects.find((e) => e.iid === iid)!.durationRounds;
-		combat.setEffectDuration(iid, 7);
+		combat.effects.setEffectDuration(iid, 7);
 		expect(dur()).toBe(7);
-		combat.setEffectDuration(iid, 0); // typed 0 → until removed
+		combat.effects.setEffectDuration(iid, 0); // typed 0 → until removed
 		expect(dur()).toBeUndefined();
 	});
 });
@@ -1332,14 +1336,14 @@ describe('CombatVM · death (UBUG-15: instant death, three failures, the exhaust
 	});
 
 	it('the top of the exhaustion ladder is lethal, and lower rungs are not', () => {
-		combat.setExhaustion(5);
+		combat.effects.setExhaustion(5);
 		expect(character.play.death).toBeNull();
-		combat.setExhaustion(6); // the data cap (exhaustion row max_level) = death
+		combat.effects.setExhaustion(6); // the data cap (exhaustion row max_level) = death
 		expect(character.play.death).toEqual({ cause: 'exhaustion' });
 	});
 
 	it('“I was revived” lifts you off 0 HP, clears the track and drops one exhaustion level', () => {
-		combat.setExhaustion(6);
+		combat.effects.setExhaustion(6);
 		character.play.hp.current = 0;
 		character.play.deathSaves = { successes: 1, failures: 3 };
 		combat.revive();
@@ -1351,7 +1355,7 @@ describe('CombatVM · death (UBUG-15: instant death, three failures, the exhaust
 
 	it('reviving is a FLOOR of 1 HP — it never takes hit points away', () => {
 		character.play.hp.current = 9; // died of exhaustion at 9 HP
-		combat.setExhaustion(6);
+		combat.effects.setExhaustion(6);
 		combat.revive();
 		expect(character.play.hp.current).toBe(9);
 	});

@@ -9,7 +9,7 @@
 	import { combat } from '../state.svelte';
 
 	let { c }: { c: Character } = $props();
-	const max = $derived(combat.exhaustionMax);
+	const max = $derived(combat.effects.exhaustionMax);
 	const level = $derived(c.play.exhaustion);
 	const pips = $derived(max <= 6 ? Array.from({ length: max }, (_, i) => i) : []);
 </script>
@@ -25,7 +25,7 @@
 						class:on={level > i}
 						aria-label="Exhaustion level {i + 1}"
 						aria-pressed={level > i}
-						onclick={() => combat.setExhaustion(level === i + 1 ? i : i + 1)}
+						onclick={() => combat.effects.setExhaustion(level === i + 1 ? i : i + 1)}
 					></button>
 				{/each}
 			</div>
@@ -41,12 +41,12 @@
 				<button
 					type="button"
 					aria-label="Decrease exhaustion"
-					onclick={() => combat.setExhaustion(level - 1)}>−</button
+					onclick={() => combat.effects.setExhaustion(level - 1)}>−</button
 				>
 				<button
 					type="button"
 					aria-label="Increase exhaustion"
-					onclick={() => combat.setExhaustion(level + 1)}>+</button
+					onclick={() => combat.effects.setExhaustion(level + 1)}>+</button
 				>
 			</div>
 		</div>

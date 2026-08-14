@@ -46,10 +46,10 @@
 <!-- one Buffs/Debuffs effect row: name (white) + wrapping tags, then the duration dropdown + remove -->
 {#snippet effectRow(e: EffectInstance, polarity: 'positive' | 'negative')}
 	{@const condId = conditionIdOf(e)}
-	{@const infoText = condId ? combat.conditionText(condId) : null}
+	{@const infoText = condId ? combat.effects.conditionText(condId) : null}
 	<!-- a condition instance only carries `apply_condition:<id>`; show what the condition DOES by
 	     rendering the condition row's own tokens (mechanical tags + display-only notes) instead -->
-	{@const tags = condId ? combat.conditionTokens(condId) : e.effects}
+	{@const tags = condId ? combat.effects.conditionTokens(condId) : e.effects}
 	{@const isConc = !!e.source && c.play.concentration === e.source}
 	<div class="effect-row">
 		<div class="effect-main">
@@ -93,7 +93,7 @@
 			<button
 				class="icon-button effect-remove"
 				title="Remove effect"
-				onclick={() => combat.removeEffect(e.iid)}>✕</button
+				onclick={() => combat.effects.removeEffect(e.iid)}>✕</button
 			>
 		</span>
 	</div>
@@ -221,7 +221,7 @@
 						title="Remove effect"
 						onclick={(e) => {
 							e.stopPropagation();
-							combat.removeEffect(r.iid);
+							combat.effects.removeEffect(r.iid);
 						}}>✕</span
 					>
 				</button>

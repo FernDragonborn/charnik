@@ -13,9 +13,10 @@
 	const actions = $derived(combat.actions);
 	const hiddenActions = $derived(combat.hiddenActions);
 	const passiveSkills = $derived(combat.passiveSkills);
-	const conditionList = $derived(combat.conditionList);
+	const conditionList = $derived(combat.effects.conditionList);
 	const character = $derived(combat.character);
-	const { setTempHp, addEffect, addCustomModifier, togglePassive } = combat;
+	const { setTempHp, addCustomModifier, togglePassive } = combat;
+	const { addEffect } = combat.effects;
 
 	// Keep the dropdown inside the viewport: after it renders, if it would run off the bottom (or
 	// top) edge, shift it up/down so it fits. `overlay.top` is in document coords (button bottom +
@@ -86,7 +87,8 @@
 			<div class="dur-picker">
 				<button
 					class="pill-btn"
-					onclick={() => (combat.newEffectDuration = Math.max(0, combat.newEffectDuration - 1))}
+					onclick={() =>
+						(combat.effects.newEffectDuration = Math.max(0, combat.effects.newEffectDuration - 1))}
 					>−</button
 				>
 				<input
@@ -95,20 +97,22 @@
 					min="0"
 					placeholder="∞"
 					aria-label="Duration in rounds"
-					bind:value={combat.newEffectDuration}
+					bind:value={combat.effects.newEffectDuration}
 				/>
-				<span class="dur-val">{combat.newEffectDuration > 0 ? 'rds' : 'until removed (∞)'}</span>
-				<button class="pill-btn" onclick={() => (combat.newEffectDuration += 1)}>＋</button>
+				<span class="dur-val"
+					>{combat.effects.newEffectDuration > 0 ? 'rds' : 'until removed (∞)'}</span
+				>
+				<button class="pill-btn" onclick={() => (combat.effects.newEffectDuration += 1)}>＋</button>
 				<button
 					class="pill-btn"
-					class:on={combat.newEffectDuration === 0}
+					class:on={combat.effects.newEffectDuration === 0}
 					title="Lasts until you remove it"
-					onclick={() => (combat.newEffectDuration = 0)}>∞</button
+					onclick={() => (combat.effects.newEffectDuration = 0)}>∞</button
 				>
 			</div>
 			<div class="section eyebrow">Catalog</div>
-			{#each combat.effectCatalog as p (p.label)}
-				{@const dur = p.durationRounds ?? combat.newEffectDuration}
+			{#each combat.effects.effectCatalog as p (p.label)}
+				{@const dur = p.durationRounds ?? combat.effects.newEffectDuration}
 				<button
 					class="menu-row"
 					onclick={() =>
@@ -166,20 +170,25 @@
 				<div class="dur-picker">
 					<button
 						class="dur-step"
-						onclick={() => (combat.newEffectDuration = Math.max(0, combat.newEffectDuration - 1))}
-						>−</button
+						onclick={() =>
+							(combat.effects.newEffectDuration = Math.max(
+								0,
+								combat.effects.newEffectDuration - 1,
+							))}>−</button
 					>
 					<span class="dur-picker-val"
-						>{combat.newEffectDuration > 0
-							? `${combat.newEffectDuration} rds`
+						>{combat.effects.newEffectDuration > 0
+							? `${combat.effects.newEffectDuration} rds`
 							: '∞ until removed'}</span
 					>
-					<button class="dur-step" onclick={() => (combat.newEffectDuration += 1)}>＋</button>
+					<button class="dur-step" onclick={() => (combat.effects.newEffectDuration += 1)}
+						>＋</button
+					>
 					<button
 						class="dur-inf"
-						class:on={combat.newEffectDuration === 0}
+						class:on={combat.effects.newEffectDuration === 0}
 						title="Lasts until you remove it"
-						onclick={() => (combat.newEffectDuration = 0)}>∞</button
+						onclick={() => (combat.effects.newEffectDuration = 0)}>∞</button
 					>
 				</div>
 				<div class="field">

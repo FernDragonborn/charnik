@@ -37,11 +37,11 @@
 	});
 
 	function pick(value: number | null) {
-		combat.setEffectDuration(iid, value ?? 0);
+		combat.effects.setEffectDuration(iid, value ?? 0);
 		onclose();
 	}
 	function applyCustom() {
-		combat.setEffectDuration(iid, Math.max(0, Math.round(customValue || 0)));
+		combat.effects.setEffectDuration(iid, Math.max(0, Math.round(customValue || 0)));
 		onclose();
 	}
 </script>
@@ -56,8 +56,8 @@
 	style="top:{pos.top}px; left:{pos.left}px"
 >
 	<div class="dur-step-row">
-		<button type="button" onclick={() => combat.bumpEffectDuration(iid, -1)}>−</button>
-		<button type="button" onclick={() => combat.bumpEffectDuration(iid, 1)}>＋</button>
+		<button type="button" onclick={() => combat.effects.bumpEffectDuration(iid, -1)}>−</button>
+		<button type="button" onclick={() => combat.effects.bumpEffectDuration(iid, 1)}>＋</button>
 	</div>
 	{#each EFFECT_DURATION_PRESETS as p (p.label)}
 		<button
