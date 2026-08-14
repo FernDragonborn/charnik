@@ -120,9 +120,10 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > the code AND manifest, and stored **outside** the data folder — so a plugin cannot arrive
    > pre-enabled no matter how it got onto disk, exactly as a restored "campaign backup" can't.
    > A pack update that changes plugin bytes changes the hash, which **disables** it until
-   > re-consented; not even auto-download can swap code silently. What the installer owes the user
-   > is disclosure: "this pack contains N plugins" BEFORE it installs, and the consent dialog names
-   > the pack, since the user did not place that folder themselves.
+   > re-consented; not even auto-download can swap code silently. The disclosure the installer owes
+   > the user is BUILT: the discover step names a pack's plugins before it is installed, an update
+   > distinguishes "contains plugins" from "changes their bytes", and the consent dialog names the
+   > pack, since the user did not place that folder themselves.
 8. **Parsing safety.** Vetted parsers (`papaparse`, `JSON.parse`); row/cell/file **size
    caps** to avoid memory blowups; malformed rows → health view, not a crash.
 9. **Minimal Rust surface.** Prefer official audited plugins; keep custom Tauri commands

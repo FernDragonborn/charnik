@@ -454,7 +454,9 @@ items. Each may carry **effects** (bounded vocab).
 
 ### Content loader (P4, IMPLEMENTED — `src/lib/content/loader.ts`)
 `loadContent(storage, roots)` → a `ContentGraph`. **Storage-agnostic** (Tauri fs / node-fs /
-in-memory / read-only fetch — serves desktop AND web). Per root: reads `_pack.json` defaults,
+in-memory / read-only fetch — serves desktop AND web). Per root: reads each file's own
+`#content-*` header (there is no pack manifest — see REL-4 "Manifest-free by design" and
+AI-CONVENTIONS §1.6),
 lists `*.csv`, infers type from `<filebase>_*.csv`, parses (papaparse) + validates
 (`parseRow`/zod). Builds `byType`, `byEffectiveId` (`type:source:id`), and **`articles`**
 (`type:id` → all editions/sources, powering the 5e↔5.5e toggle). Discovers **locales** from
@@ -466,24 +468,28 @@ missing referenced ids so the render layer can "render what's possible + flag it
 real shipped content (658 spells, 531 monsters load with zero errors). `NodeStorage`
 (`src/lib/storage/node.ts`) added for those integration tests. **Note**: spell→class access =
 inline `spells.classes` **plus** an additive `spell_lists.csv` join (so homebrew classes add
-access without editing shipped spells — see Spellcasting model). **TODO**: `spell_slots.csv` +
-`class_casting.csv` + `spell_lists.csv` join (see Spellcasting model), explicit type
-declaration + UI type-assign (see Content type identification), backfill truncated 2014
-class-feature prose from SRD 5.1, `collisions.json` read/write, wire `charnik.config.json` for
-roots.
+access without editing shipped spells — see Spellcasting model). **TODO** (the rest of this list has
+since shipped — `spell_slots.csv`, the `spell_lists.csv` join + its unknown-id warn, the explicit
+`#content-type:` directive, `collisions.json` read/write; and roots are DISCOVERED by scanning, so
+there is no config list of them to wire — REL-4 superseded that): the **2014** `class_casting.csv`
+counts (see Spellcasting model), **UI type-assign** for an unrecognised file, and backfilling the
+truncated 2014 class-feature prose from SRD 5.1.
 
 ### Content type identification (which CSV is what) — DESIGN
 
 Users add their own CSVs and **organize them into folders freely**, so the app can't rely on
 one rigid convention to know a file's **type** (schema). Two separate concerns, don't conflate:
 - **(a) What TYPE is this CSV?** (schema) — precedence, first match wins:
-  1. **Explicit declaration** (survives any name/folder): a first-line directive
-     `#charnik-type: spell_slots`, or a `_pack.json` map (`{ "files": { "x.csv": "spell_slots" },
-     "globs": { "slots_*": "spell_slots" } }`).
+  1. **Explicit declaration** (survives any name/folder): the header directive
+     **`#content-type: spell_slots`** — one of the `#content-*` keys, not a format of its own, and
+     not the `#charnik-type:` this section used to name (the app has never parsed that). A
+     `_pack.json` map was the alternative and is REJECTED with every other manifest (§1.6).
   2. **Filename convention** (current behaviour): `<filebase>_*.csv` → type. Zero-config for the
      shipped SRD and anyone who follows it.
   3. **Ask in the UI**: an unrecognized file is **never silently dropped** — it's surfaced in
-     content-health and the user assigns its type once (persisted to the manifest).
+     content-health, and the user assigns its type once (written into the file's own header, since
+     there is nowhere else for it to live). Still open: the loader + the health entry exist, the
+     assign FORM does not.
 - **(b) What ROLE does a row play / who uses it?** — already solved by **references**, not
   guessing. A class points at its slot table (`slot_table: full`), a character points at content
   by `type:source:id`. The app never infers "this file is warlock's slots" from a filename.
@@ -539,9 +545,12 @@ Common columns on every type: `id` (lowercase slug; identity = `source:id`), `sy
 - **item** (`items_*.csv`) `category, item_type, cost, weight_lb, properties, damage, damage_type, range, ac, armor_dex_cap("" full / "2" medium / "0" heavy), str_min, stealth_disadvantage, attunement, rarity`.
 - **condition** (`conditions_*.csv`) `negative` (crimson vs teal); mechanics in `effects`.
 - **effect** (`effects_*.csv`, runtime "+" catalog) `kind(bounded vocab), target, op, value, duration_rounds`.
-- **Pack manifest** `content/<root>/_pack.json` carries `schemaVersion, source, license,
-  attribution, systems` for the whole pack → rows don't repeat license/version; per-row
-  `source` still allowed so packs merge. (Supersedes a per-row `schema_version` column.)
+- **File-level metadata, NOT a pack manifest.** `schemaVersion, source, license, attribution,
+  systems` are declared per FILE in its `#content-*` header (DATA-VER-1), so rows don't repeat
+  license/version and files from different sources still merge. **This replaced a proposed
+  `_pack.json` sidecar** — see REL-4 "Manifest-free by design" for why (it is also the case that
+  produced the general rule, AI-CONVENTIONS §1.6). A stray `_pack.json` left over from that layout
+  is inert: it isn't read, and the pack differ knows not to propose deleting it.
 - **TODO (later)**: 2024 subclass-level overrides (all level 3) via per-system override
   column rather than the seeded 2014 `subclass_level`; bulk SRD fill beyond the seed.
 
@@ -1033,8 +1042,9 @@ were learned the hard way.
   change and a `docs/compatibility.md` chokepoint, so it stays its own piece rather than riding
   another wave.
 - **W5 · tail:** REL-2 packaging channels, UBUG-19 (icons are drawn, not typed — ~100 sites),
-  UBUG-4's real `.msi` verify (attach to the next release), ARCH-4 / B11 / B24 / R7 / TYPE-2 /
-  LINT-1 / the CSS rename pass. UX-2 onboarding stays deferred.
+  UBUG-4's real `.msi` verify (attach to the next release), ARCH-4 / R7 / TYPE-2 / LINT-1 / the CSS
+  rename pass. B24 and B11 have since been answered (both won't-do, with the measurement /
+  the caps that already cover the path that mattered). UX-2 onboarding stays deferred.
 
 **Out of band — do these when next in the area, don't schedule them into a wave:** `UBUG-22`
 (`rollFormula` drops a mid-string modifier — an hour, and it is silently wrong numbers reachable
@@ -1215,8 +1225,19 @@ holds the done-work log; these are the OPEN tails it carried):**
   add on top is `size` on `FileEntry` (still absent, `storage/types.ts`) plus a cap in every storage
   impl — guarding a file the USER put in their own dataDir, which is not a trust boundary and is
   precisely where a cap rejects legitimately-large homebrew. Recorded, not queued.
-- [ ] **B24 · granular per-file watcher reparse.** The watcher reparses coarsely; per-file is deeper in
-  the watcher plumbing, not a one-liner. Low priority.
+- [x] **B24 · granular per-file watcher reparse — MEASURED, then answered the cheap way
+  (2026-08-14).** A full reload of both shipped packs (read, hash, parse, validate, index, resolve)
+  is **~90 ms for 2866 rows**, so reparsing only the changed file would save under a tenth of a
+  second on an action a human performs by hand — in exchange for rebuilding `articles`,
+  `byEffectiveId`, locale discovery and `resolveRefs` incrementally, every one of which spans files.
+  **Incremental parsing is therefore a won't-do, with the number behind it.**
+  What the watcher genuinely got wrong is now fixed: it rebuilt on ANY path under `content/`, so an
+  editor's temp and lock files (`~$…`, `.goutputstream-…`, `spells.csv~`, vim's `4913`) each cost a
+  full rebuild plus a full re-render, several times per save. It now filters on the SAME predicate
+  that decides what a pack ships (`isPackFile`), so the watcher and the pack differ cannot disagree
+  about what counts as content; a path with no extension still passes, because on some platforms
+  removing a folder emits only the folder's own path and a hand-deleted pack must not linger
+  on screen until the next launch.
 - **A17 ritual/pact residual** — pact-slot pips + upcast picker SHIPPED (see UBUG-6). Residual is only
   the pure-warlock slot-gating nuance + ritual-source (`L13` in the hazards above). Minor.
 - **Won't-do (recorded so they aren't re-audited as bugs):** **D19** exhaustion `max 6` stays a RAW
@@ -1366,13 +1387,13 @@ holds the done-work log; these are the OPEN tails it carried):**
   shipped files on update, preserving any the user hand-edited (hash drift). The "bump it whenever
   shipped SRD data changes" rule lives on the constant itself (`schema/version.ts`).
 - [x] **REL-4 · Content packs from a URL — update content independently of the app. FEATURE CLOSED
-  2026-08-11, with an OPEN hardening tail** (maintainer 2026-08-10; slices 0–11 built and verified
+  2026-08-11; hardening closed 2026-08-12** (maintainer 2026-08-10; slices 0–11 built and verified
   against the real GitHub, then audited architecturally, and that audit's own list closed the same
   day — `0cf0c4c`). Reaching a NON-GitHub host was carved out to **REL-5** as a separate, much-later
   feature. A second read-only pass (2026-08-12) found seven more, all fixed the same day (`001a9dc`,
-  `9f28d52`..`54d0bb6` — see "the second pass" below). **A third pass the same day asked the
-  question as a SECURITY one and found nine, none of them fixed yet — see "the third pass", which is
-  the only open list on this item.**
+  `9f28d52`..`54d0bb6` — see "the second pass" below). **A third pass the same day asked the question
+  as a SECURITY one and found twelve; all are fixed and live-verified (24/24 on real Windows) — see
+  "the third pass". Nothing on this item is open.**
   **The ask:** a Settings field where you paste
   a repo URL, and the app checks for (and offers) content updates, so a user isn't re-downloading and
   unpacking dozens of CSVs by hand. **The shipped SRD becomes one of these packs**, so rules data can be
@@ -1450,9 +1471,11 @@ holds the done-work log; these are the OPEN tails it carried):**
     campaign backup), and changed bytes ⇒ changed hash ⇒ disabled until re-consented, so even
     auto-download can't swap code silently. **One unit, one folder:** code and the data it serves
     install and uninstall together, which also deleted the "removing a pack must hunt down its
-    plugins" problem the split-roots version created. BUILT in discovery (`plugin-host.ts` scans
-    `plugins/` ∪ `content/*/plugins/*`); what the pack INSTALLER still owes: "this pack contains N
-    plugins" before installing.
+    plugins" problem the split-roots version created. BUILT end to end: discovery (`plugin-host.ts`
+    scans `plugins/` ∪ `content/*/plugins/*`) and the installer's disclosure — the discover step
+    names the plugins a pack carries before you install it, and an update distinguishes "this pack
+    contains plugins" from "this update CHANGES their bytes", which is the sentence that matters
+    (`PackUpdatesSettings.svelte`).
     - **`namespace` stays globally unique — do NOT key the registry by `pack:namespace`.** That was
       proposed and is wrong: `plugin:<namespace>:<handler>` is a token in CSV content and a token
       cannot name a pack, so two providers of one namespace leave the dispatch ambiguous no matter
@@ -1989,7 +2012,8 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [x] **SEC-2 · Every `{@html}` goes through the sanitizer** — no hand-rolled escaping; see
   `docs/SECURITY.md`.
 **Data versioning (DECIDED 2026-07-06 — design below; surfaced in the refactor, 2026-07-05):**
-- **DATA-VER-1 · content versioning — BUILT (2026-07-06, tasks 1–5).** Design-of-record: a
+- **DATA-VER-1 · content versioning — BUILT (2026-07-06, tasks 1–5; task 6 closed 2026-08-14).**
+  Design-of-record: a
   `#content-<key>:` directive header block (leading comment lines before the CSV column row) carries
   per-FILE `type`/`source`/`systems`/`url`/`license`/`id`(uuidv7)/`updated-at`/`schema`/`hash` — the
   per-row `source`/`systems` COLUMNS are dropped (the file is the unit of source+edition; split files
@@ -1999,12 +2023,37 @@ holds the done-work log; these are the OPEN tails it carried):**
   surfaces `graph.metaIssues` / `driftItems` → `ContentMetaModal` (missing required source/license)
   + `HashDriftModal` (body edited after the last stamp), per-session dismiss. Missing meta never
   hard-blocks — machine keys (id/hash/updated-at/schema/type) auto-fill; human keys (source/license)
-  prompt; a missing `systems` defaults to both editions. **OPEN (task 6):** the modal confirm actions
-  (`onFillAndSave`/`onUpdate`) still only DISMISS — the directive write-back (atomic BOM+CRLF,
-  watcher-ignored, app-writable files only), the Settings "content-editing mode" auto-stamp toggle,
-  the in-app authoring stamp, and per-type `CONTENT_MIGRATIONS` via `migrate()` remain to wire;
-  `CONTENT_SCHEMA_VERSION` is exported but not yet consumed by a content migration. Web is read-only
-  (detect, no write-back). Git holds the full design log (per-key rules, fill-classes, drift copy).
+  prompt; a missing `systems` defaults to both editions.
+
+  **Task 6 — the write-back — DONE 2026-08-14.** Both dialogs' confirm buttons now write
+  (`content/restamp.ts`); the in-app authoring stamp had already landed with Editor mode
+  (`homebrew.ts`). Four things about it are decisions, not implementation details:
+  - **It re-stamps a file the app did not create, deliberately.** The neighbouring invariant is "the
+    app writes only files it owns", and it exists so a hand-edit is never silently clobbered. Here
+    the user has ASKED and only the two stamp lines move. Without it a drifted file is unfixable
+    from inside the app — `isProtectedFromOverwrite` refuses to refresh anything failing its own
+    hash, so the file freezes at whatever it drifted to and the only cure is a terminal command, in
+    a project built for people who do not have one.
+  - **ONE stamping function, shared with `pnpm restamp`**, so a file stamped from the terminal and
+    one stamped from the UI are byte-identical and the load-time check agrees with both.
+  - **The original BOM + EOL survive byte-for-byte.** A pack diff compares git blob SHAs, so
+    rewriting 2000 line endings to fix one header line would report the whole file as changed
+    against a repo where nothing moved — the `core.autocrlf` bug of REL-4 slice 11, re-created by us.
+  - **"Don't ask again" is content-editing mode**, a persisted setting (`app.contentEditingMode`)
+    that adopts a hand-edit instead of asking AND mutes both prompts — and is reachable again in
+    Settings ▸ Content health, because an answer must not be a door that locks behind you (the same
+    rule as REL-4's `dismissedMissing`). Auto-adoption skips a pack mid-swap: an apply re-checks disk
+    state before its rename, so an unattended stamp landing mid-swap would cancel a user's update.
+  - **`CONTENT_MIGRATIONS` is wired with an EMPTY registry** (`content/migrations.ts`), and the
+    reason is not "somewhere to put future steps": a pack declaring a schema this build never heard
+    of used to load in silence and render whatever its columns happened to mean here. It is now a
+    content-health warning, and the rows still load — flagged beats silently reinterpreted. The unit
+    is a FILE (the version is declared once in its header); absent ⇒ current, so a hand-authored CSV
+    is not asked to migrate.
+
+  Web is read-only and now says so by NOT prompting: it still detects both conditions and lists them
+  in content health, but a dialog whose only button cannot work is worse than no dialog. Git holds
+  the full design log (per-key rules, fill-classes, drift copy).
 
 **Builder / character:**
 - [~] **Lineages & subraces** — Phase 1 DONE: `species_option` content type (linked `species_id`,
@@ -2076,7 +2125,7 @@ holds the done-work log; these are the OPEN tails it carried):**
 
 **Platform / content:**
 - [x] **Tauri fs Storage** impl + platform factory.
-- [~] **Content-type identification** — loader `#charnik-type: <type>` first-line directive DONE
+- [~] **Content-type identification** — loader `#content-type: <type>` header directive DONE
   (freely-named files declare their type; explicit wins over filename; unknown type → error).
   Remaining: **UI type-assign** (a form that writes the directive) — folds into homebrew authoring.
 - [~] **Homebrew content from the UI** — DONE for all browsable types via an editable-article form

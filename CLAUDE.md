@@ -225,8 +225,10 @@ These span many files and are easy to violate; preserve them.
   content-health panel recomputes it on load and shows **"changed · declared \<date\>"**
   drift when the stored hash ≠ the body. So **after ANY hand-edit to a content CSV**
   (adding an effect token to a feat, tweaking a row), you MUST re-stamp before committing:
-  run **`pnpm restamp <file.csv>`** (`tools/restamp.ts` — reuses the app's own `hashBody`,
-  rewrites only the `#content-hash` + `updated_at` lines, preserves BOM/EOL). **Do NOT
+  run **`pnpm restamp <file.csv>`** (`tools/restamp.ts` — a thin CLI over the app's own
+  `restampText`, the same function the in-app drift dialog calls, so a file stamped from the terminal
+  and one stamped from the UI come out byte-identical; it rewrites the `#content-hash` +
+  `updated_at` lines, fills `id`/`schema` if the file lacks them, and preserves BOM/EOL). **Do NOT
   re-run a converter just to re-stamp** — `convert.mjs`'s row-regen drops
   `conditions_srd.csv`'s `max_level` column (stale-converter bug); if you *do* run a
   converter for a real content change, `git checkout` any file it touched that you didn't
