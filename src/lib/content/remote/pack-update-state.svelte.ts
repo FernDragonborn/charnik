@@ -33,7 +33,7 @@ export interface PendingUpdate {
 }
 
 /** A pack found in a repo the user just pasted, and what installing it would bring. */
-export interface DiscoveredPack {
+interface DiscoveredPack {
 	pack: string;
 	repo: string;
 	/** The branch its listing came off — `main` unless the repo turned out to live on `master`. */
