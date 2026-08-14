@@ -260,6 +260,10 @@ a clean `switch(kind)` dispatch isn't false-flagged), **`max-depth` warn 4** (de
 with early returns / extract), **`max-params` warn 4** (machine-enforces §2.2 — 5+ positional params
 means group them into a typed object). All warn-only.
 
+**`pnpm loc` is how you read these numbers** (§10) — it counts exactly what the rules above count,
+so a file's size means one thing here. `wc -l` disagrees by roughly a third and has misled a planning
+pass in this repo already.
+
 **The 400-line warn is the TRIGGER, not the target.** Once a logic file crosses 400, splitting it so
 each resulting file sits *just under 400* is not enough — split so every result holds **at most ~300
 logic lines, and preferably nearer ~200**. Aim for the ~200 sweet spot; treat 300 as the ceiling, 400
@@ -889,6 +893,11 @@ The repo ships its own tooling under `tools/` — check there BEFORE hand-rollin
   checked to agree with it digit-for-digit**, so there is one number for "how big is this file", not
   a tool with a second opinion. `wc -l` is not that number: this repo comments heavily, and the
   file eslint calls 524 is 757 by `wc`. For a `.svelte` it counts the `<script>` blocks only (§2.6).
+  **Reach for it at three moments, and never quote `wc -l` at any of them:** before choosing what to
+  split (so the target list is the real one — `derive.ts` sat fourth-biggest all along and never made
+  a "top 3" picked by `wc`), when stating a size in a report or a commit message, and after a carve
+  to say what it actually bought. `--verify` re-checks the agreement with eslint if either side
+  changes.
 - **`pnpm knip`** — part of `pnpm lint`, but its rules are set to `warn`, so it reports and exits 0:
   it is a REPORT, not the gate this line used to claim. Don't reintroduce unused exports; un-export
   rather than exporting "just in case", and triage what it lists (§8.4 — in active dev an unused
