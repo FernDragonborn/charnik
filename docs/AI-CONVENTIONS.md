@@ -620,6 +620,27 @@ typed key so consumers get inference, not `unknown`. Prefer idiomatic Svelte 5 p
 (`$state`/`$derived`, arrow-method fields) over ad-hoc wiring. A green `svelte-check` is the
 correctness gate for cross-scope moves.
 
+### 7.4b A file that belongs somewhere else MOVES — and `git mv` is how
+
+**Rule.** When a module (or a symbol inside one) turns out to belong in a different folder or file,
+move it as part of the change that discovered it. A thing living in the wrong place is a small, real
+tax: readers look in the wrong file, and the wrong module ends up importing the right one.
+
+**The signals, in order of how loud they are:**
+- **an import cycle** (`madge --circular`, §10) — almost always one module doing two jobs, a leaf's
+  policy plus the orchestration over it. Move the leaf out. `content/disk.ts` came out of
+  `provider.ts` this way, and `build/rows.ts` out of the build view-model, both because a new sibling
+  needed the leaf and got the whole module instead;
+- **a symbol imported from outside its home more than from inside it** — its home is now a detour;
+- **a name that only makes sense once you know which folder you are in.**
+
+**How to apply.** `git mv`, never delete-and-recreate — blame is the record of why a line exists, and
+a recreated file starts that record over. Then rewrite the imports mechanically. **If the basename
+is ambiguous across folders, the rewrite must be DIRECTORY-AWARE**: two modules both called
+`state.svelte.ts` meant a plain string swap sent `build/`'s imports at the combat view-model, which
+was the exact ambiguity the rename existed to remove (2026-08-14). The gate that catches it is
+`svelte-check`, so run it before the commit, not after.
+
 ### 7.4 Fix the root cause, don't guess
 **Rule.** On bugfixes, **find the root cause before writing any fix**. Do NOT ship a plausible
 patch and hope.
