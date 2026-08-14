@@ -63,8 +63,9 @@ builds simply don't auto-update.
 Charnik separates **code**, **bundled data**, and **user content** — see
 [`COPYING.md`](COPYING.md) for the full picture.
 
-- **Code → [AGPL-3.0-or-later](LICENSE).** Free for everyone, modification allowed, but
-  changes must be disclosed (including over a network).
+- **Code → [MIT](LICENSE).** Take it, change it, ship it — just keep the copyright notice.
+  (AGPL-3.0-or-later up to 0.5.0: we don't want to oblige you to make your code public, though
+  sharing it back is welcome. Those releases stay available under AGPL.)
 - **Bundled data → CC-BY-4.0.** Rules data derives from the WotC **SRD 5.1** and **SRD 5.2.1** and
   lives in its own repo, [charnik-content-srd](https://github.com/FernDragonborn/charnik-content-srd),
   with the licence and attribution beside it. Charnik ships **SRD-only** — add non-SRD material

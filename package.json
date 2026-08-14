@@ -2,7 +2,7 @@
 	"name": "charnik",
 	"private": true,
 	"version": "0.6.0",
-	"license": "AGPL-3.0-or-later",
+	"license": "MIT",
 	"type": "module",
 	"packageManager": "pnpm@11.3.0",
 	"scripts": {

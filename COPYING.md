@@ -5,7 +5,7 @@ are governed separately.
 
 | Layer | Covers | License | Where |
 |-------|--------|---------|-------|
-| **Code** | This whole repository (TS, Svelte, Rust, config, docs) | **AGPL-3.0-or-later** | root `LICENSE` |
+| **Code** | This whole repository (TS, Svelte, Rust, config, docs) | **MIT** | root `LICENSE` |
 | **Bundled data** | The SRD CSVs + catalogs, which live in their own repo ([charnik-content-srd](https://github.com/FernDragonborn/charnik-content-srd)) and are vendored into a build | **CC-BY-4.0** | that repo's `LICENSE` + `ATTRIBUTION.md` |
 | **User homebrew** | Content a user adds to their own homebrew CSVs | **owned by its author** — Charnik imposes none | per-`source` metadata |
 
@@ -18,14 +18,14 @@ are governed separately.
 The paths are carried inline (one component, not thirteen files); the ISC notice is
 reproduced with Lucide upstream and permits redistribution with attribution.
 
-## Code — AGPL-3.0-or-later
+## Code — MIT
 
-Free for everyone, modification allowed, but **modifications must be disclosed** —
-including over a network (the Affero clause). Source files declare it machine-readably:
+Take it, change it, ship it. The one condition is that the copyright notice travels with the
+code.
 
-```
-// SPDX-License-Identifier: AGPL-3.0-or-later
-```
+Charnik was AGPL-3.0-or-later up to 0.5.0. We moved to MIT in 0.6.0 because we don't want to
+*oblige* anyone reusing this to make their own code public — doing so is welcome, not
+compulsory. Releases already published under AGPL stay available under those terms.
 
 ## Data — CC-BY-4.0
 

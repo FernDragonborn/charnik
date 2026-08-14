@@ -33,9 +33,10 @@ Core intent:
   commercial-ok; attribute). Default data = SRD only; excluded stuff (Beholder,
   Artificer, Aasimar…) not shipped — users add their own. WotC Fan Content Policy bans
   apps but is irrelevant (we use the CC route). Show attribution in the UI (About).
-- **Three-layer repo licensing** (DECIDED): **code = AGPL-3.0-or-later** (root `LICENSE`;
-  SPDX `// SPDX-License-Identifier: AGPL-3.0-or-later` header per source file — disclose
-  modifications, incl. over a network) · **bundled data = CC-BY-4.0** (`content/LICENSE`
+- **Three-layer repo licensing** (DECIDED): **code = MIT** (root `LICENSE`; keep the
+  copyright notice, nothing else — AGPL-3.0-or-later up to 0.5.0, dropped because we don't
+  oblige reusers to publish their code; no SPDX header per file, the root licence is the
+  declaration) · **bundled data = CC-BY-4.0** (`content/LICENSE`
   + `content/ATTRIBUTION.md`, WotC SRD credit) · **user homebrew = author-owned** (app
   relicenses nothing). Summary lives in root `COPYING.md` + README "Licensing".
 - **Per-source license metadata**: every `source` carries its own `license` +

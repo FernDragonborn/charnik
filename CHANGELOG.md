@@ -7,6 +7,13 @@ The external-content release: rules data now lives in its own repository and rea
 dying are modelled properly, magic items finally change your numbers, and the roll card was
 rebuilt around the swing rather than a run-on line of dice.
 
+### Charnik is now MIT-licensed
+
+- **The code moves from AGPL-3.0-or-later to [MIT](LICENSE).** We don't want to oblige anyone who
+  reuses Charnik to publish their own code — sharing it back is welcome, not compulsory. Keep the
+  copyright notice and that's the whole obligation. Releases up to 0.5.0 stay available under AGPL.
+  Bundled SRD data is unaffected (CC-BY-4.0), and content you write stays yours.
+
 ### Content packs — content that updates itself
 
 - **Install content from a URL.** **Settings ▸ Content ▸ Packs** takes a repository link, lists
