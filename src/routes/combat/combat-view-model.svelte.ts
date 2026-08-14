@@ -12,26 +12,18 @@ import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/stor
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
-import { rollPool, rollFormula } from '$lib/rules/dice';
-import { shortRestHalfHeal } from '$lib/rules/core';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
-import type { Character, DeathCause, ShortRestMode } from '$lib/character/schema';
+import type { Character, ShortRestMode } from '$lib/character/schema';
 import {
 	titleCase,
 	GROUP_MODES,
 	type GroupMode,
-	netAdvantage,
 	computeAttacks,
 	standardActions,
 	buildSpellGroups,
 	preparedTalliesByClass,
-	parseDamageParts,
 	modTargetLabel,
-	applyDefense,
-	effectiveHpMax,
-	DEATH_CAUSE_LABEL,
 	type Attack,
-	type MenuKind,
 	type StandardAction,
 } from '$lib/combat/helpers';
 import { RollTray } from './roll-tray.svelte';
@@ -43,7 +35,7 @@ import {
 } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
 import type { RollLogEntry } from '$lib/combat/helpers';
-import { registerDiceTray, openDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
+import { openDiceTray } from '$lib/dice/tray.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { EffectsEditor } from './effects-editor.svelte';
 import { SheetRolls } from './sheet-rolls.svelte';
@@ -52,22 +44,28 @@ import { PanelLayout } from './panel-layout.svelte';
 import { SpellCasting } from './spell-casting.svelte';
 import { TurnEconomy } from './turn-economy.svelte';
 import { ResourceTracker } from './resource-tracker.svelte';
+import { MenuOverlay, type OpenOverlay } from './menu-overlay.svelte';
+import { RestControls } from './rest-controls.svelte';
+import { HitPoints } from './hit-points.svelte';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
 
 /**
- * D1 — still over the 400-line lint (warn-only), being cut down slice by slice into the subsystems
- * beside it, each owning its slice behind an accessor.
+ * D1 — under the 400-line lint since the menus, the short rest and HP+death moved to subsystems
+ * beside it. What is left is the character (load, sheet, level-up), the display derivations the
+ * panels read, concentration's lifecycle, and one accessor per moved name.
  *
- * **HP + death is NOT a clean slice — do not start it expecting one.** `hpMax` is read from seven
- * places (both rests, the level-up clamp, damage, heal, an action) and `die()` from four, one of
- * them in `effects-editor.svelte.ts` (exhaustion kills). HP is the spine the rest of the play-state
- * hangs off, so extracting it starts with a design call about whether everything else reads
- * `this.hp.hpMax` — and it is where a reactivity break costs the most.
+ * **The accessors are the point, not clutter.** `hpMax` and `die` are declared on two sibling
+ * subsystems' host interfaces, five panels destructure `openMenu`, the markup two-way binds
+ * `tempHpInput`, and the behavioural tests drive every one of them from `combat.*`. Moving an
+ * implementation is no reason to move the name people call (§6.1) — so each carve leaves a
+ * one-line forward here and nothing above this file has to know it happened.
  *
- * Cleaner candidates: rests + hit dice (bordering `ResourceTracker`, which already owns recharge),
- * then the action list and the menu/overlay plumbing.
+ * A subsystem reads back through a `() => this` host thunk. A `$derived` field CANNOT use it: field
+ * initialisers run before the constructor assigns `host`, so anything reading the host is a getter.
+ * That is why `hitDice`, `hpBar` and `damageTypeOptions` are getters and not `$derived` — they were
+ * `$derived` here, where `this` was already whole.
  *
  * Every carve ends with `shot.mjs`: a bound scalar moves fine, but only if its binding is retargeted
  * with it (`bind:value={combat.effects.newEffectDuration}`), and unit tests do not cover that seam.
@@ -91,6 +89,98 @@ class CombatVM {
 		() => this.character,
 		() => this.sheet,
 	);
+	/** HP, damage/healing and death — see hit-points.svelte.ts. */
+	hp = new HitPoints(() => this);
+	/* The HP verbs stay ON the view-model: `hpMax` and `die` are declared on two sibling subsystems'
+	   host interfaces, the panels bind `tempHpInput`/`hpAmount`, and the behavioural tests drive all
+	   of them from here (§6.1). */
+	get hpMax(): number {
+		return this.hp.hpMax;
+	}
+	get hpBar() {
+		return this.hp.hpBar;
+	}
+	get hpAmount(): number {
+		return this.hp.hpAmount;
+	}
+	set hpAmount(v: number) {
+		this.hp.hpAmount = v;
+	}
+	get tempHpInput(): number {
+		return this.hp.tempHpInput;
+	}
+	set tempHpInput(v: number) {
+		this.hp.tempHpInput = v;
+	}
+	get damageType(): string | null {
+		return this.hp.damageType;
+	}
+	set damageType(v: string | null) {
+		this.hp.damageType = v;
+	}
+	get damageTypeOptions(): string[] {
+		return this.hp.damageTypeOptions;
+	}
+	get concentrationSaveMod(): number {
+		return this.hp.concentrationSaveMod;
+	}
+	get pendingConcentrationSave() {
+		return this.hp.pendingConcentrationSave;
+	}
+	set pendingConcentrationSave(v) {
+		this.hp.pendingConcentrationSave = v;
+	}
+	damage = () => this.hp.damage();
+	heal = () => this.hp.heal();
+	setTempHp = () => this.hp.setTempHp();
+	clampCurrentHp = () => this.hp.clampCurrentHp();
+	rollConcentrationSave = () => this.hp.rollConcentrationSave();
+	dropConcentrationFromSave = () => this.hp.dropConcentrationFromSave();
+	dismissConcentrationSave = () => this.hp.dismissConcentrationSave();
+	deathSave = () => this.hp.deathSave();
+	toggleDeathSave = (...a: Parameters<HitPoints['toggleDeathSave']>) =>
+		this.hp.toggleDeathSave(...a);
+	die = (...a: Parameters<HitPoints['die']>) => this.hp.die(...a);
+	revive = () => this.hp.revive();
+	/** The short-rest popover + Hit-Dice spending — see rest-controls.svelte.ts. */
+	rests = new RestControls(() => this);
+	/* The rest verbs stay ON the view-model: the Controls bar, the popover markup and the
+	   behavioural tests are all written against these names (§6.1). */
+	get hitDice() {
+		return this.rests.hitDice;
+	}
+	get hdPick(): Record<string, number> {
+		return this.rests.hdPick;
+	}
+	set hdPick(v: Record<string, number>) {
+		this.rests.hdPick = v;
+	}
+	get hdPickCount(): number {
+		return this.rests.hdPickCount;
+	}
+	get shortRestMode(): ShortRestMode {
+		return this.rests.shortRestMode;
+	}
+	hdPickInc = (...a: Parameters<RestControls['hdPickInc']>) => this.rests.hdPickInc(...a);
+	spendHitDie = (...a: Parameters<RestControls['spendHitDie']>) => this.rests.spendHitDie(...a);
+	startShortRest = (...a: Parameters<RestControls['startShortRest']>) =>
+		this.rests.startShortRest(...a);
+	commitShortRest = () => this.rests.commitShortRest();
+	/** Menus + the dice-tray seam (where a dropdown opens) — see menu-overlay.svelte.ts. */
+	menus = new MenuOverlay(() => this);
+	/* The menu verbs stay ON the view-model: five panels destructure `openMenu` off it, and both
+	   sibling subsystems declare it on their host interface (§6.1). */
+	get overlay(): OpenOverlay | null {
+		return this.menus.overlay;
+	}
+	set overlay(v: OpenOverlay | null) {
+		this.menus.overlay = v;
+	}
+	openMenu = (...a: Parameters<MenuOverlay['openMenu']>) => this.menus.openMenu(...a);
+	openMenuCentered = (...a: Parameters<MenuOverlay['openMenuCentered']>) =>
+		this.menus.openMenuCentered(...a);
+	openDice = (...a: Parameters<MenuOverlay['openDice']>) => this.menus.openDice(...a);
+	registerTray = () => this.menus.registerTray();
 	// read the shared reactive content store → a live content refresh (reloadContent) re-derives the
 	// sheet with no page reload, while the character's play-state is left untouched
 	/** Roll semantics (effect pickup, forced outcomes, the attack roll, Savage Attacker) — see
@@ -142,15 +232,7 @@ class CombatVM {
 		const cur = ui.spellsPinned ?? [];
 		ui.spellsPinned = cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id];
 	};
-	// menus open as dropdowns anchored under their trigger button (not centered modals)
-	overlay = $state<null | {
-		kind: MenuKind;
-		top: number;
-		left: number | null;
-		right: number | null;
-	}>(null);
 	hiddenActions = $state<Record<string, boolean>>({});
-	tempHpInput = $state(5);
 	customEffectLabel = $state('');
 	spellGroupBy = $state<GroupMode>('level');
 	// which skills show in the passive-senses row — PERSISTED per character in ui.passiveSkills
@@ -196,18 +278,6 @@ class CombatVM {
 		void appendLog(getUserStorage(), id, entry);
 	};
 
-	openMenu = (kind: MenuKind, e: Event) => {
-		const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-		const anchorRight = r.left > window.innerWidth / 2;
-		// document coords (+scroll) so the dropdown scrolls WITH the page/button, not the viewport
-		this.overlay = {
-			kind,
-			top: r.bottom + window.scrollY + 6,
-			left: anchorRight ? null : r.left + window.scrollX,
-			right: anchorRight ? document.documentElement.clientWidth - r.right : null,
-		};
-	};
-
 	// structured custom modifier (GM "+1 AC" in a few clicks): target · sign · amount → a
 	// flat_bonus token the effects engine already applies (now live, via the reactive sheet).
 	customModTarget = $state('ac');
@@ -223,57 +293,6 @@ class CombatVM {
 		this.customEffectLabel = '';
 		this.customModAmount = 1;
 	};
-
-	openDice = (e: Event) => {
-		this.tray.reset();
-		this.openMenu('dice', e);
-	};
-
-	/** Open a menu with NO anchor event — a centered dropdown near the top. Used by the D8 tray seam,
-	 *  where a request arrives from a generic RollButton that doesn't hand us its DOM node. */
-	openMenuCentered = (kind: MenuKind) => {
-		if (typeof window === 'undefined') return;
-		this.overlay = {
-			kind,
-			top: window.scrollY + 80,
-			left: Math.max(8, window.innerWidth / 2 - 150),
-			right: null,
-		};
-	};
-
-	/** D8: the ONE dice-tray seam, implemented by the rich combat tray. Registered on mount (see
-	 *  +page), so a generic `openDiceTray({label, formula})` anywhere in combat opens THIS tray (pool,
-	 *  advantage, attack→damage chain) instead of the instant-roll fallback. A caller may pass a
-	 *  pre-split `pool`/`mod`; otherwise the formula↔pool adapter (`parseDamageParts`) fills the tray. */
-	handleTrayRequest = (req: DiceTrayRequest) => {
-		const [parsed] = req.pool ? [] : parseDamageParts(req.formula);
-		const pool = req.pool ?? parsed?.pool ?? {};
-		const mod = req.mod ?? parsed?.mod ?? 0;
-		this.tray.prefill({
-			label: req.label,
-			dice: pool,
-			mod,
-			advantage: req.advantage ?? 0,
-			mods: req.mods ?? {},
-		});
-		if (req.queuedDamage)
-			this.tray.queueDamage({
-				label: req.queuedDamage.label,
-				parts: [
-					{
-						dice: req.queuedDamage.dice,
-						mod: req.queuedDamage.mod,
-						type: '',
-						...(req.queuedDamage.mods ? { mods: req.queuedDamage.mods } : {}),
-					},
-				],
-			});
-		this.openMenuCentered('dice');
-	};
-
-	/** Register this tray as the live `DiceTrayRequest` handler; returns an unregister fn (called on
-	 *  combat unmount so leaving the route restores the instant-roll fallback). */
-	registerTray = () => registerDiceTray(this.handleTrayRequest);
 
 	/** EFX-ROLL: feature-granted named rollables (Sneak Attack, Bardic Inspiration die) — the derive
 	 *  already resolved each expr to a dice formula against this character's levels. */
@@ -293,180 +312,6 @@ class CombatVM {
 		})),
 	);
 
-	/** Hit-dice pools for the panel: each die size with its spent/left counts (left disables the spend
-	 *  button when the pool is empty — refilled on a long rest). */
-	hitDice = $derived(
-		(this.sheet?.hitDice ?? []).map((h) => ({
-			...h,
-			spent: this.resources.hitDiceSpent(h.die),
-			left: h.max - this.resources.hitDiceSpent(h.die),
-		})),
-	);
-	/** Spend one Hit Die of the given size (short-rest healing): roll the die + CON mod, heal a MINIMUM
-	 *  of 1 HP (RAW) clamped to max, log it, and mark the die spent. Blocked when that pool is empty. */
-	spendHitDie = (die: string) => {
-		const c = this.character;
-		const pool = this.sheet?.hitDice.find((h) => h.die === die);
-		if (!c || !pool) return;
-		if (pool.max - this.resources.hitDiceSpent(die) <= 0) {
-			toast(`No ${die} Hit Dice left`, { description: 'Regain some on a long rest' });
-			return;
-		}
-		const conMod = this.sheet?.abilities.con.mod ?? 0;
-		const r = rollFormula(`1${die}${conMod >= 0 ? `+${conMod}` : conMod}`);
-		c.play.hp.current = Math.min(this.hpMax, c.play.hp.current + Math.max(1, r.total)); // min 1 HP/die
-		c.play.hitDiceSpent = { ...c.play.hitDiceSpent, [die]: this.resources.hitDiceSpent(die) + 1 };
-		this.tray.pushRoll(`Hit Die ${die}`, r);
-	};
-
-	/** The character's short-rest healing model (per-character rules variant; `dice` = RAW default). */
-	get shortRestMode(): ShortRestMode {
-		return this.character?.ui.shortRestMode ?? 'dice';
-	}
-	/** Hit dice chosen to spend in the short-rest popover (die size → count). Reset when it opens. */
-	hdPick = $state<Record<string, number>>({});
-	/** Total hit dice currently selected in the popover. */
-	hdPickCount = $derived(Object.values(this.hdPick).reduce((n, v) => n + v, 0));
-	/** Bump the chosen count of one die size, clamped to [0, the pool's remaining]. */
-	hdPickInc = (die: string, delta: number) => {
-		const left = this.hitDice.find((h) => h.die === die)?.left ?? 0;
-		this.hdPick = {
-			...this.hdPick,
-			[die]: Math.max(0, Math.min(left, (this.hdPick[die] ?? 0) + delta)),
-		};
-	};
-	/** Press "☾ Short": the `half` model heals ½ max HP right away; the `dice` model opens the picker
-	 *  popover (choose how many Hit Dice to spend). Both run the shared short-rest recharge (pools /
-	 *  pact slots / effect expiry). */
-	startShortRest = (e: Event) => {
-		if (this.shortRestMode === 'half') return this.doHalfShortRest();
-		this.hdPick = {}; // a fresh selection each time the picker opens
-		this.openMenu('restshort', e);
-	};
-	/** The `half` short rest (BG3 / house variant): recharge + heal ½ max HP, no Hit Dice spent. */
-	private doHalfShortRest() {
-		const p = this.character?.play;
-		if (!p) return;
-		this.resources.rest('short');
-		const heal = shortRestHalfHeal(this.hpMax);
-		p.hp.current = Math.min(this.hpMax, p.hp.current + heal);
-		this.tray.logMarker(`Short rest — +${heal} HP (½ max)`);
-		toast(`Short rest — healed ${heal} HP`);
-	}
-	/** Commit the `dice` short rest: recharge, then spend each chosen Hit Die (roll + CON, min 1 HP —
-	 *  each shows its own roll in the log), and close the picker. */
-	commitShortRest = () => {
-		this.resources.rest('short');
-		for (const [die, count] of Object.entries(this.hdPick))
-			for (let i = 0; i < count; i++) this.spendHitDie(die);
-		this.hdPick = {};
-		this.overlay = null;
-		toast('Short rest taken');
-	};
-
-	setTempHp = () => {
-		if (this.character) this.character.play.hp.temp = Math.max(0, this.tempHpInput);
-		this.overlay = null;
-	};
-
-	// --- HP: apply damage / healing to the play-state (temp HP soaks damage first) -------------
-	hpAmount = $state(1);
-	/** B4 concentration-save banner: a CON save the player owes after taking damage while concentrating.
-	 *  `dc` is the suggested-but-editable DC; `failed` is set once a rolled save misses (the banner then
-	 *  offers Drop). Null = no check due. Set in `damage()`, cleared on a passed roll / drop / when
-	 *  concentration ends. */
-	pendingConcentrationSave = $state<{ dc: number; failed?: boolean } | null>(null);
-	/** The CON saving-throw bonus a concentration save rolls (d20 + this); already folds save.con flat
-	 *  effects, so the roll must NOT re-add `fx.flat` (roll.ts: saves are pre-folded into the sheet). */
-	concentrationSaveMod = $derived(this.sheet?.abilities.con.save.value ?? 0);
-	/** Selected damage type for the next Damage press (B20). Null = untyped (no resist/vuln math). */
-	damageType = $state<string | null>(null);
-	get hpMax(): number {
-		if (!this.sheet) return this.character?.play.hp.max ?? 0;
-		// A14: a manual max no longer silences hp_max effects — they re-fold on top of it.
-		return effectiveHpMax(this.character?.play.hp.max ?? null, this.sheet.maxHp);
-	}
-	/** A14: pull play HP current down to the live effective max — call reactively so an expired
-	 *  hp_max effect (Aid) or a dropped manual max reduces current. Idempotent (no-op once
-	 *  current ≤ max), so it can't loop the autosave debounce. */
-	clampCurrentHp = () => {
-		const p = this.character?.play;
-		if (p && p.hp.current > this.hpMax) p.hp.current = this.hpMax;
-	};
-	/** The damage types the character has ANY defense for — the only ones worth offering in the
-	 *  type picker (any other type resolves identically to untyped). Empty → no picker shown. */
-	damageTypeOptions = $derived.by<string[]>(() => {
-		const d = this.sheet?.defenses;
-		if (!d) return [];
-		return [...new Set([...d.resist, ...d.immune, ...d.vulnerable])].sort();
-	});
-	damage = () => {
-		const p = this.character?.play;
-		if (!p) return;
-		const raw = Math.max(0, Math.round(this.hpAmount));
-		// B20: resist/immune/vulnerable modify the damage BEFORE temp HP soaks it (RAW ordering).
-		const defenses = this.sheet?.defenses ?? { resist: [], immune: [], vulnerable: [] };
-		const taken = applyDefense(raw, this.damageType, defenses).final;
-		let n = taken;
-		const soaked = Math.min(p.hp.temp, n); // temp HP absorbs first (5e rule)
-		p.hp.temp -= soaked;
-		n -= soaked;
-		const before = p.hp.current;
-		p.hp.current = Math.max(0, before - n);
-		// INSTANT DEATH (SRD 5.1 "Instant Death", verified): damage reduces you to 0 AND the damage
-		// REMAINING equals/exceeds your hit-point MAXIMUM (the FULL max, not half) → you die outright,
-		// no death saves. The same threshold also covers "Damage at 0 Hit Points" (already at 0 → the
-		// leftover is the whole hit). The 2024 SRD 5.2.1 omits the "Playing the Game" chapter that
-		// carries this rule (it only cross-references it), so both editions run the 5.1 text — the 2024
-		// PHB keeps the same threshold. [[charnik-srd-raw-fidelity]]
-		if (p.hp.current === 0 && n - before >= this.hpMax) this.die('massive_damage');
-		// B4: taking damage while concentrating opens the "check due" banner — a CON save at DC
-		// max(10, ⌊dmg/2⌋), capped 30 in 2024 (RAW). Suggested-but-editable DC, PLAYER-rolled, never an
-		// auto-drop (play-tracker surfaces, never forces). 0 HP already ends it via endConcentrationIfBroken.
-		if (taken > 0 && p.concentration && p.hp.current > 0) {
-			const cap = this.character?.system === '5.5e' ? 30 : Number.POSITIVE_INFINITY;
-			this.pendingConcentrationSave = { dc: Math.min(cap, Math.max(10, Math.floor(taken / 2))) };
-		}
-	};
-	heal = () => {
-		const p = this.character?.play;
-		if (!p) return;
-		p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, Math.round(this.hpAmount)));
-	};
-
-	/** Roll the owed concentration save (B4 banner). Instant + auto-applied like a death save — the tray
-	 *  has no result callback, and save.con effects (Bless bonus dice, War Caster advantage) already fold
-	 *  through `effectsFor`. `mod` is the sheet CON-save value (flat effects pre-folded → do NOT add
-	 *  `fx.flat`, roll.ts). Pass → the check clears. Fail → RAW the spell ends, but we mark the banner
-	 *  `failed` and OFFER Drop rather than auto-dropping (surface, never force). */
-	rollConcentrationSave = () => {
-		const pend = this.pendingConcentrationSave;
-		if (!pend || pend.failed || !this.character?.play.concentration) return;
-		const fx = this.rolls.effectsFor('save.con');
-		const r = rollPool({ 20: 1 }, this.concentrationSaveMod, netAdvantage(fx), fx.bonusDice, fx);
-		this.tray.pushRoll('Concentration save', r);
-		if (r.total >= pend.dc) {
-			toast(`Concentration held — ${r.total} ≥ DC ${pend.dc}`);
-			this.pendingConcentrationSave = null;
-		} else {
-			toast(`Concentration save failed — ${r.total} < DC ${pend.dc}`, {
-				description: 'The spell ends — tap Drop to confirm.',
-			});
-			this.pendingConcentrationSave = { dc: pend.dc, failed: true };
-		}
-	};
-	/** The B4 banner's "Drop spell" — deliberately END concentration (either instead of rolling, or to
-	 *  confirm the RAW consequence of a failed save). Ends the spell AND dismisses the banner. */
-	dropConcentrationFromSave = () => {
-		this.clearConcentration();
-		this.pendingConcentrationSave = null;
-	};
-	/** The B4 banner's ✕ — dismiss the reminder WITHOUT ending concentration. Unlike Drop, the spell
-	 *  keeps going: the player is waving off the check (they'll roll physically, have a feature that
-	 *  ignores it, or just don't care). Surface, never force — a reminder must be dismissable. */
-	dismissConcentrationSave = () => {
-		this.pendingConcentrationSave = null;
-	};
 	/** The N2 action executor (spend-options, action verbs, entering combat) — see executor.svelte.ts. */
 	executor = new ActionExecutor(() => this);
 	/* These three stay ON the view-model: they read as SHEET verbs, not as a subsystem's API, and
@@ -587,78 +432,6 @@ class CombatVM {
 			});
 	};
 
-	/** Roll a death save (shown while at 0 HP): a d20 vs 10 — `save.death`-targeted effects (and
-	 *  the `saves`/`d20_tests` groups: Bless, exhaustion) apply. Outcomes per RAW: nat 20 → back up
-	 *  at 1 HP; nat 1 → two failures; 10+ → success; three successes → stable (counters reset). */
-	deathSave = () => {
-		const c = this.character;
-		if (!c) return;
-		const fx = this.rolls.effectsFor('save.death');
-		// SMELL-6: always roll instantly + auto-apply the outcome. Unlike other rolls, a death save
-		// MUTATES play-state (pips / nat20→1 HP), and the tray contract has no result callback — a tray
-		// roll couldn't apply it. A death save is a fixed d20-vs-10 with nothing to customize
-		// (advantage/effects already fold via `fx`), so there's no reason to offer the tray here.
-		const r = rollPool({ 20: 1 }, fx.flat, netAdvantage(fx), fx.bonusDice, fx);
-		this.tray.pushRoll('Death save', r);
-		const ds = c.play.deathSaves;
-		if (r.natural === 20) {
-			c.play.hp.current = 1;
-			c.play.deathSaves = { successes: 0, failures: 0 };
-			toast('Natural 20 — back on your feet at 1 HP');
-		} else if (r.natural === 1) {
-			ds.failures = Math.min(3, ds.failures + 2);
-			toast('Natural 1 — two death-save failures');
-		} else if (r.total >= 10) {
-			ds.successes = Math.min(3, ds.successes + 1);
-			if (ds.successes >= 3) {
-				c.play.deathSaves = { successes: 0, failures: 0 };
-				toast('Three successes — stable at 0 HP');
-			}
-		} else {
-			ds.failures = Math.min(3, ds.failures + 1);
-		}
-		// "On your third failure, you die" — checked once, after every branch, so a natural 1's DOUBLE
-		// failure is as lethal as a third single one (it wasn't, before).
-		if (c.play.deathSaves.failures >= 3) this.die('death_saves');
-	};
-
-	/** Manually set a death-save track (players track by hand too): clicking pip `index` fills to it,
-	 *  or clears it when it's already the last filled one. `kind` is 'successes' | 'failures'. */
-	toggleDeathSave = (kind: 'successes' | 'failures', index: number) => {
-		const ds = this.character?.play.deathSaves;
-		if (!ds) return;
-		ds[kind] = ds[kind] === index + 1 ? index : index + 1;
-		if (kind === 'failures' && ds.failures >= 3) this.die('death_saves');
-	};
-
-	/** Record a death. The three lethal rules (massive damage · three death-save failures · the top of
-	 *  the exhaustion ladder) all land HERE, so "what happens when you die" is one place. Idempotent —
-	 *  the first cause sticks, so re-entering the same state doesn't re-toast. Death is AUTOMATIC in
-	 *  RAW (no "you can"), so like the initiative regain it auto-applies and NOTIFIES; the player still
-	 *  owns the way back (`revive`). */
-	die = (cause: DeathCause) => {
-		const p = this.character?.play;
-		if (!p || p.death) return;
-		p.death = { cause };
-		toast('The character has died', { description: DEATH_CAUSE_LABEL[cause] });
-	};
-	/** "I was revived" — the way back from the dead screen. RAW leaves the HP to the revival effect, so
-	 *  we apply the Revivify FLOOR (at least 1 HP, never taking hit points away — a character who died
-	 *  of Exhaustion at full HP keeps them) and clear the death-save track (it resets on regaining HP).
-	 *  Exhaustion drops by one, per the 2024 glossary ("If the creature died with any Exhaustion levels,
-	 *  it returns with 1 fewer level") — applied in BOTH editions because reviving straight back onto a
-	 *  lethal exhaustion 6 would kill you again on the spot; RAW is silent in 2014, so RAI wins
-	 *  ([[charnik-srd-raw-fidelity]]). Everything else (conditions, curses) survives death per RAW. */
-	revive = () => {
-		const p = this.character?.play;
-		if (!p) return;
-		p.death = null;
-		p.deathSaves = { successes: 0, failures: 0 };
-		p.exhaustion = Math.max(0, p.exhaustion - 1);
-		p.hp = { ...p.hp, current: Math.max(1, p.hp.current) };
-		toast('Back from the dead — 1 HP');
-	};
-
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
 	actionClick = (a: StandardAction, e: Event) => {
@@ -721,17 +494,6 @@ class CombatVM {
 	preparedTallies = $derived(
 		preparedTalliesByClass(this.character?.build.spells ?? [], this.sheet),
 	);
-
-	hpBar = $derived.by(() => {
-		if (!this.character || !this.sheet) return { cur: 0, tmp: 0 };
-		// `|| 1` guards a 0 max (unset HP) so the bar math can't divide → NaN/Infinity (D19)
-		// A14: effectiveHpMax so a manual max still stacks hp_max effects (Aid) on top.
-		const max = effectiveHpMax(this.character.play.hp.max ?? null, this.sheet.maxHp) || 1;
-		return {
-			cur: Math.max(0, Math.min(100, (this.character.play.hp.current / max) * 100)),
-			tmp: (this.character.play.hp.temp / max) * 100,
-		};
-	});
 
 	// conditions for THIS character's system (not a hardcoded edition). Carries the row `id` (not just
 	// the label) so applying one emits `apply_condition:<id>` — the DAG then expands the condition
