@@ -24,7 +24,7 @@
 		"lint": "prettier --check . && eslint . && stylelint \"src/**/*.{css,svelte}\" && knip && jscpd && madge --circular src",
 		"lint:fix": "prettier --write . && eslint . --fix && stylelint \"src/**/*.{css,svelte}\" --fix",
 		"knip": "knip",
-		"jscpd": "jscpd",
+		"jscpd": "jscpd --reporters consoleFull",
 		"postinstall": "simple-git-hooks",
 		"plugin:test": "tsx tools/plugin-test.ts"
 	},

@@ -4,6 +4,6 @@
 	"ignore": ["**/*.test.ts", "**/node_modules/**"],
 	"minTokens": 35,
 	"threshold": 1.8,
-	"reporters": ["consoleFull"],
+	"reporters": ["silent"],
 	"gitignore": true
 }

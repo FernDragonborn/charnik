@@ -835,7 +835,12 @@ The repo ships its own tooling under `tools/` — check there BEFORE hand-rollin
   refactor helpers `hoist-class.mjs`, `rename-class.mjs`.
 - **`pnpm knip`** — GREEN and a hard gate (part of `pnpm lint`). Don't reintroduce unused exports;
   un-export rather than exporting "just in case".
-- **`pnpm jscpd`** — copy-paste detector, threshold 1.8% (part of `pnpm lint` + pre-commit).
+- **`pnpm jscpd`** — copy-paste detector, threshold 1.8% (part of `pnpm lint` + pre-commit). The
+  CONFIG reporter is `silent`, i.e. the one-line verdict ("108 clones, 0.92% duplicated") and nothing
+  else, because a pre-commit hook that prints two hundred lines of other people's CSS on every
+  successful commit trains you to stop reading it. The threshold still fails the commit exactly as
+  before — the reporter decides what is PRINTED, not what passes. `pnpm jscpd` overrides it with
+  `consoleFull` for when you actually want the list.
 - **eslint `no-restricted-imports`** gates two invariants: `@tauri-apps/*` only in
   `lib/storage/tauri.ts` + `lib/update/**`; `src/lib/rules/**` must not import effects.
 - **`madge --circular src`** (part of `pnpm lint`) — no import cycles. A cycle is usually a module
