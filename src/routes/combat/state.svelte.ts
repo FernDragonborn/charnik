@@ -20,6 +20,7 @@ import { plugins } from '$lib/effects/plugin-store.svelte';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { rollPool, rollFormula } from '$lib/rules/dice';
 import { shortRestHalfHeal } from '$lib/rules/core';
+import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
 import type { Character, DeathCause, ShortRestMode } from '$lib/character/schema';
 import {
 	titleCase,
@@ -1421,7 +1422,7 @@ class CombatVM {
 
 	// standard actions (from d-charnik); roll ones reference live skills — pure builder in helpers
 	actions = $derived.by<StandardAction[]>(() =>
-		standardActions(this.sheet, this.character?.system ?? '5.5e')
+		standardActions(this.sheet, this.character?.system ?? DEFAULT_SYSTEM)
 	);
 	visibleActions = $derived(this.actions.filter((a) => !this.hiddenActions[a.id]));
 

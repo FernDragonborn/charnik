@@ -44,6 +44,12 @@ export interface AbilityBlock {
 	baseScore: number;
 	mod: number;
 	save: Computed;
+	/** Is this save proficient? A VALUE, because the UI used to answer it by sniffing the trace for a
+	 *  `layer === 'proficiency'` contribution — reaching into the stacking algebra, which
+	 *  `docs/compatibility.md` §1 names as the one shared vessel nothing outside the engine may
+	 *  pattern-match on (a family-B system has no such layer and the tile would silently go blank).
+	 *  It costs nothing: the answer is already in hand where the save is built. */
+	saveProficient: boolean;
 }
 
 /** The computed inputs every stat-phase helper reads (bundled so the helpers stay ≤4 params). */
@@ -100,17 +106,14 @@ export function deriveAbilityBlocks(
 ): Record<Ability, AbilityBlock> {
 	const abilities = {} as Record<Ability, AbilityBlock>;
 	for (const ab of ABILITIES) {
-		const base = savingThrow({
-			ability: ab,
-			score: scores[ab],
-			level,
-			proficient: classSaves.has(ab)
-		});
+		const proficient = classSaves.has(ab);
+		const base = savingThrow({ ability: ab, score: scores[ab], level, proficient });
 		abilities[ab] = {
 			score: abilityComputed[ab],
 			baseScore: build.abilities[ab],
 			mod: abilityModifier(scores[ab]),
-			save: applyEffects(`save.${ab}`, base, facts)
+			save: applyEffects(`save.${ab}`, base, facts),
+			saveProficient: proficient
 		};
 	}
 	return abilities;

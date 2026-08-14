@@ -20,7 +20,7 @@
 	<section class="grid">
 		{#each ABIL as ab (ab)}
 			{@const a = s.abilities[ab]}
-			{@const prof = a.save.trace.some((t) => t.layer === 'proficiency')}
+			{@const prof = a.saveProficient}
 			<!-- a tile is NOT a button (it holds two): a check button + a save button, both keyboard-
 			     reachable — a nested <button> is invalid HTML and drops the save from the tab order -->
 			<div class="ability">

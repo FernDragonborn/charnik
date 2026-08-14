@@ -2,6 +2,7 @@
 	// Build page header: title, character-name input, ruleset (5e/5.5e) + enforcement (Strict/Free)
 	// toggles. The `.segment-group` toggles are styled by the shared build.css (confined to .build-page).
 	import { build } from '../state.svelte';
+	import { SYSTEMS } from '$lib/rules/pipeline';
 	const b = build;
 </script>
 
@@ -13,8 +14,11 @@
 	</label>
 	<span class="spacer"></span>
 	<div class="segment-group" role="group" aria-label="Ruleset">
-		<button class:on={b.draft.system === '5e'} onclick={() => (b.draft.system = '5e')}>5e</button>
-		<button class:on={b.draft.system === '5.5e'} onclick={() => (b.draft.system = '5.5e')}>5.5e</button>
+		<!-- iterates the ONE system list, so a third system is a row in SYSTEM_LABELS, not a button
+		     somebody has to remember to add here (docs/compatibility.md) -->
+		{#each SYSTEMS as sys (sys)}
+			<button class:on={b.draft.system === sys} onclick={() => (b.draft.system = sys)}>{sys}</button>
+		{/each}
 	</div>
 	<div class="segment-group" role="group" aria-label="Enforcement">
 		<button class:on={b.draft.strict} onclick={() => (b.draft.strict = true)} title="enforce rules">Strict</button>

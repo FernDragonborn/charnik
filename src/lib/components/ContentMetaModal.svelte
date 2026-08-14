@@ -7,6 +7,7 @@
 	import { _ } from '$lib/i18n';
 	import DialogShell from './DialogShell.svelte';
 	import { EDITABLE_KEYS, OPTIONAL_KEYS } from '$lib/content/meta';
+	import { SYSTEMS } from '$lib/rules/pipeline';
 	import type { FilledMeta, MetaIssue, MetaKey } from '$lib/content/meta';
 	let {
 		issues,
@@ -21,7 +22,7 @@
 	} = $props();
 
 	const LICENSES = ['CC-BY-4.0', 'CC-BY-SA-4.0', 'CC0-1.0', 'MIT'];
-	const EDITIONS = ['5e', '5.5e'];
+	const EDITIONS = SYSTEMS;
 
 	const isCustomLicense = (v: string | undefined) => !!v && !LICENSES.includes(v);
 	// text/select field values already declared by the file (everything editable except systems).

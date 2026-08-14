@@ -42,7 +42,7 @@ const STORAGE_KEY = 'charnik:app';
 
 function defaults(): AppState {
 	return {
-		activeEditions: ['5e', '5.5e'],
+		activeEditions: [...SYSTEMS],
 		activeLocale: 'en',
 		theme: 'dark',
 		customThemes: [],

@@ -5,6 +5,7 @@
  */
 import type { SystemId } from '$lib/stores/app.svelte';
 import type { Ability } from '$lib/rules/core';
+import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
 import type { Character, ShortRestMode } from '$lib/character/schema';
 import { baseAbilities, type StatMethod, type BoostShape } from '$lib/build/rules';
 
@@ -67,8 +68,8 @@ export interface DraftState {
 export function blankDraft(): DraftState {
 	return {
 		name: '',
-		// newest ruleset by default; the build page's 5e/5.5e switcher changes it before saving
-		system: '5.5e',
+		// newest ruleset by default; the build page's edition switcher changes it before saving
+		system: DEFAULT_SYSTEM,
 		strict: true,
 		shortRestMode: 'dice',
 		speciesId: null,

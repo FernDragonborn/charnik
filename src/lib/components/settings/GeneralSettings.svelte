@@ -4,15 +4,12 @@
 	// <html> by the root layout — so a choice here is live AND survives a reload. (The system a NEW
 	// character is built under is chosen on the Build page, not here.)
 	import { app, type SystemId, type ThemeId } from '$lib/stores/app.svelte';
+	import { SYSTEMS, SYSTEM_LABELS } from '$lib/rules/pipeline';
 	import { LOCALES } from '$lib/i18n';
 
 	const THEMES: { id: ThemeId; label: string }[] = [
 		{ id: 'dark', label: '☾ Dark' },
 		{ id: 'light', label: '☀ Light' }
-	];
-	const SYSTEMS: { id: SystemId; label: string }[] = [
-		{ id: '5e', label: 'D&D 5e (2014)' },
-		{ id: '5.5e', label: 'D&D 5.5e (2024)' }
 	];
 
 	// An edition may be toggled off to hide it from the compendium/search, but never the last one
@@ -61,11 +58,11 @@
 <div class="setting-row">
 	<span class="setting-label">Shown editions</span>
 	<div class="setting-options">
-		{#each SYSTEMS as sys (sys.id)}
+		{#each SYSTEMS as sys (sys)}
 			<button
 				class="pill-btn"
-				class:accent={app.activeEditions.includes(sys.id)}
-				onclick={() => toggleEdition(sys.id)}>{sys.label}</button
+				class:accent={app.activeEditions.includes(sys)}
+				onclick={() => toggleEdition(sys)}>{SYSTEM_LABELS[sys]}</button
 			>
 		{/each}
 	</div>

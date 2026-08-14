@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (41)
+## Duplicate suspects (40)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -54,7 +54,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `say` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `sourceOf` ×2 — src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
-- `SYSTEMS` ×2 — src/lib/components/settings/GeneralSettings.svelte · src/lib/rules/pipeline.ts
 - `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
@@ -1116,6 +1115,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const SYSTEMS` — The two supported rule systems — the ONE owner (AUDIT F7/D2).
 - `type System`
+- `const SYSTEM_LABELS` — What a system is CALLED to a user — never the raw id in prose ([[friendly-source-labels]]).
+- `const DEFAULT_SYSTEM` — The system a NEW character/draft starts in when nothing says otherwise.
 - `type Layer` — Where a stat's math comes from, in pipeline order.
 - `interface Contribution`
 - `interface Note` — * A rule note / block attached to a `Computed` (not numeric), e.g.
@@ -1287,4 +1288,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 750 exports across 105 modules · 41 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 752 exports across 105 modules · 40 duplicate suspects._

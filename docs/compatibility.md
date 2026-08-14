@@ -150,7 +150,9 @@ ever ships, attribution must be **per-source**.
 ## Do-now checklist (all cheap; the only work this doc authorizes)
 
 1. **This doc exists** and is wired into `CLAUDE.md` — stops future-me smearing 5e-isms. ✅
-2. **Grep-audit done** (2026-07-30) — concrete findings below.
+2. **Grep-audit done** (2026-07-30) — concrete findings below. **Its 🔴 and 🟠 are FIXED
+   (2026-08-14)**; what remains is the 🟡 note about data-driven combat actions, which is
+   explicitly "leave now". ✅
 3. **Discipline:** build access via `derive` (§2); reserve the 4th token segment for
    bonus-type (§4); no hardcoded single license string (§5).
 
@@ -163,31 +165,26 @@ where it belongs (`core.ts:233`, `build/rules.ts:64`, `build/state.svelte.ts:468
 `draft.ts`). `fold`/`layer` is the sole owner in `pipeline.ts`. `diag/bundle.ts`'s
 `activeSystem` is a diagnostic string, not a branch. Only these leak:
 
-### 🔴 Real chokepoint leak (§1) — fix to keep the door open
+### ✅ 🔴 Real chokepoint leak (§1) — FIXED 2026-08-14
 
-`routes/combat/blocks/Abilities.svelte:23`
-```js
-{@const prof = a.save.trace.some((t) => t.layer === 'proficiency')}
-```
-UI decides "save is proficient" by **sniffing the 5e-specific `'proficiency'` layer** in
-the trace. Family B has no such layer (saves are Fort/Ref/Will good/poor) → this widget
-would silently render wrong. **Fix:** expose a semantic flag on the save `Computed`
-(`proficient: boolean`, or a structured note) so UI reads a *value*, not a layer name.
-This is the ONLY finding that actually touches cross-system compatibility.
+`routes/combat/blocks/Abilities.svelte` decided "save is proficient" by **sniffing the
+5e-specific `'proficiency'` layer** in the trace — reaching into the stacking algebra §1
+names as the one shared vessel nothing outside the engine may pattern-match on. A family-B
+system has no such layer, so the tile would have silently gone blank. `AbilityBlock` now
+carries `saveProficient: boolean` and the UI reads a **value**, not a layer name; the
+answer was already in hand where the save is built, so it cost nothing. (The skills block
+already did it this way — `Computed & { prof: SkillProficiency }` — so this is now uniform.)
+This was the only finding that actually touched cross-system compatibility.
 
-### 🟠 Single-owner violation: `SYSTEMS` duplicated as literal lists in ≥4 UI spots
+### ✅ 🟠 Single-owner violation: `SYSTEMS` duplicated as literal lists — FIXED 2026-08-14
 
-Not a rules leak, but adding a 3rd system means hunting all of these:
-- `lib/components/settings/GeneralSettings.svelte:13` — own `SYSTEMS:[{id,label}]` list
-- `lib/components/ContentMetaModal.svelte:27` — `EDITIONS = ['5e','5.5e']`
-- `routes/build/blocks/BuildHead.svelte:16-17` — two hardcoded switch buttons
-- `lib/stores/app.svelte.ts:40` — `activeEditions:['5e','5.5e']` default
-
-Two separate label mechanisms exist: `content/detail.ts:209 editionLabel()` maps *source
-tags* (`'SRD 5.1'→'D&D 5e'`), while `GeneralSettings` keeps its own id→label list.
-**Fix:** one `SYSTEM_LABELS` map (id→"D&D 5e (2014)") beside the `SYSTEMS` owner, and make
-every picker **iterate `SYSTEMS`** instead of literals. Then a 3rd system = one map row,
-and `git grep '5.5e' src/lib/components` becomes a self-sufficient lint (see below).
+`SYSTEM_LABELS` (id → "D&D 5e (2014)") and `DEFAULT_SYSTEM` now live beside the `SYSTEMS`
+owner in `rules/pipeline.ts`, and every picker **iterates `SYSTEMS`**: the settings edition
+filter, the build page's ruleset switch, the metadata dialog's edition checkboxes, and the
+`activeEditions` default. A third system is one row in that map instead of four literal
+lists to hunt.
+`sourceLabel()` in `content/detail.ts` stays separate on purpose — it names a **source tag**
+(`SRD 5.1` → "D&D 5e"), which is not a system id.
 
 ### 🟡 Minor
 
@@ -195,9 +192,9 @@ and `git grep '5.5e' src/lib/components` becomes a self-sufficient lint (see bel
   "Utilize" vs "Use an Object"). Pure fn but lives outside `rules/`, and the `is2024`
   boolean is a family-A pattern (the action set is itself family-specific). **Later:** make
   combat actions data-driven per-system when B starts. Note only — leave now.
-- Magic default-system literals: `routes/combat/state.svelte.ts:702` `?? '5.5e'`,
-  `routes/build/draft.ts:63` `system:'5.5e'`. **Fix:** a named `DEFAULT_SYSTEM` beside the
-  owner instead of scattered literals.
+- ✅ Magic default-system literals — FIXED 2026-08-14: `DEFAULT_SYSTEM` (beside `SYSTEMS`)
+  replaced the `?? '5.5e'` in `combat/state.svelte.ts` and the `system: '5.5e'` in
+  `build/draft.ts`.
 
 ### Boundary-eslint rule — decided AGAINST
 
