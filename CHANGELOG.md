@@ -1,5 +1,99 @@
 # Changelog
 
+## 0.6.0
+
+The external-content release: rules data now lives in its own repository and reaches you as a
+**content pack** — paste a URL, get updates, no app build in between. Alongside it: death and
+dying are modelled properly, magic items finally change your numbers, and the roll card was
+rebuilt around the swing rather than a run-on line of dice.
+
+### Content packs — content that updates itself
+
+- **Install content from a URL.** **Settings ▸ Content ▸ Packs** takes a repository link, lists
+  the packs it publishes, and installs the ones you pick. A pack is just a folder of CSVs — no
+  manifest to write, nothing to register — so anything you drop into `content/` by hand is a pack
+  too, and it loads with no configuration.
+- **The shipped SRD is now one of those packs.** Rules corrections can ship on their own, without
+  waiting for an app release. Updates are found by comparing file fingerprints, so checking costs
+  one small request per repository and downloads nothing until you accept.
+- **You see what an update would do before it happens.** The preview names the files *and the rows*
+  that change, flags any entry a character of yours uses, and lists half-finished homebrew or
+  translation drafts that would be left pointing at nothing. Nothing is written unless you accept —
+  an update either applies whole or not at all, and the version it replaced is kept so a bad update
+  can be rolled back.
+- **Per-pack control.** Pin a pack to stop it updating, rename it, uninstall it (which takes its
+  permissions with it), and see when an update carries executable plugin code rather than data only.
+  Two different repositories can publish a pack with the same name — you're offered a free name and
+  can edit it, rather than one quietly overwriting the other. A pack cannot take another pack's
+  identity behind your back: an update that re-tags its source is refused before a single byte is
+  written.
+- **Delete the bundled rules and the app says so.** A missing SRD pack raises a prompt at launch
+  with one button to put it back (from the bundle, no network needed) — or "I meant to, stop
+  asking". Settings always offers the restore.
+- **Plugins ride in packs.** A pack can carry its own plugin code, so an advanced homebrew set is
+  one install instead of two, and still asks for your consent before anything runs.
+- **The pack panel speaks Ukrainian**, written as Ukrainian rather than translated from the English.
+
+### Playing your character
+
+- **Death is real.** Three failed death saves (including the double failure from a natural 1), the
+  overkill rule — damage past 0 equal to your hit-point maximum — and the bottom of the exhaustion
+  ladder now actually kill the character, with a screen you can't click away. A long rest removes a
+  level of exhaustion, which it never did.
+- **Magic items change your numbers.** 28 shipped items across both editions carry their mechanics:
+  Cloak/Ring of Protection, Stone of Good Luck, Amulet of Health, Headband of Intellect, Gauntlets
+  of Ogre Power (which correctly never *lowers* a score you already have), Bracers of Defense (only
+  with no armor or shield), Boots/Cloak of Elvenkind, Eyes of the Eagle, and more. The ones the
+  effect vocabulary can't yet express stay as clearly-marked text instead of pretending.
+- **Every resource chip runs its ability.** Tapping Second Wind now heals you and spends the Bonus
+  Action; Action Surge hands you the action. Previously only Rage did the real thing and the rest
+  quietly ticked a counter down.
+- **Savage Attacker** (2024): after a weapon hit, one tap rerolls the damage dice and keeps the
+  better roll — once per turn, offered on the roll card and in the log.
+- **Uncanny Metabolism** (Monk 2024) spends its once-per-long-rest use, restores your Focus and
+  heals, in one activation. **Perfect Focus** tops your Focus back up automatically when you roll
+  initiative, and says so.
+- **Bardic Inspiration is a tracked pool** (Charisma modifier, minimum one), and Font of Inspiration
+  correctly upgrades it to recharge on a Short Rest; Superior Inspiration hands uses back at
+  initiative.
+- **Casting subclasses get their spell list.** An Eldritch Knight or Arcane Trickster — or any
+  homebrew subclass that names one — now draws from the list its row points at, instead of having
+  slots and a DC but nothing to cast.
+- **The combat view was rearranged, so a few blocks have moved and look a little different.** The
+  turn/time bar and the last roll now share one row instead of stacking with an empty band between
+  them; each action-economy slot (action, bonus action, reaction) is a button you can click, not a
+  label around a tiny pip; and the ability cards were restyled to match every other panel.
+
+### Rolling dice
+
+- **A roll card, not a line of text.** Each roll is a card with one row per attack — the dice, the
+  to-hit, the damage, and the total in its own column so a stack of them lines up. Damage types read
+  as icons (all thirteen), so a second type shares the line instead of starting a new one; a crit's
+  doubled dice sit in one pill; colour is reserved for a natural 20 or a natural 1.
+- **Retroactive advantage.** Tap the d20 on a roll that already landed and a second die joins it,
+  keeping the better one — the way it happens at a table, where "that had advantage" arrives after
+  the die is down. The same pill also switches a roll to disadvantage or back to neither, and offers
+  a plain reroll.
+- **The last-roll strip stays one line**, and a roll that's still waiting on a decision from you no
+  longer dismisses itself.
+- Unarmed Strike rolled **no damage at all** — flat damage without dice was never rolled. Fixed.
+
+### Fixes & robustness
+
+- **Editing a CSV on disk now actually reloads.** The file watcher had never once run on any
+  desktop build (the permission was granted for a command that wasn't compiled in), so "changes are
+  picked up in real time" was untrue until this release.
+- **Level-up ASI/feat picks stick.** Choices made per slot are persisted, so levelling no longer
+  applies them twice or loses them.
+- **Content health tells you more.** A file declaring a schema newer than your build is reported
+  rather than silently reinterpreted, the "changed since declared" dialog's button does what it
+  says, and a file whose header you left blank is no longer rewritten.
+- **Security.** Links inside content prose open in your OS browser, never in the app window; the
+  dependency audit is clean again; and every dialog traps keyboard focus, not just some.
+- Compendium lists sort by displayed name (installing a pack can no longer reorder your compendium);
+  a missing spellcasting table reports *unknown* instead of borrowing the other edition's formula;
+  an unreadable folder is no longer treated as an empty one.
+
 ## 0.5.0
 
 The play-tracking release: the sheet now runs spellcasting at higher levels, concentration, rests,
