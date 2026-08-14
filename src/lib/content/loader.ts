@@ -31,6 +31,7 @@ import {
 	type DriftItem
 } from './meta';
 import { fileHashState } from './hash';
+import { declaredSchema, migrateRows } from './migrations';
 
 /** Identity + provenance a loaded row carries regardless of its content type. */
 interface LoadedRowCommon {
@@ -379,7 +380,18 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 				message: `malformed locale column "${h}" (expected name_<bcp47>)`
 			});
 	}
-	for (const rawRow of parsed.data) {
+	// A file authored against another schema version is brought forward before anything reads its
+	// columns; one that cannot be (no step registered, or written by a NEWER build than this one) is
+	// reported and its rows are loaded as-is — flagged beats silently reinterpreted.
+	const migrated = migrateRows(type, parsed.data, declaredSchema(directives.get('schema')));
+	if (migrated.error)
+		acc.issues.push({
+			level: 'warn',
+			root,
+			file: entry.name,
+			message: `content schema: ${migrated.error}`
+		});
+	for (const rawRow of migrated.rows) {
 		const built = buildLoadedRow(rawRow, header, file);
 		if ('level' in built) acc.issues.push(built);
 		else acc.rows.push(built);

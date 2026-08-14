@@ -366,7 +366,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (91 modules)
+## Library functions & types (92 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -694,6 +694,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const HASH_STATE` — * The three states a file's `#content-hash` can be in.
 - `type HashState`
 
+### `src/lib/content/migrations.ts`
+
+- `interface VersionedRows` — A file's rows carried together with the version they were authored at.
+- `const CONTENT_MIGRATIONS` — * Per-type migration steps, keyed by the version they upgrade FROM.
+- `function declaredSchema` — What a file's `#content-schema:` said, or the current version when it says nothing.
+- `interface MigrationResult` — Migration outcome.
+- `function migrateRows` — Bring one file's rows up to `CONTENT_SCHEMA_VERSION`.
+
 ### `src/lib/content/provider.ts`
 
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
@@ -846,6 +854,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/watcher.ts`
 
+- `const affectsContent` — * Is this path worth a rebuild?
 - `function startContentWatcher` — Start watching `<dataDir>/content` (desktop only; no-op off desktop or if already watching).
 - `function stopContentWatcher` — Stop watching (call on teardown / before re-pointing at a new data folder).
 
@@ -1278,4 +1287,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 744 exports across 104 modules · 41 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 750 exports across 105 modules · 41 duplicate suspects._
