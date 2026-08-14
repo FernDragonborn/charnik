@@ -140,7 +140,7 @@ const effectInstance = z.object({
 
 /** What killed the character. An OPEN enum — a new lethal rule (drowning, a homebrew doom clock) is a
  *  member, never another boolean on play-state. [[csv-open-enums-not-binary]] */
-export const DEATH_CAUSES = ['massive_damage', 'death_saves', 'exhaustion'] as const;
+const DEATH_CAUSES = ['massive_damage', 'death_saves', 'exhaustion'] as const;
 export type DeathCause = (typeof DEATH_CAUSES)[number];
 
 const playSchema = z.object({
@@ -203,7 +203,7 @@ const playSchema = z.object({
 
 /** Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the
  *  ½-max-HP video-game/house variant. An OPEN enum — a new model is a member, not a boolean. */
-export const SHORT_REST_MODES = ['dice', 'half'] as const;
+const SHORT_REST_MODES = ['dice', 'half'] as const;
 export type ShortRestMode = (typeof SHORT_REST_MODES)[number];
 
 /** Per-character sheet preferences (not build, not play — resetting play keeps these). */

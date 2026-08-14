@@ -16,7 +16,7 @@ import { evalExpression, type ExprContext, type ExprValue } from './expression-e
 import { splitGuard } from './token-parser';
 
 /** The upcast kinds (§8). Which combine + which cast route each takes is decided by the two sets below. */
-export const UPCAST_KINDS = [
+const UPCAST_KINDS = [
 	'damage',
 	'heal',
 	'hp_max',
@@ -26,7 +26,7 @@ export const UPCAST_KINDS = [
 	'duration',
 	'enhancement',
 ] as const;
-export type UpcastKind = (typeof UPCAST_KINDS)[number];
+type UpcastKind = (typeof UPCAST_KINDS)[number];
 
 /** Kinds whose base value is STRUCTURED (already on the sheet), so the formula is a DELTA folded as
  *  `base + delta` (§8). Every other kind (count / area / duration / enhancement) has no structured base

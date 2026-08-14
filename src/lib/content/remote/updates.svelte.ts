@@ -71,13 +71,12 @@ import {
 } from './pack-update-state.svelte';
 // re-exported: `updates` is the state every panel and test reads, and moving its implementation is
 // no reason to move the import everyone writes (§6.1).
-export { updates, type PendingUpdate, type DiscoveredPack };
+export { updates };
 import { tauriFetcher } from './tauri-fetch';
 import { MAX_PREFETCH_BYTES, type PrefetchBudget, type RemoteFetcher } from './types';
 
 /** Which repos an AUTOMATIC check may contact right now (mode + throttle + pins). */
-export const dueRepos = (cfg: PackConfigData = packConfig, now = Date.now()): string[] =>
-	reposDueForCheck(cfg, now);
+const dueRepos = (): string[] => reposDueForCheck(packConfig, Date.now());
 
 /**
  * Ask the repos what they have. `manual` deliberately bypasses the once-a-day throttle and the

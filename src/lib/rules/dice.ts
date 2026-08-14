@@ -316,7 +316,7 @@ export function flipAdvantage<T extends Rolled>(r: T): T | null {
  * tap by accident has to be recoverable, and being stuck with an advantage you didn't mean is a worse
  * record than one corrected. Null when there is no pair, or when the entry predates `original`.
  */
-export function clearAdvantage<T extends Rolled>(r: T): T | null {
+function clearAdvantage<T extends Rolled>(r: T): T | null {
 	const adv = r.advantageRoll;
 	if (!adv || adv.original === undefined) return null;
 	const { chips, mod } = parseRollExpr(r.expr);

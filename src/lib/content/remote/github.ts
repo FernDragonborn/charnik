@@ -75,7 +75,7 @@ export function parseGithubRepo(url: string): GithubRepo | null {
  * exists. Costs nothing in the common case — the first candidate is the answer — and only the
  * FAILING path pays for the rest.
  */
-export function branchCandidates(repo: GithubRepo): string[] {
+function branchCandidates(repo: GithubRepo): string[] {
 	const parts = repo.branch.split('/');
 	const nested = parts.map((_, i) => parts.slice(0, parts.length - i).join('/'));
 	// a URL that named no branch is a GUESS, and the guess is wrong for every repo still on `master`
@@ -94,7 +94,7 @@ export const rawUrl = ({ owner, repo, branch }: GithubRepo, path: string): strin
 	`https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
 
 /** One remote file: its repo-relative path and the blob SHA that says whether it changed. */
-export interface RemoteFile {
+interface RemoteFile {
 	path: string;
 	sha: string;
 	/** Byte length, as the tree listing states it. Optional because a REMEMBERED listing (read back

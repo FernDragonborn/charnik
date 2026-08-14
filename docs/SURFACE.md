@@ -291,9 +291,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/remote/updates.svelte.ts`
 
 - `re-export updates` — re-exported: `updates` is the state every panel and test reads, and moving its implementation is no reason to move th…
-- `re-export type PendingUpdate` — re-exported: `updates` is the state every panel and test reads, and moving its implementation is no reason to move th…
-- `re-export type DiscoveredPack` — re-exported: `updates` is the state every panel and test reads, and moving its implementation is no reason to move th…
-- `const dueRepos` — Which repos an AUTOMATIC check may contact right now (mode + throttle + pins).
 - `function checkNow` — * Ask the repos what they have.
 - `function applyUpdate` — * Apply ONE pack's pending update.
 - `function restorePendingUpdates` — * Rebuild the pending set at launch from what the last check remembered — no network, no throttle, * no update-mode g…
@@ -468,8 +465,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export type SkillId`
 - `interface CharacterSheet`
 - `interface ResourceOption` — Piece 3: a spend-option on a granted resource, resolved for a specific character.
-- `interface HitDiePool` — A hit-dice pool: one die size + how many of it the character has (= summed levels of classes with * that die).
-- `function hitDicePools` — Group the character's classes into hit-dice pools by die size (RAW multiclass: pool same-size dice, * keep different …
 - `function deriveSheet` — Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM.
 
 ### `src/lib/character/repository.ts`
@@ -492,9 +487,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `re-export SYSTEMS`
 - `re-export ABILITIES`
-- `const DEATH_CAUSES` — What killed the character.
 - `type DeathCause`
-- `const SHORT_REST_MODES` — Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the * ½-max-HP video-ga…
 - `type ShortRestMode`
 - `const characterSchema`
 - `type Character`
@@ -737,7 +730,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const localPathIn` — * Where one of a pack's files lives on THIS disk.
 - `function gitBlobSha` — `sha1("blob <byteLength>\0" + bytes)` — git's own object id, so it can be compared with the SHA * in a tree listing d…
 - `const FILE_CHANGE`
-- `type FileChangeKind`
 - `interface FileChange`
 - `interface PackDiff`
 - `const hasWrites` — Does this diff actually ask to write anything?
@@ -752,10 +744,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface GithubRepo` — `owner/repo` parsed out of any reasonable GitHub URL the user might paste.
 - `function parseGithubRepo` — * Recognise a GitHub repo URL.
-- `function branchCandidates` — * The branches a URL could have meant, most specific first.
 - `const treeUrl` — The ONE request that answers for a whole repo.
 - `const rawUrl` — Where one file's bytes live.
-- `interface RemoteFile` — One remote file: its repo-relative path and the blob SHA that says whether it changed.
 - `interface RemotePack` — A remote pack: a TOP-LEVEL folder holding content files — the same test as the local * `discoverContentRoots`, applie…
 - `const isPackFile` — A file a pack actually ships: content CSVs, plus the plugin files a pack may carry (§ PLUGINS 2).
 - `function packsFromTree` — * Group a GitHub tree response into packs.
@@ -1053,8 +1043,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/effects/upcast.ts`
 
-- `const UPCAST_KINDS` — The upcast kinds (§8).
-- `type UpcastKind`
 - `interface ParsedUpcastToken` — One parsed upcast token — grammar only, not yet evaluated.
 - `interface UpcastParseError` — A parse failure for one token (surfaced as prose fallback + content-health, H11).
 - `function parseUpcast` — Parse a whole `upcast` cell into its tokens (`;`-separated).
@@ -1123,7 +1111,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function parseRollExpr` — Read an `expr` back into per-die chips + the trailing flat modifier.
 - `function amendWithAdvantage` — * Apply advantage to a roll that ALREADY happened: roll one more d20 and keep the better of the two.
 - `function flipAdvantage` — * Flip a roll that two d20 already decided: what was kept is dropped and what was dropped is kept.
-- `function clearAdvantage` — * Undo a pair: back to the single die that was rolled first, as if advantage had never applied.
 - `function cycleAdvantage` — * One tap on the d20, cycling **advantage → disadvantage → neither**.
 - `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat * mod, then `rollPool`.
 
@@ -1304,4 +1291,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 765 exports across 106 modules · 40 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 752 exports across 106 modules · 40 duplicate suspects._

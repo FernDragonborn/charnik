@@ -59,7 +59,7 @@ export const FILE_CHANGE = {
 	/** hand-edited locally, so the update SKIPS it and the user keeps their version */
 	preserved: 'preserved',
 } as const;
-export type FileChangeKind = (typeof FILE_CHANGE)[keyof typeof FILE_CHANGE];
+type FileChangeKind = (typeof FILE_CHANGE)[keyof typeof FILE_CHANGE];
 
 export interface FileChange {
 	/** repo-relative path (`srd-2024/spells_srd.csv`) — `localPath()` maps it onto disk. */

@@ -367,7 +367,7 @@ function applyArmorSpellBlock({
 
 /** A hit-dice pool: one die size + how many of it the character has (= summed levels of classes with
  *  that die). Spent counts live in `play.hitDiceSpent`, keyed by `die`. */
-export interface HitDiePool {
+interface HitDiePool {
 	die: string;
 	max: number;
 }
@@ -375,7 +375,7 @@ export interface HitDiePool {
 /** Group the character's classes into hit-dice pools by die size (RAW multiclass: pool same-size dice,
  *  keep different sizes separate). Sorted largest die first — a deterministic recover order for the
  *  2014 half-recovery. Pure. */
-export function hitDicePools(build: Character['build'], graph: ContentGraph): HitDiePool[] {
+function hitDicePools(build: Character['build'], graph: ContentGraph): HitDiePool[] {
 	const byDie = new Map<string, number>();
 	for (const c of build.classes) {
 		const row = graph.get(c.class);

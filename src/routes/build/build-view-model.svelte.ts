@@ -45,9 +45,9 @@ import {
 import { splitList, type ContentType } from '$lib/content/schemas';
 import { slugify } from '$lib/util/slug';
 import { FeatSlots } from './feat-slots.svelte';
-import { ASI, ASI_FEAT_ID, rowName, rowOfType } from './rows';
+import { ASI, rowName, rowOfType } from './rows';
 // re-exported so every existing `from '../build-view-model.svelte'` import keeps working
-export { ASI, ASI_FEAT_ID, rowName, rowOfType };
+export { ASI, rowName, rowOfType };
 import {
 	toggleCapped,
 	blankDraft,
