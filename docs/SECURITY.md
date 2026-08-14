@@ -100,10 +100,10 @@ scope**. Security tasks are **woven across roadmap phases**, not one late step.
    > (paste URL → "allow this host?" → stored outside the dataDir, so a restored backup cannot
    > arrive pre-authorised), never a wildcard on its own.
    >
-   > **The open question this leaves is written down: PLAN ▸ REL-5a (pack authenticity).** It is a
-   > design decision — what is signed, whose key, what an unsigned pack looks like, rotation — not a
-   > task waiting to be typed, and it is filed with the feature where "GitHub told us" stops being
-   > an answer.
+   > **Authenticity is left unsolved on purpose — PLAN ▸ REL-5a, decided 2026-08-14.** Pack signing
+   > was designed and dropped: a multi-author pack has nobody to sign it, the key lands in CI where
+   > "signed" restates who can push, and the one thing that executes is already pinned byte-for-byte
+   > by plugin consent. Revisit only if Charnik ever becomes a central distributor.
    >
    > **Downloaded bytes are checked against the SHA they were diffed against** — the git blob SHA
    > the repo tree published, verified before a single file is written and again on anything read
