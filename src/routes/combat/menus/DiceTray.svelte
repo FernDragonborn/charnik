@@ -1,7 +1,7 @@
 <script lang="ts">
 	// The dice tray / roll builder (overlay.kind === 'dice'). Reads the shared combat view-model's
 	// roll subsystem (combat.tray). Split out of CombatMenus.svelte.
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 	import { DICE } from '$lib/combat/helpers';
 	import { signed } from '$lib/util/format';
 	import { rollToastModel } from '$lib/dice/roll-toast';

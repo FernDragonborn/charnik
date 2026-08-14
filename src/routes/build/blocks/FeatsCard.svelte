@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Ability boosts & feats card: one ASI/feat slot per qualifying level (per class), the
 	// background origin feat (auto), and per-slot ASI allocation (+2 one / +1 two).
-	import { build, rowName, ASI } from '../state.svelte';
+	import { build, rowName, ASI } from '../build-view-model.svelte';
 	import { ABILITIES } from '$lib/character/schema';
 	import { SKILL_ABILITY } from '$lib/character/derive';
 	import { titleCase } from '$lib/util/format';

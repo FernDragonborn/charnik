@@ -5,7 +5,7 @@
 	// button really rolls (reading save.death / saves / d20_tests effects) and the pips toggle by hand.
 	// Not linked from the app; gated to dev builds by /dev/+layout. Delete once it's easy to reach.
 	import { onMount } from 'svelte';
-	import { combat } from '../../combat/state.svelte';
+	import { combat } from '../../combat/combat-view-model.svelte';
 	import HpPanel from '../../combat/blocks/HpPanel/HpPanel.svelte';
 
 	const c = $derived(combat.character);

@@ -3,7 +3,7 @@
 	// pip slots, the movement tracker, and Next turn. Reads the `combat` view-model; the non-null
 	// character comes in as a prop (for the per-slot spent counts in `play.turn`).
 	import type { Character } from '$lib/character/schema';
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 	import { range } from '$lib/combat/helpers';
 
 	let { c }: { c: Character } = $props();

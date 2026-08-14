@@ -4,7 +4,7 @@
 	// writes/binds go through `combat.*`.
 	import { onMount } from 'svelte';
 	import { dndzone } from 'svelte-dnd-action';
-	import { combat } from './state.svelte';
+	import { combat } from './combat-view-model.svelte';
 	import { content } from '$lib/content/store.svelte';
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
 	import { deriveHealth } from '$lib/character/health.svelte';

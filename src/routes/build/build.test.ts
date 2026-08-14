@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
-import { build, ASI } from './state.svelte';
+import { build, ASI } from './build-view-model.svelte';
 import { toggleSource } from '$lib/content/sources.svelte';
 
 const S = 'SRD 5.2.1';

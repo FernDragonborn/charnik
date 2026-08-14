@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Proficiencies & choices card: fixed class saving throws, skill picks (class choose-N +
 	// background-granted, with expertise toggles) and language picks.
-	import { build, rowName } from '../state.svelte';
+	import { build, rowName } from '../build-view-model.svelte';
 	import { SKILL_ABILITY } from '$lib/character/derive';
 	import { titleCase } from '$lib/util/format';
 	const b = build;

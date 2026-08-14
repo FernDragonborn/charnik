@@ -3,7 +3,7 @@
 	// Reads the `combat` view-model singleton; character + sheet come in as props.
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
-	import { combat } from '../../state.svelte';
+	import { combat } from '../../combat-view-model.svelte';
 	import { why } from '$lib/combat/helpers';
 
 	let { c, s }: { c: Character; s: CharacterSheet } = $props();

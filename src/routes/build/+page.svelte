@@ -8,7 +8,7 @@
 	import { goto, afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
-	import { build } from './state.svelte';
+	import { build } from './build-view-model.svelte';
 	import { loadCharacterBySlug } from '$lib/character/store.svelte';
 	import { content } from '$lib/content/store.svelte';
 	import Loading from '$lib/components/Loading.svelte';

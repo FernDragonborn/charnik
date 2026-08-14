@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Attacks panel body: each weapon/attack row rolls to-hit (with adv/dis via modifier keys) and
 	// shows damage + meta. Uses the shared global `.combat-row` layout — no scoped CSS.
-	import { combat } from '../../state.svelte';
+	import { combat } from '../../combat-view-model.svelte';
 	import { signed } from '$lib/combat/helpers';
 	const attacks = $derived(combat.attacks);
 </script>

@@ -2,7 +2,7 @@
 	// Anchored dropdown for an effect's duration: a −/＋ stepper row on top, then the common-duration
 	// presets and a Custom… exact-rounds input. Opens beside/below the `N rds ▾` control, clamped to
 	// the viewport, and closes on backdrop click. Writes through the combat view-model.
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 	import { EFFECT_DURATION_PRESETS } from '$lib/combat/helpers';
 
 	let {

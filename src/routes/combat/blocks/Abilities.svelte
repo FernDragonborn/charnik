@@ -2,7 +2,7 @@
 	// The six ability tiles (score + mod + saving throw). Tapping a tile rolls a check; tapping the
 	// SAVE row rolls the save. Reads the `combat` view-model; the derived sheet comes in as a prop.
 	import type { CharacterSheet } from '$lib/character/derive';
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, ABIL } from '$lib/combat/helpers';
 
 	let { s }: { s: CharacterSheet } = $props();

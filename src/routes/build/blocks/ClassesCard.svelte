@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Classes & subclass card: one row per class (multiclass adds rows), each with a class picker,
 	// subclass picker (when the class has subclasses) and a level stepper. Total level caps at 20.
-	import { build, rowName, rowOfType } from '../state.svelte';
+	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import { titleCase } from '$lib/util/format';
 	const b = build;
 </script>

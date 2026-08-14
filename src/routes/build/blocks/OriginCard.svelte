@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Origin card: species (+ sub-option / lineage) + background pickers. Creation-only (the mock
 	// edits an existing sheet, so it has no picker). All styling is shared build.css (.field/select).
-	import { build, rowName } from '../state.svelte';
+	import { build, rowName } from '../build-view-model.svelte';
 	const b = build;
 </script>
 

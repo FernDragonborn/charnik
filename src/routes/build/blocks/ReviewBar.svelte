@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Review & create bar: a live snapshot of the derived sheet (AC / HP / init / speed / prof /
 	// spell DC), blocking issues, missing-content flags, and the create/save action.
-	import { build } from '../state.svelte';
+	import { build } from '../build-view-model.svelte';
 	import { signed } from '$lib/util/format';
 
 	// the parent owns navigation-on-save (goto Combat); this bar just triggers it.

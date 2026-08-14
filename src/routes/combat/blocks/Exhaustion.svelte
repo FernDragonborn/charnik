@@ -6,7 +6,7 @@
 	// clamp to the row's max_level and carry a −/+ stepper; pips are also click-to-set. Hidden when no
 	// exhaustion content is loaded (exhaustionMax === 0). Reads the shared `combat` view-model.
 	import type { Character } from '$lib/character/schema';
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 
 	let { c }: { c: Character } = $props();
 	const max = $derived(combat.effects.exhaustionMax);

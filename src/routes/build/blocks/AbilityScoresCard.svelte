@@ -2,7 +2,7 @@
 	// Ability scores card: stat-generation method (point buy / standard array / manual), the six
 	// ability rows with live totals + provenance, and the ability-boost allocator (5.5e background
 	// choice or the 5e species free-choice ASI).
-	import { build, rowName } from '../state.svelte';
+	import { build, rowName } from '../build-view-model.svelte';
 	import { ABILITIES } from '$lib/character/schema';
 	import { signed } from '$lib/util/format';
 	import type { StatMethod } from '$lib/build/rules';

@@ -6,7 +6,7 @@
 	import ArticleProse from '$lib/components/ArticleProse.svelte';
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
-	import { combat } from '../../state.svelte';
+	import { combat } from '../../combat-view-model.svelte';
 	import {
 		effectTagResolved,
 		describeDerivedEffects,

@@ -3,7 +3,7 @@
 	// groups with slot pips and rows (prepare toggle, pin, ritual-cast badge, cast on click).
 	import { toast } from 'svelte-sonner';
 	import type { CharacterSheet } from '$lib/character/derive';
-	import { combat } from '../../state.svelte';
+	import { combat } from '../../combat-view-model.svelte';
 	import { why, signed } from '$lib/combat/helpers';
 
 	let { s }: { s: CharacterSheet } = $props();

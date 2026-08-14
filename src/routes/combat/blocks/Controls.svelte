@@ -3,7 +3,7 @@
 	// the rest buttons, Auto-calc, and the Dice-tray opener. Reads the `combat` view-model
 	// singleton; the non-null character comes in as a prop so the markup stays terse.
 	import type { Character } from '$lib/character/schema';
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
 
 	let { c }: { c: Character } = $props();

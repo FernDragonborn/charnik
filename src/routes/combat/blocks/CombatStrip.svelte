@@ -5,7 +5,7 @@
 	// rather than a full-width bar of their own; the chips wrap to fill the block (1 or 12, it scales).
 	// Reads the `combat` view-model; the derived sheet comes in as a prop.
 	import type { CharacterSheet } from '$lib/character/derive';
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
 
 	let { s }: { s: CharacterSheet } = $props();

@@ -2,7 +2,7 @@
 	// Anchored dropdown menus dispatcher (temp HP, level-up, add-effect, custom-effect, show/hide,
 	// pin-skills, spellbook, condition). The heavier dice-tray + roll-log bodies are their own
 	// components under menus/. Reads the shared `combat` view-model.
-	import { combat } from './state.svelte';
+	import { combat } from './combat-view-model.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import DiceTray from './menus/DiceTray.svelte';
 	import RollLog from './menus/RollLog.svelte';

@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Build page header: title, character-name input, ruleset (5e/5.5e) + enforcement (Strict/Free)
 	// toggles. The `.segment-group` toggles are styled by the shared build.css (confined to .build-page).
-	import { build } from '../state.svelte';
+	import { build } from '../build-view-model.svelte';
 	import { SYSTEMS } from '$lib/rules/pipeline';
 	const b = build;
 </script>

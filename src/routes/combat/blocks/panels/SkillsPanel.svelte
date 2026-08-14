@@ -2,7 +2,7 @@
 	// Skills panel body: two columns of skills grouped by governing ability; each row rolls the check
 	// and shows proficiency tier (none / half / proficient / expertise) + provenance on hover.
 	import { SKILL_ABILITY, type SkillId, type CharacterSheet } from '$lib/character/derive';
-	import { combat } from '../../state.svelte';
+	import { combat } from '../../combat-view-model.svelte';
 	import { why, signed, titleCase, ABIL, ABILITY_NAME } from '$lib/combat/helpers';
 
 	let { s }: { s: CharacterSheet } = $props();

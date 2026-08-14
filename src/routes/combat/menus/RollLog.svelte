@@ -7,7 +7,7 @@
 	// precisely to re-read a roll was the worst rendering of the four. One entry = one row = always
 	// the full-detail, single-attack model — the toast is what groups a volley, the log never does,
 	// so there is no grouping key and no second code path here.
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 	import { rollToastModel } from '$lib/dice/roll-toast';
 	import RollRow from '$lib/components/RollRow.svelte';
 

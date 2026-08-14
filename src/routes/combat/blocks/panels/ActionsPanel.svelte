@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Actions panel body: standard actions (Show/hide-filtered), feature-granted rollables (Sneak
 	// Attack, Bardic Inspiration…) and resource spend-options (Ki → Flurry) with a cost chip.
-	import { combat } from '../../state.svelte';
+	import { combat } from '../../combat-view-model.svelte';
 	const visibleActions = $derived(combat.visibleActions);
 </script>
 

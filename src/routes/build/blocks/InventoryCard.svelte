@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Inventory / starting-equipment card (creation only — managed in the play view afterwards):
 	// add items, adjust qty, equip armor/shield/weapon, remove.
-	import { build, rowName } from '../state.svelte';
+	import { build, rowName } from '../build-view-model.svelte';
 	const b = build;
 </script>
 

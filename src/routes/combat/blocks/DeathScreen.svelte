@@ -7,7 +7,7 @@
 	import DialogShell from '$lib/components/DialogShell.svelte';
 	import { DEATH_CAUSE_LABEL } from '$lib/combat/helpers';
 	import type { DeathCause } from '$lib/character/schema';
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 
 	let { cause }: { cause: DeathCause } = $props();
 </script>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Spells card: per-caster-class spell picker (single-class collapses to one section). Strict =
 	// only legally-takeable spells within the cantrip/prepared caps; Free lifts every gate.
-	import { build, rowName } from '../state.svelte';
+	import { build, rowName } from '../build-view-model.svelte';
 	const b = build;
 </script>
 

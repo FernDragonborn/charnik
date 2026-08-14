@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
 	import { signed } from '$lib/combat/helpers';
 	import HpPanel from './HpPanel/HpPanel.svelte';

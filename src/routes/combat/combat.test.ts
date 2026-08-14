@@ -11,7 +11,7 @@ import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { spellRow } from '$lib/combat/helpers';
-import { combat } from './state.svelte';
+import { combat } from './combat-view-model.svelte';
 import { ResourceTracker } from './resource-tracker.svelte';
 
 const S = 'SRD 5.2.1';

@@ -11,7 +11,7 @@
 	// The row is NOT wrapped in a button: the log cue is its own control. That keeps the roll's own
 	// pills free to become controls (UX-3's retroactive advantage) without nesting a button in a
 	// button — the constraint that shaped the toast.
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 	import { rollToastModel, ROLL_LAYOUT } from '$lib/dice/roll-toast';
 	import RollRow from '$lib/components/RollRow.svelte';
 

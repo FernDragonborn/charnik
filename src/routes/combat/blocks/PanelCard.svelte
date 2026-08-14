@@ -6,7 +6,7 @@
 	import { base } from '$app/paths';
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
-	import { combat } from '../state.svelte';
+	import { combat } from '../combat-view-model.svelte';
 	import { PANEL_TITLE } from '$lib/combat/helpers';
 	import PreparedCaps from '$lib/components/PreparedCaps.svelte';
 	import SkillsPanel from './panels/SkillsPanel.svelte';
