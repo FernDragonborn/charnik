@@ -14,7 +14,7 @@
 	import LangSwitcher from '$lib/components/LangSwitcher.svelte';
 	import ContentMetaModal from '$lib/components/ContentMetaModal.svelte';
 	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
-	import { loadContentStore } from '$lib/content/store.svelte';
+	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import {
 		autoCheckAllowed,
 		checkNow,
@@ -24,7 +24,16 @@
 	import { missingUnanswered } from '$lib/content/packs.svelte';
 	import MissingContentModal from '$lib/components/MissingContentModal.svelte';
 	import { loadPlugins } from '$lib/effects/plugin-store.svelte';
-	import { review, pendingMetaIssues, pendingDriftItems } from '$lib/content/review.svelte';
+	import {
+		adoptDriftedFiles,
+		autoAdoptDrift,
+		fillMissingMeta,
+		review,
+		pendingMetaIssues,
+		pendingDriftItems
+	} from '$lib/content/review.svelte';
+	import type { FilledMeta } from '$lib/content/meta';
+	import type { RestampFailure } from '$lib/content/restamp';
 	import { Toaster, toast } from 'svelte-sonner';
 	import { takeFlash } from '$lib/stores/flash';
 	import { externalLinkToOpen, shouldCancelNavigation } from '$lib/util/links';
@@ -225,6 +234,31 @@
 	const driftItems = $derived(pendingDriftItems());
 	const metaIssues = $derived(pendingMetaIssues());
 
+	// Content-editing mode adopts a hand-edit instead of asking. Hung off the GRAPH rather than off
+	// each load call site, so every path reaches it (startup, the first-run folder pick, a data-folder
+	// change, the watcher) — it self-guards and finds nothing to do once the drift is stamped away.
+	$effect(() => {
+		if (content.graph) void autoAdoptDrift();
+	});
+
+	// The write-back the two review dialogs promise (DATA-VER-1 task 6). Dismiss FIRST so the dialog
+	// closes on the click rather than after the disk work, then report anything that would not write —
+	// a file the app cannot fix is exactly what the user must hear about.
+	function reportFailures(failures: RestampFailure[]): void {
+		if (failures.length === 0) return;
+		toast.error(
+			$_('contentReview.writeFailed', { values: { files: failures.map((f) => f.file).join(', ') } })
+		);
+	}
+	async function adoptDrift(files: string[]): Promise<void> {
+		review.driftDismissed = true;
+		reportFailures(await adoptDriftedFiles(files));
+	}
+	async function fillMeta(fills: FilledMeta): Promise<void> {
+		review.metaDismissed = true;
+		reportFailures(await fillMissingMeta(fills));
+	}
+
 	function toggleTheme() {
 		app.theme = app.theme === 'dark' ? 'light' : 'dark';
 	}
@@ -371,22 +405,23 @@
 	<MissingContentModal />
 {/if}
 
-<!-- DATA-VER-1 startup review: drift first, then missing-metadata. Confirm actions do the write-back
-     (task 6); for now they dismiss for the session. Shipped SRD carries full metadata, so a clean
-     install shows neither. -->
+<!-- DATA-VER-1 startup review: drift first, then missing-metadata. Confirm writes the header back;
+     Skip defers to the next launch; "Don't ask again" is content-editing mode — a persisted setting,
+     reachable again in Settings ▸ Content health, not a one-way door. Shipped SRD carries full
+     metadata, so a clean install shows neither. -->
 {#if driftItems.length}
 	<HashDriftModal
 		items={driftItems}
-		onUpdate={() => (review.driftDismissed = true)}
+		onUpdate={(files) => void adoptDrift(files)}
 		onSkip={() => (review.driftDismissed = true)}
-		onNeverAsk={() => (review.driftDismissed = true)}
+		onNeverAsk={() => (app.contentEditingMode = true)}
 	/>
 {:else if metaIssues.length}
 	<ContentMetaModal
 		issues={metaIssues}
-		onFillAndSave={() => (review.metaDismissed = true)}
+		onFillAndSave={(fills) => void fillMeta(fills)}
 		onSkip={() => (review.metaDismissed = true)}
-		onNeverAsk={() => (review.metaDismissed = true)}
+		onNeverAsk={() => (app.contentEditingMode = true)}
 	/>
 {/if}
 

@@ -10,6 +10,7 @@
  */
 import { detectPlatform, Platform, getUserStorage } from '$lib/storage/provider';
 import { isPackWriteInFlight } from './remote/install';
+import { autoAdoptDrift } from './review.svelte';
 import { reloadContent } from './store.svelte';
 
 let stop: (() => void) | null = null;
@@ -23,7 +24,8 @@ function scheduleReload(): void {
 		// would drop that pack's rows and flag every reference to them, for the ~300 ms until the next
 		// one. Wait it out; each of those paths ends with a reload of its own anyway.
 		if (isPackWriteInFlight()) return scheduleReload();
-		void reloadContent();
+		// in content-editing mode the edit we just saw is adopted rather than queued for a dialog
+		void reloadContent().then(autoAdoptDrift);
 	}, 300);
 }
 

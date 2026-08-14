@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (40)
+## Duplicate suspects (41)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -34,6 +34,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
 - `fileOf` ×2 — src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
+- `files` ×2 — src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
@@ -292,8 +293,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/review.svelte.ts`
 
 - `const review`
-- `function pendingMetaIssues` — Files needing a metadata prompt, unless dismissed this session.
-- `function pendingDriftItems` — Drifted files needing a date/hash bump, unless dismissed this session.
+- `function pendingMetaIssues` — Files needing a metadata prompt, unless dismissed this session or muted for good.
+- `function pendingDriftItems` — Drifted files needing a date/hash bump.
+- `function adoptDriftedFiles` — Re-stamp the chosen drifted files and rebuild the graph.
+- `function fillMissingMeta` — Write the metadata the user supplied into each file's header.
+- `function autoAdoptDrift` — * Content-editing mode: the author is editing CSVs on disk right now and does not want a dialog on * every reload, so…
 
 ### `src/lib/content/sources.svelte.ts`
 
@@ -362,7 +366,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (90 modules)
+## Library functions & types (91 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -676,7 +680,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/meta.ts`
 
+- `const META_KEYS` — Every directive key, as ONE list the type is derived from — so code that has to ITERATE the keys * (the re-stamper fo…
 - `type MetaKey`
+- `type FilledMeta` — What the metadata prompt hands back: file → the directive values the user typed or picked.
 - `const OPTIONAL_KEYS` — Keys we OFFER to fill when the modal is already open, but whose absence does NOT trigger it on its * own — all have a…
 - `const EDITABLE_KEYS` — Every key the user can type/pick in the modal (required first, then optional).
 - `interface ParsedDirectives`
@@ -768,6 +774,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MAX_PREFETCH_BYTES` — * …and what ONE automatic check may pre-download IN TOTAL, which none of the caps above bound.
 - `interface PrefetchBudget` — What is left of {@link MAX_PREFETCH_BYTES} for this check.
 - `type UpdateError` — * A failure the UI can show.
+
+### `src/lib/content/restamp.ts`
+
+- `function restampText` — * The pure half: a content file's text in, the re-stamped text out.
+- `interface RestampFailure` — One file that could not be re-stamped, with the reason — surfaced, never swallowed.
+- `function restampFiles` — * The IO half: re-stamp each file through the `Storage` seam (atomic temp→rename in the real impls).
 
 ### `src/lib/content/schemas.ts`
 
@@ -1266,4 +1278,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 736 exports across 103 modules · 40 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 744 exports across 104 modules · 41 duplicate suspects._

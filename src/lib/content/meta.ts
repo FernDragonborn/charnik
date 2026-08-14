@@ -11,19 +11,29 @@
  *  a legacy hyphen is accepted and normalized to `_` on read, so pre-snake files still parse. */
 const DIRECTIVE = /^\s*#\s*content-([a-z][a-z_-]*)\s*:\s*(.*)$/i;
 
-export type MetaKey =
-	| 'type'
-	| 'id'
-	| 'source'
-	| 'url'
-	| 'license'
-	| 'author'
-	| 'author_url'
-	| 'systems'
-	| 'source_lang'
-	| 'schema'
-	| 'updated_at'
-	| 'hash';
+/** Every directive key, as ONE list the type is derived from — so code that has to ITERATE the keys
+ *  (the re-stamper folding in collected values) walks the same set the type admits, with no cast and
+ *  no second copy to drift. */
+export const META_KEYS = [
+	'type',
+	'id',
+	'source',
+	'url',
+	'license',
+	'author',
+	'author_url',
+	'systems',
+	'source_lang',
+	'schema',
+	'updated_at',
+	'hash'
+] as const;
+
+export type MetaKey = (typeof META_KEYS)[number];
+
+/** What the metadata prompt hands back: file → the directive values the user typed or picked.
+ *  Lives here rather than in the modal because the write-back consumes it (`content/restamp.ts`). */
+export type FilledMeta = Record<string, Partial<Record<MetaKey, string>>>;
 
 /** Keys the app can fill with NO human input — generate/compute + write back (DATA-VER-1). */
 const AUTOFILL_KEYS: readonly MetaKey[] = ['id', 'hash', 'updated_at', 'schema'];

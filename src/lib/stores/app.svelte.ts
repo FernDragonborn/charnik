@@ -31,6 +31,11 @@ interface AppState {
 	/** Bundled-theme ids already seeded to disk once, so a deleted bundled theme (Dracula/…) doesn't
 	 *  come back — but a NEW bundled theme in a later release still seeds. */
 	seededBundledIds: string[];
+	/** "I am editing content right now": mutes the two startup review prompts and re-stamps a
+	 *  hand-edited file's hash instead of asking (`content/review.svelte.ts`). Off by default, and
+	 *  reachable in Settings ▸ Content health so the modal's "don't ask again" is not a door that
+	 *  locks behind you. */
+	contentEditingMode: boolean;
 }
 
 const STORAGE_KEY = 'charnik:app';
@@ -41,7 +46,8 @@ function defaults(): AppState {
 		activeLocale: 'en',
 		theme: 'dark',
 		customThemes: [],
-		seededBundledIds: []
+		seededBundledIds: [],
+		contentEditingMode: false
 	};
 }
 
@@ -72,7 +78,8 @@ function persist(): void {
 		activeLocale: app.activeLocale,
 		theme: app.theme,
 		customThemes: app.customThemes,
-		seededBundledIds: app.seededBundledIds
+		seededBundledIds: app.seededBundledIds,
+		contentEditingMode: app.contentEditingMode
 	});
 }
 

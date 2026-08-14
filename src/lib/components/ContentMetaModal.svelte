@@ -7,10 +7,7 @@
 	import { _ } from '$lib/i18n';
 	import DialogShell from './DialogShell.svelte';
 	import { EDITABLE_KEYS, OPTIONAL_KEYS } from '$lib/content/meta';
-	import type { MetaIssue, MetaKey } from '$lib/content/meta';
-
-	/** file → (directive key → value the user typed/picked). systems is stored comma-joined. */
-	type FilledMeta = Record<string, Record<string, string>>;
+	import type { FilledMeta, MetaIssue, MetaKey } from '$lib/content/meta';
 	let {
 		issues,
 		onFillAndSave,
@@ -27,9 +24,17 @@
 	const EDITIONS = ['5e', '5.5e'];
 
 	const isCustomLicense = (v: string | undefined) => !!v && !LICENSES.includes(v);
-	// text/select field values already declared by the file (everything editable except systems)
-	const initText = (i: MetaIssue): Record<string, string> =>
-		Object.fromEntries(Object.entries(i.values).filter(([k]) => k !== 'systems'));
+	// text/select field values already declared by the file (everything editable except systems).
+	// Built by walking the KEY list rather than the object, so the payload is typed by `MetaKey` all
+	// the way to the writer instead of being cast back into one there.
+	const initText = (i: MetaIssue): Partial<Record<MetaKey, string>> => {
+		const out: Partial<Record<MetaKey, string>> = {};
+		for (const k of EDITABLE_KEYS) {
+			const v = i.values[k];
+			if (k !== 'systems' && v !== undefined) out[k] = v;
+		}
+		return out;
+	};
 	const initSystems = (i: MetaIssue): string[] =>
 		(i.values.systems ?? '')
 			.split(',')

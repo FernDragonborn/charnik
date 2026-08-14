@@ -10,6 +10,9 @@
 	import { lintEffectTokens } from '$lib/effects/apply';
 	import { tokensOf } from '$lib/content/loader';
 	import { retryPlugins } from '$lib/effects/plugin-store.svelte';
+	import { app } from '$lib/stores/app.svelte';
+	import { detectPlatform, Platform } from '$lib/storage/provider';
+	import Switch from '$lib/components/Switch.svelte';
 
 	const graph = $derived(content.graph);
 	const issues = $derived(graph?.issues ?? []);
@@ -40,6 +43,9 @@
 	);
 
 	const fileLabel = (root: string, file?: string) => (file ? `${root}/${file}` : root);
+	// The setting lives HERE, next to the drift list it governs — and it exists at all so the drift
+	// dialog's "don't ask again" can be undone. Desktop-only: the web build cannot write content back.
+	const canEditContent = detectPlatform() === Platform.Desktop;
 </script>
 
 <section class="health">
@@ -50,6 +56,23 @@
 			fixing so entries display and merge correctly.
 		</p>
 	</header>
+
+	{#if canEditContent}
+		<div class="editing-mode">
+			<Switch
+				on={app.contentEditingMode}
+				title="Content-editing mode"
+				onclick={() => (app.contentEditingMode = !app.contentEditingMode)}
+			/>
+			<span class="editing-text">
+				<strong>Content-editing mode</strong>
+				<span class="sec-note">
+					While this is on, a CSV you edit on disk has its hash re-stamped automatically and neither
+					startup prompt appears. Turn it off and Charnik asks before touching a file again.
+				</span>
+			</span>
+		</div>
+	{/if}
 
 	{#if !graph}
 		<p class="muted">Loading…</p>
@@ -136,6 +159,18 @@
 </section>
 
 <style>
+	.editing-mode {
+		display: flex;
+		align-items: flex-start;
+		gap: var(--space-3);
+		margin-bottom: var(--space-4);
+	}
+	.editing-text {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
 	.counts {
 		display: flex;
 		flex-wrap: wrap;
