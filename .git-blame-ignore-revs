@@ -1,0 +1,6 @@
+# Commits to skip in `git blame` — mechanical, whole-repo reformats with no logic change.
+# Applied automatically by `blame.ignoreRevsFile` (set below); or pass
+#   git blame --ignore-revs-file .git-blame-ignore-revs <file>
+
+# style: trailing commas (prettier trailingComma none -> all), 243 files
+d42471adc6893b947a0bbfd08eddbb17bb768193
