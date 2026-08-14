@@ -290,11 +290,10 @@ hide bugs and can't be reasoned about. Machine-enforcing the threshold keeps it 
 eyeballed.
 
 **How to apply.** When a name won't capture the whole function, or the `max-lines` warning fires,
-split by concern rather than comment around it. Current logic over the 400-line line (split targets,
-worst first): `combat/helpers.ts` (junk-drawer → split by concern), `character/derive.ts` (core agg —
-higher risk), `build/state.svelte.ts` + `combat/state.svelte.ts` (VMs), `effects/apply.ts`. Spend
-comments on the non-obvious *why*. (Exception: genuinely over-complex logic warrants a short
-what-it-does note.)
+split by concern rather than comment around it. **`pnpm loc` is the current list** — don't keep a
+copy of it here, it goes stale the moment a carve lands (this paragraph named `combat/helpers.ts`
+for a month after it was split). Spend comments on the non-obvious *why*. (Exception: genuinely
+over-complex logic warrants a short what-it-does note.)
 
 ### 2.7 Errors surface, never vanish silently
 **Rule.** An error is either **handled** (recover + carry on) or **surfaced** (returned as a Result /
@@ -448,7 +447,8 @@ streamlinehq.com (not emoji — emoji render as boxes in headless tests); keep C
 ### 4.6 Frontend architecture & UX pattern contract
 **Rule.** Components are a **thin shell** — no D&D math in a `.svelte` file; they bind to the pure
 core's `{value, trace, notes}` and render. A view's reactive state + actions live in ONE typed
-`state.svelte.ts` VM class exported as a singleton (e.g. `combat`); components read via
+VM class named after itself (`CombatVM` → `combat-view-model.svelte.ts`, §2.4) and exported as a
+singleton (e.g. `combat`); components read via
 `const x = $derived(vm.x)` (bare names in markup) and write through `vm.*`. Pure stateless
 helpers/constants/types sit in sibling `*.ts` (unit-testable). Live switches
 (`activeSystem`/`activeLocale`/`theme` + per-character `layout`) flow through reactive stores,
@@ -480,7 +480,7 @@ the shipped sheet instead of re-deciding per component. (Folded 2026-08-04 from 
 **How to apply.** Reuse the existing primitives (`Switch`, `EyeToggle`, `RollButton`,
 `DialogShell`, …) — grep `SURFACE.md` first (§4.4; CLAUDE.md "Reuse before you write"). Colours
 follow the semantic roles in **§4.5**. The Combat view is the reference implementation
-(`src/routes/combat/state.svelte.ts` + its `blocks/panels/*`).
+(`src/routes/combat/combat-view-model.svelte.ts` + its `blocks/panels/*`).
 
 ### 4.7 Icons are drawn, never typed
 
@@ -591,7 +591,8 @@ but if they still read correctly, leave them untouched; don't churn.
 
 ### 7.2 How to split a large Svelte view
 **Rule.** Split large Svelte views this way:
-1. **Per-view view-model** → `state.svelte.ts`: a typed `class` with `$state`/`$derived` fields +
+1. **Per-view view-model** → `<view>-view-model.svelte.ts` (§2.4 — the file is named after the class
+   it exports): a typed `class` with `$state`/`$derived` fields +
    **arrow-method** actions (arrow so `this` survives being passed to markup), exported as a
    singleton (`export const combat = new VM()`).
 2. **Pure helpers/constants/types** → sibling `helpers.ts` (no runes) — reusable + unit-testable.

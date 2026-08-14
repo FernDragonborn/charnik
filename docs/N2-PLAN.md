@@ -40,8 +40,8 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
 1. `[x]` **Executor, all-or-nothing — DONE + tested.** Also
    added `TurnEconomy.canSpend(slot)` (silent check-half of `trySpend`) + `ACTION_TYPE_SLOT` map. **This
    closed the piece-3 gap — activating an option now actually costs its turn slot** (Flurry etc.
-   previously spent Ki but not the bonus action). `CombatVM.activateResourceOption(opt)` (in
-   `state.svelte.ts`, where HP + tray + economy are all reachable): validate (`canAffordOption` AND the
+   previously spent Ki but not the bonus action). `activateResourceOption(opt)` (since carved into
+   `action-executor.svelte.ts`, which the VM hands HP + tray + economy): validate (`canAffordOption` AND the
    turn slot is free) → then deduct (`spendOption`, the resource math it already does) + spend the turn
    slot (`economy.trySpend`, `action_type`→slot; `free`=none) + execute the action token. Validate
    EVERYTHING before any mutation (ACTIONS.md core rule). Tests: `combat.test.ts` "N2 executor" —
@@ -94,7 +94,7 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
   model (see roll #1, then decide) over a pre-armed toggle. Fully **data-driven** (no feat id/string in
   code): a bounded MARKER token `damage_reroll` (token-parser `MARKER_KINDS`, schema `EFFECT_KINDS`) →
   `facts.damageReroll: {source}[]` (carries the feature NAME for the button label). The combat layer
-  (`state.svelte.ts`): after an INSTANT weapon attack that rolled damage dice, `offerSavage` stores the
+  (`combat-view-model.svelte.ts`): after an INSTANT weapon attack that rolled damage dice, `offerSavage` stores the
   primary damage part + toasts an actionable offer; `savageReroll` rerolls that part, KEEPS THE HIGHER
   total, rewrites the log entry in place (truthful record) + spends the use. Once-per-turn gate =
   `savageUsedRound` vs `round` (round advances on Next turn → auto-frees, no reset hook). Surfaced twice:

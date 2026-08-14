@@ -80,8 +80,9 @@ ever needed: the CH / CVM / BVM audit in `docs/PLAN.md`. But `SURFACE.md` is the
 prefer it.)
 
 The discovery artifact is **`docs/SURFACE.md`** — a generated catalog of the reusable
-surface under `src/lib`: design tokens, global CSS classes (`styles/components.css`,
-`styles/app.css`), shared components, stores, and library functions/types. Workflow:
+surface under `src/lib`: design tokens, global CSS classes (`src/lib/styles/components.css`,
+`app.css`, `tokens.css` — written `styles/…` for short elsewhere), shared components, stores, and
+library functions/types. Workflow:
 
 1. **Regenerate it** at the start of any coding task: `node tools/surface.mjs`
    (~0.15s; `pnpm surface` also works but is ~0.9s). It's disposable/always-fresh — never

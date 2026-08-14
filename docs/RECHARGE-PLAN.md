@@ -43,9 +43,9 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
    after damage, with a suggested-but-EDITABLE DC = `max(10, ½ last damage)`; player clicks when the
    instance is done; fail → OFFER to drop concentration. **SURFACE CHOSEN: B4 (§6).**
    **STATUS NOTE (verified in code 2026-08-04):** the earlier "today `damage()` does NOT handle it" is
-   STALE — `damage()` (`state.svelte.ts:425`) ALREADY fires a CON-save **toast reminder** with the
+   STALE — `damage()` (`combat-view-model.svelte.ts`) ALREADY fires a CON-save **toast reminder** with the
    DC. So this slice is an **upgrade** of that ephemeral toast → the persistent B4 banner + a real
-   roll, not a from-scratch build. Build template = **`deathSave()`** (`state.svelte.ts:646`): roll
+   roll, not a from-scratch build. Build template = **`deathSave()`** (same file): roll
    instantly via `rollPool` over `effectsFor('save.con')` + auto-apply the outcome — the SAME reason as
    the death save (the tray contract has no result callback, and `save.con` effects — Bless, War
    Caster advantage — already fold through `effectsFor`). Route the B4 Roll through that path.

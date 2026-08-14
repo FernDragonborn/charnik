@@ -16,8 +16,8 @@ derived-value contract `{value, trace, notes}` both with effects applied and wit
 engine disabled (identical shape; trace = base-only when off).
 
 ## Runner & layers (Vitest)
-- **Unit** — co-located `*.test.ts` next to source (`src/lib/rules/abilities.ts` +
-  `abilities.test.ts`; same for effects interpreter, stacking pipeline, content
+- **Unit** — co-located `*.test.ts` next to source (`src/lib/rules/core.ts` +
+  `core.test.ts`; same for effects interpreter, stacking pipeline, content
   parse/merge/locale, leveling/XP, multiclass slot math). Node env.
 - **Integration** *(PARTLY BUILT. There is still no `tests/integration/` directory; what exists is
   `tests/` holding the cases that need the real world — `live-github.test.ts` (opt-in via

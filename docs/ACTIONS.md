@@ -7,7 +7,7 @@
 > needs with or without plugins, so the model is a CORE concern and plugin hooks are THIN adapters
 > returning this same shape. Where PLUGINS.md §8 and this document disagree, THIS document wins.
 > **Implementation:** the `onUse` write-half shipped with N2 (activatable actions, shape 2) —
-> `CombatVM.activateResourceOption` + `runActionToken` (`src/routes/combat/state.svelte.ts`),
+> `ActionExecutor.activateResourceOption` + `runActionToken` (`src/routes/combat/action-executor.svelte.ts`),
 > all-or-nothing validate→execute, verified 2026-08-02 (see `docs/N2-PLAN.md`). **Still deferred:**
 > the `onEvent` write-half (`docs/RECHARGE-PLAN.md` slice 2) and plugin `onUse`/`onEvent`
 > (`api: 2`), which hook in after.

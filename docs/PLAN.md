@@ -1171,7 +1171,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   one of its callers. **The capability:** N sub-rolls from one action, each its OWN to-hit + damage (own
   advantage, own crit, own target), rendered as one grouped result. **Callers, all blocked on this and
   nothing else:** (1) `count`-scaling cantrips — Eldritch Blast beams, Scorching Ray, Magic Missile,
-  Chain Lightning; today `remindCountScaling` (`combat/state.svelte.ts`) casts ONE instance and toasts
+  Chain Lightning; today `remindCountScaling` (`combat/spell-casting.svelte.ts`) casts ONE instance and toasts
   "N×: make N separate rolls at this level", a reminder standing in for the rolls (item 9: never a
   silently-wrong single big die). (2) **UBUG-11** — a class action that makes N attacks (Flurry of Blows
   = 2× Unarmed Strike); that item keeps its own half, the `rolls` intent in ACTIONS.md that lets a
@@ -1326,7 +1326,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   also ingested some food and drink" applies unconditionally because rations are not modelled.
 - [x] **UBUG-15 · Death is modelled, and there is a dead screen.** One typed `play.death: {cause}`
   (an OPEN cause enum, not a `dead` boolean) and ONE `die(cause)` seam every lethal rule lands on.
-  The two SRD interpretations behind it live at that seam in code (`state.svelte.ts`): instant death
+  The two SRD interpretations behind it live at that seam in code (`combat-view-model.svelte.ts`): instant death
   runs the 5.1 text in BOTH editions because 5.2.1 omits the chapter carrying it, and revive drops
   one exhaustion level in 2014 too, where RAW is silent, since reviving onto a lethal 6 would kill
   you again on the spot. The dead screen is deliberately **not dismissible by backdrop or Escape** —

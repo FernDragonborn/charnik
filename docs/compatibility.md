@@ -161,8 +161,8 @@ ever ships, attribution must be **per-source**.
 ## Audit findings (2026-07-30 grep sweep) — the concrete to-fix list
 
 Verdict: the rules core is clean — every `system ===` branch lives in `rules/` + `build/`
-where it belongs (`core.ts:233`, `build/rules.ts:64`, `build/state.svelte.ts:468`,
-`draft.ts`). `fold`/`layer` is the sole owner in `pipeline.ts`. `diag/bundle.ts`'s
+where it belongs (`rules/core.ts`, `lib/build/rules.ts`, `build/build-view-model.svelte.ts`,
+`build/draft.ts`). `fold`/`layer` is the sole owner in `pipeline.ts`. `diag/bundle.ts`'s
 `activeSystem` is a diagnostic string, not a branch. Only these leak:
 
 ### ✅ 🔴 Real chokepoint leak (§1) — FIXED 2026-08-14
@@ -193,7 +193,7 @@ lists to hunt.
   boolean is a family-A pattern (the action set is itself family-specific). **Later:** make
   combat actions data-driven per-system when B starts. Note only — leave now.
 - ✅ Magic default-system literals — FIXED 2026-08-14: `DEFAULT_SYSTEM` (beside `SYSTEMS`)
-  replaced the `?? '5.5e'` in `combat/state.svelte.ts` and the `system: '5.5e'` in
+  replaced the `?? '5.5e'` in `combat/combat-view-model.svelte.ts` and the `system: '5.5e'` in
   `build/draft.ts`.
 
 ### Boundary-eslint rule — decided AGAINST

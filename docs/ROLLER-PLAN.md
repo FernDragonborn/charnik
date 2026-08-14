@@ -1,7 +1,7 @@
 # ROLLER-PLAN — Claude working ledger (the roller rewrite: ROLLER-N + the audit behind it)
 
 > Scope: `src/lib/rules/dice.ts` (the pure roller), `src/lib/combat/roll.ts`, `src/lib/dice/roll-toast.ts`,
-> `src/routes/combat/roll.svelte.ts`. Companion to `docs/PLAN.md` · `ROLLER-N`, which stays the
+> `src/routes/combat/roll-tray.svelte.ts`. Companion to `docs/PLAN.md` · `ROLLER-N`, which stays the
 > roadmap entry; this is the working detail.
 > `[ ]` open · `[~]` partial · `[x]` done+verified. Update it in the same change as the code.
 
@@ -87,7 +87,7 @@ corrected in place — no behaviour change.
 ### G · The PERSISTED roll is a far poorer record than the in-session one — two schemas, silently
 
 Bigger than A, and it is data loss rather than awkward encoding. `persistRoll`
-(`state.svelte.ts`) writes `{t, kind, label, result, detail: expr}` and **drops everything else**:
+(`combat-view-model.svelte.ts`) writes `{t, kind, label, result, detail: expr}` and **drops everything else**:
 `damage[]` (the whole per-type damage array), `advantageRoll` (both dice and the mode) and `note`
 (upcast provenance, amendment records). `tray.seed` rehydrates `{label, expr, total}`.
 
@@ -230,7 +230,7 @@ a die instead of extra fields beside it.
 ### 3. Amendments are STRUCTURE, not prose
 
 The current wart, and it is self-inflicted (2026-08-10): `amendWithAdvantage` returns the roll and
-lets the CALLER compose the note sentence — which forced an `AMEND_NOTE` regex in `roll.svelte.ts`
+lets the CALLER compose the note sentence — which forced an `AMEND_NOTE` regex in `roll-tray.svelte.ts`
 to find and replace that sentence inside a note so cycling back to neutral wouldn't eat an upcast's
 provenance. A regex that parses a sentence we ourselves wrote is the same sin as `parseRollExpr`, one
 floor up.
