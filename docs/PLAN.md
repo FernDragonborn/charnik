@@ -1988,15 +1988,28 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [~] **UBUG-4 · Tauri .msi install has no content folders.** CODE DONE (needs a real `.msi` verify).
   The content was bundled inside the app (loaded over fetch) but never written to disk, so there was
   no editable folder. Now `content/provider.ts`: on desktop (`isTauri`), `getContentGraph` SEEDS the
-  shipped CSVs into `<dataDir>/content/…` on first run (`copyMissingRoots`, skips a root that already
-  exists so user edits aren't clobbered) and then loads the graph FROM that writable folder via
+  shipped CSVs into `<dataDir>/content/…` on first run (`seedShippedContent`, which preserves a file
+  the user hand-edited — hash drift ⇒ theirs) and then loads the graph FROM that writable folder via
   TauriStorage; web still reads the bundle over fetch. No capability change needed (`$APPDATA/**` is
-  already scoped; `writeBytes` mkdirs recursively). Seed logic unit-tested over MemoryStorage. STILL
-  TODO — and it is the ONLY thing left here: build a `.msi` and confirm the folder appears + is read.
+  already scoped; `writeBytes` mkdirs recursively). Seed logic unit-tested over MemoryStorage.
+  (The `copyMissingRoots` this entry used to name is GONE — REL-4 slice 10 deleted it so that
+  uninstalling a bundled pack sticks; a fresh data dir still gets everything, and putting a deleted
+  one back is `restoreBundledPacks`, a button rather than something that happens behind your back.)
   The two follow-ups this item used to name have since shipped: the file watcher
   (`storage/tauri.ts` ▸ `watch`, which a live desktop run then proved had never actually fired — the
   capability was granted but the Cargo feature was never compiled in) and `charnik.config.json` for
   custom roots (`storage/json-config.ts`, read by `content/packs.svelte.ts`).
+
+  **STILL TODO — the only thing left here, and it is a look, not a code change.** An installer is
+  built (`src-tauri/target/release/bundle/msi/charnik_<version>_x64_en-US.msi`, and an NSIS
+  `-setup.exe` beside it). Install it and check, in order:
+  1. `%USERPROFILE%\Documents\charnik\content\` exists after the first launch and holds `srd-2014/`
+     + `srd-2024/` with their CSVs (the first run asks WHERE first — that dialog is part of the test).
+  2. The app shows rules: the compendium lists spells, and Settings ▸ Content health says the loaded
+     content is healthy rather than empty.
+  3. Edit one CSV in that folder with Notepad/Excel and save — the app should update WITHOUT a
+     restart (the watcher, fixed after it turned out never to have fired) and then offer the drift
+     dialog, whose "update" button now re-stamps the file (DATA-VER-1 task 6).
   Original report:
 - **UBUG-4b · Tauri .msi install has no content folders.** After installing the built `.msi`, there's
   no `content/` (CSV) directory created, so the app has no data. First-run on desktop must create the

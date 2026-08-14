@@ -51,7 +51,14 @@ export async function adoptDriftedFiles(files: readonly string[]): Promise<Resta
  *  filling in a license is not a change to the DATA, and that date means "when the author last said
  *  the data moved". */
 export async function fillMissingMeta(fills: FilledMeta): Promise<RestampFailure[]> {
-	const failures = await restampFiles(getUserStorage(), Object.keys(fills), fills);
+	// The dialog hands back an entry per FILE it showed, including ones the user scrolled past and
+	// left blank. Writing those achieves nothing (the file is only in the list because a human key is
+	// missing, and it still would be) while changing bytes the pack differ compares — so the next
+	// update would offer to re-download a file whose content never moved.
+	const filled = Object.keys(fills).filter((file) =>
+		Object.values(fills[file] ?? {}).some((v) => v !== undefined && v !== '')
+	);
+	const failures = await restampFiles(getUserStorage(), filled, fills);
 	await reloadContent();
 	return failures;
 }
