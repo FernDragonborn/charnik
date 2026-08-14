@@ -27,7 +27,7 @@ export const SKILL_ABILITY = {
 	religion: 'int',
 	sleight_of_hand: 'dex',
 	stealth: 'dex',
-	survival: 'wis'
+	survival: 'wis',
 } as const satisfies Record<string, Ability>;
 
 /** The 18 SRD skill ids. */

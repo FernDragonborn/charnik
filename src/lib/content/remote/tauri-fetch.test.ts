@@ -18,7 +18,7 @@ const { tauriFetcher } = await import('./tauri-fetch');
  *  cannot answer. `cancelled` records whether the reader stopped it early. */
 function streamed(
 	chunkCount: number,
-	chunkSize: number
+	chunkSize: number,
 ): { res: Response; cancelled: () => boolean } {
 	let cancelled = false;
 	let sent = 0;
@@ -29,7 +29,7 @@ function streamed(
 		},
 		cancel() {
 			cancelled = true;
-		}
+		},
 	});
 	return { res: new Response(body, { status: 200 }), cancelled: () => cancelled };
 }
@@ -58,12 +58,12 @@ describe('the response size ceiling', () => {
 	it('refuses a body that ADMITS to being too big without reading a byte', async () => {
 		const { res, cancelled } = streamed(1, 16);
 		Object.defineProperty(res, 'headers', {
-			value: new Headers({ 'content-length': String(MAX_REMOTE_BYTES + 1) })
+			value: new Headers({ 'content-length': String(MAX_REMOTE_BYTES + 1) }),
 		});
 		tauriFetch.mockResolvedValueOnce(res);
 
 		expect(
-			await tauriFetcher.getBytes('https://raw.githubusercontent.com/o/r/main/big.csv')
+			await tauriFetcher.getBytes('https://raw.githubusercontent.com/o/r/main/big.csv'),
 		).toEqual({ kind: 'error', message: 'response too large' });
 		expect(cancelled()).toBe(false); // never started
 	});

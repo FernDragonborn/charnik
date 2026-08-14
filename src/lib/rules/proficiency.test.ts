@@ -4,7 +4,7 @@ import {
 	weaponCategoryOf,
 	armorCategoryOf,
 	isWeaponProficient,
-	isArmorProficient
+	isArmorProficient,
 } from './proficiency';
 
 describe('proficiency model (pure)', () => {

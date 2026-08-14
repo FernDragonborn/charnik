@@ -9,7 +9,7 @@ import {
 	rollPool,
 	type BonusDie,
 	type DieMods,
-	type Rolled
+	type Rolled,
 } from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
 import {
@@ -17,7 +17,7 @@ import {
 	rollDamageParts,
 	type RollLogEntry,
 	type TypedRoll,
-	type DamagePartSpec
+	type DamagePartSpec,
 } from '$lib/combat/helpers';
 
 /** The amendment sentence we write onto a roll's note. Matched so re-amending REPLACES it instead of
@@ -75,7 +75,7 @@ export class RollTray {
 		Object.entries(this.dice)
 			.sort((a, b) => Number(b[0]) - Number(a[0]))
 			.map(([s, c]) => `${c}d${s}`)
-			.join(' + ') + (this.rollMod ? ` ${signed(this.rollMod)}` : '')
+			.join(' + ') + (this.rollMod ? ` ${signed(this.rollMod)}` : ''),
 	);
 
 	bumpDie = (sides: number, d: number) => {
@@ -128,7 +128,7 @@ export class RollTray {
 	rollDiceNow = (spec: RollSpec) => {
 		this.pushRoll(
 			spec.label,
-			rollPool(spec.dice, spec.mod, spec.advantage ?? 0, spec.bonusDice ?? [], spec.mods ?? {})
+			rollPool(spec.dice, spec.mod, spec.advantage ?? 0, spec.bonusDice ?? [], spec.mods ?? {}),
 		);
 	};
 
@@ -139,7 +139,7 @@ export class RollTray {
 			label,
 			...r,
 			...(damage ? { damage } : {}),
-			...(note ? { note } : {})
+			...(note ? { note } : {}),
 		};
 		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
 		this.persist?.(entry);

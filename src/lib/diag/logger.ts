@@ -24,7 +24,7 @@ export enum LogLevel {
 	Debug = 'debug',
 	Info = 'info',
 	Warn = 'warn',
-	Error = 'error'
+	Error = 'error',
 }
 
 /** One recorded log line. `ctx` holds structured, PII-free breadcrumbs (ids/counts/error text). */
@@ -71,7 +71,7 @@ export const logger = {
 	debug: (msg: string, ctx?: Record<string, unknown>) => record(LogLevel.Debug, msg, ctx),
 	info: (msg: string, ctx?: Record<string, unknown>) => record(LogLevel.Info, msg, ctx),
 	warn: (msg: string, ctx?: Record<string, unknown>) => record(LogLevel.Warn, msg, ctx),
-	error: (msg: string, ctx?: Record<string, unknown>) => record(LogLevel.Error, msg, ctx)
+	error: (msg: string, ctx?: Record<string, unknown>) => record(LogLevel.Error, msg, ctx),
 };
 
 /** The recent log tail (newest last), for the bug-report bundle. Copy so callers can't mutate the
@@ -105,7 +105,7 @@ export async function initDiag(): Promise<void> {
 				[LogLevel.Debug]: log.debug,
 				[LogLevel.Info]: log.info,
 				[LogLevel.Warn]: log.warn,
-				[LogLevel.Error]: log.error
+				[LogLevel.Error]: log.error,
 			};
 		forwardToPlugin = (entry) => {
 			const kv = ctxToKeyValues(entry.ctx);
@@ -138,7 +138,7 @@ export function captureGlobalErrors(): () => void {
 			message: event.message,
 			source: event.filename,
 			line: event.lineno,
-			stack: event.error instanceof Error ? event.error.stack : undefined
+			stack: event.error instanceof Error ? event.error.stack : undefined,
 		});
 	};
 	const onRejection = (event: PromiseRejectionEvent) => {

@@ -107,7 +107,7 @@ export function buildSpellAccess(graph: ContentGraph): SpellAccess {
 
 	return {
 		spellIdsForClass: (id) => [...(forClass.get(id) ?? [])],
-		classesForSpell: (id) => forSpell.get(id) ?? []
+		classesForSpell: (id) => forSpell.get(id) ?? [],
 	};
 }
 

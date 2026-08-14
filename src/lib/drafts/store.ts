@@ -62,14 +62,14 @@ export async function writeDraft<D extends object>(
 	storage: Storage,
 	target: DraftTarget,
 	data: D,
-	sourceHash?: string
+	sourceHash?: string,
 ): Promise<void> {
 	const envelope: DraftEnvelope<D> = {
 		schemaVersion: CONTENT_SCHEMA_VERSION,
 		target,
 		...(sourceHash !== undefined ? { sourceHash } : {}),
 		savedAt: new Date().toISOString(),
-		data
+		data,
 	};
 	await storage.write(draftPath(target), JSON.stringify(envelope, null, 2));
 }
@@ -78,7 +78,7 @@ export async function writeDraft<D extends object>(
  *  WIP → a mismatch is discarded, not migrated; the stale file is removed). */
 export async function readDraft<D extends object = Record<string, unknown>>(
 	storage: Storage,
-	target: DraftTarget
+	target: DraftTarget,
 ): Promise<DraftEnvelope<D> | null> {
 	const path = draftPath(target);
 	if (!(await storage.exists(path))) return null;
@@ -108,7 +108,7 @@ export function draftEffectiveId(target: DraftTarget): string | null {
  *  matches — the two callers below both mean "a draft pointing at an existing entry". */
 async function draftsWhoseRow(
 	storage: Storage,
-	predicate: (effectiveId: string) => boolean
+	predicate: (effectiveId: string) => boolean,
 ): Promise<DraftEnvelope[]> {
 	return (await listDrafts(storage)).filter((d) => {
 		const eid = draftEffectiveId(d.target);
@@ -121,7 +121,7 @@ async function draftsWhoseRow(
  *  `add` drafts are never orphans (they have no row yet; they're reached via the drafts list). */
 export function findOrphanDrafts(
 	storage: Storage,
-	rowExists: (effectiveId: string) => boolean
+	rowExists: (effectiveId: string) => boolean,
 ): Promise<DraftEnvelope[]> {
 	return draftsWhoseRow(storage, (eid) => !rowExists(eid));
 }
@@ -153,7 +153,7 @@ export async function repointDraft(
 	storage: Storage,
 	from: DraftTarget,
 	to: DraftTarget,
-	overwrite = false
+	overwrite = false,
 ): Promise<RepointResult> {
 	const env = await readDraft(storage, from);
 	if (!env) return 'missing';
@@ -197,7 +197,7 @@ export async function discardDrafts(storage: Storage, drafts: DraftEnvelope[]): 
 /** Read + JSON-parse a draft file, or null if it's corrupt / unparseable (never throws). */
 async function parseDraft<D extends object = Record<string, unknown>>(
 	storage: Storage,
-	path: string
+	path: string,
 ): Promise<DraftEnvelope<D> | null> {
 	try {
 		return JSON.parse(await storage.read(path)) as DraftEnvelope<D>;

@@ -10,7 +10,7 @@
 		title,
 		detail,
 		note,
-		onclose
+		onclose,
 	}: {
 		/** 'error' — the move failed; 'warning' — the move succeeded but with a caveat (e.g. leftover). */
 		tone: 'error' | 'warning';

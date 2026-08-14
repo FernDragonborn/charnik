@@ -13,7 +13,7 @@
 		higherLevel = '',
 		material = '',
 		editable = false,
-		draft
+		draft,
 	}: {
 		/** The source body (raw Markdown/HTML); also the placeholder when editing. */
 		bodyMarkdown: string;

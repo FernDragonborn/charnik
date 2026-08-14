@@ -14,7 +14,7 @@ describe.each(['srd-2014', 'srd-2024'])('shipped effects catalog · %s', (pack) 
 	const { body } = parseContentDirectives(readPackFile(pack, 'effects_srd.csv'));
 	const rows = Papa.parse<Record<string, string>>(body, {
 		header: true,
-		skipEmptyLines: true
+		skipEmptyLines: true,
 	}).data;
 
 	it('ships a non-trivial catalog and every row validates', () => {

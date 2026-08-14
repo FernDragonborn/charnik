@@ -14,7 +14,7 @@ import {
 	writeCsv,
 	assertCount,
 	dedupeIds,
-	existingColById
+	existingColById,
 } from './lib.mjs';
 import { packDir } from '../content-repo.mjs';
 
@@ -65,7 +65,7 @@ const COLUMNS = [
 	'str_min',
 	'stealth_disadvantage',
 	'attunement',
-	'rarity'
+	'rarity',
 ];
 const blank = {
 	name_uk: '',
@@ -81,7 +81,7 @@ const blank = {
 	str_min: '',
 	stealth_disadvantage: 'false',
 	attunement: 'false',
-	rarity: ''
+	rarity: '',
 };
 const row = (o) => ({ systems: '5.5e', source: 'SRD 5.2.1', ...blank, ...o });
 
@@ -124,8 +124,8 @@ let nWeapon = 0,
 					propList + (mastery && mastery !== '—' ? `; mastery: ${mastery}` : '')
 				).replace(/^; /, ''),
 				damage: dm ? `${dm[1]} ${dm[2].toLowerCase()}` : '',
-				range: rng ? rng[1] : ''
-			})
+				range: rng ? rng[1] : '',
+			}),
 		);
 		nWeapon++;
 	}
@@ -161,8 +161,8 @@ let nWeapon = 0,
 				ac: num(ac),
 				armor_dex_cap: dexCap,
 				str_min: num(str),
-				stealth_disadvantage: String(/disadvantage/i.test(stealth))
-			})
+				stealth_disadvantage: String(/disadvantage/i.test(stealth)),
+			}),
 		);
 		nArmor++;
 	}
@@ -180,8 +180,8 @@ for (const b of blocks(src('equipment.md')).filter((b) => b.h2 === 'Adventuring 
 			text_en: description(b.body),
 			category: 'gear',
 			item_type: 'adventuring gear',
-			cost: m ? cost(m[2]) : ''
-		})
+			cost: m ? cost(m[2]) : '',
+		}),
 	);
 	nGear++;
 }
@@ -229,8 +229,8 @@ for (const b of blocks(src('magic-items.md'))) {
 			category,
 			item_type: head,
 			attunement: String(/requires attunement/i.test(b.body.join('\n'))),
-			rarity: rarRaw ? slug(rarRaw) : ''
-		})
+			rarity: rarRaw ? slug(rarRaw) : '',
+		}),
 	);
 	nMagic++;
 }
@@ -239,5 +239,5 @@ assertCount('magic items', nMagic, 258);
 dedupeIds(rows);
 writeCsv(resolve(packDir('srd-2024'), 'items_srd.csv'), COLUMNS, rows);
 console.log(
-	`wrote ${rows.length} items (weapons ${nWeapon}, armor ${nArmor}, gear ${nGear}, magic ${nMagic})`
+	`wrote ${rows.length} items (weapons ${nWeapon}, armor ${nArmor}, gear ${nGear}, magic ${nMagic})`,
 );

@@ -13,7 +13,7 @@
 		issues,
 		onFillAndSave,
 		onSkip,
-		onNeverAsk
+		onNeverAsk,
 	}: {
 		issues: MetaIssue[];
 		onFillAndSave: (fills: FilledMeta) => void;
@@ -45,16 +45,16 @@
 	// per-file draft state — snapshotted at open and PRE-FILLED from whatever the file already declares
 	// (the issue set is fixed then; untrack silences the "captures initial value" reactivity warning).
 	const fills = $state<FilledMeta>(
-		untrack(() => Object.fromEntries(issues.map((i) => [i.file, initText(i)])))
+		untrack(() => Object.fromEntries(issues.map((i) => [i.file, initText(i)]))),
 	);
 	const sysSel = $state<Record<string, string[]>>(
-		untrack(() => Object.fromEntries(issues.map((i) => [i.file, initSystems(i)])))
+		untrack(() => Object.fromEntries(issues.map((i) => [i.file, initSystems(i)]))),
 	);
 	// which files have the license set to a free-typed custom value (vs one of the preset cards)
 	const licCustom = $state<Record<string, boolean>>(
 		untrack(() =>
-			Object.fromEntries(issues.map((i) => [i.file, isCustomLicense(i.values.license)]))
-		)
+			Object.fromEntries(issues.map((i) => [i.file, isCustomLicense(i.values.license)])),
+		),
 	);
 
 	const keyLabel = (k: MetaKey) => $_(`contentMeta.keys.${k}`);

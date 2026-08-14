@@ -37,7 +37,7 @@ import {
 	packConfig,
 	registerPack,
 	SHIPPED_PACK_REPO,
-	unDismissMissing
+	unDismissMissing,
 } from './packs.svelte';
 
 /** Records which CONTENT_SEED_VERSION was last written to the data dir. Lives beside the seeded roots
@@ -116,7 +116,7 @@ async function recoverInterruptedApplies(storage: Storage): Promise<void> {
 	const interrupted = new Set(
 		entries
 			.filter((e) => e.isDir && /\.(new|prev)$/i.test(e.name))
-			.map((e) => e.name.replace(/\.(new|prev)$/i, ''))
+			.map((e) => e.name.replace(/\.(new|prev)$/i, '')),
 	);
 	for (const pack of interrupted) await recoverInterruptedApply(storage, pack);
 }
@@ -193,7 +193,7 @@ export async function seedShippedContent(
 	from: Storage,
 	to: Storage,
 	roots: string[],
-	shippedVersion: number
+	shippedVersion: number,
 ): Promise<{ preserved: string[] }> {
 	const onDisk = await readSeedVersion(to);
 	if (onDisk === shippedVersion) return { preserved: [] };

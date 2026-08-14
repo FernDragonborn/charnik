@@ -6,5 +6,5 @@ export const ui = $state({
 	fullBleed: false,
 	/** Command-palette visibility. Lives here (not inside CommandPalette) so any trigger — the
 	 *  Ctrl+K shortcut, the header search chip — opens the one palette. */
-	commandPaletteOpen: false
+	commandPaletteOpen: false,
 });

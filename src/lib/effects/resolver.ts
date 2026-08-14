@@ -22,7 +22,7 @@ import {
 	splitGuard,
 	type ActiveEffect,
 	type EffectCtx,
-	type EffectIssue
+	type EffectIssue,
 } from './token-parser';
 import {
 	abilityKey,
@@ -34,7 +34,7 @@ import {
 	type DependencyResolved,
 	type Inst,
 	type ResolveArgs,
-	type ResolveState
+	type ResolveState,
 } from './dependency-graph';
 
 /** A one-level `apply_condition` expansion: the condition row's label + its token instances +
@@ -55,7 +55,7 @@ function makeInst(eff: ActiveEffect, raw: string, condId?: string, condLabel?: s
 		reads: readsOf(g.guard, parsed, condId),
 		...(condId !== undefined ? { condId } : {}),
 		...(condLabel !== undefined ? { condLabel } : {}),
-		disposition: 'pending'
+		disposition: 'pending',
 	};
 }
 
@@ -79,7 +79,7 @@ function keptTokens(list: Inst[]): string[] {
 function assembleResolved(
 	active: ActiveEffect[],
 	insts: Inst[],
-	expansions: Map<string, Expansion>
+	expansions: Map<string, Expansion>,
 ): ActiveEffect[] {
 	const out: ActiveEffect[] = [];
 	for (const eff of active) {
@@ -145,7 +145,7 @@ class Resolver {
 			hpMax: { value: 0 },
 			conditions: new Set(),
 			resources: {},
-			resourceMax: {}
+			resourceMax: {},
 		};
 		this.ctx = args.makeCtx(this.state);
 		this.hpMaxBase = computed(args.hpMaxBase?.(0) ?? [], { min: 1 });
@@ -158,7 +158,7 @@ class Resolver {
 			nodeIds: this.nodeIds,
 			nodeIndex: this.nodeIndex,
 			order: this.order,
-			cyclic: this.cyclic
+			cyclic: this.cyclic,
 		} = buildDependencyOrder(this.insts));
 		this.condemnCyclicWriters();
 		const writersByNode = this.groupWritersByNode();
@@ -171,7 +171,7 @@ class Resolver {
 			abilities: this.abilities,
 			hpMaxBase: this.hpMaxBase,
 			ctx: this.ctx,
-			state: this.state
+			state: this.state,
 		};
 	}
 
@@ -189,7 +189,7 @@ class Resolver {
 		const ex: Expansion = {
 			label: c.source,
 			children: c.tokens.map((t) => makeInst(eff, t, id, c.source)),
-			appliers: []
+			appliers: [],
 		};
 		this.expansions.set(id, ex);
 		this.insts.push(...ex.children);
@@ -220,7 +220,7 @@ class Resolver {
 			this.issues.push({
 				source: sourceOf(inst),
 				token: inst.raw,
-				reason: `dependency cycle on ${inst.writeKey}: this effect's condition or value depends on its own output — not applied`
+				reason: `dependency cycle on ${inst.writeKey}: this effect's condition or value depends on its own output — not applied`,
 			});
 		}
 	}
@@ -255,7 +255,7 @@ class Resolver {
 			this.issues.push({
 				source: sourceOf(inst),
 				token: inst.raw,
-				reason: r.ok ? `guard "${inst.guard}" is not a condition` : `bad guard: ${r.error}`
+				reason: r.ok ? `guard "${inst.guard}" is not a condition` : `bad guard: ${r.error}`,
 			});
 			inst.disposition = 'inert'; // kept verbatim: parses as unknown → visible, never silent
 			return false;
@@ -277,7 +277,7 @@ class Resolver {
 					reason:
 						v.diceFormula !== undefined
 							? 'a dice value cannot modify an ability score'
-							: `unresolved ability value: ${v.error ?? 'no value'}`
+							: `unresolved ability value: ${v.error ?? 'no value'}`,
 				});
 			}
 			// hp_max: keep applied — applyEffects('hp_max') re-resolves and notes the failure
@@ -299,7 +299,7 @@ class Resolver {
 			layer: w.condId !== undefined ? 'condition' : w.eff.layer,
 			op,
 			amount: v.amount,
-			note: w.body
+			note: w.body,
 		};
 	}
 

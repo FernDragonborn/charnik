@@ -32,10 +32,10 @@
 					contentIssues: {
 						issues: graph.issues.length,
 						metaIssues: graph.metaIssues.length,
-						driftItems: graph.driftItems.length
-					}
+						driftItems: graph.driftItems.length,
+					},
 				}
-			: {})
+			: {}),
 	});
 	const bundleText = formatBundle(bundle);
 

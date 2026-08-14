@@ -50,7 +50,7 @@
 	// FROM (source) and TO (target) locales are freely chosen via the two dropdowns above the panes.
 	let sourceLocale = $state(savedT.sourceLocale ?? 'en');
 	let targetLocale = $state(
-		savedT.targetLocale ?? (app.activeLocale === 'en' ? 'uk' : app.activeLocale)
+		savedT.targetLocale ?? (app.activeLocale === 'en' ? 'uk' : app.activeLocale),
 	);
 	const locales = $derived(graph?.locales ?? ['en']);
 	const types = $derived(graph ? [...graph.byType.keys()].filter(isBrowsable).sort() : []);
@@ -98,7 +98,7 @@
 	const rows = $derived.by(() => {
 		const q = query.trim().toLowerCase();
 		return (q ? pool.filter((r) => sourceName(r).toLowerCase().includes(q)) : [...pool]).sort(
-			byDisplayName(sourceName)
+			byDisplayName(sourceName),
 		);
 	});
 	const groupBy = $derived(groupingsFor(selectedType)[0]?.key ?? '');
@@ -110,21 +110,22 @@
 				name: String(r.data.name_en),
 				meta: entryMeta(r),
 				edition: editionLabel(r.systems),
-				row: r
-			}))
-		}))
+				row: r,
+			})),
+		})),
 	);
 	// how many of the active pool are REVIEWED into the target locale (drives the header count)
 	const reviewedCount = $derived(
-		pool.filter((r) => locStatus(r.data, r.sourceLang, targetLocale) === LOC_STATUS.reviewed).length
+		pool.filter((r) => locStatus(r.data, r.sourceLang, targetLocale) === LOC_STATUS.reviewed)
+			.length,
 	);
 
 	// the two rendered models: English source (read-only) + target (editable draft binds to prose)
 	const sourceDetail = $derived(
-		selected ? buildDetail(selected, selectedType, undefined, sourceLocale) : null
+		selected ? buildDetail(selected, selectedType, undefined, sourceLocale) : null,
 	);
 	const targetDetail = $derived(
-		selected ? buildDetail(selected, selectedType, undefined, targetLocale) : null
+		selected ? buildDetail(selected, selectedType, undefined, targetLocale) : null,
 	);
 
 	// draft = the raw target-locale prose of the selected row; reset whenever the row or locale changes.
@@ -138,7 +139,7 @@
 		type: r.type,
 		source: r.source,
 		id: r.id,
-		locale: loc
+		locale: loc,
 	});
 
 	$effect(() => {
@@ -150,7 +151,7 @@
 						name: String(r.data[`name_${loc}`] ?? ''),
 						text: String(r.data[`text_${loc}`] ?? ''),
 						material: String(r.data[`material_${loc}`] ?? ''),
-						higher_level: String(r.data[`higher_level_${loc}`] ?? '')
+						higher_level: String(r.data[`higher_level_${loc}`] ?? ''),
 					}
 				: { name: '', text: '' };
 			draft = fromRow;
@@ -166,11 +167,11 @@
 						name: String(d.name ?? ''),
 						text: String(d.text ?? ''),
 						material: String(d.material ?? ''),
-						higher_level: String(d.higher_level ?? '')
+						higher_level: String(d.higher_level ?? ''),
 					};
 					draft = restored;
 					baseline = JSON.stringify(restored); // a restored draft is the new clean baseline
-				}
+				},
 			);
 		}
 	});
@@ -202,7 +203,7 @@
 				name: draft.name,
 				text: draft.text,
 				...(draft.material !== undefined ? { material: draft.material } : {}),
-				...(draft.higher_level !== undefined ? { higher_level: draft.higher_level } : {})
+				...(draft.higher_level !== undefined ? { higher_level: draft.higher_level } : {}),
 			});
 			await deleteDraft(getUserStorage(), target); // saved → the cached draft is now redundant
 			baseline = JSON.stringify(draft); // prevent the auto-save effect from re-spawning it
@@ -221,7 +222,7 @@
 		[LOC_STATUS.notStarted]: '○',
 		[LOC_STATUS.machine]: '⚙',
 		[LOC_STATUS.started]: '◐',
-		[LOC_STATUS.reviewed]: '✓'
+		[LOC_STATUS.reviewed]: '✓',
 	};
 
 	// set the tracked status for the selected row + target locale, then reload + re-point `selected` at

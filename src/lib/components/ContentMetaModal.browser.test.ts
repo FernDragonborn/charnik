@@ -28,7 +28,7 @@ describe('ContentMetaModal (browser)', () => {
 			issues: [issue],
 			onFillAndSave: () => {},
 			onSkip: () => {},
-			onNeverAsk: () => {}
+			onNeverAsk: () => {},
 		});
 		await expect.element(page.getByRole('dialog')).toBeInTheDocument();
 		await expect.element(page.getByText('spells_homebrew.csv')).toBeInTheDocument();
@@ -43,7 +43,7 @@ describe('ContentMetaModal (browser)', () => {
 			issues: [underfilledIssue()],
 			onFillAndSave: () => {},
 			onSkip,
-			onNeverAsk: () => {}
+			onNeverAsk: () => {},
 		});
 		await page
 			.getByRole('dialog')

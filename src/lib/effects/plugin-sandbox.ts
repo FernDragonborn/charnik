@@ -26,7 +26,7 @@ import {
 	type QuickJSContext,
 	type QuickJSHandle,
 	type QuickJSRuntime,
-	type QuickJSWASMModule
+	type QuickJSWASMModule,
 } from 'quickjs-emscripten-core';
 import type { PluginCallOutcome, PluginEvaluator, PluginTokenRef } from './plugin-registry';
 
@@ -96,7 +96,7 @@ let loadedModule: QuickJSWASMModule | null = null;
 async function getModule(): Promise<QuickJSWASMModule> {
 	if (!modulePromise)
 		modulePromise = import('@jitl/quickjs-ng-wasmfile-release-sync').then((v) =>
-			newQuickJSWASMModuleFromVariant(v.default)
+			newQuickJSWASMModuleFromVariant(v.default),
 		);
 	loadedModule = await modulePromise;
 	return loadedModule;
@@ -127,7 +127,7 @@ function bootPlugin(mod: QuickJSWASMModule, p: LoadedPlugin): string | null {
 	// the sandbox-visible `globalThis.eval` binding is neutered by the setup script instead
 	// (in-sandbox eval would be capability-harmless anyway — it can't reach past the container).
 	const context = runtime.newContext({
-		intrinsics: { ...DefaultIntrinsics, Date: false }
+		intrinsics: { ...DefaultIntrinsics, Date: false },
 	});
 	p.runtime = runtime;
 	p.context = context;
@@ -156,7 +156,7 @@ function bootPlugin(mod: QuickJSWASMModule, p: LoadedPlugin): string | null {
 	const names = context.evalCode(
 		`JSON.stringify(Object.keys(globalThis.handlers ?? {}).filter(
 			(k) => typeof (globalThis.handlers[k] ?? {}).passive === "function"))`,
-		'charnik-discover.js'
+		'charnik-discover.js',
 	);
 	if (names.error) {
 		names.error.dispose();
@@ -168,7 +168,7 @@ function bootPlugin(mod: QuickJSWASMModule, p: LoadedPlugin): string | null {
 	try {
 		const parsed: unknown = JSON.parse(raw);
 		p.passiveHandlers = new Set(
-			Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : []
+			Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [],
 		);
 	} catch {
 		p.passiveHandlers = new Set();
@@ -189,7 +189,7 @@ function disposePlugin(p: LoadedPlugin): void {
  * its own runtime; a plugin that fails to boot stays listed (has() = false → its tokens degrade).
  */
 export async function createSandboxEvaluator(
-	specs: SandboxPluginSpec[]
+	specs: SandboxPluginSpec[],
 ): Promise<PluginEvaluator & { dispose(): void }> {
 	const mod = await getModule();
 	const plugins = new Map<string, LoadedPlugin>();
@@ -202,7 +202,7 @@ export async function createSandboxEvaluator(
 			runtime: null,
 			context: null,
 			deadline: 0,
-			loadError: null
+			loadError: null,
 		};
 		p.loadError = bootPlugin(mod, p); // boot failure leaves passiveHandlers empty → has() = false
 		plugins.set(spec.namespace, p);
@@ -269,12 +269,12 @@ export async function createSandboxEvaluator(
 			return {
 				ok: true,
 				resultJson: JSON.stringify(parsed.result ?? {}),
-				readPlay: parsed.playRead === true
+				readPlay: parsed.playRead === true,
 			};
 		},
 		dispose() {
 			for (const p of plugins.values()) disposePlugin(p);
 			plugins.clear();
-		}
+		},
 	};
 }

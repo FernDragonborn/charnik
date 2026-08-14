@@ -10,14 +10,14 @@ import {
 	loadThemeFiles,
 	seedBundledThemes,
 	migrateLegacyThemes,
-	initThemes
+	initThemes,
 } from './themeFiles';
 
 const theme = (over: Partial<CustomTheme> = {}): CustomTheme => ({
 	id: 'ocean',
 	name: 'Ocean',
 	tokens: { 'color-accent': '#0af', 'color-bg': '#012' },
-	...over
+	...over,
 });
 
 describe('slug + id', () => {
@@ -42,7 +42,7 @@ describe('serialize / parse (import security boundary)', () => {
 	it('drops unknown tokens + injection-shaped values on import', () => {
 		const parsed = themeFromJson(
 			{ name: 'Evil', tokens: { 'color-bg': 'red; } body{display:none', 'font-size-md': '9px' } },
-			'x'
+			'x',
 		);
 		expect(parsed).toBeNull(); // nothing safe survived
 	});
@@ -92,7 +92,7 @@ describe('file layer (MemoryStorage)', () => {
 		const { themes, newlySeeded } = await initThemes(
 			s,
 			[theme({ id: 'dracula', name: 'Dracula' })],
-			[]
+			[],
 		);
 		expect(themes.map((t) => t.id)).toEqual(['dracula']);
 		expect(newlySeeded).toEqual(['dracula']);
@@ -105,7 +105,7 @@ describe('file layer (MemoryStorage)', () => {
 			theme({ id: 'ocean', name: 'Stale cache copy' }), // must NOT overwrite the file above
 			theme({ id: 'sunset', name: 'Sunset' }), // new → written
 			theme({ id: 'dark', name: 'reserved' }), // unsafe id → skipped
-			theme({ id: 'empty', tokens: {} }) // no safe tokens → skipped
+			theme({ id: 'empty', tokens: {} }), // no safe tokens → skipped
 		]);
 		const loaded = await loadThemeFiles(s);
 		expect(loaded.map((t) => t.id).sort()).toEqual(['ocean', 'sunset']);

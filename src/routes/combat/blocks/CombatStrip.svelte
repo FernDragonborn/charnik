@@ -24,8 +24,8 @@
 		[
 			{ bucket: 'resist', label: 'Resist', types: s.defenses.resist },
 			{ bucket: 'immune', label: 'Immune', types: s.defenses.immune },
-			{ bucket: 'vulnerable', label: 'Vulnerable', types: s.defenses.vulnerable }
-		].filter((g) => g.types.length)
+			{ bucket: 'vulnerable', label: 'Vulnerable', types: s.defenses.vulnerable },
+		].filter((g) => g.types.length),
 	);
 </script>
 
@@ -112,7 +112,7 @@
 			{#each passives as p, i (p.key)}
 				{#if i > 0}<span class="separator-dot">·</span>{/if}
 				{@const advDis = p.comp.trace.find(
-					(t) => t.source === 'Advantage' || t.source === 'Disadvantage'
+					(t) => t.source === 'Advantage' || t.source === 'Disadvantage',
 				)}
 				<span class="ability-save" title={why(p.comp)}>
 					<i>{p.name}</i>{p.comp.value}{#if advDis}<span

@@ -22,7 +22,7 @@ import {
 	mkdir as fsMkdir,
 	remove as fsRemove,
 	rename as fsRename,
-	watchImmediate
+	watchImmediate,
 } from '@tauri-apps/plugin-fs';
 import { documentDir, join } from '@tauri-apps/api/path';
 import { invoke } from '@tauri-apps/api/core';
@@ -35,7 +35,7 @@ import {
 	mergeCopyList,
 	mergeFailures,
 	isSameOrInside,
-	type DirFile
+	type DirFile,
 } from './migrate';
 
 /** The user's data root is a VISIBLE, self-named folder (not a hidden per-app dir) — see
@@ -172,7 +172,7 @@ async function copyFilesInto(oldDir: string, newDir: string, files: DirFile[]): 
 async function finalizeMove(
 	oldDir: string,
 	newDir: string,
-	deleteOld: boolean
+	deleteOld: boolean,
 ): Promise<MigrateOutcome> {
 	await setDataDirOverride(newDir);
 	if (deleteOld) {
@@ -204,7 +204,7 @@ async function discardFailedCopy(newDir: string): Promise<void> {
 export async function migrateDataDir(
 	oldDir: string,
 	newDir: string,
-	deleteOld: boolean
+	deleteOld: boolean,
 ): Promise<MigrateOutcome> {
 	if (isSameOrInside(newDir, oldDir))
 		return { ok: false, stage: 'target_inside_source', failures: [] };
@@ -237,7 +237,7 @@ export async function migrateDataDir(
 export async function mergeDataDir(
 	oldDir: string,
 	newDir: string,
-	deleteOld: boolean
+	deleteOld: boolean,
 ): Promise<MigrateOutcome> {
 	if (isSameOrInside(newDir, oldDir))
 		return { ok: false, stage: 'target_inside_source', failures: [] };
@@ -315,9 +315,9 @@ export class TauriStorage implements Storage {
 					path: prefix ? `${prefix}/${e.name}` : e.name,
 					name: e.name,
 					isDir: e.isDirectory,
-					mtime
+					mtime,
 				};
-			})
+			}),
 		);
 	}
 	async mkdir(path: string): Promise<void> {
@@ -342,8 +342,8 @@ export class TauriStorage implements Storage {
 				(e) => {
 					for (const p of e.paths) rootPromise.then((root) => onChange(toRel(root, p)));
 				},
-				{ recursive: true }
-			)
+				{ recursive: true },
+			),
 		);
 		return () => void unwatch.then((fn) => fn()).catch(() => {});
 	}

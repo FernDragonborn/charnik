@@ -10,7 +10,7 @@ import {
 	isEffectExpired,
 	type ActionSlot,
 	type SpellRow,
-	type EffectInstance
+	type EffectInstance,
 } from '$lib/combat/helpers';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -23,7 +23,7 @@ const INCAPACITATED_CONDITION_ID = 'incapacitated';
 export class TurnEconomy {
 	constructor(
 		private getCharacter: () => Character | null,
-		private getSheet: () => CharacterSheet | null
+		private getSheet: () => CharacterSheet | null,
 	) {}
 
 	/** Incapacitated → can't take actions/reactions/bonus actions (a rule-based block, B9). Read from
@@ -53,7 +53,7 @@ export class TurnEconomy {
 		return this.getSheet()?.speed.value ?? 0;
 	}
 	moveLeft = $derived.by(() =>
-		Math.max(0, this.moveMax - (this.getCharacter()?.play.turn.move ?? 0))
+		Math.max(0, this.moveMax - (this.getCharacter()?.play.turn.move ?? 0)),
 	);
 
 	/** Click a pip in a slot. Same click-to-set model as spell slots: clicking a filled (available) pip

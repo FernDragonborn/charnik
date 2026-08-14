@@ -51,7 +51,7 @@ export function requireContentRepo() {
 			`    git clone ${CONTENT_REPO_URL} ${DEFAULT_DIR}\n\n` +
 			`Already have it elsewhere? Point at it with either\n` +
 			`    ${CONFIG_FILE}:  { "contentRepo": "../wherever/charnik-content-srd" }\n` +
-			`    or the CHARNIK_CONTENT environment variable.`
+			`    or the CHARNIK_CONTENT environment variable.`,
 	);
 }
 
@@ -74,7 +74,7 @@ export function contentPacks() {
 		.filter(
 			(e) =>
 				e.isDirectory() &&
-				readdirSync(join(dir, e.name)).some((f) => f.endsWith('.csv') || f === 'plugins')
+				readdirSync(join(dir, e.name)).some((f) => f.endsWith('.csv') || f === 'plugins'),
 		)
 		.map((e) => e.name)
 		.sort();

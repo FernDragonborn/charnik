@@ -4,7 +4,7 @@ import {
 	splitGuard,
 	resolveEffectValue,
 	EFFECT_KINDS,
-	type ActiveEffect
+	type ActiveEffect,
 } from './token-parser';
 import { applyEffects, collectFacts, lintEffectTokens } from './apply';
 import { makeExprContext, type BuildVars } from './context';
@@ -24,19 +24,19 @@ describe('parseToken (bounded vocabulary)', () => {
 		expect(parseToken('flat_bonus:ac+1')).toMatchObject({
 			kind: 'flat_bonus',
 			target: 'ac',
-			amount: 1
+			amount: 1,
 		});
 		expect(parseToken('flat_bonus:con-2')).toMatchObject({
 			kind: 'flat_bonus',
 			target: 'con',
-			amount: -2
+			amount: -2,
 		});
 	});
 	it('keeps dice bonuses as dice (roll modifier, not a flat number)', () => {
 		expect(parseToken('flat_bonus:saves+1d4')).toMatchObject({
 			kind: 'flat_bonus',
 			target: 'saves',
-			dice: '1d4'
+			dice: '1d4',
 		});
 	});
 	it('parses the D9-tail damage `:type` slot (flaming), leaving untyped tokens type-less', () => {
@@ -44,12 +44,12 @@ describe('parseToken (bounded vocabulary)', () => {
 			kind: 'flat_bonus',
 			target: 'damage',
 			dice: '1d6',
-			damageType: 'fire'
+			damageType: 'fire',
 		});
 		expect(parseToken('flat_bonus:damage:radiant+2')).toMatchObject({
 			target: 'damage',
 			amount: 2,
-			damageType: 'radiant'
+			damageType: 'radiant',
 		});
 		expect(parseToken('flat_bonus:damage:Cold+1d4').damageType).toBe('cold'); // normalized
 		expect(parseToken('flat_bonus:damage+1d6').damageType).toBeUndefined();
@@ -60,7 +60,7 @@ describe('parseToken (bounded vocabulary)', () => {
 			kind: 'flat_bonus',
 			target: 'attack',
 			amount: 2,
-			weaponScope: 'ranged'
+			weaponScope: 'ranged',
 		});
 		expect(parseToken('flat_bonus:attack:ranged+2').damageType).toBeUndefined();
 		expect(parseToken('flat_bonus:attack:Two_Handed+1').weaponScope).toBe('two_handed'); // normalized
@@ -71,38 +71,38 @@ describe('parseToken (bounded vocabulary)', () => {
 	it('parses the non-numeric kinds', () => {
 		expect(parseToken('resist_immune:poison')).toMatchObject({
 			kind: 'resist_immune',
-			target: 'poison'
+			target: 'poison',
 		});
 		expect(parseToken('apply_condition:paralyzed')).toMatchObject({
 			kind: 'apply_condition',
-			target: 'paralyzed'
+			target: 'paralyzed',
 		});
 		expect(parseToken('grant_resource:rage')).toMatchObject({
 			kind: 'grant_resource',
-			target: 'rage'
+			target: 'rage',
 		});
 		expect(parseToken('set_override:ac:18')).toMatchObject({
 			kind: 'set_override',
 			target: 'ac',
-			amount: 18
+			amount: 18,
 		});
 	});
 	it('structures resist_immune into a defense bucket + type (bare defaults to resist)', () => {
 		expect(parseToken('resist_immune:fire')).toMatchObject({ defense: 'resist', target: 'fire' });
 		expect(parseToken('resist_immune:immune:poison')).toMatchObject({
 			defense: 'immune',
-			target: 'poison'
+			target: 'poison',
 		});
 		expect(parseToken('resist_immune:vulnerable:cold')).toMatchObject({
 			defense: 'vulnerable',
-			target: 'cold'
+			target: 'cold',
 		});
 	});
 	it('structures a full grant_resource pool, leaves a bare one as just an id', () => {
 		expect(parseToken('grant_resource:rage:3:long').resource).toEqual({
 			id: 'rage',
 			max: 3,
-			recharge: 'long'
+			recharge: 'long',
 		});
 		expect(parseToken('grant_resource:ki').resource).toBeUndefined();
 	});
@@ -110,7 +110,7 @@ describe('parseToken (bounded vocabulary)', () => {
 		expect(parseToken('grant_resource:angelic_slumber:1:consumable').resource).toEqual({
 			id: 'angelic_slumber',
 			max: 1,
-			recharge: 'consumable'
+			recharge: 'consumable',
 		});
 	});
 	it('flags unknown / malformed tokens instead of dropping them', () => {
@@ -122,39 +122,39 @@ describe('parseToken (bounded vocabulary)', () => {
 			kind: 'min_die',
 			target: 'damage',
 			amount: 3,
-			weaponScope: 'two_handed,melee'
+			weaponScope: 'two_handed,melee',
 		});
 		expect(parseToken('reroll:damage:versatile,melee:2')).toMatchObject({
 			kind: 'reroll',
 			target: 'damage',
 			amount: 2,
-			weaponScope: 'versatile,melee'
+			weaponScope: 'versatile,melee',
 		});
 		// unscoped forms unchanged: a group target and a dotted key both keep the 2-segment grammar
 		expect(parseToken('reroll:d20_tests:2')).toMatchObject({ target: 'd20_tests', amount: 2 });
 		expect(parseToken('reroll:d20_tests:2').weaponScope).toBeUndefined();
 		expect(parseToken('min_die:skill.stealth:10')).toMatchObject({
 			target: 'skill.stealth',
-			amount: 10
+			amount: 10,
 		});
 		expect(parseToken('min_die:skill.stealth:10').weaponScope).toBeUndefined();
 	});
 	it('parses disadvantage like advantage (its own kind + target)', () => {
 		expect(parseToken('disadvantage:skill.stealth')).toMatchObject({
 			kind: 'disadvantage',
-			target: 'skill.stealth'
+			target: 'skill.stealth',
 		});
 	});
 	it('grant_proficiency carries ONE ladder level and canonicalizes a skill. prefix', () => {
 		expect(parseToken('grant_proficiency:stealth')).toMatchObject({
 			target: 'stealth',
-			proficiency: 'proficient'
+			proficiency: 'proficient',
 		});
 		// a `skill.`-prefixed target must not silently drop (audit A6)
 		expect(parseToken('grant_proficiency:skill.stealth')).toMatchObject({ target: 'stealth' });
 		expect(parseToken('grant_proficiency:expertise:stealth')).toMatchObject({
 			target: 'stealth',
-			proficiency: 'expertise'
+			proficiency: 'expertise',
 		});
 		// saves keep their prefix (derive tells them apart by it)
 		expect(parseToken('grant_proficiency:save.con')).toMatchObject({ target: 'save.con' });
@@ -165,7 +165,7 @@ describe('applyEffects seam', () => {
 	const ring: ActiveEffect = {
 		source: 'Ring of Protection',
 		layer: 'item',
-		tokens: ['flat_bonus:ac+1']
+		tokens: ['flat_bonus:ac+1'],
 	};
 
 	it('on/off invariant: no effects leaves value and trace unchanged', () => {
@@ -193,7 +193,7 @@ describe('applyEffects seam', () => {
 		const bless: ActiveEffect = {
 			source: 'Bless',
 			layer: 'condition',
-			tokens: ['flat_bonus:saves+1d4']
+			tokens: ['flat_bonus:saves+1d4'],
 		};
 		const flat: ActiveEffect = { source: 'Cloak', layer: 'item', tokens: ['flat_bonus:saves+1'] };
 		const composed = applyEffects('save.wis', base, [bless, flat]);
@@ -206,7 +206,7 @@ describe('applyEffects seam', () => {
 		const wildShape: ActiveEffect = {
 			source: 'Form',
 			layer: 'override',
-			tokens: ['set_override:ac:11']
+			tokens: ['set_override:ac:11'],
 		};
 		expect(applyEffects('ac', base, [wildShape]).value).toBe(11);
 	});
@@ -216,12 +216,12 @@ describe('applyEffects seam', () => {
 		const plate: ActiveEffect = {
 			source: 'Plate',
 			layer: 'override',
-			tokens: ['set_override:ac:18']
+			tokens: ['set_override:ac:18'],
 		};
 		const mage: ActiveEffect = {
 			source: 'Mage Armor',
 			layer: 'override',
-			tokens: ['set_override:ac:13']
+			tokens: ['set_override:ac:13'],
 		};
 		// both orderings must yield the SAME winner (18) — no ns-sort / scan-order dependence
 		expect(applyEffects('ac', base, [plate, mage]).value).toBe(18);
@@ -233,7 +233,7 @@ describe('applyEffects seam', () => {
 
 	it('clamps a hostile resource max (cost cap, not balance)', () => {
 		expect(parseToken('grant_resource:x:1000000000:short')).toMatchObject({
-			resource: { id: 'x', max: 1000 }
+			resource: { id: 'x', max: 1000 },
 		});
 	});
 
@@ -242,7 +242,7 @@ describe('applyEffects seam', () => {
 		const weird: ActiveEffect = {
 			source: 'Homebrew',
 			layer: 'feature',
-			tokens: ['flat_bonus:ac+1', 'teleport:far']
+			tokens: ['flat_bonus:ac+1', 'teleport:far'],
 		};
 		const composed = applyEffects('ac', base, [weird]);
 		expect(composed.value).toBe(13); // the good token still applies
@@ -252,7 +252,7 @@ describe('applyEffects seam', () => {
 describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D12 layer honoring', () => {
 	const speedBase = (): { value: number; trace: Contribution[] } => ({
 		value: 30,
-		trace: [{ source: 'Base speed', layer: 'base', op: 'set', amount: 30 }]
+		trace: [{ source: 'Base speed', layer: 'base', op: 'set', amount: 30 }],
 	});
 
 	it('BUG-3: a clamped base keeps its floor through applyEffects (on/off/deleted invariant)', () => {
@@ -260,9 +260,9 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 		const clampedBase = computed(
 			[
 				{ source: 'Base speed', layer: 'base', op: 'set', amount: 30 },
-				{ source: 'Heavy penalty', layer: 'item', op: 'add', amount: -40 }
+				{ source: 'Heavy penalty', layer: 'item', op: 'add', amount: -40 },
 			],
-			{ min: 0 }
+			{ min: 0 },
 		);
 		expect(clampedBase.value).toBe(0);
 		// zero effects must reproduce the clamped value, not re-fold the trace to -10
@@ -271,7 +271,7 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 		const slow: ActiveEffect = {
 			source: 'Slow',
 			layer: 'condition',
-			tokens: ['flat_bonus:speed-5']
+			tokens: ['flat_bonus:speed-5'],
 		};
 		expect(applyEffects('speed', clampedBase, [slow]).value).toBe(0);
 	});
@@ -281,7 +281,7 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 			kind: 'set_override',
 			target: 'int',
 			amount: 19,
-			setMode: 'floor'
+			setMode: 'floor',
 		});
 		expect(parseToken('set_override:str:10:cap')).toMatchObject({ setMode: 'cap' });
 		expect(parseToken('set_override:ac:11').setMode).toBeUndefined();
@@ -292,7 +292,7 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 		const floor: ActiveEffect = {
 			source: 'Item',
 			layer: 'item',
-			tokens: ['set_override:ac:15:floor']
+			tokens: ['set_override:ac:15:floor'],
 		};
 		expect(applyEffects('ac', base, [floor]).value).toBe(15);
 		const cap: ActiveEffect = { source: 'Item', layer: 'item', tokens: ['set_override:ac:11:cap'] };
@@ -300,7 +300,7 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 		const noop: ActiveEffect = {
 			source: 'Item',
 			layer: 'item',
-			tokens: ['set_override:ac:9:floor']
+			tokens: ['set_override:ac:9:floor'],
 		};
 		const r = applyEffects('ac', base, [noop]);
 		expect(r.value).toBe(12);
@@ -311,7 +311,7 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 		const grapple: ActiveEffect = {
 			source: 'Grappled',
 			layer: 'condition',
-			tokens: ['set_override:speed:0', 'block_bonus:speed']
+			tokens: ['set_override:speed:0', 'block_bonus:speed'],
 		};
 		const boots: ActiveEffect = { source: 'Boots', layer: 'item', tokens: ['flat_bonus:speed+10'] };
 		const r = applyEffects('speed', speedBase(), [grapple, boots]);
@@ -323,12 +323,12 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 		const block: ActiveEffect = {
 			source: 'Grappled',
 			layer: 'condition',
-			tokens: ['block_bonus:speed']
+			tokens: ['block_bonus:speed'],
 		};
 		const penalty: ActiveEffect = {
 			source: 'Slow',
 			layer: 'condition',
-			tokens: ['flat_bonus:speed-5']
+			tokens: ['flat_bonus:speed-5'],
 		};
 		expect(applyEffects('speed', speedBase(), [block, penalty]).value).toBe(25);
 	});
@@ -337,12 +337,12 @@ describe('A9 · set_override floor/cap modes + block_bonus (grapple family) + D1
 		const boots: ActiveEffect = {
 			source: 'Boots',
 			layer: 'item',
-			tokens: ['set_override:speed:40']
+			tokens: ['set_override:speed:40'],
 		};
 		const grapple: ActiveEffect = {
 			source: 'Grappled',
 			layer: 'condition',
-			tokens: ['set_override:speed:0']
+			tokens: ['set_override:speed:0'],
 		};
 		expect(applyEffects('speed', speedBase(), [boots, grapple]).value).toBe(0);
 		expect(applyEffects('speed', speedBase(), [grapple, boots]).value).toBe(0);
@@ -353,13 +353,13 @@ describe('G4 · halve op (2014 exhaustion — speed / hp_max ×½)', () => {
 	it('halves the value accumulated from earlier layers, rounding down', () => {
 		const base: { value: number; trace: Contribution[] } = {
 			value: 30,
-			trace: [{ source: 'Base speed', layer: 'base', op: 'set', amount: 30 }]
+			trace: [{ source: 'Base speed', layer: 'base', op: 'set', amount: 30 }],
 		};
 		const boots: ActiveEffect = { source: 'Boots', layer: 'item', tokens: ['flat_bonus:speed+10'] };
 		const exhausted: ActiveEffect = {
 			source: 'Exhausted',
 			layer: 'condition',
-			tokens: ['halve:speed']
+			tokens: ['halve:speed'],
 		};
 		// 30 + 10 = 40, then ×½ at the condition layer → 20
 		expect(applyEffects('speed', base, [boots, exhausted]).value).toBe(20);
@@ -368,12 +368,12 @@ describe('G4 · halve op (2014 exhaustion — speed / hp_max ×½)', () => {
 	it('halves hp_max (odd → floor)', () => {
 		const base: { value: number; trace: Contribution[] } = {
 			value: 25,
-			trace: [{ source: 'Hit dice', layer: 'base', op: 'add', amount: 25 }]
+			trace: [{ source: 'Hit dice', layer: 'base', op: 'add', amount: 25 }],
 		};
 		const exhausted: ActiveEffect = {
 			source: 'Exhausted',
 			layer: 'condition',
-			tokens: ['halve:hp_max']
+			tokens: ['halve:hp_max'],
 		};
 		expect(applyEffects('hp_max', base, [exhausted]).value).toBe(12); // floor(25/2)
 	});
@@ -391,7 +391,7 @@ describe('EFX-ROLL · grant_roll (feature-granted named rollable)', () => {
 		abilityScores: { str: 10, dex: 16, con: 10, int: 10, wis: 10, cha: 10 },
 		classLevels: { rogue: 6 },
 		spellcastingMod: 0,
-		baseSpeed: 30
+		baseSpeed: 30,
 	};
 	const ctx = makeExprContext(build);
 
@@ -399,7 +399,7 @@ describe('EFX-ROLL · grant_roll (feature-granted named rollable)', () => {
 		expect(parseToken('grant_roll:sneak_attack:ceil(class_level.rogue/2) d 6')).toMatchObject({
 			kind: 'grant_roll',
 			target: 'sneak_attack',
-			valueExpr: 'ceil(class_level.rogue/2) d 6'
+			valueExpr: 'ceil(class_level.rogue/2) d 6',
 		});
 	});
 
@@ -409,16 +409,16 @@ describe('EFX-ROLL · grant_roll (feature-granted named rollable)', () => {
 				{
 					source: 'Sneak Attack',
 					layer: 'feature',
-					tokens: ['grant_roll:sneak_attack:ceil(class_level.rogue/2) d 6']
-				}
+					tokens: ['grant_roll:sneak_attack:ceil(class_level.rogue/2) d 6'],
+				},
 			],
-			ctx
+			ctx,
 		);
 		expect(facts.rolls).toHaveLength(1);
 		expect(facts.rolls[0]).toMatchObject({
 			id: 'sneak_attack',
 			formula: '3d6',
-			label: 'Sneak Attack'
+			label: 'Sneak Attack',
 		});
 	});
 
@@ -426,7 +426,7 @@ describe('EFX-ROLL · grant_roll (feature-granted named rollable)', () => {
 		const tok = 'grant_roll:sneak_attack:ceil(class_level.rogue/2) d 6';
 		const facts = collectFacts(
 			[{ source: 'Sneak Attack', layer: 'feature', tokens: [tok, tok] }],
-			ctx
+			ctx,
 		);
 		expect(facts.rolls).toHaveLength(1);
 	});
@@ -438,24 +438,24 @@ describe('collectFacts', () => {
 			{
 				source: 'Rage',
 				layer: 'feature',
-				tokens: ['grant_resource:rage', 'resist_immune:bludgeoning']
+				tokens: ['grant_resource:rage', 'resist_immune:bludgeoning'],
 			},
 			{ source: 'Hold Person', layer: 'condition', tokens: ['apply_condition:paralyzed'] },
-			{ source: 'Weird', layer: 'feature', tokens: ['teleport:far'] }
+			{ source: 'Weird', layer: 'feature', tokens: ['teleport:far'] },
 		];
 		const facts = collectFacts(effects);
 		expect(facts.resourceIds).toContain('rage');
 		expect(facts.defenses).toContainEqual({
 			bucket: 'resist',
 			type: 'bludgeoning',
-			source: 'Rage'
+			source: 'Rage',
 		});
 		expect(facts.conditions).toContain('paralyzed');
 		expect(facts.unknown).toContainEqual({ source: 'Weird', token: 'teleport:far' });
 	});
 	it('fills the disadvantage bucket (was a dead field — audit A5)', () => {
 		const facts = collectFacts([
-			{ source: 'Poisoned', layer: 'condition', tokens: ['disadvantage:skills'] }
+			{ source: 'Poisoned', layer: 'condition', tokens: ['disadvantage:skills'] },
 		]);
 		expect(facts.disadvantage).toContainEqual({ target: 'skills', source: 'Poisoned' });
 	});
@@ -471,7 +471,7 @@ describe('parseToken · set_override value slot (literal vs expression vs dice)'
 		abilityScores: { str: 10, dex: 16, con: 10, int: 10, wis: 10, cha: 10 },
 		classLevels: {},
 		spellcastingMod: 0,
-		baseSpeed: 30
+		baseSpeed: 30,
 	};
 	const ctx = makeExprContext(build);
 
@@ -483,7 +483,7 @@ describe('parseToken · set_override value slot (literal vs expression vs dice)'
 	it('rejects a DICE value in an override — an AC cannot be a die (surfaced as an error fact)', () => {
 		const facts = collectFacts(
 			[{ source: 'Bug', layer: 'feature', tokens: ['set_override:ac:1d6'] }],
-			ctx
+			ctx,
 		);
 		expect(facts.numeric[0]?.error).toContain('override cannot be a dice');
 	});
@@ -492,7 +492,7 @@ describe('parseToken · set_override value slot (literal vs expression vs dice)'
 		const ud: ActiveEffect = {
 			source: 'Barbarian',
 			layer: 'feature',
-			tokens: ['set_override:ac:10+dex_mod']
+			tokens: ['set_override:ac:10+dex_mod'],
 		};
 		expect(applyEffects('ac', base, [ud], ctx).value).toBe(13);
 	});
@@ -512,7 +512,7 @@ describe('parseToken · malformed tokens degrade to `unknown` (never throw, neve
 		'set_override:ac', // missing value
 		'', // empty string
 		':', // bare separator
-		'flat_bonus' // no separator
+		'flat_bonus', // no separator
 	];
 	for (const t of unknowns)
 		it(`"${t}" → unknown`, () => {
@@ -548,7 +548,7 @@ describe('splitGuard · guard/token split edges (the `?` is a hard boundary)', (
 	it('needs no surrounding spaces around `?`', () => {
 		expect(splitGuard('is_raging?advantage:attack')).toEqual({
 			guard: 'is_raging',
-			token: 'advantage:attack'
+			token: 'advantage:attack',
 		});
 	});
 	it('a token with no `?` is returned whole (trimmed), no guard', () => {
@@ -560,11 +560,11 @@ describe('G1 · auto_fail / auto_succeed (forced roll outcome, e.g. paralyzed �
 	it('parses to its own kind + target (like advantage), target normalized', () => {
 		expect(parseToken('auto_fail:save.dex')).toMatchObject({
 			kind: 'auto_fail',
-			target: 'save.dex'
+			target: 'save.dex',
 		});
 		expect(parseToken('auto_succeed:save.wis')).toMatchObject({
 			kind: 'auto_succeed',
-			target: 'save.wis'
+			target: 'save.wis',
 		});
 		expect(parseToken('auto_fail:SAVE.STR').target).toBe('save.str'); // normalized
 	});
@@ -573,12 +573,12 @@ describe('G1 · auto_fail / auto_succeed (forced roll outcome, e.g. paralyzed �
 			{
 				source: 'Paralyzed',
 				layer: 'condition',
-				tokens: ['auto_fail:save.str', 'auto_fail:save.dex']
-			}
+				tokens: ['auto_fail:save.str', 'auto_fail:save.dex'],
+			},
 		]);
 		expect(facts.autoFail).toEqual([
 			{ target: 'save.str', source: 'Paralyzed' },
-			{ target: 'save.dex', source: 'Paralyzed' }
+			{ target: 'save.dex', source: 'Paralyzed' },
 		]);
 		expect(facts.numeric).toEqual([]); // it is NOT a bonus — never folds onto the save value
 	});
@@ -587,7 +587,7 @@ describe('G1 · auto_fail / auto_succeed (forced roll outcome, e.g. paralyzed �
 		const paralyzed: ActiveEffect = {
 			source: 'Paralyzed',
 			layer: 'condition',
-			tokens: ['auto_fail:save.str']
+			tokens: ['auto_fail:save.str'],
 		};
 		const out = applyEffects('save.str', base, [paralyzed]);
 		expect(out.value).toBe(0); // unchanged — auto-fail is an outcome, not a modifier
@@ -598,13 +598,13 @@ describe('G1 · auto_fail / auto_succeed (forced roll outcome, e.g. paralyzed �
 		const strSave = applyEffects(
 			'save.str',
 			savingThrow({ ability: 'str', score: 10, level: 1, proficient: false }),
-			facts
+			facts,
 		);
 		expect(strSave.notes?.some((n) => n.text.includes('auto-fail'))).toBe(true);
 		const skill = applyEffects(
 			'skill.stealth',
 			savingThrow({ ability: 'dex', score: 10, level: 1, proficient: false }),
-			facts
+			facts,
 		);
 		expect(skill.notes ?? []).toEqual([]); // saves group doesn't touch a skill
 	});

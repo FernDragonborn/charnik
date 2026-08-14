@@ -24,7 +24,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 const BASE = process.env.BASE || 'http://localhost:5173';
 const UPDATE = process.argv.includes('--update');
 const FILTER = (process.argv.find((a) => a.startsWith('--filter=')) ?? '').slice(
-	'--filter='.length
+	'--filter='.length,
 );
 const DIR = 'tools/visual';
 const BASELINE = `${DIR}/baseline`;
@@ -46,7 +46,7 @@ async function freeze(page) {
 			content:
 				'*,*::before,*::after{animation-duration:0s!important;animation-delay:0s!important;' +
 				'transition-duration:0s!important;transition-delay:0s!important;caret-color:transparent!important;' +
-				'scroll-behavior:auto!important}'
+				'scroll-behavior:auto!important}',
 		})
 		.catch(() => {});
 }
@@ -70,8 +70,8 @@ const ROUTES = [
 			// interaction: the Ctrl+K command palette (covers CommandPalette .group)
 			{ name: 'command-palette', prep: press('Control+k'), ready: '[role="dialog"]' },
 			{ name: 'combat-turnbar', prep: clickBtn(/Combat/), restore: clickBtn(/Combat/) },
-			{ name: 'combat-dice', prep: clickBtn(/Dice tray/), ready: '[role="dialog"]' }
-		]
+			{ name: 'combat-dice', prep: clickBtn(/Dice tray/), ready: '[role="dialog"]' },
+		],
 	},
 	{ path: '/', wait: 'main', states: [{ name: 'roster' }] },
 	{ path: '/build', wait: 'main', states: [{ name: 'build' }] },
@@ -81,8 +81,8 @@ const ROUTES = [
 		states: [
 			{ name: 'compendium' },
 			// interaction: select an entry (covers SpellHead/heads .stat-key/.meta-key/.panel-header)
-			{ name: 'compendium-entry', prep: clickText('Fire Bolt'), ready: 'h1:has-text("Fire Bolt")' }
-		]
+			{ name: 'compendium-entry', prep: clickText('Fire Bolt'), ready: 'h1:has-text("Fire Bolt")' },
+		],
 	},
 	{ path: '/spellbook', wait: 'main', states: [{ name: 'spellbook' }] },
 	{ path: '/settings', wait: 'h1', states: [{ name: 'settings' }] },
@@ -102,14 +102,14 @@ const ROUTES = [
 			{
 				name: 'dev-packs-rename',
 				prep: clickBtn(/Rename folder/i),
-				ready: 'input[type="text"]'
-			}
-		]
+				ready: 'input[type="text"]',
+			},
+		],
 	},
 	{ path: '/dev/deathsaves', wait: 'h1', states: [{ name: 'dev-deathsaves' }] },
 	// the roll-card gallery: every shape RollRow has to render (check, attack, crit, volley, nat 1),
 	// on one page — the cheapest guard there is on the component four surfaces now share
-	{ path: '/dev/rolltoast', wait: 'h1', states: [{ name: 'dev-rolltoast' }] }
+	{ path: '/dev/rolltoast', wait: 'h1', states: [{ name: 'dev-rolltoast' }] },
 ];
 
 function compare(name, buf) {
@@ -135,7 +135,7 @@ async function run() {
 	const browser = await chromium.launch();
 	const page = await browser.newPage({
 		viewport: { width: 1280, height: 1400 },
-		reducedMotion: 'reduce'
+		reducedMotion: 'reduce',
 	});
 	const drifted = []; // { name, px } for every state that changed — a summary beats a lone `worst`
 	let captured = 0;
@@ -184,7 +184,7 @@ async function run() {
 	}
 	if (drifted.length) {
 		console.log(
-			`\nVISUAL DRIFT in ${drifted.length}/${captured} states — see ${CURRENT}/*.diff.png:`
+			`\nVISUAL DRIFT in ${drifted.length}/${captured} states — see ${CURRENT}/*.diff.png:`,
 		);
 		for (const d of drifted) console.log(`  ✗ ${d.name}: ${d.px} px`);
 		process.exit(1);

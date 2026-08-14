@@ -13,7 +13,7 @@ const hit = (natural: number, dmg = 9): RollLogEntry => ({
 	expr: `d20(${natural}) +7`,
 	total: natural + 7,
 	natural,
-	damage: [{ type: 'slashing', expr: 'd8(6) +3', total: dmg }]
+	damage: [{ type: 'slashing', expr: 'd8(6) +3', total: dmg }],
 });
 
 describe('rollToastModel', () => {
@@ -30,7 +30,7 @@ describe('rollToastModel', () => {
 			label: 'Longsword',
 			expr: ' +5',
 			total: 19,
-			advantageRoll: { kept: 14, dropped: 7 }
+			advantageRoll: { kept: 14, dropped: 7 },
 		});
 		expect(m.attacks[0]?.chips[0]).toMatchObject({ sides: 20, value: 14 });
 		expect(m.attacks[0]?.dropped).toBe(7);
@@ -79,16 +79,16 @@ describe('rollToastModel', () => {
 				natural: 13,
 				damage: [
 					{ type: 'bludgeoning', expr: 'd6(5) +4', total: 9 },
-					{ type: 'radiant', expr: 'd4(3)', total: 3 }
-				]
+					{ type: 'radiant', expr: 'd4(3)', total: 3 },
+				],
 			},
 			{
 				label: 'Flurry of Blows',
 				expr: 'd20(9) +7',
 				total: 16,
 				natural: 9,
-				damage: [{ type: 'radiant', expr: 'd4(2)', total: 2 }]
-			}
+				damage: [{ type: 'radiant', expr: 'd4(2)', total: 2 }],
+			},
 		];
 		expect(rollToastModel(volley).byType.map((t) => t.type)).toEqual(['bludgeoning', 'radiant']);
 	});

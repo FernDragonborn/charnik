@@ -60,7 +60,7 @@ for (const [name, perFile] of byName) {
 collisions.sort((a, b) => b.files.length - a.files.length || b.variants - a.variants);
 
 console.log(
-	`\n=== ${collisions.length} class names reused across files with DIFFERENT styles ===\n`
+	`\n=== ${collisions.length} class names reused across files with DIFFERENT styles ===\n`,
 );
 for (const c of collisions) {
 	console.log(`.${c.name}  (${c.files.length} files, ${c.variants} distinct styles)`);

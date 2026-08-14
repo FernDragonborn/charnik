@@ -29,7 +29,7 @@ export class BrowserStorage implements Storage {
 		this.#db = openDB(dbName, 1, {
 			upgrade(db) {
 				if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
-			}
+			},
 		});
 	}
 

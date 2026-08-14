@@ -16,7 +16,7 @@ export function makeRow<T extends ContentType>(
 	type: T,
 	data: Record<string, unknown> = {},
 	source = 'SRD 5.2.1',
-	sourceLang = 'en'
+	sourceLang = 'en',
 ): LoadedRow {
 	const id = String(data.id ?? data.name_en ?? '');
 	// `data` downcasts the loose test input (RowData IS a Record<string, unknown> — a narrowing, not an
@@ -31,7 +31,7 @@ export function makeRow<T extends ContentType>(
 		sourceLang,
 		data: data as RowData<T>,
 		root: 'test',
-		file: `${type}.csv`
+		file: `${type}.csv`,
 	};
 	return row as LoadedRow;
 }

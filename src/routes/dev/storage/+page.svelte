@@ -14,12 +14,12 @@
 		{ path: 'characters/aria/character.json', size: 4200, mtime: t(11) },
 		{ path: 'content/srd/spells.csv', size: 90_000, mtime: t(2) },
 		{ path: 'content/srd/species.csv', size: 12_000, mtime: t(9) - day },
-		{ path: 'homebrew/my-feats.csv', size: 800, mtime: t(10) }
+		{ path: 'homebrew/my-feats.csv', size: 800, mtime: t(10) },
 	];
 	const chosen: DirFile[] = [
 		{ path: 'characters/aria/character.json', size: 4100, mtime: t(6) },
 		{ path: 'content/srd/spells.csv', size: 90_000, mtime: t(8) },
-		{ path: 'content/srd/backgrounds.csv', size: 3000, mtime: t(7) }
+		{ path: 'content/srd/backgrounds.csv', size: 3000, mtime: t(7) },
 	];
 	let showConflict = $state(false);
 
@@ -42,8 +42,8 @@
 				tone: 'error',
 				title: 'Move failed',
 				detail: 'Copying the files failed: failed to copy file: Access is denied. (os error 5).',
-				note: ORIGINAL_SAFE
-			}
+				note: ORIGINAL_SAFE,
+			},
 		},
 		{
 			label: 'Copy failed (Linux)',
@@ -51,8 +51,8 @@
 				tone: 'error',
 				title: 'Move failed',
 				detail: 'Copying the files failed: failed to copy file: Permission denied (os error 13).',
-				note: ORIGINAL_SAFE
-			}
+				note: ORIGINAL_SAFE,
+			},
 		},
 		{
 			label: 'Verify mismatch',
@@ -61,8 +61,8 @@
 				title: 'Move failed',
 				detail:
 					"3 file(s) didn't copy correctly (characters/aria/character.json, content/srd/spells.csv, content/srd/species.csv…).",
-				note: ORIGINAL_SAFE
-			}
+				note: ORIGINAL_SAFE,
+			},
 		},
 		{
 			label: 'Target inside source',
@@ -71,8 +71,8 @@
 				title: 'Move failed',
 				detail:
 					"The chosen folder is inside the current data folder, so it can't be the move target.",
-				note: ORIGINAL_SAFE
-			}
+				note: ORIGINAL_SAFE,
+			},
 		},
 		{
 			label: 'Cleanup warning (moved, old folder left)',
@@ -81,9 +81,9 @@
 				title: "Data moved, but old folder wasn't deleted",
 				detail:
 					"Your data was copied and verified in the new folder, but the old folder couldn't be removed: failed to remove directory: The process cannot access the file (os error 32).",
-				note: 'Nothing was lost — you can delete the old folder yourself.'
-			}
-		}
+				note: 'Nothing was lost — you can delete the old folder yourself.',
+			},
+		},
 	];
 
 	let notice = $state<Notice | null>(null);

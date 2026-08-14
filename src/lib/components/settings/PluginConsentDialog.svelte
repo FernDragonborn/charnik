@@ -13,7 +13,7 @@
 		plugin,
 		codeChanged,
 		onAccept,
-		onCancel
+		onCancel,
 	}: {
 		plugin: DiscoveredPlugin;
 		/** true → the re-consent variant (code differs from what was approved before). */

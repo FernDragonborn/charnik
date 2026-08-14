@@ -79,5 +79,5 @@ console.log(
 	`static content (from ${requireContentRepo()}):`,
 	Object.entries(manifest.roots)
 		.map(([r, fs]) => `${r} (${fs.length})`)
-		.join(', ')
+		.join(', '),
 );

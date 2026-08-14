@@ -35,14 +35,14 @@ export type Migration<T = unknown> = (data: T) => T;
 export function migrate<T extends Versioned>(
 	data: T,
 	migrations: Record<number, Migration<T>>,
-	target: number
+	target: number,
 ): T {
 	if (typeof data.schemaVersion !== 'number') {
 		throw new Error('missing schemaVersion');
 	}
 	if (data.schemaVersion > target) {
 		throw new Error(
-			`data schemaVersion ${data.schemaVersion} is newer than supported ${target}; update the app`
+			`data schemaVersion ${data.schemaVersion} is newer than supported ${target}; update the app`,
 		);
 	}
 	let cur = data;

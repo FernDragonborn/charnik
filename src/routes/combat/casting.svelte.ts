@@ -29,7 +29,7 @@ import {
 	type DamagePart,
 	type DamagePartSpec,
 	type SpellRow,
-	type MenuKind
+	type MenuKind,
 } from '$lib/combat/helpers';
 import type { RollSpec, RollTray } from './roll.svelte';
 import type { TurnEconomy } from './economy.svelte';
@@ -89,7 +89,7 @@ export class SpellCasting {
 		const effects = [
 			...tokens,
 			...(hpMaxDelta > 0 ? [`flat_bonus:hp_max+${hpMaxDelta}`] : []),
-			...(enhance > 0 ? enhancementTokens(enhance) : [])
+			...(enhance > 0 ? enhancementTokens(enhance) : []),
 		];
 		if (!c || (!effects.length && !r.concentration)) return;
 		this.host.removeLinkedEffect(r.ref); // re-cast refreshes instead of stacking a duplicate
@@ -102,8 +102,8 @@ export class SpellCasting {
 				source: r.ref,
 				effects,
 				positive: true,
-				...(rounds ? { durationRounds: rounds, startedRound: this.host.round } : {})
-			}
+				...(rounds ? { durationRounds: rounds, startedRound: this.host.round } : {}),
+			},
 		];
 	}
 
@@ -113,7 +113,7 @@ export class SpellCasting {
 	private carrierRounds(
 		r: SpellRow,
 		spell: ReturnType<ContentGraph['get']>,
-		slotLevel: number
+		slotLevel: number,
 	): number | null {
 		const base = spell?.type === 'spell' ? durationToRounds(String(spell.data.duration)) : null;
 		for (const res of this.evalUpcastAt(r, slotLevel)) {
@@ -130,7 +130,7 @@ export class SpellCasting {
 	private reserveSpellSlot(
 		r: SpellRow,
 		ritual: boolean,
-		chosenLevel?: number
+		chosenLevel?: number,
 	): string | null | 'blocked' {
 		const play = this.host.character?.play;
 		if (ritual || !play) return null;
@@ -138,7 +138,7 @@ export class SpellCasting {
 			r.level,
 			this.host.sheet?.spellcasting.pools ?? [],
 			play.spellSlotsSpent,
-			chosenLevel
+			chosenLevel,
 		);
 		if (spend && 'block' in spend) {
 			toast(spend.block);
@@ -170,12 +170,12 @@ export class SpellCasting {
 	private spellDamageParts(
 		r: SpellRow,
 		primaryFx: RollEffects,
-		deltas: DamagePart[]
+		deltas: DamagePart[],
 	): DamagePartSpec[] {
 		const parts: DamagePart[] = r.damageParts.map((p) => ({
 			pool: { ...p.pool },
 			mod: p.mod,
-			type: p.type
+			type: p.type,
 		}));
 		for (const d of deltas) {
 			const idx = d.type ? parts.findIndex((p) => p.type === d.type) : 0;
@@ -189,7 +189,7 @@ export class SpellCasting {
 			dice: p.pool,
 			mod: p.mod + (i === 0 ? primaryFx.flat : 0),
 			type: p.type,
-			...(i === 0 ? { bonusDice: primaryFx.bonusDice, mods: primaryFx } : {})
+			...(i === 0 ? { bonusDice: primaryFx.bonusDice, mods: primaryFx } : {}),
 		}));
 	}
 
@@ -225,7 +225,7 @@ export class SpellCasting {
 	private upcastFlatDelta(
 		r: SpellRow,
 		slotLevel: number,
-		kind: 'hp_max' | 'temp_hp' | 'enhancement'
+		kind: 'hp_max' | 'temp_hp' | 'enhancement',
 	): number {
 		let acc = 0;
 		for (const res of this.evalUpcastAt(r, slotLevel)) {
@@ -273,9 +273,9 @@ export class SpellCasting {
 					mod: toHit,
 					advantage: netAdvantage(fx),
 					mods: fx,
-					...(up.note ? { note: up.note } : {})
+					...(up.note ? { note: up.note } : {}),
 				},
-				e
+				e,
 			);
 			if (hasDmg) this.host.tray.queueDamage({ label: `${r.name} damage${up.suffix}`, parts });
 		} else {
@@ -283,7 +283,7 @@ export class SpellCasting {
 				`${r.name} (spell attack)`,
 				rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice, fx),
 				hasDmg ? rollDamageParts(parts) : undefined,
-				up.note
+				up.note,
 			);
 		}
 	}
@@ -298,7 +298,7 @@ export class SpellCasting {
 		r: SpellRow,
 		caster: SpellcastingClass | undefined,
 		up: UpcastCast,
-		slotLevel: number
+		slotLevel: number,
 	): { parts: DamagePartSpec[]; kind: string } {
 		const heal = r.resolution === 'auto';
 		const temp = r.resolution === 'temp';
@@ -311,7 +311,7 @@ export class SpellCasting {
 		const deltas = temp ? (tempDelta ? [{ pool: {}, mod: tempDelta, type: '' }] : []) : up.deltas;
 		return {
 			parts: this.spellDamageParts(r, primaryFx, deltas),
-			kind: temp ? 'temp HP' : heal ? 'healing' : 'damage'
+			kind: temp ? 'temp HP' : heal ? 'healing' : 'damage',
 		};
 	}
 
@@ -332,7 +332,7 @@ export class SpellCasting {
 		const up: UpcastCast = {
 			deltas,
 			suffix: slotLevel > r.level ? ` (slot ${slotLevel}${preview ? ` · ${preview}` : ''})` : '',
-			...(note ? { note } : {})
+			...(note ? { note } : {}),
 		};
 		if (r.resolution === 'hit' && caster) {
 			this.rollSpellAttack(r, e, caster, up);
@@ -364,9 +364,9 @@ export class SpellCasting {
 					mod: primary.mod,
 					...(primary.bonusDice ? { bonusDice: primary.bonusDice } : {}),
 					...(primary.mods ? { mods: primary.mods } : {}),
-					...(note ? { note } : {})
+					...(note ? { note } : {}),
 				},
-				e
+				e,
 			);
 			if (rest.length) this.host.tray.queueDamage({ label, parts: rest });
 		} else {
@@ -374,7 +374,7 @@ export class SpellCasting {
 				label,
 				rollPool(primary.dice, primary.mod, 0, primary.bonusDice ?? [], primary.mods ?? {}),
 				rest.length ? rollDamageParts(rest) : undefined,
-				note
+				note,
 			);
 		}
 	}
@@ -386,7 +386,7 @@ export class SpellCasting {
 		castableSlotLevels(
 			r.level,
 			this.host.sheet?.spellcasting.pools ?? [],
-			this.host.character?.play.spellSlotsSpent ?? {}
+			this.host.character?.play.spellSlotsSpent ?? {},
 		);
 
 	/** The spell whose upcast slot-picker is open (drives the `upcast` overlay menu — item 1). */
@@ -414,7 +414,7 @@ export class SpellCasting {
 			if (res.kind === 'damage' || res.kind === 'heal') {
 				if (Object.keys(res.pool).length === 0 && res.flat === 0) continue;
 				bits.push(
-					`+${formatDamageParts([{ pool: res.pool, mod: res.flat, type: res.type ?? '' }])}`
+					`+${formatDamageParts([{ pool: res.pool, mod: res.flat, type: res.type ?? '' }])}`,
 				);
 			} else if (res.kind === 'count') bits.push(`${res.flat}×`);
 			else if (res.kind === 'area') bits.push(`area ${res.flat} ft (${metres(res.flat)})`);
@@ -448,7 +448,7 @@ export class SpellCasting {
 		// establishes concentration (surfaced, not silently swallowed).
 		if (r.concentration && this.host.character && this.host.cantConcentrate) {
 			toast(`${r.name} cast, but you can't hold Concentration right now`, {
-				description: 'A Rage (or similar state) ends Concentration — RAW'
+				description: 'A Rage (or similar state) ends Concentration — RAW',
 			});
 		} else if (r.concentration && this.host.character) {
 			const prior = this.host.character.play.concentration;
@@ -487,7 +487,7 @@ export class SpellCasting {
 			sheet: this.host.sheet,
 			entry: sp,
 			spellRef: r.ref,
-			isCantrip: r.levelTag === 'cantrip'
+			isCantrip: r.levelTag === 'cantrip',
 		});
 		if (!res.ok) {
 			if (res.message) toast(res.message);

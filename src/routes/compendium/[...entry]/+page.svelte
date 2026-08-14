@@ -13,7 +13,7 @@
 		sourceLabel,
 		compendiumEntryPath,
 		toEntryGroups,
-		localizedName
+		localizedName,
 	} from '$lib/content/detail';
 	import { getSpellAccess } from '$lib/content/spellAccess';
 	import {
@@ -21,7 +21,7 @@
 		facetFor,
 		groupRows,
 		distinctValues,
-		byDisplayName
+		byDisplayName,
 	} from '$lib/content/grouping';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
@@ -40,7 +40,7 @@
 		findStaleDrafts,
 		discardDrafts,
 		writeDraft,
-		type DraftEnvelope
+		type DraftEnvelope,
 	} from '$lib/drafts/store';
 	import { isRowActive } from '$lib/content/sources.svelte';
 	import { app, inActiveEdition } from '$lib/stores/app.svelte';
@@ -126,7 +126,7 @@
 				type: t.type,
 				source: t.source,
 				id: t.id,
-				locale: t.locale
+				locale: t.locale,
 			});
 			goto(`${base}/translate?${qs.toString()}`);
 		} else if (t.kind === 'add') {
@@ -165,7 +165,7 @@
 		goto(compendiumEntryPath(base, row.type, row.source, row.data.id), {
 			replaceState: true,
 			keepFocus: true,
-			noScroll: true
+			noScroll: true,
 		});
 	}
 	$effect(() => {
@@ -198,7 +198,7 @@
 					.list(selectedType)
 					.filter(inEdition)
 					.filter((r) => isRowActive(r))
-			: []
+			: [],
 	);
 	const groupings = $derived(groupingsFor(selectedType));
 	const facet = $derived(facetFor(selectedType));
@@ -221,7 +221,7 @@
 	});
 
 	const groups = $derived(
-		toEntryGroups(groupRows(rows.slice(0, 500), groupBy, selectedType), localName)
+		toEntryGroups(groupRows(rows.slice(0, 500), groupBy, selectedType), localName),
 	);
 	// spell "Available to" comes from the reverse UNION access index (inline classes ∪ spell_lists),
 	// NOT the raw column — so a class that gained the spell class-side still shows, with provenance.
@@ -232,17 +232,17 @@
 			.classesForSpell(selected.effectiveId)
 			.map((e) => ({
 				name: String(graph?.get(e.classEffectiveId)?.data.name_en ?? e.classId),
-				homebrew: e.via === 'spell_list'
+				homebrew: e.via === 'spell_list',
 			}))
 			.filter((x) => (seen.has(x.name) ? false : seen.add(x.name)));
 	});
 	const detail = $derived(
-		selected ? buildDetail(selected, selectedType, availableTo, contentLocale) : null
+		selected ? buildDetail(selected, selectedType, availableTo, contentLocale) : null,
 	);
 	// editor mode = a two-panel BEFORE | AFTER: the current rendered article (read-only) beside the
 	// editable form, so you see the original next to your changes.
 	const editorBefore = $derived(
-		editRow ? buildDetail(editRow, editRow.type, undefined, contentLocale) : null
+		editRow ? buildDetail(editRow, editRow.type, undefined, contentLocale) : null,
 	);
 	// the editor is a 3-column view — ask the shell for the full viewport width (like translate);
 	// cleared when editing ends or the page unmounts.
@@ -274,7 +274,7 @@
 		await writeDraft(
 			storage,
 			{ kind: 'add', type: row.type, addGuid: crypto.randomUUID() },
-			rowToDraft(row)
+			rowToDraft(row),
 		);
 		await removeHomebrewRow(storage, row.type, `${row.root}/${row.file}`, row.id);
 		selected = null;

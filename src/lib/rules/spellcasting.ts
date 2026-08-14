@@ -60,11 +60,11 @@ export function slotToSpend(
 	spellLevel: number,
 	pools: readonly CastPool[],
 	spent: Readonly<Record<string, number>>,
-	chosenLevel?: number
+	chosenLevel?: number,
 ): SlotSpend {
 	if (spellLevel <= 0) return null; // cantrip
 	const leveled = pools.filter(
-		(p): p is CastPool & { spellLevel: number } => !p.forcedUpcast && p.spellLevel !== undefined
+		(p): p is CastPool & { spellLevel: number } => !p.forcedUpcast && p.spellLevel !== undefined,
 	);
 	// No leveled pool: a pure-pact caster (warlock) spends from the Pact Magic pool, which forces every
 	// cast up to its own slot level; a true non-caster has no pool at all → nothing to spend. (A mixed
@@ -92,10 +92,10 @@ export function slotToSpend(
 
 /** The Warlock Pact Magic pool among a set of pools (the forced-upcast slot pool), or undefined. */
 export function pactPool(
-	pools: readonly CastPool[]
+	pools: readonly CastPool[],
 ): (CastPool & { spellLevel: number }) | undefined {
 	return pools.find(
-		(p): p is CastPool & { spellLevel: number } => !!p.forcedUpcast && p.spellLevel !== undefined
+		(p): p is CastPool & { spellLevel: number } => !!p.forcedUpcast && p.spellLevel !== undefined,
 	);
 }
 
@@ -105,7 +105,7 @@ export function pactPool(
 function pactSpend(
 	spellLevel: number,
 	pools: readonly CastPool[],
-	spent: Readonly<Record<string, number>>
+	spent: Readonly<Record<string, number>>,
 ): SlotSpend {
 	const pact = pactPool(pools);
 	if (!pact) return null; // non-caster — don't gate
@@ -123,7 +123,7 @@ function pactSpend(
 export function castableSlotLevels(
 	spellLevel: number,
 	pools: readonly CastPool[],
-	spent: Readonly<Record<string, number>>
+	spent: Readonly<Record<string, number>>,
 ): number[] {
 	if (spellLevel <= 0) return [];
 	const levels = new Set<number>();
@@ -174,7 +174,7 @@ export function shareFromCaster(caster: string | undefined): CasterShare {
 /** Shared multiclass caster level = SUM of contributions (NOT the senior class). Pact excluded
  *  (its classes carry share `none`). Single full caster → its own level. */
 export function effectiveCasterLevel(
-	entries: readonly { share: CasterShare; level: number }[]
+	entries: readonly { share: CasterShare; level: number }[],
 ): number {
 	return entries.reduce((n, e) => n + shareContribution(e.share, e.level), 0);
 }
@@ -218,7 +218,7 @@ export function cantripDieMultiplier(charLevel: number): number {
  */
 export function preparedCap(
 	tableValue: number | undefined,
-	opts: { system: System; abilityMod: number; share: CasterShare; level: number }
+	opts: { system: System; abilityMod: number; share: CasterShare; level: number },
 ): number | null {
 	if (tableValue != null) return tableValue;
 	if (opts.system !== '5e') return null; // 2024 (and any future system) declares no formula
@@ -234,7 +234,7 @@ export function slotPools(
 		recharge: Recharge;
 		forcedUpcast?: boolean;
 		label?: (lvl: number) => string;
-	}
+	},
 ): CastPool[] {
 	const out: CastPool[] = [];
 	counts.forEach((n, i) => {
@@ -246,7 +246,7 @@ export function slotPools(
 			spellLevel,
 			max: n,
 			recharge: opts.recharge,
-			forcedUpcast: opts.forcedUpcast ?? false
+			forcedUpcast: opts.forcedUpcast ?? false,
 		});
 	});
 	return out;
@@ -276,7 +276,7 @@ export function canTogglePrepared(
 	entry: PreparableSpell | undefined,
 	isCantrip: boolean,
 	cap: number,
-	count: number
+	count: number,
 ): PrepareAttempt {
 	if (isCantrip)
 		return { ok: false, message: 'Cantrips are always known — you never prepare them.' };

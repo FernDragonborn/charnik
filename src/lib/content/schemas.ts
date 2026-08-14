@@ -43,7 +43,7 @@ export const EFFECT_KINDS = [
 	'blocks_concentration',
 	'damage_reroll',
 	'regain_on_initiative',
-	'plugin'
+	'plugin',
 ] as const;
 
 // --- CSV-cell coercion helpers (every cell arrives as a string) ---------------
@@ -69,7 +69,7 @@ const optNum = z.preprocess(blankToUndef, z.coerce.number().optional());
 const optInt = z.preprocess(blankToUndef, z.coerce.number().int().optional());
 const bool = z.preprocess(
 	(v) => (typeof v === 'string' ? ['true', '1', 'yes', 'y'].includes(v.toLowerCase()) : !!v),
-	z.boolean()
+	z.boolean(),
 );
 
 /** A CSV list cell → a validated array: split via the shared `splitList` (trim + drop empties), then
@@ -119,7 +119,7 @@ const base = {
 	name_uk: optStr,
 	text_en: optStr,
 	text_uk: optStr,
-	effects: effectsField
+	effects: effectsField,
 };
 
 const baseRow = z.object(base);
@@ -143,7 +143,7 @@ export const SCHOOLS = [
 	'evocation',
 	'illusion',
 	'necromancy',
-	'transmutation'
+	'transmutation',
 ] as const;
 // `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled
 // "temp HP" and never adds the spellcasting mod (temp HP is a flat/dice value, no ability mod — item 3).
@@ -155,7 +155,7 @@ export const ITEM_CATEGORIES = [
 	'gear',
 	'tool',
 	'pack',
-	'ammunition'
+	'ammunition',
 ] as const;
 export const RARITIES = [
 	'common',
@@ -163,7 +163,7 @@ export const RARITIES = [
 	'rare',
 	'very_rare',
 	'legendary',
-	'artifact'
+	'artifact',
 ] as const;
 /** Feat categories as named constants — compare against these, not bare strings. */
 export const FEAT_CATEGORY = {
@@ -171,7 +171,7 @@ export const FEAT_CATEGORY = {
 	general: 'general',
 	fightingStyle: 'fighting_style',
 	epicBoon: 'epic_boon',
-	general2014: 'general_2014'
+	general2014: 'general_2014',
 } as const;
 export const FEAT_CATEGORIES = Object.values(FEAT_CATEGORY);
 
@@ -201,7 +201,7 @@ const speciesSchema = baseRow.extend({
 	creature_type: optStr, // default "humanoid"
 	/** A "+N to M abilities of your choice" ASI (5e Half-Elf), encoded `NxM` (e.g. `1x2`). The
 	 *  fixed part rides on `effects`; abilities already boosted there are excluded from the choice. */
-	boost_choice: optStr
+	boost_choice: optStr,
 });
 
 /** A sub-choice within a species: a 2014 **subrace** (Hill Dwarf) or a 2024 in-species
@@ -215,7 +215,7 @@ const speciesOptionSchema = baseRow.extend({
 	kind: z.enum(SPECIES_OPTION_KINDS).default('subrace'),
 	option_label: optStr,
 	/** Like `species.boost_choice` — a "+N to M of your choice" ASI carried by the sub-option. */
-	boost_choice: optStr
+	boost_choice: optStr,
 });
 
 /** A class. Subclass features live in class_features keyed by class_id+level. */
@@ -245,7 +245,7 @@ const classSchema = baseRow.extend({
 	subclass_level: optInt,
 	/** Levels at which this class grants an ASI-or-feat slot (e.g. "4,6,8,12,14,16,19" for Fighter).
 	 *  Data, not a class-name switch — derived from the SRD progression by the converters. */
-	asi_levels: csvList(z.array(z.number().int()).default([]), Number)
+	asi_levels: csvList(z.array(z.number().int()).default([]), Number),
 });
 
 /** Linked table: a class feature granted at a level (incl. ASI/feat slot markers).
@@ -260,7 +260,7 @@ const classFeatureSchema = baseRow.extend({
 	 *  carry a progressive grant (SRD models Rogue Expertise as a single L1 row that also grants +2 at
 	 *  L6 → `"1:2,6:2"`; Bard 2024 `"2:2,9:2"`, 2014 `"3:2,10:2"`). The builder sums the counts whose
 	 *  level ≤ the class level. Curated onto the row like `effects` (not in the prose); empty → 0. */
-	expertise_slots: optStr
+	expertise_slots: optStr,
 });
 
 /** A subclass (one per class in SRD 5.2.1). Its features live in class_features with
@@ -282,7 +282,7 @@ const subclassSchema = baseRow.extend({
 	 *  Rogue's (they have none), so access can't be inferred from `class_id`. Data, never a class-name
 	 *  branch in code: a homebrew subclass naming two lists gets their union. Blank → the subclass
 	 *  reaches only what `spell_lists` rows grant it directly. */
-	spell_list: optStr
+	spell_list: optStr,
 });
 
 /** Background. 5.5e backgrounds carry the ability boosts + an origin feat. */
@@ -293,7 +293,7 @@ const backgroundSchema = baseRow.extend({
 	/** 5.5e: which abilities the +2/+1 (or +1/+1/+1) may go to. */
 	ability_choices: optStr,
 	/** 5.5e: granted origin feat id. */
-	origin_feat: optStr
+	origin_feat: optStr,
 });
 
 /** Feat. `category` distinguishes 5.5e origin/general/fighting-style; `prereq` is text. */
@@ -308,7 +308,7 @@ const featSchema = baseRow.extend({
 	/** §C choice-grant: how many SKILL proficiencies of the player's choice this feat grants (Skilled
 	 *  = 3). The builder shows a "pick N skills" picker, folded into `build.featSkills`. NB SRD Skilled
 	 *  reads "skills OR tools"; tools aren't modelled yet (skills-only — flagged deviation). */
-	skill_choice: optInt
+	skill_choice: optInt,
 });
 
 /** Spell. Semi-structured upcasting in `higher_level`; resolution + save_ability drive
@@ -332,7 +332,7 @@ const spellSchema = baseRow.extend({
 	// (`damage:per_slot(1d6)`, `count:slot+1`) evaluated at cast time. Language-agnostic (a formula,
 	// NOT prose — no locale siblings). Optional: old user CSVs without it load, falling back to
 	// `higher_level` prose. See src/lib/effects/upcast.ts.
-	upcast: optStr
+	upcast: optStr,
 });
 
 /** Item / equipment. Weapon, armor, shield, gear, tool, pack, ammunition. */
@@ -351,7 +351,7 @@ const itemSchema = baseRow.extend({
 		.preprocess((v) => (v === '' || v == null ? false : v), bool)
 		.default(false),
 	attunement: boolDefault(false),
-	rarity: z.preprocess(blankToUndef, Rarity.optional())
+	rarity: z.preprocess(blankToUndef, Rarity.optional()),
 });
 
 /** A language. Simple reference content the builder picks from. `category` groups them: 2014 uses
@@ -360,7 +360,7 @@ const itemSchema = baseRow.extend({
 const languageSchema = baseRow.extend({
 	category: z.enum(['standard', 'exotic', 'rare']).default('standard'),
 	speakers: optStr, // typical speakers (2014 only; 2024 dropped this)
-	script: optStr // per-language script (2014 only; 2024 dropped this)
+	script: optStr, // per-language script (2014 only; 2024 dropped this)
 });
 
 /** Condition (merged with effects on the sheet). Mechanics ride in `effects`. */
@@ -373,7 +373,7 @@ const conditionSchema = baseRow.extend({
 	 *  max_level=10 and Just Works (D19), no code change. Generalizes to PF2e valued conditions. */
 	max_level: z
 		.preprocess((v) => (v === '' || v == null ? 1 : v), z.coerce.number().int().min(1))
-		.default(1)
+		.default(1),
 	// ponytail: `derived_when` (a predicate that auto-activates a state, e.g. bloodied = hp_percent<50)
 	// is deliberately NOT added yet — `is_bloodied` already works as a computed flag exposed via the
 	// unified read vocab, and a derived predicate would need DAG-ordering against hp_max with no second
@@ -386,7 +386,7 @@ const effectSchema = baseRow.extend({
 	/** Debuffs (Bane, covers against you…) render crimson in the panel, like conditions. */
 	negative: boolDefault(false),
 	/** Optional default duration the picker applies; the round counter auto-expires it. */
-	duration_rounds: optInt
+	duration_rounds: optInt,
 });
 
 /** Monster / NPC stat block (compendium). Headline stats are structured columns; the
@@ -419,7 +419,7 @@ const monsterSchema = baseRow.extend({
 	gear: optStr,
 	senses: optStr,
 	languages: optStr,
-	skills: optStr
+	skills: optStr,
 });
 
 // --- Rules / lookup tables (NOT browsable articles: no name_en, minimal identity) ----------
@@ -430,7 +430,7 @@ const monsterSchema = baseRow.extend({
 const lookupBase = {
 	id: idField,
 	systems: systemsField.optional(),
-	source: optStr
+	source: optStr,
 };
 
 /** Spell-slot progression table, matrix form (row = character level, cols = slots per spell
@@ -448,7 +448,7 @@ const spellSlotsSchema = z.object({
 	slot_6: optInt,
 	slot_7: optInt,
 	slot_8: optInt,
-	slot_9: optInt
+	slot_9: optInt,
 });
 
 /** Per-class-level casting counts (linked `class_id`+`level`). `prepared_known` = the size of the
@@ -459,7 +459,7 @@ const classCastingSchema = z.object({
 	class_id: reqStr,
 	level: z.coerce.number().int().min(1).max(20),
 	cantrips_known: optInt,
-	prepared_known: optInt
+	prepared_known: optInt,
 });
 
 /** Additive class→spell access join (`class_id`,`spell_id`), so a homebrew class grants access to
@@ -467,7 +467,7 @@ const classCastingSchema = z.object({
 const spellListsSchema = z.object({
 	...lookupBase,
 	class_id: reqStr,
-	spell_id: reqStr
+	spell_id: reqStr,
 });
 
 /** Piece 3: a spend-option on a granted resource (Ki → Flurry of Blows, Channel Divinity → …).
@@ -484,7 +484,7 @@ const resourceOptionSchema = baseRow.extend({
 	action_type: z.enum(ACTION_TYPES).default('action'),
 	// optional L2 boolean guard: the option is greyed/unrunnable unless it evaluates true (e.g.
 	// `is_combat_start` for Persistent Rage — offerable only at initiative). Empty → always available.
-	available: optStr
+	available: optStr,
 });
 
 // --- Registry: type name → { schema, file glob, column order for unparse } -----
@@ -506,7 +506,7 @@ export const CONTENT_TYPES = {
 	spell_slots: { schema: spellSlotsSchema, filebase: 'spell_slots' },
 	class_casting: { schema: classCastingSchema, filebase: 'class_casting' },
 	spell_lists: { schema: spellListsSchema, filebase: 'spell_lists' },
-	resource_option: { schema: resourceOptionSchema, filebase: 'resource_options' }
+	resource_option: { schema: resourceOptionSchema, filebase: 'resource_options' },
 } as const;
 
 export type ContentType = keyof typeof CONTENT_TYPES;
@@ -517,7 +517,7 @@ const LOOKUP_TYPES = new Set<ContentType>([
 	'spell_slots',
 	'class_casting',
 	'spell_lists',
-	'resource_option' // named, but a linked spend-table — not a browsable article
+	'resource_option', // named, but a linked spend-table — not a browsable article
 ]);
 
 /** A browsable content type (has name/text; shows in compendium + search). */
@@ -546,7 +546,7 @@ export const LOC_STATUS = {
 	notStarted: 'not_started',
 	machine: 'machine',
 	started: 'started',
-	reviewed: 'reviewed'
+	reviewed: 'reviewed',
 } as const;
 export type LocStatus = (typeof LOC_STATUS)[keyof typeof LOC_STATUS];
 
@@ -584,7 +584,7 @@ export type RowColumn<T extends ContentType> = keyof z.infer<(typeof CONTENT_TYP
  *  schema for `T`** (so `res.data` is that type's shape at a literal call site, not the union). */
 export function parseRow<T extends ContentType>(
 	type: T,
-	row: Record<string, unknown>
+	row: Record<string, unknown>,
 ): ReturnType<(typeof CONTENT_TYPES)[T]['schema']['safeParse']> {
 	return CONTENT_TYPES[type].schema.safeParse(row) as ReturnType<
 		(typeof CONTENT_TYPES)[T]['schema']['safeParse']

@@ -12,7 +12,7 @@ import {
 	openCharacter,
 	removeCharacter,
 	ensureActiveCharacter,
-	recreateDemoCharacter
+	recreateDemoCharacter,
 } from './store.svelte';
 import { newCharacter } from './schema';
 import { getUserStorage } from '$lib/storage/provider';

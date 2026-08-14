@@ -12,7 +12,7 @@
 		none: 'Not proficient',
 		half: 'Half proficiency',
 		proficient: 'Proficient',
-		expertise: 'Expertise (×2)'
+		expertise: 'Expertise (×2)',
 	} as const;
 </script>
 

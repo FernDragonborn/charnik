@@ -13,7 +13,7 @@ import {
 	migrate,
 	CHARACTER_SCHEMA_VERSION,
 	type Migration,
-	type Versioned
+	type Versioned,
 } from '../schema/version';
 import { characterSchema, parseCharacter, type Character } from './schema';
 import { SYSTEMS } from '../rules/pipeline';
@@ -76,13 +76,13 @@ const migrateV1toV2: Migration<Versioned> = (data) => {
 const migrateV2toV3: Migration<Versioned> = (data) =>
 	({
 		...(migrateV1toV2(data) as unknown as Record<string, unknown>),
-		schemaVersion: 3
+		schemaVersion: 3,
 	}) as unknown as Versioned;
 
 /** Forward migrations keyed by the version they upgrade FROM. */
 const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = {
 	1: migrateV1toV2,
-	2: migrateV2toV3
+	2: migrateV2toV3,
 };
 
 const CHARACTERS_DIR = 'characters';
@@ -127,7 +127,7 @@ const backupName = (tier: BackupTier, ts: number) => `character.bak.${tier}.${ts
 async function listBackups(
 	storage: Storage,
 	id: string,
-	tier: BackupTier
+	tier: BackupTier,
 ): Promise<{ ts: number; path: string }[]> {
 	let entries: FileEntry[];
 	try {
@@ -140,7 +140,7 @@ async function listBackups(
 		.filter((e) => !e.isDir && e.name.startsWith(prefix) && e.name.endsWith('.json'))
 		.map((e) => ({
 			ts: Number(e.name.slice(prefix.length, -'.json'.length)) || 0,
-			path: `${dirOf(id)}/${e.name}`
+			path: `${dirOf(id)}/${e.name}`,
 		}))
 		.sort((a, b) => b.ts - a.ts);
 }
@@ -152,7 +152,7 @@ export async function backupCharacter(
 	storage: Storage,
 	id: string,
 	tier: BackupTier,
-	now = Date.now()
+	now = Date.now(),
 ): Promise<void> {
 	let current: string;
 	try {
@@ -194,7 +194,7 @@ export async function saveCharacter(storage: Storage, character: Character): Pro
 	const res = characterSchema.safeParse(character);
 	if (!res.success) {
 		throw new Error(
-			`refusing to save invalid character: ${res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')}`
+			`refusing to save invalid character: ${res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')}`,
 		);
 	}
 	// snapshot the state we're about to overwrite (throttled), so a bad save is recoverable
@@ -248,7 +248,7 @@ export async function loadCharacter(storage: Storage, slug: string): Promise<Loa
 		return {
 			ok: false,
 			error: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; '),
-			...sys
+			...sys,
 		};
 	}
 	return { ok: true, character: res.data };
@@ -261,15 +261,15 @@ export async function loadCharacter(storage: Storage, slug: string): Promise<Loa
  * would drop exactly the saves most at risk. Path knowledge stays here, not at the call site.
  */
 export async function readCharacterFiles(
-	storage: Storage
+	storage: Storage,
 ): Promise<{ slug: string; json: string }[]> {
 	if (!(await storage.exists(CHARACTERS_DIR))) return [];
 	const slugs = (await storage.list(CHARACTERS_DIR)).filter((e) => e.isDir).map((e) => e.name);
 	const files = await Promise.all(
 		slugs.map(async (slug) => ({
 			slug,
-			json: await storage.read(fileOf(slug)).catch(() => '')
-		}))
+			json: await storage.read(fileOf(slug)).catch(() => ''),
+		})),
 	);
 	return files.filter((f) => f.json !== '');
 }
@@ -292,7 +292,7 @@ export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 					level: c.build.classes.reduce((n, cl) => n + cl.level, 0),
 					classes: c.build.classes
 						.map((cl) => `${cl.class.split(':').pop()} ${cl.level}`)
-						.join(' / ')
+						.join(' / '),
 				};
 			}
 			return {
@@ -301,9 +301,9 @@ export async function listCharacters(storage: Storage): Promise<RosterEntry[]> {
 				...(res.system ? { system: res.system } : {}), // real edition if readable, else no badge
 				level: 0,
 				classes: '',
-				error: res.error ?? 'unknown error'
+				error: res.error ?? 'unknown error',
 			};
-		})
+		}),
 	);
 	return out.sort((a, b) => a.name.localeCompare(b.name));
 }

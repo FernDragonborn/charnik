@@ -18,13 +18,13 @@ import type { Computed } from '../rules/pipeline';
  *  content-controlled, so a bare index could read an Object.prototype member — same guard as context). */
 function pluginResources(
 	facts: EffectFacts,
-	resourcesSpent: Readonly<Record<string, number>>
+	resourcesSpent: Readonly<Record<string, number>>,
 ): Record<string, number> {
 	return Object.fromEntries(
 		facts.resources.map((r) => {
 			const spent = Object.hasOwn(resourcesSpent, r.id) ? (resourcesSpent[r.id] ?? 0) : 0;
 			return [r.id, Math.max(0, r.max - spent)];
-		})
+		}),
 	);
 }
 
@@ -59,8 +59,8 @@ export function applyPluginPrePass(o: PluginPrePassInputs): void {
 			classLevels,
 			proficiencyBonus: prof,
 			abilities: Object.fromEntries(
-				ABILITIES.map((ab) => [ab, { score: scores[ab], mod: abilityModifier(scores[ab]) }])
-			) as Record<Ability, { score: number; mod: number }>
+				ABILITIES.map((ab) => [ab, { score: scores[ab], mod: abilityModifier(scores[ab]) }]),
+			) as Record<Ability, { score: number; mod: number }>,
 		},
 		play: {
 			hp: character.play.hp.current,
@@ -69,11 +69,11 @@ export function applyPluginPrePass(o: PluginPrePassInputs): void {
 			flags: {
 				isBloodied: character.play.hp.current <= preHpMax / 2,
 				isRaging: facts.conditions.includes(CONDITION_FLAG_ALIASES.is_raging),
-				isConcentrating: character.play.concentration != null
+				isConcentrating: character.play.concentration != null,
 			},
 			conditions: facts.conditions,
-			resources: pluginResources(facts, character.play.resourcesSpent)
-		}
+			resources: pluginResources(facts, character.play.resourcesSpent),
+		},
 	};
 	// scope = character id: the fail-closed counter is per (plugin, character), so one character's
 	// ctx can't disable a plugin for another (PLG-3).
@@ -83,7 +83,7 @@ export function applyPluginPrePass(o: PluginPrePassInputs): void {
 	if (expansion.syntheticEffects.length)
 		mergeFacts(
 			facts,
-			collectFacts(expansion.syntheticEffects, effCtx, o.issues, isEffectTargetSupported)
+			collectFacts(expansion.syntheticEffects, effCtx, o.issues, isEffectTargetSupported),
 		);
 	facts.numeric.push(...expansion.numeric);
 	facts.pluginNotes.push(...expansion.notes);

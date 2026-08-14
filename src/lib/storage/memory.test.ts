@@ -60,7 +60,7 @@ describe('MemoryStorage', () => {
 				const s = new MemoryStorage();
 				await s.write('a/b.txt', txt);
 				return (await s.read('a/b.txt')) === txt;
-			})
+			}),
 		);
 	});
 });

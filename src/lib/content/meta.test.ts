@@ -6,7 +6,7 @@ import { parseContentDirectives, checkFileMeta } from './meta';
 const fixture = (rel: string) =>
 	readFileSync(
 		fileURLToPath(new URL(`../../../tests/fixtures/content/${rel}`, import.meta.url)),
-		'utf8'
+		'utf8',
 	);
 
 describe('content meta directives', () => {
@@ -68,7 +68,7 @@ describe('content meta directives', () => {
 		expect(issue.values).toEqual({
 			source: 'My Homebrew',
 			url: 'https://example.test',
-			systems: '5e'
+			systems: '5e',
 		});
 	});
 });

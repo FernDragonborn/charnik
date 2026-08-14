@@ -36,7 +36,7 @@ export const UPDATE_MODE = {
 	/** check, and say a pack has an update available */
 	notify: 'notify',
 	/** check and fetch the bytes ahead of time, so applying is instant — still not applied */
-	download: 'download'
+	download: 'download',
 } as const;
 export type UpdateMode = (typeof UPDATE_MODE)[keyof typeof UPDATE_MODE];
 
@@ -117,7 +117,7 @@ export const emptyPackConfig = (): PackConfigData => ({
 	packs: {},
 	repos: {},
 	pending: {},
-	dismissedMissing: []
+	dismissedMissing: [],
 });
 
 /** At most one update request per repo per day — stated plainly in the settings copy, so the
@@ -235,7 +235,7 @@ export function parsePackConfig(raw: unknown): PackConfigData {
 		pending: parsePending(parsed.pending),
 		dismissedMissing: Array.isArray(parsed.dismissedMissing)
 			? parsed.dismissedMissing.filter((p): p is string => typeof p === 'string')
-			: []
+			: [],
 	};
 }
 
@@ -251,7 +251,7 @@ function parsePending(raw: unknown): Record<string, PendingRemote> {
 		if (typeof repo !== 'string' || !Array.isArray(files)) continue;
 		const clean = files.filter(
 			(f): f is { path: string; sha: string } =>
-				isRecord<unknown>(f) && typeof f.path === 'string' && typeof f.sha === 'string'
+				isRecord<unknown>(f) && typeof f.path === 'string' && typeof f.sha === 'string',
 		);
 		if (clean.length === files.length) out[pack] = { repo, files: clean };
 	}
@@ -281,7 +281,7 @@ export function reposDueForCheck(cfg: PackConfigData, now: number): string[] {
 	const live = new Set(
 		Object.values(cfg.packs)
 			.filter((p) => p.pinned !== true)
-			.map((p) => p.repo)
+			.map((p) => p.repo),
 	);
 	if (cfg.updates === UPDATE_MODE.off) return [];
 	return [...live].filter((repo) => isRepoDue(cfg.repos[repo], now)).sort();
@@ -424,7 +424,7 @@ export function renamePackEntry(from: string, to: string): void {
 	packConfig.packs[to] = {
 		repo: entry.repo,
 		...(entry.pinned === undefined ? {} : { pinned: entry.pinned }),
-		...(remotePack === to ? {} : { remotePack })
+		...(remotePack === to ? {} : { remotePack }),
 	};
 	const pending = packConfig.pending[from];
 	if (pending) {

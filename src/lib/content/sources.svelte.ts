@@ -36,7 +36,7 @@ interface SourceConfigData {
 const emptyConfig = (): SourceConfigData => ({
 	disabledFiles: [],
 	disabledSources: [],
-	collisions: {}
+	collisions: {},
 });
 
 /** Parse a stored JSON blob into a config, merged over empty defaults (a missing/corrupt snapshot →
@@ -118,7 +118,7 @@ export function renameFileRoot(fromRoot: string, toRoot: string): void {
 	const within = (path: string) => path === fromRoot || path.startsWith(`${fromRoot}/`);
 	if (!sourceConfig.disabledFiles.some(within)) return;
 	sourceConfig.disabledFiles = sourceConfig.disabledFiles.map((path) =>
-		within(path) ? `${toRoot}${path.slice(fromRoot.length)}` : path
+		within(path) ? `${toRoot}${path.slice(fromRoot.length)}` : path,
 	);
 	persist();
 }
@@ -195,7 +195,7 @@ export function detectCollisions(graph: ContentGraph): CollisionGroup[] {
 			id: first.id,
 			name: String(first.data.name_en),
 			sources,
-			rows
+			rows,
 		});
 	}
 	return out.sort((a, b) => a.name.localeCompare(b.name));

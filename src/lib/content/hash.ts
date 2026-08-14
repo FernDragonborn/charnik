@@ -22,7 +22,7 @@ import {
 	stampDirectives,
 	HASH_STATE,
 	type HashState,
-	type MetaKey
+	type MetaKey,
 } from './meta';
 
 export const HASH_PREFIX = 'xxh64:';
@@ -81,7 +81,7 @@ async function hashLegacyBody(csv: string): Promise<string> {
 				.split('\n')
 				.map((line) => line.replace(/[ \t]+$/, ''))
 				.join('\n')
-				.replace(/\n+$/, '')
+				.replace(/\n+$/, ''),
 		)
 	);
 }
@@ -108,7 +108,7 @@ export async function fileHashState(csv: string): Promise<HashState> {
  */
 export async function stampWithHash(
 	directives: Map<MetaKey, string>,
-	body: string
+	body: string,
 ): Promise<string> {
 	const withoutHash = new Map(directives);
 	withoutHash.delete('hash');

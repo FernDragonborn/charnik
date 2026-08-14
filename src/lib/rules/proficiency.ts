@@ -18,7 +18,7 @@ function parseProfGrants(raw: string | undefined): Set<string> | null {
 		raw
 			.split(',')
 			.map((s) => s.trim().toLowerCase())
-			.filter(Boolean)
+			.filter(Boolean),
 	);
 	return set.size ? set : null;
 }
@@ -51,7 +51,7 @@ export function weaponCategoryOf(itemType: string | undefined): 'simple' | 'mart
  *  read the weight class out of `item_type` ("light armor" / "medium armor" / "heavy armor"). */
 export function armorCategoryOf(
 	itemType: string | undefined,
-	itemCategory: string
+	itemCategory: string,
 ): 'light' | 'medium' | 'heavy' | 'shield' | undefined {
 	if (itemCategory === 'shield') return 'shield';
 	const t = (itemType ?? '').toLowerCase();
@@ -66,7 +66,7 @@ export function armorCategoryOf(
 export function isWeaponProficient(
 	grants: Set<string> | null,
 	itemType: string | undefined,
-	weaponId: string
+	weaponId: string,
 ): boolean {
 	if (grants === null) return true;
 	const cat = weaponCategoryOf(itemType);
@@ -79,7 +79,7 @@ export function isWeaponProficient(
 export function isArmorProficient(
 	grants: Set<string> | null,
 	itemType: string | undefined,
-	itemCategory: string
+	itemCategory: string,
 ): boolean {
 	if (grants === null) return true;
 	const cat = armorCategoryOf(itemType, itemCategory);

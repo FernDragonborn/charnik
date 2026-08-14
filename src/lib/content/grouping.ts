@@ -54,22 +54,22 @@ export interface Grouping {
 const GROUPINGS: Partial<Record<ContentType, Grouping[]>> = {
 	spell: [
 		{ key: 'level', label: 'Level' },
-		{ key: 'school', label: 'School' }
+		{ key: 'school', label: 'School' },
 	],
 	monster: [
 		{ key: 'cr', label: 'CR' },
-		{ key: 'creature_type', label: 'Type' }
+		{ key: 'creature_type', label: 'Type' },
 	],
 	item: [
 		{ key: 'item_type', label: 'Type' },
-		{ key: 'rarity', label: 'Rarity' }
+		{ key: 'rarity', label: 'Rarity' },
 	],
 	class_feature: [{ key: 'class_id', label: 'Class' }],
 	feat: [{ key: 'category', label: 'Category' }],
 	background: [{ key: 'source', label: 'Source' }],
 	species: [{ key: 'source', label: 'Source' }],
 	species_option: [{ key: 'species_id', label: 'Species' }],
-	language: [{ key: 'category', label: 'Category' }]
+	language: [{ key: 'category', label: 'Category' }],
 };
 
 /** The primary filter facet for a type (Source is always offered on top of this). */
@@ -78,7 +78,7 @@ const FACET: Partial<Record<ContentType, Grouping>> = {
 	monster: { key: 'creature_type', label: 'Type' },
 	item: { key: 'rarity', label: 'Rarity' },
 	feat: { key: 'category', label: 'Category' },
-	class_feature: { key: 'class_id', label: 'Class' }
+	class_feature: { key: 'class_id', label: 'Class' },
 };
 
 const cap = (s: string) => titleCase(s);
@@ -122,7 +122,7 @@ const crValue = (s: string) =>
 export function groupRows(
 	rows: LoadedRow[],
 	key: string,
-	type: ContentType
+	type: ContentType,
 ): { label: string; rows: LoadedRow[] }[] {
 	if (key === 'none') {
 		return [{ label: '', rows: [...rows].sort(compareRows) }];

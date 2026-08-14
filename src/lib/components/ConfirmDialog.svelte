@@ -10,7 +10,7 @@
 		confirmLabel = 'Confirm',
 		danger = false,
 		onConfirm,
-		onCancel
+		onCancel,
 	}: {
 		title: string;
 		message: string;

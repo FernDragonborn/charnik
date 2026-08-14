@@ -26,8 +26,8 @@ async function graphOf(): Promise<ContentGraph> {
 			`shield_of_faith,5.5e,${S},Shield of Faith,1,abjuration,bonus,60 ft,"Concentration, up to 10 minutes",V S M,true,flat_bonus:ac+2`,
 			`fire_bolt,5.5e,${S},Fire Bolt,0,evocation,action,120 ft,instant,V S,false,`,
 			// a token-less CONCENTRATION control spell (Model C: must still get a timed carrier)
-			`hold_person,5.5e,${S},Hold Person,2,enchantment,action,60 ft,"Concentration, up to 1 minute",V S M,true,`
-		].join('\n')
+			`hold_person,5.5e,${S},Hold Person,2,enchantment,action,60 ft,"Concentration, up to 1 minute",V S M,true,`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/conditions_srd.csv',
@@ -35,15 +35,15 @@ async function graphOf(): Promise<ContentGraph> {
 			'id,systems,source,name_en,max_level',
 			`prone,5.5e,${S},Prone,`,
 			`grappled,5e,${S},Grappled,`, // a DIFFERENT edition — must NOT appear for a 5.5e character
-			`exhaustion,5.5e,${S},Exhaustion,6` // the leveled one — its max_level is the lethal rung
-		].join('\n')
+			`exhaustion,5.5e,${S},Exhaustion,6`, // the leveled one — its max_level is the lethal rung
+		].join('\n'),
 	);
 	await st.write(
 		'c/items_srd.csv',
 		[
 			'id,systems,source,name_en,category,item_type,damage,properties',
-			`dagger,5.5e,${S},Dagger,weapon,melee weapon,1d4 piercing,finesse`
-		].join('\n')
+			`dagger,5.5e,${S},Dagger,weapon,melee weapon,1d4 piercing,finesse`,
+		].join('\n'),
 	);
 	const g = await loadContent(st, ['c']);
 	expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -237,15 +237,15 @@ async function casterGraphOf(): Promise<ContentGraph> {
 		'c/classes_srd.csv',
 		[
 			'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
-			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`
-		].join('\n')
+			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/spell_slots_srd.csv',
 		[
 			'id,systems,source,kind,level,slot_1,slot_2,slot_3,slot_4,slot_5,slot_6,slot_7,slot_8,slot_9',
-			`full_5,5.5e,${S},full,5,4,3,2,0,0,0,0,0,0`
-		].join('\n')
+			`full_5,5.5e,${S},full,5,4,3,2,0,0,0,0,0,0`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/spells_srd.csv',
@@ -276,8 +276,8 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			`false_life,5.5e,${S},False Life,1,necromancy,action,Self,1 hour,V S M,false,temp,,1d4 +4,temp_hp:per_slot(5),`,
 			// a magic-weapon buff (Magic Weapon): an `enhancement` upcast is the WHOLE +n bonus by slot (item 7),
 			// spawned as weapon-scoped attack+damage effect tokens (base +1 at slot 2, +2 at 4, +3 at 6)
-			`magic_weapon,5.5e,${S},Magic Weapon,2,transmutation,bonus,Touch,"Concentration, up to 1 hour",V S,true,none,,,"enhancement:step(slot, 2->1, 4->2, 6->3)",`
-		].join('\n')
+			`magic_weapon,5.5e,${S},Magic Weapon,2,transmutation,bonus,Touch,"Concentration, up to 1 hour",V S,true,none,,,"enhancement:step(slot, 2->1, 4->2, 6->3)",`,
+		].join('\n'),
 	);
 	const g = await loadContent(st, ['c']);
 	return g;
@@ -361,7 +361,7 @@ describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1
 		expect(partDiceOf('cold', 6)).toBe(2); // base 2d6 cold, no delta
 		expect((combat.tray.log[0]?.damage ?? []).map((p) => p.type).sort()).toEqual([
 			'cold',
-			'piercing'
+			'piercing',
 		]);
 	});
 
@@ -477,7 +477,7 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 		character.play.round = 1;
 		character.play.effects = [
 			{ iid: 'a', label: 'Bless', effects: [], positive: true, durationRounds: 2, startedRound: 1 },
-			{ iid: 'b', label: 'Curse', effects: [], positive: false } // indefinite — never expires
+			{ iid: 'b', label: 'Curse', effects: [], positive: false }, // indefinite — never expires
 		];
 		combat.economy.nextTurn(); // round 2 — Bless has 1 round left
 		expect(character.play.effects.map((e) => e.iid)).toEqual(['a', 'b']);
@@ -496,9 +496,9 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 				effects: [],
 				positive: true,
 				durationRounds: 10,
-				startedRound: 0
+				startedRound: 0,
 			},
-			{ iid: 'mark', label: 'Mark', effects: [], positive: false }
+			{ iid: 'mark', label: 'Mark', effects: [], positive: false },
 		];
 		combat.economy.advanceTime(1); // +1 round → 8 s in, Bless still up
 		expect(character.play.round).toBe(1);
@@ -512,7 +512,7 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 		character.play.effects = [{ iid: 'x', label: 'X', effects: [], positive: false }];
 		expect(combat.hasTimedEffects).toBe(false); // indefinite only
 		character.play.effects = [
-			{ iid: 'y', label: 'Y', effects: [], positive: true, durationRounds: 5, startedRound: 0 }
+			{ iid: 'y', label: 'Y', effects: [], positive: true, durationRounds: 5, startedRound: 0 },
 		];
 		expect(combat.hasTimedEffects).toBe(true);
 	});
@@ -528,8 +528,8 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 				effects: [],
 				positive: true,
 				durationRounds: 1,
-				startedRound: 1
-			}
+				startedRound: 1,
+			},
 		];
 		combat.economy.nextTurn();
 		expect(character.play.effects).toEqual([]);
@@ -543,12 +543,12 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 			effects: [],
 			positive: true,
 			durationRounds: rounds,
-			startedRound: 0
+			startedRound: 0,
 		});
 		character.play.effects = [
 			timed('short-lived', 10),
 			timed('eight-hours', 4800),
-			{ iid: 'forever', label: 'forever', effects: [], positive: false }
+			{ iid: 'forever', label: 'forever', effects: [], positive: false },
 		];
 		combat.resources.rest('short');
 		expect(character.play.effects.map((e) => e.iid)).toEqual(['eight-hours', 'forever']);
@@ -575,7 +575,7 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 				effects: [],
 				positive: true,
 				durationRounds: 1000,
-				startedRound: 0
+				startedRound: 0,
 			},
 			// just started, 5000 rounds left → survives a short rest
 			{
@@ -584,8 +584,8 @@ describe('CombatVM · effect lifecycle (EFX-4)', () => {
 				effects: [],
 				positive: true,
 				durationRounds: 5000,
-				startedRound: 999
-			}
+				startedRound: 999,
+			},
 		];
 		combat.resources.rest('short');
 		// pre-fix both survived (compared totals > 600); now only the still-running one does
@@ -615,7 +615,7 @@ describe('CombatVM · spending a resource (UBUG-5)', () => {
 		const character = newCharacter('valen', 'Valen', '5.5e');
 		character.play.autoCalc = true;
 		character.play.effects = [
-			{ iid: '1', label: 'Rage', effects: ['grant_resource:rage:3:long'], positive: true }
+			{ iid: '1', label: 'Rage', effects: ['grant_resource:rage:3:long'], positive: true },
 		];
 		combat.graph = graph;
 		combat.character = character;
@@ -631,7 +631,7 @@ describe('CombatVM · spending a resource (UBUG-5)', () => {
 		const character = newCharacter('valen', 'Valen', '5.5e');
 		character.play.autoCalc = true;
 		character.play.effects = [
-			{ iid: '1', label: 'Rage', effects: ['grant_resource:rage:2:long'], positive: true }
+			{ iid: '1', label: 'Rage', effects: ['grant_resource:rage:2:long'], positive: true },
 		];
 		combat.graph = graph;
 		combat.character = character;
@@ -650,7 +650,7 @@ describe('CombatVM · spending a resource (UBUG-5)', () => {
 		const character = newCharacter('valen', 'Valen', '5.5e');
 		character.play.autoCalc = true;
 		character.play.effects = [
-			{ iid: '1', label: 'Rage', effects: ['grant_resource:rage:2:long'], positive: true }
+			{ iid: '1', label: 'Rage', effects: ['grant_resource:rage:2:long'], positive: true },
 		];
 		// stored spent (3) exceeds the live max (2), and 'ki' no longer exists at all
 		character.play.resourcesSpent = { rage: 3, ki: 5 };
@@ -691,7 +691,7 @@ describe('CombatVM · incapacitated zeroes the action economy (G3)', () => {
 		combat.addEffect({
 			label: 'Incapacitated',
 			tokens: ['apply_condition:incapacitated'],
-			positive: false
+			positive: false,
 		});
 		expect(combat.economy.incapacitated).toBe(true);
 		expect(combat.economy.slotMax).toEqual({ action: 0, bonus: 0, reaction: 0 });
@@ -722,10 +722,10 @@ describe('CombatVM · S2 split net', () => {
 		character.build.classes = [{ class: `class:${S}:wizard`, level: 3 }];
 		character.build.spells = [
 			{ spell: `spell:${S}:fire_bolt`, prepared: true, alwaysPrepared: false },
-			{ spell: `spell:${S}:bless`, prepared: true, alwaysPrepared: false }
+			{ spell: `spell:${S}:bless`, prepared: true, alwaysPrepared: false },
 		];
 		character.build.inventory = [
-			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false }
+			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false },
 		];
 		combat.graph = graph;
 		combat.character = character;
@@ -894,21 +894,21 @@ describe('ResourceTracker · piece 3 spend-options', () => {
 		actionType: 'bonus_action',
 		cost: 1,
 		available: true,
-		...over
+		...over,
 	});
 	const make = (spent: number, max: number) => {
 		const c = {
-			play: { resourcesSpent: { ki: spent } as Record<string, number> }
+			play: { resourcesSpent: { ki: spent } as Record<string, number> },
 		} as unknown as Character;
 		const sheet = {
-			resources: [{ id: 'ki', name: 'Ki', max, recharge: 'short', source: 'Monk' }]
+			resources: [{ id: 'ki', name: 'Ki', max, recharge: 'short', source: 'Monk' }],
 		} as unknown as CharacterSheet;
 		return {
 			t: new ResourceTracker(
 				() => c,
-				() => sheet
+				() => sheet,
 			),
-			c
+			c,
 		};
 	};
 
@@ -959,7 +959,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		actionType: 'bonus_action',
 		cost: 1,
 		available: true,
-		...over
+		...over,
 	});
 
 	it('heals, spends the resource AND costs the bonus action (composition)', async () => {
@@ -1014,7 +1014,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 			action: 'gain_action',
 			actionType: 'free',
 			cost: 1,
-			available: true
+			available: true,
 		});
 		expect(character.play.turn.action).toBe(0); // one additional action granted back
 		expect(combat.resources.resourceSpent('action_surge')).toBe(1);
@@ -1033,10 +1033,10 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 				label: 'grant',
 				effects: [
 					'grant_resource:angelic_slumber:1:consumable', // the potion — one-use, never auto-recharges
-					'grant_resource:sorcery:4:long'
+					'grant_resource:sorcery:4:long',
 				],
-				positive: true
-			}
+				positive: true,
+			},
 		];
 		combat.graph = graph;
 		combat.character = character;
@@ -1049,7 +1049,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 			action: 'rest:long',
 			actionType: 'free',
 			cost: 1,
-			available: true
+			available: true,
 		});
 
 		expect(character.play.hp.current).toBe(20); // long rest restored HP to max
@@ -1068,10 +1068,10 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 				label: 'grant',
 				effects: [
 					'grant_resource:rage:3:short_one', // the pool being restored
-					'grant_resource:persistent_rage:1:long' // the "once per long rest" gate
+					'grant_resource:persistent_rage:1:long', // the "once per long rest" gate
 				],
-				positive: true
-			}
+				positive: true,
+			},
 		];
 		character.play.resourcesSpent = { rage: 3 }; // all rage spent
 		combat.graph = graph;
@@ -1085,7 +1085,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 			action: 'restore_resource:rage',
 			actionType: 'free',
 			cost: 1,
-			available: true
+			available: true,
 		});
 		expect(combat.resources.resourceSpent('rage')).toBe(0); // all rage back
 		expect(combat.resources.resourceSpent('persistent_rage')).toBe(1); // the gate is now used
@@ -1100,7 +1100,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 			action: 'restore_resource:rage',
 			actionType: 'free',
 			cost: 1,
-			available: true
+			available: true,
 		});
 		expect(combat.resources.resourceSpent('rage')).toBe(2); // NOT restored (gate was empty)
 	});
@@ -1116,10 +1116,10 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 				label: 'grant',
 				effects: [
 					'grant_resource:focus:6:short', // the pool the multi-action restores
-					'grant_resource:uncanny_metabolism:1:long' // the once/long-rest gate its cost spends
+					'grant_resource:uncanny_metabolism:1:long', // the once/long-rest gate its cost spends
 				],
-				positive: true
-			}
+				positive: true,
+			},
 		];
 		character.play.resourcesSpent = { focus: 6 }; // all focus spent
 		combat.graph = graph;
@@ -1133,7 +1133,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 			action: 'restore_resource:focus;heal:1d6+2', // TWO tokens, run in order
 			actionType: 'free',
 			cost: 1,
-			available: true
+			available: true,
 		});
 		expect(combat.resources.resourceSpent('focus')).toBe(0); // token 1: all focus back
 		expect(combat.resources.resourceSpent('uncanny_metabolism')).toBe(1); // gate spent
@@ -1149,8 +1149,8 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 				iid: '1',
 				label: 'grant',
 				effects: ['grant_resource:focus:6:short', 'regain_on_initiative:focus:4'],
-				positive: true
-			}
+				positive: true,
+			},
 		];
 		character.play.resourcesSpent = { focus: 5 }; // only 1 available (below 4)
 		combat.graph = graph;
@@ -1273,7 +1273,12 @@ describe('ResourceTracker · short_one partial recharge', () => {
 		const character = newCharacter('rook', 'Rook', '5.5e');
 		character.play.autoCalc = true;
 		character.play.effects = [
-			{ iid: '1', label: 'SW', effects: ['grant_resource:second_wind:3:short_one'], positive: true }
+			{
+				iid: '1',
+				label: 'SW',
+				effects: ['grant_resource:second_wind:3:short_one'],
+				positive: true,
+			},
 		];
 		character.play.resourcesSpent = { second_wind: 3 }; // all three uses expended
 		combat.graph = graph;
@@ -1372,7 +1377,7 @@ describe.each(['5e', '5.5e'] as const)(
 			combat.resources.rest('long'); // never goes negative
 			expect(character.play.exhaustion).toBe(0);
 		});
-	}
+	},
 );
 
 /** Load a whole real edition into a graph (like the content tests) — the Rage buff spans the real
@@ -1454,7 +1459,7 @@ describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a b
 	it('the `available` guard is enforced by the EXECUTOR, not just greyed in the panel', () => {
 		character.build.classes = [{ class: `class:${S}:barbarian`, level: 15 }];
 		const gate = (combat.sheet?.resourceOptions ?? []).find(
-			(o) => o.resourceId === 'persistent_rage'
+			(o) => o.resourceId === 'persistent_rage',
 		);
 		expect(gate?.available).toBe(false); // out of combat, its window is shut
 		combat.resources.useResource('rage', 3); // spend one so a restore would be visible

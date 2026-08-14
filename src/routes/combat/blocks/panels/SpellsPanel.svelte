@@ -105,7 +105,7 @@
 									onclick={(e) => {
 										e.stopPropagation();
 										toast(
-											`Casting time: ${r.castTimeIcon === 'react' ? 'reaction' : 'bonus action'}`
+											`Casting time: ${r.castTimeIcon === 'react' ? 'reaction' : 'bonus action'}`,
 										);
 									}}>{r.castTimeIcon === 'react' ? '↩' : '⚡'}</i
 								>{/if}{#if r.level > 0 && combat.castableSlots(r).length > 1}<!-- upcast picker: a leveled spell with >1 open slot level can be cast higher (item 1) --><!-- svelte-ignore a11y_click_events_have_key_events --><span

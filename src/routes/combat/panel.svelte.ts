@@ -9,7 +9,7 @@ export class PanelLayout {
 	// two independent column arrays (svelte-dnd-action items need an id)
 	columns = $state<{ id: string }[][]>([
 		[{ id: 'skills' }, { id: 'spells' }],
-		[{ id: 'attacks' }, { id: 'effects' }, { id: 'actions' }]
+		[{ id: 'attacks' }, { id: 'effects' }, { id: 'actions' }],
 	]);
 	dragDisabled = $state(true); // drag only after the ⠿ grip arms it (handle-only)
 	flipDurationMs = 150;

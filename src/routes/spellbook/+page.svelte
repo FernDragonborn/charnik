@@ -88,7 +88,7 @@
 	});
 
 	const detail = $derived(
-		selected ? buildDetail(selected, 'spell', undefined, app.activeLocale) : null
+		selected ? buildDetail(selected, 'spell', undefined, app.activeLocale) : null,
 	);
 	const selEntry = $derived(selected ? entryOf.get(selected.effectiveId) : undefined);
 	const sheet = $derived(graph && character ? deriveSheet(character, graph, isRowActive) : null);
@@ -106,7 +106,7 @@
 			sheet,
 			entry: e,
 			spellRef: id,
-			isCantrip
+			isCantrip,
 		});
 		if (!res.ok) {
 			if (res.message) toast(res.message);

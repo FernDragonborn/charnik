@@ -38,8 +38,8 @@ const DRACULA: CustomTheme = {
 		'color-danger-soft': '#3a1f22',
 		'color-overlay': 'rgb(0 0 0 / 0.6)',
 		'shadow-1': '0 1px 2px rgb(0 0 0 / 0.4)',
-		'shadow-2': '0 8px 30px rgb(0 0 0 / 0.55)'
-	}
+		'shadow-2': '0 8px 30px rgb(0 0 0 / 0.55)',
+	},
 };
 
 /** Catppuccin Mocha — the soft pastel dark palette. */
@@ -72,8 +72,8 @@ const CATPPUCCIN_MOCHA: CustomTheme = {
 		'color-danger-soft': '#3a2029',
 		'color-overlay': 'rgb(0 0 0 / 0.6)',
 		'shadow-1': '0 1px 2px rgb(0 0 0 / 0.4)',
-		'shadow-2': '0 8px 30px rgb(0 0 0 / 0.55)'
-	}
+		'shadow-2': '0 8px 30px rgb(0 0 0 / 0.55)',
+	},
 };
 
 /** Catppuccin Latte — the light member of the Catppuccin family. */
@@ -106,8 +106,8 @@ const CATPPUCCIN_LATTE: CustomTheme = {
 		'color-danger-soft': '#f7dde1',
 		'color-overlay': 'rgb(0 0 0 / 0.3)',
 		'shadow-1': '0 1px 2px rgb(0 0 0 / 0.08)',
-		'shadow-2': '0 10px 30px rgb(0 0 0 / 0.12)'
-	}
+		'shadow-2': '0 10px 30px rgb(0 0 0 / 0.12)',
+	},
 };
 
 /** Themes shipped with the app — selectable directly, like the built-in dark/light. */

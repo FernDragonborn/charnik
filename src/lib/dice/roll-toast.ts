@@ -53,7 +53,7 @@ export const ROLL_LAYOUT = {
 	/** The full card: every die, captions, a row per attack. The toast, the log and the dice tray. */
 	card: 'card',
 	/** One line of an already-crowded screen: bounded content, no captions. The Playbar. */
-	strip: 'strip'
+	strip: 'strip',
 } as const;
 export type RollLayout = (typeof ROLL_LAYOUT)[keyof typeof ROLL_LAYOUT];
 
@@ -78,7 +78,7 @@ const landed = (a: RollToastAttack): boolean => a.natural !== 1;
 const damagePart = (part: TypedRoll): RollToastDamage => ({
 	type: part.type,
 	...parseRollExpr(part.expr),
-	total: part.total
+	total: part.total,
 });
 
 /** One completed roll (+ the damage that followed it) → one attack line. */
@@ -98,7 +98,7 @@ function attackLine(roll: Rolled, damage: TypedRoll[]): RollToastAttack {
 		subtotal: roll.total,
 		...(roll.natural !== undefined ? { natural: roll.natural } : {}),
 		damage: damage.map(damagePart),
-		damageTotal: damageTotal(damage)
+		damageTotal: damageTotal(damage),
 	};
 }
 
@@ -129,7 +129,7 @@ export function rollToastModel(rolled: RollLogEntry | RollLogEntry[]): RollToast
 		total: damaging
 			? attacks.filter(landed).reduce((n, a) => n + a.damageTotal, 0)
 			: (attacks[0]?.subtotal ?? 0),
-		...(note ? { note } : {})
+		...(note ? { note } : {}),
 	};
 }
 

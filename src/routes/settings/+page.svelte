@@ -27,7 +27,7 @@
 	// per-character content problem sits in a tab with no hint that it's worth opening
 	const issueCount = $derived(
 		(graph ? graph.issues.length + graph.metaIssues.length + graph.driftItems.length : 0) +
-			deriveHealth.issues.length
+			deriveHealth.issues.length,
 	);
 	const collisionCount = $derived(graph ? detectCollisions(graph).length : 0);
 
@@ -39,7 +39,7 @@
 		// the pack panel lives in this tab, so a waiting update is a reason to open it
 		{ id: 'sources', label: 'Content', badge: () => Object.keys(updates.pending).length },
 		{ id: 'collisions', label: 'Collisions', badge: () => collisionCount },
-		{ id: 'plugins', label: 'Plugins' }
+		{ id: 'plugins', label: 'Plugins' },
 	];
 </script>
 

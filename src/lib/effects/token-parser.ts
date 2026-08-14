@@ -71,7 +71,7 @@ export const EFFECT_KIND = {
 	// L3 handler REFERENCE (`plugin:<namespace>:<handlerName>[:<args>]`) — content never contains code, only this
 	// pointer; the derive pre-pass resolves it through the plugin registry (docs/PLUGINS.md §1).
 	// Missing/disabled/errored plugin → the token degrades to an inert note like any unknown.
-	plugin: 'plugin'
+	plugin: 'plugin',
 } as const;
 export type EffectKind = (typeof EFFECT_KIND)[keyof typeof EFFECT_KIND];
 /** The kinds as a list (for schema validation / the `includes` guard). */
@@ -186,7 +186,7 @@ const parseFlatBonus: KindParser = (rest, raw, kind) => {
 	// `:` is structural (never inside an L2 expression), so this is unambiguous ahead of the `[+-]`.
 	const lit =
 		/^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)(?::([a-z][a-z0-9_]*))?\s*([+-])\s*(\d+d\d+|\d+)$/i.exec(
-			rest
+			rest,
 		);
 	if (lit) {
 		const target = lit[1] ?? '';
@@ -199,7 +199,7 @@ const parseFlatBonus: KindParser = (rest, raw, kind) => {
 	}
 	// L2 expression value: `<target>[:<qualifier>]<+|->` then an expression. A `-` sign negates it.
 	const ex = /^([a-z][a-z0-9_]*(?:\.[a-z0-9_]+)?)(?::([a-z][a-z0-9_]*))?\s*([+-])\s*(.+)$/i.exec(
-		rest
+		rest,
 	);
 	if (!ex) return { kind: 'unknown', raw };
 	const qual = qualifierSlot(ex[1] ?? '', ex[2]);
@@ -250,7 +250,7 @@ const parseGrantResource: KindParser = (rest, raw, kind) => {
 	// the middle (max) can hold expression characters (`*`, `(`, `,`) unambiguously.
 	// Id is snake-only (E3): a kebab pool id would be unreadable from `resource.<id>` expressions.
 	const m = /^([a-z0-9][a-z0-9_]*)(?::(.+):(short_one|short|long|consumable|other))?$/i.exec(
-		rest.trim()
+		rest.trim(),
 	);
 	if (!m?.[1]) return { kind: 'unknown', raw };
 	const id = m[1].toLowerCase();
@@ -297,7 +297,7 @@ const parseRollMod: KindParser = (rest, raw, kind) => {
 		target: m[1].trim(),
 		amount: Number(m[3]),
 		raw,
-		...(scope ? { weaponScope: scope } : {})
+		...(scope ? { weaponScope: scope } : {}),
 	};
 };
 
@@ -317,7 +317,7 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 	[EFFECT_KIND.minDie]: parseRollMod,
 	// `regain_on_initiative:<resource>:<n>` is the same `kind:target:int` shape (resource + the floor
 	// to top up to), so it reuses the roll-mod parser — no scope segment is ever present.
-	[EFFECT_KIND.regainOnInitiative]: parseRollMod
+	[EFFECT_KIND.regainOnInitiative]: parseRollMod,
 };
 
 function classifyToken(token: string): ParsedEffect {

@@ -29,7 +29,7 @@ describe('suggestClosest — nearest valid candidate(s) within a length-relative
 		// "attac" (len 5 → cap 2) is one edit from both "attach" and "attack"; tie broken by name
 		expect(suggestClosest('attac', ['attack', 'attach', 'random'], 2)).toEqual([
 			'attach',
-			'attack'
+			'attack',
 		]);
 	});
 });

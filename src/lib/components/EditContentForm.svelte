@@ -17,7 +17,7 @@
 		isShippedFile,
 		listTypeTargets,
 		HOMEBREW_SOURCE,
-		type TargetFile
+		type TargetFile,
 	} from '$lib/content/homebrew';
 	import { slugify } from '$lib/util/slug';
 	import type { LoadedRow } from '$lib/content/loader';
@@ -30,7 +30,7 @@
 		readDraft,
 		deleteDraft,
 		listDrafts,
-		type DraftTarget
+		type DraftTarget,
 	} from '$lib/drafts/store';
 	import { isReadOnlyContent } from '$lib/config/demo';
 	import { _ } from '$lib/i18n';
@@ -55,7 +55,7 @@
 		resumeGuid,
 		resumeDraft,
 		editRow,
-		ondelete
+		ondelete,
 	}: {
 		type: ContentType;
 		onsave: (id: string) => void;
@@ -98,7 +98,7 @@
 	const draftCacheTarget = $derived<DraftTarget>(
 		editRow
 			? { kind: 'editor', type, source: editRow.source, id: editRow.id }
-			: { kind: 'add', type, addGuid }
+			: { kind: 'add', type, addGuid },
 	);
 	const readOnly = isReadOnlyContent();
 
@@ -126,7 +126,7 @@
 		const snapshot = { ...draft };
 		writeTimer = setTimeout(
 			() => void writeDraft(getUserStorage(), draftCacheTarget, snapshot),
-			600
+			600,
 		);
 	});
 
@@ -176,14 +176,14 @@
 
 	const fields = $derived(fieldsFor(type).filter((f) => !isLocaleVariant(f.name)));
 	const bodyFields = $derived(
-		fields.filter((f) => f.kind === 'textarea' && !BOTTOM_FIELDS.includes(f.name))
+		fields.filter((f) => f.kind === 'textarea' && !BOTTOM_FIELDS.includes(f.name)),
 	);
 	// the spell "at higher levels" (textarea) + material (short text), pulled under the body IN
 	// BOTTOM_FIELDS order (higher_level then material) to mirror the compendium article
 	const bottomFields = $derived(
 		fields
 			.filter((f) => BOTTOM_FIELDS.includes(f.name))
-			.sort((a, b) => BOTTOM_FIELDS.indexOf(a.name) - BOTTOM_FIELDS.indexOf(b.name))
+			.sort((a, b) => BOTTOM_FIELDS.indexOf(a.name) - BOTTOM_FIELDS.indexOf(b.name)),
 	);
 	// everything the meta grid renders: not the title, body, systems, id, classes or the bottom fields
 	const metaFields = $derived(
@@ -191,8 +191,8 @@
 			(f) =>
 				!['name_en', 'systems', 'id', CLASSES_FIELD].includes(f.name) &&
 				f.kind !== 'textarea' &&
-				!BOTTOM_FIELDS.includes(f.name)
-		)
+				!BOTTOM_FIELDS.includes(f.name),
+		),
 	);
 	const hasClasses = $derived(fields.some((f) => f.name === CLASSES_FIELD));
 
@@ -216,11 +216,11 @@
 		effects:
 			'Auto-calc effects, “;”-separated. Format kind:target±amount. ' +
 			'e.g. flat_bonus:ac+1; resist_immune:fire; grant_proficiency:skill.stealth. Leave blank if none.',
-		classes: 'Tick the spellcaster classes this spell is available to (below).'
+		classes: 'Tick the spellcaster classes this spell is available to (below).',
 	};
 	// live warning for the level cell: a value above 9 has no slot in the classic rules
 	const levelWarning = $derived(
-		Number(draft.level) > 9 ? `No level ${draft.level} spell slot in the classic rules (0–9).` : ''
+		Number(draft.level) > 9 ? `No level ${draft.level} spell slot in the classic rules (0–9).` : '',
 	);
 	// existing SPELLCASTER classes to tick in the ClassPicker — only classes with a caster type have
 	// spell slots (excludes Barbarian/Fighter/Monk/Rogue); deduped by id (a class exists once per

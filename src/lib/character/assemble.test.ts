@@ -13,7 +13,7 @@ describe('assembleCharacter', () => {
 			strict: true,
 			shortRestMode: 'dice',
 			play: null,
-			ui: null
+			ui: null,
 		});
 		expect(c.id).toBe('valen');
 		expect(c.system).toBe('5.5e');
@@ -32,7 +32,7 @@ describe('assembleCharacter', () => {
 			strict: false,
 			shortRestMode: 'dice',
 			play,
-			ui
+			ui,
 		});
 		expect(c.play.hp.current).toBe(5);
 		expect(c.ui.strict).toBe(false);
@@ -47,7 +47,7 @@ describe('assembleCharacter', () => {
 			strict: true,
 			shortRestMode: 'dice',
 			play: null,
-			ui: null
+			ui: null,
 		});
 		expect(c.build.name).toBe('Broken');
 		expect(c.build.classes).toEqual([]); // fallback keeps only name + abilities

@@ -84,7 +84,7 @@ export function parseDamageParts(dmg: string): DamagePart[] {
 export function formatDamageParts(parts: DamagePart[]): string {
 	return parts
 		.map((p) =>
-			[formatDicePool(p.pool), p.mod ? signed(p.mod) : '', p.type].filter(Boolean).join(' ')
+			[formatDicePool(p.pool), p.mod ? signed(p.mod) : '', p.type].filter(Boolean).join(' '),
 		)
 		.join(' + ');
 }
@@ -132,7 +132,7 @@ export function weaponBonus(tokens: string[]): {
 		attack,
 		damage,
 		...(extraParts.length ? { extraParts } : {}),
-		...(note ? { note } : {})
+		...(note ? { note } : {}),
 	};
 }
 
@@ -154,7 +154,7 @@ function weaponScopeSet(itemType: string, properties: string): Set<string> {
  *  fold (a scoped dice/expression bonus rides the roll path — none shipped). Returns bonus + a note. */
 function scopedAttackBonus(
 	facts: CharacterSheet['facts'],
-	scopes: Set<string>
+	scopes: Set<string>,
 ): {
 	attack: number;
 	note?: string;
@@ -174,7 +174,7 @@ function scopedAttackBonus(
 export function computeAttacks(
 	character: Character,
 	sheet: CharacterSheet,
-	graph: ContentGraph
+	graph: ContentGraph,
 ): Attack[] {
 	const prof = sheet.proficiencyBonus,
 		strMod = sheet.abilities.str.mod,
@@ -186,7 +186,7 @@ export function computeAttacks(
 		character.build.classes.map((c) => {
 			const r = graph.get(c.class);
 			return r?.type === 'class' ? r.data.weapon_profs : undefined;
-		})
+		}),
 	);
 	const out: Attack[] = [];
 	for (const inv of character.build.inventory) {
@@ -213,7 +213,7 @@ export function computeAttacks(
 		// damage type's dice. A weapon with no damage string still gets a part to carry that mod.
 		const parts = parseDamageParts(row.data.damage ?? '');
 		const baseParts = (parts.length ? parts : [{ pool: {}, mod: 0, type: '' }]).map((p, i) =>
-			i === 0 ? { ...p, mod: p.mod + mod + w.damage } : p
+			i === 0 ? { ...p, mod: p.mod + mod + w.damage } : p,
 		);
 		// typed magic damage (flaming +1d6 fire) rides as extra part(s) after the weapon's own types
 		const damageParts = [...baseParts, ...(w.extraParts ?? [])];
@@ -224,7 +224,7 @@ export function computeAttacks(
 			damageParts,
 			meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · '),
 			scopes: [...scopeSet],
-			...(note ? { note } : {})
+			...(note ? { note } : {}),
 		});
 	}
 	out.push({
@@ -233,7 +233,7 @@ export function computeAttacks(
 		scopes: ['melee'], // an unarmed strike is a melee attack, but carries no weapon properties
 		dmg: `${1 + strMod} bludgeoning`,
 		damageParts: [{ pool: {}, mod: 1 + strMod, type: 'bludgeoning' }],
-		meta: 'melee'
+		meta: 'melee',
 	});
 	return out;
 }

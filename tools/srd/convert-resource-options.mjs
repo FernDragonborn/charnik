@@ -24,7 +24,7 @@ const COLUMNS = [
 	'resource_id',
 	'cost',
 	'action',
-	'action_type'
+	'action_type',
 ];
 
 /** The three Monk options both editions share (each 1 point, a Bonus Action). Text is the SRD
@@ -34,20 +34,20 @@ const MONK_OPTIONS = [
 		id: 'flurry_of_blows',
 		name_en: 'Flurry of Blows',
 		text_en: 'Immediately after the Attack action, make two Unarmed Strikes as a Bonus Action.',
-		action: 'note:Make two Unarmed Strikes'
+		action: 'note:Make two Unarmed Strikes',
 	},
 	{
 		id: 'patient_defense',
 		name_en: 'Patient Defense',
 		text_en: 'Take the Dodge action as a Bonus Action.',
-		action: 'note:Take the Dodge action'
+		action: 'note:Take the Dodge action',
 	},
 	{
 		id: 'step_of_the_wind',
 		name_en: 'Step of the Wind',
 		text_en: 'Take the Disengage or Dash action as a Bonus Action; your jump distance is doubled.',
-		action: 'note:Disengage or Dash; jump distance doubled'
-	}
+		action: 'note:Disengage or Dash; jump distance doubled',
+	},
 ];
 
 const row = (source, systems, resourceId, o) => ({
@@ -62,17 +62,17 @@ const row = (source, systems, resourceId, o) => ({
 	resource_id: resourceId,
 	cost: '1',
 	action: o.action,
-	action_type: 'bonus_action'
+	action_type: 'bonus_action',
 });
 
 writeCsv(
 	resolve(packDir('srd-2024'), 'resource_options_srd.csv'),
 	COLUMNS,
-	MONK_OPTIONS.map((o) => row('SRD 5.2.1', '5.5e', 'focus', o))
+	MONK_OPTIONS.map((o) => row('SRD 5.2.1', '5.5e', 'focus', o)),
 );
 writeCsv(
 	resolve(packDir('srd-2014'), 'resource_options_srd.csv'),
 	COLUMNS,
-	MONK_OPTIONS.map((o) => row('SRD 5.1', '5e', 'ki', o))
+	MONK_OPTIONS.map((o) => row('SRD 5.1', '5e', 'ki', o)),
 );
 console.log('resource_options: 3 monk options × 2 editions');

@@ -14,20 +14,20 @@ describe('migrate', () => {
 	it('chains registered migrations up to the target, in order', () => {
 		const migrations: Record<number, Migration<Save>> = {
 			1: (d) => ({ schemaVersion: 2, value: d.value + 10 }),
-			2: (d) => ({ schemaVersion: 3, value: d.value + 100 })
+			2: (d) => ({ schemaVersion: 3, value: d.value + 100 }),
 		};
 		expect(migrate({ schemaVersion: 1, value: 0 }, migrations, 3)).toEqual({
 			schemaVersion: 3,
-			value: 110
+			value: 110,
 		});
 	});
 
 	it('throws when a step in the chain is missing', () => {
 		const migrations: Record<number, Migration<Save>> = {
-			1: (d) => ({ schemaVersion: 2, value: d.value })
+			1: (d) => ({ schemaVersion: 2, value: d.value }),
 		};
 		expect(() => migrate({ schemaVersion: 1, value: 0 }, migrations, 3)).toThrow(
-			/no migration from schemaVersion 2/
+			/no migration from schemaVersion 2/,
 		);
 	});
 
@@ -41,7 +41,7 @@ describe('migrate', () => {
 
 	it('throws if a migration fails to advance the version (guards an infinite loop)', () => {
 		const migrations: Record<number, Migration<Save>> = {
-			1: (d) => ({ schemaVersion: 1, value: d.value }) // forgot to bump
+			1: (d) => ({ schemaVersion: 1, value: d.value }), // forgot to bump
 		};
 		expect(() => migrate({ schemaVersion: 1, value: 0 }, migrations, 2)).toThrow(/did not advance/);
 	});

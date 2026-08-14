@@ -12,7 +12,7 @@
 		enableConsented,
 		setKillSwitch,
 		pluginStatus,
-		type PluginStatus
+		type PluginStatus,
 	} from '$lib/effects/plugin-store.svelte';
 	import { LOCAL_ORIGIN, type DiscoveredPlugin } from '$lib/effects/plugin-host';
 	import PluginConsentDialog from './PluginConsentDialog.svelte';
@@ -24,7 +24,7 @@
 		needs_consent: 'settings.plugins.status.needsConsent',
 		code_changed: 'settings.plugins.status.codeChanged',
 		disabled: 'settings.plugins.status.disabled',
-		enabled: 'settings.plugins.status.enabled'
+		enabled: 'settings.plugins.status.enabled',
 	};
 
 	async function toggle(p: DiscoveredPlugin) {

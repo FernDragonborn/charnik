@@ -28,7 +28,7 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 			name: 'Attack',
 			hint: '',
 			desc: 'weapon / spell / unarmed',
-			marker: '→ Attacks'
+			marker: '→ Attacks',
 		},
 		{ id: 'dash', name: 'Dash', hint: '', desc: '+speed this turn', marker: 'action' },
 		{
@@ -36,7 +36,7 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 			name: 'Disengage',
 			hint: '',
 			desc: 'no opportunity attacks',
-			marker: 'action'
+			marker: 'action',
 		},
 		{ id: 'dodge', name: 'Dodge', hint: '', desc: 'attackers have disadv.', marker: 'action' },
 		{
@@ -45,7 +45,7 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 			hint: signed(sk('stealth')),
 			desc: 'Stealth',
 			marker: '→ roll',
-			roll: ['Hide (Stealth)', sk('stealth')]
+			roll: ['Hide (Stealth)', sk('stealth')],
 		},
 		{
 			id: 'search',
@@ -53,7 +53,7 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 			hint: signed(sk('perception')),
 			desc: 'Perception',
 			marker: '→ roll',
-			roll: ['Search (Perception)', sk('perception')]
+			roll: ['Search (Perception)', sk('perception')],
 		},
 		// Study is a 2024 action; 2014 has no separate Study action
 		...(is2024
@@ -64,8 +64,8 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 						hint: signed(sk('arcana')),
 						desc: 'recall lore',
 						marker: '→ roll',
-						roll: ['Study (Arcana)', sk('arcana')] as [string, number]
-					}
+						roll: ['Study (Arcana)', sk('arcana')] as [string, number],
+					},
 				]
 			: []),
 		{
@@ -74,7 +74,7 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 			hint: signed(sk('athletics')),
 			desc: 'Athletics vs target',
 			marker: 'contest',
-			roll: ['Grapple (Athletics)', sk('athletics')]
+			roll: ['Grapple (Athletics)', sk('athletics')],
 		},
 		{
 			id: 'shove',
@@ -82,7 +82,7 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 			hint: signed(sk('athletics')),
 			desc: 'prone / push 5 ft',
 			marker: 'contest',
-			roll: ['Shove (Athletics)', sk('athletics')]
+			roll: ['Shove (Athletics)', sk('athletics')],
 		},
 		{ id: 'help', name: 'Help', hint: '', desc: 'give an ally advantage', marker: 'action' },
 		{ id: 'ready', name: 'Ready', hint: '', desc: 'prepare a trigger', marker: 'action' },
@@ -92,7 +92,7 @@ export function standardActions(sheet: CharacterSheet | null, system: System): S
 			name: is2024 ? 'Utilize' : 'Use an Object',
 			hint: '',
 			desc: 'use an object',
-			marker: 'action'
-		}
+			marker: 'action',
+		},
 	];
 }

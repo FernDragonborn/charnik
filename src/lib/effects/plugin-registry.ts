@@ -106,7 +106,7 @@ const contributionSchema = z.object({
 	layer: z.enum(['feature', 'item', 'condition']),
 	op: z.enum(['add', 'set', 'mult']),
 	amount: z.number().finite().min(-1000).max(1000),
-	label: z.string().max(48).optional()
+	label: z.string().max(48).optional(),
 });
 
 /** One L1 token per array element — a `;`/newline inside would smuggle N tokens past the ≤16 cap
@@ -119,14 +119,14 @@ const singleToken = z
 const resultSchema = z.object({
 	tokens: z.array(singleToken).max(16).optional(),
 	contributions: z.record(z.string(), z.array(contributionSchema).max(8)).optional(),
-	notes: z.array(z.string().max(200)).max(8).optional()
+	notes: z.array(z.string().max(200)).max(8).optional(),
 });
 
 type PluginResult = z.infer<typeof resultSchema>;
 
 /** Parse + validate a sandbox result string. Whole-result rejection on ANY violation (§4.3). */
 function validateResult(
-	resultJson: string
+	resultJson: string,
 ): { ok: true; result: PluginResult } | { ok: false; reason: string } {
 	if (resultJson.length > MAX_RESULT_JSON) return { ok: false, reason: 'result too large' };
 	let parsed: unknown;
@@ -218,7 +218,7 @@ const emptyExpansion = (): PluginExpansion => ({
 	syntheticEffects: [],
 	numeric: [],
 	notes: [],
-	unknown: []
+	unknown: [],
 });
 
 const now = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
@@ -236,7 +236,7 @@ export function expandPluginEffects(
 	effects: ActiveEffect[],
 	ctx: PluginCtx,
 	issues: EffectIssue[],
-	scope = ''
+	scope = '',
 ): PluginExpansion | null {
 	let any = false;
 	for (const eff of effects) {
@@ -265,7 +265,7 @@ export function expandPluginEffects(
 				build: JSON.stringify([token, buildJson]),
 				full: JSON.stringify([token, buildJson, playJson]),
 				buildJson,
-				playJson
+				playJson,
 			};
 			// fail-closed counter is per (namespace, character) — a fail on THIS character only
 			const r = resolvePluginToken(ref, failKey(namespace, scope), keys, budget);
@@ -297,7 +297,7 @@ function resolvePluginToken(
 	ref: PluginTokenRef,
 	fkey: string,
 	keys: TokenKeys,
-	budget: BudgetState
+	budget: BudgetState,
 ): { ok: true; result: PluginResult } | { ok: false; reason: string } {
 	const { namespace, handlerName } = ref;
 	if (!evaluator) return { ok: false, reason: 'plugin not available (no plugins enabled)' };
@@ -309,7 +309,7 @@ function resolvePluginToken(
 			ok: false,
 			reason: loadErr
 				? `plugin "${namespace}": ${loadErr}`
-				: `plugin "${namespace}" missing/disabled or handler "${handlerName}" not registered`
+				: `plugin "${namespace}" missing/disabled or handler "${handlerName}" not registered`,
 		};
 	}
 	// memo lookup: build-only first (the common, cache-hot case), then the full key
@@ -335,7 +335,7 @@ function resolvePluginToken(
 	memoSet(
 		outcome.readPlay ? memoFull : memoBuild,
 		outcome.readPlay ? keys.full : keys.build,
-		v.result
+		v.result,
 	);
 	return { ok: true, result: v.result };
 }
@@ -358,7 +358,7 @@ function applyResult({ out, eff, namespace, token, result }: ApplyResultInput): 
 				source: `${eff.source} · ${namespace}`,
 				layer: eff.layer,
 				tokens,
-				...(eff.classId !== undefined ? { classId: eff.classId } : {})
+				...(eff.classId !== undefined ? { classId: eff.classId } : {}),
 			});
 	}
 	for (const [target, contribs] of Object.entries(result.contributions ?? {})) {
@@ -370,7 +370,7 @@ function applyResult({ out, eff, namespace, token, result }: ApplyResultInput): 
 				// host-stamped provenance: a plugin cannot masquerade as core math (PLG-SEC 16)
 				source: `${namespace}: ${c.label ?? token}`,
 				token,
-				amount: c.amount
+				amount: c.amount,
 			});
 		}
 	}

@@ -54,9 +54,9 @@ export class NodeStorage implements Storage {
 					path: (dir ? join(dir, e.name) : e.name).split(sep).join('/'),
 					name: e.name,
 					isDir,
-					mtime
+					mtime,
 				};
-			})
+			}),
 		);
 	}
 	async mkdir(path: string): Promise<void> {

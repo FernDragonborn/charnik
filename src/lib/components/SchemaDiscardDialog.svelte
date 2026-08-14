@@ -11,7 +11,7 @@
 	let {
 		drafts,
 		onDiscard,
-		onKeep
+		onKeep,
 	}: {
 		drafts: DraftEnvelope[];
 		/** user acknowledged — delete the stale files */
@@ -25,7 +25,7 @@
 		if (t.kind === 'add')
 			return {
 				title: String(env.data.name_en ?? 'Untitled'),
-				sub: `new ${t.type.replace(/_/g, ' ')}`
+				sub: `new ${t.type.replace(/_/g, ' ')}`,
 			};
 		if (t.kind === 'translate')
 			return { title: t.id, sub: `${t.type.replace(/_/g, ' ')} → ${t.locale.toUpperCase()}` };

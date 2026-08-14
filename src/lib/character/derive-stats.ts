@@ -11,7 +11,7 @@ import {
 	armoredAC,
 	passiveScore,
 	abilityModifier,
-	type Ability
+	type Ability,
 } from '../rules/core';
 import { ABILITIES } from './schema';
 import type { Character } from './schema';
@@ -31,7 +31,7 @@ const PROF_ORDER: Record<SkillProficiency, number> = {
 	none: 0,
 	half: 1,
 	proficient: 2,
-	expertise: 3
+	expertise: 3,
 };
 /** The higher rung of the proficiency ladder — sources combine by MAX, never by flag-union, so
  *  "expertise without proficiency" is unrepresentable. */
@@ -84,7 +84,7 @@ export function resolveClassSaves(
 	build: Character['build'],
 	graph: ContentGraph,
 	grantedSaves: Set<Ability>,
-	missing: string[]
+	missing: string[],
 ): Set<Ability> {
 	const classSaves = new Set<Ability>([...(build.saves as Ability[]), ...grantedSaves]);
 	build.classes.forEach((c, i) => {
@@ -102,7 +102,7 @@ export function resolveClassSaves(
 export function deriveAbilityBlocks(
 	{ build, scores, level, facts }: StatInputs,
 	abilityComputed: Record<Ability, Computed>,
-	classSaves: Set<Ability>
+	classSaves: Set<Ability>,
 ): Record<Ability, AbilityBlock> {
 	const abilities = {} as Record<Ability, AbilityBlock>;
 	for (const ab of ABILITIES) {
@@ -113,7 +113,7 @@ export function deriveAbilityBlocks(
 			baseScore: build.abilities[ab],
 			mod: abilityModifier(scores[ab]),
 			save: applyEffects(`save.${ab}`, base, facts),
-			saveProficient: proficient
+			saveProficient: proficient,
 		};
 	}
 	return abilities;
@@ -124,7 +124,7 @@ export function deriveAbilityBlocks(
  *  state. */
 export function deriveSkills(
 	{ build, scores, level, facts }: StatInputs,
-	grantedSkills: Map<string, SkillProficiency>
+	grantedSkills: Map<string, SkillProficiency>,
 ): Record<SkillId, Computed & { prof: SkillProficiency }> {
 	// class/background picks + §C feat-granted skill choices (Skilled) — both are plain proficiency
 	const chosenProf = new Set([...build.skills, ...(build.featSkills ?? [])]);
@@ -143,7 +143,7 @@ export function deriveSkills(
 			level,
 			proficient: profLevel === 'proficient',
 			expertise: profLevel === 'expertise',
-			halfProficient: profLevel === 'half'
+			halfProficient: profLevel === 'half',
 		});
 		skills[skill] = { ...applyEffects(`skill.${skill}`, base, facts), prof: profLevel };
 	}
@@ -155,7 +155,7 @@ export function deriveSkills(
 export function deriveAc(
 	{ scores, facts }: StatInputs,
 	equippedArmor: LoadedRowOf<'item'> | undefined,
-	shieldRaised: boolean
+	shieldRaised: boolean,
 ): Computed {
 	let acBase: Computed;
 	if (equippedArmor) {
@@ -169,7 +169,7 @@ export function deriveAc(
 		acBase = {
 			...acBase,
 			value: acBase.value + 2,
-			trace: [...acBase.trace, { source: 'Shield', layer: 'item', op: 'add', amount: 2 }]
+			trace: [...acBase.trace, { source: 'Shield', layer: 'item', op: 'add', amount: 2 }],
 		};
 	return applyEffects('ac', acBase, facts);
 }
@@ -180,15 +180,15 @@ export function deriveSpeed(
 	{ scores, facts }: StatInputs,
 	speciesRow: LoadedRow | undefined,
 	baseSpeed: number,
-	equippedArmor: LoadedRowOf<'item'> | undefined
+	equippedArmor: LoadedRowOf<'item'> | undefined,
 ): Computed {
 	const speedBase: Contribution[] = [
 		{
 			source: speciesRow ? String(speciesRow.data.name_en) : 'Default',
 			layer: 'base',
 			op: 'add',
-			amount: baseSpeed
-		}
+			amount: baseSpeed,
+		},
 	];
 	const armorStrMin = equippedArmor ? num(equippedArmor.data.str_min) : 0;
 	if (armorStrMin > 0 && scores.str < armorStrMin)
@@ -197,7 +197,7 @@ export function deriveSpeed(
 			layer: 'item',
 			op: 'add',
 			amount: -10,
-			note: `STR ${scores.str} < ${armorStrMin}`
+			note: `STR ${scores.str} < ${armorStrMin}`,
 		});
 	return applyEffects('speed', computed(speedBase, { min: 0 }), facts);
 }
@@ -206,7 +206,7 @@ export function deriveSpeed(
  *  check has a passive form (RAW), and the play view pins arbitrary skills as passive senses. */
 export function derivePassives(
 	skills: Record<SkillId, Computed & { prof: SkillProficiency }>,
-	facts: EffectFacts
+	facts: EffectFacts,
 ): Record<SkillId, Computed> {
 	const out = {} as Record<SkillId, Computed>;
 	for (const skill of Object.keys(SKILL_ABILITY) as SkillId[]) {
@@ -224,9 +224,9 @@ export function derivePassives(
 						source: adv ? 'Advantage' : 'Disadvantage',
 						layer: 'condition',
 						op: 'add',
-						amount: adv ? 5 : -5
-					}
-				]
+						amount: adv ? 5 : -5,
+					},
+				],
 			};
 		out[skill] = applyEffects(`passive.${skill}`, base, facts);
 	}

@@ -35,7 +35,7 @@
 		{ key: 'roster', labelKey: 'nav.roster', href: '/' },
 		{ key: 'combat', labelKey: 'nav.combat', href: '/combat' },
 		{ key: 'compendium', labelKey: 'nav.compendium', href: '/compendium' },
-		{ key: 'settings', labelKey: 'nav.settings', href: '/settings' }
+		{ key: 'settings', labelKey: 'nav.settings', href: '/settings' },
 	];
 
 	// Visibility lives in the shared ui store so the header search chip can open the same palette.
@@ -51,14 +51,14 @@
 
 	const pages = $derived<PageItem[]>(
 		COMMANDS.filter((c) => $_(c.labelKey).toLowerCase().includes(query.trim().toLowerCase())).map(
-			(c) => ({ kind: 'page', key: c.key, label: $_(c.labelKey), href: c.href })
-		)
+			(c) => ({ kind: 'page', key: c.key, label: $_(c.labelKey), href: c.href }),
+		),
 	);
 	const contentItems = $derived<ContentItem[]>(
 		nameIndex && textIndex
 			? searchContent(nameIndex, textIndex, query, {
 					editions: app.activeEditions,
-					locale: app.activeLocale
+					locale: app.activeLocale,
 				})
 					// B5: two-dimensional source filter — hide rows from a disabled file/source or the
 					// losing side of a resolved collision, same as the compendium/builders. Results are
@@ -75,9 +75,9 @@
 						slug: r.id,
 						label: r.name,
 						snippet: r.snippet,
-						systems: r.systems
+						systems: r.systems,
 					}))
-			: []
+			: [],
 	);
 	const items = $derived<Item[]>([...pages, ...contentItems]);
 

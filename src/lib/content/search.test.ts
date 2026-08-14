@@ -11,7 +11,7 @@ const row = (
 	name_uk: string,
 	text_en: string,
 	systems: string,
-	source: string
+	source: string,
 ) =>
 	`${id},${systems},${source},${name_en},${name_uk},"${text_en}",3,evocation,Action,60 feet,V,Instantaneous,false,false`;
 
@@ -27,7 +27,7 @@ async function seed(): Promise<ContentGraph> {
 				'Вогняна куля',
 				'A streak blossoms into an explosion of flame.',
 				'5.5e',
-				'SRD 5.2.1'
+				'SRD 5.2.1',
 			),
 			row(
 				'shield',
@@ -35,7 +35,7 @@ async function seed(): Promise<ContentGraph> {
 				'',
 				'An invisible barrier of magic force appears.',
 				'5.5e',
-				'SRD 5.2.1'
+				'SRD 5.2.1',
 			),
 			row(
 				'healing-word',
@@ -43,13 +43,13 @@ async function seed(): Promise<ContentGraph> {
 				'',
 				'A creature regains hit points equal to 2d4.',
 				'5.5e',
-				'SRD 5.2.1'
-			)
-		].join('\n')
+				'SRD 5.2.1',
+			),
+		].join('\n'),
 	);
 	await s.write(
 		'b/spells_srd.csv',
-		[HEAD, row('fireball', 'Fireball', '', 'An explosion of flame.', '5e', 'SRD 5.1')].join('\n')
+		[HEAD, row('fireball', 'Fireball', '', 'An explosion of flame.', '5e', 'SRD 5.1')].join('\n'),
 	);
 	return loadContent(s, ['a', 'b']);
 }

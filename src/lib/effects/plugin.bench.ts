@@ -12,7 +12,7 @@ import {
 	registerPluginEvaluator,
 	clearPluginMemo,
 	type PluginCtx,
-	type PluginEvaluator
+	type PluginEvaluator,
 } from './plugin-registry';
 import type { ActiveEffect } from './token-parser';
 
@@ -29,8 +29,8 @@ const ctx = (hp = 41): PluginCtx => ({
 			con: { score: 14, mod: 2 },
 			int: { score: 10, mod: 0 },
 			wis: { score: 12, mod: 1 },
-			cha: { score: 8, mod: -1 }
-		}
+			cha: { score: 8, mod: -1 },
+		},
 	},
 	play: {
 		hp,
@@ -38,21 +38,21 @@ const ctx = (hp = 41): PluginCtx => ({
 		tempHp: 0,
 		flags: { isBloodied: false, isRaging: false, isConcentrating: false },
 		conditions: [],
-		resources: { grit: 2 }
-	}
+		resources: { grit: 2 },
+	},
 });
 const carrier = (token: string, source = 'Ring'): ActiveEffect => ({
 	source,
 	layer: 'item',
-	tokens: [token]
+	tokens: [token],
 });
 const buildOnly: PluginEvaluator = {
 	has: () => true,
 	call: () => ({
 		ok: true,
 		resultJson: JSON.stringify({ tokens: ['flat_bonus:ac+1'] }),
-		readPlay: false
-	})
+		readPlay: false,
+	}),
 };
 
 describe('expandPluginEffects pre-pass', () => {

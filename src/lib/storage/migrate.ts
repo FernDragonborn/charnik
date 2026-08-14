@@ -83,7 +83,7 @@ export function mergeCopyList(source: DirFile[], target: DirFile[]): DirFile[] {
 export function mergeFailures(
 	source: DirFile[],
 	copied: DirFile[],
-	targetAfter: DirFile[]
+	targetAfter: DirFile[],
 ): string[] {
 	const tgt = byPath(targetAfter);
 	const fails: string[] = [];

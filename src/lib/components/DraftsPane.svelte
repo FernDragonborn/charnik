@@ -12,7 +12,7 @@
 	let {
 		graph,
 		onResume,
-		onResolveOrphans
+		onResolveOrphans,
 	}: {
 		graph: ContentGraph;
 		/** Resume a draft — the page routes it (translate → /translate preselected; add → the edit form). */
@@ -39,7 +39,7 @@
 	async function reload() {
 		loading = true;
 		drafts = (await listDrafts(getUserStorage())).sort((a, b) =>
-			b.savedAt.localeCompare(a.savedAt)
+			b.savedAt.localeCompare(a.savedAt),
 		);
 		loading = false;
 	}
@@ -69,7 +69,7 @@
 				fragment: name ? `· new ${typeLabel}` : `· unsaved new ${typeLabel}`,
 				typeLabel,
 				isOrphan: false,
-				age: ago(env.savedAt)
+				age: ago(env.savedAt),
 			};
 		}
 		const eid = draftEffectiveId(t);
@@ -83,7 +83,7 @@
 			fragment: t.kind === 'translate' ? `→ ${t.locale.toUpperCase()}` : '· edit all fields',
 			typeLabel,
 			isOrphan: !row,
-			age: ago(env.savedAt)
+			age: ago(env.savedAt),
 		};
 	}
 

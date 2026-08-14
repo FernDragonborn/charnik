@@ -14,7 +14,7 @@
 		deleteDraft,
 		readDraft,
 		type DraftEnvelope,
-		type DraftTarget
+		type DraftTarget,
 	} from '$lib/drafts/store';
 	import { getUserStorage } from '$lib/storage/provider';
 	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
@@ -23,7 +23,7 @@
 		orphans,
 		startAt,
 		graph,
-		onDone
+		onDone,
 	}: {
 		orphans: DraftEnvelope[];
 		/** which orphan to open first (the one whose Resolve was clicked) */
@@ -74,7 +74,7 @@
 				type: t.type,
 				source: row.source,
 				id: String(row.data.id),
-				locale: t.locale
+				locale: t.locale,
 			};
 		return { kind: 'editor', type: t.type, source: row.source, id: String(row.data.id) };
 	}
@@ -84,9 +84,9 @@
 			? {
 					title: String(selectedRow.data.name_en),
 					sub: `${selectedRow.type.replace(/_/g, ' ')} · ${selectedRow.source}`,
-					body: String(selectedRow.data.text_en ?? '').slice(0, 320)
+					body: String(selectedRow.data.text_en ?? '').slice(0, 320),
 				}
-			: null
+			: null,
 	);
 
 	function advance() {

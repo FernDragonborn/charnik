@@ -173,5 +173,5 @@ export const emptyFacts = (): EffectFacts => ({
 	rerolls: [],
 	minDie: [],
 	unknown: [],
-	pluginNotes: []
+	pluginNotes: [],
 });

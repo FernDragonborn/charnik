@@ -19,7 +19,7 @@ export type System = (typeof SYSTEMS)[number];
  *  from `sourceLabel()` in `content/detail.ts`, which names a SOURCE TAG (`SRD 5.1`), not a system. */
 export const SYSTEM_LABELS: Record<System, string> = {
 	'5e': 'D&D 5e (2014)',
-	'5.5e': 'D&D 5.5e (2024)'
+	'5.5e': 'D&D 5.5e (2024)',
 };
 
 /** The system a NEW character/draft starts in when nothing says otherwise. Named so the choice is
@@ -63,7 +63,7 @@ export interface Note {
  *  code (which never passes one) stays i18n-runtime-free and every note reproduces its EN text. */
 export function formatNote(
 	note: Note,
-	translate?: (key: string, params?: Record<string, string | number>) => string
+	translate?: (key: string, params?: Record<string, string | number>) => string,
 ): string {
 	return translate && note.key ? translate(note.key, note.params) : note.text;
 }
@@ -83,7 +83,7 @@ export const NOTE_KEY = {
 	autoSucceed: 'provenance.autoSucceed',
 	encumbered: 'provenance.encumbered',
 	heavilyEncumbered: 'provenance.heavilyEncumbered',
-	overCapacity: 'provenance.overCapacity'
+	overCapacity: 'provenance.overCapacity',
 } as const;
 
 export interface Computed {
@@ -111,7 +111,7 @@ const LAYER_SEQUENCE: Layer[] = [
 	'item',
 	'feature',
 	'condition',
-	'override'
+	'override',
 ];
 
 /**
@@ -144,7 +144,7 @@ function fold(contribs: Contribution[], clamp?: Clamp, ineffectiveNotes?: Note[]
 				ineffectiveNotes?.push({
 					text: `${f.source}: already ≥ ${f.amount}`,
 					key: NOTE_KEY.alreadyAtLeast,
-					params: { source: f.source, amount: f.amount }
+					params: { source: f.source, amount: f.amount },
 				});
 		}
 		// caps lower (min), lowest-first
@@ -154,7 +154,7 @@ function fold(contribs: Contribution[], clamp?: Clamp, ineffectiveNotes?: Note[]
 				ineffectiveNotes?.push({
 					text: `${c.source}: already ≤ ${c.amount}`,
 					key: NOTE_KEY.alreadyAtMost,
-					params: { source: c.source, amount: c.amount }
+					params: { source: c.source, amount: c.amount },
 				});
 		}
 		const product = here.filter((c) => c.op === 'mult').reduce((p, c) => p * c.amount, 1);
@@ -182,7 +182,7 @@ function overriddenSetNotes(contribs: Contribution[]): Note[] {
 				out.push({
 					text: `${s.source}: set ${s.amount} — overridden by ${winner}`,
 					key: NOTE_KEY.overriddenSet,
-					params: { source: s.source, amount: s.amount, winner }
+					params: { source: s.source, amount: s.amount, winner },
 				});
 	}
 	return out;

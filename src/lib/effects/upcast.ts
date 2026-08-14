@@ -24,7 +24,7 @@ export const UPCAST_KINDS = [
 	'count',
 	'area',
 	'duration',
-	'enhancement'
+	'enhancement',
 ] as const;
 export type UpcastKind = (typeof UPCAST_KINDS)[number];
 
@@ -37,7 +37,7 @@ const DELTA_KINDS: ReadonlySet<UpcastKind> = new Set<UpcastKind>([
 	'damage',
 	'heal',
 	'hp_max',
-	'temp_hp'
+	'temp_hp',
 ]);
 
 /** Kinds that carry an optional `:type` sub-slot (the typed-damage grammar, H5/N4): a damage/heal
@@ -135,7 +135,7 @@ function toPoolFlat(v: ExprValue): { pool: Record<number, number>; flat: number 
  */
 export function evalUpcast(
 	cell: string | undefined,
-	ctx: ExprContext
+	ctx: ExprContext,
 ): (UpcastResult | UpcastParseError)[] {
 	return parseUpcast(cell).map((tok) => {
 		if (isError(tok)) return tok;
@@ -150,7 +150,7 @@ export function evalUpcast(
 					pool: {},
 					flat: 0,
 					raw: tok.raw,
-					...(tok.type ? { type: tok.type } : {})
+					...(tok.type ? { type: tok.type } : {}),
 				};
 		}
 		const r = evalExpression(tok.formula, ctx);
@@ -164,7 +164,7 @@ export function evalUpcast(
 					pool: {},
 					flat: 0,
 					isInfinite: true,
-					raw: tok.raw
+					raw: tok.raw,
 				};
 			return { error: `'inf' is only valid for a duration upcast`, raw: tok.raw };
 		}
@@ -175,7 +175,7 @@ export function evalUpcast(
 			pool,
 			flat,
 			raw: tok.raw,
-			...(tok.type ? { type: tok.type } : {})
+			...(tok.type ? { type: tok.type } : {}),
 		};
 	});
 }
@@ -187,7 +187,7 @@ export function combinePools(
 	base: Record<number, number>,
 	baseFlat: number,
 	delta: Record<number, number>,
-	deltaFlat: number
+	deltaFlat: number,
 ): { pool: Record<number, number>; flat: number } {
 	const pool: Record<number, number> = { ...base };
 	for (const [sides, count] of Object.entries(delta))

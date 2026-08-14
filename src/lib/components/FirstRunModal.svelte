@@ -11,7 +11,7 @@
 	let {
 		defaultDir,
 		pickFolder,
-		onConfirm
+		onConfirm,
 	}: {
 		/** The suggested data dir (…/Documents/charnik) shown pre-selected. */
 		defaultDir: string;

@@ -23,7 +23,7 @@ import { MAX_REMOTE_BYTES, type FetchResult, type RemoteFetcher } from '$lib/con
 const nodeFetcher: RemoteFetcher = {
 	async getText(url, etag): Promise<FetchResult> {
 		const res = await fetch(url, {
-			headers: etag === undefined ? {} : { 'If-None-Match': etag }
+			headers: etag === undefined ? {} : { 'If-None-Match': etag },
 		});
 		if (res.status === 304) return { kind: 'notModified' };
 		if (!res.ok) return { kind: 'error', status: res.status, message: res.statusText };
@@ -36,7 +36,7 @@ const nodeFetcher: RemoteFetcher = {
 		const res = await fetch(url);
 		if (!res.ok) return { kind: 'error' as const, message: `${res.status} ${res.statusText}` };
 		return { kind: 'ok' as const, bytes: new Uint8Array(await res.arrayBuffer()) };
-	}
+	},
 };
 
 const REPO = 'https://github.com/FernDragonborn/charnik-content-srd';

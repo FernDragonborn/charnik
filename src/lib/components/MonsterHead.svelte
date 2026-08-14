@@ -10,7 +10,7 @@
 		detail,
 		monster,
 		editable = false,
-		draft
+		draft,
 	}: {
 		detail: DetailModel;
 		monster: MonsterModel;

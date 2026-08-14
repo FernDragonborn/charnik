@@ -25,7 +25,7 @@ import {
 	casterForSpell,
 	preparedTalliesByClass,
 	canTogglePreparedFor,
-	type EffectInstance
+	type EffectInstance,
 } from './helpers';
 import { collectFacts } from '$lib/effects/apply';
 import { computed } from '$lib/rules/pipeline';
@@ -52,7 +52,7 @@ describe('A18 · casterForSpell (multiclass uses the spell class own DC)', () =>
 		({
 			className,
 			saveDC: computed([{ source: 'x', layer: 'base', op: 'add', amount: dc }]),
-			accessSpellIds: spells
+			accessSpellIds: spells,
 		}) as unknown as SpellcastingClass;
 	const sheetOf = (...classes: SpellcastingClass[]) =>
 		({ spellcasting: { classes } }) as unknown as CharacterSheet;
@@ -60,7 +60,7 @@ describe('A18 · casterForSpell (multiclass uses the spell class own DC)', () =>
 	it('returns the caster class whose list grants the spell', () => {
 		const sheet = sheetOf(
 			cls('Wizard', 16, ['spell:x:fireball']),
-			cls('Cleric', 13, ['spell:x:cure_wounds'])
+			cls('Cleric', 13, ['spell:x:cure_wounds']),
 		);
 		expect(casterForSpell(sheet, 'spell:x:cure_wounds')?.className).toBe('Cleric');
 		expect(casterForSpell(sheet, 'spell:x:fireball')?.className).toBe('Wizard');
@@ -69,7 +69,7 @@ describe('A18 · casterForSpell (multiclass uses the spell class own DC)', () =>
 	it('on an overlap the higher save DC wins; unknown spell falls back to the first class', () => {
 		const sheet = sheetOf(
 			cls('Wizard', 16, ['spell:x:shield']),
-			cls('Cleric', 13, ['spell:x:shield'])
+			cls('Cleric', 13, ['spell:x:shield']),
 		);
 		expect(casterForSpell(sheet, 'spell:x:shield')?.className).toBe('Wizard'); // DC 16 > 13
 		expect(casterForSpell(sheet, 'spell:x:unknown')?.className).toBe('Wizard'); // fallback
@@ -82,14 +82,14 @@ describe('A18-tail · preparedTalliesByClass (per-class prepared accounting)', (
 		className: string,
 		dc: number,
 		cap: number,
-		spells: string[]
+		spells: string[],
 	): SpellcastingClass =>
 		({
 			classId,
 			className,
 			preparedCap: cap,
 			saveDC: computed([{ source: 'x', layer: 'base', op: 'add', amount: dc }]),
-			accessSpellIds: spells
+			accessSpellIds: spells,
 		}) as unknown as SpellcastingClass;
 	const sheetOf = (...classes: SpellcastingClass[]) =>
 		({ spellcasting: { classes } }) as unknown as CharacterSheet;
@@ -98,30 +98,30 @@ describe('A18-tail · preparedTalliesByClass (per-class prepared accounting)', (
 	it('attributes each prepared spell to the class that grants it, counting per class', () => {
 		const sheet = sheetOf(
 			cls('wizard', 'Wizard', 16, 9, ['spell:x:fireball', 'spell:x:mage_armor']),
-			cls('cleric', 'Cleric', 13, 5, ['spell:x:cure_wounds'])
+			cls('cleric', 'Cleric', 13, 5, ['spell:x:cure_wounds']),
 		);
 		const tallies = preparedTalliesByClass(
 			[prep('spell:x:fireball'), prep('spell:x:mage_armor'), prep('spell:x:cure_wounds')],
-			sheet
+			sheet,
 		);
 		expect(tallies).toEqual([
 			{ classId: 'wizard', className: 'Wizard', count: 2, cap: 9 },
-			{ classId: 'cleric', className: 'Cleric', count: 1, cap: 5 }
+			{ classId: 'cleric', className: 'Cleric', count: 1, cap: 5 },
 		]);
 	});
 
 	it('never counts always-prepared or unprepared spells; an overlap goes to the higher-DC class', () => {
 		const sheet = sheetOf(
 			cls('wizard', 'Wizard', 16, 9, ['spell:x:shield']),
-			cls('cleric', 'Cleric', 13, 5, ['spell:x:shield'])
+			cls('cleric', 'Cleric', 13, 5, ['spell:x:shield']),
 		);
 		const tallies = preparedTalliesByClass(
 			[
 				prep('spell:x:shield'), // on both lists → attributed to Wizard (DC 16 > 13)
 				{ spell: 'spell:x:bless', prepared: true, alwaysPrepared: true }, // free, never counts
-				{ spell: 'spell:x:sleep', prepared: false, alwaysPrepared: false } // not prepared
+				{ spell: 'spell:x:sleep', prepared: false, alwaysPrepared: false }, // not prepared
 			],
-			sheet
+			sheet,
 		);
 		expect(tallies.find((t) => t.classId === 'wizard')!.count).toBe(1);
 		expect(tallies.find((t) => t.classId === 'cleric')!.count).toBe(0);
@@ -134,14 +134,14 @@ describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + 
 		className: string,
 		dc: number,
 		cap: number,
-		spells: string[]
+		spells: string[],
 	): SpellcastingClass =>
 		({
 			classId,
 			className,
 			preparedCap: cap,
 			saveDC: computed([{ source: 'x', layer: 'base', op: 'add', amount: dc }]),
-			accessSpellIds: spells
+			accessSpellIds: spells,
 		}) as unknown as SpellcastingClass;
 	const sheetOf = (...classes: SpellcastingClass[]) =>
 		({ spellcasting: { classes } }) as unknown as CharacterSheet;
@@ -152,7 +152,7 @@ describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + 
 		// Wizard cap 1 (already 1 prepared → full); Cleric cap 3 (0 prepared)
 		const sheet = sheetOf(
 			cls('wizard', 'Wizard', 16, 1, ['spell:x:magic_missile', 'spell:x:shield']),
-			cls('cleric', 'Cleric', 13, 3, ['spell:x:cure_wounds'])
+			cls('cleric', 'Cleric', 13, 3, ['spell:x:cure_wounds']),
 		);
 		const spells = [prep('spell:x:magic_missile')]; // fills the Wizard cap
 
@@ -162,7 +162,7 @@ describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + 
 			sheet,
 			entry,
 			spellRef: 'spell:x:shield',
-			isCantrip: false
+			isCantrip: false,
 		});
 		expect(wiz.ok).toBe(false);
 		expect(wiz.ok === false && wiz.message).toContain('full');
@@ -173,8 +173,8 @@ describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + 
 				sheet,
 				entry,
 				spellRef: 'spell:x:cure_wounds',
-				isCantrip: false
-			}).ok
+				isCantrip: false,
+			}).ok,
 		).toBe(true);
 	});
 
@@ -186,8 +186,8 @@ describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + 
 				sheet,
 				entry,
 				spellRef: 'spell:x:fire_bolt',
-				isCantrip: true
-			}).ok
+				isCantrip: true,
+			}).ok,
 		).toBe(false);
 		const always = { prepared: true, alwaysPrepared: true };
 		expect(
@@ -196,8 +196,8 @@ describe('A18-tail · canTogglePreparedFor (the shared toggle seam — combat + 
 				sheet,
 				entry: always,
 				spellRef: 'spell:x:fire_bolt',
-				isCantrip: false
-			}).ok
+				isCantrip: false,
+			}).ok,
 		).toBe(false);
 	});
 });
@@ -236,7 +236,7 @@ describe('D9 · weaponBonus (per-weapon magic +X)', () => {
 	it('ignores tokens that are not attack/damage flat bonuses', () => {
 		expect(weaponBonus(['resist_immune:fire', 'grant_resource:ki'])).toEqual({
 			attack: 0,
-			damage: 0
+			damage: 0,
 		});
 	});
 });
@@ -246,7 +246,7 @@ describe('B14 · describeDerivedEffects (content-borne facts for the panel)', ()
 		const facts = collectFacts([
 			{ source: 'Ring of Protection', layer: 'item', tokens: ['flat_bonus:ac+1'] },
 			{ source: 'Belt', layer: 'item', tokens: ['set_override:str:19:floor'] },
-			{ source: 'Homebrew', layer: 'feature', tokens: ['teleport:far'] }
+			{ source: 'Homebrew', layer: 'feature', tokens: ['teleport:far'] },
 		]);
 		const d = describeDerivedEffects(facts);
 		expect(d.groups.find((g) => g.source === 'Ring of Protection')?.tags).toContain('AC +1');
@@ -256,7 +256,7 @@ describe('B14 · describeDerivedEffects (content-borne facts for the panel)', ()
 
 	it('excludes runtime (condition-layer) facts so it does not duplicate the buff/debuff rows', () => {
 		const facts = collectFacts([
-			{ source: 'Bless', layer: 'condition', tokens: ['flat_bonus:saves+1'] }
+			{ source: 'Bless', layer: 'condition', tokens: ['flat_bonus:saves+1'] },
 		]);
 		expect(describeDerivedEffects(facts).groups).toHaveLength(0);
 	});
@@ -278,9 +278,9 @@ describe('effectTagResolved — resolved value for an expression-valued token (t
 					layer: 'condition' as const,
 					source: 'Rage',
 					token: rageDamage,
-					amount: 2
-				}
-			]
+					amount: 2,
+				},
+			],
 		};
 		expect(effectTagResolved(rageDamage, facts)).toBe('Damage +2');
 	});
@@ -294,7 +294,7 @@ describe('A14 · effectiveHpMax (manual override + hp_max effects)', () => {
 	// a sheet max of 30 (base) with Aid stacking +5 at the condition layer
 	const withAid = computed([
 		{ source: 'Hit dice + CON', layer: 'base', op: 'add', amount: 30 },
-		{ source: 'Aid', layer: 'condition', op: 'add', amount: 5 }
+		{ source: 'Aid', layer: 'condition', op: 'add', amount: 5 },
 	]);
 	const noAid = computed([{ source: 'Hit dice + CON', layer: 'base', op: 'add', amount: 30 }]);
 
@@ -375,7 +375,7 @@ describe('rollEffectsFor — advantage + bonus dice a roll picks up', () => {
 		expect(r.advantage).toBe(false);
 		expect(r.bonusDice).toEqual([
 			{ sides: 4, count: 1, sign: 1 },
-			{ sides: 4, count: 1, sign: -1 }
+			{ sides: 4, count: 1, sign: -1 },
 		]);
 	});
 
@@ -410,7 +410,7 @@ describe('effectTag — readable tags for the effects panel', () => {
 const eff = (over: Partial<EffectInstance> & { iid: string; label: string }): EffectInstance => ({
 	effects: [],
 	positive: false,
-	...over
+	...over,
 });
 
 describe('groupEffects — Buffs / Debuffs / Resources split', () => {
@@ -418,19 +418,19 @@ describe('groupEffects — Buffs / Debuffs / Resources split', () => {
 		iid: 'bless',
 		label: 'Bless',
 		effects: ['flat_bonus:saves+1d4'],
-		positive: true
+		positive: true,
 	});
 	const bane = eff({
 		iid: 'bane',
 		label: 'Bane',
 		effects: ['flat_bonus:saves-1d4'],
-		positive: false
+		positive: false,
 	});
 	const arcane = eff({
 		iid: 'ar',
 		label: 'Arcane Recovery',
 		effects: ['grant_resource:arcane_recovery:1:long'], // snake id (E3)
-		positive: true // still lands in Resources, not Buffs
+		positive: true, // still lands in Resources, not Buffs
 	});
 	const g = groupEffects([bless, bane, arcane]);
 
@@ -452,19 +452,19 @@ describe('parseResourceEffect + rechargeLabel', () => {
 			eff({
 				iid: 'cd',
 				label: 'Channel Divinity',
-				effects: ['grant_resource:channel_divinity:2:short'] // snake id (E3)
-			})
+				effects: ['grant_resource:channel_divinity:2:short'], // snake id (E3)
+			}),
 		);
 		expect(r).toMatchObject({
 			name: 'Channel Divinity',
 			id: 'channel_divinity',
 			max: 2,
-			recharge: 'short'
+			recharge: 'short',
 		});
 	});
 	it('returns null for a non-resource effect', () => {
 		expect(
-			parseResourceEffect(eff({ iid: 'x', label: 'Bless', effects: ['flat_bonus:ac+2'] }))
+			parseResourceEffect(eff({ iid: 'x', label: 'Bless', effects: ['flat_bonus:ac+2'] })),
 		).toBeNull();
 	});
 	it('labels recharges', () => {
@@ -488,14 +488,14 @@ describe('rollEffectsFor — disadvantage + flat (EFX-1)', () => {
 		// adds fx.flat on top — so the roll path must ignore scoped facts.
 		expect(rollEffectsFor(fx('flat_bonus:attack:ranged+2'), 'attack').flat).toBe(0);
 		expect(
-			rollEffectsFor(fx('flat_bonus:attack:ranged+2', 'flat_bonus:attack+1'), 'attack').flat
+			rollEffectsFor(fx('flat_bonus:attack:ranged+2', 'flat_bonus:attack+1'), 'attack').flat,
 		).toBe(1);
 	});
 	it('§B: a weapon-scoped min_die (GWF) applies only when the weapon carries EVERY scope tag', () => {
 		const gwf = fx('min_die:damage:two_handed,melee:3');
 		// a two-handed melee weapon (greatsword) → the floor applies
 		expect(rollEffectsFor(gwf, 'damage', new Set(['two_handed', 'melee', 'martial'])).minDie).toBe(
-			3
+			3,
 		);
 		// a two-handed RANGED weapon (longbow) is missing 'melee' → no floor
 		expect(rollEffectsFor(gwf, 'damage', new Set(['two_handed', 'ranged'])).minDie).toBeUndefined();
@@ -519,7 +519,7 @@ describe('effect expiry math (EFX-4)', () => {
 		effects: [],
 		positive: true,
 		...(durationRounds != null ? { durationRounds } : {}),
-		...(startedRound != null ? { startedRound } : {})
+		...(startedRound != null ? { startedRound } : {}),
 	});
 	it('remainingRounds counts down from the start round and floors at 0', () => {
 		expect(remainingRounds(e(3, 2), 2)).toBe(3);
@@ -552,44 +552,44 @@ describe('durationToRounds — spell duration text → rounds (1 round = 6 s)', 
 describe('parseDamageParts — typed dice pool + flat mod (A7: a bonus die is not a flat mod)', () => {
 	it('splits a single die, its flat mod, and its type', () => {
 		expect(parseDamageParts('1d8 +3 slashing')).toEqual([
-			{ pool: { 8: 1 }, mod: 3, type: 'slashing' }
+			{ pool: { 8: 1 }, mod: 3, type: 'slashing' },
 		]);
 	});
 
 	it('handles the unicode minus signed() emits', () => {
 		expect(parseDamageParts('1d6 −1 bludgeoning')).toEqual([
-			{ pool: { 6: 1 }, mod: -1, type: 'bludgeoning' }
+			{ pool: { 6: 1 }, mod: -1, type: 'bludgeoning' },
 		]);
 	});
 
 	it('does NOT read a bonus die count as a flat mod (2d6+1d4)', () => {
 		expect(parseDamageParts('2d6+1d4 fire')).toEqual([
-			{ pool: { 6: 2, 4: 1 }, mod: 0, type: 'fire' }
+			{ pool: { 6: 2, 4: 1 }, mod: 0, type: 'fire' },
 		]);
 	});
 
 	it('does NOT read a MULTI-DIGIT bonus die count as a flat mod (BUG-1: 2d6+10d4)', () => {
 		expect(parseDamageParts('2d6+10d4 fire')).toEqual([
-			{ pool: { 6: 2, 4: 10 }, mod: 0, type: 'fire' }
+			{ pool: { 6: 2, 4: 10 }, mod: 0, type: 'fire' },
 		]);
 	});
 
 	it('keeps a real flat mod alongside a bonus die (1d8+1d6+2)', () => {
 		expect(parseDamageParts('1d8+1d6+2 radiant')).toEqual([
-			{ pool: { 8: 1, 6: 1 }, mod: 2, type: 'radiant' }
+			{ pool: { 8: 1, 6: 1 }, mod: 2, type: 'radiant' },
 		]);
 	});
 
 	it('splits a MULTI-TYPE weapon into one part per type (BUG-DMG-1)', () => {
 		expect(parseDamageParts('1d6 slashing; 1d4 radiant')).toEqual([
 			{ pool: { 6: 1 }, mod: 0, type: 'slashing' },
-			{ pool: { 4: 1 }, mod: 0, type: 'radiant' }
+			{ pool: { 4: 1 }, mod: 0, type: 'radiant' },
 		]);
 	});
 
 	it('round-trips back to a display string via formatDamageParts', () => {
 		expect(formatDamageParts(parseDamageParts('1d6 slashing; 1d4 radiant'))).toBe(
-			'1d6 slashing + 1d4 radiant'
+			'1d6 slashing + 1d4 radiant',
 		);
 		expect(formatDamageParts(parseDamageParts('1d8 +3 slashing'))).toBe('1d8 +3 slashing');
 	});
@@ -616,8 +616,8 @@ describe('dealsDamage — does an attack have damage worth rolling?', () => {
 		expect(
 			dealsDamage([
 				{ dice: {}, mod: 0, type: '' },
-				{ dice: { 4: 1 }, mod: 0, type: 'radiant' }
-			])
+				{ dice: { 4: 1 }, mod: 0, type: 'radiant' },
+			]),
 		).toBe(true);
 	});
 });

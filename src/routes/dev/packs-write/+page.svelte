@@ -22,7 +22,7 @@
 		hasRollback,
 		recoverInterruptedApply,
 		removeStaging,
-		rollbackPack
+		rollbackPack,
 	} from '$lib/content/remote/install';
 	import { stampWithHash } from '$lib/content/hash';
 	import type { RemoteFetcher } from '$lib/content/remote/types';
@@ -52,7 +52,7 @@
 		getBytes: async (url) => {
 			const hit = Object.entries(files).find(([path]) => url.endsWith(path));
 			return hit ? { kind: 'ok', bytes: enc(hit[1]) } : { kind: 'error', message: `no ${url}` };
-		}
+		},
 	});
 
 	onMount(async () => {
@@ -79,7 +79,7 @@
 		const s = getUserStorage();
 		await s.writeBytes(
 			`${ROOT}/a.csv`,
-			enc(await stampWithHash(new Map([['source', 'Probe']]), csvBody))
+			enc(await stampWithHash(new Map([['source', 'Probe']]), csvBody)),
 		);
 		await s.writeBytes(`${ROOT}/plugins/probe/main.js`, enc('globalThis.probe = 1;'));
 		await s.writeBytes(`${ROOT}/notes.md`, enc('my notes'));
@@ -95,9 +95,9 @@
 					path: `${PACK}/a.csv`,
 					kind: FILE_CHANGE.changed,
 					sha,
-					expectLocal: await gitBlobSha(await s.readBytes(`${ROOT}/a.csv`))
-				}
-			]
+					expectLocal: await gitBlobSha(await s.readBytes(`${ROOT}/a.csv`)),
+				},
+			],
 		};
 	}
 
@@ -127,14 +127,14 @@
 			storage: s,
 			fetcher: localFetcher({ [`${PACK}/a.csv`]: next }),
 			repo: REPO,
-			diff: await diffFor(nextSha)
+			diff: await diffFor(nextSha),
 		});
 
 		check('apply reported no error', res.error === undefined, res.error?.kind ?? '');
 		say(`apply wrote: ${res.written.join(', ') || '(nothing)'}`);
 		for (const dir of [ROOT, `${ROOT}.new`, `${ROOT}.prev`])
 			say(
-				`  ${dir}: ${(await s.exists(dir)) ? (await listFilesRecursive(s, dir)).join(', ') || '(empty)' : '(absent)'}`
+				`  ${dir}: ${(await s.exists(dir)) ? (await listFilesRecursive(s, dir)).join(', ') || '(empty)' : '(absent)'}`,
 			);
 		check('the CSV is the new one', (await s.read(`${ROOT}/a.csv`)).includes('new'));
 		check('a file the update never mentioned survived', await s.exists(`${ROOT}/notes.md`));
@@ -142,7 +142,7 @@
 		check('the replaced folder is kept as .prev', await hasRollback(s, PACK));
 		check(
 			'.prev holds the OLD bytes',
-			(await s.read(`${ROOT}.prev/a.csv`).catch(() => '')).includes('old')
+			(await s.read(`${ROOT}.prev/a.csv`).catch(() => '')).includes('old'),
 		);
 		check('the staging folder is gone', !(await s.exists(`${ROOT}.new`)));
 
@@ -151,7 +151,7 @@
 		await new Promise((r) => setTimeout(r, 1200));
 		unwatch();
 		say(
-			`watcher fired ${watchHits}x for one apply (debounced downstream; a storm would be dozens)`
+			`watcher fired ${watchHits}x for one apply (debounced downstream; a storm would be dozens)`,
 		);
 
 		// --- 2. rollback: the undo an applied update never had --------------------------------------
@@ -166,12 +166,12 @@
 			storage: s,
 			fetcher: localFetcher({ [`${PACK}/a.csv`]: next }),
 			repo: REPO,
-			diff: stale
+			diff: stale,
 		});
 		check('a moved file refuses the whole update', refused.error !== undefined);
 		check(
 			'and the edit made in between is still there',
-			(await s.read(`${ROOT}/a.csv`)).includes('another window')
+			(await s.read(`${ROOT}/a.csv`)).includes('another window'),
 		);
 
 		// --- 4. the three interrupted states, settled from the folders alone ------------------------
@@ -181,7 +181,7 @@
 		await recoverInterruptedApply(s, PACK);
 		check(
 			'killed BEFORE the swap: the half-built tree is discarded',
-			!(await s.exists(`${ROOT}.new`))
+			!(await s.exists(`${ROOT}.new`)),
 		);
 		check('…and the live pack is untouched', (await s.read(`${ROOT}/a.csv`)).includes('live'));
 
@@ -221,7 +221,7 @@
 			.then(() => true)
 			.catch(() => false);
 		say(
-			`rename onto an existing directory: ${overwrote ? 'SUCCEEDED (the apply removes it first anyway)' : 'refused — which is why the apply removes the target first'}`
+			`rename onto an existing directory: ${overwrote ? 'SUCCEEDED (the apply removes it first anyway)' : 'refused — which is why the apply removes the target first'}`,
 		);
 
 		// --- 6. uninstall takes the staging folders with it -----------------------------------------
@@ -246,7 +246,7 @@
 		await seedPack('id\nlive');
 		const folds = await s.exists(`content/${PACK.toUpperCase()}`);
 		say(
-			`this filesystem ${folds ? 'FOLDS case (as assumed — the registry compares names case-insensitively)' : 'is case-SENSITIVE (the case-folded compare is then merely conservative)'}`
+			`this filesystem ${folds ? 'FOLDS case (as assumed — the registry compares names case-insensitively)' : 'is case-SENSITIVE (the case-folded compare is then merely conservative)'}`,
 		);
 	}
 </script>

@@ -16,7 +16,7 @@
 		rechargeLabel,
 		remainingRounds,
 		range,
-		type EffectInstance
+		type EffectInstance,
 	} from '$lib/combat/helpers';
 	import EffectDurationMenu from '../EffectDurationMenu.svelte';
 
@@ -33,7 +33,7 @@
 	// the condition effect whose rules text is expanded (the G2 info channel), by iid; single-open
 	let infoOpen = $state<string | null>(null);
 	const menuEffect = $derived(
-		durationMenu ? c.play.effects.find((e) => e.iid === durationMenu?.iid) : undefined
+		durationMenu ? c.play.effects.find((e) => e.iid === durationMenu?.iid) : undefined,
 	);
 	// the menu prefills / the chip shows REMAINING rounds at the live round counter, not the total
 	const menuRounds = $derived(menuEffect ? remainingRounds(menuEffect, combat.round) : null);

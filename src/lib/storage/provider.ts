@@ -21,7 +21,7 @@ export enum Platform {
 	/** Plain browser (the web build) → IndexedDB for user data + bundled content over fetch. */
 	Web = 'web',
 	/** No `window` at all (no browser) → build-time prerender + Node tests. Read-only, no user store. */
-	Headless = 'headless'
+	Headless = 'headless',
 }
 
 /**

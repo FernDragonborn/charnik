@@ -15,7 +15,7 @@
 		type RollLayout,
 		type RollToastModel,
 		type RollToastAttack,
-		type RollToastDamage
+		type RollToastDamage,
 	} from '$lib/dice/roll-toast';
 	import type { DieChip } from '$lib/rules/dice';
 	import DamageIcon from './DamageIcon.svelte';
@@ -25,7 +25,7 @@
 		model,
 		onAdvantage,
 		rerollDamage,
-		layout = ROLL_LAYOUT.card
+		layout = ROLL_LAYOUT.card,
 	}: {
 		model: RollToastModel;
 		/** Present → the d20 pill becomes a control that applies advantage AFTER the fact (UX-3): tap

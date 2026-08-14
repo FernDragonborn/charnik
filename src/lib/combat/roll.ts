@@ -34,9 +34,9 @@ export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): Ty
 	return parts.map((p) => ({
 		...rollPool(p.dice, p.mod, 0, p.bonusDice ?? [], {
 			...(p.mods ?? {}),
-			...(rng ? { rng } : {})
+			...(rng ? { rng } : {}),
 		}),
-		type: p.type
+		type: p.type,
 	}));
 }
 
@@ -96,12 +96,12 @@ export const NO_ROLL_EFFECTS: RollEffects = {
 	advantage: false,
 	disadvantage: false,
 	flat: 0,
-	bonusDice: []
+	bonusDice: [],
 };
 export function rollEffectsFor(
 	facts: EffectFacts,
 	key: string,
-	weaponScopes?: Set<string>
+	weaponScopes?: Set<string>,
 ): RollEffects {
 	const out: RollEffects = { ...NO_ROLL_EFFECTS, bonusDice: [] };
 	out.advantage = facts.advantage.some((a) => matchesTarget(a.target, key));

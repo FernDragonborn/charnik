@@ -68,7 +68,7 @@ const base = (r: LoadedRow) => ({
 	type: r.type,
 	id: r.id,
 	source: r.source,
-	systems: r.systems
+	systems: r.systems,
 });
 
 // Both index projections carry every locale's name (not just the active one) so a name match in ANY
@@ -100,7 +100,7 @@ function buildTextDocs(graph: ContentGraph, locale: string): TextDoc[] {
 		.map((r) => ({
 			...base(r),
 			names: displayNamesByLocale(r, locales),
-			text: plainText(String(r.data[`text_${locale}`] || r.data.text_en || ''))
+			text: plainText(String(r.data[`text_${locale}`] || r.data.text_en || '')),
 		}));
 }
 
@@ -108,7 +108,7 @@ const OPTS = {
 	ignoreLocation: true,
 	minMatchCharLength: 3,
 	includeMatches: true,
-	includeScore: true
+	includeScore: true,
 };
 
 export const makeNameIndex = (graph: ContentGraph) =>
@@ -143,7 +143,7 @@ const toSearchResult = (doc: NameDoc | TextDoc, locale: string, snippet: string)
 	source: doc.source,
 	systems: doc.systems,
 	name: displayName(doc.names, locale),
-	snippet
+	snippet,
 });
 
 /** name hits first, then text-only hits (deduped), post-filtered to active editions. */
@@ -151,7 +151,7 @@ export function searchContent(
 	nameIndex: Fuse<NameDoc>,
 	textIndex: Fuse<TextDoc>,
 	query: string,
-	{ editions, locale, limit = 30 }: SearchOpts
+	{ editions, locale, limit = 30 }: SearchOpts,
 ): SearchResult[] {
 	const q = query.trim();
 	if (q.length < 2) return [];

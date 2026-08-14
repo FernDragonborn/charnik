@@ -30,7 +30,7 @@ function mount(): {
 
 const tab = (node: HTMLElement, shiftKey = false) =>
 	node.dispatchEvent(
-		new KeyboardEvent('keydown', { key: 'Tab', shiftKey, bubbles: true, cancelable: true })
+		new KeyboardEvent('keydown', { key: 'Tab', shiftKey, bubbles: true, cancelable: true }),
 	);
 
 describe('trapFocus (AUDIT F8)', () => {

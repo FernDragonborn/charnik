@@ -18,7 +18,7 @@ import {
 	LOC_STATUS_COL_BASE,
 	isLocStatus,
 	type ProseBase,
-	type LocStatus
+	type LocStatus,
 } from './schemas';
 import { parseContentDirectives } from './meta';
 import { stampWithHash } from './hash';
@@ -56,7 +56,7 @@ export function translationCoverage(data: Record<string, unknown>, locale: strin
 export function locStatus(
 	data: Record<string, unknown>,
 	sourceLang: string,
-	locale: string
+	locale: string,
 ): LocStatus {
 	if (locale === sourceLang) return LOC_STATUS.reviewed;
 	const stored = data[`${LOC_STATUS_COL_BASE}_${locale}`];
@@ -80,7 +80,7 @@ async function patchRowColumns(
 	storage: Storage,
 	row: Pick<LoadedRow, 'root' | 'file' | 'id'>,
 	columns: Record<string, string>,
-	who: string
+	who: string,
 ): Promise<void> {
 	const path = `${row.root}/${row.file}`;
 	const raw = await storage.read(path);
@@ -108,7 +108,7 @@ export async function saveTranslation(
 	storage: Storage,
 	row: Pick<LoadedRow, 'root' | 'file' | 'id'>,
 	locale: string,
-	prose: TranslationDraft
+	prose: TranslationDraft,
 ): Promise<void> {
 	const columns: Record<string, string> = {};
 	for (const base of PROSE_BASES) {
@@ -125,12 +125,12 @@ export async function saveLocStatus(
 	storage: Storage,
 	row: Pick<LoadedRow, 'root' | 'file' | 'id'>,
 	locale: string,
-	status: LocStatus
+	status: LocStatus,
 ): Promise<void> {
 	await patchRowColumns(
 		storage,
 		row,
 		{ [`${LOC_STATUS_COL_BASE}_${locale}`]: status },
-		'saveLocStatus'
+		'saveLocStatus',
 	);
 }

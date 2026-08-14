@@ -46,7 +46,7 @@ export const pluginManifestSchema = z.strictObject({
 		.max(256)
 		.regex(/^https:\/\//, 'https:// only')
 		.optional(),
-	description: z.string().max(280).optional()
+	description: z.string().max(280).optional(),
 });
 type PluginManifest = z.infer<typeof pluginManifestSchema>;
 
@@ -134,7 +134,7 @@ export async function discoverPlugins(storage: Storage): Promise<DiscoveredPlugi
 					namespace,
 					origin,
 					ok: false,
-					problem: 'folder name is not a valid plugin namespace'
+					problem: 'folder name is not a valid plugin namespace',
 				});
 				continue;
 			}
@@ -144,13 +144,13 @@ export async function discoverPlugins(storage: Storage): Promise<DiscoveredPlugi
 					namespace,
 					origin,
 					ok: false,
-					problem: `namespace "${namespace}" is already provided by ${taken} — rename one, they cannot both answer the same plugin token`
+					problem: `namespace "${namespace}" is already provided by ${taken} — rename one, they cannot both answer the same plugin token`,
 				});
 				continue;
 			}
 			claimed.set(
 				namespace,
-				origin === LOCAL_ORIGIN ? 'your own plugins folder' : `pack "${origin}"`
+				origin === LOCAL_ORIGIN ? 'your own plugins folder' : `pack "${origin}"`,
 			);
 			out.push(await readPlugin(storage, `${dir}/${namespace}`, namespace, origin));
 		}
@@ -162,7 +162,7 @@ async function readPlugin(
 	storage: Storage,
 	dir: string,
 	namespace: string,
-	origin: string
+	origin: string,
 ): Promise<DiscoveredPlugin> {
 	let manifestRaw: string;
 	let code: string;
@@ -174,7 +174,7 @@ async function readPlugin(
 			namespace,
 			origin,
 			ok: false,
-			problem: 'plugin.json or main.js is missing/unreadable'
+			problem: 'plugin.json or main.js is missing/unreadable',
 		};
 	}
 	if (enc.encode(code).length > MAX_MAIN_JS_BYTES)
@@ -195,7 +195,7 @@ async function readPlugin(
 			namespace,
 			origin,
 			ok: false,
-			problem: `plugin.json invalid: ${first ? `${first.path.join('.')} — ${first.message}` : 'shape'}`
+			problem: `plugin.json invalid: ${first ? `${first.path.join('.')} — ${first.message}` : 'shape'}`,
 		};
 	}
 	if (m.data.api !== 1)
@@ -205,7 +205,7 @@ async function readPlugin(
 			namespace,
 			origin,
 			ok: false,
-			problem: `manifest namespace "${m.data.namespace}" ≠ folder name "${namespace}"`
+			problem: `manifest namespace "${m.data.namespace}" ≠ folder name "${namespace}"`,
 		};
 
 	return {
@@ -214,7 +214,7 @@ async function readPlugin(
 		ok: true,
 		manifest: m.data,
 		code,
-		hash: await consentHash(code, manifestRaw)
+		hash: await consentHash(code, manifestRaw),
 	};
 }
 
@@ -239,7 +239,7 @@ export function loadPluginPrefs(): PluginPrefs {
 	return {
 		consent: typeof p.consent === 'object' && p.consent !== null ? p.consent : {},
 		enabled: typeof p.enabled === 'object' && p.enabled !== null ? p.enabled : {},
-		killSwitch: p.killSwitch === true
+		killSwitch: p.killSwitch === true,
 	};
 }
 

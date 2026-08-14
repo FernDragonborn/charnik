@@ -5,7 +5,7 @@
 	import { base } from '$app/paths';
 	let {
 		message = 'Crunching the numbers…',
-		error = null
+		error = null,
 	}: { message?: string; error?: string | null } = $props();
 </script>
 

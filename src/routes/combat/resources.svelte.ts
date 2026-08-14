@@ -15,7 +15,7 @@ import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 export class ResourceTracker {
 	constructor(
 		private getCharacter: () => Character | null,
-		private getSheet: () => CharacterSheet | null
+		private getSheet: () => CharacterSheet | null,
 	) {}
 
 	// tap a spell-slot pip: click a filled pip to spend down to it, a spent pip to restore up to it
@@ -51,7 +51,7 @@ export class ResourceTracker {
 		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: after };
 		// an unlimited pool (`inf` max) never runs out — count uses instead of a remaining total
 		toast(`${name} used`, {
-			description: Number.isFinite(max) ? `${max - after} of ${max} left` : `${after} used · ∞`
+			description: Number.isFinite(max) ? `${max - after} of ${max} left` : `${after} used · ∞`,
 		});
 	};
 	resourceClick = (id: string, max: number, i: number) => {
@@ -63,7 +63,7 @@ export class ResourceTracker {
 		if (after === before) return;
 		const name = this.getSheet()?.resources.find((r) => r.id === id)?.name ?? id;
 		toast(`${name} ${after > before ? 'used' : 'restored'}`, {
-			description: `${max - after} of ${max} left`
+			description: `${max - after} of ${max} left`,
 		});
 	};
 
@@ -205,7 +205,7 @@ export class ResourceTracker {
 		toast(`${kind === 'long' ? 'Long' : 'Short'} rest — resources restored`, {
 			...(lostExhaustion
 				? { description: `Exhaustion ${exhaustionBefore} → ${c.play.exhaustion}` }
-				: {})
+				: {}),
 		});
 	};
 }

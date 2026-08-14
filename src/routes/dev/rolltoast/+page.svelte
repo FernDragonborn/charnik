@@ -16,7 +16,7 @@
 		expr: 'd20(9) +6',
 		total: 15,
 		natural: 9,
-		damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }]
+		damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }],
 	});
 	// the same one call the combat VM makes — the preview must exercise the real cycle, not a copy
 	const onAdvantage = () => {
@@ -32,7 +32,7 @@
 		attack: 0,
 		part: 0,
 		label: '↻ Savage Attacker — reroll damage, keep the higher',
-		run: () => toast('(preview) the damage reroll ran')
+		run: () => toast('(preview) the damage reroll ran'),
 	};
 
 	// hand-built entries in exactly the shape pushRoll stores (expr strings straight from rollPool);
@@ -40,7 +40,7 @@
 	const CASES: { title: string; entry: RollLogEntry | RollLogEntry[] }[] = [
 		{
 			title: 'one roll, no damage — the toast has no damage half at all',
-			entry: { label: 'Perception', expr: 'd20(14) +4', total: 18 }
+			entry: { label: 'Perception', expr: 'd20(14) +4', total: 18 },
 		},
 		{
 			title: 'a plain attack — one line, one damage type',
@@ -49,8 +49,8 @@
 				expr: 'd20(14) +7',
 				total: 21,
 				natural: 14,
-				damage: [{ type: 'slashing', expr: 'd8(8) +4', total: 12 }]
-			}
+				damage: [{ type: 'slashing', expr: 'd8(8) +4', total: 12 }],
+			},
 		},
 		{
 			title: 'advantage — the die that lost stays visible, struck through',
@@ -60,8 +60,8 @@
 				total: 19,
 				advantageRoll: { kept: 14, dropped: 7 },
 				natural: 14,
-				damage: [{ type: 'slashing', expr: 'd8(6) +3', total: 9 }]
-			}
+				damage: [{ type: 'slashing', expr: 'd8(6) +3', total: 9 }],
+			},
 		},
 		{
 			title: 'nat 20 — the line goes gold, the doubled dice share one pill',
@@ -70,8 +70,8 @@
 				expr: 'd20(20) +9',
 				total: 29,
 				natural: 20,
-				damage: [{ type: 'piercing', expr: 'd8(7) + d8(5) +5', total: 17 }]
-			}
+				damage: [{ type: 'piercing', expr: 'd8(7) + d8(5) +5', total: 17 }],
+			},
 		},
 		{
 			title: 'a second damage type — its own glyph in the same line, not a second line',
@@ -82,9 +82,9 @@
 				natural: 11,
 				damage: [
 					{ type: 'slashing', expr: 'd8(6) +4', total: 10 },
-					{ type: 'fire', expr: 'd6(4) + d6(5)', total: 9 }
-				]
-			}
+					{ type: 'fire', expr: 'd6(4) + d6(5)', total: 9 },
+				],
+			},
 		},
 		{
 			title: 'nat 1 — the one miss callable without knowing the target’s AC',
@@ -93,8 +93,8 @@
 				expr: 'd20(1) +6',
 				total: 7,
 				natural: 1,
-				damage: [{ type: 'piercing', expr: 'd6(5) +4', total: 9 }]
-			}
+				damage: [{ type: 'piercing', expr: 'd6(5) +4', total: 9 }],
+			},
 		},
 		{
 			title: 'a flurry — a line per attack, then the per-type footer and the one big number',
@@ -107,8 +107,8 @@
 					damage: [
 						{ type: 'bludgeoning', expr: 'd6(5) +4', total: 9 },
 						{ type: 'radiant', expr: 'd4(3)', total: 3 },
-						{ type: 'psychic', expr: 'd4(4)', total: 4 }
-					]
+						{ type: 'psychic', expr: 'd4(4)', total: 4 },
+					],
 				},
 				{
 					label: 'Flurry of Blows',
@@ -118,8 +118,8 @@
 					damage: [
 						{ type: 'bludgeoning', expr: 'd6(7) +4', total: 11 },
 						{ type: 'radiant', expr: 'd4(2)', total: 2 },
-						{ type: 'psychic', expr: 'd4(1)', total: 1 }
-					]
+						{ type: 'psychic', expr: 'd4(1)', total: 1 },
+					],
 				},
 				{
 					label: 'Flurry of Blows',
@@ -129,10 +129,10 @@
 					damage: [
 						{ type: 'bludgeoning', expr: 'd6(6) + d6(2) +4', total: 12 },
 						{ type: 'radiant', expr: 'd4(4) + d4(1)', total: 5 },
-						{ type: 'psychic', expr: 'd4(6) + d4(3)', total: 9 }
-					]
-				}
-			]
+						{ type: 'psychic', expr: 'd4(6) + d4(3)', total: 9 },
+					],
+				},
+			],
 		},
 		{
 			title: 'a roll already decided by two dice — the loser struck through',
@@ -142,8 +142,8 @@
 				total: 15,
 				advantageRoll: { kept: 9, dropped: 14 },
 				natural: 9,
-				damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }]
-			}
+				damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }],
+			},
 		},
 		{
 			title: 'rerolled / floored dice + an upcast note',
@@ -151,9 +151,9 @@
 				label: 'Fireball',
 				expr: 'd6(1↻5) + d6(4) + d6(6) + d6(2) + d6(1↻3) + d6(5) + d6(6) + d6(1)',
 				total: 32,
-				note: '8d6 base + 1d6 @ slot 4'
-			}
-		}
+				note: '8d6 base + 1d6 @ slot 4',
+			},
+		},
 	];
 </script>
 

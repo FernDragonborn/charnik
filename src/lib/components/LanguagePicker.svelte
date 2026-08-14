@@ -10,7 +10,7 @@
 		value = $bindable(),
 		locales,
 		allowAdd = false,
-		accent = false
+		accent = false,
 	}: {
 		value: string;
 		/** currently-loaded content locales (the "Current" section). */
@@ -31,7 +31,7 @@
 		return !q || languageSearchText(code).includes(q);
 	};
 	const current = $derived(
-		locales.map((code) => ({ code, name: languageName(code) })).filter((o) => match(o.code))
+		locales.map((code) => ({ code, name: languageName(code) })).filter((o) => match(o.code)),
 	);
 	const addable = $derived(allowAdd ? addableLanguages(locales).filter((o) => match(o.code)) : []);
 

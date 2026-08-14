@@ -18,7 +18,7 @@ export type { EffectInstance } from '$lib/character/schema';
  *  verbatim (the B18 invariant — structure changed, EN output byte-for-byte unchanged). */
 export function why(
 	c: Computed,
-	translate?: (key: string, params?: Record<string, string | number>) => string
+	translate?: (key: string, params?: Record<string, string | number>) => string,
 ): string {
 	const opSym = (op: Contribution['op']): string =>
 		op === 'set' ? '= ' : op === 'floor' ? '≥ ' : op === 'cap' ? '≤ ' : '';
@@ -73,7 +73,7 @@ const TAG_FORMATTERS: Partial<
 	[EFFECT_KIND.autoSucceed]: (p) => p.target && `auto-succeed · ${targetLabel(p.target)}`,
 	[EFFECT_KIND.note]: (p) => p.target, // free-form display text, as authored
 	// a handler REFERENCE — the namespace is the readable part; args are opaque machine input
-	[EFFECT_KIND.plugin]: (p) => p.plugin && `plugin · ${p.plugin.namespace}`
+	[EFFECT_KIND.plugin]: (p) => p.plugin && `plugin · ${p.plugin.namespace}`,
 };
 
 /** A bounded-vocab effect token → a short readable tag for the effects panel:
@@ -91,7 +91,7 @@ export function effectTag(token: string): string {
  *  concrete amount ("Damage +2"). Falls back to the literal tag for everything else. */
 export function effectTagResolved(token: string, facts: { numeric: NumericFact[] }): string {
 	const f = facts.numeric.find(
-		(n) => n.token === token && (n.amount !== undefined || n.diceFormula)
+		(n) => n.token === token && (n.amount !== undefined || n.diceFormula),
 	);
 	return f ? numericFactTag(f) : effectTag(token);
 }
@@ -137,7 +137,7 @@ export function describeDerivedEffects(facts: EffectFacts): {
 	}
 	return {
 		groups: [...bySource.entries()].map(([source, tags]) => ({ source, tags })),
-		unknown: facts.unknown
+		unknown: facts.unknown,
 	};
 }
 
@@ -182,7 +182,7 @@ export function parseResourceEffect(eff: EffectInstance): ResourceView | null {
 				name: eff.label,
 				id: p.resource.id,
 				max: p.resource.max,
-				recharge: p.resource.recharge
+				recharge: p.resource.recharge,
 			};
 	}
 	return null;
@@ -214,7 +214,7 @@ const RECHARGE_LABEL: Record<Recharge, string> = {
 	short: 'short rest',
 	short_one: 'short rest (+1)',
 	consumable: 'consumable',
-	other: 'special'
+	other: 'special',
 };
 export const rechargeLabel = (r: Recharge): string => RECHARGE_LABEL[r] ?? 'special';
 
@@ -244,5 +244,5 @@ export const EFFECT_DURATION_PRESETS: { label: string; rounds: number | null }[]
 	{ label: '1 minute · 10 rds', rounds: 10 },
 	{ label: '10 minutes · 100 rds', rounds: 100 },
 	{ label: '1 hour · 600 rds', rounds: 600 },
-	{ label: '∞ until removed', rounds: null }
+	{ label: '∞ until removed', rounds: null },
 ];

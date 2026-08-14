@@ -54,6 +54,6 @@ export const trapFocus: Action<HTMLElement, HTMLElement | null | undefined> = (n
 		destroy() {
 			node.removeEventListener('keydown', onKeydown);
 			previouslyFocused?.focus?.();
-		}
+		},
 	};
 };

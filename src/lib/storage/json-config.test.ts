@@ -22,7 +22,7 @@ describe('a config file with several owners', () => {
 		writeConfigSection(FILE, 'contentPacks', { updates: 'notify' });
 		expect(await settled()).toEqual({
 			ruleOptions: { capacity: true },
-			contentPacks: { updates: 'notify' }
+			contentPacks: { updates: 'notify' },
 		});
 	});
 
@@ -31,7 +31,7 @@ describe('a config file with several owners', () => {
 		writeConfigSection(FILE, 'ruleOptions', { capacity: true });
 		expect(await settled()).toEqual({
 			contentPacks: { updates: 'off' },
-			ruleOptions: { capacity: true }
+			ruleOptions: { capacity: true },
 		});
 	});
 
@@ -56,7 +56,7 @@ describe('a config file with several owners', () => {
 		writeConfigSection(FILE, 'ruleOptions', { capacity: true });
 		expect(await settled()).toEqual({
 			contentPacks: { packs: 9 },
-			ruleOptions: { capacity: true }
+			ruleOptions: { capacity: true },
 		});
 		expect(write).toHaveBeenCalledTimes(1);
 		write.mockRestore();
@@ -68,7 +68,7 @@ describe('a config file with several owners', () => {
 		writeConfigSection(FILE, 'ruleOptions', { capacity: true });
 		expect(await settled()).toEqual({
 			contentPacks: { updates: 'notify' },
-			ruleOptions: { capacity: true }
+			ruleOptions: { capacity: true },
 		});
 	});
 });

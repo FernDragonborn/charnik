@@ -9,7 +9,7 @@
 		iid,
 		rounds,
 		anchor,
-		onclose
+		onclose,
 	}: { iid: string; rounds: number | null; anchor: HTMLElement; onclose: () => void } = $props();
 
 	let el = $state<HTMLDivElement>();

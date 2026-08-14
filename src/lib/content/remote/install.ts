@@ -34,7 +34,7 @@ import {
 	sourceOf,
 	withinPack,
 	type FileChange,
-	type PackDiff
+	type PackDiff,
 } from './diff';
 
 /**
@@ -105,10 +105,10 @@ export async function applyPackUpdate({
 	removeDeleted = false,
 	graph = null,
 	acceptRowRemovals = false,
-	acceptSourceClaim = false
+	acceptSourceClaim = false,
 }: ApplyRequest): Promise<ApplyResult> {
 	const wanted = diff.changes.filter(
-		(c) => c.kind === FILE_CHANGE.added || c.kind === FILE_CHANGE.changed
+		(c) => c.kind === FILE_CHANGE.added || c.kind === FILE_CHANGE.changed,
 	);
 	const preserved = diff.changes.filter((c) => c.kind === FILE_CHANGE.preserved).map((c) => c.path);
 	const removable = diff.changes.filter((c) => c.kind === FILE_CHANGE.removed).map((c) => c.path);
@@ -138,8 +138,8 @@ export async function applyPackUpdate({
 			error: {
 				kind: 'i18n',
 				key: 'settings.packs.sourceClaimed',
-				values: { pack: diff.pack, source: claim.source, owner: claim.owner }
-			}
+				values: { pack: diff.pack, source: claim.source, owner: claim.owner },
+			},
 		};
 
 	// phase 1¾ — the disk must still be what the diff was computed against. The user approved a
@@ -152,8 +152,8 @@ export async function applyPackUpdate({
 			error: {
 				kind: 'i18n',
 				key: 'settings.packs.localChanged',
-				values: { files: moved.join(', ') }
-			}
+				values: { files: moved.join(', ') },
+			},
 		};
 
 	// phase 1⅞ — what would DISAPPEAR from inside the files being rewritten. The file-level preview
@@ -169,8 +169,8 @@ export async function applyPackUpdate({
 			error: {
 				kind: 'i18n',
 				key: 'settings.packs.rowsWouldVanish',
-				values: { count: rowRemovals.length }
-			}
+				values: { count: rowRemovals.length },
+			},
 		};
 
 	// phase 2 — commit through a full replacement folder. Per-file writes are atomic on their own,
@@ -182,7 +182,7 @@ export async function applyPackUpdate({
 		storage,
 		diff.pack,
 		staged,
-		new Set(removed.map((p) => localPathIn(diff.pack, p)))
+		new Set(removed.map((p) => localPathIn(diff.pack, p))),
 	);
 
 	// the pre-download did its job; the cache is pruned as a whole after a check, so nothing is
@@ -195,11 +195,11 @@ export async function applyPackUpdate({
 function rowsDroppedByUpdate(
 	graph: ContentGraph,
 	localPack: string,
-	staged: StagedFile[]
+	staged: StagedFile[],
 ): string[] {
 	const decoder = new TextDecoder();
 	const dropped = staged.flatMap((file) =>
-		rowsDroppedFromFile(graph, localPathIn(localPack, file.path), decoder.decode(file.bytes))
+		rowsDroppedFromFile(graph, localPathIn(localPack, file.path), decoder.decode(file.bytes)),
 	);
 	return [...new Set(dropped)].sort();
 }
@@ -218,14 +218,14 @@ const previousDir = (pack: string): string => localPath(`${pack}.prev`);
 async function localChangesSince(
 	storage: Storage,
 	diff: PackDiff,
-	removeDeleted: boolean
+	removeDeleted: boolean,
 ): Promise<string[]> {
 	const guarded = diff.changes.filter(
 		(c) =>
 			c.expectLocal !== undefined &&
 			(c.kind === FILE_CHANGE.added ||
 				c.kind === FILE_CHANGE.changed ||
-				(removeDeleted && c.kind === FILE_CHANGE.removed))
+				(removeDeleted && c.kind === FILE_CHANGE.removed)),
 	);
 	const moved: string[] = [];
 	for (const change of guarded) {
@@ -254,7 +254,7 @@ async function swapInNewTree(
 	storage: Storage,
 	pack: string,
 	staged: StagedFile[],
-	dropping: Set<string>
+	dropping: Set<string>,
 ): Promise<void> {
 	if (staged.length === 0 && dropping.size === 0) return; // nothing to do — don't churn a .prev
 	// …so a content rebuild triggered by these very writes can't sweep the staging folder
@@ -278,7 +278,7 @@ async function buildAndSwap(
 	storage: Storage,
 	pack: string,
 	staged: StagedFile[],
-	dropping: Set<string>
+	dropping: Set<string>,
 ): Promise<void> {
 	const live = localPath(pack);
 	const next = stagingDir(pack);
@@ -292,7 +292,7 @@ async function buildAndSwap(
 		if (written.has(path) || dropping.has(path)) continue;
 		await storage.writeBytes(
 			`${next}/${path.slice(live.length + 1)}`,
-			await storage.readBytes(path)
+			await storage.readBytes(path),
 		);
 	}
 	// writeBytes preserves the exact bytes (a content CSV's BOM/CRLF are load-bearing for Excel + the hash)
@@ -427,7 +427,7 @@ async function gatherBytes({
 	storage,
 	fetcher,
 	repo,
-	wanted
+	wanted,
 }: GatherRequest): Promise<{ files: StagedFile[] } | { error: UpdateError }> {
 	const files: StagedFile[] = [];
 	for (const change of wanted) {
@@ -441,7 +441,7 @@ async function gatherBytes({
 			return { error: { kind: 'raw', message: `${change.path}: ${res.message}` } };
 		if (change.sha !== undefined && (await gitBlobSha(res.bytes)) !== change.sha)
 			return {
-				error: { kind: 'i18n', key: 'settings.packs.contentMoved', values: { path: change.path } }
+				error: { kind: 'i18n', key: 'settings.packs.contentMoved', values: { path: change.path } },
 			};
 		files.push({ path: change.path, bytes: res.bytes });
 	}
@@ -470,7 +470,7 @@ export async function stagePackUpdate({
 	fetcher,
 	repo,
 	diff,
-	budget
+	budget,
 }: {
 	storage: Storage;
 	fetcher: RemoteFetcher;
@@ -506,7 +506,7 @@ export async function stagePackUpdate({
 /** Is this whole update already downloaded? Drives the "ready to apply offline" hint. */
 export async function isStaged(storage: Storage, diff: PackDiff): Promise<boolean> {
 	const wanted = diff.changes.filter(
-		(c) => c.kind === FILE_CHANGE.added || c.kind === FILE_CHANGE.changed
+		(c) => c.kind === FILE_CHANGE.added || c.kind === FILE_CHANGE.changed,
 	);
 	if (wanted.length === 0) return false;
 	for (const change of wanted) {
@@ -537,7 +537,7 @@ export async function pruneCache(storage: Storage, keep: Set<string>): Promise<v
 async function sourceClash(
 	storage: Storage,
 	pack: string,
-	staged: StagedFile[]
+	staged: StagedFile[],
 ): Promise<UpdateError | null> {
 	const local = await localPackSource(storage, pack);
 	if (local === null) return null;
@@ -548,7 +548,7 @@ async function sourceClash(
 			return {
 				kind: 'i18n',
 				key: 'settings.packs.sourceChanged',
-				values: { pack, from: local, to: incoming }
+				values: { pack, from: local, to: incoming },
 			};
 	}
 	return null;
@@ -570,7 +570,7 @@ async function sourceClash(
 function sourceClaimedElsewhere(
 	graph: ContentGraph | null,
 	localPack: string,
-	staged: StagedFile[]
+	staged: StagedFile[],
 ): { source: string; owner: string } | null {
 	if (!graph) return null;
 	const owners = new Map<string, string>();
@@ -605,7 +605,7 @@ export function pluginsTouchedBy(diff: PackDiff): string[] {
 	return namespacesOf(
 		diff.changes
 			.filter((c) => c.kind === FILE_CHANGE.added || c.kind === FILE_CHANGE.changed)
-			.map((c) => c.path)
+			.map((c) => c.path),
 	);
 }
 

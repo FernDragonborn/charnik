@@ -31,18 +31,18 @@ vi.mock('@tauri-apps/plugin-fs', () => ({
 	mkdir: vi.fn(),
 	remove: vi.fn(),
 	rename: vi.fn(),
-	watchImmediate: vi.fn()
+	watchImmediate: vi.fn(),
 }));
 vi.mock('@tauri-apps/api/path', () => ({
 	documentDir: vi.fn(async () => '/docs'),
-	join: vi.fn(async (...parts: string[]) => parts.join('/').replace(/\/+/g, '/'))
+	join: vi.fn(async (...parts: string[]) => parts.join('/').replace(/\/+/g, '/')),
 }));
 vi.mock('@tauri-apps/api/core', () => ({
 	invoke: vi.fn(async (cmd: string, args?: { path?: string }) => {
 		if (cmd === 'set_data_dir') h.state.override = args?.path ?? null;
 		if (cmd === 'saved_data_dir') return h.state.override;
 		return null;
-	})
+	}),
 }));
 vi.mock('@tauri-apps/plugin-opener', () => ({ openPath: vi.fn() }));
 

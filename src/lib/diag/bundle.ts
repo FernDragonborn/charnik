@@ -38,7 +38,7 @@ export function summarizeCharacter(character: Character): CharacterSummary {
 	const classes = character.build.classes.map((c) => ({
 		class: c.class,
 		level: c.level,
-		...(c.subclass ? { subclass: c.subclass } : {})
+		...(c.subclass ? { subclass: c.subclass } : {}),
 	}));
 	return {
 		id: character.id,
@@ -50,8 +50,8 @@ export function summarizeCharacter(character: Character): CharacterSummary {
 		counts: {
 			feats: character.build.feats.length,
 			inventory: character.build.inventory.length,
-			spells: character.build.spells.length
-		}
+			spells: character.build.spells.length,
+		},
 	};
 }
 
@@ -80,8 +80,8 @@ export function buildDiagnostics(input: DiagnosticsInput): DiagnosticsBundle {
 			level: e.level,
 			time: new Date(e.ts).toISOString(),
 			msg: e.msg,
-			...(e.ctx ? { ctx: e.ctx } : {})
-		}))
+			...(e.ctx ? { ctx: e.ctx } : {}),
+		})),
 	};
 }
 

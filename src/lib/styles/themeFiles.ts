@@ -49,7 +49,7 @@ export function serializeTheme(theme: CustomTheme): string {
 		format: 'charnik-theme',
 		version: 1,
 		name: theme.name,
-		tokens: sanitizeThemeTokens(theme.tokens)
+		tokens: sanitizeThemeTokens(theme.tokens),
 	};
 	return JSON.stringify(file, null, 2);
 }
@@ -59,7 +59,7 @@ export function serializeTheme(theme: CustomTheme): string {
 export function themeFromJson(
 	raw: unknown,
 	fallbackName: string,
-	taken: Iterable<string> = []
+	taken: Iterable<string> = [],
 ): CustomTheme | null {
 	if (!raw || typeof raw !== 'object') return null;
 	const obj = raw as Record<string, unknown>;
@@ -123,7 +123,7 @@ export async function removeThemeFile(storage: Storage, id: string): Promise<voi
 export async function seedBundledThemes(
 	storage: Storage,
 	bundled: readonly CustomTheme[],
-	alreadySeeded: readonly string[]
+	alreadySeeded: readonly string[],
 ): Promise<string[]> {
 	const seeded = new Set(alreadySeeded);
 	const newlySeeded: string[] = [];
@@ -150,7 +150,7 @@ export async function seedBundledThemes(
  *  Best-effort. */
 export async function migrateLegacyThemes(
 	storage: Storage,
-	legacy: readonly CustomTheme[]
+	legacy: readonly CustomTheme[],
 ): Promise<void> {
 	for (const t of legacy) {
 		if (!isSafeThemeId(t.id) || Object.keys(sanitizeThemeTokens(t.tokens)).length === 0) continue;
@@ -170,7 +170,7 @@ export async function initThemes(
 	storage: Storage,
 	bundled: readonly CustomTheme[],
 	alreadySeeded: readonly string[],
-	legacy: readonly CustomTheme[] = []
+	legacy: readonly CustomTheme[] = [],
 ): Promise<{ themes: CustomTheme[]; newlySeeded: string[] }> {
 	await migrateLegacyThemes(storage, legacy);
 	const newlySeeded = await seedBundledThemes(storage, bundled, alreadySeeded);

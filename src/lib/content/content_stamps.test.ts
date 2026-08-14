@@ -22,7 +22,7 @@ describe.runIf(hasContentRepo)('shipped content stamps', () => {
 		? contentPacks().flatMap((pack: string) =>
 				readdirSync(packDir(pack))
 					.filter((file: string) => file.endsWith('.csv'))
-					.map((file: string) => [pack, file] as const)
+					.map((file: string) => [pack, file] as const),
 			)
 		: [];
 

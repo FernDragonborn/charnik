@@ -10,7 +10,7 @@ import {
 	loadCharacter,
 	listCharacters,
 	deleteCharacter,
-	type RosterEntry
+	type RosterEntry,
 } from './repository';
 import type { Character } from './schema';
 import type { Storage } from '$lib/storage/types';

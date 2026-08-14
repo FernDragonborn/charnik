@@ -26,7 +26,7 @@ for (const [oldC, newC] of map) {
 			`class="${cls
 				.split(/\s+/)
 				.map((t) => (t === oldC ? newC : t))
-				.join(' ')}"`
+				.join(' ')}"`,
 	);
 	// class:old  Svelte directive — `(?![\w-])` so `.pop` does NOT match inside `.pop-h`
 	head = head.replace(new RegExp(`class:${oldC}(?![\\w-])`, 'g'), `class:${newC}`);

@@ -25,7 +25,7 @@ import {
 	slotPools,
 	type CastPool,
 	type CasterShare,
-	type SlotTable
+	type SlotTable,
 } from '../rules/spellcasting';
 
 export interface SpellcastingClass {
@@ -54,13 +54,13 @@ export interface SpellcastingClass {
  *  `CharacterSheet` dependency, so it lives here in the spellcasting core). */
 export function casterForSpell(
 	sheet: { spellcasting: { classes: readonly SpellcastingClass[] } } | null,
-	spellRef: string
+	spellRef: string,
 ): SpellcastingClass | undefined {
 	const classes = sheet?.spellcasting.classes ?? [];
 	const owning = classes.filter((c) => c.accessSpellIds.includes(spellRef));
 	return (owning.length ? owning : classes).reduce<SpellcastingClass | undefined>(
 		(best, c) => (!best || c.saveDC.value > best.saveDC.value ? c : best),
-		undefined
+		undefined,
 	);
 }
 
@@ -100,7 +100,7 @@ const SLOT_COLUMNS = [
 	'slot_6',
 	'slot_7',
 	'slot_8',
-	'slot_9'
+	'slot_9',
 ] as const;
 
 /** Build a slot table (charLevel → counts) for a `kind`, scoped to the character's edition. */
@@ -111,7 +111,7 @@ function slotTable(graph: ContentGraph, kind: string, systems: string[]): SlotTa
 		if (!r.systems.some((s) => systems.includes(s))) continue;
 		m.set(
 			r.data.level,
-			SLOT_COLUMNS.map((col) => r.data[col] || 0)
+			SLOT_COLUMNS.map((col) => r.data[col] || 0),
 		);
 	}
 	return m;
@@ -122,7 +122,7 @@ function castingCounts(
 	graph: ContentGraph,
 	classId: string,
 	level: number,
-	systems: string[]
+	systems: string[],
 ): { cantrips: number | undefined; prepared: number | undefined } {
 	// FILL-DOWN (E5): a class_casting table may be sparse (rows only where counts change). Use the
 	// highest defined level ≤ the target — a gap means "unchanged since the last row", NOT zero.
@@ -136,7 +136,7 @@ function castingCounts(
 		best = {
 			level: rowLevel,
 			cantrips: num(r.data.cantrips_known),
-			prepared: num(r.data.prepared_known)
+			prepared: num(r.data.prepared_known),
 		};
 	}
 	return best
@@ -149,7 +149,7 @@ function castingCounts(
  *  ability; the full `deriveSpellcasting` waits for the final scores to compute DCs). */
 export function castingAbilityByClass(
 	character: Character,
-	graph: ContentGraph
+	graph: ContentGraph,
 ): Record<string, Ability> {
 	const out: Record<string, Ability> = {};
 	for (const c of character.build.classes) {
@@ -184,7 +184,7 @@ interface CasterProfile {
  *  so we pick the owner + its identity fields, then build the profile ONCE (no per-branch dup). */
 function casterProfileFor(
 	entry: Character['build']['classes'][number],
-	graph: ContentGraph
+	graph: ContentGraph,
 ): CasterProfile | null {
 	const classRow = graph.get(entry.class);
 	if (classRow?.type !== 'class') return null;
@@ -232,7 +232,7 @@ function casterProfileFor(
 		className: classRow.data.name_en,
 		ownerId,
 		accessRef,
-		ritual
+		ritual,
 	};
 }
 
@@ -241,7 +241,7 @@ export function deriveSpellcasting(
 	graph: ContentGraph,
 	scores: Record<Ability, number>,
 	facts?: EffectFacts,
-	issues?: EffectIssue[]
+	issues?: EffectIssue[],
 ): Spellcasting {
 	const systems = [character.system];
 	/** The prepared/known cap, with the "this system has no answer" case SURFACED rather than filled
@@ -253,13 +253,13 @@ export function deriveSpellcasting(
 			system: character.system,
 			abilityMod,
 			share: p.share,
-			level: p.level
+			level: p.level,
 		});
 		if (cap !== null) return cap;
 		issues?.push({
 			source: p.className,
 			token: `class_casting:${p.ownerId}`,
-			reason: `no prepared/known count for ${p.ownerId} at level ${p.level} in ${character.system}, and this system states no formula — add a class_casting row`
+			reason: `no prepared/known count for ${p.ownerId} at level ${p.level} in ${character.system}, and this system states no formula — add a class_casting row`,
 		});
 		return 0;
 	};
@@ -300,7 +300,7 @@ export function deriveSpellcasting(
 		const ownCounts = slotCountsFor(slotTable(graph, p.slotKind, systems), p.level);
 		if (isPact)
 			pools.push(
-				...slotPools(ownCounts, { idPrefix: 'pact', recharge: 'short', forcedUpcast: true })
+				...slotPools(ownCounts, { idPrefix: 'pact', recharge: 'short', forcedUpcast: true }),
 			);
 
 		const cc = castingCounts(graph, p.ownerId, p.level, systems);
@@ -313,18 +313,18 @@ export function deriveSpellcasting(
 			// caster class's numbers — the target is not class-scoped in the L1 vocabulary
 			saveDC: foldSpellStat(
 				'spell_dc',
-				spellSaveDC({ ability: p.ability, score, level: totalLevel })
+				spellSaveDC({ ability: p.ability, score, level: totalLevel }),
 			),
 			attack: foldSpellStat(
 				'spell_attack',
-				spellAttackBonus({ ability: p.ability, score, level: totalLevel })
+				spellAttackBonus({ ability: p.ability, score, level: totalLevel }),
 			),
 			prepareStyle: p.prepareStyle,
 			cantripCap: cc.cantrips ?? 0,
 			preparedCap: cappedPrepared(p, cc.prepared, abilityModifier(score)),
 			maxSpellLevel: maxSpellLevel(ownCounts),
 			accessSpellIds: access.spellIdsForClass(p.accessRef),
-			isPact
+			isPact,
 		};
 	});
 

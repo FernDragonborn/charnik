@@ -9,7 +9,7 @@ import {
 	collectExprVariables,
 	type ExprContext,
 	type ExprValue,
-	type DiceValue
+	type DiceValue,
 } from './expression-evaluator';
 
 /** A test context backed by plain maps. Absent numeric var → undefined (evaluator treats as 0). */
@@ -18,12 +18,12 @@ function ctx(
 		numbers?: Record<string, number>;
 		booleans?: Record<string, boolean>;
 		enums?: Record<string, string>;
-	} = {}
+	} = {},
 ): ExprContext {
 	return {
 		number: (n) => opts.numbers?.[n],
 		boolean: (n) => opts.booleans?.[n],
-		enum: (n) => opts.enums?.[n]
+		enum: (n) => opts.enums?.[n],
 	};
 }
 
@@ -80,7 +80,7 @@ describe('EXPR-1 · arithmetic & precedence', () => {
 
 describe('EXPR-1 · variables', () => {
 	const c = ctx({
-		numbers: { level: 7, proficiency_bonus: 3, wis_mod: 1, cha_mod: -1, 'class_level.monk': 5 }
+		numbers: { level: 7, proficiency_bonus: 3, wis_mod: 1, cha_mod: -1, 'class_level.monk': 5 },
 	});
 
 	it('reads whitelisted numeric variables', () => {
@@ -119,19 +119,19 @@ describe('EXPR-1 · dice terms', () => {
 			'1d(if(class_level.monk>=17, 10, if(class_level.monk>=11, 8, if(class_level.monk>=5, 6, 4))))';
 		expect(dice(die, ctx({ numbers: { 'class_level.monk': 1 } }))).toEqual({
 			pool: { 4: 1 },
-			flat: 0
+			flat: 0,
 		});
 		expect(dice(die, ctx({ numbers: { 'class_level.monk': 5 } }))).toEqual({
 			pool: { 6: 1 },
-			flat: 0
+			flat: 0,
 		});
 		expect(dice(die, ctx({ numbers: { 'class_level.monk': 11 } }))).toEqual({
 			pool: { 8: 1 },
-			flat: 0
+			flat: 0,
 		});
 		expect(dice(die, ctx({ numbers: { 'class_level.monk': 17 } }))).toEqual({
 			pool: { 10: 1 },
-			flat: 0
+			flat: 0,
 		});
 	});
 
@@ -158,7 +158,7 @@ describe('EXPR-1 · conditional values (if) — SPEC5', () => {
 		const healthy = ctx({ booleans: { is_bloodied: false } });
 		expect(ev('if(is_bloodied, 1d4, 0)', bloodied)).toEqual({
 			type: 'dice',
-			dice: { pool: { 4: 1 }, flat: 0 }
+			dice: { pool: { 4: 1 }, flat: 0 },
 		});
 		expect(ev('if(is_bloodied, 1d4, 0)', healthy)).toEqual({ type: 'number', value: 0 });
 	});
@@ -181,7 +181,7 @@ describe('EXPR-1 · booleans & guards', () => {
 	it('evaluates flags, and/or/not, comparisons', () => {
 		const c = ctx({
 			booleans: { is_raging: true, is_concentrating: false },
-			numbers: { hp_percent: 40 }
+			numbers: { hp_percent: 40 },
 		});
 		expect(n('is_raging', c)).toBe(1);
 		expect(n('is_raging and not is_concentrating', c)).toBe(1);
@@ -209,14 +209,14 @@ describe('EXPR-1 · enum comparisons — SPEC3', () => {
 		expect(n('size>=large', ctx({ enums: { size: 'huge' } }))).toBe(1);
 		// armor_type is unordered → ordinal compare is an eval error → degrade
 		expect(evalExpression('armor_type<heavy', ctx({ enums: { armor_type: 'light' } })).ok).toBe(
-			false
+			false,
 		);
 	});
 
 	it('rejects a literal that is not a member of the compared enum', () => {
 		// `large` is a size literal, not an armor_type literal
 		expect(evalExpression('armor_type==large', ctx({ enums: { armor_type: 'none' } })).ok).toBe(
-			false
+			false,
 		);
 	});
 
@@ -287,7 +287,7 @@ describe('EXPR · P2 · collectExprVariables (feeds the dependency-order DAG)', 
 	it('collects dotted variable families by their full name', () => {
 		expect(collectExprVariables('class_level.monk+resource.ki').sort()).toEqual([
 			'class_level.monk',
-			'resource.ki'
+			'resource.ki',
 		]);
 	});
 	it('deduplicates a name read more than once', () => {
@@ -329,7 +329,7 @@ describe('EXPR-1 · failure is a structured error, never a throw', () => {
 		'1/0', // division by zero
 		'1d6 == 3', // comparison on dice
 		'1 d bogusvar', // unknown var as sides
-		'@#$' // stray chars
+		'@#$', // stray chars
 	];
 	for (const src of bad)
 		it(`degrades "${src}" to {ok:false}`, () => {
@@ -353,8 +353,8 @@ describe('EXPR-1 · property-based invariants', () => {
 				.tuple(tie('expr'), fc.constantFrom('+', '-', '*'), tie('expr'))
 				.map(([a, o, b]) => `(${a}${o}${b})`),
 			tie('expr').map((e) => `ceil(${e})`),
-			fc.tuple(tie('expr'), tie('expr')).map(([a, b]) => `max(${a},${b})`)
-		)
+			fc.tuple(tie('expr'), tie('expr')).map(([a, b]) => `max(${a},${b})`),
+		),
 	})).expr;
 
 	it('never throws over the whitelisted domain (ok or structured error only)', () => {
@@ -365,9 +365,9 @@ describe('EXPR-1 · property-based invariants', () => {
 				(src, nums) => {
 					const r = evalExpression(src, ctx({ numbers: nums }));
 					expect(typeof r.ok).toBe('boolean'); // did not throw
-				}
+				},
 			),
-			{ numRuns: 300 }
+			{ numRuns: 300 },
 		);
 	});
 
@@ -381,9 +381,9 @@ describe('EXPR-1 · property-based invariants', () => {
 					const a = evalExpression(src, c);
 					const b = evalExpression(src, c);
 					expect(a).toEqual(b);
-				}
+				},
 			),
-			{ numRuns: 200 }
+			{ numRuns: 200 },
 		);
 	});
 });
@@ -579,7 +579,7 @@ describe('EXPR · fuzz — arbitrary raw input never throws (returns {ok:boolean
 				const e = evalExpression(src, ctx());
 				expect(typeof e.ok).toBe('boolean');
 			}),
-			{ numRuns: 500 }
+			{ numRuns: 500 },
 		);
 	});
 	it('near-miss expression noise (real authoring surface) never throws', () => {
@@ -591,7 +591,7 @@ describe('EXPR · fuzz — arbitrary raw input never throws (returns {ok:boolean
 				const e = evalExpression(src, ctx({ numbers: { level: 5, wis_mod: 2 } }));
 				expect(typeof e.ok).toBe('boolean');
 			}),
-			{ numRuns: 1000 }
+			{ numRuns: 1000 },
 		);
 	});
 	it('a successful numeric result is ALWAYS finite (no NaN/Infinity ever escapes)', () => {
@@ -601,7 +601,7 @@ describe('EXPR · fuzz — arbitrary raw input never throws (returns {ok:boolean
 				const e = evalExpression(src, ctx({ numbers: { level: 9, wis_mod: 3 } }));
 				if (e.ok && e.value.type === 'number') expect(Number.isFinite(e.value.value)).toBe(true);
 			}),
-			{ numRuns: 1000 }
+			{ numRuns: 1000 },
 		);
 	});
 });
@@ -674,11 +674,11 @@ describe('EXPR · step() breakpoint tables', () => {
 		const bard = ctx({ numbers: { 'class_level.bard': 10 } });
 		expect(dice('1d step(class_level.bard, 1->6, 5->8, 10->10, 15->12)', bard)).toEqual({
 			pool: { 10: 1 },
-			flat: 0
+			flat: 0,
 		});
 		expect(dice('step(level, 1->1, 5->2)d6', ctx({ numbers: { level: 5 } }))).toEqual({
 			pool: { 6: 2 },
-			flat: 0
+			flat: 0,
 		});
 	});
 
@@ -686,7 +686,7 @@ describe('EXPR · step() breakpoint tables', () => {
 		const c = ctx({ numbers: { 'class_level.bard': 5 } });
 		expect(dice('step(class_level.bard, 1->1d6, 5->1d8, 10->1d10, 15->1d12)', c)).toEqual({
 			pool: { 8: 1 },
-			flat: 0
+			flat: 0,
 		});
 	});
 
@@ -704,10 +704,10 @@ describe('EXPR · step() breakpoint tables', () => {
 
 	it('lints unsorted / duplicate literal thresholds (eval still answers)', () => {
 		expect(lintExpression('step(level, 5->1, 1->2)')).toContain(
-			'step() thresholds are not in increasing order'
+			'step() thresholds are not in increasing order',
 		);
 		expect(lintExpression('step(level, 1->2, 1->3)')).toContain(
-			'step() has a duplicate threshold 1'
+			'step() has a duplicate threshold 1',
 		);
 		expect(lintExpression(rage)).toEqual([]);
 	});
@@ -763,7 +763,7 @@ describe('EXPR · per_slot() upcast sugar (UPCAST §2)', () => {
 		expect(parseExpression('per_slot(1, 2, 3)').ok).toBe(false);
 		// a dice amount makes an if() branch "dice" for the mixed-branch lint
 		expect(lintExpression('if(slot>3, per_slot(1d6), 5)')).toContain(
-			'if() branches differ in type (dice vs number)'
+			'if() branches differ in type (dice vs number)',
 		);
 	});
 });

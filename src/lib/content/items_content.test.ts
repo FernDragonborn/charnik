@@ -14,7 +14,7 @@ import { readPackFile } from '../../test-support/real-content';
  */
 const EDITIONS = [
 	['5.5e', 'srd-2024'],
-	['5e', 'srd-2014']
+	['5e', 'srd-2014'],
 ] as const;
 
 async function loadEdition(pack: string) {

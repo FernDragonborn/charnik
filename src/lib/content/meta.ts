@@ -26,7 +26,7 @@ export const META_KEYS = [
 	'source_lang',
 	'schema',
 	'updated_at',
-	'hash'
+	'hash',
 ] as const;
 
 export type MetaKey = (typeof META_KEYS)[number];
@@ -147,6 +147,6 @@ export const HASH_STATE = {
 	/** a hash was recorded and no longer matches — the DATA was edited after the last stamp */
 	drift: 'drift',
 	/** no `#content-hash` at all: nothing to compare, so nothing is known */
-	unstamped: 'unstamped'
+	unstamped: 'unstamped',
 } as const;
 export type HashState = (typeof HASH_STATE)[keyof typeof HASH_STATE];

@@ -21,7 +21,7 @@ import {
 	unDismissMissing,
 	CHECK_INTERVAL_MS,
 	UPDATE_MODE,
-	type PackConfigData
+	type PackConfigData,
 } from './packs.svelte';
 
 const REPO = 'https://github.com/FernDragonborn/charnik-content-srd';
@@ -30,7 +30,7 @@ const OTHER = 'https://github.com/someone/homebrew-packs';
 const cfg = (over: Partial<PackConfigData> = {}): PackConfigData => ({
 	...emptyPackConfig(),
 	updates: UPDATE_MODE.notify,
-	...over
+	...over,
 });
 
 describe('parsePackConfig', () => {
@@ -48,7 +48,7 @@ describe('parsePackConfig', () => {
 		const parsed = parsePackConfig({
 			updates: 'notify',
 			packs: { 'srd-2024': { repo: REPO }, 'srd-2014': { repo: REPO, pinned: true } },
-			repos: { [REPO]: { etag: 'W/"abc"', lastCheckedAt: '2026-08-11T00:00:00.000Z' } }
+			repos: { [REPO]: { etag: 'W/"abc"', lastCheckedAt: '2026-08-11T00:00:00.000Z' } },
 		});
 		expect(parsed.packs['srd-2014']?.pinned).toBe(true);
 		expect(parsed.repos[REPO]?.etag).toBe('W/"abc"');
@@ -71,7 +71,7 @@ describe('the missing-content prompt', () => {
 		expect(missingUnanswered()).toEqual([]);
 		// what persistence would write, read back
 		expect(parsePackConfig(JSON.parse(JSON.stringify(packConfig))).dismissedMissing).toEqual([
-			'srd-2014'
+			'srd-2014',
 		]);
 	});
 
@@ -86,7 +86,7 @@ describe('the missing-content prompt', () => {
 	it('a corrupt dismissal list is ignored, not trusted into the prompt logic', () => {
 		expect(parsePackConfig({ dismissedMissing: 'srd-2014' }).dismissedMissing).toEqual([]);
 		expect(parsePackConfig({ dismissedMissing: [1, 'srd-2014'] }).dismissedMissing).toEqual([
-			'srd-2014'
+			'srd-2014',
 		]);
 	});
 });
@@ -176,7 +176,7 @@ describe('reposDueForCheck', () => {
 	const now = Date.parse('2026-08-11T12:00:00.000Z');
 	const twoPacksOneRepo = {
 		packs: { 'srd-2024': { repo: REPO }, 'srd-2014': { repo: REPO } },
-		repos: {}
+		repos: {},
 	};
 
 	it('two packs from ONE repo are one request — that is the whole point of the split', () => {
@@ -184,27 +184,27 @@ describe('reposDueForCheck', () => {
 	});
 	it('mode off means the app never reaches the network on its own', () => {
 		expect(reposDueForCheck(cfg({ ...twoPacksOneRepo, updates: UPDATE_MODE.off }), now)).toEqual(
-			[]
+			[],
 		);
 	});
 	it('a repo whose every pack is pinned is not contacted — we would refuse the answer anyway', () => {
 		const pinned = {
 			packs: { 'srd-2024': { repo: REPO, pinned: true }, 'srd-2014': { repo: REPO, pinned: true } },
-			repos: {}
+			repos: {},
 		};
 		expect(reposDueForCheck(cfg(pinned), now)).toEqual([]);
 	});
 	it('but ONE unpinned pack keeps its repo live', () => {
 		const mixed = {
 			packs: { 'srd-2024': { repo: REPO, pinned: true }, 'srd-2014': { repo: REPO } },
-			repos: {}
+			repos: {},
 		};
 		expect(reposDueForCheck(cfg(mixed), now)).toEqual([REPO]);
 	});
 	it('only repos past the throttle, and deterministically ordered', () => {
 		const two = {
 			packs: { a: { repo: REPO }, b: { repo: OTHER } },
-			repos: { [OTHER]: { lastCheckedAt: new Date(now - 1000).toISOString() } }
+			repos: { [OTHER]: { lastCheckedAt: new Date(now - 1000).toISOString() } },
 		};
 		expect(reposDueForCheck(cfg(two), now)).toEqual([REPO]); // OTHER checked a second ago
 		expect(reposDueForCheck(cfg(two), now + CHECK_INTERVAL_MS)).toEqual([OTHER, REPO].sort());

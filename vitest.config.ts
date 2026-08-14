@@ -12,10 +12,12 @@ import { fileURLToPath } from 'node:url';
 const alias = {
 	$lib: fileURLToPath(new URL('./src/lib', import.meta.url)),
 	'$app/environment': fileURLToPath(
-		new URL('./src/test-support/app-environment.ts', import.meta.url)
+		new URL('./src/test-support/app-environment.ts', import.meta.url),
 	),
 	'$app/paths': fileURLToPath(new URL('./src/test-support/app-paths.ts', import.meta.url)),
-	'$app/navigation': fileURLToPath(new URL('./src/test-support/app-navigation.ts', import.meta.url))
+	'$app/navigation': fileURLToPath(
+		new URL('./src/test-support/app-navigation.ts', import.meta.url),
+	),
 };
 
 export default defineConfig({
@@ -29,8 +31,8 @@ export default defineConfig({
 					name: 'node',
 					include: ['src/**/*.{test,spec}.ts', 'tests/**/*.{test,spec}.ts'],
 					exclude: ['src/**/*.browser.{test,spec}.ts'],
-					environment: 'node'
-				}
+					environment: 'node',
+				},
 			},
 			{
 				extends: true,
@@ -41,10 +43,10 @@ export default defineConfig({
 						enabled: true,
 						provider: playwright(),
 						headless: true,
-						instances: [{ browser: 'chromium' }]
-					}
-				}
-			}
-		]
-	}
+						instances: [{ browser: 'chromium' }],
+					},
+				},
+			},
+		],
+	},
 });

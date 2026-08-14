@@ -5,7 +5,7 @@ import {
 	conflictRows,
 	mergeCopyList,
 	mergeFailures,
-	type DirFile
+	type DirFile,
 } from './migrate';
 
 const f = (path: string, size: number, mtime?: number): DirFile => ({ path, size, mtime });
@@ -31,7 +31,7 @@ describe('conflictRows — the merge table, collisions first, newer side flagged
 	it('lists files present in BOTH folders before single-side files', () => {
 		expect(rows.slice(0, 2).map((r) => r.path)).toEqual(['a.csv', 'b.csv']);
 		expect(rows.every((r, i) => (i < 2 ? r.source && r.target : !(r.source && r.target)))).toBe(
-			true
+			true,
 		);
 	});
 	it('flags which side is newer on a collision', () => {
@@ -51,7 +51,7 @@ describe('mergeCopyList — newer-wins, keep target when undatable', () => {
 		expect(
 			mergeCopyList(source, target)
 				.map((s) => s.path)
-				.sort()
+				.sort(),
 		).toEqual(['missing.csv', 'new.csv']);
 	});
 	it('keeps the target file when either side has no mtime (undatable collision)', () => {
@@ -70,7 +70,7 @@ describe('mergeFailures — the gate before deleting the old folder after a merg
 	});
 	it('flags a copied file that landed at the wrong size', () => {
 		expect(mergeFailures(source, copied, [f('kept.csv', 5), f('copied.csv', 1)])).toEqual([
-			'copied.csv'
+			'copied.csv',
 		]);
 	});
 });

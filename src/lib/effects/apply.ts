@@ -21,7 +21,7 @@ import {
 	type ActiveEffect,
 	type EffectCtx,
 	type EffectIssue,
-	type ParsedEffect
+	type ParsedEffect,
 } from './token-parser';
 import { matchesTarget, emptyFacts } from './facts';
 import type {
@@ -30,7 +30,7 @@ import type {
 	FactRef,
 	RollMod,
 	TargetValidator,
-	ResourceDef
+	ResourceDef,
 } from './facts';
 // re-export the public facts contract so `$lib/effects/apply` import sites are unchanged
 export { matchesTarget };
@@ -44,7 +44,7 @@ const RECHARGE_RANK: Record<string, number> = {
 	short_one: 3,
 	long: 2,
 	other: 1,
-	consumable: 0
+	consumable: 0,
 };
 const rechargeRank = (d: ResourceDef): number => RECHARGE_RANK[d.recharge] ?? 1;
 
@@ -63,7 +63,7 @@ class FactsCollector {
 	constructor(
 		private readonly ctx?: EffectCtx,
 		private readonly issues?: EffectIssue[],
-		private readonly isTargetSupported?: TargetValidator
+		private readonly isTargetSupported?: TargetValidator,
 	) {}
 
 	collect(effects: ActiveEffect[]): EffectFacts {
@@ -92,7 +92,7 @@ class FactsCollector {
 		this.issues?.push({
 			source,
 			token,
-			reason: `unknown target "${target}" for ${kind}${check.suggestion ?? ''}`
+			reason: `unknown target "${target}" for ${kind}${check.suggestion ?? ''}`,
 		});
 		return true;
 	}
@@ -119,7 +119,7 @@ class FactsCollector {
 						amount: 0.5,
 						layer: eff.layer,
 						source: eff.source,
-						token
+						token,
 					});
 				return true;
 			default:
@@ -181,7 +181,7 @@ class FactsCollector {
 			list.push({
 				target: p.target,
 				value: p.amount,
-				...(p.weaponScope ? { weaponScope: p.weaponScope } : {}) // §B per-weapon scope (GWF)
+				...(p.weaponScope ? { weaponScope: p.weaponScope } : {}), // §B per-weapon scope (GWF)
 			});
 		return true;
 	}
@@ -195,7 +195,7 @@ class FactsCollector {
 					this.facts.proficiencies.push({
 						target: p.target.trim(),
 						level: p.proficiency ?? 'proficient',
-						source: eff.source
+						source: eff.source,
 					});
 				break;
 			case EFFECT_KIND.grantRoll:
@@ -206,7 +206,7 @@ class FactsCollector {
 					this.facts.defenses.push({
 						bucket: p.defense ?? 'resist',
 						type: p.target.trim(),
-						source: eff.source
+						source: eff.source,
 					});
 				break;
 			case EFFECT_KIND.applyCondition:
@@ -226,7 +226,7 @@ class FactsCollector {
 					this.facts.initiativeRegain.push({
 						id: p.target.trim(),
 						upTo: p.amount,
-						source: eff.source
+						source: eff.source,
 					});
 				break;
 			case EFFECT_KIND.grantResource:
@@ -257,7 +257,7 @@ class FactsCollector {
 				id: p.target,
 				source: eff.source,
 				label: titleCase(p.target),
-				formula
+				formula,
 			});
 	}
 
@@ -279,7 +279,7 @@ class FactsCollector {
 				this.issues?.push({
 					source: eff.source,
 					token,
-					reason: r.ok ? 'resource max is not a number' : r.error
+					reason: r.ok ? 'resource max is not a number' : r.error,
 				});
 		}
 		// max ≤ 0 (a shared-pack `class_level.monk` on a non-monk, a step() below its first threshold) →
@@ -292,7 +292,7 @@ class FactsCollector {
 			max: maxVal === Infinity ? Infinity : Math.max(0, Math.min(maxVal, MAX_RESOURCE_MAX)),
 			recharge: p.resource.recharge,
 			name: titleCase(p.resource.id),
-			source: eff.source
+			source: eff.source,
 		};
 		const prev = this.pools.get(def.id);
 		// a scaling feature re-granted at a higher tier: the largest max wins. At an EQUAL max the
@@ -318,7 +318,7 @@ export function collectFacts(
 	effects: ActiveEffect[],
 	ctx?: EffectCtx,
 	issues?: EffectIssue[],
-	isTargetSupported?: TargetValidator
+	isTargetSupported?: TargetValidator,
 ): EffectFacts {
 	return new FactsCollector(ctx, issues, isTargetSupported).collect(effects);
 }
@@ -382,7 +382,7 @@ function foldNumericFact(f: NumericFact, block: FactRef | undefined, acc: FoldCt
 			notes.push({
 				text: `${block.source}: +${f.amount} to ${targetKey} blocked (${f.source})`,
 				key: NOTE_KEY.bonusBlocked,
-				params: { blocker: block.source, amount: f.amount, target: targetKey, source: f.source }
+				params: { blocker: block.source, amount: f.amount, target: targetKey, source: f.source },
 			});
 		else
 			contribs.push({
@@ -390,7 +390,7 @@ function foldNumericFact(f: NumericFact, block: FactRef | undefined, acc: FoldCt
 				layer: f.layer,
 				op: f.op,
 				amount: f.amount,
-				note: f.token
+				note: f.token,
 			});
 		return;
 	}
@@ -400,14 +400,14 @@ function foldNumericFact(f: NumericFact, block: FactRef | undefined, acc: FoldCt
 			notes.push({
 				text: `${block.source}: +${d} to ${targetKey} blocked (${f.source})`,
 				key: NOTE_KEY.bonusBlocked,
-				params: { blocker: block.source, amount: d, target: targetKey, source: f.source }
+				params: { blocker: block.source, amount: d, target: targetKey, source: f.source },
 			});
 		// `amount` param carries its own sign — a positive dice bonus reads "+1d4", a penalty "-1d4"
 		else
 			notes.push({
 				text: `${f.source}: ${d.startsWith('-') ? d : `+${d}`} to ${targetKey}`,
 				key: NOTE_KEY.diceBonus,
-				params: { source: f.source, amount: d.startsWith('-') ? d : `+${d}`, target: targetKey }
+				params: { source: f.source, amount: d.startsWith('-') ? d : `+${d}`, target: targetKey },
 			});
 		return;
 	}
@@ -415,7 +415,7 @@ function foldNumericFact(f: NumericFact, block: FactRef | undefined, acc: FoldCt
 		notes.push({
 			text: `${f.source}: unresolved "${f.token}" (${f.error})`,
 			key: NOTE_KEY.unresolved,
-			params: { source: f.source, token: f.token, error: f.error }
+			params: { source: f.source, token: f.token, error: f.error },
 		});
 }
 
@@ -427,7 +427,7 @@ function pushFlagNotes(list: FactRef[], label: string, key: string, acc: FoldCtx
 			acc.notes.push({
 				text: `${a.source}: ${label} on ${acc.targetKey}`,
 				key,
-				params: { source: a.source, target: acc.targetKey }
+				params: { source: a.source, target: acc.targetKey },
 			});
 }
 
@@ -435,7 +435,7 @@ export function applyEffects(
 	targetKey: string,
 	base: Computed,
 	effects: ActiveEffect[] | EffectFacts,
-	ctx?: EffectCtx
+	ctx?: EffectCtx,
 ): Computed {
 	const facts = Array.isArray(effects) ? collectFacts(effects, ctx) : effects;
 	const acc: FoldCtx = { targetKey, contribs: [...base.trace], notes: [...(base.notes ?? [])] };

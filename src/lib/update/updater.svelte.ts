@@ -21,7 +21,7 @@ export const updater = $state({
 	/** Download progress 0–100 while `status === 'downloading'`. */
 	progress: 0,
 	/** Last failure message, surfaced in the chip's tooltip so a stuck update isn't silent. */
-	error: ''
+	error: '',
 });
 
 /** Ask the release endpoint whether a newer signed build exists. Silent + non-fatal: a failed check

@@ -57,7 +57,7 @@ export const FILE_CHANGE = {
 	/** here, but gone upstream — the case that needs a warning */
 	removed: 'removed',
 	/** hand-edited locally, so the update SKIPS it and the user keeps their version */
-	preserved: 'preserved'
+	preserved: 'preserved',
 } as const;
 export type FileChangeKind = (typeof FILE_CHANGE)[keyof typeof FILE_CHANGE];
 
@@ -101,7 +101,7 @@ export async function diffPack(
 	remote: RemotePack,
 	/** The folder it occupies HERE. Differs from `remote.pack` when the name was already taken by a
 	 *  pack from another repo, so the install landed beside it instead of on top of it. */
-	localPack: string = remote.pack
+	localPack: string = remote.pack,
 ): Promise<PackDiff> {
 	const changes: FileChange[] = [];
 	const seen = new Set<string>();
@@ -139,7 +139,7 @@ export async function diffPack(
 				// even though a removed file is by definition not in the repo any more
 				path: `${remote.pack}/${path.slice(localRoot.length + 1)}`,
 				kind: FILE_CHANGE.removed,
-				expectLocal: await gitBlobSha(await storage.readBytes(path))
+				expectLocal: await gitBlobSha(await storage.readBytes(path)),
 			});
 
 	return { pack: localPack, changes };
@@ -178,7 +178,7 @@ export function rowsRemovedBy(graph: ContentGraph, diff: PackDiff): string[] {
 	const doomed = new Set(
 		diff.changes
 			.filter((c) => c.kind === FILE_CHANGE.removed)
-			.map((c) => localPathIn(diff.pack, c.path))
+			.map((c) => localPathIn(diff.pack, c.path)),
 	);
 	if (doomed.size === 0) return [];
 	return graph.rows
@@ -200,7 +200,7 @@ export function rowsRemovedBy(graph: ContentGraph, diff: PackDiff): string[] {
 export function rowsDroppedFromFile(
 	graph: ContentGraph,
 	localFilePath: string,
-	incoming: string
+	incoming: string,
 ): string[] {
 	const before = graph.rows.filter((row) => `${row.root}/${row.file}` === localFilePath);
 	if (before.length === 0) return [];
@@ -225,13 +225,13 @@ export function rowsDroppedFromFile(
  */
 export function charactersReferencing(
 	characters: { slug: string; json: string }[],
-	rowKeys: string[]
+	rowKeys: string[],
 ): { slug: string; keys: string[] }[] {
 	if (rowKeys.length === 0) return [];
 	return characters
 		.map(({ slug, json }) => ({
 			slug,
-			keys: rowKeys.filter((key) => json.includes(`"${key}"`))
+			keys: rowKeys.filter((key) => json.includes(`"${key}"`)),
 		}))
 		.filter((hit) => hit.keys.length > 0);
 }

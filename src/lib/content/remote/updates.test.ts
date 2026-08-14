@@ -16,7 +16,7 @@ import {
 	installPack,
 	renamePack,
 	restorePendingUpdates,
-	uninstallPack
+	uninstallPack,
 } from './updates.svelte';
 import { gitBlobSha } from './diff';
 import { discoverContentRoots } from '../disk';
@@ -33,10 +33,10 @@ const enc = (s: string) => new TextEncoder().encode(s);
 const ALL = {
 	'dark-sun/classes_srd.csv': await stampWithHash(
 		new Map([['source', 'Dark Sun']]),
-		'id\nathasian'
+		'id\nathasian',
 	),
 	'dark-sun/plugins/dark-sun-rules/main.js': 'globalThis.handlers = {};',
-	'dark-sun/plugins/dark-sun-rules/plugin.json': '{"api":1}'
+	'dark-sun/plugins/dark-sun-rules/plugin.json': '{"api":1}',
 };
 
 /** The tree always advertises the whole pack (that is what the repo holds); which files the fetcher
@@ -49,9 +49,9 @@ beforeAll(async () => {
 			Object.entries(ALL).map(async ([path, body]) => ({
 				path,
 				sha: await gitBlobSha(enc(body)),
-				type: 'blob'
-			}))
-		)
+				type: 'blob',
+			})),
+		),
 	});
 });
 
@@ -61,8 +61,8 @@ async function remoteFiles({ csvMoved = false } = {}): Promise<{ path: string; s
 	return Promise.all(
 		Object.entries(ALL).map(async ([path, body]) => ({
 			path,
-			sha: csvMoved && path.endsWith('.csv') ? 'f'.repeat(40) : await gitBlobSha(enc(body))
-		}))
+			sha: csvMoved && path.endsWith('.csv') ? 'f'.repeat(40) : await gitBlobSha(enc(body)),
+		})),
 	);
 }
 
@@ -71,7 +71,7 @@ const fetcher = (files: Record<string, string>): RemoteFetcher => ({
 	getBytes: async (url) => {
 		const hit = Object.entries(files).find(([path]) => url.endsWith(path));
 		return hit ? { kind: 'ok', bytes: enc(hit[1]) } : { kind: 'error', message: `404 ${url}` };
-	}
+	},
 });
 
 describe('install a pack from a pasted URL', () => {
@@ -99,7 +99,7 @@ describe('install a pack from a pasted URL', () => {
 		expect(await getUserStorage().read('content/dark-sun/classes_srd.csv')).toContain('athasian');
 		// a pack's plugins ride inside it (PLUGINS §2) — they land in the same folder
 		expect(await getUserStorage().exists('content/dark-sun/plugins/dark-sun-rules/main.js')).toBe(
-			true
+			true,
 		);
 		expect(packConfig.packs['dark-sun']?.repo).toBe(REPO);
 		expect(updates.discovered[0]?.installed).toBe(true);
@@ -128,7 +128,7 @@ describe('install a pack from a pasted URL', () => {
 		await restorePendingUpdates();
 
 		expect(updates.pending['dark-sun']?.diff.changes).toMatchObject([
-			{ path: 'dark-sun/classes_srd.csv', kind: 'changed', sha: 'f'.repeat(40) }
+			{ path: 'dark-sun/classes_srd.csv', kind: 'changed', sha: 'f'.repeat(40) },
 		]);
 	});
 
@@ -215,7 +215,7 @@ describe('two repos publishing the same folder name', () => {
 		expect(await getUserStorage().read('content/dark-sun-2/classes_srd.csv')).toContain('athasian');
 		// …including the plugin two levels down, which the fetch asks for by its REPO path
 		expect(await getUserStorage().exists('content/dark-sun-2/plugins/dark-sun-rules/main.js')).toBe(
-			true
+			true,
 		);
 	});
 
@@ -236,14 +236,14 @@ describe('two repos publishing the same folder name', () => {
 		// upstream moved the CSV; the remembered listing is repo-relative (`dark-sun/…`)
 		packConfig.pending['dark-sun-2'] = {
 			repo: OTHER,
-			files: await remoteFiles({ csvMoved: true })
+			files: await remoteFiles({ csvMoved: true }),
 		};
 
 		await restorePendingUpdates();
 
 		expect(updates.pending['dark-sun-2']?.diff).toMatchObject({
 			pack: 'dark-sun-2',
-			changes: [{ path: 'dark-sun/classes_srd.csv', kind: 'changed' }]
+			changes: [{ path: 'dark-sun/classes_srd.csv', kind: 'changed' }],
 		});
 	});
 
@@ -340,12 +340,12 @@ describe('the check runs alone', () => {
 				log.push(`end ${id}`);
 				return { kind: 'ok', body: tree, etag: 'W/"1"' };
 			},
-			getBytes: async () => ({ kind: 'error', message: 'not asked' })
+			getBytes: async () => ({ kind: 'error', message: 'not asked' }),
 		};
 
 		await Promise.all([
 			checkNow({ manual: true, fetcher: slow }),
-			checkNow({ manual: true, fetcher: slow })
+			checkNow({ manual: true, fetcher: slow }),
 		]);
 
 		expect(log).toEqual(['start 1', 'end 1', 'start 2', 'end 2']);
@@ -361,13 +361,13 @@ describe('the check runs alone', () => {
 		packConfig.packs['dark-sun'] = { repo: REPO };
 		packConfig.updates = UPDATE_MODE.download; // …so the check itself reaches the network for bytes
 		const movedTree = JSON.stringify({
-			tree: (await remoteFiles({ csvMoved: true })).map((f) => ({ ...f, type: 'blob' }))
+			tree: (await remoteFiles({ csvMoved: true })).map((f) => ({ ...f, type: 'blob' })),
 		});
 		const diesMidDownload: RemoteFetcher = {
 			getText: async () => ({ kind: 'ok', body: movedTree, etag: 'W/"9"' }),
 			getBytes: async () => {
 				throw new Error('killed mid pre-download');
-			}
+			},
 		};
 
 		await expect(checkNow({ manual: true, fetcher: diesMidDownload })).rejects.toThrow();
@@ -395,12 +395,12 @@ describe('the check runs alone', () => {
 				path: `dark-sun/f${i}.csv`,
 				sha: `${i}`.padStart(40, '0'),
 				type: 'blob',
-				size: 10
-			}))
+				size: 10,
+			})),
 		});
 		const serving: RemoteFetcher = {
 			getText: async () => ({ kind: 'ok', body: huge, etag: 'W/"huge"' }),
-			getBytes: async () => ({ kind: 'error', message: 'never asked — it was refused' })
+			getBytes: async () => ({ kind: 'error', message: 'never asked — it was refused' }),
 		};
 
 		await checkNow({ manual: true, fetcher: serving });

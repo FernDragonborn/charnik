@@ -13,7 +13,7 @@ import {
 	makeExprContext,
 	withSpellcastingMod,
 	type BuildVars,
-	type PlayVars
+	type PlayVars,
 } from '../effects/context';
 import type { ExprContext } from '../effects/expression-evaluator';
 import type { ActiveEffect, EffectCtx } from '../effects/token-parser';
@@ -33,7 +33,7 @@ function armorWeightOf(row: LoadedRowOf<'item'> | undefined): PlayVars['armorTyp
  *  spell's own mechanics (upcast) evaluate in manual mode while the effect layers stay gated. */
 export function baseResolveState(
 	scores: Record<Ability, number>,
-	hpMaxValue: number
+	hpMaxValue: number,
 ): ResolveState {
 	const mods = {} as Record<Ability, number>;
 	for (const ab of ABILITY_IDS) mods[ab] = abilityModifier(scores[ab]);
@@ -43,7 +43,7 @@ export function baseResolveState(
 		hpMax: { value: hpMaxValue },
 		conditions: new Set(),
 		resources: {},
-		resourceMax: {}
+		resourceMax: {},
 	};
 }
 
@@ -73,7 +73,7 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 		baseSpeed,
 		equippedArmor,
 		speciesRow,
-		abilityByClass
+		abilityByClass,
 	} = deps;
 	return (state: ResolveState): EffectCtx => {
 		const buildVars: BuildVars = {
@@ -85,7 +85,7 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 			get spellcastingMod() {
 				return primaryAbility !== undefined ? state.mods[primaryAbility] : 0;
 			},
-			baseSpeed
+			baseSpeed,
 		};
 		// a manual play-state max (play.hp.max) wins over the computed one, as everywhere
 		const hpMaxLive = (): number => character.play.hp.max ?? state.hpMax.value;
@@ -107,7 +107,7 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 				// initiative-regain option keeps it from re-firing later, so a round-wide window is fine (v1).
 				get is_combat_start() {
 					return character.play.inCombat && character.play.round <= 1;
-				}
+				},
 				// `is_raging` intentionally absent: it resolves via CONDITION_FLAG_ALIASES →
 				// has_condition.rage against the live conditions set (see effects/context.ts).
 			},
@@ -115,7 +115,7 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 			resources: state.resources,
 			resourceMax: state.resourceMax,
 			armorType: armorWeightOf(equippedArmor),
-			size: String(speciesRow?.type === 'species' ? speciesRow.data.size : 'medium')
+			size: String(speciesRow?.type === 'species' ? speciesRow.data.size : 'medium'),
 		};
 		const base = makeExprContext(buildVars, playVars);
 		const scoped = new Map<string, ExprContext>();

@@ -4,7 +4,7 @@
 	let {
 		on = false,
 		title,
-		onclick
+		onclick,
 	}: { on?: boolean; title?: string; onclick?: () => void } = $props();
 </script>
 

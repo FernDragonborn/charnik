@@ -5,7 +5,7 @@ const theme = (over: Partial<CustomTheme> = {}): CustomTheme => ({
 	id: 'ocean',
 	name: 'Ocean',
 	tokens: { 'color-accent': '#0af', 'color-bg': 'rgb(0 20 40)' },
-	...over
+	...over,
 });
 
 describe('themeToCss', () => {
@@ -18,7 +18,7 @@ describe('themeToCss', () => {
 
 	it('strips a leading -- from token names', () => {
 		expect(themeToCss(theme({ tokens: { '--color-text': '#fff' } }))).toContain(
-			'--color-text: #fff;'
+			'--color-text: #fff;',
 		);
 	});
 
@@ -31,8 +31,8 @@ describe('themeToCss', () => {
 	it('accepts color-mix / var values', () => {
 		const css = themeToCss(
 			theme({
-				tokens: { 'color-good-line': 'color-mix(in srgb, var(--color-good) 40%, transparent)' }
-			})
+				tokens: { 'color-good-line': 'color-mix(in srgb, var(--color-good) 40%, transparent)' },
+			}),
 		);
 		expect(css).toContain('color-mix(in srgb, var(--color-good) 40%, transparent)');
 	});
@@ -67,7 +67,7 @@ describe('buildThemesStylesheet', () => {
 		const { css, ids } = buildThemesStylesheet([
 			theme({ id: 'ocean' }),
 			theme({ id: 'bad id!', tokens: { 'color-bg': '#000' } }),
-			theme({ id: 'sand', tokens: { 'color-accent': '#e8c' } })
+			theme({ id: 'sand', tokens: { 'color-accent': '#e8c' } }),
 		]);
 		expect(ids).toEqual(['ocean', 'sand']);
 		expect(css).toContain("[data-theme='ocean']");
@@ -78,7 +78,7 @@ describe('buildThemesStylesheet', () => {
 	it('returns empty (never throws) on a non-array — a corrupt persisted snapshot must not kill reactivity', () => {
 		expect(buildThemesStylesheet({ nope: 1 } as unknown as CustomTheme[])).toEqual({
 			css: '',
-			ids: []
+			ids: [],
 		});
 	});
 });

@@ -32,7 +32,7 @@ import {
 	ITEM_CATEGORIES,
 	RARITIES,
 	FEAT_CATEGORIES,
-	type ContentType
+	type ContentType,
 } from './schemas';
 import type { z } from 'zod';
 
@@ -67,7 +67,7 @@ const ENUM_OPTS: Record<string, readonly string[]> = {
 	// `kind` is a column on TWO types with unrelated vocab, so it's disambiguated below (like
 	// `category`): species_option.kind = these; spell_slots.kind is a free string (rendered as text).
 	kind_species_option: SPECIES_OPTION_KINDS,
-	category_feat: FEAT_CATEGORIES // feat.category (disambiguated below)
+	category_feat: FEAT_CATEGORIES, // feat.category (disambiguated below)
 };
 const BOOL_FIELDS = new Set([
 	'concentration',
@@ -75,7 +75,7 @@ const BOOL_FIELDS = new Set([
 	'attunement',
 	'stealth_disadvantage',
 	'negative',
-	'repeatable'
+	'repeatable',
 ]);
 const NUMBER_FIELDS = new Set([
 	'speed',
@@ -89,7 +89,7 @@ const NUMBER_FIELDS = new Set([
 	'caster_from_level',
 	'cantrips_known',
 	'prepared_known',
-	'duration_rounds'
+	'duration_rounds',
 ]);
 
 // nicer labels (mirror the compendium's), falling back to Title Case of the column name
@@ -114,7 +114,7 @@ const LABELS: Record<string, string> = {
 	subclass_level: 'Subclass at level',
 	caster_share: 'Caster share (multiclass)',
 	caster_from_level: 'Casting from level',
-	prepare_style: 'Prepare style'
+	prepare_style: 'Prepare style',
 };
 const label = (name: string): string => LABELS[name] ?? titleCase(name);
 
@@ -160,7 +160,7 @@ export function fieldsFor(type: ContentType): FieldDesc[] {
 				label: label(name),
 				kind: kindOf(type, name),
 				...(options ? { options } : {}),
-				required: name === 'name_en' || name === 'systems'
+				required: name === 'name_en' || name === 'systems',
 			};
 		});
 }
@@ -202,7 +202,7 @@ export interface TargetFile {
 export async function listTypeTargets(
 	storage: Storage,
 	type: ContentType,
-	shippedRoots: readonly string[]
+	shippedRoots: readonly string[],
 ): Promise<TargetFile[]> {
 	const fb = CONTENT_TYPES[type].filebase;
 	const out: TargetFile[] = [];
@@ -230,7 +230,7 @@ export interface SaveResult {
 function buildRow(
 	type: ContentType,
 	draft: Record<string, string>,
-	existingIds: Set<string> = new Set()
+	existingIds: Set<string> = new Set(),
 ): { ok: true; row: Record<string, string> } | { ok: false; issues: string[] } {
 	const cols = columnsFor(type);
 	const row: Record<string, string> = {};
@@ -247,7 +247,7 @@ function buildRow(
 	if (!res.success) {
 		return {
 			ok: false,
-			issues: res.error.issues.map((i) => `${i.path.join('.') || 'row'}: ${i.message}`)
+			issues: res.error.issues.map((i) => `${i.path.join('.') || 'row'}: ${i.message}`),
 		};
 	}
 	return { ok: true, row };
@@ -260,7 +260,7 @@ function buildRow(
 function buildRowWithExtras(
 	type: ContentType,
 	draft: Record<string, string>,
-	existingIds: Set<string>
+	existingIds: Set<string>,
 ): { ok: true; row: Record<string, string> } | { ok: false; issues: string[] } {
 	const built = buildRow(type, draft, existingIds);
 	if (!built.ok) return built;
@@ -294,7 +294,7 @@ export async function upsertHomebrewRow(
 	storage: Storage,
 	type: ContentType,
 	draft: Record<string, string>,
-	targetFile: string = homebrewFile(type)
+	targetFile: string = homebrewFile(type),
 ): Promise<SaveResult> {
 	const id = (draft.id ?? '').trim() || slugify(draft.name_en ?? '');
 
@@ -324,7 +324,7 @@ export async function removeHomebrewRow(
 	storage: Storage,
 	type: ContentType,
 	targetFile: string,
-	id: string
+	id: string,
 ): Promise<void> {
 	if (!(await storage.exists(targetFile))) return;
 	const { rows, directives } = await readHomebrewFile(storage, targetFile);
@@ -354,7 +354,7 @@ async function writeStampedHomebrew(
 	storage: Storage,
 	file: string,
 	table: { columns: string[]; rows: Record<string, string>[] },
-	prior: Map<MetaKey, string>
+	prior: Map<MetaKey, string>,
 ): Promise<void> {
 	const body = Papa.unparse({ fields: table.columns, data: table.rows }, { newline: '\r\n' });
 	const d = new Map(prior);
@@ -371,7 +371,7 @@ async function writeStampedHomebrew(
  *  Papa so it isn't mistaken for the column header). Empty when the file doesn't exist yet. */
 async function readHomebrewFile(
 	storage: Storage,
-	file: string
+	file: string,
 ): Promise<{ rows: Record<string, string>[]; directives: Map<MetaKey, string> }> {
 	if (!(await storage.exists(file))) return { rows: [], directives: new Map() };
 	const { directives, body } = parseContentDirectives(await storage.read(file));
@@ -388,7 +388,7 @@ export async function saveHomebrewRow(
 	storage: Storage,
 	type: ContentType,
 	draft: Record<string, string>,
-	targetFile: string = homebrewFile(type)
+	targetFile: string = homebrewFile(type),
 ): Promise<SaveResult> {
 	const file = targetFile;
 
@@ -404,7 +404,7 @@ export async function saveHomebrewRow(
 		storage,
 		file,
 		{ columns: columnsWithExtras(type, rows), rows },
-		directives
+		directives,
 	);
 	return built.row.id ? { ok: true, id: built.row.id } : { ok: true };
 }

@@ -13,7 +13,7 @@ import {
 	type Computed,
 	type Contribution,
 	type Note,
-	type System
+	type System,
 } from './pipeline';
 
 /** The six ability ids — the ONE owning list (AUDIT F3); derive, don't re-declare. */
@@ -48,7 +48,7 @@ const abilityContribution = (ability: Ability, score: number): Contribution => (
 	layer: 'ability',
 	op: 'add',
 	amount: abilityModifier(score),
-	note: `${ability.toUpperCase()} ${score}`
+	note: `${ability.toUpperCase()} ${score}`,
 });
 
 /** A proficiency-layer contribution (Proficiency / Expertise / Jack of All Trades — the source names
@@ -57,7 +57,7 @@ const profContribution = (source: string, amount: number): Contribution => ({
 	source,
 	layer: 'proficiency',
 	op: 'add',
-	amount
+	amount,
 });
 
 /** The flat base-layer contribution a stat starts from (DC base 8, unarmored/armor base 10/…). */
@@ -65,7 +65,7 @@ const baseContribution = (amount: number): Contribution => ({
 	source: 'Base',
 	layer: 'base',
 	op: 'add',
-	amount
+	amount,
 });
 
 /** A saving throw: ability mod + proficiency (if proficient in that save). */
@@ -103,7 +103,7 @@ export function skillCheck(args: {
 export function passiveScore(check: Computed): Computed {
 	return computed([
 		{ source: 'Passive base', layer: 'base', op: 'add', amount: 10 },
-		{ source: 'Skill bonus', layer: 'ability', op: 'add', amount: check.value }
+		{ source: 'Skill bonus', layer: 'ability', op: 'add', amount: check.value },
 	]);
 }
 
@@ -117,7 +117,7 @@ export function spellSaveDC(args: { ability: Ability; score: number; level: numb
 	return computed([
 		baseContribution(8),
 		profContribution('Proficiency', proficiencyBonus(args.level)),
-		abilityContribution(args.ability, args.score)
+		abilityContribution(args.ability, args.score),
 	]);
 }
 
@@ -129,7 +129,7 @@ export function spellAttackBonus(args: {
 }): Computed {
 	return computed([
 		profContribution('Proficiency', proficiencyBonus(args.level)),
-		abilityContribution(args.ability, args.score)
+		abilityContribution(args.ability, args.score),
 	]);
 }
 
@@ -158,7 +158,13 @@ export function armoredAC(args: {
 			: `DEX${args.dexCap !== null ? ` (max ${args.dexCap})` : ''}`;
 	return computed([
 		{ source: 'Armor', layer: 'item', op: 'add', amount: args.armorBaseAc },
-		{ source: dexLabel, layer: 'ability', op: 'add', amount: applied, note: `DEX ${args.dexScore}` }
+		{
+			source: dexLabel,
+			layer: 'ability',
+			op: 'add',
+			amount: applied,
+			note: `DEX ${args.dexScore}`,
+		},
 	]);
 }
 
@@ -204,7 +210,7 @@ export function maxHpForClass(args: {
 				source: `avg ${avgUp} × ${laterLevels}`,
 				layer: 'base',
 				op: 'add',
-				amount: avgUp * laterLevels
+				amount: avgUp * laterLevels,
 			});
 		}
 	} else if (args.level > 0) {
@@ -213,7 +219,7 @@ export function maxHpForClass(args: {
 			source: `avg ${avgUp} × ${args.level}`,
 			layer: 'base',
 			op: 'add',
-			amount: avgUp * args.level
+			amount: avgUp * args.level,
 		});
 	}
 	c.push({
@@ -221,7 +227,7 @@ export function maxHpForClass(args: {
 		layer: 'ability',
 		op: 'add',
 		amount: conMod * args.level,
-		note: `CON ${args.conScore}`
+		note: `CON ${args.conScore}`,
 	});
 	return computed(c, { min: 1 });
 }
@@ -249,13 +255,13 @@ export function carryingCapacity(args: { strScore: number; system: System }): Co
 					{
 						text: `Encumbered at ${args.strScore * 5} lb (−10 ft)`,
 						key: NOTE_KEY.encumbered,
-						params: { lb: args.strScore * 5 }
+						params: { lb: args.strScore * 5 },
 					},
 					{
 						text: `Heavily encumbered at ${args.strScore * 10} lb (−20 ft)`,
 						key: NOTE_KEY.heavilyEncumbered,
-						params: { lb: args.strScore * 10 }
-					}
+						params: { lb: args.strScore * 10 },
+					},
 				]
 			: [{ text: 'Over capacity → speed 5 ft', key: NOTE_KEY.overCapacity }];
 	return computed(
@@ -265,10 +271,10 @@ export function carryingCapacity(args: { strScore: number; system: System }): Co
 				layer: 'base',
 				op: 'add',
 				amount: args.strScore * 15,
-				note: `STR ${args.strScore}`
-			}
+				note: `STR ${args.strScore}`,
+			},
 		],
 		undefined,
-		notes
+		notes,
 	);
 }

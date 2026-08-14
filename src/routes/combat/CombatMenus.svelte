@@ -117,7 +117,7 @@
 							tokens: p.tokens,
 							positive: !p.negative,
 							durationRounds: dur,
-							ref: p.ref
+							ref: p.ref,
 						})}
 				>
 					<span class="main"
@@ -219,7 +219,7 @@
 			<div class="pinwrap">
 				{#each ABIL as ab (ab)}
 					{@const list = (Object.keys(SKILL_ABILITY) as SkillId[]).filter(
-						(k) => SKILL_ABILITY[k] === ab
+						(k) => SKILL_ABILITY[k] === ab,
 					)}
 					{#if list.length}
 						<div class="category-block">
@@ -310,7 +310,7 @@
 							: addEffect({
 									label: cn.label,
 									tokens: [`apply_condition:${cn.id}`],
-									positive: false
+									positive: false,
 								})}
 				>
 					<span class="main">{cn.label}</span><span class="toggle-track" class:on={added}></span>

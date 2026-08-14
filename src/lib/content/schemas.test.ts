@@ -15,7 +15,7 @@ describe('content schemas — unit', () => {
 			text_en: 'Graceful and long-lived.',
 			size: 'medium',
 			speed: '30',
-			effects: ''
+			effects: '',
 		});
 		expect(r.success).toBe(true);
 		if (r.success) {
@@ -32,7 +32,7 @@ describe('content schemas — unit', () => {
 			source: 'SRD',
 			name_en: 'Half-Elf',
 			size: 'medium',
-			speed: '30'
+			speed: '30',
 		});
 		expect(r.success).toBe(false);
 	});
@@ -52,14 +52,14 @@ describe('content schemas — unit', () => {
 			name_en: 'X',
 			size: 'medium',
 			speed: '30',
-			effects: 'teleport:far; is_raging ? advantage:attack; plugin:hb:ward'
+			effects: 'teleport:far; is_raging ? advantage:attack; plugin:hb:ward',
 		});
 		expect(kept.success).toBe(true);
 		if (kept.success)
 			expect(kept.data.effects).toEqual([
 				'teleport:far',
 				'is_raging ? advantage:attack',
-				'plugin:hb:ward'
+				'plugin:hb:ward',
 			]);
 
 		const ok = parseRow('species', {
@@ -69,7 +69,7 @@ describe('content schemas — unit', () => {
 			name_en: 'Dwarf',
 			size: 'medium',
 			speed: '25',
-			effects: 'flat_bonus:con+2; resist_immune:poison'
+			effects: 'flat_bonus:con+2; resist_immune:poison',
 		});
 		expect(ok.success).toBe(true);
 		if (ok.success) expect(ok.data.effects.length).toBe(2);
@@ -91,7 +91,7 @@ describe('content schemas — unit', () => {
 			ritual: 'no',
 			resolution: 'save',
 			save_ability: 'dex',
-			damage: '8d6 fire'
+			damage: '8d6 fire',
 		});
 		expect(r.success).toBe(true);
 		if (r.success) {
@@ -120,7 +120,7 @@ describe('seeded SRD packs validate', () => {
 				const { body } = parseContentDirectives(readFileSync(file, 'utf8'));
 				const parsed = Papa.parse<Record<string, string>>(body, {
 					header: true,
-					skipEmptyLines: true
+					skipEmptyLines: true,
 				});
 				expect(parsed.errors).toEqual([]);
 				expect(parsed.data.length).toBeGreaterThan(0);
@@ -129,7 +129,7 @@ describe('seeded SRD packs validate', () => {
 					const res = parseRow(type as ContentType, row);
 					if (!res.success) {
 						failures.push(
-							`${row.id}: ${res.error.issues.map((i) => i.path.join('.') + ' ' + i.message).join('; ')}`
+							`${row.id}: ${res.error.issues.map((i) => i.path.join('.') + ' ' + i.message).join('; ')}`,
 						);
 					}
 				}

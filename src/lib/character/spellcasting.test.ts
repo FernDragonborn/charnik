@@ -29,8 +29,8 @@ beforeAll(async () => {
 			cls('wizard', 'full', 'int'),
 			cls('cleric', 'full', 'wis'),
 			cls('warlock', 'pact', 'cha'),
-			cls('bard', 'full', 'cha') // deliberately ships NO class_casting rows — see the 5.5e test
-		].join('\n')
+			cls('bard', 'full', 'cha'), // deliberately ships NO class_casting rows — see the 5.5e test
+		].join('\n'),
 	);
 	await s.write(
 		'a/spell_slots_srd.csv',
@@ -39,8 +39,8 @@ beforeAll(async () => {
 			slotRow('full', 2, 3),
 			slotRow('full', 3, 4, 2),
 			slotRow('full', 5, 4, 3, 2),
-			slotRow('pact', 5, 0, 0, 2) // 2 slots of 3rd level
-		].join('\n')
+			slotRow('pact', 5, 0, 0, 2), // 2 slots of 3rd level
+		].join('\n'),
 	);
 	await s.write(
 		'a/class_casting_srd.csv',
@@ -49,8 +49,8 @@ beforeAll(async () => {
 			castRow('wizard', 3, 3, 6),
 			castRow('wizard', 5, 4, 9),
 			castRow('cleric', 2, 3, 5),
-			castRow('warlock', 5, 2, 6)
-		].join('\n')
+			castRow('warlock', 5, 2, 6),
+		].join('\n'),
 	);
 	graph = await loadContent(s, ['a']);
 	expect(graph.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -86,7 +86,7 @@ describe('deriveSpellcasting', () => {
 		const gish = make((c) => {
 			c.build.classes = [
 				{ class: 'class:SRD 5.2.1:wizard', level: 3 },
-				{ class: 'class:SRD 5.2.1:cleric', level: 2 }
+				{ class: 'class:SRD 5.2.1:cleric', level: 2 },
 			];
 		});
 		const sc = deriveSheet(gish, graph).spellcasting;
@@ -125,16 +125,16 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
 				CLASS,
 				'fighter,5.5e,SRD 5.2.1,fighter,d10,"str,con",none,',
 				// a wizard, so the subclass has a real list to draw from
-				'wizard,5.5e,SRD 5.2.1,wizard,d6,"int,wis",full,int'
-			].join('\n')
+				'wizard,5.5e,SRD 5.2.1,wizard,d6,"int,wis",full,int',
+			].join('\n'),
 		);
 		await s.write(
 			'a/subclasses_srd.csv',
 			[
 				'id,systems,source,name_en,class_id,caster,caster_share,prepare_style,slot_table,spell_ability,caster_from_level,spell_list',
 				// Eldritch Knight: a one-third INT caster from Fighter level 3, off the WIZARD list
-				'eldritch_knight,5.5e,SRD 5.2.1,Eldritch Knight,fighter,third,third,known,third,int,3,wizard'
-			].join('\n')
+				'eldritch_knight,5.5e,SRD 5.2.1,Eldritch Knight,fighter,third,third,known,third,int,3,wizard',
+			].join('\n'),
 		);
 		// two spells: one on the wizard list the subclass names, one that must stay out of reach
 		await s.write(
@@ -142,18 +142,18 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
 			[
 				'id,systems,source,name_en,level,school,casting_time,range,components,duration,concentration,ritual,classes',
 				'shield,5.5e,SRD 5.2.1,Shield,1,abjuration,reaction,self,V S,1 round,false,false,wizard',
-				'cure_wounds,5.5e,SRD 5.2.1,Cure Wounds,1,abjuration,action,touch,V S,instant,false,false,cleric'
-			].join('\n')
+				'cure_wounds,5.5e,SRD 5.2.1,Cure Wounds,1,abjuration,action,touch,V S,instant,false,false,cleric',
+			].join('\n'),
 		);
 		await s.write(
 			'a/spell_slots_srd.csv',
 			// third-caster table: L3 → two 1st-level slots; L7 → three 1st + one 2nd
-			[SLOTS, slotRow('third', 3, 2), slotRow('third', 7, 4, 2)].join('\n')
+			[SLOTS, slotRow('third', 3, 2), slotRow('third', 7, 4, 2)].join('\n'),
 		);
 		await s.write(
 			'a/class_casting_srd.csv',
 			// class_casting keyed by the SUBCLASS id (the owner of the casting progression)
-			[CAST, castRow('eldritch_knight', 3, 2, 3)].join('\n')
+			[CAST, castRow('eldritch_knight', 3, 2, 3)].join('\n'),
 		);
 		g = await loadContent(s, ['a']);
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -162,7 +162,7 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
 	const ek = (level: number): Character =>
 		make((c) => {
 			c.build.classes = [
-				{ class: 'class:SRD 5.2.1:fighter', level, subclass: 'subclass:SRD 5.2.1:eldritch_knight' }
+				{ class: 'class:SRD 5.2.1:fighter', level, subclass: 'subclass:SRD 5.2.1:eldritch_knight' },
 			];
 		});
 

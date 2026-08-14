@@ -8,7 +8,7 @@ import {
 	registerPluginEvaluator,
 	clearPluginEvaluator,
 	clearPluginMemo,
-	type PluginEvaluator
+	type PluginEvaluator,
 } from '../effects/plugin-registry';
 
 const S = 'SRD 5.2.1';
@@ -20,22 +20,22 @@ async function graphOf(): Promise<ContentGraph> {
 		[
 			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,ritual,weapon_profs,armor_profs',
 			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,true,"dagger,quarterstaff",light`,
-			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,false,"simple,martial","light,medium,heavy,shield"`
-		].join('\n')
+			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,false,"simple,martial","light,medium,heavy,shield"`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/species_srd.csv',
 		[
 			'id,systems,source,name_en,effects,size,speed,creature_type',
-			`hardy,5.5e,${S},Hardy,flat_bonus:con+2,medium,30,humanoid`
-		].join('\n')
+			`hardy,5.5e,${S},Hardy,flat_bonus:con+2,medium,30,humanoid`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/species_options_srd.csv',
 		[
 			'id,systems,source,name_en,effects,species_id,kind,option_label',
-			`stoic,5.5e,${S},Stoic,flat_bonus:wis+1,hardy,subrace,Subrace`
-		].join('\n')
+			`stoic,5.5e,${S},Stoic,flat_bonus:wis+1,hardy,subrace,Subrace`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/items_srd.csv',
@@ -47,23 +47,23 @@ async function graphOf(): Promise<ContentGraph> {
 			`dagger,5.5e,${S},Dagger,,weapon,simple melee,,,,,1d4 piercing,`,
 			`greataxe,5.5e,${S},Greataxe,,weapon,martial melee,,,,,1d12 slashing,two-handed`,
 			`sunblade,5.5e,${S},Sun Blade,,weapon,martial melee,,,,,1d6 slashing; 1d4 radiant,`,
-			`longbow,5.5e,${S},Longbow,,weapon,martial ranged,,,,,1d8 piercing,two-handed`
-		].join('\n')
+			`longbow,5.5e,${S},Longbow,,weapon,martial ranged,,,,,1d8 piercing,two-handed`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/feats_srd.csv',
 		[
 			'id,systems,source,name_en,effects,category',
 			`archery,5.5e,${S},Archery,flat_bonus:attack:ranged+2,fighting_style`,
-			`great_weapon_fighting,5.5e,${S},Great Weapon Fighting,"min_die:damage:two_handed,melee:3;min_die:damage:versatile,melee:3",fighting_style`
-		].join('\n')
+			`great_weapon_fighting,5.5e,${S},Great Weapon Fighting,"min_die:damage:two_handed,melee:3;min_die:damage:versatile,melee:3",fighting_style`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/subclasses_srd.csv',
 		[
 			'id,systems,source,name_en,effects,class_id',
-			`evoker,5.5e,${S},Evoker,flat_bonus:skill.arcana+1,wizard`
-		].join('\n')
+			`evoker,5.5e,${S},Evoker,flat_bonus:skill.arcana+1,wizard`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/class_features_srd.csv',
@@ -72,23 +72,23 @@ async function graphOf(): Promise<ContentGraph> {
 			`arcane_ward,5.5e,${S},Arcane Ward,grant_resource:arcane_ward:3:long,wizard,2,`,
 			`spell_mastery,5.5e,${S},Spell Mastery,flat_bonus:ac+1,wizard,18,`,
 			`sculpt_spells,5.5e,${S},Sculpt Spells,flat_bonus:save.dex+1,wizard,2,evoker`,
-			`overchannel,5.5e,${S},Overchannel,flat_bonus:ac+3,wizard,14,evoker`
-		].join('\n')
+			`overchannel,5.5e,${S},Overchannel,flat_bonus:ac+3,wizard,14,evoker`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/effects_srd.csv',
 		[
 			'id,systems,source,name_en,effects,negative,duration_rounds',
-			`bless,5.5e,${S},Bless,flat_bonus:ac+1,false,10`
-		].join('\n')
+			`bless,5.5e,${S},Bless,flat_bonus:ac+1,false,10`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/conditions_srd.csv',
 		[
 			'id,systems,source,name_en,effects,negative',
 			`poisoned,5.5e,${S},Poisoned,disadvantage:attack,true`,
-			`frightened,5.5e,${S},Frightened,disadvantage:attack,true`
-		].join('\n')
+			`frightened,5.5e,${S},Frightened,disadvantage:attack,true`,
+		].join('\n'),
 	);
 	await st.write(
 		'c/resource_options_srd.csv',
@@ -99,8 +99,8 @@ async function graphOf(): Promise<ContentGraph> {
 			`ward_shield,5.5e,${S},Ward Shield,arcane_ward,x,note:absorb,reaction,`,
 			`ward_bad,5.5e,${S},Bad Cost,arcane_ward,spell_level,note:nope,action,`,
 			`ward_ready,5.5e,${S},Ward Ready,arcane_ward,1,note:ready,action,is_combat_start`, // gated to combat start
-			`ki_flurry,5.5e,${S},Flurry,ki,1,note:two strikes,bonus_action,` // a resource the wizard lacks
-		].join('\n')
+			`ki_flurry,5.5e,${S},Flurry,ki,1,note:two strikes,bonus_action,`, // a resource the wizard lacks
+		].join('\n'),
 	);
 	const g = await loadContent(st, ['c']);
 	expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -114,7 +114,7 @@ function wizard(): Character {
 	c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 10, cha: 10 };
 	c.build.inventory = [{ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false }];
 	c.play.effects = [
-		{ iid: '1', label: 'Shield of Faith', effects: ['flat_bonus:ac+2'], positive: true }
+		{ iid: '1', label: 'Shield of Faith', effects: ['flat_bonus:ac+2'], positive: true },
 	];
 	return characterSchema.parse(c);
 }
@@ -172,7 +172,7 @@ describe('deriveSheet aggregator', () => {
 		c.build.abilities = { str: 14, dex: 10, con: 12, int: 16, wis: 10, cha: 10 }; // STR +2
 		c.build.inventory = [
 			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false },
-			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }
+			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false },
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const atks = computeAttacks(characterSchema.parse(c), s, graph);
@@ -191,7 +191,7 @@ describe('deriveSheet aggregator', () => {
 		c.build.feats = [`feat:${S}:archery`];
 		c.build.inventory = [
 			{ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false },
-			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false }
+			{ item: `item:${S}:dagger`, qty: 1, equipped: true, attuned: false },
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const atks = computeAttacks(characterSchema.parse(c), s, graph);
@@ -212,7 +212,7 @@ describe('deriveSheet aggregator', () => {
 		c.build.feats = [`feat:${S}:great_weapon_fighting`];
 		c.build.inventory = [
 			{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }, // two-handed melee
-			{ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false } // two-handed RANGED
+			{ item: `item:${S}:longbow`, qty: 1, equipped: true, attuned: false }, // two-handed RANGED
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const atks = computeAttacks(characterSchema.parse(c), s, graph);
@@ -229,12 +229,12 @@ describe('deriveSheet aggregator', () => {
 		c.build.inventory = [{ item: `item:${S}:sunblade`, qty: 1, equipped: true, attuned: false }];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const sunblade = computeAttacks(characterSchema.parse(c), s, graph).find(
-			(a) => a.name === 'Sun Blade'
+			(a) => a.name === 'Sun Blade',
 		)!;
 		// "1d6 slashing; 1d4 radiant": STR+2 lands on the slashing (primary) part; radiant carries none.
 		expect(sunblade.damageParts).toEqual([
 			{ pool: { 6: 1 }, mod: 2, type: 'slashing' },
-			{ pool: { 4: 1 }, mod: 0, type: 'radiant' }
+			{ pool: { 4: 1 }, mod: 0, type: 'radiant' },
 		]);
 		expect(sunblade.dmg).toBe('1d6 +2 slashing + 1d4 radiant');
 	});
@@ -249,7 +249,7 @@ describe('deriveSheet aggregator', () => {
 			'ward_burst',
 			'ward_mend',
 			'ward_ready',
-			'ward_shield'
+			'ward_shield',
 		]);
 		expect(opts.find((o) => o.id === 'ward_burst')?.cost).toBe(2);
 		expect(opts.find((o) => o.id === 'ward_shield')?.cost).toBe('x'); // variable spend
@@ -292,18 +292,18 @@ describe('deriveSheet aggregator', () => {
 		const c = wizard();
 		c.build.classes = [
 			{ class: `class:${S}:wizard`, level: 3 }, // d6
-			{ class: `class:${S}:fighter`, level: 5 } // d10
+			{ class: `class:${S}:fighter`, level: 5 }, // d10
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.hitDice).toEqual([
 			{ die: 'd10', max: 5 }, // largest die first (deterministic recover order)
-			{ die: 'd6', max: 3 }
+			{ die: 'd6', max: 3 },
 		]);
 	});
 
 	it('piece 3: no options when the character lacks the resource (autoCalc-empty is safe)', () => {
 		expect(deriveSheet(wizard(), graph).resourceOptions.every((o) => o.resourceId !== 'ki')).toBe(
-			true
+			true,
 		);
 	});
 
@@ -316,8 +316,8 @@ describe('deriveSheet aggregator', () => {
 				label: 'Bless (stale label)',
 				effects: ['flat_bonus:ac+5'],
 				positive: true,
-				source: `effect:${S}:bless`
-			}
+				source: `effect:${S}:bless`,
+			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.ac.trace.some((t) => t.note === 'flat_bonus:ac+1')).toBe(true);
@@ -332,8 +332,8 @@ describe('deriveSheet aggregator', () => {
 				label: 'Old Buff',
 				effects: ['flat_bonus:ac+2'],
 				positive: true,
-				source: `effect:${S}:ghost` // no such row
-			}
+				source: `effect:${S}:ghost`, // no such row
+			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.ac.trace.some((t) => t.note === 'flat_bonus:ac+2')).toBe(true); // baked fallback applied
@@ -352,7 +352,7 @@ describe('deriveSheet aggregator', () => {
 		// Fighter 1 (starting) / Wizard 3 — RAW grants Fighter saves only (STR, CON), NOT Wizard's
 		c.build.classes = [
 			{ class: `class:${S}:fighter`, level: 1 },
-			{ class: `class:${S}:wizard`, level: 3 }
+			{ class: `class:${S}:wizard`, level: 3 },
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// level 4 → prof +2. STR 10(+0), CON 14(+2 w/ Hardy), INT 16(+3), WIS 10(+0)
@@ -419,7 +419,7 @@ describe('deriveSheet aggregator', () => {
 	it('B13: a known-kind token with a dead target is surfaced, not silently dropped', () => {
 		const c = wizard();
 		c.play.effects = [
-			{ iid: 'x', label: 'Typo', effects: ['flat_bonus:armorclass+1'], positive: true }
+			{ iid: 'x', label: 'Typo', effects: ['flat_bonus:armorclass+1'], positive: true },
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.ac.value).toBe(13); // leather 11 + DEX 2 — the typo'd bonus did NOT apply
@@ -436,7 +436,7 @@ describe('deriveSheet aggregator', () => {
 	it('B13: the action-economy targets (action/bonus/reaction) are recognized, not flagged', () => {
 		const c = wizard();
 		c.play.effects = [
-			{ iid: 'h', label: 'Haste', effects: ['flat_bonus:action+1'], positive: true }
+			{ iid: 'h', label: 'Haste', effects: ['flat_bonus:action+1'], positive: true },
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.deriveIssues.some((i) => /unknown target/.test(i.reason))).toBe(false);
@@ -445,7 +445,7 @@ describe('deriveSheet aggregator', () => {
 	it('passive.<any skill> is valid vocab and applies (not just the three senses)', () => {
 		const c = wizard();
 		c.play.effects = [
-			{ iid: 'o', label: 'Keen', effects: ['flat_bonus:passive.athletics+5'], positive: true }
+			{ iid: 'o', label: 'Keen', effects: ['flat_bonus:passive.athletics+5'], positive: true },
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// STR 10 (+0), not proficient: passive athletics = 10 + 5 = 15; no false "unknown target"
@@ -457,14 +457,14 @@ describe('deriveSheet aggregator', () => {
 		const c = wizard();
 		c.play.effects = [
 			{ iid: 'p', label: 'Poison', effects: ['apply_condition:poisoned'], positive: false },
-			{ iid: 'z', label: 'Typo', effects: ['apply_condition:frightend'], positive: false }
+			{ iid: 'z', label: 'Typo', effects: ['apply_condition:frightend'], positive: false },
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// the real, edition-matched condition is fine; only the typo'd id is flagged + suggested (PLG-9)
 		expect(
 			s.deriveIssues.some((i) =>
-				/unknown condition "frightend" — did you mean "frightened"\?/.test(i.reason)
-			)
+				/unknown condition "frightend" — did you mean "frightened"\?/.test(i.reason),
+			),
 		).toBe(true);
 		expect(s.deriveIssues.some((i) => /unknown condition "poisoned"/.test(i.reason))).toBe(false);
 	});
@@ -481,7 +481,7 @@ describe('deriveSheet aggregator', () => {
 		const c = wizard();
 		c.play.effects = [
 			{ iid: 'm1', label: '+2 Stealth', effects: ['flat_bonus:skill.stealth+2'], positive: true },
-			{ iid: 'm2', label: '+1 DEX save', effects: ['flat_bonus:save.dex+1'], positive: true }
+			{ iid: 'm2', label: '+1 DEX save', effects: ['flat_bonus:save.dex+1'], positive: true },
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// DEX 14 (+2): stealth = +2 mod + 2 custom = 4; dex save = +2 mod + 1 custom = 3
@@ -509,7 +509,7 @@ describe('deriveSheet aggregator', () => {
 	it('advantage on the underlying check moves the passive by +5 (and cancels vs disadvantage)', () => {
 		const c = wizard();
 		c.play.effects = [
-			{ iid: 'a', label: 'Owl', effects: ['advantage:skill.perception'], positive: true }
+			{ iid: 'a', label: 'Owl', effects: ['advantage:skill.perception'], positive: true },
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.passives.perception.value).toBe(15); // 10 + 0 mod + 5 advantage
@@ -518,7 +518,7 @@ describe('deriveSheet aggregator', () => {
 			iid: 'p',
 			label: 'Poisoned',
 			effects: ['disadvantage:skills'],
-			positive: false
+			positive: false,
 		});
 		const cancelled = deriveSheet(characterSchema.parse(c), graph);
 		expect(cancelled.passives.perception.value).toBe(10); // adv + dis cancel
@@ -531,8 +531,8 @@ describe('deriveSheet aggregator', () => {
 				iid: 'e',
 				label: 'Mentor',
 				effects: ['grant_proficiency:expertise:skill.stealth'],
-				positive: true
-			}
+				positive: true,
+			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.skills.stealth!.prof).toBe('expertise');
@@ -546,8 +546,8 @@ describe('deriveSheet aggregator', () => {
 				iid: 'g',
 				label: 'Skilled',
 				effects: ['grant_proficiency:stealth', 'grant_proficiency:save.con'],
-				positive: true
-			}
+				positive: true,
+			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.skills.stealth!.prof).toBe('proficient'); // was 'none'
@@ -573,10 +573,10 @@ describe('deriveSheet aggregator', () => {
 				effects: [
 					'resist_immune:resist:fire',
 					'resist_immune:immune:poison',
-					'resist_immune:cold' // bare → defaults to resistance
+					'resist_immune:cold', // bare → defaults to resistance
 				],
-				positive: true
-			}
+				positive: true,
+			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.defenses.resist).toEqual(['fire', 'cold']);
@@ -591,8 +591,8 @@ describe('deriveSheet aggregator', () => {
 				iid: 'r',
 				label: 'Class features',
 				effects: ['grant_resource:rage:3:long', 'grant_resource:ki:5:short'],
-				positive: true
-			}
+				positive: true,
+			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		const byId = Object.fromEntries(s.resources.map((r) => [r.id, r]));
@@ -645,22 +645,22 @@ describe('deriveSheet · L2 value expressions (EXPR-2)', () => {
 		const st = new MemoryStorage();
 		await st.write(
 			'c/classes_srd.csv',
-			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n')
+			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n'),
 		);
 		await st.write(
 			'c/species_srd.csv',
 			[
 				'id,systems,source,name_en,effects,size,speed,creature_type',
 				// AC scales with character level: ceil(level/2); Ki pool = monk level
-				`ward,5.5e,${S},Ward,flat_bonus:ac+ceil(level/2),medium,30,humanoid`
-			].join('\n')
+				`ward,5.5e,${S},Ward,flat_bonus:ac+ceil(level/2),medium,30,humanoid`,
+			].join('\n'),
 		);
 		await st.write(
 			'c/class_features_srd.csv',
 			[
 				'id,systems,source,name_en,effects,class_id,level,subclass_id',
-				`ki,5.5e,${S},Ki,grant_resource:ki:class_level.monk:short,monk,1,`
-			].join('\n')
+				`ki,5.5e,${S},Ki,grant_resource:ki:class_level.monk:short,monk,1,`,
+			].join('\n'),
 		);
 		const g = await loadContent(st, ['c']);
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -696,16 +696,16 @@ describe('deriveSheet · L2 condition guards (EXPR-3)', () => {
 			'c/classes_srd.csv',
 			[
 				'id,systems,source,name_en,hit_die,saves',
-				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`
-			].join('\n')
+				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`,
+			].join('\n'),
 		);
 		await st.write(
 			'c/species_srd.csv',
 			[
 				'id,systems,source,name_en,effects,size,speed,creature_type',
 				// Unarmored Defense: only applies with no armor; a CON-save bonus while bloodied
-				`brute,5.5e,${S},Brute,armor_type==none ? set_override:ac:13; is_bloodied ? flat_bonus:save.con+2,medium,30,humanoid`
-			].join('\n')
+				`brute,5.5e,${S},Brute,armor_type==none ? set_override:ac:13; is_bloodied ? flat_bonus:save.con+2,medium,30,humanoid`,
+			].join('\n'),
 		);
 		const g = await loadContent(st, ['c']);
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -755,23 +755,23 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 			'c/classes_srd.csv',
 			[
 				'id,systems,source,name_en,hit_die,saves',
-				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`
-			].join('\n')
+				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`,
+			].join('\n'),
 		);
 		await st.write(
 			'c/species_srd.csv',
 			[
 				'id,systems,source,name_en,effects,size,speed,creature_type',
-				`brute,5.5e,${S},Brute,is_raging ? flat_bonus:ac+2,medium,30,humanoid`
-			].join('\n')
+				`brute,5.5e,${S},Brute,is_raging ? flat_bonus:ac+2,medium,30,humanoid`,
+			].join('\n'),
 		);
 		await st.write(
 			'c/conditions_srd.csv',
 			[
 				'id,systems,source,name_en,effects,negative',
 				`rage,5.5e,${S},Rage,flat_bonus:save.str+1,false`,
-				`marked,5.5e,${S},Marked,flat_bonus:ac+5,true`
-			].join('\n')
+				`marked,5.5e,${S},Marked,flat_bonus:ac+5,true`,
+			].join('\n'),
 		);
 		const g = await loadContent(st, ['c']);
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -796,8 +796,8 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 				iid: 'f',
 				label: 'Frenzy',
 				effects: ['hp_percent<=25 ? apply_condition:rage'],
-				positive: true
-			}
+				positive: true,
+			},
 		];
 		const s = deriveSheet(c, g);
 		expect(s.ac.trace.map((t) => t.source)).not.toContain('Brute'); // is_raging ? +2 AC off
@@ -812,8 +812,8 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 				iid: 's',
 				label: 'Loop',
 				effects: ['has_condition.marked ? apply_condition:marked'],
-				positive: false
-			}
+				positive: false,
+			},
 		];
 		const s = deriveSheet(c, g);
 		expect(s.ac.trace.map((t) => t.source)).not.toContain('Loop → Marked'); // no +5 AC
@@ -823,7 +823,7 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 		const g = await condGraph();
 		const c = brute();
 		c.play.effects = [
-			{ iid: 'r', label: 'Raging', effects: ['apply_condition:rage'], positive: true }
+			{ iid: 'r', label: 'Raging', effects: ['apply_condition:rage'], positive: true },
 		];
 		const s = deriveSheet(c, g);
 		// the species' `is_raging ? flat_bonus:ac+2` now applies
@@ -840,20 +840,20 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 			'c/classes_srd.csv',
 			[
 				'id,systems,source,name_en,hit_die,saves',
-				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`
-			].join('\n')
+				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`,
+			].join('\n'),
 		);
 		await st.write(
 			'c/conditions_srd.csv',
 			[
 				'id,systems,source,name_en,effects,negative',
-				`marked,5e,SRD 5.1,Marked,flat_bonus:ac+5,true` // 5e ONLY
-			].join('\n')
+				`marked,5e,SRD 5.1,Marked,flat_bonus:ac+5,true`, // 5e ONLY
+			].join('\n'),
 		);
 		const g = await loadContent(st, ['c']);
 		const c = brute(); // a 5.5e character
 		c.play.effects = [
-			{ iid: 'm', label: 'Hex', effects: ['apply_condition:marked'], positive: false }
+			{ iid: 'm', label: 'Hex', effects: ['apply_condition:marked'], positive: false },
 		];
 		const s = deriveSheet(c, g);
 		expect(s.ac.trace.map((t) => t.source)).not.toContain('Hex → Marked'); // the 5e +5 AC never lands
@@ -866,7 +866,7 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		const st = new MemoryStorage();
 		await st.write(
 			'c/classes_srd.csv',
-			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n')
+			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n'),
 		);
 		await st.write(
 			'c/species_srd.csv',
@@ -875,15 +875,15 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 				// an expression and a guard on ability targets — resolved by the DAG (dex is safe to
 				// guard on is_bloodied; CON would be a genuine cycle, tested separately below)
 				`odd,5.5e,${S},Odd,flat_bonus:str+ceil(level/4); is_bloodied ? flat_bonus:dex+2,medium,30,humanoid`,
-				`looper,5.5e,${S},Looper,is_bloodied ? flat_bonus:con+2,medium,30,humanoid`
-			].join('\n')
+				`looper,5.5e,${S},Looper,is_bloodied ? flat_bonus:con+2,medium,30,humanoid`,
+			].join('\n'),
 		);
 		await st.write(
 			'c/items_srd.csv',
 			[
 				'id,systems,source,name_en,effects,category,item_type',
-				`headband,5.5e,${S},Headband of Intellect,set_override:int:19,gear,wondrous item`
-			].join('\n')
+				`headband,5.5e,${S},Headband of Intellect,set_override:int:19,gear,wondrous item`,
+			].join('\n'),
 		);
 		const g = await loadContent(st, ['c']);
 		return g;
@@ -929,7 +929,7 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		const g = await abilityGraph();
 		const c = odd();
 		c.play.effects = [
-			{ iid: 'b', label: 'Typo', effects: ['flat_bonus:str+1000000'], positive: true }
+			{ iid: 'b', label: 'Typo', effects: ['flat_bonus:str+1000000'], positive: true },
 		];
 		const s = deriveSheet(characterSchema.parse(c), g);
 		expect(s.abilities.str.score.value).toBe(30);
@@ -953,16 +953,16 @@ describe('deriveSheet · spellcasting_mod reads the carrying class (SPEC4)', () 
 			[
 				'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
 				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`,
-				`cleric,5.5e,${S},Cleric,d8,"wis,cha",full,wis`
-			].join('\n')
+				`cleric,5.5e,${S},Cleric,d8,"wis,cha",full,wis`,
+			].join('\n'),
 		);
 		await st.write(
 			'c/class_features_srd.csv',
 			[
 				'id,systems,source,name_en,effects,class_id,level,subclass_id',
 				// a cleric feature reading spellcasting_mod — must use WIS, not the primary (wizard/INT)
-				`blessed_ward,5.5e,${S},Blessed Ward,flat_bonus:save.wis+spellcasting_mod,cleric,1,`
-			].join('\n')
+				`blessed_ward,5.5e,${S},Blessed Ward,flat_bonus:save.wis+spellcasting_mod,cleric,1,`,
+			].join('\n'),
 		);
 		const g = await loadContent(st, ['c']);
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -974,7 +974,7 @@ describe('deriveSheet · spellcasting_mod reads the carrying class (SPEC4)', () 
 		const c = newCharacter('multi', 'Multi', '5.5e');
 		c.build.classes = [
 			{ class: `class:${S}:wizard`, level: 3 }, // primary caster (higher level)
-			{ class: `class:${S}:cleric`, level: 2 }
+			{ class: `class:${S}:cleric`, level: 2 },
 		];
 		c.build.abilities = { str: 10, dex: 10, con: 10, int: 16, wis: 14, cha: 10 };
 		// a runtime (unscoped) token: primary caster = wizard → INT +3
@@ -983,8 +983,8 @@ describe('deriveSheet · spellcasting_mod reads the carrying class (SPEC4)', () 
 				iid: 'u',
 				label: 'Focus',
 				effects: ['flat_bonus:save.str+spellcasting_mod'],
-				positive: true
-			}
+				positive: true,
+			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), g);
 		const wisSave = s.abilities.wis.save.trace.find((t) => t.source === 'Blessed Ward');
@@ -999,14 +999,14 @@ describe('deriveSheet · set_override with a dice value degrades to a note', () 
 		const st = new MemoryStorage();
 		await st.write(
 			'c/classes_srd.csv',
-			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n')
+			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n'),
 		);
 		const g = await loadContent(st, ['c']);
 		const c = newCharacter('x', 'X', '5.5e');
 		c.build.classes = [{ class: `class:${S}:monk`, level: 1 }];
 		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
 		c.play.effects = [
-			{ iid: 'd', label: 'Weird', effects: ['set_override:ac:1d6'], positive: true }
+			{ iid: 'd', label: 'Weird', effects: ['set_override:ac:1d6'], positive: true },
 		];
 		const s = deriveSheet(characterSchema.parse(c), g);
 		expect(s.ac.value).toBe(10); // base unarmored, override NOT applied
@@ -1023,27 +1023,27 @@ describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
 	/** A fake evaluator whose one handler returns a fixed result object. */
 	const fixed = (namespace: string, handlerName: string, result: unknown): PluginEvaluator => ({
 		has: (n, f) => n === namespace && f === handlerName,
-		call: () => ({ ok: true, resultJson: JSON.stringify(result), readPlay: false })
+		call: () => ({ ok: true, resultJson: JSON.stringify(result), readPlay: false }),
 	});
 
 	async function pluginGraph(): Promise<ContentGraph> {
 		const st = new MemoryStorage();
 		await st.write(
 			'c/classes_srd.csv',
-			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n')
+			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n'),
 		);
 		await st.write(
 			'c/items_srd.csv',
 			[
 				'id,systems,source,name_en,effects,category,item_type',
-				`cursed_ring,5.5e,${S},Cursed Ring,plugin:test-ns:curse,gear,ring`
-			].join('\n')
+				`cursed_ring,5.5e,${S},Cursed Ring,plugin:test-ns:curse,gear,ring`,
+			].join('\n'),
 		);
 		await st.write(
 			'c/conditions_srd.csv',
 			['id,systems,source,name_en,effects', `poisoned,5.5e,${S},Poisoned,disadvantage:attack`].join(
-				'\n'
-			)
+				'\n',
+			),
 		);
 		return loadContent(st, ['c']);
 	}
@@ -1058,13 +1058,13 @@ describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
 
 	it('a returned apply_condition registers AND expands one level (its stat tokens apply)', async () => {
 		registerPluginEvaluator(
-			fixed('test-ns', 'curse', { tokens: ['apply_condition:poisoned'], notes: ['Cursed!'] })
+			fixed('test-ns', 'curse', { tokens: ['apply_condition:poisoned'], notes: ['Cursed!'] }),
 		);
 		const s = deriveSheet(ringWearer(), await pluginGraph());
 		expect(s.facts.conditions).toContain('poisoned');
 		// the condition's OWN token (disadvantage:attack) folded — the §4.3 one-level expansion
 		expect(s.facts.disadvantage.some((d) => d.target === 'attack' && d.source === 'Poisoned')).toBe(
-			true
+			true,
 		);
 		expect(s.facts.pluginNotes).toEqual([{ source: 'Cursed Ring · test-ns', text: 'Cursed!' }]);
 	});
@@ -1072,8 +1072,8 @@ describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
 	it('contributions fold into the sheet stat with ns-stamped provenance', async () => {
 		registerPluginEvaluator(
 			fixed('test-ns', 'curse', {
-				contributions: { ac: [{ layer: 'item', op: 'add', amount: 2, label: 'Ward' }] }
-			})
+				contributions: { ac: [{ layer: 'item', op: 'add', amount: 2, label: 'Ward' }] },
+			}),
 		);
 		const s = deriveSheet(ringWearer(), await pluginGraph());
 		expect(s.ac.value).toBe(12); // 10 unarmored + 2
@@ -1099,16 +1099,16 @@ describe('B26: class features attach across sources (homebrew extends an SRD cla
 			'c/classes_srd.csv',
 			[
 				'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
-				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`
-			].join('\n')
+				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`,
+			].join('\n'),
 		);
 		// a SEPARATE file with a DIFFERENT source tag — the homebrew the user drops in
 		await st.write(
 			'c/class_features_homebrew.csv',
 			[
 				'id,systems,source,name_en,effects,class_id,level,subclass_id',
-				`focused_mind,5.5e,${HB},Focused Mind,flat_bonus:ac+5,wizard,1,`
-			].join('\n')
+				`focused_mind,5.5e,${HB},Focused Mind,flat_bonus:ac+5,wizard,1,`,
+			].join('\n'),
 		);
 		const g = await loadContent(st, ['c']);
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -1145,23 +1145,23 @@ describe('RV2: a same-(class,level,id) feature from two active sources folds ONC
 			'c/classes_srd.csv',
 			[
 				'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
-				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`
-			].join('\n')
+				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`,
+			].join('\n'),
 		);
 		await st.write(
 			'c/class_features_srd.csv',
 			[
 				'id,systems,source,name_en,effects,class_id,level,subclass_id',
-				`ward,5.5e,${S},Ward,flat_bonus:ac+5,wizard,1,`
-			].join('\n')
+				`ward,5.5e,${S},Ward,flat_bonus:ac+5,wizard,1,`,
+			].join('\n'),
 		);
 		// a homebrew row with the SAME feature id (an unresolved collision → both stay active)
 		await st.write(
 			'c/class_features_homebrew.csv',
 			[
 				'id,systems,source,name_en,effects,class_id,level,subclass_id',
-				`ward,5.5e,${HB},Ward (buffed),flat_bonus:ac+5,wizard,1,`
-			].join('\n')
+				`ward,5.5e,${HB},Ward (buffed),flat_bonus:ac+5,wizard,1,`,
+			].join('\n'),
 		);
 		return loadContent(st, ['c']);
 	}

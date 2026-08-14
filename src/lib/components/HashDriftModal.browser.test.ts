@@ -7,7 +7,7 @@ import type { DriftItem } from '$lib/content/meta';
 
 const items: DriftItem[] = [
 	{ file: 'spells_homebrew.csv', declaredDate: '2026-06-20', changedAt: '2026-07-06' },
-	{ file: 'monsters_homebrew.csv', declaredDate: '2026-05-01', changedAt: '2026-07-05' }
+	{ file: 'monsters_homebrew.csv', declaredDate: '2026-05-01', changedAt: '2026-07-05' },
 ];
 
 beforeAll(async () => {

@@ -13,7 +13,7 @@
 		items,
 		onUpdate,
 		onSkip,
-		onNeverAsk
+		onNeverAsk,
 	}: {
 		items: DriftItem[];
 		/** the files the user chose to bump (updated-at → today, hash → recomputed) */
@@ -24,7 +24,7 @@
 
 	// which files are checked for updating — all on by default (snapshot at open)
 	const checked = $state<Record<string, boolean>>(
-		untrack(() => Object.fromEntries(items.map((i) => [i.file, true])))
+		untrack(() => Object.fromEntries(items.map((i) => [i.file, true]))),
 	);
 	const anyChecked = $derived(items.some((i) => checked[i.file]));
 

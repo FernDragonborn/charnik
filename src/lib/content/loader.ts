@@ -21,14 +21,14 @@ import {
 	LOC_STATUS_COL_BASE,
 	type ContentType,
 	type RowData,
-	type ProseBase
+	type ProseBase,
 } from './schemas';
 import {
 	parseContentDirectives,
 	checkFileMeta,
 	HASH_STATE,
 	type MetaIssue,
-	type DriftItem
+	type DriftItem,
 } from './meta';
 import { fileHashState } from './hash';
 import { declaredSchema, migrateRows } from './migrations';
@@ -187,7 +187,7 @@ function collectTranslationGaps(rows: LoadedRow[], locales: string[]): ContentIs
 					id: row.id,
 					message: `locale "${locale}": partial translation — missing ${missing
 						.map((base) => `${base}_${locale}`)
-						.join(', ')}`
+						.join(', ')}`,
 				});
 		}
 	}
@@ -235,7 +235,7 @@ interface FileHeader {
 function resolveFileType(
 	file: FileRef,
 	directives: Map<string, string>,
-	acc: LoadAcc
+	acc: LoadAcc,
 ): ContentType | null {
 	const { root, entry } = file;
 	const declaredType = directives.get('type');
@@ -245,7 +245,7 @@ function resolveFileType(
 			level: 'error',
 			root,
 			file: entry.name,
-			message: `#content-type: unknown content type "${declaredType}"`
+			message: `#content-type: unknown content type "${declaredType}"`,
 		});
 		return null;
 	}
@@ -258,7 +258,7 @@ function resolveFileType(
 		root,
 		file: entry.name,
 		message:
-			'unknown content type for file (name matches no type — add a "#content-type: <type>" first line to declare it)'
+			'unknown content type for file (name matches no type — add a "#content-type: <type>" first line to declare it)',
 	});
 	return null;
 }
@@ -269,7 +269,7 @@ function resolveFileType(
 function buildLoadedRow(
 	rawRow: Record<string, string>,
 	header: FileHeader,
-	file: FileRef
+	file: FileRef,
 ): LoadedRow | ContentIssue {
 	const res = parseRow(header.type, rawRow);
 	if (!res.success)
@@ -278,7 +278,7 @@ function buildLoadedRow(
 			root: file.root,
 			file: file.entry.name,
 			...(rawRow.id ? { id: String(rawRow.id) } : {}),
-			message: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; ')
+			message: res.error.issues.map((i) => `${i.path.join('.')} ${i.message}`).join('; '),
 		};
 	// `data` shares every type's `base` columns (id/source/systems/name_en/…), so those read typed
 	// with no narrowing; type-specific reads happen after the row is narrowed by `.type`.
@@ -307,7 +307,7 @@ function buildLoadedRow(
 		sourceLang: header.sourceLang,
 		data,
 		root: file.root,
-		file: file.entry.name
+		file: file.entry.name,
 	} as LoadedRow;
 }
 
@@ -331,7 +331,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 			level: 'error',
 			root,
 			file: entry.name,
-			message: `CSV exceeds ${MAX_CSV_BYTES / (1024 * 1024)} MB cap — skipped (likely corrupt or not a content file)`
+			message: `CSV exceeds ${MAX_CSV_BYTES / (1024 * 1024)} MB cap — skipped (likely corrupt or not a content file)`,
 		});
 		return;
 	}
@@ -353,7 +353,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 		acc.driftItems.push({
 			file: fileLabel,
 			declaredDate: directives.get('updated_at'),
-			changedAt: entry.mtime ? new Date(entry.mtime).toISOString().slice(0, 10) : undefined
+			changedAt: entry.mtime ? new Date(entry.mtime).toISOString().slice(0, 10) : undefined,
 		});
 
 	const header: FileHeader = {
@@ -366,7 +366,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 			.get('systems')
 			?.split(',')
 			.map((s) => s.trim())
-			.filter(Boolean)
+			.filter(Boolean),
 	};
 	const parsed = Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
 	for (const h of parsed.meta.fields ?? []) {
@@ -377,7 +377,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 				level: 'warn',
 				root,
 				file: entry.name,
-				message: `malformed locale column "${h}" (expected name_<bcp47>)`
+				message: `malformed locale column "${h}" (expected name_<bcp47>)`,
 			});
 	}
 	// A file authored against another schema version is brought forward before anything reads its
@@ -389,7 +389,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 			level: 'warn',
 			root,
 			file: entry.name,
-			message: `content schema: ${migrated.error}`
+			message: `content schema: ${migrated.error}`,
 		});
 	for (const rawRow of migrated.rows) {
 		const built = buildLoadedRow(rawRow, header, file);
@@ -403,7 +403,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
  *  surfaced so the user can fix it. */
 function validateSpellListJoins(
 	byType: Map<ContentType, LoadedRow[]>,
-	issues: ContentIssue[]
+	issues: ContentIssue[],
 ): void {
 	const systemsById = (type: ContentType): Map<string, string[]> => {
 		const m = new Map<string, string[]>();
@@ -423,7 +423,7 @@ function validateSpellListJoins(
 					root: r.root,
 					file: r.file,
 					id: r.id,
-					message: `spell_lists: unknown ${kind} "${String(id)}" (no ${kind} with that id in this edition)`
+					message: `spell_lists: unknown ${kind} "${String(id)}" (no ${kind} with that id in this edition)`,
 				});
 		};
 		checkJoin(classSystems, r.data.class_id, 'class');
@@ -454,7 +454,7 @@ function buildIndices(rows: LoadedRow[], issues: ContentIssue[]): ContentIndices
 				root: r.root,
 				file: r.file,
 				id: r.id,
-				message: `duplicate source:id "${r.effectiveId}"`
+				message: `duplicate source:id "${r.effectiveId}"`,
 			});
 			continue;
 		}
@@ -472,7 +472,7 @@ function buildIndices(rows: LoadedRow[], issues: ContentIssue[]): ContentIndices
 export async function loadContent(
 	storage: Storage,
 	roots: string[],
-	extra: ContentSource[] = []
+	extra: ContentSource[] = [],
 ): Promise<ContentGraph> {
 	const acc: LoadAcc = {
 		rows: [],
@@ -482,7 +482,7 @@ export async function loadContent(
 		localeSet: new Set<string>(['en']),
 		typeByFilebase: Object.entries(CONTENT_TYPES)
 			.map(([t, d]) => [d.filebase, t as ContentType] as const)
-			.sort((a, b) => b[0].length - a[0].length)
+			.sort((a, b) => b[0].length - a[0].length),
 	};
 
 	const sources: ContentSource[] = [...roots.map((root) => ({ storage, root })), ...extra];
@@ -497,8 +497,8 @@ export async function loadContent(
 			raw:
 				file.entry.isDir || !file.entry.name.endsWith('.csv')
 					? null
-					: await file.st.read(`${file.root}/${file.entry.name}`)
-		}))
+					: await file.st.read(`${file.root}/${file.entry.name}`),
+		})),
 	);
 	for (const { file, raw } of withRaw) if (raw != null) await processFile(file, acc, raw);
 
@@ -545,7 +545,7 @@ export async function loadContent(
 				(f): f is LoadedRowByType<'class_feature'> =>
 					f.type === 'class_feature' &&
 					f.data.class_id === classRow.id &&
-					f.systems.some((s) => classRow.systems.includes(s))
+					f.systems.some((s) => classRow.systems.includes(s)),
 			);
 		},
 		resolveRefs(effectiveIds) {
@@ -557,6 +557,6 @@ export async function loadContent(
 				else missing.push(eid);
 			}
 			return { found, missing };
-		}
+		},
 	};
 }

@@ -81,7 +81,7 @@ export const updates = $state<UpdateState>({
 	checking: false,
 	pending: {},
 	discovered: [],
-	errors: []
+	errors: [],
 });
 
 /** Record a failure. APPENDS: within one action every reason is worth saying, and the caller that
@@ -144,7 +144,7 @@ export function checkFailure(res: CheckFailure, repo: string): UpdateError {
 		return {
 			kind: 'i18n',
 			key: 'settings.packs.tooManyPacks',
-			values: { repo, packs: res.packs, max: MAX_REPO_PACKS }
+			values: { repo, packs: res.packs, max: MAX_REPO_PACKS },
 		};
 	return { kind: 'i18n', key: 'settings.packs.repoTooBig', values: { repo } };
 }
@@ -177,7 +177,7 @@ export async function guarded(run: () => Promise<ApplyResult>): Promise<ApplyRes
 			written: [],
 			preserved: [],
 			removed: [],
-			error: { kind: 'raw', message: e instanceof Error ? e.message : String(e) }
+			error: { kind: 'raw', message: e instanceof Error ? e.message : String(e) },
 		};
 	}
 }

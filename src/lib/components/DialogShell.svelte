@@ -16,7 +16,7 @@
 		width,
 		badge = '⚑',
 		onDismiss,
-		children
+		children,
 	}: {
 		titleId: string;
 		title: string;

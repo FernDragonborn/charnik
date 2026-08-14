@@ -14,7 +14,7 @@
 		showEdition = false,
 		filters,
 		leading,
-		trailing
+		trailing,
 	}: {
 		groups: { label: string; entries: Entry<T>[] }[];
 		selectedId?: string | null;

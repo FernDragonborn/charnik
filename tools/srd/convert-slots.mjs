@@ -32,7 +32,7 @@ const KIND = {
 	wizard: 'full',
 	paladin: 'half',
 	ranger: 'half',
-	warlock: 'pact'
+	warlock: 'pact',
 };
 
 const strip = (s) =>
@@ -131,7 +131,7 @@ function parseTable(table) {
 			level,
 			cantrips: cantripCol >= 0 ? num(c[cantripCol]) : '',
 			prepared: prepCol >= 0 ? num(c[prepCol]) : '',
-			slots
+			slots,
 		});
 	}
 	return { levels, pact };
@@ -154,11 +154,11 @@ const SLOT_COLS = [
 	'slot_6',
 	'slot_7',
 	'slot_8',
-	'slot_9'
+	'slot_9',
 ];
 const matrixKey = (levels) =>
 	JSON.stringify(
-		levels.map((l) => [l.level, ...Array.from({ length: 9 }, (_, i) => l.slots[i + 1])])
+		levels.map((l) => [l.level, ...Array.from({ length: 9 }, (_, i) => l.slots[i + 1])]),
 	);
 
 const kinds = {}; // kind → representative levels
@@ -177,7 +177,7 @@ for (const [kind, { levels }] of Object.entries(kinds))
 			systems: SYSTEMS,
 			source: SOURCE,
 			kind,
-			level: l.level
+			level: l.level,
 		};
 		for (let d = 1; d <= 9; d++) row[SLOT_COLS[d - 1]] = l.slots[d];
 		slotRows.push(row);
@@ -194,7 +194,7 @@ assertCount('spell_slots', slotRows.length, Object.keys(kinds).length * 20);
 writeCsv(
 	out2014('spell_slots_srd.csv'),
 	SLOT_HEAD,
-	slotRows.map((r) => ({ ...r, systems: '5e', source: 'SRD 5.1' }))
+	slotRows.map((r) => ({ ...r, systems: '5e', source: 'SRD 5.1' })),
 );
 
 // --- class_casting: cantrips / prepared-known per class per level ------------
@@ -208,12 +208,12 @@ for (const [id, { levels }] of Object.entries(parsed))
 			class_id: id,
 			level: l.level,
 			cantrips_known: l.cantrips,
-			prepared_known: l.prepared
+			prepared_known: l.prepared,
 		});
 writeCsv(
 	out('class_casting_srd.csv'),
 	['id', 'systems', 'source', 'class_id', 'level', 'cantrips_known', 'prepared_known'],
-	castRows
+	castRows,
 );
 assertCount('class_casting', castRows.length, Object.keys(KIND).length * 20);
 

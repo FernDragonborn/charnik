@@ -17,7 +17,7 @@ import { content, reloadContent } from './store.svelte';
 
 export const review = $state<{ metaDismissed: boolean; driftDismissed: boolean }>({
 	metaDismissed: false,
-	driftDismissed: false
+	driftDismissed: false,
 });
 
 /** Can this build fix a content file at all? Gates every prompt below (see the module note). */
@@ -56,7 +56,7 @@ export async function fillMissingMeta(fills: FilledMeta): Promise<RestampFailure
 	// missing, and it still would be) while changing bytes the pack differ compares — so the next
 	// update would offer to re-download a file whose content never moved.
 	const filled = Object.keys(fills).filter((file) =>
-		Object.values(fills[file] ?? {}).some((v) => v !== undefined && v !== '')
+		Object.values(fills[file] ?? {}).some((v) => v !== undefined && v !== ''),
 	);
 	const failures = await restampFiles(getUserStorage(), filled, fills);
 	await reloadContent();

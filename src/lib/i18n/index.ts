@@ -26,7 +26,7 @@ const RTL_LANGS = new Set(['ar', 'he', 'fa', 'ur', 'dv', 'ps', 'yi']);
 /** Bundled catalogs. Add an entry + a `locales/<id>.json` to ship another language. */
 export const LOCALES: LocaleMeta[] = [
 	{ id: 'en', label: 'English', dir: 'ltr' },
-	{ id: 'uk', label: 'Українська', dir: 'ltr' }
+	{ id: 'uk', label: 'Українська', dir: 'ltr' },
 ];
 
 // Vite resolves this template import against ./locales/*.json at build time.

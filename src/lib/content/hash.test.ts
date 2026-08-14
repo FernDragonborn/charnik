@@ -23,7 +23,7 @@ describe('content file hashing', () => {
 	// whether an incoming pack is the same pack, but body-only hashing left it outside the hash
 	it('DOES change when a header directive changes — source above all', async () => {
 		expect(await hashFile('#content-source: SRD\nid\nx\n')).not.toBe(
-			await hashFile('#content-source: Homebrew\nid\nx\n')
+			await hashFile('#content-source: Homebrew\nid\nx\n'),
 		);
 	});
 
@@ -40,7 +40,7 @@ describe('content file hashing', () => {
 
 	it('hashInput drops the stamp lines and trailing blank lines', () => {
 		expect(hashInput('#content-hash: xxh64:x\n#content-type: spell\nid\nx\n\n\n')).toBe(
-			'#content-type: spell\nid\nx'
+			'#content-type: spell\nid\nx',
 		);
 	});
 });
@@ -50,9 +50,9 @@ describe('stamping and verifying agree by construction', () => {
 		const file = await stampWithHash(
 			dir([
 				['source', 'SRD'],
-				['license', 'CC-BY-4.0']
+				['license', 'CC-BY-4.0'],
 			]),
-			'id\nx'
+			'id\nx',
 		);
 		expect(await fileHashState(file)).toBe(HASH_STATE.match);
 	});
@@ -82,7 +82,7 @@ describe('stamping and verifying agree by construction', () => {
 		// a directive-less file hashes over exactly what the OLD rule hashed: the body alone
 		const legacyHash = await hashFile('id\nx');
 		expect(await fileHashState(`#content-source: SRD\n#content-hash: ${legacyHash}\nid\nx`)).toBe(
-			HASH_STATE.match
+			HASH_STATE.match,
 		);
 	});
 });

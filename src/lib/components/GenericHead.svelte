@@ -10,7 +10,7 @@
 	let {
 		detail,
 		editable = false,
-		draft
+		draft,
 	}: {
 		detail: DetailModel;
 		editable?: boolean;

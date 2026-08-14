@@ -12,7 +12,7 @@
 	const SLOTS = [
 		['action', 'Action'],
 		['bonus', 'Bonus'],
-		['reaction', 'Reaction']
+		['reaction', 'Reaction'],
 	] as const;
 </script>
 

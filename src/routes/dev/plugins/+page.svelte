@@ -18,11 +18,11 @@
 			version: '1.2.0',
 			author: 'Jane Doe',
 			url: 'https://example.com/plugin',
-			description: 'Level-scaled dice and computed pools for my table’s homebrew.'
+			description: 'Level-scaled dice and computed pools for my table’s homebrew.',
 		},
 		code: 'globalThis.handlers = {};',
 		hash: 'a'.repeat(64),
-		...over
+		...over,
 	});
 
 	plugins.supported = true;
@@ -38,7 +38,7 @@
 			namespace: 'broken-one',
 			origin: LOCAL_ORIGIN,
 			ok: false,
-			problem: 'plugin.json invalid: version — not a semver version'
+			problem: 'plugin.json invalid: version — not a semver version',
 		},
 		// two providers of one namespace: the loser is shown WITH the reason, never hidden
 		{
@@ -46,21 +46,21 @@
 			origin: 'dark-sun',
 			ok: false,
 			problem:
-				'namespace "my-homebrew" is already provided by your own plugins folder — rename one, they cannot both answer the same plugin token'
-		}
+				'namespace "my-homebrew" is already provided by your own plugins folder — rename one, they cannot both answer the same plugin token',
+		},
 	];
 	plugins.prefs = {
 		consent: {
 			'exploit-dice': 'b'.repeat(64),
 			'old-friend': 'STALE',
-			sleepy: 'd'.repeat(64)
+			sleepy: 'd'.repeat(64),
 		},
 		enabled: { 'exploit-dice': true, sleepy: false },
-		killSwitch: false
+		killSwitch: false,
 	};
 	// enabled but its main.js failed to evaluate at boot → the load-error surface (PLG-6/D)
 	plugins.loadErrors = {
-		'exploit-dice': 'main.js failed to load: SyntaxError: unexpected token (line 12)'
+		'exploit-dice': 'main.js failed to load: SyntaxError: unexpected token (line 12)',
 	};
 </script>
 

@@ -36,7 +36,7 @@ const abilityScores = z.object(
 	Object.fromEntries(ABILITIES.map((a) => [a, z.number().int().min(1).max(30)])) as Record<
 		(typeof ABILITIES)[number],
 		z.ZodNumber
-	>
+	>,
 );
 
 // --- build / definition -------------------------------------------------------
@@ -44,21 +44,21 @@ const abilityScores = z.object(
 const classEntry = z.object({
 	class: ref,
 	level: z.number().int().min(1).max(20),
-	subclass: ref.optional()
+	subclass: ref.optional(),
 });
 
 const inventoryEntry = z.object({
 	item: ref,
 	qty: z.number().int().min(1).default(1),
 	equipped: z.boolean().default(false),
-	attuned: z.boolean().default(false)
+	attuned: z.boolean().default(false),
 });
 
 const spellEntry = z.object({
 	spell: ref,
 	/** Prepared casters toggle this; always-prepared (domain/feat) can't be unset. */
 	prepared: z.boolean().default(false),
-	alwaysPrepared: z.boolean().default(false)
+	alwaysPrepared: z.boolean().default(false),
 });
 
 /** Per-slot ASI/feat picks, keyed by slot key (`"<classIndex>:<level>"`, plus `"origin"` for the
@@ -72,13 +72,13 @@ const slotPicksSchema = z.object({
 	asi: z
 		.record(
 			z.string(),
-			z.object({ shape: z.enum(['2', '1-1']), picks: z.array(z.enum(ABILITIES)) })
+			z.object({ shape: z.enum(['2', '1-1']), picks: z.array(z.enum(ABILITIES)) }),
 		)
 		.default({}),
 	/** slot key → the half-feat +1 ability choice (Grappler STR/DEX, Epic Boon any). */
 	featAbility: z.record(z.string(), z.enum(ABILITIES)).default({}),
 	/** slot key → §C feat skill-grant picks (Skilled). */
-	featSkills: z.record(z.string(), z.array(z.string())).default({})
+	featSkills: z.record(z.string(), z.array(z.string())).default({}),
 });
 
 const buildSchema = z.object({
@@ -116,7 +116,7 @@ const buildSchema = z.object({
 	photo: z.string().optional(),
 	notes: z.string().default(''),
 	/** Optional XP (level-up can be milestone instead). */
-	xp: z.number().int().min(0).optional()
+	xp: z.number().int().min(0).optional(),
 });
 
 // --- runtime / play-state -----------------------------------------------------
@@ -135,7 +135,7 @@ const effectInstance = z.object({
 	positive: z.boolean().default(false),
 	/** Absent = indefinite; else expires after N rounds from `startedRound`. */
 	durationRounds: z.number().int().min(0).optional(),
-	startedRound: z.number().int().min(0).optional()
+	startedRound: z.number().int().min(0).optional(),
 });
 
 /** What killed the character. An OPEN enum — a new lethal rule (drowning, a homebrew doom clock) is a
@@ -148,7 +148,7 @@ const playSchema = z.object({
 		current: z.number().int(),
 		/** Manual max override; absent → derived from build. */
 		max: z.number().int().optional(),
-		temp: z.number().int().min(0).default(0)
+		temp: z.number().int().min(0).default(0),
 	}),
 	/** Hit dice spent since the last long rest (keyed by die, e.g. "d10"). */
 	hitDiceSpent: z.record(z.string(), z.number().int().min(0)).default({}),
@@ -194,9 +194,9 @@ const playSchema = z.object({
 			action: z.number().int().min(0).default(0),
 			bonus: z.number().int().min(0).default(0),
 			reaction: z.number().int().min(0).default(0),
-			move: z.number().int().min(0).default(0)
+			move: z.number().int().min(0).default(0),
 		})
-		.default({ action: 0, bonus: 0, reaction: 0, move: 0 })
+		.default({ action: 0, bonus: 0, reaction: 0, move: 0 }),
 });
 
 // --- ui / per-character view preferences --------------------------------------
@@ -226,7 +226,7 @@ const uiSchema = z
 		/** Short-rest healing model (a per-character rules variant). `dice` = RAW (spend Hit Dice via
 		 *  the short-rest popover); `half` = the popular non-book variant (heal ½ max HP, no dice — the
 		 *  Baldur's Gate 3 model). Default `dice` (ship SRD-faithful); old saves without it migrate there. */
-		shortRestMode: z.enum(SHORT_REST_MODES).default('dice')
+		shortRestMode: z.enum(SHORT_REST_MODES).default('dice'),
 	})
 	.default({ strict: true, spellsHidden: [], spellsPinned: [], shortRestMode: 'dice' });
 
@@ -238,7 +238,7 @@ export const characterSchema = z.object({
 	system: z.enum(SYSTEMS),
 	build: buildSchema,
 	play: playSchema,
-	ui: uiSchema
+	ui: uiSchema,
 });
 
 export type Character = z.infer<typeof characterSchema>;
@@ -250,7 +250,7 @@ export type EffectInstance = z.infer<typeof effectInstance>;
 export function newCharacter(
 	id: string,
 	name: string,
-	system: (typeof SYSTEMS)[number]
+	system: (typeof SYSTEMS)[number],
 ): Character {
 	return characterSchema.parse({
 		schemaVersion: CHARACTER_SCHEMA_VERSION,
@@ -258,9 +258,9 @@ export function newCharacter(
 		system,
 		build: {
 			name,
-			abilities: Object.fromEntries(ABILITIES.map((a) => [a, 10]))
+			abilities: Object.fromEntries(ABILITIES.map((a) => [a, 10])),
 		},
-		play: { hp: { current: 0, temp: 0 } }
+		play: { hp: { current: 0, temp: 0 } },
 	});
 }
 

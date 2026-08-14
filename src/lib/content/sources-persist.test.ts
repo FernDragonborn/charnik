@@ -13,7 +13,7 @@ import { MemoryStorage } from '../storage/memory';
 
 let storage = new MemoryStorage();
 vi.mock('../storage/provider', () => ({
-	getUserStorage: () => storage
+	getUserStorage: () => storage,
 }));
 
 const {
@@ -23,7 +23,7 @@ const {
 	setCollision,
 	parseSourceConfig,
 	initSourceConfig,
-	sourceConfig
+	sourceConfig,
 } = await import('./sources.svelte');
 
 function memLocalStorage() {
@@ -34,7 +34,7 @@ function memLocalStorage() {
 		removeItem: (k: string) => void m.delete(k),
 		clear: () => m.clear(),
 		key: () => null,
-		length: 0
+		length: 0,
 	};
 }
 
@@ -49,7 +49,7 @@ const row = (over: Partial<LoadedRow> = {}): LoadedRow =>
 		file: 'spells_srd.csv',
 		sourceLang: 'en',
 		data: { name_en: 'Fireball' },
-		...over
+		...over,
 	}) as unknown as LoadedRow;
 
 const FILE = 'content/srd-2014/spells_srd.csv';
@@ -113,7 +113,7 @@ describe('source toggles mutate + persist to the file', () => {
 describe('parseSourceConfig merges over defaults', () => {
 	it('a saved disabledSources comes back', () => {
 		const cfg = parseSourceConfig(
-			JSON.stringify({ disabledSources: ['SRD 5.1'], disabledFiles: [], collisions: {} })
+			JSON.stringify({ disabledSources: ['SRD 5.1'], disabledFiles: [], collisions: {} }),
 		);
 		expect(isRowActive(row(), cfg)).toBe(false);
 	});
@@ -133,7 +133,7 @@ describe('initSourceConfig reads the file (and migrates the legacy blob)', () =>
 	it('loads a persisted file into the live config', async () => {
 		await storage.write(
 			CONFIG_PATH,
-			JSON.stringify({ disabledSources: ['SRD 5.1'], disabledFiles: [], collisions: {} })
+			JSON.stringify({ disabledSources: ['SRD 5.1'], disabledFiles: [], collisions: {} }),
 		);
 		await initSourceConfig();
 		expect(isRowActive(row())).toBe(false); // from the file, not defaults
@@ -142,7 +142,7 @@ describe('initSourceConfig reads the file (and migrates the legacy blob)', () =>
 	it('migrates the old localStorage blob when no file exists yet', async () => {
 		localStorage.setItem(
 			'charnik:sources',
-			JSON.stringify({ disabledFiles: [FILE], disabledSources: [], collisions: {} })
+			JSON.stringify({ disabledFiles: [FILE], disabledSources: [], collisions: {} }),
 		);
 		await initSourceConfig();
 		expect(isRowActive(row())).toBe(false); // migrated

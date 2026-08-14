@@ -39,7 +39,7 @@ describe('migrateRows', () => {
 	it('runs a registered step', () => {
 		const bump = (data: VersionedRows): VersionedRows => ({
 			schemaVersion: data.schemaVersion + 1,
-			rows: data.rows.map((r) => ({ ...r, migrated: 'yes' }))
+			rows: data.rows.map((r) => ({ ...r, migrated: 'yes' })),
 		});
 		CONTENT_MIGRATIONS.spell = { [CONTENT_SCHEMA_VERSION - 1]: bump };
 		try {

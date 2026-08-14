@@ -30,7 +30,7 @@ describe('discoverContentRoots (a pack is a folder)', () => {
 	it('finds every pack folder, excludes homebrew, and ignores loose files', async () => {
 		expect(await discoverContentRoots(await withPacks())).toEqual([
 			'content/srd-2014',
-			'content/srd-2024'
+			'content/srd-2024',
 		]);
 	});
 

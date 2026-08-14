@@ -49,7 +49,7 @@ function matchStyle(stamped: string, original: string): string {
 export async function restampText(
 	raw: string,
 	set: Partial<Record<MetaKey, string>> = {},
-	today: string = new Date().toISOString().slice(0, 10)
+	today: string = new Date().toISOString().slice(0, 10),
 ): Promise<string> {
 	const { directives, body } = parseContentDirectives(raw);
 	const next = new Map(directives);
@@ -76,7 +76,7 @@ export interface RestampFailure {
 export async function restampFiles(
 	storage: Storage,
 	files: readonly string[],
-	sets: FilledMeta = {}
+	sets: FilledMeta = {},
 ): Promise<RestampFailure[]> {
 	const failures: RestampFailure[] = [];
 	for (const file of files) {

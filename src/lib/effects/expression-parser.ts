@@ -37,7 +37,7 @@ const NUMERIC_VARS: ReadonlySet<string> = new Set<string>([
 	'temp_hp',
 	'exhaustion',
 	...ABILITY_IDS.map((a) => `${a}_mod`),
-	...ABILITY_IDS.map((a) => `${a}_score`)
+	...ABILITY_IDS.map((a) => `${a}_score`),
 ]);
 
 /** Boolean flags (0/1). Always `is_`-prefixed so a flag never reads as a bare enum literal. */
@@ -47,7 +47,7 @@ const BOOLEAN_VARS: ReadonlySet<string> = new Set<string>([
 	'is_concentrating',
 	'is_wearing_armor',
 	'is_wearing_shield',
-	'is_combat_start'
+	'is_combat_start',
 ]);
 
 /** Sugar boolean flags that are pure aliases for `has_condition.<id>`. The ONE hardcoded
@@ -55,14 +55,14 @@ const BOOLEAN_VARS: ReadonlySet<string> = new Set<string>([
  *  engine (was `RAGE_CONDITION_ID` in three files). Homebrew can skip the sugar entirely and guard
  *  on `has_condition.<id>` directly, so adding a rage-like state needs a CSV row, not code. */
 export const CONDITION_FLAG_ALIASES: Readonly<{ is_raging: string } & Record<string, string>> = {
-	is_raging: 'rage'
+	is_raging: 'rage',
 };
 
 /** Enum-typed variables → their allowed literal values. A literal is valid ONLY when compared
  *  (`==`/`!=`, plus ordinal `<`/`<=`/`>`/`>=` for ORDERED enums) against a variable of its enum. */
 export const ENUM_VARS: Readonly<Record<string, readonly string[]>> = {
 	armor_type: ARMOR_TYPES,
-	size: SIZES
+	size: SIZES,
 };
 /** Enums whose members have a meaningful order (so `<`/`>` compare by index). `armor_type` is a
  *  bag (only `==`/`!=`); `size` is a ladder. */
@@ -104,7 +104,7 @@ const FUNCTIONS: Readonly<Record<string, { min: number; max: number }>> = {
 	// levels above the spell's base level (`floor((slot - spell_level) / step)`, step defaults to 1).
 	// `amount` may be dice (`per_slot(1d6)`) — it scales the pool. Reads the cast-ephemeral slot vars;
 	// outside a cast both are 0, so it degrades to a 0 delta.
-	per_slot: { min: 1, max: 2 }
+	per_slot: { min: 1, max: 2 },
 };
 
 /* ─────────────────────────── AST ─────────────────────────── */
@@ -447,7 +447,7 @@ function varNode(name: string): Node {
 	const glued = /^(.+?)d(\d+)$/.exec(name);
 	if (glued && glued[1] && isKnownVarName(glued[1]))
 		throw new ParseError(
-			`unknown variable '${name}' — did you mean '${glued[1]} d${glued[2]}'? (a variable needs a space or parens before the dice operator)`
+			`unknown variable '${name}' — did you mean '${glued[1]} d${glued[2]}'? (a variable needs a space or parens before the dice operator)`,
 		);
 	// A bare ability name (`wis`) with no _mod/_score suffix is a deliberate parse error — never
 	// leave "mod or score?" ambiguous (PLAN).

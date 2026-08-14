@@ -156,7 +156,7 @@ function collectComponents() {
 						.trim()
 						.replace(/[=:].*$/s, '')
 						.replace(/^\.\.\./, '')
-						.trim()
+						.trim(),
 				)
 				.filter(Boolean);
 			// leading comment = first // line inside <script>
@@ -259,7 +259,7 @@ function collectDupSuspects() {
 					s
 						.trim()
 						.replace(/[?:=].*$/s, '')
-						.trim()
+						.trim(),
 				)
 				.filter(Boolean)
 				.forEach((p, i) => {
@@ -283,7 +283,7 @@ function collectDupSuspects() {
 			// same-name groups already surface above — keep body groups that add NEW information
 			.filter((sites) => new Set(sites.map((s) => s.name)).size >= 2)
 			.sort((a, b) => b.length - a.length),
-		sameArray: [...arraySites.values()].filter(spansFiles).sort((a, b) => b.length - a.length)
+		sameArray: [...arraySites.values()].filter(spansFiles).sort((a, b) => b.length - a.length),
 	};
 }
 
@@ -296,10 +296,10 @@ out.push('# Charnik reuse surface');
 out.push('');
 out.push('Catalog of the **shared, reusable surface** under `src/lib` — design tokens, global CSS');
 out.push(
-	'classes, shared components, stores, and library functions/types. Consult this (and `grep`)'
+	'classes, shared components, stores, and library functions/types. Consult this (and `grep`)',
 );
 out.push(
-	'BEFORE writing a CSS class or a TS helper, so existing ones get reused instead of duplicated.'
+	'BEFORE writing a CSS class or a TS helper, so existing ones get reused instead of duplicated.',
 );
 out.push('Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),');
 out.push('EXCEPT the duplicate-suspects section, which scans all of `src`.');
@@ -379,7 +379,7 @@ out.push('');
 // stores vs lib functions
 const exportsByModule = collectExports();
 const storeModules = [...exportsByModule.keys()].filter(
-	(m) => m.includes('/stores/') || m.endsWith('.svelte.ts')
+	(m) => m.includes('/stores/') || m.endsWith('.svelte.ts'),
 );
 const libModules = [...exportsByModule.keys()].filter((m) => !storeModules.includes(m)).sort();
 
@@ -413,11 +413,11 @@ out.push('---');
 // stays in the console log below, where it's useful without polluting version control.
 out.push(
 	`_${tokenCount} tokens · ${classes.size} global classes · ${components.length} components · ` +
-		`${exportCount} exports across ${exportsByModule.size} modules · ${dupCount} duplicate suspects._`
+		`${exportCount} exports across ${exportsByModule.size} modules · ${dupCount} duplicate suspects._`,
 );
 out.push('');
 
 writeFileSync(OUT, out.join('\n'));
 console.log(
-	`surface → ${rel(OUT)}  (${tokenCount} tokens, ${classes.size} classes, ${components.length} components, ${exportCount} exports, ${dupCount} dup suspects; ${ms}ms)`
+	`surface → ${rel(OUT)}  (${tokenCount} tokens, ${classes.size} classes, ${components.length} components, ${exportCount} exports, ${dupCount} dup suspects; ${ms}ms)`,
 );

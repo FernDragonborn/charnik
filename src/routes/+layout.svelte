@@ -19,7 +19,7 @@
 		autoCheckAllowed,
 		checkNow,
 		restorePendingUpdates,
-		updates
+		updates,
 	} from '$lib/content/remote/updates.svelte';
 	import { missingUnanswered } from '$lib/content/packs.svelte';
 	import MissingContentModal from '$lib/components/MissingContentModal.svelte';
@@ -30,7 +30,7 @@
 		fillMissingMeta,
 		review,
 		pendingMetaIssues,
-		pendingDriftItems
+		pendingDriftItems,
 	} from '$lib/content/review.svelte';
 	import type { FilledMeta } from '$lib/content/meta';
 	import type { RestampFailure } from '$lib/content/restamp';
@@ -43,7 +43,7 @@
 		applySavedDataDir,
 		defaultDataDir,
 		setDataDirOverride,
-		pickDataDir
+		pickDataDir,
 	} from '$lib/storage/tauri';
 	import FirstRunModal from '$lib/components/FirstRunModal.svelte';
 	import MobileWarning from '$lib/components/MobileWarning.svelte';
@@ -55,7 +55,7 @@
 		updater,
 		checkForUpdate,
 		installUpdate,
-		simulateUpdateAvailable
+		simulateUpdateAvailable,
 	} from '$lib/update/updater.svelte';
 	import { initDiag, captureGlobalErrors, logger } from '$lib/diag/logger';
 	import DiagnosticsModal from '$lib/components/DiagnosticsModal.svelte';
@@ -100,7 +100,7 @@
 		{ href: '/', key: 'nav.roster' },
 		{ href: '/combat', key: 'nav.combat' },
 		{ href: '/compendium', key: 'nav.compendium' },
-		{ href: '/settings', key: 'nav.settings' }
+		{ href: '/settings', key: 'nav.settings' },
 	];
 
 	// Links must include the base path so navigation works under a subpath (GitHub Pages
@@ -212,7 +212,7 @@
 				getUserStorage(),
 				BUNDLED_THEMES,
 				app.seededBundledIds,
-				app.customThemes // migrate any pre-files (localStorage-only) themes into files, once
+				app.customThemes, // migrate any pre-files (localStorage-only) themes into files, once
 			);
 			app.customThemes = themes;
 			if (newlySeeded.length) app.seededBundledIds = [...app.seededBundledIds, ...newlySeeded];
@@ -247,7 +247,9 @@
 	function reportFailures(failures: RestampFailure[]): void {
 		if (failures.length === 0) return;
 		toast.error(
-			$_('contentReview.writeFailed', { values: { files: failures.map((f) => f.file).join(', ') } })
+			$_('contentReview.writeFailed', {
+				values: { files: failures.map((f) => f.file).join(', ') },
+			}),
 		);
 	}
 	async function adoptDrift(files: string[]): Promise<void> {
@@ -276,7 +278,7 @@
 			? `${updater.progress}%`
 			: updater.status === 'installing'
 				? '…'
-				: $_('update.ready')
+				: $_('update.ready'),
 	);
 	const updateTitle = $derived(
 		updater.status === 'error'
@@ -285,7 +287,7 @@
 				? $_('update.downloading', { values: { progress: updater.progress } })
 				: updater.status === 'installing'
 					? $_('update.installing')
-					: $_('update.tooltip', { values: { version: updater.version } })
+					: $_('update.tooltip', { values: { version: updater.version } }),
 	);
 </script>
 

@@ -14,21 +14,21 @@ import {
 	packTooLarge,
 	checkRepo,
 	type GithubRepo,
-	type RemotePack
+	type RemotePack,
 } from './github';
 import {
 	MAX_PACK_BYTES,
 	MAX_PACK_FILES,
 	MAX_REPO_PACKS,
 	type RemoteFetcher,
-	type FetchResult
+	type FetchResult,
 } from './types';
 
 const REPO: GithubRepo = { owner: 'FernDragonborn', repo: 'charnik-content-srd', branch: 'main' };
 
 const fakeFetcher = (text: FetchResult): RemoteFetcher => ({
 	getText: async () => text,
-	getBytes: async () => ({ kind: 'error', message: 'not used' })
+	getBytes: async () => ({ kind: 'error', message: 'not used' }),
 });
 
 const tree = (paths: [string, string][]) =>
@@ -43,7 +43,7 @@ describe('parseGithubRepo', () => {
 		// a branch name may contain slashes; taking the first segment 404s every file, forever
 		['https://github.com/FernDragonborn/charnik-content-srd/tree/feature/packs', 'feature/packs'],
 		// …and this is what the address bar hands you in some browsers
-		['https://www.github.com/FernDragonborn/charnik-content-srd', 'main']
+		['https://www.github.com/FernDragonborn/charnik-content-srd', 'main'],
 	])('%s → branch %s', (url, branch) => {
 		expect(parseGithubRepo(url)).toEqual({ ...REPO, branch });
 	});
@@ -57,12 +57,12 @@ describe('parseGithubRepo', () => {
 describe('the two URLs', () => {
 	it('ONE tree request answers for the whole repo', () => {
 		expect(treeUrl(REPO)).toBe(
-			'https://api.github.com/repos/FernDragonborn/charnik-content-srd/git/trees/main?recursive=1'
+			'https://api.github.com/repos/FernDragonborn/charnik-content-srd/git/trees/main?recursive=1',
 		);
 	});
 	it('files come from raw. — not the API, so not on its rate budget', () => {
 		expect(rawUrl(REPO, 'srd-2024/spells_srd.csv')).toBe(
-			'https://raw.githubusercontent.com/FernDragonborn/charnik-content-srd/main/srd-2024/spells_srd.csv'
+			'https://raw.githubusercontent.com/FernDragonborn/charnik-content-srd/main/srd-2024/spells_srd.csv',
 		);
 	});
 });
@@ -73,13 +73,13 @@ describe('packsFromTree — a pack is a TOP-LEVEL folder, same rule as locally',
 			tree([
 				['srd-2024/spells_srd.csv', 'aaa'],
 				['srd-2014/items_srd.csv', 'bbb'],
-				['srd-2024/items_srd.csv', 'ccc']
-			])
+				['srd-2024/items_srd.csv', 'ccc'],
+			]),
 		);
 		expect(packs.map((p) => p.pack)).toEqual(['srd-2014', 'srd-2024']);
 		expect(packs[1]?.files.map((f) => f.path)).toEqual([
 			'srd-2024/items_srd.csv',
-			'srd-2024/spells_srd.csv'
+			'srd-2024/spells_srd.csv',
 		]);
 		expect(packs[1]?.files[0]?.sha).toBe('ccc');
 	});
@@ -89,19 +89,19 @@ describe('packsFromTree — a pack is a TOP-LEVEL folder, same rule as locally',
 				{ path: 'README.md', sha: 'x', type: 'blob' },
 				{ path: 'LICENSE', sha: 'y', type: 'blob' },
 				{ path: 'srd-2024', sha: 'z', type: 'tree' },
-				{ path: 'srd-2024/spells_srd.csv', sha: 'w', type: 'blob' }
-			]
+				{ path: 'srd-2024/spells_srd.csv', sha: 'w', type: 'blob' },
+			],
 		});
 		expect(packsFromTree(json).packs).toEqual([
-			{ pack: 'srd-2024', files: [{ path: 'srd-2024/spells_srd.csv', sha: 'w' }] }
+			{ pack: 'srd-2024', files: [{ path: 'srd-2024/spells_srd.csv', sha: 'w' }] },
 		]);
 	});
 	it('a pack may ship plugin files too (PLUGINS §2) — they are part of the same unit', () => {
 		const { packs } = packsFromTree(
 			tree([
 				['dark-sun/plugins/my-homebrew/plugin.json', 'a'],
-				['dark-sun/plugins/my-homebrew/main.js', 'b']
-			])
+				['dark-sun/plugins/my-homebrew/main.js', 'b'],
+			]),
 		);
 		expect(packs[0]?.pack).toBe('dark-sun');
 		expect(packs[0]?.files).toHaveLength(2);
@@ -115,12 +115,12 @@ describe('packsFromTree — a pack is a TOP-LEVEL folder, same rule as locally',
 				['dark-sun/main.js', 'a'],
 				['dark-sun/plugins/ns/vendor/main.js', 'b'],
 				['dark-sun/plugins/ns/main.js', 'c'],
-				['dark-sun/spells.csv', 'd']
-			])
+				['dark-sun/spells.csv', 'd'],
+			]),
 		);
 		expect(packs[0]?.files.map((f) => f.path)).toEqual([
 			'dark-sun/plugins/ns/main.js',
-			'dark-sun/spells.csv'
+			'dark-sun/spells.csv',
 		]);
 	});
 
@@ -137,7 +137,7 @@ describe('packsFromTree — a pack is a TOP-LEVEL folder, same rule as locally',
 describe('a pack too big to download is refused off the tree, before the first byte', () => {
 	const sized = (count: number, size: number): RemotePack => ({
 		pack: 'huge',
-		files: Array.from({ length: count }, (_, i) => ({ path: `huge/${i}.csv`, sha: `${i}`, size }))
+		files: Array.from({ length: count }, (_, i) => ({ path: `huge/${i}.csv`, sha: `${i}`, size })),
 	});
 
 	it('passes a pack the size of the one we ship', () => {
@@ -147,7 +147,7 @@ describe('a pack too big to download is refused off the tree, before the first b
 	it('refuses on file COUNT even when every file is tiny', () => {
 		expect(packTooLarge(sized(MAX_PACK_FILES + 1, 1))).toEqual({
 			files: MAX_PACK_FILES + 1,
-			bytes: MAX_PACK_FILES + 1
+			bytes: MAX_PACK_FILES + 1,
 		});
 	});
 
@@ -165,13 +165,13 @@ describe('a pack too big to download is refused off the tree, before the first b
 		expect(packSizeRefusal(sized(4, 20 * 1024 * 1024))).toEqual({
 			kind: 'i18n',
 			key: 'settings.packs.packTooLarge',
-			values: { pack: 'huge', files: 4, mb: 80, maxFiles: MAX_PACK_FILES, maxMb: 50 }
+			values: { pack: 'huge', files: 4, mb: 80, maxFiles: MAX_PACK_FILES, maxMb: 50 },
 		});
 	});
 
 	it('the tree carries the sizes through, so the cap has something to read', () => {
 		const json = JSON.stringify({
-			tree: [{ path: 'p/a.csv', sha: 'a', type: 'blob', size: 4096 }]
+			tree: [{ path: 'p/a.csv', sha: 'a', type: 'blob', size: 4096 }],
 		});
 		expect(packsFromTree(json).packs[0]?.files[0]?.size).toBe(4096);
 	});
@@ -182,31 +182,31 @@ describe('checkRepo', () => {
 		const res = await checkRepo(
 			fakeFetcher({ kind: 'notModified' }),
 			'https://github.com/a/b',
-			'W/"1"'
+			'W/"1"',
 		);
 		expect(res).toEqual({ kind: 'unchanged' });
 	});
 	it('carries the new ETag out, so the next check can be free too', async () => {
 		const res = await checkRepo(
 			fakeFetcher({ kind: 'ok', body: tree([['srd-2024/spells_srd.csv', 'a']]), etag: 'W/"2"' }),
-			'https://github.com/a/b'
+			'https://github.com/a/b',
 		);
 		expect(res).toEqual({
 			kind: 'packs',
 			etag: 'W/"2"',
 			branch: 'main',
-			packs: [{ pack: 'srd-2024', files: [{ path: 'srd-2024/spells_srd.csv', sha: 'a' }] }]
+			packs: [{ pack: 'srd-2024', files: [{ path: 'srd-2024/spells_srd.csv', sha: 'a' }] }],
 		});
 	});
 	it('a non-GitHub URL is "unsupported", not an error the user must act on', async () => {
 		expect(await checkRepo(fakeFetcher({ kind: 'notModified' }), 'https://example.com/x')).toEqual({
-			kind: 'unsupported'
+			kind: 'unsupported',
 		});
 	});
 	it('offline surfaces as a value, never a throw', async () => {
 		const res = await checkRepo(
 			fakeFetcher({ kind: 'error', message: 'network unreachable' }),
-			'https://github.com/a/b'
+			'https://github.com/a/b',
 		);
 		expect(res).toEqual({ kind: 'error', message: 'network unreachable' });
 	});
@@ -219,13 +219,13 @@ describe('a truncated listing is refused, not used', () => {
 	const big = (paths: [string, string][]) =>
 		JSON.stringify({
 			truncated: true,
-			tree: paths.map(([path, sha]) => ({ path, sha, type: 'blob' }))
+			tree: paths.map(([path, sha]) => ({ path, sha, type: 'blob' })),
 		});
 
 	it('says so instead of returning the part it got', async () => {
 		const res = await checkRepo(
 			fakeFetcher({ kind: 'ok', body: big([['srd-2024/spells_srd.csv', 'a']]), etag: 'W/"1"' }),
-			'https://github.com/a/b'
+			'https://github.com/a/b',
 		);
 		expect(res).toEqual({ kind: 'truncated' });
 	});
@@ -250,7 +250,7 @@ describe('a repo with more packs than we will walk', () => {
 	it('is refused as a whole, and says how many it had', async () => {
 		const res = await checkRepo(
 			fakeFetcher({ kind: 'ok', body: manyPacks(MAX_REPO_PACKS + 1), etag: 'W/"1"' }),
-			'https://github.com/a/b'
+			'https://github.com/a/b',
 		);
 		expect(res).toEqual({ kind: 'tooManyPacks', packs: MAX_REPO_PACKS + 1 });
 	});
@@ -258,7 +258,7 @@ describe('a repo with more packs than we will walk', () => {
 	it('a repo at the ceiling still works — this is a runaway guard, not a policy', async () => {
 		const res = await checkRepo(
 			fakeFetcher({ kind: 'ok', body: manyPacks(MAX_REPO_PACKS), etag: 'W/"1"' }),
-			'https://github.com/a/b'
+			'https://github.com/a/b',
 		);
 		expect(res).toMatchObject({ kind: 'packs' });
 	});
@@ -272,7 +272,7 @@ describe('the branch we guessed is not the branch the repo has', () => {
 			url.includes(`/${ok}?`)
 				? { kind: 'ok', body: tree([['srd-2024/spells_srd.csv', 'a']]) }
 				: { kind: 'error', status: 404, message: 'Not Found' },
-		getBytes: async () => ({ kind: 'error', message: 'not used' })
+		getBytes: async () => ({ kind: 'error', message: 'not used' }),
 	});
 
 	it('falls back to master on a 404 and says which branch answered', async () => {
@@ -296,7 +296,7 @@ describe('the branch we guessed is not the branch the repo has', () => {
 					? { kind: 'ok', body: tree([['srd-2024/spells_srd.csv', 'a']]) }
 					: { kind: 'error', status: 404, message: 'Not Found' };
 			},
-			getBytes: async () => ({ kind: 'error', message: 'not used' })
+			getBytes: async () => ({ kind: 'error', message: 'not used' }),
 		};
 
 		const res = await checkRepo(onlyMain, 'https://github.com/a/b/tree/main/srd-2024');
@@ -314,7 +314,7 @@ describe('the branch we guessed is not the branch the repo has', () => {
 					? { kind: 'ok', body: tree([['srd-2024/spells_srd.csv', 'a']]) }
 					: { kind: 'error', status: 404, message: 'Not Found' };
 			},
-			getBytes: async () => ({ kind: 'error', message: 'not used' })
+			getBytes: async () => ({ kind: 'error', message: 'not used' }),
 		};
 
 		const res = await checkRepo(slashed, 'https://github.com/a/b/tree/feature/packs');

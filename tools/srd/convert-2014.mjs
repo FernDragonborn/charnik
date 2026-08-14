@@ -78,7 +78,7 @@ const ABIL = {
 	constitution: 'con',
 	intelligence: 'int',
 	wisdom: 'wis',
-	charisma: 'cha'
+	charisma: 'cha',
 };
 
 // --- spells ------------------------------------------------------------------
@@ -92,7 +92,7 @@ function convertSpells() {
 		'evocation',
 		'illusion',
 		'necromancy',
-		'transmutation'
+		'transmutation',
 	];
 	const rows = [];
 	for (const e of entries) {
@@ -150,7 +150,7 @@ function convertSpells() {
 		if (/spell attack/.test(low)) resolution = 'attack';
 		else {
 			const sm = /(strength|dexterity|constitution|intelligence|wisdom|charisma) saving throw/.exec(
-				low
+				low,
 			);
 			if (sm) {
 				resolution = 'save';
@@ -183,7 +183,7 @@ function convertSpells() {
 			resolution,
 			save_ability: save,
 			damage: dm ? `${dm[1]} ${dm[2].toLowerCase()}` : '',
-			higher_level: higher
+			higher_level: higher,
 		});
 	}
 	rows.sort((a, b) => a.level - b.level || a.id.localeCompare(b.id));
@@ -213,15 +213,15 @@ function convertSpells() {
 			'resolution',
 			'save_ability',
 			'damage',
-			'higher_level'
+			'higher_level',
 		],
-		rows
+		rows,
 	);
 	console.log(
 		'spells by level:',
 		Object.entries(rows.reduce((a, r) => ((a[r.level] = (a[r.level] || 0) + 1), a), {}))
 			.map(([l, n]) => `L${l}:${n}`)
-			.join(' ')
+			.join(' '),
 	);
 	return rows.length;
 }
@@ -239,7 +239,7 @@ function convertMonsters() {
 			...(m.abilities || []).map((a) => `${a.name} ${a.description}`),
 			...((m.actions || []).length
 				? ['Actions.', ...m.actions.map((a) => `${a.name} ${a.description}`)]
-				: [])
+				: []),
 		].join('\n');
 		return {
 			id: slug(m.name),
@@ -266,7 +266,7 @@ function convertMonsters() {
 			cr: (/^([0-9/]+)/.exec(m.challenge || '') || [, ''])[1],
 			senses: m.senses || '',
 			languages: '',
-			skills: m.skills || ''
+			skills: m.skills || '',
 		};
 	});
 	assertCount('monsters', rows.length, 201); // Tabyltop Monsters JSON (SRD 5.1 Monsters chapter)
@@ -298,9 +298,9 @@ function convertMonsters() {
 			'cr',
 			'senses',
 			'languages',
-			'skills'
+			'skills',
 		],
-		rows
+		rows,
 	);
 	return rows.length;
 }
@@ -329,7 +329,7 @@ const CONDITIONS = [
 	'Prone',
 	'Restrained',
 	'Stunned',
-	'Unconscious'
+	'Unconscious',
 ];
 function convertConditions() {
 	const entries = htmlEntries(src(`${SRC}.html`));
@@ -346,13 +346,13 @@ function convertConditions() {
 			text_en: e.paras.map(strip).filter(Boolean).join('\n'),
 			text_uk: '',
 			effects: authored.get(slug(e.name)) ?? '',
-			negative: String(e.name !== 'Invisible')
+			negative: String(e.name !== 'Invisible'),
 		}));
 	assertCount('conditions', rows.length, 15);
 	writeCsv(
 		out('conditions_srd.csv'),
 		['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'negative'],
-		rows
+		rows,
 	);
 	return rows.length;
 }
@@ -366,7 +366,7 @@ const ABIL_ABBR = {
 	constitution: 'con',
 	intelligence: 'int',
 	wisdom: 'wis',
-	charisma: 'cha'
+	charisma: 'cha',
 };
 function raceAsi(text) {
 	// only the BASE race trait — the first sentence after "Ability Score Increase." — so the
@@ -393,7 +393,7 @@ const WORD_NUM = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6 };
 function raceBoostChoice(text) {
 	const m =
 		/(one|two|three|four|five|six)\s+(?:other\s+|different\s+)?ability scores?(?:\s+of your choice)?\s+(?:each\s+)?increase by (\d+)/i.exec(
-			text
+			text,
 		);
 	if (!m) return '';
 	const count = WORD_NUM[m[1].toLowerCase()] ?? Number(m[1]);
@@ -410,7 +410,7 @@ const RACE_IDS = [
 	'Gnome',
 	'HalfElf',
 	'HalfOrc',
-	'Tiefling'
+	'Tiefling',
 ];
 function convertSpecies() {
 	const html = src(`${SRC}.html`);
@@ -433,7 +433,7 @@ function convertSpecies() {
 			size: (sizeM ? sizeM[1] : 'Medium').toLowerCase(),
 			speed: speedM ? Number(speedM[1]) : 30,
 			creature_type: 'humanoid',
-			boost_choice: raceBoostChoice(text) // Half-Elf "+1 to two of your choice"
+			boost_choice: raceBoostChoice(text), // Half-Elf "+1 to two of your choice"
 		};
 	});
 	assertCount('species', rows.length, 9);
@@ -451,9 +451,9 @@ function convertSpecies() {
 			'size',
 			'speed',
 			'creature_type',
-			'boost_choice'
+			'boost_choice',
 		],
-		rows
+		rows,
 	);
 	return rows.length;
 }
@@ -490,13 +490,13 @@ function convertLanguages() {
 					effects: '',
 					category,
 					speakers,
-					script: script === '-' ? '' : script
+					script: script === '-' ? '' : script,
 				};
 			});
 	};
 	const rows = [
 		...parseTable('Standard Languages', 'standard'),
-		...parseTable('Exotic Languages', 'exotic')
+		...parseTable('Exotic Languages', 'exotic'),
 	];
 	assertCount('languages', rows.length, 16);
 	writeCsv(
@@ -512,9 +512,9 @@ function convertLanguages() {
 			'effects',
 			'category',
 			'speakers',
-			'script'
+			'script',
 		],
-		rows
+		rows,
 	);
 	return rows.length;
 }
@@ -527,7 +527,7 @@ const SUBRACES = [
 	{ id: 'HillDwarf', end: 'Elf', species: 'Dwarf' },
 	{ id: 'HighElf', end: 'Halfling', species: 'Elf' },
 	{ id: 'Lightfoot', end: 'Human', species: 'Halfling' },
-	{ id: 'RockGnome', end: 'HalfElf', species: 'Gnome' }
+	{ id: 'RockGnome', end: 'HalfElf', species: 'Gnome' },
 ];
 const SPECIES_OPTION_COLS = [
 	'id',
@@ -540,7 +540,7 @@ const SPECIES_OPTION_COLS = [
 	'effects',
 	'species_id',
 	'kind',
-	'option_label'
+	'option_label',
 ];
 function convertSpeciesOptions() {
 	const html = src(`${SRC}.html`);
@@ -560,7 +560,7 @@ function convertSpeciesOptions() {
 			effects: raceAsi(text), // the subrace's own Ability Score Increase
 			species_id: slug(sr.species),
 			kind: 'subrace',
-			option_label: 'Subrace'
+			option_label: 'Subrace',
 		};
 	});
 	assertCount('species_options', rows.length, 4);
@@ -595,8 +595,8 @@ function convertBackgrounds() {
 			tools: '',
 			languages: langsM ? '2' : '',
 			ability_choices: '',
-			origin_feat: ''
-		}
+			origin_feat: '',
+		},
 	];
 	assertCount('backgrounds', rows.length, 1);
 	writeCsv(
@@ -614,9 +614,9 @@ function convertBackgrounds() {
 			'tools',
 			'languages',
 			'ability_choices',
-			'origin_feat'
+			'origin_feat',
 		],
-		rows
+		rows,
 	);
 	return rows.length;
 }
@@ -636,7 +636,7 @@ function convertFeats() {
 			effects: '',
 			category: 'general_2014',
 			prereq: pm ? pm[1].trim() : '',
-			repeatable: 'false'
+			repeatable: 'false',
 		};
 	});
 	assertCount('feats', rows.length, 1);
@@ -653,9 +653,9 @@ function convertFeats() {
 			'effects',
 			'category',
 			'prereq',
-			'repeatable'
+			'repeatable',
 		],
-		rows
+		rows,
 	);
 	return rows.length;
 }
@@ -673,7 +673,7 @@ const CLASS_IDS = [
 	'Rogue',
 	'Sorcerer',
 	'Warlock',
-	'Wizard'
+	'Wizard',
 ];
 // caster type + spellcasting ability are fixed mechanical classifications of the 12 SRD
 // classes, identical across editions — not prose. Use the known values (matches the
@@ -690,7 +690,7 @@ const CASTER = {
 	rogue: 'none',
 	sorcerer: 'full',
 	warlock: 'pact',
-	wizard: 'full'
+	wizard: 'full',
 };
 const SPELL_ABIL = {
 	bard: 'cha',
@@ -700,7 +700,7 @@ const SPELL_ABIL = {
 	ranger: 'wis',
 	sorcerer: 'cha',
 	warlock: 'cha',
-	wizard: 'int'
+	wizard: 'int',
 };
 // SRD 5.1 subclass-choice level (differs from 2024; a known mechanical fact per class).
 const SUBCLASS_LEVEL_2014 = {
@@ -715,7 +715,7 @@ const SUBCLASS_LEVEL_2014 = {
 	rogue: 3,
 	sorcerer: 1,
 	warlock: 1,
-	wizard: 2
+	wizard: 2,
 };
 const HIT_DIE = /Hit Dice:\s*1(d\d+)/i;
 const norm = (s) =>
@@ -790,7 +790,7 @@ function convertClasses() {
 		featureRows = [];
 	// slice each class by DOCUMENT position (array order ≠ doc order), end at next class
 	const pos = CLASS_IDS.map((id) => ({ id, at: html.indexOf(`id='${id}'`) })).sort(
-		(a, b) => a.at - b.at
+		(a, b) => a.at - b.at,
 	);
 	const endOf = new Map();
 	pos.forEach((p, k) => endOf.set(p.id, pos[k + 1] ? pos[k + 1].id : 'Backgrounds'));
@@ -817,7 +817,7 @@ function convertClasses() {
 			const nn = norm(h.name);
 			if (!nn) continue;
 			const hit = tableRows.find(
-				(r) => r.text.includes(` ${nn} `) || r.text.includes(`${nn},`) || r.text.includes(`${nn} `)
+				(r) => r.text.includes(` ${nn} `) || r.text.includes(`${nn},`) || r.text.includes(`${nn} `),
 			);
 			if (hit && !levelOf.has(nn)) levelOf.set(nn, hit.lvl);
 		}
@@ -825,11 +825,11 @@ function convertClasses() {
 		// EFX-A7: proficiency prose block ("Armor: … Weapons: … Tools: … Saving Throws: …")
 		const armorCell = (/Armor:\s*([^]*?)(?:Weapons:|Tools:|Saving Throws:|Skills:)/i.exec(text) || [
 			,
-			''
+			'',
 		])[1];
 		const weaponCell = (/Weapons:\s*([^]*?)(?:Tools:|Saving Throws:|Skills:)/i.exec(text) || [
 			,
-			''
+			'',
 		])[1];
 		const savesM = /Saving Throws:\s*([A-Za-z, ]+?)(?:Skills|Tools|Armor|$)/i.exec(text);
 		const saves = savesM
@@ -845,8 +845,8 @@ function convertClasses() {
 							constitution: 'con',
 							intelligence: 'int',
 							wisdom: 'wis',
-							charisma: 'cha'
-						})[a]
+							charisma: 'cha',
+						})[a],
 				)
 			: [];
 		const skM = /Skills:\s*Choose (any )?(\w+)(?:\s+skills?)?(?:\s+from\s+([^.]+))?/i.exec(text);
@@ -868,7 +868,7 @@ function convertClasses() {
 		const caster = CASTER[id];
 		const subKw =
 			/\b(\d+)(?:st|nd|rd|th)[^|]*?(Primal Path|Divine Domain|Bard College|Druid Circle|Martial Archetype|Monastic Tradition|Sacred Oath|Ranger [A-Za-z]*|Roguish Archetype|Sorcerous Origin|Otherworldly Patron|Arcane Tradition)/i.exec(
-				text
+				text,
 			);
 
 		classRows.push({
@@ -890,7 +890,7 @@ function convertClasses() {
 			weapon_profs: parseWeaponProfs2014(weaponCell, weaponResolver),
 			armor_profs: parseArmorProfs2014(armorCell),
 			subclass_level: String(SUBCLASS_LEVEL_2014[id]),
-			asi_levels: asiLevels.join(',')
+			asi_levels: asiLevels.join(','),
 		});
 
 		// feature descriptions = h3/h4 headings with a level found in the progression table
@@ -911,7 +911,7 @@ function convertClasses() {
 				level: lvl,
 				resource: '',
 				subclass_id: '',
-				expertise_slots: authoredExpertise.get(fid) ?? '' // N4a grants (Rogue L1+L6, Bard L3+L10)
+				expertise_slots: authoredExpertise.get(fid) ?? '', // N4a grants (Rogue L1+L6, Bard L3+L10)
 			});
 		}
 	}
@@ -928,7 +928,7 @@ function convertClasses() {
 		Thief: 'rogue',
 		DraconicBloodline: 'sorcerer',
 		TheFiend: 'warlock',
-		SchoolofEvocation: 'wizard'
+		SchoolofEvocation: 'wizard',
 	};
 	const subclassRows = [];
 	for (const [sid, classId] of Object.entries(SUBCLASSES)) {
@@ -948,7 +948,7 @@ function convertClasses() {
 			text_en: '',
 			text_uk: '',
 			effects: '',
-			class_id: classId
+			class_id: classId,
 		});
 		for (const e of htmlEntries(block).filter((e) => e.level === 4)) {
 			const ftext = e.paras.map(strip).filter(Boolean).join('\n');
@@ -966,7 +966,7 @@ function convertClasses() {
 				level: lm ? Number(lm[1]) : SUBCLASS_LEVEL_2014[classId],
 				resource: '',
 				subclass_id: subId,
-				expertise_slots: authoredExpertise.get(`${subId}_${slug(e.name)}`) ?? ''
+				expertise_slots: authoredExpertise.get(`${subId}_${slug(e.name)}`) ?? '',
 			});
 		}
 	}
@@ -995,9 +995,9 @@ function convertClasses() {
 			'weapon_profs',
 			'armor_profs',
 			'subclass_level',
-			'asi_levels'
+			'asi_levels',
 		],
-		classRows
+		classRows,
 	);
 	writeCsv(
 		out('class_features_srd.csv'),
@@ -1014,14 +1014,14 @@ function convertClasses() {
 			'level',
 			'resource',
 			'subclass_id',
-			'expertise_slots'
+			'expertise_slots',
 		],
-		featureRows
+		featureRows,
 	);
 	writeCsv(
 		out('subclasses_srd.csv'),
 		['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id'],
-		subclassRows
+		subclassRows,
 	);
 	console.log('classes:', classRows.map((c) => `${c.id}(${c.hit_die},${c.caster})`).join(' '));
 	return featureRows.length;
@@ -1061,7 +1061,7 @@ const ITEM_COLS = [
 	'str_min',
 	'stealth_disadvantage',
 	'attunement',
-	'rarity'
+	'rarity',
 ];
 const irow = (o) => ({
 	systems: '5e',
@@ -1081,7 +1081,7 @@ const irow = (o) => ({
 	stealth_disadvantage: 'false',
 	attunement: 'false',
 	rarity: '',
-	...o
+	...o,
 });
 const wlb = (s) => {
 	const m = /([\d.]+)/.exec(s);
@@ -1096,7 +1096,7 @@ function convertItems() {
 		'Simple Melee Weapons': 'simple melee',
 		'Simple Ranged Weapons': 'simple ranged',
 		'Martial Melee Weapons': 'martial melee',
-		'Martial Ranged Weapons': 'martial ranged'
+		'Martial Ranged Weapons': 'martial ranged',
 	};
 	let wc = sectionCells(html, 'Weapons'),
 		wtype = '',
@@ -1126,8 +1126,8 @@ function convertItems() {
 				weight_lb: wlb(weight),
 				properties: p === '-' ? '' : p,
 				damage: dm ? `${dm[1]} ${dm[2].toLowerCase()}` : '',
-				range: (/range\s+(\d+\/\d+)/i.exec(props || '') || [, ''])[1]
-			})
+				range: (/range\s+(\d+\/\d+)/i.exec(props || '') || [, ''])[1],
+			}),
 		);
 		nW++;
 	}
@@ -1137,7 +1137,7 @@ function convertItems() {
 		'Light Armor': 'light',
 		'Medium Armor': 'medium',
 		'Heavy Armor': 'heavy',
-		Shield: 'shield'
+		Shield: 'shield',
 	};
 	let ac = sectionCells(html, 'Armor'),
 		acat = '',
@@ -1170,8 +1170,8 @@ function convertItems() {
 				ac: (/(\d+)/.exec(acv || '') || [, ''])[1],
 				armor_dex_cap: isShield ? '' : acat === 'light' ? '' : acat === 'medium' ? '2' : '0',
 				str_min: (/(\d+)/.exec(str || '') || [, ''])[1],
-				stealth_disadvantage: String(/disadvantage/i.test(stealth || ''))
-			})
+				stealth_disadvantage: String(/disadvantage/i.test(stealth || '')),
+			}),
 		);
 		nA++;
 	}
@@ -1194,8 +1194,8 @@ function convertItems() {
 				category: 'gear',
 				item_type: 'adventuring gear',
 				cost: strip(td[1]),
-				weight_lb: wlb(strip(td[2]))
-			})
+				weight_lb: wlb(strip(td[2])),
+			}),
 		);
 		nG++;
 	}
@@ -1234,8 +1234,8 @@ function convertItems() {
 				category,
 				item_type: type,
 				attunement: String(/requires attunement/.test(inner)),
-				rarity: slug(rar)
-			})
+				rarity: slug(rar),
+			}),
 		);
 		nM++;
 	}
@@ -1257,5 +1257,5 @@ const nFeat = convertFeats();
 const nItems = convertItems(); // before classes: EFX-A7 weapon-prof resolver reads the item set
 const nFeatures = convertClasses();
 console.log(
-	`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nSpecOpt} subraces, ${nLang} languages, ${nBg} backgrounds, ${nFeat} feats, 12 classes, ${nFeatures} class features, ${nItems} items`
+	`SRD 5.1: ${nSpells} spells, ${nMonsters} monsters, ${nCond} conditions, ${nSpec} species, ${nSpecOpt} subraces, ${nLang} languages, ${nBg} backgrounds, ${nFeat} feats, 12 classes, ${nFeatures} class features, ${nItems} items`,
 );

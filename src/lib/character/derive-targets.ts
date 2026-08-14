@@ -16,7 +16,7 @@ const SAVE_TARGETS = ['saves', ...ABILITIES.map((a) => `save.${a}`)];
 const SKILL_TARGETS = [
 	'skills',
 	'ability_checks', // group alias for skill checks (2014 exhaustion L1: disadvantage on ability checks)
-	...Object.keys(SKILL_ABILITY).map((s) => `skill.${s}`)
+	...Object.keys(SKILL_ABILITY).map((s) => `skill.${s}`),
 ];
 const NUMERIC_TARGETS = new Set<string>([
 	...ABILITIES,
@@ -38,7 +38,7 @@ const NUMERIC_TARGETS = new Set<string>([
 	// passive Stealth…), not only the three senses the strip highlights.
 	...Object.keys(SKILL_ABILITY).map((s) => `passive.${s}`),
 	...SAVE_TARGETS,
-	...SKILL_TARGETS
+	...SKILL_TARGETS,
 ]);
 // roll-matched kinds (advantage/disadvantage/auto_*/reroll/min_die): the keys `matchesTarget` fans
 // out over — `damage` included for GWF-style `reroll:damage`.
@@ -48,14 +48,14 @@ const ROLL_TARGETS = new Set<string>([
 	'initiative',
 	'd20_tests',
 	...SAVE_TARGETS,
-	...SKILL_TARGETS
+	...SKILL_TARGETS,
 ]);
 // grant_proficiency canonical target (token-parser strips `skill.` → bare skill id; saves keep
 // `save.`; a bare ability grants that save).
 const PROFICIENCY_TARGETS = new Set<string>([
 	...ABILITIES,
 	...ABILITIES.map((a) => `save.${a}`),
-	...Object.keys(SKILL_ABILITY)
+	...Object.keys(SKILL_ABILITY),
 ]);
 
 /** G4 `halve` targets — the only two stats RAW ever halves (2014 exhaustion L2 speed, L4 hp-max). */

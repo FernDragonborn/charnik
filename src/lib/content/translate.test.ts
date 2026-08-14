@@ -6,7 +6,7 @@ import {
 	saveLocStatus,
 	locStatus,
 	translationCoverage,
-	COVERAGE
+	COVERAGE,
 } from './translate';
 import { LOC_STATUS } from './schemas';
 import { stampWithHash } from './hash';
@@ -22,7 +22,7 @@ async function seed(s: MemoryStorage, rows: string[]): Promise<void> {
 	const body = [HEAD, ...rows].join('\n');
 	const dir = new Map<MetaKey, string>([
 		['source', 'SRD 5.2.1'],
-		['license', 'CC-BY-4.0']
+		['license', 'CC-BY-4.0'],
 	]);
 	await s.write('a/spells_srd.csv', await stampWithHash(dir, body));
 }
@@ -40,7 +40,7 @@ describe('saveTranslation', () => {
 		await saveTranslation(s, row, 'uk', {
 			name: 'Вогняна куля',
 			text: 'Промінь',
-			material: 'гуано'
+			material: 'гуано',
 		});
 
 		const after = await loadContent(s, ['a']);
@@ -64,7 +64,7 @@ describe('saveTranslation', () => {
 		expect(g2.get('spell:SRD 5.2.1:fireball')!.data.name_uk).toBe('Вогняна');
 
 		await expect(
-			saveTranslation(s, { root: 'a', file: 'spells_srd.csv', id: 'ghost' }, 'uk', { name: 'x' })
+			saveTranslation(s, { root: 'a', file: 'spells_srd.csv', id: 'ghost' }, 'uk', { name: 'x' }),
 		).rejects.toThrow();
 	});
 });
@@ -74,7 +74,7 @@ describe('translationCoverage', () => {
 		expect(translationCoverage({}, 'uk')).toBe(COVERAGE.none);
 		expect(translationCoverage({ name_uk: 'Вогняна' }, 'uk')).toBe(COVERAGE.partial);
 		expect(translationCoverage({ name_uk: 'Вогняна', text_uk: 'Промінь' }, 'uk')).toBe(
-			COVERAGE.done
+			COVERAGE.done,
 		);
 	});
 });
@@ -90,13 +90,13 @@ describe('locStatus', () => {
 	});
 	it('an explicit status wins — machine / reviewed are only ever explicit', () => {
 		expect(locStatus({ loc_status_uk: 'machine', name_uk: 'x' }, 'en', 'uk')).toBe(
-			LOC_STATUS.machine
+			LOC_STATUS.machine,
 		);
 		expect(locStatus({ loc_status_uk: 'reviewed' }, 'en', 'uk')).toBe(LOC_STATUS.reviewed);
 	});
 	it('a junk stored value is not trusted — falls through to the derived default', () => {
 		expect(locStatus({ loc_status_uk: 'garbage', text_uk: 'y' }, 'en', 'uk')).toBe(
-			LOC_STATUS.started
+			LOC_STATUS.started,
 		);
 	});
 });
@@ -123,8 +123,8 @@ describe('saveLocStatus', () => {
 				s,
 				{ root: 'a', file: 'spells_srd.csv', id: 'ghost' },
 				'uk',
-				LOC_STATUS.reviewed
-			)
+				LOC_STATUS.reviewed,
+			),
 		).rejects.toThrow();
 	});
 });

@@ -13,7 +13,7 @@ import {
 	ORDERED_ENUMS,
 	type Node,
 	type Ast,
-	type BinOp
+	type BinOp,
 } from './expression-parser';
 
 /* ─────────────────────────── value type ─────────────────────────── */

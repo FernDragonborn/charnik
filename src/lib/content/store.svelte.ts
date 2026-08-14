@@ -17,7 +17,7 @@ export const content = $state<{ graph: ContentGraph | null; guid: string; error:
 	guid: '',
 	// A load failure is recorded here (not thrown) so the loading screen can SHOW it instead of hanging
 	// forever on "Loading content…" — the only way to diagnose a broken content bundle on an installed app.
-	error: null
+	error: null,
 });
 
 /** Load the graph into the store: on success rotate the guid + clear the error; on failure record it
@@ -47,7 +47,7 @@ export async function loadContentStore(): Promise<ContentGraph | null> {
 /** Drop the cache, reload, and rotate the guid → all derived state recomputes with no page reload.
  *  `remount` also drops the storage instance so a changed data folder is re-resolved. */
 export async function reloadContent(
-	opts: { remount?: boolean } = {}
+	opts: { remount?: boolean } = {},
 ): Promise<ContentGraph | null> {
 	if (opts.remount) {
 		resetUserStorage();

@@ -13,7 +13,7 @@ const STAMPED = lf(
 	'#content-hash: xxh64:0000000000000000',
 	'#content-source: SRD 5.2.1',
 	'#content-license: CC-BY-4.0',
-	'#content-updated_at: 2020-01-01'
+	'#content-updated_at: 2020-01-01',
 );
 
 describe('restampText', () => {
@@ -68,7 +68,7 @@ describe('restampText', () => {
 
 	it('bumps the date when the caller says so — the drift case', async () => {
 		const d = parseContentDirectives(
-			await restampText(STAMPED, { updated_at: '2026-08-14' })
+			await restampText(STAMPED, { updated_at: '2026-08-14' }),
 		).directives;
 		expect(d.get('updated_at')).toBe('2026-08-14');
 	});
@@ -81,14 +81,14 @@ describe('restampFiles', () => {
 		await s.write('content/a/two.csv', LF_BODY);
 		const failures = await restampFiles(s, ['content/a/one.csv', 'content/a/two.csv'], {
 			'content/a/one.csv': { source: 'One' },
-			'content/a/two.csv': { source: 'Two' }
+			'content/a/two.csv': { source: 'Two' },
 		});
 		expect(failures).toEqual([]);
 		expect(parseContentDirectives(await s.read('content/a/one.csv')).directives.get('source')).toBe(
-			'One'
+			'One',
 		);
 		expect(parseContentDirectives(await s.read('content/a/two.csv')).directives.get('source')).toBe(
-			'Two'
+			'Two',
 		);
 	});
 

@@ -103,7 +103,7 @@ const ABIL = {
 	constitution: 'con',
 	intelligence: 'int',
 	wisdom: 'wis',
-	charisma: 'cha'
+	charisma: 'cha',
 };
 /** "Intelligence, Wisdom, Charisma" / "Strength and Constitution" → "int,wis,cha". */
 export function abilities(s) {
@@ -169,7 +169,7 @@ export function dedupeIds(rows) {
 export function writeCsv(path, columns, rows) {
 	const sources = [...new Set(rows.map((r) => r.source).filter(Boolean))];
 	const systems = [
-		...new Set(rows.flatMap((r) => String(r.systems ?? '').split(',')).filter(Boolean))
+		...new Set(rows.flatMap((r) => String(r.systems ?? '').split(',')).filter(Boolean)),
 	];
 	if (sources.length !== 1)
 		throw new Error(`${path}: expected exactly one source, got [${sources.join(', ')}]`);
@@ -203,14 +203,14 @@ export function writeCsv(path, columns, rows) {
 		`#content-systems: ${systems.join(',')}`,
 		`#content-url: ${SRD_URL}`,
 		`#content-license: CC-BY-4.0`, // both SRD 5.1 and 5.2.1 ship under CC-BY-4.0
-		`#content-id: ${contentId}`
+		`#content-id: ${contentId}`,
 	];
 	const hash = `xxh64:${h64ToString(hashInput(hashedHeader.join('\n') + '\n' + body))}`;
 	if (prevHash === hash) return; // unchanged → don't touch (no id regen, no date bump)
 
 	// the stamp is written FIRST, so verifying a file is "drop the top line and hash the rest"
 	const header = [`#content-hash: ${hash}`, ...hashedHeader, `#content-${dateKey}: ${TODAY}`].join(
-		'\n'
+		'\n',
 	);
 	writeFileSync(path, (hasBom ? '﻿' : '') + header + '\n' + body, 'utf8');
 }
@@ -219,7 +219,7 @@ export function writeCsv(path, columns, rows) {
 export function assertCount(label, got, expected) {
 	const ok = got === expected;
 	console.log(
-		`${ok ? '✓' : '✗'} ${label}: ${got}${expected != null ? ` (expected ${expected})` : ''}`
+		`${ok ? '✓' : '✗'} ${label}: ${got}${expected != null ? ` (expected ${expected})` : ''}`,
 	);
 	if (!ok) throw new Error(`${label}: emitted ${got} rows but source has ${expected}`);
 }

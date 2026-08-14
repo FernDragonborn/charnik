@@ -11,7 +11,7 @@
 		'spells_homebrew.csv':
 			'id,name_en,text_en,level,school\ntest_bolt,Test Bolt,A bolt.,1,evocation\n',
 		'monsters_homebrew.csv':
-			'#content-source: My Bestiary\n#content-url: https://example.test/bestiary\n#content-systems: 5.5e\n#content-author: Fern\nid,name_en,cr\ntest_slime,Test Slime,1\n'
+			'#content-source: My Bestiary\n#content-url: https://example.test/bestiary\n#content-systems: 5.5e\n#content-author: Fern\nid,name_en,cr\ntest_slime,Test Slime,1\n',
 	};
 	const issues = Object.entries(files)
 		.map(([file, csv]) => checkFileMeta(file, parseContentDirectives(csv).directives))

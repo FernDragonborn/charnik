@@ -11,7 +11,7 @@ import {
 	repointDraft,
 	findStaleDrafts,
 	discardDrafts,
-	type DraftTarget
+	type DraftTarget,
 } from './store';
 
 const translateTarget: DraftTarget = {
@@ -19,7 +19,7 @@ const translateTarget: DraftTarget = {
 	type: 'spell',
 	source: 'SRD 5.2.1',
 	id: 'fireball',
-	locale: 'uk'
+	locale: 'uk',
 };
 
 describe('draft store', () => {
@@ -69,7 +69,7 @@ describe('draft store', () => {
 	it('effectiveId points a translate/editor draft at its row; an add draft has none', () => {
 		expect(draftEffectiveId(translateTarget)).toBe('spell:SRD 5.2.1:fireball');
 		expect(
-			draftEffectiveId({ kind: 'editor', type: 'monster', source: 'SRD 5.1', id: 'goblin' })
+			draftEffectiveId({ kind: 'editor', type: 'monster', source: 'SRD 5.1', id: 'goblin' }),
 		).toBe('monster:SRD 5.1:goblin');
 		expect(draftEffectiveId({ kind: 'add', type: 'spell', addGuid: 'g' })).toBeNull();
 	});
@@ -82,7 +82,7 @@ describe('draft store', () => {
 			type: 'spell',
 			source: 'phb',
 			id: 'gone',
-			locale: 'uk'
+			locale: 'uk',
 		};
 		await writeDraft(s, goneTarget, { name: 'orphan', text: '' }); // row missing
 		await writeDraft(s, { kind: 'add', type: 'spell', addGuid: 'g1' }, { id: 'x' }); // add: never orphan
@@ -100,7 +100,7 @@ describe('draft store', () => {
 		await writeDraft(
 			s,
 			{ kind: 'editor', type: 'monster', source: 'SRD 5.1', id: 'goblin' },
-			{ name: 'safe' }
+			{ name: 'safe' },
 		);
 		await writeDraft(s, { kind: 'add', type: 'spell', addGuid: 'g1' }, { id: 'x' });
 
@@ -117,14 +117,14 @@ describe('draft store', () => {
 			type: 'spell',
 			source: 'phb',
 			id: 'gone',
-			locale: 'uk'
+			locale: 'uk',
 		};
 		const to: DraftTarget = {
 			kind: 'translate',
 			type: 'spell',
 			source: 'SRD 5.1',
 			id: 'chill_touch',
-			locale: 'uk'
+			locale: 'uk',
 		};
 		await writeDraft(s, from, { name: 'Дотик холоду', text: 'опис' }, 'xxh64:z');
 		expect(await repointDraft(s, from, to)).toBe('moved');
@@ -141,14 +141,14 @@ describe('draft store', () => {
 			type: 'spell',
 			source: 'phb',
 			id: 'gone',
-			locale: 'uk'
+			locale: 'uk',
 		};
 		const to: DraftTarget = {
 			kind: 'translate',
 			type: 'spell',
 			source: 'SRD 5.1',
 			id: 'chill_touch',
-			locale: 'uk'
+			locale: 'uk',
 		};
 		await writeDraft(s, from, { name: 'incoming', text: '' });
 		await writeDraft(s, to, { name: 'existing', text: '' });
@@ -188,14 +188,14 @@ describe('draft store', () => {
 			type: 'spell',
 			source: 'phb',
 			id: 'x',
-			locale: 'uk'
+			locale: 'uk',
 		};
 		const to: DraftTarget = {
 			kind: 'translate',
 			type: 'spell',
 			source: 'srd',
 			id: 'y',
-			locale: 'uk'
+			locale: 'uk',
 		};
 		expect(await repointDraft(s, from, to)).toBe('missing');
 	});

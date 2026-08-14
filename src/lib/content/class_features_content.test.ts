@@ -27,7 +27,7 @@ function rollFormula(
 	system: '5e' | '5.5e',
 	classId: string,
 	level: number,
-	rollId: string
+	rollId: string,
 ): string | undefined {
 	const sheet = deriveSheet(charOf(source, system, classId, level), graph);
 	return sheet.facts.rolls.find((r) => r.id === rollId)?.formula;
@@ -37,7 +37,7 @@ function rageMax(
 	graph: ContentGraph,
 	source: string,
 	system: '5e' | '5.5e',
-	level: number
+	level: number,
 ): number {
 	const sheet = deriveSheet(barbarian(source, system, level), graph);
 	return sheet.resources.find((r) => r.id === 'rage')?.max ?? -1;
@@ -86,7 +86,7 @@ describe('shipped class features · Persistent Rage regain (RECHARGE slice 2)', 
 		c.play.inCombat = true;
 		c.play.round = 1;
 		const inCombat = deriveSheet(c, g).resourceOptions.find(
-			(o) => o.id === 'barbarian_persistent_rage_regain'
+			(o) => o.id === 'barbarian_persistent_rage_regain',
 		);
 		expect(inCombat?.available).toBe(true);
 	});
@@ -115,7 +115,7 @@ describe('shipped class feature · Uncanny Metabolism MULTI-action regain (RECHA
 		c.play.inCombat = true;
 		c.play.round = 1;
 		const inCombat = deriveSheet(c, g).resourceOptions.find(
-			(o) => o.id === 'monk_uncanny_metabolism_regain'
+			(o) => o.id === 'monk_uncanny_metabolism_regain',
 		);
 		expect(inCombat?.available).toBe(true);
 	});
@@ -123,7 +123,7 @@ describe('shipped class feature · Uncanny Metabolism MULTI-action regain (RECHA
 	it('5.5e: the Martial-Arts die in the multi-action heal scales with monk level (d10 + 11 at L11)', async () => {
 		const opt = deriveSheet(
 			charOf('SRD 5.2.1', '5.5e', 'monk', 11),
-			await loadEdition('srd-2024')
+			await loadEdition('srd-2024'),
 		).resourceOptions.find((o) => o.id === 'monk_uncanny_metabolism_regain');
 		expect(opt?.action).toBe('restore_resource:focus;heal:1d10+11');
 	});
@@ -134,7 +134,7 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 	const raging = (g: ContentGraph, source: string, system: '5e' | '5.5e', level: number) => {
 		const c = barbarian(source, system, level);
 		c.play.effects = [
-			{ iid: 'r1', label: 'Rage', effects: ['apply_condition:rage'], positive: true }
+			{ iid: 'r1', label: 'Rage', effects: ['apply_condition:rage'], positive: true },
 		];
 		return deriveSheet(characterSchema.parse(c), g);
 	};
@@ -144,14 +144,14 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 		async (dir, source, system) => {
 			const sheet = deriveSheet(
 				barbarian(source, system as '5e' | '5.5e', 1),
-				await loadEdition(dir)
+				await loadEdition(dir),
 			);
 			const opt = sheet.resourceOptions.find((o) => o.id === 'barbarian_rage_enter');
 			expect(opt?.resourceId).toBe('rage');
 			expect(opt?.action).toBe('apply_effect:rage');
 			expect(opt?.actionType).toBe('bonus_action');
 			expect(opt?.cost).toBe(1);
-		}
+		},
 	);
 
 	it.each([['srd-2024', 'SRD 5.2.1', '5.5e'] as const, ['srd-2014', 'SRD 5.1', '5e'] as const])(
@@ -160,7 +160,7 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 			const s = raging(await loadEdition(dir), source, system as '5e' | '5.5e', 1);
 			expect([...s.defenses.resist].sort()).toEqual(['bludgeoning', 'piercing', 'slashing']);
 			expect(s.facts.advantage.some((a) => a.target === 'save.str')).toBe(true);
-		}
+		},
 	);
 
 	it('5.5e: rage damage bonus scales +2 → +3 (L9) → +4 (L16) as a damage roll fact', async () => {
@@ -192,7 +192,7 @@ describe('shipped class feature · Perfect Focus auto-regain on initiative (rega
 		expect(s.facts.initiativeRegain).toContainEqual({
 			id: 'focus',
 			upTo: 4,
-			source: 'Perfect Focus'
+			source: 'Perfect Focus',
 		});
 	});
 	it('5.5e: a monk below level 15 has no initiative-regain', async () => {
@@ -217,7 +217,7 @@ describe('shipped class feature · Bardic Inspiration pool + Font of Inspiration
 
 	for (const [system, source, dir] of [
 		['5.5e', 'SRD 5.2.1', 'srd-2024'],
-		['5e', 'SRD 5.1', 'srd-2014']
+		['5e', 'SRD 5.1', 'srd-2014'],
 	] as const) {
 		it(`${system}: uses = CHA modifier, on a LONG rest before Font of Inspiration`, async () => {
 			const s = deriveSheet(bard(source, system, 4, 16), await loadEdition(dir));
@@ -242,7 +242,7 @@ describe('shipped class feature · Bardic Inspiration pool + Font of Inspiration
 		expect(s.facts.initiativeRegain).toContainEqual({
 			id: 'bardic_inspiration',
 			upTo: 2,
-			source: 'Superior Inspiration'
+			source: 'Superior Inspiration',
 		});
 	});
 
@@ -251,7 +251,7 @@ describe('shipped class feature · Bardic Inspiration pool + Font of Inspiration
 		expect(s.facts.initiativeRegain).toContainEqual({
 			id: 'bardic_inspiration',
 			upTo: 1,
-			source: 'Superior Inspiration'
+			source: 'Superior Inspiration',
 		});
 	});
 });
@@ -275,7 +275,7 @@ describe('shipped feature rollables · grant_roll scaling dice (EFX-E4/ROLL)', (
 describe('shipped Monk resource + spend-options (piece 3)', () => {
 	it.each([
 		['srd-2024', 'SRD 5.2.1', '5.5e', 'focus'] as const,
-		['srd-2014', 'SRD 5.1', '5e', 'ki'] as const
+		['srd-2014', 'SRD 5.1', '5e', 'ki'] as const,
 	])(
 		'%s: a monk 5 has %s points = level, with Flurry/Patient/Step options at cost 1',
 		async (dir, source, system, resourceId) => {
@@ -286,10 +286,10 @@ describe('shipped Monk resource + spend-options (piece 3)', () => {
 			expect(opts.map((o) => o.id).sort()).toEqual([
 				'flurry_of_blows',
 				'patient_defense',
-				'step_of_the_wind'
+				'step_of_the_wind',
 			]);
 			expect(opts.every((o) => o.cost === 1 && o.actionType === 'bonus_action')).toBe(true);
-		}
+		},
 	);
 });
 
@@ -349,7 +349,7 @@ describe('shipped feat effects (real content)', () => {
 			c.build.feats = feats;
 			if (armored)
 				c.build.inventory = [
-					{ item: 'item:SRD 5.2.1:leather_armor', qty: 1, equipped: true, attuned: false }
+					{ item: 'item:SRD 5.2.1:leather_armor', qty: 1, equipped: true, attuned: false },
 				];
 			return deriveSheet(characterSchema.parse(c), g).ac;
 		};
@@ -400,7 +400,7 @@ describe('N4a · shipped expertise_slots grants (real content)', () => {
 			expertiseBudget(
 				[{ classId: `class:${source}:${classId}`, subclassId: null, level }],
 				g,
-				system
+				system,
 			);
 
 	it('2024: Rogue 2@L1 +2@L6, Bard 2@L2 +2@L9, Ranger 2@L9', async () => {
@@ -426,10 +426,10 @@ describe('N4a · shipped expertise_slots grants (real content)', () => {
 		const budget = expertiseBudget(
 			[
 				{ classId: 'class:SRD 5.2.1:rogue', subclassId: null, level: 6 },
-				{ classId: 'class:SRD 5.2.1:bard', subclassId: null, level: 10 }
+				{ classId: 'class:SRD 5.2.1:bard', subclassId: null, level: 10 },
 			],
 			g,
-			'5.5e'
+			'5.5e',
 		);
 		expect(budget).toBe(8); // Rogue L6 (2+2) + Bard 2024 L10 (2+2)
 	});

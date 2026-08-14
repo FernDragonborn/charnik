@@ -30,7 +30,7 @@ import {
 	setRepoBranch,
 	unDismissMissing,
 	UPDATE_MODE,
-	type PackConfigData
+	type PackConfigData,
 } from '../packs.svelte';
 import { discoverContentRoots, packNameOf } from '../disk';
 import { renameFileRoot } from '../sources.svelte';
@@ -40,7 +40,7 @@ import {
 	packTooLarge,
 	parseGithubRepo,
 	type GithubRepo,
-	type RemotePack
+	type RemotePack,
 } from './github';
 import { diffPack, hasWrites, rowsRemovedBy, charactersReferencing } from './diff';
 import {
@@ -54,7 +54,7 @@ import {
 	removeStaging,
 	rollbackPack,
 	stagePackUpdate,
-	type ApplyResult
+	type ApplyResult,
 } from './install';
 import {
 	updates,
@@ -67,7 +67,7 @@ import {
 	checkFailure,
 	fetchRepo,
 	type PendingUpdate,
-	type DiscoveredPack
+	type DiscoveredPack,
 } from './update-state.svelte';
 // re-exported: `updates` is the state every panel and test reads, and moving its implementation is
 // no reason to move the import everyone writes (§6.1).
@@ -85,7 +85,7 @@ export const dueRepos = (cfg: PackConfigData = packConfig, now = Date.now()): st
  * respect both. Silent on failure by design: an offline user can do nothing about it.
  */
 export function checkNow(
-	opts: { manual?: boolean; repo?: string; fetcher?: RemoteFetcher } = {}
+	opts: { manual?: boolean; repo?: string; fetcher?: RemoteFetcher } = {},
 ): Promise<void> {
 	return serialised(() => runCheck(opts));
 }
@@ -130,7 +130,7 @@ async function runCheck(opts: {
 async function checkOneRepo(
 	fetcher: RemoteFetcher,
 	repo: string,
-	budget?: PrefetchBudget
+	budget?: PrefetchBudget,
 ): Promise<void> {
 	const stored = packConfig.repos[repo]?.etag;
 	const res = await checkRepo(fetcher, repo, stored);
@@ -180,7 +180,7 @@ async function checkOneRepo(
 				fetcher,
 				repo: parsed,
 				diff: pending.diff,
-				...(budget === undefined ? {} : { budget })
+				...(budget === undefined ? {} : { budget }),
 			});
 			pending.staged = await isStaged(getUserStorage(), pending.diff);
 		}
@@ -215,7 +215,7 @@ async function describeUpdate(
 	repo: string,
 	remote: RemotePack,
 	/** the folder it occupies HERE, which the repo has no say in */
-	localPack: string
+	localPack: string,
 ): Promise<PendingUpdate | null> {
 	// Before anything downstream can fetch a byte. Both callers reach the network from here — a check
 	// in `download` mode stages the whole diff immediately, and a restored offer is one click from
@@ -240,7 +240,7 @@ async function describeUpdate(
 		...(await whoBreaks(removedRows)),
 		plugins: pluginsIn(remote),
 		pluginsChanged: pluginsTouchedBy(diff),
-		staged: await isStaged(storage, diff)
+		staged: await isStaged(storage, diff),
 	};
 }
 
@@ -254,7 +254,7 @@ async function describeUpdate(
  * missing reference, while an unfinished translation of a deleted row has nothing left to attach to.
  */
 async function whoBreaks(
-	removedRows: string[]
+	removedRows: string[],
 ): Promise<{ affected: { slug: string; keys: string[] }[]; affectedDrafts: string[] }> {
 	if (removedRows.length === 0) return { affected: [], affectedDrafts: [] };
 	const storage = getUserStorage();
@@ -264,7 +264,7 @@ async function whoBreaks(
 		affectedDrafts: drafts
 			.map((d) => draftEffectiveId(d.target))
 			.filter((eid): eid is string => eid !== null)
-			.sort()
+			.sort(),
 	};
 }
 
@@ -279,7 +279,7 @@ export function applyUpdate(
 		acceptRowRemovals?: boolean;
 		acceptSourceClaim?: boolean;
 		fetcher?: RemoteFetcher;
-	} = {}
+	} = {},
 ): Promise<ApplyResult | null> {
 	// shares the check's queue: it ends by pruning the same shared cache, and a check running
 	// alongside it would be rebuilding the very set that prune consults
@@ -293,7 +293,7 @@ async function runApply(
 		acceptRowRemovals?: boolean;
 		acceptSourceClaim?: boolean;
 		fetcher?: RemoteFetcher;
-	}
+	},
 ): Promise<ApplyResult | null> {
 	clearErrors();
 	const pending = updates.pending[pack];
@@ -310,8 +310,8 @@ async function runApply(
 			removeDeleted: opts.removeDeleted === true,
 			graph: content.graph,
 			acceptRowRemovals: opts.acceptRowRemovals === true,
-			acceptSourceClaim: opts.acceptSourceClaim === true
-		})
+			acceptSourceClaim: opts.acceptSourceClaim === true,
+		}),
 	);
 	if (res.error !== undefined) {
 		fail(res.error);
@@ -368,7 +368,7 @@ async function runRestore(): Promise<void> {
 		const pending = await describeUpdate(
 			remembered.repo,
 			{ pack: remoteNameOf(pack, entry), files: remembered.files },
-			pack
+			pack,
 		);
 		// applied (or hand-edited) in the meantime: the disk already matches, so there is no offer
 		if (pending) updates.pending[pack] = pending;
@@ -409,7 +409,7 @@ export const autoCheckAllowed = (): boolean => packConfig.updates !== UPDATE_MOD
  */
 export async function discoverPacks(
 	repo: string,
-	opts: { fetcher?: RemoteFetcher } = {}
+	opts: { fetcher?: RemoteFetcher } = {},
 ): Promise<void> {
 	updates.checking = true;
 	clearErrors();
@@ -450,7 +450,7 @@ export async function discoverPacks(
 					// somebody's. Folder names are not the publisher's to reserve, and two repos both
 					// publishing `srd-2024` is a thing to resolve rather than refuse — so the second one
 					// gets a suggestion the user can overrule before installing.
-					localName: already ?? freeLocalPackName(remote.pack, onDisk)
+					localName: already ?? freeLocalPackName(remote.pack, onDisk),
 				};
 			});
 		// "nothing here" is the wrong thing to say when we found something and refused it for size
@@ -473,7 +473,7 @@ export async function discoverPacks(
  */
 export async function installPack(
 	pack: string,
-	opts: { fetcher?: RemoteFetcher; localName?: string; acceptSourceClaim?: boolean } = {}
+	opts: { fetcher?: RemoteFetcher; localName?: string; acceptSourceClaim?: boolean } = {},
 ): Promise<ApplyResult | null> {
 	clearErrors();
 	const found = updates.discovered.find((d) => d.pack === pack);
@@ -497,7 +497,7 @@ export async function installPack(
 		fail({
 			kind: 'i18n',
 			key: 'settings.packs.folderTaken',
-			values: { name: typed, repo: owner.repo }
+			values: { name: typed, repo: owner.repo },
 		});
 		return null;
 	}
@@ -519,8 +519,8 @@ export async function installPack(
 			// …and the graph, so a pack claiming a source another pack already publishes under is
 			// caught HERE — a first install is exactly when that claim gets made
 			graph: content.graph,
-			acceptSourceClaim: opts.acceptSourceClaim === true
-		})
+			acceptSourceClaim: opts.acceptSourceClaim === true,
+		}),
 	);
 	if (res.error !== undefined) {
 		fail(res.error);
@@ -535,7 +535,7 @@ export async function installPack(
 	// clears it, and re-installing from the URL is the other way the same pack returns.
 	unDismissMissing([local]);
 	updates.discovered = updates.discovered.map((d) =>
-		d.pack === pack ? { ...d, installed: true, localName: local } : d
+		d.pack === pack ? { ...d, installed: true, localName: local } : d,
 	);
 	return res;
 }
@@ -578,8 +578,8 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
 			key: 'settings.packs.folderTaken',
 			values: {
 				name: target,
-				repo: (claimed === undefined ? undefined : packConfig.packs[claimed])?.repo ?? ''
-			}
+				repo: (claimed === undefined ? undefined : packConfig.packs[claimed])?.repo ?? '',
+			},
 		});
 		return false;
 	}

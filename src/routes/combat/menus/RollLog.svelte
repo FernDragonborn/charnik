@@ -31,7 +31,7 @@
 							attack: 0,
 							part: 0,
 							label: `↻ ${combat.savageLabel} — reroll damage, keep the higher`,
-							run: combat.savageReroll
+							run: combat.savageReroll,
 						}
 					: undefined}
 			/>

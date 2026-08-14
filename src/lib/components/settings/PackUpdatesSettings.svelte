@@ -13,7 +13,7 @@
 		setPinned,
 		setUpdateMode,
 		SHIPPED_PACK_REPO,
-		UPDATE_MODE
+		UPDATE_MODE,
 	} from '$lib/content/packs.svelte';
 	import { restoreBundledPacks } from '$lib/content/provider';
 	import { refreshPlugins } from '$lib/effects/plugin-store.svelte';
@@ -26,7 +26,7 @@
 		renamePack,
 		rollbackablePacks,
 		undoUpdate,
-		uninstallPack
+		uninstallPack,
 	} from '$lib/content/remote/updates.svelte';
 	import { content, reloadContent } from '$lib/content/store.svelte';
 	import { FILE_CHANGE } from '$lib/content/remote/diff';
@@ -74,7 +74,7 @@
 			write: changes.filter((c) => c.kind === FILE_CHANGE.added || c.kind === FILE_CHANGE.changed)
 				.length,
 			preserved: changes.filter((c) => c.kind === FILE_CHANGE.preserved).length,
-			removed: changes.filter((c) => c.kind === FILE_CHANGE.removed).length
+			removed: changes.filter((c) => c.kind === FILE_CHANGE.removed).length,
 		};
 	}
 
@@ -188,7 +188,7 @@
 						{#if found.plugins.length > 0}
 							<div class="pack-warn">
 								{$_('settings.packs.carriesPlugins', {
-									values: { list: found.plugins.join(', ') }
+									values: { list: found.plugins.join(', ') },
 								})}
 							</div>
 						{/if}
@@ -218,7 +218,7 @@
 								class="pill-btn accent"
 								onclick={async () => {
 									const res = await installPack(found.pack, {
-										localName: folderName[found.pack] ?? found.localName
+										localName: folderName[found.pack] ?? found.localName,
 									});
 									// it stopped to say this pack publishes under a source name another pack
 									// already uses — the message is in `updates.error`, and the button below is
@@ -236,7 +236,7 @@
 										claimToAccept = null;
 										await installPack(found.pack, {
 											localName: folderName[found.pack] ?? found.localName,
-											acceptSourceClaim: true
+											acceptSourceClaim: true,
 										});
 										await afterDiskChange();
 									}}
@@ -322,7 +322,7 @@
 						{#if lastChecked(entry.repo)}
 							<div class="pack-sub">
 								{$_('settings.packs.lastChecked', {
-									values: { when: new Date(lastChecked(entry.repo) ?? '').toLocaleString() }
+									values: { when: new Date(lastChecked(entry.repo) ?? '').toLocaleString() },
 								})}
 							</div>
 						{/if}
@@ -341,13 +341,13 @@
 								{#if pending.removedRows.length > 0}
 									<div class="pack-warn">
 										{$_('settings.packs.rowsRemoved', {
-											values: { count: pending.removedRows.length }
+											values: { count: pending.removedRows.length },
 										})}
 									</div>
 									{#if pending.affected.length > 0}
 										<div class="pack-warn">
 											{$_('settings.packs.charactersAffected', {
-												values: { who: pending.affected.map((a) => a.slug).join(', ') }
+												values: { who: pending.affected.map((a) => a.slug).join(', ') },
 											})}
 										</div>
 									{/if}
@@ -356,7 +356,7 @@
 									{#if pending.affectedDrafts.length > 0}
 										<div class="pack-warn">
 											{$_('settings.packs.draftsAffected', {
-												values: { who: pending.affectedDrafts.join(', ') }
+												values: { who: pending.affectedDrafts.join(', ') },
 											})}
 										</div>
 									{/if}
@@ -371,13 +371,13 @@
 								{#if pending.pluginsChanged.length > 0}
 									<div class="pack-warn">
 										{$_('settings.packs.changesPlugins', {
-											values: { list: pending.pluginsChanged.join(', ') }
+											values: { list: pending.pluginsChanged.join(', ') },
 										})}
 									</div>
 								{:else if pending.plugins.length > 0}
 									<div class="pack-warn">
 										{$_('settings.packs.carriesPlugins', {
-											values: { list: pending.plugins.join(', ') }
+											values: { list: pending.plugins.join(', ') },
 										})}
 									</div>
 								{/if}
@@ -390,7 +390,7 @@
 								{entriesFrom(pack) === 0
 									? $_('settings.packs.uninstallWarnEmpty', { values: { repo: entry.repo } })
 									: $_('settings.packs.uninstallWarn', {
-											values: { count: entriesFrom(pack), repo: entry.repo }
+											values: { count: entriesFrom(pack), repo: entry.repo },
 										})}
 							</div>
 						{/if}

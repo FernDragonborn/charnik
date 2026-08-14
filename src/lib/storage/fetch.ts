@@ -18,7 +18,7 @@ export class FetchStorage implements Storage {
 	/** `basePrefix` = the app base path ('' on desktop-style root, '/charnik' on Pages). */
 	constructor(
 		private readonly basePrefix = '',
-		private readonly manifestPath = 'content/manifest.json'
+		private readonly manifestPath = 'content/manifest.json',
 	) {}
 
 	private url(path: string): string {
@@ -28,7 +28,7 @@ export class FetchStorage implements Storage {
 	private loadManifest(): Promise<Manifest> {
 		if (!this.manifest) {
 			this.manifest = fetch(this.url(this.manifestPath)).then((r) =>
-				r.ok ? (r.json() as Promise<Manifest>) : { roots: {} }
+				r.ok ? (r.json() as Promise<Manifest>) : { roots: {} },
 			);
 		}
 		return this.manifest;
@@ -60,7 +60,7 @@ export class FetchStorage implements Storage {
 		const files = (m.roots[dir] ?? []).map((name) => ({
 			path: `${dir}/${name}`,
 			name,
-			isDir: false
+			isDir: false,
 		}));
 		// HTTP has no directory listing, so the manifest's KEYS stand in for one: a root that sits
 		// under `dir` reports as a SUBDIRECTORY. Without this, listing `content/` came back empty and
@@ -74,7 +74,7 @@ export class FetchStorage implements Storage {
 		}
 		return [
 			...[...subdirs].map((name) => ({ path: `${prefix}${name}`, name, isDir: true })),
-			...files
+			...files,
 		];
 	}
 

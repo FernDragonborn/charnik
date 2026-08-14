@@ -13,7 +13,7 @@
 		missingBundled,
 		packConfig,
 		SHIPPED_PACK_REPO,
-		UPDATE_MODE
+		UPDATE_MODE,
 	} from '$lib/content/packs.svelte';
 	import { updates } from '$lib/content/remote/updates.svelte';
 	import { FILE_CHANGE } from '$lib/content/remote/diff';
@@ -40,14 +40,14 @@
 		packConfig.packs = {
 			'srd-2024': { repo: REPO },
 			'srd-2014': { repo: REPO, pinned: true },
-			'dark-sun': { repo: THIRD_PARTY }
+			'dark-sun': { repo: THIRD_PARTY },
 		};
 		// FIXED instants, not `Date.now() - 3h`: the panel renders them with `toLocaleString`, so a
 		// relative fixture makes every screenshot differ from the last by a minute and the visual
 		// baseline can never be clean. A preview page seeded for looking at has to be deterministic.
 		packConfig.repos = {
 			[REPO]: { lastCheckedAt: '2026-08-11T09:20:00.000Z', etag: 'W/"a"' },
-			[THIRD_PARTY]: { lastCheckedAt: '2026-08-10T06:20:00.000Z' }
+			[THIRD_PARTY]: { lastCheckedAt: '2026-08-10T06:20:00.000Z' },
 		};
 
 		updates.supported = true;
@@ -56,8 +56,8 @@
 			{
 				kind: 'i18n',
 				key: 'settings.packs.hostUnsupported',
-				values: { repo: 'https://my-server.example/packs' }
-			}
+				values: { repo: 'https://my-server.example/packs' },
+			},
 		];
 		// what a pasted URL turns up, including the code disclosure before you commit
 		updates.discovered = [
@@ -69,7 +69,7 @@
 				files: 7,
 				plugins: ['dark-sun-rules'],
 				installed: false,
-				localName: 'dark-sun'
+				localName: 'dark-sun',
 			},
 			// the COLLISION case: this repo also publishes an `srd-2024`, and the name is already the
 			// shipped pack's — so it is offered a folder beside it, with the name editable first
@@ -81,8 +81,8 @@
 				files: 16,
 				plugins: [],
 				installed: false,
-				localName: 'srd-2024-2'
-			}
+				localName: 'srd-2024-2',
+			},
 		];
 		updates.pending = {
 			'srd-2024': {
@@ -96,15 +96,15 @@
 						{ path: 'srd-2024/feats_srd.csv', kind: FILE_CHANGE.changed },
 						{ path: 'srd-2024/backgrounds_srd.csv', kind: FILE_CHANGE.added },
 						{ path: 'srd-2024/items_srd.csv', kind: FILE_CHANGE.preserved },
-						{ path: 'srd-2024/languages_srd.csv', kind: FILE_CHANGE.removed }
-					]
+						{ path: 'srd-2024/languages_srd.csv', kind: FILE_CHANGE.removed },
+					],
 				},
 				removedRows: ['language:SRD 5.2.1:draconic', 'language:SRD 5.2.1:goblin'],
 				affected: [{ slug: 'karroth', keys: ['language:SRD 5.2.1:draconic'] }],
 				affectedDrafts: ['language:SRD 5.2.1:goblin'],
 				plugins: [],
 				pluginsChanged: [],
-				staged: true
+				staged: true,
 			},
 			'dark-sun': {
 				pack: 'dark-sun',
@@ -112,7 +112,7 @@
 				remote: { pack: 'dark-sun', files: [] },
 				diff: {
 					pack: 'dark-sun',
-					changes: [{ path: 'dark-sun/classes_srd.csv', kind: FILE_CHANGE.added }]
+					changes: [{ path: 'dark-sun/classes_srd.csv', kind: FILE_CHANGE.added }],
 				},
 				removedRows: [],
 				affected: [],
@@ -120,8 +120,8 @@
 				plugins: ['dark-sun-rules'],
 				// the sharper warning: this update rewrites the plugin's code, so it stops until re-approved
 				pluginsChanged: ['dark-sun-rules'],
-				staged: false
-			}
+				staged: false,
+			},
 		};
 	}
 </script>

@@ -14,7 +14,7 @@ import {
 	loadPluginPrefs,
 	savePluginPrefs,
 	pluginManifestSchema,
-	type DiscoveredPlugin
+	type DiscoveredPlugin,
 } from './plugin-host';
 
 const MANIFEST = {
@@ -24,7 +24,7 @@ const MANIFEST = {
 	version: '1.0.0',
 	author: 'Jane Doe',
 	url: 'https://example.com/repo',
-	description: 'Test plugin.'
+	description: 'Test plugin.',
 };
 const MAIN = `globalThis.handlers = { f: { passive() { return {}; } } };`;
 
@@ -53,13 +53,13 @@ describe('discoverPlugins', () => {
 		[
 			'manifest namespace ≠ folder',
 			{ manifest: { ...MANIFEST, namespace: 'other-ns' } },
-			/folder name/
+			/folder name/,
 		],
 		['unknown manifest key', { manifest: { ...MANIFEST, extra: 1 } }, /invalid/],
 		['newer api', { manifest: { ...MANIFEST, api: 2 } }, /invalid/],
 		['http url', { manifest: { ...MANIFEST, url: 'http://x.com' } }, /invalid/],
 		['bad semver', { manifest: { ...MANIFEST, version: 'latest' } }, /invalid/],
-		['oversized main.js', { code: `// ${'x'.repeat(300000)}` }, /256 KB/]
+		['oversized main.js', { code: `// ${'x'.repeat(300000)}` }, /256 KB/],
 	])('%s → not ok, problem surfaced', async (_n, over, problemRe) => {
 		const [p] = await discoverPlugins(await seeded(over));
 		expect(p?.ok).toBe(false);
@@ -111,7 +111,7 @@ describe('discoverPlugins', () => {
 		await s.mkdir('plugins/lonely');
 		await s.write(
 			'plugins/lonely/plugin.json',
-			JSON.stringify({ ...MANIFEST, namespace: 'lonely' })
+			JSON.stringify({ ...MANIFEST, namespace: 'lonely' }),
 		);
 		const [p] = await discoverPlugins(s);
 		expect(p?.ok).toBe(false);
@@ -131,7 +131,7 @@ describe('consentHash — length-prefixed SHA-256 (§6.3)', () => {
 		const base = await consentHash(MAIN, JSON.stringify(MANIFEST));
 		expect(await consentHash(MAIN + ' ', JSON.stringify(MANIFEST))).not.toBe(base);
 		expect(await consentHash(MAIN, JSON.stringify({ ...MANIFEST, url: 'https://evil' }))).not.toBe(
-			base
+			base,
 		);
 	});
 });
@@ -142,7 +142,7 @@ describe('isRunnable — consent × enabled × kill switch', () => {
 		origin: LOCAL_ORIGIN,
 		ok: true,
 		code: MAIN,
-		hash
+		hash,
 	});
 	it('requires consent to the EXACT hash + the enabled flag', () => {
 		const prefs = emptyPrefs();
@@ -168,7 +168,7 @@ describe('pluginManifestSchema strictness', () => {
 	it('optional fields may be absent', () => {
 		expect(
 			pluginManifestSchema.safeParse({ api: 1, namespace: 'x1', name: 'X', version: '0.1.0' })
-				.success
+				.success,
 		).toBe(true);
 	});
 });
@@ -181,7 +181,7 @@ describe('loadPluginPrefs — defensive parsing (corrupt/partial localStorage, P
 		(globalThis as { localStorage?: unknown }).localStorage = {
 			getItem: (k: string) => store[k] ?? null,
 			setItem: (k: string, v: string) => void (store[k] = v),
-			removeItem: (k: string) => void delete store[k]
+			removeItem: (k: string) => void delete store[k],
 		};
 	});
 	afterEach(() => {

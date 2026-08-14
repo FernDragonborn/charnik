@@ -17,7 +17,7 @@ export interface RemoteFetcher {
 	getText(url: string, etag?: string): Promise<FetchResult>;
 	/** GET one file's exact bytes — content files are stored byte-for-byte (BOM/EOL matter). */
 	getBytes(
-		url: string
+		url: string,
 	): Promise<{ kind: 'ok'; bytes: Uint8Array } | { kind: 'error'; message: string }>;
 }
 

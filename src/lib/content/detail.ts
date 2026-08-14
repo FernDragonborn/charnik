@@ -19,7 +19,7 @@ const COMMON = new Set([
 	'text_en',
 	'text_uk',
 	'effects',
-	'higher_level'
+	'higher_level',
 ]);
 
 // nicer meta-cell labels than the auto Title-Case of the raw column name
@@ -35,7 +35,7 @@ const LABELS: Record<string, string> = {
 	casting_time: 'Casting time',
 	higher_level: 'At higher levels',
 	creature_type: 'Type',
-	class_id: 'Class'
+	class_id: 'Class',
 };
 const cap = (s: string) => LABELS[s] ?? titleCase(s);
 const asText = (v: unknown) => (Array.isArray(v) ? v.join(', ') : String(v));
@@ -110,7 +110,7 @@ type SpellData = LoadedRowOf<'spell'>['data'];
 const RES_CHIP: Record<string, SpellModel['resChip']> = {
 	attack: 'hit',
 	save: 'save',
-	auto: 'auto'
+	auto: 'auto',
 };
 
 /** resolution → the full label; a save shows its ability. */
@@ -136,7 +136,7 @@ function spellDamage(d: SpellData): { dice: string; dmgType: string } {
 function buildSpell(
 	row: LoadedRowOf<'spell'>,
 	availableTo?: SpellModel['availableTo'],
-	locale = 'en'
+	locale = 'en',
 ): SpellModel {
 	const d = row.data;
 	const res = d.resolution ?? 'none';
@@ -158,9 +158,9 @@ function buildSpell(
 				'Duration',
 				conc && !/concentration/i.test(d.duration ?? '')
 					? `Concentration · ${d.duration}`
-					: (d.duration ?? '')
+					: (d.duration ?? ''),
 			],
-			['Components', components]
+			['Components', components],
 		].filter(([, v]) => v) as [string, string][],
 		classes: (d.classes ?? '')
 			.split(',')
@@ -169,7 +169,7 @@ function buildSpell(
 			.join(', '),
 		...(availableTo ? { availableTo } : {}),
 		higherLevel: localized(d, 'higher_level', locale),
-		material: localized(d, 'material', locale)
+		material: localized(d, 'material', locale),
 	};
 }
 
@@ -190,7 +190,7 @@ export function compendiumEntryPath(
 	base: string,
 	type: string,
 	source: string,
-	id: string
+	id: string,
 ): string {
 	return `${base}/compendium/${type}/${encodeURIComponent(source)}/${id}`;
 }
@@ -200,7 +200,7 @@ export function compendiumEntryPath(
  *  a DISPLAY map only. Unknown sources (homebrew, third-party) pass through unchanged. */
 const SOURCE_LABELS: Record<string, string> = {
 	'SRD 5.1': 'D&D 5e',
-	'SRD 5.2.1': 'D&D 5.5e'
+	'SRD 5.2.1': 'D&D 5.5e',
 };
 export function sourceLabel(source: string): string {
 	return SOURCE_LABELS[source] ?? source;
@@ -237,7 +237,7 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 			ab: a.toUpperCase(),
 			score,
 			mod: signed(abilityModifier(score)),
-			...(save == null ? {} : { save: signed(save) })
+			...(save == null ? {} : { save: signed(save) }),
 		};
 	});
 	const hasSaves = ABILITY_IDS.some((a) => {
@@ -263,13 +263,13 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 			...pair('Senses', 'senses'),
 			...pair('Skills', 'skills'),
 			...pair('Languages', 'languages'),
-			...pair('Gear', 'gear')
+			...pair('Gear', 'gear'),
 		],
 		defenses: [
 			...pair('Resistances', 'resistances'),
 			...pair('Immunities', 'immunities'),
-			...pair('Vulnerabilities', 'vulnerabilities')
-		]
+			...pair('Vulnerabilities', 'vulnerabilities'),
+		],
 	};
 }
 
@@ -279,7 +279,7 @@ export function buildDetail(
 	row: LoadedRow,
 	type: ContentType,
 	availableTo?: SpellModel['availableTo'],
-	locale = 'en'
+	locale = 'en',
 ): DetailModel {
 	const d = row.data;
 	// fields every type's DetailModel shares (title/prose/attribution); the branch adds its own
@@ -292,7 +292,7 @@ export function buildDetail(
 		// declares its own `#content-source`, so one stamping `SRD 5.2.1` renders as "D&D 5.5e" exactly
 		// like the shipped SRD does. The folder it came from is the fact the app actually knows.
 		source: `Source: ${sourceLabel(row.source)} · ${packNameOf(row.root)}`,
-		license: row.license ?? ''
+		license: row.license ?? '',
 	};
 	if (row.type === 'monster')
 		return { ...common, eyebrow: '', meta: [], higherLevel: '', monster: buildMonster(row) };
@@ -302,13 +302,13 @@ export function buildDetail(
 			...common,
 			eyebrow: [
 				Number(spell.level) === 0 ? 'Cantrip' : `Level ${spell.level}`,
-				spell.school ? cap(String(spell.school)) : ''
+				spell.school ? cap(String(spell.school)) : '',
 			]
 				.filter(Boolean)
 				.join(' · '),
 			meta: [],
 			higherLevel: localized(d, 'higher_level', locale),
-			spell: buildSpell(row, availableTo, locale)
+			spell: buildSpell(row, availableTo, locale),
 		};
 	}
 	// generic types carry no ability-score columns (only monster does, handled above), so the meta
@@ -321,7 +321,7 @@ export function buildDetail(
 		...common,
 		eyebrow: cap(String(type)),
 		meta,
-		higherLevel: localized(d, 'higher_level', locale)
+		higherLevel: localized(d, 'higher_level', locale),
 	};
 }
 
@@ -347,12 +347,12 @@ export function entryMeta(row: LoadedRow): string {
 	const parts = [
 		'category' in data ? String(data.category ?? '') : '',
 		'item_type' in data ? String(data.item_type ?? '') : '',
-		'rarity' in data ? String(data.rarity ?? '') : ''
+		'rarity' in data ? String(data.rarity ?? '') : '',
 	].filter(Boolean);
 	return parts
 		.filter(
 			(p, i) =>
-				!parts.some((q, j) => j !== i && q !== p && q.toLowerCase().includes(p.toLowerCase()))
+				!parts.some((q, j) => j !== i && q !== p && q.toLowerCase().includes(p.toLowerCase())),
 		)
 		.join(' · ');
 }
@@ -362,7 +362,7 @@ export function entryMeta(row: LoadedRow): string {
  *  stays identical; the caller supplies the grouping and the name source (localized vs English). */
 export function toEntryGroups(
 	groups: { label: string; rows: LoadedRow[] }[],
-	nameOf: (row: LoadedRow) => string
+	nameOf: (row: LoadedRow) => string,
 ): { label: string; entries: Entry<LoadedRow>[] }[] {
 	return groups.map((g) => ({
 		label: g.label,
@@ -371,15 +371,15 @@ export function toEntryGroups(
 			name: nameOf(r),
 			meta: entryMeta(r),
 			edition: editionLabel(r.systems),
-			row: r
-		}))
+			row: r,
+		})),
 	}));
 }
 
 /** Group entries for the list — spells by level, everything else as one flat group. */
 export function groupEntries(
 	rows: LoadedRow[],
-	type: ContentType
+	type: ContentType,
 ): { label: string; rows: LoadedRow[] }[] {
 	if (type !== 'spell') return [{ label: '', rows }];
 	const byLevel = new Map<number, LoadedRow[]>();
@@ -393,6 +393,6 @@ export function groupEntries(
 		.sort((a, b) => a - b)
 		.map((level) => ({
 			label: level === 0 ? 'Cantrips' : `${ordinal(level)} level`,
-			rows: byLevel.get(level) ?? []
+			rows: byLevel.get(level) ?? [],
 		}));
 }

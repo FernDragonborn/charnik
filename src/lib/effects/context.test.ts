@@ -4,7 +4,7 @@ import {
 	withSpellcastingMod,
 	withCastSlot,
 	type BuildVars,
-	type PlayVars
+	type PlayVars,
 } from './context';
 import { parseToken, resolveEffectValue, EFFECT_KIND, type ActiveEffect } from './token-parser';
 import { applyEffects, collectFacts, matchesTarget } from './apply';
@@ -17,7 +17,7 @@ const build: BuildVars = {
 	abilityScores: { str: 16, dex: 14, con: 14, int: 10, wis: 12, cha: 8 },
 	classLevels: { fighter: 5, rogue: 2 },
 	spellcastingMod: 0,
-	baseSpeed: 30
+	baseSpeed: 30,
 };
 const ctx = makeExprContext(build);
 
@@ -96,7 +96,7 @@ describe('makeExprContext · play variables (EXPR-3 half)', () => {
 			resourceMax: { ki: 6 },
 			armorType: 'heavy',
 			size: 'large',
-			...over
+			...over,
 		});
 
 	it('resolves the raw play numbers and flags', () => {
@@ -133,16 +133,16 @@ describe('resolveEffectValue · literal vs expression', () => {
 		expect(resolveEffectValue(parseToken('flat_bonus:ac+2'), ctx)).toEqual({ amount: 2 });
 		expect(resolveEffectValue(parseToken('flat_bonus:save.dex-1'), ctx)).toEqual({ amount: -1 });
 		expect(resolveEffectValue(parseToken('flat_bonus:damage+1d6'), ctx)).toEqual({
-			diceFormula: '1d6'
+			diceFormula: '1d6',
 		});
 	});
 
 	it('evaluates an expression value, flooring the numeric result (5e round-down)', () => {
 		expect(resolveEffectValue(parseToken('flat_bonus:ac+ceil(level/2)'), ctx)).toEqual({
-			amount: 4
+			amount: 4,
 		});
 		expect(resolveEffectValue(parseToken('flat_bonus:saves+max(1,cha_mod)'), ctx)).toEqual({
-			amount: 1
+			amount: 1,
 		});
 		// division floors at the final stat value: 7/2 = 3.5 → 3
 		expect(resolveEffectValue(parseToken('flat_bonus:ac+level/2'), ctx)).toEqual({ amount: 3 });
@@ -151,9 +151,9 @@ describe('resolveEffectValue · literal vs expression', () => {
 	it('evaluates a dice-count expression to a roller formula (Sneak Attack)', () => {
 		// class_level.rogue = 2 → ceil(2/2)=1 → 1d6
 		expect(
-			resolveEffectValue(parseToken('flat_bonus:damage+ceil(class_level.rogue/2)d6'), ctx)
+			resolveEffectValue(parseToken('flat_bonus:damage+ceil(class_level.rogue/2)d6'), ctx),
 		).toEqual({
-			diceFormula: '1d6'
+			diceFormula: '1d6',
 		});
 	});
 
@@ -167,7 +167,7 @@ describe('resolveEffectValue · literal vs expression', () => {
 	it('handles a negated expression value', () => {
 		// exhaustion is a play var → 0 here → -2*0 = 0
 		expect(resolveEffectValue(parseToken('flat_bonus:speed-2*exhaustion'), ctx)).toEqual({
-			amount: 0
+			amount: 0,
 		});
 	});
 });
@@ -176,7 +176,7 @@ describe('applyEffects · expression contributions fold through the seam', () =>
 	it('folds a resolved expression bonus into the stat value + trace', () => {
 		const base = computed([{ source: 'base', layer: 'base', op: 'add', amount: 10 }]);
 		const effects: ActiveEffect[] = [
-			{ source: 'Scaling Ward', layer: 'feature', tokens: ['flat_bonus:ac+ceil(level/2)'] }
+			{ source: 'Scaling Ward', layer: 'feature', tokens: ['flat_bonus:ac+ceil(level/2)'] },
 		];
 		const out = applyEffects('ac', base, effects, ctx);
 		expect(out.value).toBe(14); // 10 + ceil(7/2)=4
@@ -186,7 +186,7 @@ describe('applyEffects · expression contributions fold through the seam', () =>
 	it('surfaces an unresolved expression as an inert note, not a fold', () => {
 		const base = computed([{ source: 'base', layer: 'base', op: 'add', amount: 10 }]);
 		const effects: ActiveEffect[] = [
-			{ source: 'Broken', layer: 'feature', tokens: ['flat_bonus:ac+nope_var'] }
+			{ source: 'Broken', layer: 'feature', tokens: ['flat_bonus:ac+nope_var'] },
 		];
 		const out = applyEffects('ac', base, effects, ctx);
 		expect(out.value).toBe(10); // unchanged
@@ -198,7 +198,7 @@ describe('collectFacts · resource pools with expression max (Ki = monk level)',
 	it('resolves a computed pool max against the ctx', () => {
 		const monkCtx = makeExprContext({ ...build, classLevels: { monk: 6 } });
 		const effects: ActiveEffect[] = [
-			{ source: 'Monk', layer: 'feature', tokens: ['grant_resource:ki:class_level.monk:short'] }
+			{ source: 'Monk', layer: 'feature', tokens: ['grant_resource:ki:class_level.monk:short'] },
 		];
 		const res = collectFacts(effects, monkCtx).resources;
 		expect(res).toHaveLength(1);
@@ -207,12 +207,12 @@ describe('collectFacts · resource pools with expression max (Ki = monk level)',
 
 	it('keeps a literal-max pool working (backward compatible)', () => {
 		const effects: ActiveEffect[] = [
-			{ source: 'Barbarian', layer: 'feature', tokens: ['grant_resource:rage:3:long'] }
+			{ source: 'Barbarian', layer: 'feature', tokens: ['grant_resource:rage:3:long'] },
 		];
 		expect(collectFacts(effects, ctx).resources[0]).toMatchObject({
 			id: 'rage',
 			max: 3,
-			recharge: 'long'
+			recharge: 'long',
 		});
 	});
 });
@@ -239,10 +239,14 @@ describe('L1 · d20_tests group target', () => {
 			resources: {},
 			resourceMax: {},
 			armorType: 'none',
-			size: 'medium'
+			size: 'medium',
 		});
 		const effects: ActiveEffect[] = [
-			{ source: 'Exhaustion', layer: 'condition', tokens: ['flat_bonus:d20_tests+(-2*exhaustion)'] }
+			{
+				source: 'Exhaustion',
+				layer: 'condition',
+				tokens: ['flat_bonus:d20_tests+(-2*exhaustion)'],
+			},
 		];
 		const base = (n: number) => computed([{ source: 'b', layer: 'base', op: 'add', amount: n }]);
 		expect(applyEffects('save.dex', base(5), effects, exhaustedCtx).value).toBe(-1); // 5 − 6
@@ -256,12 +260,12 @@ describe('L1 · roll-manipulation vocab (reroll / min_die)', () => {
 		expect(parseToken('reroll:damage:2')).toMatchObject({
 			kind: EFFECT_KIND.reroll,
 			target: 'damage',
-			amount: 2
+			amount: 2,
 		});
 		expect(parseToken('min_die:skill.stealth:10')).toMatchObject({
 			kind: EFFECT_KIND.minDie,
 			target: 'skill.stealth',
-			amount: 10
+			amount: 10,
 		});
 		expect(parseToken('reroll:damage').kind).toBe('unknown'); // malformed → inert, not dropped
 	});
@@ -269,7 +273,7 @@ describe('L1 · roll-manipulation vocab (reroll / min_die)', () => {
 	it('surfaces them as structured roll-mod facts (recognized, not inert, not folded)', () => {
 		const effects: ActiveEffect[] = [
 			{ source: 'GWF', layer: 'feature', tokens: ['reroll:damage:2'] },
-			{ source: 'Reliable Talent', layer: 'feature', tokens: ['min_die:skills:10'] }
+			{ source: 'Reliable Talent', layer: 'feature', tokens: ['min_die:skills:10'] },
 		];
 		const facts = collectFacts(effects);
 		expect(facts.rerolls).toEqual([{ target: 'damage', value: 2 }]);
@@ -284,7 +288,7 @@ describe('collectFacts · step() tables and the `inf` unlimited max (Rage end-to
 		'grant_resource:rage:step(class_level.barbarian, 1->2, 3->3, 6->4, 12->5, 17->6, 20->inf):long';
 	const barb = (lvl: number) => makeExprContext({ ...build, classLevels: { barbarian: lvl } });
 	const rageEffects: ActiveEffect[] = [
-		{ source: 'Barbarian', layer: 'feature', tokens: [rageToken] }
+		{ source: 'Barbarian', layer: 'feature', tokens: [rageToken] },
 	];
 
 	it('resolves the table max at low/mid levels', () => {
@@ -296,7 +300,7 @@ describe('collectFacts · step() tables and the `inf` unlimited max (Rage end-to
 	it('resolves Unlimited (Infinity) at 20 — `inf` passes the cost-cap clamp', () => {
 		expect(collectFacts(rageEffects, barb(20)).resources[0]).toMatchObject({
 			id: 'rage',
-			max: Infinity
+			max: Infinity,
 		});
 	});
 
@@ -309,7 +313,7 @@ describe('collectFacts · step() tables and the `inf` unlimited max (Rage end-to
 	it('largest-max fold prefers Infinity (multiclass-style re-grant)', () => {
 		const both: ActiveEffect[] = [
 			{ source: 'A', layer: 'feature', tokens: ['grant_resource:rage:3:long'] },
-			{ source: 'B', layer: 'feature', tokens: [rageToken] }
+			{ source: 'B', layer: 'feature', tokens: [rageToken] },
 		];
 		expect(collectFacts(both, barb(20)).resources[0]).toMatchObject({ max: Infinity, source: 'B' });
 	});

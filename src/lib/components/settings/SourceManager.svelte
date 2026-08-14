@@ -11,7 +11,7 @@
 		setFilesEnabled,
 		toggleFile,
 		toggleSource,
-		filePath as filePathOf
+		filePath as filePathOf,
 	} from '$lib/content/sources.svelte';
 
 	const graph = $derived(content.graph);
@@ -37,7 +37,7 @@
 				...g,
 				files: [...g.files.entries()]
 					.map(([path, count]) => ({ path, count }))
-					.sort((a, b) => a.path.localeCompare(b.path))
+					.sort((a, b) => a.path.localeCompare(b.path)),
 			}))
 			.sort((a, b) => a.pack.localeCompare(b.pack) || a.source.localeCompare(b.source));
 	});
@@ -84,7 +84,7 @@
 						onclick={() =>
 							setFilesEnabled(
 								g.files.map((f) => f.path),
-								groupOff(g.files)
+								groupOff(g.files),
 							)}
 					>
 						<span class="knob"></span>

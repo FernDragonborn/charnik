@@ -13,7 +13,7 @@
 		label,
 		variant = 'pill',
 		title,
-		children
+		children,
 	}: {
 		/** Dice formula to roll / prefill the tray ("8d6", "1d20"). */
 		formula: string;

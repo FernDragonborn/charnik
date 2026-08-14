@@ -24,7 +24,7 @@ export type DefenseBucket = 'immune' | 'resist' | 'vulnerable' | null;
 export function applyDefense(
 	amount: number,
 	type: string | null,
-	defenses: Defenses
+	defenses: Defenses,
 ): { final: number; bucket: DefenseBucket } {
 	if (!type) return { final: amount, bucket: null };
 	if (defenses.immune.includes(type)) return { final: 0, bucket: 'immune' };
@@ -44,7 +44,7 @@ export function effectiveHpMax(manualMax: number | null, sheetMaxHp: Computed): 
 	if (manualMax === null) return sheetMaxHp.value;
 	const contribs: Contribution[] = [
 		{ source: 'Manual max', layer: 'base', op: 'set', amount: manualMax },
-		...sheetMaxHp.trace.filter((c) => HP_EFFECT_LAYERS.has(c.layer))
+		...sheetMaxHp.trace.filter((c) => HP_EFFECT_LAYERS.has(c.layer)),
 	];
 	return computed(contribs, { min: 1 }).value;
 }

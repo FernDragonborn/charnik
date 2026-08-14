@@ -18,7 +18,7 @@ import {
 	pruneCache,
 	recoverInterruptedApply,
 	rollbackPack,
-	stagePackUpdate
+	stagePackUpdate,
 } from './install';
 import type { RemotePack } from './github';
 import type { RemoteFetcher } from './types';
@@ -37,7 +37,7 @@ const fetcherOf = (files: Record<string, string>): RemoteFetcher => ({
 	getBytes: async (url) => {
 		const hit = Object.entries(files).find(([path]) => url.endsWith(path));
 		return hit ? { kind: 'ok', bytes: enc(hit[1]) } : { kind: 'error', message: `404 ${url}` };
-	}
+	},
 });
 
 describe('gitBlobSha', () => {
@@ -59,8 +59,8 @@ describe('diffPack', () => {
 			files: [
 				{ path: 'p/same.csv', sha: await gitBlobSha(enc(same)) },
 				{ path: 'p/old.csv', sha: 'different-sha' },
-				{ path: 'p/new.csv', sha: 'whatever' }
-			]
+				{ path: 'p/new.csv', sha: 'whatever' },
+			],
 		};
 		const diff = await diffPack(s, remote);
 		// `expectLocal` is the disk state each decision was made against — re-checked at apply time
@@ -68,8 +68,8 @@ describe('diffPack', () => {
 			expect.arrayContaining([
 				{ path: 'p/old.csv', kind: FILE_CHANGE.changed },
 				{ path: 'p/new.csv', kind: FILE_CHANGE.added },
-				{ path: 'p/gone.csv', kind: FILE_CHANGE.removed }
-			])
+				{ path: 'p/gone.csv', kind: FILE_CHANGE.removed },
+			]),
 		);
 		expect(diff.changes.find((c) => c.path === 'p/new.csv')?.expectLocal).toBeNull();
 		// an unchanged file produces no entry at all
@@ -82,10 +82,10 @@ describe('diffPack', () => {
 		await s.writeBytes('content/p/mine.csv', enc('#content-hash: xxh64:stale\nid\nMY EDIT'));
 		const diff = await diffPack(s, {
 			pack: 'p',
-			files: [{ path: 'p/mine.csv', sha: 'upstream' }]
+			files: [{ path: 'p/mine.csv', sha: 'upstream' }],
 		});
 		expect(diff.changes).toMatchObject([
-			{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved, sha: 'upstream' }
+			{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved, sha: 'upstream' },
 		]);
 	});
 
@@ -96,7 +96,7 @@ describe('diffPack', () => {
 		await s.writeBytes('content/p/mine.csv', enc('id\nMY OWN FILE'));
 		const diff = await diffPack(s, { pack: 'p', files: [{ path: 'p/mine.csv', sha: 'upstream' }] });
 		expect(diff.changes).toMatchObject([
-			{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved, sha: 'upstream' }
+			{ path: 'p/mine.csv', kind: FILE_CHANGE.preserved, sha: 'upstream' },
 		]);
 	});
 
@@ -108,10 +108,10 @@ describe('diffPack', () => {
 		await s.writeBytes('content/p/plugins/ns/main.js', enc('globalThis.x = 1;'));
 		const diff = await diffPack(s, {
 			pack: 'p',
-			files: [{ path: 'p/plugins/ns/main.js', sha: 'upstream' }]
+			files: [{ path: 'p/plugins/ns/main.js', sha: 'upstream' }],
 		});
 		expect(diff.changes).toMatchObject([
-			{ path: 'p/plugins/ns/main.js', kind: FILE_CHANGE.changed, sha: 'upstream' }
+			{ path: 'p/plugins/ns/main.js', kind: FILE_CHANGE.changed, sha: 'upstream' },
 		]);
 	});
 
@@ -129,7 +129,7 @@ describe('diffPack', () => {
 		await s.writeBytes('content/p/plugins/old-rules/main.js', enc('globalThis.x = 1;'));
 		const diff = await diffPack(s, { pack: 'p', files: [] });
 		expect(diff.changes).toMatchObject([
-			{ path: 'p/plugins/old-rules/main.js', kind: FILE_CHANGE.removed }
+			{ path: 'p/plugins/old-rules/main.js', kind: FILE_CHANGE.removed },
 		]);
 	});
 });
@@ -139,8 +139,8 @@ describe('applyPackUpdate', () => {
 		pack: 'p',
 		changes: [
 			{ path: 'p/a.csv', kind: FILE_CHANGE.added },
-			{ path: 'p/b.csv', kind: FILE_CHANGE.changed }
-		]
+			{ path: 'p/b.csv', kind: FILE_CHANGE.changed },
+		],
 	};
 
 	it('writes every file, byte for byte', async () => {
@@ -149,7 +149,7 @@ describe('applyPackUpdate', () => {
 			storage: s,
 			fetcher: fetcherOf({ 'p/a.csv': 'id\na', 'p/b.csv': 'id\nb' }),
 			repo: REPO,
-			diff
+			diff,
 		});
 		expect(res.error).toBeUndefined();
 		expect(res.written).toEqual(['p/a.csv', 'p/b.csv']);
@@ -163,7 +163,7 @@ describe('applyPackUpdate', () => {
 			storage: s,
 			fetcher: fetcherOf({ 'p/a.csv': 'id\na' }), // b.csv 404s
 			repo: REPO,
-			diff
+			diff,
 		});
 		expect(res.error).toEqual({ kind: 'raw', message: expect.stringMatching(/b\.csv/) });
 		expect(res.written).toEqual([]);
@@ -180,15 +180,15 @@ describe('applyPackUpdate', () => {
 			storage: s,
 			fetcher: fetcherOf({
 				'p/a.csv': '#content-source: New Name\nid\na',
-				'p/b.csv': '#content-source: New Name\nid\nb'
+				'p/b.csv': '#content-source: New Name\nid\nb',
 			}),
 			repo: REPO,
-			diff
+			diff,
 		});
 		expect(res.error).toEqual({
 			kind: 'i18n',
 			key: 'settings.packs.sourceChanged',
-			values: { pack: 'p', from: 'Old Name', to: 'New Name' }
+			values: { pack: 'p', from: 'Old Name', to: 'New Name' },
 		});
 		expect(res.written).toEqual([]);
 		expect(await s.read('content/p/a.csv')).toContain('Old Name'); // untouched
@@ -201,7 +201,7 @@ describe('applyPackUpdate', () => {
 	   whatever they like there — so a pack stamping the SRD's tag renders as official beside it. */
 	describe('a pack claiming a source another pack already publishes under', () => {
 		const installed = {
-			rows: [{ type: 'spell', source: 'SRD 5.2.1', id: 'fireball', root: 'content/srd-2024' }]
+			rows: [{ type: 'spell', source: 'SRD 5.2.1', id: 'fireball', root: 'content/srd-2024' }],
 		} as ContentGraph;
 		const impostor = () =>
 			fetcherOf({ 'p/a.csv': '#content-source: SRD 5.2.1\nid\na', 'p/b.csv': 'id\nb' });
@@ -213,7 +213,7 @@ describe('applyPackUpdate', () => {
 				fetcher: impostor(),
 				repo: REPO,
 				diff,
-				graph: installed
+				graph: installed,
 			});
 
 			expect(res.sourceClaim).toEqual({ source: 'SRD 5.2.1', owner: 'srd-2024' });
@@ -230,7 +230,7 @@ describe('applyPackUpdate', () => {
 				repo: REPO,
 				diff,
 				graph: installed,
-				acceptSourceClaim: true
+				acceptSourceClaim: true,
 			});
 
 			expect(res.error).toBeUndefined();
@@ -240,7 +240,7 @@ describe('applyPackUpdate', () => {
 		it('says nothing when the pack UPDATING is the one that owns the tag', async () => {
 			const s = new MemoryStorage();
 			const own = {
-				rows: [{ type: 'spell', source: 'SRD 5.2.1', id: 'fireball', root: 'content/p' }]
+				rows: [{ type: 'spell', source: 'SRD 5.2.1', id: 'fireball', root: 'content/p' }],
 			} as ContentGraph;
 
 			const res = await applyPackUpdate({
@@ -248,7 +248,7 @@ describe('applyPackUpdate', () => {
 				fetcher: impostor(),
 				repo: REPO,
 				diff,
-				graph: own
+				graph: own,
 			});
 
 			expect(res.sourceClaim).toBeUndefined();
@@ -263,10 +263,10 @@ describe('applyPackUpdate', () => {
 			storage: s,
 			fetcher: fetcherOf({
 				'p/a.csv': '#content-source: Same\nid\nnew',
-				'p/b.csv': '#content-source: Same\nid\nb'
+				'p/b.csv': '#content-source: Same\nid\nb',
 			}),
 			repo: REPO,
-			diff
+			diff,
 		});
 		expect(res.error).toBeUndefined();
 		expect(res.written).toEqual(['p/a.csv', 'p/b.csv']);
@@ -278,10 +278,10 @@ describe('applyPackUpdate', () => {
 			storage: s,
 			fetcher: fetcherOf({
 				'p/a.csv': '#content-source: Brand New\nid\na',
-				'p/b.csv': '#content-source: Brand New\nid\nb'
+				'p/b.csv': '#content-source: Brand New\nid\nb',
 			}),
 			repo: REPO,
-			diff
+			diff,
 		});
 		expect(res.error).toBeUndefined();
 		expect(res.written).toHaveLength(2);
@@ -292,7 +292,7 @@ describe('applyPackUpdate', () => {
 		await s.writeBytes('content/p/gone.csv', enc('id\ngone'));
 		const withRemoval = {
 			pack: 'p',
-			changes: [{ path: 'p/gone.csv', kind: FILE_CHANGE.removed }]
+			changes: [{ path: 'p/gone.csv', kind: FILE_CHANGE.removed }],
 		};
 		const args = { storage: s, fetcher: fetcherOf({}), repo: REPO, diff: withRemoval };
 		const kept = await applyPackUpdate(args);
@@ -315,9 +315,9 @@ describe('apply is a folder swap', () => {
 			{
 				path,
 				kind: FILE_CHANGE.changed,
-				expectLocal: await gitBlobSha(await s.readBytes(`content/${path}`))
-			}
-		]
+				expectLocal: await gitBlobSha(await s.readBytes(`content/${path}`)),
+			},
+		],
 	});
 
 	it('keeps every file the update never mentioned — a README, notes, a preserved edit', async () => {
@@ -330,7 +330,7 @@ describe('apply is a folder swap', () => {
 			storage: s,
 			fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
 			repo: REPO,
-			diff: await diffFor(s, 'p/a.csv')
+			diff: await diffFor(s, 'p/a.csv'),
 		});
 
 		expect(res.error).toBeUndefined();
@@ -349,7 +349,7 @@ describe('apply is a folder swap', () => {
 			storage: s,
 			fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
 			repo: REPO,
-			diff
+			diff,
 		});
 
 		expect(res.error).toMatchObject({ key: 'settings.packs.localChanged' });
@@ -377,8 +377,8 @@ describe('apply is a folder swap', () => {
 				storage: s,
 				fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
 				repo: REPO,
-				diff
-			})
+				diff,
+			}),
 		).rejects.toThrow('EBUSY');
 
 		s.rename = realRename;
@@ -394,7 +394,7 @@ describe('apply is a folder swap', () => {
 			storage: s,
 			fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
 			repo: REPO,
-			diff: await diffFor(s, 'p/a.csv')
+			diff: await diffFor(s, 'p/a.csv'),
 		});
 		expect(await hasRollback(s, 'p')).toBe(true);
 
@@ -414,7 +414,7 @@ describe('rows that would vanish from inside a changed file', () => {
 			source: 'Test',
 			id,
 			root: 'content/p',
-			file: 'spells.csv'
+			file: 'spells.csv',
 		}) as LoadedRow;
 	const graph = { rows: [row('fireball'), row('shield')] } as ContentGraph;
 	const applying = async (s: MemoryStorage, csv: string, opts = {}) =>
@@ -424,7 +424,7 @@ describe('rows that would vanish from inside a changed file', () => {
 			repo: REPO,
 			diff: { pack: 'p', changes: [{ path: 'p/spells.csv', kind: FILE_CHANGE.changed }] },
 			graph,
-			...opts
+			...opts,
 		});
 
 	it('stops and names them instead of writing — nothing is lost silently', async () => {
@@ -519,7 +519,7 @@ describe('recovering an interrupted apply', () => {
 		let sawInFlight = false;
 		const watching: RemoteFetcher = {
 			getText: async () => ({ kind: 'error', message: 'not used' }),
-			getBytes: async () => ({ kind: 'ok', bytes: enc('id\nnew') })
+			getBytes: async () => ({ kind: 'ok', bytes: enc('id\nnew') }),
 		};
 		// the write phase is where the staging folder exists; sample the flag from inside it
 		const spy = s.writeBytes.bind(s);
@@ -532,7 +532,7 @@ describe('recovering an interrupted apply', () => {
 			storage: s,
 			fetcher: watching,
 			repo: REPO,
-			diff: { pack: 'p', changes: [{ path: 'p/a.csv', kind: FILE_CHANGE.changed }] }
+			diff: { pack: 'p', changes: [{ path: 'p/a.csv', kind: FILE_CHANGE.changed }] },
 		});
 
 		expect(sawInFlight).toBe(true);
@@ -549,7 +549,7 @@ describe('recovering an interrupted apply', () => {
 			storage: s,
 			fetcher: fetcherOf({ 'p/a.csv': 'id\nnew' }),
 			repo: REPO,
-			diff: { pack: 'p', changes: [{ path: 'p/a.csv', kind: FILE_CHANGE.changed }] }
+			diff: { pack: 'p', changes: [{ path: 'p/a.csv', kind: FILE_CHANGE.changed }] },
 		});
 
 		let sawInFlight = false;
@@ -571,11 +571,11 @@ describe('the pre-download staging cache', () => {
 	const bodyA = 'id\na';
 	const offline: RemoteFetcher = {
 		getText: async () => ({ kind: 'error', message: 'offline' }),
-		getBytes: async () => ({ kind: 'error', message: 'offline' })
+		getBytes: async () => ({ kind: 'error', message: 'offline' }),
 	};
 	const stagedDiff = async () => ({
 		pack: 'p',
-		changes: [{ path: 'p/a.csv', kind: FILE_CHANGE.added, sha: await gitBlobSha(enc(bodyA)) }]
+		changes: [{ path: 'p/a.csv', kind: FILE_CHANGE.added, sha: await gitBlobSha(enc(bodyA)) }],
 	});
 
 	it('a staged update applies with NO network at all', async () => {
@@ -585,7 +585,7 @@ describe('the pre-download staging cache', () => {
 			storage: s,
 			fetcher: fetcherOf({ 'p/a.csv': bodyA }),
 			repo: REPO,
-			diff
+			diff,
 		});
 		expect(await isStaged(s, diff)).toBe(true);
 
@@ -612,7 +612,7 @@ describe('the pre-download staging cache', () => {
 			fetcher: fetcherOf({ 'p/a.csv': bodyA }),
 			repo: REPO,
 			diff,
-			budget
+			budget,
 		});
 
 		expect(complete).toBe(false);
@@ -622,7 +622,7 @@ describe('the pre-download staging cache', () => {
 			storage: s,
 			fetcher: fetcherOf({ 'p/a.csv': bodyA }),
 			repo: REPO,
-			diff
+			diff,
 		});
 		expect(res.error).toBeUndefined();
 		expect(await s.read('content/p/a.csv')).toBe(bodyA);
@@ -638,7 +638,7 @@ describe('the pre-download staging cache', () => {
 			fetcher: fetcherOf({ 'p/a.csv': bodyA }),
 			repo: REPO,
 			diff,
-			budget
+			budget,
 		});
 
 		expect(budget.left).toBe(1024 - enc(bodyA).byteLength);
@@ -654,7 +654,7 @@ describe('the pre-download staging cache', () => {
 			storage: s,
 			fetcher: fetcherOf({ 'p/a.csv': bodyA }),
 			repo: REPO,
-			diff
+			diff,
 		});
 		expect(res.error).toBeUndefined();
 		expect(await s.read('content/p/a.csv')).toBe(bodyA); // re-fetched, not the corrupt copy
@@ -668,12 +668,12 @@ describe('the pre-download staging cache', () => {
 			storage: s,
 			fetcher: fetcherOf({ 'p/a.csv': 'id\nSOMETHING ELSE' }),
 			repo: REPO,
-			diff: await stagedDiff()
+			diff: await stagedDiff(),
 		});
 		expect(res.error).toEqual({
 			kind: 'i18n',
 			key: 'settings.packs.contentMoved',
-			values: { path: 'p/a.csv' }
+			values: { path: 'p/a.csv' },
 		});
 		expect(await s.exists('content/p/a.csv')).toBe(false);
 	});
@@ -692,7 +692,7 @@ describe('the impact preview — what a removal would break', () => {
 	const row = (file: string, id: string): LoadedRow =>
 		({ root: 'content/p', file, type: 'class', source: 'SRD 5.2.1', id }) as LoadedRow;
 	const graph = {
-		rows: [row('gone.csv', 'barbarian'), row('stays.csv', 'bard')]
+		rows: [row('gone.csv', 'barbarian'), row('stays.csv', 'bard')],
 	} as ContentGraph;
 
 	it('lists the rows that would disappear, keyed as a character references them', () => {
@@ -701,16 +701,16 @@ describe('the impact preview — what a removal would break', () => {
 	});
 	it('no removals → nothing to warn about', () => {
 		expect(
-			rowsRemovedBy(graph, { pack: 'p', changes: [{ path: 'p/x.csv', kind: FILE_CHANGE.added }] })
+			rowsRemovedBy(graph, { pack: 'p', changes: [{ path: 'p/x.csv', kind: FILE_CHANGE.added }] }),
 		).toEqual([]);
 	});
 	it('names the characters that reference them, and only those', () => {
 		const characters = [
 			{ slug: 'grog', json: '{"build":{"classes":[{"class":"class:SRD 5.2.1:barbarian"}]}}' },
-			{ slug: 'scanlan', json: '{"build":{"classes":[{"class":"class:SRD 5.2.1:bard"}]}}' }
+			{ slug: 'scanlan', json: '{"build":{"classes":[{"class":"class:SRD 5.2.1:bard"}]}}' },
 		];
 		expect(charactersReferencing(characters, ['class:SRD 5.2.1:barbarian'])).toEqual([
-			{ slug: 'grog', keys: ['class:SRD 5.2.1:barbarian'] }
+			{ slug: 'grog', keys: ['class:SRD 5.2.1:barbarian'] },
 		]);
 	});
 	it('a longer id that merely CONTAINS the key is not a match (quoted comparison)', () => {
@@ -728,9 +728,9 @@ describe('pluginsIn — the installer must disclose code before installing', () 
 					{ path: 'dark-sun/items_srd.csv', sha: 'a' },
 					{ path: 'dark-sun/plugins/my-homebrew/main.js', sha: 'b' },
 					{ path: 'dark-sun/plugins/my-homebrew/plugin.json', sha: 'c' },
-					{ path: 'dark-sun/plugins/other/main.js', sha: 'd' }
-				]
-			})
+					{ path: 'dark-sun/plugins/other/main.js', sha: 'd' },
+				],
+			}),
 		).toEqual(['my-homebrew', 'other']);
 	});
 	it('a data-only pack ships no code', () => {

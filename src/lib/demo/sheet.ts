@@ -32,7 +32,7 @@ const DEMO_EFFECTS: Character['play']['effects'] = [
 		effects: ['flat_bonus:ac+2'],
 		positive: true,
 		durationRounds: 100,
-		startedRound: 0
+		startedRound: 0,
 	},
 	{
 		iid: 'bless',
@@ -40,7 +40,7 @@ const DEMO_EFFECTS: Character['play']['effects'] = [
 		effects: ['flat_bonus:saves+1d4'],
 		positive: true,
 		durationRounds: 10,
-		startedRound: 0
+		startedRound: 0,
 	},
 	{
 		iid: 'bane',
@@ -48,14 +48,14 @@ const DEMO_EFFECTS: Character['play']['effects'] = [
 		effects: ['flat_bonus:saves-1d4'],
 		positive: false,
 		durationRounds: 10,
-		startedRound: 0
+		startedRound: 0,
 	},
 	{
 		iid: 'poisoned',
 		label: 'Poisoned',
 		effects: ['apply_condition:poisoned'],
-		positive: false
-	}
+		positive: false,
+	},
 ];
 
 export function demoCharacter(): Character {
@@ -69,7 +69,7 @@ export function demoCharacter(): Character {
 	// so each carries its subclass (subclass_level = 3 for both).
 	c.build.classes = [
 		{ class: `class:${S}:warlock`, level: 5, subclass: `subclass:${S}:fiend_patron` },
-		{ class: `class:${S}:barbarian`, level: 3, subclass: `subclass:${S}:path_of_the_berserker` }
+		{ class: `class:${S}:barbarian`, level: 3, subclass: `subclass:${S}:path_of_the_berserker` },
 	];
 	// Base scores stay point-buy-legal (8–15); the background's ability boosts layer on top (kept
 	// separate so point-buy validation and the boost's provenance both survive).
@@ -85,12 +85,12 @@ export function demoCharacter(): Character {
 		{ item: `item:${S}:leather_armor`, qty: 1, equipped: true, attuned: false },
 		{ item: `item:${S}:greataxe`, qty: 1, equipped: true, attuned: false }, // barbarian martial
 		{ item: `item:${S}:cloak_of_protection`, qty: 1, equipped: true, attuned: true }, // attunement
-		{ item: `item:${S}:handaxe`, qty: 2, equipped: false, attuned: false }
+		{ item: `item:${S}:handaxe`, qty: 2, equipped: false, attuned: false },
 	];
 	const spell = (id: string, prepared = true, alwaysPrepared = false) => ({
 		spell: `spell:${S}:${id}`,
 		prepared,
-		alwaysPrepared
+		alwaysPrepared,
 	});
 	// Warlock (Pact Magic, CHA) spells — all list `warlock` in the shipped SRD spell rows.
 	c.build.spells = [
@@ -98,7 +98,7 @@ export function demoCharacter(): Character {
 		spell('hex'), // 1st-level concentration — the active concentration below
 		spell('hold_person'),
 		spell('invisibility'),
-		spell('darkness')
+		spell('darkness'),
 	];
 	c.play.hp = { current: 38, max: undefined, temp: 6 };
 	c.play.hitDiceSpent = { d8: 1, d12: 1 }; // mixed pool (warlock d8 + barbarian d12), one of each spent

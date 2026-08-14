@@ -14,7 +14,7 @@ import {
 	clearPluginMemo,
 	type PluginCtx,
 	type PluginEvaluator,
-	type PluginTokenRef
+	type PluginTokenRef,
 } from './plugin-registry';
 import type { ActiveEffect } from './token-parser';
 
@@ -31,8 +31,8 @@ const ctx = (hp = 41): PluginCtx => ({
 			con: { score: 14, mod: 2 },
 			int: { score: 10, mod: 0 },
 			wis: { score: 12, mod: 1 },
-			cha: { score: 8, mod: -1 }
-		}
+			cha: { score: 8, mod: -1 },
+		},
 	},
 	play: {
 		hp,
@@ -40,20 +40,20 @@ const ctx = (hp = 41): PluginCtx => ({
 		tempHp: 0,
 		flags: { isBloodied: false, isRaging: false, isConcentrating: false },
 		conditions: [],
-		resources: { grit: 2 }
-	}
+		resources: { grit: 2 },
+	},
 });
 
 const carrier = (token: string, source = 'Ring'): ActiveEffect => ({
 	source,
 	layer: 'item',
-	tokens: [token]
+	tokens: [token],
 });
 
 /** A minimal counting evaluator — records how many times `has`/`call` actually ran. */
 function counting(
 	result: (t: PluginTokenRef) => unknown,
-	opts?: { readPlay?: boolean }
+	opts?: { readPlay?: boolean },
 ): PluginEvaluator & { calls: number; hasCalls: number } {
 	const ev = {
 		calls: 0,
@@ -67,9 +67,9 @@ function counting(
 			return {
 				ok: true as const,
 				resultJson: JSON.stringify(result(token)),
-				readPlay: opts?.readPlay ?? false
+				readPlay: opts?.readPlay ?? false,
 			};
-		}
+		},
 	};
 	return ev;
 }
@@ -125,7 +125,7 @@ describe('L3 hot-path cost guarantees (work-count, not wall-clock)', () => {
 					/* spin */
 				}
 				return { ok: true, resultJson: '{}', readPlay: false };
-			}
+			},
 		};
 		registerPluginEvaluator(ev);
 		const carriers = Array.from({ length: 50 }, (_, i) => carrier(`plugin:ns1:h${i}`));
@@ -152,8 +152,8 @@ describe('real QuickJS throughput (generous wall-clock floor)', () => {
 				namespace: 'ns1',
 				code: `globalThis.handlers = { h: { passive(t, ctx) {
 					return { contributions: { ac: [{ layer: 'item', op: 'add', amount: ctx.build.level }] } };
-				} } };`
-			}
+				} } };`,
+			},
 		]);
 		disposers.push(ev);
 		const b = JSON.stringify(ctx().build);

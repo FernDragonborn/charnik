@@ -41,7 +41,7 @@ export const THEMEABLE_TOKENS = [
 	'color-danger-soft',
 	'color-overlay',
 	'shadow-1',
-	'shadow-2'
+	'shadow-2',
 ] as const;
 
 /** @public a token name the Themes editor can set (drives the editor form's typing). */
@@ -89,7 +89,7 @@ export function sanitizeThemeTokens(tokens: unknown): Record<string, string> {
 export function themeToCss(theme: CustomTheme): string {
 	if (!isSafeThemeId(theme.id)) return '';
 	const decls = Object.entries(sanitizeThemeTokens(theme.tokens)).map(
-		([t, v]) => `\t--${t}: ${v};`
+		([t, v]) => `\t--${t}: ${v};`,
 	);
 	return decls.length ? `[data-theme='${theme.id}'] {\n${decls.join('\n')}\n}` : '';
 }

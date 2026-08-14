@@ -125,7 +125,7 @@ const LANGUAGES: Record<string, Language> = {
 	// — constructed —
 	eo: { native: 'Esperanto', en: 'Esperanto', uk: 'есперанто' },
 	ia: { native: 'Interlingua', en: 'Interlingua', uk: 'інтерлінгва' },
-	la: { native: 'Latina', en: 'Latin', uk: 'латина' }
+	la: { native: 'Latina', en: 'Latin', uk: 'латина' },
 };
 
 /** Human-readable name for a locale code — its native name, else the code upper-cased (e.g. "EN-GB").

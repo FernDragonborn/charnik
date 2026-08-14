@@ -84,7 +84,7 @@ class EffectGatherer {
 			source: String(row.data.name_en),
 			layer,
 			tokens,
-			...(classId !== undefined ? { classId } : {})
+			...(classId !== undefined ? { classId } : {}),
 		});
 	}
 
@@ -102,7 +102,7 @@ class EffectGatherer {
 		const ctx: ClassCtx = {
 			level: entry.level,
 			classId: classRow.id,
-			subclassId: subclassRow?.type === 'subclass' ? subclassRow.id : ''
+			subclassId: subclassRow?.type === 'subclass' ? subclassRow.id : '',
 		};
 		for (const f of this.graph.featuresForClass(classRow)) this.considerFeature(f, ctx, seen);
 	}
@@ -123,7 +123,7 @@ class EffectGatherer {
 				source: String(f.data.name_en),
 				token: `class_feature:${f.data.id}`,
 				reason:
-					'duplicate class feature from another source — applied once; resolve the collision to choose which'
+					'duplicate class feature from another source — applied once; resolve the collision to choose which',
 			});
 			return;
 		}

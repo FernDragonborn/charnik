@@ -42,7 +42,7 @@ const WORDS = new Set(
 	 hero grid group count date dates dice tray pool prep prof rest heal temp tile trace types used util
 	 wide small span none empty entry field file files input modal popup level total stat stats strip
 	 check ready muted spent bonus boost pick drop over acts hint sub two dim on off die eye set new add
-	 mod res neg pos big rev asi ctrls req opt`.split(/\s+/)
+	 mod res neg pos big rev asi ctrls req opt`.split(/\s+/),
 );
 // cryptic = a single token (no hyphen) that is short (≤6) AND not a plain allow-listed word — catches
 // glued abbreviations like .aedot / .pchip / .iname that a vowel test misses.

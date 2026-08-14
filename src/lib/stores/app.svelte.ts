@@ -47,7 +47,7 @@ function defaults(): AppState {
 		theme: 'dark',
 		customThemes: [],
 		seededBundledIds: [],
-		contentEditingMode: false
+		contentEditingMode: false,
 	};
 }
 
@@ -66,7 +66,7 @@ function load(): AppState {
 		customThemes: Array.isArray(saved.customThemes) ? saved.customThemes : base.customThemes,
 		seededBundledIds: Array.isArray(saved.seededBundledIds)
 			? saved.seededBundledIds
-			: base.seededBundledIds
+			: base.seededBundledIds,
 	};
 }
 
@@ -79,7 +79,7 @@ function persist(): void {
 		theme: app.theme,
 		customThemes: app.customThemes,
 		seededBundledIds: app.seededBundledIds,
-		contentEditingMode: app.contentEditingMode
+		contentEditingMode: app.contentEditingMode,
 	});
 }
 

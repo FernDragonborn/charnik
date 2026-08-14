@@ -14,7 +14,7 @@ import {
 	maxHpForClass,
 	carryingCapacity,
 	hitDiceRecoveredOnLongRest,
-	ABILITY_SCORE_CLAMP
+	ABILITY_SCORE_CLAMP,
 } from './core';
 import type { System } from './pipeline';
 
@@ -36,7 +36,7 @@ describe('primitives (golden SRD values)', () => {
 
 	it('proficiency bonus by level', () => {
 		expect([1, 4, 5, 8, 9, 12, 13, 16, 17, 20].map(proficiencyBonus)).toEqual([
-			2, 2, 3, 3, 4, 4, 5, 5, 6, 6
+			2, 2, 3, 3, 4, 4, 5, 5, 6, 6,
 		]);
 	});
 });
@@ -91,10 +91,10 @@ describe.each<System>(['5e', '5.5e'])('system-agnostic formulas (%s)', () => {
 
 	it('max HP (SRD fixed): barbarian d12 L3 CON 14, wizard d6 L1 CON 12', () => {
 		expect(
-			maxHpForClass({ hitDie: 'd12', level: 3, conScore: 14, includesCharacterLevel1: true }).value
+			maxHpForClass({ hitDie: 'd12', level: 3, conScore: 14, includesCharacterLevel1: true }).value,
 		).toBe(32);
 		expect(
-			maxHpForClass({ hitDie: 'd6', level: 1, conScore: 12, includesCharacterLevel1: true }).value
+			maxHpForClass({ hitDie: 'd6', level: 1, conScore: 12, includesCharacterLevel1: true }).value,
 		).toBe(7);
 	});
 
@@ -105,7 +105,7 @@ describe.each<System>(['5e', '5.5e'])('system-agnostic formulas (%s)', () => {
 			hitDie: 'd10',
 			level: 3,
 			conScore: 14,
-			includesCharacterLevel1: true
+			includesCharacterLevel1: true,
 		});
 		expect(fighter.value).toBe(28);
 		// Wizard d6 multiclassed in: EVERY level is avg-up (4+4=8) + CON 2×2 = 4 → 12 (NOT 6 on level 1)
@@ -113,7 +113,7 @@ describe.each<System>(['5e', '5.5e'])('system-agnostic formulas (%s)', () => {
 			hitDie: 'd6',
 			level: 2,
 			conScore: 14,
-			includesCharacterLevel1: false
+			includesCharacterLevel1: false,
 		});
 		expect(wizard.value).toBe(12);
 		expect(fighter.value + wizard.value).toBe(40); // was 42 before the fix (+2 overcount)
@@ -128,10 +128,10 @@ describe('edition divergence', () => {
 	it('encumbrance tiers are a 5e-only variant (5.5e drops speed instead)', () => {
 		expect(carryingCapacity({ strScore: 15, system: '5e' }).notes?.map((n) => n.text)).toEqual([
 			'Encumbered at 75 lb (−10 ft)',
-			'Heavily encumbered at 150 lb (−20 ft)'
+			'Heavily encumbered at 150 lb (−20 ft)',
 		]);
 		expect(carryingCapacity({ strScore: 15, system: '5.5e' }).notes?.map((n) => n.text)).toEqual([
-			'Over capacity → speed 5 ft'
+			'Over capacity → speed 5 ft',
 		]);
 	});
 
@@ -152,7 +152,7 @@ describe('invariants (fast-check)', () => {
 		fc.assert(
 			fc.property(fc.integer({ min: 1, max: 30 }), (s) => {
 				expect(abilityModifier(s)).toBe(Math.floor((s - 10) / 2));
-			})
+			}),
 		);
 		for (let s = 2; s <= 30; s++)
 			expect(abilityModifier(s)).toBeGreaterThanOrEqual(abilityModifier(s - 1));
@@ -164,7 +164,7 @@ describe('invariants (fast-check)', () => {
 				const p = proficiencyBonus(lvl);
 				expect(p).toBeGreaterThanOrEqual(2);
 				expect(p).toBeLessThanOrEqual(6);
-			})
+			}),
 		);
 	});
 
@@ -176,8 +176,8 @@ describe('invariants (fast-check)', () => {
 				(score, level) => {
 					const st = savingThrow({ ability: 'con', score, level, proficient: true });
 					expect(st.value).toBe(abilityModifier(score) + proficiencyBonus(level));
-				}
-			)
+				},
+			),
 		);
 	});
 });

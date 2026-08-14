@@ -17,7 +17,7 @@ import {
 	CONTENT_SCHEMA_VERSION,
 	migrate,
 	type Migration,
-	type Versioned
+	type Versioned,
 } from '$lib/schema/version';
 import type { ContentType } from './schemas';
 
@@ -55,14 +55,14 @@ export interface MigrationResult {
 export function migrateRows(
 	type: ContentType,
 	rows: Record<string, string>[],
-	from: number
+	from: number,
 ): MigrationResult {
 	if (from === CONTENT_SCHEMA_VERSION) return { rows };
 	try {
 		const out = migrate<VersionedRows>(
 			{ schemaVersion: from, rows },
 			CONTENT_MIGRATIONS[type] ?? {},
-			CONTENT_SCHEMA_VERSION
+			CONTENT_SCHEMA_VERSION,
 		);
 		return { rows: out.rows };
 	} catch (e) {

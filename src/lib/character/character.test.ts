@@ -10,18 +10,18 @@ import {
 	appendLog,
 	readLog,
 	backupCharacter,
-	uniqueCharacterId
+	uniqueCharacterId,
 } from './repository';
 
 function sample(): Character {
 	const c = newCharacter('mirt', 'Mirt', '5.5e');
 	c.build.classes = [
-		{ class: 'class:SRD 5.2.1:wizard', level: 3, subclass: 'subclass:SRD 5.2.1:evoker' }
+		{ class: 'class:SRD 5.2.1:wizard', level: 3, subclass: 'subclass:SRD 5.2.1:evoker' },
 	];
 	c.build.abilities.int = 16;
 	c.build.skills = ['arcana', 'history'];
 	c.build.inventory = [
-		{ item: 'item:SRD 5.2.1:longsword', qty: 1, equipped: true, attuned: false }
+		{ item: 'item:SRD 5.2.1:longsword', qty: 1, equipped: true, attuned: false },
 	];
 	c.build.spells = [{ spell: 'spell:SRD 5.2.1:fireball', prepared: true, alwaysPrepared: false }];
 	c.play.hp = { current: 14, temp: 0 };
@@ -69,18 +69,18 @@ describe('character migration v1→v2 (E3 kebab→snake refs)', () => {
 					{
 						class: 'class:SRD 5.2.1:barbarian',
 						level: 5,
-						subclass: 'subclass:SRD 5.2.1:path-of-the-berserker'
-					}
+						subclass: 'subclass:SRD 5.2.1:path-of-the-berserker',
+					},
 				],
 				feats: ['feat:SRD 5.2.1:great-weapon-master'],
 				skills: ['animal-handling', 'sleight-of-hand', 'athletics'],
 				expertise: ['animal-handling'],
 				inventory: [
-					{ item: 'item:SRD 5.2.1:studded-leather', qty: 1, equipped: true, attuned: false }
+					{ item: 'item:SRD 5.2.1:studded-leather', qty: 1, equipped: true, attuned: false },
 				],
-				spells: [{ spell: 'spell:SRD 5.2.1:fire-bolt', prepared: true, alwaysPrepared: false }]
+				spells: [{ spell: 'spell:SRD 5.2.1:fire-bolt', prepared: true, alwaysPrepared: false }],
 			},
-			play: { hp: { current: 20, temp: 0 }, concentration: 'spell:SRD 5.2.1:hold-person' }
+			play: { hp: { current: 20, temp: 0 }, concentration: 'spell:SRD 5.2.1:hold-person' },
 		};
 		await s.write('characters/grog/character.json', JSON.stringify(v1));
 		const res = await loadCharacter(s, 'grog');
@@ -112,11 +112,11 @@ describe('character migration v1→v2 (E3 kebab→snake refs)', () => {
 				speciesOption: 'species_option:SRD 5.2.1:elf-high-elf',
 				classes: [{ class: 'class:SRD 5.2.1:wizard', level: 3 }],
 				inventory: [
-					{ item: 'item:SRD 5.2.1:leather-armor', qty: 1, equipped: true, attuned: false }
+					{ item: 'item:SRD 5.2.1:leather-armor', qty: 1, equipped: true, attuned: false },
 				],
-				spells: [{ spell: 'spell:SRD 5.2.1:fire-bolt', prepared: true, alwaysPrepared: false }]
+				spells: [{ spell: 'spell:SRD 5.2.1:fire-bolt', prepared: true, alwaysPrepared: false }],
 			},
-			play: { hp: { current: 14, temp: 0 } }
+			play: { hp: { current: 14, temp: 0 } },
 		};
 		await s.write('characters/valen/character.json', JSON.stringify(v2));
 		const res = await loadCharacter(s, 'valen');
@@ -181,7 +181,7 @@ describe('character repository (in-memory)', () => {
 		// valid JSON but not a valid character (missing build/play) — its `system` is still readable
 		await s.write(
 			'characters/halfbad/character.json',
-			'{"schemaVersion":3,"system":"5.5e","id":"halfbad"}'
+			'{"schemaVersion":3,"system":"5.5e","id":"halfbad"}',
 		);
 		// unreadable edition → no badge at all (never a wrong default)
 		await s.write('characters/noedition/character.json', '{"schemaVersion":3,"id":"noedition"}');
@@ -215,7 +215,7 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 		await appendLog(s, 'mirt', { t: 2, kind: 'save', label: 'DEX', result: 9 });
 		await s.write(
 			'characters/mirt/log.jsonl',
-			(await s.read('characters/mirt/log.jsonl')) + 'garbage\n'
+			(await s.read('characters/mirt/log.jsonl')) + 'garbage\n',
 		);
 		const log = await readLog(s, 'mirt');
 		expect(log.map((e) => e.label)).toEqual(['DEX', 'Longsword']);
@@ -229,8 +229,8 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 		// fire without awaiting each — the old read-modify-write would let later writes clobber earlier
 		await Promise.all(
 			Array.from({ length: 20 }, (_, i) =>
-				appendLog(s, 'mirt', { t: i, kind: 'roll', label: `r${i}`, result: i })
-			)
+				appendLog(s, 'mirt', { t: i, kind: 'roll', label: `r${i}`, result: i }),
+			),
 		);
 		const log = await readLog(s, 'mirt');
 		expect(log.length).toBe(20);
@@ -283,7 +283,7 @@ describe('rotating backups (B3)', () => {
 		expect(kept.length).toBe(2);
 		expect(kept).toEqual([
 			`character.bak.save.${t0 + 11 * min}.json`,
-			`character.bak.save.${t0 + 22 * min}.json`
+			`character.bak.save.${t0 + 22 * min}.json`,
 		]);
 	});
 

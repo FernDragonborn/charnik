@@ -26,7 +26,7 @@ import {
 	MAX_PACK_FILES,
 	MAX_REPO_PACKS,
 	type RemoteFetcher,
-	type UpdateError
+	type UpdateError,
 } from './types';
 
 /** `owner/repo` parsed out of any reasonable GitHub URL the user might paste. */
@@ -173,7 +173,7 @@ export function packsFromTree(json: string): { packs: RemotePack[]; truncated: b
 		packs: [...byPack.entries()]
 			.map(([pack, files]) => ({ pack, files: files.sort((a, b) => a.path.localeCompare(b.path)) }))
 			.sort((a, b) => a.pack.localeCompare(b.pack)),
-		truncated
+		truncated,
 	};
 }
 
@@ -208,8 +208,8 @@ export function packSizeRefusal(remote: RemotePack): UpdateError | null {
 					files: over.files,
 					mb: Math.ceil(over.bytes / (1024 * 1024)),
 					maxFiles: MAX_PACK_FILES,
-					maxMb: MAX_PACK_BYTES / (1024 * 1024)
-				}
+					maxMb: MAX_PACK_BYTES / (1024 * 1024),
+				},
 			};
 }
 
@@ -230,7 +230,7 @@ export type CheckResult =
 export async function checkRepo(
 	fetcher: RemoteFetcher,
 	repoUrl: string,
-	etag?: string
+	etag?: string,
 ): Promise<CheckResult> {
 	const repo = parseGithubRepo(repoUrl);
 	if (!repo) return { kind: 'unsupported' };

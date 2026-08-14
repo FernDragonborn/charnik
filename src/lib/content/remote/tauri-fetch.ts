@@ -81,7 +81,7 @@ export const tauriFetcher: RemoteFetcher = {
 				// several packs from one repo effectively free in the steady state
 				headers: etag === undefined ? {} : { 'If-None-Match': etag },
 				connectTimeout: 15_000,
-				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 			});
 			if (res.status === 304) return { kind: 'notModified' };
 			if (!res.ok) return { kind: 'error', status: res.status, message: res.statusText };
@@ -104,7 +104,7 @@ export const tauriFetcher: RemoteFetcher = {
 			const res = await tauriFetch(url, {
 				method: 'GET',
 				connectTimeout: 15_000,
-				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS)
+				signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 			});
 			if (!res.ok) return { kind: 'error' as const, message: `${res.status} ${res.statusText}` };
 			if (declaredTooLarge(res)) return { kind: 'error' as const, message: 'response too large' };
@@ -114,5 +114,5 @@ export const tauriFetcher: RemoteFetcher = {
 		} catch (e) {
 			return { kind: 'error' as const, message: e instanceof Error ? e.message : String(e) };
 		}
-	}
+	},
 };

@@ -13,14 +13,14 @@ const disc = (over: Partial<DiscoveredPlugin> = {}): DiscoveredPlugin => ({
 	origin: LOCAL_ORIGIN,
 	ok: true,
 	hash: 'HASH',
-	...over
+	...over,
 });
 const prefs = (over: Partial<PluginPrefs> = {}): PluginPrefs => ({ ...emptyPrefs(), ...over });
 
 describe('pluginStatus — the Settings status label', () => {
 	it('a broken folder is always "broken", whatever the prefs', () => {
 		expect(
-			pluginStatus(disc({ ok: false }), prefs({ enabled: { p1: true }, consent: { p1: 'HASH' } }))
+			pluginStatus(disc({ ok: false }), prefs({ enabled: { p1: true }, consent: { p1: 'HASH' } })),
 		).toBe('broken');
 	});
 	it('ok + never consented → "needs_consent"', () => {
@@ -34,7 +34,7 @@ describe('pluginStatus — the Settings status label', () => {
 	});
 	it('consented + enabled → "enabled"', () => {
 		expect(pluginStatus(disc(), prefs({ consent: { p1: 'HASH' }, enabled: { p1: true } }))).toBe(
-			'enabled'
+			'enabled',
 		);
 	});
 	it('a missing hash (ok but unhashable) is treated as not-consented → "needs_consent"', () => {

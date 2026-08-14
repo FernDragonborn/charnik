@@ -39,7 +39,7 @@
 			metaIssues.length +
 			driftItems.length +
 			tokenLints.length +
-			deriveIssues.length
+			deriveIssues.length,
 	);
 
 	const fileLabel = (root: string, file?: string) => (file ? `${root}/${file}` : root);

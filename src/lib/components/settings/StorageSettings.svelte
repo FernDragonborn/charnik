@@ -15,7 +15,7 @@
 		migrateDataDir,
 		mergeDataDir,
 		repointDataDir,
-		type MigrateOutcome
+		type MigrateOutcome,
 	} from '$lib/storage/tauri';
 	import { conflictRows, isSameOrInside, type ConflictRow } from '$lib/storage/migrate';
 	import { errText } from '$lib/util/format';
@@ -99,7 +99,7 @@
 				tone: 'error',
 				title: failTitle,
 				detail: moveDetail(outcome),
-				note: ORIGINAL_SAFE
+				note: ORIGINAL_SAFE,
 			};
 			return;
 		}
@@ -109,7 +109,7 @@
 				title: "Data moved, but old folder wasn't deleted",
 				detail: `Your data was copied and verified in the new folder, but the old folder couldn't be removed: ${outcome.error ?? 'unknown error'}.`,
 				note: 'Nothing was lost — you can delete the old folder yourself.',
-				then: () => void reloadApp()
+				then: () => void reloadApp(),
 			};
 			return;
 		}
@@ -134,7 +134,7 @@
 					title: "That's already your data folder",
 					detail:
 						"You can't move your data into the folder it already lives in — pick a different one.",
-					note: 'Nothing was changed.'
+					note: 'Nothing was changed.',
 				};
 				return;
 			}
@@ -147,7 +147,7 @@
 			await applyOutcome(
 				await migrateDataDir(from, target, true),
 				'Move failed',
-				'Data moved successfully'
+				'Data moved successfully',
 			);
 		} catch (e) {
 			startContentWatcher();
@@ -172,7 +172,7 @@
 			await applyOutcome(
 				await mergeDataDir(from, target, true),
 				'Merge failed',
-				'Data merged successfully'
+				'Data merged successfully',
 			);
 		} catch (e) {
 			startContentWatcher();
@@ -195,7 +195,7 @@
 				tone: 'error',
 				title: "Couldn't change the read path",
 				detail: errText(e),
-				note: 'Nothing was changed.'
+				note: 'Nothing was changed.',
 			};
 		} finally {
 			busy = false;

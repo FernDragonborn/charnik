@@ -20,7 +20,7 @@ import {
 	type ActiveEffect,
 	type EffectCtx,
 	type EffectIssue,
-	type ParsedEffect
+	type ParsedEffect,
 } from './token-parser';
 
 /* ─────────────────────── value nodes (what effects can write AND expressions read) ─────────────────────── */
@@ -134,7 +134,7 @@ export interface Inst {
 export const readsOf = (
 	guard: string | undefined,
 	parsed: ParsedEffect,
-	condId?: string
+	condId?: string,
 ): DepKey[] => {
 	const names: string[] = [];
 	if (guard !== undefined) names.push(...collectExprVariables(guard));

@@ -7,7 +7,7 @@
 	let {
 		value,
 		options,
-		onChange
+		onChange,
 	}: {
 		/** the current `classes` column string (comma-separated). */
 		value: string;
@@ -21,7 +21,7 @@
 		value
 			.split(',')
 			.map((s) => s.trim())
-			.filter(Boolean)
+			.filter(Boolean),
 	);
 	const optionIds = $derived(new Set(options.map((o) => o.id)));
 	// tokens that don't match any known class id = custom, user-typed class names

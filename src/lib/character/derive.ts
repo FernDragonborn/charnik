@@ -29,7 +29,7 @@ import {
 	deriveDefenses,
 	type SkillProficiency,
 	type AbilityBlock,
-	type StatInputs
+	type StatInputs,
 } from './derive-stats';
 import { ABILITIES } from './schema';
 import {
@@ -39,14 +39,14 @@ import {
 	carryingCapacity,
 	ABILITY_SCORE_CLAMP,
 	DIE_MAX,
-	type Ability
+	type Ability,
 } from '../rules/core';
 import { gatherProfGrants, isArmorProficient, armorCategoryOf } from '../rules/proficiency';
 import {
 	type ActiveEffect,
 	type EffectCtx,
 	type EffectIssue,
-	ctxOf
+	ctxOf,
 } from '../effects/token-parser';
 import { evalExpression, diceToFormula, type ExprContext } from '../effects/expression-evaluator';
 import { applyEffects, collectFacts, type EffectFacts, type ResourceDef } from '../effects/apply';
@@ -150,7 +150,7 @@ function resolveActionFormula(
 	action: string,
 	ctx: ExprContext | undefined,
 	name: string,
-	issues: EffectIssue[]
+	issues: EffectIssue[],
 ): string {
 	return action
 		.split(';')
@@ -166,7 +166,7 @@ function resolveOneActionFormula(
 	action: string,
 	ctx: ExprContext | undefined,
 	name: string,
-	issues: EffectIssue[]
+	issues: EffectIssue[],
 ): string {
 	const i = action.indexOf(':');
 	if (i === -1) return action;
@@ -190,7 +190,7 @@ function resolveAvailable(
 	expr: string,
 	ctx: ExprContext | undefined,
 	name: string,
-	issues: EffectIssue[]
+	issues: EffectIssue[],
 ): boolean {
 	const src = expr.trim();
 	if (!src || !ctx) return true;
@@ -199,7 +199,7 @@ function resolveAvailable(
 	issues.push({
 		source: name,
 		token: `available:${src}`,
-		reason: r.ok ? 'available guard is not a condition' : r.error
+		reason: r.ok ? 'available guard is not a condition' : r.error,
 	});
 	return true;
 }
@@ -211,7 +211,7 @@ function resolveResourceOptions({
 	system,
 	isActive,
 	issues,
-	ctx
+	ctx,
 }: ResourceOptionsInput): ResourceOption[] {
 	const out: ResourceOption[] = [];
 	for (const row of graph.rows) {
@@ -226,7 +226,7 @@ function resolveResourceOptions({
 			issues.push({
 				source: String(row.data.name_en),
 				token: `cost:${raw}`,
-				reason: 'unsupported resource-option cost (v1 supports an integer or `x`)'
+				reason: 'unsupported resource-option cost (v1 supports an integer or `x`)',
 			});
 			continue;
 		}
@@ -239,7 +239,7 @@ function resolveResourceOptions({
 				String(row.data.action ?? ''),
 				ctx,
 				String(row.data.name_en),
-				issues
+				issues,
 			),
 			actionType: (row.data.action_type as ResourceOption['actionType']) ?? 'action',
 			cost,
@@ -247,8 +247,8 @@ function resolveResourceOptions({
 				String(row.data.available ?? ''),
 				ctx,
 				String(row.data.name_en),
-				issues
-			)
+				issues,
+			),
 		});
 	}
 	return out;
@@ -258,7 +258,7 @@ function resolveResourceOptions({
  *  it reaches BOTH the hover note and the actual Hide roll (deduped by target+source, like a token). */
 function applyStealthDisadvantage(
 	equippedArmor: LoadedRowOf<'item'> | undefined,
-	facts: EffectFacts
+	facts: EffectFacts,
 ): void {
 	if (!equippedArmor?.data.stealth_disadvantage) return;
 	const source = String(equippedArmor.data.name_en);
@@ -273,7 +273,7 @@ function flagPhantomConditions(
 	facts: EffectFacts,
 	graph: ContentGraph,
 	system: System,
-	issues: EffectIssue[]
+	issues: EffectIssue[],
 ): void {
 	const conditionIds = new Set(graph.list('condition', { system }).map((r) => r.id));
 	for (const id of facts.conditions)
@@ -281,7 +281,7 @@ function flagPhantomConditions(
 			issues.push({
 				source: 'apply_condition',
 				token: `apply_condition:${id}`,
-				reason: `unknown condition "${id}"${didYouMean(id, conditionIds)}` // PLG-9
+				reason: `unknown condition "${id}"${didYouMean(id, conditionIds)}`, // PLG-9
 			});
 }
 
@@ -290,7 +290,7 @@ function seedAbilityBase(build: Character['build']): Record<Ability, Contributio
 	const abilityBase = {} as Record<Ability, Contribution[]>;
 	for (const ab of ABILITIES) {
 		const contribs: Contribution[] = [
-			{ source: 'Base score', layer: 'base', op: 'add', amount: build.abilities[ab] }
+			{ source: 'Base score', layer: 'base', op: 'add', amount: build.abilities[ab] },
 		];
 		const boost = build.abilityBoosts?.[ab] ?? 0;
 		if (boost) contribs.push({ source: 'Ability boosts', layer: 'base', op: 'add', amount: boost });
@@ -302,7 +302,7 @@ function seedAbilityBase(build: Character['build']): Record<Ability, Contributio
 /** Class levels keyed by BARE id (`class_level.monk`), summed across multiclass entries. */
 function computeClassLevels(
 	build: Character['build'],
-	graph: ContentGraph
+	graph: ContentGraph,
 ): Record<string, number> {
 	const classLevels: Record<string, number> = {};
 	for (const c of build.classes) {
@@ -315,7 +315,7 @@ function computeClassLevels(
 /** The primary caster's ability (highest caster-class level) — the ctx's default `spellcasting_mod`. */
 function pickPrimaryCaster(
 	abilityByClass: Record<string, Ability>,
-	classLevels: Record<string, number>
+	classLevels: Record<string, number>,
 ): Ability | undefined {
 	let primaryAbility: Ability | undefined;
 	let primaryLevel = -1;
@@ -344,14 +344,14 @@ function applyArmorSpellBlock({
 	equippedArmor,
 	build,
 	graph,
-	issues
+	issues,
 }: ArmorSpellBlockInput): void {
 	if (!equippedArmor) return;
 	const armorGrants = gatherProfGrants(
 		build.classes.map((c) => {
 			const r = graph.get(c.class);
 			return r?.type === 'class' ? r.data.armor_profs : undefined;
-		})
+		}),
 	);
 	if (isArmorProficient(armorGrants, equippedArmor.data.item_type, equippedArmor.data.category))
 		return;
@@ -360,7 +360,7 @@ function applyArmorSpellBlock({
 	const cat = armorCategoryOf(equippedArmor.data.item_type, equippedArmor.data.category);
 	spellcasting.armorBlock = {
 		source,
-		note: `Not proficient with ${cat} armor — spellcasting blocked`
+		note: `Not proficient with ${cat} armor — spellcasting blocked`,
 	};
 	issues.push({ source, token: 'armor_proficiency', reason: spellcasting.armorBlock.note });
 }
@@ -398,7 +398,7 @@ export function deriveSheet(
 	// B15: source/collision filter. Kept a PARAMETER (not an import) so derive stays framework-
 	// agnostic and testable; the VMs pass `isRowActive` (reactive over the source config), tests
 	// default to all-active. Applied once at gather, never per-stat.
-	isActive: (row: LoadedRow) => boolean = () => true
+	isActive: (row: LoadedRow) => boolean = () => true,
 ): CharacterSheet {
 	const build = character.build;
 	const system = character.system;
@@ -463,7 +463,7 @@ export function deriveSheet(
 		baseSpeed,
 		equippedArmor,
 		speciesRow,
-		abilityByClass
+		abilityByClass,
 	});
 
 	// The ONE resolve stage (effects/dependency-graph.ts): dependency-ordered guards, A10 ability pipeline,
@@ -479,7 +479,7 @@ export function deriveSheet(
 			expandCondition,
 			abilityBase,
 			hpMaxBase: hpMaxBaseFor,
-			resourcesSpent: character.play.resourcesSpent
+			resourcesSpent: character.play.resourcesSpent,
 		});
 		issues.push(...r.issues);
 		effCtx = r.ctx;
@@ -517,7 +517,7 @@ export function deriveSheet(
 			effCtx,
 			expandCondition,
 			maxHpBase,
-			issues
+			issues,
 		});
 
 	applyStealthDisadvantage(equippedArmor, facts); // A4
@@ -579,13 +579,13 @@ export function deriveSheet(
 			issues,
 			// the base L2 ctx (resource-option formulas don't use per-effect spellcasting scoping), so
 			// `heal:`/`roll:` formulas resolve once here like resource maxes
-			ctx: baseCtx
+			ctx: baseCtx,
 		}),
 		spellcasting,
 		missing: [...new Set(missing)], // dedupe: the same ref can be missing from several scans (D19)
 		deriveIssues: issues,
 		resolvedEffects,
 		facts,
-		...(baseCtx ? { castCtx: baseCtx } : {})
+		...(baseCtx ? { castCtx: baseCtx } : {}),
 	};
 }

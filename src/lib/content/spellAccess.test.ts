@@ -26,19 +26,19 @@ async function seed() {
 		[
 			SPELL_HEAD,
 			spell('fireball', '5.5e', 'SRD 5.2.1', 'wizard,sorcerer'),
-			spell('cure_wounds', '5.5e', 'SRD 5.2.1', 'cleric')
-		].join('\n')
+			spell('cure_wounds', '5.5e', 'SRD 5.2.1', 'cleric'),
+		].join('\n'),
 	);
 	await s.write('a/classes_srd.csv', [CLASS_HEAD, cls('wizard', '5.5e', 'SRD 5.2.1')].join('\n'));
 	// homebrew pack: an Artificer that grants access to fireball via a class-side join (no edit
 	// to the shipped fireball row)
 	await s.write(
 		'hb/classes_srd.csv',
-		[CLASS_HEAD, cls('artificer', '5.5e', 'Homebrew', 'half')].join('\n')
+		[CLASS_HEAD, cls('artificer', '5.5e', 'Homebrew', 'half')].join('\n'),
 	);
 	await s.write(
 		'hb/spell_lists_hb.csv',
-		[LIST_HEAD, 'artificer_fireball,5.5e,Homebrew,artificer,fireball'].join('\n')
+		[LIST_HEAD, 'artificer_fireball,5.5e,Homebrew,artificer,fireball'].join('\n'),
 	);
 	// a PHB-shaped casting subclass (B25): a Fighter subclass casting off the WIZARD list, plus one
 	// that names no list at all. Neither ships in the SRD — this is the engine seam a homebrew/PHB
@@ -48,13 +48,13 @@ async function seed() {
 		[
 			SUB_HEAD,
 			subclass('eldritch_knight', 'wizard', 'wizard'),
-			subclass('listless_knight', 'wizard', '')
-		].join('\n')
+			subclass('listless_knight', 'wizard', ''),
+		].join('\n'),
 	);
 	// 2014 root — a wizard + a 5e-only spell, to prove edition scoping
 	await s.write(
 		'b/spells_srd.csv',
-		[SPELL_HEAD, spell('magic_missile', '5e', 'SRD 5.1', 'wizard')].join('\n')
+		[SPELL_HEAD, spell('magic_missile', '5e', 'SRD 5.1', 'wizard')].join('\n'),
 	);
 	await s.write('b/classes_srd.csv', [CLASS_HEAD, cls('wizard', '5e', 'SRD 5.1')].join('\n'));
 	return s;
@@ -78,7 +78,7 @@ describe('spell↔class access (union index)', () => {
 
 		// the homebrew Artificer reaches fireball WITHOUT the fireball row being edited
 		expect(access.spellIdsForClass('class:Homebrew:artificer')).toContain(
-			'spell:SRD 5.2.1:fireball'
+			'spell:SRD 5.2.1:fireball',
 		);
 	});
 
@@ -121,8 +121,8 @@ describe('spell↔class access (union index)', () => {
 			[
 				'id,systems,source,class_id,spell_id',
 				'x,5.5e,Homebrew,warlock-typo,fireball', // unknown class
-				'y,5.5e,Homebrew,artificer,spell_typo' // unknown spell
-			].join('\n')
+				'y,5.5e,Homebrew,artificer,spell_typo', // unknown spell
+			].join('\n'),
 		);
 		const g = await loadContent(s, ['a', 'hb', 'b']);
 		const warns = g.issues.filter((i) => i.level === 'warn').map((i) => i.message);

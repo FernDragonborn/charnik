@@ -54,7 +54,7 @@ const dups = [...groups.values()]
 // cross-file duplicates (the best hoist candidates) first, then same-file
 const crossFile = dups.filter((g) => new Set(g.hits.map((h) => h.file)).size >= 2);
 console.log(
-	`\n=== ${dups.length} duplicated declaration-blocks (${crossFile.length} span >1 file) ===\n`
+	`\n=== ${dups.length} duplicated declaration-blocks (${crossFile.length} span >1 file) ===\n`,
 );
 for (const g of dups.slice(0, 30)) {
 	const files = new Set(g.hits.map((h) => h.file));

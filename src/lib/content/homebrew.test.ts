@@ -9,7 +9,7 @@ import {
 	upsertHomebrewRow,
 	removeHomebrewRow,
 	homebrewFile,
-	HOMEBREW_SOURCE
+	HOMEBREW_SOURCE,
 } from './homebrew';
 import { makeRow } from './test-utils';
 import { parseContentDirectives, checkFileMeta } from './meta';
@@ -38,7 +38,7 @@ describe('homebrew save targets', () => {
 		const t = await listTypeTargets(s, 'spell', shipped);
 		expect(t.map((x) => x.file).sort()).toEqual([
 			'content/homebrew/spells_hb.csv',
-			'content/srd-2024/spells_srd.csv'
+			'content/srd-2024/spells_srd.csv',
 		]);
 		expect(t.find((x) => x.file.includes('srd'))?.shipped).toBe(true);
 		expect(t.find((x) => x.file.includes('homebrew'))?.shipped).toBe(false);
@@ -62,13 +62,13 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 			s,
 			'condition',
 			{ id: 'dazed', name_en: 'Dazed', systems: '5e', text_en: 'v1' },
-			file
+			file,
 		);
 		await upsertHomebrewRow(
 			s,
 			'condition',
 			{ id: 'dazed', name_en: 'Dazed', systems: '5e', text_en: 'v2' },
-			file
+			file,
 		);
 		const rows = await readRows(s, file);
 		expect(rows.length).toBe(1);
@@ -80,7 +80,7 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 		const shipped = makeRow(
 			'condition',
 			{ id: 'blinded', name_en: 'Blinded', text_en: 'orig' },
-			'SRD 5.1'
+			'SRD 5.1',
 		);
 		const draft = rowToDraft(shipped);
 		draft.systems = '5e';
@@ -98,7 +98,7 @@ describe('editor-mode upsert (fork-to-homebrew / edit-in-place)', () => {
 		const row = makeRow(
 			'condition',
 			{ id: 'x', name_en: 'X', text_en: 'e', name_uk: 'Ікс', text_uk: 'опис' },
-			'SRD 5.1'
+			'SRD 5.1',
 		);
 		const draft = rowToDraft(row);
 		draft.systems = '5e';
@@ -146,7 +146,7 @@ describe('fresh save (append a new row)', () => {
 			s,
 			'condition',
 			{ id: 'x', name_en: 'X', text_en: 'e', name_uk: 'Ікс', text_uk: 'опис', systems: '5e' },
-			file
+			file,
 		);
 		const rows = await readRows(s, file);
 		expect(rows[0]?.name_uk).toBe('Ікс');

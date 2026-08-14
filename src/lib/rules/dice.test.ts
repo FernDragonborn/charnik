@@ -9,7 +9,7 @@ import {
 	flipAdvantage,
 	cycleAdvantage,
 	type Rng,
-	type Rolled
+	type Rolled,
 } from './dice';
 
 /** RNG that yields the given [0,1) values in order (then throws if over-drawn — catches extra draws). */
@@ -50,11 +50,11 @@ describe('rollPool', () => {
 	it('appends a signed flat modifier', () => {
 		expect(rollPool({ 6: 1 }, 3, 0, [], rngSequence(0.5))).toMatchObject({
 			total: 7,
-			expr: 'd6(4) +3'
+			expr: 'd6(4) +3',
 		});
 		expect(rollPool({ 6: 1 }, -2, 0, [], rngSequence(0.5))).toMatchObject({
 			total: 2,
-			expr: 'd6(4) −2'
+			expr: 'd6(4) −2',
 		});
 	});
 
@@ -76,7 +76,7 @@ describe('rollPool', () => {
 			0,
 			0,
 			[{ sides: 4, count: 1, sign: 1 }],
-			rngSequence(0.5, 0.5)
+			rngSequence(0.5, 0.5),
 		);
 		expect(bless).toMatchObject({ total: 14, expr: 'd20(11) + +d4(3)' });
 		const bane = rollPool(
@@ -84,7 +84,7 @@ describe('rollPool', () => {
 			0,
 			0,
 			[{ sides: 4, count: 1, sign: -1 }],
-			rngSequence(0.5, 0.5)
+			rngSequence(0.5, 0.5),
 		);
 		expect(bane).toMatchObject({ total: 8, expr: 'd20(11) + −d4(3)' });
 	});
@@ -158,7 +158,7 @@ describe('parseRollExpr (the toast/log chip breakdown)', () => {
 		const { chips, mod } = parseRollExpr(r.expr); // "d8(5) + d6(4) +3"
 		expect(chips.map((c) => [c.sides, c.value, c.sign])).toEqual([
 			[8, 5, 1],
-			[6, 4, 1]
+			[6, 4, 1],
 		]);
 		expect(mod).toBe(3);
 		expect(chips.reduce((n, c) => n + c.sign * c.value, 0) + mod).toBe(r.total);
@@ -167,7 +167,7 @@ describe('parseRollExpr (the toast/log chip breakdown)', () => {
 	it('takes the FINAL face of a rerolled/floored die and keeps the detail', () => {
 		const r = rollPool({ 20: 1 }, 0, 0, [], { rng: rngSequence(0, 0.15), reroll: 1, minDie: 10 });
 		expect(parseRollExpr(r.expr).chips).toEqual([
-			{ sides: 20, value: 10, sign: 1, detail: '1↻4→10' }
+			{ sides: 20, value: 10, sign: 1, detail: '1↻4→10' },
 		]);
 	});
 
@@ -203,7 +203,7 @@ describe('amendWithAdvantage', () => {
 	const rolled = (expr: string, total: number, natural?: number): Rolled => ({
 		expr,
 		total,
-		...(natural !== undefined ? { natural } : {})
+		...(natural !== undefined ? { natural } : {}),
 	});
 
 	it('keeps the fresh die when it beats the original, and raises the total by the difference', () => {
@@ -236,7 +236,7 @@ describe('amendWithAdvantage', () => {
 
 	it('refuses a roll that two dice already decided', () => {
 		expect(
-			amendWithAdvantage({ expr: '+4', total: 18, advantageRoll: { kept: 14, dropped: 3 } })
+			amendWithAdvantage({ expr: '+4', total: 18, advantageRoll: { kept: 14, dropped: 3 } }),
 		).toBeNull();
 	});
 
@@ -332,7 +332,7 @@ describe('cycleAdvantage', () => {
 		const legacy: Rolled = {
 			expr: '+4',
 			total: 7,
-			advantageRoll: { kept: 3, dropped: 18, mode: -1 }
+			advantageRoll: { kept: 3, dropped: 18, mode: -1 },
 		};
 		expect(cycleAdvantage(legacy)?.advantageRoll).toMatchObject({ kept: 18, mode: 1 });
 	});

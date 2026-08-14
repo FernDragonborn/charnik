@@ -9,7 +9,7 @@
 
 	const THEMES: { id: ThemeId; label: string }[] = [
 		{ id: 'dark', label: '☾ Dark' },
-		{ id: 'light', label: '☀ Light' }
+		{ id: 'light', label: '☀ Light' },
 	];
 
 	// An edition may be toggled off to hide it from the compendium/search, but never the last one

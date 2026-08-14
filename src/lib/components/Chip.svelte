@@ -4,7 +4,7 @@
 	let {
 		active = false,
 		onclick,
-		children
+		children,
 	}: { active?: boolean; onclick?: () => void; children: Snippet } = $props();
 </script>
 

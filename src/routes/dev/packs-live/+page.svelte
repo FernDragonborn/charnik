@@ -64,7 +64,7 @@
 			const diff = await diffPack(getUserStorage(), pack);
 			const per = diff.changes.reduce<Record<string, number>>(
 				(acc, c) => ({ ...acc, [c.kind]: (acc[c.kind] ?? 0) + 1 }),
-				{}
+				{},
 			);
 			const summary = Object.entries(per)
 				.map(([k, n]) => `${n} ${k}`)

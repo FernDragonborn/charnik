@@ -19,7 +19,7 @@ import {
 	pactPool,
 	PACT_SLOT_KEY,
 	type PrepareAttempt,
-	type PreparableSpell
+	type PreparableSpell,
 } from '$lib/rules/spellcasting';
 
 export const GROUP_MODES = ['level', 'prepared', 'school'] as const;
@@ -88,7 +88,7 @@ function effectHint(d: RowData<'spell'>): string {
 				'mage hand': 'utility',
 				'mage armor': 'set AC 13',
 				fly: 'fly 60 ft',
-				'mirror image': '3 duplicates'
+				'mirror image': '3 duplicates',
 			}[name.toLowerCase()] ?? 'utility'
 		);
 	return 'utility';
@@ -110,7 +110,7 @@ export interface PreparedClassTally {
  *  or `alwaysPrepared`). One tally per caster profile, in profile order. */
 export function preparedTalliesByClass(
 	spells: readonly { spell: string; prepared: boolean; alwaysPrepared: boolean }[],
-	sheet: CharacterSheet | null
+	sheet: CharacterSheet | null,
 ): PreparedClassTally[] {
 	const classes = sheet?.spellcasting.classes ?? [];
 	const counts = new Map<string, number>();
@@ -123,7 +123,7 @@ export function preparedTalliesByClass(
 		classId: c.classId,
 		className: c.className,
 		count: counts.get(c.classId) ?? 0,
-		cap: c.preparedCap
+		cap: c.preparedCap,
 	}));
 }
 
@@ -147,7 +147,7 @@ export function canTogglePreparedFor({
 	sheet,
 	entry,
 	spellRef,
-	isCantrip
+	isCantrip,
 }: PrepareToggleInput): PrepareAttempt {
 	const cls = casterForSpell(sheet, spellRef);
 	const tally = cls
@@ -166,7 +166,7 @@ function groupByLevel(
 	all: SpEntry[],
 	graph: ContentGraph,
 	slotsByLevel: Map<number, number>,
-	spellSlotsSpent: Record<string, number>
+	spellSlotsSpent: Record<string, number>,
 ): SpellGroup[] {
 	const byLevel = new Map<number, SpellRow[]>();
 	for (const x of all) {
@@ -183,7 +183,7 @@ function groupByLevel(
 				lvl === 0
 					? null
 					: { full: slotsByLevel.get(lvl) ?? 0, spent: spellSlotsSpent[String(lvl)] ?? 0 },
-			rows: byLevel.get(lvl) ?? []
+			rows: byLevel.get(lvl) ?? [],
 		}));
 }
 
@@ -209,7 +209,7 @@ function groupBySchool(all: SpEntry[], graph: ContentGraph): SpellGroup[] {
 		key: 'sch:' + sch,
 		label: titleCase(sch),
 		slots: null,
-		rows: bySchool.get(sch) ?? []
+		rows: bySchool.get(sch) ?? [],
 	}));
 }
 
@@ -231,7 +231,7 @@ export function buildSpellGroups({
 	graph,
 	groupBy,
 	pinned,
-	hidden = []
+	hidden = [],
 }: SpellGroupsInput): SpellGroup[] {
 	const slotsByLevel = new Map<number, number>();
 	for (const p of sheet?.spellcasting.pools ?? [])
@@ -243,8 +243,8 @@ export function buildSpellGroups({
 				graph,
 				sp.spell,
 				sp.alwaysPrepared ? 'always' : sp.prepared ? 'on' : '',
-				sheet?.level ?? 1
-			)
+				sheet?.level ?? 1,
+			),
 		}))
 		.filter((x): x is SpEntry => !!x.row)
 		.filter((x) => !hidden.includes(x.row.ref));
@@ -262,7 +262,7 @@ export function buildSpellGroups({
 			key: PACT_SLOT_KEY,
 			label: `Pact Magic · ${ordinal(pact.spellLevel)}`,
 			slots: { full: pact.max, spent: character.play.spellSlotsSpent[PACT_SLOT_KEY] ?? 0 },
-			rows: []
+			rows: [],
 		});
 
 	if (groupBy === 'level')
@@ -277,7 +277,7 @@ const SP_RES_CHIP: Record<string, SpellRow['resolution']> = {
 	attack: 'hit',
 	save: 'save',
 	auto: 'auto',
-	temp: 'temp'
+	temp: 'temp',
 };
 
 /** resolution → the row's result label ('' for utility); a save shows its ability. */
@@ -311,7 +311,7 @@ export function spellRow(
 	graph: ContentGraph,
 	ref: string,
 	prep: SpellRow['prepState'],
-	charLevel = 1
+	charLevel = 1,
 ): SpellRow | null {
 	const row = graph.get(ref);
 	if (row?.type !== 'spell') return null;
@@ -334,6 +334,6 @@ export function spellRow(
 		upcast: d.upcast ?? '',
 		concentration: d.concentration ?? false,
 		ritual: d.ritual ?? false,
-		prepState: prep
+		prepState: prep,
 	};
 }

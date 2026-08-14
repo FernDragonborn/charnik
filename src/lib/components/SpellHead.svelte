@@ -11,7 +11,7 @@
 		detail,
 		spell,
 		editable = false,
-		draft
+		draft,
 	}: {
 		detail: DetailModel;
 		spell: SpellModel;

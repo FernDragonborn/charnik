@@ -14,7 +14,7 @@ import {
 	preparedLeveledCount,
 	canTogglePrepared,
 	type CastPool,
-	type SlotTable
+	type SlotTable,
 } from './spellcasting';
 
 describe('cantrip damage scaling (A15 — 5/11/17 steps, both editions)', () => {
@@ -44,15 +44,15 @@ describe('caster level (multiclass)', () => {
 		expect(
 			effectiveCasterLevel([
 				{ share: 'full', level: 5 },
-				{ share: 'full', level: 5 }
-			])
+				{ share: 'full', level: 5 },
+			]),
 		).toBe(10);
 		// Paladin 6 (half) / Fighter-EK 3 (third) → 3 + 1 = 4
 		expect(
 			effectiveCasterLevel([
 				{ share: 'half', level: 6 },
-				{ share: 'third', level: 3 }
-			])
+				{ share: 'third', level: 3 },
+			]),
 		).toBe(4);
 	});
 
@@ -73,7 +73,7 @@ describe('caster level (multiclass)', () => {
 			fc.property(fc.array(fc.record({ share, level: fc.integer({ min: 1, max: 20 }) })), (es) => {
 				const total = es.reduce((n, e) => n + e.level, 0);
 				return effectiveCasterLevel(es) <= total;
-			})
+			}),
 		);
 	});
 });
@@ -81,7 +81,7 @@ describe('caster level (multiclass)', () => {
 describe('slots + caps', () => {
 	const full: SlotTable = new Map([
 		[1, [2, 0, 0, 0, 0, 0, 0, 0, 0]],
-		[5, [4, 3, 2, 0, 0, 0, 0, 0, 0]]
+		[5, [4, 3, 2, 0, 0, 0, 0, 0, 0]],
 	]);
 	const pact: SlotTable = new Map([[9, [0, 0, 0, 0, 2, 0, 0, 0, 0]]]);
 
@@ -99,21 +99,21 @@ describe('slots + caps', () => {
 
 	it('with no table row, 5e falls back to ITS formula (ability mod + effective level)', () => {
 		expect(preparedCap(undefined, { system: '5e', abilityMod: 3, share: 'full', level: 5 })).toBe(
-			8
+			8,
 		);
 		expect(preparedCap(undefined, { system: '5e', abilityMod: 3, share: 'half', level: 6 })).toBe(
-			6
+			6,
 		);
 		// "minimum of one spell" — a dump-stat caster still prepares one
 		expect(preparedCap(undefined, { system: '5e', abilityMod: -2, share: 'full', level: 1 })).toBe(
-			1
+			1,
 		);
 	});
 
 	it('5.5e states NO formula, so a missing row is UNKNOWN — never 2014 math', () => {
 		// the whole point: silently reusing the 5e formula would mix the systems (compatibility.md)
 		expect(preparedCap(undefined, { system: '5.5e', abilityMod: 3, share: 'full', level: 5 })).toBe(
-			null
+			null,
 		);
 	});
 
@@ -122,19 +122,19 @@ describe('slots + caps', () => {
 		expect(pools.map((p) => [p.spellLevel, p.max])).toEqual([
 			[1, 4],
 			[2, 3],
-			[3, 2]
+			[3, 2],
 		]);
 		const pactPools = slotPools(slotCountsFor(pact, 9), {
 			idPrefix: 'pact',
 			recharge: 'short',
-			forcedUpcast: true
+			forcedUpcast: true,
 		});
 		expect(pactPools).toHaveLength(1);
 		expect(pactPools[0]).toMatchObject({
 			spellLevel: 5,
 			max: 2,
 			recharge: 'short',
-			forcedUpcast: true
+			forcedUpcast: true,
 		});
 	});
 });
@@ -145,7 +145,7 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 		label: `Level ${spellLevel}`,
 		spellLevel,
 		max,
-		recharge: 'long'
+		recharge: 'long',
 	});
 	const pools = [pool(1, 4), pool(2, 3), pool(3, 2)];
 
@@ -168,7 +168,7 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 			spellLevel: 3,
 			max: 2,
 			recharge: 'short',
-			forcedUpcast: true
+			forcedUpcast: true,
 		};
 		// a warlock spell of any level ≤ the pact slot level spends one pact slot
 		expect(slotToSpend(1, [pact], {})).toEqual({ key: 'pact' });
@@ -184,7 +184,7 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 
 	it('blocks when the caster has leveled slots but none ≥ the level remain', () => {
 		expect(slotToSpend(3, pools, { '3': 2 })).toEqual({
-			block: 'No level-3 spell slot remaining'
+			block: 'No level-3 spell slot remaining',
 		});
 	});
 
@@ -195,10 +195,10 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 
 	it('blocks a chosen slot below the spell level, or a chosen-but-empty level (never downshifts)', () => {
 		expect(slotToSpend(3, pools, {}, 1)).toEqual({
-			block: "A level-1 slot can't cast a level-3 spell"
+			block: "A level-1 slot can't cast a level-3 spell",
 		});
 		expect(slotToSpend(1, pools, { '3': 2 }, 3)).toEqual({
-			block: 'No level-3 spell slot remaining'
+			block: 'No level-3 spell slot remaining',
 		});
 	});
 });
@@ -209,7 +209,7 @@ describe('castableSlotLevels — the upcast picker options', () => {
 		label: `Level ${spellLevel}`,
 		spellLevel,
 		max,
-		recharge: 'long'
+		recharge: 'long',
 	});
 	const pools = [pool(1, 4), pool(2, 3), pool(3, 2)];
 
@@ -231,7 +231,7 @@ describe('castableSlotLevels — the upcast picker options', () => {
 			spellLevel: 3,
 			max: 2,
 			recharge: 'short',
-			forcedUpcast: true
+			forcedUpcast: true,
 		};
 		expect(castableSlotLevels(1, [pact], {})).toEqual([]);
 	});
@@ -241,7 +241,7 @@ describe('prepared cap helpers (D13 — shared by combat + spellbook)', () => {
 	const spells = [
 		{ prepared: true, alwaysPrepared: false }, // counts
 		{ prepared: true, alwaysPrepared: true }, // always → free, never counted
-		{ prepared: false, alwaysPrepared: false } // not prepared
+		{ prepared: false, alwaysPrepared: false }, // not prepared
 	];
 	it('preparedLeveledCount counts only leveled prepared spells (excludes always-prepared)', () => {
 		expect(preparedLeveledCount(spells)).toBe(1);
@@ -253,16 +253,16 @@ describe('prepared cap helpers (D13 — shared by combat + spellbook)', () => {
 	});
 	it('canTogglePrepared refuses always-prepared silently (no message)', () => {
 		expect(canTogglePrepared({ prepared: true, alwaysPrepared: true }, false, 5, 0)).toEqual({
-			ok: false
+			ok: false,
 		});
 	});
 	it('canTogglePrepared blocks preparing over the cap but always allows UN-preparing', () => {
 		expect(canTogglePrepared({ prepared: false, alwaysPrepared: false }, false, 3, 3).ok).toBe(
-			false
+			false,
 		);
 		// already prepared → unprepare is fine even at the cap
 		expect(canTogglePrepared({ prepared: true, alwaysPrepared: false }, false, 3, 3)).toEqual({
-			ok: true
+			ok: true,
 		});
 	});
 });

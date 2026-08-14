@@ -26,7 +26,7 @@ describe('buildDetail', () => {
 	it('spell: eyebrow is Cantrip / Level + school; carries a spell model + friendly source', () => {
 		const cantrip = buildDetail(
 			row({ name_en: 'Fire Bolt', level: '0', school: 'evocation' }),
-			'spell'
+			'spell',
 		);
 		expect(cantrip.eyebrow).toBe('Cantrip · Evocation');
 		expect(cantrip.title).toBe('Fire Bolt');
@@ -37,7 +37,7 @@ describe('buildDetail', () => {
 
 		const leveled = buildDetail(
 			row({ name_en: 'Fireball', level: '3', school: 'evocation' }),
-			'spell'
+			'spell',
 		);
 		expect(leveled.eyebrow).toBe('Level 3 · Evocation');
 	});
@@ -58,7 +58,7 @@ describe('buildDetail', () => {
 			material: 'bat guano', // legacy bare column (no _en) → still shown
 			higher_level: '+1d6 per slot',
 			level: '3',
-			school: 'evocation'
+			school: 'evocation',
 		};
 		const uk = buildDetail(row(d), 'spell', undefined, 'uk');
 		expect(uk.title).toBe('Вогняна куля');
@@ -78,7 +78,7 @@ describe('buildDetail', () => {
 			row({ name_en: 'Alert', name_uk: 'Пильність', text_uk: 'опис', category: 'origin' }, 'feat'),
 			'feat',
 			undefined,
-			'uk'
+			'uk',
 		);
 		expect(detail.title).toBe('Пильність');
 		expect(detail.meta.map(([k]) => k)).not.toContain('Name Uk');
@@ -93,7 +93,7 @@ describe('entryMeta', () => {
 
 	it('item sub-line drops a broader term already implied by a more specific one', () => {
 		expect(entryMeta(row({ category: 'gear', item_type: 'adventuring gear' }, 'item'))).toBe(
-			'adventuring gear'
+			'adventuring gear',
 		);
 	});
 });

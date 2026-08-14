@@ -19,12 +19,12 @@ const okText = (body: string): FakeResponse => ({
 	ok: true,
 	status: 200,
 	text: () => Promise.resolve(body),
-	arrayBuffer: () => Promise.resolve(new TextEncoder().encode(body).buffer)
+	arrayBuffer: () => Promise.resolve(new TextEncoder().encode(body).buffer),
 });
 const okJson = (data: unknown): FakeResponse => ({
 	ok: true,
 	status: 200,
-	json: () => Promise.resolve(data)
+	json: () => Promise.resolve(data),
 });
 const notFound = (): FakeResponse => ({ ok: false, status: 404 });
 
@@ -44,7 +44,7 @@ describe('FetchStorage.read / readBytes', () => {
 	it('throws with the status on a non-ok response', async () => {
 		fetchMock.mockResolvedValueOnce(notFound());
 		await expect(new FetchStorage().read('content/missing.csv')).rejects.toThrow(
-			'fetch content/missing.csv: 404'
+			'fetch content/missing.csv: 404',
 		);
 	});
 
@@ -63,17 +63,17 @@ describe('FetchStorage.list / exists (manifest-backed)', () => {
 		const entries = await new FetchStorage().list('content/srd-2024');
 		expect(entries).toEqual([
 			{ path: 'content/srd-2024/spells_srd.csv', name: 'spells_srd.csv', isDir: false },
-			{ path: 'content/srd-2024/items_srd.csv', name: 'items_srd.csv', isDir: false }
+			{ path: 'content/srd-2024/items_srd.csv', name: 'items_srd.csv', isDir: false },
 		]);
 	});
 
 	it('reports the manifest roots under a dir as SUBDIRECTORIES (pack discovery scans for these)', async () => {
 		fetchMock.mockResolvedValueOnce(
-			okJson({ roots: { 'content/srd-2024': ['spells_srd.csv'], 'content/srd-2014': [] } })
+			okJson({ roots: { 'content/srd-2024': ['spells_srd.csv'], 'content/srd-2014': [] } }),
 		);
 		expect(await new FetchStorage().list('content')).toEqual([
 			{ path: 'content/srd-2024', name: 'srd-2024', isDir: true },
-			{ path: 'content/srd-2014', name: 'srd-2014', isDir: true }
+			{ path: 'content/srd-2014', name: 'srd-2014', isDir: true },
 		]);
 	});
 
@@ -83,17 +83,17 @@ describe('FetchStorage.list / exists (manifest-backed)', () => {
 		const nested = {
 			roots: {
 				'content/dark-sun': ['classes_srd.csv'],
-				'content/dark-sun/plugins/rules': ['main.js', 'plugin.json']
-			}
+				'content/dark-sun/plugins/rules': ['main.js', 'plugin.json'],
+			},
 		};
 		fetchMock.mockResolvedValue(okJson(nested));
 		const s = new FetchStorage();
 		expect(await s.list('content')).toEqual([
-			{ path: 'content/dark-sun', name: 'dark-sun', isDir: true }
+			{ path: 'content/dark-sun', name: 'dark-sun', isDir: true },
 		]);
 		expect(await s.list('content/dark-sun')).toEqual([
 			{ path: 'content/dark-sun/plugins', name: 'plugins', isDir: true },
-			{ path: 'content/dark-sun/classes_srd.csv', name: 'classes_srd.csv', isDir: false }
+			{ path: 'content/dark-sun/classes_srd.csv', name: 'classes_srd.csv', isDir: false },
 		]);
 		expect(await s.list('content/dark-sun/plugins/rules')).toHaveLength(2);
 		expect(await s.exists('content/dark-sun/plugins/rules/main.js')).toBe(true);
@@ -135,7 +135,7 @@ describe('FetchStorage.list / exists (manifest-backed)', () => {
 		fetchMock.mockResolvedValueOnce({ ok: true, status: 200 } as FakeResponse); // HEAD hit
 		await expect(new FetchStorage().exists('other/dir/file.csv')).resolves.toBe(true);
 		expect(fetchMock).toHaveBeenLastCalledWith(expect.stringContaining('other/dir/file.csv'), {
-			method: 'HEAD'
+			method: 'HEAD',
 		});
 	});
 });

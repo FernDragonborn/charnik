@@ -28,14 +28,14 @@ export const PANEL_TITLE: Record<string, string> = {
 	attacks: 'Attacks',
 	spells: 'Spells',
 	actions: 'Actions',
-	effects: 'Effects & conditions'
+	effects: 'Effects & conditions',
 };
 
 /** Why the character died — the dead banner's subtitle, one phrase per `play.death.cause`. */
 export const DEATH_CAUSE_LABEL: Record<DeathCause, string> = {
 	massive_damage: 'Massive damage — the leftover met your hit-point maximum',
 	death_saves: 'Three failed death saves',
-	exhaustion: 'The last level of Exhaustion'
+	exhaustion: 'The last level of Exhaustion',
 };
 
 /** Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`. */
@@ -46,7 +46,7 @@ export const ABILITY_NAME: Record<Ability, string> = {
 	con: 'Constitution',
 	int: 'Intelligence',
 	wis: 'Wisdom',
-	cha: 'Charisma'
+	cha: 'Charisma',
 };
 
 /** The 18 SRD skills (id order) — for the custom-modifier target picker. */
@@ -63,8 +63,8 @@ export const MOD_TARGETS: { group: string; opts: { v: string; l: string }[] }[] 
 		opts: [
 			{ v: 'ac', l: 'AC' },
 			{ v: 'initiative', l: 'Initiative' },
-			{ v: 'speed', l: 'Speed (ft)' }
-		]
+			{ v: 'speed', l: 'Speed (ft)' },
+		],
 	},
 	{
 		group: 'Saves',
@@ -72,17 +72,17 @@ export const MOD_TARGETS: { group: string; opts: { v: string; l: string }[] }[] 
 			{ v: 'saves', l: 'All saves' },
 			...(['str', 'dex', 'con', 'int', 'wis', 'cha'] as const).map((a) => ({
 				v: `save.${a}`,
-				l: `${a.toUpperCase()} save`
-			}))
-		]
+				l: `${a.toUpperCase()} save`,
+			})),
+		],
 	},
 	{
 		group: 'Skills',
 		opts: [
 			{ v: 'skills', l: 'All skills' },
-			...SKILL_IDS.map((s) => ({ v: `skill.${s}`, l: titleCase(s) }))
-		]
-	}
+			...SKILL_IDS.map((s) => ({ v: `skill.${s}`, l: titleCase(s) })),
+		],
+	},
 ];
 
 /** Human label for a custom-modifier target key (for the auto effect name). Pure. */

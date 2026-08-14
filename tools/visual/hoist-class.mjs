@@ -24,7 +24,7 @@ for (const [oldC, newC] of map) {
 			`class="${cls
 				.split(/\s+/)
 				.map((t) => (t === oldC ? newC : t))
-				.join(' ')}"`
+				.join(' ')}"`,
 	);
 	head = head.replace(new RegExp(`class:${oldC}\\b`, 'g'), `class:${newC}`);
 	// style: delete the local `.old { … }` flat rule (the new name is a global now)

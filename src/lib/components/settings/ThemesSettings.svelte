@@ -11,14 +11,14 @@
 		THEMEABLE_TOKENS,
 		snapshotBaseTokens,
 		type CustomTheme,
-		type ThemeableToken
+		type ThemeableToken,
 	} from '$lib/styles/customThemes';
 	import {
 		writeThemeFile,
 		removeThemeFile,
 		serializeTheme,
 		themeFromJson,
-		uniqueThemeId
+		uniqueThemeId,
 	} from '$lib/styles/themeFiles';
 	import { getUserStorage } from '$lib/storage/provider';
 
@@ -64,7 +64,7 @@
 		const theme: CustomTheme = {
 			id: uniqueThemeId(name, takenIds()),
 			name,
-			tokens: snapshotBaseTokens(base)
+			tokens: snapshotBaseTokens(base),
 		};
 		addTheme(theme, { activate: true, edit: true }); // activate so the editor previews live
 	}
@@ -73,7 +73,7 @@
 		const name = `${src.name} copy`;
 		addTheme(
 			{ id: uniqueThemeId(name, takenIds()), name, tokens: { ...src.tokens } },
-			{ edit: true }
+			{ edit: true },
 		);
 	}
 
@@ -139,7 +139,7 @@
 	// the list below with everything else (editable + deletable; the only difference is they ship).
 	const BUILT_INS = [
 		{ id: 'dark', name: '☾ Dark', clean: 'Dark' },
-		{ id: 'light', name: '☀ Light', clean: 'Light' }
+		{ id: 'light', name: '☀ Light', clean: 'Light' },
 	];
 	const SWATCHES = ['color-bg', 'color-surface', 'color-accent', 'color-resource', 'color-good'];
 </script>

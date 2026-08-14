@@ -6,7 +6,7 @@ import type { ExprContext } from './expression-evaluator';
 const at = (s: number, sl: number): ExprContext => ({
 	number: (n) => (n === 'slot' ? s : n === 'spell_level' ? sl : undefined),
 	boolean: (n) => (n === 'is_bloodied' ? false : undefined),
-	enum: () => undefined
+	enum: () => undefined,
 });
 
 /** The single (successful) result of a one-token cell. */
@@ -20,7 +20,7 @@ function one(cell: string, ctx: ExprContext): UpcastResult {
 describe('UPCAST · parseUpcast — grammar', () => {
 	it('parses a linear damage delta (Fireball)', () => {
 		expect(parseUpcast('damage:per_slot(1d6)')).toEqual([
-			{ kind: 'damage', formula: 'per_slot(1d6)', combine: 'delta', raw: 'damage:per_slot(1d6)' }
+			{ kind: 'damage', formula: 'per_slot(1d6)', combine: 'delta', raw: 'damage:per_slot(1d6)' },
 		]);
 	});
 
@@ -31,8 +31,8 @@ describe('UPCAST · parseUpcast — grammar', () => {
 				type: 'bludgeoning',
 				formula: 'per_slot(1d8)',
 				combine: 'delta',
-				raw: 'damage:bludgeoning:per_slot(1d8)'
-			}
+				raw: 'damage:bludgeoning:per_slot(1d8)',
+			},
 		]);
 	});
 
@@ -52,7 +52,7 @@ describe('UPCAST · parseUpcast — grammar', () => {
 
 	it('rejects a `:type` sub-slot on enhancement (only damage/heal are typed)', () => {
 		expect(parseUpcast('enhancement:melee:slot+1')[0]).toMatchObject({
-			error: expect.stringContaining('cannot carry a type')
+			error: expect.stringContaining('cannot carry a type'),
 		});
 	});
 
@@ -64,12 +64,12 @@ describe('UPCAST · parseUpcast — grammar', () => {
 
 	it('degrades a malformed / unknown / mis-typed token to a parse error (H11)', () => {
 		expect(parseUpcast('nonsense:1d6')[0]).toMatchObject({
-			error: expect.stringContaining('unknown')
+			error: expect.stringContaining('unknown'),
 		});
 		expect(parseUpcast('damage')[0]).toMatchObject({ error: expect.any(String) });
 		// a `:type` sub-slot is only legal on damage/heal, not count
 		expect(parseUpcast('count:fire:slot+1')[0]).toMatchObject({
-			error: expect.stringContaining('cannot carry a type')
+			error: expect.stringContaining('cannot carry a type'),
 		});
 	});
 
@@ -91,7 +91,7 @@ describe('UPCAST · evalUpcast — evaluation against a cast ctx', () => {
 		expect(one('heal:per_slot(1d8)', at(2, 1))).toMatchObject({
 			kind: 'heal',
 			combine: 'delta',
-			pool: { 8: 1 }
+			pool: { 8: 1 },
 		});
 	});
 
@@ -116,21 +116,21 @@ describe('UPCAST · evalUpcast — evaluation against a cast ctx', () => {
 
 	it('rejects inf on a non-duration kind (would poison base+delta arithmetic)', () => {
 		expect(evalUpcast('damage:step(slot, 9->inf)', at(9, 3))[0]).toMatchObject({
-			error: expect.stringContaining('duration')
+			error: expect.stringContaining('duration'),
 		});
 	});
 
 	it('degrades a broken formula to an error (content-health, not silent-wrong dice)', () => {
 		expect(evalUpcast('damage:1d6 +', at(5, 3))[0]).toMatchObject({ error: expect.any(String) });
 		expect(evalUpcast('count:1/0', at(5, 3))[0]).toMatchObject({
-			error: expect.stringContaining('division')
+			error: expect.stringContaining('division'),
 		});
 	});
 
 	it('honours an optional guard prefix (false guard → 0 contribution)', () => {
 		expect(one('is_bloodied ? damage:per_slot(1d6)', at(5, 3))).toMatchObject({
 			pool: {},
-			flat: 0
+			flat: 0,
 		});
 	});
 

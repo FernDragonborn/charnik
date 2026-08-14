@@ -11,7 +11,7 @@ import { readPackFile } from '../../test-support/real-content';
  */
 const EDITIONS = [
 	['5.5e', 'srd-2024'],
-	['5e', 'srd-2014']
+	['5e', 'srd-2014'],
 ] as const;
 
 async function loadEdition(pack: string) {
@@ -50,8 +50,8 @@ describe('shipped conditions · effects column is engine-valid', () => {
 						'apply_condition:incapacitated',
 						'set_override:speed:0',
 						'auto_fail:save.str',
-						'auto_fail:save.dex'
-					])
+						'auto_fail:save.dex',
+					]),
 				);
 				// prone carries at least one display-only note (attacks against you)
 				expect(effectsOf('prone').some((t) => t.startsWith('note:'))).toBe(true);
@@ -59,7 +59,7 @@ describe('shipped conditions · effects column is engine-valid', () => {
 				// benefit from a bonus to its speed") — the 0-set alone lets a later +10 survive.
 				for (const id of ['grappled', 'restrained'])
 					expect(effectsOf(id), id).toEqual(
-						expect.arrayContaining(['set_override:speed:0', 'block_bonus:speed'])
+						expect.arrayContaining(['set_override:speed:0', 'block_bonus:speed']),
 					);
 			});
 		});

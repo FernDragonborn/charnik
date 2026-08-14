@@ -75,7 +75,7 @@ export function parseDiceTerm(term: string): BonusDie | null {
 	return {
 		count: Math.min(Number(m[2]), MAX_DICE_PER_TERM),
 		sides: Math.min(Number(m[3]), MAX_DIE_SIDES),
-		sign: m[1] === '-' ? -1 : 1
+		sign: m[1] === '-' ? -1 : 1,
 	};
 }
 
@@ -119,7 +119,7 @@ interface PoolResult {
 function rollPoolDice(
 	dice: Record<number, number>,
 	advantage: number,
-	rollOne: (sides: number) => { v: number; face: number; label: string }
+	rollOne: (sides: number) => { v: number; face: number; label: string },
 ): PoolResult {
 	const parts: string[] = [];
 	let total = 0;
@@ -138,7 +138,7 @@ function rollPoolDice(
 					kept: win,
 					dropped: winIsFirst ? r2.v : r.v,
 					mode: advantage > 0 ? 1 : -1,
-					original: r.v
+					original: r.v,
 				};
 				natural = winIsFirst ? r.face : r2.face; // the kept die's face (pre-floor)
 				total += win;
@@ -153,7 +153,7 @@ function rollPoolDice(
 		total,
 		parts,
 		...(advantageRoll !== undefined ? { advantageRoll } : {}),
-		...(natural !== undefined ? { natural } : {})
+		...(natural !== undefined ? { natural } : {}),
 	};
 }
 
@@ -169,7 +169,7 @@ export function rollPool(
 	mod = 0,
 	advantage = 0,
 	bonusDice: BonusDie[] = [],
-	opts: RollOptions | Rng = {}
+	opts: RollOptions | Rng = {},
 ): Rolled {
 	const o: RollOptions = typeof opts === 'function' ? { rng: opts } : opts;
 	const rng = o.rng ?? Math.random;
@@ -205,7 +205,7 @@ export function rollPool(
 		total,
 		expr,
 		...(pool.advantageRoll !== undefined ? { advantageRoll: pool.advantageRoll } : {}),
-		...(pool.natural !== undefined ? { natural: pool.natural } : {})
+		...(pool.natural !== undefined ? { natural: pool.natural } : {}),
 	};
 }
 
@@ -233,7 +233,7 @@ export function parseRollExpr(expr: string): { chips: DieChip[]; mod: number } {
 			// the LAST number is what the die finally counted as (post reroll ↻ and post floor →)
 			value: Number(faces[faces.length - 1] ?? 0),
 			sign: m[1] === '−' ? -1 : 1,
-			detail
+			detail,
 		});
 	}
 	// no die ever ends in a bare signed number (they all close with `)`), so the tail is the flat mod
@@ -278,10 +278,10 @@ export function amendWithAdvantage<T extends Rolled>(r: T, rng: Rng = Math.rando
 		// the kept d20 renders from `advantageRoll`, so it must leave `expr` or it would show twice
 		expr: formatExpr(
 			chips.filter((_, k) => k !== index),
-			mod
+			mod,
 		),
 		advantageRoll: { kept, dropped: keptIsFresh ? d20.value : fresh, mode: 1, original: d20.value },
-		natural: keptIsFresh ? fresh : (r.natural ?? d20.value)
+		natural: keptIsFresh ? fresh : (r.natural ?? d20.value),
 	};
 }
 
@@ -304,9 +304,9 @@ export function flipAdvantage<T extends Rolled>(r: T): T | null {
 			kept: adv.dropped,
 			dropped: adv.kept,
 			mode: (adv.mode ?? (adv.kept >= adv.dropped ? 1 : -1)) === 1 ? -1 : 1,
-			...(adv.original !== undefined ? { original: adv.original } : {})
+			...(adv.original !== undefined ? { original: adv.original } : {}),
 		},
-		natural: adv.dropped
+		natural: adv.dropped,
 	};
 }
 
@@ -326,7 +326,7 @@ export function clearAdvantage<T extends Rolled>(r: T): T | null {
 		...(rest as T),
 		total: r.total - adv.kept + adv.original,
 		expr: formatExpr([d20, ...chips], mod),
-		natural: adv.original
+		natural: adv.original,
 	};
 }
 

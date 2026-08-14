@@ -64,7 +64,7 @@ function parseMonsters(md, cutH3) {
 			starts.push({
 				meta: i,
 				name: headingFor[i],
-				nameIdx: lines.lastIndexOf(headingFor[i] && `### ${headingFor[i]}`)
+				nameIdx: lines.lastIndexOf(headingFor[i] && `### ${headingFor[i]}`),
 			});
 		}
 	}
@@ -86,7 +86,7 @@ function parseMonsters(md, cutH3) {
 		const save = (a) => {
 			const r = new RegExp(
 				`<strong>${a}</strong>\\s*</td>\\s*<td>\\s*\\d+\\s*</td>\\s*<td>[^<]*</td>\\s*<td>\\s*([+−\\-\\d]+)\\s*</td>`,
-				'i'
+				'i',
 			).exec(block);
 			return r ? Number(r[1].replace('−', '-')) : '';
 		};
@@ -136,7 +136,7 @@ function parseMonsters(md, cutH3) {
 			gear: field1(block, 'Gear'),
 			senses: field1(block, 'Senses'),
 			languages: field1(block, 'Languages'),
-			skills: field1(block, 'Skills')
+			skills: field1(block, 'Skills'),
 		});
 	}
 	return out;
@@ -144,7 +144,7 @@ function parseMonsters(md, cutH3) {
 
 const rows = [
 	...parseMonsters(srcFile('monsters-A-Z.md'), true),
-	...parseMonsters(srcFile('animals.md'), false)
+	...parseMonsters(srcFile('animals.md'), false),
 ];
 assertCount('monsters', rows.length, 330); // monsters-A-Z 235 + animals 95
 dedupeIds(rows);
@@ -187,9 +187,9 @@ writeCsv(
 		'gear',
 		'senses',
 		'languages',
-		'skills'
+		'skills',
 	],
-	rows
+	rows,
 );
 console.log(`wrote ${rows.length} monsters`);
 console.log('CR spread:', [...new Set(rows.map((r) => r.cr))].filter(Boolean).sort().join(' '));

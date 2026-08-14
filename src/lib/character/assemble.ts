@@ -10,7 +10,7 @@ import {
 	type Character,
 	type CharacterPlay,
 	type CharacterUi,
-	type ShortRestMode
+	type ShortRestMode,
 } from './schema';
 import type { SystemId } from '../stores/app.svelte';
 
@@ -46,7 +46,7 @@ export function assembleCharacter(build: BuildInput, w: AssembleWrapper): Charac
 		// editing keeps the original play-state; creating starts blank
 		play: w.play ?? { hp: { current: 0, temp: 0 } },
 		// persist the Free/Strict + short-rest-model choices per character (keep other ui prefs)
-		ui: { ...(w.ui ?? {}), strict: w.strict, shortRestMode: w.shortRestMode }
+		ui: { ...(w.ui ?? {}), strict: w.strict, shortRestMode: w.shortRestMode },
 	});
 	if (res.success) return res.data;
 	// last-resort: a bare valid character so the preview never crashes
@@ -56,6 +56,6 @@ export function assembleCharacter(build: BuildInput, w: AssembleWrapper): Charac
 		system: w.system,
 		build: { name: build.name, abilities: build.abilities },
 		play: { hp: { current: 0, temp: 0 } },
-		ui: {}
+		ui: {},
 	});
 }

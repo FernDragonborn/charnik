@@ -6,7 +6,7 @@
 	// head, since its margins depend on that head's own layout.
 	let {
 		value = $bindable(''),
-		placeholder
+		placeholder,
 	}: {
 		value?: string;
 		/** Shown when the name is empty — the article's display title, so an untranslated entry still

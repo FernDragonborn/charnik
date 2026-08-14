@@ -18,7 +18,7 @@ import {
 	writeCsv,
 	assertCount,
 	dedupeIds,
-	existingColById
+	existingColById,
 } from './lib.mjs';
 import { packDir } from '../content-repo.mjs';
 
@@ -37,13 +37,13 @@ function martialSubsets(itemsCsvPath) {
 		.filter((l) => !l.startsWith('#'))
 		.join('\n');
 	const weapons = Papa.parse(raw, { header: true, skipEmptyLines: true }).data.filter(
-		(r) => r.category === 'weapon' && /^martial (melee|ranged)$/i.test(r.item_type || '')
+		(r) => r.category === 'weapon' && /^martial (melee|ranged)$/i.test(r.item_type || ''),
 	);
 	return {
 		finesseOrLight: weapons
 			.filter((r) => /finesse|light/i.test(r.properties || ''))
 			.map((r) => r.id),
-		light: weapons.filter((r) => /\blight\b/i.test(r.properties || '')).map((r) => r.id)
+		light: weapons.filter((r) => /\blight\b/i.test(r.properties || '')).map((r) => r.id),
 	};
 }
 
@@ -159,7 +159,7 @@ for (const part of parts) {
 		weapon_profs: parseWeaponProfs(traits['Weapon Proficiencies'], subsets),
 		armor_profs: parseArmorProfs(traits['Armor Training']),
 		subclass_level: subclassLevel,
-		asi_levels: asiLevels.join(',')
+		asi_levels: asiLevels.join(','),
 	});
 
 	const pushFeature = (b, subclass_id) => {
@@ -180,7 +180,7 @@ for (const part of parts) {
 			level: Number(m[1]),
 			resource: '',
 			subclass_id: subclass_id || '',
-			expertise_slots: authoredExpertise.get(fid) ?? '' // preserve N4a grants authored post-conversion
+			expertise_slots: authoredExpertise.get(fid) ?? '', // preserve N4a grants authored post-conversion
 		});
 	};
 
@@ -203,7 +203,7 @@ for (const part of parts) {
 			text_en: '',
 			text_uk: '',
 			effects: '',
-			class_id: id
+			class_id: id,
 		});
 		for (const b of blocks('## x\n' + subPortion)) pushFeature(b, subId);
 	}
@@ -236,9 +236,9 @@ writeCsv(
 		'weapon_profs',
 		'armor_profs',
 		'subclass_level',
-		'asi_levels'
+		'asi_levels',
 	],
-	classRows
+	classRows,
 );
 writeCsv(
 	resolve(packDir('srd-2024'), 'class_features_srd.csv'),
@@ -255,19 +255,19 @@ writeCsv(
 		'level',
 		'resource',
 		'subclass_id',
-		'expertise_slots'
+		'expertise_slots',
 	],
-	featureRows
+	featureRows,
 );
 writeCsv(
 	resolve(packDir('srd-2024'), 'subclasses_srd.csv'),
 	['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'class_id'],
-	subclassRows
+	subclassRows,
 );
 console.log(
 	'classes:',
 	classRows
 		.map((c) => `${c.id}(${c.hit_die},${c.caster}${c.spell_ability ? '/' + c.spell_ability : ''})`)
-		.join(' ')
+		.join(' '),
 );
 console.log('subclasses:', subclassRows.map((s) => s.id).join(' '));

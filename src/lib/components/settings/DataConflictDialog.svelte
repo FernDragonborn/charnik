@@ -14,7 +14,7 @@
 		onPickAnother,
 		onRepoint,
 		onMerge,
-		onclose
+		onclose,
 	}: {
 		rows: ConflictRow[];
 		currentPath: string;

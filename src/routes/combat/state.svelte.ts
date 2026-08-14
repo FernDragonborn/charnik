@@ -14,7 +14,7 @@ import {
 	deriveSheet,
 	type CharacterSheet,
 	type SkillId,
-	type ResourceOption
+	type ResourceOption,
 } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { rollPool, rollFormula } from '$lib/rules/dice';
@@ -48,14 +48,14 @@ import {
 	type TypedRoll,
 	type MenuKind,
 	type StandardAction,
-	type ActionSlot
+	type ActionSlot,
 } from '$lib/combat/helpers';
 import { RollTray, type RollSpec } from './roll.svelte';
 import {
 	appendLog,
 	readLog,
 	snapshotCharacterOnLaunch,
-	type LogEntry
+	type LogEntry,
 } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
 import type { RollLogEntry } from '$lib/combat/helpers';
@@ -75,7 +75,7 @@ const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> 
 	action: 'action',
 	bonus_action: 'bonus',
 	reaction: 'reaction',
-	free: null
+	free: null,
 };
 
 /**
@@ -104,12 +104,12 @@ class CombatVM {
 	/** Action-economy subsystem (pips, movement, turn/round, in-combat spend checks). */
 	economy = new TurnEconomy(
 		() => this.character,
-		() => this.sheet
+		() => this.sheet,
 	);
 	/** Resource/rest subsystem (spell slots, resource pips, short/long rests). */
 	resources = new ResourceTracker(
 		() => this.character,
-		() => this.sheet
+		() => this.sheet,
 	);
 	// read the shared reactive content store → a live content refresh (reloadContent) re-derives the
 	// sheet with no page reload, while the character's play-state is left untouched
@@ -133,7 +133,7 @@ class CombatVM {
 	// B19: any round-timed effect currently ticking. Gates the out-of-combat "pass time" control — a
 	// timed buff cast outside a fight has no turn advance to expire it, so it'd hang until a rest.
 	hasTimedEffects = $derived(
-		(this.character?.play.effects ?? []).some((e) => e.durationRounds != null)
+		(this.character?.play.effects ?? []).some((e) => e.durationRounds != null),
 	);
 	// Savage Attacker (N2, `damage_reroll` fact): the last weapon-damage roll the player MAY reroll,
 	// keeping the higher weapon-dice total — once per turn (2024). Held until used or superseded by the
@@ -160,7 +160,7 @@ class CombatVM {
 	// D3: pins persist per character in ui.spellsPinned (bare ids), not a demo hardcode. Exposed as a
 	// boolean map for the panel's `pinned[id]` lookup; toggle via togglePin so the array stays the source.
 	pinned = $derived<Record<string, boolean>>(
-		Object.fromEntries((this.character?.ui.spellsPinned ?? []).map((id) => [id, true]))
+		Object.fromEntries((this.character?.ui.spellsPinned ?? []).map((id) => [id, true])),
 	);
 	togglePin = (id: string) => {
 		const ui = this.character?.ui;
@@ -207,7 +207,7 @@ class CombatVM {
 		// restore the persisted roll history so the log isn't empty after a reload (B4)
 		const hist = await readLog(getUserStorage(), c.id);
 		this.tray.seed(
-			hist.map((le) => ({ label: le.label, expr: le.detail ?? '', total: le.result ?? NaN }))
+			hist.map((le) => ({ label: le.label, expr: le.detail ?? '', total: le.result ?? NaN })),
 		);
 	};
 
@@ -230,7 +230,7 @@ class CombatVM {
 			kind,
 			top: r.bottom + window.scrollY + 6,
 			left: anchorRight ? null : r.left + window.scrollX,
-			right: anchorRight ? document.documentElement.clientWidth - r.right : null
+			right: anchorRight ? document.documentElement.clientWidth - r.right : null,
 		};
 	};
 
@@ -263,7 +263,7 @@ class CombatVM {
 			kind,
 			top: window.scrollY + 80,
 			left: Math.max(8, window.innerWidth / 2 - 150),
-			right: null
+			right: null,
 		};
 	};
 
@@ -280,7 +280,7 @@ class CombatVM {
 			dice: pool,
 			mod,
 			advantage: req.advantage ?? 0,
-			mods: req.mods ?? {}
+			mods: req.mods ?? {},
 		});
 		if (req.queuedDamage)
 			this.tray.queueDamage({
@@ -290,9 +290,9 @@ class CombatVM {
 						dice: req.queuedDamage.dice,
 						mod: req.queuedDamage.mod,
 						type: '',
-						...(req.queuedDamage.mods ? { mods: req.queuedDamage.mods } : {})
-					}
-				]
+						...(req.queuedDamage.mods ? { mods: req.queuedDamage.mods } : {}),
+					},
+				],
 			});
 		this.openMenuCentered('dice');
 	};
@@ -315,8 +315,8 @@ class CombatVM {
 			...o,
 			left:
 				(this.sheet?.resources.find((r) => r.id === o.resourceId)?.max ?? 0) -
-				this.resources.resourceSpent(o.resourceId)
-		}))
+				this.resources.resourceSpent(o.resourceId),
+		})),
 	);
 
 	/** Hit-dice pools for the panel: each die size with its spent/left counts (left disables the spend
@@ -325,8 +325,8 @@ class CombatVM {
 		(this.sheet?.hitDice ?? []).map((h) => ({
 			...h,
 			spent: this.resources.hitDiceSpent(h.die),
-			left: h.max - this.resources.hitDiceSpent(h.die)
-		}))
+			left: h.max - this.resources.hitDiceSpent(h.die),
+		})),
 	);
 	/** Spend one Hit Die of the given size (short-rest healing): roll the die + CON mod, heal a MINIMUM
 	 *  of 1 HP (RAW) clamped to max, log it, and mark the die spent. Blocked when that pool is empty. */
@@ -358,7 +358,7 @@ class CombatVM {
 		const left = this.hitDice.find((h) => h.die === die)?.left ?? 0;
 		this.hdPick = {
 			...this.hdPick,
-			[die]: Math.max(0, Math.min(left, (this.hdPick[die] ?? 0) + delta))
+			[die]: Math.max(0, Math.min(left, (this.hdPick[die] ?? 0) + delta)),
 		};
 	};
 	/** Press "☾ Short": the `half` model heals ½ max HP right away; the `dice` model opens the picker
@@ -476,7 +476,7 @@ class CombatVM {
 			this.pendingConcentrationSave = null;
 		} else {
 			toast(`Concentration save failed — ${r.total} < DC ${pend.dc}`, {
-				description: 'The spell ends — tap Drop to confirm.'
+				description: 'The spell ends — tap Drop to confirm.',
 			});
 			this.pendingConcentrationSave = { dc: pend.dc, failed: true };
 		}
@@ -631,12 +631,12 @@ class CombatVM {
 			tokens: cat.tokens,
 			positive: !cat.negative,
 			ref: cat.ref,
-			...(cat.durationRounds != null ? { durationRounds: cat.durationRounds } : {})
+			...(cat.durationRounds != null ? { durationRounds: cat.durationRounds } : {}),
 		});
 	}
 
 	groupByLabel = $derived(
-		{ level: 'By level', prepared: 'Prepared', school: 'By school' }[this.spellGroupBy]
+		{ level: 'By level', prepared: 'Prepared', school: 'By school' }[this.spellGroupBy],
 	);
 	cycleGroupBy = () =>
 		(this.spellGroupBy =
@@ -658,7 +658,7 @@ class CombatVM {
 	speciesName = $derived.by(() =>
 		this.character?.build.species && this.graph
 			? String(this.graph.get(this.character.build.species)?.data.name_en ?? '')
-			: ''
+			: '',
 	);
 	/** The spell currently concentrated on (resolved to a display label), or null. Reads the schema's
 	 *  `play.concentration` ref — set on cast, cleared by tapping the indicator. */
@@ -704,7 +704,7 @@ class CombatVM {
 		return this.passiveSkills.map((k) => ({
 			key: k,
 			name: titleCase(k),
-			comp: sheet.passives[k] // effect-adjusted (adv/dis ±5, passive.<skill>), not bare 10+mod
+			comp: sheet.passives[k], // effect-adjusted (adv/dis ±5, passive.<skill>), not bare 10+mod
 		}));
 	});
 	togglePassive = (k: SkillId) => {
@@ -725,8 +725,8 @@ class CombatVM {
 		(this.character?.build.classes ?? []).map((c, i) => ({
 			index: i,
 			level: c.level,
-			name: this.graph ? String(this.graph.get(c.class)?.data.name_en ?? 'Class') : 'Class'
-		}))
+			name: this.graph ? String(this.graph.get(c.class)?.data.name_en ?? 'Class') : 'Class',
+		})),
 	);
 	/** Add one level to a class and persist (the sheet re-derives HP/prof/slots/features live).
 	 *  New choices at this level — ASI/feat/spells — are picked in the builder; here we advance the
@@ -735,14 +735,14 @@ class CombatVM {
 		const c = this.character;
 		if (!c || !this.canLevelUp) return;
 		c.build.classes = c.build.classes.map((cl, i) =>
-			i === classIndex ? { ...cl, level: cl.level + 1 } : cl
+			i === classIndex ? { ...cl, level: cl.level + 1 } : cl,
 		);
 		void saveCharacterToStore(c);
 		this.overlay = null;
 		const cls = c.build.classes[classIndex];
 		if (cls)
 			toast(`Level up — ${this.graph?.get(cls.class)?.data.name_en ?? 'class'} ${cls.level}`, {
-				description: 'HP & slots updated. Set any new ASI/feat/spells in the builder.'
+				description: 'HP & slots updated. Set any new ASI/feat/spells in the builder.',
 			});
 	};
 
@@ -791,7 +791,7 @@ class CombatVM {
 				mod,
 				advantage: adv,
 				bonusDice: fx?.bonusDice ?? [],
-				mods: fx ?? {}
+				mods: fx ?? {},
 			});
 	};
 
@@ -883,7 +883,7 @@ class CombatVM {
 			dice: p.pool,
 			mod: p.mod + (i === 0 ? dmgFx.flat : 0),
 			type: p.type,
-			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dmgFx } : {})
+			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dmgFx } : {}),
 		}));
 		// asked AFTER the effects fold in, so a flat damage effect on a damage-less weapon still counts
 		const hasDmg = dealsDamage(parts);
@@ -895,9 +895,9 @@ class CombatVM {
 					dice: { 20: 1 },
 					mod: at.toHit + fx.flat,
 					advantage: netAdvantage(fx),
-					mods: fx
+					mods: fx,
 				},
-				e
+				e,
 			);
 			if (hasDmg) this.tray.queueDamage({ label: `${at.name} damage`, parts });
 			return;
@@ -920,7 +920,7 @@ class CombatVM {
 	 *  pairs it with the log entry. Fully data-driven — no feat id/name in code. */
 	private savageOffer(
 		primary: DamagePartSpec | undefined,
-		dmgRolls: TypedRoll[] | undefined
+		dmgRolls: TypedRoll[] | undefined,
 	): { spec: DamagePartSpec; roll: TypedRoll } | null {
 		const primaryRoll = dmgRolls?.[0];
 		// there must be DICE to reroll — a flat-damage attack (Unarmed Strike) now rolls and toasts its
@@ -947,7 +947,7 @@ class CombatVM {
 		const revised: RollLogEntry = {
 			...p.entry,
 			damage: [keep, ...(p.entry.damage ?? []).slice(1)],
-			note: `${label}: kept ${keep.total} (other roll ${dropped.total})`
+			note: `${label}: kept ${keep.total} (other roll ${dropped.total})`,
 		};
 		this.tray.reviseEntry(p.entry, revised);
 		this.savageUsedRound = this.round;
@@ -990,12 +990,12 @@ class CombatVM {
 	attacks = $derived.by<Attack[]>(() =>
 		this.character && this.sheet && this.graph
 			? computeAttacks(this.character, this.sheet, this.graph)
-			: []
+			: [],
 	);
 
 	// standard actions (from d-charnik); roll ones reference live skills — pure builder in helpers
 	actions = $derived.by<StandardAction[]>(() =>
-		standardActions(this.sheet, this.character?.system ?? DEFAULT_SYSTEM)
+		standardActions(this.sheet, this.character?.system ?? DEFAULT_SYSTEM),
 	);
 	visibleActions = $derived(this.actions.filter((a) => !this.hiddenActions[a.id]));
 
@@ -1007,16 +1007,16 @@ class CombatVM {
 					graph: this.graph,
 					groupBy: this.spellGroupBy,
 					pinned: this.pinned,
-					hidden: this.character.ui.spellsHidden
+					hidden: this.character.ui.spellsHidden,
 				})
-			: []
+			: [],
 	);
 	// B9: worn non-proficient armor blocks spellcasting (RAW rule-block). Surfaced on the spells panel.
 	armorBlock = $derived(this.sheet?.spellcasting.armorBlock);
 	// A18-tail: per-class prepared accounting (each prepared spell attributed to the class that grants
 	// it). Drives the header (via PreparedCaps); the toggle gate uses canTogglePreparedFor directly.
 	preparedTallies = $derived(
-		preparedTalliesByClass(this.character?.build.spells ?? [], this.sheet)
+		preparedTalliesByClass(this.character?.build.spells ?? [], this.sheet),
 	);
 
 	hpBar = $derived.by(() => {
@@ -1026,7 +1026,7 @@ class CombatVM {
 		const max = effectiveHpMax(this.character.play.hp.max ?? null, this.sheet.maxHp) || 1;
 		return {
 			cur: Math.max(0, Math.min(100, (this.character.play.hp.current / max) * 100)),
-			tmp: (this.character.play.hp.temp / max) * 100
+			tmp: (this.character.play.hp.temp / max) * 100,
 		};
 	});
 
@@ -1099,7 +1099,7 @@ class CombatVM {
 			label: String(r.data.name_en),
 			tokens: r.data.effects,
 			negative: r.data.negative,
-			durationRounds: r.data.duration_rounds ?? null
+			durationRounds: r.data.duration_rounds ?? null,
 		}));
 	});
 	/** Duration (in rounds) applied to the NEXT effect added from the add-effect / custom menus.
@@ -1131,8 +1131,8 @@ class CombatVM {
 				effects: spec.tokens,
 				positive: spec.positive ?? true,
 				...(spec.ref !== undefined ? { source: spec.ref } : {}),
-				...duration
-			}
+				...duration,
+			},
 		];
 		this.overlay = null;
 	};

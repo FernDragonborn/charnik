@@ -10,7 +10,7 @@
 		characters,
 		loadRoster,
 		openCharacter,
-		removeCharacter
+		removeCharacter,
 	} from '$lib/character/store.svelte';
 
 	const demo = isDemo();

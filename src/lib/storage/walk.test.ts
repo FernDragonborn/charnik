@@ -9,7 +9,7 @@ describe('listFilesRecursive', () => {
 		await s.write('content/p/plugins/ns/main.js', 'b');
 		expect(await listFilesRecursive(s, 'content/p')).toEqual([
 			'content/p/a.csv',
-			'content/p/plugins/ns/main.js'
+			'content/p/plugins/ns/main.js',
 		]);
 	});
 

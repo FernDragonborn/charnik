@@ -9,7 +9,7 @@ function characterWithPii() {
 	c.build.notes = 'secret backstory: my email is me@example.com';
 	c.build.classes = [
 		{ class: 'phb:wizard', level: 3, subclass: 'phb:evocation' },
-		{ class: 'phb:fighter', level: 2 }
+		{ class: 'phb:fighter', level: 2 },
 	];
 	c.build.species = 'phb:elf';
 	c.build.background = 'phb:sage';
@@ -26,7 +26,7 @@ describe('summarizeCharacter', () => {
 		expect(s.totalLevel).toBe(5);
 		expect(s.classes).toEqual([
 			{ class: 'phb:wizard', level: 3, subclass: 'phb:evocation' },
-			{ class: 'phb:fighter', level: 2 }
+			{ class: 'phb:fighter', level: 2 },
 		]);
 		expect(s.counts).toEqual({ feats: 1, inventory: 0, spells: 0 });
 	});
@@ -43,7 +43,7 @@ describe('summarizeCharacter', () => {
 describe('buildDiagnostics', () => {
 	const log: LogEntry[] = [
 		{ ts: 0, level: LogLevel.Info, msg: 'content loaded', ctx: { rows: 42 } },
-		{ ts: 1000, level: LogLevel.Error, msg: 'uncaught error', ctx: { stack: 'x' } }
+		{ ts: 1000, level: LogLevel.Error, msg: 'uncaught error', ctx: { stack: 'x' } },
 	];
 
 	it('assembles the full snapshot, character redacted', () => {
@@ -54,7 +54,7 @@ describe('buildDiagnostics', () => {
 			activeLocale: 'en',
 			character: characterWithPii(),
 			logTail: log,
-			contentIssues: { issues: 2, metaIssues: 0, driftItems: 1 }
+			contentIssues: { issues: 2, metaIssues: 0, driftItems: 1 },
 		});
 		expect(b.appVersion).toBe('0.4.0');
 		expect(b.character?.totalLevel).toBe(5);
@@ -70,7 +70,7 @@ describe('buildDiagnostics', () => {
 			activeSystem: '5.5e',
 			activeLocale: 'uk',
 			character: null,
-			logTail: []
+			logTail: [],
 		});
 		expect(b.character).toBeNull();
 		expect(b.log).toEqual([]);
@@ -84,8 +84,8 @@ describe('buildDiagnostics', () => {
 				activeSystem: '5e',
 				activeLocale: 'en',
 				character: null,
-				logTail: []
-			})
+				logTail: [],
+			}),
 		);
 		expect(out.startsWith('```json\n')).toBe(true);
 		expect(out.endsWith('\n```')).toBe(true);

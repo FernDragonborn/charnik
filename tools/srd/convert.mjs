@@ -19,7 +19,7 @@ import {
 	skillList,
 	slug,
 	writeCsv,
-	assertCount
+	assertCount,
 } from './lib.mjs';
 import { packDir } from '../content-repo.mjs';
 
@@ -49,7 +49,7 @@ const FEAT_SECTIONS = {
 	'Origin Feats': 'origin',
 	'General Feats': 'general',
 	'Fighting Style Feats': 'fighting_style',
-	'Epic Boon Feats': 'epic_boon'
+	'Epic Boon Feats': 'epic_boon',
 };
 // Feat `effects` (mechanical tokens) and `ability_choice` (half-feat +1 targets) are authored AFTER
 // conversion — curated from the SRD text, NOT present as such in the prose. Preserve them by id, or a
@@ -89,7 +89,7 @@ function convertFeats() {
 			prereq: prereqM ? prereqM[1].trim() : '',
 			repeatable: String(/_Repeatable\._/.test(text)),
 			ability_choice: authoredAbility.get(slug(b.name)) ?? '', // half-feat +1 targets, preserved
-			skill_choice: authoredSkill.get(slug(b.name)) ?? '' // §C skill choice-grant count, preserved
+			skill_choice: authoredSkill.get(slug(b.name)) ?? '', // §C skill choice-grant count, preserved
 		};
 	});
 	writeCsv(
@@ -107,9 +107,9 @@ function convertFeats() {
 			'prereq',
 			'repeatable',
 			'ability_choice',
-			'skill_choice'
+			'skill_choice',
 		],
-		rows
+		rows,
 	);
 	assertCount('feats', rows.length, all.length);
 }
@@ -131,13 +131,13 @@ function convertConditions() {
 			text_en: description(b.body),
 			text_uk: '',
 			effects: authored.get(id) ?? '',
-			negative: String(!POSITIVE_CONDITIONS.has(id))
+			negative: String(!POSITIVE_CONDITIONS.has(id)),
 		};
 	});
 	writeCsv(
 		out('conditions_srd.csv'),
 		['id', 'systems', 'source', 'name_en', 'name_uk', 'text_en', 'text_uk', 'effects', 'negative'],
-		rows
+		rows,
 	);
 	assertCount('conditions', rows.length, all.length);
 }
@@ -162,7 +162,7 @@ function convertSpecies() {
 				/(tiny|small|medium|large|huge|gargantuan)/i.exec(sizeRaw)?.[1] || 'medium'
 			).toLowerCase(),
 			speed: parseInt(speedRaw, 10) || 30,
-			creature_type: (field(text, 'Creature Type') || '').toLowerCase()
+			creature_type: (field(text, 'Creature Type') || '').toLowerCase(),
 		};
 	});
 	writeCsv(
@@ -178,9 +178,9 @@ function convertSpecies() {
 			'effects',
 			'size',
 			'speed',
-			'creature_type'
+			'creature_type',
 		],
-		rows
+		rows,
 	);
 	assertCount('species', rows.length, all.length);
 }
@@ -192,7 +192,7 @@ function convertSpecies() {
 // ancestry (a paired damage-type table) and Gnome/Goliath (prose lists) are deferred.
 const SPECIES_CHOICE_2024 = {
 	Elf: { kind: 'lineage', label: 'Elven Lineage' },
-	Tiefling: { kind: 'legacy', label: 'Fiendish Legacy' }
+	Tiefling: { kind: 'legacy', label: 'Fiendish Legacy' },
 };
 const stripHtml = (s) =>
 	s
@@ -226,7 +226,7 @@ function convertSpeciesOptions() {
 				effects: '',
 				species_id: slug(b.name),
 				kind: ch.kind,
-				option_label: ch.label
+				option_label: ch.label,
 			});
 		}
 	}
@@ -244,9 +244,9 @@ function convertSpeciesOptions() {
 			'effects',
 			'species_id',
 			'kind',
-			'option_label'
+			'option_label',
 		],
-		rows
+		rows,
 	);
 }
 
@@ -268,7 +268,7 @@ function convertBackgrounds() {
 			tools: slug(field(text, 'Tool Proficiency')),
 			languages: '',
 			ability_choices: abilities(field(text, 'Ability Scores')),
-			origin_feat: slug(field(text, 'Feat'))
+			origin_feat: slug(field(text, 'Feat')),
 		};
 	});
 	writeCsv(
@@ -286,9 +286,9 @@ function convertBackgrounds() {
 			'tools',
 			'languages',
 			'ability_choices',
-			'origin_feat'
+			'origin_feat',
 		],
-		rows
+		rows,
 	);
 	assertCount('backgrounds', rows.length, all.length);
 }
@@ -327,7 +327,7 @@ function convertLanguages() {
 			effects: '',
 			category, // 2024 uses Standard / Rare (2014 used Standard / Exotic)
 			speakers: '', // not in the 2024 source
-			script: '' // 2024 dropped per-language scripts
+			script: '', // 2024 dropped per-language scripts
 		};
 	};
 	const rows = [...standard.map((n) => mk(n, 'standard')), ...rare.map((n) => mk(n, 'rare'))];
@@ -345,9 +345,9 @@ function convertLanguages() {
 			'effects',
 			'category',
 			'speakers',
-			'script'
+			'script',
 		],
-		rows
+		rows,
 	);
 }
 

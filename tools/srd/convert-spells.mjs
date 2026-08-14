@@ -30,7 +30,7 @@ const SCHOOLS = [
 	'evocation',
 	'illusion',
 	'necromancy',
-	'transmutation'
+	'transmutation',
 ];
 const ABIL = {
 	strength: 'str',
@@ -38,7 +38,7 @@ const ABIL = {
 	constitution: 'con',
 	intelligence: 'int',
 	wisdom: 'wis',
-	charisma: 'cha'
+	charisma: 'cha',
 };
 
 // snake_case ids (E3) — kept in sync with lib.mjs `slug`.
@@ -131,7 +131,7 @@ function parseSpell(name, body) {
 		resolution = 'attack';
 	} else {
 		const sm = /(strength|dexterity|constitution|intelligence|wisdom|charisma) saving throw/.exec(
-			low
+			low,
 		);
 		if (sm) {
 			resolution = 'save';
@@ -174,7 +174,7 @@ function parseSpell(name, body) {
 		resolution,
 		save_ability,
 		damage,
-		higher_level: higher
+		higher_level: higher,
 	};
 }
 
@@ -208,7 +208,7 @@ const columns = [
 	'resolution',
 	'save_ability',
 	'damage',
-	'higher_level'
+	'higher_level',
 ];
 const csv = Papa.unparse({ fields: columns, data: rows }, { newline: '\n' });
 writeFileSync(OUT, csv + '\n', 'utf8');
@@ -217,5 +217,5 @@ console.log(
 	'by level:',
 	Object.entries(rows.reduce((a, r) => ((a[r.level] = (a[r.level] || 0) + 1), a), {}))
 		.map(([l, n]) => `L${l}:${n}`)
-		.join(' ')
+		.join(' '),
 );

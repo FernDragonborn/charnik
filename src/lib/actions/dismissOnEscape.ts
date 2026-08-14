@@ -25,6 +25,6 @@ export const dismissOnEscape: Action<HTMLElement, (() => void) | undefined> = (_
 		},
 		destroy() {
 			window.removeEventListener('keydown', onKeydown);
-		}
+		},
 	};
 };

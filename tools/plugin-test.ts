@@ -16,7 +16,7 @@ import { createSandboxEvaluator } from '../src/lib/effects/plugin-sandbox';
 import {
 	expandPluginEffects,
 	registerPluginEvaluator,
-	type PluginCtx
+	type PluginCtx,
 } from '../src/lib/effects/plugin-registry';
 import { parseToken, EFFECT_KIND, type EffectIssue } from '../src/lib/effects/token-parser';
 
@@ -33,8 +33,8 @@ const DEFAULT_CTX: PluginCtx = {
 			con: { score: 14, mod: 2 },
 			int: { score: 10, mod: 0 },
 			wis: { score: 12, mod: 1 },
-			cha: { score: 8, mod: -1 }
-		}
+			cha: { score: 8, mod: -1 },
+		},
 	},
 	play: {
 		hp: 41,
@@ -42,8 +42,8 @@ const DEFAULT_CTX: PluginCtx = {
 		tempHp: 0,
 		flags: { isBloodied: false, isRaging: false, isConcentrating: false },
 		conditions: [],
-		resources: { grit: 2 }
-	}
+		resources: { grit: 2 },
+	},
 };
 
 function fail(msg: string): never {
@@ -60,13 +60,13 @@ const dir = process.argv[2];
 const rawToken = arg('--token');
 if (!dir || dir.startsWith('--') || !rawToken)
 	fail(
-		'usage: pnpm plugin:test <plugin-folder> --token "plugin:<namespace>:<handlerName>[:<args>]" [--ctx fixture.json]'
+		'usage: pnpm plugin:test <plugin-folder> --token "plugin:<namespace>:<handlerName>[:<args>]" [--ctx fixture.json]',
 	);
 
 const parsed = parseToken(rawToken);
 if (parsed.kind !== EFFECT_KIND.plugin || !parsed.plugin)
 	fail(
-		`"${rawToken}" is not a valid plugin token (grammar: plugin:<namespace>:<handlerName>[:<args>], docs/PLUGINS.md §1)`
+		`"${rawToken}" is not a valid plugin token (grammar: plugin:<namespace>:<handlerName>[:<args>], docs/PLUGINS.md §1)`,
 	);
 
 let manifestRaw: string;
@@ -86,11 +86,11 @@ if (!manifest.success) {
 const folderNs = basename(resolve(dir));
 if (manifest.data.namespace !== parsed.plugin.namespace)
 	fail(
-		`token namespace "${parsed.plugin.namespace}" ≠ manifest namespace "${manifest.data.namespace}"`
+		`token namespace "${parsed.plugin.namespace}" ≠ manifest namespace "${manifest.data.namespace}"`,
 	);
 if (manifest.data.namespace !== folderNs)
 	console.warn(
-		`⚠ folder name "${folderNs}" ≠ manifest namespace "${manifest.data.namespace}" — the app would reject this install`
+		`⚠ folder name "${folderNs}" ≠ manifest namespace "${manifest.data.namespace}" — the app would reject this install`,
 	);
 
 let ctx = DEFAULT_CTX;
@@ -100,14 +100,14 @@ if (ctxPath) {
 	ctx = {
 		api: 1,
 		build: { ...DEFAULT_CTX.build, ...over.build },
-		play: { ...DEFAULT_CTX.play, ...over.play }
+		play: { ...DEFAULT_CTX.play, ...over.play },
 	};
 }
 
 const evaluator = await createSandboxEvaluator([{ namespace: manifest.data.namespace, code }]);
 if (!evaluator.has(parsed.plugin.namespace, parsed.plugin.handlerName))
 	fail(
-		`handler "${parsed.plugin.handlerName}" not registered — main.js failed to evaluate, or globalThis.handlers["${parsed.plugin.handlerName}"].passive is not a function`
+		`handler "${parsed.plugin.handlerName}" not registered — main.js failed to evaluate, or globalThis.handlers["${parsed.plugin.handlerName}"].passive is not a function`,
 	);
 registerPluginEvaluator(evaluator);
 
@@ -115,7 +115,7 @@ const issues: EffectIssue[] = [];
 const out = expandPluginEffects(
 	[{ source: 'plugin-test', layer: 'feature', tokens: [rawToken] }],
 	ctx,
-	issues
+	issues,
 );
 
 if (issues.length) {
@@ -128,17 +128,17 @@ console.log('✔ valid result\n');
 if (out?.syntheticEffects.length)
 	console.log(
 		'tokens (fold at the carrier layer):',
-		out.syntheticEffects.flatMap((e) => e.tokens)
+		out.syntheticEffects.flatMap((e) => e.tokens),
 	);
 if (out?.numeric.length)
 	console.log(
 		'contributions:',
-		out.numeric.map((n) => `${n.target} ${n.op} ${n.amount} @${n.layer} (${n.source})`)
+		out.numeric.map((n) => `${n.target} ${n.op} ${n.amount} @${n.layer} (${n.source})`),
 	);
 if (out?.notes.length)
 	console.log(
 		'notes:',
-		out.notes.map((n) => n.text)
+		out.notes.map((n) => n.text),
 	);
 if (!out?.syntheticEffects.length && !out?.numeric.length && !out?.notes.length)
 	console.log('(empty result — "nothing applies")');

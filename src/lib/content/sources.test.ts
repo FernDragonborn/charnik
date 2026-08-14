@@ -7,7 +7,7 @@ const cfg = (over: Partial<Parameters<typeof isRowActive>[1]> = {}) => ({
 	disabledFiles: [],
 	disabledSources: [],
 	collisions: {},
-	...over
+	...over,
 });
 
 // makeRow gives root:'test', file:'<type>.csv'
@@ -61,7 +61,7 @@ describe('collision detection', () => {
 	it('does NOT flag the disjoint 5e/5.5e SRD pair (coexist via the edition toggle)', () => {
 		const g = graphWith([
 			row('fireball', 'SRD 5.1', ['5e']),
-			row('fireball', 'SRD 5.2.1', ['5.5e'])
+			row('fireball', 'SRD 5.2.1', ['5.5e']),
 		]);
 		expect(detectCollisions(g)).toHaveLength(0);
 	});

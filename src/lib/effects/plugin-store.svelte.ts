@@ -20,13 +20,13 @@ import {
 	isRunnable,
 	emptyPrefs,
 	type DiscoveredPlugin,
-	type PluginPrefs
+	type PluginPrefs,
 } from './plugin-host';
 import {
 	registerPluginEvaluator,
 	clearPluginEvaluator,
 	clearPluginMemo,
-	type PluginEvaluator
+	type PluginEvaluator,
 } from './plugin-registry';
 
 interface PluginsState {
@@ -49,7 +49,7 @@ export const plugins = $state<PluginsState>({
 	discovered: [],
 	prefs: emptyPrefs(),
 	loadErrors: {},
-	version: 0
+	version: 0,
 });
 
 let evaluatorHandle: { dispose(): void } | null = null;
@@ -92,7 +92,7 @@ async function rebuildEvaluator(): Promise<void> {
 		// dynamic import: the QuickJS-WASM module loads only when ≥1 plugin actually runs
 		const { createSandboxEvaluator } = await import('./plugin-sandbox');
 		next = await createSandboxEvaluator(
-			runnable.map((p) => ({ namespace: p.namespace, code: p.code ?? '' }))
+			runnable.map((p) => ({ namespace: p.namespace, code: p.code ?? '' })),
 		);
 	}
 	if (gen !== rebuildGen) {

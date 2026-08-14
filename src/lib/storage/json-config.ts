@@ -63,7 +63,7 @@ export function writeConfigSection(
 	 * this session and is simply gone at the next launch. So the failure is available to any tenant
 	 * that has something to say about it, and ignored by the ones that don't.
 	 */
-	onWrite?: (error: unknown) => void
+	onWrite?: (error: unknown) => void,
 ): void {
 	const queued = dirty.get(file);
 	if (queued) {

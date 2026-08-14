@@ -16,8 +16,8 @@ describe('loader — logic (in-memory)', () => {
 			[
 				SPELL_HEAD,
 				spell('fireball', '5.5e', 'SRD 5.2.1', 'Вогняна куля'),
-				spell('shield', '5.5e', 'SRD 5.2.1')
-			].join('\n')
+				spell('shield', '5.5e', 'SRD 5.2.1'),
+			].join('\n'),
 		);
 		await s.write('b/spells_srd.csv', [SPELL_HEAD, spell('fireball', '5e', 'SRD 5.1')].join('\n'));
 		return s;
@@ -50,12 +50,12 @@ describe('loader — logic (in-memory)', () => {
 			[
 				SPELL_HEAD,
 				spell('fireball', '5.5e', 'SRD 5.2.1'),
-				spell('fireball', '5.5e', 'SRD 5.2.1')
-			].join('\n')
+				spell('fireball', '5.5e', 'SRD 5.2.1'),
+			].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
 		expect(g.issues.some((i) => i.level === 'error' && /duplicate source:id/.test(i.message))).toBe(
-			true
+			true,
 		);
 		// B22: the dup is dropped from every scanned collection so its tokens can't apply twice
 		expect(g.list('spell').filter((r) => r.id === 'fireball')).toHaveLength(1);
@@ -66,11 +66,11 @@ describe('loader — logic (in-memory)', () => {
 		const s = new MemoryStorage();
 		await s.write(
 			'a/spells_srd.csv',
-			[SPELL_HEAD + ',name_spanish', spell('fireball', '5.5e', 'SRD 5.2.1') + ',Bola'].join('\n')
+			[SPELL_HEAD + ',name_spanish', spell('fireball', '5.5e', 'SRD 5.2.1') + ',Bola'].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
 		expect(
-			g.issues.some((i) => i.level === 'warn' && /malformed locale column/.test(i.message))
+			g.issues.some((i) => i.level === 'warn' && /malformed locale column/.test(i.message)),
 		).toBe(true);
 		expect(g.locales).not.toContain('spanish');
 		expect(g.list('spell').length).toBe(1);
@@ -89,7 +89,7 @@ describe('loader — logic (in-memory)', () => {
 		const s = new MemoryStorage();
 		await s.write(
 			'a/spells_srd.csv',
-			[SPELL_HEAD, spell('ok', '5.5e', 'SRD 5.2.1'), spell('bad', '3.5e', 'SRD 5.2.1')].join('\n')
+			[SPELL_HEAD, spell('ok', '5.5e', 'SRD 5.2.1'), spell('bad', '3.5e', 'SRD 5.2.1')].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
 		expect(g.list('spell').length).toBe(1); // "ok" loaded, "bad" (systems 3.5e) rejected
@@ -101,7 +101,7 @@ describe('loader — logic (in-memory)', () => {
 		// filename maps to no type, but the directive declares it — and it parses as spells
 		await s.write(
 			'a/my_cool_spells.csv',
-			['#content-type: spell', SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n')
+			['#content-type: spell', SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
@@ -114,11 +114,11 @@ describe('loader — logic (in-memory)', () => {
 		const s = new MemoryStorage();
 		await s.write(
 			'a/stuff.csv',
-			['#content-type: gizmo', SPELL_HEAD, spell('zap', '5.5e', 'SRD 5.2.1')].join('\n')
+			['#content-type: gizmo', SPELL_HEAD, spell('zap', '5.5e', 'SRD 5.2.1')].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
 		expect(
-			g.issues.some((i) => i.level === 'error' && /unknown content type "gizmo"/.test(i.message))
+			g.issues.some((i) => i.level === 'error' && /unknown content type "gizmo"/.test(i.message)),
 		).toBe(true);
 		expect(g.list('spell').length).toBe(0);
 	});
@@ -128,7 +128,7 @@ describe('loader — logic (in-memory)', () => {
 		await s.write('a/whatever.csv', [SPELL_HEAD, spell('zap', '5.5e', 'SRD 5.2.1')].join('\n'));
 		const g = await loadContent(s, ['a']);
 		expect(
-			g.issues.some((i) => i.level === 'warn' && /unknown content type for file/.test(i.message))
+			g.issues.some((i) => i.level === 'warn' && /unknown content type for file/.test(i.message)),
 		).toBe(true);
 	});
 
@@ -137,7 +137,7 @@ describe('loader — logic (in-memory)', () => {
 		// header declares source but NOT license → the ContentMetaModal should be offered
 		await s.write(
 			'a/spells_srd.csv',
-			['#content-source: Homebrew', SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n')
+			['#content-source: Homebrew', SPELL_HEAD, spell('zap', '5.5e', 'Homebrew')].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
 		const issue = g.metaIssues.find((i) => i.file === 'a/spells_srd.csv');
@@ -156,8 +156,8 @@ describe('loader — logic (in-memory)', () => {
 				'#content-updated-at: 2020-01-01',
 				'#content-hash: xxh64:deadbeef', // deliberately wrong
 				SPELL_HEAD,
-				spell('zap', '5.5e', 'Homebrew')
-			].join('\n')
+				spell('zap', '5.5e', 'Homebrew'),
+			].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
 		const drift = g.driftItems.find((d) => d.file === 'a/spells_srd.csv');
@@ -176,10 +176,10 @@ describe('loader — logic (in-memory)', () => {
 			await stampWithHash(
 				new Map([
 					['source', 'Homebrew'],
-					['license', 'CC-BY-4.0']
+					['license', 'CC-BY-4.0'],
 				]),
-				body
-			)
+				body,
+			),
 		);
 		const g = await loadContent(s, ['a']);
 		expect(g.driftItems).toEqual([]);
@@ -189,7 +189,7 @@ describe('loader — logic (in-memory)', () => {
 		const g = await loadContent(await seed(), ['a', 'b']);
 		const { found, missing } = g.resolveRefs([
 			'spell:SRD 5.2.1:fireball',
-			'spell:SRD 5.2.1:does-not-exist'
+			'spell:SRD 5.2.1:does-not-exist',
 		]);
 		expect(found.map((r) => r.id)).toEqual(['fireball']);
 		expect(missing).toEqual(['spell:SRD 5.2.1:does-not-exist']);
@@ -204,12 +204,12 @@ describe('loader — logic (in-memory)', () => {
 				'id,systems,source,name_en,name_uk,text_en,text_uk',
 				'partial,5.5e,SRD 5.2.1,Blinded,Осліплений,Cannot see,', // name_uk set, text_uk missing → PARTIAL
 				'complete,5.5e,SRD 5.2.1,Charmed,Зачарований,Cannot attack,Не може атакувати', // both → OK
-				'untouched,5.5e,SRD 5.2.1,Deafened,,Cannot hear,' // no uk at all → silent (EN fallback)
-			].join('\n')
+				'untouched,5.5e,SRD 5.2.1,Deafened,,Cannot hear,', // no uk at all → silent (EN fallback)
+			].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
 		const warns = g.issues.filter(
-			(i) => i.level === 'warn' && /partial translation/.test(i.message)
+			(i) => i.level === 'warn' && /partial translation/.test(i.message),
 		);
 		expect(warns.map((w) => w.id)).toEqual(['partial']);
 		expect(warns[0]?.message).toMatch(/text_uk/);
@@ -241,7 +241,7 @@ describe('loader — real content', () => {
 			expect(feats.some((f) => f.id === 'barbarian_rage')).toBe(true);
 
 			expect(g.locales).toContain('uk');
-		}
+		},
 	);
 });
 
@@ -285,7 +285,7 @@ describe('localization status columns + source language', () => {
 		await s.write('a/spells_srd.csv', [HEAD, line('fireball', '', '')].join('\n'));
 		await s.write(
 			'b/spells_uk.csv',
-			['#content-source-lang: uk', HEAD, line('lightning', 'Блискавка', '')].join('\n')
+			['#content-source-lang: uk', HEAD, line('lightning', 'Блискавка', '')].join('\n'),
 		);
 		const g = await loadContent(s, ['a', 'b']);
 		expect(g.get('spell:SRD 5.2.1:fireball')!.sourceLang).toBe('en');

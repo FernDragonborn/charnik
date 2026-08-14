@@ -29,7 +29,7 @@
 	// The sheet can't compute until content is loaded, so while the graph is still null the wait is
 	// really about content, not the sheet — say so instead of the misleading "computing your sheet".
 	const loadingMessage = $derived(
-		content.graph ? 'Computing your character sheet…' : 'Loading content…'
+		content.graph ? 'Computing your character sheet…' : 'Loading content…',
 	);
 	const columns = $derived(combat.layout.columns);
 	const flipDurationMs = combat.layout.flipDurationMs;
@@ -73,7 +73,7 @@
 		onBeforeReload(async () => {
 			clearTimeout(saveTimer);
 			if (combat.character) await saveCharacterToStore(combat.character);
-		})
+		}),
 	);
 
 	// Publish this character's derive-time issues to content-health (SPEC10). It must NOT clear on
@@ -126,7 +126,7 @@
 					type: 'panel',
 					dragDisabled,
 					flipDurationMs,
-					dropTargetStyle: {}
+					dropTargetStyle: {},
 				}}
 				onconsider={(e) => dndConsider(ci, e)}
 				onfinalize={(e) => dndFinalize(ci, e)}

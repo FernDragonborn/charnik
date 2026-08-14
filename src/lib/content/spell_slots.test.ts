@@ -14,7 +14,7 @@ describe('shipped spell_slots table', () => {
 		const { body } = parseContentDirectives(readPackFile('srd-2024', 'spell_slots_srd.csv'));
 		const rows = Papa.parse<Record<string, string>>(body, {
 			header: true,
-			skipEmptyLines: true
+			skipEmptyLines: true,
 		}).data;
 		const full = rows.filter((r) => r.kind === 'full');
 		expect(full.length).toBe(20);

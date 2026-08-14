@@ -59,7 +59,7 @@ const own = <T>(rec: Record<string, T> | undefined, key: string): T | undefined 
 function dottedNumber(
 	d: { prefix: string; id: string },
 	build: BuildVars,
-	play?: PlayVars
+	play?: PlayVars,
 ): number | undefined {
 	if (d.prefix === 'class_level') return own(build.classLevels, d.id) ?? 0;
 	if (d.prefix === 'resource') return own(play?.resources, d.id) ?? 0;
@@ -131,7 +131,7 @@ export function makeExprContext(build: BuildVars, play?: PlayVars): ExprContext 
 			if (name === 'armor_type') return play?.armorType;
 			if (name === 'size') return play?.size;
 			return undefined;
-		}
+		},
 	};
 }
 
@@ -144,7 +144,7 @@ export function withCastSlot(base: ExprContext, slot: number, spellLevel: number
 		number: (name) =>
 			name === 'slot' ? slot : name === 'spell_level' ? spellLevel : base.number(name),
 		boolean: (name) => base.boolean(name),
-		enum: (name) => base.enum(name)
+		enum: (name) => base.enum(name),
 	};
 }
 
@@ -157,6 +157,6 @@ export function withSpellcastingMod(base: ExprContext, mod: number | (() => numb
 		number: (name) =>
 			name === 'spellcasting_mod' ? (typeof mod === 'function' ? mod() : mod) : base.number(name),
 		boolean: (name) => base.boolean(name),
-		enum: (name) => base.enum(name)
+		enum: (name) => base.enum(name),
 	};
 }

@@ -27,7 +27,7 @@ describe('distinctValues', () => {
 			row({ school: 'evocation' }),
 			row({ school: 'abjuration' }),
 			row({ school: 'evocation' }),
-			row({ school: '' })
+			row({ school: '' }),
 		];
 		expect(distinctValues(rows, 'school')).toEqual(['abjuration', 'evocation']);
 	});
@@ -45,10 +45,10 @@ describe('groupRows', () => {
 			[
 				row({ name_en: 'Fireball', level: '3' }),
 				row({ name_en: 'Fire Bolt', level: '0' }),
-				row({ name_en: 'Bless', level: '1' })
+				row({ name_en: 'Bless', level: '1' }),
 			],
 			'level',
-			'spell'
+			'spell',
 		);
 		expect(g.map((x) => x.label)).toEqual(['Cantrips', '1st level', '3rd level']);
 	});
@@ -58,10 +58,10 @@ describe('groupRows', () => {
 			[
 				row({ name_en: 'A', cr: '2' }, 'monster'),
 				row({ name_en: 'B', cr: '1/4' }, 'monster'),
-				row({ name_en: 'C', cr: '1/2' }, 'monster')
+				row({ name_en: 'C', cr: '1/2' }, 'monster'),
 			],
 			'cr',
-			'monster'
+			'monster',
 		);
 		expect(g.map((x) => x.label)).toEqual(['CR 1/4', 'CR 1/2', 'CR 2']);
 	});
@@ -70,7 +70,7 @@ describe('groupRows', () => {
 		const g = groupRows(
 			[row({ name_en: 'A' }, 'spell', 'Homebrew'), row({ name_en: 'B' }, 'spell', 'SRD 5.2.1')],
 			'source',
-			'spell'
+			'spell',
 		);
 		expect(g.map((x) => x.rows.length)).toEqual([1, 1]);
 	});
