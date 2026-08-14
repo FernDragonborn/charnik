@@ -25,6 +25,7 @@
 		"lint:fix": "prettier --write . && eslint . --fix && stylelint \"src/**/*.{css,svelte}\" --fix",
 		"knip": "knip",
 		"jscpd": "jscpd --reporters consoleFull",
+		"loc": "node tools/loc.mjs",
 		"postinstall": "simple-git-hooks",
 		"plugin:test": "tsx tools/plugin-test.ts"
 	},

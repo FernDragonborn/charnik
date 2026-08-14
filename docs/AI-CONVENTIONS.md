@@ -884,6 +884,11 @@ The repo ships its own tooling under `tools/` — check there BEFORE hand-rollin
   `pnpm dev`'s output and pass `BASE=http://localhost:PORT`.
 - **CSS analysis:** `tools/visual/css-dups.mjs`, `css-name-collisions.mjs`, `css-classes.mjs`;
   refactor helpers `hoist-class.mjs`, `rename-class.mjs`.
+- **`pnpm loc`** — lines of CODE per file, worst first (`--all` for everything, or pass a path
+  fragment). It counts the way eslint's `max-lines` does (`skipBlankLines` + `skipComments`) **and is
+  checked to agree with it digit-for-digit**, so there is one number for "how big is this file", not
+  a tool with a second opinion. `wc -l` is not that number: this repo comments heavily, and the
+  file eslint calls 524 is 757 by `wc`. For a `.svelte` it counts the `<script>` blocks only (§2.6).
 - **`pnpm knip`** — part of `pnpm lint`, but its rules are set to `warn`, so it reports and exits 0:
   it is a REPORT, not the gate this line used to claim. Don't reintroduce unused exports; un-export
   rather than exporting "just in case", and triage what it lists (§8.4 — in active dev an unused
