@@ -23,7 +23,7 @@ reproduced with Lucide upstream and permits redistribution with attribution.
 Take it, change it, ship it. The one condition is that the copyright notice travels with the
 code.
 
-Charnik was AGPL-3.0-or-later up to 0.5.0. We moved to MIT in 0.6.0 because we don't want to
+Charnik was AGPL-3.0-or-later up to 0.5.0. We moved to MIT in 0.6.1 because we don't want to
 *oblige* anyone reusing this to make their own code public — doing so is welcome, not
 compulsory. Releases already published under AGPL stay available under those terms.
 

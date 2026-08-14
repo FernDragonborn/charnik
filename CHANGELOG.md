@@ -1,6 +1,9 @@
 # Changelog
 
-## 0.6.0
+## 0.6.1
+
+*0.6.0 was never published — its tag name got permanently reserved on GitHub before the release
+went out, so this identical build ships under the next number.*
 
 The external-content release: rules data now lives in its own repository and reaches you as a
 **content pack** — paste a URL, get updates, no app build in between. Alongside it: death and
