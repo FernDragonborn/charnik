@@ -22,19 +22,7 @@ import { uniqueCharacterId } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
 import type { Ability } from '$lib/rules/core';
-import {
-	baseAbilities,
-	pointsSpent,
-	pointBuyCost,
-	canRaise,
-	canLower,
-	boostCarrier,
-	allocateBackgroundBoost,
-	boostPickCount,
-	POINT_BUY_BUDGET,
-	STANDARD_ARRAY,
-	type StatMethod
-} from '$lib/build/rules';
+import { pointBuyCost } from '$lib/build/rules';
 import {
 	parseSpeciesBoostChoice,
 	speciesFixedAbilities as fixedAbilitiesFromRows,
@@ -45,6 +33,7 @@ import {
 import { splitList, type ContentType } from '$lib/content/schemas';
 import { slugify } from '$lib/util/slug';
 import { FeatSlots } from './feat-slots.svelte';
+import { AbilityAllocation } from './ability-allocation.svelte';
 import { ASI, rowName, rowOfType } from './rows';
 // re-exported so every existing `from '../build-view-model.svelte'` import keeps working
 export { ASI, rowName, rowOfType };
@@ -60,17 +49,19 @@ const csv = splitList;
 
 
 /**
- * D1 EXCEPTION — file over the 400-line lint (warn-only). Split DEFERRED, like CombatVM: not
- * forbidden, just low return for the churn/regression risk.
+ * Under the 400-line lint since the ability scores and their boosts moved to `AbilityAllocation`.
+ * Already out before that: the draft model + factories → `build/draft.ts`; every pure derivation
+ * (spell picker, `assembleCharacter`, `draftFromCharacter`, issues) → `build/derive.ts`; the ASI/feat
+ * slot machinery → `feat-slots.svelte.ts`.
  *
- * Already out: the draft model + factories → `build/draft.ts`; every pure derivation (spell picker,
- * ability boosts, feat slots, `assembleCharacter`, `draftFromCharacter`, issues) → `build/derive.ts`.
- * What remains is draft-centric: ONE `draft` `$state` object whose fields are `bind:`-ed across
- * build/blocks/*, plus ~40 thin `$derived`/mutators over it. Unlike combat (which has an extractable
- * spell/cast slice with no bound state), there's no clean sub-VM to peel off here — the single
- * bind:-ed draft is the whole state, so a split mostly relocates `bind:`-surface across the
- * component↔VM seam, where reactivity bugs escape unit tests (only the running UI catches them).
- * Prior sessions reached this twice. If a real need arises, verify live via shot.mjs, never blind.
+ * **The `bind:`-ed draft is what makes further splits expensive**, and two prior sessions stopped
+ * here for that reason. It is one `$state` object whose fields are bound across `build/blocks/*`, so
+ * relocating any of it moves `bind:` surface across the component↔VM seam — where a reactivity break
+ * escapes unit tests and only the running UI shows it. The ability carve worked because it moved
+ * DERIVATIONS over the draft, never the draft itself: not one `bind:` target changed.
+ *
+ * Apply that test to the next candidate (the option lists, the spell picker, skills+expertise). If it
+ * would move a bound field, verify live via `shot.mjs` and a driven browser, never blind.
  */
 class BuildVM {
 	// read the shared reactive content store → a live content refresh re-derives options with no reload
@@ -140,7 +131,7 @@ class BuildVM {
 		// would double-count. Carry only the residue (species/background boosts + old saves that stored
 		// no slots → nothing subtracts, so their whole flat boost survives, unchanged old behaviour).
 		const carried: Partial<Record<Ability, number>> = { ...char.build.abilityBoosts };
-		for (const [ab, n] of Object.entries(this.slotBoosts)) {
+		for (const [ab, n] of Object.entries(this.abilities.slotBoosts)) {
 			const left = (carried[ab as Ability] ?? 0) - (n as number);
 			if (left > 0) carried[ab as Ability] = left;
 			else delete carried[ab as Ability];
@@ -401,107 +392,13 @@ class BuildVM {
 		this.classSkillCount === 0 ||
 		this.classSkillOptions.includes(skill);
 
-	// --- ability scores --------------------------------------------------------
-	setMethod = (m: StatMethod) => {
-		this.draft.method = m;
-		if (m === 'standard_array') this.draft.arrayPick = {};
-		if (m === 'point_buy') this.draft.abilities = baseAbilities();
-	};
-	pointsUsed = $derived(pointsSpent(this.draft.abilities));
-	pointsLeft = $derived(POINT_BUY_BUDGET - this.pointsUsed);
-
-	bumpAbility = (ab: Ability, dir: 1 | -1) => {
-		// editing an existing character in Strict: base scores are locked (you don't re-roll them at
-		// level-up — increases come only from ASI slots). Free lets you edit anything.
-		if (this.edit && this.draft.strict) return;
-		const cur = this.draft.abilities[ab];
-		if (this.draft.method === 'point_buy' && !this.draft.strict) {
-			// lenient point-buy still respects budget/caps to keep the counter meaningful
-		}
-		if (this.draft.method === 'point_buy') {
-			if (dir === 1 && !canRaise(this.draft.abilities, ab)) return;
-			if (dir === -1 && !canLower(this.draft.abilities, ab)) return;
-		} else {
-			// manual: 1..30 (Free) or 3..20 (Strict-ish) — stay lenient, just clamp sane bounds
-			const lo = this.draft.strict ? 3 : 1;
-			const hi = this.draft.strict ? 20 : 30;
-			if (cur + dir < lo || cur + dir > hi) return;
-		}
-		this.draft.abilities = { ...this.draft.abilities, [ab]: cur + dir };
-	};
-
-	/** Standard array: assign the next unused value to an ability, or clear it. */
-	assignArray = (ab: Ability, value: number | null) => {
-		const next = { ...this.draft.arrayPick };
-		// remove this value from any other ability first (each value used once)
-		if (value != null) for (const k of ABILITIES) if (next[k] === value) delete next[k];
-		if (value == null) delete next[ab];
-		else next[ab] = value;
-		this.draft.arrayPick = next;
-		this.draft.abilities = { ...this.draft.abilities, [ab]: value ?? 8 };
-	};
-	/** Standard-array values not yet assigned to an ability. */
-	arrayRemaining = $derived.by(() => {
-		const used = new Set(Object.values(this.draft.arrayPick));
-		return STANDARD_ARRAY.filter((v) => !used.has(v));
-	});
-
-	// --- ability boosts (5.5e background choice; 5e species flows via effects) --
-	boostCarrier = $derived(boostCarrier(this.draft.system));
-	backgroundBoostChoices = $derived.by<Ability[]>(() =>
-		csv(this.backgroundRow?.data.ability_choices).filter((a): a is Ability =>
-			(ABILITIES as readonly string[]).includes(a)
-		)
-	);
-	/** JUST the 5.5e background boost allocation (for the background chips — so an ASI boost doesn't
-	 *  leak into them). Empty unless a 5.5e background offers a choice. */
-	backgroundBoosts = $derived.by<Partial<Record<Ability, number>>>(() =>
-		this.draft.system === '5.5e' && this.backgroundBoostChoices.length
-			? allocateBackgroundBoost(this.draft.boostShape, this.draft.boostPicks, this.backgroundBoostChoices)
-			: {}
-	);
-	/** Ability boosts derived PURELY from the ASI/feat slots (per-slot +2/+1 ASI + each half-feat's +1).
-	 *  Split out of `abilityBoosts` so `hydrate` can subtract them from the carried flat boosts — a
-	 *  restored slot re-derives its own boost, so carrying it flat too would double-apply (UBUG-13). */
-	slotBoosts = $derived.by<Partial<Record<Ability, number>>>(() => {
-		const out: Partial<Record<Ability, number>> = {};
-		const add = (m: Partial<Record<Ability, number>>) => {
-			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
-		};
-		for (const s of this.feats.featSlots) if (this.draft.slotFeats[s.key] === ASI) add(this.feats.asiBoostFor(s.key));
-		// half-feat +1 (Grappler STR/DEX, Epic Boon any) — the chosen ability of each half-feat slot
-		for (const s of this.feats.featSlots) {
-			const ab = this.draft.slotFeatAbility[s.key];
-			if (ab && this.feats.halfFeatOptionsFor(s.key).includes(ab)) out[ab] = (out[ab] ?? 0) + 1;
-		}
-		return out;
-	});
-	/** All ability boosts folded together: 5.5e background choice + species free-choice + every ASI slot. */
-	abilityBoosts = $derived.by<Partial<Record<Ability, number>>>(() => {
-		const out: Partial<Record<Ability, number>> = {};
-		const add = (m: Partial<Record<Ability, number>>) => {
-			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
-		};
-		add(this.edit?.boosts ?? {}); // NON-slot boosts carried from a loaded character (species/background)
-		add(this.backgroundBoosts); // 5.5e background choice (empty unless the guard in backgroundBoosts holds)
-		// species free-choice ASI (5e Half-Elf +1/+1)
-		if (this.speciesBoostChoice)
-			for (const ab of this.draft.speciesBoostPicks)
-				out[ab] = (out[ab] ?? 0) + this.speciesBoostChoice.amount;
-		add(this.slotBoosts);
-		return out;
-	});
-	toggleBoostPick = (ab: Ability) => {
-		this.draft.boostPicks = toggleCapped(
-			this.draft.boostPicks,
-			ab,
-			boostPickCount(this.draft.boostShape)
-		);
-	};
-
 	/** Feat / ASI slots (which levels grant one, what fills it, the choices it then asks for) — see
 	 *  feats.svelte.ts. */
 	feats = new FeatSlots(() => this);
+	/** Ability scores + every boost layered on them — see ability-allocation.svelte.ts. Read as
+	 *  `b.abilities.*`: unlike the combat subsystems this one has a single consumer component, so it
+	 *  is addressed directly instead of behind a dozen forwarding accessors. */
+	abilities = new AbilityAllocation(() => this);
 
 	// --- assembled character + live sheet --------------------------------------
 	assembled = $derived.by<Character>(() => {
@@ -521,7 +418,7 @@ class BuildVM {
 					subclass: c.subclassId ?? undefined
 				})),
 			abilities: { ...this.draft.abilities },
-			abilityBoosts: this.abilityBoosts as Record<string, number>,
+			abilityBoosts: this.abilities.abilityBoosts as Record<string, number>,
 			skills: [...new Set([...this.autoSkills, ...this.draft.skills])],
 			// §C feat-granted skills (Skilled) kept in their OWN field so the class-skill cap counter isn't
 			// inflated on edit; carried verbatim on edit (like abilityBoosts) + new slot picks on top
@@ -575,7 +472,7 @@ class BuildVM {
 			{ name: this.draft.name, method: this.draft.method, strict: this.draft.strict },
 			{
 				hasClass: !!this.classId,
-				pointsLeft: this.pointsLeft,
+				pointsLeft: this.abilities.pointsLeft,
 				classSkillCount: this.classSkillCount,
 				skillChosenCount: this.skillChosenCount,
 				spellPicker: this.spellPicker
@@ -611,12 +508,12 @@ class BuildVM {
 	/** Provenance sub-line for an ability row: base + boost + species/effect bonus. */
 	abilityNote = (ab: Ability): string => {
 		const base = this.draft.abilities[ab];
-		const boost = this.abilityBoosts[ab] ?? 0;
+		const boost = this.abilities.abilityBoosts[ab] ?? 0;
 		const total = this.sheet?.abilities[ab].score.value ?? base;
 		const extra = total - base - boost; // species / effect contribution
 		const parts: string[] = [`base ${base}`];
 		if (boost) parts.push(`boost +${boost}`);
-		if (extra) parts.push(`${this.boostCarrier === 'species' ? 'species' : 'other'} ${extra > 0 ? '+' : ''}${extra}`);
+		if (extra) parts.push(`${this.abilities.boostCarrier === 'species' ? 'species' : 'other'} ${extra > 0 ? '+' : ''}${extra}`);
 		return parts.join(' · ');
 	};
 	abilityCost = (ab: Ability): number => pointBuyCost(this.draft.abilities[ab]);

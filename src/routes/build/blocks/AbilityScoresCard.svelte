@@ -18,11 +18,11 @@
 	<div class="statgenhead">
 		<div class="method">
 			{#each METHODS as m (m.id)}
-				<button class="method-seg" class:on={b.draft.method === m.id} onclick={() => b.setMethod(m.id)}>{m.label}</button>
+				<button class="method-seg" class:on={b.draft.method === m.id} onclick={() => b.abilities.setMethod(m.id)}>{m.label}</button>
 			{/each}
 		</div>
 		{#if b.draft.method === 'point_buy'}
-			<span class="points">Points <b class:over={b.pointsLeft < 0}>{b.pointsLeft}</b> / 27</span>
+			<span class="points">Points <b class:over={b.abilities.pointsLeft < 0}>{b.abilities.pointsLeft}</b> / 27</span>
 		{/if}
 	</div>
 
@@ -31,16 +31,16 @@
 		<div class="stat-row">
 			<span class="ability-code">{ab}</span>
 			{#if b.draft.method === 'standard_array'}
-				<select class="arraysel bare" value={b.draft.arrayPick[ab] ?? ''} onchange={(e) => b.assignArray(ab, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}>
+				<select class="arraysel bare" value={b.draft.arrayPick[ab] ?? ''} onchange={(e) => b.abilities.assignArray(ab, e.currentTarget.value === '' ? null : Number(e.currentTarget.value))}>
 					<option value="">—</option>
 					{#if b.draft.arrayPick[ab] != null}<option value={b.draft.arrayPick[ab]}>{b.draft.arrayPick[ab]}</option>{/if}
-					{#each b.arrayRemaining as v (v)}<option value={v}>{v}</option>{/each}
+					{#each b.abilities.arrayRemaining as v (v)}<option value={v}>{v}</option>{/each}
 				</select>
 			{:else}
 				<span class="stepper">
-					<button aria-label="lower {ab}" onclick={() => b.bumpAbility(ab, -1)}>−</button>
+					<button aria-label="lower {ab}" onclick={() => b.abilities.bumpAbility(ab, -1)}>−</button>
 					<span class="base">{b.draft.abilities[ab]}</span>
-					<button aria-label="raise {ab}" onclick={() => b.bumpAbility(ab, 1)}>+</button>
+					<button aria-label="raise {ab}" onclick={() => b.abilities.bumpAbility(ab, 1)}>+</button>
 				</span>
 			{/if}
 			<span class="bonus">{b.abilityNote(ab)}</span>
@@ -48,7 +48,7 @@
 		</div>
 	{/each}
 
-	{#if b.boostCarrier === 'background' && b.backgroundBoostChoices.length}
+	{#if b.abilities.boostCarrier === 'background' && b.abilities.backgroundBoostChoices.length}
 		<div class="boost">
 			<p class="subtext">5.5e background boost — on your <b class="gold">{rowName(b.backgroundRow)}</b> abilities</p>
 			<div class="segment-group small">
@@ -56,14 +56,14 @@
 				<button class:on={b.draft.boostShape === '1-1-1'} onclick={() => (b.draft.boostShape = '1-1-1')}>+1 / +1 / +1</button>
 			</div>
 			<div class="chips spaced">
-				{#each b.backgroundBoostChoices as ab (ab)}
-					<button class="pick-chip" class:on={b.draft.boostPicks.includes(ab)} onclick={() => b.toggleBoostPick(ab)}>
-						{ab.toUpperCase()}{#if b.backgroundBoosts[ab]}<span class="gold"> +{b.backgroundBoosts[ab]}</span>{/if}
+				{#each b.abilities.backgroundBoostChoices as ab (ab)}
+					<button class="pick-chip" class:on={b.draft.boostPicks.includes(ab)} onclick={() => b.abilities.toggleBoostPick(ab)}>
+						{ab.toUpperCase()}{#if b.abilities.backgroundBoosts[ab]}<span class="gold"> +{b.abilities.backgroundBoosts[ab]}</span>{/if}
 					</button>
 				{/each}
 			</div>
 		</div>
-	{:else if b.boostCarrier === 'species'}
+	{:else if b.abilities.boostCarrier === 'species'}
 		<p class="subtext note">5e species ability bonuses apply automatically from the species entry.</p>
 		{#if b.speciesBoostChoice}
 			<div class="boost">
