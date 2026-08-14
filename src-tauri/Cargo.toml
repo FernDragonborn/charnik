@@ -1,10 +1,10 @@
 [package]
 name = "app"
 version = "0.6.1"
-description = "A Tauri App"
-authors = ["you"]
-license = ""
-repository = ""
+description = "A D&D 5e (2014) + 5.5e (2024) character tracking system — build, play, and browse, over content you own as plain CSV."
+authors = ["Fern Dragonborn <48766349+FernDragonborn@users.noreply.github.com>"]
+license = "MIT"
+repository = "https://github.com/FernDragonborn/charnik"
 edition = "2021"
 rust-version = "1.77.2"
 
