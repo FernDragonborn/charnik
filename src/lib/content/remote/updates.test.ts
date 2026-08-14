@@ -9,15 +9,9 @@ import 'fake-indexeddb/auto';
 import { describe, it, expect, afterAll, beforeAll, beforeEach } from 'vitest';
 import { getUserStorage } from '$lib/storage/provider';
 import { packConfig, emptyPackConfig, UPDATE_MODE } from '../packs.svelte';
-import {
-	updates,
-	checkNow,
-	discoverPacks,
-	installPack,
-	renamePack,
-	restorePendingUpdates,
-	uninstallPack,
-} from './updates.svelte';
+import { updates, checkNow, restorePendingUpdates } from './updates.svelte';
+// one suite across both halves on purpose: what it pins is the GLUE between them
+import { discoverPacks, installPack, renamePack, uninstallPack } from './pack-lifecycle';
 import { gitBlobSha } from './diff';
 import { discoverContentRoots } from '../disk';
 import { forgetUninstalledPacks } from '../provider';

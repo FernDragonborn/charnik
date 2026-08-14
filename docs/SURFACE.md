@@ -297,10 +297,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function undoUpdate` — * Undo the last applied update for one pack, from the copy the swap kept beside it.
 - `function rollbackablePacks` — Which installed packs have a previous version on disk — drives the undo button.
 - `const autoCheckAllowed` — Should the app check by itself at startup?
-- `function discoverPacks` — * Ask a pasted repo URL what packs it holds.
-- `function installPack` — * Install one discovered pack.
-- `function renamePack` — * Move a pack into a different folder, files and bookkeeping together — the way a name chosen at * install time (or a…
-- `function uninstallPack` — * Uninstall a pack: revoke what its plugins were granted, delete its folder (which takes their code * with it — it li…
 
 ### `src/lib/content/review.svelte.ts`
 
@@ -378,7 +374,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (92 modules)
+## Library functions & types (93 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -771,6 +767,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function pruneCache` — * Throw away staged bytes nothing is waiting for.
 - `function pluginsIn` — Does this pack ship executable code?
 - `function pluginsTouchedBy` — * Plugin namespaces whose CODE this update would rewrite — a much sharper thing to say than "this * pack contains plu…
+
+### `src/lib/content/remote/pack-lifecycle.ts`
+
+- `function discoverPacks` — * Ask a pasted repo URL what packs it holds.
+- `function installPack` — * Install one discovered pack.
+- `function renamePack` — * Move a pack into a different folder, files and bookkeeping together — the way a name chosen at * install time (or a…
+- `function uninstallPack` — * Uninstall a pack: revoke what its plugins were granted, delete its folder (which takes their code * with it — it li…
 
 ### `src/lib/content/remote/tauri-fetch.ts`
 
@@ -1291,4 +1294,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 752 exports across 106 modules · 40 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 752 exports across 107 modules · 40 duplicate suspects._

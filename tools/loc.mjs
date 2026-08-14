@@ -108,14 +108,17 @@ if (args.includes('--verify')) {
 	process.exit(bad === 0 ? 0 : 1);
 }
 
-const shown = showAll ? rows : rows.filter((r) => r.code > r.limit);
+const over = rows.filter((r) => r.code > r.limit);
+const shown = showAll ? rows : over;
 console.log(' code  total  file');
 for (const r of shown)
 	console.log(
 		`${String(r.code).padStart(5)}  ${String(r.total).padStart(5)}  ${r.file}${r.svelte ? '  (script only)' : ''}`,
 	);
-if (shown.length === 0) console.log('  — nothing over the threshold');
+// counted over the WHOLE selection, not over what got printed: under `--all` those differ, and the
+// summary line is the number people quote
+if (over.length === 0) console.log('  — nothing over the threshold');
 else
 	console.log(
-		`\n${shown.length} over the threshold (ts ${TS_LIMIT}, svelte script ${SVELTE_SCRIPT_LIMIT})`,
+		`\n${over.length} over the threshold (ts ${TS_LIMIT}, svelte script ${SVELTE_SCRIPT_LIMIT})`,
 	);

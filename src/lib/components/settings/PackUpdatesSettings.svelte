@@ -21,13 +21,15 @@
 		updates,
 		checkNow,
 		applyUpdate,
+		rollbackablePacks,
+		undoUpdate,
+	} from '$lib/content/remote/updates.svelte';
+	import {
 		discoverPacks,
 		installPack,
 		renamePack,
-		rollbackablePacks,
-		undoUpdate,
 		uninstallPack,
-	} from '$lib/content/remote/updates.svelte';
+	} from '$lib/content/remote/pack-lifecycle';
 	import { content, reloadContent } from '$lib/content/store.svelte';
 	import { FILE_CHANGE } from '$lib/content/remote/diff';
 
