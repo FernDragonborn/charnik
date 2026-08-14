@@ -10,30 +10,30 @@
 </script>
 
 <div class="card">
-	<h2>Ability boosts &amp; feats <span class="count">{b.filledSlots}/{b.featSlots.length}</span></h2>
+	<h2>Ability boosts &amp; feats <span class="count">{b.feats.filledSlots}/{b.feats.featSlots.length}</span></h2>
 	{#if !b.classId}
 		<p class="subtext">Pick a class to see its ASI / feat slots.</p>
 	{:else}
-		{#if b.originFeatRef}
+		{#if b.feats.originFeatRef}
 			<div class="field-row">
 				<span class="level-tag gold">BG</span>
-				<span class="feat-line"><b>Origin feat</b> — {rowName(b.graph?.get(b.originFeatRef))} <span class="subtext">(granted)</span></span>
+				<span class="feat-line"><b>Origin feat</b> — {rowName(b.graph?.get(b.feats.originFeatRef))} <span class="subtext">(granted)</span></span>
 			</div>
-			{@const originSkills = b.featSkillCountOf(b.originFeatRef)}
+			{@const originSkills = b.feats.featSkillCountOf(b.feats.originFeatRef)}
 			{#if originSkills > 0}{@render skillPicker('origin', originSkills)}{/if}
 		{/if}
-		{#each b.featSlots as slot (slot.key)}
+		{#each b.feats.featSlots as slot (slot.key)}
 			{@const chosen = b.draft.slotFeats[slot.key] ?? ''}
 			{@const asi = b.draft.slotAsi[slot.key]}
 			{@const multi = b.draft.classes.length > 1}
 			<div class="field-row" class:done={!!chosen}>
 				<span class="level-tag">{multi ? `${slot.className.slice(0, 3)} ` : ''}L{slot.level}</span>
-				<select class="bare feat-select" value={chosen} onchange={(e) => b.setSlotFeat(slot.key, e.currentTarget.value)}>
+				<select class="bare feat-select" value={chosen} onchange={(e) => b.feats.setSlotFeat(slot.key, e.currentTarget.value)}>
 					<option value="">— ASI or feat —</option>
 					<option value={ASI}>Ability Score Improvement (+2 or +1/+1)</option>
-					{#each b.featOptionsFor(slot.level) as f (f.effectiveId)}
-						<option value={f.effectiveId} disabled={b.featOptionBlocked(f.effectiveId, slot.key)}>
-							{rowName(f)}{b.isRepeatable(f.effectiveId) ? ' ↻' : ''}
+					{#each b.feats.featOptionsFor(slot.level) as f (f.effectiveId)}
+						<option value={f.effectiveId} disabled={b.feats.featOptionBlocked(f.effectiveId, slot.key)}>
+							{rowName(f)}{b.feats.isRepeatable(f.effectiveId) ? ' ↻' : ''}
 						</option>
 					{/each}
 				</select>
@@ -41,20 +41,20 @@
 			{#if chosen === ASI && asi}
 				<div class="asi-block">
 					<div class="segment-group small">
-						<button class:on={asi.shape === '2'} onclick={() => b.setAsiShape(slot.key, '2')}>+2 one</button>
-						<button class:on={asi.shape === '1-1'} onclick={() => b.setAsiShape(slot.key, '1-1')}>+1 / +1</button>
+						<button class:on={asi.shape === '2'} onclick={() => b.feats.setAsiShape(slot.key, '2')}>+2 one</button>
+						<button class:on={asi.shape === '1-1'} onclick={() => b.feats.setAsiShape(slot.key, '1-1')}>+1 / +1</button>
 					</div>
 					<div class="chips">
 						{#each ABILITIES as ab (ab)}
-							{@const amt = b.asiBoostFor(slot.key)[ab]}
-							<button class="pick-chip" class:on={asi.picks.includes(ab)} onclick={() => b.toggleAsiPick(slot.key, ab)}>
+							{@const amt = b.feats.asiBoostFor(slot.key)[ab]}
+							<button class="pick-chip" class:on={asi.picks.includes(ab)} onclick={() => b.feats.toggleAsiPick(slot.key, ab)}>
 								{ab.toUpperCase()}{#if amt}<span class="gold"> +{amt}</span>{/if}
 							</button>
 						{/each}
 					</div>
 				</div>
 			{:else if chosen && chosen !== ASI}
-				{@const halfOpts = b.halfFeatOptionsFor(slot.key)}
+				{@const halfOpts = b.feats.halfFeatOptionsFor(slot.key)}
 				{#if halfOpts.length}
 					<div class="asi-block">
 						<span class="subtext"
@@ -62,14 +62,14 @@
 						>
 						<div class="chips">
 							{#each halfOpts as ab (ab)}
-								<button class="pick-chip" class:on={b.draft.slotFeatAbility[slot.key] === ab} onclick={() => b.setSlotFeatAbility(slot.key, ab)}>
+								<button class="pick-chip" class:on={b.draft.slotFeatAbility[slot.key] === ab} onclick={() => b.feats.setSlotFeatAbility(slot.key, ab)}>
 									{ab.toUpperCase()}
 								</button>
 							{/each}
 						</div>
 					</div>
 				{/if}
-				{@const skillCount = b.featSkillCountOf(chosen)}
+				{@const skillCount = b.feats.featSkillCountOf(chosen)}
 				{#if skillCount > 0}{@render skillPicker(slot.key, skillCount)}{/if}
 			{/if}
 		{/each}
@@ -78,7 +78,7 @@
 </div>
 
 {#snippet skillPicker(key: string, cap: number)}
-	{@const picks = b.slotFeatSkillsFor(key)}
+	{@const picks = b.feats.slotFeatSkillsFor(key)}
 	<div class="asi-block">
 		<span class="subtext"
 			>Skills — choose <b class="teal">{Math.min(picks.length, cap)}/{cap}</b>
@@ -87,8 +87,8 @@
 		<div class="chips">
 			{#each SKILLS as skill (skill)}
 				{@const on = picks.includes(skill)}
-				{@const blocked = (b.draft.strict && b.featSkillTakenElsewhere(key, skill) && !on) || (!on && picks.length >= cap)}
-				<button class="pick-chip" class:on class:dim={blocked} disabled={blocked} onclick={() => b.toggleSlotFeatSkill(key, skill, cap)}>
+				{@const blocked = (b.draft.strict && b.feats.featSkillTakenElsewhere(key, skill) && !on) || (!on && picks.length >= cap)}
+				<button class="pick-chip" class:on class:dim={blocked} disabled={blocked} onclick={() => b.feats.toggleSlotFeatSkill(key, skill, cap)}>
 					{titleCase(skill)}
 				</button>
 			{/each}

@@ -49,6 +49,10 @@ import {
 } from '$lib/build/derive';
 import { splitList, FEAT_CATEGORY, type ContentType } from '$lib/content/schemas';
 import { slugify } from '$lib/util/slug';
+import { FeatSlots } from './feats.svelte';
+import { ASI, ASI_FEAT_ID, rowName, rowOfType } from './rows';
+// re-exported so every existing `from '../state.svelte'` import keeps working
+export { ASI, ASI_FEAT_ID, rowName, rowOfType };
 import {
 	asiPickCount,
 	toggleCapped,
@@ -59,36 +63,8 @@ import {
 	type EditContext
 } from './draft';
 
-/** Type guard: is this row of content type `T`? (A predicate is needed — TS won't narrow a union by a
- *  bare `row.type === type` comparison against a generic `T`.) */
-function isRowOfType<T extends ContentType>(
-	row: LoadedRow,
-	type: T
-): row is LoadedRowByType<T> {
-	return row.type === type;
-}
-
-/** Narrow a looked-up row to a known content type (or undefined if it's a different type / missing).
- *  Lets the build derive read type-specific columns without a cast. */
-export function rowOfType<T extends ContentType>(
-	row: LoadedRow | undefined,
-	type: T
-): LoadedRowByType<T> | undefined {
-	return row && isRowOfType(row, type) ? row : undefined;
-}
-
 const csv = splitList;
 
-/** Localised display name for a content row (falls back to EN). Thin wrapper over the shared
- *  `localizedName` (AUDIT F9) that adds the undefined-row guard + the active-locale default. */
-export function rowName(row: LoadedRow | undefined, locale = app.activeLocale): string {
-	return row ? localizedName(row, locale) : '';
-}
-
-/** Sentinel a feat slot holds when the choice is an Ability Score Improvement (not a feat). */
-export const ASI = '__asi__';
-/** The SRD feat id representing an ASI — filtered out of the feat picker (handled as boosts). */
-const ASI_FEAT_ID = 'ability_score_improvement';
 
 /**
  * D1 EXCEPTION — file over the 400-line lint (warn-only). Split DEFERRED, like CombatVM: not
@@ -239,7 +215,7 @@ class BuildVM {
 	languageList = $derived(this.list('language'));
 	itemList = $derived(this.list('item'));
 
-	private row(id: string | null): LoadedRow | undefined {
+	row(id: string | null): LoadedRow | undefined {
 		return id && this.graph ? this.graph.get(id) : undefined;
 	}
 	/** Subclasses available for a given class ref (per multiclass row). */
@@ -499,11 +475,11 @@ class BuildVM {
 		const add = (m: Partial<Record<Ability, number>>) => {
 			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
 		};
-		for (const s of this.featSlots) if (this.draft.slotFeats[s.key] === ASI) add(this.asiBoostFor(s.key));
+		for (const s of this.feats.featSlots) if (this.draft.slotFeats[s.key] === ASI) add(this.feats.asiBoostFor(s.key));
 		// half-feat +1 (Grappler STR/DEX, Epic Boon any) — the chosen ability of each half-feat slot
-		for (const s of this.featSlots) {
+		for (const s of this.feats.featSlots) {
 			const ab = this.draft.slotFeatAbility[s.key];
-			if (ab && this.halfFeatOptionsFor(s.key).includes(ab)) out[ab] = (out[ab] ?? 0) + 1;
+			if (ab && this.feats.halfFeatOptionsFor(s.key).includes(ab)) out[ab] = (out[ab] ?? 0) + 1;
 		}
 		return out;
 	});
@@ -530,134 +506,9 @@ class BuildVM {
 		);
 	};
 
-	// --- feats: one ASI/feat slot per qualifying level, PER CLASS (RAW-correct for multiclass:
-	// each class grants its ASIs at its own class levels — Fighter +6/14, Rogue +10) ------------
-	featSlots = $derived.by<{ key: string; level: number; className: string }[]>(() => {
-		const out: { key: string; level: number; className: string }[] = [];
-		this.draft.classes.forEach((c, i) => {
-			if (!c.classId) return;
-			const row = this.row(c.classId);
-			const className = rowName(row);
-			const asiLevels = rowOfType(row, 'class')?.data.asi_levels;
-			for (const level of asiFeatLevels(c.level, asiLevels))
-				out.push({ key: `${i}:${level}`, level, className });
-		});
-		return out;
-	});
-	/** The background's granted origin feat (5.5e), resolved to a ref — auto, not a slot. */
-	originFeatRef = $derived.by<string | null>(() => {
-		const id = this.backgroundRow?.data.origin_feat;
-		if (!id) return null;
-		return this.featList.find((f) => f.id === String(id))?.effectiveId ?? null;
-	});
-	/** Feat options that make sense for a slot at `level`: origin feats are background-only, and
-	 *  epic boons only unlock at level 19+. (Not a hard block — just the right menu per slot.) */
-	featOptionsFor = (level: number): LoadedRow[] =>
-		this.featList.filter((f) => {
-			// the plain ASI is offered as its own dedicated slot option, not as a feat row
-			if (f.id === ASI_FEAT_ID) return false;
-			const cat = String(f.data.category ?? FEAT_CATEGORY.general);
-			if (cat === FEAT_CATEGORY.origin) return false;
-			if (cat === FEAT_CATEGORY.epicBoon) return level >= 19;
-			return true;
-		});
-	// ASI may be taken in every slot; a feat is repeatable iff its row says so.
-	isRepeatable = (ref: string): boolean =>
-		ref === ASI || Boolean(rowOfType(this.graph?.get(ref), 'feat')?.data.repeatable);
-	/** Feat refs already spent on slots (repeatable ones may recur). */
-	usedFeatRefs = $derived<string[]>(Object.values(this.draft.slotFeats));
-	/** A feat option is blocked for a slot if it's non-repeatable and already taken elsewhere. */
-	featOptionBlocked = (ref: string, slotKey: string): boolean =>
-		!this.isRepeatable(ref) && this.draft.slotFeats[slotKey] !== ref && this.usedFeatRefs.includes(ref);
-	setSlotFeat = (key: string, ref: string) => {
-		const next = { ...this.draft.slotFeats };
-		if (ref) next[key] = ref;
-		else delete next[key];
-		this.draft.slotFeats = next;
-		// initialise / clear this slot's ASI allocation as needed
-		if (ref === ASI && !this.draft.slotAsi[key])
-			this.draft.slotAsi = { ...this.draft.slotAsi, [key]: { shape: '2', picks: [] } };
-		if (ref !== ASI && this.draft.slotAsi[key]) {
-			const asi = { ...this.draft.slotAsi };
-			delete asi[key];
-			this.draft.slotAsi = asi;
-		}
-		// a half-feat defaults its +1 to the first offered ability; a non-half-feat clears any choice
-		const first = this.halfFeatOptionsFor(key)[0];
-		const featAb = { ...this.draft.slotFeatAbility };
-		if (first) featAb[key] ??= first;
-		else delete featAb[key];
-		this.draft.slotFeatAbility = featAb;
-		// §C: a feat swap clears the slot's skill choice-grant picks (stale for the new feat)
-		const featSk = { ...this.draft.slotFeatSkills };
-		delete featSk[key];
-		this.draft.slotFeatSkills = featSk;
-	};
-	/** The abilities a slot's chosen feat lets you raise by +1 (a half-feat like Grappler / an Epic
-	 *  Boon), or `[]` if the slot holds no half-feat. Reads the feat row's `ability_choice`. */
-	halfFeatOptionsFor = (key: string): Ability[] => {
-		const ref = this.draft.slotFeats[key];
-		if (!ref || ref === ASI) return [];
-		const feat = rowOfType(this.graph?.get(ref), 'feat');
-		return halfFeatAbilities(feat?.data.ability_choice);
-	};
-	setSlotFeatAbility = (key: string, ab: Ability) => {
-		this.draft.slotFeatAbility = { ...this.draft.slotFeatAbility, [key]: ab };
-	};
-	filledSlots = $derived(this.featSlots.filter((s) => this.draft.slotFeats[s.key]).length);
-
-	// --- §C skill choice-grant (Skilled: pick N skill proficiencies) ------------
-	// Data-driven off the feat's `skill_choice` column (author-set count, no feat-id hardcode), so a
-	// homebrew Skilled/Prodigy Just Works. NB SRD Skilled is "skills OR tools"; tools aren't modelled
-	// yet → skills-only (a flagged RAW deviation, docs/FEATS-PLAN §C).
-	/** How many skills a feat REF grants by choice (0 = not a choice-grant feat). */
-	featSkillCountOf = (ref: string | null | undefined): number => {
-		if (!ref || ref === ASI) return 0;
-		return Number(rowOfType(this.graph?.get(ref), 'feat')?.data.skill_choice ?? 0) || 0;
-	};
-	/** The chosen skills for a choice-grant key (a feat slot key, or `'origin'` for the BG feat). */
-	slotFeatSkillsFor = (key: string): string[] => this.draft.slotFeatSkills[key] ?? [];
-	/** Toggle a skill in a slot's §C picks, capped at the feat's grant count. */
-	toggleSlotFeatSkill = (key: string, skill: string, cap: number) => {
-		this.draft.slotFeatSkills = {
-			...this.draft.slotFeatSkills,
-			[key]: toggleCapped(this.slotFeatSkillsFor(key), skill, cap)
-		};
-	};
-	/** Strict-mode guard: a skill already proficient from ANOTHER source (class/background pick or a
-	 *  different feat's grant) is a wasted pick — disable it in Strict, allow it in Free. */
-	featSkillTakenElsewhere = (key: string, skill: string): boolean => {
-		if (this.autoSkills.includes(skill) || this.draft.skills.includes(skill)) return true;
-		return Object.entries(this.draft.slotFeatSkills).some(
-			([k, list]) => k !== key && list.includes(skill)
-		);
-	};
-	/** Every §C-granted skill across all slots + the origin feat (deduped, each capped to its grant),
-	 *  folded into `build.featSkills` at assemble. Stale picks (feat/count changed) are trimmed here. */
-	featSkillPicks = $derived.by<string[]>(() => {
-		const out = new Set<string>();
-		const take = (key: string, count: number) => {
-			for (const s of this.slotFeatSkillsFor(key).slice(0, count)) out.add(s);
-		};
-		for (const s of this.featSlots) take(s.key, this.featSkillCountOf(this.draft.slotFeats[s.key]));
-		take('origin', this.featSkillCountOf(this.originFeatRef));
-		return [...out];
-	});
-
-	// --- per-slot ASI allocation (+2 to one ability, or +1 to two) --------------
-	asiBoostFor = (key: string): Partial<Record<Ability, number>> =>
-		asiBoost(this.draft.slotAsi[key]);
-	setAsiShape = (key: string, shape: AsiShape) => {
-		const cur = this.draft.slotAsi[key] ?? { shape, picks: [] };
-		// trim picks to the new shape's cap (switching 1-1 → 2 drops the extra target)
-		const picks = cur.picks.slice(0, asiPickCount(shape));
-		this.draft.slotAsi = { ...this.draft.slotAsi, [key]: { shape, picks } };
-	};
-	toggleAsiPick = (key: string, ab: Ability) => {
-		const cur = this.draft.slotAsi[key] ?? { shape: '2' as const, picks: [] as Ability[] };
-		const picks = toggleCapped(cur.picks, ab, asiPickCount(cur.shape));
-		this.draft.slotAsi = { ...this.draft.slotAsi, [key]: { ...cur, picks } };
-	};
+	/** Feat / ASI slots (which levels grant one, what fills it, the choices it then asks for) — see
+	 *  feats.svelte.ts. */
+	feats = new FeatSlots(() => this);
 
 	// --- assembled character + live sheet --------------------------------------
 	assembled = $derived.by<Character>(() => {
@@ -681,7 +532,7 @@ class BuildVM {
 			skills: [...new Set([...this.autoSkills, ...this.draft.skills])],
 			// §C feat-granted skills (Skilled) kept in their OWN field so the class-skill cap counter isn't
 			// inflated on edit; carried verbatim on edit (like abilityBoosts) + new slot picks on top
-			featSkills: [...new Set([...(this.edit?.featSkills ?? []), ...this.featSkillPicks])],
+			featSkills: [...new Set([...(this.edit?.featSkills ?? []), ...this.feats.featSkillPicks])],
 			expertise: this.draft.expertise.filter((s) => this.isProficient(s)),
 			saves: this.classRow?.data.saves ?? [],
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
@@ -689,8 +540,8 @@ class BuildVM {
 			feats: [
 				...new Set([
 					// carried over from a loaded character (level-up), else the auto origin feat
-					...(this.edit ? this.edit.feats : this.originFeatRef ? [this.originFeatRef] : []),
-					...this.featSlots.map((s) => this.draft.slotFeats[s.key]).filter((r) => r && r !== ASI)
+					...(this.edit ? this.edit.feats : this.feats.originFeatRef ? [this.feats.originFeatRef] : []),
+					...this.feats.featSlots.map((s) => this.draft.slotFeats[s.key]).filter((r) => r && r !== ASI)
 				])
 			],
 			// persist the per-slot picks so a later level-up restores filled slots (UBUG-13)

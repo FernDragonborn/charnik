@@ -101,7 +101,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.reset();
 		build.graph = graph;
 		build.draft.classes = [{ classId: `class:${S}:fighter`, subclassId: null, level: 14 }];
-		expect(build.featSlots.map((s) => s.level)).toEqual([4, 6, 8, 12, 14]);
+		expect(build.feats.featSlots.map((s) => s.level)).toEqual([4, 6, 8, 12, 14]);
 	});
 
 	it('level-up restores filled ASI slots and applies each boost ONCE, not twice (UBUG-13)', () => {
@@ -110,11 +110,11 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.draft.name = 'Asi';
 		build.draft.classes = [{ classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
 		build.draft.abilities = { str: 8, dex: 14, con: 14, int: 15, wis: 10, cha: 12 };
-		const slot = build.featSlots[0]; // the level-4 ASI slot
+		const slot = build.feats.featSlots[0]; // the level-4 ASI slot
 		expect(slot).toBeDefined();
 		const key = slot?.key ?? '';
-		build.setSlotFeat(key, ASI);
-		build.toggleAsiPick(key, 'con'); // shape '2' → +2 CON
+		build.feats.setSlotFeat(key, ASI);
+		build.feats.toggleAsiPick(key, 'con'); // shape '2' → +2 CON
 		const saved = characterSchema.parse(build.assembled);
 		expect(saved.build.abilityBoosts.con).toBe(2);
 		expect(saved.build.slotPicks.feats[key]).toBe(ASI); // slot persisted
