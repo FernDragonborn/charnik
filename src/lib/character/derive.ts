@@ -16,6 +16,16 @@
 import { tokensOf, type ContentGraph, type LoadedRow, type LoadedRowOf } from '../content/loader';
 import type { Character } from './schema';
 import { gatherEffects } from './derive-gather';
+import { resolveResourceOptions, type ResourceOption } from './derive-resource-options';
+// re-exported: `ResourceOption` is part of `CharacterSheet`, so its consumers import it from here
+export type { ResourceOption };
+import {
+	computeClassLevels,
+	hitDicePools,
+	pickPrimaryCaster,
+	seedAbilityBase,
+	type HitDiePool,
+} from './derive-setup';
 import { applyPluginPrePass } from './derive-plugins';
 import {
 	num,
@@ -38,7 +48,6 @@ import {
 	maxHpForClass,
 	carryingCapacity,
 	ABILITY_SCORE_CLAMP,
-	DIE_MAX,
 	type Ability,
 } from '../rules/core';
 import { gatherProfGrants, isArmorProficient, armorCategoryOf } from '../rules/proficiency';
@@ -48,7 +57,7 @@ import {
 	type EffectIssue,
 	ctxOf,
 } from '../effects/token-parser';
-import { evalExpression, diceToFormula, type ExprContext } from '../effects/expression-evaluator';
+import type { ExprContext } from '../effects/expression-evaluator';
 import { applyEffects, collectFacts, type EffectFacts, type ResourceDef } from '../effects/apply';
 import { didYouMean } from '../effects/suggest';
 import { resolveActiveEffects } from '../effects/resolver';
@@ -111,149 +120,6 @@ export interface CharacterSheet {
 	castCtx?: ExprContext;
 }
 
-/** Piece 3: a spend-option on a granted resource, resolved for a specific character. `cost` is a
- *  small integer or `'x'` (player-picked variable spend, 1..remaining); context-dependent costs
- *  (spell_level etc.) are deferred — an unsupported cost drops the option with a deriveIssue. */
-export interface ResourceOption {
-	id: string;
-	resourceId: string;
-	name: string;
-	description: string;
-	/** Bounded action token(s) the UI runs / displays: apply_condition / heal / roll / apply_effect /
-	 *  gain_action / rest:short|long / restore_resource:<id> / note. A `;`-separated LIST is a
-	 *  multi-action (Uncanny Metabolism = regain focus AND heal) — run in order on one activation. */
-	action: string;
-	actionType: 'action' | 'bonus_action' | 'reaction' | 'free';
-	cost: number | 'x';
-	/** Whether the option's `available` L2 guard passes right now (no guard → always true). A false
-	 *  guard greys the option out — e.g. Persistent Rage is offerable only at combat start. */
-	available: boolean;
-}
-
-interface ResourceOptionsInput {
-	graph: ContentGraph;
-	resourceIds: Set<string>;
-	system: System;
-	isActive: (row: LoadedRow) => boolean;
-	issues: EffectIssue[];
-	/** The L2 context (base), so a `heal:`/`roll:` action's formula resolves to concrete dice HERE
-	 *  (once, like resource maxes) instead of at spend time; absent when auto-calc is off (manual). */
-	ctx: ExprContext | undefined;
-}
-
-/** Resolve the L2 value inside a resource-option `action` so the executor can just roll it. Supports a
- *  `;`-separated MULTI-action (Uncanny Metabolism = `restore_resource:focus;heal:<MA die>+monk_level`):
- *  each sub-token is resolved independently and rejoined with `;`, so the executor runs them in order.
- *  Ceiling: a `note:` inside a multi-action can't contain `;` (it's the action separator) — no shipped
- *  option needs one. A single-token action (the common case) is unchanged (split of one = itself). */
-function resolveActionFormula(
-	action: string,
-	ctx: ExprContext | undefined,
-	name: string,
-	issues: EffectIssue[],
-): string {
-	return action
-		.split(';')
-		.map((tok) => resolveOneActionFormula(tok.trim(), ctx, name, issues))
-		.filter(Boolean)
-		.join(';');
-}
-
-/** Resolve ONE action sub-token's L2 value: `heal:` / `roll:` carry a formula
- *  (`1d10+class_level.fighter` → `1d10+5`); `apply_condition:` / `note:` / `restore_resource:` pass
- *  through unchanged. A resolution failure keeps the raw token + flags a deriveIssue (executor no-ops). */
-function resolveOneActionFormula(
-	action: string,
-	ctx: ExprContext | undefined,
-	name: string,
-	issues: EffectIssue[],
-): string {
-	const i = action.indexOf(':');
-	if (i === -1) return action;
-	const verb = action.slice(0, i);
-	const rest = action.slice(i + 1).trim();
-	if ((verb !== 'heal' && verb !== 'roll') || !rest || !ctx) return action;
-	const r = evalExpression(rest, ctx);
-	if (!r.ok) {
-		issues.push({ source: name, token: action, reason: r.error });
-		return action;
-	}
-	const formula =
-		r.value.type === 'number' ? String(Math.floor(r.value.value)) : diceToFormula(r.value.dice);
-	return `${verb}:${formula}`;
-}
-
-/** Evaluate an option's `available` L2 boolean guard → is it offerable right now? Empty → always
- *  available; a malformed guard fails OPEN (available) + a deriveIssue, so a bad guard surfaces
- *  rather than silently hiding the option (SPEC4-style: surface, never swallow). */
-function resolveAvailable(
-	expr: string,
-	ctx: ExprContext | undefined,
-	name: string,
-	issues: EffectIssue[],
-): boolean {
-	const src = expr.trim();
-	if (!src || !ctx) return true;
-	const r = evalExpression(src, ctx);
-	if (r.ok && r.value.type === 'number') return r.value.value !== 0;
-	issues.push({
-		source: name,
-		token: `available:${src}`,
-		reason: r.ok ? 'available guard is not a condition' : r.error,
-	});
-	return true;
-}
-
-/** Gather the spend-options for the resources a character has (edition + source filtered). Pure. */
-function resolveResourceOptions({
-	graph,
-	resourceIds,
-	system,
-	isActive,
-	issues,
-	ctx,
-}: ResourceOptionsInput): ResourceOption[] {
-	const out: ResourceOption[] = [];
-	for (const row of graph.rows) {
-		if (row.type !== 'resource_option' || !row.systems.includes(system) || !isActive(row)) continue;
-		const resourceId = String(row.data.resource_id);
-		if (!resourceIds.has(resourceId)) continue;
-		const raw = String(row.data.cost ?? '').trim();
-		let cost: number | 'x';
-		if (raw === 'x') cost = 'x';
-		else if (/^\d+$/.test(raw)) cost = Number(raw);
-		else {
-			issues.push({
-				source: String(row.data.name_en),
-				token: `cost:${raw}`,
-				reason: 'unsupported resource-option cost (v1 supports an integer or `x`)',
-			});
-			continue;
-		}
-		out.push({
-			id: row.id,
-			resourceId,
-			name: String(row.data.name_en),
-			description: String(row.data.text_en ?? ''),
-			action: resolveActionFormula(
-				String(row.data.action ?? ''),
-				ctx,
-				String(row.data.name_en),
-				issues,
-			),
-			actionType: (row.data.action_type as ResourceOption['actionType']) ?? 'action',
-			cost,
-			available: resolveAvailable(
-				String(row.data.available ?? ''),
-				ctx,
-				String(row.data.name_en),
-				issues,
-			),
-		});
-	}
-	return out;
-}
-
 /** A4: armor with the stealth-disadvantage flag synthesizes a `disadvantage:skill.stealth` FACT so
  *  it reaches BOTH the hover note and the actual Hide roll (deduped by target+source, like a token). */
 function applyStealthDisadvantage(
@@ -283,50 +149,6 @@ function flagPhantomConditions(
 				token: `apply_condition:${id}`,
 				reason: `unknown condition "${id}"${didYouMean(id, conditionIds)}`, // PLG-9
 			});
-}
-
-/** A10 seeds: the score fold starts from the base score + allocated boosts, as traced contributions. */
-function seedAbilityBase(build: Character['build']): Record<Ability, Contribution[]> {
-	const abilityBase = {} as Record<Ability, Contribution[]>;
-	for (const ab of ABILITIES) {
-		const contribs: Contribution[] = [
-			{ source: 'Base score', layer: 'base', op: 'add', amount: build.abilities[ab] },
-		];
-		const boost = build.abilityBoosts?.[ab] ?? 0;
-		if (boost) contribs.push({ source: 'Ability boosts', layer: 'base', op: 'add', amount: boost });
-		abilityBase[ab] = contribs;
-	}
-	return abilityBase;
-}
-
-/** Class levels keyed by BARE id (`class_level.monk`), summed across multiclass entries. */
-function computeClassLevels(
-	build: Character['build'],
-	graph: ContentGraph,
-): Record<string, number> {
-	const classLevels: Record<string, number> = {};
-	for (const c of build.classes) {
-		const row = graph.get(c.class);
-		if (row) classLevels[row.id] = (classLevels[row.id] ?? 0) + c.level;
-	}
-	return classLevels;
-}
-
-/** The primary caster's ability (highest caster-class level) — the ctx's default `spellcasting_mod`. */
-function pickPrimaryCaster(
-	abilityByClass: Record<string, Ability>,
-	classLevels: Record<string, number>,
-): Ability | undefined {
-	let primaryAbility: Ability | undefined;
-	let primaryLevel = -1;
-	for (const [cid, ab] of Object.entries(abilityByClass)) {
-		const lvl = classLevels[cid] ?? 0;
-		if (lvl > primaryLevel) {
-			primaryLevel = lvl;
-			primaryAbility = ab;
-		}
-	}
-	return primaryAbility;
 }
 
 interface ArmorSpellBlockInput {
@@ -363,28 +185,6 @@ function applyArmorSpellBlock({
 		note: `Not proficient with ${cat} armor — spellcasting blocked`,
 	};
 	issues.push({ source, token: 'armor_proficiency', reason: spellcasting.armorBlock.note });
-}
-
-/** A hit-dice pool: one die size + how many of it the character has (= summed levels of classes with
- *  that die). Spent counts live in `play.hitDiceSpent`, keyed by `die`. */
-interface HitDiePool {
-	die: string;
-	max: number;
-}
-
-/** Group the character's classes into hit-dice pools by die size (RAW multiclass: pool same-size dice,
- *  keep different sizes separate). Sorted largest die first — a deterministic recover order for the
- *  2014 half-recovery. Pure. */
-function hitDicePools(build: Character['build'], graph: ContentGraph): HitDiePool[] {
-	const byDie = new Map<string, number>();
-	for (const c of build.classes) {
-		const row = graph.get(c.class);
-		const die = String((row?.type === 'class' ? row.data.hit_die : undefined) || 'd8');
-		byDie.set(die, (byDie.get(die) ?? 0) + c.level);
-	}
-	return [...byDie]
-		.map(([die, max]) => ({ die, max }))
-		.sort((a, b) => (DIE_MAX[b.die] ?? 0) - (DIE_MAX[a.die] ?? 0));
 }
 
 // Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM. The

@@ -374,7 +374,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (93 modules)
+## Library functions & types (95 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -436,6 +436,19 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PluginPrePassInputs`
 - `function applyPluginPrePass` — L3 plugin PRE-PASS (docs/PLUGINS.md; stage 2½ — between resolve and the fold): resolve every * `plugin:` token agains…
 
+### `src/lib/character/derive-resource-options.ts`
+
+- `interface ResourceOption` — Piece 3: a spend-option on a granted resource, resolved for a specific character.
+- `function resolveResourceOptions` — Gather the spend-options for the resources a character has (edition + source filtered).
+
+### `src/lib/character/derive-setup.ts`
+
+- `function seedAbilityBase` — A10 seeds: the score fold starts from the base score + allocated boosts, as traced contributions.
+- `function computeClassLevels` — Class levels keyed by BARE id (`class_level.monk`), summed across multiclass entries.
+- `function pickPrimaryCaster` — The primary caster's ability (highest caster-class level) — the ctx's default `spellcasting_mod`.
+- `interface HitDiePool` — A hit-dice pool: one die size + how many of it the character has (= summed levels of classes with * that die).
+- `function hitDicePools` — Group the character's classes into hit-dice pools by die size (RAW multiclass: pool same-size dice, * keep different …
+
 ### `src/lib/character/derive-stats.ts`
 
 - `const num` — Coerce a CSV-derived cell to a number (already-number passes through), else the default.
@@ -457,10 +470,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/character/derive.ts`
 
+- `re-export ResourceOption` — re-exported: `ResourceOption` is part of `CharacterSheet`, so its consumers import it from here
 - `re-export SKILL_ABILITY`
 - `re-export type SkillId`
 - `interface CharacterSheet`
-- `interface ResourceOption` — Piece 3: a spend-option on a granted resource, resolved for a specific character.
 - `function deriveSheet` — Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM.
 
 ### `src/lib/character/repository.ts`
@@ -1294,4 +1307,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 752 exports across 107 modules · 40 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 759 exports across 109 modules · 40 duplicate suspects._
