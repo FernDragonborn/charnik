@@ -67,8 +67,9 @@ That folder lives in one of two places, and they mean different things:
 that makes it work, and two separate installs is how a user ends up with half of it. A pack may
 also be plugins only. Code always sits in the pack's `plugins/` subfolder, never loose beside the
 CSVs, so "does this pack contain code?" is one directory listing — for the user and for the
-installer, which must say so BEFORE installing. Arriving inside a pack grants nothing: consent
-(§6) is per-plugin and hash-pinned either way.
+installer, which says so BEFORE installing: the discover step names a pack's plugins, and an update
+distinguishes "contains plugins" from "changes their bytes" (`PackUpdatesSettings.svelte`). Arriving
+inside a pack grants nothing: consent (§6) is per-plugin and hash-pinned either way.
 
 **A namespace is globally unique**, because `plugin:<namespace>:<handlerName>` is how content
 refers to a handler (§1) and a token cannot name a pack. A second claimant is therefore *reported*

@@ -19,9 +19,12 @@ engine disabled (identical shape; trace = base-only when off).
 - **Unit** — co-located `*.test.ts` next to source (`src/lib/rules/abilities.ts` +
   `abilities.test.ts`; same for effects interpreter, stacking pipeline, content
   parse/merge/locale, leveling/XP, multiclass slot math). Node env.
-- **Integration** *(ASPIRATIONAL — not built yet; `tests/integration/` does not exist as of
-  2026-07-16, AUDIT B23; this describes the intended tier, not current coverage)* —
-  `tests/integration/**`; run against the **node/in-memory `Storage`
+- **Integration** *(PARTLY BUILT. There is still no `tests/integration/` directory; what exists is
+  `tests/` holding the cases that need the real world — `live-github.test.ts` (opt-in via
+  `CHARNIK_LIVE_NETWORK=1`) and `content-repo.test.ts` — plus co-located suites that already cover
+  much of the list below over `MemoryStorage`/`NodeStorage`. The gap is the tier's SHAPE, not its
+  coverage; treat the list as the target)* —
+  `tests/**`; run against the **node/in-memory `Storage`
   impl** (NOT Tauri), backed by per-test **temp dirs** (`os.tmpdir()`) where real fs is
   wanted; **never** the user's real `content/`/`characters/`. The Tauri `Storage` impl is
   thin and covered by e2e, not unit/integration. Cover:
@@ -110,5 +113,8 @@ P9 sheet (component math, effects panel, play-state/rests) ·
 P12 export/print (deferred e2e).
 
 ## CI
-GitHub Actions is **free for public repos**; add a minimal `lint + test` workflow **on
-first push to GitHub**, not now.
+GitHub Actions (free for public repos), **in place**: `ci.yml` (lint + test), `codeql.yml`,
+`pages.yml` (the web demo) and `release.yml` (the desktop matrix). All three of the workflows that
+need rules data check the CONTENT repo out into `.content-srd/` and set `CHARNIK_CONTENT` —
+`actions/checkout` refuses a path outside the workspace, so the sibling-folder layout that needs no
+config locally cannot be used there.

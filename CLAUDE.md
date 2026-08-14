@@ -42,7 +42,7 @@ the content into `static/content/`, which is what makes a release carry it as th
 
 The app is **built and shipping** (Tauri desktop releases on GitHub + a web demo on
 GitHub Pages): content pipeline, character build/play views, compendium, homebrew
-authoring, effects engine, i18n — with 300+ Vitest tests. **`docs/PLAN.md` is the
+authoring, effects engine, i18n — with 1300+ Vitest tests. **`docs/PLAN.md` is the
 authoritative spec** (index) and tracks what's done vs open (roadmap ticks, UBUG/REL/DEP
 items); companions: **`docs/TESTING.md`**, **`docs/SECURITY.md`**, and
 **`docs/EFFECTS.md`** (the normative effects-engine spec — L1 vocab, L2 grammar/semantics, the
