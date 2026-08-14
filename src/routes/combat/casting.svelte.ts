@@ -16,7 +16,6 @@ import type { SpellcastingClass } from '$lib/character/spellcasting';
 import {
 	wantsTray,
 	durationToRounds,
-	rollEffectsFor,
 	netAdvantage,
 	NO_ROLL_EFFECTS,
 	type RollEffects,
@@ -27,7 +26,6 @@ import {
 	rollDamageParts,
 	dealsDamage,
 	metres,
-	computeAttacks,
 	type DamagePart,
 	type DamagePartSpec,
 	type SpellRow,

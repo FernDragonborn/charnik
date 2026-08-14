@@ -12,7 +12,6 @@
 import { toast } from 'svelte-sonner';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
-import { localizedName } from '$lib/content/detail';
 import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { ABILITIES, type Character } from '$lib/character/schema';
@@ -21,7 +20,6 @@ import { classCasts } from '$lib/character/spellcasting';
 import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
 import { uniqueCharacterId } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
-import { app } from '$lib/stores/app.svelte';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
 import type { Ability } from '$lib/rules/core';
 import {
@@ -33,7 +31,6 @@ import {
 	boostCarrier,
 	allocateBackgroundBoost,
 	boostPickCount,
-	asiFeatLevels,
 	POINT_BUY_BUDGET,
 	STANDARD_ARRAY,
 	type StatMethod
@@ -41,24 +38,20 @@ import {
 import {
 	parseSpeciesBoostChoice,
 	speciesFixedAbilities as fixedAbilitiesFromRows,
-	asiBoost,
 	buildSpellPicker,
 	buildIssues,
 	expertiseBudget,
-	halfFeatAbilities
 } from '$lib/build/derive';
-import { splitList, FEAT_CATEGORY, type ContentType } from '$lib/content/schemas';
+import { splitList, type ContentType } from '$lib/content/schemas';
 import { slugify } from '$lib/util/slug';
 import { FeatSlots } from './feats.svelte';
 import { ASI, ASI_FEAT_ID, rowName, rowOfType } from './rows';
 // re-exported so every existing `from '../state.svelte'` import keeps working
 export { ASI, ASI_FEAT_ID, rowName, rowOfType };
 import {
-	asiPickCount,
 	toggleCapped,
 	blankDraft,
 	draftFromCharacter,
-	type AsiShape,
 	type DraftState,
 	type EditContext
 } from './draft';

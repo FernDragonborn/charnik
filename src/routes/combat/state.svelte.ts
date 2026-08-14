@@ -17,7 +17,6 @@ import {
 	type ResourceOption
 } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
-import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { rollPool, rollFormula } from '$lib/rules/dice';
 import { shortRestHalfHeal } from '$lib/rules/core';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
@@ -27,7 +26,6 @@ import {
 	wantsTray,
 	GROUP_MODES,
 	type GroupMode,
-	durationToRounds,
 	remainingRounds,
 	rollEffectsFor,
 	autoOutcome,
@@ -37,24 +35,17 @@ import {
 	computeAttacks,
 	standardActions,
 	buildSpellGroups,
-	enhancementTokens,
-	casterForSpell,
 	preparedTalliesByClass,
-	canTogglePreparedFor,
 	parseDamageParts,
-	formatDamageParts,
 	rollDamageParts,
 	dealsDamage,
 	modTargetLabel,
-	metres,
 	applyDefense,
 	effectiveHpMax,
 	DEATH_CAUSE_LABEL,
 	type Attack,
-	type DamagePart,
 	type DamagePartSpec,
 	type TypedRoll,
-	type SpellRow,
 	type MenuKind,
 	type StandardAction,
 	type ActionSlot
@@ -68,7 +59,6 @@ import {
 } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
 import type { RollLogEntry } from '$lib/combat/helpers';
-import type { SpellcastingClass } from '$lib/character/spellcasting';
 import { registerDiceTray, openDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
 import { toastRoll } from '$lib/dice/roll-toast';
 import { isRowActive } from '$lib/content/sources.svelte';
@@ -76,10 +66,6 @@ import { PanelLayout } from './panel.svelte';
 import { SpellCasting } from './casting.svelte';
 import { TurnEconomy } from './economy.svelte';
 import { ResourceTracker } from './resources.svelte';
-import { slotToSpend, castableSlotLevels, pactPool, PACT_SLOT_KEY } from '$lib/rules/spellcasting';
-import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
-import type { ExprContext } from '$lib/effects/expression-evaluator';
-import { evalUpcast, combinePools } from '$lib/effects/upcast';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];

@@ -11,7 +11,7 @@ import type { ContentGraph, LoadedRow, LoadedRowByType } from '$lib/content/load
 import type { Ability } from '$lib/rules/core';
 import { asiBoost, halfFeatAbilities } from '$lib/build/derive';
 import { asiFeatLevels } from '$lib/build/rules';
-import { splitList, FEAT_CATEGORY } from '$lib/content/schemas';
+import { FEAT_CATEGORY } from '$lib/content/schemas';
 import { asiPickCount, toggleCapped } from './draft';
 import { ASI, ASI_FEAT_ID, rowName, rowOfType } from './rows';
 import type { AsiShape, DraftState } from './draft';

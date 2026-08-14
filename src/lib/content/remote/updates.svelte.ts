@@ -39,11 +39,10 @@ import {
 	packSizeRefusal,
 	packTooLarge,
 	parseGithubRepo,
-	type CheckResult,
 	type GithubRepo,
 	type RemotePack
 } from './github';
-import { diffPack, hasWrites, rowsRemovedBy, charactersReferencing, type PackDiff } from './diff';
+import { diffPack, hasWrites, rowsRemovedBy, charactersReferencing } from './diff';
 import {
 	applyPackUpdate,
 	duringPackWrite,
@@ -74,13 +73,7 @@ import {
 // no reason to move the import everyone writes (§6.1).
 export { updates, type PendingUpdate, type DiscoveredPack };
 import { tauriFetcher } from './tauri-fetch';
-import {
-	MAX_PREFETCH_BYTES,
-	MAX_REPO_PACKS,
-	type PrefetchBudget,
-	type RemoteFetcher,
-	type UpdateError
-} from './types';
+import { MAX_PREFETCH_BYTES, type PrefetchBudget, type RemoteFetcher } from './types';
 
 /** Which repos an AUTOMATIC check may contact right now (mode + throttle + pins). */
 export const dueRepos = (cfg: PackConfigData = packConfig, now = Date.now()): string[] =>
