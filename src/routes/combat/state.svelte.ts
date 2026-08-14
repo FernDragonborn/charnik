@@ -10,12 +10,7 @@
 import { toast } from 'svelte-sonner';
 import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
-import {
-	deriveSheet,
-	type CharacterSheet,
-	type SkillId,
-	type ResourceOption,
-} from '$lib/character/derive';
+import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
 import { rollPool, rollFormula } from '$lib/rules/dice';
 import { shortRestHalfHeal } from '$lib/rules/core';
@@ -23,33 +18,23 @@ import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
 import type { Character, DeathCause, ShortRestMode } from '$lib/character/schema';
 import {
 	titleCase,
-	wantsTray,
 	GROUP_MODES,
 	type GroupMode,
-	rollEffectsFor,
-	autoOutcome,
 	netAdvantage,
-	NO_ROLL_EFFECTS,
-	type RollEffects,
 	computeAttacks,
 	standardActions,
 	buildSpellGroups,
 	preparedTalliesByClass,
 	parseDamageParts,
-	rollDamageParts,
-	dealsDamage,
 	modTargetLabel,
 	applyDefense,
 	effectiveHpMax,
 	DEATH_CAUSE_LABEL,
 	type Attack,
-	type DamagePartSpec,
-	type TypedRoll,
 	type MenuKind,
 	type StandardAction,
-	type ActionSlot,
 } from '$lib/combat/helpers';
-import { RollTray, type RollSpec } from './roll.svelte';
+import { RollTray } from './roll.svelte';
 import {
 	appendLog,
 	readLog,
@@ -59,9 +44,10 @@ import {
 import { getUserStorage } from '$lib/storage/provider';
 import type { RollLogEntry } from '$lib/combat/helpers';
 import { registerDiceTray, openDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
-import { toastRoll } from '$lib/dice/roll-toast';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { EffectsEditor } from './effects.svelte';
+import { Rolls } from './rolls.svelte';
+import { ActionExecutor } from './executor.svelte';
 import { PanelLayout } from './panel.svelte';
 import { SpellCasting } from './casting.svelte';
 import { TurnEconomy } from './economy.svelte';
@@ -69,14 +55,6 @@ import { ResourceTracker } from './resources.svelte';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
-
-/** A resource-option's `action_type` → the turn-economy slot it consumes (`free` = none). */
-const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> = {
-	action: 'action',
-	bonus_action: 'bonus',
-	reaction: 'reaction',
-	free: null,
-};
 
 /**
  * D1 — this file is still over the 400-line lint (warn-only) and is being cut down slice by slice.
@@ -98,10 +76,13 @@ const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> 
  * means deciding FIRST whether the rest of the sheet reads `this.hp.hpMax` — a real design call, not
  * a mechanical carve, and the one place where a reactivity break costs the most.
  *
- * Cleaner remaining candidates, in order: rests + hit dice (they border `ResourceTracker`, which
- * already exists and already owns recharge), then the action list. The ROLL cluster
- * (`attackRoll`/`savageReroll`/`handleTrayRequest`) should wait for ROLLER-N — its result SHAPE is
- * what ROLLER-PLAN already marked as aged, so splitting it now means splitting it twice.
+ * DONE SINCE: the action executor (executor.svelte.ts) and roll semantics (rolls.svelte.ts). The
+ * roll cluster was carved BEFORE ROLLER-N rather than after, reversing the note that used to sit
+ * here: that rewrite lands on exactly those functions, and it is easier against 211 lines with a
+ * declared host interface than against a 900-line view-model.
+ *
+ * Cleaner remaining candidates: rests + hit dice (bordering ResourceTracker, which already owns
+ * recharge), then the action list and the menu/overlay plumbing.
  */
 
 class CombatVM {
@@ -124,6 +105,22 @@ class CombatVM {
 	);
 	// read the shared reactive content store → a live content refresh (reloadContent) re-derives the
 	// sheet with no page reload, while the character's play-state is left untouched
+	/** Roll semantics (effect pickup, forced outcomes, the attack roll, Savage Attacker) — see
+	 *  rolls.svelte.ts. */
+	rolls = new Rolls(() => this);
+	/* The roll verbs stay ON the view-model: every panel and the behavioural tests call them here,
+	   and casting reads `effectsFor`/`openRoll` through the same names (§6.1). */
+	effectsFor = (...a: Parameters<Rolls['effectsFor']>) => this.rolls.effectsFor(...a);
+	openRoll = (...a: Parameters<Rolls['openRoll']>) => this.rolls.openRoll(...a);
+	roll = (...a: Parameters<Rolls['roll']>) => this.rolls.roll(...a);
+	attackRoll = (...a: Parameters<Rolls['attackRoll']>) => this.rolls.attackRoll(...a);
+	savageReroll = () => this.rolls.savageReroll();
+	get savageLabel() {
+		return this.rolls.savageLabel;
+	}
+	get savagePendingEntry() {
+		return this.rolls.savagePendingEntry;
+	}
 	graph = $derived(content.graph);
 	character = $state<Character | null>(null);
 	/** Fully reactive: recomputes whenever the character (HP, effects, shield, auto-calc…), the
@@ -146,28 +143,6 @@ class CombatVM {
 	hasTimedEffects = $derived(
 		(this.character?.play.effects ?? []).some((e) => e.durationRounds != null),
 	);
-	// Savage Attacker (N2, `damage_reroll` fact): the last weapon-damage roll the player MAY reroll,
-	// keeping the higher weapon-dice total — once per turn (2024). Held until used or superseded by the
-	// next attack. The per-turn gate is `savageUsedRound` vs `round`: `round` advances on Next turn, so
-	// the use auto-frees each turn with no reset hook. Whether it's OFFERED is fully data-driven — only
-	// when a feature contributes a `damage_reroll` fact, and the button is labelled from that feature's
-	// own name (see the `damage_reroll` token in token-parser.ts; no feat id/string is hardcoded here).
-	private savagePending = $state<{
-		spec: DamagePartSpec;
-		roll: TypedRoll;
-		entry: RollLogEntry;
-	} | null>(null);
-	private savageUsedRound = $state<number | null>(null);
-	/** The feature name offering a once-per-turn weapon-damage reroll RIGHT NOW, or null when none is
-	 *  pending / the per-turn use is spent / no `damage_reroll` feature is active. Drives the offer UI. */
-	get savageLabel(): string | null {
-		if (!this.savagePending || this.savageUsedRound === this.round) return null;
-		return this.sheet?.facts.damageReroll[0]?.source ?? null;
-	}
-	/** The log entry the pending reroll would rewrite — so the roll log can put the button on that row. */
-	get savagePendingEntry(): RollLogEntry | null {
-		return this.savagePending?.entry ?? null;
-	}
 	// D3: pins persist per character in ui.spellsPinned (bare ids), not a demo hardcode. Exposed as a
 	// boolean map for the panel's `pinned[id]` lookup; toggle via togglePin so the array stays the source.
 	pinned = $derived<Record<string, boolean>>(
@@ -418,7 +393,7 @@ class CombatVM {
 	concentrationSaveMod = $derived(this.sheet?.abilities.con.save.value ?? 0);
 	/** Selected damage type for the next Damage press (B20). Null = untyped (no resist/vuln math). */
 	damageType = $state<string | null>(null);
-	private get hpMax(): number {
+	get hpMax(): number {
 		if (!this.sheet) return this.character?.play.hp.max ?? 0;
 		// A14: a manual max no longer silences hp_max effects — they re-fold on top of it.
 		return effectiveHpMax(this.character?.play.hp.max ?? null, this.sheet.maxHp);
@@ -479,7 +454,7 @@ class CombatVM {
 	rollConcentrationSave = () => {
 		const pend = this.pendingConcentrationSave;
 		if (!pend || pend.failed || !this.character?.play.concentration) return;
-		const fx = this.effectsFor('save.con');
+		const fx = this.rolls.effectsFor('save.con');
 		const r = rollPool({ 20: 1 }, this.concentrationSaveMod, netAdvantage(fx), fx.bonusDice, fx);
 		this.tray.pushRoll('Concentration save', r);
 		if (r.total >= pend.dc) {
@@ -504,148 +479,15 @@ class CombatVM {
 	dismissConcentrationSave = () => {
 		this.pendingConcentrationSave = null;
 	};
-
-	/** N2 executor (first slice): activate a resource spend-option. Validate the resource cost AND the
-	 *  turn slot ALL-OR-NOTHING (ACTIONS.md), then deduct both and run the action token. The turn cost
-	 *  was the piece-3 gap — spending an option (Flurry, Second Wind…) now actually consumes its
-	 *  action/bonus/reaction, not just the resource. */
-	activateResourceOption = (opt: ResourceOption, amount = 1) => {
-		if (!this.character) return;
-		const slot = ACTION_TYPE_SLOT[opt.actionType]; // null for a free action
-		// the `available` L2 guard is a RULE, not a UI state: ActionsPanel greys the row, but the
-		// resource chip reaches the same option, so the check belongs here where every caller passes
-		// (else a chip could fire Persistent Rage outside its combat-start window).
-		if (!opt.available) {
-			toast(`${opt.name} — not available right now`);
-			return;
-		}
-		if (!this.resources.canAffordOption(opt, amount)) {
-			toast(`${opt.name} — not enough ${opt.resourceId}`, { description: 'Recharge on a rest' });
-			return;
-		}
-		if (slot && !this.economy.canSpend(slot)) {
-			toast(`No ${slot} left this turn`, { description: 'Press “Next turn” to refresh.' });
-			return;
-		}
-		if (slot) this.economy.trySpend(slot); // both spends succeed — validated above
-		this.resources.spendOption(opt, amount); // deduct the resource (+ its own toast)
-		this.runActionToken(opt);
-	};
-
-	/** The resource CHIP's primary "use one" gesture. When the pool has exactly ONE action-option, using
-	 *  the resource IS that action — so the chip runs it through the executor (validate → spend the pool
-	 *  → charge the turn slot → run the action token), identical to clicking the row in Actions. Any
-	 *  other split would lie: it was `apply_effect`-only before, so the Second Wind chip silently ticked
-	 *  a counter down while healing nothing and charging no Bonus Action (UBUG-16).
-	 *  A pool with SEVERAL options (Focus → Flurry / Patient Defense / Step of the Wind) has no single
-	 *  action to infer, and a pool with none has nothing to run: both stay a plain decrement, which is
-	 *  also the honest escape hatch for spending a point on something the app doesn't model. */
-	useResourceOrEnter = (id: string, max: number) => {
-		const options = (this.sheet?.resourceOptions ?? []).filter((o) => o.resourceId === id);
-		const [only] = options;
-		if (options.length === 1 && only) this.activateResourceOption(only);
-		else this.resources.useResource(id, max);
-	};
-
-	/** Enter/leave combat. Wraps `economy.toggleCombat` (which flips `inCombat` + resets the round) so
-	 *  that ENTERING combat = "rolling Initiative" also fires the auto event features. */
-	toggleCombat = () => {
-		this.economy.toggleCombat();
-		if (this.character?.play.inCombat) this.fireInitiativeRegen();
-	};
-
-	/** AUTO event on combat start ("when you roll Initiative"): every `regain_on_initiative` feature
-	 *  restores its pool up to N and NOTIFIES what happened — auto-apply + toast, the maintainer's call
-	 *  for these NO-CHOICE features (Perfect Focus → Focus 4, etc.), the tracker's first event-driven
-	 *  auto-mutation. Data-driven (any feature carrying the token fires; notice labelled from its name).
-	 *  Gated on auto-calc: with it OFF the player manages pools by hand, so the app doesn't touch them. */
-	private fireInitiativeRegen() {
-		const c = this.character;
-		if (!c?.play.autoCalc) return;
-		for (const r of this.sheet?.facts.initiativeRegain ?? []) {
-			const def = this.sheet?.resources.find((x) => x.id === r.id);
-			if (!def) continue;
-			const before = def.max - (c.play.resourcesSpent?.[r.id] ?? 0);
-			const after = this.resources.restoreUpTo(r.id, r.upTo);
-			if (after > before)
-				toast(r.source, { description: `${titleCase(r.id)} restored — now ${after}` });
-		}
-	}
-
-	/** Run a resource-option's RESOLVED action token (a `heal:`/`roll:` formula is already L2-resolved
-	 *  at derive). Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths):
-	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,
-	 *  `apply_effect:<id>` → apply a NAMED effects.csv buff/debuff (Rage) via the "+"-catalog add path
-	 *  (ref/negative/duration all read from the row), `gain_action` → refund one action this turn
-	 *  (Action Surge), `rest:short|long` → take that rest
-	 *  (recharge pools / reset slots / restore HP — a Potion of Angelic Slumber, 2024 short-rest
-	 *  spells), `restore_resource:<id>` → regain ALL uses of a pool (Persistent Rage, Uncanny
-	 *  Metabolism), `note:` → the spendOption toast. */
-	private runActionToken(opt: ResourceOption) {
-		// a `;`-separated action is a MULTI-action (Uncanny Metabolism = restore focus AND heal): run each
-		// sub-token in order on the ONE activation (cost + turn slot were validated once, up front).
-		for (const token of opt.action.split(';')) {
-			const t = token.trim();
-			if (t) this.runOneAction(opt, t);
-		}
-	}
-
-	/** Run ONE resolved action verb (`opt.action` may hold several, `;`-joined — see `runActionToken`).
-	 *  Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths). */
-	private runOneAction(opt: ResourceOption, action: string) {
-		const p = this.character?.play;
-		if (!p) return;
-		const sep = action.indexOf(':');
-		const verb = sep === -1 ? action : action.slice(0, sep);
-		const arg = sep === -1 ? '' : action.slice(sep + 1);
-		if (verb === 'heal' && arg) {
-			const r = rollFormula(arg);
-			p.hp.current = Math.min(this.hpMax, p.hp.current + Math.max(0, r.total));
-			this.tray.pushRoll(`${opt.name} — heal`, r);
-		} else if (verb === 'roll' && arg) {
-			this.tray.pushRoll(opt.name, rollFormula(arg));
-		} else if (verb === 'apply_condition' && arg) {
-			this.effects.addEffect({ label: opt.name, tokens: [action], positive: false });
-		} else if (verb === 'apply_effect' && arg) {
-			this.applyCatalogEffect(opt, arg);
-		} else if (verb === 'gain_action') {
-			p.turn.action = Math.max(0, p.turn.action - 1); // one additional action this turn
-		} else if (verb === 'restore_resource' && arg) {
-			this.resources.restoreAll(arg); // regain all uses of the pool (Persistent Rage / Uncanny Metabolism)
-		} else if (verb === 'rest' && (arg === 'short' || arg === 'long')) {
-			// grant a rest: lands on the SAME rest system the rest buttons use (recharge pools by type,
-			// reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). A
-			// consumable that grants a rest MUST have recharge `other` so the rest it triggers doesn't
-			// refund its own charge (see ACTIONS.md §2).
-			this.resources.rest(arg);
-			toast(`${opt.name} — ${arg} rest taken`);
-		}
-	}
-
-	/** `apply_effect:<id>` — apply a NAMED catalog buff/debuff (Rage, Bless-as-action…) via the SAME add
-	 *  path the "+" picker uses: its `ref` re-resolves the tokens LIVE at derive, `negative` sets
-	 *  buff/debuff, `duration_rounds` gives the timer (round-counter auto-expires it). Missing id →
-	 *  surface, not a silent no-op. Split out of `runOneAction` to keep its verb-dispatch under budget. */
-	private applyCatalogEffect(opt: ResourceOption, arg: string) {
-		const p = this.character?.play;
-		if (!p) return;
-		const cat = this.effects.effectCatalog.find((eff) => eff.ref.split(':').pop() === arg);
-		if (!cat) {
-			toast(`${opt.name} — effect “${arg}” not found`, { description: 'Check effects.csv' });
-			return;
-		}
-		// a named STATE doesn't stack — you're raging or you're not (RAW/RAI). Re-entering refreshes
-		// (drop any live instance of the same catalog ref first), never adds a second Rage.
-		p.effects = p.effects.filter((e) => e.source !== cat.ref);
-		this.effects.addEffect({
-			label: cat.label,
-			tokens: cat.tokens,
-			positive: !cat.negative,
-			ref: cat.ref,
-			...(cat.durationRounds != null ? { durationRounds: cat.durationRounds } : {}),
-		});
-	}
-
+	/** The N2 action executor (spend-options, action verbs, entering combat) — see executor.svelte.ts. */
+	executor = new ActionExecutor(() => this);
+	/* These three stay ON the view-model: they read as SHEET verbs, not as a subsystem's API, and
+	   they are what the panels and the behavioural tests call (§6.1). */
+	activateResourceOption = (...args: Parameters<ActionExecutor['activateResourceOption']>) =>
+		this.executor.activateResourceOption(...args);
+	useResourceOrEnter = (...args: Parameters<ActionExecutor['useResourceOrEnter']>) =>
+		this.executor.useResourceOrEnter(...args);
+	toggleCombat = () => this.executor.toggleCombat();
 	groupByLabel = $derived(
 		{ level: 'By level', prepared: 'Prepared', school: 'By school' }[this.spellGroupBy],
 	);
@@ -757,62 +599,13 @@ class CombatVM {
 			});
 	};
 
-	/** Advantage/disadvantage + flat + bonus dice + reroll/min_die a roll picks up from active
-	 *  effects (gated on the effects-auto toggle). Reads the sheet's typed-facts object (D7: guards
-	 *  evaluated, conditions expanded, expression values resolved — B21), not raw `play.effects`. */
-	effectsFor(key: string, weaponScopes?: Set<string>): RollEffects {
-		const c = this.character;
-		if (!c || !c.play.autoCalc || !this.sheet) return NO_ROLL_EFFECTS; // effects-auto off → plain rolls
-		return rollEffectsFor(this.sheet.facts, key, weaponScopes);
-	}
-
-	/** A forced outcome (paralyzed → auto-fail STR/DEX saves) for a roll key, or null. Gated on the
-	 *  same effects-auto toggle as `effectsFor`, so turning auto off restores plain rolls. */
-	private autoOutcomeFor(key: string): 'fail' | 'succeed' | null {
-		const c = this.character;
-		if (!c || !c.play.autoCalc || !this.sheet) return null;
-		return autoOutcome(this.sheet.facts, key);
-	}
-
-	// open the roll builder prefilled + anchored, so the player can pick advantage then Roll
-	openRoll = (spec: RollSpec, e: Event) => {
-		this.tray.prefill(spec);
-		this.openMenu('dice', e);
-	};
-	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray. `key`
-	// (e.g. "save.dex", "skill.stealth", "attack") lets the roll pick up matching effects. NB the
-	// flat part is IGNORED for save/skill keys — it's already folded into the sheet value `mod`.
-	roll = (label: string, mod: number, e: Event, key?: string) => {
-		// a forced outcome (paralyzed → auto-fail its STR/DEX save) skips the die entirely — the result
-		// is decided by the condition, not the roll; logged as a no-roll marker so it's still visible
-		const forced = key ? this.autoOutcomeFor(key) : null;
-		if (forced) {
-			this.tray.logMarker(`${label} — auto-${forced}`);
-			toast(`${label}: automatic ${forced === 'fail' ? 'failure' : 'success'}`);
-			return;
-		}
-		const fx = key ? this.effectsFor(key) : null;
-		const adv = fx ? netAdvantage(fx) : 0;
-		if (wantsTray(e))
-			this.openRoll({ label, dice: { 20: 1 }, mod, advantage: adv, mods: fx ?? {} }, e);
-		else
-			this.tray.rollDiceNow({
-				label,
-				dice: { 20: 1 },
-				mod,
-				advantage: adv,
-				bonusDice: fx?.bonusDice ?? [],
-				mods: fx ?? {},
-			});
-	};
-
 	/** Roll a death save (shown while at 0 HP): a d20 vs 10 — `save.death`-targeted effects (and
 	 *  the `saves`/`d20_tests` groups: Bless, exhaustion) apply. Outcomes per RAW: nat 20 → back up
 	 *  at 1 HP; nat 1 → two failures; 10+ → success; three successes → stable (counters reset). */
 	deathSave = () => {
 		const c = this.character;
 		if (!c) return;
-		const fx = this.effectsFor('save.death');
+		const fx = this.rolls.effectsFor('save.death');
 		// SMELL-6: always roll instantly + auto-apply the outcome. Unlike other rolls, a death save
 		// MUTATES play-state (pips / nat20→1 HP), and the tray contract has no result callback — a tray
 		// roll couldn't apply it. A death save is a fixed d20-vs-10 with nothing to customize
@@ -878,101 +671,12 @@ class CombatVM {
 		toast('Back from the dead — 1 HP');
 	};
 
-	/** Roll a weapon/unarmed attack (the Attack action → spends an action in combat). A normal tap
-	 *  rolls the to-hit (picks up attack advantage/flat/dice effects) THEN the weapon damage (with
-	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Alt/Ctrl-click opens the roll tray. */
-	attackRoll = (at: Attack, e: Event) => {
-		if (!this.economy.trySpend('action')) return;
-		// §A/§B: pass this weapon's category tags so a scoped effect (GWF's min_die on two-handed melee
-		// damage) applies only to matching weapons; unscoped effects (Bless, Rage) apply regardless.
-		const scopes = new Set(at.scopes);
-		const fx = this.effectsFor('attack', scopes);
-		const dmgFx = this.effectsFor('damage', scopes);
-		// Damage effects (Bless-style flat/dice, reroll/min_die) fold onto the PRIMARY part only — RAW
-		// adds them to the weapon's base damage, not to a second damage type's dice.
-		const parts: DamagePartSpec[] = at.damageParts.map((p, i) => ({
-			dice: p.pool,
-			mod: p.mod + (i === 0 ? dmgFx.flat : 0),
-			type: p.type,
-			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dmgFx } : {}),
-		}));
-		// asked AFTER the effects fold in, so a flat damage effect on a damage-less weapon still counts
-		const hasDmg = dealsDamage(parts);
-		if (wantsTray(e)) {
-			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
-			this.openRoll(
-				{
-					label: at.name,
-					dice: { 20: 1 },
-					mod: at.toHit + fx.flat,
-					advantage: netAdvantage(fx),
-					mods: fx,
-				},
-				e,
-			);
-			if (hasDmg) this.tray.queueDamage({ label: `${at.name} damage`, parts });
-			return;
-		}
-		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
-		const toHit = rollPool({ 20: 1 }, at.toHit + fx.flat, netAdvantage(fx), fx.bonusDice, fx);
-		const dmgRolls = hasDmg ? rollDamageParts(parts) : undefined;
-		// N2 Savage Attacker: does THIS weapon damage qualify for a reroll? The offer itself is not
-		// attached to the toast — a toast expires mid-decision, so it announces and the always-visible
-		// Playbar (and the log, forever) carries the control, as the ↻ on the damage pill it rerolls.
-		// (The Alt-click tray path rolls damage later, so the offer rides the instant tap; a v1 gap.)
-		const savage = this.savageOffer(parts[0], dmgRolls);
-		const entry = this.tray.pushRoll(at.name, toHit, dmgRolls);
-		if (savage) this.savagePending = { spec: savage.spec, roll: savage.roll, entry };
-	};
-
-	/** Does the attack about to be toasted qualify for a Savage Attacker reroll? ONLY when a feature
-	 *  contributes a `damage_reroll` fact, the attack rolled damage dice, and the per-turn use is free.
-	 *  Returns the PRIMARY damage part (so the reroll reproduces it) + the roll it made; the caller
-	 *  pairs it with the log entry. Fully data-driven — no feat id/name in code. */
-	private savageOffer(
-		primary: DamagePartSpec | undefined,
-		dmgRolls: TypedRoll[] | undefined,
-	): { spec: DamagePartSpec; roll: TypedRoll } | null {
-		const primaryRoll = dmgRolls?.[0];
-		// there must be DICE to reroll — a flat-damage attack (Unarmed Strike) now rolls and toasts its
-		// damage too, so "damage was rolled" no longer implies "dice were rolled" for this caller
-		if (!primary || !primaryRoll || Object.keys(primary.dice).length === 0) return null;
-		const label = this.sheet?.facts.damageReroll[0]?.source;
-		if (!label || this.savageUsedRound === this.round) return null;
-		return { spec: primary, roll: primaryRoll };
-	}
-
-	/** Savage Attacker: reroll the pending weapon damage and KEEP THE HIGHER total, rewriting the log
-	 *  entry in place (truthful record) and spending the once-per-turn use. Rerolls the whole PRIMARY
-	 *  damage part — RAW rerolls only the weapon's own dice, so any bonus die riding that part (Bless) is
-	 *  rerolled too: a negligible, arguably-faithful deviation ("use either roll"). */
-	savageReroll = () => {
-		const p = this.savagePending;
-		const label = this.savageLabel;
-		if (!p || !label) return;
-		const re = rollDamageParts([p.spec])[0];
-		if (!re) return;
-		const keptRe = re.total > p.roll.total;
-		const keep = keptRe ? re : p.roll;
-		const dropped = keptRe ? p.roll : re;
-		const revised: RollLogEntry = {
-			...p.entry,
-			damage: [keep, ...(p.entry.damage ?? []).slice(1)],
-			note: `${label}: kept ${keep.total} (other roll ${dropped.total})`,
-		};
-		this.tray.reviseEntry(p.entry, revised);
-		this.savageUsedRound = this.round;
-		this.savagePending = null;
-		// re-toast the REVISED roll, not a summary line: the reroll changed the damage, so the player
-		// should see the same card again with the kept dice in it
-		toastRoll(revised);
-	};
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
 	 *  no-roll ones just consume the slot. The "Attack" row is a pointer to the Attacks panel. */
 	actionClick = (a: StandardAction, e: Event) => {
 		if (a.id === 'attack') return; // routes to the Attacks panel; not itself an action spend
 		if (!this.economy.trySpend('action')) return;
-		if (a.roll) this.roll(a.roll[0], a.roll[1], e);
+		if (a.roll) this.rolls.roll(a.roll[0], a.roll[1], e);
 		else toast(`${a.name} — action used`);
 	};
 	/** Spell casting (slots, upcast, the rolls a cast makes) — see casting.svelte.ts. */
