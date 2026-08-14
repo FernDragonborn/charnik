@@ -86,11 +86,22 @@ const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> 
  * (434 lines, `casting.svelte.ts`) — its public API stayed HERE as delegating fields, because that
  * is the boundary the markup and the behavioural tests are written against.
  *
- * Next slice, in order of payoff: the effects/conditions editor, then HP + death. Both are bigger
- * risks than casting was, since they touch the `bind:`-ed scalars (`tempHpInput`,
- * `customEffectLabel`, `newEffectDuration`, `customMod*`) that CombatMenus and the panels bind to —
- * and a reactivity break across the component↔VM seam does not show up in unit tests, only in the
- * running UI. So: extract mechanically (§7.1), then verify with `shot.mjs`, never blind.
+ * The `bind:`-ed scalars turned out to be a small problem, not the blocker they were written up as:
+ * six of them across two components, and a bound field moves fine as long as the binding is
+ * retargeted with it (`bind:value={combat.effects.newEffectDuration}`). Unit tests do not cover that
+ * seam, so every carve ends with `shot.mjs`, never blind.
+ *
+ * **HP + death was examined next and is NOT a clean slice — do not start it expecting one.**
+ * `hpMax` is read from seven places (both rests, the level-up clamp, damage, heal, an action) and
+ * `die()` from four, one of them now in `effects.svelte.ts` (exhaustion kills). HP is the shared
+ * spine the rest of the play-state hangs off, not a module hiding inside this one. Extracting it
+ * means deciding FIRST whether the rest of the sheet reads `this.hp.hpMax` — a real design call, not
+ * a mechanical carve, and the one place where a reactivity break costs the most.
+ *
+ * Cleaner remaining candidates, in order: rests + hit dice (they border `ResourceTracker`, which
+ * already exists and already owns recharge), then the action list. The ROLL cluster
+ * (`attackRoll`/`savageReroll`/`handleTrayRequest`) should wait for ROLLER-N — its result SHAPE is
+ * what ROLLER-PLAN already marked as aged, so splitting it now means splitting it twice.
  */
 
 class CombatVM {
