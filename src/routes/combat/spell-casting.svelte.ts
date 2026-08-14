@@ -1,11 +1,10 @@
 /*
- * Spell casting — the subsystem the combat view-model delegates to, in the same shape as
- * `RollTray` / `TurnEconomy` / `ResourceTracker` (§7.2). Carved out of `state.svelte.ts`
- * unchanged; it owns slot reservation, upcast evaluation, the spell's own effect tokens, the
- * attack/save/damage rolls a cast produces, and the prepared toggle.
+ * Spell casting — slot reservation, upcast evaluation, the spell's own effect tokens, the
+ * attack/save/damage rolls a cast produces, and the prepared toggle. One of the subsystems the
+ * combat view-model delegates to (§7.2).
  *
- * It reads the host VM through a narrow interface rather than importing the class, so nothing here
- * depends on the rest of the sheet and there is no import cycle.
+ * It reads the host through a narrow interface rather than importing the view-model class, so
+ * nothing here depends on the rest of the sheet and there is no import cycle.
  */
 import { toast } from 'svelte-sonner';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
@@ -72,8 +71,8 @@ export class SpellCasting {
 		const tokens = tokensOf(spell);
 		// Model C (CONCENTRATION-PLAN): a CONCENTRATION spell ALWAYS gets a carrier effect — even
 		// token-less — so its duration is TIMED (the carrier owns the clock; `play.concentration` is a
-		// ref to it, and the carrier expiring ends concentration). Before, a token-less control spell
-		// (Hold Person, Web…) had no carrier → its concentration hung until a long rest. A
+		// ref to it, and the carrier expiring ends concentration). Without the token-less case a control
+		// spell (Hold Person, Web…) gets no carrier and its concentration hangs until a long rest. A
 		// NON-concentration spell with no tokens has nothing to track → still a no-op.
 		// B3 (item 3): an hp_max upcast scales the magnitude of the effect the spell grants — Aid's base
 		// `flat_bonus:hp_max+5` gets an ADDITIONAL `flat_bonus:hp_max+delta` per slot above base. hp_max
@@ -209,7 +208,7 @@ export class SpellCasting {
 	/** Evaluate a spell's `upcast` cell against its cast ctx at `slotLevel` — the ONE place the ephemeral
 	 *  ctx is built, so the damage / duration / hp_max / temp_hp consumers below all read the same
 	 *  evaluation. Empty only when there's no `upcast` (castCtx is always present now — upcast is a spell
-	 *  mechanic, NOT gated on the auto-calc toggle; N6 revised 2026-08-04). Pure read; each caller picks
+	 *  mechanic, NOT gated on the auto-calc toggle; N6). Pure read; each caller picks
 	 *  the kinds it cares about. */
 	private evalUpcastAt(r: SpellRow, slotLevel: number): ReturnType<typeof evalUpcast> {
 		const base = this.host.sheet?.castCtx;

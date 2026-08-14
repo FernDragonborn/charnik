@@ -611,7 +611,7 @@ export async function renamePack(from: string, to: string): Promise<boolean> {
  * deliberately NOT special-cased here; the caller decides, and the bundled floor re-seeds it on next
  * launch anyway.
  *
- * The revoke belongs HERE and not in the button that used to do it: consent lives outside the data
+ * The revoke belongs HERE, not in the button: consent lives outside the data
  * dir (PLG-SEC 12), so it outlives the files, and an invariant that depends on one component calling
  * two functions in the right order is one caller away from being false. It runs BEFORE the delete,
  * while the folder is still there to say which namespaces were this pack's.

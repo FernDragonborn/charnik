@@ -1,10 +1,7 @@
 /*
- * The pack-update STATE and the plumbing both halves of the feature share: what is pending, what
- * failed, the one-at-a-time queue, and how a check result reads to a user.
- *
- * It exists because `updates.svelte.ts` (checking + applying) and the install/rename/uninstall half
- * both need these, and keeping them in one of the two made that file the other's private-parts
- * owner. Everything here is exported on purpose; nothing here talks to the network.
+ * The pack-update STATE and the plumbing both halves of the feature share — checking/applying and
+ * install/rename/uninstall: what is pending, what failed, the one-at-a-time queue, and how a check
+ * result reads to a user. Everything is exported on purpose; nothing here talks to the network.
  */
 import { detectPlatform, Platform } from '$lib/storage/provider';
 import { packConfig } from '../packs.svelte';

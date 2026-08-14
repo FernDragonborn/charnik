@@ -260,6 +260,16 @@ a clean `switch(kind)` dispatch isn't false-flagged), **`max-depth` warn 4** (de
 with early returns / extract), **`max-params` warn 4** (machine-enforces §2.2 — 5+ positional params
 means group them into a typed object). All warn-only.
 
+**A comment does not keep a changelog.** Git already holds what the code used to be, who changed it
+and when — a source file repeating that is a diary nobody updates. Two lines to hold on to:
+- **an example of a VALUE earns its place** (`e.g. "5e,5.5e"`, `e.g. `full`, `pact``) — it shows the
+  shape faster than a sentence. An example from the project's HISTORY does not;
+- **past tense is allowed only when it names a failure that RETURNS if the code is undone.** "The
+  prune used to sit behind this return, so switching modes stranded every staged byte" is a guard
+  and must stay. "Split out of the old monolithic page", "went 2026-08-14", "reversing the note that
+  used to sit here" are diary entries — delete them, and drop dates and session references with
+  them ("this session" means nothing at the next one).
+
 **`pnpm loc` is how you read these numbers** (§10) — it counts exactly what the rules above count,
 so a file's size means one thing here. `wc -l` disagrees by roughly a third and has misled a planning
 pass in this repo already.

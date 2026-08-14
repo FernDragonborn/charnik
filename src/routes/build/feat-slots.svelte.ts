@@ -1,7 +1,7 @@
 /*
  * Feat and ASI SLOTS: which levels grant one, what may fill it, and the choices a filled slot then
- * asks for (a half-feat's ability, a feat's skill grants, an ASI's shape). Carved out of the build
- * view-model, which reads back the few results the assembled character needs.
+ * asks for (a half-feat's ability, a feat's skill grants, an ASI's shape). The build view-model
+ * reads back the few results the assembled character needs.
  *
  * The slot KEY ("class-4") is the identity everything here hangs off — the per-slot mapping is what
  * a flattened boost list could not express (UBUG-13: a restored slot re-derived its own boost a

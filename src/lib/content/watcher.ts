@@ -18,7 +18,7 @@ let stop: (() => void) | null = null;
 let timer: ReturnType<typeof setTimeout> | undefined;
 
 /**
- * Is this path worth a rebuild? (B24, measured 2026-08-14.)
+ * Is this path worth a rebuild? (B24, measured.)
  *
  * A full reload of both shipped packs — read, hash, parse, validate, index, resolve — is **~90 ms
  * for 2866 rows**, so reparsing only the changed FILE would save under a tenth of a second on an

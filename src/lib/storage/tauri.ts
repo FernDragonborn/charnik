@@ -48,8 +48,8 @@ async function readDataDirOverride(): Promise<string | null> {
 	return (await invoke<string | null>('saved_data_dir')) ?? null;
 }
 
-/** Persist a user-chosen data dir to the pointer. Rust REFUSES a path that wasn't chosen via the
- *  native folder picker this session, so this only ever succeeds for a genuine user choice. */
+/** Persist a user-chosen data dir to the pointer. Rust REFUSES a path that was not chosen through
+ *  the native folder picker in the running process, so this only succeeds for a genuine user pick. */
 export async function setDataDirOverride(dir: string): Promise<void> {
 	await invoke('set_data_dir', { path: dir });
 }

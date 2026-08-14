@@ -2,10 +2,9 @@
  * Roll semantics: what a tap on a stat, a save, a skill or an attack actually rolls — which effects
  * it picks up, whether the outcome is forced, and the once-per-turn weapon-damage reroll.
  *
- * Carved out ahead of ROLLER-N rather than after it, deliberately. ROLLER-PLAN's finding is that the
- * roller answers with a formatted STRING the UI parses back, so provenance and crit-doubling have
- * nowhere to live — that rewrite lands on exactly these functions, and it is easier against 200
- * lines with a declared host interface than against a 900-line view-model.
+ * **ROLLER-N lands here.** Its finding (ROLLER-PLAN) is that the roller answers with a formatted
+ * STRING the UI parses back, so provenance and crit-doubling have nowhere to live — the rewrite is
+ * against these functions and the host interface below is what it has to satisfy.
  */
 import { toast } from 'svelte-sonner';
 import type { Character } from '$lib/character/schema';

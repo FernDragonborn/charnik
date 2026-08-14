@@ -1,7 +1,7 @@
 /*
  * The Combat/Spellbook spell block: build a spell row from content (with cantrip scaling), group
  * spells, and the per-class prepared-spell accounting (which caster a spell is cast as, its cap).
- * Pure. Split out of the old combat/helpers.ts junk-drawer.
+ * Pure.
  */
 import { ordinal, titleCase } from '$lib/util/format';
 import type { ContentGraph } from '$lib/content/loader';

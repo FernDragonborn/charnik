@@ -552,7 +552,7 @@ export function deriveSheet(
 	// the base L2 ctx (a bare synthetic effect — no per-effect spellcasting scoping): resource-option
 	// formulas resolve against it here, AND it's the post-derive snapshot the cast layer wraps for
 	// upcast (UPCAST §5). Always present now — built from base state even with auto-calc off (the toggle
-	// gates effect LAYERS, not spell mechanics like upcast; N6 revised 2026-08-04).
+	// gates effect LAYERS, not spell mechanics like upcast; N6).
 	const baseCtx = ctxOf(effCtx, { source: '', layer: 'feature', tokens: [] });
 
 	return {

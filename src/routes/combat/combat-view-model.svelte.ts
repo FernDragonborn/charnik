@@ -57,32 +57,20 @@ import { ResourceTracker } from './resource-tracker.svelte';
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
 
 /**
- * D1 — this file is still over the 400-line lint (warn-only) and is being cut down slice by slice.
+ * D1 — still over the 400-line lint (warn-only), being cut down slice by slice into the subsystems
+ * beside it, each owning its slice behind an accessor.
  *
- * Out already: pure math → `$lib/combat/helpers`; five subsystems (`tray`/`layout`/`economy`/
- * `resources`/`casting`), each owning its slice behind an accessor. Spell casting went 2026-08-14
- * (434 lines, `casting.svelte.ts`) — its public API stayed HERE as delegating fields, because that
- * is the boundary the markup and the behavioural tests are written against.
+ * **HP + death is NOT a clean slice — do not start it expecting one.** `hpMax` is read from seven
+ * places (both rests, the level-up clamp, damage, heal, an action) and `die()` from four, one of
+ * them in `effects-editor.svelte.ts` (exhaustion kills). HP is the spine the rest of the play-state
+ * hangs off, so extracting it starts with a design call about whether everything else reads
+ * `this.hp.hpMax` — and it is where a reactivity break costs the most.
  *
- * The `bind:`-ed scalars turned out to be a small problem, not the blocker they were written up as:
- * six of them across two components, and a bound field moves fine as long as the binding is
- * retargeted with it (`bind:value={combat.effects.newEffectDuration}`). Unit tests do not cover that
- * seam, so every carve ends with `shot.mjs`, never blind.
+ * Cleaner candidates: rests + hit dice (bordering `ResourceTracker`, which already owns recharge),
+ * then the action list and the menu/overlay plumbing.
  *
- * **HP + death was examined next and is NOT a clean slice — do not start it expecting one.**
- * `hpMax` is read from seven places (both rests, the level-up clamp, damage, heal, an action) and
- * `die()` from four, one of them now in `effects.svelte.ts` (exhaustion kills). HP is the shared
- * spine the rest of the play-state hangs off, not a module hiding inside this one. Extracting it
- * means deciding FIRST whether the rest of the sheet reads `this.hp.hpMax` — a real design call, not
- * a mechanical carve, and the one place where a reactivity break costs the most.
- *
- * DONE SINCE: the action executor (executor.svelte.ts) and roll semantics (rolls.svelte.ts). The
- * roll cluster was carved BEFORE ROLLER-N rather than after, reversing the note that used to sit
- * here: that rewrite lands on exactly those functions, and it is easier against 211 lines with a
- * declared host interface than against a 900-line view-model.
- *
- * Cleaner remaining candidates: rests + hit dice (bordering ResourceTracker, which already owns
- * recharge), then the action list and the menu/overlay plumbing.
+ * Every carve ends with `shot.mjs`: a bound scalar moves fine, but only if its binding is retargeted
+ * with it (`bind:value={combat.effects.newEffectDuration}`), and unit tests do not cover that seam.
  */
 
 class CombatVM {

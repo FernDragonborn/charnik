@@ -1,10 +1,9 @@
 /*
  * Row lookups and the two slot sentinels the build view-model and its subsystems both need.
  *
- * A LEAF on purpose: `feats.svelte.ts` needs these and `state.svelte.ts` imports `feats`, so leaving
- * them in the view-model made the two import each other (`madge --circular` is a lint gate — the
- * same fix as `provider ↔ remote/*` in REL-4, where the policy moved to `content/disk.ts`).
- * `state.svelte.ts` re-exports everything here, so no existing import had to move.
+ * A LEAF on purpose (§7.4b): the view-model imports `feat-slots`, which needs these, so holding them
+ * in the view-model makes the two import each other. It re-exports everything here, so importing
+ * either module works.
  */
 import { localizedName } from '$lib/content/detail';
 import { app } from '$lib/stores/app.svelte';
