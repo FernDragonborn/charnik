@@ -118,7 +118,14 @@ export class HitPoints {
 		const pend = this.pendingConcentrationSave;
 		if (!pend || pend.failed || !this.host().character?.play.concentration) return;
 		const fx = this.host().rolls.effectsFor('save.con');
-		const r = rollPool({ 20: 1 }, this.concentrationSaveMod, netAdvantage(fx), fx.bonusDice, fx);
+		const r = rollPool(
+			{ 20: 1 },
+			{
+				...fx,
+				mod: this.concentrationSaveMod,
+				advantage: netAdvantage(fx),
+			},
+		);
 		this.host().tray.pushRoll('Concentration save', r);
 		if (r.total >= pend.dc) {
 			toast(`Concentration held — ${r.total} ≥ DC ${pend.dc}`);
@@ -154,7 +161,7 @@ export class HitPoints {
 		// MUTATES play-state (pips / nat20→1 HP), and the tray contract has no result callback — a tray
 		// roll couldn't apply it. A death save is a fixed d20-vs-10 with nothing to customize
 		// (advantage/effects already fold via `fx`), so there's no reason to offer the tray here.
-		const r = rollPool({ 20: 1 }, fx.flat, netAdvantage(fx), fx.bonusDice, fx);
+		const r = rollPool({ 20: 1 }, { ...fx, mod: fx.flat, advantage: netAdvantage(fx) });
 		this.host().tray.pushRoll('Death save', r);
 		const ds = c.play.deathSaves;
 		if (r.natural === 20) {

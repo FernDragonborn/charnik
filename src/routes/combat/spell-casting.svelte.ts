@@ -280,7 +280,7 @@ export class SpellCasting {
 		} else {
 			this.host.tray.pushRoll(
 				`${r.name} (spell attack)`,
-				rollPool({ 20: 1 }, toHit, netAdvantage(fx), fx.bonusDice, fx),
+				rollPool({ 20: 1 }, { ...fx, mod: toHit, advantage: netAdvantage(fx) }),
 				hasDmg ? rollDamageParts(parts) : undefined,
 				up.note,
 			);
@@ -371,7 +371,11 @@ export class SpellCasting {
 		} else {
 			this.host.tray.pushRoll(
 				label,
-				rollPool(primary.dice, primary.mod, 0, primary.bonusDice ?? [], primary.mods ?? {}),
+				rollPool(primary.dice, {
+					...(primary.mods ?? {}),
+					mod: primary.mod,
+					...(primary.bonusDice ? { bonusDice: primary.bonusDice } : {}),
+				}),
 				rest.length ? rollDamageParts(rest) : undefined,
 				note,
 			);

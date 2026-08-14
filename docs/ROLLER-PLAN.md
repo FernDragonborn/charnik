@@ -61,7 +61,7 @@ One roll, one total. The N-attacks-in-one-action model therefore lives in the TO
 
 ### D · Advantage is an argument, not a property of the roll
 
-`rollPool(dice, mod, advantage, …)` applies advantage to **the first d20 in the pool only**
+`rollPool`'s `advantage` applies to **the first d20 in the pool only**
 (`k === 0`). A pool with two d20 silently rolls the second one straight. `natural` is likewise "the
 first d20's", so a multi-d20 pool has no defined nat-20. Nothing in the app rolls two d20 in one pool
 today, so this is a latent trap rather than a live bug — but it is the same modelling error as A:
@@ -200,13 +200,23 @@ projections of the pair.
 The one sentence the rest follows from: **the roller should return what HAPPENED, not how to show
 it.** Today it returns a rendering, and every gap in the audit above is a consequence.
 
-### 1. One typed request in, not five positional arguments
+### 1. One typed request in, not five positional arguments — `[~]` HALF DONE 2026-08-14
 
-`rollPool(dice, mod, advantage, bonusDice, opts)` puts a magic `−1 / 0 / +1` in the third position.
+`rollPool(dice, mod, advantage, bonusDice, opts)` put a magic `−1 / 0 / +1` in the third position.
 AI-CONVENTIONS §2.8 forbids exactly this, and the best evidence is that `RollSpec` in the tray
 **already exists** with the motivation spelled out in its own comment — "so a roll site passes one
 typed object instead of 5–6 positional args". The right request was invented one layer up; the
 roller should take it directly.
+
+**Done:** the signature is now `rollPool(dice, RollPoolOptions | Rng)` — `mod`, `advantage` and
+`bonusDice` are named fields, and a `RollEffects` spreads straight in
+(`{ ...fx, mod: fx.flat, advantage: netAdvantage(fx) }`). The bare-`Rng` shorthand stayed, because
+most test call sites pass nothing else. This was taken early, out of order, because `max-params`
+was warning on it and the fix is independent of the result-shape work.
+
+**Still open:** taking `RollSpec` ITSELF — one request carrying the label, the type and the damage
+parts, not just the dice. That belongs with the structured result (3 below); until the roller
+answers with facts there is nothing for the extra request fields to become.
 
 ### 2. Every die carries where it came from
 

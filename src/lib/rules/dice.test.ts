@@ -44,28 +44,28 @@ describe('parseDicePool', () => {
 
 describe('rollPool', () => {
 	it('rolls a single die', () => {
-		expect(rollPool({ 6: 1 }, 0, 0, [], rngSequence(0.5))).toEqual({ total: 4, expr: 'd6(4)' });
+		expect(rollPool({ 6: 1 }, rngSequence(0.5))).toEqual({ total: 4, expr: 'd6(4)' });
 	});
 
 	it('appends a signed flat modifier', () => {
-		expect(rollPool({ 6: 1 }, 3, 0, [], rngSequence(0.5))).toMatchObject({
+		expect(rollPool({ 6: 1 }, { rng: rngSequence(0.5), mod: 3 })).toMatchObject({
 			total: 7,
 			expr: 'd6(4) +3',
 		});
-		expect(rollPool({ 6: 1 }, -2, 0, [], rngSequence(0.5))).toMatchObject({
+		expect(rollPool({ 6: 1 }, { rng: rngSequence(0.5), mod: -2 })).toMatchObject({
 			total: 2,
 			expr: 'd6(4) −2',
 		});
 	});
 
 	it('advantage rolls two d20 and keeps the higher, exposing the loser', () => {
-		const r = rollPool({ 20: 1 }, 0, 1, [], rngSequence(0.1, 0.9)); // d20 → 3, then 19
+		const r = rollPool({ 20: 1 }, { rng: rngSequence(0.1, 0.9), advantage: 1 }); // d20 → 3, then 19
 		expect(r.total).toBe(19);
 		expect(r.advantageRoll).toMatchObject({ kept: 19, dropped: 3, mode: 1 });
 	});
 
 	it('disadvantage keeps the lower', () => {
-		const r = rollPool({ 20: 1 }, 0, -1, [], rngSequence(0.1, 0.9));
+		const r = rollPool({ 20: 1 }, { rng: rngSequence(0.1, 0.9), advantage: -1 });
 		expect(r.total).toBe(3);
 		expect(r.advantageRoll).toMatchObject({ kept: 3, dropped: 19, mode: -1 });
 	});
@@ -73,51 +73,45 @@ describe('rollPool', () => {
 	it('adds signed bonus dice (Bless +1d4 / Bane −1d4)', () => {
 		const bless = rollPool(
 			{ 20: 1 },
-			0,
-			0,
-			[{ sides: 4, count: 1, sign: 1 }],
-			rngSequence(0.5, 0.5),
+			{ rng: rngSequence(0.5, 0.5), bonusDice: [{ sides: 4, count: 1, sign: 1 }] },
 		);
 		expect(bless).toMatchObject({ total: 14, expr: 'd20(11) + +d4(3)' });
 		const bane = rollPool(
 			{ 20: 1 },
-			0,
-			0,
-			[{ sides: 4, count: 1, sign: -1 }],
-			rngSequence(0.5, 0.5),
+			{ rng: rngSequence(0.5, 0.5), bonusDice: [{ sides: 4, count: 1, sign: -1 }] },
 		);
 		expect(bane).toMatchObject({ total: 8, expr: 'd20(11) + −d4(3)' });
 	});
 
 	it('sorts the pool high-sides first', () => {
-		const r = rollPool({ 4: 1, 8: 1 }, 0, 0, [], rngSequence(0.5, 0.5)); // d8 then d4
+		const r = rollPool({ 4: 1, 8: 1 }, rngSequence(0.5, 0.5)); // d8 then d4
 		expect(r.expr).toBe('d8(5) + d4(3)');
 		expect(r.total).toBe(8);
 	});
 
 	it('exposes the natural d20 face (nat-1/nat-20 outcomes)', () => {
-		expect(rollPool({ 20: 1 }, 5, 0, [], rngSequence(0.999)).natural).toBe(20); // 20 + 5 = 25 total
-		expect(rollPool({ 20: 1 }, 5, 0, [], rngSequence(0)).natural).toBe(1);
-		expect(rollPool({ 6: 1 }, 0, 0, [], rngSequence(0.5)).natural).toBeUndefined(); // no d20 in pool
+		expect(rollPool({ 20: 1 }, { rng: rngSequence(0.999), mod: 5 }).natural).toBe(20); // 20 + 5 = 25 total
+		expect(rollPool({ 20: 1 }, { rng: rngSequence(0), mod: 5 }).natural).toBe(1);
+		expect(rollPool({ 6: 1 }, rngSequence(0.5)).natural).toBeUndefined(); // no d20 in pool
 	});
 });
 
 describe('rollPool · roll-manipulation (L1 reroll / min_die facts)', () => {
 	it('rerolls a die that lands ≤ the threshold, keeping the new result (GWF ≤2)', () => {
 		// d6 → 1 (≤2, reroll) → 5; the label shows both faces
-		const r = rollPool({ 6: 1 }, 0, 0, [], { rng: rngSequence(0, 0.7), reroll: 2 });
+		const r = rollPool({ 6: 1 }, { rng: rngSequence(0, 0.7), reroll: 2 });
 		expect(r.total).toBe(5);
 		expect(r.expr).toBe('d6(1↻5)');
 	});
 
 	it('does NOT reroll a die above the threshold', () => {
-		const r = rollPool({ 6: 1 }, 0, 0, [], { rng: rngSequence(0.5), reroll: 2 }); // d6 → 4, kept
+		const r = rollPool({ 6: 1 }, { rng: rngSequence(0.5), reroll: 2 }); // d6 → 4, kept
 		expect(r.total).toBe(4);
 		expect(r.expr).toBe('d6(4)');
 	});
 
 	it('floors a die below the minimum AS the minimum (Reliable Talent d20 → 10)', () => {
-		const r = rollPool({ 20: 1 }, 3, 0, [], { rng: rngSequence(0.1), minDie: 10 }); // d20 → 3 → 10
+		const r = rollPool({ 20: 1 }, { rng: rngSequence(0.1), minDie: 10, mod: 3 }); // d20 → 3 → 10
 		expect(r.total).toBe(13); // 10 + 3 mod
 		expect(r.expr).toBe('d20(3→10) +3');
 		expect(r.natural).toBe(3); // the NATURAL face is pre-floor (a nat-1 is still a nat-1)
@@ -125,13 +119,13 @@ describe('rollPool · roll-manipulation (L1 reroll / min_die facts)', () => {
 
 	it('applies reroll THEN floor in order (Halfling Lucky 1 + a floor)', () => {
 		// d20 → 1 (reroll on 1) → 4, then floored to 10
-		const r = rollPool({ 20: 1 }, 0, 0, [], { rng: rngSequence(0, 0.15), reroll: 1, minDie: 10 });
+		const r = rollPool({ 20: 1 }, { rng: rngSequence(0, 0.15), reroll: 1, minDie: 10 });
 		expect(r.total).toBe(10);
 		expect(r.expr).toBe('d20(1↻4→10)');
 	});
 
 	it('accepts a bare Rng for the existing callers (back-compat)', () => {
-		expect(rollPool({ 6: 1 }, 0, 0, [], rngSequence(0.5)).total).toBe(4);
+		expect(rollPool({ 6: 1 }, rngSequence(0.5)).total).toBe(4);
 	});
 });
 
@@ -154,7 +148,7 @@ describe('rollFormula', () => {
 
 describe('parseRollExpr (the toast/log chip breakdown)', () => {
 	it('round-trips a rolled expr into per-die chips + the flat modifier', () => {
-		const r = rollPool({ 8: 1, 6: 1 }, 3, 0, [], rngSequence(0.5, 0.5));
+		const r = rollPool({ 8: 1, 6: 1 }, { rng: rngSequence(0.5, 0.5), mod: 3 });
 		const { chips, mod } = parseRollExpr(r.expr); // "d8(5) + d6(4) +3"
 		expect(chips.map((c) => [c.sides, c.value, c.sign])).toEqual([
 			[8, 5, 1],
@@ -165,14 +159,17 @@ describe('parseRollExpr (the toast/log chip breakdown)', () => {
 	});
 
 	it('takes the FINAL face of a rerolled/floored die and keeps the detail', () => {
-		const r = rollPool({ 20: 1 }, 0, 0, [], { rng: rngSequence(0, 0.15), reroll: 1, minDie: 10 });
+		const r = rollPool({ 20: 1 }, { rng: rngSequence(0, 0.15), reroll: 1, minDie: 10 });
 		expect(parseRollExpr(r.expr).chips).toEqual([
 			{ sides: 20, value: 10, sign: 1, detail: '1↻4→10' },
 		]);
 	});
 
 	it('signs a negative bonus die and reads a negative modifier', () => {
-		const r = rollPool({ 20: 1 }, -2, 0, [{ sides: 4, count: 1, sign: -1 }], rngSequence(0.5, 0.5));
+		const r = rollPool(
+			{ 20: 1 },
+			{ rng: rngSequence(0.5, 0.5), mod: -2, bonusDice: [{ sides: 4, count: 1, sign: -1 }] },
+		);
 		const { chips, mod } = parseRollExpr(r.expr); // "d20(11) + −d4(3) −2"
 		expect(chips.map((c) => c.sign)).toEqual([1, -1]);
 		expect(mod).toBe(-2);
@@ -187,7 +184,7 @@ describe('parseRollExpr (the toast/log chip breakdown)', () => {
 describe('parseRollExpr · advantage-only pool', () => {
 	it('still reads the modifier when the kept d20 lives outside expr', () => {
 		// an advantage roll's d20 is surfaced as `advantageRoll`, so expr is just the mod
-		const r = rollPool({ 20: 1 }, 5, 1, [], rngSequence(0.65, 0.3));
+		const r = rollPool({ 20: 1 }, { rng: rngSequence(0.65, 0.3), mod: 5, advantage: 1 });
 		expect(r.expr).toBe(' +5');
 		expect(parseRollExpr(r.expr)).toEqual({ chips: [], mod: 5 });
 	});
@@ -254,8 +251,8 @@ describe('advantageRoll.mode', () => {
 
 	it('is +1 for advantage and −1 for disadvantage even when both dice tie', () => {
 		const tie = () => 0.5; // both d20 land on the same face
-		expect(rollPool({ 20: 1 }, 0, 1, [], tie).advantageRoll?.mode).toBe(1);
-		expect(rollPool({ 20: 1 }, 0, -1, [], tie).advantageRoll?.mode).toBe(-1);
+		expect(rollPool({ 20: 1 }, { rng: tie, advantage: 1 }).advantageRoll?.mode).toBe(1);
+		expect(rollPool({ 20: 1 }, { rng: tie, advantage: -1 }).advantageRoll?.mode).toBe(-1);
 	});
 
 	it('a roll amended after the fact is advantage by construction', () => {
@@ -286,7 +283,7 @@ describe('flipAdvantage', () => {
 	});
 
 	it('still flips the MODE when the two dice tied (the numbers alone can never say which)', () => {
-		const tied = rollPool({ 20: 1 }, 0, 1, [], () => 0.5);
+		const tied = rollPool({ 20: 1 }, { rng: () => 0.5, advantage: 1 });
 		const flipped = flipAdvantage(tied);
 		expect(flipped?.advantageRoll?.mode).toBe(-1);
 		expect(flipped?.total).toBe(tied.total);
@@ -321,7 +318,7 @@ describe('cycleAdvantage', () => {
 	});
 
 	it('undoes a NATIVE disadvantage back to the die that was rolled first', () => {
-		const rolled = rollPool({ 20: 1 }, 2, -1, [], rngSequence(0.9, 0.1)); // 19 then 3, keeps 3
+		const rolled = rollPool({ 20: 1 }, { rng: rngSequence(0.9, 0.1), mod: 2, advantage: -1 }); // 19 then 3, keeps 3
 		expect(rolled.advantageRoll).toMatchObject({ kept: 3, dropped: 19, original: 19 });
 		const none = cycleAdvantage(rolled);
 		expect(none?.advantageRoll).toBeUndefined();

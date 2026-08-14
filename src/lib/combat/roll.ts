@@ -32,9 +32,11 @@ export const dealsDamage = (parts: DamagePartSpec[]): boolean =>
  *  injectable for tests; each part carries its own type through so the tray can show the breakdown. */
 export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): TypedRoll[] {
 	return parts.map((p) => ({
-		...rollPool(p.dice, p.mod, 0, p.bonusDice ?? [], {
+		...rollPool(p.dice, {
 			...(p.mods ?? {}),
 			...(rng ? { rng } : {}),
+			mod: p.mod,
+			...(p.bonusDice ? { bonusDice: p.bonusDice } : {}),
 		}),
 		type: p.type,
 	}));

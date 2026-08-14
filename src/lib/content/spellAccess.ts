@@ -39,26 +39,48 @@ const csv = splitList;
 
 const shareEdition = (a: string[], b: string[]) => a.some((s) => b.includes(s));
 
+/** Bare id → every row carrying it (one per edition/source). Both indexes are built this way. */
+function rowsByBareId(rows: LoadedRow[]): Map<string, LoadedRow[]> {
+	const byId = new Map<string, LoadedRow[]>();
+	for (const row of rows) {
+		const arr = byId.get(row.id) ?? [];
+		arr.push(row);
+		byId.set(row.id, arr);
+	}
+	return byId;
+}
+
+/** Records one class↔spell edge, edition-checked and deduped. */
+type Link = (cls: LoadedRow, spell: LoadedRow, via: AccessVia) => void;
+
+/**
+ * Subclass pass: a casting subclass draws the spell LIST of the class(es) its `spell_list` column
+ * names (B25). Runs LAST so it copies whatever the two earlier passes resolved for that class —
+ * including `spell_lists` grants, so a homebrew class's additive rows reach its subclasses too.
+ */
+function linkSubclassLists(
+	graph: ContentGraph,
+	classesById: Map<string, LoadedRow[]>,
+	forClass: Map<string, Set<string>>,
+	link: Link,
+): void {
+	for (const sub of graph.list('subclass')) {
+		const drawnFrom = csv(sub.data.spell_list).flatMap((bare) => classesById.get(bare) ?? []);
+		for (const cls of drawnFrom) {
+			if (!shareEdition(cls.systems, sub.systems)) continue;
+			for (const spellEid of forClass.get(cls.effectiveId) ?? []) {
+				const spell = graph.get(spellEid);
+				if (spell) link(sub, spell, 'subclass_list');
+			}
+		}
+	}
+}
+
 /** Build the union access index from the content graph (pure). */
 export function buildSpellAccess(graph: ContentGraph): SpellAccess {
-	const classRows = graph.list('class');
 	const spellRows = graph.list('spell');
-	const listRows = graph.list('spell_lists');
-
-	// bare class id → its rows (one per edition/source)
-	const classesById = new Map<string, LoadedRow[]>();
-	for (const c of classRows) {
-		const arr = classesById.get(c.id) ?? [];
-		arr.push(c);
-		classesById.set(c.id, arr);
-	}
-	// bare spell id → its rows (one per edition/source)
-	const spellsById = new Map<string, LoadedRow[]>();
-	for (const s of spellRows) {
-		const arr = spellsById.get(s.id) ?? [];
-		arr.push(s);
-		spellsById.set(s.id, arr);
-	}
+	const classesById = rowsByBareId(graph.list('class'));
+	const spellsById = rowsByBareId(spellRows);
 
 	const forClass = new Map<string, Set<string>>(); // classEID → spell EIDs
 	const forSpell = new Map<string, AccessEntry[]>(); // spellEID → entries
@@ -85,25 +107,13 @@ export function buildSpellAccess(graph: ContentGraph): SpellAccess {
 	// class-side: additive spell_lists join. An orphan join (unknown class_id or spell_id) resolves
 	// to [] → skipped here; the loader flags it as a content-health WARNING (likely a typo), so a
 	// dangling grant is harmless in the index but surfaced to the user.
-	for (const row of listRows) {
+	for (const row of graph.list('spell_lists')) {
 		const cls = classesById.get(String(row.data.class_id)) ?? [];
 		const sp = spellsById.get(String(row.data.spell_id)) ?? [];
 		for (const c of cls) for (const s of sp) link(c, s, 'spell_list');
 	}
 
-	// subclass-side: a casting subclass draws the spell LIST of the class(es) its `spell_list` column
-	// names (B25). Runs last so it can copy whatever the two passes above resolved for that class —
-	// including `spell_lists` grants, so a homebrew class's additive rows reach its subclasses too.
-	for (const sub of graph.list('subclass')) {
-		for (const bareClass of csv(sub.data.spell_list))
-			for (const cls of classesById.get(bareClass) ?? []) {
-				if (!shareEdition(cls.systems, sub.systems)) continue;
-				for (const spellEid of forClass.get(cls.effectiveId) ?? []) {
-					const spell = graph.get(spellEid);
-					if (spell) link(sub, spell, 'subclass_list');
-				}
-			}
-	}
+	linkSubclassLists(graph, classesById, forClass, link);
 
 	return {
 		spellIdsForClass: (id) => [...(forClass.get(id) ?? [])],

@@ -154,7 +154,10 @@ export class SheetRolls {
 			return;
 		}
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
-		const toHit = rollPool({ 20: 1 }, at.toHit + fx.flat, netAdvantage(fx), fx.bonusDice, fx);
+		const toHit = rollPool(
+			{ 20: 1 },
+			{ ...fx, mod: at.toHit + fx.flat, advantage: netAdvantage(fx) },
+		);
 		const dmgRolls = hasDmg ? rollDamageParts(parts) : undefined;
 		// N2 Savage Attacker: does THIS weapon damage qualify for a reroll? The offer itself is not
 		// attached to the toast — a toast expires mid-decision, so it announces and the always-visible

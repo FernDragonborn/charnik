@@ -517,6 +517,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface Spellcasting`
 - `const classCasts` — Does this class row cast spells at all?
 - `function castingAbilityByClass` — Casting ability per caster class id (`spell_ability`, default INT) — the cheap slice the * effects resolve needs BEFO…
+- `interface SpellcastingInput` — What the full casting derive needs.
 - `function deriveSpellcasting`
 
 ### `src/lib/combat/actions.ts`
@@ -1121,6 +1122,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function parseDicePool` — Parse every `NdM` token in a string into a pool ({sides: count}).
 - `function formatDicePool` — Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first.
 - `interface RollOptions` — Options for `rollPool` beyond the pool itself: injectable rng + roll-manipulation effects.
+- `interface RollPoolOptions` — Everything a pool roll can be given besides the dice themselves.
 - `function rollPool` — * Roll a dice pool + flat mod.
 - `interface DieChip` — One die as the UI shows it: the face it ended on, how many sides it had, its sign (a Bane die is * −1d4) and the raw …
 - `function parseRollExpr` — Read an `expr` back into per-die chips + the trailing flat modifier.
@@ -1306,4 +1308,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 758 exports across 109 modules · 40 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 760 exports across 109 modules · 40 duplicate suspects._

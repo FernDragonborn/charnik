@@ -236,13 +236,26 @@ function casterProfileFor(
 	};
 }
 
-export function deriveSpellcasting(
-	character: Character,
-	graph: ContentGraph,
-	scores: Record<Ability, number>,
-	facts?: EffectFacts,
-	issues?: EffectIssue[],
-): Spellcasting {
+/** What the full casting derive needs. The two optional halves are the effects engine's: with
+ *  auto-calc off there are no `facts` to fold and nowhere to report an `issue`, and casting still
+ *  derives — the DCs are just base ones. */
+export interface SpellcastingInput {
+	character: Character;
+	graph: ContentGraph;
+	/** The FINAL ability scores, so DCs read a Headband of Intellect (derive.ts calls this after the
+	 *  resolve stage for exactly that reason). */
+	scores: Record<Ability, number>;
+	facts?: EffectFacts;
+	issues?: EffectIssue[];
+}
+
+export function deriveSpellcasting({
+	character,
+	graph,
+	scores,
+	facts,
+	issues,
+}: SpellcastingInput): Spellcasting {
 	const systems = [character.system];
 	/** The prepared/known cap, with the "this system has no answer" case SURFACED rather than filled
 	 *  in from another edition's rule. Only 5e states a formula; a 5.5e class with no `class_casting`

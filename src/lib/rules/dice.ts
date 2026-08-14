@@ -157,22 +157,30 @@ function rollPoolDice(
 	};
 }
 
+/** Everything a pool roll can be given besides the dice themselves. One object rather than four
+ *  positional arguments, because the middle of `rollPool(d, 0, 0, [], rng)` said nothing about
+ *  what those zeros were (§2.8) — and because a `RollEffects` spreads straight into it. */
+export interface RollPoolOptions extends RollOptions {
+	/** Flat modifier added after the dice. */
+	mod?: number;
+	/** −1 disadvantage · 0 normal · +1 advantage. */
+	advantage?: number;
+	/** Signed effect dice (Bless +1d4 / Bane −1d4). */
+	bonusDice?: BonusDie[];
+}
+
 /**
- * Roll a dice pool + flat mod. `advantage` (−1 disadvantage / 0 normal / +1 advantage) applies to
- * the FIRST d20 in the pool: roll two, keep the winner, expose the loser as `advantageRoll`.
- * `bonusDice` are the signed effect dice (Bless +1d4 / Bane −1d4). `opts` takes the rng (seeded in
- * tests) and the `reroll`/`min_die` effect facts — a bare `Rng` is accepted for existing callers.
- * Deterministic under a seeded rng.
+ * Roll a dice pool + flat mod. `advantage` applies to the FIRST d20 in the pool: roll two, keep the
+ * winner, expose the loser as `advantageRoll`. `opts` also takes the rng (seeded in tests) and the
+ * `reroll`/`min_die` effect facts — a bare `Rng` is accepted, which is the whole of what most
+ * callers pass. Deterministic under a seeded rng.
  */
-export function rollPool(
-	dice: Record<number, number>,
-	mod = 0,
-	advantage = 0,
-	bonusDice: BonusDie[] = [],
-	opts: RollOptions | Rng = {},
-): Rolled {
-	const o: RollOptions = typeof opts === 'function' ? { rng: opts } : opts;
+export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | Rng = {}): Rolled {
+	const o: RollPoolOptions = typeof opts === 'function' ? { rng: opts } : opts;
 	const rng = o.rng ?? Math.random;
+	const mod = o.mod ?? 0;
+	const advantage = o.advantage ?? 0;
+	const bonusDice = o.bonusDice ?? [];
 	// one pool die with reroll/floor applied; `label` spells out what happened (d6(1↻4), d20(3→10)).
 	// `face` is the actual die result AFTER a reroll but BEFORE a min_die floor — a nat-1/nat-20 is
 	// judged by what the die shows (Reliable Talent's "treat as 10" doesn't erase a natural 1).
@@ -352,5 +360,5 @@ export function cycleAdvantage<T extends Rolled>(r: T, rng: Rng = Math.random): 
 export function rollFormula(formula: string, rng: Rng = Math.random): Rolled {
 	const fm = /([+-]\s*\d+)\s*$/.exec(formula);
 	const mod = fm?.[1] ? Number(fm[1].replace(/\s/g, '')) : 0;
-	return rollPool(parseDicePool(formula), mod, 0, [], rng);
+	return rollPool(parseDicePool(formula), { mod, rng });
 }

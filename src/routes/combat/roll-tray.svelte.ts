@@ -117,7 +117,11 @@ export class RollTray {
 	/** The custom roll tray's Roll: rolls the pool + any queued attack damage as ONE combined entry
 	 *  (line 1 = the roll, line 2 = the dropped adv die, then one line per damage type + a total). */
 	doRoll = () => {
-		const primary = rollPool(this.dice, this.rollMod, this.rollAdvantage, [], this.rollMods);
+		const primary = rollPool(this.dice, {
+			...this.rollMods,
+			mod: this.rollMod,
+			advantage: this.rollAdvantage,
+		});
 		const damage = this.pendingDamage ? rollDamageParts(this.pendingDamage.parts) : undefined;
 		this.pendingDamage = null;
 		this.pushRoll(this.rollSrc ?? 'Custom roll', primary, damage, this.rollNote ?? undefined);
@@ -128,7 +132,12 @@ export class RollTray {
 	rollDiceNow = (spec: RollSpec) => {
 		this.pushRoll(
 			spec.label,
-			rollPool(spec.dice, spec.mod, spec.advantage ?? 0, spec.bonusDice ?? [], spec.mods ?? {}),
+			rollPool(spec.dice, {
+				...(spec.mods ?? {}),
+				mod: spec.mod,
+				...(spec.advantage === undefined ? {} : { advantage: spec.advantage }),
+				...(spec.bonusDice ? { bonusDice: spec.bonusDice } : {}),
+			}),
 		);
 	};
 
