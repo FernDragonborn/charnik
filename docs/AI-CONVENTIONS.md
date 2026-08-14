@@ -237,7 +237,11 @@ it's doing too much; split it.
 **Size limits (machine-enforced, 2026-07-27).** Aligned to industry best practice, applied to
 **logic only** — `eslint` `max-lines` warns at **400** and `max-lines-per-function` at **80** (both
 skip blank lines + comments), scoped to `**/*.ts` (which covers `.svelte.ts` view-models — pure logic)
-and **NOT** `.svelte` (mostly markup + CSS, so a line count there measures the wrong thing). Warnings,
+and **NOT** `.svelte` (mostly markup + CSS, so a line count there measures the wrong thing). **What
+to measure in a `.svelte` instead: the non-comment lines inside its `<script>`** — that is the logic,
+and logic is what belongs in the view-model (§7.2). Judged that way the ranking inverts: a 575-line
+`RollRow.svelte` is 90% markup and fine, while a 550-line `+layout.svelte` carrying 221 lines of
+script is not. Never quote a `.svelte` file's total line count as debt. Warnings,
 never errors — CI (`eslint .`, no `--max-warnings`) stays green; the warning is the "time to split by
 concern" signal, not a gate. Tests are exempt.
 
