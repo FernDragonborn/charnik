@@ -661,6 +661,34 @@ impl, always. Concrete cases this session: `recharge` "is binary" → corrected 
 (EFFECTS.md); N2-PLAN's onEvent sketch "regain one, auto" → corrected to the SRD reality (player
 choice, regain-all, own long-rest gate) the moment the SRD was checked.
 
+**The other direction, and it is the one that actually rots (added 2026-08-14).** The rule above
+fires when you NOTICE a stale line. That is not enough on its own: the ten drifts found by reading
+PLAN end-to-end that day had all survived several passes precisely because nobody was looking at
+those lines — four sat inside items already ticked `[x]`, which is where nobody re-reads. So the
+rule has a second, non-optional half:
+
+> **Finishing something, renaming something, or deleting something is not done until the docs that
+> describe it are updated in the SAME commit.** The doc set is a grep away, so there is no excuse
+> for guessing which files: before committing, grep `docs/` + `CLAUDE.md` for every identifier the
+> change touched — the function, the file, the directive, the constant, the item id. Each hit is
+> either still true or it is the drift.
+
+**The two smells to grep FOR**, both from that day's ten:
+- **A requirement in the present tense that is now built** — "the installer *must say so* before
+  installing", "*still owes*", "*remain to wire*", "does not exist *yet*". Shipped work described as
+  owed makes the project look unfinished and sends the next session to re-do it. Grep: `still owes`,
+  `remain to`, `not yet`, `TODO`, `OPEN (`.
+- **A name that no longer exists** — `hashBody` (now `restampText`), `#charnik-type:` (never parsed;
+  it is `#content-type:`), `_pack.json` (rejected with every other manifest, §1.6). Grep the OLD
+  name at the moment you rename, not later.
+
+**Rank the fix by what a reader would DO with the lie**, because they are not equal. Worst is a doc
+that instructs building what the architecture forbids — `_pack.json` was still specced in the data
+model of a project whose §1.6 bans manifests, so a reader following the data model would have built
+the banned thing. Next is a summary that contradicts its own body (REL-4's header claimed nine
+unfixed security findings above a section reporting twelve fixed) — the header is what people read.
+Last, and still worth fixing, is shipped work listed as owed.
+
 ### 8.6b The plan is PRUNED, not accumulated — closed work leaves, the "why" stays
 
 **Rule.** `docs/PLAN.md` is a working document, not an archive. When work CLOSES, its narrative
