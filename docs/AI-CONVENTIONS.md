@@ -218,6 +218,15 @@ kebab-case + full words for CSS, with a component/feature prefix when a name cou
 `<style>` blocks. Short loop locals (`i`, `k`) are still fine. The existing cryptic combat classes
 are flagged for an opportunistic rename pass — do it when touching the file, not big-bang.
 
+**FILES follow the same rule, and the mechanical version of it is: a module that exports one class
+is named after that class** (`RollTray` → `roll-tray.svelte.ts`, `ActionExecutor` →
+`action-executor.svelte.ts`). One-word module names read fine to whoever just wrote them and stop
+reading fine the moment a sibling lands: this session shipped `roll.svelte.ts` next to
+`rolls.svelte.ts` — the tray and the roll semantics, distinguished by an `s` — and
+`updates.svelte.ts` next to `update-state.svelte.ts`. Renamed 2026-08-14 (`git mv`, so blame
+survives). If the class name is itself vague, that is the thing to fix first: `Rolls` became
+`SheetRolls` before the file could be named after it.
+
 ### 2.5 One name per fact
 **Rule.** If a word names a fact in one place, every other place must reuse **that** name. Only the
 **case convention** may differ where the context warrants (`is_bloodied` in the snake_case DSL ↔

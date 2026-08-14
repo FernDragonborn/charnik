@@ -31,8 +31,8 @@ import {
 	type SpellRow,
 	type MenuKind,
 } from '$lib/combat/helpers';
-import type { RollSpec, RollTray } from './roll.svelte';
-import type { TurnEconomy } from './economy.svelte';
+import type { RollSpec, RollTray } from './roll-tray.svelte';
+import type { TurnEconomy } from './turn-economy.svelte';
 import { slotToSpend, castableSlotLevels, pactPool, PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import { withCastSlot, withSpellcastingMod } from '$lib/effects/context';
 import type { ExprContext } from '$lib/effects/expression-evaluator';

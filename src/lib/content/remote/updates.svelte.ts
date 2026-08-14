@@ -68,7 +68,7 @@ import {
 	fetchRepo,
 	type PendingUpdate,
 	type DiscoveredPack,
-} from './update-state.svelte';
+} from './pack-update-state.svelte';
 // re-exported: `updates` is the state every panel and test reads, and moving its implementation is
 // no reason to move the import everyone writes (§6.1).
 export { updates, type PendingUpdate, type DiscoveredPack };

@@ -44,7 +44,7 @@ import {
 } from '$lib/build/derive';
 import { splitList, type ContentType } from '$lib/content/schemas';
 import { slugify } from '$lib/util/slug';
-import { FeatSlots } from './feats.svelte';
+import { FeatSlots } from './feat-slots.svelte';
 import { ASI, ASI_FEAT_ID, rowName, rowOfType } from './rows';
 // re-exported so every existing `from '../state.svelte'` import keeps working
 export { ASI, ASI_FEAT_ID, rowName, rowOfType };

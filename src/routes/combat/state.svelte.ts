@@ -34,7 +34,7 @@ import {
 	type MenuKind,
 	type StandardAction,
 } from '$lib/combat/helpers';
-import { RollTray } from './roll.svelte';
+import { RollTray } from './roll-tray.svelte';
 import {
 	appendLog,
 	readLog,
@@ -45,13 +45,13 @@ import { getUserStorage } from '$lib/storage/provider';
 import type { RollLogEntry } from '$lib/combat/helpers';
 import { registerDiceTray, openDiceTray, type DiceTrayRequest } from '$lib/dice/tray.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
-import { EffectsEditor } from './effects.svelte';
-import { Rolls } from './rolls.svelte';
-import { ActionExecutor } from './executor.svelte';
-import { PanelLayout } from './panel.svelte';
-import { SpellCasting } from './casting.svelte';
-import { TurnEconomy } from './economy.svelte';
-import { ResourceTracker } from './resources.svelte';
+import { EffectsEditor } from './effects-editor.svelte';
+import { SheetRolls } from './sheet-rolls.svelte';
+import { ActionExecutor } from './action-executor.svelte';
+import { PanelLayout } from './panel-layout.svelte';
+import { SpellCasting } from './spell-casting.svelte';
+import { TurnEconomy } from './turn-economy.svelte';
+import { ResourceTracker } from './resource-tracker.svelte';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
@@ -107,13 +107,13 @@ class CombatVM {
 	// sheet with no page reload, while the character's play-state is left untouched
 	/** Roll semantics (effect pickup, forced outcomes, the attack roll, Savage Attacker) — see
 	 *  rolls.svelte.ts. */
-	rolls = new Rolls(() => this);
+	rolls = new SheetRolls(() => this);
 	/* The roll verbs stay ON the view-model: every panel and the behavioural tests call them here,
 	   and casting reads `effectsFor`/`openRoll` through the same names (§6.1). */
-	effectsFor = (...a: Parameters<Rolls['effectsFor']>) => this.rolls.effectsFor(...a);
-	openRoll = (...a: Parameters<Rolls['openRoll']>) => this.rolls.openRoll(...a);
-	roll = (...a: Parameters<Rolls['roll']>) => this.rolls.roll(...a);
-	attackRoll = (...a: Parameters<Rolls['attackRoll']>) => this.rolls.attackRoll(...a);
+	effectsFor = (...a: Parameters<SheetRolls['effectsFor']>) => this.rolls.effectsFor(...a);
+	openRoll = (...a: Parameters<SheetRolls['openRoll']>) => this.rolls.openRoll(...a);
+	roll = (...a: Parameters<SheetRolls['roll']>) => this.rolls.roll(...a);
+	attackRoll = (...a: Parameters<SheetRolls['attackRoll']>) => this.rolls.attackRoll(...a);
 	savageReroll = () => this.rolls.savageReroll();
 	get savageLabel() {
 		return this.rolls.savageLabel;

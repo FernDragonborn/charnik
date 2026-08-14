@@ -14,10 +14,10 @@ import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { rollFormula } from '$lib/rules/dice';
 import { titleCase, type ActionSlot } from '$lib/combat/helpers';
-import type { RollTray } from './roll.svelte';
-import type { TurnEconomy } from './economy.svelte';
-import type { ResourceTracker } from './resources.svelte';
-import type { EffectsEditor } from './effects.svelte';
+import type { RollTray } from './roll-tray.svelte';
+import type { TurnEconomy } from './turn-economy.svelte';
+import type { ResourceTracker } from './resource-tracker.svelte';
+import type { EffectsEditor } from './effects-editor.svelte';
 
 /** A resource-option's `action_type` → the turn-economy slot it consumes (`free` = none). */
 const ACTION_TYPE_SLOT: Record<ResourceOption['actionType'], ActionSlot | null> = {

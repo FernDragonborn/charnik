@@ -272,7 +272,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function setRepoBranch` — Remember which branch this repo's listing came off (see {@link RepoEntry.branch}).
 - `function recordCheck` — * Remember that we asked this repo — including a `304`, which is exactly the case worth recording * (it cost nothing …
 
-### `src/lib/content/remote/update-state.svelte.ts`
+### `src/lib/content/remote/pack-update-state.svelte.ts`
 
 - `interface PendingUpdate` — One pack with an update waiting, and everything the user needs to decide about it.
 - `interface DiscoveredPack` — A pack found in a repo the user just pasted, and what installing it would bring.

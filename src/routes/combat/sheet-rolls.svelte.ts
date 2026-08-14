@@ -27,11 +27,11 @@ import {
 	type MenuKind,
 	type RollLogEntry,
 } from '$lib/combat/helpers';
-import type { RollSpec, RollTray } from './roll.svelte';
-import type { TurnEconomy } from './economy.svelte';
+import type { RollSpec, RollTray } from './roll-tray.svelte';
+import type { TurnEconomy } from './turn-economy.svelte';
 
 /** What roll semantics need from the sheet around them. */
-export interface RollsHost {
+export interface SheetRollsHost {
 	character: Character | null;
 	sheet: CharacterSheet | null;
 	round: number;
@@ -40,10 +40,10 @@ export interface RollsHost {
 	openMenu(kind: MenuKind, e: Event): void;
 }
 
-export class Rolls {
+export class SheetRolls {
 	/* Accessor, not an object — a $derived field initialiser runs before a constructor parameter
 	   property is assigned (same shape as the other subsystems). */
-	constructor(private host: () => RollsHost) {}
+	constructor(private host: () => SheetRollsHost) {}
 
 	// Savage Attacker (N2, `damage_reroll` fact): the last weapon-damage roll the player MAY reroll,
 	// keeping the higher weapon-dice total — once per turn (2024). Held until used or superseded by the
