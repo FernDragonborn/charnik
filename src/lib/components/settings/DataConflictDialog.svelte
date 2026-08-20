@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '../Icon.svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
 	// Shown when the folder chosen for a data move ISN'T empty (an automatic move needs an empty one).
@@ -45,7 +46,7 @@
 	use:trapFocus={safeBtn}
 >
 	<header class="dialog-head">
-		<span class="dialog-badge warn">⚠</span>
+		<span class="dialog-badge warn"><Icon name="triangle-alert" size={17} /></span>
 		<h2 id="cf-title" class="dialog-title">That folder already has files</h2>
 		<p class="dialog-subtitle">
 			An automatic move needs an empty folder. If you've already copied your data across, choose

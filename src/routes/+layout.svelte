@@ -11,6 +11,7 @@
 	import { ui } from '$lib/stores/ui.svelte';
 	import { dirFor, locale as i18nLocale, _ } from '$lib/i18n';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
+	import Icon from '$lib/components/Icon.svelte';
 	import LangSwitcher from '$lib/components/LangSwitcher.svelte';
 	import ContentMetaModal from '$lib/components/ContentMetaModal.svelte';
 	import HashDriftModal from '$lib/components/HashDriftModal.svelte';
@@ -66,7 +67,7 @@
 	// to GitHub, so the user has a diagnostics bundle to attach.
 	let showDiagnostics = $state(false);
 
-	// The ⟳ button does a no-flash refresh: re-read content + roster from disk into their reactive
+	// The refresh chip does a no-flash refresh: re-read content + roster from disk into their reactive
 	// stores, so every view re-derives without a page reload. F5 keeps the familiar hard reload
 	// (flush + reload the webview — not a process restart). See $lib/content/reload.
 	let refreshing = $state(false);
@@ -90,7 +91,7 @@
 			void reloadApp(); // hard reload (flush + reload the webview)
 		} else if (isDesktop && (e.ctrlKey || e.metaKey) && !e.shiftKey && e.code === 'KeyR') {
 			// Desktop only: the webview's native Ctrl+R is a hard reload → swap it for our no-flash soft
-			// refresh (matches the ⟳ button). Ctrl+Shift+R is left alone.
+			// refresh (matches the refresh chip). Ctrl+Shift+R is left alone.
 			e.preventDefault();
 			void softRefresh();
 		}
@@ -314,12 +315,13 @@
 		onclick={() => (showDiagnostics = true)}
 		title={$_('feedback.title')}
 	>
+		<Icon name="bug" size={13} />
 		{$_('feedback.link')}
 	</button>
 	<div class="chips">
 		<LangSwitcher />
 		<button type="button" class="chip" onclick={toggleTheme} title={$_('settings.theme')}>
-			{app.theme === 'dark' ? '☾' : '☀'}
+			<Icon name={app.theme === 'dark' ? 'moon' : 'sun'} label={$_('settings.theme')} />
 		</button>
 		<button
 			type="button"
@@ -327,7 +329,8 @@
 			onclick={() => void softRefresh()}
 			disabled={refreshing}
 			title={isDesktop ? `${$_('refresh.title')} (Ctrl+R)` : $_('refresh.title')}
-			aria-label={isDesktop ? `${$_('refresh.title')} (Ctrl+R)` : $_('refresh.title')}>⟳</button
+			aria-label={isDesktop ? `${$_('refresh.title')} (Ctrl+R)` : $_('refresh.title')}
+			><Icon name="rotate-cw" /></button
 		>
 		<!-- Content packs with an update waiting. "Check and notify" has to NOTIFY somewhere the user
 		     actually is: the panel that knows about it lives three clicks deep in Settings, so without
@@ -339,7 +342,7 @@
 				href="{base}/settings"
 				title={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
 				aria-label={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
-				>⭳ {$_('settings.packs.chip')}</a
+				><Icon name="download" size={13} /> {$_('settings.packs.chip')}</a
 			>
 		{/if}
 		{#if updater.status !== 'idle'}
@@ -350,7 +353,7 @@
 				onclick={() => void installUpdate()}
 				disabled={updateBusy}
 				title={updateTitle}
-				aria-label={updateTitle}>⭳ {updateLabel}</button
+				aria-label={updateTitle}><Icon name="download" size={13} /> {updateLabel}</button
 			>
 		{/if}
 		<button
@@ -360,20 +363,7 @@
 			title={$_('nav.openCommandPalette')}
 			aria-label={$_('nav.openCommandPalette')}
 		>
-			<svg
-				width="13"
-				height="13"
-				viewBox="0 0 24 24"
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				aria-hidden="true"
-			>
-				<circle cx="11" cy="11" r="7" />
-				<path d="M21 21l-4.3-4.3" />
-			</svg>
+			<Icon name="search" size={13} />
 			Ctrl K
 		</button>
 	</div>
@@ -522,7 +512,8 @@
 		align-items: center;
 		gap: 5px;
 	}
-	.search-chip svg {
+	/* :global — the svg now belongs to Icon.svelte, so a scoped selector can't reach it */
+	.search-chip :global(svg) {
 		opacity: 0.85;
 	}
 	main {

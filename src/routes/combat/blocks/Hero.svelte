@@ -2,6 +2,7 @@
 	// Character header: eyebrow (class · species), name, the level/system/proficiency subline with
 	// the Level-up button, and the HP panel alongside. Reads the `combat` view-model; character +
 	// sheet come in as props.
+	import Icon from '$lib/components/Icon.svelte';
 	import { base } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import type { Character } from '$lib/character/schema';
@@ -30,7 +31,7 @@
 					onclick={async () => {
 						await saveCharacterToStore(c); // persist first (e.g. the demo) so the builder can load it
 						goto(`${base}/build?levelup=${c.id}`);
-					}}>▲ Level up</button
+					}}><Icon name="arrow-up" size={13} /> Level up</button
 				>
 			{/if}
 		</div>

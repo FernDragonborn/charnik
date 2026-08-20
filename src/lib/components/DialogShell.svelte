@@ -7,6 +7,7 @@
 	import type { Snippet } from 'svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
+	import Icon, { type IconName } from './Icon.svelte';
 	import LangSwitcher from './LangSwitcher.svelte';
 
 	let {
@@ -14,7 +15,7 @@
 		title,
 		subtitle,
 		width,
-		badge = '⚑',
+		badge = 'flag',
 		onDismiss,
 		children,
 	}: {
@@ -23,7 +24,9 @@
 		subtitle: string;
 		/** CSS width for the panel (e.g. "min(760px, calc(100vw - 2 * var(--space-4)))"). */
 		width: string;
-		badge?: string;
+		/** The badge glyph, by icon name — the flag is the house default (see the orphan-reassign
+		 *  dialog); a dialog with a subject of its own says it (`skull`, `folder`, `key-round`). */
+		badge?: IconName;
 		/** Omit for a dialog with NO way out but its own buttons: the backdrop stops being clickable and
 		 *  Escape stops closing it (the FirstRunModal pattern). For a state the player must resolve —
 		 *  being dead — a stray click must not silently dismiss the only way back. */
@@ -46,7 +49,7 @@
 >
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>
-		<span class="dialog-badge">{badge}</span>
+		<span class="dialog-badge"><Icon name={badge} size={17} /></span>
 		<h2 id={titleId} class="dialog-title">{title}</h2>
 		<p class="dialog-subtitle">{subtitle}</p>
 	</header>

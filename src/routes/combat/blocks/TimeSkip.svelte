@@ -3,6 +3,7 @@
 	// effects; OUT of combat the round is frozen, so a round-timed buff (a 10-round Bless) would hang
 	// until a rest. This lets the user skip a round / minute / 10 min / hour (1 round = 6 s) and expire
 	// whatever timed out. Shown only when a timed effect is actually ticking (see combat.hasTimedEffects).
+	import Icon from '$lib/components/Icon.svelte';
 	import { combat } from '../combat-view-model.svelte';
 
 	// label → rounds (1 round = 6 s → 1 min = 10 rd, 10 min = 100 rd, 1 hr = 600 rd)
@@ -15,7 +16,7 @@
 </script>
 
 <section class="combat-bar">
-	<span class="bar-label">⏱ Pass time</span>
+	<span class="bar-label"><Icon name="timer" size={13} /> Pass time</span>
 	{#each STEPS as [label, rounds] (label)}
 		<button
 			type="button"

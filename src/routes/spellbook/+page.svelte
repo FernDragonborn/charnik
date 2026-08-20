@@ -4,6 +4,7 @@
 	// prepare + show-on-sheet edit the ACTIVE character (persisted: prepared on the spellEntry,
 	// hidden in ui.spellsHidden — Issue #3); pin is still a local UI set (D3, no schema field yet).
 	import { onMount } from 'svelte';
+	import DiceIcon from '$lib/components/DiceIcon.svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { toast } from 'svelte-sonner';
@@ -176,7 +177,7 @@
 
 		<WikiDetail {detail}>
 			{#snippet actions()}
-				<button class="cta" onclick={cast}>🎲 Cast</button>
+				<button class="cta" onclick={cast}><DiceIcon size={14} /> Cast</button>
 				<span class="detail-toggle">
 					Prepared
 					<Switch

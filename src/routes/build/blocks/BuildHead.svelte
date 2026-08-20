@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Build page header: title, character-name input, ruleset (5e/5.5e) + enforcement (Strict/Free)
 	// toggles. The `.segment-group` toggles are styled by the shared build.css (confined to .build-page).
+	import Icon from '$lib/components/Icon.svelte';
 	import { build } from '../build-view-model.svelte';
 	import { SYSTEMS } from '$lib/rules/pipeline';
 	const b = build;
@@ -29,12 +30,12 @@
 		<button
 			class:on={b.draft.shortRestMode === 'dice'}
 			onclick={() => (b.draft.shortRestMode = 'dice')}
-			title="Short rest: spend Hit Dice to heal (RAW)">☾ Dice</button
+			title="Short rest: spend Hit Dice to heal (RAW)"><Icon name="moon" size={12} /> Dice</button
 		>
 		<button
 			class:on={b.draft.shortRestMode === 'half'}
 			onclick={() => (b.draft.shortRestMode = 'half')}
-			title="Short rest: heal half your max HP (house/video-game style)">☾ ½ HP</button
+			title="Short rest: heal half your max HP (house/video-game style)"><Icon name="moon" size={12} /> ½ HP</button
 		>
 	</div>
 </div>

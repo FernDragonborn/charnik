@@ -1,6 +1,7 @@
 <script lang="ts">
 	// The six ability tiles (score + mod + saving throw). Tapping a tile rolls a check; tapping the
 	// SAVE row rolls the save. Reads the `combat` view-model; the derived sheet comes in as a prop.
+	import Icon from '$lib/components/Icon.svelte';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, ABIL } from '$lib/combat/helpers';
@@ -13,7 +14,9 @@
 
 <div class="sectlab">
 	<button class="slabtoggle" onclick={() => toggle('abilities')}
-		><span class="chevron">{collapsed.abilities ? '▸' : '▾'}</span>Abilities</button
+		><span class="chevron"
+			><Icon name={collapsed.abilities ? 'chevron-right' : 'chevron-down'} size={13} /></span
+		>Abilities</button
 	><em>tap to roll a check or save</em>
 </div>
 {#if !collapsed.abilities}

@@ -3,6 +3,7 @@
 	// senses/defenses band. Structural stats are read-only; only the title is editable (translate).
 	import type { DetailModel, MonsterModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
+	import DiceIcon from './DiceIcon.svelte';
 	import RollButton from './RollButton.svelte';
 	import EditableTitle from './EditableTitle.svelte';
 
@@ -49,7 +50,7 @@
 					{monster.hp}
 					{#if monster.hpFormula}<span class="dim">{monster.hpFormula}</span>
 						<RollButton formula={monster.hpFormula} label="HP rolled" variant="icon" title="Roll HP"
-							>🎲</RollButton
+							><DiceIcon size={14} /></RollButton
 						>{/if}
 				</span>
 			</div>

@@ -13,10 +13,12 @@ are governed separately.
 
 | Asset | Source | License |
 |-------|--------|---------|
+| The UI icon set, via the `@lucide/svelte` dependency (`src/lib/components/Icon.svelte`) | [Lucide](https://github.com/lucide-icons/lucide) | **ISC** |
 | The damage-type glyphs in `src/lib/components/DamageIcon.svelte` | [Lucide](https://github.com/lucide-icons/lucide) | **ISC** |
 
-The paths are carried inline (one component, not thirteen files); the ISC notice is
-reproduced with Lucide upstream and permits redistribution with attribution.
+The damage-type paths are carried inline (one component, not thirteen files); the rest come from the
+package. The ISC notice is reproduced with Lucide upstream and permits redistribution with
+attribution.
 
 ## Code — MIT
 

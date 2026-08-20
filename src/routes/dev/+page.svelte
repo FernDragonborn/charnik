@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Dev toolbox index (dev-server only — gated by the /dev layout). Small maintenance actions that
 	// don't belong in the shipped UI. Links to the design-preview pages live here too.
+	import Icon from '$lib/components/Icon.svelte';
 	import { toast } from 'svelte-sonner';
 	import { base } from '$app/paths';
 	import { recreateDemoCharacter } from '$lib/character/store.svelte';
@@ -26,7 +27,9 @@
 
 	<section>
 		<h2>Character</h2>
-		<button class="action" onclick={recreateDemo} disabled={busy}>♻ Recreate demo character</button>
+		<button class="action" onclick={recreateDemo} disabled={busy}
+			><Icon name="recycle" size={13} /> Recreate demo character</button
+		>
 		<p class="hint">
 			Overwrites the persisted demo save with a fresh build and makes it active — wipes accumulated
 			demo edits (hidden spells, HP, layout).

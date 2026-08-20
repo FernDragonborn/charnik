@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Generic confirm dialog — the house attention-dialog template (charnik-dialog-design-template),
 	// for a destructive/irreversible action that needs an explicit yes. Shared `.dialog` shell.
+	import Icon from './Icon.svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
 
@@ -34,7 +35,7 @@
 	use:trapFocus
 >
 	<header class="dialog-head">
-		<span class="dialog-badge" class:danger>⚑</span>
+		<span class="dialog-badge" class:danger><Icon name="flag" size={17} /></span>
 		<h2 id="confirm-title" class="dialog-title">{title}</h2>
 		<p class="dialog-subtitle">{message}</p>
 	</header>

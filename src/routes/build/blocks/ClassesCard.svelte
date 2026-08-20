@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Classes & subclass card: one row per class (multiclass adds rows), each with a class picker,
 	// subclass picker (when the class has subclasses) and a level stepper. Total level caps at 20.
+	import Icon from '$lib/components/Icon.svelte';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import { titleCase } from '$lib/util/format';
 	const b = build;
@@ -9,13 +10,13 @@
 <div class="card">
 	<h2>
 		Classes &amp; subclass
-		<button class="add-btn" onclick={() => b.addClass()}>＋ Multiclass</button>
+		<button class="add-btn" onclick={() => b.addClass()}><Icon name="plus" size={13} /> Multiclass</button>
 	</h2>
 	{#each b.draft.classes as cls, i (i)}
 		{@const clsRow = cls.classId ? rowOfType(b.graph?.get(cls.classId), 'class') : undefined}
 		{@const subs = b.subclassesFor(cls.classId)}
 		<div class="class-row">
-			<span class="class-icon">{clsRow ? '✦' : i === 0 ? '＋' : '⌁'}</span>
+			<span class="class-icon"><Icon name={clsRow ? 'sparkles' : i === 0 ? 'plus' : 'circle-dashed'} size={13} /></span>
 			<span class="class-name">
 				<select class="bare" value={cls.classId ?? ''} onchange={(e) => b.setClass(i, e.currentTarget.value || null)}>
 					<option value="">{i === 0 ? 'Choose a class…' : 'Add a class…'}</option>
@@ -34,12 +35,12 @@
 				{/if}
 			</span>
 			<span class="stepper level">
-				<button aria-label="lower level" onclick={() => b.bumpClassLevel(i, -1)}>−</button>
+				<button aria-label="lower level" onclick={() => b.bumpClassLevel(i, -1)}><Icon name="minus" size={12} /></button>
 				<span class="base">{cls.level}</span>
-				<button aria-label="raise level" onclick={() => b.bumpClassLevel(i, 1)}>+</button>
+				<button aria-label="raise level" onclick={() => b.bumpClassLevel(i, 1)}><Icon name="plus" size={12} /></button>
 			</span>
 			{#if i > 0}
-				<button class="remove-btn" title="Remove class" onclick={() => b.removeClass(i)}>✕</button>
+				<button class="remove-btn" title="Remove class" onclick={() => b.removeClass(i)}><Icon name="x" size={12} /></button>
 			{/if}
 		</div>
 	{/each}

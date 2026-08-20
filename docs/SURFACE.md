@@ -93,7 +93,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (64)
+## Global CSS classes (65)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -133,9 +133,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.eyebrow` | components.css |  |
 | `.ghost` | components.css |  |
 | `.htoggle` | components.css |  |
-| `.icon-button` | components.css | --- ghost icon button (remove / close ✕) --- |
+| `.icon-button` | components.css | --- ghost icon button (remove / close) --- |
 | `.icon-toggle` | components.css | --- icon-toggle: square 26×24 icon button that flips on/off (EyeToggle show-on-sheet, Pin quick-bar). |
 | `.loading` | components.css | --- full-view loading / empty state --- |
+| `.lucide` | components.css | --- drawn icons (Icon.svelte / Lucide) — global because the svg belongs to the icon component, so no consumer's scope… |
 | `.meta-key` | GenericHead.svelte :global |  |
 | `.meta-value` | GenericHead.svelte :global |  |
 | `.mobile-blocked` | MobileWarning.svelte :global |  |
@@ -164,13 +165,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (47)
+## Shared components (48)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
 | **ArticleProse** | `bodyMarkdown`, `higherLevel`, `material`, `editable`, `draft` | The shared PROSE of a wiki article: body text (+ optional "at higher levels" and spell material), |
 | **Chip** | `active`, `onclick`, `children` | A filter / tag chip. |
-| **ClassPicker** | `value`, `options`, `onChange` | Multi-select for a spell's `classes` column: tick which EXISTING classes (pulled from the loaded |
+| **ClassPicker** | `value`, `options`, `onChange` |  |
 | **CollisionManager** | — | Collision resolution (collisions.json, PLAN invariant). |
 | **CommandPalette** | — | Ctrl/Cmd+K command + global content search. |
 | **ConfirmDialog** | `title`, `message`, `confirmLabel`, `danger`, `onConfirm`, `onCancel` | Generic confirm dialog — the house attention-dialog template (charnik-dialog-design-template), |
@@ -192,6 +193,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **GeneralSettings** | — | Appearance & language settings: theme, UI locale, and the compendium/search edition filter. |
 | **GenericHead** | `detail`, `editable`, `draft` | The "shapka" for every non-spell, non-monster article (species, class, feat, item, …): eyebrow, |
 | **HashDriftModal** | `items`, `onUpdate`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal for the DATA-DRIFT case (DATA-VER-1): a file's body no longer |
+| **Icon** | `name`, `size`, `fill`, `label` | The app's icon set: Lucide (ISC), one component so a caller writes `<Icon name="x" />` and never |
 | **LangSwitcher** | — | The one canonical language switcher — reused everywhere (topbar, dialogs) so it looks and behaves |
 | **LanguagePicker** | `value`, `locales`, `allowAdd`, `accent` | Searchable language dropdown — one shared control for the translate view's FROM and TO pickers |
 | **Loading** | `message`, `error` | Full-view loading screen shown while the sheet/content is being loaded (the derive can take a |
@@ -201,7 +203,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **NoCharacter** | — | Shared empty state for the play views (Combat / Spellbook) when there's no active character — |
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
 | **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/PLAN.md · REL-4). |
-| **Pin** | `on`, `title`, `onclick` | Pin toggle (d-spellmgr `.ic.pin`): ★ pinned to the quick bar, ☆ not. |
+| **Pin** | `on`, `title`, `onclick` | Pin toggle: a filled star is pinned to the quick bar, an outline one is not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
@@ -1309,4 +1311,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 761 exports across 109 modules · 40 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 761 exports across 109 modules · 40 duplicate suspects._

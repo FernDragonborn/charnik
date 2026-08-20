@@ -2,6 +2,7 @@
 	// Combat toolbar: the play-state toggles (Combat / Shield / Concentration / Inspiration),
 	// the rest buttons, Auto-calc, and the Dice-tray opener. Reads the `combat` view-model
 	// singleton; the non-null character comes in as a prop so the markup stays terse.
+	import Icon from '$lib/components/Icon.svelte';
 	import type { Character } from '$lib/character/schema';
 	import { combat } from '../combat-view-model.svelte';
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
@@ -17,25 +18,28 @@
 		class:on={c.play.inCombat}
 		onclick={combat.toggleCombat}
 		title="Track the action economy (rounds, action/bonus/reaction)"
-		>⚔ Combat <span class="toggle-state">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
+		><Icon name="swords" /> Combat
+		<span class="toggle-state">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
 	>
 	<button
 		class="toggle"
 		class:on={c.play.shieldRaised}
 		onclick={() => (c.play.shieldRaised = !c.play.shieldRaised)}
-		>🛡 Shield <span class="toggle-state">{c.play.shieldRaised ? 'ON' : 'OFF'}</span></button
+		><Icon name="shield" /> Shield
+		<span class="toggle-state">{c.play.shieldRaised ? 'ON' : 'OFF'}</span></button
 	>
 	{#if conc}<button
 			class="toggle concentration on"
 			onclick={combat.clearConcentration}
 			title="Tap to stop concentrating"
-			>◈ Concentration <span class="toggle-state">{conc.label}</span></button
+			><Icon name="target" /> Concentration <span class="toggle-state">{conc.label}</span></button
 		>{/if}
 	<button
 		class="toggle"
 		class:on={c.play.inspiration}
 		onclick={() => (c.play.inspiration = !c.play.inspiration)}
-		>✦ Inspiration <span class="toggle-state">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
+		><Icon name="sparkles" /> Inspiration
+		<span class="toggle-state">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
 	>
 	<span class="spacer"></span>
 	<button
@@ -43,17 +47,18 @@
 		onclick={(e) => combat.startShortRest(e)}
 		title={combat.shortRestMode === 'half'
 			? 'Short rest — heal half your max HP'
-			: 'Short rest — spend Hit Dice to heal'}>☾ Short</button
+			: 'Short rest — spend Hit Dice to heal'}><Icon name="moon" /> Short</button
 	>
 	<button class="toggle rest" onclick={() => combat.resources.rest('long')} title="Long rest"
-		>🌙 Long</button
+		><Icon name="moon" /> Long</button
 	>
 	<button
 		class="toggle auto"
 		class:on={c.play.autoCalc}
 		onclick={() => (c.play.autoCalc = !c.play.autoCalc)}
 		title="Auto-calculate derived stats from effects (off → base values only)"
-		>⚙ Auto-calc <span class="toggle-state">{c.play.autoCalc ? 'ON' : 'OFF'}</span></button
+		><Icon name="settings" /> Auto-calc
+		<span class="toggle-state">{c.play.autoCalc ? 'ON' : 'OFF'}</span></button
 	>
 	<button class="toggle dice" onclick={openDice}><DiceIcon /> Dice tray</button>
 </section>

@@ -5,6 +5,7 @@
 	// data dir (via the Storage seam), so a theme is a portable file you can share / hand-edit — like
 	// the CSV content packs. Built-in dark/light are read-only bases you clone from; the bundled
 	// Dracula/Catppuccin presets are worked examples you can add.
+	import Icon, { type IconName } from '../Icon.svelte';
 	import { toast } from 'svelte-sonner';
 	import { app } from '$lib/stores/app.svelte';
 	import {
@@ -137,9 +138,9 @@
 	// dark/light are the only truly built-in themes (from tokens.css) — always present, not deletable.
 	// The bundled palettes (Dracula/Catppuccin) are seeded as ordinary custom themes, so they live in
 	// the list below with everything else (editable + deletable; the only difference is they ship).
-	const BUILT_INS = [
-		{ id: 'dark', name: '☾ Dark', clean: 'Dark' },
-		{ id: 'light', name: '☀ Light', clean: 'Light' },
+	const BUILT_INS: { id: string; name: string; clean: string; icon: IconName }[] = [
+		{ id: 'dark', name: 'Dark', clean: 'Dark', icon: 'moon' },
+		{ id: 'light', name: 'Light', clean: 'Light', icon: 'sun' },
 	];
 	const SWATCHES = ['color-bg', 'color-surface', 'color-accent', 'color-resource', 'color-good'];
 </script>
@@ -155,7 +156,9 @@
 
 {#if mode.view === 'list'}
 	<div class="themes-toolbar">
-		<button class="btn ghost" onclick={() => fileInput?.click()}>⬆ Import theme…</button>
+		<button class="btn ghost" onclick={() => fileInput?.click()}
+			><Icon name="upload" size={13} /> Import theme…</button
+		>
 		<input
 			bind:this={fileInput}
 			type="file"
@@ -176,7 +179,7 @@
 				onkeydown={(e) => onCardKeydown(e, b.id)}
 			>
 				<div class="theme-pick">
-					<span class="theme-name">{b.name}</span>
+					<span class="theme-name"><Icon name={b.icon} size={13} /> {b.name}</span>
 					<span class="theme-tag eyebrow">built-in</span>
 				</div>
 				<div class="theme-actions">
@@ -245,7 +248,9 @@
 {:else if editing}
 	<!-- editor -->
 	<div class="editor-head">
-		<button class="btn ghost" onclick={() => (mode = { view: 'list' })}>← Back</button>
+		<button class="btn ghost" onclick={() => (mode = { view: 'list' })}
+			><Icon name="arrow-left" size={13} /> Back</button
+		>
 		<input
 			class="text-field name-input"
 			value={editing.name}
@@ -257,7 +262,7 @@
 			class:active={app.theme === editing.id}
 			onclick={() => activate(editing.id)}
 		>
-			{app.theme === editing.id ? '● Active' : 'Activate & preview'}
+			{#if app.theme === editing.id}<Icon name="check" size={13} /> Active{:else}Activate & preview{/if}
 		</button>
 	</div>
 

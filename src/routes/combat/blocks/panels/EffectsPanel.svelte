@@ -3,6 +3,7 @@
 	// mechanical tags, a duration dropdown + remove), then read-only sections for item/feature-derived
 	// contributions, unrecognized tokens, and L3 plugin notes. Owns the duration-menu / info-expand
 	// local state and the per-effect row snippet.
+	import Icon from '$lib/components/Icon.svelte';
 	import ArticleProse from '$lib/components/ArticleProse.svelte';
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
@@ -60,7 +61,7 @@
 				<button
 					class="conc-badge"
 					title="Concentrating — tap to drop"
-					onclick={combat.clearConcentration}>◎ Concentration</button
+					onclick={combat.clearConcentration}><Icon name="target" size={13} /> Concentration</button
 				>
 			{/if}
 			{#each tags as tok (tok)}
@@ -88,12 +89,14 @@
 				class="duration-select"
 				title="Set duration"
 				onclick={(ev) => (durationMenu = { iid: e.iid, anchor: ev.currentTarget })}
-				>{durationLabel(remainingRounds(e, combat.round))} ▾</button
+				>{durationLabel(remainingRounds(e, combat.round))}
+				<Icon name="chevron-down" size={12} /></button
 			>
 			<button
 				class="icon-button effect-remove"
 				title="Remove effect"
-				onclick={() => combat.effects.removeEffect(e.iid)}>✕</button
+				onclick={() => combat.effects.removeEffect(e.iid)}
+				><Icon name="x" size={13} label="Remove effect" /></button
 			>
 		</span>
 	</div>
@@ -222,7 +225,7 @@
 						onclick={(e) => {
 							e.stopPropagation();
 							combat.effects.removeEffect(r.iid);
-						}}>✕</span
+						}}><Icon name="x" size={12} /></span
 					>
 				</button>
 			{/each}
@@ -256,7 +259,7 @@
 		<!-- L3 plugin notes (PLUGINS.md §4.3) — PLAIN TEXT only (PLG-SEC 3), attributed to
 		     the carrying effect · plugin namespace, styled like the display-only rules notes -->
 		<div class="effect-section">
-			<div class="section-head">⚙ Plugin notes</div>
+			<div class="section-head"><Icon name="settings" size={13} /> Plugin notes</div>
 			{#each s.facts.pluginNotes as n, i (i)}
 				<p class="plugin-note"><b>{n.source}</b> — {n.text}</p>
 			{/each}

@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
+	import Icon from '$lib/components/Icon.svelte';
 	import { isDemo } from '$lib/config/demo';
 	import { sanitizeHtml } from '$lib/content/markdown';
 	import { _ } from '$lib/i18n';
@@ -77,14 +78,19 @@
 						<span class="roster-subtitle">
 							{c.classes || 'level ' + c.level}
 							{#if c.system}<span class="sysbadge">{c.system}</span>{/if}
-							{#if c.error}<span class="roster-error">⚠ {c.error}</span>{/if}
+							{#if c.error}<span class="roster-error"
+									><Icon name="triangle-alert" size={13} />
+									{c.error}</span
+								>{/if}
 						</span>
 					</button>
 					<button
 						class="roster-delete"
 						title={$_('roster.delete', { values: { name: c.name } })}
-						onclick={() => removeCharacter(c.id)}>✕</button
+						onclick={() => removeCharacter(c.id)}
 					>
+						<Icon name="x" label={$_('roster.delete', { values: { name: c.name } })} />
+					</button>
 				</li>
 			{/each}
 		</ul>

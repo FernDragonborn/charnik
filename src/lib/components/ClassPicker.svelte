@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from './Icon.svelte';
 	// Multi-select for a spell's `classes` column: tick which EXISTING classes (pulled from the loaded
 	// content) it's available to, and/or add a class that isn't in the CSVs by name. Existing classes are
 	// stored by their id (so they resolve); a custom one is stored by its raw name (it won't resolve by
@@ -56,7 +57,9 @@
 				aria-pressed={has(o.id)}
 				onclick={() => toggle(o.id)}
 			>
-				<span class="box">{has(o.id) ? '✓' : ''}</span>{o.name}
+				<span class="box"
+					>{#if has(o.id)}<Icon name="check" size={12} />{/if}</span
+				>{o.name}
 			</button>
 		{/each}
 	</div>
@@ -67,7 +70,7 @@
 				<span class="custom-chip">
 					{t}
 					<button type="button" class="rm" aria-label="Remove {t}" onclick={() => removeToken(t)}
-						>×</button
+						><Icon name="x" size={11} /></button
 					>
 				</span>
 			{/each}

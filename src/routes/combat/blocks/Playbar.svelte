@@ -11,6 +11,8 @@
 	// The row is NOT wrapped in a button: the log cue is its own control. That keeps the roll's own
 	// pills free to become controls (UX-3's retroactive advantage) without nesting a button in a
 	// button — the constraint that shaped the toast.
+	import Icon from '$lib/components/Icon.svelte';
+	import DiceIcon from '$lib/components/DiceIcon.svelte';
 	import { combat } from '../combat-view-model.svelte';
 	import { rollToastModel, ROLL_LAYOUT } from '$lib/dice/roll-toast';
 	import RollRow from '$lib/components/RollRow.svelte';
@@ -27,7 +29,7 @@
 			? {
 					attack: 0,
 					part: 0,
-					label: `↻ ${combat.savageLabel} — reroll damage, keep the higher`,
+					label: `${combat.savageLabel} — reroll damage, keep the higher`,
 					run: combat.savageReroll,
 				}
 			: undefined,
@@ -47,7 +49,7 @@
 			<span class="no-roll">Tap any check · save · attack · spell to roll it.</span>
 		{/if}
 		<button class="log-cue" onclick={(e) => openMenu('log', e)} title="Roll log · history"
-			>🎲 log ▸</button
+			><DiceIcon size={15} /> log <Icon name="chevron-right" size={12} /></button
 		>
 	</div>
 </div>

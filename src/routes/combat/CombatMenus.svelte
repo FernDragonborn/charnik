@@ -2,6 +2,7 @@
 	// Anchored dropdown menus dispatcher (temp HP, level-up, add-effect, custom-effect, show/hide,
 	// pin-skills, spellbook, condition). The heavier dice-tray + roll-log bodies are their own
 	// components under menus/. Reads the shared `combat` view-model.
+	import Icon from '$lib/components/Icon.svelte';
 	import { combat } from './combat-view-model.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import DiceTray from './menus/DiceTray.svelte';
@@ -81,7 +82,9 @@
 			</p>
 		{:else if overlay.kind === 'addeffect'}
 			<div class="search">
-				<span class="search-icon">🔍</span><input placeholder="Search effects…" />
+				<span class="search-icon"><Icon name="search" size={13} /></span><input
+					placeholder="Search effects…"
+				/>
 			</div>
 			<div class="section eyebrow">Duration · applied to what you add</div>
 			<div class="dur-picker">
@@ -89,7 +92,7 @@
 					class="pill-btn"
 					onclick={() =>
 						(combat.effects.newEffectDuration = Math.max(0, combat.effects.newEffectDuration - 1))}
-					>−</button
+					><Icon name="minus" size={12} label="One round fewer" /></button
 				>
 				<input
 					class="modifier-amount"
@@ -102,12 +105,15 @@
 				<span class="dur-val"
 					>{combat.effects.newEffectDuration > 0 ? 'rds' : 'until removed (∞)'}</span
 				>
-				<button class="pill-btn" onclick={() => (combat.effects.newEffectDuration += 1)}>＋</button>
+				<button class="pill-btn" onclick={() => (combat.effects.newEffectDuration += 1)}
+					><Icon name="plus" size={12} label="One round more" /></button
+				>
 				<button
 					class="pill-btn"
 					class:on={combat.effects.newEffectDuration === 0}
 					title="Lasts until you remove it"
-					onclick={() => (combat.effects.newEffectDuration = 0)}>∞</button
+					onclick={() => (combat.effects.newEffectDuration = 0)}
+					><Icon name="infinity" size={13} label="Until removed" /></button
 				>
 			</div>
 			<div class="section eyebrow">Catalog</div>
@@ -125,7 +131,9 @@
 						})}
 				>
 					<span class="main"
-						><span class="effect-icon" class:negative={p.negative}>＋</span>{p.label}</span
+						><span class="effect-icon" class:negative={p.negative}
+							><Icon name="plus" size={11} /></span
+						>{p.label}</span
 					><span class="durpill">{dur > 0 ? `${dur} rds` : '∞'}</span>
 				</button>
 			{/each}
@@ -134,9 +142,10 @@
 				class="menu-row"
 				onclick={() => combat.overlay && (combat.overlay = { ...overlay, kind: 'customeffect' })}
 			>
-				<span class="main"><span class="effect-icon">✎</span><b>Custom effect…</b></span><span
-					class="meta">text + manual mod</span
-				>
+				<span class="main"
+					><span class="effect-icon"><Icon name="pencil" size={11} /></span><b>Custom effect…</b
+					></span
+				><span class="meta">text + manual mod</span>
 			</button>
 		{:else if overlay.kind === 'customeffect'}
 			<div class="menu-panel">
@@ -174,7 +183,7 @@
 							(combat.effects.newEffectDuration = Math.max(
 								0,
 								combat.effects.newEffectDuration - 1,
-							))}>−</button
+							))}><Icon name="minus" size={12} label="One round fewer" /></button
 					>
 					<span class="dur-picker-val"
 						>{combat.effects.newEffectDuration > 0
@@ -182,13 +191,14 @@
 							: '∞ until removed'}</span
 					>
 					<button class="dur-step" onclick={() => (combat.effects.newEffectDuration += 1)}
-						>＋</button
+						><Icon name="plus" size={12} label="One round more" /></button
 					>
 					<button
 						class="dur-inf"
 						class:on={combat.effects.newEffectDuration === 0}
 						title="Lasts until you remove it"
-						onclick={() => (combat.effects.newEffectDuration = 0)}>∞</button
+						onclick={() => (combat.effects.newEffectDuration = 0)}
+						><Icon name="infinity" size={13} label="Until removed" /></button
 					>
 				</div>
 				<div class="field">
@@ -206,7 +216,7 @@
 		{:else if overlay.kind === 'showhide'}
 			<div class="popup-heading eyebrow">
 				Which actions appear<button class="icon-button" onclick={() => (combat.overlay = null)}
-					>✕</button
+					><Icon name="x" size={13} label="Close" /></button
 				>
 			</div>
 			{#each actions as a (a.id)}
@@ -220,9 +230,9 @@
 			{/each}
 		{:else if overlay.kind === 'pinskills'}
 			<div class="popup-heading eyebrow">
-				Passive senses · 👁 = shown<button
+				Passive senses · <EyeIcon on={true} /> = shown<button
 					class="icon-button"
-					onclick={() => (combat.overlay = null)}>✕</button
+					onclick={() => (combat.overlay = null)}><Icon name="x" size={13} label="Close" /></button
 				>
 			</div>
 			<div class="pin-wrap">
@@ -267,13 +277,15 @@
 							<button
 								class="pill-btn"
 								disabled={(combat.hdPick[h.die] ?? 0) <= 0}
-								onclick={() => combat.hdPickInc(h.die, -1)}>−</button
+								onclick={() => combat.hdPickInc(h.die, -1)}
+								><Icon name="minus" size={12} label="One die fewer" /></button
 							>
 							<span class="hitdice-pick">{combat.hdPick[h.die] ?? 0}</span>
 							<button
 								class="pill-btn"
 								disabled={(combat.hdPick[h.die] ?? 0) >= h.left}
-								onclick={() => combat.hdPickInc(h.die, 1)}>＋</button
+								onclick={() => combat.hdPickInc(h.die, 1)}
+								><Icon name="plus" size={12} label="One die more" /></button
 							>
 						</div>
 					</div>
@@ -298,7 +310,9 @@
 			{/if}
 		{:else if overlay.kind === 'manage'}
 			<div class="popup-heading eyebrow">
-				Spellbook<button class="icon-button" onclick={() => (combat.overlay = null)}>✕</button>
+				Spellbook<button class="icon-button" onclick={() => (combat.overlay = null)}
+					><Icon name="x" size={13} label="Close" /></button
+				>
 			</div>
 			<p class="note" style="padding: 11px 13px">
 				Full spellbook manager arrives with the spell-manager view (d-spellmgr).
@@ -306,7 +320,7 @@
 		{:else if overlay.kind === 'condition'}
 			<div class="popup-heading eyebrow">
 				Conditions · multi-select<button class="icon-button" onclick={() => (combat.overlay = null)}
-					>✕</button
+					><Icon name="x" size={13} label="Close" /></button
 				>
 			</div>
 			{#each conditionList as cn (cn.id)}

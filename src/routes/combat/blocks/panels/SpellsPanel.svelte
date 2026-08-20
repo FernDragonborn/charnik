@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Spells panel body: per-class cast line (save DC / attack), an armor-block warning, then spell
 	// groups with slot pips and rows (prepare toggle, pin, ritual-cast badge, cast on click).
+	import Icon from '$lib/components/Icon.svelte';
 	import { toast } from 'svelte-sonner';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../combat-view-model.svelte';
@@ -28,7 +29,8 @@
 	</div>
 	{#if combat.armorBlock}
 		<div class="armor-block" title={combat.armorBlock.note}>
-			⚠ Spellcasting blocked — not proficient with {combat.armorBlock.source}
+			<Icon name="triangle-alert" size={13} /> Spellcasting blocked — not proficient with {combat
+				.armorBlock.source}
 		</div>
 	{/if}
 	<div class="spell-rows">
@@ -77,7 +79,8 @@
 										e.stopPropagation();
 										combat.togglePin(r.id);
 									}
-								}}>{pinned[r.id] ? '★' : '☆'}</span
+								}}
+								><Icon name="star" size={13} fill={pinned[r.id] ? 'currentColor' : 'none'} /></span
 							>
 							{#if r.ritual && s.spellcasting.ritualCasting}
 								<!-- ritual cast: no spell slot (A17). Only shown when the character HAS ritual casting
@@ -107,7 +110,11 @@
 										toast(
 											`Casting time: ${r.castTimeIcon === 'react' ? 'reaction' : 'bonus action'}`,
 										);
-									}}>{r.castTimeIcon === 'react' ? '↩' : '⚡'}</i
+									}}
+									><Icon
+										name={r.castTimeIcon === 'react' ? 'corner-down-left' : 'zap'}
+										size={12}
+									/></i
 								>{/if}{#if r.level > 0 && combat.castableSlots(r).length > 1}<!-- upcast picker: a leveled spell with >1 open slot level can be cast higher (item 1) --><!-- svelte-ignore a11y_click_events_have_key_events --><span
 									class="upcast-btn"
 									role="button"
@@ -116,7 +123,7 @@
 									onclick={(e) => {
 										e.stopPropagation();
 										combat.openUpcast(r, e);
-									}}>⇡</span
+									}}><Icon name="arrow-up" size={12} /></span
 								>{/if}{r.levelTag}</span
 						>
 					</button>
@@ -345,7 +352,7 @@
 		border-radius: 50%;
 	}
 	/* hover = a FILLED disc behind the star (bg + halo of the same colour, so it's a solid circle, not
-	   a donut). The glyph itself never changes colour — a pinned ★ stays gold, an unpinned ☆ stays
+	   a donut). The icon itself never changes colour — a pinned (filled) star stays gold, an unpinned one stays
 	   dim — only the disc appears behind it. */
 	.pin-star:hover {
 		background: var(--color-border);

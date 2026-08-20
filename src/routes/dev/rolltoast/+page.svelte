@@ -31,7 +31,7 @@
 	const rerollDamage = {
 		attack: 0,
 		part: 0,
-		label: '↻ Savage Attacker — reroll damage, keep the higher',
+		label: 'Savage Attacker — reroll damage, keep the higher',
 		run: () => toast('(preview) the damage reroll ran'),
 	};
 
@@ -169,7 +169,8 @@
 		<div class="cap">
 			the SAME row mounted with controls — how the Playbar and the log show it. The toast above
 			never gets these: it expires mid-decision, so it announces and these two control. Tap the d20
-			to apply advantage after the fact; tap the ↻ damage pill to reroll it.
+			to apply advantage after the fact; tap the damage pill marked with the reroll icon to reroll
+			it.
 		</div>
 		<div class="slot live">
 			<RollRow model={rollToastModel(live)} {onAdvantage} {rerollDamage} />

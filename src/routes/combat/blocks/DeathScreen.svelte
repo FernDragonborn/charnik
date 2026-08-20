@@ -16,7 +16,7 @@
 	titleId="death-title"
 	title="You have died"
 	subtitle={DEATH_CAUSE_LABEL[cause]}
-	badge="💀"
+	badge="skull"
 	width="min(460px, calc(100vw - 2 * var(--space-4)))"
 >
 	<div class="body">

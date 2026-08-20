@@ -1,6 +1,7 @@
 <script lang="ts">
 	// The dice tray / roll builder (overlay.kind === 'dice'). Reads the shared combat view-model's
 	// roll subsystem (combat.tray). Split out of CombatMenus.svelte.
+	import Icon from '$lib/components/Icon.svelte';
 	import { combat } from '../combat-view-model.svelte';
 	import { DICE } from '$lib/combat/helpers';
 	import { signed } from '$lib/util/format';
@@ -21,8 +22,10 @@
 	<div class="pool">
 		{#each Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0])) as [s, c] (s)}
 			<div class="pool-chip">
-				<button onclick={() => bumpDie(Number(s), -1)}>−</button><b>{c}</b>×d{s}<button
-					onclick={() => bumpDie(Number(s), 1)}>+</button
+				<button onclick={() => bumpDie(Number(s), -1)} aria-label="One die fewer"
+					><Icon name="minus" size={12} /></button
+				><b>{c}</b>×d{s}<button onclick={() => bumpDie(Number(s), 1)} aria-label="One die more"
+					><Icon name="plus" size={12} /></button
 				>
 			</div>
 		{/each}
@@ -50,8 +53,13 @@
 	</div>
 	<div class="roll-mod-row">
 		<div class="roll-mod">
-			<button onclick={() => (combat.tray.rollMod -= 1)}>−</button> mod {signed(rollMod)}
-			<button onclick={() => (combat.tray.rollMod += 1)}>+</button>
+			<button onclick={() => (combat.tray.rollMod -= 1)} aria-label="Lower the modifier"
+				><Icon name="minus" size={12} /></button
+			>
+			mod {signed(rollMod)}
+			<button onclick={() => (combat.tray.rollMod += 1)} aria-label="Raise the modifier"
+				><Icon name="plus" size={12} /></button
+			>
 		</div>
 		<button class="roll-button" onclick={doRoll}>Roll {rollExpr}</button>
 	</div>

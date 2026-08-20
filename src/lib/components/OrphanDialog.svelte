@@ -1,9 +1,10 @@
 <script lang="ts">
+	import Icon from './Icon.svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
 	// Orphan-draft reassign dialog — fires when the draft cache is read and a draft's target row no longer
 	// exists (deleted / renamed / source disabled). The house attention-dialog template
-	// (charnik-dialog-design-template): ⚑ badge header, "N of M" step-through, two-pane body (your draft
+	// (charnik-dialog-design-template): flag-badge header, "N of M" step-through, two-pane body (your draft
 	// prose on the left, a searchable reassign picker + live preview on the right), footer = Delete · Skip
 	// · Keep-as-new · Reassign. Reassign RE-POINTS the draft (writes it under the new target); nothing is
 	// written to content until the user later resumes + saves. If the chosen entry already has a draft it's
@@ -154,7 +155,7 @@
 	use:trapFocus
 >
 	<header class="dialog-head">
-		<span class="dialog-badge warn">⚑</span>
+		<span class="dialog-badge warn"><Icon name="flag" size={17} /></span>
 		<h2 id="orphan-title" class="dialog-title">
 			Orphaned draft{#if total > 1}<span class="count-pill">{index + 1} of {total}</span>{/if}
 		</h2>
@@ -184,7 +185,9 @@
 					<button class="btn" onclick={keepExisting}>Keep the existing one</button>
 				</div>
 			</div>
-			<button class="btn ghost cf-back" onclick={() => (conflict = null)}>← Back</button>
+			<button class="btn ghost cf-back" onclick={() => (conflict = null)}
+				><Icon name="arrow-left" size={13} /> Back</button
+			>
 		</div>
 	{:else}
 		<div class="panes">

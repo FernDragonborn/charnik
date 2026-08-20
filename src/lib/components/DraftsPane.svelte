@@ -1,10 +1,11 @@
 <script lang="ts">
 	// Pending-drafts list — the full-width pane that replaces the editing block in the compendium right
-	// column (opened from the "✎ Edit compendium" → Drafts entry). Lists EVERY unsaved draft (translate /
+	// column (opened from the "Edit compendium" → Drafts entry). Lists EVERY unsaved draft (translate /
 	// add / editor), grouped, each resumable or deletable. Orphans (a draft whose target row is gone) sit
 	// up top with a Resolve action that opens the reassign dialog. Presentation + local list state only;
 	// the draft IO lives in $lib/drafts/store (thin-component rule).
 	import { onMount } from 'svelte';
+	import Icon, { type IconName } from './Icon.svelte';
 	import { getUserStorage } from '$lib/storage/provider';
 	import { listDrafts, deleteDraft, draftEffectiveId, type DraftEnvelope } from '$lib/drafts/store';
 	import type { ContentGraph } from '$lib/content/loader';
@@ -25,7 +26,7 @@
 	interface DraftRow {
 		env: DraftEnvelope;
 		kind: 'translate' | 'add' | 'editor';
-		icon: string;
+		icon: IconName;
 		title: string;
 		fragment: string;
 		typeLabel: string;
@@ -45,7 +46,11 @@
 	}
 	onMount(reload);
 
-	const ICON = { translate: '⇄', add: '＋', editor: '✎' } as const;
+	const ICON = {
+		translate: 'arrow-left-right',
+		add: 'plus',
+		editor: 'pencil',
+	} as const satisfies Record<string, IconName>;
 
 	function ago(iso: string): string {
 		const min = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
@@ -118,7 +123,7 @@
 			<div class="dp-group-label eyebrow">{label}</div>
 			{#each items as r (r.env.target)}
 				<div class="draft" class:is-orphan={r.isOrphan}>
-					<div class="dkind {r.kind}">{r.icon}</div>
+					<div class="dkind {r.kind}"><Icon name={r.icon} size={13} /></div>
 					<div class="dmeta">
 						<div class="dtitle">{r.title} <span class="frag">{r.fragment}</span></div>
 						<div class="dsub">
@@ -147,7 +152,7 @@
 		{/if}
 	{/snippet}
 
-	{@render group('⚑ Needs attention', orphanRows, true)}
+	{@render group('Needs attention', orphanRows, true)}
 	{@render group('Translations', translateRows, false)}
 	{@render group('New entries', addRows, false)}
 	{@render group('Editor', editorRows, false)}

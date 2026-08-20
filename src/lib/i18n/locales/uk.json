@@ -176,7 +176,7 @@
 		"restoreDemo": "Відновити демо-персонажа"
 	},
 	"feedback": {
-		"link": "🐞 Знайшли помилку?",
+		"link": "Знайшли помилку?",
 		"title": "Повідомити про помилку або лишити відгук на GitHub",
 		"diag": {
 			"title": "Повідомити про помилку",
@@ -306,7 +306,7 @@
 		"editInPlaceNote": "Редагування вашого homebrew-запису на місці.",
 		"targetLabel": "Зберегти у файл",
 		"targetHomebrew": "Мій хоумбрю (рекомендовано)",
-		"targetNewFile": "＋ Новий файл…",
+		"targetNewFile": "Новий файл…",
 		"targetShippedTag": "у складі програми",
 		"newFilePlaceholder": "назва",
 		"srdWarnTitle": "Цей файл входить до складу Charnik",

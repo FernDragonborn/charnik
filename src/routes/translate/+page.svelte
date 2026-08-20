@@ -5,6 +5,7 @@
 	// locales are chosen freely via two dropdowns above the panes + persisted across re-entries. Saves
 	// write the localized columns into the row's own CSV + re-stamp its hash (see content/translate.ts).
 	// Reuses EntryList + WikiDetail + the shared list helpers — only the shell is new.
+	import Icon, { type IconName } from '$lib/components/Icon.svelte';
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -216,13 +217,13 @@
 		}
 	}
 
-	// list-marker glyph per tracked status. Extension recipe: a new LOC_STATUS member needs a glyph here
+	// list-marker icon per tracked status. Extension recipe: a new LOC_STATUS member needs an icon here
 	// + a `translate.status.<x>` i18n key; colour comes from the `.loc-mark.<status>` class.
-	const LOC_MARK: Record<LocStatus, string> = {
-		[LOC_STATUS.notStarted]: '○',
-		[LOC_STATUS.machine]: '⚙',
-		[LOC_STATUS.started]: '◐',
-		[LOC_STATUS.reviewed]: '✓',
+	const LOC_MARK: Record<LocStatus, IconName> = {
+		[LOC_STATUS.notStarted]: 'circle',
+		[LOC_STATUS.machine]: 'bot',
+		[LOC_STATUS.started]: 'circle-dot',
+		[LOC_STATUS.reviewed]: 'check',
 	};
 
 	// set the tracked status for the selected row + target locale, then reload + re-point `selected` at
@@ -250,7 +251,7 @@
 	<div class="page">
 		<div class="subbar">
 			<button class="pill-btn accent" onclick={() => goto(`${base}/compendium`)}>
-				← Back to compendium
+				<Icon name="arrow-left" size={13} /> Back to compendium
 			</button>
 			<span class="sep"></span>
 			<select class="type-sel" bind:value={selectedType}>
@@ -269,7 +270,9 @@
 			>
 				{#snippet leading(e)}
 					{@const st = locStatus(e.row.data, e.row.sourceLang, targetLocale)}
-					<span class="loc-mark {st}" title={$_(`translate.status.${st}`)}>{LOC_MARK[st]}</span>
+					<span class="loc-mark {st}" title={$_(`translate.status.${st}`)}
+						><Icon name={LOC_MARK[st]} size={12} /></span
+					>
 				{/snippet}
 			</EntryList>
 

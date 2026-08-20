@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Review & create bar: a live snapshot of the derived sheet (AC / HP / init / speed / prof /
 	// spell DC), blocking issues, missing-content flags, and the create/save action.
+	import Icon from '$lib/components/Icon.svelte';
 	import { build } from '../build-view-model.svelte';
 	import { signed } from '$lib/util/format';
 
@@ -35,7 +36,8 @@
 				<p class="subtext warn">Missing content: {b.sheet.missing.join(', ')}</p>
 			{/if}
 			<button class="create wide" disabled={!b.canCreate || b.saving} onclick={create}>
-				{b.saving ? 'Saving…' : b.edit ? '✦ Save changes' : '✦ Create character'}
+				{#if b.saving}Saving…{:else}<Icon name="sparkles" size={13} />
+					{b.edit ? 'Save changes' : 'Create character'}{/if}
 			</button>
 		</div>
 	</div>

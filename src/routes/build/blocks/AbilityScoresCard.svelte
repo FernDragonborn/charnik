@@ -2,6 +2,7 @@
 	// Ability scores card: stat-generation method (point buy / standard array / manual), the six
 	// ability rows with live totals + provenance, and the ability-boost allocator (5.5e background
 	// choice or the 5e species free-choice ASI).
+	import Icon from '$lib/components/Icon.svelte';
 	import { build, rowName } from '../build-view-model.svelte';
 	import { ABILITIES } from '$lib/character/schema';
 	import { signed } from '$lib/util/format';
@@ -38,9 +39,9 @@
 				</select>
 			{:else}
 				<span class="stepper">
-					<button aria-label="lower {ab}" onclick={() => b.abilities.bumpAbility(ab, -1)}>−</button>
+					<button aria-label="lower {ab}" onclick={() => b.abilities.bumpAbility(ab, -1)}><Icon name="minus" size={12} /></button>
 					<span class="base">{b.draft.abilities[ab]}</span>
-					<button aria-label="raise {ab}" onclick={() => b.abilities.bumpAbility(ab, 1)}>+</button>
+					<button aria-label="raise {ab}" onclick={() => b.abilities.bumpAbility(ab, 1)}><Icon name="plus" size={12} /></button>
 				</span>
 			{/if}
 			<span class="bonus">{b.abilityNote(ab)}</span>

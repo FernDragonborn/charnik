@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Inventory / starting-equipment card (creation only — managed in the play view afterwards):
 	// add items, adjust qty, equip armor/shield/weapon, remove.
+	import Icon from '$lib/components/Icon.svelte';
 	import { build, rowName } from '../build-view-model.svelte';
 	const b = build;
 </script>
@@ -26,9 +27,9 @@
 				<div class="inventory-row">
 					<span class="invname">{rowName(b.graph?.get(it.item))}</span>
 					<span class="inventory-qty">
-						<button onclick={() => b.bumpItemQty(it.item, -1)} aria-label="Fewer">−</button>
+						<button onclick={() => b.bumpItemQty(it.item, -1)} aria-label="Fewer"><Icon name="minus" size={12} /></button>
 						<b>{it.qty}</b>
-						<button onclick={() => b.bumpItemQty(it.item, 1)} aria-label="More">+</button>
+						<button onclick={() => b.bumpItemQty(it.item, 1)} aria-label="More"><Icon name="plus" size={12} /></button>
 					</span>
 					{#if b.itemEquippable(it.item)}
 						<button
@@ -41,7 +42,7 @@
 					<button
 						class="icon-button"
 						onclick={() => b.removeInventoryItem(it.item)}
-						aria-label="Remove">✕</button
+						aria-label="Remove"><Icon name="x" size={12} /></button
 					>
 				</div>
 			{/each}

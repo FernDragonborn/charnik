@@ -1,7 +1,9 @@
 <script lang="ts">
-	// Anchored dropdown for an effect's duration: a −/＋ stepper row on top, then the common-duration
-	// presets and a Custom… exact-rounds input. Opens beside/below the `N rds ▾` control, clamped to
-	// the viewport, and closes on backdrop click. Writes through the combat view-model.
+	// Anchored dropdown for an effect's duration: a minus/plus stepper row on top, then the
+	// common-duration presets and a Custom… exact-rounds input. Opens beside/below the effect's
+	// remaining-rounds control, clamped to the viewport, and closes on backdrop click. Writes through
+	// the combat view-model.
+	import Icon from '$lib/components/Icon.svelte';
 	import { combat } from '../combat-view-model.svelte';
 	import { EFFECT_DURATION_PRESETS } from '$lib/combat/helpers';
 
@@ -56,8 +58,14 @@
 	style="top:{pos.top}px; left:{pos.left}px"
 >
 	<div class="dur-step-row">
-		<button type="button" onclick={() => combat.effects.bumpEffectDuration(iid, -1)}>−</button>
-		<button type="button" onclick={() => combat.effects.bumpEffectDuration(iid, 1)}>＋</button>
+		<button
+			type="button"
+			onclick={() => combat.effects.bumpEffectDuration(iid, -1)}
+			aria-label="One round fewer"><Icon name="minus" size={12} /></button
+		>
+		<button type="button" onclick={() => combat.effects.bumpEffectDuration(iid, 1)}
+			><Icon name="plus" size={12} label="Add a round" /></button
+		>
 	</div>
 	{#each EFFECT_DURATION_PRESETS as p (p.label)}
 		<button

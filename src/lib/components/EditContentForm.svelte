@@ -3,6 +3,7 @@
 	// WikiDetail (eyebrow · title · meta grid · body) so adding content feels like editing the
 	// page you were just reading. Binds a flat draft, validates + writes via the homebrew pipeline
 	// (schema-checked, UTF-8-BOM/CRLF, atomic), then hands the new id back to the caller.
+	import Icon from './Icon.svelte';
 	import { onMount } from 'svelte';
 	import { getUserStorage } from '$lib/storage/provider';
 	import { resetContentGraph } from '$lib/content/provider';
@@ -334,7 +335,7 @@
 						<input type="text" bind:value={draft[f.name]} />
 					{/if}
 					{#if f.name === 'level' && levelWarning}
-						<span class="cell-warn">⚠ {levelWarning}</span>
+						<span class="cell-warn"><Icon name="triangle-alert" size={12} /> {levelWarning}</span>
 					{/if}
 				</label>
 			{/each}
@@ -413,7 +414,7 @@
 
 		{#if targetShipped}
 			<div class="shipped-warn">
-				<b>⚠ {$_('homebrewForm.srdWarnTitle')}</b>
+				<b><Icon name="triangle-alert" size={13} /> {$_('homebrewForm.srdWarnTitle')}</b>
 				<p>{$_('homebrewForm.srdWarnBody')}</p>
 				<button type="button" class="btn primary" onclick={() => (sel = homebrewFile(type))}
 					>{$_('homebrewForm.srdWarnAction')}</button

@@ -1,7 +1,7 @@
 <script lang="ts">
 	// The one shared roll affordance. Plain click = instant roll + toast; ctrl/alt-click = open the
 	// dice tray (via the openDiceTray CONTRACT, not a concrete tray) prefilled with the same formula.
-	// Every 🎲 in the app routes through here, so the modifier convention + the tray hook live in one
+	// Every dice roll in the app routes through here, so the modifier convention + the tray hook live in one
 	// place. Content (the label/emoji) is the caller's; `variant` picks the look.
 	import type { Snippet } from 'svelte';
 	import { rollFormula } from '$lib/rules/dice';

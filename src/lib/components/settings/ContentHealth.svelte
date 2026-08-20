@@ -5,6 +5,7 @@
 	// already computes everything (graph.issues / metaIssues / driftItems), this just presents it.
 	// Two effect-token layers merge in (SPEC10): static authoring lint over every loaded row's
 	// tokens, and the OPEN character's derive-time issues published by the combat page.
+	import Icon from '../Icon.svelte';
 	import { content } from '$lib/content/store.svelte';
 	import { deriveHealth } from '$lib/character/health.svelte';
 	import { lintEffectTokens } from '$lib/effects/apply';
@@ -77,7 +78,9 @@
 	{#if !graph}
 		<p class="muted">Loading…</p>
 	{:else if total === 0}
-		<div class="all-clear">✓ All loaded content is healthy — no problems found.</div>
+		<div class="all-clear">
+			<Icon name="check" size={13} /> All loaded content is healthy — no problems found.
+		</div>
 	{:else}
 		<div class="counts">
 			<span class="count err" class:zero={errors.length === 0}>{errors.length} errors</span>

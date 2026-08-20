@@ -1,5 +1,7 @@
 <script lang="ts">
-	// Pin toggle (d-spellmgr `.ic.pin`): ★ pinned to the quick bar, ☆ not.
+	// Pin toggle: a filled star is pinned to the quick bar, an outline one is not.
+	import Icon from './Icon.svelte';
+
 	let {
 		on = false,
 		title,
@@ -8,12 +10,12 @@
 </script>
 
 <button class="icon-toggle pin" class:on type="button" {title} aria-pressed={on} {onclick}>
-	{on ? '★' : '☆'}
+	<Icon name="star" size={13} fill={on ? 'currentColor' : 'none'} />
 </button>
 
 <style>
-	/* base .icon-toggle is global (components.css); the ★/☆ glyph needs a font-size and the pinned
-	   state uses the crimson accent — both local to Pin */
+	/* base .icon-toggle is global (components.css); the pinned state uses the crimson accent, local
+	   to Pin */
 	.icon-toggle {
 		font-size: var(--font-size-sm);
 	}

@@ -3,6 +3,7 @@
 	// anything seeds to disk. Defaults to a visible ~/Documents/charnik; the user can point it at any
 	// folder. Presentation only — the folder picker + fs-scope grant are injected so this previews in a
 	// plain browser (see /dev/firstrun) and the Tauri wiring stays out of the component.
+	import Icon from './Icon.svelte';
 	import { untrack } from 'svelte';
 	import { _ } from '$lib/i18n';
 	import { trapFocus } from '$lib/actions/trapFocus';
@@ -53,7 +54,7 @@
 >
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>
-		<span class="dialog-badge">📁</span>
+		<span class="dialog-badge"><Icon name="folder" size={17} /></span>
 		<h2 id="fr-title" class="dialog-title">{$_('firstRun.title')}</h2>
 		<p class="dialog-subtitle">{$_('firstRun.subtitle')}</p>
 	</header>

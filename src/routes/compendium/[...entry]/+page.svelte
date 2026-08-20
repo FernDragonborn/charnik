@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Compendium — the same two-pane shape as the Spellbook (d-spellmgr), read-only: a grouped
 	// list of every content row + the wiki detail from its CSV. Reuses EntryList + WikiDetail.
+	import Icon from '$lib/components/Icon.svelte';
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -426,11 +427,12 @@
 
 			{#if inMode}
 				<button class="back-to-browse pill-btn accent" onclick={exitMode}
-					>← Back to compendium</button
+					><Icon name="arrow-left" size={13} /> Back to compendium</button
 				>
 			{:else}
 				<details class="mode-picker" bind:open={pickerOpen} use:autoClose>
-					<summary class="pill-btn accent">✎ Edit compendium</summary>
+					<summary class="pill-btn accent"><Icon name="pencil" size={13} /> Edit compendium</summary
+					>
 					<!-- One entry for all content-authoring modes; each opens in the right pane. Editor edits
 				     the currently-selected entry (a shipped row forks to homebrew on save). -->
 					<div class="mode-menu">

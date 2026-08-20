@@ -1354,8 +1354,27 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [x] **UBUG-17 · Action/Bonus/Reaction pips look interactive, and all of them are** — every pill
   in that bar signals it the same way (hover + pointer + the global focus ring).
 - [x] **UBUG-18 · Abilities block used a different background** than the panels around it.
-- [ ] **UBUG-19 · Icons are DRAWN, never typed — replace every font glyph doing an icon's job
-  (2026-08-09; scope and rationale corrected 2026-08-10).** It was filed as "three emoji to swap": the
+- [x] **UBUG-19 · Icons are DRAWN, never typed — DONE 2026-08-21.** Every font glyph doing an icon's
+  job across the app is now an SVG. **What shipped:** `src/lib/components/Icon.svelte` — one component
+  over Lucide (ISC, `@lucide/svelte`), `<Icon name="x" size={13} />`, keys spelled exactly as Lucide
+  spells them so an icon is findable without a translation table. A DEP rather than hand-copied path
+  data on purpose: ~40 glyphs of path data transcribed by hand is 40 chances to draw something subtly
+  wrong, and the package is the same art the existing `DamageIcon` already borrowed. `DamageIcon` and
+  `EyeIcon` stay hand-drawn — a d20-with-a-d4 and an open/closed eye pair that no icon set has.
+  **Beyond the census:** a glyph inside an i18n string (`🐞 Found a bug?`) or a status map
+  (`translate`'s `○ ⚙ ◐ ✓`, `DraftsPane`'s `⇄ ＋ ✎`, the theme pickers' `☾ ☀`) can't hold a component,
+  so those became `IconName` values with the glyph out of the string — worth knowing, because it means
+  **a locale catalog no longer carries UI iconography** and a translator can't break the icon.
+  `DialogShell`'s `badge` prop went from a glyph string to an `IconName` for the same reason.
+  **A11y:** an icon-only button used to have the glyph as its accessible name, so `Icon` takes an
+  optional `label` (sets `aria-label` + `role="img"`; unset → Lucide's `aria-hidden`, right for
+  decoration) and every icon-only control now names itself.
+  **Left as text on purpose (the rule below):** `−`, `×`, `∞`, `½` INSIDE a sentence or a value
+  (`Expertise (×2)`, `12 (2d6 + 5)`, `d6(1↻5)` in a roll breakdown) — text set at text size. The
+  stepper `−`/`+` PAIRS did become icons: half a pair as an icon and half as text is worse than
+  either. The roll card's advantage cues stay CSS geometry.
+  Gate: svelte-check 0, 1324 tests, `shot.mjs` 20/20 re-baselined after eyeballing every state.
+  _(Original filing + rationale, kept because it is the WHY:)_ It was filed as "three emoji to swap": the
   speed/movement field, the lightning by Bonus Action, the bug on the report button. A census says
   otherwise — roughly a hundred glyph-as-icon uses across `src/**/*.svelte`, led by `↻` (14), `∞` (13),
   `✕` (11), `⚠` (8), `🎲` (7), `☾` (7), `▾`/`▸` (12), `★`/`☆` (9), `⚑` (5), `✓` (4), `✎` (4), `✦` (4),

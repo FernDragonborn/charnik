@@ -3,6 +3,7 @@
 	// in several sources (source-namespaced identity). When two overlap an edition — e.g. your homebrew
 	// fork of an SRD spell, both active in 5e — this lets you keep ALL of them (they coexist, homebrew
 	// sorts on top) or keep just ONE source. Live + persisted via sourceConfig; no reload.
+	import Icon from '../Icon.svelte';
 	import { content } from '$lib/content/store.svelte';
 	import { sourceLabel } from '$lib/content/detail';
 	import { detectCollisions, sourceConfig, setCollision } from '$lib/content/sources.svelte';
@@ -24,7 +25,9 @@
 	{#if !graph}
 		<p class="muted">Loading…</p>
 	{:else if collisions.length === 0}
-		<div class="all-clear">✓ No collisions — every entry’s id is unambiguous in its edition.</div>
+		<div class="all-clear">
+			<Icon name="check" size={13} /> No collisions — every entry’s id is unambiguous in its edition.
+		</div>
 	{:else}
 		{#each collisions as c (c.key)}
 			<div class="collision">

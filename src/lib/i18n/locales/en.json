@@ -176,7 +176,7 @@
 		"restoreDemo": "Restore demo character"
 	},
 	"feedback": {
-		"link": "🐞 Found a bug?",
+		"link": "Found a bug?",
 		"title": "Report a bug or leave feedback on GitHub",
 		"diag": {
 			"title": "Report a bug",
@@ -306,7 +306,7 @@
 		"editInPlaceNote": "Editing your homebrew entry in place.",
 		"targetLabel": "Save to file",
 		"targetHomebrew": "My homebrew (recommended)",
-		"targetNewFile": "＋ New file…",
+		"targetNewFile": "New file…",
 		"targetShippedTag": "ships with app",
 		"newFilePlaceholder": "name",
 		"srdWarnTitle": "This file ships with Charnik",

@@ -4,6 +4,7 @@
 	// (translate). Prose lives BELOW in ArticleProse; the dispatcher (WikiDetail) stacks them.
 	import type { DetailModel, SpellModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
+	import DiceIcon from './DiceIcon.svelte';
 	import RollButton from './RollButton.svelte';
 	import EditableTitle from './EditableTitle.svelte';
 
@@ -43,11 +44,13 @@
 			{/if}
 			<div class="spell-effect-rolls">
 				{#if spell.resChip === 'hit'}
-					<RollButton formula="1d20" label={`${detail.title} — to hit`}>🎲 d20</RollButton>
+					<RollButton formula="1d20" label={`${detail.title} — to hit`}
+						><DiceIcon size={14} /> d20</RollButton
+					>
 				{/if}
 				{#if spell.dice}
 					<RollButton formula={spell.dice} label={detail.title}
-						>🎲 {spell.resChip === 'auto' ? 'Heal' : 'Dmg'}</RollButton
+						><DiceIcon size={14} /> {spell.resChip === 'auto' ? 'Heal' : 'Dmg'}</RollButton
 					>
 				{/if}
 			</div>

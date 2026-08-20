@@ -185,13 +185,25 @@
 	text-align: center;
 }
 
-/* --- ghost icon button (remove / close ✕) --- */
+/* --- ghost icon button (remove / close) --- */
 .icon-button {
 	background: transparent;
 	border: 0;
 	color: var(--color-text-muted);
 	cursor: pointer;
 	font-size: var(--font-size-sm);
+	/* an icon-only button has no text box to centre against, so centre the glyph itself */
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* --- drawn icons (Icon.svelte / Lucide) — global because the svg belongs to the icon component, so
+   no consumer's scoped style can reach it. Sitting a hair below the baseline is what makes a glyph
+   look typeset next to its label instead of floating. --- */
+svg.lucide {
+	flex: none;
+	vertical-align: -0.15em;
 }
 
 /* --- content-detail layout (WikiDetail render + EditContentForm edit) --- */

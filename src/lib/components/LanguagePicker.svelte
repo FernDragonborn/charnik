@@ -4,6 +4,7 @@
 	// a type-to-filter search over the loaded content locales plus (when `allowAdd`) every other known
 	// language, so a new target language is one click away. Picking an "add" language just sets the
 	// value to that code — translating + saving then creates its columns (no separate schema step).
+	import Icon from './Icon.svelte';
 	import { languageName, languageSearchText, addableLanguages } from '$lib/i18n/languages';
 
 	let {
@@ -61,7 +62,7 @@
 	>
 		<span class="name">{languageName(value)}</span>
 		<span class="code">{value.toUpperCase()}</span>
-		<span class="caret">▾</span>
+		<span class="caret"><Icon name="chevron-down" size={12} /></span>
 	</button>
 
 	{#if open}
@@ -84,7 +85,9 @@
 				<div class="section eyebrow">Add a language</div>
 				{#each addable as o (o.code)}
 					<button class="opt add" onclick={() => choose(o.code)}>
-						<span class="opt-name">{o.name}</span><span class="opt-code">＋ {o.code}</span>
+						<span class="opt-name">{o.name}</span><span class="opt-code"
+							><Icon name="plus" size={11} /> {o.code}</span
+						>
 					</button>
 				{/each}
 			{/if}

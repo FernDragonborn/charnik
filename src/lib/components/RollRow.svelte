@@ -10,6 +10,7 @@
 	// button and follow-up action bar, the log's per-row affordances, the Playbar's log cue. There is
 	// no `variant`/`compact` prop — a difference that needs one belongs in the chrome, not here.
 	// Density is decided from the model itself (a volley drops its per-type chips, see `multi`).
+	import Icon from './Icon.svelte';
 	import {
 		ROLL_LAYOUT,
 		type RollLayout,
@@ -167,7 +168,7 @@
 			{:else}
 				<span>{d.total}</span>
 			{/if}
-			{#if re}<span class="roll-cue">↻</span>{/if}
+			{#if re}<span class="roll-cue"><Icon name="rotate-ccw" size={9} /></span>{/if}
 		</svelte:element>
 		{#if d.mod && d.chips.length && !strip}<span class="roll-modifier">{signed(d.mod)}</span>{/if}
 	</span>
@@ -244,7 +245,9 @@
 	     which is one tap away and renders it in full. On a one-line strip it is permanent space for a
 	     few seconds of value, and for an amendment it is redundant besides: the green/red frame and
 	     the struck-through die already say the roll was changed. Kept as the strip's tooltip. -->
-	{#if model.note && !strip}<span class="roll-note">⇡ {model.note}</span>{/if}
+	{#if model.note && !strip}<span class="roll-note"
+			><Icon name="arrow-up" size={11} /> {model.note}</span
+		>{/if}
 </div>
 
 <style>

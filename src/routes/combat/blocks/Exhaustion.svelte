@@ -5,6 +5,7 @@
 	// (max_level ≤ 6), a smooth rectangular scale when it's larger (a homebrew 20-rung ladder). Both
 	// clamp to the row's max_level and carry a −/+ stepper; pips are also click-to-set. Hidden when no
 	// exhaustion content is loaded (exhaustionMax === 0). Reads the shared `combat` view-model.
+	import Icon from '$lib/components/Icon.svelte';
 	import type { Character } from '$lib/character/schema';
 	import { combat } from '../combat-view-model.svelte';
 
@@ -41,12 +42,14 @@
 				<button
 					type="button"
 					aria-label="Decrease exhaustion"
-					onclick={() => combat.effects.setExhaustion(level - 1)}>−</button
+					onclick={() => combat.effects.setExhaustion(level - 1)}
+					><Icon name="minus" size={12} /></button
 				>
 				<button
 					type="button"
 					aria-label="Increase exhaustion"
-					onclick={() => combat.effects.setExhaustion(level + 1)}>+</button
+					onclick={() => combat.effects.setExhaustion(level + 1)}
+					><Icon name="plus" size={12} /></button
 				>
 			</div>
 		</div>

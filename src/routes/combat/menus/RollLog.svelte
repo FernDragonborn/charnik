@@ -19,7 +19,7 @@
 	{#each log as l, i (i)}
 		<div class="log-row">
 			<!-- the log carries the same live controls as the Playbar, on EVERY roll and forever: tap the
-			     d20 to apply advantage after the fact, tap a ↻ damage pill to reroll it. N2 Savage
+			     d20 to apply advantage after the fact, tap a damage pill marked with the reroll icon to reroll it. N2 Savage
 			     Attacker's offer is one of those pills — the label comes from the granting feature
 			     (combat.savageLabel), never hardcoded — instead of the bar that used to sit under the row,
 			     which could not say WHICH damage it meant once a roll has several parts. -->
@@ -30,7 +30,7 @@
 					? {
 							attack: 0,
 							part: 0,
-							label: `↻ ${combat.savageLabel} — reroll damage, keep the higher`,
+							label: `${combat.savageLabel} — reroll damage, keep the higher`,
 							run: combat.savageReroll,
 						}
 					: undefined}

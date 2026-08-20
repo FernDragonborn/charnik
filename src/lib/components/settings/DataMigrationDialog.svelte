@@ -3,6 +3,7 @@
 	// needs time to read what went wrong and the reassurance that their original data is safe — so it
 	// stays on screen until dismissed (never a toast that flashes past). Uses the shared global .dialog
 	// shell (styles/components.css); this only sets its width.
+	import Icon from '../Icon.svelte';
 	import { trapFocus } from '$lib/actions/trapFocus';
 
 	let {
@@ -55,7 +56,7 @@
 >
 	<header class="dialog-head">
 		<span class="dialog-badge" class:err={tone === 'error'} class:warn={tone === 'warning'}
-			>{tone === 'error' ? '⚠' : 'ℹ'}</span
+			><Icon name={tone === 'error' ? 'triangle-alert' : 'info'} size={17} /></span
 		>
 		<h2 id="mig-title" class="dialog-title">{title}</h2>
 	</header>

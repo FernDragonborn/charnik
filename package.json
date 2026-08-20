@@ -72,6 +72,7 @@
 	},
 	"dependencies": {
 		"@jitl/quickjs-ng-wasmfile-release-sync": "^0.32.0",
+		"@lucide/svelte": "^1.33.0",
 		"@tauri-apps/api": "^2.11.1",
 		"@tauri-apps/plugin-fs": "~2.5.1",
 		"@tauri-apps/plugin-http": "^2.5.9",

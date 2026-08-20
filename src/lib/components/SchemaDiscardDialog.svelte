@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from './Icon.svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
 	// Schema-discard warning — the house attention-dialog template
@@ -45,7 +46,7 @@
 	use:trapFocus
 >
 	<header class="dialog-head">
-		<span class="dialog-badge warn">⚑</span>
+		<span class="dialog-badge warn"><Icon name="flag" size={17} /></span>
 		<h2 id="discard-title" class="dialog-title">
 			Older drafts can’t be restored{#if drafts.length > 1}<span class="count-pill"
 					>{drafts.length}</span

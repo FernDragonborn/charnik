@@ -2,6 +2,7 @@
 	// Action-economy bar (only shown while Combat is ON): round counter, the action/bonus/reaction
 	// pip slots, the movement tracker, and Next turn. Reads the `combat` view-model; the non-null
 	// character comes in as a prop (for the per-slot spent counts in `play.turn`).
+	import Icon from '$lib/components/Icon.svelte';
 	import type { Character } from '$lib/character/schema';
 	import { combat } from '../combat-view-model.svelte';
 	import { range } from '$lib/combat/helpers';
@@ -57,17 +58,20 @@
 		onclick={() => combat.economy.spendMove(5)}
 		title="Click: spend 5 ft"
 	>
-		🦶 Move <b class:spent={combat.economy.moveLeft === 0}>{combat.economy.moveLeft}</b> / {combat
-			.economy.moveMax} ft
+		<Icon name="footprints" size={13} /> Move
+		<b class:spent={combat.economy.moveLeft === 0}>{combat.economy.moveLeft}</b>
+		/ {combat.economy.moveMax} ft
 	</button>
 	<button
 		type="button"
 		class="action-economy-reset"
 		onclick={combat.economy.resetMove}
-		title="Reset movement">↺</button
+		title="Reset movement"><Icon name="rotate-ccw" size={13} label="Reset movement" /></button
 	>
 	<span class="spacer"></span>
-	<button type="button" class="nextturn" onclick={combat.economy.nextTurn}>Next turn ▸</button>
+	<button type="button" class="nextturn" onclick={combat.economy.nextTurn}
+		>Next turn <Icon name="chevron-right" size={13} /></button
+	>
 </section>
 
 <style>

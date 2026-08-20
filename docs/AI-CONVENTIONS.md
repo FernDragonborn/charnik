@@ -484,10 +484,12 @@ follow the semantic roles in **§4.5**. The Combat view is the reference impleme
 
 ### 4.7 Icons are drawn, never typed
 
-**Rule.** A character that is **text** stays text — `−`, `≥`, `∞`, an arrow inside a sentence are set
-at text size and the font was designed for them. A character standing in for an **icon** is DRAWN: an
-inline SVG bundled locally ([[charnik-icon-sources]]), or plain CSS geometry when the shape is trivial.
-No emoji-as-icon, no icon-font dependency.
+**Rule.** A character that is **text** stays text — `−`, `≥`, `∞`, `×`, an arrow inside a sentence are
+set at text size and the font was designed for them. A character standing in for an **icon** is DRAWN:
+`<Icon name="…" />` (`src/lib/components/Icon.svelte`, Lucide paths bundled locally), or plain CSS
+geometry when the shape is trivial. No emoji-as-icon, no icon FONT.
+**One exception worth naming: a −/+ pair.** Half a stepper drawn and half typed reads worse than
+either choice made consistently, so a pair goes together.
 
 **Why.** A font glyph doing an icon's job fails three different ways, and all three get worse as the
 display shrinks or the page is zoomed out — which is where this app gets used (phone, laptop at
@@ -499,10 +501,20 @@ display shrinks or the page is zoomed out — which is where this app gets used 
 - **Presentation drift.** `⚠`, `☀`, `✦` and friends render as colour emoji on one platform and
   monochrome on another, so the same build is not the same UI on two machines.
 
-**How to apply.** Reach for the existing SVG components first (`DamageIcon`, the Lucide set). For a
-trivial geometric indicator, CSS is lighter than an SVG and exact: the roll card's advantage cues are
-three `clip-path` polygons filled with `currentColor` at a size we choose, with no font in the path
-(`RollRow.svelte`). The outstanding sweep of ~100 existing glyph-as-icon sites is **PLAN · UBUG-19**.
+**How to apply.** `<Icon name="…" size={13} />` — the name is Lucide's own, so a new glyph is one
+import + one map entry in `Icon.svelte`. Two icons stay hand-drawn because no set has them:
+`DamageIcon` (thirteen damage types) and `EyeIcon` (the open/closed pair). For a trivial geometric
+indicator, CSS is lighter than an SVG and exact: the roll card's advantage cues are three `clip-path`
+polygons filled with `currentColor` at a size we choose, with no font in the path (`RollRow.svelte`).
+
+**An icon-only control names itself.** Its glyph used to BE its accessible name; an SVG has none, so
+pass `label` (→ `aria-label` + `role="img"`). Beside a text label, leave `label` unset or a screen
+reader reads it twice.
+
+**An icon never lives in a STRING.** Not in an i18n catalog (a translator would carry, or drop, the
+app's iconography), not in a status/kind map. Map to an `IconName` and render it — `DialogShell`'s
+`badge`, `DraftsPane`'s kinds and translate's status marks are the worked examples. The sweep of
+~100 sites is done: **PLAN · UBUG-19**.
 
 ---
 

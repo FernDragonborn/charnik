@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '../Icon.svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
 	// Plugin consent — the house attention-dialog template, single-pane notice variant
@@ -38,7 +39,7 @@
 >
 	<header class="dialog-head">
 		<div class="dialog-lang-corner"><LangSwitcher /></div>
-		<span class="dialog-badge warn">⚿</span>
+		<span class="dialog-badge warn"><Icon name="key-round" size={17} /></span>
 		<h2 id="plg-title" class="dialog-title">
 			{codeChanged
 				? $_('settings.plugins.consent.titleChanged')

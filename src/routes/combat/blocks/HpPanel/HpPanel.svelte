@@ -1,6 +1,8 @@
 <script lang="ts">
 	// Hit-points panel (current/max/temp, bar, damage/heal, temp-HP). Always shown.
 	// Reads the `combat` view-model singleton; character + sheet come in as props.
+	import Icon from '$lib/components/Icon.svelte';
+	import DiceIcon from '$lib/components/DiceIcon.svelte';
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../../combat-view-model.svelte';
@@ -20,7 +22,9 @@
 		<div class="hp-readout">
 			<div class="hitpoints-label">
 				<span>Hit points</span>
-				<button class="temptag" onclick={(e) => openMenu('temphp', e)}>＋ Temp HP</button>
+				<button class="temptag" onclick={(e) => openMenu('temphp', e)}
+					><Icon name="plus" size={13} /> Temp HP</button
+				>
 			</div>
 			<div class="hitpoints-value" title={why(s.maxHp)}>
 				{c.play.hp.current}<small>
@@ -35,7 +39,9 @@
 			</div>
 		</div>
 		<div class="hp-controls">
-			<button class="hp-btn heal" onclick={combat.heal} title="Apply healing">＋ Heal</button>
+			<button class="hp-btn heal" onclick={combat.heal} title="Apply healing"
+				><Icon name="plus" size={13} /> Heal</button
+			>
 			<input
 				class="hp-number"
 				type="number"
@@ -67,10 +73,10 @@
 		{@const pend = combat.pendingConcentrationSave}
 		<div class="conc-banner" class:failed={pend.failed} role="status">
 			{#if pend.failed}
-				<span class="conc-warn">✖ Save failed</span>
+				<span class="conc-warn"><Icon name="circle-x" size={13} /> Save failed</span>
 				<span class="conc-detail">{combat.conc.label} ends</span>
 			{:else}
-				<span class="conc-warn">⚠ Concentration check</span>
+				<span class="conc-warn"><Icon name="triangle-alert" size={13} /> Concentration check</span>
 				<span class="conc-detail">
 					{combat.conc.label} · DC
 					<input
@@ -85,7 +91,9 @@
 			{/if}
 			<span class="conc-actions">
 				{#if !pend.failed}
-					<button class="conc-btn roll" onclick={combat.rollConcentrationSave}>🎲 Roll</button>
+					<button class="conc-btn roll" onclick={combat.rollConcentrationSave}
+						><DiceIcon size={14} /> Roll</button
+					>
 				{/if}
 				<button
 					class="conc-btn drop"
@@ -96,7 +104,8 @@
 					class="conc-btn dismiss"
 					title="Dismiss — keep concentrating"
 					aria-label="Dismiss, keep concentrating"
-					onclick={combat.dismissConcentrationSave}>✕</button
+					onclick={combat.dismissConcentrationSave}
+					><Icon name="x" size={13} label="Dismiss" /></button
 				>
 			</span>
 		</div>
@@ -110,7 +119,7 @@
 				onclick={() => combat.deathSave()}
 				title="Roll a death save"
 			>
-				🎲 Death save
+				<DiceIcon size={14} /> Death save
 			</button>
 			<div class="death-tracks">
 				<div class="death-track" role="group" aria-label="Death save successes">

@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Actions panel body: standard actions (Show/hide-filtered), feature-granted rollables (Sneak
 	// Attack, Bardic Inspiration…) and resource spend-options (Ki → Flurry) with a cost chip.
+	import Icon from '$lib/components/Icon.svelte';
 	import { combat } from '../../combat-view-model.svelte';
 	const visibleActions = $derived(combat.visibleActions);
 </script>
@@ -16,7 +17,9 @@
 {#each combat.featureRolls as r (r.id + r.source)}
 	<button class="combat-row" onclick={() => combat.rollFeature(r)}>
 		<span class="row-name">{r.label}</span><span class="combat-row-hint">{r.formula}</span>
-		<span class="combat-row-desc">{r.source}</span><span class="combat-row-marker">→ roll</span>
+		<span class="combat-row-desc">{r.source}</span><span class="combat-row-marker"
+			>roll <Icon name="chevron-right" size={11} /></span
+		>
 	</button>
 {/each}
 <!-- piece 3: resource spend-options (Ki → Flurry of Blows…) with a cost chip; disabled when the

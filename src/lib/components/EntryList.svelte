@@ -2,6 +2,7 @@
 	// Left-pane list (d-spellmgr design): search + optional filter chips + grouped rows.
 	// Each row shows a name + meta sub-line; `leading`/`trailing` snippets add per-row controls
 	// (Spellbook: eye/pin + prepare toggle). Compendium passes none → a plain browsable list.
+	import Icon from './Icon.svelte';
 	import type { Snippet } from 'svelte';
 	import type { Entry } from '$lib/content/detail';
 
@@ -30,7 +31,7 @@
 
 <div class="list">
 	<div class="lsearch">
-		<span class="search-icon">🔍</span><input
+		<span class="search-icon"><Icon name="search" size={13} /></span><input
 			placeholder={searchPlaceholder}
 			bind:value={searchValue}
 		/>

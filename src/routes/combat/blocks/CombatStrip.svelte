@@ -4,6 +4,7 @@
 	// (spanning both rows). Resources are just counters, so they live here in the sheet's stat grid
 	// rather than a full-width bar of their own; the chips wrap to fill the block (1 or 12, it scales).
 	// Reads the `combat` view-model; the derived sheet comes in as a prop.
+	import Icon from '$lib/components/Icon.svelte';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
 	import { why, signed, metres, range, rechargeLabel } from '$lib/combat/helpers';
@@ -31,7 +32,9 @@
 
 <div class="sectlab">
 	<button class="slabtoggle" onclick={() => toggle('combat')}
-		><span class="chevron">{collapsed.combat ? '▸' : '▾'}</span>Combat</button
+		><span class="chevron"
+			><Icon name={collapsed.combat ? 'chevron-right' : 'chevron-down'} size={13} /></span
+		>Combat</button
 	>
 </div>
 {#if !collapsed.combat}
@@ -118,13 +121,19 @@
 					<i>{p.name}</i>{p.comp.value}{#if advDis}<span
 							class="advantage-mark"
 							class:disadvantage={advDis.source === 'Disadvantage'}
-							title={advDis.source}>{advDis.source === 'Advantage' ? '▲' : '▼'}</span
+							title={advDis.source}
+							><Icon
+								name={advDis.source === 'Advantage' ? 'chevron-up' : 'chevron-down'}
+								size={12}
+							/></span
 						>{/if}
 				</span>
 			{:else}
 				<span class="ability-save"><i>none pinned</i></span>
 			{/each}
-			<button class="edit" onclick={(e) => openMenu('pinskills', e)}>✎ Pin skills</button>
+			<button class="edit" onclick={(e) => openMenu('pinskills', e)}
+				><Icon name="pencil" size={13} /> Pin skills</button
+			>
 		</div>
 
 		{#if defenseGroups.length}
@@ -302,7 +311,7 @@
 		color: var(--color-border-strong);
 	}
 	/* a passive is ±5 under advantage/disadvantage (RAW) — mark it so a low number reads as
-	   "reduced by a debuff", not a bug. ▲ green = advantage, ▼ red = disadvantage. */
+	   "reduced by a debuff", not a bug. The chevron is green up for advantage, red down for disadvantage. */
 	.senses-strip .advantage-mark {
 		font-size: var(--font-size-xs);
 		margin-left: 3px;

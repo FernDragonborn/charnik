@@ -3,13 +3,14 @@
 	// All bind straight to the `app` store — which persists to localStorage and is mirrored onto
 	// <html> by the root layout — so a choice here is live AND survives a reload. (The system a NEW
 	// character is built under is chosen on the Build page, not here.)
+	import Icon, { type IconName } from '../Icon.svelte';
 	import { app, type SystemId, type ThemeId } from '$lib/stores/app.svelte';
 	import { SYSTEMS, SYSTEM_LABELS } from '$lib/rules/pipeline';
 	import { LOCALES } from '$lib/i18n';
 
-	const THEMES: { id: ThemeId; label: string }[] = [
-		{ id: 'dark', label: '☾ Dark' },
-		{ id: 'light', label: '☀ Light' },
+	const THEMES: { id: ThemeId; label: string; icon: IconName }[] = [
+		{ id: 'dark', label: 'Dark', icon: 'moon' },
+		{ id: 'light', label: 'Light', icon: 'sun' },
 	];
 
 	// An edition may be toggled off to hide it from the compendium/search, but never the last one
@@ -36,7 +37,7 @@
 	<div class="setting-options">
 		{#each THEMES as t (t.id)}
 			<button class="pill-btn" class:accent={app.theme === t.id} onclick={() => (app.theme = t.id)}
-				>{t.label}</button
+				><Icon name={t.icon} size={13} /> {t.label}</button
 			>
 		{/each}
 	</div>

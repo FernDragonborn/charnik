@@ -3,6 +3,7 @@
 	// with manifest info + status, per-plugin enable behind the consent dialog, the global kill
 	// switch, and a refresh re-scan. Desktop-only (PLG-SEC 21) — the web build shows an explainer.
 	// Broken folders are listed with their problem, never silently skipped.
+	import Icon from '../Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import {
 		plugins,
@@ -88,7 +89,7 @@
 						{#if p.problem}
 							<div class="plugin-problem">{p.problem}</div>
 						{:else if loadErr}
-							<div class="plugin-problem">⚠ {loadErr}</div>
+							<div class="plugin-problem"><Icon name="triangle-alert" size={13} /> {loadErr}</div>
 						{:else if p.manifest?.description}
 							<div class="plugin-desc">{p.manifest.description}</div>
 						{/if}

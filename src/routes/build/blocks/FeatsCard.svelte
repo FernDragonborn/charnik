@@ -1,6 +1,7 @@
 <script lang="ts">
 	// Ability boosts & feats card: one ASI/feat slot per qualifying level (per class), the
 	// background origin feat (auto), and per-slot ASI allocation (+2 one / +1 two).
+	import Icon from '$lib/components/Icon.svelte';
 	import { build, rowName, ASI } from '../build-view-model.svelte';
 	import { ABILITIES } from '$lib/character/schema';
 	import { SKILL_ABILITY } from '$lib/character/derive';
@@ -33,7 +34,8 @@
 					<option value={ASI}>Ability Score Improvement (+2 or +1/+1)</option>
 					{#each b.feats.featOptionsFor(slot.level) as f (f.effectiveId)}
 						<option value={f.effectiveId} disabled={b.feats.featOptionBlocked(f.effectiveId, slot.key)}>
-							{rowName(f)}{b.feats.isRepeatable(f.effectiveId) ? ' ↻' : ''}
+							{rowName(f)}{#if b.feats.isRepeatable(f.effectiveId)}
+							<Icon name="rotate-ccw" size={11} />{/if}
 						</option>
 					{/each}
 				</select>
@@ -73,7 +75,7 @@
 				{#if skillCount > 0}{@render skillPicker(slot.key, skillCount)}{/if}
 			{/if}
 		{/each}
-		<p class="subtext note">↻ = repeatable — take it in more than one slot. ASI &amp; feats apply to the preview.</p>
+		<p class="subtext note"><Icon name="rotate-ccw" size={11} /> = repeatable — take it in more than one slot. ASI &amp; feats apply to the preview.</p>
 	{/if}
 </div>
 

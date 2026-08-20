@@ -54,7 +54,7 @@
 	title={$_('feedback.diag.title')}
 	subtitle={$_('feedback.diag.subtitle')}
 	width="min(640px, calc(100vw - 2 * var(--space-4)))"
-	badge="🐞"
+	badge="bug"
 	{onDismiss}
 >
 	<div class="dialog-body">
