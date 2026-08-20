@@ -752,7 +752,7 @@ describe('CombatVM · S2 split net', () => {
 
 	it('action economy: in combat a spell spends its slot and the second cast is blocked', () => {
 		character.play.inCombat = true;
-		character.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+		character.play.turn.action = 0;
 		const fireBolt = spellRow(graph, `spell:${S}:fire_bolt`, 'on')!;
 		combat.cast(fireBolt, noModifiers); // action ct → spends the action
 		expect(character.play.turn.action).toBe(1);
@@ -812,7 +812,7 @@ describe('CombatVM · S2 split net', () => {
 	it('Savage Attacker: a data-driven `damage_reroll` fact offers a once-per-turn reroll that never lowers the kept damage', () => {
 		character.play.inCombat = true;
 		character.play.round = 1;
-		character.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+		character.play.turn.action = 0;
 		// a runtime effect carrying the data-driven marker (in real content a feat's `effects` column
 		// carries it); its LABEL becomes the offer label — nothing feat-specific is hardcoded in the VM.
 		combat.effects.addEffect({
@@ -833,13 +833,13 @@ describe('CombatVM · S2 split net', () => {
 		expect(combat.savageLabel).toBeNull(); // once-per-turn use spent
 
 		// a second attack the SAME turn does NOT re-offer (use already spent this round)
-		character.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 }; // free the action for a 2nd attack
+		character.play.turn.action = 0; // free the action for a 2nd attack
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
 		expect(combat.savageLabel).toBeNull();
 
 		// Next turn frees the use again
 		combat.economy.nextTurn();
-		character.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+		character.play.turn.action = 0;
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
 		expect(combat.savageLabel).toBe('Savage Attacker');
 	});
@@ -1003,25 +1003,54 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		expect(character.play.turn.bonus).toBe(0); // slot preserved (validated before any mutation)
 	});
 
-	it('gain_action refunds one action this turn (Action Surge), free action costs no slot', async () => {
+	const actionSurge = () => ({
+		id: 'fighter_action_surge',
+		resourceId: 'action_surge',
+		name: 'Action Surge',
+		description: '',
+		action: 'gain_action',
+		actionType: 'free' as const,
+		cost: 1,
+		available: true,
+	});
+
+	it('gain_action grants an ADDITIONAL action this turn (Action Surge), free action costs no slot', async () => {
 		const graph = await graphOf();
 		const character = grant('grant_resource:action_surge:1:short');
 		character.play.turn.action = 1; // the regular action is already used
 		combat.graph = graph;
 		combat.character = character;
 
-		combat.activateResourceOption({
-			id: 'fighter_action_surge',
-			resourceId: 'action_surge',
-			name: 'Action Surge',
-			description: '',
-			action: 'gain_action',
-			actionType: 'free',
-			cost: 1,
-			available: true,
-		});
-		expect(character.play.turn.action).toBe(0); // one additional action granted back
+		combat.activateResourceOption(actionSurge());
+		expect(character.play.turn.action).toBe(1); // what was spent stays spent
+		expect(combat.economy.slotMax.action).toBe(2); // …and there is one more pip to spend
+		expect(combat.economy.canSpend('action')).toBe(true);
 		expect(combat.resources.resourceSpent('action_surge')).toBe(1);
+	});
+
+	// RAW it grants an action; it does not un-spend one. Surging FIRST used to decrement a
+	// zero spent-counter, so the use was burnt for nothing (PLAN · UBUG-11 tail).
+	it('gain_action is worth a full extra action even when nothing has been spent yet', async () => {
+		const graph = await graphOf();
+		const character = grant('grant_resource:action_surge:1:short');
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.activateResourceOption(actionSurge());
+		expect(character.play.turn.action).toBe(0);
+		expect(combat.economy.slotMax.action).toBe(2); // two actions available, not one
+	});
+
+	it('a granted action dies with the turn', async () => {
+		const graph = await graphOf();
+		const character = grant('grant_resource:action_surge:1:short');
+		combat.graph = graph;
+		combat.character = character;
+
+		combat.activateResourceOption(actionSurge());
+		combat.economy.nextTurn();
+		expect(character.play.turn.grantedActions).toBe(0);
+		expect(combat.economy.slotMax.action).toBe(1);
 	});
 
 	it('rest:long grants a long rest — restores HP, resets slots, recharges pools; the consumable charge is NOT refunded', async () => {

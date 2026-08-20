@@ -48,8 +48,8 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
    both all-or-nothing directions (no bonus left / pool exhausted → nothing applied).
 2. `[x]` **Action-token execution — ALL DONE (`runActionToken`).** `heal:<formula>` → `rollFormula`
    → `hp.current` clamped to `hpMax` + log; `roll:<formula>` → `rollFormula` → `tray.pushRoll` + log;
-   `apply_condition:<id>` → `addEffect`; `note:` → toast; `gain_action` (Action Surge → refund one
-   `play.turn.action`). Ad-hoc `indexOf(':')` split (these are ACTION verbs, not L1 effect tokens, so
+   `apply_condition:<id>` → `addEffect`; `note:` → toast; `gain_action` (Action Surge → one more pip
+   via `play.turn.grantedActions`; it decremented `play.turn.action` until 2026-08-21). Ad-hoc `indexOf(':')` split (these are ACTION verbs, not L1 effect tokens, so
    `parseToken`'s effect-vocab doesn't cover heal/roll/gain_action — a 2-line split is right here).
 3. `[x]` **Resolve the action formula's L2 at derive — DONE** (`resolveActionFormula`) — `resolveResourceOptions` resolves
    `heal:1d10+class_level.fighter` → `heal:1d10+5` (mirror resource-max / `grant_roll` resolution), so

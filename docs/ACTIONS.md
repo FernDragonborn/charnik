@@ -67,7 +67,7 @@ still landing on an existing system per the table above:
 | `roll:<formula>` | the dice path + roll log |
 | `apply_condition:<id>` | the `play.effects` add path |
 | `apply_effect:<id>` | a NAMED `effects.csv` buff/debuff (Rage) → the `play.effects` add path via the "+"-catalog seam (its `ref` re-resolves LIVE, `negative`→buff/debuff, `duration_rounds`→timer). The multi-token, timed, positive analogue of `apply_condition` — a class-feature ACTIVATION that turns a state on (Enter Rage). |
-| `gain_action` | refund one action this turn (Action Surge) |
+| `gain_action` | one ADDITIONAL action this turn (Action Surge) — `play.turn.grantedActions`, which raises the per-turn max. Never a refund of a spent action: surging before you act must be worth a whole action, not nothing. It lives in play-state rather than as a `flat_bonus:action+1` effect because a grant is a one-turn fact and must still work with effects-auto off. |
 | `rest:short` / `rest:long` | **take that rest** — the SAME system the rest buttons use (recharge pools by type, reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). Models a Potion of Angelic Slumber / a rest-granting spell. |
 | `restore_resource:<id>` | regain ALL uses of a pool — `ResourceTracker.restoreAll` (Persistent Rage, Uncanny Metabolism) |
 | `note:<text>` | a log/toast line |

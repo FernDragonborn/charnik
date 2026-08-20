@@ -195,8 +195,12 @@ const playSchema = z.object({
 			bonus: z.number().int().min(0).default(0),
 			reaction: z.number().int().min(0).default(0),
 			move: z.number().int().min(0).default(0),
+			/** Additional actions granted for THIS turn only (Action Surge) — they raise the max, they
+			 *  do not un-spend what was used. A one-turn fact rather than an effect, so it survives with
+			 *  effects-auto off and dies with the turn. Absent on saves written before it existed → 0. */
+			grantedActions: z.number().int().min(0).default(0),
 		})
-		.default({ action: 0, bonus: 0, reaction: 0, move: 0 }),
+		.default({ action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0 }),
 });
 
 // --- ui / per-character view preferences --------------------------------------

@@ -114,8 +114,8 @@ export class ActionExecutor {
 	 *  at derive). Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths):
 	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,
 	 *  `apply_effect:<id>` → apply a NAMED effects.csv buff/debuff (Rage) via the "+"-catalog add path
-	 *  (ref/negative/duration all read from the row), `gain_action` → refund one action this turn
-	 *  (Action Surge), `rest:short|long` → take that rest
+	 *  (ref/negative/duration all read from the row), `gain_action` → one ADDITIONAL action this turn
+	 *  (Action Surge — a granted pip, never a refund), `rest:short|long` → take that rest
 	 *  (recharge pools / reset slots / restore HP — a Potion of Angelic Slumber, 2024 short-rest
 	 *  spells), `restore_resource:<id>` → regain ALL uses of a pool (Persistent Rage, Uncanny
 	 *  Metabolism), `note:` → the spendOption toast. */
@@ -147,7 +147,9 @@ export class ActionExecutor {
 		} else if (verb === 'apply_effect' && arg) {
 			this.applyCatalogEffect(opt, arg);
 		} else if (verb === 'gain_action') {
-			p.turn.action = Math.max(0, p.turn.action - 1); // one additional action this turn
+			// RAW: an ADDITIONAL action, i.e. one more pip this turn — not a refund of a spent one. It
+			// used to decrement `turn.action`, so surging BEFORE acting burnt a use for nothing.
+			p.turn.grantedActions += 1;
 		} else if (verb === 'restore_resource' && arg) {
 			this.host().resources.restoreAll(arg); // regain all uses of the pool (Persistent Rage / Uncanny Metabolism)
 		} else if (verb === 'rest' && (arg === 'short' || arg === 'long')) {

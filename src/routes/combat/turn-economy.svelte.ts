@@ -35,14 +35,15 @@ export class TurnEconomy {
 		return this.getSheet()?.facts.conditions.includes(INCAPACITATED_CONDITION_ID) ?? false;
 	});
 
-	// base 1 pip per slot + extras from effects (Action Surge → +1 action, Haste → +1 action), rendered
-	// as more pips — data-driven via `flat_bonus:<slot>+N` tokens. Reads the sheet's typed-facts
-	// object (D7: guards evaluated, item/feature effects included, values resolved — B21). Incapacitated
-	// zeroes every slot (no action/bonus/reaction), overriding any extras.
+	// base 1 pip per slot + extras from standing effects (Haste → +1 action), rendered as more pips —
+	// data-driven via `flat_bonus:<slot>+N` tokens. Reads the sheet's typed-facts object (D7: guards
+	// evaluated, item/feature effects included, values resolved — B21). Action Surge is the OTHER kind
+	// of extra: granted for this turn only, tracked in play-state, and counted whether effects-auto is
+	// on or off. Incapacitated zeroes every slot, overriding both.
 	slotMax = $derived.by<Record<ActionSlot, number>>(() => {
 		if (this.incapacitated) return { action: 0, bonus: 0, reaction: 0 };
 		const c = this.getCharacter();
-		const max = { action: 1, bonus: 1, reaction: 1 };
+		const max = { action: 1 + (c?.play.turn.grantedActions ?? 0), bonus: 1, reaction: 1 };
 		if (c?.play.autoCalc)
 			for (const f of this.getSheet()?.facts.numeric ?? [])
 				if (f.op === 'add' && f.amount !== undefined && Object.hasOwn(max, f.target))
@@ -97,7 +98,7 @@ export class TurnEconomy {
 	nextTurn = () => {
 		const c = this.getCharacter();
 		if (!c) return;
-		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+		c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0 };
 		c.play.round += 1;
 		this.expireTimedEffects();
 	};
@@ -119,7 +120,7 @@ export class TurnEconomy {
 		if (!c) return;
 		c.play.inCombat = !c.play.inCombat;
 		if (c.play.inCombat) {
-			c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0 };
+			c.play.turn = { action: 0, bonus: 0, reaction: 0, move: 0, grantedActions: 0 };
 			c.play.round = 1;
 		}
 	};

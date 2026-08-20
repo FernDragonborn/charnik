@@ -1345,9 +1345,12 @@ holds the done-work log; these are the OPEN tails it carried):**
   that doubles as the honest escape hatch for spending a resource on something unmodelled. An L2
   `available` guard is enforced INSIDE `activateResourceOption`, not in a `disabled` attribute, so no
   caller can route around it.
-  - [ ] **Tail, pre-existing:** `gain_action` REFUNDS a spent action (`turn.action − 1`), so using
-    Action Surge BEFORE you have acted burns a use for nothing. RAW it grants an ADDITIONAL action —
-    a per-turn max bump, not a spent-counter nudge.
+  - [x] **Tail, pre-existing — FIXED 2026-08-21.** `gain_action` REFUNDED a spent action
+    (`turn.action − 1`), so using Action Surge before you had acted burnt a use for nothing. It now
+    raises the per-turn max: `play.turn.grantedActions`, added to `slotMax.action` and reset with the
+    turn, so the extra pip shows in the turnbar and `canSpend` honours it. Play-state rather than a
+    `flat_bonus:action+1` effect on purpose — `slotMax` only folds effect facts when auto-calc is ON,
+    and a feature the player activated by hand must not silently do nothing with effects off.
 - [x] **UBUG-17 · Action/Bonus/Reaction pips look interactive, and all of them are** — every pill
   in that bar signals it the same way (hover + pointer + the global focus ring).
 - [x] **UBUG-18 · Abilities block used a different background** than the panels around it.
