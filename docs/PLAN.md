@@ -899,7 +899,29 @@ stay semi-manual.
   `effects: ''`, so a re-run wiped the authoring (verified by doing exactly that, then re-running to
   prove the fix: byte-identical output, same hash). The `existingColById` helper the other two
   converters had each copied is now one export in `tools/srd/lib.mjs`. Hashes re-stamped;
-  `items_content.test.ts` pins the values + drift. **App-verified:** demo Karroth's attuned Cloak now
+  `items_content.test.ts` pins the values + drift.
+  **SECOND TRANCHE DONE 2026-08-21 — 23 items in 2024, 12 in 2014**, again read off each edition's own
+  shipped text. Named damage types fold (`resist_immune:resist:<type>` — Staff of Fire/Frost, Brooch of
+  Shielding, Cloak of Arachnida, Periapt of Proof against Poison, Armor of Invulnerability's b/p/s);
+  UNQUALIFIED advantage on a named roll folds (Sentinel Shield + Rod of Alertness →
+  `advantage:initiative;advantage:skill.perception`, Cloak of the Bat → stealth, Quarterstaff of the
+  Acrobat → acrobatics); the `+N` weapons fold through the D9 weapon path (Holy Avenger +3, Vorpal +3,
+  Staff of the Magi +2 with `flat_bonus:spell_attack+2`, Berserker Axe +1 with `flat_bonus:hp_max+level`);
+  Frost Brand's rider is the typed-damage form `flat_bonus:damage:cold+1d6`; Boots of Striding and
+  Springing is `set_override:speed:30:floor`; the Robe of the Archmagi is a GUARDED expression set,
+  `not is_wearing_armor ? set_override:ac:15+dex_mod` (a set_override is not limited to a literal — the
+  test pins AC 15).
+  **Edition divergences found in the shipped text, kept rather than smoothed:** 2014's Armor of
+  Invulnerability resists "nonmagical damage", which is not a type the vocabulary can NAME, so it stays
+  a note while 2024's b/p/s folds; 2014's Scarab of Protection has no +1 AC (that is a 2024 addition),
+  so only 2024 folds one. **Content gap noticed, not fixed:** several 2014 rows ship with an EMPTY
+  `text_en` (`vorpal_sword`, `rod_of_alertness`, `dragon_scale_mail`, `boots_of_striding_and_springing`,
+  `talisman_of_pure_good`) and `frost_brand`/`brooch_of_shielding` are truncated mid-sentence — those
+  editions were skipped rather than authored from memory (the no-invented-data rule).
+  **New gate:** `items_content.test.ts` now runs EVERY shipped item token through a real `deriveSheet`
+  and demands no `unknown target` issue — a known kind with a dead target parses fine and then folds
+  onto nothing, which the "known kind" check alone never caught.
+  **App-verified (first tranche):** demo Karroth's attuned Cloak now
   reads AC 14 → **15** with "Cloak of Protection +1" in the trace, and every save +1
   (`design-preview/magic-item-efx.png`). **REMAINING (the `[~]`):** the other ~240 magic items — mostly
   charges/activated procedures (RECHARGE slice 3), GM-chosen variants (Ring/Armor of Resistance),

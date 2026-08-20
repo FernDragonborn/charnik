@@ -2,7 +2,9 @@ import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import { loadContent } from './loader';
 import { parseToken, splitGuard } from '../effects/token-parser';
-import { readPackFile } from '../../test-support/real-content';
+import { readPackFile, loadPacks } from '../../test-support/real-content';
+import { newCharacter, characterSchema } from '../character/schema';
+import { deriveSheet } from '../character/derive';
 
 /*
  * Guards the SHIPPED magic-item data (MAGIC-ITEM-EFX authoring): the `effects` tokens we filled must
@@ -58,6 +60,47 @@ describe('shipped magic items · effects column is engine-valid', () => {
 				expect(byId('amulet_of_health')).toEqual(['set_override:con:19:floor']);
 				expect(byId('headband_of_intellect')).toEqual(['set_override:int:19:floor']);
 				expect(byId('gauntlets_of_ogre_power')).toEqual(['set_override:str:19:floor']);
+			});
+
+			// A known KIND with a dead TARGET is the other half of the same failure: it parses, then
+			// folds onto nothing. That check lives at derive (which owns the consumers), so run every
+			// shipped item token through a real sheet and demand no `unknown target` — this is the gate
+			// that catches the next authoring typo, whatever item it lands on.
+			it('every authored token has a target the derive actually consumes', async () => {
+				const g = await loadPacks(path);
+				const c = newCharacter('probe', 'Probe', edition);
+				c.play.effects = g
+					.list('item')
+					.filter((r) => (r.data.effects ?? []).length > 0)
+					.map((r, i) => ({
+						iid: `i${i}`,
+						label: String(r.data.name_en),
+						effects: r.data.effects ?? [],
+						positive: true,
+					}));
+				const issues = deriveSheet(characterSchema.parse(c), g).deriveIssues;
+				expect(issues.filter((i) => /unknown target/.test(i.reason))).toEqual([]);
+			});
+
+			it("the Robe of the Archmagi's base AC is a GUARDED set, so armour still wins", async () => {
+				const g = await loadPacks(path);
+				const robe = g.list('item').find((r) => r.id === 'robe_of_the_archmagi')?.data.effects;
+				const c = newCharacter('probe', 'Probe', edition);
+				c.play.effects = [{ iid: 'r', label: 'Robe', effects: robe ?? [], positive: true }];
+				const s = deriveSheet(characterSchema.parse(c), g);
+				// unarmoured, DEX 10 (+0) on a fresh character: base AC 15 + DEX. Proves the guard AND
+				// the `15+dex_mod` expression resolve — a set_override is not limited to a literal.
+				expect(s.ac.value).toBe(15);
+			});
+
+			it('the second tranche folds: resistances, unqualified advantage, a floored Speed', async () => {
+				const g = await loadEdition(path);
+				const byId = (id: string) => g.list('item').find((r) => r.id === id)?.data.effects;
+				// the type is NAMED, so it folds; 2014's Armor of Invulnerability says "nonmagical
+				// damage", which is not a type the vocabulary can name — it stays a note (see PLAN).
+				expect(byId('staff_of_fire')).toEqual(['resist_immune:resist:fire']);
+				expect(byId('cloak_of_arachnida')?.[0]).toBe('resist_immune:resist:poison');
+				expect(byId('robe_of_eyes')?.[0]).toBe('advantage:skill.perception');
 			});
 
 			it('Bracers of Defense carry the no-armour-no-shield GUARD, not a bare +2 AC', async () => {
