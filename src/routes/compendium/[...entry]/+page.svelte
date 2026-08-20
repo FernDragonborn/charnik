@@ -557,7 +557,7 @@
 
 	{#if confirmDelete}
 		<ConfirmDialog
-			title="Delete “{String(confirmDelete.data.name_en)}”?"
+			title="Delete “{confirmDelete.data.name_en}”?"
 			message="This removes the entry from your homebrew CSV and can’t be undone."
 			confirmLabel="Delete"
 			danger

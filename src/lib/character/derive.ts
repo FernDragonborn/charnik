@@ -127,7 +127,7 @@ function applyStealthDisadvantage(
 	facts: EffectFacts,
 ): void {
 	if (!equippedArmor?.data.stealth_disadvantage) return;
-	const source = String(equippedArmor.data.name_en);
+	const source = equippedArmor.data.name_en;
 	if (!facts.disadvantage.some((d) => d.target === 'skill.stealth' && d.source === source))
 		facts.disadvantage.push({ target: 'skill.stealth', source });
 }
@@ -177,7 +177,7 @@ function applyArmorSpellBlock({
 	);
 	if (isArmorProficient(armorGrants, equippedArmor.data.item_type, equippedArmor.data.category))
 		return;
-	const source = String(equippedArmor.data.name_en);
+	const source = equippedArmor.data.name_en;
 	// cat is always defined here — isArmorProficient returns true (no block) on an unclassifiable armor.
 	const cat = armorCategoryOf(equippedArmor.data.item_type, equippedArmor.data.category);
 	spellcasting.armorBlock = {
@@ -249,7 +249,7 @@ export function deriveSheet(
 		// same-id/same-edition clash across two sources is a collisions.json concern, not resolved here.
 		const cond = graph.list('condition', { system }).find((r) => r.id === condId);
 		const toks = tokensOf(cond);
-		return cond && toks.length ? { source: String(cond.data.name_en), tokens: toks } : undefined;
+		return cond && toks.length ? { source: cond.data.name_en, tokens: toks } : undefined;
 	};
 
 	// The ctx factory (derive-context.ts): closes over the static setup, returns `(state) => EffectCtx`

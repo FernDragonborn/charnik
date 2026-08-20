@@ -125,7 +125,7 @@ export function resolveResourceOptions({
 		else if (/^\d+$/.test(raw)) cost = Number(raw);
 		else {
 			issues.push({
-				source: String(row.data.name_en),
+				source: row.data.name_en,
 				token: `cost:${raw}`,
 				reason: 'unsupported resource-option cost (v1 supports an integer or `x`)',
 			});
@@ -134,22 +134,12 @@ export function resolveResourceOptions({
 		out.push({
 			id: row.id,
 			resourceId,
-			name: String(row.data.name_en),
+			name: row.data.name_en,
 			description: String(row.data.text_en ?? ''),
-			action: resolveActionFormula(
-				String(row.data.action ?? ''),
-				ctx,
-				String(row.data.name_en),
-				issues,
-			),
+			action: resolveActionFormula(String(row.data.action ?? ''), ctx, row.data.name_en, issues),
 			actionType: (row.data.action_type as ResourceOption['actionType']) ?? 'action',
 			cost,
-			available: resolveAvailable(
-				String(row.data.available ?? ''),
-				ctx,
-				String(row.data.name_en),
-				issues,
-			),
+			available: resolveAvailable(String(row.data.available ?? ''), ctx, row.data.name_en, issues),
 		});
 	}
 	return out;

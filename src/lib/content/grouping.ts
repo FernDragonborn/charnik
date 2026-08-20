@@ -4,7 +4,7 @@
  * "A–Z" fallback; and a primary filter facet plus the always-present Source filter. Pure —
  * the page just drives these.
  */
-import type { LoadedRow } from './loader';
+import { rowName, type LoadedRow } from './loader';
 import { ordinal, titleCase } from '$lib/util/format';
 import { SYSTEMS, type ContentType } from './schemas';
 import { sourceLabel } from './detail';
@@ -16,7 +16,7 @@ const homebrewRank = (r: LoadedRow) => (r.source === HOMEBREW_SOURCE ? 0 : 1);
 
 /** Homebrew-first, then A–Z — for the flat "A–Z" grouping (which already sorted by name). */
 const compareRows = (a: LoadedRow, b: LoadedRow): number =>
-	homebrewRank(a) - homebrewRank(b) || String(a.data.name_en).localeCompare(String(b.data.name_en));
+	homebrewRank(a) - homebrewRank(b) || rowName(a).localeCompare(rowName(b));
 
 /** Float homebrew rows to the top of a group while PRESERVING the existing relative order otherwise
  *  (JS sort is stable) — so grouped views only change when a homebrew row is present, never reshuffle

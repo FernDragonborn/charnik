@@ -35,7 +35,7 @@ export class EffectsEditor {
 				// leveled conditions (exhaustion, max_level>1) are a stepper, not a binary toggle — they
 				// don't belong in this multi-select (they'd double-count with gatherExhaustion). D19.
 				.filter((r) => Number(r.data.max_level ?? 1) <= 1)
-				.map((r) => ({ id: r.id, label: String(r.data.name_en) }))
+				.map((r) => ({ id: r.id, label: r.data.name_en }))
 		);
 	});
 	/** The exhaustion ladder height for this character's system (0 = no exhaustion row loaded → the
@@ -92,7 +92,7 @@ export class EffectsEditor {
 			// B17: carry the catalog ref so an added effect resolves LIVE at derive (fixes propagate),
 			// with the baked label/tokens kept as the orphan fallback.
 			ref: r.effectiveId,
-			label: String(r.data.name_en),
+			label: r.data.name_en,
 			tokens: r.data.effects,
 			negative: r.data.negative,
 			durationRounds: r.data.duration_rounds ?? null,

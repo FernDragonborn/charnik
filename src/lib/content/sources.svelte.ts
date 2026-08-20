@@ -12,7 +12,7 @@
  * SOURCE tag is enabled. Plus collision resolution: when the same `type:id` exists in several sources
  * that overlap an edition, the user can keep just one source (keep-one) or show them all (keep-all).
  */
-import type { ContentGraph, LoadedRow } from './loader';
+import { rowName, type ContentGraph, type LoadedRow } from './loader';
 import { readStored } from '$lib/util/persist';
 import { getUserStorage } from '$lib/storage/provider';
 
@@ -193,7 +193,7 @@ export function detectCollisions(graph: ContentGraph): CollisionGroup[] {
 			key,
 			type: first.type,
 			id: first.id,
-			name: String(first.data.name_en),
+			name: rowName(first),
 			sources,
 			rows,
 		});

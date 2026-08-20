@@ -18,7 +18,7 @@
 	import { groupingsFor, groupRows, byDisplayName } from '$lib/content/grouping';
 	import { saveTranslation, saveLocStatus, locStatus } from '$lib/content/translate';
 	import { LOC_STATUS, LOC_STATUS_ORDER, type LocStatus } from '$lib/content/schemas';
-	import type { LoadedRow } from '$lib/content/loader';
+	import { rowName, type LoadedRow } from '$lib/content/loader';
 	import EntryList from '$lib/components/EntryList.svelte';
 	import WikiDetail from '$lib/components/WikiDetail.svelte';
 	import LanguagePicker from '$lib/components/LanguagePicker.svelte';
@@ -95,7 +95,7 @@
 
 	const pool = $derived(graph ? graph.list(selectedType).filter(inEdition) : []);
 	// this pane always shows the SOURCE-language name, so it sorts on `name_en` rather than a locale
-	const sourceName = (r: LoadedRow) => String(r.data.name_en);
+	const sourceName = (r: LoadedRow) => rowName(r);
 	const rows = $derived.by(() => {
 		const q = query.trim().toLowerCase();
 		return (q ? pool.filter((r) => sourceName(r).toLowerCase().includes(q)) : [...pool]).sort(
@@ -108,7 +108,7 @@
 			label: g.label,
 			entries: g.rows.map((r): Entry<LoadedRow> => ({
 				id: r.effectiveId,
-				name: String(r.data.name_en),
+				name: rowName(r),
 				meta: entryMeta(r),
 				edition: editionLabel(r.systems),
 				row: r,

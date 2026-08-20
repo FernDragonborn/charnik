@@ -1064,9 +1064,9 @@ were learned the hard way.
   SCOPED-BONUS.** Slice 3 wants item charges, which want an inventory. SCOPED-BONUS is an L1 grammar
   change and a `docs/compatibility.md` chokepoint, so it stays its own piece rather than riding
   another wave.
-- **W5 · tail:** REL-2 packaging channels, UBUG-19 (icons are drawn, not typed — ~100 sites),
-  UBUG-4's real `.msi` verify (attach to the next release), ARCH-4 / R7 / TYPE-2 / LINT-1 / the CSS
-  rename pass. B24 and B11 have since been answered (both won't-do, with the measurement /
+- **W5 · tail:** REL-2 packaging channels,
+  UBUG-4's real `.msi` verify (attach to the next release), ARCH-4 / R7 / LINT-1.
+  UBUG-19, TYPE-2 and the CSS rename pass came off this list on 2026-08-21. B24 and B11 have since been answered (both won't-do, with the measurement /
   the caps that already cover the path that mattered). UX-2 onboarding stays deferred.
 
 **Out of band — do these when next in the area, don't schedule them into a wave:** _(empty —
@@ -2246,17 +2246,22 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   **Unverified note carried from that pass, worth checking when next in there:** the Cast action was
   said to render only in the generic branch, so a spell in the Spellbook may never show it.
 - [x] **WD-2 · Extract `RollButton`** — the shared roll affordance.
-- [ ] **TYPE-2 · Typed `LoadedRow` (the loader keeps the type it already knew)** — the loader
-  reads `#content-type:` (or filename) and runs the typed `parseRow(type, raw)`, then **discards
-  the type** into `data: Record<string, unknown>`. Make `LoadedRow` a discriminated union on
-  `type` (`LoadedRowOf<T>` with `data: z.infer<schema[T]> & LocaleCols`), and thread the generic
-  through `graph.list<T>(type)` / `get`. Frictions: (1) locale-prose columns zod strips + the
-  loader re-attaches need a template-literal index (`` `${string}_${string}` `` → `string`,
-  which under `noUncheckedIndexedAccess` reads as `string | undefined`); (2) dynamic-key reads
-  (`buildDetail`'s `d[ability]`, grouping, spellAccess) lean on that index. ~236 `.data`/`.list`
-  sites, but the shared `base` (name_en/text_en/systems/source/effects) means common-column reads
-  compile un-narrowed; only type-specific reads need `row.type === 'x'` narrowing (mostly at sites
-  that already know the type). `svelte-check` drives the pass.
+- [x] **TYPE-2 · Typed `LoadedRow` — SHIPPED 2026-07-09 (`84ac428`); this entry was stale until
+  2026-08-21.** `LoadedRow` is a discriminated union on `type` (`LoadedRowOf<T>` with
+  `data: RowData<T>` = the zod-inferred model + the re-attached prose-locale / loc-status columns),
+  and the generic is threaded through `graph.list<T>(type)` (`LoadedRowByType<T>`) and
+  `featuresForClass`. `row.data.level` is a `number`.
+  **The two frictions the plan predicted are real, and they are the SHAPE of what's left, not a
+  to-do:** (1) the prose-locale template-literal index makes a dynamic `data[\`name_${loc}\`]` read
+  `string | undefined` — correct, since a locale column may be absent; (2) on the UNION, even
+  `data.name_en` is `string | undefined`, because the lookup tables (spell slots, XP thresholds) have
+  no such column at all. That second one was being papered over by `String(row.data.name_en)` at ~15
+  sites, which renders the literal **"undefined"** for exactly those rows.
+  **Closed 2026-08-21 with `rowName(row)`** — one accessor beside `tokensOf`, falling back to the id;
+  the coercion is gone from every narrowed-row site (where the column is simply there) and every union
+  site now goes through the accessor. Deliberately still `Record<string, unknown>`: `homebrew`'s
+  generic column walk and `translationCoverage`, which iterate columns by name and have no static type
+  to want.
 - [~] **DRAFT-CACHE · Persist in-progress edits (translate / add / editor) so a closed form restores.**
   DONE (parts 1–2, commits `6178ce3`/`48cb105`): `$lib/drafts/store` (self-contained files, no manifest,
   content-versioned, discard-on-mismatch, +6 tests) + translate wired (prefill/debounced-save/clear,
@@ -2330,14 +2335,14 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`); the hole is lint. Add:
   `@typescript-eslint/no-non-null-assertion`, keep `no-explicit-any` + `ban-ts-comment` (errors),
   `consistent-type-assertions` (no unsafe object-literal `as`). Then enable
-  `recommendedTypeChecked` (the unsafe-`any` family — real teeth) **after TYPE-2**, so it doesn't
-  drown in the current bag. Policy: new code fully typed; avoid the `undefined` TYPE (model
+  `recommendedTypeChecked` (the unsafe-`any` family — real teeth) — TYPE-2 is done, so the bag it
+  would have drowned in is gone. Policy: new code fully typed; avoid the `undefined` TYPE (model
   absence deliberately) — introducing it needs a deliberate decision. Null-checks are their own
   follow-on track (`noUncheckedIndexedAccess` already forces many).
 
 **Sequencing (DECIDED 2026-07-09):** **TYPE-2 → LINT-1 → WD-1 → WD-2.** Type the foundation
 first so every new component (the heads) is born typed and LINT-1's type-checked rules land on
-clean code; the view split follows.
+clean code; the view split follows. **Only LINT-1 is left of that sequence.**
 
 **Editor mode — DONE (commit `2868f5c`; two-panel `5550e9c`).** The "Editor" mode-picker entry (active
 once an entry is selected) opens a **two-panel BEFORE | AFTER** view (commit `5550e9c`, as agreed):

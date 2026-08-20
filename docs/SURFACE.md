@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (40)
+## Duplicate suspects (41)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -52,6 +52,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `remove` ×2 — src/lib/components/DraftsPane.svelte · src/lib/components/settings/ThemesSettings.svelte
 - `REPORT` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
+- `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `say` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `sourceOf` ×2 — src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
@@ -685,6 +686,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `interface LoadedRowOf` — A loaded row of a KNOWN content type `T`: the common identity + the zod-validated, coerced model * for `T` (Spell, Mo…
 - `type LoadedRow` — A loaded content row — a discriminated union on `type`.
+- `const rowName` — A row's English name — the label a trace, toast or list shows.
 - `const tokensOf` — A row's bounded-vocab effect tokens (empty for lookup tables, which carry no `effects` column).
 - `type LoadedRowByType` — The loaded-row member(s) for a type `T`.
 - `interface ContentGraph`
@@ -1311,4 +1313,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 65 global classes · 48 components · 761 exports across 109 modules · 40 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 762 exports across 109 modules · 41 duplicate suspects._

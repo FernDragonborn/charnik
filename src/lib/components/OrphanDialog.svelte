@@ -18,7 +18,7 @@
 		type DraftTarget,
 	} from '$lib/drafts/store';
 	import { getUserStorage } from '$lib/storage/provider';
-	import type { ContentGraph, LoadedRow } from '$lib/content/loader';
+	import { rowName, type ContentGraph, type LoadedRow } from '$lib/content/loader';
 
 	let {
 		orphans,
@@ -62,7 +62,7 @@
 		if (!t || t.kind === 'add') return [];
 		const q = query.trim().toLowerCase();
 		const all = graph.list(t.type);
-		const pool = q ? all.filter((r) => String(r.data.name_en).toLowerCase().includes(q)) : all;
+		const pool = q ? all.filter((r) => rowName(r).toLowerCase().includes(q)) : all;
 		return pool.slice(0, 40);
 	});
 
@@ -83,7 +83,7 @@
 	const preview = $derived(
 		selectedRow
 			? {
-					title: String(selectedRow.data.name_en),
+					title: rowName(selectedRow),
 					sub: `${selectedRow.type.replace(/_/g, ' ')} · ${selectedRow.source}`,
 					body: String(selectedRow.data.text_en ?? '').slice(0, 320),
 				}

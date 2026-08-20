@@ -68,6 +68,14 @@ export interface LoadedRowOf<T extends ContentType> extends LoadedRowCommon {
  *  (name_en/text_en/systems/source/effects) read without narrowing since every member has them. */
 export type LoadedRow = { [T in ContentType]: LoadedRowOf<T> }[ContentType];
 
+/** A row's English name — the label a trace, toast or list shows. The ONE accessor for it, because on
+ *  the `LoadedRow` UNION `data.name_en` is legitimately `string | undefined`: the lookup tables
+ *  (spell slots, XP thresholds) have no `name_en` column at all. Callers used to paper over that by
+ *  coercing the read to a string, which renders the literal "undefined" for exactly those rows; the
+ *  id is the honest fallback. A row narrowed to a type that HAS the column should just read it. */
+export const rowName = (row: LoadedRow): string =>
+	('name_en' in row.data ? row.data.name_en : undefined) ?? row.id;
+
 /** A row's bounded-vocab effect tokens (empty for lookup tables, which carry no `effects` column).
  *  The ONE accessor every consumer (derive gather, combat cast, content-health lint) reads. */
 export const tokensOf = (row: LoadedRow | undefined): string[] => {

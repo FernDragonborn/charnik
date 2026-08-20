@@ -8,7 +8,7 @@
 	import Icon, { type IconName } from './Icon.svelte';
 	import { getUserStorage } from '$lib/storage/provider';
 	import { listDrafts, deleteDraft, draftEffectiveId, type DraftEnvelope } from '$lib/drafts/store';
-	import type { ContentGraph } from '$lib/content/loader';
+	import { rowName, type ContentGraph } from '$lib/content/loader';
 
 	let {
 		graph,
@@ -79,12 +79,12 @@
 		}
 		const eid = draftEffectiveId(t);
 		const row = eid ? graph.get(eid) : undefined;
-		const rowName = row ? String(row.data.name_en) : t.id;
+		const title = row ? rowName(row) : t.id;
 		return {
 			env,
 			kind: t.kind,
 			icon: ICON[t.kind],
-			title: rowName,
+			title,
 			fragment: t.kind === 'translate' ? `→ ${t.locale.toUpperCase()}` : '· edit all fields',
 			typeLabel,
 			isOrphan: !row,

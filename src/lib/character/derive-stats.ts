@@ -18,7 +18,7 @@ import type { Character } from './schema';
 import { SKILL_ABILITY, type SkillId } from './skills';
 import { applyEffects, matchesTarget, type EffectFacts } from '../effects/apply';
 import { computed, type Computed, type Contribution } from '../rules/pipeline';
-import type { ContentGraph, LoadedRow, LoadedRowOf } from '../content/loader';
+import { rowName, type ContentGraph, type LoadedRow, type LoadedRowOf } from '../content/loader';
 
 /** Coerce a CSV-derived cell to a number (already-number passes through), else the default. Shared by
  *  the stat helpers + deriveSheet's base-speed read. */
@@ -184,7 +184,7 @@ export function deriveSpeed(
 ): Computed {
 	const speedBase: Contribution[] = [
 		{
-			source: speciesRow ? String(speciesRow.data.name_en) : 'Default',
+			source: speciesRow ? rowName(speciesRow) : 'Default',
 			layer: 'base',
 			op: 'add',
 			amount: baseSpeed,
@@ -193,7 +193,7 @@ export function deriveSpeed(
 	const armorStrMin = equippedArmor ? num(equippedArmor.data.str_min) : 0;
 	if (armorStrMin > 0 && scores.str < armorStrMin)
 		speedBase.push({
-			source: `${String(equippedArmor?.data.name_en)} (STR ${armorStrMin})`,
+			source: `${equippedArmor ? rowName(equippedArmor) : 'Armor'} (STR ${armorStrMin})`,
 			layer: 'item',
 			op: 'add',
 			amount: -10,

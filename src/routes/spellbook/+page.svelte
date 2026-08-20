@@ -14,7 +14,7 @@
 	import { isRowActive } from '$lib/content/sources.svelte';
 	import { preparedTalliesByClass, canTogglePreparedFor } from '$lib/combat/helpers';
 	import PreparedCaps from '$lib/components/PreparedCaps.svelte';
-	import type { LoadedRow } from '$lib/content/loader';
+	import { rowName, type LoadedRow } from '$lib/content/loader';
 	import type { Character } from '$lib/character/schema';
 	import { buildDetail, groupEntries, toEntryGroups } from '$lib/content/detail';
 	import { app } from '$lib/stores/app.svelte';
@@ -79,13 +79,13 @@
 		const q = query.trim().toLowerCase();
 		const rows = resolved
 			.filter(({ entry, row }) => {
-				if (q && !String(row.data.name_en).toLowerCase().includes(q)) return false;
+				if (q && !rowName(row).toLowerCase().includes(q)) return false;
 				if (filter === 'prepared' && !isPrepared(entry)) return false;
 				if (filter === 'pinned' && !pinned.has(row.effectiveId)) return false;
 				return true;
 			})
 			.map((x) => x.row);
-		return toEntryGroups(groupEntries(rows, 'spell'), (r) => String(r.data.name_en));
+		return toEntryGroups(groupEntries(rows, 'spell'), (r) => rowName(r));
 	});
 
 	const detail = $derived(

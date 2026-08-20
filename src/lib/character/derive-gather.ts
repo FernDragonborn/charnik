@@ -7,7 +7,7 @@
  * `apply_condition` expansion happen LATER, in the ONE resolve stage (effects/resolver.ts) — in
  * dependency order — so this phase is a pure collect, no interpretation.
  */
-import { tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
+import { rowName, tokensOf, type ContentGraph, type LoadedRow } from '../content/loader';
 import type { Character } from './schema';
 import type { ActiveEffect, EffectIssue } from '../effects/token-parser';
 import type { Layer } from '../rules/pipeline';
@@ -81,7 +81,7 @@ class EffectGatherer {
 		const tokens = tokensOf(row);
 		if (!row || !tokens.length) return;
 		this.active.push({
-			source: String(row.data.name_en),
+			source: rowName(row),
 			layer,
 			tokens,
 			...(classId !== undefined ? { classId } : {}),
@@ -120,7 +120,7 @@ class EffectGatherer {
 		const key = `${f.data.id}:${f.data.level}:${forSubclass ?? ''}`;
 		if (seen.has(key)) {
 			this.issues.push({
-				source: String(f.data.name_en),
+				source: rowName(f),
 				token: `class_feature:${f.data.id}`,
 				reason:
 					'duplicate class feature from another source — applied once; resolve the collision to choose which',
@@ -141,7 +141,7 @@ class EffectGatherer {
 			const liveActive = live !== undefined && this.isActive(live);
 			if (eff.source && !liveActive) this.missing.push(eff.source);
 			const tokens = liveActive ? tokensOf(live) : eff.effects;
-			const label = liveActive ? String(live.data.name_en) : eff.label;
+			const label = liveActive ? rowName(live) : eff.label;
 			if (tokens.length) this.active.push({ source: label, layer: 'condition', tokens });
 		}
 	}
@@ -159,7 +159,7 @@ class EffectGatherer {
 			.find((r) => r.id === 'exhaustion' && this.isActive(r));
 		const tokens = tokensOf(row);
 		if (row && tokens.length)
-			this.active.push({ source: String(row.data.name_en), layer: 'condition', tokens });
+			this.active.push({ source: rowName(row), layer: 'condition', tokens });
 	}
 }
 
