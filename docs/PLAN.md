@@ -1047,9 +1047,8 @@ were learned the hard way.
   rename pass. B24 and B11 have since been answered (both won't-do, with the measurement /
   the caps that already cover the path that mattered). UX-2 onboarding stays deferred.
 
-**Out of band — do these when next in the area, don't schedule them into a wave:** `UBUG-22`
-(`rollFormula` drops a mid-string modifier — an hour, and it is silently wrong numbers reachable
-from content AND the plugin API).
+**Out of band — do these when next in the area, don't schedule them into a wave:** _(empty —
+`UBUG-22` was the last one and is closed.)_
 
 **From AUDIT-29-07 (retired 2026-08-04 — its Bugs/Smells/Naming were all closed + verified; git
 holds the done-work log; these are the OPEN tails it carried):**
@@ -1134,17 +1133,22 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
-- [ ] **UBUG-22 · `rollFormula` silently drops a flat modifier that isn't at the end of the formula
-  (found in the roller audit 2026-08-10).** `rollFormula('1d6+3+1d4')` totals **10, not 13** — proven
-  with maximal dice. `parseDicePool` collects every `NdM` group, but the flat modifier is read by a
-  TAIL regex (`/([+-]\s*\d+)\s*$/`), so any `+N` with a dice term after it is simply lost.
-  **Why it matters: it is reachable from CONTENT, not just from a typed formula.** `RollButton` rolls
-  formulas straight out of compendium CSVs, and `heal:<formula>` arrives from a `resource_option.action`
-  cell — so a homebrew author writing `heal:1d8+2+1d4` gets a quietly smaller heal with no warning.
-  Same failure class as UBUG-21 and the reason for the never-a-silently-wrong-number rule.
-  **Fix independently of the roller rewrite** — it is a parse bug, not a shape problem: sum every
-  signed standalone term instead of reading only the tail, and cover `1d6+3+1d4`, `2d6-1`, a bare
-  `+3`, and a modifier before any dice. Listed as slice 1 in [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md).
+- [x] **UBUG-22 · `rollFormula` silently dropped a flat modifier that wasn't at the end of the formula
+  — FIXED 2026-08-21.** `rollFormula('1d6+3+1d4')` totalled **10, not 13**: `parseDicePool` collected
+  every dice group, but the modifier was read by a TAIL regex, so any `+N` with a dice term after it
+  was lost — reachable from CONTENT (a homebrew `heal:1d8+2+1d4` healed quietly less) and from the
+  plugin API, which is what made it worth doing ahead of the roller rewrite.
+  **What shipped:** one `DICE_TERM` regex both parsers share + `parseFlatModifier` — strip the dice,
+  then sum EVERY signed term. Sharing the regex is the actual fix: what one parser skips, the other
+  must not read as a number. `attacks.ts`'s `segmentMod` + `segmentFlatBase` were the same parser
+  written twice and are gone; damage segments and roll formulas can no longer disagree about what
+  `+2` means. Two more silent drops fell out with it — a bare `d8` (no count) rolled nothing, and a
+  dice-less `70` in a formula rolled 0.
+  **The rule an UNSIGNED number obeys, and why:** it counts only as a leading value in a segment with
+  NO dice ("70", "1 bludgeoning"). With dice present it is ignored — that is the statblock average
+  form the shipped monsters use (`12 (2d6 + 5)` must roll 2d6+5, never 2d6+17), which the first draft
+  of this fix broke and the pre-commit self-check caught against real content. Same reason prose
+  ("1d20 vs AC 15") is ignored: a missing number beats a wrong one. 17 new assertions.
 - [ ] **UBUG-21 · The dice tray edits the TO-HIT while claiming to be the attack — dice and modifier
   you add for damage land on the d20 instead (reported by the maintainer 2026-08-10, long-standing;
   `design-preview/dice-bug.png`). Fix WITH `ROLLER-N`, below — same seam, and pointless to build twice.**

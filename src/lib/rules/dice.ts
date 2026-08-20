@@ -79,16 +79,41 @@ export function parseDiceTerm(term: string): BonusDie | null {
 	};
 }
 
-/** Parse every `NdM` token in a string into a pool ({sides: count}). "2d6 + 1d4" → {6:2, 4:1}.
+/** A dice term anywhere in a formula: `2d6`, and `d8` where the count is left implicit (= 1). ONE
+ *  regex because the pool parser and the modifier parser must agree on what a die IS — whatever one
+ *  of them skips, the other must not read as a plain number, which is precisely how UBUG-22 lost a
+ *  `+3`. Global, so only use it with `matchAll`/`replace` (both leave `lastIndex` alone). */
+const DICE_TERM = /(\d*)d(\d+)/gi;
+
+/** Parse every dice term in a string into a pool ({sides: count}). "2d6 + 1d4" → {6:2, 4:1}.
  *  Counts/sides are cost-capped (see the caps above) so an untrusted formula can't blow the loop. */
 export function parseDicePool(s: string): Record<number, number> {
 	const out: Record<number, number> = {};
-	for (const m of s.matchAll(/(\d+)d(\d+)/gi)) {
+	for (const m of s.matchAll(DICE_TERM)) {
 		const sides = Math.min(Number(m[2]), MAX_DIE_SIDES);
-		const count = Math.min(Number(m[1]), MAX_DICE_PER_TERM);
+		const count = Math.min(m[1] ? Number(m[1]) : 1, MAX_DICE_PER_TERM);
 		out[sides] = Math.min((out[sides] ?? 0) + count, MAX_DICE_PER_TERM);
 	}
 	return out;
+}
+
+/**
+ * The flat modifier of a formula or damage segment: EVERY signed term that is not part of a die,
+ * summed. The dice come out first, so a die's count can never be misread as a modifier
+ * ("2d6+10d4" → 0) and a modifier counts wherever it sits. Reading only the TAIL is what made
+ * `1d6+3+1d4` roll three short (UBUG-22) — reachable from content, since a homebrew
+ * `heal:1d8+2+1d4` goes through here. Handles the unicode minus `signed()` writes as well as ASCII.
+ *
+ * An UNSIGNED number counts only as a leading value in a segment with no dice at all — Heal's "70",
+ * a fixed "1 bludgeoning" weapon. With dice present it is ignored, because that is the statblock
+ * average-damage form the shipped monsters use ("12 (2d6 + 5)" must roll 2d6+5, not 2d6+17), and
+ * because damage strings carry prose ("1d20 vs AC 15"). A missing number beats a wrong one.
+ */
+export function parseFlatModifier(s: string): number {
+	const rest = s.replace(DICE_TERM, ' ');
+	let mod = rest === s ? Number(/^\s*(\d+)\b/.exec(rest)?.[1] ?? 0) : 0;
+	for (const m of rest.matchAll(/([+\-−])\s*(\d+)/g)) mod += (m[1] === '+' ? 1 : -1) * Number(m[2]);
+	return mod;
 }
 
 /** Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first. Inverse of
@@ -355,10 +380,9 @@ export function cycleAdvantage<T extends Rolled>(r: T, rng: Rng = Math.random): 
 		: (clearAdvantage(r) ?? flipAdvantage(r));
 }
 
-/** Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat
- *  mod, then `rollPool`. Rolls EVERY dice group (the old compendium roller only did the first). */
+/** Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + the flat mod, then
+ *  `rollPool`. Rolls EVERY dice group (the old compendium roller only did the first) and counts every
+ *  flat term, wherever it sits (UBUG-22 — it used to read only the tail). */
 export function rollFormula(formula: string, rng: Rng = Math.random): Rolled {
-	const fm = /([+-]\s*\d+)\s*$/.exec(formula);
-	const mod = fm?.[1] ? Number(fm[1].replace(/\s/g, '')) : 0;
-	return rollPool(parseDicePool(formula), { mod, rng });
+	return rollPool(parseDicePool(formula), { mod: parseFlatModifier(formula), rng });
 }

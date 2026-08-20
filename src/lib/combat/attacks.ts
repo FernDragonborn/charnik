@@ -6,7 +6,7 @@ import { gatherProfGrants, isWeaponProficient } from '$lib/rules/proficiency';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
-import { parseDicePool, formatDicePool } from '$lib/rules/dice';
+import { parseDicePool, parseFlatModifier, formatDicePool } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import { parseToken, EFFECT_KIND } from '$lib/effects/token-parser';
 import { effectTag } from './effects-view';
@@ -37,46 +37,25 @@ export interface Attack {
 	note?: string;
 }
 
-/** The flat mod inside a single damage segment ("1d8 +3 slashing" → +3). Handles the unicode minus
- *  `signed()` emits. A die's count must NOT read as a flat mod — in "2d6+10d4" the `+10` precedes
- *  `d4`, so match a signed number only when NOT followed by (more digits then) `d` (a die is
- *  `<count>d<sides>`, never spaced). `(?!\d*d)` — not just `(?!d)` — else the regex backtracks a
- *  multi-digit count ("+10d4" → "+1"). Type words never start with `d`, so "+3 slashing" parses. */
-function segmentMod(segment: string): number {
-	const m = /([+\-−])\s*(\d+)(?!\d*d)/i.exec(segment);
-	return m ? (m[1] === '+' ? 1 : -1) * Number(m[2]) : 0;
-}
-
 /** The trailing damage-type word(s) of a segment ("1d8 +3 slashing" → "slashing"), or "" if none. */
 function segmentType(segment: string): string {
 	return (/([a-z][a-z ]*?)\s*$/i.exec(segment.trim())?.[1] ?? '').trim();
 }
 
-/** A dice-less segment's flat base as an UNSIGNED leading integer (Heal's "70", a fixed "1 bludgeoning"
- *  weapon). `segmentMod` only reads a SIGNED number — so it can't misread a die's count ("1d10" → +10) —
- *  which silently drops a bare fixed value; recover it here. Only ever called on a segment with NO dice,
- *  so there's no die count to confuse it with. */
-function segmentFlatBase(segment: string): number {
-	const m = /^\s*(\d+)\b/.exec(segment);
-	return m ? Number(m[1]) : 0;
-}
-
 /** Parse a weapon/spell damage string into its typed parts. Multiple types are `;`-separated
  *  ("1d6 slashing; 1d4 radiant"); a plain weapon is one part ("1d8 slashing"). Each part carries its
- *  own dice pool, flat mod, and type. Empty string → no parts. Pure. */
+ *  own dice pool, flat mod, and type — dice and modifier read by the roller's own parsers, so a
+ *  segment and a roll formula can never disagree about what "+2" means. Empty string → no parts. Pure. */
 export function parseDamageParts(dmg: string): DamagePart[] {
 	return dmg
 		.split(';')
 		.map((s) => s.trim())
 		.filter(Boolean)
-		.map((seg) => {
-			const pool = parseDicePool(seg);
-			// a dice-less segment ("70" for Heal) carries its value as an unsigned flat base — segmentMod
-			// only reads a signed one, so recover it here (never when there are dice, N2 / item 6).
-			const mod =
-				Object.keys(pool).length === 0 ? segmentMod(seg) || segmentFlatBase(seg) : segmentMod(seg);
-			return { pool, mod, type: segmentType(seg) };
-		});
+		.map((seg) => ({
+			pool: parseDicePool(seg),
+			mod: parseFlatModifier(seg),
+			type: segmentType(seg),
+		}));
 }
 
 /** Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4

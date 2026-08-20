@@ -1119,7 +1119,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MAX_DICE_PER_TERM` — Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted * formula (shared cont…
 - `const MAX_DIE_SIDES`
 - `function parseDiceTerm` — Parse a single signed dice term ("1d4" / "-2d4" / "+1d6") into a `BonusDie`, or null if it * isn't one.
-- `function parseDicePool` — Parse every `NdM` token in a string into a pool ({sides: count}).
+- `function parseDicePool` — Parse every dice term in a string into a pool ({sides: count}).
+- `function parseFlatModifier` — * The flat modifier of a formula or damage segment: EVERY signed term that is not part of a die, * summed.
 - `function formatDicePool` — Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first.
 - `interface RollOptions` — Options for `rollPool` beyond the pool itself: injectable rng + roll-manipulation effects.
 - `interface RollPoolOptions` — Everything a pool roll can be given besides the dice themselves.
@@ -1129,7 +1130,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function amendWithAdvantage` — * Apply advantage to a roll that ALREADY happened: roll one more d20 and keep the better of the two.
 - `function flipAdvantage` — * Flip a roll that two d20 already decided: what was kept is dropped and what was dropped is kept.
 - `function cycleAdvantage` — * One tap on the d20, cycling **advantage → disadvantage → neither**.
-- `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + trailing flat * mod, then `rollPool`.
+- `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + the flat mod, then * `rollPool`.
 
 ### `src/lib/rules/pipeline.ts`
 
@@ -1308,4 +1309,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 64 global classes · 47 components · 760 exports across 109 modules · 40 duplicate suspects._
+_45 tokens · 64 global classes · 47 components · 761 exports across 109 modules · 40 duplicate suspects._

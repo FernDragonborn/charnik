@@ -3,6 +3,7 @@ import {
 	rollPool,
 	rollFormula,
 	parseDicePool,
+	parseFlatModifier,
 	parseDiceTerm,
 	parseRollExpr,
 	amendWithAdvantage,
@@ -39,6 +40,36 @@ describe('parseDicePool', () => {
 		expect(parseDicePool('2d6 + 1d4')).toEqual({ 6: 2, 4: 1 });
 		expect(parseDicePool('3d8')).toEqual({ 8: 3 });
 		expect(parseDicePool('no dice here')).toEqual({});
+	});
+	it('reads an implicit count of one ("d8" is a die, not nothing)', () => {
+		expect(parseDicePool('d8')).toEqual({ 8: 1 });
+		expect(parseDicePool('d6 + 2d6')).toEqual({ 6: 3 });
+	});
+});
+
+describe('parseFlatModifier (shared by the roller and the damage-segment parser)', () => {
+	it('sums every signed term, wherever it sits', () => {
+		expect(parseFlatModifier('1d6+3+1d4')).toBe(3);
+		expect(parseFlatModifier('1d8 +3 slashing')).toBe(3);
+		expect(parseFlatModifier('2d6-1')).toBe(-1);
+		expect(parseFlatModifier('+2+3')).toBe(5);
+	});
+	it('reads the unicode minus `signed()` writes', () => {
+		expect(parseFlatModifier('1d6 −1 bludgeoning')).toBe(-1);
+	});
+	it('takes an unsigned LEADING value only when the segment has no dice', () => {
+		expect(parseFlatModifier('70')).toBe(70); // Heal
+		expect(parseFlatModifier('1 bludgeoning')).toBe(1); // a fixed-damage weapon
+		expect(parseFlatModifier('1d20 vs AC 15')).toBe(0);
+	});
+	it('reads the statblock average form as dice + the SIGNED mod only', () => {
+		// the shipped monsters carry "12 (2d6 + 5)" — the 12 is the average, not a bonus
+		expect(parseFlatModifier('12 (2d6 + 5)')).toBe(5);
+		expect(parseFlatModifier('6 (1d12)')).toBe(0);
+	});
+	it('never mistakes a die count for a modifier', () => {
+		expect(parseFlatModifier('1d10')).toBe(0);
+		expect(parseFlatModifier('2d6+10d4')).toBe(0);
 	});
 });
 
@@ -143,6 +174,40 @@ describe('rollFormula', () => {
 	it('handles a monster HP formula', () => {
 		const r = rollFormula('16d12 + 80', rngSequence(...Array(16).fill(0.5)));
 		expect(r.total).toBe(16 * 7 + 80); // d12 at 0.5 → 7
+	});
+
+	// UBUG-22: the modifier used to be read by a TAIL regex, so any +N with dice after it was lost —
+	// silently, and reachable from content (a homebrew `heal:1d8+2+1d4`) and from the plugin API.
+	it('counts a flat modifier that is not at the end (UBUG-22)', () => {
+		// maximal dice: 0.99 on a d6 → 6, on a d4 → 4
+		expect(rollFormula('1d6+3+1d4', rngSequence(0.99, 0.99)).total).toBe(13);
+	});
+
+	it('counts a signed modifier that comes BEFORE any dice', () => {
+		expect(rollFormula('+2 + 1d6', rngSequence(0.99)).total).toBe(8);
+	});
+
+	it('rolls a bare-count die and a dice-less flat value', () => {
+		expect(rollFormula('d8+2', rngSequence(0.99)).total).toBe(10);
+		expect(rollFormula('70').total).toBe(70); // Heal — no dice at all, and no rng drawn
+	});
+
+	it('rolls the statblock average form as its dice, not its average', () => {
+		expect(rollFormula('12 (2d6 + 5)', rngSequence(0.99, 0.99)).total).toBe(17);
+	});
+
+	it('subtracts a negative modifier wherever it sits', () => {
+		expect(rollFormula('2d6-1', rngSequence(0.99, 0.99)).total).toBe(11);
+		expect(rollFormula('1d6-2+1d4', rngSequence(0.99, 0.99)).total).toBe(8);
+	});
+
+	it('never reads a die COUNT as a modifier', () => {
+		const r = rollFormula('2d6+10d4', rngSequence(...Array(12).fill(0.99)));
+		expect(r.total).toBe(2 * 6 + 10 * 4); // the +10 belongs to d4, not to the total
+	});
+
+	it('ignores an unsigned number that is neither leading nor a die (prose, not a bonus)', () => {
+		expect(rollFormula('1d20 vs AC 15', rngSequence(0.99)).total).toBe(20);
 	});
 });
 

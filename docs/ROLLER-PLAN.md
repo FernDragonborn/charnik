@@ -67,7 +67,7 @@ first d20's", so a multi-d20 pool has no defined nat-20. Nothing in the app roll
 today, so this is a latent trap rather than a live bug — but it is the same modelling error as A:
 the roll's *manner* is passed alongside the dice instead of being part of what a roll IS.
 
-### E · `rollFormula` silently drops a flat modifier that isn't at the end — REAL BUG
+### E · `rollFormula` silently drops a flat modifier that isn't at the end — REAL BUG, FIXED 2026-08-21
 
 Proven: `rollFormula('1d6+3+1d4')` with maximal dice totals **10, not 13**. The `+3` is lost, because
 the modifier regex only looks at the tail (`/([+-]\s*\d+)\s*$/`).
@@ -77,6 +77,13 @@ compendium CSVs, and `heal:<formula>` comes from a `resource_option.action` cell
 writing `heal:1d8+2+1d4` gets a quietly smaller heal. Same failure class as `UBUG-21` — a wrong
 number with no complaint — and the reason the project's rule is "never a silently-wrong single big
 die". **Filed separately as `UBUG-22`: it is independent of the rewrite and should not wait for it.**
+
+**Fixed** (slice 1 below): the two parsers now share one `DICE_TERM` regex, and `parseFlatModifier`
+strips the dice before summing every signed term — so the pool parser and the modifier parser cannot
+disagree about what is a die, which was the root cause rather than the tail regex itself. `attacks.ts`
+lost its private copy (`segmentMod` + `segmentFlatBase`) to the shared one. Note for slice 3: this
+still does NOT surface what it could not parse (§5) — an unrecognised fragment is ignored, not
+reported. That stays open, and it is now the only part of finding J's rule still unmet.
 
 ### F · `Rolled.natural` was documented wrong — FIXED 2026-08-10
 
@@ -279,8 +286,10 @@ case" should be refused: ROLLER-N needs exactly two levels and nobody has asked 
 
 ## Slices (draft — sequence, not yet estimates)
 
-1. `[ ]` **UBUG-22 first, on its own** — the `rollFormula` mid-string modifier bug. Independent of
-   everything below, reachable from content, cheap.
+1. `[x]` **UBUG-22 — DONE 2026-08-21, on its own.** The `rollFormula` mid-string modifier bug; see
+   finding E for what shipped (one shared `DICE_TERM` + `parseFlatModifier`, `attacks.ts`'s duplicate
+   parser deleted). What it deliberately did NOT do: surface an unparsed fragment (§5) — that waits
+   for the `{roll, issues}` shape.
 2. `[ ]` **One record, persisted and in-session (finding G).** Today the disk entry silently drops
    damage, the advantage pair and the note. Make the persisted shape the same shape, decide whether
    an amendment writes back, and keep old lines loadable. Do this EARLY: every slice below makes the
