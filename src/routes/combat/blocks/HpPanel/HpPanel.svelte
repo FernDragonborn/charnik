@@ -105,7 +105,11 @@
 	<!-- death takes over the whole sheet (DeathScreen), so the pips stay out of its way -->
 	{#if downed && !c.play.death}
 		<div class="death-saves">
-			<button class="hp-btn deathroll" onclick={() => combat.deathSave()} title="Roll a death save">
+			<button
+				class="hp-btn death-roll"
+				onclick={() => combat.deathSave()}
+				title="Roll a death save"
+			>
 				🎲 Death save
 			</button>
 			<div class="death-tracks">
@@ -365,7 +369,7 @@
 		flex-direction: column;
 		gap: 9px;
 	}
-	.hp-btn.deathroll {
+	.hp-btn.death-roll {
 		flex: 0 0 auto;
 		align-self: flex-start;
 		background: var(--color-surface-2);

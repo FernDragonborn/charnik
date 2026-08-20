@@ -98,9 +98,9 @@
 
 {#snippet hitDice(a: RollToastAttack)}
 	<span
-		class="rt-hit"
-		class:adv={a.advantageMode === 1}
-		class:dis={a.advantageMode === -1}
+		class="roll-to-hit"
+		class:advantage={a.advantageMode === 1}
+		class:disadvantage={a.advantageMode === -1}
 		title={a.advantageMode === 1
 			? 'rolled with advantage'
 			: a.advantageMode === -1
@@ -111,26 +111,26 @@
 			{#if c.sides === 20 && i === 0 && canAmend(a)}
 				<button
 					type="button"
-					class="rt-die d20 control {tone(c)}"
+					class="roll-die d20 tappable {tone(c)}"
 					title={cueTitle(a)}
 					onclick={() => onAdvantage?.()}
-					>{face(c)}<span class="rt-cue {cueShape(a)}"></span></button
+					>{face(c)}<span class="roll-cue {cueShape(a)}"></span></button
 				>
 			{:else}
-				<span class="rt-die {tone(c)}" class:d20={c.sides === 20} title="d{c.sides} · {c.detail}"
+				<span class="roll-die {tone(c)}" class:d20={c.sides === 20} title="d{c.sides} · {c.detail}"
 					>{face(c)}</span
 				>
 			{/if}
 		{/each}
 		{#if a.dropped !== undefined}
-			<span class="rt-die dropped" title="dropped d20">{a.dropped}</span>
+			<span class="roll-die dropped-die" title="dropped d20">{a.dropped}</span>
 		{/if}
 		{#if foldedDice(a)}
-			<span class="rt-die folded" title={a.chips.map((c) => c.detail).join(' + ')}
+			<span class="roll-die folded-dice" title={a.chips.map((c) => c.detail).join(' + ')}
 				>{foldedDice(a)}</span
 			>
 		{/if}
-		{#if a.mod}<span class="rt-mod">{signed(a.mod)}</span>{/if}
+		{#if a.mod}<span class="roll-modifier">{signed(a.mod)}</span>{/if}
 	</span>
 {/snippet}
 
@@ -141,14 +141,14 @@
 		rerollDamage && rerollDamage.attack === attack && rerollDamage.part === part
 			? rerollDamage
 			: undefined}
-	<span class="rt-part" title={d.type || undefined}>
+	<span class="roll-damage-part" title={d.type || undefined}>
 		<DamageIcon type={d.type} />
 		<svelte:element
 			this={re ? 'button' : 'span'}
 			role={re ? 'button' : undefined}
 			type={re ? 'button' : undefined}
-			class="rt-die"
-			class:control={re}
+			class="roll-die"
+			class:tappable={re}
 			title={re
 				? re.label
 				: `${d.chips.map((c) => c.detail).join(' + ')}${d.mod ? ` ${signed(d.mod)}` : ''}`}
@@ -161,79 +161,82 @@
 				<span>{d.total}</span>
 			{:else if d.chips.length}
 				{#each d.chips as c, i (i)}
-					{#if i}<span class="rt-div"></span>{/if}
+					{#if i}<span class="roll-die-divider"></span>{/if}
 					<span title="d{c.sides} · {c.detail}">{face(c)}</span>
 				{/each}
 			{:else}
 				<span>{d.total}</span>
 			{/if}
-			{#if re}<span class="rt-cue">↻</span>{/if}
+			{#if re}<span class="roll-cue">↻</span>{/if}
 		</svelte:element>
-		{#if d.mod && d.chips.length && !strip}<span class="rt-mod">{signed(d.mod)}</span>{/if}
+		{#if d.mod && d.chips.length && !strip}<span class="roll-modifier">{signed(d.mod)}</span>{/if}
 	</span>
 {/snippet}
 
-<div class="rollrow" class:strip title={strip && model.note ? model.note : undefined}>
-	<span class="rt-name">{model.label}</span>
+<div class="roll-row" class:strip title={strip && model.note ? model.note : undefined}>
+	<span class="roll-label">{model.label}</span>
 	{#if strip && multi}
 		<!-- a volley cannot flow inline: three attacks each with their own dice and damage types is a
 		     two-dimensional thing, and forcing it onto one line is exactly the overlap this layout
 		     exists to avoid. A strip says WHAT happened and how much; the card and the log carry the
 		     attack-by-attack breakdown. (Nothing rolls a volley yet — blocked on ROLLER-N — but the
 		     gallery renders one, and it must not be the shape that ships.) -->
-		<span class="rt-grid volley">
-			<span class="rt-mod">{attacks.length} attacks</span>
+		<span class="roll-grid volley">
+			<span class="roll-modifier">{attacks.length} attacks</span>
 			{#each model.byType as t, i (i)}
-				<span class="rt-typesum" title={t.type || undefined}>
+				<span class="roll-type-sum" title={t.type || undefined}>
 					<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
 				</span>
 			{/each}
-			<span class="rt-tot big">{model.total}</span>
+			<span class="roll-total big-total">{model.total}</span>
 		</span>
 	{:else}
-		<span class="rt-grid" class:damaging={model.damaging} class:multi>
+		<span class="roll-grid" class:damaging={model.damaging} class:multi>
 			<!-- the captions name the two NUMBERS, not the dice: "to hit" spans the dice columns so its
 		     own width can't widen them, and lands on the to-hit total's right edge. -->
 			{#if model.damaging}
-				<span class="rt-cap hit eyebrow">to hit</span>
+				<span class="roll-caption hit eyebrow">to hit</span>
 				<span></span>
-				<span class="rt-cap eyebrow">damage</span>
+				<span class="roll-caption eyebrow">damage</span>
 			{/if}
 			{#each attacks as a, i (i)}
-				{#if multi}<span class="rt-idx" class:gold={a.natural === 20}>{i + 1}</span>{/if}
+				{#if multi}<span class="roll-attack-index" class:nat-20={a.natural === 20}>{i + 1}</span
+					>{/if}
 				{@render hitDice(a)}
 				{#if model.damaging}
-					<span class="rt-sub" class:gold={a.natural === 20} class:bad={a.natural === 1}
-						>{a.subtotal}</span
+					<span
+						class="roll-to-hit-total"
+						class:nat-20={a.natural === 20}
+						class:nat-1={a.natural === 1}>{a.subtotal}</span
 					>
-					<span class="rt-dmg">
+					<span class="roll-damage">
 						{#if a.natural === 1}
-							<span class="rt-none">—</span>
+							<span class="roll-no-damage">—</span>
 						{:else}
 							{#each a.damage as d, j (j)}{@render damagePart(d, i, j)}{/each}
 						{/if}
 					</span>
 				{/if}
 				<span
-					class="rt-tot"
-					class:big={!multi}
-					class:gold={a.natural === 20}
-					class:bad={a.natural === 1}
+					class="roll-total"
+					class:big-total={!multi}
+					class:nat-20={a.natural === 20}
+					class:nat-1={a.natural === 1}
 				>
-					{#if !model.damaging}{a.subtotal}{:else if a.natural === 1}<span class="rt-miss"
+					{#if !model.damaging}{a.subtotal}{:else if a.natural === 1}<span class="roll-miss"
 							>miss</span
 						>{:else}{a.damageTotal}{/if}
 				</span>
 			{/each}
 			{#if multi}
-				<span class="rt-bytype">
+				<span class="roll-type-sums">
 					{#each model.byType as t, i (i)}
-						<span class="rt-typesum" title={t.type || undefined}>
+						<span class="roll-type-sum" title={t.type || undefined}>
 							<DamageIcon type={t.type} size={14} /><span>{t.total}</span>
 						</span>
 					{/each}
 				</span>
-				<span class="rt-tot big grand">{model.total}</span>
+				<span class="roll-total big-total grand-total">{model.total}</span>
 			{/if}
 		</span>
 	{/if}
@@ -241,58 +244,58 @@
 	     which is one tap away and renders it in full. On a one-line strip it is permanent space for a
 	     few seconds of value, and for an amendment it is redundant besides: the green/red frame and
 	     the struck-through die already say the roll was changed. Kept as the strip's tooltip. -->
-	{#if model.note && !strip}<span class="rt-note">⇡ {model.note}</span>{/if}
+	{#if model.note && !strip}<span class="roll-note">⇡ {model.note}</span>{/if}
 </div>
 
 <style>
 	/* the roll owns its own stacking now — a mounting surface just gives it a box, it doesn't have to
 	   know that a roll is three sibling spans */
-	.rollrow {
+	.roll-row {
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
 	}
 	/* one line: the label sits beside the numbers, the column captions fold away (they title columns
 	   that no longer exist as a grid), and the totals stop being display-sized */
-	.rollrow.strip {
+	.roll-row.strip {
 		flex-direction: row;
 		align-items: center;
 	}
 	/* the label yields FIRST when the strip runs out of room: you just rolled it, and the log keeps it
 	   in full. Everything to its right is either a control or a number, and neither can be ellipsised. */
-	.strip .rt-name {
+	.strip .roll-label {
 		flex: 0 1 auto;
 		min-width: 3ch;
 		padding: 8px 4px 8px 13px;
 	}
-	.strip .rt-grid,
-	.strip .rt-grid.damaging,
-	.strip .rt-grid.multi,
-	.strip .rt-grid.volley {
+	.strip .roll-grid,
+	.strip .roll-grid.damaging,
+	.strip .roll-grid.multi,
+	.strip .roll-grid.volley {
 		display: flex;
 		align-items: center;
 		gap: 9px;
 		padding: 0 4px;
 	}
-	.strip .rt-cap {
+	.strip .roll-caption {
 		display: none;
 	}
-	.strip .rt-hit,
-	.strip .rt-dmg {
+	.strip .roll-to-hit,
+	.strip .roll-damage {
 		padding: 0;
 		border-left: 0;
 	}
-	.strip .rt-sub {
+	.strip .roll-to-hit-total {
 		padding-right: 0;
 	}
-	.strip .rt-tot,
-	.strip .rt-tot.big {
+	.strip .roll-total,
+	.strip .roll-total.big-total {
 		padding: 0 11px;
 		font-size: var(--font-size-body);
 		border-left: 1px solid var(--color-border);
 	}
 
-	.rt-name {
+	.roll-label {
 		padding: 11px 16px 9px;
 		font-family: var(--font-display);
 		font-size: var(--font-size-body);
@@ -304,34 +307,34 @@
 	}
 	/* one row per attack. The fixed-ish columns let a stack of rolls read down the same seams; they
 	   grow past their floor rather than clip (a dropped adv die, a three-digit total). */
-	.rt-grid {
+	.roll-grid {
 		display: grid;
 		grid-template-columns: 1fr 58px;
 		align-items: center;
 		padding: 0 0 6px 16px;
 	}
-	.rt-grid.damaging {
+	.roll-grid.damaging {
 		grid-template-columns: minmax(58px, max-content) minmax(36px, max-content) 1fr 58px;
 	}
-	.rt-grid.multi {
+	.roll-grid.multi {
 		grid-template-columns: 26px minmax(58px, max-content) minmax(36px, max-content) 1fr 58px;
 		padding-left: 0;
 	}
-	.rt-cap {
+	.roll-caption {
 		padding: 0 0 5px;
 		font-size: var(--font-size-micro);
 		text-align: center;
 	}
-	.rt-cap.hit {
+	.roll-caption.hit {
 		grid-column: 1 / 3;
 		padding-right: 12px; /* the to-hit total's own padding — the caption sits on its right edge */
 		text-align: right;
 	}
-	.multi .rt-cap.hit {
+	.multi .roll-caption.hit {
 		grid-column: 1 / 4;
 	}
 	/* which attack of the volley this is — a bare ordinal, gold when that one crit */
-	.rt-idx {
+	.roll-attack-index {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -341,7 +344,7 @@
 		color: var(--color-text-muted);
 		font-variant-numeric: tabular-nums;
 	}
-	.rt-hit {
+	.roll-to-hit {
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -351,17 +354,17 @@
 	/* HOW the d20 was rolled is the one thing you cannot read off the numbers, so it frames the pair
 	   rather than tinting a die — the dice keep their own nat-20 gold / nat-1 red, which says what the
 	   die DID. Green for advantage, red for disadvantage. */
-	.rt-hit.adv,
-	.rt-hit.dis {
+	.roll-to-hit.advantage,
+	.roll-to-hit.disadvantage {
 		margin: 2px 0;
 		padding: 2px 6px;
 		border-radius: var(--radius-full);
 		border: 2px solid var(--color-good);
 	}
-	.rt-hit.dis {
+	.roll-to-hit.disadvantage {
 		border-color: var(--color-danger);
 	}
-	.rt-die {
+	.roll-die {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -378,32 +381,32 @@
 		font-variant-numeric: tabular-nums;
 	}
 	/* several dice of one damage type share a pill — a crit's doubled d8s are one thing, not two */
-	.rt-div {
+	.roll-die-divider {
 		width: 1px;
 		height: 12px;
 		background: var(--color-border-strong);
 	}
-	.rt-die.max {
+	.roll-die.max {
 		background: var(--color-resource-soft);
 		border-color: var(--color-resource-line);
 		color: var(--color-resource);
 	}
-	.rt-die.min {
+	.roll-die.min {
 		color: var(--color-text-muted);
 	}
 	/* the d20 decides things — its extremes get the full-strength edge, not just tinted text */
-	.rt-die.d20.max {
+	.roll-die.d20.max {
 		border-color: var(--color-resource);
 		font-weight: 700;
 	}
-	.rt-die.d20.min {
+	.roll-die.d20.min {
 		background: var(--color-danger-soft);
 		border-color: var(--color-danger);
 		color: var(--color-danger);
 		font-weight: 700;
 	}
 	/* the adv/disadv die that lost: smaller, struck through, no fill */
-	.rt-die.dropped {
+	.roll-die.dropped-die {
 		min-width: 19px;
 		height: 18px;
 		padding: 0 5px;
@@ -416,7 +419,7 @@
 	   than coloured, because green and red are spoken for — they say how the d20 was rolled — and a
 	   third meaning in the same palette would read as a roll outcome. Inert pills are untouched, so
 	   there is never a false affordance. */
-	.rt-die.control {
+	.roll-die.tappable {
 		gap: 2px;
 		padding-right: 4px;
 		border-style: dashed;
@@ -429,53 +432,53 @@
 	   No third colour: each shape wears the colour of the state it reports, so teal and red keep meaning
 	   exactly what they mean on the frame. The neutral diamond stays uncoloured, which is why it can be
 	   the affordance marker without claiming a state. */
-	.rt-cue.up,
-	.rt-cue.down,
-	.rt-cue.none {
+	.roll-cue.up,
+	.roll-cue.down,
+	.roll-cue.none {
 		width: 8px;
 		height: 8px;
 		background: currentColor;
 	}
-	.rt-cue.up {
+	.roll-cue.up {
 		clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
 		color: var(--color-good);
 	}
-	.rt-cue.down {
+	.roll-cue.down {
 		clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
 		color: var(--color-danger);
 	}
-	.rt-cue.none {
+	.roll-cue.none {
 		clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
 		color: var(--color-text-muted);
 	}
-	.rt-die.control:hover {
+	.roll-die.tappable:hover {
 		border-color: var(--color-accent);
 		background: var(--color-accent-soft);
 	}
-	.rt-die.control:focus-visible {
+	.roll-die.tappable:focus-visible {
 		outline: 2px solid var(--color-accent);
 		outline-offset: 1px;
 	}
-	.rt-cue {
+	.roll-cue {
 		font-size: var(--font-size-micro);
 		line-height: 1;
 		opacity: 0.8;
 	}
 	/* the folded pool ("8d6") is a count, not a result — it reads as a caption, not as a die face */
-	.rt-die.folded {
+	.roll-die.folded-dice {
 		background: transparent;
 		border-style: dashed;
 		color: var(--color-text-muted);
 		font-weight: 500;
 	}
-	.rt-mod {
+	.roll-modifier {
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		font-variant-numeric: tabular-nums;
 		white-space: nowrap;
 	}
 	/* what the to-hit came to — subordinate to the damage, which is the number being read */
-	.rt-sub {
+	.roll-to-hit-total {
 		padding-right: 12px;
 		text-align: right;
 		font-family: var(--font-display);
@@ -486,7 +489,7 @@
 	}
 	/* the damage half of the row: glyph-led chips, right-aligned against the total's rule, wrapping
 	   onto a second line when a crit doubles the types */
-	.rt-dmg {
+	.roll-damage {
 		align-self: stretch;
 		display: flex;
 		flex-wrap: wrap;
@@ -496,19 +499,19 @@
 		padding: 6px 12px 6px 14px;
 		border-left: 1px solid var(--color-border);
 	}
-	.rt-part {
+	.roll-damage-part {
 		display: inline-flex;
 		align-items: center;
 		gap: 3px;
 		flex: none;
 		white-space: nowrap;
 	}
-	.rt-none {
+	.roll-no-damage {
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
 	/* the summary column: same width whatever the height, so a stack lines its numbers up */
-	.rt-tot {
+	.roll-total {
 		align-self: stretch;
 		display: flex;
 		align-items: center;
@@ -521,27 +524,27 @@
 		color: var(--color-text-muted);
 		font-variant-numeric: tabular-nums;
 	}
-	.rt-tot.big {
+	.roll-total.big-total {
 		padding-bottom: 6px;
 		font-size: var(--font-size-h2);
 		font-weight: 700;
 		color: var(--color-text);
 	}
-	.rt-tot.gold,
-	.rt-sub.gold,
-	.rt-idx.gold {
+	.roll-total.nat-20,
+	.roll-to-hit-total.nat-20,
+	.roll-attack-index.nat-20 {
 		color: var(--color-resource);
 	}
-	.rt-tot.bad,
-	.rt-sub.bad {
+	.roll-total.nat-1,
+	.roll-to-hit-total.nat-1 {
 		color: var(--color-danger);
 	}
-	.rt-miss {
+	.roll-miss {
 		font-size: var(--font-size-sm);
 		font-weight: 600;
 	}
 	/* the volley's footer: what it dealt per type, then the one number that leaves the card */
-	.rt-bytype {
+	.roll-type-sums {
 		grid-column: 1 / 5;
 		display: flex;
 		flex-wrap: wrap;
@@ -550,7 +553,7 @@
 		gap: 12px;
 		padding: 7px 12px 11px 0;
 	}
-	.rt-typesum {
+	.roll-type-sum {
 		display: flex;
 		align-items: center;
 		gap: 5px;
@@ -559,15 +562,15 @@
 		font-weight: 600;
 		font-variant-numeric: tabular-nums;
 	}
-	.rt-typesum span {
+	.roll-type-sum span {
 		color: var(--color-text);
 	}
-	.rt-tot.grand {
+	.roll-total.grand-total {
 		align-self: stretch;
 		padding: 5px 0 11px;
 		border-top: 1px solid var(--color-border);
 	}
-	.rt-note {
+	.roll-note {
 		padding: 0 16px 9px;
 		font-size: var(--font-size-xs);
 		color: var(--color-accent-bright);

@@ -60,8 +60,11 @@
 		🦶 Move <b class:spent={combat.economy.moveLeft === 0}>{combat.economy.moveLeft}</b> / {combat
 			.economy.moveMax} ft
 	</button>
-	<button type="button" class="aereset" onclick={combat.economy.resetMove} title="Reset movement"
-		>↺</button
+	<button
+		type="button"
+		class="action-economy-reset"
+		onclick={combat.economy.resetMove}
+		title="Reset movement">↺</button
 	>
 	<span class="spacer"></span>
 	<button type="button" class="nextturn" onclick={combat.economy.nextTurn}>Next turn ▸</button>
@@ -124,7 +127,7 @@
 	.turn-slot.move:hover {
 		color: var(--color-text);
 	}
-	.aereset {
+	.action-economy-reset {
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-full);
@@ -134,7 +137,7 @@
 		color: var(--color-text-muted);
 		font-size: var(--font-size-body);
 	}
-	.aereset:hover {
+	.action-economy-reset:hover {
 		color: var(--color-text);
 		border-color: var(--color-border-strong);
 	}

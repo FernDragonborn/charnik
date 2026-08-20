@@ -13,12 +13,12 @@
 	let { model, closeToast }: { model: RollToastModel; closeToast?: () => void } = $props();
 </script>
 
-<div class="rolltoast">
+<div class="roll-toast">
 	<!-- the roll itself is a real <button>, not a div with a role: it IS the dismiss target (see
 	     closeToast above), which is exactly why no control may live inside it. -->
 	<button
 		type="button"
-		class="rt-card"
+		class="roll-card"
 		class:dismissible={closeToast}
 		aria-label="{model.label} — {model.total}{closeToast ? '. Dismiss' : ''}"
 		title={closeToast ? 'Dismiss' : undefined}
@@ -34,7 +34,7 @@
 	   toaster column. Give the li a band to centre the card in. The band is the design's 400px max,
 	   wider than sonner's own column, so pull it back half the difference and the roll toasts stay
 	   centred on the same axis as every other toast. */
-	:global([data-sonner-toast]:has(> .rolltoast)) {
+	:global([data-sonner-toast]:has(> .roll-toast)) {
 		display: flex;
 		justify-content: center;
 		width: 400px;
@@ -42,13 +42,13 @@
 	}
 	/* under 600px sonner takes the li full-width itself — don't fight it, just stop shifting */
 	@media (max-width: 600px) {
-		:global([data-sonner-toast]:has(> .rolltoast)) {
+		:global([data-sonner-toast]:has(> .roll-toast)) {
 			width: 100%;
 			margin-left: 0;
 		}
 	}
 	/* the card sizes to its content: a bare check stays narrow, a three-attack flurry grows */
-	.rolltoast {
+	.roll-toast {
 		display: flex;
 		flex-direction: column;
 		width: max-content;
@@ -60,7 +60,7 @@
 		box-shadow: var(--shadow-2);
 		overflow: hidden;
 	}
-	.rt-card {
+	.roll-card {
 		display: flex;
 		flex-direction: column;
 		padding: 0;
@@ -71,10 +71,10 @@
 		border-radius: inherit;
 		color: inherit;
 	}
-	.rt-card.dismissible {
+	.roll-card.dismissible {
 		cursor: pointer;
 	}
-	.rolltoast:has(.rt-card.dismissible:hover) {
+	.roll-toast:has(.roll-card.dismissible:hover) {
 		border-color: var(--color-border-strong);
 	}
 </style>

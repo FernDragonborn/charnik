@@ -14,8 +14,8 @@
 	const log = $derived(combat.tray.log);
 </script>
 
-<div class="cardhead2"><span class="menu-title eyebrow">Roll log · history</span></div>
-<div class="logscroll">
+<div class="log-head"><span class="menu-title eyebrow">Roll log · history</span></div>
+<div class="log-scroll">
 	{#each log as l, i (i)}
 		<div class="log-row">
 			<!-- the log carries the same live controls as the Playbar, on EVERY roll and forever: tap the
@@ -43,17 +43,17 @@
 
 <style>
 	/* --- roll log --- */
-	.cardhead2 {
+	.log-head {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		padding: 11px 13px 6px;
 	}
 	/* mono/uppercase/tracking/muted come from the shared .eyebrow primitive; keep only the micro size */
-	.cardhead2 .menu-title {
+	.log-head .menu-title {
 		font-size: var(--font-size-micro);
 	}
-	.logscroll {
+	.log-scroll {
 		padding: 0 6px 4px;
 	}
 	.log-row {

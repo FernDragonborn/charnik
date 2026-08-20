@@ -35,7 +35,7 @@
 </script>
 
 <div class="playbar">
-	<div class="lastroll" class:empty={!last}>
+	<div class="last-roll" class:empty={!last}>
 		{#if last}
 			<RollRow
 				model={rollToastModel(last)}
@@ -44,7 +44,7 @@
 				layout={ROLL_LAYOUT.strip}
 			/>
 		{:else}
-			<span class="noroll">Tap any check · save · attack · spell to roll it.</span>
+			<span class="no-roll">Tap any check · save · attack · spell to roll it.</span>
 		{/if}
 		<button class="log-cue" onclick={(e) => openMenu('log', e)} title="Roll log · history"
 			>🎲 log ▸</button
@@ -61,7 +61,7 @@
 	}
 	/* matches the combat bars it sits beside — same surface, same 12px radius, same 56px floor — so
 	   the row reads as two halves of one strip rather than two unrelated widgets */
-	.lastroll {
+	.last-roll {
 		display: flex;
 		align-items: stretch;
 		min-width: 0;
@@ -72,7 +72,7 @@
 		border-radius: 12px;
 		overflow: hidden;
 	}
-	.noroll {
+	.no-roll {
 		display: flex;
 		align-items: center;
 		padding: 9px 14px;

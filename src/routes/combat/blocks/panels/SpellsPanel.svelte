@@ -15,10 +15,10 @@
 
 {#if s.spellcasting.classes.length}
 	{@const multi = s.spellcasting.classes.length > 1}
-	<div class="castline">
+	<div class="cast-line">
 		{#each s.spellcasting.classes as sc, i (sc.className)}
-			{#if i > 0}<span class="castsep"> · </span>{/if}
-			{#if multi}<b class="castcls">{sc.className}</b>
+			{#if i > 0}<span class="cast-separator"> · </span>{/if}
+			{#if multi}<b class="cast-class">{sc.className}</b>
 			{/if}Save DC
 			<b title={why(sc.saveDC)}>{sc.saveDC.value}</b> · attack
 			<b>{signed(sc.attack.value)}</b>
@@ -62,7 +62,7 @@
 							></i>
 							<span class="name-main">{r.name}</span>
 							<span
-								class="pinstar"
+								class="pin-star"
 								class:on={pinned[r.id]}
 								role="button"
 								tabindex="-1"
@@ -127,21 +127,21 @@
 {/if}
 
 <style>
-	.castline {
+	.cast-line {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin: -2px 0 9px;
 	}
-	.castline b {
+	.cast-line b {
 		color: var(--color-resource);
 		font-family: var(--font-display);
 		font-weight: 700;
 	}
-	.castline b.castcls {
+	.cast-line b.cast-class {
 		color: var(--color-accent-bright);
 	}
-	.castsep {
+	.cast-separator {
 		color: var(--color-border-strong);
 	}
 	.spell-rows {
@@ -222,7 +222,7 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 	}
-	.spell-row .pinstar {
+	.spell-row .pin-star {
 		flex: none;
 	}
 	.spell-row .spell-summary {
@@ -321,7 +321,7 @@
 		background: var(--color-resource);
 		border-color: var(--color-resource);
 	}
-	.pinstar {
+	.pin-star {
 		position: relative;
 		display: inline-flex;
 		align-items: center;
@@ -338,7 +338,7 @@
 		border-radius: 50%;
 	}
 	/* big invisible click target so the star is easy to hit (same trick as the prep dot) */
-	.pinstar::before {
+	.pin-star::before {
 		content: '';
 		position: absolute;
 		inset: -7px;
@@ -347,11 +347,11 @@
 	/* hover = a FILLED disc behind the star (bg + halo of the same colour, so it's a solid circle, not
 	   a donut). The glyph itself never changes colour — a pinned ★ stays gold, an unpinned ☆ stays
 	   dim — only the disc appears behind it. */
-	.pinstar:hover {
+	.pin-star:hover {
 		background: var(--color-border);
 		box-shadow: 0 0 0 2px var(--color-border);
 	}
-	.pinstar.on {
+	.pin-star.on {
 		color: var(--color-accent-bright);
 	}
 	/* B9: worn non-proficient armor blocks spellcasting (RAW rule-block) */

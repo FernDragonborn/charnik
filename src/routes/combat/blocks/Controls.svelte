@@ -13,7 +13,7 @@
 
 <section class="controls">
 	<button
-		class="toggle combatsw"
+		class="toggle combat-toggle"
 		class:on={c.play.inCombat}
 		onclick={combat.toggleCombat}
 		title="Track the action economy (rounds, action/bonus/reaction)"
@@ -26,7 +26,7 @@
 		>🛡 Shield <span class="toggle-state">{c.play.shieldRaised ? 'ON' : 'OFF'}</span></button
 	>
 	{#if conc}<button
-			class="toggle conc on"
+			class="toggle concentration on"
 			onclick={combat.clearConcentration}
 			title="Tap to stop concentrating"
 			>◈ Concentration <span class="toggle-state">{conc.label}</span></button
@@ -96,12 +96,12 @@
 	.toggle.on .toggle-state {
 		border-color: var(--color-resource);
 	}
-	.toggle.conc.on {
+	.toggle.concentration.on {
 		background: var(--color-accent-soft);
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
 	}
-	.toggle.conc.on .toggle-state {
+	.toggle.concentration.on .toggle-state {
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
 	}
@@ -120,12 +120,12 @@
 		font-size: var(--font-size-sm);
 	}
 	/* Combat mode = gold when tracking (own class: `combat` collides with the stat-grid section) */
-	.toggle.combatsw.on {
+	.toggle.combat-toggle.on {
 		background: var(--color-resource-soft);
 		border-color: var(--color-resource);
 		color: var(--color-resource);
 	}
-	.toggle.combatsw.on .toggle-state {
+	.toggle.combat-toggle.on .toggle-state {
 		border-color: var(--color-resource);
 	}
 	.controls .spacer {

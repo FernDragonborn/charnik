@@ -20,14 +20,14 @@
 	{#if rollSrc}<div class="tray-src"><b>{rollSrc}</b></div>{/if}
 	<div class="pool">
 		{#each Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0])) as [s, c] (s)}
-			<div class="poolchip">
+			<div class="pool-chip">
 				<button onclick={() => bumpDie(Number(s), -1)}>−</button><b>{c}</b>×d{s}<button
 					onclick={() => bumpDie(Number(s), 1)}>+</button
 				>
 			</div>
 		{/each}
 	</div>
-	<p class="gridhint">tap a die to add · ± sets the count</p>
+	<p class="grid-hint">tap a die to add · ± sets the count</p>
 	<div class="dice-grid">
 		{#each DICE as d (d)}<button class="die-btn" onclick={() => bumpDie(d, 1)}>d{d}</button>{/each}
 	</div>
@@ -53,7 +53,7 @@
 			<button onclick={() => (combat.tray.rollMod -= 1)}>−</button> mod {signed(rollMod)}
 			<button onclick={() => (combat.tray.rollMod += 1)}>+</button>
 		</div>
-		<button class="rollbtn" onclick={doRoll}>Roll {rollExpr}</button>
+		<button class="roll-button" onclick={doRoll}>Roll {rollExpr}</button>
 	</div>
 	<!-- the tray's own result readout: the same RollRow the toast and the log mount, so the roll you
 	     just built reads identically to the roll you re-read later (UBUG-20) -->
@@ -89,7 +89,7 @@
 		gap: 7px;
 		margin-bottom: 9px;
 	}
-	.poolchip {
+	.pool-chip {
 		display: flex;
 		align-items: center;
 		gap: 5px;
@@ -101,18 +101,18 @@
 		font-size: var(--font-size-xs);
 		color: var(--color-resource);
 	}
-	.poolchip button {
+	.pool-chip button {
 		all: unset;
 		cursor: pointer;
 		color: var(--color-resource);
 		font-size: var(--font-size-body);
 		padding: 0 2px;
 	}
-	.poolchip b {
+	.pool-chip b {
 		font-family: var(--font-display);
 		font-weight: 700;
 	}
-	.gridhint {
+	.grid-hint {
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		margin: 0 0 7px;
@@ -184,7 +184,7 @@
 		font-size: var(--font-size-body);
 		padding: 0 4px;
 	}
-	.rollbtn {
+	.roll-button {
 		flex: 1;
 		text-align: center;
 		font-family: var(--font-display);

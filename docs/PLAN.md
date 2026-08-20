@@ -2163,11 +2163,23 @@ holds the done-work log; these are the OPEN tails it carried):**
 **Code quality:**
 - [x] **Friendly source labels** — `sourceLabel()` shows "D&D 5e (2014)", never the raw SRD tag;
   the `source` value itself stays exact for attribution ([[friendly-source-labels]]).
-- [ ] **CSS class-naming rename pass** — the combat sheet has cryptic classes (`.ae`, `.aedot`,
-  `.mcell`, `.sk`, `.atk`, `.an/.ah/.ad/.am`, `.hpadj/.hpbtn`, `.combatsw`, …) that read poorly and
-  invite collisions (already hit `.combat`, `.modrow`). Rename to verbose, self-evident, kebab-case
-  names with a feature prefix; do it opportunistically per file when touched, not big-bang. New code
-  already follows this (`modifier-row`, `modifier-amount`).
+- [x] **CSS class-naming rename pass — DONE 2026-08-21.** Renamed to verbose, self-evident,
+  kebab-case names with a feature prefix, across 12 files, gated by `shot.mjs` (20/20, 0 px) +
+  svelte-check. **Most of the names this item listed had already gone** with the file carves — of
+  `.ae/.aedot/.mcell/.sk/.atk/.an/.ah/.ad/.am/.hpadj/.hpbtn/.combatsw` only `.combatsw` was left. What
+  remained was the roll card's whole `rt-*` family (`rt-tot`, `rt-idx`, `rt-sub`, `rt-cap`, `rt-div`
+  …) → `roll-total` / `roll-attack-index` / `roll-to-hit-total` / `roll-caption` /
+  `roll-die-divider`; the colour-named nat markers `.gold`/`.bad` → `.nat-20`/`.nat-1` (the class now
+  says the rule, not the shade); and the per-file leftovers `.advdis`, `.respips`, `.aereset`,
+  `.castcls/.castline/.castsep`, `.cardhead2`, `.logscroll`, `.gridhint`, `.poolchip`, `.rollbtn`,
+  `.noroll/.lastroll`, `.deathroll`, `.divlite`, `.popup-h`, `.pinwrap`, `.hd-*`.
+  **Left alone on purpose:** short words that are already self-evident in their component (`.pip`,
+  `.move`, `.rest`, `.dice`, `.gauge`, `.filled`), and the `class:strip` / `class:multi` shorthands —
+  renaming those means expanding the directive, and the reading gain is nil. Any name whose value is
+  produced in the script (`tone()` → `max`/`min`, `cueShape()` → `up`/`down`/`none`) also stays: a
+  rename there is a JS change, not a class change, and `.roll-die.max` reads fine.
+  Tooling used, worth reusing: `tools/visual/css-classes.mjs cryptic` for the census and
+  `tools/visual/rename-class.mjs <file> old:new …`, which renames a class ONLY where it is a class.
 
 **Refactoring debt (self-flagged — patterns that drifted from "this is TypeScript, model it"):**
 - [x] **R1–R5 · Typing/extraction refactors.** `EditContext` for edit/level-up state; typed

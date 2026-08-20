@@ -146,7 +146,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.panel-head` | components.css | panel header: click the whole title area (chev + name) to collapse |
 | `.pill-btn` | components.css | display-font pill button — the shared toolbar/disclosure control (combat toolbar, compendium group-by + disclosure su… |
 | `.primary` | components.css |  |
-| `.rolltoast` | RollToast.svelte :global |  |
+| `.roll-toast` | RollToast.svelte :global |  |
 | `.row-name` | components.css |  |
 | `.sec-head` | components.css | --- settings-tab section chrome (shared by every Settings panel: Content-health / Sources / Collisions) — one heading… |
 | `.sec-note` | components.css |  |

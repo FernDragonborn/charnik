@@ -58,7 +58,7 @@
 			<DiceTray />
 		{:else if overlay.kind === 'temphp'}
 			<div class="menu-panel">
-				<div class="popup-h eyebrow" style="border: 0">Set temporary HP</div>
+				<div class="popup-heading eyebrow" style="border: 0">Set temporary HP</div>
 				<div class="field">
 					<input type="number" bind:value={combat.tempHpInput} />
 					<button class="submit-btn" onclick={setTempHp}>Set</button>
@@ -68,7 +68,7 @@
 				</p>
 			</div>
 		{:else if overlay.kind === 'levelup'}
-			<div class="popup-h eyebrow" style="border: 0">Level up · which class</div>
+			<div class="popup-heading eyebrow" style="border: 0">Level up · which class</div>
 			{#each combat.levelUpClasses as cl (cl.index)}
 				<button class="menu-row" onclick={() => combat.levelUp(cl.index)}>
 					<span class="main">{cl.name} <b class="gold">{cl.level} → {cl.level + 1}</b></span>
@@ -129,7 +129,7 @@
 					><span class="durpill">{dur > 0 ? `${dur} rds` : '∞'}</span>
 				</button>
 			{/each}
-			<div class="divlite"></div>
+			<div class="divider-light"></div>
 			<button
 				class="menu-row"
 				onclick={() => combat.overlay && (combat.overlay = { ...overlay, kind: 'customeffect' })}
@@ -140,7 +140,7 @@
 			</button>
 		{:else if overlay.kind === 'customeffect'}
 			<div class="menu-panel">
-				<div class="popup-h eyebrow" style="border: 0">Custom modifier</div>
+				<div class="popup-heading eyebrow" style="border: 0">Custom modifier</div>
 				<div class="modifier-row">
 					<select
 						class="modifier-target"
@@ -204,7 +204,7 @@
 		{:else if overlay.kind === 'log'}
 			<RollLog />
 		{:else if overlay.kind === 'showhide'}
-			<div class="popup-h eyebrow">
+			<div class="popup-heading eyebrow">
 				Which actions appear<button class="icon-button" onclick={() => (combat.overlay = null)}
 					>✕</button
 				>
@@ -219,13 +219,13 @@
 				</button>
 			{/each}
 		{:else if overlay.kind === 'pinskills'}
-			<div class="popup-h eyebrow">
+			<div class="popup-heading eyebrow">
 				Passive senses · 👁 = shown<button
 					class="icon-button"
 					onclick={() => (combat.overlay = null)}>✕</button
 				>
 			</div>
-			<div class="pinwrap">
+			<div class="pin-wrap">
 				{#each ABIL as ab (ab)}
 					{@const list = (Object.keys(SKILL_ABILITY) as SkillId[]).filter(
 						(k) => SKILL_ABILITY[k] === ab,
@@ -247,7 +247,7 @@
 		{:else if overlay.kind === 'upcast'}
 			{@const r = combat.upcastSpell}
 			{#if r}
-				<div class="popup-h eyebrow" style="border: 0">Cast {r.name} · at which slot</div>
+				<div class="popup-heading eyebrow" style="border: 0">Cast {r.name} · at which slot</div>
 				{#each combat.castableSlots(r) as lvl (lvl)}
 					{@const preview = combat.castPreview(r, lvl)}
 					<button class="menu-row" onclick={(e) => combat.castAtSlot(lvl, e)}>
@@ -258,18 +258,18 @@
 				<p class="note" style="padding: 6px 13px 2px">Upcasting spends the higher-level slot.</p>
 			{/if}
 		{:else if overlay.kind === 'restshort'}
-			<div class="popup-h eyebrow" style="border: 0">Short rest · spend Hit Dice</div>
+			<div class="popup-heading eyebrow" style="border: 0">Short rest · spend Hit Dice</div>
 			{#if combat.hitDice.length}
 				{#each combat.hitDice as h (h.die)}
-					<div class="hd-row">
-						<span class="hd-name">{h.die} <small>{h.left}/{h.max}</small></span>
-						<div class="hd-steppers">
+					<div class="hitdice-row">
+						<span class="hitdice-name">{h.die} <small>{h.left}/{h.max}</small></span>
+						<div class="hitdice-steppers">
 							<button
 								class="pill-btn"
 								disabled={(combat.hdPick[h.die] ?? 0) <= 0}
 								onclick={() => combat.hdPickInc(h.die, -1)}>−</button
 							>
-							<span class="hd-pick">{combat.hdPick[h.die] ?? 0}</span>
+							<span class="hitdice-pick">{combat.hdPick[h.die] ?? 0}</span>
 							<button
 								class="pill-btn"
 								disabled={(combat.hdPick[h.die] ?? 0) >= h.left}
@@ -297,14 +297,14 @@
 				</div>
 			{/if}
 		{:else if overlay.kind === 'manage'}
-			<div class="popup-h eyebrow">
+			<div class="popup-heading eyebrow">
 				Spellbook<button class="icon-button" onclick={() => (combat.overlay = null)}>✕</button>
 			</div>
 			<p class="note" style="padding: 11px 13px">
 				Full spellbook manager arrives with the spell-manager view (d-spellmgr).
 			</p>
 		{:else if overlay.kind === 'condition'}
-			<div class="popup-h eyebrow">
+			<div class="popup-heading eyebrow">
 				Conditions · multi-select<button class="icon-button" onclick={() => (combat.overlay = null)}
 					>✕</button
 				>
@@ -350,7 +350,7 @@
 		box-shadow: 0 18px 40px var(--color-overlay);
 		padding-bottom: 6px;
 	}
-	.popup-h {
+	.popup-heading {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -414,7 +414,7 @@
 		font-size: var(--font-size-micro);
 		padding: 8px 13px 3px;
 	}
-	.divlite {
+	.divider-light {
 		height: 1px;
 		background: var(--color-border);
 		margin: 4px 0;
@@ -523,30 +523,30 @@
 		padding: 8px 6px;
 	}
 	/* --- short-rest Hit-Dice picker --- */
-	.hd-row {
+	.hitdice-row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 9px;
 		padding: 5px 13px;
 	}
-	.hd-name {
+	.hitdice-name {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-sm);
 	}
-	.hd-name small {
+	.hitdice-name small {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 		margin-left: 4px;
 	}
-	.hd-steppers {
+	.hitdice-steppers {
 		display: flex;
 		align-items: center;
 		gap: 8px;
 	}
-	.hd-pick {
+	.hitdice-pick {
 		min-width: 18px;
 		text-align: center;
 		font-family: var(--font-mono);
@@ -554,19 +554,19 @@
 		color: var(--color-good);
 	}
 	/* --- pin skills (two-column) --- */
-	.pinwrap {
+	.pin-wrap {
 		column-count: 2;
 		column-gap: 14px;
 		column-rule: 1px solid var(--color-border);
 		padding: 7px;
 	}
-	.pinwrap .category-block {
+	.pin-wrap .category-block {
 		break-inside: avoid;
 	}
-	.pinwrap .section {
+	.pin-wrap .section {
 		padding: 6px 6px 2px;
 	}
-	.pinwrap .menu-row .skill-name {
+	.pin-wrap .menu-row .skill-name {
 		font-size: var(--font-size-sm);
 	}
 </style>

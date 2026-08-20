@@ -129,7 +129,7 @@
 						stroke-linecap="round"
 					/></svg
 				>
-				Buffs <span class="sec-count">· {effectGroups.buffs.length}</span>
+				Buffs <span class="section-count">· {effectGroups.buffs.length}</span>
 			</div>
 			{#each effectGroups.buffs as e (e.iid)}{@render effectRow(e, 'positive')}{/each}
 		</div>
@@ -151,7 +151,7 @@
 						stroke-linecap="round"
 					/></svg
 				>
-				Debuffs <span class="sec-count">· {effectGroups.debuffs.length}</span>
+				Debuffs <span class="section-count">· {effectGroups.debuffs.length}</span>
 			</div>
 			{#each effectGroups.debuffs as e (e.iid)}{@render effectRow(e, 'negative')}{/each}
 		</div>
@@ -173,7 +173,7 @@
 						stroke-linecap="round"
 					/><path d="M6 10 H9" stroke-linecap="round" /></svg
 				>
-				Resources <span class="sec-count">· {effectGroups.resources.length}</span>
+				Resources <span class="section-count">· {effectGroups.resources.length}</span>
 			</div>
 			{#each effectGroups.resources as r (r.iid)}
 				{@const spent = combat.resources.resourceSpent(r.id)}
@@ -297,7 +297,7 @@
 	.section-head--resource {
 		color: var(--color-resource);
 	}
-	.section-head .sec-count {
+	.section-head .section-count {
 		color: var(--color-text-muted);
 	}
 	.effect-row {

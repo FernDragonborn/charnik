@@ -77,7 +77,7 @@
 						>
 							{r.name}
 							{#if Number.isFinite(r.max) && r.max <= PIP_CAP}
-								<span class="respips">
+								<span class="resource-pips">
 									{#each range(r.max) as i (i)}
 										<!-- svelte-ignore a11y_click_events_have_key_events -->
 										<span
@@ -116,8 +116,8 @@
 				)}
 				<span class="ability-save" title={why(p.comp)}>
 					<i>{p.name}</i>{p.comp.value}{#if advDis}<span
-							class="advdis"
-							class:dis={advDis.source === 'Disadvantage'}
+							class="advantage-mark"
+							class:disadvantage={advDis.source === 'Disadvantage'}
 							title={advDis.source}>{advDis.source === 'Advantage' ? '▲' : '▼'}</span
 						>{/if}
 				</span>
@@ -252,7 +252,7 @@
 	.resource-chips .resource:hover {
 		background: var(--color-border);
 	}
-	.respips {
+	.resource-pips {
 		display: inline-flex;
 		gap: 4px;
 	}
@@ -303,14 +303,14 @@
 	}
 	/* a passive is ±5 under advantage/disadvantage (RAW) — mark it so a low number reads as
 	   "reduced by a debuff", not a bug. ▲ green = advantage, ▼ red = disadvantage. */
-	.senses-strip .advdis {
+	.senses-strip .advantage-mark {
 		font-size: var(--font-size-xs);
 		margin-left: 3px;
 		/* muted toward the surface so the arrow recedes (darker on dark, lighter on light) — a hint,
 		   not an attention-grabber; the direction still reads adv/dis, tooltip has the detail */
 		color: color-mix(in srgb, var(--color-good) 45%, var(--color-surface));
 	}
-	.senses-strip .advdis.dis {
+	.senses-strip .advantage-mark.disadvantage {
 		color: color-mix(in srgb, var(--color-danger) 45%, var(--color-surface));
 	}
 	.senses-strip .edit {
