@@ -1265,6 +1265,34 @@ holds the done-work log; these are the OPEN tails it carried):**
   2026-08-10: no such field exists anywhere in `src`.** Nothing of the contract is settled; the loop,
   the grouped roll/toast/log rendering and the request shape are all unbuilt. The reminder text stays the fallback for what the roller
   can't express. Ties [[charnik-dicetray-attack-damage-concept]] + the RollToast row model (UBUG-12).
+- [ ] **RES-NAME · what a resource pool is CALLED — MAINTAINER WANTS TO DIG (2026-08-21, on a hunch
+  while reviewing the UX-1 toast change; nothing here is decided, this is the evidence to start from).**
+  A pool has an `id` (`arcane_ward`) that is real identity: the key in `play.resourcesSpent` on disk,
+  the join `resource_option.resource_id` matches, the thing `grant_resource:<id>:…` writes. It has no
+  authored NAME at all — `ResourceDef.name` is `titleCase(id)` (`effects/apply.ts`), computed at
+  derive time and thrown away on reload with everything else.
+  **The smell, concretely: the same fact is spelled FOUR ways, none of them authorable.**
+  1. `effects/apply.ts` → `name: titleCase(p.resource.id)` — the canonical one.
+  2. `combat/resource-tracker.svelte.ts` → `resourceName()` = `def?.name ?? id`, so a pool nothing
+     grants any more prints the RAW id at the user.
+  3. `combat/action-executor.svelte.ts` (the initiative-regain toast) → `titleCase(r.id)`, bypassing
+     `name` entirely — a second implementation of the same derivation.
+  4. `combat/blocks/panels/ActionsPanel.svelte` → `o.resourceId.replace(/_/g, ' ')` — a THIRD
+     spelling, lower-case with spaces, because `ResourceOption` carries `resourceId` and no name.
+  That is [[one-name-per-fact]] broken four times over, and it is invisible while every id happens to
+  title-case into something plausible.
+  **Why it is more than tidiness:** (a) a homebrew author cannot name their own pool — 2024 calls the
+  monk pool **Focus Points** and the id is `ki`, and no CSV column can say so; (b) the name can never
+  be LOCALIZED, which sits badly beside "i18n is data-driven" — it is derived from an English-ish id
+  inside the engine, after content has stopped having a say; (c) the fallback in (2) means a UI string
+  can still be a raw id, which is exactly what UX-1 went through the codebase to remove.
+  **The questions that make it non-trivial** (why it is a backlog item and not a patch): two features
+  granting the SAME id merge (largest max wins, faster recharge wins) — so whose name wins, and does
+  a name conflict mean anything? Does the name live on the `grant_resource` token, on a `resource`
+  content row that does not exist yet, or on the granting feature? The id must stay the identity
+  (renaming one orphans `resourcesSpent` on every saved character), so a name column is additive —
+  but then a pool with no row anywhere still needs a fallback, and `titleCase(id)` is that fallback,
+  which is where we came in.
 - [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from
   `UPCAST-INVOCATION-SCOPE` + the Magic Weapon `enhancement` tail of UPCAST-ROLLER — they were the same
   problem written twice).** L1 can say `flat_bonus:damage+n` but not "…only for this weapon / only for
