@@ -54,9 +54,10 @@ describe('loader — logic (in-memory)', () => {
 			].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
-		expect(g.issues.some((i) => i.level === 'error' && /duplicate source:id/.test(i.message))).toBe(
-			true,
-		);
+		// the message is prose for the user; the identifier that clashed is the durable part (UX-1)
+		expect(
+			g.issues.some((i) => i.level === 'error' && !!i.detail?.includes('spell:SRD 5.2.1:fireball')),
+		).toBe(true);
 		// B22: the dup is dropped from every scanned collection so its tokens can't apply twice
 		expect(g.list('spell').filter((r) => r.id === 'fireball')).toHaveLength(1);
 		expect(g.rows.filter((r) => r.effectiveId === 'spell:SRD 5.2.1:fireball')).toHaveLength(1);
@@ -69,9 +70,9 @@ describe('loader — logic (in-memory)', () => {
 			[SPELL_HEAD + ',name_spanish', spell('fireball', '5.5e', 'SRD 5.2.1') + ',Bola'].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
-		expect(
-			g.issues.some((i) => i.level === 'warn' && /malformed locale column/.test(i.message)),
-		).toBe(true);
+		expect(g.issues.some((i) => i.level === 'warn' && !!i.detail?.includes('name_spanish'))).toBe(
+			true,
+		);
 		expect(g.locales).not.toContain('spanish');
 		expect(g.list('spell').length).toBe(1);
 	});
@@ -82,7 +83,9 @@ describe('loader — logic (in-memory)', () => {
 		await s.write('a/spells_srd.csv', 'x'.repeat(20 * 1024 * 1024 + 1));
 		const g = await loadContent(s, ['a']);
 		expect(g.list('spell').length).toBe(0); // skipped whole file, no partial load
-		expect(g.issues.some((i) => i.level === 'error' && /cap/.test(i.message))).toBe(true);
+		expect(
+			g.issues.some((i) => i.level === 'error' && i.file === 'spells_srd.csv' && !!i.detail),
+		).toBe(true);
 	});
 
 	it('flags an invalid row without crashing the rest', async () => {
@@ -106,8 +109,8 @@ describe('loader — logic (in-memory)', () => {
 		const g = await loadContent(s, ['a']);
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 		expect(g.get('spell:Homebrew:zap')).toBeTruthy();
-		// no "unknown content type" warning, because the directive resolved it
-		expect(g.issues.some((i) => /unknown content type/.test(i.message))).toBe(false);
+		// no "can't tell what this file holds" warning, because the directive resolved it
+		expect(g.issues.some((i) => i.file === 'my_cool_spells.csv')).toBe(false);
 	});
 
 	it('errors on a #content-type directive naming an unknown type', async () => {
@@ -117,9 +120,9 @@ describe('loader — logic (in-memory)', () => {
 			['#content-type: gizmo', SPELL_HEAD, spell('zap', '5.5e', 'SRD 5.2.1')].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
-		expect(
-			g.issues.some((i) => i.level === 'error' && /unknown content type "gizmo"/.test(i.message)),
-		).toBe(true);
+		expect(g.issues.some((i) => i.level === 'error' && i.detail === '#content-type: gizmo')).toBe(
+			true,
+		);
 		expect(g.list('spell').length).toBe(0);
 	});
 
@@ -127,9 +130,8 @@ describe('loader — logic (in-memory)', () => {
 		const s = new MemoryStorage();
 		await s.write('a/whatever.csv', [SPELL_HEAD, spell('zap', '5.5e', 'SRD 5.2.1')].join('\n'));
 		const g = await loadContent(s, ['a']);
-		expect(
-			g.issues.some((i) => i.level === 'warn' && /unknown content type for file/.test(i.message)),
-		).toBe(true);
+		expect(g.issues.some((i) => i.level === 'warn' && i.file === 'whatever.csv')).toBe(true);
+		expect(g.list('spell').length).toBe(0); // and nothing was guessed into the graph
 	});
 
 	it('flags a file missing a REQUIRED metadata key (source/license) as a metaIssue', async () => {
@@ -208,11 +210,9 @@ describe('loader — logic (in-memory)', () => {
 			].join('\n'),
 		);
 		const g = await loadContent(s, ['a']);
-		const warns = g.issues.filter(
-			(i) => i.level === 'warn' && /partial translation/.test(i.message),
-		);
+		const warns = g.issues.filter((i) => i.level === 'warn' && !!i.detail?.startsWith('empty '));
 		expect(warns.map((w) => w.id)).toEqual(['partial']);
-		expect(warns[0]?.message).toMatch(/text_uk/);
+		expect(warns[0]?.detail).toMatch(/text_uk/); // which column to fill is the actionable half
 	});
 });
 

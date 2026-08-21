@@ -53,8 +53,9 @@
 	<header class="sec-head">
 		<h2>Content health</h2>
 		<p class="sec-note">
-			Problems found while loading your content — nothing here blocks the app, but each is worth
-			fixing so entries display and merge correctly.
+			What Charnik noticed while reading your content files. The app keeps working either way — but
+			anything listed here is missing from the app, or isn’t doing what its file says it should.
+			Each entry names the file to open and what to change in it.
 		</p>
 	</header>
 
@@ -102,31 +103,44 @@
 							{fileLabel(it.root, it.file)}{#if it.id}<span class="row-id"> · {it.id}</span>{/if}
 						</div>
 						<div class="row-msg">{it.message}</div>
+						{#if it.detail}<div class="row-detail">{it.detail}</div>{/if}
 					</div>
 				{/each}
 			{/if}
 		{/snippet}
 
-		{@render issueGroup('Errors — these rows are dropped', errors, 'err')}
-		{@render issueGroup('Warnings', warnings, 'warn')}
+		{@render issueGroup('Did not load — this content is missing from the app', errors, 'err')}
+		{@render issueGroup('Loaded, but something in it is off', warnings, 'warn')}
 
 		{#if metaIssues.length}
-			<div class="group-label eyebrow meta">Missing metadata (source / license)</div>
+			<div class="group-label eyebrow meta">Files that don’t say where they came from</div>
+			<p class="sec-note group-note">
+				These files load and work normally — but without a source and a licence, Charnik can’t
+				credit their author or tell you what you may share. It offers to fill this in when it
+				starts, or you can add the two lines yourself at the top of the file.
+			</p>
 			{#each metaIssues as m (m.file)}
 				<div class="row meta">
 					<div class="row-file">{m.file}</div>
-					<div class="row-msg">needs: {m.missingHuman.join(', ')}</div>
+					<div class="row-detail">
+						missing: {m.missingHuman.map((k) => `#content-${k}`).join(', ')}
+					</div>
 				</div>
 			{/each}
 		{/if}
 
 		{#if driftItems.length}
-			<div class="group-label eyebrow drift">Edited outside the app (hash no longer matches)</div>
+			<div class="group-label eyebrow drift">Files edited outside Charnik</div>
+			<p class="sec-note group-note">
+				Their contents no longer match the fingerprint recorded inside them. Nothing is broken and
+				your edits are being used — but until the fingerprint is re-stamped, Charnik leaves these
+				files alone rather than replacing them when their content pack updates.
+			</p>
 			{#each driftItems as d (d.file)}
 				<div class="row drift">
 					<div class="row-file">{d.file}</div>
-					<div class="row-msg">
-						changed {d.changedAt ?? 'unknown'} · declared {d.declaredDate ?? '—'}
+					<div class="row-detail">
+						changed {d.changedAt ?? 'unknown'} · fingerprint dated {d.declaredDate ?? '—'}
 					</div>
 				</div>
 			{/each}
@@ -206,6 +220,12 @@
 		font-size: var(--font-size-micro);
 		margin: 18px 0 8px;
 	}
+	/* the "what it means / what to do" that every row in the group shares — said once above them
+	   instead of repeated on forty identical rows */
+	.group-note {
+		margin: -4px 0 8px;
+		max-width: 70ch;
+	}
 	.plugin-retry-row {
 		display: flex;
 		align-items: center;
@@ -256,5 +276,14 @@
 		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
 		margin-top: 2px;
+	}
+	/* the exact token/column/id, demoted under the sentence: the panel is the homebrew author's
+	   debugger too, so the detail is quieter but never dropped (UX-1) */
+	.row-detail {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
+		opacity: 0.75;
+		margin-top: 4px;
 	}
 </style>

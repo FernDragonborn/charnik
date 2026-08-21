@@ -7,6 +7,10 @@ export const ordinal = (n: number): string =>
 export const titleCase = (s: string): string =>
 	s.replace(/[-_]/g, ' ').replace(/\b\w/g, (m) => m.toUpperCase());
 
+/** A content-type id as it reads in a sentence: `spell_lists` → "spell lists". Lower-case on
+ *  purpose — these appear mid-message ("…a spell lists row"), not as headings. */
+export const contentTypeLabel = (type: string): string => type.replace(/_/g, ' ');
+
 /** An unknown thrown value → its message string (`e.message` or `String(e)`). The one place this
  *  ubiquitous try/catch pattern lives (AUDIT F6). */
 export const errText = (e: unknown): string => (e instanceof Error ? e.message : String(e));

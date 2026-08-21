@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (41)
+## Duplicate suspects (43)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -54,7 +54,9 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `say` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
+- `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
 - `sourceOf` ×2 — src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
+- `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
@@ -1290,6 +1292,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const ordinal` — 1 → "1st", 2 → "2nd", 11 → "11th" … (spell-level labels, feature lists).
 - `const titleCase` — "sleight_of_hand" / "animal-handling" → "Sleight Of Hand" / "Animal Handling".
+- `const contentTypeLabel` — A content-type id as it reads in a sentence: `spell_lists` → "spell lists".
 - `const errText` — An unknown thrown value → its message string (`e.message` or `String(e)`).
 - `const asText` — * A value of UNKNOWN shape → the text to show, or `fallback` when it isn't text.
 - `const signed` — A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "0" (a zero modifier reads plain, no * sign — the sheet's con…
@@ -1318,4 +1321,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 764 exports across 110 modules · 41 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 765 exports across 110 modules · 43 duplicate suspects._

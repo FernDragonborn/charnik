@@ -91,6 +91,9 @@ const ROUTES = [
 	{ path: '/dev/drift', wait: '[role="dialog"]', states: [{ name: 'dev-drift' }] },
 	{ path: '/dev/firstrun', wait: '[role="dialog"]', states: [{ name: 'dev-firstrun' }] },
 	{ path: '/dev/plugins', wait: 'h1', states: [{ name: 'dev-plugins' }] },
+	// content-health with every problem group populated at once — on real content the panel is always
+	// "all clear", so this is the only place its copy and layout are ever seen
+	{ path: '/dev/health', wait: '.row', states: [{ name: 'dev-health' }] },
 	// the content-pack panel, which is desktop-gated and so only reachable here. Every warning it
 	// exists to show is on the fixture at once: rows that would vanish, the drafts they orphan, a
 	// pack whose folder name is already taken, and plugin code an update would stop.

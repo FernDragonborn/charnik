@@ -125,8 +125,8 @@ describe('spell↔class access (union index)', () => {
 			].join('\n'),
 		);
 		const g = await loadContent(s, ['a', 'hb', 'b']);
-		const warns = g.issues.filter((i) => i.level === 'warn').map((i) => i.message);
-		expect(warns.some((m) => /unknown class "warlock-typo"/.test(m))).toBe(true);
-		expect(warns.some((m) => /unknown spell "spell_typo"/.test(m))).toBe(true);
+		const warns = g.issues.filter((i) => i.level === 'warn').map((i) => i.detail ?? '');
+		expect(warns.some((d) => /class_id "warlock-typo"/.test(d))).toBe(true);
+		expect(warns.some((d) => /spell_id "spell_typo"/.test(d))).toBe(true);
 	});
 });
