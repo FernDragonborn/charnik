@@ -290,10 +290,21 @@ case" should be refused: ROLLER-N needs exactly two levels and nobody has asked 
    finding E for what shipped (one shared `DICE_TERM` + `parseFlatModifier`, `attacks.ts`'s duplicate
    parser deleted). What it deliberately did NOT do: surface an unparsed fragment (§5) — that waits
    for the `{roll, issues}` shape.
-2. `[ ]` **One record, persisted and in-session (finding G).** Today the disk entry silently drops
-   damage, the advantage pair and the note. Make the persisted shape the same shape, decide whether
-   an amendment writes back, and keep old lines loadable. Do this EARLY: every slice below makes the
-   in-session record richer, which widens the gap if the disk side is left behind.
+2. `[x]` **One record, persisted and in-session — DONE 2026-08-21.** `LogEntry.roll` now carries the
+   WHOLE `RollLogEntry` (a type-only import, so the character layer gains no runtime edge into
+   combat), and `logLineFor` is the one builder an append and a revision share — they cannot write
+   different shapes. The flattened `result`/`detail` stay, written but never read back when `roll` is
+   present: an older build can still read a new line, and a line from before today still loads (it
+   rehydrates to exactly the poor record it always was). `RollLogEntry.at` moved the timestamp onto
+   the ROLL — the line used to invent its own at write time, which is part of how the two records
+   drifted apart.
+   **The write-back question, decided: an amendment REWRITES its own line.** `reviseLog` replaces the
+   line matching the roll's `at`, on the same per-slug chain as the append. Appending would record one
+   roll twice; leaving it alone was the actual bug — the pill offered to amend a rehydrated roll and
+   the correction died with the session. The file is rewritten in full on every append anyway, so this
+   is not a new write pattern. A roll that has rotated off disk is a silent no-op, never an append.
+   **Verified live** (web build, IndexedDB): a Greataxe attack survives a reload with its damage AND
+   its disadvantage pair intact — before, the reloaded log had a label and a total and nothing else.
 3. `[ ]` **Structured result.** `Rolled` carries dice, not prose: per-die `{sides, value, face,
    detail, source?}`. Keep emitting `expr` as a rendered view for entries already on disk; nothing
    new reads it. `parseRollExpr` survives only as a **legacy log reader** and is documented as such.

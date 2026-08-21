@@ -62,9 +62,20 @@ export class RollTray {
 	private pendingDamage = $state<{ label: string; parts: DamagePartSpec[] } | null>(null);
 	log = $state<RollLogEntry[]>([]);
 
-	/** Optional sink for completed rolls → the persistent `log.jsonl` (B4). Injected by CombatVM so
-	 *  this module stays storage-agnostic; a no-op when unset (tests / preview). */
-	constructor(private readonly persist?: (entry: RollLogEntry) => void) {}
+	/**
+	 * Sinks to the persistent `log.jsonl` (B4), injected by CombatVM so this module stays
+	 * storage-agnostic (both no-ops when unset — tests, previews).
+	 *
+	 * `persist` appends a completed roll. `persistRevision` REPLACES the line a roll already wrote:
+	 * an amendment (advantage applied after the fact, a Savage Attacker reroll) is not a new roll, it
+	 * changes what that roll was decided as — and without this the correction lived only until the
+	 * page reloaded, while the pill happily offered to amend the rehydrated one again (ROLLER-PLAN
+	 * finding G).
+	 */
+	constructor(
+		private readonly persist?: (entry: RollLogEntry) => void,
+		private readonly persistRevision?: (entry: RollLogEntry) => void,
+	) {}
 
 	/** Restore the log from a prior session's persisted history (newest-first, capped). */
 	seed = (entries: RollLogEntry[]) => {
@@ -164,6 +175,7 @@ export class RollTray {
 			...r,
 			...(damage ? { damage } : {}),
 			...(note ? { note } : {}),
+			at: Date.now(),
 		};
 		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
 		this.persist?.(entry);
@@ -180,6 +192,8 @@ export class RollTray {
 	 *  has rolled off the capped log. */
 	reviseEntry = (old: RollLogEntry, revised: RollLogEntry) => {
 		this.log = this.log.map((e) => (e === old ? revised : e));
+		// the same roll, decided differently — rewrite ITS line rather than appending a second one
+		if (revised.at !== undefined) this.persistRevision?.(revised);
 	};
 
 	/**
@@ -211,6 +225,9 @@ export class RollTray {
 
 	/** A no-roll cast (buff/utility): a bare log marker, not a rolled total. */
 	logMarker = (label: string) => {
-		this.log = [{ label, expr: '', total: NaN }, ...this.log].slice(0, ROLL_LOG_MAX);
+		this.log = [{ label, expr: '', total: NaN, at: Date.now() }, ...this.log].slice(
+			0,
+			ROLL_LOG_MAX,
+		);
 	};
 }

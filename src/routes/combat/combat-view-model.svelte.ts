@@ -29,9 +29,10 @@ import {
 import { RollTray } from './roll-tray.svelte';
 import {
 	appendLog,
+	reviseLog,
 	readLog,
+	logLineFor,
 	snapshotCharacterOnLaunch,
-	type LogEntry,
 } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
 import type { RollLogEntry } from '$lib/combat/helpers';
@@ -74,7 +75,10 @@ const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insig
 class CombatVM {
 	/** Dice-roll subsystem (tray state + log + roll execution) — see roll.svelte.ts. Each completed
 	 *  roll is also persisted to the active character's `log.jsonl` (B4). */
-	tray = new RollTray((e) => this.persistRoll(e));
+	tray = new RollTray(
+		(e) => this.persistRoll(e),
+		(e) => this.persistRevision(e),
+	);
 	/** Panel-layout subsystem (columns, collapse, drag) — persists column order onto the character. */
 	layout = new PanelLayout((cols) => {
 		if (this.character) this.character.ui.panelColumns = cols;
@@ -262,8 +266,13 @@ class CombatVM {
 		this.layout.restore(c.ui.panelColumns);
 		// restore the persisted roll history so the log isn't empty after a reload (B4)
 		const hist = await readLog(getUserStorage(), c.id);
+		// a line written since the record was unified carries the WHOLE roll; an older one carries only
+		// the flattened summary, which is all there ever was in it (ROLLER-PLAN finding G)
 		this.tray.seed(
-			hist.map((le) => ({ label: le.label, expr: le.detail ?? '', total: le.result ?? NaN })),
+			hist.map(
+				(le) =>
+					le.roll ?? { label: le.label, expr: le.detail ?? '', total: le.result ?? NaN, at: le.t },
+			),
 		);
 	};
 
@@ -272,10 +281,14 @@ class CombatVM {
 	private persistRoll = (e: RollLogEntry): void => {
 		const id = this.character?.id;
 		if (!id) return;
-		const entry: LogEntry = { t: Date.now(), kind: 'roll', label: e.label };
-		if (Number.isFinite(e.total)) entry.result = e.total;
-		if (e.expr) entry.detail = e.expr;
-		void appendLog(getUserStorage(), id, entry);
+		void appendLog(getUserStorage(), id, logLineFor(e));
+	};
+
+	/** An amendment rewrites the line its roll already wrote — same roll, decided differently. */
+	private persistRevision = (e: RollLogEntry): void => {
+		const id = this.character?.id;
+		if (!id) return;
+		void reviseLog(getUserStorage(), id, logLineFor(e));
 	};
 
 	// structured custom modifier (GM "+1 AC" in a few clicks): target · sign · amount → a

@@ -48,7 +48,16 @@ export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): Ty
  *  per damage type plus a combined total. `note` is an optional provenance line (item 4): an upcast
  *  cast records "Xd base + Yd @ slot N" so the boosted dice are explained (value + provenance), not a
  *  bare bigger total. */
-export type RollLogEntry = Rolled & { label: string; damage?: TypedRoll[]; note?: string };
+export type RollLogEntry = Rolled & {
+	label: string;
+	damage?: TypedRoll[];
+	note?: string;
+	/** When it was rolled (epoch ms), stamped by `pushRoll` — so it belongs to the ROLL rather than to
+	 *  how it happens to be stored. The persisted line used to invent its own timestamp at write time,
+	 *  which is part of how the two records drifted apart; it is also what an amendment matches on to
+	 *  rewrite its own line. Absent only on a view-model literal that is toasted but never logged. */
+	at?: number;
+};
 
 /** Combined total across every typed damage part. */
 export const damageTotal = (parts: TypedRoll[]): number => parts.reduce((n, p) => n + p.total, 0);

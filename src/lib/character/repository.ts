@@ -17,6 +17,9 @@ import {
 } from '../schema/version';
 import { characterSchema, parseCharacter, type Character } from './schema';
 import { SYSTEMS } from '../rules/pipeline';
+// TYPE-only: the log line and the in-session entry are the SAME record, so the type comes from where
+// the roll lives. Erased at build — no runtime edge from the character layer into combat.
+import type { RollLogEntry } from '../combat/roll';
 
 /** Snake-case the ID segment of a content ref `type:source:id` (only the id part — the `source`
  *  like "SRD 5.1" is display and left alone), or a bare skill id. Non-strings pass through. */
@@ -315,11 +318,31 @@ export async function deleteCharacter(storage: Storage, slug: string): Promise<v
 // --- roll log (append-only sibling; kept out of character.json) ---------------
 
 export interface LogEntry {
-	t: number; // epoch ms
+	t: number; // epoch ms — equals `roll.at` for anything written since 2026-08-21
 	kind: string; // "attack" | "save" | "check" | "damage" | "custom" …
 	label: string;
+	/** The COMPLETE in-session record: dice, per-type damage, the advantage pair, the provenance
+	 *  note. The line used to carry a flattened summary instead, so a reload silently returned a
+	 *  poorer log than the one on screen — an attack without its damage, an advantaged roll without
+	 *  its pair (ROLLER-PLAN finding G). Absent on lines written before that. */
+	roll?: RollLogEntry;
+	/** The flattened total + rendered expression. LEGACY: still written so a line stays readable by
+	 *  an older build, and still read for lines that predate `roll`. Nothing new should grow here. */
 	result?: number;
 	detail?: string;
+}
+
+/** The stored line for one completed roll: the WHOLE record, plus the flattened summary an older
+ *  build reads. One builder, so an append and a revision can never write different shapes. */
+export function logLineFor(roll: RollLogEntry): LogEntry {
+	return {
+		t: roll.at ?? Date.now(),
+		kind: 'roll',
+		label: roll.label,
+		roll,
+		...(Number.isFinite(roll.total) ? { result: roll.total } : {}),
+		...(roll.expr ? { detail: roll.expr } : {}),
+	};
 }
 
 /** Cap on retained roll-log lines on disk — the log is a rolling history, not an archive, so it
@@ -356,6 +379,44 @@ async function writeLogLine(storage: Storage, slug: string, entry: LogEntry): Pr
 	lines.push(JSON.stringify(entry));
 	const kept = lines.length > LOG_MAX_LINES ? lines.slice(lines.length - LOG_MAX_LINES) : lines;
 	await storage.write(logOf(slug), kept.join('\n') + '\n');
+}
+
+/** Replace the line a roll already wrote (matched on its timestamp), for an AMENDMENT: advantage
+ *  applied after the fact, a reroll. Appending instead would record the same roll twice, and leaving
+ *  it alone would mean the correction dies with the session. Runs on the same per-slug chain as
+ *  `appendLog`, since both rewrite the whole file. No-op when the line has rotated off. */
+export function reviseLog(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
+	const prior = appendChains.get(slug) ?? Promise.resolve();
+	const next = prior.catch(() => {}).then(() => rewriteLogLine(storage, slug, entry));
+	appendChains.set(slug, next);
+	void next.finally(() => {
+		if (appendChains.get(slug) === next) appendChains.delete(slug);
+	});
+	return next;
+}
+
+async function rewriteLogLine(storage: Storage, slug: string, entry: LogEntry): Promise<void> {
+	let prev: string;
+	try {
+		prev = await storage.read(logOf(slug));
+	} catch {
+		return; // no log yet — nothing to revise
+	}
+	const lines = prev.split('\n').filter((l) => l.trim());
+	const i = lines.findIndex((l) => l.includes(`"t":${entry.t}`) && parsedT(l) === entry.t);
+	if (i === -1) return;
+	lines[i] = JSON.stringify(entry);
+	await storage.write(logOf(slug), lines.join('\n') + '\n');
+}
+
+/** The `t` of one stored line, or NaN if it doesn't parse — the cheap `includes` above narrows the
+ *  candidates, this confirms one (a damage total of 1755... could contain the digits by accident). */
+function parsedT(line: string): number {
+	try {
+		return (JSON.parse(line) as LogEntry).t;
+	} catch {
+		return NaN;
+	}
 }
 
 /** Read the whole roll log, newest first. Bad lines are skipped. */

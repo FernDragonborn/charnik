@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
+import type { RollLogEntry } from '../combat/roll';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { CHARACTER_SCHEMA_VERSION } from '../schema/version';
 import {
@@ -8,6 +9,8 @@ import {
 	listCharacters,
 	deleteCharacter,
 	appendLog,
+	reviseLog,
+	logLineFor,
 	readLog,
 	backupCharacter,
 	uniqueCharacterId,
@@ -222,6 +225,57 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 		// the roll log is not part of the character file
 		const c = (await loadCharacter(s, 'mirt')).character;
 		expect(c).toBeUndefined(); // no character.json written in this test
+	});
+
+	it('carries the WHOLE roll to disk, and still reads a line written before it did', async () => {
+		const s = new MemoryStorage();
+		const roll: RollLogEntry = {
+			label: 'Greataxe',
+			expr: 'd20(14) +6',
+			total: 20,
+			natural: 14,
+			at: 1000,
+			damage: [{ type: 'slashing', expr: '1d12(7) +3', total: 10 }],
+			advantageRoll: { kept: 14, dropped: 3, mode: 1 },
+			note: 'advantage after the roll',
+		};
+		await appendLog(s, 'mirt', logLineFor(roll));
+		// a line from before the record was unified: the flattened summary is all it ever had
+		await s.write(
+			'characters/mirt/log.jsonl',
+			(await s.read('characters/mirt/log.jsonl')) +
+				JSON.stringify({ t: 900, kind: 'roll', label: 'Old', result: 7, detail: 'd20(7)' }) +
+				'\n',
+		);
+
+		const log = await readLog(s, 'mirt');
+		const fresh = log.find((e) => e.label === 'Greataxe');
+		// the damage, the advantage pair and the note used to be dropped on the way to disk
+		expect(fresh?.roll).toEqual(roll);
+		expect(fresh?.t).toBe(roll.at); // the line's time IS the roll's, not one invented at write
+		expect(fresh?.result).toBe(20); // …and the flat summary an older build reads is still there
+		expect(log.find((e) => e.label === 'Old')?.roll).toBeUndefined(); // legacy line still loads
+	});
+
+	it('an amendment REPLACES its own line instead of appending a second roll', async () => {
+		const s = new MemoryStorage();
+		const rolled: RollLogEntry = { label: 'Stealth', expr: 'd20(4) +7', total: 11, at: 500 };
+		await appendLog(s, 'mirt', logLineFor(rolled));
+		await appendLog(s, 'mirt', logLineFor({ label: 'Other', expr: 'd20(9)', total: 9, at: 600 }));
+
+		const amended: RollLogEntry = {
+			...rolled,
+			total: 18,
+			advantageRoll: { kept: 11, dropped: 4, mode: 1 },
+		};
+		await reviseLog(s, 'mirt', logLineFor(amended));
+
+		const log = await readLog(s, 'mirt');
+		expect(log).toHaveLength(2); // not three — the same roll, decided differently
+		expect(log.find((e) => e.label === 'Stealth')?.roll?.total).toBe(18);
+		// a roll that has already rotated off disk is a no-op, never an append
+		await reviseLog(s, 'mirt', logLineFor({ label: 'Gone', expr: '', total: 0, at: 1 }));
+		expect((await readLog(s, 'mirt')).length).toBe(2);
 	});
 
 	it('BUG-4: concurrent appends all survive (per-slug serialization, no clobber)', async () => {
