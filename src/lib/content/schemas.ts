@@ -483,7 +483,14 @@ const spellListsSchema = z.object({
  *  places it in the turn economy.
  *  Carries name/text (shown in the picker) but is NOT a browsable article. */
 const ACTION_TYPES = ['action', 'bonus_action', 'reaction', 'free'] as const;
-const resourceOptionSchema = baseRow.extend({
+/** Named, but carries no effect tokens of its own. `effects` rides on `base` for the ARTICLE types,
+ *  where a row's own tokens are how it acts on a sheet; on these two the column would be inert AND
+ *  inviting — the tokens that matter already live on the class feature / item that grants the pool
+ *  (`grant_resource:…`) or on the option's `action`, so a token typed here would lint like a real one
+ *  in content-health and then fold onto nothing. Omitted so the authoring form never offers it. */
+const namedRow = baseRow.omit({ effects: true });
+
+const resourceOptionSchema = namedRow.extend({
 	resource_id: reqStr,
 	cost: optStr,
 	action: optStr,
@@ -505,7 +512,7 @@ const resourceOptionSchema = baseRow.extend({
  * No columns beyond the base ones: id + name/text per locale is the whole point. A pool with no row
  * still works — the display falls back to a title-cased id, so this is additive for homebrew.
  */
-const resourceSchema = baseRow;
+const resourceSchema = namedRow;
 
 // --- Registry: type name → { schema, file glob, column order for unparse } -----
 
