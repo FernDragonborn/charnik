@@ -33,9 +33,7 @@
 	>
 		<span class="row-name">{o.name}</span>
 		<span class="combat-row-hint">
-			<span class="cost-chip"
-				>{o.cost === 'x' ? 'X' : o.cost} {o.resourceId.replace(/_/g, ' ')}</span
-			>
+			<span class="cost-chip">{o.cost === 'x' ? 'X' : o.cost} {o.resourceName}</span>
 		</span>
 		<span class="combat-row-desc">{o.description}</span>
 		<span class="combat-row-marker">{o.actionType.replace('_', ' ')}</span>

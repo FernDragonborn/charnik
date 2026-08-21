@@ -11,6 +11,7 @@ import type { ContentGraph, LoadedRow } from '../content/loader';
 import type { EffectIssue } from '../effects/token-parser';
 import { evalExpression, diceToFormula, type ExprContext } from '../effects/expression-evaluator';
 import type { System } from '../rules/pipeline';
+import { titleCase } from '../util/format';
 
 /** Piece 3: a spend-option on a granted resource, resolved for a specific character. `cost` is a
  *  small integer or `'x'` (player-picked variable spend, 1..remaining); context-dependent costs
@@ -18,6 +19,9 @@ import type { System } from '../rules/pipeline';
 export interface ResourceOption {
 	id: string;
 	resourceId: string;
+	/** What the POOL this spends is called — carried on the option so a cost chip never has to
+	 *  reformat the id itself, which is how three different spellings of one pool appeared (RES-NAME). */
+	resourceName: string;
 	name: string;
 	description: string;
 	/** Bounded action token(s) the UI runs / displays: apply_condition / heal / roll / apply_effect /
@@ -34,6 +38,9 @@ export interface ResourceOption {
 interface ResourceOptionsInput {
 	graph: ContentGraph;
 	resourceIds: Set<string>;
+	/** Pool id → its authored name, resolved once by the derive so an option's chip and the pool's
+	 *  own tracker cannot call the same pool different things (RES-NAME). */
+	poolNames: Map<string, string>;
 	system: System;
 	isActive: (row: LoadedRow) => boolean;
 	issues: EffectIssue[];
@@ -117,6 +124,7 @@ function resolveAvailable(
 export function resolveResourceOptions({
 	graph,
 	resourceIds,
+	poolNames,
 	system,
 	isActive,
 	issues,
@@ -144,6 +152,7 @@ export function resolveResourceOptions({
 		out.push({
 			id: row.id,
 			resourceId,
+			resourceName: poolNames.get(resourceId) ?? titleCase(resourceId),
 			name: row.data.name_en,
 			description: String(row.data.text_en ?? ''),
 			action: resolveActionFormula(String(row.data.action ?? ''), ctx, row.data.name_en, issues),

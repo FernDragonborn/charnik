@@ -75,6 +75,12 @@ async function graphOf(): Promise<ContentGraph> {
 			`overchannel,5.5e,${S},Overchannel,flat_bonus:ac+3,wizard,14,evoker`,
 		].join('\n'),
 	);
+	// RES-NAME: a pool's display name comes from content. Deliberately NOT what `titleCase(id)` would
+	// produce, so a test can tell the two apart. `ki` below is left unnamed to exercise the fallback.
+	await st.write(
+		'c/resources_srd.csv',
+		['id,systems,source,name_en', `arcane_ward,5.5e,${S},Ward Charges`].join('\n'),
+	);
 	await st.write(
 		'c/effects_srd.csv',
 		[
@@ -142,6 +148,17 @@ describe('deriveSheet aggregator', () => {
 		const filtered = deriveSheet(wizard(), graph, (row) => row.id !== 'hardy');
 		expect(filtered.abilities.con.score.value).toBe(12); // species bonus no longer applied
 		expect(filtered.missing.some((m) => m.includes('hardy'))).toBe(true); // surfaced, not silent
+	});
+
+	it('RES-NAME: a pool is named by content, and falls back to the id when nothing names it', () => {
+		const c = wizard();
+		c.build.classes = [{ class: `class:${S}:wizard`, level: 2 }]; // Arcane Ward at L2
+		const s = deriveSheet(characterSchema.parse(c), graph);
+		// the content row wins over the engine's title-cased id — which is the whole point: a pool's
+		// name is not derivable from its key (the shipped case is `focus` → "Focus Points")
+		expect(s.resources.find((r) => r.id === 'arcane_ward')?.name).toBe('Ward Charges');
+		// and an option's cost chip reads the SAME name, rather than formatting the id a second way
+		expect(s.resourceOptions.find((o) => o.id === 'ward_burst')?.resourceName).toBe('Ward Charges');
 	});
 
 	it('B15: a disabled class_feature row stops contributing (feature loop respects the filter)', () => {

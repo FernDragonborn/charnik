@@ -52,6 +52,7 @@ import {
 	type Ability,
 } from '../rules/core';
 import { gatherProfGrants, isArmorProficient, armorCategoryOf } from '../rules/proficiency';
+import { resourceNames, namedResources } from './resource-names';
 import {
 	type ActiveEffect,
 	type EffectCtx,
@@ -303,6 +304,10 @@ export function deriveSheet(
 	// the ONE typed-facts object (D7): every token parsed + value-resolved once; every consumer
 	// below (and the roll path / action economy through the sheet) reads THIS, never a re-scan.
 	const facts = collectFacts(resolvedEffects, effCtx, issues, isEffectTargetSupported);
+	// what each granted pool is CALLED — read from content, because the engine only has the id and a
+	// pool's name is not derivable from it (RES-NAME). Resolved once for both the pools and their
+	// spend-options, so the two can't name the same pool differently.
+	const poolNames = resourceNames(graph, system, isActive);
 
 	// L3 plugin PRE-PASS (stage 2½ — between resolve and the fold); a no-op with no plugin tokens.
 	if (character.play.autoCalc && resolvedEffects.length)
@@ -370,10 +375,11 @@ export function deriveSheet(
 		passives: derivePassives(skills, facts),
 		carryingCapacity: carryingCapacity({ strScore: scores.str, system }),
 		defenses,
-		resources: facts.resources,
+		resources: namedResources(facts.resources, poolNames),
 		resourceOptions: resolveResourceOptions({
 			graph,
 			resourceIds: new Set(facts.resources.map((r) => r.id)),
+			poolNames,
 			system,
 			isActive,
 			issues,

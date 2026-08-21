@@ -892,6 +892,7 @@ describe('ResourceTracker · piece 3 spend-options', () => {
 	const opt = (over: Partial<ResourceOption> = {}): ResourceOption => ({
 		id: 'flurry',
 		resourceId: 'ki',
+		resourceName: 'Ki',
 		name: 'Flurry of Blows',
 		description: '',
 		action: 'note:Make two Unarmed Strikes',
@@ -957,6 +958,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 	const secondWind = (over: Partial<ResourceOption> = {}): ResourceOption => ({
 		id: 'fighter_second_wind',
 		resourceId: 'second_wind',
+		resourceName: 'Second Wind',
 		name: 'Second Wind',
 		description: '',
 		action: 'heal:1d10+5',
@@ -1006,6 +1008,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 	const actionSurge = () => ({
 		id: 'fighter_action_surge',
 		resourceId: 'action_surge',
+		resourceName: 'Action Surge',
 		name: 'Action Surge',
 		description: '',
 		action: 'gain_action',
@@ -1077,6 +1080,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		combat.activateResourceOption({
 			id: 'potion_angelic_slumber',
 			resourceId: 'angelic_slumber',
+			resourceName: 'Angelic Slumber',
 			name: 'Potion of Angelic Slumber',
 			description: '',
 			action: 'rest:long',
@@ -1113,6 +1117,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		combat.activateResourceOption({
 			id: 'barbarian_persistent_rage',
 			resourceId: 'persistent_rage',
+			resourceName: 'Persistent Rage',
 			name: 'Persistent Rage',
 			description: '',
 			action: 'restore_resource:rage',
@@ -1128,6 +1133,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		combat.activateResourceOption({
 			id: 'barbarian_persistent_rage',
 			resourceId: 'persistent_rage',
+			resourceName: 'Persistent Rage',
 			name: 'Persistent Rage',
 			description: '',
 			action: 'restore_resource:rage',
@@ -1161,6 +1167,7 @@ describe('CombatVM · N2 executor (activateResourceOption)', () => {
 		combat.activateResourceOption({
 			id: 'monk_uncanny_metabolism_regain',
 			resourceId: 'uncanny_metabolism',
+			resourceName: 'Uncanny Metabolism',
 			name: 'Uncanny Metabolism',
 			description: '',
 			action: 'restore_resource:focus;heal:1d6+2', // TWO tokens, run in order

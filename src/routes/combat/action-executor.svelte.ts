@@ -13,7 +13,7 @@ import { toast } from 'svelte-sonner';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { rollFormula } from '$lib/rules/dice';
-import { titleCase, ACTION_SLOT_LABEL, type ActionSlot } from '$lib/combat/helpers';
+import { ACTION_SLOT_LABEL, type ActionSlot } from '$lib/combat/helpers';
 import type { RollTray } from './roll-tray.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
@@ -110,7 +110,9 @@ export class ActionExecutor {
 			const before = def.max - (c.play.resourcesSpent?.[r.id] ?? 0);
 			const after = this.host().resources.restoreUpTo(r.id, r.upTo);
 			if (after > before)
-				toast(r.source, { description: `${titleCase(r.id)} restored — now ${after}` });
+				toast(r.source, {
+					description: `${this.host().resources.resourceName(r.id)} restored — now ${after}`,
+				});
 		}
 	}
 

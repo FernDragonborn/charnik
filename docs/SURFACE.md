@@ -381,7 +381,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (97 modules)
+## Library functions & types (98 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -502,6 +502,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function appendLog` — Append one roll-log line (`log.jsonl`, one JSON object per line), rotating out the oldest lines * past `LOG_MAX_LINES…
 - `function reviseLog` — Replace the line a roll already wrote (matched on its timestamp), for an AMENDMENT: advantage * applied after the fac…
 - `function readLog` — Read the whole roll log, newest first.
+
+### `src/lib/character/resource-names.ts`
+
+- `function resourceNames` — Pool id → its authored name, for the active edition + enabled sources.
+- `const namedResources` — The pools, each carrying the name content gives it (or the one the engine derived, unchanged).
 
 ### `src/lib/character/schema.ts`
 
@@ -1338,4 +1343,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 779 exports across 111 modules · 43 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 781 exports across 112 modules · 43 duplicate suspects._

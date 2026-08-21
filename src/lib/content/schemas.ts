@@ -493,6 +493,20 @@ const resourceOptionSchema = baseRow.extend({
 	available: optStr,
 });
 
+/**
+ * A resource POOL, by name (RES-NAME). `grant_resource:<id>:…` names the pool by id — the id is the
+ * identity: the key in `play.resourcesSpent` on disk and what `resource_option.resource_id` joins to.
+ * This row is where the pool is CALLED something, and it exists because the name cannot be derived
+ * from the id: 2024's monk pool is granted as `focus` by the feature "Monk's Focus" and is called
+ * **Focus Points**, and `bardic_inspiration` is granted by two different features, so no granting
+ * feature can own the name either. Carrying it as content also makes it translatable, which a name
+ * computed inside the engine never could be.
+ *
+ * No columns beyond the base ones: id + name/text per locale is the whole point. A pool with no row
+ * still works — the display falls back to a title-cased id, so this is additive for homebrew.
+ */
+const resourceSchema = baseRow;
+
 // --- Registry: type name → { schema, file glob, column order for unparse } -----
 
 export const CONTENT_TYPES = {
@@ -513,6 +527,7 @@ export const CONTENT_TYPES = {
 	class_casting: { schema: classCastingSchema, filebase: 'class_casting' },
 	spell_lists: { schema: spellListsSchema, filebase: 'spell_lists' },
 	resource_option: { schema: resourceOptionSchema, filebase: 'resource_options' },
+	resource: { schema: resourceSchema, filebase: 'resources' },
 } as const;
 
 export type ContentType = keyof typeof CONTENT_TYPES;
@@ -524,6 +539,7 @@ const LOOKUP_TYPES = new Set<ContentType>([
 	'class_casting',
 	'spell_lists',
 	'resource_option', // named, but a linked spend-table — not a browsable article
+	'resource', // a pool's display name; its rules text lives on the feature that grants it
 ]);
 
 /** A browsable content type (has name/text; shows in compendium + search). */
