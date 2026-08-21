@@ -108,11 +108,13 @@ REHYDRATED roll, computing from a partial record — and `reviseEntry` never wri
 correction dies with the session anyway. **Any rewrite must make the persisted entry and the
 in-session entry the same shape**, and decide the write-back question rather than inherit it.
 
-### H · `LogEntry.kind` is a dead taxonomy, and a bare string
+### H · `LogEntry.kind` is a dead taxonomy, and a bare string — FIXED 2026-08-21
 
-The interface documents `"attack" | "save" | "check" | "damage" | "custom"`; every write hardcodes
-`'roll'`. So the field costs bytes and buys nothing, and when it is revived it should be a named
-member, not a free string (AI-CONVENTIONS §1.5).
+The interface documented `"attack" | "save" | "check" | "damage" | "custom"`; every write hardcoded
+`'roll'`, so a reader could not trust the field. It is now `LOG_KIND` with the ONE member that is
+actually written (AI-CONVENTIONS §1.5). Reviving the taxonomy means adding a member, at which point
+every switch over it stops compiling until it handles the new one — which is the whole point of a
+named member over a free string. The field stays on the line: every entry already on disk carries it.
 
 ### I · PLAN §9 promises a roll log the code does not deliver
 

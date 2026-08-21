@@ -495,6 +495,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function readCharacterFiles` — * Every saved character as RAW json, keyed by slug.
 - `function listCharacters` — List the roster.
 - `function deleteCharacter` — Delete a character folder (character.json, log, photo).
+- `const LOG_KIND` — The kinds of line `log.jsonl` holds.
+- `type LogKind`
 - `interface LogEntry`
 - `function logLineFor` — The stored line for one completed roll: the WHOLE record, plus the flattened summary an older * build reads.
 - `function appendLog` — Append one roll-log line (`log.jsonl`, one JSON object per line), rotating out the oldest lines * past `LOG_MAX_LINES…
@@ -1336,4 +1338,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 777 exports across 111 modules · 43 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 779 exports across 111 modules · 43 duplicate suspects._

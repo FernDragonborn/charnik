@@ -9,6 +9,7 @@ import {
 	listCharacters,
 	deleteCharacter,
 	appendLog,
+	LOG_KIND,
 	reviseLog,
 	logLineFor,
 	readLog,
@@ -214,8 +215,8 @@ describe('character repository (in-memory)', () => {
 describe('roll log (log.jsonl, out of character.json)', () => {
 	it('appends and reads newest-first, skipping corrupt lines', async () => {
 		const s = new MemoryStorage();
-		await appendLog(s, 'mirt', { t: 1, kind: 'attack', label: 'Longsword', result: 17 });
-		await appendLog(s, 'mirt', { t: 2, kind: 'save', label: 'DEX', result: 9 });
+		await appendLog(s, 'mirt', { t: 1, kind: LOG_KIND.roll, label: 'Longsword', result: 17 });
+		await appendLog(s, 'mirt', { t: 2, kind: LOG_KIND.roll, label: 'DEX', result: 9 });
 		await s.write(
 			'characters/mirt/log.jsonl',
 			(await s.read('characters/mirt/log.jsonl')) + 'garbage\n',
@@ -283,7 +284,7 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 		// fire without awaiting each — the old read-modify-write would let later writes clobber earlier
 		await Promise.all(
 			Array.from({ length: 20 }, (_, i) =>
-				appendLog(s, 'mirt', { t: i, kind: 'roll', label: `r${i}`, result: i }),
+				appendLog(s, 'mirt', { t: i, kind: LOG_KIND.roll, label: `r${i}`, result: i }),
 			),
 		);
 		const log = await readLog(s, 'mirt');
@@ -294,7 +295,7 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 	it('rotates the log file so it stays bounded (B4)', async () => {
 		const s = new MemoryStorage();
 		for (let i = 0; i < 550; i++)
-			await appendLog(s, 'mirt', { t: i, kind: 'roll', label: `r${i}`, result: i });
+			await appendLog(s, 'mirt', { t: i, kind: LOG_KIND.roll, label: `r${i}`, result: i });
 		const log = await readLog(s, 'mirt');
 		expect(log.length).toBe(500); // capped at LOG_MAX_LINES
 		expect(log.map((e) => e.label).at(0)).toBe('r549'); // newest kept

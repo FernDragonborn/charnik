@@ -317,9 +317,18 @@ export async function deleteCharacter(storage: Storage, slug: string): Promise<v
 
 // --- roll log (append-only sibling; kept out of character.json) ---------------
 
+/** The kinds of line `log.jsonl` holds. `roll` is the only one written today — see `LogEntry.kind`. */
+export const LOG_KIND = { roll: 'roll' } as const;
+export type LogKind = (typeof LOG_KIND)[keyof typeof LOG_KIND];
+
 export interface LogEntry {
 	t: number; // epoch ms — equals `roll.at` for anything written since 2026-08-21
-	kind: string; // "attack" | "save" | "check" | "damage" | "custom" …
+	/** What KIND of line this is. One member so far — every writer has always said `roll`, while the
+	 *  type advertised a taxonomy ("attack" | "save" | "check" | …) nothing ever wrote, so a reader
+	 *  could not trust it (ROLLER-PLAN finding H). A named member rather than a free string, per
+	 *  AI-CONVENTIONS §1.5: reviving the taxonomy means adding a member here, and every switch over it
+	 *  then fails to compile until it handles the new one. */
+	kind: LogKind;
 	label: string;
 	/** The COMPLETE in-session record: dice, per-type damage, the advantage pair, the provenance
 	 *  note. The line used to carry a flattened summary instead, so a reload silently returned a
@@ -337,7 +346,7 @@ export interface LogEntry {
 export function logLineFor(roll: RollLogEntry): LogEntry {
 	return {
 		t: roll.at ?? Date.now(),
-		kind: 'roll',
+		kind: LOG_KIND.roll,
 		label: roll.label,
 		roll,
 		...(Number.isFinite(roll.total) ? { result: roll.total } : {}),
