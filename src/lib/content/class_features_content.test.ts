@@ -142,10 +142,7 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 	it.each([['srd-2024', 'SRD 5.2.1', '5.5e'] as const, ['srd-2014', 'SRD 5.1', '5e'] as const])(
 		'%s: a barbarian has an "Enter Rage" bonus-action option that spends a rage use',
 		async (dir, source, system) => {
-			const sheet = deriveSheet(
-				barbarian(source, system as '5e' | '5.5e', 1),
-				await loadEdition(dir),
-			);
+			const sheet = deriveSheet(barbarian(source, system, 1), await loadEdition(dir));
 			const opt = sheet.resourceOptions.find((o) => o.id === 'barbarian_rage_enter');
 			expect(opt?.resourceId).toBe('rage');
 			expect(opt?.action).toBe('apply_effect:rage');
@@ -157,7 +154,7 @@ describe('shipped Rage buff · Enter Rage (N2 shape 2)', () => {
 	it.each([['srd-2024', 'SRD 5.2.1', '5.5e'] as const, ['srd-2014', 'SRD 5.1', '5e'] as const])(
 		'%s: raging grants b/p/s resistance + advantage on Strength saves',
 		async (dir, source, system) => {
-			const s = raging(await loadEdition(dir), source, system as '5e' | '5.5e', 1);
+			const s = raging(await loadEdition(dir), source, system, 1);
 			expect([...s.defenses.resist].sort()).toEqual(['bludgeoning', 'piercing', 'slashing']);
 			expect(s.facts.advantage.some((a) => a.target === 'save.str')).toBe(true);
 		},
@@ -280,7 +277,7 @@ describe('shipped Monk resource + spend-options (piece 3)', () => {
 		'%s: a monk 5 has %s points = level, with Flurry/Patient/Step options at cost 1',
 		async (dir, source, system, resourceId) => {
 			const g = await loadEdition(dir);
-			const sheet = deriveSheet(charOf(source, system as '5e' | '5.5e', 'monk', 5), g);
+			const sheet = deriveSheet(charOf(source, system, 'monk', 5), g);
 			expect(sheet.resources.find((r) => r.id === resourceId)?.max).toBe(5); // = monk level
 			const opts = sheet.resourceOptions.filter((o) => o.resourceId === resourceId);
 			expect(opts.map((o) => o.id).sort()).toEqual([

@@ -430,7 +430,7 @@ describe('deriveSheet aggregator', () => {
 		c.build.inventory = [{ item: `item:${S}:plate_armor`, qty: 1, equipped: true, attuned: false }];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.facts.disadvantage.some((d) => d.target === 'skill.stealth')).toBe(true);
-		expect(s.skills.stealth!.notes?.some((n) => /disadvantage/i.test(n.text))).toBe(true);
+		expect(s.skills.stealth.notes?.some((n) => /disadvantage/i.test(n.text))).toBe(true);
 	});
 
 	it('B13: a known-kind token with a dead target is surfaced, not silently dropped', () => {
@@ -508,7 +508,7 @@ describe('deriveSheet aggregator', () => {
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// DEX 14 (+2): stealth = +2 mod + 2 custom = 4; dex save = +2 mod + 1 custom = 3
-		expect(s.skills.stealth!.value).toBe(4);
+		expect(s.skills.stealth.value).toBe(4);
 		expect(s.abilities.dex.save.value).toBe(3);
 	});
 
@@ -558,8 +558,8 @@ describe('deriveSheet aggregator', () => {
 			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
-		expect(s.skills.stealth!.prof).toBe('expertise');
-		expect(s.skills.stealth!.value).toBe(6); // DEX +2 + prof 2 × 2
+		expect(s.skills.stealth.prof).toBe('expertise');
+		expect(s.skills.stealth.value).toBe(6); // DEX +2 + prof 2 × 2
 	});
 
 	it('grants skill and save proficiency from a grant_proficiency effect', () => {
@@ -573,8 +573,8 @@ describe('deriveSheet aggregator', () => {
 			},
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
-		expect(s.skills.stealth!.prof).toBe('proficient'); // was 'none'
-		expect(s.skills.stealth!.value).toBe(4); // DEX +2 + prof +2
+		expect(s.skills.stealth.prof).toBe('proficient'); // was 'none'
+		expect(s.skills.stealth.value).toBe(4); // DEX +2 + prof +2
 		expect(s.abilities.con.save.trace.some((t) => t.layer === 'proficiency')).toBe(true);
 	});
 
@@ -583,8 +583,8 @@ describe('deriveSheet aggregator', () => {
 		c.build.abilities = { str: 10, dex: 14, con: 12, int: 16, wis: 10, cha: 10 }; // DEX +2
 		c.build.featSkills = ['stealth']; // chosen via a Skilled-style feat
 		const s = deriveSheet(characterSchema.parse(c), graph);
-		expect(s.skills.stealth!.prof).toBe('proficient');
-		expect(s.skills.stealth!.value).toBe(4); // DEX +2 + prof +2 (L3)
+		expect(s.skills.stealth.prof).toBe('proficient');
+		expect(s.skills.stealth.value).toBe(4); // DEX +2 + prof +2 (L3)
 	});
 
 	it('collects damage defenses from resist_immune effects (mode + bare default)', () => {
@@ -648,7 +648,7 @@ describe('deriveSheet aggregator', () => {
 		c.build.classes = [{ class: `class:${S}:wizard`, level: 3, subclass: `subclass:${S}:evoker` }];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// the subclass row's own tokens + its L2 feature apply; its L14 feature does not
-		expect(s.skills.arcana!.trace.map((t) => t.source)).toContain('Evoker');
+		expect(s.skills.arcana.trace.map((t) => t.source)).toContain('Evoker');
 		expect(s.abilities.dex.save.trace.map((t) => t.source)).toContain('Sculpt Spells');
 		expect(s.ac.trace.map((t) => t.source)).not.toContain('Overchannel');
 	});

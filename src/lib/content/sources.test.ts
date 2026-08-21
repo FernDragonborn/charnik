@@ -12,8 +12,8 @@ const cfg = (over: Partial<Parameters<typeof isRowActive>[1]> = {}) => ({
 
 // makeRow gives root:'test', file:'<type>.csv'
 const row = (id: string, source: string, systems: string[]) => {
-	const r = makeRow('condition', { id, name_en: id }, source) as LoadedRow;
-	return { ...r, systems } as LoadedRow;
+	const r = makeRow('condition', { id, name_en: id }, source);
+	return { ...r, systems };
 };
 
 describe('two-dimensional source filtering', () => {

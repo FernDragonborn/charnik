@@ -66,9 +66,7 @@ describe('caster level (multiclass)', () => {
 	});
 
 	it('effective level never exceeds total level (invariant)', () => {
-		const share = fc.constantFrom('full', 'half', 'half_up', 'third', 'none') as fc.Arbitrary<
-			'full' | 'half' | 'half_up' | 'third' | 'none'
-		>;
+		const share = fc.constantFrom('full', 'half', 'half_up', 'third', 'none');
 		fc.assert(
 			fc.property(fc.array(fc.record({ share, level: fc.integer({ min: 1, max: 20 }) })), (es) => {
 				const total = es.reduce((n, e) => n + e.level, 0);

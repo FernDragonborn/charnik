@@ -140,7 +140,7 @@
 				id: t.id,
 				locale: t.locale,
 			});
-			goto(`${base}/translate?${qs.toString()}`);
+			void goto(`${base}/translate?${qs.toString()}`);
 		} else if (t.kind === 'add') {
 			resumeAdd = { guid: t.addGuid, data: env.data as Record<string, string> };
 			selectedType = t.type;
@@ -174,7 +174,7 @@
 		editRow = null;
 		showDrafts = false;
 		selected = row;
-		goto(compendiumEntryPath(base, row.type, row.source, row.data.id), {
+		void goto(compendiumEntryPath(base, row.type, row.source, row.data.id), {
 			replaceState: true,
 			keepFocus: true,
 			noScroll: true,
@@ -451,7 +451,7 @@
 							class="mode-item"
 							onclick={() => {
 								pickerOpen = false;
-								goto(`${base}/translate`);
+								void goto(`${base}/translate`);
 							}}
 						>
 							<b>Translate</b><small>side-by-side prose translation</small>

@@ -92,7 +92,7 @@ export class BrowserStorage implements Storage {
 	async list(dir: string): Promise<FileEntry[]> {
 		const d = norm(dir);
 		const prefix = d ? `${d}/` : '';
-		const keys = (await (await this.#db).getAllKeys(STORE)) as string[];
+		const keys = await (await this.#db).getAllKeys(STORE);
 		const out: FileEntry[] = [];
 		for (const key of keys) {
 			if (!key.startsWith(prefix) || key === d) continue;

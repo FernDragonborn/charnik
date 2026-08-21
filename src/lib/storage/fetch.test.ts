@@ -132,7 +132,7 @@ describe('FetchStorage.list / exists (manifest-backed)', () => {
 
 	it('exists falls back to a network HEAD for a path outside the manifest', async () => {
 		fetchMock.mockResolvedValueOnce(okJson(manifest)); // manifest load
-		fetchMock.mockResolvedValueOnce({ ok: true, status: 200 } as FakeResponse); // HEAD hit
+		fetchMock.mockResolvedValueOnce({ ok: true, status: 200 }); // HEAD hit
 		await expect(new FetchStorage().exists('other/dir/file.csv')).resolves.toBe(true);
 		expect(fetchMock).toHaveBeenLastCalledWith(expect.stringContaining('other/dir/file.csv'), {
 			method: 'HEAD',

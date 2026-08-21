@@ -45,7 +45,7 @@ describe('ContentMetaModal (browser)', () => {
 			onSkip,
 			onNeverAsk: () => {},
 		});
-		await page
+		page
 			.getByRole('dialog')
 			.element()
 			.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));

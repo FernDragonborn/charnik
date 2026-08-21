@@ -85,7 +85,7 @@ beforeEach(() => {
 		if (!f) throw new Error(`ENOENT ${String(p)}`);
 		return { size: f.size, mtime: new Date(f.mtime) } as never;
 	});
-	vi.mocked(fs.mkdir).mockResolvedValue(undefined as never);
+	vi.mocked(fs.mkdir).mockResolvedValue(undefined);
 	vi.mocked(fs.remove).mockImplementation(async (p: string | URL) => {
 		const n = h.norm(String(p));
 		for (const k of [...h.files.keys()]) if (k === n || k.startsWith(n + '/')) h.files.delete(k);
