@@ -16,7 +16,11 @@ export const CONTENT_SCHEMA_VERSION = 1;
 // v2: the seeded bytes were CRLF on Windows (git's autocrlf, since fixed with `-text` in the content
 // repo) while every published blob is LF — so the pack updater saw all 15 files as changed forever.
 // Re-seeding rewrites them as LF; the hash is EOL-normalised, so no hand-edit is mistaken for one.
-export const CONTENT_SEED_VERSION = 2;
+// v3: the shipped SRD gained `resources_srd.csv` in both editions (RES-NAME). A NEW FILE is the case
+// this counter exists for and the easiest one to forget — nothing about an existing file changed, so
+// nothing looked stale; a desktop install seeded at v2 would simply never receive it, and every pool
+// would keep showing a title-cased id with no way for the user to tell why.
+export const CONTENT_SEED_VERSION = 3;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

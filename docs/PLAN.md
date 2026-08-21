@@ -1290,6 +1290,15 @@ holds the done-work log; these are the OPEN tails it carried):**
   **Content:** `resources_srd.csv` in both editions (7 pools in 5.5e, 5 in 5e), every name read off
   that edition's own shipped text (content repo `17fb092`). A test asserts every granted pool id has a
   row, so a converter re-run that drops the file fails loudly instead of reverting to `titleCase`.
+  **What shipping it taught, the same day** (maintainer pulled content, kept the installed app, and
+  got two "unknown content type" warnings): a new content TYPE is **not** a backwards-compatible
+  content change, and the two-repo split guarantees older builds will meet it. Nothing broke — the
+  file is skipped and names fall back — but `CONTENT_SEED_VERSION` had not been bumped either, so the
+  file would never have arrived on the next app update. Bumped to **3**, both unknown-type messages
+  now name "content newer than the app" as a cause (it is no longer likelier to be a typo), and the
+  rule is written down as **AI-CONVENTIONS §1.7** — including that a file of a NEW type should not
+  declare `#content-type:`, because an older build then reports an ERROR where it would otherwise
+  report a warning.
 - [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from
   `UPCAST-INVOCATION-SCOPE` + the Magic Weapon `enhancement` tail of UPCAST-ROLLER — they were the same
   problem written twice).** L1 can say `flat_bonus:damage+n` but not "…only for this weapon / only for

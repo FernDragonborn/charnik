@@ -159,6 +159,34 @@ say why in the PR: the bar is that the fact genuinely cannot live inside any sin
 
 ---
 
+### 1.7 A new content TYPE is not a backwards-compatible content change
+
+**Rule.** Content ships from its own repo on its own schedule (CLAUDE.md, REL-4) — that is the point
+of the split. So a content change lands on app builds that are ALREADY INSTALLED, and only some kinds
+of change are safe there. Adding rows, fixing values, adding a locale column: safe, an older build
+reads what it understands. Adding a new content **type** (a new `CONTENT_TYPES` entry and a
+`<type>_*.csv` beside the others): **not** safe — every older build calls that file an unknown type
+and skips it, with a warning the user did nothing to earn.
+
+**Two things follow, and BOTH are easy to forget.**
+1. **Bump `CONTENT_SEED_VERSION`** whenever the shipped set of files changes — a NEW file is the
+   easiest case to miss, because nothing about an existing file looks stale. Without the bump a
+   desktop install seeded at the old version simply never receives it.
+2. **Do not declare `#content-type:` on a file whose type is new.** Left to the filename, an older
+   build reports a WARNING and skips one file; declared explicitly, the same build reports an ERROR.
+   Both skip it, so the quieter one is the kinder one.
+
+**Why it is a rule and not a note.** The failure is silent in the direction that matters: the app is
+FINE — the missing file only removes something additive — so the only signal is a warning about a
+file the user never touched. The message names the real cause ("content newer than the app —
+updating Charnik would read it") precisely because a typo is no longer the likeliest explanation.
+
+**The case that made it (2026-08-21, RES-NAME).** Adding the `resource` type shipped
+`resources_srd.csv` to the content repo; the maintainer pulled content, kept the installed app, and
+got two "unknown content type" warnings. Nothing was broken — pool names fell back to a title-cased
+id, exactly as designed — but the seed version had not been bumped either, so the file would not have
+arrived at all on the next app update.
+
 ## 2. TypeScript & code quality
 
 ### 2.1 Strict typing is a hard gate

@@ -12,7 +12,7 @@
  */
 import { contentTypeLabel } from '../util/format';
 import { languageName } from '../i18n/languages';
-import { didYouMean } from '../util/suggest';
+import { didYouMean, suggestClosest } from '../util/suggest';
 
 /** The said half of a content issue: the sentence + the particulars under it. */
 export interface IssueText {
@@ -22,15 +22,23 @@ export interface IssueText {
 
 export const issueText = {
 	/** `#content-type:` names a type this build has never heard of → the whole file is skipped. */
-	unknownDeclaredType: (declared: string, known: Iterable<string>): IssueText => ({
-		message: `This file says it holds a kind of content Charnik doesn’t know, so none of its rows were loaded. Correct the type on its first line${didYouMean(declared, known) || '.'}`,
-		detail: `#content-type: ${declared}`,
-	}),
+	unknownDeclaredType: (declared: string, known: Iterable<string>): IssueText => {
+		// parenthesised, not `didYouMean`'s trailing form: the suggestion sits MID-sentence here, and
+		// "misspelled — did you mean "spell"?, or …" reads like two sentences colliding
+		const near = suggestClosest(declared, known);
+		const hint = near.length ? ` (did you mean ${near.map((n) => `"${n}"`).join(' or ')}?)` : '';
+		return {
+			message: `This file says it holds a kind of content this version of Charnik doesn’t know, so none of its rows were loaded. Either the type is misspelled${hint}, or the file arrived with content newer than the app — updating Charnik would then read it.`,
+			detail: `#content-type: ${declared}`,
+		};
+	},
 
-	/** No directive and a filename that matches no type — nothing to guess from. */
+	/** No directive and a filename that matches no type. TWO real causes, not one: a hand-named file,
+	 *  and — because content ships from its own repo on its own schedule — a file for a content type
+	 *  only a NEWER app knows (`resources_srd.csv` did exactly this to installed builds). */
 	unknownFileType: (): IssueText => ({
 		message:
-			'Charnik can’t tell what this file holds, so it was skipped. Either name it after the kind of content it has (spells_mine.csv, feats_mine.csv) or add a first line saying so: #content-type: spell',
+			'This version of Charnik can’t tell what this file holds, so it was skipped — nothing else in the folder is affected. If you wrote it, name it after the kind of content it has (spells_mine.csv, feats_mine.csv) or add a first line saying so: #content-type: spell. If it arrived with a content pack, it is probably a kind of content a newer Charnik adds; updating the app will read it.',
 	}),
 
 	/** Over the read cap. Almost always a backup/export that wandered into a content folder. */
