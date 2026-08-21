@@ -2371,13 +2371,33 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   where `any` enters from papaparse / `JSON.parse`, so it wants a typing pass at those boundaries, not
   a rule flip) and `require-await` (47 — style, and several are deliberate async interfaces).
   Policy unchanged: new code fully typed; avoid the `undefined` TYPE (model absence deliberately).
-- [ ] **NULL-1 · Audit the returned `null`** (maintainer, 2026-08-21) — walk the functions that return
-  `T | null` and decide, per site, whether absence is really a VALUE or whether the signature is
-  dodging a decision. Candidates to convert: an empty collection instead of `null`; a typed result
-  (`{ key } | { blocked }` — the shape `reserveSpellSlot` just moved to); a thrown error where the
-  caller genuinely cannot continue. Keep `null` where it means "asked, and there is legitimately
-  nothing" (`graph.get` on a missing ref — the render-what-you-can invariant depends on it). Same
-  track as the type policy above; `noUncheckedIndexedAccess` already forces the read side.
+- [~] **NULL-1 · Audit the returned `null` — WALKED 2026-08-21** (maintainer, 2026-08-21). All 64
+  `T | null` returns under `src/` read, each judged against one question: is absence a VALUE here, or
+  is the signature dodging a decision? **The great majority are values and stay** — `graph.get` on a
+  missing ref (the render-what-you-can invariant depends on it), every parser and lookup, the
+  storage/draft reads, `checkFileMeta` (null = the file is fine). Two KINDS of finding came out.
+  **1. `null` that means the OPPOSITE of "nothing" — converted to a named state.** `gatherProfGrants`
+  answered `null` for "no declared proficiencies", which the whole module treats as *proficient with
+  everything* — a reader of `isArmorProficient(grants, …)` would read it exactly backwards. Now
+  `ProfGrants = Set<string> | UNCONSTRAINED`. Same shape in `derive-targets`: `null` meant "this
+  effect kind has an OPEN vocabulary, every target passes", now `OPEN_VOCAB`. Neither is a type
+  change so much as a naming one — the type was already honest, the spelling wasn't.
+  **2. `null` that swallowed a REFUSAL — converted to a reported result.** `applyUpdate` and
+  `installPack` each answered `null` for several unrelated situations, and some of those never
+  reached the panel's error list at all: a click on an offer that had just gone away, and a repo link
+  that no longer parses, both did nothing and said nothing (§2.7's exact failure). Both now always
+  return an `ApplyResult`; `refuse()` (beside `fail`/`applyFailed`) reports on BOTH channels at once,
+  which is what they had been disagreeing about. Three new strings, EN + UA. The caller's `res?.`
+  optional chains went with the null.
+  **Deliberately kept, with the reason recorded here so it isn't re-litigated:** the advantage family
+  (`amendWithAdvantage`/`flipAdvantage`/`cycleAdvantage` → `T | null`) — null means "this roll cannot
+  take that change", which is a real answer and the callers act on it; `expandPluginEffects` → null is
+  a documented fast path for the no-plugin build (an empty expansion would make every non-plugin
+  derive walk the merge), and it carries the removability invariant.
+  **One thing found and NOT fixed (needs a surface, not a signature):** `parseDraft` drops a corrupt
+  draft file silently, so an unfinished translation whose JSON got mangled just vanishes from the
+  drafts pane with no word to the user. Surfacing it is a small feature (which channel? the pane, or
+  content-health?), not a null-audit edit — hence `[~]`, and it is the only thing left of this item.
 
 **Sequencing (DECIDED 2026-07-09):** **TYPE-2 → LINT-1 → WD-1 → WD-2.** Type the foundation
 first so every new component (the heads) is born typed and LINT-1's type-checked rules land on

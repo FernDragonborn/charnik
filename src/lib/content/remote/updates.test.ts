@@ -220,7 +220,9 @@ describe('two repos publishing the same folder name', () => {
 
 		const res = await installPack('dark-sun', { fetcher: fetcher(ALL), localName: 'dark-sun' });
 
-		expect(res).toBeNull();
+		// NULL-1: a refusal REPORTS — nothing written, and a reason the panel can show
+		expect(res.written).toEqual([]);
+		expect(res.error).toMatchObject({ key: 'settings.packs.folderTaken' });
 		expect(packConfig.packs['dark-sun']?.repo).toBe(REPO); // still the first repo's
 	});
 

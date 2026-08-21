@@ -44,6 +44,7 @@ import {
 import {
 	updates,
 	fail,
+	refuse,
 	clearErrors,
 	guarded,
 	noListing,
@@ -124,18 +125,18 @@ export async function discoverPacks(
 export async function installPack(
 	pack: string,
 	opts: { fetcher?: RemoteFetcher; localName?: string; acceptSourceClaim?: boolean } = {},
-): Promise<ApplyResult | null> {
+): Promise<ApplyResult> {
 	clearErrors();
+	// Every refusal below reports; two of them used to answer a bare `null`, so the click did nothing
+	// and said nothing — the one failure the user cannot see (§2.7, NULL-1).
 	const found = updates.discovered.find((d) => d.pack === pack);
-	if (!found) return null;
+	if (!found) return refuse({ kind: 'i18n', key: 'settings.packs.installGone', values: { pack } });
 	const typed = (opts.localName ?? found.localName).trim();
 	// belt-and-braces: `discoverPacks` already filtered the remote name, but this is the function that
 	// WRITES, and a reserved name is the one input that turns an install into data loss — and `local`
 	// can be anything the user typed into the rename box
-	if (!isUsablePackFolderName(typed)) {
-		fail({ kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: typed } });
-		return null;
-	}
+	if (!isUsablePackFolderName(typed))
+		return refuse({ kind: 'i18n', key: 'settings.packs.badFolderName', values: { name: typed } });
 	// …and it must not be somebody else's folder. Only the entry this repo already owns may be
 	// written over; anything else is the collision the suggested name exists to step around.
 	// Matched case-INSENSITIVELY, because NTFS/APFS fold case: `SRD-2024` typed beside an installed
@@ -143,19 +144,22 @@ export async function installPack(
 	// somebody else's pack away to `.prev`.
 	const ownerName = claimedPackName(typed);
 	const owner = ownerName === undefined ? undefined : packConfig.packs[ownerName];
-	if (owner !== undefined && localPackFor(found.repo, pack) !== ownerName) {
-		fail({
+	if (owner !== undefined && localPackFor(found.repo, pack) !== ownerName)
+		return refuse({
 			kind: 'i18n',
 			key: 'settings.packs.folderTaken',
 			values: { name: typed, repo: owner.repo },
 		});
-		return null;
-	}
 	// our own pack under a differently-cased name is ONE folder, so write to the name the registry
 	// already knows rather than minting a second entry for the same directory
 	const local = ownerName ?? typed;
 	const parsed = parseGithubRepo(found.repo);
-	if (!parsed) return null;
+	if (!parsed)
+		return refuse({
+			kind: 'i18n',
+			key: 'settings.packs.applyBadRepo',
+			values: { pack, repo: found.repo },
+		});
 	const repo: GithubRepo = { ...parsed, branch: found.branch };
 
 	const storage = getUserStorage();

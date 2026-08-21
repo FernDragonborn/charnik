@@ -39,6 +39,7 @@ import {
 import {
 	updates,
 	fail,
+	refuse,
 	clearErrors,
 	serialised,
 	guarded,
@@ -258,7 +259,7 @@ export function applyUpdate(
 		acceptSourceClaim?: boolean;
 		fetcher?: RemoteFetcher;
 	} = {},
-): Promise<ApplyResult | null> {
+): Promise<ApplyResult> {
 	// shares the check's queue: it ends by pruning the same shared cache, and a check running
 	// alongside it would be rebuilding the very set that prune consults
 	return serialised(() => runApply(pack, opts));
@@ -272,12 +273,20 @@ async function runApply(
 		acceptSourceClaim?: boolean;
 		fetcher?: RemoteFetcher;
 	},
-): Promise<ApplyResult | null> {
+): Promise<ApplyResult> {
 	clearErrors();
+	// Both refusals below used to answer `null`: the click did nothing and said nothing, which is the
+	// one failure shape the user cannot see (§2.7). They are ordinary states — a second click on an
+	// offer that just went away, a repo link that no longer parses — so they report like any other.
 	const pending = updates.pending[pack];
-	if (!pending) return null;
+	if (!pending) return refuse({ kind: 'i18n', key: 'settings.packs.applyGone', values: { pack } });
 	const repo = fetchRepo(pending.repo);
-	if (!repo) return null;
+	if (!repo)
+		return refuse({
+			kind: 'i18n',
+			key: 'settings.packs.applyBadRepo',
+			values: { pack, repo: pending.repo },
+		});
 
 	const res = await guarded(() =>
 		applyPackUpdate({

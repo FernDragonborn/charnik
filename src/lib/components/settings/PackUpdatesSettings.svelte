@@ -451,7 +451,7 @@
 									const res = await applyUpdate(pack);
 									// it stopped to show rows that would vanish from inside changed files — the
 									// second click is the one that accepts them
-									rowsToAccept = res?.rowRemovals !== undefined ? pack : null;
+									rowsToAccept = res.rowRemovals !== undefined ? pack : null;
 									await afterDiskChange();
 								}}
 							>

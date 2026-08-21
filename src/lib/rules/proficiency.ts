@@ -11,29 +11,40 @@
  * declare its grants can make a weapon/armor non-proficient.
  */
 
-/** Parse one class's comma-list prof column into a lowercased set. Blank/absent → null. */
-function parseProfGrants(raw: string | undefined): Set<string> | null {
-	if (raw == null || raw.trim() === '') return null;
+/**
+ * What a character is proficient with — either the declared set, or `UNCONSTRAINED`.
+ *
+ * NAMED rather than `null` (NULL-1): the lenient state means "proficient with EVERYTHING", and
+ * `null` reads as its opposite — no grants, i.e. proficient with nothing. A reader of
+ * `isArmorProficient(grants, …)` should not have to look up which way round it is.
+ */
+export const UNCONSTRAINED = 'unconstrained';
+export type ProfGrants = Set<string> | typeof UNCONSTRAINED;
+
+/** Parse one class's comma-list prof column into a lowercased set. Blank/absent → UNCONSTRAINED. */
+function parseProfGrants(raw: string | undefined): ProfGrants {
+	if (raw == null || raw.trim() === '') return UNCONSTRAINED;
 	const set = new Set(
 		raw
 			.split(',')
 			.map((s) => s.trim().toLowerCase())
 			.filter(Boolean),
 	);
-	return set.size ? set : null;
+	return set.size ? set : UNCONSTRAINED;
 }
 
 /**
- * Union the prof grants across a character's classes. `null` = UNCONSTRAINED (proficient with
- * everything): returned when any class is undeclared, or the character has no classes — the
- * lenient fallback. Otherwise the merged set of declared categories/ids.
+ * Union the prof grants across a character's classes. `UNCONSTRAINED` when any class is undeclared,
+ * or the character has no classes at all — the lenient fallback. Otherwise the merged set of
+ * declared categories/ids.
  */
-export function gatherProfGrants(rawList: (string | undefined)[]): Set<string> | null {
-	if (!rawList.length) return null;
+export function gatherProfGrants(rawList: (string | undefined)[]): ProfGrants {
+	if (!rawList.length) return UNCONSTRAINED;
 	const union = new Set<string>();
 	for (const raw of rawList) {
 		const g = parseProfGrants(raw);
-		if (g === null) return null; // an undeclared class → all-proficient, swallows the union
+		// an undeclared class → all-proficient, which swallows the union
+		if (g === UNCONSTRAINED) return UNCONSTRAINED;
 		for (const c of g) union.add(c);
 	}
 	return union;
@@ -62,26 +73,26 @@ export function armorCategoryOf(
 }
 
 /** Is the character proficient with this weapon? Category grant (simple/martial) OR a specific
- *  weapon-id grant. Unconstrained grants (null) or an unclassifiable weapon → proficient. */
+ *  weapon-id grant. UNCONSTRAINED grants or an unclassifiable weapon → proficient. */
 export function isWeaponProficient(
-	grants: Set<string> | null,
+	grants: ProfGrants,
 	itemType: string | undefined,
 	weaponId: string,
 ): boolean {
-	if (grants === null) return true;
+	if (grants === UNCONSTRAINED) return true;
 	const cat = weaponCategoryOf(itemType);
 	if (cat && grants.has(cat)) return true;
 	return grants.has(weaponId.toLowerCase());
 }
 
-/** Is the character proficient with this armor/shield? Unconstrained grants (null) or an
- *  unclassifiable armor category → proficient (lenient — never block on unknown data). */
+/** Is the character proficient with this armor/shield? UNCONSTRAINED grants or an unclassifiable
+ *  armor category → proficient (lenient — never block on unknown data). */
 export function isArmorProficient(
-	grants: Set<string> | null,
+	grants: ProfGrants,
 	itemType: string | undefined,
 	itemCategory: string,
 ): boolean {
-	if (grants === null) return true;
+	if (grants === UNCONSTRAINED) return true;
 	const cat = armorCategoryOf(itemType, itemCategory);
 	if (!cat) return true;
 	return grants.has(cat);

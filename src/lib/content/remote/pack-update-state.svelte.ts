@@ -170,11 +170,19 @@ export async function guarded(run: () => Promise<ApplyResult>): Promise<ApplyRes
 	try {
 		return await run();
 	} catch (e) {
-		return {
-			written: [],
-			preserved: [],
-			removed: [],
-			error: { kind: 'raw', message: e instanceof Error ? e.message : String(e) },
-		};
+		return applyFailed({ kind: 'raw', message: e instanceof Error ? e.message : String(e) });
 	}
+}
+
+/** An apply that wrote nothing, and why. The ONE shape a refusal takes: an apply either reports what
+ *  it did or reports why it did nothing — it never answers `null`, which says neither (NULL-1). */
+export function applyFailed(error: UpdateError): ApplyResult {
+	return { written: [], preserved: [], removed: [], error };
+}
+
+/** Refuse to write, on BOTH channels at once: the panel's error list and the caller's answer. They
+ *  used to disagree — several refusals reached one, some reached neither. */
+export function refuse(error: UpdateError): ApplyResult {
+	fail(error);
+	return applyFailed(error);
 }

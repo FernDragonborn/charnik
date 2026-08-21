@@ -61,8 +61,13 @@ const PROFICIENCY_TARGETS = new Set<string>([
 /** G4 `halve` targets — the only two stats RAW ever halves (2014 exhaustion L2 speed, L4 hp-max). */
 const HALVE_TARGETS = new Set<string>(['speed', 'hp_max']);
 
-/** The candidate target set a kind is checked against, or null for an open-vocab kind. */
-const targetCandidatesFor = (kind: string): Set<string> | null => {
+/** A kind whose targets are NOT a closed set (resist_immune's damage types, grant_resource's ids):
+ *  there is nothing to check against, so every target passes. Named rather than `null` (NULL-1) —
+ *  "no candidate set" and "no valid targets" are opposite answers and must not share a spelling. */
+const OPEN_VOCAB = 'open-vocab';
+
+/** The candidate target set a kind is checked against, or OPEN_VOCAB when it has no closed set. */
+const targetCandidatesFor = (kind: string): Set<string> | typeof OPEN_VOCAB => {
 	switch (kind) {
 		// block_bonus blocks bonuses to a stat target (grappled → speed) — same closed vocab as sets.
 		case EFFECT_KIND.flatBonus:
@@ -82,7 +87,7 @@ const targetCandidatesFor = (kind: string): Set<string> | null => {
 		case EFFECT_KIND.grantProficiency:
 			return PROFICIENCY_TARGETS;
 		default:
-			return null;
+			return OPEN_VOCAB;
 	}
 };
 
@@ -91,6 +96,6 @@ const targetCandidatesFor = (kind: string): Set<string> | null => {
  *  validated elsewhere or unbounded. An unsupported target carries a PLG-9 "did you mean?" suffix. */
 export const isEffectTargetSupported = (kind: string, target: string): TargetCheck => {
 	const candidates = targetCandidatesFor(kind);
-	if (!candidates || candidates.has(target)) return { supported: true };
+	if (candidates === OPEN_VOCAB || candidates.has(target)) return { supported: true };
 	return { supported: false, suggestion: didYouMean(target, candidates) };
 };

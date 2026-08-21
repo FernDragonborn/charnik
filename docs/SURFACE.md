@@ -291,6 +291,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function checkFailure` — * How such a failure reads to the user.
 - `function fetchRepo` — * The repo to FETCH from: the pasted URL, plus the branch a check actually found the tree on.
 - `function guarded` — * The disk half of an apply can THROW where the network half returns a value: a full disk, `EBUSY` * from a content C…
+- `function applyFailed` — An apply that wrote nothing, and why.
+- `function refuse` — Refuse to write, on BOTH channels at once: the panel's error list and the caller's answer.
 
 ### `src/lib/content/remote/updates.svelte.ts`
 
@@ -1156,6 +1158,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/rules/proficiency.ts`
 
+- `const UNCONSTRAINED` — * What a character is proficient with — either the declared set, or `UNCONSTRAINED`.
+- `type ProfGrants`
 - `function gatherProfGrants` — * Union the prof grants across a character's classes.
 - `function weaponCategoryOf` — Normalize a weapon item's `item_type` ("martial melee", "simple ranged") to its category.
 - `function armorCategoryOf` — Normalize an armor item to its category.
@@ -1327,4 +1331,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 768 exports across 111 modules · 43 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 772 exports across 111 modules · 43 duplicate suspects._

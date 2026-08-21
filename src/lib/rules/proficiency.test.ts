@@ -5,22 +5,23 @@ import {
 	armorCategoryOf,
 	isWeaponProficient,
 	isArmorProficient,
+	UNCONSTRAINED,
 } from './proficiency';
 
 describe('proficiency model (pure)', () => {
 	it('gatherProfGrants: unions declared class grants', () => {
 		const g = gatherProfGrants(['simple,martial', 'light,heavy']);
-		expect(g).not.toBeNull();
-		expect([...g!].sort()).toEqual(['heavy', 'light', 'martial', 'simple']);
+		expect(g).not.toBe(UNCONSTRAINED);
+		expect([...(g as Set<string>)].sort()).toEqual(['heavy', 'light', 'martial', 'simple']);
 	});
 
-	it('gatherProfGrants: any undeclared (blank) class → null = unconstrained (lenient)', () => {
-		expect(gatherProfGrants(['simple', undefined])).toBeNull();
-		expect(gatherProfGrants(['simple', ''])).toBeNull();
+	it('gatherProfGrants: any undeclared (blank) class → UNCONSTRAINED (lenient)', () => {
+		expect(gatherProfGrants(['simple', undefined])).toBe(UNCONSTRAINED);
+		expect(gatherProfGrants(['simple', ''])).toBe(UNCONSTRAINED);
 	});
 
-	it('gatherProfGrants: no classes at all → null (lenient, never wrong-downward)', () => {
-		expect(gatherProfGrants([])).toBeNull();
+	it('gatherProfGrants: no classes at all → UNCONSTRAINED (lenient, never wrong-downward)', () => {
+		expect(gatherProfGrants([])).toBe(UNCONSTRAINED);
 	});
 
 	it('weaponCategoryOf normalizes item_type', () => {
@@ -43,8 +44,8 @@ describe('proficiency model (pure)', () => {
 		expect(isWeaponProficient(g, 'martial melee', 'greataxe')).toBe(false);
 	});
 
-	it('isWeaponProficient: null grants (unconstrained) → always proficient', () => {
-		expect(isWeaponProficient(null, 'martial melee', 'greataxe')).toBe(true);
+	it('isWeaponProficient: UNCONSTRAINED grants → always proficient', () => {
+		expect(isWeaponProficient(UNCONSTRAINED, 'martial melee', 'greataxe')).toBe(true);
 	});
 
 	it('isArmorProficient: declared grant gate', () => {
@@ -54,8 +55,8 @@ describe('proficiency model (pure)', () => {
 		expect(isArmorProficient(g, '', 'shield')).toBe(false);
 	});
 
-	it('isArmorProficient: null grants OR unclassifiable armor → never block (lenient)', () => {
-		expect(isArmorProficient(null, 'heavy armor', 'armor')).toBe(true);
+	it('isArmorProficient: UNCONSTRAINED grants OR unclassifiable armor → never block (lenient)', () => {
+		expect(isArmorProficient(UNCONSTRAINED, 'heavy armor', 'armor')).toBe(true);
 		expect(isArmorProficient(new Set(['light']), 'mystery', 'armor')).toBe(true);
 	});
 });
