@@ -26,8 +26,8 @@ vite.config.ts.timestamp-*
 src-tauri/target/
 src-tauri/gen/
 
-# Tauri script
-build.ps1
+# Tauri release script — holds the local signing key, never committed
+tools/build-release.ps1
 
 # local design mocks + renders (kept on disk, not tracked)
 design-preview/

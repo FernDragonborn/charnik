@@ -2424,7 +2424,7 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   **Type-aware rules are CI-only, and the reason is a measurement:** the syntax pass is **26s**, the
   type-aware pass **7m48s** — a fixed cost to build the TS program that neither `--cache` nor scoping
   to `src/**` shrinks (8m40 → 7m48). So `eslint.config.js` (fast) runs on pre-commit and pre-push,
-  `eslint.typed.config.js` runs as `pnpm lint:typed` in CI. It covers `.svelte` as well as `.ts` on
+  `config/eslint.typed.config.js` runs as `pnpm lint:typed` in CI. It covers `.svelte` as well as `.ts` on
   purpose — most floating promises live in components.
   **Enabled rule by rule, not via `recommendedTypeChecked`.** The five that name a bug are on and
   their 63 findings are fixed: `no-floating-promises` (16 — every one a `void`-or-await decision),

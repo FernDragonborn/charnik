@@ -9,8 +9,9 @@
  * It covers `.svelte` as well as `.ts` on purpose: the floating promises this catches are mostly in
  * components (`+layout.svelte`, `CommandPalette.svelte`), so a `.ts`-only scope would miss the point.
  */
+import { join } from 'node:path';
 import ts from 'typescript-eslint';
-import base from './eslint.config.js';
+import base from '../eslint.config.js';
 
 export default ts.config(...base, {
 	// APP SOURCE ONLY. The root config files (vite/vitest/svelte.config) are outside the app's
@@ -18,7 +19,8 @@ export default ts.config(...base, {
 	// cost for files that have no promises to float.
 	files: ['src/**/*.ts', 'src/**/*.svelte'],
 	languageOptions: {
-		parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+		// The repo root, not this file's folder — the project service resolves `tsconfig.json` from here.
+		parserOptions: { projectService: true, tsconfigRootDir: join(import.meta.dirname, '..') },
 	},
 	rules: {
 		// Rule by rule rather than `recommendedTypeChecked`: that preset also drags in the `no-unsafe-*`

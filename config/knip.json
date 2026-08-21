@@ -3,6 +3,7 @@
 	"entry": ["tools/**/*.mjs"],
 	"project": ["src/**/*.{ts,svelte}", "tools/**/*.mjs"],
 	"ignoreDependencies": ["@tauri-apps/cli"],
+	"stylelint": { "config": ["config/stylelint.json"] },
 	"rules": {
 		"exports": "warn",
 		"types": "warn",

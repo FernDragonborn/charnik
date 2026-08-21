@@ -995,7 +995,9 @@ The repo ships its own tooling under `tools/` — check there BEFORE hand-rollin
   doing two jobs (a leaf's policy plus the orchestration on top of it): split the leaf out rather
   than reordering imports. The `$lib`/`$app` aliases live in `.madgerc` — without them madge
   silently SKIPS every aliased import and reports "no cycles" for a repo full of them, so check the
-  skipped-file count if you ever touch that config.
+  skipped-file count if you ever touch that config. It is the ONE linter config still in the repo
+  root (the rest moved to `config/` on 2026-08-21): madge has no `--config` flag, it only reads
+  `.madgerc` from the cwd. Don't try to move it again.
 - Also: `tools/srd/*` (SRD converters), `tools/build-static-content.mjs` (predev/prebuild).
 
 ---

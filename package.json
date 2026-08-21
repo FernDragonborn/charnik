@@ -21,18 +21,35 @@
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint . && stylelint \"src/**/*.{css,svelte}\" && knip && jscpd && madge --circular src",
-		"lint:typed": "eslint -c eslint.typed.config.js .",
-		"lint:fix": "prettier --write . && eslint . --fix && stylelint \"src/**/*.{css,svelte}\" --fix",
-		"knip": "knip",
-		"jscpd": "jscpd --reporters consoleFull",
+		"lint": "prettier --check . && eslint . && stylelint --config config/stylelint.json \"src/**/*.{css,svelte}\" && knip --config config/knip.json && jscpd -c config/jscpd.json && madge --circular src",
+		"lint:typed": "eslint -c config/eslint.typed.config.js .",
+		"lint:fix": "prettier --write . && eslint . --fix && stylelint --config config/stylelint.json \"src/**/*.{css,svelte}\" --fix",
+		"knip": "knip --config config/knip.json",
+		"jscpd": "jscpd -c config/jscpd.json --reporters consoleFull",
 		"loc": "node tools/loc.mjs",
 		"postinstall": "simple-git-hooks",
 		"plugin:test": "tsx tools/plugin-test.ts"
 	},
 	"simple-git-hooks": {
-		"pre-commit": "node tools/surface.mjs && git add docs/SURFACE.md && npx prettier --check . && npx eslint . && npx jscpd",
+		"pre-commit": "node tools/surface.mjs && git add docs/SURFACE.md && npx prettier --check . && npx eslint . && npx jscpd -c config/jscpd.json",
 		"pre-push": "pnpm check && pnpm lint && pnpm test"
+	},
+	"prettier": {
+		"useTabs": true,
+		"singleQuote": true,
+		"trailingComma": "all",
+		"printWidth": 100,
+		"plugins": [
+			"prettier-plugin-svelte"
+		],
+		"overrides": [
+			{
+				"files": "*.svelte",
+				"options": {
+					"parser": "svelte"
+				}
+			}
+		]
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
