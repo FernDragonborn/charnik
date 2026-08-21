@@ -147,7 +147,12 @@
 		{/if}
 
 		{#if tokenLints.length}
-			<div class="group-label eyebrow warn">Effect-token warnings (authoring)</div>
+			<div class="group-label eyebrow warn">Effects that look like a slip of the pen</div>
+			<p class="sec-note group-note">
+				These work — Charnik is only pointing out things that are usually a typo, like a d7 or two
+				branches of one formula that return different kinds of value. Written for whoever authored
+				the row.
+			</p>
 			{#each tokenLints as l, i (l.id + i)}
 				<div class="row warn">
 					<div class="row-file">{l.id}</div>
@@ -160,7 +165,7 @@
 			<div class="group-label eyebrow warn plugin-retry-row">
 				<!-- not only EFFECT problems any more: a missing per-system data row (e.g. no class_casting
 			     for the active edition) is reported through the same channel -->
-				<span>Problems deriving “{deriveHealth.characterName}” (this character only)</span>
+				<span>Things that didn’t work out on “{deriveHealth.characterName}” (this sheet only)</span>
 				{#if hasPluginIssue}
 					<button class="retry-btn" onclick={retryPlugins}>Retry plugins</button>
 				{/if}
@@ -169,6 +174,7 @@
 				<div class="row warn">
 					<div class="row-file">{it.source} · <span class="row-id">{it.token}</span></div>
 					<div class="row-msg">{it.reason}</div>
+					{#if it.detail}<div class="row-detail">{it.detail}</div>{/if}
 				</div>
 			{/each}
 		{/if}

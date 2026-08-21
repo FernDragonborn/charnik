@@ -423,7 +423,9 @@ describe('deriveSheet aggregator', () => {
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		expect(s.ac.value).toBe(13); // leather 11 + DEX 2 — the typo'd bonus did NOT apply
-		expect(s.deriveIssues.some((i) => /unknown target "armorclass"/.test(i.reason))).toBe(true);
+		expect(s.deriveIssues.some((i) => /unknown target "armorclass"/.test(i.detail ?? ''))).toBe(
+			true,
+		);
 	});
 
 	it('PLG-9: a near-miss target typo gets a "did you mean?" suggestion', () => {
@@ -439,7 +441,7 @@ describe('deriveSheet aggregator', () => {
 			{ iid: 'h', label: 'Haste', effects: ['flat_bonus:action+1'], positive: true },
 		];
 		const s = deriveSheet(characterSchema.parse(c), graph);
-		expect(s.deriveIssues.some((i) => /unknown target/.test(i.reason))).toBe(false);
+		expect(s.deriveIssues.some((i) => /unknown target/.test(i.detail ?? ''))).toBe(false);
 	});
 
 	it('passive.<any skill> is valid vocab and applies (not just the three senses)', () => {
@@ -450,7 +452,7 @@ describe('deriveSheet aggregator', () => {
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// STR 10 (+0), not proficient: passive athletics = 10 + 5 = 15; no false "unknown target"
 		expect(s.passives.athletics.value).toBe(15);
-		expect(s.deriveIssues.some((i) => /unknown target/.test(i.reason))).toBe(false);
+		expect(s.deriveIssues.some((i) => /unknown target/.test(i.detail ?? ''))).toBe(false);
 	});
 
 	it('A16: apply_condition to a nonexistent condition surfaces an issue', () => {
@@ -462,11 +464,15 @@ describe('deriveSheet aggregator', () => {
 		const s = deriveSheet(characterSchema.parse(c), graph);
 		// the real, edition-matched condition is fine; only the typo'd id is flagged + suggested (PLG-9)
 		expect(
-			s.deriveIssues.some((i) =>
-				/unknown condition "frightend" — did you mean "frightened"\?/.test(i.reason),
+			s.deriveIssues.some(
+				(i) =>
+					/did you mean "frightened"\?/.test(i.reason) &&
+					/unknown condition "frightend"/.test(i.detail ?? ''),
 			),
 		).toBe(true);
-		expect(s.deriveIssues.some((i) => /unknown condition "poisoned"/.test(i.reason))).toBe(false);
+		expect(s.deriveIssues.some((i) => /unknown condition "poisoned"/.test(i.detail ?? ''))).toBe(
+			false,
+		);
 	});
 
 	it('adds a shield when raised (the play-state toggle, not the inventory flag)', () => {
@@ -941,7 +947,7 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		c.play.hp = { current: 10, max: 50, temp: 0 };
 		const s = deriveSheet(characterSchema.parse(c), g);
 		expect(s.abilities.con.score.value).toBe(10); // not applied — no fixpoint iteration
-		expect(s.deriveIssues.some((i) => i.reason.includes('dependency cycle'))).toBe(true);
+		expect(s.deriveIssues.some((i) => (i.detail ?? '').includes('dependency cycle'))).toBe(true);
 	});
 });
 
@@ -1084,7 +1090,7 @@ describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
 		const s = deriveSheet(ringWearer(), await pluginGraph());
 		expect(s.ac.value).toBe(10);
 		expect(s.facts.unknown.some((u) => u.token === 'plugin:test-ns:curse')).toBe(true);
-		expect(s.deriveIssues.some((i) => i.reason.includes('not available'))).toBe(true);
+		expect(s.deriveIssues.some((i) => (i.detail ?? '').includes('not available'))).toBe(true);
 	});
 });
 

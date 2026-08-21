@@ -250,9 +250,18 @@ export function expandPluginEffects(
 	const playJson = JSON.stringify(ctx.play);
 	const budget: BudgetState = { t0: now(), over: false };
 
+	// ONE user-facing sentence for every way a plugin can fail — the dozen internal reasons (over
+	// budget, result too large, bad target key, handler not registered…) are all the same fact to the
+	// person reading the panel, and all have the same next step. The exact fault rides in `detail`.
 	const degrade = (eff: ActiveEffect, token: string, reason: string): void => {
 		out.unknown.push({ source: eff.source, token });
-		issues.push({ source: eff.source, token, reason });
+		issues.push({
+			source: eff.source,
+			token,
+			reason:
+				'This part of the sheet is worked out by a plugin, and the plugin did not return a usable answer — so it contributes nothing. Nothing else on the sheet is affected. Fix the plugin, then press “Retry plugins”.',
+			detail: reason,
+		});
 	};
 
 	for (const eff of effects) {

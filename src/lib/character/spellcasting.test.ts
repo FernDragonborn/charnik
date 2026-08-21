@@ -213,8 +213,8 @@ describe('deriveSpellcasting: a missing 5.5e casting table surfaces, never falls
 		const sheet = deriveSheet(bard(3), graph);
 		const issue = sheet.deriveIssues.find((i) => i.token.startsWith('class_casting:'));
 		expect(issue?.token).toBe('class_casting:bard');
-		expect(issue?.reason).toMatch(/no prepared\/known count for bard at level 3 in 5\.5e/);
-		expect(issue?.reason).toMatch(/add a class_casting row/);
+		expect(issue?.detail).toMatch(/class_casting:bard — no prepared\/known count at level 3/);
+		expect(issue?.reason).toMatch(/level 3 in D&D 5\.5e \(2024\)/); // the edition, in the user's words
 	});
 
 	it('a class that DOES declare the table is untouched', () => {

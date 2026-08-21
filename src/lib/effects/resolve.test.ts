@@ -92,7 +92,7 @@ describe('resolveActiveEffects · guards', () => {
 		const r = resolve(bad, makeExprContext(build, play()));
 		// kept WITH its guard → downstream parses it as `unknown` → an inert note, not an applied effect
 		expect(r.effects.flatMap((e) => e.tokens)).toEqual(['bogus_var ? flat_bonus:ac+1']);
-		expect(r.issues[0]?.reason).toContain('bad guard');
+		expect(r.issues[0]?.detail).toContain('bad guard');
 		expect(r.issues[0]?.token).toBe('bogus_var ? flat_bonus:ac+1');
 		// and the seam does NOT apply it as a bonus
 		const ac = applyEffects('ac', computed([]), r.effects, makeExprContext(build, play()));
@@ -307,7 +307,7 @@ describe('resolveActiveEffects · dependency order (the DAG)', () => {
 			expandCondition: () => ({ source: 'X', tokens: ['flat_bonus:ac+5'] }),
 		});
 		expect(r.state.conditions.has('x')).toBe(false); // never bootstraps itself
-		expect(r.issues.some((i) => i.reason.includes('dependency cycle'))).toBe(true);
+		expect(r.issues.some((i) => (i.detail ?? '').includes('dependency cycle'))).toBe(true);
 		// the token stays visible (inert, guard intact) — never silently dropped
 		expect(r.effects.flatMap((e) => e.tokens)).toContain('has_condition.x ? apply_condition:x');
 		expect(r.effects.flatMap((e) => e.tokens)).not.toContain('flat_bonus:ac+5');
@@ -368,7 +368,7 @@ describe('resolveActiveEffects · P2 · cycle & guard edge cases', () => {
 		});
 		expect(r.abilities.str.value).toBe(10); // neither +2 applied — both condemned as cyclic
 		expect(r.abilities.dex.value).toBe(10);
-		expect(r.issues.filter((i) => i.reason.includes('dependency cycle'))).toHaveLength(2);
+		expect(r.issues.filter((i) => (i.detail ?? '').includes('dependency cycle'))).toHaveLength(2);
 		// both tokens stay visible (inert, guard intact) — never silently dropped
 		const tokens = r.effects.flatMap((e) => e.tokens);
 		expect(tokens).toContain('dex_mod>=0 ? flat_bonus:str+2');
@@ -400,7 +400,7 @@ describe('resolveActiveEffects · P2 · cycle & guard edge cases', () => {
 			{ source: 'D', layer: 'feature', tokens: ['1d6 ? flat_bonus:ac+1'] },
 		];
 		const r = resolveActiveEffects({ active, makeCtx: liveCtx, expandCondition: noExpand });
-		expect(r.issues[0]?.reason).toContain('not a condition');
+		expect(r.issues[0]?.detail).toContain('not a yes/no condition');
 		expect(r.effects.flatMap((e) => e.tokens)).toContain('1d6 ? flat_bonus:ac+1'); // kept verbatim
 		expect(applyEffects('ac', computed([]), r.effects, r.ctx).trace).toEqual([]); // not folded
 	});

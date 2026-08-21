@@ -33,9 +33,7 @@ import {
 import { fileHashState } from './hash';
 import { declaredSchema, migrateRows } from './migrations';
 import { CONTENT_SCHEMA_VERSION } from '../schema/version';
-import { languageName } from '../i18n/languages';
-import { contentTypeLabel } from '../util/format';
-import { didYouMean } from '../util/suggest';
+import { issueText } from './issue-text';
 
 /** Identity + provenance a loaded row carries regardless of its content type. */
 interface LoadedRowCommon {
@@ -103,19 +101,14 @@ interface ContentIssue {
 	root: string;
 	file?: string;
 	id?: string;
-	/** What happened, what it means for the sheet, and what to type to fix it — in the words of
-	 *  someone who edits CSVs, not of the parser (UX-1). The exact token/column/id that caused it
-	 *  goes in `detail`, never in here. */
+	/** What happened / what it means / what to change, in the reader's words — the wording lives in
+	 *  `issue-text.ts`, and the exact token, column or id goes in `detail`, never in here (UX-1). */
 	message: string;
-	/** The raw technical particulars — column name, zod complaint, the id that clashed. Rendered as a
-	 *  secondary line, because the content-health panel is ALSO the homebrew author's debugger: the
-	 *  detail is demoted, never dropped. */
+	/** The particulars, rendered demoted under the sentence — the panel is the author's debugger too. */
 	detail?: string;
 }
 
-interface ListOptions {
-	system?: string;
-}
+type ListOptions = { system?: string };
 
 export interface ContentGraph {
 	rows: LoadedRow[];
@@ -204,8 +197,10 @@ function collectTranslationGaps(rows: LoadedRow[], locales: string[]): ContentIs
 					root: row.root,
 					file: row.file,
 					id: row.id,
-					message: `Half-translated into ${languageName(locale)} — the parts that are missing show in English until you fill them in (Compendium ▸ Translate).`,
-					detail: `empty columns: ${missing.map((base) => `${base}_${locale}`).join(', ')}`,
+					...issueText.partialTranslation(
+						locale,
+						missing.map((base) => `${base}_${locale}`),
+					),
 				});
 		}
 	}
@@ -259,13 +254,11 @@ function resolveFileType(
 	const declaredType = directives.get('type');
 	if (declaredType) {
 		if (declaredType in CONTENT_TYPES) return declaredType as ContentType;
-		const hint = didYouMean(declaredType, Object.keys(CONTENT_TYPES));
 		acc.issues.push({
 			level: 'error',
 			root,
 			file: entry.name,
-			message: `This file says it holds a kind of content Charnik doesn't know, so none of its rows were loaded. Correct the type on its first line${hint || '.'}`,
-			detail: `#content-type: ${declaredType}`,
+			...issueText.unknownDeclaredType(declaredType, Object.keys(CONTENT_TYPES)),
 		});
 		return null;
 	}
@@ -277,8 +270,7 @@ function resolveFileType(
 		level: 'warn',
 		root,
 		file: entry.name,
-		message:
-			"Charnik can't tell what this file holds, so it was skipped. Either name it after the kind of content it has (spells_mine.csv, feats_mine.csv) or add a first line saying so: #content-type: spell",
+		...issueText.unknownFileType(),
 	});
 	return null;
 }
@@ -292,22 +284,18 @@ function buildLoadedRow(
 	file: FileRef,
 ): LoadedRow | ContentIssue {
 	const res = parseRow(header.type, rawRow);
-	if (!res.success) {
-		// name the COLUMNS to go fix; the parser's own wording (types, enums, "expected number") is the
-		// author's debugging detail, not the sentence a CSV editor should have to decode (UX-1)
-		const columns = [...new Set(res.error.issues.map((i) => i.path.join('.')).filter(Boolean))];
-		const which = columns.length
-			? `the column${columns.length > 1 ? 's' : ''} ${columns.map((c) => `"${c}"`).join(', ')}`
-			: 'one of its columns';
+	if (!res.success)
 		return {
 			level: 'error',
 			root: file.root,
 			file: file.entry.name,
 			...(rawRow.id ? { id: String(rawRow.id) } : {}),
-			message: `This row was skipped because ${which} holds something a ${contentTypeLabel(header.type)} row can't use. Correct the cell and save the file — the rest of the file loaded normally.`,
-			detail: res.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
+			...issueText.badRow(
+				[...new Set(res.error.issues.map((i) => i.path.join('.')).filter(Boolean))],
+				header.type,
+				res.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '),
+			),
 		};
-	}
 	// `data` shares every type's `base` columns (id/source/systems/name_en/…), so those read typed
 	// with no narrowing; type-specific reads happen after the row is narrowed by `.type`.
 	const data: AnyRowData = res.data;
@@ -363,8 +351,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 			level: 'error',
 			root,
 			file: entry.name,
-			message: `This file is bigger than the ${MAX_CSV_BYTES / (1024 * 1024)} MB Charnik reads for one content file, so it was skipped. A content CSV is normally far smaller than that — check it isn't a backup, an export, or a damaged file. If it really is content, split it into several files; every file in the folder is loaded.`,
-			detail: `${(raw.length / (1024 * 1024)).toFixed(1)} MB`,
+			...issueText.oversizedFile(raw.length, MAX_CSV_BYTES),
 		});
 		return;
 	}
@@ -410,9 +397,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 				level: 'warn',
 				root,
 				file: entry.name,
-				message:
-					"This column looks like a translation, but Charnik can't read a language code out of it, so the column is ignored. Translation columns are written name_<code> or text_<code> — name_uk, text_de.",
-				detail: `column "${h}"`,
+				...issueText.malformedLocaleColumn(h),
 			});
 	}
 	// A file authored against another schema version is brought forward before anything reads its
@@ -425,11 +410,7 @@ async function processFile(file: FileRef, acc: LoadAcc, preRead?: string): Promi
 			level: 'warn',
 			root,
 			file: entry.name,
-			message:
-				declared > CONTENT_SCHEMA_VERSION
-					? 'This file was written by a newer version of Charnik than the one you are running. Its rows were loaded as they are, so anything the newer version added is ignored — update Charnik to read the file fully.'
-					: 'This file uses an older layout that Charnik has no way to bring forward, so its rows were loaded exactly as written. If entries from it look wrong, open one in the app and save it again.',
-			detail: `#content-schema: ${declared}, this build reads ${CONTENT_SCHEMA_VERSION} · ${migrated.error}`,
+			...issueText.schemaMismatch(declared, CONTENT_SCHEMA_VERSION, migrated.error),
 		});
 	for (const rawRow of migrated.rows) {
 		const built = buildLoadedRow(rawRow, header, file);
@@ -458,14 +439,12 @@ function validateSpellListJoins(
 		if (r.type !== 'spell_lists') continue; // byType guarantees it; the guard narrows the union for TS
 		const checkJoin = (map: Map<string, string[]>, id: unknown, kind: string): void => {
 			if (joinResolves(map, id, r.systems)) return;
-			const hint = didYouMean(String(id), map.keys());
 			issues.push({
 				level: 'warn',
 				root: r.root,
 				file: r.file,
 				id: r.id,
-				message: `This row puts a spell on a class's list, but no ${kind} in this edition has that id — so the row does nothing${hint || '. Check the id for a typo, or whether the row’s "systems" column names the edition that ' + kind + ' is in.'}`,
-				detail: `${kind}_id "${String(id)}"`,
+				...issueText.unresolvedJoin(kind, String(id), map.keys()),
 			});
 		};
 		checkJoin(classSystems, r.data.class_id, 'class');
@@ -497,8 +476,7 @@ function buildIndices(rows: LoadedRow[], issues: ContentIssue[]): ContentIndices
 				root: r.root,
 				file: r.file,
 				id: r.id,
-				message: `Two entries share the id "${r.id}" under the same source, so only the first one is used and this one is ignored everywhere in the app. Give one of them a different id, or delete the copy.`,
-				detail: `"${r.effectiveId}" · the copy in use is in ${kept.root}/${kept.file}`,
+				...issueText.duplicateId(r.id, r.effectiveId, `${kept.root}/${kept.file}`),
 			});
 			continue;
 		}

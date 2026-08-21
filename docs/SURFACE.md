@@ -379,7 +379,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (96 modules)
+## Library functions & types (97 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -684,6 +684,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function upsertHomebrewRow` — * Editor-mode save (UPSERT).
 - `function removeHomebrewRow` — Delete a homebrew row (by id) from its CSV — the only content the app may remove (never a shipped * file).
 - `function saveHomebrewRow` — * Validate a draft and append it to its homebrew CSV (rewriting the file atomically).
+
+### `src/lib/content/issue-text.ts`
+
+- `interface IssueText` — The said half of a content issue: the sentence + the particulars under it.
+- `const issueText`
 
 ### `src/lib/content/loader.ts`
 
@@ -1321,4 +1326,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 765 exports across 110 modules · 43 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 767 exports across 111 modules · 43 duplicate suspects._

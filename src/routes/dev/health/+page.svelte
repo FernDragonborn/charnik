@@ -3,6 +3,8 @@
 	// "why isn't my CSV showing up", and on the shipped SRD it always renders "all clear" — so its
 	// problem states had no visual coverage at all. This route feeds DELIBERATELY broken CSVs through
 	// the REAL loader (not hand-made issue objects), so what you see is what a user would see.
+	// shot.mjs pixel-diffs the first viewport only — `body` never scrolls, so the groups below the
+	// fold are eyeballed here rather than diffed, the same as on every long route.
 	import ContentHealth from '$lib/components/settings/ContentHealth.svelte';
 	import { MemoryStorage } from '$lib/storage/memory';
 	import { loadContent } from '$lib/content/loader';
@@ -35,7 +37,8 @@
 			'#content-updated_at: 2026-08-01',
 			'#content-hash: xxh64:0000000000000000',
 			'id,systems,source,name_en,text_en,effects',
-			'lucky_ish,5.5e,My Feats,Lucky-ish,Reroll a die.,flat_bonus:ac+1d4',
+			// the d7 is deliberate: it drives the authoring-lint group from the real lint, not a stub
+			'lucky_ish,5.5e,My Feats,Lucky-ish,Reroll a die.,flat_bonus:ac+1d7',
 		].join('\n'),
 	};
 
@@ -49,8 +52,20 @@
 		content.guid = crypto.randomUUID();
 		// the derive-time half comes from whichever character is open in play; stand in for it
 		deriveHealth.set('Karroth the Red', [
-			{ source: 'Cloak of Protection', token: 'flat_bonus:armorclass+1', reason: 'unknown target' },
-			{ source: 'Rage', token: 'plugin:brutal:damage', reason: 'plugin budget exhausted' },
+			{
+				source: 'Cloak of Protection',
+				token: 'flat_bonus:armorclass+1',
+				reason:
+					'Nothing on the sheet is called "armorclass", so this effect changes nothing — did you mean "ac"?',
+				detail: 'flat_bonus: unknown target "armorclass"',
+			},
+			{
+				source: 'Rage',
+				token: 'plugin:brutal:damage',
+				reason:
+					'This part of the sheet is worked out by a plugin, and the plugin did not return a usable answer — so it contributes nothing. Nothing else on the sheet is affected. Fix the plugin, then press “Retry plugins”.',
+				detail: 'plugin budget for this computation exhausted',
+			},
 		]);
 	}
 	const ready = seed();

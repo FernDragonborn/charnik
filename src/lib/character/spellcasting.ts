@@ -13,7 +13,7 @@ import type { ContentGraph, LoadedRowOf } from '../content/loader';
 import { getSpellAccess } from '../content/spellAccess';
 import type { Character } from './schema';
 import { abilityModifier, spellSaveDC, spellAttackBonus, type Ability } from '../rules/core';
-import type { Computed } from '../rules/pipeline';
+import { SYSTEM_LABELS, type Computed } from '../rules/pipeline';
 import { applyEffects, type EffectFacts } from '../effects/apply';
 import type { EffectIssue } from '../effects/token-parser';
 import {
@@ -272,7 +272,8 @@ export function deriveSpellcasting({
 		issues?.push({
 			source: p.className,
 			token: `class_casting:${p.ownerId}`,
-			reason: `no prepared/known count for ${p.ownerId} at level ${p.level} in ${character.system}, and this system states no formula — add a class_casting row`,
+			reason: `Charnik doesn't know how many spells ${p.className} prepares at level ${p.level} in ${SYSTEM_LABELS[character.system]}, so it shows none — this edition gives no formula to work it out from. Add the count for that level to the class's casting table in your content.`,
+			detail: `class_casting:${p.ownerId} — no prepared/known count at level ${p.level}`,
 		});
 		return 0;
 	};

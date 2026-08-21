@@ -223,7 +223,9 @@ class Resolver {
 			this.issues.push({
 				source: sourceOf(inst),
 				token: inst.raw,
-				reason: `dependency cycle on ${inst.writeKey}: this effect's condition or value depends on its own output — not applied`,
+				reason:
+					'This effect needs its own result before it can work out its own result, so Charnik cannot apply it — it is left out of the sheet. Rewrite it so it depends on something else.',
+				detail: `dependency cycle on ${inst.writeKey}`,
 			});
 		}
 	}
@@ -258,7 +260,11 @@ class Resolver {
 			this.issues.push({
 				source: sourceOf(inst),
 				token: inst.raw,
-				reason: r.ok ? `guard "${inst.guard}" is not a condition` : `bad guard: ${r.error}`,
+				reason:
+					'Charnik cannot tell whether the condition in front of this effect is met, so the effect is not applied.',
+				detail: r.ok
+					? `the guard "${inst.guard}" is not a yes/no condition`
+					: `bad guard: ${r.error}`,
 			});
 			inst.disposition = 'inert'; // kept verbatim: parses as unknown → visible, never silent
 			return false;
@@ -274,13 +280,16 @@ class Resolver {
 		if (v.amount === undefined) {
 			if (abilityTarget) {
 				w.disposition = 'inert';
+				const rolled = v.diceFormula !== undefined;
 				this.issues.push({
 					source: sourceOf(w),
 					token: w.raw,
-					reason:
-						v.diceFormula !== undefined
-							? 'a dice value cannot modify an ability score'
-							: `unresolved ability value: ${v.error ?? 'no value'}`,
+					reason: rolled
+						? 'An ability score changes by a fixed amount, never by a roll, so this effect was left out.'
+						: 'Charnik could not work out how much this changes the ability score by, so it was left out.',
+					detail: rolled
+						? `dice value "${v.diceFormula}" on an ability score`
+						: (v.error ?? 'the value expression resolved to nothing'),
 				});
 			}
 			// hp_max: keep applied — applyEffects('hp_max') re-resolves and notes the failure

@@ -92,7 +92,8 @@ class FactsCollector {
 		this.issues?.push({
 			source,
 			token,
-			reason: `unknown target "${target}" for ${kind}${check.suggestion ?? ''}`,
+			reason: `Nothing on the sheet is called "${target}", so this effect changes nothing${check.suggestion ?? ' — check the spelling in the row’s effects column.'}`,
+			detail: `${kind}: unknown target "${target}"`,
 		});
 		return true;
 	}
@@ -249,7 +250,13 @@ class FactsCollector {
 		const rv = resolveEffectValue(p, ctxOf(this.ctx, eff));
 		const formula = rv.diceFormula ?? (rv.amount !== undefined ? String(rv.amount) : undefined);
 		if (formula === undefined) {
-			this.issues?.push({ source: eff.source, token, reason: rv.error ?? 'roll has no value' });
+			this.issues?.push({
+				source: eff.source,
+				token,
+				reason:
+					'This should offer something to roll, but its formula does not work out to dice or a number — so no roll is offered.',
+				detail: rv.error ?? 'the value expression resolved to nothing',
+			});
 			return;
 		}
 		if (!this.facts.rolls.some((r) => r.id === p.target && r.source === eff.source))
@@ -279,7 +286,9 @@ class FactsCollector {
 				this.issues?.push({
 					source: eff.source,
 					token,
-					reason: r.ok ? 'resource max is not a number' : r.error,
+					reason:
+						'Charnik could not work out how many uses this gives, so it is not shown in the resource tracker. Track it by hand until the count in the row is fixed.',
+					detail: r.ok ? 'the max expression is not a number' : r.error,
 				});
 		}
 		// max ≤ 0 (a shared-pack `class_level.monk` on a non-monk, a step() below its first threshold) →

@@ -4,7 +4,7 @@
 	// add / editor), grouped, each resumable or deletable. Orphans (a draft whose target row is gone) sit
 	// up top with a Resolve action that opens the reassign dialog. Presentation + local list state only;
 	// the draft IO lives in $lib/drafts/store (thin-component rule).
-	import { asText } from '$lib/util/format';
+	import { asText, contentTypeLabel } from '$lib/util/format';
 	import { onMount } from 'svelte';
 	import Icon, { type IconName } from './Icon.svelte';
 	import { getUserStorage } from '$lib/storage/provider';
@@ -64,7 +64,7 @@
 
 	function toRow(env: DraftEnvelope): DraftRow {
 		const t = env.target;
-		const typeLabel = t.type.replace(/_/g, ' ');
+		const typeLabel = contentTypeLabel(t.type);
 		if (t.kind === 'add') {
 			const name = asText(env.data.name_en).trim();
 			return {

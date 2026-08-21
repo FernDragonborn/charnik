@@ -273,7 +273,7 @@ describe('the JSON boundary (§5) — invalid shapes are contained', () => {
 			issues,
 		);
 		expect(out?.unknown.length).toBe(1);
-		expect(issues[0]?.reason).toMatch(/invalid result/);
+		expect(issues[0]?.detail).toMatch(/invalid result/);
 	});
 });
 

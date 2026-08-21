@@ -148,7 +148,9 @@ function flagPhantomConditions(
 			issues.push({
 				source: 'apply_condition',
 				token: `apply_condition:${id}`,
-				reason: `unknown condition "${id}"${didYouMean(id, conditionIds)}`, // PLG-9
+				// PLG-9
+				reason: `Something tried to apply a condition called "${id}", but this edition has no such condition — so nothing was applied${didYouMean(id, conditionIds) || '. Add it to a conditions CSV, or correct the name.'}`,
+				detail: `apply_condition: unknown condition "${id}"`,
 			});
 }
 

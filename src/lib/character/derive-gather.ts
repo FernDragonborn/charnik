@@ -123,7 +123,8 @@ class EffectGatherer {
 				source: rowName(f),
 				token: `class_feature:${f.data.id}`,
 				reason:
-					'duplicate class feature from another source — applied once; resolve the collision to choose which',
+					'Two content packs both provide this class feature. Charnik applied it once, not twice — pick which copy you want in Settings ▸ Content to make the choice explicit.',
+				detail: 'duplicate class feature across sources',
 			});
 			return;
 		}

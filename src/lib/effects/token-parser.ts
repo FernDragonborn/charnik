@@ -402,5 +402,10 @@ export function splitGuard(raw: string): GuardedToken {
 export interface EffectIssue {
 	source: string;
 	token: string;
+	/** What went wrong and what it means for the sheet, in the words of whoever wrote the CSV row —
+	 *  the parser's own phrasing belongs in `detail` (UX-1). */
 	reason: string;
+	/** The technical particulars (the parser's complaint, a plugin's error) — shown demoted, so the
+	 *  homebrew author still gets the exact fault the sentence summarizes. */
+	detail?: string;
 }

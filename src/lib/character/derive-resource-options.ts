@@ -76,7 +76,13 @@ function resolveOneActionFormula(
 	if ((verb !== 'heal' && verb !== 'roll') || !rest || !ctx) return action;
 	const r = evalExpression(rest, ctx);
 	if (!r.ok) {
-		issues.push({ source: name, token: action, reason: r.error });
+		issues.push({
+			source: name,
+			token: action,
+			reason:
+				'Charnik could not work out what this option heals or rolls, so it is offered with the formula exactly as written.',
+			detail: r.error,
+		});
 		return action;
 	}
 	const formula =
@@ -100,7 +106,9 @@ function resolveAvailable(
 	issues.push({
 		source: name,
 		token: `available:${src}`,
-		reason: r.ok ? 'available guard is not a condition' : r.error,
+		reason:
+			'Charnik cannot tell when this option is meant to be available, so it is always offered. Check the condition on the row.',
+		detail: r.ok ? `"${src}" is not a yes/no condition` : r.error,
 	});
 	return true;
 }
@@ -127,7 +135,9 @@ export function resolveResourceOptions({
 			issues.push({
 				source: row.data.name_en,
 				token: `cost:${raw}`,
-				reason: 'unsupported resource-option cost (v1 supports an integer or `x`)',
+				reason:
+					'This option does not say how much it costs in a way Charnik understands, so it is not offered. The cost has to be a whole number, or "x" for "you choose how many".',
+				detail: `cost: "${raw}"`,
 			});
 			continue;
 		}

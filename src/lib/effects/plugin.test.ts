@@ -117,14 +117,14 @@ describe('expandPluginEffects — availability degradation', () => {
 		const issues: EffectIssue[] = [];
 		const out = expandPluginEffects([carrier('plugin:ns1:fn1')], ctx(), issues);
 		expect(out?.unknown).toEqual([{ source: 'Ring of Testing', token: 'plugin:ns1:fn1' }]);
-		expect(issues[0]?.reason).toMatch(/not available/);
+		expect(issues[0]?.detail).toMatch(/not available/);
 	});
 	it('unknown namespace/handlerName → degrade with the troubleshooting reason', () => {
 		registerPluginEvaluator(fakeEvaluator({}));
 		const issues: EffectIssue[] = [];
 		const out = expandPluginEffects([carrier('plugin:ns1:nope')], ctx(), issues);
 		expect(out?.unknown.length).toBe(1);
-		expect(issues[0]?.reason).toMatch(/missing\/disabled/);
+		expect(issues[0]?.detail).toMatch(/missing\/disabled/);
 	});
 	it('a broken plugin surfaces its REAL load error, not a generic "not registered" (author DX)', () => {
 		const ev: PluginEvaluator = {
@@ -135,7 +135,7 @@ describe('expandPluginEffects — availability degradation', () => {
 		registerPluginEvaluator(ev);
 		const issues: EffectIssue[] = [];
 		expandPluginEffects([carrier('plugin:ns1:h')], ctx(), issues);
-		expect(issues[0]?.reason).toMatch(/SyntaxError/); // the author sees WHY, not a puzzle
+		expect(issues[0]?.detail).toMatch(/SyntaxError/); // the author sees WHY, not a puzzle
 	});
 });
 
@@ -169,7 +169,7 @@ describe('the tokens dialect (§4.3) — returned L1 tokens ride the content mac
 		const issues: EffectIssue[] = [];
 		const out = expandPluginEffects([carrier('plugin:ns1:fn1')], ctx(), issues);
 		expect(out?.syntheticEffects).toEqual([]);
-		expect(issues[0]?.reason).toMatch(/invalid result/);
+		expect(issues[0]?.detail).toMatch(/invalid result/);
 	});
 	it('over 16 tokens rejects the whole result', () => {
 		registerPluginEvaluator(
@@ -265,7 +265,7 @@ describe('the contributions dialect (§4.3) — host-stamped pre-folded amounts'
 		);
 		const issues: EffectIssue[] = [];
 		expandPluginEffects([carrier('plugin:ns1:fn1')], ctx(), issues);
-		expect(issues[0]?.reason).toMatch(/contributions\.ac\.0\.layer|layer/);
+		expect(issues[0]?.detail).toMatch(/contributions\.ac\.0\.layer|layer/);
 	});
 });
 
@@ -306,7 +306,7 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 		for (let i = 0; i < 5; i++)
 			expandPluginEffects([carrier('plugin:ns1:fn1')], ctx({ hp: i }), issues);
 		expect(n).toBe(3);
-		expect(issues.at(-1)?.reason).toMatch(/disabled after repeated failures/);
+		expect(issues.at(-1)?.detail).toMatch(/disabled after repeated failures/);
 	});
 
 	it('the counter is per (namespace, character): a fail on ONE character never disables another (PLG-3)', () => {
@@ -371,7 +371,7 @@ describe('fail-closed (§5) — 3 consecutive failures disable the plugin for th
 			's',
 		);
 		// first token eats the budget; the second is degraded before its call
-		expect(issues.some((i) => /budget/.test(i.reason))).toBe(true);
+		expect(issues.some((i) => /budget/.test(i.detail ?? ''))).toBe(true);
 		expect(out?.unknown.some((u) => u.token === 'plugin:ns1:bbb')).toBe(true);
 	});
 });
