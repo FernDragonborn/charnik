@@ -3,6 +3,7 @@
 	// Theme/system/language switches live in the top bar already; this page owns the heavier content
 	// controls: health diagnostics, two-dimensional source filtering, and collision resolution.
 	import { onMount } from 'svelte';
+	import { page } from '$app/state';
 	import { loadContentStore, content } from '$lib/content/store.svelte';
 	import { detectCollisions } from '$lib/content/sources.svelte';
 	import GeneralSettings from '$lib/components/settings/GeneralSettings.svelte';
@@ -16,8 +17,26 @@
 	import { deriveHealth } from '$lib/character/health.svelte';
 	import { updates } from '$lib/content/remote/updates.svelte';
 
-	type Tab = 'general' | 'themes' | 'data' | 'health' | 'sources' | 'collisions' | 'plugins';
+	const TAB_IDS = [
+		'general',
+		'themes',
+		'data',
+		'health',
+		'sources',
+		'collisions',
+		'plugins',
+	] as const;
+	type Tab = (typeof TAB_IDS)[number];
+
+	// `?tab=` makes a tab LINKABLE, which is what the "Rules update" chip needs: it used to point at
+	// `/settings` and land on General, so the one panel that knows about the waiting update was still
+	// a click away — and clicking the chip while already in Settings did nothing at all, since the URL
+	// never changed. A tab a link can name fixes both.
+	const urlTab = $derived(TAB_IDS.find((id) => id === page.url.searchParams.get('tab')));
 	let tab = $state<Tab>('general');
+	$effect(() => {
+		if (urlTab) tab = urlTab;
+	});
 
 	onMount(loadContentStore);
 

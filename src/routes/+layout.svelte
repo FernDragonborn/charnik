@@ -339,7 +339,7 @@
 		{#if pendingPacks > 0}
 			<a
 				class="chip chip-packs"
-				href="{base}/settings"
+				href="{base}/settings?tab=sources"
 				title={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
 				aria-label={$_('settings.packs.chipTitle', { values: { count: pendingPacks } })}
 				><Icon name="download" size={13} /> {$_('settings.packs.chip')}</a
