@@ -10,6 +10,8 @@ import {
 	findOrphanDrafts,
 	repointDraft,
 	findStaleDrafts,
+	findUnreadableDrafts,
+	deleteDraftFiles,
 	discardDrafts,
 	type DraftTarget,
 } from './store';
@@ -179,6 +181,22 @@ describe('draft store', () => {
 		await discardDrafts(s, staleDrafts);
 		expect(await s.exists(path)).toBe(false); // now gone
 		expect(await findStaleDrafts(s)).toEqual([]);
+	});
+
+	it('reports a draft file that no longer parses, and leaves the readable ones alone', async () => {
+		const s = new MemoryStorage();
+		await writeDraft(s, translateTarget, { name: 'fine', text: '' });
+		// a truncated write / a hand-edit that broke the JSON: the file is there, the content is not
+		const broken = 'drafts/broken.json';
+		await s.write(broken, '{"target":{"kind":"add"');
+
+		expect(await findUnreadableDrafts(s)).toEqual([broken]);
+		expect((await listDrafts(s)).length).toBe(1); // the good one is unaffected by its neighbour
+		expect(await findStaleDrafts(s)).toEqual([]); // and it is not miscounted as a stale one
+
+		await deleteDraftFiles(s, [broken]);
+		expect(await s.exists(broken)).toBe(false);
+		expect(await findUnreadableDrafts(s)).toEqual([]);
 	});
 
 	it('reports a missing source when re-pointing a draft that is not there', async () => {

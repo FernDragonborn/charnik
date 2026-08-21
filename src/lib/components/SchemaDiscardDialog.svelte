@@ -12,15 +12,22 @@
 
 	let {
 		drafts,
+		unreadable = [],
 		onDiscard,
 		onKeep,
 	}: {
 		drafts: DraftEnvelope[];
+		/** Paths of draft files that no longer parse — the same loss with a different cause, so they are
+		 *  listed here rather than getting a dialog of their own. Nothing inside can be read, so the file
+		 *  name is all there is to show. */
+		unreadable?: string[];
 		/** user acknowledged — delete the stale files */
 		onDiscard: () => void;
 		/** dismiss without deleting (they stay on disk, still ignored until the schema matches again) */
 		onKeep: () => void;
 	} = $props();
+
+	const total = $derived(drafts.length + unreadable.length);
 
 	function draftLabel(env: DraftEnvelope): { title: string; sub: string } {
 		const t = env.target;
@@ -49,14 +56,19 @@
 	<header class="dialog-head">
 		<span class="dialog-badge warn"><Icon name="flag" size={17} /></span>
 		<h2 id="discard-title" class="dialog-title">
-			Older drafts can’t be restored{#if drafts.length > 1}<span class="count-pill"
-					>{drafts.length}</span
-				>{/if}
+			Some drafts can’t be restored{#if total > 1}<span class="count-pill">{total}</span>{/if}
 		</h2>
 		<p class="dialog-subtitle">
-			{drafts.length === 1 ? 'An unfinished edit was' : `${drafts.length} unfinished edits were`} saved
-			under an older content schema and can’t be migrated forward. Discarding them frees the space; keeping
-			them leaves the files on disk (still ignored) in case a future version can read them.
+			{#if drafts.length}{drafts.length === 1
+					? 'An unfinished edit was'
+					: `${drafts.length} unfinished edits were`} saved under an older content schema and can’t be
+				migrated forward.{/if}
+			{#if unreadable.length}{unreadable.length === 1
+					? 'One draft file'
+					: `${unreadable.length} draft files`} can no longer be read at all — the contents are damaged,
+				so there is nothing left in them to restore.{/if}
+			Discarding them frees the space; keeping them leaves the files on disk (still ignored) in case a
+			future version can read them.
 		</p>
 	</header>
 
@@ -71,14 +83,22 @@
 				<div class="ver">schema v{env.schemaVersion}</div>
 			</div>
 		{/each}
+		{#each unreadable as path (path)}
+			<div class="dialog-card row">
+				<div class="meta">
+					<div class="title">{path.slice(path.lastIndexOf('/') + 1)}</div>
+					<div class="sub">unreadable file</div>
+				</div>
+			</div>
+		{/each}
 	</div>
 
 	<footer class="dialog-foot">
 		<span class="dialog-spacer"></span>
 		<button class="btn ghost" onclick={onKeep}>Keep for now</button>
 		<button class="btn primary" onclick={onDiscard}>
-			Discard {drafts.length}
-			{drafts.length === 1 ? 'draft' : 'drafts'}
+			Discard {total}
+			{total === 1 ? 'draft' : 'drafts'}
 		</button>
 	</footer>
 </div>

@@ -213,7 +213,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
 | **RollRow** | `model`, `onAdvantage`, `rerollDamage`, `layout` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
 | **RollToast** | `model`, `closeToast` | The dice-roll toast — CHROME around a `RollRow`, nothing more. |
-| **SchemaDiscardDialog** | `drafts`, `onDiscard`, `onKeep` |  |
+| **SchemaDiscardDialog** | `drafts`, `unreadable`, `onDiscard`, `onKeep` |  |
 | **SourceManager** | — | Two-dimensional source filtering (PLAN invariant): a row shows iff its FILE is enabled AND its |
 | **SpellHead** | `detail`, `spell`, `editable`, `draft` | The "shapka" of a spell article: eyebrow (level · school · edition), title (+ ritual/concentration |
 | **StorageSettings** | — | Where Charnik keeps your data (characters + content). |
@@ -941,6 +941,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function draftsTargeting` — * Drafts pointed at any of these rows — the same question `findOrphanDrafts` asks, aimed at rows * that are about to …
 - `type RepointResult` — Outcome of a re-point: the move happened, or the destination already holds a draft (the caller must * let the user ch…
 - `function repointDraft` — Re-target an (orphan) draft onto a different entry: copy its data under the new key, delete the old * file.
+- `function findUnreadableDrafts` — Draft files that no longer parse (a truncated write, a hand-edit that broke the JSON).
+- `function deleteDraftFiles` — Delete draft files by PATH — the unreadable ones, which have no target to delete by.
 - `function listDrafts` — Every current-version draft on disk (for the pending-drafts / orphan surface).
 - `function findStaleDrafts` — Drafts saved under a DIFFERENT content-schema version — ephemeral WIP that can't be migrated, so it * will be discarded.
 - `function discardDrafts` — Delete the given stale drafts (called after the user acknowledges the discard warning).
@@ -1332,4 +1334,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 773 exports across 111 modules · 43 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 775 exports across 111 modules · 43 duplicate suspects._

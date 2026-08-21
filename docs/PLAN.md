@@ -2397,7 +2397,7 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   `unknown`, which narrows to `any[]` — a TS quirk that re-opens the value that parse boundary exists
   to close; a local guard keeps the elements `unknown`.
   Policy unchanged: new code fully typed; avoid the `undefined` TYPE (model absence deliberately).
-- [~] **NULL-1 · Audit the returned `null` — WALKED 2026-08-21** (maintainer, 2026-08-21). All 64
+- [x] **NULL-1 · Audit the returned `null` — DONE 2026-08-21** (maintainer, 2026-08-21). All 64
   `T | null` returns under `src/` read, each judged against one question: is absence a VALUE here, or
   is the signature dodging a decision? **The great majority are values and stay** — `graph.get` on a
   missing ref (the render-what-you-can invariant depends on it), every parser and lookup, the
@@ -2420,10 +2420,13 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   take that change", which is a real answer and the callers act on it; `expandPluginEffects` → null is
   a documented fast path for the no-plugin build (an empty expansion would make every non-plugin
   derive walk the merge), and it carries the removability invariant.
-  **One thing found and NOT fixed (needs a surface, not a signature):** `parseDraft` drops a corrupt
-  draft file silently, so an unfinished translation whose JSON got mangled just vanishes from the
-  drafts pane with no word to the user. Surfacing it is a small feature (which channel? the pane, or
-  content-health?), not a null-audit edit — hence `[~]`, and it is the only thing left of this item.
+  **The one thing the audit found that needed a surface, not a signature — also done.** `parseDraft`
+  dropped a corrupt draft file silently, so an unfinished translation whose JSON got mangled vanished
+  with no word. It needed no new channel: the stale-schema dialog already exists to say "unfinished
+  work you cannot get back", and a damaged file is that same news with a different cause. `scanDrafts`
+  now returns both halves, `findUnreadableDrafts` names the files, and the dialog lists them beside
+  the stale ones (by filename — there is nothing readable inside to label them with) and discards both
+  on one click. Browser test + store test cover it.
 
 **Sequencing (DECIDED 2026-07-09):** **TYPE-2 → LINT-1 → WD-1 → WD-2.** Type the foundation
 first so every new component (the heads) is born typed and LINT-1's type-checked rules land on

@@ -39,7 +39,9 @@
 	import {
 		findOrphanDrafts,
 		findStaleDrafts,
+		findUnreadableDrafts,
 		discardDrafts,
+		deleteDraftFiles,
 		writeDraft,
 		type DraftEnvelope,
 	} from '$lib/drafts/store';
@@ -81,6 +83,8 @@
 	let orphanStart = $state<DraftEnvelope | null>(null);
 	// drafts from an older content schema that can't be migrated → warn before discarding
 	let staleDrafts = $state<DraftEnvelope[]>([]);
+	/** Draft files that no longer parse — surfaced through the SAME dialog as the stale ones. */
+	let unreadableDrafts = $state<string[]>([]);
 
 	onMount(async () => {
 		await loadContentStore();
@@ -93,11 +97,18 @@
 	// on load, warn if any cached draft was saved under a different content schema (it will be dropped —
 	// surface it so the user's unsaved work doesn't vanish silently).
 	async function detectStaleDrafts() {
-		staleDrafts = await findStaleDrafts(getUserStorage());
+		const storage = getUserStorage();
+		staleDrafts = await findStaleDrafts(storage);
+		// a damaged file is the same news to the user as an unmigratable one: unfinished work that
+		// cannot come back. It used to be skipped in silence (NULL-1).
+		unreadableDrafts = await findUnreadableDrafts(storage);
 	}
 	async function discardStale() {
-		await discardDrafts(getUserStorage(), staleDrafts);
+		const storage = getUserStorage();
+		await discardDrafts(storage, staleDrafts);
+		await deleteDraftFiles(storage, unreadableDrafts);
 		staleDrafts = [];
+		unreadableDrafts = [];
 	}
 
 	// on load, surface any draft whose target row is gone (deleted / renamed / source disabled) — the
@@ -566,11 +577,15 @@
 		/>
 	{/if}
 
-	{#if staleDrafts.length}
+	{#if staleDrafts.length || unreadableDrafts.length}
 		<SchemaDiscardDialog
 			drafts={staleDrafts}
+			unreadable={unreadableDrafts}
 			onDiscard={discardStale}
-			onKeep={() => (staleDrafts = [])}
+			onKeep={() => {
+				staleDrafts = [];
+				unreadableDrafts = [];
+			}}
 		/>
 	{/if}
 

@@ -163,17 +163,40 @@ export async function repointDraft(
 	return 'moved';
 }
 
-/** Every parseable draft on disk REGARDLESS of schema version (corrupt/unparseable files skipped).
- *  The version-filtered {@link listDrafts} and the stale-version scan both build on this. */
-async function listAllDrafts(storage: Storage): Promise<DraftEnvelope[]> {
-	if (!(await storage.exists(DRAFTS_DIR))) return [];
-	const out: DraftEnvelope[] = [];
+/** Every draft file on disk, split into the ones that parse and the ones that do NOT. Unreadable
+ *  files are not dropped on the floor: a draft is the user's unfinished work, and a file that can no
+ *  longer be read is the same loss as a stale-schema one — it just has a different cause (NULL-1). */
+async function scanDrafts(
+	storage: Storage,
+): Promise<{ drafts: DraftEnvelope[]; unreadable: string[] }> {
+	if (!(await storage.exists(DRAFTS_DIR))) return { drafts: [], unreadable: [] };
+	const drafts: DraftEnvelope[] = [];
+	const unreadable: string[] = [];
 	for (const entry of await storage.list(DRAFTS_DIR)) {
 		if (entry.isDir || !entry.name.endsWith('.json')) continue;
 		const envelope = await parseDraft(storage, entry.path);
-		if (envelope) out.push(envelope);
+		if (envelope) drafts.push(envelope);
+		else unreadable.push(entry.path);
 	}
-	return out;
+	return { drafts, unreadable };
+}
+
+/** Every parseable draft on disk REGARDLESS of schema version. The version-filtered
+ *  {@link listDrafts} and the stale-version scan both build on this. */
+async function listAllDrafts(storage: Storage): Promise<DraftEnvelope[]> {
+	return (await scanDrafts(storage)).drafts;
+}
+
+/** Draft files that no longer parse (a truncated write, a hand-edit that broke the JSON). Surfaced
+ *  beside the stale ones so unfinished work never disappears without a word; the paths are all there
+ *  is to show, since nothing inside them can be read. */
+export async function findUnreadableDrafts(storage: Storage): Promise<string[]> {
+	return (await scanDrafts(storage)).unreadable;
+}
+
+/** Delete draft files by PATH — the unreadable ones, which have no target to delete by. */
+export async function deleteDraftFiles(storage: Storage, paths: string[]): Promise<void> {
+	for (const path of paths) await storage.remove(path);
 }
 
 /** Every current-version draft on disk (for the pending-drafts / orphan surface). Corrupt or
