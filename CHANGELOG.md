@@ -1,5 +1,67 @@
 # Changelog
 
+## 0.6.2
+
+A bugfix release, and the fix that names it: **your resource pools have names now.** Alongside it,
+every message the app shows when something goes wrong was rewritten for the person who owns the
+data rather than for the parser.
+
+### Resources are named, not guessed
+
+- **A pool is called what the rules call it.** Charnik used to title-case the internal id, which is
+  plausible-looking and wrong exactly where it matters: the 2024 monk pool is called **Focus
+  Points** (the id is `focus`), and the 2014 one **Ki Points**. Both now come from the shipped
+  rules data, which also means they can be translated — a name the app invented never could be.
+- **Homebrew can name its own pools.** A `resources` CSV maps a pool id to a name; a pool with no
+  row still works exactly as before, so nothing is required of a pack that doesn't care.
+- **One name everywhere.** The tracker, the action's cost chip and every toast used to format the
+  id three different ways ("rage", "Rage", "rage_uses"); they now read the same name.
+- **A misspelled resource is reported instead of vanishing.** An action that spends a pool nothing
+  grants used to disappear from the sheet with no explanation anywhere. Content health now names
+  the file, the row and the id it couldn't resolve, and suggests the one you probably meant.
+
+### Messages you can act on
+
+- **Every content and rules error was rewritten.** Each one now says what happened, what it means
+  for your sheet, and what to change — with the technical detail kept underneath rather than in
+  front. `duplicate source:id "spell:SRD 5.1:x"` became a sentence that names the file the surviving
+  copy is in; a misspelled content type suggests the right one; a half-translated entry says which
+  columns are still empty and where to fill them.
+- **A blocked action says what you ran out of.** "Not enough Focus Points for Flurry of Blows —
+  2 left · costs 3", rather than an internal id. Spell-slot blocks speak in table language ("No
+  3rd-level spell slots left — cast it from a higher slot, or rest").
+- **The homebrew form points at the field.** "Level — needs a number" instead of the validator's
+  "Invalid input: expected number, received nan".
+- **The "Rules update" chip opens the panel that has the update** instead of the top of Settings —
+  and does something when you're already in Settings.
+
+### Rolls
+
+- **A flat modifier in the middle of a formula is counted.** `1d8+2+1d4` used to roll `1d8+1d4`,
+  silently healing less. A bare `d8` with no count rolled nothing, and a dice-less number rolled 0.
+- **Action Surge grants an action instead of refunding one.** Surging before you acted used to burn
+  a use for nothing.
+- **The roll log survives a reload intact.** Damage, the advantage pair and an upcast's provenance
+  note used to be dropped on the way to disk, so a reloaded log was a poorer record than the one you
+  had been looking at. Amending a roll's advantage now sticks, too.
+- **The dice tray says which half of an attack it is building.** It builds the to-hit and shows the
+  damage that rides along, read-only — so dice you add can no longer land silently on the d20. The
+  editable version is still to come.
+
+### Magic items
+
+- **35 more shipped magic items change your numbers** (23 in the 2024 rules, 12 in 2014) —
+  resistances, unqualified advantage, `+N` weapons, Frost Brand's rider, the Robe of the Archmagi's
+  guarded AC. Every value was read off that edition's own text; where the rules can't be expressed
+  yet, the item keeps its text rather than folding something approximate.
+
+### Fixed
+
+- Icons come from one icon set rather than being typed into translatable strings, so a translation
+  can no longer break one; icon-only buttons have accessible labels.
+- On the web build, renaming a folder could write a phantom entry that later reads as a real file.
+- A draft file that can no longer be read is reported instead of silently disappearing.
+
 ## 0.6.1
 
 *0.6.0 was never published — its tag name got permanently reserved on GitHub before the release
