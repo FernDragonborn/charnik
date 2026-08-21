@@ -1207,8 +1207,17 @@ holds the done-work log; these are the OPEN tails it carried):**
   needs the two-part structure the ROLL CARD already renders — to-hit and damage as separate,
   separately-adjustable sub-rolls — which is the model `ROLLER-N` must introduce anyway
   ([[charnik-dicetray-attack-damage-concept]]). Building it here first would build it twice.
-  **Interim honesty option if the roller slips:** label the pool "to hit" and render the queued damage
-  visible-but-read-only. Cheap, stops the silent-wrong-roll, and pre-builds no structure.
+  **Interim honesty — TAKEN 2026-08-21, because the roller did slip.** The tray's heading now reads
+  "Greataxe · to hit" and carries the queued damage as a read-only line ("then 1d12 +3 slashing —
+  rolled with it, not from this pool"), so the pool can no longer be read as the whole attack. It is
+  still true that the damage cannot be adjusted; it is no longer true that a player has no way to
+  know. `RollTray.queuedDamage` is a getter over the same `pendingDamage` the roll already used
+  (`$state` so the panel tracks it), and `poolExpr` in `combat/roll.ts` is now the ONE pool
+  formatter — the tray's own `rollExpr` was a second copy of it, and a read-only damage line that
+  described a pool differently from the pool above it would be its own small lie.
+  New shot state `combat-dice-attack` pins it: the prefilled tray had no visual coverage at all,
+  which is part of why this survived so long. **The real fix is still ROLLER-N** — this changes no
+  structure and buys none of it.
 - [ ] **ROLLER-N · one roller that fires N independent sub-rolls (promoted to its own item 2026-08-09;
   working ledger + the 2026-08-10 audit behind it → [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md)).**
   Was filed as a sub-tail of UPCAST (`UPCAST-ROLLER`, was D14) — the wrong home, because upcast is only

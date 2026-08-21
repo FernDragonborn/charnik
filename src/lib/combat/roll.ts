@@ -6,6 +6,7 @@
 import { parseDiceTerm, rollPool, type BonusDie, type DieMods, type Rolled } from '$lib/rules/dice';
 import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
 import type { RollMod } from '$lib/effects/facts';
+import { signed } from '$lib/util/format';
 
 /** A rolled damage slice carrying its damage type ("slashing", "radiant"). A single-type hit is one
  *  of these; a multi-type weapon rolls several, each shown separately with its own total (BUG-DMG-1). */
@@ -51,6 +52,17 @@ export type RollLogEntry = Rolled & { label: string; damage?: TypedRoll[]; note?
 
 /** Combined total across every typed damage part. */
 export const damageTotal = (parts: TypedRoll[]): number => parts.reduce((n, p) => n + p.total, 0);
+
+/** A dice pool + modifier as it READS: "1d12 + 3", "2d6", "+4" (a flat-only pool, e.g. an Unarmed
+ *  Strike's "1 + STR"). One formatter, because the tray prints its own pool and — since UBUG-21's
+ *  interim — the damage queued behind it, and those two must not describe a pool differently. */
+export const poolExpr = (dice: Record<number, number>, mod = 0): string => {
+	const terms = Object.entries(dice)
+		.sort((a, b) => Number(b[0]) - Number(a[0]))
+		.map(([sides, count]) => `${count}d${sides}`);
+	if (mod || terms.length === 0) terms.push(signed(mod));
+	return terms.join(' + ').replace(' + +', ' +').replace(' + −', ' −');
+};
 
 /** The three action-economy slots a turn tracks. */
 export type ActionSlot = 'action' | 'bonus' | 'reaction';

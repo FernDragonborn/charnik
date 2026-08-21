@@ -13,7 +13,7 @@ import {
 } from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
 import {
-	signed,
+	poolExpr,
 	rollDamageParts,
 	type RollLogEntry,
 	type TypedRoll,
@@ -59,7 +59,7 @@ export class RollTray {
 	private rollNote: string | null = null;
 	/** A follow-up roll fired right after the tray's Roll (an attack's damage after its to-hit) — one
 	 *  typed part per damage type. */
-	private pendingDamage: { label: string; parts: DamagePartSpec[] } | null = null;
+	private pendingDamage = $state<{ label: string; parts: DamagePartSpec[] } | null>(null);
 	log = $state<RollLogEntry[]>([]);
 
 	/** Optional sink for completed rolls → the persistent `log.jsonl` (B4). Injected by CombatVM so
@@ -71,12 +71,7 @@ export class RollTray {
 		this.log = entries.slice(0, ROLL_LOG_MAX);
 	};
 
-	rollExpr = $derived(
-		Object.entries(this.dice)
-			.sort((a, b) => Number(b[0]) - Number(a[0]))
-			.map(([s, c]) => `${c}d${s}`)
-			.join(' + ') + (this.rollMod ? ` ${signed(this.rollMod)}` : ''),
-	);
+	rollExpr = $derived(poolExpr(this.dice, this.rollMod));
 
 	bumpDie = (sides: number, d: number) => {
 		const n = (this.dice[sides] ?? 0) + d;
@@ -107,6 +102,26 @@ export class RollTray {
 		this.rollNote = spec.note ?? null;
 		this.pendingDamage = null;
 	};
+
+	/**
+	 * What rides on the tray's next Roll, for a READ-ONLY line beside the pool (UBUG-21, interim).
+	 *
+	 * The tray builds the TO-HIT — its pool, its modifier, its advantage — while the damage is queued
+	 * out of sight. Under a heading that says "Greataxe" that reads as the attack, so a player adding
+	 * "+1d6" for a damage rider gets it summed into the d20 and the card resolves a silently-wrong
+	 * number (item 9). Showing what is queued does not make it editable; it makes the pool honest
+	 * about being half of the roll. The editable version is `ROLLER-N`'s sub-roll model.
+	 */
+	get queuedDamage(): { label: string; text: string } | null {
+		const p = this.pendingDamage;
+		if (!p) return null;
+		return {
+			label: p.label,
+			text: p.parts
+				.map((part) => `${poolExpr(part.dice, part.mod)}${part.type ? ` ${part.type}` : ''}`)
+				.join(' + '),
+		};
+	}
 
 	/** Queue a damage roll to fire right after the tray's next Roll (an attack's to-hit → damage). Each
 	 *  part is one damage type; they roll and display separately. */

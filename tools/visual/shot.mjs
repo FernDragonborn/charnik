@@ -71,6 +71,17 @@ const ROUTES = [
 			{ name: 'command-palette', prep: press('Control+k'), ready: '[role="dialog"]' },
 			{ name: 'combat-turnbar', prep: clickBtn(/Combat/), restore: clickBtn(/Combat/) },
 			{ name: 'combat-dice', prep: clickBtn(/Dice tray/), ready: '[role="dialog"]' },
+			// the tray PREFILLED from an attack: it builds the to-hit and the damage rides along
+			// read-only, which is the state UBUG-21 is about — and the only one that shows it
+			{
+				name: 'combat-dice-attack',
+				prep: (p) =>
+					p
+						.getByText('Greataxe', { exact: true })
+						.first()
+						.click({ modifiers: ['Alt'] }),
+				ready: 'text=/rolled with it/',
+			},
 		],
 	},
 	{ path: '/', wait: 'main', states: [{ name: 'roster' }] },

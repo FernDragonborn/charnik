@@ -13,12 +13,24 @@
 	const rollAdvantage = $derived(combat.tray.rollAdvantage);
 	const rollMod = $derived(combat.tray.rollMod);
 	const rollExpr = $derived(combat.tray.rollExpr);
+	// an attack prefills the tray with its TO-HIT and queues the damage out of sight; say so, and show
+	// what is queued, so the pool below can't be read as the whole attack (UBUG-21 interim)
+	const queued = $derived(combat.tray.queuedDamage);
 	const log = $derived(combat.tray.log);
 	const { bumpDie, doRoll } = combat.tray;
 </script>
 
 <div class="tray">
-	{#if rollSrc}<div class="tray-src"><b>{rollSrc}</b></div>{/if}
+	{#if rollSrc}
+		<div class="tray-src">
+			<b
+				>{rollSrc}{#if queued}<span class="src-part"> · to hit</span>{/if}</b
+			>
+			{#if queued}
+				<span class="queued">then {queued.text} — rolled with it, not from this pool</span>
+			{/if}
+		</div>
+	{/if}
 	<div class="pool">
 		{#each Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0])) as [s, c] (s)}
 			<div class="pool-chip">
@@ -84,6 +96,18 @@
 		border-radius: 9px;
 		padding: 8px 11px;
 		margin-bottom: 9px;
+	}
+	.src-part {
+		font-family: var(--font-body);
+		font-weight: 400;
+		color: var(--color-text-muted);
+	}
+	/* the damage that rides on this roll: shown, deliberately not editable — the tray only builds the
+	   to-hit until ROLLER-N gives damage its own sub-roll */
+	.queued {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-muted);
 	}
 	.tray-src b {
 		font-family: var(--font-display);
