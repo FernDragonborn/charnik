@@ -26,7 +26,8 @@ describe('HashDriftModal (browser)', () => {
 
 		// uncheck the first file (checked by default), then apply → only the second should be updated
 		await page.getByRole('checkbox').nth(0).click();
-		await page.getByText('Оновити дати та хеші').click();
+		// by ROLE + a fragment, not the whole sentence — the confirm copy is prose and gets rewritten
+		await page.getByRole('button', { name: /записати мої зміни/i }).click();
 		expect(onUpdate).toHaveBeenCalledWith(['monsters_homebrew.csv']);
 	});
 

@@ -136,6 +136,34 @@ function optionsOf(type: ContentType, name: string): readonly string[] | undefin
 	return ENUM_OPTS[name];
 }
 
+/** One validation failure, said the way the FORM says it (UX-1): the field's own label plus what
+ *  that field will accept — never the validator's "Invalid input: expected number, received nan",
+ *  which names a type system the person filling in a form has no reason to know. The requirement is
+ *  read off the same `kindOf`/`optionsOf` the inputs are built from, so it can't drift from what the
+ *  widget actually allows. */
+function fieldIssue(
+	type: ContentType,
+	row: Record<string, string>,
+	issue: z.core.$ZodIssue,
+): string {
+	const column = issue.path.join('.');
+	if (!column) return issue.message;
+	const name = label(column);
+	if (!row[column]) return `${name} — fill this in`;
+	const options = optionsOf(type, column);
+	if (options) return `${name} — choose one of: ${options.join(', ')}`;
+	switch (kindOf(type, column)) {
+		case 'number':
+			return `${name} — needs a number`;
+		case 'bool':
+			return `${name} — needs to be true or false`;
+		case 'systems':
+			return `${name} — pick at least one edition`;
+		default:
+			return `${name} — ${issue.message}`;
+	}
+}
+
 /** Canonical column order for a type = its schema's declared field order. */
 function columnsFor(type: ContentType): string[] {
 	const shape = (CONTENT_TYPES[type].schema as z.ZodObject).shape as Record<string, unknown>;
@@ -245,12 +273,8 @@ function buildRow(
 		row.id = `${row.id}-${n}`;
 	}
 	const res = parseRow(type, row);
-	if (!res.success) {
-		return {
-			ok: false,
-			issues: res.error.issues.map((i) => `${i.path.join('.') || 'row'}: ${i.message}`),
-		};
-	}
+	if (!res.success)
+		return { ok: false, issues: res.error.issues.map((i) => fieldIssue(type, row, i)) };
 	return { ok: true, row };
 }
 

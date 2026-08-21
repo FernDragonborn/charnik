@@ -249,11 +249,11 @@
 	},
 	"contentDrift": {
 		"title": "Content data changed",
-		"subtitle": "We noticed because a file's recorded hash no longer matches its contents — the data was edited outside the app. This is a normal step, we just want to confirm you meant it this way. Set today's date as the revision date and recompute the hash?",
+		"subtitle": "These files were edited outside Charnik — what's inside them no longer matches the fingerprint they carry. That's allowed and nothing is lost; we only want to be sure the change was yours. Shall we record today as their revision date and re-take the fingerprint?",
 		"declaredLabel": "Header says updated",
 		"changedLabel": "Actually changed",
 		"unknownDate": "unknown",
-		"update": "Update dates & hashes",
+		"update": "Yes, record my changes",
 		"skip": "Skip for now",
 		"neverAsk": "Don't ask again (content-editing mode)"
 	},

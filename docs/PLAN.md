@@ -1082,7 +1082,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   into the VM (the house pattern — logic-layer stays `$_`-free, UI injects, cf. `formatNote(note,
   translate?)`) OR allow `get(_)` in a VM (a VM is the UI layer, not rules-core, so `get(_)` is
   defensible — but it's not the established pattern). UA copy uses formal «ви» ([[uk-formal-vy]]).
-  **Do UX-1 first** — translating copy that's about to be rewritten costs the UA pass twice.
+  **UX-1 is done (2026-08-21)**, so the copy this pass translates is the rewritten copy. What still
+  gates it is W2 — the roller writes English prose into `log.jsonl`, which can't be localised later.
 - [x] **UX-3 · Roll access: retroactive advantage instead of a pre-roll gesture — BUILT 2026-08-10,
   see UBUG-20 for what shipped.** The problem was that `Alt/Ctrl-click` opened the roll tray, on an app
   explicitly used on a phone where modifiers do not exist. The answer: don't bind a gesture to opening
@@ -1117,29 +1118,45 @@ holds the done-work log; these are the OPEN tails it carried):**
   zero files under `src/routes/combat/`, and en.json has no `combat.*` namespace at all (see ARCH-1
   above). Onboarding would add on the order of ten strings; localizing combat is hundreds. Constraint
   (b) — tutorials repel — stands on its own and is the real reason.
-- [ ] **UX-1 · Error copy pass — audit every user-facing message and rewrite what a non-technical
-  person can't act on (maintainer request 2026-08-09).** The app is explicitly built for people who
-  own their data as plain CSV, not for developers (CLAUDE.md), but most of our messages are written
-  from the ENGINE's point of view: they name internal identifiers and assume the reader knows the data
-  model. Real examples, all currently shipped:
-  - `no prepared/known count for warlock at level 5 in 5.5e, and this system states no formula — add a
-    class_casting row` (mine, 2026-08-09) — says `class_casting`, a file the user has never heard of,
-    and `5.5e` instead of the friendly "D&D 5.5e (2024)" label we already have a helper for.
-  - `unknown target "armorclass" for flat_bonus` · `spell_lists: unknown class "warlock-typo"` ·
-    `#content-type: unknown content type` · `malformed locale column` · `duplicate source:id`.
-  - `plugin budget for this computation exhausted` · `result too large` · `invalid result: bad target key`.
-  - Row headers render as `Warlock · class_casting:warlock` — a raw token as the primary label.
-  **The standard to apply:** each message answers three things in the user's words — *what happened*,
-  *what it means for their sheet*, *what to do next* (which file, which row, what to type). Keep the
-  exact technical detail (token, id, file:line) but demote it to a secondary line, because the
-  content-health panel is ALSO the homebrew author's debugging tool — this is a rewrite for a second
-  audience, never a deletion of detail. Use the friendly edition/source labels ([[friendly-source-labels]]),
-  never raw `5e`/`SRD 5.2.1` in prose.
-  **Scope:** the content-health panel (loader issues, missing metadata, hash drift, token lints, derive
-  issues), toasts across combat/build, dialog copy, homebrew-form validation, plugin failures.
-  **Sequencing:** do this BEFORE **ARCH-1**'s i18n sweep — otherwise every bad string gets translated
-  into UA and has to be redone twice. Ties [[play-tracker-surfaces-never-forces]] (a message the player
-  can't act on is the same failure as a silent one) and AI-CONVENTIONS §2.7.
+- [x] **UX-1 · Error copy pass — DONE 2026-08-21** (maintainer request 2026-08-09). Every message the
+  app shows when something goes wrong was written from the ENGINE's point of view, at a user whose
+  whole relationship with the app is "I own my data as plain CSV". **The standard applied:** each
+  message answers *what happened*, *what it means for their sheet*, *what to do next* — and the exact
+  technical particular (token, column, id, the validator's own complaint) is **demoted to a second
+  line, never deleted**, because the content-health panel is ALSO the homebrew author's debugger.
+  **The shape that carries it:** `ContentIssue` and `EffectIssue` each gained a `detail` field, and
+  the panel renders it as a quiet mono line under the sentence. Everything the old messages said is
+  still on screen; what changed is which half is the sentence. The loader's copy was lifted out to
+  **`content/issue-text.ts`** — it had pushed `loader.ts` past the 400-line lint, and gathering it is
+  what makes ARCH-1's localization a file to hand over rather than a grep.
+  **What a sentence could afford that a fragment couldn't:** a misspelled `#content-type:` now gets
+  `didYouMean` over the known types and an unresolved `spell_lists` join gets it over the real ids
+  (`util/suggest.ts` — moved out of `effects/`, which never imported it, so `content/` could);
+  a duplicate id NAMES the file the surviving copy is in; the schema warning splits by direction
+  (a file from a newer build is a different problem, with a different fix, than one from an older
+  one — read off the versions, never off the thrown text).
+  **Plugin failures collapsed to ONE sentence** at the `degrade` seam: a dozen internal reasons
+  (over budget, result too large, bad target key, handler not registered…) are the same fact to the
+  reader and have the same next step, so they became one sentence with the exact fault underneath.
+  **Play-side:** a resource is named by its NAME (`resourceName()` — the same lookup was written four
+  times, and the two places that skipped it were the two that printed the id); `ACTION_SLOT_LABEL`
+  because "bonus" is not the name of anything at the table; the slot blocks speak in table language
+  ("No 3rd-level spell slots left — cast it from a higher slot, or rest"); the homebrew form names
+  the FIELD and what it accepts, read off the same `kindOf`/`optionsOf` the inputs are built from, so
+  it can't drift from what the widget allows; the drift dialog says "fingerprint", not "hash".
+  **Left as-is, deliberately:** the effect-token authoring lints stay terse — their audience IS the
+  author, and the panel now says so above them. The derive row's `source · token` header keeps the
+  token as its muted secondary identifier: it is what identifies the failing row.
+  **New `/dev/health` route + shot state:** on the shipped SRD the panel is always "all clear", so
+  none of this copy had any visual coverage; the route feeds deliberately broken CSVs through the
+  REAL loader. (shot.mjs pixel-diffs the first viewport only — `body` never scrolls — so the groups
+  below the fold are eyeballed, as on every long route.)
+  **Tests moved off the prose onto `detail`**: the identifier is the durable fact, the sentence is
+  copy ([[behavioral-tests-not-form]]). Ties [[play-tracker-surfaces-never-forces]] (a message the
+  player can't act on is the same failure as a silent one) and AI-CONVENTIONS §2.7.
+  **ARCH-1's copy prerequisite is cleared** — the UA pass now translates the rewritten copy once. Its
+  OTHER blocker stands (W3: the roller still writes English sentences into `log.jsonl`, and prose
+  already on disk can't be localised afterwards), so ARCH-1 still waits on W2, not on this.
 - [ ] **ARCH-4 · stylelint spacing px-guard.** The `font-size:["px"]` guard is DONE + enforced (green).
   The spacing half (`padding`/`margin`/`gap` px → `--space-*`) is ~523 warnings: blocked on a design
   call — either add spacing-scale tokens for the off-scale values or migrate-with-screenshot-verify,
