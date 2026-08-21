@@ -2348,7 +2348,8 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
 - [x] **LOC-STATUS · Tracked per-locale localization status.** `loc_status_<loc>` column, an open
   enum (`not_started|machine|started|reviewed`) whose members drive the marker + control
   automatically — add a member and it appears (`content/schemas.ts`).
-- [~] **LINT-1 · Ban type-escape hatches — MOSTLY DONE 2026-08-21.** tsconfig was already max-strict
+- [x] **LINT-1 · Ban type-escape hatches — DONE 2026-08-21** (the `no-unsafe-*` tail, the last open
+  half, was measured and answered the same day — see below). tsconfig was already max-strict
   (`strict` + `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`); the hole was lint.
   **Shipped:** `no-non-null-assertion` (was already on) + `consistent-type-assertions`
   (`objectLiteralTypeAssertions: 'never'`), which took out eight `{} as Record<K, V>` seeds — a claim
@@ -2367,9 +2368,25 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
   `status: 'idle' as UpdateStatus`, turned out to be load-bearing and became an annotation instead),
   `no-redundant-type-constituents` (3 — `'all' | string`, `Size | string`, and `string | null |
   'blocked'`, where the literal was swallowed by `string`; the last became a typed `SlotReservation`),
-  `await-thenable` (2). **Left OFF with measured counts:** the `no-unsafe-*` family (58 — every one
-  where `any` enters from papaparse / `JSON.parse`, so it wants a typing pass at those boundaries, not
-  a rule flip) and `require-await` (47 — style, and several are deliberate async interfaces).
+  `await-thenable` (2). **Left OFF with measured counts:** the `no-unsafe-*` family (58) and
+  `require-await` (47 — style, and several are deliberate async interfaces).
+  **The `no-unsafe-*` 58, WALKED 2026-08-21 — and the guess about them was wrong.** They are not
+  "where `any` enters from papaparse / `JSON.parse`": **19 are in test files** (which keep the
+  escape-hatch rules off for the same reason `!` is exempt there — a fixture is deliberately partial),
+  and **most of the rest are the rule failing to see through a generic `.svelte` component**. Passing
+  a fully-typed `{label, entries: Entry<LoadedRow>[]}[]` into `EntryList` (`generics="T"`) makes the
+  rule call the callback's `e` an `any`, and `ClassPicker`'s `onChange: (value: string) => void` gets
+  the same treatment — while `svelte-check`, which is the actual type gate, reports zero errors on
+  both. Turning the family on would mean 30-odd suppressions for a tool's blind spot. **It stays off,
+  and this is now a measurement rather than a suspicion.**
+  **The two REAL ones were in `.ts`, and both are fixed:** `BrowserStorage` opened IndexedDB with no
+  schema, so every `get` was a `Promise<any>` and every key list an `any[]` — the one boundary where
+  the browser hands back whatever it stored was also the one place nothing was checked. It now
+  declares `DBSchema`, which deleted a cast AND immediately caught a real bug: `rename()` wrote the
+  `undefined` from a key that had gone missing between the listing and the read, planting an entry
+  every later read treats as a file. And `schemas.ts`'s effects column used `Array.isArray` on an
+  `unknown`, which narrows to `any[]` — a TS quirk that re-opens the value that parse boundary exists
+  to close; a local guard keeps the elements `unknown`.
   Policy unchanged: new code fully typed; avoid the `undefined` TYPE (model absence deliberately).
 - [~] **NULL-1 · Audit the returned `null` — WALKED 2026-08-21** (maintainer, 2026-08-21). All 64
   `T | null` returns under `src/` read, each judged against one question: is absence a VALUE here, or
@@ -2401,7 +2418,8 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
 
 **Sequencing (DECIDED 2026-07-09):** **TYPE-2 → LINT-1 → WD-1 → WD-2.** Type the foundation
 first so every new component (the heads) is born typed and LINT-1's type-checked rules land on
-clean code; the view split follows. **Only LINT-1 is left of that sequence.**
+clean code; the view split follows. **TYPE-2 and LINT-1 are both closed (2026-08-21); WD-1 → WD-2 are
+what remains of the sequence.**
 
 **Editor mode — DONE (commit `2868f5c`; two-panel `5550e9c`).** The "Editor" mode-picker entry (active
 once an entry is selected) opens a **two-panel BEFORE | AFTER** view (commit `5550e9c`, as agreed):

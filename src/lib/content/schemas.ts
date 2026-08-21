@@ -92,6 +92,11 @@ const idField = z
 /** `systems` = comma list over SYSTEMS, e.g. "5e" | "5.5e" | "5e,5.5e". */
 const systemsField = csvList(z.array(z.enum(SYSTEMS)).min(1));
 
+/** `Array.isArray` narrows an `unknown` to `any[]` — a TS quirk that re-opens the value this parse
+ *  boundary exists to close. Kept local: the effects column is the only place we take an array off a
+ *  cell that may already have been parsed once. */
+const isUnknownArray = (v: unknown): v is unknown[] => Array.isArray(v);
+
 /** A `;`-separated list of effect tokens. The loader NEVER rejects a token (B12): an unknown or
  *  not-yet-understood token (an L2 guard that starts with a condition not a kind, a `plugin:` token,
  *  a future `reroll:`/`min_die:` kind) is kept VERBATIM and degrades to an inert text note when the
@@ -101,7 +106,7 @@ const systemsField = csvList(z.array(z.enum(SYSTEMS)).min(1));
  *  the schema's — the schema deliberately stays independent of the removable engine. */
 const effectsField = z.preprocess((v) => {
 	if (v === '' || v == null) return [];
-	if (Array.isArray(v)) return v;
+	if (isUnknownArray(v)) return v; // elements stay `unknown`; the schema below says they're strings
 	return asText(v)
 		.split(';')
 		.map((s) => s.trim())

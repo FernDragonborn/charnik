@@ -5,7 +5,7 @@
  * subtree). Chosen over OPFS for universal reach (every desktop browser + iOS Safari + Android).
  * The compiled Tauri apps use a real-fs impl behind the same `Storage` interface.
  */
-import { openDB, type IDBPDatabase } from 'idb';
+import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Storage, FileEntry } from './types';
 
 const DB_NAME = 'charnik';
@@ -16,17 +16,24 @@ interface Node {
 	data?: string | Uint8Array;
 }
 
+/** The store's shape, declared to `idb` rather than left to inference: without it every `get` is a
+ *  `Promise<any>` and every key list an `any[]`, so the one boundary where the browser hands us back
+ *  whatever it stored is also the one place nothing is checked (LINT-1's `no-unsafe-*` pass). */
+interface CharnikDB extends DBSchema {
+	[STORE]: { key: string; value: Node };
+}
+
 const norm = (p: string) => p.replace(/^\/+|\/+$/g, '');
 const name = (p: string) => (p.includes('/') ? p.slice(p.lastIndexOf('/') + 1) : p);
 
 type Listener = { dir: string; fn: (path: string) => void };
 
 export class BrowserStorage implements Storage {
-	#db: Promise<IDBPDatabase>;
+	#db: Promise<IDBPDatabase<CharnikDB>>;
 	#listeners = new Set<Listener>();
 
 	constructor(dbName = DB_NAME) {
-		this.#db = openDB(dbName, 1, {
+		this.#db = openDB<CharnikDB>(dbName, 1, {
 			upgrade(db) {
 				if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
 			},
@@ -100,7 +107,7 @@ export class BrowserStorage implements Storage {
 	async remove(path: string): Promise<void> {
 		const p = norm(path);
 		const db = await this.#db;
-		const keys = (await db.getAllKeys(STORE)) as string[];
+		const keys = await db.getAllKeys(STORE);
 		const tx = db.transaction(STORE, 'readwrite');
 		for (const key of keys) if (key === p || key.startsWith(`${p}/`)) await tx.store.delete(key);
 		await tx.done;
@@ -112,11 +119,15 @@ export class BrowserStorage implements Storage {
 		const src = norm(from);
 		const dst = norm(to);
 		const db = await this.#db;
-		const keys = (await db.getAllKeys(STORE)) as string[];
+		const keys = await db.getAllKeys(STORE);
 		const tx = db.transaction(STORE, 'readwrite');
 		for (const key of keys) {
 			if (key !== src && !key.startsWith(`${src}/`)) continue;
 			const value = await tx.store.get(key);
+			// a key listed a moment ago with nothing behind it is not a node to move — writing the
+			// `undefined` through (which the untyped store used to allow) would plant an entry that
+			// every later read treats as a real file
+			if (value === undefined) continue;
 			await tx.store.delete(key);
 			await tx.store.put(value, dst + key.slice(src.length));
 		}
