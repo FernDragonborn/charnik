@@ -118,7 +118,7 @@ export class AbilityAllocation {
 	get slotBoosts(): Partial<Record<Ability, number>> {
 		const out: Partial<Record<Ability, number>> = {};
 		const add = (m: Partial<Record<Ability, number>>) => {
-			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
+			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a]);
 		};
 		for (const s of this.host().feats.featSlots) if (this.host().draft.slotFeats[s.key] === ASI) add(this.host().feats.asiBoostFor(s.key));
 		// half-feat +1 (Grappler STR/DEX, Epic Boon any) — the chosen ability of each half-feat slot
@@ -132,7 +132,7 @@ export class AbilityAllocation {
 	get abilityBoosts(): Partial<Record<Ability, number>> {
 		const out: Partial<Record<Ability, number>> = {};
 		const add = (m: Partial<Record<Ability, number>>) => {
-			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a] as number);
+			for (const a of ABILITIES) if (m[a]) out[a] = (out[a] ?? 0) + (m[a]);
 		};
 		add(this.host().edit?.boosts ?? {}); // NON-slot boosts carried from a loaded character (species/background)
 		add(this.backgroundBoosts); // 5.5e background choice (empty unless the guard in backgroundBoosts holds)

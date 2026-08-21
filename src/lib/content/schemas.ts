@@ -15,6 +15,7 @@
  * never rejects one (B12): an unknown/future token degrades to an inert note downstream, so
  * vocabulary growth never breaks older rows.
  */
+import { asText } from '../util/format';
 import { z } from 'zod';
 import { SYSTEMS } from '../rules/pipeline';
 
@@ -58,7 +59,7 @@ export const splitList = (v: unknown): string[] =>
 		? v.map(String)
 		: v == null || v === ''
 			? []
-			: String(v)
+			: asText(v)
 					.split(/[,;]/)
 					.map((s) => s.trim())
 					.filter(Boolean);
@@ -101,7 +102,7 @@ const systemsField = csvList(z.array(z.enum(SYSTEMS)).min(1));
 const effectsField = z.preprocess((v) => {
 	if (v === '' || v == null) return [];
 	if (Array.isArray(v)) return v;
-	return String(v)
+	return asText(v)
 		.split(';')
 		.map((s) => s.trim())
 		.filter(Boolean);

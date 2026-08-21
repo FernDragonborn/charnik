@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { asText } from '$lib/util/format';
 	import Icon from './Icon.svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
@@ -47,8 +48,8 @@
 	let conflict = $state<{ to: DraftTarget; existing: DraftEnvelope } | null>(null);
 
 	// draft prose (translate data = {name,text,material,higher_level}); read-only on the left
-	const draftName = $derived(String(current?.data.name ?? current?.data.name_en ?? ''));
-	const draftText = $derived(String(current?.data.text ?? current?.data.text_en ?? ''));
+	const draftName = $derived(asText(current?.data.name ?? current?.data.name_en));
+	const draftText = $derived(asText(current?.data.text ?? current?.data.text_en));
 	const oldId = $derived(current ? draftIdLabel(current.target) : '');
 
 	function draftIdLabel(t: DraftTarget): string {
@@ -180,8 +181,8 @@
 				</div>
 				<div class="cf-pane">
 					<div class="cf-label eyebrow">Existing draft at that entry</div>
-					<div class="cf-name">{String(conflict.existing.data.name ?? '(no name)')}</div>
-					<div class="cf-body">{String(conflict.existing.data.text ?? '')}</div>
+					<div class="cf-name">{asText(conflict.existing.data.name, '(no name)')}</div>
+					<div class="cf-body">{asText(conflict.existing.data.text)}</div>
 					<button class="btn" onclick={keepExisting}>Keep the existing one</button>
 				</div>
 			</div>

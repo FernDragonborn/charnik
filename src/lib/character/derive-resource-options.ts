@@ -137,7 +137,7 @@ export function resolveResourceOptions({
 			name: row.data.name_en,
 			description: String(row.data.text_en ?? ''),
 			action: resolveActionFormula(String(row.data.action ?? ''), ctx, row.data.name_en, issues),
-			actionType: (row.data.action_type as ResourceOption['actionType']) ?? 'action',
+			actionType: row.data.action_type ?? 'action',
 			cost,
 			available: resolveAvailable(String(row.data.available ?? ''), ctx, row.data.name_en, issues),
 		});

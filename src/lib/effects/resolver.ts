@@ -11,6 +11,7 @@
  * derive issue, and its writers degrade to inert notes — never an iterate-to-fixpoint loop
  * (PLUGINS.md §8.4, PLAN "State model").
  */
+import { recordOf } from '../util/records';
 import { ABILITY_IDS, abilityModifier, ABILITY_SCORE_CLAMP, type Ability } from '../rules/core';
 import { computed, type Computed, type Contribution } from '../rules/pipeline';
 import { evalExpression, type ExprContext } from './expression-evaluator';
@@ -98,9 +99,7 @@ function assembleResolved(
 
 /** Zeroed ability record — the resolve state's score/mod seed. */
 function zeroAbilities(): Record<Ability, number> {
-	const r = {} as Record<Ability, number>;
-	for (const ab of ABILITY_IDS) r[ab] = 0;
-	return r;
+	return recordOf(ABILITY_IDS, () => 0);
 }
 
 /** A11 (D&D "Combining Game Effects"): the SAME named runtime effect applied twice (two Bless casts)
@@ -134,6 +133,10 @@ class Resolver {
 	private nodeIndex = new Map<DepKey, number>();
 	private order: number[] = [];
 	private cyclic = new Set<number>();
+	/** Filled ability-by-ability as the score nodes fold, so it really is empty at construction — the
+	 *  one place a `{} as Record<…>` seed is the honest shape rather than a claim (every ability IS a
+	 *  node, so it is complete by the time `run()` returns it). */
+	// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- see above
 	private readonly abilities = {} as Record<Ability, Computed>;
 	/** hp_max base (pre-effect) folded at the final CON — reassigned when the hp_max node folds. */
 	private hpMaxBase: Computed;

@@ -305,7 +305,10 @@ function buildLoadedRow(
 	const id = data.id;
 	// parseRow validated `data` against `type`; TS can't correlate the runtime `type` union with the
 	// per-type `data` union into one LoadedRow member without an assertion — ONE localized cast here.
-	return {
+	// It is on the assembled VARIABLE, not the literal: the literal is checked field-by-field against
+	// the common shape first, so a missing/mistyped `effectiveId` still fails, and only the
+	// type↔data correlation is asserted (`consistent-type-assertions`, PLAN · LINT-1).
+	const row: LoadedRowCommon & { type: ContentType; data: AnyRowData } = {
 		type: header.type,
 		source,
 		id,
@@ -316,7 +319,8 @@ function buildLoadedRow(
 		data,
 		root: file.root,
 		file: file.entry.name,
-	} as LoadedRow;
+	};
+	return row as LoadedRow;
 }
 
 /** B11: byte cap per CSV, checked BEFORE `Papa.parse` (the freeze/OOM step — parse builds an object

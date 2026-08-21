@@ -91,8 +91,8 @@
 	function run(it: Item | undefined) {
 		if (!it) return;
 		closePalette();
-		if (it.kind === 'page') goto(`${base}${it.href}`);
-		else goto(compendiumEntryPath(base, it.type, it.source, it.slug));
+		if (it.kind === 'page') void goto(`${base}${it.href}`);
+		else void goto(compendiumEntryPath(base, it.type, it.source, it.slug));
 	}
 
 	function onWindowKeydown(e: KeyboardEvent) {
@@ -133,7 +133,7 @@
 			restoreEl = document.activeElement as HTMLElement;
 			query = '';
 			active = 0;
-			loadContentStore();
+			void loadContentStore();
 		} else if (!isOpen && wasOpen) {
 			restoreEl?.focus();
 		}

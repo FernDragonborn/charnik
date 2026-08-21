@@ -14,7 +14,7 @@ export function renderContentMarkdown(md: string): string {
 	// breaks: a single newline → <br>. CSV cells (condition/item/feat text) use `•` + hard newlines
 	// for line-per-bullet layout that isn't Markdown list syntax; without this they'd collapse to one
 	// line. Paragraphs stay blank-line separated, so prose is unaffected.
-	let html = marked.parse(spaced, { async: false, breaks: true }) as string;
+	let html = marked.parse(spaced, { async: false, breaks: true });
 	html = html
 		.replace(/\*\*([^*<>\n]+)\*\*/g, '<strong>$1</strong>')
 		.replace(/\*([^*<>\n]+)\*/g, '<em>$1</em>');

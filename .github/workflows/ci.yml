@@ -39,11 +39,22 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
+      # The TYPE gate. It ran only in the local pre-push hook until 2026-08-21, so a `--no-verify`
+      # push (or a clone whose hooks were never installed) could land type errors with CI still green.
+      - name: Typecheck
+        run: pnpm check
+
       - name: Test
         run: pnpm test
 
       - name: Lint
         run: pnpm lint
+
+      # The type-aware rules (floating promises, "[object Object]", dead casts). CI-only: they make
+      # ESLint build the whole TS program first, ~8 min measured against 26s for the syntax pass —
+      # machine time here, but it would be a wall in front of every push.
+      - name: Lint (type-aware)
+        run: pnpm lint:typed
 
       - name: Build (SPA)
         run: pnpm build

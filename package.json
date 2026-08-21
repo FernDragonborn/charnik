@@ -22,6 +22,7 @@
 		"test:coverage": "vitest run --coverage",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint . && stylelint \"src/**/*.{css,svelte}\" && knip && jscpd && madge --circular src",
+		"lint:typed": "eslint -c eslint.typed.config.js .",
 		"lint:fix": "prettier --write . && eslint . --fix && stylelint \"src/**/*.{css,svelte}\" --fix",
 		"knip": "knip",
 		"jscpd": "jscpd --reporters consoleFull",

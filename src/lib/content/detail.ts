@@ -4,7 +4,7 @@
  * unit-testable. The components (WikiDetail / EntryList) just render these models.
  */
 import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loader';
-import { ordinal, signed, titleCase } from '$lib/util/format';
+import { asText, ordinal, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
 import { packNameOf } from './disk';
@@ -38,7 +38,10 @@ const LABELS: Record<string, string> = {
 	class_id: 'Class',
 };
 const cap = (s: string) => LABELS[s] ?? titleCase(s);
-const asText = (v: unknown) => (Array.isArray(v) ? v.join(', ') : String(v));
+/** A meta cell's text: a list column joins, anything else goes through the shared `asText` (so an
+ *  object from a homebrew cell renders empty rather than "[object Object]"). */
+const cellText = (v: unknown): string =>
+	Array.isArray(v) ? v.map((x: unknown) => asText(x)).join(', ') : asText(v);
 const nonEmpty = (v: unknown) => v !== '' && v != null && !(Array.isArray(v) && v.length === 0);
 // skip noisy negative/placeholder values ("false", "none", "0") from the meta grid
 const meaningful = (v: unknown) => nonEmpty(v) && !/^(false|none|0)$/i.test(String(v));
@@ -47,7 +50,7 @@ const meaningful = (v: unknown) => nonEmpty(v) && !/^(false|none|0)$/i.test(Stri
 // bare column (so pre-localization data like a plain `material` still renders). PROSE_LOC matches the
 // suffixed variants so the meta grid can skip them (they're rendered as prose, not as k/v cells).
 const localized = (d: Record<string, unknown>, base: string, locale: string): string =>
-	String(d[`${base}_${locale}`] ?? d[`${base}_en`] ?? d[base] ?? '');
+	cellText(d[`${base}_${locale}`] ?? d[`${base}_en`] ?? d[base]);
 
 /** A content row's display NAME in `locale`, falling back to EN then the id (AUDIT F9 — the one
  *  localized-name reader). NB translate view deliberately does NOT use this (it wants an empty
@@ -208,7 +211,9 @@ export function sourceLabel(source: string): string {
 
 /** Format a row's `systems` array as a short edition label. */
 export function editionLabel(systems: unknown): string {
-	const arr = Array.isArray(systems) ? systems.map(String) : systems ? [String(systems)] : [];
+	const arr = Array.isArray(systems)
+		? systems.map((s: unknown) => asText(s))
+		: [asText(systems)].filter(Boolean);
 	return arr.join(' · ');
 }
 
@@ -245,7 +250,7 @@ function buildMonster(row: LoadedRowOf<'monster'>): MonsterModel {
 		return raw != null && Number(raw) !== Math.floor((Number(d[a]) - 10) / 2);
 	});
 	const pair = (label: string, key: RowColumn<'monster'>): [string, string][] =>
-		meaningful(d[key]) ? [[label, asText(d[key])]] : [];
+		meaningful(d[key]) ? [[label, cellText(d[key])]] : [];
 	return {
 		type: [d.size ? cap(String(d.size)) : '', d.creature_type ? cap(String(d.creature_type)) : '']
 			.filter(Boolean)
@@ -316,7 +321,7 @@ export function buildDetail(
 	const skip = new Set(COMMON);
 	const meta = Object.entries(d)
 		.filter(([k, v]) => !skip.has(k) && !PROSE_LOC.test(k) && meaningful(v))
-		.map(([k, v]) => [cap(k), String(v) === 'true' ? 'Yes' : asText(v)] as [string, string]);
+		.map(([k, v]) => [cap(k), asText(v) === 'true' ? 'Yes' : cellText(v)] as [string, string]);
 	return {
 		...common,
 		eyebrow: cap(String(type)),

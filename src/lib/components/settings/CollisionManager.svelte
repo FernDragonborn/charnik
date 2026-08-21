@@ -6,11 +6,16 @@
 	import Icon from '../Icon.svelte';
 	import { content } from '$lib/content/store.svelte';
 	import { sourceLabel } from '$lib/content/detail';
-	import { detectCollisions, sourceConfig, setCollision } from '$lib/content/sources.svelte';
+	import {
+		detectCollisions,
+		sourceConfig,
+		setCollision,
+		KEEP_ALL,
+	} from '$lib/content/sources.svelte';
 
 	const graph = $derived(content.graph);
 	const collisions = $derived(graph ? detectCollisions(graph) : []);
-	const choiceOf = (key: string) => sourceConfig.collisions[key] ?? 'all';
+	const choiceOf = (key: string) => sourceConfig.collisions[key] ?? KEEP_ALL;
 </script>
 
 <section>
@@ -39,8 +44,8 @@
 				<div class="choices">
 					<button
 						class="choice"
-						class:sel={choiceOf(c.key) === 'all'}
-						onclick={() => setCollision(c.key, 'all')}
+						class:sel={choiceOf(c.key) === KEEP_ALL}
+						onclick={() => setCollision(c.key, KEEP_ALL)}
 					>
 						Keep all ({c.sources.length})
 					</button>

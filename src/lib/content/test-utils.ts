@@ -3,6 +3,7 @@
  * replacement for the old `{ … } as unknown as LoadedRow` factories scattered across the content
  * tests: tests name a content type + only the columns under test, and get a properly-typed row.
  */
+import { asText } from '../util/format';
 import type { ContentType, RowData } from './schemas';
 import type { LoadedRow, LoadedRowOf } from './loader';
 
@@ -18,7 +19,7 @@ export function makeRow<T extends ContentType>(
 	source = 'SRD 5.2.1',
 	sourceLang = 'en',
 ): LoadedRow {
-	const id = String(data.id ?? data.name_en ?? '');
+	const id = asText(data.id ?? data.name_en);
 	// `data` downcasts the loose test input (RowData IS a Record<string, unknown> — a narrowing, not an
 	// `unknown` bypass). `row` is a genuine LoadedRowOf<T>; the `as LoadedRow` only works around TS not
 	// assigning a generic union member to its own union — no shape is invented.

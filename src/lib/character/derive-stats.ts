@@ -4,6 +4,7 @@
  * `Computed` (or a small record) for one facet of the sheet: saves, skills, AC, speed, passives,
  * defenses. No reactivity, no effects gathering — the effect list is already resolved into `facts`.
  */
+import { recordOf } from '../util/records';
 import {
 	savingThrow,
 	skillCheck,
@@ -86,7 +87,7 @@ export function resolveClassSaves(
 	grantedSaves: Set<Ability>,
 	missing: string[],
 ): Set<Ability> {
-	const classSaves = new Set<Ability>([...(build.saves as Ability[]), ...grantedSaves]);
+	const classSaves = new Set<Ability>([...build.saves, ...grantedSaves]);
 	build.classes.forEach((c, i) => {
 		const row = graph.get(c.class);
 		if (!row) {
@@ -94,7 +95,7 @@ export function resolveClassSaves(
 			return;
 		}
 		if (i === 0 && row.type === 'class' && Array.isArray(row.data.saves))
-			for (const a of row.data.saves as Ability[]) classSaves.add(a);
+			for (const a of row.data.saves) classSaves.add(a);
 	});
 	return classSaves;
 }
@@ -104,19 +105,17 @@ export function deriveAbilityBlocks(
 	abilityComputed: Record<Ability, Computed>,
 	classSaves: Set<Ability>,
 ): Record<Ability, AbilityBlock> {
-	const abilities = {} as Record<Ability, AbilityBlock>;
-	for (const ab of ABILITIES) {
+	return recordOf(ABILITIES, (ab) => {
 		const proficient = classSaves.has(ab);
 		const base = savingThrow({ ability: ab, score: scores[ab], level, proficient });
-		abilities[ab] = {
+		return {
 			score: abilityComputed[ab],
 			baseScore: build.abilities[ab],
 			mod: abilityModifier(scores[ab]),
 			save: applyEffects(`save.${ab}`, base, facts),
 			saveProficient: proficient,
 		};
-	}
-	return abilities;
+	});
 }
 
 /** Skills: the BUILD's chosen level (expertise requires the chosen proficiency) combines with the
@@ -129,8 +128,8 @@ export function deriveSkills(
 	// class/background picks + §C feat-granted skill choices (Skilled) — both are plain proficiency
 	const chosenProf = new Set([...build.skills, ...(build.featSkills ?? [])]);
 	const chosenExpert = new Set(build.expertise ?? []);
-	const skills = {} as Record<SkillId, Computed & { prof: SkillProficiency }>;
-	for (const [skill, ab] of Object.entries(SKILL_ABILITY) as [SkillId, Ability][]) {
+	return recordOf(Object.keys(SKILL_ABILITY) as SkillId[], (skill) => {
+		const ab = SKILL_ABILITY[skill];
 		const chosen: SkillProficiency = chosenProf.has(skill)
 			? chosenExpert.has(skill)
 				? 'expertise'
@@ -145,9 +144,8 @@ export function deriveSkills(
 			expertise: profLevel === 'expertise',
 			halfProficient: profLevel === 'half',
 		});
-		skills[skill] = { ...applyEffects(`skill.${skill}`, base, facts), prof: profLevel };
-	}
-	return skills;
+		return { ...applyEffects(`skill.${skill}`, base, facts), prof: profLevel };
+	});
 }
 
 /** AC: equipped armor (dex-capped) + a raised shield's +2 (the play-state flag, the single source
@@ -208,8 +206,7 @@ export function derivePassives(
 	skills: Record<SkillId, Computed & { prof: SkillProficiency }>,
 	facts: EffectFacts,
 ): Record<SkillId, Computed> {
-	const out = {} as Record<SkillId, Computed>;
-	for (const skill of Object.keys(SKILL_ABILITY) as SkillId[]) {
+	return recordOf(Object.keys(SKILL_ABILITY) as SkillId[], (skill) => {
 		// advantage/disadvantage on the underlying check moves the passive by ±5 (both → cancel, RAW).
 		const adv = facts.advantage.some((a) => matchesTarget(a.target, `skill.${skill}`));
 		const dis = facts.disadvantage.some((d) => matchesTarget(d.target, `skill.${skill}`));
@@ -228,9 +225,8 @@ export function derivePassives(
 					},
 				],
 			};
-		out[skill] = applyEffects(`passive.${skill}`, base, facts);
-	}
-	return out;
+		return applyEffects(`passive.${skill}`, base, facts);
+	});
 }
 
 /** Damage defenses collected from `resist_immune` facts, deduped per bucket. */

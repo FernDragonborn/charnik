@@ -11,6 +11,20 @@ export const titleCase = (s: string): string =>
  *  ubiquitous try/catch pattern lives (AUDIT F6). */
 export const errText = (e: unknown): string => (e instanceof Error ? e.message : String(e));
 
+/**
+ * A value of UNKNOWN shape → the text to show, or `fallback` when it isn't text.
+ *
+ * For data that came off disk as JSON (a draft envelope, a homebrew cell): `String(v)` on an object
+ * renders the literal `"[object Object]"` into the UI, which is the failure `no-base-to-string`
+ * exists to catch. A number is worth rendering; an object or an absent value is not.
+ */
+export const asText = (v: unknown, fallback = ''): string =>
+	typeof v === 'string'
+		? v
+		: typeof v === 'number' || typeof v === 'boolean'
+			? String(v)
+			: fallback;
+
 /** A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "0" (a zero modifier reads plain, no
  *  sign — the sheet's convention for abilities/skills/saves). Real minus glyph. One formatter (F2). */
 export const signed = (n: number): string => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');

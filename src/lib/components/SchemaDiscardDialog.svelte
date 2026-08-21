@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { asText } from '$lib/util/format';
 	import Icon from './Icon.svelte';
 	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { trapFocus } from '$lib/actions/trapFocus';
@@ -25,7 +26,7 @@
 		const t = env.target;
 		if (t.kind === 'add')
 			return {
-				title: String(env.data.name_en ?? 'Untitled'),
+				title: asText(env.data.name_en, 'Untitled'),
 				sub: `new ${t.type.replace(/_/g, ' ')}`,
 			};
 		if (t.kind === 'translate')

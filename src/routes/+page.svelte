@@ -29,7 +29,7 @@
 
 	async function open(slug: string) {
 		await openCharacter(slug);
-		goto(`${base}/combat`);
+		void goto(`${base}/combat`);
 	}
 </script>
 

@@ -340,7 +340,7 @@ export class TauriStorage implements Storage {
 			watchImmediate(
 				full,
 				(e) => {
-					for (const p of e.paths) rootPromise.then((root) => onChange(toRel(root, p)));
+					for (const p of e.paths) void rootPromise.then((root) => onChange(toRel(root, p)));
 				},
 				{ recursive: true },
 			),

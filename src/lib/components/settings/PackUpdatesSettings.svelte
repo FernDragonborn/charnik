@@ -151,7 +151,7 @@
 			disabled={updates.checking}
 			onclick={() => {
 				repoUrl = SHIPPED_PACK_REPO;
-				discoverPacks(SHIPPED_PACK_REPO);
+				void discoverPacks(SHIPPED_PACK_REPO);
 			}}
 		>
 			{$_('settings.packs.ownRepoLoad')}

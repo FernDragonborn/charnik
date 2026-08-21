@@ -21,8 +21,11 @@ const CONFIG_PATH = 'collisions.json';
 /** The pre-ARCH-2 localStorage key; read once to migrate an existing config into the file. */
 const LEGACY_KEY = 'charnik:sources';
 
-/** A collision group's resolution: `'all'` = keep every source (default), else the one source to keep. */
-export type CollisionChoice = 'all' | string;
+/** A collision group's resolution: `KEEP_ALL` = keep every source (default), else the one source tag
+ *  to keep. Spelled as a plain `string` with a named constant beside it, because `'all' | string`
+ *  collapses to `string` anyway — the union LOOKED like it constrained something and didn't. */
+export const KEEP_ALL = 'all';
+export type CollisionChoice = string;
 
 interface SourceConfigData {
 	/** disabled content FILES, as `root/file` paths. */
@@ -145,7 +148,7 @@ export function toggleSource(source: string): void {
 }
 /** Set a collision group's resolution (which source wins, or 'all'). */
 export function setCollision(articleKey: string, choice: CollisionChoice): void {
-	if (choice === 'all') delete sourceConfig.collisions[articleKey];
+	if (choice === KEEP_ALL) delete sourceConfig.collisions[articleKey];
 	else sourceConfig.collisions[articleKey] = choice;
 	persist();
 }
@@ -161,7 +164,7 @@ export function isRowActive(row: LoadedRow, cfg: SourceConfigData = sourceConfig
 	if (cfg.disabledFiles.includes(filePath(row))) return false;
 	if (cfg.disabledSources.includes(row.source)) return false;
 	const choice = cfg.collisions[articleKey(row)];
-	if (choice && choice !== 'all' && choice !== row.source) return false;
+	if (choice && choice !== KEEP_ALL && choice !== row.source) return false;
 	return true;
 }
 

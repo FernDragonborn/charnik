@@ -6,6 +6,7 @@
  * resolved, and the final ctx reads the final state. Split out of derive.ts so the aggregator stays
  * an orchestrator.
  */
+import { recordOf } from '../util/records';
 import type { Character } from './schema';
 import { ABILITY_IDS, abilityModifier, type Ability } from '../rules/core';
 import type { LoadedRow, LoadedRowOf } from '../content/loader';
@@ -35,8 +36,7 @@ export function baseResolveState(
 	scores: Record<Ability, number>,
 	hpMaxValue: number,
 ): ResolveState {
-	const mods = {} as Record<Ability, number>;
-	for (const ab of ABILITY_IDS) mods[ab] = abilityModifier(scores[ab]);
+	const mods = recordOf(ABILITY_IDS, (ab) => abilityModifier(scores[ab]));
 	return {
 		scores,
 		mods,

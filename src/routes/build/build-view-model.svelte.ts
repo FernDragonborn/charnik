@@ -132,7 +132,7 @@ class BuildVM {
 		// no slots → nothing subtracts, so their whole flat boost survives, unchanged old behaviour).
 		const carried: Partial<Record<Ability, number>> = { ...char.build.abilityBoosts };
 		for (const [ab, n] of Object.entries(this.abilities.slotBoosts)) {
-			const left = (carried[ab as Ability] ?? 0) - (n as number);
+			const left = (carried[ab as Ability] ?? 0) - (n);
 			if (left > 0) carried[ab as Ability] = left;
 			else delete carried[ab as Ability];
 		}

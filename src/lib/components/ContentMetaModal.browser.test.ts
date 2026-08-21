@@ -16,7 +16,7 @@ function underfilledIssue() {
 
 beforeAll(async () => {
 	await startI18n('uk');
-	locale.set('uk');
+	void locale.set('uk');
 	await waitLocale();
 });
 

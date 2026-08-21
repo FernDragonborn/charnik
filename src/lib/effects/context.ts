@@ -9,7 +9,7 @@
  * resolve to 0 / false / no-match (SPEC4) — the evaluator already treats `undefined` that way, so a
  * resolver returns `undefined` for a name it doesn't carry rather than guessing.
  */
-import { ABILITY_IDS, type Ability, type ArmorType, type Size } from '../rules/core';
+import { ABILITY_IDS, type Ability, type ArmorType } from '../rules/core';
 import { splitDottedName, CONDITION_FLAG_ALIASES } from './expression-parser';
 import { type ExprContext } from './expression-evaluator';
 
@@ -44,7 +44,9 @@ export interface PlayVars {
 	resourceMax: Record<string, number>;
 	/** Enum-typed play state. */
 	armorType: ArmorType;
-	size: Size | string;
+	/** A `Size` in shipped data, but homebrew may invent one, so this is honestly a string — the old
+	 *  `Size | string` collapsed to exactly this while reading as if it constrained the value. */
+	size: string;
 }
 
 /** Read an own property of a plain record, or undefined. Guards the dotted-id lookups: the id is

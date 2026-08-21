@@ -42,6 +42,11 @@ import { evalUpcast, combinePools } from '$lib/effects/upcast';
  *  the cast actually adds dice — a fuller roll-log `note` ("8d6 base + 2d6 @ slot 5", item 4). */
 type UpcastCast = { deltas: DamagePart[]; suffix: string; note?: string };
 
+/** The outcome of reserving a spell slot: the slot key to spend (`null` = nothing to spend), or
+ *  blocked because none remain. Two SHAPES rather than a `'blocked'` string beside the key, so a
+ *  caller cannot read the sentinel as a slot — see `reserveSpellSlot`. */
+type SlotReservation = { key: string | null } | { blocked: true };
+
 /** What casting needs from the sheet around it. A narrow structural interface rather than the VM
  *  class, so this module does not import the thing that imports it. */
 export interface CastingHost {
@@ -123,16 +128,14 @@ export class SpellCasting {
 		return base;
 	}
 
-	/** Reserve a leveled spell slot for a non-ritual cast (A17): returns the slot key to spend, or
-	 *  null (nothing to spend — cantrip / pure-pact / ritual), or 'blocked' (+ a toast) when none
-	 *  remain. Reserve-before-commit so a block returns BEFORE the action economy is touched. */
-	private reserveSpellSlot(
-		r: SpellRow,
-		ritual: boolean,
-		chosenLevel?: number,
-	): string | null | 'blocked' {
+	/** Reserve a leveled spell slot for a non-ritual cast (A17): the slot key to spend, `null` for
+	 *  nothing to spend (cantrip / pure-pact / ritual), or blocked (+ a toast) when none remain.
+	 *  Reserve-before-commit so a block returns BEFORE the action economy is touched.
+	 *  A typed result rather than a `'blocked'` STRING sentinel: in `string | null | 'blocked'` the
+	 *  literal is swallowed by `string`, so nothing stopped a caller from forgetting the check. */
+	private reserveSpellSlot(r: SpellRow, ritual: boolean, chosenLevel?: number): SlotReservation {
 		const play = this.host.character?.play;
-		if (ritual || !play) return null;
+		if (ritual || !play) return { key: null };
 		const spend = slotToSpend(
 			r.level,
 			this.host.sheet?.spellcasting.pools ?? [],
@@ -141,9 +144,9 @@ export class SpellCasting {
 		);
 		if (spend && 'block' in spend) {
 			toast(spend.block);
-			return 'blocked';
+			return { blocked: true };
 		}
-		return spend && 'key' in spend ? spend.key : null;
+		return { key: spend && 'key' in spend ? spend.key : null };
 	}
 
 	/** The slot LEVEL a cast resolves at (drives upcast, §4): a pact slot forces the cast up to the
@@ -438,8 +441,9 @@ export class SpellCasting {
 		// pact casters spend nothing; the action-economy check below stays combat-only.
 		const ritual =
 			opts?.ritual === true && r.ritual && (this.host.sheet?.spellcasting.ritualCasting ?? false);
-		const slot = this.reserveSpellSlot(r, ritual, opts?.slot);
-		if (slot === 'blocked') return;
+		const reserved = this.reserveSpellSlot(r, ritual, opts?.slot);
+		if ('blocked' in reserved) return;
+		const slot = reserved.key;
 		// a spell costs its casting-time slot (action / bonus / reaction) when tracking combat
 		if (!this.host.economy.trySpend(this.host.economy.ctSlot(r.castTimeIcon))) return;
 		if (slot && play) play.spellSlotsSpent[slot] = (play.spellSlotsSpent[slot] ?? 0) + 1;

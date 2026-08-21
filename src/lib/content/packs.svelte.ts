@@ -14,6 +14,7 @@
  * (`storage/json-config.ts`). The registry is a tenant of that file, not its owner — writing the
  * whole blob would erase every other section (rule-options, settings) the moment a pack is pinned.
  */
+import { errText } from '../util/format';
 import { readConfigFile, writeConfigSection } from '$lib/storage/json-config';
 import { HOMEBREW_ROOT } from './homebrew';
 
@@ -361,8 +362,7 @@ export const packConfigError = $state<{ message: string | null }>({ message: nul
  *  execution time so the last write reflects the latest state. */
 function persist(): void {
 	writeConfigSection(CONFIG_PATH, SECTION, packConfig, (error) => {
-		packConfigError.message =
-			error === null ? null : error instanceof Error ? error.message : String(error);
+		packConfigError.message = error === null ? null : errText(error);
 	});
 }
 

@@ -37,7 +37,7 @@
 
 	async function create() {
 		const id = await build.save();
-		if (id) goto(`${base}/combat`);
+		if (id) void goto(`${base}/combat`);
 	}
 </script>
 

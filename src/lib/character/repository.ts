@@ -73,11 +73,10 @@ const migrateV1toV2: Migration<Versioned> = (data) => {
  * so migrateV1toV2 never saw it). snakeRef is idempotent on already-snake ids, so re-running is
  * safe for every legitimate v2 save; only stale kebab refs change.
  */
-const migrateV2toV3: Migration<Versioned> = (data) =>
-	({
-		...(migrateV1toV2(data) as unknown as Record<string, unknown>),
-		schemaVersion: 3,
-	}) as unknown as Versioned;
+const migrateV2toV3: Migration<Versioned> = (data) => ({
+	...(migrateV1toV2(data) as unknown as Record<string, unknown>),
+	schemaVersion: 3,
+});
 
 /** Forward migrations keyed by the version they upgrade FROM. */
 const CHARACTER_MIGRATIONS: Record<number, Migration<Versioned>> = {

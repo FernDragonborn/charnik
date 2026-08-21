@@ -124,7 +124,7 @@
 
 	// Keep svelte-i18n's active locale in sync with the store.
 	$effect(() => {
-		i18nLocale.set(app.activeLocale);
+		void i18nLocale.set(app.activeLocale);
 	});
 
 	/**
@@ -177,7 +177,7 @@
 		// Dev preview of the update chip: `?dev-update` in the URL. No-op in production.
 		if (import.meta.env.DEV && page.url.searchParams.has('dev-update')) simulateUpdateAvailable();
 		if (detectPlatform() !== Platform.Desktop) {
-			loadContentStore();
+			void loadContentStore();
 			void syncThemes(); // web: IndexedDB storage is always ready
 			return;
 		}

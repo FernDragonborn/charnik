@@ -13,6 +13,7 @@
  *
  * Every field is a `Computed` ({value, trace, notes}), so the UI explains any number.
  */
+import { recordOf } from '../util/records';
 import { tokensOf, type ContentGraph, type LoadedRow, type LoadedRowOf } from '../content/loader';
 import type { Character } from './schema';
 import { gatherEffects } from './derive-gather';
@@ -287,13 +288,10 @@ export function deriveSheet(
 		abilityComputed = r.abilities;
 		maxHpBase = r.hpMaxBase;
 	} else {
-		abilityComputed = {} as Record<Ability, Computed>;
-		for (const ab of ABILITIES)
-			abilityComputed[ab] = computed(abilityBase[ab], ABILITY_SCORE_CLAMP);
+		abilityComputed = recordOf(ABILITIES, (ab) => computed(abilityBase[ab], ABILITY_SCORE_CLAMP));
 		maxHpBase = computed(hpMaxBaseFor(abilityComputed.con.value), { min: 1 });
 	}
-	const scores = {} as Record<Ability, number>;
-	for (const ab of ABILITIES) scores[ab] = abilityComputed[ab].value;
+	const scores = recordOf(ABILITIES, (ab) => abilityComputed[ab].value);
 	// Auto-calc OFF gates the effect LAYERS (Bless / Rage / conditions), NOT the spell's OWN mechanics:
 	// with no resolve stage there's no `effCtx`, but upcast + resource-option formulas still need the L2
 	// ctx (so a higher-slot cast scales its dice in manual mode, like cantrip die-scaling already does).

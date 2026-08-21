@@ -2331,14 +2331,36 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
 - [x] **LOC-STATUS · Tracked per-locale localization status.** `loc_status_<loc>` column, an open
   enum (`not_started|machine|started|reviewed`) whose members drive the marker + control
   automatically — add a member and it appears (`content/schemas.ts`).
-- [ ] **LINT-1 · Ban type-escape hatches** — tsconfig is already max-strict (`strict` +
-  `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`); the hole is lint. Add:
-  `@typescript-eslint/no-non-null-assertion`, keep `no-explicit-any` + `ban-ts-comment` (errors),
-  `consistent-type-assertions` (no unsafe object-literal `as`). Then enable
-  `recommendedTypeChecked` (the unsafe-`any` family — real teeth) — TYPE-2 is done, so the bag it
-  would have drowned in is gone. Policy: new code fully typed; avoid the `undefined` TYPE (model
-  absence deliberately) — introducing it needs a deliberate decision. Null-checks are their own
-  follow-on track (`noUncheckedIndexedAccess` already forces many).
+- [~] **LINT-1 · Ban type-escape hatches — MOSTLY DONE 2026-08-21.** tsconfig was already max-strict
+  (`strict` + `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess`); the hole was lint.
+  **Shipped:** `no-non-null-assertion` (was already on) + `consistent-type-assertions`
+  (`objectLiteralTypeAssertions: 'never'`), which took out eight `{} as Record<K, V>` seeds — a claim
+  that every key exists before any does — in favour of `recordOf(keys, valueFor)` (`util/records.ts`).
+  Tests keep both rules OFF, same reason the `!` exemption already existed: a fixture is deliberately
+  partial. One documented exception survives (`resolver.ts`'s progressively-filled `abilities`).
+  **Type-aware rules are CI-only, and the reason is a measurement:** the syntax pass is **26s**, the
+  type-aware pass **7m48s** — a fixed cost to build the TS program that neither `--cache` nor scoping
+  to `src/**` shrinks (8m40 → 7m48). So `eslint.config.js` (fast) runs on pre-commit and pre-push,
+  `eslint.typed.config.js` runs as `pnpm lint:typed` in CI. It covers `.svelte` as well as `.ts` on
+  purpose — most floating promises live in components.
+  **Enabled rule by rule, not via `recommendedTypeChecked`.** The five that name a bug are on and
+  their 63 findings are fixed: `no-floating-promises` (16 — every one a `void`-or-await decision),
+  `no-base-to-string` (13 — `String(unknown)` at JSON/CSV boundaries, i.e. latent "[object Object]"
+  in the UI; now `asText`/`errText`), `no-unnecessary-type-assertion` (26 dead casts — one of them,
+  `status: 'idle' as UpdateStatus`, turned out to be load-bearing and became an annotation instead),
+  `no-redundant-type-constituents` (3 — `'all' | string`, `Size | string`, and `string | null |
+  'blocked'`, where the literal was swallowed by `string`; the last became a typed `SlotReservation`),
+  `await-thenable` (2). **Left OFF with measured counts:** the `no-unsafe-*` family (58 — every one
+  where `any` enters from papaparse / `JSON.parse`, so it wants a typing pass at those boundaries, not
+  a rule flip) and `require-await` (47 — style, and several are deliberate async interfaces).
+  Policy unchanged: new code fully typed; avoid the `undefined` TYPE (model absence deliberately).
+- [ ] **NULL-1 · Audit the returned `null`** (maintainer, 2026-08-21) — walk the functions that return
+  `T | null` and decide, per site, whether absence is really a VALUE or whether the signature is
+  dodging a decision. Candidates to convert: an empty collection instead of `null`; a typed result
+  (`{ key } | { blocked }` — the shape `reserveSpellSlot` just moved to); a thrown error where the
+  caller genuinely cannot continue. Keep `null` where it means "asked, and there is legitimately
+  nothing" (`graph.get` on a missing ref — the render-what-you-can invariant depends on it). Same
+  track as the type policy above; `noUncheckedIndexedAccess` already forces the read side.
 
 **Sequencing (DECIDED 2026-07-09):** **TYPE-2 → LINT-1 → WD-1 → WD-2.** Type the foundation
 first so every new component (the heads) is born typed and LINT-1's type-checked rules land on

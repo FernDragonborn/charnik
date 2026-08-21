@@ -30,7 +30,7 @@
 					class="levelup"
 					onclick={async () => {
 						await saveCharacterToStore(c); // persist first (e.g. the demo) so the builder can load it
-						goto(`${base}/build?levelup=${c.id}`);
+						void goto(`${base}/build?levelup=${c.id}`);
 					}}><Icon name="arrow-up" size={13} /> Level up</button
 				>
 			{/if}

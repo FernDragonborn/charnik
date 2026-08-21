@@ -311,7 +311,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/content/sources.svelte.ts`
 
-- `type CollisionChoice` — A collision group's resolution: `'all'` = keep every source (default), else the one source to keep.
+- `const KEEP_ALL` — A collision group's resolution: `KEEP_ALL` = keep every source (default), else the one source tag * to keep.
+- `type CollisionChoice`
 - `function parseSourceConfig` — Parse a stored JSON blob into a config, merged over empty defaults (a missing/corrupt snapshot → * all-active).
 - `const sourceConfig` — Reactive, persisted config.
 - `function initSourceConfig` — Load the persisted browse-config from the data root (once, at app start).
@@ -371,12 +372,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/update/updater.svelte.ts`
 
 - `type UpdateStatus`
-- `const updater`
+- `const updater` — The reactive updater state the chip reads.
 - `function checkForUpdate` — Ask the release endpoint whether a newer signed build exists.
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (95 modules)
+## Library functions & types (96 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -1126,7 +1127,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function parseDicePool` — Parse every dice term in a string into a pool ({sides: count}).
 - `function parseFlatModifier` — * The flat modifier of a formula or damage segment: EVERY signed term that is not part of a die, * summed.
 - `function formatDicePool` — Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first.
-- `interface RollOptions` — Options for `rollPool` beyond the pool itself: injectable rng + roll-manipulation effects.
 - `interface RollPoolOptions` — Everything a pool roll can be given besides the dice themselves.
 - `function rollPool` — * Roll a dice pool + flat mod.
 - `interface DieChip` — One die as the UI shows it: the face it ended on, how many sides it had, its sign (a Bane die is * −1d4) and the raw …
@@ -1296,6 +1296,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ordinal` — 1 → "1st", 2 → "2nd", 11 → "11th" … (spell-level labels, feature lists).
 - `const titleCase` — "sleight_of_hand" / "animal-handling" → "Sleight Of Hand" / "Animal Handling".
 - `const errText` — An unknown thrown value → its message string (`e.message` or `String(e)`).
+- `const asText` — * A value of UNKNOWN shape → the text to show, or `fallback` when it isn't text.
 - `const signed` — A signed modifier for display: 5 → "+5", −2 → "−2", 0 → "0" (a zero modifier reads plain, no * sign — the sheet's con…
 
 ### `src/lib/util/links.ts`
@@ -1308,9 +1309,13 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function readStored` — Read + JSON-parse a localStorage key.
 - `function writeStored` — JSON-stringify + write a localStorage key.
 
+### `src/lib/util/records.ts`
+
+- `const recordOf` — * Build a `Record<K, V>` that has EVERY key in `keys`, computing each value from its key.
+
 ### `src/lib/util/slug.ts`
 
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
 
 ---
-_45 tokens · 65 global classes · 48 components · 762 exports across 109 modules · 41 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 764 exports across 110 modules · 41 duplicate suspects._

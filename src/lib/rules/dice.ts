@@ -126,7 +126,7 @@ export function formatDicePool(pool: Record<number, number>): string {
 }
 
 /** Options for `rollPool` beyond the pool itself: injectable rng + roll-manipulation effects. */
-export interface RollOptions extends DieMods {
+interface RollOptions extends DieMods {
 	rng?: Rng;
 }
 

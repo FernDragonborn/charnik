@@ -20,6 +20,7 @@
  * This module is imported DYNAMICALLY (plugin-host.ts) only when ≥1 plugin is enabled on desktop —
  * the web build never executes it (PLG-SEC 21).
  */
+import { asText } from '../util/format';
 import {
 	newQuickJSWASMModuleFromVariant,
 	DefaultIntrinsics,
@@ -75,7 +76,7 @@ function errText(context: QuickJSContext, handle: QuickJSHandle): string {
 		const v: unknown = context.dump(handle);
 		if (v && typeof v === 'object' && 'message' in v) {
 			const o = v as { name?: unknown; message?: unknown };
-			return `${o.name ?? 'Error'}: ${String(o.message)}`.slice(0, 200);
+			return `${asText(o.name, 'Error')}: ${asText(o.message)}`.slice(0, 200);
 		}
 		return String(v).slice(0, 200);
 	} catch {
@@ -265,7 +266,8 @@ export async function createSandboxEvaluator(
 			} catch {
 				return { ok: false, reason: 'invalid result: not JSON' };
 			}
-			if (parsed.err !== undefined) return { ok: false, reason: String(parsed.err) };
+			if (parsed.err !== undefined)
+				return { ok: false, reason: asText(parsed.err, 'plugin error') };
 			return {
 				ok: true,
 				resultJson: JSON.stringify(parsed.result ?? {}),

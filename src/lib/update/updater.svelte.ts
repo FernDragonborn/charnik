@@ -14,8 +14,16 @@ let pending: Update | null = null;
 // (absent) handle. Guarded everywhere by import.meta.env.DEV so it tree-shakes out of production.
 let fakeUpdate = false;
 
-export const updater = $state({
-	status: 'idle' as UpdateStatus,
+/** The reactive updater state the chip reads. ANNOTATED rather than asserted per field: without a
+ *  type here `status` widens to `string`, and "any string is a status" is exactly what the union
+ *  exists to prevent. */
+export const updater: {
+	status: UpdateStatus;
+	version: string;
+	progress: number;
+	error: string;
+} = $state({
+	status: 'idle',
 	/** Version of the available update, for the chip's tooltip. Empty until one is found. */
 	version: '',
 	/** Download progress 0–100 while `status === 'downloading'`. */

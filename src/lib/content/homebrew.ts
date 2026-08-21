@@ -9,6 +9,7 @@
  * bundled SRD (we only ever write files we created). CSV is emitted UTF-8-BOM + CRLF (Excel/Cyrillic
  * safety) and the whole file is rewritten atomically (Storage.write is temp→rename in real impls).
  */
+import { asText } from '../util/format';
 import Papa from 'papaparse';
 import type { Storage } from '$lib/storage/types';
 import type { LoadedRow } from './loader';
@@ -276,7 +277,7 @@ export function rowToDraft(row: LoadedRow): Record<string, string> {
 	const d = blankDraft(row.type);
 	for (const [k, v] of Object.entries(row.data as Record<string, unknown>)) {
 		if (k === 'source') continue;
-		d[k] = v == null ? '' : Array.isArray(v) ? v.join(',') : String(v);
+		d[k] = Array.isArray(v) ? v.map((x: unknown) => asText(x)).join(',') : asText(v);
 	}
 	d.systems = row.systems.join(',');
 	d.id = row.id;

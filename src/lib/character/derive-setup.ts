@@ -6,6 +6,7 @@
  * They live here rather than in `derive.ts` for size (§2.6); the orchestrator keeps the phases that
  * mutate what the fold produced.
  */
+import { recordOf } from '../util/records';
 import type { ContentGraph } from '../content/loader';
 import { ABILITIES, type Character } from './schema';
 import { DIE_MAX, type Ability } from '../rules/core';
@@ -13,16 +14,14 @@ import type { Contribution } from '../rules/pipeline';
 
 /** A10 seeds: the score fold starts from the base score + allocated boosts, as traced contributions. */
 export function seedAbilityBase(build: Character['build']): Record<Ability, Contribution[]> {
-	const abilityBase = {} as Record<Ability, Contribution[]>;
-	for (const ab of ABILITIES) {
+	return recordOf(ABILITIES, (ab) => {
 		const contribs: Contribution[] = [
 			{ source: 'Base score', layer: 'base', op: 'add', amount: build.abilities[ab] },
 		];
 		const boost = build.abilityBoosts?.[ab] ?? 0;
 		if (boost) contribs.push({ source: 'Ability boosts', layer: 'base', op: 'add', amount: boost });
-		abilityBase[ab] = contribs;
-	}
-	return abilityBase;
+		return contribs;
+	});
 }
 
 /** Class levels keyed by BARE id (`class_level.monk`), summed across multiclass entries. */

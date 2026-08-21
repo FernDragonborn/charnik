@@ -4,6 +4,14 @@ import svelte from 'eslint-plugin-svelte';
 import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 
+/*
+ * THE FAST PASS — syntax-only, no TypeScript program. This is what the pre-commit hook runs.
+ *
+ * The type-aware rules live in `eslint.typed.config.js`, which extends this one and is what
+ * `pnpm lint` (pre-push) and CI run. They are split because type information costs ~17s to build
+ * BEFORE the first file is examined — measured, and a fixed cost that neither `--cache` nor linting
+ * fewer files shrinks. Paying it on every commit is not worth it; paying it beside `pnpm test` is.
+ */
 export default ts.config(
 	js.configs.recommended,
 	...ts.configs.recommended,
@@ -25,6 +33,13 @@ export default ts.config(
 			// the non-null `!`, which silently defeats strict null-checks). `noUncheckedIndexedAccess` is
 			// on, so handle absence explicitly (`?.`, a guard, `?? fallback`) instead of asserting it away.
 			'@typescript-eslint/no-non-null-assertion': 'error',
+			// An object-literal `as T` is the other escape hatch: it type-checks a MISSING field as if
+			// it were there (excess-property checking is skipped), which is how a half-built literal
+			// passes for a full model. Annotate the variable instead and let assignment check it.
+			'@typescript-eslint/consistent-type-assertions': [
+				'error',
+				{ assertionStyle: 'as', objectLiteralTypeAssertions: 'never' },
+			],
 			// local Maps inside $derived computations aren't reactive state — plain Map is correct
 			'svelte/prefer-svelte-reactivity': 'off',
 			// internal links prepend `base` manually (SPA under a subpath) — intentional
@@ -37,6 +52,9 @@ export default ts.config(
 		files: ['**/*.test.ts'],
 		rules: {
 			'@typescript-eslint/no-non-null-assertion': 'off',
+			// same reason: a fixture is deliberately partial ("a play-state with only hp"), and the
+			// point of the test is what the code does with it — annotating it fully would be a lie.
+			'@typescript-eslint/consistent-type-assertions': 'off',
 		},
 	},
 	{
