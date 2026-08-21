@@ -69,7 +69,7 @@ export const issueText = {
 
 	/** Some prose translated, some not — the gap falls back to English (LOC-CHECK). */
 	partialTranslation: (locale: string, missingColumns: string[]): IssueText => ({
-		message: `Half-translated into ${languageName(locale)} — the parts that are missing show in English until you fill them in (Compendium ▸ Translate).`,
+		message: `Half-translated into ${languageName(locale)} — the parts that are missing show in English until you fill them in (Compendium ▸ Edit compendium ▸ Translate).`,
 		detail: `empty columns: ${missingColumns.join(', ')}`,
 	}),
 
