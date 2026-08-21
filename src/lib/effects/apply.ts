@@ -287,7 +287,7 @@ class FactsCollector {
 					source: eff.source,
 					token,
 					reason:
-						'Charnik could not work out how many uses this gives, so it is not shown in the resource tracker. Track it by hand until the count in the row is fixed.',
+						'Charnik could not work out how many uses this gives, so it is not shown in the resource tracker. Correct the count in the row and it will appear.',
 					detail: r.ok ? 'the max expression is not a number' : r.error,
 				});
 		}

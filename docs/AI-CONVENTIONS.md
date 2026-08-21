@@ -889,6 +889,31 @@ an imported dataset's counter collides. A fresh GUID works as a cache key, for e
 future sync/import dedup. (E.g. the content store rotates `guid = crypto.randomUUID()` on each
 `reloadContent()`; derived indexes key off the guid.)
 
+### 9.5 A message says what happened, what it means, and what to do — the token goes underneath
+**Rule.** Any string a USER can see when something goes wrong (a loader/derive issue, a toast, a
+dialog, a form error) is a sentence in their words, answering three things: **what happened**, **what
+it means for their sheet**, **what to change**. The exact technical particular — the effect token,
+the column name, the validator's own complaint, a plugin's error, an id — is **demoted, never
+deleted**: it goes in the `detail` field of `ContentIssue`/`EffectIssue`, or in a toast's
+`description`, so the homebrew author still gets the fault while the CSV owner gets the sentence.
+
+**Why.** The app is for people who own their data as plain CSV, not for developers (CLAUDE.md), and
+the same panel serves both audiences. `duplicate source:id "spell:SRD 5.1:x"` is a complete
+explanation to whoever wrote the loader and no explanation at all to anyone else. The demotion is
+what lets one message serve both without either half being written twice. Established by the UX-1
+pass (PLAN); the copy that pass produced is the reference for tone and length.
+
+**How to apply.** Name things as the UI names them (a resource by its NAME, an edition via
+`SYSTEM_LABELS`, a source via `sourceLabel`, a form field by its own label, a route by the path the
+user actually clicks). Say the consequence in the same sentence: *skipped*, *changes nothing*, *not
+offered*, *nothing was changed*. Where a closed vocabulary was mistyped, add `didYouMean`. Where a
+dozen internal reasons share one meaning and one fix (every plugin failure), collapse them to one
+sentence at the seam and keep the reason in `detail` rather than writing twelve half-sentences. Copy
+for content issues lives in `content/issue-text.ts`, not inline at the `push()`.
+
+**Testing.** Assert the DURABLE fact — the identifier in `detail`, the level, the file, that the
+action was refused — never the sentence, which is copy and will be rewritten ([[behavioral-tests-not-form]]).
+
 ---
 
 ## 10. Repo tooling (use it before hand-rolling)
