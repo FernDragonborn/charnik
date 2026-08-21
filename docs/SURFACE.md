@@ -1038,11 +1038,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `function resolveActiveEffects` — Resolve every active effect in dependency order (see `Resolver`).
 
-### `src/lib/effects/suggest.ts`
-
-- `function suggestClosest` — * The nearest 1–2 candidates to `input` within the length-relative cap, CLOSEST first.
-- `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
-
 ### `src/lib/effects/token-parser.ts`
 
 - `const EFFECT_KIND` — The bounded effect vocabulary, as named constants — compare against these, never bare strings.
@@ -1316,6 +1311,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/util/slug.ts`
 
 - `function slugify` — * Turn a human name into an id-safe slug: lowercase, every run of non-alphanumerics collapsed to a * single UNDERSCOR…
+
+### `src/lib/util/suggest.ts`
+
+- `function suggestClosest` — * The nearest 1–2 candidates to `input` within the length-relative cap, CLOSEST first.
+- `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
 _45 tokens · 65 global classes · 48 components · 764 exports across 110 modules · 41 duplicate suspects._

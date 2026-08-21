@@ -60,7 +60,7 @@ import {
 } from '../effects/token-parser';
 import type { ExprContext } from '../effects/expression-evaluator';
 import { applyEffects, collectFacts, type EffectFacts, type ResourceDef } from '../effects/apply';
-import { didYouMean } from '../effects/suggest';
+import { didYouMean } from '../util/suggest';
 import { resolveActiveEffects } from '../effects/resolver';
 import { deriveSpellcasting, castingAbilityByClass, type Spellcasting } from './spellcasting';
 import { makeEffectCtxFactory, baseResolveState } from './derive-context';

@@ -1,8 +1,8 @@
 /*
- * "Did you mean?" for a token typed against a CLOSED vocabulary (AUDIT PLG-9). When an effect token
- * fails a bounded set — an unknown target key, a typo'd condition/skill id — the error appends the
- * nearest valid candidate(s) so a dead-end becomes a one-glance fix. NEVER call on free text (args,
- * guard expressions); only on finite, known vocabularies.
+ * "Did you mean?" for a word typed against a CLOSED vocabulary (AUDIT PLG-9). When a value fails a
+ * bounded set — an unknown effect target, a typo'd condition/skill id, a misspelled `#content-type:`
+ * — the error appends the nearest valid candidate(s) so a dead-end becomes a one-glance fix. NEVER
+ * call on free text (args, guard expressions); only on finite, known vocabularies.
  */
 import { distance } from 'fastest-levenshtein';
 
