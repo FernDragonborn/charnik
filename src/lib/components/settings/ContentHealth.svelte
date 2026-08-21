@@ -10,6 +10,7 @@
 	import { deriveHealth } from '$lib/character/health.svelte';
 	import { lintEffectTokens } from '$lib/effects/apply';
 	import { tokensOf } from '$lib/content/loader';
+	import { resourceJoinIssues } from '$lib/content/resource-joins';
 	import { retryPlugins } from '$lib/effects/plugin-store.svelte';
 	import { app } from '$lib/stores/app.svelte';
 	import { detectPlatform, Platform } from '$lib/storage/provider';
@@ -30,6 +31,17 @@
 			for (const w of lintEffectTokens(tokensOf(row))) out.push({ id: row.id, message: w });
 		return out;
 	});
+	// references to a resource pool nothing grants — an option that can never be offered, a name that
+	// will never be read. Content-level (no character involved), so it sits with the loader's issues.
+	// per ACTIVE EDITION, not over the union: a pool granted only in 5.5e must not silently vouch for
+	// an option that only exists in 5e. Deduped by row, since a row can sit in both.
+	const joinIssues = $derived.by(() => {
+		if (!graph) return [];
+		const seen = new Map<string, ReturnType<typeof resourceJoinIssues>[number]>();
+		for (const system of app.activeEditions)
+			for (const issue of resourceJoinIssues(graph, system)) seen.set(issue.file + issue.id, issue);
+		return [...seen.values()];
+	});
 	const deriveIssues = $derived(deriveHealth.issues);
 	// a plugin token that degraded (broken/over-budget/auto-disabled) — offer a one-click retry that
 	// resets the per-character fail counters and re-derives (e.g. after fixing the plugin's code)
@@ -40,6 +52,7 @@
 			metaIssues.length +
 			driftItems.length +
 			tokenLints.length +
+			joinIssues.length +
 			deriveIssues.length,
 	);
 
@@ -142,6 +155,17 @@
 					<div class="row-detail">
 						changed {d.changedAt ?? 'unknown'} · fingerprint dated {d.declaredDate ?? '—'}
 					</div>
+				</div>
+			{/each}
+		{/if}
+
+		{#if joinIssues.length}
+			<div class="group-label eyebrow warn">Points at a resource that doesn’t exist</div>
+			{#each joinIssues as j (j.file + j.id)}
+				<div class="row warn">
+					<div class="row-file">{j.file}<span class="row-id"> · {j.id}</span></div>
+					<div class="row-msg">{j.message}</div>
+					<div class="row-detail">{j.detail}</div>
 				</div>
 			{/each}
 		{/if}

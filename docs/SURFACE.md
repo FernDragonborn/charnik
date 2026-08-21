@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (43)
+## Duplicate suspects (44)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -63,6 +63,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 **Identical one-liner body, different names:**
 
 - `cap` (src/lib/content/detail.ts) = `label` (src/lib/content/homebrew.ts)
+- `where` (src/lib/content/resource-joins.ts) = `filePath` (src/lib/content/sources.svelte.ts)
 
 ## Design tokens (`styles/tokens.css`)
 
@@ -381,7 +382,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (98 modules)
+## Library functions & types (99 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -828,6 +829,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const MAX_PREFETCH_BYTES` — * …and what ONE automatic check may pre-download IN TOTAL, which none of the caps above bound.
 - `interface PrefetchBudget` — What is left of {@link MAX_PREFETCH_BYTES} for this check.
 - `type UpdateError` — * A failure the UI can show.
+
+### `src/lib/content/resource-joins.ts`
+
+- `interface JoinIssue` — One unresolved reference, in the shape the content-health panel renders.
+- `function grantedPoolIds` — Every pool id something in this edition actually GRANTS.
+- `function resourceJoinIssues` — * Rows that name a resource pool nothing grants.
 
 ### `src/lib/content/restamp.ts`
 
@@ -1343,4 +1350,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 781 exports across 112 modules · 43 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 784 exports across 113 modules · 44 duplicate suspects._

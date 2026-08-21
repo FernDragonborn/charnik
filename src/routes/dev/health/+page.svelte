@@ -11,6 +11,7 @@
 	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { deriveHealth } from '$lib/character/health.svelte';
 
+	const NL = '\n';
 	const SPELL_HEAD =
 		'id,systems,source,name_en,name_uk,text_en,text_uk,level,school,casting_time,range,components,duration,concentration,ritual';
 	const spell = (id: string, systems: string, name_uk = '', text_uk = '') =>
@@ -30,6 +31,20 @@
 			'id,systems,source,class_id,spell_id',
 			'x,5.5e,Homebrew,warlok,fire_bolt',
 		].join('\n'),
+		// a granted pool + a spend-option that misspells it: the join check has something real to
+		// resolve against, which is what makes the "points at a resource that doesn't exist" group appear
+		'preview/class_features_homebrew.csv': [
+			'#content-source: My Class',
+			'#content-license: Custom',
+			'id,systems,source,name_en,text_en,effects,class_id,level',
+			'monks_focus,5.5e,My Class,Monk’s Focus,You gain Focus Points.,grant_resource:focus:2:short,monk,2',
+		].join(NL),
+		'preview/resource_options_homebrew.csv': [
+			'#content-source: My Class',
+			'#content-license: Custom',
+			'id,systems,source,name_en,text_en,resource_id,cost,action,action_type',
+			'flurry,5.5e,My Class,Flurry of Blows,Two Unarmed Strikes.,focuss,1,note:two strikes,bonus_action',
+		].join(NL),
 		// a stamped file whose body no longer matches its hash → the drift group
 		'preview/feats_homebrew.csv': [
 			'#content-source: My Feats',
