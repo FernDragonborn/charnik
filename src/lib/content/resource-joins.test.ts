@@ -29,6 +29,24 @@ describe('resource joins', () => {
 		expect([...grantedPoolIds(g, '5e')]).toEqual([]); // edition-scoped
 	});
 
+	it('sees a GUARDED grant — a working option must never be reported as broken', async () => {
+		const s = new MemoryStorage();
+		await s.write(
+			'c/class_features_srd.csv',
+			[
+				'id,systems,source,name_en,effects,class_id,level',
+				`frenzy,5.5e,${S},Frenzy,is_raging ? grant_resource:frenzy:2:long,barbarian,3`,
+			].join('\n'),
+		);
+		await s.write(
+			'c/resource_options_srd.csv',
+			[OPTION_HEAD, `rampage,5.5e,${S},Rampage,frenzy,1,note:again,bonus_action`].join('\n'),
+		);
+		const g = await loadContent(s, ['c']);
+		expect([...grantedPoolIds(g, '5.5e')]).toEqual(['frenzy']);
+		expect(resourceJoinIssues(g, '5.5e')).toEqual([]);
+	});
+
 	it('flags an option whose resource_id nothing grants — the silent case', async () => {
 		const g = await graphOf({
 			'c/resource_options_srd.csv': [

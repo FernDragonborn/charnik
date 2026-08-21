@@ -1290,6 +1290,22 @@ holds the done-work log; these are the OPEN tails it carried):**
   **Content:** `resources_srd.csv` in both editions (7 pools in 5.5e, 5 in 5e), every name read off
   that edition's own shipped text (content repo `17fb092`). A test asserts every granted pool id has a
   row, so a converter re-run that drops the file fails loudly instead of reverting to `titleCase`.
+  **Fresh-eyes pass, same day — three holes found and closed, one left open on purpose.**
+  (1) `grantedPoolIds` called `parseToken` on the RAW token, and a guarded grant
+  (`is_raging ? grant_resource:…`) parses to `unknown` — so a pool granted under a condition looked
+  ungranted and its perfectly good option would have been reported as broken. `splitGuard` first,
+  like the token lint does; a test pins it. A checker that cries wolf is worse than no checker.
+  (2) A pool's name is content prose, and the Translate view could not reach it: its type list was
+  filtered by `isBrowsable`, and neither `resource` nor `resource_option` is an article. Translation
+  wants PROSE, not articles — `hasProse(type)` asks the schema whether it declares `name_en`, so
+  `resource_option` (Flurry of Blows' own name and description!) became translatable too, having
+  never been.
+  (3) The tracker's fallback for a pool nothing grants any more printed the RAW id, while the
+  engine's printed `titleCase(id)` — two fallbacks for one fact. Both are `titleCase` now.
+  **Left open, deliberately** (needs a UI decision, not a patch): a `resource` row cannot be AUTHORED
+  from the app — the compendium's add/edit flow is keyed to the browsable types, so homebrew must
+  hand-write `resources_hb.csv`. That is the "everything is doable from the UI" invariant unmet for
+  this type, and it is unmet for `resource_option` in exactly the same way, since before this.
   **What shipping it taught, the same day** (maintainer pulled content, kept the installed app, and
   got two "unknown content type" warnings): a new content TYPE is **not** a backwards-compatible
   content change, and the two-repo split guarantees older builds will meet it. Nothing broke — the

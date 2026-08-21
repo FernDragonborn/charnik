@@ -862,7 +862,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const SPECIES_OPTION_KINDS` — The kinds a species sub-choice can be (2014 subrace vs 2024 lineage/legacy/ancestry).
 - `const CONTENT_TYPES`
 - `type ContentType`
-- `const isBrowsable` — A browsable content type (has name/text; shows in compendium + search).
+- `const isBrowsable` — A browsable content type (an ARTICLE: shows in compendium + search).
+- `const hasProse` — A type whose rows carry TRANSLATABLE prose — a superset of the browsable ones.
 - `const PROSE_BASES` — The localizable prose bases that carry per-locale columns (`name_uk`, `text_de`, `material_fr`, * `higher_level_uk`).
 - `type ProseBase`
 - `const LOC_STATUS` — Tracked localization status of a row's translation into ONE locale — set in the translate view and * stored per-local…
@@ -1350,4 +1351,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 784 exports across 113 modules · 44 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 785 exports across 113 modules · 44 duplicate suspects._

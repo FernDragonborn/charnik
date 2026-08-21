@@ -13,7 +13,7 @@
  * content-health pass may import it — and does, so the ids come from `parseToken`, not from a second
  * regex that would drift from the grammar.
  */
-import { parseToken } from '$lib/effects/token-parser';
+import { parseToken, splitGuard } from '$lib/effects/token-parser';
 import { didYouMean } from '$lib/util/suggest';
 import type { ContentGraph, LoadedRow } from './loader';
 import { tokensOf } from './loader';
@@ -33,7 +33,10 @@ export function grantedPoolIds(graph: ContentGraph, system: string): Set<string>
 	for (const row of graph.rows) {
 		if (!row.systems.includes(system)) continue;
 		for (const token of tokensOf(row)) {
-			const id = parseToken(token).resource?.id;
+			// `splitGuard` FIRST: a guarded grant (`is_raging ? grant_resource:…`) parses to `unknown`
+			// otherwise, and the pool would look ungranted — turning a working option into a false
+			// report, which is the one thing a checker like this must never do
+			const id = parseToken(splitGuard(token).token).resource?.id;
 			if (id !== undefined) out.add(id);
 		}
 	}

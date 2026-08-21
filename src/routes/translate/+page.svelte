@@ -13,7 +13,7 @@
 	import { toast } from 'svelte-sonner';
 	import { content, loadContentStore, reloadContent } from '$lib/content/store.svelte';
 	import { getUserStorage } from '$lib/storage/provider';
-	import { isBrowsable, type ContentType } from '$lib/content/schemas';
+	import { hasProse, type ContentType } from '$lib/content/schemas';
 	import { buildDetail, entryMeta, editionLabel, type Entry } from '$lib/content/detail';
 	import { groupingsFor, groupRows, byDisplayName } from '$lib/content/grouping';
 	import { saveTranslation, saveLocStatus, locStatus } from '$lib/content/translate';
@@ -54,7 +54,9 @@
 		savedT.targetLocale ?? (app.activeLocale === 'en' ? 'uk' : app.activeLocale),
 	);
 	const locales = $derived(graph?.locales ?? ['en']);
-	const types = $derived(graph ? [...graph.byType.keys()].filter(isBrowsable).sort() : []);
+	// PROSE, not "article": a resource pool's name and a spend-option's label are shown on the sheet
+	// and were untranslatable purely because neither type is browsable
+	const types = $derived(graph ? [...graph.byType.keys()].filter(hasProse).sort() : []);
 	let selectedType = $state<ContentType>((savedT.selectedType as ContentType) ?? 'spell');
 	let query = $state('');
 	let selected = $state<LoadedRow | null>(null);
@@ -86,7 +88,7 @@
 		const id = p.get('id');
 		const locale = p.get('locale');
 		if (!type || !source || !id || !content.graph) return;
-		if (isBrowsable(type as ContentType)) selectedType = type as ContentType;
+		if (hasProse(type as ContentType)) selectedType = type as ContentType;
 		if (locale) targetLocale = locale;
 		selected = content.graph.get(`${type}:${source}:${id}`) ?? selected;
 	}

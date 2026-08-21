@@ -549,8 +549,16 @@ const LOOKUP_TYPES = new Set<ContentType>([
 	'resource', // a pool's display name; its rules text lives on the feature that grants it
 ]);
 
-/** A browsable content type (has name/text; shows in compendium + search). */
+/** A browsable content type (an ARTICLE: shows in compendium + search). */
 export const isBrowsable = (t: ContentType): boolean => !LOOKUP_TYPES.has(t);
+
+/** A type whose rows carry TRANSLATABLE prose — a superset of the browsable ones. `resource` and
+ *  `resource_option` are not articles, but their names are read off the sheet (a pool's name, an
+ *  action's label), so they need the translate view as much as a spell does; the pure lookup tables
+ *  (slot matrices, join rows) have no prose at all. Asked of the schema rather than kept as a second
+ *  list, so a new type is translatable exactly when it actually declares a name. */
+export const hasProse = (t: ContentType): boolean =>
+	'name_en' in (CONTENT_TYPES[t].schema as z.ZodObject).shape;
 
 /** The localizable prose bases that carry per-locale columns (`name_uk`, `text_de`, `material_fr`,
  *  `higher_level_uk`). Kept in ONE place — the loader re-attach, the translate write path and this

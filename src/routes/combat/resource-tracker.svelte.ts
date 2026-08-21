@@ -6,7 +6,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { saveCharacterToStore } from '$lib/character/store.svelte';
-import { pipClick, remainingRounds } from '$lib/combat/helpers';
+import { pipClick, remainingRounds, titleCase } from '$lib/combat/helpers';
 import { hitDiceRecoveredOnLongRest } from '$lib/rules/core';
 import { PACT_SLOT_KEY } from '$lib/rules/spellcasting';
 import type { Character } from '$lib/character/schema';
@@ -28,8 +28,10 @@ export class ResourceTracker {
 	/** The pool's definition on the live sheet, or undefined when nothing grants it any more. */
 	private defOf = (id: string) => this.getSheet()?.resources.find((r) => r.id === id);
 	/** What a pool is CALLED — never its id, which is a key, not a word the player has ever read (UX-1).
-	 *  Public because the action executor blocks a spend with the same sentence. */
-	resourceName = (id: string): string => this.defOf(id)?.name ?? id;
+	 *  Public because the action executor blocks a spend with the same sentence. The fallback matches
+	 *  the engine's (`titleCase`), so a pool nothing grants any more — a removed feature, a disabled
+	 *  source — reads like a pool rather than like a database key. */
+	resourceName = (id: string): string => this.defOf(id)?.name ?? titleCase(id);
 
 	/** Spent count for a resource, CLAMPED to what the current sheet actually grants. Persisted
 	 *  `resourcesSpent` is keyed by id and outlives the effect that granted it — so after a feature/
