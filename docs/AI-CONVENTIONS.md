@@ -983,6 +983,11 @@ The repo ships its own tooling under `tools/` — check there BEFORE hand-rollin
   a red `pnpm lint`, 35 unused imports left behind by the carves, because nothing between the commit
   and `pre-push` ever looked. A gate you only meet at push time is a gate you meet with five commits
   already written on top of the break.
+  **Editing the `simple-git-hooks` block in `package.json` changes nothing on its own** — the command
+  is COPIED into `.git/hooks/pre-commit` at install time, and only `postinstall` re-copies it. That
+  `eslint .` sat in package.json for a week while the installed hook still ran the pre-eslint version,
+  invisibly. After touching the block, run `npx simple-git-hooks` and `tail -1 .git/hooks/pre-commit`
+  to see what will actually run.
 - **`pnpm jscpd`** — copy-paste detector, threshold 1.8% (part of `pnpm lint` + pre-commit). The
   CONFIG reporter is `silent`, i.e. the one-line verdict ("108 clones, 0.92% duplicated") and nothing
   else, because a pre-commit hook that prints two hundred lines of other people's CSS on every
