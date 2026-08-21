@@ -174,8 +174,10 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 		expect(slotToSpend(1, [pact], {})).toEqual({ key: 'pact' });
 		expect(slotToSpend(3, [pact], {})).toEqual({ key: 'pact' });
 		// exhausted → blocked; above the pact slot level → blocked
-		expect(slotToSpend(1, [pact], { pact: 2 })).toEqual({ block: 'No Pact Magic slots remaining' });
-		expect(slotToSpend(4, [pact], {})).toEqual({ block: 'Your pact slots only reach level 3' });
+		// the WORDING is copy (UX-1) — what the test pins is that each case blocks, and that the block
+		// names the level the player has to reason about
+		expect(slotToSpend(1, [pact], { pact: 2 })).toMatchObject({ block: /Pact Magic/ });
+		expect(slotToSpend(4, [pact], {})).toMatchObject({ block: /3rd level/ });
 	});
 
 	it('a true non-caster (no pool at all) is not gated', () => {
@@ -183,9 +185,7 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 	});
 
 	it('blocks when the caster has leveled slots but none ≥ the level remain', () => {
-		expect(slotToSpend(3, pools, { '3': 2 })).toEqual({
-			block: 'No level-3 spell slot remaining',
-		});
+		expect(slotToSpend(3, pools, { '3': 2 })).toMatchObject({ block: /3rd-level/ });
 	});
 
 	it('honours an explicit chosen slot (upcast picker) — spends THAT level, not the auto-lowest', () => {
@@ -194,11 +194,9 @@ describe('slotToSpend — which slot a cast consumes (A17)', () => {
 	});
 
 	it('blocks a chosen slot below the spell level, or a chosen-but-empty level (never downshifts)', () => {
-		expect(slotToSpend(3, pools, {}, 1)).toEqual({
-			block: "A level-1 slot can't cast a level-3 spell",
-		});
-		expect(slotToSpend(1, pools, { '3': 2 }, 3)).toEqual({
-			block: 'No level-3 spell slot remaining',
+		expect(slotToSpend(3, pools, {}, 1)).toMatchObject({ block: /1st-level slot is too low/ });
+		expect(slotToSpend(1, pools, { '3': 2 }, 3)).toMatchObject({
+			block: /No 3rd-level spell slots/,
 		});
 	});
 });

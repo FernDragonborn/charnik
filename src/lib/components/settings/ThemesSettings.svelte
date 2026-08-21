@@ -114,12 +114,17 @@
 		try {
 			raw = JSON.parse(await file.text());
 		} catch {
-			toast('That file isn’t valid JSON');
+			toast('That file isn’t a theme Charnik can read', {
+				description: 'A theme is a .json file — the one you picked isn’t valid JSON.',
+			});
 			return;
 		}
 		const theme = themeFromJson(raw, file.name.replace(/\.json$/, ''), takenIds());
 		if (!theme) {
-			toast('No themeable tokens in that file');
+			toast('Nothing to theme in that file', {
+				description:
+					'It’s valid JSON, but none of it names a colour or size Charnik styles with. Export a theme from here to see the shape one has.',
+			});
 			return;
 		}
 		addTheme(theme, { activate: true });

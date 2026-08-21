@@ -55,6 +55,13 @@ export const damageTotal = (parts: TypedRoll[]): number => parts.reduce((n, p) =
 /** The three action-economy slots a turn tracks. */
 export type ActionSlot = 'action' | 'bonus' | 'reaction';
 
+/** What a slot is called in a sentence — "bonus" alone is not the name of anything at the table. */
+export const ACTION_SLOT_LABEL: Record<ActionSlot, string> = {
+	action: 'action',
+	bonus: 'bonus action',
+	reaction: 'reaction',
+};
+
 /** The dice sizes offered in the roll tray. */
 export const DICE = [4, 6, 8, 10, 12, 20, 100];
 

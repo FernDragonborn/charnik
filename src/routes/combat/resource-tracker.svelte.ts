@@ -25,6 +25,12 @@ export class ResourceTracker {
 		c.play.spellSlotsSpent[key] = pipClick(spent, i, full);
 	};
 
+	/** The pool's definition on the live sheet, or undefined when nothing grants it any more. */
+	private defOf = (id: string) => this.getSheet()?.resources.find((r) => r.id === id);
+	/** What a pool is CALLED — never its id, which is a key, not a word the player has ever read (UX-1).
+	 *  Public because the action executor blocks a spend with the same sentence. */
+	resourceName = (id: string): string => this.defOf(id)?.name ?? id;
+
 	/** Spent count for a resource, CLAMPED to what the current sheet actually grants. Persisted
 	 *  `resourcesSpent` is keyed by id and outlives the effect that granted it — so after a feature/
 	 *  plugin is removed or its max drops, the stored `spent` can exceed the live max (or reference a
@@ -32,8 +38,7 @@ export class ResourceTracker {
 	 *  show a negative "left" or orphan pips. */
 	resourceSpent = (id: string): number => {
 		const stored = this.getCharacter()?.play.resourcesSpent[id] ?? 0;
-		const max = this.getSheet()?.resources.find((r) => r.id === id)?.max ?? 0;
-		return Math.max(0, Math.min(stored, max));
+		return Math.max(0, Math.min(stored, this.defOf(id)?.max ?? 0));
 	};
 	/** Use ONE unit of a resource — the spell-cast analogue for named pools (UBUG-8): spend the next
 	 *  available unit, or BLOCK with a toast when exhausted (mirrors how a cast reserves + gates a spell
@@ -41,7 +46,7 @@ export class ResourceTracker {
 	useResource = (id: string, max: number) => {
 		const c = this.getCharacter();
 		if (!c) return;
-		const name = this.getSheet()?.resources.find((r) => r.id === id)?.name ?? id;
+		const name = this.resourceName(id);
 		const before = this.resourceSpent(id);
 		if (before >= max) {
 			toast(`${name} — none left`, { description: 'Recharge on a rest' });
@@ -61,7 +66,7 @@ export class ResourceTracker {
 		const after = pipClick(before, i, max);
 		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: after };
 		if (after === before) return;
-		const name = this.getSheet()?.resources.find((r) => r.id === id)?.name ?? id;
+		const name = this.resourceName(id);
 		toast(`${name} ${after > before ? 'used' : 'restored'}`, {
 			description: `${max - after} of ${max} left`,
 		});
@@ -77,7 +82,7 @@ export class ResourceTracker {
 
 	/** Units left in the pool backing an option (max − spent). `x`-cost options price at `amount`. */
 	private remainingFor = (resourceId: string): number => {
-		const max = this.getSheet()?.resources.find((r) => r.id === resourceId)?.max ?? 0;
+		const max = this.defOf(resourceId)?.max ?? 0;
 		return max - this.resourceSpent(resourceId);
 	};
 	/** Piece 3: can this option be paid for right now? (`x` = a player-picked `amount`, ≥1.) */
@@ -93,7 +98,9 @@ export class ResourceTracker {
 		if (!c) return false;
 		const cost = opt.cost === 'x' ? amount : opt.cost;
 		if (!this.canAffordOption(opt, amount)) {
-			toast(`${opt.name} — not enough ${opt.resourceId}`, { description: 'Recharge on a rest' });
+			toast(`Not enough ${this.resourceName(opt.resourceId)} for ${opt.name}`, {
+				description: `${this.remainingFor(opt.resourceId)} left · costs ${cost}. Rest to recharge.`,
+			});
 			return false;
 		}
 		const before = this.resourceSpent(opt.resourceId);
@@ -101,7 +108,9 @@ export class ResourceTracker {
 		const desc = opt.action.startsWith('note:')
 			? opt.action.slice('note:'.length)
 			: opt.description;
-		toast(`${opt.name} — spent ${cost} ${opt.resourceId}`, { description: desc });
+		toast(`${opt.name} — spent ${cost} ${this.resourceName(opt.resourceId)}`, {
+			description: desc,
+		});
 		return true;
 	};
 
@@ -112,7 +121,7 @@ export class ResourceTracker {
 		const c = this.getCharacter();
 		if (!c) return;
 		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: 0 };
-		const name = this.getSheet()?.resources.find((r) => r.id === id)?.name ?? id;
+		const name = this.resourceName(id);
 		toast(`${name} — fully restored`);
 	};
 
@@ -122,7 +131,7 @@ export class ResourceTracker {
 	 *  No-op returning 0 when the pool is unknown. Silent unlike `restoreAll` — it's a system event. */
 	restoreUpTo = (id: string, upTo: number): number => {
 		const c = this.getCharacter();
-		const def = this.getSheet()?.resources.find((r) => r.id === id);
+		const def = this.defOf(id);
 		if (!c || !def) return 0;
 		const spent = c.play.resourcesSpent?.[id] ?? 0;
 		const newSpent = Math.min(spent, Math.max(0, def.max - upTo)); // only restores (never raises spent)

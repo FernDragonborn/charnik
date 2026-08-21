@@ -592,6 +592,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the per-type dama…
 - `const damageTotal` — Combined total across every typed damage part.
 - `type ActionSlot` — The three action-economy slots a turn tracks.
+- `const ACTION_SLOT_LABEL` — What a slot is called in a sentence — "bonus" alone is not the name of anything at the table.
 - `const DICE` — The dice sizes offered in the roll tray.
 - `const range` — `[0, 1, …, n-1]` — for rendering N pips/dots.
 - `const wantsTray` — A normal tap rolls instantly; Alt/Ctrl/Cmd-click opens the prefilled roll tray.
@@ -1326,4 +1327,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 767 exports across 111 modules · 43 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 768 exports across 111 modules · 43 duplicate suspects._

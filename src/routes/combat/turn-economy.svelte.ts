@@ -8,6 +8,7 @@ import { toast } from 'svelte-sonner';
 import {
 	pipClick,
 	isEffectExpired,
+	ACTION_SLOT_LABEL,
 	type ActionSlot,
 	type SpellRow,
 	type EffectInstance,
@@ -150,7 +151,9 @@ export class TurnEconomy {
 			return false;
 		}
 		if (c.play.turn[slot] >= this.slotMax[slot]) {
-			toast(`No ${slot} left this turn`, { description: 'Press “Next turn” to refresh.' });
+			toast(`No ${ACTION_SLOT_LABEL[slot]} left this turn`, {
+				description: 'Press “Next turn” to refresh.',
+			});
 			return false;
 		}
 		c.play.turn[slot] += 1;

@@ -9,6 +9,7 @@
  * separate pool and contributes NOTHING to the shared caster level.
  */
 import type { System } from './pipeline';
+import { ordinal } from '../util/format';
 
 /** Multiclass caster-level contribution + rounding (data value `caster_share`). */
 export type CasterShare = 'full' | 'half' | 'half_up' | 'third' | 'none';
@@ -77,17 +78,23 @@ export function slotToSpend(
 	// the auto slot (a below-level pick can't cast the spell; a chosen-but-empty level is a real block).
 	if (chosenLevel !== undefined) {
 		if (chosenLevel < spellLevel)
-			return { block: `A level-${chosenLevel} slot can't cast a level-${spellLevel} spell` };
+			return {
+				block: `A ${ordinal(chosenLevel)}-level slot is too low for a ${ordinal(spellLevel)}-level spell — pick ${ordinal(spellLevel)} or higher.`,
+			};
 		return isOpen(chosenLevel)
 			? { key: String(chosenLevel) }
-			: { block: `No level-${chosenLevel} spell slot remaining` };
+			: {
+					block: `No ${ordinal(chosenLevel)}-level spell slots left — cast it from a higher slot, or rest.`,
+				};
 	}
 	const open = leveled
 		.filter((p) => p.spellLevel >= spellLevel && p.max - (spent[String(p.spellLevel)] ?? 0) > 0)
 		.sort((a, b) => a.spellLevel - b.spellLevel)[0];
 	return open
 		? { key: String(open.spellLevel) }
-		: { block: `No level-${spellLevel} spell slot remaining` };
+		: {
+				block: `No slot left that can cast a ${ordinal(spellLevel)}-level spell — rest to get slots back.`,
+			};
 }
 
 /** The Warlock Pact Magic pool among a set of pools (the forced-upcast slot pool), or undefined. */
@@ -110,10 +117,12 @@ function pactSpend(
 	const pact = pactPool(pools);
 	if (!pact) return null; // non-caster — don't gate
 	if (spellLevel > pact.spellLevel)
-		return { block: `Your pact slots only reach level ${pact.spellLevel}` };
+		return {
+			block: `Your Pact Magic slots are ${ordinal(pact.spellLevel)} level, too low for this spell.`,
+		};
 	return pact.max - (spent[PACT_SLOT_KEY] ?? 0) > 0
 		? { key: PACT_SLOT_KEY }
-		: { block: 'No Pact Magic slots remaining' };
+		: { block: 'No Pact Magic slots left — they come back on a short rest.' };
 }
 
 /** Every leveled slot level a spell of `spellLevel` can be cast from RIGHT NOW — each level ≥ the

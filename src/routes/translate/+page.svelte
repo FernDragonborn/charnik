@@ -211,7 +211,7 @@
 			await reloadContent();
 			toast('Translation saved');
 		} catch (e) {
-			toast(`Could not save: ${errText(e)}`);
+			toast('Your translation was not saved', { description: errText(e) });
 		} finally {
 			saving = false;
 		}
@@ -236,7 +236,7 @@
 			await reloadContent();
 			selected = content.graph?.get(selected.effectiveId) ?? selected;
 		} catch (e) {
-			toast(`Could not save: ${errText(e)}`);
+			toast('Your translation was not saved', { description: errText(e) });
 		} finally {
 			saving = false;
 		}

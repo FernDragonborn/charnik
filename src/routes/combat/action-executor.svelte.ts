@@ -13,7 +13,7 @@ import { toast } from 'svelte-sonner';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { rollFormula } from '$lib/rules/dice';
-import { titleCase, type ActionSlot } from '$lib/combat/helpers';
+import { titleCase, ACTION_SLOT_LABEL, type ActionSlot } from '$lib/combat/helpers';
 import type { RollTray } from './roll-tray.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
@@ -58,11 +58,15 @@ export class ActionExecutor {
 			return;
 		}
 		if (!this.host().resources.canAffordOption(opt, amount)) {
-			toast(`${opt.name} — not enough ${opt.resourceId}`, { description: 'Recharge on a rest' });
+			toast(`Not enough ${this.host().resources.resourceName(opt.resourceId)} for ${opt.name}`, {
+				description: 'Rest to recharge.',
+			});
 			return;
 		}
 		if (slot && !this.host().economy.canSpend(slot)) {
-			toast(`No ${slot} left this turn`, { description: 'Press “Next turn” to refresh.' });
+			toast(`No ${ACTION_SLOT_LABEL[slot]} left this turn`, {
+				description: 'Press “Next turn” to refresh.',
+			});
 			return;
 		}
 		if (slot) this.host().economy.trySpend(slot); // both spends succeed — validated above
@@ -171,7 +175,9 @@ export class ActionExecutor {
 		if (!p) return;
 		const cat = this.host().effects.effectCatalog.find((eff) => eff.ref.split(':').pop() === arg);
 		if (!cat) {
-			toast(`${opt.name} — effect “${arg}” not found`, { description: 'Check effects.csv' });
+			toast(`${opt.name} can’t take effect`, {
+				description: `It applies “${arg}”, and no effect by that name is loaded — add it to your effects file, or correct the name on the option.`,
+			});
 			return;
 		}
 		// a named STATE doesn't stack — you're raging or you're not (RAW/RAI). Re-entering refreshes

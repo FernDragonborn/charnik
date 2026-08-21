@@ -232,7 +232,10 @@ export class SpellCasting {
 		let acc = 0;
 		for (const res of this.evalUpcastAt(r, slotLevel)) {
 			if ('error' in res) {
-				if (res.raw.startsWith(kind)) toast(`Upcast: ${res.error}`);
+				if (res.raw.startsWith(kind))
+					toast('Cast at its base strength — this spell’s upcast rule could not be worked out.', {
+						description: res.error,
+					});
 				continue;
 			}
 			if (res.kind === kind) acc += res.flat;
@@ -251,7 +254,9 @@ export class SpellCasting {
 		const out: DamagePart[] = [];
 		for (const res of this.evalUpcastAt(r, slotLevel)) {
 			if ('error' in res) {
-				toast(`Upcast: ${res.error}`);
+				toast('Cast at its base strength — this spell’s upcast rule could not be worked out.', {
+					description: res.error,
+				});
 				continue;
 			}
 			if ((res.kind !== 'damage' && res.kind !== 'heal') || res.combine !== 'delta') continue;
