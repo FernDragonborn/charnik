@@ -1064,9 +1064,9 @@ were learned the hard way.
   SCOPED-BONUS.** Slice 3 wants item charges, which want an inventory. SCOPED-BONUS is an L1 grammar
   change and a `docs/compatibility.md` chokepoint, so it stays its own piece rather than riding
   another wave.
-- **W5 · tail:** REL-2 packaging channels,
-  UBUG-4's real `.msi` verify (attach to the next release), ARCH-4 / R7 / LINT-1.
-  UBUG-19, TYPE-2 and the CSS rename pass came off this list on 2026-08-21. B24 and B11 have since been answered (both won't-do, with the measurement /
+- **W5 · tail:** REL-2 packaging channels, ARCH-4 / R7 / LINT-1.
+  UBUG-19, TYPE-2 and the CSS rename pass came off this list on 2026-08-21; UBUG-4 came off it on
+  2026-08-22, verified on a real install. B24 and B11 have since been answered (both won't-do, with the measurement /
   the caps that already cover the path that mattered). UX-2 onboarding stays deferred.
 
 **Out of band — do these when next in the area, don't schedule them into a wave:** _(empty —
@@ -2122,7 +2122,8 @@ holds the done-work log; these are the OPEN tails it carried):**
     updater already carries a minisign public key (`tauri.conf.json` ▸ `plugins.updater.pubkey`) and
     verification is therefore already in the binary. Sign the bytes, never the `xxh64:` digest —
     xxHash is not collision-resistant.
-- [~] **UBUG-4 · Tauri .msi install has no content folders.** CODE DONE (needs a real `.msi` verify).
+- [x] **UBUG-4 · Tauri .msi install has no content folders — FIXED, and verified on a real install
+  (2026-08-22).**
   The content was bundled inside the app (loaded over fetch) but never written to disk, so there was
   no editable folder. Now `content/provider.ts`: on desktop (`isTauri`), `getContentGraph` SEEDS the
   shipped CSVs into `<dataDir>/content/…` on first run (`seedShippedContent`, which preserves a file
@@ -2137,16 +2138,19 @@ holds the done-work log; these are the OPEN tails it carried):**
   capability was granted but the Cargo feature was never compiled in) and `charnik.config.json` for
   custom roots (`storage/json-config.ts`, read by `content/packs.svelte.ts`).
 
-  **STILL TODO — the only thing left here, and it is a look, not a code change.** An installer is
-  built (`src-tauri/target/release/bundle/msi/charnik_<version>_x64_en-US.msi`, and an NSIS
-  `-setup.exe` beside it). Install it and check, in order:
+  **The reported bug is CONFIRMED FIXED on a real install (maintainer, 2026-08-22): reinstalling
+  works** — the content folder is there and the app runs off it, which is the whole of what UBUG-4
+  reported (no `content/`, so no data). Steps 1–2 below are what that covers.
   1. `%USERPROFILE%\Documents\charnik\content\` exists after the first launch and holds `srd-2014/`
      + `srd-2024/` with their CSVs (the first run asks WHERE first — that dialog is part of the test).
   2. The app shows rules: the compendium lists spells, and Settings ▸ Content health says the loaded
      content is healthy rather than empty.
-  3. Edit one CSV in that folder with Notepad/Excel and save — the app should update WITHOUT a
-     restart (the watcher, fixed after it turned out never to have fired) and then offer the drift
-     dialog, whose "update" button now re-stamps the file (DATA-VER-1 task 6).
+  3. **The one look still worth taking, and it is no longer this item's bug:** edit one CSV in that
+     folder with Notepad/Excel and save — the app should update WITHOUT a restart (the watcher) and
+     then offer the drift dialog, whose "update" button re-stamps the file (DATA-VER-1 task 6). The
+     watcher itself was live-verified on real Windows in REL-4's third pass — after that run found it
+     had never once fired (the capability was granted; the Cargo feature was never compiled in) — but
+     not from an installed build, which is the only reason this line survives.
   Original report:
 - **UBUG-4b · Tauri .msi install has no content folders.** After installing the built `.msi`, there's
   no `content/` (CSV) directory created, so the app has no data. First-run on desktop must create the
