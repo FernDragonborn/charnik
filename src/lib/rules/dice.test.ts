@@ -5,7 +5,9 @@ import {
 	parseDicePool,
 	parseFlatModifier,
 	parseDiceTerm,
-	parseRollExpr,
+	DIE_ROLE,
+	parseLegacyExpr,
+	rehydrateRoll,
 	amendWithAdvantage,
 	flipAdvantage,
 	cycleAdvantage,
@@ -75,7 +77,13 @@ describe('parseFlatModifier (shared by the roller and the damage-segment parser)
 
 describe('rollPool', () => {
 	it('rolls a single die', () => {
-		expect(rollPool({ 6: 1 }, rngSequence(0.5))).toEqual({ total: 4, expr: 'd6(4)' });
+		// the whole record, pinned: the dice ARE the result, and `expr` is one rendering of them
+		expect(rollPool({ 6: 1 }, rngSequence(0.5))).toEqual({
+			total: 4,
+			mod: 0,
+			dice: [{ sides: 6, value: 4, face: 4, sign: 1, detail: '4', role: DIE_ROLE.pool }],
+			expr: 'd6(4)',
+		});
 	});
 
 	it('appends a signed flat modifier', () => {
@@ -211,10 +219,10 @@ describe('rollFormula', () => {
 	});
 });
 
-describe('parseRollExpr (the toast/log chip breakdown)', () => {
+describe('parseLegacyExpr (reading a roll off disk that predates `dice`)', () => {
 	it('round-trips a rolled expr into per-die chips + the flat modifier', () => {
 		const r = rollPool({ 8: 1, 6: 1 }, { rng: rngSequence(0.5, 0.5), mod: 3 });
-		const { chips, mod } = parseRollExpr(r.expr); // "d8(5) + d6(4) +3"
+		const { dice: chips, mod } = parseLegacyExpr(r.expr); // "d8(5) + d6(4) +3"
 		expect(chips.map((c) => [c.sides, c.value, c.sign])).toEqual([
 			[8, 5, 1],
 			[6, 4, 1],
@@ -225,8 +233,10 @@ describe('parseRollExpr (the toast/log chip breakdown)', () => {
 
 	it('takes the FINAL face of a rerolled/floored die and keeps the detail', () => {
 		const r = rollPool({ 20: 1 }, { rng: rngSequence(0, 0.15), reroll: 1, minDie: 10 });
-		expect(parseRollExpr(r.expr).chips).toEqual([
-			{ sides: 20, value: 10, sign: 1, detail: '1↻4→10' },
+		expect(parseLegacyExpr(r.expr).dice).toEqual([
+			// value is what it counted for, face is what the die showed before the floor — the string
+			// holds both, which is the one thing this reader can still recover exactly
+			{ sides: 20, value: 10, face: 4, sign: 1, detail: '1↻4→10', role: DIE_ROLE.pool },
 		]);
 	});
 
@@ -235,23 +245,76 @@ describe('parseRollExpr (the toast/log chip breakdown)', () => {
 			{ 20: 1 },
 			{ rng: rngSequence(0.5, 0.5), mod: -2, bonusDice: [{ sides: 4, count: 1, sign: -1 }] },
 		);
-		const { chips, mod } = parseRollExpr(r.expr); // "d20(11) + −d4(3) −2"
+		const { dice: chips, mod } = parseLegacyExpr(r.expr); // "d20(11) + −d4(3) −2"
 		expect(chips.map((c) => c.sign)).toEqual([1, -1]);
 		expect(mod).toBe(-2);
 		expect(chips.reduce((n, c) => n + c.sign * c.value, 0) + mod).toBe(r.total);
 	});
 
 	it('is empty for a marker entry with no expr', () => {
-		expect(parseRollExpr('')).toEqual({ chips: [], mod: 0 });
+		expect(parseLegacyExpr('')).toEqual({ dice: [], mod: 0 });
 	});
 });
 
-describe('parseRollExpr · advantage-only pool', () => {
+/*
+ * The record is the DICE now, not the string. What matters is that a roll answers with what happened
+ * (ROLLER-PLAN finding A), that the string it still emits is a faithful rendering of that, and that a
+ * roll read back off disk arrives in the same shape as one just rolled — no caller should ever have
+ * to know which of the two it is holding.
+ */
+describe('Rolled.dice — the record, with `expr` as its rendering', () => {
+	it('records every die with what it showed, what it counted for, and what drew it', () => {
+		const r = rollPool(
+			{ 20: 1 },
+			{ rng: rngSequence(0.1, 0.5), minDie: 10, bonusDice: [{ sides: 4, count: 1, sign: -1 }] },
+		);
+		expect(r.dice).toEqual([
+			// floored: it showed 3, it counted 10 — the two numbers the old string had to encode
+			{ sides: 20, value: 10, face: 3, sign: 1, detail: '3→10', role: DIE_ROLE.pool },
+			{ sides: 4, value: 3, face: 3, sign: -1, detail: '3', role: DIE_ROLE.bonus },
+		]);
+		expect(r.dice.reduce((n, d) => n + d.sign * d.value, 0) + r.mod).toBe(r.total);
+	});
+
+	it('renders a positive bonus die with its sign — the distinction the old formatter lost', () => {
+		const r = rollPool(
+			{ 20: 1 },
+			{ rng: rngSequence(0.5, 0.5), bonusDice: [{ sides: 4, count: 1, sign: 1 }] },
+		);
+		expect(r.expr).toBe('d20(11) + +d4(3)'); // a pool d4 would read `d4(3)`
+		expect(r.dice.map((d) => d.role)).toEqual([DIE_ROLE.pool, DIE_ROLE.bonus]);
+	});
+
+	it('leaves a roll that already has its dice exactly as it found it', () => {
+		const fresh = rollPool({ 8: 2 }, rngSequence(0.5, 0.5));
+		expect(rehydrateRoll(fresh)).toEqual(fresh);
+	});
+
+	it('fills the dice of a roll stored before they existed, from the string it did store', () => {
+		const stored = rehydrateRoll({ expr: 'd8(5) + d6(4) +3', total: 12 });
+		expect(stored.mod).toBe(3);
+		expect(stored.dice.map((d) => [d.sides, d.value])).toEqual([
+			[8, 5],
+			[6, 4],
+		]);
+	});
+
+	it('amends a roll through its dice, and the rendered string follows', () => {
+		// the kept d20 moves to `advantageRoll`, so it must leave BOTH the dice and their rendering
+		const start = rollPool({ 20: 1, 6: 1 }, { rng: rngSequence(0.3, 0.5), mod: 4 });
+		const out = amendWithAdvantage(start, () => 0.9);
+		expect(out?.dice.map((d) => d.sides)).toEqual([6]);
+		expect(out?.expr).toBe(`d6(4) +4`);
+		expect(out?.mod).toBe(4);
+	});
+});
+
+describe('parseLegacyExpr · advantage-only pool', () => {
 	it('still reads the modifier when the kept d20 lives outside expr', () => {
 		// an advantage roll's d20 is surfaced as `advantageRoll`, so expr is just the mod
 		const r = rollPool({ 20: 1 }, { rng: rngSequence(0.65, 0.3), mod: 5, advantage: 1 });
 		expect(r.expr).toBe(' +5');
-		expect(parseRollExpr(r.expr)).toEqual({ chips: [], mod: 5 });
+		expect(parseLegacyExpr(r.expr)).toEqual({ dice: [], mod: 5 });
 	});
 });
 
@@ -261,12 +324,10 @@ describe('parseRollExpr · advantage-only pool', () => {
  * that the kept die leaves `expr` so it can't render twice.
  */
 describe('amendWithAdvantage', () => {
-	/** A d20 roll as `rollPool` would have recorded it. */
-	const rolled = (expr: string, total: number, natural?: number): Rolled => ({
-		expr,
-		total,
-		...(natural !== undefined ? { natural } : {}),
-	});
+	/** A d20 roll as it comes back off DISK — an entry written before `Rolled` carried its dice, so
+	 *  the amend path is exercised against exactly the shape the legacy reader hands it. */
+	const rolled = (expr: string, total: number, natural?: number): Rolled =>
+		rehydrateRoll({ expr, total, ...(natural !== undefined ? { natural } : {}) });
 
 	it('keeps the fresh die when it beats the original, and raises the total by the difference', () => {
 		const out = amendWithAdvantage(rolled('d20(7) +4', 11, 7), () => 0.9); // → 19
@@ -285,8 +346,8 @@ describe('amendWithAdvantage', () => {
 
 	it('takes the kept d20 out of `expr` (it renders from advantageRoll — else it shows twice)', () => {
 		const out = amendWithAdvantage(rolled('d20(7) + d6(3) +4', 14, 7), () => 0.9);
-		expect(parseRollExpr(out?.expr ?? '').chips.map((c) => c.sides)).toEqual([6]);
-		expect(parseRollExpr(out?.expr ?? '').mod).toBe(4);
+		expect(out?.dice.map((d) => d.sides)).toEqual([6]);
+		expect(out?.mod).toBe(4);
 	});
 
 	it('compares what the dice CONTRIBUTE, so a min_die floor is not undone', () => {
@@ -298,7 +359,9 @@ describe('amendWithAdvantage', () => {
 
 	it('refuses a roll that two dice already decided', () => {
 		expect(
-			amendWithAdvantage({ expr: '+4', total: 18, advantageRoll: { kept: 14, dropped: 3 } }),
+			amendWithAdvantage(
+				rehydrateRoll({ expr: '+4', total: 18, advantageRoll: { kept: 14, dropped: 3 } }),
+			),
 		).toBeNull();
 	});
 
@@ -312,7 +375,7 @@ describe('amendWithAdvantage', () => {
  * numbers — a tie looks identical either way — and the roll row frames the pair green or red by it.
  */
 describe('advantageRoll.mode', () => {
-	const rolled = (expr: string, total: number): Rolled => ({ expr, total });
+	const rolled = (expr: string, total: number): Rolled => rehydrateRoll({ expr, total });
 
 	it('is +1 for advantage and −1 for disadvantage even when both dice tie', () => {
 		const tie = () => 0.5; // both d20 land on the same face
@@ -330,7 +393,7 @@ describe('advantageRoll.mode', () => {
  * rolled rather than drawing a new die, so the toggle can never manufacture a better result.
  */
 describe('flipAdvantage', () => {
-	const plain = (expr: string, total: number): Rolled => ({ expr, total });
+	const plain = (expr: string, total: number): Rolled => rehydrateRoll({ expr, total });
 
 	it('swaps which of the two dice counted, and moves the total with it', () => {
 		const advantaged = amendWithAdvantage(plain('d20(7) +4', 11), () => 0.9); // 19 kept
@@ -364,7 +427,7 @@ describe('flipAdvantage', () => {
  * a die, so a lap round the cycle can never improve a roll, and a mis-tap is always undoable.
  */
 describe('cycleAdvantage', () => {
-	const plain = (expr: string, total: number): Rolled => ({ expr, total });
+	const plain = (expr: string, total: number): Rolled => rehydrateRoll({ expr, total });
 
 	it('goes advantage → disadvantage → neither, and back to the roll as it landed', () => {
 		const start = plain('d20(7) + d6(3) +4', 14);
@@ -379,7 +442,8 @@ describe('cycleAdvantage', () => {
 		const none = cycleAdvantage(dis!);
 		expect(none?.advantageRoll).toBeUndefined();
 		expect(none?.total).toBe(14); // exactly the roll we started from
-		expect(parseRollExpr(none?.expr ?? '')).toEqual(parseRollExpr(start.expr));
+		expect(none?.dice).toEqual(start.dice);
+		expect(none?.expr).toBe(start.expr);
 	});
 
 	it('undoes a NATIVE disadvantage back to the die that was rolled first', () => {
@@ -391,11 +455,11 @@ describe('cycleAdvantage', () => {
 	});
 
 	it('an entry with no recorded original flips instead of getting stuck', () => {
-		const legacy: Rolled = {
+		const legacy: Rolled = rehydrateRoll({
 			expr: '+4',
 			total: 7,
 			advantageRoll: { kept: 3, dropped: 18, mode: -1 },
-		};
+		});
 		expect(cycleAdvantage(legacy)?.advantageRoll).toMatchObject({ kept: 18, mode: 1 });
 	});
 });

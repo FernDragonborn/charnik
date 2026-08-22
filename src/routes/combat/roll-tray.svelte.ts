@@ -225,9 +225,9 @@ export class RollTray {
 
 	/** A no-roll cast (buff/utility): a bare log marker, not a rolled total. */
 	logMarker = (label: string) => {
-		this.log = [{ label, expr: '', total: NaN, at: Date.now() }, ...this.log].slice(
-			0,
-			ROLL_LOG_MAX,
-		);
+		this.log = [
+			{ label, expr: '', dice: [], mod: 0, total: NaN, at: Date.now() },
+			...this.log,
+		].slice(0, ROLL_LOG_MAX);
 	};
 }

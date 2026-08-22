@@ -4,17 +4,23 @@
  */
 import { describe, it, expect } from 'vitest';
 import { rollToastModel } from './roll-toast';
-import type { RollLogEntry } from '$lib/combat/roll';
+import { rehydrateLogEntry, type RollLogEntry } from '$lib/combat/roll';
 
-const check: RollLogEntry = { label: 'Perception', expr: 'd20(14) +4', total: 18, natural: 14 };
-
-const hit = (natural: number, dmg = 9): RollLogEntry => ({
-	label: 'Longsword',
-	expr: `d20(${natural}) +7`,
-	total: natural + 7,
-	natural,
-	damage: [{ type: 'slashing', expr: 'd8(6) +3', total: dmg }],
+const check: RollLogEntry = rehydrateLogEntry({
+	label: 'Perception',
+	expr: 'd20(14) +4',
+	total: 18,
+	natural: 14,
 });
+
+const hit = (natural: number, dmg = 9): RollLogEntry =>
+	rehydrateLogEntry({
+		label: 'Longsword',
+		expr: `d20(${natural}) +7`,
+		total: natural + 7,
+		natural,
+		damage: [{ type: 'slashing', expr: 'd8(6) +3', total: dmg }],
+	});
 
 describe('rollToastModel', () => {
 	it('a roll with no damage has no damage half, and the big number is the roll', () => {
@@ -26,12 +32,14 @@ describe('rollToastModel', () => {
 	});
 
 	it('puts the kept advantage d20 back at the front and keeps the dropped one', () => {
-		const m = rollToastModel({
-			label: 'Longsword',
-			expr: ' +5',
-			total: 19,
-			advantageRoll: { kept: 14, dropped: 7 },
-		});
+		const m = rollToastModel(
+			rehydrateLogEntry({
+				label: 'Longsword',
+				expr: ' +5',
+				total: 19,
+				advantageRoll: { kept: 14, dropped: 7 },
+			}),
+		);
 		expect(m.attacks[0]?.chips[0]).toMatchObject({ sides: 20, value: 14 });
 		expect(m.attacks[0]?.dropped).toBe(7);
 		expect(m.attacks[0]?.mod).toBe(5);
@@ -89,11 +97,29 @@ describe('rollToastModel', () => {
 				natural: 9,
 				damage: [{ type: 'radiant', expr: 'd4(2)', total: 2 }],
 			},
-		];
+		].map(rehydrateLogEntry);
 		expect(rollToastModel(volley).byType.map((t) => t.type)).toEqual(['bludgeoning', 'radiant']);
 	});
 
 	it('a single roll gets no footer — the big number already is the sum', () => {
 		expect(rollToastModel(hit(14)).byType).toEqual([]);
+	});
+
+	// a line from before `Rolled` carried its dice stores them nowhere but the rendered string — for
+	// the row AND for every damage part under it. Rehydrating only the row would give a reloaded
+	// attack its d20 back while its damage pills stayed empty.
+	it('a roll read back off disk gets its damage dice back, not just the to-hit', () => {
+		const m = rollToastModel(
+			rehydrateLogEntry({
+				label: 'Greataxe',
+				expr: 'd20(14) +6',
+				total: 20,
+				natural: 14,
+				damage: [{ type: 'slashing', expr: 'd12(7) +3', total: 10 }],
+			}),
+		);
+		expect(m.attacks[0]?.chips.map((c) => c.sides)).toEqual([20]);
+		expect(m.attacks[0]?.damage[0]?.chips.map((c) => c.value)).toEqual([7]);
+		expect(m.attacks[0]?.damage[0]?.mod).toBe(3);
 	});
 });

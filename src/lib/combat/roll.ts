@@ -3,7 +3,15 @@
  * advantage math, pip click-to-set, and the small roll-UI constants. Pure — the caller gates on
  * the effects-auto toggle. Split out of the old combat/helpers.ts junk-drawer.
  */
-import { parseDiceTerm, rollPool, type BonusDie, type DieMods, type Rolled } from '$lib/rules/dice';
+import {
+	parseDiceTerm,
+	rehydrateRoll,
+	rollPool,
+	type BonusDie,
+	type DieMods,
+	type Rolled,
+	type StoredRoll,
+} from '$lib/rules/dice';
 import { matchesTarget, type EffectFacts } from '$lib/effects/apply';
 import type { RollMod } from '$lib/effects/facts';
 import { signed } from '$lib/util/format';
@@ -57,6 +65,25 @@ export type RollLogEntry = Rolled & {
 	 *  which is part of how the two records drifted apart; it is also what an amendment matches on to
 	 *  rewrite its own line. Absent only on a view-model literal that is toasted but never logged. */
 	at?: number;
+};
+
+/** A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only
+ *  the rendered `expr`, and so does every damage part under it. */
+export type StoredRollLogEntry = Omit<RollLogEntry, 'dice' | 'mod' | 'damage'> &
+	Partial<Pick<Rolled, 'dice' | 'mod'>> & { damage?: (StoredRoll & { type: string })[] };
+
+/** A stored row → a row with dice, damage parts included. `rehydrateRoll` covers ONE roll; an attack
+ *  is a roll plus N damage rolls, and rehydrating only the top one would give the row back its d20
+ *  while its damage chips stayed empty. The seam is here rather than in the roller because `damage`
+ *  is a combat-layer fact and `rules/dice` must not learn about it. */
+export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => {
+	// `damage` comes off FIRST: rehydrating the row would otherwise carry the stored (dice-less) parts
+	// through untouched whenever there are none to replace them
+	const { damage, ...roll } = e;
+	return {
+		...rehydrateRoll(roll),
+		...(damage ? { damage: damage.map((d) => rehydrateRoll(d)) } : {}),
+	};
 };
 
 /** Combined total across every typed damage part. */

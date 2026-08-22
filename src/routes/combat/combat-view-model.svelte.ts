@@ -35,6 +35,7 @@ import {
 	snapshotCharacterOnLaunch,
 } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
+import { rehydrateLogEntry } from '$lib/combat/roll';
 import type { RollLogEntry } from '$lib/combat/helpers';
 import { openDiceTray } from '$lib/dice/tray.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
@@ -267,11 +268,14 @@ class CombatVM {
 		// restore the persisted roll history so the log isn't empty after a reload (B4)
 		const hist = await readLog(getUserStorage(), c.id);
 		// a line written since the record was unified carries the WHOLE roll; an older one carries only
-		// the flattened summary, which is all there ever was in it (ROLLER-PLAN finding G)
+		// the flattened summary, which is all there ever was in it (ROLLER-PLAN finding G). Either way
+		// it goes through `rehydrateRoll`, which fills the per-die record from the rendered `expr` when
+		// the line predates it — the one place the legacy string is still read.
 		this.tray.seed(
-			hist.map(
-				(le) =>
+			hist.map((le) =>
+				rehydrateLogEntry(
 					le.roll ?? { label: le.label, expr: le.detail ?? '', total: le.result ?? NaN, at: le.t },
+				),
 			),
 		);
 	};

@@ -9,15 +9,18 @@
 	import { cycleAdvantage } from '$lib/rules/dice';
 	import { toast } from 'svelte-sonner';
 	import type { RollLogEntry } from '$lib/combat/helpers';
+	import { rehydrateLogEntry, type StoredRollLogEntry } from '$lib/combat/roll';
 
 	// a live entry the controls actually act on, so the preview exercises the real amend path
-	let live = $state<RollLogEntry>({
-		label: 'Greataxe',
-		expr: 'd20(9) +6',
-		total: 15,
-		natural: 9,
-		damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }],
-	});
+	let live = $state<RollLogEntry>(
+		rehydrateLogEntry({
+			label: 'Greataxe',
+			expr: 'd20(9) +6',
+			total: 15,
+			natural: 9,
+			damage: [{ type: 'slashing', expr: 'd12(2) +3', total: 5 }],
+		}),
+	);
 	// the same one call the combat VM makes — the preview must exercise the real cycle, not a copy
 	const onAdvantage = () => {
 		const revised = cycleAdvantage(live);
@@ -35,9 +38,11 @@
 		run: () => toast('(preview) the damage reroll ran'),
 	};
 
-	// hand-built entries in exactly the shape pushRoll stores (expr strings straight from rollPool);
-	// an array of them is one action that resolved several attacks (Extra Attack / Flurry of Blows)
-	const CASES: { title: string; entry: RollLogEntry | RollLogEntry[] }[] = [
+	// hand-built entries, written as `expr` strings because that is what reads clearly in a fixture
+	// ladder — `rehydrateLogEntry` turns each into the structured record a live roll now produces, so
+	// the preview renders through exactly the path the app does (and exercises the legacy reader while
+	// it's at it). An array is one action that resolved several attacks (Extra Attack / Flurry).
+	const CASES: { title: string; entry: StoredRollLogEntry | StoredRollLogEntry[] }[] = [
 		{
 			title: 'one roll, no damage — the toast has no damage half at all',
 			entry: { label: 'Perception', expr: 'd20(14) +4', total: 18 },
@@ -155,6 +160,11 @@
 			},
 		},
 	];
+
+	const cases = CASES.map((c) => ({
+		title: c.title,
+		entry: Array.isArray(c.entry) ? c.entry.map(rehydrateLogEntry) : rehydrateLogEntry(c.entry),
+	}));
 </script>
 
 <div class="page">
@@ -185,7 +195,7 @@
 			shows its part total. The card above and the log keep every die.
 		</div>
 		<div class="strips">
-			{#each CASES as c, i (i)}
+			{#each cases as c, i (i)}
 				<div class="strip">
 					<RollRow model={rollToastModel(c.entry)} layout={ROLL_LAYOUT.strip} />
 				</div>
@@ -194,7 +204,7 @@
 	</div>
 
 	<div class="ladder">
-		{#each CASES as c, i (i)}
+		{#each cases as c, i (i)}
 			<div class="case">
 				<div class="cap">{c.title}</div>
 				<div class="slot"><RollToast model={rollToastModel(c.entry)} /></div>

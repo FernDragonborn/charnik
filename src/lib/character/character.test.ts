@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
-import type { RollLogEntry } from '../combat/roll';
+import { rehydrateLogEntry, type RollLogEntry } from '../combat/roll';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { CHARACTER_SCHEMA_VERSION } from '../schema/version';
 import {
@@ -230,7 +230,7 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 
 	it('carries the WHOLE roll to disk, and still reads a line written before it did', async () => {
 		const s = new MemoryStorage();
-		const roll: RollLogEntry = {
+		const roll: RollLogEntry = rehydrateLogEntry({
 			label: 'Greataxe',
 			expr: 'd20(14) +6',
 			total: 20,
@@ -239,7 +239,7 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 			damage: [{ type: 'slashing', expr: '1d12(7) +3', total: 10 }],
 			advantageRoll: { kept: 14, dropped: 3, mode: 1 },
 			note: 'advantage after the roll',
-		};
+		});
 		await appendLog(s, 'mirt', logLineFor(roll));
 		// a line from before the record was unified: the flattened summary is all it ever had
 		await s.write(
@@ -260,9 +260,18 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 
 	it('an amendment REPLACES its own line instead of appending a second roll', async () => {
 		const s = new MemoryStorage();
-		const rolled: RollLogEntry = { label: 'Stealth', expr: 'd20(4) +7', total: 11, at: 500 };
+		const rolled: RollLogEntry = rehydrateLogEntry({
+			label: 'Stealth',
+			expr: 'd20(4) +7',
+			total: 11,
+			at: 500,
+		});
 		await appendLog(s, 'mirt', logLineFor(rolled));
-		await appendLog(s, 'mirt', logLineFor({ label: 'Other', expr: 'd20(9)', total: 9, at: 600 }));
+		await appendLog(
+			s,
+			'mirt',
+			logLineFor(rehydrateLogEntry({ label: 'Other', expr: 'd20(9)', total: 9, at: 600 })),
+		);
 
 		const amended: RollLogEntry = {
 			...rolled,
@@ -275,7 +284,11 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 		expect(log).toHaveLength(2); // not three — the same roll, decided differently
 		expect(log.find((e) => e.label === 'Stealth')?.roll?.total).toBe(18);
 		// a roll that has already rotated off disk is a no-op, never an append
-		await reviseLog(s, 'mirt', logLineFor({ label: 'Gone', expr: '', total: 0, at: 1 }));
+		await reviseLog(
+			s,
+			'mirt',
+			logLineFor(rehydrateLogEntry({ label: 'Gone', expr: '', total: 0, at: 1 })),
+		);
 		expect((await readLog(s, 'mirt')).length).toBe(2);
 	});
 

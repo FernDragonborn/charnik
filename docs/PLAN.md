@@ -1226,12 +1226,17 @@ holds the done-work log; these are the OPEN tails it carried):**
   structure and buys none of it.
 - [~] **ROLLER-N · one roller that fires N independent sub-rolls (promoted to its own item 2026-08-09;
   working ledger + the 2026-08-10 audit behind it → [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md)).**
-  **Slices 1 and 2 are done (2026-08-21): UBUG-22, then the ONE record** — the persisted line now
+  **Slices 1–3 are done. 1 and 2 (2026-08-21): UBUG-22, then the ONE record** — the persisted line now
   carries the whole roll (damage, the advantage pair, the note), an amendment rewrites its own line
   instead of dying with the session, and old lines still load. That was the "do this EARLY" slice,
-  because every slice after it makes the in-session record richer. Slices 3–6 (structured result,
-  advantage as recorded dice, sub-rolls, crits) are what remains, and the sub-roll one is what
-  `UBUG-21` needs to close for real.
+  because every slice after it makes the in-session record richer.
+  **Slice 3 (2026-08-22): the roller answers with DICE, not with prose.** `Rolled` carries
+  `dice: RolledDie[]` + `mod`; `expr` is now a rendering of them, read only by `parseLegacyExpr` for
+  lines already on disk, behind one `rehydrateRoll` / `rehydrateLogEntry` seam. The house contract
+  ("value + provenance, never a bare number") finally covers the one computation that answered with a
+  string, and the toast stopped parsing a format we wrote ourselves. Slices 4–6 (advantage as
+  recorded dice, sub-rolls, crits) are what remains, and the sub-roll one is what `UBUG-21` needs to
+  close for real.
   Was filed as a sub-tail of UPCAST (`UPCAST-ROLLER`, was D14) — the wrong home, because upcast is only
   one of its callers. **The capability:** N sub-rolls from one action, each its OWN to-hit + damage (own
   advantage, own crit, own target), rendered as one grouped result. **Callers, all blocked on this and

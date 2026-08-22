@@ -602,6 +602,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const dealsDamage` — Does this set of parts actually deal damage?
 - `function rollDamageParts` — Roll each damage part into a `TypedRoll`, preserving order (primary part first).
 - `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the per-type dama…
+- `type StoredRollLogEntry` — A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only * the rendered `expr…
+- `const rehydrateLogEntry` — A stored row → a row with dice, damage parts included.
 - `const damageTotal` — Combined total across every typed damage part.
 - `const poolExpr` — A dice pool + modifier as it READS: "1d12 + 3", "2d6", "+4" (a flat-only pool, e.g.
 - `type ActionSlot` — The three action-economy slots a turn tracks.
@@ -1144,7 +1146,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type Rng` — Injectable randomness; defaults to Math.random, seeded in tests.
 - `interface BonusDie` — A signed bonus/penalty die a roll gains from an effect (Bless +1d4 → {sides:4,count:1,sign:+1}).
-- `interface Rolled` — Result of a roll: the total, a human-readable breakdown, and the two d20 if adv/disadv applied.
+- `const DIE_ROLE` — What a die was drawn FOR.
+- `type DieRole`
+- `interface RolledDie` — * ONE die, as it was actually rolled.
+- `interface Rolled` — Result of a roll: the total, the dice it was made of, and the two d20 if adv/disadv applied.
 - `interface DieMods` — Roll-manipulation effects a roll carries (L1 `reroll:`/`min_die:` facts — the roll path is * their consumer).
 - `const MAX_DICE_PER_TERM` — Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted * formula (shared cont…
 - `const MAX_DIE_SIDES`
@@ -1154,8 +1159,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function formatDicePool` — Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first.
 - `interface RollPoolOptions` — Everything a pool roll can be given besides the dice themselves.
 - `function rollPool` — * Roll a dice pool + flat mod.
-- `interface DieChip` — One die as the UI shows it: the face it ended on, how many sides it had, its sign (a Bane die is * −1d4) and the raw …
-- `function parseRollExpr` — Read an `expr` back into per-die chips + the trailing flat modifier.
+- `function parseLegacyExpr` — * Read an `expr` back into dice + the trailing flat modifier.
+- `type StoredRoll` — A roll as it may come back off disk: everything a `Rolled` has, except that the per-die record * may be missing — tha…
+- `function rehydrateRoll` — * A stored roll → a roll with its dice, filling them from `expr` when the entry predates them.
 - `function amendWithAdvantage` — * Apply advantage to a roll that ALREADY happened: roll one more d20 and keep the better of the two.
 - `function flipAdvantage` — * Flip a roll that two d20 already decided: what was kept is dropped and what was dropped is kept.
 - `function cycleAdvantage` — * One tap on the d20, cycling **advantage → disadvantage → neither**.
@@ -1351,4 +1357,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 785 exports across 113 modules · 44 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 791 exports across 113 modules · 44 duplicate suspects._

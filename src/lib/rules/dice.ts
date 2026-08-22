@@ -1,9 +1,14 @@
 /*
- * The ONE dice roller. Pure: no Svelte, no toast, no logging — it returns {total, expr,
- * advantageRoll?} so every caller (combat tap-roll, the custom roll tray, compendium HP/damage)
- * shares identical mechanics and it's unit-testable with a seeded RNG. Before this, three copies of
- * the roll loop had drifted (the compendium one only rolled the first NdM group). A single roll path
- * is also a correctness property: advantage, bonus dice and formatting can't diverge across sites.
+ * The ONE dice roller. Pure: no Svelte, no toast, no logging — every caller (combat tap-roll, the
+ * custom roll tray, compendium HP/damage) shares identical mechanics and it's unit-testable with a
+ * seeded RNG. Before this, three copies of the roll loop had drifted (the compendium one only rolled
+ * the first NdM group). A single roll path is also a correctness property: advantage, bonus dice and
+ * rendering can't diverge across sites.
+ *
+ * It answers with WHAT HAPPENED, not with how to show it: `{total, dice, mod, advantageRoll?}`, one
+ * `RolledDie` per die. `expr` is a rendering of that, kept only because entries already in
+ * `log.jsonl` have nothing else — it used to BE the record, and the display parsed it back with a
+ * regex to get its chips (ROLLER-PLAN finding A).
  */
 
 /** Injectable randomness; defaults to Math.random, seeded in tests. Returns [0,1). */
@@ -31,10 +36,51 @@ interface AdvantageRoll {
 	original?: number;
 }
 
-/** Result of a roll: the total, a human-readable breakdown, and the two d20 if adv/disadv applied. */
+/** What a die was drawn FOR. Rendering reads it (a bonus die writes its sign, a pool die doesn't),
+ *  and it is where "these are the doubled ones" will live when crits land — a property of the die
+ *  rather than a field beside it. A named member, not a bare string (AI-CONVENTIONS §1.5). */
+export const DIE_ROLE = {
+	/** The roll's own dice — the weapon's d8, the check's d20. */
+	pool: 'pool',
+	/** A signed die an effect added: Bless +1d4, Bane −1d4. */
+	bonus: 'bonus',
+} as const;
+export type DieRole = (typeof DIE_ROLE)[keyof typeof DIE_ROLE];
+
+/**
+ * ONE die, as it was actually rolled. This is the roll's record — the house contract is "value +
+ * provenance, never a bare number" (CLAUDE.md), and until this existed the only per-die record was
+ * the rendered `expr` string, which the display then parsed back with a regex (ROLLER-PLAN finding A).
+ */
+export interface RolledDie {
+	sides: number;
+	/** What the die counted for, BEFORE its sign — post-reroll and post-`min_die` floor. A Bane die
+	 *  that shows 3 has `value: 3, sign: -1` and takes 3 off the total. */
+	value: number;
+	/** The face it ended on: after a reroll, BEFORE a floor. A nat 1 that Reliable Talent treats as
+	 *  10 is still a natural 1, which is why this is not the same number as `value`. */
+	face: number;
+	sign: 1 | -1;
+	/** The raw story of this die — "4", "1↻4" (rerolled), "3→10" (floored) — so a hover can explain
+	 *  a value that isn't just the face. */
+	detail: string;
+	role: DieRole;
+	/** Where the die came from ("Bless", "Greataxe"). The provenance a string could never hold; a
+	 *  roll site fills it when it knows, so it stays optional. */
+	source?: string;
+}
+
+/** Result of a roll: the total, the dice it was made of, and the two d20 if adv/disadv applied. */
 export interface Rolled {
 	total: number;
-	/** e.g. "d8(5) + d6(2) +3"; the bonus-die parts carry their own sign. */
+	/** Every die the roll drew, in the order it was rolled. THE record — read this, not `expr`. The
+	 *  adv/disadv d20 is not in here; it lives in `advantageRoll` (slice 4 folds the two together). */
+	dice: RolledDie[];
+	/** The flat modifier added after the dice. */
+	mod: number;
+	/** e.g. "d8(5) + d6(2) +3" — a RENDERING of `dice` + `mod`, kept because it is what entries
+	 *  already in `log.jsonl` carry and what an older build reads. Nothing new should read it:
+	 *  `parseLegacyExpr` exists for those old entries and for nothing else. */
 	expr: string;
 	/** Present only when an advantage/disadvantage d20 was rolled. */
 	advantageRoll?: AdvantageRoll;
@@ -130,23 +176,23 @@ interface RollOptions extends DieMods {
 	rng?: Rng;
 }
 
-/** The rolled main pool: running total, rendered parts, and the adv/natural metadata. */
+/** The rolled main pool: running total, the dice themselves, and the adv/natural metadata. */
 interface PoolResult {
 	total: number;
-	parts: string[];
+	dice: RolledDie[];
 	advantageRoll?: AdvantageRoll;
 	natural?: number;
 }
 
 /** Roll the main pool (all NdM groups, highest die first). The FIRST d20 gets advantage/disadvantage
  *  — roll two, keep the winner, surface the loser as `advantageRoll`. `rollOne` carries the pool's
- *  reroll/min_die effects. Split out of `rollPool` (the bonus-dice/mod/formatting stays there). */
+ *  reroll/min_die effects. Split out of `rollPool` (the bonus-dice/mod/rendering stays there). */
 function rollPoolDice(
 	dice: Record<number, number>,
 	advantage: number,
-	rollOne: (sides: number) => { v: number; face: number; label: string },
+	rollOne: (sides: number) => RolledDie,
 ): PoolResult {
-	const parts: string[] = [];
+	const rolled: RolledDie[] = [];
 	let total = 0;
 	let advantageRoll: AdvantageRoll | undefined;
 	let natural: number | undefined;
@@ -157,26 +203,26 @@ function rollPoolDice(
 			if (sides === 20 && advantage !== 0 && k === 0) {
 				// roll TWO d20 and keep the winner; the loser is surfaced (rendered struck through)
 				const r2 = rollOne(20);
-				const win = advantage > 0 ? Math.max(r.v, r2.v) : Math.min(r.v, r2.v);
-				const winIsFirst = win === r.v;
+				const win = advantage > 0 ? Math.max(r.value, r2.value) : Math.min(r.value, r2.value);
+				const winIsFirst = win === r.value;
 				advantageRoll = {
 					kept: win,
-					dropped: winIsFirst ? r2.v : r.v,
+					dropped: winIsFirst ? r2.value : r.value,
 					mode: advantage > 0 ? 1 : -1,
-					original: r.v,
+					original: r.value,
 				};
 				natural = winIsFirst ? r.face : r2.face; // the kept die's face (pre-floor)
 				total += win;
-				continue; // the advantage detail renders the d20, don't duplicate it in `parts`
+				continue; // the pair renders from `advantageRoll`, don't duplicate it in the dice
 			}
 			if (sides === 20 && natural === undefined) natural = r.face;
-			total += r.v;
-			parts.push(r.label);
+			total += r.value;
+			rolled.push(r);
 		}
 	}
 	return {
 		total,
-		parts,
+		dice: rolled,
 		...(advantageRoll !== undefined ? { advantageRoll } : {}),
 		...(natural !== undefined ? { natural } : {}),
 	};
@@ -206,10 +252,10 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 	const mod = o.mod ?? 0;
 	const advantage = o.advantage ?? 0;
 	const bonusDice = o.bonusDice ?? [];
-	// one pool die with reroll/floor applied; `label` spells out what happened (d6(1↻4), d20(3→10)).
-	// `face` is the actual die result AFTER a reroll but BEFORE a min_die floor — a nat-1/nat-20 is
-	// judged by what the die shows (Reliable Talent's "treat as 10" doesn't erase a natural 1).
-	const rollOne = (sides: number): { v: number; face: number; label: string } => {
+	// one pool die with reroll/floor applied; `detail` spells out what happened (1↻4, 3→10). `face` is
+	// the actual die result AFTER a reroll but BEFORE a min_die floor — a nat-1/nat-20 is judged by
+	// what the die shows (Reliable Talent's "treat as 10" doesn't erase a natural 1).
+	const rollOne = (sides: number): RolledDie => {
 		let v = rollDie(sides, rng);
 		let detail = `${v}`;
 		if (o.reroll !== undefined && v <= o.reroll) {
@@ -221,66 +267,96 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 			v = o.minDie;
 			detail += `→${v}`;
 		}
-		return { v, face, label: `d${sides}(${detail})` };
+		return { sides, value: v, face, sign: 1, detail, role: DIE_ROLE.pool };
 	};
 	const pool = rollPoolDice(dice, advantage, rollOne);
-	const parts = pool.parts;
+	const rolled = pool.dice;
 	let total = pool.total;
 	for (const b of bonusDice)
 		for (let k = 0; k < b.count; k++) {
 			const v = rollDie(b.sides, rng);
 			total += b.sign * v;
-			parts.push(`${b.sign < 0 ? '−' : '+'}d${b.sides}(${v})`);
+			rolled.push({
+				sides: b.sides,
+				value: v,
+				face: v,
+				sign: b.sign < 0 ? -1 : 1,
+				detail: `${v}`,
+				role: DIE_ROLE.bonus,
+			});
 		}
 	total += mod;
-	const expr = parts.join(' + ') + (mod ? ` ${formatModifier(mod)}` : '');
 	return {
 		total,
-		expr,
+		dice: rolled,
+		mod,
+		expr: formatExpr(rolled, mod),
 		...(pool.advantageRoll !== undefined ? { advantageRoll: pool.advantageRoll } : {}),
 		...(pool.natural !== undefined ? { natural: pool.natural } : {}),
 	};
 }
 
-/** One die as the UI shows it: the face it ended on, how many sides it had, its sign (a Bane die is
- *  −1d4) and the raw detail ("1↻4", "3→10") so a reroll/floor is still explainable on hover. */
-export interface DieChip {
-	sides: number;
-	value: number;
-	sign: number;
-	detail: string;
-}
-
-/** Read an `expr` back into per-die chips + the trailing flat modifier. The roll toast/log render one
- *  chip per die, and `expr` is the only per-die record that survives into a persisted `log.jsonl`
- *  entry — so the display parses its own format rather than the roller carrying a second payload.
- *  Inverse of the `expr` built by `rollPool`; the adv/disadv d20 is NOT in here (it lives in
- *  `advantageRoll`). */
-export function parseRollExpr(expr: string): { chips: DieChip[]; mod: number } {
-	const chips: DieChip[] = [];
+/**
+ * Read an `expr` back into dice + the trailing flat modifier. **LEGACY ONLY.** `expr` used to be the
+ * single per-die record, so a `log.jsonl` line written before `Rolled.dice` existed carries the dice
+ * nowhere else — this is how those lines are still readable, and it is the only reason it survives
+ * (ROLLER-PLAN, "explicitly not wanted": a formatted string as the record). Nothing that rolls today
+ * should call it; go through `rehydrateRoll` at the point a stored roll is read.
+ *
+ * What it can and cannot recover: a floored die ("3→10") gives back both its face and its value; a
+ * rerolled one ("1↻4") only the value it kept, since the discarded face is not the natural either
+ * way. A positive bonus die is indistinguishable from a pool die in this format, so everything
+ * unsigned comes back as `pool` — the sign is the only role marker the old string ever had.
+ */
+export function parseLegacyExpr(expr: string): { dice: RolledDie[]; mod: number } {
+	const dice: RolledDie[] = [];
 	for (const m of expr.matchAll(/([+−])?d(\d+)\(([^)]*)\)/g)) {
 		const detail = m[3] ?? '';
-		const faces = detail.match(/\d+/g) ?? [];
-		chips.push({
+		const faces = (detail.match(/\d+/g) ?? []).map(Number);
+		// the LAST number is what the die finally counted as (post reroll ↻ and post floor →); a floor
+		// is the one step that changes the value, so the face is the number before the arrow
+		const value = faces[faces.length - 1] ?? 0;
+		const floored = detail.includes('→') && faces.length > 1;
+		const sign = m[1] === '−' ? -1 : 1;
+		dice.push({
 			sides: Number(m[2]),
-			// the LAST number is what the die finally counted as (post reroll ↻ and post floor →)
-			value: Number(faces[faces.length - 1] ?? 0),
-			sign: m[1] === '−' ? -1 : 1,
+			value,
+			face: floored ? (faces[faces.length - 2] ?? value) : value,
+			sign,
 			detail,
+			role: sign < 0 || m[1] === '+' ? DIE_ROLE.bonus : DIE_ROLE.pool,
 		});
 	}
 	// no die ever ends in a bare signed number (they all close with `)`), so the tail is the flat mod
 	const mod = /([+−])(\d+)\s*$/.exec(expr);
-	return { chips, mod: mod ? (mod[1] === '−' ? -1 : 1) * Number(mod[2]) : 0 };
+	return { dice, mod: mod ? (mod[1] === '−' ? -1 : 1) * Number(mod[2]) : 0 };
 }
 
-/** Chips + flat mod → an `expr`, the inverse of what `rollPool` joins. Not byte-identical to the
- *  original for a POSITIVE bonus die (the roller writes `+d4(3)`, this writes `d4(3)`) because the
- *  parse can't tell a pool die from one — but it round-trips through `parseRollExpr` to the same
- *  chips, which is all `expr` is for (the display parses its own format). */
-const formatExpr = (chips: DieChip[], mod: number): string =>
-	chips.map((c) => `${c.sign < 0 ? '−' : ''}d${c.sides}(${c.detail})`).join(' + ') +
-	(mod ? ` ${formatModifier(mod)}` : '');
+/** Dice + flat mod → the `expr` string. Now a pure RENDERING of the record rather than the record
+ *  itself; `role` is what makes it exact, since a positive bonus die writes its `+` and a pool die
+ *  does not — the distinction the old chip-based formatter documented that it could not keep. */
+const formatExpr = (dice: RolledDie[], mod: number): string =>
+	dice
+		.map(
+			(d) => `${d.sign < 0 ? '−' : d.role === DIE_ROLE.bonus ? '+' : ''}d${d.sides}(${d.detail})`,
+		)
+		.join(' + ') + (mod ? ` ${formatModifier(mod)}` : '');
+
+/** A roll as it may come back off disk: everything a `Rolled` has, except that the per-die record
+ *  may be missing — that is exactly what a `log.jsonl` line written before it existed looks like. */
+export type StoredRoll = Omit<Rolled, 'dice' | 'mod'> & Partial<Pick<Rolled, 'dice' | 'mod'>>;
+
+/**
+ * A stored roll → a roll with its dice, filling them from `expr` when the entry predates them.
+ * The ONE legacy seam: every reader of a persisted roll goes through here, so nothing downstream has
+ * to know that two shapes ever existed. A roll that already carries dice is returned untouched.
+ */
+export function rehydrateRoll<T extends StoredRoll>(roll: T): Omit<T, 'dice' | 'mod'> & Rolled {
+	const { dice, mod } = roll.dice
+		? { dice: roll.dice, mod: roll.mod ?? 0 }
+		: parseLegacyExpr(roll.expr);
+	return { ...roll, dice, mod };
+}
 
 /**
  * Apply advantage to a roll that ALREADY happened: roll one more d20 and keep the better of the two.
@@ -298,23 +374,23 @@ const formatExpr = (chips: DieChip[], mod: number): string =>
  */
 export function amendWithAdvantage<T extends Rolled>(r: T, rng: Rng = Math.random): T | null {
 	if (r.advantageRoll) return null;
-	const { chips, mod } = parseRollExpr(r.expr);
-	const index = chips.findIndex((c) => c.sides === 20 && c.sign > 0);
-	const d20 = chips[index];
+	const index = r.dice.findIndex((d) => d.sides === 20 && d.sign > 0);
+	const d20 = r.dice[index];
 	if (!d20) return null;
 	const fresh = rollDie(20, rng);
 	const keptIsFresh = fresh > d20.value;
 	const kept = keptIsFresh ? fresh : d20.value;
+	// the kept d20 renders from `advantageRoll`, so it leaves the dice or it would show twice
+	const dice = r.dice.filter((_, k) => k !== index);
 	return {
 		...r,
 		total: r.total - d20.value + kept,
-		// the kept d20 renders from `advantageRoll`, so it must leave `expr` or it would show twice
-		expr: formatExpr(
-			chips.filter((_, k) => k !== index),
-			mod,
-		),
+		dice,
+		expr: formatExpr(dice, r.mod),
 		advantageRoll: { kept, dropped: keptIsFresh ? d20.value : fresh, mode: 1, original: d20.value },
-		natural: keptIsFresh ? fresh : (r.natural ?? d20.value),
+		// the die's FACE, not its value: a d20 floored to 10 by Reliable Talent is still a natural 1.
+		// The string this used to read back could not tell those apart and fell back to the value.
+		natural: keptIsFresh ? fresh : (r.natural ?? d20.face),
 	};
 }
 
@@ -352,13 +428,21 @@ export function flipAdvantage<T extends Rolled>(r: T): T | null {
 function clearAdvantage<T extends Rolled>(r: T): T | null {
 	const adv = r.advantageRoll;
 	if (!adv || adv.original === undefined) return null;
-	const { chips, mod } = parseRollExpr(r.expr);
-	const d20: DieChip = { sides: 20, value: adv.original, sign: 1, detail: `${adv.original}` };
+	const d20: RolledDie = {
+		sides: 20,
+		value: adv.original,
+		face: adv.original,
+		sign: 1,
+		detail: `${adv.original}`,
+		role: DIE_ROLE.pool,
+	};
+	const dice = [d20, ...r.dice];
 	const { advantageRoll: _dropped, ...rest } = r;
 	return {
 		...(rest as T),
 		total: r.total - adv.kept + adv.original,
-		expr: formatExpr([d20, ...chips], mod),
+		dice,
+		expr: formatExpr(dice, r.mod),
 		natural: adv.original,
 	};
 }

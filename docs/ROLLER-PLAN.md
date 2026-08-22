@@ -40,7 +40,11 @@ single roll path itself, which exists because three copies had already drifted.
 
 **Decision: the roller returns structured dice, and the string becomes a rendering of them, not the
 record.** A rendered `expr` may stay for backwards compatibility with already-persisted entries;
-nothing new should read it.
+nothing new should read it. **SHIPPED 2026-08-22 (slice 3).** Every consequence listed above is
+closed except the last: the toast no longer parses a string, the format is no longer a versionless
+persisted schema (the dice are), a die's role is expressible, and the amend path is dice surgery
+rather than string surgery. WHICH EFFECT contributed a die is the one that stays open — `source` is
+on `RolledDie` and no roll site fills it yet.
 
 ### B · Crits do not exist
 
@@ -307,9 +311,26 @@ case" should be refused: ROLLER-N needs exactly two levels and nobody has asked 
    is not a new write pattern. A roll that has rotated off disk is a silent no-op, never an append.
    **Verified live** (web build, IndexedDB): a Greataxe attack survives a reload with its damage AND
    its disadvantage pair intact — before, the reloaded log had a label and a total and nothing else.
-3. `[ ]` **Structured result.** `Rolled` carries dice, not prose: per-die `{sides, value, face,
-   detail, source?}`. Keep emitting `expr` as a rendered view for entries already on disk; nothing
-   new reads it. `parseRollExpr` survives only as a **legacy log reader** and is documented as such.
+3. `[x]` **Structured result — DONE 2026-08-22.** `Rolled` carries `dice: RolledDie[]` + `mod`, and
+   the roller answers with what happened instead of with a rendering of it. Each die is
+   `{sides, value, face, sign, detail, role, source?}`.
+   **`role` was added to the sketched shape, and it earns its place twice.** It is what makes `expr`
+   an EXACT rendering — a positive bonus die writes its `+`, a pool die does not, the one thing the
+   old chip formatter documented that it could not round-trip — and it is where slice 6's "these are
+   the doubled dice" goes without a field beside the die. A named member (`DIE_ROLE`), so adding
+   `crit`/`alternate` later fails every unhandled switch.
+   **The legacy string is now behind ONE seam.** `parseRollExpr` → **`parseLegacyExpr`**, documented
+   as the reader for lines already on disk and nothing else; every stored roll enters through
+   `rehydrateRoll`, and a log row through **`rehydrateLogEntry`** (combat layer), which also fills the
+   DAMAGE parts — rehydrating only the row gave a reloaded attack its d20 back while its damage pills
+   stayed empty. The dev fixture ladder is written in `expr` strings and rehydrated, so the preview
+   and the legacy reader are exercised by the same 26-state visual run (0 px).
+   **What came off string surgery:** `amendWithAdvantage` and `clearAdvantage` add and remove the d20
+   in the dice array now, and re-render `expr` after. A floored d20's natural is right for the first
+   time — the amend path fell back to the die's VALUE because a string could not tell 3→10 apart.
+   **Deliberately not done here:** `source` is declared but nothing fills it yet (a roll site has to
+   pass provenance — it lands with slice 5's sub-rolls, where a die's origin is the point); advantage
+   still lives beside the dice (slice 4); `{roll, issues}` (§5) still open.
 4. `[ ]` **Advantage as recorded dice + a mode** (the section above). Kills the re-roll leak, folds
    `mode`/`advantageMode`/`dropped`/`original` into one representation, and makes Elven Accuracy a
    data point rather than a feature.

@@ -9,7 +9,7 @@
  * damaged. A plain check is that same row minus the damage half. Pure — the component just renders.
  */
 import { toast } from 'svelte-sonner';
-import { parseRollExpr, type DieChip, type Rolled } from '$lib/rules/dice';
+import { DIE_ROLE, type RolledDie, type Rolled } from '$lib/rules/dice';
 import { damageTotal, type RollLogEntry, type TypedRoll } from '$lib/combat/roll';
 import RollToast from '$lib/components/RollToast.svelte';
 
@@ -18,7 +18,7 @@ import RollToast from '$lib/components/RollToast.svelte';
 export interface RollToastDamage {
 	/** Damage-type key ("fire") → glyph. "" when the content row carried no type. */
 	type: string;
-	chips: DieChip[];
+	chips: RolledDie[];
 	mod: number;
 	total: number;
 }
@@ -26,7 +26,7 @@ export interface RollToastDamage {
 /** One attack line: the d20 that decided it plus the damage it rolled. A plain check/save is the
  *  same line with an empty `damage` — the toast then simply has no damage half. */
 export interface RollToastAttack {
-	chips: DieChip[];
+	chips: RolledDie[];
 	/** The adv/disadv d20 that lost — shown struck through next to the kept one. */
 	dropped?: number;
 	/** Was the pair rolled at advantage (1) or disadvantage (−1)? Frames the two d20 green or red —
@@ -74,16 +74,18 @@ export interface RollToastModel {
  *  struck and left out of every total. Anything else is the DM's call, not the toast's. */
 const landed = (a: RollToastAttack): boolean => a.natural !== 1;
 
-/** A damage part → its toast row: the type keeps its glyph, `expr` gives back the dice + flat mod. */
+/** A damage part → its toast row: the type keeps its glyph, the dice come straight off the roll. */
 const damagePart = (part: TypedRoll): RollToastDamage => ({
 	type: part.type,
-	...parseRollExpr(part.expr),
+	chips: part.dice,
+	mod: part.mod,
 	total: part.total,
 });
 
 /** One completed roll (+ the damage that followed it) → one attack line. */
 function attackLine(roll: Rolled, damage: TypedRoll[]): RollToastAttack {
-	const { chips, mod } = parseRollExpr(roll.expr);
+	const chips = roll.dice;
+	const mod = roll.mod;
 	const adv = roll.advantageRoll;
 	// the kept adv/disadv d20 never made it into `expr` (the roller surfaces it separately) — put it
 	// back at the front so the line reads left-to-right as the dice were rolled
@@ -91,7 +93,19 @@ function attackLine(roll: Rolled, damage: TypedRoll[]): RollToastAttack {
 	// which is right except on a tie (where nothing could tell them apart anyway)
 	const mode = adv ? (adv.mode ?? (adv.kept >= adv.dropped ? 1 : -1)) : undefined;
 	return {
-		chips: adv ? [{ sides: 20, value: adv.kept, sign: 1, detail: `${adv.kept}` }, ...chips] : chips,
+		chips: adv
+			? [
+					{
+						sides: 20,
+						value: adv.kept,
+						face: roll.natural ?? adv.kept,
+						sign: 1,
+						detail: `${adv.kept}`,
+						role: DIE_ROLE.pool,
+					},
+					...chips,
+				]
+			: chips,
 		...(adv ? { dropped: adv.dropped } : {}),
 		...(mode ? { advantageMode: mode } : {}),
 		mod,

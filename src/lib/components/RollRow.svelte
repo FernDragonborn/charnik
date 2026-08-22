@@ -18,7 +18,7 @@
 		type RollToastAttack,
 		type RollToastDamage,
 	} from '$lib/dice/roll-toast';
-	import type { DieChip } from '$lib/rules/dice';
+	import type { RolledDie } from '$lib/rules/dice';
 	import DamageIcon from './DamageIcon.svelte';
 	import { signed } from '$lib/util/format';
 
@@ -51,9 +51,9 @@
 	const attacks = $derived(model.attacks);
 	const multi = $derived(attacks.length > 1 && model.damaging);
 	// a die that came up max reads as gold, a 1 as spent — the d20 says it loudest (it decides things)
-	const tone = (c: DieChip) =>
+	const tone = (c: RolledDie) =>
 		c.value === c.sides ? 'max' : c.value === 1 ? 'min' : ('' as const);
-	const face = (c: DieChip) => `${c.sign < 0 ? '−' : ''}${c.value}`;
+	const face = (c: RolledDie) => `${c.sign < 0 ? '−' : ''}${c.value}`;
 
 	/** Which chip of an attack is THE d20 that decided it — the first positive one, matching what
 	 *  `amendWithAdvantage` picks. -1 when the roll has no d20 to amend. */
