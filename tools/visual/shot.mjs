@@ -100,6 +100,12 @@ const ROUTES = [
 	// the source list is on the Content tab, which the base /settings shot never reaches — and `?tab=`
 	// makes it a plain URL, so no interaction is needed to get there. Second state expands one pack,
 	// the only way the per-file switches are ever seen.
+	// the theme cards + the data pane, the two settings tabs with UI of their own and no dev route.
+	// The other three (health, collisions, plugins) are deliberately NOT here: on real content they
+	// render an all-clear line or a "desktop only" note, and their populated shapes are already
+	// covered by /dev/health and /dev/plugins.
+	{ path: '/settings?tab=themes', wait: 'h1', states: [{ name: 'settings-themes' }] },
+	{ path: '/settings?tab=data', wait: 'h1', states: [{ name: 'settings-data' }] },
 	{
 		path: '/settings?tab=sources',
 		wait: 'h1',
