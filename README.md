@@ -36,8 +36,9 @@ version is out, an **Update** button appears in the top bar; click it to update 
 > git clone https://github.com/FernDragonborn/charnik-content-srd.git
 > ```
 >
-> A different location goes in `charnik.config.json` (`{ "contentRepo": "…" }`) or the
-> `CHARNIK_CONTENT` environment variable. Without the content, `pnpm dev` / `pnpm build` stop with
+> A different location goes in `charnik.dev.json` (`{ "contentRepo": "…" }`, gitignored) or the
+> `CHARNIK_CONTENT` environment variable — **not** `charnik.config.json`, which is the app's runtime
+> config in your data folder and has nothing to do with the checkout. Without the content, `pnpm dev` / `pnpm build` stop with
 > the clone command rather than starting an app with no rules in it. The build **vendors** the CSVs
 > into the app, so a release still ships them. Content fixes are commits in the CONTENT repo.
 
