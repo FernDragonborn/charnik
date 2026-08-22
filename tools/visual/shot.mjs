@@ -97,6 +97,21 @@ const ROUTES = [
 	},
 	{ path: '/spellbook', wait: 'main', states: [{ name: 'spellbook' }] },
 	{ path: '/settings', wait: 'h1', states: [{ name: 'settings' }] },
+	// the source list is on the Content tab, which the base /settings shot never reaches — and `?tab=`
+	// makes it a plain URL, so no interaction is needed to get there. Second state expands one pack,
+	// the only way the per-file switches are ever seen.
+	{
+		path: '/settings?tab=sources',
+		wait: 'h1',
+		states: [
+			{ name: 'settings-sources' },
+			{
+				name: 'settings-sources-open',
+				prep: (p) => p.getByRole('button', { expanded: false }).first().click(),
+				ready: 'text=/\\.csv/',
+			},
+		],
+	},
 	{ path: '/translate', wait: '.subbar', states: [{ name: 'translate' }] },
 	{ path: '/dev/meta', wait: '[role="dialog"]', states: [{ name: 'dev-meta' }] },
 	{ path: '/dev/drift', wait: '[role="dialog"]', states: [{ name: 'dev-drift' }] },

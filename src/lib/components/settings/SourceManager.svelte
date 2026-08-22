@@ -5,6 +5,7 @@
 	// reload). Disabling never drops data — re-enabling brings rows straight back.
 	import { content } from '$lib/content/store.svelte';
 	import { sourceLabel } from '$lib/content/detail';
+	import Icon from '$lib/components/Icon.svelte';
 	import PackUpdatesSettings from './PackUpdatesSettings.svelte';
 	import {
 		sourceConfig,
@@ -23,11 +24,14 @@
 	// into a single row with a single switch. The pack is the folder on disk — the one thing here the
 	// app knows rather than believes — so it heads the group and can be switched off on its own.
 	const groups = $derived.by(() => {
-		const m = new Map<string, { pack: string; source: string; files: Map<string, number> }>();
+		const m = new Map<
+			string,
+			{ key: string; pack: string; source: string; files: Map<string, number> }
+		>();
 		for (const r of graph?.rows ?? []) {
 			const pack = r.root.slice(r.root.lastIndexOf('/') + 1);
 			const key = JSON.stringify([pack, r.source]);
-			const g = m.get(key) ?? { pack, source: r.source, files: new Map<string, number>() };
+			const g = m.get(key) ?? { key, pack, source: r.source, files: new Map<string, number>() };
 			const fp = filePathOf(r);
 			g.files.set(fp, (g.files.get(fp) ?? 0) + 1);
 			m.set(key, g);
@@ -49,6 +53,10 @@
 	const sourceOff = (s: string) => sourceConfig.disabledSources.includes(s);
 	const fileOff = (p: string) => sourceConfig.disabledFiles.includes(p);
 	const shortFile = (p: string) => p.split('/').pop() ?? p;
+
+	// Packs start collapsed — the per-file switches are the rare case, the pack switch is the common
+	// one, and a dozen packs' worth of files buries it. View state only, not persisted.
+	const open = $state<Record<string, boolean>>({});
 </script>
 
 <!-- Packs come FIRST because they are the layer below: a pack is the folder the files below arrive
@@ -69,7 +77,7 @@
 	{#if !graph}
 		<p class="muted">Loading…</p>
 	{:else}
-		{#each groups as g (JSON.stringify([g.pack, g.source]))}
+		{#each groups as g (g.key)}
 			<div class="source" class:off={sourceOff(g.source) || groupOff(g.files)}>
 				<div class="source-head">
 					<!-- governs THIS pack's files only; the source tag next to it is what the pack calls
@@ -89,7 +97,14 @@
 					>
 						<span class="knob"></span>
 					</button>
-					<span class="source-name">{g.pack}</span>
+					<button
+						class="source-name"
+						aria-expanded={open[g.key] ?? false}
+						onclick={() => (open[g.key] = !open[g.key])}
+						><span class="chevron"
+							><Icon name={open[g.key] ? 'chevron-down' : 'chevron-right'} size={13} /></span
+						>{g.pack}</button
+					>
 					<button
 						class="source-tag as-toggle"
 						title="Turn “{g.source}” off everywhere it appears"
@@ -98,27 +113,31 @@
 					>
 						{sourceLabel(g.source)}
 					</button>
-					<span class="source-count">{g.files.length} files</span>
+					<span class="source-count"
+						>{g.files.filter((f) => !fileOff(f.path)).length} / {g.files.length} files</span
+					>
 				</div>
-				<div class="files">
-					{#each g.files as f (f.path)}
-						<div class="file" class:off={fileOff(f.path) || sourceOff(g.source)}>
-							<button
-								class="toggle small"
-								class:on={!fileOff(f.path)}
-								role="switch"
-								aria-checked={!fileOff(f.path)}
-								aria-label="Toggle file {f.path}"
-								disabled={sourceOff(g.source)}
-								onclick={() => toggleFile(f.path)}
-							>
-								<span class="knob"></span>
-							</button>
-							<span class="file-name">{shortFile(f.path)}</span>
-							<span class="file-count">{f.count}</span>
-						</div>
-					{/each}
-				</div>
+				{#if open[g.key]}
+					<div class="files">
+						{#each g.files as f (f.path)}
+							<div class="file" class:off={fileOff(f.path) || sourceOff(g.source)}>
+								<button
+									class="toggle small"
+									class:on={!fileOff(f.path)}
+									role="switch"
+									aria-checked={!fileOff(f.path)}
+									aria-label="Toggle file {f.path}"
+									disabled={sourceOff(g.source)}
+									onclick={() => toggleFile(f.path)}
+								>
+									<span class="knob"></span>
+								</button>
+								<span class="file-name">{shortFile(f.path)}</span>
+								<span class="file-count">{f.count}</span>
+							</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		{/each}
 	{/if}
@@ -138,10 +157,23 @@
 		padding: 10px 12px;
 		background: var(--color-surface-2);
 	}
+	/* the name doubles as the expand/collapse control (same chev+label pattern as the play panels) */
 	.source-name {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-body);
+		color: var(--color-text);
+		background: transparent;
+		border: 0;
+		padding: 3px 7px 3px 3px;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+	}
+	.source-name:hover {
+		background: var(--color-surface);
 	}
 	.source-tag {
 		font-family: var(--font-mono);
