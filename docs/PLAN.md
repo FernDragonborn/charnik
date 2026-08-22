@@ -1084,6 +1084,12 @@ holds the done-work log; these are the OPEN tails it carried):**
   defensible — but it's not the established pattern). UA copy uses formal «ви» ([[uk-formal-vy]]).
   **UX-1 is done (2026-08-21)**, so the copy this pass translates is the rewritten copy. What still
   gates it is W2 — the roller writes English prose into `log.jsonl`, which can't be localised later.
+  **Drift found 2026-08-22, and it is the shape this pass has to expect elsewhere:** UX-1 rewrote the
+  Data tab's copy in `StorageSettings.svelte` as hardcoded EN, which left `settings.data.*` (title /
+  desc / open / change, in BOTH catalogs) referenced by nothing — a stale UA translation of a screen
+  that no longer says that. Kept, not deleted: they are the sweep's starting point, and the lesson is
+  that a copy rewrite has to be checked against the catalog or it silently orphans one. Both catalogs
+  are otherwise key-for-key identical (270/270), and `settings.data.*` is the only dead group in EN.
 - [x] **UX-3 · Roll access: retroactive advantage instead of a pre-roll gesture — BUILT 2026-08-10,
   see UBUG-20 for what shipped.** The problem was that `Alt/Ctrl-click` opened the roll tray, on an app
   explicitly used on a phone where modifiers do not exist. The answer: don't bind a gesture to opening
@@ -2325,8 +2331,9 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
 `docs/SURFACE.md`). Ordering + open decisions below.
 
 - [x] **WD-1 · Split `WikiDetail`.** Read + translate parity only; `editor` mode stayed a stub.
-  **Unverified note carried from that pass, worth checking when next in there:** the Cast action was
-  said to render only in the generic branch, so a spell in the Spellbook may never show it.
+  **The note this carried is CHECKED and closed (2026-08-22):** the Cast action does show on spells.
+  `WikiDetail` renders the `actions` snippet once under the head, outside the per-type branch, so it
+  is type-independent — the generic-branch-only version it warned about is already gone.
 - [x] **WD-2 · Extract `RollButton`** — the shared roll affordance.
 - [x] **TYPE-2 · Typed `LoadedRow` — SHIPPED 2026-07-09 (`84ac428`); this entry was stale until
   2026-08-21.** `LoadedRow` is a discriminated union on `type` (`LoadedRowOf<T>` with
