@@ -5,10 +5,14 @@
  * the first NdM group). A single roll path is also a correctness property: advantage, bonus dice and
  * rendering can't diverge across sites.
  *
- * It answers with WHAT HAPPENED, not with how to show it: `{total, dice, mod, advantageRoll?}`, one
+ * It answers with WHAT HAPPENED, not with how to show it: `{total, dice, d20s, advantage, mod}`, one
  * `RolledDie` per die. `expr` is a rendering of that, kept only because entries already in
  * `log.jsonl` have nothing else — it used to BE the record, and the display parsed it back with a
  * regex to get its chips (ROLLER-PLAN finding A).
+ *
+ * Advantage is a MODE over the d20 it drew, not a fact about them: the dice are what happened, how
+ * many of them count is an interpretation, and re-reading a roll the other way round must never draw
+ * (`setAdvantage`).
  */
 
 /** Injectable randomness; defaults to Math.random, seeded in tests. Returns [0,1). */
@@ -21,18 +25,24 @@ export interface BonusDie {
 	sign: number;
 }
 
-/** The two d20 of an advantage/disadvantage roll: the one kept and the one dropped, and WHICH of the
- *  two it was. The mode can't be recovered from the numbers — two d20 that both land on 12 look the
- *  same either way — and the UI frames the pair green or red by it. Optional so an entry persisted
- *  before it existed still loads; those fall back to comparing kept against dropped. */
-interface AdvantageRoll {
+/** How a roll's d20 were read. An INTERPRETATION of dice already on the table, freely switchable —
+ *  which is the whole point: the dice are a fact, the mode is not, so changing it must never draw.
+ *  A named member, and the one place this fact lives (it used to be spelled three ways: a ±1 `mode`
+ *  on the pair, a ±1 `advantageMode` on the toast line, and implied by `kept` vs `dropped`). */
+export const ADVANTAGE_MODE = {
+	neither: 'neither',
+	advantage: 'advantage',
+	disadvantage: 'disadvantage',
+} as const;
+export type AdvantageMode = (typeof ADVANTAGE_MODE)[keyof typeof ADVANTAGE_MODE];
+
+/** The pre-2026-08-22 shape of an advantage pair, as it still sits in `log.jsonl`. Read by
+ *  `rehydrateRoll` and by nothing else — `d20s` + `advantage` replaced every field of it. */
+export interface LegacyAdvantageRoll {
 	kept: number;
 	dropped: number;
 	mode?: 1 | -1;
-	/** The die that was rolled FIRST. Recorded so the pair can be undone — a tap too many has to be
-	 *  recoverable, and "no advantage" means "the die that stood before the second one", which the
-	 *  kept/dropped pair alone can't say. Absent on entries logged before it existed; those simply
-	 *  can't return to neutral. */
+	/** The die that was rolled FIRST. Absent on the oldest entries — see `drawOrderUnknown`. */
 	original?: number;
 }
 
@@ -70,25 +80,62 @@ export interface RolledDie {
 	source?: string;
 }
 
-/** Result of a roll: the total, the dice it was made of, and the two d20 if adv/disadv applied. */
+/** Result of a roll: the total, the dice it was made of, and how its d20 were read. */
 export interface Rolled {
 	total: number;
-	/** Every die the roll drew, in the order it was rolled. THE record — read this, not `expr`. The
-	 *  adv/disadv d20 is not in here; it lives in `advantageRoll` (slice 4 folds the two together). */
+	/** Every die the roll drew EXCEPT its d20 candidates, in the order it was rolled. THE record —
+	 *  read this, not `expr`. */
 	dice: RolledDie[];
+	/** The d20 that decide this roll, in the order they were DRAWN, and never more than one of them
+	 *  counts (`keptD20`). One entry is an ordinary d20 test; a second appears the first time the roll
+	 *  is read at advantage or disadvantage, and is kept forever after — switching the mode again
+	 *  re-reads these dice instead of drawing (see `setAdvantage`). Empty for a damage roll.
+	 *
+	 *  A second POOL d20 (`{20: 2}`) is not a candidate and stays in `dice`: advantage has always
+	 *  applied to the first d20 only, and nothing in the app rolls two (ROLLER-PLAN finding D). */
+	d20s: RolledDie[];
+	/** How those d20 are read. Not a property of the dice — an interpretation of them. */
+	advantage: AdvantageMode;
 	/** The flat modifier added after the dice. */
 	mod: number;
 	/** e.g. "d8(5) + d6(2) +3" — a RENDERING of `dice` + `mod`, kept because it is what entries
 	 *  already in `log.jsonl` carry and what an older build reads. Nothing new should read it:
 	 *  `parseLegacyExpr` exists for those old entries and for nothing else. */
 	expr: string;
-	/** Present only when an advantage/disadvantage d20 was rolled. */
-	advantageRoll?: AdvantageRoll;
-	/** The NATURAL face of the first d20 — after a reroll, BEFORE a `min_die` floor, before modifiers.
-	 *  Pre-floor on purpose: Reliable Talent's "treat a d20 below 10 as 10" must not erase a natural 1.
-	 *  Drives nat-1/nat-20 outcomes (death saves, crits). Present only when the pool rolled a d20. */
-	natural?: number;
+	/** Set ONLY by the legacy reader, for a pair logged before the first-drawn die was recorded: the
+	 *  two numbers are known, the order they came in is not. Such a roll can still be read either way
+	 *  round — advantage and disadvantage are exact from the pair alone — but it can never go back to
+	 *  `neither`, because "the die that stood first" would be a guess presented as a total. Delete
+	 *  this and its branch once logs from before 2026-08-10 have rotated out. */
+	drawOrderUnknown?: true;
 }
+
+/** The d20 that counts: the highest at advantage, the lowest at disadvantage, and otherwise the one
+ *  that was drawn first. Derived, never stored — `kept`/`dropped` used to be fields, which is how a
+ *  mode switch could disagree with the dice it was switching between. */
+export function keptD20(roll: Pick<Rolled, 'd20s' | 'advantage'>): RolledDie | undefined {
+	const [first, ...rest] = roll.d20s;
+	if (!first || roll.advantage === ADVANTAGE_MODE.neither) return first;
+	const better = roll.advantage === ADVANTAGE_MODE.advantage;
+	// reduce keeps the FIRST of equal dice, so the pair always splits into one kept and one dropped
+	return rest.reduce(
+		(best, d) => ((better ? d.value > best.value : d.value < best.value) ? d : best),
+		first,
+	);
+}
+
+/** The d20 that were rolled and did not count — rendered struck through beside the one that did. */
+export const droppedD20s = (roll: Pick<Rolled, 'd20s' | 'advantage'>): RolledDie[] => {
+	const kept = keptD20(roll);
+	return roll.d20s.filter((d) => d !== kept);
+};
+
+/** The NATURAL face of the d20 that counted — after a reroll, BEFORE a `min_die` floor, before
+ *  modifiers. Pre-floor on purpose: Reliable Talent's "treat a d20 below 10 as 10" must not erase a
+ *  natural 1. Drives nat-1/nat-20 outcomes (death saves, crits). Undefined when no d20 decided the
+ *  roll. */
+export const naturalOf = (roll: Pick<Rolled, 'd20s' | 'advantage'>): number | undefined =>
+	keptD20(roll)?.face;
 
 /** Roll-manipulation effects a roll carries (L1 `reroll:`/`min_die:` facts — the roll path is
  *  their consumer). They apply to the POOL's own dice, not to signed bonus dice (GWF rerolls the
@@ -178,54 +225,34 @@ interface RollOptions extends DieMods {
 
 /** The rolled main pool: running total, the dice themselves, and the adv/natural metadata. */
 interface PoolResult {
-	total: number;
 	dice: RolledDie[];
-	advantageRoll?: AdvantageRoll;
-	natural?: number;
+	d20s: RolledDie[];
 }
 
-/** Roll the main pool (all NdM groups, highest die first). The FIRST d20 gets advantage/disadvantage
- *  — roll two, keep the winner, surface the loser as `advantageRoll`. `rollOne` carries the pool's
- *  reroll/min_die effects. Split out of `rollPool` (the bonus-dice/mod/rendering stays there). */
+/** Roll the main pool (all NdM groups, highest die first). The FIRST d20 is the roll's DECIDING die
+ *  and goes to `d20s` rather than to the pool; at advantage or disadvantage a second one is drawn
+ *  beside it, and which of the two counts is then a question for `keptD20`, not for this loop.
+ *  `rollOne` carries the pool's reroll/min_die effects. */
 function rollPoolDice(
 	dice: Record<number, number>,
 	advantage: number,
 	rollOne: (sides: number) => RolledDie,
 ): PoolResult {
 	const rolled: RolledDie[] = [];
-	let total = 0;
-	let advantageRoll: AdvantageRoll | undefined;
-	let natural: number | undefined;
+	const d20s: RolledDie[] = [];
 	for (const [s, c] of Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0]))) {
 		const sides = Number(s);
 		for (let k = 0; k < c; k++) {
 			const r = rollOne(sides);
-			if (sides === 20 && advantage !== 0 && k === 0) {
-				// roll TWO d20 and keep the winner; the loser is surfaced (rendered struck through)
-				const r2 = rollOne(20);
-				const win = advantage > 0 ? Math.max(r.value, r2.value) : Math.min(r.value, r2.value);
-				const winIsFirst = win === r.value;
-				advantageRoll = {
-					kept: win,
-					dropped: winIsFirst ? r2.value : r.value,
-					mode: advantage > 0 ? 1 : -1,
-					original: r.value,
-				};
-				natural = winIsFirst ? r.face : r2.face; // the kept die's face (pre-floor)
-				total += win;
-				continue; // the pair renders from `advantageRoll`, don't duplicate it in the dice
+			if (sides === 20 && k === 0) {
+				d20s.push(r);
+				if (advantage !== 0) d20s.push(rollOne(20));
+				continue;
 			}
-			if (sides === 20 && natural === undefined) natural = r.face;
-			total += r.value;
 			rolled.push(r);
 		}
 	}
-	return {
-		total,
-		dice: rolled,
-		...(advantageRoll !== undefined ? { advantageRoll } : {}),
-		...(natural !== undefined ? { natural } : {}),
-	};
+	return { dice: rolled, d20s };
 }
 
 /** Everything a pool roll can be given besides the dice themselves. One object rather than four
@@ -271,11 +298,9 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 	};
 	const pool = rollPoolDice(dice, advantage, rollOne);
 	const rolled = pool.dice;
-	let total = pool.total;
 	for (const b of bonusDice)
 		for (let k = 0; k < b.count; k++) {
 			const v = rollDie(b.sides, rng);
-			total += b.sign * v;
 			rolled.push({
 				sides: b.sides,
 				value: v,
@@ -285,16 +310,20 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 				role: DIE_ROLE.bonus,
 			});
 		}
-	total += mod;
-	return {
-		total,
-		dice: rolled,
-		mod,
-		expr: formatExpr(rolled, mod),
-		...(pool.advantageRoll !== undefined ? { advantageRoll: pool.advantageRoll } : {}),
-		...(pool.natural !== undefined ? { natural: pool.natural } : {}),
-	};
+	const mode =
+		advantage > 0
+			? ADVANTAGE_MODE.advantage
+			: advantage < 0
+				? ADVANTAGE_MODE.disadvantage
+				: ADVANTAGE_MODE.neither;
+	const roll = { dice: rolled, d20s: pool.d20s, advantage: mode, mod };
+	return { ...roll, total: totalOf(roll), expr: formatExpr(roll) };
 }
+
+/** What a roll comes to: its dice, the one d20 that counts, and the flat modifier. The one place the
+ *  sum is defined, so re-reading a roll at a different advantage cannot drift from rolling it there. */
+export const totalOf = (roll: Pick<Rolled, 'dice' | 'd20s' | 'advantage' | 'mod'>): number =>
+	roll.dice.reduce((n, d) => n + d.sign * d.value, 0) + (keptD20(roll)?.value ?? 0) + roll.mod;
 
 /**
  * Read an `expr` back into dice + the trailing flat modifier. **LEGACY ONLY.** `expr` used to be the
@@ -332,118 +361,139 @@ export function parseLegacyExpr(expr: string): { dice: RolledDie[]; mod: number 
 	return { dice, mod: mod ? (mod[1] === '−' ? -1 : 1) * Number(mod[2]) : 0 };
 }
 
-/** Dice + flat mod → the `expr` string. Now a pure RENDERING of the record rather than the record
- *  itself; `role` is what makes it exact, since a positive bonus die writes its `+` and a pool die
- *  does not — the distinction the old chip-based formatter documented that it could not keep. */
-const formatExpr = (dice: RolledDie[], mod: number): string =>
-	dice
-		.map(
-			(d) => `${d.sign < 0 ? '−' : d.role === DIE_ROLE.bonus ? '+' : ''}d${d.sides}(${d.detail})`,
-		)
-		.join(' + ') + (mod ? ` ${formatModifier(mod)}` : '');
+/** A roll → the `expr` string. Now a pure RENDERING of the record rather than the record itself;
+ *  `role` is what makes it exact, since a positive bonus die writes its `+` and a pool die does not —
+ *  the distinction the old chip-based formatter documented that it could not keep.
+ *
+ *  The d20 it shows is the one that COUNTED, never the pair: a build old enough to read `expr` for
+ *  its dice can no longer find the pair beside it (`advantageRoll` is not written any more), so a
+ *  string with no d20 in it would render a d20 test with no d20. The dropped die is simply not part
+ *  of a rendering that has one slot for the roll. */
+function formatExpr(roll: Pick<Rolled, 'dice' | 'd20s' | 'advantage' | 'mod'>): string {
+	const kept = keptD20(roll);
+	return (
+		[...(kept ? [kept] : []), ...roll.dice]
+			.map(
+				(d) => `${d.sign < 0 ? '−' : d.role === DIE_ROLE.bonus ? '+' : ''}d${d.sides}(${d.detail})`,
+			)
+			.join(' + ') + (roll.mod ? ` ${formatModifier(roll.mod)}` : '')
+	);
+}
 
-/** A roll as it may come back off disk: everything a `Rolled` has, except that the per-die record
- *  may be missing — that is exactly what a `log.jsonl` line written before it existed looks like. */
-export type StoredRoll = Omit<Rolled, 'dice' | 'mod'> & Partial<Pick<Rolled, 'dice' | 'mod'>>;
+/** A roll as it may come back off disk: everything a `Rolled` has, except that the parts added since
+ *  it was written may be missing, and an old advantage pair may be there instead — which is exactly
+ *  what a `log.jsonl` line written by an earlier build looks like. */
+export type StoredRoll = Omit<Rolled, 'dice' | 'mod' | 'd20s' | 'advantage'> &
+	Partial<Pick<Rolled, 'dice' | 'mod' | 'd20s' | 'advantage'>> & {
+		/** pre-2026-08-22 pair */
+		advantageRoll?: LegacyAdvantageRoll;
+		/** pre-2026-08-22 kept-d20 face, now derived by `naturalOf` */
+		natural?: number;
+	};
 
-/**
- * A stored roll → a roll with its dice, filling them from `expr` when the entry predates them.
- * The ONE legacy seam: every reader of a persisted roll goes through here, so nothing downstream has
- * to know that two shapes ever existed. A roll that already carries dice is returned untouched.
- */
-export function rehydrateRoll<T extends StoredRoll>(roll: T): Omit<T, 'dice' | 'mod'> & Rolled {
-	const { dice, mod } = roll.dice
-		? { dice: roll.dice, mod: roll.mod ?? 0 }
-		: parseLegacyExpr(roll.expr);
-	return { ...roll, dice, mod };
+/** A d20 known only as its number → the die it stands for. Its detail is that number: an old pair
+ *  recorded only what the d20 came to, and a die drawn to amend a roll has no reroll/floor story of
+ *  its own (amending applies no effect facts — see `setAdvantage`). */
+const plainD20 = (value: number, face = value): RolledDie => ({
+	sides: 20,
+	value,
+	face,
+	sign: 1,
+	detail: `${value}`,
+	role: DIE_ROLE.pool,
+});
+
+/** An old `{kept, dropped, mode?, original?}` pair → the dice in DRAW order + how they were read.
+ *  `original` says which came first; without it only the pair is known, which every mode but
+ *  `neither` can be answered from exactly (see `Rolled.drawOrderUnknown`). */
+function legacyPair(
+	adv: LegacyAdvantageRoll,
+	natural: number | undefined,
+): Pick<Rolled, 'd20s' | 'advantage'> & { drawOrderUnknown?: true } {
+	const mode =
+		(adv.mode ?? (adv.kept >= adv.dropped ? 1 : -1)) === 1
+			? ADVANTAGE_MODE.advantage
+			: ADVANTAGE_MODE.disadvantage;
+	// the kept die's face is the roll's `natural`; the dropped one only ever had its value
+	const kept = plainD20(adv.kept, natural ?? adv.kept);
+	const dropped = plainD20(adv.dropped);
+	const kptFirst = adv.original === undefined || adv.original === adv.kept;
+	return {
+		d20s: kptFirst ? [kept, dropped] : [dropped, kept],
+		advantage: mode,
+		...(adv.original === undefined ? { drawOrderUnknown: true as const } : {}),
+	};
 }
 
 /**
- * Apply advantage to a roll that ALREADY happened: roll one more d20 and keep the better of the two.
+ * A stored roll → a roll in the shape the roller produces today: per-die record, d20 candidates,
+ * advantage as a mode. The ONE legacy seam — every reader of a persisted roll goes through here, so
+ * nothing downstream has to know that three shapes ever existed. A roll already in today's shape is
+ * returned untouched.
+ */
+export function rehydrateRoll(roll: StoredRoll): Rolled {
+	const { advantageRoll, natural, total, expr } = roll;
+	const parsed = roll.dice ? { dice: roll.dice, mod: roll.mod ?? 0 } : parseLegacyExpr(expr);
+	const base = {
+		total,
+		expr,
+		...parsed,
+		...(roll.drawOrderUnknown ? { drawOrderUnknown: true as const } : {}),
+	};
+	if (roll.d20s && roll.advantage)
+		return { ...base, d20s: roll.d20s, advantage: roll.advantage } satisfies Rolled;
+	// a pair was stored apart from the dice; without one, the roll's own first d20 is the candidate
+	if (advantageRoll) return { ...base, ...legacyPair(advantageRoll, natural) };
+	const index = parsed.dice.findIndex((d) => d.sides === 20 && d.sign > 0);
+	const d20 = parsed.dice[index];
+	return {
+		...base,
+		dice: d20 ? parsed.dice.filter((_, k) => k !== index) : parsed.dice,
+		d20s: d20 ? [natural === undefined ? d20 : { ...d20, face: natural }] : [],
+		advantage: ADVANTAGE_MODE.neither,
+	};
+}
+
+/**
+ * Read a roll that ALREADY happened at a different advantage.
  *
  * RAW-exact rather than a fudge — the rule is "roll a second d20 and take the higher", and rolling it
  * after the first is on the table changes nothing mechanically. It also matches how tables actually
  * play: the DM says "that has advantage" once the die is already down.
  *
- * Returns null when the roll can't take it: no d20 in the pool, or two dice already decided it.
+ * **Only the FIRST switch away from `neither` draws.** The second die stays on the roll forever after,
+ * so every later switch — including back to `neither` and out again — re-reads dice already on the
+ * table. That is the property the d20 pill was justified with, and until 2026-08-22 it was false:
+ * going back to neutral DELETED the pair, so the next tap drew a fresh second die and a player who
+ * kept cycling could keep drawing until they liked the result (ROLLER-PLAN, "the dice must survive a
+ * state change").
  *
- * The two dice are compared by what they CONTRIBUTE, not by their raw faces. A die floored by
- * `min_die` (Reliable Talent's 3→10) contributed 10, and RAW would floor the new die the same way —
- * so the higher contribution is the right outcome either way, and the log entry doesn't have to carry
- * the roll's effect facts for this to be correct.
- */
-export function amendWithAdvantage<T extends Rolled>(r: T, rng: Rng = Math.random): T | null {
-	if (r.advantageRoll) return null;
-	const index = r.dice.findIndex((d) => d.sides === 20 && d.sign > 0);
-	const d20 = r.dice[index];
-	if (!d20) return null;
-	const fresh = rollDie(20, rng);
-	const keptIsFresh = fresh > d20.value;
-	const kept = keptIsFresh ? fresh : d20.value;
-	// the kept d20 renders from `advantageRoll`, so it leaves the dice or it would show twice
-	const dice = r.dice.filter((_, k) => k !== index);
-	return {
-		...r,
-		total: r.total - d20.value + kept,
-		dice,
-		expr: formatExpr(dice, r.mod),
-		advantageRoll: { kept, dropped: keptIsFresh ? d20.value : fresh, mode: 1, original: d20.value },
-		// the die's FACE, not its value: a d20 floored to 10 by Reliable Talent is still a natural 1.
-		// The string this used to read back could not tell those apart and fell back to the value.
-		natural: keptIsFresh ? fresh : (r.natural ?? d20.face),
-	};
-}
-
-/**
- * Flip a roll that two d20 already decided: what was kept is dropped and what was dropped is kept.
- * No new die — both were rolled the moment advantage was applied, so switching between advantage and
- * disadvantage is a REINTERPRETATION of dice already on the table, not a re-roll. That is what makes
- * the d20 pill safe to tap twice: the second tap can't manufacture a better outcome, it can only pick
- * the other die that was already there.
+ * The dice are compared by what they CONTRIBUTE, not by their raw faces. A die floored by `min_die`
+ * (Reliable Talent's 3→10) contributed 10, and RAW would floor the new die the same way — so the
+ * higher contribution is the right outcome either way, and the roll doesn't have to carry its effect
+ * facts for this to be correct.
  *
- * Returns null for a roll no pair decided (nothing to flip).
+ * Null when the roll can't take the mode: no d20 decided it, or — for `neither` — the entry is an old
+ * pair whose draw order was never recorded, where "the die that stood first" would be a guess.
  */
-export function flipAdvantage<T extends Rolled>(r: T): T | null {
-	const adv = r.advantageRoll;
-	if (!adv) return null;
+export function setAdvantage<T extends Rolled>(
+	roll: T,
+	mode: AdvantageMode,
+	rng: Rng = Math.random,
+): T | null {
+	if (!roll.d20s.length) return null;
+	if (mode === roll.advantage) return roll;
+	if (mode === ADVANTAGE_MODE.neither && roll.drawOrderUnknown) return null;
+	const needsPair = mode !== ADVANTAGE_MODE.neither && roll.d20s.length < 2;
+	const d20s = needsPair ? [...roll.d20s, plainD20(rollDie(20, rng))] : roll.d20s;
+	const next = { ...roll, d20s, advantage: mode };
 	return {
-		...r,
-		total: r.total - adv.kept + adv.dropped,
-		advantageRoll: {
-			kept: adv.dropped,
-			dropped: adv.kept,
-			mode: (adv.mode ?? (adv.kept >= adv.dropped ? 1 : -1)) === 1 ? -1 : 1,
-			...(adv.original !== undefined ? { original: adv.original } : {}),
-		},
-		natural: adv.dropped,
-	};
-}
-
-/**
- * Undo a pair: back to the single die that was rolled first, as if advantage had never applied. The
- * second die really was rolled, and the log entry says the roll was amended — but a control you can
- * tap by accident has to be recoverable, and being stuck with an advantage you didn't mean is a worse
- * record than one corrected. Null when there is no pair, or when the entry predates `original`.
- */
-function clearAdvantage<T extends Rolled>(r: T): T | null {
-	const adv = r.advantageRoll;
-	if (!adv || adv.original === undefined) return null;
-	const d20: RolledDie = {
-		sides: 20,
-		value: adv.original,
-		face: adv.original,
-		sign: 1,
-		detail: `${adv.original}`,
-		role: DIE_ROLE.pool,
-	};
-	const dice = [d20, ...r.dice];
-	const { advantageRoll: _dropped, ...rest } = r;
-	return {
-		...(rest as T),
-		total: r.total - adv.kept + adv.original,
-		dice,
-		expr: formatExpr(dice, r.mod),
-		natural: adv.original,
+		...next,
+		// the total moves by the swap alone — a delta, not a recount, so a roll rehydrated from a line
+		// whose dice no longer add up to its stored total keeps the total it was logged with
+		total: roll.total - (keptD20(roll)?.value ?? 0) + (keptD20(next)?.value ?? 0),
+		// re-rendered because the d20 it shows is the one that counts, and that just changed
+		expr: formatExpr(next),
 	};
 }
 
@@ -457,11 +507,14 @@ function clearAdvantage<T extends Rolled>(r: T): T | null {
  * Null when the roll has no d20 to amend.
  */
 export function cycleAdvantage<T extends Rolled>(r: T, rng: Rng = Math.random): T | null {
-	if (!r.advantageRoll) return amendWithAdvantage(r, rng);
-	// advantage → disadvantage → neither; an entry with no recorded `original` can only flip
-	return (r.advantageRoll.mode ?? 1) === 1
-		? flipAdvantage(r)
-		: (clearAdvantage(r) ?? flipAdvantage(r));
+	const next =
+		r.advantage === ADVANTAGE_MODE.neither
+			? ADVANTAGE_MODE.advantage
+			: r.advantage === ADVANTAGE_MODE.advantage
+				? ADVANTAGE_MODE.disadvantage
+				: ADVANTAGE_MODE.neither;
+	// an old pair with no recorded draw order can't reach `neither` — it laps back to advantage instead
+	return setAdvantage(r, next, rng) ?? setAdvantage(r, ADVANTAGE_MODE.advantage, rng);
 }
 
 /** Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + the flat mod, then

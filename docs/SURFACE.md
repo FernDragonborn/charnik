@@ -604,6 +604,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `type RollLogEntry` — A roll-log row: a completed roll (the primary/to-hit) plus what it was for, and — for an attack — * the per-type dama…
 - `type StoredRollLogEntry` — A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only * the rendered `expr…
 - `const rehydrateLogEntry` — A stored row → a row with dice, damage parts included.
+- `function amendedNote` — A roll's note after it has been re-read at a different advantage: whatever the note already said, * minus any previou…
 - `const damageTotal` — Combined total across every typed damage part.
 - `const poolExpr` — A dice pool + modifier as it READS: "1d12 + 3", "2d6", "+4" (a flat-only pool, e.g.
 - `type ActionSlot` — The three action-economy slots a turn tracks.
@@ -1146,10 +1147,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `type Rng` — Injectable randomness; defaults to Math.random, seeded in tests.
 - `interface BonusDie` — A signed bonus/penalty die a roll gains from an effect (Bless +1d4 → {sides:4,count:1,sign:+1}).
+- `const ADVANTAGE_MODE` — How a roll's d20 were read.
+- `type AdvantageMode`
+- `interface LegacyAdvantageRoll` — The pre-2026-08-22 shape of an advantage pair, as it still sits in `log.jsonl`.
 - `const DIE_ROLE` — What a die was drawn FOR.
 - `type DieRole`
 - `interface RolledDie` — * ONE die, as it was actually rolled.
-- `interface Rolled` — Result of a roll: the total, the dice it was made of, and the two d20 if adv/disadv applied.
+- `interface Rolled` — Result of a roll: the total, the dice it was made of, and how its d20 were read.
+- `function keptD20` — The d20 that counts: the highest at advantage, the lowest at disadvantage, and otherwise the one * that was drawn first.
+- `const droppedD20s` — The d20 that were rolled and did not count — rendered struck through beside the one that did.
+- `const naturalOf` — The NATURAL face of the d20 that counted — after a reroll, BEFORE a `min_die` floor, before * modifiers.
 - `interface DieMods` — Roll-manipulation effects a roll carries (L1 `reroll:`/`min_die:` facts — the roll path is * their consumer).
 - `const MAX_DICE_PER_TERM` — Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted * formula (shared cont…
 - `const MAX_DIE_SIDES`
@@ -1159,11 +1166,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function formatDicePool` — Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first.
 - `interface RollPoolOptions` — Everything a pool roll can be given besides the dice themselves.
 - `function rollPool` — * Roll a dice pool + flat mod.
+- `const totalOf` — What a roll comes to: its dice, the one d20 that counts, and the flat modifier.
 - `function parseLegacyExpr` — * Read an `expr` back into dice + the trailing flat modifier.
-- `type StoredRoll` — A roll as it may come back off disk: everything a `Rolled` has, except that the per-die record * may be missing — tha…
-- `function rehydrateRoll` — * A stored roll → a roll with its dice, filling them from `expr` when the entry predates them.
-- `function amendWithAdvantage` — * Apply advantage to a roll that ALREADY happened: roll one more d20 and keep the better of the two.
-- `function flipAdvantage` — * Flip a roll that two d20 already decided: what was kept is dropped and what was dropped is kept.
+- `type StoredRoll` — A roll as it may come back off disk: everything a `Rolled` has, except that the parts added since * it was written ma…
+- `function rehydrateRoll` — * A stored roll → a roll in the shape the roller produces today: per-die record, d20 candidates, * advantage as a mode.
+- `function setAdvantage` — * Read a roll that ALREADY happened at a different advantage.
 - `function cycleAdvantage` — * One tap on the d20, cycling **advantage → disadvantage → neither**.
 - `function rollFormula` — Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + the flat mod, then * `rollPool`.
 
@@ -1357,4 +1364,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 791 exports across 113 modules · 44 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 798 exports across 113 modules · 44 duplicate suspects._

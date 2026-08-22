@@ -4,6 +4,9 @@
  * the effects-auto toggle. Split out of the old combat/helpers.ts junk-drawer.
  */
 import {
+	ADVANTAGE_MODE,
+	droppedD20s,
+	keptD20,
 	parseDiceTerm,
 	rehydrateRoll,
 	rollPool,
@@ -69,22 +72,54 @@ export type RollLogEntry = Rolled & {
 
 /** A log row as it may come BACK off disk: a line written before `Rolled` carried its dice has only
  *  the rendered `expr`, and so does every damage part under it. */
-export type StoredRollLogEntry = Omit<RollLogEntry, 'dice' | 'mod' | 'damage'> &
-	Partial<Pick<Rolled, 'dice' | 'mod'>> & { damage?: (StoredRoll & { type: string })[] };
+export type StoredRollLogEntry = StoredRoll & {
+	label: string;
+	note?: string;
+	at?: number;
+	damage?: (StoredRoll & { type: string })[];
+};
 
 /** A stored row → a row with dice, damage parts included. `rehydrateRoll` covers ONE roll; an attack
  *  is a roll plus N damage rolls, and rehydrating only the top one would give the row back its d20
  *  while its damage chips stayed empty. The seam is here rather than in the roller because `damage`
- *  is a combat-layer fact and `rules/dice` must not learn about it. */
-export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => {
-	// `damage` comes off FIRST: rehydrating the row would otherwise carry the stored (dice-less) parts
-	// through untouched whenever there are none to replace them
-	const { damage, ...roll } = e;
-	return {
-		...rehydrateRoll(roll),
-		...(damage ? { damage: damage.map((d) => rehydrateRoll(d)) } : {}),
-	};
-};
+ *  is a combat-layer fact and `rules/dice` must not learn about it.
+ *
+ *  The row's own fields are listed rather than spread: `rehydrateRoll` DROPS the legacy fields it
+ *  consumes, and a spread of the original would carry them (a stale advantage pair, a stale
+ *  `natural`) back onto the row and from there back to disk. */
+export const rehydrateLogEntry = (e: StoredRollLogEntry): RollLogEntry => ({
+	...rehydrateRoll(e),
+	label: e.label,
+	...(e.note !== undefined ? { note: e.note } : {}),
+	...(e.at !== undefined ? { at: e.at } : {}),
+	...(e.damage ? { damage: e.damage.map((d) => ({ ...rehydrateRoll(d), type: d.type })) } : {}),
+});
+
+/** The amendment sentence a roll's note carries, matched so re-amending REPLACES it rather than
+ *  stacking, and so undoing removes it without eating a note the roll already had (an upcast's
+ *  "8d6 base + 1d6 @ slot 4" is provenance, and amending the d20 must not destroy it).
+ *
+ *  The sentence is ONE ` · ` segment, and the parenthetical is why: it used to read "advantage after
+ *  the roll · kept 19 over 7", which this pattern could only eat as far as the next `·` — so every
+ *  lap round the cycle left another "· kept 19 over 7" behind and the note grew. Reading back a
+ *  sentence we wrote ourselves is the sin ROLLER-PLAN §3 names; one segment is the cheap half of the
+ *  fix, and the structured `amendments: [{kind, from, to}]` is the real one. */
+const AMEND_NOTE = /(?:^\s*|\s·\s)(?:(?:dis)?advantage after the roll|advantage cleared)[^·]*/;
+
+/** A roll's note after it has been re-read at a different advantage: whatever the note already said,
+ *  minus any previous amendment, plus what this one is. Pure so the sentence has one definition and
+ *  a test can walk a whole lap of the cycle over it. */
+export function amendedNote(previous: string | undefined, revised: Rolled): string {
+	const dropped = droppedD20s(revised)[0];
+	const kept = (previous ?? '').replace(AMEND_NOTE, '').trim();
+	const amendment = !dropped
+		? ''
+		: revised.advantage === ADVANTAGE_MODE.neither
+			? // the second die was really rolled and the record says so; it just doesn't count
+				`advantage cleared (the second d20, ${dropped.value}, does not count)`
+			: `${revised.advantage} after the roll (kept ${keptD20(revised)?.value} over ${dropped.value})`;
+	return [kept, amendment].filter(Boolean).join(' · ');
+}
 
 /** Combined total across every typed damage part. */
 export const damageTotal = (parts: TypedRoll[]): number => parts.reduce((n, p) => n + p.total, 0);

@@ -167,7 +167,11 @@ property the current leak violates); and amend→flip→clear returns the origin
 
 ---
 
-## The dice must survive a state change (maintainer, 2026-08-10) — and today they don't
+## The dice must survive a state change (maintainer, 2026-08-10) — BUILT 2026-08-22 (slice 4)
+
+> The shape below is what shipped, with one correction from slice 3: `d20s` holds `RolledDie`, not
+> bare numbers, or an ordinary d20's reroll/floor story would be lost the moment it moved out of the
+> pool. `kept`/`dropped`/`original` are derived exactly as predicted, and `original` is gone.
 
 **The requirement.** Toggling advantage / disadvantage / neither must never re-roll. The dice that
 were rolled are a fact; the mode is an interpretation of them.
@@ -331,9 +335,30 @@ case" should be refused: ROLLER-N needs exactly two levels and nobody has asked 
    **Deliberately not done here:** `source` is declared but nothing fills it yet (a roll site has to
    pass provenance — it lands with slice 5's sub-rolls, where a die's origin is the point); advantage
    still lives beside the dice (slice 4); `{roll, issues}` (§5) still open.
-4. `[ ]` **Advantage as recorded dice + a mode** (the section above). Kills the re-roll leak, folds
-   `mode`/`advantageMode`/`dropped`/`original` into one representation, and makes Elven Accuracy a
-   data point rather than a feature.
+4. `[x]` **Advantage as recorded dice + a mode — DONE 2026-08-22.** `Rolled` carries
+   `d20s: RolledDie[]` (every d20 it drew, in DRAW order) + `advantage: AdvantageMode`
+   (`neither`/`advantage`/`disadvantage`). `kept`/`dropped`/`original`/`mode`/`advantageMode` are all
+   gone: `keptD20`, `droppedD20s` and `naturalOf` derive them, so a mode switch cannot disagree with
+   the dice it is switching between.
+   **The re-roll leak is closed and verified in the browser.** `setAdvantage` draws only on the first
+   switch away from `neither`; six taps round the cycle on `/dev/rolltoast` keep the same pair
+   ({9, 3}) and the note follows it. `amendWithAdvantage`/`flipAdvantage`/`clearAdvantage` collapsed
+   into that one function, with `cycleAdvantage` a three-line loop over it.
+   **A visible consequence, called out for a look:** back at `neither` the second die is still shown,
+   struck through and unframed, because it really was rolled — the old code deleted it, which is
+   exactly how the next tap could draw a fresh one.
+   **A second, older bug fell out of it.** The amendment sentence was matched back out of the note by
+   a regex that could only eat as far as the next `·`, so "advantage after the roll · kept 19 over 7"
+   left "· kept 19 over 7" behind on every lap and the note grew. The sentence is now ONE segment
+   ("… (kept 19 over 7)"), built by a pure `amendedNote` in `combat/roll.ts` that the combat VM and
+   the dev preview share, with a test that walks a full lap. The structured
+   `amendments: [{kind, from, to}]` of §3 is still the real fix.
+   **Legacy:** an old `{kept, dropped, mode?, original?}` pair converts on read; without `original`
+   the pair is known but its ORDER is not, so such a roll reads either way round but cannot return to
+   `neither` (`drawOrderUnknown`) — a total built on a guessed first die is exactly the silently-wrong
+   number the house rule forbids.
+   Elven Accuracy is now a third element in `d20s` rather than a new concept — still unbuilt, but no
+   longer a modelling question.
 5. `[ ]` **Sub-rolls.** A roll becomes a tree: one action → N attacks → each a to-hit + damage parts.
    Moves `RollToastAttack[]` out of the view layer. This is `ROLLER-N` proper, and it is also what
    `UBUG-21` needs (the dice tray can finally show and edit the damage half, not just the to-hit).

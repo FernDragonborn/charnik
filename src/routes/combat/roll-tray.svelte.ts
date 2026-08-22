@@ -5,6 +5,7 @@
  * (attack/cast/action) call into it. Pure dice math lives in $lib/rules/dice.
  */
 import {
+	ADVANTAGE_MODE,
 	cycleAdvantage,
 	rollPool,
 	type BonusDie,
@@ -13,17 +14,13 @@ import {
 } from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
 import {
+	amendedNote,
 	poolExpr,
 	rollDamageParts,
 	type RollLogEntry,
 	type TypedRoll,
 	type DamagePartSpec,
 } from '$lib/combat/helpers';
-
-/** The amendment sentence we write onto a roll's note. Matched so re-amending REPLACES it instead of
- *  stacking, and so undoing removes it without eating a note the roll already carried (an upcast's
- *  "8d6 base + 1d6 @ slot 4" is provenance, and amending the d20 must not destroy it). */
-const AMEND_NOTE = /(?:^\s*|\s·\s)(?:dis)?advantage after the roll[^·]*/;
 
 /** Cap on the retained roll log (newest kept). */
 const ROLL_LOG_MAX = 200;
@@ -212,12 +209,7 @@ export class RollTray {
 	amendAdvantage = (entry: RollLogEntry) => {
 		const revised = cycleAdvantage(entry);
 		if (!revised) return;
-		const adv = revised.advantageRoll;
-		const kept = (entry.note ?? '').replace(AMEND_NOTE, '').trim();
-		const amendment = adv
-			? `${adv.mode === -1 ? 'disadvantage' : 'advantage'} after the roll · kept ${adv.kept} over ${adv.dropped}`
-			: '';
-		const note = [kept, amendment].filter(Boolean).join(' · ');
+		const note = amendedNote(entry.note, revised);
 		// a spread can't REMOVE a key, and a roll cycled back to neutral must lose the amendment line
 		const { note: _replaced, ...rest } = revised;
 		this.reviseEntry(entry, note ? { ...rest, note } : rest);
@@ -226,7 +218,16 @@ export class RollTray {
 	/** A no-roll cast (buff/utility): a bare log marker, not a rolled total. */
 	logMarker = (label: string) => {
 		this.log = [
-			{ label, expr: '', dice: [], mod: 0, total: NaN, at: Date.now() },
+			{
+				label,
+				expr: '',
+				dice: [],
+				d20s: [],
+				advantage: ADVANTAGE_MODE.neither,
+				mod: 0,
+				total: NaN,
+				at: Date.now(),
+			},
 			...this.log,
 		].slice(0, ROLL_LOG_MAX);
 	};

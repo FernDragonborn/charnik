@@ -1234,9 +1234,13 @@ holds the done-work log; these are the OPEN tails it carried):**
   `dice: RolledDie[]` + `mod`; `expr` is now a rendering of them, read only by `parseLegacyExpr` for
   lines already on disk, behind one `rehydrateRoll` / `rehydrateLogEntry` seam. The house contract
   ("value + provenance, never a bare number") finally covers the one computation that answered with a
-  string, and the toast stopped parsing a format we wrote ourselves. Slices 4–6 (advantage as
-  recorded dice, sub-rolls, crits) are what remains, and the sub-roll one is what `UBUG-21` needs to
-  close for real.
+  string, and the toast stopped parsing a format we wrote ourselves.
+  **Slice 4 (2026-08-22): advantage is a MODE over recorded dice.** `d20s` + `advantage` replace
+  `kept`/`dropped`/`original`/`mode`/`advantageMode`; `setAdvantage` draws only on the first switch
+  away from neutral, which closes the leak where cycling back to neutral deleted the second die and
+  the next tap drew a fresh one — a control that could be tapped until it gave a better number.
+  Verified in the browser over six taps. Slices 5–6 (sub-rolls, crits) are what remains, and the
+  sub-roll one is what `UBUG-21` needs to close for real.
   Was filed as a sub-tail of UPCAST (`UPCAST-ROLLER`, was D14) — the wrong home, because upcast is only
   one of its callers. **The capability:** N sub-rolls from one action, each its OWN to-hit + damage (own
   advantage, own crit, own target), rendered as one grouped result. **Callers, all blocked on this and

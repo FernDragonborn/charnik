@@ -11,7 +11,7 @@
  * the action executor and the short rest read it from there rather than recomputing.
  */
 import { toast } from 'svelte-sonner';
-import { rollPool } from '$lib/rules/dice';
+import { naturalOf, rollPool } from '$lib/rules/dice';
 import { applyDefense, effectiveHpMax, netAdvantage, DEATH_CAUSE_LABEL } from '$lib/combat/helpers';
 import type { Character, DeathCause } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -164,11 +164,12 @@ export class HitPoints {
 		const r = rollPool({ 20: 1 }, { ...fx, mod: fx.flat, advantage: netAdvantage(fx) });
 		this.host().tray.pushRoll('Death save', r);
 		const ds = c.play.deathSaves;
-		if (r.natural === 20) {
+		const natural = naturalOf(r);
+		if (natural === 20) {
 			c.play.hp.current = 1;
 			c.play.deathSaves = { successes: 0, failures: 0 };
 			toast('Natural 20 — back on your feet at 1 HP');
-		} else if (r.natural === 1) {
+		} else if (natural === 1) {
 			ds.failures = Math.min(3, ds.failures + 2);
 			toast('Natural 1 — two death-save failures');
 		} else if (r.total >= 10) {

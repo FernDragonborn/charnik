@@ -1,4 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import { amendedNote } from './roll';
+import {
+	ADVANTAGE_MODE,
+	DIE_ROLE,
+	type AdvantageMode,
+	type Rolled,
+	type RolledDie,
+} from '$lib/rules/dice';
 import {
 	rollEffectsFor,
 	autoOutcome,
@@ -651,5 +659,50 @@ describe('standardActions — edition-aware terms (D5)', () => {
 		expect(names).not.toContain('Study');
 		expect(names).not.toContain('Utilize');
 		expect(names).toContain('Use an Object');
+	});
+});
+
+/*
+ * The amendment sentence on a roll's note. It is prose we write and then have to find again, so the
+ * case that matters is a full lap of the cycle: each amendment must REPLACE the last one and leave
+ * the provenance the roll already carried untouched. It used to leave a "· kept 19 over 7" fragment
+ * behind on every lap, because the pattern could only eat as far as the next separator.
+ */
+describe('amendedNote', () => {
+	const d20 = (value: number): RolledDie => ({
+		sides: 20,
+		value,
+		face: value,
+		sign: 1,
+		detail: `${value}`,
+		role: DIE_ROLE.pool,
+	});
+	const roll = (advantage: AdvantageMode): Rolled => ({
+		total: 0,
+		dice: [],
+		d20s: [d20(7), d20(19)],
+		advantage,
+		mod: 0,
+		expr: '',
+	});
+
+	it('replaces the previous amendment instead of stacking, lap after lap', () => {
+		const start = '8d6 base + 1d6 @ slot 4';
+		const adv = amendedNote(start, roll(ADVANTAGE_MODE.advantage));
+		expect(adv).toBe('8d6 base + 1d6 @ slot 4 · advantage after the roll (kept 19 over 7)');
+		const dis = amendedNote(adv, roll(ADVANTAGE_MODE.disadvantage));
+		expect(dis).toBe('8d6 base + 1d6 @ slot 4 · disadvantage after the roll (kept 7 over 19)');
+		const none = amendedNote(dis, roll(ADVANTAGE_MODE.neither));
+		expect(none).toBe(
+			'8d6 base + 1d6 @ slot 4 · advantage cleared (the second d20, 19, does not count)',
+		);
+		// and round again — the note must not grow
+		expect(amendedNote(none, roll(ADVANTAGE_MODE.advantage))).toBe(adv);
+	});
+
+	it('says nothing at all when no second die was ever rolled', () => {
+		const single: Rolled = { ...roll(ADVANTAGE_MODE.neither), d20s: [d20(7)] };
+		expect(amendedNote(undefined, single)).toBe('');
+		expect(amendedNote('8d6 base', single)).toBe('8d6 base');
 	});
 });

@@ -9,7 +9,14 @@
  * damaged. A plain check is that same row minus the damage half. Pure — the component just renders.
  */
 import { toast } from 'svelte-sonner';
-import { DIE_ROLE, type RolledDie, type Rolled } from '$lib/rules/dice';
+import {
+	droppedD20s,
+	keptD20,
+	naturalOf,
+	type AdvantageMode,
+	type RolledDie,
+	type Rolled,
+} from '$lib/rules/dice';
 import { damageTotal, type RollLogEntry, type TypedRoll } from '$lib/combat/roll';
 import RollToast from '$lib/components/RollToast.svelte';
 
@@ -29,9 +36,10 @@ export interface RollToastAttack {
 	chips: RolledDie[];
 	/** The adv/disadv d20 that lost — shown struck through next to the kept one. */
 	dropped?: number;
-	/** Was the pair rolled at advantage (1) or disadvantage (−1)? Frames the two d20 green or red —
-	 *  the one thing about a roll you can't read off the numbers (two 12s look identical either way). */
-	advantageMode?: 1 | -1;
+	/** How the pair was read. Frames the two d20 green or red — the one thing about a roll you can't
+	 *  read off the numbers (two 12s look identical either way). Absent when no pair decided the roll;
+	 *  the roll's own `ADVANTAGE_MODE.neither` is not a frame. */
+	advantageMode?: AdvantageMode;
 	mod: number;
 	/** What the to-hit (or, with no damage, the roll itself) came to. */
 	subtotal: number;
@@ -84,33 +92,18 @@ const damagePart = (part: TypedRoll): RollToastDamage => ({
 
 /** One completed roll (+ the damage that followed it) → one attack line. */
 function attackLine(roll: Rolled, damage: TypedRoll[]): RollToastAttack {
-	const chips = roll.dice;
-	const mod = roll.mod;
-	const adv = roll.advantageRoll;
-	// the kept adv/disadv d20 never made it into `expr` (the roller surfaces it separately) — put it
-	// back at the front so the line reads left-to-right as the dice were rolled
-	// `mode` is absent on rolls logged before it was recorded — fall back to what the pair implies,
-	// which is right except on a tie (where nothing could tell them apart anyway)
-	const mode = adv ? (adv.mode ?? (adv.kept >= adv.dropped ? 1 : -1)) : undefined;
+	// the deciding d20 leads the line, so it reads left-to-right as the dice were rolled; it lives
+	// apart from the pool because which of a pair counts is a question of how the roll is READ
+	const kept = keptD20(roll);
+	const dropped = droppedD20s(roll)[0];
+	const natural = naturalOf(roll);
 	return {
-		chips: adv
-			? [
-					{
-						sides: 20,
-						value: adv.kept,
-						face: roll.natural ?? adv.kept,
-						sign: 1,
-						detail: `${adv.kept}`,
-						role: DIE_ROLE.pool,
-					},
-					...chips,
-				]
-			: chips,
-		...(adv ? { dropped: adv.dropped } : {}),
-		...(mode ? { advantageMode: mode } : {}),
-		mod,
+		chips: kept ? [kept, ...roll.dice] : roll.dice,
+		...(dropped ? { dropped: dropped.value } : {}),
+		...(dropped ? { advantageMode: roll.advantage } : {}),
+		mod: roll.mod,
 		subtotal: roll.total,
-		...(roll.natural !== undefined ? { natural: roll.natural } : {}),
+		...(natural !== undefined ? { natural } : {}),
 		damage: damage.map(damagePart),
 		damageTotal: damageTotal(damage),
 	};

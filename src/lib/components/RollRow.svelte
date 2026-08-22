@@ -18,7 +18,7 @@
 		type RollToastAttack,
 		type RollToastDamage,
 	} from '$lib/dice/roll-toast';
-	import type { RolledDie } from '$lib/rules/dice';
+	import { ADVANTAGE_MODE, type RolledDie } from '$lib/rules/dice';
 	import DamageIcon from './DamageIcon.svelte';
 	import { signed } from '$lib/util/format';
 
@@ -67,11 +67,15 @@
 	 *  set as a character — at cue size a font glyph has no stem to snap to and the rasteriser turns
 	 *  its diagonals to mush (`◆` came out a blob, `⇈` drew its two arrows at different heights). */
 	const cueShape = (a: RollToastAttack) =>
-		a.advantageMode === 1 ? 'up' : a.advantageMode === -1 ? 'down' : 'none';
+		a.advantageMode === ADVANTAGE_MODE.advantage
+			? 'up'
+			: a.advantageMode === ADVANTAGE_MODE.disadvantage
+				? 'down'
+				: 'none';
 	const cueTitle = (a: RollToastAttack) =>
-		a.advantageMode === 1
+		a.advantageMode === ADVANTAGE_MODE.advantage
 			? 'rolled with advantage — tap for disadvantage'
-			: a.advantageMode === -1
+			: a.advantageMode === ADVANTAGE_MODE.disadvantage
 				? 'rolled with disadvantage — tap to undo'
 				: 'roll a second d20 and keep the better — advantage';
 
@@ -100,11 +104,11 @@
 {#snippet hitDice(a: RollToastAttack)}
 	<span
 		class="roll-to-hit"
-		class:advantage={a.advantageMode === 1}
-		class:disadvantage={a.advantageMode === -1}
-		title={a.advantageMode === 1
+		class:advantage={a.advantageMode === ADVANTAGE_MODE.advantage}
+		class:disadvantage={a.advantageMode === ADVANTAGE_MODE.disadvantage}
+		title={a.advantageMode === ADVANTAGE_MODE.advantage
 			? 'rolled with advantage'
-			: a.advantageMode === -1
+			: a.advantageMode === ADVANTAGE_MODE.disadvantage
 				? 'rolled with disadvantage'
 				: undefined}
 	>

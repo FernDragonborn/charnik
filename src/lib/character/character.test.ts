@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { MemoryStorage } from '../storage/memory';
 import { rehydrateLogEntry, type RollLogEntry } from '../combat/roll';
+import { ADVANTAGE_MODE, setAdvantage } from '../rules/dice';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { CHARACTER_SCHEMA_VERSION } from '../schema/version';
 import {
@@ -273,11 +274,9 @@ describe('roll log (log.jsonl, out of character.json)', () => {
 			logLineFor(rehydrateLogEntry({ label: 'Other', expr: 'd20(9)', total: 9, at: 600 })),
 		);
 
-		const amended: RollLogEntry = {
-			...rolled,
-			total: 18,
-			advantageRoll: { kept: 11, dropped: 4, mode: 1 },
-		};
+		// the same roll read at advantage after the fact: its d20(4) plus a second one, rolled 11
+		const amended = setAdvantage(rolled, ADVANTAGE_MODE.advantage, () => 0.5);
+		if (!amended) throw new Error('the roll has a d20 — it can take advantage');
 		await reviseLog(s, 'mirt', logLineFor(amended));
 
 		const log = await readLog(s, 'mirt');

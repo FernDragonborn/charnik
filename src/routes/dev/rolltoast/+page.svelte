@@ -9,7 +9,7 @@
 	import { cycleAdvantage } from '$lib/rules/dice';
 	import { toast } from 'svelte-sonner';
 	import type { RollLogEntry } from '$lib/combat/helpers';
-	import { rehydrateLogEntry, type StoredRollLogEntry } from '$lib/combat/roll';
+	import { amendedNote, rehydrateLogEntry, type StoredRollLogEntry } from '$lib/combat/roll';
 
 	// a live entry the controls actually act on, so the preview exercises the real amend path
 	let live = $state<RollLogEntry>(
@@ -25,11 +25,10 @@
 	const onAdvantage = () => {
 		const revised = cycleAdvantage(live);
 		if (!revised) return;
-		const mode = revised.advantageRoll?.mode;
+		// the same sentence the combat VM writes, through the same builder
+		const note = amendedNote(live.note, revised);
 		const { note: _replaced, ...rest } = revised;
-		live = mode
-			? { ...rest, note: `${mode === -1 ? 'disadvantage' : 'advantage'} after the roll` }
-			: rest;
+		live = note ? { ...rest, note } : rest;
 	};
 	const rerollDamage = {
 		attack: 0,

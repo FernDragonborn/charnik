@@ -8,9 +8,13 @@ import {
 	DIE_ROLE,
 	parseLegacyExpr,
 	rehydrateRoll,
-	amendWithAdvantage,
-	flipAdvantage,
+	totalOf,
+	setAdvantage,
 	cycleAdvantage,
+	keptD20,
+	droppedD20s,
+	naturalOf,
+	ADVANTAGE_MODE,
 	type Rng,
 	type Rolled,
 } from './dice';
@@ -82,6 +86,8 @@ describe('rollPool', () => {
 			total: 4,
 			mod: 0,
 			dice: [{ sides: 6, value: 4, face: 4, sign: 1, detail: '4', role: DIE_ROLE.pool }],
+			d20s: [], // no d20 decided this one
+			advantage: ADVANTAGE_MODE.neither,
 			expr: 'd6(4)',
 		});
 	});
@@ -100,13 +106,16 @@ describe('rollPool', () => {
 	it('advantage rolls two d20 and keeps the higher, exposing the loser', () => {
 		const r = rollPool({ 20: 1 }, { rng: rngSequence(0.1, 0.9), advantage: 1 }); // d20 → 3, then 19
 		expect(r.total).toBe(19);
-		expect(r.advantageRoll).toMatchObject({ kept: 19, dropped: 3, mode: 1 });
+		expect(r.d20s.map((d) => d.value)).toEqual([3, 19]); // draw order
+		expect(keptD20(r)?.value).toBe(19);
+		expect(r.advantage).toBe(ADVANTAGE_MODE.advantage);
 	});
 
 	it('disadvantage keeps the lower', () => {
 		const r = rollPool({ 20: 1 }, { rng: rngSequence(0.1, 0.9), advantage: -1 });
 		expect(r.total).toBe(3);
-		expect(r.advantageRoll).toMatchObject({ kept: 3, dropped: 19, mode: -1 });
+		expect(keptD20(r)?.value).toBe(3);
+		expect(droppedD20s(r).map((d) => d.value)).toEqual([19]);
 	});
 
 	it('adds signed bonus dice (Bless +1d4 / Bane −1d4)', () => {
@@ -129,9 +138,9 @@ describe('rollPool', () => {
 	});
 
 	it('exposes the natural d20 face (nat-1/nat-20 outcomes)', () => {
-		expect(rollPool({ 20: 1 }, { rng: rngSequence(0.999), mod: 5 }).natural).toBe(20); // 20 + 5 = 25 total
-		expect(rollPool({ 20: 1 }, { rng: rngSequence(0), mod: 5 }).natural).toBe(1);
-		expect(rollPool({ 6: 1 }, rngSequence(0.5)).natural).toBeUndefined(); // no d20 in pool
+		expect(naturalOf(rollPool({ 20: 1 }, { rng: rngSequence(0.999), mod: 5 }))).toBe(20);
+		expect(naturalOf(rollPool({ 20: 1 }, { rng: rngSequence(0), mod: 5 }))).toBe(1);
+		expect(naturalOf(rollPool({ 6: 1 }, rngSequence(0.5)))).toBeUndefined(); // no d20 in pool
 	});
 });
 
@@ -153,7 +162,7 @@ describe('rollPool · roll-manipulation (L1 reroll / min_die facts)', () => {
 		const r = rollPool({ 20: 1 }, { rng: rngSequence(0.1), minDie: 10, mod: 3 }); // d20 → 3 → 10
 		expect(r.total).toBe(13); // 10 + 3 mod
 		expect(r.expr).toBe('d20(3→10) +3');
-		expect(r.natural).toBe(3); // the NATURAL face is pre-floor (a nat-1 is still a nat-1)
+		expect(naturalOf(r)).toBe(3); // the NATURAL face is pre-floor (a nat-1 is still a nat-1)
 	});
 
 	it('applies reroll THEN floor in order (Halfling Lucky 1 + a floor)', () => {
@@ -268,12 +277,14 @@ describe('Rolled.dice — the record, with `expr` as its rendering', () => {
 			{ 20: 1 },
 			{ rng: rngSequence(0.1, 0.5), minDie: 10, bonusDice: [{ sides: 4, count: 1, sign: -1 }] },
 		);
-		expect(r.dice).toEqual([
-			// floored: it showed 3, it counted 10 — the two numbers the old string had to encode
+		// floored: it showed 3, it counted 10 — the two numbers the old string had to encode
+		expect(r.d20s).toEqual([
 			{ sides: 20, value: 10, face: 3, sign: 1, detail: '3→10', role: DIE_ROLE.pool },
+		]);
+		expect(r.dice).toEqual([
 			{ sides: 4, value: 3, face: 3, sign: -1, detail: '3', role: DIE_ROLE.bonus },
 		]);
-		expect(r.dice.reduce((n, d) => n + d.sign * d.value, 0) + r.mod).toBe(r.total);
+		expect(r.total).toBe(totalOf(r));
 	});
 
 	it('renders a positive bonus die with its sign — the distinction the old formatter lost', () => {
@@ -282,7 +293,7 @@ describe('Rolled.dice — the record, with `expr` as its rendering', () => {
 			{ rng: rngSequence(0.5, 0.5), bonusDice: [{ sides: 4, count: 1, sign: 1 }] },
 		);
 		expect(r.expr).toBe('d20(11) + +d4(3)'); // a pool d4 would read `d4(3)`
-		expect(r.dice.map((d) => d.role)).toEqual([DIE_ROLE.pool, DIE_ROLE.bonus]);
+		expect(r.dice.map((d) => d.role)).toEqual([DIE_ROLE.bonus]);
 	});
 
 	it('leaves a roll that already has its dice exactly as it found it', () => {
@@ -299,132 +310,98 @@ describe('Rolled.dice — the record, with `expr` as its rendering', () => {
 		]);
 	});
 
-	it('amends a roll through its dice, and the rendered string follows', () => {
-		// the kept d20 moves to `advantageRoll`, so it must leave BOTH the dice and their rendering
-		const start = rollPool({ 20: 1, 6: 1 }, { rng: rngSequence(0.3, 0.5), mod: 4 });
-		const out = amendWithAdvantage(start, () => 0.9);
-		expect(out?.dice.map((d) => d.sides)).toEqual([6]);
-		expect(out?.expr).toBe(`d6(4) +4`);
-		expect(out?.mod).toBe(4);
+	it('keeps the deciding d20 out of the pool, and renders the one that counted', () => {
+		const r = rollPool({ 20: 1, 6: 1 }, { rng: rngSequence(0.3, 0.5), mod: 4 });
+		expect(r.dice.map((d) => d.sides)).toEqual([6]);
+		expect(r.d20s.map((d) => d.value)).toEqual([7]);
+		expect(r.expr).toBe('d20(7) + d6(4) +4');
+		// and at advantage the string follows the die that now counts, never both
+		const adv = setAdvantage(r, ADVANTAGE_MODE.advantage, () => 0.9); // fresh 19
+		expect(adv?.expr).toBe('d20(19) + d6(4) +4');
 	});
 });
 
 describe('parseLegacyExpr · advantage-only pool', () => {
-	it('still reads the modifier when the kept d20 lives outside expr', () => {
-		// an advantage roll's d20 is surfaced as `advantageRoll`, so expr is just the mod
-		const r = rollPool({ 20: 1 }, { rng: rngSequence(0.65, 0.3), mod: 5, advantage: 1 });
-		expect(r.expr).toBe(' +5');
-		expect(parseLegacyExpr(r.expr)).toEqual({ dice: [], mod: 5 });
+	it('still reads the modifier of an old advantage line, whose d20 lived beside the string', () => {
+		// a pre-2026-08-22 advantage roll wrote its pair to `advantageRoll` and left ` +5` behind
+		expect(parseLegacyExpr(' +5')).toEqual({ dice: [], mod: 5 });
+		const roll = rehydrateRoll({
+			expr: ' +5',
+			total: 19,
+			advantageRoll: { kept: 14, dropped: 7, mode: 1, original: 7 },
+		});
+		expect(roll.mod).toBe(5);
+		expect(roll.d20s.map((d) => d.value)).toEqual([7, 14]); // draw order, from `original`
+		expect(keptD20(roll)?.value).toBe(14);
 	});
 });
 
 /*
- * UX-3 retroactive advantage: a roll that already landed can take a second d20 after the fact. The
- * cases that matter are the two outcomes (the new die wins / loses), the two ineligible shapes, and
- * that the kept die leaves `expr` so it can't render twice.
+ * UX-3 retroactive advantage: a roll that already landed can be READ at a different advantage. The
+ * cases that matter are the two outcomes (the new die wins / loses), the shapes that can't take a
+ * mode, and — the point of the whole model — that only the first switch ever draws a die.
  */
-describe('amendWithAdvantage', () => {
+describe('setAdvantage', () => {
 	/** A d20 roll as it comes back off DISK — an entry written before `Rolled` carried its dice, so
 	 *  the amend path is exercised against exactly the shape the legacy reader hands it. */
 	const rolled = (expr: string, total: number, natural?: number): Rolled =>
 		rehydrateRoll({ expr, total, ...(natural !== undefined ? { natural } : {}) });
+	const adv = (r: Rolled, rng?: Rng) => setAdvantage(r, ADVANTAGE_MODE.advantage, rng);
 
 	it('keeps the fresh die when it beats the original, and raises the total by the difference', () => {
-		const out = amendWithAdvantage(rolled('d20(7) +4', 11, 7), () => 0.9); // → 19
+		const out = adv(rolled('d20(7) +4', 11, 7), () => 0.9); // → 19
 		expect(out).not.toBeNull();
-		expect(out?.advantageRoll).toMatchObject({ kept: 19, dropped: 7, mode: 1 });
+		expect(out?.d20s.map((d) => d.value)).toEqual([7, 19]); // in DRAW order, not kept-first
+		expect(keptD20(out!)?.value).toBe(19);
+		expect(droppedD20s(out!).map((d) => d.value)).toEqual([7]);
 		expect(out?.total).toBe(23);
-		expect(out?.natural).toBe(19);
+		expect(naturalOf(out!)).toBe(19);
 	});
 
 	it('keeps the original when the fresh die loses, and the total does not move', () => {
-		const out = amendWithAdvantage(rolled('d20(18) +4', 22, 18), () => 0.1); // → 3
-		expect(out?.advantageRoll).toMatchObject({ kept: 18, dropped: 3, mode: 1 });
+		const out = adv(rolled('d20(18) +4', 22, 18), () => 0.1); // → 3
+		expect(keptD20(out!)?.value).toBe(18);
+		expect(droppedD20s(out!).map((d) => d.value)).toEqual([3]);
 		expect(out?.total).toBe(22);
-		expect(out?.natural).toBe(18);
+		expect(naturalOf(out!)).toBe(18);
 	});
 
-	it('takes the kept d20 out of `expr` (it renders from advantageRoll — else it shows twice)', () => {
-		const out = amendWithAdvantage(rolled('d20(7) + d6(3) +4', 14, 7), () => 0.9);
+	it('takes the deciding d20 out of the pool, so the line can lead with it', () => {
+		const out = adv(rolled('d20(7) + d6(3) +4', 14, 7), () => 0.9);
 		expect(out?.dice.map((d) => d.sides)).toEqual([6]);
 		expect(out?.mod).toBe(4);
 	});
 
 	it('compares what the dice CONTRIBUTE, so a min_die floor is not undone', () => {
 		// Reliable Talent: a natural 3 was floored to 10 and contributed 10; a fresh 7 must not win
-		const out = amendWithAdvantage(rolled('d20(3→10) +5', 15, 3), () => 0.31); // → 7
-		expect(out?.advantageRoll).toMatchObject({ kept: 10, dropped: 7, mode: 1 });
+		const out = adv(rolled('d20(3→10) +5', 15, 3), () => 0.31); // → 7
+		expect(keptD20(out!)?.value).toBe(10);
+		expect(naturalOf(out!)).toBe(3); // and the floor still doesn't erase the natural
 		expect(out?.total).toBe(15);
 	});
 
-	it('refuses a roll that two dice already decided', () => {
-		expect(
-			amendWithAdvantage(
-				rehydrateRoll({ expr: '+4', total: 18, advantageRoll: { kept: 14, dropped: 3 } }),
-			),
-		).toBeNull();
+	it('re-reads a pair it already has instead of drawing another die', () => {
+		const pair = rollPool({ 20: 1 }, { rng: rngSequence(0.1, 0.9), advantage: 1 });
+		// an rng that throws if drawn from: switching mode must not touch it
+		const out = setAdvantage(pair, ADVANTAGE_MODE.disadvantage, rngSequence());
+		expect(out?.d20s).toEqual(pair.d20s);
+		expect(keptD20(out!)?.value).toBe(3);
 	});
 
 	it('refuses a roll with no d20 in it (damage)', () => {
-		expect(amendWithAdvantage(rolled('d8(5) + d6(2) +3', 10))).toBeNull();
+		expect(adv(rolled('d8(5) + d6(2) +3', 10))).toBeNull();
+	});
+
+	it('is a no-op for the mode the roll already has', () => {
+		const r = rollPool({ 20: 1 }, rngSequence(0.5));
+		expect(setAdvantage(r, ADVANTAGE_MODE.neither, rngSequence())).toEqual(r);
 	});
 });
 
 /*
- * `mode` records advantage vs disadvantage on the pair itself. It cannot be recovered from the two
- * numbers — a tie looks identical either way — and the roll row frames the pair green or red by it.
- */
-describe('advantageRoll.mode', () => {
-	const rolled = (expr: string, total: number): Rolled => rehydrateRoll({ expr, total });
-
-	it('is +1 for advantage and −1 for disadvantage even when both dice tie', () => {
-		const tie = () => 0.5; // both d20 land on the same face
-		expect(rollPool({ 20: 1 }, { rng: tie, advantage: 1 }).advantageRoll?.mode).toBe(1);
-		expect(rollPool({ 20: 1 }, { rng: tie, advantage: -1 }).advantageRoll?.mode).toBe(-1);
-	});
-
-	it('a roll amended after the fact is advantage by construction', () => {
-		expect(amendWithAdvantage(rolled('d20(7) +4', 11))?.advantageRoll?.mode).toBe(1);
-	});
-});
-
-/*
- * Tapping the d20 a second time switches advantage to disadvantage. It reinterprets the pair already
- * rolled rather than drawing a new die, so the toggle can never manufacture a better result.
- */
-describe('flipAdvantage', () => {
-	const plain = (expr: string, total: number): Rolled => rehydrateRoll({ expr, total });
-
-	it('swaps which of the two dice counted, and moves the total with it', () => {
-		const advantaged = amendWithAdvantage(plain('d20(7) +4', 11), () => 0.9); // 19 kept
-		const flipped = flipAdvantage(advantaged!);
-		expect(flipped?.advantageRoll).toMatchObject({ kept: 7, dropped: 19, mode: -1 });
-		expect(flipped?.total).toBe(11); // back to what the original die scored
-		expect(flipped?.natural).toBe(7);
-	});
-
-	it('flips back, so the control is a toggle and not a one-way door', () => {
-		const once = amendWithAdvantage(plain('d20(7) +4', 11), () => 0.9);
-		const twice = flipAdvantage(flipAdvantage(once!)!);
-		expect(twice?.advantageRoll).toMatchObject({ kept: 19, dropped: 7, mode: 1 });
-		expect(twice?.total).toBe(23);
-	});
-
-	it('still flips the MODE when the two dice tied (the numbers alone can never say which)', () => {
-		const tied = rollPool({ 20: 1 }, { rng: () => 0.5, advantage: 1 });
-		const flipped = flipAdvantage(tied);
-		expect(flipped?.advantageRoll?.mode).toBe(-1);
-		expect(flipped?.total).toBe(tied.total);
-	});
-
-	it('refuses a roll no pair decided', () => {
-		expect(flipAdvantage(plain('d20(7) +4', 11))).toBeNull();
-	});
-});
-
-/*
- * The d20 pill is a three-state control: advantage → disadvantage → neither. Only the first tap draws
- * a die, so a lap round the cycle can never improve a roll, and a mis-tap is always undoable.
+ * The d20 pill is a three-state control: advantage → disadvantage → neither. Only the FIRST tap
+ * draws, so a lap round the cycle can never improve a roll — the property the control was justified
+ * with, and the one going back to neutral used to break by forgetting the pair.
  */
 describe('cycleAdvantage', () => {
 	const plain = (expr: string, total: number): Rolled => rehydrateRoll({ expr, total });
@@ -432,34 +409,54 @@ describe('cycleAdvantage', () => {
 	it('goes advantage → disadvantage → neither, and back to the roll as it landed', () => {
 		const start = plain('d20(7) + d6(3) +4', 14);
 		const adv = cycleAdvantage(start, () => 0.9); // fresh 19 beats 7
-		expect(adv?.advantageRoll).toMatchObject({ kept: 19, dropped: 7, mode: 1, original: 7 });
+		expect(keptD20(adv!)?.value).toBe(19);
+		expect(adv?.advantage).toBe(ADVANTAGE_MODE.advantage);
 		expect(adv?.total).toBe(26);
 
 		const dis = cycleAdvantage(adv!);
-		expect(dis?.advantageRoll).toMatchObject({ kept: 7, dropped: 19, mode: -1 });
+		expect(keptD20(dis!)?.value).toBe(7);
+		expect(dis?.advantage).toBe(ADVANTAGE_MODE.disadvantage);
 		expect(dis?.total).toBe(14);
 
 		const none = cycleAdvantage(dis!);
-		expect(none?.advantageRoll).toBeUndefined();
+		expect(none?.advantage).toBe(ADVANTAGE_MODE.neither);
 		expect(none?.total).toBe(14); // exactly the roll we started from
 		expect(none?.dice).toEqual(start.dice);
 		expect(none?.expr).toBe(start.expr);
 	});
 
-	it('undoes a NATIVE disadvantage back to the die that was rolled first', () => {
-		const rolled = rollPool({ 20: 1 }, { rng: rngSequence(0.9, 0.1), mod: 2, advantage: -1 }); // 19 then 3, keeps 3
-		expect(rolled.advantageRoll).toMatchObject({ kept: 3, dropped: 19, original: 19 });
-		const none = cycleAdvantage(rolled);
-		expect(none?.advantageRoll).toBeUndefined();
-		expect(none?.total).toBe(21); // 19 + 2
+	// the bug this model exists to kill: neutral used to DELETE the second die, so the next tap drew a
+	// fresh one and a player could keep lapping until they liked the result
+	it('never draws a second time — a full lap keeps the same two dice', () => {
+		let r: Rolled | null = plain('d20(7) +4', 11);
+		r = cycleAdvantage(r, () => 0.9); // the one draw: 19
+		const pair = r!.d20s;
+		// every further step gets an rng that throws the moment it is asked for a number
+		for (let i = 0; i < 6; i++) {
+			r = cycleAdvantage(r!, rngSequence());
+			expect(r?.d20s).toEqual(pair);
+		}
+		expect(r?.advantage).toBe(ADVANTAGE_MODE.advantage); // 7 steps from neither = two full laps
 	});
 
-	it('an entry with no recorded original flips instead of getting stuck', () => {
-		const legacy: Rolled = rehydrateRoll({
+	it('undoes a NATIVE disadvantage back to the die that was rolled first', () => {
+		const rolled = rollPool({ 20: 1 }, { rng: rngSequence(0.9, 0.1), mod: 2, advantage: -1 }); // 19 then 3, keeps 3
+		expect(keptD20(rolled)?.value).toBe(3);
+		const none = setAdvantage(rolled, ADVANTAGE_MODE.neither);
+		expect(none?.total).toBe(21); // 19 + 2 — the die that stood before the second one
+	});
+
+	it('an old entry with no recorded draw order laps back to advantage instead of guessing', () => {
+		// the pair is known, the order is not — so "the die that stood first" cannot be answered, and
+		// a total built on a guess is worse than a mode that doesn't offer neutral
+		const legacy = rehydrateRoll({
 			expr: '+4',
 			total: 7,
 			advantageRoll: { kept: 3, dropped: 18, mode: -1 },
 		});
-		expect(cycleAdvantage(legacy)?.advantageRoll).toMatchObject({ kept: 18, mode: 1 });
+		expect(legacy.drawOrderUnknown).toBe(true);
+		expect(setAdvantage(legacy, ADVANTAGE_MODE.neither)).toBeNull();
+		expect(cycleAdvantage(legacy)?.advantage).toBe(ADVANTAGE_MODE.advantage);
+		expect(keptD20(cycleAdvantage(legacy)!)?.value).toBe(18);
 	});
 });
