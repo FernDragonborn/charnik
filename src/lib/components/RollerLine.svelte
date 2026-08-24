@@ -75,6 +75,9 @@
 	function onKeydown(event: KeyboardEvent): void {
 		if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
 			event.preventDefault();
+			// the panel handles Ctrl+Enter too, for focus that is NOT in a line (a header die button).
+			// Without this the event reaches both and one press rolls twice.
+			event.stopPropagation();
 			roll();
 			return;
 		}
