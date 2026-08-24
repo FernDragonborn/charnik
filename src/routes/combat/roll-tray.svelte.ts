@@ -104,6 +104,18 @@ export class RollTray {
 		});
 	};
 
+	/** Prefill a roll that is PURE DAMAGE — nothing decides it with a d20 (Fireball: the target saves,
+	 *  not you). A separate entry point rather than a flag on `prefill`, because the two are different
+	 *  SHAPES: this one has no test line at all, and giving damage one would hand it an advantage
+	 *  toggle and a to-hit total it has no use for. */
+	prefillDamage = (spec: { label: string; parts: DamagePartSpec[]; note?: string }) => {
+		this.organ.prefill({
+			label: spec.label,
+			damage: spec.parts,
+			...(spec.note ? { note: spec.note } : {}),
+		});
+	};
+
 	/** Give the roll its damage half — one part per damage type. UBUG-21: this used to be a queue the
 	 *  tray could neither show nor edit, so everything the player could change belonged to the to-hit
 	 *  under a heading that said "Greataxe"; it is now the organ's second LINE, made of the same

@@ -323,10 +323,17 @@ export class RollerOrgan {
 				}),
 				advantage: spec.test.advantage ?? ADVANTAGE_MODE.neither,
 			});
-		this.lines = lines.length ? lines : [emptyLine(ROLLER_ROLE.test)];
-		this.drafts = this.lines.map(() => '');
+		this.lines = lines;
+		this.drafts = lines.map(() => '');
 		this.focus = 0;
 		if (spec.damage?.length) this.setDamage(spec.damage);
+		// neither half — an ad-hoc roll is still this organ, with an empty line to type into. The
+		// fallback runs AFTER the damage, or a damage-only roll would be given a test line it has no
+		// use for (an advantage toggle and a to-hit total on a Fireball).
+		if (!this.lines.length) {
+			this.lines = [emptyLine(ROLLER_ROLE.test)];
+			this.drafts = [''];
+		}
 	};
 
 	/**

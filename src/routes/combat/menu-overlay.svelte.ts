@@ -71,6 +71,17 @@ export class MenuOverlay {
 		const [parsed] = req.pool ? [] : parseDamageParts(req.formula);
 		const pool = req.pool ?? parsed?.pool ?? {};
 		const mod = req.mod ?? parsed?.mod ?? 0;
+		// A request with no d20 is a QUANTITY, not a verdict: a compendium "8d6 fire" is damage, and a
+		// test line would give it an advantage toggle and a to-hit total. Every caller that means a
+		// test has a d20 in its pool, so the pool IS the signal — no extra field on the seam.
+		if (!pool[20]) {
+			this.host().tray.prefillDamage({
+				label: req.label,
+				parts: [{ dice: pool, mod, type: parsed?.type ?? '' }],
+			});
+			this.openMenuCentered('dice');
+			return;
+		}
 		this.host().tray.prefill({
 			label: req.label,
 			dice: pool,

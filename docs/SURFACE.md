@@ -200,7 +200,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **EyeIcon** | `on` | The open/closed eye glyph, in `currentColor` — shared by EyeToggle (the spellbook show-on-sheet |
 | **EyeToggle** | `on`, `title`, `onclick` | Show-on-sheet toggle (d-spellmgr `.ic.eye`): open eye = on the sheet, closed = hidden. |
 | **FirstRunModal** | `defaultDir`, `pickFolder`, `onConfirm` | First-run, full-screen modal: asks WHERE to keep the user's data (characters + content) before |
-| **GeneralSettings** | — | Appearance & language settings: theme, UI locale, and the compendium/search edition filter. |
+| **GeneralSettings** | — | Appearance & language settings: theme, UI locale, the compendium/search edition filter — and |
 | **GenericHead** | `detail`, `editable`, `draft` | The "shapka" for every non-spell, non-monster article (species, class, feat, item, …): eyebrow, |
 | **HashDriftModal** | `items`, `onUpdate`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal for the DATA-DRIFT case (DATA-VER-1): a file's body no longer |
 | **Icon** | `name`, `size`, `fill`, `label` | The app's icon set: Lucide (ISC), one component so a caller writes `<Icon name="x" />` and never |

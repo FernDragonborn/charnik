@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import fc from 'fast-check';
 import {
 	rollPool,
 	rollFormula,
@@ -521,5 +522,85 @@ describe('rollPool · crits', () => {
 
 	it('rolls exactly as before when no crit is asked for', () => {
 		expect(rollPool({ 6: 1 }, rngSequence(0.5)).dice).toHaveLength(1);
+	});
+});
+
+/*
+ * Properties, not examples — the roller had none, which ROLLER-PLAN finding M calls out as the gap
+ * that let the advantage re-roll leak live so long. These four pin what must be true of EVERY roll,
+ * whatever it drew, and they are the ones the design argued from rather than a coverage exercise.
+ */
+describe('rollPool · properties', () => {
+	/** A pool of 1–4 groups over the real die sizes, so a property covers shapes an example can't. */
+	const pool = fc
+		.array(fc.tuple(fc.constantFrom(4, 6, 8, 10, 12, 20), fc.integer({ min: 1, max: 4 })), {
+			minLength: 1,
+			maxLength: 4,
+		})
+		.map((pairs) => Object.fromEntries(pairs) as Record<number, number>);
+	const mod = fc.integer({ min: -10, max: 10 });
+	/** A finite, deterministic rng — the roll is a pure function of it. */
+	const seed = fc.array(fc.double({ min: 0, max: 0.999, noNaN: true }), { minLength: 300 });
+	const cycled = (r: Rolled) => r.d20s.map((d) => d.value).sort((a, b) => a - b);
+
+	it('a total is its dice plus the one d20 that counts plus the modifier — nothing else', () => {
+		fc.assert(
+			fc.property(pool, mod, seed, (dice, m, values) => {
+				const r = rollPool(dice, { mod: m, rng: rngSequence(...values) });
+				const fromDice = r.dice.reduce((n, d) => n + d.sign * d.value, 0);
+				expect(r.total).toBe(fromDice + (keptD20(r)?.value ?? 0) + m);
+			}),
+		);
+	});
+
+	it('cycling the advantage state never changes the dice that were drawn', () => {
+		fc.assert(
+			fc.property(mod, seed, (m, values) => {
+				const rng = rngSequence(...values);
+				const first = rollPool({ 20: 1, 6: 2 }, { mod: m, rng });
+				let r = first;
+				const seen: number[][] = [];
+				// three laps: only the FIRST switch away from neither may draw, ever
+				for (let i = 0; i < 9; i++) {
+					r = cycleAdvantage(r, rng) ?? r;
+					seen.push(cycled(r));
+					expect(r.dice).toEqual(first.dice);
+				}
+				expect(new Set(seen.map((s) => s.join(','))).size).toBe(1);
+			}),
+		);
+	});
+
+	it('the d20 that counts is never worse than the one that did not', () => {
+		fc.assert(
+			fc.property(seed, (values) => {
+				const rng = rngSequence(...values);
+				const advantaged = setAdvantage(
+					rollPool({ 20: 1 }, { rng }),
+					ADVANTAGE_MODE.advantage,
+					rng,
+				);
+				if (!advantaged) return;
+				const kept = keptD20(advantaged)?.value ?? 0;
+				for (const dropped of droppedD20s(advantaged))
+					expect(kept).toBeGreaterThanOrEqual(dropped.value);
+			}),
+		);
+	});
+
+	it('a full lap of the cycle returns the roll exactly as it landed', () => {
+		fc.assert(
+			fc.property(mod, seed, (m, values) => {
+				const rng = rngSequence(...values);
+				const landed = rollPool({ 20: 1, 8: 1 }, { mod: m, rng });
+				const lap = cycleAdvantage(
+					cycleAdvantage(cycleAdvantage(landed, rng) ?? landed, rng) ?? landed,
+					rng,
+				);
+				expect(lap?.advantage).toBe(ADVANTAGE_MODE.neither);
+				expect(lap?.total).toBe(landed.total);
+				expect(lap?.expr).toBe(landed.expr);
+			}),
+		);
 	});
 });

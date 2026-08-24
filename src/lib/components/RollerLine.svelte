@@ -102,6 +102,17 @@
 		}
 	}
 
+	/** A focused pill IS the selected pill — no second piece of state for it, and the focus ring is
+	 *  the selection. Del/Backspace removes it, Enter unfolds it back to text (the same act as a
+	 *  double-click), and the caret goes back into the line either way so typing continues. */
+	function onPillKey(event: KeyboardEvent, at: number): void {
+		if (event.key === 'Delete' || event.key === 'Backspace') organ.removePill(index, at);
+		else if (event.key === 'Enter') organ.unfold(index, at);
+		else return;
+		event.preventDefault();
+		input?.focus();
+	}
+
 	function onDrop(event: DragEvent): void {
 		event.preventDefault();
 		const moved = event.dataTransfer?.getData('text/roller-pill');
@@ -132,7 +143,9 @@
 				? `${pill.type}${pill.inherited ? ' · inherited from the group on its left' : ''}`
 				: pill.text}
 			ondragstart={(e) => e.dataTransfer?.setData('text/roller-pill', `${index}:${at}`)}
+			onclick={(e) => e.currentTarget.focus()}
 			ondblclick={() => organ.unfold(index, at)}
+			onkeydown={(e) => onPillKey(e, at)}
 		>
 			{#if pill.kind === PILL_KIND.dice}
 				<span class="roller-value {diceTone(pill)}">{diceText(pill)}</span>
@@ -339,6 +352,12 @@
 		font-size: var(--font-size-xs);
 		white-space: nowrap;
 		cursor: grab;
+	}
+	/* focus is the selection: the pill you clicked is the pill Del removes */
+	.roller-pill:focus {
+		outline: none;
+		border-color: var(--color-text-muted);
+		background: color-mix(in srgb, var(--color-text) 8%, var(--color-surface-2));
 	}
 	.roller-pill.type-pill {
 		padding: 4px 7px;

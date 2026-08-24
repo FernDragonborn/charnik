@@ -365,18 +365,11 @@ export class SpellCasting {
 		const [primary, ...rest] = parts;
 		if (!primary) return;
 		if (wantsTray(e)) {
-			this.host.openRoll(
-				{
-					label,
-					dice: primary.dice,
-					mod: primary.mod,
-					...(primary.bonusDice ? { bonusDice: primary.bonusDice } : {}),
-					...(primary.mods ? { mods: primary.mods } : {}),
-					...(note ? { note } : {}),
-				},
-				e,
-			);
-			if (rest.length) this.host.tray.queueDamage({ label, parts: rest });
+			// EVERY part is damage — there is no d20 here. The tray used to put the primary part on the
+			// pool it built the to-hit from, which under the roller's line model would give a Fireball an
+			// advantage toggle and a to-hit total.
+			this.host.tray.prefillDamage({ label, parts, ...(note ? { note } : {}) });
+			this.host.openMenu('dice', e);
 		} else {
 			this.host.tray.pushRoll(
 				label,

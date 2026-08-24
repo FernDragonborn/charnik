@@ -1051,9 +1051,11 @@ were learned the hard way.
 - **W1 · Roll card (UBUG-20 + UX-3) — DONE 2026-08-10.** One `RollRow` across toast / Playbar / log /
   tray, retroactive advantage as a three-state pill, the reroll pill, the one-line strip. Tails are
   listed on UBUG-20 itself.
-- **W2 · The roller → ROLLER-N → UBUG-11.** Now has its own ledger, **[`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md)**,
-  after the 2026-08-10 audit turned "add a loop for N attacks" into "the result SHAPE is what aged".
-  Carries `UBUG-21` (the tray edits the to-hit while claiming to be the attack) and `UBUG-22`.
+- **W2 · The roller → ROLLER-N → UBUG-11. ROLLER-N and UBUG-21 closed 2026-08-24**; the ledger,
+  **[`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md)**, stays as the record of the 2026-08-10 audit that
+  turned "add a loop for N attacks" into "the result SHAPE is what aged", and of the organ's design.
+  What the wave still owes: `UBUG-11` — a class action that makes N attacks (Flurry of Blows) needs
+  the `rolls` intent in ACTIONS.md to CALL the roller, which now exists to be called.
 - **W3 · UX-1 error-copy pass → ARCH-1 i18n sweep.** After W0, because REL-4 adds a whole class of
   new user-facing messages that would otherwise be written twice. UX-1 before ARCH-1, or bad copy
   gets translated and then rewritten. **And after W2** — this reason is new and load-bearing: the
@@ -1203,7 +1205,13 @@ holds the done-work log; these are the OPEN tails it carried):**
   form the shipped monsters use (`12 (2d6 + 5)` must roll 2d6+5, never 2d6+17), which the first draft
   of this fix broke and the pre-commit self-check caught against real content. Same reason prose
   ("1d20 vs AC 15") is ignored: a missing number beats a wrong one. 17 new assertions.
-- [ ] **UBUG-21 · The dice tray edits the TO-HIT while claiming to be the attack — dice and modifier
+- [x] **UBUG-21 · CLOSED 2026-08-24 with `ROLLER-N`'s organ: the damage is the second LINE, made of
+  the same editable pills as the to-hit, so a `+1d6` typed for a damage rider lands on the damage.
+  Two silently-wrong numbers went with it — a prefilled roll dropped an effect's dice entirely (alt-
+  clicking under Bless rolled a d4 short of the same roll tapped normally), and reroll/bound facts
+  now ride the pool's own dice so a GWF reroll can't reach a Bless die beside them.**
+  The report, kept because it names the failure class: **the dice tray edits the TO-HIT while
+  claiming to be the attack — dice and modifier
   you add for damage land on the d20 instead (reported by the maintainer 2026-08-10, long-standing;
   `design-preview/dice-bug.png`). Fix WITH `ROLLER-N`, below — same seam, and pointless to build twice.**
   Alt/Ctrl-clicking an attack prefills the tray from `attackRoll`'s tray branch: `dice: {20:1}`,
@@ -1233,8 +1241,15 @@ holds the done-work log; these are the OPEN tails it carried):**
   New shot state `combat-dice-attack` pins it: the prefilled tray had no visual coverage at all,
   which is part of why this survived so long. **The real fix is still ROLLER-N** — this changes no
   structure and buys none of it.
-- [~] **ROLLER-N · one roller that fires N independent sub-rolls (promoted to its own item 2026-08-09;
-  working ledger + the 2026-08-10 audit behind it → [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md)).**
+- [x] **ROLLER-N · one roller that fires N independent sub-rolls — CLOSED 2026-08-24 (promoted to its
+  own item 2026-08-09; working ledger + the 2026-08-10 audit behind it →
+  [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md)).**
+  **Slices 5–6 (2026-08-24): the ROLLER ORGAN.** A roll is built as LINES carrying a role — a d20
+  test is a verdict, damage is a quantity, and they are different kinds of thing rather than two
+  instances of "a roll". One action fires N instances of them, logged per line and toasted as one
+  card, which is the capability this item was filed for. Crits landed with it (`CRIT_METHOD`
+  classic/loyal, §9's rule option + a per-roll override). Design decisions, and what is still open,
+  are in ROLLER-PLAN ▸ "The organ".
   **Slices 1–3 are done. 1 and 2 (2026-08-21): UBUG-22, then the ONE record** — the persisted line now
   carries the whole roll (damage, the advantage pair, the note), an amendment rewrites its own line
   instead of dying with the session, and old lines still load. That was the "do this EARLY" slice,
@@ -1248,20 +1263,19 @@ holds the done-work log; these are the OPEN tails it carried):**
   `kept`/`dropped`/`original`/`mode`/`advantageMode`; `setAdvantage` draws only on the first switch
   away from neutral, which closes the leak where cycling back to neutral deleted the second die and
   the next tap drew a fresh one — a control that could be tapped until it gave a better number.
-  Verified in the browser over six taps. Slices 5–6 (sub-rolls, crits) are what remains, and the
-  sub-roll one is what `UBUG-21` needs to close for real.
+  Verified in the browser over six taps.
   Was filed as a sub-tail of UPCAST (`UPCAST-ROLLER`, was D14) — the wrong home, because upcast is only
   one of its callers. **The capability:** N sub-rolls from one action, each its OWN to-hit + damage (own
-  advantage, own crit, own target), rendered as one grouped result. **Callers, all blocked on this and
-  nothing else:** (1) `count`-scaling cantrips — Eldritch Blast beams, Scorching Ray, Magic Missile,
-  Chain Lightning; today `remindCountScaling` (`combat/spell-casting.svelte.ts`) casts ONE instance and toasts
-  "N×: make N separate rolls at this level", a reminder standing in for the rolls (item 9: never a
-  silently-wrong single big die). (2) **UBUG-11** — a class action that makes N attacks (Flurry of Blows
-  = 2× Unarmed Strike); that item keeps its own half, the `rolls` intent in ACTIONS.md that lets a
-  feature CALL this. (3) any future multiattack. **Build it once here** — a second per-feature path is
-  the failure mode to avoid. **Carries `UBUG-21` with it** (above): the tray only ever built the
-  to-hit half, so the sub-roll model this item introduces is the same one that fixes it — close them
-  together.
+  advantage, own crit, own target), rendered as one grouped result. **The callers were the reason, and each now
+  needs only its own CALL:** (1) `count`-scaling cantrips — Eldritch Blast beams, Scorching Ray,
+  Magic Missile, Chain Lightning; `remindCountScaling` (`combat/spell-casting.svelte.ts`) still casts
+  ONE instance and toasts "N×: make N separate rolls at this level", a reminder standing in for the
+  rolls (item 9: never a silently-wrong single big die) — it can now prefill the roller with a
+  `×N` count pill instead. (2) **UBUG-11** — a class action that makes N attacks (Flurry of Blows =
+  2× Unarmed Strike); that item keeps its own half, the `rolls` intent in ACTIONS.md. (3) any future
+  multiattack. **Built once here** — a second per-feature path is the failure mode that was being
+  avoided. **Carried `UBUG-21` with it** (above), and closed it: the tray only ever built the to-hit
+  half, and the line model is the same one that fixes it.
   **The audit says the shape itself is what aged** — the roller answers with a formatted STRING that
   the UI parses back, so provenance, damage type and crit-doubling have nowhere to live, and the
   advantage amend/undo does string surgery. Details, decisions and slices are in `ROLLER-PLAN.md`;
@@ -2711,7 +2725,10 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
    attack/save). Same in 5e/5.5e.
    **Crit damage method = a rule-option**: *classic* (roll DOUBLE the dice) or *loyal* (one
    set of dice **maxed** + one set **rolled**); default classic, switchable in settings and
-   per-roll.
+   per-roll. **BUILT 2026-08-24** (`CRIT_METHOD`, Settings ▸ General, and an override in the
+   roller). The crit TOGGLE is on the roller's damage line and is manual: a natural 20 is not
+   always a crit, and a crit happens without one. The two-part roll builder above it is the
+   roller organ — its lines ARE ① to-hit and ② damage (ROLLER-N · UBUG-21).
 10. **Content editor UI** — add/save custom content (incl. effects) into homebrew CSVs.
 11. **Theming + settings** — light/dark + custom themes; settings screen with unified
     **rule-options toggles** (capacity, encumbrance, free-feat, xp-mode, multiclass,

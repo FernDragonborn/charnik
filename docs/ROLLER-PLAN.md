@@ -1,6 +1,7 @@
 # ROLLER-PLAN — Claude working ledger (the roller rewrite: ROLLER-N + the audit behind it)
 
 > Scope: `src/lib/rules/dice.ts` (the pure roller), `src/lib/combat/roll.ts`, `src/lib/dice/roll-toast.ts`,
+> `src/lib/dice/roller*.ts` (the organ), `src/lib/components/Roller*.svelte`,
 > `src/routes/combat/roll-tray.svelte.ts`. Companion to `docs/PLAN.md` · `ROLLER-N`, which stays the
 > roadmap entry; this is the working detail.
 > `[ ]` open · `[~]` partial · `[x]` done+verified. Update it in the same change as the code.
@@ -159,11 +160,11 @@ the advantage die at a different moment, pre-rolling anything) changes what a se
 produces. Harmless live, noisy in tests — so it must be one intentional change, not a drift across
 slices. Keep `rngSequence`'s over-draw throw: it is what catches an accidental extra draw.
 
-**Property tests are missing for the roller specifically.** TESTING.md's fast-check list covers the
-mod formula, capacity, stacking order-stability and save/load identity — nothing for dice. The
-rewrite is the moment to pin: total = Σ contributing dice + mod; a kept advantage die is never worse
-than the dropped one; **cycling the advantage state never changes the multiset of dice drawn** (the
-property the current leak violates); and amend→flip→clear returns the original roll exactly.
+**Property tests were missing for the roller specifically — ADDED 2026-08-24.** All four are in
+`rules/dice.test.ts` and in TESTING.md's list: total = Σ contributing dice + the one d20 that counts
++ mod; a kept advantage die is never worse than a dropped one; **cycling the advantage state never
+changes the multiset of dice drawn** (the property the 2026-08-22 leak violated); amend→flip→clear
+returns the roll exactly as it landed.
 
 ---
 
@@ -359,16 +360,71 @@ case" should be refused: ROLLER-N needs exactly two levels and nobody has asked 
    number the house rule forbids.
    Elven Accuracy is now a third element in `d20s` rather than a new concept — still unbuilt, but no
    longer a modelling question.
-5. `[ ]` **Sub-rolls.** A roll becomes a tree: one action → N attacks → each a to-hit + damage parts.
-   Moves `RollToastAttack[]` out of the view layer. This is `ROLLER-N` proper, and it is also what
-   `UBUG-21` needs (the dice tray can finally show and edit the damage half, not just the to-hit).
-6. `[ ]` **Crits.** The `natural === 20` hook exists; the toggle, the per-roll override and the
-   *classic* / *loyal* rule-option (PLAN §9) do not. Needs slice 2's structure to mark which dice are
-   the doubled ones.
+5. `[x]` **Sub-rolls — DONE 2026-08-24, as the ROLLER ORGAN.** A roll is now built as LINES, and a
+   line carries a role: a d20 test is a verdict (one die decides, the rest only colour it), damage is
+   a quantity (every die counts and they add up). One action fires N instances of them
+   (`RollerOrgan.roll()` answers with `RollLogEntry[]`), each logged on its own line and toasted as
+   one card. `RollToastAttack[]` stays as the toast's VIEW model, which is what it always should have
+   been — what moved down is the thing that produces it.
+   **`UBUG-21` closes with it.** The tray's damage was a queue it could neither show nor edit, so
+   everything adjustable belonged to the to-hit under a heading that said "Greataxe"; a `+1d6` typed
+   for a damage rider was summed into the d20. It is now the second LINE, made of the same pills.
+   **Two silently-wrong numbers fell out on the way.** A prefilled roll dropped an effect's DICE
+   entirely — alt-clicking under Bless rolled a d4 short of the same roll tapped normally — and the
+   reroll/bound facts now ride the POOL's own dice (`DicePill.min`/`max`/`reroll`), so a Great Weapon
+   Fighting reroll cannot reach a Bless die in the same line.
+   **What a line does NOT do:** it is two levels, not a tree (§6 above). A per-instance target, a
+   per-instance advantage and Elven Accuracy are all still unbuilt — the volley rolls the same set N
+   times, which is what §12 of the design decided a volley IS.
+6. `[x]` **Crits — DONE 2026-08-24.** `DIE_ROLE.crit` + `CRIT_METHOD` (*classic* rolls the dice
+   twice, *loyal* maxes one set), a toggle on the damage line, a rule option in Settings ▸ General
+   and a per-roll override in the roller itself. RAW: every DIE the roll made gains a twin — the
+   weapon's and an effect's alike — and the flat modifier gains nothing, which is the half of the
+   rule tables get wrong. A crit is never inferred from a natural 20: the same 20 is a crit on an
+   attack and just a 20 on a check, and a crit happens without one (finding B).
 
 **Not in scope, recorded so it isn't re-derived:** the −1 · 0 · +1 axis on `rollPool(advantage)` /
 `netAdvantage(fx)` stays numeric. That is arithmetic over effects that sums and clamps — a different
-fact from "how this roll was decided", which is the one that becomes a named member.
+fact from "how this roll was decided", which is the one that becomes a named member. The two meet at
+exactly one seam, `advantageMode()` in `roll-tray.svelte.ts`.
+
+---
+
+## The organ (design agreed 2026-08-24, built the same day)
+
+The design doc is a Claude Design page ("Roller Spec"); what it DECIDED lives here, because a link
+is not a record. Modules: `dice/roller.ts` (pure model), `dice/roller-vocabulary.ts` (the suggestion
+menu, pure), `dice/roller-sources.ts` (the one file that reads the content graph),
+`dice/roller.svelte.ts` (live state), `components/Roller.svelte` + `RollerLine.svelte`.
+
+- **The app never knows AC or DC, so no threshold is ever shown.** "Hit" is the player's call. The
+  one outcome the app may name by itself is a natural 1.
+- **A line is a list of PILLS, not a formula string** — the same decision `Rolled.dice` made one
+  floor down. A pill holds what a string cannot: which effect gave the die, that a bound applies to
+  it, that a damage type was inherited rather than typed.
+- **Colour lives in the TEXT, never in a pill's fill.** Every pill is `--color-surface-2` +
+  `--color-border-strong`; the number's colour says what it is. Tinted fills belong to the two state
+  toggles alone, so "this is a test" and "this line is focused" cannot read as one signal — which is
+  also why line focus is a neutral light border rather than the role colour.
+- **Only a fragment that looks like arithmetic and did not parse blocks the roll** (`+d4?`). A bare
+  WORD never blocks: on a damage line it is a damage type (homebrew invents them freely), anywhere
+  else it is a label the player wrote beside a die. A missing damage type underlines and rolls — the
+  number is not in doubt.
+- **The language you type in is not the language the UI is in.** A name matches across every
+  localized `name_*` a row carries and against the key; the menu SHOWS the interface locale's name;
+  the pill and the log keep the key. An exact name two candidates share stays unresolved rather than
+  guessed.
+- **Rejected, so it is not re-proposed:** a `|` pipe separating the two halves of one field; tabs
+  instead of two lines (both halves must be visible at once); a separate "situational modifier"
+  control (it is an ordinary pill in the line it belongs to); an "untyped" segment in the result.
+
+**Still open.** Where the organ lives physically — a popover anchored to whatever launched it,
+inline in the Playbar for the last roll, or both modes of one panel — is undecided; today it is the
+dice-tray popup, which is what §12 said it replaces. `RolledDie.source` is still filled only for a
+die the player named: a prefilled effect die arrives known but UNNAMED (`pillsFromPool` gives it an
+empty source so it stays an effect die), because no roll site threads the effect's identity yet.
+Damage types have no localized names anywhere in the data, so they match and display in English
+until some content carries them.
 
 ## Conventions (do not drift)
 
