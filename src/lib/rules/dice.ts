@@ -54,8 +54,24 @@ export const DIE_ROLE = {
 	pool: 'pool',
 	/** A signed die an effect added: Bless +1d4, Bane −1d4. */
 	bonus: 'bonus',
+	/** A die the roll gained because it was a CRIT — the second set. It is a property of the die, not
+	 *  a field beside the roll, which is what lets the display ride a crit's doubled dice in ONE
+	 *  divided pill: they are the same damage, rolled twice, not two damages. */
+	crit: 'crit',
 } as const;
 export type DieRole = (typeof DIE_ROLE)[keyof typeof DIE_ROLE];
+
+/** How a crit doubles damage. A rule OPTION, not a house rule: 5e RAW is *classic*, and *loyal* is
+ *  the common table variant that trades the swinginess of a second roll for a guaranteed floor. Set
+ *  in Settings and overridable per roll, because the table decides this mid-session as often as not.
+ *  A named member so a third method can be added without a boolean growing a second meaning. */
+export const CRIT_METHOD = {
+	/** RAW: roll the damage dice twice and add both. */
+	classic: 'classic',
+	/** One set rolled + one set at its maximum. */
+	loyal: 'loyal',
+} as const;
+export type CritMethod = (typeof CRIT_METHOD)[keyof typeof CRIT_METHOD];
 
 /**
  * ONE die, as it was actually rolled. This is the roll's record — the house contract is "value +
@@ -145,6 +161,10 @@ export interface DieMods {
 	reroll?: number;
 	/** Treat a die below this AS this — Reliable Talent's d20 → 10. */
 	minDie?: number;
+	/** Treat a die above this AS this — the ceiling to `minDie`'s floor. Nothing in 5e needs it today;
+	 *  it exists because the roller organ takes `<10` in the same field as `>10`, and a bound that has
+	 *  no home here would have to arrive later as a mechanism of its own. */
+	maxDie?: number;
 }
 
 /** Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted
@@ -160,15 +180,20 @@ const rollDie = (sides: number, rng: Rng) => 1 + Math.floor(rng() * sides);
 /** "+N" / "−N" for a nonzero flat modifier (0 is never appended). */
 const formatModifier = (n: number) => (n >= 0 ? `+${n}` : `−${Math.abs(n)}`);
 
-/** Parse a single signed dice term ("1d4" / "-2d4" / "+1d6") into a `BonusDie`, or null if it
- *  isn't one. Used for effect bonus dice (Bless/Bane) where the sign matters. */
+/** Parse a single signed dice term ("1d4" / "-2d4" / "+d6") into a `BonusDie`, or null if it isn't
+ *  one. Used for effect bonus dice (Bless/Bane) where the sign matters, and by the roller organ for
+ *  a typed dice token.
+ *
+ *  The count is optional, exactly as in `DICE_TERM`: "d4" is one d4 wherever it is written, and the
+ *  two parsers disagreeing about that is the shape of UBUG-22. The unicode minus is accepted beside
+ *  the ASCII one because `signed()` writes it, so a term read back off the UI comes in that way. */
 export function parseDiceTerm(term: string): BonusDie | null {
-	const m = /^([+-]?)(\d+)d(\d+)$/.exec(term.trim());
+	const m = /^([+\-−]?)(\d*)d(\d+)$/.exec(term.trim());
 	if (!m) return null;
 	return {
-		count: Math.min(Number(m[2]), MAX_DICE_PER_TERM),
+		count: Math.min(m[2] ? Number(m[2]) : 1, MAX_DICE_PER_TERM),
 		sides: Math.min(Number(m[3]), MAX_DIE_SIDES),
-		sign: m[1] === '-' ? -1 : 1,
+		sign: m[1] === '-' || m[1] === '−' ? -1 : 1,
 	};
 }
 
@@ -255,6 +280,38 @@ function rollPoolDice(
 	return { dice: rolled, d20s };
 }
 
+/**
+ * The second copy of a die a crit adds. Every die the roll made gets one — RAW is "roll all of the
+ * attack's damage dice twice", which is all of them and not just the weapon's, so a Hex d6 on the
+ * damage line doubles like anything else. The flat modifier does not, and that is the half of the
+ * rule tables get wrong.
+ *
+ * The twin keeps the original's SIGN and SOURCE — a doubled penalty die is still a penalty, and the
+ * provenance is what lets the display put a die and its twin in one divided pill instead of showing
+ * two unrelated dice. Its role is what says it was the crit's.
+ */
+function critTwin(
+	die: RolledDie,
+	method: CritMethod,
+	rollOne: (sides: number) => RolledDie,
+	maxDie: number | undefined,
+): RolledDie {
+	const source = die.source !== undefined ? { source: die.source } : {};
+	if (method === CRIT_METHOD.classic)
+		return { ...rollOne(die.sides), sign: die.sign, role: DIE_ROLE.crit, ...source };
+	// loyal: the added set is taken at its maximum, still under any ceiling the roll carries
+	const value = Math.min(die.sides, maxDie ?? die.sides);
+	return {
+		sides: die.sides,
+		value,
+		face: die.sides,
+		sign: die.sign,
+		detail: `${value}`,
+		role: DIE_ROLE.crit,
+		...source,
+	};
+}
+
 /** Everything a pool roll can be given besides the dice themselves. One object rather than four
  *  positional arguments, because the middle of `rollPool(d, 0, 0, [], rng)` said nothing about
  *  what those zeros were (§2.8) — and because a `RollEffects` spreads straight into it. */
@@ -265,6 +322,11 @@ export interface RollPoolOptions extends RollOptions {
 	advantage?: number;
 	/** Signed effect dice (Bless +1d4 / Bane −1d4). */
 	bonusDice?: BonusDie[];
+	/** Set → this roll crit: every DIE it rolled gains a twin (`DIE_ROLE.crit`), by the given method.
+	 *  The flat modifier is not doubled, which is the rule and also the only part of a crit players
+	 *  reliably get wrong. Manual, never inferred from a natural 20: the same 20 is a crit on an
+	 *  attack and just a 20 on a check, and a crit happens without one (ROLLER-PLAN finding B). */
+	crit?: CritMethod;
 }
 
 /**
@@ -279,9 +341,9 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 	const mod = o.mod ?? 0;
 	const advantage = o.advantage ?? 0;
 	const bonusDice = o.bonusDice ?? [];
-	// one pool die with reroll/floor applied; `detail` spells out what happened (1↻4, 3→10). `face` is
-	// the actual die result AFTER a reroll but BEFORE a min_die floor — a nat-1/nat-20 is judged by
-	// what the die shows (Reliable Talent's "treat as 10" doesn't erase a natural 1).
+	// one pool die with reroll + bounds applied; `detail` spells out what happened (1↻4, 3→10). `face`
+	// is the actual die result AFTER a reroll but BEFORE a bound — a nat-1/nat-20 is judged by what the
+	// die shows (Reliable Talent's "treat as 10" doesn't erase a natural 1).
 	const rollOne = (sides: number): RolledDie => {
 		let v = rollDie(sides, rng);
 		let detail = `${v}`;
@@ -290,10 +352,11 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 			detail += `↻${v}`;
 		}
 		const face = v;
-		if (o.minDie !== undefined && v < o.minDie) {
-			v = o.minDie;
-			detail += `→${v}`;
-		}
+		// a bound moves what the die COUNTS FOR and leaves its face alone — a nat 1 floored to 10 is
+		// still a natural 1, which is why `face` is taken before this and never after
+		if (o.minDie !== undefined && v < o.minDie) v = o.minDie;
+		if (o.maxDie !== undefined && v > o.maxDie) v = o.maxDie;
+		if (v !== face) detail += `→${v}`;
 		return { sides, value: v, face, sign: 1, detail, role: DIE_ROLE.pool };
 	};
 	const pool = rollPoolDice(dice, advantage, rollOne);
@@ -310,6 +373,7 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 				role: DIE_ROLE.bonus,
 			});
 		}
+	if (o.crit) for (const d of [...rolled]) rolled.push(critTwin(d, o.crit, rollOne, o.maxDie));
 	const mode =
 		advantage > 0
 			? ADVANTAGE_MODE.advantage

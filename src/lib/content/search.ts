@@ -9,7 +9,8 @@
  * automatically.
  */
 import Fuse, { type FuseResultMatch } from 'fuse.js';
-import { LOCALE_TAG, type ContentGraph, type LoadedRow } from './loader';
+import type { ContentGraph, LoadedRow } from './loader';
+import { localesOf, localizedName, namesByLocale } from './names';
 import { isBrowsable, type ContentType } from './schemas';
 
 export interface NameDoc {
@@ -50,19 +51,6 @@ export const plainText = (s: string) =>
 		.replace(/\s+/g, ' ')
 		.trim();
 
-/** Locales present in the data (from `name_*` columns); always includes `en`. */
-// F11: the ONE locale grammar (was `[a-z]{2,3}` — subtag locales like pt-BR were unsearchable)
-const NAME_LOCALE_COL = new RegExp(`^name_(${LOCALE_TAG})$`);
-function localesOf(graph: ContentGraph): string[] {
-	const set = new Set(['en']);
-	for (const r of graph.rows)
-		for (const k of Object.keys(r.data)) {
-			const m = NAME_LOCALE_COL.exec(k);
-			if (m?.[1]) set.add(m[1]);
-		}
-	return [...set];
-}
-
 const base = (r: LoadedRow) => ({
 	effectiveId: r.effectiveId,
 	type: r.type,
@@ -72,23 +60,15 @@ const base = (r: LoadedRow) => ({
 });
 
 // Both index projections carry every locale's name (not just the active one) so a name match in ANY
-// language surfaces the row and the UI can still show the active-locale label. Empty columns are
-// skipped so `displayName`'s fallback chain sees only real translations.
-function displayNamesByLocale(row: LoadedRow, locales: string[]): Record<string, string> {
-	const names: Record<string, string> = {};
-	for (const locale of locales) {
-		const value = row.data[`name_${locale}`];
-		if (value) names[locale] = String(value);
-	}
-	return names;
-}
-
+// language surfaces the row and the UI can still show the active-locale label. `namesByLocale` +
+// `localesOf` live in `./names`: the roller's suggestion menu matches the same way, and two
+// cross-language name projections would be one fact spelled twice.
 function buildNameDocs(graph: ContentGraph): NameDoc[] {
 	const locales = localesOf(graph);
 	return graph.rows
 		.filter((r) => isBrowsable(r.type))
 		.map((r) => {
-			const names = displayNamesByLocale(r, locales);
+			const names = namesByLocale(r, locales);
 			return { ...base(r), names, nameAll: [...new Set(Object.values(names))] };
 		});
 }
@@ -99,7 +79,7 @@ function buildTextDocs(graph: ContentGraph, locale: string): TextDoc[] {
 		.filter((r) => isBrowsable(r.type))
 		.map((r) => ({
 			...base(r),
-			names: displayNamesByLocale(r, locales),
+			names: namesByLocale(r, locales),
 			text: plainText(String(r.data[`text_${locale}`] || r.data.text_en || '')),
 		}));
 }
@@ -116,9 +96,6 @@ export const makeNameIndex = (graph: ContentGraph) =>
 
 export const makeTextIndex = (graph: ContentGraph, locale: string) =>
 	new Fuse(buildTextDocs(graph, locale), { ...OPTS, threshold: 0.34, keys: ['text'] });
-
-const displayName = (names: Record<string, string>, locale: string) =>
-	names[locale] || names.en || Object.values(names)[0] || '';
 
 function snippetFor(text: string, matches: readonly FuseResultMatch[] | undefined): string {
 	const m = matches?.find((x) => x.key === 'text');
@@ -142,7 +119,7 @@ const toSearchResult = (doc: NameDoc | TextDoc, locale: string, snippet: string)
 	id: doc.id,
 	source: doc.source,
 	systems: doc.systems,
-	name: displayName(doc.names, locale),
+	name: localizedName(doc.names, locale),
 	snippet,
 });
 

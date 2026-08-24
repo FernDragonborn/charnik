@@ -8,6 +8,7 @@
 // startI18n in +layout.ts) already uses the saved locale/theme.
 
 import { SYSTEMS } from '$lib/content/schemas';
+import { CRIT_METHOD, type CritMethod } from '$lib/rules/dice';
 import { readStored, writeStored } from '$lib/util/persist';
 import type { CustomTheme } from '$lib/styles/customThemes';
 
@@ -36,6 +37,10 @@ interface AppState {
 	 *  reachable in Settings ▸ Content health so the modal's "don't ask again" is not a door that
 	 *  locks behind you. */
 	contentEditingMode: boolean;
+	/** How a crit doubles damage — RAW *classic* by default, *loyal* for tables that prefer a floor
+	 *  to a second swing (PLAN §9). A rule option rather than a preference: it changes numbers, so it
+	 *  is also overridable per roll in the roller, where the table's ruling actually happens. */
+	critMethod: CritMethod;
 }
 
 const STORAGE_KEY = 'charnik:app';
@@ -48,6 +53,7 @@ function defaults(): AppState {
 		customThemes: [],
 		seededBundledIds: [],
 		contentEditingMode: false,
+		critMethod: CRIT_METHOD.classic,
 	};
 }
 
@@ -80,6 +86,7 @@ function persist(): void {
 		customThemes: app.customThemes,
 		seededBundledIds: app.seededBundledIds,
 		contentEditingMode: app.contentEditingMode,
+		critMethod: app.critMethod,
 	});
 }
 

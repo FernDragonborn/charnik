@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (44)
+## Duplicate suspects (45)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -39,6 +39,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
+- `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `name` ×2 — src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
@@ -222,7 +223,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ThemesSettings** | — | Settings ▸ Themes — author custom colour themes without a rebuild. |
 | **WikiDetail** | `detail`, `actions`, `footer`, `editable`, `draft` | Right-pane wiki detail: a thin DISPATCHER. |
 
-## Stores & reactive state (14 modules)
+## Stores & reactive state (15 modules)
 
 ### `src/lib/character/health.svelte.ts`
 
@@ -337,6 +338,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function loadContentStore` — Load the graph once into the store (no-op if already loaded).
 - `function reloadContent` — Drop the cache, reload, and rotate the guid → all derived state recomputes with no page reload.
 
+### `src/lib/dice/roller.svelte.ts`
+
+- `interface RollerPrefill` — What a caller hands the organ to build a roll it already knows about (an attack row, a spell).
+- `class RollerOrgan`
+
 ### `src/lib/dice/tray.svelte.ts`
 
 - `interface DiceTrayRequest` — * A request to open the tray.
@@ -382,7 +388,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (99 modules)
+## Library functions & types (102 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -748,6 +754,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface MigrationResult` — Migration outcome.
 - `function migrateRows` — Bring one file's rows up to `CONTENT_SCHEMA_VERSION`.
 
+### `src/lib/content/names.ts`
+
+- `const localizedName` — The name to SHOW out of a locale→name map: the active locale, else English, else whatever there * is.
+- `function namesByLocale` — Every locale a row is NAMED in → its name there, empty columns skipped so `localizedName`'s * fallback chain only eve…
+- `function localesOf` — The locales the DATA actually carries (from its `name_*` columns); always includes `en`.
+
 ### `src/lib/content/provider.ts`
 
 - `function getContentGraph` — Load (once) and return the merged content graph (SRD ∪ user homebrew).
@@ -948,6 +960,43 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface RollToastModel`
 - `function rollToastModel` — * Build the toast model from completed rolls (the same shape the roll log stores).
 - `function toastRoll` — Toast a completed roll.
+
+### `src/lib/dice/roller-vocabulary.ts`
+
+- `interface NamedRollSource` — A named thing a line can be told about: an effect (active or merely known) or a damage type.
+- `interface RollerCandidate` — One row of the suggestion menu — and, since picking it is the same act as typing its name in * full, also what the re…
+- `function rollerCandidates` — Project the sources into menu rows for one interface locale.
+- `interface RollerMatch` — A candidate that matched, with where in its LABEL the match sits so the menu can embolden it.
+- `function matchCandidates` — * The menu for a partially typed word: active effects first, then everything else known, each group * by relevance an…
+- `function candidateResolver` — The resolver a line uses when a token is SUBMITTED: an exact name, in any language the data * carries, becomes that c…
+
+### `src/lib/dice/roller.ts`
+
+- `const PILL_KIND` — What a pill IS.
+- `type PillKind`
+- `interface DicePill`
+- `interface FlatPill`
+- `interface DamageTypePill`
+- `interface CountPill`
+- `interface RawPill`
+- `type RollerPill`
+- `const ROLLER_ROLE` — What a line is FOR.
+- `type RollerRole`
+- `interface RollerLine`
+- `const emptyLine`
+- `type RollerResolver` — Resolve a WORD (an effect name, a damage type) to what it means — supplied by the vocabulary, * which is the only par…
+- `const TOKEN_KIND` — What a typed token turns into.
+- `type ParsedRollerToken`
+- `function parseRollerToken` — * One token → what it means.
+- `function pillsFromPool` — * A dice pool + modifier (+ its damage type) → the pills that describe it.
+- `function normalizeLine` — * Re-derive the line's implicit parts after an edit.
+- `function addToken` — Add a typed token to a line, resolving what it means first.
+- `const volleyOf` — How many instances this line fires — the volley multiplier (§12: a volley rolls the SAME set N * times, so it is a co…
+- `function testRoll` — A test line → what `rollPool` needs.
+- `function damageParts` — * A damage line → one part per damage type.
+- `interface RollerIssue` — Something the line cannot answer for.
+- `function rollerIssues` — Everything wrong with a set of lines, in reading order.
+- `const canRoll` — Can these lines be rolled at all?
 
 ### `src/lib/drafts/store.ts`
 
@@ -1152,6 +1201,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface LegacyAdvantageRoll` — The pre-2026-08-22 shape of an advantage pair, as it still sits in `log.jsonl`.
 - `const DIE_ROLE` — What a die was drawn FOR.
 - `type DieRole`
+- `const CRIT_METHOD` — How a crit doubles damage.
+- `type CritMethod`
 - `interface RolledDie` — * ONE die, as it was actually rolled.
 - `interface Rolled` — Result of a roll: the total, the dice it was made of, and how its d20 were read.
 - `function keptD20` — The d20 that counts: the highest at advantage, the lowest at disadvantage, and otherwise the one * that was drawn first.
@@ -1160,7 +1211,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface DieMods` — Roll-manipulation effects a roll carries (L1 `reroll:`/`min_die:` facts — the roll path is * their consumer).
 - `const MAX_DICE_PER_TERM` — Cost caps (not game balance): a dice term drives a roll loop + a string build, so an untrusted * formula (shared cont…
 - `const MAX_DIE_SIDES`
-- `function parseDiceTerm` — Parse a single signed dice term ("1d4" / "-2d4" / "+1d6") into a `BonusDie`, or null if it * isn't one.
+- `function parseDiceTerm` — Parse a single signed dice term ("1d4" / "-2d4" / "+d6") into a `BonusDie`, or null if it isn't * one.
 - `function parseDicePool` — Parse every dice term in a string into a pool ({sides: count}).
 - `function parseFlatModifier` — * The flat modifier of a formula or damage segment: EVERY signed term that is not part of a die, * summed.
 - `function formatDicePool` — Render a dice pool back to a string ({6:2, 4:1} → "2d6 + 1d4"), largest die first.
@@ -1364,4 +1415,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 798 exports across 113 modules · 44 duplicate suspects._
+_45 tokens · 65 global classes · 48 components · 836 exports across 117 modules · 45 duplicate suspects._

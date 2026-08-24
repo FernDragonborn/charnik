@@ -11,6 +11,7 @@ import {
 	rehydrateRoll,
 	rollPool,
 	type BonusDie,
+	type CritMethod,
 	type DieMods,
 	type Rolled,
 	type StoredRoll,
@@ -31,6 +32,9 @@ export interface DamagePartSpec {
 	type: string;
 	bonusDice?: BonusDie[];
 	mods?: DieMods;
+	/** Set → this part crit, by that method. Per PART rather than per roll because a crit doubles
+	 *  DICE, and each part has its own; the flat modifier it carries is untouched either way. */
+	crit?: CritMethod;
 }
 
 /** Does this set of parts actually deal damage? "Has a part" is NOT the question: `parseDamageParts`
@@ -49,6 +53,7 @@ export function rollDamageParts(parts: DamagePartSpec[], rng?: () => number): Ty
 			...(rng ? { rng } : {}),
 			mod: p.mod,
 			...(p.bonusDice ? { bonusDice: p.bonusDice } : {}),
+			...(p.crit ? { crit: p.crit } : {}),
 		}),
 		type: p.type,
 	}));

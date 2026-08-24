@@ -6,6 +6,7 @@ import {
 	parseFlatModifier,
 	parseDiceTerm,
 	DIE_ROLE,
+	CRIT_METHOD,
 	parseLegacyExpr,
 	rehydrateRoll,
 	totalOf,
@@ -458,5 +459,67 @@ describe('cycleAdvantage', () => {
 		expect(setAdvantage(legacy, ADVANTAGE_MODE.neither)).toBeNull();
 		expect(cycleAdvantage(legacy)?.advantage).toBe(ADVANTAGE_MODE.advantage);
 		expect(keptD20(cycleAdvantage(legacy)!)?.value).toBe(18);
+	});
+});
+
+describe('rollPool · a ceiling, the mirror of the floor', () => {
+	it('caps a die above the maximum AS the maximum, leaving its natural face alone', () => {
+		const r = rollPool({ 20: 1 }, { rng: rngSequence(0.999), maxDie: 10, mod: 2 }); // d20 → 20 → 10
+		expect(r.total).toBe(12);
+		expect(r.expr).toBe('d20(20→10) +2');
+		expect(naturalOf(r)).toBe(20);
+	});
+
+	it('leaves a die already under the ceiling untouched', () => {
+		expect(rollPool({ 20: 1 }, { rng: rngSequence(0.1), maxDie: 10 }).expr).toBe('d20(3)');
+	});
+});
+
+describe('rollPool · crits', () => {
+	it('classic rolls every die a second time and adds it, leaving the modifier alone', () => {
+		// 2d6 → 4, 4; the crit set → 2, 6. Modifier +3 is NOT doubled.
+		const r = rollPool(
+			{ 6: 2 },
+			{ rng: rngSequence(0.5, 0.5, 0.2, 0.9), mod: 3, crit: CRIT_METHOD.classic },
+		);
+		expect(r.dice).toHaveLength(4);
+		expect(r.dice.filter((d) => d.role === DIE_ROLE.crit)).toHaveLength(2);
+		expect(r.total).toBe(4 + 4 + 2 + 6 + 3);
+	});
+
+	it('loyal adds one set at its maximum and draws nothing for it', () => {
+		// one draw only: the rolled set. Over-drawing would throw.
+		const r = rollPool({ 8: 1 }, { rng: rngSequence(0.5), mod: 4, crit: CRIT_METHOD.loyal });
+		expect(r.total).toBe(5 + 8 + 4);
+		expect(r.dice.map((d) => d.value)).toEqual([5, 8]);
+	});
+
+	it('doubles an effect die too — RAW doubles ALL the damage dice, not just the weapon’s', () => {
+		const r = rollPool(
+			{ 6: 1 },
+			{
+				rng: rngSequence(0.5, 0.5),
+				bonusDice: [{ sides: 6, count: 1, sign: 1 }],
+				crit: CRIT_METHOD.loyal,
+			},
+		);
+		expect(r.dice).toHaveLength(4);
+		expect(r.total).toBe(4 + 4 + 6 + 6);
+	});
+
+	it('keeps the sign of a die it doubles — a doubled penalty is still a penalty', () => {
+		const r = rollPool(
+			{},
+			{
+				rng: rngSequence(0.5),
+				bonusDice: [{ sides: 4, count: 1, sign: -1 }],
+				crit: CRIT_METHOD.loyal,
+			},
+		);
+		expect(r.total).toBe(-3 - 4);
+	});
+
+	it('rolls exactly as before when no crit is asked for', () => {
+		expect(rollPool({ 6: 1 }, rngSequence(0.5)).dice).toHaveLength(1);
 	});
 });
