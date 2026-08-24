@@ -194,6 +194,27 @@ describe('damage types', () => {
 	});
 });
 
+describe('a word the vocabulary does not know', () => {
+	it('is a homebrew damage TYPE on a damage line — content invents types freely', () => {
+		const line = type(ROLLER_ROLE.damage, '2d6', 'ichor');
+		expect(line.pills[1]).toMatchObject({ kind: PILL_KIND.damageType, type: 'ichor' });
+		expect(damageParts(line)).toMatchObject([{ dice: { 6: 2 }, type: 'ichor' }]);
+		expect(canRoll([line])).toBe(true);
+	});
+
+	it('is a label the player wrote anywhere else, and blocks nothing', () => {
+		const line = type(ROLLER_ROLE.test, '1d4', 'dm’s luck');
+		expect(line.pills[1]).toMatchObject({ kind: PILL_KIND.note, text: 'dm’s luck' });
+		expect(canRoll([line])).toBe(true);
+		expect(rollerIssues([line])).toEqual([]);
+	});
+
+	it('still blocks when it looks like arithmetic and is not — that is the whole test', () => {
+		expect(canRoll([type(ROLLER_ROLE.test, 'd20', '+d4?')])).toBe(false);
+		expect(canRoll([type(ROLLER_ROLE.test, 'd20', '3d')])).toBe(false);
+	});
+});
+
 describe('issues', () => {
 	it('blocks the roll on a fragment it could not account for', () => {
 		const line = type(ROLLER_ROLE.damage, '1d8', '+2', '+d4?', 'fire');

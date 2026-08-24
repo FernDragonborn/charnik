@@ -1,26 +1,40 @@
 /*
- * The dice-roll subsystem of the Combat view-model: the roll-builder tray state (pool, modifier,
- * advantage), the roll log, and the roll-execution methods. Split out of CombatVM so the roll concern
- * is one cohesive unit; CombatVM composes it as `combat.tray` and the higher-level actions
- * (attack/cast/action) call into it. Pure dice math lives in $lib/rules/dice.
+ * The dice-roll subsystem of the Combat view-model: the roller ORGAN the tray mounts, the roll log,
+ * and the roll-execution methods. Split out of CombatVM so the roll concern is one cohesive unit;
+ * CombatVM composes it as `combat.tray` and the higher-level actions (attack/cast/action) call into
+ * it. Pure dice math lives in $lib/rules/dice, and the organ's own model in $lib/dice/roller.
+ *
+ * The builder half used to live here as loose fields (`dice`, `rollMod`, `rollAdvantage`) plus a
+ * `pendingDamage` queue that the tray could neither show nor edit — which is UBUG-21. It is now one
+ * `RollerOrgan`: a test line and, when there IS damage, a damage line, both made of the same
+ * editable pills. `prefill` / `queueDamage` keep their names and their callers.
  */
 import {
 	ADVANTAGE_MODE,
 	cycleAdvantage,
 	rollPool,
+	type AdvantageMode,
 	type BonusDie,
 	type DieMods,
 	type Rolled,
 } from '$lib/rules/dice';
 import { toastRoll } from '$lib/dice/roll-toast';
+import { RollerOrgan } from '$lib/dice/roller.svelte';
 import {
 	amendedNote,
-	poolExpr,
-	rollDamageParts,
 	type RollLogEntry,
 	type TypedRoll,
 	type DamagePartSpec,
 } from '$lib/combat/helpers';
+
+/** The ±1 axis every roll site speaks (it is arithmetic over effects) → the roll's named mode. The
+ *  two are different facts on purpose (ROLLER-PLAN, "not in scope"), and this is the one seam. */
+const advantageMode = (advantage: number): AdvantageMode =>
+	advantage > 0
+		? ADVANTAGE_MODE.advantage
+		: advantage < 0
+			? ADVANTAGE_MODE.disadvantage
+			: ADVANTAGE_MODE.neither;
 
 /** Cap on the retained roll log (newest kept). */
 const ROLL_LOG_MAX = 200;
@@ -34,8 +48,8 @@ export interface RollSpec {
 	mod: number;
 	/** −1 disadvantage · 0 normal · +1 advantage (default 0). */
 	advantage?: number;
-	/** Signed effect bonus dice (Bless +1d4) — only rollDiceNow applies these; a prefilled tray Roll
-	 *  does not (it re-rolls the pool interactively). */
+	/** Signed effect bonus dice (Bless +1d4). They ride an instant roll, and a prefilled roller shows
+	 *  them as pills you can edit or drag to the other line. */
 	bonusDice?: BonusDie[];
 	/** reroll/min_die effect facts — apply on the tray's Roll too. */
 	mods?: DieMods;
@@ -45,18 +59,9 @@ export interface RollSpec {
 }
 
 export class RollTray {
-	// dice tray / roll builder
-	dice = $state<Record<number, number>>({ 20: 1 }); // sides → count in the pool
-	rollMod = $state(0);
-	rollAdvantage = $state(0); // −1 disadvantage · 0 normal · +1 advantage
-	rollSrc = $state<string | null>(null);
-	/** reroll/min_die effect facts riding a prefilled roll (they apply on the tray's Roll too). */
-	private rollMods: DieMods = {};
-	/** Provenance line carried from a prefilled roll into its logged entry (item 4). */
-	private rollNote: string | null = null;
-	/** A follow-up roll fired right after the tray's Roll (an attack's damage after its to-hit) — one
-	 *  typed part per damage type. */
-	private pendingDamage = $state<{ label: string; parts: DamagePartSpec[] } | null>(null);
+	/** The roll being built — the organ the dice tray mounts. Its lines, pills and state toggles ARE
+	 *  the builder; nothing about the roll under construction lives beside it. */
+	organ = new RollerOrgan();
 	log = $state<RollLogEntry[]>([]);
 
 	/**
@@ -79,75 +84,33 @@ export class RollTray {
 		this.log = entries.slice(0, ROLL_LOG_MAX);
 	};
 
-	rollExpr = $derived(poolExpr(this.dice, this.rollMod));
+	/** Clear the organ to an empty test line (opening the dice menu fresh). */
+	reset = () => this.organ.reset();
 
-	bumpDie = (sides: number, d: number) => {
-		const n = (this.dice[sides] ?? 0) + d;
-		if (n <= 0) delete this.dice[sides];
-		else this.dice[sides] = n;
-		this.dice = { ...this.dice };
-	};
-
-	/** Clear the tray to a bare d20 (opening the dice menu fresh). */
-	reset = () => {
-		this.dice = { 20: 1 };
-		this.rollMod = 0;
-		this.rollAdvantage = 0;
-		this.rollSrc = null;
-		this.rollMods = {};
-		this.rollNote = null;
-		this.pendingDamage = null;
-	};
-
-	/** Prefill the tray for a specific roll (a stat/attack), so the player can pick advantage then
-	 *  Roll. `spec.mods` = the roll's reroll/min_die effect facts (they survive into the tray's Roll). */
+	/** Prefill the roller for a specific roll (a stat/attack), so the player can pick advantage then
+	 *  Roll. `spec.mods` = the roll's reroll/min_die effect facts; they ride the POOL's dice, so a
+	 *  Great Weapon Fighting reroll never reaches a Bless die that lands in the same line. */
 	prefill = (spec: RollSpec) => {
-		this.rollSrc = spec.label;
-		this.dice = { ...spec.dice };
-		this.rollMod = spec.mod;
-		this.rollAdvantage = spec.advantage ?? 0;
-		this.rollMods = spec.mods ?? {};
-		this.rollNote = spec.note ?? null;
-		this.pendingDamage = null;
-	};
-
-	/**
-	 * What rides on the tray's next Roll, for a READ-ONLY line beside the pool (UBUG-21, interim).
-	 *
-	 * The tray builds the TO-HIT — its pool, its modifier, its advantage — while the damage is queued
-	 * out of sight. Under a heading that says "Greataxe" that reads as the attack, so a player adding
-	 * "+1d6" for a damage rider gets it summed into the d20 and the card resolves a silently-wrong
-	 * number (item 9). Showing what is queued does not make it editable; it makes the pool honest
-	 * about being half of the roll. The editable version is `ROLLER-N`'s sub-roll model.
-	 */
-	get queuedDamage(): { label: string; text: string } | null {
-		const p = this.pendingDamage;
-		if (!p) return null;
-		return {
-			label: p.label,
-			text: p.parts
-				.map((part) => `${poolExpr(part.dice, part.mod)}${part.type ? ` ${part.type}` : ''}`)
-				.join(' + '),
-		};
-	}
-
-	/** Queue a damage roll to fire right after the tray's next Roll (an attack's to-hit → damage). Each
-	 *  part is one damage type; they roll and display separately. */
-	queueDamage = (spec: { label: string; parts: DamagePartSpec[] }) => {
-		this.pendingDamage = { label: spec.label, parts: spec.parts };
-	};
-
-	/** The custom roll tray's Roll: rolls the pool + any queued attack damage as ONE combined entry
-	 *  (line 1 = the roll, line 2 = the dropped adv die, then one line per damage type + a total). */
-	doRoll = () => {
-		const primary = rollPool(this.dice, {
-			...this.rollMods,
-			mod: this.rollMod,
-			advantage: this.rollAdvantage,
+		this.organ.prefill({
+			label: spec.label,
+			test: {
+				dice: spec.dice,
+				mod: spec.mod,
+				advantage: advantageMode(spec.advantage ?? 0),
+				...(spec.mods ? { mods: spec.mods } : {}),
+				...(spec.bonusDice?.length ? { bonusDice: spec.bonusDice } : {}),
+			},
+			...(spec.note ? { note: spec.note } : {}),
 		});
-		const damage = this.pendingDamage ? rollDamageParts(this.pendingDamage.parts) : undefined;
-		this.pendingDamage = null;
-		this.pushRoll(this.rollSrc ?? 'Custom roll', primary, damage, this.rollNote ?? undefined);
+	};
+
+	/** Give the roll its damage half — one part per damage type. UBUG-21: this used to be a queue the
+	 *  tray could neither show nor edit, so everything the player could change belonged to the to-hit
+	 *  under a heading that said "Greataxe"; it is now the organ's second LINE, made of the same
+	 *  pills. The label is dropped on purpose — the roll already has one, and "Greataxe" plus
+	 *  "Greataxe damage" was one name said twice. */
+	queueDamage = (spec: { label: string; parts: DamagePartSpec[] }) => {
+		this.organ.setDamage(spec.parts);
 	};
 
 	/** Roll a dice pool immediately (a tap that "just works"): advantage, signed bonus dice and
@@ -182,6 +145,16 @@ export class RollTray {
 		// SAME proxy the `{#each}` iterates — else an `entry === log[i]` identity check would never match.
 		// `?? entry` only guards the type (log[0] is always the just-pushed element after the assignment).
 		return this.log[0] ?? entry;
+	};
+
+	/** Record rolls that one ACTION resolved — a volley's N instances. Each gets its own log line
+	 *  (they are separate rolls, and each carries its own `at` so an amendment can rewrite the right
+	 *  one), and they share ONE toast, because one action happened. */
+	recordRolls = (entries: RollLogEntry[]): void => {
+		if (!entries.length) return;
+		this.log = [...entries, ...this.log].slice(0, ROLL_LOG_MAX);
+		for (const entry of entries) this.persist?.(entry);
+		toastRoll(entries);
 	};
 
 	/** Replace an existing log entry (identity match) with a revised copy — used by the Savage Attacker

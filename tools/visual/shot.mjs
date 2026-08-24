@@ -71,8 +71,8 @@ const ROUTES = [
 			{ name: 'command-palette', prep: press('Control+k'), ready: '[role="dialog"]' },
 			{ name: 'combat-turnbar', prep: clickBtn(/Combat/), restore: clickBtn(/Combat/) },
 			{ name: 'combat-dice', prep: clickBtn(/Dice tray/), ready: '[role="dialog"]' },
-			// the tray PREFILLED from an attack: it builds the to-hit and the damage rides along
-			// read-only, which is the state UBUG-21 is about — and the only one that shows it
+			// the tray PREFILLED from an attack: a test line AND an editable damage line, which is the
+			// state UBUG-21 was about — and the only one that shows the two-line model on real data
 			{
 				name: 'combat-dice-attack',
 				prep: (p) =>
@@ -80,7 +80,7 @@ const ROUTES = [
 						.getByText('Greataxe', { exact: true })
 						.first()
 						.click({ modifiers: ['Alt'] }),
-				ready: 'text=/rolled with it/',
+				ready: '.roller-line:nth-of-type(2)',
 			},
 		],
 	},
@@ -145,6 +145,27 @@ const ROUTES = [
 	// the roll-card gallery: every shape RollRow has to render (check, attack, crit, volley, nat 1),
 	// on one page — the cheapest guard there is on the component four surfaces now share
 	{ path: '/dev/rolltoast', wait: 'h1', states: [{ name: 'dev-rolltoast' }] },
+	// the roller organ's own gallery. Two states, because the second is the one no static markup can
+	// show: the suggestion menu open under a half-typed token, which is where most of the design is.
+	{
+		path: '/dev/roller',
+		wait: 'h1',
+		states: [
+			{
+				name: 'dev-roller',
+				prep: (p) => p.locator('.case').nth(2).click(),
+				ready: '.roller-line',
+			},
+			{
+				name: 'dev-roller-menu',
+				prep: async (p) => {
+					await p.locator('.roller-input').first().click();
+					await p.keyboard.type('bl');
+				},
+				ready: '.roller-menu',
+			},
+		],
+	},
 ];
 
 function compare(name, buf) {

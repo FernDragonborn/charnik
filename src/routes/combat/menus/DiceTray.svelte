@@ -1,80 +1,41 @@
 <script lang="ts">
-	// The dice tray / roll builder (overlay.kind === 'dice'). Reads the shared combat view-model's
-	// roll subsystem (combat.tray). Split out of CombatMenus.svelte.
-	import Icon from '$lib/components/Icon.svelte';
-	import { combat } from '../combat-view-model.svelte';
-	import { DICE } from '$lib/combat/helpers';
-	import { signed } from '$lib/util/format';
-	import { rollToastModel } from '$lib/dice/roll-toast';
+	// The dice tray (overlay.kind === 'dice') — the roller ORGAN plus the readout under it. Everything
+	// that used to be here (the pool chips, the dice grid, the advantage segments, the modifier
+	// stepper, the read-only queued-damage line) is now the organ's two lines of pills, so this file
+	// is the mount and the wiring: give the roller what the sheet knows it can be told by name, and
+	// hand its completed rolls to the log.
+	import Roller from '$lib/components/Roller.svelte';
 	import RollRow from '$lib/components/RollRow.svelte';
+	import { rollToastModel } from '$lib/dice/roll-toast';
+	import { rollerSources } from '$lib/dice/roller-sources';
+	import { rollerCandidates } from '$lib/dice/roller-vocabulary';
+	import { app } from '$lib/stores/app.svelte';
+	import { content } from '$lib/content/store.svelte';
+	import { combat } from '../combat-view-model.svelte';
 
-	const rollSrc = $derived(combat.tray.rollSrc);
-	const dice = $derived(combat.tray.dice);
-	const rollAdvantage = $derived(combat.tray.rollAdvantage);
-	const rollMod = $derived(combat.tray.rollMod);
-	const rollExpr = $derived(combat.tray.rollExpr);
-	// an attack prefills the tray with its TO-HIT and queues the damage out of sight; say so, and show
-	// what is queued, so the pool below can't be read as the whole attack (UBUG-21 interim)
-	const queued = $derived(combat.tray.queuedDamage);
+	const organ = combat.tray.organ;
 	const log = $derived(combat.tray.log);
-	const { bumpDie, doRoll } = combat.tray;
+
+	// what a line can be told BY NAME: the character's active effects first, then the effect catalog
+	// and the damage types. Rebuilt from the graph, so a homebrew effect in a CSV is typeable with no
+	// code change — and re-derived on a locale switch, because the menu shows names in the UI language.
+	$effect(() => {
+		organ.candidates = rollerCandidates(
+			rollerSources(
+				content.graph,
+				combat.character?.system,
+				(combat.character?.play.effects ?? []).map((e) => ({
+					label: e.label,
+					effects: e.effects,
+				})),
+			),
+			app.activeLocale,
+		);
+	});
 </script>
 
 <div class="tray">
-	{#if rollSrc}
-		<div class="tray-src">
-			<b
-				>{rollSrc}{#if queued}<span class="src-part"> · to hit</span>{/if}</b
-			>
-			{#if queued}
-				<span class="queued">then {queued.text} — rolled with it, not from this pool</span>
-			{/if}
-		</div>
-	{/if}
-	<div class="pool">
-		{#each Object.entries(dice).sort((a, b) => Number(b[0]) - Number(a[0])) as [s, c] (s)}
-			<div class="pool-chip">
-				<button onclick={() => bumpDie(Number(s), -1)} aria-label="One die fewer"
-					><Icon name="minus" size={12} /></button
-				><b>{c}</b>×d{s}<button onclick={() => bumpDie(Number(s), 1)} aria-label="One die more"
-					><Icon name="plus" size={12} /></button
-				>
-			</div>
-		{/each}
-	</div>
-	<p class="grid-hint">tap a die to add · ± sets the count</p>
-	<div class="dice-grid">
-		{#each DICE as d (d)}<button class="die-btn" onclick={() => bumpDie(d, 1)}>d{d}</button>{/each}
-	</div>
-	<div class="advantage-row">
-		<button
-			class="adv-seg"
-			class:on={rollAdvantage === -1}
-			onclick={() => (combat.tray.rollAdvantage = -1)}>Disadv.</button
-		>
-		<button
-			class="adv-seg"
-			class:on={rollAdvantage === 0}
-			onclick={() => (combat.tray.rollAdvantage = 0)}>Normal</button
-		>
-		<button
-			class="adv-seg"
-			class:on={rollAdvantage === 1}
-			onclick={() => (combat.tray.rollAdvantage = 1)}>Advant.</button
-		>
-	</div>
-	<div class="roll-mod-row">
-		<div class="roll-mod">
-			<button onclick={() => (combat.tray.rollMod -= 1)} aria-label="Lower the modifier"
-				><Icon name="minus" size={12} /></button
-			>
-			mod {signed(rollMod)}
-			<button onclick={() => (combat.tray.rollMod += 1)} aria-label="Raise the modifier"
-				><Icon name="plus" size={12} /></button
-			>
-		</div>
-		<button class="roll-button" onclick={doRoll}>Roll {rollExpr}</button>
-	</div>
+	<Roller {organ} onroll={combat.tray.recordRolls} />
 	<!-- the tray's own result readout: the same RollRow the toast and the log mount, so the roll you
 	     just built reads identically to the roll you re-read later (UBUG-20) -->
 	{#if log[0]}
@@ -83,151 +44,8 @@
 </div>
 
 <style>
-	/* --- dice tray / roll builder --- */
 	.tray {
 		padding: 12px;
-	}
-	.tray-src {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: 9px;
-		padding: 8px 11px;
-		margin-bottom: 9px;
-	}
-	.src-part {
-		font-family: var(--font-body);
-		font-weight: 400;
-		color: var(--color-text-muted);
-	}
-	/* the damage that rides on this roll: shown, deliberately not editable — the tray only builds the
-	   to-hit until ROLLER-N gives damage its own sub-roll */
-	.queued {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-	}
-	.tray-src b {
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: var(--font-size-body);
-	}
-	.pool {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 7px;
-		margin-bottom: 9px;
-	}
-	.pool-chip {
-		display: flex;
-		align-items: center;
-		gap: 5px;
-		background: var(--color-resource-soft);
-		border: 1px solid var(--color-resource);
-		border-radius: var(--radius);
-		padding: 4px 8px;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-		color: var(--color-resource);
-	}
-	.pool-chip button {
-		all: unset;
-		cursor: pointer;
-		color: var(--color-resource);
-		font-size: var(--font-size-body);
-		padding: 0 2px;
-	}
-	.pool-chip b {
-		font-family: var(--font-display);
-		font-weight: 700;
-	}
-	.grid-hint {
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
-		margin: 0 0 7px;
-	}
-	.dice-grid {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		gap: 7px;
-		margin-bottom: 11px;
-	}
-	.die-btn {
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: var(--font-size-sm);
-		text-align: center;
-		padding: 9px 0;
-		border-radius: 9px;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		color: var(--color-text);
-		cursor: pointer;
-	}
-	.die-btn:hover {
-		border-color: var(--color-resource);
-	}
-	.advantage-row {
-		display: flex;
-		gap: 6px;
-		margin-bottom: 11px;
-	}
-	.adv-seg {
-		flex: 1;
-		text-align: center;
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: var(--font-size-xs);
-		padding: 7px 0;
-		border-radius: var(--radius);
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		color: var(--color-text-muted);
-		cursor: pointer;
-	}
-	.adv-seg.on {
-		background: var(--color-good-soft);
-		border-color: var(--color-good);
-		color: var(--color-good);
-	}
-	.roll-mod-row {
-		display: flex;
-		gap: 8px;
-		margin: 8px 0;
-	}
-	.roll-mod {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius);
-		padding: 7px 9px;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-xs);
-	}
-	.roll-mod button {
-		all: unset;
-		cursor: pointer;
-		color: var(--color-text-muted);
-		font-size: var(--font-size-body);
-		padding: 0 4px;
-	}
-	.roll-button {
-		flex: 1;
-		text-align: center;
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: var(--font-size-body);
-		color: var(--color-accent-text);
-		background: var(--color-accent-deep);
-		border: 1px solid var(--color-accent-deep);
-		border-radius: 9px;
-		padding: 9px 12px;
-		cursor: pointer;
 	}
 	/* the readout, ruled off from the builder above it */
 	.roll-history {

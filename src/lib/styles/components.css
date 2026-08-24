@@ -600,3 +600,26 @@ svg.lucide {
 	opacity: 0.5;
 	cursor: not-allowed;
 }
+
+/* --- the advantage cue: the three-state glyph that says how a d20 is being read. SHAPE only, in
+   `currentColor` — the consumer picks the colours, because the two places this appears want
+   different ones on purpose. A completed roll (RollRow) leaves the neutral diamond colourless so it
+   can mark the pill as tappable without claiming a state; the roller's toggle shows all three in
+   full colour, because there the state is the whole point.
+   Clipped out of a solid box rather than typed as a character: at 8px a font glyph has no vertical
+   stem for the rasteriser to align to and its diagonals blur into a lump (`◆` came out a blob). */
+.advantage-cue {
+	width: 8px;
+	height: 8px;
+	background: currentColor;
+	line-height: 1;
+}
+.advantage-cue-up {
+	clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+}
+.advantage-cue-down {
+	clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+}
+.advantage-cue-neither {
+	clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+}

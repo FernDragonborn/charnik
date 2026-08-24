@@ -279,6 +279,7 @@ export class SpellCasting {
 					dice: { 20: 1 },
 					mod: toHit,
 					advantage: netAdvantage(fx),
+					bonusDice: fx.bonusDice,
 					mods: fx,
 					...(up.note ? { note: up.note } : {}),
 				},

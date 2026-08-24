@@ -15,7 +15,9 @@ import {
 	CRIT_METHOD,
 	rollPool,
 	type AdvantageMode,
+	type BonusDie,
 	type CritMethod,
+	type DieMods,
 	type Rng,
 } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
@@ -42,8 +44,19 @@ import { candidateResolver, matchCandidates, type RollerCandidate } from './roll
  *  with no test — the target saves, not you (§3). */
 export interface RollerPrefill {
 	label: string;
-	test?: { dice: Record<number, number>; mod: number; advantage?: AdvantageMode };
+	test?: {
+		dice: Record<number, number>;
+		mod: number;
+		advantage?: AdvantageMode;
+		/** reroll / bounds that ride the pool's own dice (GWF, Reliable Talent). */
+		mods?: DieMods;
+		/** Signed effect dice (Bless +1d4). They arrive without the effect's NAME — see
+		 *  `pillsFromPool` — but they arrive, which is more than the old tray managed. */
+		bonusDice?: BonusDie[];
+	};
 	damage?: DamagePartSpec[];
+	/** Provenance recorded with the roll — an upcast's "8d6 base + 1d6 @ slot 4". */
+	note?: string;
 }
 
 /** The caret is in the LINE, not in the suggestion menu. `↓` moves it in, `↑` off the top row moves
@@ -53,6 +66,9 @@ const IN_LINE = -1;
 export class RollerOrgan {
 	/** What the roll is for ("Greataxe"). Empty for an ad-hoc roll. */
 	label = $state('');
+	/** Provenance carried into the logged entry (an upcast's extra dice), never shown as a pill —
+	 *  it explains the roll rather than contributing to it. */
+	note = $state('');
 	lines = $state<RollerLine[]>([emptyLine(ROLLER_ROLE.test)]);
 	/** The uncommitted text of each line, by line index — a token is text until a space parses it. */
 	drafts = $state<string[]>(['']);
@@ -283,6 +299,7 @@ export class RollerOrgan {
 
 	reset = (): void => {
 		this.label = '';
+		this.note = '';
 		this.lines = [emptyLine(ROLLER_ROLE.test)];
 		this.drafts = [''];
 		this.focus = 0;
@@ -295,22 +312,46 @@ export class RollerOrgan {
 	prefill = (spec: RollerPrefill): void => {
 		this.reset();
 		this.label = spec.label;
+		this.note = spec.note ?? '';
 		const lines: RollerLine[] = [];
 		if (spec.test)
 			lines.push({
 				...emptyLine(ROLLER_ROLE.test),
-				pills: pillsFromPool(spec.test.dice, spec.test.mod),
+				pills: pillsFromPool(spec.test.dice, spec.test.mod, {
+					...(spec.test.mods ? { mods: spec.test.mods } : {}),
+					...(spec.test.bonusDice?.length ? { bonusDice: spec.test.bonusDice } : {}),
+				}),
 				advantage: spec.test.advantage ?? ADVANTAGE_MODE.neither,
-			});
-		const parts = (spec.damage ?? []).filter((p) => Object.keys(p.dice).length || p.mod);
-		if (parts.length)
-			lines.push({
-				...emptyLine(ROLLER_ROLE.damage),
-				pills: parts.flatMap((p) => pillsFromPool(p.dice, p.mod, p.type)),
 			});
 		this.lines = lines.length ? lines : [emptyLine(ROLLER_ROLE.test)];
 		this.drafts = this.lines.map(() => '');
 		this.focus = 0;
+		if (spec.damage?.length) this.setDamage(spec.damage);
+	};
+
+	/**
+	 * Give the organ its damage half — the second line, built from the parts a roll site already
+	 * knows. Separate from `prefill` because an attack arrives in two calls (the to-hit opens the
+	 * tray, the damage is queued right after), and because THIS is what closes UBUG-21: the damage
+	 * used to be queued out of sight and unadjustable, so a "+1d6" typed for a damage rider landed on
+	 * the d20 and the card resolved a silently-wrong number.
+	 */
+	setDamage = (parts: DamagePartSpec[]): void => {
+		const real = parts.filter((p) => Object.keys(p.dice).length || p.mod);
+		const line: RollerLine = {
+			...emptyLine(ROLLER_ROLE.damage),
+			pills: real.flatMap((p) =>
+				pillsFromPool(p.dice, p.mod, {
+					...(p.type ? { type: p.type } : {}),
+					...(p.mods ? { mods: p.mods } : {}),
+					...(p.bonusDice?.length ? { bonusDice: p.bonusDice } : {}),
+				}),
+			),
+		};
+		if (!real.length) return;
+		const at = this.lines.findIndex((l) => l.role === ROLLER_ROLE.damage);
+		this.lines = at >= 0 ? this.lines.map((l, i) => (i === at ? line : l)) : [...this.lines, line];
+		this.drafts = this.lines.map((_, i) => this.drafts[i] ?? '');
 	};
 
 	/**
@@ -347,6 +388,7 @@ export class RollerOrgan {
 				label: this.label || 'Custom roll',
 				...primary,
 				...(damage ? { damage } : {}),
+				...(this.note ? { note: this.note } : {}),
 				// one instance per millisecond: `at` is what an amendment matches on to rewrite ITS line,
 				// so a volley whose three attacks shared a timestamp would rewrite the wrong one
 				at: at + i,

@@ -50,6 +50,8 @@
 
 	const attacks = $derived(model.attacks);
 	const multi = $derived(attacks.length > 1 && model.damaging);
+	/** Both halves are present → the to-hit columns and the captions that name them. */
+	const twoPart = $derived(model.damaging && model.tested);
 	// a die that came up max reads as gold, a 1 as spent — the d20 says it loudest (it decides things)
 	const tone = (c: RolledDie) =>
 		c.value === c.sides ? 'max' : c.value === 1 ? 'min' : ('' as const);
@@ -71,7 +73,7 @@
 			? 'up'
 			: a.advantageMode === ADVANTAGE_MODE.disadvantage
 				? 'down'
-				: 'none';
+				: 'neither';
 	const cueTitle = (a: RollToastAttack) =>
 		a.advantageMode === ADVANTAGE_MODE.advantage
 			? 'rolled with advantage — tap for disadvantage'
@@ -117,12 +119,12 @@
 					class="roll-die d20 tappable {tone(c)}"
 					title={cueTitle(a)}
 					onclick={() => onAdvantage?.()}
-					>{face(c)}<span class="roll-cue {cueShape(a)}"></span></button
+					>{face(c)}<span class="roll-cue advantage-cue advantage-cue-{cueShape(a)}"></span></button
 				>
 			{:else}
 				<span class="roll-die {tone(c)}" class:d20={c.sides === 20} title="d{c.sides} · {c.detail}"
 					>{face(c)}{#if c.sides === 20 && i === 0 && a.advantageMode}<span
-							class="roll-cue {cueShape(a)}"
+							class="roll-cue advantage-cue advantage-cue-{cueShape(a)}"
 						></span>{/if}</span
 				>
 			{/if}
@@ -196,10 +198,16 @@
 			<span class="roll-total big-total">{model.total}</span>
 		</span>
 	{:else}
-		<span class="roll-grid" class:damaging={model.damaging} class:multi>
+		<span
+			class="roll-grid"
+			class:damaging={twoPart}
+			class:damage-only={model.damaging && !model.tested}
+			class:multi
+		>
 			<!-- the captions name the two NUMBERS, not the dice: "to hit" spans the dice columns so its
-		     own width can't widen them, and lands on the to-hit total's right edge. -->
-			{#if model.damaging}
+		     own width can't widen them, and lands on the to-hit total's right edge. A damage-only roll
+		     has nothing to distinguish, so it gets no captions at all. -->
+			{#if twoPart}
 				<span class="roll-caption hit eyebrow">to hit</span>
 				<span></span>
 				<span class="roll-caption eyebrow">damage</span>
@@ -207,13 +215,15 @@
 			{#each attacks as a, i (i)}
 				{#if multi}<span class="roll-attack-index" class:nat-20={a.natural === 20}>{i + 1}</span
 					>{/if}
-				{@render hitDice(a)}
-				{#if model.damaging}
+				{#if model.tested}{@render hitDice(a)}{/if}
+				{#if twoPart}
 					<span
 						class="roll-to-hit-total"
 						class:nat-20={a.natural === 20}
 						class:nat-1={a.natural === 1}>{a.subtotal}</span
 					>
+				{/if}
+				{#if model.damaging}
 					<span class="roll-damage">
 						{#if a.natural === 1}
 							<span class="roll-no-damage">—</span>
@@ -327,6 +337,19 @@
 		grid-template-columns: 26px minmax(58px, max-content) minmax(36px, max-content) 1fr 58px;
 		padding-left: 0;
 	}
+	/* damage with no test (Fireball): the damage IS the row, so it leads instead of sitting in a
+	   column ruled off from a to-hit that doesn't exist */
+	.roll-grid.damage-only {
+		grid-template-columns: 1fr 58px;
+	}
+	.roll-grid.multi.damage-only {
+		grid-template-columns: 26px 1fr 58px;
+	}
+	.damage-only .roll-damage {
+		justify-content: flex-start;
+		padding-left: 0;
+		border-left: 0;
+	}
 	.roll-caption {
 		padding: 0 0 5px;
 		font-size: var(--font-size-micro);
@@ -430,29 +453,18 @@
 		gap: 2px;
 		padding-right: 4px;
 	}
-	/* The three cue shapes, clipped out of a solid box rather than typed as a character: at this size a
-	   font glyph has no vertical stem for the rasteriser to align to, so its diagonals blur into a lump.
-	   A clipped box is the exact geometry we asked for, at a size we control, in currentColor.
+	/* The SHAPES are the shared `.advantage-cue` (styles/components.css); only the colours are ours.
 	   No third colour: each shape wears the colour of the state it reports — the same teal and red the
-	   toast puts on its card edge. The neutral diamond stays uncoloured, which is why it can be the
-	   affordance marker without claiming a state. */
-	.roll-cue.up,
-	.roll-cue.down,
-	.roll-cue.none {
-		width: 8px;
-		height: 8px;
-		background: currentColor;
-	}
-	.roll-cue.up {
-		clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+	   toast puts on its card edge. The neutral diamond stays UNCOLOURED here, which is why it can be
+	   the affordance marker without claiming a state; the roller's toggle, which has no such job,
+	   colours all three. */
+	.roll-cue.advantage-cue-up {
 		color: var(--color-good);
 	}
-	.roll-cue.down {
-		clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+	.roll-cue.advantage-cue-down {
 		color: var(--color-danger);
 	}
-	.roll-cue.none {
-		clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+	.roll-cue.advantage-cue-neither {
 		color: var(--color-text-muted);
 	}
 	.roll-die.tappable:hover {
@@ -549,7 +561,8 @@
 	}
 	/* the volley's footer: what it dealt per type, then the one number that leaves the card */
 	.roll-type-sums {
-		grid-column: 1 / 5;
+		/* every column but the total's, whichever shape the grid is in */
+		grid-column: 1 / -2;
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;

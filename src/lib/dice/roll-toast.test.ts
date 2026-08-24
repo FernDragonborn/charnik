@@ -122,4 +122,30 @@ describe('rollToastModel', () => {
 		expect(m.attacks[0]?.damage[0]?.chips.map((c) => c.value)).toEqual([7]);
 		expect(m.attacks[0]?.damage[0]?.mod).toBe(3);
 	});
+
+	// a Fireball has damage and no to-hit — the target saves, not you. The card must not draw an empty
+	// "to hit" column reading 0 beside it (the unfinished-card look the roller spec rejects).
+	it('says a damage-only roll has no test half', () => {
+		const fireball = rollToastModel(
+			rehydrateLogEntry({
+				label: 'Fireball',
+				expr: '',
+				total: 0,
+				damage: [{ type: 'fire', expr: 'd6(4) + d6(5)', total: 9 }],
+			}),
+		);
+		expect(fireball.tested).toBe(false);
+		expect(fireball.damaging).toBe(true);
+		expect(fireball.total).toBe(9);
+
+		const attack = rollToastModel(
+			rehydrateLogEntry({
+				label: 'Longsword',
+				expr: 'd20(14) +7',
+				total: 21,
+				damage: [{ type: 'slashing', expr: 'd8(8) +4', total: 12 }],
+			}),
+		);
+		expect(attack.tested).toBe(true);
+	});
 });

@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (45)
+## Duplicate suspects (46)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -23,11 +23,14 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `num` ×3 — src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
+- `onKeydown` ×3 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
+- `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
 - `cap` ×2 — src/lib/content/detail.ts · src/lib/content/grouping.ts
+- `CASES` ×2 — src/routes/dev/roller/+page.svelte · src/routes/dev/rolltoast/+page.svelte
 - `choose` ×2 — src/lib/components/FirstRunModal.svelte · src/lib/components/LanguagePicker.svelte
 - `CONFIG_PATH` ×2 — src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts
 - `CONTENT_DIR` ×2 — src/lib/content/disk.ts · src/lib/effects/plugin-host.ts
@@ -45,7 +48,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
 - `onClick` ×2 — src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
-- `onKeydown` ×2 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/trapFocus.ts
 - `ORIGINAL_SAFE` ×2 — src/lib/components/settings/StorageSettings.svelte · src/routes/dev/storage/+page.svelte
 - `pick` ×2 — src/routes/combat/blocks/EffectDurationMenu.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `PIP_CAP` ×2 — src/routes/combat/blocks/CombatStrip.svelte · src/routes/combat/blocks/panels/EffectsPanel.svelte
@@ -56,7 +58,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `say` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
-- `sourceOf` ×2 — src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
@@ -98,13 +99,17 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (65)
+## Global CSS classes (69)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
 | Class | Defined in | Purpose |
 | --- | --- | --- |
 | `.accent` | components.css |  |
+| `.advantage-cue` | components.css | --- the advantage cue: the three-state glyph that says how a d20 is being read. |
+| `.advantage-cue-down` | components.css |  |
+| `.advantage-cue-neither` | components.css |  |
+| `.advantage-cue-up` | components.css |  |
 | `.all-clear` | components.css |  |
 | `.bar-label` | components.css | the mono uppercase eyebrow that titles a combat bar (Round / Pass time / …) |
 | `.btn` | components.css | --- buttons: neutral base + ghost / primary variants (dialog footers, forms) --- |
@@ -170,7 +175,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.visually-hidden` | app.css | Screen-reader-only content (labels, live regions). |
 | `.warn` | components.css | Attention-dialog badge tint: `warn` for reversible "needs your attention" prompts (orphaned / discarded drafts), matc… |
 
-## Shared components (48)
+## Shared components (50)
 
 | Component | Props | Purpose |
 | --- | --- | --- |
@@ -182,7 +187,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **ConfirmDialog** | `title`, `message`, `confirmLabel`, `danger`, `onConfirm`, `onCancel` | Generic confirm dialog — the house attention-dialog template (charnik-dialog-design-template), |
 | **ContentHealth** | — | Content-health diagnostics — surfaces the loader's findings to the USER (not just the dev |
 | **ContentMetaModal** | `issues`, `onFillAndSave`, `onSkip`, `onNeverAsk` | Full-screen, dark-backdrop modal that reviews content files with missing metadata (DATA-VER-1). |
-| **DamageIcon** | `type`, `size` | The damage-type glyphs — Lucide (ISC), carried as bare path data so all thirteen types are ONE |
+| **DamageIcon** | `type`, `size` | A damage type's glyph. |
 | **DataConflictDialog** | `rows`, `currentPath`, `targetPath`, `onPickAnother`, `onRepoint`, `onMerge`, `onclose` |  |
 | **DataMigrationDialog** | `tone`, `title`, `detail`, `note`, `onclose` | Persistent result dialog for a data-folder move. |
 | **DiagnosticsModal** | `onDismiss` | The bug-report diagnostics step (audit DIAG-1). |
@@ -213,6 +218,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
+| **Roller** | `organ`, `onroll` | The roller ORGAN — the whole of what a roll looks like while you are building it, and the app's |
+| **RollerLine** | `organ`, `index`, `line`, `roll` | ONE line of the roller organ: the role stripe, the pills, the caret, the suggestion menu that |
 | **RollRow** | `model`, `onAdvantage`, `rerollDamage`, `layout` | The rendering of ONE roll — the label, the grid (a line per attack), and the provenance note. |
 | **RollToast** | `model`, `closeToast` | The dice-roll toast — CHROME around a `RollRow`, nothing more. |
 | **SchemaDiscardDialog** | `drafts`, `unreadable`, `onDiscard`, `onKeep` |  |
@@ -388,7 +395,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (102 modules)
+## Library functions & types (104 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -612,7 +619,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const rehydrateLogEntry` — A stored row → a row with dice, damage parts included.
 - `function amendedNote` — A roll's note after it has been re-read at a different advantage: whatever the note already said, * minus any previou…
 - `const damageTotal` — Combined total across every typed damage part.
-- `const poolExpr` — A dice pool + modifier as it READS: "1d12 + 3", "2d6", "+4" (a flat-only pool, e.g.
 - `type ActionSlot` — The three action-economy slots a turn tracks.
 - `const ACTION_SLOT_LABEL` — What a slot is called in a sentence — "bonus" alone is not the name of anything at the table.
 - `const DICE` — The dice sizes offered in the roll tray.
@@ -640,6 +646,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpellGroupsInput` — Group the character's spells for the spell block (Pinned first, then by level / prepared / school), * attaching the c…
 - `function buildSpellGroups`
 - `function spellRow` — Build a spell row from the content graph (or null if the ref is missing).
+
+### `src/lib/components/damage-glyphs.ts`
+
+- `const DAMAGE_TYPES` — The damage types the app can draw.
+- `const damageGlyph` — The glyph paths for a type, or an empty array for one the app has never heard of (homebrew is * free to invent types;…
 
 ### `src/lib/components/wikiEdit.ts`
 
@@ -961,6 +972,11 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function rollToastModel` — * Build the toast model from completed rolls (the same shape the roll log stores).
 - `function toastRoll` — Toast a completed roll.
 
+### `src/lib/dice/roller-sources.ts`
+
+- `interface ActiveRollSource` — An effect currently ON the character — the play-state shape, reduced to what a roller needs.
+- `function rollerSources` — * Everything a roller line can name, active effects first.
+
 ### `src/lib/dice/roller-vocabulary.ts`
 
 - `interface NamedRollSource` — A named thing a line can be told about: an effect (active or merely known) or a damage type.
@@ -973,12 +989,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/dice/roller.ts`
 
 - `const PILL_KIND` — What a pill IS.
-- `type PillKind`
 - `interface DicePill`
 - `interface FlatPill`
-- `interface DamageTypePill`
-- `interface CountPill`
-- `interface RawPill`
 - `type RollerPill`
 - `const ROLLER_ROLE` — What a line is FOR.
 - `type RollerRole`
@@ -988,9 +1000,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const TOKEN_KIND` — What a typed token turns into.
 - `type ParsedRollerToken`
 - `function parseRollerToken` — * One token → what it means.
-- `function pillsFromPool` — * A dice pool + modifier (+ its damage type) → the pills that describe it.
+- `function pillsFromPool` — * A dice pool + modifier (+ its damage type, its roll-manipulation facts, its effect dice) → the * pills that describ…
 - `function normalizeLine` — * Re-derive the line's implicit parts after an edit.
 - `function addToken` — Add a typed token to a line, resolving what it means first.
+- `function pillGroups` — * The line's pills as DAMAGE GROUPS, by index: everything left of a type pill belongs to it, so a * group is a run of…
 - `const volleyOf` — How many instances this line fires — the volley multiplier (§12: a volley rolls the SAME set N * times, so it is a co…
 - `function testRoll` — A test line → what `rollPool` needs.
 - `function damageParts` — * A damage line → one part per damage type.
@@ -1415,4 +1428,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 65 global classes · 48 components · 836 exports across 117 modules · 45 duplicate suspects._
+_45 tokens · 69 global classes · 50 components · 836 exports across 119 modules · 46 duplicate suspects._

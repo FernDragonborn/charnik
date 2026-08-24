@@ -69,9 +69,12 @@ export type RollLayout = (typeof ROLL_LAYOUT)[keyof typeof ROLL_LAYOUT];
 export interface RollToastModel {
 	label: string;
 	attacks: RollToastAttack[];
-	/** True once anything was damaged: the "to hit"/"damage" captions, the damage column and the
-	 *  per-type footer all hang off this. */
+	/** True once anything was damaged: the damage column and the per-type footer hang off this. */
 	damaging: boolean;
+	/** True when a d20 (or at least a modifier) decided something — i.e. there IS a to-hit half.
+	 *  A Fireball has damage and no test: the target saves, not you. Without this the card would draw
+	 *  an empty "to hit" column reading 0, which is the unfinished-card look the spec rejects. */
+	tested: boolean;
 	/** Damage summed per type across the attacks — the footer of a multi-attack toast. */
 	byType: { type: string; total: number }[];
 	/** The big number on the right: total damage when there is any, else the roll total. */
@@ -133,6 +136,7 @@ export function rollToastModel(rolled: RollLogEntry | RollLogEntry[]): RollToast
 		label: entries[0]?.label ?? '',
 		attacks,
 		damaging,
+		tested: attacks.some((a) => a.chips.length > 0 || a.mod !== 0),
 		byType: attacks.length > 1 ? sumByType(attacks) : [],
 		total: damaging
 			? attacks.filter(landed).reduce((n, a) => n + a.damageTotal, 0)

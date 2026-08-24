@@ -106,7 +106,20 @@ export class SheetRolls {
 		const fx = key ? this.effectsFor(key) : null;
 		const adv = fx ? netAdvantage(fx) : 0;
 		if (wantsTray(e))
-			this.openRoll({ label, dice: { 20: 1 }, mod, advantage: adv, mods: fx ?? {} }, e);
+			// the effect DICE ride too: the tray used to drop them, so alt-clicking a roll under Bless
+			// rolled a d4 short of the same roll tapped normally — a silently-wrong number, and exactly
+			// what the roller's pills exist to make visible
+			this.openRoll(
+				{
+					label,
+					dice: { 20: 1 },
+					mod,
+					advantage: adv,
+					bonusDice: fx?.bonusDice ?? [],
+					mods: fx ?? {},
+				},
+				e,
+			);
 		else
 			this.host().tray.rollDiceNow({
 				label,
@@ -146,6 +159,7 @@ export class SheetRolls {
 					dice: { 20: 1 },
 					mod: at.toHit + fx.flat,
 					advantage: netAdvantage(fx),
+					bonusDice: fx.bonusDice,
 					mods: fx,
 				},
 				e,

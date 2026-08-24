@@ -26,7 +26,9 @@ import { signed } from '$lib/util/format';
 import type { DamagePartSpec } from '$lib/combat/roll';
 
 /** What a pill IS. A named member, not a bare string (AI-CONVENTIONS §1.5): every renderer and every
- *  fold switches on it, so a new kind must fail to compile rather than fall through silently. */
+ *  fold switches on it, so a new kind must fail to compile rather than fall through silently. The
+ *  KIND type is not exported and does not need to be — `RollerPill` is a discriminated union, so
+ *  `pill.kind === PILL_KIND.dice` narrows to the member without anyone naming it. */
 export const PILL_KIND = {
 	/** Dice — the weapon's `2d6`, an effect's `+1d4`. */
 	dice: 'dice',
@@ -36,10 +38,14 @@ export const PILL_KIND = {
 	damageType: 'damageType',
 	/** A volley multiplier ("×3 attacks") — N instances of the same set, not N different lines. */
 	count: 'count',
-	/** Text the parser could not account for. Never dropped, never rolled (§5 / finding J). */
+	/** A word the vocabulary doesn't know, written beside a die as a label ("1d4 dm's luck"). Not an
+	 *  error: §6 says so outright. It adds nothing and blocks nothing — it is what the player called
+	 *  this die, and the log keeps it. */
+	note: 'note',
+	/** Text the parser could not account for AS ARITHMETIC — `+d4?`. Never dropped, never rolled,
+	 *  and the one thing that stops the roll (§5 / §10 / finding J). */
 	raw: 'raw',
 } as const;
-export type PillKind = (typeof PILL_KIND)[keyof typeof PILL_KIND];
 
 /** The token the pill was made from, kept verbatim so Backspace and double-click can unfold the pill
  *  back into the exact text the player typed — "Bless → Bane" without retyping the whole token. */
@@ -56,6 +62,11 @@ export interface DicePill extends PillCommon {
 	min?: number;
 	/** Ceiling: the mirror of `min` (`<10`). */
 	max?: number;
+	/** Reroll this die once if it lands at or under this (Great Weapon Fighting ≤2, Halfling Lucky 1).
+	 *  On the DIE for the same reason the bounds are: RAW it belongs to the weapon's own dice, not to
+	 *  a Bless die sitting beside them, and a line-level flag could not tell those apart. Arrives from
+	 *  a prefill rather than from a token — no spelling of it has been asked for. */
+	reroll?: number;
 	/** Where the die came from ("Bless"). Present only when a real source exists — a die the player
 	 *  typed by hand has none, and a "manual" marker would add nothing. Also what makes it an EFFECT
 	 *  die rather than a pool die when it rolls. */
@@ -68,7 +79,7 @@ export interface FlatPill extends PillCommon {
 	source?: string;
 }
 
-export interface DamageTypePill extends PillCommon {
+interface DamageTypePill extends PillCommon {
 	kind: typeof PILL_KIND.damageType;
 	type: string;
 	/** Set when the app added this pill rather than the player: the tail after a type inherits it.
@@ -77,16 +88,20 @@ export interface DamageTypePill extends PillCommon {
 	inherited?: true;
 }
 
-export interface CountPill extends PillCommon {
+interface CountPill extends PillCommon {
 	kind: typeof PILL_KIND.count;
 	times: number;
 }
 
-export interface RawPill extends PillCommon {
+interface NotePill extends PillCommon {
+	kind: typeof PILL_KIND.note;
+}
+
+interface RawPill extends PillCommon {
 	kind: typeof PILL_KIND.raw;
 }
 
-export type RollerPill = DicePill | FlatPill | DamageTypePill | CountPill | RawPill;
+export type RollerPill = DicePill | FlatPill | DamageTypePill | CountPill | NotePill | RawPill;
 
 /** What a line is FOR. The whole two-line model hangs off this: the stripe colour, which state
  *  toggle it gets, and whether it rolls a verdict or a quantity. */
@@ -195,19 +210,25 @@ export function parseRollerToken(raw: string, resolve: RollerResolver): ParsedRo
 }
 
 /**
- * A dice pool + modifier (+ its damage type) → the pills that describe it. The ONE adapter every
- * prefill goes through, so a roll arriving from an attack row is the same kind of thing as one typed
- * by hand — which is the point of the organ: there is no "prefilled mode" it can be stuck in.
+ * A dice pool + modifier (+ its damage type, its roll-manipulation facts, its effect dice) → the
+ * pills that describe it. The ONE adapter every prefill goes through, so a roll arriving from an
+ * attack row is the same kind of thing as one typed by hand — which is the point of the organ: there
+ * is no "prefilled mode" it can be stuck in.
  *
- * ponytail: it takes no effect dice, because no prefill site has any to give yet. When one does, a
- * positive effect die needs a `source` here or it folds back as a pool die and picks up the pool's
- * rerolls.
+ * `mods` land on the POOL's dice only, which is what keeps a Great Weapon Fighting reroll off a
+ * Bless die sitting in the same line (RAW, and the reason those facts belong to a die rather than to
+ * a line).
  */
 export function pillsFromPool(
 	dice: Record<number, number>,
 	mod: number,
-	type?: string,
+	opts: { type?: string; mods?: DieMods; bonusDice?: BonusDie[] } = {},
 ): RollerPill[] {
+	const bounds = {
+		...(opts.mods?.minDie !== undefined ? { min: opts.mods.minDie } : {}),
+		...(opts.mods?.maxDie !== undefined ? { max: opts.mods.maxDie } : {}),
+		...(opts.mods?.reroll !== undefined ? { reroll: opts.mods.reroll } : {}),
+	};
 	const pills: RollerPill[] = Object.entries(dice)
 		.sort((a, b) => Number(b[0]) - Number(a[0]))
 		.map(([sides, count]) => ({
@@ -216,9 +237,23 @@ export function pillsFromPool(
 			count,
 			sides: Number(sides),
 			sign: 1,
+			...bounds,
 		}));
+	// An effect die arrives here KNOWN but UNNAMED: the roll site has the die and not the effect that
+	// gave it (`RolledDie.source` is still unfilled — ROLLER-PLAN §2). The empty source is what keeps
+	// it an EFFECT die rather than a pool one, so it can't pick up the pool's rerolls; the caption
+	// simply has nothing to print until provenance is threaded through.
+	for (const b of opts.bonusDice ?? [])
+		pills.push({
+			kind: PILL_KIND.dice,
+			text: `${b.sign < 0 ? '-' : '+'}${b.count}d${b.sides}`,
+			count: b.count,
+			sides: b.sides,
+			sign: b.sign < 0 ? -1 : 1,
+			source: '',
+		});
 	if (mod) pills.push({ kind: PILL_KIND.flat, text: signed(mod), amount: mod });
-	if (type) pills.push({ kind: PILL_KIND.damageType, text: type, type });
+	if (opts.type) pills.push({ kind: PILL_KIND.damageType, text: opts.type, type: opts.type });
 	return pills;
 }
 
@@ -243,6 +278,30 @@ export function normalizeLine(line: RollerLine): RollerLine {
 	return { ...line, pills };
 }
 
+/** A bare WORD — letters, spaces and the punctuation names carry. Not arithmetic, so it can never
+ *  make a total quietly smaller, which is the whole test for whether a fragment may stop a roll. */
+const isWord = (text: string): boolean => /^\p{L}[\p{L}\p{M}\s'’-]*$/u.test(text.trim());
+
+/**
+ * What an unrecognised token becomes, which depends on the line it landed in — and this is the one
+ * place the two spec rules about unknown words meet.
+ *
+ * On a DAMAGE line a word is a damage TYPE: homebrew invents types freely, and one the app has no
+ * glyph for still has to type its damage (§7 — it just stays a word instead of collapsing to an
+ * icon). Anywhere else a word is a LABEL the player wrote beside a die ("1d4 dm's luck", §6) — it
+ * adds nothing and stops nothing.
+ *
+ * Anything that is NOT a word stays raw, and raw is what blocks. That is the line the house rule
+ * actually draws: a fragment that looks like arithmetic and did not parse would make the number
+ * quietly smaller; a word never can.
+ */
+function wordPill(pill: RollerPill, role: RollerRole): RollerPill {
+	if (pill.kind !== PILL_KIND.raw || !isWord(pill.text)) return pill;
+	return role === ROLLER_ROLE.damage
+		? { kind: PILL_KIND.damageType, text: pill.text, type: pill.text.trim().toLowerCase() }
+		: { kind: PILL_KIND.note, text: pill.text };
+}
+
 /** Add a typed token to a line, resolving what it means first. A bound lands on the last die in the
  *  line rather than becoming a pill of its own — it is a property of that die (§5) — and with no die
  *  to land on it stays raw, because a floor over nothing is not a fact we can keep. */
@@ -251,7 +310,7 @@ export function addToken(line: RollerLine, raw: string, resolve: RollerResolver)
 	if (!parsed) return line;
 	if (parsed.kind === TOKEN_KIND.advantage) return { ...line, advantage: parsed.mode };
 	if (parsed.kind === TOKEN_KIND.pill)
-		return normalizeLine({ ...line, pills: [...line.pills, parsed.pill] });
+		return normalizeLine({ ...line, pills: [...line.pills, wordPill(parsed.pill, line.role)] });
 
 	const at = line.pills.map((p) => p.kind).lastIndexOf(PILL_KIND.dice);
 	const die = line.pills[at];
@@ -288,11 +347,33 @@ function foldValues(pills: RollerPill[]): {
 		if (p.kind !== PILL_KIND.dice) continue;
 		if (p.min !== undefined) mods.minDie = Math.max(mods.minDie ?? 0, p.min);
 		if (p.max !== undefined) mods.maxDie = Math.min(mods.maxDie ?? p.max, p.max);
+		if (p.reroll !== undefined) mods.reroll = Math.max(mods.reroll ?? 0, p.reroll);
 		if (p.sign < 0 || p.source !== undefined)
 			bonusDice.push({ sides: p.sides, count: p.count, sign: p.sign });
 		else dice[p.sides] = (dice[p.sides] ?? 0) + p.count;
 	}
 	return { dice, mod, bonusDice, mods };
+}
+
+/**
+ * The line's pills as DAMAGE GROUPS, by index: everything left of a type pill belongs to it, so a
+ * group is a run of pills ending in its type (§7). The render draws each group as one figure, which
+ * is how "this +3 belongs to the fire and not to the cold" is legible at all when a line carries
+ * several types — the same fold `damageParts` does, exposed so the DOM can match the model instead
+ * of laying every pill out flat and hoping.
+ */
+export function pillGroups(pills: RollerPill[]): number[][] {
+	const groups: number[][] = [];
+	let run: number[] = [];
+	pills.forEach((pill, index) => {
+		run.push(index);
+		if (pill.kind === PILL_KIND.damageType) {
+			groups.push(run);
+			run = [];
+		}
+	});
+	if (run.length) groups.push(run);
+	return groups;
 }
 
 /** How many instances this line fires — the volley multiplier (§12: a volley rolls the SAME set N
