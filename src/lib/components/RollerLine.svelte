@@ -38,8 +38,19 @@
 	 *  d20 and touches nothing else, while a crit doubles every damage die in the line. */
 	const doubles = (p: DicePill): boolean =>
 		isTest ? p.sides === 20 && line.advantage !== ADVANTAGE_MODE.neither : line.crit;
-	/** Damage groups: everything left of a type pill is that type's, drawn as one figure. */
+	/** Damage groups: everything left of a type pill is that type's, drawn as one figure. A group
+	 *  that does NOT end in a type is damage with no type — underlined, never blocked: a type is not
+	 *  arithmetic, and without one the number is still right (§7 / §10). */
 	const groups = $derived(pillGroups(line.pills));
+	const closedByType = (group: number[]): boolean =>
+		line.pills[group[group.length - 1] ?? -1]?.kind === PILL_KIND.damageType;
+	const untyped = (group: number[]): boolean =>
+		!isTest &&
+		!closedByType(group) &&
+		group.some((at) => {
+			const kind = line.pills[at]?.kind;
+			return kind === PILL_KIND.dice || kind === PILL_KIND.flat;
+		});
 	const cue = $derived(
 		line.advantage === ADVANTAGE_MODE.advantage
 			? 'up'
@@ -200,7 +211,12 @@
 			ondrop={onDrop}
 		>
 			{#each groups as group, g (g)}
-				<span class="roller-group" class:typed={!isTest && group.length > 1}>
+				<span
+					class="roller-group"
+					class:typed={closedByType(group)}
+					class:untyped={untyped(group)}
+					title={untyped(group) ? 'damage with no type — it rolls anyway' : undefined}
+				>
 					{#each group as at (at)}{@render pillView(line.pills[at] as RollerPill, at)}{/each}
 				</span>
 			{/each}
@@ -338,6 +354,13 @@
 		margin: -2px;
 		border: 1px solid transparent;
 		border-radius: 9px;
+	}
+	/* nothing on its left to inherit and no type of its own: the same wavy underline a raw fragment
+	   gets, in a muted colour, because this one does not stop the roll */
+	.roller-group.untyped {
+		text-decoration: underline wavy var(--color-text-muted);
+		text-decoration-skip-ink: none;
+		text-underline-offset: 5px;
 	}
 	.roller-group.typed:hover {
 		border-color: var(--color-resource-line);

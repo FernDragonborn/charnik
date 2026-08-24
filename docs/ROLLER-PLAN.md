@@ -418,6 +418,21 @@ menu, pure), `dice/roller-sources.ts` (the one file that reads the content graph
   instead of two lines (both halves must be visible at once); a separate "situational modifier"
   control (it is an ordinary pill in the line it belongs to); an "untyped" segment in the result.
 
+**Deliberately not built, with the reason** (so none of it reads as an oversight):
+
+- **Clicking a pill's NUMBER does not place a caret inside it.** The spec wants text behaviour to
+  win there; pills are elements beside an `<input>`, not runs inside a contenteditable, so there is
+  no caret to place. What a mouse gets instead: click selects the pill (focus IS the selection, and
+  Del removes it), double-click unfolds it back to the exact text it was made from, and `−`/`+`
+  appear on hover for the quantity. The contenteditable rewrite is the only way to close this and it
+  buys one interaction.
+- **The mouse wheel over a pill.** Svelte registers `onwheel` passively, so the handler cannot
+  `preventDefault` and the tray would scroll under the cursor while the number changed. The `−`/`+`
+  cover it.
+- **The resist/vulnerability reminder under a result** (§10, third row). The app knows the
+  CHARACTER's resistances and not the target's, so the honest version of this reminder is a line
+  that says the same thing on every damage roll — noise. It needs a target concept first.
+
 **Still open.** Where the organ lives physically — a popover anchored to whatever launched it,
 inline in the Playbar for the last roll, or both modes of one panel — is undecided; today it is the
 dice-tray popup, which is what §12 said it replaces. `RolledDie.source` is still filled only for a

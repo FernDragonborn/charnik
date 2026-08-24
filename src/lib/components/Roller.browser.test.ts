@@ -100,6 +100,18 @@ describe('the roller organ (browser)', () => {
 		expect(onroll).not.toHaveBeenCalled();
 	});
 
+	it('underlines damage with no type, and rolls it anyway', async () => {
+		const { onroll, screen, caret } = await mount();
+		await userEvent.click(screen.getByRole('button', { name: '+ damage line' }).element());
+		await typeInto(caret(1), '2d6 +3 ');
+		expect(document.querySelector('.roller-group.untyped')).not.toBeNull();
+		await userEvent.click(screen.getByRole('button', { name: 'Roll' }).element());
+		expect(onroll).toHaveBeenCalledOnce();
+		// naming a type takes the underline away
+		await typeInto(caret(1), 'fire ');
+		expect(document.querySelector('.roller-group.untyped')).toBeNull();
+	});
+
 	it('a focused pill is the selected pill — Delete removes it', async () => {
 		const { organ, caret } = await mount();
 		await typeInto(caret(), '2d6 1d4 ');
