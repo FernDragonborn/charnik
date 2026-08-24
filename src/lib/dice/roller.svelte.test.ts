@@ -151,6 +151,15 @@ describe('rolling', () => {
 		expect(new Set(entries.map((e) => e.at)).size).toBe(3);
 	});
 
+	it('reads a volley count off whichever line carries it, test or damage', () => {
+		organ.lines = [
+			{ role: ROLLER_ROLE.damage, pills: [], advantage: ADVANTAGE_MODE.neither, crit: false },
+		];
+		organ.drafts = [''];
+		typeInto(0, '2d6 fire ×2 ');
+		expect(organ.roll(half)).toHaveLength(2);
+	});
+
 	it('refuses to roll a line it could not fully account for', () => {
 		typeInto(0, 'd20 +d4? ');
 		expect(organ.rollable).toBe(false);

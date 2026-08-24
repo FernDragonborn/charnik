@@ -146,6 +146,10 @@
 	{:else if pill.kind === PILL_KIND.note}
 		<span class="roller-note" title="your own label — it changes no number">{pill.text}</span>
 	{:else}
+		<!-- Focusable but NOT in the tab order on purpose: a line can hold half a dozen pills, and
+		     tabbing through every one to leave the roller would be worse than the affordance is worth.
+		     A keyboard already reaches every pill — Backspace at the caret unfolds them one at a time,
+		     right to left — so what a click buys here is a shortcut for a mouse, not the only path. -->
 		<span
 			class="roller-pill"
 			class:type-pill={pill.kind === PILL_KIND.damageType}
@@ -217,7 +221,10 @@
 					class:untyped={untyped(group)}
 					title={untyped(group) ? 'damage with no type — it rolls anyway' : undefined}
 				>
-					{#each group as at (at)}{@render pillView(line.pills[at] as RollerPill, at)}{/each}
+					{#each group as at (at)}{@const pill = line.pills[at]}{#if pill}{@render pillView(
+								pill,
+								at,
+							)}{/if}{/each}
 				</span>
 			{/each}
 			<!-- the caret and its grey completion are ONE item, so the field's pill gap can't open

@@ -226,9 +226,9 @@ export class RollerOrgan {
 		);
 	};
 
-	/** Nudge a pill's quantity — the −/+ that appear on hover and the wheel over it. They exist
-	 *  because clicking the NUMBER has to stay a caret placement, or there is no way into a pill with
-	 *  a mouse at all (§4). A dice pill counts dice, a flat pill counts itself. */
+	/** Nudge a pill's quantity — the −/+ that appear on hover. They exist because a pill has no caret
+	 *  to click into, so without them a mouse could add a die and never change how many (§4).
+	 *  A dice pill counts dice; a flat pill counts itself. */
 	bumpPill = (index: number, pillIndex: number, delta: number): void => {
 		const line = this.lineAt(index);
 		const pill = line?.pills[pillIndex];
@@ -379,7 +379,9 @@ export class RollerOrgan {
 			.flatMap((line) =>
 				damageParts(line).map((p) => (line.crit ? { ...p, crit: this.critMethod } : p)),
 			);
-		const times = test ? volleyOf(test) : 1;
+		// a volley is a count on ANY line, not only the test one: a damage-only spell can fire N times
+		// too, and reading it off the test line alone would silently drop that
+		const times = Math.max(1, ...this.lines.map(volleyOf));
 		const at = Date.now();
 		const out: RollLogEntry[] = [];
 		for (let i = 0; i < times; i++) {
