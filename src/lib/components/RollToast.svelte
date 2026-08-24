@@ -6,14 +6,25 @@
 	// It mounts RollRow with NO action props, so every pill is inert: a toast announces, the Playbar
 	// and the log control (UX-3) — which is also why it no longer has to stay open indefinitely.
 	import type { RollToastModel } from '$lib/dice/roll-toast';
+	import { ADVANTAGE_MODE } from '$lib/rules/dice';
 	import RollRow from './RollRow.svelte';
 
 	// `closeToast` is injected by svelte-sonner for a custom-component toast — which is also why it
 	// drops its own close button, so the card itself has to be the dismiss affordance.
 	let { model, closeToast }: { model: RollToastModel; closeToast?: () => void } = $props();
+
+	// HOW the d20 was rolled is the one thing you can't read off the numbers, and on a toast — which
+	// you glance at once — it belongs to the whole card rather than to a frame around two dice. The
+	// row's own cue (the triangle in the d20) still says it inside. First attack: nothing rolls a
+	// volley yet, and a volley whose attacks were rolled differently has no single card colour anyway.
+	const advantage = $derived(model.attacks[0]?.advantageMode);
 </script>
 
-<div class="roll-toast">
+<div
+	class="roll-toast"
+	class:advantage={advantage === ADVANTAGE_MODE.advantage}
+	class:disadvantage={advantage === ADVANTAGE_MODE.disadvantage}
+>
 	<!-- the roll itself is a real <button>, not a div with a role: it IS the dismiss target (see
 	     closeToast above), which is exactly why no control may live inside it. -->
 	<button
@@ -74,7 +85,16 @@
 	.roll-card.dismissible {
 		cursor: pointer;
 	}
-	.roll-toast:has(.roll-card.dismissible:hover) {
+	/* an advantaged/disadvantaged roll wears its colour on the card edge — 2px, so it reads at a glance
+	   without a second frame inside the row. The hover cue stands down for it: the colour says
+	   something about the roll, and hover would overwrite it with a state of the pointer. */
+	.roll-toast.advantage {
+		border: 2px solid var(--color-good);
+	}
+	.roll-toast.disadvantage {
+		border: 2px solid var(--color-danger);
+	}
+	.roll-toast:not(.advantage, .disadvantage):has(.roll-card.dismissible:hover) {
 		border-color: var(--color-border-strong);
 	}
 </style>

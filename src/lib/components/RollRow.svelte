@@ -104,8 +104,6 @@
 {#snippet hitDice(a: RollToastAttack)}
 	<span
 		class="roll-to-hit"
-		class:advantage={a.advantageMode === ADVANTAGE_MODE.advantage}
-		class:disadvantage={a.advantageMode === ADVANTAGE_MODE.disadvantage}
 		title={a.advantageMode === ADVANTAGE_MODE.advantage
 			? 'rolled with advantage'
 			: a.advantageMode === ADVANTAGE_MODE.disadvantage
@@ -123,7 +121,9 @@
 				>
 			{:else}
 				<span class="roll-die {tone(c)}" class:d20={c.sides === 20} title="d{c.sides} · {c.detail}"
-					>{face(c)}</span
+					>{face(c)}{#if c.sides === 20 && i === 0 && a.advantageMode}<span
+							class="roll-cue {cueShape(a)}"
+						></span>{/if}</span
 				>
 			{/if}
 		{/each}
@@ -247,8 +247,8 @@
 	{/if}
 	<!-- the note is a RECORD (an upcast's provenance, an amendment) and records belong in the log,
 	     which is one tap away and renders it in full. On a one-line strip it is permanent space for a
-	     few seconds of value, and for an amendment it is redundant besides: the green/red frame and
-	     the struck-through die already say the roll was changed. Kept as the strip's tooltip. -->
+	     few seconds of value, and for an amendment it is redundant besides: the cue in the d20 and the
+	     struck-through die already say the roll was changed. Kept as the strip's tooltip. -->
 	{#if model.note && !strip}<span class="roll-note"
 			><Icon name="arrow-up" size={11} /> {model.note}</span
 		>{/if}
@@ -357,19 +357,9 @@
 		align-items: center;
 		gap: 4px;
 		padding: 6px 0;
-	}
-	/* HOW the d20 was rolled is the one thing you cannot read off the numbers, so it frames the pair
-	   rather than tinting a die — the dice keep their own nat-20 gold / nat-1 red, which says what the
-	   die DID. Green for advantage, red for disadvantage. */
-	.roll-to-hit.advantage,
-	.roll-to-hit.disadvantage {
-		margin: 2px 0;
-		padding: 2px 6px;
-		border-radius: var(--radius-full);
-		border: 2px solid var(--color-good);
-	}
-	.roll-to-hit.disadvantage {
-		border-color: var(--color-danger);
+		/* the dice group is as wide as its dice, never as wide as its column — a grid item stretches by
+		   default, and on a roll with no damage that column is `1fr`. */
+		justify-self: start;
 	}
 	.roll-die {
 		display: inline-flex;
@@ -423,22 +413,29 @@
 	}
 	/* An interactive pill must LOOK like one ([[charnik-interactive-affordance]]): its own edge, a
 	   cursor, a hover, a focus ring and a glyph saying what tapping does. The edge is DASHED rather
-	   than coloured, because green and red are spoken for — they say how the d20 was rolled — and a
-	   third meaning in the same palette would read as a roll outcome. Inert pills are untouched, so
-	   there is never a false affordance. */
+	   than coloured, and the hover is COLOURLESS, because green and red are spoken for — they say how
+	   the d20 was rolled — and the theme's crimson accent sits a shade away from the red that means
+	   disadvantage, so an accent hover read as "this is about to become disadvantage". A hover says
+	   only that the thing is live; what the tap does is the pill's title, which is where the next state
+	   belongs — it survives touch, where there is no hover at all. Inert pills are untouched, so there
+	   is never a false affordance. */
 	.roll-die.tappable {
-		gap: 2px;
-		padding-right: 4px;
 		border-style: dashed;
 		border-color: var(--color-border-strong);
 		cursor: pointer;
 	}
+	/* a pill carrying the adv/disadv cue tightens around it — the cue is a marker on the die, not a
+	   second value beside it */
+	.roll-die:has(.roll-cue) {
+		gap: 2px;
+		padding-right: 4px;
+	}
 	/* The three cue shapes, clipped out of a solid box rather than typed as a character: at this size a
 	   font glyph has no vertical stem for the rasteriser to align to, so its diagonals blur into a lump.
 	   A clipped box is the exact geometry we asked for, at a size we control, in currentColor.
-	   No third colour: each shape wears the colour of the state it reports, so teal and red keep meaning
-	   exactly what they mean on the frame. The neutral diamond stays uncoloured, which is why it can be
-	   the affordance marker without claiming a state. */
+	   No third colour: each shape wears the colour of the state it reports — the same teal and red the
+	   toast puts on its card edge. The neutral diamond stays uncoloured, which is why it can be the
+	   affordance marker without claiming a state. */
 	.roll-cue.up,
 	.roll-cue.down,
 	.roll-cue.none {
@@ -459,8 +456,8 @@
 		color: var(--color-text-muted);
 	}
 	.roll-die.tappable:hover {
-		border-color: var(--color-accent);
-		background: var(--color-accent-soft);
+		border-color: var(--color-text-muted);
+		background: color-mix(in srgb, var(--color-text) 10%, var(--color-surface-2));
 	}
 	.roll-die.tappable:focus-visible {
 		outline: 2px solid var(--color-accent);

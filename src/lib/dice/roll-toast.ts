@@ -36,9 +36,10 @@ export interface RollToastAttack {
 	chips: RolledDie[];
 	/** The adv/disadv d20 that lost — shown struck through next to the kept one. */
 	dropped?: number;
-	/** How the pair was read. Frames the two d20 green or red — the one thing about a roll you can't
-	 *  read off the numbers (two 12s look identical either way). Absent when no pair decided the roll;
-	 *  the roll's own `ADVANTAGE_MODE.neither` is not a frame. */
+	/** How the pair was read — the one thing about a roll you can't read off the numbers (two 12s look
+	 *  identical either way). Shown as the green/red cue in the d20 itself, and on a toast also as the
+	 *  colour of the card edge. Absent when no pair decided the roll; the roll's own
+	 *  `ADVANTAGE_MODE.neither` is not a state to report. */
 	advantageMode?: AdvantageMode;
 	mod: number;
 	/** What the to-hit (or, with no damage, the roll itself) came to. */

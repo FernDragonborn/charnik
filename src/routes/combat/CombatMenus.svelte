@@ -48,6 +48,7 @@
 	<div
 		bind:this={popEl}
 		class="popup"
+		class:wide={overlay.kind === 'log'}
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
@@ -363,6 +364,12 @@
 		border-radius: 13px;
 		box-shadow: 0 18px 40px var(--color-overlay);
 		padding-bottom: 6px;
+	}
+	/* the roll log's row is four columns wide (dice · to hit · damage · total) and does not fit the
+	   menu width — at 300px the d20 pair wrapped, which drew as a two-line blob. The row is the fixed
+	   thing here (it is the same RollRow everywhere); the menu is what gives. */
+	.popup.wide {
+		width: min(360px, calc(100vw - 1.5rem));
 	}
 	.popup-heading {
 		display: flex;

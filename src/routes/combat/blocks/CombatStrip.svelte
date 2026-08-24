@@ -57,7 +57,9 @@
 		</button>
 		<div class="tile" title={why(s.speed)}>
 			<div class="tile-key">Speed</div>
-			<div class="tile-value">{s.speed.value} ft<small> ({metres(s.speed.value)})</small></div>
+			<!-- the space goes OUTSIDE <small>: Svelte trims whitespace at an element's edges, so a leading
+			     one inside it is dropped and the metric hugs the "ft" -->
+			<div class="tile-value">{s.speed.value} ft <small>({metres(s.speed.value)})</small></div>
 			<div class="tile-text">base walk</div>
 		</div>
 
@@ -179,6 +181,14 @@
 	}
 
 	.tile {
+		/* a <button> centres its content vertically whatever its display is, so the tiles with less text
+		   than their neighbours (Initiative, one line) floated 8px below the ones with more (AC, two).
+		   An explicit flex column replaces the UA's centring with our own alignment, and the plain-div
+		   tile lays out the same way, so the row reads off one top edge. */
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		justify-content: flex-start;
 		text-align: left;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);

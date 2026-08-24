@@ -47,10 +47,10 @@
 		onclick={(e) => combat.startShortRest(e)}
 		title={combat.shortRestMode === 'half'
 			? 'Short rest — heal half your max HP'
-			: 'Short rest — spend Hit Dice to heal'}><Icon name="moon" /> Short</button
+			: 'Short rest — spend Hit Dice to heal'}><Icon name="flame-kindling" /> Short</button
 	>
 	<button class="toggle rest" onclick={() => combat.resources.rest('long')} title="Long rest"
-		><Icon name="moon" /> Long</button
+		><Icon name="tent" /> Long</button
 	>
 	<button
 		class="toggle auto"

@@ -539,4 +539,19 @@
 		flex-direction: column;
 		overflow: hidden;
 	}
+	/* UBUG-23. sonner forces every collapsed background toast to `height: var(--front-toast-height)`,
+	   which is invisible for ITS toasts because it also fades their content out — but only for
+	   `data-styled='true'`, and a custom-component toast is styled='false'. Ours size to their content
+	   (the roll card is max-content), so a taller one behind the front one spilled out of the forced
+	   height and clipped. Same mechanism, extended to the toasts the library left out: the geometry
+	   stays, the content goes. `data-expanded='false'` keeps hover-expand — the one state where a
+	   background toast is MEANT to be seen at its own size — and pointer-events follow the pixels, so
+	   an invisible card is not a click target. */
+	:global([data-sonner-toast][data-expanded='false'][data-front='false'][data-styled='false'])
+		> :global(*) {
+		opacity: 0;
+	}
+	:global([data-sonner-toast][data-expanded='false'][data-front='false'][data-styled='false']) {
+		pointer-events: none;
+	}
 </style>

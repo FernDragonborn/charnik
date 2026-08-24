@@ -30,12 +30,12 @@
 		<button
 			class:on={b.draft.shortRestMode === 'dice'}
 			onclick={() => (b.draft.shortRestMode = 'dice')}
-			title="Short rest: spend Hit Dice to heal (RAW)"><Icon name="moon" size={12} /> Dice</button
+			title="Short rest: spend Hit Dice to heal (RAW)"><Icon name="flame-kindling" size={12} /> Dice</button
 		>
 		<button
 			class:on={b.draft.shortRestMode === 'half'}
 			onclick={() => (b.draft.shortRestMode = 'half')}
-			title="Short rest: heal half your max HP (house/video-game style)"><Icon name="moon" size={12} /> ½ HP</button
+			title="Short rest: heal half your max HP (house/video-game style)"><Icon name="flame-kindling" size={12} /> ½ HP</button
 		>
 	</div>
 </div>

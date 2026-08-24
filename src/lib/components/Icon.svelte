@@ -28,6 +28,7 @@
 	import CornerDownLeft from '@lucide/svelte/icons/corner-down-left';
 	import Download from '@lucide/svelte/icons/download';
 	import Flag from '@lucide/svelte/icons/flag';
+	import FlameKindling from '@lucide/svelte/icons/flame-kindling';
 	import Folder from '@lucide/svelte/icons/folder';
 	import Infinity_ from '@lucide/svelte/icons/infinity';
 	import Info from '@lucide/svelte/icons/info';
@@ -49,6 +50,7 @@
 	import Sun from '@lucide/svelte/icons/sun';
 	import Swords from '@lucide/svelte/icons/swords';
 	import Target from '@lucide/svelte/icons/target';
+	import Tent from '@lucide/svelte/icons/tent';
 	import Timer from '@lucide/svelte/icons/timer';
 	import TriangleAlert from '@lucide/svelte/icons/triangle-alert';
 	import Upload from '@lucide/svelte/icons/upload';
@@ -72,6 +74,9 @@
 		'corner-down-left': CornerDownLeft,
 		download: Download,
 		flag: Flag,
+		/* a short rest is an hour by the fire, a long one is making camp — the two used to share the
+		   moon, which said "rest" for both and told them apart not at all */
+		'flame-kindling': FlameKindling,
 		folder: Folder,
 		infinity: Infinity_,
 		info: Info,
@@ -93,6 +98,7 @@
 		sun: Sun,
 		swords: Swords,
 		target: Target,
+		tent: Tent,
 		timer: Timer,
 		'triangle-alert': TriangleAlert,
 		upload: Upload,

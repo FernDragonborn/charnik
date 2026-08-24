@@ -1178,6 +1178,15 @@ holds the done-work log; these are the OPEN tails it carried):**
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
+- [x] **UBUG-23 · A stacked toast was resized to the front toast's height instead of just sitting
+  behind it — clipped when taller, stretched when shorter — FIXED 2026-08-24.** `svelte-sonner` forces
+  `height: var(--front-toast-height)` on every collapsed background toast and makes that harmless by
+  fading their content out — but only for `data-styled='true'`, and a custom-component toast is
+  `styled='false'`. Ours size to their content, so a taller one behind the front card spilled out of
+  the forced height. Fix in `routes/+layout.svelte`: the library's own content-fade, extended to the
+  unstyled toasts it skips (plus `pointer-events: none`, so an invisible card is not a click target).
+  `data-expanded='false'` keeps hover-expand, where a background toast is meant to be seen at its own
+  size — verified both states in `/dev/rolltoast`.
 - [x] **UBUG-22 · `rollFormula` silently dropped a flat modifier that wasn't at the end of the formula
   — FIXED 2026-08-21.** `rollFormula('1d6+3+1d4')` totalled **10, not 13**: `parseDicePool` collected
   every dice group, but the modifier was read by a TAIL regex, so any `+N` with a dice term after it
