@@ -55,7 +55,17 @@
 		display: flex;
 		flex-direction: column;
 	}
+	/* the readout sits BESIDE the Roll tab rather than under it: the tab hangs off the builder's bottom
+	   edge on the right, so this only has to clear its column (~90px) — and can then sit close under
+	   the card instead of a whole tab-height away from it. The negative margin takes back most of the
+	   room `.roller` reserves for the tab, which it still needs where nothing sits beside it. */
 	.roll-history {
+		/* positioned so it paints ABOVE the builder: `.roller-panel` is `position: relative` for its
+		   Roll tab, and a positioned element paints over an unpositioned sibling whatever the order —
+		   which dropped the builder's shadow across the readout that comes after it. */
+		position: relative;
+		margin-top: -30px;
+		margin-right: 90px;
 		padding: 6px 12px 10px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
