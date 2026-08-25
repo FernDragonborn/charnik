@@ -1109,7 +1109,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   [`docs/research/roll-surfaces.md`](research/roll-surfaces.md).
 - [ ] **UX-2 · First-run onboarding — DEFERRED, not a priority (maintainer, 2026-08-10; recorded so the
   need doesn't get re-derived from scratch each time a non-obvious affordance ships).** The trigger: the
-  app keeps accumulating things a first-time user cannot deduce (Alt/Ctrl-click a stat to open the roll
+  app keeps accumulating things a first-time user cannot deduce (Shift-click a stat to open the roll
   tray instead of rolling it, `Ctrl+K`, the fact that all content is CSV on disk they may edit live,
   and — once UBUG-20 lands — that an eligible damage pill is clickable). **Maintainer constraints:**
   minimum text, maximum interactivity, because (a) less to translate, (b) long tutorials actively repel
@@ -1222,7 +1222,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   claiming to be the attack — dice and modifier
   you add for damage land on the d20 instead (reported by the maintainer 2026-08-10, long-standing;
   `design-preview/dice-bug.png`). Fix WITH `ROLLER-N`, below — same seam, and pointless to build twice.**
-  Alt/Ctrl-clicking an attack prefills the tray from `attackRoll`'s tray branch: `dice: {20:1}`,
+  Shift-clicking an attack prefills the tray from `attackRoll`'s tray branch: `dice: {20:1}`,
   `mod: at.toHit + fx.flat`, and the damage goes to `queueDamage`, where it is INVISIBLE and
   unadjustable — `doRoll` rolls the shown pool, then rolls the queued parts from their fixed specs.
   So everything the tray shows, and everything it lets you change, belongs to the to-hit, under a

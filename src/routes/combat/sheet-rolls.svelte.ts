@@ -91,7 +91,7 @@ export class SheetRolls {
 		this.host().tray.prefill(spec);
 		this.host().openMenu('dice', e);
 	};
-	// EVERY roll site: normal tap rolls instantly; Alt/Ctrl-click opens the prefilled tray. `key`
+	// EVERY roll site: normal tap rolls instantly; Shift-click opens the prefilled tray. `key`
 	// (e.g. "save.dex", "skill.stealth", "attack") lets the roll pick up matching effects. NB the
 	// flat part is IGNORED for save/skill keys — it's already folded into the sheet value `mod`.
 	roll = (label: string, mod: number, e: Event, key?: string) => {
@@ -133,7 +133,7 @@ export class SheetRolls {
 
 	/** Roll a weapon/unarmed attack (the Attack action → spends an action in combat). A normal tap
 	 *  rolls the to-hit (picks up attack advantage/flat/dice effects) THEN the weapon damage (with
-	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Alt/Ctrl-click opens the roll tray. */
+	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Shift-click opens the roll tray. */
 	attackRoll = (at: Attack, e: Event) => {
 		if (!this.host().economy.trySpend('action')) return;
 		// §A/§B: pass this weapon's category tags so a scoped effect (GWF's min_die on two-handed melee

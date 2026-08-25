@@ -372,7 +372,7 @@ export class SpellCasting {
 
 	/** Roll a spell's damage/heal from its typed parts: the FIRST part is the primary (rolled + shown as
 	 *  the entry); the rest are typed damage lines under it (Ice Knife's cold under its piercing). A tray
-	 *  intent (`wantsTray(e)` — Alt/Ctrl-click) opens the prefilled tray instead of rolling instantly
+	 *  intent (`wantsTray(e)` — Shift-click) opens the prefilled tray instead of rolling instantly
 	 *  (queuing the rest as its follow-up). */
 	private rollDamageEntry(label: string, parts: DamagePartSpec[], e: Event, note?: string): void {
 		const [primary, ...rest] = parts;

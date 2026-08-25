@@ -50,7 +50,7 @@ async function graphOf(): Promise<ContentGraph> {
 	return g;
 }
 
-const noModifiers = { altKey: false, ctrlKey: false, metaKey: false } as unknown as Event;
+const noModifiers = { shiftKey: false } as unknown as Event;
 
 describe('CombatVM · concentration (CVM-bug1)', () => {
 	let graph: ContentGraph;

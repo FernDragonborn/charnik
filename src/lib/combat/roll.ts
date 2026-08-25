@@ -144,11 +144,8 @@ export const DICE = [4, 6, 8, 10, 12, 20, 100];
 /** `[0, 1, …, n-1]` — for rendering N pips/dots. */
 export const range = (n: number): number[] => Array.from({ length: n }, (_, i) => i);
 
-/** A normal tap rolls instantly; Alt/Ctrl/Cmd-click opens the prefilled roll tray. */
-export const wantsTray = (e: Event) => {
-	const m = e as MouseEvent;
-	return m.altKey || m.ctrlKey || m.metaKey;
-};
+/** A normal tap rolls instantly; Shift-click opens the prefilled roll tray. */
+export const wantsTray = (e: Event) => (e as MouseEvent).shiftKey;
 
 /**
  * Click-to-set for every pip tracker (action economy, spell slots, resources) — ONE model:

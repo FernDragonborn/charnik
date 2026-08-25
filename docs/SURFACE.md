@@ -628,7 +628,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ACTION_SLOT_LABEL` — What a slot is called in a sentence — "bonus" alone is not the name of anything at the table.
 - `const DICE` — The dice sizes offered in the roll tray.
 - `const range` — `[0, 1, …, n-1]` — for rendering N pips/dots.
-- `const wantsTray` — A normal tap rolls instantly; Alt/Ctrl/Cmd-click opens the prefilled roll tray.
+- `const wantsTray` — A normal tap rolls instantly; Shift-click opens the prefilled roll tray.
 - `function pipClick` — * Click-to-set for every pip tracker (action economy, spell slots, resources) — ONE model: * available pips on the LE…
 - `interface RollEffects` — What a roll target (e.g.
 - `const NO_ROLL_EFFECTS`

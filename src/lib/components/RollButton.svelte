@@ -1,9 +1,10 @@
 <script lang="ts">
-	// The one shared roll affordance. Plain click = instant roll + toast; ctrl/alt-click = open the
+	// The one shared roll affordance. Plain click = instant roll + toast; shift-click = open the
 	// dice tray (via the openDiceTray CONTRACT, not a concrete tray) prefilled with the same formula.
 	// Every dice roll in the app routes through here, so the modifier convention + the tray hook live in one
 	// place. Content (the label/emoji) is the caller's; `variant` picks the look.
 	import type { Snippet } from 'svelte';
+	import { wantsTray } from '$lib/combat/roll';
 	import { rollFormula } from '$lib/rules/dice';
 	import { toastRoll } from '$lib/dice/roll-toast';
 	import { openDiceTray } from '$lib/dice/tray.svelte';
@@ -27,7 +28,7 @@
 
 	function onClick(e: MouseEvent) {
 		// modifier-click hands off to the tray (richer: adv/dis, mods) instead of rolling instantly
-		if (e.ctrlKey || e.altKey) {
+		if (wantsTray(e)) {
 			openDiceTray({ label, formula });
 			return;
 		}
