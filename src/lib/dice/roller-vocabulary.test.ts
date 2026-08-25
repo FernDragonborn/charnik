@@ -35,6 +35,13 @@ const SOURCES: NamedRollSource[] = [
 	},
 	{ key: 'inert', names: { en: 'Inert' }, tokens: ['note:nothing rollable here'], active: false },
 	{ key: 'fire', names: { en: 'fire' }, tokens: [], active: false, damageType: true },
+	{
+		key: 'neutral',
+		names: { en: 'neutral', uk: 'нейтрально' },
+		tokens: [],
+		active: false,
+		mode: ADVANTAGE_MODE.neither,
+	},
 ];
 
 const en = () => rollerCandidates(SOURCES, 'en');
@@ -59,7 +66,22 @@ describe('rollerCandidates', () => {
 			kind: TOKEN_KIND.advantage,
 			mode: ADVANTAGE_MODE.advantage,
 		});
-		expect(byKey('trickster_blessing')?.preview).toBe('adv');
+	});
+
+	it('offers the mode words as rows of their own, named in full', () => {
+		expect(byKey('neutral')?.insert).toEqual({
+			kind: TOKEN_KIND.advantage,
+			mode: ADVANTAGE_MODE.neither,
+		});
+		// no chip: the row's NAME is what it does, as with a damage type
+		expect(byKey('neutral')?.preview).toBe('');
+		// found by the name in ANY installed language, whatever language the UI is in
+		expect(matchCandidates('нейтр', en())[0]?.candidate.key).toBe('neutral');
+		expect(matchCandidates('neut', uk())[0]?.candidate.label).toBe('нейтрально');
+	});
+
+	it('writes out what an advantage-granting SOURCE does, not the app jargon for it', () => {
+		expect(byKey('trickster_blessing')?.preview).toBe('advantage');
 	});
 
 	it('offers a flat source and a damage type in the same list', () => {

@@ -331,6 +331,13 @@
 		"heavilyEncumbered": "Сильне обтяження від {lb, plural, one {# фунта} few {# фунтів} many {# фунтів} other {# фунта}} (−20 фт)",
 		"overCapacity": "Понад ліміт → швидкість 5 фт"
 	},
+	"roller": {
+		"mode": {
+			"advantage": "перевага",
+			"disadvantage": "завада",
+			"neutral": "нейтрально"
+		}
+	},
 	"damageType": {
 		"slashing": "рубляча",
 		"piercing": "колюча",

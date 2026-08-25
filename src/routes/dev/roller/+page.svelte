@@ -47,7 +47,8 @@
 			tokens: ['flat_bonus:ac+2'],
 			active: false,
 		},
-		// the damage types come from the real glyph list, exactly as they do in the app
+		// the mode words and the damage types come from the app's own bridge, so the preview offers
+		// exactly what the tray does (localized names included)
 		...rollerSources(null, undefined, []),
 	];
 

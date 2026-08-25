@@ -15,7 +15,7 @@
  */
 import { localizedName } from '$lib/content/names';
 import { EFFECT_KIND, parseToken } from '$lib/effects/token-parser';
-import { ADVANTAGE_MODE, parseDiceTerm } from '$lib/rules/dice';
+import { ADVANTAGE_MODE, parseDiceTerm, type AdvantageMode } from '$lib/rules/dice';
 import { signed } from '$lib/util/format';
 import { PILL_KIND, TOKEN_KIND, type ParsedRollerToken, type RollerResolver } from './roller';
 
@@ -33,6 +33,10 @@ export interface NamedRollSource {
 	active: boolean;
 	/** A damage type rather than a source of dice. */
 	damageType?: true;
+	/** Sets how the line is READ rather than adding anything to it — the `adv` / `dis` / `neut` rows.
+	 *  A source rather than a constant in this file because its NAME is localized like every other
+	 *  row's, and the catalog is the bridge's business (`roller-sources.ts`), not the vocabulary's. */
+	mode?: AdvantageMode;
 }
 
 /** One row of the suggestion menu — and, since picking it is the same act as typing its name in
@@ -58,6 +62,7 @@ export interface RollerCandidate {
  *  touches several targets (Bless is attack AND saves) contributes the same die to each, and the
  *  line the cursor is in already says which roll it is going into (§8 — a mod belongs to its line). */
 function contributionOf(source: NamedRollSource, label: string): ParsedRollerToken | null {
+	if (source.mode) return { kind: TOKEN_KIND.advantage, mode: source.mode };
 	if (source.damageType)
 		return {
 			kind: TOKEN_KIND.pill,
@@ -92,11 +97,20 @@ function contributionOf(source: NamedRollSource, label: string): ParsedRollerTok
 	return null;
 }
 
+/** What a mode row DOES, written out. Never the abbreviation: `adv` is jargon this app made up, and a
+ *  menu is where you learn what a thing is, not where you are quizzed on its short form (the parser
+ *  still takes `adv`, and typing it finds this row by prefix anyway). */
+const MODE_PREVIEW: Record<AdvantageMode, string> = {
+	[ADVANTAGE_MODE.advantage]: 'advantage',
+	[ADVANTAGE_MODE.disadvantage]: 'disadvantage',
+	[ADVANTAGE_MODE.neither]: 'neutral',
+};
+
 /** What a candidate writes into the line, as text. A damage type has nothing to preview — its name
- *  IS the whole of it — so its chip is empty and the row is just the name. */
-function previewOf(insert: ParsedRollerToken): string {
-	if (insert.kind === TOKEN_KIND.advantage)
-		return insert.mode === ADVANTAGE_MODE.advantage ? 'adv' : 'dis';
+ *  IS the whole of it — so its chip is empty and the row is just the name; a MODE row is the same
+ *  case, since its name is what it does. */
+function previewOf(source: NamedRollSource, insert: ParsedRollerToken): string {
+	if (insert.kind === TOKEN_KIND.advantage) return source.mode ? '' : MODE_PREVIEW[insert.mode];
 	if (insert.kind !== TOKEN_KIND.pill) return '';
 	const pill = insert.pill;
 	if (pill.kind === PILL_KIND.dice)
@@ -122,7 +136,7 @@ export function rollerCandidates(sources: NamedRollSource[], locale: string): Ro
 				...new Set([source.key, ...Object.values(source.names)].map((s) => s.toLowerCase())),
 			],
 			insert,
-			preview: previewOf(insert),
+			preview: previewOf(source, insert),
 			active: source.active,
 		});
 	}

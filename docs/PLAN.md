@@ -1173,6 +1173,26 @@ holds the done-work log; these are the OPEN tails it carried):**
   **ARCH-1's copy prerequisite is cleared** — the UA pass now translates the rewritten copy once. Its
   OTHER blocker stands (W3: the roller still writes English sentences into `log.jsonl`, and prose
   already on disk can't be localised afterwards), so ARCH-1 still waits on W2, not on this.
+- [ ] **CONDEFF · one content type for conditions and effects** (maintainer, 2026-08-26 — from the
+  roller: "I can't add Poisoned to an attack roll"). Poisoned IS disadvantage on the attack the same
+  way Bless is +1d4 on it; that they are two content TYPES is an authoring accident the player is
+  made to know about. **Already merged, and staying that way:** play-state has ONE list
+  (`play.effects`, an "effect/condition instance"), everything runtime folds at the **`condition`
+  LAYER** — which is stacking algebra and survives the merge untouched — and both schemas are
+  `baseRow` + the same `effects` token column.
+  **What actually differs:** three columns (`max_level` on conditions, `duration_rounds` on effects,
+  and `negative`, whose DEFAULT is inverted between them — the only real design question), plus two
+  UIs (a binary multi-select vs the "+" catalog with a duration), plus the `apply_condition:<id>`
+  indirection between an applied instance and what it does.
+  **Size, measured not guessed:** the merged schema is the union of those columns behind a `kind`
+  open enum ([[csv-open-enums-not-binary]]); `~10` call sites of `graph.list('condition', …)`
+  (derive-gather, derive, resolver, effects-editor ×4, roller-sources); character JSON is untouched
+  (refs are `source:id`, and `apply_condition` keeps resolving — an id lookup inside one type instead
+  of the other); the content repo needs a `#content-type` change on `conditions_*.csv` + a re-stamp,
+  no row rewriting, since the loader already merges any number of CSVs into one type. So: a day, and
+  the risk sits in the content-repo diff, not in the engine.
+  **Unblocked meanwhile (2026-08-26):** the roller's vocabulary lists BOTH types, so Poisoned is
+  typeable into a roll today; the merge is what stops the next surface from having to remember to.
 - [ ] **ARCH-4 · stylelint spacing px-guard.** The `font-size:["px"]` guard is DONE + enforced (green).
   The spacing half (`padding`/`margin`/`gap` px → `--space-*`) is ~523 warnings: blocked on a design
   call — either add spacing-scale tokens for the off-scale values or migrate-with-screenshot-verify,

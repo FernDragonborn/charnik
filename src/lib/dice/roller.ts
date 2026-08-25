@@ -146,13 +146,19 @@ export type ParsedRollerToken =
 	| { kind: typeof TOKEN_KIND.advantage; mode: AdvantageMode }
 	| { kind: typeof TOKEN_KIND.bound; min?: number; max?: number };
 
-/** `adv` / `dis` and their long forms, in the one place they are spelled. */
+/** `adv` / `dis` / `neut` and their long forms, in the one place they are spelled. English only, and
+ *  deliberately so: these are the parser's native words, always taken whatever the UI language is.
+ *  What a Ukrainian reader TYPES («перевага») arrives through the vocabulary's mode rows instead —
+ *  the same road every other localized name takes. */
 const ADVANTAGE_WORDS: Record<string, AdvantageMode> = {
 	adv: ADVANTAGE_MODE.advantage,
 	advantage: ADVANTAGE_MODE.advantage,
 	dis: ADVANTAGE_MODE.disadvantage,
 	disadv: ADVANTAGE_MODE.disadvantage,
 	disadvantage: ADVANTAGE_MODE.disadvantage,
+	neut: ADVANTAGE_MODE.neither,
+	neutral: ADVANTAGE_MODE.neither,
+	neither: ADVANTAGE_MODE.neither,
 };
 
 /**

@@ -80,6 +80,10 @@ describe('parseRollerToken', () => {
 		});
 	});
 
+	it('takes a mode back OFF a line with neut', () => {
+		expect(type(ROLLER_ROLE.test, 'd20', 'adv', 'neut').advantage).toBe(ADVANTAGE_MODE.neither);
+	});
+
 	it('resolves a name in ANY language the vocabulary knows, to the same pill', () => {
 		expect(parseRollerToken('благословення', resolve)).toMatchObject({
 			pill: { sides: 4, source: 'Bless' },

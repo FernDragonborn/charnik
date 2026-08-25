@@ -113,7 +113,11 @@ export class RollerOrgan {
 	 *  line it inserts a pill that means nothing, so it is not offered there and — because the same
 	 *  list backs the resolver — typing the name in full can't get past what the menu withheld. */
 	vocabularyFor = (role: RollerRole): RollerCandidate[] =>
-		role === ROLLER_ROLE.damage ? this.candidates : this.candidates.filter((c) => !isDamageType(c));
+		role === ROLLER_ROLE.damage
+			? // and the mirror of it: advantage is a fact about d20s, so `adv` and the effects whose whole
+				// contribution IS advantage are not offered on a damage line either
+				this.candidates.filter((c) => c.insert.kind !== TOKEN_KIND.advantage)
+			: this.candidates.filter((c) => !isDamageType(c));
 
 	private roleAt = (index: number): RollerRole => this.lineAt(index)?.role ?? ROLLER_ROLE.test;
 
@@ -164,7 +168,12 @@ export class RollerOrgan {
 		// nothing was typed to complete when the menu came from a pill, so there is no ghost
 		if (!top || this.retyping) return '';
 		const rest = top.at === 0 ? top.candidate.label.slice(this.draft.length) : '';
-		return `${rest} → ${top.candidate.preview || top.candidate.label}`;
+		// what Tab INSERTS, when that is not already what completing the word spells out: a row with no
+		// chip (a damage type, a mode) says its whole self in the completion, and "ad|vantage → advantage"
+		// is the same word twice. A row matched in another language has no completion, so there the name
+		// is the only thing the ghost can show.
+		const tail = top.candidate.preview || (rest ? '' : top.candidate.label);
+		return tail ? `${rest} → ${tail}` : rest;
 	});
 
 	issues = $derived(rollerIssues(this.lines));
@@ -214,10 +223,26 @@ export class RollerOrgan {
 	/** `↓` moves the caret out of the line and into the menu; `↑` off the top row brings it back. One
 	 *  selection, never a line selection and a menu selection at once. */
 	selectDown = (): void => {
-		if (this.menu.length) this.selected = Math.min(this.selected + 1, this.menu.length - 1);
+		// from the HIGHLIGHTED row, not from `selected`: a typed menu highlights its top row from the
+		// start (that is what the ghost is previewing), so stepping from `selected` spent the first ↓
+		// re-selecting the row that already looked selected. A picker highlights nothing until you
+		// arrive, and there `highlight` is IN_LINE — so the same expression still enters at row 0.
+		if (this.menu.length) this.selected = Math.min(this.highlight + 1, this.menu.length - 1);
 	};
 	selectUp = (): void => {
 		this.selected = this.selected <= 0 ? IN_LINE : this.selected - 1;
+	};
+	/** `←` / `→` in a menu laid out in COLUMNS: one column over is `stride` rows along a column-first
+	 *  list. The stride is the view's to know — how many columns the picker draws is a layout fact, and
+	 *  the organ only ever sees a flat list. Clamped rather than wrapping: the top row is where `↑`
+	 *  leaves for the line, and a sideways key that could also leave would be two exits. */
+	selectAcross = (stride: number): void => {
+		if (!this.menu.length) return;
+		const from = this.highlight;
+		// with nothing highlighted yet (a picker you have not arrowed into) a sideways key ENTERS the
+		// list, the same as ↓ — it should not land you halfway down the second column
+		this.selected =
+			from === IN_LINE ? 0 : Math.max(0, Math.min(from + stride, this.menu.length - 1));
 	};
 	dismissMenu = (): void => {
 		this.dismissed = true;

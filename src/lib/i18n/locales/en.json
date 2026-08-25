@@ -331,6 +331,13 @@
 		"heavilyEncumbered": "Heavily encumbered at {lb} lb (−20 ft)",
 		"overCapacity": "Over capacity → speed 5 ft"
 	},
+	"roller": {
+		"mode": {
+			"advantage": "advantage",
+			"disadvantage": "disadvantage",
+			"neutral": "neutral"
+		}
+	},
 	"damageType": {
 		"slashing": "Slashing",
 		"piercing": "Piercing",

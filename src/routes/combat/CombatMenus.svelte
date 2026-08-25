@@ -3,6 +3,7 @@
 	// pin-skills, spellbook, condition). The heavier dice-tray + roll-log bodies are their own
 	// components under menus/. Reads the shared `combat` view-model.
 	import Icon from '$lib/components/Icon.svelte';
+	import { dismissOnEscape } from '$lib/actions/dismissOnEscape';
 	import { combat } from './combat-view-model.svelte';
 	import EyeIcon from '$lib/components/EyeIcon.svelte';
 	import DiceTray from './menus/DiceTray.svelte';
@@ -95,6 +96,7 @@
 		aria-modal="true"
 		tabindex="-1"
 		style="top:{pos.top}px; {pos.left != null ? `left:${pos.left}px` : `right:${pos.right}px`}"
+		use:dismissOnEscape={() => (combat.overlay = null)}
 	>
 		{#if overlay.kind === 'dice'}
 			<DiceTray />

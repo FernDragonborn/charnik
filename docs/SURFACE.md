@@ -1179,6 +1179,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function startI18n` — * Initialize the catalogs.
 - `re-export locale`
 - `re-export waitLocale`
+- `re-export json`
 - `re-export _`
 
 ### `src/lib/i18n/languages.ts`
@@ -1436,4 +1437,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 69 global classes · 50 components · 840 exports across 119 modules · 50 duplicate suspects._
+_45 tokens · 69 global classes · 50 components · 841 exports across 119 modules · 50 duplicate suspects._

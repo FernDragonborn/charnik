@@ -6,7 +6,7 @@
  * hardcoded array inside a component. Runtime-added catalogs extend `LOCALES`; everything
  * UI-facing reads from it. Missing keys fall back to English.
  */
-import { register, init, locale, waitLocale, _ } from 'svelte-i18n';
+import { register, init, locale, waitLocale, json, _ } from 'svelte-i18n';
 
 export type Dir = 'ltr' | 'rtl';
 
@@ -47,6 +47,10 @@ export function dirFor(localeId: string): Dir {
 export async function startI18n(initialLocale: string = FALLBACK_LOCALE): Promise<void> {
 	// `init` returns `void | Promise<void>`; await normalizes it to a real Promise.
 	await init({ fallbackLocale: FALLBACK_LOCALE, initialLocale });
+	// every catalog, not just the active one: the roller matches what you TYPE against every language
+	// installed, so a Ukrainian «перевага» finds its row under an English UI and back. Catalogs are a
+	// few KB each and this is the only place that can know they are all in before anything reads them.
+	await Promise.all(LOCALES.map(({ id }) => waitLocale(id)));
 }
 
-export { locale, waitLocale, _ };
+export { locale, waitLocale, json, _ };

@@ -57,7 +57,9 @@ describe('the roller organ (browser)', () => {
 
 	it('moves the caret into the menu and back out of its top row', async () => {
 		const { organ, caret } = await mount();
-		await typeInto(caret(), 'b');
+		// ONE match, so the row ↓ enters on is the top row: with several, ↓ steps past the top one
+		// (which already reads as selected — it is what the ghost previews) and ↑ walks back through it
+		await typeInto(caret(), 'bles');
 		expect(organ.inMenu).toBe(false);
 		await userEvent.keyboard('{ArrowDown}');
 		expect(organ.inMenu).toBe(true);

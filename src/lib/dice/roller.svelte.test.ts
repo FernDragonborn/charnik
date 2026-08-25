@@ -12,6 +12,7 @@ const SOURCES: NamedRollSource[] = [
 		tokens: ['flat_bonus:attack+1d4'],
 		active: true,
 	},
+	{ key: 'blur', names: { en: 'Blur' }, tokens: ['flat_bonus:ac+2'], active: false },
 	{ key: 'fire', names: { en: 'fire' }, tokens: [], active: false, damageType: true },
 	{ key: 'cold', names: { en: 'cold' }, tokens: [], active: false, damageType: true },
 ];
@@ -64,8 +65,30 @@ describe('typing', () => {
 		expect(organ.menu.length).toBeGreaterThan(0);
 	});
 
-	it('moves the caret into the menu and back out of its top', () => {
+	it('↓ steps PAST the row that already looked selected', () => {
 		typeInto(0, 'bl');
+		expect(organ.menu).toHaveLength(2);
+		// the top row is highlighted from the start — it is what the ghost previews
+		expect(organ.highlight).toBe(0);
+		organ.selectDown();
+		expect(organ.highlight).toBe(1);
+	});
+
+	it('← / → cross a column of a multi-column menu, clamped at both ends', () => {
+		typeInto(0, 'bl');
+		organ.selectAcross(1);
+		expect(organ.highlight).toBe(1);
+		organ.selectAcross(1);
+		expect(organ.highlight).toBe(1);
+		organ.selectAcross(-1);
+		expect(organ.highlight).toBe(0);
+		organ.selectAcross(-1);
+		expect(organ.highlight).toBe(0);
+	});
+
+	it('moves the caret into the menu and back out of its top', () => {
+		// one match, so the row ↓ enters on IS the top row and ↑ leaves from it
+		typeInto(0, 'bles');
 		expect(organ.inMenu).toBe(false);
 		organ.selectDown();
 		expect(organ.inMenu).toBe(true);

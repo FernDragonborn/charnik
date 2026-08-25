@@ -34,6 +34,12 @@
 		roll,
 	}: { organ: RollerOrgan; index: number; line: RollerLine; roll: () => void } = $props();
 
+	/** How many columns the type picker lays out in. Here rather than only in the CSS because the
+	 *  markup has to say how many rows go in each column for a column-first fill — and because ←/→
+	 *  cross a column by stepping exactly that many rows along the flat list. */
+	const TYPE_COLUMNS = 2;
+	const typeRows = $derived(Math.ceil(organ.menu.length / TYPE_COLUMNS));
+
 	const isTest = $derived(line.role === ROLLER_ROLE.test);
 	const focused = $derived(organ.focus === index);
 	/** The menu hangs off the line it belongs to — the one being typed in, or, when a type pill opened
@@ -207,8 +213,15 @@
 		const row = picking === at ? organ.menu[organ.highlight] : undefined;
 		if (picking === at && event.key === 'ArrowDown') organ.selectDown();
 		else if (picking === at && event.key === 'ArrowUp') organ.selectUp();
-		else if (picking === at && event.key === 'Escape') organ.dismissMenu();
-		else if (row && event.key === 'Enter') pickRow(row.candidate);
+		// the picker is two columns, so it is walked in two directions: ↓↑ down a column, ←→ across to
+		// the next one — a whole column's worth of rows along the list
+		else if (picking === at && event.key === 'ArrowRight') organ.selectAcross(typeRows);
+		else if (picking === at && event.key === 'ArrowLeft') organ.selectAcross(-typeRows);
+		else if (picking === at && event.key === 'Escape') {
+			// the picker closes, the tray around it does not — Escape peels ONE layer
+			event.stopPropagation();
+			organ.dismissMenu();
+		} else if (row && event.key === 'Enter') pickRow(row.candidate);
 		else return onPillEdit(event, at);
 		event.preventDefault();
 	}
@@ -390,44 +403,49 @@
 			<!-- the menu is the line continued: same width, joined border, no shadow. Active effects
 			     lead; the green dot is what marks them, so the two groups need no headings. -->
 			<div class="roller-menu" class:types={picking >= 0}>
-				{#each organ.menu as hit, row (hit.candidate.key)}
-					<button
-						type="button"
-						class="roller-menu-row"
-						class:on={row === organ.highlight}
-						onmousedown={(e) => {
-							e.preventDefault();
-							pickRow(hit.candidate);
-						}}
-					>
-						{#if isDamageType(hit.candidate)}
-							<span class="roller-menu-glyph">
-								{#if damageGlyph(hit.candidate.key).length}<DamageIcon
-										type={hit.candidate.key}
-									/>{/if}
+				<!-- the type picker's two columns are filled COLUMN-first (`--type-rows` is how many go in
+				     each), so the next row in the list is the next row on screen: ↓ walks straight down a
+				     column instead of hopping left–right–down through a row-major grid. -->
+				<div class="roller-menu-rows" style:--type-rows={typeRows}>
+					{#each organ.menu as hit, row (hit.candidate.key)}
+						<button
+							type="button"
+							class="roller-menu-row"
+							class:on={row === organ.highlight}
+							onmousedown={(e) => {
+								e.preventDefault();
+								pickRow(hit.candidate);
+							}}
+						>
+							{#if isDamageType(hit.candidate)}
+								<span class="roller-menu-glyph">
+									{#if damageGlyph(hit.candidate.key).length}<DamageIcon
+											type={hit.candidate.key}
+										/>{/if}
+								</span>
+							{:else}
+								<span
+									class="roller-menu-preview {previewTone(hit.candidate.preview)}"
+									class:empty={!hit.candidate.preview}>{hit.candidate.preview}</span
+								>
+							{/if}
+							<span class="roller-menu-name">
+								{#if hit.at >= 0}{hit.candidate.label.slice(0, hit.at)}<b
+										>{hit.candidate.label.slice(hit.at, hit.at + hit.length)}</b
+									>{hit.candidate.label.slice(hit.at + hit.length)}{:else}{hit.candidate.label}{/if}
 							</span>
-						{:else}
-							<span
-								class="roller-menu-preview {previewTone(hit.candidate.preview)}"
-								class:empty={!hit.candidate.preview}>{hit.candidate.preview}</span
-							>
-						{/if}
-						<span class="roller-menu-name">
-							{#if hit.at >= 0}{hit.candidate.label.slice(0, hit.at)}<b
-									>{hit.candidate.label.slice(hit.at, hit.at + hit.length)}</b
-								>{hit.candidate.label.slice(hit.at + hit.length)}{:else}{hit.candidate.label}{/if}
-						</span>
-						{#if !isDamageType(hit.candidate)}
-							<span class="roller-menu-dot" class:active={hit.candidate.active}></span>
-						{/if}
-						{#if row === organ.highlight}<span class="roller-menu-key"
-								>{picking >= 0 ? '↵' : 'Tab'}</span
-							>{/if}
-					</button>
-				{/each}
+							{#if !isDamageType(hit.candidate)}
+								<span class="roller-menu-dot" class:active={hit.candidate.active}></span>
+							{/if}
+							{#if row === organ.highlight}<span class="roller-menu-key"
+									>{picking >= 0 ? '↵' : 'Tab'}</span
+								>{/if}
+						</button>
+					{/each}
+				</div>
 				<span class="roller-menu-hints">
 					{#if picking >= 0}
-						<span><b>↓</b> pick a type</span>
+						<span><b>↓ ↑ ← →</b> pick a type</span>
 						<span><b>Esc</b> keep this one</span>
 					{:else}
 						<span><b>Tab</b> complete</span>
@@ -638,7 +656,10 @@
 	   at the far end of a full-width input. `size` is the fallback where `field-sizing` isn't known. */
 	.roller-input {
 		field-sizing: content;
-		min-width: 2ch;
+		/* 1ch, not 2: the floor is only there so an EMPTY field still shows a caret to click into. At 2
+		   it stayed wider than one or two typed letters, and the grey completion — which starts where
+		   the field ends — drifted a space off the word it was completing as you deleted back. */
+		min-width: 1ch;
 		padding: 0;
 		border: 0;
 		background: transparent;
@@ -676,15 +697,21 @@
 		border-top: 0;
 		border-radius: 0 0 9px 9px;
 	}
-	/* the type picker is every damage type there is — a dozen-odd rows. Two columns because the list is
-	   a CHOICE, not a search result: nothing is ranked, so height is all the single column was buying. */
-	.roller-menu.types {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 2px var(--space-2);
+	.roller-menu-rows {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
 	}
-	.roller-menu.types .roller-menu-hints {
-		grid-column: 1 / -1;
+	/* the type picker is every damage type there is — a dozen-odd rows. Two columns because the list is
+	   a CHOICE, not a search result: nothing is ranked, so height is all the single column was buying.
+	   Filled column-FIRST (`grid-auto-flow: column` over an explicit row count), because the arrow keys
+	   walk the list by index: row-major columns made ↓ jump sideways before it ever went down. */
+	.roller-menu.types .roller-menu-rows {
+		display: grid;
+		grid-auto-flow: column;
+		grid-template-rows: repeat(var(--type-rows), auto);
+		grid-template-columns: repeat(2, 1fr);
+		gap: 2px var(--space-2);
 	}
 	.roller-menu-row {
 		display: flex;
