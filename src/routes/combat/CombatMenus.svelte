@@ -38,13 +38,12 @@
 
 {#if overlay}
 	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<!-- backdrop: click closes; wheeling OUTSIDE the menu closes it too so the page can scroll
-	     (wheeling over the menu itself scrolls the menu, via its own overflow:auto) -->
-	<div
-		class="overlay-backdrop"
-		onclick={() => (combat.overlay = null)}
-		onwheel={() => (combat.overlay = null)}
-	></div>
+	<!-- backdrop: click closes, and that is ALL it does. It used to close on wheel too, so the page
+	     could scroll — but a menu that vanishes the moment you scroll to look at what it is about is a
+	     menu you have to open twice. It is a transparent catcher, not a scroll blocker: the wheel
+	     chains straight through to the page, and the menu is anchored in DOCUMENT coordinates, so it
+	     travels with the button that opened it. -->
+	<div class="overlay-backdrop" onclick={() => (combat.overlay = null)}></div>
 	<div
 		bind:this={popEl}
 		class="popup"

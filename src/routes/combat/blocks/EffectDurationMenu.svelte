@@ -25,7 +25,7 @@
 	}
 
 	// Place the menu just below the control, right-aligned to it; pull left/up if it would overflow.
-	$effect(() => {
+	function place(): void {
 		if (!el) return;
 		const a = anchor.getBoundingClientRect();
 		const w = el.offsetWidth;
@@ -36,6 +36,20 @@
 		if (left < margin) left = margin;
 		if (top + h > window.innerHeight - margin) top = Math.max(margin, a.top - h - 6);
 		pos = { top, left };
+	}
+
+	// Re-placed on every scroll rather than closed by one: the menu belongs to the control it came
+	// from, so it travels with it. Capture phase, because the control may sit inside a panel that
+	// scrolls on its own and that scroll never reaches `window`.
+	$effect(() => {
+		if (!el) return; // reading it is also what re-runs this once the element exists
+		place();
+		window.addEventListener('scroll', place, true);
+		window.addEventListener('resize', place);
+		return () => {
+			window.removeEventListener('scroll', place, true);
+			window.removeEventListener('resize', place);
+		};
 	});
 
 	function pick(value: number | null) {
@@ -49,7 +63,7 @@
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="dur-backdrop" onclick={onclose} onwheel={onclose}></div>
+<div class="dur-backdrop" onclick={onclose}></div>
 <div
 	bind:this={el}
 	class="dur-menu"
