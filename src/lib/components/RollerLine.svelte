@@ -9,7 +9,9 @@
 	//    "this is a test" and "this line is active" can't be read as the same signal.
 	//  · the menu is a CONTINUATION of the line, not a dropdown over it: same width, joined borders,
 	//    so the pills appear to grow downward.
+	import { tick } from 'svelte';
 	import DamageIcon from './DamageIcon.svelte';
+	import { isDamageType } from '$lib/dice/roller-vocabulary';
 	import Icon from './Icon.svelte';
 	import { damageGlyph } from './damage-glyphs';
 	import {
@@ -21,6 +23,7 @@
 		type RollerPill,
 	} from '$lib/dice/roller';
 	import type { RollerOrgan } from '$lib/dice/roller.svelte';
+	import type { RollerCandidate } from '$lib/dice/roller-vocabulary';
 	import { ADVANTAGE_MODE } from '$lib/rules/dice';
 	import { signed } from '$lib/util/format';
 
@@ -33,7 +36,11 @@
 
 	const isTest = $derived(line.role === ROLLER_ROLE.test);
 	const focused = $derived(organ.focus === index);
-	const menuOpen = $derived(focused && organ.menu.length > 0);
+	/** The menu hangs off the line it belongs to — the one being typed in, or, when a type pill opened
+	 *  it, the one that pill is in (the caret may well still be in the other line). */
+	const menuOpen = $derived(
+		organ.menu.length > 0 && (organ.retyping ? organ.retyping.line === index : focused),
+	);
 	/** The line's state doubles this die — and WHICH dice differs by role: advantage draws a second
 	 *  d20 and touches nothing else, while a crit doubles every damage die in the line. */
 	const doubles = (p: DicePill): boolean =>
@@ -41,7 +48,15 @@
 	/** Damage groups: everything left of a type pill is that type's, drawn as one figure. A group
 	 *  that does NOT end in a type is damage with no type — underlined, never blocked: a type is not
 	 *  arithmetic, and without one the number is still right (§7 / §10). */
-	const groups = $derived(pillGroups(line.pills));
+	/** Where the caret stands in this line — the pill index it is in front of. */
+	const caret = $derived(organ.caretAt(index));
+
+	/** The line split at the caret: the groups of the tokens before it, and of those after (their pill
+	 *  indices shifted back to absolute, since the pills they name are the same ones). */
+	const before = $derived(pillGroups(line.pills.slice(0, caret)));
+	const after = $derived(
+		pillGroups(line.pills.slice(caret)).map((group) => group.map((at) => at + caret)),
+	);
 	const closedByType = (group: number[]): boolean =>
 		line.pills[group[group.length - 1] ?? -1]?.kind === PILL_KIND.damageType;
 	const untyped = (group: number[]): boolean =>
@@ -83,7 +98,55 @@
 	const previewTone = (preview: string): string =>
 		preview.startsWith('−') ? 'negative' : preview.startsWith('+') ? 'positive' : '';
 
+	/** Whether the TEXT caret is at an edge of the draft — only then does an arrow leave the token it
+	 *  is in and step to the next one. Inside the text, ← and → are ordinary text editing. */
+	const atTextStart = (i: HTMLInputElement): boolean =>
+		i.selectionStart === 0 && i.selectionEnd === 0;
+	const atTextEnd = (i: HTMLInputElement): boolean =>
+		i.selectionStart === i.value.length && i.selectionEnd === i.value.length;
+
+	/** Step to the next token and put the TEXT caret where the step arrived from — the end of the token
+	 *  when walking left, its start when walking right, so the next arrow reads as one more character
+	 *  rather than a jump. `atEnd` overrides that for Ctrl+arrow, which lands on a whole token. */
+	async function step(left: boolean, atEnd = left): Promise<void> {
+		if (left) organ.caretLeft(index);
+		else organ.caretRight(index);
+		await tick();
+		// the caret MOVED in the markup, so this is a different input element than the one the key was
+		// pressed in — it has to be re-focused or the walk drops focus on its first step
+		input?.focus();
+		const at = atEnd ? (input?.value.length ?? 0) : 0;
+		input?.setSelectionRange(at, at);
+	}
+
 	function onKeydown(event: KeyboardEvent): void {
+		const held = event.ctrlKey || event.metaKey;
+		// walk a token left: what is typed folds back into the line and the token before it opens.
+		// Ctrl+Z is the same move — the browser's own undo would restore the TEXT of a token while the
+		// pill it became stayed in the line, which is a line that says the same thing twice.
+		if (event.key === 'z' && held) {
+			event.preventDefault();
+			void step(true);
+			return;
+		}
+		// Ctrl+arrow jumps a whole TOKEN, not a word: "Blessing of the Trickster" is one thing here, and
+		// the browser's word-at-a-time jump would stop three times inside it.
+		if (
+			event.key === 'ArrowLeft' &&
+			(held || atTextStart(event.currentTarget as HTMLInputElement))
+		) {
+			event.preventDefault();
+			void step(true);
+			return;
+		}
+		if (
+			event.key === 'ArrowRight' &&
+			(held || atTextEnd(event.currentTarget as HTMLInputElement))
+		) {
+			event.preventDefault();
+			void step(false, held);
+			return;
+		}
 		if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
 			event.preventDefault();
 			// the panel handles Ctrl+Enter too, for focus that is NOT in a line (a header die button).
@@ -112,14 +175,45 @@
 		}
 		if (event.key === 'Backspace' && !(organ.drafts[index] ?? '')) {
 			event.preventDefault();
-			organ.unfoldLast(index);
+			void step(true);
 		}
 	}
 
+	/** Leaving the line parses what is in it. A token is finished by a space, by Enter — or by you
+	 *  going somewhere else, which is the same statement ("I'm done with this one") made with the
+	 *  mouse. Same single path as Tab/Enter/Roll, so what the ghost promised is what lands.
+	 *  Clicking a menu row does NOT reach this: that row preventDefaults its mousedown and the caret
+	 *  never leaves. */
+	function onblur(): void {
+		organ.commit(index);
+	}
+
+	const picking = $derived(organ.retyping?.line === index ? organ.retyping.pill : -1);
+
+	/** Take a menu row. The caret goes back into the line either way — after picking from a PILL's
+	 *  menu the pill would otherwise keep the focus ring, still reading as selected when the thing it
+	 *  was selected for is over. */
+	function pickRow(candidate: RollerCandidate): void {
+		organ.pick(index, candidate);
+		input?.focus();
+	}
+
 	/** A focused pill IS the selected pill — no second piece of state for it, and the focus ring is
-	 *  the selection. Del/Backspace removes it, Enter unfolds it back to text (the same act as a
-	 *  double-click), and the caret goes back into the line either way so typing continues. */
+	 *  the selection. While the pill's own type menu is open the arrows and Enter belong to THAT, so a
+	 *  picker opened by a click is still finishable without the mouse. */
 	function onPillKey(event: KeyboardEvent, at: number): void {
+		const row = picking === at ? organ.menu[organ.highlight] : undefined;
+		if (picking === at && event.key === 'ArrowDown') organ.selectDown();
+		else if (picking === at && event.key === 'ArrowUp') organ.selectUp();
+		else if (picking === at && event.key === 'Escape') organ.dismissMenu();
+		else if (row && event.key === 'Enter') pickRow(row.candidate);
+		else return onPillEdit(event, at);
+		event.preventDefault();
+	}
+
+	/** Delete/Backspace removes the pill, Enter unfolds it back to text (the same act as a
+	 *  double-click), and the caret goes back into the line either way so typing continues. */
+	function onPillEdit(event: KeyboardEvent, at: number): void {
 		if (event.key === 'Delete' || event.key === 'Backspace') organ.removePill(index, at);
 		else if (event.key === 'Enter') organ.unfold(index, at);
 		else return;
@@ -161,7 +255,12 @@
 				? `${pill.type}${pill.inherited ? ' · inherited from the group on its left' : ''}`
 				: pill.text}
 			ondragstart={(e) => e.dataTransfer?.setData('text/roller-pill', `${index}:${at}`)}
-			onclick={(e) => e.currentTarget.focus()}
+			onclick={(e) => {
+				e.currentTarget.focus();
+				// a type pill has no caret to click into, so clicking it opens the type menu; clicking any
+				// other pill is what closes that menu again
+				organ.retype(index, at);
+			}}
 			ondblclick={() => organ.unfold(index, at)}
 			onkeydown={(e) => onPillKey(e, at)}
 		>
@@ -190,11 +289,20 @@
 			{#if pill.kind === PILL_KIND.dice || pill.kind === PILL_KIND.flat}
 				<!-- clicking the NUMBER has to stay a caret placement, or a pill can't be entered with a
 				     mouse at all — so the quantity gets its own two controls (§4) -->
+				<!-- the two clicks stop here: they belong to the STEPPER, and letting them reach the pill
+				     would select it on the first and unfold it into text on the second — so nudging a
+				     modifier twice would throw you into editing it -->
 				<span class="roller-steps">
-					<button type="button" aria-label="one less" onclick={() => organ.bumpPill(index, at, -1)}
-						><Icon name="minus" size={9} /></button
-					><button type="button" aria-label="one more" onclick={() => organ.bumpPill(index, at, 1)}
-						><Icon name="plus" size={9} /></button
+					<button
+						type="button"
+						aria-label="one less"
+						onclick={(e) => (e.stopPropagation(), organ.bumpPill(index, at, -1))}
+						ondblclick={(e) => e.stopPropagation()}><Icon name="minus" size={9} /></button
+					><button
+						type="button"
+						aria-label="one more"
+						onclick={(e) => (e.stopPropagation(), organ.bumpPill(index, at, 1))}
+						ondblclick={(e) => e.stopPropagation()}><Icon name="plus" size={9} /></button
 					>
 				</span>
 			{/if}
@@ -202,59 +310,84 @@
 	{/if}
 {/snippet}
 
+<!-- a damage group: everything left of a type pill belongs to it. A group the caret walked INTO is
+     drawn as two, one either side of the caret — which is what it is while you are editing it. -->
+{#snippet groupView(group: number[])}
+	<span
+		class="roller-group"
+		class:typed={closedByType(group)}
+		class:untyped={untyped(group)}
+		title={untyped(group) ? 'damage with no type — it rolls anyway' : undefined}
+	>
+		{#each group as at (at)}{@const pill = line.pills[at]}{#if pill}{@render pillView(
+					pill,
+					at,
+				)}{/if}{/each}
+	</span>
+{/snippet}
+
+<!-- the caret and its grey completion are ONE item, so the field's pill gap can't open between what
+     you typed and what it is about to become. -->
+{#snippet caretView()}
+	<span class="roller-caret">
+		<input
+			bind:this={input}
+			class="roller-input"
+			type="text"
+			size={(organ.drafts[index] ?? '').length + 1}
+			value={organ.drafts[index] ?? ''}
+			aria-label={isTest ? 'test roll' : 'damage roll'}
+			oninput={(e) => organ.type(index, e.currentTarget.value)}
+			onfocus={() => {
+				organ.focus = index;
+				// back at the caret: the menu belongs to what is typed again, not to a pill
+				organ.retyping = null;
+			}}
+			{onblur}
+			onkeydown={onKeydown}
+		/>
+		{#if focused && organ.ghost}<span class="roller-ghost">{organ.ghost}</span>{/if}
+	</span>
+{/snippet}
+
 <div class="roller-line">
-	<span class="roller-stripe" class:damage={!isTest}></span>
 	<div class="roller-stack">
-		<!-- a drop target for a pill dragged from the other line, not a control of its own -->
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<div
-			class="roller-field"
-			class:focused
-			class:menu-open={menuOpen}
-			ondragover={(e) => e.preventDefault()}
-			ondrop={onDrop}
-		>
-			{#each groups as group, g (g)}
-				<span
-					class="roller-group"
-					class:typed={closedByType(group)}
-					class:untyped={untyped(group)}
-					title={untyped(group) ? 'damage with no type — it rolls anyway' : undefined}
-				>
-					{#each group as at (at)}{@const pill = line.pills[at]}{#if pill}{@render pillView(
-								pill,
-								at,
-							)}{/if}{/each}
-				</span>
-			{/each}
-			<!-- the caret and its grey completion are ONE item, so the field's pill gap can't open
-			     between what you typed and what it is about to become -->
-			<span class="roller-caret">
-				<input
-					bind:this={input}
-					class="roller-input"
-					type="text"
-					size={(organ.drafts[index] ?? '').length + 1}
-					value={organ.drafts[index] ?? ''}
-					aria-label={isTest ? 'test roll' : 'damage roll'}
-					oninput={(e) => organ.type(index, e.currentTarget.value)}
-					onfocus={() => (organ.focus = index)}
-					onkeydown={onKeydown}
-				/>
-				{#if focused && organ.ghost}<span class="roller-ghost">{organ.ghost}</span>{/if}
-			</span>
-			<button
-				type="button"
-				class="roller-field-rest"
-				tabindex="-1"
-				aria-label="type into this line"
-				onclick={() => input?.focus()}
-			></button>
+		<!-- the stripe stands beside the FIELD only. Stretched down the whole stack it also ran the
+		     length of an open menu, which is a long coloured rule saying nothing about the list. -->
+		<div class="roller-row">
+			<span class="roller-stripe" class:damage={!isTest}></span>
+			<!-- a drop target for a pill dragged from the other line, not a control of its own -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				class="roller-field"
+				class:focused
+				class:menu-open={menuOpen}
+				ondragover={(e) => e.preventDefault()}
+				ondrop={onDrop}
+			>
+				<!-- the tokens before the caret, the caret, the tokens after it. The caret is rendered ONCE,
+			     between the two blocks, and never inside one: walking the line then MOVES the input
+			     element instead of destroying and rebuilding it, and a moved element keeps its focus. -->
+				{#each before as group, g (g)}{@render groupView(group)}{/each}
+				{@render caretView()}
+				{#each after as group, g (g)}{@render groupView(group)}{/each}
+				<button
+					type="button"
+					class="roller-field-rest"
+					tabindex="-1"
+					aria-label="type into this line"
+					onclick={() => {
+						// the empty rest of the row is past every token, so clicking it means "type at the end"
+						organ.caretToEnd(index);
+						input?.focus();
+					}}
+				></button>
+			</div>
 		</div>
 		{#if menuOpen}
 			<!-- the menu is the line continued: same width, joined border, no shadow. Active effects
 			     lead; the green dot is what marks them, so the two groups need no headings. -->
-			<div class="roller-menu">
+			<div class="roller-menu" class:types={picking >= 0}>
 				{#each organ.menu as hit, row (hit.candidate.key)}
 					<button
 						type="button"
@@ -262,26 +395,43 @@
 						class:on={row === organ.highlight}
 						onmousedown={(e) => {
 							e.preventDefault();
-							organ.pick(index, hit.candidate);
+							pickRow(hit.candidate);
 						}}
 					>
-						<span
-							class="roller-menu-preview {previewTone(hit.candidate.preview)}"
-							class:empty={!hit.candidate.preview}>{hit.candidate.preview}</span
-						>
+						{#if isDamageType(hit.candidate)}
+							<span class="roller-menu-glyph">
+								{#if damageGlyph(hit.candidate.key).length}<DamageIcon
+										type={hit.candidate.key}
+									/>{/if}
+							</span>
+						{:else}
+							<span
+								class="roller-menu-preview {previewTone(hit.candidate.preview)}"
+								class:empty={!hit.candidate.preview}>{hit.candidate.preview}</span
+							>
+						{/if}
 						<span class="roller-menu-name">
 							{#if hit.at >= 0}{hit.candidate.label.slice(0, hit.at)}<b
 									>{hit.candidate.label.slice(hit.at, hit.at + hit.length)}</b
 								>{hit.candidate.label.slice(hit.at + hit.length)}{:else}{hit.candidate.label}{/if}
 						</span>
-						<span class="roller-menu-dot" class:active={hit.candidate.active}></span>
-						{#if row === organ.highlight}<span class="roller-menu-key">Tab</span>{/if}
+						{#if !isDamageType(hit.candidate)}
+							<span class="roller-menu-dot" class:active={hit.candidate.active}></span>
+						{/if}
+						{#if row === organ.highlight}<span class="roller-menu-key"
+								>{picking >= 0 ? '↵' : 'Tab'}</span
+							>{/if}
 					</button>
 				{/each}
 				<span class="roller-menu-hints">
-					<span><b>Tab</b> complete</span>
-					<span><b>↓</b> into the list</span>
-					<span><b>↑</b> back to the line</span>
+					{#if picking >= 0}
+						<span><b>↓</b> pick a type</span>
+						<span><b>Esc</b> keep this one</span>
+					{:else}
+						<span><b>Tab</b> complete</span>
+						<span><b>↓</b> into the list</span>
+						<span><b>↑</b> back to the line</span>
+					{/if}
 				</span>
 			</div>
 		{/if}
@@ -312,6 +462,12 @@
 		align-items: flex-start;
 		gap: var(--space-2);
 	}
+	/* the stripe and the field, side by side — the row the stripe measures itself against */
+	.roller-row {
+		display: flex;
+		align-items: stretch;
+		gap: var(--space-2);
+	}
 	/* the role, said once and quietly: crimson decides, gold hurts */
 	.roller-stripe {
 		flex: none;
@@ -330,6 +486,8 @@
 		flex-direction: column;
 	}
 	.roller-field {
+		flex: 1;
+		min-width: 0;
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
@@ -505,11 +663,23 @@
 		display: flex;
 		flex-direction: column;
 		gap: 3px;
+		/* it hangs off the FIELD, so it starts where the field does — past the stripe's column */
+		margin-left: calc(3px + var(--space-2));
 		padding: 7px 8px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-text-muted);
 		border-top: 0;
 		border-radius: 0 0 9px 9px;
+	}
+	/* the type picker is every damage type there is — a dozen-odd rows. Two columns because the list is
+	   a CHOICE, not a search result: nothing is ranked, so height is all the single column was buying. */
+	.roller-menu.types {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 2px var(--space-2);
+	}
+	.roller-menu.types .roller-menu-hints {
+		grid-column: 1 / -1;
 	}
 	.roller-menu-row {
 		display: flex;
@@ -529,6 +699,19 @@
 	.roller-menu-row.on,
 	.roller-menu-row:hover {
 		background: color-mix(in srgb, var(--color-text) 10%, var(--color-surface-2));
+		color: var(--color-text);
+	}
+	/* a damage type wears its glyph where an effect writes its number. No chip behind it: the icon is
+	   already a shape, and a second plate around it would be the third box in one row. */
+	.roller-menu-glyph {
+		flex: none;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.6em;
+		color: var(--color-text-muted);
+	}
+	.roller-menu-row.on .roller-menu-glyph {
 		color: var(--color-text);
 	}
 	.roller-menu-preview {

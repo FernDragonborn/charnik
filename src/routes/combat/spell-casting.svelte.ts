@@ -266,31 +266,44 @@ export class SpellCasting {
 		return out;
 	}
 
-	private rollSpellAttack(r: SpellRow, e: Event, caster: SpellcastingClass, up: UpcastCast): void {
+	private rollSpellAttack(
+		r: SpellRow,
+		e: Event,
+		caster: SpellcastingClass,
+		cast: { up: UpcastCast; times: number },
+	): void {
+		const { up, times } = cast;
 		const fx = this.host.effectsFor('attack');
 		const dmgFx = this.host.effectsFor('damage');
 		const toHit = caster.attack.value + fx.flat;
 		const parts = this.spellDamageParts(r, dmgFx, up.deltas);
 		const hasDmg = dealsDamage(parts);
+		const label = `${r.name} (spell attack)`;
 		if (wantsTray(e)) {
 			this.host.openRoll(
 				{
-					label: `${r.name} (spell attack)`,
+					label,
 					dice: { 20: 1 },
 					mod: toHit,
 					advantage: netAdvantage(fx),
 					bonusDice: fx.bonusDice,
 					mods: fx,
 					...(up.note ? { note: up.note } : {}),
+					...(times > 1 ? { times } : {}),
 				},
 				e,
 			);
 			if (hasDmg) this.host.tray.queueDamage({ label: `${r.name} damage${up.suffix}`, parts });
 		} else {
-			this.host.tray.pushRoll(
-				`${r.name} (spell attack)`,
-				rollPool({ 20: 1 }, { ...fx, mod: toHit, advantage: netAdvantage(fx) }),
-				hasDmg ? rollDamageParts(parts) : undefined,
+			// N beams = N separate attacks, each with its own to-hit and its own damage — one action, so
+			// one toast, N log lines. This used to roll ONE and ask the player to roll the rest by hand.
+			this.host.tray.pushVolley(
+				label,
+				times,
+				() => ({
+					r: rollPool({ 20: 1 }, { ...fx, mod: toHit, advantage: netAdvantage(fx) }),
+					...(hasDmg ? { damage: rollDamageParts(parts) } : {}),
+				}),
 				up.note,
 			);
 		}
@@ -343,7 +356,7 @@ export class SpellCasting {
 			...(note ? { note } : {}),
 		};
 		if (r.resolution === 'hit' && caster) {
-			this.rollSpellAttack(r, e, caster, up);
+			this.rollSpellAttack(r, e, caster, { up, times: this.volleyOf(r, slotLevel) });
 			return;
 		}
 		const { parts, kind } = this.spellOutcomeParts(r, caster, up, slotLevel);
@@ -454,7 +467,7 @@ export class SpellCasting {
 		// establishes concentration (surfaced, not silently swallowed).
 		if (r.concentration && this.host.character && this.host.cantConcentrate) {
 			toast(`${r.name} cast, but you can't hold Concentration right now`, {
-				description: 'A Rage (or similar state) ends Concentration — RAW',
+				description: 'A Rage (or a similar state) ends Concentration.',
 			});
 		} else if (r.concentration && this.host.character) {
 			const prior = this.host.character.play.concentration;
@@ -463,21 +476,15 @@ export class SpellCasting {
 		}
 		this.applySpellEffect(r, slotLevel);
 		this.rollSpellCast(r, e, ritual, slotLevel);
-		this.remindCountScaling(r, slotLevel);
 	};
 
-	/** A cantrip that scales by COUNT (Eldritch Blast's beams) fires N separate rolls at higher levels.
-	 *  The per-instance roller is deferred (PLAN `ROLLER-N`; NB the other D14 in this repo is the unique
-	 *  character id — same number, different item), so casting rolls ONE instance and surfaces the count as
-	 *  a reminder to roll the rest — never a silently-wrong single big die (item 9). Leveled count spells
-	 *  surface their total through the slot-picker preview instead, so this is cantrip-only. */
-	private remindCountScaling(r: SpellRow, slotLevel: number): void {
-		if (r.level !== 0) return;
-		for (const res of this.evalUpcastAt(r, slotLevel)) {
-			if ('error' in res || res.kind !== 'count') continue;
-			if (res.flat > 1)
-				toast(`${r.name} — ${res.flat}×: make ${res.flat} separate rolls at this level`);
-		}
+	/** How many instances this cast fires — Eldritch Blast's beams at level 5. A `count` upcast result
+	 *  IS a volley, which the roller rolls (`×N`, one action, N records). It used to be a toast asking
+	 *  the player to roll the rest by hand, because the per-instance roller did not exist yet. */
+	private volleyOf(r: SpellRow, slotLevel: number): number {
+		for (const res of this.evalUpcastAt(r, slotLevel))
+			if (!('error' in res) && res.kind === 'count' && res.flat > 1) return res.flat;
+		return 1;
 	}
 
 	// tap a spell's prep dot to prepare/unprepare it (always-prepared can't be unset)

@@ -105,11 +105,38 @@ describe('the roller organ (browser)', () => {
 		await userEvent.click(screen.getByRole('button', { name: '+ damage line' }).element());
 		await typeInto(caret(1), '2d6 +3 ');
 		expect(document.querySelector('.roller-group.untyped')).not.toBeNull();
+		// the underline has to SAY what it means — a wavy line nobody can read is not a message
+		expect(document.querySelector('.roller-blocked.warn')?.textContent).toContain('no type');
 		await userEvent.click(screen.getByRole('button', { name: 'Roll' }).element());
 		expect(onroll).toHaveBeenCalledOnce();
 		// naming a type takes the underline away
 		await typeInto(caret(1), 'fire ');
 		expect(document.querySelector('.roller-group.untyped')).toBeNull();
+		expect(document.querySelector('.roller-blocked')).toBeNull();
+	});
+
+	it('leaving the line parses what was half-typed in it', async () => {
+		const { organ, screen, caret } = await mount();
+		await userEvent.click(screen.getByRole('button', { name: '+ damage line' }).element());
+		await typeInto(caret(), '2d6 +3');
+		await userEvent.click(caret(1) as Element);
+		expect(organ.lines[0]?.pills.map((p) => p.kind)).toEqual([PILL_KIND.dice, PILL_KIND.flat]);
+		expect(organ.drafts[0]).toBe('');
+	});
+
+	it('← at the left edge steps into the token before the caret', async () => {
+		const { organ, caret } = await mount();
+		await typeInto(caret(), 'd20 +7 ');
+		await userEvent.keyboard('{ArrowLeft}');
+		expect(organ.draft).toBe('+7');
+		// you land INSIDE the token, at the end of its text: ← is ordinary editing until the text runs
+		// out, and only the press past its left edge steps to the token before it
+		await userEvent.keyboard('{ArrowLeft}{ArrowLeft}{ArrowLeft}');
+		expect(organ.draft).toBe('d20');
+		expect(organ.lines[0]?.pills.map((p) => p.text)).toEqual(['+7']);
+		// what is typed now lands where the caret STANDS, not at the end of the line
+		await userEvent.keyboard(' 2d4 ');
+		expect(organ.lines[0]?.pills.map((p) => p.text)).toEqual(['d20', '2d4', '+7']);
 	});
 
 	it('a focused pill is the selected pill — Delete removes it', async () => {

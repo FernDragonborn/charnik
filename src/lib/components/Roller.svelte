@@ -11,7 +11,6 @@
 	import type { RollLogEntry } from '$lib/combat/roll';
 	import { ROLLER_ROLE } from '$lib/dice/roller';
 	import type { RollerOrgan } from '$lib/dice/roller.svelte';
-	import { CRIT_METHOD } from '$lib/rules/dice';
 
 	let {
 		organ,
@@ -24,8 +23,10 @@
 	} = $props();
 
 	const hasDamage = $derived(organ.lines.some((l) => l.role === ROLLER_ROLE.damage));
-	const critLine = $derived(organ.lines.some((l) => l.crit));
 	const blocking = $derived(organ.issues.filter((i) => i.blocking));
+	/** The band says the FIRST thing wrong, blocking first. A warning gets it only when nothing is
+	 *  blocking — otherwise the reason you can't roll would be pushed under a note about a type. */
+	const issue = $derived(blocking[0] ?? organ.issues[0]);
 
 	function fire(): void {
 		const rolled = organ.roll();
@@ -63,36 +64,28 @@
 				<RollerLine {organ} {index} {line} roll={fire} />
 			{/each}
 			<!-- what belongs to the LINES rather than to the dice: a second line exists only when there
-			     IS damage (§3), and the crit method is a rule option a table rules on mid-session as
-			     often as it sets it once (PLAN §9), so it is reachable where the crit toggle is. -->
-			{#if !hasDamage || critLine}
+			     IS damage (§3). How a crit DOUBLES is not here — it is a table's house rule, set once in
+			     Settings ▸ General, not something anyone clicks back and forth mid-roll. -->
+			{#if !hasDamage}
 				<div class="roller-extras">
-					{#if !hasDamage}
-						<button type="button" class="roller-extra" onclick={organ.addDamageLine}
-							>+ damage line</button
-						>
-					{/if}
-					{#if critLine}
-						<button
-							type="button"
-							class="roller-extra"
-							title="how a crit doubles: classic rolls the dice twice, loyal maxes one set"
-							onclick={organ.cycleCritMethod}
-							>crit: {organ.critMethod === CRIT_METHOD.classic ? 'classic' : 'loyal'}</button
-						>
-					{/if}
+					<button type="button" class="roller-extra" onclick={organ.addDamageLine}
+						>+ damage line</button
+					>
 				</div>
 			{/if}
 		</div>
 
-		<!-- the ONE thing that stops a roll. Shown as a band rather than a tooltip because the Roll
-		     button going muted says "you can't", and this says why (§10). A missing damage type is not
-		     here: it underlines and rolls. -->
-		{#if blocking.length}
-			<div class="roller-blocked">
-				<span class="roller-blocked-badge">!</span>
+		<!-- what the line can't answer for, as a band rather than a tooltip: the Roll button going muted
+		     says "you can't", and this says why (§10). A missing damage type reads the same way — the
+		     wavy underline says WHICH group, and a hover is no way to learn what an underline means —
+		     but muted and without the badge, because it stops nothing. -->
+		{#if issue}
+			<div class="roller-blocked" class:warn={!issue.blocking}>
+				{#if issue.blocking}<span class="roller-blocked-badge">!</span>{/if}
 				<span
-					>{blocking[0]?.text} — rolling the part I did understand would just be a quietly smaller number.</span
+					>{issue.text} — {issue.blocking
+						? 'rolling the part I did understand would just be a quietly smaller number'
+						: 'a type is not arithmetic, so the number is right without it'}.</span
 				>
 			</div>
 		{/if}
@@ -198,6 +191,15 @@
 		border-radius: 9px;
 		font-size: var(--font-size-xs);
 		color: var(--color-text);
+	}
+	/* a warning is the same band, drawn as quietly as the underline it explains: no fill, no badge —
+	   it must not read as "something is wrong", because nothing is */
+	.roller-blocked.warn {
+		padding: 0 11px;
+		background: transparent;
+		border-color: transparent;
+		color: var(--color-text-muted);
+		font-size: var(--font-size-micro);
 	}
 	.roller-blocked-badge {
 		flex: none;

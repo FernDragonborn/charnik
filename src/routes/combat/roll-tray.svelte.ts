@@ -56,7 +56,32 @@ export interface RollSpec {
 	/** Optional provenance line recorded with the completed roll (item 4: an upcast's "Xd base + Yd @
 	 *  slot N"), so a boosted roll explains where the extra dice came from. */
 	note?: string;
+	/** How many instances the action fires — a volley (Eldritch Blast's beams at level 5). Absent or 1
+	 *  is the ordinary single roll. */
+	times?: number;
 }
+
+/** One completed roll as a log line. Shared by the single push and the volley so a beam of a volley
+ *  and a lone attack are the same record — only their timestamps differ. */
+const entryOf = ({
+	label,
+	r,
+	at,
+	damage,
+	note,
+}: {
+	label: string;
+	r: Rolled;
+	at: number;
+	damage?: TypedRoll[];
+	note?: string;
+}): RollLogEntry => ({
+	label,
+	...r,
+	...(damage ? { damage } : {}),
+	...(note ? { note } : {}),
+	at,
+});
 
 export class RollTray {
 	/** The roll being built — the organ the dice tray mounts. Its lines, pills and state toggles ARE
@@ -99,6 +124,7 @@ export class RollTray {
 				advantage: advantageMode(spec.advantage ?? 0),
 				...(spec.mods ? { mods: spec.mods } : {}),
 				...(spec.bonusDice?.length ? { bonusDice: spec.bonusDice } : {}),
+				...(spec.times ? { times: spec.times } : {}),
 			},
 			...(spec.note ? { note: spec.note } : {}),
 		});
@@ -142,13 +168,15 @@ export class RollTray {
 	/** Record a completed roll: prepend to the log (capped) and toast it. `damage` (for an attack) is
 	 *  the per-type rolls that follow the to-hit — each shown as its own line, plus a combined total. */
 	pushRoll = (label: string, r: Rolled, damage?: TypedRoll[], note?: string): RollLogEntry => {
-		const entry: RollLogEntry = {
+		// spread rather than passed straight through: `damage: undefined` is not the same as "no damage"
+		// under exactOptionalPropertyTypes, and the log entry must not carry an empty key
+		const entry = entryOf({
 			label,
-			...r,
+			r,
+			at: Date.now(),
 			...(damage ? { damage } : {}),
 			...(note ? { note } : {}),
-			at: Date.now(),
-		};
+		});
 		this.log = [entry, ...this.log].slice(0, ROLL_LOG_MAX);
 		this.persist?.(entry);
 		toastRoll(entry);
@@ -157,6 +185,31 @@ export class RollTray {
 		// SAME proxy the `{#each}` iterates — else an `entry === log[i]` identity check would never match.
 		// `?? entry` only guards the type (log[0] is always the just-pushed element after the assignment).
 		return this.log[0] ?? entry;
+	};
+
+	/** Roll the same thing N times as ONE action — a volley (Eldritch Blast's beams). `roll` is called
+	 *  per instance because each is its own throw; the organ's `roll()` builds its volley the same way,
+	 *  which is why an instant cast and one sent through the tray come out identical. */
+	pushVolley = (
+		label: string,
+		times: number,
+		roll: () => { r: Rolled; damage?: TypedRoll[] },
+		note?: string,
+	): void => {
+		const at = Date.now();
+		this.recordRolls(
+			// `at + i` so an amendment rewrites ITS beam, not a sibling that shared the millisecond
+			Array.from({ length: Math.max(1, times) }, (_, i) => {
+				const { r, damage } = roll();
+				return entryOf({
+					label,
+					r,
+					at: at + i,
+					...(damage ? { damage } : {}),
+					...(note ? { note } : {}),
+				});
+			}),
+		);
 	};
 
 	/** Record rolls that one ACTION resolved — a volley's N instances. Each gets its own log line

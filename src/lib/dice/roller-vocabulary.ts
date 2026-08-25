@@ -129,6 +129,12 @@ export function rollerCandidates(sources: NamedRollSource[], locale: string): Ro
 	return out;
 }
 
+/** Whether a row inserts a damage TYPE rather than dice. Read off the insert instead of carried as a
+ *  flag: the type is already what the row does, and a second field saying so is a second thing to
+ *  keep true. The organ uses it to decide which rows a LINE may be told at all. */
+export const isDamageType = (candidate: RollerCandidate): boolean =>
+	candidate.insert.kind === TOKEN_KIND.pill && candidate.insert.pill.kind === PILL_KIND.damageType;
+
 /** How well a typed word fits a name. Lower is better; the ranks are the spec's own reading order —
  *  a name that STARTS with what you typed beats one where some word inside it starts with it, which
  *  beats a match buried mid-word (`tri` → "Blessing of the Trickster" is rank 1, not a miss). 3 is
@@ -150,9 +156,13 @@ export interface RollerMatch {
 }
 
 /**
- * The menu for a partially typed word: active effects first, then everything else known, each group
- * by relevance and then alphabetically. No group headings — the spec marks activity with a dot
- * instead, because a heading over a one-row group costs more than it explains.
+ * The menu for a partially typed word: damage types first, then active effects, then everything else
+ * known, each group by relevance and then alphabetically. No group headings — the spec marks activity
+ * with a dot instead, because a heading over a one-row group costs more than it explains.
+ *
+ * Types lead because the only line they are ever OFFERED on is a damage line (the organ hands this
+ * the vocabulary that line may be told), and on a damage line the type is the thing you are missing —
+ * the dice are already there. On a test line the list is effects, because there is nothing else in it.
  *
  * Matched by NAME, never by fuzzy distance: "did you mean" is right for an error message
  * (`suggestClosest`) and wrong for a live menu, where an unrelated row landing under the cursor is
@@ -173,6 +183,7 @@ export function matchCandidates(
 	}
 	hits.sort(
 		(a, b) =>
+			Number(isDamageType(b.candidate)) - Number(isDamageType(a.candidate)) ||
 			Number(b.candidate.active) - Number(a.candidate.active) ||
 			a.rank - b.rank ||
 			a.candidate.label.localeCompare(b.candidate.label),

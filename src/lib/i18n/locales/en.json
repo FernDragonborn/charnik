@@ -330,5 +330,20 @@
 		"encumbered": "Encumbered at {lb} lb (−10 ft)",
 		"heavilyEncumbered": "Heavily encumbered at {lb} lb (−20 ft)",
 		"overCapacity": "Over capacity → speed 5 ft"
+	},
+	"damageType": {
+		"slashing": "Slashing",
+		"piercing": "Piercing",
+		"bludgeoning": "Bludgeoning",
+		"fire": "Fire",
+		"cold": "Cold",
+		"lightning": "Lightning",
+		"thunder": "Thunder",
+		"acid": "Acid",
+		"poison": "Poison",
+		"necrotic": "Necrotic",
+		"radiant": "Radiant",
+		"psychic": "Psychic",
+		"force": "Force"
 	}
 }

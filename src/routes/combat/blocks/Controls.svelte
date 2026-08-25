@@ -110,13 +110,15 @@
 		border-color: var(--color-accent);
 		color: var(--color-accent-bright);
 	}
+	/* neutral, not green: auto-calc being ON is the NORMAL state, not a good outcome — green here reads
+	   as "something went well" beside toggles whose colour really does mean a state (rage, concentration) */
 	.toggle.auto.on {
-		background: var(--color-good-soft);
-		border-color: var(--color-good);
-		color: var(--color-good);
+		background: color-mix(in srgb, var(--color-text) 10%, var(--color-surface-2));
+		border-color: var(--color-text-muted);
+		color: var(--color-text);
 	}
 	.toggle.auto.on .toggle-state {
-		border-color: var(--color-good);
+		border-color: var(--color-text-muted);
 	}
 	.toggle.dice {
 		background: var(--color-accent-deep);

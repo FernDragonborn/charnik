@@ -12,11 +12,9 @@ import { app } from '$lib/stores/app.svelte';
 import { rollDamageParts, type DamagePartSpec, type RollLogEntry } from '$lib/combat/roll';
 import {
 	ADVANTAGE_MODE,
-	CRIT_METHOD,
 	rollPool,
 	type AdvantageMode,
 	type BonusDie,
-	type CritMethod,
 	type DieMods,
 	type Rng,
 } from '$lib/rules/dice';
@@ -28,7 +26,9 @@ import {
 	addToken,
 	canRoll,
 	damageParts,
+	countPill,
 	emptyLine,
+	isInherited,
 	normalizeLine,
 	pillsFromPool,
 	rollerIssues,
@@ -36,8 +36,14 @@ import {
 	volleyOf,
 	type RollerLine,
 	type RollerPill,
+	type RollerRole,
 } from './roller';
-import { candidateResolver, matchCandidates, type RollerCandidate } from './roller-vocabulary';
+import {
+	candidateResolver,
+	isDamageType,
+	matchCandidates,
+	type RollerCandidate,
+} from './roller-vocabulary';
 
 /** What a caller hands the organ to build a roll it already knows about (an attack row, a spell).
  *  Both halves are optional and independent: a check is a test with no damage, a Fireball is damage
@@ -53,6 +59,9 @@ export interface RollerPrefill {
 		/** Signed effect dice (Bless +1d4). They arrive without the effect's NAME — see
 		 *  `pillsFromPool` — but they arrive, which is more than the old tray managed. */
 		bonusDice?: BonusDie[];
+		/** How many instances this fires — Eldritch Blast's beams. It arrives as the same `×N` pill a
+		 *  person types, so the count is visible and editable rather than a hidden multiplier. */
+		times?: number;
 	};
 	damage?: DamagePartSpec[];
 	/** Provenance recorded with the roll — an upcast's "8d6 base + 1d6 @ slot 4". */
@@ -62,6 +71,11 @@ export interface RollerPrefill {
 /** The caret is in the LINE, not in the suggestion menu. `↓` moves it in, `↑` off the top row moves
  *  it back — so there is one selection, not a line selection and a menu selection at once. */
 const IN_LINE = -1;
+
+/** "The caret is at the end of the line", stored rather than recomputed: a line's length changes with
+ *  every edit, and a caret parked at the end must STAY there without every mutation updating it.
+ *  `caretAt` clamps it down to the real length on read. */
+const AT_END = Number.MAX_SAFE_INTEGER;
 
 export class RollerOrgan {
 	/** What the roll is for ("Greataxe"). Empty for an ad-hoc roll. */
@@ -79,31 +93,67 @@ export class RollerOrgan {
 	selected = $state(IN_LINE);
 	/** What the lines can be told by name. The host owns this; the organ only reads it. */
 	candidates = $state<RollerCandidate[]>([]);
-	/** Per-roll override of the crit method, or null to follow the app setting. The table rules on
-	 *  this mid-session as often as it sets it once, so it is reachable from the tray (PLAN §9). */
-	critOverride = $state<CritMethod | null>(null);
+
+	/** Where the caret sits IN each line, as the index of the pill it stands in front of. A line is a
+	 *  row of tokens, so the caret walks it token by token: ← folds what is being typed back into a
+	 *  pill and opens the one before it, → does the reverse, and typing inserts where the caret IS
+	 *  rather than always at the end. */
+	private carets = $state<number[]>([]);
 
 	/** Esc closes the menu and leaves the text alone; typing anything opens it again. A flag rather
 	 *  than an empty menu, because the matches are still there — it is the OFFER that was declined. */
 	private dismissed = $state(false);
 
-	private resolver = $derived(candidateResolver(this.candidates));
-	draft = $derived(this.drafts[this.focus] ?? '');
-	critMethod = $derived(this.critOverride ?? app.critMethod);
+	/** Which type pill is being re-chosen, as `{line, pill}`, or null. A type pill has no caret to
+	 *  click into, so the pill itself is the control: clicking one re-opens the SAME menu carrying the
+	 *  only rows that could go there. "Slashing, actually" is then one click, not delete-and-retype. */
+	retyping = $state<{ line: number; pill: number } | null>(null);
 
-	/** The suggestion list for what is being typed. Open the moment the token has a LETTER — digits
-	 *  and `d` belong to the dice parser and must not raise a menu over a `2d6` in progress. */
+	/** What a line of THIS role may be told by name. A damage type is a fact about damage: on a d20
+	 *  line it inserts a pill that means nothing, so it is not offered there and — because the same
+	 *  list backs the resolver — typing the name in full can't get past what the menu withheld. */
+	vocabularyFor = (role: RollerRole): RollerCandidate[] =>
+		role === ROLLER_ROLE.damage ? this.candidates : this.candidates.filter((c) => !isDamageType(c));
+
+	private roleAt = (index: number): RollerRole => this.lineAt(index)?.role ?? ROLLER_ROLE.test;
+
+	draft = $derived(this.drafts[this.focus] ?? '');
+	/** How a crit doubles. A table's house rule, not a per-roll choice — it is set once in Settings,
+	 *  so the organ reads it and offers no switch of its own. */
+	critMethod = $derived(app.critMethod);
+
+	/** Every damage type there is, as menu rows — the list a clicked type pill offers. Nothing is
+	 *  emboldened (`at: -1`) because nothing was typed to embolden. */
+	private typeRows = $derived(
+		this.candidates
+			.filter(isDamageType)
+			.map((candidate) => ({ candidate, at: -1, length: 0 }))
+			.sort((a, b) => a.candidate.label.localeCompare(b.candidate.label)),
+	);
+
+	/** The menu, from whichever source opened it: what is being typed, or the types a clicked type
+	 *  pill may become. ONE list, so ↓ ↑ Enter Esc need no second selection model.
+	 *
+	 *  Typing opens it the moment the token has a LETTER — digits and `d` belong to the dice parser
+	 *  and must not raise a menu over a `2d6` in progress. */
 	menu = $derived(
-		!this.dismissed && /\p{L}/u.test(this.draft)
-			? matchCandidates(this.draft, this.candidates)
-			: [],
+		this.retyping
+			? this.typeRows
+			: !this.dismissed && /\p{L}/u.test(this.draft)
+				? matchCandidates(this.draft, this.vocabularyFor(this.roleAt(this.focus)))
+				: [],
 	);
 
 	/** Which row is highlighted. The top row is highlighted from the start — that is what the ghost
 	 *  hint is previewing — so `selected` says whether the CARET moved into the menu, not whether
-	 *  anything is chosen. */
+	 *  anything is chosen. A type picker highlights NOTHING until you arrow into it: there is no ghost
+	 *  previewing a top row, and a highlight that Enter wouldn't take is a lie. */
 	highlight = $derived(
-		this.menu.length ? Math.max(0, Math.min(this.selected, this.menu.length - 1)) : IN_LINE,
+		!this.menu.length
+			? IN_LINE
+			: this.retyping
+				? Math.min(this.selected, this.menu.length - 1)
+				: Math.max(0, Math.min(this.selected, this.menu.length - 1)),
 	);
 	inMenu = $derived(this.selected !== IN_LINE && this.menu.length > 0);
 
@@ -111,7 +161,8 @@ export class RollerOrgan {
 	 *  what it would insert. So what Tab does is legible before Tab. */
 	ghost = $derived.by(() => {
 		const top = this.menu[this.highlight];
-		if (!top) return '';
+		// nothing was typed to complete when the menu came from a pill, so there is no ghost
+		if (!top || this.retyping) return '';
 		const rest = top.at === 0 ? top.candidate.label.slice(this.draft.length) : '';
 		return `${rest} → ${top.candidate.preview || top.candidate.label}`;
 	});
@@ -133,7 +184,21 @@ export class RollerOrgan {
 		this.drafts = this.lines.map((_, i) => (i === index ? text : (this.drafts[i] ?? '')));
 		this.selected = IN_LINE;
 		this.dismissed = false;
+		// typing is the other source of the menu — it takes it back from the pill
+		this.retyping = null;
 	}
+
+	/** Where the caret is in a line: the index of the pill it stands in front of, `pills.length` at the
+	 *  end. Clamped on read, so a caret parked at the end survives every edit. */
+	caretAt = (index: number): number =>
+		Math.max(0, Math.min(this.carets[index] ?? AT_END, this.lineAt(index)?.pills.length ?? 0));
+
+	private setCaret(index: number, at: number): void {
+		this.carets = this.lines.map((_, i) => (i === index ? at : (this.carets[i] ?? AT_END)));
+	}
+
+	/** Put the caret back at the end of a line — what clicking the empty rest of the row means. */
+	caretToEnd = (index: number): void => this.setCaret(index, AT_END);
 
 	/** Type into a line. Whitespace is what parses a token — feedback BEFORE the roll rather than
 	 *  after it (§4) — so the field's whole content splits on it: everything before the last gap is
@@ -157,13 +222,51 @@ export class RollerOrgan {
 	dismissMenu = (): void => {
 		this.dismissed = true;
 		this.selected = IN_LINE;
+		this.retyping = null;
 	};
 
-	/** Commit a finished token into a line. */
+	/** Click a damage-type pill: the menu opens carrying every type, so changing one is a pick rather
+	 *  than a delete-and-retype. Clicking the SAME pill again closes it — one control, two states —
+	 *  and clicking anything else closes it too. */
+	retype = (index: number, pillIndex: number): void => {
+		const pill = this.lineAt(index)?.pills[pillIndex];
+		const open = this.retyping?.line === index && this.retyping.pill === pillIndex;
+		this.retyping =
+			!open && pill?.kind === PILL_KIND.damageType ? { line: index, pill: pillIndex } : null;
+		this.selected = IN_LINE;
+	};
+
+	/** Commit a finished token into a line, WHERE THE CARET IS. The line is split at the caret and the
+	 *  token added to the head, so everything `addToken` decides from context — a bound landing on the
+	 *  last die, a type closing the group — reads the tokens to the LEFT of the caret, which is what
+	 *  "insert here" has to mean. With the caret at the end (the usual case) the head is the whole
+	 *  line and this is exactly what it always did. */
 	private commitText(index: number, text: string): void {
 		const line = this.lineAt(index);
 		if (!line || !text.trim()) return;
-		this.replace(index, addToken(line, text, this.resolver));
+		const at = this.caretAt(index);
+		const head: RollerLine = { ...line, pills: line.pills.slice(0, at) };
+		const grown = addToken(head, text, candidateResolver(this.vocabularyFor(line.role)));
+		this.replace(
+			index,
+			normalizeLine({ ...grown, pills: [...grown.pills, ...line.pills.slice(at)] }),
+		);
+		if (grown.pills.length > head.pills.length) this.setCaret(index, at + 1);
+	}
+
+	/** Put a finished pill in at the caret — the mouse's half of `commitText`. */
+	private insertPill(index: number, pill: RollerPill): void {
+		const line = this.lineAt(index);
+		if (!line) return;
+		const at = this.caretAt(index);
+		this.replace(
+			index,
+			normalizeLine({
+				...line,
+				pills: [...line.pills.slice(0, at), pill, ...line.pills.slice(at)],
+			}),
+		);
+		this.setCaret(index, at + 1);
 	}
 
 	/** Take a suggestion: the pill lands in the line and the caret comes out the far side of it, which
@@ -171,13 +274,25 @@ export class RollerOrgan {
 	pick = (index: number, candidate: RollerCandidate): void => {
 		const line = this.lineAt(index);
 		if (!line) return;
+		// a pick from a type pill REPLACES it rather than appending — and the replacement is a typed
+		// pill, so re-choosing an inherited one is how you stop it inheriting
+		const retyping = this.retyping;
+		if (retyping && candidate.insert.kind === TOKEN_KIND.pill) {
+			const chosen = candidate.insert.pill;
+			this.retyping = null;
+			this.replace(
+				index,
+				normalizeLine({
+					...line,
+					pills: line.pills.map((p, i) => (i === retyping.pill ? chosen : p)),
+				}),
+			);
+			return;
+		}
 		if (candidate.insert.kind === TOKEN_KIND.advantage)
 			this.replace(index, { ...line, advantage: candidate.insert.mode });
 		else if (candidate.insert.kind === TOKEN_KIND.pill)
-			this.replace(
-				index,
-				normalizeLine({ ...line, pills: [...line.pills, candidate.insert.pill] }),
-			);
+			this.insertPill(index, candidate.insert.pill);
 		this.setDraft(index, '');
 	};
 
@@ -194,36 +309,72 @@ export class RollerOrgan {
 		else this.commitText(index, text);
 	};
 
-	/** Backspace against the left edge of the caret: unfold the last pill back into text, caret at its
-	 *  end. The pill keeps the token it was made from precisely so this is lossless. */
-	unfoldLast = (index: number): void => {
-		const line = this.lineAt(index);
-		if (!line || (this.drafts[index] ?? '') !== '' || !line.pills.length) return;
-		const last = line.pills[line.pills.length - 1];
-		if (!last) return;
-		this.replace(index, normalizeLine({ ...line, pills: line.pills.slice(0, -1) }));
-		this.setDraft(index, last.text);
-	};
-
-	/** Unfold any pill — what a double-click does ("Bless → Bane" without retyping). */
-	unfold = (index: number, pillIndex: number): void => {
-		const line = this.lineAt(index);
-		const pill = line?.pills[pillIndex];
-		if (!line || !pill) return;
-		this.replace(
-			index,
-			normalizeLine({ ...line, pills: line.pills.filter((_, i) => i !== pillIndex) }),
-		);
-		this.setDraft(index, pill.text);
-	};
-
-	removePill = (index: number, pillIndex: number): void => {
+	/**
+	 * Step the caret one token LEFT: what is being typed folds back into the line where it stood, and
+	 * the token now before the caret opens as text. ←, Backspace on an empty draft and Ctrl+Z are all
+	 * this one move — a line is a row of tokens, and this is how you reach one that is not the last.
+	 *
+	 * An INHERITED type is stepped over: it is derived, not typed, so `normalizeLine` re-creates it the
+	 * instant it is removed — which used to make Backspace unable to ever reach the die in front of it,
+	 * no matter how many times it was pressed.
+	 */
+	caretLeft = (index: number): void => {
+		// where the draft stands, read BEFORE folding it: the fold puts a pill there and moves the caret
+		// past it, and stepping from the new position would just re-open the token we only just closed
+		const from = this.caretAt(index);
 		const line = this.lineAt(index);
 		if (!line) return;
+		const at = line.pills.slice(0, from).findLastIndex((p) => !isInherited(p));
+		// at the head of the line there is nothing to step into — so stay in the token being edited
+		// rather than folding it away and leaving the caret parked past it
+		if (at < 0) return;
+		this.commit(index);
+		this.openPillAt(index, at);
+	};
+
+	/** The mirror of `caretLeft`: fold what is being typed back in and open the token AFTER it, so a
+	 *  caret that walked into the middle of a line can walk back out of it. */
+	caretRight = (index: number): void => {
+		this.commit(index);
+		const line = this.lineAt(index);
+		if (!line) return;
+		const from = this.caretAt(index);
+		const ahead = line.pills.slice(from).findIndex((p) => !isInherited(p));
+		if (ahead < 0) return this.caretToEnd(index);
+		this.openPillAt(index, from + ahead);
+	};
+
+	/** Unfold the pill at `at` into the draft and leave the caret in its place. The pill keeps the
+	 *  token it was made from precisely so this is lossless. */
+	private openPillAt(index: number, at: number): void {
+		const line = this.lineAt(index);
+		const pill = line?.pills[at];
+		if (!line || !pill) return;
+		this.replace(index, normalizeLine({ ...line, pills: line.pills.filter((_, i) => i !== at) }));
+		this.setDraft(index, pill.text);
+		this.setCaret(index, at);
+	}
+
+	/** Unfold any pill — what a double-click does ("Bless → Bane" without retyping). An inherited type
+	 *  has nothing to unfold TO: it was never typed, and removing it only makes `normalizeLine` put it
+	 *  straight back. Re-choosing it (a click) is what makes it a real pill. */
+	unfold = (index: number, pillIndex: number): void => {
+		if (isInherited(this.lineAt(index)?.pills[pillIndex])) return;
+		this.openPillAt(index, pillIndex);
+	};
+
+	/** Take a pill out. An inherited type is not one to take out — it is re-derived from the group on
+	 *  its left, so deleting it does nothing except look broken; the type it inherited FROM is the one
+	 *  to edit. */
+	removePill = (index: number, pillIndex: number): void => {
+		const line = this.lineAt(index);
+		if (!line || isInherited(line.pills[pillIndex])) return;
 		this.replace(
 			index,
 			normalizeLine({ ...line, pills: line.pills.filter((_, i) => i !== pillIndex) }),
 		);
+		// a pill taken out from the LEFT of the caret would otherwise shift the caret one token right
+		if (pillIndex < this.caretAt(index)) this.setCaret(index, this.caretAt(index) - 1);
 	};
 
 	/** Nudge a pill's quantity — the −/+ that appear on hover. They exist because a pill has no caret
@@ -285,11 +436,6 @@ export class RollerOrgan {
 		if (line) this.replace(index, { ...line, crit: !line.crit });
 	};
 
-	cycleCritMethod = (): void => {
-		this.critOverride =
-			this.critMethod === CRIT_METHOD.classic ? CRIT_METHOD.loyal : CRIT_METHOD.classic;
-	};
-
 	/** A damage line, added on demand. */
 	addDamageLine = (): void => {
 		this.lines = [...this.lines, emptyLine(ROLLER_ROLE.damage)];
@@ -302,9 +448,11 @@ export class RollerOrgan {
 		this.note = '';
 		this.lines = [emptyLine(ROLLER_ROLE.test)];
 		this.drafts = [''];
+		// empty = every caret at the end of its line, which is where a fresh one belongs
+		this.carets = [];
 		this.focus = 0;
 		this.selected = IN_LINE;
-		this.critOverride = null;
+		this.retyping = null;
 	};
 
 	/** Build the organ for a roll the app already knows about. The second line exists only when there
@@ -317,14 +465,18 @@ export class RollerOrgan {
 		if (spec.test)
 			lines.push({
 				...emptyLine(ROLLER_ROLE.test),
-				pills: pillsFromPool(spec.test.dice, spec.test.mod, {
-					...(spec.test.mods ? { mods: spec.test.mods } : {}),
-					...(spec.test.bonusDice?.length ? { bonusDice: spec.test.bonusDice } : {}),
-				}),
+				pills: [
+					...pillsFromPool(spec.test.dice, spec.test.mod, {
+						...(spec.test.mods ? { mods: spec.test.mods } : {}),
+						...(spec.test.bonusDice?.length ? { bonusDice: spec.test.bonusDice } : {}),
+					}),
+					...((spec.test.times ?? 1) > 1 ? [countPill(spec.test.times ?? 1)] : []),
+				],
 				advantage: spec.test.advantage ?? ADVANTAGE_MODE.neither,
 			});
 		this.lines = lines;
 		this.drafts = lines.map(() => '');
+		this.carets = [];
 		this.focus = 0;
 		if (spec.damage?.length) this.setDamage(spec.damage);
 		// neither half — an ad-hoc roll is still this organ, with an empty line to type into. The

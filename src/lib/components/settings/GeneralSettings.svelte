@@ -12,7 +12,7 @@
 	import { CRIT_METHOD, type CritMethod } from '$lib/rules/dice';
 
 	const CRIT_METHODS: { id: CritMethod; label: string; hint: string }[] = [
-		{ id: CRIT_METHOD.classic, label: 'Classic', hint: 'RAW — roll the damage dice twice' },
+		{ id: CRIT_METHOD.classic, label: 'Classic', hint: 'By the book — roll the damage dice twice' },
 		{ id: CRIT_METHOD.loyal, label: 'Loyal', hint: 'One set rolled, one set at its maximum' },
 	];
 

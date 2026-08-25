@@ -206,13 +206,20 @@ export function computeAttacks(
 			...(note ? { note } : {}),
 		});
 	}
+	// an unarmed strike is a melee attack, but carries no weapon properties. It reads the SAME
+	// melee-scoped attack bonuses a weapon does — it is one of the attacks that scope names, and
+	// leaving it out made a character's fists the one melee attack a melee bonus skipped. Its damage
+	// is `1 + STR` by the book; effects (a Rage +2) fold in at the roll, as they do for every weapon.
+	const unarmedScopes = new Set(['melee']);
+	const unarmedScoped = scopedAttackBonus(sheet.facts, unarmedScopes);
 	out.push({
 		name: 'Unarmed Strike',
-		toHit: strMod + prof,
-		scopes: ['melee'], // an unarmed strike is a melee attack, but carries no weapon properties
+		toHit: strMod + prof + unarmedScoped.attack,
+		scopes: [...unarmedScopes],
 		dmg: `${1 + strMod} bludgeoning`,
 		damageParts: [{ pool: {}, mod: 1 + strMod, type: 'bludgeoning' }],
 		meta: 'melee',
+		...(unarmedScoped.note ? { note: unarmedScoped.note } : {}),
 	});
 	return out;
 }

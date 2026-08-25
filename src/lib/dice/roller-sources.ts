@@ -4,10 +4,22 @@
  * app can draw. Kept apart from `roller-vocabulary.ts` so THAT stays pure and testable on plain
  * objects — this is the only file in the roller that knows a content graph exists.
  */
+import { get } from 'svelte/store';
 import { DAMAGE_TYPES } from '$lib/components/damage-glyphs';
 import type { ContentGraph } from '$lib/content/loader';
 import { localesOf, namesByLocale } from '$lib/content/names';
+import { FALLBACK_LOCALE, _, locale } from '$lib/i18n';
 import type { NamedRollSource } from './roller-vocabulary';
+
+/** A damage type's names: the key (which is also its English name) plus whatever the UI language
+ *  calls it, so "силова" finds `force` under a Ukrainian UI. Only the ACTIVE locale, not every
+ *  installed one — svelte-i18n hands out one catalog at a time, and the language you type in is the
+ *  one you are reading. The caller rebuilds these on a locale switch. */
+function damageTypeNames(type: string): Record<string, string> {
+	const ui = get(locale) ?? FALLBACK_LOCALE;
+	const translate = get(_);
+	return { [FALLBACK_LOCALE]: type, [ui]: translate(`damageType.${type}`, { default: type }) };
+}
 
 /** An effect currently ON the character — the play-state shape, reduced to what a roller needs. */
 export interface ActiveRollSource {
@@ -60,7 +72,7 @@ export function rollerSources(
 		...byName.values(),
 		...DAMAGE_TYPES.map((type) => ({
 			key: type,
-			names: { en: type },
+			names: damageTypeNames(type),
 			tokens: [],
 			active: false,
 			damageType: true as const,

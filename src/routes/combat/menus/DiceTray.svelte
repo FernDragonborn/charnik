@@ -16,6 +16,10 @@
 	const organ = combat.tray.organ;
 	const log = $derived(combat.tray.log);
 
+	// the tray keeps the roll it was building between openings, but not a MENU that was open when it
+	// closed — reopening onto a half-open type picker is a state nobody asked for
+	organ.retyping = null;
+
 	// what a line can be told BY NAME: the character's active effects first, then the effect catalog
 	// and the damage types. Rebuilt from the graph, so a homebrew effect in a CSV is typeable with no
 	// code change — and re-derived on a locale switch, because the menu shows names in the UI language.

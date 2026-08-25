@@ -278,6 +278,20 @@ export function normalizeLine(line: RollerLine): RollerLine {
 	return { ...line, pills };
 }
 
+/** The volley pill for a roll the app already knows fires N times (Eldritch Blast's beams) — the
+ *  same pill typing `×3` makes, so a prefilled volley and a typed one are one thing. */
+export const countPill = (times: number): RollerPill => ({
+	kind: PILL_KIND.count,
+	text: `×${times}`,
+	times,
+});
+
+/** A pill `normalizeLine` DERIVED rather than one that was typed. It is rebuilt from the group on its
+ *  left after every edit, which makes it the one pill an edit must never target: removing it puts it
+ *  straight back, and a Backspace that keeps hitting it can never reach the die in front of it. */
+export const isInherited = (pill: RollerPill | undefined): boolean =>
+	pill?.kind === PILL_KIND.damageType && pill.inherited === true;
+
 /** A bare WORD — letters, spaces and the punctuation names carry. Not arithmetic, so it can never
  *  make a total quietly smaller, which is the whole test for whether a fragment may stop a roll. */
 const isWord = (text: string): boolean => /^\p{L}[\p{L}\p{M}\s'’-]*$/u.test(text.trim());

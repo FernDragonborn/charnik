@@ -330,5 +330,20 @@
 		"encumbered": "Обтяження від {lb, plural, one {# фунта} few {# фунтів} many {# фунтів} other {# фунта}} (−10 фт)",
 		"heavilyEncumbered": "Сильне обтяження від {lb, plural, one {# фунта} few {# фунтів} many {# фунтів} other {# фунта}} (−20 фт)",
 		"overCapacity": "Понад ліміт → швидкість 5 фт"
+	},
+	"damageType": {
+		"slashing": "рубляча",
+		"piercing": "колюча",
+		"bludgeoning": "дробильна",
+		"fire": "вогонь",
+		"cold": "холод",
+		"lightning": "блискавка",
+		"thunder": "грім",
+		"acid": "кислота",
+		"poison": "отрута",
+		"necrotic": "некротична",
+		"radiant": "промениста",
+		"psychic": "психічна",
+		"force": "силова"
 	}
 }
