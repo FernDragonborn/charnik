@@ -317,31 +317,42 @@ export class RollerOrgan {
 	 * An INHERITED type is stepped over: it is derived, not typed, so `normalizeLine` re-creates it the
 	 * instant it is removed — which used to make Backspace unable to ever reach the die in front of it,
 	 * no matter how many times it was pressed.
+	 *
+	 * Answers whether it actually MOVED. The caller re-places the text caret inside the token it
+	 * arrived in, and doing that on a step that went nowhere is how ← at the head of a line threw you
+	 * back to the end of the token you were already editing.
 	 */
-	caretLeft = (index: number): void => {
+	caretLeft = (index: number): boolean => {
 		// where the draft stands, read BEFORE folding it: the fold puts a pill there and moves the caret
 		// past it, and stepping from the new position would just re-open the token we only just closed
 		const from = this.caretAt(index);
 		const line = this.lineAt(index);
-		if (!line) return;
+		if (!line) return false;
 		const at = line.pills.slice(0, from).findLastIndex((p) => !isInherited(p));
 		// at the head of the line there is nothing to step into — so stay in the token being edited
 		// rather than folding it away and leaving the caret parked past it
-		if (at < 0) return;
+		if (at < 0) return false;
 		this.commit(index);
 		this.openPillAt(index, at);
+		return true;
 	};
 
 	/** The mirror of `caretLeft`: fold what is being typed back in and open the token AFTER it, so a
-	 *  caret that walked into the middle of a line can walk back out of it. */
-	caretRight = (index: number): void => {
-		this.commit(index);
+	 *  caret that walked into the middle of a line can walk back out of it. With no token ahead the
+	 *  caret goes to the end of the line and the draft is left alone — there is nothing to open. */
+	caretRight = (index: number): boolean => {
 		const line = this.lineAt(index);
-		if (!line) return;
+		if (!line) return false;
 		const from = this.caretAt(index);
+		// counted before the fold: folding the draft inserts a pill AT the caret, pushing these right
 		const ahead = line.pills.slice(from).findIndex((p) => !isInherited(p));
-		if (ahead < 0) return this.caretToEnd(index);
-		this.openPillAt(index, from + ahead);
+		if (ahead < 0) {
+			this.caretToEnd(index);
+			return false;
+		}
+		this.commit(index);
+		this.openPillAt(index, this.caretAt(index) + ahead);
+		return true;
 	};
 
 	/** Unfold the pill at `at` into the draft and leave the caret in its place. The pill keeps the

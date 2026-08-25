@@ -48,13 +48,18 @@
 </div>
 
 <style>
+	/* what you are BUILDING and what you already ROLLED are two things, so they are two cards with a
+	   gap — one continuous sheet made the Roll tab between them look like it was floating in the
+	   middle of nothing. The gap is the room the tab hangs into (`.roller`'s own bottom margin). */
 	.tray {
-		padding: 12px;
+		display: flex;
+		flex-direction: column;
 	}
-	/* the readout, ruled off from the builder above it */
 	.roll-history {
-		border-top: 1px solid var(--color-border);
-		margin: 10px -12px -12px;
-		padding-top: 3px;
+		padding: 6px 12px 10px;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-md);
+		box-shadow: 0 18px 40px var(--color-overlay);
 	}
 </style>

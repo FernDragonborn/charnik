@@ -107,11 +107,15 @@
 	.roller {
 		margin-bottom: 42px;
 	}
+	/* the organ is its OWN card, and the surface it is mounted on draws nothing: two frames around one
+	   set of dice is one line too many, and of the two this is the one that has to stay — the Roll tab
+	   hangs off its bottom edge, and with no edge to hang from the button floats. */
 	.roller-panel {
 		position: relative;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-md);
+		box-shadow: 0 18px 40px var(--color-overlay);
 	}
 	.roller-header {
 		display: flex;

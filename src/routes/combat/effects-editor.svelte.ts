@@ -8,7 +8,7 @@
  */
 import type { Character, DeathCause } from '$lib/character/schema';
 import type { ContentGraph } from '$lib/content/loader';
-import { remainingRounds, type MenuKind } from '$lib/combat/helpers';
+import { endConcentrationCarriedBy, remainingRounds, type MenuKind } from '$lib/combat/helpers';
 
 /** What the effects editor needs from the sheet around it. */
 export interface EffectsHost {
@@ -133,10 +133,14 @@ export class EffectsEditor {
 		];
 		this.host().overlay = null;
 	};
-	/** Remove an active effect from the panel (the ✕). */
+	/** Remove an active effect from the panel (the ✕) — and with it the concentration it was carrying,
+	 *  which used to survive its own effect and leave the sheet claiming a spell that was gone. */
 	removeEffect = (iid: string) => {
 		const c = this.host().character;
-		if (c) c.play.effects = c.play.effects.filter((e) => e.iid !== iid);
+		if (!c) return;
+		const gone = c.play.effects.filter((e) => e.iid === iid);
+		c.play.effects = c.play.effects.filter((e) => e.iid !== iid);
+		endConcentrationCarriedBy(c.play, gone);
 	};
 	/** Set an active effect's remaining duration to an exact round count (typed into the panel field).
 	 *  The typed number means "rounds from NOW" — the start is re-anchored to the current round.

@@ -599,6 +599,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function groupEffects` — Split active effects into the three panel sections.
 - `const rechargeLabel`
 - `const remainingRounds` — Rounds an effect has left at the given round counter (null = indefinite, floor 0).
+- `function endConcentrationCarriedBy` — * An effect leaving the sheet takes its concentration WITH it.
 - `const isEffectExpired` — A round-timed effect is expired once the counter has advanced past its duration.
 - `function durationToRounds` — Spell duration text → rounds (1 round = 6 s): "1 minute" → 10, "Concentration, up to 1 hour" → * 600, "2 rounds" → 2.
 - `const EFFECT_DURATION_PRESETS` — The common effect durations offered in the duration dropdown (game terms, no round/minute dup).
@@ -1431,4 +1432,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 69 global classes · 50 components · 839 exports across 119 modules · 46 duplicate suspects._
+_45 tokens · 69 global classes · 50 components · 840 exports across 119 modules · 46 duplicate suspects._

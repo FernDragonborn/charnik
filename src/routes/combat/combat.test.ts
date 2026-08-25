@@ -866,6 +866,14 @@ describe('CombatVM · S2 split net', () => {
 		expect(character.play.effects.some((e) => e.iid === iid)).toBe(false);
 	});
 
+	it('removing the carrier effect ends the concentration it was carrying', () => {
+		combat.effects.addEffect({ label: 'Hex', tokens: [], ref: `spell:${S}:hex` });
+		character.play.concentration = `spell:${S}:hex`;
+		combat.effects.removeEffect(character.play.effects.at(-1)!.iid);
+		// the ✕ used to leave the indicator at the top of the sheet naming a spell that was gone
+		expect(character.play.concentration).toBeNull();
+	});
+
 	it('bumpEffectDuration nudges rounds, and dropping to 0 makes it indefinite', () => {
 		combat.effects.newEffectDuration = 2;
 		combat.effects.addEffect({ label: 'Bless2', tokens: ['flat_bonus:saves+1d4'] });

@@ -62,6 +62,14 @@ UI `Roller.svelte` / `RollerLine.svelte`, mounted by `DiceTray.svelte` as `comba
     "active"), and stands in TWO columns — 13 rows was a scroll.
 24. `[~]` **The role stripe stops at the field** instead of running the whole height of an open menu:
     a long coloured rule down a list of damage types is a line that says nothing.
+25. `[~]` **← at the head of a line threw the caret to the end of the token it was already in.** A
+    step that goes nowhere now leaves the text caret alone.
+26. `[~]` **Removing an effect left its concentration running** at the top of the sheet. The carrier
+    IS the concentration, so all three ways an effect can leave (the ✕, a rest, the round counter)
+    now go through one seam — `endConcentrationCarriedBy`.
+27. `[~]` **Too many frames.** The tray and its readout are two CARDS with a gap rather than one
+    sheet with a rule across it; the roller keeps its own frame (the Roll tab hangs off that edge, and
+    without it the button floated); a line's field draws no box at rest, only on focus.
 
 ## Noticed while working, not reported
 

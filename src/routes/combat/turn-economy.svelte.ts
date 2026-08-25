@@ -12,6 +12,7 @@ import {
 	type ActionSlot,
 	type SpellRow,
 	type EffectInstance,
+	endConcentrationCarriedBy,
 } from '$lib/combat/helpers';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -88,10 +89,8 @@ export class TurnEconomy {
 		for (const e of c.play.effects) (isEffectExpired(e, c.play.round) ? expired : kept).push(e);
 		if (!expired.length) return;
 		c.play.effects = kept;
-		for (const e of expired) {
-			if (e.source && e.source === c.play.concentration) c.play.concentration = null;
-			toast(`${e.label} — expired`);
-		}
+		endConcentrationCarriedBy(c.play, expired);
+		for (const e of expired) toast(`${e.label} — expired`);
 	};
 
 	/** End the turn: refresh every action-economy slot, advance the round counter, and expire

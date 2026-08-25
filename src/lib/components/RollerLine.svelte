@@ -45,14 +45,15 @@
 	 *  d20 and touches nothing else, while a crit doubles every damage die in the line. */
 	const doubles = (p: DicePill): boolean =>
 		isTest ? p.sides === 20 && line.advantage !== ADVANTAGE_MODE.neither : line.crit;
-	/** Damage groups: everything left of a type pill is that type's, drawn as one figure. A group
-	 *  that does NOT end in a type is damage with no type — underlined, never blocked: a type is not
-	 *  arithmetic, and without one the number is still right (§7 / §10). */
 	/** Where the caret stands in this line — the pill index it is in front of. */
 	const caret = $derived(organ.caretAt(index));
 
-	/** The line split at the caret: the groups of the tokens before it, and of those after (their pill
-	 *  indices shifted back to absolute, since the pills they name are the same ones). */
+	/** Damage groups: everything left of a type pill is that type's, drawn as one figure. A group that
+	 *  does NOT end in a type is damage with no type — underlined, never blocked: a type is not
+	 *  arithmetic, and without one the number is still right (§7 / §10).
+	 *
+	 *  Split at the caret: the groups of the tokens before it, and of those after (their pill indices
+	 *  shifted back to absolute, since the pills they name are the same ones). */
 	const before = $derived(pillGroups(line.pills.slice(0, caret)));
 	const after = $derived(
 		pillGroups(line.pills.slice(caret)).map((group) => group.map((at) => at + caret)),
@@ -109,8 +110,9 @@
 	 *  when walking left, its start when walking right, so the next arrow reads as one more character
 	 *  rather than a jump. `atEnd` overrides that for Ctrl+arrow, which lands on a whole token. */
 	async function step(left: boolean, atEnd = left): Promise<void> {
-		if (left) organ.caretLeft(index);
-		else organ.caretRight(index);
+		// a step that went nowhere leaves the text caret alone: re-placing it is what threw you to the
+		// end of the token you were already in when there was nothing to step into
+		if (!(left ? organ.caretLeft(index) : organ.caretRight(index))) return;
 		await tick();
 		// the caret MOVED in the markup, so this is a different input element than the one the key was
 		// pressed in — it has to be re-focused or the walk drops focus on its first step
@@ -485,6 +487,9 @@
 		display: flex;
 		flex-direction: column;
 	}
+	/* the field draws NO box at rest. What a line is, is said by its stripe and by the pills standing
+	   in it; a permanent frame around them only nested a third rectangle between the panel and the
+	   number. The border is kept in place as transparent so appearing on focus shifts nothing. */
 	.roller-field {
 		flex: 1;
 		min-width: 0;
@@ -494,14 +499,14 @@
 		gap: 6px;
 		min-height: 36px;
 		padding: 6px 8px;
-		background: var(--color-surface);
-		border: 1px solid var(--color-border);
+		background: transparent;
+		border: 1px solid transparent;
 		border-radius: 9px;
 	}
 	/* focus is NEUTRAL and light on purpose: colouring it by role would make "active" and "this is a
 	   test" the same signal, and then neither reads */
 	.roller-field.focused {
-		border-color: var(--color-text-muted);
+		border-color: var(--color-border);
 	}
 	.roller-field.menu-open {
 		border-radius: 9px 9px 0 0;

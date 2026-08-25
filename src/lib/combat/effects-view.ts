@@ -222,6 +222,22 @@ export const rechargeLabel = (r: Recharge): string => RECHARGE_LABEL[r] ?? 'spec
 export const remainingRounds = (e: EffectInstance, round: number): number | null =>
 	e.durationRounds == null ? null : Math.max(0, (e.startedRound ?? 0) + e.durationRounds - round);
 
+/**
+ * An effect leaving the sheet takes its concentration WITH it. The carrier effect IS the
+ * concentration (CONCENTRATION-PLAN model C: the carrier owns the clock and `play.concentration` is
+ * a ref to it), so a removed or expired one has to clear the ref too — or the indicator at the top
+ * of the sheet keeps naming a spell that is no longer running.
+ *
+ * One seam for all three ways an effect can go: the panel's ✕, a rest that outlasts it, and the
+ * round counter passing its duration.
+ */
+export function endConcentrationCarriedBy(
+	play: { concentration: string | null },
+	gone: readonly EffectInstance[],
+): void {
+	for (const e of gone) if (e.source && e.source === play.concentration) play.concentration = null;
+}
+
 /** A round-timed effect is expired once the counter has advanced past its duration. */
 export const isEffectExpired = (e: EffectInstance, round: number): boolean =>
 	e.durationRounds != null && round >= (e.startedRound ?? 0) + e.durationRounds;
