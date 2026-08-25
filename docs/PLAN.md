@@ -1056,6 +1056,14 @@ were learned the hard way.
   turned "add a loop for N attacks" into "the result SHAPE is what aged", and of the organ's design.
   What the wave still owes: `UBUG-11` — a class action that makes N attacks (Flurry of Blows) needs
   the `rolls` intent in ACTIONS.md to CALL the roller, which now exists to be called.
+  **A session of live testing on 2026-08-25 (`48a68c3`..`6c8d82e`) closed 27 findings against the
+  built organ** — the model ones: the CARET IS IN THE LINE (← / Ctrl+Z / Ctrl+arrow walk it token by
+  token, and typing inserts where it stands), a line's ROLE decides its vocabulary (a damage type is
+  neither offered nor resolved on a d20 line, and a type pill re-opens that menu to change it), a
+  cantrip's beam COUNT is rolled as a volley rather than delegated to the player by toast, and an
+  INHERITED type is derived so no edit may target it. Tail left open by that session: a token typed
+  WITHOUT spaces (`2d6+3`) still parses as one raw fragment and blocks the roll — the parser splits
+  on whitespace only, and that is what a person types.
 - **W3 · UX-1 error-copy pass → ARCH-1 i18n sweep.** After W0, because REL-4 adds a whole class of
   new user-facing messages that would otherwise be written twice. UX-1 before ARCH-1, or bad copy
   gets translated and then rewritten. **And after W2** — this reason is new and load-bearing: the

@@ -378,11 +378,13 @@
 	.popup.dice-tray {
 		width: min(460px, calc(100vw - 1.5rem));
 		/* the tray is two CARDS with a gap between them, each carrying its own edge and shadow — so the
-		   dropdown behind them draws nothing, or the gap would show a third surface through it */
+		   dropdown behind them draws nothing, or the gap would show a third surface through it. It keeps
+		   its padding, though: this box still scrolls, so a shadow cast outside it is a shadow clipped
+		   flat against its edge — the room has to be INSIDE. */
 		background: transparent;
 		border: 0;
 		box-shadow: none;
-		padding-bottom: 0;
+		padding: 4px 16px 20px;
 	}
 	.popup-heading {
 		display: flex;

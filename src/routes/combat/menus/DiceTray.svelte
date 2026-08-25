@@ -70,6 +70,6 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-md);
-		box-shadow: 0 18px 40px var(--color-overlay);
+		box-shadow: 0 6px 18px var(--color-overlay);
 	}
 </style>
