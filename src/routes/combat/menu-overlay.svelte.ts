@@ -2,8 +2,11 @@
  * The Combat view's menus: where a dropdown opens, and the one dice-tray seam every roll in the app
  * can reach. Split out of the view-model, which is about the character, not about page geometry.
  *
- * Menus anchor under the button that opened them in DOCUMENT coordinates, so a dropdown scrolls with
- * the page instead of hanging in the viewport. The tray seam is the other half: a generic
+ * Menus anchor under the button that opened them and are RE-MEASURED from it as the page scrolls, so
+ * a dropdown travels with its button instead of hanging in the viewport. (Document coordinates were
+ * the first answer and the wrong one: `main` is the scroll region here, not the document, so
+ * `window.scrollY` is always 0 and an absolutely-placed menu never moved.) The tray seam is the other
+ * half: a generic
  * `openDiceTray({label, formula})` raised anywhere in combat has to arrive at THIS tray (pool,
  * advantage, the attack→damage chain) rather than the instant-roll fallback.
  *
@@ -19,13 +22,17 @@ export interface MenuOverlayHost {
 	tray: RollTray;
 }
 
-/** An open dropdown: which menu, and where it sits in DOCUMENT coordinates. Anchored left OR right
- *  (whichever edge the trigger is nearer), never both. */
+/** An open dropdown: which menu, and where it sits in VIEWPORT coordinates — the placement it opened
+ *  with, which the view re-measures from `anchor` on every scroll. Anchored left OR right (whichever
+ *  edge the trigger is nearer), never both. */
 export interface OpenOverlay {
 	kind: MenuKind;
 	top: number;
 	left: number | null;
 	right: number | null;
+	/** The button it was opened from, when there was one. Kept so a click on THAT button is not read
+	 *  as a click outside the menu — it is the toggle, and closing on it would fight the reopen. */
+	anchor?: HTMLElement;
 }
 
 export class MenuOverlay {
@@ -35,13 +42,20 @@ export class MenuOverlay {
 	overlay = $state<OpenOverlay | null>(null);
 
 	openMenu = (kind: MenuKind, e: Event) => {
-		const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+		const anchor = e.currentTarget as HTMLElement;
+		// the trigger is a TOGGLE: with no backdrop swallowing the click, the button gets it back, and
+		// a menu that only ever opened would be one you can't put away with the control you opened it by
+		if (this.overlay?.kind === kind && this.overlay.anchor === anchor) {
+			this.overlay = null;
+			return;
+		}
+		const r = anchor.getBoundingClientRect();
 		const anchorRight = r.left > window.innerWidth / 2;
-		// document coords (+scroll) so the dropdown scrolls WITH the page/button, not the viewport
 		this.overlay = {
 			kind,
-			top: r.bottom + window.scrollY + 6,
-			left: anchorRight ? null : r.left + window.scrollX,
+			anchor,
+			top: r.bottom + 6,
+			left: anchorRight ? null : r.left,
 			right: anchorRight ? document.documentElement.clientWidth - r.right : null,
 		};
 	};
@@ -57,7 +71,7 @@ export class MenuOverlay {
 		if (typeof window === 'undefined') return;
 		this.overlay = {
 			kind,
-			top: window.scrollY + 80,
+			top: 80,
 			left: Math.max(8, window.innerWidth / 2 - 150),
 			right: null,
 		};

@@ -1,8 +1,8 @@
 <script lang="ts">
 	// Anchored dropdown for an effect's duration: a minus/plus stepper row on top, then the
 	// common-duration presets and a Custom… exact-rounds input. Opens beside/below the effect's
-	// remaining-rounds control, clamped to the viewport, and closes on backdrop click. Writes through
-	// the combat view-model.
+	// remaining-rounds control, clamped to the viewport, follows that control when the page scrolls,
+	// and closes on a pointer outside it. Writes through the combat view-model.
 	import Icon from '$lib/components/Icon.svelte';
 	import { combat } from '../combat-view-model.svelte';
 	import { EFFECT_DURATION_PRESETS } from '$lib/combat/helpers';
@@ -24,8 +24,10 @@
 		custom = true;
 	}
 
-	// Place the menu just below the control, right-aligned to it; pull left/up if it would overflow.
-	function place(): void {
+	/** Place the menu just below the control, right-aligned to it. `clamp` pulls it left/up when it
+	 *  would overflow the screen — for the OPENING placement only: while following a scroll it has to
+	 *  travel with its control, not pin itself to an edge the control has already left. */
+	function place(clamp: boolean): void {
 		if (!el) return;
 		const a = anchor.getBoundingClientRect();
 		const w = el.offsetWidth;
@@ -33,22 +35,35 @@
 		const margin = 8;
 		let left = a.right - w;
 		let top = a.bottom + 6;
-		if (left < margin) left = margin;
-		if (top + h > window.innerHeight - margin) top = Math.max(margin, a.top - h - 6);
+		if (clamp) {
+			if (left < margin) left = margin;
+			if (top + h > window.innerHeight - margin) top = Math.max(margin, a.top - h - 6);
+		}
 		pos = { top, left };
 	}
 
 	// Re-placed on every scroll rather than closed by one: the menu belongs to the control it came
 	// from, so it travels with it. Capture phase, because the control may sit inside a panel that
 	// scrolls on its own and that scroll never reaches `window`.
+	//
+	// Closing is a listener too, not a full-screen catcher: a fixed catcher's scroll parent is the
+	// viewport, which does not scroll in this app, so it froze the page under the open menu.
 	$effect(() => {
 		if (!el) return; // reading it is also what re-runs this once the element exists
-		place();
-		window.addEventListener('scroll', place, true);
-		window.addEventListener('resize', place);
+		place(true);
+		const follow = () => place(false);
+		const reflow = () => place(true);
+		const closeOnOutside = (ev: PointerEvent) => {
+			const t = ev.target as Node;
+			if (!el?.contains(t) && !anchor.contains(t)) onclose();
+		};
+		window.addEventListener('scroll', follow, true);
+		window.addEventListener('resize', reflow);
+		window.addEventListener('pointerdown', closeOnOutside, true);
 		return () => {
-			window.removeEventListener('scroll', place, true);
-			window.removeEventListener('resize', place);
+			window.removeEventListener('scroll', follow, true);
+			window.removeEventListener('resize', reflow);
+			window.removeEventListener('pointerdown', closeOnOutside, true);
 		};
 	});
 
@@ -62,8 +77,6 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-<div class="dur-backdrop" onclick={onclose}></div>
 <div
 	bind:this={el}
 	class="dur-menu"
@@ -105,12 +118,6 @@
 </div>
 
 <style>
-	.dur-backdrop {
-		position: fixed;
-		inset: 0;
-		z-index: 60;
-		background: transparent;
-	}
 	.dur-menu {
 		position: fixed;
 		z-index: 61;

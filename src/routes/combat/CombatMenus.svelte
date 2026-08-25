@@ -19,31 +19,73 @@
 	const { setTempHp, addCustomModifier, togglePassive } = combat;
 	const { addEffect } = combat.effects;
 
-	// Keep the dropdown inside the viewport: after it renders, if it would run off the bottom (or
-	// top) edge, shift it up/down so it fits. `overlay.top` is in document coords (button bottom +
-	// scroll); we clamp the equivalent viewport position, then convert back.
 	let popEl = $state<HTMLDivElement>();
-	$effect(() => {
+	let pos = $state<{ top: number; left: number | null; right: number | null }>({
+		top: 0,
+		left: 0,
+		right: null,
+	});
+
+	/**
+	 * Where the dropdown sits, in viewport coordinates: under its button, re-measured from it. A menu
+	 * opened with NO button (the tray seam's centered one) keeps the placement it was given.
+	 *
+	 * `clamp` is for PLACING it — a menu opened near the bottom edge is pulled up so it fits. It is
+	 * deliberately off while following a scroll: clamping there would pin the menu to the top of the
+	 * screen while the button it belongs to scrolled away underneath, which is a menu pointing at
+	 * nothing. It scrolls off with its button instead.
+	 */
+	function place(clamp: boolean): void {
 		if (!overlay || !popEl) return;
 		const margin = 8;
-		const h = popEl.offsetHeight;
-		const vh = window.innerHeight;
-		const viewportTop = overlay.top - window.scrollY; // where it currently sits on screen
-		let top = viewportTop;
-		if (top + h > vh - margin) top = vh - margin - h; // overflowing bottom → pull up
-		if (top < margin) top = margin; // …but never above the top edge
-		popEl.style.top = `${top + window.scrollY}px`;
+		const r = overlay.anchor?.getBoundingClientRect();
+		// which EDGE it hangs from was decided when it opened; only the measurement is redone
+		const left = r && overlay.left != null ? r.left : overlay.left;
+		const right =
+			r && overlay.right != null ? document.documentElement.clientWidth - r.right : overlay.right;
+		let top = r ? r.bottom + 6 : overlay.top;
+		if (clamp) {
+			if (top + popEl.offsetHeight > window.innerHeight - margin)
+				top = window.innerHeight - margin - popEl.offsetHeight;
+			if (top < margin) top = margin;
+		}
+		pos = { top, left, right };
+	}
+
+	/**
+	 * The two things an open dropdown listens for.
+	 *
+	 * It TRAVELS with its button: re-placed on scroll (capture phase — `main` is the scroll region,
+	 * not the window, so a bubbling listener would never hear it) rather than closed by one, because a
+	 * menu that vanishes the moment you scroll to look at what it is about is a menu you open twice.
+	 *
+	 * And it CLOSES on a pointer outside it. That used to be a full-screen transparent catcher, which
+	 * quietly ate the wheel: a fixed element's scroll parent is the viewport, and the viewport does not
+	 * scroll in this app — so the page froze under every open menu, and the old fix for THAT was to
+	 * close on wheel. A listener blocks nothing.
+	 */
+	$effect(() => {
+		if (!overlay || !popEl) return;
+		place(true);
+		const follow = () => place(false);
+		const reflow = () => place(true);
+		const closeOnOutside = (e: PointerEvent) => {
+			const t = e.target as Node;
+			if (popEl?.contains(t) || overlay.anchor?.contains(t)) return;
+			combat.overlay = null;
+		};
+		window.addEventListener('scroll', follow, true);
+		window.addEventListener('resize', reflow);
+		window.addEventListener('pointerdown', closeOnOutside, true);
+		return () => {
+			window.removeEventListener('scroll', follow, true);
+			window.removeEventListener('resize', reflow);
+			window.removeEventListener('pointerdown', closeOnOutside, true);
+		};
 	});
 </script>
 
 {#if overlay}
-	<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-	<!-- backdrop: click closes, and that is ALL it does. It used to close on wheel too, so the page
-	     could scroll — but a menu that vanishes the moment you scroll to look at what it is about is a
-	     menu you have to open twice. It is a transparent catcher, not a scroll blocker: the wheel
-	     chains straight through to the page, and the menu is anchored in DOCUMENT coordinates, so it
-	     travels with the button that opened it. -->
-	<div class="overlay-backdrop" onclick={() => (combat.overlay = null)}></div>
 	<div
 		bind:this={popEl}
 		class="popup"
@@ -52,9 +94,7 @@
 		role="dialog"
 		aria-modal="true"
 		tabindex="-1"
-		style="top:{overlay.top}px; {overlay.left != null
-			? `left:${overlay.left}px`
-			: `right:${overlay.right}px`}"
+		style="top:{pos.top}px; {pos.left != null ? `left:${pos.left}px` : `right:${pos.right}px`}"
 	>
 		{#if overlay.kind === 'dice'}
 			<DiceTray />
@@ -346,15 +386,8 @@
 
 <style>
 	/* overlays — d-menus popover language */
-	/* transparent catcher: click outside the dropdown closes it */
-	.overlay-backdrop {
-		position: fixed;
-		inset: 0;
-		background: transparent;
-		z-index: 50;
-	}
 	.popup {
-		position: absolute;
+		position: fixed;
 		width: min(300px, calc(100vw - 1.5rem));
 		max-height: 72vh;
 		overflow: auto;
