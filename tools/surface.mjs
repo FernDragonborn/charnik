@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Reuse-surface index generator — writes docs/SURFACE.md.
+ * Reuse-surface index generator — writes docs/surface.md.
  *
  * WHY: the agent (and humans) keep re-creating CSS classes / TS helpers that already exist,
  * because the shared surface isn't discoverable at a glance. This scans src/lib and emits a
@@ -23,7 +23,7 @@ import { join, relative, basename } from 'node:path';
 
 const ROOT = process.cwd();
 const SRC = join(ROOT, 'src', 'lib');
-const OUT = join(ROOT, 'docs', 'SURFACE.md');
+const OUT = join(ROOT, 'docs', 'surface.md');
 const STYLES = join(SRC, 'styles');
 
 const t0 = Date.now();
@@ -409,7 +409,7 @@ renderModules(libModules);
 const ms = Date.now() - t0;
 out.push('---');
 // NB no generation time in the FILE footer — it changes every run and would stage a spurious
-// SURFACE.md diff on every commit (the pre-commit hook regenerates + `git add`s this). The timing
+// surface.md diff on every commit (the pre-commit hook regenerates + `git add`s this). The timing
 // stays in the console log below, where it's useful without polluting version control.
 out.push(
 	`_${tokenCount} tokens · ${classes.size} global classes · ${components.length} components · ` +

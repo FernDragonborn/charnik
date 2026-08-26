@@ -1,7 +1,7 @@
 /*
  * The N2 action EXECUTOR: what actually happens when a class feature's spend-option is used —
  * validate the resource cost and the turn slot all-or-nothing, deduct both, then run the action's
- * verbs. The verb set and the all-or-nothing rule are specified in docs/internals/ACTIONS.md §2; the rule that
+ * verbs. The verb set and the all-or-nothing rule are specified in docs/internals/actions.md §2; the rule that
  * matters most is that every verb lands on an EXISTING system rather than opening a new mutation
  * path into play-state.
  *
@@ -44,7 +44,7 @@ export class ActionExecutor {
 	constructor(private host: () => ExecutorHost) {}
 
 	/** N2 executor (first slice): activate a resource spend-option. Validate the resource cost AND the
-	 *  turn slot ALL-OR-NOTHING (ACTIONS.md), then deduct both and run the action token. The turn cost
+	 *  turn slot ALL-OR-NOTHING (actions.md), then deduct both and run the action token. The turn cost
 	 *  was the piece-3 gap — spending an option (Flurry, Second Wind…) now actually consumes its
 	 *  action/bonus/reaction, not just the resource. */
 	activateResourceOption = (opt: ResourceOption, amount = 1) => {
@@ -117,7 +117,7 @@ export class ActionExecutor {
 	}
 
 	/** Run a resource-option's RESOLVED action token (a `heal:`/`roll:` formula is already L2-resolved
-	 *  at derive). Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths):
+	 *  at derive). Each verb lands on an EXISTING system (actions.md §2 — no new mutation paths):
 	 *  `heal:` → HP path (clamped), `roll:` → tray + log, `apply_condition:` → the effect add path,
 	 *  `apply_effect:<id>` → apply a NAMED effects.csv buff/debuff (Rage) via the "+"-catalog add path
 	 *  (ref/negative/duration all read from the row), `gain_action` → one ADDITIONAL action this turn
@@ -135,7 +135,7 @@ export class ActionExecutor {
 	}
 
 	/** Run ONE resolved action verb (`opt.action` may hold several, `;`-joined — see `runActionToken`).
-	 *  Each verb lands on an EXISTING system (ACTIONS.md §2 — no new mutation paths). */
+	 *  Each verb lands on an EXISTING system (actions.md §2 — no new mutation paths). */
 	private runOneAction(opt: ResourceOption, action: string) {
 		const p = this.host().character?.play;
 		if (!p) return;
@@ -162,7 +162,7 @@ export class ActionExecutor {
 			// grant a rest: lands on the SAME rest system the rest buttons use (recharge pools by type,
 			// reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). A
 			// consumable that grants a rest MUST have recharge `other` so the rest it triggers doesn't
-			// refund its own charge (see ACTIONS.md §2).
+			// refund its own charge (see actions.md §2).
 			this.host().resources.rest(arg);
 			toast(`${opt.name} — ${arg} rest taken`);
 		}

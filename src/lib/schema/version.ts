@@ -1,5 +1,5 @@
 /*
- * schemaVersion convention (pinned at P1, see docs/PLAN.md decision #5).
+ * schemaVersion convention (pinned at P1, see docs/plan.md decision #5).
  *
  * Both CONTENT rows and CHARACTER files carry a `schemaVersion` from day 1 so saves made
  * by an old build can be migrated forward by a newer one. Bump the relevant constant when

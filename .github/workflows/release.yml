@@ -2,7 +2,7 @@ name: Release desktop
 
 # Manual only — daily pushes never trigger a release. Ship a real build like this:
 #   1. Bump the version in BOTH package.json and src-tauri/tauri.conf.json.
-#   2. Write the new section at the top of docs/CHANGELOG.md (its top block becomes the release notes).
+#   2. Write the new section at the top of docs/changelog.md (its top block becomes the release notes).
 #   3. Actions tab → this workflow → "Run workflow".
 # It builds + signs the installers (Windows NSIS + Linux AppImage/.deb/.rpm), emits latest.json (the
 # updater manifest the app polls, with an entry per platform), and publishes a GitHub Release tagged
@@ -87,13 +87,13 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # Release notes = the top docs/CHANGELOG.md section (its first "## …" header through the line before
+      # Release notes = the top docs/changelog.md section (its first "## …" header through the line before
       # the next "## "). Manual bump means CHANGELOG's top block already describes this version.
       - name: Extract release notes
         id: notes
         shell: bash
         run: |
-          notes=$(awk '/^## /{c++} c==1' docs/CHANGELOG.md)
+          notes=$(awk '/^## /{c++} c==1' docs/changelog.md)
           {
             echo 'body<<CHANGELOG_EOF'
             echo "$notes"

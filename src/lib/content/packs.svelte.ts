@@ -1,6 +1,6 @@
 /*
  * The installed-pack REGISTRY — where each pack came from and when we last asked its repo whether
- * anything changed (docs/PLAN.md · REL-4 slice 1). Local state ABOUT an install, so it lives in app
+ * anything changed (docs/plan.md · REL-4 slice 1). Local state ABOUT an install, so it lives in app
  * config (`charnik.config.json`), never in the CSVs: a content file describes content, not this
  * machine's update habits (docs/internals/content.md ▸ No manifests names this file as a legitimate exception).
  *
@@ -27,7 +27,7 @@ const SECTION = 'contentPacks';
 
 /**
  * What the app may do over the NETWORK on its own. Applying is never in here — that is always a
- * user action (SECURITY.md §7), so the strongest setting still only pre-downloads.
+ * user action (security.md §7), so the strongest setting still only pre-downloads.
  * Default `off`: pinging a third party on every launch contradicts the offline-first, no-account
  * posture, and PRIVACY (not rate limits) is why.
  */

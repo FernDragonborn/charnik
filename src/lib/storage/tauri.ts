@@ -1,11 +1,11 @@
 /*
  * The runtime desktop/mobile `Storage` impl — real filesystem via `@tauri-apps/plugin-fs`.
  *
- * This is the ONLY file above the seam that imports Tauri (docs/PLAN.md invariant). Everything
+ * This is the ONLY file above the seam that imports Tauri (docs/plan.md invariant). Everything
  * else uses the `Storage` interface and never knows which impl backs it. Paths are relative to a
  * lazily-resolved `dataDir` root (OS app-data by default); we join them to an absolute path and
  * reject `..` traversal here, mirroring `NodeStorage` — the Tauri capabilities/fs-scope enforce
- * the same boundary a second time (defence in depth, see docs/internals/SECURITY.md).
+ * the same boundary a second time (defence in depth, see docs/internals/security.md).
  *
  * Writes are atomic (temp sibling → rename), matching the "no DB → atomic temp→rename" invariant.
  * `dataDir` resolution is lazy (a cached Promise) so `getUserStorage()` can stay synchronous while
@@ -39,7 +39,7 @@ import {
 } from './migrate';
 
 /** The user's data root is a VISIBLE, self-named folder (not a hidden per-app dir) — see
- *  docs/PLAN.md "Data directory & config". */
+ *  docs/plan.md "Data directory & config". */
 const DATA_DIR_NAME = 'charnik';
 /** The user's saved data-dir choice, or null if none / unreadable. The pointer file
  *  (`<appConfig>/config.json`) is now owned by Rust — the renderer never reads or writes it, so a
@@ -131,7 +131,7 @@ async function walkTree(dir: string): Promise<DirFile[]> {
 	return out;
 }
 
-/** The current data folder's files — for the merge dialog's name table (see docs/PLAN.md). */
+/** The current data folder's files — for the merge dialog's name table (see docs/plan.md). */
 export async function listDataDirFiles(dir: string): Promise<DirFile[]> {
 	return walkTree(dir);
 }

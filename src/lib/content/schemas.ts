@@ -2,7 +2,7 @@
  * Per-type content schemas (CSV row shapes), validated with zod.
  *
  * One schema per content type, SHARED by: the CSV loader, the content-editor forms, and
- * the content-health view (docs/PLAN.md "Data model (CSV)"). CSV cells are all strings;
+ * the content-health view (docs/plan.md "Data model (CSV)"). CSV cells are all strings;
  * schemas coerce numeric/boolean columns and treat empty cells as "absent" (EN fallback,
  * optional mechanics). Bad rows are flagged by the loader, never crashed on.
  *
@@ -334,7 +334,7 @@ const spellSchema = baseRow.extend({
 	save_ability: z.preprocess(blankToUndef, Ability.optional()),
 	damage: optStr, // "8d6 fire" base damage/effect summary
 	higher_level: optStr, // upcast / cantrip-scaling PROSE (the fallback for non-scalar upcasts)
-	// Structured upcast (docs/UPCAST-PLAN.md): a `;`-list of `kind[:type]:formula` tokens
+	// Structured upcast (docs/plan.md ▸ UPCAST): a `;`-list of `kind[:type]:formula` tokens
 	// (`damage:per_slot(1d6)`, `count:slot+1`) evaluated at cast time. Language-agnostic (a formula,
 	// NOT prose — no locale siblings). Optional: old user CSVs without it load, falling back to
 	// `higher_level` prose. See src/lib/effects/upcast.ts.

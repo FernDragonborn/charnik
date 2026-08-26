@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { contentRepoDir, requireContentRepo } from '../tools/content-repo.mjs';
 
 /*
- * The content lives in a SEPARATE repo (docs/PLAN.md · REL-4 slice 0) and everything that reads it
+ * The content lives in a SEPARATE repo (docs/plan.md · REL-4 slice 0) and everything that reads it
  * — the build's vendoring step, the SRD converters, the content tests — resolves through this one
  * seam. If its precedence breaks, a build silently vendors the wrong folder, so pin it.
  */

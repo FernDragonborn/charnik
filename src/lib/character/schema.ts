@@ -1,7 +1,7 @@
 /*
  * The character model (`characters/<slug>/character.json`).
  *
- * Two hard separations, per docs/PLAN.md:
+ * Two hard separations, per docs/plan.md:
  *   - **build/definition** (what the character IS — chosen at build/level-up) vs
  *     **runtime/play-state** (what changes during play — HP, slots, conditions…).
  *     Resetting play never touches the build; a long rest only edits `play`.
@@ -164,7 +164,7 @@ const playSchema = z.object({
 	 *  shield's AC contribution (not the inventory equipped flag). */
 	shieldRaised: z.boolean().default(false),
 	/** Effects-auto engine on. Off → derived stats drop their effect layers (flat bonuses,
-	 *  advantage, conditions) and show base values only (docs/PLAN.md effects global toggle). */
+	 *  advantage, conditions) and show base values only (docs/plan.md effects global toggle). */
 	autoCalc: z.boolean().default(true),
 	deathSaves: z
 		.object({ successes: z.number().int().min(0).max(3), failures: z.number().int().min(0).max(3) })

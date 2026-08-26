@@ -13,7 +13,7 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
-    # the SRD content is its own repo (docs/PLAN.md REL-4 slice 0) — tests and the build both read
+    # the SRD content is its own repo (docs/plan.md REL-4 slice 0) — tests and the build both read
     # it. Locally it's the sibling folder; here it can't be (actions/checkout refuses a path outside
     # the workspace), so check it out inside and point the resolver at it.
     env:

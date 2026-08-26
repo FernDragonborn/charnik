@@ -9,7 +9,7 @@
  * A genuine CYCLE (an effect whose condition depends on its own output — "+10 max HP while below
  * half HP") has no unique answer: it is a CONTENT BUG, detected in the graph order, surfaced as a
  * derive issue, and its writers degrade to inert notes — never an iterate-to-fixpoint loop
- * (PLUGINS.md §8.4, PLAN "State model").
+ * (plugins.md §8.4, PLAN "State model").
  */
 import { recordOf } from '../util/records';
 import { ABILITY_IDS, abilityModifier, ABILITY_SCORE_CLAMP, type Ability } from '../rules/core';

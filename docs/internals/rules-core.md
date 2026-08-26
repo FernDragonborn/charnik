@@ -42,7 +42,7 @@ disadvantage, grant proficiency, resist/immune, apply condition, grant resource,
 kinds, note, and plugin.
 
 Effects are **interpreted data, not `eval` and not an executing DSL**. That is a security property as
-much as a design one — see `SECURITY.md`.
+much as a design one — see `security.md`.
 
 An unknown effect degrades to **text plus a manual modifier**. It is never silently dropped, and it
 is surfaced in the effects panel.
@@ -67,7 +67,7 @@ module can be deleted without breaking core or UI. **Core tests must not import 
   `context.ts`, the context a formula may read.
 - **L3 — plugins.** `plugin-registry.ts` and `plugin-sandbox.ts`.
 
-The normative spec for all of it is `EFFECTS.md`, with `PLUGINS.md` and `ACTIONS.md` as companions.
+The normative spec for all of it is `effects.md`, with `plugins.md` and `actions.md` as companions.
 
 ### Token versus effect
 

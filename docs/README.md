@@ -5,9 +5,9 @@ pointer at it, not a second set of rules.
 
 ## What is still open
 
-- [The plan](PLAN.md) — the authoritative spec and the only place that says what is open.
-- Active ledgers: [N2](N2-PLAN.md) · [Recharge](RECHARGE-PLAN.md) · [Roller](ROLLER-PLAN.md)
-- [Changelog](CHANGELOG.md)
+- [The plan](plan.md) — the authoritative spec and the only place that says what is open.
+- Active ledgers: [N2](n2-plan.md) · [Recharge](recharge-plan.md) · [Roller](roller-plan.md)
+- [Changelog](changelog.md)
 
 ## How it works
 
@@ -17,12 +17,12 @@ pointer at it, not a second set of rules.
 - [Content packs](internals/packs.md) — fetching, diffing, applying, rolling back
 - [Characters](internals/characters.md) — the save format and its build/play/ui split
 - [UI](internals/ui.md) — thin shell, theming, the UX pattern contract, icons, error copy
-- [Effects](internals/EFFECTS.md) — normative spec, with [plugins](internals/PLUGINS.md) and
-  [actions](internals/ACTIONS.md)
-- [Testing](internals/TESTING.md) · [Security](internals/SECURITY.md)
+- [Effects](internals/effects.md) — normative spec, with [plugins](internals/plugins.md) and
+  [actions](internals/actions.md)
+- [Testing](internals/testing.md) · [Security](internals/security.md)
 - [Multi-system compatibility](internals/compatibility.md) — where a 5e-only assumption would bite
 - [Tooling](internals/tooling.md) — the repo's own tools and their traps
 - [Work artifacts](internals/work-artifacts.md) — where planned work lives and how the plan is pruned
-- [Reuse surface](SURFACE.md) — generated; never hand-edited
+- [Reuse surface](surface.md) — generated; never hand-edited
 
 Design research sits in [research/](research/).

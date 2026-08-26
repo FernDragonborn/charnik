@@ -9,7 +9,7 @@
  *
  * The evaluator (expression-evaluator.ts) consumes the `Node`/`Ast` this file produces — a
  * one-directional dep (eval → parse), also sharing the enum grammar. Grammar/precedence/vars are
- * pinned in docs/PLAN.md → "EXPR".
+ * pinned in docs/plan.md → "EXPR".
  */
 import { ABILITY_IDS, SIZES, ARMOR_TYPES } from '../rules/core';
 

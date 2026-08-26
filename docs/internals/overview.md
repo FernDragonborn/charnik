@@ -9,7 +9,7 @@ Charnik is a **Tauri v2 desktop app** wrapping a **SvelteKit SPA** (`adapter-sta
 the system webview, with a free web build of the same SPA beside it. There is **no HTTP server** —
 not in the desktop app, not anywhere. Standalone desktop is the case that matters; LAN and remote
 access are not goals, and the absence of a server is a security property as much as a simplicity one
-(`SECURITY.md`).
+(`security.md`).
 
 The Rust side stays minimal: configuration, capabilities, and the official plugins. The whole
 TypeScript side runs without Rust; only the Tauri wiring needs it.
@@ -54,7 +54,7 @@ link and a `404.html` SPA fallback.
 
 - **`src/lib/rules`** — the pure core. See `rules-core.md`.
 - **`src/lib/effects`** — the removable effects module, joined at `applyEffects`. See `rules-core.md`
-  and the normative `EFFECTS.md`.
+  and the normative `effects.md`.
 - **`src/lib/content`** — loading, merging, validating, hashing, and writing CSV. See `content.md`;
   external packs are in `packs.md`.
 - **`src/lib/character`** — the save schema and the derive pipeline. See `characters.md`.

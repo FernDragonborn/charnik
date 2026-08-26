@@ -2,7 +2,7 @@
  * L1 effect vocabulary — the token PARSER + per-token value resolution.
  *
  * The effects engine is an ISOLATED, optional, removable module: it interprets the BOUNDED effect
- * vocabulary (data, never `eval`/a DSL — a security property, see docs/internals/SECURITY.md). The rules
+ * vocabulary (data, never `eval`/a DSL — a security property, see docs/internals/security.md). The rules
  * core has NO dependency on it; deleting `src/lib/effects/` leaves the core's {value,trace,notes}
  * contract intact. This module may import core TYPES (pipeline), never the reverse.
  *
@@ -69,7 +69,7 @@ export const EFFECT_KIND = {
 	// the seam for future ones (turn-start regen, etc.) is a new token, not a general event bus (YAGNI).
 	regainOnInitiative: 'regain_on_initiative',
 	// L3 handler REFERENCE (`plugin:<namespace>:<handlerName>[:<args>]`) — content never contains code, only this
-	// pointer; the derive pre-pass resolves it through the plugin registry (docs/internals/PLUGINS.md §1).
+	// pointer; the derive pre-pass resolves it through the plugin registry (docs/internals/plugins.md §1).
 	// Missing/disabled/errored plugin → the token degrades to an inert note like any unknown.
 	plugin: 'plugin',
 } as const;
@@ -128,7 +128,7 @@ export interface ParsedEffect {
 	 *  derive time — exactly one of the two is set. */
 	resource?: { id: string; max?: number; maxExpr?: string; recharge: Recharge };
 	/** plugin: the parsed handler reference. `args` is OPAQUE, hostile text the handler must parse
-	 *  defensively (docs/internals/PLUGINS.md §1) — never interpreted here. */
+	 *  defensively (docs/internals/plugins.md §1) — never interpreted here. */
 	plugin?: { namespace: string; handlerName: string; args: string };
 	raw: string;
 }
@@ -275,7 +275,7 @@ const parseGrantProficiency: KindParser = (rest, raw, kind) => {
 };
 
 const parsePlugin: KindParser = (rest, raw, kind) => {
-	// `plugin:<namespace>:<handlerName>[:<args>]` — grammar + length caps from docs/internals/PLUGINS.md §1. The token is
+	// `plugin:<namespace>:<handlerName>[:<args>]` — grammar + length caps from docs/internals/plugins.md §1. The token is
 	// attacker-controlled content; over-cap or malformed → inert unknown (never a partial parse).
 	// `args` may itself contain `:` — only the first two separators are structural.
 	const m = /^([a-z0-9][a-z0-9-]{0,31}):([a-z0-9][a-z0-9-]{0,31})(?::([\s\S]{0,256}))?$/.exec(rest);

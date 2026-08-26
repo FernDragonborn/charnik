@@ -130,7 +130,7 @@
 	/**
 	 * A link OUT of the app opens in the OS browser, never in the app's own window.
 	 *
-	 * SECURITY.md §5 has stated this as a control for a long time and nothing implemented it. It
+	 * security.md §5 has stated this as a control for a long time and nothing implemented it. It
 	 * matters because content prose is rendered HTML from CSVs a stranger may have written: DOMPurify
 	 * strips anything executable and correctly keeps `<a href>`, so one click on a spell description
 	 * replaced the whole app with a remote page — in a window with no address bar, no back button and
@@ -162,7 +162,7 @@
 	});
 
 	// Content loads once at startup so the DATA-VER-1 review surfaces app-wide. On desktop the FIRST
-	// launch first asks WHERE to keep the data (docs/PLAN.md) and holds the load until chosen, so it
+	// launch first asks WHERE to keep the data (docs/plan.md) and holds the load until chosen, so it
 	// seeds to the chosen folder; a saved custom folder is re-granted fs-scope each start. Web/headless
 	// just load. Cached — a no-op if a page already loaded it.
 	let firstRunDefault = $state<string | null>(null); // non-null → show the first-run picker

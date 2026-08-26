@@ -5,7 +5,7 @@
  *
  * Both editions share the same 27-point buy (scores 8–15 before boosts). The divergence the
  * app cares about is WHERE the ability boost sits: 5.5e puts it on the background, 5e on the
- * species (see docs/PLAN.md). Species boosts flow through the effects engine automatically;
+ * species (see docs/plan.md). Species boosts flow through the effects engine automatically;
  * the background boost (5.5e) is a build-time choice, allocated here into `abilityBoosts`.
  */
 import type { Ability } from '../rules/core';

@@ -3,9 +3,9 @@
 Normative spec for the auto-calc engine: how a bounded **effect vocabulary** feeds one
 **stacking pipeline** to produce every derived stat as `{value, trace, notes}`. This is the
 design record for **L1** (the bounded token vocabulary) and **L2** (value expressions); **L3**
-(the QuickJS plugin sandbox) has its own normative spec in [`PLUGINS.md`](PLUGINS.md), the
-play-state action model lives in [`ACTIONS.md`](ACTIONS.md), and the threat model in
-[`SECURITY.md`](SECURITY.md). The build/status history lives in `PLAN.md` and git.
+(the QuickJS plugin sandbox) has its own normative spec in [`plugins.md`](plugins.md), the
+play-state action model lives in [`actions.md`](actions.md), and the threat model in
+[`security.md`](security.md). The build/status history lives in `plan.md` and git.
 
 > **Source of truth is the code** (`src/lib/effects/`). Where this doc and the code disagree,
 > the code wins and this doc is stale — fix it.
@@ -17,7 +17,7 @@ play-state action model lives in [`ACTIONS.md`](ACTIONS.md), and the threat mode
 - **Data, never code.** Auto-calc flows through ONE stacking pipeline
   (`base → ability mod → proficiency → item → feature → condition → override`, clamped to caps)
   fed by a **bounded vocabulary**. Effects are **interpreted data, not `eval`/a DSL** — a
-  security property (SECURITY.md). L2 widens the token grammar with a **non-Turing formula
+  security property (security.md). L2 widens the token grammar with a **non-Turing formula
   language** (no loops, recursion, assignment, side effects); L3 is the ONLY layer that runs
   code, and only inside a WASM sandbox.
 - **Unknown → inert, never dropped.** An unrecognized kind, an out-of-vocabulary target, a
@@ -43,7 +43,7 @@ play-state action model lives in [`ACTIONS.md`](ACTIONS.md), and the threat mode
 | `expression-evaluator.ts`                                                                | **L2** — AST → value (integer OR dice term), over an `EffectCtx`.                                                                                              |
 | `dependency-graph.ts`                                                                    | The ONE resolve stage — `resolveActiveEffects` (gather → guards → expand → dedupe → facts), in dependency order.                                               |
 | `context.ts`                                                                             | `makeExprContext` / `ctxOf` — the `ctx` a formula reads (build + play vars).                                                                                   |
-| `plugin-registry.ts` · `plugin-host.ts` · `plugin-sandbox.ts` · `plugin-store.svelte.ts` | **L3** — see `PLUGINS.md`.                                                                                                                                     |
+| `plugin-registry.ts` · `plugin-host.ts` · `plugin-sandbox.ts` · `plugin-store.svelte.ts` | **L3** — see `plugins.md`.                                                                                                                                     |
 | `suggest.ts`                                                                             | "did you mean?" fuzzy hints for a typo'd token/target.                                                                                                         |
 
 ### Naming rule (token vs effect)
@@ -77,7 +77,7 @@ expression never contains one). `EFFECT_KIND` (`token-parser.ts`) is the closed 
 | `apply_condition`            | `apply_condition:<id>`                                  | Expand a condition row's own tokens ONE level (the condition's `effects` flow + register `has_condition.<id>`).                                                                                         |
 | `hp_max`                     | `flat_bonus:hp_max+<value>`                             | Max-HP contribution (Toughness/Aid), re-folded on a manual base.                                                                                                                                        |
 | `note`                       | `note:<free text>`                                      | DISPLAY-ONLY: a mechanic the engine can't model on a single-character sheet (attacks AGAINST you, auto-crit, sense/relational). Never folds, matches no target; shown distinctly. `;` separates a list. |
-| `plugin`                     | `plugin:<namespace>:<handlerName>[:<args>]`             | L3 handler REFERENCE (never code). Resolved by the derive pre-pass through the registry (PLUGINS.md).                                                                                                   |
+| `plugin`                     | `plugin:<namespace>:<handlerName>[:<args>]`             | L3 handler REFERENCE (never code). Resolved by the derive pre-pass through the registry (plugins.md).                                                                                                   |
 
 ### Targets
 
@@ -257,7 +257,7 @@ settable (the automatic long-rest −1 is a default convenience, not a lock).
 3. **Facts** (`collectFacts`) — parse every resolved token ONCE, resolve L2 values ONCE → the
    typed `EffectFacts` object (numeric / advantage / disadvantage / proficiencies / defenses /
    resources / conditions / rerolls / minDie / unknown). No consumer re-parses the token list.
-   - **3½ · Plugin pre-pass** (L3, PLUGINS.md) — runs AFTER the first `collectFacts` over the
+   - **3½ · Plugin pre-pass** (L3, plugins.md) — runs AFTER the first `collectFacts` over the
      content-only facts; returned `tokens` go through a SECOND `collectFacts` merged via
      `mergeFacts`; `contributions` append as host-stamped numeric facts. Plugin output cannot feed
      the DAG/guards; a returned `apply_condition` expands ONE level, no cascade.
@@ -282,7 +282,7 @@ resolve stage, no split-brain scans.
 
 ---
 
-## 5 · L3 — plugins (summary; see PLUGINS.md)
+## 5 · L3 — plugins (summary; see plugins.md)
 
 For the true homebrew tail that L2 can't express, a **`plugin:` token** references a handler in
 `dataDir/plugins/<namespace>/main.js` (never code in CSV). Handlers run in a **QuickJS-in-WASM
@@ -291,8 +291,8 @@ zod revalidation, length-prefixed SHA-256 consent hash stored outside the dataDi
 counter). A handler returns declarative output (`contributions` / L1 `tokens`) that rides the
 existing fold; it can NEVER break derive (any failure degrades to an inert note). Three state
 channels: `passive` (READ state → contributions), `onUse` / `onEvent` (WRITE play-state, core-owned
-per ACTIONS.md; deferred to `api: 2`). **Desktop-only** — the web build ships no sandbox. Full
-normative contract, ctx/result schemas, budgets, and the security checklist: [`PLUGINS.md`](PLUGINS.md).
+per actions.md; deferred to `api: 2`). **Desktop-only** — the web build ships no sandbox. Full
+normative contract, ctx/result schemas, budgets, and the security checklist: [`plugins.md`](plugins.md).
 
 ---
 
@@ -311,7 +311,7 @@ normative contract, ctx/result schemas, budgets, and the security checklist: [`P
 
 ## 7 · See also
 
-- [`PLUGINS.md`](PLUGINS.md) — L3 plugin sandbox, the normative `api: 1` contract.
-- [`ACTIONS.md`](ACTIONS.md) — the core play-state action/event model (`onUse`/`onEvent` intent).
-- [`SECURITY.md`](SECURITY.md) — the threat model (no `eval`/DSL, sandbox containment, cost caps).
-- `PLAN.md` — status/roadmap and the AUDIT SPEC cross-references.
+- [`plugins.md`](plugins.md) — L3 plugin sandbox, the normative `api: 1` contract.
+- [`actions.md`](actions.md) — the core play-state action/event model (`onUse`/`onEvent` intent).
+- [`security.md`](security.md) — the threat model (no `eval`/DSL, sandbox containment, cost caps).
+- `plan.md` — status/roadmap and the AUDIT SPEC cross-references.

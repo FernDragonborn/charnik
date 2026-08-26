@@ -1,9 +1,9 @@
 # Charnik — D&D Character Tracking System (Plan)
 
-> Index doc. Companions: [TESTING.md](internals/TESTING.md) · [SECURITY.md](internals/SECURITY.md) ·
+> Index doc. Companions: [testing.md](internals/testing.md) · [security.md](internals/security.md) ·
 > [research/existing-generators.md](./research/existing-generators.md). Frontend UX pattern
 > contract → [internals/ui.md](internals/ui.md) ▸ The UX pattern contract; live component inventory → generated
-> [SURFACE.md](./SURFACE.md).
+> [surface.md](./surface.md).
 
 ## Context
 
@@ -52,17 +52,17 @@ traits, class features, feats, equipped items, conditions), and the user can see
 trust what happened.
 
 > **The current NORMATIVE spec (code-accurate token vocabulary, L2 grammar/semantics, the
-> derive pipeline, state model) is [`docs/internals/EFFECTS.md`](internals/EFFECTS.md).** This section is the
-> DECISION RECORD (why the engine has this shape); EFFECTS.md wins on any syntax detail.
+> derive pipeline, state model) is [`docs/internals/effects.md`](internals/effects.md).** This section is the
+> DECISION RECORD (why the engine has this shape); effects.md wins on any syntax detail.
 
 - **Bounded effect vocabulary + text fallback.** Effects are structured data from a
   **fixed vocabulary**, NOT an executed mini-language (also a security win — content is
-  never code; see SECURITY.md). The kinds/targets/values are enumerated in
-  [`EFFECTS.md`](internals/EFFECTS.md) §2 (`flat_bonus`/`set_override`/`advantage`/`grant_proficiency`/
+  never code; see security.md). The kinds/targets/values are enumerated in
+  [`effects.md`](internals/effects.md) §2 (`flat_bonus`/`set_override`/`advantage`/`grant_proficiency`/
   `resist_immune`/`apply_condition`/`grant_resource`/…). Anything outside the vocab =
   **free text + an optional manual modifier** the user toggles. No Turing-complete DSL
   (avoids Aurora's swamp; stays testable).
-- **Expressiveness = three layers, never code-in-CSV** (DECIDED; see SECURITY.md #4):
+- **Expressiveness = three layers, never code-in-CSV** (DECIDED; see security.md #4):
   **L1** the bounded vocab above (data; ~95%); **L2** safe value-expressions (`1d4`,
   `prof*2`, `ceil(level/2)`) via OUR dice+arithmetic parser — non-Turing-complete,
   whitelisted vars, no `eval`; **L3** plugins for the long tail. **Ordering DECIDED
@@ -671,7 +671,7 @@ fails that: users can't find it. So:
 - **No auto-migration** from the old `%APPDATA%\io.github.ferndragonborn.charnik` for now — we deploy fresh to test
   seeding (a migrate/import path can come later).
 - All file IO stays confined to `dataDir`/roots via the **`Storage` interface + Tauri fs capability
-  scope** (see SECURITY.md).
+  scope** (see security.md).
 
 ---
 
@@ -718,7 +718,7 @@ is the IO layer.
 - **Minimal Rust**: mostly `tauri.conf.json` + capability files + official plugins; custom
   Rust commands only if a plugin can't cover something. (User doesn't know Rust → keep the
   Rust surface tiny.)
-- **No server → no LAN/IP/auth surface** (simpler security; see SECURITY.md). LAN/phone
+- **No server → no LAN/IP/auth surface** (simpler security; see security.md). LAN/phone
   access is therefore unavailable (accepted: standalone 99%).
 
 ### Second target: free web demo on GitHub Pages (desktop stays priority)
@@ -793,7 +793,7 @@ Libs (minimal): `papaparse`, `svelte-i18n`, `zod`; **Tauri v2** + plugins
 10. **XP** — optional `xp` field + `milestone|xp` toggle.
 11. **Data dir** — portable `dataDir` next to binary, auto-filled, overridable.
 12. **Dice roller, content-health view, change-log** — in scope. **PWA deferred.**
-13. **Testing** → [TESTING.md]; **Security** → [SECURITY.md] (separate plans).
+13. **Testing** → [testing.md]; **Security** → [security.md] (separate plans).
 14. **Packaging** — **`pnpm tauri build`** → per-OS installers (Win `.exe`/`.msi`, Linux
     AppImage). Toolchain: **Rust (rustup) + MSVC C++ Build Tools** (Win) + WebView2
     (present); webkit2gtk (Linux). **No server / no LAN.**
@@ -829,7 +829,7 @@ different file, `charnik.dev.json` in the APP repo — same name for both was a 
 - **CSV write-back footguns**: UTF-8 BOM + CRLF (Excel/Cyrillic), atomic writes, app
   writes only its own files, watcher ignores self-writes. (Addressed above; verify.)
 - **Multiclass spellcasting** + **concentration** + **prepared/known** = highest-bug
-  modules → dedicated tests (see TESTING.md), call out in P8.
+  modules → dedicated tests (see testing.md), call out in P8.
 - **Tauri toolchain**: needs **Rust (rustup) + MSVC C++ Build Tools** (Win); WebView2 is
   present. Not yet installed → install before Tauri wiring (TS side scaffolds without it).
   Per-OS builds. Keep the Rust surface minimal (official plugins, little/no custom Rust).
@@ -1009,29 +1009,29 @@ stay semi-manual.
   optional and OFF by default — many tables don't track it; when on, folds into N1's
   capacity bar. Lives in play-state; no migration concerns pre-release (see N1 note).
 
-### EXPR · L2 value-expression layer — BUILT (design → docs/internals/EFFECTS.md §3)
+### EXPR · L2 value-expression layer — BUILT (design → docs/internals/effects.md §3)
 
 The bounded L2 formula layer (value expressions + condition guards, the type/resolution rules, the
 worked examples, conditions/exhaustion-as-data) is **shipped** and its normative design lives in
-[`EFFECTS.md`](internals/EFFECTS.md) §3–§4. Delivered across EXPR-1..5 + CONDITIONS-1 (2026-07-17/19):
+[`effects.md`](internals/effects.md) §3–§4. Delivered across EXPR-1..5 + CONDITIONS-1 (2026-07-17/19):
 parser+evaluator (`expression-parser.ts` / `expression-evaluator.ts`), value expressions in tokens,
 condition guards + the ONE resolve stage (`resolveActiveEffects`, `dependency-graph.ts`), the
 dependency-order DAG (ability scores fold through the pipeline — A10), the typed-facts output
 (`collectFacts`), cantrip scaling, the roll-manip L1 tail (`reroll`/`min_die`, `d20_tests`,
 `speed.fly/swim`, `spell_dc`/`spell_attack`, `save.death`), and all 15 standard conditions carrying
 mechanical `effects` tokens in both editions. AUDIT SPEC2–SPEC7 (grammar / type / resolution
-decisions) are recorded in EFFECTS.md §3; git holds the per-phase log.
+decisions) are recorded in effects.md §3; git holds the per-phase log.
 
-### PLG · Plugin sandbox (L3 expressiveness) — BUILT (design → docs/internals/PLUGINS.md)
+### PLG · Plugin sandbox (L3 expressiveness) — BUILT (design → docs/internals/plugins.md)
 
 The QuickJS-in-WASM plugin layer is **shipped** (PLG-1..3, 2026-07-19): the registry + native
 handlers, the quickjs-emscripten (quickjs-NG sync) sandbox with the full PLG-SEC containment
 (zero-capability context, 5 ms / 8 MB budgets, JSON-string boundary, length-prefixed SHA-256
 consent hash stored OUTSIDE the dataDir, fail-closed counter, desktop-only), and the normative
-[`PLUGINS.md`](internals/PLUGINS.md) (`api: 1`) — all in `src/lib/effects/plugin-*`. Plugin-token failures
+[`plugins.md`](internals/plugins.md) (`api: 1`) — all in `src/lib/effects/plugin-*`. Plugin-token failures
 surface via `deriveIssues` → content health. The design decisions, the PLG-SEC containment
 checklist, the state model (three channels) and the authoritative derive stage-list are the
-design-of-record in [`PLUGINS.md`](internals/PLUGINS.md) and [`EFFECTS.md`](internals/EFFECTS.md) §4/§6 (AUDIT
+design-of-record in [`plugins.md`](internals/plugins.md) and [`effects.md`](internals/effects.md) §4/§6 (AUDIT
 SPEC1 / SPEC8 / SPEC9 map there); git holds the per-phase log. Open tails: the dedicated
 plugin-dependency notification view + portability / version awareness (fresh-eyes review #2).
 
@@ -1061,10 +1061,10 @@ were learned the hard way.
   tray, retroactive advantage as a three-state pill, the reroll pill, the one-line strip. Tails are
   listed on UBUG-20 itself.
 - **W2 · The roller → ROLLER-N → UBUG-11. ROLLER-N and UBUG-21 closed 2026-08-24**; the ledger,
-  **[`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md)**, stays as the record of the 2026-08-10 audit that
+  **[`docs/roller-plan.md`](roller-plan.md)**, stays as the record of the 2026-08-10 audit that
   turned "add a loop for N attacks" into "the result SHAPE is what aged", and of the organ's design.
   What the wave still owes: `UBUG-11` — a class action that makes N attacks (Flurry of Blows) needs
-  the `rolls` intent in ACTIONS.md to CALL the roller, which now exists to be called.
+  the `rolls` intent in actions.md to CALL the roller, which now exists to be called.
   **A session of live testing on 2026-08-25 (`48a68c3`..`6c8d82e`) closed 27 findings against the
   built organ** — the model ones: the CARET IS IN THE LINE (← / Ctrl+Z / Ctrl+arrow walk it token by
   token, and typing inserts where it stands), a line's ROLE decides its vocabulary (a damage type is
@@ -1177,7 +1177,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   REAL loader. (shot.mjs pixel-diffs the first viewport only — `body` never scrolls — so the groups
   below the fold are eyeballed, as on every long route.)
   **Tests moved off the prose onto `detail`**: the identifier is the durable fact, the sentence is
-  copy (docs/internals/TESTING.md). Ties docs/internals/characters.md ▸ A tracker surfaces, it never decides (a message the
+  copy (docs/internals/testing.md). Ties docs/internals/characters.md ▸ A tracker surfaces, it never decides (a message the
   player can't act on is the same failure as a silent one) and AGENTS.md ▸ Taste (errors surface).
   **ARCH-1's copy prerequisite is cleared** — the UA pass now translates the rewritten copy once. Its
   OTHER blocker stands (W3: the roller still writes English sentences into `log.jsonl`, and prose
@@ -1213,7 +1213,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   of the index — never silently given a list. EK/AT are PHB, not SRD, so coverage lives in fixtures.
 - [ ] **D16 · generalized player-choice model.** Half-feat ability-choice is DONE (§ Builder, 2026-08-02);
   still open: Magic Initiate spell picks + Skilled skill/tool-choice grants — both need the shared
-  choice UI (see `docs/N2-PLAN.md` feat tail). One "player choice at a slot" abstraction covers all.
+  choice UI (see `docs/n2-plan.md` feat tail). One "player choice at a slot" abstraction covers all.
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
@@ -1266,7 +1266,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   (2) damage (weapon/spell dice + mod) with a **Crit toggle**"). Only stage 1 was ever built. The tray
   needs the two-part structure the ROLL CARD already renders — to-hit and damage as separate,
   separately-adjustable sub-rolls — which is the model `ROLLER-N` must introduce anyway
-  (ROLLER-PLAN.md). Building it here first would build it twice.
+  (roller-plan.md). Building it here first would build it twice.
   **Interim honesty — TAKEN 2026-08-21, because the roller did slip.** The tray's heading now reads
   "Greataxe · to hit" and carries the queued damage as a read-only line ("then 1d12 +3 slashing —
   rolled with it, not from this pool"), so the pool can no longer be read as the whole attack. It is
@@ -1280,7 +1280,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   structure and buys none of it.
 - [x] **ROLLER-N · one roller that fires N independent sub-rolls — CLOSED 2026-08-24 (promoted to its
   own item 2026-08-09; working ledger + the 2026-08-10 audit behind it →
-  [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md)).**
+  [`docs/roller-plan.md`](roller-plan.md)).**
   **Slices 5–6 (2026-08-24): the ROLLER ORGAN.** A roll is built as LINES carrying a role — a d20
   test is a verdict, damage is a quantity, and they are different kinds of thing rather than two
   instances of "a roll". One action fires N instances of them, logged per line and toasted as one
@@ -1309,13 +1309,13 @@ holds the done-work log; these are the OPEN tails it carried):**
   ONE instance and toasts "N×: make N separate rolls at this level", a reminder standing in for the
   rolls (item 9: never a silently-wrong single big die) — it can now prefill the roller with a
   `×N` count pill instead. (2) **UBUG-11** — a class action that makes N attacks (Flurry of Blows =
-  2× Unarmed Strike); that item keeps its own half, the `rolls` intent in ACTIONS.md. (3) any future
+  2× Unarmed Strike); that item keeps its own half, the `rolls` intent in actions.md. (3) any future
   multiattack. **Built once here** — a second per-feature path is the failure mode that was being
   avoided. **Carried `UBUG-21` with it** (above), and closed it: the tray only ever built the to-hit
   half, and the line model is the same one that fixes it.
   **The audit says the shape itself is what aged** — the roller answers with a formatted STRING that
   the UI parses back, so provenance, damage type and crit-doubling have nowhere to live, and the
-  advantage amend/undo does string surgery. Details, decisions and slices are in `ROLLER-PLAN.md`;
+  advantage amend/undo does string surgery. Details, decisions and slices are in `roller-plan.md`;
   the two items below are the ones already agreed.
   **Fold the advantage two-state while in here (maintainer, 2026-08-10).** One fact is currently
   spelled twice under two names — `AdvantageRoll.mode?: 1 | -1` on the rolled result and
@@ -1336,10 +1336,10 @@ holds the done-work log; these are the OPEN tails it carried):**
   a player who keeps cycling keeps getting new dice to pick from. That defeats the exact property the
   control was justified with. The fix is that a roll records the dice it drew and the mode merely
   selects which counts — NOT pre-rolling two batches for every roll, which would draw dice nobody
-  asked for and change the RNG consumption of every roll in the app (`ROLLER-PLAN.md` has the shape). ~~Contract `DiceTrayRequest.instances` is already fixed~~ — **WRONG, corrected
+  asked for and change the RNG consumption of every roll in the app (`roller-plan.md` has the shape). ~~Contract `DiceTrayRequest.instances` is already fixed~~ — **WRONG, corrected
   2026-08-10: no such field exists anywhere in `src`.** Nothing of the contract is settled; the loop,
   the grouped roll/toast/log rendering and the request shape are all unbuilt. The reminder text stays the fallback for what the roller
-  can't express. Ties ROLLER-PLAN.md + the RollToast row model (UBUG-12).
+  can't express. Ties roller-plan.md + the RollToast row model (UBUG-12).
 - [x] **RES-NAME · a resource pool has a NAME of its own — DONE 2026-08-21** (maintainer's call on
   the hunch filed the same day: "ім'я у ресурсу має бути окремим, а не виводитись із айді").
   **What was wrong.** A pool's `id` is identity — the key in `play.resourcesSpent` on disk, what
@@ -1488,13 +1488,13 @@ holds the done-work log; these are the OPEN tails it carried):**
   app can roll attacks. The N2 executor (`runActionToken`) resolves heal/roll/apply_effect/apply_condition/
   gain_action/rest, but a "make N attacks" action degrades to text. **Rework how class actions resolve:**
   let an action fire ATTACK sub-rolls (to-hit + damage) through the existing `attackRoll` path — Flurry =
-  2× Unarmed Strike, and the general case for any "make an attack" ability. Ties into ACTIONS.md (the
-  `rolls` intent field) + ROLLER-PLAN.md. The whole "action from a class
+  2× Unarmed Strike, and the general case for any "make an attack" ability. Ties into actions.md (the
+  `rolls` intent field) + roller-plan.md. The whole "action from a class
   feature" model is the target, not just Flurry.
   **Split 2026-08-09:** the "fire N sub-rolls" half is `ROLLER-N` (a general roller, also what a
   `count`-scaling cantrip needs — re-reported the same day on a Warlock: Eldritch Blast at level 5 just
   toasts "2×: make 2 separate rolls at this level"). **What stays UBUG-11** is the action half: the
-  `rolls` intent in ACTIONS.md that lets a class feature CALL that roller with the right weapon, instead
+  `rolls` intent in actions.md that lets a class feature CALL that roller with the right weapon, instead
   of degrading to `note:` text. Don't build a Flurry-shaped roller here.
 - [x] **UBUG-12 · Roll feedback is hard to read — the toast became a component (2026-08-09, design
   5A from `design-preview/toast-update/`).** Superseded by UBUG-20, which made that component the ONE
@@ -1586,7 +1586,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   Playbar carries the live control on the same roll); the toast has no labelled close control, which
   is its own a11y nit since the card IS a labelled dismiss button today; the volley chooser waits on
   `ROLLER-N`. That an amendment never reaches the append-only `log.jsonl` is finding G in
-  [`docs/ROLLER-PLAN.md`](ROLLER-PLAN.md), not a tail of this item.
+  [`docs/roller-plan.md`](roller-plan.md), not a tail of this item.
 - [x] **UBUG-10 · Spellbook "show on sheet" (eye) did nothing.** Fixed end-to-end via a persisted
   `ui.spellsHidden`; pins likewise persist in `ui.spellsPinned` (D3), no demo hardcode.
 - [x] **REL-3 · Desktop content re-seed on update.** A `CONTENT_SEED_VERSION` marker re-seeds
@@ -1641,12 +1641,12 @@ holds the done-work log; these are the OPEN tails it carried):**
   - **There is no pack version and none is needed.** `#content-hash` answers "did THIS file change",
     which is finer-grained than a pack semver AND lines up exactly with the per-file hand-edit check.
 
-  **Network channel: Rust, not the webview.** `SECURITY.md` §5 states "No remote content loading" and
+  **Network channel: Rust, not the webview.** `security.md` §5 states "No remote content loading" and
   the CSP governs the webview's network. The precedent to copy is §1's updater: an outbound HTTP
   *client* in Rust (`plugin-updater`), never webview `fetch`. Host allowlist in capabilities. Doing this
   via webview fetch would require relaxing a shipped security invariant — don't.
 
-  **Applying is always a user action** (`SECURITY.md` §7, "never silent overwrite"). Content is rules;
+  **Applying is always a user action** (`security.md` §7, "never silent overwrite"). Content is rules;
   changing them mid-campaign unasked is the worst thing a tracker can do.
 
   **Hand-edited files: the rule already exists and is unit-tested — reuse REL-3.** This was flagged as
@@ -1759,12 +1759,12 @@ holds the done-work log; these are the OPEN tails it carried):**
      pack is the unit of INSTALLING (one pin, one uninstall). `reposDueForCheck` also skips a repo
      whose every pack is pinned: a request whose answer we'd refuse to use.
   2. `[x]` **The fetcher, in Rust** — `tauri-plugin-http` behind a `RemoteFetcher` seam
-     (`content/remote/`), never webview `fetch` (SECURITY.md §5). GitHub is a HOST ADAPTER over a
+     (`content/remote/`), never webview `fetch` (security.md §5). GitHub is a HOST ADAPTER over a
      plain HTTPS fetcher, not the model: `checkRepo` sends `If-None-Match` and a `304` means the
      whole check cost nothing. **Finding worth keeping: a static capability allowlist and "paste any
      URL" are mutually exclusive** — a capability is compiled in and cannot be widened at runtime —
      so v1 allows the two GitHub hosts, and an arbitrary self-hosted URL is a decision deferred to
-     whoever needs it (SECURITY.md §7 states the two options). **Desktop only.**
+     whoever needs it (security.md §7 states the two options). **Desktop only.**
   3. `[x]` **check → diff → apply.** `diffPack` compares by GIT BLOB SHA (what a tree listing
      gives), so "did this change?" needs no download; `isUserModified` is reused verbatim for the
      hand-edit rule, so a file you edited is `preserved`, never overwritten. Applying is
@@ -2060,7 +2060,7 @@ holds the done-work log; these are the OPEN tails it carried):**
     every parser bound (L2 512/depth 32, CSV 20 MB, pack 200 files/50 MB, repo 50 packs, tree
     `truncated`), the CSP, "applying is always a click", git-tree symlink blobs, and the four narrow
     Rust commands. `NodeStorage` validates differently from the shared guard but contains just as
-    well (SECURITY.md §3).
+    well (security.md §3).
   - **Verified live**, not only in tests: `/dev/packs-write` extended with the new invariants and run
     inside the Tauri app on Windows — 24/24, and it reports that this filesystem folds case. Note the
     probe had been asserting the OLD, wrong state machine and passing; a probe is only as good as the
@@ -2144,7 +2144,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   project value; coupling the model to one forge would break it for nothing.
   - **What actually blocks it is the capability, and no amount of TS solves that.** A Tauri
     capability is compiled into the binary and cannot be widened at runtime by config, by a pasted
-    URL, or by a bug in the webview — which is exactly why it is the boundary (SECURITY.md §5/§7).
+    URL, or by a bug in the webview — which is exactly why it is the boundary (security.md §5/§7).
     So today `src-tauri/capabilities/default.json` allows `api.github.com` +
     `raw.githubusercontent.com` and nothing else, and `checkRepo` answers `unsupported` for anything
     else. Widening it wholesale would hand any pasted URL the network, which is the one thing the
@@ -2165,7 +2165,7 @@ holds the done-work log; these are the OPEN tails it carried):**
     Downloaded bytes are verified against the git blob SHA the tree listing published. That is
     INTEGRITY against a truncated or swapped transfer; it says nothing about the publisher, so a
     typo-squatted URL or an account takeover passes every check. That remains the posture, stated in
-    SECURITY.md §7 — not an omission waiting to be closed.
+    security.md §7 — not an omission waiting to be closed.
 
     **Why signing was dropped: a pack with more than one author has nobody to sign it.** The key ends
     up in CI, where "signed" means "somebody could push to main" — which is what the blob SHA already
@@ -2233,7 +2233,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
 - [x] **SEC-2 · Every `{@html}` goes through the sanitizer** — no hand-rolled escaping; see
-  `docs/internals/SECURITY.md`.
+  `docs/internals/security.md`.
 **Data versioning (DECIDED 2026-07-06 — design below; surfaced in the refactor, 2026-07-05):**
 - **DATA-VER-1 · content versioning — BUILT (2026-07-06, tasks 1–5; task 6 closed 2026-08-14).**
   Design-of-record: a
@@ -2303,7 +2303,7 @@ holds the done-work log; these are the OPEN tails it carried):**
 **Effects engine (finish the vocab, add authoring):**
 - [x] **Custom-modifier UI** — DONE. Combat "Custom modifier" builder (grouped target · +/− ·
   amount) → `flat_bonus` token, applied live via the reactive sheet.
-- [x] **The rest of the L1 vocab is mechanically applied** — see `docs/internals/EFFECTS.md`.
+- [x] **The rest of the L1 vocab is mechanically applied** — see `docs/internals/effects.md`.
 - [~] **Feat stat/skill bonuses** — engine folds feat `effects` already (derive-gather pushes feat
   rows). **Started (2026-08-02):** convert.mjs now PRESERVES authored feat `effects` (was wiped on
   re-run, like class_features); **Alert (2024)** encoded faithfully =
@@ -2319,7 +2319,7 @@ holds the done-work log; these are the OPEN tails it carried):**
     conditional bonuses (Archery +2 ranged attack), armor-gated bonuses (Defense +1 AC while armored),
     once-per-turn damage rerolls (Savage Attacker / Great Weapon Fighting), spell grants (Magic
     Initiate), skill/tool CHOICE grants (Skilled — needs a choice UI too).
-- [x] **Plugin sandbox** (QuickJS-WASM) — see `docs/internals/PLUGINS.md`.
+- [x] **Plugin sandbox** (QuickJS-WASM) — see `docs/internals/plugins.md`.
 **Spellcasting follow-ups:**
 - [~] **Resource subsystem** — engine + tracker DONE. `grant_resource:<id>:<max>:<recharge>` parsed
   into resource pools (`collectResources`, data-driven / class-agnostic — rage, ki, sorcery points,
@@ -2401,7 +2401,7 @@ here and was removed in the 2026-07-27 plan trim; git holds the detail.)
 
 A coordinated set: split the wiki detail into components, type the loader properly, and harden
 the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below; live shapes in
-`docs/SURFACE.md`). Ordering + open decisions below.
+`docs/surface.md`). Ordering + open decisions below.
 
 - [x] **WD-1 · Split `WikiDetail`.** Read + translate parity only; `editor` mode stayed a stub.
   **The note this carried is CHECKED and closed (2026-08-22):** the Cast action does show on spells.
@@ -2590,7 +2590,7 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
 
 ## Implementation roadmap (phased)
 1. **Scaffold** — SvelteKit (**`adapter-static` SPA**) + **pnpm** + lint; test tooling
-   (see TESTING.md); **`Storage` interface + node/in-memory impl**; `schemaVersion`
+   (see testing.md); **`Storage` interface + node/in-memory impl**; `schemaVersion`
    convention; **frontend conventions pinned** (store shape `activeSystem/activeLocale/
    theme`, CSS token contract, `t()`+`dir`/RTL, route map, thin-component rule, **a11y +
    keyboard nav incl. Tab order & `Ctrl+K`**); `package.json` scripts (pnpm); write
@@ -2614,8 +2614,8 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
    `log.jsonl`, autosave/backups, bundle, missing-content) + tests.
 7.5 **Frontend architecture** — component tree, sheet layout, props from core types,
    store/`$derived` wiring for live switches. (UX pattern contract → `internals/ui.md`;
-   live component inventory → generated `docs/SURFACE.md`. `FRONTEND.md` retired 2026-08-04, its
-   living contract folded into internals/ui.md, its inventory superseded by SURFACE.md.)
+   live component inventory → generated `docs/surface.md`. `FRONTEND.md` retired 2026-08-04, its
+   living contract folded into internals/ui.md, its inventory superseded by surface.md.)
    **Layout model = modular panels + preset views (HYBRID, decided P1).** The UI is built
    from discrete **panels** (HP, combat stats, abilities, skills, attacks, spells,
    actions/maneuvers, conditions/effects, inventory, notes, …). It ships **named views** —
@@ -2775,10 +2775,10 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
 13. **Package** via **`pnpm tauri build`** (Win `.exe`/`.msi`, Linux AppImage (appimage-only, `tauri.linux.conf.json`)) +
     README (install, add-content-via-CSV, portable vs app-data mode).
 
-Security tasks are woven across phases per [SECURITY.md].
+Security tasks are woven across phases per [security.md].
 
 ## Verification
-Automated coverage and conventions live in [TESTING.md] (suites map to phases; run
+Automated coverage and conventions live in [testing.md] (suites map to phases; run
 `pnpm test`). Manual acceptance per feature: live switches (no reload); sources
 (2nd CSV, homebrew folder, toggle off, collision resolve); live reload (edit CSV on
 disk); portability (move JSON to fresh install → renders + flags missing; bundle opens

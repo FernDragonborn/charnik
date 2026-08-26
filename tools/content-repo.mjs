@@ -2,7 +2,7 @@
  * Where the SRD content lives — the ONE resolver for it.
  *
  * The content is its OWN repository (`charnik-content-srd`) so rules data can be corrected and
- * released WITHOUT shipping an app build (docs/PLAN.md · REL-4 slice 0). Clone it beside this repo
+ * released WITHOUT shipping an app build (docs/plan.md · REL-4 slice 0). Clone it beside this repo
  * and nothing needs configuring; anything else is a config or an env var. Everything that reads the
  * shipped CSVs from disk — the static-content vendoring step, the SRD converters, the content tests
  * — comes through here, so the location is stated in exactly one place.

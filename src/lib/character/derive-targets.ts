@@ -11,7 +11,7 @@ import type { TargetCheck } from '../effects/apply';
 
 // The target keys the sheet actually consumes, per kind. Kept here (not in the effects module) because
 // they are DERIVE's contract — the stats/rolls derive.ts computes; the economy-action (action/bonus/
-// reaction) targets `TurnEconomy.slotMax` consumes are documented in PLUGINS.md §4.4.
+// reaction) targets `TurnEconomy.slotMax` consumes are documented in plugins.md §4.4.
 const SAVE_TARGETS = ['saves', ...ABILITIES.map((a) => `save.${a}`)];
 const SKILL_TARGETS = [
 	'skills',

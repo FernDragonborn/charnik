@@ -6,7 +6,7 @@
 ## Reuse before you write
 
 **`node tools/surface.mjs`** (well under a second; `pnpm surface` is the same thing, slower)
-regenerates **`SURFACE.md`**, the catalog of everything reusable under `src/lib`: design tokens,
+regenerates **`surface.md`**, the catalog of everything reusable under `src/lib`: design tokens,
 global CSS classes, shared components, stores, library functions and types. A SessionStart hook
 regenerates it each session and a pre-commit hook regenerates and stages it. Never hand-edit it.
 
@@ -15,7 +15,7 @@ re-created here are **CSS classes** and **functions of every kind** — not only
 derivations, parsers, click handlers, rules math, formatters, and store accessors. A shared class
 lives in exactly one place (`styles/components.css`); a shared control is one component.
 
-`SURFACE.md` also carries a **"Duplicate suspects"** section from three detectors: same-name function
+`surface.md` also carries a **"Duplicate suspects"** section from three detectors: same-name function
 or `UPPER_SNAKE` definitions in two or more files, identical parameter-normalized one-liner arrow
 bodies, and identical literal arrays. It scans all of `src`, including routes and `.svelte` scripts,
 so it catches semantic duplicates that jscpd and knip cannot. It is a review list, not a gate.

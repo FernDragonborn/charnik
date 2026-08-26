@@ -147,9 +147,9 @@ Content edits are commits in the content repo. App code is commits here. A build
 ## Working on it
 
 `pnpm dev` · `pnpm test` · `pnpm lint` · `pnpm build` · `pnpm check` · `pnpm tauri dev` (needs Rust)
-· `pnpm restamp <file>` · `pnpm loc` · `node tools/surface.mjs`. Full tool notes: `docs/TOOLING.md`.
+· `pnpm restamp <file>` · `pnpm loc` · `node tools/surface.mjs`. Full tool notes: `docs/internals/tooling.md`.
 
-**Reuse before you write.** Before writing any code in `src/`, regenerate `docs/SURFACE.md`
+**Reuse before you write.** Before writing any code in `src/`, regenerate `docs/surface.md`
 (`node tools/surface.mjs`, well under a second) and grep for the concept — a class name, a formatter,
 a helper. The things most often re-created here are CSS classes and functions of every kind, not only
 obvious utilities. A shared class lives in exactly one place; a shared control is one component. If
@@ -188,7 +188,9 @@ offer two or three **rendered** variants — they are picked from seeing them, n
 - Comments carry **why**, not what. If a name cannot capture a function's essence, it is doing too
   much — split it, don't comment around it. A comment is not a changelog; git holds that.
 - Names are verbose and self-evident, in code and in CSS. `rollDie(sides, rng)`, not `one(...)`.
-  A module that exports one class is named after that class.
+  A module that exports one class is named after that class. **Markdown files are kebab-case**
+  (`work-artifacts.md`, `rules-core.md`) — the only exceptions are the root files an ecosystem
+  already spells for us: `README`, `CHANGELOG`, `LICENSE`, `COPYING`, `AGENTS`, `CLAUDE`.
 - One name per fact everywhere. Only the case convention may differ (`is_bloodied` ↔ `isBloodied`).
 - Everything is typed, and the linter bans the escape hatches — `any`, `!`, `@ts-ignore`, unsafe casts.
   If a value can be absent, model that deliberately rather than reaching for `T | undefined`.
@@ -228,15 +230,15 @@ offer two or three **rendered** variants — they are picked from seeing them, n
 
 `docs/README.md` is the full map. What you will reach for most:
 
-- **`docs/PLAN.md`** — the authoritative spec and the only place that says what is still **open**.
+- **`docs/plan.md`** — the authoritative spec and the only place that says what is still **open**.
   When a decision there proves wrong, fix it in the same change.
 - **`docs/internals/`** — how the software works, in the present tense, one file per subsystem:
   `overview` (the seams and the path a number takes) · `rules-core` · `content` · `packs` ·
   `characters` · `ui` (the UX pattern contract lives here) · `tooling` (the repo's own tools and
   their traps) · `work-artifacts` (where planned work lives, how the plan is pruned).
-- **`docs/internals/EFFECTS.md`** — the normative effects spec, with `PLUGINS.md` and `ACTIONS.md` as
-  its companions. `TESTING.md` and `SECURITY.md` sit beside them.
+- **`docs/internals/effects.md`** — the normative effects spec, with `plugins.md` and `actions.md` as
+  its companions. `testing.md` and `security.md` sit beside them.
 - **`docs/internals/compatibility.md`** — the chokepoints where a 5e-only assumption would block
   another game system later. Read it before touching the fold pipeline, the effect grammar, or the
   schemas.
-- **`docs/SURFACE.md`** — generated catalog of everything reusable. Never hand-edit it.
+- **`docs/surface.md`** — generated catalog of everything reusable. Never hand-edit it.

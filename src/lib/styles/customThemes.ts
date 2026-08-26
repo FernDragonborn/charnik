@@ -6,7 +6,7 @@
  *
  * The built-in dark/light themes live in tokens.css; these are ADDITIVE user themes on top.
  *
- * SECURITY (docs/internals/SECURITY.md — bounded, no injection/eval): theme values may come from user files
+ * SECURITY (docs/internals/security.md — bounded, no injection/eval): theme values may come from user files
  * (untrusted). We only emit (a) token NAMES from the known themeable set and (b) VALUES that match a
  * strict color/length grammar — no braces, semicolons, url(), @-rules or comment markers can escape
  * a declaration and inject a rule. The id is slug-validated so it can't break the attribute selector.

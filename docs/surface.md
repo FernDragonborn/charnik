@@ -216,10 +216,10 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **MonsterHead** | `detail`, `monster`, `editable`, `draft` | The "shapka" of a monster stat block: eyebrow, title, the vitals + abilities panels, and the |
 | **NoCharacter** | — | Shared empty state for the play views (Combat / Spellbook) when there's no active character — |
 | **OrphanDialog** | `orphans`, `startAt`, `graph`, `onDone` |  |
-| **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/PLAN.md · REL-4). |
+| **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/plan.md · REL-4). |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle: a filled star is pinned to the quick bar, an outline one is not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
-| **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/internals/PLUGINS.md §6): discovered plugin list |
+| **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/internals/plugins.md §6): discovered plugin list |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
 | **Roller** | `organ`, `onroll` | The roller ORGAN — the whole of what a roll looks like while you are building it, and the app's |
@@ -459,7 +459,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/character/derive-plugins.ts`
 
 - `interface PluginPrePassInputs`
-- `function applyPluginPrePass` — L3 plugin PRE-PASS (docs/internals/PLUGINS.md; stage 2½ — between resolve and the fold): resolve every * `plugin:` to…
+- `function applyPluginPrePass` — L3 plugin PRE-PASS (docs/internals/plugins.md; stage 2½ — between resolve and the fold): resolve every * `plugin:` to…
 
 ### `src/lib/character/derive-resource-options.ts`
 
@@ -1361,7 +1361,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function openDataDir` — Open the active data folder in the OS file manager (shows content/ + characters/).
 - `function repointDataDir` — Persist a chosen data folder WITHOUT moving anything — "just read from here now".
 - `function dirIsEmpty` — True when `dir` has no entries (or doesn't exist yet) — the precondition for an automatic move.
-- `function listDataDirFiles` — The current data folder's files — for the merge dialog's name table (see docs/PLAN.md).
+- `function listDataDirFiles` — The current data folder's files — for the merge dialog's name table (see docs/plan.md).
 - `interface MigrateOutcome`
 - `function migrateDataDir` — Move the data folder into an EMPTY target: copy every file `oldDir → newDir`, verify the copy is * complete (each sou…
 - `function mergeDataDir` — Merge the data folder into a NON-empty target: copy only the files the target lacks or that the * source has a newer …

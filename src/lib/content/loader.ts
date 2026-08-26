@@ -4,7 +4,7 @@
  * Storage-agnostic (works over Tauri fs, node-fs, in-memory, or a read-only fetch source —
  * so the same loader serves the desktop app AND the web build). Nothing here imports Tauri.
  *
- * Robustness is a first-class output, not an afterthought (see docs/internals/SECURITY.md +
+ * Robustness is a first-class output, not an afterthought (see docs/internals/security.md +
  * "missing content" invariant):
  *   - Invalid rows / unknown files / malformed locale columns are collected as
  *     `issues` (content-health) — never thrown. A bad row is skipped, the rest load.
@@ -209,7 +209,7 @@ function collectTranslationGaps(rows: LoadedRow[], locales: string[]): ContentIs
 
 /** One content root paired with the storage it lives in. Bundled SRD roots read from the
  *  read-only fetch/asset source; user homebrew reads from the writable user storage — the loader
- *  merges them into one graph (docs/PLAN.md "content merged from many files/roots"). */
+ *  merges them into one graph (docs/plan.md "content merged from many files/roots"). */
 export interface ContentSource {
 	storage: Storage;
 	root: string;

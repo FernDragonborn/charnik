@@ -1,7 +1,7 @@
 /*
  * L3 plugin PRE-PASS — stage 2½ of deriveSheet (between the resolve stage and the stat fold), split
  * out of derive.ts. Resolves `plugin:` tokens against the registry over the least-data ctx
- * (docs/internals/PLUGINS.md §4.2) and merges the results into the typed facts. A no-op when no plugin token /
+ * (docs/internals/plugins.md §4.2) and merges the results into the typed facts. A no-op when no plugin token /
  * no registry is present (the removability invariant), so this file only runs for plugin-using builds.
  */
 import { abilityModifier, type Ability } from '../rules/core';
@@ -42,10 +42,10 @@ export interface PluginPrePassInputs {
 	issues: EffectIssue[];
 }
 
-/** L3 plugin PRE-PASS (docs/internals/PLUGINS.md; stage 2½ — between resolve and the fold): resolve every
+/** L3 plugin PRE-PASS (docs/internals/plugins.md; stage 2½ — between resolve and the fold): resolve every
  *  `plugin:` token against the registry over the §4.2 least-data ctx. Returned TOKENS merge through a
  *  second collectFacts, CONTRIBUTIONS fold as host-stamped numeric facts, and a plugin-granted
- *  `apply_condition` expands ONE level (PLUGINS.md §4.3). No plugin tokens / no registry → a no-op
+ *  `apply_condition` expands ONE level (plugins.md §4.3). No plugin tokens / no registry → a no-op
  *  (removability invariant). Mutates `facts` + `issues`. `api:1` limit: the ctx hpMax + the granted
  *  condition's sub-tokens read the PRE-plugin state — plugins cannot feed the condition DAG. */
 export function applyPluginPrePass(o: PluginPrePassInputs): void {

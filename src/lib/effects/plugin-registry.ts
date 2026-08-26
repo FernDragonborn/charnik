@@ -1,5 +1,5 @@
 /*
- * L3 plugin REGISTRY + the derive pre-pass (docs/internals/PLUGINS.md is the normative `api: 1` spec).
+ * L3 plugin REGISTRY + the derive pre-pass (docs/internals/plugins.md is the normative `api: 1` spec).
  *
  * A `plugin:<namespace>:<handlerName>[:<args>]` token is a REFERENCE — code never lives in content. The pre-pass
  * (`expandPluginEffects`) resolves every such token once per derive through an injected
@@ -8,7 +8,7 @@
  * (zod, strict caps, finite numbers, whitelisted keys). A missing/disabled/over-budget/errored
  * plugin degrades the token to an inert note — a plugin can never break the sheet.
  *
- * Placement in the derive stage list (PLAN.md fresh-eyes #6): the pre-pass runs BETWEEN
+ * Placement in the derive stage list (plan.md fresh-eyes #6): the pre-pass runs BETWEEN
  * (2) resolve and (3) facts — returned `tokens` must ride `collectFacts` like content tokens.
  * Memoization: results memoized on (raw token, ctx-hash), the build/play ctx halves hashed
  * separately — a handler that never reads `ctx.play` stays cache-hot across HP ticks (§4.2).
@@ -18,7 +18,7 @@ import type { Ability } from '../rules/core';
 import { parseToken, EFFECT_KIND, type ActiveEffect, type EffectIssue } from './token-parser';
 import type { NumericFact } from './apply';
 
-// --- The ctx a handler receives (docs/internals/PLUGINS.md §4.2) ------------------------------------------
+// --- The ctx a handler receives (docs/internals/plugins.md §4.2) ------------------------------------------
 // Least-data by design: game numbers only, never names/notes/free text. Two sub-objects with
 // different lifetimes — `build` changes only on a build edit, `play` changes constantly.
 

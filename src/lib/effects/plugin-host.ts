@@ -1,7 +1,7 @@
 /*
  * L3 plugin HOST — discovery + consent hashing (pure logic; the reactive store and registry wiring
- * live in plugin-store.svelte.ts). Normative contract: docs/internals/PLUGINS.md §2 (packaging) + §6
- * (lifecycle/consent) and the PLG-SEC checklist in docs/PLAN.md.
+ * live in plugin-store.svelte.ts). Normative contract: docs/internals/plugins.md §2 (packaging) + §6
+ * (lifecycle/consent) and the PLG-SEC checklist in docs/plan.md.
  *
  * A plugin is a folder `<namespace>/` with `plugin.json` + `main.js`, read through the Storage seam
  * (own-your-data: a plugin is a folder you can read; tests use MemoryStorage). It lives EITHER in
@@ -22,11 +22,11 @@ import { z } from 'zod';
 import type { Storage } from '../storage/types';
 import { readStored, writeStored } from '../util/persist';
 
-/** `main.js` size cap (docs/internals/PLUGINS.md §2). */
+/** `main.js` size cap (docs/internals/plugins.md §2). */
 const MAX_MAIN_JS_BYTES = 256 * 1024;
 /** `plugin.json` sanity cap (a manifest is a few hundred bytes; anything huge is hostile). */
 const MAX_MANIFEST_BYTES = 8 * 1024;
-/** The namespace/folder grammar (docs/internals/PLUGINS.md §1) — lowercase only, no `.`/`/`/`\`, so traversal is
+/** The namespace/folder grammar (docs/internals/plugins.md §1) — lowercase only, no `.`/`/`/`\`, so traversal is
  *  unrepresentable; ANY folder not matching is rejected (incl. Windows case-folded lookalikes:
  *  matching is exact, `My-Homebrew` never silently resolves to `my-homebrew`). */
 const NAMESPACE_RE = /^[a-z0-9][a-z0-9-]{0,31}$/;

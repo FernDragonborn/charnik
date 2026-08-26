@@ -151,7 +151,7 @@ async function checkOneRepo(
 			continue;
 		}
 		// `download` mode fetches the bytes NOW so applying is instant and works offline. It is still
-		// only a download: nothing under `content/` is touched until the user clicks (SECURITY.md §7).
+		// only a download: nothing under `content/` is touched until the user clicks (security.md §7).
 		const parsed = fetchRepo(repo);
 		if (packConfig.updates === UPDATE_MODE.download && parsed && hasWrites(pending.diff)) {
 			await stagePackUpdate({
@@ -249,7 +249,7 @@ async function whoBreaks(
 
 /**
  * Apply ONE pack's pending update. Always called from a click — never from `checkNow`, never on a
- * timer (SECURITY.md §7). Returns what happened; on failure nothing was written.
+ * timer (security.md §7). Returns what happened; on failure nothing was written.
  */
 export function applyUpdate(
 	pack: string,

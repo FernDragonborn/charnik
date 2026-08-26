@@ -1,7 +1,7 @@
 /*
  * A JSON config FILE in the data root that has SEVERAL owners.
  *
- * `charnik.config.json` is the app config (docs/PLAN.md "Config files": dataDir, roots, toggles,
+ * `charnik.config.json` is the app config (docs/plan.md "Config files": dataDir, roots, toggles,
  * rule-options, settings) — the pack registry is one section of it, not the file. The obvious
  * implementation, `write(JSON.stringify(myState))`, quietly makes the first writer the file's owner
  * and every later one a data-loss bug: pinning a pack would drop rule-options it never knew about,

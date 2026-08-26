@@ -1,6 +1,6 @@
 # Automated dependency updates — the app's security posture assumes it may outlive active
 # maintenance: a library bump must be able to close a vulnerability without anyone hand-rolling
-# a fix (docs/PLAN.md, PLG-SEC #10). Minor/patch bumps are grouped to keep PR noise low;
+# a fix (docs/plan.md, PLG-SEC #10). Minor/patch bumps are grouped to keep PR noise low;
 # security advisories always get their own PR regardless.
 version: 2
 updates:

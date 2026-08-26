@@ -3,7 +3,7 @@
 > **What this is:** my execution ledger for the **N2 activatable-actions** phase — clicking a
 > data-defined ability in play (Second Wind, Action Surge, Lay on Hands, smites, Channel Divinity)
 > and having it spend/heal/roll/apply through the systems that already exist. Working notes, not the
-> spec (that's **`docs/internals/ACTIONS.md`** — the normative intent/executor model — and `docs/PLAN.md` N2).
+> spec (that's **`docs/internals/actions.md`** — the normative intent/executor model — and `docs/plan.md` N2).
 > `[ ]` open · `[~]` partial · `[x]` done+verified. Update it in the same change as the code.
 >
 > **Supersedes `docs/FEATS-PLAN.md`** (retired 2026-08-02): the feat phase's encodable (tier-1/2) work
@@ -14,7 +14,7 @@
 ## Why this phase
 
 `savage_attacker` and the active-ability feat tail are blocked on the **`onUse` write-half**
-(`docs/internals/ACTIONS.md`): using an ability = validate an **intent** `{rolls, spend, effects, hp, tempHp,
+(`docs/internals/actions.md`): using an ability = validate an **intent** `{rolls, spend, effects, hp, tempHp,
 cost, notes}`, then execute it through existing systems. `passive` (the derive read-half) is built;
 `onUse`/`onEvent` are the deferred write-half. Activatable abilities are **core to the play-tracking
 mission**, so we build the N2 foundation rather than one-off hacks.
@@ -31,8 +31,8 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
   toasts, but explicitly does NOT cost the turn slot or run `heal:`/`roll:`/`apply_condition:` (its own
   comment: "wire to the dice tray in a follow-up; v1 surfaces the note: text").
 
-**⇒ N2's first slice = COMPLETE that executor** (not a from-scratch build). Matches `docs/internals/ACTIONS.md` §2
-+ `docs/PLAN.md` N2 ("activatable actions = COMPOSITION of existing systems — no new engine").
+**⇒ N2's first slice = COMPLETE that executor** (not a from-scratch build). Matches `docs/internals/actions.md` §2
++ `docs/plan.md` N2 ("activatable actions = COMPOSITION of existing systems — no new engine").
 
 ## First slice — complete the executor + Second Wind
 
@@ -44,7 +44,7 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
    `action-executor.svelte.ts`, which the VM hands HP + tray + economy): validate (`canAffordOption` AND the
    turn slot is free) → then deduct (`spendOption`, the resource math it already does) + spend the turn
    slot (`economy.trySpend`, `action_type`→slot; `free`=none) + execute the action token. Validate
-   EVERYTHING before any mutation (ACTIONS.md core rule). Tests: `combat.test.ts` "N2 executor" —
+   EVERYTHING before any mutation (actions.md core rule). Tests: `combat.test.ts` "N2 executor" —
    both all-or-nothing directions (no bonus left / pool exhausted → nothing applied).
 2. `[x]` **Action-token execution — ALL DONE (`runActionToken`).** `heal:<formula>` → `rollFormula`
    → `hp.current` clamped to `hpMax` + log; `roll:<formula>` → `rollFormula` → `tray.pushRoll` + log;
@@ -65,7 +65,7 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
    the bonus + the one use, then the row disables. Screenshots in `design-preview/n2-second-wind-*.png`.
    - **2024 Second Wind short-rest recharge — FIXED (`<this commit>`).** RAW: regain ONE use on a Short
      Rest + all on a Long Rest. Extended the `Recharge` enum with `short_one` (an open enum member, NOT a
-     boolean partial-recharge flag — the rule this triggered, docs/AGENTS.md ▸ Taste (open enums, never booleans) / CLAUDE.md): one
+     boolean partial-recharge flag — the rule this triggered, AGENTS.md ▸ Taste): one
      new member in `spellcasting.ts`, one alternation in the token parser, one branch in `rest()`, one
      `rechargeLabel` case. 2024 SW row now `...:short_one`. 2014 SW/AS + 2024 AS ("short or long rest" =
      full) stay `short` (RAW-exact). Tested: short rest regains one, long rest regains all.
@@ -143,7 +143,7 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
     property). Generalize the trigger dimension only when a 2nd declarative event-action ships (YAGNI).
 
 ### Deferred (OUT — keep the slice small)
-- Roll-dependent LOGIC (read the die, then decide) — ACTIONS.md marks it a later API.
+- Roll-dependent LOGIC (read the die, then decide) — actions.md marks it a later API.
 - Plugin `onUse` (`api:2`), `onEvent`, choice groups (N2 shape 3), Wild Shape, the rest of N2.
 
 ### Verification
@@ -174,4 +174,4 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
 - **Ship SRD-only**: Fighter + Second Wind + Action Surge are SRD; PHB actives are engine-support test
   targets (homebrew authors add rows).
 - **Executor is isolated/removable** — no new mutation paths; every intent field lands on an existing
-  system (ACTIONS.md §2). Core tests must not depend on it.
+  system (actions.md §2). Core tests must not depend on it.

@@ -1,5 +1,5 @@
 /**
- * Content-file hashing for the change/drift detector (DATA-VER-1, docs/PLAN.md).
+ * Content-file hashing for the change/drift detector (DATA-VER-1, docs/plan.md).
  *
  * We hash the WHOLE FILE — header directives included — minus two lines that are stamps ABOUT the
  * file rather than part of it (see `UNHASHED_DIRECTIVE`). Hashing only the body, as this did

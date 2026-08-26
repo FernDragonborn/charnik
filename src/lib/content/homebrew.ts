@@ -1,6 +1,6 @@
 /*
  * Homebrew authoring pipeline — turn a form draft into a validated CSV row and write it into the
- * user's homebrew content root (the "everything is doable from the UI" invariant, docs/PLAN.md).
+ * user's homebrew content root (the "everything is doable from the UI" invariant, docs/plan.md).
  *
  * The mechanics are pure/testable; only `saveHomebrewRow` touches Storage. A draft is a flat
  * `Record<string,string>` of CSV cell values (the form binds to it); we validate it through the

@@ -4,7 +4,7 @@
 	import { trapFocus } from '$lib/actions/trapFocus';
 	// Plugin consent — the house attention-dialog template, single-pane notice variant
 	// (charnik-dialog-design-template). Shown before a plugin is FIRST enabled, and again whenever
-	// its code hash changed (docs/internals/PLUGINS.md §6). Every manifest field renders as PLAIN TEXT
+	// its code hash changed (docs/internals/plugins.md §6). Every manifest field renders as PLAIN TEXT
 	// (PLG-SEC 15) and the url is display-only — never a clickable in-app link (PLG-SEC 7).
 	import { _ } from '$lib/i18n';
 	import LangSwitcher from '$lib/components/LangSwitcher.svelte';

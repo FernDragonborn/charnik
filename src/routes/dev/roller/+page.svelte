@@ -1,5 +1,5 @@
 <script lang="ts">
-	// DEV-ONLY preview of the roller organ (docs/ROLLER-PLAN.md · the "Roller Spec" design doc).
+	// DEV-ONLY preview of the roller organ (docs/roller-plan.md · the "Roller Spec" design doc).
 	// The organ is a live thing — typing, a menu, a caret — so the preview drives the REAL
 	// `RollerOrgan` with a fixture vocabulary rather than rendering fixed markup. Every button below
 	// is a starting state; the roller itself is the same one the dice tray mounts.

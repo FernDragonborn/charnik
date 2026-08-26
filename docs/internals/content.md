@@ -63,7 +63,7 @@ which is finer-grained than a pack-level version and lines up with the hand-edit
 **These are not manifests. Do not "clean them up":**
 
 - **`plugins/<ns>/plugin.json`** — a plugin is code, not data, and its manifest carries the consent
-  hash, which needs a stable non-executable subject (see `SECURITY.md`).
+  hash, which needs a stable non-executable subject (see `security.md`).
 - **`collisions.json`** — a decision between several sources, as above.
 - **Single-field markers** (`demo-seeded.json`, `content/.seed-version`) — they state one fact about
   the install; they index nothing.

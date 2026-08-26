@@ -950,7 +950,7 @@ describe('ResourceTracker · piece 3 spend-options', () => {
 
 /*
  * N2 executor — activateResourceOption composes resource + turn-slot spend + the action token,
- * ALL-OR-NOTHING (ACTIONS.md). Drives the real VM (economy + HP + resources). RNG unseeded → the heal
+ * ALL-OR-NOTHING (actions.md). Drives the real VM (economy + HP + resources). RNG unseeded → the heal
  * asserts a range, never an exact total. A `second_wind`/`action_surge` pool is granted via a play
  * effect (the same path the shipped fighter feature uses), so canAfford reads a real sheet resource.
  */
@@ -1312,7 +1312,7 @@ describe('CombatVM · Hit Dice', () => {
 
 /*
  * short_one recharge (2024 Second Wind: regain ONE use on a short rest, all on a long rest). An open
- * enum member — not a boolean partial-recharge column (docs/AGENTS.md ▸ Taste (open enums, never booleans)). Drives the real
+ * enum member — not a boolean partial-recharge column (AGENTS.md ▸ Taste). Drives the real
  * rest() so the sheet resource carries the recharge policy end-to-end.
  */
 describe('ResourceTracker · short_one partial recharge', () => {

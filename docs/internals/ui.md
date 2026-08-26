@@ -92,7 +92,7 @@ good", so they are pinned here and every component follows them.
    homebrew and user-created entities may set an image.
 
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
-`EyeToggle`, `RollButton`, `DialogShell`) — grep `SURFACE.md` before building another one.
+`EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.
 
 ## Every interactive element says so
 

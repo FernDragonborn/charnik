@@ -31,7 +31,7 @@
 		"plugin:test": "tsx tools/plugin-test.ts"
 	},
 	"simple-git-hooks": {
-		"pre-commit": "node tools/surface.mjs && git add docs/SURFACE.md && npx prettier --check . && npx eslint . && npx jscpd -c config/jscpd.json",
+		"pre-commit": "node tools/surface.mjs && git add docs/surface.md && npx prettier --check . && npx eslint . && npx jscpd -c config/jscpd.json",
 		"pre-push": "pnpm check && pnpm lint && pnpm test"
 	},
 	"prettier": {

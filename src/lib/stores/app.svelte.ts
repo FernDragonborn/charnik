@@ -1,4 +1,4 @@
-// App-level reactive state (pinned frontend convention, see docs/PLAN.md P1).
+// App-level reactive state (pinned frontend convention, see docs/plan.md P1).
 // Live-switchable with no reload. A saved character is bound to its OWN system (stored in its
 // JSON); the system a NEW character is built under is chosen on the Build page (draft.system).
 //
@@ -23,7 +23,7 @@ interface AppState {
 	activeEditions: SystemId[];
 	/** UI locale; content falls back to EN when a translation is missing. */
 	activeLocale: string;
-	/** Shipped default = dark slate (see docs/PLAN.md #18). */
+	/** Shipped default = dark slate (see docs/plan.md #18). */
 	theme: ThemeId;
 	/** User-authored themes (token overrides), injected at runtime as `[data-theme=id]` and selectable
 	 *  like the built-ins. The source of truth is the `themes/` files; this mirrors them (a fast cache

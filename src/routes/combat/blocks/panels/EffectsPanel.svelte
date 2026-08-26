@@ -256,7 +256,7 @@
 		</div>
 	{/if}
 	{#if s.facts.pluginNotes.length}
-		<!-- L3 plugin notes (PLUGINS.md §4.3) — PLAIN TEXT only (PLG-SEC 3), attributed to
+		<!-- L3 plugin notes (plugins.md §4.3) — PLAIN TEXT only (PLG-SEC 3), attributed to
 		     the carrying effect · plugin namespace, styled like the display-only rules notes -->
 		<div class="effect-section">
 			<div class="section-head"><Icon name="settings" size={13} /> Plugin notes</div>

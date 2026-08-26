@@ -1,7 +1,7 @@
 /*
  * PLG-1 behavioral tests — the registry seam + derive pre-pass with an INJECTED fake evaluator
  * (zero sandbox: proves the token grammar, host-side validation caps, memo economics, fail-closed
- * counter, and attribution rules from docs/internals/PLUGINS.md §4 with no QuickJS in sight).
+ * counter, and attribution rules from docs/internals/plugins.md §4 with no QuickJS in sight).
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { parseToken, EFFECT_KIND, type ActiveEffect, type EffectIssue } from './token-parser';
@@ -78,7 +78,7 @@ beforeEach(() => {
 	clearPluginMemo();
 });
 
-describe('parseToken — the plugin: token grammar (PLUGINS.md §1)', () => {
+describe('parseToken — the plugin: token grammar (plugins.md §1)', () => {
 	it('parses namespace/handlerName/args; args may contain further colons', () => {
 		const p = parseToken('plugin:my-homebrew:exploit-die:d8@5,d10@11');
 		expect(p.kind).toBe(EFFECT_KIND.plugin);

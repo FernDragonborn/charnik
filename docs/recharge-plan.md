@@ -3,8 +3,8 @@
 > **What this is:** my execution ledger for the three recharge/restore patterns the `Recharge` enum
 > can't express (the table from the 2026-08-02 design thread). Build order is dependency-forced:
 > Hit Dice (no deps) → onEvent regain (needs the N2 write-half) → item-charge `{trigger, amount}`
-> recharge (needs item-charge tracking). Normative homes: **`docs/internals/EFFECTS.md` §Recharge-model roadmap**
-> (the enum + why), **`docs/internals/ACTIONS.md`** (the onEvent intent model), **`docs/PLAN.md` B2** (hit dice).
+> recharge (needs item-charge tracking). Normative homes: **`docs/internals/effects.md` §Recharge-model roadmap**
+> (the enum + why), **`docs/internals/actions.md`** (the onEvent intent model), **`docs/plan.md` B2** (hit dice).
 > `[ ]` open · `[~]` partial · `[x]` done+verified. Update it in the same change as the code.
 > AGENTS.md ▸ Taste (open enums, never booleans) — extend by an enum member / subsystem, never a boolean flag.
 
@@ -74,7 +74,7 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
    (`short > short_one > long > other > consumable`) — the general rule for any "same uses, better
    recovery" upgrade. Still open: Evergreen Wild Shape needs Wild Shape tracked. Champion Heroic Rally is
    a different trigger (turn-start heal) → a future token. **Arbitrary "any action on any
-   event" = L3 plugin `onEvent` (scripting), NOT a wider L1 token.** See PLAN.md item 3.
+   event" = L3 plugin `onEvent` (scripting), NOT a wider L1 token.** See plan.md item 3.
 
 6. **Concentration UX — BEHAVIOR = variant A, SURFACE = B4. BUILT + app-verified 2026-08-04 (`1b7a4f0`).**
    `pendingConcentrationSave` VM state (set in `damage()`, replacing the old toast) → the HpPanel banner;
@@ -128,7 +128,7 @@ types attack names — that's friction with no data behind it. Two real cases:
 Surfaced during the concentration design; both fire on taking damage, so do them alongside/after the
 concentration work rather than as their own visits.
 
-- **Overkill instant death — DONE 2026-08-09** (with UBUG-15's death rules; see `docs/PLAN.md`). SRD
+- **Overkill instant death — DONE 2026-08-09** (with UBUG-15's death rules; see `docs/plan.md`). SRD
   2014 (verified, `tools/srd-src/2014/…:3642`): damage reduces you to 0 AND the **leftover ≥ your FULL
   Hit-Point maximum** (100%, not half) → instant death, no death saves. Shipped in `damage()` against
   `hpMax` (so hp_max effects count), landing on the shared `die('massive_damage')` seam; the SRD's own
@@ -271,4 +271,4 @@ generic `{trigger, amount}` recharge before this = speculative.
   deviations (docs/internals/content.md ▸ Where the shipped data comes from–1.2).
 - **Enums/subsystems, not booleans** AGENTS.md ▸ Taste (open enums, never booleans) — each new policy = a member or a
   subsystem seam, never a two-state flag.
-- **Executor is isolated/removable** — every intent field lands on an existing system (ACTIONS.md §2).
+- **Executor is isolated/removable** — every intent field lands on an existing system (actions.md §2).

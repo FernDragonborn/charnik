@@ -6,7 +6,7 @@
  * because its regexp engine honours the interrupt (PLG-SEC 1b — the canonical handler pattern runs
  * a regexp over hostile `args`, so ReDoS must be interruptible).
  *
- * Containment model (docs/internals/PLUGINS.md §5):
+ * Containment model (docs/internals/plugins.md §5):
  * - one RUNTIME per plugin (PLG-SEC 14 — no shared globals between plugins);
  * - zero-capability context: nothing injected; Date excluded via the intrinsics config;
  *   Math.random / WeakRef / FinalizationRegistry / performance / the `eval` binding neutered by
@@ -39,7 +39,7 @@ const LOAD_BUDGET_MS = 50;
 const MEMORY_LIMIT = 8 * 1024 * 1024;
 /** Sandbox stack limit, bytes. */
 const STACK_LIMIT = 256 * 1024;
-/** `main.js` size cap (docs/internals/PLUGINS.md §2) — enforced at discovery too; defense in depth here. */
+/** `main.js` size cap (docs/internals/plugins.md §2) — enforced at discovery too; defense in depth here. */
 const MAX_MAIN_JS_BYTES = 256 * 1024;
 
 /** Neuter the non-intrinsic determinism/side-channel surfaces (PLG-SEC 1) and freeze the result so

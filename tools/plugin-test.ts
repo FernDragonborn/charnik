@@ -1,5 +1,5 @@
 /*
- * Plugin fixture-runner CLI (docs/internals/PLUGINS.md §11) — runs YOUR handler in the REAL QuickJS sandbox
+ * Plugin fixture-runner CLI (docs/internals/plugins.md §11) — runs YOUR handler in the REAL QuickJS sandbox
  * with the real budgets and the real host-side validation, then prints the validated result or the
  * exact rejection reason. This is the same code path the app's derive pre-pass uses, so "works
  * here" = "works on the sheet".
@@ -66,7 +66,7 @@ if (!dir || dir.startsWith('--') || !rawToken)
 const parsed = parseToken(rawToken);
 if (parsed.kind !== EFFECT_KIND.plugin || !parsed.plugin)
 	fail(
-		`"${rawToken}" is not a valid plugin token (grammar: plugin:<namespace>:<handlerName>[:<args>], docs/internals/PLUGINS.md §1)`,
+		`"${rawToken}" is not a valid plugin token (grammar: plugin:<namespace>:<handlerName>[:<args>], docs/internals/plugins.md §1)`,
 	);
 
 let manifestRaw: string;

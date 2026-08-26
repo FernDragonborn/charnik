@@ -1,6 +1,6 @@
 # Charnik — Testing plan
 
-Companion to [PLAN.md](../PLAN.md). Tests are the **primary verification gate** —
+Companion to [plan.md](../plan.md). Tests are the **primary verification gate** —
 every roadmap phase ships a runnable suite (`pnpm test`) that proves it.
 
 ## Principle
@@ -60,7 +60,7 @@ divergences: ASI source (species vs background), weapon mastery (5.5e-only),
 encumbrance tiers (5e-only), over-capacity→5 ft, multiclass slot rules.
 
 ## High-risk modules (extra coverage)
-Per [PLAN.md] these historically break (Aurora failed several). **Coverage status (2026-07-16):**
+Per [plan.md] these historically break (Aurora failed several). **Coverage status (2026-07-16):**
 the effects engine, multiclass spellcasting, and level-up math have unit tests today; the
 **rule-blocks** (armor→spellcasting), **concentration** prompt fn, and **rests** (hit-dice /
 per-rest resources / 5.5e long-rest −1 exhaustion) items below are still LARGELY UNIMPLEMENTED —

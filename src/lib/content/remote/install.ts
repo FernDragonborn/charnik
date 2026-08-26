@@ -1,7 +1,7 @@
 /*
  * Applying an update (REL-4 slice 3) — the only part of this feature that writes.
  *
- * **Always a user action** (SECURITY.md §7): nothing here runs on a timer. Checking and even
+ * **Always a user action** (security.md §7): nothing here runs on a timer. Checking and even
  * downloading can be automatic; changing someone's rules mid-campaign cannot.
  *
  * **Pack-level all-or-nothing, on the network AND on disk.** Every byte is fetched first, so a
@@ -462,7 +462,7 @@ async function readCached(storage: Storage, sha: string): Promise<Uint8Array | n
 /**
  * Pre-download an update's bytes into the cache, so applying it later is instant and works offline
  * (the `download` update mode). Writes nothing into `content/`: downloading is not applying, and
- * applying stays a click (SECURITY.md §7). Failures are silent — a pre-fetch nobody asked to watch
+ * applying stays a click (security.md §7). Failures are silent — a pre-fetch nobody asked to watch
  * must not produce an error the user can't act on, and apply will simply fetch then.
  */
 export async function stagePackUpdate({

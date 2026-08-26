@@ -1,6 +1,6 @@
 /**
  * Content-file metadata directives (the `#content-<key>: <value>` header block) + the
- * required-field check that drives the "content meta review" modal (DATA-VER-1, docs/PLAN.md).
+ * required-field check that drives the "content meta review" modal (DATA-VER-1, docs/plan.md).
  *
  * The header is a run of leading `#content-<key>: <value>` comment lines before the CSV column
  * header, in any order. This module is the single parser + the pure classifier of what's missing;

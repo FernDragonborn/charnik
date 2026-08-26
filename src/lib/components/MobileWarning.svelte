@@ -4,7 +4,7 @@
 	import LangSwitcher from './LangSwitcher.svelte';
 	import { trapFocus } from '$lib/actions/trapFocus';
 
-	// The layout has NO responsive/mobile styling yet (docs/PLAN.md — mobile comes after the core).
+	// The layout has NO responsive/mobile styling yet (docs/plan.md — mobile comes after the core).
 	// A narrow viewport is the honest signal that the layout is broken here — not user-agent, which
 	// lies. Threshold picked empirically. Dismiss is in-memory only: this component lives in the root
 	// layout (never remounted across SPA navigation), so a dismissal lasts the whole visit but a real

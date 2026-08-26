@@ -3,7 +3,7 @@
  * graph, no effects, no Svelte: tables are passed in as plain data, so it's fully unit-testable
  * and the core stays framework-agnostic. The derive layer feeds it data from the graph.
  *
- * Model (docs/PLAN.md "Spellcasting model", fork 1): a slot IS a recharge-typed "castable pool"
+ * Model (docs/plan.md "Spellcasting model", fork 1): a slot IS a recharge-typed "castable pool"
  * tagged with a spell level; the UI renders level-tagged pools as pips. Multiclass slots are the
  * SUM of caster contributions into ONE full table (not the senior class); warlock Pact Magic is a
  * separate pool and contributes NOTHING to the shared caster level.

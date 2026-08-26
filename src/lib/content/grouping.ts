@@ -25,7 +25,7 @@ const homebrewFirst = (rows: LoadedRow[]): LoadedRow[] =>
 	[...rows].sort((a, b) => homebrewRank(a) - homebrewRank(b));
 
 /** How new a row's edition is. SYSTEMS is ordered oldest→newest, so its index IS the ranking and no
- *  edition id is named here — a `'5.5e' ===` test would be the 5e-ism docs/COMPATIBILITY.md warns of. */
+ *  edition id is named here — a `'5.5e' ===` test would be the 5e-ism docs/internals/compatibility.md warns of. */
 const editionRank = (r: LoadedRow): number =>
 	Math.max(-1, ...r.systems.map((s) => (SYSTEMS as readonly string[]).indexOf(s)));
 

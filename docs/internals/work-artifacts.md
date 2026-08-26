@@ -29,7 +29,7 @@ people read. Last, and still worth fixing, is shipped work listed as owed.
 
 ## Planned work belongs in the plan
 
-`docs/PLAN.md` is the tracker: it states what is **open**, with the outcome and constraints each item
+`docs/plan.md` is the tracker: it states what is **open**, with the outcome and constraints each item
 must satisfy. A status box is `[ ]` open, `[~]` decided or in flight, `[x]` done.
 
 **A box turns `[x]` only when the change is in code and verified.** A fix may be proposed, designed,
@@ -74,10 +74,10 @@ Then, before the doc dies:
 
    ```sh
    for pat in '^- \*\*' '^\*\*' '^#' '^- \[ \]' '^- \[~\]' '^  - \[ \]' '^- \[x\]'; do
-     echo "$pat  $(git show HEAD:docs/PLAN.md | grep -c "$pat")  ->  $(grep -c "$pat" docs/PLAN.md)"
+     echo "$pat  $(git show HEAD:docs/plan.md | grep -c "$pat")  ->  $(grep -c "$pat" docs/plan.md)"
    done
-   diff <(git show HEAD:docs/PLAN.md | grep -o '^- \[ \] \*\*[A-Za-z0-9-]*' | sort) \
-        <(grep -o '^- \[ \] \*\*[A-Za-z0-9-]*' docs/PLAN.md | sort)
+   diff <(git show HEAD:docs/plan.md | grep -o '^- \[ \] \*\*[A-Za-z0-9-]*' | sort) \
+        <(grep -o '^- \[ \] \*\*[A-Za-z0-9-]*' docs/plan.md | sort)
    ```
 
    Any unexplained delta is content you dropped. Account for each one out loud before committing —

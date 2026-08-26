@@ -7,7 +7,7 @@
  * user refreshes mid-edit.
  *
  * Phase B (later) will add a no-flash live reload (reset caches + bump a content-version signal that
- * views watch) — see docs/PLAN.md. Until then a webview reload is the reliable, simple answer.
+ * views watch) — see docs/plan.md. Until then a webview reload is the reliable, simple answer.
  */
 
 // Pending-write flushers (e.g. a debounced character autosave) — awaited before any reload.

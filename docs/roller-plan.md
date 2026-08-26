@@ -2,7 +2,7 @@
 
 > Scope: `src/lib/rules/dice.ts` (the pure roller), `src/lib/combat/roll.ts`, `src/lib/dice/roll-toast.ts`,
 > `src/lib/dice/roller*.ts` (the organ), `src/lib/components/Roller*.svelte`,
-> `src/routes/combat/roll-tray.svelte.ts`. Companion to `docs/PLAN.md` · `ROLLER-N`, which stays the
+> `src/routes/combat/roll-tray.svelte.ts`. Companion to `docs/plan.md` · `ROLLER-N`, which stays the
 > roadmap entry; this is the working detail.
 > `[ ]` open · `[~]` partial · `[x]` done+verified. Update it in the same change as the code.
 
@@ -132,7 +132,7 @@ numbers are the roller's own contract.
 
 ### J · The plugin contract makes the FORMULA STRING a public API and a trust boundary
 
-`PLUGINS.md`: *"Randomness belongs to the host. You never roll dice — you return dice FORMULAS …
+`plugins.md`: *"Randomness belongs to the host. You never roll dice — you return dice FORMULAS …
 Charnik's single dice path rolls them, so the roll log stays honest"*, with `rolls: [{label,
 formula}]` on the action contract. So `rollFormula` — the function with **UBUG-22**'s silent
 modifier loss — is the sandboxed-plugin entry point. That raises UBUG-22 from "a content bug" to
@@ -148,20 +148,20 @@ no such field anywhere in `src`. Corrected in PLAN. Also note `formula: string` 
 
 ### L · "This is a d20 test" is implied, not stated — and a plugin hook depends on it
 
-`PLUGINS.md` defines the hook group `d20_tests`, which "fans out to every d20 roll (saves,
+`plugins.md` defines the hook group `d20_tests`, which "fans out to every d20 roll (saves,
 checks/skills, attack, initiative)". Today that concept exists only as `{20: 1}` happening to be in
 the pool. Once a roll can carry sub-rolls, "which of these is the d20 test, and which kind" has to be
 explicit in the model or the hook has nothing reliable to bind to.
 
 ### M · Changing the draw ORDER breaks every seeded expectation — do it in one deliberate commit
 
-TESTING.md pins a seeded RNG for the dice roller as a determinism contract. Any reshuffle (rolling
+testing.md pins a seeded RNG for the dice roller as a determinism contract. Any reshuffle (rolling
 the advantage die at a different moment, pre-rolling anything) changes what a seeded sequence
 produces. Harmless live, noisy in tests — so it must be one intentional change, not a drift across
 slices. Keep `rngSequence`'s over-draw throw: it is what catches an accidental extra draw.
 
 **Property tests were missing for the roller specifically — ADDED 2026-08-24.** All four are in
-`rules/dice.test.ts` and in TESTING.md's list: total = Σ contributing dice + the one d20 that counts
+`rules/dice.test.ts` and in testing.md's list: total = Σ contributing dice + the one d20 that counts
 + mod; a kept advantage die is never worse than a dropped one; **cycling the advantage state never
 changes the multiset of dice drawn** (the property the 2026-08-22 leak violated); amend→flip→clear
 returns the roll exactly as it landed.

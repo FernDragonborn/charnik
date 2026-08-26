@@ -57,7 +57,7 @@ export interface RollMod {
 export interface NumericFact {
 	target: string;
 	/** `add`/`set` from flat_bonus/set_override; `floor`/`cap` from set_override's mode slot (A9);
-	 *  `mult` from `halve` (G4, ×½) and plugin `contributions` (PLUGINS.md §4.3). */
+	 *  `mult` from `halve` (G4, ×½) and plugin `contributions` (plugins.md §4.3). */
 	op: 'add' | 'set' | 'mult' | 'floor' | 'cap';
 	layer: Layer;
 	source: string;
@@ -149,7 +149,7 @@ export interface EffectFacts {
 	rerolls: RollMod[];
 	minDie: RollMod[];
 	unknown: { source: string; token: string }[];
-	/** Plain-text notes returned by plugin handlers (PLUGINS.md §4.3) — panel display only,
+	/** Plain-text notes returned by plugin handlers (plugins.md §4.3) — panel display only,
 	 *  rendered as TEXT (PLG-SEC 3). Filled by the plugin pre-pass, empty otherwise. */
 	pluginNotes: { source: string; text: string }[];
 }

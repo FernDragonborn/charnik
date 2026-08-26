@@ -4,7 +4,7 @@
  *
  * "Conditions are merged into the Effects panel" is a design decision, not a coincidence — a
  * condition IS an effect of kind `apply_condition`, so ONE list is the source of truth for what is
- * currently modifying the character (docs/PLAN.md, roadmap 9). That is why they are one module.
+ * currently modifying the character (docs/plan.md, roadmap 9). That is why they are one module.
  */
 import type { Character, DeathCause } from '$lib/character/schema';
 import type { ContentGraph } from '$lib/content/loader';

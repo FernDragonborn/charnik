@@ -1,5 +1,5 @@
 /*
- * Spell ↔ class access — the bidirectional UNION index (docs/PLAN.md "Spellcasting model").
+ * Spell ↔ class access — the bidirectional UNION index (docs/plan.md "Spellcasting model").
  *
  * A spell is accessible to a class from EITHER direction, so neither edits the other's files:
  *   - spell-side: the spell row's `classes` column (shipped SRD tags its classes inline), or
