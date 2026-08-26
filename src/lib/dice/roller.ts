@@ -25,7 +25,7 @@ import {
 import { signed } from '$lib/util/format';
 import type { DamagePartSpec } from '$lib/combat/roll';
 
-/** What a pill IS. A named member, not a bare string (AI-CONVENTIONS §1.5): every renderer and every
+/** What a pill IS. A named member, not a bare string (AGENTS.md ▸ Taste (open enums, never booleans)): every renderer and every
  *  fold switches on it, so a new kind must fail to compile rather than fall through silently. The
  *  KIND type is not exported and does not need to be — `RollerPill` is a discriminated union, so
  *  `pill.kind === PILL_KIND.dice` narrows to the member without anyone naming it. */

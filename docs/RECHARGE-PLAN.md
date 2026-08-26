@@ -6,7 +6,7 @@
 > recharge (needs item-charge tracking). Normative homes: **`docs/internals/EFFECTS.md` §Recharge-model roadmap**
 > (the enum + why), **`docs/internals/ACTIONS.md`** (the onEvent intent model), **`docs/PLAN.md` B2** (hit dice).
 > `[ ]` open · `[~]` partial · `[x]` done+verified. Update it in the same change as the code.
-> CONVENTIONS §1.5 — extend by an enum member / subsystem, never a boolean flag.
+> AGENTS.md ▸ Taste (open enums, never booleans) — extend by an enum member / subsystem, never a boolean flag.
 
 ## Why these three, and why NOT one generic engine now
 
@@ -20,14 +20,14 @@ own subsystem, and we do NOT pre-build a universal `{trigger, amount}` recharge 
 ## Design findings (2026-08-02) — WIP, RESHAPES slices 2-3, refine before building
 
 > Captured from the design thread with the maintainer. **Not final** — to review/edit together, then
-> rewrite slices 2-3 under it. A prototype must be chosen first (see §6). CONVENTIONS §8.6
+> rewrite slices 2-3 under it. A prototype must be chosen first (see §6). docs/internals/work-artifacts.md ▸ Current facts belong in the docs
 
 1. **CORE PRINCIPLE (emerged across 3 cases): a play-tracker SURFACES & SUGGESTS — it never
    auto-applies or forces a player decision.** It highlights / reminds / pre-fills a smart default; the
    PLAYER clicks. Why: (a) most RAW features are "you *can*" = a choice; (b) a tracker doesn't hold full
    game state (what counts as one *instance* of damage; whether you "attacked an enemy" this turn), so
    it can't correctly auto-decide; (c) forcing is bad UX — a concentration prompt on every Damage press
-   breaks on corrections (took 72, enter 71, then +1 to fix → must not re-prompt). CONVENTIONS §4.8
+   breaks on corrections (took 72, enter 71, then +1 to fix → must not re-prompt). docs/internals/characters.md ▸ A tracker surfaces, it never decides
 
 2. **Slice 2 (initiative regain) REFRAMED — NOT an auto event-bus.** Conditional activated abilities are
    ALWAYS listed, greyed when unavailable, highlighted + a notice when their window opens; the action
@@ -133,7 +133,7 @@ concentration work rather than as their own visits.
   Hit-Point maximum** (100%, not half) → instant death, no death saves. Shipped in `damage()` against
   `hpMax` (so hp_max effects count), landing on the shared `die('massive_damage')` seam; the SRD's own
   example (max 12, at 6, take 18) is a test. Temp HP soaks first, so it can pull the leftover under the
-  threshold. CONVENTIONS §1.2
+  threshold. docs/internals/rules-core.md ▸ RAW, RAI, and saying which
 - **Massive Damage / System Shock — DMG OPTIONAL, not SRD. Future toggle, not shipped data.** ≥ half
   max HP in one instance → DC 15 CON save → roll on the System Shock table (drop to 0 / stunned / no
   reactions — NOT exhaustion). A DMG variant many tables ignore; support later as an optional toggle
@@ -268,7 +268,7 @@ generic `{trigger, amount}` recharge before this = speculative.
 ## Conventions (do not drift)
 - **CSV-only data**; re-stamp with `pnpm restamp <file>` after a hand-edit (CLAUDE.md).
 - **RAW fidelity**: encode only what maps faithfully; VERIFY against `tools/srd-src/**` text; flag
-  deviations (CONVENTIONS §1.1–1.2).
-- **Enums/subsystems, not booleans** CONVENTIONS §1.5 — each new policy = a member or a
+  deviations (docs/internals/content.md ▸ Where the shipped data comes from–1.2).
+- **Enums/subsystems, not booleans** AGENTS.md ▸ Taste (open enums, never booleans) — each new policy = a member or a
   subsystem seam, never a two-state flag.
 - **Executor is isolated/removable** — every intent field lands on an existing system (ACTIONS.md §2).

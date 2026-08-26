@@ -21,7 +21,7 @@ export const packNameOf = (root: string): string => root.slice(root.lastIndexOf(
 
 /**
  * Every installed content pack, discovered by SCANNING `content/` — a pack is a folder, so the
- * folder listing is the file list and there is no index to keep in sync (AI-CONVENTIONS §1.6).
+ * folder listing is the file list and there is no index to keep in sync (docs/internals/content.md ▸ No manifests).
  * The shipped SRD is just the pack the app happens to bundle. Excludes the writable homebrew root
  * (loaded separately as the user's own source).
  *

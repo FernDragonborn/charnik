@@ -93,7 +93,7 @@ export class HitPoints {
 		// no death saves. The same threshold also covers "Damage at 0 Hit Points" (already at 0 → the
 		// leftover is the whole hit). The 2024 SRD 5.2.1 omits the "Playing the Game" chapter that
 		// carries this rule (it only cross-references it), so both editions run the 5.1 text — the 2024
-		// PHB keeps the same threshold. CONVENTIONS §1.2
+		// PHB keeps the same threshold. docs/internals/rules-core.md ▸ RAW, RAI, and saying which
 		if (p.hp.current === 0 && n - before >= this.hpMax) this.die('massive_damage');
 		// B4: taking damage while concentrating opens the "check due" banner — a CON save at DC
 		// max(10, ⌊dmg/2⌋), capped 30 in 2024 (RAW). Suggested-but-editable DC, PLAYER-rolled, never an
@@ -212,7 +212,7 @@ export class HitPoints {
 	 *  Exhaustion drops by one, per the 2024 glossary ("If the creature died with any Exhaustion levels,
 	 *  it returns with 1 fewer level") — applied in BOTH editions because reviving straight back onto a
 	 *  lethal exhaustion 6 would kill you again on the spot; RAW is silent in 2014, so RAI wins
-	 *  (CONVENTIONS §1.2). Everything else (conditions, curses) survives death per RAW. */
+	 *  (docs/internals/rules-core.md ▸ RAW, RAI, and saying which). Everything else (conditions, curses) survives death per RAW. */
 	revive = () => {
 		const p = this.host().character?.play;
 		if (!p) return;

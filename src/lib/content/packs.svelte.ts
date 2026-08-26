@@ -2,7 +2,7 @@
  * The installed-pack REGISTRY — where each pack came from and when we last asked its repo whether
  * anything changed (docs/PLAN.md · REL-4 slice 1). Local state ABOUT an install, so it lives in app
  * config (`charnik.config.json`), never in the CSVs: a content file describes content, not this
- * machine's update habits (AI-CONVENTIONS §1.6 names this file as a legitimate exception).
+ * machine's update habits (docs/internals/content.md ▸ No manifests names this file as a legitimate exception).
  *
  * **A REPO is not a PACK.** One repository can hold several packs (the shipped SRD is two —
  * `srd-2014` and `srd-2024` — from one repo), and GitHub's tree API answers for a whole repo in a

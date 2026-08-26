@@ -178,7 +178,10 @@ nothing: fakes overwrite happily, while Windows refuses to rename a directory on
 and designs here depend on that. Write a `/dev/<name>` probe that asserts on mount and writes a report
 into the data dir, point `devUrl` at it, run the app, read the report, revert `devUrl`.
 
-**Screenshots go in `design-preview/`.** Never the repo root, never a temp folder.
+**Screenshots go in `design-preview/`.** Never the repo root, never a temp folder. That folder also
+holds the iterated `*.html` design mocks: when a view has one, **bake it faithfully** and wire live
+data onto it, rather than building a simplified version from scratch. When a design choice is open,
+offer two or three **rendered** variants — they are picked from seeing them, not from names.
 
 ## Taste
 
@@ -223,13 +226,17 @@ into the data dir, point `devUrl` at it, run the app, read the report, revert `d
 
 ## The docs
 
-- **`docs/PLAN.md`** — the authoritative spec and the only place that says what is still open. When a
-  decision there proves wrong, fix it in the same change.
-- **`docs/ARCHITECTURE.md`** — what the software is: the invariants, the data model, the seams.
-- **`docs/TOOLING.md`** — the repo's own tools and the traps in them.
-- **`docs/internals/EFFECTS.md`** — the normative effects spec (vocabulary, grammar, the derive pipeline), with
-  `docs/internals/PLUGINS.md` and `docs/internals/ACTIONS.md` as its companions.
-- **`docs/internals/TESTING.md`**, **`docs/internals/SECURITY.md`** — strategy and threat model.
-- **`docs/internals/compatibility.md`** — the chokepoints where a 5e-only assumption would block another game
-  system later. Read it before touching the fold pipeline, the effect grammar, or the schemas.
+`docs/README.md` is the full map. What you will reach for most:
+
+- **`docs/PLAN.md`** — the authoritative spec and the only place that says what is still **open**.
+  When a decision there proves wrong, fix it in the same change.
+- **`docs/internals/`** — how the software works, in the present tense, one file per subsystem:
+  `overview` (the seams and the path a number takes) · `rules-core` · `content` · `packs` ·
+  `characters` · `ui` (the UX pattern contract lives here) · `tooling` (the repo's own tools and
+  their traps) · `work-artifacts` (where planned work lives, how the plan is pruned).
+- **`docs/internals/EFFECTS.md`** — the normative effects spec, with `PLUGINS.md` and `ACTIONS.md` as
+  its companions. `TESTING.md` and `SECURITY.md` sit beside them.
+- **`docs/internals/compatibility.md`** — the chokepoints where a 5e-only assumption would block
+  another game system later. Read it before touching the fold pipeline, the effect grammar, or the
+  schemas.
 - **`docs/SURFACE.md`** — generated catalog of everything reusable. Never hand-edit it.

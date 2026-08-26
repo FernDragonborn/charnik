@@ -201,7 +201,7 @@ content-health (reason + offending token), never a bare "invalid".
 long rest), `short_one` (regain ONE per short rest + all on long — the recurring 2024 pattern:
 verified in SRD for Rage, Second Wind, Channel Divinity Cleric/Paladin, Wild Shape), `other` (manual).
 A new *rest*-policy = one more enum member (cheap, TS re-checks every `switch`), NEVER a boolean flag
-(CONVENTIONS §1.5).
+(AGENTS.md ▸ Taste (open enums, never booleans)).
 
 Three patterns the current enum can't express — **planned, not rejected** (the "when" for each):
 

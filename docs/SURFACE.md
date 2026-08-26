@@ -1252,7 +1252,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const SYSTEMS` — The two supported rule systems — the ONE owner (AUDIT F7/D2).
 - `type System`
-- `const SYSTEM_LABELS` — What a system is CALLED to a user — never the raw id in prose (CONVENTIONS §9.2).
+- `const SYSTEM_LABELS` — What a system is CALLED to a user — never the raw id in prose (AGENTS.md ▸ A small glossary (source)).
 - `const DEFAULT_SYSTEM` — The system a NEW character/draft starts in when nothing says otherwise.
 - `type Layer` — Where a stat's math comes from, in pipeline order.
 - `interface Contribution`

@@ -1312,7 +1312,7 @@ describe('CombatVM · Hit Dice', () => {
 
 /*
  * short_one recharge (2024 Second Wind: regain ONE use on a short rest, all on a long rest). An open
- * enum member — not a boolean partial-recharge column (docs/AI-CONVENTIONS §1.5). Drives the real
+ * enum member — not a boolean partial-recharge column (docs/AGENTS.md ▸ Taste (open enums, never booleans)). Drives the real
  * rest() so the sheet resource carries the recharge policy end-to-end.
  */
 describe('ResourceTracker · short_one partial recharge', () => {

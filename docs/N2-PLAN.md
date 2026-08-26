@@ -65,7 +65,7 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
    the bonus + the one use, then the row disables. Screenshots in `design-preview/n2-second-wind-*.png`.
    - **2024 Second Wind short-rest recharge — FIXED (`<this commit>`).** RAW: regain ONE use on a Short
      Rest + all on a Long Rest. Extended the `Recharge` enum with `short_one` (an open enum member, NOT a
-     boolean partial-recharge flag — the rule this triggered, docs/AI-CONVENTIONS §1.5 / CLAUDE.md): one
+     boolean partial-recharge flag — the rule this triggered, docs/AGENTS.md ▸ Taste (open enums, never booleans) / CLAUDE.md): one
      new member in `spellcasting.ts`, one alternation in the token parser, one branch in `rest()`, one
      `rechargeLabel` case. 2024 SW row now `...:short_one`. 2014 SW/AS + 2024 AS ("short or long rest" =
      full) stay `short` (RAW-exact). Tested: short rest regains one, long rest regains all.
@@ -170,7 +170,7 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
 ## Conventions (do not drift)
 - **CSV-only data**: author into `content/**/*.csv`; **re-stamp with `pnpm restamp <file>`** after a
   hand-edit (NOT a converter re-run — it drops `conditions_srd.csv`'s `max_level`).
-- **RAW fidelity**: encode only what maps faithfully; flag deviations. CONVENTIONS §1.2.
+- **RAW fidelity**: encode only what maps faithfully; flag deviations. docs/internals/rules-core.md ▸ RAW, RAI, and saying which.
 - **Ship SRD-only**: Fighter + Second Wind + Action Surge are SRD; PHB actives are engine-support test
   targets (homebrew authors add rows).
 - **Executor is isolated/removable** — no new mutation paths; every intent field lands on an existing

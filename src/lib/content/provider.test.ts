@@ -15,7 +15,7 @@ const ROOTS = ['content/srd-2024'];
 const P = 'content/srd-2024/spells_srd.csv';
 
 /** A pack is a FOLDER under `content/` and the roots are found by scanning for those folders — no
- *  index file to keep in sync (AI-CONVENTIONS §1.6). These pin the three things that scan must get
+ *  index file to keep in sync (docs/internals/content.md ▸ No manifests). These pin the three things that scan must get
  *  right: user-added packs appear, homebrew never does, and the order is deterministic. */
 describe('discoverContentRoots (a pack is a folder)', () => {
 	async function withPacks(): Promise<MemoryStorage> {

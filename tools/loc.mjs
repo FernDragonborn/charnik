@@ -1,7 +1,7 @@
 /*
  * Lines of CODE per file — the number the size rules actually judge, not `wc -l`.
  *
- * Two metrics, because the repo has two kinds of file (AI-CONVENTIONS §2.6):
+ * Two metrics, because the repo has two kinds of file (docs/internals/tooling.md ▸ Size):
  *  - `.ts` → non-blank, non-comment lines, counted the same way eslint's `max-lines`
  *    (`skipBlankLines` + `skipComments`, threshold 400) does, so this agrees with the gate instead
  *    of offering a second opinion.

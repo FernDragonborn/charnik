@@ -309,7 +309,7 @@ async function buildAndSwap(
  * Is a pack folder being written RIGHT NOW — swapped in, renamed, rolled back or deleted? Anything
  * that DRAWS CONCLUSIONS FROM THE `content/` LISTING must stand back while one is.
  *
- * The listing is the only record of what is installed (there is no manifest, AI-CONVENTIONS §1.6),
+ * The listing is the only record of what is installed (there is no manifest, docs/internals/content.md ▸ No manifests),
  * and every one of these operations makes a pack folder briefly absent — between the two renames of
  * a swap, between `rename` and `renamePackEntry`, for the length of a rollback. The watcher reloads
  * throughout. Two readers act on that listing and both do damage with it:

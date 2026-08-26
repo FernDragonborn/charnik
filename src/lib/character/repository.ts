@@ -326,7 +326,7 @@ export interface LogEntry {
 	/** What KIND of line this is. One member so far — every writer has always said `roll`, while the
 	 *  type advertised a taxonomy ("attack" | "save" | "check" | …) nothing ever wrote, so a reader
 	 *  could not trust it (ROLLER-PLAN finding H). A named member rather than a free string, per
-	 *  AI-CONVENTIONS §1.5: reviving the taxonomy means adding a member here, and every switch over it
+	 *  AGENTS.md ▸ Taste (open enums, never booleans): reviving the taxonomy means adding a member here, and every switch over it
 	 *  then fails to compile until it handles the new one. */
 	kind: LogKind;
 	label: string;

@@ -57,7 +57,7 @@ export interface RollToastAttack {
  *  well as shape — `strip` folds a pool into a count, shows a damage part's total instead of its
  *  dice, summarises a volley and moves the note to a tooltip — so "true" would be carrying policy
  *  under a name that only describes layout, and a third presentation would have nowhere to go
- *  (AI-CONVENTIONS §1.5). Compare via the named members, never bare strings. */
+ *  (AGENTS.md ▸ Taste (open enums, never booleans)). Compare via the named members, never bare strings. */
 export const ROLL_LAYOUT = {
 	/** The full card: every die, captions, a row per attack. The toast, the log and the dice tray. */
 	card: 'card',

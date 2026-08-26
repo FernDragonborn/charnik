@@ -19,7 +19,7 @@ up as a diff THERE, and gets committed there. The converters stay here because t
 **Two edition roots, edition-specific `source`.** SRD 5.1 and 5.2.1 are different documents,
 so their rows carry distinct `source` tags (`SRD 5.1` vs `SRD 5.2.1`) → the same slug never
 collides on `source:id` across editions (`SRD 5.1:fireball` ≠ `SRD 5.2.1:fireball`). There is no
-per-pack manifest — every CSV declares its own `#content-*` header (AI-CONVENTIONS §1.6). Both
+per-pack manifest — every CSV declares its own `#content-*` header (docs/internals/content.md ▸ No manifests). Both
 carry canonical WotC CC-BY-4.0 attribution.
 **Rejected:** BTMorton/dnd-5e-srd (OGL 1.0a, not CC-BY; SRD 5.0); normalized JSON
 compilations like 5e-bits (OGL provenance) — incompatible with our CC-BY-only rule.

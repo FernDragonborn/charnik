@@ -19,7 +19,7 @@ export type CasterShare = 'full' | 'half' | 'half_up' | 'third' | 'none';
  *  where bare `other` didn't), or `other` = never auto but not a consumable (a manual/special-recharge
  *  pool the player resets themselves). An OPEN enum on purpose — add a policy member, never a boolean
  *  flag, so a new recharge rule extends the vocabulary instead of forking the model (see
- *  docs/AI-CONVENTIONS.md). The ONE owner of this vocabulary (D11) — the effects layer imports it,
+ *  docs/internals/rules-core.md). The ONE owner of this vocabulary (D11) — the effects layer imports it,
  *  never redefines it. */
 export type Recharge = 'short' | 'long' | 'short_one' | 'consumable' | 'other';
 

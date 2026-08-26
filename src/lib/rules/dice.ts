@@ -58,7 +58,7 @@ export interface LegacyAdvantageRoll {
 
 /** What a die was drawn FOR. Rendering reads it (a bonus die writes its sign, a pool die doesn't),
  *  and it is where "these are the doubled ones" will live when crits land — a property of the die
- *  rather than a field beside it. A named member, not a bare string (AI-CONVENTIONS §1.5). */
+ *  rather than a field beside it. A named member, not a bare string (AGENTS.md ▸ Taste (open enums, never booleans)). */
 export const DIE_ROLE = {
 	/** The roll's own dice — the weapon's d8, the check's d20. */
 	pool: 'pool',

@@ -62,7 +62,7 @@ export function packDir(pack) {
 }
 
 /** Every installed pack, by folder name — discovered by scanning, since a folder listing IS the
- *  file list and there is no manifest to keep in sync (AI-CONVENTIONS §1.6). Sorted only for
+ *  file list and there is no manifest to keep in sync (docs/internals/content.md ▸ No manifests). Sorted only for
  *  determinism: nothing may read meaning into pack order.
  *
  *  A pack qualifies on holding a CSV **or** a `plugins/` subtree, matching what the remote side

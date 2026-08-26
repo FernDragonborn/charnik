@@ -2,7 +2,7 @@
 
 > Index doc. Companions: [TESTING.md](internals/TESTING.md) · [SECURITY.md](internals/SECURITY.md) ·
 > [research/existing-generators.md](./research/existing-generators.md). Frontend UX pattern
-> contract → [AI-CONVENTIONS.md](./AI-CONVENTIONS.md) §4.6; live component inventory → generated
+> contract → [internals/ui.md](internals/ui.md) ▸ The UX pattern contract; live component inventory → generated
 > [SURFACE.md](./SURFACE.md).
 
 ## Context
@@ -430,7 +430,7 @@ items. Each may carry **effects** (bounded vocab).
   arrow-key navigable**: ↑/↓ move a highlighted item, **Enter activates it (identical to a
   left-click)**, Home/End jump, type-ahead where useful — applies uniformly to the command
   palette, spell/attack lists, roll log, compendium, and every dropdown. Cheaper now than
-  retrofitting; UX pattern contract in `AI-CONVENTIONS.md` §4.6.
+  retrofitting; UX pattern contract in `internals/ui.md`.
 - **Content-pack sharing (in scope)**: export a whole **`source`** as a portable set
   (its CSVs, optionally zipped) so users can share homebrew packs; import re-uses the
   collision/health flow. (Distinct from per-character bundle export.)
@@ -466,7 +466,7 @@ items. Each may carry **effects** (bounded vocab).
 `loadContent(storage, roots)` → a `ContentGraph`. **Storage-agnostic** (Tauri fs / node-fs /
 in-memory / read-only fetch — serves desktop AND web). Per root: reads each file's own
 `#content-*` header (there is no pack manifest — see REL-4 "Manifest-free by design" and
-AI-CONVENTIONS §1.6),
+docs/internals/content.md ▸ No manifests),
 lists `*.csv`, infers type from `<filebase>_*.csv`, parses (papaparse) + validates
 (`parseRow`/zod). Builds `byType`, `byEffectiveId` (`type:source:id`), and **`articles`**
 (`type:id` → all editions/sources, powering the 5e↔5.5e toggle). Discovers **locales** from
@@ -559,7 +559,7 @@ Common columns on every type: `id` (lowercase slug; identity = `source:id`), `sy
   systems` are declared per FILE in its `#content-*` header (DATA-VER-1), so rows don't repeat
   license/version and files from different sources still merge. **This replaced a proposed
   `_pack.json` sidecar** — see REL-4 "Manifest-free by design" for why (it is also the case that
-  produced the general rule, AI-CONVENTIONS §1.6). A stray `_pack.json` left over from that layout
+  produced the general rule, docs/internals/content.md ▸ No manifests). A stray `_pack.json` left over from that layout
   is inert: it isn't read, and the pack differ knows not to propose deleting it.
 - **TODO (later)**: 2024 subclass-level overrides (all level 3) via per-system override
   column rather than the seeded 2014 `subclass_level`; bulk SRD fill beyond the seed.
@@ -808,7 +808,7 @@ Libs (minimal): `papaparse`, `svelte-i18n`, `zod`; **Tauri v2** + plugins
     (data·labels). Layout = grimoire sheet: HP hero, combat tiles (AC/initiative/speed/
     passive), 6 ability tiles, **spell slots as gold "sigil" pips** (filled=available,
     dashed=spent), effects+provenance panel. Just the default token *values*; the token
-    contract + light/dark/custom themes are unchanged. UX pattern contract → `AI-CONVENTIONS.md` §4.6.
+    contract + light/dark/custom themes are unchanged. UX pattern contract → `internals/ui.md`.
     **Semantic color roles (consistent everywhere):** **crimson = important / danger**
     (pinned/favourite, negative effects, destructive, primary actions like Roll/Next-turn),
     **teal/cyan = good / confirmation / positive** (available resources & slot pips, positive
@@ -1100,7 +1100,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   natively in `.svelte`, no VM plumbing) → then VM toasts, which need a decision: inject a `translate`
   into the VM (the house pattern — logic-layer stays `$_`-free, UI injects, cf. `formatNote(note,
   translate?)`) OR allow `get(_)` in a VM (a VM is the UI layer, not rules-core, so `get(_)` is
-  defensible — but it's not the established pattern). UA copy uses formal «ви» (CONVENTIONS §9.1).
+  defensible — but it's not the established pattern). UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
   **UX-1 is done (2026-08-21)**, so the copy this pass translates is the rewritten copy. What still
   gates it is W2 — the roller writes English prose into `log.jsonl`, which can't be localised later.
   **Drift found 2026-08-22, and it is the shape this pass has to expect elsewhere:** UX-1 rewrote the
@@ -1125,7 +1125,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   people from a new app.
   **Design position to start from (not yet agreed, argue it when it's picked up):**
   1. A tutorial that teaches individual CONTROLS is usually a patch over a discoverability bug — the
-     first fix is the affordance (CONVENTIONS §4.3), not a screen explaining it.
+     first fix is the affordance (docs/internals/ui.md ▸ Every interactive element says so), not a screen explaining it.
      Otherwise onboarding becomes the dumping ground for every place we skimped on signalling.
   2. What legitimately needs teaching is what *cannot* be made self-evident: a modifier-click, a global
      shortcut, and the data model (your character is a folder of files you own). That is a handful of
@@ -1177,8 +1177,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   REAL loader. (shot.mjs pixel-diffs the first viewport only — `body` never scrolls — so the groups
   below the fold are eyeballed, as on every long route.)
   **Tests moved off the prose onto `detail`**: the identifier is the durable fact, the sentence is
-  copy (CONVENTIONS §6.1). Ties CONVENTIONS §4.8 (a message the
-  player can't act on is the same failure as a silent one) and AI-CONVENTIONS §2.7.
+  copy (docs/internals/TESTING.md). Ties docs/internals/characters.md ▸ A tracker surfaces, it never decides (a message the
+  player can't act on is the same failure as a silent one) and AGENTS.md ▸ Taste (errors surface).
   **ARCH-1's copy prerequisite is cleared** — the UA pass now translates the rewritten copy once. Its
   OTHER blocker stands (W3: the roller still writes English sentences into `log.jsonl`, and prose
   already on disk can't be localised afterwards), so ARCH-1 still waits on W2, not on this.
@@ -1194,7 +1194,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   UIs (a binary multi-select vs the "+" catalog with a duration), plus the `apply_condition:<id>`
   indirection between an applied instance and what it does.
   **Size, measured not guessed:** the merged schema is the union of those columns behind a `kind`
-  open enum (CONVENTIONS §1.5); `~10` call sites of `graph.list('condition', …)`
+  open enum (AGENTS.md ▸ Taste (open enums, never booleans)); `~10` call sites of `graph.list('condition', …)`
   (derive-gather, derive, resolver, effects-editor ×4, roller-sources); character JSON is untouched
   (refs are `source:id`, and `apply_condition` keeps resolving — an id lookup inside one type instead
   of the other); the content repo needs a `#content-type` change on `conditions_*.csv` + a re-stamp,
@@ -1320,8 +1320,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   **Fold the advantage two-state while in here (maintainer, 2026-08-10).** One fact is currently
   spelled twice under two names — `AdvantageRoll.mode?: 1 | -1` on the rolled result and
   `RollToastAttack.advantageMode?: 1 | -1` on the view model, the second re-derived from the first
-  with a legacy fallback. That breaks CONVENTIONS §2.5, and both are two-state where a named
-  member belongs (AI-CONVENTIONS §1.5 — the same reasoning that turned `RollRow`'s `line: boolean`
+  with a legacy fallback. That breaks AGENTS.md ▸ Taste (one name per fact), and both are two-state where a named
+  member belongs (AGENTS.md ▸ Taste (open enums, never booleans) — the same reasoning that turned `RollRow`'s `line: boolean`
   into `ROLL_LAYOUT`). Two changes, and the FOLD is the bigger one:
   - **Collapse, don't just rename.** `RollToastAttack` carries `dropped` AND `advantageMode` — both
     are projections of the one `AdvantageRoll`. Carry the object itself and the two fields become
@@ -1351,7 +1351,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   was invented inside the engine after content had stopped having a say.
   And it was spelled FOUR ways: `titleCase(id)` in the engine, `def?.name ?? id` in the tracker, a
   second `titleCase(r.id)` in the initiative-regain toast, and `resourceId.replace(/_/g,' ')` in the
-  actions panel — CONVENTIONS §2.5 broken four times over.
+  actions panel — AGENTS.md ▸ Taste (one name per fact) broken four times over.
   **The shape chosen, and why not the alternatives.** A new `resource` content type: id + the base
   name/text columns, nothing else. NOT a slot on the `grant_resource` token (display text inside an L1
   token can never be localised, and the grammar is a `compatibility.md` chokepoint), and NOT a column
@@ -1387,7 +1387,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   file is skipped and names fall back — but `CONTENT_SEED_VERSION` had not been bumped either, so the
   file would never have arrived on the next app update. Bumped to **3**, both unknown-type messages
   now name "content newer than the app" as a cause (it is no longer likelier to be a typo), and the
-  rule is written down as **AI-CONVENTIONS §1.7** — including that a file of a NEW type should not
+  rule is written down as **docs/internals/content.md ▸ A new content TYPE** — including that a file of a NEW type should not
   declare `#content-type:`, because an older build then reports an ERROR where it would otherwise
   report a warning.
 - [ ] **SCOPED-BONUS · a bonus that applies to ONE thing, not everything (merged 2026-08-09 from
@@ -1427,7 +1427,7 @@ holds the done-work log; these are the OPEN tails it carried):**
 - **Won't-do (recorded so they aren't re-audited as bugs):** **D19** exhaustion `max 6` stays a RAW
   constant (identical both editions — not a data-driven win, YAGNI); **SMELL-2** `deriveHealth` is
   single-open + `characterName` is a display-only label — keying it by `c.id` is dead flexibility;
-  loose `z.record` play-state keys stay un-branded (see `docs/AI-CONVENTIONS.md` §2.1).
+  loose `z.record` play-state keys stay un-branded (see `docs/internals/characters.md` ▸ Play-state modelling).
 
 **User-reported bugs (2026-07-05, desktop test — verify + fix):**
 - [x] **UBUG-1 · Short rest heals via Hit Dice** — `1d<die> + CON`, min 1 HP, player picks how
@@ -1464,7 +1464,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   `durationRounds` IS editing the concentration) and cost ~1 line, where giving concentration its own
   clock needed a display proxy and a second expiry path. A concentration spell ALWAYS gets a carrier,
   even token-less, which is what gave Hold Person and Web a timer. The CON save on damage is a toast
-  REMINDER, never an auto-drop (CONVENTIONS §4.8). Duration canon = rounds.
+  REMINDER, never an auto-drop (docs/internals/characters.md ▸ A tracker surfaces, it never decides). Duration canon = rounds.
 - [x] **UBUG-7 · Effect (i) rules text renders as Markdown**, not raw.
 - [x] **UBUG-8 · Resources are used like spells** — the name is a "use one" button, the pips stay
   for manual restore. Action economy is deliberately not wired here (resources carry no action-cost
@@ -1557,7 +1557,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   speed/movement field, the lightning by Bonus Action, the bug on the report button. A census says
   otherwise — roughly a hundred glyph-as-icon uses across `src/**/*.svelte`, led by `↻` (14), `∞` (13),
   `✕` (11), `⚠` (8), `🎲` (7), `☾` (7), `▾`/`▸` (12), `★`/`☆` (9), `⚑` (5), `✓` (4), `✎` (4), `✦` (4),
-  `☀` (3), `⚙` (3), `🔍` (2). Bundle SVGs locally with attribution (CONVENTIONS §4.7) — no
+  `☀` (3), `⚙` (3), `🔍` (2). Bundle SVGs locally with attribution (docs/internals/ui.md ▸ Icons are drawn, never typed) — no
   emoji, no icon-font dep.
   **Why it is a correctness issue and not taste — three distinct failure modes, two of them hit for
   real while building the roll card (2026-08-10):** (1) **rasterisation** — a small filled glyph with
@@ -1567,7 +1567,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   drift** — codepoints like `⚠`, `☀`, `✦` render as colour emoji on one platform and monochrome on
   another, so the same UI is not the same UI. All three get worse as the display gets smaller or the
   page is zoomed out, which is exactly where a tracker gets used.
-  **The rule (see AI-CONVENTIONS §4.7):** a character that is TEXT stays text — `−`, `≥`, `∞` inside a
+  **The rule (see docs/internals/ui.md ▸ Icons are drawn, never typed):** a character that is TEXT stays text — `−`, `≥`, `∞` inside a
   sentence are set at text size and the font was designed for them. A character standing in for an
   ICON is drawn instead: an inline SVG, or CSS geometry when the shape is trivial. The roll card's
   advantage cues are the worked example — three `clip-path` polygons in `currentColor`, exact
@@ -1626,7 +1626,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   - Deleting a bundled pack still re-seeds it on next launch (`copyMissingRoots`), which is the
     "deleting or downgrading the SRD pack needs an answer" item below, now reachable from the UI-side.
 
-  **Manifest-free by design** (the case that produced the general rule — **AI-CONVENTIONS §1.6**, "no
+  **Manifest-free by design** (the case that produced the general rule — **docs/internals/content.md ▸ No manifests**, "no
   manifests or index files: discover by scanning, describe in-band"). A sidecar `pack.json` was proposed
   and REJECTED: the project deliberately
   keeps data in CSV, and every `#content-*` header already carries what a manifest would —
@@ -2010,7 +2010,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   - `[x]` **`provider ↔ remote/*` import cycle** (`cefab1e`). `provider.ts` was both low-level file
     policy and the orchestration above it, so the remote half had to import the module that imports
     it. The policy moved to a leaf (`content/disk.ts`); `madge --circular src` joins `pnpm lint` as
-    the back-stop (AI-CONVENTIONS §10).
+    the back-stop (docs/internals/tooling.md).
   - `[x]` **The tail** (`54d0bb6`): a cap on the number of packs in a REPO (the per-pack caps let a
     thousand tiny folders through); a pack refused for size no longer buried by the ETag recorded
     beside it (`recordCheck(…, null)` drops the stored one, so the next check re-lists and refuses
@@ -2158,7 +2158,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   - **And the manifest-free design leaves one genuine gap to answer first.** The `#content-*` headers
     carry everything except *which files exist*. GitHub's tree API supplies that in one request; a
     plain static host can only do it if it serves an autoindex. So the general case is "any static
-    host with an autoindex", the answer is still NOT a `pack.json` (AI-CONVENTIONS §1.6), and
+    host with an autoindex", the answer is still NOT a `pack.json` (docs/internals/content.md ▸ No manifests), and
     deciding what to do about a host with neither is part of this item rather than a surprise inside
     it.
   - **REL-5a · Pack AUTHENTICITY — DECIDED: no signing (raised 2026-08-12, closed 2026-08-14).**
@@ -2364,7 +2364,7 @@ holds the done-work log; these are the OPEN tails it carried):**
 
 **Code quality:**
 - [x] **Friendly source labels** — `sourceLabel()` shows "D&D 5e (2014)", never the raw SRD tag;
-  the `source` value itself stays exact for attribution (CONVENTIONS §9.2).
+  the `source` value itself stays exact for attribution (AGENTS.md ▸ A small glossary (source)).
 - [x] **CSS class-naming rename pass — DONE 2026-08-21.** Renamed to verbose, self-evident,
   kebab-case names with a feature prefix, across 12 files, gated by `shot.mjs` (20/20, 0 px) +
   svelte-check. **Most of the names this item listed had already gone** with the file carves — of
@@ -2445,7 +2445,7 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
     Resume/Delete. This makes add-drafts **unlimited + individually pickable** (supersedes resume-newest
     -of-type). A draft must be **openable no matter what** (incl. orphans) so modified fields are never
     lost.
-  - **Orphan dialog** = the house attention-dialog template (CONVENTIONS §4.4): centered
+  - **Orphan dialog** = the house attention-dialog template (docs/internals/ui.md ▸ Shared controls and dialogs): centered
     modal, ⚑ badge header + **"N of M" step-through** (one orphan at a time), 2-pane body (left = your
     draft prose read-only; right = **searchable reassign picker across ALL sources** + live preview of the
     highlighted target), footer = Delete · Skip · Keep-as-new · Reassign. Orphans are discovered **when the
@@ -2471,7 +2471,7 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
     ```
     Identity lives IN the file (`target`), so the **filename is just a safe unique name** — a hash of
     `kind+target` for translate/editor (re-editing the same row+locale overwrites its one file, no
-    dupes) or the add GUID (`crypto.randomUUID`, per CONVENTIONS §9.4). This sidesteps the
+    dupes) or the add GUID (`crypto.randomUUID`, per AGENTS.md ▸ Taste). This sidesteps the
     Windows filename hazard (raw `effectiveId` = `type:source:id` has illegal `:` + spaces).
   - **Versioning follows the general schema — NO separate draft schema.** `data` is a content row (or a
     prose subset), so it carries `CONTENT_SCHEMA_VERSION` via the existing `Versioned`/`migrate`
@@ -2613,9 +2613,9 @@ the detail source-line (was a hardcoded `CC-BY-4.0`).
 7. **Character schema** (build/runtime split, `schemaVersion`) + store (load/save, photo,
    `log.jsonl`, autosave/backups, bundle, missing-content) + tests.
 7.5 **Frontend architecture** — component tree, sheet layout, props from core types,
-   store/`$derived` wiring for live switches. (UX pattern contract → `AI-CONVENTIONS.md` §4.6;
+   store/`$derived` wiring for live switches. (UX pattern contract → `internals/ui.md`;
    live component inventory → generated `docs/SURFACE.md`. `FRONTEND.md` retired 2026-08-04, its
-   living contract folded into AI-CONVENTIONS, its inventory superseded by SURFACE.md.)
+   living contract folded into internals/ui.md, its inventory superseded by SURFACE.md.)
    **Layout model = modular panels + preset views (HYBRID, decided P1).** The UI is built
    from discrete **panels** (HP, combat stats, abilities, skills, attacks, spells,
    actions/maneuvers, conditions/effects, inventory, notes, …). It ships **named views** —

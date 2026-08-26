@@ -117,7 +117,7 @@ in-session entry the same shape**, and decide the write-back question rather tha
 
 The interface documented `"attack" | "save" | "check" | "damage" | "custom"`; every write hardcoded
 `'roll'`, so a reader could not trust the field. It is now `LOG_KIND` with the ONE member that is
-actually written (AI-CONVENTIONS §1.5). Reviving the taxonomy means adding a member, at which point
+actually written (AGENTS.md ▸ Taste (open enums, never booleans)). Reviving the taxonomy means adding a member, at which point
 every switch over it stops compiling until it handles the new one — which is the whole point of a
 named member over a free string. The field stays on the line: every entry already on disk carries it.
 
@@ -221,7 +221,7 @@ it.** Today it returns a rendering, and every gap in the audit above is a conseq
 ### 1. One typed request in, not five positional arguments — `[~]` HALF DONE 2026-08-14
 
 `rollPool(dice, mod, advantage, bonusDice, opts)` put a magic `−1 / 0 / +1` in the third position.
-AI-CONVENTIONS §2.8 forbids exactly this, and the best evidence is that `RollSpec` in the tray
+AGENTS.md ▸ Taste forbids exactly this, and the best evidence is that `RollSpec` in the tray
 **already exists** with the motivation spelled out in its own comment — "so a roll site passes one
 typed object instead of 5–6 positional args". The right request was invented one layer up; the
 roller should take it directly.

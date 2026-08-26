@@ -429,7 +429,7 @@
 		color: var(--color-text-muted);
 		text-decoration: line-through;
 	}
-	/* An interactive pill must LOOK like one (CONVENTIONS §4.3): its own edge, a
+	/* An interactive pill must LOOK like one (docs/internals/ui.md ▸ Every interactive element says so): its own edge, a
 	   cursor, a hover, a focus ring and a glyph saying what tapping does. The edge is DASHED rather
 	   than coloured, and the hover is COLOURLESS, because green and red are spoken for — they say how
 	   the d20 was rolled — and the theme's crimson accent sits a shade away from the red that means
