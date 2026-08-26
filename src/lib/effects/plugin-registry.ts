@@ -1,5 +1,5 @@
 /*
- * L3 plugin REGISTRY + the derive pre-pass (docs/PLUGINS.md is the normative `api: 1` spec).
+ * L3 plugin REGISTRY + the derive pre-pass (docs/internals/PLUGINS.md is the normative `api: 1` spec).
  *
  * A `plugin:<namespace>:<handlerName>[:<args>]` token is a REFERENCE — code never lives in content. The pre-pass
  * (`expandPluginEffects`) resolves every such token once per derive through an injected
@@ -18,7 +18,7 @@ import type { Ability } from '../rules/core';
 import { parseToken, EFFECT_KIND, type ActiveEffect, type EffectIssue } from './token-parser';
 import type { NumericFact } from './apply';
 
-// --- The ctx a handler receives (docs/PLUGINS.md §4.2) ------------------------------------------
+// --- The ctx a handler receives (docs/internals/PLUGINS.md §4.2) ------------------------------------------
 // Least-data by design: game numbers only, never names/notes/free text. Two sub-objects with
 // different lifetimes — `build` changes only on a build edit, `play` changes constantly.
 

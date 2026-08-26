@@ -10,7 +10,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## ⚠ TWO REPOS — the SRD content lives outside this one (decided 2026-08-11)
+## ⚠ TWO REPOS — the SRD content lives outside this one
 
 **If you are a developer: you need TWO clones, side by side.** The shipped SRD content is its own
 repository, `charnik-content-srd`, precisely so rules data can be corrected and released WITHOUT
@@ -44,24 +44,21 @@ The app is **built and shipping** (Tauri desktop releases on GitHub + a web demo
 GitHub Pages): content pipeline, character build/play views, compendium, homebrew
 authoring, effects engine, i18n — with 1300+ Vitest tests. **`docs/PLAN.md` is the
 authoritative spec** (index) and tracks what's done vs open (roadmap ticks, UBUG/REL/DEP
-items); companions: **`docs/TESTING.md`**, **`docs/SECURITY.md`**, and
-**`docs/EFFECTS.md`** (the normative effects-engine spec — L1 vocab, L2 grammar/semantics, the
-derive pipeline; `docs/PLUGINS.md` + `docs/ACTIONS.md` are its L3/action companions).
+items); companions: **`docs/internals/TESTING.md`**, **`docs/internals/SECURITY.md`**, and
+**`docs/internals/EFFECTS.md`** (the normative effects-engine spec — L1 vocab, L2 grammar/semantics, the
+derive pipeline; `docs/internals/PLUGINS.md` + `docs/internals/ACTIONS.md` are its L3/action companions).
 **`docs/AI-CONVENTIONS.md`** is the house working-rules — the settled "how we do things here"
 (data/SRD fidelity, typing & code-quality bar, CSS/theming, testing strategy, refactor
 mechanics, git & tooling hygiene, working style). Read it before coding; it complements these
 architecture invariants with the *practice* around them.
-**`docs/compatibility.md`** is the multi-system foot-gun ledger — the ~5 shared chokepoints
+**`docs/internals/compatibility.md`** is the multi-system foot-gun ledger — the ~5 shared chokepoints
 (fold/stacking algebra, build schema, `system ===` branching, effect-token grammar,
 per-source license) where a 5e-only assumption would block a future 3.5 / Pathfinder engine.
 **Consult it before touching the rules core, the fold pipeline, the effect grammar, or the
 character/content schemas** — the point is to not bake 5e-isms into shared code, NOT to
 pre-build any multi-system abstraction (that's YAGNI).
 `docs/research/existing-generators.md` records why design choices were made (what to
-avoid from D&D Beyond / Aurora / Roll20, what to copy). The
-`срншоти для 1го рандун правок/` folder holds reference screenshots (official UA 5.5e
-sheet pages; carrying-capacity rules) — consult them for sheet field coverage and the
-capacity formula.
+avoid from D&D Beyond / Aurora / Roll20, what to copy).
 
 Before implementing, read the relevant `docs/PLAN.md` section. When a decision there
 proves wrong or incomplete during implementation, update `docs/PLAN.md` in the same
@@ -145,15 +142,14 @@ These span many files and are easy to violate; preserve them.
   effects/modifier stacking pipeline) lives in a pure-TS core with Vitest tests, **not**
   in Svelte components. It exposes a small shared base with **per-system (`5e` / `5.5e`)
   overrides** and is **reactive to the active system** (live switch, no reload).
-  **3.5 is out of scope** — do not add a 3.5 engine; only the cheap `systems` data
-  column and the thin system seam exist.
+  only the cheap `systems` data column and the thin system seam exist.
 
 - **Effects/modifier engine = data, never code.** Auto-calc of derived stats flows
   through one **stacking pipeline** (`base → ability mod → proficiency → item → feature
   → condition → override`, clamped to caps) fed by a **bounded effect vocabulary** (flat
   bonus / set_override / advantage / grant_proficiency / resist_immune / apply_condition
   / grant_resource). Effects are **interpreted data, not `eval`/a DSL** (also a security
-  property — see `docs/SECURITY.md`). Unknown effects fall back to **text + a manual
+  property — see `docs/internals/SECURITY.md`). Unknown effects fall back to **text + a manual
   modifier** (never silently dropped; surfaced in the effects panel). The whole
   effects-auto system has a **global toggle** (off → stats are manual/text only). Users
   can add **custom/temporary effects** at runtime via a "+" (catalog from an
@@ -214,7 +210,7 @@ These span many files and are easy to violate; preserve them.
   (OS app-data by default; optional portable `data/` next to the exe). ALL file IO goes
   through the `Storage` interface — runtime: **Tauri fs**, scoped by capabilities to
   `dataDir`/roots (traversal rejected); tests: **node/in-memory**. No scattered raw `fs`,
-  and **nothing above the interface imports Tauri**. No HTTP server (`docs/SECURITY.md`).
+  and **nothing above the interface imports Tauri**. No HTTP server (`docs/internals/SECURITY.md`).
 
 - **CSV write-back is careful.** The app writes **only files it created** (homebrew),
   never rewrites hand-edited user files; writes are **atomic** (temp→rename) and
@@ -275,7 +271,7 @@ These span many files and are easy to violate; preserve them.
 
 ## Testing
 
-Tests are the verification gate; full strategy in **`docs/TESTING.md`**. Conventions:
+Tests are the verification gate; full strategy in **`docs/internals/TESTING.md`**. Conventions:
 - Logic lives in a **pure rules/content core** → fast Vitest unit tests co-located as
   `*.test.ts`; keep Svelte components thin so few component tests are needed.
 - Integration tests (`tests/integration/`) use **temp content roots** (`os.tmpdir()`)

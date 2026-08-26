@@ -3,7 +3,7 @@
  *
  * This is the only file in the content layer that imports Tauri (the same exemption
  * `storage/tauri.ts` has, and for the same reason). Doing this with webview `fetch` would mean
- * relaxing the shipped `connect-src` invariant — docs/SECURITY.md §5 — so don't.
+ * relaxing the shipped `connect-src` invariant — docs/internals/SECURITY.md §5 — so don't.
  *
  * Which hosts are reachable is declared in `src-tauri/capabilities/default.json`, NOT here: a
  * capability is compiled into the binary and cannot be widened at runtime by config, a bad URL, or

@@ -1,6 +1,6 @@
 # Charnik — Testing plan
 
-Companion to [PLAN.md](./PLAN.md). Tests are the **primary verification gate** —
+Companion to [PLAN.md](../PLAN.md). Tests are the **primary verification gate** —
 every roadmap phase ships a runnable suite (`pnpm test`) that proves it.
 
 ## Principle

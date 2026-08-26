@@ -1,7 +1,7 @@
 /*
  * The N2 action EXECUTOR: what actually happens when a class feature's spend-option is used —
  * validate the resource cost and the turn slot all-or-nothing, deduct both, then run the action's
- * verbs. The verb set and the all-or-nothing rule are specified in docs/ACTIONS.md §2; the rule that
+ * verbs. The verb set and the all-or-nothing rule are specified in docs/internals/ACTIONS.md §2; the rule that
  * matters most is that every verb lands on an EXISTING system rather than opening a new mutation
  * path into play-state.
  *

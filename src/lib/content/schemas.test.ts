@@ -102,7 +102,7 @@ describe('content schemas — unit', () => {
 	});
 });
 
-// The seeded SRD pack is the canonical fixture (docs/TESTING.md): every shipped row must
+// The seeded SRD pack is the canonical fixture (docs/internals/TESTING.md): every shipped row must
 // validate against its schema. This gate keeps data and schema from drifting apart.
 describe('seeded SRD packs validate', () => {
 	// Both edition packs (SRD 5.2.1 = 5.5e, SRD 5.1 = 5e). Every shipped row must validate.

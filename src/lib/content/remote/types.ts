@@ -2,7 +2,7 @@
  * The remote-fetch seam (REL-4 slice 2). Everything above it — the check/diff/apply logic and the
  * GitHub adapter — talks to this interface and never knows that the real implementation is an HTTP
  * client in Rust. Same shape as the `Storage` seam, and for the same two reasons: the webview must
- * not be given network reach (docs/SECURITY.md §5), and the logic has to be testable without one.
+ * not be given network reach (docs/internals/SECURITY.md §5), and the logic has to be testable without one.
  */
 
 /** A conditional GET result. `notModified` is the case worth designing for: a `304` from an `ETag`

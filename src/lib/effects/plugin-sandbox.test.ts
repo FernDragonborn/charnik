@@ -2,7 +2,7 @@
  * PLG-2 sandbox integration tests — the REAL QuickJS-WASM container with the real budgets.
  * Every PLG-SEC containment claim is asserted here: escapes undefined, determinism intrinsics
  * gone, infinite loop + ReDoS interrupted, memory bomb limited, malformed output rejected,
- * happy paths from docs/PLUGINS.md §9, and the memo read-tracking flag.
+ * happy paths from docs/internals/PLUGINS.md §9, and the memo read-tracking flag.
  */
 import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { createSandboxEvaluator } from './plugin-sandbox';
@@ -66,7 +66,7 @@ beforeEach(() => {
 	clearPluginMemo();
 });
 
-describe('happy paths — the docs/PLUGINS.md §9 examples run as written', () => {
+describe('happy paths — the docs/internals/PLUGINS.md §9 examples run as written', () => {
 	it('§9.1 level-scaled exploit die (tokens dialect, defensive args parse)', async () => {
 		const ev = await evaluatorFor(
 			'my-homebrew',

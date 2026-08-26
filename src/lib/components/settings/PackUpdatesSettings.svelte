@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Settings ▸ Updates — content packs (docs/PLAN.md · REL-4). The dropdown governs the NETWORK
-	// only; APPLYING is always the button, never automatic (docs/SECURITY.md §7). The manual check
+	// only; APPLYING is always the button, never automatic (docs/internals/SECURITY.md §7). The manual check
 	// deliberately bypasses the once-a-day throttle, because "I want to test this one" is the real
 	// use. Desktop-only: the web build serves the content of its own deploy.
 	import { _ } from '$lib/i18n';

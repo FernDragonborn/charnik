@@ -222,7 +222,7 @@ export function cantripDieMultiplier(charLevel: number): number {
  *     count is independent of the ability score. A missing row there is missing DATA, not a rule.
  *
  * So `null` = "this system can't answer" — the caller must surface that, never silently borrow the
- * other edition's math. **Systems must not mix, ever** (docs/compatibility.md); a shared fallback
+ * other edition's math. **Systems must not mix, ever** (docs/internals/compatibility.md); a shared fallback
  * that happened to be 2014's rule is exactly that kind of silent bleed.
  */
 export function preparedCap(

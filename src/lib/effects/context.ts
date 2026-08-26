@@ -3,7 +3,7 @@
  * half). It adapts the character's derived numbers into the `ExprContext` the pure evaluator reads,
  * so a token like `flat_bonus:damage+ceil(class_level.rogue/2)d6` resolves against the real sheet.
  *
- * Split by lifetime, mirroring docs/PLUGINS.md §4.2: BUILD vars (level, ability mods/scores, class
+ * Split by lifetime, mirroring docs/internals/PLUGINS.md §4.2: BUILD vars (level, ability mods/scores, class
  * levels…) change only on a build edit; PLAY vars (hp, flags, resources, enums) change constantly.
  * EXPR-2 passes only `build`; EXPR-3 fills `play` for condition guards. Absent-but-whitelisted vars
  * resolve to 0 / false / no-match (SPEC4) — the evaluator already treats `undefined` that way, so a

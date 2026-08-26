@@ -1,5 +1,5 @@
 <script lang="ts">
-	// Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list
+	// Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/internals/PLUGINS.md §6): discovered plugin list
 	// with manifest info + status, per-plugin enable behind the consent dialog, the global kill
 	// switch, and a refresh re-scan. Desktop-only (PLG-SEC 21) — the web build shows an explainer.
 	// Broken folders are listed with their problem, never silently skipped.

@@ -7,7 +7,7 @@
  *   - runtime impl  = Tauri fs (`@tauri-apps/plugin-fs`), scoped by capabilities
  *   - test impl     = `MemoryStorage` (and later a node-fs impl for temp-dir tests)
  *
- * See docs/PLAN.md (Architecture) and docs/SECURITY.md.
+ * See docs/PLAN.md (Architecture) and docs/internals/SECURITY.md.
  */
 export interface FileEntry {
 	/** Path relative to the dataDir root, using `/` separators. */

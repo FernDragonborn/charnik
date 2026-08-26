@@ -15,7 +15,7 @@ export type System = (typeof SYSTEMS)[number];
 
 /** What a system is CALLED to a user — never the raw id in prose (CONVENTIONS §9.2). It
  *  lives beside the id list so a third system is one row here and every picker follows, instead of
- *  the four hardcoded `['5e','5.5e']` literals this replaced (`docs/compatibility.md` §🟠). Distinct
+ *  the four hardcoded `['5e','5.5e']` literals this replaced (`docs/internals/compatibility.md` §🟠). Distinct
  *  from `sourceLabel()` in `content/detail.ts`, which names a SOURCE TAG (`SRD 5.1`), not a system. */
 export const SYSTEM_LABELS: Record<System, string> = {
 	'5e': 'D&D 5e (2014)',

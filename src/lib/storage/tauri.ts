@@ -5,7 +5,7 @@
  * else uses the `Storage` interface and never knows which impl backs it. Paths are relative to a
  * lazily-resolved `dataDir` root (OS app-data by default); we join them to an absolute path and
  * reject `..` traversal here, mirroring `NodeStorage` — the Tauri capabilities/fs-scope enforce
- * the same boundary a second time (defence in depth, see docs/SECURITY.md).
+ * the same boundary a second time (defence in depth, see docs/internals/SECURITY.md).
  *
  * Writes are atomic (temp sibling → rename), matching the "no DB → atomic temp→rename" invariant.
  * `dataDir` resolution is lazy (a cached Promise) so `getUserStorage()` can stay synchronous while

@@ -198,7 +198,7 @@ describe('deriveSpellcasting: casting subclass (B25)', () => {
  * Systems must never silently mix. 5e states the prepared count as a FORMULA (ability mod + level);
  * 5.5e states no formula at all — its table is the only source. So a 5.5e class with no
  * `class_casting` row is missing DATA, and the engine must SAY so (content health) rather than quietly
- * applying the other edition's math. See docs/compatibility.md.
+ * applying the other edition's math. See docs/internals/compatibility.md.
  */
 describe('deriveSpellcasting: a missing 5.5e casting table surfaces, never falls back to 5e math', () => {
 	const bard = (level: number) =>

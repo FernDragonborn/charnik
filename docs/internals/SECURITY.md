@@ -1,6 +1,6 @@
 # Charnik — Security plan
 
-Companion to [PLAN.md](./PLAN.md). Charnik is a **standalone Tauri desktop app** (no HTTP
+Companion to [PLAN.md](../PLAN.md). Charnik is a **standalone Tauri desktop app** (no HTTP
 server). That removes the whole network attack surface; the real risks are **untrusted
 content** (CSV/JSON, shared homebrew, bundle/content-pack imports) and **file-system
 scope**. Security tasks are **woven across roadmap phases**, not one late step.

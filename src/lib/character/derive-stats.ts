@@ -47,7 +47,7 @@ export interface AbilityBlock {
 	save: Computed;
 	/** Is this save proficient? A VALUE, because the UI used to answer it by sniffing the trace for a
 	 *  `layer === 'proficiency'` contribution — reaching into the stacking algebra, which
-	 *  `docs/compatibility.md` §1 names as the one shared vessel nothing outside the engine may
+	 *  `docs/internals/compatibility.md` §1 names as the one shared vessel nothing outside the engine may
 	 *  pattern-match on (a family-B system has no such layer and the tile would silently go blank).
 	 *  It costs nothing: the answer is already in hand where the save is built. */
 	saveProficient: boolean;

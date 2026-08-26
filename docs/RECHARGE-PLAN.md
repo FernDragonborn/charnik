@@ -3,8 +3,8 @@
 > **What this is:** my execution ledger for the three recharge/restore patterns the `Recharge` enum
 > can't express (the table from the 2026-08-02 design thread). Build order is dependency-forced:
 > Hit Dice (no deps) → onEvent regain (needs the N2 write-half) → item-charge `{trigger, amount}`
-> recharge (needs item-charge tracking). Normative homes: **`docs/EFFECTS.md` §Recharge-model roadmap**
-> (the enum + why), **`docs/ACTIONS.md`** (the onEvent intent model), **`docs/PLAN.md` B2** (hit dice).
+> recharge (needs item-charge tracking). Normative homes: **`docs/internals/EFFECTS.md` §Recharge-model roadmap**
+> (the enum + why), **`docs/internals/ACTIONS.md`** (the onEvent intent model), **`docs/PLAN.md` B2** (hit dice).
 > `[ ]` open · `[~]` partial · `[x]` done+verified. Update it in the same change as the code.
 > CONVENTIONS §1.5 — extend by an enum member / subsystem, never a boolean flag.
 

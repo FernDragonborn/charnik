@@ -219,7 +219,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | **PackUpdatesSettings** | — | Settings ▸ Updates — content packs (docs/PLAN.md · REL-4). |
 | **Pin** | `on`, `title`, `onclick` | Pin toggle: a filled star is pinned to the quick bar, an outline one is not. |
 | **PluginConsentDialog** | `plugin`, `codeChanged`, `onAccept`, `onCancel` |  |
-| **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/PLUGINS.md §6): discovered plugin list |
+| **PluginsSettings** | — | Settings ▸ Plugins — the L3 sandbox lifecycle UI (docs/internals/PLUGINS.md §6): discovered plugin list |
 | **PreparedCaps** | `tallies` | A18-tail: the ONE prepared-spell cap readout, shared by the combat spells panel and the spellbook |
 | **RollButton** | `formula`, `label`, `variant`, `title`, `children` | The one shared roll affordance. |
 | **Roller** | `organ`, `onroll` | The roller ORGAN — the whole of what a roll looks like while you are building it, and the app's |
@@ -459,7 +459,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/character/derive-plugins.ts`
 
 - `interface PluginPrePassInputs`
-- `function applyPluginPrePass` — L3 plugin PRE-PASS (docs/PLUGINS.md; stage 2½ — between resolve and the fold): resolve every * `plugin:` token agains…
+- `function applyPluginPrePass` — L3 plugin PRE-PASS (docs/internals/PLUGINS.md; stage 2½ — between resolve and the fold): resolve every * `plugin:` to…
 
 ### `src/lib/character/derive-resource-options.ts`
 

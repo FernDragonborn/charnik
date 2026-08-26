@@ -260,7 +260,7 @@ export function deriveSpellcasting({
 	/** The prepared/known cap, with the "this system has no answer" case SURFACED rather than filled
 	 *  in from another edition's rule. Only 5e states a formula; a 5.5e class with no `class_casting`
 	 *  row is missing DATA, so we report it and cap at 0 instead of silently applying 2014 math
-	 *  (systems must never mix — docs/compatibility.md). */
+	 *  (systems must never mix — docs/internals/compatibility.md). */
 	const cappedPrepared = (p: CasterProfile, tableValue: number | undefined, abilityMod: number) => {
 		const cap = preparedCap(tableValue, {
 			system: character.system,

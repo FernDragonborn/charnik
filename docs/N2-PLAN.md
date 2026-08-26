@@ -3,7 +3,7 @@
 > **What this is:** my execution ledger for the **N2 activatable-actions** phase — clicking a
 > data-defined ability in play (Second Wind, Action Surge, Lay on Hands, smites, Channel Divinity)
 > and having it spend/heal/roll/apply through the systems that already exist. Working notes, not the
-> spec (that's **`docs/ACTIONS.md`** — the normative intent/executor model — and `docs/PLAN.md` N2).
+> spec (that's **`docs/internals/ACTIONS.md`** — the normative intent/executor model — and `docs/PLAN.md` N2).
 > `[ ]` open · `[~]` partial · `[x]` done+verified. Update it in the same change as the code.
 >
 > **Supersedes `docs/FEATS-PLAN.md`** (retired 2026-08-02): the feat phase's encodable (tier-1/2) work
@@ -14,7 +14,7 @@
 ## Why this phase
 
 `savage_attacker` and the active-ability feat tail are blocked on the **`onUse` write-half**
-(`docs/ACTIONS.md`): using an ability = validate an **intent** `{rolls, spend, effects, hp, tempHp,
+(`docs/internals/ACTIONS.md`): using an ability = validate an **intent** `{rolls, spend, effects, hp, tempHp,
 cost, notes}`, then execute it through existing systems. `passive` (the derive read-half) is built;
 `onUse`/`onEvent` are the deferred write-half. Activatable abilities are **core to the play-tracking
 mission**, so we build the N2 foundation rather than one-off hacks.
@@ -31,7 +31,7 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
   toasts, but explicitly does NOT cost the turn slot or run `heal:`/`roll:`/`apply_condition:` (its own
   comment: "wire to the dice tray in a follow-up; v1 surfaces the note: text").
 
-**⇒ N2's first slice = COMPLETE that executor** (not a from-scratch build). Matches `docs/ACTIONS.md` §2
+**⇒ N2's first slice = COMPLETE that executor** (not a from-scratch build). Matches `docs/internals/ACTIONS.md` §2
 + `docs/PLAN.md` N2 ("activatable actions = COMPOSITION of existing systems — no new engine").
 
 ## First slice — complete the executor + Second Wind

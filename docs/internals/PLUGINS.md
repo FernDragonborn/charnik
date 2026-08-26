@@ -354,7 +354,7 @@ object by these keys.
 ## 8. Reserved: the `onUse` hook (`api: 2`, shape pinned now)
 
 > **Ownership note (fresh-eyes #1/#3).** The intent model below is CORE-owned — its normative
-> home is [`docs/ACTIONS.md`](ACTIONS.md) (the action/event/state-channel spec the tracking app
+> home is [`docs/internals/ACTIONS.md`](ACTIONS.md) (the action/event/state-channel spec the tracking app
 > needs with or without plugins). This section restates the PLUGIN-visible surface; the detailed
 > schemas are illustrative until the core executor lands, and where the two documents disagree,
 > ACTIONS.md wins.

@@ -4,7 +4,7 @@
  * Storage-agnostic (works over Tauri fs, node-fs, in-memory, or a read-only fetch source —
  * so the same loader serves the desktop app AND the web build). Nothing here imports Tauri.
  *
- * Robustness is a first-class output, not an afterthought (see docs/SECURITY.md +
+ * Robustness is a first-class output, not an afterthought (see docs/internals/SECURITY.md +
  * "missing content" invariant):
  *   - Invalid rows / unknown files / malformed locale columns are collected as
  *     `issues` (content-health) — never thrown. A bad row is skipped, the rest load.

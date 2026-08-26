@@ -1,6 +1,6 @@
 # Charnik — D&D Character Tracking System (Plan)
 
-> Index doc. Companions: [TESTING.md](./TESTING.md) · [SECURITY.md](./SECURITY.md) ·
+> Index doc. Companions: [TESTING.md](internals/TESTING.md) · [SECURITY.md](internals/SECURITY.md) ·
 > [research/existing-generators.md](./research/existing-generators.md). Frontend UX pattern
 > contract → [AI-CONVENTIONS.md](./AI-CONVENTIONS.md) §4.6; live component inventory → generated
 > [SURFACE.md](./SURFACE.md).
@@ -52,13 +52,13 @@ traits, class features, feats, equipped items, conditions), and the user can see
 trust what happened.
 
 > **The current NORMATIVE spec (code-accurate token vocabulary, L2 grammar/semantics, the
-> derive pipeline, state model) is [`docs/EFFECTS.md`](EFFECTS.md).** This section is the
+> derive pipeline, state model) is [`docs/internals/EFFECTS.md`](internals/EFFECTS.md).** This section is the
 > DECISION RECORD (why the engine has this shape); EFFECTS.md wins on any syntax detail.
 
 - **Bounded effect vocabulary + text fallback.** Effects are structured data from a
   **fixed vocabulary**, NOT an executed mini-language (also a security win — content is
   never code; see SECURITY.md). The kinds/targets/values are enumerated in
-  [`EFFECTS.md`](EFFECTS.md) §2 (`flat_bonus`/`set_override`/`advantage`/`grant_proficiency`/
+  [`EFFECTS.md`](internals/EFFECTS.md) §2 (`flat_bonus`/`set_override`/`advantage`/`grant_proficiency`/
   `resist_immune`/`apply_condition`/`grant_resource`/…). Anything outside the vocab =
   **free text + an optional manual modifier** the user toggles. No Turing-complete DSL
   (avoids Aurora's swamp; stays testable).
@@ -1009,11 +1009,11 @@ stay semi-manual.
   optional and OFF by default — many tables don't track it; when on, folds into N1's
   capacity bar. Lives in play-state; no migration concerns pre-release (see N1 note).
 
-### EXPR · L2 value-expression layer — BUILT (design → docs/EFFECTS.md §3)
+### EXPR · L2 value-expression layer — BUILT (design → docs/internals/EFFECTS.md §3)
 
 The bounded L2 formula layer (value expressions + condition guards, the type/resolution rules, the
 worked examples, conditions/exhaustion-as-data) is **shipped** and its normative design lives in
-[`EFFECTS.md`](EFFECTS.md) §3–§4. Delivered across EXPR-1..5 + CONDITIONS-1 (2026-07-17/19):
+[`EFFECTS.md`](internals/EFFECTS.md) §3–§4. Delivered across EXPR-1..5 + CONDITIONS-1 (2026-07-17/19):
 parser+evaluator (`expression-parser.ts` / `expression-evaluator.ts`), value expressions in tokens,
 condition guards + the ONE resolve stage (`resolveActiveEffects`, `dependency-graph.ts`), the
 dependency-order DAG (ability scores fold through the pipeline — A10), the typed-facts output
@@ -1022,16 +1022,16 @@ dependency-order DAG (ability scores fold through the pipeline — A10), the typ
 mechanical `effects` tokens in both editions. AUDIT SPEC2–SPEC7 (grammar / type / resolution
 decisions) are recorded in EFFECTS.md §3; git holds the per-phase log.
 
-### PLG · Plugin sandbox (L3 expressiveness) — BUILT (design → docs/PLUGINS.md)
+### PLG · Plugin sandbox (L3 expressiveness) — BUILT (design → docs/internals/PLUGINS.md)
 
 The QuickJS-in-WASM plugin layer is **shipped** (PLG-1..3, 2026-07-19): the registry + native
 handlers, the quickjs-emscripten (quickjs-NG sync) sandbox with the full PLG-SEC containment
 (zero-capability context, 5 ms / 8 MB budgets, JSON-string boundary, length-prefixed SHA-256
 consent hash stored OUTSIDE the dataDir, fail-closed counter, desktop-only), and the normative
-[`PLUGINS.md`](PLUGINS.md) (`api: 1`) — all in `src/lib/effects/plugin-*`. Plugin-token failures
+[`PLUGINS.md`](internals/PLUGINS.md) (`api: 1`) — all in `src/lib/effects/plugin-*`. Plugin-token failures
 surface via `deriveIssues` → content health. The design decisions, the PLG-SEC containment
 checklist, the state model (three channels) and the authoritative derive stage-list are the
-design-of-record in [`PLUGINS.md`](PLUGINS.md) and [`EFFECTS.md`](EFFECTS.md) §4/§6 (AUDIT
+design-of-record in [`PLUGINS.md`](internals/PLUGINS.md) and [`EFFECTS.md`](internals/EFFECTS.md) §4/§6 (AUDIT
 SPEC1 / SPEC8 / SPEC9 map there); git holds the per-phase log. Open tails: the dedicated
 plugin-dependency notification view + portability / version awareness (fresh-eyes review #2).
 
@@ -1081,7 +1081,7 @@ were learned the hard way.
   worth localising (ROLLER-PLAN, "the record holds facts").
 - **W4 · N1 Inventory → RECHARGE slice 3 (item charges) → D16 choice-UI (→ `magic_initiate`) →
   SCOPED-BONUS.** Slice 3 wants item charges, which want an inventory. SCOPED-BONUS is an L1 grammar
-  change and a `docs/compatibility.md` chokepoint, so it stays its own piece rather than riding
+  change and a `docs/internals/compatibility.md` chokepoint, so it stays its own piece rather than riding
   another wave.
 - **W5 · tail:** REL-2 packaging channels, ARCH-4 / R7 / LINT-1.
   UBUG-19, TYPE-2 and the CSS rename pass came off this list on 2026-08-21; UBUG-4 came off it on
@@ -1398,7 +1398,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   all. Both need the same thing — a scope key on the bonus. `attacks.ts` §A/§B already scopes by weapon
   CATEGORY; the extension is a general scope (`weapon_id` / `spell_id` / per-instance), NOT a feat
   enumeration — every invocation is then just "a scoped effect on a spell". **This is an L1 grammar
-  change and a `docs/compatibility.md` chokepoint** (effect-token grammar) — decide it there, not
+  change and a `docs/internals/compatibility.md` chokepoint** (effect-token grammar) — decide it there, not
   ad-hoc in the fold. Independent of ROLLER-N (each ships without the other), but the per-beam case
   only becomes visible once N beams actually roll. Also the mechanical half of DEMO-1 gap 4 / N2
   invocations.
@@ -2233,7 +2233,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   plain `cargo update`). Only affects a LINUX desktop build; Windows (WebView2) + the web target have
   no glib. Defer to a Tauri upgrade; safe to dismiss with that rationale meanwhile.
 - [x] **SEC-2 · Every `{@html}` goes through the sanitizer** — no hand-rolled escaping; see
-  `docs/SECURITY.md`.
+  `docs/internals/SECURITY.md`.
 **Data versioning (DECIDED 2026-07-06 — design below; surfaced in the refactor, 2026-07-05):**
 - **DATA-VER-1 · content versioning — BUILT (2026-07-06, tasks 1–5; task 6 closed 2026-08-14).**
   Design-of-record: a
@@ -2303,7 +2303,7 @@ holds the done-work log; these are the OPEN tails it carried):**
 **Effects engine (finish the vocab, add authoring):**
 - [x] **Custom-modifier UI** — DONE. Combat "Custom modifier" builder (grouped target · +/− ·
   amount) → `flat_bonus` token, applied live via the reactive sheet.
-- [x] **The rest of the L1 vocab is mechanically applied** — see `docs/EFFECTS.md`.
+- [x] **The rest of the L1 vocab is mechanically applied** — see `docs/internals/EFFECTS.md`.
 - [~] **Feat stat/skill bonuses** — engine folds feat `effects` already (derive-gather pushes feat
   rows). **Started (2026-08-02):** convert.mjs now PRESERVES authored feat `effects` (was wiped on
   re-run, like class_features); **Alert (2024)** encoded faithfully =
@@ -2319,7 +2319,7 @@ holds the done-work log; these are the OPEN tails it carried):**
     conditional bonuses (Archery +2 ranged attack), armor-gated bonuses (Defense +1 AC while armored),
     once-per-turn damage rerolls (Savage Attacker / Great Weapon Fighting), spell grants (Magic
     Initiate), skill/tool CHOICE grants (Skilled — needs a choice UI too).
-- [x] **Plugin sandbox** (QuickJS-WASM) — see `docs/PLUGINS.md`.
+- [x] **Plugin sandbox** (QuickJS-WASM) — see `docs/internals/PLUGINS.md`.
 **Spellcasting follow-ups:**
 - [~] **Resource subsystem** — engine + tracker DONE. `grant_resource:<id>:<max>:<recharge>` parsed
   into resource pools (`collectResources`, data-driven / class-agnostic — rage, ki, sorcery points,
