@@ -139,7 +139,7 @@ const effectInstance = z.object({
 });
 
 /** What killed the character. An OPEN enum — a new lethal rule (drowning, a homebrew doom clock) is a
- *  member, never another boolean on play-state. [[csv-open-enums-not-binary]] */
+ *  member, never another boolean on play-state. CONVENTIONS §1.5 */
 const DEATH_CAUSES = ['massive_damage', 'death_saves', 'exhaustion'] as const;
 export type DeathCause = (typeof DEATH_CAUSES)[number];
 

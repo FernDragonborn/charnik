@@ -178,7 +178,7 @@ control for free and forever. The decision to share the renderer pays for itself
 **Caveat to carry:** an edited roll must stay a truthful record — the log entry should say the roll was
 changed after the fact (the existing `savageReroll` note pattern, "kept X, other roll Y"). Whether a
 player is *entitled* to the advantage is a table-trust question, not ours to police
-([[play-tracker-surfaces-never-forces]]).
+(CONVENTIONS §4.8).
 
 ## What this settles for Charnik
 

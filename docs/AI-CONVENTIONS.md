@@ -61,7 +61,7 @@ prefer it" — it triggers only on ambiguous/contradictory/clearly-unintended RA
 - Clean RAW → follow it. Ambiguous/contradictory/obviously-unintended RAW → follow RAI **and say so**
   (note the interpretation + why). Never silently pick an interpretation.
 - Where RAW and RAI diverge as a legitimate table decision (e.g. Magic Missile = one save vs per-dart;
-  2014 "separate save per source" vs 2024 dropping it) → **offer the choice** ([[play-tracker-surfaces-never-forces]]),
+  2014 "separate save per source" vs 2024 dropping it) → **offer the choice** (CONVENTIONS §4.8),
   don't bake one in.
 - A RAW/RAI-correct behavior that's currently unimplementable → log it as a **KNOWN GAP**, not a
   design choice.
@@ -298,6 +298,16 @@ and when — a source file repeating that is a diary nobody updates. Two lines t
   used to sit here" are diary entries — delete them, and drop dates and session references with
   them ("this session" means nothing at the next one).
 
+**Auditing comment VOLUME.** Comments themselves are wanted; the objection is to volume that carries
+nothing. Run the audit in this order: **measure the repo's baseline first** (Charnik sits at a 27%
+comment share, median 26%, p90 42% — so a 28% file is normal here). Then apply the ratio **only to
+BIG files**: on a small one it ranks by SIZE, not by verbosity — a necessary 5-line header over 18
+lines of code reads as 47% and looks guilty, while a wasted paragraph in a 350-line file hides at 2%.
+Never present a small file's percentage as evidence. **Judge small files paragraph by paragraph**,
+one test: *is there a reader who, without this, makes a mistake?* If not, cut it. Look hardest at the
+header of a small NEW file — comments carried along with moved code sit at the house median; the ones
+written from scratch are the heavy ones.
+
 **`pnpm loc` is how you read these numbers** (§10) — it counts exactly what the rules above count,
 so a file's size means one thing here. `wc -l` disagrees by roughly a third and has misled a planning
 pass in this repo already.
@@ -455,6 +465,14 @@ single source of truth.
 topbar and dialogs. Every attention dialog shows it top-right so the user can switch language to
 read the dialog. Before inlining a button/toggle that already exists, extract or reuse it.
 
+**The house dialog shape.** The orphan-draft reassign dialog (`design-preview/orphan-popup.html`) is
+the approved template every later attention dialog bakes from: centered modal on a dim backdrop; a
+round badge header + title + optional count pill ("1 of 2") + one muted subtitle sentence; a
+**two-pane body** whenever the decision needs a comparison (the user's work left, the thing being
+chosen right, with a searchable picker + live preview); footer = destructive action far-left, then a
+spacer, then Skip → secondary → primary. Share the shell through the global `.dialog` classes rather
+than re-styling per dialog.
+
 **MANDATORY — full-screen dialogs carry a language switcher.** Any dialog/modal/banner that
 covers the whole viewport (backdrop overlay, `alertdialog`/`dialog`, first-run, mobile warning,
 …) MUST include `LangSwitcher` top-right. Rationale: it can appear *before* the user has reached
@@ -469,8 +487,10 @@ state = **toggle switch**. Avoid templated AI-default looks (cream + terracotta)
 slate + heraldic crimson + gold; Space Grotesk / Inter / JetBrains Mono.
 
 **How to apply.** Record durable design decisions in `docs/PLAN.md` (authoritative) in the same
-change. Throwaway mocks live in `design-preview/`. Icons: bundle SVGs from flaticon.com /
-streamlinehq.com (not emoji — emoji render as boxes in headless tests); keep CC-BY attribution.
+change. Throwaway mocks live in `design-preview/`, and so does every screenshot or rendered preview
+you produce — never the repo root, never a temp dir: the folder is gitignored for images, the
+maintainer already opens it, and a scratchpad path is one they cannot find. Icons follow **§4.7**
+(drawn via `Icon.svelte`, never a font glyph or emoji).
 
 ### 4.6 Frontend architecture & UX pattern contract
 **Rule.** Components are a **thin shell** — no D&D math in a `.svelte` file; they bind to the pure
@@ -544,6 +564,24 @@ app's iconography), not in a status/kind map. Map to an `IconName` and render it
 `badge`, `DraftsPane`'s kinds and translate's status marks are the worked examples. The sweep of
 ~100 sites is done: **PLAN · UBUG-19**.
 
+### 4.8 A play-tracker SURFACES and suggests — it never auto-applies
+
+**Rule.** When a feature triggers on a game event, the app **highlights** the option, reminds the
+player, and pre-fills a smart default (a suggested DC, the likely amount) — and the **player clicks**
+to resolve it. Never silently mutate play-state on the player's behalf.
+
+**Why.** Most RAW features are "you *can*", i.e. a choice, and auto-doing them steals it. The tracker
+does not hold full game state either — what counts as one *instance* of damage, whether you "attacked
+an enemy" this turn — so it cannot correctly auto-decide. Forcing also breaks on corrections: a
+concentration prompt on every Damage press fires again when someone enters 72, then 71, then +1 to
+fix it.
+
+**How to apply.** Conditional abilities are always listed, greyed when unavailable, highlighted with
+a notice when their window opens. A mandatory save (concentration on damage) is an on-demand button
+beside its indicator — like the death-save button at 0 HP — carrying a suggested but editable DC, not
+an auto-popup. Prefer *event → reminder* over an auto-mutating event bus. Same family as §1.2 (offer
+both readings, don't hardcode one).
+
 ---
 
 ## 5. Dependencies
@@ -588,7 +626,7 @@ functions with input→output contracts. Before merging duplicate impls, a **dif
 **Rule.** **During active development**, the primary bug nets are (1) user-story walkthroughs and
 (2) strict typing that makes wrong states unrepresentable. Tests carry a **maximally functional**
 role only — behavioral checks at stable boundaries for blocks under active development that may be
-fully rewritten (effects system, DiceTray). **Pre-release**, lay tests over everything properly.
+fully rewritten (the effects system, the roller). **Pre-release**, lay tests over everything properly.
 
 **Why.** Coverage % during churn tests code that's about to be deleted; the same effort pre-release
 buys real update-safety.
@@ -606,9 +644,18 @@ pnpm build`. A green subset is a false green.
 `pnpm test` runs BOTH the node project AND the `*.browser.test.ts` Chromium project. A commit once
 landed without `pnpm build` and CI fell.
 
-**How to apply.** CI (`.github/workflows/ci.yml`) runs exactly `pnpm test` → `pnpm lint` →
-`pnpm build`; run all three and only commit when all pass. `knip` and `jscpd` are part of
-`pnpm lint`.
+**How to apply.** CI (`.github/workflows/ci.yml`) runs `pnpm check` → `pnpm test` → `pnpm lint` →
+`pnpm build`; run them all and only commit when all pass. `knip` and `jscpd` are part of `pnpm lint`.
+
+**A RELEASE obliges the type-aware pass too.** `pnpm lint:typed` (`config/eslint.typed.config.js` —
+floating promises, await-thenable, dead casts) is CI-only: it builds the whole TS program, **~9m30**,
+so it runs in no git hook and nothing local catches its errors — they accumulate silently and surface
+on push. **The trigger, needing no further confirmation: the maintainer asks to fill in the CHANGELOG,
+or asks directly to prepare a release.** On either, run every step in order before tagging, and start
+the typed pass early in the background (`run_in_background`) so it overlaps the rest of the release
+work. For an ordinary commit the same config scoped to your own diff —
+`npx eslint -c config/eslint.typed.config.js <files>` — returns in seconds and covers what you wrote;
+the whole-repo run only adds drift someone else caused.
 
 ---
 
@@ -744,13 +791,28 @@ signal (e.g. the `kilograms` helper mirrors `metres` for a carrying-capacity dis
 yet). Truly orphaned (no plan) → delete; planned → keep + mark (`@public` JSDoc silences knip) +
 note the gap.
 
-### 8.5 Answer "should I…?" questions before acting
-**Rule.** When the maintainer asks a diagnostic/confirmation question ("do I set `fullscreen: true`
-for this?", "чи треба X?"), **answer and explain first** — do NOT jump to editing files. Give the
-explanation + the exact change, then stop. Only edit if they explicitly ask you to.
+### 8.5 A question asks for INFORMATION — answer it, then stop
+**Rule.** When the maintainer asks something, that is a request for information, not permission to
+act on the answer. This covers every form of it, not just "should I…?":
+- **"чи треба X? / do I set `fullscreen: true`?"** — a diagnostic question;
+- **"propose / suggest / запропонуй"** — they want the proposal, so they can choose;
+- **"explain / поясни / how does X work"** — they want to understand it;
+- **"tell me / розкажи / скажи"** — they want to be told, and "скажи, як це зробити" asks for the
+  method, never for the result;
+- **"is there anything that…? / чи є щось…?"** — they want the finding and will decide what to do
+  with it.
 
-**Why.** They often want to try the change themselves after understanding it; a preemptive edit
-takes that away.
+The imperative mood is what makes these easy to misread: «розкажи», «поясни», «запропонуй» are
+grammatically commands, and they command SPEECH — not the work being spoken about.
+
+**Why.** The maintainer often wants to make the change themselves, or to weigh the options before any
+of them is committed to. A preemptive edit takes the decision away and hides which parts were their
+call.
+
+**How to apply.** Answer, give the exact change you WOULD make, then stop and let them reply. Act
+only on an instruction ("роби", "давай", "do it"). A long answer is still an answer — length is not a
+licence to start. The one exception is a standing instruction already given for that run (an explicit
+autonomous handoff), and even inside one, a direct question is still a question.
 
 ### 8.6 Plan diverges from reality → sync it with the code, in the same change
 **Rule.** Whenever you notice a plan / spec / status line that **contradicts what the code (or the
@@ -882,6 +944,20 @@ N6 decisions were preserved as the "why", and every cross-doc link into it was r
 the `git rm`. (`CONCENTRATION-PLAN.md` was retired the same way right after — fully implemented, its
 Model C + CON-save-reminder principle folded into `PLAN.md`, no open items to lift.)
 
+### 8.8 Every line of prose carries information, or it goes
+
+**Rule.** Don't write volume for its own sake — in a doc, a PLAN entry, a commit body, or a comment.
+If a line adds nothing the reader lacks, cut it.
+
+**Why.** Almost every doc in this repo is read by an assistant or by the one maintainer. Prose
+written to look thorough is pure cost: they scroll past 200 lines to find the 2 that matter.
+
+**How to apply.** A doc that tracks work states what is OPEN — what closed lives in git, so link the
+SHA instead of retelling it (§8.6b). One reason per fact, once, in one place: two homes for the same
+reasoning means one of them rots. A commit body says what changed and why it was wrong before, not a
+tour. Cut restatements of what the code says, headings with nothing under them, and hedging. An
+explanation the maintainer explicitly asked for is not filler — give that one in full.
+
 ---
 
 ## 9. i18n, UX details & identity
@@ -940,7 +1016,7 @@ sentence at the seam and keep the reason in `detail` rather than writing twelve 
 for content issues lives in `content/issue-text.ts`, not inline at the `push()`.
 
 **Testing.** Assert the DURABLE fact — the identifier in `detail`, the level, the file, that the
-action was refused — never the sentence, which is copy and will be rewritten ([[behavioral-tests-not-form]]).
+action was refused — never the sentence, which is copy and will be rewritten (CONVENTIONS §6.1).
 
 ---
 
@@ -962,6 +1038,10 @@ The repo ships its own tooling under `tools/` — check there BEFORE hand-rollin
   the file (covering the exact UI a change touches beats eyeballing). Baselines are machine/font-
   specific → gitignored, so regenerate locally. Note: the dev server is often NOT on 5173 — read
   `pnpm dev`'s output and pass `BASE=http://localhost:PORT`.
+  **ONE red run is not evidence.** It can fail on different states and then pass with no code change
+  in between — round/turn-dependent chips drift on their own, and a dev server that lived through a
+  file rename serves a stale HMR graph. Re-run, and restart `pnpm dev` after renaming modules, before
+  believing a drift report.
 - **CSS analysis:** `tools/visual/css-dups.mjs`, `css-name-collisions.mjs`, `css-classes.mjs`;
   refactor helpers `hoist-class.mjs`, `rename-class.mjs`.
 - **`pnpm loc`** — lines of CODE per file, worst first (`--all` for everything, or pass a path
@@ -1004,6 +1084,56 @@ The repo ships its own tooling under `tools/` — check there BEFORE hand-rollin
   root (the rest moved to `config/` on 2026-08-21): madge has no `--config` flag, it only reads
   `.madgerc` from the cwd. Don't try to move it again.
 - Also: `tools/srd/*` (SRD converters), `tools/build-static-content.mjs` (predev/prebuild).
+
+### 10.1 How long things take — set a timeout, not a ceiling
+
+Set a command's timeout to roughly **2× its expected duration**, never a comfortable ceiling:
+completion detection is unreliable, so a finished command often keeps the turn blocked until the
+timeout expires. A 15-minute ceiling on a 15-second test run is 15 minutes the maintainer sits
+through — the generous ceiling is not free insurance, it IS the cost. Measured durations: `pnpm test`
+~15 s · `pnpm check` ~10 s · `eslint .` ~26 s · `pnpm build` ~10 s · a single `vitest run <file>`
+~2 s · `tools/visual/shot.mjs` ~30 s for the full set · `pnpm lint:typed` **~9m30** (§6.3). For
+anything genuinely long or unknown, run it in the background instead of buying a big timeout.
+
+### 10.2 Toolchain constraints that will bite
+
+- **TypeScript stays on 6.x.** The TS 7.0 bump was closed and the major is on dependabot's ignore
+  list: `typescript-eslint` hard-errors "does not support TS 7.0", which breaks the whole `eslint`
+  step (and `pnpm lint` / CI) even though vitest passes. Revisit when typescript-eslint ships TS≥7
+  support (upstream: typescript-eslint#10940).
+- **Browser tests need a local chromium.** `*.browser.test.ts` run under the `browser` vitest project
+  (Playwright, headless); a fresh machine needs `pnpm exec playwright install chromium` first, or it
+  fails with "Executable doesn't exist". Run just them via `pnpm vitest run --project browser`.
+  Under vitest-browser-svelte 3, `render()` is **async** — `await render(...)`, or you get
+  `screen.getByRole is not a function`.
+- **Two shells, two syntaxes.** This repo is worked primarily from **PowerShell**, and the
+  here-string habit `@'…'@` leaks into commands sent to a Bash tool, where `@` is not a quote and
+  mangles the message — most visibly in `git commit -m`. For any multi-line message the
+  shell-agnostic path is **`git commit -F <file>`**; if you inline it, match the tool (Bash `<<'EOF'`,
+  PowerShell `@'…'@` with the closing `'@` at column 0).
+
+### 10.3 Filesystem and network work is verified on the REAL desktop app
+
+A `MemoryStorage` test proves nothing about the disk: fakes overwrite happily, while **Windows
+refuses to rename a directory onto an existing one** — and the whole `.new` → swap → `.prev` design
+depends on exactly that. Write a **`/dev/<name>` probe page** that asserts on mount and writes a
+report into the data dir, then read the report back — `/dev/packs-write` is the worked example.
+
+- The desktop app has **no address bar**, so point `src-tauri/tauri.conf.json`'s `devUrl` at
+  `http://localhost:5173/dev/<probe>`, run it, then **revert the file**.
+- Stopping `pnpm tauri dev` kills the cargo wrapper but **leaves `app.exe` alive**
+  (`Get-Process app | Stop-Process -Force`) — otherwise windows accumulate and several probe
+  instances fight over the same scratch folder and produce nonsense.
+- Probe writes go in a **dot-prefixed** folder (`content/.probe-pack`) so pack discovery ignores them.
+  The data dir is `<Documents>/charnik`, pointed at from
+  `%APPDATA%\io.github.ferndragonborn.charnik\config.json`.
+- `Storage.watch` returns its unsubscribe synchronously but **attaches asynchronously** — measure
+  after a delay or you get a reassuring zero.
+- **A permission is not a feature.** Granting `fs:allow-watch` does not make `watch` exist:
+  `tauri-plugin-fs` registers it behind the `watch` **Cargo feature**, and without it the call fails
+  as an unhandled promise rejection nobody sees — correct, wired TS can sit there doing nothing on
+  every build. When a Tauri API does nothing, check the Cargo feature BEFORE the permission and before
+  the TS.
 
 ---
 

@@ -13,7 +13,7 @@
 export const SYSTEMS = ['5e', '5.5e'] as const;
 export type System = (typeof SYSTEMS)[number];
 
-/** What a system is CALLED to a user — never the raw id in prose ([[friendly-source-labels]]). It
+/** What a system is CALLED to a user — never the raw id in prose (CONVENTIONS §9.2). It
  *  lives beside the id list so a third system is one row here and every picker follows, instead of
  *  the four hardcoded `['5e','5.5e']` literals this replaced (`docs/compatibility.md` §🟠). Distinct
  *  from `sourceLabel()` in `content/detail.ts`, which names a SOURCE TAG (`SRD 5.1`), not a system. */
@@ -69,7 +69,7 @@ export function formatNote(
 }
 
 /** i18n keys for the engine-generated (system) notes — the ONE owner, so producers in pipeline /
- *  apply / core and the message catalogs never drift on a bare string ([[one-name-per-fact]]). */
+ *  apply / core and the message catalogs never drift on a bare string (CONVENTIONS §2.5). */
 export const NOTE_KEY = {
 	alreadyAtLeast: 'provenance.alreadyAtLeast',
 	alreadyAtMost: 'provenance.alreadyAtMost',

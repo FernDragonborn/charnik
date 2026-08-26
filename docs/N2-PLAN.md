@@ -170,8 +170,7 @@ The activatable-action machinery mostly EXISTS from the "piece 3" resource-optio
 ## Conventions (do not drift)
 - **CSV-only data**: author into `content/**/*.csv`; **re-stamp with `pnpm restamp <file>`** after a
   hand-edit (NOT a converter re-run — it drops `conditions_srd.csv`'s `max_level`).
-  [[content-csv-hash-restamp]].
-- **RAW fidelity**: encode only what maps faithfully; flag deviations. [[charnik-srd-raw-fidelity]].
+- **RAW fidelity**: encode only what maps faithfully; flag deviations. CONVENTIONS §1.2.
 - **Ship SRD-only**: Fighter + Second Wind + Action Surge are SRD; PHB actives are engine-support test
   targets (homebrew authors add rows).
 - **Executor is isolated/removable** — no new mutation paths; every intent field lands on an existing

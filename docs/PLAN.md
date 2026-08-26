@@ -390,6 +390,15 @@ items. Each may carry **effects** (bounded vocab).
 - **Roster**: manage many characters — list/create/duplicate/delete/search.
 - **Dice roller** (in scope): roll with computed modifiers (attacks/saves/skills/damage),
   adv/disadv.
+  - **3D physics dice — DEFERRED, not dropped.** An off-the-shelf overlay
+    (`@3d-dice/dice-box` — WebGL/BabylonJS + wasm physics, themeable, returns per-die results) on the
+    roller's seam, **off by default** and especially gated on the web demo, because the bundle is
+    heavy (WebGL + wasm + textures). **Decided — variant A: the physics engine owns the rolled
+    number** (maintainer: *"нам не треба детермінізм"*), which drops the hard part of forcing a 3D
+    roll to land on a pre-computed RNG value. **What that must not break:** `rules/dice.rollFormula`
+    is not deleted — a roll resolves through a result *provider* (`dice3d` when the toggle is on,
+    else `rollFormula`), so the fallback path (web, toggle off, headless), the dice tests, and every
+    downstream consumer (`log.jsonl`, damage totals, HP) keep working off the same integer.
 - **Change-log** (in scope): optional per-character event history (leveled up, took
   damage, spent slot…), stored as **append-only `log.jsonl`** (NOT in `character.json`,
   so it doesn't bloat it; capped/rotated).
@@ -1091,7 +1100,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   natively in `.svelte`, no VM plumbing) → then VM toasts, which need a decision: inject a `translate`
   into the VM (the house pattern — logic-layer stays `$_`-free, UI injects, cf. `formatNote(note,
   translate?)`) OR allow `get(_)` in a VM (a VM is the UI layer, not rules-core, so `get(_)` is
-  defensible — but it's not the established pattern). UA copy uses formal «ви» ([[uk-formal-vy]]).
+  defensible — but it's not the established pattern). UA copy uses formal «ви» (CONVENTIONS §9.1).
   **UX-1 is done (2026-08-21)**, so the copy this pass translates is the rewritten copy. What still
   gates it is W2 — the roller writes English prose into `log.jsonl`, which can't be localised later.
   **Drift found 2026-08-22, and it is the shape this pass has to expect elsewhere:** UX-1 rewrote the
@@ -1116,7 +1125,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   people from a new app.
   **Design position to start from (not yet agreed, argue it when it's picked up):**
   1. A tutorial that teaches individual CONTROLS is usually a patch over a discoverability bug — the
-     first fix is the affordance ([[charnik-interactive-affordance]]), not a screen explaining it.
+     first fix is the affordance (CONVENTIONS §4.3), not a screen explaining it.
      Otherwise onboarding becomes the dumping ground for every place we skimped on signalling.
   2. What legitimately needs teaching is what *cannot* be made self-evident: a modifier-click, a global
      shortcut, and the data model (your character is a folder of files you own). That is a handful of
@@ -1168,7 +1177,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   REAL loader. (shot.mjs pixel-diffs the first viewport only — `body` never scrolls — so the groups
   below the fold are eyeballed, as on every long route.)
   **Tests moved off the prose onto `detail`**: the identifier is the durable fact, the sentence is
-  copy ([[behavioral-tests-not-form]]). Ties [[play-tracker-surfaces-never-forces]] (a message the
+  copy (CONVENTIONS §6.1). Ties CONVENTIONS §4.8 (a message the
   player can't act on is the same failure as a silent one) and AI-CONVENTIONS §2.7.
   **ARCH-1's copy prerequisite is cleared** — the UA pass now translates the rewritten copy once. Its
   OTHER blocker stands (W3: the roller still writes English sentences into `log.jsonl`, and prose
@@ -1185,7 +1194,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   UIs (a binary multi-select vs the "+" catalog with a duration), plus the `apply_condition:<id>`
   indirection between an applied instance and what it does.
   **Size, measured not guessed:** the merged schema is the union of those columns behind a `kind`
-  open enum ([[csv-open-enums-not-binary]]); `~10` call sites of `graph.list('condition', …)`
+  open enum (CONVENTIONS §1.5); `~10` call sites of `graph.list('condition', …)`
   (derive-gather, derive, resolver, effects-editor ×4, roller-sources); character JSON is untouched
   (refs are `source:id`, and `apply_condition` keeps resolving — an id lookup inside one type instead
   of the other); the content repo needs a `#content-type` change on `conditions_*.csv` + a re-stamp,
@@ -1257,7 +1266,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   (2) damage (weapon/spell dice + mod) with a **Crit toggle**"). Only stage 1 was ever built. The tray
   needs the two-part structure the ROLL CARD already renders — to-hit and damage as separate,
   separately-adjustable sub-rolls — which is the model `ROLLER-N` must introduce anyway
-  ([[charnik-dicetray-attack-damage-concept]]). Building it here first would build it twice.
+  (ROLLER-PLAN.md). Building it here first would build it twice.
   **Interim honesty — TAKEN 2026-08-21, because the roller did slip.** The tray's heading now reads
   "Greataxe · to hit" and carries the queued damage as a read-only line ("then 1d12 +3 slashing —
   rolled with it, not from this pool"), so the pool can no longer be read as the whole attack. It is
@@ -1311,7 +1320,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   **Fold the advantage two-state while in here (maintainer, 2026-08-10).** One fact is currently
   spelled twice under two names — `AdvantageRoll.mode?: 1 | -1` on the rolled result and
   `RollToastAttack.advantageMode?: 1 | -1` on the view model, the second re-derived from the first
-  with a legacy fallback. That breaks [[one-name-per-fact]], and both are two-state where a named
+  with a legacy fallback. That breaks CONVENTIONS §2.5, and both are two-state where a named
   member belongs (AI-CONVENTIONS §1.5 — the same reasoning that turned `RollRow`'s `line: boolean`
   into `ROLL_LAYOUT`). Two changes, and the FOLD is the bigger one:
   - **Collapse, don't just rename.** `RollToastAttack` carries `dropped` AND `advantageMode` — both
@@ -1330,7 +1339,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   asked for and change the RNG consumption of every roll in the app (`ROLLER-PLAN.md` has the shape). ~~Contract `DiceTrayRequest.instances` is already fixed~~ — **WRONG, corrected
   2026-08-10: no such field exists anywhere in `src`.** Nothing of the contract is settled; the loop,
   the grouped roll/toast/log rendering and the request shape are all unbuilt. The reminder text stays the fallback for what the roller
-  can't express. Ties [[charnik-dicetray-attack-damage-concept]] + the RollToast row model (UBUG-12).
+  can't express. Ties ROLLER-PLAN.md + the RollToast row model (UBUG-12).
 - [x] **RES-NAME · a resource pool has a NAME of its own — DONE 2026-08-21** (maintainer's call on
   the hunch filed the same day: "ім'я у ресурсу має бути окремим, а не виводитись із айді").
   **What was wrong.** A pool's `id` is identity — the key in `play.resourcesSpent` on disk, what
@@ -1342,7 +1351,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   was invented inside the engine after content had stopped having a say.
   And it was spelled FOUR ways: `titleCase(id)` in the engine, `def?.name ?? id` in the tracker, a
   second `titleCase(r.id)` in the initiative-regain toast, and `resourceId.replace(/_/g,' ')` in the
-  actions panel — [[one-name-per-fact]] broken four times over.
+  actions panel — CONVENTIONS §2.5 broken four times over.
   **The shape chosen, and why not the alternatives.** A new `resource` content type: id + the base
   name/text columns, nothing else. NOT a slot on the `grant_resource` token (display text inside an L1
   token can never be localised, and the grammar is a `compatibility.md` chokepoint), and NOT a column
@@ -1455,7 +1464,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   `durationRounds` IS editing the concentration) and cost ~1 line, where giving concentration its own
   clock needed a display proxy and a second expiry path. A concentration spell ALWAYS gets a carrier,
   even token-less, which is what gave Hold Person and Web a timer. The CON save on damage is a toast
-  REMINDER, never an auto-drop ([[play-tracker-surfaces-never-forces]]). Duration canon = rounds.
+  REMINDER, never an auto-drop (CONVENTIONS §4.8). Duration canon = rounds.
 - [x] **UBUG-7 · Effect (i) rules text renders as Markdown**, not raw.
 - [x] **UBUG-8 · Resources are used like spells** — the name is a "use one" button, the pips stay
   for manual restore. Action economy is deliberately not wired here (resources carry no action-cost
@@ -1480,7 +1489,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   gain_action/rest, but a "make N attacks" action degrades to text. **Rework how class actions resolve:**
   let an action fire ATTACK sub-rolls (to-hit + damage) through the existing `attackRoll` path — Flurry =
   2× Unarmed Strike, and the general case for any "make an attack" ability. Ties into ACTIONS.md (the
-  `rolls` intent field) + [[charnik-dicetray-attack-damage-concept]]. The whole "action from a class
+  `rolls` intent field) + ROLLER-PLAN.md. The whole "action from a class
   feature" model is the target, not just Flurry.
   **Split 2026-08-09:** the "fire N sub-rolls" half is `ROLLER-N` (a general roller, also what a
   `count`-scaling cantrip needs — re-reported the same day on a Warlock: Eldritch Blast at level 5 just
@@ -1548,7 +1557,7 @@ holds the done-work log; these are the OPEN tails it carried):**
   speed/movement field, the lightning by Bonus Action, the bug on the report button. A census says
   otherwise — roughly a hundred glyph-as-icon uses across `src/**/*.svelte`, led by `↻` (14), `∞` (13),
   `✕` (11), `⚠` (8), `🎲` (7), `☾` (7), `▾`/`▸` (12), `★`/`☆` (9), `⚑` (5), `✓` (4), `✎` (4), `✦` (4),
-  `☀` (3), `⚙` (3), `🔍` (2). Bundle SVGs locally with attribution ([[charnik-icon-sources]]) — no
+  `☀` (3), `⚙` (3), `🔍` (2). Bundle SVGs locally with attribution (CONVENTIONS §4.7) — no
   emoji, no icon-font dep.
   **Why it is a correctness issue and not taste — three distinct failure modes, two of them hit for
   real while building the roll card (2026-08-10):** (1) **rasterisation** — a small filled glyph with
@@ -2355,7 +2364,7 @@ holds the done-work log; these are the OPEN tails it carried):**
 
 **Code quality:**
 - [x] **Friendly source labels** — `sourceLabel()` shows "D&D 5e (2014)", never the raw SRD tag;
-  the `source` value itself stays exact for attribution ([[friendly-source-labels]]).
+  the `source` value itself stays exact for attribution (CONVENTIONS §9.2).
 - [x] **CSS class-naming rename pass — DONE 2026-08-21.** Renamed to verbose, self-evident,
   kebab-case names with a feature prefix, across 12 files, gated by `shot.mjs` (20/20, 0 px) +
   svelte-check. **Most of the names this item listed had already gone** with the file carves — of
@@ -2436,7 +2445,7 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
     Resume/Delete. This makes add-drafts **unlimited + individually pickable** (supersedes resume-newest
     -of-type). A draft must be **openable no matter what** (incl. orphans) so modified fields are never
     lost.
-  - **Orphan dialog** = the house attention-dialog template ([[charnik-dialog-design-template]]): centered
+  - **Orphan dialog** = the house attention-dialog template (CONVENTIONS §4.4): centered
     modal, ⚑ badge header + **"N of M" step-through** (one orphan at a time), 2-pane body (left = your
     draft prose read-only; right = **searchable reassign picker across ALL sources** + live preview of the
     highlighted target), footer = Delete · Skip · Keep-as-new · Reassign. Orphans are discovered **when the
@@ -2462,7 +2471,7 @@ the lint gate. The WikiDetail decomposition + RollButton shipped (see WD-1 below
     ```
     Identity lives IN the file (`target`), so the **filename is just a safe unique name** — a hash of
     `kind+target` for translate/editor (re-editing the same row+locale overwrites its one file, no
-    dupes) or the add GUID (`crypto.randomUUID`, per [[charnik-guid-not-counter]]). This sidesteps the
+    dupes) or the add GUID (`crypto.randomUUID`, per CONVENTIONS §9.4). This sidesteps the
     Windows filename hazard (raw `effectiveId` = `type:source:id` has illegal `:` + spaces).
   - **Versioning follows the general schema — NO separate draft schema.** `data` is a content row (or a
     prose subset), so it carries `CONTENT_SCHEMA_VERSION` via the existing `Versioned`/`migrate`
