@@ -18,7 +18,7 @@
 		type RollToastAttack,
 		type RollToastDamage,
 	} from '$lib/dice/roll-toast';
-	import { ADVANTAGE_MODE, type RolledDie } from '$lib/rules/dice';
+	import { ADVANTAGE_CUE, ADVANTAGE_MODE, type RolledDie } from '$lib/rules/dice';
 	import DamageIcon from './DamageIcon.svelte';
 	import { signed } from '$lib/util/format';
 
@@ -68,12 +68,7 @@
 	 *  only thing marking the pill as a control, since there is no frame yet. Drawn in CSS rather than
 	 *  set as a character — at cue size a font glyph has no stem to snap to and the rasteriser turns
 	 *  its diagonals to mush (`◆` came out a blob, `⇈` drew its two arrows at different heights). */
-	const cueShape = (a: RollToastAttack) =>
-		a.advantageMode === ADVANTAGE_MODE.advantage
-			? 'up'
-			: a.advantageMode === ADVANTAGE_MODE.disadvantage
-				? 'down'
-				: 'neither';
+	const cueShape = (a: RollToastAttack) => ADVANTAGE_CUE[a.advantageMode ?? ADVANTAGE_MODE.neither];
 	const cueTitle = (a: RollToastAttack) =>
 		a.advantageMode === ADVANTAGE_MODE.advantage
 			? 'rolled with advantage — tap for disadvantage'

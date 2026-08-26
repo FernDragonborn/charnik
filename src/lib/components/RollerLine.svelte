@@ -17,6 +17,7 @@
 	import {
 		PILL_KIND,
 		ROLLER_ROLE,
+		TOKEN_KIND,
 		pillGroups,
 		type DicePill,
 		type RollerLine,
@@ -24,7 +25,7 @@
 	} from '$lib/dice/roller';
 	import type { RollerOrgan } from '$lib/dice/roller.svelte';
 	import type { RollerCandidate } from '$lib/dice/roller-vocabulary';
-	import { ADVANTAGE_MODE } from '$lib/rules/dice';
+	import { ADVANTAGE_CUE, ADVANTAGE_MODE } from '$lib/rules/dice';
 	import { signed } from '$lib/util/format';
 
 	let {
@@ -73,13 +74,11 @@
 			const kind = line.pills[at]?.kind;
 			return kind === PILL_KIND.dice || kind === PILL_KIND.flat;
 		});
-	const cue = $derived(
-		line.advantage === ADVANTAGE_MODE.advantage
-			? 'up'
-			: line.advantage === ADVANTAGE_MODE.disadvantage
-				? 'down'
-				: 'neither',
-	);
+	const cue = $derived(ADVANTAGE_CUE[line.advantage]);
+	/** The same cue for a MENU row that sets a mode — the `advantage`/`disadvantage`/`neutral` rows and
+	 *  any source whose whole contribution is advantage. Null for every other row, which has a chip. */
+	const rowCue = (candidate: RollerCandidate): string | null =>
+		candidate.insert.kind === TOKEN_KIND.advantage ? ADVANTAGE_CUE[candidate.insert.mode] : null;
 
 	let input = $state<HTMLInputElement | null>(null);
 
@@ -127,6 +126,16 @@
 		input?.setSelectionRange(at, at);
 	}
 
+	/** Put the caret in ANOTHER line of this same roller. The input lives in that line's component, so
+	 *  the only handle on it is the DOM — scoped to this organ's panel, since a page may mount more
+	 *  than one. Out of range is a no-op: the first line's ↑ and the last line's ↓ do nothing. */
+	function focusLine(at: number): void {
+		const inputs = input
+			?.closest('.roller-panel')
+			?.querySelectorAll<HTMLInputElement>('.roller-input');
+		inputs?.[at]?.focus();
+	}
+
 	function onKeydown(event: KeyboardEvent): void {
 		const held = event.ctrlKey || event.metaKey;
 		// walk a token left: what is typed folds back into the line and the token before it opens.
@@ -171,13 +180,19 @@
 		}
 		if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
 			event.preventDefault();
-			if (event.key === 'ArrowDown') organ.selectDown();
-			else organ.selectUp();
+			const down = event.key === 'ArrowDown';
+			// with a menu open the arrows walk IT; with none open there is nothing else vertical in a
+			// roller but its lines, so they step between test and damage
+			if (organ.menu.length) {
+				if (down) organ.selectDown();
+				else organ.selectUp();
+			} else focusLine(index + (down ? 1 : -1));
 			return;
 		}
 		if (event.key === 'Escape' && organ.menu.length) {
-			// the menu closes; the dialog around us does not
-			event.stopPropagation();
+			// the suggestion menu is a hint, not a layer to dismiss on its own: Escape closes the tray
+			// around us in the same press (the tray keeps what you built, so nothing is lost). Only the
+			// menu state is cleaned up here, so re-opening doesn't come back onto a stale list.
 			organ.dismissMenu();
 			return;
 		}
@@ -217,11 +232,8 @@
 		// the next one — a whole column's worth of rows along the list
 		else if (picking === at && event.key === 'ArrowRight') organ.selectAcross(typeRows);
 		else if (picking === at && event.key === 'ArrowLeft') organ.selectAcross(-typeRows);
-		else if (picking === at && event.key === 'Escape') {
-			// the picker closes, the tray around it does not — Escape peels ONE layer
-			event.stopPropagation();
-			organ.dismissMenu();
-		} else if (row && event.key === 'Enter') pickRow(row.candidate);
+		else if (picking === at && event.key === 'Escape') organ.dismissMenu();
+		else if (row && event.key === 'Enter') pickRow(row.candidate);
 		else return onPillEdit(event, at);
 		event.preventDefault();
 	}
@@ -422,6 +434,12 @@
 									{#if damageGlyph(hit.candidate.key).length}<DamageIcon
 											type={hit.candidate.key}
 										/>{/if}
+								</span>
+								<!-- a row that sets the MODE wears the same cue the line's toggle and a rolled d20 do, so the
+							     shape is what you look for rather than three words of similar length -->
+							{:else if rowCue(hit.candidate)}
+								<span class="roller-menu-glyph cue-{rowCue(hit.candidate)}">
+									<span class="advantage-cue advantage-cue-{rowCue(hit.candidate)}"></span>
 								</span>
 							{:else}
 								<span
@@ -745,6 +763,16 @@
 	}
 	.roller-menu-row.on .roller-menu-glyph {
 		color: var(--color-text);
+	}
+	/* the cue is drawn in `currentColor`, so the direction is said in colour exactly as a `+1d4` /
+	   `−1d4` chip says its own — and it keeps that colour when the row is highlighted, which is why
+	   these come after the rule above at the same weight. Neutral stays uncoloured: it is the ABSENCE
+	   of a state, and a third colour would make "no advantage" look like a third one. */
+	.roller-menu-row .roller-menu-glyph.cue-up {
+		color: var(--color-good);
+	}
+	.roller-menu-row .roller-menu-glyph.cue-down {
+		color: var(--color-danger);
 	}
 	.roller-menu-preview {
 		flex: none;

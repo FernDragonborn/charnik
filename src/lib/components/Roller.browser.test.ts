@@ -67,6 +67,19 @@ describe('the roller organ (browser)', () => {
 		expect(organ.inMenu).toBe(false);
 	});
 
+	it('↓ and ↑ step between the LINES when no menu is open', async () => {
+		const { screen, caret } = await mount();
+		await screen.getByRole('button', { name: /damage line/ }).click();
+		await userEvent.click(caret(0) as Element);
+		await userEvent.keyboard('{ArrowDown}');
+		expect(document.activeElement).toBe(caret(1));
+		await userEvent.keyboard('{ArrowUp}');
+		expect(document.activeElement).toBe(caret(0));
+		// the top line's ↑ has nowhere to go and stays put, rather than dropping focus out of the organ
+		await userEvent.keyboard('{ArrowUp}');
+		expect(document.activeElement).toBe(caret(0));
+	});
+
 	it('Escape closes the menu and leaves the text where it was', async () => {
 		const { organ, caret } = await mount();
 		await typeInto(caret(), 'bl{Escape}');

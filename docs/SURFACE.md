@@ -1220,6 +1220,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface BonusDie` — A signed bonus/penalty die a roll gains from an effect (Bless +1d4 → {sides:4,count:1,sign:+1}).
 - `const ADVANTAGE_MODE` — How a roll's d20 were read.
 - `type AdvantageMode`
+- `const ADVANTAGE_CUE` — Mode → the shape that says it: the modifier suffix of the shared `.advantage-cue` class * (`styles/components.css`).
 - `interface LegacyAdvantageRoll` — The pre-2026-08-22 shape of an advantage pair, as it still sits in `log.jsonl`.
 - `const DIE_ROLE` — What a die was drawn FOR.
 - `type DieRole`
@@ -1437,4 +1438,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 69 global classes · 50 components · 841 exports across 119 modules · 50 duplicate suspects._
+_45 tokens · 69 global classes · 50 components · 842 exports across 119 modules · 50 duplicate suspects._

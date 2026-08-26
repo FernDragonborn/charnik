@@ -36,6 +36,16 @@ export const ADVANTAGE_MODE = {
 } as const;
 export type AdvantageMode = (typeof ADVANTAGE_MODE)[keyof typeof ADVANTAGE_MODE];
 
+/** Mode → the shape that says it: the modifier suffix of the shared `.advantage-cue` class
+ *  (`styles/components.css`). Up-triangle, down-triangle, diamond — one glyph, drawn the same
+ *  wherever a mode is shown (the roller's toggle, a completed roll's d20, the suggestion menu).
+ *  Here beside the mode because it was being re-derived by hand at every one of those. */
+export const ADVANTAGE_CUE: Record<AdvantageMode, 'up' | 'down' | 'neither'> = {
+	[ADVANTAGE_MODE.advantage]: 'up',
+	[ADVANTAGE_MODE.disadvantage]: 'down',
+	[ADVANTAGE_MODE.neither]: 'neither',
+};
+
 /** The pre-2026-08-22 shape of an advantage pair, as it still sits in `log.jsonl`. Read by
  *  `rehydrateRoll` and by nothing else — `d20s` + `advantage` replaced every field of it. */
 export interface LegacyAdvantageRoll {
