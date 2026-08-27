@@ -183,7 +183,10 @@ export function writeCsv(path, columns, rows) {
 	// spelling; and when the body hash is unchanged, leave the file byte-for-byte alone (no id
 	// regen, no date bump). Only real data changes produce a diff.
 	let contentId = uuidv7();
-	let hasBom = true; // default: write the UTF-8 BOM (Excel/Cyrillic safety, per CLAUDE.md)
+	// A pack file is LF and BOM-less (docs/internals/content.md) — BOM + CRLF are for the CSVs the APP
+	// writes into the user's data folder, where Excel is the one opening them. The default was the
+	// other way round, which is how seven shipped files ended up with a BOM their neighbours lack.
+	let hasBom = false;
 	let dateKey = 'updated_at';
 	let prevHash = null;
 	if (existsSync(path)) {
