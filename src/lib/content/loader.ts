@@ -34,6 +34,7 @@ import { fileHashState } from './hash';
 import { declaredSchema, migrateRows } from './migrations';
 import { CONTENT_SCHEMA_VERSION } from '../schema/version';
 import { issueText } from './issue-text';
+import { parseItemTags, NUMERIC_TAGS } from './item-tags';
 
 /** Identity + provenance a loaded row carries regardless of its content type. */
 interface LoadedRowCommon {
@@ -452,6 +453,33 @@ function validateSpellListJoins(
 	}
 }
 
+/** Validate what folding item columns into `tags` took away from zod: a numeric tag's value, and the
+ *  existence of the row `base_item_id` points at. Both used to be impossible to get silently wrong —
+ *  `ac: optInt` rejected a non-number by column name, and there was no reference to dangle — so the
+ *  check comes back here rather than being dropped along with the columns (docs/plan.md ▸ ITEM-TAGS). */
+function validateItemTags(byType: Map<ContentType, LoadedRow[]>, issues: ContentIssue[]): void {
+	const items = byType.get('item') ?? [];
+	const idsBySource = new Map<string, Set<string>>();
+	for (const r of items) {
+		const set = idsBySource.get(r.source) ?? new Set<string>();
+		set.add(r.id);
+		idsBySource.set(r.source, set);
+	}
+	for (const r of items) {
+		if (r.type !== 'item') continue; // byType guarantees it; the guard narrows the union for TS
+		const where = { level: 'warn' as const, root: r.root, file: r.file, id: r.id };
+		for (const [name, value] of parseItemTags(r.data.tags))
+			if (NUMERIC_TAGS.includes(name) && !Number.isInteger(Number(value || NaN)))
+				issues.push({ ...where, ...issueText.badTagValue(`${name}:${value}`, name) });
+		const base = r.data.base_item_id;
+		if (base && !idsBySource.get(r.source)?.has(base))
+			issues.push({
+				...where,
+				...issueText.unresolvedBaseItem(base, idsBySource.get(r.source) ?? []),
+			});
+	}
+}
+
 interface ContentIndices {
 	byType: Map<ContentType, LoadedRow[]>;
 	byEffectiveId: Map<string, LoadedRow>;
@@ -530,6 +558,7 @@ export async function loadContent(
 	const { byType, byEffectiveId, articles, uniqueRows } = buildIndices(rows, issues);
 
 	validateSpellListJoins(byType, issues);
+	validateItemTags(byType, issues);
 
 	// content-health: surface partially-translated rows (mis-filled tables), never throw
 	issues.push(...collectTranslationGaps(uniqueRows, [...localeSet]));

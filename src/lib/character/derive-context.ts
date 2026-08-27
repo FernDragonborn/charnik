@@ -9,7 +9,9 @@
 import { recordOf } from '../util/records';
 import type { Character } from './schema';
 import { ABILITY_IDS, abilityModifier, type Ability } from '../rules/core';
-import type { LoadedRow, LoadedRowOf } from '../content/loader';
+import type { LoadedRow } from '../content/loader';
+import { armorWeightOf } from '../content/item-tags';
+import type { ResolvedItem } from '../content/resolved-item';
 import {
 	makeExprContext,
 	withSpellcastingMod,
@@ -20,14 +22,10 @@ import type { ExprContext } from '../effects/expression-evaluator';
 import type { ActiveEffect, EffectCtx } from '../effects/token-parser';
 import { type ResolveState } from '../effects/dependency-graph';
 
-/** Armor weight class of the equipped armor (for the `armor_type` guard variable); no armor → none. */
-function armorWeightOf(row: LoadedRowOf<'item'> | undefined): PlayVars['armorType'] {
-	const t = String(row?.data.item_type ?? '').toLowerCase();
-	if (t.includes('heavy')) return 'heavy';
-	if (t.includes('medium')) return 'medium';
-	if (t.includes('light')) return 'light';
-	return 'none';
-}
+/** Armor weight class of the equipped armor (for the `armor_type` guard variable); no armor, or
+ *  armor that declares no weight, → none. */
+const armorTypeOf = (armor: ResolvedItem | undefined): PlayVars['armorType'] =>
+	(armor && armorWeightOf(armor.tags)) || 'none';
 
 /** The BASE (pre-effect) resolve state, for building `castCtx` when auto-calc is OFF: no effects were
  *  gathered, so scores are base, mods derive from them, and conditions/resources are empty. Lets a
@@ -55,7 +53,7 @@ export interface EffectCtxDeps {
 	classLevels: Record<string, number>;
 	primaryAbility: Ability | undefined;
 	baseSpeed: number;
-	equippedArmor: LoadedRowOf<'item'> | undefined;
+	equippedArmor: ResolvedItem | undefined;
 	speciesRow: LoadedRow | undefined;
 	abilityByClass: Record<string, Ability>;
 }
@@ -114,7 +112,7 @@ export function makeEffectCtxFactory(deps: EffectCtxDeps): (state: ResolveState)
 			conditions: state.conditions,
 			resources: state.resources,
 			resourceMax: state.resourceMax,
-			armorType: armorWeightOf(equippedArmor),
+			armorType: armorTypeOf(equippedArmor),
 			size: String(speciesRow?.type === 'species' ? speciesRow.data.size : 'medium'),
 		};
 		const base = makeExprContext(buildVars, playVars);

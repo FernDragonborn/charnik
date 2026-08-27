@@ -8,6 +8,23 @@ const { h64ToString } = await xxhash();
 const SRD_URL = 'https://dnd.wizards.com/resources/systems-reference-document';
 const TODAY = new Date().toISOString().slice(0, 10);
 
+/** `CONTENT_SCHEMA_VERSION`, read out of the app's own source rather than duplicated here — a second
+ *  copy would drift the moment one is bumped, and converter output would then declare a shape it is
+ *  not written against. Read by regex because this is a plain .mjs tool with no TS build step; if the
+ *  constant is ever renamed this throws instead of silently stamping the wrong version. */
+function contentSchemaVersion() {
+	const src = readFileSync(
+		new URL('../../src/lib/schema/version.ts', import.meta.url).pathname.replace(
+			/^\/([A-Z]:)/,
+			'$1',
+		),
+		'utf8',
+	);
+	const m = /export const CONTENT_SCHEMA_VERSION\s*=\s*(\d+)/.exec(src);
+	if (!m) throw new Error('cannot find CONTENT_SCHEMA_VERSION in src/lib/schema/version.ts');
+	return m[1];
+}
+
 /** Time-sortable UUIDv7 (48-bit ms timestamp + random) — the pack's stable identity. */
 function uuidv7() {
 	const ts = Date.now();
@@ -207,6 +224,10 @@ export function writeCsv(path, columns, rows) {
 		`#content-url: ${SRD_URL}`,
 		`#content-license: CC-BY-4.0`, // both SRD 5.1 and 5.2.1 ship under CC-BY-4.0
 		`#content-id: ${contentId}`,
+		// Converter output is written against TODAY's shape, so it says so. Omitting it worked only
+		// because "absent" is read as "current" — which stops being true at the next schema bump, when
+		// every regenerated file would silently claim the new version.
+		`#content-schema: ${contentSchemaVersion()}`,
 	];
 	const hash = `xxh64:${h64ToString(hashInput(hashedHeader.join('\n') + '\n' + body))}`;
 	if (prevHash === hash) return; // unchanged → don't touch (no id regen, no date bump)

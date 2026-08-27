@@ -8,6 +8,7 @@ import { asText, ordinal, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
 import { packNameOf } from './disk';
+import { parseItemTags } from './item-tags';
 
 /** Columns never shown as a meta cell (identity / localization / rendered elsewhere). */
 const COMMON = new Set([
@@ -24,11 +25,8 @@ const COMMON = new Set([
 
 // nicer meta-cell labels than the auto Title-Case of the raw column name
 const LABELS: Record<string, string> = {
-	item_type: 'Type',
 	weight_lb: 'Weight (lb)',
-	armor_dex_cap: 'Dex cap',
-	str_min: 'Str min',
-	stealth_disadvantage: 'Stealth',
+	base_item_id: 'Base item',
 	ac: 'AC',
 	hp_formula: 'HP formula',
 	save_ability: 'Save',
@@ -38,6 +36,38 @@ const LABELS: Record<string, string> = {
 	class_id: 'Class',
 };
 const cap = (s: string) => LABELS[s] ?? titleCase(s);
+
+/** Tags that keep the label the column they replaced had, so folding eight item columns into one
+ *  did not cost the detail view its vocabulary — an armour still says "Str min 15", not a word
+ *  buried in a list. Everything else joins one "Properties" cell. */
+const TAG_LABELS: Record<string, string> = {
+	ac: 'AC',
+	dex_cap: 'Dex cap',
+	str_min: 'Str min',
+	armor: 'Armor',
+	mastery: 'Mastery',
+	range: 'Range',
+	ammo: 'Ammunition',
+	stealth_disadvantage: 'Stealth',
+	attunement: 'Attunement',
+};
+/** What a labelled tag with no value says, where plain "Yes" would be less than the column said. */
+const BARE_TAG_TEXT: Record<string, string> = {
+	stealth_disadvantage: 'Disadvantage',
+	attunement: 'Required',
+};
+
+/** An item's `tags` cell → meta cells. */
+function tagCells(raw: unknown): [string, string][] {
+	const labelled: [string, string][] = [];
+	const properties: string[] = [];
+	for (const [name, value] of parseItemTags(raw)) {
+		const label = TAG_LABELS[name];
+		if (label) labelled.push([label, value ? titleCase(value) : (BARE_TAG_TEXT[name] ?? 'Yes')]);
+		else properties.push(value ? `${titleCase(name)} (${value})` : titleCase(name));
+	}
+	return properties.length ? [['Properties', properties.join(', ')], ...labelled] : labelled;
+}
 /** A meta cell's text: a list column joins, anything else goes through the shared `asText` (so an
  *  object from a homebrew cell renders empty rather than "[object Object]"). */
 const cellText = (v: unknown): string =>
@@ -324,7 +354,9 @@ export function buildDetail(
 	const skip = new Set(COMMON);
 	const meta = Object.entries(d)
 		.filter(([k, v]) => !skip.has(k) && !PROSE_LOC.test(k) && meaningful(v))
-		.map(([k, v]) => [cap(k), asText(v) === 'true' ? 'Yes' : cellText(v)] as [string, string]);
+		.flatMap(([k, v]): [string, string][] =>
+			k === 'tags' ? tagCells(v) : [[cap(k), asText(v) === 'true' ? 'Yes' : cellText(v)]],
+		);
 	return {
 		...common,
 		eyebrow: cap(String(type)),
@@ -348,20 +380,13 @@ export function entryMeta(row: LoadedRow): string {
 			.filter(Boolean)
 			.join(' · ');
 	}
-	// item_type is usually more specific than category ("martial melee" vs "weapon"); drop the
-	// broader one when it's already implied, so basic gear isn't "gear · adventuring gear". The
-	// `in` checks read only the columns a row's type actually has — no cast onto the union.
+	// The `in` checks read only the columns a row's type actually has — no cast onto the union.
 	const data = row.data;
-	const parts = [
+	return [
 		'category' in data ? String(data.category ?? '') : '',
-		'item_type' in data ? String(data.item_type ?? '') : '',
 		'rarity' in data ? String(data.rarity ?? '') : '',
-	].filter(Boolean);
-	return parts
-		.filter(
-			(p, i) =>
-				!parts.some((q, j) => j !== i && q !== p && q.toLowerCase().includes(p.toLowerCase())),
-		)
+	]
+		.filter(Boolean)
 		.join(' · ');
 }
 

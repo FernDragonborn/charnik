@@ -9,7 +9,9 @@
  * current version. They never reach back into UI or Storage.
  */
 
-export const CONTENT_SCHEMA_VERSION = 1;
+// v2 (ITEM-TAGS): eight sparse item columns fold into `tags`, and `base_item_id` replaces the prose
+// parenthetical `item_type` used to name a base weapon in. See content/migrations.ts.
+export const CONTENT_SCHEMA_VERSION = 2;
 // Desktop content SEED version — bump whenever the shipped SRD CSVs change (data, ids, headers). On
 // update, a desktop install whose on-disk seed version is older is RE-SEEDED (untouched shipped files
 // overwritten, user-edited ones preserved). v1 = the 0.4.0 snake_case + redone-SRD baseline.
@@ -20,7 +22,9 @@ export const CONTENT_SCHEMA_VERSION = 1;
 // this counter exists for and the easiest one to forget — nothing about an existing file changed, so
 // nothing looked stale; a desktop install seeded at v2 would simply never receive it, and every pool
 // would keep showing a title-cased id with no way for the user to tell why.
-export const CONTENT_SEED_VERSION = 3;
+// v4: ITEM-TAGS reshaped both items CSVs (schema v2). Every shipped file's bytes changed, so an
+// install left at v3 would keep reading v1 items through the migration instead of the real thing.
+export const CONTENT_SEED_VERSION = 4;
 // v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 // v3: the same snaking re-run — the v2-SEEDED demo character still carried kebab refs.
 export const CHARACTER_SCHEMA_VERSION = 3;

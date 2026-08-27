@@ -106,8 +106,8 @@ export interface ParsedEffect {
 	 *  extra typed damage part (rolled + shown separately), never onto the base type. */
 	damageType?: string;
 	/** §A weapon-category scope on `flat_bonus:attack:<category>` (Archery `attack:ranged+2`): the
-	 *  bonus applies only to weapons carrying this category tag (item_type/property word, e.g.
-	 *  ranged / melee / two_handed / finesse). The `:type`-vs-`:category` slot collision is resolved
+	 *  bonus applies only to weapons whose `tags` column carries this name (ranged / melee /
+	 *  two_handed / finesse). The `:type`-vs-`:category` slot collision is resolved
 	 *  by TARGET — an `attack` bonus is never damage-typed, so its qualifier is always a scope; a
 	 *  `damage` qualifier stays a damageType (the scoped-damage case — GWF/Dueling — is deferred). */
 	weaponScope?: string;

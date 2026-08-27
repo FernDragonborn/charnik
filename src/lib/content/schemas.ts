@@ -154,6 +154,9 @@ export const SCHOOLS = [
 // `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled
 // "temp HP" and never adds the spellcasting mod (temp HP is a flat/dice value, no ability mod — item 3).
 export const RESOLUTIONS = ['attack', 'save', 'auto', 'temp', 'none'] as const;
+// The magic-item kinds were carried by `item_type` while `category` said only "gear" for all 380 of
+// them; ITEM-TAGS folded that column away, and a kind is what `category` is for. They sit beside the
+// mundane categories rather than under a "magic" one because `rarity` is what marks an item magical.
 export const ITEM_CATEGORIES = [
 	'weapon',
 	'armor',
@@ -162,6 +165,13 @@ export const ITEM_CATEGORIES = [
 	'tool',
 	'pack',
 	'ammunition',
+	'potion',
+	'ring',
+	'wand',
+	'staff',
+	'rod',
+	'scroll',
+	'wondrous',
 ] as const;
 export const RARITIES = [
 	'common',
@@ -341,23 +351,21 @@ const spellSchema = baseRow.extend({
 	upcast: optStr,
 });
 
-/** Item / equipment. Weapon, armor, shield, gear, tool, pack, ammunition. */
+/** Item / equipment. Weapon, armor, shield, gear, tool, pack, ammunition.
+ *
+ *  Everything that applies to SOME items rides in `tags` (`martial, melee, versatile:1d10` /
+ *  `armor:heavy, ac:18, dex_cap:0, str_min:15`) — see `item-tags.ts` and the column-or-tag rule in
+ *  docs/plan.md. What stays a column applies to every item, or has grown its own grammar. */
 const itemSchema = baseRow.extend({
 	category: ItemCategory,
-	item_type: optStr, // "martial melee" | "light armor" | "artisan's tools" ...
+	/** `name` / `name:value`, comma-separated. The only place the app learns what an item IS. */
+	tags: optStr,
+	damage: optStr, // "1d8 slashing" — dice + type, multi-type as "1d6 slashing; 1d4 radiant"
+	/** The mundane item this one is built from (same source); empty cells inherit from it. */
+	base_item_id: optStr,
+	rarity: z.preprocess(blankToUndef, Rarity.optional()),
 	cost: optStr, // "15 gp"
 	weight_lb: optNum,
-	properties: optStr, // weapon props / notes, comma list
-	damage: optStr, // "1d8 slashing" — dice + type, multi-type as "1d6 slashing; 1d4 radiant"
-	range: optStr, // "80/320" thrown/ranged
-	ac: optInt, // armor base AC
-	armor_dex_cap: optStr, // "" full | "2" medium cap | "0" none (heavy)
-	str_min: optInt, // heavy-armor STR requirement
-	stealth_disadvantage: z
-		.preprocess((v) => (v === '' || v == null ? false : v), bool)
-		.default(false),
-	attunement: boolDefault(false),
-	rarity: z.preprocess(blankToUndef, Rarity.optional()),
 });
 
 /** A language. Simple reference content the builder picks from. `category` groups them: 2014 uses

@@ -37,6 +37,7 @@ import { slugify } from '$lib/util/slug';
 import { FeatSlots } from './feat-slots.svelte';
 import { AbilityAllocation } from './ability-allocation.svelte';
 import { ASI, rowName, rowOfType } from './rows';
+import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
 // re-exported so every existing `from '../build-view-model.svelte'` import keeps working
 export { ASI, rowName, rowOfType };
 import {
@@ -204,6 +205,13 @@ class BuildVM {
 	row(id: string | null): LoadedRow | undefined {
 		return id && this.graph ? this.graph.get(id) : undefined;
 	}
+	/** An inventory item as the sheet reads it — tags, plus whatever it inherits from its base item.
+	 *  The graph lives here, so a component never resolves an item itself and gets a +1 plate's AC
+	 *  from its own (empty) tags. */
+	resolvedItem = (id: string | null): ResolvedItem | undefined => {
+		const row = rowOfType(this.row(id), 'item');
+		return row && this.graph ? resolveItem(this.graph, row) : undefined;
+	};
 	/** Subclasses available for a given class ref (per multiclass row). */
 	subclassesFor = (classId: string | null): LoadedRow[] => {
 		const cls = this.row(classId);

@@ -31,9 +31,13 @@ describe('migrateRows', () => {
 		expect(result.rows).toEqual(rows()); // still loaded — flagged, not dropped
 	});
 
-	it('reports an older file with no step registered', () => {
+	/* One version counter covers every content TYPE, so a bump that reshaped items says nothing about
+	   spells: no step at a version means that type did not change then, and its rows advance as they
+	   are. (Contrast the CHARACTER chain — one shape, so there a missing step IS a gap and throws.) */
+	it('advances a type with no step registered, untouched', () => {
 		const result = migrateRows('spell', rows(), CONTENT_SCHEMA_VERSION - 1);
-		expect(result.error).toMatch(/no migration from/);
+		expect(result.error).toBeUndefined();
+		expect(result.rows).toEqual(rows());
 	});
 
 	it('runs a registered step', () => {

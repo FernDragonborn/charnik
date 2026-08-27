@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (54)
+## Duplicate suspects (53)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -21,6 +21,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `label` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/SkillsPane.svelte
 - `open` ×4 — src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
+- `name` ×3 — src/lib/content/item-tags.ts · src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `num` ×3 — src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
@@ -48,7 +49,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
 - `match` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/build/blocks/SpellsPane.svelte
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
-- `name` ×2 — src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
 - `onClick` ×2 — src/lib/components/RollButton.svelte · src/routes/+layout.svelte
 - `onDown` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/compendium/[...entry]/+page.svelte
@@ -67,7 +67,6 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `show` ×2 — src/lib/build/sheet-diff.ts · src/routes/dev/storage/+page.svelte
 - `SKILLS` ×2 — src/routes/build/blocks/FeatPane.svelte · src/routes/build/blocks/SkillRows.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
-- `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
 **Identical one-liner body, different names:**
@@ -403,7 +402,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (106 modules)
+## Library functions & types (108 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -751,6 +750,19 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface IssueText` — The said half of a content issue: the sentence + the particulars under it.
 - `const issueText`
 
+### `src/lib/content/item-tags.ts`
+
+- `type ItemTags` — Tag name → its value (`''` for a bare tag like `finesse`).
+- `const ITEM_TAG` — The tag names the app itself compares against.
+- `type ArmorWeight`
+- `type WeaponCategory`
+- `type ArmorCategory`
+- `const NUMERIC_TAGS` — Tags whose value must be a whole number.
+- `function parseItemTags` — Parse a `tags` cell into name → value.
+- `function tagInt` — A numeric tag's value, or `null` when the tag is absent or not a number.
+- `function armorWeightOf` — The armor weight an `armor:<weight>` tag names, or undefined when it names nothing known.
+- `function weaponCategoryOf` — A weapon's proficiency category.
+
 ### `src/lib/content/loader.ts`
 
 - `interface LoadedRowOf` — A loaded row of a KNOWN content type `T`: the common identity + the zod-validated, coerced model * for `T` (Spell, Mo…
@@ -883,6 +895,12 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface PrefetchBudget` — What is left of {@link MAX_PREFETCH_BYTES} for this check.
 - `type UpdateError` — * A failure the UI can show.
 
+### `src/lib/content/resolved-item.ts`
+
+- `interface ResolvedItem` — An item as the sheet reads it: its row, its tags with a `base_item_id` base merged underneath, * and the damage inher…
+- `function resolveItem` — * Resolve an item against the mundane row its `base_item_id` names — a +1 longsword IS a longsword, * so it inherits …
+- `function armorCategoryOf` — An armor/shield's proficiency category.
+
 ### `src/lib/content/resource-joins.ts`
 
 - `interface JoinIssue` — One unresolved reference, in the shape the content-health panel renders.
@@ -908,7 +926,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const PREPARE_STYLES`
 - `const SCHOOLS`
 - `const RESOLUTIONS` — `temp` = a spell that grants TEMPORARY HP (False Life): rolls like `auto` healing but is labelled "temp HP" and never…
-- `const ITEM_CATEGORIES`
+- `const ITEM_CATEGORIES` — The magic-item kinds were carried by `item_type` while `category` said only "gear" for all 380 of them; ITEM-TAGS fol…
 - `const RARITIES`
 - `const FEAT_CATEGORY` — Feat categories as named constants — compare against these, not bare strings.
 - `const FEAT_CATEGORIES`
@@ -1290,8 +1308,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const UNCONSTRAINED` — * What a character is proficient with — either the declared set, or `UNCONSTRAINED`.
 - `type ProfGrants`
 - `function gatherProfGrants` — * Union the prof grants across a character's classes.
-- `function weaponCategoryOf` — Normalize a weapon item's `item_type` ("martial melee", "simple ranged") to its category.
-- `function armorCategoryOf` — Normalize an armor item to its category.
 - `function isWeaponProficient` — Is the character proficient with this weapon?
 - `function isArmorProficient` — Is the character proficient with this armor/shield?
 
@@ -1321,7 +1337,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/schema/version.ts`
 
-- `const CONTENT_SCHEMA_VERSION`
+- `const CONTENT_SCHEMA_VERSION` — v2 (ITEM-TAGS): eight sparse item columns fold into `tags`, and `base_item_id` replaces the prose parenthetical `item…
 - `const CONTENT_SEED_VERSION` — Desktop content SEED version — bump whenever the shipped SRD CSVs change (data, ids, headers).
 - `const CHARACTER_SCHEMA_VERSION` — v2 (E3): content ids migrated kebab→snake, so saved character refs are rewritten forward.
 - `interface Versioned`
@@ -1460,4 +1476,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 69 global classes · 50 components · 854 exports across 121 modules · 54 duplicate suspects._
+_45 tokens · 69 global classes · 50 components · 865 exports across 123 modules · 53 duplicate suspects._

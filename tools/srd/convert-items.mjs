@@ -17,6 +17,7 @@ import {
 	existingColById,
 } from './lib.mjs';
 import { packDir } from '../content-repo.mjs';
+import { weaponTags, armorTags, magicItemHead, splitTopLevel } from './item-tags.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -49,17 +50,11 @@ const COLUMNS = [
 	'systems',
 	'source',
 	'category',
-	'item_type',
-	'properties',
+	'tags',
 	'damage',
-	'range',
-	'ac',
-	'armor_dex_cap',
-	'str_min',
-	'stealth_disadvantage',
+	'base_item_id',
 	'effects',
 	'rarity',
-	'attunement',
 	'cost',
 	'weight_lb',
 	'name_en',
@@ -73,14 +68,9 @@ const blank = {
 	effects: '',
 	cost: '',
 	weight_lb: '',
-	properties: '',
+	tags: '',
 	damage: '',
-	range: '',
-	ac: '',
-	armor_dex_cap: '',
-	str_min: '',
-	stealth_disadvantage: 'false',
-	attunement: 'false',
+	base_item_id: '',
 	rarity: '',
 };
 const row = (o) => ({ systems: '5.5e', source: 'SRD 5.2.1', ...blank, ...o });
@@ -109,22 +99,16 @@ let nWeapon = 0,
 		if (td.length < 6) continue;
 		const [name, dmg, props, mastery, weight, cst] = td;
 		const dm = /(\d+d\d+)\s+(\w+)/.exec(dmg);
-		const rng = /range\s+(\d+\/\d+)/i.exec(props);
-		const propList = props === '—' ? '' : props;
 		rows.push(
 			row({
 				id: slug(name),
 				name_en: name,
 				text_en: '',
 				category: 'weapon',
-				item_type: type,
+				tags: weaponTags({ group: type, properties: props === '—' ? '' : props, mastery }),
 				cost: cost(cst),
 				weight_lb: num(weight),
-				properties: (
-					propList + (mastery && mastery !== '—' ? `; mastery: ${mastery}` : '')
-				).replace(/^; /, ''),
 				damage: dm ? `${dm[1]} ${dm[2].toLowerCase()}` : '',
-				range: rng ? rng[1] : '',
 			}),
 		);
 		nWeapon++;
@@ -155,13 +139,15 @@ let nWeapon = 0,
 				name_en: name,
 				text_en: '',
 				category: isShield ? 'shield' : 'armor',
-				item_type: isShield ? 'shield' : `${cat} armor`,
+				tags: armorTags({
+					weight: isShield ? 'shield' : cat,
+					ac: num(ac),
+					dexCap,
+					strMin: num(str),
+					stealthDisadvantage: /disadvantage/i.test(stealth),
+				}),
 				cost: cost(cst),
 				weight_lb: num(weight),
-				ac: num(ac),
-				armor_dex_cap: dexCap,
-				str_min: num(str),
-				stealth_disadvantage: String(/disadvantage/i.test(stealth)),
 			}),
 		);
 		nArmor++;
@@ -170,22 +156,42 @@ let nWeapon = 0,
 }
 
 // --- adventuring gear --------------------------------------------------------
+// The `####` entries carry the description and the price, but NOT the weight — that lives only in
+// the Adventuring Gear table further down the same section, which is why every gear row shipped
+// weightless and the encumbrance number was built out of armour and weapons alone.
+const gearWeights = new Map();
+for (const tr of firstTable(
+	sectionBetween(src('equipment.md'), /^## Adventuring Gear/m, /^## Mounts and Vehicles/m),
+).match(/<tr[\s\S]*?<\/tr>/gi) || []) {
+	const td = trCells(tr, 'td');
+	if (td.length < 2) continue;
+	const [name, weight] = td;
+	if (name) gearWeights.set(slug(name), num(weight)); // "Varies" / "—" → '' (no weight declared)
+}
+
 for (const b of blocks(src('equipment.md')).filter((b) => b.h2 === 'Adventuring Gear')) {
 	const m = /^(.*?)\s*\(([^)]*)\)\s*$/.exec(b.name);
 	const name = m ? m[1].trim() : b.name;
+	const id = slug(name);
 	rows.push(
 		row({
-			id: slug(name),
+			id,
 			name_en: name,
 			text_en: description(b.body),
 			category: 'gear',
-			item_type: 'adventuring gear',
 			cost: m ? cost(m[2]) : '',
+			weight_lb: gearWeights.get(id) ?? '',
 		}),
 	);
 	nGear++;
 }
 assertCount('gear', nGear, 81);
+// the table and the entries are two lists of the same 81 things; a mismatch means one of them moved
+assertCount(
+	'gear weights matched',
+	[...gearWeights.keys()].filter((id) => rows.some((r) => r.id === id)).length,
+	81,
+);
 
 // --- magic items -------------------------------------------------------------
 // Magic-item `effects` tokens are authored AFTER conversion (MAGIC-ITEM-EFX) — curated from the SRD
@@ -198,6 +204,8 @@ const authoredEffects = existingColById(resolve(packDir('srd-2024'), 'items_srd.
 // creature stat blocks (meta begins with a creature size, e.g. "_Large Beast,…_").
 const RARITY = ['Very Rare', 'Uncommon', 'Common', 'Rare', 'Legendary', 'Artifact'];
 const SIZE_RE = /^(Tiny|Small|Medium|Large|Huge|Gargantuan)\b/;
+// every mundane row converted above — what a magic item's `base_item_id` may point at
+const mundaneIds = new Set(rows.map((r) => r.id));
 for (const b of blocks(src('magic-items.md'))) {
 	const metaLine = (b.body.find((l) => l.trim() !== '') || '').trim();
 	const mm = /^_(.+)_$/.exec(metaLine);
@@ -207,18 +215,11 @@ for (const b of blocks(src('magic-items.md'))) {
 	const hasRarity =
 		RARITY.some((r) => new RegExp(r, 'i').test(inner)) || /rarity varies/i.test(inner);
 	if (!hasRarity) continue;
-	const typeRaw = inner.split(',')[0].trim();
+	// depth-0 split: "Weapon (glaive, halberd, pike), Rare" is a TYPE with commas in it, and cutting
+	// at the first one is what shipped `vorpal_sword` declaring itself a glaive
+	const typeRaw = splitTopLevel(inner)[0] ?? '';
 	const rarRaw = RARITY.find((r) => new RegExp(r, 'i').test(inner)) || ''; // blank when "Rarity Varies"
-	const head = typeRaw.toLowerCase();
-	const category = head.startsWith('armor')
-		? 'armor'
-		: head.startsWith('weapon')
-			? 'weapon'
-			: head.startsWith('shield')
-				? 'shield'
-				: head.startsWith('ammunition')
-					? 'ammunition'
-					: 'gear';
+	const { category, baseItemId } = magicItemHead(typeRaw, mundaneIds);
 	const id = slug(b.name);
 	rows.push(
 		row({
@@ -227,8 +228,8 @@ for (const b of blocks(src('magic-items.md'))) {
 			text_en: description(b.body),
 			effects: authoredEffects.get(id) ?? '', // preserve tokens authored post-conversion
 			category,
-			item_type: head,
-			attunement: String(/requires attunement/i.test(b.body.join('\n'))),
+			base_item_id: baseItemId,
+			tags: /requires attunement/i.test(b.body.join('\n')) ? 'attunement' : '',
 			rarity: rarRaw ? slug(rarRaw) : '',
 		}),
 	);

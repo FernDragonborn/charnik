@@ -70,14 +70,7 @@ const ENUM_OPTS: Record<string, readonly string[]> = {
 	kind_species_option: SPECIES_OPTION_KINDS,
 	category_feat: FEAT_CATEGORIES, // feat.category (disambiguated below)
 };
-const BOOL_FIELDS = new Set([
-	'concentration',
-	'ritual',
-	'attunement',
-	'stealth_disadvantage',
-	'negative',
-	'repeatable',
-]);
+const BOOL_FIELDS = new Set(['concentration', 'ritual', 'negative', 'repeatable']);
 const NUMBER_FIELDS = new Set([
 	'speed',
 	'level',
@@ -86,7 +79,6 @@ const NUMBER_FIELDS = new Set([
 	'languages',
 	'weight_lb',
 	'ac',
-	'str_min',
 	'caster_from_level',
 	'cantrips_known',
 	'prepared_known',
@@ -103,10 +95,8 @@ const LABELS: Record<string, string> = {
 	primary_ability: 'Primary ability',
 	spell_ability: 'Spellcasting ability',
 	save_ability: 'Save',
-	item_type: 'Type',
 	weight_lb: 'Weight (lb)',
-	armor_dex_cap: 'Dex cap',
-	str_min: 'Str min',
+	base_item_id: 'Base item',
 	casting_time: 'Casting time',
 	higher_level: 'At higher levels',
 	creature_type: 'Creature type',

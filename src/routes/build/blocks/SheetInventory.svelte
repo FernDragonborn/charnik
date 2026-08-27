@@ -6,6 +6,7 @@
 	import { _ } from '$lib/i18n';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import { why } from '$lib/combat/effects-view';
+	import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
 	const b = build;
 
 	const s = $derived(b.sheet);
@@ -38,11 +39,13 @@
 		<div class="items">
 			{#each b.draft.inventory as entry (entry.item)}
 				{@const row = rowOfType(b.row(entry.item), 'item')}
+				{@const item = b.resolvedItem(entry.item)}
+				{@const ac = item ? tagInt(item.tags, ITEM_TAG.ac) : null}
 				<div class="item">
 					<span class="iname">{rowName(row) || entry.item}</span>
 					<span class="imeta">
-						{#if row?.data.ac}AC {row.data.ac}{/if}
-						{#if row?.data.damage}{row.data.damage}{/if}
+						{#if ac !== null}AC {ac}{/if}
+						{#if item?.damage}{item.damage}{/if}
 					</span>
 					<span class="stepper qty">
 						<button aria-label={$_('build.inventory.fewer')} onclick={() => b.bumpItemQty(entry.item, -1)}><Icon name="minus" size={11} /></button>

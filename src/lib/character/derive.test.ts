@@ -40,14 +40,14 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/items_srd.csv',
 		[
-			'id,systems,source,name_en,effects,category,item_type,ac,armor_dex_cap,str_min,stealth_disadvantage,damage,properties',
-			`leather_armor,5.5e,${S},Leather Armor,,armor,light armor,11,,,,,`,
-			`plate_armor,5.5e,${S},Plate Armor,,armor,heavy armor,18,0,15,true,,`,
-			`shield,5.5e,${S},Shield,,shield,shield,2,,,,,`,
-			`dagger,5.5e,${S},Dagger,,weapon,simple melee,,,,,1d4 piercing,`,
-			`greataxe,5.5e,${S},Greataxe,,weapon,martial melee,,,,,1d12 slashing,two-handed`,
-			`sunblade,5.5e,${S},Sun Blade,,weapon,martial melee,,,,,1d6 slashing; 1d4 radiant,`,
-			`longbow,5.5e,${S},Longbow,,weapon,martial ranged,,,,,1d8 piercing,two-handed`,
+			'id,systems,source,name_en,effects,category,tags,damage',
+			`leather_armor,5.5e,${S},Leather Armor,,armor,"armor:light, ac:11",`,
+			`plate_armor,5.5e,${S},Plate Armor,,armor,"armor:heavy, ac:18, dex_cap:0, str_min:15, stealth_disadvantage",`,
+			`shield,5.5e,${S},Shield,,shield,ac:2,`,
+			`dagger,5.5e,${S},Dagger,,weapon,"simple, melee",1d4 piercing`,
+			`greataxe,5.5e,${S},Greataxe,,weapon,"martial, melee, two_handed",1d12 slashing`,
+			`sunblade,5.5e,${S},Sun Blade,,weapon,"martial, melee",1d6 slashing; 1d4 radiant`,
+			`longbow,5.5e,${S},Longbow,,weapon,"martial, ranged, two_handed",1d8 piercing`,
 		].join('\n'),
 	);
 	await st.write(
@@ -904,8 +904,8 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 		await st.write(
 			'c/items_srd.csv',
 			[
-				'id,systems,source,name_en,effects,category,item_type',
-				`headband,5.5e,${S},Headband of Intellect,set_override:int:19,gear,wondrous item`,
+				'id,systems,source,name_en,effects,category',
+				`headband,5.5e,${S},Headband of Intellect,set_override:int:19,wondrous`,
 			].join('\n'),
 		);
 		const g = await loadContent(st, ['c']);
@@ -1058,8 +1058,8 @@ describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
 		await st.write(
 			'c/items_srd.csv',
 			[
-				'id,systems,source,name_en,effects,category,item_type',
-				`cursed_ring,5.5e,${S},Cursed Ring,plugin:test-ns:curse,gear,ring`,
+				'id,systems,source,name_en,effects,category',
+				`cursed_ring,5.5e,${S},Cursed Ring,plugin:test-ns:curse,ring`,
 			].join('\n'),
 		);
 		await st.write(

@@ -212,6 +212,12 @@
 		resolution: 'How it resolves: save / attack / auto / util — drives the roll widget.',
 		save: 'Ability for the saving throw, e.g. dex, wis, con.',
 		damage: 'Dice + type for the parser, e.g. “8d6 fire” or “2d4 necrotic”. Leave blank if none.',
+		tags:
+			'What the item is, comma-separated. A word, or word:value. ' +
+			'e.g. martial, melee, versatile:1d10, mastery:sap — or armor:heavy, ac:18, dex_cap:0, str_min:15.',
+		base_item_id:
+			'The id of the ordinary item this one is built from, e.g. “longsword” for a +1 Longsword. ' +
+			'Everything left blank here is taken from it.',
 		material: 'Material component text, e.g. “a pinch of sulfur and bat guano”.',
 		higher_level: 'What changes when cast with a higher-level slot.',
 		effects:

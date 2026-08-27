@@ -10,6 +10,14 @@ import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
 import { slug, writeCsv, assertCount, dedupeIds } from './lib.mjs';
 import { packDir } from '../content-repo.mjs';
+import {
+	weaponTags,
+	armorTags,
+	magicItemHead,
+	splitTopLevel,
+	tagSet,
+	isMundaneWeapon,
+} from './item-tags.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -744,7 +752,7 @@ function baseWeaponResolver() {
 		.join('\n');
 	const map = new Map();
 	for (const r of Papa.parse(raw, { header: true, skipEmptyLines: true }).data)
-		if (r.category === 'weapon' && /^(simple|martial) (melee|ranged)$/i.test(r.item_type || ''))
+		if (r.category === 'weapon' && isMundaneWeapon(tagSet(r.tags)))
 			map.set(wordKey(r.name_en), r.id);
 	return map;
 }
@@ -1045,17 +1053,11 @@ const ITEM_COLS = [
 	'systems',
 	'source',
 	'category',
-	'item_type',
-	'properties',
+	'tags',
 	'damage',
-	'range',
-	'ac',
-	'armor_dex_cap',
-	'str_min',
-	'stealth_disadvantage',
+	'base_item_id',
 	'effects',
 	'rarity',
-	'attunement',
 	'cost',
 	'weight_lb',
 	'name_en',
@@ -1072,14 +1074,9 @@ const irow = (o) => ({
 	effects: '',
 	cost: '',
 	weight_lb: '',
-	properties: '',
+	tags: '',
 	damage: '',
-	range: '',
-	ac: '',
-	armor_dex_cap: '',
-	str_min: '',
-	stealth_disadvantage: 'false',
-	attunement: 'false',
+	base_item_id: '',
 	rarity: '',
 	...o,
 });
@@ -1121,12 +1118,10 @@ function convertItems() {
 				id: slug(name),
 				name_en: name,
 				category: 'weapon',
-				item_type: wtype,
+				tags: weaponTags({ group: wtype, properties: p === '-' ? '' : p }),
 				cost,
 				weight_lb: wlb(weight),
-				properties: p === '-' ? '' : p,
 				damage: dm ? `${dm[1]} ${dm[2].toLowerCase()}` : '',
-				range: (/range\s+(\d+\/\d+)/i.exec(props || '') || [, ''])[1],
 			}),
 		);
 		nW++;
@@ -1164,13 +1159,15 @@ function convertItems() {
 				id: slug(name),
 				name_en: name,
 				category: isShield ? 'shield' : 'armor',
-				item_type: isShield ? 'shield' : `${acat} armor`,
+				tags: armorTags({
+					weight: acat,
+					ac: (/(\d+)/.exec(acv || '') || [, ''])[1],
+					dexCap: isShield ? '' : acat === 'light' ? '' : acat === 'medium' ? '2' : '0',
+					strMin: (/(\d+)/.exec(str || '') || [, ''])[1],
+					stealthDisadvantage: /disadvantage/i.test(stealth || ''),
+				}),
 				cost,
 				weight_lb: wlb(weight),
-				ac: (/(\d+)/.exec(acv || '') || [, ''])[1],
-				armor_dex_cap: isShield ? '' : acat === 'light' ? '' : acat === 'medium' ? '2' : '0',
-				str_min: (/(\d+)/.exec(str || '') || [, ''])[1],
-				stealth_disadvantage: String(/disadvantage/i.test(stealth || '')),
 			}),
 		);
 		nA++;
@@ -1192,7 +1189,6 @@ function convertItems() {
 				id: slug(name),
 				name_en: name,
 				category: 'gear',
-				item_type: 'adventuring gear',
 				cost: strip(td[1]),
 				weight_lb: wlb(strip(td[2])),
 			}),
@@ -1204,6 +1200,8 @@ function convertItems() {
 	// Their `effects` tokens are authored AFTER conversion (MAGIC-ITEM-EFX) — preserve by id, or a
 	// re-run silently wipes the authoring (the same trap class_features already carries).
 	const authoredItems = existingEffectsById('items_srd.csv');
+	// every mundane row converted above — what a magic item's `base_item_id` may point at
+	const mundaneIds = new Set(rows.map((r) => r.id));
 	let nM = 0;
 	const RAR = ['very rare', 'uncommon', 'common', 'rare', 'legendary', 'artifact'];
 	const magSlice = html.slice(html.indexOf("id='MagicItemsAZ'"));
@@ -1212,14 +1210,9 @@ function convertItems() {
 		const inner = strip((/<em>([\s\S]*?)<\/em>/i.exec(metaP) || [, ''])[1]).toLowerCase();
 		const rar = RAR.find((r) => inner.includes(r));
 		if (!rar) continue; // section text, not a magic item
-		const type = inner.split(',')[0].trim();
-		const category = type.startsWith('armor')
-			? 'armor'
-			: type.startsWith('weapon')
-				? 'weapon'
-				: type.startsWith('ammunition')
-					? 'ammunition'
-					: 'gear';
+		// depth-0 split: "weapon (glaive, halberd, pike), rare" is a TYPE with commas in it
+		const type = splitTopLevel(inner)[0] ?? '';
+		const { category, baseItemId } = magicItemHead(type, mundaneIds);
 		const id = slug(e.name);
 		rows.push(
 			irow({
@@ -1232,8 +1225,8 @@ function convertItems() {
 					.join('\n'),
 				effects: authoredItems.get(id) ?? '', // preserve tokens authored post-conversion
 				category,
-				item_type: type,
-				attunement: String(/requires attunement/.test(inner)),
+				base_item_id: baseItemId,
+				tags: /requires attunement/.test(inner) ? 'attunement' : '',
 				rarity: slug(rar),
 			}),
 		);

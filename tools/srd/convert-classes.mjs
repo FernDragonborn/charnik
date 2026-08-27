@@ -21,6 +21,7 @@ import {
 	existingColById,
 } from './lib.mjs';
 import { packDir } from '../content-repo.mjs';
+import { tagSet, isMundaneWeapon } from './item-tags.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../..');
@@ -36,14 +37,14 @@ function martialSubsets(itemsCsvPath) {
 		.split('\n')
 		.filter((l) => !l.startsWith('#'))
 		.join('\n');
-	const weapons = Papa.parse(raw, { header: true, skipEmptyLines: true }).data.filter(
-		(r) => r.category === 'weapon' && /^martial (melee|ranged)$/i.test(r.item_type || ''),
-	);
+	const weapons = Papa.parse(raw, { header: true, skipEmptyLines: true })
+		.data.map((r) => ({ id: r.id, category: r.category, tags: tagSet(r.tags) }))
+		.filter((r) => r.category === 'weapon' && isMundaneWeapon(r.tags) && r.tags.has('martial'));
 	return {
 		finesseOrLight: weapons
-			.filter((r) => /finesse|light/i.test(r.properties || ''))
+			.filter((r) => r.tags.has('finesse') || r.tags.has('light'))
 			.map((r) => r.id),
-		light: weapons.filter((r) => /\blight\b/i.test(r.properties || '')).map((r) => r.id),
+		light: weapons.filter((r) => r.tags.has('light')).map((r) => r.id),
 	};
 }
 

@@ -91,9 +91,10 @@ describe('entryMeta', () => {
 		expect(entryMeta(row({ school: 'evocation', damage: '8d6' }))).toBe('evocation · 8d6');
 	});
 
-	it('item sub-line drops a broader term already implied by a more specific one', () => {
-		expect(entryMeta(row({ category: 'gear', item_type: 'adventuring gear' }, 'item'))).toBe(
-			'adventuring gear',
-		);
+	/* Since ITEM-TAGS the kind IS the category, so there is no broader/narrower pair left to dedupe —
+	   what an item is comes from `category`, and how magical it is from `rarity`. */
+	it('item sub-line = category · rarity', () => {
+		expect(entryMeta(row({ category: 'gear' }, 'item'))).toBe('gear');
+		expect(entryMeta(row({ category: 'ring', rarity: 'rare' }, 'item'))).toBe('ring · rare');
 	});
 });

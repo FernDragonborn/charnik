@@ -3,6 +3,8 @@
  * bonus, and build the attack list from equipped inventory. Pure. Split out of combat/helpers.ts.
  */
 import { gatherProfGrants, isWeaponProficient } from '$lib/rules/proficiency';
+import { weaponCategoryOf, ITEM_TAG, type ItemTags } from '$lib/content/item-tags';
+import { resolveItem } from '$lib/content/resolved-item';
 import type { ContentGraph } from '$lib/content/loader';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
@@ -29,8 +31,8 @@ export interface Attack {
 	 *  separately (BUG-DMG-1). The ability/magic mod is folded into the first (primary) part only. */
 	damageParts: DamagePart[];
 	meta: string;
-	/** §A/§B weapon-category tags (item_type + property words) the roll path matches a scoped effect
-	 *  against — Archery (attack:ranged) and GWF (min_die:damage:two_handed,melee) read these. */
+	/** §A/§B the weapon's tag NAMES, which the roll path matches a scoped effect against — Archery
+	 *  (attack:ranged) and GWF (min_die:damage:two_handed,melee) read these. */
 	scopes: string[];
 	/** D9 provenance — a magic weapon's own bonus folded into THIS attack ("+1 attack & damage"),
 	 *  or a visible degrade note for a bonus v1 can't fold yet (dice / expression). */
@@ -115,23 +117,16 @@ export function weaponBonus(tokens: string[]): {
 	};
 }
 
-/** §A: a weapon's category tags for scope matching — its item_type words (`simple`, `martial`,
- *  `melee`, `ranged`) plus its property words (`finesse`, `two_handed`, `thrown`, …; "two-handed" →
- *  `two_handed`, "versatile (1d10)" → `versatile`). A scoped bonus applies iff its scope is in here.
- *
- *  A magic item names its base weapon in a prose parenthetical ("weapon (any sword that deals
- *  slashing damage)"), and only the words before it are categories — splitting the phrase as well
- *  made scopes out of "that", "deals" and "slashing". Prose is not a data source (content.md); the
- *  base weapon's own tags come back when a magic row can point at the row it is built from. */
-function weaponScopeSet(itemType: string, properties: string): Set<string> {
-	const scopes = new Set<string>();
-	const category = itemType.toLowerCase().split('(')[0] ?? '';
-	for (const w of category.split(/\s+/)) if (w) scopes.add(w);
-	for (const p of properties.toLowerCase().split(/[,;]/)) {
-		const first = p.trim().split(/[\s(]/)[0];
-		if (first) scopes.add(first.replace(/-/g, '_'));
-	}
-	return scopes;
+/** The sub-line under an attack row: what kind of weapon it is, then the first thing it can do
+ *  ("martial melee · versatile 1d10"). The kind tags lead in a fixed order so two weapons of the
+ *  same kind never read differently because their CSV cells were written in another order. */
+function attackMeta(tags: ItemTags): string {
+	const kindOrder: string[] = [ITEM_TAG.simple, ITEM_TAG.martial, ITEM_TAG.melee, ITEM_TAG.ranged];
+	const kind = kindOrder.filter((t) => tags.has(t));
+	const first = [...tags].find(([name]) => !kind.includes(name));
+	return [kind.join(' '), first ? [first[0], first[1]].filter(Boolean).join(' ') : '']
+		.filter(Boolean)
+		.join(' · ');
 }
 
 /** §A: sum the character-level weapon-scoped `flat_bonus:attack:<category>` bonuses (Archery
@@ -178,10 +173,15 @@ export function computeAttacks(
 		if (!inv.equipped) continue;
 		const row = graph.get(inv.item);
 		if (row?.type !== 'item' || row.data.category !== 'weapon') continue;
-		const props = (row.data.properties ?? '').toLowerCase();
-		const ranged = (row.data.item_type ?? '').includes('ranged');
-		const mod = ranged ? dexMod : props.includes('finesse') ? Math.max(strMod, dexMod) : strMod;
-		const proficient = isWeaponProficient(weaponGrants, row.data.item_type, row.id);
+		// a magic weapon carries only what it adds; the rest — category, properties, base damage —
+		// comes from the mundane row its `base_item_id` names
+		const item = resolveItem(graph, row);
+		const ranged = item.tags.has(ITEM_TAG.ranged);
+		// ranged is DEX, finesse is the better of the two, everything else is STR
+		let mod = strMod;
+		if (ranged) mod = dexMod;
+		else if (item.tags.has(ITEM_TAG.finesse)) mod = Math.max(strMod, dexMod);
+		const proficient = isWeaponProficient(weaponGrants, weaponCategoryOf(item.tags), row.id);
 		// D9: a magic weapon's OWN effect tokens fold into THIS attack only (a +1 sword must not
 		// grant +1 to every attack — so it can't ride gatherEffects/global facts). v1 folds LITERAL
 		// flat_bonus:attack / flat_bonus:damage; a dice / expression bonus (a flaming +1d6) needs the
@@ -189,14 +189,21 @@ export function computeAttacks(
 		const w = weaponBonus(row.data.effects);
 		// §A: character-level weapon-category-scoped attack bonuses (Archery → ranged weapons) fold
 		// into THIS weapon's to-hit only when it carries the matching category tag.
-		const scopeSet = weaponScopeSet(row.data.item_type ?? '', props);
+		// a tag NAME is an effect scope — one vocabulary, so `mastery:nick` scopes as `mastery`
+		const scopeSet = new Set(item.tags.keys());
 		const scoped = scopedAttackBonus(sheet.facts, scopeSet);
 		const notProfNote = proficient ? undefined : 'Not proficient — no proficiency bonus';
-		const note = [w.note, scoped.note, notProfNote].filter(Boolean).join('; ') || undefined;
+		// A "Weapon (any melee weapon)" template names no base, so there is nothing to inherit: no
+		// dice, no category, no scopes. Say so on the row — the alternative is an attack line that
+		// looks complete and silently rolls a bare ability modifier.
+		const templateNote =
+			item.tags.size === 0 && !item.damage ? 'Base weapon not set — roll its own dice' : undefined;
+		const note =
+			[w.note, scoped.note, notProfNote, templateNote].filter(Boolean).join('; ') || undefined;
 		// The ability mod + a magic weapon's flat damage bonus land on the PRIMARY (first) damage part
 		// only — RAW adds the ability modifier once, to the weapon's base damage, never to a second
 		// damage type's dice. A weapon with no damage string still gets a part to carry that mod.
-		const parts = parseDamageParts(row.data.damage ?? '');
+		const parts = parseDamageParts(item.damage);
 		const baseParts = (parts.length ? parts : [{ pool: {}, mod: 0, type: '' }]).map((p, i) =>
 			i === 0 ? { ...p, mod: p.mod + mod + w.damage } : p,
 		);
@@ -207,7 +214,7 @@ export function computeAttacks(
 			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.attack,
 			dmg: formatDamageParts(damageParts),
 			damageParts,
-			meta: [row.data.item_type, props.split(/[,;]/)[0]].filter(Boolean).join(' · '),
+			meta: attackMeta(item.tags),
 			scopes: [...scopeSet],
 			...(note ? { note } : {}),
 		});

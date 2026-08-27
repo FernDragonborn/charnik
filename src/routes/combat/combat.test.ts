@@ -41,8 +41,8 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/items_srd.csv',
 		[
-			'id,systems,source,name_en,category,item_type,damage,properties',
-			`dagger,5.5e,${S},Dagger,weapon,melee weapon,1d4 piercing,finesse`,
+			'id,systems,source,name_en,category,tags,damage',
+			`dagger,5.5e,${S},Dagger,weapon,"simple, melee, finesse",1d4 piercing`,
 		].join('\n'),
 	);
 	const g = await loadContent(st, ['c']);

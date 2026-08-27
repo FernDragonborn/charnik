@@ -90,6 +90,22 @@ export const issueText = {
 		detail: `${kind}_id "${id}"`,
 	}),
 
+	/** A tag whose value has to be a number isn't one. Folding a column into `tags` cost zod's
+	 *  per-column validation of it, so this is where that check comes back (docs/plan.md). */
+	badTagValue: (tag: string, name: string): IssueText => ({
+		message: `The tag "${name}" has to be a whole number, and this row gives it something else — so it is ignored, and the item behaves as if the tag weren’t there at all. Write it as ${name}:12, or remove it.`,
+		detail: `tags: ${tag}`,
+	}),
+
+	/** `base_item_id` names a row that isn't there — the item silently loses everything it inherits. */
+	unresolvedBaseItem: (id: string, candidates: Iterable<string>): IssueText => ({
+		message: `This item says it is built from another item that doesn’t exist under the same source, so it inherits nothing — no damage, no properties, no weapon category${
+			didYouMean(id, candidates) ||
+			'. Check the id for a typo, or add the base item to a CSV in the same pack.'
+		}`,
+		detail: `base_item_id "${id}"`,
+	}),
+
 	/** The same `source:id` twice — the second copy is inert everywhere, so say which one won. */
 	duplicateId: (id: string, effectiveId: string, keptIn: string): IssueText => ({
 		message: `Two entries share the id "${id}" under the same source, so only the first one is used and this one is ignored everywhere in the app. Give one of them a different id, or delete the copy.`,

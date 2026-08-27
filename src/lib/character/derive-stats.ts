@@ -19,7 +19,9 @@ import type { Character } from './schema';
 import { SKILL_ABILITY, type SkillId } from './skills';
 import { applyEffects, matchesTarget, type EffectFacts } from '../effects/apply';
 import { computed, type Computed, type Contribution } from '../rules/pipeline';
-import { rowName, type ContentGraph, type LoadedRow, type LoadedRowOf } from '../content/loader';
+import { rowName, type ContentGraph, type LoadedRow } from '../content/loader';
+import { tagInt, ITEM_TAG } from '../content/item-tags';
+import type { ResolvedItem } from '../content/resolved-item';
 
 /** Coerce a CSV-derived cell to a number (already-number passes through), else the default. Shared by
  *  the stat helpers + deriveSheet's base-speed read. */
@@ -152,14 +154,15 @@ export function deriveSkills(
  *  for it — not the inventory equipped flag), else unarmored; then AC effects fold on top. */
 export function deriveAc(
 	{ scores, facts }: StatInputs,
-	equippedArmor: LoadedRowOf<'item'> | undefined,
+	equippedArmor: ResolvedItem | undefined,
 	shieldRaised: boolean,
 ): Computed {
 	let acBase: Computed;
 	if (equippedArmor) {
-		const capRaw = equippedArmor.data.armor_dex_cap;
-		const dexCap = capRaw === '' || capRaw == null ? null : num(capRaw);
-		acBase = armoredAC({ armorBaseAc: num(equippedArmor.data.ac), dexScore: scores.dex, dexCap });
+		// no `dex_cap` tag means no cap (light armor), which is NOT `dex_cap:0` (heavy) — hence null
+		const dexCap = tagInt(equippedArmor.tags, ITEM_TAG.dexCap);
+		const armorBaseAc = tagInt(equippedArmor.tags, ITEM_TAG.ac) ?? 0;
+		acBase = armoredAC({ armorBaseAc, dexScore: scores.dex, dexCap });
 	} else {
 		acBase = unarmoredAC({ dexScore: scores.dex });
 	}
@@ -178,7 +181,7 @@ export function deriveSpeed(
 	{ scores, facts }: StatInputs,
 	speciesRow: LoadedRow | undefined,
 	baseSpeed: number,
-	equippedArmor: LoadedRowOf<'item'> | undefined,
+	equippedArmor: ResolvedItem | undefined,
 ): Computed {
 	const speedBase: Contribution[] = [
 		{
@@ -188,10 +191,10 @@ export function deriveSpeed(
 			amount: baseSpeed,
 		},
 	];
-	const armorStrMin = equippedArmor ? num(equippedArmor.data.str_min) : 0;
+	const armorStrMin = equippedArmor ? (tagInt(equippedArmor.tags, ITEM_TAG.strMin) ?? 0) : 0;
 	if (armorStrMin > 0 && scores.str < armorStrMin)
 		speedBase.push({
-			source: `${equippedArmor ? rowName(equippedArmor) : 'Armor'} (STR ${armorStrMin})`,
+			source: `${equippedArmor ? rowName(equippedArmor.row) : 'Armor'} (STR ${armorStrMin})`,
 			layer: 'item',
 			op: 'add',
 			amount: -10,

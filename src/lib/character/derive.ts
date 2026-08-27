@@ -51,7 +51,9 @@ import {
 	ABILITY_SCORE_CLAMP,
 	type Ability,
 } from '../rules/core';
-import { gatherProfGrants, isArmorProficient, armorCategoryOf } from '../rules/proficiency';
+import { gatherProfGrants, isArmorProficient } from '../rules/proficiency';
+import { ITEM_TAG } from '../content/item-tags';
+import { armorCategoryOf, resolveItem, type ResolvedItem } from '../content/resolved-item';
 import { resourceNames, namedResources } from './resource-names';
 import {
 	type ActiveEffect,
@@ -125,11 +127,11 @@ export interface CharacterSheet {
 /** A4: armor with the stealth-disadvantage flag synthesizes a `disadvantage:skill.stealth` FACT so
  *  it reaches BOTH the hover note and the actual Hide roll (deduped by target+source, like a token). */
 function applyStealthDisadvantage(
-	equippedArmor: LoadedRowOf<'item'> | undefined,
+	equippedArmor: ResolvedItem | undefined,
 	facts: EffectFacts,
 ): void {
-	if (!equippedArmor?.data.stealth_disadvantage) return;
-	const source = equippedArmor.data.name_en;
+	if (!equippedArmor?.tags.has(ITEM_TAG.stealthDisadvantage)) return;
+	const source = equippedArmor.row.data.name_en;
 	if (!facts.disadvantage.some((d) => d.target === 'skill.stealth' && d.source === source))
 		facts.disadvantage.push({ target: 'skill.stealth', source });
 }
@@ -157,7 +159,7 @@ function flagPhantomConditions(
 
 interface ArmorSpellBlockInput {
 	spellcasting: Spellcasting;
-	equippedArmor: LoadedRowOf<'item'> | undefined;
+	equippedArmor: ResolvedItem | undefined;
 	build: Character['build'];
 	graph: ContentGraph;
 	issues: EffectIssue[];
@@ -179,11 +181,11 @@ function applyArmorSpellBlock({
 			return r?.type === 'class' ? r.data.armor_profs : undefined;
 		}),
 	);
-	if (isArmorProficient(armorGrants, equippedArmor.data.item_type, equippedArmor.data.category))
-		return;
-	const source = equippedArmor.data.name_en;
-	// cat is always defined here — isArmorProficient returns true (no block) on an unclassifiable armor.
-	const cat = armorCategoryOf(equippedArmor.data.item_type, equippedArmor.data.category);
+	// cat is read once — isArmorProficient returns true (no block) on an unclassifiable armor, so by
+	// the time the note is built it is always defined.
+	const cat = armorCategoryOf(equippedArmor);
+	if (isArmorProficient(armorGrants, cat)) return;
+	const source = equippedArmor.row.data.name_en;
 	spellcasting.armorBlock = {
 		source,
 		note: `Not proficient with ${cat} armor — spellcasting blocked`,
@@ -237,9 +239,12 @@ export function deriveSheet(
 	};
 
 	// equipped armor — shared by the AC math below and the `armor_type`/`is_wearing_armor` guards.
-	const equippedArmor = build.inventory
+	// RESOLVED once (tags, plus whatever it inherits from its `base_item_id`), because five readers
+	// downstream ask it what it is and they must not each answer differently.
+	const equippedArmorRow = build.inventory
 		.map((i) => (i.equipped ? graph.get(i.item) : undefined))
 		.find((r): r is LoadedRowOf<'item'> => r?.type === 'item' && r.data.category === 'armor');
+	const equippedArmor = equippedArmorRow ? resolveItem(graph, equippedArmorRow) : undefined;
 
 	// casting ability per caster class + the primary caster (highest caster class level) — the
 	// cheap slice the resolve ctx needs; full spellcasting derives AFTER the final scores exist.

@@ -177,13 +177,11 @@ tokens from its Ability Score Increase paragraph. What makes that legitimate is 
 a CSV column, in a diff, that a human reads before it ships. That review is the boundary; downstream
 of it, the column is the only truth.
 
-**Known live exception: an item's `item_type`.** For mundane gear it is a category (`martial melee`,
-`light armor`); for magic items the SRD writes a phrase (`weapon (any sword that deals slashing
-damage)`), and three readers sniff substrings out of it — `weaponCategoryOf`, the `ranged` test in
-`computeAttacks`, and `weaponScopeSet`. A magic weapon therefore has no properties, no damage dice,
-and no fighting-style scopes. The fix is a `base_item_id` column pointing at the mundane row it is
-built from, not a better regex — planned as ITEM-TAGS in `docs/plan.md`, together with the rule for
-when a fact is a column and when it is a tag.
+There is **no live exception left in `src/`**. The last one was an item's `item_type`, which held a
+category for mundane gear (`martial melee`) and a prose phrase for magic items (`weapon (any sword
+that deals slashing damage)`) — three readers sniffed substrings out of it, so a magic weapon had no
+properties, no damage dice and no fighting-style scopes. ITEM-TAGS replaced it with the `tags` column
+and `base_item_id` (`docs/plan.md`); the phrase is now read once, in the converter, into a column.
 
 ## The content repo
 

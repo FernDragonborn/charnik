@@ -61,7 +61,9 @@ const GROUPINGS: Partial<Record<ContentType, Grouping[]>> = {
 		{ key: 'creature_type', label: 'Type' },
 	],
 	item: [
-		{ key: 'item_type', label: 'Type' },
+		// `category` carries the kind since ITEM-TAGS folded `item_type` away — and it groups better
+		// than that column ever did, which had 54 distinct values because magic rows held prose in it.
+		{ key: 'category', label: 'Type' },
 		{ key: 'rarity', label: 'Rarity' },
 	],
 	class_feature: [{ key: 'class_id', label: 'Class' }],

@@ -552,7 +552,7 @@ Common columns on every type: `id` (lowercase slug; identity = `source:id`), `sy
 - **background** (`backgrounds_*.csv`) `skills, tools, languages, ability_choices, origin_feat` (last two = 5.5e).
 - **feat** (`feats_*.csv`) `category(origin/general/fighting_style/epic_boon/general_2014), prereq, repeatable`.
 - **spell** (`spells_*.csv`) `level, school, casting_time, range, components, material, duration, concentration, ritual, classes, resolution(attack/save/auto/none), save_ability, damage, higher_level`. Caster-wide DC/attack are **computed, never stored**.
-- **item** (`items_*.csv`) `category, item_type, cost, weight_lb, properties, damage, damage_type, range, ac, armor_dex_cap("" full / "2" medium / "0" heavy), str_min, stealth_disadvantage, attunement, rarity`.
+- **item** (`items_*.csv`) `category, tags, damage, base_item_id, rarity, cost, weight_lb`. Everything that applies to only SOME items rides in `tags` (ITEM-TAGS below).
 - **condition** (`conditions_*.csv`) `negative` (crimson vs teal); mechanics in `effects`.
 - **effect** (`effects_*.csv`, runtime "+" catalog) `kind(bounded vocab), target, op, value, duration_rounds`.
 - **File-level metadata, NOT a pack manifest.** `schemaVersion, source, license, attribution,
@@ -593,46 +593,72 @@ first is a column with a bug; the second was never column-shaped.
   banned because it is the L2 minus operator (see `slugify`), and `name:value` is the shape every
   effect token already uses, so a tag and an effect scope are the same string (`two_handed`).
 
-### ITEM-TAGS · eight item columns fold into `tags` (TODO, not started)
-Applies the rule above. `items_*.csv` carries 19 columns of which most are blank for any given row,
+### ITEM-TAGS · eight item columns folded into `tags` (DONE 2026-08-27, content schema v2)
+Applied the rule above. `items_*.csv` carried 19 columns of which most were blank for any given row,
 because it describes weapons, armour, gear and magic items in one table — which is right: splitting
 by kind would break `inventoryEntry.item` (one ref to any item) and the 24 places that narrow on
-`row.type === 'item'`.
-
-| folds into `tags` | why | | stays a column | why |
-|---|---|---|---|---|
-| `item_type` | three different facts under one name (`simple melee` / `light armor` / `weapon (dagger)`), and 3 functions substring-match it | | `damage` | compound field (see rule) |
-| `properties` | a list of words; one reader | | `ac` | with `damage`, the number the sheet leans on |
-| `range` | zero readers, duplicates `Thrown (Range 20/60)` | | `rarity`, `cost`, `weight_lb` | companions — same row carries all three |
-| `armor_dex_cap`, `str_min`, `ac`* | `num()`-coerced by hand anyway; armour-only | | `effects` | compound field |
-| `stealth_disadvantage` | meaningful in 7 rows of 390 | | | |
-| `attunement` | zero readers; SRD qualifies it in prose (`attunement:druid`) | | | |
-
-\* `ac` folds too: of its 18 mentions in `src/`, only `derive-stats.ts:162` and
-`SheetInventory.svelte:44` read the **item** column; the rest are the character's computed `ac`
-effect target or a monster's. Result — **19 → 13**:
+`row.type === 'item'`. **19 → 13**, of which two are new:
 
 ```
 id, category, tags, damage, base_item_id, effects, rarity, cost, weight_lb,
 name_en, name_uk, text_en, text_uk
 ```
 
-Work, in order:
-1. **`tags`** — replaces `properties` (do not add beside it). Kills `weaponScopeSet` and with it the
-   last prose-sniffing in the combat path; makes weapon mastery (`mastery:nick`) a first-class fact
-   instead of the scope `mastery:` it currently degrades to. **Supersedes refinement 2 below** — a
-   `mastery` column is the wrong shape under this rule.
-2. **`base_item_id`** — a magic item points at the mundane row it is built from; empty columns
-   inherit, filled ones win, in ONE resolver both `computeAttacks` and `buildItem` call. Fixes the
-   worst sparsity: 34 of 71 weapons and 19 of 31 armours are blank purely because they are magic.
-   The "any melee weapon" templates (Flame Tongue) are NOT this — the base is the player's choice at
-   equip time, needing `inventoryEntry.base` in the character schema and a UI; deliberately deferred,
-   with a visible note on the attack row rather than silence.
-3. **`weight_lb` in the converter** — 287 gear rows have no weight; that is an extraction gap, not a
-   reason to move the column.
+| folded into `tags` | | stayed a column |
+|---|---|---|
+| `item_type` — three different facts under one name (`simple melee` / `light armor` / `weapon (dagger)`), which 3 functions substring-matched | | `damage`, `effects` — compound fields (see rule) |
+| `properties`, `range` | | `rarity`, `cost`, `weight_lb` — companions, one row carries all three |
+| `ac`, `armor_dex_cap`, `str_min`, `stealth_disadvantage`, `attunement` | | |
 
-Migration is the first real use of `content/migrations.ts` (empty registry, written for exactly this
-shape): bump `CONTENT_SCHEMA_VERSION`, register the `item` step, re-stamp.
+What it bought, beyond the sparsity:
+
+- **`weaponScopeSet` is gone**, and with it the last prose-sniffing in the combat path. A tag NAME
+  *is* an effect scope, so there is one vocabulary: `mastery:nick` scopes as `mastery` instead of the
+  empty `mastery:` all 38 mastery rows used to degrade to. (**Superseded refinement 2 below** — a
+  `mastery` column is the wrong shape under this rule.)
+- **`category` carries the kind.** `potion`/`ring`/`wand`/`staff`/`rod`/`scroll`/`wondrous` joined
+  `ITEM_CATEGORIES`: `item_type` was holding them for 380 rows while `category` said only "gear", and
+  the compendium's Type grouping had 54 buckets because magic rows kept prose in it.
+- **`base_item_id`** — a magic item points at the mundane row it is built from; the base's tags go
+  underneath, the item's own win by name, in one resolver (`content/item-tags.ts ▸ resolveItem`).
+  `vorpal_sword` no longer declares itself a glaive, which is what `inner.split(',')[0]` made of
+  `Weapon (Glaive, Greatsword, Longsword, or Scimitar)` in 8 shipped rows.
+- **`weight_lb` for 2024 gear** — 0 of 81 rows had one. The `####` entries carry the price, the
+  weight lives only in the Adventuring Gear table; the converter now reads both. 62 of 81 have a
+  weight, the other 19 say `—` in the SRD and stay blank.
+- **The checks a column had, back where they belong.** zod validated `ac: optInt` by column name and
+  a tag list is just a string, so a non-numeric `ac:`/`dex_cap:`/`str_min:` and a dangling
+  `base_item_id` are content-health issues (`loader.ts ▸ validateItemTags`).
+
+Small wart left standing: the article's **Base item** cell shows the raw id (`scale_mail`), because
+`buildDetail` is pure and has no graph to look the name up in. Resolving it means an options object
+through all seven call sites (a 5th positional param trips the "five params means a type" rule) —
+worth doing when that cell becomes a link to the base item's article, not before.
+
+**Still open.** The "any melee weapon" templates (Flame Tongue) are NOT `base_item_id` — the base is
+the player's choice at equip time, needing `inventoryEntry.base` in the character schema and a UI.
+Deliberately deferred; the attack row says "Base weapon not set" rather than rolling a bare modifier
+and looking complete.
+
+**Weapon mastery is now half-modelled** (5.5e only — 2014 has no such rule, so only the 2024
+converter writes the tag). The weapon half is data: every 2024 weapon has exactly one mastery
+property in its own SRD column, and `mastery:<name>` records it. The CHARACTER half is missing —
+RAW the property does nothing unless a feature unlocks it, and the five SRD classes that grant
+Weapon Mastery at level 1 (Barbarian, Fighter, Paladin, Ranger, Rogue) each unlock it for **N kinds
+of weapon of the player's choice**, N growing per the class table and one choice swappable on a Long
+Rest. That is build state (`build.masteries`, re-editable at level-up like every other chosen
+option) plus the eight effects themselves, none of which exist. `versatile:1d10` is the same shape:
+data with no mechanic reading it.
+
+Migration was the first real use of `content/migrations.ts`: `CONTENT_SCHEMA_VERSION` 1 → 2, the
+`item` step registered, both packs regenerated. Two things it forced:
+
+- **A missing step now advances a type untouched.** One counter covers every content type, so a bump
+  that reshapes items says nothing about spells; demanding a step per type made every v1 file of
+  every other type an error. (The CHARACTER chain keeps the strict rule — one shape, so a gap is real.)
+- **Converters stamp `#content-schema`.** They never had, and every re-run silently stripped it — the
+  directive only survived because a `pnpm restamp` had put it back. Absent reads as "current", which
+  is true until the next bump and then quietly wrong for every regenerated file.
 
 ### "Articles" + edition toggle (UI/model)
 A single content row is an **"article"**. When an article exists in BOTH editions (same
