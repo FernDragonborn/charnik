@@ -277,8 +277,11 @@ const parseGrantProficiency: KindParser = (rest, raw, kind) => {
 const parsePlugin: KindParser = (rest, raw, kind) => {
 	// `plugin:<namespace>:<handlerName>[:<args>]` — grammar + length caps from docs/internals/plugins.md §1. The token is
 	// attacker-controlled content; over-cap or malformed → inert unknown (never a partial parse).
-	// `args` may itself contain `:` — only the first two separators are structural.
-	const m = /^([a-z0-9][a-z0-9-]{0,31}):([a-z0-9][a-z0-9-]{0,31})(?::([\s\S]{0,256}))?$/.exec(rest);
+	// `args` may itself contain `:` — only the first two separators are structural, which is also why
+	// this body is exempt from `tightenDelimiters` and spells out its own `\s*` on those two.
+	const m = /^([a-z0-9][a-z0-9-]{0,31})\s*:\s*([a-z0-9][a-z0-9-]{0,31})(?::([\s\S]{0,256}))?$/.exec(
+		rest,
+	);
 	if (!m?.[1] || !m[2]) return { kind: 'unknown', raw };
 	return { kind, plugin: { namespace: m[1], handlerName: m[2], args: m[3] ?? '' }, raw };
 };
@@ -320,6 +323,18 @@ const KIND_PARSERS: Partial<Record<EffectKind, KindParser>> = {
 	[EFFECT_KIND.regainOnInitiative]: parseRollMod,
 };
 
+/** Kinds whose body ENDS in free-form prose (a `note:`'s display text, a plugin's argument): the
+ *  interior spacing is content, so only the ends are trimmed. Every other kind's body is structure. */
+const FREE_TEXT_BODY: ReadonlySet<string> = new Set([EFFECT_KIND.note, EFFECT_KIND.plugin]);
+
+/** Whitespace touching a `:` or `,` is formatting, not meaning — `advantage: attack` and
+ *  `min_die:damage:two_handed, melee:3` say exactly what they look like they say. Collapsed at the
+ *  ONE parse chokepoint (as the target lowercasing in `parseTokenUncached` is), so every kind parser
+ *  is tolerant without its regex spelling it out, and so is the next one somebody writes. */
+function tightenDelimiters(kind: EffectKind, body: string): string {
+	return FREE_TEXT_BODY.has(kind) ? body.trim() : body.replace(/\s*([:,])\s*/g, '$1').trim();
+}
+
 function classifyToken(token: string): ParsedEffect {
 	const raw = token.trim();
 	const sep = raw.indexOf(':');
@@ -328,8 +343,8 @@ function classifyToken(token: string): ParsedEffect {
 	if (sep === -1)
 		return MARKER_KINDS.has(raw) ? { kind: raw as EffectKind, raw } : { kind: 'unknown', raw };
 	const kind = raw.slice(0, sep) as EffectKind;
-	const rest = raw.slice(sep + 1);
 	if (!EFFECT_KINDS.includes(kind)) return { kind: 'unknown', raw };
+	const rest = tightenDelimiters(kind, raw.slice(sep + 1));
 	// advantage / disadvantage / apply_condition / auto_fail / auto_succeed / note: bare target (rest
 	// kept verbatim — note's free-text casing/spacing must survive; the trimming kinds have parsers).
 	return (KIND_PARSERS[kind] ?? ((r, rw) => ({ kind, target: r, raw: rw })))(rest, raw, kind);
