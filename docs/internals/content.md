@@ -149,6 +149,36 @@ Aasimar. Users add that themselves as homebrew. Keep the CC-BY attribution with 
 every `source` carries its own `license` and `attribution` columns so SRD and community packs coexist
 and the About screen can credit each correctly.
 
+## Prose is not a data source
+
+**Nothing in `src/` may read a value out of an article's prose.** Every number, die, damage type, or
+category the app computes with comes from a declared column. `text`/`text_<locale>` is rendered,
+clamped, searched, and translated — never mined.
+
+The failure it prevents is the quiet kind. `text_en.match(/(\d+d\d+)/)` takes the first die in a
+paragraph: correct for the row it was written against, wrong for the row where the same rule is
+worded differently, and blank for every locale that translated the row away from the English the
+regex knew. It is a guess wearing a number's clothes, and the trace cannot explain it because there
+is no rule behind it.
+
+A missing column stays missing. Show nothing, or show the prose itself, and let the author fill the
+column in — that is a gap a user can see and close. `src/lib/content/prose-is-not-data.test.ts` fails
+the build on the shape this mistake is usually written in; it is a tripwire on the cheap path, not a
+proof, so the rule is the thing to hold, not the test.
+
+**The converters in `tools/srd/` are the exception, and the only one.** The SRD ships as prose, so
+they have no other source: `resolution` and `save_ability` come from "… saving throw", a race's ASI
+tokens from its Ability Score Increase paragraph. What makes that legitimate is where it lands —
+a CSV column, in a diff, that a human reads before it ships. That review is the boundary; downstream
+of it, the column is the only truth.
+
+**Known live exception: an item's `item_type`.** For mundane gear it is a category (`martial melee`,
+`light armor`); for magic items the SRD writes a phrase (`weapon (any sword that deals slashing
+damage)`), and three readers sniff substrings out of it — `weaponCategoryOf`, the `ranged` test in
+`computeAttacks`, and `weaponScopeSet`. A magic weapon therefore has no properties, no damage dice,
+and no fighting-style scopes. The fix is a `base_item` column pointing at the mundane row it is built
+from, not a better regex.
+
 ## The content repo
 
 The shipped SRD content is a separate repository, `charnik-content-srd`, so rules data can be

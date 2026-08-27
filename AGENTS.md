@@ -70,6 +70,13 @@ comes from a real CC-BY SRD source through the converters in `tools/srd/`, which
 against it. Schema tests validate shape, not truth, so a hallucinated damage die passes every gate you
 have and poisons the app. Need a dataset? Fetch it.
 
+**Reading a number out of prose.** Nothing in `src/` mines `text`/`text_<locale>` for a value. A die,
+a damage type, a category — it comes from a declared column or it does not exist, and a missing column
+shows as missing rather than as the first number the paragraph happened to contain. The converters in
+`tools/srd/` are the only exception, because the SRD *is* prose, and what they extract lands in a CSV
+a human reads in a diff. `prose-is-not-data.test.ts` guards the usual shape; `docs/internals/content.md`
+has the rule and the one live exception still open.
+
 **Pushing.** Commit whenever you have a meaningful, verified checkpoint — straight to `main`, this
 project does not use feature branches. Pushing is the one git action that needs explicit permission
 in the current turn, and a single "push" authorizes that turn only.

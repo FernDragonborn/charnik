@@ -117,10 +117,16 @@ export function weaponBonus(tokens: string[]): {
 
 /** §A: a weapon's category tags for scope matching — its item_type words (`simple`, `martial`,
  *  `melee`, `ranged`) plus its property words (`finesse`, `two_handed`, `thrown`, …; "two-handed" →
- *  `two_handed`, "versatile (1d10)" → `versatile`). A scoped bonus applies iff its scope is in here. */
+ *  `two_handed`, "versatile (1d10)" → `versatile`). A scoped bonus applies iff its scope is in here.
+ *
+ *  A magic item names its base weapon in a prose parenthetical ("weapon (any sword that deals
+ *  slashing damage)"), and only the words before it are categories — splitting the phrase as well
+ *  made scopes out of "that", "deals" and "slashing". Prose is not a data source (content.md); the
+ *  base weapon's own tags come back when a magic row can point at the row it is built from. */
 function weaponScopeSet(itemType: string, properties: string): Set<string> {
 	const scopes = new Set<string>();
-	for (const w of itemType.toLowerCase().split(/\s+/)) if (w) scopes.add(w);
+	const category = itemType.toLowerCase().split('(')[0] ?? '';
+	for (const w of category.split(/\s+/)) if (w) scopes.add(w);
 	for (const p of properties.toLowerCase().split(/[,;]/)) {
 		const first = p.trim().split(/[\s(]/)[0];
 		if (first) scopes.add(first.replace(/-/g, '_'));

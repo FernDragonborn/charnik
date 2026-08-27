@@ -130,16 +130,13 @@ function resolutionLabel(res: string, saveAbility: string): string {
 	return 'Utility';
 }
 
-/** A spell's damage/heal dice + type: the `damage` column ("8d6 fire"), else a heal die scraped from
- *  an auto-resolution spell's prose ("2d8" → healing). Empty when neither is present. */
+/** A spell's damage/heal dice + type, from the `damage` column ("8d6 fire") and nowhere else. Empty
+ *  when the column is: a healing spell that never declares its die shows none, rather than the first
+ *  die its prose happens to mention. */
 function spellDamage(d: SpellData): { dice: string; dmgType: string } {
 	const dm = (d.damage ?? '').match(/(\d+d\d+(?:\s*[+-]\s*\d+)?)\s*(.*)/);
-	if (dm) return { dice: (dm[1] ?? '').replace(/\s/g, ''), dmgType: (dm[2] ?? '').trim() };
-	if ((d.resolution ?? 'none') === 'auto') {
-		const h = (d.text_en ?? '').match(/(\d+d\d+)/);
-		if (h) return { dice: h[1] ?? '', dmgType: 'healing' };
-	}
-	return { dice: '', dmgType: '' };
+	if (!dm) return { dice: '', dmgType: '' };
+	return { dice: (dm[1] ?? '').replace(/\s/g, ''), dmgType: (dm[2] ?? '').trim() };
 }
 
 function buildSpell(
