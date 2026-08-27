@@ -564,6 +564,76 @@ Common columns on every type: `id` (lowercase slug; identity = `source:id`), `sy
 - **TODO (later)**: 2024 subclass-level overrides (all level 3) via per-system override
   column rather than the seeded 2014 `subclass_level`; bulk SRD fill beyond the seed.
 
+### Column or tag — where a fact lives (DECIDED 2026-08-27)
+The rule for every future schema change, and the one that shapes ITEM-TAGS below.
+
+> **A column when its emptiness is a hole. A tag when its absence means "does not apply."**
+
+`weight_lb` is blank in 287 of 390 items — a hole, because the converter never extracted it, and
+somebody should. `str_min` is blank on a dagger because daggers have no Strength requirement. The
+first is a column with a bug; the second was never column-shaped.
+
+- **Fold alternatives, never companions.** A tag cell stays short only because the folded facts are
+  mutually exclusive by kind: a weapon never carries armour tags. Measured over shipped 2024 items,
+  the folded cell is **median 17 characters, worst ≈76** (a crossbow), against today's `properties`
+  maximum of 75. Folding facts that co-occur — `cost`, `weight_lb`, `rarity` all apply to the same
+  row — would grow every cell without bound. That is what "everything in tags" fails at.
+- **A compound field stays a column even where it would fit.** `damage` is `1d6 slashing; 1d4
+  radiant`: its own internal structure, carrying the separators a tag list uses. Same class as
+  `effects`. A fact that has grown a grammar is not a tag however sparse it is.
+- **What a tag costs**, in order of how much it hurts: (1) zod stops validating it — `ac: optInt`
+  rejects `"eleven"` by column name, `ac:eleven` inside a tag list is just a string, so **a bad
+  tag value must surface in content health**, the channel unknown effect tokens already take, never
+  a silent zero; (2) the header stops advertising that the fact exists — an empty `str_min` column
+  says "armour can require Strength", a missing tag says nothing; (3) no fill-down, sort or filter in
+  a table processor. Hence the quick test: **if you would ever drag it down the whole sheet, it is a
+  column.**
+- **Grammar**: a tag is `name` or `name:value`, lowercase snake, comma/semicolon separated and read
+  by the existing `splitList`. Nothing more — no nesting, no ordering, no third separator. `-` is
+  banned because it is the L2 minus operator (see `slugify`), and `name:value` is the shape every
+  effect token already uses, so a tag and an effect scope are the same string (`two_handed`).
+
+### ITEM-TAGS · eight item columns fold into `tags` (TODO, not started)
+Applies the rule above. `items_*.csv` carries 19 columns of which most are blank for any given row,
+because it describes weapons, armour, gear and magic items in one table — which is right: splitting
+by kind would break `inventoryEntry.item` (one ref to any item) and the 24 places that narrow on
+`row.type === 'item'`.
+
+| folds into `tags` | why | | stays a column | why |
+|---|---|---|---|---|
+| `item_type` | three different facts under one name (`simple melee` / `light armor` / `weapon (dagger)`), and 3 functions substring-match it | | `damage` | compound field (see rule) |
+| `properties` | a list of words; one reader | | `ac` | with `damage`, the number the sheet leans on |
+| `range` | zero readers, duplicates `Thrown (Range 20/60)` | | `rarity`, `cost`, `weight_lb` | companions — same row carries all three |
+| `armor_dex_cap`, `str_min`, `ac`* | `num()`-coerced by hand anyway; armour-only | | `effects` | compound field |
+| `stealth_disadvantage` | meaningful in 7 rows of 390 | | | |
+| `attunement` | zero readers; SRD qualifies it in prose (`attunement:druid`) | | | |
+
+\* `ac` folds too: of its 18 mentions in `src/`, only `derive-stats.ts:162` and
+`SheetInventory.svelte:44` read the **item** column; the rest are the character's computed `ac`
+effect target or a monster's. Result — **19 → 13**:
+
+```
+id, category, tags, damage, base_item_id, effects, rarity, cost, weight_lb,
+name_en, name_uk, text_en, text_uk
+```
+
+Work, in order:
+1. **`tags`** — replaces `properties` (do not add beside it). Kills `weaponScopeSet` and with it the
+   last prose-sniffing in the combat path; makes weapon mastery (`mastery:nick`) a first-class fact
+   instead of the scope `mastery:` it currently degrades to. **Supersedes refinement 2 below** — a
+   `mastery` column is the wrong shape under this rule.
+2. **`base_item_id`** — a magic item points at the mundane row it is built from; empty columns
+   inherit, filled ones win, in ONE resolver both `computeAttacks` and `buildItem` call. Fixes the
+   worst sparsity: 34 of 71 weapons and 19 of 31 armours are blank purely because they are magic.
+   The "any melee weapon" templates (Flame Tongue) are NOT this — the base is the player's choice at
+   equip time, needing `inventoryEntry.base` in the character schema and a UI; deliberately deferred,
+   with a visible note on the attack row rather than silence.
+3. **`weight_lb` in the converter** — 287 gear rows have no weight; that is an extraction gap, not a
+   reason to move the column.
+
+Migration is the first real use of `content/migrations.ts` (empty registry, written for exactly this
+shape): bump `CONTENT_SCHEMA_VERSION`, register the `item` step, re-stamp.
+
 ### "Articles" + edition toggle (UI/model)
 A single content row is an **"article"**. When an article exists in BOTH editions (same
 base slug across `SRD 5.1`/5e and `SRD 5.2.1`/5.5e — e.g. `fireball`, `longsword`,
@@ -579,7 +649,9 @@ the rest — but a few things sit in text that would be better structured. Add v
 1. **`spell_lists.csv` linked table** (spell_id × class_id). SRD 5.1 lists class spell
    lists separately, so 2014 spells have an empty `classes` column; a linked table fixes
    both editions uniformly (supersedes the inline `spell.classes` string).
-2. **`mastery` column on item** (5.5e weapon mastery) — currently folded into `properties`.
+2. ~~**`mastery` column on item**~~ — superseded by ITEM-TAGS above: mastery is a tag
+   (`mastery:nick`), not a column. Today `properties` carries it as `mastery: Nick` and
+   `weaponScopeSet` reduces all 38 rows to the scope `mastery:`, losing the name.
 3. **Species ability bonuses → `effects`** (`flat_bonus:con+2`) instead of only prose
    (5e: on species; 5.5e: on background); model **subraces/lineages** (e.g. Elf lineages).
 4. **Monster**: optionally structure `saving_throws`, `damage_resist/immune`,

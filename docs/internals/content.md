@@ -121,6 +121,11 @@ because a typo is no longer the likeliest explanation.
 
 The app writes **only files it created** (homebrew). It never rewrites a hand-edited user file.
 
+**A rewrite keeps the file's own column order.** The header comes from the file when there is one and
+from the schema only when the file is being created, so somebody who rearranged their own CSV gets it
+back the way they left it — editing one row through the UI is not a reason to restyle their file.
+Columns the rows have gained but the header lacks are appended rather than dropped.
+
 Writes are **atomic** (temp then rename) and encoded **UTF-8 with BOM, CRLF line endings**, so Excel
 opens Cyrillic correctly. Rows are serialized with `papaparse.unparse` from the same forms the user
 fills in — nobody is ever required to open a file by hand.
@@ -176,8 +181,9 @@ of it, the column is the only truth.
 `light armor`); for magic items the SRD writes a phrase (`weapon (any sword that deals slashing
 damage)`), and three readers sniff substrings out of it — `weaponCategoryOf`, the `ranged` test in
 `computeAttacks`, and `weaponScopeSet`. A magic weapon therefore has no properties, no damage dice,
-and no fighting-style scopes. The fix is a `base_item` column pointing at the mundane row it is built
-from, not a better regex.
+and no fighting-style scopes. The fix is a `base_item_id` column pointing at the mundane row it is
+built from, not a better regex — planned as ITEM-TAGS in `docs/plan.md`, together with the rule for
+when a fact is a column and when it is a tag.
 
 ## The content repo
 

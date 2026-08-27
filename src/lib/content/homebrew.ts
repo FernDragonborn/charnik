@@ -170,10 +170,21 @@ function columnsFor(type: ContentType): string[] {
 	return Object.keys(shape);
 }
 
-/** Column order for a rewrite: schema columns first, then any extra columns present in `rows`
- *  (localized prose, etc.) so writing back never drops columns the loader would otherwise keep. */
-function columnsWithExtras(type: ContentType, rows: Record<string, string>[]): string[] {
-	const cols = columnsFor(type);
+/**
+ * Column order for a rewrite. An EXISTING file keeps the header it already has, with any column the
+ * rows have gained appended — a person who rearranged their own CSV gets it back the way they left
+ * it, and editing one row through the UI is not a reason to restyle their file. Only a file being
+ * created has no header to respect, and takes the schema's order.
+ *
+ * Columns absent from the header but present in the rows are appended rather than dropped (localized
+ * prose the loader would otherwise keep, a column a newer schema added).
+ */
+function columnsWithExtras(
+	type: ContentType,
+	rows: Record<string, string>[],
+	existingHeader: string[] = [],
+): string[] {
+	const cols = existingHeader.length ? existingHeader : columnsFor(type);
 	const extras = [...new Set(rows.flatMap(Object.keys))].filter((c) => !cols.includes(c));
 	return [...cols, ...extras];
 }
@@ -323,7 +334,7 @@ export async function upsertHomebrewRow(
 ): Promise<SaveResult> {
 	const id = (draft.id ?? '').trim() || slugify(draft.name_en ?? '');
 
-	const { rows: existing, directives } = await readHomebrewFile(storage, targetFile);
+	const { rows: existing, directives, header } = await readHomebrewFile(storage, targetFile);
 
 	// validate through the schema (buildRow forces source + slugs a blank id); pass no existingIds so
 	// the id is KEPT (an upsert reuses it), not de-duplicated like a fresh add.
@@ -331,7 +342,7 @@ export async function upsertHomebrewRow(
 	if (!built.ok) return { ok: false, issues: built.issues };
 	const finalRow = built.row;
 
-	const columns = columnsWithExtras(type, [...existing, finalRow]);
+	const columns = columnsWithExtras(type, [...existing, finalRow], header);
 
 	const idx = existing.findIndex((r) => r.id === id);
 	if (idx >= 0) existing[idx] = finalRow;
@@ -352,14 +363,14 @@ export async function removeHomebrewRow(
 	id: string,
 ): Promise<void> {
 	if (!(await storage.exists(targetFile))) return;
-	const { rows, directives } = await readHomebrewFile(storage, targetFile);
+	const { rows, directives, header } = await readHomebrewFile(storage, targetFile);
 	const remaining = rows.filter((r) => r.id !== id);
 	if (remaining.length === rows.length) return; // nothing matched
 	if (remaining.length === 0) {
 		await storage.remove(targetFile); // last row gone → drop the empty file
 		return;
 	}
-	const columns = columnsWithExtras(type, remaining);
+	const columns = columnsWithExtras(type, remaining, header);
 	await writeStampedHomebrew(storage, targetFile, { columns, rows: remaining }, directives);
 }
 
@@ -397,11 +408,16 @@ async function writeStampedHomebrew(
 async function readHomebrewFile(
 	storage: Storage,
 	file: string,
-): Promise<{ rows: Record<string, string>[]; directives: Map<MetaKey, string> }> {
-	if (!(await storage.exists(file))) return { rows: [], directives: new Map() };
+): Promise<{
+	rows: Record<string, string>[];
+	directives: Map<MetaKey, string>;
+	/** The header as the file actually spells it — the column order a rewrite must preserve. */
+	header: string[];
+}> {
+	if (!(await storage.exists(file))) return { rows: [], directives: new Map(), header: [] };
 	const { directives, body } = parseContentDirectives(await storage.read(file));
 	const parsed = Papa.parse<Record<string, string>>(body, { header: true, skipEmptyLines: true });
-	return { rows: parsed.data, directives };
+	return { rows: parsed.data, directives, header: parsed.meta.fields ?? [] };
 }
 
 /**
@@ -418,7 +434,7 @@ export async function saveHomebrewRow(
 	const file = targetFile;
 
 	// existing rows + header (if the file exists) — to keep ids unique, preserve prior entries + header
-	const { rows: existing, directives } = await readHomebrewFile(storage, file);
+	const { rows: existing, directives, header } = await readHomebrewFile(storage, file);
 	const existingIds = new Set(existing.map((r) => r.id).filter((id): id is string => Boolean(id)));
 
 	const built = buildRowWithExtras(type, draft, existingIds);
@@ -428,7 +444,7 @@ export async function saveHomebrewRow(
 	await writeStampedHomebrew(
 		storage,
 		file,
-		{ columns: columnsWithExtras(type, rows), rows },
+		{ columns: columnsWithExtras(type, rows, header), rows },
 		directives,
 	);
 	return built.row.id ? { ok: true, id: built.row.id } : { ok: true };

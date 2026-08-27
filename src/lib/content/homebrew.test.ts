@@ -153,3 +153,38 @@ describe('fresh save (append a new row)', () => {
 		expect(rows[0]?.text_uk).toBe('опис');
 	});
 });
+
+describe("a rewrite respects the file's own column order", () => {
+	const header = async (s: MemoryStorage, file: string) => {
+		const { body } = parseContentDirectives(await s.read(file));
+		return Papa.parse<Record<string, string>>(body, { header: true, preview: 1 }).meta.fields ?? [];
+	};
+
+	it('keeps a hand-arranged header when a row is added through the UI', async () => {
+		const s = new MemoryStorage();
+		const file = homebrewFile('item');
+		// a person put the mechanics first and the prose last, the way the packs read
+		const mine = 'id,category,damage,name_en,text_en';
+		await s.write(file, `${mine}\nmy_axe,weapon,1d8 slashing,My Axe,A nice axe.\n`);
+
+		const saved = await saveHomebrewRow(s, 'item', {
+			name_en: 'Second Axe',
+			category: 'weapon',
+			systems: '5e',
+		});
+		expect(saved.ok).toBe(true);
+		// their five columns stay put and in their order; the schema's extras land after them
+		expect((await header(s, file)).slice(0, 5)).toEqual(mine.split(','));
+	});
+
+	it('uses the schema order for a file it is creating', async () => {
+		const s = new MemoryStorage();
+		const saved = await saveHomebrewRow(s, 'item', {
+			name_en: 'First Axe',
+			category: 'weapon',
+			systems: '5e',
+		});
+		expect(saved.ok).toBe(true);
+		expect((await header(s, homebrewFile('item')))[0]).toBe('id');
+	});
+});
