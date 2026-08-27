@@ -221,7 +221,6 @@ writeCsv(
 		'id',
 		'systems',
 		'source',
-		'effects',
 		'hit_die',
 		'primary_ability',
 		'saves',
@@ -233,6 +232,7 @@ writeCsv(
 		'armor_profs',
 		'subclass_level',
 		'asi_levels',
+		'effects',
 		'name_en',
 		'name_uk',
 		'text_en',
@@ -246,12 +246,12 @@ writeCsv(
 		'id',
 		'systems',
 		'source',
-		'effects',
 		'class_id',
 		'level',
 		'resource',
 		'subclass_id',
 		'expertise_slots',
+		'effects',
 		'name_en',
 		'name_uk',
 		'text_en',
@@ -261,7 +261,7 @@ writeCsv(
 );
 writeCsv(
 	resolve(packDir('srd-2024'), 'subclasses_srd.csv'),
-	['id', 'systems', 'source', 'effects', 'class_id', 'name_en', 'name_uk', 'text_en', 'text_uk'],
+	['id', 'systems', 'source', 'class_id', 'effects', 'name_en', 'name_uk', 'text_en', 'text_uk'],
 	subclassRows,
 );
 console.log(
