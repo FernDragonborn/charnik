@@ -190,10 +190,6 @@ const columns = [
 	'id',
 	'systems',
 	'source',
-	'name_en',
-	'name_uk',
-	'text_en',
-	'text_uk',
 	'effects',
 	'level',
 	'school',
@@ -209,6 +205,10 @@ const columns = [
 	'save_ability',
 	'damage',
 	'higher_level',
+	'name_en',
+	'name_uk',
+	'text_en',
+	'text_uk',
 ];
 const csv = Papa.unparse({ fields: columns, data: rows }, { newline: '\n' });
 writeFileSync(OUT, csv + '\n', 'utf8');

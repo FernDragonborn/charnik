@@ -48,10 +48,6 @@ const COLUMNS = [
 	'id',
 	'systems',
 	'source',
-	'name_en',
-	'name_uk',
-	'text_en',
-	'text_uk',
 	'effects',
 	'category',
 	'item_type',
@@ -66,6 +62,10 @@ const COLUMNS = [
 	'stealth_disadvantage',
 	'attunement',
 	'rarity',
+	'name_en',
+	'name_uk',
+	'text_en',
+	'text_uk',
 ];
 const blank = {
 	name_uk: '',

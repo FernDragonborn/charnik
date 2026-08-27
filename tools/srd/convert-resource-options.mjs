@@ -16,14 +16,14 @@ const COLUMNS = [
 	'id',
 	'systems',
 	'source',
-	'name_en',
-	'name_uk',
-	'text_en',
-	'text_uk',
 	'resource_id',
 	'cost',
 	'action',
 	'action_type',
+	'name_en',
+	'name_uk',
+	'text_en',
+	'text_uk',
 ];
 
 /** The three Monk options both editions share (each 1 point, a Bonus Action). Text is the SRD
