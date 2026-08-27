@@ -40,6 +40,10 @@ export default ts.config(
 				'error',
 				{ assertionStyle: 'as', objectLiteralTypeAssertions: 'never' },
 			],
+			// NOT `no-nested-ternary`: one nested arm still reads as one sentence ("+n, −n, or 0"), and
+			// the only rule that draws the line at depth (`unicorn/no-nested-ternary`) demands parens
+			// that prettier immediately strips — the two can never both be satisfied. A ladder of three
+			// or more arms is a review call: say it with an if/else, a lookup table, or early returns.
 			// local Maps inside $derived computations aren't reactive state — plain Map is correct
 			'svelte/prefer-svelte-reactivity': 'off',
 			// internal links prepend `base` manually (SPA under a subpath) — intentional

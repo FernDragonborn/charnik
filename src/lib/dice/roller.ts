@@ -16,6 +16,7 @@
  */
 import {
 	ADVANTAGE_MODE,
+	ADVANTAGE_SIGN,
 	MAX_DICE_PER_TERM,
 	parseDiceTerm,
 	type AdvantageMode,
@@ -416,12 +417,7 @@ export function testRoll(line: RollerLine): {
 		mod,
 		bonusDice,
 		mods,
-		advantage:
-			line.advantage === ADVANTAGE_MODE.advantage
-				? 1
-				: line.advantage === ADVANTAGE_MODE.disadvantage
-					? -1
-					: 0,
+		advantage: ADVANTAGE_SIGN[line.advantage],
 	};
 }
 

@@ -207,7 +207,9 @@ export function maxSpellLevel(counts: readonly number[]): number {
  *  (its `higher_level` prose restates them); a homebrew cantrip that scales differently simply
  *  isn't level 0-typed or overrides via its own damage column. */
 export function cantripDieMultiplier(charLevel: number): number {
-	return charLevel >= 17 ? 4 : charLevel >= 11 ? 3 : charLevel >= 5 ? 2 : 1;
+	if (charLevel >= 17) return 4;
+	if (charLevel >= 11) return 3;
+	return charLevel >= 5 ? 2 : 1;
 }
 
 /**

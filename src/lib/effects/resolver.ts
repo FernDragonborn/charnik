@@ -299,13 +299,7 @@ class Resolver {
 		// A9: a set_override's mode slot chooses floor/cap (Headband INT ≥ 19 resolves HERE — the
 		// ability DAG, not applyEffects). D12: honor the carried layer for sets too (only the
 		// condId → 'condition' refinement remains), so a floor lands at the item layer it belongs to.
-		const op = isSet
-			? w.parsed.setMode === 'floor'
-				? 'floor'
-				: w.parsed.setMode === 'cap'
-					? 'cap'
-					: 'set'
-			: 'add';
+		const op = isSet ? (w.parsed.setMode ?? 'set') : 'add';
 		return {
 			source: sourceOf(w),
 			layer: w.condId !== undefined ? 'condition' : w.eff.layer,

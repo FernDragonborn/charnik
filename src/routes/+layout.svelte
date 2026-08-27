@@ -274,22 +274,18 @@
 	// The update chip only exists once a newer build is found; it stays gold-lit until installed, shows
 	// live % while downloading, and is inert (no re-trigger) mid-install.
 	const updateBusy = $derived(updater.status === 'downloading' || updater.status === 'installing');
-	const updateLabel = $derived(
-		updater.status === 'downloading'
-			? `${updater.progress}%`
-			: updater.status === 'installing'
-				? '…'
-				: $_('update.ready'),
-	);
-	const updateTitle = $derived(
-		updater.status === 'error'
-			? $_('update.error', { values: { error: updater.error } })
-			: updater.status === 'downloading'
-				? $_('update.downloading', { values: { progress: updater.progress } })
-				: updater.status === 'installing'
-					? $_('update.installing')
-					: $_('update.tooltip', { values: { version: updater.version } }),
-	);
+	const updateLabel = $derived.by(() => {
+		if (updater.status === 'downloading') return `${updater.progress}%`;
+		if (updater.status === 'installing') return '…';
+		return $_('update.ready');
+	});
+	const updateTitle = $derived.by(() => {
+		if (updater.status === 'error') return $_('update.error', { values: { error: updater.error } });
+		if (updater.status === 'downloading')
+			return $_('update.downloading', { values: { progress: updater.progress } });
+		if (updater.status === 'installing') return $_('update.installing');
+		return $_('update.tooltip', { values: { version: updater.version } });
+	});
 </script>
 
 <svelte:head>

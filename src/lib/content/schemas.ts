@@ -54,15 +54,14 @@ const blankToUndef = (v: unknown) => (v === '' || v == null ? undefined : v);
 
 /** Split a CSV list cell (comma/semicolon separated) into trimmed, non-empty items. Already-parsed
  *  arrays pass through stringified. The one splitter shared by build/content code. */
-export const splitList = (v: unknown): string[] =>
-	Array.isArray(v)
-		? v.map(String)
-		: v == null || v === ''
-			? []
-			: asText(v)
-					.split(/[,;]/)
-					.map((s) => s.trim())
-					.filter(Boolean);
+export function splitList(v: unknown): string[] {
+	if (Array.isArray(v)) return v.map(String);
+	if (v == null || v === '') return [];
+	return asText(v)
+		.split(/[,;]/)
+		.map((s) => s.trim())
+		.filter(Boolean);
+}
 
 const optStr = z.preprocess(blankToUndef, z.string().optional());
 const reqStr = z.string().min(1);

@@ -85,16 +85,12 @@
 	/** Which colour a die's number wears — the ROLE it plays in this line, since the pill itself is
 	 *  the same surface as every other. Crimson decides the roll, gold was doubled, teal/red is a
 	 *  signed contribution from somewhere, plain is just dice. */
-	const diceTone = (p: DicePill): string =>
-		isTest && p.sides === 20
-			? 'deciding'
-			: !isTest && line.crit
-				? 'doubled'
-				: p.source
-					? p.sign < 0
-						? 'negative'
-						: 'positive'
-					: '';
+	const diceTone = (p: DicePill): string => {
+		if (isTest && p.sides === 20) return 'deciding';
+		if (!isTest && line.crit) return 'doubled';
+		if (!p.source) return '';
+		return p.sign < 0 ? 'negative' : 'positive';
+	};
 	/** A sourced die writes its sign, a pool die does not — the same rule the roller's own `expr`
 	 *  rendering follows, so a pill and the record of it read alike. */
 	const diceText = (p: DicePill): string =>

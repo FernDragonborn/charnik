@@ -30,9 +30,11 @@
 
 	// Which prose fields this article carries: spells have both, generic has higher-level only, monster
 	// has neither. Empty string = absent → ArticleProse renders a field only when non-empty.
-	const higherLevel = $derived(
-		detail?.spell ? detail.spell.higherLevel : detail?.monster ? '' : (detail?.higherLevel ?? ''),
-	);
+	const higherLevel = $derived.by(() => {
+		if (detail?.spell) return detail.spell.higherLevel;
+		if (detail?.monster) return '';
+		return detail?.higherLevel ?? '';
+	});
 	const material = $derived(detail?.spell ? detail.spell.material : '');
 </script>
 

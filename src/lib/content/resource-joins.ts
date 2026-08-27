@@ -56,13 +56,9 @@ export function resourceJoinIssues(graph: ContentGraph, system: string): JoinIss
 	const out: JoinIssue[] = [];
 	for (const row of graph.rows) {
 		if (!row.systems.includes(system)) continue;
-		const referenced =
-			row.type === 'resource_option'
-				? String(row.data.resource_id)
-				: row.type === 'resource'
-					? row.id
-					: undefined;
-		if (referenced === undefined || granted.has(referenced)) continue;
+		if (row.type !== 'resource_option' && row.type !== 'resource') continue;
+		const referenced = row.type === 'resource_option' ? String(row.data.resource_id) : row.id;
+		if (granted.has(referenced)) continue;
 		const hint = didYouMean(referenced, granted);
 		out.push({
 			file: where(row),

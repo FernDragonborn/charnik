@@ -46,6 +46,25 @@ export const ADVANTAGE_CUE: Record<AdvantageMode, 'up' | 'down' | 'neither'> = {
 	[ADVANTAGE_MODE.neither]: 'neither',
 };
 
+/** Mode ↔ the ±1 axis every roll site speaks (it is arithmetic over effects). The two are different
+ *  facts on purpose (ROLLER-PLAN, "not in scope"), and this pair is the one seam between them. */
+export const ADVANTAGE_SIGN: Record<AdvantageMode, number> = {
+	[ADVANTAGE_MODE.advantage]: 1,
+	[ADVANTAGE_MODE.disadvantage]: -1,
+	[ADVANTAGE_MODE.neither]: 0,
+};
+export function advantageFromSign(sign: number): AdvantageMode {
+	if (sign > 0) return ADVANTAGE_MODE.advantage;
+	return sign < 0 ? ADVANTAGE_MODE.disadvantage : ADVANTAGE_MODE.neither;
+}
+
+/** The lap a tap on the cue takes. One order, wherever the tap happens. */
+export const NEXT_ADVANTAGE: Record<AdvantageMode, AdvantageMode> = {
+	[ADVANTAGE_MODE.neither]: ADVANTAGE_MODE.advantage,
+	[ADVANTAGE_MODE.advantage]: ADVANTAGE_MODE.disadvantage,
+	[ADVANTAGE_MODE.disadvantage]: ADVANTAGE_MODE.neither,
+};
+
 /** The pre-2026-08-22 shape of an advantage pair, as it still sits in `log.jsonl`. Read by
  *  `rehydrateRoll` and by nothing else — `d20s` + `advantage` replaced every field of it. */
 export interface LegacyAdvantageRoll {
@@ -384,13 +403,7 @@ export function rollPool(dice: Record<number, number>, opts: RollPoolOptions | R
 			});
 		}
 	if (o.crit) for (const d of [...rolled]) rolled.push(critTwin(d, o.crit, rollOne, o.maxDie));
-	const mode =
-		advantage > 0
-			? ADVANTAGE_MODE.advantage
-			: advantage < 0
-				? ADVANTAGE_MODE.disadvantage
-				: ADVANTAGE_MODE.neither;
-	const roll = { dice: rolled, d20s: pool.d20s, advantage: mode, mod };
+	const roll = { dice: rolled, d20s: pool.d20s, advantage: advantageFromSign(advantage), mod };
 	return { ...roll, total: totalOf(roll), expr: formatExpr(roll) };
 }
 
@@ -581,14 +594,11 @@ export function setAdvantage<T extends Rolled>(
  * Null when the roll has no d20 to amend.
  */
 export function cycleAdvantage<T extends Rolled>(r: T, rng: Rng = Math.random): T | null {
-	const next =
-		r.advantage === ADVANTAGE_MODE.neither
-			? ADVANTAGE_MODE.advantage
-			: r.advantage === ADVANTAGE_MODE.advantage
-				? ADVANTAGE_MODE.disadvantage
-				: ADVANTAGE_MODE.neither;
 	// an old pair with no recorded draw order can't reach `neither` — it laps back to advantage instead
-	return setAdvantage(r, next, rng) ?? setAdvantage(r, ADVANTAGE_MODE.advantage, rng);
+	return (
+		setAdvantage(r, NEXT_ADVANTAGE[r.advantage], rng) ??
+		setAdvantage(r, ADVANTAGE_MODE.advantage, rng)
+	);
 }
 
 /** Roll a dice formula string ("16d12 + 80", "8d6", "2d6+1d4-1"): parse the pool + the flat mod, then

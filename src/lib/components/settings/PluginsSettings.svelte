@@ -27,6 +27,14 @@
 		disabled: 'settings.plugins.status.disabled',
 		enabled: 'settings.plugins.status.enabled',
 	};
+	/** What the button offers per status — a consent-pending plugin is reviewed, not just flipped. */
+	const actionKey: Record<PluginStatus, string> = {
+		broken: '',
+		needs_consent: 'settings.plugins.review',
+		code_changed: 'settings.plugins.review',
+		disabled: 'settings.plugins.enable',
+		enabled: 'settings.plugins.disable',
+	};
 
 	async function toggle(p: DiscoveredPlugin) {
 		const status = pluginStatus(p, plugins.prefs);
@@ -101,11 +109,7 @@
 					{/if}
 					{#if status !== 'broken'}
 						<button class="pill-btn" class:accent={status === 'enabled'} onclick={() => toggle(p)}>
-							{status === 'enabled'
-								? $_('settings.plugins.disable')
-								: status === 'disabled'
-									? $_('settings.plugins.enable')
-									: $_('settings.plugins.review')}
+							{$_(actionKey[status])}
 						</button>
 					{/if}
 				</div>

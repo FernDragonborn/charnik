@@ -461,10 +461,15 @@ function isKnownVarName(name: string): boolean {
 	return !!d && !!d.id && (DOTTED_NUMERIC.has(d.prefix) || DOTTED_BOOLEAN.has(d.prefix));
 }
 
-const arityText = (s: { min: number; max: number }): string =>
-	s.min === s.max ? `${s.min}` : s.max === Infinity ? `at least ${s.min}` : `${s.min}–${s.max}`;
-const tokText = (t: Tok | undefined): string =>
-	!t ? 'end' : t.k === 'num' ? String(t.v) : t.k === 'dice' ? 'd' : t.v;
+function arityText(s: { min: number; max: number }): string {
+	if (s.min === s.max) return `${s.min}`;
+	return s.max === Infinity ? `at least ${s.min}` : `${s.min}–${s.max}`;
+}
+function tokText(t: Tok | undefined): string {
+	if (!t) return 'end';
+	if (t.k === 'num') return String(t.v);
+	return t.k === 'dice' ? 'd' : t.v;
+}
 
 /** Parse results memoized by source string: expressions live in content rows and re-evaluate on
  *  EVERY derive (each HP click), so re-parsing the same string per stat per derive is pure waste

@@ -76,12 +76,11 @@ async function runCheck(opts: {
 }): Promise<void> {
 	if (detectPlatform() !== Platform.Desktop) return;
 	const fetcher = opts.fetcher ?? tauriFetcher;
-	const repos =
-		opts.repo !== undefined
-			? [opts.repo]
-			: opts.manual === true
-				? [...new Set(Object.values(packConfig.packs).map((p) => p.repo))]
-				: dueRepos();
+	let repos: string[];
+	if (opts.repo !== undefined) repos = [opts.repo];
+	else if (opts.manual === true)
+		repos = [...new Set(Object.values(packConfig.packs).map((p) => p.repo))];
+	else repos = dueRepos();
 	// Nothing to ask — but the cache still needs sweeping, and the prune used to sit BEHIND this
 	// return. Switching from `download` back to `off` (or pinning the last pack) then left every
 	// staged byte on disk forever, because the one thing that cleans them only ran after a check that

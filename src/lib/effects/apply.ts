@@ -130,14 +130,8 @@ class FactsCollector {
 
 	private pushNumeric(p: ParsedEffect, eff: ActiveEffect, token: string): void {
 		if (!p.target || this.rejectTarget(p.kind, p.target, eff.source, token)) return;
-		const op: NumericFact['op'] =
-			p.kind === EFFECT_KIND.flatBonus
-				? 'add'
-				: p.setMode === 'floor'
-					? 'floor'
-					: p.setMode === 'cap'
-						? 'cap'
-						: 'set';
+		// a flat bonus always adds; a set_override's mode slot names the bound it is (plain set if none)
+		const op: NumericFact['op'] = p.kind === EFFECT_KIND.flatBonus ? 'add' : (p.setMode ?? 'set');
 		const v = resolveEffectValue(p, ctxOf(this.ctx, eff));
 		const fact: NumericFact = { target: p.target, op, layer: eff.layer, source: eff.source, token };
 		if (p.weaponScope) fact.weaponScope = p.weaponScope; // §A: scoped per-weapon in computeAttacks

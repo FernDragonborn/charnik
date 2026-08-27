@@ -11,9 +11,9 @@
  */
 import {
 	ADVANTAGE_MODE,
+	advantageFromSign,
 	cycleAdvantage,
 	rollPool,
-	type AdvantageMode,
 	type BonusDie,
 	type DieMods,
 	type Rolled,
@@ -26,15 +26,6 @@ import {
 	type TypedRoll,
 	type DamagePartSpec,
 } from '$lib/combat/helpers';
-
-/** The ±1 axis every roll site speaks (it is arithmetic over effects) → the roll's named mode. The
- *  two are different facts on purpose (ROLLER-PLAN, "not in scope"), and this is the one seam. */
-const advantageMode = (advantage: number): AdvantageMode =>
-	advantage > 0
-		? ADVANTAGE_MODE.advantage
-		: advantage < 0
-			? ADVANTAGE_MODE.disadvantage
-			: ADVANTAGE_MODE.neither;
 
 /** Cap on the retained roll log (newest kept). */
 const ROLL_LOG_MAX = 200;
@@ -121,7 +112,7 @@ export class RollTray {
 			test: {
 				dice: spec.dice,
 				mod: spec.mod,
-				advantage: advantageMode(spec.advantage ?? 0),
+				advantage: advantageFromSign(spec.advantage ?? 0),
 				...(spec.mods ? { mods: spec.mods } : {}),
 				...(spec.bonusDice?.length ? { bonusDice: spec.bonusDice } : {}),
 				...(spec.times ? { times: spec.times } : {}),

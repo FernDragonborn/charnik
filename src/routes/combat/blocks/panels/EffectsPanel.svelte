@@ -29,6 +29,11 @@
 
 	// effects grouped into Buffs / Debuffs / Resources sections
 	const effectGroups = $derived(groupEffects(c.play.effects));
+	/** Which section renders first — only that one drops the divider above it. */
+	const firstKind = $derived.by(() => {
+		if (effectGroups.buffs.length) return 'buffs';
+		return effectGroups.debuffs.length ? 'debuffs' : 'resources';
+	});
 	// the open duration dropdown (which effect + its anchor button); its rounds tracked live
 	let durationMenu = $state<{ iid: string; anchor: HTMLElement } | null>(null);
 	// the condition effect whose rules text is expanded (the G2 info channel), by iid; single-open
@@ -110,11 +115,6 @@
 {#if !c.play.effects.length && !derivedEffects.groups.length && !derivedEffects.unknown.length && !s.facts.pluginNotes.length}
 	<p class="trace">No active effects.</p>
 {:else}
-	{@const firstKind = effectGroups.buffs.length
-		? 'buffs'
-		: effectGroups.debuffs.length
-			? 'debuffs'
-			: 'resources'}
 	{#if effectGroups.buffs.length}
 		<div class="effect-section" class:effect-section--first={firstKind === 'buffs'}>
 			<div class="section-head section-head--buff">

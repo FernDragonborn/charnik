@@ -116,9 +116,9 @@ const AMEND_NOTE = /(?:^\s*|\s·\s)(?:(?:dis)?advantage after the roll|advantage
 export function amendedNote(previous: string | undefined, revised: Rolled): string {
 	const dropped = droppedD20s(revised)[0];
 	const kept = (previous ?? '').replace(AMEND_NOTE, '').trim();
-	const amendment = !dropped
-		? ''
-		: revised.advantage === ADVANTAGE_MODE.neither
+	if (!dropped) return kept;
+	const amendment =
+		revised.advantage === ADVANTAGE_MODE.neither
 			? // the second die was really rolled and the record says so; it just doesn't count
 				`advantage cleared (the second d20, ${dropped.value}, does not count)`
 			: `${revised.advantage} after the roll (kept ${keptD20(revised)?.value} over ${dropped.value})`;

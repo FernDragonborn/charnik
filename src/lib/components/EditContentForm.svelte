@@ -84,12 +84,11 @@
 	const editing = !!editRow;
 	// svelte-ignore state_referenced_locally
 	const editShipped = editRow ? isShippedFile(`${editRow.root}/${editRow.file}`, packRoots) : false;
-	// svelte-ignore state_referenced_locally
-	const editTarget = editRow
-		? editShipped
-			? homebrewFile(type)
-			: `${editRow.root}/${editRow.file}`
-		: undefined;
+	function saveTargetFile(): string | undefined {
+		if (!editRow) return undefined;
+		return editShipped ? homebrewFile(type) : `${editRow.root}/${editRow.file}`;
+	}
+	const editTarget = saveTargetFile();
 
 	// A new entry has no id yet, so its draft is keyed by a stable per-session GUID (per
 	// charnik-guid-not-counter): resumed from the pending list / an existing add-draft, else fresh.
@@ -106,12 +105,11 @@
 	// initial-only capture is intended: the parent remounts this form with {#key type}, so the
 	// draft resets cleanly whenever the type changes. Editor mode seeds from the row; a resumed
 	// add-draft overlays the blank shape; else blank.
-	// svelte-ignore state_referenced_locally
-	const initialDraft = editRow
-		? rowToDraft(editRow)
-		: resumeDraft
-			? { ...blankDraft(type), ...resumeDraft }
-			: blankDraft(type);
+	function seedDraft() {
+		if (editRow) return rowToDraft(editRow);
+		return resumeDraft ? { ...blankDraft(type), ...resumeDraft } : blankDraft(type);
+	}
+	const initialDraft = seedDraft();
 	let draft = $state(initialDraft);
 	let baseline = $state(JSON.stringify(initialDraft));
 	let issues = $state<string[]>([]);

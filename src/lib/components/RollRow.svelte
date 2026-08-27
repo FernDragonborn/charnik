@@ -18,7 +18,12 @@
 		type RollToastAttack,
 		type RollToastDamage,
 	} from '$lib/dice/roll-toast';
-	import { ADVANTAGE_CUE, ADVANTAGE_MODE, type RolledDie } from '$lib/rules/dice';
+	import {
+		ADVANTAGE_CUE,
+		ADVANTAGE_MODE,
+		type AdvantageMode,
+		type RolledDie,
+	} from '$lib/rules/dice';
 	import DamageIcon from './DamageIcon.svelte';
 	import { signed } from '$lib/util/format';
 
@@ -69,12 +74,18 @@
 	 *  set as a character — at cue size a font glyph has no stem to snap to and the rasteriser turns
 	 *  its diagonals to mush (`◆` came out a blob, `⇈` drew its two arrows at different heights). */
 	const cueShape = (a: RollToastAttack) => ADVANTAGE_CUE[a.advantageMode ?? ADVANTAGE_MODE.neither];
-	const cueTitle = (a: RollToastAttack) =>
-		a.advantageMode === ADVANTAGE_MODE.advantage
-			? 'rolled with advantage — tap for disadvantage'
-			: a.advantageMode === ADVANTAGE_MODE.disadvantage
-				? 'rolled with disadvantage — tap to undo'
-				: 'roll a second d20 and keep the better — advantage';
+	const CUE_TITLE: Record<AdvantageMode, string> = {
+		[ADVANTAGE_MODE.advantage]: 'rolled with advantage — tap for disadvantage',
+		[ADVANTAGE_MODE.disadvantage]: 'rolled with disadvantage — tap to undo',
+		[ADVANTAGE_MODE.neither]: 'roll a second d20 and keep the better — advantage',
+	};
+	/** The pill states its own advantage; only a d20 roll can be told a different one. */
+	const HIT_TITLE: Record<AdvantageMode, string | undefined> = {
+		[ADVANTAGE_MODE.advantage]: 'rolled with advantage',
+		[ADVANTAGE_MODE.disadvantage]: 'rolled with disadvantage',
+		[ADVANTAGE_MODE.neither]: undefined,
+	};
+	const cueTitle = (a: RollToastAttack) => CUE_TITLE[a.advantageMode ?? ADVANTAGE_MODE.neither];
 
 	/**
 	 * One line can hold a bounded number of pills, and a pool is NOT bounded — a Fireball is 8d6, a
@@ -99,14 +110,7 @@
 </script>
 
 {#snippet hitDice(a: RollToastAttack)}
-	<span
-		class="roll-to-hit"
-		title={a.advantageMode === ADVANTAGE_MODE.advantage
-			? 'rolled with advantage'
-			: a.advantageMode === ADVANTAGE_MODE.disadvantage
-				? 'rolled with disadvantage'
-				: undefined}
-	>
+	<span class="roll-to-hit" title={HIT_TITLE[a.advantageMode ?? ADVANTAGE_MODE.neither]}>
 		{#each shownChips(a) as c, i (i)}
 			{#if c.sides === 20 && i === 0 && canAmend(a)}
 				<button

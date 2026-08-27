@@ -13,6 +13,15 @@ import type { EffectInstance } from '$lib/character/schema';
 /** A runtime effect instance — the character-schema type, re-exported for the combat views. */
 export type { EffectInstance } from '$lib/character/schema';
 
+/** Ops that read as a comparison get a symbol; a plain addend or multiplier reads as its own sign. */
+const OP_SYMBOL: Record<Contribution['op'], string> = {
+	add: '',
+	mult: '',
+	set: '=',
+	floor: '≥',
+	cap: '≤',
+};
+
 /** Provenance trace of a Computed → a human-readable "why" string for tooltips. Pass `translate`
  *  (svelte-i18n's `$format`) to localize the rule notes; without it every note renders its EN text
  *  verbatim (the B18 invariant — structure changed, EN output byte-for-byte unchanged). */
@@ -20,10 +29,10 @@ export function why(
 	c: Computed,
 	translate?: (key: string, params?: Record<string, string | number>) => string,
 ): string {
-	const opSym = (op: Contribution['op']): string =>
-		op === 'set' ? '= ' : op === 'floor' ? '≥ ' : op === 'cap' ? '≤ ' : '';
+	const opSym = (op: Contribution['op']): string => (OP_SYMBOL[op] ? `${OP_SYMBOL[op]} ` : '');
 	const parts = c.trace
-		.filter((t) => t.amount !== 0 || t.op === 'set' || t.op === 'floor' || t.op === 'cap')
+		// a comparison op says something even at 0; a plain addend of 0 says nothing
+		.filter((t) => t.amount !== 0 || OP_SYMBOL[t.op] !== '')
 		.map((t) => `${t.source} ${opSym(t.op)}${signed(t.amount)}${t.note ? ` (${t.note})` : ''}`);
 	return (
 		(parts.join(', ') || '—') +
@@ -60,7 +69,7 @@ const TAG_FORMATTERS: Partial<
 	[EFFECT_KIND.flatBonus]: (p) => p.target && `${targetLabel(p.target)} ${flatDelta(p)}`,
 	[EFFECT_KIND.setOverride]: (p) =>
 		p.target &&
-		`${targetLabel(p.target)} ${p.setMode === 'floor' ? '≥' : p.setMode === 'cap' ? '≤' : '='} ${p.amount ?? p.valueExpr ?? '?'}`,
+		`${targetLabel(p.target)} ${OP_SYMBOL[p.setMode ?? 'set']} ${p.amount ?? p.valueExpr ?? '?'}`,
 	[EFFECT_KIND.blockBonus]: (p) => p.target && `block · ${targetLabel(p.target)}`,
 	[EFFECT_KIND.halve]: (p) => p.target && `${targetLabel(p.target)} ×½`,
 	[EFFECT_KIND.resistImmune]: (p) => p.target && `${p.defense ?? 'resist'} · ${p.target}`,
@@ -242,6 +251,8 @@ export function endConcentrationCarriedBy(
 export const isEffectExpired = (e: EffectInstance, round: number): boolean =>
 	e.durationRounds != null && round >= (e.startedRound ?? 0) + e.durationRounds;
 
+const ROUNDS_PER_UNIT: Record<string, number> = { round: 1, minute: 10, hour: 600, day: 14400 };
+
 /** Spell duration text → rounds (1 round = 6 s): "1 minute" → 10, "Concentration, up to 1 hour" →
  *  600, "2 rounds" → 2. Null when it doesn't map to rounds (Instantaneous / Until dispelled /
  *  Special) — a cast-applied effect is then indefinite (until removed). Pure. */
@@ -250,7 +261,7 @@ export function durationToRounds(text: string): number | null {
 	if (!m) return null;
 	const n = Number(m[1]);
 	const unit = (m[2] ?? '').toLowerCase();
-	return unit === 'round' ? n : unit === 'minute' ? n * 10 : unit === 'hour' ? n * 600 : n * 14400;
+	return n * (ROUNDS_PER_UNIT[unit] ?? 1);
 }
 
 /** The common effect durations offered in the duration dropdown (game terms, no round/minute dup).

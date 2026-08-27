@@ -225,6 +225,12 @@ export interface SpellGroupsInput {
 	hidden?: readonly string[];
 }
 
+/** A build entry's prepared state: always-prepared wins, since the toggle cannot unset it. */
+function prepState(sp: { prepared: boolean; alwaysPrepared: boolean }): SpellRow['prepState'] {
+	if (sp.alwaysPrepared) return 'always';
+	return sp.prepared ? 'on' : '';
+}
+
 export function buildSpellGroups({
 	character,
 	sheet,
@@ -239,12 +245,7 @@ export function buildSpellGroups({
 	const all: SpEntry[] = character.build.spells
 		.map((sp) => ({
 			sp,
-			row: spellRow(
-				graph,
-				sp.spell,
-				sp.alwaysPrepared ? 'always' : sp.prepared ? 'on' : '',
-				sheet?.level ?? 1,
-			),
+			row: spellRow(graph, sp.spell, prepState(sp), sheet?.level ?? 1),
 		}))
 		.filter((x): x is SpEntry => !!x.row)
 		.filter((x) => !hidden.includes(x.row.ref));

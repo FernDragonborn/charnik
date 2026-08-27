@@ -138,6 +138,15 @@ export function unarmoredAC(args: { dexScore: number }): Computed {
 	return computed([baseContribution(10), abilityContribution('dex', args.dexScore)]);
 }
 
+/** How much of the DEX modifier the armor lets through. Heavy armor (cap 0) ignores DEX ENTIRELY —
+ *  no bonus AND no penalty, so a negative mod must not lower AC (RAW, identical in 5e and 5.5e);
+ *  `Math.min(dexMod, 0)` would wrongly subtract it. A medium cap bounds the mod from ABOVE only. */
+function dexModUnderArmor(dexMod: number, dexCap: number | null): number {
+	if (dexCap === null) return dexMod;
+	if (dexCap === 0) return 0;
+	return Math.min(dexMod, dexCap);
+}
+
 /** Armored AC = armor base + capped DEX. `dexCap`: null = uncapped (light), 2 = medium,
  *  0 = none (heavy). */
 export function armoredAC(args: {
@@ -146,12 +155,7 @@ export function armoredAC(args: {
 	dexCap: number | null;
 }): Computed {
 	const dexMod = abilityModifier(args.dexScore);
-	// Heavy armor (dexCap 0) ignores DEX ENTIRELY — no bonus AND no penalty, so a negative DEX mod
-	// must not lower AC (RAW, identical in 5e and 5.5e). Light (null) applies the full mod; medium
-	// (2) caps the mod's UPPER bound but a negative mod still applies (the cap is a maximum, not a
-	// floor). `Math.min(dexMod, 0)` would wrongly subtract a negative mod under heavy armor.
-	const applied =
-		args.dexCap === null ? dexMod : args.dexCap === 0 ? 0 : Math.min(dexMod, args.dexCap);
+	const applied = dexModUnderArmor(dexMod, args.dexCap);
 	const dexLabel =
 		args.dexCap === 0
 			? 'DEX (heavy: ignored)'

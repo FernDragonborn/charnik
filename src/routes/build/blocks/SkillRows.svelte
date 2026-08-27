@@ -13,6 +13,13 @@
 
 	let { columns = 2 }: { columns?: number } = $props();
 
+	/** A background-granted skill explains why it is locked; every other row explains its number. */
+	function skillTitle(skill: SkillId): string {
+		if (b.autoSkills.includes(skill)) return $_('build.skills.fromBackgroundHint');
+		const comp = b.sheet?.skills[skill];
+		return comp ? why(comp) : '';
+	}
+
 	const SKILLS = Object.keys(SKILL_ABILITY) as SkillId[];
 	const groups = ABILITIES.map((ab) => ({
 		ab,
@@ -34,7 +41,7 @@
 					<button
 						class="name"
 						disabled={auto || (!on && !pickable)}
-						title={auto ? $_('build.skills.fromBackgroundHint') : comp ? why(comp) : ''}
+						title={skillTitle(skill)}
 						onclick={() => b.toggleSkill(skill)}
 					>
 						<i class="dot" class:prof={on} class:expert></i>

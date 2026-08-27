@@ -165,27 +165,18 @@ class BuildVM {
 	 *  regardless of the source filter. Refs are stored as `effectiveId` (the picker option values). */
 	private selectedIdsFor(type: ContentType): Set<string> {
 		const d = this.draft;
-		const ids: (string | null)[] =
-			type === 'species'
-				? [d.speciesId]
-				: type === 'species_option'
-					? [d.speciesOptionId]
-					: type === 'background'
-						? [d.backgroundId]
-						: type === 'class'
-							? d.classes.map((c) => c.classId)
-							: type === 'subclass'
-								? d.classes.map((c) => c.subclassId)
-								: type === 'feat'
-									? Object.values(d.slotFeats)
-									: type === 'language'
-										? d.selectedLanguages
-										: type === 'item'
-											? d.inventory.map((i) => i.item)
-											: type === 'spell'
-												? d.selectedSpells
-												: [];
-		return new Set(ids.filter((x): x is string => !!x));
+		const idsByType: Partial<Record<ContentType, (string | null)[]>> = {
+			species: [d.speciesId],
+			species_option: [d.speciesOptionId],
+			background: [d.backgroundId],
+			class: d.classes.map((c) => c.classId),
+			subclass: d.classes.map((c) => c.subclassId),
+			feat: Object.values(d.slotFeats),
+			language: d.selectedLanguages,
+			item: d.inventory.map((i) => i.item),
+			spell: d.selectedSpells,
+		};
+		return new Set((idsByType[type] ?? []).filter((x): x is string => !!x));
 	}
 
 	private list<T extends ContentType>(type: T): LoadedRowByType<T>[] {
@@ -411,6 +402,12 @@ class BuildVM {
 	abilities = new AbilityAllocation(() => this);
 
 	// --- assembled character + live sheet --------------------------------------
+	/** Carried over from a loaded character (level-up), else the auto origin feat. */
+	private get carriedFeats(): string[] {
+		if (this.edit) return this.edit.feats;
+		return this.feats.originFeatRef ? [this.feats.originFeatRef] : [];
+	}
+
 	assembled = $derived.by<Character>(() => {
 		const build = {
 			name: this.draft.name || 'Unnamed',
@@ -439,8 +436,7 @@ class BuildVM {
 			// its ability boost flows through abilityBoosts instead)
 			feats: [
 				...new Set([
-					// carried over from a loaded character (level-up), else the auto origin feat
-					...(this.edit ? this.edit.feats : this.feats.originFeatRef ? [this.feats.originFeatRef] : []),
+					...this.carriedFeats,
 					...this.feats.featSlots.map((s) => this.draft.slotFeats[s.key]).filter((r) => r && r !== ASI)
 				])
 			],

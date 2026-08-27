@@ -59,6 +59,10 @@
 
 	const keyLabel = (k: MetaKey) => $_(`contentMeta.keys.${k}`);
 	const isUrl = (k: MetaKey) => k === 'url' || k === 'author_url';
+	function keyPlaceholder(k: MetaKey): string {
+		if (k === 'source') return $_('contentMeta.sourcePlaceholder');
+		return isUrl(k) ? $_('contentMeta.urlPlaceholder') : $_('contentMeta.authorPlaceholder');
+	}
 
 	function setLicense(file: string, value: string) {
 		const fill = fills[file];
@@ -158,11 +162,7 @@
 										class="field-input"
 										type={isUrl(key) ? 'url' : 'text'}
 										bind:value={fill[key]}
-										placeholder={key === 'source'
-											? $_('contentMeta.sourcePlaceholder')
-											: isUrl(key)
-												? $_('contentMeta.urlPlaceholder')
-												: $_('contentMeta.authorPlaceholder')}
+										placeholder={keyPlaceholder(key)}
 									/>
 								{/if}
 							</div>

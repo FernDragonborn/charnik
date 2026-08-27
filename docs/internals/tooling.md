@@ -116,6 +116,12 @@ is fine, while a 550-line one carrying 221 lines of script is not.
   has no `--config` flag and only reads `.madgerc` from the cwd. Do not try to move it again.
 - **`no-restricted-imports`** gates two invariants: `@tauri-apps/*` only in `lib/storage/tauri.ts`
   and `lib/update/**`; `src/lib/rules/**` must not import effects.
+- **Nested ternaries are a review call, not a rule.** One nested arm still reads as one sentence
+  (`n > 0 ? '+n' : n < 0 ? '−n' : '0'`), and banning it costs more than it buys. A ladder of three or
+  more arms is the problem — the reader has to walk all of it to answer "what happens when X" — and a
+  lookup table, `if`/`else if`, or early returns say that plainly. There is no linter for the
+  distinction: core `no-nested-ternary` bans both, and `unicorn/no-nested-ternary`, which draws the
+  line at depth, demands parentheses that prettier immediately strips. Do not re-add either.
 
 ### A file that belongs somewhere else MOVES
 

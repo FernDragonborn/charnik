@@ -130,14 +130,14 @@ export function deriveSkills(
 	// class/background picks + §C feat-granted skill choices (Skilled) — both are plain proficiency
 	const chosenProf = new Set([...build.skills, ...(build.featSkills ?? [])]);
 	const chosenExpert = new Set(build.expertise ?? []);
+	// expertise only counts on a skill the build is also proficient in
+	function chosenProficiency(skill: SkillId): SkillProficiency {
+		if (!chosenProf.has(skill)) return 'none';
+		return chosenExpert.has(skill) ? 'expertise' : 'proficient';
+	}
 	return recordOf(Object.keys(SKILL_ABILITY) as SkillId[], (skill) => {
 		const ab = SKILL_ABILITY[skill];
-		const chosen: SkillProficiency = chosenProf.has(skill)
-			? chosenExpert.has(skill)
-				? 'expertise'
-				: 'proficient'
-			: 'none';
-		const profLevel = maxProf(chosen, grantedSkills.get(skill) ?? 'none');
+		const profLevel = maxProf(chosenProficiency(skill), grantedSkills.get(skill) ?? 'none');
 		const base = skillCheck({
 			ability: ab,
 			score: scores[ab],

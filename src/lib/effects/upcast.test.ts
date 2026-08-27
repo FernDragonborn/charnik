@@ -3,11 +3,14 @@ import { parseUpcast, evalUpcast, combinePools, type UpcastResult } from './upca
 import type { ExprContext } from './expression-evaluator';
 
 /** A cast ctx backed by plain maps — a spell of base level `sl` cast from slot `s`. */
-const at = (s: number, sl: number): ExprContext => ({
-	number: (n) => (n === 'slot' ? s : n === 'spell_level' ? sl : undefined),
-	boolean: (n) => (n === 'is_bloodied' ? false : undefined),
-	enum: () => undefined,
-});
+const at = (s: number, sl: number): ExprContext => {
+	const numbers: Record<string, number> = { slot: s, spell_level: sl };
+	return {
+		number: (n) => numbers[n],
+		boolean: (n) => (n === 'is_bloodied' ? false : undefined),
+		enum: () => undefined,
+	};
+};
 
 /** The single (successful) result of a one-token cell. */
 function one(cell: string, ctx: ExprContext): UpcastResult {

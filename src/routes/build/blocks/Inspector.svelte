@@ -24,13 +24,16 @@
 	const spec = $derived(ins.spec);
 	const target = $derived(ins.target);
 	/** What the Take button would commit — named, so the button says what happens. */
-	const previewName = $derived(
-		ins.previewId === null
-			? ''
-			: ins.previewRow
-				? rowName(ins.previewRow)
-				: $_('build.feats.asi')
-	);
+	const previewName = $derived.by(() => {
+		if (ins.previewId === null) return '';
+		return ins.previewRow ? rowName(ins.previewRow) : $_('build.feats.asi');
+	});
+	/** What the Take button reads: nothing picked, already taken, or the name it would commit. */
+	const takeLabel = $derived.by(() => {
+		if (ins.previewIsCurrent && ins.pick?.currentId) return $_('build.inspector.alreadyTaken');
+		if (!previewName) return $_('build.inspector.chooseOption');
+		return $_('build.inspector.take', { values: { name: previewName } });
+	});
 </script>
 
 <div class="pane">
@@ -107,11 +110,7 @@
 				{/if}
 				<span class="spacer"></span>
 				<button class="btn primary" disabled={ins.previewId === null || ins.previewIsCurrent} onclick={ins.take}>
-					{ins.previewIsCurrent && ins.pick.currentId
-						? $_('build.inspector.alreadyTaken')
-						: previewName
-							? $_('build.inspector.take', { values: { name: previewName } })
-							: $_('build.inspector.chooseOption')}
+					{takeLabel}
 				</button>
 			</footer>
 		{/if}

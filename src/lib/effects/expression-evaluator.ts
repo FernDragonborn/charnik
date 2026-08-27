@@ -190,7 +190,7 @@ function numCompare(op: BinOp, a: number, b: number): boolean {
 
 /** dice × integer: scale the pool counts and flat by the integer factor. */
 function scaleDice(a: ExprValue, b: ExprValue): ExprValue {
-	const d: DiceValue = isDice(a) ? a.dice : isDice(b) ? b.dice : { pool: {}, flat: 0 };
+	const d: DiceValue = [a, b].find(isDice)?.dice ?? { pool: {}, flat: 0 };
 	const factorV = isDice(a) ? b : a;
 	if (isDice(factorV)) throw new EvalError('cannot multiply a dice term by a dice term');
 	const factor = Math.floor(factorV.value);
@@ -208,6 +208,14 @@ function isEnumCompare(l: Node, r: Node): boolean {
 	const kinds = new Set([l.t, r.t]);
 	return kinds.has('enumvar') && kinds.has('enumlit');
 }
+
+/** The ordinal comparisons, over the two members' positions in the enum's declared order. */
+const ORDINAL_COMPARE: Record<string, (a: number, b: number) => boolean> = {
+	'<': (a, b) => a < b,
+	'<=': (a, b) => a <= b,
+	'>': (a, b) => a > b,
+	'>=': (a, b) => a >= b,
+};
 
 function evalEnumCompare(op: BinOp, l: Node, r: Node, ctx: ExprContext): ExprValue {
 	const varNode = (l.t === 'enumvar' ? l : r) as { t: 'enumvar'; name: string };
@@ -228,8 +236,7 @@ function evalEnumCompare(op: BinOp, l: Node, r: Node, ctx: ExprContext): ExprVal
 	const ci = members.indexOf(current);
 	const li = members.indexOf(litNode.name);
 	if (ci === -1) return num(0);
-	const r2 = op === '<' ? ci < li : op === '<=' ? ci <= li : op === '>' ? ci > li : ci >= li;
-	return num(r2 ? 1 : 0);
+	return num(ORDINAL_COMPARE[op]?.(ci, li) ? 1 : 0);
 }
 
 function evalCall(n: { fn: string; args: Node[] }, ctx: ExprContext): ExprValue {

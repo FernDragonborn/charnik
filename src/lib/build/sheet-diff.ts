@@ -88,13 +88,14 @@ function skillChanges(before: CharacterSheet, after: CharacterSheet): SheetChang
 /** Defenses are lists, so they diff as "what got added" rather than "from → to". */
 function defenseChanges(before: CharacterSheet, after: CharacterSheet): SheetChange[] {
 	const kinds = ['resist', 'immune', 'vulnerable'] as const;
+	const label = { resist: 'Resistant', immune: 'Immune', vulnerable: 'Vulnerable' };
 	return kinds.flatMap((kind) => {
 		const had = new Set(before.defenses[kind]);
 		const gained = after.defenses[kind].filter((d) => !had.has(d));
 		if (!gained.length) return [];
 		return [
 			{
-				label: kind === 'vulnerable' ? 'Vulnerable' : kind === 'immune' ? 'Immune' : 'Resistant',
+				label: label[kind],
 				from: '—',
 				to: gained.join(', '),
 				// vulnerability is the one gain a player does not want

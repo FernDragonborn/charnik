@@ -143,8 +143,10 @@ export function makeExprContext(build: BuildVars, play?: PlayVars): ExprContext 
  *  through to `base`, so an upcast formula can still read `spellcasting_mod`, ability mods, etc. */
 export function withCastSlot(base: ExprContext, slot: number, spellLevel: number): ExprContext {
 	return {
-		number: (name) =>
-			name === 'slot' ? slot : name === 'spell_level' ? spellLevel : base.number(name),
+		number: (name) => {
+			if (name === 'slot') return slot;
+			return name === 'spell_level' ? spellLevel : base.number(name);
+		},
 		boolean: (name) => base.boolean(name),
 		enum: (name) => base.enum(name),
 	};
@@ -156,8 +158,10 @@ export function withCastSlot(base: ExprContext, slot: number, spellLevel: number
  *  mutates ability mods mid-pass; a captured number would go stale). */
 export function withSpellcastingMod(base: ExprContext, mod: number | (() => number)): ExprContext {
 	return {
-		number: (name) =>
-			name === 'spellcasting_mod' ? (typeof mod === 'function' ? mod() : mod) : base.number(name),
+		number: (name) => {
+			if (name !== 'spellcasting_mod') return base.number(name);
+			return typeof mod === 'function' ? mod() : mod;
+		},
 		boolean: (name) => base.boolean(name),
 		enum: (name) => base.enum(name),
 	};

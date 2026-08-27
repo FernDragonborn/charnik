@@ -12,6 +12,7 @@ import { app } from '$lib/stores/app.svelte';
 import { rollDamageParts, type DamagePartSpec, type RollLogEntry } from '$lib/combat/roll';
 import {
 	ADVANTAGE_MODE,
+	NEXT_ADVANTAGE,
 	rollPool,
 	type AdvantageMode,
 	type BonusDie,
@@ -140,25 +141,21 @@ export class RollerOrgan {
 	 *
 	 *  Typing opens it the moment the token has a LETTER — digits and `d` belong to the dice parser
 	 *  and must not raise a menu over a `2d6` in progress. */
-	menu = $derived(
-		this.retyping
-			? this.typeRows
-			: !this.dismissed && /\p{L}/u.test(this.draft)
-				? matchCandidates(this.draft, this.vocabularyFor(this.roleAt(this.focus)))
-				: [],
-	);
+	menu = $derived.by(() => {
+		if (this.retyping) return this.typeRows;
+		if (this.dismissed || !/\p{L}/u.test(this.draft)) return [];
+		return matchCandidates(this.draft, this.vocabularyFor(this.roleAt(this.focus)));
+	});
 
 	/** Which row is highlighted. The top row is highlighted from the start — that is what the ghost
 	 *  hint is previewing — so `selected` says whether the CARET moved into the menu, not whether
 	 *  anything is chosen. A type picker highlights NOTHING until you arrow into it: there is no ghost
 	 *  previewing a top row, and a highlight that Enter wouldn't take is a lie. */
-	highlight = $derived(
-		!this.menu.length
-			? IN_LINE
-			: this.retyping
-				? Math.min(this.selected, this.menu.length - 1)
-				: Math.max(0, Math.min(this.selected, this.menu.length - 1)),
-	);
+	highlight = $derived.by(() => {
+		if (!this.menu.length) return IN_LINE;
+		const clamped = Math.min(this.selected, this.menu.length - 1);
+		return this.retyping ? clamped : Math.max(0, clamped);
+	});
 	inMenu = $derived(this.selected !== IN_LINE && this.menu.length > 0);
 
 	/** The grey completion drawn inline, editor style: the rest of the highlighted row's name, then
@@ -439,13 +436,12 @@ export class RollerOrgan {
 		const target = this.lineAt(to);
 		const pill = source?.pills[pillIndex];
 		if (!source || !target || !pill || from === to) return;
-		this.lines = this.lines.map((l, i) =>
-			i === from
-				? normalizeLine({ ...l, pills: l.pills.filter((_, k) => k !== pillIndex) })
-				: i === to
-					? normalizeLine({ ...l, pills: [...l.pills, pill] })
-					: l,
-		);
+		this.lines = this.lines.map((l, i) => {
+			if (i === from)
+				return normalizeLine({ ...l, pills: l.pills.filter((_, k) => k !== pillIndex) });
+			if (i === to) return normalizeLine({ ...l, pills: [...l.pills, pill] });
+			return l;
+		});
 	};
 
 	/** A die button in the header: it lands in the line the caret is in. The header has no role of its
@@ -458,13 +454,7 @@ export class RollerOrgan {
 	cycleAdvantage = (index: number): void => {
 		const line = this.lineAt(index);
 		if (!line) return;
-		const next =
-			line.advantage === ADVANTAGE_MODE.neither
-				? ADVANTAGE_MODE.advantage
-				: line.advantage === ADVANTAGE_MODE.advantage
-					? ADVANTAGE_MODE.disadvantage
-					: ADVANTAGE_MODE.neither;
-		this.replace(index, { ...line, advantage: next });
+		this.replace(index, { ...line, advantage: NEXT_ADVANTAGE[line.advantage] });
 	};
 
 	toggleCrit = (index: number): void => {

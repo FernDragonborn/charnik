@@ -56,13 +56,10 @@ function record(level: LogLevel, msg: string, ctx?: Record<string, unknown>): vo
 // The dev/web mirror sink — the ONE deliberate console site (the `no-console` rule exempts
 // `$lib/diag/**` for exactly this).
 function mirrorToConsole(entry: LogEntry): void {
-	const fn =
-		entry.level === LogLevel.Error
-			? console.error
-			: entry.level === LogLevel.Warn
-				? console.warn
-				: console.log;
-	fn(`[${entry.level}] ${entry.msg}`, entry.ctx ?? '');
+	const line: [string, unknown] = [`[${entry.level}] ${entry.msg}`, entry.ctx ?? ''];
+	if (entry.level === LogLevel.Error) console.error(...line);
+	else if (entry.level === LogLevel.Warn) console.warn(...line);
+	else console.log(...line);
 }
 
 /** The app-wide logger. Prefer structured `ctx` over interpolating values into `msg`. */
