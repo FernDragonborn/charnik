@@ -5,7 +5,7 @@
  */
 import type { Ability } from '../rules/core';
 import { ABILITIES } from '../character/schema';
-import type { ContentGraph, LoadedRow } from '../content/loader';
+import type { ContentGraph, LoadedRow, LoadedRowByType } from '../content/loader';
 import type { CharacterSheet } from '../character/derive';
 import { casterForSpell } from '../character/spellcasting';
 import { parseToken, splitGuard, EFFECT_KIND } from '../effects/token-parser';
@@ -145,13 +145,10 @@ export function buildSpellPicker({
 			bucket.push(s);
 			byLevel.set(levelOf(s), bucket);
 		}
+		// no label: a group is identified by its LEVEL, and the words for it live in the UI catalog
 		const groups = [...byLevel.keys()]
 			.sort((a, b) => a - b)
-			.map((lvl) => ({
-				level: lvl,
-				label: lvl === 0 ? 'Cantrips' : `Level ${lvl}`,
-				spells: byLevel.get(lvl) ?? []
-			}));
+			.map((lvl) => ({ level: lvl, spells: byLevel.get(lvl) ?? [] }));
 		// RV1: attribute each CHOSEN spell to ONE caster class via `casterForSpell` — the SAME rule the
 		// play sheet uses for prepared tallies — so a dual-list spell counts against ONE class's cap
 		// (identically at build + play time), not against every class whose list happens to include it.
@@ -164,35 +161,224 @@ export function buildSpellPicker({
 	});
 }
 
-/** The blocking-in-Strict validation messages for a draft. Free is lenient (a name is all that's
- *  strictly required — enforced by the caller); Strict adds the allocation checks below. Pure. */
-export function buildIssues(
-	d: { name: string; method: StatMethod; strict: boolean },
-	deps: {
-		hasClass: boolean;
-		pointsLeft: number;
-		classSkillCount: number;
-		skillChosenCount: number;
-		spellPicker: ReturnType<typeof buildSpellPicker>;
-	}
-): string[] {
-	const out: string[] = [];
-	if (!d.name.trim()) out.push('Give your character a name.');
-	if (!deps.hasClass) out.push('Pick a class (you can change it later).');
-	if (d.method === 'point_buy' && deps.pointsLeft > 0)
-		out.push(`${deps.pointsLeft} ability points unspent.`);
-	if (d.strict) {
-		const needSkills = deps.classSkillCount - deps.skillChosenCount;
-		if (needSkills > 0) out.push(`Choose ${needSkills} more skill${needSkills > 1 ? 's' : ''}.`);
-		for (const pc of deps.spellPicker) {
-			const dc = pc.profile.cantripCap - pc.cantripsChosen;
-			const dp = pc.profile.preparedCap - pc.leveledChosen;
-			const who = deps.spellPicker.length > 1 ? `${pc.profile.className} ` : '';
-			if (dc > 0) out.push(`Choose ${dc} more ${who}cantrip${dc > 1 ? 's' : ''}.`);
-			if (dc < 0) out.push(`Remove ${-dc} ${who}cantrip${dc < -1 ? 's' : ''} (over cap).`);
-			if (dp > 0) out.push(`Choose ${dp} more ${who}spell${dp > 1 ? 's' : ''}.`);
-			if (dp < 0) out.push(`Remove ${-dp} ${who}spell${dp < -1 ? 's' : ''} (over cap).`);
+/** A class row as the draft holds it, pre-resolution (ids nullable while the user is still choosing).
+ *  Named once because four helpers here take the same shape. */
+export interface DraftClassEntry {
+	classId: string | null;
+	subclassId: string | null;
+	level: number;
+}
+
+/** Class rows that have reached the level their subclass was due at without choosing one. A
+ *  character built straight to level 8 owes this exactly as much as one levelled up to it, which is
+ *  why it is computed from the level rather than watched for during a level-up. Pure. */
+export function openSubclassChoices(
+	classes: readonly DraftClassEntry[],
+	graph: ContentGraph,
+	nameOf: (row: LoadedRow) => string
+): { index: number; className: string; level: number }[] {
+	return classes.flatMap((entry, index) => {
+		if (!entry.classId || entry.subclassId) return [];
+		const row = graph.get(entry.classId);
+		if (row?.type !== 'class') return [];
+		const due = Number(row.data.subclass_level ?? 0);
+		if (!due || entry.level < due) return [];
+		return [{ index, className: nameOf(row), level: due }];
+	});
+}
+
+/** One class feature as the sheet lists it: which level handed it over, from which class, and
+ *  whether the character has actually reached it yet. */
+export interface ClassFeatureLine {
+	level: number;
+	className: string;
+	row: LoadedRowByType<'class_feature'>;
+	/** False for the look-ahead rows — what the next level or two will bring. */
+	gained: boolean;
+	/** Came from the chosen subclass rather than the class itself. */
+	fromSubclass: boolean;
+}
+
+/**
+ * Every class feature the drafted classes grant, gained ones first, then a short look-ahead.
+ *
+ * Mirrors the derive's feature gates exactly (level ≤, matching edition, base features always,
+ * subclass features only for the chosen subclass) so the sheet can never list a feature the engine
+ * did not apply. Deduped by (id, level, subclass) across sources, like the derive does. Pure.
+ *
+ * `lookaheadLevels` is why this is worth showing at all: a character built straight to level 5 wants
+ * to see that level 6 is where the aura arrives.
+ */
+export interface ClassFeatureInput {
+	classes: readonly DraftClassEntry[];
+	graph: ContentGraph;
+	system: string;
+	nameOf: (row: LoadedRow) => string;
+	/** How far past the current level to preview. */
+	lookaheadLevels?: number;
+}
+
+export function classFeatureLines({
+	classes,
+	graph,
+	system,
+	nameOf,
+	lookaheadLevels = 3
+}: ClassFeatureInput): ClassFeatureLine[] {
+	const out: ClassFeatureLine[] = [];
+	const seen = new Set<string>();
+	for (const entry of classes) {
+		if (!entry.classId) continue;
+		const classRow = graph.get(entry.classId);
+		if (classRow?.type !== 'class') continue;
+		const subclassRow = entry.subclassId ? graph.get(entry.subclassId) : undefined;
+		const subclassId = subclassRow?.type === 'subclass' ? subclassRow.id : '';
+		for (const row of graph.featuresForClass(classRow)) {
+			const level = Number(row.data.level);
+			if (level > entry.level + lookaheadLevels) continue;
+			if (!row.systems.includes(system)) continue;
+			const forSubclass = row.data.subclass_id;
+			if (forSubclass && forSubclass !== subclassId) continue;
+			const key = `${row.data.id}:${level}:${forSubclass ?? ''}`;
+			if (seen.has(key)) continue;
+			seen.add(key);
+			out.push({
+				level,
+				className: nameOf(classRow),
+				row,
+				gained: level <= entry.level,
+				fromSubclass: !!forSubclass
+			});
 		}
 	}
+	return out.sort((a, b) => a.level - b.level || a.className.localeCompare(b.className));
+}
+
+/** What part of the sheet a todo is about — the caller maps this to the control that fixes it, so
+ *  every line in the "still to do" bar is a link straight to the thing it names. */
+type TodoKind =
+	| 'name'
+	| 'species'
+	| 'speciesOption'
+	| 'background'
+	| 'class'
+	| 'subclass'
+	| 'abilities'
+	| 'skills'
+	| 'spells'
+	| 'feat';
+
+export interface BuildTodo {
+	kind: TodoKind;
+	/** i18n key under `build.todo` — a catalog key, never a sentence: this module is pure and has no
+	 *  locale, and the same todo has to read correctly in every language the user installs. */
+	key: string;
+	/** ICU values the key interpolates. */
+	values?: Record<string, string | number>;
+	/** Required todos block creation and warn on leaving; optional ones are a nudge. */
+	required: boolean;
+	/** Which class row / feat slot the todo belongs to, when the kind has several instances. */
+	index?: number;
+	slotKey?: string;
+	level?: number;
+}
+
+/** An empty field is required in BOTH modes — Strict vs Free decides whether a CAP is enforced, not
+ *  whether a choice was made. Over-cap ("remove one") is therefore the only Strict-gated line here. */
+export interface BuildTodoInput {
+	name: string;
+	method: StatMethod;
+	strict: boolean;
+	hasSpecies: boolean;
+	/** The species offers subraces/lineages and none is picked yet. */
+	needsSpeciesOption: boolean;
+	hasBackground: boolean;
+	hasClass: boolean;
+	/** Class rows whose subclass is due at their level and still unchosen. */
+	openSubclasses: { index: number; className: string; level: number }[];
+	pointsLeft: number;
+	classSkillCount: number;
+	skillChosenCount: number;
+	/** Feat/ASI slots the character has reached and not yet filled. */
+	openFeatSlots: { key: string; level: number; className: string }[];
+	spellPicker: ReturnType<typeof buildSpellPicker>;
+}
+
+/** The four spell todos a caster class can owe, as (condition, key) pairs — written once so the
+ *  under-cap and over-cap halves can't drift apart. */
+function spellTodos(d: BuildTodoInput): BuildTodo[] {
+	const out: BuildTodo[] = [];
+	const named = d.spellPicker.length > 1; // multiclass: say WHICH class owes the pick
+	for (const pc of d.spellPicker) {
+		const values = { class: pc.profile.className };
+		const short: [number, string, string][] = [
+			[pc.profile.cantripCap - pc.cantripsChosen, 'cantrips', 'cantripsOver'],
+			[pc.profile.preparedCap - pc.leveledChosen, 'spells', 'spellsOver'],
+		];
+		for (const [delta, underKey, overKey] of short) {
+			if (delta > 0)
+				out.push({
+					kind: 'spells',
+					key: named ? `${underKey}For` : underKey,
+					values: { count: delta, ...values },
+					required: true,
+				});
+			// over-cap is a RULE, not an empty field — only Strict cares
+			else if (delta < 0 && d.strict)
+				out.push({ kind: 'spells', key: overKey, values: { count: -delta }, required: true });
+		}
+	}
+	return out;
+}
+
+/**
+ * Everything still unfinished about a draft, in the order a player would fix it. Pure and
+ * locale-free — each line is a catalog key plus its values, translated where it is rendered.
+ *
+ * A character is not necessarily built at level 1: every slot the chosen levels opened (subclass,
+ * each ASI/feat level) is its own line, so levelling straight to 8 cannot silently skip three
+ * choices.
+ */
+export function buildTodos(d: BuildTodoInput): BuildTodo[] {
+	const out: BuildTodo[] = [];
+	const need = (ok: boolean, kind: TodoKind) => {
+		if (!ok) out.push({ kind, key: kind, required: true });
+	};
+
+	need(!!d.name.trim(), 'name');
+	need(d.hasSpecies, 'species');
+	need(!d.needsSpeciesOption, 'speciesOption');
+	need(d.hasClass, 'class');
+	need(d.hasBackground, 'background');
+
+	for (const s of d.openSubclasses)
+		out.push({
+			kind: 'subclass',
+			key: 'subclass',
+			values: { class: s.className, level: s.level },
+			index: s.index,
+			level: s.level,
+			required: true,
+		});
+	if (d.method === 'point_buy' && d.pointsLeft > 0)
+		out.push({
+			kind: 'abilities',
+			key: 'abilityPoints',
+			values: { count: d.pointsLeft },
+			required: true,
+		});
+	const needSkills = d.classSkillCount - d.skillChosenCount;
+	if (needSkills > 0)
+		out.push({ kind: 'skills', key: 'skills', values: { count: needSkills }, required: true });
+	for (const slot of d.openFeatSlots)
+		out.push({
+			kind: 'feat',
+			key: slot.className ? 'featIn' : 'feat',
+			values: { level: slot.level, class: slot.className },
+			slotKey: slot.key,
+			level: slot.level,
+			required: true,
+		});
+	out.push(...spellTodos(d));
 	return out;
 }

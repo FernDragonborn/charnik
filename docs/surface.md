@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (50)
+## Duplicate suspects (54)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -18,8 +18,9 @@ reused for genuinely different things) — judge, then either merge or leave.
 **Same name, several files:**
 
 - `persist` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
+- `label` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/SkillsPane.svelte
+- `open` ×4 — src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
-- `label` ×3 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
 - `num` ×3 — src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
@@ -45,6 +46,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
+- `match` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/build/blocks/SpellsPane.svelte
 - `MAX_MAIN_JS_BYTES` ×2 — src/lib/effects/plugin-host.ts · src/lib/effects/plugin-sandbox.ts
 - `name` ×2 — src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `of` ×2 — src/lib/character/derive.ts · src/lib/content/spellAccess.ts
@@ -62,6 +64,8 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
 - `say` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
+- `show` ×2 — src/lib/build/sheet-diff.ts · src/routes/dev/storage/+page.svelte
+- `SKILLS` ×2 — src/routes/build/blocks/FeatPane.svelte · src/routes/build/blocks/SkillRows.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `t` ×2 — src/lib/rules/proficiency.ts · src/routes/dev/storage/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
@@ -399,7 +403,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (104 modules)
+## Library functions & types (106 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -419,7 +423,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function asiBoost` — One per-slot ASI allocation (+2 to one ability, or +1 to two) → its ability-boost map.
 - `interface SpellPickerInput` — Build the per-caster-class spell picker: the pickable spell pool grouped by level, plus the * cantrip/leveled counts …
 - `function buildSpellPicker`
-- `function buildIssues` — The blocking-in-Strict validation messages for a draft.
+- `interface DraftClassEntry` — A class row as the draft holds it, pre-resolution (ids nullable while the user is still choosing).
+- `function openSubclassChoices` — Class rows that have reached the level their subclass was due at without choosing one.
+- `interface ClassFeatureLine` — One class feature as the sheet lists it: which level handed it over, from which class, and * whether the character ha…
+- `interface ClassFeatureInput` — * Every class feature the drafted classes grant, gained ones first, then a short look-ahead.
+- `function classFeatureLines`
+- `interface BuildTodo`
+- `interface BuildTodoInput` — An empty field is required in BOTH modes — Strict vs Free decides whether a CAP is enforced, not * whether a choice w…
+- `function buildTodos` — * Everything still unfinished about a draft, in the order a player would fix it.
 
 ### `src/lib/build/rules.ts`
 
@@ -439,6 +450,16 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function boostPickCount` — How many abilities a background-boost shape asks the user to pick (2-1 → 2, 1-1-1 → 3).
 - `function asiFeatLevels` — * The ASI-or-feat-slot levels a class grants up to `level`.
 - `function baseAbilities` — A blank ability set at the point-buy floor (all 8).
+
+### `src/lib/build/sheet-diff.ts`
+
+- `interface SheetChange`
+- `function diffSheets` — * Everything a candidate pick moves: ability scores, the headline stats, skill proficiency tiers, * and newly gained …
+
+### `src/lib/build/social.ts`
+
+- `interface SocialBar`
+- `function socialBars` — The three social bars for a sheet's passives.
 
 ### `src/lib/character/assemble.ts`
 
@@ -669,6 +690,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/detail.ts`
 
 - `const localizedName` — A content row's display NAME in `locale`, falling back to EN then the id (AUDIT F9 — the one * localized-name reader).
+- `const localizedProse` — A content row's PROSE in `locale`, falling back to EN then a legacy bare column — the same rule * the detail pane use…
 - `interface MonsterModel` — A monster stat block (the two-table "C" layout), built when type === 'monster'.
 - `interface SpellModel` — A spell article (the "strip" layout: fixed-size effect block + casting cells).
 - `interface Entry` — A row in the left-pane list (name + meta sub-line + the underlying content row).
@@ -1438,4 +1460,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 69 global classes · 50 components · 842 exports across 119 modules · 50 duplicate suspects._
+_45 tokens · 69 global classes · 50 components · 854 exports across 121 modules · 54 duplicate suspects._

@@ -1,103 +1,98 @@
 <script lang="ts">
-	// Review & create bar: a live snapshot of the derived sheet (AC / HP / init / speed / prof /
-	// spell DC), blocking issues, missing-content flags, and the create/save action.
+	// The bottom of the sheet: what is still open, and the one button that turns a draft into a
+	// character. Each unfinished line is a LINK to the control that fixes it — a list of complaints
+	// you can't act on is just nagging.
 	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
-	import { signed } from '$lib/util/format';
+	const b = build;
 
 	// the parent owns navigation-on-save (goto Combat); this bar just triggers it.
 	let { create }: { create: () => void } = $props();
-	const b = build;
 </script>
 
-<div class="card review">
-	<h2 class="review-title">
-		{b.edit ? 'Review & save' : 'Review & create'}
-		<span class="count gold">Level {b.sheet?.level ?? b.totalLevel}</span>
-	</h2>
-	<div class="revgrid">
-		{#if b.sheet}
-			<div class="stats">
-				<div class="stat"><b>{b.sheet.ac.value}</b><small>AC</small></div>
-				<div class="stat"><b>{b.sheet.maxHp.value}</b><small>Max HP</small></div>
-				<div class="stat"><b>{signed(b.sheet.initiative.value)}</b><small>Init</small></div>
-				<div class="stat"><b>{b.sheet.speed.value}</b><small>Speed</small></div>
-				<div class="stat"><b>{signed(b.sheet.proficiencyBonus)}</b><small>Prof</small></div>
-				{#if b.sheet.spellcasting.classes[0]}<div class="stat"><b>{b.sheet.spellcasting.classes[0].saveDC.value}</b><small>Spell DC</small></div>{/if}
+<div class="card review" class:ready={b.canCreate}>
+	<div class="left">
+		{#if b.blocking.length}
+			<span class="eyebrow"
+				>{$_('build.review.stillToDo', { values: { count: b.blocking.length } })}</span
+			>
+			<div class="todos">
+				{#each b.blocking as todo (todo.key + JSON.stringify(todo.values ?? {}))}
+					{@const target = b.todoTarget(todo)}
+					{@const text = $_(`build.todo.${todo.key}`, { values: todo.values })}
+					{#if target}
+						<button class="pill-btn todo" onclick={() => b.inspector.open(target)}>{text}</button>
+					{:else}
+						<span class="pill-btn todo static">{text}</span>
+					{/if}
+				{/each}
 			</div>
+		{:else}
+			<span class="eyebrow ready-label">{$_('build.review.ready')}</span>
+			<p class="subtext">{$_('build.review.readyBody')}</p>
 		{/if}
-		<div class="revside">
-			{#if b.issues.length}
-				<ul class="issues">{#each b.issues as msg (msg)}<li>{msg}</li>{/each}</ul>
-			{:else}
-				<p class="subtext ready">Ready to create.</p>
-			{/if}
-			{#if b.sheet?.missing.length}
-				<p class="subtext warn">Missing content: {b.sheet.missing.join(', ')}</p>
-			{/if}
-			<button class="create wide" disabled={!b.canCreate || b.saving} onclick={create}>
-				{#if b.saving}Saving…{:else}<Icon name="sparkles" size={13} />
-					{b.edit ? 'Save changes' : 'Create character'}{/if}
-			</button>
-		</div>
+		{#if b.sheet?.missing.length}
+			<p class="subtext warn">
+				{$_('build.review.missingContent', { values: { list: b.sheet.missing.join(', ') } })}
+			</p>
+		{/if}
 	</div>
+
+	<button class="create" disabled={!b.canCreate || b.saving} onclick={create}>
+		{#if b.saving}
+			{$_('build.review.saving')}
+		{:else}
+			<Icon name="sparkles" size={13} />
+			{$_(b.edit ? 'build.review.save' : 'build.review.create')}
+		{/if}
+	</button>
 </div>
 
 <style>
 	.review {
-		margin-top: 18px;
-		background: linear-gradient(180deg, var(--color-accent-soft), var(--color-surface));
-		border-color: var(--color-accent-deep);
-	}
-	.review .review-title {
-		color: var(--color-accent-bright);
-	}
-	.revgrid {
-		display: grid;
-		grid-template-columns: 2fr 1fr;
+		display: flex;
+		align-items: flex-start;
 		gap: 18px;
-		align-items: center;
+		margin-top: 4px;
+		border-color: var(--color-accent-deep);
+		background: linear-gradient(180deg, var(--color-accent-soft), var(--color-surface));
 	}
-	.stats {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 10px;
+	.review.ready {
+		border-color: var(--color-good);
+		background: linear-gradient(180deg, var(--color-good-soft), var(--color-surface));
 	}
-	.stat {
-		background: var(--color-surface-2);
-		border: 1px solid var(--color-border);
-		border-radius: 10px;
-		padding: 10px;
-		text-align: center;
-	}
-	.stat b {
-		display: block;
-		font-family: var(--font-display);
-		font-weight: 700;
-		font-size: var(--font-size-h5);
-	}
-	.stat small {
-		font-family: var(--font-mono);
-		font-size: var(--font-size-micro);
-		text-transform: uppercase;
-		letter-spacing: 0.08em;
-		color: var(--color-text-muted);
-	}
-	.revside {
+	.left {
+		flex: 1;
+		min-width: 0;
 		display: flex;
 		flex-direction: column;
 		gap: 8px;
 	}
-	.issues {
-		margin: 0;
-		padding-left: 16px;
-		font-size: var(--font-size-xs);
-		color: var(--color-text-muted);
+	.ready-label {
+		color: var(--color-good);
 	}
-	.issues li {
-		margin: 2px 0;
+	.todos {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+	.todo {
+		border-color: var(--color-accent-deep);
+		color: var(--color-accent-bright);
+	}
+	.todo:hover {
+		background: var(--color-accent-soft);
+		border-color: var(--color-accent);
+	}
+	.todo.static {
+		cursor: default;
+	}
+	.todo.static:hover {
+		background: transparent;
 	}
 	.create {
+		flex: none;
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-sm);
@@ -105,21 +100,27 @@
 		border: 1px solid var(--color-accent-deep);
 		color: var(--color-accent-text);
 		border-radius: 9px;
-		padding: 9px 16px;
+		padding: 11px 20px;
 		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		gap: 7px;
+	}
+	.create:hover:not(:disabled) {
+		background: var(--color-accent);
 	}
 	.create:disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
 	}
-	.create.wide {
-		width: 100%;
-		padding: 11px;
+	.create:focus-visible {
+		outline: var(--focus-ring);
+		outline-offset: var(--focus-offset);
 	}
 
-	@media (max-width: 760px) {
-		.revgrid {
-			grid-template-columns: 1fr;
+	@media (max-width: 700px) {
+		.review {
+			flex-direction: column;
 		}
 	}
 </style>

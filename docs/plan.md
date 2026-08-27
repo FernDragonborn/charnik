@@ -966,14 +966,17 @@ stay semi-manual.
   Attacks panel shows ×N. Prereq: the fold must gather these feature tokens; content-schema
   columns bump + converter updates.
   Order: shapes 1→3→2, Wild Shape last as its own item.
-- [ ] **N3 · Builder/level-up redesign — descriptions everywhere.** Requirement: NOTHING is
-  picked blind (spells, feats, subclasses, maneuvers, features). UI thesis: master–detail
-  with REUSED WikiDetail as the detail pane (one-shared-component rule; no new renderer);
-  hover/focus previews, click pins; narrow screens = expandable rows. Level-up gets a
-  "gained at level N" screen from `featuresForClass`. Process (decided 2026-07-15): go
-  STRAIGHT to an HTML mock in design-preview/ (no ASCII drafts — too big a piece), approve,
-  bake — and split the 1032-line build page (D1) while baking. Choice groups (N2 shape 3)
-  render here.
+- [~] **N3 · Builder/level-up redesign — descriptions everywhere.** Requirement: NOTHING is
+  picked blind (spells, feats, subclasses, maneuvers, features). **BAKED 2026-08-27** from the
+  "Builder Sheet Inspector" mock: the builder is now a LIVE SHEET on the left and a one-choice-at-a-
+  time inspector on the right, each choice showing the reused `WikiDetail` article plus **what taking
+  it would do to the sheet** (`previewSheet` runs the real pipeline on a trial draft →
+  `lib/build/sheet-diff`). Level-up reuses the same page. Every target has its own inspector body
+  (a feat slot is not an ability allocator); all of them render side by side at `/dev/inspector`.
+  Remaining under this item: the **guided ("walk me through it") second mode** — deliberately not
+  built, the inspector's targets are a data descriptor so a wizard is a second entry point onto the
+  same view-model, not a rewrite. Choice groups (N2 shape 3) still render here when N2 lands.
+  Working notes: `docs/builder-plan.md`.
 - [~] **N4 · Skills system fixes.** (a) **DONE (2026-08-02):** `toggleExpertise` capped from data
   — a curated `expertise_slots` `level:count` column on class_features (ONE row carries the
   progressive grant: Rogue `1:2,6:2`, Bard `3:2,10:2` 2014 / `2:2,9:2` 2024, 2024 Ranger `9:2`;

@@ -62,6 +62,8 @@ export interface DraftState {
 	slotFeatSkills: Record<string, string[]>;
 	selectedSpells: string[];
 	inventory: { item: string; qty: number; equipped: boolean; attuned: boolean }[];
+	/** Free prose for the table — bonds, flaws, a debt. One bullet per line; affects nothing. */
+	notes: string;
 }
 
 /** A blank new-character draft. The one source of default choices (reset + the initial state). */
@@ -90,7 +92,8 @@ export function blankDraft(): DraftState {
 		slotFeatAbility: {},
 		slotFeatSkills: {},
 		selectedSpells: [],
-		inventory: []
+		inventory: [],
+		notes: ''
 	};
 }
 
@@ -127,6 +130,7 @@ export function draftFromCharacter(char: Character): DraftState {
 		slotAsi: { ...char.build.slotPicks.asi },
 		slotFeatAbility: { ...char.build.slotPicks.featAbility },
 		slotFeatSkills: { ...char.build.slotPicks.featSkills },
+		notes: char.build.notes,
 		inventory: char.build.inventory.map((i) => ({
 			item: i.item,
 			qty: i.qty,

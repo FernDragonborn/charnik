@@ -57,6 +57,12 @@ const localized = (d: Record<string, unknown>, base: string, locale: string): st
  *  string, not an EN fallback, to mark "not yet translated"). */
 export const localizedName = (row: LoadedRow, locale: string): string =>
 	String(row.data[`name_${locale}`] || row.data.name_en || row.id);
+
+/** A content row's PROSE in `locale`, falling back to EN then a legacy bare column — the same rule
+ *  the detail pane uses, exported for the surfaces that render a row's text without building a whole
+ *  `DetailModel` (the builder sheet lists feature and trait text inline). */
+export const localizedProse = (row: LoadedRow, base: string, locale: string): string =>
+	localized(row.data, base, locale);
 const PROSE_LOC = new RegExp(`^(?:name|text|material|higher_level)_${LOCALE_TAG}$`);
 
 interface AbilityScore {

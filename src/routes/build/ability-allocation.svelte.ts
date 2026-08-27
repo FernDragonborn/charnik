@@ -25,11 +25,45 @@ import {
 	type StatMethod,
 } from '$lib/build/rules';
 import { splitList as csv } from '$lib/content/schemas';
+import { signed } from '$lib/util/format';
 import { toggleCapped } from './draft';
 import { ASI } from './rows';
 import type { DraftState, EditContext } from './draft';
 import type { FeatSlots } from './feat-slots.svelte';
 import type { LoadedRowByType } from '$lib/content/loader';
+
+/** Where a single point in an ability came from — the parts of the provenance line an ability row
+ *  shows. Numbers, not a sentence: the component translates it (the module stays locale-free). */
+export interface AbilityProvenance {
+	base: number;
+	/** Allocated boosts (background choice, ASI, half-feat). */
+	boost: number;
+	/** Everything else that moved the score — species traits, effects. */
+	other: number;
+	/** Which layer carries this edition's origin bonuses, for naming `other`. */
+	carrier: 'species' | 'background';
+}
+
+/** The provenance line an ability row shows ("base 15 · boost +2 · species +1"). Takes the
+ *  translator rather than importing one, like `why()` — this module stays locale-free and the caller
+ *  passes `$_`. Parts that contributed nothing are left out; a bare "base N" is the common case. */
+export function abilityProvenanceText(
+	p: AbilityProvenance,
+	t: (key: string, options?: { values?: Record<string, string | number> }) => string
+): string {
+	const parts = [t('build.abilities.provenanceBase', { values: { score: p.base } })];
+	if (p.boost) parts.push(t('build.abilities.provenanceBoost', { values: { amount: signed(p.boost) } }));
+	if (p.other)
+		parts.push(
+			t(
+				p.carrier === 'species'
+					? 'build.abilities.provenanceSpecies'
+					: 'build.abilities.provenanceOther',
+				{ values: { amount: signed(p.other) } }
+			)
+		);
+	return parts.join(' · ');
+}
 
 /** What the allocation needs from the build around it. */
 export interface AbilityAllocationHost {
@@ -150,5 +184,20 @@ export class AbilityAllocation {
 			ab,
 			boostPickCount(this.host().draft.boostShape)
 		);
+	};
+
+	/** Where this ability's final score came from. `other` is whatever the base and the allocated
+	 *  boosts don't account for — species traits and effects, which never pass through here, so the
+	 *  caller supplies the derived total rather than this module reaching for the sheet (which would
+	 *  make the view-model's type inference circular: sheet → assembled → abilities → sheet). */
+	provenance = (ab: Ability, derivedTotal?: number): AbilityProvenance => {
+		const base = this.host().draft.abilities[ab];
+		const boost = this.abilityBoosts[ab] ?? 0;
+		return {
+			base,
+			boost,
+			other: (derivedTotal ?? base) - base - boost,
+			carrier: this.boostCarrier
+		};
 	};
 }

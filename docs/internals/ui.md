@@ -146,6 +146,31 @@ none, so pass `label` (which becomes `aria-label` plus `role="img"`). Beside a t
 **An icon never lives in a string** — not in an i18n catalog, where a translator would carry or drop
 the app's iconography, and not in a status or kind map. Map to an `IconName` and render it.
 
+## Strings live in the catalogs, and so do the things that produce them
+
+A user-facing sentence is a key in `src/lib/i18n/locales/*.json`, rendered with `$_('ns.key', {
+values })`. That much is the AGENTS.md rule. The part that is easy to get wrong is everything
+*upstream* of the component.
+
+**A view-model or a pure module returns a KEY plus its values, never a sentence.** `buildTodos`
+yields `{ key: 'skills', values: { count: 2 } }`; the inspector's target descriptors carry
+`titleKey`/`blurbKey`. Those modules have no locale and must not acquire one — importing a store into
+a pure function to format a string is how a "pure, node-testable" helper stops being either. Where a
+helper genuinely has to compose text (`why()`, `abilityProvenanceText()`), it takes the translator as
+a parameter.
+
+**A closed vocabulary maps to keys, it is not a table of words.** A recharge kind, a stat-generation
+method, and a writing prompt are each a fixed id list in code and a set of catalog entries beside it.
+
+**Data is not copy.** A content row's own word for something — a species option labelled "Subrace" vs
+"Lineage" — passes through as an ICU *value*, because no UI catalog can know what a user's pack calls
+its columns.
+
+`src/lib/i18n/catalogs.test.ts` is the guard: every bundled locale must carry the same keys as
+English, no value may be blank, and a placeholder used in one locale must exist in every other. A key
+added to English and forgotten elsewhere otherwise renders an English sentence inside an otherwise
+translated screen, and nothing complains.
+
 ## Error copy
 
 Any string a user can see when something goes wrong is a sentence in their words answering three

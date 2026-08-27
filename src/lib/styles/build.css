@@ -1,26 +1,213 @@
 /*
  * Shared styling for the Build (character-creation) view, split across src/routes/build/blocks/*.
  * Every selector is confined under `.build-page` (set on the route's root <section>) so these
- * generic builder class names (.field, .chips, .pick-chip, .subtext…) reach every block component
- * WITHOUT leaking onto other routes' scoped lookalikes — the css-hoist name-collision foot-gun the
- * combat split avoided by keeping scoped copies. Card-LOCAL classes stay scoped inside their block.
+ * generic builder class names (.slot, .tag, .chips, .pick-chip, .subtext…) reach every block
+ * component WITHOUT leaking onto other routes' scoped lookalikes — the css-hoist name-collision
+ * foot-gun the combat split avoided by keeping scoped copies (`/dev/rolltoast` has its own `.slot`,
+ * and cannot be reached from here). Block-LOCAL classes stay scoped inside their block.
  *
  * Imported once (globally, unhashed) by build/+page.svelte; the `.build-page` ancestor does the
  * confining, not Svelte's per-component hash.
  */
 
-/* card heading (flex row: label + trailing count/button) */
-.build-page .card h2 {
-	font-family: var(--font-display);
-	font-weight: 600;
-	font-size: var(--font-size-xs);
-	letter-spacing: var(--tracking-label);
-	text-transform: uppercase;
-	color: var(--color-text-muted);
-	margin: 0 0 14px;
+/* A pane that scrolls inside the page rather than with it. The default scrollbar is a bright slab
+   against a dark surface and reads as a border; this makes it part of the pane. */
+.build-page .scrolly {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-border-strong) transparent;
+}
+
+/* ============================================================================================
+ * The SHEET vocabulary — the left pane is a character sheet, not a form, so its blocks share one
+ * set of primitives: a card head, a stat tile, a static tag, a pip row, a meter, and `.slot` (the
+ * one class that makes a piece of the sheet a click that opens the inspector).
+ * ============================================================================================ */
+
+/* a card's own header: eyebrow, then a spacer, then a trailing note */
+.build-page .card-head {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 11px;
+	flex-wrap: wrap;
+}
+.build-page .card-head .spacer {
+	flex: 1;
+}
+.build-page .card-head .trail {
+	font-family: var(--font-mono);
+	font-size: var(--font-size-xs);
+	color: var(--color-text-muted);
+}
+.build-page .card-head .trail.open {
+	color: var(--color-accent-bright);
+}
+
+/* SLOT — anything on the sheet that opens the inspector. It must look pressable everywhere it
+   appears, so the affordance lives here once rather than in a dozen scoped lookalikes. */
+.build-page .slot {
+	all: unset;
+	box-sizing: border-box;
+	cursor: pointer;
+	display: block;
+	border-radius: var(--radius-md);
+	border: 1px solid transparent;
+}
+.build-page .slot:hover {
+	border-color: var(--color-border-strong);
+	background: color-mix(in srgb, var(--color-surface-2) 60%, transparent);
+}
+.build-page .slot:focus-visible {
+	outline: var(--focus-ring);
+	outline-offset: var(--focus-offset);
+}
+/* the slot currently open in the inspector */
+.build-page .slot.active {
+	border-color: var(--color-accent);
+	background: var(--color-accent-soft);
+}
+/* an EMPTY required slot — crimson, because it is what is standing between here and a character */
+.build-page .slot.empty {
+	border: 1px dashed var(--color-accent);
+	color: var(--color-accent-bright);
+}
+.build-page .slot.empty:hover {
+	background: var(--color-accent-soft);
+}
+
+/* a big readout tile (AC / Max HP / Initiative / …) */
+.build-page .tile {
+	border: 1px solid var(--color-border);
+	background: var(--color-surface);
+	border-radius: var(--radius-md);
+	padding: 11px 8px;
+	text-align: center;
+	min-width: 0;
+}
+.build-page .tile b {
+	display: block;
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: var(--font-size-h5);
+	line-height: 1.15;
+}
+.build-page .tile small {
+	font-family: var(--font-mono);
+	font-size: var(--font-size-micro);
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--color-text-muted);
+}
+
+/* a STATIC tag — reads a fact, does not toggle anything (`.pick-chip` is the interactive one) */
+.build-page .tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	border: 1px solid var(--color-border-strong);
+	background: var(--color-surface-2);
+	border-radius: var(--radius-full);
+	padding: 5px 11px;
+	font-size: var(--font-size-xs);
+	color: var(--color-text);
+	white-space: nowrap;
+}
+.build-page .tag.muted {
+	color: var(--color-text-muted);
+}
+.build-page .tag.gold {
+	border-color: var(--color-resource-line);
+	background: var(--color-resource-soft);
+	color: var(--color-resource);
+}
+.build-page .tag.accent {
+	border-color: var(--color-accent-deep);
+	background: var(--color-accent-soft);
+	color: var(--color-accent-bright);
+}
+.build-page .tag.ghost {
+	border-style: dashed;
+	background: transparent;
+	color: var(--color-text-muted);
+}
+.build-page .tag.ghost.wanted {
+	border-color: var(--color-accent);
+	color: var(--color-accent-bright);
+}
+
+/* pips — a countable resource. Available on the left, spent on the right (ui.md §7). */
+.build-page .pips {
+	display: flex;
+	gap: 5px;
+	flex-wrap: wrap;
+}
+.build-page .pip {
+	width: 13px;
+	height: 13px;
+	border-radius: var(--radius-sm);
+	background: var(--color-resource);
+	flex: none;
+}
+.build-page .pip.plain {
+	background: var(--color-text-muted);
+}
+.build-page .pip.off {
+	background: transparent;
+	border: 1px solid var(--color-border-strong);
+}
+
+/* meter — a proportion (encumbrance, the social read-out) */
+.build-page .meter {
+	height: 6px;
+	background: var(--color-surface-2);
+	border-radius: 3px;
+	overflow: hidden;
+}
+.build-page .meter > span {
+	display: block;
+	height: 100%;
+	background: var(--color-resource);
+	border-radius: 3px;
+}
+.build-page .meter.good > span {
+	background: var(--color-good);
+}
+
+/* the compendium article inside an inspector pane — a card for WikiDetail to sit in. It scrolls with
+   the pane, not inside its own box, because the pane is already the scroll region. */
+.build-page .article {
+	border: 1px solid var(--color-border);
+	border-radius: var(--radius-md);
+	background: var(--color-surface);
+	padding: 4px 14px 12px;
+}
+
+/* two lines of a content row's prose, then an ellipsis — the sheet summarises, the inspector reads */
+.build-page .clamp-2 {
+	font-size: var(--font-size-xs);
+	color: var(--color-text-muted);
+	line-height: 1.45;
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	overflow: hidden;
+}
+
+/* rows of small facts: label on the left, value on the right */
+.build-page .facts {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	column-gap: 10px;
+	row-gap: 6px;
+	font-size: var(--font-size-xs);
+	color: var(--color-text-muted);
+}
+.build-page .facts > b {
+	font-weight: 400;
+}
+.build-page .facts > span {
+	color: var(--color-text);
 }
 
 /* inline accents / counters */
@@ -31,9 +218,6 @@
 }
 .build-page .gold {
 	color: var(--color-resource);
-}
-.build-page .teal {
-	color: var(--color-good);
 }
 
 /* muted sub-labels + their contextual variants */
@@ -46,10 +230,6 @@
 .build-page .subtext.note {
 	margin-top: 10px;
 }
-.build-page .subtext.subgroup {
-	margin-top: 10px;
-	color: var(--color-resource);
-}
 .build-page .subtext.warn {
 	color: var(--color-warning);
 }
@@ -57,25 +237,7 @@
 	color: var(--color-good);
 }
 
-/* labelled field rows (Origin / Inventory selects) */
-.build-page .field {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	margin-bottom: 11px;
-}
-.build-page .field:last-child {
-	margin-bottom: 0;
-}
-.build-page .field > span {
-	flex: none;
-	width: 92px;
-	font-family: var(--font-mono);
-	font-size: var(--font-size-xs);
-	text-transform: uppercase;
-	letter-spacing: 0.08em;
-	color: var(--color-text-muted);
-}
+/* selects (the standard-array picker is the last one left) */
 .build-page select {
 	font-family: var(--font-body);
 	font-size: var(--font-size-sm);
@@ -85,9 +247,6 @@
 	border-radius: var(--radius);
 	padding: 7px 10px;
 	cursor: pointer;
-}
-.build-page .field select {
-	flex: 1;
 }
 .build-page select:focus-visible {
 	outline: 2px solid var(--color-accent);
@@ -175,12 +334,6 @@
 	background: var(--color-good-soft);
 	border-color: var(--color-good);
 	color: var(--color-good);
-}
-.build-page .pick-chip.locked {
-	background: var(--color-resource-soft);
-	border-color: var(--color-resource);
-	color: var(--color-resource);
-	cursor: default;
 }
 .build-page .pick-chip.dim {
 	opacity: 0.4;

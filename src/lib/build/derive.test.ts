@@ -3,7 +3,8 @@ import {
 	parseSpeciesBoostChoice,
 	asiBoost,
 	speciesFixedAbilities,
-	buildIssues,
+	buildTodos,
+	type BuildTodoInput,
 	expertiseSlotsAtLevel,
 	expertiseBudget,
 	halfFeatAbilities
@@ -90,35 +91,60 @@ describe('speciesFixedAbilities', () => {
 	});
 });
 
-describe('buildIssues', () => {
-	const base = { name: 'Hero', method: 'manual' as const, strict: true };
-	const noDeps = {
+describe('buildTodos', () => {
+	/** A draft with nothing left to do — each test breaks exactly one thing. */
+	const done: BuildTodoInput = {
+		name: 'Hero',
+		method: 'manual',
+		strict: true,
+		hasSpecies: true,
+		needsSpeciesOption: false,
+		hasBackground: true,
 		hasClass: true,
+		openSubclasses: [],
 		pointsLeft: 0,
 		classSkillCount: 0,
 		skillChosenCount: 0,
+		openFeatSlots: [],
 		spellPicker: []
 	};
-	it('flags a missing name and a missing class', () => {
-		const out = buildIssues({ ...base, name: '  ' }, { ...noDeps, hasClass: false });
-		expect(out).toContain('Give your character a name.');
-		expect(out).toContain('Pick a class (you can change it later).');
+	const kinds = (input: BuildTodoInput) => buildTodos(input).map((t) => t.kind);
+
+	it('a finished draft has nothing left to do', () => {
+		expect(buildTodos(done)).toEqual([]);
 	});
-	it('flags unspent point-buy points only in point-buy', () => {
-		expect(buildIssues({ ...base, method: 'point_buy' }, { ...noDeps, pointsLeft: 3 })).toContain(
-			'3 ability points unspent.'
-		);
-		expect(buildIssues({ ...base, method: 'manual' }, { ...noDeps, pointsLeft: 3 })).not.toContain(
-			'3 ability points unspent.'
-		);
+	it('flags every empty origin field', () => {
+		expect(
+			kinds({ ...done, name: '  ', hasSpecies: false, hasBackground: false, hasClass: false })
+		).toEqual(['name', 'species', 'class', 'background']);
 	});
-	it('a complete Strict draft has no issues; Free skips the Strict checks', () => {
-		expect(buildIssues(base, noDeps)).toEqual([]);
-		expect(buildIssues({ ...base, strict: false }, { ...noDeps, classSkillCount: 2 })).toEqual([]);
+	it('a species with lineages needs one chosen', () => {
+		expect(kinds({ ...done, needsSpeciesOption: true })).toEqual(['speciesOption']);
 	});
-	it('Strict flags too-few chosen skills', () => {
-		expect(buildIssues(base, { ...noDeps, classSkillCount: 2, skillChosenCount: 0 })).toContain(
-			'Choose 2 more skills.'
-		);
+	it('unspent points only count in point-buy', () => {
+		expect(kinds({ ...done, method: 'point_buy', pointsLeft: 3 })).toEqual(['abilities']);
+		expect(kinds({ ...done, method: 'manual', pointsLeft: 3 })).toEqual([]);
+	});
+	it('an empty field is required in Free too — only the over-cap check is Strict', () => {
+		const short = { ...done, classSkillCount: 2, skillChosenCount: 0 };
+		expect(buildTodos({ ...short, strict: false })[0]).toMatchObject({
+			kind: 'skills',
+			key: 'skills',
+			values: { count: 2 },
+			required: true
+		});
+	});
+	it('every open subclass and feat slot is its own line, and carries where it came from', () => {
+		const todos = buildTodos({
+			...done,
+			openSubclasses: [{ index: 0, className: 'Paladin', level: 3 }],
+			openFeatSlots: [
+				{ key: 'p-4', level: 4, className: 'Paladin' },
+				{ key: 'p-8', level: 8, className: 'Paladin' }
+			]
+		});
+		expect(todos.map((t) => t.kind)).toEqual(['subclass', 'feat', 'feat']);
+		expect(todos[0]).toMatchObject({ index: 0, level: 3 });
+		expect(todos.slice(1).map((t) => t.slotKey)).toEqual(['p-4', 'p-8']);
 	});
 });

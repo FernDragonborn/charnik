@@ -48,6 +48,7 @@
 			<li><a href={dev('plugins')}>Plugins</a></li>
 			<li><a href={dev('storage')}>Storage</a></li>
 			<li><a href={dev('packs')}>Content packs (fixture)</a></li>
+			<li><a href={dev('inspector')}>Builder inspector — every target at once</a></li>
 		</ul>
 	</section>
 

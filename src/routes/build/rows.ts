@@ -5,7 +5,7 @@
  * in the view-model makes the two import each other. It re-exports everything here, so importing
  * either module works.
  */
-import { localizedName } from '$lib/content/detail';
+import { localizedName, localizedProse } from '$lib/content/detail';
 import { app } from '$lib/stores/app.svelte';
 import type { ContentType } from '$lib/content/schemas';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
@@ -29,6 +29,22 @@ export function rowOfType<T extends ContentType>(
  *  `localizedName` (AUDIT F9) that adds the undefined-row guard + the active-locale default. */
 export function rowName(row: LoadedRow | undefined, locale = app.activeLocale): string {
 	return row ? localizedName(row, locale) : '';
+}
+
+/** Localised body text for a content row (falls back to EN, then empty) — `rowName`'s sibling, for
+ *  the sheet blocks that print a feature's or trait's prose straight onto the sheet.
+ *
+ *  Content prose is markdown, and the sheet renders these as a two-line clamp rather than an
+ *  article, so the syntax is stripped rather than rendered: `_Origin Feat_` reading as literal
+ *  underscores is worse than losing the emphasis. The full article, markdown intact, is one click
+ *  away in the inspector. */
+export function rowText(row: LoadedRow | undefined, locale = app.activeLocale): string {
+	if (!row) return '';
+	return localizedProse(row, 'text', locale)
+		.replace(/[*_`]+/g, '')
+		.replace(/^#+\s*/gm, '')
+		.replace(/\s*\n+\s*/g, ' ')
+		.trim();
 }
 
 /** Sentinel a feat slot holds when the choice is an Ability Score Improvement (not a feat). */

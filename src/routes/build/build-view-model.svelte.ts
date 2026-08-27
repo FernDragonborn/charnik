@@ -22,14 +22,16 @@ import { uniqueCharacterId } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
 import type { Ability } from '$lib/rules/core';
-import { pointBuyCost } from '$lib/build/rules';
 import {
 	parseSpeciesBoostChoice,
 	speciesFixedAbilities as fixedAbilitiesFromRows,
 	buildSpellPicker,
-	buildIssues,
+	buildTodos,
 	expertiseBudget,
+	openSubclassChoices,
+	type BuildTodo,
 } from '$lib/build/derive';
+import { Inspector, targetForTodo } from './inspector.svelte';
 import { splitList, type ContentType } from '$lib/content/schemas';
 import { slugify } from '$lib/util/slug';
 import { FeatSlots } from './feat-slots.svelte';
@@ -448,7 +450,7 @@ class BuildVM {
 				const lvl = Number(rowOfType(this.graph?.get(ref), 'spell')?.data.level ?? 0);
 				return { spell: ref, prepared: lvl > 0, alwaysPrepared: lvl === 0 };
 			}),
-			notes: ''
+			notes: this.draft.notes
 		};
 		// editing keeps the original id + play/ui; creating derives a fresh id from the name
 		return assembleCharacter(build, {
@@ -465,24 +467,68 @@ class BuildVM {
 		return this.graph ? deriveSheet(this.assembled, this.graph, isRowActive) : null;
 	});
 
-	// --- validation --------------------------------------------------------------
-	// Free is lenient (only a name is required). Strict adds allocation checks that BLOCK create.
-	issues = $derived.by<string[]>(() =>
-		buildIssues(
-			{ name: this.draft.name, method: this.draft.method, strict: this.draft.strict },
-			{
-				hasClass: !!this.classId,
-				pointsLeft: this.abilities.pointsLeft,
-				classSkillCount: this.classSkillCount,
-				skillChosenCount: this.skillChosenCount,
-				spellPicker: this.spellPicker
-			}
-		)
+	// --- the inspector (right pane) -------------------------------------------------------------
+	/** The choice currently open in the right pane, and the flow that commits it. */
+	inspector = new Inspector(() => this);
+
+	/**
+	 * The sheet the draft WOULD produce with `mutate` applied — the real pipeline, on a trial draft,
+	 * then put back. Derived reads are pull-based, so the whole `assembled → sheet` chain recomputes
+	 * inside this synchronous window and again when the draft is restored; nothing outside ever
+	 * observes the trial state. Deliberately expensive (a full `deriveSheet`) — call it for the ONE
+	 * option a player is reading, never per row of a list.
+	 *
+	 * Running the REAL pipeline is the point: a hand-written "what a background gives you" summary
+	 * would drift from what the engine actually applies, and the drift would be invisible.
+	 *
+	 * The sharp edge: this writes to `this.draft` from inside a `$derived` (`Inspector.changes`),
+	 * which `docs/internals/ui.md` otherwise forbids. It is safe because the write is undone in the
+	 * same synchronous frame, so no consumer ever sees the trial value and the dependency graph ends
+	 * where it started. If Svelte ever makes that a hard error, the upgrade is to move `changes` into
+	 * an `$effect` that writes a `$state` — one tick of lag, same output.
+	 */
+	previewSheet = (mutate: () => void): CharacterSheet | null => {
+		const restore = $state.snapshot(this.draft); // already a deep clone
+		try {
+			mutate();
+			return this.sheet;
+		} finally {
+			this.draft = restore;
+		}
+	};
+
+	// --- what is still unfinished ----------------------------------------------------------------
+	/** Every empty required field, in fix-it order — the "still to do" bar, each line a link into the
+	 *  inspector. Built at ANY starting level: each level's subclass and feat slot is its own line. */
+	todos = $derived.by<BuildTodo[]>(() =>
+		buildTodos({
+			name: this.draft.name,
+			method: this.draft.method,
+			strict: this.draft.strict,
+			hasSpecies: !!this.draft.speciesId,
+			needsSpeciesOption: this.speciesOptions.length > 0 && !this.draft.speciesOptionId,
+			hasBackground: !!this.draft.backgroundId,
+			hasClass: !!this.classId,
+			openSubclasses: this.openSubclasses,
+			pointsLeft: this.abilities.pointsLeft,
+			classSkillCount: this.classSkillCount,
+			skillChosenCount: this.skillChosenCount,
+			openFeatSlots: this.feats.featSlots.filter((s) => !this.draft.slotFeats[s.key]),
+			spellPicker: this.spellPicker
+		})
 	);
-	// Free: name only. Strict: everything above must be resolved.
-	canCreate = $derived(
-		this.draft.name.trim().length > 0 && (!this.draft.strict || this.issues.length === 0)
+
+	openSubclasses = $derived(
+		this.graph ? openSubclassChoices(this.draft.classes, this.graph, (r) => rowName(r)) : []
 	);
+
+	/** The inspector target that fixes a todo — so clicking the line opens the control, not a page. */
+	todoTarget = targetForTodo;
+
+	/** Blocking todos — what stands between the draft and a playable character, and the ONLY gate on
+	 *  creating one. Each carries the inspector target that resolves it (`todoTarget`). */
+	blocking = $derived(this.todos.filter((t) => t.required));
+	canCreate = $derived(this.blocking.length === 0);
 
 	save = async (): Promise<string | null> => {
 		if (!this.canCreate) return null;
@@ -505,18 +551,6 @@ class BuildVM {
 		}
 	};
 
-	/** Provenance sub-line for an ability row: base + boost + species/effect bonus. */
-	abilityNote = (ab: Ability): string => {
-		const base = this.draft.abilities[ab];
-		const boost = this.abilities.abilityBoosts[ab] ?? 0;
-		const total = this.sheet?.abilities[ab].score.value ?? base;
-		const extra = total - base - boost; // species / effect contribution
-		const parts: string[] = [`base ${base}`];
-		if (boost) parts.push(`boost +${boost}`);
-		if (extra) parts.push(`${this.abilities.boostCarrier === 'species' ? 'species' : 'other'} ${extra > 0 ? '+' : ''}${extra}`);
-		return parts.join(' · ');
-	};
-	abilityCost = (ab: Ability): number => pointBuyCost(this.draft.abilities[ab]);
 }
 
 /** The single shared Build view-model instance. */

@@ -6,7 +6,8 @@ pointer at it, not a second set of rules.
 ## What is still open
 
 - [The plan](plan.md) — the authoritative spec and the only place that says what is open.
-- Active ledgers: [N2](n2-plan.md) · [Recharge](recharge-plan.md) · [Roller](roller-plan.md)
+- Active ledgers: [N2](n2-plan.md) · [Recharge](recharge-plan.md) · [Roller](roller-plan.md) ·
+  [Builder](builder-plan.md)
 - [Changelog](changelog.md)
 
 ## How it works
