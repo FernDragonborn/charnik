@@ -160,16 +160,29 @@ Completion detection is unreliable, so a finished command often keeps the turn b
 timeout expires: a 15-minute ceiling on a 15-second test run is 15 minutes someone sits through. The
 generous ceiling is not insurance, it is the cost.
 
-`pnpm test` ~15 s · `pnpm check` ~10 s · `eslint .` ~26 s · `pnpm build` ~10 s · a single
+`pnpm test` ~15 s · `pnpm check` ~65 s · `eslint .` ~26 s · `pnpm build` ~10 s · a single
 `vitest run <file>` ~2 s · `shot.mjs` ~30 s for the full set · **`pnpm lint:typed` ~9m30**. For
 anything genuinely long or unknown, run it in the background instead of buying a big timeout.
 
 ## Toolchain constraints that will bite
 
-- **TypeScript stays on 6.x.** The 7.0 bump is on dependabot's ignore list because
-  `typescript-eslint` hard-errors "does not support TS 7.0", which breaks the whole `eslint` step —
-  and so `pnpm lint` and CI — even though vitest passes. Revisit when typescript-eslint ships TS ≥ 7
-  support (upstream: typescript-eslint#10940).
+- **TypeScript stays on 6.x.** The 7.0 bump is on dependabot's ignore list (PR #7, closed
+  2026-07-26). The root cause is not typescript-eslint being slow: **TS 7.0 ships no programmatic
+  API at all** — it lands in 7.1, targeted autumn 2026 — so every tool that reads the compiler
+  breaks at once. `typescript-eslint` still peers `typescript >=4.8.4 <6.1.0` as of 8.68.0 and
+  crashes on `Cjs` if forced; `svelte-check` crashes on `typescript@7` too (sveltejs/language-tools#3063).
+  Microsoft's answer is the `@typescript/typescript6` alias package, which keeps the old API under the
+  `typescript` name — i.e. the migration buys nothing here, because nothing in this repo runs `tsc`:
+  vite and vitest transpile with esbuild, and the two type gates are the tools that are blocked.
+  The tsconfig is already 7.0-clean (`target: esnext`, `moduleResolution: bundler`, no `baseUrl`).
+  Revisit when TS 7.1 ships its API and typescript-eslint peers it. typescript-eslint#10940 is a
+  *different* ask — tsgo as a speed backend — and is explicitly not on their roadmap.
+- **`svelte-check --tsgo` is real but rides a dead package.** Measured here: `pnpm check` 69 s → 30 s,
+  and a planted type error in `.ts`, `.svelte`, a component and a `.browser.test.ts` was caught in
+  every one, so the `--incremental` "files outside rootDir go unchecked" caveat does not bite this
+  layout. It needs `@typescript/native-preview`, which stopped publishing on 2026-07-07, one day
+  before 7.0 GA. Not adopted: a frozen pre-GA compiler under the gate that must not lie is a bad
+  trade for 39 s on a pre-push hook.
 - **Browser tests need a local chromium.** `*.browser.test.ts` run under the `browser` vitest project;
   a fresh machine needs `pnpm exec playwright install chromium` first. Run just them with
   `pnpm vitest run --project browser`. Under vitest-browser-svelte 3, `render()` is **async** — miss

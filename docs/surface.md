@@ -917,7 +917,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `re-export SYSTEMS`
 - `const EFFECT_KINDS` — Bounded effect vocabulary — the only kinds the engine understands.
-- `const splitList` — Split a CSV list cell (comma/semicolon separated) into trimmed, non-empty items.
+- `function splitList` — Split a CSV list cell (comma/semicolon separated) into trimmed, non-empty items.
 - `re-export SIZES` — Option lists are exported (single source) so the homebrew authoring form renders identical selects — a value the form…
 - `re-export ABILITIES` — Option lists are exported (single source) so the homebrew authoring form renders identical selects — a value the form…
 - `const HIT_DICE`
@@ -1261,6 +1261,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const ADVANTAGE_MODE` — How a roll's d20 were read.
 - `type AdvantageMode`
 - `const ADVANTAGE_CUE` — Mode → the shape that says it: the modifier suffix of the shared `.advantage-cue` class * (`styles/components.css`).
+- `const ADVANTAGE_SIGN` — Mode ↔ the ±1 axis every roll site speaks (it is arithmetic over effects).
+- `function advantageFromSign`
+- `const NEXT_ADVANTAGE` — The lap a tap on the cue takes.
 - `interface LegacyAdvantageRoll` — The pre-2026-08-22 shape of an advantage pair, as it still sits in `log.jsonl`.
 - `const DIE_ROLE` — What a die was drawn FOR.
 - `type DieRole`
@@ -1476,4 +1479,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 69 global classes · 50 components · 865 exports across 123 modules · 53 duplicate suspects._
+_45 tokens · 69 global classes · 50 components · 868 exports across 123 modules · 53 duplicate suspects._
