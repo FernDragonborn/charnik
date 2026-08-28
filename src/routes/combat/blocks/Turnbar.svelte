@@ -15,6 +15,11 @@
 		['bonus', 'Bonus'],
 		['reaction', 'Reaction'],
 	] as const;
+
+	// the narrow bar drops the words, so the readout can't be the accessible name any more
+	const moveLabel = $derived(
+		`Movement: ${combat.economy.moveLeft} of ${combat.economy.moveMax} ft left — click to spend 5 ft`,
+	);
 </script>
 
 <section class="turnbar combat-bar">
@@ -30,8 +35,9 @@
 			class="turn-slot"
 			onclick={() => combat.economy.trySpend(slot)}
 			title="Spend one {label}"
+			aria-label="Spend one {label}"
 		>
-			{label}
+			<span class="slot-label">{label}</span>
 			<span class="turn-pips">
 				{#each range(combat.economy.slotMax[slot]) as i (i)}
 					{@const used = i >= combat.economy.slotMax[slot] - c.play.turn[slot]}
@@ -57,10 +63,11 @@
 		class="turn-slot move"
 		onclick={() => combat.economy.spendMove(5)}
 		title="Click: spend 5 ft"
+		aria-label={moveLabel}
 	>
-		<Icon name="footprints" size={13} /> Move
+		<Icon name="footprints" size={13} /> <span class="slot-label">Move</span>
 		<b class:spent={combat.economy.moveLeft === 0}>{combat.economy.moveLeft}</b>
-		/ {combat.economy.moveMax} ft
+		/ {combat.economy.moveMax} <span class="slot-label">ft</span>
 	</button>
 	<button
 		type="button"
@@ -69,16 +76,58 @@
 		title="Reset movement"><Icon name="rotate-ccw" size={13} label="Reset movement" /></button
 	>
 	<span class="spacer"></span>
-	<button type="button" class="nextturn" onclick={combat.economy.nextTurn}
-		>Next turn <Icon name="chevron-right" size={13} /></button
+	<button
+		type="button"
+		class="nextturn"
+		onclick={combat.economy.nextTurn}
+		aria-label="Next turn"
+		title="Next turn"
+		><span class="slot-label">Next turn</span> <Icon name="chevron-right" size={13} /></button
 	>
 </section>
 
 <style>
 	/* container (.combat-bar) + .bar-label are shared (components.css) */
+
+	/* The bar never wraps (.combat-bar), so it has to fit itself into whatever the status row leaves
+	   it — which is a CONTAINER width, not a viewport one: the same 1400px window gives this bar half
+	   the room once a long roll is sitting in the strip beside it. Two steps: first the padding and
+	   the unit go, then the words, leaving the pips that carry the actual state. Nothing is ever
+	   removed — every control keeps its box, its hit area, and (via aria-label) its name. */
+	.turnbar {
+		container-type: inline-size;
+	}
 	.turnbar .spacer {
 		flex: 1 1 auto;
 		min-width: 8px;
+	}
+	/* Each threshold is the width the regime ABOVE it stops fitting in, measured on the English bar:
+	   631px with full padding and words, 539px once compacted, 367px once the words are gone. Only
+	   the last regime is locale-proof (pips, numbers, icons) — RE-MEASURE THE TWO THRESHOLDS when the
+	   labels get translated, because `container-type` zeroes the min-content floor, so a longer word
+	   overflows the bar instead of pushing it wider. */
+	@container (max-width: 630px) {
+		.turnbar .turn-slot {
+			gap: 5px;
+			padding: 5px 8px;
+		}
+		.turnbar .nextturn {
+			padding: 7px 11px;
+		}
+		.turnbar .turn-slot.move .slot-label {
+			display: none;
+		}
+	}
+	@container (max-width: 540px) {
+		.turnbar .turn-slot .slot-label,
+		.turnbar .nextturn .slot-label {
+			display: none;
+		}
+		/* label-less, the pill is only as wide as its pips — keep a finger-sized target */
+		.turnbar .turn-slot {
+			min-width: 34px;
+			justify-content: center;
+		}
 	}
 	/* every pill in this bar is a button; they all signal it the same way (hover + pointer + the
 	   global focus ring) — a pill that looked inert was the UBUG-17 complaint */

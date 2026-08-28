@@ -123,7 +123,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.card` | components.css | --- card + panel header --- |
 | `.chevron` | components.css |  |
 | `.chip` | components.css | A plain grey chip is easy to miss in a dialog corner — give the language switcher a teal outline so it reads as an of… |
-| `.combat-bar` | components.css | --- combat bar: the horizontal surface strip above the panel grid (Turnbar, ResourceBar, TimeSkip all shared this ide… |
+| `.combat-bar` | components.css | NEVER wraps: a status strip that grew a second row moved every control below it and read as two unrelated bars. |
 | `.combat-row` | components.css | --- combat action/attack row: the two-line list row shared by the Attacks + Actions panels (name + right-aligned hint… |
 | `.combat-row-desc` | components.css |  |
 | `.combat-row-hint` | components.css |  |

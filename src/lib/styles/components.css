@@ -299,9 +299,11 @@ svg.lucide {
 
 /* --- combat bar: the horizontal surface strip above the panel grid (Turnbar, ResourceBar, TimeSkip
    all shared this identical container; each keeps only its own inner controls as scoped styles) --- */
+/* NEVER wraps: a status strip that grew a second row moved every control below it and read as two
+   unrelated bars. Each bar instead narrows its own controls (see Turnbar's container queries). */
 .combat-bar {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	align-items: center;
 	gap: 8px;
 	background: var(--color-surface);
@@ -312,6 +314,11 @@ svg.lucide {
 	   "Next turn" button is the tallest control, so pin all bars to its height (border-box) */
 	min-height: 56px;
 	margin-bottom: 12px;
+}
+/* nowrap on the flex line only stops the CONTROLS from dropping to a second row — the text inside a
+   squeezed pill still breaks, which grew the bar exactly the same way ("Next turn" over two lines) */
+.combat-bar > * {
+	white-space: nowrap;
 }
 /* the mono uppercase eyebrow that titles a combat bar (Round / Pass time / …) */
 .bar-label {
