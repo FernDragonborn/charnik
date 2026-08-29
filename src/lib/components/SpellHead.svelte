@@ -19,6 +19,11 @@
 		editable?: boolean;
 		draft?: WikiEditDraft | undefined;
 	} = $props();
+
+	/** Has this spell anything to roll? A utility spell had a 116px tile saying "No roll" — a banner
+	 *  whose whole content was the absence of content. Without rolls the tile goes and its resolution
+	 *  chip joins Ritual / Concentration beside the title, where the other one-word facts already are. */
+	const rolls = $derived(!!spell.dice || spell.resChip === 'hit');
 </script>
 
 <div class="detail-eyebrow">
@@ -31,13 +36,14 @@
 	{:else}
 		<h1>{detail.title}</h1>
 	{/if}
+	{#if !rolls}<span class="stat-chip {spell.resChip}">{spell.resLabel}</span>{/if}
 	{#if spell.ritual}<span class="stat-chip util">Ritual</span>{/if}
 	{#if spell.concentration}<span class="stat-chip save">Concentration</span>{/if}
 </div>
-<div class="strip">
-	<div class="spell-effect {spell.resChip}">
-		<span class="stat-chip {spell.resChip}">{spell.resLabel}</span>
-		{#if spell.dice || spell.resChip === 'hit'}
+<div class="strip" class:norolls={!rolls}>
+	{#if rolls}
+		<div class="spell-effect {spell.resChip}">
+			<span class="stat-chip {spell.resChip}">{spell.resLabel}</span>
 			{#if spell.dice}
 				<span class="spell-effect-value">{spell.dice}</span>
 				{#if spell.dmgType}<span class="spell-effect-sub">{spell.dmgType}</span>{/if}
@@ -54,10 +60,8 @@
 					>
 				{/if}
 			</div>
-		{:else}
-			<span class="spell-effect-value none">No roll</span>
-		{/if}
-	</div>
+		</div>
+	{/if}
 	<div class="stat-cells">
 		{#each spell.cells as [k, v] (k)}
 			<div class="stat-cell">
@@ -66,7 +70,7 @@
 			</div>
 		{/each}
 		{#if spell.availableTo?.length}
-			<div class="stat-cell span">
+			<div class="stat-cell">
 				<div class="stat-key eyebrow">Available to</div>
 				<div class="stat-value">
 					{#each spell.availableTo as c, i (c.name)}{i ? ', ' : ''}{c.name}{#if c.homebrew}<span
@@ -76,7 +80,7 @@
 				</div>
 			</div>
 		{:else if spell.classes}
-			<div class="stat-cell span">
+			<div class="stat-cell">
 				<div class="stat-key eyebrow">Available to</div>
 				<div class="stat-value">{spell.classes}</div>
 			</div>
@@ -129,6 +133,9 @@
 		align-items: start;
 		margin-bottom: 4px;
 	}
+	.strip.norolls {
+		grid-template-columns: 1fr;
+	}
 	.spell-effect {
 		min-height: 116px;
 		display: flex;
@@ -157,10 +164,6 @@
 	.spell-effect.auto .spell-effect-value {
 		color: var(--color-good);
 	}
-	.spell-effect-value.none {
-		color: var(--color-text-muted);
-		font-size: var(--font-size-h6);
-	}
 	.spell-effect-sub {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
@@ -187,11 +190,6 @@
 		border-radius: 9px;
 		padding: 7px 11px;
 	}
-	/* full row whatever the auto-fit column count turns out to be — `span 2` would invent an implicit
-	   second column when only one fits */
-	.stat-cell.span {
-		grid-column: 1 / -1;
-	}
 	.stat-cell .stat-key {
 		font-size: var(--font-size-micro);
 	}
@@ -209,6 +207,20 @@
 	@container article (max-width: 560px) {
 		.strip {
 			grid-template-columns: 1fr;
+		}
+		/* Stacked, the effect tile stops being a 168px column and becomes a ROW. Centring one die and
+		   two buttons inside a full-width 116px box put the head's loudest element in a band of empty
+		   space — the same "mostly nothing" the list rows had. */
+		.spell-effect {
+			min-height: 0;
+			flex-direction: row;
+			justify-content: flex-start;
+			gap: 10px;
+			padding: 9px 12px;
+			text-align: left;
+		}
+		.spell-effect-rolls {
+			margin-left: auto;
 		}
 	}
 </style>
