@@ -107,7 +107,7 @@ Style **only** through these — never hardcode a color/size. Names are semantic
 
 **faint red tint bg (invalid-cell / danger banners)** — `--color-overlay`, `--color-accent`, `--color-accent-bright`, `--color-accent-deep`, `--color-accent-soft`, `--color-resource`, `--color-good`, `--color-good-line`, `--color-resource-line`, `--color-warning-text`, `--color-danger-soft`
 
-## Global CSS classes (69)
+## Global CSS classes (73)
 
 A shared class lives in exactly ONE place. Reuse before making a scoped lookalike.
 
@@ -120,6 +120,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.advantage-cue-up` | components.css |  |
 | `.all-clear` | components.css |  |
 | `.bar-label` | components.css | the mono uppercase eyebrow that titles a combat bar (Round / Pass time / …) |
+| `.base` | components.css |  |
 | `.btn` | components.css | --- buttons: neutral base + ghost / primary variants (dialog footers, forms) --- |
 | `.card` | components.css | --- card + panel header --- |
 | `.chevron` | components.css |  |
@@ -150,6 +151,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.durpill` | components.css | duration / generic mono pill |
 | `.eyebrow` | components.css |  |
 | `.ghost` | components.css |  |
+| `.good` | components.css |  |
 | `.htoggle` | components.css |  |
 | `.icon-button` | components.css | --- ghost icon button (remove / close) --- |
 | `.icon-toggle` | components.css | --- icon-toggle: square 26×24 icon button that flips on/off (EyeToggle show-on-sheet, Pin quick-bar). |
@@ -157,6 +159,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.lucide` | components.css | --- drawn icons (Icon.svelte / Lucide) — global because the svg belongs to the icon component, so no consumer's scope… |
 | `.meta-key` | GenericHead.svelte :global |  |
 | `.meta-value` | GenericHead.svelte :global |  |
+| `.meter` | components.css | --- meter: a proportion (encumbrance, the social read-out) --- |
 | `.mobile-blocked` | MobileWarning.svelte :global |  |
 | `.mono-path` | components.css | a filesystem path shown inline (settings Data row) — mono, muted, ellipsized |
 | `.monster-type` | components.css |  |
@@ -176,6 +179,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 | `.skip-link` | app.css | Skip-to-content link: hidden until focused (keyboard users tab to it first). |
 | `.slabtoggle` | components.css | whole label clickable to collapse (chev + name), no button box |
 | `.source-line` | components.css |  |
+| `.stepper` | components.css | --- number stepper: a count you can nudge either way (class level, ability scores, item qty) --- |
 | `.text-field` | components.css | text-input / textarea field base (edit forms, inline editors). |
 | `.toggle-track` | components.css | --- toggle-track: the pill on/off switch knob (Switch component, combat menus) --- |
 | `.topbar` | MobileWarning.svelte :global |  |
@@ -403,7 +407,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (108 modules)
+## Library functions & types (109 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -521,6 +525,23 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export type SkillId`
 - `interface CharacterSheet`
 - `function deriveSheet` — Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM.
+
+### `src/lib/character/inventory.ts`
+
+- `type InventoryEntry`
+- `type InventoryList`
+- `const ATTUNEMENT_CAP` — RAW, both editions: a creature can be attuned to at most three magic items at once.
+- `const isEquippable`
+- `const isConsumable`
+- `const needsAttunement`
+- `const attunedCount`
+- `const carriedWeight` — Total carried weight in pounds.
+- `const addItem`
+- `const removeItem`
+- `const bumpQty`
+- `const toggleEquipped`
+- `const toggleAttuned` — Attuning is not symmetric with equipping: un-attuning is always allowed, and only the way IN can * be over the cap.
+- `const useOne` — Spend one of a consumable: the last one leaves the inventory rather than sitting at qty 0, which * would read as "car…
 
 ### `src/lib/character/repository.ts`
 
@@ -1480,4 +1501,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 69 global classes · 50 components · 868 exports across 123 modules · 54 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 882 exports across 124 modules · 54 duplicate suspects._

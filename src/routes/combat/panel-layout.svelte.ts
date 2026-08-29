@@ -9,7 +9,7 @@ export class PanelLayout {
 	// two independent column arrays (svelte-dnd-action items need an id)
 	columns = $state<{ id: string }[][]>([
 		[{ id: 'skills' }, { id: 'spells' }],
-		[{ id: 'attacks' }, { id: 'effects' }, { id: 'actions' }],
+		[{ id: 'attacks' }, { id: 'effects' }, { id: 'actions' }, { id: 'inventory' }],
 	]);
 	dragDisabled = $state(true); // drag only after the ⠿ grip arms it (handle-only)
 	flipDurationMs = 150;
@@ -20,9 +20,24 @@ export class PanelLayout {
 
 	toggle = (k: string) => (this.collapsed[k] = !this.collapsed[k]);
 
-	/** Restore a saved layout (from the character's ui.panelColumns), if any. */
+	/**
+	 * Restore a saved layout (from the character's ui.panelColumns), if any — RECONCILED against the
+	 * panels that actually exist, in both directions.
+	 *
+	 * A layout is saved the first time a character's panels are dragged and then outlives the app that
+	 * wrote it. Without this, a panel added later would be invisible forever to every character that
+	 * had ever reordered anything (there is no UI to add one back), and a panel since removed would
+	 * leave a card with no title and no body. Neither is something a user could fix from the app.
+	 */
 	restore = (saved?: string[][]) => {
-		if (saved?.length) this.columns = saved.map((col) => col.map((id) => ({ id })));
+		if (!saved?.length) return;
+		const known = new Set(this.columns.flat().map((panel) => panel.id));
+		const kept = saved.map((col) => col.filter((id) => known.has(id)).map((id) => ({ id })));
+		const seen = new Set(kept.flat().map((panel) => panel.id));
+		const added = [...known].filter((id) => !seen.has(id)).map((id) => ({ id }));
+		const last = kept[kept.length - 1];
+		if (last) last.push(...added);
+		this.columns = kept;
 	};
 
 	// svelte-dnd-action: sync each column on drag consider + finalize; re-lock the grip.

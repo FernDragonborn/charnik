@@ -206,6 +206,55 @@ svg.lucide {
 	vertical-align: -0.15em;
 }
 
+/* --- meter: a proportion (encumbrance, the social read-out) --- */
+.meter {
+	height: 6px;
+	background: var(--color-surface-2);
+	border-radius: 3px;
+	overflow: hidden;
+}
+.meter > span {
+	display: block;
+	height: 100%;
+	background: var(--color-resource);
+	border-radius: 3px;
+}
+.meter.good > span {
+	background: var(--color-good);
+}
+
+/* --- number stepper: a count you can nudge either way (class level, ability scores, item qty) --- */
+.stepper {
+	display: flex;
+	align-items: center;
+	background: var(--color-surface-2);
+	border: 1px solid var(--color-border);
+	border-radius: 9px;
+	overflow: hidden;
+	width: max-content;
+}
+.stepper button {
+	all: unset;
+	cursor: pointer;
+	color: var(--color-text-muted);
+	width: 30px;
+	height: 30px;
+	display: grid;
+	place-items: center;
+	font-size: var(--font-size-md);
+}
+.stepper button:hover {
+	background: var(--color-border);
+	color: var(--color-text);
+}
+.stepper .base {
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: var(--font-size-md);
+	min-width: 32px;
+	text-align: center;
+}
+
 /* --- content-detail layout (WikiDetail render + EditContentForm edit) --- */
 /* An article renders at very different widths — a compendium half-screen, a 500px builder inspector —
    so its heads size against THIS box, never the viewport. A viewport media query got the builder's

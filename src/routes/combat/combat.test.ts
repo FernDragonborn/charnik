@@ -13,6 +13,7 @@ import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { spellRow } from '$lib/combat/helpers';
 import { combat } from './combat-view-model.svelte';
 import { ResourceTracker } from './resource-tracker.svelte';
+import { PanelLayout } from './panel-layout.svelte';
 
 const S = 'SRD 5.2.1';
 
@@ -1524,5 +1525,29 @@ describe('CombatVM · UBUG-16 — a resource chip RUNS its action, it is not a b
 		combat.useResourceOrEnter('focus', 5);
 		expect(combat.resources.resourceSpent('focus')).toBe(1); // decremented…
 		expect(character.play.turn.bonus).toBe(0); // …but no action was picked, so none was charged
+	});
+});
+
+describe('PanelLayout · a saved layout is reconciled with the panels that exist (N1)', () => {
+	it('appends a panel added after the layout was saved, and drops one since removed', () => {
+		const layout = new PanelLayout();
+		const shipped = layout.columns.flat().map((p) => p.id);
+		// what an older app version wrote: no `inventory`, plus a panel that has since been deleted
+		layout.restore([['skills'], ['attacks', 'a-panel-we-removed']]);
+		const restored = layout.columns.flat().map((p) => p.id);
+		expect(restored).not.toContain('a-panel-we-removed');
+		expect(restored).toContain('inventory');
+		// every shipped panel is reachable — there is no UI to add a missing one back
+		expect([...restored].sort()).toEqual([...shipped].sort());
+	});
+
+	it('leaves an up-to-date layout exactly as saved, order included', () => {
+		const layout = new PanelLayout();
+		const saved = [
+			['inventory', 'skills'],
+			['effects', 'attacks', 'actions', 'spells'],
+		];
+		layout.restore(saved);
+		expect(layout.columns.map((col) => col.map((p) => p.id))).toEqual(saved);
 	});
 });

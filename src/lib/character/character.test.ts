@@ -17,6 +17,7 @@ import {
 	backupCharacter,
 	uniqueCharacterId,
 } from './repository';
+import { attunedCount, bumpQty, carriedWeight, toggleAttuned, useOne } from './inventory';
 
 function sample(): Character {
 	const c = newCharacter('mirt', 'Mirt', '5.5e');
@@ -371,5 +372,32 @@ describe('rotating backups (B3)', () => {
 		const live = await s.read('characters/mirt/character.json');
 		const bak = await s.read(`characters/mirt/character.bak.launch.${t0}.json`);
 		expect(bak).toBe(live);
+	});
+});
+
+describe('inventory operations (shared by the builder draft and the play sheet)', () => {
+	const list = [
+		{ item: 'item:S:potion', qty: 2, equipped: false, attuned: false },
+		{ item: 'item:S:cloak', qty: 1, equipped: true, attuned: true },
+	];
+
+	it('using one of a stack decrements it; using the last one drops the row', () => {
+		expect(useOne(list, 'item:S:potion').find((e) => e.item === 'item:S:potion')?.qty).toBe(1);
+		// a used-up stack must LEAVE, or every surface that counts rows still counts it as carried
+		const emptied = useOne(useOne(list, 'item:S:potion'), 'item:S:potion');
+		expect(emptied.some((e) => e.item === 'item:S:potion')).toBe(false);
+	});
+
+	it('quantity never goes below one — dropping the last is `remove`, not a zero row', () => {
+		expect(bumpQty(list, 'item:S:cloak', -5).find((e) => e.item === 'item:S:cloak')?.qty).toBe(1);
+	});
+
+	it('weight counts the whole stack, not the row', () => {
+		expect(carriedWeight(list, (ref) => (ref === 'item:S:potion' ? 0.5 : 1))).toBe(2);
+	});
+
+	it('attunement is counted from the entries, so the cap can be judged anywhere', () => {
+		expect(attunedCount(list)).toBe(1);
+		expect(attunedCount(toggleAttuned(list, 'item:S:potion'))).toBe(2);
 	});
 });

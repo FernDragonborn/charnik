@@ -38,6 +38,13 @@ import { FeatSlots } from './feat-slots.svelte';
 import { AbilityAllocation } from './ability-allocation.svelte';
 import { ASI, rowName, rowOfType } from './rows';
 import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
+import {
+	addItem,
+	bumpQty,
+	isEquippable,
+	removeItem,
+	toggleEquipped
+} from '$lib/character/inventory';
 // re-exported so every existing `from '../build-view-model.svelte'` import keeps working
 export { ASI, rowName, rowOfType };
 import {
@@ -78,31 +85,17 @@ class BuildVM {
 			? this.draft.selectedLanguages.filter((x) => x !== ref)
 			: [...this.draft.selectedLanguages, ref];
 	};
-	addInventoryItem = (ref: string) => {
-		if (!ref || this.draft.inventory.some((i) => i.item === ref)) return;
-		this.draft.inventory = [
-			...this.draft.inventory,
-			{ item: ref, qty: 1, equipped: false, attuned: false }
-		];
-	};
-	removeInventoryItem = (ref: string) => {
-		this.draft.inventory = this.draft.inventory.filter((i) => i.item !== ref);
-	};
-	bumpItemQty = (ref: string, d: number) => {
-		this.draft.inventory = this.draft.inventory.map((i) =>
-			i.item === ref ? { ...i, qty: Math.max(1, i.qty + d) } : i
-		);
-	};
-	toggleItemEquipped = (ref: string) => {
-		this.draft.inventory = this.draft.inventory.map((i) =>
-			i.item === ref ? { ...i, equipped: !i.equipped } : i
-		);
-	};
+	// the list semantics are shared with the combat sheet's inventory panel ($lib/character/inventory);
+	// what differs between the two is only where the list lives.
+	addInventoryItem = (ref: string) => (this.draft.inventory = addItem(this.draft.inventory, ref));
+	removeInventoryItem = (ref: string) =>
+		(this.draft.inventory = removeItem(this.draft.inventory, ref));
+	bumpItemQty = (ref: string, d: number) =>
+		(this.draft.inventory = bumpQty(this.draft.inventory, ref, d));
+	toggleItemEquipped = (ref: string) =>
+		(this.draft.inventory = toggleEquipped(this.draft.inventory, ref));
 	/** Can this item be equipped (armor / shield / weapon)? */
-	itemEquippable = (ref: string): boolean => {
-		const r = this.row(ref);
-		return r?.type === 'item' && ['armor', 'shield', 'weapon'].includes(r.data.category);
-	};
+	itemEquippable = (ref: string): boolean => isEquippable(this.resolvedItem(ref));
 
 	saving = $state(false);
 

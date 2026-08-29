@@ -29,6 +29,7 @@ export const PANEL_TITLE: Record<string, string> = {
 	spells: 'Spells',
 	actions: 'Actions',
 	effects: 'Effects & conditions',
+	inventory: 'Inventory',
 };
 
 /** Why the character died — the dead banner's subtitle, one phrase per `play.death.cause`. */
@@ -97,8 +98,5 @@ export function modTargetLabel(t: string): string {
 /** Feet → "N m" (metric in parentheses next to imperial). */
 export const metres = (ft: number) => `${(ft * 0.3048).toFixed(1).replace(/\.0$/, '')} m`;
 
-/** Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7). NOTE: not yet
- *  wired to any UI — carrying-capacity IS computed (sheet.carryingCapacity) but not rendered; when its
- *  tile/toggle lands it MUST use this per the units invariant (lb→kg everywhere). Kept, not deleted.
- *  @public planned — wiring pending (see AUDIT carrying-capacity display gap). */
+/** Pounds → "N kg" (metric in parentheses next to imperial, mirroring `metres` — B7). */
 export const kilograms = (lb: number) => `${(lb * 0.4536).toFixed(1).replace(/\.0$/, '')} kg`;

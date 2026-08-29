@@ -977,17 +977,16 @@ shape). PHB examples remain the smoke set: Rage, Second Wind + Action Surge, ki 
 die + Flurry, Sneak Attack, Wild Shape, Divine Smite; Metamagic point↔slot conversion may
 stay semi-manual.
 
-- [ ] **N1 · Inventory view.** USER-CONFIRMED WANTED (2026-07-19): there is still NO inventory
-  view anywhere in the app (only `build.inventory` rows in the builder) — bake it from the
-  `design-preview/d-inventory.html` mock per the bake-from-mocks rule, don't design from
-  scratch. New combat panel `pid: 'inventory'` (panel infra + the
-  layout-model plan already reserve it): rows = name + description, qty stepper, equip/attune
-  toggles (attunement cap 3 — Strict blocks, note explains), "use" on consumables (qty−1).
-  B7 lands here: weight sum → carrying-capacity bar (+ kg). Money is its OWN item (→ N6),
-  not an inventory row. Equipped/attuned effects already flow (gatherEffects) and AC/attacks
-  re-derive reactively. MIGRATIONS: decided 2026-07-15 — 0 users yet, so NO migration work
-  now; schema may change freely (breaking) until release; the schemaVersion machinery stays
-  for post-release.
+- [x] **N1 · Inventory view — the combat panel is built** (`pid: 'inventory'`): qty stepper,
+  equip / attune (cap 3 — Strict blocks with a toast, Free allows and the count says so), "use" on
+  a consumable, and B7's weight → carrying-capacity bar, which is the first time that computed
+  number has been rendered anywhere. What must survive the tick:
+  - **Money is its OWN thing (→ N6), never an inventory row.**
+  - **Adding an item stays in the builder.** The panel is the four verbs play needs; adding is a
+    search through hundreds of rows, which is what the builder's equipment pane is for.
+  - **MIGRATIONS: decided 2026-07-15 — 0 users yet, so NO migration work now**; the schema may
+    change freely (breaking) until release, and the schemaVersion machinery stays for post-release.
+  - Still open here: **item charges** live in RECHARGE slice 3, not in this panel.
 - [~] **MAGIC-ITEM-EFX · Tokenize the shipped SRD magic-item effects (GLOBAL content task,
   surfaced by DEMO-1 gap 2, 2026-08-04).** **FIRST TRANCHE DONE 2026-08-09 — 14 items × both editions,
   each read off that edition's own SRD text.** The plumbing was already there (an `effects` column,

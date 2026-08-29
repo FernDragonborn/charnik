@@ -1,6 +1,6 @@
 <script lang="ts">
 	// One draggable card in the combat panel grid. `pid` selects which panel body it renders — skills /
-	// attacks / actions / effects / spells — under a shared collapsible head (title + per-panel toolbar
+	// attacks / actions / effects / spells / inventory — under a shared collapsible head (title + toolbar
 	// button + drag handle). A thin dispatcher: each body lives in ./panels/*; character + sheet come in
 	// as props. The dnd grid that hosts these cards stays in the page.
 	import Icon from '$lib/components/Icon.svelte';
@@ -16,6 +16,7 @@
 	import ActionsPanel from './panels/ActionsPanel.svelte';
 	import EffectsPanel from './panels/EffectsPanel.svelte';
 	import SpellsPanel from './panels/SpellsPanel.svelte';
+	import InventoryPanel from './panels/InventoryPanel.svelte';
 
 	let { pid, c, s }: { pid: string; c: Character; s: CharacterSheet } = $props();
 
@@ -71,6 +72,8 @@
 		<EffectsPanel {c} {s} />
 	{:else if pid === 'spells'}
 		<SpellsPanel {s} />
+	{:else if pid === 'inventory'}
+		<InventoryPanel />
 	{/if}
 {/if}
 

@@ -49,6 +49,7 @@ import { ResourceTracker } from './resource-tracker.svelte';
 import { MenuOverlay, type OpenOverlay } from './menu-overlay.svelte';
 import { RestControls } from './rest-controls.svelte';
 import { HitPoints } from './hit-points.svelte';
+import { InventoryTracker } from './inventory.svelte';
 
 /** The passive-senses row's default skills when the character hasn't customized it (ui.passiveSkills). */
 const DEFAULT_PASSIVE_SKILLS: SkillId[] = ['perception', 'investigation', 'insight'];
@@ -96,6 +97,12 @@ class CombatVM {
 	);
 	/** HP, damage/healing and death — see hit-points.svelte.ts. */
 	hp = new HitPoints(() => this);
+	/** What is carried, and the play-time verbs on it (equip, attune, qty, use) — N1. */
+	inventory = new InventoryTracker(
+		() => this.character,
+		() => this.graph,
+		() => this.sheet,
+	);
 	/* The HP verbs stay ON the view-model: `hpMax` and `die` are declared on two sibling subsystems'
 	   host interfaces, the panels bind `tempHpInput`/`hpAmount`, and the behavioural tests drive all
 	   of them from here (§6.1). */
