@@ -54,6 +54,7 @@ import {
 	type DraftState,
 	type EditContext
 } from './draft';
+import { switchClass, type ClassScopedPicks } from './class-picks-cache';
 
 const csv = splitList;
 
@@ -116,6 +117,7 @@ class BuildVM {
 	reset = () => {
 		this.edit = null;
 		this.draft = blankDraft();
+		this.classPicks.clear();
 	};
 
 	/** Load an existing character into the draft (for level-up / editing). Straightforward fields map
@@ -264,11 +266,11 @@ class BuildVM {
 		if (i === 0) return; // keep the primary row
 		this.draft.classes = this.draft.classes.filter((_, idx) => idx !== i);
 	};
-	setClass = (i: number, id: string | null) => {
-		this.draft.classes = this.draft.classes.map((c, idx) =>
-			idx === i ? { ...c, classId: id, subclassId: null } : c
-		);
-	};
+	/** Change the class in row `i`, stashing what the outgoing one owned under its own ref and handing
+	 *  it straight back if it returns — so trying a class costs nothing (see `class-picks-cache`). */
+	setClass = (i: number, id: string | null) => switchClass(this.draft, i, id, this.classPicks);
+	/** Class-scoped picks by class ref, for as long as this draft lives. */
+	classPicks = new Map<string, ClassScopedPicks>();
 	setSubclass = (i: number, id: string | null) => {
 		this.draft.classes = this.draft.classes.map((c, idx) => (idx === i ? { ...c, subclassId: id } : c));
 	};
