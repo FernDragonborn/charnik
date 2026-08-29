@@ -72,7 +72,7 @@
 	const AUTOSAVE_DELAY_MS = 600;
 	$effect(() => {
 		$state.snapshot(b.draft);
-		const timer = setTimeout(() => void build.persistDraft(), AUTOSAVE_DELAY_MS);
+		const timer = setTimeout(() => void build.drafts.persist(), AUTOSAVE_DELAY_MS);
 		return () => clearTimeout(timer);
 	});
 

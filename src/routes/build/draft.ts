@@ -7,6 +7,7 @@ import type { SystemId } from '$lib/stores/app.svelte';
 import type { Ability } from '$lib/rules/core';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
 import type { Character, ShortRestMode } from '$lib/character/schema';
+import type { ContentType } from '$lib/content/schemas';
 import { baseAbilities, type StatMethod, type BoostShape } from '$lib/build/rules';
 
 /** ASI allocation shape: +2 to one ability ('2') or +1 to two ('1-1'). */
@@ -173,6 +174,25 @@ export function draftSummary(draft: DraftState): {
 		level: taken.reduce((n, c) => n + c.level, 0),
 		system: draft.system
 	};
+}
+
+/** RV3: the refs the draft currently holds for a content type. A picker keeps these even when their
+ *  source is disabled, so a selection made BEFORE turning a source off never vanishes from its own
+ *  picker (and stays re-pickable) — mirroring how the spellbook keeps the character's own spells
+ *  regardless of the source filter. Refs are stored as `effectiveId` (the picker option values). */
+export function selectedRefs(draft: DraftState, type: ContentType): Set<string> {
+	const refsByType: Partial<Record<ContentType, (string | null)[]>> = {
+		species: [draft.speciesId],
+		species_option: [draft.speciesOptionId],
+		background: [draft.backgroundId],
+		class: draft.classes.map((c) => c.classId),
+		subclass: draft.classes.map((c) => c.subclassId),
+		feat: Object.values(draft.slotFeats),
+		language: draft.selectedLanguages,
+		item: draft.inventory.map((i) => i.item),
+		spell: draft.selectedSpells
+	};
+	return new Set((refsByType[type] ?? []).filter((x): x is string => !!x));
 }
 
 /** What a level-up / edit carries over from the loaded character (null on the BuildVM = creating). */

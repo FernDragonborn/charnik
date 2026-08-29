@@ -12,6 +12,20 @@ name, never base64 inside the JSON. An optional append-only `log.jsonl` sits bes
 There is no database. Writes are atomic — temp file, then rename — with a debounced autosave and
 rotating backups.
 
+## The unfinished one is a different kind of file
+
+A build in progress autosaves to `character-drafts/<guid>.json` — debounced by the build page, driven
+by `DraftSession` (`routes/build/draft-session.svelte.ts`) over `character/draft-repository.ts`. It is
+keyed by a GUID because a draft has no name to be keyed by and may never get one, and it holds the
+whole `DraftState` plus the class-picks cache, so resuming restores the choices a player had, not a
+reconstruction of them.
+
+**Nothing here validates.** A draft is the user's unfinished work, not data anything computes from, so
+an unreadable file is dropped from the roster rather than repaired into something they did not build —
+the opposite of `character.json`, which is migrated forward. Two things are never written: a draft
+holding no decision yet (opening the builder must not litter the data folder), and any edit of an
+existing character, whose own save is already the record. Creating the character deletes the draft.
+
 ## Three parts, and the split is load-bearing
 
 `src/lib/character/schema.ts` divides a character into `build`, `play`, and `ui`.

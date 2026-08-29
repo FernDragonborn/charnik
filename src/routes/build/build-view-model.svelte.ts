@@ -51,22 +51,23 @@ import {
 	toggleCapped,
 	blankDraft,
 	draftFromCharacter,
-	draftSummary,
-	isDraftWorthKeeping,
+	selectedRefs,
 	type DraftState,
 	type EditContext
 } from './draft';
-import { saveDraft, deleteDraft, type DraftRecord } from '$lib/character/draft-repository';
+import type { DraftRecord } from '$lib/character/draft-repository';
+import { DraftSession } from './draft-session.svelte';
 import { switchClass, type ClassScopedPicks } from './class-picks-cache';
 
 const csv = splitList;
 
 
 /**
- * Under the 400-line lint since the ability scores and their boosts moved to `AbilityAllocation`.
- * Already out before that: the draft model + factories → `build/draft.ts`; every pure derivation
- * (spell picker, `assembleCharacter`, `draftFromCharacter`, issues) → `build/derive.ts`; the ASI/feat
- * slot machinery → `feat-slots.svelte.ts`.
+ * Under the 400-line lint since the autosaved draft went to `draft-session.svelte.ts` and the
+ * picker's "what is already picked" question to `draft.ts`. Out before those: the ability scores and
+ * their boosts → `AbilityAllocation`; the draft model + factories → `build/draft.ts`; every pure
+ * derivation (spell picker, `assembleCharacter`, `draftFromCharacter`, issues) → `build/derive.ts`;
+ * the ASI/feat slot machinery → `feat-slots.svelte.ts`.
  *
  * **The `bind:`-ed draft is what makes further splits expensive**, and two prior sessions stopped
  * here for that reason. It is one `$state` object whose fields are bound across `build/blocks/*`, so
@@ -121,35 +122,22 @@ class BuildVM {
 		this.edit = null;
 		this.draft = blankDraft();
 		this.classPicks.clear();
-		this.draftGuid = crypto.randomUUID();
+		this.drafts.renew();
 	};
 
-	// --- the draft as a thing that survives leaving -----------------------------------------------
-	/** Identity of the unfinished build on disk. A GUID because a draft has no name to be keyed by
-	 *  and may never get one (AGENTS.md: identify anything shareable with a GUID). */
-	draftGuid = $state<string>(crypto.randomUUID());
-
-	/** Write the draft, or remove it once there is nothing left worth keeping. Called debounced by
-	 *  the page; safe to call at any time. */
-	persistDraft = async (): Promise<void> => {
-		if (this.edit) return; // editing a real character — its own save is the record
-		const storage = getUserStorage();
-		if (!isDraftWorthKeeping(this.draft)) return deleteDraft(storage, this.draftGuid);
-		await saveDraft(storage, {
-			guid: this.draftGuid,
-			savedAt: new Date().toISOString(),
-			summary: draftSummary(this.draft),
-			draft: $state.snapshot(this.draft),
-			classPicks: [...this.classPicks]
-		});
-	};
+	/** The unfinished build on disk — autosave, resume, discard. See `draft-session`. */
+	drafts = new DraftSession(() => ({
+		draft: this.draft,
+		classPicks: this.classPicks,
+		isEditing: !!this.edit
+	}));
 
 	/** Resume an unfinished build, cache and all. */
 	hydrateDraft = (record: DraftRecord): void => {
 		this.edit = null;
 		this.draft = record.draft as DraftState;
 		this.classPicks = new Map(record.classPicks as [string, ClassScopedPicks][]);
-		this.draftGuid = record.guid;
+		this.drafts.adopt(record);
 	};
 
 	/** Load an existing character into the draft (for level-up / editing). Straightforward fields map
@@ -186,29 +174,9 @@ class BuildVM {
 	// tag, plus the losing side of a resolved collision) is applied at this one choke point — a
 	// disabled row must not be offerable for a NEW build, same as it's hidden from the compendium.
 	// Reactive: isRowActive reads the reactive source config, so a live toggle re-derives the lists.
-	/** RV3: the refs currently picked for a content type. `list()` keeps these even when their source
-	 *  is disabled, so a selection the user made BEFORE turning a source off never vanishes from its own
-	 *  picker (and stays re-pickable) — mirroring how the spellbook keeps the character's own spells
-	 *  regardless of the source filter. Refs are stored as `effectiveId` (the picker option values). */
-	private selectedIdsFor(type: ContentType): Set<string> {
-		const d = this.draft;
-		const idsByType: Partial<Record<ContentType, (string | null)[]>> = {
-			species: [d.speciesId],
-			species_option: [d.speciesOptionId],
-			background: [d.backgroundId],
-			class: d.classes.map((c) => c.classId),
-			subclass: d.classes.map((c) => c.subclassId),
-			feat: Object.values(d.slotFeats),
-			language: d.selectedLanguages,
-			item: d.inventory.map((i) => i.item),
-			spell: d.selectedSpells,
-		};
-		return new Set((idsByType[type] ?? []).filter((x): x is string => !!x));
-	}
-
 	private list<T extends ContentType>(type: T): LoadedRowByType<T>[] {
 		if (!this.graph) return [];
-		const keep = this.selectedIdsFor(type); // RV3: never drop a currently-picked ref
+		const keep = selectedRefs(this.draft, type); // RV3: never drop a currently-picked ref
 		return [...this.graph.list(type, { system: this.draft.system })]
 			.filter((r) => isRowActive(r) || keep.has(r.effectiveId))
 			.sort((a, b) => rowName(a).localeCompare(rowName(b)));
@@ -575,7 +543,7 @@ class BuildVM {
 			}
 			await saveCharacterToStore(character);
 			// the draft became a character, so the unfinished copy has nothing left to be
-			await deleteDraft(getUserStorage(), this.draftGuid);
+			await this.drafts.discard();
 			// make the freshly-created character the active one so Combat opens IT, not the demo
 			await openCharacter(character.id);
 			return character.id;

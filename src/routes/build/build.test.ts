@@ -4,8 +4,11 @@
  * `Character` out — so it survives refactors of the VM's internal shape (field regroup, method
  * merges). It asserts WHAT a build produces, never HOW the VM is structured.
  */
+import 'fake-indexeddb/auto'; // the draft session writes through the real Storage seam
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
+import { getUserStorage } from '$lib/storage/provider';
+import { listDrafts } from '$lib/character/draft-repository';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import { build, ASI } from './build-view-model.svelte';
@@ -134,6 +137,23 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		const out = build.assembled;
 		expect(out.build.name).toBeTruthy();
 		expect(out.build.classes).toEqual([]);
+	});
+
+	it('autosaves a draft only once it holds a decision, and not while editing a real character', async () => {
+		const storage = getUserStorage();
+		await build.drafts.persist();
+		expect(await listDrafts(storage)).toEqual([]); // nothing decided → no file to litter with
+
+		build.draft.name = 'Hilda';
+		await build.drafts.persist();
+		expect((await listDrafts(storage)).map((d) => d.summary.name)).toEqual(['Hilda']);
+
+		await build.drafts.discard(); // the draft became a character
+		expect(await listDrafts(storage)).toEqual([]);
+
+		build.hydrate(savedCharacter()); // editing an existing character — its own save is the record
+		await build.drafts.persist();
+		expect(await listDrafts(storage)).toEqual([]);
 	});
 
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {
