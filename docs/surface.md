@@ -801,6 +801,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/content/markdown.ts`
 
 - `function renderContentMarkdown` — Some content mixes Markdown with raw HTML tables.
+- `function renderContentMarkdownInline` — * The same pipeline for a fragment that must stay INLINE — a spell's "at higher levels" line, its * material component.
 - `function sanitizeHtml` — Sanitize a raw HTML string (no Markdown pass) — DOMPurify keeps safe inline tags like <b>/<em> and * strips anything …
 
 ### `src/lib/content/meta.ts`
@@ -1502,4 +1503,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 882 exports across 124 modules · 55 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 883 exports across 124 modules · 55 duplicate suspects._

@@ -376,6 +376,7 @@
 		"weight_lb": "Weight (lb)",
 		"casting_time": "Casting time",
 		"higher_level": "At higher levels",
+		"material": "Material",
 		"creature_type": "Creature type",
 		"skills_choose": "Skill choices",
 		"skills_from": "Skill list",

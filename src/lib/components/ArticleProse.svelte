@@ -5,7 +5,8 @@
 	// raw HTML (user-owned CSV): parsed with marked, then sanitized with DOMPurify so injected
 	// <script>/on*/javascript: can't run.
 	import { browser } from '$app/environment';
-	import { renderContentMarkdown } from '$lib/content/markdown';
+	import { renderContentMarkdown, renderContentMarkdownInline } from '$lib/content/markdown';
+	import { _ } from '$lib/i18n';
 	import type { WikiEditDraft } from './wikiEdit';
 
 	let {
@@ -28,6 +29,11 @@
 	} = $props();
 
 	const bodyHtml = $derived(browser ? renderContentMarkdown(bodyMarkdown) : '');
+	// These two are prose out of the same CSV cells as the body and carry the same Markdown, so they
+	// go through the same seam. Interpolating them raw printed `**Ghouls**` and `_Magic Missile_`
+	// verbatim on every spell that used emphasis outside the body.
+	const higherHtml = $derived(browser ? renderContentMarkdownInline(higherLevel) : higherLevel);
+	const materialHtml = $derived(browser ? renderContentMarkdownInline(material) : material);
 </script>
 
 {#if editable && draft}
@@ -39,25 +45,27 @@
 {#if higherLevel}
 	{#if editable && draft}
 		<label class="edit-line">
-			<span class="eyebrow">At higher levels</span>
+			<span class="eyebrow">{$_('contentField.higher_level')}</span>
 			<textarea
 				class="text-field edit-body short"
 				bind:value={draft.higher_level}
 				placeholder={higherLevel}></textarea>
 		</label>
 	{:else}
-		<div class="highlight">At higher levels — {higherLevel}</div>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized by renderContentMarkdownInline -->
+		<div class="highlight">{$_('contentField.higher_level')} — {@html higherHtml}</div>
 	{/if}
 {/if}
 
 {#if material}
 	{#if editable && draft}
 		<label class="edit-line">
-			<span class="eyebrow">Material</span>
+			<span class="eyebrow">{$_('contentField.material')}</span>
 			<input class="text-field edit-inline" bind:value={draft.material} placeholder={material} />
 		</label>
 	{:else}
-		<div class="source-line">Material — {material}</div>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized by renderContentMarkdownInline -->
+		<div class="source-line">{$_('contentField.material')} — {@html materialHtml}</div>
 	{/if}
 {/if}
 

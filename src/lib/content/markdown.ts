@@ -21,6 +21,21 @@ export function renderContentMarkdown(md: string): string {
 	return DOMPurify.sanitize(html);
 }
 
+/**
+ * The same pipeline for a fragment that must stay INLINE — a spell's "at higher levels" line, its
+ * material component. Both carry Markdown in the SRD (`create_undead` has `**Ghouls**`), and both
+ * used to be interpolated as plain text, so the syntax showed literally. `parseInline` skips the
+ * block grammar, so no stray `<p>` lands inside a one-line callout.
+ */
+export function renderContentMarkdownInline(md: string): string {
+	const html = marked.parseInline(md, { async: false });
+	return DOMPurify.sanitize(
+		html
+			.replace(/\*\*([^*<>\n]+)\*\*/g, '<strong>$1</strong>')
+			.replace(/\*([^*<>\n]+)\*/g, '<em>$1</em>'),
+	);
+}
+
 /** Sanitize a raw HTML string (no Markdown pass) — DOMPurify keeps safe inline tags like <b>/<em> and
  *  strips anything executable (<script>, on* handlers, javascript:). The shared seam for `{@html …}`
  *  of any string that could be user-authored — incl. i18n catalog strings, since a user can drop in a
