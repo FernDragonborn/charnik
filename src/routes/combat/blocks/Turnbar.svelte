@@ -9,7 +9,9 @@
 
 	let { c }: { c: Character } = $props();
 
-	// action-economy slots (id + label); base 1 pip each until a feature grants extras
+	// action-economy slots (id + label); base 1 pip each until a feature grants extras. Each slot's
+	// pip has its own SHAPE (see the styles) — on the narrow bar the words are gone and the shape is
+	// the only thing telling an action from a bonus action from a reaction.
 	const SLOTS = [
 		['action', 'Action'],
 		['bonus', 'Bonus'],
@@ -43,7 +45,7 @@
 					{@const used = i >= combat.economy.slotMax[slot] - c.play.turn[slot]}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<span
-						class="turn-pip"
+						class="turn-pip pip-{slot}"
 						class:used
 						role="button"
 						tabindex="-1"
@@ -101,12 +103,14 @@
 		flex: 1 1 auto;
 		min-width: 8px;
 	}
-	/* Each threshold is the width the regime ABOVE it stops fitting in, measured on the English bar:
-	   631px with full padding and words, 539px once compacted, 367px once the words are gone. Only
+	/* Each threshold is the width the regime ABOVE it stops fitting in, measured on the English bar
+	   as the CONTENT box the query actually sees (the bar's own 12px padding and 1px border are NOT
+	   in it): 612px with full padding and words, 520px once compacted, 341px once the words are gone.
+	   Only
 	   the last regime is locale-proof (pips, numbers, icons) — RE-MEASURE THE TWO THRESHOLDS when the
 	   labels get translated, because `container-type` zeroes the min-content floor, so a longer word
 	   overflows the bar instead of pushing it wider. */
-	@container (max-width: 630px) {
+	@container (max-width: 611px) {
 		.turnbar .turn-slot {
 			gap: 5px;
 			padding: 5px 8px;
@@ -118,7 +122,7 @@
 			display: none;
 		}
 	}
-	@container (max-width: 540px) {
+	@container (max-width: 519px) {
 		.turnbar .turn-slot .slot-label,
 		.turnbar .nextturn .slot-label {
 			display: none;
@@ -152,20 +156,39 @@
 		display: inline-flex;
 		gap: 4px;
 	}
+	/* One shape per slot, following Baldur's Gate 3's action economy — a circle for an action, a
+	   triangle for a bonus action, a four-pointed star for a reaction. The shape, not the colour, is
+	   what identifies a slot: it survives a user theme, a colour-blind eye, and the narrow bar that
+	   has dropped the words. Colours come from existing semantic tokens rather than new ones, so
+	   every shipped and user-written theme keeps working with no entry to add.
+	   `clip-path` clips a border and a box-shadow away with the box, so a spent pip is a MUTED FILL
+	   (not an outline) and the glow is a drop-shadow filter, which follows the clipped silhouette. */
 	.turn-slot .turn-pip {
-		width: 12px;
-		height: 12px;
+		width: 13px;
+		height: 13px;
 		padding: 0;
-		border: 1px solid var(--color-good);
-		border-radius: 50%;
-		background: var(--color-good);
-		box-shadow: 0 0 8px color-mix(in srgb, var(--color-good) 45%, transparent);
+		background: var(--pip-color);
+		filter: drop-shadow(0 0 4px color-mix(in srgb, var(--pip-color) 55%, transparent));
 		cursor: pointer;
 	}
 	.turn-slot .turn-pip.used {
-		background: transparent;
-		border-color: var(--color-border-strong);
-		box-shadow: none;
+		--pip-color: var(--color-border-strong);
+		filter: none;
+	}
+	.turn-slot .pip-action {
+		--pip-color: var(--color-good);
+		border-radius: 50%;
+	}
+	.turn-slot .pip-bonus {
+		--pip-color: var(--color-warning);
+		width: 15px;
+		clip-path: polygon(50% 4%, 100% 96%, 0 96%);
+	}
+	.turn-slot .pip-reaction {
+		--pip-color: var(--color-accent-bright);
+		width: 15px;
+		height: 15px;
+		clip-path: polygon(50% 0, 58% 42%, 100% 50%, 58% 58%, 50% 100%, 42% 58%, 0 50%, 42% 42%);
 	}
 	.turn-slot b {
 		color: var(--color-text);
