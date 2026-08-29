@@ -26,7 +26,7 @@
 	class="asi-card"
 	class:on={ins.previewId === ASI}
 	class:taken={chosen === ASI}
-	onclick={() => (ins.previewId = ASI)}
+	onclick={() => ins.take(ASI)}
 >
 	<b>{$_('build.feats.asi')}</b>
 	<span>{$_('build.feats.asiHint')}</span>
@@ -60,11 +60,16 @@
 		previewId={ins.previewId}
 		takenIds={ins.pick.currentId ? [ins.pick.currentId] : []}
 		onpreview={(id) => (ins.previewId = id)}
+		onactivate={ins.take}
 		placeholder={$_('build.feats.searchFeats')}
 	/>
 {/if}
 
-<ChangeList changes={ins.changes} taken={ins.previewIsCurrent} />
+{#if ins.changes.length}
+	<ChangeList changes={ins.changes} />
+{:else}
+	<ChangeList changes={ins.applied} taken />
+{/if}
 
 <!-- a taken feat's own sub-choices: the +1 a half-feat grants, and the skills a Skilled-shaped feat
      hands out. They belong to the slot, so they live with it rather than in a separate pane. -->

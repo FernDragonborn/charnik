@@ -20,10 +20,17 @@
 		previewId={ins.previewId}
 		takenIds={ins.pick.currentId ? [ins.pick.currentId] : []}
 		onpreview={(id) => (ins.previewId = id)}
+		onactivate={ins.take}
 		placeholder={$_('build.inspector.searchIn', { values: { count: ins.pick.options.length } })}
 	/>
 
-	<ChangeList changes={ins.changes} taken={ins.previewIsCurrent} />
+	<!-- ↑/↓ preview, so `changes` is still "what this WOULD do"; a click commits, so `applied` is
+	     "what that DID". Whichever of the two is live is the one worth reading. -->
+	{#if ins.changes.length}
+		<ChangeList changes={ins.changes} />
+	{:else}
+		<ChangeList changes={ins.applied} taken />
+	{/if}
 
 	{#if ins.detail}
 		<div class="article">

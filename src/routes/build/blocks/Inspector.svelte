@@ -1,11 +1,14 @@
 <script lang="ts">
 	// The right pane. A shared shell — eyebrow, title, one sentence of what this choice IS, then a
-	// body, then a footer that commits — around a body component chosen per target, because a feat
-	// slot and a notes field are not the same question and forcing them into one layout makes both
-	// worse. Every target is rendered side by side at /dev/inspector.
+	// body — around a body component chosen per target, because a feat slot and a notes field are not
+	// the same question and forcing them into one layout makes both worse. Every target is rendered
+	// side by side at /dev/inspector.
+	//
+	// There is no commit footer: a click on an option TAKES it. The only thing left down there is
+	// Clear, because un-making a choice has no other affordance.
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
-	import { build, rowName } from '../build-view-model.svelte';
+	import { build } from '../build-view-model.svelte';
 	import type { Inspector } from '../inspector.svelte';
 	import PickPane from './PickPane.svelte';
 	import FeatPane from './FeatPane.svelte';
@@ -23,17 +26,6 @@
 
 	const spec = $derived(ins.spec);
 	const target = $derived(ins.target);
-	/** What the Take button would commit — named, so the button says what happens. */
-	const previewName = $derived.by(() => {
-		if (ins.previewId === null) return '';
-		return ins.previewRow ? rowName(ins.previewRow) : $_('build.feats.asi');
-	});
-	/** What the Take button reads: nothing picked, already taken, or the name it would commit. */
-	const takeLabel = $derived.by(() => {
-		if (ins.previewIsCurrent && ins.pick?.currentId) return $_('build.inspector.alreadyTaken');
-		if (!previewName) return $_('build.inspector.chooseOption');
-		return $_('build.inspector.take', { values: { name: previewName } });
-	});
 </script>
 
 <div class="pane">
@@ -103,15 +95,11 @@
 			{/if}
 		</div>
 
-		{#if ins.pick}
+		<!-- No Take button: a click on a row commits it. What is left here is the way OUT, which a
+		     reversible choice still needs and which nothing else offers. -->
+		{#if ins.pick?.clearable && ins.pick.currentId}
 			<footer class="foot">
-				{#if ins.pick.clearable && ins.pick.currentId}
-					<button class="btn ghost" onclick={ins.clear}>{$_('build.inspector.clear')}</button>
-				{/if}
-				<span class="spacer"></span>
-				<button class="btn primary" disabled={ins.previewId === null || ins.previewIsCurrent} onclick={ins.take}>
-					{takeLabel}
-				</button>
+				<button class="btn ghost" onclick={ins.clear}>{$_('build.inspector.clear')}</button>
 			</footer>
 		{/if}
 	{/if}

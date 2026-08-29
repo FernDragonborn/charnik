@@ -236,15 +236,24 @@ export class Inspector {
 	query = $state('');
 	/** The option being READ (not yet taken) — what the prose and the diff are about. */
 	previewId = $state<string | null>(null);
+	/**
+	 * What the last commit actually did. A pick lands on click, so by the time you look there is no
+	 * "before" left to preview against — but the answer is the same one moment later, phrased in the
+	 * past tense. Walking the list with ↑/↓ still previews, so reading before committing is intact
+	 * for the keyboard; the mouse trades that for one click instead of two.
+	 */
+	applied = $state<SheetChange[]>([]);
 
 	open = (target: InspectorTarget) => {
 		this.target = target;
 		this.query = '';
+		this.applied = [];
 		this.previewId = this.spec?.kind === 'pick' ? this.spec.currentId : null;
 	};
 	close = () => {
 		this.target = null;
 		this.previewId = null;
+		this.applied = [];
 	};
 	/** Same target twice = a toggle, so the thing you clicked also closes the pane. */
 	toggle = (target: InspectorTarget) => {
@@ -306,18 +315,31 @@ export class Inspector {
 	});
 
 	// --- committing --------------------------------------------------------------------------------
-	/** Take the previewed option. Leaves the pane open on `pick` targets that cascade (species →
-	 *  lineage), because the next question is the one the player now needs. */
-	take = () => {
+	/**
+	 * Take an option. This is what a click on the row does — there is no confirm step, because a pick
+	 * here is already undone by picking something else or by Clear, and a button to confirm a
+	 * reversible act is a button that only ever costs a click.
+	 *
+	 * The pane stays open on targets that cascade (species → lineage), because the next question is
+	 * the one the player now needs.
+	 */
+	take = (id: string) => {
 		const spec = this.pick;
-		if (!spec || this.previewId === null) return;
-		spec.apply(this.previewId);
+		if (!spec || id === spec.currentId) return;
+		const host = this.host();
+		const before = host.sheet; // deriveSheet returns a fresh object, so this stays valid after apply
+		spec.apply(id);
+		this.previewId = id;
+		this.applied = diffSheets(before, host.sheet);
 	};
 	/** Un-make the choice. The way out of every way in. */
 	clear = () => {
 		const spec = this.pick;
 		if (!spec?.clearable) return;
+		const host = this.host();
+		const before = host.sheet;
 		spec.apply(null);
 		this.previewId = null;
+		this.applied = diffSheets(before, host.sheet);
 	};
 }
