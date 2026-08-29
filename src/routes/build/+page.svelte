@@ -65,10 +65,10 @@
 		} else build.reset();
 	});
 
-	// Autosave. A half-built character is the thing people lose, and the leave guard only covers
-	// leaving on purpose — it cannot help with a crash, a closed tab, or a reload. Reading a deep
-	// snapshot is what subscribes this to every field of the draft; the delay keeps a name being
-	// typed from becoming one write per keystroke.
+	// Autosave. A half-built character is the thing people lose, and the two ways they lose it — a
+	// crash and a closed tab — are the two no dialog can catch. Reading a deep snapshot is what
+	// subscribes this to every field of the draft; the delay keeps a name being typed from becoming
+	// one write per keystroke.
 	const AUTOSAVE_DELAY_MS = 600;
 	$effect(() => {
 		$state.snapshot(b.draft);

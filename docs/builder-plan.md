@@ -46,9 +46,9 @@ ever preview, in both; Enter is the click.
   ASI/feat slot the chosen levels opened is its own todo line, and the class-features list shows every
   level up to this one plus a three-level look-ahead. Jumping straight to level 8 cannot silently skip
   three choices.
-- **The player is held here until the required fields are filled.** `blocking` gates Create, and
-  `beforeNavigate` intercepts leaving with an explicit "discard the draft and leave" confirm — a hard
-  block with no way out would be a one-way door.
+- **The player is held here until the required fields are filled.** `blocking` gates Create. Leaving
+  is not intercepted: the draft autosaves to `character-drafts/<guid>.json` and waits in the roster,
+  so there is nothing to warn about (`docs/internals/characters.md`).
 - **Per-target inspector layouts.** One shared shell (title, blurb, footer); the body is a component
   per target, because a feat slot and an ability allocator are not the same question.
   `/dev/inspector` renders every target at once so a regression in one is visible at a glance.
@@ -70,8 +70,9 @@ ever preview, in both; Enter is the click.
   `docs/internals/ui.md` otherwise forbids. Safe because the write is undone in the same synchronous
   frame, so nothing observes the trial value. Upgrade path if Svelte hardens this: move `changes` into
   an `$effect` writing a `$state` — one tick of lag, same output. Documented at the call site.
-- **The leave guard covers in-app navigation only.** Closing the window/tab is not intercepted; a
-  `beforeunload` would fight the desktop app's own quit.
+- **Autosave is debounced, so the last 600 ms of typing dies with a crashed tab.** Everything before
+  it is on disk. A `beforeunload` flush would fight the desktop app's own quit for one name's worth
+  of characters.
 - **Skill names are still `titleCase(id)`**, not catalog strings — the same gap the combat sheet has.
   They are rules ids, not content rows, so they need their own key namespace.
 
@@ -105,7 +106,7 @@ any effect token at all, and none encode a numeric stat bonus):
 - [x] `build/inspector.svelte.ts` — targets, structural `InspectorHost`, option list + search,
       preview, diff, commit.
 - [x] `BuildVM` — `previewSheet`, `todos`, `blocking`, `inspector`, `draft.notes`.
-- [x] Page shell: full-bleed split, sticky header, leave guard, todo bar.
+- [x] Page shell: full-bleed split, sticky header, debounced draft autosave, todo bar.
 - [x] Sheet blocks (left) — origin, abilities, vitals, class + features, defenses, attacks, spells,
       resources, skills, feats, equipment, out-of-combat.
 - [x] Inspector panes (right), one per target.
