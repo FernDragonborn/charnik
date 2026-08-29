@@ -8,16 +8,17 @@
 	// Shared builder CSS lives in $lib/styles/build.css (confined to `.build-page`); block-local CSS
 	// stays scoped inside its block.
 	import { onMount } from 'svelte';
-	import { goto, afterNavigate, beforeNavigate } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
 	import { build } from './build-view-model.svelte';
 	import { loadCharacterBySlug } from '$lib/character/store.svelte';
+	import { loadDraft } from '$lib/character/draft-repository';
+	import { getUserStorage } from '$lib/storage/provider';
 	import { content } from '$lib/content/store.svelte';
 	import { ui } from '$lib/stores/ui.svelte';
 	import { _ } from '$lib/i18n';
 	import Loading from '$lib/components/Loading.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import '$lib/styles/build.css';
 	import BuildHead from './blocks/BuildHead.svelte';
 	import SheetOrigin from './blocks/SheetOrigin.svelte';
@@ -49,36 +50,37 @@
 	});
 
 	// Runs on first load AND every navigation (incl. a query-only change on this same route, which
-	// doesn't remount): ?edit/?levelup=<slug> hydrates from that character; no param → a fresh draft
-	// (so "New character" after a level-up doesn't reopen the last edit).
+	// doesn't remount): ?edit/?levelup=<slug> hydrates from that character, ?draft=<guid> resumes an
+	// unfinished build; no param → a fresh draft (so "New character" after a level-up doesn't reopen
+	// the last edit).
 	afterNavigate(async () => {
 		const slug = page.url.searchParams.get('edit') || page.url.searchParams.get('levelup');
+		const guid = page.url.searchParams.get('draft');
 		const char = slug ? await loadCharacterBySlug(slug) : null;
 		if (char) build.hydrate(char);
-		else build.reset();
+		else if (guid) {
+			const record = await loadDraft(getUserStorage(), guid);
+			if (record) build.hydrateDraft(record);
+			else build.reset(); // deleted from another window, or hand-edited into nonsense
+		} else build.reset();
 	});
 
-	// --- the leave guard ------------------------------------------------------------------------
-	// A half-built character is not playable, so walking away from one is almost always a misclick.
-	// The navigation is cancelled and re-offered as an explicit choice — never a silent block, or the
-	// page becomes a room with no door.
-	let leaving = $state<(() => void) | null>(null);
-	let leaveConfirmed = false;
-	let saved = $state(false);
-	beforeNavigate((nav) => {
-		if (leaveConfirmed || saved || !b.blocking.length || !nav.to) return;
-		nav.cancel();
-		const href = nav.to.url.href;
-		leaving = () => {
-			leaveConfirmed = true;
-			void goto(href);
-		};
+	// Autosave. A half-built character is the thing people lose, and the leave guard only covers
+	// leaving on purpose — it cannot help with a crash, a closed tab, or a reload. Reading a deep
+	// snapshot is what subscribes this to every field of the draft; the delay keeps a name being
+	// typed from becoming one write per keystroke.
+	const AUTOSAVE_DELAY_MS = 600;
+	$effect(() => {
+		$state.snapshot(b.draft);
+		const timer = setTimeout(() => void build.persistDraft(), AUTOSAVE_DELAY_MS);
+		return () => clearTimeout(timer);
 	});
 
+	// There is no leave guard any more. It existed because walking away lost the build; the draft is
+	// now on disk and waiting in the roster, so a dialog saying otherwise would simply be wrong.
 	async function create() {
 		const id = await build.save();
 		if (!id) return;
-		saved = true; // the draft became a character — leaving is no longer a loss
 		void goto(`${base}/combat`);
 	}
 </script>
@@ -119,17 +121,6 @@
 			</aside>
 		</div>
 	</section>
-{/if}
-
-{#if leaving}
-	<ConfirmDialog
-		title={$_('build.leave.title')}
-		message={$_('build.leave.message', { values: { count: b.blocking.length } })}
-		confirmLabel={$_('build.leave.confirm')}
-		danger
-		onConfirm={() => leaving?.()}
-		onCancel={() => (leaving = null)}
-	/>
 {/if}
 
 <style>

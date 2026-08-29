@@ -13,19 +13,32 @@
 		openCharacter,
 		removeCharacter,
 	} from '$lib/character/store.svelte';
+	import { listDrafts, deleteDraft, type DraftRecord } from '$lib/character/draft-repository';
+	import { getUserStorage } from '$lib/storage/provider';
 
 	const demo = isDemo();
 
 	let loading = $state(true);
 	let error = $state('');
+	// Unfinished builds live beside the finished ones: they are the same intention at an earlier
+	// stage, and a separate page for them would be a place nobody visits.
+	let drafts = $state<DraftRecord[]>([]);
+	const reloadDrafts = async () => (drafts = await listDrafts(getUserStorage()));
+
 	onMount(async () => {
 		try {
 			await loadRoster();
+			await reloadDrafts();
 		} catch (e) {
 			error = (e as Error).message;
 		}
 		loading = false;
 	});
+
+	async function discardDraft(guid: string) {
+		await deleteDraft(getUserStorage(), guid);
+		await reloadDrafts();
+	}
 
 	async function open(slug: string) {
 		await openCharacter(slug);
@@ -67,10 +80,32 @@
 		<p class="muted">{$_('roster.loading')}</p>
 	{:else if error}
 		<p class="roster-error">{$_('roster.storageError')} {error}</p>
-	{:else if characters.roster.length === 0}
+	{:else if characters.roster.length === 0 && drafts.length === 0}
 		<p class="muted">{$_('roster.empty')}</p>
 	{:else}
 		<ul class="list">
+			<!-- a dashed card is the same card, not yet finished: clicking it resumes the build -->
+			{#each drafts as d (d.guid)}
+				<li class="card roster-card is-draft">
+					<a class="roster-open" href="{base}/build?draft={d.guid}">
+						<span class="roster-name">
+							{d.summary.name || $_('roster.draftUnnamed')}
+							<span class="draft-tag">{$_('roster.draft')}</span>
+						</span>
+						<span class="roster-subtitle">
+							{d.summary.classes || $_('roster.draftNoClass')}
+							<span class="sysbadge">{d.summary.system}</span>
+						</span>
+					</a>
+					<button
+						class="roster-delete"
+						title={$_('roster.discardDraft')}
+						onclick={() => discardDraft(d.guid)}
+					>
+						<Icon name="x" label={$_('roster.discardDraft')} />
+					</button>
+				</li>
+			{/each}
 			{#each characters.roster as c (c.id)}
 				<li class="card roster-card">
 					<button class="roster-open" onclick={() => open(c.id)}>
@@ -210,6 +245,28 @@
 		color: var(--color-text);
 		padding: 14px 16px;
 		cursor: pointer;
+		text-decoration: none;
+	}
+	/* dashed = not finished. The same shape as a saved character on purpose: it IS one, earlier. */
+	.roster-card.is-draft {
+		border-style: dashed;
+		border-color: var(--color-border-strong);
+		background: transparent;
+	}
+	.roster-card.is-draft .roster-name {
+		color: var(--color-text-muted);
+	}
+	.draft-tag {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-label);
+		color: var(--color-accent-bright);
+		border: 1px solid var(--color-accent-deep);
+		border-radius: var(--radius-full);
+		padding: 1px 7px;
+		margin-left: 6px;
+		vertical-align: middle;
 	}
 	.roster-open:hover {
 		background: var(--color-surface-2);

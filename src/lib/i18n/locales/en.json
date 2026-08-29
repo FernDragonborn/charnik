@@ -245,7 +245,11 @@
 		"storageError": "Storage error —",
 		"empty": "No characters yet. Create one to get started.",
 		"newCharacter": "+ New character",
-		"delete": "Delete {name}"
+		"delete": "Delete {name}",
+		"draft": "draft",
+		"draftUnnamed": "Unnamed character",
+		"draftNoClass": "no class yet",
+		"discardDraft": "Discard this draft"
 	},
 	"missingContent": {
 		"title": "There are no rules on disk",
@@ -728,11 +732,6 @@
 			"create": "Create character",
 			"save": "Save changes",
 			"saving": "Saving…"
-		},
-		"leave": {
-			"title": "Leave this character unfinished?",
-			"message": "{count, plural, one {# required choice is} other {# required choices are}} still open, so the draft can't be saved yet. Leaving now discards it.",
-			"confirm": "Discard and leave"
 		}
 	}
 }

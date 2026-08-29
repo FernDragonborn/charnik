@@ -142,6 +142,39 @@ export function draftFromCharacter(char: Character): DraftState {
 	};
 }
 
+/**
+ * Is there anything here worth keeping if the user walks away?
+ *
+ * Opening /build must not litter the data folder with empty drafts, so a draft is only persisted
+ * once it holds a decision. Ability scores and the rules toggles are excluded on purpose: they have
+ * defaults, so they are never evidence that someone started building.
+ */
+export function isDraftWorthKeeping(draft: DraftState): boolean {
+	return Boolean(
+		draft.name.trim() ||
+			draft.speciesId ||
+			draft.backgroundId ||
+			draft.classes.some((c) => c.classId)
+	);
+}
+
+/** The one line the roster shows for an unfinished build. Refs are `type:source:id`, so the last
+ *  segment is the readable part — the roster does the same for saved characters. */
+export function draftSummary(draft: DraftState): {
+	name: string;
+	classes: string;
+	level: number;
+	system: SystemId;
+} {
+	const taken = draft.classes.filter((c) => c.classId);
+	return {
+		name: draft.name.trim(),
+		classes: taken.map((c) => `${c.classId?.split(':').pop()} ${c.level}`).join(' / '),
+		level: taken.reduce((n, c) => n + c.level, 0),
+		system: draft.system
+	};
+}
+
 /** What a level-up / edit carries over from the loaded character (null on the BuildVM = creating). */
 export interface EditContext {
 	id: string;

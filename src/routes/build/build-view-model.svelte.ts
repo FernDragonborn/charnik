@@ -51,9 +51,12 @@ import {
 	toggleCapped,
 	blankDraft,
 	draftFromCharacter,
+	draftSummary,
+	isDraftWorthKeeping,
 	type DraftState,
 	type EditContext
 } from './draft';
+import { saveDraft, deleteDraft, type DraftRecord } from '$lib/character/draft-repository';
 import { switchClass, type ClassScopedPicks } from './class-picks-cache';
 
 const csv = splitList;
@@ -118,6 +121,35 @@ class BuildVM {
 		this.edit = null;
 		this.draft = blankDraft();
 		this.classPicks.clear();
+		this.draftGuid = crypto.randomUUID();
+	};
+
+	// --- the draft as a thing that survives leaving -----------------------------------------------
+	/** Identity of the unfinished build on disk. A GUID because a draft has no name to be keyed by
+	 *  and may never get one (AGENTS.md: identify anything shareable with a GUID). */
+	draftGuid = $state<string>(crypto.randomUUID());
+
+	/** Write the draft, or remove it once there is nothing left worth keeping. Called debounced by
+	 *  the page; safe to call at any time. */
+	persistDraft = async (): Promise<void> => {
+		if (this.edit) return; // editing a real character — its own save is the record
+		const storage = getUserStorage();
+		if (!isDraftWorthKeeping(this.draft)) return deleteDraft(storage, this.draftGuid);
+		await saveDraft(storage, {
+			guid: this.draftGuid,
+			savedAt: new Date().toISOString(),
+			summary: draftSummary(this.draft),
+			draft: $state.snapshot(this.draft),
+			classPicks: [...this.classPicks]
+		});
+	};
+
+	/** Resume an unfinished build, cache and all. */
+	hydrateDraft = (record: DraftRecord): void => {
+		this.edit = null;
+		this.draft = record.draft as DraftState;
+		this.classPicks = new Map(record.classPicks as [string, ClassScopedPicks][]);
+		this.draftGuid = record.guid;
 	};
 
 	/** Load an existing character into the draft (for level-up / editing). Straightforward fields map
@@ -542,6 +574,8 @@ class BuildVM {
 				character.play.hp.current = this.sheet?.maxHp.value ?? 0;
 			}
 			await saveCharacterToStore(character);
+			// the draft became a character, so the unfinished copy has nothing left to be
+			await deleteDraft(getUserStorage(), this.draftGuid);
 			// make the freshly-created character the active one so Combat opens IT, not the demo
 			await openCharacter(character.id);
 			return character.id;

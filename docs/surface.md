@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (55)
+## Duplicate suspects (58)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -20,6 +20,8 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `persist` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `label` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/SkillsPane.svelte
 - `open` ×4 — src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
+- `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
+- `files` ×3 — src/lib/character/draft-repository.ts · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `inEdition` ×3 — src/lib/content/search.ts · src/routes/compendium/[...entry]/+page.svelte · src/routes/translate/+page.svelte
 - `name` ×3 — src/lib/content/item-tags.ts · src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
@@ -37,16 +39,17 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `closeOnOutside` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `CONFIG_PATH` ×2 — src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts
 - `CONTENT_DIR` ×2 — src/lib/content/disk.ts · src/lib/effects/plugin-host.ts
+- `deleteDraft` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
+- `DRAFTS_DIR` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `EFFECT_KINDS` ×2 — src/lib/content/schemas.ts · src/lib/effects/token-parser.ts
 - `errText` ×2 — src/lib/effects/plugin-sandbox.ts · src/lib/util/format.ts
-- `fileOf` ×2 — src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
-- `files` ×2 — src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `follow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `groupOf` ×2 — src/lib/components/CommandPalette.svelte · src/routes/build/blocks/SpellsPane.svelte
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
 - `id` ×2 — src/lib/content/homebrew.ts · src/routes/combat/action-executor.svelte.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
+- `listDrafts` ×2 — src/lib/character/draft-repository.ts · src/lib/drafts/store.ts
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
 - `localizedName` ×2 — src/lib/content/detail.ts · src/lib/content/names.ts
 - `match` ×2 — src/lib/components/LanguagePicker.svelte · src/routes/build/blocks/SpellsPane.svelte
@@ -408,7 +411,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function simulateUpdateAvailable` — Dev-only: light the update chip without a published release, to preview its styling/states.
 - `function installUpdate`
 
-## Library functions & types (109 modules)
+## Library functions & types (110 modules)
 
 ### `src/lib/actions/dismissOnEscape.ts`
 
@@ -526,6 +529,14 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `re-export type SkillId`
 - `interface CharacterSheet`
 - `function deriveSheet` — Stays over max-lines-per-function (~134) by design — a deliberate D1 exception like CombatVM.
+
+### `src/lib/character/draft-repository.ts`
+
+- `interface DraftRecord` — One saved draft.
+- `function saveDraft`
+- `function loadDraft`
+- `function deleteDraft`
+- `function listDrafts` — Newest first.
 
 ### `src/lib/character/inventory.ts`
 
@@ -1503,4 +1514,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 883 exports across 124 modules · 55 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 888 exports across 125 modules · 58 duplicate suspects._
