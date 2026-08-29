@@ -91,8 +91,63 @@ good", so they are pinned here and every component follows them.
 9. **An icon slot takes an emoji or an image.** The SRD ships no art, so the fallback is a glyph;
    homebrew and user-created entities may set an image.
 
+10. **A row's own state sits on the LEFT; a modifier on that state sits on the right.** The
+    spellbook puts `EyeToggle`/`Pin` before the name and the "prepared" `Switch` after it;
+    `SkillRows` puts the proficiency dot before the name and `×2` expertise after it. "Taken" in a
+    builder picker is the row's own state, so it goes left. Gold means taken/proficient/prepared
+    everywhere, so a new control reuses it rather than inventing a colour.
+
 The Combat view is the reference implementation. Reuse the existing primitives (`Switch`,
 `EyeToggle`, `RollButton`, `DialogShell`) — grep `surface.md` before building another one.
+
+## Choosing one row out of many — the picker contract
+
+Every "pick a content row" surface in the builder follows this. It is not a style preference: the
+current `OptionList` violates it and that is the defect list below. The research behind each rule,
+with screenshots of how other TTRPG tools and non-game apps solve it, is in
+`design-preview/inspector-picker-research.md`; the rendered variants are
+`design-preview/inspector-scroll-variants.html`.
+
+1. **The pane is never a scroll container around another scroll container.** A wheel goes to the
+   innermost scrollable ancestor under the pointer, so two nested scroll surfaces in one column make
+   "scroll the pane" unreachable wherever the list happens to be. The pane is a fixed-height grid;
+   exactly one region inside it scrolls. (Baymard names this failure mode *scroll hijacking*; the
+   compendium already avoids it with `overflow:hidden` + `min-height:0` panes.)
+2. **No magic list heights.** `max-height: 340px` inside a scrolling pane is the bug above. Height
+   comes from the layout.
+3. **Six of the eight pickers have no big-list problem** — background 5, subclass ~4, species 18,
+   feat 18, class 24, language 35 rows across both editions. They render as a **grid**, not a list,
+   and have no scroll at all. Only spells (658) and items (773) need more.
+4. **For the big two, the level (or category) is STRUCTURE, not a filter.** Collapsible sticky
+   sections, all headers always visible with their counts, everything collapsed by default. A filter
+   that hides the rest reads as being cut off from the list; a section does not. School /
+   concentration / ritual stay real filter chips — those genuinely narrow.
+5. **A collapsed section must never hide a search match** — typing expands everything with a hit.
+6. **Reading and taking are separate controls.** The row body opens the article; the left-hand
+   toggle takes it. A click that both reads and commits means you cannot read before you commit.
+7. **Two tiers of reading**: hover/focus shows a compact teaser card (meta line + a clamped few
+   lines, `pointer-events: none` so it needs no hover-bridge and can never be the thing you try to
+   scroll); click opens the full popover. Baldur's Gate 3 is the reference for both.
+8. **Cards live on the page frame, not in the column**, so they spill over the sheet and cost the
+   pane no height. Anchor them **horizontally to the picker container**, never to the clicked entry —
+   in a grid the clicked cell's left edge is not the picker's, so anchoring to it covers the entries
+   to its left and the take toggles with them.
+9. **Any click outside a card closes it**, in the capture phase, plus Escape. No exceptions to hunt
+   for: clicking the next entry closes and reopens, which reads as a swap without a special case.
+
+Two traps, both found by driving the mock rather than by reading it:
+
+- **`hidden` loses to an author `display`.** `.popover { display: flex }` beats the UA's
+  `[hidden] { display: none }`, so the element never hides and nothing about it looks wrong in a
+  screenshot. Hide with `{#if}`, or say `[hidden] { display: none }` yourself.
+- **Never scroll a section into view with `offsetTop` arithmetic.** `offsetTop` is measured from
+  each element's own `offsetParent`; `h.offsetTop - list.offsetTop` only cancels while both resolve
+  to the same ancestor, and one `position: relative` wrapper between them breaks it silently. Use
+  live `getBoundingClientRect()` deltas, and snap the first section to a true `0` — the list's
+  padding plus the header's margin otherwise leave a few px you can still scroll up past.
+
+Caps are per class, not per level: `cantripCap` + `preparedCap` (`src/lib/build/derive.ts`). A
+per-level "2/3" counter is invented game data and must never be rendered.
 
 ## Every interactive element says so
 

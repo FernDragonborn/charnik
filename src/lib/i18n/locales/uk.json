@@ -449,7 +449,7 @@
 		"strictHint": "Тримайте мене в межах правил",
 		"freeHint": "Дозвольте змінювати будь-що",
 		"shortRest": "Лікування на короткому відпочинку",
-		"shortRestDice": "Кубики",
+		"shortRestDice": "Кістки",
 		"shortRestHalf": "½ HP",
 		"shortRestDiceHint": "Короткий відпочинок: витрачаєте кістки життя (за книгою)",
 		"shortRestHalfHint": "Короткий відпочинок: відновлюєте половину максимальних HP (домашнє правило)",
@@ -514,7 +514,7 @@
 			"resists": "опір: {type}",
 			"immuneTo": "імунітет: {type}",
 			"vulnerableTo": "вразливість: {type}",
-			"noResistances": "поки без опорів до шкоди",
+			"noResistances": "без опорів до шкоди",
 			"editLanguages": "Мови…"
 		},
 		"attacks": {

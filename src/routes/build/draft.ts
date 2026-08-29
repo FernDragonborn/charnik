@@ -73,7 +73,9 @@ export function blankDraft(): DraftState {
 		// newest ruleset by default; the build page's edition switcher changes it before saving
 		system: DEFAULT_SYSTEM,
 		strict: true,
-		shortRestMode: 'dice',
+		// ½ max HP by default: most tables run the flat-heal variant, and spending Hit Dice is the
+		// opt-in the header switches to.
+		shortRestMode: 'half',
 		speciesId: null,
 		speciesOptionId: null,
 		speciesBoostPicks: [],

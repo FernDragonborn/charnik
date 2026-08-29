@@ -514,7 +514,7 @@
 			"resists": "resists {type}",
 			"immuneTo": "immune to {type}",
 			"vulnerableTo": "vulnerable to {type}",
-			"noResistances": "no damage resistances yet",
+			"noResistances": "no damage resistances",
 			"editLanguages": "Languages…"
 		},
 		"attacks": {
