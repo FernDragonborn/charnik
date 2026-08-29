@@ -143,40 +143,66 @@ export class ActionExecutor {
 		}
 	}
 
-	/** Run ONE resolved action verb (`opt.action` may hold several, `;`-joined — see `runActionToken`).
-	 *  Each verb lands on an EXISTING system (actions.md §2 — no new mutation paths). */
-	private runOneAction(opt: ResourceOption, action: string) {
-		const p = this.host().character?.play;
-		if (!p) return;
-		const sep = action.indexOf(':');
-		const verb = sep === -1 ? action : action.slice(0, sep);
-		const arg = sep === -1 ? '' : action.slice(sep + 1);
-		if (verb === 'heal' && arg) {
+	/**
+	 * The verb table — one entry per bounded token in actions.md §2, each landing on an EXISTING
+	 * system (no new mutation paths). A table rather than an if-ladder because the ladder is what
+	 * grows: every verb added one more branch to one function, and the eleventh tipped it past what
+	 * anybody reads in one go. An entry that needs an argument checks for it; a verb whose argument
+	 * is missing does nothing, which is the same silence the ladder gave.
+	 */
+	private readonly VERBS: Record<string, (opt: ResourceOption, arg: string) => void> = {
+		heal: (opt, arg) => {
+			const p = this.host().character?.play;
+			if (!p || !arg) return;
 			const r = rollFormula(arg);
 			p.hp.current = Math.min(this.host().hpMax, p.hp.current + Math.max(0, r.total));
 			this.host().tray.pushRoll(`${opt.name} — heal`, r);
-		} else if (verb === 'roll' && arg) {
-			this.host().tray.pushRoll(opt.name, rollFormula(arg));
-		} else if (verb === 'apply_condition' && arg) {
-			this.host().effects.addEffect({ label: opt.name, tokens: [action], positive: false });
-		} else if (verb === 'apply_effect' && arg) {
-			this.applyCatalogEffect(opt, arg);
-		} else if (verb === 'gain_action') {
+		},
+		roll: (opt, arg) => {
+			if (arg) this.host().tray.pushRoll(opt.name, rollFormula(arg));
+		},
+		apply_condition: (opt, arg) => {
+			if (arg)
+				this.host().effects.addEffect({
+					label: opt.name,
+					tokens: [`apply_condition:${arg}`],
+					positive: false,
+				});
+		},
+		apply_effect: (opt, arg) => {
+			if (arg) this.applyCatalogEffect(opt, arg);
+		},
+		gain_action: () => {
 			// RAW: an ADDITIONAL action, i.e. one more pip this turn — not a refund of a spent one. It
 			// used to decrement `turn.action`, so surging BEFORE acting burnt a use for nothing.
-			p.turn.grantedActions += 1;
-		} else if (verb === 'attack' && arg) {
-			this.makeAttacks(opt, arg);
-		} else if (verb === 'restore_resource' && arg) {
-			this.host().resources.restoreAll(arg); // regain all uses of the pool (Persistent Rage / Uncanny Metabolism)
-		} else if (verb === 'rest' && (arg === 'short' || arg === 'long')) {
+			const p = this.host().character?.play;
+			if (p) p.turn.grantedActions += 1;
+		},
+		attack: (opt, arg) => {
+			if (arg) this.makeAttacks(opt, arg);
+		},
+		restore_resource: (_opt, arg) => {
+			// regain all uses of the pool (Persistent Rage / Uncanny Metabolism)
+			if (arg) this.host().resources.restoreAll(arg);
+		},
+		rest: (opt, arg) => {
 			// grant a rest: lands on the SAME rest system the rest buttons use (recharge pools by type,
 			// reset slots, restore HP + hit dice on a long rest, expire outlasted timed effects). A
 			// consumable that grants a rest MUST have recharge `other` so the rest it triggers doesn't
 			// refund its own charge (see actions.md §2).
+			if (arg !== 'short' && arg !== 'long') return;
 			this.host().resources.rest(arg);
 			toast(`${opt.name} — ${arg} rest taken`);
-		}
+		},
+	};
+
+	/** Run ONE resolved action verb (`opt.action` may hold several, `;`-joined — see `runActionToken`). */
+	private runOneAction(opt: ResourceOption, action: string) {
+		if (!this.host().character) return;
+		const sep = action.indexOf(':');
+		const verb = sep === -1 ? action : action.slice(0, sep);
+		const arg = sep === -1 ? '' : action.slice(sep + 1);
+		this.VERBS[verb]?.(opt, arg);
 	}
 
 	/**
