@@ -5,11 +5,14 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import type { Character } from '$lib/character/schema';
 	import { combat } from '../combat-view-model.svelte';
+	import { _ } from '$lib/i18n';
 	import DiceIcon from '$lib/components/DiceIcon.svelte';
 
 	let { c }: { c: Character } = $props();
 	const conc = $derived(combat.conc);
 	const { openDice } = combat;
+	/** Every toggle's state pill reads the same two words. */
+	const state = (on: boolean) => $_(on ? 'combat.controls.on' : 'combat.controls.off');
 </script>
 
 <section class="controls">
@@ -17,50 +20,62 @@
 		class="toggle combat-toggle"
 		class:on={c.play.inCombat}
 		onclick={combat.toggleCombat}
-		title="Track the action economy (rounds, action/bonus/reaction)"
-		><Icon name="swords" /> Combat
-		<span class="toggle-state">{c.play.inCombat ? 'ON' : 'OFF'}</span></button
+		title={$_('combat.controls.combatHint')}
+		><Icon name="swords" />
+		{$_('combat.controls.combat')}
+		<span class="toggle-state">{state(c.play.inCombat)}</span></button
 	>
 	<button
 		class="toggle"
 		class:on={c.play.shieldRaised}
 		onclick={() => (c.play.shieldRaised = !c.play.shieldRaised)}
-		><Icon name="shield" /> Shield
-		<span class="toggle-state">{c.play.shieldRaised ? 'ON' : 'OFF'}</span></button
+		><Icon name="shield" />
+		{$_('combat.controls.shield')}
+		<span class="toggle-state">{state(c.play.shieldRaised)}</span></button
 	>
 	{#if conc}<button
 			class="toggle concentration on"
 			onclick={combat.clearConcentration}
-			title="Tap to stop concentrating"
-			><Icon name="target" /> Concentration <span class="toggle-state">{conc.label}</span></button
+			title={$_('combat.controls.concentrationHint')}
+			><Icon name="target" />
+			{$_('combat.controls.concentration')}
+			<span class="toggle-state">{conc.label}</span></button
 		>{/if}
 	<button
 		class="toggle"
 		class:on={c.play.inspiration}
 		onclick={() => (c.play.inspiration = !c.play.inspiration)}
-		><Icon name="sparkles" /> Inspiration
-		<span class="toggle-state">{c.play.inspiration ? 'ON' : 'OFF'}</span></button
+		><Icon name="sparkles" />
+		{$_('combat.controls.inspiration')}
+		<span class="toggle-state">{state(c.play.inspiration)}</span></button
 	>
 	<span class="spacer"></span>
 	<button
 		class="toggle rest"
 		onclick={(e) => combat.startShortRest(e)}
-		title={combat.shortRestMode === 'half'
-			? 'Short rest — heal half your max HP'
-			: 'Short rest — spend Hit Dice to heal'}><Icon name="flame-kindling" /> Short</button
+		title={$_(
+			combat.shortRestMode === 'half'
+				? 'combat.controls.shortHintHalf'
+				: 'combat.controls.shortHintDice',
+		)}><Icon name="flame-kindling" /> {$_('combat.controls.short')}</button
 	>
-	<button class="toggle rest" onclick={() => combat.resources.rest('long')} title="Long rest"
-		><Icon name="tent" /> Long</button
+	<button
+		class="toggle rest"
+		onclick={() => combat.resources.rest('long')}
+		title={$_('combat.controls.longHint')}><Icon name="tent" /> {$_('combat.controls.long')}</button
 	>
 	<button
 		class="toggle auto"
 		class:on={c.play.autoCalc}
 		onclick={() => (c.play.autoCalc = !c.play.autoCalc)}
-		title="Auto-calculate derived stats from effects (off → base values only)"
-		><Icon name="settings" /> Auto-calc
-		<span class="toggle-state">{c.play.autoCalc ? 'ON' : 'OFF'}</span></button
+		title={$_('combat.controls.autoCalcHint')}
+		><Icon name="settings" />
+		{$_('combat.controls.autoCalc')}
+		<span class="toggle-state">{state(c.play.autoCalc)}</span></button
 	>
-	<button class="toggle dice" onclick={openDice}><DiceIcon /> Dice tray</button>
+	<button class="toggle dice" onclick={openDice}
+		><DiceIcon /> {$_('combat.controls.diceTray')}</button
+	>
 </section>
 
 <style>

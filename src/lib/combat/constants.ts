@@ -23,15 +23,6 @@ export type MenuKind =
 	| 'restshort'
 	| 'manage';
 
-export const PANEL_TITLE: Record<string, string> = {
-	skills: 'Skills',
-	attacks: 'Attacks',
-	spells: 'Spells',
-	actions: 'Actions',
-	effects: 'Effects & conditions',
-	inventory: 'Inventory',
-};
-
 /** Why the character died — the dead banner's subtitle, one phrase per `play.death.cause`. */
 export const DEATH_CAUSE_LABEL: Record<DeathCause, string> = {
 	massive_damage: 'Massive damage — the leftover met your hit-point maximum',

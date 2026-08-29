@@ -9,7 +9,7 @@
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
-	import { PANEL_TITLE } from '$lib/combat/helpers';
+	import { _ } from '$lib/i18n';
 	import PreparedCaps from '$lib/components/PreparedCaps.svelte';
 	import SkillsPanel from './panels/SkillsPanel.svelte';
 	import AttacksPanel from './panels/AttacksPanel.svelte';
@@ -30,34 +30,36 @@
 	<button class="htoggle" onclick={() => toggle(pid)}>
 		<span class="chevron"
 			><Icon name={collapsed[pid] ? 'chevron-right' : 'chevron-down'} size={13} /></span
-		>{PANEL_TITLE[pid]}
+		>{$_(`combat.panel.${pid}`)}
 	</button>
 	{#if pid === 'actions'}
 		<button class="pill-btn" onclick={(e) => openMenu('showhide', e)}
-			><EyeIcon on={true} /> Show / hide</button
+			><EyeIcon on={true} /> {$_('combat.panel.showHide')}</button
 		>
 	{:else if pid === 'effects'}
 		<span class="head-btns">
 			<button class="pill-btn" onclick={(e) => openMenu('condition', e)}
-				><Icon name="plus" size={13} /> Condition</button
+				><Icon name="plus" size={13} /> {$_('combat.panel.condition')}</button
 			>
 			<button class="pill-btn" onclick={(e) => openMenu('addeffect', e)}
-				><Icon name="plus" size={13} /> Add effect</button
+				><Icon name="plus" size={13} /> {$_('combat.panel.addEffect')}</button
 			>
 		</span>
 	{:else if pid === 'spells' && s.spellcasting.classes.length}
 		<span class="prepared-count"><PreparedCaps tallies={combat.preparedTallies} /></span>
-		<button class="pill-btn" onclick={cycleGroupBy} title="Change grouping"
+		<button class="pill-btn" onclick={cycleGroupBy} title={$_('combat.panel.changeGrouping')}
 			>{groupByLabel} <Icon name="chevron-down" size={12} /></button
 		>
-		<a class="pill-btn" href="{base}/spellbook"><Icon name="settings" size={13} /> Manage all</a>
+		<a class="pill-btn" href="{base}/spellbook"
+			><Icon name="settings" size={13} /> {$_('combat.panel.manageAll')}</a
+		>
 	{/if}
 	<span
 		class="drag-handle"
 		role="button"
 		tabindex="-1"
-		aria-label="drag to reorder"
-		title="drag to reorder"
+		aria-label={$_('combat.panel.dragToReorder')}
+		title={$_('combat.panel.dragToReorder')}
 		onpointerdown={() => (combat.layout.dragDisabled = false)}>⠿</span
 	>
 </div>

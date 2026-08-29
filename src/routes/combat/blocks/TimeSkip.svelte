@@ -5,6 +5,7 @@
 	// whatever timed out. Shown only when a timed effect is actually ticking (see combat.hasTimedEffects).
 	import Icon from '$lib/components/Icon.svelte';
 	import { combat } from '../combat-view-model.svelte';
+	import { _ } from '$lib/i18n';
 
 	// label → rounds (1 round = 6 s → 1 min = 10 rd, 10 min = 100 rd, 1 hr = 600 rd)
 	const STEPS = [
@@ -16,14 +17,13 @@
 </script>
 
 <section class="combat-bar">
-	<span class="bar-label"><Icon name="timer" size={13} /> Pass time</span>
+	<span class="bar-label"><Icon name="timer" size={13} /> {$_('combat.timeSkip.title')}</span>
 	{#each STEPS as [label, rounds] (label)}
 		<button
 			type="button"
 			class="step"
 			onclick={() => combat.economy.advanceTime(rounds)}
-			title="Advance {rounds} round{rounds > 1 ? 's' : ''} and expire what times out"
-			>{label}</button
+			title={$_('combat.timeSkip.hint', { values: { rounds } })}>{label}</button
 		>
 	{/each}
 </section>

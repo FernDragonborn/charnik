@@ -8,6 +8,7 @@
 	import type { Character } from '$lib/character/schema';
 	import type { CharacterSheet } from '$lib/character/derive';
 	import { combat } from '../combat-view-model.svelte';
+	import { _ } from '$lib/i18n';
 	import { saveCharacterToStore } from '$lib/character/store.svelte';
 	import { signed } from '$lib/combat/helpers';
 	import HpPanel from './HpPanel/HpPanel.svelte';
@@ -23,7 +24,9 @@
 		<div class="eyebrow">{className}{speciesName ? ` · ${speciesName}` : ''}</div>
 		<h1>{c.build.name}</h1>
 		<div class="subline">
-			Level <b>{s.level}</b> · <span class="system-badge">{c.system}</span> · Proficiency
+			{$_('combat.hero.level')}
+			<b>{s.level}</b>
+			· <span class="system-badge">{c.system}</span> · {$_('combat.hero.proficiency')}
 			<b>{signed(s.proficiencyBonus)}</b>
 			{#if combat.canLevelUp}
 				<button
@@ -31,7 +34,7 @@
 					onclick={async () => {
 						await saveCharacterToStore(c); // persist first (e.g. the demo) so the builder can load it
 						void goto(`${base}/build?levelup=${c.id}`);
-					}}><Icon name="arrow-up" size={13} /> Level up</button
+					}}><Icon name="arrow-up" size={13} /> {$_('combat.hero.levelUp')}</button
 				>
 			{/if}
 		</div>

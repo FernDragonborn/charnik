@@ -1193,22 +1193,27 @@ were learned the hard way.
 
 **From AUDIT-29-07 (retired 2026-08-04 — its Bugs/Smells/Naming were all closed + verified; git
 holds the done-work log; these are the OPEN tails it carried):**
-- [ ] **ARCH-1 / B8 · i18n sweep of combat + build.** `en.json` has no `combat.*`/`build.*` sections;
-  CombatVM/BuildVM hardcode EN (toasts, `combat/constants.ts` labels, panel headers, buttons) — the
-  biggest gap from "i18n is data-driven". Partial is safe (EN-fallback is the contract). **Plan:**
-  namespace `combat.*`/`build.*` in en/uk.json → start with component-level static labels (`$_` works
-  natively in `.svelte`, no VM plumbing) → then VM toasts, which need a decision: inject a `translate`
-  into the VM (the house pattern — logic-layer stays `$_`-free, UI injects, cf. `formatNote(note,
-  translate?)`) OR allow `get(_)` in a VM (a VM is the UI layer, not rules-core, so `get(_)` is
-  defensible — but it's not the established pattern). UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
-  **UX-1 is done (2026-08-21)**, so the copy this pass translates is the rewritten copy. What still
-  gates it is W2 — the roller writes English prose into `log.jsonl`, which can't be localised later.
-  **Drift found 2026-08-22, and it is the shape this pass has to expect elsewhere:** UX-1 rewrote the
-  Data tab's copy in `StorageSettings.svelte` as hardcoded EN, which left `settings.data.*` (title /
-  desc / open / change, in BOTH catalogs) referenced by nothing — a stale UA translation of a screen
-  that no longer says that. Kept, not deleted: they are the sweep's starting point, and the lesson is
-  that a copy rewrite has to be checked against the catalog or it silently orphans one. Both catalogs
-  are otherwise key-for-key identical (270/270), and `settings.data.*` is the only dead group in EN.
+- [~] **ARCH-1 / B8 · i18n sweep of combat + build.** `build.*` is done (270 keys). `combat.*` now
+  exists and covers the **page chrome**: the Controls toolbar, the Hero subline, Exhaustion, the turn
+  bar, Pass time, every panel head, and the Inventory panel. The dead `sheet.*` group — eight keys
+  nothing referenced, the same orphaning drift `settings.data.*` had — was folded into it.
+  **What is deliberately NOT translated, and why it must stay that way until W2:** anything that
+  becomes a **roll label**. `repository.ts ▸ logLineFor` writes `roll.label` verbatim into
+  `log.jsonl`, and prose already on disk cannot be localised afterwards. Skill and ability NAMES are
+  therefore still `titleCase(id)` everywhere, because the same string is both the row's display text
+  and the label of the roll it fires — translating the display half alone would show a Ukrainian
+  skill whose own roll toast says it in English. That is one change, after W2, across the combat
+  sheet AND the builder (`docs/builder-plan.md` carries the same open tail).
+  **Still open besides that:** VM toasts (decided: `get(_)` inside a function — a toast is
+  fire-and-forget, so the one-shot store read is correct and needs no plumbing; never at module top
+  level, where it would freeze at load-time locale), the stat-tile labels on the combat sheet
+  (`ARMOR CLASS`, `INITIATIVE`, `SPEED`, `HIT POINTS`, `RESOURCES`, `PASSIVE SENSES`), the HP panel's
+  buttons, and the Effects / Actions / Attacks / Spells panel bodies.
+  UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
+  **A locale is not free of layout consequences:** the turn bar's container-query thresholds are the
+  MAX over shipped locales (Ukrainian labels run ~15px wider than English), and `container-type`
+  zeroes the min-content floor, so a too-narrow threshold clips rather than pushes. Re-measure per
+  the recipe in `Turnbar.svelte` when a locale is added.
 - [x] **UX-3 · Roll access: retroactive advantage instead of a pre-roll gesture — BUILT 2026-08-10,
   see UBUG-20 for what shipped.** The problem was that `Alt/Ctrl-click` opened the roll tray, on an app
   explicitly used on a phone where modifiers do not exist. The answer: don't bind a gesture to opening

@@ -6,27 +6,29 @@
 	import type { Character } from '$lib/character/schema';
 	import { combat } from '../combat-view-model.svelte';
 	import { range } from '$lib/combat/helpers';
+	import { _ } from '$lib/i18n';
 
 	let { c }: { c: Character } = $props();
 
 	// action-economy slots (id + label); base 1 pip each until a feature grants extras. Each slot's
 	// pip has its own SHAPE (see the styles) — on the narrow bar the words are gone and the shape is
 	// the only thing telling an action from a bonus action from a reaction.
-	const SLOTS = [
-		['action', 'Action'],
-		['bonus', 'Bonus'],
-		['reaction', 'Reaction'],
-	] as const;
+	const SLOTS = ['action', 'bonus', 'reaction'] as const;
+	/** A slot's word. Its id IS the catalog key, so a new slot needs no table here. */
+	const slotLabel = (slot: (typeof SLOTS)[number]) => $_(`combat.turn.${slot}`);
 
 	// the narrow bar drops the words, so the readout can't be the accessible name any more
 	const moveLabel = $derived(
-		`Movement: ${combat.economy.moveLeft} of ${combat.economy.moveMax} ft left — click to spend 5 ft`,
+		$_('combat.turn.moveReading', {
+			values: { left: combat.economy.moveLeft, max: combat.economy.moveMax },
+		}),
 	);
 </script>
 
 <section class="turnbar combat-bar">
-	<span class="bar-label">Round <b>{combat.round}</b></span>
-	{#each SLOTS as [slot, label] (slot)}
+	<span class="bar-label">{$_('combat.turn.round')} <b>{combat.round}</b></span>
+	{#each SLOTS as slot (slot)}
+		{@const label = slotLabel(slot)}
 		<!-- UBUG-17: the WHOLE pill is the hit area ("spend one {label}"), not just the 12px dot; the
 		     pips inside still set the count exactly (click a spent one to restore) and stop the
 		     pill's click, the same nesting the resource chips use. A button can't nest a button, so the
@@ -36,8 +38,8 @@
 			type="button"
 			class="turn-slot"
 			onclick={() => combat.economy.trySpend(slot)}
-			title="Spend one {label}"
-			aria-label="Spend one {label}"
+			title={$_('combat.turn.spendOne', { values: { label } })}
+			aria-label={$_('combat.turn.spendOne', { values: { label } })}
 		>
 			<span class="slot-label">{label}</span>
 			<span class="turn-pips">
@@ -53,8 +55,10 @@
 							e.stopPropagation();
 							combat.economy.usePip(slot, i);
 						}}
-						title="{label}: {used ? 'used — click to restore' : 'available'}"
-						aria-label="{label} pip {i + 1}"
+						title={$_(used ? 'combat.turn.pipUsed' : 'combat.turn.pipAvailable', {
+							values: { label },
+						})}
+						aria-label={$_('combat.turn.pip', { values: { label, n: i + 1 } })}
 					></span>
 				{/each}
 			</span>
@@ -64,27 +68,29 @@
 		type="button"
 		class="turn-slot move"
 		onclick={() => combat.economy.spendMove(5)}
-		title="Click: spend 5 ft"
+		title={$_('combat.turn.moveHint')}
 		aria-label={moveLabel}
 	>
-		<Icon name="footprints" size={13} /> <span class="slot-label">Move</span>
+		<Icon name="footprints" size={13} /> <span class="slot-label">{$_('combat.turn.move')}</span>
 		<b class:spent={combat.economy.moveLeft === 0}>{combat.economy.moveLeft}</b>
-		/ {combat.economy.moveMax} <span class="slot-label">ft</span>
+		/ {combat.economy.moveMax} <span class="slot-label">{$_('combat.turn.feet')}</span>
 	</button>
 	<button
 		type="button"
 		class="action-economy-reset"
 		onclick={combat.economy.resetMove}
-		title="Reset movement"><Icon name="rotate-ccw" size={13} label="Reset movement" /></button
+		title={$_('combat.turn.resetMove')}
+		><Icon name="rotate-ccw" size={13} label={$_('combat.turn.resetMove')} /></button
 	>
 	<span class="spacer"></span>
 	<button
 		type="button"
 		class="nextturn"
 		onclick={combat.economy.nextTurn}
-		aria-label="Next turn"
-		title="Next turn"
-		><span class="slot-label">Next turn</span> <Icon name="chevron-right" size={13} /></button
+		aria-label={$_('combat.turn.nextTurn')}
+		title={$_('combat.turn.nextTurn')}
+		><span class="slot-label">{$_('combat.turn.nextTurn')}</span>
+		<Icon name="chevron-right" size={13} /></button
 	>
 </section>
 
@@ -103,14 +109,14 @@
 		flex: 1 1 auto;
 		min-width: 8px;
 	}
-	/* Each threshold is the width the regime ABOVE it stops fitting in, measured on the English bar
-	   as the CONTENT box the query actually sees (the bar's own 12px padding and 1px border are NOT
-	   in it): 612px with full padding and words, 520px once compacted, 341px once the words are gone.
-	   Only
-	   the last regime is locale-proof (pips, numbers, icons) — RE-MEASURE THE TWO THRESHOLDS when the
-	   labels get translated, because `container-type` zeroes the min-content floor, so a longer word
-	   overflows the bar instead of pushing it wider. */
-	@container (max-width: 611px) {
+	/* Each threshold is the width the regime ABOVE it stops fitting in, as the CONTENT box the query
+	   sees (the bar's own 12px padding and 1px border are NOT in it), taken as the MAXIMUM over every
+	   shipped locale — `container-type` zeroes the min-content floor, so a label too long for the
+	   regime overflows the bar instead of pushing it wider. Measured: full 612 (en) / 627 (uk),
+	   compact 520 (en) / 541 (uk), wordless 341 (en) / 338 (uk) — only the last is locale-proof, being
+	   pips, numbers and icons. A NEW LOCALE MEANS RE-MEASURING: force each regime's declarations with
+	   `container-type: normal; width: min-content` and read the bar's width back. */
+	@container (max-width: 630px) {
 		.turnbar .turn-slot {
 			gap: 5px;
 			padding: 5px 8px;
@@ -122,7 +128,7 @@
 			display: none;
 		}
 	}
-	@container (max-width: 519px) {
+	@container (max-width: 545px) {
 		.turnbar .turn-slot .slot-label,
 		.turnbar .nextturn .slot-label {
 			display: none;

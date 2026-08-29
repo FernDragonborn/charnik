@@ -614,7 +614,6 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/combat/constants.ts`
 
 - `type MenuKind` — The anchored dropdown menus the Combat view can open (overlay.kind).
-- `const PANEL_TITLE`
 - `const DEATH_CAUSE_LABEL` — Why the character died — the dead banner's subtitle, one phrase per `play.death.cause`.
 - `const ABIL` — Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`.
 - `const ABILITY_NAME`
@@ -1501,4 +1500,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 882 exports across 124 modules · 54 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 881 exports across 124 modules · 54 duplicate suspects._

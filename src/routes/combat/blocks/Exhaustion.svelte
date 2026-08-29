@@ -8,6 +8,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import type { Character } from '$lib/character/schema';
 	import { combat } from '../combat-view-model.svelte';
+	import { _ } from '$lib/i18n';
 
 	let { c }: { c: Character } = $props();
 	const max = $derived(combat.effects.exhaustionMax);
@@ -18,36 +19,40 @@
 {#if max > 0}
 	<div class="exhaustion">
 		{#if max <= 6}
-			<div class="gauge pips" role="group" aria-label="Exhaustion level">
+			<div class="gauge pips" role="group" aria-label={$_('combat.exhaustion.gauge')}>
 				{#each pips as i (i)}
 					<button
 						type="button"
 						class="pip"
 						class:on={level > i}
-						aria-label="Exhaustion level {i + 1}"
+						aria-label={$_('combat.exhaustion.pip', { values: { level: i + 1 } })}
 						aria-pressed={level > i}
 						onclick={() => combat.effects.setExhaustion(level === i + 1 ? i : i + 1)}
 					></button>
 				{/each}
 			</div>
 		{:else}
-			<div class="gauge smooth" role="img" aria-label="Exhaustion {level} of {max}">
+			<div
+				class="gauge smooth"
+				role="img"
+				aria-label={$_('combat.exhaustion.reading', { values: { level, max } })}
+			>
 				<i class="fill" style="height:{(level / max) * 100}%"></i>
 			</div>
 		{/if}
 		<div class="side">
-			<div class="exhaustion-title">Exhaustion</div>
+			<div class="exhaustion-title">{$_('combat.exhaustion.title')}</div>
 			<div class="exhaustion-num" class:on={level > 0}>{level}<small>/{max}</small></div>
 			<div class="exhaustion-step">
 				<button
 					type="button"
-					aria-label="Decrease exhaustion"
+					aria-label={$_('combat.exhaustion.decrease')}
 					onclick={() => combat.effects.setExhaustion(level - 1)}
 					><Icon name="minus" size={12} /></button
 				>
 				<button
 					type="button"
-					aria-label="Increase exhaustion"
+					aria-label={$_('combat.exhaustion.increase')}
 					onclick={() => combat.effects.setExhaustion(level + 1)}
 					><Icon name="plus" size={12} /></button
 				>

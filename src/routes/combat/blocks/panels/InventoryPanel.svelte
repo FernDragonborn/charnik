@@ -7,6 +7,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { base } from '$app/paths';
 	import { combat } from '../../combat-view-model.svelte';
+	import { _ } from '$lib/i18n';
 	import { ATTUNEMENT_CAP } from '$lib/character/inventory';
 	import { kilograms } from '$lib/combat/constants';
 
@@ -15,21 +16,25 @@
 </script>
 
 <div class="load">
-	<span class="eyebrow">Load</span>
+	<span class="eyebrow">{$_('combat.inventory.load')}</span>
 	<span class="load-figure">
-		<b>{Math.round(inv.carriedLb)}</b> / {inv.capacityLb} lb
+		{$_('combat.inventory.weight', {
+			values: { carried: Math.round(inv.carriedLb), capacity: inv.capacityLb },
+		})}
 		<span class="metric">({kilograms(inv.carriedLb)} / {kilograms(inv.capacityLb)})</span>
 	</span>
 	<span class="spacer"></span>
 	<span class="attune" class:full={inv.attunementFull}>
-		attuned {inv.attuned}/{ATTUNEMENT_CAP}
+		{$_('combat.inventory.attuned', {
+			values: { count: inv.attuned, cap: ATTUNEMENT_CAP },
+		})}
 	</span>
 </div>
 <div class="meter" class:good={!inv.overCapacity} class:over={inv.overCapacity}>
 	<span style:width="{inv.load * 100}%"></span>
 </div>
 {#if inv.overCapacity}
-	<p class="note">Over capacity — speed drops and every check that uses it suffers. Your call.</p>
+	<p class="note">{$_('combat.inventory.overCapacity')}</p>
 {/if}
 
 <div class="items">
@@ -38,28 +43,40 @@
 			<span class="nm">{row.name}</span>
 			{#if row.entry.qty > 1}<span class="qty-tag">×{row.entry.qty}</span>{/if}
 			<span class="meta">{row.meta}</span>
-			{#if row.weightLb}<span class="wt">{row.weightLb} lb</span>{/if}
+			{#if row.weightLb}<span class="wt"
+					>{$_('combat.inventory.pounds', { values: { lb: row.weightLb } })}</span
+				>{/if}
 			<span class="acts">
 				<span class="stepper">
-					<button aria-label="One fewer {row.name}" onclick={() => inv.bump(row.entry.item, -1)}>
+					<button
+						aria-label={$_('combat.inventory.fewer', { values: { name: row.name } })}
+						onclick={() => inv.bump(row.entry.item, -1)}
+					>
 						<Icon name="minus" size={11} />
 					</button>
 					<span class="base">{row.entry.qty}</span>
-					<button aria-label="One more {row.name}" onclick={() => inv.bump(row.entry.item, 1)}>
+					<button
+						aria-label={$_('combat.inventory.more', { values: { name: row.name } })}
+						onclick={() => inv.bump(row.entry.item, 1)}
+					>
 						<Icon name="plus" size={11} />
 					</button>
 				</span>
 				{#if row.consumable}
-					<button class="pill-btn" onclick={() => inv.use(row.entry.item)}>Use</button>
+					<button class="pill-btn" onclick={() => inv.use(row.entry.item)}
+						>{$_('combat.inventory.use')}</button
+					>
 				{/if}
 				{#if row.equippable}
 					<button
 						class="pill-btn"
 						class:accent={row.entry.equipped}
 						onclick={() => inv.equip(row.entry.item)}
-						title={row.entry.equipped ? 'Take it off' : 'Wear or wield it'}
+						title={$_(
+							row.entry.equipped ? 'combat.inventory.unequipHint' : 'combat.inventory.equipHint',
+						)}
 					>
-						{row.entry.equipped ? 'Equipped' : 'Equip'}
+						{$_(row.entry.equipped ? 'combat.inventory.equipped' : 'combat.inventory.equip')}
 					</button>
 				{/if}
 				{#if row.attunable}
@@ -67,16 +84,19 @@
 						class="pill-btn"
 						class:accent={row.entry.attuned}
 						onclick={() => inv.attune(row.entry.item)}
-						title={row.entry.attuned ? 'Break attunement' : 'Attune to it'}
+						title={$_(
+							row.entry.attuned ? 'combat.inventory.unattuneHint' : 'combat.inventory.attuneHint',
+						)}
 					>
-						{row.entry.attuned ? 'Attuned' : 'Attune'}
+						{$_(row.entry.attuned ? 'combat.inventory.attunedOn' : 'combat.inventory.attune')}
 					</button>
 				{/if}
 			</span>
 		</div>
 	{:else}
 		<p class="note">
-			Nothing carried yet. Equipment is added in the builder — <a href="{base}/build">open it</a>.
+			{$_('combat.inventory.empty')}
+			<a href="{base}/build">{$_('combat.inventory.openBuilder')}</a>
 		</p>
 	{/each}
 </div>
@@ -94,10 +114,6 @@
 	.load-figure {
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-	}
-	.load-figure b {
-		color: var(--color-text);
-		font-size: var(--font-size-sm);
 	}
 	.metric {
 		font-family: var(--font-mono);

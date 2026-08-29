@@ -11,6 +11,99 @@
 		"skipToContent": "Skip to content",
 		"openCommandPalette": "Open command palette"
 	},
+	"combat": {
+		"controls": {
+			"combat": "Combat",
+			"combatHint": "Track the action economy (rounds, action/bonus/reaction)",
+			"shield": "Shield",
+			"concentration": "Concentration",
+			"concentrationHint": "Tap to stop concentrating",
+			"inspiration": "Inspiration",
+			"short": "Short",
+			"shortHintDice": "Short rest — spend Hit Dice to heal",
+			"shortHintHalf": "Short rest — heal half your max HP",
+			"long": "Long",
+			"longHint": "Long rest",
+			"autoCalc": "Auto-calc",
+			"autoCalcHint": "Auto-calculate derived stats from effects (off → base values only)",
+			"diceTray": "Dice tray",
+			"on": "ON",
+			"off": "OFF"
+		},
+		"hero": {
+			"level": "Level",
+			"proficiency": "Proficiency",
+			"levelUp": "Level up"
+		},
+		"exhaustion": {
+			"title": "Exhaustion",
+			"gauge": "Exhaustion level",
+			"pip": "Exhaustion level {level}",
+			"reading": "Exhaustion {level} of {max}",
+			"decrease": "Decrease exhaustion",
+			"increase": "Increase exhaustion"
+		},
+		"turn": {
+			"round": "Round",
+			"action": "Action",
+			"bonus": "Bonus",
+			"reaction": "Reaction",
+			"spendOne": "Spend one {label}",
+			"pip": "{label} pip {n}",
+			"pipUsed": "{label}: used — click to restore",
+			"pipAvailable": "{label}: available",
+			"move": "Move",
+			"moveHint": "Click: spend 5 ft",
+			"moveReading": "Movement: {left} of {max} ft left — click to spend 5 ft",
+			"feet": "ft",
+			"resetMove": "Reset movement",
+			"nextTurn": "Next turn"
+		},
+		"timeSkip": {
+			"title": "Pass time",
+			"hint": "Advance {rounds, plural, one {# round} other {# rounds}} and expire what times out"
+		},
+		"panel": {
+			"skills": "Skills",
+			"attacks": "Attacks",
+			"spells": "Spells",
+			"actions": "Actions",
+			"effects": "Effects & conditions",
+			"inventory": "Inventory",
+			"showHide": "Show / hide",
+			"condition": "Condition",
+			"addEffect": "Add effect",
+			"manageAll": "Manage all",
+			"changeGrouping": "Change grouping",
+			"dragToReorder": "drag to reorder"
+		},
+		"inventory": {
+			"load": "Load",
+			"weight": "{carried} / {capacity} lb",
+			"attuned": "attuned {count}/{cap}",
+			"overCapacity": "Over capacity — speed drops and every check that uses it suffers. Your call.",
+			"empty": "Nothing carried yet. Equipment is added in the builder.",
+			"openBuilder": "open it",
+			"fewer": "One fewer {name}",
+			"more": "One more {name}",
+			"use": "Use",
+			"used": "Used {name}",
+			"leftCount": "{count} left",
+			"equip": "Equip",
+			"equipped": "Equipped",
+			"equipHint": "Wear or wield it",
+			"unequipHint": "Take it off",
+			"attune": "Attune",
+			"attunedOn": "Attuned",
+			"attuneHint": "Attune to it",
+			"unattuneHint": "Break attunement",
+			"attunementFull": "Attuned to {cap} items already",
+			"attunementFullHint": "Break attunement with one first, or switch this character to Free.",
+			"attunementOver": "Over the attunement limit ({cap})",
+			"attunementOverHint": "Free mode — allowed, and the count says so.",
+			"pounds": "{lb} lb"
+		}
+	},
 	"mobile": {
 		"title": "No mobile version yet",
 		"body": "What you see on a phone has never been tested or designed for small screens — there's no responsive layout at all right now.\n\nA mobile version will come later, once the core features are done.\n\nCharnik works best on a desktop.",
@@ -146,16 +239,6 @@
 			"uninstallWarn": "Deletes its files from your disk, and the {count} entries it gives you with them. Characters using any of those go blank there. You can get it back any time from {repo}.",
 			"uninstallWarnEmpty": "Deletes its files from your disk. Characters using anything from it go blank there. You can get it back any time from {repo}."
 		}
-	},
-	"sheet": {
-		"hitPoints": "Hit points",
-		"armorClass": "Armor class",
-		"initiative": "Initiative",
-		"speed": "Speed",
-		"passivePerception": "Passive perception",
-		"spellSlots": "Spell slots",
-		"effects": "Effects",
-		"shieldToggle": "Shield"
 	},
 	"roster": {
 		"loading": "Loading…",
