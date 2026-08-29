@@ -1204,11 +1204,16 @@ holds the done-work log; these are the OPEN tails it carried):**
   and the label of the roll it fires — translating the display half alone would show a Ukrainian
   skill whose own roll toast says it in English. That is one change, after W2, across the combat
   sheet AND the builder (`docs/builder-plan.md` carries the same open tail).
-  **Still open besides that:** VM toasts (decided: `get(_)` inside a function — a toast is
-  fire-and-forget, so the one-shot store read is correct and needs no plumbing; never at module top
-  level, where it would freeze at load-time locale), the stat-tile labels on the combat sheet
-  (`ARMOR CLASS`, `INITIATIVE`, `SPEED`, `HIT POINTS`, `RESOURCES`, `PASSIVE SENSES`), the HP panel's
-  buttons, and the Effects / Actions / Attacks / Spells panel bodies.
+  **The boundary is sharper than "chrome vs body", and it is what the rest of the sweep must
+  respect:** a string is safe when nothing it names is ALSO a roll label. The Controls toolbar, the
+  panel heads and the turn bar pass that test, which is why they are done. The stat tiles do NOT —
+  `ARMOR CLASS` and `INITIATIVE` sit on buttons that roll `'AC (touch)'` and `'Initiative'`, so
+  translating the tile alone puts a Ukrainian tile above an English toast. Same for the ability
+  grid, the skills list and every panel body that rolls. All of that rides with W2, as one change.
+  **Genuinely free of W2, and therefore next:** VM toasts (decided: `get(_)` inside a function — a
+  toast is fire-and-forget, so the one-shot store read is correct and needs no plumbing; never at
+  module top level, where it would freeze at the load-time locale), and the section headers that
+  name no roll (`Passive senses`, `Defenses`, `Resources`, `Pin skills`).
   UA copy uses formal «ви» (docs/internals/ui.md ▸ Accessibility).
   **A locale is not free of layout consequences:** the turn bar's container-query thresholds are the
   MAX over shipped locales (Ukrainian labels run ~15px wider than English), and `container-type`
@@ -1601,6 +1606,12 @@ holds the done-work log; these are the OPEN tails it carried):**
   toasts "2×: make 2 separate rolls at this level"). **What stays UBUG-11** is the action half: the
   `rolls` intent in actions.md that lets a class feature CALL that roller with the right weapon, instead
   of degrading to `note:` text. Don't build a Flurry-shaped roller here.
+  **The APP half is built:** `attack:<weapon id>[:<count>]` is an executor verb (docs/internals/actions.md
+  §2), firing the ordinary attack path so a strike inside an action carries exactly what a tap on the
+  Attacks panel does, and charging no turn slot of its own. The weapon is named by bare content id, so
+  `Attack` grew an `id` (its display name never was an identity). **What is left is CONTENT, in
+  `charnik-content-srd`:** the `resource_options` rows that still say `note:` — Flurry of Blows becomes
+  `attack:unarmed_strike:2` — hand-edited in both editions and `pnpm restamp`ed, never re-converted.
 - [x] **UBUG-12 · Roll feedback is hard to read — the toast became a component (2026-08-09, design
   5A from `design-preview/toast-update/`).** Superseded by UBUG-20, which made that component the ONE
   renderer for all four roll surfaces. Two rules from it are still load-bearing and both live in code:

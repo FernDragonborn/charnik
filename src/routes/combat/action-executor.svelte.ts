@@ -14,7 +14,9 @@ import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { rollFormula } from '$lib/rules/dice';
 import { ACTION_SLOT_LABEL, type ActionSlot } from '$lib/combat/helpers';
+import type { Attack } from '$lib/combat/attacks';
 import type { RollTray } from './roll-tray.svelte';
+import type { SheetRolls } from './sheet-rolls.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
 import type { ResourceTracker } from './resource-tracker.svelte';
 import type { EffectsEditor } from './effects-editor.svelte';
@@ -36,7 +38,14 @@ export interface ExecutorHost {
 	economy: TurnEconomy;
 	resources: ResourceTracker;
 	effects: EffectsEditor;
+	/** The character's attack rows, and the way to fire one — what `attack:` resolves against. */
+	attacks: Attack[];
+	rolls: SheetRolls;
 }
+
+/** How many strikes one action may fire. RAW's largest is a handful; the cap is against a content
+ *  typo (`attack:dagger:200`) turning one click into two hundred log lines. */
+const MAX_ATTACKS_PER_ACTION = 12;
 
 export class ActionExecutor {
 	/* Accessor, not an object — a $derived field initialiser runs before a constructor parameter
@@ -156,6 +165,8 @@ export class ActionExecutor {
 			// RAW: an ADDITIONAL action, i.e. one more pip this turn — not a refund of a spent one. It
 			// used to decrement `turn.action`, so surging BEFORE acting burnt a use for nothing.
 			p.turn.grantedActions += 1;
+		} else if (verb === 'attack' && arg) {
+			this.makeAttacks(opt, arg);
 		} else if (verb === 'restore_resource' && arg) {
 			this.host().resources.restoreAll(arg); // regain all uses of the pool (Persistent Rage / Uncanny Metabolism)
 		} else if (verb === 'rest' && (arg === 'short' || arg === 'long')) {
@@ -166,6 +177,35 @@ export class ActionExecutor {
 			this.host().resources.rest(arg);
 			toast(`${opt.name} — ${arg} rest taken`);
 		}
+	}
+
+	/**
+	 * `attack:<weapon id>[:<count>]` — UBUG-11. A class feature that says "make two Unarmed Strikes"
+	 * MAKES them: each strike goes through the ordinary attack path, so it picks up the same
+	 * proficiency, magic bonus, Rage damage and scoped effects a tap on the Attacks panel would. It
+	 * charges no turn slot of its own — the option's `action_type` already paid for the whole thing.
+	 *
+	 * The weapon is named by its BARE content id, never its display name, so the token survives a
+	 * translated sheet. An id the character isn't carrying is SURFACED: an action that silently rolls
+	 * nothing is the bug this verb exists to fix, so it must not become a quieter version of itself.
+	 */
+	private makeAttacks(opt: ResourceOption, arg: string) {
+		const sep = arg.lastIndexOf(':');
+		const hasCount = sep > 0 && /^\d+$/.test(arg.slice(sep + 1));
+		const id = (hasCount ? arg.slice(0, sep) : arg).trim().toLowerCase();
+		const asked = hasCount ? Number(arg.slice(sep + 1)) : 1;
+		const count = Math.min(Math.max(1, asked), MAX_ATTACKS_PER_ACTION);
+		const at = this.host().attacks.find((a) => a.id.toLowerCase() === id);
+		if (!at) {
+			toast(`${opt.name} — nothing to attack with`, {
+				description: `It makes an attack with “${id}”, and you have no such weapon equipped.`,
+			});
+			return;
+		}
+		// numbered, because two identical entries in the log are indistinguishable otherwise — and
+		// which of the two Flurry strikes hit is exactly what the player is reading the log for
+		for (let i = 0; i < count; i++)
+			this.host().rolls.rollAttackNow(at, count > 1 ? `${at.name} ${i + 1}/${count}` : at.name);
 	}
 
 	/** `apply_effect:<id>` — apply a NAMED catalog buff/debuff (Rage, Bless-as-action…) via the SAME add

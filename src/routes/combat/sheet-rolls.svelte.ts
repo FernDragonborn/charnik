@@ -136,21 +136,7 @@ export class SheetRolls {
 	 *  `damage`-keyed effects — Rage +2, sneak/hemocraft dice); Shift-click opens the roll tray. */
 	attackRoll = (at: Attack, e: Event) => {
 		if (!this.host().economy.trySpend('action')) return;
-		// §A/§B: pass this weapon's category tags so a scoped effect (GWF's min_die on two-handed melee
-		// damage) applies only to matching weapons; unscoped effects (Bless, Rage) apply regardless.
-		const scopes = new Set(at.scopes);
-		const fx = this.effectsFor('attack', scopes);
-		const dmgFx = this.effectsFor('damage', scopes);
-		// Damage effects (Bless-style flat/dice, reroll/min_die) fold onto the PRIMARY part only — RAW
-		// adds them to the weapon's base damage, not to a second damage type's dice.
-		const parts: DamagePartSpec[] = at.damageParts.map((p, i) => ({
-			dice: p.pool,
-			mod: p.mod + (i === 0 ? dmgFx.flat : 0),
-			type: p.type,
-			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dmgFx } : {}),
-		}));
-		// asked AFTER the effects fold in, so a flat damage effect on a damage-less weapon still counts
-		const hasDmg = dealsDamage(parts);
+		const { fx, parts, hasDmg } = this.attackSpec(at);
 		if (wantsTray(e)) {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
 			this.openRoll(
@@ -167,6 +153,16 @@ export class SheetRolls {
 			if (hasDmg) this.host().tray.queueDamage({ label: `${at.name} damage`, parts });
 			return;
 		}
+		this.rollAttackNow(at);
+	};
+
+	/**
+	 * Roll one attack instantly, charging NOTHING: no turn slot, no tray. What an action that makes
+	 * attacks calls (UBUG-11) — a Flurry of Blows already paid one bonus action for the pair, so each
+	 * strike inside it must not try to pay again. `label` distinguishes the strikes in the log.
+	 */
+	rollAttackNow = (at: Attack, label = at.name) => {
+		const { parts, fx, hasDmg } = this.attackSpec(at);
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
 		const toHit = rollPool(
 			{ 20: 1 },
@@ -178,9 +174,29 @@ export class SheetRolls {
 		// Playbar (and the log, forever) carries the control, as the ↻ on the damage pill it rerolls.
 		// (The Alt-click tray path rolls damage later, so the offer rides the instant tap; a v1 gap.)
 		const savage = this.savageOffer(parts[0], dmgRolls);
-		const entry = this.host().tray.pushRoll(at.name, toHit, dmgRolls);
+		const entry = this.host().tray.pushRoll(label, toHit, dmgRolls);
 		if (savage) this.savagePending = { spec: savage.spec, roll: savage.roll, entry };
 	};
+
+	/** The effects and damage parts an attack rolls with — shared by the tap, the tray and the action
+	 *  executor, so the three can never disagree about what a weapon actually swings for. */
+	private attackSpec(at: Attack) {
+		// §A/§B: pass this weapon's category tags so a scoped effect (GWF's min_die on two-handed melee
+		// damage) applies only to matching weapons; unscoped effects (Bless, Rage) apply regardless.
+		const scopes = new Set(at.scopes);
+		const fx = this.effectsFor('attack', scopes);
+		const dmgFx = this.effectsFor('damage', scopes);
+		// Damage effects (Bless-style flat/dice, reroll/min_die) fold onto the PRIMARY part only — RAW
+		// adds them to the weapon's base damage, not to a second damage type's dice.
+		const parts: DamagePartSpec[] = at.damageParts.map((p, i) => ({
+			dice: p.pool,
+			mod: p.mod + (i === 0 ? dmgFx.flat : 0),
+			type: p.type,
+			...(i === 0 ? { bonusDice: dmgFx.bonusDice, mods: dmgFx } : {}),
+		}));
+		// asked AFTER the effects fold in, so a flat damage effect on a damage-less weapon still counts
+		return { fx, parts, hasDmg: dealsDamage(parts) };
+	}
 
 	/** Does the attack about to be toasted qualify for a Savage Attacker reroll? ONLY when a feature
 	 *  contributes a `damage_reroll` fact, the attack rolled damage dice, and the per-turn use is free.

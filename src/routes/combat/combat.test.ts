@@ -14,6 +14,7 @@ import { spellRow } from '$lib/combat/helpers';
 import { combat } from './combat-view-model.svelte';
 import { ResourceTracker } from './resource-tracker.svelte';
 import { PanelLayout } from './panel-layout.svelte';
+import { UNARMED_STRIKE_ID } from '$lib/combat/attacks';
 
 const S = 'SRD 5.2.1';
 
@@ -1549,5 +1550,108 @@ describe('PanelLayout · a saved layout is reconciled with the panels that exist
 		];
 		layout.restore(saved);
 		expect(layout.columns.map((col) => col.map((p) => p.id))).toEqual(saved);
+	});
+});
+
+/*
+ * UBUG-11 — a class action that says "make two Unarmed Strikes" MAKES them. The verb fires the real
+ * attack path, so each strike carries the same to-hit and damage a tap on the Attacks panel would;
+ * the whole flurry costs the option's ONE bonus action, never one per strike.
+ */
+describe('CombatVM · an action that attacks (UBUG-11)', () => {
+	const flurry = (over: Partial<ResourceOption> = {}): ResourceOption => ({
+		id: 'monk_flurry',
+		resourceId: 'focus',
+		resourceName: 'Focus',
+		name: 'Flurry of Blows',
+		description: '',
+		action: `attack:${UNARMED_STRIKE_ID}:2`,
+		actionType: 'bonus_action',
+		cost: 1,
+		available: true,
+		...over,
+	});
+	const monk = (): Character => {
+		const c = newCharacter('kel', 'Kel', '5.5e');
+		c.play.autoCalc = true;
+		c.play.inCombat = true;
+		c.play.effects = [
+			{ iid: '1', label: 'grant', effects: ['grant_resource:focus:3:short'], positive: true },
+		];
+		return c;
+	};
+
+	it('rolls one entry per strike, and spends ONE bonus action for the pair', async () => {
+		const graph = await graphOf();
+		const character = monk();
+		combat.graph = graph;
+		combat.character = character;
+		const before = combat.tray.log.length;
+
+		combat.activateResourceOption(flurry());
+
+		expect(combat.tray.log.length - before).toBe(2); // two strikes, two log entries
+		expect(character.play.turn.bonus).toBe(1); // ONE bonus action, not one per strike
+		expect(combat.resources.resourceSpent('focus')).toBe(1);
+		// numbered, so the log says WHICH strike each line was
+		expect(combat.tray.log[0]?.label).toMatch(/2\/2$/);
+		expect(combat.tray.log[1]?.label).toMatch(/1\/2$/);
+	});
+
+	it('a weapon the character has not got is surfaced, not silently skipped', async () => {
+		const graph = await graphOf();
+		const character = monk();
+		combat.graph = graph;
+		combat.character = character;
+		const before = combat.tray.log.length;
+
+		combat.activateResourceOption(flurry({ action: 'attack:greatsword_we_do_not_carry:2' }));
+
+		expect(combat.tray.log.length).toBe(before); // nothing rolled…
+		expect(character.play.turn.bonus).toBe(1); // …though the action was still spent (all-or-nothing
+		expect(combat.resources.resourceSpent('focus')).toBe(1); // validates the COST, not the content)
+	});
+
+	it('a missing count means one strike, and a silly one is capped rather than obeyed', async () => {
+		const graph = await graphOf();
+		const character = monk();
+		combat.graph = graph;
+		combat.character = character;
+
+		const before = combat.tray.log.length; // the tray is a singleton, so count the DELTA
+
+		combat.activateResourceOption(flurry({ action: `attack:${UNARMED_STRIKE_ID}` }));
+		expect(combat.tray.log.length - before).toBe(1);
+		expect(combat.tray.log[0]?.label).toBe('Unarmed Strike'); // unnumbered when there is only one
+
+		character.play.turn.bonus = 0; // fresh turn for the second activation
+		combat.activateResourceOption(flurry({ action: `attack:${UNARMED_STRIKE_ID}:500` }));
+		expect(combat.tray.log.length - before).toBe(1 + 12); // capped, not five hundred log lines
+	});
+});
+
+/** UBUG-11 against the REAL content: the shipped Flurry row must actually carry the attack verb, in
+ *  BOTH editions. A synthetic option proves the executor; only this proves the feature. */
+describe.each([
+	['srd-2024', '5.5e' as const, 'SRD 5.2.1'],
+	['srd-2014', '5e' as const, 'SRD 5.1'],
+])('CombatVM · Flurry of Blows really strikes (%s)', (pack, system, source) => {
+	let character: Character;
+	beforeEach(async () => {
+		combat.graph = await realGraph(pack);
+		character = newCharacter('kel', 'Kel', system);
+		character.build.classes = [{ class: `class:${source}:monk`, level: 5 }];
+		character.play.inCombat = true;
+		combat.character = character;
+	});
+
+	it('the shipped option fires two Unarmed Strikes instead of toasting a note', () => {
+		const flurry = combat.sheet?.resourceOptions.find((o) => o.id.endsWith('flurry_of_blows'));
+		expect(flurry?.action).toBe(`attack:${UNARMED_STRIKE_ID}:2`);
+		if (!flurry) return;
+		const before = combat.tray.log.length;
+		combat.activateResourceOption(flurry);
+		expect(combat.tray.log.length - before).toBe(2);
+		expect(character.play.turn.bonus).toBe(1); // one Bonus Action for the pair
 	});
 });

@@ -25,8 +25,9 @@ export interface ResourceOption {
 	name: string;
 	description: string;
 	/** Bounded action token(s) the UI runs / displays: apply_condition / heal / roll / apply_effect /
-	 *  gain_action / rest:short|long / restore_resource:<id> / note. A `;`-separated LIST is a
-	 *  multi-action (Uncanny Metabolism = regain focus AND heal) — run in order on one activation. */
+	 *  attack:<weapon id>[:<count>] / gain_action / rest:short|long / restore_resource:<id> / note. A
+	 *  `;`-separated LIST is a multi-action (Uncanny Metabolism = regain focus AND heal) — run in order
+	 *  on one activation. */
 	action: string;
 	actionType: 'action' | 'bonus_action' | 'reaction' | 'free';
 	cost: number | 'x';

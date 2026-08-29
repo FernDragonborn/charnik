@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (54)
+## Duplicate suspects (55)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -44,6 +44,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `follow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
 - `groupOf` ×2 — src/lib/components/CommandPalette.svelte · src/routes/build/blocks/SpellsPane.svelte
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
+- `id` ×2 — src/lib/content/homebrew.ts · src/routes/combat/action-executor.svelte.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
 - `load` ×2 — src/lib/stores/app.svelte.ts · src/routes/+layout.ts
@@ -605,6 +606,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/combat/attacks.ts`
 
 - `interface DamagePart` — One typed slice of a weapon's damage: its dice pool, flat mod, and damage type.
+- `const UNARMED_STRIKE_ID` — The one id a bare-fisted attack answers to — it has no content row, and an action that says * "make two Unarmed Strik…
 - `interface Attack` — A weapon/unarmed attack row.
 - `function parseDamageParts` — Parse a weapon/spell damage string into its typed parts.
 - `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
@@ -1500,4 +1502,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 881 exports across 124 modules · 54 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 882 exports across 124 modules · 55 duplicate suspects._

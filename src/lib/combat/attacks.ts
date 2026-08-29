@@ -21,8 +21,16 @@ export interface DamagePart {
 	type: string;
 }
 
+/** The one id a bare-fisted attack answers to — it has no content row, and an action that says
+ *  "make two Unarmed Strikes" has to be able to name it. */
+export const UNARMED_STRIKE_ID = 'unarmed_strike';
+
 /** A weapon/unarmed attack row. */
 export interface Attack {
+	/** The BARE content id of the weapon behind it (`UNARMED_STRIKE_ID` for fists) — what an action
+	 *  token names when it fires this attack, so the match survives translation and re-sourcing.
+	 *  `name` is what a person reads; it is not an identity. */
+	id: string;
 	name: string;
 	toHit: number;
 	/** Human-readable damage (built from `damageParts`); shown in the panel. */
@@ -210,6 +218,7 @@ export function computeAttacks(
 		// typed magic damage (flaming +1d6 fire) rides as extra part(s) after the weapon's own types
 		const damageParts = [...baseParts, ...(w.extraParts ?? [])];
 		out.push({
+			id: row.id,
 			name: row.data.name_en,
 			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.attack,
 			dmg: formatDamageParts(damageParts),
@@ -226,6 +235,7 @@ export function computeAttacks(
 	const unarmedScopes = new Set(['melee']);
 	const unarmedScoped = scopedAttackBonus(sheet.facts, unarmedScopes);
 	out.push({
+		id: UNARMED_STRIKE_ID,
 		name: 'Unarmed Strike',
 		toHit: strMod + prof + unarmedScoped.attack,
 		scopes: [...unarmedScopes],
