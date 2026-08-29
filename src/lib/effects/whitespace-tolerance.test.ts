@@ -21,8 +21,8 @@ import { hasContentRepo } from '../../test-support/real-content';
 /** Every distinct `effects` token in the shipped CSVs. */
 function shippedTokens(): string[] {
 	const out = new Set<string>();
-	for (const pack of contentPacks() as string[])
-		for (const file of readdirSync(packDir(pack)).filter((f: string) => f.endsWith('.csv'))) {
+	for (const pack of contentPacks())
+		for (const file of readdirSync(packDir(pack)).filter((f) => f.endsWith('.csv'))) {
 			const body = readFileSync(`${packDir(pack)}/${file}`, 'utf8')
 				.replace(/^\uFEFF/, '') // written with a BOM (Excel safety) — strip before the #-filter
 				.split('\n')
