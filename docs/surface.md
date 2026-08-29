@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (53)
+## Duplicate suspects (54)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -42,6 +42,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `fileOf` ×2 — src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `files` ×2 — src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
 - `follow` ×2 — src/routes/combat/CombatMenus.svelte · src/routes/combat/blocks/EffectDurationMenu.svelte
+- `groupOf` ×2 — src/lib/components/CommandPalette.svelte · src/routes/build/blocks/SpellsPane.svelte
 - `has` ×2 — src/lib/components/ClassPicker.svelte · src/lib/content/translate.ts
 - `LABELS` ×2 — src/lib/content/detail.ts · src/lib/content/homebrew.ts
 - `link` ×2 — src/lib/content/spellAccess.ts · src/routes/+layout.svelte
@@ -1479,4 +1480,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 69 global classes · 50 components · 868 exports across 123 modules · 53 duplicate suspects._
+_45 tokens · 69 global classes · 50 components · 868 exports across 123 modules · 54 duplicate suspects._

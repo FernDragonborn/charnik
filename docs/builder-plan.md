@@ -15,11 +15,18 @@ Two panes, full-bleed, each scrolling on its own.
 currently derives, and every changeable thing on it is a click that opens the inspector on that
 choice. An unfilled thing renders as an empty slot that says what it will give, in crimson.
 
-**Right — the inspector (420px).** One choice at a time: what it is, the options with their
+**Right — the inspector (500px).** One choice at a time: what it is, the options with their
 compendium prose (the reused `WikiDetail` — one article renderer, never a builder-only summary), and
 **what taking it would do to the sheet** — computed by really applying the candidate to a trial draft
 and diffing the two derived sheets (`BuildVM.previewSheet` → `diffSheets`). Nothing is picked blind;
 that is the whole point of N3.
+
+**Every list of content rows is `OptionList` + `WikiDetail`, including the multi-select ones.** Spells
+and equipment are chosen the same way a species is: search, highlight, read the whole article, commit.
+`OptionList` takes `takenIds` (a list, so one-of and many-of are the same control) and an optional
+`groupOf`, which keeps a pre-sorted list's structure — spell levels — inside one flat, keyboard-walkable
+list. A wall of name-only chips is not an option list: fifty SRD spells with nothing but their names is
+picking blind, which is the one thing this page exists to prevent.
 
 ## Decisions taken
 

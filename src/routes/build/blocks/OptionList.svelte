@@ -13,20 +13,28 @@
 		options,
 		query = $bindable(''),
 		previewId,
-		currentId,
+		takenIds,
 		onpreview,
 		placeholder,
-		lead
+		lead,
+		groupOf
 	}: {
 		options: LoadedRow[];
 		query?: string;
 		previewId: string | null;
-		currentId: string | null;
+		/** Already chosen. A list, because the same control serves a one-of pick (species, a feat) and
+		 *  a many-of one (spells) — one is the other with a single element. */
+		takenIds: string[];
 		onpreview: (id: string) => void;
 		placeholder: string;
 		/** An extra row above the content rows (the ASI pseudo-option on a feat slot). */
 		lead?: Snippet;
+		/** Section label for a row. A label that differs from the row above starts a new section, so a
+		 *  pre-sorted list (spells by level) keeps its structure inside one flat, walkable list. */
+		groupOf?: (row: LoadedRow) => string;
 	} = $props();
+
+	const taken = $derived(new Set(takenIds));
 
 	/** ↑/↓ walk the rendered order and preview as they go, so the keyboard reads exactly what the
 	 *  mouse would. */
@@ -54,18 +62,23 @@
 
 <div class="rows scrolly" role="listbox" tabindex="-1" aria-label={$_('build.inspector.options')} onkeydown={walk}>
 	{#if lead}{@render lead()}{/if}
-	{#each options as row (row.effectiveId)}
+	{#each options as row, i (row.effectiveId)}
 		{@const meta = entryMeta(row)}
+		{@const group = groupOf?.(row)}
+		{@const prev = options[i - 1]}
+		{#if group && (!prev || group !== groupOf?.(prev))}
+			<div class="glabel">{group}</div>
+		{/if}
 		<button
 			class="orow"
 			role="option"
 			aria-selected={row.effectiveId === previewId}
 			class:preview={row.effectiveId === previewId}
-			class:current={row.effectiveId === currentId}
+			class:current={taken.has(row.effectiveId)}
 			onclick={() => onpreview(row.effectiveId)}
 		>
 			<b>{rowName(row)}</b>
-			{#if row.effectiveId === currentId}<span class="taken">{$_('build.inspector.taken')}</span>{/if}
+			{#if taken.has(row.effectiveId)}<span class="taken">{$_('build.inspector.taken')}</span>{/if}
 			{#if meta}<span class="ometa">{meta}</span>{/if}
 		</button>
 	{:else}
@@ -113,12 +126,23 @@
 		display: flex;
 		flex-direction: column;
 		gap: 5px;
-		max-height: 280px;
+		max-height: 340px;
 		overflow: auto;
 		padding: 8px 2px;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		margin-top: 9px;
+	}
+	.glabel {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		letter-spacing: var(--tracking-label);
+		text-transform: uppercase;
+		color: var(--color-text-muted);
+		padding: 6px 8px 2px;
+		position: sticky;
+		top: -8px;
+		background: var(--color-bg);
 	}
 	.orow {
 		all: unset;

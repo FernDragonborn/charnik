@@ -1,20 +1,45 @@
 <script lang="ts">
-	// Spells, per caster class, grouped by level, with the caps that decide whether you're finished.
-	// Strict shows only what this character may legally take; Free lifts every gate. Search is here
-	// because the SRD spell list is long enough that a wall of chips is unusable without it (N5·6).
+	// Spells, per caster class, with the caps that decide whether you're finished. Strict shows only
+	// what this character may legally take; Free lifts every gate.
+	//
+	// It reads like the pick targets next door — the SAME OptionList and the SAME WikiDetail — because
+	// the question is the same one: nothing is chosen blind. A wall of name-only chips was unusable
+	// (fifty SRD spells, and no way to learn what any of them does without leaving the builder); here
+	// a spell is highlighted, read in full, and only then taken. Multi-select is the one difference,
+	// so the commit is a button under the article rather than the inspector's single Take footer.
 	import { _ } from '$lib/i18n';
 	import { build, rowName } from '../build-view-model.svelte';
+	import { buildDetail } from '$lib/content/detail';
+	import type { LoadedRow } from '$lib/content/loader';
+	import { app } from '$lib/stores/app.svelte';
+	import WikiDetail from '$lib/components/WikiDetail.svelte';
+	import OptionList from './OptionList.svelte';
 	const b = build;
 
 	let query = $state('');
+	/** The spell being READ. Shared across caster classes: one article at a time, like the pick panes. */
+	let previewId = $state<string | null>(null);
+
 	const match = (name: string) =>
 		!query.trim() || name.toLowerCase().includes(query.trim().toLowerCase());
+	const previewRow = $derived(previewId ? b.row(previewId) : undefined);
+	const detail = $derived(
+		previewRow ? buildDetail(previewRow, 'spell', undefined, app.activeLocale) : null,
+	);
+	const isTaken = $derived(!!previewId && b.draft.selectedSpells.includes(previewId));
+
+	const levelLabel = (level: number) =>
+		level === 0
+			? $_('build.spells.groupCantrips')
+			: $_('build.spells.groupLevel', { values: { level } });
+	/** Level → section label, for a list already sorted by level. */
+	const groupOf = (row: LoadedRow) =>
+		levelLabel(row.type === 'spell' ? Number(row.data.level ?? 0) : 0);
 </script>
 
 {#if b.spellPicker.length}
-	<input class="text-field" placeholder={$_('build.spells.search')} bind:value={query} />
-
 	{#each b.spellPicker as pc (pc.profile.classEffectiveId)}
+		{@const options = pc.groups.flatMap((g) => g.spells).filter((s) => match(rowName(s)))}
 		<div class="caster">
 			<div class="card-head">
 				<span class="eyebrow">{pc.profile.className}</span>
@@ -32,29 +57,32 @@
 				</span>
 			</div>
 
-			{#each pc.groups as g (g.level)}
-				{@const spells = g.spells.filter((s) => match(rowName(s)))}
-				{#if spells.length}
-					<div class="sectlab">
-						<span
-							>{g.level === 0
-								? $_('build.spells.groupCantrips')
-								: $_('build.spells.groupLevel', { values: { level: g.level } })}</span
-						>
-					</div>
-					<div class="chips spaced">
-						{#each spells as s (s.effectiveId)}
-							<button
-								class="pick-chip"
-								class:on={b.draft.selectedSpells.includes(s.effectiveId)}
-								onclick={() => b.toggleSpell(s.effectiveId)}>{rowName(s)}</button
-							>
-						{/each}
-					</div>
-				{/if}
-			{/each}
+			<OptionList
+				{options}
+				bind:query
+				{previewId}
+				takenIds={b.draft.selectedSpells}
+				onpreview={(id) => (previewId = id)}
+				placeholder={$_('build.spells.search')}
+				{groupOf}
+			/>
 		</div>
 	{/each}
+
+	{#if previewRow}
+		<!-- above the article, like InventoryPane: a long spell must not put its own commit off-screen -->
+		<button class="btn primary take" onclick={() => previewId && b.toggleSpell(previewId)}>
+			{$_(isTaken ? 'build.spells.remove' : 'build.spells.add', {
+				values: { name: rowName(previewRow) }
+			})}
+		</button>
+	{/if}
+
+	{#if detail}
+		<div class="article"><WikiDetail {detail} /></div>
+	{:else}
+		<p class="subtext">{$_('build.inspector.highlightToRead')}</p>
+	{/if}
 {:else if b.classRow}
 	<p class="subtext">{$_('build.spells.noCasting', { values: { class: rowName(b.classRow) } })}</p>
 {:else}
@@ -71,5 +99,8 @@
 	.caster:first-of-type {
 		border-top: 0;
 		padding-top: 0;
+	}
+	.take {
+		width: 100%;
 	}
 </style>

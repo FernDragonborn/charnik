@@ -456,6 +456,7 @@
 			"armorBlock": "{note} — {source} is armour you aren't trained in.",
 			"noneChosen": "No spells chosen yet. Cantrips are always ready; leveled spells start prepared.",
 			"noCasting": "{class} casts no spells of its own.",
+			"add": "Add {name}",
 			"remove": "Remove {name}",
 			"cantrips": "cantrips {chosen}/{cap}",
 			"prepared": "prepared {chosen}/{cap}",

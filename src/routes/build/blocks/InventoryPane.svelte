@@ -26,7 +26,7 @@
 	{options}
 	bind:query
 	{previewId}
-	currentId={null}
+	takenIds={b.draft.inventory.map((i) => i.item)}
 	onpreview={(id) => (previewId = id)}
 	placeholder={$_('build.inventory.search')}
 />

@@ -138,7 +138,7 @@
 	}
 	.split {
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 420px;
+		grid-template-columns: minmax(0, 1fr) 500px;
 		gap: 16px;
 		flex: 1;
 		min-height: 0;

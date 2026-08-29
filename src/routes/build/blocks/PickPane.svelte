@@ -18,7 +18,7 @@
 		options={ins.options}
 		bind:query={ins.query}
 		previewId={ins.previewId}
-		currentId={ins.pick.currentId}
+		takenIds={ins.pick.currentId ? [ins.pick.currentId] : []}
 		onpreview={(id) => (ins.previewId = id)}
 		placeholder={$_('build.inspector.searchIn', { values: { count: ins.pick.options.length } })}
 	/>
