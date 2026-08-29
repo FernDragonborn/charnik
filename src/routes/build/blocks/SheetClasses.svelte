@@ -21,6 +21,21 @@
 	);
 	const gained = $derived(features.filter((f) => f.gained));
 	const upcoming = $derived(features.filter((f) => !f.gained));
+
+	/** Multiclass features are two lists that happen to share a sheet, not one list: a Wizard's
+	 *  Spellcasting and a Cleric's Spellcasting are different features with the same name, and
+	 *  interleaving them by level makes neither readable. Single-class collapses to one group with
+	 *  no heading, so nothing is added for the common case. */
+	const byClass = $derived.by(() => {
+		const groups = new Map<string, typeof features>();
+		for (const f of features) groups.set(f.className, [...(groups.get(f.className) ?? []), f]);
+		return [...groups].map(([className, lines]) => ({
+			className,
+			gained: lines.filter((f) => f.gained),
+			upcoming: lines.filter((f) => !f.gained)
+		}));
+	});
+	const multi = $derived(byClass.length > 1);
 </script>
 
 <div class="card">
@@ -95,9 +110,9 @@
 		</div>
 	{/each}
 
-	{#if features.length}
+	{#snippet featureGrid(gainedLines: typeof features, upcomingLines: typeof features)}
 		<div class="features">
-			{#each gained as f (`${f.className}:${f.row.effectiveId}:${f.level}`)}
+			{#each gainedLines as f (`${f.className}:${f.row.effectiveId}:${f.level}`)}
 				{@const prose = rowText(f.row)}
 				<div class="feature">
 					<span class="lvl" class:sub={f.fromSubclass}>{f.level}</span>
@@ -107,7 +122,7 @@
 					</div>
 				</div>
 			{/each}
-			{#each upcoming as f (`${f.className}:${f.row.effectiveId}:${f.level}`)}
+			{#each upcomingLines as f (`${f.className}:${f.row.effectiveId}:${f.level}`)}
 				<div class="feature ahead">
 					<span class="lvl">{f.level}</span>
 					<div class="ftext">
@@ -122,6 +137,24 @@
 				</div>
 			{/each}
 		</div>
+	{/snippet}
+
+	{#if features.length}
+		{#if multi}
+			{#each byClass as g (g.className)}
+				<div class="clsgroup">
+					<div class="clslabel">
+						<span class="eyebrow">{g.className}</span>
+						<span class="trail"
+							>{$_('build.classes.featureCount', { values: { count: g.gained.length } })}</span
+						>
+					</div>
+					{@render featureGrid(g.gained, g.upcoming)}
+				</div>
+			{/each}
+		{:else}
+			{@render featureGrid(gained, upcoming)}
+		{/if}
 	{/if}
 </div>
 
@@ -169,6 +202,23 @@
 		margin-top: 11px;
 		padding-top: 11px;
 		border-top: 1px solid var(--color-border);
+	}
+	/* one block per class, so two Spellcastings never sit side by side unlabelled */
+	.clsgroup + .clsgroup {
+		margin-top: 6px;
+	}
+	.clslabel {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+		margin-top: 11px;
+		padding-top: 11px;
+		border-top: 1px solid var(--color-border);
+	}
+	.clsgroup .features {
+		margin-top: 4px;
+		padding-top: 0;
+		border-top: 0;
 	}
 	.feature {
 		display: flex;

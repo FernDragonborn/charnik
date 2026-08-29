@@ -471,7 +471,6 @@
 			"maxHp": "Max HP",
 			"initiative": "Initiative",
 			"speed": "Speed · {metres} m",
-			"passivePerception": "Passive perception",
 			"hitDice": "Hit dice",
 			"hitDiceHint": "Spent on a short rest to heal",
 			"spellDc": "Spell save DC",
@@ -501,7 +500,6 @@
 		"defenses": {
 			"saves": "Saving throws",
 			"noneProficient": "none proficient",
-			"passiveSenses": "Passive senses",
 			"trained": "Trained & resistant",
 			"armour": "Armour",
 			"weapons": "Weapons",
@@ -551,19 +549,15 @@
 		"resources": {
 			"title": "Resources",
 			"hint": "what your features hand you, and when it comes back",
-			"hitDice": "Hit dice",
 			"pool": "{max} · {recharge} · {source}",
-			"hitDicePool": "{max} × {die} · {recharge}",
 			"rechargeShort": "short rest",
 			"rechargeLong": "long rest",
 			"rechargeOther": "special",
-			"spendOnShortRest": "spent on a short rest",
-			"halfInstead": "short rest heals ½ max HP instead",
-			"noneForClass": "{class} grants no tracked pool at this level.",
 			"needClass": "Choose a class to see the pools it grants."
 		},
 		"skills": {
 			"title": "Skills",
+			"columns": "check · passive",
 			"classPicks": "class picks {chosen}/{cap}",
 			"fromBackground": "{count, plural, one {# from background} other {# from background}}",
 			"expertise": "expertise {used}/{cap}",

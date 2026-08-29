@@ -471,7 +471,6 @@
 			"maxHp": "Макс. HP",
 			"initiative": "Ініціатива",
 			"speed": "Швидкість · {metres} м",
-			"passivePerception": "Пасивна уважність",
 			"hitDice": "Кістки життя",
 			"hitDiceHint": "Витрачаються на короткому відпочинку заради лікування",
 			"spellDc": "DC заклять",
@@ -501,7 +500,6 @@
 		"defenses": {
 			"saves": "Рятувальні кидки",
 			"noneProficient": "без володінь",
-			"passiveSenses": "Пасивні чуття",
 			"trained": "Володіння та стійкість",
 			"armour": "Броня",
 			"weapons": "Зброя",
@@ -551,19 +549,15 @@
 		"resources": {
 			"title": "Ресурси",
 			"hint": "що дають вам особливості й коли це повертається",
-			"hitDice": "Кістки життя",
 			"pool": "{max} · {recharge} · {source}",
-			"hitDicePool": "{max} × {die} · {recharge}",
 			"rechargeShort": "короткий відпочинок",
 			"rechargeLong": "довгий відпочинок",
 			"rechargeOther": "особливо",
-			"spendOnShortRest": "витрачаються на короткому відпочинку",
-			"halfInstead": "короткий відпочинок натомість лікує ½ макс. HP",
-			"noneForClass": "{class} не дає відстежуваних ресурсів на цьому рівні.",
 			"needClass": "Оберіть клас, щоб побачити його ресурси."
 		},
 		"skills": {
 			"title": "Навички",
+			"columns": "перевірка · пасив",
 			"classPicks": "вибір класу {chosen}/{cap}",
 			"fromBackground": "{count, plural, one {# від бекграунду} few {# від бекграунду} many {# від бекграунду} other {# від бекграунду}}",
 			"expertise": "експертиза {used}/{cap}",

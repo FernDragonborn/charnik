@@ -1,7 +1,11 @@
 <script lang="ts">
-	// Saving throws, passive senses, and what this character is trained in or shrugs off. Three
-	// read-outs that share a row because they answer one question: what happens to you when something
-	// happens TO you. Every number carries its provenance on hover.
+	// Saving throws, and what this character is trained in or shrugs off. Two read-outs that share a
+	// row because they answer one question: what happens to you when something happens TO you.
+	// Every number carries its provenance on hover.
+	//
+	// Passive scores are NOT here: the sheet has one for every skill (`derive.ts` `passives`), so they
+	// read in the skill list beside the check they belong to, rather than in a card that could only
+	// ever show three of eighteen.
 	import { _ } from '$lib/i18n';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import { ABILITIES } from '$lib/character/schema';
@@ -67,27 +71,6 @@
 		</div>
 
 		<div class="card">
-			<div class="card-head"><span class="eyebrow">{$_('build.defenses.passiveSenses')}</span></div>
-			<div class="passives">
-				{#each ['perception', 'insight', 'investigation'] as const as id (id)}
-					<div class="tile" title={why(s.passives[id])}>
-						<b>{s.passives[id].value}</b><small>{titleCase(id)}</small>
-					</div>
-				{/each}
-			</div>
-			{#if s.flySpeed.value || s.swimSpeed.value}
-				<div class="tags">
-					{#if s.flySpeed.value}<span class="tag gold"
-							>{$_('build.defenses.fly', { values: { feet: s.flySpeed.value } })}</span
-						>{/if}
-					{#if s.swimSpeed.value}<span class="tag gold"
-							>{$_('build.defenses.swim', { values: { feet: s.swimSpeed.value } })}</span
-						>{/if}
-				</div>
-			{/if}
-		</div>
-
-		<div class="card">
 			<div class="card-head"><span class="eyebrow">{$_('build.defenses.trained')}</span></div>
 			<div class="facts">
 				<b>{$_('build.defenses.armour')}</b><span>{armor}</span>
@@ -96,6 +79,14 @@
 				<b>{$_('build.defenses.languages')}</b><span>{languages || DASH}</span>
 			</div>
 			<div class="tags">
+				<!-- fly/swim moved here when the passive-senses card went: they are things you shrug off
+				     gravity or water with, and this card is already "what is true of your body". -->
+				{#if s.flySpeed.value}<span class="tag gold"
+						>{$_('build.defenses.fly', { values: { feet: s.flySpeed.value } })}</span
+					>{/if}
+				{#if s.swimSpeed.value}<span class="tag gold"
+						>{$_('build.defenses.swim', { values: { feet: s.swimSpeed.value } })}</span
+					>{/if}
 				{#if hasDefenses}
 					{#each defenses.resist as d (d)}<span class="tag gold"
 							>{$_('build.defenses.resists', { values: { type: d } })}</span
@@ -123,7 +114,7 @@
 <style>
 	.row3 {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 		gap: 14px;
 		align-items: start;
 	}
@@ -160,18 +151,6 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-sm);
-	}
-	.passives {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 6px;
-	}
-	.passives .tile {
-		background: var(--color-surface-2);
-		padding: 8px 4px;
-	}
-	.passives .tile b {
-		font-size: var(--font-size-md);
 	}
 	.tags {
 		display: flex;

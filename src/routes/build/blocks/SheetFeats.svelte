@@ -78,9 +78,11 @@
 </div>
 
 <style>
+	/* one slot per row: this card now sits in the narrower half of the pair, and a 280px minimum
+	   forced it to overflow rather than reflow. */
 	.slots {
 		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		grid-template-columns: minmax(0, 1fr);
 		gap: 8px;
 	}
 	.featrow {

@@ -102,8 +102,13 @@
 				<SheetAttacks />
 				<SheetSpells />
 				<SheetResources />
-				<SheetSkills />
-				<SheetFeats />
+				<!-- Skills at full width left a wide hole down its middle: 18 rows in two columns simply
+				     do not need 690px. Paired with the feat slots, which are few and short, the leftover
+				     room lands BELOW the shorter card instead of inside the taller one. -->
+				<div class="sheet-pair">
+					<SheetSkills />
+					<SheetFeats />
+				</div>
 				<SheetInventory />
 				<SheetStory />
 				<ReviewBar {create} />
@@ -154,6 +159,19 @@
 		overflow: auto;
 		min-height: 0;
 		padding-right: 4px;
+	}
+	/* skills is the taller and denser of the two, so it takes the larger share; `start` keeps the
+	   short card short instead of stretching it to match. */
+	.sheet-pair {
+		display: grid;
+		grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+		gap: 14px;
+		align-items: start;
+	}
+	@media (max-width: 900px) {
+		.sheet-pair {
+			grid-template-columns: 1fr;
+		}
 	}
 	.inspector {
 		border-left: 1px solid var(--color-border);

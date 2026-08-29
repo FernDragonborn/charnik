@@ -37,6 +37,7 @@
 				{@const pickable = b.skillPickable(skill)}
 				{@const expert = b.draft.expertise.includes(skill)}
 				{@const comp = b.sheet?.skills[skill]}
+				{@const pas = b.sheet?.passives[skill]}
 				<div class="skill" class:on class:dim={!on && !pickable}>
 					<button
 						class="name"
@@ -59,6 +60,10 @@
 						>
 					{/if}
 					<b class="val">{comp ? signed(comp.value) : ''}</b>
+					<!-- every skill has a passive score, not just the three the old card listed (derive.ts
+					     `passives` is keyed by SkillId) — so it reads here, next to the check it belongs to,
+					     instead of in a separate card that could only ever show three of them. -->
+					{#if pas}<span class="passive" title={why(pas)}>{pas.value}</span>{/if}
 				</div>
 			{/each}
 		</div>
@@ -164,5 +169,19 @@
 	}
 	.skill.on .val {
 		color: var(--color-text);
+	}
+	/* the passive score: quieter than the check, because it is what happens without rolling */
+	.passive {
+		flex: none;
+		min-width: 20px;
+		text-align: right;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		color: var(--color-text-muted);
+		border-left: 1px solid var(--color-border);
+		padding-left: 6px;
+	}
+	.skill.on .passive {
+		color: var(--color-resource);
 	}
 </style>

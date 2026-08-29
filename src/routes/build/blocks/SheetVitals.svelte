@@ -21,9 +21,6 @@
 				>{$_('build.vitals.speed', { values: { metres: Math.round(s.speed.value * 0.3) } })}</small
 			>
 		</div>
-		<div class="tile" title={why(s.passives.perception)}>
-			<b>{s.passives.perception.value}</b><small>{$_('build.vitals.passivePerception')}</small>
-		</div>
 		{#if s.hitDice.length}
 			<div class="tile" title={$_('build.vitals.hitDiceHint')}>
 				<b>{s.hitDice.map((h) => `${h.max}${h.die}`).join(' · ')}</b><small>{$_('build.vitals.hitDice')}</small>
@@ -41,10 +38,29 @@
 {/if}
 
 <style>
+	/* ONE row, always. `auto-fit` wrapped a caster's seven tiles onto a second row that was mostly
+	   empty air; these are the headline numbers and they read as a strip, so they share the width
+	   instead of claiming a minimum and spilling. */
 	.vitals {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+		display: flex;
 		gap: 9px;
+	}
+	.vitals :global(.tile) {
+		flex: 1 1 0;
+		min-width: 0;
+		padding-inline: 4px;
+	}
+	.vitals :global(.tile small) {
+		display: block;
+		line-height: 1.2;
+		letter-spacing: 0.06em;
+	}
+	/* below this the strip stops fitting seven tiles legibly and wrapping is the lesser evil */
+	@media (max-width: 900px) {
+		.vitals {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+		}
 	}
 	.tile.gold b {
 		color: var(--color-resource);

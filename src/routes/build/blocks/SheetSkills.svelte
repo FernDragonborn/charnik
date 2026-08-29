@@ -11,6 +11,8 @@
 <div class="card">
 	<div class="card-head">
 		<span class="eyebrow">{$_('build.skills.title')}</span>
+		<!-- names the two number columns; without it the second one is an unexplained integer -->
+		<span class="trail">{$_('build.skills.columns')}</span>
 		<span class="spacer"></span>
 		{#if b.classSkillCount > 0}
 			<span class="trail" class:open={b.skillChosenCount < b.classSkillCount}>

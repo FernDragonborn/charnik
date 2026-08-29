@@ -1,9 +1,13 @@
 <script lang="ts">
 	// Everything countable this character owns: the pools their features granted (rage, ki, channel
 	// divinity — whatever the class actually has, discovered from `grant_resource` effects, never a
-	// hardcoded list) plus hit dice. Read-only here; they are spent in the combat view.
+	// hardcoded list). Read-only here; they are spent in the combat view.
+	//
+	// Hit dice are NOT a pool here. Every character has them, so a card per die type said nothing
+	// about THIS character while taking a card's worth of room — and under the default ½-HP short
+	// rest they are not even spent. They read as one tile in the vitals strip instead.
 	import { _ } from '$lib/i18n';
-	import { build, rowName } from '../build-view-model.svelte';
+	import { build } from '../build-view-model.svelte';
 	const b = build;
 
 	const s = $derived(b.sheet);
@@ -19,7 +23,7 @@
 	const PIP_LIMIT = 12;
 </script>
 
-{#if resources.length || s?.hitDice.length}
+{#if resources.length}
 	<div class="card">
 		<div class="card-head">
 			<span class="eyebrow">{$_('build.resources.title')}</span>
@@ -44,39 +48,7 @@
 						>
 				</div>
 			{/each}
-			{#each s?.hitDice ?? [] as pool (pool.die)}
-				<div class="pool">
-					<b>{$_('build.resources.hitDice')}</b>
-					{#if pool.max <= PIP_LIMIT}
-						<div class="pips">
-							{#each Array.from({ length: pool.max }, (_, i) => i) as i (i)}<span class="pip plain"></span>{/each}
-						</div>
-					{:else}
-						<span class="big">{pool.max}</span>
-					{/if}
-					<small
-							>{$_('build.resources.hitDicePool', {
-								values: {
-									max: pool.max,
-									die: pool.die,
-									recharge: $_(
-										b.draft.shortRestMode === 'dice'
-											? 'build.resources.spendOnShortRest'
-											: 'build.resources.halfInstead'
-									)
-								}
-							})}</small
-						>
-				</div>
-			{/each}
 		</div>
-		{#if !resources.length}
-			<p class="subtext note">
-				{b.classRow
-					? $_('build.resources.noneForClass', { values: { class: rowName(b.classRow) } })
-					: $_('build.resources.needClass')}
-			</p>
-		{/if}
 	</div>
 {/if}
 
