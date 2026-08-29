@@ -142,7 +142,7 @@
 		   ends: it was cramped on a wide screen and would crowd the sheet on a narrow one. It takes a
 		   share of the window instead, floored so the article never squeezes and capped so the sheet
 		   never becomes the smaller pane. */
-		grid-template-columns: minmax(0, 1fr) clamp(480px, 32vw, 680px);
+		grid-template-columns: minmax(0, 1fr) clamp(520px, 40vw, 880px);
 		gap: 16px;
 		flex: 1;
 		min-height: 0;

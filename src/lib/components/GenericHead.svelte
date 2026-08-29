@@ -102,7 +102,7 @@
 		margin-top: 2px;
 		overflow-wrap: anywhere;
 	}
-	@media (max-width: 560px) {
+	@container article (max-width: 560px) {
 		.abilities {
 			grid-template-columns: repeat(3, 1fr);
 		}

@@ -172,9 +172,12 @@
 		justify-content: center;
 		gap: 5px;
 	}
+	/* auto-fit rather than a fixed pair: the same head is read in a wide compendium pane and in a
+	   builder inspector, and the cells should pack to whatever fits instead of squeezing "30 feet
+	   (9.1 m)" onto two lines because the column count was decided elsewhere. */
 	.stat-cells {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
 		gap: 8px;
 		align-content: start;
 	}
@@ -184,8 +187,10 @@
 		border-radius: 9px;
 		padding: 7px 11px;
 	}
+	/* full row whatever the auto-fit column count turns out to be — `span 2` would invent an implicit
+	   second column when only one fits */
 	.stat-cell.span {
-		grid-column: span 2;
+		grid-column: 1 / -1;
 	}
 	.stat-cell .stat-key {
 		font-size: var(--font-size-micro);
@@ -201,7 +206,7 @@
 		font-weight: 700;
 		margin-left: 1px;
 	}
-	@media (max-width: 560px) {
+	@container article (max-width: 560px) {
 		.strip {
 			grid-template-columns: 1fr;
 		}

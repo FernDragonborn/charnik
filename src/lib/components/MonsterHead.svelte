@@ -204,7 +204,7 @@
 	.band-row.defenses .band-value {
 		color: var(--color-accent-bright);
 	}
-	@media (max-width: 560px) {
+	@container article (max-width: 560px) {
 		.content-cols {
 			grid-template-columns: 1fr;
 		}
