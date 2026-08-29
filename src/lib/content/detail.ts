@@ -365,18 +365,32 @@ export function buildDetail(
 	};
 }
 
+/** "60 feet" → "60 ft". The one safe swap on free SRD text, and it is on every single row. */
+const shortRange = (s: string): string => s.replace(/\bfeet\b/i, 'ft').replace(/-foot\b/i, '-ft');
+
+/** The casting time both editions spell for a plain action — 2014 writes "1 action", 2024 "Action". */
+const PLAIN_ACTION = /^(1\s+)?action$/i;
+
 /** The small sub-line under an entry's name in the list. */
 export function entryMeta(row: LoadedRow): string {
 	if (row.type === 'spell') {
 		const d = row.data;
-		const res =
-			d.resolution &&
-			d.resolution !== 'none' &&
-			d.resolution !== 'attack' &&
-			d.resolution !== 'save'
-				? String(d.resolution)
-				: '';
-		return [d.school ? String(d.school) : '', d.damage ? String(d.damage) : res]
+		const casting = String(d.casting_time ?? '');
+		return [
+			d.school ? String(d.school) : '',
+			// A plain action is the default and true of most spells — printing it on every row is
+			// noise, while a bonus action or a reaction is exactly what decides whether a spell is
+			// castable this turn. Only the unusual casting time earns the space.
+			PLAIN_ACTION.test(casting) ? '' : casting,
+			d.range ? shortRange(String(d.range)) : '',
+			d.damage ? String(d.damage) : '',
+			d.resolution === 'save' && d.save_ability
+				? `${String(d.save_ability).toUpperCase()} save`
+				: '',
+			d.resolution === 'attack' ? 'attack' : '',
+			d.concentration ? 'conc.' : '',
+			d.ritual ? 'ritual' : '',
+		]
 			.filter(Boolean)
 			.join(' · ');
 	}

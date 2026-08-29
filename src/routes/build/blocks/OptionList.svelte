@@ -15,6 +15,7 @@
 		previewId,
 		takenIds,
 		onpreview,
+		onactivate,
 		placeholder,
 		lead,
 		groupOf
@@ -25,7 +26,16 @@
 		/** Already chosen. A list, because the same control serves a one-of pick (species, a feat) and
 		 *  a many-of one (spells) — one is the other with a single element. */
 		takenIds: string[];
+		/** Highlight — what the prose and the diff follow. Never commits anything. */
 		onpreview: (id: string) => void;
+		/**
+		 * Commit, when the target has nothing to confirm. A many-of list (spells, equipment) toggles
+		 * the row you clicked and is undone by clicking it again, so a separate Take button would be a
+		 * confirmation step over an already-reversible act. A one-of pick leaves this unset: there the
+		 * click has to stay a preview, because the whole point is reading the diff before taking it.
+		 * Arrow keys only ever preview — walking a list must not commit six things on the way down.
+		 */
+		onactivate?: (id: string) => void;
 		placeholder: string;
 		/** An extra row above the content rows (the ASI pseudo-option on a feat slot). */
 		lead?: Snippet;
@@ -42,6 +52,13 @@
 		const ids = options.map((o) => o.effectiveId);
 		if (!ids.length) return;
 		const at = previewId ? ids.indexOf(previewId) : -1;
+		// Enter is a left click on the highlighted row (ui.md §5) — the walk happens from the search
+		// box, so the row itself never has focus for the browser's own Enter-on-a-button to fire.
+		if (event.code === 'Enter' && previewId && onactivate) {
+			event.preventDefault();
+			onactivate(previewId);
+			return;
+		}
 		let next: number | null = null;
 		if (event.code === 'ArrowDown') next = Math.min(ids.length - 1, at + 1);
 		else if (event.code === 'ArrowUp') next = at <= 0 ? 0 : at - 1;
@@ -75,7 +92,10 @@
 			aria-selected={row.effectiveId === previewId}
 			class:preview={row.effectiveId === previewId}
 			class:current={taken.has(row.effectiveId)}
-			onclick={() => onpreview(row.effectiveId)}
+			onclick={() => {
+				onpreview(row.effectiveId);
+				onactivate?.(row.effectiveId);
+			}}
 		>
 			<b>{rowName(row)}</b>
 			{#if taken.has(row.effectiveId)}<span class="taken">{$_('build.inspector.taken')}</span>{/if}
@@ -125,7 +145,7 @@
 	.rows {
 		display: flex;
 		flex-direction: column;
-		gap: 5px;
+		gap: 3px;
 		max-height: 340px;
 		overflow: auto;
 		padding: 8px 2px;
@@ -152,7 +172,7 @@
 		align-items: baseline;
 		gap: 8px;
 		flex-wrap: wrap;
-		padding: 8px 11px;
+		padding: 5px 10px;
 		margin: 0 6px;
 		border: 1px solid var(--color-border);
 		border-radius: 9px;

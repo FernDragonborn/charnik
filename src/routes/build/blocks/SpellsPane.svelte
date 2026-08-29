@@ -4,9 +4,11 @@
 	//
 	// It reads like the pick targets next door — the SAME OptionList and the SAME WikiDetail — because
 	// the question is the same one: nothing is chosen blind. A wall of name-only chips was unusable
-	// (fifty SRD spells, and no way to learn what any of them does without leaving the builder); here
-	// a spell is highlighted, read in full, and only then taken. Multi-select is the one difference,
-	// so the commit is a button under the article rather than the inspector's single Take footer.
+	// (fifty SRD spells, and no way to learn what any of them does without leaving the builder).
+	//
+	// A click TAKES the spell and opens its article; clicking it again gives it back. There is no
+	// confirm step, because picking here is already reversible in one click — the Take footer next
+	// door exists to let you read a diff first, and a spell has no diff to read.
 	import { _ } from '$lib/i18n';
 	import { build, rowName } from '../build-view-model.svelte';
 	import { buildDetail } from '$lib/content/detail';
@@ -26,7 +28,6 @@
 	const detail = $derived(
 		previewRow ? buildDetail(previewRow, 'spell', undefined, app.activeLocale) : null,
 	);
-	const isTaken = $derived(!!previewId && b.draft.selectedSpells.includes(previewId));
 
 	const levelLabel = (level: number) =>
 		level === 0
@@ -63,20 +64,12 @@
 				{previewId}
 				takenIds={b.draft.selectedSpells}
 				onpreview={(id) => (previewId = id)}
+				onactivate={b.toggleSpell}
 				placeholder={$_('build.spells.search')}
 				{groupOf}
 			/>
 		</div>
 	{/each}
-
-	{#if previewRow}
-		<!-- above the article, like InventoryPane: a long spell must not put its own commit off-screen -->
-		<button class="btn primary take" onclick={() => previewId && b.toggleSpell(previewId)}>
-			{$_(isTaken ? 'build.spells.remove' : 'build.spells.add', {
-				values: { name: rowName(previewRow) }
-			})}
-		</button>
-	{/if}
 
 	{#if detail}
 		<div class="article"><WikiDetail {detail} /></div>
@@ -99,8 +92,5 @@
 	.caster:first-of-type {
 		border-top: 0;
 		padding-top: 0;
-	}
-	.take {
-		width: 100%;
 	}
 </style>

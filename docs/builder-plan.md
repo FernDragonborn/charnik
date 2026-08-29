@@ -15,18 +15,26 @@ Two panes, full-bleed, each scrolling on its own.
 currently derives, and every changeable thing on it is a click that opens the inspector on that
 choice. An unfilled thing renders as an empty slot that says what it will give, in crimson.
 
-**Right — the inspector (500px).** One choice at a time: what it is, the options with their
+**Right — the inspector (`clamp(480px, 32vw, 680px)`).** One choice at a time: what it is, the options with their
 compendium prose (the reused `WikiDetail` — one article renderer, never a builder-only summary), and
 **what taking it would do to the sheet** — computed by really applying the candidate to a trial draft
 and diffing the two derived sheets (`BuildVM.previewSheet` → `diffSheets`). Nothing is picked blind;
 that is the whole point of N3.
 
 **Every list of content rows is `OptionList` + `WikiDetail`, including the multi-select ones.** Spells
-and equipment are chosen the same way a species is: search, highlight, read the whole article, commit.
+and equipment are chosen the same way a species is: search, read the whole article, commit.
 `OptionList` takes `takenIds` (a list, so one-of and many-of are the same control) and an optional
 `groupOf`, which keeps a pre-sorted list's structure — spell levels — inside one flat, keyboard-walkable
 list. A wall of name-only chips is not an option list: fifty SRD spells with nothing but their names is
-picking blind, which is the one thing this page exists to prevent.
+picking blind, which is the one thing this page exists to prevent. A row earns its height by carrying
+what decides the pick — for a spell, school, an unusual casting time, range, damage, save, concentration
+(`entryMeta`), never the name alone.
+
+**A many-of pick has NO confirm step.** Clicking a spell or an item takes it, and clicking it again
+gives it back: a Take button over an act that is already one click to undo is a confirmation of
+nothing. `OptionList.onactivate` is what a one-of target leaves unset — there the click has to stay a
+preview, because reading the diff before taking it is the whole point of that flow. Arrow keys only
+ever preview, in both; Enter is the click.
 
 ## Decisions taken
 

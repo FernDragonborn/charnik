@@ -1,6 +1,7 @@
 <script lang="ts">
-	// Adding equipment: search the item list, read the article, add it. Quantity, equipping and
-	// removal stay on the sheet's own row — those are one click on something you can already see.
+	// Adding equipment: search the item list, click to carry it, read the article. A click carries the
+	// item and a second one puts it back — no confirm step over an act that is already one click to
+	// undo. Quantity and equipping stay on the sheet's own row, on something you can already see.
 	import { _ } from '$lib/i18n';
 	import { build, rowName } from '../build-view-model.svelte';
 	import { buildDetail } from '$lib/content/detail';
@@ -19,7 +20,7 @@
 	);
 	const previewRow = $derived(previewId ? b.row(previewId) : undefined);
 	const detail = $derived(previewRow ? buildDetail(previewRow, 'item', undefined, app.activeLocale) : null);
-	const alreadyCarried = $derived(!!previewId && b.draft.inventory.some((i) => i.item === previewId));
+	const carrying = (id: string) => b.draft.inventory.some((i) => i.item === id);
 </script>
 
 <OptionList
@@ -28,29 +29,12 @@
 	{previewId}
 	takenIds={b.draft.inventory.map((i) => i.item)}
 	onpreview={(id) => (previewId = id)}
+	onactivate={(id) => (carrying(id) ? b.removeInventoryItem(id) : b.addInventoryItem(id))}
 	placeholder={$_('build.inventory.search')}
 />
-
-{#if previewId}
-	<button
-		class="btn primary add"
-		disabled={alreadyCarried}
-		onclick={() => previewId && b.addInventoryItem(previewId)}
-	>
-		{alreadyCarried
-			? $_('build.inventory.alreadyCarried')
-			: $_('build.inventory.addNamed', { values: { name: rowName(previewRow) } })}
-	</button>
-{/if}
 
 {#if detail}
 	<div class="article"><WikiDetail {detail} /></div>
 {:else}
 	<p class="subtext">{$_('build.inventory.highlightToRead')}</p>
 {/if}
-
-<style>
-	.add {
-		width: 100%;
-	}
-</style>
