@@ -102,19 +102,24 @@ The Combat view is the reference implementation. Reuse the existing primitives (
 
 ## Choosing one row out of many — the picker contract
 
-Every "pick a content row" surface in the builder follows this. It is not a style preference: the
-current `OptionList` violates it and that is the defect list below. The research behind each rule,
-with screenshots of how other TTRPG tools and non-game apps solve it, is in
-`design-preview/inspector-picker-research.md`; the rendered variants are
-`design-preview/inspector-scroll-variants.html`.
+Every "pick a content row" surface in the builder follows this. The research behind each rule, with
+screenshots of how other TTRPG tools and non-game apps solve it, is in
+`design-preview/inspector-picker-research.md`; `design-preview/inspector-scroll-variants.html`
+renders the variants it weighs, of which V6 and V9 are the two this contract describes.
+
+It lives in `src/routes/build/`. `OptionGrid` is the small pickers, `SectionedPicker` the big two;
+both open a `PickerCard` on click, and `SectionedPicker` a `PickerPeek` on hover. `PickerSearch` is
+the search row they share, `option-walk.ts` the keyboard walk, `card-placement.ts` where a card
+lands. The pane itself is not a scroll container; which element is depends on the target, and
+`Inspector.bodyScrolls` decides.
 
 1. **The pane is never a scroll container around another scroll container.** A wheel goes to the
    innermost scrollable ancestor under the pointer, so two nested scroll surfaces in one column make
    "scroll the pane" unreachable wherever the list happens to be. The pane is a fixed-height grid;
    exactly one region inside it scrolls. (Baymard names this failure mode *scroll hijacking*; the
    compendium already avoids it with `overflow:hidden` + `min-height:0` panes.)
-2. **No magic list heights.** `max-height: 340px` inside a scrolling pane is the bug above. Height
-   comes from the layout.
+2. **No magic list heights.** Height comes from the layout: the grid shrinks before it scrolls, the
+   sectioned list takes what is left. A `max-height` in px is rule 1 in another disguise.
 3. **Six of the eight pickers have no big-list problem** — background 5, subclass ~4, species 18,
    feat 18, class 24, language 35 rows across both editions. They render as a **grid**, not a list,
    and have no scroll at all. Only spells (658) and items (773) need more.
@@ -128,18 +133,21 @@ with screenshots of how other TTRPG tools and non-game apps solve it, is in
 7. **Two tiers of reading**: hover/focus shows a compact teaser card (meta line + a clamped few
    lines, `pointer-events: none` so it needs no hover-bridge and can never be the thing you try to
    scroll); click opens the full popover. Baldur's Gate 3 is the reference for both.
-8. **Cards live on the page frame, not in the column**, so they spill over the sheet and cost the
-   pane no height. Anchor them **horizontally to the picker container**, never to the clicked entry —
-   in a grid the clicked cell's left edge is not the picker's, so anchoring to it covers the entries
-   to its left and the take toggles with them.
-9. **Any click outside a card closes it**, in the capture phase, plus Escape. No exceptions to hunt
-   for: clicking the next entry closes and reopens, which reads as a swap without a special case.
+8. **Cards escape the column**, so they spill over the sheet and cost the pane no height. They are
+   `position: fixed`, which is what gets them out of the pane's `overflow: hidden` with no portal.
+   Anchor them **horizontally to the picker container**, never to the clicked entry — in a grid the
+   clicked cell's left edge is not the picker's, so anchoring to it covers the entries to its left
+   and the take toggles with them. Below ~1100px there is no sheet to spill over, so a card that
+   would land off-screen flips to the other side of the picker.
+9. **Any click outside a card closes it**, in the capture phase, plus Escape. A click inside the
+   PICKER is explicitly not "outside": the picker's own handler then reads it as "open that one
+   instead", or on the entry already open as "close", so swapping and toggling need no special case.
 
-Two traps, both found by driving the mock rather than by reading it:
+Two traps that only a driven browser catches:
 
 - **`hidden` loses to an author `display`.** `.popover { display: flex }` beats the UA's
   `[hidden] { display: none }`, so the element never hides and nothing about it looks wrong in a
-  screenshot. Hide with `{#if}`, or say `[hidden] { display: none }` yourself.
+  screenshot. Hide with `{#if}`, as the cards do, or say `[hidden] { display: none }` yourself.
 - **Never scroll a section into view with `offsetTop` arithmetic.** `offsetTop` is measured from
   each element's own `offsetParent`; `h.offsetTop - list.offsetTop` only cancels while both resolve
   to the same ancestor, and one `position: relative` wrapper between them breaks it silently. Use

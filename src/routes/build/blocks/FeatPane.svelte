@@ -9,8 +9,7 @@
 	import { ABILITIES } from '$lib/character/schema';
 	import { SKILL_ABILITY } from '$lib/character/skills';
 	import { titleCase } from '$lib/util/format';
-	import WikiDetail from '$lib/components/WikiDetail.svelte';
-	import OptionList from './OptionList.svelte';
+	import OptionGrid from './OptionGrid.svelte';
 	import ChangeList from './ChangeList.svelte';
 	const b = build;
 	const SKILLS = Object.keys(SKILL_ABILITY);
@@ -54,25 +53,29 @@
 {/if}
 
 {#if ins.pick}
-	<OptionList
+	<OptionGrid
 		options={ins.options}
 		bind:query={ins.query}
 		previewId={ins.previewId}
 		takenIds={ins.pick.currentId ? [ins.pick.currentId] : []}
 		onpreview={(id) => (ins.previewId = id)}
-		onactivate={ins.take}
+		ontake={ins.take}
+		detail={ins.detail}
 		placeholder={$_('build.feats.searchFeats')}
 	/>
 {/if}
 
-{#if ins.changes.length}
-	<ChangeList changes={ins.changes} />
-{:else}
-	<ChangeList changes={ins.applied} taken />
-{/if}
+<!-- everything the slot owes ONCE something is in it. Its own region, because a Skilled-shaped feat
+     adds eighteen skill chips under here and the grid above must not be the thing that gives way. -->
+<div class="slotfoot scrolly">
+	{#if ins.changes.length}
+		<ChangeList changes={ins.changes} />
+	{:else}
+		<ChangeList changes={ins.applied} taken />
+	{/if}
 
-<!-- a taken feat's own sub-choices: the +1 a half-feat grants, and the skills a Skilled-shaped feat
-     hands out. They belong to the slot, so they live with it rather than in a separate pane. -->
+	<!-- a taken feat's own sub-choices: the +1 a half-feat grants, and the skills a Skilled-shaped feat
+	     hands out. They belong to the slot, so they live with it rather than in a separate pane. -->
 {#if chosen && chosen !== ASI}
 	{@const halfOpts = b.feats.halfFeatOptionsFor(slotKey)}
 	{#if halfOpts.length}
@@ -121,15 +124,21 @@
 		</div>
 	{/if}
 {/if}
-
-{#if ins.detail}
-	<div class="article"><WikiDetail detail={ins.detail} /></div>
-{/if}
+</div>
 
 <style>
+	.slotfoot {
+		display: flex;
+		flex-direction: column;
+		gap: 11px;
+		flex: 0 1 auto;
+		min-height: 0;
+		overflow: auto;
+	}
 	.asi-card {
 		all: unset;
 		box-sizing: border-box;
+		flex: none;
 		cursor: pointer;
 		display: flex;
 		flex-direction: column;
@@ -167,6 +176,7 @@
 	.alloc {
 		display: flex;
 		flex-direction: column;
+		flex: none;
 		gap: 8px;
 	}
 </style>

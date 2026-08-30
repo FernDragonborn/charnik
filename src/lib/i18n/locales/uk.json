@@ -549,7 +549,9 @@
 			"search": "Пошук заклять…",
 			"needClass": "Оберіть клас, щоб побачити його чаклунство.",
 			"groupCantrips": "Замовляння",
-			"groupLevel": "{level} рівень"
+			"groupLevel": "{level} рівень",
+			"concentration": "Концентрація",
+			"ritual": "Ритуал"
 		},
 		"resources": {
 			"title": "Ресурси",
@@ -634,8 +636,7 @@
 			"overCapacity": "Перевантаження — за книгою швидкість падає до 0.",
 			"encumbranceAt": "Правила перевантаження починаються з {lb} фунтів.",
 			"needBasics": "Оберіть клас і характеристики, щоб отримати місткість.",
-			"search": "Пошук спорядження…",
-			"highlightToRead": "Виділіть річ, щоб прочитати про неї."
+			"search": "Пошук спорядження…"
 		},
 		"story": {
 			"title": "Поза боєм",
@@ -668,11 +669,21 @@
 			"clear": "Очистити",
 			"whatChanges": "Що це змінить",
 			"whatChanged": "Що це змінило",
-			"highlightToRead": "Виділіть варіант, щоб прочитати про нього.",
 			"noMatch": "Нічого не збігається з «{query}».",
 			"searchIn": "Пошук серед {count}…",
 			"options": "Варіанти",
 			"taken": "обрано"
+		},
+		"picker": {
+			"take": "Взяти",
+			"taken": "Взято",
+			"takeRow": "Взяти: {name}",
+			"removeRow": "Прибрати: {name}",
+			"close": "Закрити",
+			"readMore": "Клікніть, щоб прочитати повністю",
+			"expandAll": "розгорнути все",
+			"collapseAll": "згорнути все",
+			"sectionTaken": "взято {count}"
 		},
 		"spec": {
 			"speciesTitle": "Вид",

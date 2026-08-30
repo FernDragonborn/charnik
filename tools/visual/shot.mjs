@@ -85,7 +85,29 @@ const ROUTES = [
 		],
 	},
 	{ path: '/', wait: 'main', states: [{ name: 'roster' }] },
-	{ path: '/build', wait: 'main', states: [{ name: 'build' }] },
+	// the builder at rest, then the picker: a grid of options, and the article card that opens beside
+	// it over the sheet. Neither state touches the draft — reading an option is not taking it — so
+	// nothing here needs a `restore`.
+	{
+		path: '/build',
+		wait: 'main',
+		states: [
+			{ name: 'build' },
+			{
+				name: 'build-picker-grid',
+				prep: clickText('Choose a class'),
+				ready: '[role="option"]',
+			},
+			{
+				name: 'build-picker-card',
+				prep: async (p) => {
+					await p.getByText('Choose a class', { exact: true }).first().click();
+					await p.locator('[role="option"]').first().click();
+				},
+				ready: '[role="dialog"]',
+			},
+		],
+	},
 	{
 		path: '/compendium',
 		wait: 'main',
@@ -141,6 +163,9 @@ const ROUTES = [
 			},
 		],
 	},
+	// every inspector target at once over one level-8 caster draft — the only place the sectioned
+	// spell and equipment pickers, and the panes that scroll as plain content, are all in one frame
+	{ path: '/dev/inspector', wait: '.col', states: [{ name: 'dev-inspector', settle: 600 }] },
 	{ path: '/dev/deathsaves', wait: 'h1', states: [{ name: 'dev-deathsaves' }] },
 	// the roll-card gallery: every shape RollRow has to render (check, attack, crit, volley, nat 1),
 	// on one page — the cheapest guard there is on the component four surfaces now share

@@ -120,12 +120,15 @@
 		color: var(--color-text-muted);
 		margin: 0 0 6px;
 	}
+	/* a DEFINITE height, not a max: a pane is a fixed-height box whose list scrolls inside it, and
+	   against an auto-height parent that collapses to "however tall the content is" — which is the
+	   one shape this page exists to catch a break in. */
 	.frame {
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
 		background: var(--color-bg);
 		padding: 14px;
-		max-height: 720px;
-		overflow: auto;
+		height: 720px;
+		overflow: hidden;
 	}
 </style>

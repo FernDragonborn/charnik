@@ -21,20 +21,19 @@ compendium prose (the reused `WikiDetail` — one article renderer, never a buil
 and diffing the two derived sheets (`BuildVM.previewSheet` → `diffSheets`). Nothing is picked blind;
 that is the whole point of N3.
 
-**Every list of content rows is `OptionList` + `WikiDetail`, including the multi-select ones.** Spells
-and equipment are chosen the same way a species is: search, read the whole article, commit.
-`OptionList` takes `takenIds` (a list, so one-of and many-of are the same control) and an optional
-`groupOf`, which keeps a pre-sorted list's structure — spell levels — inside one flat, keyboard-walkable
-list. A wall of name-only chips is not an option list: fifty SRD spells with nothing but their names is
-picking blind, which is the one thing this page exists to prevent. A row earns its height by carrying
-what decides the pick — for a spell, school, an unusual casting time, range, damage, save, concentration
-(`entryMeta`), never the name alone.
+**Every pick of a content row reads the whole article before committing, including the multi-select
+ones.** Spells and equipment are chosen the same way a species is: search, read, commit. The two
+shapes and everything that governs them are the **picker contract** in `docs/internals/ui.md` —
+`OptionGrid` for the six small pickers, `SectionedPicker` for spells and equipment, both opening the
+reused `WikiDetail` in a card beside the picker. A wall of name-only chips is not a picker: fifty SRD
+spells with nothing but their names is picking blind, which is the one thing this page exists to
+prevent. An entry earns its space by carrying what decides the pick — for a spell, school, an unusual
+casting time, range, damage, save, concentration (`pickerMeta` → `entryMeta`), never the name alone.
 
-**A many-of pick has NO confirm step.** Clicking a spell or an item takes it, and clicking it again
-gives it back: a Take button over an act that is already one click to undo is a confirmation of
-nothing. `OptionList.onactivate` is what a one-of target leaves unset — there the click has to stay a
-preview, because reading the diff before taking it is the whole point of that flow. Arrow keys only
-ever preview, in both; Enter is the click.
+**Taking has NO confirm step, and it is not the same click as reading.** The toggle on a row takes it
+and takes it back; the row body opens the article, which repeats the take where the eyes already are.
+A one-of pick replaces rather than toggles, and `Clear` in the pane footer is its way out. Arrow keys
+only ever preview; Enter is the click.
 
 ## Decisions taken
 

@@ -1,0 +1,47 @@
+/*
+ * ↑/↓/Home/End/Enter over a picker's options (ui.md §5).
+ *
+ * Shared by the grid and the sectioned list because it is the same contract in both: arrows move the
+ * HIGHLIGHT and never commit — walking a list must not take six things on the way down — and Enter
+ * is identical to a left click on whatever is highlighted.
+ */
+
+/** All a walk needs from a key event. Narrower than `KeyboardEvent` on purpose: a real one is
+ *  assignable to it, and it leaves the walk testable in node with no DOM to stand up. */
+export interface KeyPress {
+	code: string;
+	preventDefault(): void;
+}
+
+export interface OptionWalk {
+	/** The options in rendered order. A sectioned list passes only what is actually on screen: a
+	 *  collapsed section is not somewhere the keyboard can land. */
+	ids: string[];
+	previewId: string | null;
+	onpreview: (id: string) => void;
+	/** What a left click would do to the highlighted option. */
+	onenter: (id: string) => void;
+}
+
+/** Handle a key, or leave it alone. Returns whether it was ours, so a caller can still react. */
+export function walkOptions(event: KeyPress, { ids, previewId, onpreview, onenter }: OptionWalk): boolean {
+	if (!ids.length) return false;
+	const at = previewId ? ids.indexOf(previewId) : -1;
+	// The walk happens from the search box, so the highlighted option never has focus for the
+	// browser's own Enter-on-a-button to fire — this is the only thing that makes Enter work there.
+	if (event.code === 'Enter' && previewId && ids.includes(previewId)) {
+		event.preventDefault();
+		onenter(previewId);
+		return true;
+	}
+	let next: number | null = null;
+	if (event.code === 'ArrowDown') next = Math.min(ids.length - 1, at + 1);
+	else if (event.code === 'ArrowUp') next = at <= 0 ? 0 : at - 1;
+	else if (event.code === 'Home') next = 0;
+	else if (event.code === 'End') next = ids.length - 1;
+	if (next === null) return false;
+	event.preventDefault();
+	const id = ids[next];
+	if (id) onpreview(id);
+	return true;
+}

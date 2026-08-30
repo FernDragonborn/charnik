@@ -549,7 +549,9 @@
 			"search": "Search spells…",
 			"needClass": "Choose a class to see its spellcasting.",
 			"groupCantrips": "Cantrips",
-			"groupLevel": "Level {level}"
+			"groupLevel": "Level {level}",
+			"concentration": "Concentration",
+			"ritual": "Ritual"
 		},
 		"resources": {
 			"title": "Resources",
@@ -634,8 +636,7 @@
 			"overCapacity": "Over capacity — speed drops to 0 by the book.",
 			"encumbranceAt": "Encumbrance rules start at {lb} lb.",
 			"needBasics": "Choose a class and abilities to get a capacity.",
-			"search": "Search equipment…",
-			"highlightToRead": "Highlight an item to read it."
+			"search": "Search equipment…"
 		},
 		"story": {
 			"title": "Out of combat",
@@ -668,11 +669,21 @@
 			"clear": "Clear",
 			"whatChanges": "What it would change",
 			"whatChanged": "What it changed",
-			"highlightToRead": "Highlight an option to read it.",
 			"noMatch": "Nothing matches “{query}”.",
 			"searchIn": "Search {count}…",
 			"options": "Options",
 			"taken": "taken"
+		},
+		"picker": {
+			"take": "Take",
+			"taken": "Taken",
+			"takeRow": "Take {name}",
+			"removeRow": "Remove {name}",
+			"close": "Close",
+			"readMore": "Click to read in full",
+			"expandAll": "expand all",
+			"collapseAll": "collapse all",
+			"sectionTaken": "{count} taken"
 		},
 		"spec": {
 			"speciesTitle": "Species",

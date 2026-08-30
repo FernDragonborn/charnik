@@ -1,0 +1,86 @@
+<script lang="ts">
+	// The first tier of reading an option (ui.md §7): a teaser, so scanning a long list does not cost
+	// a click per row. `pointer-events: none` is deliberate — there is nothing to click in it, so it
+	// needs no hover-bridge to survive the trip and can never be the thing you try to scroll. Reading
+	// in full is the click, and that opens PickerCard.
+	import { _ } from '$lib/i18n';
+	import { placeCard, entryElement } from '../card-placement';
+
+	let {
+		picker,
+		entryId,
+		title,
+		meta,
+		text,
+	}: {
+		picker: HTMLElement;
+		entryId: string;
+		title: string;
+		meta: string;
+		/** Plain prose, already stripped of markdown — the peek clamps it, it does not render it. */
+		text: string;
+	} = $props();
+
+	let peek = $state<HTMLElement | null>(null);
+
+	$effect(() => {
+		void entryId;
+		if (peek) placeCard(peek, entryElement(picker, entryId), picker);
+	});
+</script>
+
+<div class="picker-peek" bind:this={peek}>
+	<header>
+		<b>{title}</b>
+		{#if meta}<span class="pmeta">{meta}</span>{/if}
+	</header>
+	<p class="ptext">{text}</p>
+	<span class="pmore">{$_('build.picker.readMore')}</span>
+</div>
+
+<style>
+	.picker-peek {
+		position: fixed;
+		z-index: 38;
+		width: min(320px, calc(100vw - 24px));
+		padding-bottom: 9px;
+		pointer-events: none;
+		background: var(--color-surface);
+		border: 1px solid var(--color-border-strong);
+		border-radius: var(--radius-md);
+		box-shadow: 0 14px 38px var(--color-overlay);
+		overflow: hidden;
+	}
+	header {
+		padding: 9px 12px 7px;
+		border-bottom: 1px solid var(--color-border);
+	}
+	header b {
+		display: block;
+		font-family: var(--font-display);
+		font-size: var(--font-size-sm);
+	}
+	.pmeta {
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		color: var(--color-resource);
+	}
+	.ptext {
+		margin: 8px 12px 0;
+		font-size: var(--font-size-xs);
+		line-height: 1.5;
+		color: var(--color-text-muted);
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 3;
+		line-clamp: 3;
+		overflow: hidden;
+	}
+	.pmore {
+		display: block;
+		margin: 8px 12px 0;
+		font-family: var(--font-mono);
+		font-size: var(--font-size-micro);
+		color: var(--color-accent-bright);
+	}
+</style>

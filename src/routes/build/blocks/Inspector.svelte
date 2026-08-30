@@ -75,25 +75,30 @@
 		<h2>{$_(`build.spec.${spec.titleKey}`, { values: spec.values })}</h2>
 		<p class="blurb">{$_(`build.spec.${spec.blurbKey}`, { values: spec.values })}</p>
 
-		<div class="body">
-			{#if target.id === 'feat'}
-				<FeatPane slotKey={target.slotKey} {ins} />
-			{:else if spec.kind === 'pick'}
-				<PickPane {ins} />
-			{:else if spec.pane === 'abilities'}
-				<AbilitiesPane />
-			{:else if spec.pane === 'skills'}
-				<SkillsPane />
-			{:else if spec.pane === 'languages'}
-				<LanguagesPane />
-			{:else if spec.pane === 'spells'}
-				<SpellsPane />
-			{:else if spec.pane === 'inventory'}
-				<InventoryPane />
-			{:else if spec.pane === 'notes'}
-				<NotesPane />
-			{/if}
-		</div>
+		<!-- keyed on the target so switching from one choice to another starts the next pane clean: a
+		     card left open over the old option, or a search box still holding the old query, describes
+		     something the pane is not about. -->
+		{#key JSON.stringify(target)}
+			<div class="body scrolly" class:scrolls={ins.bodyScrolls}>
+				{#if target.id === 'feat'}
+					<FeatPane slotKey={target.slotKey} {ins} />
+				{:else if spec.kind === 'pick'}
+					<PickPane {ins} />
+				{:else if spec.pane === 'abilities'}
+					<AbilitiesPane />
+				{:else if spec.pane === 'skills'}
+					<SkillsPane />
+				{:else if spec.pane === 'languages'}
+					<LanguagesPane />
+				{:else if spec.pane === 'spells'}
+					<SpellsPane />
+				{:else if spec.pane === 'inventory'}
+					<InventoryPane />
+				{:else if spec.pane === 'notes'}
+					<NotesPane />
+				{/if}
+			</div>
+		{/key}
 
 		<!-- No Take button: a click on a row commits it. What is left here is the way OUT, which a
 		     reversible choice still needs and which nothing else offers. -->
@@ -106,11 +111,14 @@
 </div>
 
 <style>
+	/* The pane owns the column's height and nothing above the body scrolls, so the wheel has exactly
+	   one place to go wherever the pointer is (ui.md §1). */
 	.pane {
 		display: flex;
 		flex-direction: column;
 		gap: 11px;
-		min-height: 100%;
+		height: 100%;
+		min-height: 0;
 	}
 	.head {
 		display: flex;
@@ -136,8 +144,17 @@
 		display: flex;
 		flex-direction: column;
 		gap: 11px;
+		flex: 1;
+		min-height: 0;
+	}
+	/* the panes that are just content (abilities, skills, languages, notes) scroll here; a picker
+	   builds its own region and leaves this one alone. */
+	.body.scrolls {
+		overflow: auto;
 	}
 	.resting {
+		min-height: 0;
+		overflow: auto;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		background: var(--color-surface);
@@ -180,14 +197,13 @@
 		cursor: default;
 		color: var(--color-text-muted);
 	}
+	/* the body takes every spare pixel, so the footer lands at the bottom on its own — nothing to be
+	   sticky against, since the pane itself does not scroll */
 	.foot {
 		display: flex;
 		align-items: center;
 		gap: 9px;
-		margin-top: auto;
-		position: sticky;
-		bottom: 0;
-		background: var(--color-bg);
+		flex: none;
 		border-top: 1px solid var(--color-border);
 		padding: 11px 0;
 	}

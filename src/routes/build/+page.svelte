@@ -164,10 +164,14 @@
 			grid-template-columns: 1fr;
 		}
 	}
+	/* A fixed-height box, NOT a scroll container: a wheel goes to the innermost scrollable ancestor
+	   under the pointer, so a scrolling column around a scrolling list makes "scroll the inspector"
+	   unreachable wherever the list happens to be (ui.md §1). Exactly one region inside the pane
+	   scrolls, and the pane picks which. */
 	.inspector {
 		border-left: 1px solid var(--color-border);
 		background: var(--color-bg);
-		overflow: auto;
+		overflow: hidden;
 		min-height: 0;
 		padding-left: 16px;
 	}

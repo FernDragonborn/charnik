@@ -1097,8 +1097,9 @@ stay semi-manual.
   max(10, ⌊dmg/2⌋)) now toasts a reminder in `damage()` (see the CONCENTRATION entry). (3) Death saves + exhaustion UI (→ B2).
   (4) Ammunition as consumable — decided 2026-07-15: tracking OFF by default (a toggle
   that exists but is never enforced; ~99% of tables don't track ammo). (5) Short-rest
-  hit-dice UI (→ UBUG-1/B2). (6) Search/filter in builder pickers — SRD lists are already
-  long, PHB homebrew makes them impassable. (7) Multiclass: combat preparedCap reads
+  hit-dice UI (→ UBUG-1/B2). (6) **DONE** — the builder pickers carry search, and the two big ones
+  carry the level/category sections and the school/concentration/ritual facets that keep a long list
+  navigable (the picker contract, `docs/internals/ui.md`). (7) Multiclass: combat preparedCap reads
   classes[0] only. (8) Sneak Attack "once per turn" — first per-turn-limit case; manual
   toggle first, automation later.
 - [ ] **N6 · Currency (decided 2026-07-15: separate design, not an inventory row).** Support

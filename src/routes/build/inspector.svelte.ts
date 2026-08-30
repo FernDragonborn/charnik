@@ -73,6 +73,13 @@ export type InspectorTarget =
  *  surface. A union so a new pane can't be spelled wrong. */
 type EditPane = 'abilities' | 'skills' | 'languages' | 'spells' | 'inventory' | 'notes';
 
+/**
+ * The panes that set up their OWN scroll region — a picker whose list scrolls under a fixed search
+ * box and section rail. For everything else the shell's body is the scroll region, which is how the
+ * pane ends up with exactly one either way (ui.md §1: never a scroll container around another).
+ */
+const PANE_OWNS_SCROLL = new Set<EditPane>(['spells', 'inventory']);
+
 /** The words a target is described with: catalog KEYS under `build.spec`, not sentences — this
  *  module has no locale, and the shell that renders it does. */
 interface SpecCopy {
@@ -271,6 +278,10 @@ export class Inspector {
 	});
 
 	pick = $derived<PickSpec | null>(this.spec?.kind === 'pick' ? this.spec : null);
+
+	/** Should the shell's body be the scroll region? Every pick target builds its own (the grid
+	 *  scrolls under a fixed search box), and so do the two big edit pickers. */
+	bodyScrolls = $derived(this.spec?.kind === 'edit' && !PANE_OWNS_SCROLL.has(this.spec.pane));
 
 	// --- the option list ------------------------------------------------------------------------
 	/** The current target's options, narrowed by the search box. Case-insensitive substring on the

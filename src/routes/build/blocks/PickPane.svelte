@@ -1,11 +1,14 @@
 <script lang="ts">
-	// "Choose one content row" — species, lineage, background, class, subclass. Search the list,
-	// highlight an option, read its compendium article (the SAME WikiDetail the compendium renders —
-	// one article renderer, never a builder-only summary), and see what it would do to the sheet.
-	import { _ } from '$lib/i18n';
+	// "Choose one content row" — species, lineage, background, class, subclass. A grid of every
+	// option with its own meta line, and what taking one would do to the sheet underneath it.
+	//
+	// The article is not a third block down the column: it opens beside the grid, over the sheet,
+	// where it costs this column no height and leaves the diff visible while you read (ui.md §8). It
+	// is the SAME WikiDetail the compendium renders — one article renderer, never a builder-only
+	// summary.
 	import type { Inspector } from '../inspector.svelte';
-	import WikiDetail from '$lib/components/WikiDetail.svelte';
-	import OptionList from './OptionList.svelte';
+	import { _ } from '$lib/i18n';
+	import OptionGrid from './OptionGrid.svelte';
 	import ChangeList from './ChangeList.svelte';
 
 	// taken as a prop rather than reached for on the singleton, so /dev/inspector can render several
@@ -14,30 +17,22 @@
 </script>
 
 {#if ins.pick}
-	<OptionList
+	<OptionGrid
 		options={ins.options}
 		bind:query={ins.query}
 		previewId={ins.previewId}
 		takenIds={ins.pick.currentId ? [ins.pick.currentId] : []}
 		onpreview={(id) => (ins.previewId = id)}
-		onactivate={ins.take}
+		ontake={ins.take}
+		detail={ins.detail}
 		placeholder={$_('build.inspector.searchIn', { values: { count: ins.pick.options.length } })}
 	/>
 
-	<!-- ↑/↓ preview, so `changes` is still "what this WOULD do"; a click commits, so `applied` is
-	     "what that DID". Whichever of the two is live is the one worth reading. -->
+	<!-- Highlighting previews, so `changes` is still "what this WOULD do"; the card's take button
+	     commits, so `applied` is "what that DID". Whichever is live is the one worth reading. -->
 	{#if ins.changes.length}
 		<ChangeList changes={ins.changes} />
 	{:else}
 		<ChangeList changes={ins.applied} taken />
 	{/if}
-
-	{#if ins.detail}
-		<div class="article">
-			<WikiDetail detail={ins.detail} />
-		</div>
-	{:else}
-		<p class="subtext">{$_('build.inspector.highlightToRead')}</p>
-	{/if}
 {/if}
-
