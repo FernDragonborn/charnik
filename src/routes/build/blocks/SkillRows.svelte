@@ -46,7 +46,7 @@
 						onclick={() => b.toggleSkill(skill)}
 					>
 						<i class="dot" class:prof={on} class:expert></i>
-						<span>{titleCase(skill.replace(/_/g, ' '))}</span>
+						<span>{titleCase(skill)}</span>
 					</button>
 					{#if on && b.expertiseCap > 0}
 						{@const capped = !expert && b.draft.strict && b.expertiseUsed >= b.expertiseCap}

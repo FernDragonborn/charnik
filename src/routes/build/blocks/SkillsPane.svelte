@@ -7,8 +7,6 @@
 	import SkillRows from './SkillRows.svelte';
 	import { titleCase } from '$lib/util/format';
 	const b = build;
-
-	const label = (s: string) => titleCase(s.replace(/_/g, ' '));
 </script>
 
 <div class="counts">
@@ -32,7 +30,7 @@
 {#if b.classSkillCount > 0}
 	<p class="subtext">
 		{$_(b.draft.strict ? 'build.skills.classList' : 'build.skills.classListFree', {
-			values: { skills: b.classSkillOptions.map(label).join(' · ') }
+			values: { skills: b.classSkillOptions.map(titleCase).join(' · ') }
 		})}
 	</p>
 {:else if b.classId}
@@ -43,7 +41,7 @@
 
 {#if b.autoSkills.length}
 	<p class="subtext note">
-		{$_('build.skills.lockedOn', { values: { skills: b.autoSkills.map(label).join(' · ') } })}
+		{$_('build.skills.lockedOn', { values: { skills: b.autoSkills.map(titleCase).join(' · ') } })}
 	</p>
 {/if}
 

@@ -76,7 +76,7 @@ function skillChanges(before: CharacterSheet, after: CharacterSheet): SheetChang
 		if (from === to) return [];
 		return [
 			{
-				label: titleCase(id.replace(/_/g, ' ')),
+				label: titleCase(id),
 				from,
 				to,
 				better: PROF_RANK[to] > PROF_RANK[from],

@@ -52,7 +52,7 @@ export function socialBars(passives: Record<SkillId, Computed> | undefined): Soc
 			label,
 			fill: Math.min(1, Math.max(0, (passive - BAR_FLOOR) / (BAR_CEILING - BAR_FLOOR))),
 			passive,
-			via: titleCase(best.replace(/_/g, ' ')),
+			via: titleCase(best),
 			trace: passives[best],
 		};
 	});

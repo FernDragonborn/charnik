@@ -23,8 +23,8 @@
 
 <button
 	class="asi-card"
-	class:on={ins.previewId === ASI}
-	class:taken={chosen === ASI}
+	class:is-active={ins.previewId === ASI}
+	class:is-taken={chosen === ASI}
 	onclick={() => ins.take(ASI)}
 >
 	<b>{$_('build.feats.asi')}</b>
@@ -117,7 +117,7 @@
 						disabled={blocked}
 						onclick={() => b.feats.toggleSlotFeatSkill(slotKey, skill, skillCount)}
 					>
-						{titleCase(skill.replace(/_/g, ' '))}
+						{titleCase(skill)}
 					</button>
 				{/each}
 			</div>
@@ -144,14 +144,6 @@
 	}
 	.asi-card:hover {
 		border-color: var(--color-accent);
-	}
-	.asi-card.on {
-		border-color: var(--color-accent);
-		background: var(--color-accent-soft);
-	}
-	.asi-card.taken {
-		border-color: var(--color-resource-line);
-		background: var(--color-resource-soft);
 	}
 	.asi-card:focus-visible {
 		outline: var(--focus-ring);

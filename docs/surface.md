@@ -17,8 +17,8 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 **Same name, several files:**
 
-- `label` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/blocks/SkillsPane.svelte · src/routes/build/rows.ts
 - `persist` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
+- `label` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/rows.ts
 - `open` ×4 — src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `files` ×3 — src/lib/character/draft-repository.ts · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts

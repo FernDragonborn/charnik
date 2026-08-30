@@ -13,8 +13,8 @@
 	const lineage = $derived(b.speciesOptionRow);
 	const background = $derived(b.backgroundRow);
 
-	const bgSkills = $derived(splitList(background?.data.skills).map((s) => titleCase(s.replace(/_/g, ' '))));
-	const bgTools = $derived(splitList(background?.data.tools).map((t) => titleCase(t.replace(/_/g, ' '))));
+	const bgSkills = $derived(splitList(background?.data.skills).map((s) => titleCase(s)));
+	const bgTools = $derived(splitList(background?.data.tools).map((t) => titleCase(t)));
 	const bgBoosts = $derived(splitList(background?.data.ability_choices).map((a) => a.toUpperCase()));
 
 	const open = (target: InspectorTarget) => b.inspector.toggle(target);

@@ -28,7 +28,7 @@
 		const grants = gatherProfGrants(raw);
 		if (grants === UNCONSTRAINED) return $_('build.defenses.all');
 		if (!grants.size) return $_('build.defenses.none');
-		return [...grants].map((g) => titleCase(g.replace(/_/g, ' '))).join(' · ');
+		return [...grants].map((g) => titleCase(g)).join(' · ');
 	}
 
 	const armor = $derived(profText(classRows.map((r) => r.data.armor_profs)));
@@ -62,7 +62,7 @@
 			<div class="saves">
 				{#each ABILITIES as ab (ab)}
 					{@const block = s.abilities[ab]}
-					<div class="save" class:prof={block.saveProficient} title={why(block.save)}>
+					<div class="save" class:is-taken={block.saveProficient} title={why(block.save)}>
 						<span class="code">{ab}</span>
 						<b>{signed(block.save.value)}</b>
 					</div>
@@ -132,11 +132,7 @@
 		border-radius: var(--radius);
 		padding: 6px 9px;
 	}
-	.save.prof {
-		border-color: var(--color-resource-line);
-		background: var(--color-resource-soft);
-	}
-	.save.prof b {
+	.save.is-taken b {
 		color: var(--color-resource);
 	}
 	.save .code {
