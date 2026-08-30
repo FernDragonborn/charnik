@@ -61,8 +61,10 @@ type Translate = (key: string, options?: { values?: Record<string, string | numb
  * short to say gets nothing, never a sentence mined out of its prose.
  */
 export function pickerMeta(row: LoadedRow, t: Translate): string {
-	/** A snake_case enum value as a person reads it. */
-	const label = (value: unknown) => titleCase(String(value ?? '').replace(/_/g, ' '));
+	/** A snake_case enum value as a person reads it. Takes the column's own type rather than
+	 *  `unknown`: `String(anything)` on a column that turned out to be an object prints
+	 *  `[object Object]` into the UI, and only the type-aware lint catches that. */
+	const label = (value: string | undefined) => titleCase((value ?? '').replace(/_/g, ' '));
 	if (row.type === 'class')
 		return [row.data.hit_die, row.data.saves.map((s) => s.toUpperCase()).join(', ')]
 			.filter(Boolean)
