@@ -169,6 +169,33 @@ function classesOfferedTo(b: InspectorHost, row: number): LoadedRow[] {
 	return b.classList.filter((r) => !heldElsewhere.has(r.effectiveId));
 }
 
+/**
+ * One class row's picker.
+ *
+ * A row that already holds a class SWAPS it. That has to be said out loud, because the control is
+ * the same shape as the one that adds a class and its diff is not: swapping the first class moves
+ * the saving throws and the spellcasting with it — RAW they come from the first class alone — so a
+ * player who thought they were multiclassing reads "INT save +1 → −1" as the app getting the rule
+ * wrong. Adding a class is the "+ Multiclass" button, and the blurb points at it.
+ */
+function classPickSpec(b: InspectorHost, index: number): PickSpec {
+	const held = b.draft.classes[index]?.classId ?? null;
+	return {
+		kind: 'pick',
+		titleKey: index === 0 ? 'classTitle' : 'classTitleExtra',
+		// spread rather than `values: held ? … : undefined` — `exactOptionalPropertyTypes` reads an
+		// explicit `undefined` as a value, not as an absent key
+		...(held
+			? { blurbKey: 'classReplaceBlurb', values: { class: rowName(b.row(held)) } }
+			: { blurbKey: 'classBlurb' }),
+		type: 'class',
+		options: classesOfferedTo(b, index),
+		currentId: held,
+		apply: (id) => b.setClass(index, id),
+		clearable: index > 0,
+	};
+}
+
 /** How each `pick` target behaves. Separate from the class so the descriptor stays a plain function
  *  of (target, draft) — and so neither this nor the class grows past what one screen can hold. */
 function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
@@ -210,16 +237,7 @@ function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
 				clearable: true,
 			};
 		case 'class':
-			return {
-				kind: 'pick',
-				titleKey: t.index === 0 ? 'classTitle' : 'classTitleExtra',
-				blurbKey: 'classBlurb',
-				type: 'class',
-				options: classesOfferedTo(b, t.index),
-				currentId: b.draft.classes[t.index]?.classId ?? null,
-				apply: (id) => b.setClass(t.index, id),
-				clearable: t.index > 0,
-			};
+			return classPickSpec(b, t.index);
 		case 'subclass': {
 			const cls = b.draft.classes[t.index];
 			return {

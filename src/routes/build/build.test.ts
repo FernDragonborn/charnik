@@ -158,6 +158,19 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.draft.slotAsi[key]?.picks).toEqual(['wis']);
 	});
 
+	it('a class row that already holds one says it swaps, not adds', () => {
+		build.reset();
+		build.graph = graph;
+		build.inspector.open({ id: 'class', index: 0 });
+		expect(build.inspector.spec?.blurbKey).toBe('classBlurb');
+
+		// once filled, the same control replaces — and its diff moves the saves and the spellcasting,
+		// which reads as the app breaking the multiclass rule unless the pane says what it is doing
+		build.setClass(0, `class:${S}:wizard`);
+		expect(build.inspector.spec?.blurbKey).toBe('classReplaceBlurb');
+		expect(build.inspector.spec?.values).toEqual({ class: 'Wizard' });
+	});
+
 	it('a class another row already holds is not offered again', () => {
 		build.reset();
 		build.graph = graph;

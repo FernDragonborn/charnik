@@ -694,6 +694,7 @@
 			"classTitle": "Class",
 			"classTitleExtra": "Additional class",
 			"classBlurb": "What your character does. Hit die, saving throws, the skill list you choose from, and every feature that arrives with a level.",
+			"classReplaceBlurb": "This row is {class}. Picking here replaces it rather than adding a class — for a second class, use “Multiclass” on the sheet.",
 			"subclassTitle": "Subclass",
 			"subclassBlurb": "The specialisation inside {class}. It adds features at its own levels.",
 			"featTitle": "Level {level} — feat or ability boost",
