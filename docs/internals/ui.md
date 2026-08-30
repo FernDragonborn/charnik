@@ -117,9 +117,19 @@ renders the variants it weighs, of which V6 and V9 are the two this contract des
 
 It lives in `src/routes/build/`. `OptionGrid` is the small pickers, `SectionedPicker` the big two;
 both open a `PickerCard` on click, and `SectionedPicker` a `PickerPeek` on hover. `PickerSearch` is
-the search row they share, `option-walk.ts` the keyboard walk, `card-placement.ts` where a card
-lands. The pane itself is not a scroll container; which element is depends on the target, and
-`Inspector.bodyScrolls` decides.
+the search row they share, `option-walk.ts` the keyboard walk, `picker-reading.svelte.ts` the state
+behind both — which option the card is up for, and where the arrow keys go — and `card-placement.ts`
+where a card lands. `InspectorGrid` is every `pick` target's body, so the diff's own rule (what it
+WOULD do while you read, what it DID once you clicked) is stated once; a feat slot passes its
+sub-choices in as `extra` rather than rebuilding the grid. `LanguagesPane` is the same search row and
+the same walk over a multi-select chip list. The pane itself is not a scroll container; which element
+is depends on the target, and `Inspector.bodyScrolls` decides.
+
+**The caret stays in the search box.** An option is a real button, so it can be tabbed to — and a
+walk started from there hands focus back to the search box rather than leaving a ring on one option
+while Enter takes another. That is why the search box is a `combobox` naming the highlight through
+`aria-activedescendant`: with focus that never moves, it is the only thing a screen reader has to go
+on. Enter is the search box's to interpret; on a focused option the browser's own Enter is right.
 
 `PickerCard` is also what the **sheet's** clamped prose opens — a class feature is two lines and an
 ellipsis on `SheetClasses`, and two lines with no way past them is the same defect as picking blind.

@@ -16,12 +16,11 @@
  */
 import type { ContentType } from '$lib/content/schemas';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
-import { buildDetail, type DetailModel } from '$lib/content/detail';
+import type { DetailModel } from '$lib/content/detail';
 import { diffSheets, type SheetChange } from '$lib/build/sheet-diff';
 import type { BuildTodo } from '$lib/build/derive';
 import type { CharacterSheet } from '$lib/character/derive';
-import { app } from '$lib/stores/app.svelte';
-import { rowName, ASI } from './rows';
+import { filterByName, rowDetail, rowName, ASI } from './rows';
 import type { DraftState } from './draft';
 
 /**
@@ -325,13 +324,9 @@ export class Inspector {
 	// --- the option list ------------------------------------------------------------------------
 	/** The current target's options, narrowed by the search box. Case-insensitive substring on the
 	 *  displayed name — the SRD lists are long enough that a picker without this is unusable (N5·6). */
-	options = $derived.by<LoadedRow[]>(() => {
-		const spec = this.pick;
-		if (!spec) return [];
-		const q = this.query.trim().toLowerCase();
-		if (!q) return spec.options;
-		return spec.options.filter((r) => rowName(r).toLowerCase().includes(q));
-	});
+	options = $derived.by<LoadedRow[]>(() =>
+		this.pick ? filterByName(this.pick.options, this.query) : [],
+	);
 
 	/** The row the pane is reading — the preview if one is highlighted, else what is already taken. */
 	previewRow = $derived.by<LoadedRow | undefined>(() => {
@@ -340,9 +335,8 @@ export class Inspector {
 	});
 
 	detail = $derived.by<DetailModel | null>(() => {
-		const row = this.previewRow;
 		const type = this.pick?.type;
-		return row && type ? buildDetail(row, type, undefined, app.activeLocale) : null;
+		return type ? rowDetail(this.previewRow, type) : null;
 	});
 
 	/** Is the previewed option the one already taken? Then there is nothing to commit. */

@@ -9,12 +9,11 @@
 	import { ABILITIES } from '$lib/character/schema';
 	import { SKILL_ABILITY } from '$lib/character/skills';
 	import { titleCase } from '$lib/util/format';
-	import OptionGrid from './OptionGrid.svelte';
-	import ChangeList from './ChangeList.svelte';
+	import InspectorGrid from './InspectorGrid.svelte';
 	const b = build;
 	const SKILLS = Object.keys(SKILL_ABILITY);
 
-	// `ins` is a prop for the same reason PickPane takes one — see there.
+	// `ins` is a prop for the same reason InspectorGrid takes one — see there.
 	let { slotKey, ins }: { slotKey: string; ins: Inspector } = $props();
 
 	const chosen = $derived(b.draft.slotFeats[slotKey] ?? '');
@@ -52,27 +51,11 @@
 	</div>
 {/if}
 
-{#if ins.pick}
-	<OptionGrid
-		options={ins.options}
-		bind:query={ins.query}
-		previewId={ins.previewId}
-		takenIds={ins.pick.currentId ? [ins.pick.currentId] : []}
-		onpreview={(id) => (ins.previewId = id)}
-		ontake={ins.take}
-		detail={ins.detail}
-		placeholder={$_('build.feats.searchFeats')}
-	>
-		<!-- everything the slot owes once something is in it, in the same scroll region as the feats:
-		     a Skilled-shaped feat adds eighteen skill chips under here, and one region that grows is
-		     what keeps a short pane from clipping the grid AND the chips at once. -->
-		{#snippet below()}
-	{#if ins.changes.length}
-		<ChangeList changes={ins.changes} />
-	{:else}
-		<ChangeList changes={ins.applied} taken />
-	{/if}
-
+<!-- everything the slot owes once something is in it goes in the SAME scroll region as the feats: a
+     Skilled-shaped feat adds eighteen skill chips under there, and one region that grows is what
+     keeps a short pane from clipping the grid AND the chips at once. -->
+<InspectorGrid {ins} placeholder={$_('build.feats.searchFeats')}>
+	{#snippet extra()}
 	<!-- a taken feat's own sub-choices: the +1 a half-feat grants, and the skills a Skilled-shaped feat
 	     hands out. They belong to the slot, so they live with it rather than in a separate pane. -->
 {#if chosen && chosen !== ASI}
@@ -124,9 +107,8 @@
 		</div>
 	{/if}
 {/if}
-		{/snippet}
-	</OptionGrid>
-{/if}
+	{/snippet}
+</InspectorGrid>
 
 <style>
 	.asi-card {

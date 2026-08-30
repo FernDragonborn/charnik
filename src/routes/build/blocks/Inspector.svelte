@@ -10,7 +10,7 @@
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
 	import type { Inspector } from '../inspector.svelte';
-	import PickPane from './PickPane.svelte';
+	import InspectorGrid from './InspectorGrid.svelte';
 	import FeatPane from './FeatPane.svelte';
 	import AbilitiesPane from './AbilitiesPane.svelte';
 	import SkillsPane from './SkillsPane.svelte';
@@ -102,7 +102,7 @@
 				{#if target.id === 'feat'}
 					<FeatPane slotKey={target.slotKey} {ins} />
 				{:else if spec.kind === 'pick'}
-					<PickPane {ins} />
+					<InspectorGrid {ins} />
 				{:else if spec.pane === 'abilities'}
 					<AbilitiesPane />
 				{:else if spec.pane === 'skills'}

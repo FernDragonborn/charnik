@@ -24,6 +24,9 @@ export interface PickerReadingHost {
 	/** Anything the picker must put away when the full card opens (the sectioned list's hover teaser
 	 *  stands down for it). */
 	onopen?: () => void;
+	/** What Enter does, when it is not "open the article". A language has nothing to read, so there
+	 *  Enter takes the row outright — the same thing a click on it does. */
+	onenter?: (id: string) => void;
 }
 
 export class PickerReading {
@@ -67,9 +70,12 @@ export class PickerReading {
 	};
 	close = () => (this.reading = false);
 
-	/** ↑/↓/Home/End/Enter from the search box — Enter reads whatever is highlighted. */
-	fromSearch = (event: KeyboardEvent): boolean =>
-		walkOptions(event, { ...this.host(), onenter: this.read });
+	/** ↑/↓/Home/End/Enter from the search box — Enter does to the highlighted option whatever a click
+	 *  on it would, which is reading it unless the picker says otherwise. */
+	fromSearch = (event: KeyboardEvent): boolean => {
+		const host = this.host();
+		return walkOptions(event, { ...host, onenter: host.onenter ?? this.read });
+	};
 
 	/**
 	 * The same walk from an option that holds focus. Enter is deliberately left to the browser — the

@@ -5,6 +5,7 @@
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
 	import SkillRows from './SkillRows.svelte';
+	import SkillCounts from './SkillCounts.svelte';
 	const b = build;
 </script>
 
@@ -14,23 +15,7 @@
 		<!-- names the two number columns; without it the second one is an unexplained integer -->
 		<span class="trail">{$_('build.skills.columns')}</span>
 		<span class="spacer"></span>
-		{#if b.classSkillCount > 0}
-			<span class="trail" class:open={b.skillChosenCount < b.classSkillCount}>
-				{$_('build.skills.classPicks', {
-					values: { chosen: b.skillChosenCount, cap: b.classSkillCount }
-				})}
-			</span>
-		{/if}
-		{#if b.autoSkills.length}<span class="trail"
-				>{$_('build.skills.fromBackground', { values: { count: b.autoSkills.length } })}</span
-			>{/if}
-		{#if b.expertiseCap > 0}
-			<span class="trail"
-				>{$_('build.skills.expertise', {
-					values: { used: b.expertiseUsed, cap: b.expertiseCap }
-				})}</span
-			>
-		{/if}
+		<SkillCounts badge="trail" />
 		<button
 			class="pill-btn"
 			class:accent={b.inspector.isOpen({ id: 'skills' })}

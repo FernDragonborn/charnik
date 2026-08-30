@@ -5,27 +5,12 @@
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
 	import SkillRows from './SkillRows.svelte';
+	import SkillCounts from './SkillCounts.svelte';
 	import { titleCase } from '$lib/util/format';
 	const b = build;
 </script>
 
-<div class="counts">
-	{#if b.classSkillCount > 0}
-		<span class="tag" class:accent={b.skillChosenCount < b.classSkillCount}>
-			{$_('build.skills.classPicks', {
-				values: { chosen: b.skillChosenCount, cap: b.classSkillCount }
-			})}
-		</span>
-	{/if}
-	{#if b.autoSkills.length}<span class="tag gold"
-			>{$_('build.skills.fromBackground', { values: { count: b.autoSkills.length } })}</span
-		>{/if}
-	{#if b.expertiseCap > 0}
-		<span class="tag"
-			>{$_('build.skills.expertise', { values: { used: b.expertiseUsed, cap: b.expertiseCap } })}</span
-		>
-	{/if}
-</div>
+<div class="counts"><SkillCounts badge="tag" /></div>
 
 {#if b.classSkillCount > 0}
 	<p class="subtext">

@@ -5,10 +5,8 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
-	import { rowText } from '../rows';
+	import { rowDetail, rowText } from '../rows';
 	import { classFeatureLines } from '$lib/build/derive';
-	import { buildDetail } from '$lib/content/detail';
-	import { app } from '$lib/stores/app.svelte';
 	import PickerCard from './PickerCard.svelte';
 	const b = build;
 
@@ -45,9 +43,7 @@
 	let card = $state<HTMLElement | null>(null);
 	let readingId = $state<string | null>(null);
 	const readingRow = $derived(features.find((f) => f.row.effectiveId === readingId)?.row);
-	const detail = $derived(
-		readingRow ? buildDetail(readingRow, 'class_feature', undefined, app.activeLocale) : null
-	);
+	const detail = $derived(rowDetail(readingRow, 'class_feature'));
 	const readFeature = (id: string) => (readingId = readingId === id ? null : id);
 </script>
 

@@ -5,20 +5,16 @@
 	// that is already one click to undo. Quantity and equipping stay on the sheet's own row.
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
-	import { buildDetail } from '$lib/content/detail';
 	import { ITEM_CATEGORIES } from '$lib/content/schemas';
-	import { app } from '$lib/stores/app.svelte';
 	import { titleCase } from '$lib/util/format';
+	import { rowDetail } from '../rows';
 	import SectionedPicker from './SectionedPicker.svelte';
 	const b = build;
 
 	let query = $state('');
 	let previewId = $state<string | null>(null);
 
-	const previewRow = $derived(previewId ? b.row(previewId) : undefined);
-	const detail = $derived(
-		previewRow ? buildDetail(previewRow, 'item', undefined, app.activeLocale) : null,
-	);
+	const detail = $derived(rowDetail(previewId ? b.row(previewId) : undefined, 'item'));
 	const carrying = (id: string) => b.draft.inventory.some((i) => i.item === id);
 
 	// The schema's own order, which runs weapon → armor → gear → magic, is the order a player shops

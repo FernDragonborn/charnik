@@ -1,15 +1,32 @@
 <script lang="ts">
 	// Languages. A flat multi-select — there is nothing to compare and nothing to preview, so this
 	// pane is deliberately just the chips and a count.
+	//
+	// It still opens with the SAME search row as every other picker and walks with the same keys:
+	// thirty-five rows is a list, and a list the keyboard cannot reach is one ui.md §5 does not
+	// allow. Enter takes or drops the highlighted language, because here reading and taking are the
+	// same act — a language has nothing to read.
 	import { _ } from '$lib/i18n';
 	import { build, rowName } from '../build-view-model.svelte';
+	import { filterByName } from '../rows';
+	import { PickerReading } from '../picker-reading.svelte';
+	import PickerSearch from './PickerSearch.svelte';
 	const b = build;
 
 	let query = $state('');
-	const shown = $derived(
-		query.trim()
-			? b.languageList.filter((r) => rowName(r).toLowerCase().includes(query.trim().toLowerCase()))
-			: b.languageList
+	let highlighted = $state<string | null>(null);
+	const shown = $derived(filterByName(b.languageList, query));
+
+	const pickerId = $props.id();
+	const picker = new PickerReading(
+		() => ({
+			ids: shown.map((r) => r.effectiveId),
+			previewId: highlighted,
+			onpreview: (id) => (highlighted = id),
+			// there is no article to open here, so Enter goes straight through to the toggle
+			onenter: (id) => b.toggleLanguage(id),
+		}),
+		pickerId,
 	);
 </script>
 
@@ -18,13 +35,34 @@
 		· {$_('build.languages.backgroundGrants', { values: { count: b.backgroundLangCount } })}{/if}
 </p>
 
-<input class="text-field" placeholder={$_('build.languages.search')} bind:value={query} />
+<PickerSearch
+	bind:query
+	bind:element={picker.search}
+	placeholder={$_('build.languages.search')}
+	count={shown.length}
+	onkeydown={picker.fromSearch}
+	listId={picker.listId}
+	activeId={picker.activeId}
+/>
 
-<div class="chips">
+<div
+	class="chips"
+	id={picker.listId}
+	role="listbox"
+	aria-multiselectable="true"
+	aria-label={$_('build.inspector.options')}
+	tabindex="-1"
+	onkeydown={picker.fromOptions}
+>
 	{#each shown as row (row.effectiveId)}
+		{@const on = b.draft.selectedLanguages.includes(row.effectiveId)}
 		<button
 			class="pick-chip"
-			class:on={b.draft.selectedLanguages.includes(row.effectiveId)}
+			id={picker.optionId(row.effectiveId)}
+			role="option"
+			aria-selected={on}
+			class:on
+			class:is-active={row.effectiveId === highlighted}
 			onclick={() => b.toggleLanguage(row.effectiveId)}>{rowName(row)}</button
 		>
 	{:else}

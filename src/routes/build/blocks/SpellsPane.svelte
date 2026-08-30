@@ -11,10 +11,9 @@
 	// here. A per-level "2/3" counter would be invented game data.
 	import { _ } from '$lib/i18n';
 	import { build, rowName } from '../build-view-model.svelte';
-	import { buildDetail } from '$lib/content/detail';
 	import type { LoadedRow } from '$lib/content/loader';
-	import { app } from '$lib/stores/app.svelte';
 	import { titleCase } from '$lib/util/format';
+	import { rowDetail } from '../rows';
 	import SectionedPicker from './SectionedPicker.svelte';
 	const b = build;
 
@@ -26,10 +25,7 @@
 	let concentrationOnly = $state(false);
 	let ritualOnly = $state(false);
 
-	const previewRow = $derived(previewId ? b.row(previewId) : undefined);
-	const detail = $derived(
-		previewRow ? buildDetail(previewRow, 'spell', undefined, app.activeLocale) : null,
-	);
+	const detail = $derived(rowDetail(previewId ? b.row(previewId) : undefined, 'spell'));
 
 	const levelLabel = (level: number) =>
 		level === 0

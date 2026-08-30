@@ -12,7 +12,7 @@
 	import type { Snippet } from 'svelte';
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { DetailModel } from '$lib/content/detail';
-	import { pickerMeta, rowName, rowText } from '../rows';
+	import { filterByName, pickerMeta, rowName, rowText } from '../rows';
 	import { PickerReading } from '../picker-reading.svelte';
 	import PickerSearch from './PickerSearch.svelte';
 	import PickerCard from './PickerCard.svelte';
@@ -54,10 +54,7 @@
 	const trimmed = $derived(query.trim().toLowerCase());
 	const shown = $derived(
 		sections
-			.map((s) => ({
-				...s,
-				rows: trimmed ? s.rows.filter((r) => rowName(r).toLowerCase().includes(trimmed)) : s.rows,
-			}))
+			.map((s) => ({ ...s, rows: filterByName(s.rows, query) }))
 			.filter((s) => !trimmed || s.rows.length),
 	);
 	/** A collapsed section must never hide a search match (§5), so typing forces everything open. */

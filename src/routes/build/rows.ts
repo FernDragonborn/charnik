@@ -5,7 +5,7 @@
  * in the view-model makes the two import each other. It re-exports everything here, so importing
  * either module works.
  */
-import { entryMeta, localizedName, localizedProse } from '$lib/content/detail';
+import { buildDetail, entryMeta, localizedName, localizedProse, type DetailModel } from '$lib/content/detail';
 import { app } from '$lib/stores/app.svelte';
 import { splitList, type ContentType } from '$lib/content/schemas';
 
@@ -48,6 +48,28 @@ export function rowText(row: LoadedRow | undefined, locale = app.activeLocale): 
 		.replace(/\s*\n+\s*/g, ' ')
 		.trim();
 }
+
+/**
+ * The rows whose displayed name contains `query`, case-insensitively — what every builder search box
+ * means by typing. One implementation because three had it: the inspector's option list, the
+ * sectioned picker's sections, and the language chips.
+ *
+ * An empty query returns the list untouched, so a caller never has to special-case it.
+ */
+export function filterByName<T extends LoadedRow>(rows: T[], query: string): T[] {
+	const needle = query.trim().toLowerCase();
+	if (!needle) return rows;
+	return rows.filter((row) => rowName(row).toLowerCase().includes(needle));
+}
+
+/**
+ * The article model for a row, in the locale the UI is being read in.
+ *
+ * `buildDetail` takes a locale because the compendium and the translator pass their own; everything
+ * in the builder means "the one the user is reading", and four places said so a character at a time.
+ */
+export const rowDetail = (row: LoadedRow | undefined, type: ContentType): DetailModel | null =>
+	row ? buildDetail(row, type, undefined, app.activeLocale) : null;
 
 /** The catalog lookup a formatter needs, passed in rather than reached for: this module has no
  *  component to read `$_` from, and the units phrasing is a translated sentence. */
