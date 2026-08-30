@@ -7,6 +7,10 @@
  *   node tools/visual/shot.mjs                      # compare current render vs baseline → exit 1 on drift
  *   node tools/visual/shot.mjs --filter=compendium  # only states whose name contains "compendium"
  *
+ * `--filter` is for LOOKING, not for baselining. States share one browser context, so what a state
+ * renders can depend on the ones before it (see the combat route). Capture a baseline with a full
+ * `--update` run, or the saved image is of a sequence the comparison run never repeats.
+ *
  * BASE env overrides the URL (default http://localhost:5173 — the dev server is often on a different
  * port, read `pnpm dev`'s output and pass BASE=http://localhost:PORT).
  *
@@ -26,6 +30,8 @@ const UPDATE = process.argv.includes('--update');
 const FILTER = (process.argv.find((a) => a.startsWith('--filter=')) ?? '').slice(
 	'--filter='.length,
 );
+/** Long enough for a debounced autosave to land — the combat sheet's is 800ms. */
+const RESTORE_FLUSH_MS = 1000;
 const DIR = 'tools/visual';
 const BASELINE = `${DIR}/baseline`;
 const CURRENT = `${DIR}/current`;
@@ -72,7 +78,14 @@ const ROUTES = [
 			{ name: 'combat-turnbar', prep: clickBtn(/Combat/), restore: clickBtn(/Combat/) },
 			{ name: 'combat-dice', prep: clickBtn(/Dice tray/), ready: '[role="dialog"]' },
 			// the tray PREFILLED from an attack: a test line AND an editable damage line, which is the
-			// state UBUG-21 was about — and the only one that shows the two-line model on real data
+			// state UBUG-21 was about — and the only one that shows the two-line model on real data.
+			//
+			// LAST in this route, and it has to stay last: its prep rolls a real attack, and a prep
+			// runs whether or not `ready` then matches — a "skipped" state has already had its effect.
+			// Ordering is the only thing keeping that off the next capture, which is the standing
+			// weakness of this harness: states share one browser context, so anything a prep writes to
+			// storage or to the roll strip is visible to every state after it. A state that fails its
+			// `ready` check is the sharp edge, because nothing in the output says it changed anything.
 			{
 				name: 'combat-dice-attack',
 				prep: (p) =>
@@ -254,8 +267,16 @@ async function run() {
 				if (px > 0) drifted.push({ name: st.name, px });
 			}
 			// `restore` reverts a state that mutated PERSISTENT data (e.g. combat-turnbar toggles
-			// play.inCombat, which autosaves) so it can't bleed into the next run's baseline.
-			if (st.restore) await st.restore(page).catch(() => {});
+			// play.inCombat, which autosaves) so it can't bleed into the next state or the next run.
+			//
+			// The wait is the whole point: the save it undoes is DEBOUNCED, so a `goto` fired straight
+			// after the restoring click cancels it and leaves the mutation on disk. That failure is
+			// invisible in isolation — the state after it drifts, passes when run alone with --filter,
+			// and drifts again in a full run.
+			if (st.restore) {
+				await st.restore(page).catch(() => {});
+				await page.waitForTimeout(RESTORE_FLUSH_MS);
+			}
 		}
 	}
 	await browser.close();

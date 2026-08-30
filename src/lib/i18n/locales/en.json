@@ -681,6 +681,7 @@
 			"removeRow": "Remove {name}",
 			"close": "Close",
 			"readMore": "Click to read in full",
+			"readOrTake": "Click to read · double-click to take",
 			"expandAll": "expand all",
 			"collapseAll": "collapse all",
 			"sectionTaken": "{count} taken"

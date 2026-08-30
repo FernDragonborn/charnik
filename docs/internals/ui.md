@@ -142,6 +142,11 @@ Anything that clamps a content row's text owes a click that shows the rest.
 5. **A collapsed section must never hide a search match** — typing expands everything with a hit.
 6. **Reading and taking are separate controls.** The row body opens the article; the left-hand
    toggle takes it. A click that both reads and commits means you cannot read before you commit.
+   A **double-click** on the row body is a shortcut to that toggle — the same act, under the hand
+   that is already there, for the one you do dozens of times in a row. It exists only where a row
+   HAS a toggle, so a one-of pick (whose only commit is the card's Take, after the diff) never gains
+   a gesture that swaps a class without showing what it costs. The teaser announces it, because a
+   shortcut nobody is told about is not one.
 7. **Two tiers of reading**: hover/focus shows a compact teaser card (meta line + a clamped few
    lines, `pointer-events: none` so it needs no hover-bridge and can never be the thing you try to
    scroll); click opens the full popover. Baldur's Gate 3 is the reference for both.

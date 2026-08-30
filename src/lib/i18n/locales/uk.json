@@ -681,6 +681,7 @@
 			"removeRow": "Прибрати: {name}",
 			"close": "Закрити",
 			"readMore": "Клікніть, щоб прочитати повністю",
+			"readOrTake": "Клік — читати · подвійний клік — взяти",
 			"expandAll": "розгорнути все",
 			"collapseAll": "згорнути все",
 			"sectionTaken": "взято {count}"

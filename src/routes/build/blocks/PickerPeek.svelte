@@ -3,7 +3,6 @@
 	// a click per row. `pointer-events: none` is deliberate — there is nothing to click in it, so it
 	// needs no hover-bridge to survive the trip and can never be the thing you try to scroll. Reading
 	// in full is the click, and that opens PickerCard.
-	import { _ } from '$lib/i18n';
 	import { placeCard, entryElement } from '../card-placement';
 
 	let {
@@ -12,6 +11,7 @@
 		title,
 		meta,
 		text,
+		hint,
 	}: {
 		picker: HTMLElement;
 		entryId: string;
@@ -19,6 +19,9 @@
 		meta: string;
 		/** Plain prose, already stripped of markdown — the peek clamps it, it does not render it. */
 		text: string;
+		/** What the pointer can do to this row. Supplied by the picker, because a list whose rows have
+		 *  a take toggle offers more than one whose rows do not. */
+		hint: string;
 	} = $props();
 
 	let peek = $state<HTMLElement | null>(null);
@@ -35,7 +38,7 @@
 		{#if meta}<span class="pmeta">{meta}</span>{/if}
 	</header>
 	<p class="ptext">{text}</p>
-	<span class="pmore">{$_('build.picker.readMore')}</span>
+	<span class="pmore">{hint}</span>
 </div>
 
 <style>

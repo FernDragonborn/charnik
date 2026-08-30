@@ -200,11 +200,15 @@
 					>
 						<Icon name="check" size={12} />
 					</button>
+					<!-- a double-click is the shortcut to the toggle beside it: the hand is already on the
+					     row, and the ✓ is a small target to travel to for something you do dozens of
+					     times. It commits nothing a single click does, so reading stays free. -->
 					<button
 						class="sbody"
 						role="option"
 						aria-selected={id === previewId}
 						onclick={() => read(id)}
+						ondblclick={() => ontake(id)}
 						onmouseenter={() => (peeking = id)}
 						onmouseleave={() => (peeking = null)}
 						onfocus={() => (peeking = id)}
@@ -238,6 +242,7 @@
 		title={rowName(peekRow)}
 		meta={pickerMeta(peekRow, $_)}
 		text={rowText(peekRow)}
+		hint={$_('build.picker.readOrTake')}
 	/>
 {/if}
 
@@ -412,6 +417,9 @@
 		gap: 9px;
 		padding: 6px 10px 6px 2px;
 		border-radius: 9px;
+		/* `all: unset` puts text selection back, and the row's second click is a double-click that
+		   takes the spell — highlighting its name on the way is not what that gesture meant */
+		user-select: none;
 	}
 	.sbody:focus-visible {
 		outline: var(--focus-ring);
