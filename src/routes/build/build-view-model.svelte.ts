@@ -38,7 +38,8 @@ import { FeatSlots } from './feat-slots.svelte';
 import { AbilityAllocation } from './ability-allocation.svelte';
 import { ASI, rowName, rowOfType } from './rows';
 import { DraftInventory } from './draft-inventory';
-// re-exported so every existing `from '../build-view-model.svelte'` import keeps working
+// the blocks reach these through the view-model they already import, so `rows` stays a leaf nobody
+// has to know about to print a name
 export { ASI, rowName, rowOfType };
 import {
 	toggleCapped,
@@ -57,20 +58,15 @@ const csv = splitList;
 
 
 /**
- * Under the 400-line lint since the autosaved draft went to `draft-session.svelte.ts` and the
- * picker's "what is already picked" question to `draft.ts`. Out before those: the ability scores and
- * their boosts → `AbilityAllocation`; the draft model + factories → `build/draft.ts`; every pure
- * derivation (spell picker, `assembleCharacter`, `draftFromCharacter`, issues) → `build/derive.ts`;
- * the ASI/feat slot machinery → `feat-slots.svelte.ts`.
+ * What is left here is the draft itself and the derivations that read all of it. Everything with a
+ * narrower job lives beside it: `AbilityAllocation`, `FeatSlots`, `DraftInventory`, `DraftSession`,
+ * `DraftHistory`, `Inspector`, and the pure model in `draft.ts` / `derive.ts`.
  *
- * **The `bind:`-ed draft is what makes further splits expensive**, and two prior sessions stopped
- * here for that reason. It is one `$state` object whose fields are bound across `build/blocks/*`, so
- * relocating any of it moves `bind:` surface across the component↔VM seam — where a reactivity break
- * escapes unit tests and only the running UI shows it. The ability carve worked because it moved
- * DERIVATIONS over the draft, never the draft itself: not one `bind:` target changed.
- *
- * Apply that test to the next candidate (the option lists, the spell picker, skills+expertise). If it
- * would move a bound field, verify live via `shot.mjs` and a driven browser, never blind.
+ * **The `bind:`-ed draft is what makes a further split expensive.** It is one `$state` object whose
+ * fields are bound across `build/blocks/*`, so moving any of it moves `bind:` surface across the
+ * component↔view-model seam — where a broken binding passes every unit test and only the running UI
+ * shows it. A carve that moves DERIVATIONS over the draft is cheap; one that moves a bound field is
+ * not, and is verified in a driven browser rather than reasoned about.
  */
 class BuildVM {
 	// read the shared reactive content store → a live content refresh re-derives options with no reload

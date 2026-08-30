@@ -22,6 +22,7 @@ import type { BuildTodo } from '$lib/build/derive';
 import type { CharacterSheet } from '$lib/character/derive';
 import { filterByName, rowDetail, rowName, ASI } from './rows';
 import type { DraftState } from './draft';
+import type { FeatSlots } from './feat-slots.svelte';
 
 /**
  * What the inspector needs from the build view-model around it — a STRUCTURAL host, like FeatsHost
@@ -43,12 +44,10 @@ export interface InspectorHost {
 	backgroundList: LoadedRowByType<'background'>[];
 	classList: LoadedRowByType<'class'>[];
 	subclassesFor(classId: string | null): LoadedRow[];
-	feats: {
-		featOptionsFor(level: number): LoadedRow[];
-		/** Already spent on another slot and not repeatable — not offered to this one. */
-		featOptionBlocked(ref: string, slotKey: string): boolean;
-		setSlotFeat(key: string, ref: string): void;
-	};
+	/** Picked off the real class rather than re-described: a hand-written twin of three methods is a
+	 *  second declaration of a shape that has one owner, and it drifts silently when that owner
+	 *  changes. `feat-slots` imports nothing from here, so the type-only reference adds no cycle. */
+	feats: Pick<FeatSlots, 'featOptionsFor' | 'featOptionBlocked' | 'setSlotFeat'>;
 
 	pickSpecies(id: string | null): void;
 	setClass(index: number, id: string | null): void;
@@ -63,23 +62,30 @@ export type InspectorTarget =
 	| { id: 'class'; index: number }
 	| { id: 'subclass'; index: number }
 	| { id: 'feat'; slotKey: string; level: number }
-	| { id: 'abilities' }
-	| { id: 'skills' }
-	| { id: 'languages' }
-	| { id: 'spells' }
-	| { id: 'inventory' }
-	| { id: 'notes' };
-
-/** The `edit` targets, as the pane names them — the value the shell switches on to render a control
- *  surface. A union so a new pane can't be spelled wrong. */
-type EditPane = 'abilities' | 'skills' | 'languages' | 'spells' | 'inventory' | 'notes';
+	| { id: EditPane };
 
 /**
- * The panes that set up their OWN scroll region — a picker whose list scrolls under a fixed search
- * box and section rail. For everything else the shell's body is the scroll region, which is how the
- * pane ends up with exactly one either way (ui.md §1: never a scroll container around another).
+ * Every `edit` target — a control surface that is its own thing, so the pane only has to name it.
+ *
+ * ONE entry per pane, because everything else about a pane is derived from this: the id it answers
+ * to, the two lines of copy above it, and whether it brings its own scroll region.
+ *
+ * `ownsScroll` marks a picker whose list scrolls under a fixed search box and section rail. For
+ * everything else the shell's body is the scroll region, which is how a pane ends up with exactly
+ * one either way (ui.md §1: never a scroll container around another).
  */
-const PANE_OWNS_SCROLL = new Set<EditPane>(['spells', 'inventory']);
+const EDIT_PANES = {
+	abilities: { titleKey: 'abilitiesTitle', blurbKey: 'abilitiesBlurb', ownsScroll: false },
+	skills: { titleKey: 'skillsTitle', blurbKey: 'skillsBlurb', ownsScroll: false },
+	languages: { titleKey: 'languagesTitle', blurbKey: 'languagesBlurb', ownsScroll: false },
+	spells: { titleKey: 'spellsTitle', blurbKey: 'spellsBlurb', ownsScroll: true },
+	inventory: { titleKey: 'inventoryTitle', blurbKey: 'inventoryBlurb', ownsScroll: true },
+	notes: { titleKey: 'notesTitle', blurbKey: 'notesBlurb', ownsScroll: false },
+} as const satisfies Record<string, { titleKey: string; blurbKey: string; ownsScroll: boolean }>;
+
+/** The `edit` targets, as the pane names them — read off the table, so a pane cannot exist in the
+ *  type and be missing from the copy, or the other way round. */
+export type EditPane = keyof typeof EDIT_PANES;
 
 /** The words a target is described with: catalog KEYS under `build.spec`, not sentences — this
  *  module has no locale, and the shell that renders it does. */
@@ -126,31 +132,14 @@ export function targetForTodo(todo: BuildTodo): InspectorTarget | null {
 	}
 }
 
-/** The `edit` targets: a control surface that is its own thing, so the pane only has to name it.
- *  A flat table because none of them needs the draft to describe itself. */
-const EDIT_SPECS: Record<EditPane, EditSpec> = {
-	abilities: { kind: 'edit', pane: 'abilities', titleKey: 'abilitiesTitle', blurbKey: 'abilitiesBlurb' },
-	skills: { kind: 'edit', pane: 'skills', titleKey: 'skillsTitle', blurbKey: 'skillsBlurb' },
-	languages: { kind: 'edit', pane: 'languages', titleKey: 'languagesTitle', blurbKey: 'languagesBlurb' },
-	spells: { kind: 'edit', pane: 'spells', titleKey: 'spellsTitle', blurbKey: 'spellsBlurb' },
-	inventory: { kind: 'edit', pane: 'inventory', titleKey: 'inventoryTitle', blurbKey: 'inventoryBlurb' },
-	notes: { kind: 'edit', pane: 'notes', titleKey: 'notesTitle', blurbKey: 'notesBlurb' },
-};
+/** Is this target one of the edit panes? A predicate over the table rather than a cast, so the table
+ *  stays the only list of them. */
+const isEditPane = (id: InspectorTarget['id']): id is EditPane => id in EDIT_PANES;
 
-/** The edit targets, narrowed by their own id — a lookup rather than a cast, so adding a pane to the
- *  union without adding it here is a type error, not a blank pane. */
 function editSpecFor(t: InspectorTarget): EditSpec | null {
-	switch (t.id) {
-		case 'abilities':
-		case 'skills':
-		case 'languages':
-		case 'spells':
-		case 'inventory':
-		case 'notes':
-			return EDIT_SPECS[t.id];
-		default:
-			return null;
-	}
+	if (!isEditPane(t.id)) return null;
+	const { titleKey, blurbKey } = EDIT_PANES[t.id];
+	return { kind: 'edit', pane: t.id, titleKey, blurbKey };
 }
 
 /**
@@ -319,7 +308,7 @@ export class Inspector {
 
 	/** Should the shell's body be the scroll region? Every pick target builds its own (the grid
 	 *  scrolls under a fixed search box), and so do the two big edit pickers. */
-	bodyScrolls = $derived(this.spec?.kind === 'edit' && !PANE_OWNS_SCROLL.has(this.spec.pane));
+	bodyScrolls = $derived(this.spec?.kind === 'edit' && !EDIT_PANES[this.spec.pane].ownsScroll);
 
 	// --- the option list ------------------------------------------------------------------------
 	/** The current target's options, narrowed by the search box. Case-insensitive substring on the

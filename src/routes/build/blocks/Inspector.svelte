@@ -9,7 +9,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
-	import type { Inspector } from '../inspector.svelte';
+	import type { EditPane, Inspector } from '../inspector.svelte';
 	import InspectorGrid from './InspectorGrid.svelte';
 	import FeatPane from './FeatPane.svelte';
 	import AbilitiesPane from './AbilitiesPane.svelte';
@@ -18,7 +18,19 @@
 	import SpellsPane from './SpellsPane.svelte';
 	import InventoryPane from './InventoryPane.svelte';
 	import NotesPane from './NotesPane.svelte';
+	import type { Component } from 'svelte';
 	const b = build;
+
+	/** Which component answers each edit target. A table keyed by the pane union, so a pane added to
+	 *  `EDIT_PANES` and forgotten here is a type error rather than a blank pane. */
+	const PANE_COMPONENT: Record<EditPane, Component> = {
+		abilities: AbilitiesPane,
+		skills: SkillsPane,
+		languages: LanguagesPane,
+		spells: SpellsPane,
+		inventory: InventoryPane,
+		notes: NotesPane,
+	};
 	// defaults to the page's shared inspector; /dev/inspector passes its own so it can show every
 	// target at once, each previewing against the same draft.
 	let { inspector = build.inspector }: { inspector?: Inspector } = $props();
@@ -103,18 +115,9 @@
 					<FeatPane slotKey={target.slotKey} {ins} />
 				{:else if spec.kind === 'pick'}
 					<InspectorGrid {ins} />
-				{:else if spec.pane === 'abilities'}
-					<AbilitiesPane />
-				{:else if spec.pane === 'skills'}
-					<SkillsPane />
-				{:else if spec.pane === 'languages'}
-					<LanguagesPane />
-				{:else if spec.pane === 'spells'}
-					<SpellsPane />
-				{:else if spec.pane === 'inventory'}
-					<InventoryPane />
-				{:else if spec.pane === 'notes'}
-					<NotesPane />
+				{:else}
+					{@const Pane = PANE_COMPONENT[spec.pane]}
+					<Pane />
 				{/if}
 			</div>
 		{/key}
