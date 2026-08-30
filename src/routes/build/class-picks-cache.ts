@@ -101,6 +101,38 @@ export function restoreClassPicks(draft: DraftState, row: number, picks: ClassSc
 	);
 }
 
+/**
+ * Take row `row` off the draft.
+ *
+ * The slot maps are keyed by ROW INDEX, so dropping a row out of the middle of the list moves every
+ * row after it onto keys that belong to somebody else: remove the Fighter and the Rogue behind it
+ * inherits the Fighter's level-4 feat while losing its own. Everything is therefore read out first,
+ * the maps are emptied, and each survivor is written back under the index it now has.
+ *
+ * The leaving class's picks go to the cache like a swap's do — removing a row is another way of
+ * saying "not this one", and it costs the same nothing if the class comes back.
+ */
+export function removeClassRow(
+	draft: DraftState,
+	row: number,
+	cache: Map<string, ClassScopedPicks>,
+): void {
+	if (row <= 0 || row >= draft.classes.length) return; // row 0 is the primary and always stays
+	const stashes = draft.classes.map((_, i) => stashClassPicks(draft, i));
+	const leaving = draft.classes[row]?.classId;
+	const leavingPicks = stashes[row];
+	if (leaving && leavingPicks) cache.set(leaving, leavingPicks);
+
+	for (const map of [draft.slotFeats, draft.slotAsi, draft.slotFeatAbility, draft.slotFeatSkills])
+		for (const key of Object.keys(map)) delete map[key];
+
+	draft.classes = draft.classes.filter((_, i) => i !== row);
+	stashes.forEach((picks, i) => {
+		if (!picks || i === row) return;
+		restoreClassPicks(draft, i < row ? i : i - 1, picks);
+	});
+}
+
 /** Put `classId` in row `row`: stash what is leaving, clear the row, hand back what is returning. */
 export function switchClass(
 	draft: DraftState,

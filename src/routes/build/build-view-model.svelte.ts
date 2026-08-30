@@ -51,7 +51,7 @@ import {
 import type { DraftRecord } from '$lib/character/draft-repository';
 import { DraftSession } from './draft-session.svelte';
 import { DraftHistory } from './draft-history.svelte';
-import { switchClass, type ClassScopedPicks } from './class-picks-cache';
+import { removeClassRow, switchClass, type ClassScopedPicks } from './class-picks-cache';
 
 const csv = splitList;
 
@@ -250,10 +250,8 @@ class BuildVM {
 		if (!this.canRaiseLevel) return; // a new class starts at 1 → would exceed 20
 		this.draft.classes = [...this.draft.classes, { classId: null, subclassId: null, level: 1 }];
 	};
-	removeClass = (i: number) => {
-		if (i === 0) return; // keep the primary row
-		this.draft.classes = this.draft.classes.filter((_, idx) => idx !== i);
-	};
+	/** Drop a class row, re-keying what the rows behind it own — see `class-picks-cache`. */
+	removeClass = (i: number) => removeClassRow(this.draft, i, this.classPicks);
 	/** Change the class in row `i`, stashing what the outgoing one owned under its own ref and handing
 	 *  it straight back if it returns — so trying a class costs nothing (see `class-picks-cache`). */
 	setClass = (i: number, id: string | null) => switchClass(this.draft, i, id, this.classPicks);
