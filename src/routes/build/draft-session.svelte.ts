@@ -25,8 +25,21 @@ export class DraftSession {
 	 *  and may never get one (AGENTS.md: identify anything shareable with a GUID). */
 	guid = $state<string>(crypto.randomUUID());
 
+	/**
+	 * What was last written, so an unchanged draft is not written again.
+	 *
+	 * The builder's option preview derives the sheet on a TRIAL draft and puts the draft back, which
+	 * replaces the `$state` object twice — so merely reading what a class would do wakes the autosave
+	 * with nothing to save. Without this, a player browsing options rewrites the same file on disk
+	 * over and over. Compared by value because the draft is plain data.
+	 */
+	private written: string | null = null;
+
 	/** Forget the current draft's identity — the next autosave starts a new file. */
-	renew = () => (this.guid = crypto.randomUUID());
+	renew = () => {
+		this.guid = crypto.randomUUID();
+		this.written = null; // a new file has nothing written to it yet
+	};
 
 	/** Write the draft, or remove it once there is nothing left worth keeping. Safe to call at any
 	 *  time; the page calls it debounced. */
@@ -34,12 +47,19 @@ export class DraftSession {
 		const host = this.host();
 		if (host.isEditing) return;
 		const storage = getUserStorage();
-		if (!isDraftWorthKeeping(host.draft)) return deleteDraft(storage, this.guid);
+		if (!isDraftWorthKeeping(host.draft)) {
+			this.written = null;
+			return deleteDraft(storage, this.guid);
+		}
+		const snapshot = $state.snapshot(host.draft);
+		const body = JSON.stringify([snapshot, [...host.classPicks]]);
+		if (body === this.written) return;
+		this.written = body;
 		await saveDraft(storage, {
 			guid: this.guid,
 			savedAt: new Date().toISOString(),
 			summary: draftSummary(host.draft),
-			draft: $state.snapshot(host.draft),
+			draft: snapshot,
 			classPicks: [...host.classPicks],
 		});
 	};
@@ -48,5 +68,8 @@ export class DraftSession {
 	discard = (): Promise<void> => deleteDraft(getUserStorage(), this.guid);
 
 	/** Take over a resumed record's identity. The caller restores the draft itself. */
-	adopt = (record: DraftRecord) => (this.guid = record.guid);
+	adopt = (record: DraftRecord) => {
+		this.guid = record.guid;
+		this.written = null;
+	};
 }
