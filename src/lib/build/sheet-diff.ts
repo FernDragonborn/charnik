@@ -6,32 +6,59 @@
  * what a background IS, this says what taking it DOES to these six numbers. Only changed rows come
  * back — an unchanged AC is not information.
  *
- * Pure: two sheets in, labelled rows out. No content graph, no draft, no runes.
+ * Pure: two sheets in, rows out. No content graph, no draft, no runes — and no locale, which is why
+ * every word it produces leaves here as a catalog KEY and is read by the component that renders it.
  */
 import type { CharacterSheet } from '../character/derive';
 import { ABILITIES } from '../character/schema';
 import { SKILL_ABILITY, type SkillId } from '../character/skills';
-import { signed, titleCase } from '../util/format';
+import { signed } from '../util/format';
+
+/**
+ * A piece of a diff row, in the only forms this module can honestly produce: text that is already
+ * language-free (a number), one catalog key, or several read as one phrase.
+ */
+export type DiffText =
+	| { text: string }
+	| { key: string; values?: Record<string, string | number> }
+	/** Several keys as one comma-separated phrase — the damage types a pick starts resisting. */
+	| { keys: string[] };
 
 export interface SheetChange {
-	label: string;
-	from: string;
-	to: string;
+	label: DiffText;
+	from: DiffText;
+	to: DiffText;
 	/** Did the number move in the direction a player wants? Drives the colour, nothing else. */
 	better: boolean;
+	/** Stable across a re-derive, for the `{#each}` key: the label is an object now. */
+	id: string;
 }
 
-/** A stat worth diffing: how to name it and how to read it out of a sheet. `signed` renders +3
- *  rather than 3, which is how a modifier is spoken. */
-const STATS: { label: string; of: (s: CharacterSheet) => number; signed?: boolean }[] = [
-	{ label: 'AC', of: (s) => s.ac.value },
-	{ label: 'Max HP', of: (s) => s.maxHp.value },
-	{ label: 'Initiative', of: (s) => s.initiative.value, signed: true },
-	{ label: 'Speed', of: (s) => s.speed.value },
-	{ label: 'Proficiency', of: (s) => s.proficiencyBonus, signed: true },
-	{ label: 'Carry capacity', of: (s) => s.carryingCapacity.value },
-	{ label: 'Spell save DC', of: (s) => s.spellcasting.classes[0]?.saveDC.value ?? 0 },
-	{ label: 'Spell attack', of: (s) => s.spellcasting.classes[0]?.attack.value ?? 0, signed: true },
+const num = (n: number, plus = false): DiffText => ({ text: plus ? signed(n) : String(n) });
+
+/** A stat worth diffing: what names it, and how to read it out of a sheet. `signed` renders +3
+ *  rather than 3, which is how a modifier is spoken.
+ *
+ *  The keys are the sheet's OWN — the inspector must not invent a second word for the AC the vitals
+ *  card is already calling something. */
+const STATS: { id: string; key: string; of: (s: CharacterSheet) => number; signed?: boolean }[] = [
+	{ id: 'ac', key: 'build.vitals.ac', of: (s) => s.ac.value },
+	{ id: 'maxHp', key: 'build.vitals.maxHp', of: (s) => s.maxHp.value },
+	{ id: 'initiative', key: 'build.vitals.initiative', of: (s) => s.initiative.value, signed: true },
+	{ id: 'speed', key: 'build.diff.speed', of: (s) => s.speed.value },
+	{ id: 'prof', key: 'build.diff.proficiency', of: (s) => s.proficiencyBonus, signed: true },
+	{ id: 'carry', key: 'build.diff.carryCapacity', of: (s) => s.carryingCapacity.value },
+	{
+		id: 'spellDc',
+		key: 'build.vitals.spellDc',
+		of: (s) => s.spellcasting.classes[0]?.saveDC.value ?? 0,
+	},
+	{
+		id: 'spellAttack',
+		key: 'build.vitals.spellAttack',
+		of: (s) => s.spellcasting.classes[0]?.attack.value ?? 0,
+		signed: true,
+	},
 ];
 
 const skillIds = Object.keys(SKILL_ABILITY) as SkillId[];
@@ -45,17 +72,26 @@ function numericChanges(before: CharacterSheet, after: CharacterSheet): SheetCha
 	for (const ab of ABILITIES) {
 		const from = before.abilities[ab].score.value;
 		const to = after.abilities[ab].score.value;
+		// the abbreviation is the whole label, and it is the same six letters in every locale the app
+		// already passes them to (`build.abilities.scoreLabel`)
 		if (from !== to)
-			out.push({ label: ab.toUpperCase(), from: String(from), to: String(to), better: to > from });
+			out.push({
+				id: ab,
+				label: { text: ab.toUpperCase() },
+				from: num(from),
+				to: num(to),
+				better: to > from,
+			});
 		// a save moves for reasons the score doesn't — a class granting proficiency is the usual one,
 		// and it is exactly the kind of thing a player picking a class wants to see
 		const saveFrom = before.abilities[ab].save.value;
 		const saveTo = after.abilities[ab].save.value;
 		if (saveFrom !== saveTo)
 			out.push({
-				label: `${ab.toUpperCase()} save`,
-				from: signed(saveFrom),
-				to: signed(saveTo),
+				id: `${ab}-save`,
+				label: { key: 'build.diff.save', values: { ability: ab.toUpperCase() } },
+				from: num(saveFrom, true),
+				to: num(saveTo, true),
 				better: saveTo > saveFrom,
 			});
 	}
@@ -63,8 +99,13 @@ function numericChanges(before: CharacterSheet, after: CharacterSheet): SheetCha
 		const from = stat.of(before);
 		const to = stat.of(after);
 		if (from === to) continue;
-		const show = (n: number) => (stat.signed ? signed(n) : String(n));
-		out.push({ label: stat.label, from: show(from), to: show(to), better: to > from });
+		out.push({
+			id: stat.id,
+			label: { key: stat.key },
+			from: num(from, stat.signed),
+			to: num(to, stat.signed),
+			better: to > from,
+		});
 	}
 	return out;
 }
@@ -76,9 +117,10 @@ function skillChanges(before: CharacterSheet, after: CharacterSheet): SheetChang
 		if (from === to) return [];
 		return [
 			{
-				label: titleCase(id),
-				from,
-				to,
+				id: `skill-${id}`,
+				label: { key: `skillName.${id}` },
+				from: { key: `build.diff.rank.${from}` },
+				to: { key: `build.diff.rank.${to}` },
 				better: PROF_RANK[to] > PROF_RANK[from],
 			},
 		];
@@ -88,16 +130,21 @@ function skillChanges(before: CharacterSheet, after: CharacterSheet): SheetChang
 /** Defenses are lists, so they diff as "what got added" rather than "from → to". */
 function defenseChanges(before: CharacterSheet, after: CharacterSheet): SheetChange[] {
 	const kinds = ['resist', 'immune', 'vulnerable'] as const;
-	const label = { resist: 'Resistant', immune: 'Immune', vulnerable: 'Vulnerable' };
+	const key = {
+		resist: 'build.diff.resistant',
+		immune: 'build.diff.immune',
+		vulnerable: 'build.diff.vulnerable',
+	};
 	return kinds.flatMap((kind) => {
 		const had = new Set(before.defenses[kind]);
 		const gained = after.defenses[kind].filter((d) => !had.has(d));
 		if (!gained.length) return [];
 		return [
 			{
-				label: label[kind],
-				from: '—',
-				to: gained.join(', '),
+				id: `defense-${kind}`,
+				label: { key: key[kind] },
+				from: { text: '—' },
+				to: { keys: gained.map((d) => `damageType.${d}`) },
 				// vulnerability is the one gain a player does not want
 				better: kind !== 'vulnerable',
 			},

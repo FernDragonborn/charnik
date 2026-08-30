@@ -5,6 +5,8 @@ import { newCharacter, type Character } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { diffSheets } from './sheet-diff';
 import { socialBars } from './social';
+import { SKILL_ABILITY } from '../character/skills';
+import en from '../i18n/locales/en.json';
 
 const S = 'SRD 5.2.1';
 
@@ -50,13 +52,14 @@ describe('diffSheets', () => {
 		stronger.build.abilityBoosts = { con: 2 };
 		const rows = diffSheets(before, deriveSheet(stronger, g));
 
-		expect(rows.find((r) => r.label === 'CON')).toMatchObject({
-			from: '14',
-			to: '16',
+		expect(rows.find((r) => r.id === 'con')).toMatchObject({
+			label: { text: 'CON' },
+			from: { text: '14' },
+			to: { text: '16' },
 			better: true,
 		});
 		// +1 CON mod × 5 levels
-		expect(rows.find((r) => r.label === 'Max HP')?.better).toBe(true);
+		expect(rows.find((r) => r.id === 'maxHp')?.better).toBe(true);
 	});
 
 	it('training a skill reports the proficiency tier moving', async () => {
@@ -68,15 +71,48 @@ describe('diffSheets', () => {
 		trained.build.skills = ['athletics', 'intimidation'];
 		const rows = diffSheets(before, deriveSheet(trained, g));
 
-		expect(rows.find((r) => r.label === 'Athletics')).toMatchObject({
-			from: 'none',
-			to: 'proficient',
+		// keys, not words: this module has no locale, and the pane that renders it does
+		expect(rows.find((r) => r.id === 'skill-athletics')).toMatchObject({
+			label: { key: 'skillName.athletics' },
+			from: { key: 'build.diff.rank.none' },
+			to: { key: 'build.diff.rank.proficient' },
 			better: true,
 		});
 	});
 
 	it('an undreived side yields nothing — "we do not know" must not read as "nothing changes"', () => {
 		expect(diffSheets(null, null)).toEqual([]);
+	});
+
+	/**
+	 * Every word this module can produce is a catalog key, and a key with no entry renders as itself.
+	 * That failure is silent in the UI — "skillName.arcana" looks like a name until you read it — so
+	 * the keys are enumerated here against English rather than trusted.
+	 */
+	it('every key it can emit exists in the catalog', () => {
+		const at = (key: string): unknown =>
+			key.split('.').reduce<unknown>((node, part) => {
+				if (typeof node !== 'object' || node === null) return undefined;
+				return (node as Record<string, unknown>)[part];
+			}, en);
+
+		const keys = [
+			...Object.keys(SKILL_ABILITY).map((id) => `skillName.${id}`),
+			...['none', 'half', 'proficient', 'expertise'].map((r) => `build.diff.rank.${r}`),
+			'build.diff.save',
+			'build.diff.speed',
+			'build.diff.proficiency',
+			'build.diff.carryCapacity',
+			'build.diff.resistant',
+			'build.diff.immune',
+			'build.diff.vulnerable',
+			'build.vitals.ac',
+			'build.vitals.maxHp',
+			'build.vitals.initiative',
+			'build.vitals.spellDc',
+			'build.vitals.spellAttack',
+		];
+		expect(keys.filter((k) => typeof at(k) !== 'string')).toEqual([]);
 	});
 });
 

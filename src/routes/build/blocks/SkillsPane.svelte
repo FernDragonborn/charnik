@@ -4,9 +4,9 @@
 	// shared `SkillRows` the sheet uses — a skill is trained in exactly one control.
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
+	import { skillLabel } from '../rows';
 	import SkillRows from './SkillRows.svelte';
 	import SkillCounts from './SkillCounts.svelte';
-	import { titleCase } from '$lib/util/format';
 	const b = build;
 </script>
 
@@ -15,7 +15,7 @@
 {#if b.classSkillCount > 0}
 	<p class="subtext">
 		{$_(b.draft.strict ? 'build.skills.classList' : 'build.skills.classListFree', {
-			values: { skills: b.classSkillOptions.map(titleCase).join(' · ') }
+			values: { skills: b.classSkillOptions.map((s) => skillLabel(s, $_)).join(' · ') }
 		})}
 	</p>
 {:else if b.classId}
@@ -26,7 +26,7 @@
 
 {#if b.autoSkills.length}
 	<p class="subtext note">
-		{$_('build.skills.lockedOn', { values: { skills: b.autoSkills.map(titleCase).join(' · ') } })}
+		{$_('build.skills.lockedOn', { values: { skills: b.autoSkills.map((s) => skillLabel(s, $_)).join(' · ') } })}
 	</p>
 {/if}
 

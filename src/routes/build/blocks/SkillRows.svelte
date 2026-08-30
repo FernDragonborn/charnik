@@ -5,9 +5,10 @@
 	// skills are locked on, because a background does not ask.
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
+	import { skillLabel } from '../rows';
 	import { SKILL_ABILITY, type SkillId } from '$lib/character/skills';
 	import { ABILITIES } from '$lib/character/schema';
-	import { signed, titleCase } from '$lib/util/format';
+	import { signed } from '$lib/util/format';
 	import { why } from '$lib/combat/effects-view';
 	const b = build;
 
@@ -46,7 +47,7 @@
 						onclick={() => b.toggleSkill(skill)}
 					>
 						<i class="dot" class:prof={on} class:expert></i>
-						<span>{titleCase(skill)}</span>
+						<span>{skillLabel(skill, $_)}</span>
 					</button>
 					{#if on && b.expertiseCap > 0}
 						{@const capped = !expert && b.draft.strict && b.expertiseUsed >= b.expertiseCap}

@@ -747,6 +747,41 @@
 			"create": "Create character",
 			"save": "Save changes",
 			"saving": "Saving…"
+		},
+		"diff": {
+			"speed": "Speed",
+			"proficiency": "Proficiency",
+			"carryCapacity": "Carry capacity",
+			"save": "{ability} save",
+			"resistant": "Resistant",
+			"immune": "Immune",
+			"vulnerable": "Vulnerable",
+			"rank": {
+				"none": "none",
+				"half": "half",
+				"proficient": "proficient",
+				"expertise": "expertise"
+			}
 		}
+	},
+	"skillName": {
+		"acrobatics": "Acrobatics",
+		"animal_handling": "Animal Handling",
+		"arcana": "Arcana",
+		"athletics": "Athletics",
+		"deception": "Deception",
+		"history": "History",
+		"insight": "Insight",
+		"intimidation": "Intimidation",
+		"investigation": "Investigation",
+		"medicine": "Medicine",
+		"nature": "Nature",
+		"perception": "Perception",
+		"performance": "Performance",
+		"persuasion": "Persuasion",
+		"religion": "Religion",
+		"sleight_of_hand": "Sleight of Hand",
+		"stealth": "Stealth",
+		"survival": "Survival"
 	}
 }

@@ -747,6 +747,41 @@
 			"create": "Створити персонажа",
 			"save": "Зберегти зміни",
 			"saving": "Збереження…"
+		},
+		"diff": {
+			"speed": "Швидкість",
+			"proficiency": "Бонус вправності",
+			"carryCapacity": "Вантажність",
+			"save": "рятівний кидок {ability}",
+			"resistant": "Опір",
+			"immune": "Імунітет",
+			"vulnerable": "Вразливість",
+			"rank": {
+				"none": "немає",
+				"half": "половина",
+				"proficient": "вправність",
+				"expertise": "експертиза"
+			}
 		}
+	},
+	"skillName": {
+		"acrobatics": "Акробатика",
+		"animal_handling": "Догляд за тваринами",
+		"arcana": "Магія",
+		"athletics": "Атлетика",
+		"deception": "Обман",
+		"history": "Історія",
+		"insight": "Проникливість",
+		"intimidation": "Залякування",
+		"investigation": "Розслідування",
+		"medicine": "Медицина",
+		"nature": "Природа",
+		"perception": "Уважність",
+		"performance": "Виступ",
+		"persuasion": "Переконання",
+		"religion": "Релігія",
+		"sleight_of_hand": "Спритність рук",
+		"stealth": "Непомітність",
+		"survival": "Виживання"
 	}
 }

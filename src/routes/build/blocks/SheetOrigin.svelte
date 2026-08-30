@@ -4,6 +4,7 @@
 	// because an empty origin is the most common reason a draft can't be saved.
 	import { _ } from '$lib/i18n';
 	import { build, rowName } from '../build-view-model.svelte';
+	import { skillLabel } from '../rows';
 	import { splitList } from '$lib/content/schemas';
 	import { titleCase } from '$lib/util/format';
 	import type { InspectorTarget } from '../inspector.svelte';
@@ -13,7 +14,7 @@
 	const lineage = $derived(b.speciesOptionRow);
 	const background = $derived(b.backgroundRow);
 
-	const bgSkills = $derived(splitList(background?.data.skills).map((s) => titleCase(s)));
+	const bgSkills = $derived(splitList(background?.data.skills).map((s) => skillLabel(s, $_)));
 	const bgTools = $derived(splitList(background?.data.tools).map((t) => titleCase(t)));
 	const bgBoosts = $derived(splitList(background?.data.ability_choices).map((a) => a.toUpperCase()));
 

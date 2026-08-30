@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (58)
+## Duplicate suspects (57)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -19,6 +19,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 - `persist` ×5 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/packs.svelte.ts · src/lib/content/sources.svelte.ts · src/lib/effects/plugin-store.svelte.ts · src/lib/stores/app.svelte.ts
 - `label` ×4 — src/lib/components/settings/ThemesSettings.svelte · src/lib/content/grouping.ts · src/lib/content/homebrew.ts · src/routes/build/rows.ts
+- `num` ×4 — src/lib/build/sheet-diff.ts · src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `open` ×4 — src/routes/+page.svelte · src/routes/build/blocks/SheetAbilities.svelte · src/routes/build/blocks/SheetOrigin.svelte · src/routes/build/blocks/SheetSpells.svelte
 - `fileOf` ×3 — src/lib/character/draft-repository.ts · src/lib/character/repository.ts · src/lib/styles/themeFiles.ts
 - `files` ×3 — src/lib/character/draft-repository.ts · src/lib/content/review.svelte.ts · src/lib/storage/fetch.ts
@@ -26,10 +27,10 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `name` ×3 — src/lib/content/item-tags.ts · src/lib/storage/browser.ts · src/lib/styles/themeFiles.ts
 - `norm` ×3 — src/lib/storage/browser.ts · src/lib/storage/migrate.ts · src/routes/+layout.svelte
 - `now` ×3 — src/lib/content/remote/install.ts · src/lib/effects/plugin-registry.ts · src/lib/effects/plugin-sandbox.ts
-- `num` ×3 — src/lib/character/derive-stats.ts · src/lib/character/spellcasting.ts · src/lib/effects/expression-evaluator.ts
 - `onKeydown` ×3 — src/lib/actions/dismissOnEscape.ts · src/lib/actions/trapFocus.ts · src/lib/components/RollerLine.svelte
 - `REPO` ×3 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte · src/routes/dev/packs/+page.svelte
 - `save` ×3 — src/lib/components/ContentMetaModal.svelte · src/lib/components/EditContentForm.svelte · src/routes/translate/+page.svelte
+- `say` ×3 — src/routes/build/blocks/ChangeList.svelte · src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `sourceOf` ×3 — src/lib/components/RollerLine.svelte · src/lib/content/remote/diff.ts · src/lib/effects/resolver.ts
 - `toggle` ×3 — src/lib/components/ClassPicker.svelte · src/lib/components/settings/PluginsSettings.svelte · src/routes/compendium/[...entry]/+page.svelte
 - `blankDraft` ×2 — src/lib/content/homebrew.ts · src/routes/build/draft.ts
@@ -67,9 +68,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `REPORT` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `restoreDemo` ×2 — src/lib/components/NoCharacter.svelte · src/lib/components/settings/StorageSettings.svelte
 - `rowName` ×2 — src/lib/content/loader.ts · src/routes/build/rows.ts
-- `say` ×2 — src/routes/dev/packs-live/+page.svelte · src/routes/dev/packs-write/+page.svelte
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
-- `show` ×2 — src/lib/build/sheet-diff.ts · src/routes/dev/storage/+page.svelte
 - `SKILLS` ×2 — src/routes/build/blocks/FeatPane.svelte · src/routes/build/blocks/SkillRows.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
@@ -461,6 +460,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/build/sheet-diff.ts`
 
+- `type DiffText` — * A piece of a diff row, in the only forms this module can honestly produce: text that is already * language-free (a …
 - `interface SheetChange`
 - `function diffSheets` — * Everything a candidate pick moves: ability scores, the headline stats, skill proficiency tiers, * and newly gained …
 
@@ -1514,4 +1514,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 888 exports across 125 modules · 58 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 889 exports across 125 modules · 57 duplicate suspects._

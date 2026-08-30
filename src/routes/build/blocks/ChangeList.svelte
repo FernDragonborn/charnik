@@ -3,9 +3,17 @@
 	// highlighted option would produce. Silent when nothing moves, because an empty list here means
 	// "this choice touches no number", which is itself the answer.
 	import { _ } from '$lib/i18n';
-	import type { SheetChange } from '$lib/build/sheet-diff';
+	import type { DiffText, SheetChange } from '$lib/build/sheet-diff';
 
 	let { changes, taken = false }: { changes: SheetChange[]; taken?: boolean } = $props();
+
+	/** The diff is computed with no locale, so it hands back catalog keys and this reads them. */
+	const say = (t: DiffText): string =>
+		'text' in t
+			? t.text
+			: 'keys' in t
+				? t.keys.map((k) => $_(k)).join(', ')
+				: $_(t.key, { values: t.values });
 </script>
 
 {#if changes.length}
@@ -14,11 +22,11 @@
 			>{$_(taken ? 'build.inspector.whatChanged' : 'build.inspector.whatChanges')}</span
 		>
 		<div class="rows">
-			{#each changes as c (c.label)}
-				<span class="clabel">{c.label}</span>
-				<span class="from">{c.from}</span>
+			{#each changes as c (c.id)}
+				<span class="clabel">{say(c.label)}</span>
+				<span class="from">{say(c.from)}</span>
 				<span class="arrow">→</span>
-				<b class="to" class:better={c.better} class:worse={!c.better}>{c.to}</b>
+				<b class="to" class:better={c.better} class:worse={!c.better}>{say(c.to)}</b>
 			{/each}
 		</div>
 	</div>

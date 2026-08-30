@@ -73,7 +73,17 @@ export const rowDetail = (row: LoadedRow | undefined, type: ContentType): Detail
 
 /** The catalog lookup a formatter needs, passed in rather than reached for: this module has no
  *  component to read `$_` from, and the units phrasing is a translated sentence. */
-type Translate = (key: string, options?: { values?: Record<string, string | number> }) => string;
+type Translate = (
+	key: string,
+	options?: { values?: Record<string, string | number>; default?: string },
+) => string;
+
+/**
+ * A skill id as a person reads it. The catalog is the source; `titleCase` is the fallback so a
+ * homebrew pack shipping a nineteenth skill reads as a name rather than as its own key.
+ */
+export const skillLabel = (id: string, t: Translate): string =>
+	t(`skillName.${id}`, { default: titleCase(id) });
 
 /**
  * The one line of meta a picker entry carries under (or beside) its name.

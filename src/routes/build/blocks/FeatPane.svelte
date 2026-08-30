@@ -5,10 +5,10 @@
 	// skill-granting feat's picks) open right under it.
 	import { _ } from '$lib/i18n';
 	import { build, rowName, ASI } from '../build-view-model.svelte';
+	import { skillLabel } from '../rows';
 	import type { Inspector } from '../inspector.svelte';
 	import { ABILITIES } from '$lib/character/schema';
 	import { SKILL_ABILITY } from '$lib/character/skills';
-	import { titleCase } from '$lib/util/format';
 	import InspectorGrid from './InspectorGrid.svelte';
 	const b = build;
 	const SKILLS = Object.keys(SKILL_ABILITY);
@@ -100,7 +100,7 @@
 						disabled={blocked}
 						onclick={() => b.feats.toggleSlotFeatSkill(slotKey, skill, skillCount)}
 					>
-						{titleCase(skill)}
+						{skillLabel(skill, $_)}
 					</button>
 				{/each}
 			</div>
