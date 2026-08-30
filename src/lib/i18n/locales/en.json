@@ -762,6 +762,14 @@
 				"proficient": "proficient",
 				"expertise": "expertise"
 			}
+		},
+		"notice": {
+			"strictKnownSpell": "Strict: you can't unlearn a known spell — switch to Free to remove it.",
+			"strictCapFull": "{who}{what} full ({cap}) — remove one first, or switch to Free.",
+			"capCantrips": "cantrips",
+			"capPrepared": "prepared spells",
+			"strictTrainedSkill": "Strict: you can't drop a trained skill — switch to Free to remove it.",
+			"strictAllTrained": "Strict: every pick here is a trained skill — switch to Free to change one."
 		}
 	},
 	"skillName": {

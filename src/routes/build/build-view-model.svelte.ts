@@ -10,6 +10,7 @@
  * dead end" stance.
  */
 import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
 import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
@@ -288,7 +289,7 @@ class BuildVM {
 	toggleSpell = (ref: string) => {
 		if (this.draft.selectedSpells.includes(ref)) {
 			if (this.edit && this.draft.strict && this.edit.spells.has(ref)) {
-				toast("Strict: you can't unlearn a known spell — switch to Free to remove it.");
+				toast(t('build.notice.strictKnownSpell'));
 				return;
 			}
 			this.draft.selectedSpells = this.draft.selectedSpells.filter((s) => s !== ref);
@@ -301,11 +302,14 @@ class BuildVM {
 				if (!pc.profile.accessSpellIds.includes(ref)) continue; // doesn't count for this class
 				const [chosen, cap, what] =
 					lvl === 0
-						? ([pc.cantripsChosen, pc.profile.cantripCap, 'cantrips'] as const)
-						: ([pc.leveledChosen, pc.profile.preparedCap, 'prepared spells'] as const);
+						? ([pc.cantripsChosen, pc.profile.cantripCap, 'capCantrips'] as const)
+						: ([pc.leveledChosen, pc.profile.preparedCap, 'capPrepared'] as const);
 				if (chosen >= cap) {
+					// the class name only when there is more than one caster to tell apart
 					const who = this.spellPicker.length > 1 ? `${pc.profile.className} ` : '';
-					toast(`${who}${what} full (${cap}) — remove one first, or switch to Free.`);
+					toast(
+						t('build.notice.strictCapFull', { who, what: t(`build.notice.${what}`), cap }),
+					);
 					return;
 				}
 			}
@@ -330,7 +334,7 @@ class BuildVM {
 		if (this.autoSkills.includes(skill)) return; // background-granted, locked on
 		if (this.draft.skills.includes(skill)) {
 			if (this.edit && this.draft.strict && this.edit.skills.has(skill)) {
-				toast("Strict: you can't drop a trained skill — switch to Free to remove it.");
+				toast(t('build.notice.strictTrainedSkill'));
 				return;
 			}
 			this.draft.skills = this.draft.skills.filter((s) => s !== skill);
@@ -353,7 +357,7 @@ class BuildVM {
 			(s) => !this.autoSkills.includes(s) && !this.edit?.skills.has(s)
 		);
 		if (!droppable) {
-			toast("Strict: every pick here is a trained skill — switch to Free to change one.");
+			toast(t('build.notice.strictAllTrained'));
 			return;
 		}
 		this.draft.skills = [...this.draft.skills.filter((s) => s !== droppable), skill];

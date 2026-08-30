@@ -8,7 +8,7 @@ BEFORE writing a CSS class or a TS helper, so existing ones get reused instead o
 Regenerate with `pnpm surface`. Covers `src/lib` only (routes/tests excluded),
 EXCEPT the duplicate-suspects section, which scans all of `src`.
 
-## Duplicate suspects (57)
+## Duplicate suspects (58)
 
 Review list, NOT a gate: same names / identical bodies / identical literal arrays in
 2+ files. Before adding to it, check whether the shared home already exists; before
@@ -71,6 +71,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 - `seed` ×2 — src/routes/dev/health/+page.svelte · src/routes/dev/packs/+page.svelte
 - `SKILLS` ×2 — src/routes/build/blocks/FeatPane.svelte · src/routes/build/blocks/SkillRows.svelte
 - `spell` ×2 — src/lib/demo/sheet.ts · src/routes/dev/health/+page.svelte
+- `t` ×2 — src/lib/i18n/index.ts · src/routes/dev/storage/+page.svelte
 - `varNode` ×2 — src/lib/effects/expression-evaluator.ts · src/lib/effects/expression-parser.ts
 
 **Identical one-liner body, different names:**
@@ -1252,6 +1253,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const LOCALES` — Bundled catalogs.
 - `function dirFor` — Text direction for a locale id (independent of svelte-i18n, which doesn't track it).
 - `function startI18n` — * Initialize the catalogs.
+- `const t` — as literals in `combat ` and `build `.
 - `re-export locale`
 - `re-export waitLocale`
 - `re-export json`
@@ -1514,4 +1516,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 889 exports across 125 modules · 57 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 890 exports across 125 modules · 58 duplicate suspects._

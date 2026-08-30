@@ -6,6 +6,7 @@
  * hardcoded array inside a component. Runtime-added catalogs extend `LOCALES`; everything
  * UI-facing reads from it. Missing keys fall back to English.
  */
+import { get } from 'svelte/store';
 import { register, init, locale, waitLocale, json, _ } from 'svelte-i18n';
 
 export type Dir = 'ltr' | 'rtl';
@@ -52,5 +53,15 @@ export async function startI18n(initialLocale: string = FALLBACK_LOCALE): Promis
 	// few KB each and this is the only place that can know they are all in before anything reads them.
 	await Promise.all(LOCALES.map(({ id }) => waitLocale(id)));
 }
+
+/**
+ * Translate from outside a component.
+ *
+ * A view-model raising a toast has no `$_`, which is how a screenful of English sentences ended up
+ * as literals in `combat/*` and `build/*`. This reads the live store, so it follows a locale switch
+ * exactly like the markup does — the value is read at call time, never captured.
+ */
+export const t = (key: string, values?: Record<string, string | number>): string =>
+	get(_)(key, values ? { values } : undefined);
 
 export { locale, waitLocale, json, _ };
