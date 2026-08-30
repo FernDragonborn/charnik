@@ -194,6 +194,8 @@ offer two or three **rendered** variants — they are picked from seeing them, n
 
 - Comments carry **why**, not what. If a name cannot capture a function's essence, it is doing too
   much — split it, don't comment around it. A comment is not a changelog; git holds that.
+- Comments and documentation do not carry any historic data. We have a git for this purpose. All
+  records must be written in present time.
 - Names are verbose and self-evident, in code and in CSS. `rollDie(sides, rng)`, not `one(...)`.
   A module that exports one class is named after that class. **Markdown files are kebab-case**
   (`work-artifacts.md`, `rules-core.md`) — the only exceptions are the root files an ecosystem
