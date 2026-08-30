@@ -142,6 +142,60 @@ function convertConditions() {
 	assertCount('conditions', rows.length, all.length);
 }
 
+/**
+ * The 13 damage types the rules name. A closed list, because it is what stops a sentence from being
+ * read as a mechanic it is not: Dragonborn's "Resistance to the damage type determined by your
+ * Draconic Ancestry" would otherwise yield a resistance to "the".
+ */
+const DAMAGE_TYPES = new Set([
+	'acid',
+	'bludgeoning',
+	'cold',
+	'fire',
+	'force',
+	'lightning',
+	'necrotic',
+	'piercing',
+	'poison',
+	'psychic',
+	'radiant',
+	'slashing',
+	'thunder',
+]);
+
+/**
+ * The effect tokens a species' or lineage's own prose states outright.
+ *
+ * The SRD is prose, so this is the one place allowed to read a mechanic out of a sentence — and it
+ * only reads sentences that say exactly one thing about one named damage type. A choice
+ * ("Resistance to the damage type determined by…") names none, so it matches nothing. Anything
+ * conditional ("Advantage on saving throws you make to avoid or end the Poisoned condition") is
+ * likewise left alone: the vocabulary has no gate for it, and an ungated `advantage:save.con` is a
+ * different, wrong rule.
+ *
+ * Callers pass the species' OWN traits with its choice table already removed. A species body embeds
+ * that table verbatim, so reading the whole block gives every Elf the Wood Elf's speed and every
+ * Tiefling all three legacies at once — each of which the sheet would then apply for real.
+ *
+ * What is left unextracted is not lost: it is in `text_en`, which the article renders in full.
+ */
+function effectsFromTraits(text) {
+	const tokens = [];
+	for (const m of text.matchAll(/You have (Resistance|Immunity|Vulnerability) to (\w+) damage/g)) {
+		const type = m[2].toLowerCase();
+		if (!DAMAGE_TYPES.has(type)) continue;
+		const bucket = { Resistance: 'resist', Immunity: 'immune', Vulnerability: 'vulnerable' }[m[1]];
+		tokens.push(`resist_immune:${bucket}:${type}`);
+	}
+	// "Your Speed increases to 35 feet" — a set, not a bonus, exactly as the sentence says
+	for (const m of text.matchAll(/Your Speed increases to (\d+) feet/g))
+		tokens.push(`set_override:speed:${m[1]}`);
+	return tokens.join(';');
+}
+
+/** A species' own prose, with any choice table it embeds taken out — see `effectsFromTraits`. */
+const withoutTables = (text) => text.replace(/<table>[\s\S]*?<\/table>/gi, ' ');
+
 // --- species -----------------------------------------------------------------
 function convertSpecies() {
 	const all = blocks(src('character-origins.md')).filter((b) => b.h3 === 'Species Descriptions');
@@ -157,7 +211,7 @@ function convertSpecies() {
 			name_uk: '',
 			text_en: description(b.body),
 			text_uk: '',
-			effects: '',
+			effects: effectsFromTraits(withoutTables(text)),
 			size: (
 				/(tiny|small|medium|large|huge|gargantuan)/i.exec(sizeRaw)?.[1] || 'medium'
 			).toLowerCase(),
@@ -187,9 +241,11 @@ function convertSpecies() {
 
 // --- species options (2024 in-species lineages / legacies) -------------------
 // 2024 species with a table-based choice: each is a 4-column table (Name · level-1 benefit ·
-// spell · spell). We take the name + level-1 benefit text; effects stay blank (2024 species carry
-// no ASI — the choice grants a trait, recorded + shown, not a stat change). Dragonborn draconic
-// ancestry (a paired damage-type table) and Gnome/Goliath (prose lists) are deferred.
+// spell · spell). We take the name + level-1 benefit text, and whatever `effectsFromTraits` can read
+// out of it — a legacy's resistance, Wood Elf's speed. 2024 species carry no ASI, so nothing here is
+// a stat change beyond what the benefit says in so many words. The cantrip each of these also grants
+// has no token in the vocabulary yet, so it stays prose. Dragonborn draconic ancestry (a paired
+// damage-type table) and Gnome/Goliath (prose lists) are deferred.
 const SPECIES_CHOICE_2024 = {
 	Elf: { kind: 'lineage', label: 'Elven Lineage' },
 	Tiefling: { kind: 'legacy', label: 'Fiendish Legacy' },
@@ -223,7 +279,7 @@ function convertSpeciesOptions() {
 				name_uk: '',
 				text_en: tds[i + 1] || '', // the level-1 benefit
 				text_uk: '',
-				effects: '',
+				effects: effectsFromTraits(tds[i + 1] || ''),
 				species_id: slug(b.name),
 				kind: ch.kind,
 				option_label: ch.label,
