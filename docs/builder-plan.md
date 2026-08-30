@@ -33,7 +33,14 @@ casting time, range, damage, save, concentration (`pickerMeta` → `entryMeta`),
 **Taking has NO confirm step, and it is not the same click as reading.** The toggle on a row takes it
 and takes it back; the row body opens the article, which repeats the take where the eyes already are.
 A one-of pick replaces rather than toggles, and `Clear` in the pane footer is its way out. Arrow keys
-only ever preview; Enter is the click.
+only ever preview; Enter is the click; a double-click takes.
+
+**The whole draft has undo.** Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y, and a pair of buttons in the header
+because a shortcut is not a way in for someone who never learns it. A step is a snapshot of
+`DraftState` (`draft-history.svelte.ts`), taken on the autosave's debounce — so a name being typed is
+one thing to take back rather than one per keystroke, and a pick that lands in a click is its own.
+Nothing there knows what a class is, which is why a new field on the draft is undoable the moment it
+exists. It is also what makes the fast gestures safe to offer.
 
 ## Decisions taken
 

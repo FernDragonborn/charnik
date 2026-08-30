@@ -37,14 +37,7 @@ import { slugify } from '$lib/util/slug';
 import { FeatSlots } from './feat-slots.svelte';
 import { AbilityAllocation } from './ability-allocation.svelte';
 import { ASI, rowName, rowOfType } from './rows';
-import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
-import {
-	addItem,
-	bumpQty,
-	isEquippable,
-	removeItem,
-	toggleEquipped
-} from '$lib/character/inventory';
+import { DraftInventory } from './draft-inventory';
 // re-exported so every existing `from '../build-view-model.svelte'` import keeps working
 export { ASI, rowName, rowOfType };
 import {
@@ -57,6 +50,7 @@ import {
 } from './draft';
 import type { DraftRecord } from '$lib/character/draft-repository';
 import { DraftSession } from './draft-session.svelte';
+import { DraftHistory } from './draft-history.svelte';
 import { switchClass, type ClassScopedPicks } from './class-picks-cache';
 
 const csv = splitList;
@@ -90,17 +84,8 @@ class BuildVM {
 			? this.draft.selectedLanguages.filter((x) => x !== ref)
 			: [...this.draft.selectedLanguages, ref];
 	};
-	// the list semantics are shared with the combat sheet's inventory panel ($lib/character/inventory);
-	// what differs between the two is only where the list lives.
-	addInventoryItem = (ref: string) => (this.draft.inventory = addItem(this.draft.inventory, ref));
-	removeInventoryItem = (ref: string) =>
-		(this.draft.inventory = removeItem(this.draft.inventory, ref));
-	bumpItemQty = (ref: string, d: number) =>
-		(this.draft.inventory = bumpQty(this.draft.inventory, ref, d));
-	toggleItemEquipped = (ref: string) =>
-		(this.draft.inventory = toggleEquipped(this.draft.inventory, ref));
-	/** Can this item be equipped (armor / shield / weapon)? */
-	itemEquippable = (ref: string): boolean => isEquippable(this.resolvedItem(ref));
+	/** Carrying, equipping and resolving items — see `draft-inventory`. */
+	inventory = new DraftInventory(() => this);
 
 	saving = $state(false);
 
@@ -123,6 +108,7 @@ class BuildVM {
 		this.draft = blankDraft();
 		this.classPicks.clear();
 		this.drafts.renew();
+		this.history.reset();
 	};
 
 	/** The unfinished build on disk — autosave, resume, discard. See `draft-session`. */
@@ -132,12 +118,20 @@ class BuildVM {
 		isEditing: !!this.edit
 	}));
 
+	/** Undo / redo over the draft — see `draft-history`. The page records a step on the autosave's
+	 *  debounce, so one settled change is one step. */
+	history = new DraftHistory({
+		read: () => this.draft,
+		write: (draft) => (this.draft = draft)
+	});
+
 	/** Resume an unfinished build, cache and all. */
 	hydrateDraft = (record: DraftRecord): void => {
 		this.edit = null;
 		this.draft = record.draft as DraftState;
 		this.classPicks = new Map(record.classPicks as [string, ClassScopedPicks][]);
 		this.drafts.adopt(record);
+		this.history.reset();
 	};
 
 	/** Load an existing character into the draft (for level-up / editing). Straightforward fields map
@@ -166,6 +160,7 @@ class BuildVM {
 			skills: new Set(char.build.skills),
 			spells: new Set(this.draft.selectedSpells)
 		};
+		this.history.reset();
 	};
 
 	// --- content option lists (filtered by the draft's system) -----------------
@@ -191,13 +186,6 @@ class BuildVM {
 	row(id: string | null): LoadedRow | undefined {
 		return id && this.graph ? this.graph.get(id) : undefined;
 	}
-	/** An inventory item as the sheet reads it — tags, plus whatever it inherits from its base item.
-	 *  The graph lives here, so a component never resolves an item itself and gets a +1 plate's AC
-	 *  from its own (empty) tags. */
-	resolvedItem = (id: string | null): ResolvedItem | undefined => {
-		const row = rowOfType(this.row(id), 'item');
-		return row && this.graph ? resolveItem(this.graph, row) : undefined;
-	};
 	/** Subclasses available for a given class ref (per multiclass row). */
 	subclassesFor = (classId: string | null): LoadedRow[] => {
 		const cls = this.row(classId);

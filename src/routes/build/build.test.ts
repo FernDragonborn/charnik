@@ -184,6 +184,44 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(offered).not.toContain(`class:${S}:fighter`); // taking it here would be Fighter/Fighter
 	});
 
+	it('undo and redo walk the whole draft back and forward', () => {
+		build.reset();
+		build.graph = graph;
+		// the page records on the autosave debounce; a test settles each step itself
+		build.draft.name = 'Alia';
+		build.history.record();
+		build.setClass(0, `class:${S}:wizard`);
+		build.history.record();
+
+		build.history.undo();
+		expect(build.draft.classes[0]?.classId).toBeNull();
+		expect(build.draft.name).toBe('Alia'); // one step, not everything since the start
+		build.history.undo();
+		expect(build.draft.name).toBe('');
+		expect(build.history.canUndo).toBe(false);
+
+		build.history.redo();
+		expect(build.draft.name).toBe('Alia');
+		build.history.redo();
+		expect(build.draft.classes[0]?.classId).toBe(`class:${S}:wizard`);
+		expect(build.history.canRedo).toBe(false);
+	});
+
+	it('a fresh change forgets what was undone, and an unchanged draft is not a step', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.name = 'Alia';
+		build.history.record();
+		build.history.record(); // settled twice with nothing between
+		build.history.undo();
+		expect(build.draft.name).toBe('');
+		expect(build.history.canUndo).toBe(false); // the second record added no step to walk back over
+
+		build.draft.name = 'Bern';
+		build.history.record();
+		expect(build.history.canRedo).toBe(false); // the branch that held "Alia" is gone
+	});
+
 	it('a blank reset produces a minimal valid character (no crash on empty draft)', () => {
 		build.reset();
 		build.graph = graph;

@@ -88,19 +88,23 @@
 		onkeydown={walk}
 	>
 		{#each options as row (row.effectiveId)}
-		{@const meta = pickerMeta(row, $_)}
-		<button
-			class="cell"
-			data-entry={row.effectiveId}
-			role="option"
-			aria-selected={row.effectiveId === previewId}
-			class:preview={row.effectiveId === previewId}
-			class:taken={taken.has(row.effectiveId)}
-			onclick={() => activate(row.effectiveId)}
-		>
-			<span class="cname">{rowName(row)}</span>
-			{#if meta}<span class="cmeta">{meta}</span>{/if}
-		</button>
+			{@const meta = pickerMeta(row, $_)}
+			<!-- the double-click takes it outright, the same gesture the sectioned list uses. It skips
+			     the diff, which is the one thing this pane exists to show — so it is a shortcut for
+			     someone who already knows what they want, and Ctrl+Z is the way back. -->
+			<button
+				class="cell"
+				data-entry={row.effectiveId}
+				role="option"
+				aria-selected={row.effectiveId === previewId}
+				class:preview={row.effectiveId === previewId}
+				class:taken={taken.has(row.effectiveId)}
+				onclick={() => activate(row.effectiveId)}
+				ondblclick={() => ontake(row.effectiveId)}
+			>
+				<span class="cname">{rowName(row)}</span>
+				{#if meta}<span class="cmeta">{meta}</span>{/if}
+			</button>
 		{:else}
 			<p class="subtext nomatch">{$_('build.inspector.noMatch', { values: { query } })}</p>
 		{/each}
@@ -161,6 +165,9 @@
 		border-radius: var(--radius-md);
 		background: var(--color-surface);
 		text-align: center;
+		/* `all: unset` puts text selection back, and a cell's second click is a double-click that
+		   takes the option — highlighting its name on the way is not what that gesture meant */
+		user-select: none;
 	}
 	.cell:hover {
 		border-color: var(--color-border-strong);

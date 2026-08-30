@@ -38,7 +38,7 @@
 	{previewId}
 	takenIds={b.draft.inventory.map((i) => i.item)}
 	onpreview={(id) => (previewId = id)}
-	ontake={(id) => (carrying(id) ? b.removeInventoryItem(id) : b.addInventoryItem(id))}
+	ontake={(id) => (carrying(id) ? b.inventory.remove(id) : b.inventory.add(id))}
 	{detail}
 	placeholder={$_('build.inventory.search')}
 />

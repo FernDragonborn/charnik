@@ -39,7 +39,7 @@
 		<div class="items">
 			{#each b.draft.inventory as entry (entry.item)}
 				{@const row = rowOfType(b.row(entry.item), 'item')}
-				{@const item = b.resolvedItem(entry.item)}
+				{@const item = b.inventory.resolved(entry.item)}
 				{@const ac = item ? tagInt(item.tags, ITEM_TAG.ac) : null}
 				<div class="item">
 					<span class="iname">{rowName(row) || entry.item}</span>
@@ -48,19 +48,19 @@
 						{#if item?.damage}{item.damage}{/if}
 					</span>
 					<span class="stepper qty">
-						<button aria-label={$_('build.inventory.fewer')} onclick={() => b.bumpItemQty(entry.item, -1)}><Icon name="minus" size={11} /></button>
+						<button aria-label={$_('build.inventory.fewer')} onclick={() => b.inventory.bumpQty(entry.item, -1)}><Icon name="minus" size={11} /></button>
 						<span class="base">{entry.qty}</span>
-						<button aria-label={$_('build.inventory.more')} onclick={() => b.bumpItemQty(entry.item, 1)}><Icon name="plus" size={11} /></button>
+						<button aria-label={$_('build.inventory.more')} onclick={() => b.inventory.bumpQty(entry.item, 1)}><Icon name="plus" size={11} /></button>
 					</span>
-					{#if b.itemEquippable(entry.item)}
-						<button class="pick-chip" class:on={entry.equipped} onclick={() => b.toggleItemEquipped(entry.item)}>
+					{#if b.inventory.equippable(entry.item)}
+						<button class="pick-chip" class:on={entry.equipped} onclick={() => b.inventory.toggleEquipped(entry.item)}>
 							{$_(entry.equipped ? 'build.inventory.equipped' : 'build.inventory.equip')}
 						</button>
 					{/if}
 					<button
 						class="icon-button"
 						aria-label={$_('build.inventory.remove', { values: { name: rowName(row) } })}
-						onclick={() => b.removeInventoryItem(entry.item)}
+						onclick={() => b.inventory.remove(entry.item)}
 					>
 						<Icon name="x" size={11} />
 					</button>

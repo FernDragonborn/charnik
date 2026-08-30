@@ -25,6 +25,25 @@
 		<small>{$_('build.levelMeta', { values: { bonus: signed(b.sheet?.proficiencyBonus ?? 2) } })}</small>
 	</span>
 
+	<!-- the keyboard's Ctrl+Z has to have a face: every way in is doable from the UI, and a shortcut
+	     is not a way in for someone who never learns it -->
+	<div class="undo">
+		<button
+			class="icon-button"
+			disabled={!b.history.canUndo}
+			title={$_('build.undo')}
+			aria-label={$_('build.undo')}
+			onclick={build.history.undo}><Icon name="rotate-ccw" size={14} /></button
+		>
+		<button
+			class="icon-button"
+			disabled={!b.history.canRedo}
+			title={$_('build.redo')}
+			aria-label={$_('build.redo')}
+			onclick={build.history.redo}><Icon name="rotate-cw" size={14} /></button
+		>
+	</div>
+
 	<span class="spacer"></span>
 
 	<div class="segment-group" role="group" aria-label={$_('build.ruleset')}>
@@ -108,6 +127,26 @@
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 		color: var(--color-text-muted);
+	}
+	.undo {
+		display: flex;
+		gap: 2px;
+	}
+	.undo button {
+		padding: 6px;
+		border-radius: var(--radius-sm);
+	}
+	.undo button:hover:not(:disabled) {
+		background: var(--color-surface-2);
+		color: var(--color-text);
+	}
+	.undo button:disabled {
+		opacity: 0.35;
+		cursor: default;
+	}
+	.undo button:focus-visible {
+		outline: var(--focus-ring);
+		outline-offset: 1px;
 	}
 	.spacer {
 		flex: 1;

@@ -447,6 +447,8 @@
 		"nameLabel": "Character name",
 		"levelTotal": "Total level across every class",
 		"levelMeta": "level · prof {bonus}",
+		"undo": "Undo (Ctrl+Z)",
+		"redo": "Redo (Ctrl+Shift+Z)",
 		"ruleset": "Ruleset",
 		"enforcement": "Enforcement",
 		"strict": "Strict",

@@ -447,6 +447,8 @@
 		"nameLabel": "Імʼя персонажа",
 		"levelTotal": "Сумарний рівень за всіма класами",
 		"levelMeta": "рівень · володіння {bonus}",
+		"undo": "Скасувати (Ctrl+Z)",
+		"redo": "Повернути (Ctrl+Shift+Z)",
 		"ruleset": "Редакція",
 		"enforcement": "Дотримання правил",
 		"strict": "Строго",

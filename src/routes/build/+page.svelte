@@ -72,8 +72,30 @@
 	const AUTOSAVE_DELAY_MS = 600;
 	$effect(() => {
 		$state.snapshot(b.draft);
-		const timer = setTimeout(() => void build.drafts.persist(), AUTOSAVE_DELAY_MS);
+		const timer = setTimeout(() => {
+			// one settled change is one step of history, which is why this rides the same debounce: a
+			// name being typed becomes one thing to take back rather than one per keystroke
+			build.history.record();
+			void build.drafts.persist();
+		}, AUTOSAVE_DELAY_MS);
 		return () => clearTimeout(timer);
+	});
+
+	// Ctrl/Cmd+Z and Ctrl+Shift+Z / Ctrl+Y over the whole draft. Bound to the physical key (`code`),
+	// and deliberately NOT taken from a text field: a caret in the name box has the browser's own
+	// undo stack, which is the right one while you are typing in it.
+	$effect(() => {
+		const onKey = (event: KeyboardEvent) => {
+			if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
+			if (event.target instanceof Element && event.target.closest('input, textarea')) return;
+			const redo = event.code === 'KeyY' || (event.code === 'KeyZ' && event.shiftKey);
+			if (!redo && event.code !== 'KeyZ') return;
+			event.preventDefault();
+			if (redo) build.history.redo();
+			else build.history.undo();
+		};
+		window.addEventListener('keydown', onKey);
+		return () => window.removeEventListener('keydown', onKey);
 	});
 
 	// There is no leave guard any more. It existed because walking away lost the build; the draft is
