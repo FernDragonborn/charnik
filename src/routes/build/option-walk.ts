@@ -19,8 +19,14 @@ export interface OptionWalk {
 	ids: string[];
 	previewId: string | null;
 	onpreview: (id: string) => void;
-	/** What a left click would do to the highlighted option. */
-	onenter: (id: string) => void;
+	/**
+	 * What a left click would do to the highlighted option.
+	 *
+	 * Absent when the walk is driven from an option that already HAS focus: there the browser's own
+	 * Enter-on-a-button is the right one, and taking it over would activate the highlight rather than
+	 * the thing the focus ring is around.
+	 */
+	onenter?: (id: string) => void;
 }
 
 /** Handle a key, or leave it alone. Returns whether it was ours, so a caller can still react. */
@@ -29,7 +35,7 @@ export function walkOptions(event: KeyPress, { ids, previewId, onpreview, onente
 	const at = previewId ? ids.indexOf(previewId) : -1;
 	// The walk happens from the search box, so the highlighted option never has focus for the
 	// browser's own Enter-on-a-button to fire — this is the only thing that makes Enter work there.
-	if (event.code === 'Enter' && previewId && ids.includes(previewId)) {
+	if (event.code === 'Enter' && onenter && previewId && ids.includes(previewId)) {
 		event.preventDefault();
 		onenter(previewId);
 		return true;
@@ -45,3 +51,11 @@ export function walkOptions(event: KeyPress, { ids, previewId, onpreview, onente
 	if (id) onpreview(id);
 	return true;
 }
+
+/**
+ * A stable DOM id for one option, so the search box can name the highlighted one through
+ * `aria-activedescendant` — the only way a screen reader hears a walk whose focus never leaves the
+ * caret. A content ref carries spaces and colons and an `id` may carry neither.
+ */
+export const optionDomId = (picker: string, effectiveId: string): string =>
+	`${picker}-${effectiveId.replace(/[^\w-]/g, '_')}`;

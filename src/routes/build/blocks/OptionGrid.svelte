@@ -15,7 +15,7 @@
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { DetailModel } from '$lib/content/detail';
 	import { pickerMeta, rowName } from '../rows';
-	import { walkOptions } from '../option-walk';
+	import { PickerReading } from '../picker-reading.svelte';
 	import PickerSearch from './PickerSearch.svelte';
 	import PickerCard from './PickerCard.svelte';
 
@@ -52,40 +52,36 @@
 
 	const taken = $derived(new Set(takenIds));
 	let grid = $state<HTMLElement | null>(null);
-	/** Is the article card up? It always reads `previewId`, so the highlight and the card can never
-	 *  disagree about which option is being talked about. */
-	let reading = $state(false);
 	const previewRow = $derived(options.find((o) => o.effectiveId === previewId));
 
-	/** A click on a cell reads it; a click on the cell already being read puts the card away. */
-	function activate(id: string) {
-		if (reading && id === previewId) {
-			reading = false;
-			return;
-		}
-		onpreview(id);
-		reading = true;
-	}
-
-	const walk = (event: KeyboardEvent) =>
-		walkOptions(event, {
-			ids: options.map((o) => o.effectiveId),
-			previewId,
-			onpreview,
-			onenter: activate,
-		});
+	// reading + the keyboard walk are the same contract in both pickers — see `picker-reading`.
+	// The id scopes this picker's DOM ids: the spell pane renders one per caster class.
+	const pickerId = $props.id();
+	const picker = new PickerReading(
+		() => ({ ids: options.map((o) => o.effectiveId), previewId, onpreview }),
+		pickerId,
+	);
 </script>
 
-<PickerSearch bind:query {placeholder} count={options.length} onkeydown={walk} />
+<PickerSearch
+	bind:query
+	bind:element={picker.search}
+	{placeholder}
+	count={options.length}
+	onkeydown={picker.fromSearch}
+	listId={picker.listId}
+	activeId={picker.activeId}
+/>
 
 <div class="oscroll scrolly">
 	<div
 		class="ogrid"
+		id={picker.listId}
 		role="listbox"
 		tabindex="-1"
 		aria-label={$_('build.inspector.options')}
 		bind:this={grid}
-		onkeydown={walk}
+		onkeydown={picker.fromOptions}
 	>
 		{#each options as row (row.effectiveId)}
 			{@const meta = pickerMeta(row, $_)}
@@ -94,12 +90,13 @@
 			     someone who already knows what they want, and Ctrl+Z is the way back. -->
 			<button
 				class="cell"
+				id={picker.optionId(row.effectiveId)}
 				data-entry={row.effectiveId}
 				role="option"
 				aria-selected={row.effectiveId === previewId}
 				class:is-active={row.effectiveId === previewId}
 				class:is-taken={taken.has(row.effectiveId)}
-				onclick={() => activate(row.effectiveId)}
+				onclick={() => picker.read(row.effectiveId)}
 				ondblclick={() => ontake(row.effectiveId)}
 			>
 				<span class="cname">{rowName(row)}</span>
@@ -113,7 +110,7 @@
 	{#if below}{@render below()}{/if}
 </div>
 
-{#if reading && grid && previewId && previewRow}
+{#if picker.reading && grid && previewId && previewRow}
 	<PickerCard
 		picker={grid}
 		entryId={previewId}
@@ -121,7 +118,7 @@
 		{detail}
 		taken={taken.has(previewId)}
 		ontake={() => ontake(previewId)}
-		onclose={() => (reading = false)}
+		onclose={picker.close}
 	/>
 {/if}
 

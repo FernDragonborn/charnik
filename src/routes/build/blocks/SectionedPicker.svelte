@@ -13,7 +13,7 @@
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { DetailModel } from '$lib/content/detail';
 	import { pickerMeta, rowName, rowText } from '../rows';
-	import { walkOptions } from '../option-walk';
+	import { PickerReading } from '../picker-reading.svelte';
 	import PickerSearch from './PickerSearch.svelte';
 	import PickerCard from './PickerCard.svelte';
 	import PickerPeek from './PickerPeek.svelte';
@@ -46,8 +46,6 @@
 	const taken = $derived(new Set(takenIds));
 	let list = $state<HTMLElement | null>(null);
 	let openKeys = $state<string[]>([]);
-	/** Which row the article card is up for. Null = closed; the peek takes over on hover. */
-	let reading = $state(false);
 	/** The row the pointer or focus is teasing. Stands down entirely while the card is open. */
 	let peeking = $state<string | null>(null);
 	/** Which section headers the rail should light, recomputed on scroll (scroll-spy). */
@@ -76,16 +74,6 @@
 		openKeys = openKeys.includes(key) ? openKeys.filter((k) => k !== key) : [...openKeys, key];
 	}
 
-	function read(id: string) {
-		if (reading && id === previewId) {
-			reading = false;
-			return;
-		}
-		peeking = null; // the teaser steps aside for the real thing
-		onpreview(id);
-		reading = true;
-	}
-
 	/**
 	 * Scroll a section to the top of the list.
 	 *
@@ -112,9 +100,17 @@
 		requestAnimationFrame(() => scrollToSection(key));
 	}
 
-	/** The rail says where you ARE; it never cuts the list down. A section is current once its header
-	 *  has reached the top of the list's viewport. */
-	function spy() {
+	/**
+	 * The rail says where you ARE; it never cuts the list down. A section is current once its header
+	 * has reached the top of the list's viewport.
+	 *
+	 * Measured once per FRAME, not once per scroll event: a wheel fires far more often than the
+	 * screen repaints, and this reads a rect per section — fourteen of them in the item picker — so
+	 * unthrottled it asks the browser for layout many times over for one visible result.
+	 */
+	let spying = 0;
+	function measure() {
+		spying = 0;
 		if (!list) return;
 		const top = list.getBoundingClientRect().top;
 		let current: string | null = null;
@@ -123,21 +119,32 @@
 				current = box.dataset.section ?? null;
 		hereKey = current;
 	}
+	function spy() {
+		if (!spying) spying = requestAnimationFrame(measure);
+	}
 
-	const walk = (event: KeyboardEvent) =>
-		walkOptions(event, {
+	// reading + the keyboard walk are the same contract in both pickers — see `picker-reading`.
+	// The id scopes this picker's DOM ids: the spell pane renders one per caster class.
+	const pickerId = $props.id();
+	const picker = new PickerReading(
+		() => ({
 			ids: walkable.map((r) => r.effectiveId),
 			previewId,
 			onpreview,
-			onenter: read,
-		});
+			onopen: () => (peeking = null), // the teaser steps aside for the real thing
+		}),
+		pickerId,
+	);
 </script>
 
 <PickerSearch
 	bind:query
+	bind:element={picker.search}
 	{placeholder}
 	count={shown.reduce((n, s) => n + s.rows.length, 0)}
-	onkeydown={walk}
+	onkeydown={picker.fromSearch}
+	listId={picker.listId}
+	activeId={picker.activeId}
 />
 
 {#if controls}{@render controls()}{/if}
@@ -159,11 +166,12 @@
 
 <div
 	class="rows scrolly"
+	id={picker.listId}
 	role="listbox"
 	tabindex="-1"
 	aria-label={$_('build.inspector.options')}
 	bind:this={list}
-	onkeydown={walk}
+	onkeydown={picker.fromOptions}
 	onscroll={spy}
 >
 	{#each shown as section (section.key)}
@@ -205,9 +213,10 @@
 					     times. It commits nothing a single click does, so reading stays free. -->
 					<button
 						class="sbody"
+						id={picker.optionId(id)}
 						role="option"
 						aria-selected={id === previewId}
-						onclick={() => read(id)}
+						onclick={() => picker.read(id)}
 						ondblclick={() => ontake(id)}
 						onmouseenter={() => (peeking = id)}
 						onmouseleave={() => (peeking = null)}
@@ -225,7 +234,7 @@
 	{/each}
 </div>
 
-{#if reading && list && previewId && previewRow}
+{#if picker.reading && list && previewId && previewRow}
 	<PickerCard
 		picker={list}
 		entryId={previewId}
@@ -233,7 +242,7 @@
 		{detail}
 		taken={taken.has(previewId)}
 		ontake={() => ontake(previewId)}
-		onclose={() => (reading = false)}
+		onclose={picker.close}
 	/>
 {:else if peeking && list && peekRow}
 	<PickerPeek
