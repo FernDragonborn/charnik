@@ -46,6 +46,8 @@ export interface InspectorHost {
 	subclassesFor(classId: string | null): LoadedRow[];
 	feats: {
 		featOptionsFor(level: number): LoadedRow[];
+		/** Already spent on another slot and not repeatable — not offered to this one. */
+		featOptionBlocked(ref: string, slotKey: string): boolean;
 		setSlotFeat(key: string, ref: string): void;
 	};
 
@@ -152,6 +154,21 @@ function editSpecFor(t: InspectorTarget): EditSpec | null {
 	}
 }
 
+/**
+ * The classes a class row may take: every class except the ones the OTHER rows already hold.
+ *
+ * Two rows of one class is not a table variant to leave open — it is `Rogue 3 / Rogue 1` where the
+ * character means `Rogue 4`, and previewing it reports things like "spell save DC 9 → 0" that are
+ * true of the broken shape and true of nothing anyone wants. Moving a class between rows is done by
+ * removing the row that holds it, which its own ✕ does.
+ */
+function classesOfferedTo(b: InspectorHost, row: number): LoadedRow[] {
+	const heldElsewhere = new Set(
+		b.draft.classes.flatMap((c, i) => (i !== row && c.classId ? [c.classId] : [])),
+	);
+	return b.classList.filter((r) => !heldElsewhere.has(r.effectiveId));
+}
+
 /** How each `pick` target behaves. Separate from the class so the descriptor stays a plain function
  *  of (target, draft) — and so neither this nor the class grows past what one screen can hold. */
 function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
@@ -198,7 +215,7 @@ function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
 				titleKey: t.index === 0 ? 'classTitle' : 'classTitleExtra',
 				blurbKey: 'classBlurb',
 				type: 'class',
-				options: b.classList,
+				options: classesOfferedTo(b, t.index),
 				currentId: b.draft.classes[t.index]?.classId ?? null,
 				apply: (id) => b.setClass(t.index, id),
 				clearable: t.index > 0,
@@ -224,7 +241,11 @@ function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
 				blurbKey: 'featBlurb',
 				values: { level: t.level },
 				type: 'feat',
-				options: b.feats.featOptionsFor(t.level),
+				// same rule as a class: a feat another slot already spent is not offered again, unless
+				// its row says it repeats. Taking one twice grants its benefit once and reads as a bug.
+				options: b.feats
+					.featOptionsFor(t.level)
+					.filter((r) => !b.feats.featOptionBlocked(r.effectiveId, t.slotKey)),
 				currentId: b.draft.slotFeats[t.slotKey] ?? null,
 				apply: (id) => b.feats.setSlotFeat(t.slotKey, id ?? ''),
 				clearable: true,

@@ -131,6 +131,46 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.assembled.build.abilityBoosts.con).toBe(2); // once, not 4
 	});
 
+	it('a full ability picker replaces its oldest pick rather than ignoring the click', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.classes = [{ classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
+		const key = build.feats.featSlots[0]?.key ?? '';
+		build.feats.setSlotFeat(key, ASI);
+
+		// shape '2' takes ONE target, so the second click lands on a picker that is already full
+		build.feats.toggleAsiPick(key, 'con');
+		build.feats.toggleAsiPick(key, 'int');
+		expect(build.draft.slotAsi[key]?.picks).toEqual(['int']);
+		expect(build.assembled.build.abilityBoosts.int).toBe(2);
+		expect(build.assembled.build.abilityBoosts.con).toBeUndefined();
+
+		// '1-1' takes two, and a third click drops the one chosen first
+		build.feats.setAsiShape(key, '1-1');
+		build.feats.toggleAsiPick(key, 'str');
+		build.feats.toggleAsiPick(key, 'dex');
+		expect(build.draft.slotAsi[key]?.picks).toEqual(['str', 'dex']);
+		build.feats.toggleAsiPick(key, 'wis');
+		expect(build.draft.slotAsi[key]?.picks).toEqual(['dex', 'wis']);
+
+		// clicking one you already hold still takes it back — replacing is only what a FULL picker does
+		build.feats.toggleAsiPick(key, 'dex');
+		expect(build.draft.slotAsi[key]?.picks).toEqual(['wis']);
+	});
+
+	it('a class another row already holds is not offered again', () => {
+		build.reset();
+		build.graph = graph;
+		build.setClass(0, `class:${S}:wizard`);
+		build.addClass();
+		build.setClass(1, `class:${S}:fighter`);
+
+		build.inspector.open({ id: 'class', index: 0 });
+		const offered = build.inspector.options.map((r) => r.effectiveId);
+		expect(offered).toContain(`class:${S}:wizard`); // the row's own class stays, and stays gold
+		expect(offered).not.toContain(`class:${S}:fighter`); // taking it here would be Fighter/Fighter
+	});
+
 	it('a blank reset produces a minimal valid character (no crash on empty draft)', () => {
 		build.reset();
 		build.graph = graph;

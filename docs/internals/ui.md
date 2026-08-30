@@ -91,7 +91,15 @@ good", so they are pinned here and every component follows them.
 9. **An icon slot takes an emoji or an image.** The SRD ships no art, so the fallback is a glyph;
    homebrew and user-created entities may set an image.
 
-10. **A row's own state sits on the LEFT; a modifier on that state sits on the right.** The
+10. **A capped multi-select never dead-ends.** At the cap, a click on an unpicked chip replaces the
+    oldest pick instead of doing nothing: nothing on screen says "un-pick one first", so a chip that
+    looks live and is not is a dead end the user has to solve by guessing. `toggleCapped`
+    (`src/routes/build/draft.ts`) is the one implementation, and `BuildVM.toggleSkill` follows it for
+    the Strict class-skill cap. A chip blocked for a *different* reason — another slot already grants
+    that skill, a skill carried in from a level-up — is dimmed and disabled, which is a statement
+    rather than a silence.
+
+11. **A row's own state sits on the LEFT; a modifier on that state sits on the right.** The
     spellbook puts `EyeToggle`/`Pin` before the name and the "prepared" `Switch` after it;
     `SkillRows` puts the proficiency dot before the name and `×2` expertise after it. "Taken" in a
     builder picker is the row's own state, so it goes left. Gold means taken/proficient/prepared
@@ -112,6 +120,10 @@ both open a `PickerCard` on click, and `SectionedPicker` a `PickerPeek` on hover
 the search row they share, `option-walk.ts` the keyboard walk, `card-placement.ts` where a card
 lands. The pane itself is not a scroll container; which element is depends on the target, and
 `Inspector.bodyScrolls` decides.
+
+`PickerCard` is also what the **sheet's** clamped prose opens — a class feature is two lines and an
+ellipsis on `SheetClasses`, and two lines with no way past them is the same defect as picking blind.
+Anything that clamps a content row's text owes a click that shows the rest.
 
 1. **The pane is never a scroll container around another scroll container.** A wheel goes to the
    innermost scrollable ancestor under the pointer, so two nested scroll surfaces in one column make

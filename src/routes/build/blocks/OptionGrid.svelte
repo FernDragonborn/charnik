@@ -11,6 +11,7 @@
 	// Keyboard-first (ui.md §5): ↑/↓ move the highlight, Home/End jump, Enter is a left click. Walking
 	// only ever highlights — an open card follows the highlight, but nothing commits on the way past.
 	import { _ } from '$lib/i18n';
+	import type { Snippet } from 'svelte';
 	import type { LoadedRow } from '$lib/content/loader';
 	import type { DetailModel } from '$lib/content/detail';
 	import { pickerMeta, rowName } from '../rows';
@@ -27,6 +28,7 @@
 		ontake,
 		detail,
 		placeholder,
+		below,
 	}: {
 		options: LoadedRow[];
 		query?: string;
@@ -41,6 +43,11 @@
 		/** The article for `previewId`, rendered by the card. */
 		detail: DetailModel | null;
 		placeholder: string;
+		/** Whatever the pane shows under the options — the diff, a taken pick's own sub-choices. It
+		 *  renders INSIDE the scroll region with the grid, because the pane gets one and this is it:
+		 *  two shrinkable boxes each with their own scrollbar is the failure this control exists to
+		 *  remove, not a shape to reproduce a level down. */
+		below?: Snippet;
 	} = $props();
 
 	const taken = $derived(new Set(takenIds));
@@ -71,15 +78,16 @@
 
 <PickerSearch bind:query {placeholder} count={options.length} onkeydown={walk} />
 
-<div
-	class="ogrid"
-	role="listbox"
-	tabindex="-1"
-	aria-label={$_('build.inspector.options')}
-	bind:this={grid}
-	onkeydown={walk}
->
-	{#each options as row (row.effectiveId)}
+<div class="oscroll scrolly">
+	<div
+		class="ogrid"
+		role="listbox"
+		tabindex="-1"
+		aria-label={$_('build.inspector.options')}
+		bind:this={grid}
+		onkeydown={walk}
+	>
+		{#each options as row (row.effectiveId)}
 		{@const meta = pickerMeta(row, $_)}
 		<button
 			class="cell"
@@ -93,9 +101,12 @@
 			<span class="cname">{rowName(row)}</span>
 			{#if meta}<span class="cmeta">{meta}</span>{/if}
 		</button>
-	{:else}
-		<p class="subtext nomatch">{$_('build.inspector.noMatch', { values: { query } })}</p>
-	{/each}
+		{:else}
+			<p class="subtext nomatch">{$_('build.inspector.noMatch', { values: { query } })}</p>
+		{/each}
+	</div>
+
+	{#if below}{@render below()}{/if}
 </div>
 
 {#if reading && grid && previewId && previewRow}
@@ -111,24 +122,27 @@
 {/if}
 
 <style>
+	/* The pane's ONE scroll region, holding the options and whatever the pane puts under them. They
+	   scroll together on purpose: as two boxes that each shrink and scroll, a short pane gives both a
+	   scrollbar and clips both, which is the defect this control exists to remove. */
+	.oscroll {
+		display: flex;
+		flex-direction: column;
+		gap: 11px;
+		flex: 1;
+		min-height: 0;
+		overflow: auto;
+		padding: 2px;
+	}
 	/* auto-fill rather than a fixed column count: the inspector takes a share of the window, so the
-	   same grid is four across at 1280 and six on a wide screen.
-
-	   It shrinks before it scrolls (`flex: 0 1 auto`), so the twelve classes that fit simply fit and
-	   nothing here has a magic height — a pack that ships two hundred feats gets a scrollbar, and it
-	   is the pane's ONLY one. */
+	   same grid is four across at 1280 and six on a wide screen. */
 	.ogrid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
 		align-content: start;
 		gap: 6px;
-		margin-top: 9px;
-		flex: 0 1 auto;
-		min-height: 96px;
-		overflow: auto;
-		padding: 2px;
-		scrollbar-width: thin;
-		scrollbar-color: var(--color-border-strong) transparent;
+		margin-top: 7px;
+		flex: none;
 	}
 	.nomatch {
 		grid-column: 1 / -1;

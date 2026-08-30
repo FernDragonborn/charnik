@@ -7,6 +7,9 @@
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import { rowText } from '../rows';
 	import { classFeatureLines } from '$lib/build/derive';
+	import { buildDetail } from '$lib/content/detail';
+	import { app } from '$lib/stores/app.svelte';
+	import PickerCard from './PickerCard.svelte';
 	const b = build;
 
 	const features = $derived(
@@ -36,9 +39,19 @@
 		}));
 	});
 	const multi = $derived(byClass.length > 1);
+
+	/** A feature's prose is clamped to two lines here, so clicking one opens the rest — the same
+	 *  article card the pickers use, because this is the same act of reading a content row. */
+	let card = $state<HTMLElement | null>(null);
+	let readingId = $state<string | null>(null);
+	const readingRow = $derived(features.find((f) => f.row.effectiveId === readingId)?.row);
+	const detail = $derived(
+		readingRow ? buildDetail(readingRow, 'class_feature', undefined, app.activeLocale) : null
+	);
+	const readFeature = (id: string) => (readingId = readingId === id ? null : id);
 </script>
 
-<div class="card">
+<div class="card" bind:this={card}>
 	<div class="card-head">
 		<span class="eyebrow">{$_('build.classes.title')}</span>
 		<span class="spacer"></span>
@@ -114,13 +127,19 @@
 		<div class="features">
 			{#each gainedLines as f (`${f.className}:${f.row.effectiveId}:${f.level}`)}
 				{@const prose = rowText(f.row)}
-				<div class="feature">
+				<button
+					class="feature readable"
+					class:reading={f.row.effectiveId === readingId}
+					data-entry={f.row.effectiveId}
+					title={$_('build.picker.readMore')}
+					onclick={() => readFeature(f.row.effectiveId)}
+				>
 					<span class="lvl" class:sub={f.fromSubclass}>{f.level}</span>
 					<div class="ftext">
 						<b>{rowName(f.row)}</b>
 						{#if prose}<span class="clamp-2">{prose}</span>{/if}
 					</div>
-				</div>
+				</button>
 			{/each}
 			{#each upcomingLines as f (`${f.className}:${f.row.effectiveId}:${f.level}`)}
 				<div class="feature ahead">
@@ -157,6 +176,17 @@
 		{/if}
 	{/if}
 </div>
+
+{#if readingId && card && readingRow}
+	<PickerCard
+		picker={card}
+		entryId={readingId}
+		title={rowName(readingRow)}
+		{detail}
+		taken={false}
+		onclose={() => (readingId = null)}
+	/>
+{/if}
 
 <style>
 	.classrow {
@@ -225,6 +255,33 @@
 		gap: 9px;
 		align-items: flex-start;
 		padding: 4px 0;
+	}
+	/* a gained feature is two clamped lines, so it says so and opens the rest */
+	.feature.readable {
+		all: unset;
+		box-sizing: border-box;
+		display: flex;
+		gap: 9px;
+		align-items: flex-start;
+		width: 100%;
+		padding: 4px 6px;
+		margin: 0 -6px;
+		border-radius: var(--radius-sm);
+		cursor: pointer;
+		text-align: left;
+	}
+	.feature.readable:hover {
+		background: var(--color-surface-2);
+	}
+	.feature.readable:focus-visible {
+		outline: var(--focus-ring);
+		outline-offset: -2px;
+	}
+	.feature.reading {
+		background: var(--color-accent-soft);
+	}
+	.feature.reading b {
+		color: var(--color-accent-bright);
 	}
 	.feature.ahead {
 		opacity: 0.55;

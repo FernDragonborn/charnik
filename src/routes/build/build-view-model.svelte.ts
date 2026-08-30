@@ -359,8 +359,22 @@ class BuildVM {
 			return;
 		}
 		// Strict: cap counts only NON-background picks (a background overlap frees a slot)
-		if (this.classSkillCount === 0 || this.skillChosenCount < this.classSkillCount)
+		if (this.classSkillCount === 0 || this.skillChosenCount < this.classSkillCount) {
 			this.draft.skills = [...this.draft.skills, skill];
+			return;
+		}
+		// At the cap a click REPLACES the oldest pick instead of doing nothing — the same rule the
+		// ability pickers follow (`toggleCapped`), because a chip that looks live and is not is a dead
+		// end. A skill carried in from a level-up is never the one dropped: Strict refuses to unlearn
+		// those, and replacing one would be unlearning under another name.
+		const droppable = this.draft.skills.find(
+			(s) => !this.autoSkills.includes(s) && !this.edit?.skills.has(s)
+		);
+		if (!droppable) {
+			toast("Strict: every pick here is a trained skill — switch to Free to change one.");
+			return;
+		}
+		this.draft.skills = [...this.draft.skills.filter((s) => s !== droppable), skill];
 	};
 	skillChosenCount = $derived(this.draft.skills.filter((s) => !this.autoSkills.includes(s)).length);
 	/** Proficient = chosen or background-granted (a prerequisite for expertise). */

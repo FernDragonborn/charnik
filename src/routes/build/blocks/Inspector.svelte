@@ -26,9 +26,28 @@
 
 	const spec = $derived(ins.spec);
 	const target = $derived(ins.target);
+
+	/**
+	 * A click on the pane's own background drops the highlight.
+	 *
+	 * The highlight is what the diff and any open card are about, so leaving it lit after you have
+	 * clicked away from everything says the pane is still talking about an option you stopped looking
+	 * at. Anything you can actually operate keeps its click — this only fires on the space between.
+	 */
+	const OPERABLE = 'button, a, input, textarea, select, label, [role="option"]';
+	function clearOnBackground(event: MouseEvent) {
+		const el = event.target;
+		if (el instanceof Element && el.closest(OPERABLE)) return;
+		ins.previewId = null;
+	}
 </script>
 
-<div class="pane">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+	class="pane"
+	onclick={clearOnBackground}
+	onkeydown={(e) => e.code === 'Escape' && (ins.previewId = null)}
+>
 	{#if !spec || !target}
 		<!-- resting state: not empty space, but the shortest path to a finished character -->
 		<div class="head">

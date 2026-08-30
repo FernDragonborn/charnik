@@ -15,12 +15,21 @@ export type AsiShape = '2' | '1-1';
 /** How many abilities an ASI shape lets you pick ('2' → 1 target, '1-1' → 2 targets). */
 export const asiPickCount = (shape: AsiShape): number => (shape === '2' ? 1 : 2);
 
-/** Toggle `item` in a capped multi-select list: drop it if already picked, else add it only while
- *  under `cap`. The shared shape behind every "pick up to N" control in the builder (ability boosts,
- *  ASI targets, …) so they can't drift apart. */
+/**
+ * Toggle `item` in a capped multi-select list: drop it if already picked, else add it — and at the
+ * cap, add it in place of the oldest pick rather than refusing.
+ *
+ * A full "+2 to one ability" picker that ignores the chip you click is a dead end you have to work
+ * out for yourself: nothing on screen says the way forward is to un-pick something first. Making the
+ * click land is both what a player means by it and the way back out of a wrong pick.
+ *
+ * The shared shape behind every "pick up to N" control in the builder (ability boosts, ASI targets,
+ * a feat's granted skills) so they cannot drift apart.
+ */
 export function toggleCapped<T>(list: T[], item: T, cap: number): T[] {
 	if (list.includes(item)) return list.filter((x) => x !== item);
-	return list.length < cap ? [...list, item] : list;
+	if (cap <= 0) return list;
+	return [...list.slice(Math.max(0, list.length - cap + 1)), item];
 }
 
 /** One class row in the draft (pre-resolution: nullable ids while the user is still choosing). */

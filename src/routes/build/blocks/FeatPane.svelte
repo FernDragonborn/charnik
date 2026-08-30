@@ -62,12 +62,11 @@
 		ontake={ins.take}
 		detail={ins.detail}
 		placeholder={$_('build.feats.searchFeats')}
-	/>
-{/if}
-
-<!-- everything the slot owes ONCE something is in it. Its own region, because a Skilled-shaped feat
-     adds eighteen skill chips under here and the grid above must not be the thing that gives way. -->
-<div class="slotfoot scrolly">
+	>
+		<!-- everything the slot owes once something is in it, in the same scroll region as the feats:
+		     a Skilled-shaped feat adds eighteen skill chips under here, and one region that grows is
+		     what keeps a short pane from clipping the grid AND the chips at once. -->
+		{#snippet below()}
 	{#if ins.changes.length}
 		<ChangeList changes={ins.changes} />
 	{:else}
@@ -107,9 +106,10 @@
 			<div class="chips">
 				{#each SKILLS as skill (skill)}
 					{@const on = picks.includes(skill)}
+					<!-- blocked only by ANOTHER slot already granting it. Being at the cap is not a block:
+					     a click there replaces the oldest pick, so the grant is never a dead end. -->
 					{@const blocked =
-						(b.draft.strict && b.feats.featSkillTakenElsewhere(slotKey, skill) && !on) ||
-						(!on && picks.length >= skillCount)}
+						b.draft.strict && b.feats.featSkillTakenElsewhere(slotKey, skill) && !on}
 					<button
 						class="pick-chip"
 						class:on
@@ -124,17 +124,11 @@
 		</div>
 	{/if}
 {/if}
-</div>
+		{/snippet}
+	</OptionGrid>
+{/if}
 
 <style>
-	.slotfoot {
-		display: flex;
-		flex-direction: column;
-		gap: 11px;
-		flex: 0 1 auto;
-		min-height: 0;
-		overflow: auto;
-	}
 	.asi-card {
 		all: unset;
 		box-sizing: border-box;

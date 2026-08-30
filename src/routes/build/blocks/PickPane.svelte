@@ -26,13 +26,15 @@
 		ontake={ins.take}
 		detail={ins.detail}
 		placeholder={$_('build.inspector.searchIn', { values: { count: ins.pick.options.length } })}
-	/>
-
-	<!-- Highlighting previews, so `changes` is still "what this WOULD do"; the card's take button
-	     commits, so `applied` is "what that DID". Whichever is live is the one worth reading. -->
-	{#if ins.changes.length}
-		<ChangeList changes={ins.changes} />
-	{:else}
-		<ChangeList changes={ins.applied} taken />
-	{/if}
+	>
+		<!-- Highlighting previews, so `changes` is still "what this WOULD do"; the card's take button
+		     commits, so `applied` is "what that DID". Whichever is live is the one worth reading. -->
+		{#snippet below()}
+			{#if ins.changes.length}
+				<ChangeList changes={ins.changes} />
+			{:else}
+				<ChangeList changes={ins.applied} taken />
+			{/if}
+		{/snippet}
+	</OptionGrid>
 {/if}
