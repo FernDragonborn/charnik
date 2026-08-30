@@ -97,8 +97,8 @@
 				data-entry={row.effectiveId}
 				role="option"
 				aria-selected={row.effectiveId === previewId}
-				class:preview={row.effectiveId === previewId}
-				class:taken={taken.has(row.effectiveId)}
+				class:is-active={row.effectiveId === previewId}
+				class:is-taken={taken.has(row.effectiveId)}
 				onclick={() => activate(row.effectiveId)}
 				ondblclick={() => ontake(row.effectiveId)}
 			>
@@ -189,23 +189,17 @@
 		color: var(--color-text-muted);
 		line-height: 1.3;
 	}
-	.cell.preview {
-		border-color: var(--color-accent);
-		background: var(--color-accent-soft);
-	}
-	.cell.preview .cname {
+	/* the two state fills come from `.is-active` / `.is-taken` in build.css; what is the cell's own
+	   is how its NAME reads in each state */
+	.cell.is-active .cname {
 		color: var(--color-accent-bright);
+	}
+	.cell.is-taken .cname {
+		color: var(--color-resource);
 	}
 	/* gold fill wins the cell, because "this is the one you have" outranks "this is the one you are
 	   reading" — but the accent outline stays, so the card still points somewhere visible. */
-	.cell.taken {
-		border-color: var(--color-resource-line);
-		background: var(--color-resource-soft);
-	}
-	.cell.taken .cname {
-		color: var(--color-resource);
-	}
-	.cell.taken.preview {
+	.cell.is-taken.is-active {
 		border-color: var(--color-accent);
 	}
 </style>

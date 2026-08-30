@@ -61,7 +61,28 @@
 	outline: var(--focus-ring);
 	outline-offset: var(--focus-offset);
 }
-/* the slot currently open in the inspector */
+/* ============================================================================================
+ * The two states every builder control speaks, in the ONE place that says what they look like.
+ *
+ * ui.md §11 pins gold as taken/proficient/prepared and the accent as what you are looking at.
+ * That is a contract across controls, so it cannot live as a copy per control: a cell, a list row,
+ * an ASI card and a take button all wear the same two states, and a copy the eighth control forgot
+ * is a contract broken with nothing to catch it. A control carries the class and adds only what is
+ * its own (a text colour, a hover).
+ *
+ * The class is DOUBLED on purpose. Svelte scopes a component's own `.cell` to `.cell.svelte-hash`,
+ * which is two classes — exactly what `.build-page .is-taken` is — so the two tie, load order
+ * decides, and the control's own background silently wins. Repeating the class buys the one point
+ * of specificity that makes the state land. A driven browser catches this; nothing else does.
+ * ============================================================================================ */
+.build-page .is-taken.is-taken,
+.build-page .tag.gold {
+	border-color: var(--color-resource-line);
+	background: var(--color-resource-soft);
+}
+/* `.slot.active` is the sheet's own spelling of "open in the inspector" — the same state, so the
+   same declarations, not a second copy of them */
+.build-page .is-active.is-active,
 .build-page .slot.active {
 	border-color: var(--color-accent);
 	background: var(--color-accent-soft);
@@ -116,8 +137,6 @@
 	color: var(--color-text-muted);
 }
 .build-page .tag.gold {
-	border-color: var(--color-resource-line);
-	background: var(--color-resource-soft);
 	color: var(--color-resource);
 }
 .build-page .tag.accent {

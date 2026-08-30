@@ -188,7 +188,7 @@
 				{@const id = row.effectiveId}
 				{@const on = taken.has(id)}
 				{@const name = rowName(row)}
-				<div class="srow" class:taken={on} class:preview={id === previewId} data-entry={id}>
+				<div class="srow" class:is-taken={on} class:is-active={id === previewId} data-entry={id}>
 					<button
 						class="addbtn"
 						class:on
@@ -367,14 +367,11 @@
 		border: 1px solid transparent;
 		border-radius: 9px;
 	}
-	.srow:hover,
-	.srow.preview {
+	/* the state fills are `.is-active` / `.is-taken` in build.css; hover borrows the active look
+	   because pointing at a row and reading it are the same intent a moment apart */
+	.srow:hover {
 		border-color: var(--color-accent);
 		background: var(--color-accent-soft);
-	}
-	.srow.taken {
-		border-color: var(--color-resource-line);
-		background: var(--color-resource-soft);
 	}
 	.addbtn {
 		all: unset;

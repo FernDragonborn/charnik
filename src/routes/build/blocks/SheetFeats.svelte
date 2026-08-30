@@ -32,7 +32,7 @@
 	{:else}
 		<div class="slots">
 			{#if b.feats.originFeatRef}
-				<div class="featrow granted">
+				<div class="featrow is-taken">
 					<span class="lvl">{$_('build.feats.origin')}</span>
 					<div class="ftext">
 						<b>{rowName(b.row(b.feats.originFeatRef))}</b>
@@ -94,10 +94,6 @@
 		border: 1px solid var(--color-border);
 		background: var(--color-surface-2);
 		text-align: left;
-	}
-	.featrow.granted {
-		border-color: var(--color-resource-line);
-		background: var(--color-resource-soft);
 	}
 	.lvl {
 		flex: none;

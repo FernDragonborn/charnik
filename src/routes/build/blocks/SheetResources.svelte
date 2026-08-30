@@ -32,7 +32,7 @@
 		</div>
 		<div class="pools">
 			{#each resources as r (r.id)}
-				<div class="pool gold">
+				<div class="pool is-taken">
 					<b>{r.name}</b>
 					{#if r.max <= PIP_LIMIT}
 						<div class="pips">
@@ -67,16 +67,12 @@
 		border-radius: var(--radius-md);
 		padding: 10px 12px;
 	}
-	.pool.gold {
-		border-color: var(--color-resource-line);
-		background: var(--color-resource-soft);
-	}
 	.pool b {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-sm);
 	}
-	.pool.gold b {
+	.pool.is-taken b {
 		color: var(--color-resource);
 	}
 	.pool small {

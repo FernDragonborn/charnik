@@ -78,7 +78,7 @@
 
 	{#if ontake}
 		<footer>
-			<button class="btn take" class:taken onclick={ontake}>
+			<button class="btn take" class:is-taken={taken} onclick={ontake}>
 				<Icon name={taken ? 'check' : 'plus'} size={13} />
 				{$_(taken ? 'build.picker.taken' : 'build.picker.take')}
 			</button>
@@ -134,9 +134,7 @@
 		align-items: center;
 		gap: 6px;
 	}
-	.take.taken {
-		background: var(--color-resource-soft);
-		border-color: var(--color-resource-line);
+	.take.is-taken {
 		color: var(--color-resource);
 	}
 </style>
