@@ -200,10 +200,12 @@ anything genuinely long or unknown, run it in the background instead of buying a
   this blind spot; exactly two were real, both in plain `.ts`. Before acting on such a tally, split it
   by file kind and check a sample against `svelte-check`.
 - **Two shells, two syntaxes.** This repo is worked primarily from PowerShell, and the here-string
-  habit `@'…'@` leaks into commands sent to a Bash tool, where `@` is not a quote and mangles the
-  message — most visibly in `git commit -m`. For any multi-line message use **`git commit -F <file>`**;
-  if you inline it, match the tool (Bash `<<'EOF'`, PowerShell `@'…'@` with the closing `'@` at column
-  zero).
+  habit `@'…'@` leaks into commands sent to a Bash tool, where `@` is not a quote: the delimiters
+  survive as literal text and land in whatever the heredoc feeds — a commit message, a file body, a
+  patch. Check for a stray `@` at the start or end of anything written this way. For any multi-line
+  message use **`git commit -F <file>`**; write file bodies with the Write tool rather than a shell
+  heredoc; if you must inline, match the tool (Bash `<<'EOF'`, PowerShell `@'…'@` with the closing
+  `'@` at column zero).
 
 ## Verifying on the real desktop app
 
