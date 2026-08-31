@@ -7,24 +7,22 @@
  * a flattened boost list could not express (UBUG-13: a restored slot re-derived its own boost a
  * second time).
  */
-import type { ContentGraph, LoadedRow, LoadedRowByType } from '$lib/content/loader';
+import type { LoadedRow } from '$lib/content/loader';
+import type { BuildVM } from './build-view-model.svelte';
 import type { Ability } from '$lib/rules/core';
 import { asiBoost, halfFeatAbilities } from '$lib/build/derive';
 import { asiFeatLevels } from '$lib/build/rules';
 import { FEAT_CATEGORY } from '$lib/content/schemas';
 import { asiPickCount, toggleCapped } from './draft';
 import { ASI, ASI_FEAT_ID, rowName, rowOfType } from './rows';
-import type { AsiShape, DraftState } from './draft';
+import type { AsiShape } from './draft';
 
-/** What the slot machinery needs from the build view-model around it. */
-export interface FeatsHost {
-	draft: DraftState;
-	graph: ContentGraph | null;
-	featList: LoadedRowByType<'feat'>[];
-	backgroundRow: LoadedRowByType<'background'> | undefined;
-	autoSkills: string[];
-	row(id: string | null): LoadedRow | undefined;
-}
+/** What the slot machinery needs from the build view-model around it — picked off the class rather
+ *  than re-described, so the two cannot drift apart. `import type` is erased, so no runtime cycle. */
+export type FeatsHost = Pick<
+	BuildVM,
+	'draft' | 'graph' | 'featList' | 'backgroundRow' | 'autoSkills' | 'row'
+>;
 
 export class FeatSlots {
 	/* The host arrives as an ACCESSOR, not an object: a $derived field initialiser runs before a

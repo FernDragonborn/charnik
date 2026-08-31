@@ -1,5 +1,8 @@
 {
 	"fileExtensions": ["ts"],
+	"detectiveOptions": {
+		"ts": { "skipTypeImports": true }
+	},
 	"tsConfig": {
 		"compilerOptions": {
 			"baseUrl": ".",

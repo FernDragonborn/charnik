@@ -15,45 +15,40 @@
  * Nothing here computes D&D math. It selects, previews, and commits.
  */
 import type { ContentType } from '$lib/content/schemas';
-import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
+import type { LoadedRow } from '$lib/content/loader';
 import type { DetailModel } from '$lib/content/detail';
 import { diffSheets, type SheetChange } from '$lib/build/sheet-diff';
 import type { BuildTodo } from '$lib/build/derive';
-import type { CharacterSheet } from '$lib/character/derive';
 import { filterByName, rowDetail, rowName, ASI } from './rows';
-import type { DraftState } from './draft';
-import type { FeatSlots } from './feat-slots.svelte';
+import type { BuildVM } from './build-view-model.svelte';
 
 /**
- * What the inspector needs from the build view-model around it — a STRUCTURAL host, like FeatsHost
- * next door. The view-model owns the draft and every derivation; this pane only reads option lists,
- * writes single choices, and asks for a trial derive. Declaring the surface here rather than
- * importing `BuildVM` also keeps the two modules acyclic (§7.4b).
+ * What the inspector needs from the build view-model around it. The view-model owns the draft and
+ * every derivation; this pane only reads option lists, writes single choices, and asks for a trial
+ * derive — so the surface is worth naming, but naming it TWICE is what drifts. A `Pick` says the
+ * same thing and cannot disagree with the class it came from.
+ *
+ * `import type` is erased, so this costs no runtime cycle — and `madge` is configured to measure
+ * runtime cycles, which is the thing a cycle check is for.
  */
-export interface InspectorHost {
-	draft: DraftState;
-	sheet: CharacterSheet | null;
-	/** Derive the sheet `mutate` would produce, on a draft of its own. The host handed to `mutate`
-	 *  is a THROWAWAY: writing to it is how a preview stays a preview. */
-	previewSheet(mutate: (trial: InspectorHost) => void): CharacterSheet | null;
-	row(id: string | null): LoadedRow | undefined;
-
-	speciesList: LoadedRowByType<'species'>[];
-	speciesRow: LoadedRowByType<'species'> | undefined;
-	speciesOptions: LoadedRow[];
-	speciesOptionLabel: string;
-	backgroundList: LoadedRowByType<'background'>[];
-	classList: LoadedRowByType<'class'>[];
-	subclassesFor(classId: string | null): LoadedRow[];
-	/** Picked off the real class rather than re-described: a hand-written twin of three methods is a
-	 *  second declaration of a shape that has one owner, and it drifts silently when that owner
-	 *  changes. `feat-slots` imports nothing from here, so the type-only reference adds no cycle. */
-	feats: Pick<FeatSlots, 'featOptionsFor' | 'featOptionBlocked' | 'setSlotFeat'>;
-
-	pickSpecies(id: string | null): void;
-	setClass(index: number, id: string | null): void;
-	setSubclass(index: number, id: string | null): void;
-}
+export type InspectorHost = Pick<
+	BuildVM,
+	| 'draft'
+	| 'sheet'
+	| 'previewSheet'
+	| 'row'
+	| 'speciesList'
+	| 'speciesRow'
+	| 'speciesOptions'
+	| 'speciesOptionLabel'
+	| 'backgroundList'
+	| 'classList'
+	| 'subclassesFor'
+	| 'feats'
+	| 'pickSpecies'
+	| 'setClass'
+	| 'setSubclass'
+>;
 
 /** Which thing on the sheet the inspector is currently about. */
 export type InspectorTarget =

@@ -69,7 +69,7 @@ const csv = splitList;
  * shows it. A carve that moves DERIVATIONS over the draft is cheap; one that moves a bound field is
  * not, and is verified in a driven browser rather than reasoned about.
  */
-class BuildVM {
+export class BuildVM {
 	// read the shared reactive content store → a live content refresh re-derives options with no reload
 	graph = $derived(content.graph);
 

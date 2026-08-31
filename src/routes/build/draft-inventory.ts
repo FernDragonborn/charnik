@@ -17,16 +17,13 @@ import {
 	toggleEquipped,
 } from '$lib/character/inventory';
 import { resolveItem, type ResolvedItem } from '$lib/content/resolved-item';
-import type { ContentGraph, LoadedRow } from '$lib/content/loader';
+import type { BuildVM } from './build-view-model.svelte';
 import { rowOfType } from './rows';
 import type { DraftState } from './draft';
 
-/** What this needs from the view-model around it — a structural host, like `DraftSessionHost`. */
-export interface DraftInventoryHost {
-	draft: DraftState;
-	graph: ContentGraph | null;
-	row(id: string | null): LoadedRow | undefined;
-}
+/** What this needs from the view-model around it — picked off the class, so it cannot drift from
+ *  what the class actually offers. `import type` is erased, so no runtime cycle. */
+export type DraftInventoryHost = Pick<BuildVM, 'draft' | 'graph' | 'row'>;
 
 export class DraftInventory {
 	constructor(private host: () => DraftInventoryHost) {}
