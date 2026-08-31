@@ -5,6 +5,7 @@
  * unit; CombatVM composes it as `combat.resources`, passing getters for the reactive character + sheet.
  */
 import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import { saveCharacterToStore } from '$lib/character/store.svelte';
 import {
 	endConcentrationCarriedBy,
@@ -56,14 +57,18 @@ export class ResourceTracker {
 		const name = this.resourceName(id);
 		const before = this.resourceSpent(id);
 		if (before >= max) {
-			toast(`${name} — none left`, { description: 'Recharge on a rest' });
+			toast(t('combat.notice.resourceNoneLeft', { name }), {
+				description: t('combat.notice.rechargeOnRest'),
+			});
 			return;
 		}
 		const after = before + 1;
 		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: after };
 		// an unlimited pool (`inf` max) never runs out — count uses instead of a remaining total
-		toast(`${name} used`, {
-			description: Number.isFinite(max) ? `${max - after} of ${max} left` : `${after} used · ∞`,
+		toast(t('combat.notice.resourceUsed', { name }), {
+			description: Number.isFinite(max)
+				? t('combat.notice.resourceLeftOf', { left: max - after, max })
+				: t('combat.notice.resourceUsedUnlimited', { used: after }),
 		});
 	};
 	resourceClick = (id: string, max: number, i: number) => {
@@ -74,9 +79,12 @@ export class ResourceTracker {
 		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: after };
 		if (after === before) return;
 		const name = this.resourceName(id);
-		toast(`${name} ${after > before ? 'used' : 'restored'}`, {
-			description: `${max - after} of ${max} left`,
-		});
+		toast(
+			t(after > before ? 'combat.notice.resourceUsed' : 'combat.notice.resourceRestoredName', {
+				name,
+			}),
+			{ description: t('combat.notice.resourceLeftOf', { left: max - after, max }) },
+		);
 	};
 
 	/** Spent count for a hit-die pool, CLAMPED to the live max (same stale-state guard as
@@ -105,9 +113,18 @@ export class ResourceTracker {
 		if (!c) return false;
 		const cost = opt.cost === 'x' ? amount : opt.cost;
 		if (!this.canAffordOption(opt, amount)) {
-			toast(`Not enough ${this.resourceName(opt.resourceId)} for ${opt.name}`, {
-				description: `${this.remainingFor(opt.resourceId)} left · costs ${cost}. Rest to recharge.`,
-			});
+			toast(
+				t('combat.notice.notEnoughResource', {
+					resource: this.resourceName(opt.resourceId),
+					name: opt.name,
+				}),
+				{
+					description: t('combat.notice.notEnoughResourceBody', {
+						left: this.remainingFor(opt.resourceId),
+						cost,
+					}),
+				},
+			);
 			return false;
 		}
 		const before = this.resourceSpent(opt.resourceId);
@@ -115,9 +132,14 @@ export class ResourceTracker {
 		const desc = opt.action.startsWith('note:')
 			? opt.action.slice('note:'.length)
 			: opt.description;
-		toast(`${opt.name} — spent ${cost} ${this.resourceName(opt.resourceId)}`, {
-			description: desc,
-		});
+		toast(
+			t('combat.notice.resourceSpent', {
+				name: opt.name,
+				cost,
+				resource: this.resourceName(opt.resourceId),
+			}),
+			{ description: desc },
+		);
 		return true;
 	};
 
@@ -129,7 +151,7 @@ export class ResourceTracker {
 		if (!c) return;
 		c.play.resourcesSpent = { ...c.play.resourcesSpent, [id]: 0 };
 		const name = this.resourceName(id);
-		toast(`${name} — fully restored`);
+		toast(t('combat.notice.resourceFullyRestored', { name }));
 	};
 
 	/** Regain expended uses until at least `upTo` are AVAILABLE — never reduces what's there ("regain
@@ -217,9 +239,14 @@ export class ResourceTracker {
 		c.play.effects = c.play.effects.filter((e) => !outlived(e));
 		void saveCharacterToStore(c);
 		const lostExhaustion = exhaustionBefore > c.play.exhaustion;
-		toast(`${kind === 'long' ? 'Long' : 'Short'} rest — resources restored`, {
+		toast(t('combat.notice.restRestored', { kind: t(`combat.restKind.${kind}`) }), {
 			...(lostExhaustion
-				? { description: `Exhaustion ${exhaustionBefore} → ${c.play.exhaustion}` }
+				? {
+						description: t('combat.notice.exhaustionChanged', {
+							from: exhaustionBefore,
+							to: c.play.exhaustion,
+						}),
+					}
 				: {}),
 		});
 	};

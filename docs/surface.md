@@ -628,7 +628,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/combat/constants.ts`
 
 - `type MenuKind` — The anchored dropdown menus the Combat view can open (overlay.kind).
-- `const DEATH_CAUSE_LABEL` — Why the character died — the dead banner's subtitle, one phrase per `play.death.cause`.
+- `const DEATH_CAUSE_LABEL` — Why the character died — the dead banner's subtitle, one key per `play.death.cause`.
 - `const ABIL` — Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`.
 - `const ABILITY_NAME`
 - `const MOD_TARGETS` — Targets a custom "+N" modifier can point at, grouped for a native <select> with optgroups.

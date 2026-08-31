@@ -7,6 +7,7 @@
 	// Dracula/Catppuccin presets are worked examples you can add.
 	import Icon, { type IconName } from '../Icon.svelte';
 	import { toast } from 'svelte-sonner';
+	import { _ } from '$lib/i18n';
 	import { app } from '$lib/stores/app.svelte';
 	import {
 		THEMEABLE_TOKENS,
@@ -114,21 +115,20 @@
 		try {
 			raw = JSON.parse(await file.text());
 		} catch {
-			toast('That file isn’t a theme Charnik can read', {
-				description: 'A theme is a .json file — the one you picked isn’t valid JSON.',
+			toast($_('settings.notice.themeNotReadable'), {
+				description: $_('settings.notice.themeNotReadableBody'),
 			});
 			return;
 		}
 		const theme = themeFromJson(raw, file.name.replace(/\.json$/, ''), takenIds());
 		if (!theme) {
-			toast('Nothing to theme in that file', {
-				description:
-					'It’s valid JSON, but none of it names a colour or size Charnik styles with. Export a theme from here to see the shape one has.',
+			toast($_('settings.notice.themeNothingToTheme'), {
+				description: $_('settings.notice.themeNothingToThemeBody'),
 			});
 			return;
 		}
 		addTheme(theme, { activate: true });
-		toast(`Imported “${theme.name}”`);
+		toast($_('settings.notice.themeImported', { values: { name: theme.name } }));
 	}
 
 	const activate = (id: string) => (app.theme = id);

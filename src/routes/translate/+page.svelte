@@ -211,9 +211,9 @@
 			await deleteDraft(getUserStorage(), target); // saved → the cached draft is now redundant
 			baseline = JSON.stringify(draft); // prevent the auto-save effect from re-spawning it
 			await reloadContent();
-			toast('Translation saved');
+			toast($_('translate.notice.saved'));
 		} catch (e) {
-			toast('Your translation was not saved', { description: errText(e) });
+			toast($_('translate.notice.notSaved'), { description: errText(e) });
 		} finally {
 			saving = false;
 		}
@@ -238,7 +238,7 @@
 			await reloadContent();
 			selected = content.graph?.get(selected.effectiveId) ?? selected;
 		} catch (e) {
-			toast('Your translation was not saved', { description: errText(e) });
+			toast($_('translate.notice.notSaved'), { description: errText(e) });
 		} finally {
 			saving = false;
 		}

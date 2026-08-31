@@ -102,6 +102,77 @@
 			"attunementOver": "Понад межу налаштування ({cap})",
 			"attunementOverHint": "Вільний режим — дозволено, і лічильник це показує.",
 			"pounds": "{lb} фн"
+		},
+		"slot": {
+			"action": "дій",
+			"bonus": "бонусних дій",
+			"reaction": "реакцій"
+		},
+		"restKind": {
+			"short": "Короткий",
+			"long": "Тривалий"
+		},
+		"deathCause": {
+			"massive_damage": "Нищівна шкода — залишок дорівняв ваш максимум здоров’я",
+			"death_saves": "Три провалені рятівні кидки від смерті",
+			"exhaustion": "Останній рівень виснаження"
+		},
+		"notice": {
+			"notAvailable": "{name} — зараз недоступно",
+			"notEnoughResource": "Бракує «{resource}» для «{name}»",
+			"restToRecharge": "Відновіть відпочинком.",
+			"notEnoughResourceBody": "Лишилось {left} · коштує {cost}. Відновіть відпочинком.",
+			"noSlotLeft": "Цього ходу {slot} не лишилось",
+			"nextTurnToRefresh": "Натисніть «Наступний хід», щоб оновити.",
+			"resourceRestoredTo": "«{resource}» відновлено — тепер {count}",
+			"restTakenFor": "{name} — {kind} відпочинок узято",
+			"nothingToAttack": "{name} — немає чим атакувати",
+			"nothingToAttackBody": "Ця дія атакує зброєю «{id}», а такої у вас не споряджено.",
+			"effectMissing": "«{name}» не може подіяти",
+			"effectMissingBody": "Вона застосовує «{id}», але ефекту з такою назвою не завантажено — додайте його у свій файл ефектів або виправте назву в опції.",
+			"castingTime": "Час створення: {when}",
+			"castingReaction": "реакція",
+			"castingBonus": "бонусна дія",
+			"levelUp": "Новий рівень — {class} {level}",
+			"levelUpBody": "HP і комірки оновлено. Нові ASI, риси та закляття оберіть у білдері.",
+			"actionUsed": "{name} — дію витрачено",
+			"concentrationHeld": "Концентрацію втримано — {total} ≥ DC {dc}",
+			"concentrationFailed": "Рятівний кидок на концентрацію провалено — {total} < DC {dc}",
+			"concentrationFailedBody": "Закляття завершується — натисніть «Скинути», щоб підтвердити.",
+			"nat20Revive": "Природна 20 — ви знову на ногах з 1 HP",
+			"nat1Failures": "Природна 1 — два провали рятівних кидків від смерті",
+			"stabilised": "Три успіхи — стабілізовано на 0 HP",
+			"died": "Персонаж загинув",
+			"revived": "Повернення з мертвих — 1 HP",
+			"attunementFull": "Ви вже налаштовані на {cap} предметів",
+			"attunementFullBody": "Спершу розірвіть налаштування з одним або переведіть персонажа у вільний режим.",
+			"overAttunement": "Понад ліміт налаштування ({cap})",
+			"overAttunementBody": "Вільний режим — дозволено, і лічильник це показує.",
+			"usedItem": "Використано: {name}",
+			"itemsLeft": "лишилось {count}",
+			"resourceNoneLeft": "{name} — не лишилось",
+			"rechargeOnRest": "Відновлюється на відпочинку",
+			"resourceUsed": "{name} — витрачено",
+			"resourceRestoredName": "{name} — відновлено",
+			"resourceLeftOf": "лишилось {left} з {max}",
+			"resourceUsedUnlimited": "витрачено {used} · ∞",
+			"resourceSpent": "{name} — витрачено {cost} «{resource}»",
+			"resourceFullyRestored": "{name} — відновлено повністю",
+			"restRestored": "{kind} відпочинок — ресурси відновлено",
+			"exhaustionChanged": "Виснаження {from} → {to}",
+			"noHitDice": "Кубиків здоров’я {die} не лишилось",
+			"regainOnLongRest": "Частина повернеться після тривалого відпочинку",
+			"shortRestHealed": "Короткий відпочинок — відновлено {hp} HP",
+			"shortRestTaken": "Короткий відпочинок узято",
+			"automaticFailure": "{label}: автоматичний провал",
+			"automaticSuccess": "{label}: автоматичний успіх",
+			"upcastUnknown": "Створено на базовій силі — правило підсилення цього закляття не вдалося розібрати.",
+			"castSpell": "Створено: {name}{suffix}",
+			"noConcentration": "{name} створено, але зараз ви не можете тримати концентрацію",
+			"noConcentrationBody": "Лють (чи схожий стан) припиняє концентрацію.",
+			"effectExpired": "{label} — завершився",
+			"incapacitated": "Недієздатність",
+			"incapacitatedBody": "Не можна робити дії, бонусні дії чи реакції."
 		}
 	},
 	"mobile": {
@@ -238,6 +309,14 @@
 			"undoDone": "«{pack}» повернуто до версії, яка була до останнього оновлення.",
 			"uninstallWarn": "З диска зникнуть файли набору, а з ними — і все, що він дає (зараз це записів: {count}). У персонажів, які ними користуються, ці місця спорожніють. Повернути набір можна будь-коли з {repo}.",
 			"uninstallWarnEmpty": "З диска зникнуть файли набору. У персонажів, які щось із нього беруть, ці місця спорожніють. Повернути набір можна будь-коли з {repo}."
+		},
+		"notice": {
+			"demoRestored": "Демо-персонажа відновлено — {name}",
+			"themeNotReadable": "Цей файл Charnik не може прочитати як тему",
+			"themeNotReadableBody": "Тема — це файл .json, а обраний вами не є коректним JSON.",
+			"themeNothingToTheme": "У цьому файлі немає чого тематизувати",
+			"themeImported": "Імпортовано «{name}»",
+			"themeNothingToThemeBody": "Це коректний JSON, але жодне поле в ньому не називає колір чи розмір, якими Charnik стилізує. Експортуйте тему звідси, щоб побачити її форму."
 		}
 	},
 	"roster": {
@@ -301,6 +380,10 @@
 			"machine": "Машинний переклад",
 			"started": "Почато",
 			"reviewed": "Вичитано"
+		},
+		"notice": {
+			"saved": "Переклад збережено",
+			"notSaved": "Ваш переклад не збережено"
 		}
 	},
 	"contentMeta": {
@@ -791,5 +874,10 @@
 		"sleight_of_hand": "Спритність рук",
 		"stealth": "Непомітність",
 		"survival": "Виживання"
+	},
+	"spellbook": {
+		"notice": {
+			"cast": "Створено: {name}"
+		}
 	}
 }

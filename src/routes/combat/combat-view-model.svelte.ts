@@ -8,6 +8,7 @@
  * correct `this`. Pure helpers live in $lib/combat/helpers.
  */
 import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
@@ -451,9 +452,13 @@ class CombatVM {
 		this.overlay = null;
 		const cls = c.build.classes[classIndex];
 		if (cls)
-			toast(`Level up — ${this.graph?.get(cls.class)?.data.name_en ?? 'class'} ${cls.level}`, {
-				description: 'HP & slots updated. Set any new ASI/feat/spells in the builder.',
-			});
+			toast(
+				t('combat.notice.levelUp', {
+					class: this.graph?.get(cls.class)?.data.name_en ?? '',
+					level: cls.level,
+				}),
+				{ description: t('combat.notice.levelUpBody') },
+			);
 	};
 
 	/** Click a standard action (Dash, Hide, …). Spends an action; roll-type ones open their roll,
@@ -462,7 +467,7 @@ class CombatVM {
 		if (a.id === 'attack') return; // routes to the Attacks panel; not itself an action spend
 		if (!this.economy.trySpend('action')) return;
 		if (a.roll) this.rolls.roll(a.roll[0], a.roll[1], e);
-		else toast(`${a.name} — action used`);
+		else toast(t('combat.notice.actionUsed', { name: a.name }));
 	};
 	/** Spell casting (slots, upcast, the rolls a cast makes) — see casting.svelte.ts. */
 	casting = new SpellCasting(this);

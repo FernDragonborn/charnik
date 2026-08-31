@@ -60,8 +60,13 @@ export async function startI18n(initialLocale: string = FALLBACK_LOCALE): Promis
  * A view-model raising a toast has no `$_`, which is how a screenful of English sentences ended up
  * as literals in `combat/*` and `build/*`. This reads the live store, so it follows a locale switch
  * exactly like the markup does — the value is read at call time, never captured.
+ *
+ * With no locale set, `svelte-i18n` THROWS rather than returning anything. A notice must never be
+ * the thing that breaks the action that raised it — a failed cast is a worse bug than an unformatted
+ * one — so the key is handed back instead. The app sets a locale before its first paint; what
+ * reaches this branch is a node test driving a view-model with no i18n at all.
  */
 export const t = (key: string, values?: Record<string, string | number>): string =>
-	get(_)(key, values ? { values } : undefined);
+	get(locale) == null ? key : get(_)(key, values ? { values } : undefined);
 
 export { locale, waitLocale, json, _ };

@@ -7,6 +7,7 @@
  * nothing here depends on the rest of the sheet and there is no import cycle.
  */
 import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import { tokensOf, type ContentGraph } from '$lib/content/loader';
 import { rollPool } from '$lib/rules/dice';
 import type { Character } from '$lib/character/schema';
@@ -233,9 +234,7 @@ export class SpellCasting {
 		for (const res of this.evalUpcastAt(r, slotLevel)) {
 			if ('error' in res) {
 				if (res.raw.startsWith(kind))
-					toast('Cast at its base strength — this spell’s upcast rule could not be worked out.', {
-						description: res.error,
-					});
+					toast(t('combat.notice.upcastUnknown'), { description: res.error });
 				continue;
 			}
 			if (res.kind === kind) acc += res.flat;
@@ -254,9 +253,7 @@ export class SpellCasting {
 		const out: DamagePart[] = [];
 		for (const res of this.evalUpcastAt(r, slotLevel)) {
 			if ('error' in res) {
-				toast('Cast at its base strength — this spell’s upcast rule could not be worked out.', {
-					description: res.error,
-				});
+				toast(t('combat.notice.upcastUnknown'), { description: res.error });
 				continue;
 			}
 			if ((res.kind !== 'damage' && res.kind !== 'heal') || res.combine !== 'delta') continue;
@@ -366,7 +363,7 @@ export class SpellCasting {
 			// a cast with no roll (buff/utility): a bare log marker, not a rolled total
 			const suffix = ritual ? ' (ritual)' : '';
 			this.host.tray.logMarker(`Cast ${r.name}${suffix}`);
-			toast(`Cast ${r.name}${suffix}`);
+			toast(t('combat.notice.castSpell', { name: r.name, suffix }));
 		}
 	}
 
@@ -466,8 +463,8 @@ export class SpellCasting {
 		// Barbarian can't maintain Concentration while the Rage is active, so the spell casts but never
 		// establishes concentration (surfaced, not silently swallowed).
 		if (r.concentration && this.host.character && this.host.cantConcentrate) {
-			toast(`${r.name} cast, but you can't hold Concentration right now`, {
-				description: 'A Rage (or a similar state) ends Concentration.',
+			toast(t('combat.notice.noConcentration', { name: r.name }), {
+				description: t('combat.notice.noConcentrationBody'),
 			});
 		} else if (r.concentration && this.host.character) {
 			const prior = this.host.character.play.concentration;

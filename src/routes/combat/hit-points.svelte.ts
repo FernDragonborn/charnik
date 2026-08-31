@@ -11,6 +11,7 @@
  * the action executor and the short rest read it from there rather than recomputing.
  */
 import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import { naturalOf, rollPool } from '$lib/rules/dice';
 import { applyDefense, effectiveHpMax, netAdvantage, DEATH_CAUSE_LABEL } from '$lib/combat/helpers';
 import type { Character, DeathCause } from '$lib/character/schema';
@@ -128,11 +129,11 @@ export class HitPoints {
 		);
 		this.host().tray.pushRoll('Concentration save', r);
 		if (r.total >= pend.dc) {
-			toast(`Concentration held — ${r.total} ≥ DC ${pend.dc}`);
+			toast(t('combat.notice.concentrationHeld', { total: r.total, dc: pend.dc }));
 			this.pendingConcentrationSave = null;
 		} else {
-			toast(`Concentration save failed — ${r.total} < DC ${pend.dc}`, {
-				description: 'The spell ends — tap Drop to confirm.',
+			toast(t('combat.notice.concentrationFailed', { total: r.total, dc: pend.dc }), {
+				description: t('combat.notice.concentrationFailedBody'),
 			});
 			this.pendingConcentrationSave = { dc: pend.dc, failed: true };
 		}
@@ -168,15 +169,15 @@ export class HitPoints {
 		if (natural === 20) {
 			c.play.hp.current = 1;
 			c.play.deathSaves = { successes: 0, failures: 0 };
-			toast('Natural 20 — back on your feet at 1 HP');
+			toast(t('combat.notice.nat20Revive'));
 		} else if (natural === 1) {
 			ds.failures = Math.min(3, ds.failures + 2);
-			toast('Natural 1 — two death-save failures');
+			toast(t('combat.notice.nat1Failures'));
 		} else if (r.total >= 10) {
 			ds.successes = Math.min(3, ds.successes + 1);
 			if (ds.successes >= 3) {
 				c.play.deathSaves = { successes: 0, failures: 0 };
-				toast('Three successes — stable at 0 HP');
+				toast(t('combat.notice.stabilised'));
 			}
 		} else {
 			ds.failures = Math.min(3, ds.failures + 1);
@@ -204,7 +205,7 @@ export class HitPoints {
 		const p = this.host().character?.play;
 		if (!p || p.death) return;
 		p.death = { cause };
-		toast('The character has died', { description: DEATH_CAUSE_LABEL[cause] });
+		toast(t('combat.notice.died'), { description: t(DEATH_CAUSE_LABEL[cause]) });
 	};
 	/** "I was revived" — the way back from the dead screen. RAW leaves the HP to the revival effect, so
 	 *  we apply the Revivify FLOOR (at least 1 HP, never taking hit points away — a character who died
@@ -220,7 +221,7 @@ export class HitPoints {
 		p.deathSaves = { successes: 0, failures: 0 };
 		p.exhaustion = Math.max(0, p.exhaustion - 1);
 		p.hp = { ...p.hp, current: Math.max(1, p.hp.current) };
-		toast('Back from the dead — 1 HP');
+		toast(t('combat.notice.revived'));
 	};
 
 	get hpBar(): { cur: number; tmp: number } {

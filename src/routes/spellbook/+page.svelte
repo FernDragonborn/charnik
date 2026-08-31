@@ -8,6 +8,7 @@
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
 	import { toast } from 'svelte-sonner';
+	import { _ } from '$lib/i18n';
 	import { content, loadContentStore } from '$lib/content/store.svelte';
 	import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 	import { deriveSheet } from '$lib/character/derive';
@@ -123,7 +124,7 @@
 		return next;
 	}
 	function cast() {
-		if (selected) toast(`Cast ${selected.data.name_en}`);
+		if (selected) toast($_('spellbook.notice.cast', { values: { name: selected.data.name_en } }));
 	}
 </script>
 

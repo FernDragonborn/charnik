@@ -8,6 +8,7 @@
  * bookkeeping. Every method here calls `rest('short')` first, so the two halves cannot drift apart.
  */
 import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import { rollFormula } from '$lib/rules/dice';
 import { shortRestHalfHeal } from '$lib/rules/core';
 import type { Character, ShortRestMode } from '$lib/character/schema';
@@ -52,7 +53,9 @@ export class RestControls {
 		const pool = this.host().sheet?.hitDice.find((h) => h.die === die);
 		if (!c || !pool) return;
 		if (pool.max - this.host().resources.hitDiceSpent(die) <= 0) {
-			toast(`No ${die} Hit Dice left`, { description: 'Regain some on a long rest' });
+			toast(t('combat.notice.noHitDice', { die }), {
+				description: t('combat.notice.regainOnLongRest'),
+			});
 			return;
 		}
 		const conMod = this.host().sheet?.abilities.con.mod ?? 0;
@@ -97,7 +100,7 @@ export class RestControls {
 		const heal = shortRestHalfHeal(this.host().hpMax);
 		p.hp.current = Math.min(this.host().hpMax, p.hp.current + heal);
 		this.host().tray.logMarker(`Short rest — +${heal} HP (½ max)`);
-		toast(`Short rest — healed ${heal} HP`);
+		toast(t('combat.notice.shortRestHealed', { hp: heal }));
 	}
 	/** Commit the `dice` short rest: recharge, then spend each chosen Hit Die (roll + CON, min 1 HP —
 	 *  each shows its own roll in the log), and close the picker. */
@@ -107,6 +110,6 @@ export class RestControls {
 			for (let i = 0; i < count; i++) this.spendHitDie(die);
 		this.hdPick = {};
 		this.host().overlay = null;
-		toast('Short rest taken');
+		toast(t('combat.notice.shortRestTaken'));
 	};
 }

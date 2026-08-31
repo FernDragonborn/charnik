@@ -10,6 +10,7 @@
  * other things that spend and restore.
  */
 import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { rollFormula } from '$lib/rules/dice';
@@ -63,18 +64,22 @@ export class ActionExecutor {
 		// resource chip reaches the same option, so the check belongs here where every caller passes
 		// (else a chip could fire Persistent Rage outside its combat-start window).
 		if (!opt.available) {
-			toast(`${opt.name} — not available right now`);
+			toast(t('combat.notice.notAvailable', { name: opt.name }));
 			return;
 		}
 		if (!this.host().resources.canAffordOption(opt, amount)) {
-			toast(`Not enough ${this.host().resources.resourceName(opt.resourceId)} for ${opt.name}`, {
-				description: 'Rest to recharge.',
-			});
+			toast(
+				t('combat.notice.notEnoughResource', {
+					resource: this.host().resources.resourceName(opt.resourceId),
+					name: opt.name,
+				}),
+				{ description: t('combat.notice.restToRecharge') },
+			);
 			return;
 		}
 		if (slot && !this.host().economy.canSpend(slot)) {
-			toast(`No ${ACTION_SLOT_LABEL[slot]} left this turn`, {
-				description: 'Press “Next turn” to refresh.',
+			toast(t('combat.notice.noSlotLeft', { slot: t(ACTION_SLOT_LABEL[slot]) }), {
+				description: t('combat.notice.nextTurnToRefresh'),
 			});
 			return;
 		}
@@ -120,7 +125,10 @@ export class ActionExecutor {
 			const after = this.host().resources.restoreUpTo(r.id, r.upTo);
 			if (after > before)
 				toast(r.source, {
-					description: `${this.host().resources.resourceName(r.id)} restored — now ${after}`,
+					description: t('combat.notice.resourceRestoredTo', {
+						resource: this.host().resources.resourceName(r.id),
+						count: after,
+					}),
 				});
 		}
 	}
@@ -192,7 +200,7 @@ export class ActionExecutor {
 			// refund its own charge (see actions.md §2).
 			if (arg !== 'short' && arg !== 'long') return;
 			this.host().resources.rest(arg);
-			toast(`${opt.name} — ${arg} rest taken`);
+			toast(t('combat.notice.restTakenFor', { name: opt.name, kind: t(`combat.restKind.${arg}`) }));
 		},
 	};
 
@@ -223,8 +231,8 @@ export class ActionExecutor {
 		const count = Math.min(Math.max(1, asked), MAX_ATTACKS_PER_ACTION);
 		const at = this.host().attacks.find((a) => a.id.toLowerCase() === id);
 		if (!at) {
-			toast(`${opt.name} — nothing to attack with`, {
-				description: `It makes an attack with “${id}”, and you have no such weapon equipped.`,
+			toast(t('combat.notice.nothingToAttack', { name: opt.name }), {
+				description: t('combat.notice.nothingToAttackBody', { id }),
 			});
 			return;
 		}
@@ -243,8 +251,8 @@ export class ActionExecutor {
 		if (!p) return;
 		const cat = this.host().effects.effectCatalog.find((eff) => eff.ref.split(':').pop() === arg);
 		if (!cat) {
-			toast(`${opt.name} can’t take effect`, {
-				description: `It applies “${arg}”, and no effect by that name is loaded — add it to your effects file, or correct the name on the option.`,
+			toast(t('combat.notice.effectMissing', { name: opt.name }), {
+				description: t('combat.notice.effectMissingBody', { id: arg }),
 			});
 			return;
 		}

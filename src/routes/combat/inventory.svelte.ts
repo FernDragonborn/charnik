@@ -9,6 +9,7 @@
  * attunement cap, and using a consumable up.
  */
 import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import {
 	ATTUNEMENT_CAP,
 	attunedCount,
@@ -113,13 +114,13 @@ export class InventoryTracker {
 		if (!entry) return;
 		if (!entry.attuned && this.attunementFull) {
 			if (c.ui.strict) {
-				toast(`Attuned to ${ATTUNEMENT_CAP} items already`, {
-					description: 'Break attunement with one first, or switch this character to Free.',
+				toast(t('combat.notice.attunementFull', { cap: ATTUNEMENT_CAP }), {
+					description: t('combat.notice.attunementFullBody'),
 				});
 				return;
 			}
-			toast(`Over the attunement limit (${ATTUNEMENT_CAP})`, {
-				description: 'Free mode — allowed, and the count says so.',
+			toast(t('combat.notice.overAttunement', { cap: ATTUNEMENT_CAP }), {
+				description: t('combat.notice.overAttunementBody'),
 			});
 		}
 		this.write(toggleAttuned(c.build.inventory, ref));
@@ -133,6 +134,9 @@ export class InventoryTracker {
 		if (!c) return;
 		const row = this.rows.find((r) => r.entry.item === ref);
 		this.write(useOne(c.build.inventory, ref));
-		if (row) toast(`Used ${row.name}`, { description: `${row.entry.qty - 1} left` });
+		if (row)
+			toast(t('combat.notice.usedItem', { name: row.name }), {
+				description: t('combat.notice.itemsLeft', { count: row.entry.qty - 1 }),
+			});
 	};
 }

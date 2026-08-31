@@ -23,6 +23,7 @@
 	import { reloadApp } from '$lib/content/reload';
 	import { flashAfterReload } from '$lib/stores/flash';
 	import { toast } from 'svelte-sonner';
+	import { _ } from '$lib/i18n';
 	import { recreateDemoCharacter } from '$lib/character/store.svelte';
 	import DataMigrationDialog from './DataMigrationDialog.svelte';
 	import DataConflictDialog from './DataConflictDialog.svelte';
@@ -37,7 +38,7 @@
 	async function restoreDemo() {
 		confirmRestore = false;
 		const demo = await recreateDemoCharacter();
-		toast(`Demo character restored — ${demo.build.name}`);
+		toast($_('settings.notice.demoRestored', { values: { name: demo.build.name } }));
 	}
 
 	// A failed move is important — it must NOT be a toast that flashes past. It goes in this persistent

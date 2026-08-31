@@ -102,6 +102,77 @@
 			"attunementOver": "Over the attunement limit ({cap})",
 			"attunementOverHint": "Free mode — allowed, and the count says so.",
 			"pounds": "{lb} lb"
+		},
+		"slot": {
+			"action": "action",
+			"bonus": "bonus action",
+			"reaction": "reaction"
+		},
+		"restKind": {
+			"short": "Short",
+			"long": "Long"
+		},
+		"deathCause": {
+			"massive_damage": "Massive damage — the leftover met your hit-point maximum",
+			"death_saves": "Three failed death saves",
+			"exhaustion": "The last level of Exhaustion"
+		},
+		"notice": {
+			"notAvailable": "{name} — not available right now",
+			"notEnoughResource": "Not enough {resource} for {name}",
+			"restToRecharge": "Rest to recharge.",
+			"notEnoughResourceBody": "{left} left · costs {cost}. Rest to recharge.",
+			"noSlotLeft": "No {slot} left this turn",
+			"nextTurnToRefresh": "Press “Next turn” to refresh.",
+			"resourceRestoredTo": "{resource} restored — now {count}",
+			"restTakenFor": "{name} — {kind} rest taken",
+			"nothingToAttack": "{name} — nothing to attack with",
+			"nothingToAttackBody": "It makes an attack with “{id}”, and you have no such weapon equipped.",
+			"effectMissing": "{name} can’t take effect",
+			"effectMissingBody": "It applies “{id}”, and no effect by that name is loaded — add it to your effects file, or correct the name on the option.",
+			"castingTime": "Casting time: {when}",
+			"castingReaction": "reaction",
+			"castingBonus": "bonus action",
+			"levelUp": "Level up — {class} {level}",
+			"levelUpBody": "HP & slots updated. Set any new ASI/feat/spells in the builder.",
+			"actionUsed": "{name} — action used",
+			"concentrationHeld": "Concentration held — {total} ≥ DC {dc}",
+			"concentrationFailed": "Concentration save failed — {total} < DC {dc}",
+			"concentrationFailedBody": "The spell ends — tap Drop to confirm.",
+			"nat20Revive": "Natural 20 — back on your feet at 1 HP",
+			"nat1Failures": "Natural 1 — two death-save failures",
+			"stabilised": "Three successes — stable at 0 HP",
+			"died": "The character has died",
+			"revived": "Back from the dead — 1 HP",
+			"attunementFull": "Attuned to {cap} items already",
+			"attunementFullBody": "Break attunement with one first, or switch this character to Free.",
+			"overAttunement": "Over the attunement limit ({cap})",
+			"overAttunementBody": "Free mode — allowed, and the count says so.",
+			"usedItem": "Used {name}",
+			"itemsLeft": "{count} left",
+			"resourceNoneLeft": "{name} — none left",
+			"rechargeOnRest": "Recharge on a rest",
+			"resourceUsed": "{name} used",
+			"resourceRestoredName": "{name} restored",
+			"resourceLeftOf": "{left} of {max} left",
+			"resourceUsedUnlimited": "{used} used · ∞",
+			"resourceSpent": "{name} — spent {cost} {resource}",
+			"resourceFullyRestored": "{name} — fully restored",
+			"restRestored": "{kind} rest — resources restored",
+			"exhaustionChanged": "Exhaustion {from} → {to}",
+			"noHitDice": "No {die} Hit Dice left",
+			"regainOnLongRest": "Regain some on a long rest",
+			"shortRestHealed": "Short rest — healed {hp} HP",
+			"shortRestTaken": "Short rest taken",
+			"automaticFailure": "{label}: automatic failure",
+			"automaticSuccess": "{label}: automatic success",
+			"upcastUnknown": "Cast at its base strength — this spell’s upcast rule could not be worked out.",
+			"castSpell": "Cast {name}{suffix}",
+			"noConcentration": "{name} cast, but you can’t hold Concentration right now",
+			"noConcentrationBody": "A Rage (or a similar state) ends Concentration.",
+			"effectExpired": "{label} — expired",
+			"incapacitated": "Incapacitated",
+			"incapacitatedBody": "Can’t take actions, bonus actions, or reactions."
 		}
 	},
 	"mobile": {
@@ -238,6 +309,14 @@
 			"undoDone": "“{pack}” is back to the version it had before the last update.",
 			"uninstallWarn": "Deletes its files from your disk, and the {count} entries it gives you with them. Characters using any of those go blank there. You can get it back any time from {repo}.",
 			"uninstallWarnEmpty": "Deletes its files from your disk. Characters using anything from it go blank there. You can get it back any time from {repo}."
+		},
+		"notice": {
+			"demoRestored": "Demo character restored — {name}",
+			"themeNotReadable": "That file isn’t a theme Charnik can read",
+			"themeNotReadableBody": "A theme is a .json file — the one you picked isn’t valid JSON.",
+			"themeNothingToTheme": "Nothing to theme in that file",
+			"themeImported": "Imported “{name}”",
+			"themeNothingToThemeBody": "It’s valid JSON, but none of it names a colour or size Charnik styles with. Export a theme from here to see the shape one has."
 		}
 	},
 	"roster": {
@@ -301,6 +380,10 @@
 			"machine": "Machine translation",
 			"started": "Started",
 			"reviewed": "Reviewed"
+		},
+		"notice": {
+			"saved": "Translation saved",
+			"notSaved": "Your translation was not saved"
 		}
 	},
 	"contentMeta": {
@@ -791,5 +874,10 @@
 		"sleight_of_hand": "Sleight of Hand",
 		"stealth": "Stealth",
 		"survival": "Survival"
+	},
+	"spellbook": {
+		"notice": {
+			"cast": "Cast {name}"
+		}
 	}
 }

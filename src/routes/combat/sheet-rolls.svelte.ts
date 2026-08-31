@@ -7,6 +7,7 @@
  * against these functions and the host interface below is what it has to satisfy.
  */
 import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { rollPool } from '$lib/rules/dice';
@@ -100,7 +101,11 @@ export class SheetRolls {
 		const forced = key ? this.autoOutcomeFor(key) : null;
 		if (forced) {
 			this.host().tray.logMarker(`${label} — auto-${forced}`);
-			toast(`${label}: automatic ${forced === 'fail' ? 'failure' : 'success'}`);
+			toast(
+				t(forced === 'fail' ? 'combat.notice.automaticFailure' : 'combat.notice.automaticSuccess', {
+					label,
+				}),
+			);
 			return;
 		}
 		const fx = key ? this.effectsFor(key) : null;

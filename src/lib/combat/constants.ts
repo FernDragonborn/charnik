@@ -23,11 +23,12 @@ export type MenuKind =
 	| 'restshort'
 	| 'manage';
 
-/** Why the character died — the dead banner's subtitle, one phrase per `play.death.cause`. */
+/** Why the character died — the dead banner's subtitle, one key per `play.death.cause`. Catalog
+ *  keys rather than phrases: this module has no locale, and both consumers can read one. */
 export const DEATH_CAUSE_LABEL: Record<DeathCause, string> = {
-	massive_damage: 'Massive damage — the leftover met your hit-point maximum',
-	death_saves: 'Three failed death saves',
-	exhaustion: 'The last level of Exhaustion',
+	massive_damage: 'combat.deathCause.massive_damage',
+	death_saves: 'combat.deathCause.death_saves',
+	exhaustion: 'combat.deathCause.exhaustion',
 };
 
 /** Re-export of the ONE ability-id list (AUDIT F3) — importers keep using `ABIL`. */

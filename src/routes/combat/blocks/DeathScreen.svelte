@@ -4,6 +4,7 @@
 	// the only ways out are the two buttons. Reuses the shared DialogShell (omitting `onDismiss` is what
 	// makes it must-acknowledge), so it renders identically to every other attention dialog.
 	import { base } from '$app/paths';
+	import { _ } from '$lib/i18n';
 	import DialogShell from '$lib/components/DialogShell.svelte';
 	import { DEATH_CAUSE_LABEL } from '$lib/combat/helpers';
 	import type { DeathCause } from '$lib/character/schema';
@@ -15,7 +16,7 @@
 <DialogShell
 	titleId="death-title"
 	title="You have died"
-	subtitle={DEATH_CAUSE_LABEL[cause]}
+	subtitle={$_(DEATH_CAUSE_LABEL[cause])}
 	badge="skull"
 	width="min(460px, calc(100vw - 2 * var(--space-4)))"
 >

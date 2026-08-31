@@ -5,6 +5,7 @@
  * CombatVM composes it as `combat.economy`, passing getters for the reactive character + sheet.
  */
 import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import {
 	pipClick,
 	isEffectExpired,
@@ -90,7 +91,7 @@ export class TurnEconomy {
 		if (!expired.length) return;
 		c.play.effects = kept;
 		endConcentrationCarriedBy(c.play, expired);
-		for (const e of expired) toast(`${e.label} — expired`);
+		for (const e of expired) toast(t('combat.notice.effectExpired', { label: e.label }));
 	};
 
 	/** End the turn: refresh every action-economy slot, advance the round counter, and expire
@@ -146,12 +147,14 @@ export class TurnEconomy {
 		if (!c || !c.play.inCombat) return true;
 		// incapacitated is a hard block, not an exhaustion — a distinct message ("Next turn" won't help)
 		if (this.incapacitated) {
-			toast('Incapacitated', { description: "Can't take actions, bonus actions, or reactions." });
+			toast(t('combat.notice.incapacitated'), {
+				description: t('combat.notice.incapacitatedBody'),
+			});
 			return false;
 		}
 		if (c.play.turn[slot] >= this.slotMax[slot]) {
-			toast(`No ${ACTION_SLOT_LABEL[slot]} left this turn`, {
-				description: 'Press “Next turn” to refresh.',
+			toast(t('combat.notice.noSlotLeft', { slot: t(ACTION_SLOT_LABEL[slot]) }), {
+				description: t('combat.notice.nextTurnToRefresh'),
 			});
 			return false;
 		}
