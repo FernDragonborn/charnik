@@ -487,7 +487,11 @@ class BuildVM {
 	 * an `$effect` that writes a `$state` — one tick of lag, same output.
 	 */
 	previewSheet = (mutate: () => void): CharacterSheet | null => {
-		const restore = $state.snapshot(this.draft); // already a deep clone
+		// `structuredClone` on top, for the reason `draft-history` states: `$state.snapshot` copies a
+		// PROXY, and outside the browser there is no proxy to copy — so it hands back the draft itself,
+		// `mutate` edits the "copy", and putting it back puts back the mutation. The trial would then
+		// be permanent everywhere the app is driven headlessly.
+		const restore = structuredClone($state.snapshot(this.draft));
 		try {
 			mutate();
 			return this.sheet;

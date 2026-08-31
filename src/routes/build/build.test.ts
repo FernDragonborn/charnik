@@ -65,6 +65,20 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.graph = graph;
 	});
 
+	it('previewing an option leaves the draft exactly as it was', () => {
+		build.draft.name = 'Valen';
+		build.draft.classes = [{ classId: `class:${S}:wizard`, subclassId: null, level: 3 }];
+		const before = JSON.stringify(build.draft);
+
+		// the inspector's diff runs the REAL pipeline on a trial draft; nothing outside may see it
+		build.previewSheet(() => {
+			build.draft.speciesId = `species:${S}:hardy`;
+			build.draft.skills = ['arcana'];
+		});
+
+		expect(JSON.stringify(build.draft)).toBe(before);
+	});
+
 	it('preserves identity, system, and the core build choices', () => {
 		const saved = savedCharacter();
 		build.hydrate(saved);
