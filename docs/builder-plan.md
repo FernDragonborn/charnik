@@ -72,15 +72,13 @@ exists. It is also what makes the fast gestures safe to offer.
 
 ## Known sharp edges
 
-- **`previewSheet` writes to `draft` from inside a `$derived`** (`Inspector.changes`), which
-  `docs/internals/ui.md` otherwise forbids. Safe because the write is undone in the same synchronous
-  frame, so nothing observes the trial value. Upgrade path if Svelte hardens this: move `changes` into
-  an `$effect` writing a `$state` — one tick of lag, same output. Documented at the call site.
+- **`previewSheet` builds a whole second `BuildVM` per preview.** That is the price of a diff that
+  runs the real pipeline while `Inspector.changes` stays a pure `$derived`: a trial draft nobody else
+  holds needs no restoring, and a `$derived` that writes state is what `docs/internals/ui.md` forbids
+  and Svelte guards against. Call it for the ONE option a player is reading, never per row.
 - **Autosave is debounced, so the last 600 ms of typing dies with a crashed tab.** Everything before
   it is on disk. A `beforeunload` flush would fight the desktop app's own quit for one name's worth
   of characters.
-- **Skill names are still `titleCase(id)`**, not catalog strings — the same gap the combat sheet has.
-  They are rules ids, not content rows, so they need their own key namespace.
 
 ## Not built, and why
 

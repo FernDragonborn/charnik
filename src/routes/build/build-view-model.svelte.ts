@@ -471,33 +471,35 @@ class BuildVM {
 	inspector = new Inspector(() => this);
 
 	/**
-	 * The sheet the draft WOULD produce with `mutate` applied — the real pipeline, on a trial draft,
-	 * then put back. Derived reads are pull-based, so the whole `assembled → sheet` chain recomputes
-	 * inside this synchronous window and again when the draft is restored; nothing outside ever
-	 * observes the trial state. Deliberately expensive (a full `deriveSheet`) — call it for the ONE
-	 * option a player is reading, never per row of a list.
+	 * The sheet `mutate` would produce — the real pipeline, run on a view-model of its own.
 	 *
 	 * Running the REAL pipeline is the point: a hand-written "what a background gives you" summary
 	 * would drift from what the engine actually applies, and the drift would be invisible.
 	 *
-	 * The sharp edge: this writes to `this.draft` from inside a `$derived` (`Inspector.changes`),
-	 * which `docs/internals/ui.md` otherwise forbids. It is safe because the write is undone in the
-	 * same synchronous frame, so no consumer ever sees the trial value and the dependency graph ends
-	 * where it started. If Svelte ever makes that a hard error, the upgrade is to move `changes` into
-	 * an `$effect` that writes a `$state` — one tick of lag, same output.
+	 * It is a SEPARATE instance rather than this one trial-mutated and put back. Mutating this one
+	 * meant writing `$state` from inside a `$derived` (`Inspector.changes`), which `ui.md` forbids
+	 * and Svelte guards against — and it meant the restore had to be perfect, which it was not: a
+	 * snapshot that is not a copy made every preview permanent outside the browser. A draft nobody
+	 * else holds cannot be restored wrongly, because it is never put back.
+	 *
+	 * The clone is explicit for the reason `draft-history` states: `$state.snapshot` copies a PROXY,
+	 * and outside the browser there is none, so it hands back the object itself.
+	 *
+	 * Deliberately expensive (a whole view-model and a full `deriveSheet`) — call it for the ONE
+	 * option a player is reading, never per row of a list.
 	 */
-	previewSheet = (mutate: () => void): CharacterSheet | null => {
-		// `structuredClone` on top, for the reason `draft-history` states: `$state.snapshot` copies a
-		// PROXY, and outside the browser there is no proxy to copy — so it hands back the draft itself,
-		// `mutate` edits the "copy", and putting it back puts back the mutation. The trial would then
-		// be permanent everywhere the app is driven headlessly.
-		const restore = structuredClone($state.snapshot(this.draft));
-		try {
-			mutate();
-			return this.sheet;
-		} finally {
-			this.draft = restore;
-		}
+	previewSheet = (mutate: (trial: BuildVM) => void): CharacterSheet | null => {
+		const trial = new BuildVM();
+		// the graph is taken, never re-derived: a preview must read the same content this view-model
+		// does, including a graph handed in directly rather than loaded from the shared store
+		trial.graph = this.graph;
+		trial.draft = structuredClone($state.snapshot(this.draft));
+		trial.edit = this.edit;
+		// the cache too: taking a class hands back what that class owned, so a preview that ignored it
+		// would show a swap costing picks the real one keeps
+		trial.classPicks = new Map(this.classPicks);
+		mutate(trial);
+		return trial.sheet;
 	};
 
 	// --- what is still unfinished ----------------------------------------------------------------

@@ -33,8 +33,9 @@ import type { FeatSlots } from './feat-slots.svelte';
 export interface InspectorHost {
 	draft: DraftState;
 	sheet: CharacterSheet | null;
-	/** Derive the sheet a trial mutation would produce, then put the draft back. */
-	previewSheet(mutate: () => void): CharacterSheet | null;
+	/** Derive the sheet `mutate` would produce, on a draft of its own. The host handed to `mutate`
+	 *  is a THROWAWAY: writing to it is how a preview stays a preview. */
+	previewSheet(mutate: (trial: InspectorHost) => void): CharacterSheet | null;
 	row(id: string | null): LoadedRow | undefined;
 
 	speciesList: LoadedRowByType<'species'>[];
@@ -102,8 +103,10 @@ interface PickSpec extends SpecCopy {
 	type: ContentType;
 	options: LoadedRow[];
 	currentId: string | null;
-	/** Write the pick into the draft. `null` clears it. */
-	apply: (id: string | null) => void;
+	/** Write the pick into a host's draft. `null` clears it. The host is a PARAMETER because the same
+	 *  spec is applied twice over: for real when you take an option, and to a throwaway when the pane
+	 *  works out what taking it would do. */
+	apply: (host: InspectorHost, id: string | null) => void;
 	/** Can this choice be un-made? A class row cannot (removing it is a different control). */
 	clearable: boolean;
 }
@@ -179,7 +182,7 @@ function classPickSpec(b: InspectorHost, index: number): PickSpec {
 		type: 'class',
 		options: classesOfferedTo(b, index),
 		currentId: held,
-		apply: (id) => b.setClass(index, id),
+		apply: (host, id) => host.setClass(index, id),
 		clearable: index > 0,
 	};
 }
@@ -196,7 +199,7 @@ function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
 				type: 'species',
 				options: b.speciesList,
 				currentId: b.draft.speciesId,
-				apply: (id) => b.pickSpecies(id),
+				apply: (host, id) => host.pickSpecies(id),
 				clearable: true,
 			};
 		case 'speciesOption':
@@ -210,7 +213,7 @@ function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
 				type: 'species_option',
 				options: b.speciesOptions,
 				currentId: b.draft.speciesOptionId,
-				apply: (id) => (b.draft.speciesOptionId = id),
+				apply: (host, id) => (host.draft.speciesOptionId = id),
 				clearable: true,
 			};
 		case 'background':
@@ -221,7 +224,7 @@ function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
 				type: 'background',
 				options: b.backgroundList,
 				currentId: b.draft.backgroundId,
-				apply: (id) => (b.draft.backgroundId = id),
+				apply: (host, id) => (host.draft.backgroundId = id),
 				clearable: true,
 			};
 		case 'class':
@@ -236,7 +239,7 @@ function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
 				type: 'subclass',
 				options: b.subclassesFor(cls?.classId ?? null),
 				currentId: cls?.subclassId ?? null,
-				apply: (id) => b.setSubclass(t.index, id),
+				apply: (host, id) => host.setSubclass(t.index, id),
 				clearable: true,
 			};
 		}
@@ -253,7 +256,7 @@ function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
 					.featOptionsFor(t.level)
 					.filter((r) => !b.feats.featOptionBlocked(r.effectiveId, t.slotKey)),
 				currentId: b.draft.slotFeats[t.slotKey] ?? null,
-				apply: (id) => b.feats.setSlotFeat(t.slotKey, id ?? ''),
+				apply: (host, id) => host.feats.setSlotFeat(t.slotKey, id ?? ''),
 				clearable: true,
 			};
 		default:
@@ -344,7 +347,7 @@ export class Inspector {
 		const id = this.previewId;
 		if (!spec || id === null || id === spec.currentId) return [];
 		const b = this.host();
-		return diffSheets(b.sheet, b.previewSheet(() => spec.apply(id)));
+		return diffSheets(b.sheet, b.previewSheet((trial) => spec.apply(trial, id)));
 	});
 
 	// --- committing --------------------------------------------------------------------------------
@@ -361,7 +364,7 @@ export class Inspector {
 		if (!spec || id === spec.currentId) return;
 		const host = this.host();
 		const before = host.sheet; // deriveSheet returns a fresh object, so this stays valid after apply
-		spec.apply(id);
+		spec.apply(host, id);
 		this.previewId = id;
 		this.applied = diffSheets(before, host.sheet);
 	};
@@ -371,7 +374,7 @@ export class Inspector {
 		if (!spec?.clearable) return;
 		const host = this.host();
 		const before = host.sheet;
-		spec.apply(null);
+		spec.apply(host, null);
 		this.previewId = null;
 		this.applied = diffSheets(before, host.sheet);
 	};

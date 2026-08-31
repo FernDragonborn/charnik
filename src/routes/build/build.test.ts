@@ -70,12 +70,14 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.draft.classes = [{ classId: `class:${S}:wizard`, subclassId: null, level: 3 }];
 		const before = JSON.stringify(build.draft);
 
-		// the inspector's diff runs the REAL pipeline on a trial draft; nothing outside may see it
-		build.previewSheet(() => {
-			build.draft.speciesId = `species:${S}:hardy`;
-			build.draft.skills = ['arcana'];
+		// the inspector's diff runs the REAL pipeline on a draft of its own; nothing outside may see it
+		const sheet = build.previewSheet((trial) => {
+			trial.draft.speciesId = `species:${S}:hardy`;
+			trial.draft.skills = ['arcana'];
 		});
 
+		// the trial really was derived — an empty diff would pass a weaker assertion for free
+		expect(sheet?.abilities.con.score.value).toBe(10); // 8 + the species' +2
 		expect(JSON.stringify(build.draft)).toBe(before);
 	});
 
