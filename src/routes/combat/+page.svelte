@@ -3,6 +3,7 @@
 	// pure helpers in $lib/combat/helpers. Markup keeps bare names via reactive read-aliases;
 	// writes/binds go through `combat.*`.
 	import { onMount } from 'svelte';
+	import { _ } from '$lib/i18n';
 	import { dndzone } from 'svelte-dnd-action';
 	import { combat } from './combat-view-model.svelte';
 	import { content } from '$lib/content/store.svelte';
@@ -88,7 +89,7 @@
 	});
 </script>
 
-<svelte:head><title>Combat — Charnik</title></svelte:head>
+<svelte:head><title>{$_('nav.combat')} — Charnik</title></svelte:head>
 <svelte:window onpointerup={releaseDrag} />
 
 {#if combat.noCharacter}

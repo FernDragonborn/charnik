@@ -110,7 +110,7 @@
 	}
 </script>
 
-<svelte:head><title>Build — Charnik</title></svelte:head>
+<svelte:head><title>{$_('nav.build')} — Charnik</title></svelte:head>
 
 {#if content.error}
 	<!-- W2: a content-load failure was silent here (empty pickers) — surface it like the other views. -->

@@ -3,11 +3,17 @@
 		"name": "Charnik",
 		"tagline": "Ваші персонажі — ваші."
 	},
+	"compendium": {
+		"pickAnEntry": "Оберіть запис, щоб побачити подробиці."
+	},
 	"nav": {
 		"roster": "Персонажі",
 		"combat": "Бій",
 		"compendium": "Довідник",
 		"settings": "Налаштування",
+		"build": "Білдер",
+		"spellbook": "Книга заклять",
+		"translate": "Переклад",
 		"skipToContent": "Перейти до вмісту",
 		"openCommandPalette": "Відкрити палітру команд"
 	},

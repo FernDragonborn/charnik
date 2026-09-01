@@ -5,6 +5,7 @@
 	// shows on spells too (it used to only render in the generic branch). Read-only by default;
 	// `editable` (translate) makes the title + prose editable via the bound `draft`.
 	import type { Snippet } from 'svelte';
+	import { _ } from '$lib/i18n';
 	import type { DetailModel } from '$lib/content/detail';
 	import type { WikiEditDraft } from './wikiEdit';
 	import SpellHead from './SpellHead.svelte';
@@ -40,7 +41,7 @@
 
 <article class="detail-body">
 	{#if !detail}
-		<p class="pick">Select an entry to see its detail.</p>
+		<p class="pick">{$_('compendium.pickAnEntry')}</p>
 	{:else}
 		{#if detail.spell}
 			<SpellHead {detail} spell={detail.spell} {editable} {draft} />

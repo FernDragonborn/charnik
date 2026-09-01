@@ -62,7 +62,7 @@
 	];
 </script>
 
-<svelte:head><title>Settings — Charnik</title></svelte:head>
+<svelte:head><title>{$_('nav.settings')} — Charnik</title></svelte:head>
 
 <div class="settings">
 	<h1>{$_('nav.settings')}</h1>

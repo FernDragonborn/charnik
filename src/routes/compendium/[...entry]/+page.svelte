@@ -2,6 +2,7 @@
 	// Compendium — the same two-pane shape as the Spellbook (d-spellmgr), read-only: a grouped
 	// list of every content row + the wiki detail from its CSV. Reuses EntryList + WikiDetail.
 	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '$lib/i18n';
 	import { onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -349,7 +350,7 @@
 	}
 </script>
 
-<svelte:head><title>Compendium — Charnik</title></svelte:head>
+<svelte:head><title>{$_('nav.compendium')} — Charnik</title></svelte:head>
 
 {#if !graph}
 	<Loading message="Loading content…" error={content.error} />

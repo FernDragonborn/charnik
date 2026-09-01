@@ -128,7 +128,7 @@
 	}
 </script>
 
-<svelte:head><title>Spellbook — Charnik</title></svelte:head>
+<svelte:head><title>{$_('nav.spellbook')} — Charnik</title></svelte:head>
 
 {#if loaded && !character}
 	<NoCharacter />

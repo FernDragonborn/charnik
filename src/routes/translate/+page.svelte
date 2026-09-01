@@ -245,7 +245,7 @@
 	}
 </script>
 
-<svelte:head><title>Translate — Charnik</title></svelte:head>
+<svelte:head><title>{$_('nav.translate')} — Charnik</title></svelte:head>
 
 {#if !graph}
 	<Loading message="Loading…" error={content.error} />

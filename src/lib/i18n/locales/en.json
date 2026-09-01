@@ -3,11 +3,17 @@
 		"name": "Charnik",
 		"tagline": "Own your characters."
 	},
+	"compendium": {
+		"pickAnEntry": "Select an entry to see its detail."
+	},
 	"nav": {
 		"roster": "Roster",
 		"combat": "Combat",
 		"compendium": "Compendium",
 		"settings": "Settings",
+		"build": "Build",
+		"spellbook": "Spellbook",
+		"translate": "Translate",
 		"skipToContent": "Skip to content",
 		"openCommandPalette": "Open command palette"
 	},
