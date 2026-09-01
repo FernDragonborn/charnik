@@ -12,6 +12,7 @@ import { listDrafts, deleteDraft } from '$lib/character/draft-repository';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import { build, ASI } from './build-view-model.svelte';
+import { newClassRow } from './draft';
 import { toggleSource } from '$lib/content/sources.svelte';
 
 const S = 'SRD 5.2.1';
@@ -75,7 +76,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 
 	it('previewing an option leaves the draft exactly as it was', () => {
 		build.draft.name = 'Valen';
-		build.draft.classes = [{ classId: `class:${S}:wizard`, subclassId: null, level: 3 }];
+		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 3 }];
 		const before = JSON.stringify(build.draft);
 
 		// the inspector's diff runs the REAL pipeline on a draft of its own; nothing outside may see it
@@ -98,7 +99,8 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(out.system).toBe('5.5e');
 		expect(out.build.name).toBe('Valen');
 		expect(out.build.species).toBe(`species:${S}:hardy`);
-		expect(out.build.classes).toEqual([{ class: `class:${S}:wizard`, level: 3 }]);
+		expect(out.build.classes).toMatchObject([{ class: `class:${S}:wizard`, level: 3 }]);
+		expect(out.build.classes[0]?.rowId).toBeTruthy(); // the row keeps an identity of its own
 		expect(out.build.abilities).toEqual(saved.build.abilities);
 	});
 
@@ -127,7 +129,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('derives ASI/feat slots from the class asi_levels data (Fighter gets 6 & 14)', () => {
 		build.reset();
 		build.graph = graph;
-		build.draft.classes = [{ classId: `class:${S}:fighter`, subclassId: null, level: 14 }];
+		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 14 }];
 		expect(build.feats.featSlots.map((s) => s.level)).toEqual([4, 6, 8, 12, 14]);
 	});
 
@@ -135,7 +137,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.reset();
 		build.graph = graph;
 		build.draft.name = 'Asi';
-		build.draft.classes = [{ classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
+		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
 		build.draft.abilities = { str: 8, dex: 14, con: 14, int: 15, wis: 10, cha: 12 };
 		const slot = build.feats.featSlots[0]; // the level-4 ASI slot
 		expect(slot).toBeDefined();
@@ -158,7 +160,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('a full ability picker replaces its oldest pick rather than ignoring the click', () => {
 		build.reset();
 		build.graph = graph;
-		build.draft.classes = [{ classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
+		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 4 }];
 		const key = build.feats.featSlots[0]?.key ?? '';
 		build.feats.setSlotFeat(key, ASI);
 
@@ -277,7 +279,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.draft.name = 'Asi';
 		// level 6 is a Fighter-only ASI level: the fallback the builder uses with no graph does not
 		// know about it, which is what made the timing matter
-		build.draft.classes = [{ classId: `class:${S}:fighter`, subclassId: null, level: 6 }];
+		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 6 }];
 		const key = build.feats.featSlots.find((s) => s.level === 6)?.key ?? '';
 		expect(key).toBeTruthy();
 		build.feats.setSlotFeat(key, ASI);
@@ -315,7 +317,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.reset();
 		build.graph = graph;
 		build.setClass(0, `class:${S}:fighter`);
-		build.draft.classes = [{ classId: `class:${S}:fighter`, subclassId: null, level: 7 }];
+		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 7 }];
 		build.draft.skills = ['athletics'];
 		build.setClass(0, `class:${S}:wizard`); // stashes the Fighter at level 7, with its skills
 
@@ -379,8 +381,8 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.reset();
 		build.graph = graph;
 		build.draft.classes = [
-			{ classId: `class:${S}:wizard`, subclassId: null, level: 20 },
-			{ classId: null, subclassId: null, level: 1 }, // added while the level was still low
+			{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 20 },
+			{ ...newClassRow(), classId: null, subclassId: null, level: 1 }, // added while the level was still low
 		];
 		build.setClass(1, `class:${S}:fighter`);
 		expect(build.draft.classes[1]?.classId).toBeNull();
@@ -409,7 +411,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('expertise stays reachable when the class grants none, and never dead-ends at the cap (B15, B16)', () => {
 		build.reset();
 		build.graph = graph;
-		build.draft.classes = [{ classId: `class:${S}:fighter`, subclassId: null, level: 3 }];
+		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 3 }];
 		build.draft.skills = ['athletics', 'perception', 'survival'];
 		expect(build.skillPicks.expertiseCap).toBe(0); // this Fighter grants no expertise slots
 
@@ -428,7 +430,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.draft.expertise).toEqual([]);
 
 		// at a real cap the click replaces the oldest pick instead of being ignored (ui.md §10)
-		build.draft.classes = [{ classId: `class:${S}:rogue`, subclassId: null, level: 1 }];
+		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:rogue`, subclassId: null, level: 1 }];
 		expect(build.skillPicks.expertiseCap).toBe(2);
 		build.skillPicks.toggleExpertise('athletics');
 		build.skillPicks.toggleExpertise('perception');
@@ -447,7 +449,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 			// hold, and a generation method that was never one
 			draft: {
 				name: 'Old',
-				classes: [{ classId: `class:${S}:wizard`, subclassId: null, level: 99 }],
+				classes: [{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 99 }],
 				method: 'astrology',
 				skills: ['arcana'],
 			},
@@ -465,6 +467,25 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.draft.method).toBe('point_buy');
 		expect(build.classPicks.size).toBe(1); // the readable stash entry survives, the junk one does not
 		expect(build.assembled.build.name).toBe('Old'); // and the sheet derives at all, which is the point
+	});
+
+	it('a character saved when slot keys named a row index still restores its slots (S4)', () => {
+		const saved = savedCharacter();
+		saved.build.classes = [{ class: `class:${S}:wizard`, level: 4 }]; // no rowId: an older save
+		saved.build.slotPicks = {
+			feats: { '0:4': ASI },
+			asi: { '0:4': { shape: '2', picks: ['con'] } },
+			featAbility: {},
+			featSkills: {},
+		};
+		build.reset();
+		build.graph = graph;
+		build.hydrate(characterSchema.parse(saved));
+
+		const key = build.feats.featSlots.find((s) => s.level === 4)?.key ?? '';
+		expect(key).not.toBe('0:4'); // the row has an id now
+		expect(build.draft.slotFeats[key]).toBe(ASI); // …and its picks came with it
+		expect(build.assembled.build.abilityBoosts.con).toBe(2);
 	});
 
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {

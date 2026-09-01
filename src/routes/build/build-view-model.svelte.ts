@@ -41,6 +41,7 @@ import { DraftInventory } from './draft-inventory';
 export { ASI, rowName, rowOfType };
 import {
 	blankDraft,
+	newClassRow,
 	draftFromCharacter,
 	selectedRefs,
 	parseDraftState,
@@ -227,7 +228,7 @@ export class BuildVM {
 	canRaiseLevel = $derived(this.totalLevel < MAX_CHARACTER_LEVEL);
 	addClass = () => {
 		if (!this.canRaiseLevel) return; // a new class starts at 1 → would exceed the cap
-		this.draft.classes = [...this.draft.classes, { classId: null, subclassId: null, level: 1 }];
+		this.draft.classes = [...this.draft.classes, newClassRow()];
 	};
 	/** Drop a class row, re-keying what the rows behind it own — see `class-picks-cache`. */
 	removeClass = (i: number) => {
@@ -306,12 +307,18 @@ export class BuildVM {
 				: undefined,
 			background: this.draft.backgroundId ?? undefined,
 			classes: this.draft.classes
-				.filter((c) => c.classId)
-				.map((c) => ({
-					class: c.classId as string,
-					level: c.level,
-					subclass: c.subclassId ?? undefined
-				})),
+				.flatMap((c) =>
+					c.classId
+						? [{
+								// the row id travels with the row: `slotPicks` is keyed by it, so a level-up
+								// that minted fresh ids would restore every slot under a key nothing looks up
+								rowId: c.rowId,
+								class: c.classId,
+								level: c.level,
+								subclass: c.subclassId ?? undefined
+							}]
+						: [],
+				),
 			abilities: { ...this.draft.abilities },
 			abilityBoosts: this.abilities.abilityBoosts as Record<string, number>,
 			skills: [...new Set([...this.skillPicks.autoSkills, ...this.draft.skills])],

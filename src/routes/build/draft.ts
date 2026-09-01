@@ -49,10 +49,58 @@ export function toggleCapped<T>(list: T[], item: T, cap: number): T[] {
 }
 
 /** One class row in the draft (pre-resolution: nullable ids while the user is still choosing). */
-interface DraftClass {
+export interface DraftClass {
+	/**
+	 * The ROW's identity, and the prefix of every slot key that belongs to it.
+	 *
+	 * A GUID rather than the row's position, because the position is not an identity: dropping a row
+	 * out of the middle used to move every row behind it onto keys belonging to somebody else, and
+	 * fifty lines existed to read the maps out and write them back under the indexes each row had
+	 * just inherited. An id nobody has to renumber is what makes that go away — and it is what an
+	 * `{#each}` needs to stop keying rows by their place in the list.
+	 */
+	rowId: string;
 	classId: string | null;
 	subclassId: string | null;
 	level: number;
+}
+
+/** A fresh empty class row. */
+export const newClassRow = (): DraftClass => ({
+	rowId: crypto.randomUUID(),
+	classId: null,
+	subclassId: null,
+	level: 1,
+});
+
+/** The four per-slot maps as the draft holds them — keyed `<rowId>:<level>`. */
+export interface SlotMaps {
+	slotFeats: Record<string, string>;
+	slotAsi: Record<string, { shape: AsiShape; picks: Ability[] }>;
+	slotFeatAbility: Record<string, Ability>;
+	slotFeatSkills: Record<string, string[]>;
+}
+
+/**
+ * Give every row an id, moving the slot keys of any row that has none.
+ *
+ * Drafts and characters saved before rows had ids key their slots by the row's INDEX, so a row
+ * getting `rowId` now takes its `0:4`, `0:8` … with it. Runs on both read paths; a row that already
+ * carries an id is left alone, so this costs one pass and never fires twice.
+ */
+export function adoptRowIds(rows: DraftClass[], slots: SlotMaps): void {
+	rows.forEach((row, index) => {
+		if (row.rowId) return;
+		row.rowId = crypto.randomUUID();
+		for (const map of [slots.slotFeats, slots.slotAsi, slots.slotFeatAbility, slots.slotFeatSkills])
+			for (const key of Object.keys(map)) {
+				const [prefix, level] = key.split(':');
+				if (prefix !== String(index) || !level) continue;
+				// the row's own key, under the number it used to be
+				(map as Record<string, unknown>)[`${row.rowId}:${level}`] = map[key];
+				delete (map as Record<string, unknown>)[key];
+			}
+	});
 }
 
 /** Every user-editable build choice, as ONE typed object (single source of the field set — adding a
@@ -106,7 +154,7 @@ export function blankDraft(): DraftState {
 		speciesOptionId: null,
 		speciesBoostPicks: [],
 		backgroundId: null,
-		classes: [{ classId: null, subclassId: null, level: 1 }],
+		classes: [newClassRow()],
 		method: 'point_buy',
 		abilities: baseAbilities(),
 		arrayPick: {},
@@ -161,12 +209,13 @@ export const draftStateSchema: z.ZodType<DraftState> = z.object({
 	classes: z
 		.array(
 			z.object({
+				rowId: z.string().catch(''),
 				classId: z.string().nullable().catch(null),
 				subclassId: z.string().nullable().catch(null),
 				level: z.number().int().min(1).max(MAX_CHARACTER_LEVEL).catch(1),
 			}),
 		)
-		.catch(() => [{ classId: null, subclassId: null, level: 1 }]),
+		.catch(() => [newClassRow()]),
 	method: z.enum(STAT_METHODS).catch('point_buy'),
 	abilities: abilityScores.catch(() => baseAbilities()),
 	arrayPick: z.partialRecord(z.enum(ABILITIES), z.number().int()).catch(() => ({})),
@@ -197,14 +246,16 @@ export const draftStateSchema: z.ZodType<DraftState> = z.object({
  *  record was already dropped by the repository if it would not even parse as JSON. */
 export function parseDraftState(value: unknown): DraftState {
 	const parsed = draftStateSchema.safeParse(value);
-	return parsed.success ? parsed.data : blankDraft();
+	if (!parsed.success) return blankDraft();
+	adoptRowIds(parsed.data.classes, parsed.data); // a draft saved when slot keys named a row index
+	return parsed.data;
 }
 
 /** Load an existing character into a fresh draft (edit / level-up). Straightforward fields map
  *  directly; abilities become manual with prior boosts/feats carried separately (see hydrate). New
  *  per-level picks (slotFeats/slotAsi/boost*) start blank so a prior session can't leak in. */
 export function draftFromCharacter(char: Character): DraftState {
-	return {
+	const draft: DraftState = {
 		...blankDraft(),
 		name: char.build.name,
 		system: char.system,
@@ -215,11 +266,14 @@ export function draftFromCharacter(char: Character): DraftState {
 		backgroundId: char.build.background ?? null,
 		classes: char.build.classes.length
 			? char.build.classes.map((c) => ({
+					// a save from before rows had ids leaves this blank, and `adoptRowIds` below both
+					// mints one and moves that row's slot keys onto it
+					rowId: c.rowId ?? '',
 					classId: c.class,
 					subclassId: c.subclass ?? null,
 					level: c.level
 				}))
-			: [{ classId: null, subclassId: null, level: 1 }],
+			: [newClassRow()],
 		method: 'manual',
 		abilities: { ...char.build.abilities },
 		skills: [...char.build.skills],
@@ -241,6 +295,8 @@ export function draftFromCharacter(char: Character): DraftState {
 			attuned: i.attuned // preserve attunement through the builder round-trip (D15)
 		}))
 	};
+	adoptRowIds(draft.classes, draft);
+	return draft;
 }
 
 /**

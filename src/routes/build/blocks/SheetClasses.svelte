@@ -57,7 +57,7 @@
 		</button>
 	</div>
 
-	{#each b.draft.classes as cls, i (i)}
+	{#each b.draft.classes as cls, i (cls.rowId)}
 		{@const clsRow = rowOfType(b.row(cls.classId), 'class')}
 		{@const subs = b.subclassesFor(cls.classId)}
 		{@const subRow = rowOfType(b.row(cls.subclassId), 'subclass')}

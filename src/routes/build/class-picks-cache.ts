@@ -65,21 +65,21 @@ export function parseClassPicks(value: unknown): Map<string, ClassScopedPicks> {
 	);
 }
 
-/** `2:4` → `4` for row 2; anything belonging to another row is not this class's business. */
-const levelOfSlotKey = (key: string, row: number): string | null => {
+/** `<rowId>:4` → `4` for that row; anything belonging to another row is not this class's business. */
+const levelOfSlotKey = (key: string, rowId: string): string | null => {
 	const [prefix, level] = key.split(':');
-	return prefix === String(row) && level ? level : null;
+	return prefix === rowId && level ? level : null;
 };
 
 /** Read out everything row `row` owns. Returns `null` when that row holds no class yet. */
 export function stashClassPicks(draft: DraftState, row: number): ClassScopedPicks | null {
 	const entry = draft.classes[row];
 	if (!entry?.classId) return null;
-	/** `{ '2:4': x }` → `{ '4': x }`, keeping only what row `row` owns. */
+	/** `{ '<rowId>:4': x }` → `{ '4': x }`, keeping only what this row owns. */
 	const byLevel = <T>(source: Record<string, T>): Record<string, T> =>
 		Object.fromEntries(
 			Object.entries(source).flatMap(([key, value]) => {
-				const level = levelOfSlotKey(key, row);
+				const level = levelOfSlotKey(key, entry.rowId);
 				return level ? [[level, value] as const] : [];
 			}),
 		);
@@ -101,26 +101,23 @@ export function stashClassPicks(draft: DraftState, row: number): ClassScopedPick
 	};
 }
 
-/** Drop everything row `row` owns, so a class arriving with nothing cached starts clean. */
-export function clearClassPicks(draft: DraftState, row: number): void {
+/** Drop the slot picks row `rowId` owns, so a class arriving with nothing cached starts clean. */
+export function dropRowSlots(draft: DraftState, rowId: string): void {
 	const drop = (source: Record<string, unknown>) => {
-		for (const key of Object.keys(source)) if (levelOfSlotKey(key, row)) delete source[key];
+		for (const key of Object.keys(source)) if (levelOfSlotKey(key, rowId)) delete source[key];
 	};
 	drop(draft.slotFeats);
 	drop(draft.slotAsi);
 	drop(draft.slotFeatAbility);
 	drop(draft.slotFeatSkills);
-	if (draft.classes.length === 1) {
-		draft.skills = [];
-		draft.expertise = [];
-		draft.selectedSpells = [];
-	}
 }
 
-/** Put a stashed set back on row `row`, re-keying the slot maps to that row. */
+/** Put a stashed set back on a row, re-keying the slot maps to it. */
 export function restoreClassPicks(draft: DraftState, row: number, picks: ClassScopedPicks): void {
+	const rowId = draft.classes[row]?.rowId;
+	if (!rowId) return;
 	const put = <T>(target: Record<string, T>, source: Record<string, T>) => {
-		for (const [level, value] of Object.entries(source)) target[`${row}:${level}`] = value;
+		for (const [level, value] of Object.entries(source)) target[`${rowId}:${level}`] = value;
 	};
 	put(draft.slotFeats, picks.slotFeats);
 	put(draft.slotAsi, picks.slotAsi);
@@ -139,10 +136,8 @@ export function restoreClassPicks(draft: DraftState, row: number, picks: ClassSc
 /**
  * Take row `row` off the draft.
  *
- * The slot maps are keyed by ROW INDEX, so dropping a row out of the middle of the list moves every
- * row after it onto keys that belong to somebody else: remove the Fighter and the Rogue behind it
- * inherits the Fighter's level-4 feat while losing its own. Everything is therefore read out first,
- * the maps are emptied, and each survivor is written back under the index it now has.
+ * The rows behind it need nothing done to them: a slot key names the row's own id, not its place in
+ * the list, so removing one out of the middle cannot move anybody else's picks onto it.
  *
  * The leaving class's picks go to the cache like a swap's do — removing a row is another way of
  * saying "not this one", and it costs the same nothing if the class comes back.
@@ -153,19 +148,12 @@ export function removeClassRow(
 	cache: Map<string, ClassScopedPicks>,
 ): void {
 	if (row <= 0 || row >= draft.classes.length) return; // row 0 is the primary and always stays
-	const stashes = draft.classes.map((_, i) => stashClassPicks(draft, i));
-	const leaving = draft.classes[row]?.classId;
-	const leavingPicks = stashes[row];
-	if (leaving && leavingPicks) cache.set(leaving, leavingPicks);
-
-	for (const map of [draft.slotFeats, draft.slotAsi, draft.slotFeatAbility, draft.slotFeatSkills])
-		for (const key of Object.keys(map)) delete map[key];
-
+	const entry = draft.classes[row];
+	if (!entry) return;
+	const leavingPicks = stashClassPicks(draft, row);
+	if (entry.classId && leavingPicks) cache.set(entry.classId, leavingPicks);
+	dropRowSlots(draft, entry.rowId);
 	draft.classes = draft.classes.filter((_, i) => i !== row);
-	stashes.forEach((picks, i) => {
-		if (!picks || i === row) return;
-		restoreClassPicks(draft, i < row ? i : i - 1, picks);
-	});
 }
 
 /** Put `classId` in row `row`: stash what is leaving, clear the row, hand back what is returning. */
@@ -184,7 +172,14 @@ export function switchClass(
 	if (leaving === classId) return;
 	const stashed = stashClassPicks(draft, row);
 	if (leaving && stashed) cache.set(leaving, stashed);
-	clearClassPicks(draft, row);
+	dropRowSlots(draft, draft.classes[row]?.rowId ?? '');
+	// the shared pools belong to whoever is in the draft, so they only empty when the ONE class that
+	// could have filled them is the class leaving
+	if (draft.classes.length === 1) {
+		draft.skills = [];
+		draft.expertise = [];
+		draft.selectedSpells = [];
+	}
 	draft.classes = draft.classes.map((c, i) =>
 		i === row ? { ...c, classId, subclassId: null } : c,
 	);

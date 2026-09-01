@@ -3,9 +3,9 @@
  * asks for (a half-feat's ability, a feat's skill grants, an ASI's shape). The build view-model
  * reads back the few results the assembled character needs.
  *
- * The slot KEY (`${classRow}:${level}`) is the identity everything here hangs off — the per-slot
- * mapping is what a flattened boost list could not express (UBUG-13: a restored slot re-derived its
- * own boost a second time).
+ * The slot KEY (`<rowId>:<level>`) is the identity everything here hangs off — the per-slot mapping
+ * is what a flattened boost list could not express (UBUG-13: a restored slot re-derived its own
+ * boost a second time), and the row half of it is the row's own id, never its place in the list.
  */
 import type { LoadedRow } from '$lib/content/loader';
 import type { BuildVM } from './build-view-model.svelte';
@@ -34,14 +34,14 @@ export class FeatSlots {
 	 *  grants its ASIs at its OWN class levels (Fighter +6/14, Rogue +10). */
 	featSlots = $derived.by<{ key: string; level: number; className: string }[]>(() => {
 		const out: { key: string; level: number; className: string }[] = [];
-		this.host().draft.classes.forEach((c, i) => {
-			if (!c.classId) return;
+		for (const c of this.host().draft.classes) {
+			if (!c.classId) continue;
 			const row = this.host().row(c.classId);
 			const className = rowName(row);
 			const asiLevels = rowOfType(row, 'class')?.data.asi_levels;
 			for (const level of asiFeatLevels(c.level, asiLevels))
-				out.push({ key: `${i}:${level}`, level, className });
-		});
+				out.push({ key: `${c.rowId}:${level}`, level, className });
+		}
 		return out;
 	});
 	/** The background's granted origin feat (5.5e), resolved to a ref — auto, not a slot. */

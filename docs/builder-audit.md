@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **20 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **21 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -365,7 +365,7 @@ part needing `.svelte.ts`. Moving (1) and (2) to a plain `inspector-specs.ts` le
 and makes the table node-testable — `pickSpecFor`, `targetForTodo` and `classesOfferedTo` currently
 have no unit coverage.
 
-**[ ] S4. Class rows are identified by array index, and ~55 lines of `class-picks-cache` exist to paper
+**[x] S4. Class rows are identified by array index, and ~55 lines of `class-picks-cache` exist to paper
 over it.** `SheetClasses.svelte:60` `{#each b.draft.classes as cls, i (i)}`, slot keys `${i}:${level}`
 (`feat-slots.svelte.ts:41`), and `class-picks-cache.ts:113-116` documents the consequence in its own
 words. AGENTS.md: identify anything shareable with a GUID, not a local counter. A `rowId` on

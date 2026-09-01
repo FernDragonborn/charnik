@@ -1,81 +1,81 @@
 /*
  * Switching a class must not destroy what the outgoing one owned, and must not hand its picks to
  * the incoming one. Pure functions over a plain draft — no Svelte runtime needed.
+ *
+ * Row ids are spelled out here rather than minted, because the whole point of the slot key is which
+ * ROW it names: a test that could not tell two rows apart would pass on the bug this prevents.
  */
 import { describe, it, expect } from 'vitest';
-import { blankDraft } from './draft';
+import { blankDraft, type DraftClass } from './draft';
 import {
 	stashClassPicks,
-	clearClassPicks,
+	dropRowSlots,
 	restoreClassPicks,
 	removeClassRow,
 	type ClassScopedPicks,
 } from './class-picks-cache';
 
+const row = (rowId: string, classId: string, extra: Partial<DraftClass> = {}): DraftClass => ({
+	rowId,
+	classId,
+	subclassId: null,
+	level: 1,
+	...extra,
+});
+
 const wizardish = () => {
 	const d = blankDraft();
-	d.classes = [{ classId: 'srd:wizard', subclassId: 'srd:evoker', level: 5 }];
+	d.classes = [row('r0', 'srd:wizard', { subclassId: 'srd:evoker', level: 5 })];
 	d.skills = ['arcana', 'history'];
 	d.expertise = ['arcana'];
 	d.selectedSpells = ['srd:fireball'];
-	d.slotFeats['0:4'] = 'srd:alert';
-	d.slotFeatAbility['0:4'] = 'int';
+	d.slotFeats['r0:4'] = 'srd:alert';
+	d.slotFeatAbility['r0:4'] = 'int';
 	return d;
 };
 
 describe('class-scoped picks', () => {
 	it('round-trips everything a class owns', () => {
 		const d = wizardish();
-		const stashed = stashClassPicks(d, 0)!;
-		clearClassPicks(d, 0);
-		d.classes = [{ classId: 'srd:barbarian', subclassId: null, level: 1 }];
+		const stashed = stashClassPicks(d, 0);
+		expect(stashed).not.toBeNull();
+		dropRowSlots(d, 'r0');
+		d.classes = [row('r0', 'srd:barbarian')];
 
-		expect(d.slotFeats['0:4']).toBeUndefined();
-		expect(d.selectedSpells).toEqual([]);
+		expect(d.slotFeats['r0:4']).toBeUndefined();
 
-		d.classes = [{ classId: 'srd:wizard', subclassId: null, level: 1 }];
-		restoreClassPicks(d, 0, stashed);
+		d.classes = [row('r0', 'srd:wizard')];
+		restoreClassPicks(d, 0, stashed as ClassScopedPicks);
 
 		expect(d.classes[0]).toMatchObject({ subclassId: 'srd:evoker', level: 5 });
-		expect(d.slotFeats['0:4']).toBe('srd:alert');
-		expect(d.slotFeatAbility['0:4']).toBe('int');
+		expect(d.slotFeats['r0:4']).toBe('srd:alert');
+		expect(d.slotFeatAbility['r0:4']).toBe('int');
 		expect(d.skills).toEqual(['arcana', 'history']);
 		expect(d.selectedSpells).toEqual(['srd:fireball']);
 	});
 
 	it('re-keys slot picks when the class comes back in a different row', () => {
 		const d = wizardish();
-		const stashed = stashClassPicks(d, 0)!;
-		d.classes = [
-			{ classId: 'srd:cleric', subclassId: null, level: 1 },
-			{ classId: 'srd:wizard', subclassId: null, level: 1 },
-		];
+		const stashed = stashClassPicks(d, 0) as ClassScopedPicks;
+		d.classes = [row('r1', 'srd:cleric'), row('r2', 'srd:wizard')];
 		restoreClassPicks(d, 1, stashed);
-		expect(d.slotFeats['1:4']).toBe('srd:alert');
+		expect(d.slotFeats['r2:4']).toBe('srd:alert');
 	});
 
 	it('leaves another row alone', () => {
 		const d = wizardish();
-		d.classes = [
-			{ classId: 'srd:wizard', subclassId: null, level: 3 },
-			{ classId: 'srd:cleric', subclassId: null, level: 2 },
-		];
-		d.slotFeats['1:4'] = 'srd:tough';
-		clearClassPicks(d, 0);
-		expect(d.slotFeats['0:4']).toBeUndefined();
-		expect(d.slotFeats['1:4']).toBe('srd:tough');
+		d.classes = [row('r0', 'srd:wizard', { level: 3 }), row('r1', 'srd:cleric', { level: 2 })];
+		d.slotFeats['r1:4'] = 'srd:tough';
+		dropRowSlots(d, 'r0');
+		expect(d.slotFeats['r0:4']).toBeUndefined();
+		expect(d.slotFeats['r1:4']).toBe('srd:tough');
 	});
 
 	it('does not carry the shared pools while multiclassed', () => {
 		const d = wizardish();
-		d.classes = [
-			{ classId: 'srd:wizard', subclassId: null, level: 3 },
-			{ classId: 'srd:cleric', subclassId: null, level: 2 },
-		];
+		d.classes = [row('r0', 'srd:wizard', { level: 3 }), row('r1', 'srd:cleric', { level: 2 })];
 		// two classes feed one spell list, so a snapshot of it belongs to neither of them
-		expect(stashClassPicks(d, 0)!.shared).toBeNull();
-		clearClassPicks(d, 0);
-		expect(d.selectedSpells).toEqual(['srd:fireball']);
+		expect(stashClassPicks(d, 0)?.shared).toBeNull();
 	});
 
 	it('is null for a row with no class yet', () => {
@@ -88,24 +88,25 @@ describe('removing a class row', () => {
 	const threeClasses = () => {
 		const d = blankDraft();
 		d.classes = [
-			{ classId: 'srd:wizard', subclassId: 'srd:evoker', level: 4 },
-			{ classId: 'srd:fighter', subclassId: null, level: 4 },
-			{ classId: 'srd:rogue', subclassId: 'srd:thief', level: 4 },
+			row('r0', 'srd:wizard', { subclassId: 'srd:evoker', level: 4 }),
+			row('r1', 'srd:fighter', { level: 4 }),
+			row('r2', 'srd:rogue', { subclassId: 'srd:thief', level: 4 }),
 		];
-		d.slotFeats['0:4'] = 'srd:alert';
-		d.slotFeats['1:4'] = 'srd:tough';
-		d.slotFeats['2:4'] = 'srd:lucky';
+		d.slotFeats['r0:4'] = 'srd:alert';
+		d.slotFeats['r1:4'] = 'srd:tough';
+		d.slotFeats['r2:4'] = 'srd:lucky';
 		return d;
 	};
 
-	it('leaves every survivor holding its own picks, not the removed row’s', () => {
+	it('leaves every survivor holding its own picks, and takes the removed row’s away', () => {
 		const d = threeClasses();
 		removeClassRow(d, 1, new Map());
 
 		expect(d.classes.map((c) => c.classId)).toEqual(['srd:wizard', 'srd:rogue']);
-		expect(d.slotFeats['0:4']).toBe('srd:alert'); // Wizard, unmoved
-		expect(d.slotFeats['1:4']).toBe('srd:lucky'); // Rogue, re-keyed off row 2
-		expect(d.slotFeats['2:4']).toBeUndefined(); // nothing left behind at the old index
+		expect(d.slotFeats['r0:4']).toBe('srd:alert');
+		// the Rogue moved from row 2 to row 1 and its picks did not have to move with it
+		expect(d.slotFeats['r2:4']).toBe('srd:lucky');
+		expect(d.slotFeats['r1:4']).toBeUndefined();
 		expect(d.classes[1]).toMatchObject({ subclassId: 'srd:thief', level: 4 });
 	});
 

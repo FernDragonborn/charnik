@@ -45,6 +45,9 @@ const classEntry = z.object({
 	class: ref,
 	level: z.number().int().min(1).max(20),
 	subclass: ref.optional(),
+	/** The row's own identity, which `slotPicks` is keyed by. Absent on saves written while the keys
+	 *  named a row INDEX — the builder gives those rows an id and moves their keys onto it. */
+	rowId: z.string().optional(),
 });
 
 const inventoryEntry = z.object({

@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { build } from './build-view-model.svelte';
+import { newClassRow } from './draft';
 
 const S = 'SRD 5.2.1';
 const ref = (type: string, id: string) => `${type}:${S}:${id}`;
@@ -60,8 +61,8 @@ describe('SpellPicks · the Strict cap charges the class the tally would (B11)',
 		build.graph = graph;
 		build.draft.name = 'Duo';
 		build.draft.classes = [
-			{ classId: ref('class', 'cleric'), subclassId: null, level: 5 },
-			{ classId: ref('class', 'wizard'), subclassId: null, level: 5 },
+			{ ...newClassRow(), classId: ref('class', 'cleric'), subclassId: null, level: 5 },
+			{ ...newClassRow(), classId: ref('class', 'wizard'), subclassId: null, level: 5 },
 		];
 		// the wizard casts off the higher score, so `casterForSpell` attributes a shared spell to it
 		build.draft.abilities = { str: 8, dex: 12, con: 12, int: 18, wis: 10, cha: 8 };
