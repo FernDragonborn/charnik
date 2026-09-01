@@ -23,6 +23,7 @@ import { uniqueCharacterId } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
 import type { Ability } from '$lib/rules/core';
+import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
 import {
 	parseSpeciesBoostChoice,
 	speciesFixedAbilities as fixedAbilitiesFromRows,
@@ -119,8 +120,11 @@ export class BuildVM {
 	/** Undo / redo over the draft — see `draft-history`. The page records a step on the autosave's
 	 *  debounce, so one settled change is one step. */
 	history = new DraftHistory({
-		read: () => this.draft,
-		write: (draft) => (this.draft = draft)
+		read: () => ({ draft: this.draft, classPicks: [...this.classPicks] }),
+		write: (step) => {
+			this.draft = step.draft;
+			this.classPicks = new Map(step.classPicks);
+		}
 	});
 
 	/** Resume an unfinished build, cache and all. */
@@ -245,16 +249,41 @@ export class BuildVM {
 		this.draft.classes.reduce((n, c) => n + (c.classId ? c.level : 0), 0) || 1
 	);
 	/** Character level is capped at 20 total across all classes. */
-	canRaiseLevel = $derived(this.totalLevel < 20);
+	canRaiseLevel = $derived(this.totalLevel < MAX_CHARACTER_LEVEL);
 	addClass = () => {
-		if (!this.canRaiseLevel) return; // a new class starts at 1 → would exceed 20
+		if (!this.canRaiseLevel) return; // a new class starts at 1 → would exceed the cap
 		this.draft.classes = [...this.draft.classes, { classId: null, subclassId: null, level: 1 }];
 	};
 	/** Drop a class row, re-keying what the rows behind it own — see `class-picks-cache`. */
-	removeClass = (i: number) => removeClassRow(this.draft, i, this.classPicks);
-	/** Change the class in row `i`, stashing what the outgoing one owned under its own ref and handing
-	 *  it straight back if it returns — so trying a class costs nothing (see `class-picks-cache`). */
-	setClass = (i: number, id: string | null) => switchClass(this.draft, i, id, this.classPicks);
+	removeClass = (i: number) => {
+		removeClassRow(this.draft, i, this.classPicks);
+		// every row after `i` moves down one, so a pane open on a class or a subclass is now about a
+		// different row — and the one that was removed is about nothing at all
+		const open = this.inspector.target?.id;
+		if (open === 'class' || open === 'subclass') this.inspector.close();
+	};
+	/**
+	 * Change the class in row `i`, stashing what the outgoing one owned under its own ref and handing
+	 * it straight back if it returns — so trying a class costs nothing (see `class-picks-cache`).
+	 *
+	 * The cap is checked HERE and not only where a level is raised: an empty row contributes nothing
+	 * to `totalLevel`, so a draft at 20 can still hold one, and filling it is the one way past 20 that
+	 * nothing downstream clamps.
+	 */
+	setClass = (i: number, id: string | null) => {
+		if (id && this.levelAfterTaking(i, id) > MAX_CHARACTER_LEVEL) {
+			toast(t('build.notice.levelCapFull', { cap: MAX_CHARACTER_LEVEL }));
+			return;
+		}
+		switchClass(this.draft, i, id, this.classPicks);
+	};
+	/** What the character's total level becomes if row `i` takes `id` — a class that is coming back
+	 *  brings the level it left with, not the level the row shows now. */
+	private levelAfterTaking(i: number, id: string): number {
+		const row = this.draft.classes[i];
+		const held = row?.classId ? row.level : 0;
+		return this.totalLevel - held + (this.classPicks.get(id)?.level ?? row?.level ?? 1);
+	}
 	/** Class-scoped picks by class ref, for as long as this draft lives. */
 	classPicks = new Map<string, ClassScopedPicks>();
 	setSubclass = (i: number, id: string | null) => {
@@ -263,7 +292,7 @@ export class BuildVM {
 	bumpClassLevel = (i: number, dir: 1 | -1) => {
 		if (dir === 1 && !this.canRaiseLevel) return; // total character level cap
 		this.draft.classes = this.draft.classes.map((c, idx) =>
-			idx === i ? { ...c, level: Math.max(1, Math.min(20, c.level + dir)) } : c
+			idx === i ? { ...c, level: Math.max(1, Math.min(MAX_CHARACTER_LEVEL, c.level + dir)) } : c
 		);
 	};
 

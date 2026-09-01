@@ -347,6 +347,57 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		await build.drafts.discard();
 	});
 
+	it('a class picker left open on a removed row cannot empty the shared pools (B4)', () => {
+		build.reset();
+		build.graph = graph;
+		build.setClass(0, `class:${S}:wizard`);
+		build.draft.skills = ['arcana'];
+		build.draft.selectedSpells = [`spell:${S}:fireball`];
+		build.addClass();
+		build.setClass(1, `class:${S}:fighter`);
+
+		build.inspector.open({ id: 'class', index: 1 });
+		build.removeClass(1);
+		expect(build.inspector.target).toBeNull(); // the pane went with the row
+
+		// and the pick that pane would have applied lands on nothing, instead of clearing the draft
+		build.setClass(1, `class:${S}:fighter`);
+		expect(build.draft.classes).toHaveLength(1);
+		expect(build.draft.skills).toEqual(['arcana']);
+		expect(build.draft.selectedSpells).toEqual([`spell:${S}:fireball`]);
+	});
+
+	it('filling a row that was already there cannot push the character past the cap (B7)', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.classes = [
+			{ classId: `class:${S}:wizard`, subclassId: null, level: 20 },
+			{ classId: null, subclassId: null, level: 1 }, // added while the level was still low
+		];
+		build.setClass(1, `class:${S}:fighter`);
+		expect(build.draft.classes[1]?.classId).toBeNull();
+		expect(build.totalLevel).toBe(20);
+	});
+
+	it('undo takes the class stash back with the draft (B18)', () => {
+		build.reset();
+		build.graph = graph;
+		build.setClass(0, `class:${S}:wizard`);
+		build.draft.selectedSpells = [`spell:${S}:fireball`];
+		build.history.record();
+
+		build.setClass(0, `class:${S}:fighter`); // stashes the Wizard's spell list
+		build.history.record();
+		expect(build.classPicks.size).toBe(1);
+
+		build.history.undo();
+		expect(build.draft.classes[0]?.classId).toBe(`class:${S}:wizard`);
+		expect(build.draft.selectedSpells).toEqual([`spell:${S}:fireball`]);
+		// the stash the switch created is undone too — left behind, taking the Wizard again would
+		// hand back picks that were just taken back
+		expect(build.classPicks.size).toBe(0);
+	});
+
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {
 		build.hydrate(savedCharacter()); // picks class = wizard (source S); fighter stays unpicked
 		const wizard = `class:${S}:wizard`;

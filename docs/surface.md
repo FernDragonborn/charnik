@@ -443,6 +443,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/build/rules.ts`
 
 - `type StatMethod`
+- `const MAX_CHARACTER_LEVEL` — The ceiling for the WHOLE character, not for one class: multiclass levels sum into it.
 - `const POINT_BUY_BUDGET`
 - `const POINT_BUY_MIN`
 - `const POINT_BUY_MAX`
@@ -1517,4 +1518,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 891 exports across 125 modules · 58 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 892 exports across 125 modules · 58 duplicate suspects._

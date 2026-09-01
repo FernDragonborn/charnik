@@ -140,6 +140,11 @@ export function switchClass(
 	classId: string | null,
 	cache: Map<string, ClassScopedPicks>,
 ): void {
+	// A picker opened on a row that has since been removed still applies to the index it captured.
+	// Without this the row is missing, so nothing is stashed and no class is written — but the clear
+	// below still runs, and on a single-class draft it empties the skills, expertise and spells for a
+	// click that appeared to do nothing at all.
+	if (row < 0 || row >= draft.classes.length) return;
 	const leaving = draft.classes[row]?.classId ?? null;
 	if (leaving === classId) return;
 	const stashed = stashClassPicks(draft, row);

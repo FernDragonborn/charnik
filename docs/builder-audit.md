@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **8 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **11 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -126,7 +126,7 @@ switch to Fighter (stashing the Wizard's `{level:7, skills, selectedSpells}`), t
 `?levelup=<other>` and set that character's class to Wizard: `restoreClassPicks` gives them level 7
 and another character's skills.
 
-**[ ] B4. A class picker left open on a removed row wipes every skill, expertise and spell pick.**
+**[x] B4. A class picker left open on a removed row wipes every skill, expertise and spell pick.**
 `inspector.svelte.ts:180` — `apply: (host, id) => host.setClass(index, id)` — captures `index` at open
 and never revalidates it; `SheetClasses.svelte:117` calls `b.removeClass(i)` without touching
 `b.inspector`. Multiclass → open row 1's class slot → remove row 1 → double-click any class in the
@@ -158,7 +158,7 @@ boundary and an explicit unsafe cast. A `blankDraft()` spread underneath is the 
 
 ## Bugs — logic
 
-**[ ] B7. Character level 21+.** `canRaiseLevel` (`:245`) is checked in `addClass` and `bumpClassLevel`,
+**[x] B7. Character level 21+.** `canRaiseLevel` (`:245`) is checked in `addClass` and `bumpClassLevel`,
 not in `setClass` (`:254`). `totalLevel` (`:241`) counts only rows that already hold a class, so an
 empty row is invisible to the cap: `addClass()` at level 1 → `setClass(0, wizard)` → raise to 20 →
 `setClass(1, fighter)` fills the pre-existing empty row → 21. Nothing downstream clamps it.
@@ -238,7 +238,7 @@ below, does not.
 `classPicks`, `drafts`, `history` — not `inspector`. Going from a level-up to "New character" with the
 pane open on `{id:'feat', slotKey:'1:4'}` leaves it open on a slot the blank draft does not have.
 
-**[ ] B18. Undo does not cover `classPicks`.** `draft-history.svelte.ts:94` writes only the draft, while
+**[x] B18. Undo does not cover `classPicks`.** `draft-history.svelte.ts:94` writes only the draft, while
 `DraftSession.persist` (`:55`) serialises draft **and** `classPicks` together, so after an undo across
 a class switch the autosaved record pairs a pre-switch draft with a post-switch cache. Not cosmetic:
 undo a Wizard pick, switch to Wizard, and `restoreClassPicks` resurrects the undone pick.
