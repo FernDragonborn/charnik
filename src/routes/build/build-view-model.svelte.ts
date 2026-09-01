@@ -423,7 +423,7 @@ export class BuildVM {
 	 * Running the REAL pipeline is the point: a hand-written "what a background gives you" summary
 	 * would drift from what the engine actually applies, and the drift would be invisible.
 	 *
-	 * It is a SEPARATE instance rather than this one trial-mutated and put back. Mutating this one
+	 * It is a SEPARATE view-model rather than this one trial-mutated and put back. Mutating this one
 	 * meant writing `$state` from inside a `$derived` (`Inspector.changes`), which `ui.md` forbids
 	 * and Svelte guards against — and it meant the restore had to be perfect, which it was not: a
 	 * snapshot that is not a copy made every preview permanent outside the browser. A draft nobody
@@ -432,22 +432,29 @@ export class BuildVM {
 	 * The clone is explicit for the reason `draft-history` states: `$state.snapshot` copies a PROXY,
 	 * and outside the browser there is none, so it hands back the object itself.
 	 *
-	 * Deliberately expensive (a whole view-model and a full `deriveSheet`) — call it for the ONE
-	 * option a player is reading, never per row of a list.
+	 * Deliberately expensive (a full `deriveSheet` over a copied draft) — call it for the ONE option a
+	 * player is reading, never per row of a list.
 	 */
 	previewSheet = (mutate: (trial: BuildVM) => void): CharacterSheet | null => {
-		const trial = new BuildVM();
+		// ONE throwaway view-model, reused. A fresh one per call mints a GUID, a history and a
+		// storage-capable draft session, none of which a trial has any use for — and this runs again
+		// on every keystroke anywhere in the draft while an option is being read.
+		const trial = (this.trialVM ??= new BuildVM());
 		// the graph is taken, never re-derived: a preview must read the same content this view-model
 		// does, including a graph handed in directly rather than loaded from the shared store
 		trial.graph = this.graph;
 		trial.draft = structuredClone($state.snapshot(this.draft));
 		trial.edit = this.edit;
 		// the cache too: taking a class hands back what that class owned, so a preview that ignored it
-		// would show a swap costing picks the real one keeps
-		trial.classPicks = new Map(this.classPicks);
+		// would show a swap costing picks the real one keeps. Deep, because `restoreClassPicks` writes
+		// the stashed slot maps into the trial draft — a shallow copy hands it the real ones.
+		trial.classPicks = new Map(
+			[...this.classPicks].map(([ref, picks]) => [ref, structuredClone(picks)]),
+		);
 		mutate(trial);
 		return trial.sheet;
 	};
+	private trialVM: BuildVM | null = null;
 
 	// --- what is still unfinished ----------------------------------------------------------------
 	/** Every empty required field, in fix-it order — the "still to do" bar, each line a link into the

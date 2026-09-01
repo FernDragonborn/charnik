@@ -41,27 +41,14 @@ export function expertiseSlotsAtLevel(spec: string | undefined, classLevel: numb
  *  the matching system and either a base feature or one under the chosen subclass). Mirrors the
  *  derive-gather feature gates. The builder caps expertise picks at this. Pure. */
 export function expertiseBudget(
-	classes: readonly { classId: string | null; subclassId: string | null; level: number }[],
+	classes: readonly DraftClassEntry[],
 	graph: ContentGraph,
 	system: string
 ): number {
 	let total = 0;
-	const seen = new Set<string>(); // fold each (id, level, subclass) feature once across sources
-	for (const entry of classes) {
-		if (!entry.classId) continue;
-		const classRow = graph.get(entry.classId);
-		if (classRow?.type !== 'class') continue;
-		for (const f of graph.featuresForClass(classRow)) {
-			const spec = f.data.expertise_slots;
-			if (!spec || Number(f.data.level) > entry.level) continue;
-			if (!f.systems.includes(system)) continue;
-			const forSubclass = f.data.subclass_id;
-			if (forSubclass && forSubclass !== (entry.subclassId ?? '')) continue;
-			const key = `${f.data.id}:${f.data.level}:${forSubclass ?? ''}`;
-			if (seen.has(key)) continue;
-			seen.add(key);
-			total += expertiseSlotsAtLevel(spec, entry.level);
-		}
+	for (const feature of activeClassFeatures(classes, graph, system)) {
+		const spec = feature.row.data.expertise_slots;
+		if (spec) total += expertiseSlotsAtLevel(spec, feature.entry.level);
 	}
 	return total;
 }
@@ -234,7 +221,47 @@ export function classFeatureLines({
 	nameOf,
 	lookaheadLevels = 3
 }: ClassFeatureInput): ClassFeatureLine[] {
-	const out: ClassFeatureLine[] = [];
+	const out = [...activeClassFeatures(classes, graph, system, { extraLevels: lookaheadLevels })].map(
+		(f) => ({
+			level: f.level,
+			className: nameOf(f.classRow),
+			row: f.row,
+			gained: f.gained,
+			fromSubclass: f.fromSubclass
+		})
+	);
+	return out.sort((a, b) => a.level - b.level || a.className.localeCompare(b.className));
+}
+
+/** One class feature a drafted row actually has, with the row it came from. */
+interface ActiveClassFeature {
+	entry: DraftClassEntry;
+	classRow: LoadedRowByType<'class'>;
+	row: LoadedRowByType<'class_feature'>;
+	level: number;
+	fromSubclass: boolean;
+	/** False for the look-ahead rows — what the next level or two will bring. */
+	gained: boolean;
+}
+
+/**
+ * Every class feature the drafted rows grant, under the gate the derive itself applies: the level is
+ * reached, the feature belongs to this edition, and a subclass feature belongs to the subclass that
+ * row actually chose. Deduped by (id, level, subclass) across sources, like the derive does.
+ *
+ * ONE iterator, because a gate written twice is a gate that drifts: the copy that fed the expertise
+ * cap compared a feature's bare `subclass_id` against the draft's `effectiveId` REF, so no subclass
+ * feature ever matched and a subclass-granted expertise slot was silently worth nothing.
+ *
+ * `extraLevels` is the only difference between its two readers — the sheet previews what the next
+ * level or two will bring, a cap counts only what is in hand.
+ */
+export function* activeClassFeatures(
+	classes: readonly DraftClassEntry[],
+	graph: ContentGraph,
+	system: string,
+	{ extraLevels = 0 }: { extraLevels?: number } = {}
+): Generator<ActiveClassFeature> {
 	const seen = new Set<string>();
 	for (const entry of classes) {
 		if (!entry.classId) continue;
@@ -244,23 +271,23 @@ export function classFeatureLines({
 		const subclassId = subclassRow?.type === 'subclass' ? subclassRow.id : '';
 		for (const row of graph.featuresForClass(classRow)) {
 			const level = Number(row.data.level);
-			if (level > entry.level + lookaheadLevels) continue;
+			if (level > entry.level + extraLevels) continue;
 			if (!row.systems.includes(system)) continue;
 			const forSubclass = row.data.subclass_id;
 			if (forSubclass && forSubclass !== subclassId) continue;
 			const key = `${row.data.id}:${level}:${forSubclass ?? ''}`;
 			if (seen.has(key)) continue;
 			seen.add(key);
-			out.push({
-				level,
-				className: nameOf(classRow),
+			yield {
+				entry,
+				classRow,
 				row,
-				gained: level <= entry.level,
-				fromSubclass: !!forSubclass
-			});
+				level,
+				fromSubclass: !!forSubclass,
+				gained: level <= entry.level
+			};
 		}
 	}
-	return out.sort((a, b) => a.level - b.level || a.className.localeCompare(b.className));
 }
 
 /** What part of the sheet a todo is about — the caller maps this to the control that fixes it, so

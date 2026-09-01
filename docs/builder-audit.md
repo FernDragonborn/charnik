@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **26 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **28 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -334,7 +334,7 @@ table roles.
 
 ## Smells
 
-**[ ] S1. `Inspector.changes` builds a whole `BuildVM` and runs a full `deriveSheet` on every keystroke
+**[x] S1. `Inspector.changes` builds a whole `BuildVM` and runs a full `deriveSheet` on every keystroke
 anywhere in the draft.** `inspector.svelte.ts:340-346` → `previewSheet`
 (`build-view-model.svelte.ts:491-503`) → `structuredClone($state.snapshot(this.draft))`.
 `$state.snapshot` walks the whole proxy, so the `$derived` subscribes to **every** field of the draft.
@@ -372,7 +372,7 @@ words. AGENTS.md: identify anything shareable with a GUID, not a local counter. 
 `DraftClassEntry` removes the stash-clear-rewrite dance in `removeClassRow` and all of
 `levelOfSlotKey`, and fixes the `{#each}` key for free.
 
-**[ ] S5. `derive.ts` walks the class-feature gate twice.** `expertiseBudget` (`:54-63`) and
+**[x] S5. `derive.ts` walks the class-feature gate twice.** `expertiseBudget` (`:54-63`) and
 `classFeatureLines` (`:236-244`) are the same loop with the same
 `key = \`${id}:${level}:${sub}\``, and both docstrings say they mirror the derive-gather feature
 gates. A third copy of a gate is what drifts. One `activeClassFeatures(entry, graph, system,
