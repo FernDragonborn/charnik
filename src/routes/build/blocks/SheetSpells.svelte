@@ -30,7 +30,7 @@
 	const open = () => b.inspector.toggle({ id: 'spells' });
 </script>
 
-{#if b.isCaster && casting}
+{#if b.spellPicks.isCaster && casting}
 	<div class="card">
 		<div class="card-head">
 			<span class="eyebrow">{$_('build.spells.title')}</span>
@@ -47,7 +47,7 @@
 									: 'build.spells.stylePrepared'
 							),
 							chosen:
-								b.spellPicker.find((p) => p.profile.classEffectiveId === c.classEffectiveId)
+								b.spellPicks.picker.find((p) => p.profile.classEffectiveId === c.classEffectiveId)
 									?.leveledChosen ?? 0,
 							cap: c.preparedCap
 						}
@@ -97,7 +97,7 @@
 								<button
 									class="pick-chip on"
 									title={$_('build.spells.remove', { values: { name: sp.name } })}
-									onclick={() => b.toggleSpell(sp.id)}
+									onclick={() => b.spellPicks.toggle(sp.id)}
 								>
 									{sp.name}
 								</button>

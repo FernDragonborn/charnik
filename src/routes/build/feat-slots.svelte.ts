@@ -3,9 +3,9 @@
  * asks for (a half-feat's ability, a feat's skill grants, an ASI's shape). The build view-model
  * reads back the few results the assembled character needs.
  *
- * The slot KEY ("class-4") is the identity everything here hangs off — the per-slot mapping is what
- * a flattened boost list could not express (UBUG-13: a restored slot re-derived its own boost a
- * second time).
+ * The slot KEY (`${classRow}:${level}`) is the identity everything here hangs off — the per-slot
+ * mapping is what a flattened boost list could not express (UBUG-13: a restored slot re-derived its
+ * own boost a second time).
  */
 import type { LoadedRow } from '$lib/content/loader';
 import type { BuildVM } from './build-view-model.svelte';
@@ -21,7 +21,7 @@ import type { AsiShape } from './draft';
  *  than re-described, so the two cannot drift apart. `import type` is erased, so no runtime cycle. */
 export type FeatsHost = Pick<
 	BuildVM,
-	'draft' | 'graph' | 'featList' | 'backgroundRow' | 'autoSkills' | 'row'
+	'draft' | 'graph' | 'featList' | 'backgroundRow' | 'skillPicks' | 'row'
 >;
 
 export class FeatSlots {
@@ -129,7 +129,7 @@ export class FeatSlots {
 	/** Strict-mode guard: a skill already proficient from ANOTHER source (class/background pick or a
 	 *  different feat's grant) is a wasted pick — disable it in Strict, allow it in Free. */
 	featSkillTakenElsewhere = (key: string, skill: string): boolean => {
-		if (this.host().autoSkills.includes(skill) || this.host().draft.skills.includes(skill)) return true;
+		if (this.host().skillPicks.isProficient(skill)) return true;
 		return Object.entries(this.host().draft.slotFeatSkills).some(
 			([k, list]) => k !== key && list.includes(skill)
 		);

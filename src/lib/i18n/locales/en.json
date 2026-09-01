@@ -854,6 +854,7 @@
 			"strictTrainedSkill": "Strict: you can't drop a trained skill — switch to Free to remove it.",
 			"strictAllTrained": "Strict: every pick here is a trained skill — switch to Free to change one.",
 			"levelCapFull": "Level {cap} is the cap across every class — lower one first.",
+			"noExpertiseSlots": "Strict: your class grants no expertise — switch to Free to double a skill anyway.",
 			"draftNotSaved": "This build isn't being saved",
 			"draftNotSavedBody": "Charnik can't write to your data folder, so nothing here is on disk. Check the folder still exists and has room, then make any change to try again."
 		}

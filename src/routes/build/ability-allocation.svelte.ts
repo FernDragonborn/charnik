@@ -26,6 +26,7 @@ import {
 	STANDARD_ARRAY,
 	type StatMethod,
 } from '$lib/build/rules';
+import { parseSpeciesBoostChoice, speciesFixedAbilities } from '$lib/build/derive';
 import { splitList as csv } from '$lib/content/schemas';
 import { signed } from '$lib/util/format';
 import { toggleCapped } from './draft';
@@ -81,8 +82,8 @@ export interface AbilityAllocationHost {
 	edit: EditContext | null;
 	feats: FeatSlots;
 	backgroundRow: LoadedRowByType<'background'> | undefined;
-	/** The species' "+N to M of your choice" shape (5e Half-Elf), or null when it offers none. */
-	speciesBoostChoice: { amount: number; count: number } | null;
+	speciesRow: LoadedRowByType<'species'> | undefined;
+	speciesOptionRow: LoadedRowByType<'species_option'> | undefined;
 }
 
 export class AbilityAllocation {
@@ -131,6 +132,31 @@ export class AbilityAllocation {
 		const used = new Set(Object.values(this.host().draft.arrayPick));
 		return STANDARD_ARRAY.filter((v) => !used.has(v));
 	}
+
+	// --- the species' "+N to M of your choice" ASI (5e Half-Elf) ----------------
+	/** The free-choice shape the species or its sub-option offers, if any (e.g. `1x2`). */
+	get speciesBoostChoice(): { amount: number; count: number } | null {
+		const row = this.host().speciesOptionRow ?? this.host().speciesRow;
+		return parseSpeciesBoostChoice(
+			String(this.host().speciesOptionRow?.data.boost_choice || row?.data.boost_choice || ''),
+		);
+	}
+	/** Abilities the species' FIXED ASI already raised — excluded from the choice, because 5e
+	 *  Half-Elf's +1/+1 goes to two abilities OTHER than the +2 CHA. */
+	get speciesFixedAbilities(): ReadonlySet<Ability> {
+		return speciesFixedAbilities([this.host().speciesRow, this.host().speciesOptionRow]);
+	}
+	/** What the free choice may be spent on: all six minus the fixed-boosted ones. */
+	get speciesBoostAbilities(): Ability[] {
+		return ABILITIES.filter((a) => !this.speciesFixedAbilities.has(a));
+	}
+	toggleSpeciesBoostPick = (ab: Ability) => {
+		this.host().draft.speciesBoostPicks = toggleCapped(
+			this.host().draft.speciesBoostPicks,
+			ab,
+			this.speciesBoostChoice?.count ?? 0,
+		);
+	};
 
 	// --- ability boosts (5.5e background choice; 5e species flows via effects) --
 	get boostCarrier(): 'background' | 'species' {
@@ -186,7 +212,7 @@ export class AbilityAllocation {
 		);
 		add(this.backgroundBoosts); // 5.5e background choice (empty unless the guard in backgroundBoosts holds)
 		// species free-choice ASI (5e Half-Elf +1/+1)
-		const speciesChoice = this.host().speciesBoostChoice;
+		const speciesChoice = this.speciesBoostChoice;
 		if (speciesChoice)
 			for (const ab of this.host().draft.speciesBoostPicks)
 				out[ab] = (out[ab] ?? 0) + speciesChoice.amount;

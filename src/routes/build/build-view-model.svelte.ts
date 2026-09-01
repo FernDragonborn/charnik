@@ -13,28 +13,24 @@ import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
-import { deriveSheet, type CharacterSheet, SKILL_ABILITY } from '$lib/character/derive';
+import { deriveSheet, type CharacterSheet } from '$lib/character/derive';
 import { plugins } from '$lib/effects/plugin-store.svelte';
-import { ABILITIES, type Character } from '$lib/character/schema';
+import type { Character } from '$lib/character/schema';
 import { assembleCharacter } from '$lib/character/assemble';
-import { classCasts } from '$lib/character/spellcasting';
 import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte';
 import { uniqueCharacterId } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
-import type { Ability } from '$lib/rules/core';
 import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
 import {
-	parseSpeciesBoostChoice,
-	speciesFixedAbilities as fixedAbilitiesFromRows,
-	buildSpellPicker,
 	buildTodos,
-	expertiseBudget,
 	openSubclassChoices,
 	type BuildTodo,
 } from '$lib/build/derive';
 import { Inspector, targetForTodo } from './inspector.svelte';
-import { splitList, type ContentType } from '$lib/content/schemas';
+import { SkillPicks } from './skill-picks.svelte';
+import { SpellPicks } from './spell-picks.svelte';
+import type { ContentType } from '$lib/content/schemas';
 import { slugify } from '$lib/util/slug';
 import { FeatSlots } from './feat-slots.svelte';
 import { AbilityAllocation } from './ability-allocation.svelte';
@@ -44,7 +40,6 @@ import { DraftInventory } from './draft-inventory';
 // has to know about to print a name
 export { ASI, rowName, rowOfType };
 import {
-	toggleCapped,
 	blankDraft,
 	draftFromCharacter,
 	selectedRefs,
@@ -55,8 +50,6 @@ import type { DraftRecord } from '$lib/character/draft-repository';
 import { DraftSession } from './draft-session.svelte';
 import { DraftHistory } from './draft-history.svelte';
 import { removeClassRow, switchClass, type ClassScopedPicks } from './class-picks-cache';
-
-const csv = splitList;
 
 
 /**
@@ -186,6 +179,8 @@ export class BuildVM {
 	featList = $derived(this.list('feat'));
 	languageList = $derived(this.list('language'));
 	itemList = $derived(this.list('item'));
+	/** Read by the spell picker, which needs the whole pool before it sections it per caster class. */
+	spellList = $derived(this.list('spell'));
 
 	row(id: string | null): LoadedRow | undefined {
 		return id && this.graph ? this.graph.get(id) : undefined;
@@ -216,28 +211,6 @@ export class BuildVM {
 		this.draft.speciesId = id;
 		this.draft.speciesOptionId = null;
 		this.draft.speciesBoostPicks = [];
-	};
-
-	// --- species "+N to M of your choice" ASI (5e Half-Elf) --------------------
-	/** The free-choice ASI shape from the species or its sub-option, if any (e.g. `1x2`). */
-	speciesBoostChoice = $derived(
-		parseSpeciesBoostChoice(
-			String(this.speciesOptionRow?.data.boost_choice || this.speciesRow?.data.boost_choice || '')
-		)
-	);
-	/** Abilities already raised by the species' FIXED ASI (its effects) — excluded from the choice
-	 *  (5e Half-Elf's +1/+1 goes to two abilities OTHER than the +2 CHA). */
-	speciesFixedAbilities = $derived(fixedAbilitiesFromRows([this.speciesRow, this.speciesOptionRow]));
-	/** Abilities offered for the free choice (all six minus the fixed-boosted ones). */
-	speciesBoostAbilities = $derived<Ability[]>(
-		ABILITIES.filter((a) => !this.speciesFixedAbilities.has(a))
-	);
-	toggleSpeciesBoostPick = (ab: Ability) => {
-		this.draft.speciesBoostPicks = toggleCapped(
-			this.draft.speciesBoostPicks,
-			ab,
-			this.speciesBoostChoice?.count ?? 0
-		);
 	};
 
 	// --- multiclass rows -------------------------------------------------------
@@ -296,129 +269,15 @@ export class BuildVM {
 		);
 	};
 
-	isCaster = $derived.by(() =>
-		this.draft.classes.some((c) => {
-			const row = rowOfType(this.row(c.classId), 'class');
-			return !!row && classCasts(row);
-		})
-	);
-	/**
-	 * Spell picker, PER caster class (one section each — single-class collapses to one). Strict
-	 * shows only legally-pickable spells (via the access map, cantrips always + leveled ≤ the
-	 * class's max spell level); Free lifts every gate. Mirrors the skills Strict/Free toggle.
-	 */
-	spellPicker = $derived.by(() =>
-		this.graph && this.sheet
-			? buildSpellPicker({
-					allSpells: this.list('spell'),
-					sheet: this.sheet,
-					graph: this.graph,
-					strict: this.draft.strict,
-					selectedSpells: this.draft.selectedSpells
-				})
-			: []
-	);
-	toggleSpell = (ref: string) => {
-		if (this.draft.selectedSpells.includes(ref)) {
-			if (this.edit && this.draft.strict && this.edit.spells.has(ref)) {
-				toast(t('build.notice.strictKnownSpell'));
-				return;
-			}
-			this.draft.selectedSpells = this.draft.selectedSpells.filter((s) => s !== ref);
-			return;
-		}
-		// Strict: block picking past the cantrip / prepared cap of any class this spell counts for
-		if (this.draft.strict) {
-			const lvl = Number(rowOfType(this.graph?.get(ref), 'spell')?.data.level ?? 0);
-			for (const pc of this.spellPicker) {
-				if (!pc.profile.accessSpellIds.includes(ref)) continue; // doesn't count for this class
-				const [chosen, cap, what] =
-					lvl === 0
-						? ([pc.cantripsChosen, pc.profile.cantripCap, 'capCantrips'] as const)
-						: ([pc.leveledChosen, pc.profile.preparedCap, 'capPrepared'] as const);
-				if (chosen >= cap) {
-					// the class name only when there is more than one caster to tell apart
-					const who = this.spellPicker.length > 1 ? `${pc.profile.className} ` : '';
-					toast(
-						t('build.notice.strictCapFull', { who, what: t(`build.notice.${what}`), cap }),
-					);
-					return;
-				}
-			}
-		}
-		this.draft.selectedSpells = [...this.draft.selectedSpells, ref];
-	};
+	/** Which spells are chosen, and the Strict caps over them — see spell-picks.svelte.ts. */
+	spellPicks = new SpellPicks(() => this);
 
-	// --- skills: class picks (choose N) + background grants (auto) --------------
-	classSkillCount = $derived(Number(this.classRow?.data.skills_choose ?? 0));
-	classSkillOptions = $derived.by<string[]>(() => {
-		const from = csv(this.classRow?.data.skills_from);
-		if (from.length === 1 && from[0]?.toLowerCase() === 'any') return Object.keys(SKILL_ABILITY);
-		return from;
-	});
-	backgroundSkills = $derived(csv(this.backgroundRow?.data.skills));
-	/** Skills granted for free by the background (always proficient). */
-	autoSkills = $derived(this.backgroundSkills);
 	/** How many free "of your choice" languages the background grants (display only). */
 	backgroundLangCount = $derived(Number(this.backgroundRow?.data.languages ?? 0));
 
-	toggleSkill = (skill: string) => {
-		if (this.autoSkills.includes(skill)) return; // background-granted, locked on
-		if (this.draft.skills.includes(skill)) {
-			if (this.edit && this.draft.strict && this.edit.skills.has(skill)) {
-				toast(t('build.notice.strictTrainedSkill'));
-				return;
-			}
-			this.draft.skills = this.draft.skills.filter((s) => s !== skill);
-			return;
-		}
-		if (!this.draft.strict) {
-			this.draft.skills = [...this.draft.skills, skill]; // Free: any skill, no cap
-			return;
-		}
-		// Strict: cap counts only NON-background picks (a background overlap frees a slot)
-		if (this.classSkillCount === 0 || this.skillChosenCount < this.classSkillCount) {
-			this.draft.skills = [...this.draft.skills, skill];
-			return;
-		}
-		// At the cap a click REPLACES the oldest pick instead of doing nothing — the same rule the
-		// ability pickers follow (`toggleCapped`), because a chip that looks live and is not is a dead
-		// end. A skill carried in from a level-up is never the one dropped: Strict refuses to unlearn
-		// those, and replacing one would be unlearning under another name.
-		const droppable = this.draft.skills.find(
-			(s) => !this.autoSkills.includes(s) && !this.edit?.skills.has(s)
-		);
-		if (!droppable) {
-			toast(t('build.notice.strictAllTrained'));
-			return;
-		}
-		this.draft.skills = [...this.draft.skills.filter((s) => s !== droppable), skill];
-	};
-	skillChosenCount = $derived(this.draft.skills.filter((s) => !this.autoSkills.includes(s)).length);
-	/** Proficient = chosen or background-granted (a prerequisite for expertise). */
-	isProficient = (skill: string): boolean =>
-		this.autoSkills.includes(skill) || this.draft.skills.includes(skill);
-	/** N4a: expertise slots the drafted classes' features unlock (Rogue L1+L6, Bard L3+L10). */
-	expertiseCap = $derived(
-		this.graph ? expertiseBudget(this.draft.classes, this.graph, this.draft.system) : 0
-	);
-	expertiseUsed = $derived(this.draft.expertise.filter((s) => this.isProficient(s)).length);
-	/** Toggle expertise (×2) on a proficient skill. Strict enforces the class-granted cap (Free lets
-	 *  you exceed it — same policy as skill picks); removing is always allowed. */
-	toggleExpertise = (skill: string) => {
-		if (!this.isProficient(skill)) return;
-		const has = this.draft.expertise.includes(skill);
-		if (!has && this.draft.strict && this.expertiseUsed >= this.expertiseCap) return;
-		this.draft.expertise = has
-			? this.draft.expertise.filter((s) => s !== skill)
-			: [...this.draft.expertise, skill];
-	};
-	/** A skill is pickable when Free, or (Strict) it's on the class list / the class has no list. */
-	skillPickable = (skill: string): boolean =>
-		this.autoSkills.includes(skill) ||
-		!this.draft.strict ||
-		this.classSkillCount === 0 ||
-		this.classSkillOptions.includes(skill);
+	/** Skill proficiencies and expertise — the class list, the background's grants, and the two capped
+	 *  pickers over them. See skill-picks.svelte.ts. */
+	skillPicks = new SkillPicks(() => this);
 
 	/** Feat / ASI slots (which levels grant one, what fills it, the choices it then asks for) — see
 	 *  feats.svelte.ts. */
@@ -453,11 +312,11 @@ export class BuildVM {
 				})),
 			abilities: { ...this.draft.abilities },
 			abilityBoosts: this.abilities.abilityBoosts as Record<string, number>,
-			skills: [...new Set([...this.autoSkills, ...this.draft.skills])],
+			skills: [...new Set([...this.skillPicks.autoSkills, ...this.draft.skills])],
 			// §C feat-granted skills (Skilled) kept in their OWN field so the class-skill cap counter isn't
 			// inflated on edit; carried verbatim on edit (like abilityBoosts) + new slot picks on top
 			featSkills: [...new Set([...(this.edit?.featSkills ?? []), ...this.feats.featSkillPicks])],
-			expertise: this.draft.expertise.filter((s) => this.isProficient(s)),
+			expertise: this.draft.expertise.filter((s) => this.skillPicks.isProficient(s)),
 			saves: this.classRow?.data.saves ?? [],
 			// origin feat (auto) + each filled slot that holds a real feat (ASI is not a feat —
 			// its ability boost flows through abilityBoosts instead)
@@ -548,10 +407,10 @@ export class BuildVM {
 			hasClass: !!this.classId,
 			openSubclasses: this.openSubclasses,
 			pointsLeft: this.abilities.pointsLeft,
-			classSkillCount: this.classSkillCount,
-			skillChosenCount: this.skillChosenCount,
+			classSkillCount: this.skillPicks.classSkillCount,
+			skillChosenCount: this.skillPicks.chosenCount,
 			openFeatSlots: this.feats.featSlots.filter((s) => !this.draft.slotFeats[s.key]),
-			spellPicker: this.spellPicker
+			spellPicker: this.spellPicks.picker
 		})
 	);
 

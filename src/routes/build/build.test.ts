@@ -23,7 +23,15 @@ async function graphOf(): Promise<ContentGraph> {
 		[
 			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,asi_levels',
 			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,"4,8,12,16,19"`,
-			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,"4,6,8,12,14,16,19"`
+			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,"4,6,8,12,14,16,19"`,
+			`rogue,5.5e,${S},Rogue,d8,"dex,int",none,,"4,8,10,12,16,19"`
+		].join('\n')
+	);
+	await st.write(
+		'c/class_features_srd.csv',
+		[
+			'id,systems,source,name_en,class_id,level,expertise_slots',
+			`expertise,5.5e,${S},Expertise,rogue,1,"1:2,6:2"`
 		].join('\n')
 	);
 	await st.write(
@@ -396,6 +404,36 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		// the stash the switch created is undone too — left behind, taking the Wizard again would
 		// hand back picks that were just taken back
 		expect(build.classPicks.size).toBe(0);
+	});
+
+	it('expertise stays reachable when the class grants none, and never dead-ends at the cap (B15, B16)', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.classes = [{ classId: `class:${S}:fighter`, subclassId: null, level: 3 }];
+		build.draft.skills = ['athletics', 'perception', 'survival'];
+		expect(build.skillPicks.expertiseCap).toBe(0); // this Fighter grants no expertise slots
+
+		// Strict says no, and says it out loud rather than rendering a control that does nothing
+		build.skillPicks.toggleExpertise('athletics');
+		expect(build.draft.expertise).toEqual([]);
+		expect(build.skillPicks.expertiseOffered('athletics')).toBe(false);
+
+		// Free is the mode that lifts it — and having taken one, the way back out must exist
+		build.draft.strict = false;
+		build.skillPicks.toggleExpertise('athletics');
+		expect(build.draft.expertise).toEqual(['athletics']);
+		build.draft.strict = true;
+		expect(build.skillPicks.expertiseOffered('athletics')).toBe(true); // cap 0, but it is already doubled
+		build.skillPicks.toggleExpertise('athletics');
+		expect(build.draft.expertise).toEqual([]);
+
+		// at a real cap the click replaces the oldest pick instead of being ignored (ui.md §10)
+		build.draft.classes = [{ classId: `class:${S}:rogue`, subclassId: null, level: 1 }];
+		expect(build.skillPicks.expertiseCap).toBe(2);
+		build.skillPicks.toggleExpertise('athletics');
+		build.skillPicks.toggleExpertise('perception');
+		build.skillPicks.toggleExpertise('survival');
+		expect(build.draft.expertise).toEqual(['perception', 'survival']);
 	});
 
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {

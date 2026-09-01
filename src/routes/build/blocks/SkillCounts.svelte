@@ -14,22 +14,22 @@
 	const lit = $derived(badge === 'tag' ? 'accent' : 'open');
 </script>
 
-{#if b.classSkillCount > 0}
-	<span class={[badge, b.skillChosenCount < b.classSkillCount && lit]}>
+{#if b.skillPicks.classSkillCount > 0}
+	<span class={[badge, b.skillPicks.chosenCount < b.skillPicks.classSkillCount && lit]}>
 		{$_('build.skills.classPicks', {
-			values: { chosen: b.skillChosenCount, cap: b.classSkillCount }
+			values: { chosen: b.skillPicks.chosenCount, cap: b.skillPicks.classSkillCount }
 		})}
 	</span>
 {/if}
-{#if b.autoSkills.length}
+{#if b.skillPicks.autoSkills.length}
 	<!-- gold, because these are granted rather than chosen — the tag dressing has a gold variant and
 	     the card head's trailing note does not -->
 	<span class={[badge, badge === 'tag' && 'gold']}>
-		{$_('build.skills.fromBackground', { values: { count: b.autoSkills.length } })}
+		{$_('build.skills.fromBackground', { values: { count: b.skillPicks.autoSkills.length } })}
 	</span>
 {/if}
-{#if b.expertiseCap > 0}
+{#if b.skillPicks.expertiseCap > 0}
 	<span class={badge}>
-		{$_('build.skills.expertise', { values: { used: b.expertiseUsed, cap: b.expertiseCap } })}
+		{$_('build.skills.expertise', { values: { used: b.skillPicks.expertiseUsed, cap: b.skillPicks.expertiseCap } })}
 	</span>
 {/if}

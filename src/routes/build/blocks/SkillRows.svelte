@@ -16,7 +16,7 @@
 
 	/** A background-granted skill explains why it is locked; every other row explains its number. */
 	function skillTitle(skill: SkillId): string {
-		if (b.autoSkills.includes(skill)) return $_('build.skills.fromBackgroundHint');
+		if (b.skillPicks.autoSkills.includes(skill)) return $_('build.skills.fromBackgroundHint');
 		const comp = b.sheet?.skills[skill];
 		return comp ? why(comp) : '';
 	}
@@ -33,9 +33,9 @@
 		<div class="group">
 			<div class="sectlab"><span>{g.ab}</span></div>
 			{#each g.skills as skill (skill)}
-				{@const auto = b.autoSkills.includes(skill)}
+				{@const auto = b.skillPicks.autoSkills.includes(skill)}
 				{@const on = auto || b.draft.skills.includes(skill)}
-				{@const pickable = b.skillPickable(skill)}
+				{@const pickable = b.skillPicks.pickable(skill)}
 				{@const expert = b.draft.expertise.includes(skill)}
 				{@const comp = b.sheet?.skills[skill]}
 				{@const pas = b.sheet?.passives[skill]}
@@ -44,20 +44,17 @@
 						class="name"
 						disabled={auto || (!on && !pickable)}
 						title={skillTitle(skill)}
-						onclick={() => b.toggleSkill(skill)}
+						onclick={() => b.skillPicks.toggleSkill(skill)}
 					>
 						<i class="dot" class:prof={on} class:expert></i>
 						<span>{skillLabel(skill, $_)}</span>
 					</button>
-					{#if on && b.expertiseCap > 0}
-						{@const capped = !expert && b.draft.strict && b.expertiseUsed >= b.expertiseCap}
+					{#if b.skillPicks.expertiseOffered(skill)}
 						<button
 							class="x2"
 							class:on={expert}
-							class:dim={capped}
-							disabled={capped}
 							title={$_('build.skills.expertiseHint')}
-							onclick={() => b.toggleExpertise(skill)}>×2</button
+							onclick={() => b.skillPicks.toggleExpertise(skill)}>×2</button
 						>
 					{/if}
 					<b class="val">{comp ? signed(comp.value) : ''}</b>
@@ -143,17 +140,13 @@
 		color: var(--color-text-muted);
 		cursor: pointer;
 	}
-	.x2:hover:not(:disabled) {
+	.x2:hover {
 		border-color: var(--color-border-strong);
 	}
 	.x2.on {
 		border-color: var(--color-good);
 		color: var(--color-good);
 		background: var(--color-good-soft);
-	}
-	.x2.dim {
-		opacity: 0.4;
-		cursor: not-allowed;
 	}
 	.x2:focus-visible {
 		outline: var(--focus-ring);

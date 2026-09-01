@@ -88,21 +88,21 @@
 		</div>
 	</div>
 {:else if b.abilities.boostCarrier === 'species'}
-	{#if b.speciesBoostChoice}
+	{#if b.abilities.speciesBoostChoice}
 		<div class="boost">
 			<span class="eyebrow">
 				{$_('build.abilities.speciesChoice', {
 					values: {
 						species: rowName(b.speciesOptionRow) || rowName(b.speciesRow),
-						count: b.speciesBoostChoice.count,
-						amount: b.speciesBoostChoice.amount
+						count: b.abilities.speciesBoostChoice.count,
+						amount: b.abilities.speciesBoostChoice.amount
 					}
 				})}
-				<span class="gold">{b.draft.speciesBoostPicks.length}/{b.speciesBoostChoice.count}</span>
+				<span class="gold">{b.draft.speciesBoostPicks.length}/{b.abilities.speciesBoostChoice.count}</span>
 			</span>
 			<div class="chips">
-				{#each b.speciesBoostAbilities as ab (ab)}
-					<button class="pick-chip" class:on={b.draft.speciesBoostPicks.includes(ab)} onclick={() => b.toggleSpeciesBoostPick(ab)}>
+				{#each b.abilities.speciesBoostAbilities as ab (ab)}
+					<button class="pick-chip" class:on={b.draft.speciesBoostPicks.includes(ab)} onclick={() => b.abilities.toggleSpeciesBoostPick(ab)}>
 						{ab.toUpperCase()}
 					</button>
 				{/each}

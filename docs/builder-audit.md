@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **11 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **14 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -194,7 +194,7 @@ Cleric 5 (row 0) / Wizard 3 (row 1), highlight Fighter for row 0: the diff print
 reported. The `?? 0` is the same defect further on: a character gaining spellcasting reads "Spell save
 DC 0 → 13", presenting a sentinel as a number the player used to have.
 
-**[ ] B11. The strict spell cap blocks by one rule and counts by another.** `derive.ts:152-159` (RV1)
+**[x] B11. The strict spell cap blocks by one rule and counts by another.** `derive.ts:152-159` (RV1)
 attributes each chosen spell to **one** caster class via `casterForSpell`. The guard at
 `build-view-model.svelte.ts:288-295` rejects on `pc.profile.accessSpellIds.includes(ref)` — i.e. for
 *every* class whose list holds the spell. A Cleric 5 / Wizard 5 who is full on cleric picks cannot
@@ -223,12 +223,12 @@ the class's `subclass_level` alone; `SheetClasses.svelte:90` renders the button 
 subclass source disabled the review bar says "choose a subclass" and the click opens an empty pane.
 Gate the todo on `subclassesFor(...).length` too.
 
-**[ ] B15. Expertise is unreachable whenever the class grants none — including in Free mode.**
+**[x] B15. Expertise is unreachable whenever the class grants none — including in Free mode.**
 `SkillRows.svelte:52` gates the only ×2 control on `b.expertiseCap > 0` rather than on the mode.
 `toggleExpertise` (`:376-378`) explicitly allows adding in Free and removing always, but no button
 ever renders. A character edited into "has expertise, cap 0" can never drop it.
 
-**[ ] B16. Expertise at the cap dead-ends, against the ui.md §10 contract its sibling follows.**
+**[x] B16. Expertise at the cap dead-ends, against the ui.md §10 contract its sibling follows.**
 `SkillRows.svelte:53-59` uses `disabled={capped}`. ui.md §10: at the cap a click on an unpicked chip
 replaces the oldest pick; dimmed-and-disabled is for a chip blocked for a *different* reason.
 `toggleSkill` (`:346-357`) does the replace correctly for the class-skill cap; expertise, ten lines
@@ -347,7 +347,7 @@ Key the trial on `(previewId, targetIdentity)` and read the draft through a narr
 `restoreClassPicks` (`class-picks-cache.ts:88`) assigns the same nested `{shape, picks}` objects into
 the trial draft.
 
-**[ ] S2. `BuildVM` is a god object, and three clean carves touch no `bind:`-ed field.** The class doc
+**[~] S2. `BuildVM` is a god object, and three clean carves touch no `bind:`-ed field.** The class doc
 (`:66-70`) argues a further split is expensive because draft fields are bound across `blocks/*`. True
 of `draft`, false of the derivations over it:
 

@@ -36,7 +36,7 @@
 	 *  a homebrew pack that ships a tenth school gets a chip for it. */
 	const schoolsPresent = $derived([
 		...new Set(
-			b.spellPicker
+			b.spellPicks.picker
 				.flatMap((pc) => pc.groups.flatMap((g) => g.spells))
 				.map((s) => (s.type === 'spell' ? String(s.data.school) : ''))
 				.filter(Boolean),
@@ -54,8 +54,8 @@
 		(schools = schools.includes(school) ? schools.filter((s) => s !== school) : [...schools, school]);
 </script>
 
-{#if b.spellPicker.length}
-	{#each b.spellPicker as pc (pc.profile.classEffectiveId)}
+{#if b.spellPicks.picker.length}
+	{#each b.spellPicks.picker as pc (pc.profile.classEffectiveId)}
 		{@const sections = pc.groups
 			.map((g) => ({
 				key: `${pc.profile.classEffectiveId}:${g.level}`,
@@ -86,7 +86,7 @@
 				{previewId}
 				takenIds={b.draft.selectedSpells}
 				onpreview={(id) => (previewId = id)}
-				ontake={b.toggleSpell}
+				ontake={b.spellPicks.toggle}
 				{detail}
 				placeholder={$_('build.spells.search')}
 			>

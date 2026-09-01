@@ -12,10 +12,10 @@
 
 <div class="counts"><SkillCounts badge="tag" /></div>
 
-{#if b.classSkillCount > 0}
+{#if b.skillPicks.classSkillCount > 0}
 	<p class="subtext">
 		{$_(b.draft.strict ? 'build.skills.classList' : 'build.skills.classListFree', {
-			values: { skills: b.classSkillOptions.map((s) => skillLabel(s, $_)).join(' · ') }
+			values: { skills: b.skillPicks.classSkillOptions.map((s) => skillLabel(s, $_)).join(' · ') }
 		})}
 	</p>
 {:else if b.classId}
@@ -24,9 +24,9 @@
 	<p class="subtext">{$_('build.skills.needClass')}</p>
 {/if}
 
-{#if b.autoSkills.length}
+{#if b.skillPicks.autoSkills.length}
 	<p class="subtext note">
-		{$_('build.skills.lockedOn', { values: { skills: b.autoSkills.map((s) => skillLabel(s, $_)).join(' · ') } })}
+		{$_('build.skills.lockedOn', { values: { skills: b.skillPicks.autoSkills.map((s) => skillLabel(s, $_)).join(' · ') } })}
 	</p>
 {/if}
 
