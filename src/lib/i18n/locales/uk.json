@@ -834,6 +834,8 @@
 		"diff": {
 			"speed": "Швидкість",
 			"proficiency": "Бонус вправності",
+			"spellDcFor": "Складність закляттів ({class})",
+			"spellAttackFor": "Атака закляттям ({class})",
 			"carryCapacity": "Вантажність",
 			"save": "рятівний кидок {ability}",
 			"resistant": "Опір",

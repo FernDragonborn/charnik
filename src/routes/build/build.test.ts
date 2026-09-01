@@ -451,7 +451,10 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 				method: 'astrology',
 				skills: ['arcana'],
 			},
-			classPicks: [['class:x:y', { level: 3 }], 'not an entry at all'],
+			classPicks: [
+				['class:x:y', { level: 3 }],
+				['class:junk:junk', 'not a set of picks at all'],
+			],
 		});
 
 		expect(build.draft.name).toBe('Old'); // what WAS readable is kept

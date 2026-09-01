@@ -30,7 +30,9 @@ export const num = (v: unknown, d = 0): number => (typeof v === 'number' ? v : N
 /** Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) →
  *  proficient → expertise (×2). */
 export type SkillProficiency = 'none' | 'half' | 'proficient' | 'expertise';
-const PROF_ORDER: Record<SkillProficiency, number> = {
+/** The ladder as a number, so two proficiencies can be compared — shared with the builder's diff,
+ *  which reads a change in rank as better or worse. */
+export const PROF_ORDER: Record<SkillProficiency, number> = {
 	none: 0,
 	half: 1,
 	proficient: 2,

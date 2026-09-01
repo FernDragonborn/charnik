@@ -512,6 +512,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `const num` — Coerce a CSV-derived cell to a number (already-number passes through), else the default.
 - `type SkillProficiency` — Skill proficiency level (a level, not two booleans): none → half (Jack of All Trades) → * proficient → expertise (×2).
+- `const PROF_ORDER` — The ladder as a number, so two proficiencies can be compared — shared with the builder's diff, * which reads a change…
 - `interface AbilityBlock`
 - `interface StatInputs` — The computed inputs every stat-phase helper reads (bundled so the helpers stay ≤4 params).
 - `function gatherGrantedProficiencies` — Effect-granted proficiencies split into saves (proficient-or-not) + skills (by ladder level).
@@ -1522,4 +1523,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 896 exports across 125 modules · 58 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 897 exports across 125 modules · 58 duplicate suspects._

@@ -11,7 +11,10 @@
  */
 import type { CharacterSheet } from '../character/derive';
 import { ABILITIES } from '../character/schema';
+import type { SpellcastingClass } from '../character/spellcasting';
 import { SKILL_ABILITY, type SkillId } from '../character/skills';
+// the ladder is the derive's own — a second copy of it here is a second answer to "is this better"
+import { PROF_ORDER } from '../character/derive-stats';
 import { signed } from '../util/format';
 
 /**
@@ -48,24 +51,31 @@ const STATS: { id: string; key: string; of: (s: CharacterSheet) => number; signe
 	{ id: 'speed', key: 'build.diff.speed', of: (s) => s.speed.value },
 	{ id: 'prof', key: 'build.diff.proficiency', of: (s) => s.proficiencyBonus, signed: true },
 	{ id: 'carry', key: 'build.diff.carryCapacity', of: (s) => s.carryingCapacity.value },
+];
+
+/** Nothing on this side of the diff — a stat the character did not have, as opposed to one that was
+ *  zero. */
+const NONE: DiffText = { text: '—' };
+
+/** The per-caster-class stats, which cannot go in `STATS`: a sheet has one of each PER class. */
+const SPELL_STATS = [
 	{
 		id: 'spellDc',
 		key: 'build.vitals.spellDc',
-		of: (s) => s.spellcasting.classes[0]?.saveDC.value ?? 0,
+		classKey: 'build.diff.spellDcFor',
+		of: (c: SpellcastingClass) => c.saveDC.value,
+		signed: false,
 	},
 	{
 		id: 'spellAttack',
 		key: 'build.vitals.spellAttack',
-		of: (s) => s.spellcasting.classes[0]?.attack.value ?? 0,
+		classKey: 'build.diff.spellAttackFor',
+		of: (c: SpellcastingClass) => c.attack.value,
 		signed: true,
 	},
-];
+] as const;
 
 const skillIds = Object.keys(SKILL_ABILITY) as SkillId[];
-
-/** Skill proficiency read as a rank, so gaining expertise reads as an improvement and losing
- *  proficiency reads as a loss. */
-const PROF_RANK = { none: 0, half: 1, proficient: 2, expertise: 3 } as const;
 
 function numericChanges(before: CharacterSheet, after: CharacterSheet): SheetChange[] {
 	const out: SheetChange[] = [];
@@ -121,9 +131,46 @@ function skillChanges(before: CharacterSheet, after: CharacterSheet): SheetChang
 				label: { key: `skillName.${id}` },
 				from: { key: `build.diff.rank.${from}` },
 				to: { key: `build.diff.rank.${to}` },
-				better: PROF_RANK[to] > PROF_RANK[from],
+				better: PROF_ORDER[to] > PROF_ORDER[from],
 			},
 		];
+	});
+}
+
+/**
+ * Spellcasting, matched by CLASS rather than by position.
+ *
+ * `spellcasting.classes` is the character's caster rows in row order, so `classes[0]` on the two
+ * sheets is not the same class the moment a pick adds, removes or reorders one: highlighting a
+ * Fighter for row 0 of a Cleric 5 / Wizard 3 read as "the Wizard's DC got worse", and the Cleric
+ * losing spellcasting altogether was never reported. A class present on one side only reads as `—`,
+ * because a save DC of 0 is not a number anybody had.
+ */
+function spellcastingChanges(before: CharacterSheet, after: CharacterSheet): SheetChange[] {
+	const casters = [...before.spellcasting.classes, ...after.spellcasting.classes];
+	const ids = [...new Set(casters.map((c) => c.classEffectiveId))];
+	return ids.flatMap((id) => {
+		const from = before.spellcasting.classes.find((c) => c.classEffectiveId === id);
+		const to = after.spellcasting.classes.find((c) => c.classEffectiveId === id);
+		return SPELL_STATS.flatMap((stat) => {
+			const was = from ? stat.of(from) : null;
+			const now = to ? stat.of(to) : null;
+			if (was === now) return [];
+			return [
+				{
+					id: `${stat.id}-${id}`,
+					// the class is named only when more than one is involved, so the single-caster case
+					// keeps the same label the vitals card uses
+					label:
+						ids.length > 1
+							? { key: stat.classKey, values: { class: (to ?? from)?.className ?? '' } }
+							: { key: stat.key },
+					from: was === null ? NONE : num(was, stat.signed),
+					to: now === null ? NONE : num(now, stat.signed),
+					better: (now ?? 0) > (was ?? 0),
+				},
+			];
+		});
 	});
 }
 
@@ -143,7 +190,7 @@ function defenseChanges(before: CharacterSheet, after: CharacterSheet): SheetCha
 			{
 				id: `defense-${kind}`,
 				label: { key: key[kind] },
-				from: { text: '—' },
+				from: NONE,
 				to: { keys: gained.map((d) => `damageType.${d}`) },
 				// vulnerability is the one gain a player does not want
 				better: kind !== 'vulnerable',
@@ -164,6 +211,7 @@ export function diffSheets(
 	if (!before || !after) return [];
 	return [
 		...numericChanges(before, after),
+		...spellcastingChanges(before, after),
 		...skillChanges(before, after),
 		...defenseChanges(before, after),
 	];

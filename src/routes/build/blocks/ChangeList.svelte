@@ -7,12 +7,15 @@
 
 	let { changes, taken = false }: { changes: SheetChange[]; taken?: boolean } = $props();
 
-	/** The diff is computed with no locale, so it hands back catalog keys and this reads them. */
+	/** The diff is computed with no locale, so it hands back catalog keys and this reads them. A key
+	 *  with no entry falls back to its last segment: the `damageType.*` list is open, so a homebrew
+	 *  pack's own type would otherwise be printed as `damageType.sonic` in the middle of a sentence. */
+	const read = (key: string): string => $_(key, { default: key.split('.').at(-1) ?? key });
 	const say = (t: DiffText): string =>
 		'text' in t
 			? t.text
 			: 'keys' in t
-				? t.keys.map((k) => $_(k)).join(', ')
+				? t.keys.map(read).join(', ')
 				: $_(t.key, { values: t.values });
 </script>
 

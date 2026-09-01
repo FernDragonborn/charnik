@@ -334,13 +334,17 @@ export class Inspector {
 	// --- what taking it would do ------------------------------------------------------------------
 	/**
 	 * The heart of the pane: the draft with the previewed option applied, derived for real, diffed
-	 * against the draft as it stands. Empty while nothing new is highlighted — an unchanged sheet and
-	 * "no preview" both mean "no rows", and both are correctly silent.
+	 * against the draft as it stands.
+	 *
+	 * `null` means nothing is being previewed, which is NOT the same as an option that moves no
+	 * number — and an empty array said both. The consumer falls back to "what the last take did"
+	 * when there is no preview, so conflating them printed the previous commit's rows beside an
+	 * option that changes nothing.
 	 */
-	changes = $derived.by<SheetChange[]>(() => {
+	changes = $derived.by<SheetChange[] | null>(() => {
 		const spec = this.pick;
 		const id = this.previewId;
-		if (!spec || id === null || id === spec.currentId) return [];
+		if (!spec || id === null || id === spec.currentId) return null;
 		const b = this.host();
 		return diffSheets(b.sheet, b.previewSheet((trial) => spec.apply(trial, id)));
 	});

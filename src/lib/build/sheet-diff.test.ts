@@ -6,6 +6,7 @@ import { deriveSheet } from '../character/derive';
 import { diffSheets } from './sheet-diff';
 import { socialBars } from './social';
 import { SKILL_ABILITY } from '../character/skills';
+import { DAMAGE_TYPES } from '../components/damage-glyphs';
 import en from '../i18n/locales/en.json';
 
 const S = 'SRD 5.2.1';
@@ -16,8 +17,10 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/classes_srd.csv',
 		[
-			'id,systems,source,name_en,hit_die,saves,caster,weapon_profs,armor_profs',
-			`fighter,5.5e,${S},Fighter,d10,"str,con",none,"simple,martial","light,medium,heavy,shield"`,
+			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,slot_table,weapon_profs,armor_profs',
+			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,,"simple,martial","light,medium,heavy,shield"`,
+			`cleric,5.5e,${S},Cleric,d8,"wis,cha",full,wis,full,simple,"light,medium,shield"`,
+			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,full,simple,`,
 		].join('\n'),
 	);
 	await st.write(
@@ -43,6 +46,30 @@ describe('diffSheets', () => {
 		const g = await graphOf();
 		const sheet = deriveSheet(fighter(), g);
 		expect(diffSheets(sheet, sheet)).toEqual([]);
+	});
+
+	it('reports spellcasting by class, not by row position (B10)', async () => {
+		const g = await graphOf();
+		const duo = fighter();
+		duo.build.classes = [
+			{ class: `class:${S}:cleric`, level: 5 },
+			{ class: `class:${S}:wizard`, level: 3 },
+		];
+		const before = deriveSheet(duo, g);
+
+		// row 0 becomes a Fighter: the CLERIC loses spellcasting, the wizard is untouched — read
+		// positionally this said the wizard's DC got worse and never mentioned the cleric at all
+		const swapped = fighter();
+		swapped.build.classes = [
+			{ class: `class:${S}:fighter`, level: 5 },
+			{ class: `class:${S}:wizard`, level: 3 },
+		];
+		const rows = diffSheets(before, deriveSheet(swapped, g));
+
+		expect(rows.find((r) => r.id.includes('wizard'))).toBeUndefined();
+		const lostDc = rows.find((r) => r.id === `spellDc-class:${S}:cleric`);
+		expect(lostDc?.to).toEqual({ text: '—' }); // not "0", which is a number nobody had
+		expect(lostDc?.better).toBe(false);
 	});
 
 	it('a raised ability reports the score and everything downstream of it', async () => {
@@ -111,6 +138,11 @@ describe('diffSheets', () => {
 			'build.vitals.initiative',
 			'build.vitals.spellDc',
 			'build.vitals.spellAttack',
+			'build.diff.spellDcFor',
+			'build.diff.spellAttackFor',
+			// the `{ keys: [...] }` form, which the enumeration used to skip entirely — a resistance row
+			// names its damage types, and every SHIPPED type has to have a word
+			...DAMAGE_TYPES.map((d) => `damageType.${d}`),
 		];
 		expect(keys.filter((k) => typeof at(k) !== 'string')).toEqual([]);
 	});

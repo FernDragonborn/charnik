@@ -834,6 +834,8 @@
 		"diff": {
 			"speed": "Speed",
 			"proficiency": "Proficiency",
+			"spellDcFor": "{class} spell save DC",
+			"spellAttackFor": "{class} spell attack",
 			"carryCapacity": "Carry capacity",
 			"save": "{ability} save",
 			"resistant": "Resistant",

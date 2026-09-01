@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **15 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **20 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -172,7 +172,7 @@ Slot `0:8` leaves the sheet, `slotFeats['0:8']` survives, and `pickSpecFor`
 match, with no explanation and no way back short of re-raising the level. The stale key is persisted
 (`:440`) and re-hydrated.
 
-**[ ] B9. The diff falls back to the previous commit's rows whenever the option being read changes
+**[x] B9. The diff falls back to the previous commit's rows whenever the option being read changes
 nothing.** `InspectorGrid.svelte:50-53`:
 
 ```svelte
@@ -186,7 +186,7 @@ Open a feat slot → double-click Alert (`applied` = the initiative rows) → ar
 grant, empty diff) → the pane reads "What changed: Initiative +2 → +7" beside the Skilled article.
 `changes` needs a third state (`null`), not an empty array doing two jobs.
 
-**[ ] B10. `sheet-diff` compares spellcasting positionally.** `sheet-diff.ts:53-61`:
+**[x] B10. `sheet-diff` compares spellcasting positionally.** `sheet-diff.ts:53-61`:
 `of: (s) => s.spellcasting.classes[0]?.saveDC.value ?? 0`. `spellcasting.classes` is `build.classes`
 filtered to casters, in row order, so `classes[0]` is a different class between the two sheets.
 Cleric 5 (row 0) / Wizard 3 (row 1), highlight Fighter for row 0: the diff prints "Spell save DC
@@ -414,7 +414,7 @@ renders "9.1 m" from the shared `metres()` (`combat/constants.ts:91`). It also b
 formats the same column properly → "STR, CON". One fact, two spellings, and exactly the hazard
 `pickerMeta`'s own comment (`rows.ts:96-99`) warns about.
 
-**[ ] S12. `PROF_RANK` duplicates `PROF_ORDER`.** `sheet-diff.ts:68` against `derive-stats.ts:33` — same
+**[x] S12. `PROF_RANK` duplicates `PROF_ORDER`.** `sheet-diff.ts:68` against `derive-stats.ts:33` — same
 four keys, same order; the second is simply not exported.
 
 **[ ] S13. Duplicated CSS classes that should live in one place.**
@@ -442,12 +442,12 @@ builder-specific — see the scope table.
 `ability-allocation.svelte.ts:154-156` and `:168-170` — identical `add()` bodies in `slotBoosts` and
 `abilityBoosts`.
 
-**[ ] S16. The test claiming to enumerate every emittable key skips a form.** `sheet-diff.test.ts:92`
+**[x] S16. The test claiming to enumerate every emittable key skips a form.** `sheet-diff.test.ts:92`
 covers `skillName.*`, `build.diff.*` and `build.vitals.*` at `:99-114`, but never the `{ keys: [...] }`
 form from `defenseChanges` (`sheet-diff.ts:147`). A homebrew pack declaring `resist:sonic` renders the
 literal `damageType.sonic`, and the guard that exists for this does not look at it.
 
-**[ ] S17. Damage types print raw ids on the sheet while the diff of the same data localizes them.**
+**[x] S17. Damage types print raw ids on the sheet while the diff of the same data localizes them.**
 `SheetDefenses.svelte:91-99` passes `d` as `bludgeoning`; `sheet-diff.ts:147` does it right, and
 `en.json` carries a full `damageType` catalog.
 
