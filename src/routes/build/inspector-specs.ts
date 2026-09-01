@@ -207,99 +207,109 @@ function classPickSpec(b: InspectorHost, index: number): PickSpec {
 	};
 }
 
-/** How each `pick` target behaves. Separate from the class so the descriptor stays a plain function
- *  of (target, draft) — and so neither this nor the class grows past what one screen can hold. */
+function speciesPickSpec(b: InspectorHost): PickSpec {
+	const lock = settledPick(!!b.settledDraft?.speciesId, b.draft.speciesId);
+	return {
+		kind: 'pick',
+		titleKey: 'speciesTitle',
+		blurbKey: 'speciesBlurb',
+		type: 'species',
+		options: b.speciesList,
+		currentId: b.draft.speciesId,
+		apply: (host, id) => host.pickSpecies(id),
+		blockedKey: lock.blocked,
+		clearable: lock.clearable,
+	};
+}
+
+function speciesOptionPickSpec(b: InspectorHost): PickSpec {
+	const lock = settledPick(!!b.settledDraft?.speciesOptionId, b.draft.speciesOptionId);
+	return {
+		kind: 'pick',
+		// the label is the CONTENT's own word for this choice ("Subrace" / "Lineage"), which no UI
+		// catalog can know — it is data, so it passes through as a value, not a key
+		titleKey: 'lineageTitle',
+		blurbKey: 'speciesOptionBlurb',
+		values: { label: b.speciesOptionLabel, species: rowName(b.speciesRow) },
+		type: 'species_option',
+		options: b.speciesOptions,
+		currentId: b.draft.speciesOptionId,
+		apply: (host, id) => (host.draft.speciesOptionId = id),
+		blockedKey: lock.blocked,
+		clearable: lock.clearable,
+	};
+}
+
+function backgroundPickSpec(b: InspectorHost): PickSpec {
+	const lock = settledPick(!!b.settledDraft?.backgroundId, b.draft.backgroundId);
+	return {
+		kind: 'pick',
+		titleKey: 'backgroundTitle',
+		blurbKey: 'backgroundBlurb',
+		type: 'background',
+		options: b.backgroundList,
+		currentId: b.draft.backgroundId,
+		apply: (host, id) => (host.draft.backgroundId = id),
+		blockedKey: lock.blocked,
+		clearable: lock.clearable,
+	};
+}
+
+function subclassPickSpec(b: InspectorHost, index: number): PickSpec {
+	const cls = b.draft.classes[index];
+	const settledRow = b.settledDraft?.classes.find((c) => c.rowId === cls?.rowId);
+	const lock = settledPick(!!settledRow?.subclassId, cls?.subclassId ?? null);
+	return {
+		kind: 'pick',
+		titleKey: 'subclassTitle',
+		blurbKey: 'subclassBlurb',
+		values: { class: rowName(b.row(cls?.classId ?? null)) },
+		type: 'subclass',
+		options: b.subclassesFor(cls?.classId ?? null),
+		currentId: cls?.subclassId ?? null,
+		apply: (host, id) => host.setSubclass(index, id),
+		blockedKey: lock.blocked,
+		clearable: lock.clearable,
+	};
+}
+
+function featPickSpec(b: InspectorHost, slotKey: string, level: number): PickSpec {
+	const held = b.draft.slotFeats[slotKey] ?? null;
+	const lock = settledPick(!!b.settledDraft?.slotFeats[slotKey], held);
+	return {
+		kind: 'pick',
+		titleKey: 'featTitle',
+		blurbKey: 'featBlurb',
+		values: { level },
+		type: 'feat',
+		// a feat another slot already spent stays in the list and says so, unless its row says it
+		// repeats. Taking one twice grants its benefit once and reads as a bug.
+		options: b.feats.featOptionsFor(level),
+		blockedKey: (id) =>
+			lock.blocked(id) ??
+			(b.feats.featOptionBlocked(id, slotKey) ? 'build.feats.takenElsewhere' : null),
+		currentId: held,
+		apply: (host, id) => host.feats.setSlotFeat(slotKey, id ?? ''),
+		clearable: lock.clearable,
+	};
+}
+
+/** How each `pick` target behaves — one descriptor per target, so this stays a dispatch rather than
+ *  a place specs grow in. Separate from the class so it is a plain function of (target, draft). */
 export function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
-	const settled = b.settledDraft;
 	switch (t.id) {
-		case 'species': {
-			const lock = settledPick(!!settled?.speciesId, b.draft.speciesId);
-			return {
-				kind: 'pick',
-				titleKey: 'speciesTitle',
-				blurbKey: 'speciesBlurb',
-				type: 'species',
-				options: b.speciesList,
-				currentId: b.draft.speciesId,
-				apply: (host, id) => host.pickSpecies(id),
-				blockedKey: lock.blocked,
-				clearable: lock.clearable,
-			};
-		}
-		case 'speciesOption': {
-			const lock = settledPick(!!settled?.speciesOptionId, b.draft.speciesOptionId);
-			return {
-				kind: 'pick',
-				// the label is the CONTENT's own word for this choice ("Subrace" / "Lineage"), which no
-				// UI catalog can know — it is data, so it passes through as a value, not a key
-				titleKey: 'lineageTitle',
-				blurbKey: 'speciesOptionBlurb',
-				values: { label: b.speciesOptionLabel, species: rowName(b.speciesRow) },
-				type: 'species_option',
-				options: b.speciesOptions,
-				currentId: b.draft.speciesOptionId,
-				apply: (host, id) => (host.draft.speciesOptionId = id),
-				blockedKey: lock.blocked,
-				clearable: lock.clearable,
-			};
-		}
-		case 'background': {
-			const lock = settledPick(!!settled?.backgroundId, b.draft.backgroundId);
-			return {
-				kind: 'pick',
-				titleKey: 'backgroundTitle',
-				blurbKey: 'backgroundBlurb',
-				type: 'background',
-				options: b.backgroundList,
-				currentId: b.draft.backgroundId,
-				apply: (host, id) => (host.draft.backgroundId = id),
-				blockedKey: lock.blocked,
-				clearable: lock.clearable,
-			};
-		}
+		case 'species':
+			return speciesPickSpec(b);
+		case 'speciesOption':
+			return speciesOptionPickSpec(b);
+		case 'background':
+			return backgroundPickSpec(b);
 		case 'class':
 			return classPickSpec(b, t.index);
-		case 'subclass': {
-			const cls = b.draft.classes[t.index];
-			const lock = settledPick(
-				!!settled?.classes.find((c) => c.rowId === cls?.rowId)?.subclassId,
-				cls?.subclassId ?? null,
-			);
-			return {
-				kind: 'pick',
-				titleKey: 'subclassTitle',
-				blurbKey: 'subclassBlurb',
-				values: { class: rowName(b.row(cls?.classId ?? null)) },
-				type: 'subclass',
-				options: b.subclassesFor(cls?.classId ?? null),
-				currentId: cls?.subclassId ?? null,
-				apply: (host, id) => host.setSubclass(t.index, id),
-				blockedKey: lock.blocked,
-				clearable: lock.clearable,
-			};
-		}
-		case 'feat': {
-			const lock = settledPick(
-				!!settled?.slotFeats[t.slotKey],
-				b.draft.slotFeats[t.slotKey] ?? null,
-			);
-			return {
-				kind: 'pick',
-				titleKey: 'featTitle',
-				blurbKey: 'featBlurb',
-				values: { level: t.level },
-				type: 'feat',
-				// a feat another slot already spent stays in the list and says so, unless its row says it
-				// repeats. Taking one twice grants its benefit once and reads as a bug.
-				options: b.feats.featOptionsFor(t.level),
-				blockedKey: (id) =>
-					lock.blocked(id) ??
-					(b.feats.featOptionBlocked(id, t.slotKey) ? 'build.feats.takenElsewhere' : null),
-				currentId: b.draft.slotFeats[t.slotKey] ?? null,
-				apply: (host, id) => host.feats.setSlotFeat(t.slotKey, id ?? ''),
-				clearable: lock.clearable,
-			};
-		}
+		case 'subclass':
+			return subclassPickSpec(b, t.index);
+		case 'feat':
+			return featPickSpec(b, t.slotKey, t.level);
 		default:
 			return null;
 	}
