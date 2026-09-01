@@ -32,15 +32,26 @@
 	{:else}
 		<div class="slots">
 			{#if b.feats.originFeatRef}
-				<div class="featrow is-taken">
+				<!-- granted, not chosen — so it is not a slot: the level badge reads "origin", there is no
+				     empty state, and opening it leads to what the feat asks back rather than to a list. -->
+				{@const owed = b.feats.originChoicesOwed}
+				<button
+					class="slot featrow"
+					class:is-taken={owed === 0}
+					class:empty={owed > 0}
+					class:active={b.inspector.isOpen({ id: 'originFeat' })}
+					onclick={() => b.inspector.toggle({ id: 'originFeat' })}
+				>
 					<span class="lvl">{$_('build.feats.origin')}</span>
 					<span class="ftext">
 						<b>{rowName(b.row(b.feats.originFeatRef))}</b>
-						<span class="clamp-2"
-							>{rowText(b.row(b.feats.originFeatRef)) || $_('build.feats.grantedByBackground')}</span
-						>
+						<span class="clamp-2">
+							{owed > 0
+								? $_('build.feats.originOwes', { values: { count: owed } })
+								: rowText(b.row(b.feats.originFeatRef)) || $_('build.feats.grantedByBackground')}
+						</span>
 					</span>
-				</div>
+				</button>
 			{/if}
 
 			{#each b.feats.featSlots as slot (slot.key)}

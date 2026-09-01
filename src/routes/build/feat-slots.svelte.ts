@@ -13,7 +13,7 @@ import type { Ability } from '$lib/rules/core';
 import { asiBoost, halfFeatAbilities } from '$lib/build/derive';
 import { asiFeatLevels } from '$lib/build/rules';
 import { FEAT_CATEGORY } from '$lib/content/schemas';
-import { asiPickCount, toggleCapped } from './draft';
+import { asiPickCount, toggleCapped, ORIGIN_SLOT_KEY } from './draft';
 import { ASI, ASI_FEAT_ID, rowName, rowOfType } from './rows';
 import type { AsiShape } from './draft';
 
@@ -50,6 +50,10 @@ export class FeatSlots {
 		if (!id) return null;
 		return this.host().featList.find((f) => f.id === String(id))?.effectiveId ?? null;
 	});
+	/** The feat a choice-key holds: a slot's pick, or the granted origin feat under its own key. One
+	 *  lookup, because everything a filled slot then asks for is asked of the origin feat too. */
+	featRefFor = (key: string): string | null =>
+		key === ORIGIN_SLOT_KEY ? this.originFeatRef : (this.host().draft.slotFeats[key] ?? null);
 	/** Feat options that make sense for a slot at `level`: origin feats are background-only, and
 	 *  epic boons only unlock at level 19+. (Not a hard block — just the right menu per slot.) */
 	featOptionsFor = (level: number): LoadedRow[] =>
@@ -107,10 +111,10 @@ export class FeatSlots {
 		delete featSk[key];
 		this.host().draft.slotFeatSkills = featSk;
 	};
-	/** The abilities a slot's chosen feat lets you raise by +1 (a half-feat like Grappler / an Epic
-	 *  Boon), or `[]` if the slot holds no half-feat. Reads the feat row's `ability_choice`. */
+	/** The abilities a choice-key's feat lets you raise by +1 (a half-feat like Grappler / an Epic
+	 *  Boon), or `[]` if it holds no half-feat. Reads the feat row's `ability_choice`. */
 	halfFeatOptionsFor = (key: string): Ability[] => {
-		const ref = this.host().draft.slotFeats[key];
+		const ref = this.featRefFor(key);
 		if (!ref || ref === ASI) return [];
 		const feat = rowOfType(this.host().graph?.get(ref), 'feat');
 		return halfFeatAbilities(feat?.data.ability_choice);
@@ -129,7 +133,7 @@ export class FeatSlots {
 		if (!ref || ref === ASI) return 0;
 		return Number(rowOfType(this.host().graph?.get(ref), 'feat')?.data.skill_choice ?? 0) || 0;
 	};
-	/** The chosen skills for a choice-grant key (a feat slot key, or `'origin'` for the BG feat). */
+	/** The chosen skills for a choice-grant key (a feat slot key, or {@link ORIGIN_SLOT_KEY}). */
 	slotFeatSkillsFor = (key: string): string[] => this.host().draft.slotFeatSkills[key] ?? [];
 	/** Toggle a skill in a slot's §C picks, capped at the feat's grant count. */
 	toggleSlotFeatSkill = (key: string, skill: string, cap: number) => {
@@ -154,8 +158,29 @@ export class FeatSlots {
 			for (const s of this.slotFeatSkillsFor(key).slice(0, count)) out.add(s);
 		};
 		for (const s of this.featSlots) take(s.key, this.featSkillCountOf(this.host().draft.slotFeats[s.key]));
-		take('origin', this.featSkillCountOf(this.originFeatRef));
+		take(ORIGIN_SLOT_KEY, this.featSkillCountOf(this.originFeatRef));
 		return [...out];
+	});
+	/**
+	 * How many choices the granted origin feat still owes — its unpicked skills, plus its +1 if the
+	 * background handed over a half-feat and nothing has been assigned.
+	 *
+	 * A granted feat asks its questions exactly like a chosen one does, and a question nobody is told
+	 * about is a grant silently thrown away: Skilled's three skills never reached the character.
+	 */
+	originChoicesOwed = $derived.by<number>(() => {
+		const ref = this.originFeatRef;
+		if (!ref) return 0;
+		const skillsOwed = Math.max(
+			this.featSkillCountOf(ref) - this.slotFeatSkillsFor(ORIGIN_SLOT_KEY).length,
+			0,
+		);
+		const abilityOwed =
+			this.halfFeatOptionsFor(ORIGIN_SLOT_KEY).length &&
+			!this.host().draft.slotFeatAbility[ORIGIN_SLOT_KEY]
+				? 1
+				: 0;
+		return skillsOwed + abilityOwed;
 	});
 
 	// --- per-slot ASI allocation (+2 to one ability, or +1 to two) --------------

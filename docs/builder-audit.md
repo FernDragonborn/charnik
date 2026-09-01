@@ -70,7 +70,7 @@ Work this file does not itself hold:
 - [ ] **Strict on the level-up path.** Under Strict, a level cannot go down and a decision already
   made cannot be re-picked; Free lifts both. Related to B15, which reaches the same flag from the
   expertise side.
-- [ ] **X1. Origin feat needs its own component.** Granted, not chosen — it must not render as a feat
+- [x] **X1. Origin feat needs its own component.** Granted, not chosen — it must not render as a feat
   slot that merely refuses to open (falls out of B13).
 - [x] **X2. A class with no subclass rows is reported by content health.** The builder side is B14;
   this is the other half, and it lives wherever content health already reports a broken class.
@@ -215,7 +215,7 @@ keeps applying the +1/+1 while `AbilitiesPane.svelte:90` hides the chips
 (`boostCarrier === 'species'` is now false). Applied, with no control to see or clear it. Note the
 asymmetry: `backgroundBoosts` (`ability-allocation.svelte.ts:141`) *is* system-gated.
 
-**[ ] B13. A 5.5e origin feat's sub-choices have no UI, and the doc claims otherwise.**
+**[x] B13. A 5.5e origin feat's sub-choices have no UI, and the doc claims otherwise.**
 `feat-slots.svelte.ts:145` reads picks under the `'origin'` key and `draft.ts:71` asserts "the
 origin-feat picker uses the `'origin'` key". The only writer is `toggleSlotFeatSkill`, called only
 from `FeatPane.svelte:101` with a `slotKey`. `SheetFeats.svelte:35-43` renders the origin feat as a

@@ -302,7 +302,8 @@ type TodoKind =
 	| 'abilities'
 	| 'skills'
 	| 'spells'
-	| 'feat';
+	| 'feat'
+	| 'originFeat';
 
 export interface BuildTodo {
 	kind: TodoKind;
@@ -337,6 +338,9 @@ export interface BuildTodoInput {
 	skillChosenCount: number;
 	/** Feat/ASI slots the character has reached and not yet filled. */
 	openFeatSlots: { key: string; level: number; className: string }[];
+	/** The background's granted origin feat and how many choices it still asks for. A grant nobody is
+	 *  told about is a grant thrown away — Skilled hands out three skills or none. */
+	originFeat: { name: string; owed: number };
 	spellPicker: ReturnType<typeof buildSpellPicker>;
 }
 
@@ -413,6 +417,13 @@ export function buildTodos(d: BuildTodoInput): BuildTodo[] {
 			values: { level: slot.level, class: slot.className },
 			slotKey: slot.key,
 			level: slot.level,
+			required: true,
+		});
+	if (d.originFeat.owed > 0)
+		out.push({
+			kind: 'originFeat',
+			key: 'originFeat',
+			values: { feat: d.originFeat.name, count: d.originFeat.owed },
 			required: true,
 		});
 	out.push(...spellTodos(d));

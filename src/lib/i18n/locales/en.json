@@ -684,6 +684,8 @@
 			"needClass": "Choose a class to see which levels offer a feat.",
 			"origin": "origin",
 			"grantedByBackground": "Granted by your background.",
+			"originOwes": "{count, plural, one {# choice still to make.} other {# choices still to make.}}",
+			"noOriginFeat": "This background grants no origin feat.",
 			"takenElsewhere": "Another slot already holds this feat — it grants its benefit once.",
 			"notChosenHint": "Raise your abilities, or take a feat that does what a score cannot.",
 			"asi": "Ability Score Improvement",
@@ -815,7 +817,9 @@
 			"notesTitle": "Story",
 			"notesBlurb": "Bonds, flaws, whatever the table needs to remember. Goes to your GM; it changes nothing on the sheet.",
 			"lineageTitle": "{label}",
-			"lineageFallback": "Lineage"
+			"lineageFallback": "Lineage",
+			"originFeatTitle": "Origin feat",
+			"originFeatBlurb": "Your background grants this feat outright — it is not picked and cannot be cleared. What is left here is what the feat asks you."
 		},
 		"languages": {
 			"chosen": "Chosen {count}",
@@ -833,6 +837,7 @@
 			"skills": "{count, plural, one {Choose # more skill.} other {Choose # more skills.}}",
 			"feat": "Level {level}: take a feat or raise an ability.",
 			"featIn": "Level {level} ({class}): take a feat or raise an ability.",
+			"originFeat": "{feat}: {count, plural, one {# choice} other {# choices}} still to make.",
 			"cantrips": "{count, plural, one {Choose # more cantrip.} other {Choose # more cantrips.}}",
 			"cantripsFor": "{count, plural, one {Choose # more {class} cantrip.} other {Choose # more {class} cantrips.}}",
 			"spells": "{count, plural, one {Choose # more spell.} other {Choose # more spells.}}",

@@ -12,6 +12,7 @@
 	import type { EditPane, Inspector } from '../inspector.svelte';
 	import InspectorGrid from './InspectorGrid.svelte';
 	import FeatPane from './FeatPane.svelte';
+	import OriginFeatPane from './OriginFeatPane.svelte';
 	import AbilitiesPane from './AbilitiesPane.svelte';
 	import SkillsPane from './SkillsPane.svelte';
 	import LanguagesPane from './LanguagesPane.svelte';
@@ -25,6 +26,7 @@
 	 *  `EDIT_PANES` and forgotten here is a type error rather than a blank pane. */
 	const PANE_COMPONENT: Record<EditPane, Component> = {
 		abilities: AbilitiesPane,
+		originFeat: OriginFeatPane,
 		skills: SkillsPane,
 		languages: LanguagesPane,
 		spells: SpellsPane,

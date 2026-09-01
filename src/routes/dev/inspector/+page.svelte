@@ -48,6 +48,7 @@
 			{ label: 'species', target: { id: 'species' } },
 			...lineage,
 			{ label: 'background', target: { id: 'background' } },
+			{ label: 'origin feat', target: { id: 'originFeat' } },
 			{ label: 'class', target: { id: 'class', index: 0 } },
 			{ label: 'subclass', target: { id: 'subclass', index: 0 } },
 			...featSlot,

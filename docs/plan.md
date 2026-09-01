@@ -1322,9 +1322,11 @@ holds the done-work log; these are the OPEN tails it carried):**
   `spell_list` column on the `subclass` row naming the class lists it draws from (RAW an EK/AT casts
   off the WIZARD list, which cannot be inferred from `class_id`). A blank column keeps a subclass out
   of the index — never silently given a list. EK/AT are PHB, not SRD, so coverage lives in fixtures.
-- [ ] **D16 · generalized player-choice model.** Half-feat ability-choice is DONE (§ Builder, 2026-08-02);
-  still open: Magic Initiate spell picks + Skilled skill/tool-choice grants — both need the shared
-  choice UI (see `docs/n2-plan.md` feat tail). One "player choice at a slot" abstraction covers all.
+- [ ] **D16 · generalized player-choice model.** Half-feat ability-choice and Skilled's skill grants
+  are DONE, at a level's slot AND under the background's granted origin feat — both ask through the
+  same `FeatSubChoices` block, keyed by a slot key or by `ORIGIN_SLOT_KEY`. Still open: Magic Initiate
+  spell picks, and the tool half of Skilled (tools are not modelled — see `docs/n2-plan.md` feat tail).
+  One "player choice at a slot" abstraction covers all.
 - [ ] **D6 / D10 / E4 · mechanics from prose → columns.** `effectHint`/`healDice`/`durationToRounds`/
   `castingIcon` hardcode spell names EN-only; most SRD spells still ship EMPTY `effects` columns (E4)
   so there are no tokens to summarize. Tracked live under UBUG-9 (the caption idea) — E4 is its blocker.
@@ -2435,7 +2437,8 @@ holds the done-work log; these are the OPEN tails it carried):**
   - **Needs vocab the L1 grammar lacks** → left as text (engine already surfaces it): weapon-type-
     conditional bonuses (Archery +2 ranged attack), armor-gated bonuses (Defense +1 AC while armored),
     once-per-turn damage rerolls (Savage Attacker / Great Weapon Fighting), spell grants (Magic
-    Initiate), skill/tool CHOICE grants (Skilled — needs a choice UI too).
+    Initiate), the tool half of a CHOICE grant (Skilled — its skill half has its picker, under a slot
+    and under the origin feat alike; tools are not modelled).
 - [x] **Plugin sandbox** (QuickJS-WASM) — see `docs/internals/plugins.md`.
 **Spellcasting follow-ups:**
 - [~] **Resource subsystem** — engine + tracker DONE. `grant_resource:<id>:<max>:<recharge>` parsed

@@ -62,6 +62,9 @@ export type InspectorTarget =
  */
 export const EDIT_PANES = {
 	abilities: { titleKey: 'abilitiesTitle', blurbKey: 'abilitiesBlurb', ownsScroll: false },
+	// an `edit` pane rather than a `pick` one because nothing here is chosen: the background hands the
+	// feat over, and the pane exists for the questions it then asks back
+	originFeat: { titleKey: 'originFeatTitle', blurbKey: 'originFeatBlurb', ownsScroll: false },
 	skills: { titleKey: 'skillsTitle', blurbKey: 'skillsBlurb', ownsScroll: false },
 	languages: { titleKey: 'languagesTitle', blurbKey: 'languagesBlurb', ownsScroll: false },
 	spells: { titleKey: 'spellsTitle', blurbKey: 'spellsBlurb', ownsScroll: true },

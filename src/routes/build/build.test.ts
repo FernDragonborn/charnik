@@ -12,7 +12,7 @@ import { listDrafts, deleteDraft } from '$lib/character/draft-repository';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import { build, ASI } from './build-view-model.svelte';
-import { newClassRow } from './draft';
+import { newClassRow, ORIGIN_SLOT_KEY } from './draft';
 import { targetForTodo } from './inspector-specs';
 import { toggleSource } from '$lib/content/sources.svelte';
 
@@ -39,9 +39,20 @@ async function graphOf(): Promise<ContentGraph> {
 	await st.write(
 		'c/feats_srd.csv',
 		[
-			'id,systems,source,name_en,category',
-			`alert,5.5e,${S},Alert,general`,
-			`tough,5.5e,${S},Tough,general`
+			'id,systems,source,name_en,category,ability_choice,skill_choice',
+			`alert,5.5e,${S},Alert,general,,`,
+			`tough,5.5e,${S},Tough,general,,`,
+			`skilled,5.5e,${S},Skilled,origin,,3`,
+			// a half-feat origin feat: no SRD background grants one, a homebrew pack may
+			`gifted,5.5e,${S},Gifted,origin,"str,dex",`
+		].join('\n')
+	);
+	await st.write(
+		'c/backgrounds_srd.csv',
+		[
+			'id,systems,source,name_en,skills,origin_feat',
+			`scholar,5.5e,${S},Scholar,"arcana,history",skilled`,
+			`prodigy,5.5e,${S},Prodigy,,gifted`
 		].join('\n')
 	);
 	await st.write(
@@ -567,6 +578,46 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(spec?.options.map((r) => r.effectiveId)).toContain(`feat:${S}:alert`);
 		expect(spec?.blockedKey?.(`feat:${S}:alert`)).toBe('build.feats.takenElsewhere');
 		expect(spec?.blockedKey?.(`feat:${S}:tough`)).toBeNull();
+	});
+
+	it('a granted origin feat asks its own choices, and they land on the character (B13)', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.backgroundId = `background:${S}:scholar`;
+		expect(build.feats.originFeatRef).toBe(`feat:${S}:skilled`);
+		// Skilled grants three skills of the player's choice — unpicked, they are three choices owed,
+		// and the review bar says so instead of the grant quietly evaporating
+		expect(build.feats.originChoicesOwed).toBe(3);
+		expect(build.todos.map((t) => t.kind)).toContain('originFeat');
+
+		for (const skill of ['stealth', 'athletics', 'survival'])
+			build.feats.toggleSlotFeatSkill(ORIGIN_SLOT_KEY, skill, 3);
+		expect(build.feats.originChoicesOwed).toBe(0);
+		expect(build.assembled.build.featSkills).toEqual(
+			expect.arrayContaining(['stealth', 'athletics', 'survival'])
+		);
+		expect(build.todos.map((t) => t.kind)).not.toContain('originFeat');
+	});
+
+	it("a granted half-feat's +1 is asked for, and reaches the ability score (B13)", () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.abilities = { str: 8, dex: 14, con: 14, int: 15, wis: 10, cha: 12 };
+		build.draft.backgroundId = `background:${S}:prodigy`;
+		expect(build.feats.halfFeatOptionsFor(ORIGIN_SLOT_KEY)).toEqual(['str', 'dex']);
+		expect(build.feats.originChoicesOwed).toBe(1);
+
+		build.feats.setSlotFeatAbility(ORIGIN_SLOT_KEY, 'dex');
+		expect(build.feats.originChoicesOwed).toBe(0);
+		expect(build.assembled.build.abilityBoosts.dex).toBe(1);
+
+		// and a level-up of that character applies it once, not twice — the same reconciliation the
+		// slots get, because the origin feat re-derives its own boost too
+		const saved = characterSchema.parse(build.assembled);
+		build.reset();
+		build.graph = graph;
+		build.hydrate(saved);
+		expect(build.assembled.build.abilityBoosts.dex).toBe(1);
 	});
 
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {

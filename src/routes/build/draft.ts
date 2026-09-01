@@ -73,6 +73,15 @@ export const newClassRow = (): DraftClass => ({
 	level: 1,
 });
 
+/**
+ * The key the background's origin feat keeps its own choices under.
+ *
+ * Not a `<rowId>:<level>` slot, because the feat is GRANTED rather than chosen — but the choices it
+ * then asks for (a half-feat's +1, a Skilled-shaped feat's skills) are the same shape as a slot's, so
+ * they live in the same maps under one reserved key.
+ */
+export const ORIGIN_SLOT_KEY = 'origin';
+
 /** The four per-slot maps as the draft holds them — keyed `<rowId>:<level>`. */
 export interface SlotMaps {
 	slotFeats: Record<string, string>;
@@ -132,7 +141,8 @@ export interface DraftState {
 	 *  (any) grants, keyed by slot. Folds into `abilityBoosts` at assemble. */
 	slotFeatAbility: Record<string, Ability>;
 	/** §C skill choice-grant per slot: the chosen skill ids for a feat that grants N picks (Skilled),
-	 *  keyed by slot (the origin-feat picker uses the `'origin'` key). Folds into `build.featSkills`. */
+	 *  keyed by slot (the origin feat's own picks live under {@link ORIGIN_SLOT_KEY}). Folds into
+	 *  `build.featSkills`. */
 	slotFeatSkills: Record<string, string[]>;
 	selectedSpells: string[];
 	inventory: { item: string; qty: number; equipped: boolean; attuned: boolean }[];

@@ -134,6 +134,7 @@ describe('buildTodos', () => {
 		classSkillCount: 0,
 		skillChosenCount: 0,
 		openFeatSlots: [],
+		originFeat: { name: '', owed: 0 },
 		spellPicker: []
 	};
 	const kinds = (input: BuildTodoInput) => buildTodos(input).map((t) => t.kind);
@@ -174,5 +175,15 @@ describe('buildTodos', () => {
 		expect(todos.map((t) => t.kind)).toEqual(['subclass', 'feat', 'feat']);
 		expect(todos[0]).toMatchObject({ index: 0, level: 3 });
 		expect(todos.slice(1).map((t) => t.slotKey)).toEqual(['p-4', 'p-8']);
+	});
+	it('a granted origin feat that still asks something is one line, naming the feat', () => {
+		expect(buildTodos({ ...done, originFeat: { name: 'Skilled', owed: 3 } })[0]).toMatchObject({
+			kind: 'originFeat',
+			key: 'originFeat',
+			values: { feat: 'Skilled', count: 3 },
+			required: true
+		});
+		// nothing left to choose — a granted feat is not a todo just for being granted
+		expect(kinds({ ...done, originFeat: { name: 'Alert', owed: 0 } })).toEqual([]);
 	});
 });

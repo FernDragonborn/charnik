@@ -29,7 +29,7 @@ import {
 import { parseSpeciesBoostChoice, speciesFixedAbilities } from '$lib/build/derive';
 import { splitList } from '$lib/content/schemas';
 import { signed } from '$lib/util/format';
-import { toggleCapped } from './draft';
+import { toggleCapped, ORIGIN_SLOT_KEY } from './draft';
 import { ASI } from './rows';
 import type { DraftState, EditContext } from './draft';
 import type { FeatSlots } from './feat-slots.svelte';
@@ -185,10 +185,11 @@ export class AbilityAllocation {
 		const out: Partial<Record<Ability, number>> = {};
 		const add = (m: Partial<Record<Ability, number>>) => addBoosts(out, m);
 		for (const s of this.host().feats.featSlots) if (this.host().draft.slotFeats[s.key] === ASI) add(this.host().feats.asiBoostFor(s.key));
-		// half-feat +1 (Grappler STR/DEX, Epic Boon any) — the chosen ability of each half-feat slot
-		for (const s of this.host().feats.featSlots) {
-			const ab = this.host().draft.slotFeatAbility[s.key];
-			if (ab && this.host().feats.halfFeatOptionsFor(s.key).includes(ab)) out[ab] = (out[ab] ?? 0) + 1;
+		// half-feat +1 (Grappler STR/DEX, Epic Boon any) — the chosen ability of each half-feat slot, and
+		// of the granted origin feat, which asks the same question without being a slot
+		for (const key of [...this.host().feats.featSlots.map((s) => s.key), ORIGIN_SLOT_KEY]) {
+			const ab = this.host().draft.slotFeatAbility[key];
+			if (ab && this.host().feats.halfFeatOptionsFor(key).includes(ab)) out[ab] = (out[ab] ?? 0) + 1;
 		}
 		return out;
 	}

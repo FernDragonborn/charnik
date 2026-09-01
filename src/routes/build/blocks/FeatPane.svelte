@@ -5,14 +5,12 @@
 	// skill-granting feat's picks) open right under it.
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
-	import { build, rowName, ASI } from '../build-view-model.svelte';
-	import { skillLabel } from '../rows';
+	import { build, ASI } from '../build-view-model.svelte';
 	import type { Inspector } from '../inspector.svelte';
 	import { ABILITIES } from '$lib/character/schema';
-	import { SKILL_ABILITY } from '$lib/character/skills';
 	import InspectorGrid from './InspectorGrid.svelte';
+	import FeatSubChoices from './FeatSubChoices.svelte';
 	const b = build;
-	const SKILLS = Object.keys(SKILL_ABILITY);
 
 	// `ins` is a prop for the same reason InspectorGrid takes one — see there.
 	let { slotKey, ins }: { slotKey: string; ins: Inspector } = $props();
@@ -71,57 +69,9 @@
      keeps a short pane from clipping the grid AND the chips at once. -->
 <InspectorGrid {ins} placeholder={$_('build.feats.searchFeats')}>
 	{#snippet extra()}
-	<!-- a taken feat's own sub-choices: the +1 a half-feat grants, and the skills a Skilled-shaped feat
-	     hands out. They belong to the slot, so they live with it rather than in a separate pane. -->
-{#if chosen && chosen !== ASI}
-	{@const halfOpts = b.feats.halfFeatOptionsFor(slotKey)}
-	{#if halfOpts.length}
-		<div class="alloc">
-			<span class="eyebrow"
-				>{$_('build.feats.halfFeatAsk', { values: { feat: rowName(b.row(chosen)) } })}</span
-			>
-			<div class="chips">
-				{#each halfOpts as ab (ab)}
-					<button
-						class="pick-chip"
-						class:on={b.draft.slotFeatAbility[slotKey] === ab}
-						onclick={() => b.feats.setSlotFeatAbility(slotKey, ab)}>{ab.toUpperCase()}</button
-					>
-				{/each}
-			</div>
-		</div>
-	{/if}
-	{@const skillCount = b.feats.featSkillCountOf(chosen)}
-	{#if skillCount > 0}
-		{@const picks = b.feats.slotFeatSkillsFor(slotKey)}
-		<div class="alloc">
-			<span class="eyebrow">
-				{$_('build.feats.skillGrant', {
-					values: { chosen: Math.min(picks.length, skillCount), cap: skillCount }
-				})}
-				<span class="gold">{$_('build.feats.toolsNote')}</span>
-			</span>
-			<div class="chips">
-				{#each SKILLS as skill (skill)}
-					{@const on = picks.includes(skill)}
-					<!-- blocked only by ANOTHER slot already granting it. Being at the cap is not a block:
-					     a click there replaces the oldest pick, so the grant is never a dead end. -->
-					{@const blocked =
-						b.draft.strict && b.feats.featSkillTakenElsewhere(slotKey, skill) && !on}
-					<button
-						class="pick-chip"
-						class:on
-						class:dim={blocked}
-						disabled={blocked}
-						onclick={() => b.feats.toggleSlotFeatSkill(slotKey, skill, skillCount)}
-					>
-						{skillLabel(skill, $_)}
-					</button>
-				{/each}
-			</div>
-		</div>
-	{/if}
-{/if}
+		<!-- a taken feat's own sub-choices belong to the slot, so they live with it rather than in a
+		     separate pane — and they are the same block the granted origin feat renders. -->
+		<FeatSubChoices choiceKey={slotKey} />
 	{/snippet}
 </InspectorGrid>
 
@@ -163,11 +113,5 @@
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		line-height: 1.45;
-	}
-	.alloc {
-		display: flex;
-		flex-direction: column;
-		flex: none;
-		gap: var(--space-2);
 	}
 </style>

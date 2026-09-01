@@ -482,6 +482,10 @@ export class BuildVM {
 			classSkillCount: this.skillPicks.classSkillCount,
 			skillChosenCount: this.skillPicks.chosenCount,
 			openFeatSlots: this.feats.featSlots.filter((s) => !this.draft.slotFeats[s.key]),
+			originFeat: {
+				name: rowName(this.row(this.feats.originFeatRef)),
+				owed: this.feats.originChoicesOwed,
+			},
 			spellPicker: this.spellPicks.picker
 		})
 	);
