@@ -29,6 +29,8 @@ const POINT_BUY_COST: Record<number, number> = {
 
 /** The ceiling for the WHOLE character, not for one class: multiclass levels sum into it. */
 export const MAX_CHARACTER_LEVEL = 20;
+/** 5.5e: the level an Epic Boon becomes a legal pick for a feat slot. */
+export const EPIC_BOON_MIN_LEVEL = 19;
 
 export const POINT_BUY_BUDGET = 27;
 export const POINT_BUY_MIN = 8;

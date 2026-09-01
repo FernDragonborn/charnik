@@ -445,6 +445,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const STAT_METHODS`
 - `type StatMethod`
 - `const MAX_CHARACTER_LEVEL` — The ceiling for the WHOLE character, not for one class: multiclass levels sum into it.
+- `const EPIC_BOON_MIN_LEVEL` — 5.5e: the level an Epic Boon becomes a legal pick for a feat slot.
 - `const POINT_BUY_BUDGET`
 - `const POINT_BUY_MIN`
 - `const POINT_BUY_MAX`
@@ -1526,4 +1527,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 900 exports across 125 modules · 58 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 901 exports across 125 modules · 58 duplicate suspects._

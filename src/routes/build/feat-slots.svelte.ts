@@ -11,7 +11,7 @@ import type { LoadedRow } from '$lib/content/loader';
 import type { BuildVM } from './build-view-model.svelte';
 import type { Ability } from '$lib/rules/core';
 import { asiBoost, halfFeatAbilities } from '$lib/build/derive';
-import { asiFeatLevels } from '$lib/build/rules';
+import { asiFeatLevels, EPIC_BOON_MIN_LEVEL } from '$lib/build/rules';
 import { FEAT_CATEGORY } from '$lib/content/schemas';
 import { asiPickCount, toggleCapped, ORIGIN_SLOT_KEY } from './draft';
 import { ASI, ASI_FEAT_ID, rowName, rowOfType } from './rows';
@@ -62,7 +62,7 @@ export class FeatSlots {
 			if (f.id === ASI_FEAT_ID) return false;
 			const cat = String(f.data.category ?? FEAT_CATEGORY.general);
 			if (cat === FEAT_CATEGORY.origin) return false;
-			if (cat === FEAT_CATEGORY.epicBoon) return level >= 19;
+			if (cat === FEAT_CATEGORY.epicBoon) return level >= EPIC_BOON_MIN_LEVEL;
 			return true;
 		});
 	// ASI may be taken in every slot; a feat is repeatable iff its row says so.

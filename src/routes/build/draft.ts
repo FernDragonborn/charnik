@@ -98,16 +98,24 @@ export interface SlotMaps {
  * carries an id is left alone, so this costs one pass and never fires twice.
  */
 export function adoptRowIds(rows: DraftClass[], slots: SlotMaps): void {
+	// one element type, so a write into any of them is a write of that map's own value type — the
+	// four maps hold different values, and reading them as one union makes every write a cast
+	const maps: Record<string, unknown>[] = [
+		slots.slotFeats,
+		slots.slotAsi,
+		slots.slotFeatAbility,
+		slots.slotFeatSkills,
+	];
 	rows.forEach((row, index) => {
 		if (row.rowId) return;
 		row.rowId = crypto.randomUUID();
-		for (const map of [slots.slotFeats, slots.slotAsi, slots.slotFeatAbility, slots.slotFeatSkills])
+		for (const map of maps)
 			for (const key of Object.keys(map)) {
 				const [prefix, level] = key.split(':');
 				if (prefix !== String(index) || !level) continue;
 				// the row's own key, under the number it used to be
-				(map as Record<string, unknown>)[`${row.rowId}:${level}`] = map[key];
-				delete (map as Record<string, unknown>)[key];
+				map[`${row.rowId}:${level}`] = map[key];
+				delete map[key];
 			}
 	});
 }

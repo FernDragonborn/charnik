@@ -404,7 +404,7 @@ everything else falls to `entryMeta(row)` (`detail.ts:375-404`), which emits raw
 spell picker and the 773-row item picker. `e33cd11` fixed the stringify hazard here and left the
 locale hole.
 
-**[ ] S9. Metric conversion is hand-rolled in four places, past the existing helpers.**
+**[x] S9. Metric conversion is hand-rolled in four places, past the existing helpers.**
 `SheetVitals.svelte:21` uses `* 0.3` (not 0.3048), so 30 ft renders "9 m" while `CombatStrip.svelte:62`
 renders "9.1 m" from the shared `metres()` (`combat/constants.ts:91`). It also breaks ui.md §6
 (imperial first, metric in parentheses) — there is no `ft` unit at all. Same `* 0.3` at
@@ -417,7 +417,7 @@ renders "9.1 m" from the shared `metres()` (`combat/constants.ts:91`). It also b
 `rowName()`. Keying that list on the name (`:38 (a.name)`) is also fragile — two rows with the same
 `name_en` from different sources is a duplicate-key crash.
 
-**[ ] S11. `String(clsRow.data.saves).toUpperCase()`** — `SheetClasses.svelte:83`. The schema is
+**[x] S11. `String(clsRow.data.saves).toUpperCase()`** — `SheetClasses.svelte:83`. The schema is
 `csvList(z.array(Ability)…)`, so this is `Array.prototype.toString` → "STR,CON", while `rows.ts:101`
 formats the same column properly → "STR, CON". One fact, two spellings, and exactly the hazard
 `pickerMeta`'s own comment (`rows.ts:96-99`) warns about.
@@ -465,20 +465,20 @@ literal `damageType.sonic`, and the guard that exists for this does not look at 
 only because ESLint ignores blocks containing a comment; the next branch already does what the comment
 claims.
 
-**[ ] N2.** `previewIsCurrent` (`inspector.svelte.ts:330-332`) is dead — grep of `src/` returns only the
+**[x] N2.** `previewIsCurrent` (`inspector.svelte.ts:330-332`) is dead — grep of `src/` returns only the
 definition.
 
-**[~] N3.** Two comments describe deleted behaviour. `draft-session.svelte.ts:30-33` still says the option
+**[x] N3.** Two comments describe deleted behaviour. `draft-session.svelte.ts:30-33` still says the option
 preview "derives the sheet on a TRIAL draft and puts the draft back" — `ee92794` removed the put-back
 entirely. `feat-slots.svelte.ts:6` says the slot key is `"class-4"` while `:43` produces
 `${i}:${level}`, the format the whole of `class-picks-cache.ts` parses.
 
-**[ ] N4.** Two names for one fact: `primaryClassId` / `classId` (`:237-238`), and `backgroundSkills` /
+**[x] N4.** Two names for one fact: `primaryClassId` / `classId` (`:237-238`), and `backgroundSkills` /
 `autoSkills` (`:327-329`, where the first has exactly one reader — the second). `csv` is spelled two
 ways for the same import: `const csv = splitList` (`:58`) against
 `import { splitList as csv }` (`ability-allocation.svelte.ts:27`).
 
-**[ ] N5.** Two `as` casts standing in for the banned `!`: `:418` `c.classId as string` (a `flatMap`
+**[x] N5.** Two `as` casts standing in for the banned `!`: `:418` `c.classId as string` (a `flatMap`
 narrows it honestly) and `:423` `abilityBoosts as Record<string, number>` (asserts a `Partial` is
 total, which it is not).
 
@@ -486,16 +486,16 @@ total, which it is not).
 `draft.system === '5.5e'` three lines after `:130-132` exposes the named predicate that
 `AbilitiesPane.svelte:73` already uses.
 
-**[~] N7.** Bare literals where a named constant belongs: `20` as the level cap twice (`:245`, `:263`);
+**[x] N7.** Bare literals where a named constant belongs: `20` as the level cap twice (`:245`, `:263`);
 `19` for epic boon (`feat-slots.svelte.ts:60`); `3`/`1`/`20`/`30` for manual score bounds and
 `value ?? 8` where `POINT_BUY_MIN` is already imported (`ability-allocation.svelte.ts:106-107, 121`).
 
-**[ ] N8.** Hardcoded English reaching the screen: `String(… ?? 'Lineage')` (`:205`, rendered as the
+**[x] N8.** Hardcoded English reaching the screen: `String(… ?? 'Lineage')` (`:205`, rendered as the
 inspector title), `name: … || 'Unnamed'` (`:408`), `slugify(...) || 'hero'` twice (`:456`, `:547`).
 `SheetOrigin.svelte:91` promises `{ count: 2 }` skills for an unchosen background — a number from
 nowhere. `SheetInventory.svelte:47` prints a literal `AC {ac}` though `build.vitals.ac` exists.
 
-**[ ] N9.** `<title>Build — Charnik</title>` is hardcoded (`+page.svelte:110`), as in 6 of 7 routes; only
+**[x] N9.** `<title>Build — Charnik</title>` is hardcoded (`+page.svelte:110`), as in 6 of 7 routes; only
 the roster (`routes/+page.svelte:49`) uses the catalog. `WikiDetail.svelte:43` prints an untranslated
 "Select an entry to see its detail." inside the picker card.
 
@@ -507,12 +507,12 @@ nothing. The `e.code` house rule is about physical shortcuts; a confirm key need
 and `card-placement.ts:35-41` picks a side from `rail.left` alone. The repo uses a logical property in
 exactly one file.
 
-**[ ] N12.** Two dead i18n keys in both catalogs: `build.resources.needClass`, `build.inspector.taken`.
+**[x] N12.** Two dead i18n keys in both catalogs: `build.resources.needClass`, `build.inspector.taken`.
 
-**[ ] N13.** `optionDomId` (`option-walk.ts:61`) does `replace(/[^\w-]/g, '_')`, so `srd:fire bolt` and
+**[x] N13.** `optionDomId` (`option-walk.ts:61`) does `replace(/[^\w-]/g, '_')`, so `srd:fire bolt` and
 `srd_fire:bolt` produce one DOM id. Theoretical, but it feeds `aria-activedescendant`.
 
-**[ ] N14.** `class:free={true}` is a constant dressed as a directive — `BuildHead.svelte:58`.
+**[x] N14.** `class:free={true}` is a constant dressed as a directive — `BuildHead.svelte:58`.
 
 **[~] N15.** Test coverage stops at the small pure helpers. No unit tests for `classFeatureLines`,
 `openSubclassChoices`, `buildSpellPicker` — the three that touch the graph, the edition gate and
