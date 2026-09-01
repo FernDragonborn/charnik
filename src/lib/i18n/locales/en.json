@@ -533,6 +533,12 @@
 		"undo": "Undo (Ctrl+Z)",
 		"redo": "Redo (Ctrl+Shift+Z)",
 		"ruleset": "Ruleset",
+		"edition": {
+			"title": "Switch to {system}?",
+			"subtitle": "{count, plural, one {One pick has no equivalent in that edition and will be cleared.} other {# picks have no equivalent in that edition and will be cleared.}}",
+			"keep": "Stay here",
+			"switch": "Switch to {system}"
+		},
 		"enforcement": "Enforcement",
 		"strict": "Strict",
 		"free": "Free",
@@ -861,6 +867,17 @@
 			"draftNotSaved": "This build isn't being saved",
 			"draftNotSavedBody": "Charnik can't write to your data folder, so nothing here is on disk. Check the folder still exists and has room, then make any change to try again."
 		}
+	},
+	"contentType": {
+		"species": "Species",
+		"species_option": "Lineage",
+		"background": "Background",
+		"class": "Class",
+		"subclass": "Subclass",
+		"feat": "Feat",
+		"language": "Language",
+		"item": "Item",
+		"spell": "Spell"
 	},
 	"skillName": {
 		"acrobatics": "Acrobatics",

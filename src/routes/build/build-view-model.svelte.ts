@@ -31,6 +31,7 @@ import { Inspector, targetForTodo } from './inspector.svelte';
 import { SkillPicks } from './skill-picks.svelte';
 import { SpellPicks } from './spell-picks.svelte';
 import type { ContentType } from '$lib/content/schemas';
+import type { SystemId } from '$lib/stores/app.svelte';
 import { slugify } from '$lib/util/slug';
 import { FeatSlots } from './feat-slots.svelte';
 import { AbilityAllocation } from './ability-allocation.svelte';
@@ -44,6 +45,7 @@ import {
 	newClassRow,
 	draftFromCharacter,
 	selectedRefs,
+	allSelectedRefs,
 	parseDraftState,
 	type DraftState,
 	type EditContext
@@ -214,6 +216,51 @@ export class BuildVM {
 		this.draft.speciesId = id;
 		this.draft.speciesOptionId = null;
 		this.draft.speciesBoostPicks = [];
+	};
+
+	// --- the edition this character is built in --------------------------------
+	/**
+	 * What switching to `system` would drop: every pick whose row does not exist in that edition.
+	 *
+	 * A ref that resolves to nothing at all is left out — that pick is already broken, and switching
+	 * is not what broke it.
+	 */
+	picksLostBySwitching = (system: SystemId): { type: ContentType; ref: string; name: string }[] => {
+		const graph = this.graph;
+		if (!graph) return [];
+		return allSelectedRefs(this.draft).flatMap(({ type, ref }) => {
+			const row = graph.get(ref);
+			return row && !row.systems.includes(system) ? [{ type, ref, name: rowName(row) }] : [];
+		});
+	};
+
+	/**
+	 * Change the edition, taking the picks the new one has no row for with it.
+	 *
+	 * Leaving them in place is what made a 5e Half-Elf keep applying its +1/+1 after a flip to 5.5e:
+	 * the species still RESOLVED by id, so the boost was still allocated, while the chips that let
+	 * you see or clear it were gone with the edition that offered them. A pick the current edition
+	 * cannot show is a pick nobody can undo.
+	 */
+	switchSystem = (system: SystemId) => {
+		const dropped = new Set(this.picksLostBySwitching(system).map((p) => p.ref));
+		this.draft.system = system;
+		if (!dropped.size) return;
+		if (this.draft.speciesId && dropped.has(this.draft.speciesId)) this.pickSpecies(null);
+		if (this.draft.speciesOptionId && dropped.has(this.draft.speciesOptionId))
+			this.draft.speciesOptionId = null;
+		if (this.draft.backgroundId && dropped.has(this.draft.backgroundId))
+			this.draft.backgroundId = null;
+		this.draft.classes.forEach((row, i) => {
+			if (row.subclassId && dropped.has(row.subclassId)) this.setSubclass(i, null);
+			// through `switchClass`, so the row's slot picks and its stash are handled the one way
+			if (row.classId && dropped.has(row.classId)) switchClass(this.draft, i, null, this.classPicks);
+		});
+		for (const [key, ref] of Object.entries(this.draft.slotFeats))
+			if (dropped.has(ref)) this.feats.setSlotFeat(key, '');
+		this.draft.selectedLanguages = this.draft.selectedLanguages.filter((r) => !dropped.has(r));
+		this.draft.selectedSpells = this.draft.selectedSpells.filter((r) => !dropped.has(r));
+		this.draft.inventory = this.draft.inventory.filter((i) => !dropped.has(i.item));
 	};
 
 	// --- multiclass rows -------------------------------------------------------

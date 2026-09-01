@@ -517,6 +517,25 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.feats.featOptionBlocked(alert, at(4))).toBe(false);
 	});
 
+	it('switching edition clears the picks the new one has no row for (B12)', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.speciesId = `species:${S}:hardy`; // 5.5e only, like everything in this fixture
+		build.setClass(0, `class:${S}:wizard`);
+		build.draft.selectedSpells = [`spell:${S}:fireball`];
+
+		const losing = build.picksLostBySwitching('5e');
+		expect(losing.map((p) => p.type).sort()).toEqual(['class', 'species', 'spell']);
+
+		build.switchSystem('5e');
+		expect(build.draft.system).toBe('5e');
+		expect(build.draft.speciesId).toBeNull();
+		expect(build.draft.classes[0]?.classId).toBeNull();
+		expect(build.draft.selectedSpells).toEqual([]);
+		// and nothing is left applying itself from behind a picker that can no longer show it
+		expect(build.assembled.build.abilityBoosts).toEqual({});
+	});
+
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {
 		build.hydrate(savedCharacter()); // picks class = wizard (source S); fighter stays unpicked
 		const wizard = `class:${S}:wizard`;

@@ -337,7 +337,13 @@ export function draftSummary(draft: DraftState): {
  *  picker (and stays re-pickable) — mirroring how the spellbook keeps the character's own spells
  *  regardless of the source filter. Refs are stored as `effectiveId` (the picker option values). */
 export function selectedRefs(draft: DraftState, type: ContentType): Set<string> {
-	const refsByType: Partial<Record<ContentType, (string | null)[]>> = {
+	return new Set((refsHeld(draft)[type] ?? []).filter((x): x is string => !!x));
+}
+
+/** Every ref the draft holds, by the type it was picked from. ONE table: a newly picked field is
+ *  added here and both readers — the per-type picker filter and the edition switch — see it. */
+function refsHeld(draft: DraftState): Partial<Record<ContentType, (string | null)[]>> {
+	return {
 		species: [draft.speciesId],
 		species_option: [draft.speciesOptionId],
 		background: [draft.backgroundId],
@@ -348,7 +354,13 @@ export function selectedRefs(draft: DraftState, type: ContentType): Set<string> 
 		item: draft.inventory.map((i) => i.item),
 		spell: draft.selectedSpells
 	};
-	return new Set((refsByType[type] ?? []).filter((x): x is string => !!x));
+}
+
+/** Flat, for anything that has to look at the whole set of picks rather than one type of them. */
+export function allSelectedRefs(draft: DraftState): { type: ContentType; ref: string }[] {
+	return Object.entries(refsHeld(draft)).flatMap(([type, refs]) =>
+		refs.flatMap((ref) => (ref ? [{ type: type as ContentType, ref }] : []))
+	);
 }
 
 /** What a level-up / edit carries over from the loaded character (null on the BuildVM = creating). */

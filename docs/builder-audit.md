@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **24 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **26 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -201,7 +201,7 @@ attributes each chosen spell to **one** caster class via `casterForSpell`. The g
 take *Cure Wounds* as a Wizard, though the tally would have charged it to whichever class
 `casterForSpell` names.
 
-**[ ] B12. Switching edition mid-draft leaves an invisible, unremovable species ASI.**
+**[x] B12. Switching edition mid-draft leaves an invisible, unremovable species ASI.**
 `BuildHead.svelte:53` writes `b.draft.system = sys` and nothing else. `speciesRow` (`:174-176`)
 resolves through `graph.get(id)`, not the system-filtered `list()`, so a 5e Half-Elf still resolves
 after a flip to 5.5e and `speciesBoostChoice` stays non-null. `ability-allocation.svelte.ts:170-173`
@@ -276,7 +276,7 @@ shortcut in both pickers, but from the walk Enter maps to `read` (`picker-readin
 nothing else takes. The only keyboard route is tabbing to the row's `.addbtn`, which `OptionGrid` does
 not have at all — there the sole take is Enter → card → tab past every cell → Take.
 
-**[ ] A6. Segment toggles in the masthead have no focus ring and no state for AT.** `build.css:327-338`
+**[x] A6. Segment toggles in the masthead have no focus ring and no state for AT.** `build.css:327-338`
 `.build-page .segment-group button { all: unset; … }` at specificity (0,2,1) beats the global
 `:focus-visible { outline: var(--focus-ring) }` (`app.css:36`, (0,1,0)) and never re-adds it. Every
 other `all: unset` control in the module (`.slot`, `.pick-chip`, `.jumpbtn`, `.sect`, `.sbody`,

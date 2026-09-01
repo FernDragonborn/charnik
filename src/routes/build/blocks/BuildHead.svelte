@@ -10,7 +10,21 @@
 	import { build } from '../build-view-model.svelte';
 	import { SYSTEMS } from '$lib/rules/pipeline';
 	import { signed } from '$lib/util/format';
+	import EditionSwitchDialog from './EditionSwitchDialog.svelte';
+	import type { SystemId } from '$lib/stores/app.svelte';
 	const b = build;
+
+	/** The edition the user asked for, while they confirm what it costs. */
+	let pendingSystem = $state<SystemId | null>(null);
+	const losing = $derived(pendingSystem ? b.picksLostBySwitching(pendingSystem) : []);
+
+	/** Switching outright when nothing is lost: a confirmation with an empty list is a dialog that
+	 *  only ever costs a click. */
+	function askSwitch(sys: SystemId) {
+		if (sys === b.draft.system) return;
+		if (b.picksLostBySwitching(sys).length) pendingSystem = sys;
+		else b.switchSystem(sys);
+	}
 </script>
 
 <header class="head">
@@ -50,27 +64,56 @@
 		<!-- iterates the ONE system list, so a third system is a row in SYSTEM_LABELS, not a button
 		     somebody has to remember to add here (docs/internals/compatibility.md) -->
 		{#each SYSTEMS as sys (sys)}
-			<button class:on={b.draft.system === sys} onclick={() => (b.draft.system = sys)}>{sys}</button>
+			<button
+				class:on={b.draft.system === sys}
+				aria-pressed={b.draft.system === sys}
+				onclick={() => askSwitch(sys)}>{sys}</button
+			>
 		{/each}
 	</div>
 	<div class="segment-group" role="group" aria-label={$_('build.enforcement')}>
-		<button class:on={b.draft.strict} onclick={() => (b.draft.strict = true)} title={$_('build.strictHint')}>{$_('build.strict')}</button>
-		<button class:free={true} class:on={!b.draft.strict} onclick={() => (b.draft.strict = false)} title={$_('build.freeHint')}>{$_('build.free')}</button>
+		<button
+			class:on={b.draft.strict}
+			aria-pressed={b.draft.strict}
+			onclick={() => (b.draft.strict = true)}
+			title={$_('build.strictHint')}>{$_('build.strict')}</button
+		>
+		<button
+			class="free"
+			class:on={!b.draft.strict}
+			aria-pressed={!b.draft.strict}
+			onclick={() => (b.draft.strict = false)}
+			title={$_('build.freeHint')}>{$_('build.free')}</button
+		>
 	</div>
 	<div class="segment-group" role="group" aria-label={$_('build.shortRest')}>
 		<!-- per-character rules variant: Dice = RAW (spend Hit Dice), Half = ½ max HP (BG3/house style) -->
 		<button
 			class:on={b.draft.shortRestMode === 'dice'}
+			aria-pressed={b.draft.shortRestMode === 'dice'}
 			onclick={() => (b.draft.shortRestMode = 'dice')}
 			title={$_('build.shortRestDiceHint')}><Icon name="flame-kindling" size={12} /> {$_('build.shortRestDice')}</button
 		>
 		<button
 			class:on={b.draft.shortRestMode === 'half'}
+			aria-pressed={b.draft.shortRestMode === 'half'}
 			onclick={() => (b.draft.shortRestMode = 'half')}
 			title={$_('build.shortRestHalfHint')}><Icon name="flame-kindling" size={12} /> {$_('build.shortRestHalf')}</button
 		>
 	</div>
 </header>
+
+{#if pendingSystem}
+	<EditionSwitchDialog
+		system={pendingSystem}
+		{losing}
+		onConfirm={() => {
+			if (pendingSystem) b.switchSystem(pendingSystem);
+			pendingSystem = null;
+		}}
+		onCancel={() => (pendingSystem = null)}
+	/>
+{/if}
 
 <style>
 	/* `.visually-hidden` is the global screen-reader util in app.css — no local copy (C2). */

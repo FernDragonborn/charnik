@@ -336,6 +336,13 @@
 .build-page .segment-group button:hover {
 	color: var(--color-text);
 }
+/* `all: unset` above takes the global focus ring with it, and at (0,2,1) it outranks the `:focus-visible`
+   rule in app.css — so every control that unsets has to put it back (as `.slot`, `.pick-chip`, `.cell`
+   and the rest of the module already do). */
+.build-page .segment-group button:focus-visible {
+	outline: var(--focus-ring);
+	outline-offset: -2px;
+}
 .build-page .segment-group button.on {
 	background: var(--color-good-soft);
 	color: var(--color-good);
