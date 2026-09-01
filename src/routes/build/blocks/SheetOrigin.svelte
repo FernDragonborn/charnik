@@ -74,7 +74,7 @@
 			<span class="eyebrow">{$_('build.origin.background')}</span>
 			{#if background}
 				<b class="pickname">{rowName(background)}</b>
-				<div class="chips tags">
+				<span class="chips tags">
 					{#each bgSkills as s (s)}<span class="tag gold">{s}</span>{/each}
 					{#each bgTools as t (t)}<span class="tag muted">{t}</span>{/each}
 					{#if Number(background.data.languages) > 0}
@@ -85,17 +85,17 @@
 						>
 					{/if}
 					{#each bgBoosts as a (a)}<span class="tag gold">{a}</span>{/each}
-				</div>
+				</span>
 			{:else}
 				<b class="pickname">{$_('build.notChosen')}</b>
-				<div class="chips tags">
+				<span class="chips tags">
 					<!-- what a background gives is data, so an unchosen one promises nothing countable: two
 					     skills is the SRD's usual shape, not a rule, and a number here would be inventing
 					     game data on a card that has none yet -->
 					<span class="tag ghost">{$_('build.origin.backgroundSkillsUnknown')}</span>
 					<span class="tag ghost">{$_('build.origin.backgroundTool')}</span>
 					<span class="tag ghost wanted">{$_('build.origin.backgroundBoosts')}</span>
-				</div>
+				</span>
 			{/if}
 		</button>
 	</div>

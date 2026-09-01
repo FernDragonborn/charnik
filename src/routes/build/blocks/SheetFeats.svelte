@@ -34,12 +34,12 @@
 			{#if b.feats.originFeatRef}
 				<div class="featrow is-taken">
 					<span class="lvl">{$_('build.feats.origin')}</span>
-					<div class="ftext">
+					<span class="ftext">
 						<b>{rowName(b.row(b.feats.originFeatRef))}</b>
 						<span class="clamp-2"
 							>{rowText(b.row(b.feats.originFeatRef)) || $_('build.feats.grantedByBackground')}</span
 						>
-					</div>
+					</span>
 				</div>
 			{/if}
 
@@ -55,7 +55,7 @@
 					<span class="lvl" class:done={!!chosen}
 						>{multi ? `${slot.className.slice(0, 3)} ` : ''}L{slot.level}</span
 					>
-					<div class="ftext">
+					<span class="ftext">
 						{#if chosen === ASI}
 							<b>{$_('build.feats.asi')}</b>
 							<span class="clamp-2">{asiSummary(slot.key)}</span>
@@ -66,7 +66,7 @@
 							<b>{$_('build.notChosen')}</b>
 							<span class="clamp-2">{$_('build.feats.notChosenHint')}</span>
 						{/if}
-					</div>
+					</span>
 				</button>
 			{/each}
 

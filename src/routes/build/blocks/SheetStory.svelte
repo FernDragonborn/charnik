@@ -48,9 +48,11 @@
 		>
 			<span class="eyebrow">{$_('build.story.heading')}</span>
 			{#if bullets.length}
-				<ul>
-					{#each bullets.slice(0, 4) as line, i (i)}<li>{line}</li>{/each}
-				</ul>
+				<!-- spans, not a list: a button's content model is phrasing content, and a `<ul>` inside
+				     one is invalid — the lines are a preview of the notes, not a list to navigate -->
+				<span class="lines">
+					{#each bullets.slice(0, 4) as line, i (i)}<span class="line">{line}</span>{/each}
+				</span>
 				{#if bullets.length > 4}<span class="more"
 						>{$_('build.story.more', { values: { count: bullets.length - 4 } })}</span
 					>{/if}
@@ -98,11 +100,17 @@
 		background: var(--color-surface-2);
 		text-align: left;
 	}
-	.notes ul {
-		margin: 0;
-		padding-left: 17px;
+	.notes .lines {
+		display: flex;
+		flex-direction: column;
 		font-size: var(--font-size-xs);
 		line-height: 1.55;
+	}
+	/* the bullet a `<li>` used to draw, on a span that is allowed inside a button */
+	.notes .line::before {
+		content: '·';
+		color: var(--color-text-muted);
+		margin-right: var(--space-1-5);
 	}
 	.empty-note,
 	.more {

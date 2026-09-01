@@ -131,16 +131,16 @@
 					onclick={() => readFeature(f.row.effectiveId)}
 				>
 					<span class="lvl" class:sub={f.fromSubclass}>{f.level}</span>
-					<div class="ftext">
+					<span class="ftext">
 						<b>{rowName(f.row)}</b>
 						{#if prose}<span class="clamp-2">{prose}</span>{/if}
-					</div>
+					</span>
 				</button>
 			{/each}
 			{#each upcomingLines as f (`${f.className}:${f.row.effectiveId}:${f.level}`)}
 				<div class="feature ahead">
 					<span class="lvl">{f.level}</span>
-					<div class="ftext">
+					<span class="ftext">
 						<b>{rowName(f.row)}</b>
 						<span class="clamp-2"
 							>{$_(
@@ -148,7 +148,7 @@
 								{ values: { level: f.level } }
 							)}</span
 						>
-					</div>
+					</span>
 				</div>
 			{/each}
 		</div>

@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **54 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **55 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -330,7 +330,7 @@ whole rationale in `card-placement.ts:1-12` is "vertically level with the entry"
 feat cell. ui.md §6: reading and taking are separate controls. The ASI card is also outside
 `picker.ids`, so arrows and Home/End can never reach it.
 
-**[ ] A15. Provenance is mouse-only, and buttons wrap flow content.** ui.md §3 requires provenance on
+**[~] A15. Provenance is mouse-only, and buttons wrap flow content.** ui.md §3 requires provenance on
 hover **or focus**, but `SheetVitals.svelte:16-18`, `SheetDefenses.svelte:65` and `SkillRows.svelte:67`
 put `title={why(...)}` on plain `<div>`/`<span>` that never take focus. Separately
 `SheetStory.svelte:43-59` nests `<ul><li>` inside `<button>`, and `SheetClasses.svelte:126-138`,
