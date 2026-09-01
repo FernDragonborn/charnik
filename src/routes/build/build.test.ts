@@ -13,6 +13,7 @@ import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import { build, ASI } from './build-view-model.svelte';
 import { newClassRow } from './draft';
+import { targetForTodo } from './inspector-specs';
 import { toggleSource } from '$lib/content/sources.svelte';
 
 const S = 'SRD 5.2.1';
@@ -534,6 +535,38 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.draft.selectedSpells).toEqual([]);
 		// and nothing is left applying itself from behind a picker that can no longer show it
 		expect(build.assembled.build.abilityBoosts).toEqual({});
+	});
+
+	it('every todo points at the control that fixes it (N15)', () => {
+		// the review bar is only useful if its lines are links, and a todo whose target is wrong opens
+		// a pane about something else entirely
+		expect(targetForTodo({ key: 'name', kind: 'name', required: true })).toBeNull();
+		expect(targetForTodo({ key: 'class', kind: 'class', required: true, index: 1 })).toEqual({
+			id: 'class',
+			index: 1,
+		});
+		expect(
+			targetForTodo({ key: 'feat', kind: 'feat', required: false, slotKey: 'r0:4', level: 4 }),
+		).toEqual({ id: 'feat', slotKey: 'r0:4', level: 4 });
+		expect(targetForTodo({ key: 'skills', kind: 'skills', required: true })).toEqual({
+			id: 'skills',
+		});
+	});
+
+	it('a feat spent in another slot is offered with a reason, not withheld (N15)', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 8 },
+		];
+		const at = (level: number) => build.feats.featSlots.find((s) => s.level === level)?.key ?? '';
+		build.feats.setSlotFeat(at(8), `feat:${S}:alert`);
+
+		build.inspector.open({ id: 'feat', slotKey: at(4), level: 4 });
+		const spec = build.inspector.pick;
+		expect(spec?.options.map((r) => r.effectiveId)).toContain(`feat:${S}:alert`);
+		expect(spec?.blockedKey?.(`feat:${S}:alert`)).toBe('build.feats.takenElsewhere');
+		expect(spec?.blockedKey?.(`feat:${S}:tough`)).toBeNull();
 	});
 
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {

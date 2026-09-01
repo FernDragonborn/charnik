@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **53 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **54 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -364,7 +364,7 @@ of `draft`, false of the derivations over it:
 - Species free-boost `:216-234` — ability allocation living outside `AbilityAllocation`, which already
   consumes `speciesBoostChoice` back through the host
 
-**[ ] S3. `inspector.svelte.ts` is three modules.** (1) `EDIT_PANES` + `editSpecFor`, lines 63-141;
+**[x] S3. `inspector.svelte.ts` is three modules.** (1) `EDIT_PANES` + `editSpecFor`, lines 63-141;
 (2) the pick-descriptor table `classesOfferedTo` + `classPickSpec` + `pickSpecFor`, lines 143-260 —
 118 lines of pure `(target, host) → Spec` with no runes; (3) the `Inspector` class, 262-376, the only
 part needing `.svelte.ts`. Moving (1) and (2) to a plain `inspector-specs.ts` leaves a 114-line class
@@ -512,7 +512,7 @@ exactly one file.
 
 **[ ] N14.** `class:free={true}` is a constant dressed as a directive — `BuildHead.svelte:58`.
 
-**[ ] N15.** Test coverage stops at the small pure helpers. No unit tests for `classFeatureLines`,
+**[~] N15.** Test coverage stops at the small pure helpers. No unit tests for `classFeatureLines`,
 `openSubclassChoices`, `buildSpellPicker` — the three that touch the graph, the edition gate and
 multiclass attribution, which is why B11, B14 and S5 are invisible to the gate — nor for
 `ability-allocation.svelte.ts`, `card-placement.ts`, `picker-reading.svelte.ts`.
