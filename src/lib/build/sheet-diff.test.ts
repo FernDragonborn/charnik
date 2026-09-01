@@ -158,7 +158,8 @@ describe('socialBars', () => {
 		// CHA 14 (+2) beats the WIS/DEX-based social skills → passive 12
 		const sway = bars.find((b) => b.id === 'sway');
 		expect(sway).toMatchObject({ passive: 12 });
-		expect(['Persuasion', 'Intimidation', 'Deception', 'Performance']).toContain(sway?.via);
+		// a skill ID, not a word: this module has no locale, and the component says the name
+		expect(['persuasion', 'intimidation', 'deception', 'performance']).toContain(sway?.via);
 		expect(sway?.fill).toBeCloseTo((12 - 5) / 25);
 	});
 

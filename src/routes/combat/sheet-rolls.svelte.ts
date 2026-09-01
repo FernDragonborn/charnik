@@ -8,6 +8,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
+import { attackName } from '$lib/combat/attacks';
 import type { Character } from '$lib/character/schema';
 import type { CharacterSheet } from '$lib/character/derive';
 import { rollPool } from '$lib/rules/dice';
@@ -146,7 +147,7 @@ export class SheetRolls {
 			// tray on the TO-HIT (pick advantage), then Roll fires the damage as one combined entry
 			this.openRoll(
 				{
-					label: at.name,
+					label: attackName(at, t),
 					dice: { 20: 1 },
 					mod: at.toHit + fx.flat,
 					advantage: netAdvantage(fx),
@@ -155,7 +156,7 @@ export class SheetRolls {
 				},
 				e,
 			);
-			if (hasDmg) this.host().tray.queueDamage({ label: `${at.name} damage`, parts });
+			if (hasDmg) this.host().tray.queueDamage({ label: `${attackName(at, t)} damage`, parts });
 			return;
 		}
 		this.rollAttackNow(at);
@@ -166,7 +167,7 @@ export class SheetRolls {
 	 * attacks calls (UBUG-11) — a Flurry of Blows already paid one bonus action for the pair, so each
 	 * strike inside it must not try to pay again. `label` distinguishes the strikes in the log.
 	 */
-	rollAttackNow = (at: Attack, label = at.name) => {
+	rollAttackNow = (at: Attack, label = attackName(at, t)) => {
 		const { parts, fx, hasDmg } = this.attackSpec(at);
 		// instant: to-hit (with effect advantage/flat/dice) + per-type damage → one combined entry
 		const toHit = rollPool(

@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **49 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **51 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -390,7 +390,7 @@ It works only because every call site spells the keys in the same order today. T
 (`Inspector.svelte:112`) rests on property-declaration order in unrelated `.svelte` files. A small
 `sameTarget(a, b)` switch on `id` cannot silently disagree.
 
-**[ ] S7. `social.ts` holds user-facing English in a pure module.** `:36-38` `label: 'Sway'` — dead, since
+**[x] S7. `social.ts` holds user-facing English in a pure module.** `:36-38` `label: 'Sway'` — dead, since
 `SheetStory.svelte:36` reads `$_('build.social.' + bar.id)` — and `:55` `via: titleCase(best)`,
 rendered directly at `SheetStory.svelte:38`. `skillLabel(id, t)` already exists (`rows.ts:85-86`).
 ui.md:245 forbids a sentence in a pure module outright.
@@ -409,7 +409,7 @@ renders "9.1 m" from the shared `metres()` (`combat/constants.ts:91`). It also b
 `SheetOrigin.svelte:40` and `rows.ts:107`; `SheetInventory.svelte:78` uses `* 0.45` instead of
 `kilograms()` (0.4536). Both helpers are in `docs/surface.md:636-637`.
 
-**[ ] S10. Attack names bypass i18n.** `SheetAttacks.svelte:39` renders `{a.name}`, where
+**[x] S10. Attack names bypass i18n.** `SheetAttacks.svelte:39` renders `{a.name}`, where
 `combat/attacks.ts:222` sets `name: row.data.name_en` and `:239` hardcodes `name: 'Unarmed Strike'`
 (with `dmg: \`${1 + strMod} bludgeoning\`` beside it). Every other row on the sheet goes through
 `rowName()`. Keying that list on the name (`:38 (a.name)`) is also fragile — two rows with the same

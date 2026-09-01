@@ -15,7 +15,7 @@ import type { Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { rollFormula } from '$lib/rules/dice';
 import { ACTION_SLOT_LABEL, type ActionSlot } from '$lib/combat/helpers';
-import type { Attack } from '$lib/combat/attacks';
+import { attackName, type Attack } from '$lib/combat/attacks';
 import type { RollTray } from './roll-tray.svelte';
 import type { SheetRolls } from './sheet-rolls.svelte';
 import type { TurnEconomy } from './turn-economy.svelte';
@@ -239,7 +239,10 @@ export class ActionExecutor {
 		// numbered, because two identical entries in the log are indistinguishable otherwise — and
 		// which of the two Flurry strikes hit is exactly what the player is reading the log for
 		for (let i = 0; i < count; i++)
-			this.host().rolls.rollAttackNow(at, count > 1 ? `${at.name} ${i + 1}/${count}` : at.name);
+			this.host().rolls.rollAttackNow(
+				at,
+				count > 1 ? `${attackName(at, t)} ${i + 1}/${count}` : attackName(at, t),
+			);
 	}
 
 	/** `apply_effect:<id>` — apply a NAMED catalog buff/debuff (Rage, Bless-as-action…) via the SAME add

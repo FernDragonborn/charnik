@@ -615,6 +615,7 @@
 		},
 		"attacks": {
 			"title": "Атаки",
+			"unarmedStrike": "Удар без зброї",
 			"perTurn": "{count, plural, one {# атака} few {# атаки} many {# атак} other {# атак}} за дію «Атака»",
 			"equipment": "Спорядження…",
 			"colAttack": "Атака",

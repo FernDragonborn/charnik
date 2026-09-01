@@ -803,9 +803,11 @@ describe('CombatVM · S2 split net', () => {
 	});
 
 	it('attacks: an equipped weapon + Unarmed Strike are offered; attackRoll logs a roll', () => {
-		const names = combat.attacks.map((a) => a.name);
-		expect(names).toContain('Dagger');
-		expect(names).toContain('Unarmed Strike');
+		// by id: a weapon's name is its row's, in the reader's language, and the unarmed strike has no
+		// row to take one from — what identifies an attack is what an action token can name
+		const ids = combat.attacks.map((a) => a.id);
+		expect(ids).toContain('dagger');
+		expect(ids).toContain(UNARMED_STRIKE_ID);
 		const before = combat.tray.log.length;
 		combat.attackRoll(combat.attacks[0]!, noModifiers);
 		expect(combat.tray.log.length).toBe(before + 1);
@@ -1622,7 +1624,9 @@ describe('CombatVM · an action that attacks (UBUG-11)', () => {
 
 		combat.activateResourceOption(flurry({ action: `attack:${UNARMED_STRIKE_ID}` }));
 		expect(combat.tray.log.length - before).toBe(1);
-		expect(combat.tray.log[0]?.label).toBe('Unarmed Strike'); // unnumbered when there is only one
+		// unnumbered when there is only one. The label is the catalog KEY here: node has no catalog
+		// loaded, and the point of the assertion is the numbering, not the word.
+		expect(combat.tray.log[0]?.label).toBe('combat.attacks.unarmedStrike');
 
 		character.play.turn.bonus = 0; // fresh turn for the second activation
 		combat.activateResourceOption(flurry({ action: `attack:${UNARMED_STRIKE_ID}:500` }));

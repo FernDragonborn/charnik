@@ -5,12 +5,13 @@
 	// here rather than after the character exists.
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
-	import { computeAttacks } from '$lib/combat/attacks';
+	import { attackName, computeAttacks } from '$lib/combat/attacks';
+	import { app } from '$lib/stores/app.svelte';
 	import { signed } from '$lib/util/format';
 	const b = build;
 
 	const attacks = $derived(
-		b.sheet && b.graph ? computeAttacks(b.assembled, b.sheet, b.graph) : []
+		b.sheet && b.graph ? computeAttacks(b.assembled, b.sheet, b.graph, app.activeLocale) : []
 	);
 	const extraAttacks = $derived(b.sheet?.facts.numeric.filter((f) => f.target === 'attacks') ?? []);
 	const perTurn = $derived(1 + extraAttacks.reduce((n, f) => n + (f.amount ?? 0), 0));
@@ -35,8 +36,10 @@
 			<span class="eyebrow h">{$_('build.attacks.colToHit')}</span>
 			<span class="eyebrow h">{$_('build.attacks.colDamage')}</span>
 			<span class="eyebrow h">{$_('build.attacks.colNotes')}</span>
-			{#each attacks as a (a.name)}
-				<b class="aname">{a.name}</b>
+			<!-- keyed on the id AND the position: two sources can ship the same weapon id, and a
+			     duplicate key is a crash rather than a wrong row -->
+			{#each attacks as a, i (`${a.id}-${i}`)}
+				<b class="aname">{attackName(a, $_)}</b>
 				<span class="hit">{signed(a.toHit)}</span>
 				<span class="dmg">{a.dmg}</span>
 				<span class="ameta">{[a.meta, a.note].filter(Boolean).join(' · ')}</span>

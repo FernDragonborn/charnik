@@ -12,6 +12,7 @@ import { parseDicePool, parseFlatModifier, formatDicePool } from '$lib/rules/dic
 import { signed } from '$lib/util/format';
 import { parseToken, EFFECT_KIND } from '$lib/effects/token-parser';
 import { effectTag } from './effects-view';
+import { localizedName } from '$lib/content/detail';
 
 /** One typed slice of a weapon's damage: its dice pool, flat mod, and damage type. A plain weapon is
  *  one part ("1d8 slashing"); a multi-type weapon is several ("1d6 slashing" + "1d4 radiant"). */
@@ -31,7 +32,12 @@ export interface Attack {
 	 *  token names when it fires this attack, so the match survives translation and re-sourcing.
 	 *  `name` is what a person reads; it is not an identity. */
 	id: string;
+	/** The weapon row's name in the READER's language. Empty for the one attack that has no row —
+	 *  see `nameKey`. */
 	name: string;
+	/** A catalog key naming this attack, for the one that is not a content row. Read through
+	 *  `attackName`, which is the only place that has to know about the pair. */
+	nameKey?: string;
 	toHit: number;
 	/** Human-readable damage (built from `damageParts`); shown in the panel. */
 	dmg: string;
@@ -46,6 +52,12 @@ export interface Attack {
 	 *  or a visible degrade note for a bonus v1 can't fold yet (dice / expression). */
 	note?: string;
 }
+
+/** What to print for an attack. A weapon carries its row's localized name; the unarmed strike is not
+ *  a content row, so it carries a key instead — and nothing outside here has to know which is which.
+ *  Takes the translator rather than importing one, like `skillLabel`. */
+export const attackName = (attack: Attack, t: (key: string) => string): string =>
+	attack.nameKey ? t(attack.nameKey) : attack.name;
 
 /** The trailing damage-type word(s) of a segment ("1d8 +3 slashing" → "slashing"), or "" if none. */
 function segmentType(segment: string): string {
@@ -163,6 +175,7 @@ export function computeAttacks(
 	character: Character,
 	sheet: CharacterSheet,
 	graph: ContentGraph,
+	locale = 'en',
 ): Attack[] {
 	const prof = sheet.proficiencyBonus,
 		strMod = sheet.abilities.str.mod,
@@ -219,7 +232,8 @@ export function computeAttacks(
 		const damageParts = [...baseParts, ...(w.extraParts ?? [])];
 		out.push({
 			id: row.id,
-			name: row.data.name_en,
+			// the same name the compendium and every other row on the sheet print
+			name: localizedName(row, locale),
 			toHit: mod + (proficient ? prof : 0) + w.attack + scoped.attack,
 			dmg: formatDamageParts(damageParts),
 			damageParts,
@@ -236,7 +250,8 @@ export function computeAttacks(
 	const unarmedScoped = scopedAttackBonus(sheet.facts, unarmedScopes);
 	out.push({
 		id: UNARMED_STRIKE_ID,
-		name: 'Unarmed Strike',
+		name: '',
+		nameKey: 'combat.attacks.unarmedStrike',
 		toHit: strMod + prof + unarmedScoped.attack,
 		scopes: [...unarmedScopes],
 		dmg: `${1 + strMod} bludgeoning`,

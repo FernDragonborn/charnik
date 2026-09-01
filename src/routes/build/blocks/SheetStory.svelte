@@ -10,6 +10,7 @@
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
 	import { socialBars } from '$lib/build/social';
+	import { skillLabel } from '../rows';
 	import { why } from '$lib/combat/effects-view';
 	const b = build;
 
@@ -30,12 +31,12 @@
 				<div
 					class="bar"
 					title="{$_('build.story.barHint', {
-						values: { skill: bar.via, passive: bar.passive }
+						values: { skill: skillLabel(bar.via, $_), passive: bar.passive }
 					})} — {why(bar.trace)}"
 				>
 					<span class="blabel">{$_(`build.social.${bar.id}`)}</span>
 					<span class="meter"><span style:width="{bar.fill * 100}%"></span></span>
-					<span class="bvia">{bar.via} {bar.passive}</span>
+					<span class="bvia">{skillLabel(bar.via, $_)} {bar.passive}</span>
 				</div>
 			{/each}
 		</div>

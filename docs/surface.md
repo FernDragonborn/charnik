@@ -627,6 +627,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface DamagePart` — One typed slice of a weapon's damage: its dice pool, flat mod, and damage type.
 - `const UNARMED_STRIKE_ID` — The one id a bare-fisted attack answers to — it has no content row, and an action that says * "make two Unarmed Strik…
 - `interface Attack` — A weapon/unarmed attack row.
+- `const attackName` — What to print for an attack.
 - `function parseDamageParts` — Parse a weapon/spell damage string into its typed parts.
 - `function formatDamageParts` — Render typed damage parts back to a display string ("1d8 +3 slashing", "1d6 slashing + 1d4 * radiant").
 - `function weaponBonus` — D9: fold a weapon's own `effects` tokens into a per-weapon attack/damage bonus.
@@ -1523,4 +1524,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 897 exports across 125 modules · 58 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 898 exports across 125 modules · 58 duplicate suspects._

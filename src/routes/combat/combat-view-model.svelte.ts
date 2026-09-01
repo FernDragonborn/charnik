@@ -9,6 +9,7 @@
  */
 import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
+import { app } from '$lib/stores/app.svelte';
 import { ensureActiveCharacter, saveCharacterToStore } from '$lib/character/store.svelte';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { deriveSheet, type CharacterSheet, type SkillId } from '$lib/character/derive';
@@ -494,7 +495,7 @@ class CombatVM {
 
 	attacks = $derived.by<Attack[]>(() =>
 		this.character && this.sheet && this.graph
-			? computeAttacks(this.character, this.sheet, this.graph)
+			? computeAttacks(this.character, this.sheet, this.graph, app.activeLocale)
 			: [],
 	);
 

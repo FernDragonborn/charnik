@@ -615,6 +615,7 @@
 		},
 		"attacks": {
 			"title": "Attacks",
+			"unarmedStrike": "Unarmed Strike",
 			"perTurn": "{count, plural, one {# attack} other {# attacks}} per Attack action",
 			"equipment": "Equipment…",
 			"colAttack": "Attack",
