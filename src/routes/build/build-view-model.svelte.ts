@@ -55,6 +55,9 @@ import { DraftSession } from './draft-session.svelte';
 import { DraftHistory } from './draft-history.svelte';
 import { parseClassPicks, removeClassRow, switchClass, type ClassScopedPicks } from './class-picks-cache';
 
+/** The id a character with no usable name gets. Not copy — an id, and one the user never reads. */
+const FALLBACK_SLUG = 'hero';
+
 
 /**
  * What is left here is the draft itself and the derivations that read all of it. Everything with a
@@ -208,8 +211,10 @@ export class BuildVM {
 	});
 	speciesOptionRow = $derived(rowOfType(this.row(this.draft.speciesOptionId), 'species_option'));
 	/** Label for the sub-picker (e.g. "Subrace" 2014 / "Lineage" 2024), from the options' data. */
+	/** The CONTENT's own word for this choice ("Subrace" 2014, "Lineage" 2024). A pack that names
+	 *  none falls back to the catalog's word rather than to an English one written here. */
 	speciesOptionLabel = $derived(
-		String(this.speciesOptions[0]?.data.option_label ?? 'Lineage')
+		String(this.speciesOptions[0]?.data.option_label ?? t('build.spec.lineageFallback'))
 	);
 	/** Pick a species; clears the now-stale sub-option + free-boost choices. */
 	pickSpecies = (id: string | null) => {
@@ -264,8 +269,8 @@ export class BuildVM {
 	};
 
 	// --- multiclass rows -------------------------------------------------------
+	/** Row 0's class. RAW it is the one that drives the saving throws, the skill list and the ASI. */
 	primaryClassId = $derived<string | null>(this.draft.classes[0]?.classId ?? null);
-	classId = $derived<string | null>(this.primaryClassId); // primary drives saves/skills/ASI
 	classRow = $derived(rowOfType(this.row(this.primaryClassId), 'class'));
 	/** Total character level = sum of all class levels (drives prof, HP, feat slots). */
 	totalLevel = $derived(
@@ -346,7 +351,7 @@ export class BuildVM {
 
 	assembled = $derived.by<Character>(() => {
 		const build = {
-			name: this.draft.name || 'Unnamed',
+			name: this.draft.name || t('build.unnamed'),
 			species: this.draft.speciesId ?? undefined,
 			// only persist the sub-option if it's valid for the chosen species (guards a stale pick)
 			speciesOption: this.speciesOptions.some((o) => o.effectiveId === this.draft.speciesOptionId)
@@ -367,7 +372,11 @@ export class BuildVM {
 						: [],
 				),
 			abilities: { ...this.draft.abilities },
-			abilityBoosts: this.abilities.abilityBoosts as Record<string, number>,
+			// dropped rather than cast: a `Partial` asserted to be total is a lie about the six keys,
+			// and only the abilities that were actually boosted belong in the saved record
+			abilityBoosts: Object.fromEntries(
+				Object.entries(this.abilities.abilityBoosts).flatMap(([ab, n]) => (n ? [[ab, n]] : []))
+			),
 			skills: [...new Set([...this.skillPicks.autoSkills, ...this.draft.skills])],
 			// §C feat-granted skills (Skilled) kept in their OWN field so the class-skill cap counter isn't
 			// inflated on edit; carried verbatim on edit (like abilityBoosts) + new slot picks on top
@@ -400,7 +409,7 @@ export class BuildVM {
 		};
 		// editing keeps the original id + play/ui; creating derives a fresh id from the name
 		return assembleCharacter(build, {
-			id: this.edit?.id ?? (slugify(this.draft.name) || 'hero'),
+			id: this.edit?.id ?? (slugify(this.draft.name) || FALLBACK_SLUG),
 			system: this.draft.system,
 			strict: this.draft.strict,
 			shortRestMode: this.draft.shortRestMode,
@@ -467,7 +476,7 @@ export class BuildVM {
 			hasSpecies: !!this.draft.speciesId,
 			needsSpeciesOption: this.speciesOptions.length > 0 && !this.draft.speciesOptionId,
 			hasBackground: !!this.draft.backgroundId,
-			hasClass: !!this.classId,
+			hasClass: !!this.primaryClassId,
 			openSubclasses: this.openSubclasses,
 			pointsLeft: this.abilities.pointsLeft,
 			classSkillCount: this.skillPicks.classSkillCount,
@@ -505,7 +514,7 @@ export class BuildVM {
 			// collision-free id (slug + suffix) so two same-named builds don't overwrite (D14).
 			// Editing/level-up: keep the existing id + play state (HP, effects, spent slots…).
 			if (!this.edit) {
-				character.id = await uniqueCharacterId(getUserStorage(), slugify(this.draft.name) || 'hero');
+				character.id = await uniqueCharacterId(getUserStorage(), slugify(this.draft.name) || FALLBACK_SLUG);
 				character.play.hp.current = this.sheet?.maxHp.value ?? 0;
 			}
 			await saveCharacterToStore(character);

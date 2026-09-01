@@ -27,7 +27,7 @@ import {
 	type StatMethod,
 } from '$lib/build/rules';
 import { parseSpeciesBoostChoice, speciesFixedAbilities } from '$lib/build/derive';
-import { splitList as csv } from '$lib/content/schemas';
+import { splitList } from '$lib/content/schemas';
 import { signed } from '$lib/util/format';
 import { toggleCapped } from './draft';
 import { ASI } from './rows';
@@ -163,7 +163,7 @@ export class AbilityAllocation {
 		return boostCarrier(this.host().draft.system);
 	}
 	get backgroundBoostChoices(): Ability[] {
-		return csv(this.host().backgroundRow?.data.ability_choices).filter((a): a is Ability =>
+		return splitList(this.host().backgroundRow?.data.ability_choices).filter((a): a is Ability =>
 			(ABILITIES as readonly string[]).includes(a),
 		);
 	}

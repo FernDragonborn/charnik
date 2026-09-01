@@ -5,6 +5,7 @@
 	import { build } from '../build-view-model.svelte';
 	import { signed } from '$lib/util/format';
 	import { why } from '$lib/combat/effects-view';
+	import { metres } from '$lib/combat/constants';
 	const b = build;
 
 	const s = $derived(b.sheet);
@@ -18,7 +19,7 @@
 		<div class="tile" title={why(s.initiative)}><b>{signed(s.initiative.value)}</b><small>{$_('build.vitals.initiative')}</small></div>
 		<div class="tile" title={why(s.speed)}>
 			<b>{s.speed.value}</b><small
-				>{$_('build.vitals.speed', { values: { metres: Math.round(s.speed.value * 0.3) } })}</small
+				>{$_('build.vitals.speed', { values: { metres: metres(s.speed.value) } })}</small
 			>
 		</div>
 		{#if s.hitDice.length}

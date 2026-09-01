@@ -7,6 +7,7 @@
 	import { skillLabel } from '../rows';
 	import { splitList } from '$lib/content/schemas';
 	import { titleCase } from '$lib/util/format';
+	import { metres } from '$lib/combat/constants';
 	import type { InspectorTarget } from '../inspector.svelte';
 	const b = build;
 
@@ -37,7 +38,7 @@
 						values: {
 							size: titleCase(String(species.data.size)),
 							feet: Number(species.data.speed),
-							metres: Math.round(Number(species.data.speed) * 0.3)
+							metres: metres(Number(species.data.speed))
 						}
 					})}{#if species.data.creature_type}{' · ' + titleCase(String(species.data.creature_type))}{/if}
 				</span>
@@ -88,7 +89,10 @@
 			{:else}
 				<b class="pickname">{$_('build.notChosen')}</b>
 				<div class="tags">
-					<span class="tag ghost">{$_('build.origin.backgroundSkills', { values: { count: 2 } })}</span>
+					<!-- what a background gives is data, so an unchosen one promises nothing countable: two
+					     skills is the SRD's usual shape, not a rule, and a number here would be inventing
+					     game data on a card that has none yet -->
+					<span class="tag ghost">{$_('build.origin.backgroundSkillsUnknown')}</span>
 					<span class="tag ghost">{$_('build.origin.backgroundTool')}</span>
 					<span class="tag ghost wanted">{$_('build.origin.backgroundBoosts')}</span>
 				</div>

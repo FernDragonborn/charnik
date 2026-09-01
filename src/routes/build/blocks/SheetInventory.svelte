@@ -6,6 +6,7 @@
 	import { _ } from '$lib/i18n';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
 	import { why } from '$lib/combat/effects-view';
+	import { kilograms } from '$lib/combat/constants';
 	import { tagInt, ITEM_TAG } from '$lib/content/item-tags';
 	const b = build;
 
@@ -44,7 +45,7 @@
 				<div class="item">
 					<span class="iname">{rowName(row) || entry.item}</span>
 					<span class="imeta">
-						{#if ac !== null}AC {ac}{/if}
+						{#if ac !== null}{$_('build.vitals.ac')}&nbsp;{ac}{/if}
 						{#if item?.damage}{item.damage}{/if}
 					</span>
 					<span class="stepper qty">
@@ -75,7 +76,7 @@
 			<div class="facts">
 				<b>{$_('build.inventory.carrying')}</b><span
 					>{$_('build.inventory.weight', {
-						values: { lb: Math.round(carried), kg: Math.round(carried * 0.45) }
+						values: { lb: Math.round(carried), kg: kilograms(carried) }
 					})}</span
 				>
 				<b>{$_('build.inventory.capacity')}</b><span title={s ? why(s.carryingCapacity) : ''}

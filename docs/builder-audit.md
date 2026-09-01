@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **40 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **49 of 65 done.**
 
 Work this file does not itself hold:
 

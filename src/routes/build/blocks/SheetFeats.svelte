@@ -27,7 +27,7 @@
 		</span>
 	</div>
 
-	{#if !b.classId}
+	{#if !b.primaryClassId}
 		<p class="subtext">{$_('build.feats.needClass')}</p>
 	{:else}
 		<div class="slots">

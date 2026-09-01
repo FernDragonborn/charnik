@@ -532,6 +532,7 @@
 		"levelMeta": "level · prof {bonus}",
 		"undo": "Undo (Ctrl+Z)",
 		"redo": "Redo (Ctrl+Shift+Z)",
+		"unnamed": "Unnamed",
 		"ruleset": "Ruleset",
 		"edition": {
 			"title": "Switch to {system}?",
@@ -553,11 +554,12 @@
 		"origin": {
 			"species": "Species",
 			"speciesHint": "Size, speed, senses and the traits you keep at every level.",
-			"speciesMeta": "{size} · {feet} ft ({metres} m)",
+			"speciesMeta": "{size} · {feet} ft ({metres})",
 			"lineageChosen": "A branch of {species} — its own traits on top.",
 			"lineageAsk": "{species} asks which branch you belong to.",
 			"background": "Background",
 			"backgroundSkills": "{count, plural, one {# skill} other {# skills}}",
+			"backgroundSkillsUnknown": "skills",
 			"backgroundTool": "a tool",
 			"backgroundLanguages": "{count, plural, one {# language} other {# languages}}",
 			"backgroundBoosts": "ability boosts (5.5e)"
@@ -566,7 +568,7 @@
 			"ac": "AC",
 			"maxHp": "Max HP",
 			"initiative": "Initiative",
-			"speed": "Speed · {metres} m",
+			"speed": "Speed · ft ({metres})",
 			"hitDice": "Hit dice",
 			"hitDiceHint": "Spent on a short rest to heal",
 			"spellDc": "Spell save DC",
@@ -650,8 +652,7 @@
 			"pool": "{max} · {recharge} · {source}",
 			"rechargeShort": "short rest",
 			"rechargeLong": "long rest",
-			"rechargeOther": "special",
-			"needClass": "Choose a class to see the pools it grants."
+			"rechargeOther": "special"
 		},
 		"skills": {
 			"title": "Skills",
@@ -723,7 +724,7 @@
 			"load": "Load",
 			"carrying": "Carrying",
 			"capacity": "Capacity",
-			"weight": "{lb} lb ({kg} kg)",
+			"weight": "{lb} lb ({kg})",
 			"pounds": "{lb} lb",
 			"overCapacity": "Over capacity — speed drops to 0 by the book.",
 			"encumbranceAt": "Encumbrance rules start at {lb} lb.",
@@ -763,8 +764,7 @@
 			"whatChanged": "What it changed",
 			"noMatch": "Nothing matches “{query}”.",
 			"searchIn": "Search {count}…",
-			"options": "Options",
-			"taken": "taken"
+			"options": "Options"
 		},
 		"picker": {
 			"searchLabel": "Search these options",
@@ -805,7 +805,8 @@
 			"inventoryBlurb": "What your character carries. Equipping armour, a shield, or a weapon changes AC and your attacks immediately.",
 			"notesTitle": "Story",
 			"notesBlurb": "Bonds, flaws, whatever the table needs to remember. Goes to your GM; it changes nothing on the sheet.",
-			"lineageTitle": "{label}"
+			"lineageTitle": "{label}",
+			"lineageFallback": "Lineage"
 		},
 		"languages": {
 			"chosen": "Chosen {count}",

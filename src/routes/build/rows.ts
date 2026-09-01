@@ -10,6 +10,7 @@ import { app } from '$lib/stores/app.svelte';
 import { splitList, type ContentType } from '$lib/content/schemas';
 
 import { titleCase } from '$lib/util/format';
+import { metres } from '$lib/combat/constants';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
 
 /** Type guard: is this row of content type `T`? (A predicate is needed — TS won't narrow a union by
@@ -98,13 +99,11 @@ export function pickerMeta(row: LoadedRow, t: Translate): string {
 	 *  `[object Object]` into the UI, and only the type-aware lint catches that. */
 	const label = (value: string | undefined) => titleCase(value ?? '');
 	if (row.type === 'class')
-		return [row.data.hit_die, row.data.saves.map((s) => s.toUpperCase()).join(', ')]
-			.filter(Boolean)
-			.join(' · ');
+		return [row.data.hit_die, savesLabel(row.data.saves)].filter(Boolean).join(' · ');
 	// the same sentence the sheet's own origin card prints, so a species reads identically in both
 	if (row.type === 'species')
 		return t('build.origin.speciesMeta', {
-			values: { size: label(row.data.size), feet: row.data.speed, metres: Math.round(row.data.speed * 0.3) },
+			values: { size: label(row.data.size), feet: row.data.speed, metres: metres(row.data.speed) },
 		});
 	if (row.type === 'background') return splitList(row.data.skills).map(label).join(', ');
 	if (row.type === 'feat') return label(row.data.category);
@@ -113,6 +112,11 @@ export function pickerMeta(row: LoadedRow, t: Translate): string {
 	if (row.type === 'item') return label(row.data.rarity);
 	return entryMeta(row);
 }
+
+/** The saving throws a class grants, as a person reads them ("STR, CON"). A column, not a string:
+ *  `String(csvList)` is `Array.prototype.toString` and prints "STR,CON" with no space. */
+export const savesLabel = (saves: readonly string[]): string =>
+	saves.map((s) => s.toUpperCase()).join(', ');
 
 /** Sentinel a feat slot holds when the choice is an Ability Score Improvement (not a feat). */
 export const ASI = '__asi__';

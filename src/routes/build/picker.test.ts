@@ -57,7 +57,8 @@ describe('pickerMeta · every value comes from a declared column', () => {
 
 		expect(meta('wizard')).toBe('d6 · INT, WIS');
 		// the sheet's own origin sentence, so a species reads the same in both places
-		expect(meta('dwarf')).toBe('build.origin.speciesMeta(Medium|30|9)');
+		// …including its metric conversion, which is the shared helper's and not a local 0.3
+		expect(meta('dwarf')).toBe('build.origin.speciesMeta(Medium|30|9.1 m)');
 		expect(meta('sage')).toBe('Arcana, Sleight Of Hand');
 		expect(meta('archery')).toBe('Fighting Style');
 		// the item list is grouped BY category, so only the rarity is left to say

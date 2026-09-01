@@ -334,11 +334,6 @@ export class Inspector {
 		return type ? rowDetail(this.previewRow, type) : null;
 	});
 
-	/** Is the previewed option the one already taken? Then there is nothing to commit. */
-	previewIsCurrent = $derived(
-		!!this.pick && (this.previewId ?? this.pick.currentId) === this.pick.currentId,
-	);
-
 	// --- what taking it would do ------------------------------------------------------------------
 	/**
 	 * The heart of the pane: the draft with the previewed option applied, derived for real, diffed

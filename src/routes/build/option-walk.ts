@@ -75,4 +75,7 @@ export function walkOptions(
  * caret. A content ref carries spaces and colons and an `id` may carry neither.
  */
 export const optionDomId = (picker: string, effectiveId: string): string =>
-	`${picker}-${effectiveId.replace(/[^\w-]/g, '_')}`;
+	// only whitespace is replaced, because only whitespace is illegal in an id — flattening every
+	// other character made `srd:fire bolt` and `srd_fire:bolt` the same DOM id, and this one feeds
+	// `aria-activedescendant`
+	`${picker}-${effectiveId.replace(/\s+/g, '_')}`;

@@ -5,7 +5,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { build, rowName, rowOfType } from '../build-view-model.svelte';
-	import { rowDetail, rowText } from '../rows';
+	import { rowDetail, rowText, savesLabel } from '../rows';
 	import { classFeatureLines } from '$lib/build/derive';
 	import PickerCard from './PickerCard.svelte';
 	const b = build;
@@ -80,7 +80,7 @@
 						? $_('build.classes.classMeta', {
 								values: {
 									die: String(clsRow.data.hit_die),
-									saves: String(clsRow.data.saves).toUpperCase()
+									saves: savesLabel(clsRow.data.saves)
 								}
 							})
 						: $_('build.classes.classHint')}</small

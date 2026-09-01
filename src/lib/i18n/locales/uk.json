@@ -532,6 +532,7 @@
 		"levelMeta": "рівень · володіння {bonus}",
 		"undo": "Скасувати (Ctrl+Z)",
 		"redo": "Повернути (Ctrl+Shift+Z)",
+		"unnamed": "Без імені",
 		"ruleset": "Редакція",
 		"edition": {
 			"title": "Перейти на {system}?",
@@ -553,11 +554,12 @@
 		"origin": {
 			"species": "Вид",
 			"speciesHint": "Розмір, швидкість, чуття і риси, які лишаються з вами на кожному рівні.",
-			"speciesMeta": "{size} · {feet} футів ({metres} м)",
+			"speciesMeta": "{size} · {feet} фт ({metres})",
 			"lineageChosen": "Гілка виду {species} — додає власні риси зверху.",
 			"lineageAsk": "{species} питає, до якої гілки ви належите.",
 			"background": "Бекграунд",
 			"backgroundSkills": "{count, plural, one {# навичка} few {# навички} many {# навичок} other {# навичок}}",
+			"backgroundSkillsUnknown": "навички",
 			"backgroundTool": "інструмент",
 			"backgroundLanguages": "{count, plural, one {# мова} few {# мови} many {# мов} other {# мов}}",
 			"backgroundBoosts": "буст характеристик (5.5e)"
@@ -566,7 +568,7 @@
 			"ac": "КБ",
 			"maxHp": "Макс. HP",
 			"initiative": "Ініціатива",
-			"speed": "Швидкість · {metres} м",
+			"speed": "Швидкість · фт ({metres})",
 			"hitDice": "Кістки життя",
 			"hitDiceHint": "Витрачаються на короткому відпочинку заради лікування",
 			"spellDc": "DC заклять",
@@ -650,8 +652,7 @@
 			"pool": "{max} · {recharge} · {source}",
 			"rechargeShort": "короткий відпочинок",
 			"rechargeLong": "довгий відпочинок",
-			"rechargeOther": "особливо",
-			"needClass": "Оберіть клас, щоб побачити його ресурси."
+			"rechargeOther": "особливо"
 		},
 		"skills": {
 			"title": "Навички",
@@ -723,7 +724,7 @@
 			"load": "Навантаження",
 			"carrying": "Несете",
 			"capacity": "Місткість",
-			"weight": "{lb} фунтів ({kg} кг)",
+			"weight": "{lb} фн ({kg})",
 			"pounds": "{lb} фунтів",
 			"overCapacity": "Перевантаження — за книгою швидкість падає до 0.",
 			"encumbranceAt": "Правила перевантаження починаються з {lb} фунтів.",
@@ -763,8 +764,7 @@
 			"whatChanged": "Що це змінило",
 			"noMatch": "Нічого не збігається з «{query}».",
 			"searchIn": "Пошук серед {count}…",
-			"options": "Варіанти",
-			"taken": "обрано"
+			"options": "Варіанти"
 		},
 		"picker": {
 			"searchLabel": "Пошук серед цих варіантів",
@@ -805,7 +805,8 @@
 			"inventoryBlurb": "Що ваш персонаж носить. Вдягнена броня, щит чи зброя одразу змінюють КБ і ваші атаки.",
 			"notesTitle": "Історія",
 			"notesBlurb": "Звʼязки, вади — усе, що вашому столу варто памʼятати. Іде майстрові й нічого не змінює на листі.",
-			"lineageTitle": "{label}"
+			"lineageTitle": "{label}",
+			"lineageFallback": "Походження"
 		},
 		"languages": {
 			"chosen": "Обрано {count}",
