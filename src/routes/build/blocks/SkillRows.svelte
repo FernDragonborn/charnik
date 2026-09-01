@@ -158,7 +158,7 @@
 		font-weight: 700;
 		font-size: var(--font-size-sm);
 		min-width: 26px;
-		text-align: right;
+		text-align: end;
 		color: var(--color-text-muted);
 	}
 	.skill.on .val {
@@ -168,12 +168,12 @@
 	.passive {
 		flex: none;
 		min-width: 20px;
-		text-align: right;
+		text-align: end;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
-		border-left: 1px solid var(--color-border);
-		padding-left: var(--space-1-5);
+		border-inline-start: 1px solid var(--color-border);
+		padding-inline-start: var(--space-1-5);
 	}
 	.skill.on .passive {
 		color: var(--color-resource);

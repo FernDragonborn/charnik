@@ -199,7 +199,7 @@
 		opacity: 0.7;
 	}
 	.source-count {
-		margin-left: auto;
+		margin-inline-start: auto;
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
@@ -228,7 +228,7 @@
 		text-decoration: line-through;
 	}
 	.file-count {
-		margin-left: auto;
+		margin-inline-start: auto;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
@@ -252,7 +252,7 @@
 	.toggle .knob {
 		position: absolute;
 		top: 1px;
-		left: 1px;
+		inset-inline-start: 1px;
 		width: 16px;
 		height: 16px;
 		border-radius: 50%;
@@ -270,11 +270,11 @@
 		border-color: var(--color-good);
 	}
 	.toggle.on .knob {
-		left: 15px;
+		inset-inline-start: 15px;
 		background: var(--color-good);
 	}
 	.toggle.small.on .knob {
-		left: 13px;
+		inset-inline-start: 13px;
 	}
 	.toggle:disabled {
 		opacity: 0.4;

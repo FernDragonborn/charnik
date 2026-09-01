@@ -29,16 +29,21 @@ export function placeCard(card: HTMLElement, entry: HTMLElement, picker: HTMLEle
 	const top = entry.getBoundingClientRect().top - RISE;
 	card.style.top = `${Math.min(Math.max(MARGIN, top), Math.max(MARGIN, window.innerHeight - box.height - MARGIN))}px`;
 
-	// Left of the picker is the sheet, and that is where the card belongs. Below ~1100px the inspector
-	// is the full width and there is no sheet to spill over, so it flips to the other side rather than
-	// hanging off-screen where it cannot be read.
+	// The card belongs over the SHEET, which is the side the inspector is not on: before the picker in
+	// a left-to-right layout, after it in a mirrored one. Below ~1100px the inspector is the full width
+	// and there is no sheet to spill over, so it flips rather than hanging off-screen unread.
 	const rail = picker.getBoundingClientRect();
-	const onTheLeft = rail.left - box.width - GAP;
-	card.style.left = `${
-		onTheLeft >= MARGIN
-			? onTheLeft
-			: Math.max(MARGIN, Math.min(rail.right + GAP, window.innerWidth - box.width - MARGIN))
-	}px`;
+	const beforePicker = rail.left - box.width - GAP;
+	const afterPicker = rail.right + GAP;
+	const preferred =
+		getComputedStyle(picker).direction === 'rtl'
+			? afterPicker + box.width <= window.innerWidth - MARGIN
+				? afterPicker
+				: beforePicker
+			: beforePicker >= MARGIN
+				? beforePicker
+				: afterPicker;
+	card.style.left = `${Math.max(MARGIN, Math.min(preferred, window.innerWidth - box.width - MARGIN))}px`;
 }
 
 /** The DOM node for one entry of a picker, or the picker itself when that row is not rendered (a

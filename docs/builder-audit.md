@@ -502,7 +502,7 @@ the roster (`routes/+page.svelte:49`) uses the catalog. `WikiDetail.svelte:43` p
 **[x] N10.** `walkOptions` matches Enter by `event.code` (`option-walk.ts:38`), so `NumpadEnter` does
 nothing. The `e.code` house rule is about physical shortcuts; a confirm key needs both spellings.
 
-**[ ] N11.** RTL: the module uses physical properties throughout — `SectionedPicker.svelte:392, 359,
+**[x] N11.** RTL: the module uses physical properties throughout — `SectionedPicker.svelte:392, 359,
 297-300, 442`, `PickerCard.svelte:106, 132`, `+page.svelte:174, 194-198`, `SkillRows.svelte:182-183` —
 and `card-placement.ts:35-41` picks a side from `rail.left` alone. The repo uses a logical property in
 exactly one file.

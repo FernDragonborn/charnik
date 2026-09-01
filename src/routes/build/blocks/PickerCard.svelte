@@ -126,7 +126,7 @@
 	.close {
 		position: absolute;
 		top: 8px;
-		right: 10px;
+		inset-inline-end: 10px;
 		z-index: 1;
 		padding: var(--space-1);
 		border-radius: var(--radius-full);
@@ -151,7 +151,7 @@
 		border-top: 1px solid var(--color-border);
 	}
 	.take {
-		margin-left: auto;
+		margin-inline-start: auto;
 		display: flex;
 		align-items: center;
 		gap: var(--space-1-5);

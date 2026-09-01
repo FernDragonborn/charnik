@@ -85,7 +85,7 @@
 		font-weight: 600;
 	}
 	.levelup {
-		margin-left: 8px;
+		margin-inline-start: 8px;
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-xs);

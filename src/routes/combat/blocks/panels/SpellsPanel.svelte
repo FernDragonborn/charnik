@@ -202,11 +202,11 @@
 		break-inside: avoid;
 		width: 100%;
 		background: transparent;
-		border-left: 0;
-		border-right: 0;
+		border-inline-start: 0;
+		border-inline-end: 0;
 		border-bottom: 0;
 		color: var(--color-text);
-		text-align: left;
+		text-align: start;
 		font: inherit;
 	}
 	.spgroup:first-child .spell-category {
@@ -237,7 +237,7 @@
 		font-size: var(--font-size-xs);
 		font-weight: 600;
 		white-space: nowrap;
-		text-align: right;
+		text-align: end;
 		overflow: hidden;
 		text-overflow: ellipsis;
 	}
@@ -269,12 +269,12 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-		text-align: right;
+		text-align: end;
 		white-space: nowrap;
 	}
 	.spell-row .spell-level .cast-icon {
 		font-style: normal;
-		margin-right: 6px;
+		margin-inline-end: 6px;
 		color: var(--color-accent-bright);
 		cursor: help;
 	}
@@ -282,7 +282,7 @@
 	   clutter, then reads as clickable (interactive-affordance invariant). */
 	.spell-row .spell-level .upcast-btn {
 		display: inline-block;
-		margin-right: 5px;
+		margin-inline-end: 5px;
 		padding: 0 3px;
 		border-radius: 4px;
 		color: var(--color-resource);
@@ -305,7 +305,7 @@
 		height: 8px;
 		border-radius: 50%;
 		border: 1.5px solid var(--color-border-strong);
-		margin-right: 8px;
+		margin-inline-end: 8px;
 		vertical-align: middle;
 		cursor: pointer;
 	}
@@ -338,7 +338,7 @@
 		background: transparent;
 		border: 0;
 		color: var(--color-border-strong);
-		margin-left: 5px;
+		margin-inline-start: 5px;
 		cursor: pointer;
 		font-size: var(--font-size-xs);
 		line-height: 1;
@@ -372,7 +372,7 @@
 	}
 	/* ritual-cast badge — only on ritual-tagged spells; casts with no slot */
 	.ritual-cast {
-		margin-left: 6px;
+		margin-inline-start: 6px;
 		padding: 0 5px;
 		border: 1px solid var(--color-border);
 		border-radius: 4px;

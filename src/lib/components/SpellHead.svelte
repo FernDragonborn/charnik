@@ -202,7 +202,7 @@
 	.homebrew-mark {
 		color: var(--color-resource);
 		font-weight: 700;
-		margin-left: 1px;
+		margin-inline-start: 1px;
 	}
 	@container article (max-width: 560px) {
 		.strip {
@@ -217,10 +217,10 @@
 			justify-content: flex-start;
 			gap: 10px;
 			padding: 9px 12px;
-			text-align: left;
+			text-align: start;
 		}
 		.spell-effect-rolls {
-			margin-left: auto;
+			margin-inline-start: auto;
 		}
 	}
 </style>

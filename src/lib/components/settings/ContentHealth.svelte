@@ -280,19 +280,19 @@
 	}
 	.row {
 		border: 1px solid var(--color-border);
-		border-left-width: 3px;
+		border-inline-start-width: 3px;
 		border-radius: var(--radius);
 		padding: 8px 12px;
 		margin-bottom: 6px;
 		background: var(--color-surface-2);
 	}
 	.row.err {
-		border-left-color: var(--color-accent);
+		border-inline-start-color: var(--color-accent);
 	}
 	.row.warn,
 	.row.meta,
 	.row.drift {
-		border-left-color: var(--color-warning);
+		border-inline-start-color: var(--color-warning);
 	}
 	.row-file {
 		font-family: var(--font-mono);

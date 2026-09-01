@@ -458,7 +458,7 @@
 		background: var(--color-surface-2);
 	}
 	.feedback {
-		margin-left: auto;
+		margin-inline-start: auto;
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-sm);

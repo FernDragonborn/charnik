@@ -118,7 +118,7 @@
 	.paths em {
 		color: var(--color-text-muted);
 		font-style: normal;
-		margin-right: var(--space-2);
+		margin-inline-end: var(--space-2);
 	}
 	.paths code {
 		font-family: var(--font-mono);
@@ -135,7 +135,7 @@
 		font-size: var(--font-size-sm);
 	}
 	th {
-		text-align: left;
+		text-align: start;
 		font-family: var(--font-display);
 		font-weight: 600;
 		color: var(--color-text-muted);
@@ -168,7 +168,7 @@
 		color: var(--color-good);
 	}
 	.tag {
-		margin-left: var(--space-2);
+		margin-inline-start: var(--space-2);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-good);

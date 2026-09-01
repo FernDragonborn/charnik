@@ -173,7 +173,7 @@
 		color: var(--color-text);
 		font-family: var(--font-body);
 		font-size: var(--font-size-xs);
-		text-align: left;
+		text-align: start;
 		cursor: pointer;
 	}
 	.case:hover {

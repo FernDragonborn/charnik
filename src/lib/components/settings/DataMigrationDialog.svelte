@@ -98,7 +98,7 @@
 	}
 	/* Warning tone: recolour the head's accent stripe from crimson to the same gold as the badge. */
 	.migrate-dialog.tone-warning .dialog-head {
-		border-left-color: var(--color-resource);
+		border-inline-start-color: var(--color-resource);
 	}
 
 	/* Shake on a dismiss attempt. Keyframes keep the .dialog centring transform (translate(-50%,-50%))

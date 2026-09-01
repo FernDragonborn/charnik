@@ -22,6 +22,6 @@
 		color: var(--color-resource);
 	}
 	.prep-cls + .prep-cls {
-		margin-left: var(--space-2);
+		margin-inline-start: var(--space-2);
 	}
 </style>

@@ -11,6 +11,28 @@
 	"rules": {
 		"color-no-hex": true,
 		"declaration-property-unit-disallowed-list": { "font-size": ["px"] },
+		"property-disallowed-list": [
+			[
+				"margin-left",
+				"margin-right",
+				"padding-left",
+				"padding-right",
+				"border-left",
+				"border-right",
+				"border-left-color",
+				"border-right-color",
+				"border-left-width",
+				"border-right-width",
+				"border-left-style",
+				"border-right-style"
+			],
+			{
+				"message": "Use the logical property (…-inline-start / …-inline-end) — a box side written physically stays put when the UI is mirrored (AGENTS.md: support RTL). Bare `left`/`right` offsets are still allowed: those anchor to the viewport, and some are written by JS."
+			}
+		],
+		"declaration-property-value-disallowed-list": {
+			"text-align": ["left", "right"]
+		},
 		"custom-property-empty-line-before": null,
 		"declaration-empty-line-before": null,
 		"comment-empty-line-before": null,

@@ -218,7 +218,7 @@
 						aria-label="Amount"
 					/>
 				</div>
-				<div class="section eyebrow" style="padding-left: 0">Duration</div>
+				<div class="section eyebrow" style="padding-inline-start: 0">Duration</div>
 				<div class="dur-picker">
 					<button
 						class="dur-step"
@@ -439,7 +439,7 @@
 		border-radius: var(--radius);
 		cursor: pointer;
 		color: var(--color-text);
-		text-align: left;
+		text-align: start;
 		font: inherit;
 	}
 	.menu-row:hover {
@@ -609,7 +609,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
-		margin-left: 4px;
+		margin-inline-start: 4px;
 	}
 	.hitdice-steppers {
 		display: flex;

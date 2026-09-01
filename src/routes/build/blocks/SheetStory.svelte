@@ -98,7 +98,7 @@
 		padding: var(--space-2-5) var(--space-3);
 		border-color: var(--color-border);
 		background: var(--color-surface-2);
-		text-align: left;
+		text-align: start;
 	}
 	.notes .lines {
 		display: flex;
@@ -110,7 +110,7 @@
 	.notes .line::before {
 		content: '·';
 		color: var(--color-text-muted);
-		margin-right: var(--space-1-5);
+		margin-inline-end: var(--space-1-5);
 	}
 	.empty-note,
 	.more {

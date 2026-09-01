@@ -651,7 +651,7 @@
 		position: absolute;
 		z-index: 20;
 		top: calc(100% + 5px);
-		left: 0;
+		inset-inline-start: 0;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 10px;
@@ -666,7 +666,7 @@
 	.dropdown-option {
 		display: block;
 		width: 100%;
-		text-align: left;
+		text-align: start;
 		background: transparent;
 		border: 0;
 		color: var(--color-text);
@@ -737,7 +737,7 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
-		margin-left: auto;
+		margin-inline-start: auto;
 	}
 	.lang-label {
 		font-size: var(--font-size-micro);
@@ -745,10 +745,10 @@
 	/* both the back button and mode-picker summary use .pill-btn.accent for the crimson look; only
 	   their right-alignment / marker-removal / open-state stay local */
 	.back-to-browse {
-		margin-left: auto;
+		margin-inline-start: auto;
 	}
 	.mode-picker {
-		margin-left: auto;
+		margin-inline-start: auto;
 		position: relative;
 	}
 	.mode-picker > summary {
@@ -763,7 +763,7 @@
 	}
 	.mode-menu {
 		position: absolute;
-		right: 0;
+		inset-inline-end: 0;
 		z-index: 20;
 		margin-top: 6px;
 		display: flex;
@@ -781,7 +781,7 @@
 		flex-direction: column;
 		align-items: flex-start;
 		gap: 1px;
-		text-align: left;
+		text-align: start;
 		padding: 8px 11px;
 		border: 0;
 		border-radius: 7px;
@@ -839,7 +839,7 @@
 		padding: 16px 18px;
 	}
 	.epane.before {
-		border-right: 1px solid var(--color-border);
+		border-inline-end: 1px solid var(--color-border);
 	}
 	.epane-label {
 		font-size: var(--font-size-micro);
@@ -853,7 +853,7 @@
 			grid-template-columns: 1fr;
 		}
 		.epane.before {
-			border-right: 0;
+			border-inline-end: 0;
 			border-bottom: 1px solid var(--color-border);
 		}
 	}

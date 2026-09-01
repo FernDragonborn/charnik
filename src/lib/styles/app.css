@@ -70,7 +70,7 @@ select optgroup {
 /* Skip-to-content link: hidden until focused (keyboard users tab to it first). */
 .skip-link {
 	position: absolute;
-	left: var(--space-2);
+	inset-inline-start: var(--space-2);
 	top: calc(-1 * var(--space-8));
 	z-index: 100;
 	padding: var(--space-2) var(--space-3);

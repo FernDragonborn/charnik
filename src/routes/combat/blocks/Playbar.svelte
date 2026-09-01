@@ -88,7 +88,7 @@
 		gap: 4px;
 		padding: 0 11px;
 		border: 0;
-		border-left: 1px solid var(--color-border);
+		border-inline-start: 1px solid var(--color-border);
 		background: var(--color-surface-2);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);

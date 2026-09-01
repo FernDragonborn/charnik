@@ -121,7 +121,7 @@
 		flex-wrap: wrap;
 	}
 	.points {
-		margin-left: auto;
+		margin-inline-start: auto;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
@@ -160,7 +160,7 @@
 		color: var(--color-text-muted);
 	}
 	.total {
-		text-align: right;
+		text-align: end;
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-h6);
@@ -169,7 +169,7 @@
 		color: var(--color-text-muted);
 		font-size: var(--font-size-xs);
 		font-weight: 500;
-		margin-left: var(--space-1);
+		margin-inline-start: var(--space-1);
 	}
 	.boost {
 		display: flex;

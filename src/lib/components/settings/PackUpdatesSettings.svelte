@@ -548,7 +548,7 @@
 		font-weight: 600;
 	}
 	.pack-tag {
-		margin-left: var(--space-2);
+		margin-inline-start: var(--space-2);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}

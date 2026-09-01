@@ -155,7 +155,7 @@
 	.roller-extras {
 		display: flex;
 		gap: 6px;
-		padding-left: 11px;
+		padding-inline-start: 11px;
 	}
 	.roller-extra {
 		padding: 3px 8px;
@@ -221,7 +221,7 @@
 	.roller-roll {
 		position: absolute;
 		top: 100%;
-		right: 20px;
+		inset-inline-end: 20px;
 		height: 36px;
 		padding: 0 18px;
 		border: 1px solid var(--color-border-strong);

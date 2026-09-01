@@ -254,7 +254,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
-		text-align: left;
+		text-align: start;
 		padding: var(--space-2) var(--space-3);
 		background: var(--color-bg);
 		border: 1px solid var(--color-border-strong);

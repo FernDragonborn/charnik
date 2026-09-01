@@ -174,7 +174,7 @@
 		gap: 14px;
 		overflow: auto;
 		min-height: 0;
-		padding-right: var(--space-1);
+		padding-inline-end: var(--space-1);
 	}
 	/* skills is the taller and denser of the two, so it takes the larger share; `start` keeps the
 	   short card short instead of stretching it to match. */
@@ -194,11 +194,11 @@
 	   unreachable wherever the list happens to be (ui.md §1). Exactly one region inside the pane
 	   scrolls, and the pane picks which. */
 	.inspector {
-		border-left: 1px solid var(--color-border);
+		border-inline-start: 1px solid var(--color-border);
 		background: var(--color-bg);
 		overflow: hidden;
 		min-height: 0;
-		padding-left: var(--space-4);
+		padding-inline-start: var(--space-4);
 	}
 
 	/* under ~1100px the inspector can't hold a list and a diff side by side with the sheet — it moves
@@ -215,9 +215,9 @@
 			overflow: visible;
 		}
 		.inspector {
-			border-left: 0;
+			border-inline-start: 0;
 			border-top: 1px solid var(--color-border);
-			padding-left: 0;
+			padding-inline-start: 0;
 			padding-top: var(--space-4);
 		}
 	}

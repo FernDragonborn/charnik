@@ -49,13 +49,13 @@
 		display: flex;
 		justify-content: center;
 		width: 400px;
-		margin-left: calc((var(--width) - 400px) / 2);
+		margin-inline-start: calc((var(--width) - 400px) / 2);
 	}
 	/* under 600px sonner takes the li full-width itself — don't fight it, just stop shifting */
 	@media (max-width: 600px) {
 		:global([data-sonner-toast]:has(> .roll-toast)) {
 			width: 100%;
-			margin-left: 0;
+			margin-inline-start: 0;
 		}
 	}
 	/* the card sizes to its content: a bare check stays narrow, a three-attack flurry grows */
@@ -76,7 +76,7 @@
 		flex-direction: column;
 		padding: 0;
 		font: inherit;
-		text-align: left;
+		text-align: start;
 		background: transparent;
 		border: 0;
 		border-radius: inherit;

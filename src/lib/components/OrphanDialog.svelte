@@ -256,7 +256,7 @@
 		min-height: 0;
 	}
 	.pane + .pane {
-		border-left: 1px solid var(--color-border);
+		border-inline-start: 1px solid var(--color-border);
 	}
 	.panelabel {
 		font-size: var(--font-size-micro);
@@ -311,7 +311,7 @@
 		background: transparent;
 		color: var(--color-text);
 		font-size: var(--font-size-sm);
-		text-align: left;
+		text-align: start;
 	}
 	.res:hover {
 		background: var(--color-surface-2);
@@ -324,7 +324,7 @@
 		font-weight: 600;
 	}
 	.res .src {
-		margin-left: auto;
+		margin-inline-start: auto;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);

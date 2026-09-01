@@ -117,7 +117,9 @@ const ROUTES = [
 					await p.getByText('Choose a class', { exact: true }).first().click();
 					await p.locator('[role="option"]').first().click();
 				},
-				ready: '[role="dialog"]',
+				// the card is a named REGION, not a dialog: the caret stays in the search box, so it never
+				// takes focus and has nothing a dialog's focus contract could be about
+				ready: '.picker-card',
 			},
 		],
 	},

@@ -91,7 +91,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
-		margin-left: auto;
+		margin-inline-start: auto;
 	}
 	.choices {
 		display: flex;

@@ -153,7 +153,7 @@
 	.dur-item {
 		display: block;
 		width: 100%;
-		text-align: left;
+		text-align: start;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		padding: 5px 9px;

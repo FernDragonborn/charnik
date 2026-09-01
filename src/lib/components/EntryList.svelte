@@ -65,7 +65,7 @@
 
 <style>
 	.list {
-		border-right: 1px solid var(--color-border);
+		border-inline-end: 1px solid var(--color-border);
 		background: var(--color-surface);
 		display: flex;
 		flex-direction: column;

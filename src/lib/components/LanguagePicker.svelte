@@ -133,7 +133,7 @@
 	.menu {
 		position: absolute;
 		top: calc(100% + 4px);
-		left: 0;
+		inset-inline-start: 0;
 		z-index: 30;
 		width: 260px;
 		max-height: 340px;
@@ -163,7 +163,7 @@
 		align-items: center;
 		gap: 8px;
 		width: 100%;
-		text-align: left;
+		text-align: start;
 		background: transparent;
 		border: 0;
 		border-radius: 7px;

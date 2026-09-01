@@ -54,7 +54,7 @@
 		max-width: min(720px, 90vw);
 		max-height: 40vh;
 		overflow: auto;
-		text-align: left;
+		text-align: start;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);

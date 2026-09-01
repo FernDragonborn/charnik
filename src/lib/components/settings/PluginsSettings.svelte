@@ -162,7 +162,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-		margin-left: var(--space-2);
+		margin-inline-start: var(--space-2);
 	}
 	.plugin-sub {
 		font-size: var(--font-size-sm);

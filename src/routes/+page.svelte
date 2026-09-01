@@ -138,7 +138,7 @@
 		margin: 4px 0 22px;
 		padding: 18px 22px;
 		border: 1px solid var(--color-accent);
-		border-left-width: 5px;
+		border-inline-start-width: 5px;
 		border-radius: 12px;
 		background: var(--color-accent-soft, var(--color-surface));
 	}
@@ -239,7 +239,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 4px;
-		text-align: left;
+		text-align: start;
 		background: transparent;
 		border: 0;
 		color: var(--color-text);
@@ -265,7 +265,7 @@
 		border: 1px solid var(--color-accent-deep);
 		border-radius: var(--radius-full);
 		padding: 1px 7px;
-		margin-left: 6px;
+		margin-inline-start: 6px;
 		vertical-align: middle;
 	}
 	.roster-open:hover {
@@ -298,7 +298,7 @@
 		flex: none;
 		background: transparent;
 		border: 0;
-		border-left: 1px solid var(--color-border);
+		border-inline-start: 1px solid var(--color-border);
 		color: var(--color-border-strong);
 		cursor: pointer;
 		padding: 0 14px;

@@ -78,7 +78,7 @@
 		background: transparent;
 		border: 0;
 		color: var(--color-text);
-		text-align: left;
+		text-align: start;
 	}
 	.skill-row:hover {
 		background: var(--color-surface-2);

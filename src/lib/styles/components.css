@@ -33,7 +33,7 @@
 	border: 0;
 	cursor: pointer;
 	padding: 4px 8px 4px 2px;
-	margin-right: auto;
+	margin-inline-end: auto;
 	border-radius: var(--radius-sm);
 }
 .htoggle:hover {
@@ -43,7 +43,7 @@
 .chevron {
 	color: var(--color-text-muted);
 	font-size: var(--font-size-micro);
-	margin-right: 4px;
+	margin-inline-end: 4px;
 }
 .drag-handle {
 	color: var(--color-border-strong);
@@ -400,7 +400,7 @@ svg.lucide {
 	background: transparent;
 	border: 0;
 	color: var(--color-text);
-	text-align: left;
+	text-align: start;
 }
 .combat-row + .combat-row {
 	box-shadow: 0 -1px 0 var(--color-border);
@@ -466,12 +466,12 @@ svg.lucide {
 	position: relative;
 	padding: var(--space-5) var(--space-6) var(--space-4);
 	border-bottom: 1px solid var(--color-border);
-	border-left: 4px solid var(--color-accent);
+	border-inline-start: 4px solid var(--color-accent);
 }
 .dialog-lang-corner {
 	position: absolute;
 	top: var(--space-4);
-	right: var(--space-4);
+	inset-inline-end: var(--space-4);
 }
 /* A plain grey chip is easy to miss in a dialog corner — give the language switcher a teal outline so
    it reads as an offered action (the one control you reach for when the copy isn't in your language).
@@ -505,7 +505,7 @@ svg.lucide {
 	border: 1px solid var(--color-warning);
 	border-radius: 20px;
 	padding: 1px 9px;
-	margin-left: var(--space-3);
+	margin-inline-start: var(--space-3);
 	vertical-align: middle;
 }
 .dialog-title {
@@ -576,7 +576,7 @@ svg.lucide {
 	content: '';
 	position: absolute;
 	top: 2px;
-	left: 2px;
+	inset-inline-start: 2px;
 	width: 14px;
 	height: 14px;
 	border-radius: 50%;
@@ -588,7 +588,7 @@ svg.lucide {
 	border-color: var(--color-good);
 }
 .toggle-track.on::after {
-	left: 16px;
+	inset-inline-start: 16px;
 	background: var(--color-good);
 }
 

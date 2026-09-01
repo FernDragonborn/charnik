@@ -312,8 +312,8 @@
 	   control that acts on ALL of them must not be the one that scrolls out of reach */
 	.jumpbtn.all {
 		position: sticky;
-		right: 0;
-		margin-left: auto;
+		inset-inline-end: 0;
+		margin-inline-start: auto;
 		background: var(--color-bg);
 		box-shadow: -8px 0 8px -4px var(--color-bg);
 	}
@@ -374,7 +374,7 @@
 		color: var(--color-text-muted);
 	}
 	.sof {
-		margin-left: auto;
+		margin-inline-start: auto;
 		font-size: var(--font-size-micro);
 	}
 	/* a row is TWO controls: the state toggle on the left, the body that reads. The wrapper carries
@@ -396,7 +396,7 @@
 	/* the control itself is `.addbtn` in build.css — shared with the feat pane's ASI row, which asks
 	   the same question. Where it sits in THIS row is what stays here. */
 	.srow .addbtn {
-		margin-left: var(--space-1-5);
+		margin-inline-start: var(--space-1-5);
 	}
 	.sbody {
 		all: unset;
@@ -427,7 +427,7 @@
 	}
 	.smeta {
 		flex: 1;
-		text-align: right;
+		text-align: end;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);

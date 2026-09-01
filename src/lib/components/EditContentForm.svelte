@@ -502,8 +502,8 @@
 		font-size: var(--font-size-xs);
 		line-height: 1.45;
 		color: var(--color-text-muted);
-		border-left: 2px solid var(--color-border-strong);
-		padding-left: 10px;
+		border-inline-start: 2px solid var(--color-border-strong);
+		padding-inline-start: 10px;
 	}
 	.target-row {
 		display: flex;
@@ -609,7 +609,7 @@
 	.bool .knob {
 		position: absolute;
 		top: 1px;
-		left: 1px;
+		inset-inline-start: 1px;
 		width: 16px;
 		height: 16px;
 		border-radius: 50%;
@@ -623,7 +623,7 @@
 		border-color: var(--color-good);
 	}
 	.bool.on .knob {
-		left: 19px;
+		inset-inline-start: 19px;
 		background: var(--color-accent-text);
 	}
 	.classes-block,
@@ -705,7 +705,7 @@
 	}
 	.issues ul {
 		margin: 6px 0 0;
-		padding-left: 18px;
+		padding-inline-start: 18px;
 	}
 	.actions {
 		display: flex;
@@ -742,7 +742,7 @@
 		border-color: var(--color-border-strong);
 	}
 	.delete-entry {
-		margin-left: auto;
+		margin-inline-start: auto;
 		font-family: var(--font-display);
 		font-size: var(--font-size-body);
 		background: transparent;

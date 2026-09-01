@@ -89,7 +89,7 @@
 	.body :global(td) {
 		border: 1px solid var(--color-border);
 		padding: 5px 9px;
-		text-align: left;
+		text-align: start;
 		vertical-align: top;
 	}
 	.body :global(th) {
@@ -117,7 +117,7 @@
 	.body :global(ul),
 	.body :global(ol) {
 		margin: 0 0 12px;
-		padding-left: 20px;
+		padding-inline-start: 20px;
 	}
 	.body :global(li) {
 		margin: 2px 0;
@@ -125,7 +125,7 @@
 	.highlight {
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-left: 3px solid var(--color-resource);
+		border-inline-start: 3px solid var(--color-resource);
 		border-radius: var(--radius);
 		padding: 10px 13px;
 		font-size: var(--font-size-sm);

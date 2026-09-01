@@ -180,8 +180,8 @@
 		flex-direction: column;
 		gap: 5px;
 		justify-content: space-between;
-		border-left: 1px solid var(--color-border);
-		padding-left: 15px;
+		border-inline-start: 1px solid var(--color-border);
+		padding-inline-start: 15px;
 	}
 	.hitpoints .hitpoints-label {
 		display: flex;
@@ -226,7 +226,7 @@
 		font-weight: 600;
 		font-size: var(--font-size-body);
 		color: var(--color-good);
-		margin-left: 7px;
+		margin-inline-start: 7px;
 	}
 	.hitpoints-bar {
 		height: 9px;
@@ -346,7 +346,7 @@
 		color: var(--color-text);
 	}
 	.conc-actions {
-		margin-left: auto;
+		margin-inline-start: auto;
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;

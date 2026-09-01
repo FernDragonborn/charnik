@@ -367,7 +367,7 @@
 		color: var(--color-text);
 	}
 	.prog {
-		margin-left: auto;
+		margin-inline-start: auto;
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
@@ -390,8 +390,8 @@
 		overflow: hidden;
 	}
 	.pane {
-		border-left: 1px solid var(--color-border);
-		padding-left: 14px;
+		border-inline-start: 1px solid var(--color-border);
+		padding-inline-start: 14px;
 		overflow: auto; /* source / target scroll independently of the list */
 		min-height: 0;
 	}
@@ -441,12 +441,12 @@
 		background: var(--color-surface-2);
 		color: var(--color-text-muted);
 		border: 0;
-		border-left: 1px solid var(--color-border);
+		border-inline-start: 1px solid var(--color-border);
 		padding: 6px 12px;
 		cursor: pointer;
 	}
 	.status-opt:first-child {
-		border-left: 0;
+		border-inline-start: 0;
 	}
 	.status-opt:hover:not(:disabled) {
 		color: var(--color-text);

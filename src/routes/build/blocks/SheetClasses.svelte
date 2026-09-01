@@ -285,7 +285,7 @@
 		margin: 0 -var(--space-1-5);
 		border-radius: var(--radius-sm);
 		cursor: pointer;
-		text-align: left;
+		text-align: start;
 	}
 	.feature.readable:hover {
 		background: var(--color-surface-2);

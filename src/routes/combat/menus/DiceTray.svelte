@@ -65,7 +65,7 @@
 		   which dropped the builder's shadow across the readout that comes after it. */
 		position: relative;
 		margin-top: -30px;
-		margin-right: 90px;
+		margin-inline-end: 90px;
 		padding: 6px 12px 10px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);

@@ -470,7 +470,7 @@
 		border-radius: 9px;
 		background: transparent;
 		color: var(--color-text);
-		text-align: left;
+		text-align: start;
 		cursor: pointer;
 	}
 	.resource-row:hover {

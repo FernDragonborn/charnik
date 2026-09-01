@@ -52,6 +52,13 @@ A genuinely new shade is a **semantic** token added to *both* theme blocks (`:ro
 `[data-theme='light']`). Alpha tints are `color-mix(in srgb, var(--token) N%, transparent)`, which
 themes for free. The stylelint `color-no-hex` guard enforces the colour half; sizes are on you.
 
+**A box side is logical, never physical:** `margin-inline-start`, `padding-inline-end`,
+`border-inline-start`, `text-align: start`. A physical side stays put when the UI is mirrored, and
+Charnik discovers its locales — an RTL catalog is a file a user can drop in, not a release we plan.
+Stylelint's `property-disallowed-list` holds the line. Bare `left`/`right` offsets are still allowed:
+they anchor a `fixed`/`absolute` box to the viewport, and some are written from JS — where the side
+is a real choice, ask `getComputedStyle(el).direction`, as `card-placement.ts` does.
+
 **Semantic colours are fixed:** crimson is important or dangerous, teal is good or confirming, gold
 is a neutral marker. Visibility is an open/closed **eye** (teal means shown); state is a **toggle
 switch**. Avoid the templated look of cream and terracotta; the shipped theme is slate with heraldic

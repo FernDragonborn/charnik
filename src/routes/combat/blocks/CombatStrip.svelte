@@ -189,7 +189,7 @@
 		flex-direction: column;
 		align-items: stretch;
 		justify-content: flex-start;
-		text-align: left;
+		text-align: start;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 13px;
@@ -315,7 +315,7 @@
 		font-weight: 400;
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-		margin-right: 6px;
+		margin-inline-end: 6px;
 	}
 	.senses-strip .separator-dot {
 		color: var(--color-border-strong);
@@ -324,7 +324,7 @@
 	   "reduced by a debuff", not a bug. The chevron is green up for advantage, red down for disadvantage. */
 	.senses-strip .advantage-mark {
 		font-size: var(--font-size-xs);
-		margin-left: 3px;
+		margin-inline-start: 3px;
 		/* muted toward the surface so the arrow recedes (darker on dark, lighter on light) — a hint,
 		   not an attention-grabber; the direction still reads adv/dis, tooltip has the detail */
 		color: color-mix(in srgb, var(--color-good) 45%, var(--color-surface));
@@ -333,7 +333,7 @@
 		color: color-mix(in srgb, var(--color-danger) 45%, var(--color-surface));
 	}
 	.senses-strip .edit {
-		margin-left: auto;
+		margin-inline-start: auto;
 		font-family: var(--font-body);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);

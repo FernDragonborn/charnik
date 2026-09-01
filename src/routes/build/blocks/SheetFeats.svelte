@@ -104,7 +104,7 @@
 		border-radius: var(--radius-md);
 		border: 1px solid var(--color-border);
 		background: var(--color-surface-2);
-		text-align: left;
+		text-align: start;
 	}
 	/* the badge itself is `.lvl` in build.css; a slot's says a WORD as well as a number ("origin"),
 	   so it is padded and letter-spaced here */

@@ -299,16 +299,16 @@
 	.strip .roll-to-hit,
 	.strip .roll-damage {
 		padding: 0;
-		border-left: 0;
+		border-inline-start: 0;
 	}
 	.strip .roll-to-hit-total {
-		padding-right: 0;
+		padding-inline-end: 0;
 	}
 	.strip .roll-total,
 	.strip .roll-total.big-total {
 		padding: 0 11px;
 		font-size: var(--font-size-body);
-		border-left: 1px solid var(--color-border);
+		border-inline-start: 1px solid var(--color-border);
 	}
 
 	.roll-label {
@@ -334,7 +334,7 @@
 	}
 	.roll-grid.multi {
 		grid-template-columns: 26px minmax(58px, max-content) minmax(36px, max-content) 1fr 58px;
-		padding-left: 0;
+		padding-inline-start: 0;
 	}
 	/* damage with no test (Fireball): the damage IS the row, so it leads instead of sitting in a
 	   column ruled off from a to-hit that doesn't exist */
@@ -346,8 +346,8 @@
 	}
 	.damage-only .roll-damage {
 		justify-content: flex-start;
-		padding-left: 0;
-		border-left: 0;
+		padding-inline-start: 0;
+		border-inline-start: 0;
 	}
 	.roll-caption {
 		padding: 0 0 5px;
@@ -356,8 +356,8 @@
 	}
 	.roll-caption.hit {
 		grid-column: 1 / 3;
-		padding-right: 12px; /* the to-hit total's own padding — the caption sits on its right edge */
-		text-align: right;
+		padding-inline-end: 12px; /* the to-hit total's own padding — the caption sits on its end edge */
+		text-align: end;
 	}
 	.multi .roll-caption.hit {
 		grid-column: 1 / 4;
@@ -450,7 +450,7 @@
 	   second value beside it */
 	.roll-die:has(.roll-cue) {
 		gap: 2px;
-		padding-right: 4px;
+		padding-inline-end: 4px;
 	}
 	/* The SHAPES are the shared `.advantage-cue` (styles/components.css); only the colours are ours.
 	   No third colour: each shape wears the colour of the state it reports — the same teal and red the
@@ -494,8 +494,8 @@
 	}
 	/* what the to-hit came to — subordinate to the damage, which is the number being read */
 	.roll-to-hit-total {
-		padding-right: 12px;
-		text-align: right;
+		padding-inline-end: 12px;
+		text-align: end;
 		font-family: var(--font-display);
 		font-size: var(--font-size-body);
 		font-weight: 600;
@@ -512,7 +512,7 @@
 		justify-content: flex-end;
 		gap: 5px;
 		padding: 6px 12px 6px 14px;
-		border-left: 1px solid var(--color-border);
+		border-inline-start: 1px solid var(--color-border);
 	}
 	.roll-damage-part {
 		display: inline-flex;
@@ -531,7 +531,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		border-left: 1px solid var(--color-border);
+		border-inline-start: 1px solid var(--color-border);
 		font-family: var(--font-display);
 		font-size: var(--font-size-body);
 		font-weight: 600;

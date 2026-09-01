@@ -704,7 +704,7 @@
 		flex-direction: column;
 		gap: 3px;
 		/* it hangs off the FIELD, so it starts where the field does — past the stripe's column */
-		margin-left: calc(3px + var(--space-2));
+		margin-inline-start: calc(3px + var(--space-2));
 		padding: 7px 8px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-text-muted);
@@ -738,7 +738,7 @@
 		background: transparent;
 		color: var(--color-text-muted);
 		font-size: var(--font-size-xs);
-		text-align: left;
+		text-align: start;
 		cursor: pointer;
 	}
 	/* selection is a FILL, never an outline — the spec is explicit that menu rows carry no borders */
