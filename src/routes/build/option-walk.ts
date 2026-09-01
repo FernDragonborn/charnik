@@ -20,6 +20,14 @@ export interface OptionWalk {
 	previewId: string | null;
 	onpreview: (id: string) => void;
 	/**
+	 * Do Home and End jump the highlight?
+	 *
+	 * Not from the search box. The WAI-ARIA editable-combobox pattern reserves them for the textbox,
+	 * and taking them costs someone typing "great weapon m" the only way back to the start of what
+	 * they typed. On an option that holds focus there is no caret to serve, so they jump there.
+	 */
+	jumpKeys?: boolean;
+	/**
 	 * What a left click would do to the highlighted option.
 	 *
 	 * Absent when the walk is driven from an option that already HAS focus: there the browser's own
@@ -30,12 +38,21 @@ export interface OptionWalk {
 }
 
 /** Handle a key, or leave it alone. Returns whether it was ours, so a caller can still react. */
-export function walkOptions(event: KeyPress, { ids, previewId, onpreview, onenter }: OptionWalk): boolean {
+export function walkOptions(
+	event: KeyPress,
+	{ ids, previewId, onpreview, onenter, jumpKeys = true }: OptionWalk,
+): boolean {
 	if (!ids.length) return false;
 	const at = previewId ? ids.indexOf(previewId) : -1;
 	// The walk happens from the search box, so the highlighted option never has focus for the
 	// browser's own Enter-on-a-button to fire — this is the only thing that makes Enter work there.
-	if (event.code === 'Enter' && onenter && previewId && ids.includes(previewId)) {
+	// `NumpadEnter` is the same key to everyone but the keyboard.
+	if (
+		(event.code === 'Enter' || event.code === 'NumpadEnter') &&
+		onenter &&
+		previewId &&
+		ids.includes(previewId)
+	) {
 		event.preventDefault();
 		onenter(previewId);
 		return true;
@@ -43,8 +60,8 @@ export function walkOptions(event: KeyPress, { ids, previewId, onpreview, onente
 	let next: number | null = null;
 	if (event.code === 'ArrowDown') next = Math.min(ids.length - 1, at + 1);
 	else if (event.code === 'ArrowUp') next = at <= 0 ? 0 : at - 1;
-	else if (event.code === 'Home') next = 0;
-	else if (event.code === 'End') next = ids.length - 1;
+	else if (jumpKeys && event.code === 'Home') next = 0;
+	else if (jumpKeys && event.code === 'End') next = ids.length - 1;
 	if (next === null) return false;
 	event.preventDefault();
 	const id = ids[next];

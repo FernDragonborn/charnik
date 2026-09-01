@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **28 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **40 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -77,6 +77,12 @@ Work this file does not itself hold:
 
 Deferred by decision, not open work: the shared provenance popover (A15's second half), and keyboard
 navigation past the double-Enter take (A5).
+
+**A9 is partial.** The row wrappers are `presentation` and the options are the listbox's own children
+now, but the section headers are still interactive `<button>`s inside it, which `aria-required-children`
+does not allow. Every way out changes the picker's shape: one listbox per section breaks the single
+`aria-controls`/`aria-activedescendant` the combobox needs, and making the header non-interactive moves
+collapsing to the jump rail. That is a UX decision, not a cleanup.
 
 Reviewed: `src/routes/build/**` and `src/lib/build/**` (~8 000 lines), plus the 25 commits from
 `b2e25fa` to `bbef3d6` that built them. `pnpm test` (1810 passed) and `pnpm lint` are green — every
@@ -245,7 +251,7 @@ undo a Wizard pick, switch to Wizard, and `restoreClassPicks` resurrects the und
 
 ## Accessibility and UI anti-patterns
 
-**[ ] A1. Clicking inside the open article card closes it.** `Inspector.svelte:49-54`'s
+**[x] A1. Clicking inside the open article card closes it.** `Inspector.svelte:49-54`'s
 `clearOnBackground` clears `ins.previewId` on any click not matching `OPERABLE`, and `PickerCard` is a
 DOM descendant of `.pane` (`position: fixed` does not change bubbling ancestry). Species → click
 "Dwarf" → click any paragraph of the article: the click bubbles `.cbody → .body → .pane`, and
@@ -254,24 +260,24 @@ deliberately exempts inside-clicks from its *own* dismiss handler; this is a sec
 dismisser reaching past it. `SpellsPane`/`InventoryPane` hold `previewId` locally and are unaffected,
 so the identical gesture behaves differently in the two pickers.
 
-**[ ] A2. The walked highlight is never scrolled into view.** `grep -rn "scrollIntoView" src/` is empty;
+**[x] A2. The walked highlight is never scrolled into view.** `grep -rn "scrollIntoView" src/` is empty;
 `option-walk.ts:50-51` only calls `onpreview(id)`. With the caret in the search box, holding ↓ moves
 `previewId` and `aria-activedescendant` past the bottom of `.rows` without scrolling — a combobox
 pointing `aria-activedescendant` at an off-screen option. With the card open,
 `card-placement.ts:29-30` anchors it to the off-screen row's rect and clamps it to the viewport.
 
-**[ ] A3. Home/End are stolen from the search input.** `option-walk.ts:46-49`, wired straight onto a text
+**[x] A3. Home/End are stolen from the search input.** `option-walk.ts:46-49`, wired straight onto a text
 `<input>` at `PickerSearch.svelte:39`. Type "great weapon m", press Home to fix the start of the
 query: the caret does not move and the highlight jumps to the first option. The WAI-ARIA editable
 combobox pattern reserves Home/End for the textbox.
 
-**[ ] A4. A double-click's end state depends on the state before it.** `SectionedPicker.svelte:216-217`
+**[x] A4. A double-click's end state depends on the state before it.** `SectionedPicker.svelte:216-217`
 and `OptionGrid.svelte:99-100` pair `onclick={read}` with `ondblclick={ontake}`, and `read()` toggles
 (`picker-reading.svelte.ts:61-70`) while a dblclick fires both clicks first. On a row not being read:
 open, close, take → the card flashes and vanishes. On the row being read: close, open, take → the card
 stays. One gesture, two screens, plus two `placeCard` layout passes per take.
 
-**[ ] A5. The double-click take has no keyboard counterpart.** ui.md §6 makes double-click the take
+**[x] A5. The double-click take has no keyboard counterpart.** ui.md §6 makes double-click the take
 shortcut in both pickers, but from the walk Enter maps to `read` (`picker-reading.svelte.ts:77`) and
 nothing else takes. The only keyboard route is tabbing to the row's `.addbtn`, which `OptionGrid` does
 not have at all — there the sole take is Enter → card → tab past every cell → Take.
@@ -284,26 +290,26 @@ other `all: unset` control in the module (`.slot`, `.pick-chip`, `.jumpbtn`, `.s
 on-state by class alone — no `aria-pressed`, no `role="radio"` — so ruleset, Strict/Free and
 short-rest are colour-only.
 
-**[ ] A7. The picker search input has no accessible name.** `PickerSearch.svelte:35-45` relies on
+**[x] A7. The picker search input has no accessible name.** `PickerSearch.svelte:35-45` relies on
 `placeholder` while carrying `role="combobox"`, which requires one. The house pattern
 (`<span class="visually-hidden">`) is two files over at `BuildHead.svelte:18-20`. `aria-expanded` is
 hardcoded `"true"` although the list can be empty.
 
-**[ ] A8. `PickerCard` is a `role="dialog"` with no focus management.** `PickerCard.svelte:68` — no
+**[x] A8. `PickerCard` is a `role="dialog"` with no focus management.** `PickerCard.svelte:68` — no
 `aria-modal`, no focus moved in, no trap, no restore on close. Opened by Enter from the search box
 (`picker-reading.svelte.ts:75-78`), a screen-reader user hears nothing and the Take button is
 unreachable without tabbing through every rendered option first (100+ stops with a spell section
 open).
 
-**[ ] A9. `role="listbox"` whose children are not options.** `SectionedPicker.svelte:164-190` — the
+**[~] A9. `role="listbox"` whose children are not options.** `SectionedPicker.svelte:164-190` — the
 listbox directly owns section-header `<button>`s and `<div class="srow">` wrappers, and each `option`
 is nested a level down beside a *second* interactive button. Fails `aria-required-children`.
 
-**[ ] A10. One Escape collapses two levels.** `PickerCard.svelte:56-57` (document) and
+**[x] A10. One Escape collapses two levels.** `PickerCard.svelte:56-57` (document) and
 `Inspector.svelte:61` (pane) both listen, so with the card open and the caret in the search box one
 Escape closes the card *and* clears the highlight, emptying the diff and losing your place.
 
-**[ ] A11. Expand/Collapse-all is a dead control while a query is typed.**
+**[x] A11. Expand/Collapse-all is a dead control while a query is typed.**
 `SectionedPicker.svelte:61-62` — `isOpen = (key) => !!trimmed || openKeys.includes(key)`, so any query
 makes `allOpen` true, the button reads "Collapse all", and clicking sets `openKeys = []` with nothing
 changing on screen. It also discards the sections the user had opened, so clearing the query collapses
@@ -314,12 +320,12 @@ everything.
 species/background/class carries no ARIA, only `--color-resource` gold. `SectionedPicker` is fine
 (`addbtn` carries `aria-pressed`, `:198-202`); the grid has no equivalent.
 
-**[ ] A13. Neither floating card re-places on scroll or resize.** `PickerCard.svelte:40-44` and
+**[x] A13. Neither floating card re-places on scroll or resize.** `PickerCard.svelte:40-44` and
 `PickerPeek.svelte:29-32` run `placeCard` only when `entryId`/`detail` change. Wheel-scroll `.rows`
 with the card open and it stays pinned to the old viewport position while its row moves away — the
 whole rationale in `card-placement.ts:1-12` is "vertically level with the entry".
 
-**[ ] A14. The ASI card commits on a single click while everything beside it only reads.**
+**[x] A14. The ASI card commits on a single click while everything beside it only reads.**
 `FeatPane.svelte:23-31` `onclick={() => ins.take(ASI)}`, against `read`/`ondblclick=take` on every
 feat cell. ui.md §6: reading and taking are separate controls. The ASI card is also outside
 `picker.ids`, so arrows and Home/End can never reach it.
@@ -491,7 +497,7 @@ nowhere. `SheetInventory.svelte:47` prints a literal `AC {ac}` though `build.vit
 the roster (`routes/+page.svelte:49`) uses the catalog. `WikiDetail.svelte:43` prints an untranslated
 "Select an entry to see its detail." inside the picker card.
 
-**[ ] N10.** `walkOptions` matches Enter by `event.code` (`option-walk.ts:38`), so `NumpadEnter` does
+**[x] N10.** `walkOptions` matches Enter by `event.code` (`option-walk.ts:38`), so `NumpadEnter` does
 nothing. The `e.code` house rule is about physical shortcuts; a confirm key needs both spellings.
 
 **[ ] N11.** RTL: the module uses physical properties throughout — `SectionedPicker.svelte:392, 359,

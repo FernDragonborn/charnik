@@ -333,6 +333,39 @@
 	color: var(--color-text-muted);
 	cursor: pointer;
 }
+/* The round ✓ that TAKES a row, as opposed to reading it (ui.md §11: a row's own state sits on the
+   left). Shared by the sectioned picker's rows and the feat pane's ability-improvement row; where it
+   sits inside a row belongs to that row. */
+.build-page .addbtn {
+	all: unset;
+	box-sizing: border-box;
+	flex: none;
+	width: 22px;
+	height: 22px;
+	align-self: center;
+	cursor: pointer;
+	border: 1.5px solid var(--color-border-strong);
+	border-radius: 50%;
+	display: grid;
+	place-items: center;
+	color: transparent;
+}
+.build-page .addbtn:hover {
+	border-color: var(--color-accent);
+	color: var(--color-accent-bright);
+}
+/* gold fill means taken, exactly as gold means prepared in the spellbook and proficient in
+   SkillRows. The glyph never changes — only whether it is lit. */
+.build-page .addbtn.on {
+	border-color: var(--color-resource);
+	background: var(--color-resource);
+	color: var(--color-resource-soft);
+}
+.build-page .addbtn:focus-visible {
+	outline: var(--focus-ring);
+	outline-offset: 2px;
+}
+
 .build-page .segment-group button:hover {
 	color: var(--color-text);
 }

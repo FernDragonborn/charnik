@@ -59,7 +59,14 @@
 	);
 	/** A collapsed section must never hide a search match (§5), so typing forces everything open. */
 	const isOpen = (key: string) => !!trimmed || openKeys.includes(key);
-	const allOpen = $derived(shown.length > 0 && shown.every((s) => isOpen(s.key)));
+	/**
+	 * Expand/collapse-all reads what the USER opened, not what the query forced open.
+	 *
+	 * Off the rendered state, any query made this true: the button read "Collapse all", clicking it
+	 * changed nothing on screen — and threw away every section the user had opened, so clearing the
+	 * query collapsed the lot.
+	 */
+	const allOpen = $derived(shown.length > 0 && shown.every((s) => openKeys.includes(s.key)));
 	/** The rows the keyboard can reach — only what is actually rendered. */
 	const walkable = $derived(shown.filter((s) => isOpen(s.key)).flatMap((s) => s.rows));
 	const peekRow = $derived(walkable.find((r) => r.effectiveId === peeking));
@@ -128,6 +135,7 @@
 			ids: walkable.map((r) => r.effectiveId),
 			previewId,
 			onpreview,
+			ontake,
 			onopen: () => (peeking = null), // the teaser steps aside for the real thing
 		}),
 		pickerId,
@@ -193,7 +201,14 @@
 				{@const id = row.effectiveId}
 				{@const on = taken.has(id)}
 				{@const name = rowName(row)}
-				<div class="srow" class:is-taken={on} class:is-active={id === previewId} data-entry={id}>
+				<!-- presentational: a listbox's children are options, and this is the row's layout box -->
+					<div
+						class="srow"
+						role="presentation"
+						class:is-taken={on}
+						class:is-active={id === previewId}
+						data-entry={id}
+					>
 					<button
 						class="addbtn"
 						class:on
@@ -212,9 +227,12 @@
 						class="sbody"
 						id={picker.optionId(id)}
 						role="option"
-						aria-selected={id === previewId}
-						onclick={() => picker.read(id)}
-						ondblclick={() => ontake(id)}
+						aria-selected={on}
+						onclick={(event) => event.detail < 2 && picker.read(id)}
+						ondblclick={() => {
+							ontake(id);
+							picker.close();
+						}}
 						onmouseenter={() => (peeking = id)}
 						onmouseleave={() => (peeking = null)}
 						onfocus={() => (peeking = id)}
@@ -379,35 +397,10 @@
 		border-color: var(--color-accent);
 		background: var(--color-accent-soft);
 	}
-	.addbtn {
-		all: unset;
-		box-sizing: border-box;
-		flex: none;
-		width: 22px;
-		height: 22px;
-		align-self: center;
+	/* the control itself is `.addbtn` in build.css — shared with the feat pane's ASI row, which asks
+	   the same question. Where it sits in THIS row is what stays here. */
+	.srow .addbtn {
 		margin-left: 7px;
-		cursor: pointer;
-		border: 1.5px solid var(--color-border-strong);
-		border-radius: 50%;
-		display: grid;
-		place-items: center;
-		color: transparent;
-	}
-	.addbtn:hover {
-		border-color: var(--color-accent);
-		color: var(--color-accent-bright);
-	}
-	/* gold fill means taken, exactly as gold means prepared in the spellbook and proficient in
-	   SkillRows. The glyph never changes — only whether it is lit. */
-	.addbtn.on {
-		border-color: var(--color-resource);
-		background: var(--color-resource);
-		color: var(--color-resource-soft);
-	}
-	.addbtn:focus-visible {
-		outline: var(--focus-ring);
-		outline-offset: 2px;
 	}
 	.sbody {
 		all: unset;

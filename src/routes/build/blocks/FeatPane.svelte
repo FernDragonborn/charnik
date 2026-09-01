@@ -3,6 +3,7 @@
 	// different kinds of answer, so the ability-improvement option gets its own card with its own
 	// allocator on top of the feat list, and a chosen feat's sub-choices (a half-feat's +1, a
 	// skill-granting feat's picks) open right under it.
+	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { build, rowName, ASI } from '../build-view-model.svelte';
 	import { skillLabel } from '../rows';
@@ -20,15 +21,29 @@
 	const asi = $derived(b.draft.slotAsi[slotKey]);
 </script>
 
-<button
-	class="asi-card"
-	class:is-active={ins.previewId === ASI}
-	class:is-taken={chosen === ASI}
-	onclick={() => ins.take(ASI)}
->
-	<b>{$_('build.feats.asi')}</b>
-	<span>{$_('build.feats.asiHint')}</span>
-</button>
+<!-- Reading and taking are separate controls here too (ui.md §6, §11): the card body highlights the
+     option so the diff below says what +2 would do, and the ✓ on its left commits it — the same pair
+     the sectioned picker's rows carry. A single click that committed made this the one thing in the
+     pane that decided for you. -->
+<div class="asi-card" class:is-active={ins.previewId === ASI} class:is-taken={chosen === ASI}>
+	<button
+		class="addbtn"
+		class:on={chosen === ASI}
+		aria-pressed={chosen === ASI}
+		aria-label={$_('build.picker.takeRow', { values: { name: $_('build.feats.asi') } })}
+		onclick={() => ins.take(ASI)}
+	>
+		<Icon name="check" size={12} />
+	</button>
+	<button
+		class="asi-body"
+		onclick={(event) => event.detail < 2 && (ins.previewId = ASI)}
+		ondblclick={() => ins.take(ASI)}
+	>
+		<b>{$_('build.feats.asi')}</b>
+		<span>{$_('build.feats.asiHint')}</span>
+	</button>
+</div>
 
 {#if chosen === ASI && asi}
 	<div class="alloc">
@@ -111,14 +126,13 @@
 </InspectorGrid>
 
 <style>
+	/* the row shape the sectioned picker uses: state on the left, the thing itself beside it */
 	.asi-card {
-		all: unset;
 		box-sizing: border-box;
 		flex: none;
-		cursor: pointer;
 		display: flex;
-		flex-direction: column;
-		gap: 3px;
+		align-items: center;
+		gap: 9px;
 		padding: 11px 13px;
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-md);
@@ -127,9 +141,18 @@
 	.asi-card:hover {
 		border-color: var(--color-accent);
 	}
-	.asi-card:focus-visible {
+	.asi-body {
+		all: unset;
+		flex: 1;
+		min-width: 0;
+		cursor: pointer;
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+	}
+	.asi-body:focus-visible {
 		outline: var(--focus-ring);
-		outline-offset: 1px;
+		outline-offset: 3px;
 	}
 	.asi-card b {
 		font-family: var(--font-display);

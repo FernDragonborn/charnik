@@ -27,6 +27,9 @@ export interface PickerReadingHost {
 	/** What Enter does, when it is not "open the article". A language has nothing to read, so there
 	 *  Enter takes the row outright — the same thing a click on it does. */
 	onenter?: (id: string) => void;
+	/** Commit the option. Reached by a second Enter on the row already being read — the keyboard's
+	 *  half of the double-click take. */
+	ontake?: (id: string) => void;
 }
 
 export class PickerReading {
@@ -70,11 +73,30 @@ export class PickerReading {
 	};
 	close = () => (this.reading = false);
 
-	/** ↑/↓/Home/End/Enter from the search box — Enter does to the highlighted option whatever a click
-	 *  on it would, which is reading it unless the picker says otherwise. */
+	/**
+	 * ↑/↓/Enter from the search box. Enter does to the highlighted option whatever a click on it
+	 * would — which is reading it, unless the picker says otherwise.
+	 *
+	 * A SECOND Enter on the row already being read takes it, mirroring the double-click that is the
+	 * take shortcut everywhere else (ui.md §6). Without it the double-click has no keyboard
+	 * counterpart at all: the only route to a take was tabbing past every rendered option to reach
+	 * the card's own button.
+	 *
+	 * Home and End stay with the caret — see `jumpKeys`.
+	 */
 	fromSearch = (event: KeyboardEvent): boolean => {
 		const host = this.host();
-		return walkOptions(event, { ...host, onenter: host.onenter ?? this.read });
+		const walked = walkOptions(event, {
+			...host,
+			jumpKeys: false,
+			onenter: (id) => {
+				if (host.onenter) host.onenter(id);
+				else if (this.reading && id === host.previewId) host.ontake?.(id);
+				else this.read(id);
+			},
+		});
+		if (walked) this.revealActive();
+		return walked;
 	};
 
 	/**
@@ -84,6 +106,21 @@ export class PickerReading {
 	 * has left.
 	 */
 	fromOptions = (event: KeyboardEvent): void => {
-		if (walkOptions(event, this.host())) this.search?.focus();
+		if (!walkOptions(event, this.host())) return;
+		this.search?.focus();
+		this.revealActive();
 	};
+
+	/**
+	 * Bring the highlighted option on screen.
+	 *
+	 * Nothing else does: focus never moves, so the browser has no reason to scroll, and holding ↓ ran
+	 * the highlight (and `aria-activedescendant`) off the bottom of a list that never moved — with the
+	 * card, if one is open, anchored to a row that is no longer in the viewport.
+	 */
+	private revealActive(): void {
+		const { previewId } = this.host();
+		if (!previewId) return;
+		document.getElementById(this.optionId(previewId))?.scrollIntoView({ block: 'nearest' });
+	}
 }

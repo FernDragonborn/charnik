@@ -37,10 +37,24 @@
 
 	// Re-placed whenever the card moves to another entry: ↑/↓ walk the list with the card open, and a
 	// card left behind at the old row would be pointing at the wrong thing.
+	//
+	// …and on scroll and resize, for the same reason one step further out: the card is `position:
+	// fixed` and its row is not, so a wheel over the list slides the row out from under a card that
+	// stays pinned to the viewport. Being level with the entry is the whole point of where it lands.
 	$effect(() => {
 		void entryId;
 		void detail;
-		if (card) placeCard(card, entryElement(picker, entryId), picker);
+		const place = () => {
+			if (card) placeCard(card, entryElement(picker, entryId), picker);
+		};
+		place();
+		// capture, because the thing that scrolls is an element inside the pane, not the window
+		window.addEventListener('scroll', place, true);
+		window.addEventListener('resize', place);
+		return () => {
+			window.removeEventListener('scroll', place, true);
+			window.removeEventListener('resize', place);
+		};
 	});
 
 	// Any click outside closes, plus Escape (ui.md §9). Clicks inside the PICKER are left alone on
@@ -53,19 +67,27 @@
 			if (card?.contains(target) || picker.contains(target)) return;
 			onclose();
 		};
+		// CAPTURE, and it stops there: the pane behind this listens for Escape too, and one press
+		// closing the card AND dropping the highlight empties the diff and loses your place in the list.
+		// Capture runs before any bubble handler, so the outer one never sees the key at all.
 		const key = (event: KeyboardEvent) => {
-			if (event.code === 'Escape') onclose();
+			if (event.code !== 'Escape') return;
+			event.stopPropagation();
+			onclose();
 		};
 		document.addEventListener('click', away, true);
-		document.addEventListener('keydown', key);
+		document.addEventListener('keydown', key, true);
 		return () => {
 			document.removeEventListener('click', away, true);
-			document.removeEventListener('keydown', key);
+			document.removeEventListener('keydown', key, true);
 		};
 	});
 </script>
 
-<div class="picker-card" bind:this={card} role="dialog" aria-label={title}>
+<!-- A labelled group, NOT a dialog: a dialog owes focus moved into it, a trap and a restore, and all
+     three fight the contract this picker is built on — the caret stays in the search box, which is
+     the only thing naming the highlighted option to a screen reader while the arrows walk. -->
+<div class="picker-card" bind:this={card} role="group" aria-label={title}>
 	<!-- No title bar of its own: the article already opens with its type and its name, and printing
 	     them a second time an inch above would just be the same words twice. -->
 	<button class="close icon-button" aria-label={$_('build.picker.close')} onclick={onclose}>

@@ -46,7 +46,10 @@
 	 * clicked away from everything says the pane is still talking about an option you stopped looking
 	 * at. Anything you can actually operate keeps its click — this only fires on the space between.
 	 */
-	const OPERABLE = 'button, a, input, textarea, select, label, [role="option"]';
+	// The open article card is a DOM descendant of the pane (`position: fixed` does not move it out of
+	// the bubbling path), and it is the highlight's own content — so a click on a paragraph of it must
+	// not be read as clicking away from the thing you are reading.
+	const OPERABLE = 'button, a, input, textarea, select, label, [role="option"], .picker-card';
 	function clearOnBackground(event: MouseEvent) {
 		const el = event.target;
 		if (el instanceof Element && el.closest(OPERABLE)) return;

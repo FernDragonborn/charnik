@@ -767,6 +767,7 @@
 			"taken": "taken"
 		},
 		"picker": {
+			"searchLabel": "Search these options",
 			"take": "Take",
 			"taken": "Taken",
 			"takeRow": "Take {name}",

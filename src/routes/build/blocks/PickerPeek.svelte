@@ -26,9 +26,20 @@
 
 	let peek = $state<HTMLElement | null>(null);
 
+	// re-placed on scroll and resize as well as on a move to another row: the teaser is `position:
+	// fixed` and the row it points at is not, so a wheel leaves it pinned beside nothing
 	$effect(() => {
 		void entryId;
-		if (peek) placeCard(peek, entryElement(picker, entryId), picker);
+		const place = () => {
+			if (peek) placeCard(peek, entryElement(picker, entryId), picker);
+		};
+		place();
+		window.addEventListener('scroll', place, true);
+		window.addEventListener('resize', place);
+		return () => {
+			window.removeEventListener('scroll', place, true);
+			window.removeEventListener('resize', place);
+		};
 	});
 </script>
 

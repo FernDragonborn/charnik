@@ -7,6 +7,7 @@
 	// never leaves this box, so the highlighted option is announced through `aria-activedescendant`
 	// rather than by moving focus. Without it a screen reader hears the arrows do nothing.
 	import Icon from '$lib/components/Icon.svelte';
+	import { _ } from '$lib/i18n';
 
 	let {
 		query = $bindable(''),
@@ -28,17 +29,23 @@
 		listId: string;
 		activeId?: string | undefined;
 	} = $props();
+
+	const inputId = $props.id();
 </script>
 
 <div class="lsearch">
 	<span class="search-icon"><Icon name="search" size={13} /></span>
+	<!-- A placeholder is not a name: it is gone the moment anything is typed, and a `combobox` owes
+	     one at all times. The house pattern is the visually-hidden label. -->
+	<label class="visually-hidden" for={inputId}>{$_('build.picker.searchLabel')}</label>
 	<input
+		id={inputId}
 		bind:this={element}
 		{placeholder}
 		bind:value={query}
 		{onkeydown}
 		role="combobox"
-		aria-expanded="true"
+		aria-expanded={count > 0}
 		aria-controls={listId}
 		aria-activedescendant={activeId}
 		autocomplete="off"

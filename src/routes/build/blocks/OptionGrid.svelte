@@ -62,7 +62,7 @@
 	// The id scopes this picker's DOM ids: the spell pane renders one per caster class.
 	const pickerId = $props.id();
 	const picker = new PickerReading(
-		() => ({ ids: options.map((o) => o.effectiveId), previewId, onpreview }),
+		() => ({ ids: options.map((o) => o.effectiveId), previewId, onpreview, ontake }),
 		pickerId,
 	);
 </script>
@@ -92,7 +92,10 @@
 			{@const why = blocked?.(row.effectiveId) ?? null}
 			<!-- the double-click takes it outright, the same gesture the sectioned list uses. It skips
 			     the diff, which is the one thing this pane exists to show — so it is a shortcut for
-			     someone who already knows what they want, and Ctrl+Z is the way back. -->
+			     someone who already knows what they want, and Ctrl+Z is the way back.
+			     A double-click delivers its two clicks first, and `read` toggles: without the `detail`
+			     guard and the close below, the same gesture left the card open or shut depending on
+			     which row you happened to be reading when you started. -->
 			<button
 				class="cell"
 				id={picker.optionId(row.effectiveId)}
@@ -104,8 +107,11 @@
 				class:is-active={row.effectiveId === previewId}
 				class:is-taken={taken.has(row.effectiveId)}
 				class:is-blocked={!!why}
-				onclick={() => picker.read(row.effectiveId)}
-				ondblclick={() => ontake(row.effectiveId)}
+				onclick={(event) => event.detail < 2 && picker.read(row.effectiveId)}
+				ondblclick={() => {
+					ontake(row.effectiveId);
+					picker.close();
+				}}
 			>
 				<span class="cname">{rowName(row)}</span>
 				{#if meta}<span class="cmeta">{meta}</span>{/if}
