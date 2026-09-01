@@ -43,13 +43,14 @@ import {
 	blankDraft,
 	draftFromCharacter,
 	selectedRefs,
+	parseDraftState,
 	type DraftState,
 	type EditContext
 } from './draft';
 import type { DraftRecord } from '$lib/character/draft-repository';
 import { DraftSession } from './draft-session.svelte';
 import { DraftHistory } from './draft-history.svelte';
-import { removeClassRow, switchClass, type ClassScopedPicks } from './class-picks-cache';
+import { parseClassPicks, removeClassRow, switchClass, type ClassScopedPicks } from './class-picks-cache';
 
 
 /**
@@ -123,8 +124,9 @@ export class BuildVM {
 	/** Resume an unfinished build, cache and all. */
 	hydrateDraft = (record: DraftRecord): void => {
 		this.edit = null;
-		this.draft = record.draft as DraftState;
-		this.classPicks = new Map(record.classPicks as [string, ClassScopedPicks][]);
+		// parsed, not cast: the record is a file the user can edit and an older Charnik may have written
+		this.draft = parseDraftState(record.draft);
+		this.classPicks = parseClassPicks(record.classPicks);
 		this.drafts.adopt(record);
 		this.history.reset();
 		this.inspector.close();

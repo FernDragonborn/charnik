@@ -442,6 +442,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 ### `src/lib/build/rules.ts`
 
+- `const STAT_METHODS`
 - `type StatMethod`
 - `const MAX_CHARACTER_LEVEL` — The ceiling for the WHOLE character, not for one class: multiclass levels sum into it.
 - `const POINT_BUY_BUDGET`
@@ -455,7 +456,8 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function canRaise` — Can this score be raised by one step under point-buy without breaking cap or budget?
 - `function canLower` — Can this score be lowered by one step under point-buy (floor 8)?
 - `function boostCarrier` — Which entity carries the primary ability boost in a given system.
-- `type BoostShape` — The two 5.5e background boost shapes, over the three abilities the background offers.
+- `const BOOST_SHAPES` — The two 5.5e background boost shapes, over the three abilities the background offers.
+- `type BoostShape`
 - `function allocateBackgroundBoost` — * Allocate a 5.5e background ability boost into an `abilityBoosts` record.
 - `function boostPickCount` — How many abilities a background-boost shape asks the user to pick (2-1 → 2, 1-1-1 → 3).
 - `function asiFeatLevels` — * The ASI-or-feat-slot levels a class grants up to `level`.
@@ -587,7 +589,9 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 
 - `re-export SYSTEMS`
 - `re-export ABILITIES`
+- `const abilityScores`
 - `type DeathCause`
+- `const SHORT_REST_MODES` — Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the * ½-max-HP video-ga…
 - `type ShortRestMode`
 - `const characterSchema`
 - `type Character`
@@ -1518,4 +1522,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 892 exports across 125 modules · 58 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 896 exports across 125 modules · 58 duplicate suspects._

@@ -436,6 +436,34 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.draft.expertise).toEqual(['perception', 'survival']);
 	});
 
+	it('a draft written by an older Charnik opens instead of taking the page down (B6)', () => {
+		build.reset();
+		build.graph = graph;
+		build.hydrateDraft({
+			guid: 'older-draft',
+			savedAt: new Date().toISOString(),
+			summary: { name: 'Old', classes: '', level: 1, system: '5.5e' },
+			// no slotFeatSkills and no inventory (fields that did not exist yet), a level nothing can
+			// hold, and a generation method that was never one
+			draft: {
+				name: 'Old',
+				classes: [{ classId: `class:${S}:wizard`, subclassId: null, level: 99 }],
+				method: 'astrology',
+				skills: ['arcana'],
+			},
+			classPicks: [['class:x:y', { level: 3 }], 'not an entry at all'],
+		});
+
+		expect(build.draft.name).toBe('Old'); // what WAS readable is kept
+		expect(build.draft.skills).toEqual(['arcana']);
+		expect(build.draft.slotFeatSkills).toEqual({}); // the missing field is blank, not undefined
+		expect(build.draft.inventory).toEqual([]);
+		expect(build.draft.classes[0]?.level).toBe(1);
+		expect(build.draft.method).toBe('point_buy');
+		expect(build.classPicks.size).toBe(1); // the readable stash entry survives, the junk one does not
+		expect(build.assembled.build.name).toBe('Old'); // and the sheet derives at all, which is the point
+	});
+
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {
 		build.hydrate(savedCharacter()); // picks class = wizard (source S); fighter stays unpicked
 		const wizard = `class:${S}:wizard`;

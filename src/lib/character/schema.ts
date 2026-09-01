@@ -32,7 +32,7 @@ const slug = z
 	.string()
 	.regex(/^[a-z0-9][a-z0-9_-]*$/, 'slug: lowercase, digits, underscores/hyphens');
 
-const abilityScores = z.object(
+export const abilityScores = z.object(
 	Object.fromEntries(ABILITIES.map((a) => [a, z.number().int().min(1).max(30)])) as Record<
 		(typeof ABILITIES)[number],
 		z.ZodNumber
@@ -207,7 +207,7 @@ const playSchema = z.object({
 
 /** Short-rest healing model (per-character rules variant): `dice` = RAW Hit-Dice spend, `half` = the
  *  ½-max-HP video-game/house variant. An OPEN enum — a new model is a member, not a boolean. */
-const SHORT_REST_MODES = ['dice', 'half'] as const;
+export const SHORT_REST_MODES = ['dice', 'half'] as const;
 export type ShortRestMode = (typeof SHORT_REST_MODES)[number];
 
 /** Per-character sheet preferences (not build, not play — resetting play keeps these). */

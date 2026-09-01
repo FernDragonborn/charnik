@@ -8,8 +8,10 @@
  *
  * Pure and Svelte-free so it can be unit-tested without a runtime; the view-model owns the Map.
  */
+import { z } from 'zod';
+import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
 import type { Ability } from '$lib/rules/core';
-import type { AsiShape, DraftState } from './draft';
+import { slotMapSchemas, type AsiShape, type DraftState } from './draft';
 
 /** Everything in the draft that belongs to one class row's class choice. */
 export interface ClassScopedPicks {
@@ -28,6 +30,39 @@ export interface ClassScopedPicks {
 	 * picks — losing a little on a multiclass switch beats destroying someone else's list.
 	 */
 	shared: { skills: string[]; expertise: string[]; selectedSpells: string[] } | null;
+}
+
+/**
+ * The stash as it comes back off disk, beside the draft it belongs to and read the same way: parsed,
+ * never cast. An entry that will not parse is DROPPED rather than repaired — a stash exists only to
+ * make switching a class free, and a half-read one hands a class back picks that are not its own.
+ */
+const classScopedPicksSchema: z.ZodType<ClassScopedPicks> = z.object({
+	subclassId: z.string().nullable().catch(null),
+	level: z.number().int().min(1).max(MAX_CHARACTER_LEVEL).catch(1),
+	slotFeats: slotMapSchemas.feats.catch(() => ({})),
+	slotAsi: slotMapSchemas.asi.catch(() => ({})),
+	slotFeatAbility: slotMapSchemas.ability.catch(() => ({})),
+	slotFeatSkills: slotMapSchemas.skills.catch(() => ({})),
+	shared: z
+		.object({
+			skills: z.array(z.string()).catch(() => []),
+			expertise: z.array(z.string()).catch(() => []),
+			selectedSpells: z.array(z.string()).catch(() => []),
+		})
+		.nullable()
+		.catch(null),
+});
+
+export function parseClassPicks(value: unknown): Map<string, ClassScopedPicks> {
+	if (!Array.isArray(value)) return new Map();
+	const entry = z.tuple([z.string(), classScopedPicksSchema]);
+	return new Map(
+		value.flatMap((raw) => {
+			const parsed = entry.safeParse(raw);
+			return parsed.success ? [parsed.data] : [];
+		}),
+	);
 }
 
 /** `2:4` → `4` for row 2; anything belonging to another row is not this class's business. */

@@ -3,15 +3,31 @@
  * factories (blank / from-an-existing-character) and the small pick helpers. Split out of the reactive
  * BuildVM so the draft shape + its construction are unit-testable with no Svelte runtime.
  */
+import { z } from 'zod';
 import type { SystemId } from '$lib/stores/app.svelte';
 import type { Ability } from '$lib/rules/core';
 import { DEFAULT_SYSTEM } from '$lib/rules/pipeline';
-import type { Character, ShortRestMode } from '$lib/character/schema';
+import {
+	abilityScores,
+	ABILITIES,
+	SHORT_REST_MODES,
+	SYSTEMS,
+	type Character,
+	type ShortRestMode,
+} from '$lib/character/schema';
 import type { ContentType } from '$lib/content/schemas';
-import { baseAbilities, type StatMethod, type BoostShape } from '$lib/build/rules';
+import {
+	baseAbilities,
+	BOOST_SHAPES,
+	MAX_CHARACTER_LEVEL,
+	STAT_METHODS,
+	type StatMethod,
+	type BoostShape,
+} from '$lib/build/rules';
 
 /** ASI allocation shape: +2 to one ability ('2') or +1 to two ('1-1'). */
-export type AsiShape = '2' | '1-1';
+export const ASI_SHAPES = ['2', '1-1'] as const;
+export type AsiShape = (typeof ASI_SHAPES)[number];
 /** How many abilities an ASI shape lets you pick ('2' → 1 target, '1-1' → 2 targets). */
 export const asiPickCount = (shape: AsiShape): number => (shape === '2' ? 1 : 2);
 
@@ -107,6 +123,81 @@ export function blankDraft(): DraftState {
 		inventory: [],
 		notes: ''
 	};
+}
+
+/**
+ * A draft as it comes back off disk.
+ *
+ * The file is the user's own unfinished work: hand-editable, and written by whatever version of
+ * Charnik they had when they left it. So it is PARSED, never cast. Every field falls back to the
+ * blank draft's value, which is what lets a draft saved before a field existed still open — the
+ * alternative is the first `.reduce` or `.length` on `undefined` taking the page down at render,
+ * with no way back to the work.
+ *
+ * Fallbacks are FUNCTIONS, not values: a shared `[]` or `{}` would be handed to every draft that
+ * needed one, and the slot maps are edited in place.
+ */
+/** The four per-slot maps, shared with the class stash — which holds the same maps re-keyed by level,
+ *  and is read back off the same file. */
+export const slotMapSchemas = {
+	feats: z.record(z.string(), z.string()),
+	asi: z.record(
+		z.string(),
+		z.object({ shape: z.enum(ASI_SHAPES), picks: z.array(z.enum(ABILITIES)) }),
+	),
+	ability: z.record(z.string(), z.enum(ABILITIES)),
+	skills: z.record(z.string(), z.array(z.string())),
+} as const;
+
+export const draftStateSchema: z.ZodType<DraftState> = z.object({
+	name: z.string().catch(''),
+	system: z.enum(SYSTEMS).catch(DEFAULT_SYSTEM),
+	strict: z.boolean().catch(true),
+	shortRestMode: z.enum(SHORT_REST_MODES).catch('half'),
+	speciesId: z.string().nullable().catch(null),
+	speciesOptionId: z.string().nullable().catch(null),
+	speciesBoostPicks: z.array(z.enum(ABILITIES)).catch(() => []),
+	backgroundId: z.string().nullable().catch(null),
+	classes: z
+		.array(
+			z.object({
+				classId: z.string().nullable().catch(null),
+				subclassId: z.string().nullable().catch(null),
+				level: z.number().int().min(1).max(MAX_CHARACTER_LEVEL).catch(1),
+			}),
+		)
+		.catch(() => [{ classId: null, subclassId: null, level: 1 }]),
+	method: z.enum(STAT_METHODS).catch('point_buy'),
+	abilities: abilityScores.catch(() => baseAbilities()),
+	arrayPick: z.partialRecord(z.enum(ABILITIES), z.number().int()).catch(() => ({})),
+	boostShape: z.enum(BOOST_SHAPES).catch('2-1'),
+	boostPicks: z.array(z.enum(ABILITIES)).catch(() => []),
+	skills: z.array(z.string()).catch(() => []),
+	expertise: z.array(z.string()).catch(() => []),
+	selectedLanguages: z.array(z.string()).catch(() => []),
+	slotFeats: slotMapSchemas.feats.catch(() => ({})),
+	slotAsi: slotMapSchemas.asi.catch(() => ({})),
+	slotFeatAbility: slotMapSchemas.ability.catch(() => ({})),
+	slotFeatSkills: slotMapSchemas.skills.catch(() => ({})),
+	selectedSpells: z.array(z.string()).catch(() => []),
+	inventory: z
+		.array(
+			z.object({
+				item: z.string(),
+				qty: z.number().int().catch(1),
+				equipped: z.boolean().catch(false),
+				attuned: z.boolean().catch(false),
+			}),
+		)
+		.catch(() => []),
+	notes: z.string().catch(''),
+});
+
+/** Read a stored draft. Anything unrecognisable in place of the whole object is a blank draft — the
+ *  record was already dropped by the repository if it would not even parse as JSON. */
+export function parseDraftState(value: unknown): DraftState {
+	const parsed = draftStateSchema.safeParse(value);
+	return parsed.success ? parsed.data : blankDraft();
 }
 
 /** Load an existing character into a fresh draft (edit / level-up). Straightforward fields map

@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **14 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **15 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -148,7 +148,7 @@ on disk, so every later identical `persist()` short-circuits and the draft is ne
 `+page.svelte:79` calls it as `void build.drafts.persist();`, so the rejection becomes an unhandled
 promise rejection and the user is told nothing — the exact failure the autosave exists to prevent.
 
-**[ ] B6. `hydrateDraft` casts unvalidated on-disk JSON straight into `DraftState`.**
+**[x] B6. `hydrateDraft` casts unvalidated on-disk JSON straight into `DraftState`.**
 `build-view-model.svelte.ts:128-129`, two `as`. `draft-repository.ts:60-66` only checks that
 `guid/savedAt/summary/draft` are truthy. A draft written before `slotFeatSkills` existed, or
 hand-edited, is assigned wholesale; the first `draft.classes.reduce` (`:242`) or

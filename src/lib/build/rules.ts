@@ -12,7 +12,8 @@ import type { Ability } from '../rules/core';
 import { ABILITIES } from '../character/schema';
 import type { SystemId } from '../stores/app.svelte';
 
-export type StatMethod = 'point_buy' | 'standard_array' | 'manual';
+export const STAT_METHODS = ['point_buy', 'standard_array', 'manual'] as const;
+export type StatMethod = (typeof STAT_METHODS)[number];
 
 /** 5e/5.5e point-buy: cost of raising a score from 8 to N (8–15). */
 const POINT_BUY_COST: Record<number, number> = {
@@ -76,7 +77,8 @@ export function boostCarrier(system: SystemId): 'background' | 'species' {
 }
 
 /** The two 5.5e background boost shapes, over the three abilities the background offers. */
-export type BoostShape = '2-1' | '1-1-1';
+export const BOOST_SHAPES = ['2-1', '1-1-1'] as const;
+export type BoostShape = (typeof BOOST_SHAPES)[number];
 
 /**
  * Allocate a 5.5e background ability boost into an `abilityBoosts` record.
