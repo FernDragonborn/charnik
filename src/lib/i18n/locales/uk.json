@@ -920,5 +920,60 @@
 		"notice": {
 			"cast": "Створено: {name}"
 		}
+	},
+	"entryMeta": {
+		"save": "ряткидок {ability}",
+		"attack": "атака",
+		"concentration": "конц.",
+		"ritual": "ритуал"
+	},
+	"spellSchool": {
+		"abjuration": "Огородження",
+		"conjuration": "Прикликання",
+		"divination": "Віщування",
+		"enchantment": "Зачарування",
+		"evocation": "Еманація",
+		"illusion": "Ілюзія",
+		"necromancy": "Некромантія",
+		"transmutation": "Перетворення"
+	},
+	"itemRarity": {
+		"common": "Звичайний",
+		"uncommon": "Незвичайний",
+		"rare": "Рідкісний",
+		"very_rare": "Дуже рідкісний",
+		"legendary": "Легендарний",
+		"artifact": "Артефакт"
+	},
+	"itemCategory": {
+		"weapon": "Зброя",
+		"armor": "Броня",
+		"shield": "Щит",
+		"gear": "Спорядження",
+		"tool": "Інструмент",
+		"pack": "Набір",
+		"ammunition": "Боєприпаси",
+		"potion": "Зілля",
+		"ring": "Перстень",
+		"wand": "Чарівна паличка",
+		"staff": "Посох",
+		"rod": "Жезл",
+		"scroll": "Сувій",
+		"wondrous": "Дивовижний предмет"
+	},
+	"featCategory": {
+		"origin": "Походження",
+		"general": "Загальний",
+		"fighting_style": "Бойовий стиль",
+		"epic_boon": "Епічний дар",
+		"general_2014": "Загальний"
+	},
+	"creatureSize": {
+		"tiny": "Крихітний",
+		"small": "Малий",
+		"medium": "Середній",
+		"large": "Великий",
+		"huge": "Величезний",
+		"gargantuan": "Гігантський"
 	}
 }

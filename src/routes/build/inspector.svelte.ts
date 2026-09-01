@@ -24,13 +24,14 @@ import { filterByName, rowDetail, ASI } from './rows';
 import {
 	editSpecFor,
 	pickSpecFor,
+	sameTarget,
 	EDIT_PANES,
 	type InspectorHost,
 	type InspectorTarget,
 	type PickSpec,
 	type Spec,
 } from './inspector-specs';
-export { targetForTodo } from './inspector-specs';
+export { targetForTodo, targetKey } from './inspector-specs';
 export type { EditPane, InspectorHost, InspectorTarget } from './inspector-specs';
 
 export class Inspector {
@@ -66,8 +67,7 @@ export class Inspector {
 		if (this.isOpen(target)) this.close();
 		else this.open(target);
 	};
-	isOpen = (target: InspectorTarget): boolean =>
-		!!this.target && JSON.stringify(this.target) === JSON.stringify(target);
+	isOpen = (target: InspectorTarget): boolean => sameTarget(this.target, target);
 
 	// --- the target descriptor -----------------------------------------------------------------
 	spec = $derived.by<Spec | null>(() => {

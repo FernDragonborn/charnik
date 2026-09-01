@@ -58,11 +58,13 @@ describe('pickerMeta · every value comes from a declared column', () => {
 		expect(meta('wizard')).toBe('d6 · INT, WIS');
 		// the sheet's own origin sentence, so a species reads the same in both places
 		// …including its metric conversion, which is the shared helper's and not a local 0.3
-		expect(meta('dwarf')).toBe('build.origin.speciesMeta(Medium|30|9.1 m)');
-		expect(meta('sage')).toBe('Arcana, Sleight Of Hand');
-		expect(meta('archery')).toBe('Fighting Style');
+		expect(meta('dwarf')).toBe('build.origin.speciesMeta(creatureSize.medium()|30|9.1 m)');
+		// every one of these columns is an open enum whose values are CONTENT, so each names the
+		// catalog it is spelled in rather than being title-cased into English on the way out
+		expect(meta('sage')).toBe('skillName.arcana(), skillName.sleight_of_hand()');
+		expect(meta('archery')).toBe('featCategory.fighting_style()');
 		// the item list is grouped BY category, so only the rarity is left to say
-		expect(meta('bag')).toBe('Very Rare');
+		expect(meta('bag')).toBe('itemRarity.very_rare()');
 	});
 });
 

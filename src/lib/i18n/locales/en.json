@@ -920,5 +920,60 @@
 		"notice": {
 			"cast": "Cast {name}"
 		}
+	},
+	"entryMeta": {
+		"save": "{ability} save",
+		"attack": "attack",
+		"concentration": "conc.",
+		"ritual": "ritual"
+	},
+	"spellSchool": {
+		"abjuration": "Abjuration",
+		"conjuration": "Conjuration",
+		"divination": "Divination",
+		"enchantment": "Enchantment",
+		"evocation": "Evocation",
+		"illusion": "Illusion",
+		"necromancy": "Necromancy",
+		"transmutation": "Transmutation"
+	},
+	"itemRarity": {
+		"common": "Common",
+		"uncommon": "Uncommon",
+		"rare": "Rare",
+		"very_rare": "Very rare",
+		"legendary": "Legendary",
+		"artifact": "Artifact"
+	},
+	"itemCategory": {
+		"weapon": "Weapon",
+		"armor": "Armor",
+		"shield": "Shield",
+		"gear": "Gear",
+		"tool": "Tool",
+		"pack": "Pack",
+		"ammunition": "Ammunition",
+		"potion": "Potion",
+		"ring": "Ring",
+		"wand": "Wand",
+		"staff": "Staff",
+		"rod": "Rod",
+		"scroll": "Scroll",
+		"wondrous": "Wondrous item"
+	},
+	"featCategory": {
+		"origin": "Origin",
+		"general": "General",
+		"fighting_style": "Fighting style",
+		"epic_boon": "Epic boon",
+		"general_2014": "General"
+	},
+	"creatureSize": {
+		"tiny": "Tiny",
+		"small": "Small",
+		"medium": "Medium",
+		"large": "Large",
+		"huge": "Huge",
+		"gargantuan": "Gargantuan"
 	}
 }

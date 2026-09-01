@@ -384,7 +384,7 @@ words. AGENTS.md: identify anything shareable with a GUID, not a local counter. 
 gates. A third copy of a gate is what drifts. One `activeClassFeatures(entry, graph, system,
 { maxLevel })` iterator feeds both; the level bound is the only difference.
 
-**[ ] S6. Target identity is `JSON.stringify` over a discriminated union.** `inspector.svelte.ts:295-296`.
+**[x] S6. Target identity is `JSON.stringify` over a discriminated union.** `inspector.svelte.ts:295-296`.
 It works only because every call site spells the keys in the same order today. The correctness of
 `class:active` on eight sheet cards and of the `{#key JSON.stringify(target)}` remount
 (`Inspector.svelte:112`) rests on property-declaration order in unrelated `.svelte` files. A small
@@ -395,7 +395,9 @@ It works only because every call site spells the keys in the same order today. T
 rendered directly at `SheetStory.svelte:38`. `skillLabel(id, t)` already exists (`rows.ts:85-86`).
 ui.md:245 forbids a sentence in a pure module outright.
 
-**[ ] S8. `pickerMeta` threads a translator in and uses it for one branch of six.** `rows.ts:100-114` —
+**[x] S8. `pickerMeta` threads a translator in and uses it for one branch of six.** What stays English
+is the free-text `range` and `damage` columns — content, not an enum, and not something to mine.
+ `rows.ts:100-114` —
 `class`, `background`, `feat` and `item` go through `titleCase()` on an English snake_case id, and
 everything else falls to `entryMeta(row)` (`detail.ts:375-404`), which emits raw `'conc.'`,
 `'ritual'`, `'DEX save'` and untranslated schools. That fallback renders every row of the 658-row

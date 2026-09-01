@@ -11,6 +11,18 @@ import { register, init, locale, waitLocale, json, _ } from 'svelte-i18n';
 
 export type Dir = 'ltr' | 'rtl';
 
+/**
+ * The catalog lookup a pure formatter TAKES rather than reaches for.
+ *
+ * `$_`'s shape, so a component hands over its own and the module stays locale-free — and so the
+ * lookup follows a locale switch, which a captured string does not. `default` is what makes a
+ * content value safe to translate: a homebrew school with no key reads as its own name.
+ */
+export type Translate = (
+	key: string,
+	options?: { values?: Record<string, string | number>; default?: string },
+) => string;
+
 export interface LocaleMeta {
 	/** BCP-47-ish id used as the catalog filename and `lang` attribute. */
 	id: string;

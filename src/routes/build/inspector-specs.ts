@@ -52,6 +52,30 @@ export type InspectorTarget =
 	| { id: EditPane };
 
 /**
+ * One target's identity, as a string.
+ *
+ * A switch on the discriminant, because the obvious alternative is not equivalent: comparing two
+ * targets by `JSON.stringify` agrees only while every call site happens to spell the keys in the
+ * same order, and what rests on that is the `active` state of eight sheet cards and the remount that
+ * starts each pane clean. Property-declaration order in unrelated `.svelte` files is not a contract.
+ */
+export function targetKey(t: InspectorTarget): string {
+	switch (t.id) {
+		case 'class':
+		case 'subclass':
+			return `${t.id}:${t.index}`;
+		case 'feat':
+			return `${t.id}:${t.slotKey}:${t.level}`;
+		default:
+			return t.id;
+	}
+}
+
+/** Is the pane about this exact thing? `null` on either side is "no target", never a match. */
+export const sameTarget = (a: InspectorTarget | null, b: InspectorTarget | null): boolean =>
+	!!a && !!b && targetKey(a) === targetKey(b);
+
+/**
  * Every `edit` target — a control surface that is its own thing, so the pane only has to name it.
  *
  * ONE entry per pane, because everything else about a pane is derived from this: the id it answers

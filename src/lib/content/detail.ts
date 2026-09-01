@@ -7,6 +7,7 @@ import { LOCALE_TAG, type LoadedRow, type LoadedRowOf } from '$lib/content/loade
 import { asText, ordinal, signed, titleCase } from '$lib/util/format';
 import { ABILITY_IDS, abilityModifier } from '$lib/rules/core';
 import type { ContentType, RowColumn } from '$lib/content/schemas';
+import type { Translate } from '$lib/i18n';
 import { packNameOf } from './disk';
 import { parseItemTags } from './item-tags';
 
@@ -371,13 +372,23 @@ const shortRange = (s: string): string => s.replace(/\bfeet\b/i, 'ft').replace(/
 /** The casting time both editions spell for a plain action — 2014 writes "1 action", 2024 "Action". */
 const PLAIN_ACTION = /^(1\s+)?action$/i;
 
+/**
+ * A content enum value as a person reads it — a school, a rarity, an item kind, a feat category.
+ *
+ * The catalog is the source and the value itself is the fallback, exactly like `skillLabel`: these
+ * columns are OPEN enums, so a homebrew pack's ninth school has to read as a name rather than as a
+ * missing key. Takes the translator, because this module has no locale of its own.
+ */
+export const contentLabel = (catalog: string, value: unknown, t: Translate): string =>
+	value ? t(`${catalog}.${String(value)}`, { default: titleCase(String(value)) }) : '';
+
 /** The small sub-line under an entry's name in the list. */
-export function entryMeta(row: LoadedRow): string {
+export function entryMeta(row: LoadedRow, t: Translate): string {
 	if (row.type === 'spell') {
 		const d = row.data;
 		const casting = String(d.casting_time ?? '');
 		return [
-			d.school ? String(d.school) : '',
+			contentLabel('spellSchool', d.school, t),
 			// A plain action is the default and true of most spells — printing it on every row is
 			// noise, while a bonus action or a reaction is exactly what decides whether a spell is
 			// castable this turn. Only the unusual casting time earns the space.
@@ -385,11 +396,11 @@ export function entryMeta(row: LoadedRow): string {
 			d.range ? shortRange(String(d.range)) : '',
 			d.damage ? String(d.damage) : '',
 			d.resolution === 'save' && d.save_ability
-				? `${String(d.save_ability).toUpperCase()} save`
+				? t('entryMeta.save', { values: { ability: String(d.save_ability).toUpperCase() } })
 				: '',
-			d.resolution === 'attack' ? 'attack' : '',
-			d.concentration ? 'conc.' : '',
-			d.ritual ? 'ritual' : '',
+			d.resolution === 'attack' ? t('entryMeta.attack') : '',
+			d.concentration ? t('entryMeta.concentration') : '',
+			d.ritual ? t('entryMeta.ritual') : '',
 		]
 			.filter(Boolean)
 			.join(' · ');
@@ -397,12 +408,17 @@ export function entryMeta(row: LoadedRow): string {
 	// The `in` checks read only the columns a row's type actually has — no cast onto the union.
 	const data = row.data;
 	return [
-		'category' in data ? String(data.category ?? '') : '',
-		'rarity' in data ? String(data.rarity ?? '') : '',
+		'category' in data ? contentLabel(categoryCatalog(row.type), data.category, t) : '',
+		'rarity' in data ? contentLabel('itemRarity', data.rarity, t) : '',
 	]
 		.filter(Boolean)
 		.join(' · ');
 }
+
+/** Which catalog a `category` column is spelled in — the column name is shared, the vocabulary is
+ *  not: an item's category is a kind of thing, a feat's is when you may take it. */
+const categoryCatalog = (type: ContentType): string =>
+	type === 'feat' ? 'featCategory' : 'itemCategory';
 
 /** Project grouped rows into the EntryList model: each group's rows become display Entries (id, name
  *  via `nameOf`, meta, edition, row). Shared by the compendium + spellbook lists so the row projection
@@ -410,13 +426,14 @@ export function entryMeta(row: LoadedRow): string {
 export function toEntryGroups(
 	groups: { label: string; rows: LoadedRow[] }[],
 	nameOf: (row: LoadedRow) => string,
+	t: Translate,
 ): { label: string; entries: Entry<LoadedRow>[] }[] {
 	return groups.map((g) => ({
 		label: g.label,
 		entries: g.rows.map((r) => ({
 			id: r.effectiveId,
 			name: nameOf(r),
-			meta: entryMeta(r),
+			meta: entryMeta(r, t),
 			edition: editionLabel(r.systems),
 			row: r,
 		})),

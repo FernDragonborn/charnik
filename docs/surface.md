@@ -741,6 +741,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function editionLabel` — Format a row's `systems` array as a short edition label.
 - `interface DetailModel`
 - `function buildDetail` — Build the right-pane wiki detail model for a content row.
+- `const contentLabel` — * A content enum value as a person reads it — a school, a rarity, an item kind, a feat category.
 - `function entryMeta` — The small sub-line under an entry's name in the list.
 - `function toEntryGroups` — Project grouped rows into the EntryList model: each group's rows become display Entries (id, name * via `nameOf`, met…
 - `function groupEntries` — Group entries for the list — spells by level, everything else as one flat group.
@@ -1256,6 +1257,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 ### `src/lib/i18n/index.ts`
 
 - `type Dir`
+- `type Translate` — * The catalog lookup a pure formatter TAKES rather than reaches for.
 - `interface LocaleMeta`
 - `const FALLBACK_LOCALE`
 - `const LOCALES` — Bundled catalogs.
@@ -1524,4 +1526,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_47 tokens · 73 global classes · 50 components · 898 exports across 125 modules · 58 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 900 exports across 125 modules · 58 duplicate suspects._

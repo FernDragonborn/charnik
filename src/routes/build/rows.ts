@@ -5,7 +5,15 @@
  * in the view-model makes the two import each other. It re-exports everything here, so importing
  * either module works.
  */
-import { buildDetail, entryMeta, localizedName, localizedProse, type DetailModel } from '$lib/content/detail';
+import {
+	buildDetail,
+	contentLabel,
+	entryMeta,
+	localizedName,
+	localizedProse,
+	type DetailModel,
+} from '$lib/content/detail';
+import type { Translate } from '$lib/i18n';
 import { app } from '$lib/stores/app.svelte';
 import { splitList, type ContentType } from '$lib/content/schemas';
 
@@ -72,13 +80,6 @@ export function filterByName<T extends LoadedRow>(rows: T[], query: string): T[]
 export const rowDetail = (row: LoadedRow | undefined, type: ContentType): DetailModel | null =>
 	row ? buildDetail(row, type, undefined, app.activeLocale) : null;
 
-/** The catalog lookup a formatter needs, passed in rather than reached for: this module has no
- *  component to read `$_` from, and the units phrasing is a translated sentence. */
-type Translate = (
-	key: string,
-	options?: { values?: Record<string, string | number>; default?: string },
-) => string;
-
 /**
  * A skill id as a person reads it. The catalog is the source; `titleCase` is the fallback so a
  * homebrew pack shipping a nineteenth skill reads as a name rather than as its own key.
@@ -94,23 +95,30 @@ export const skillLabel = (id: string, t: Translate): string =>
  * short to say gets nothing, never a sentence mined out of its prose.
  */
 export function pickerMeta(row: LoadedRow, t: Translate): string {
-	/** A snake_case enum value as a person reads it. Takes the column's own type rather than
-	 *  `unknown`: `String(anything)` on a column that turned out to be an object prints
-	 *  `[object Object]` into the UI, and only the type-aware lint catches that. */
-	const label = (value: string | undefined) => titleCase(value ?? '');
+	/** A snake_case enum value as a person reads it — through the catalog, since every one of these
+	 *  columns is an open enum whose values are content, not code. */
+	const label = (catalog: string, value: string | undefined) => contentLabel(catalog, value, t);
 	if (row.type === 'class')
 		return [row.data.hit_die, savesLabel(row.data.saves)].filter(Boolean).join(' · ');
 	// the same sentence the sheet's own origin card prints, so a species reads identically in both
 	if (row.type === 'species')
 		return t('build.origin.speciesMeta', {
-			values: { size: label(row.data.size), feet: row.data.speed, metres: metres(row.data.speed) },
+			values: {
+				size: label('creatureSize', row.data.size),
+				feet: row.data.speed,
+				metres: metres(row.data.speed),
+			},
 		});
-	if (row.type === 'background') return splitList(row.data.skills).map(label).join(', ');
-	if (row.type === 'feat') return label(row.data.category);
+	// the background's own grants, in the words the skill list uses everywhere else
+	if (row.type === 'background')
+		return splitList(row.data.skills)
+			.map((skill) => skillLabel(skill, t))
+			.join(', ');
+	if (row.type === 'feat') return label('featCategory', row.data.category);
 	// the item picker groups BY category, so repeating it on every row of its own section says
 	// nothing; rarity is the part that still differs inside one
-	if (row.type === 'item') return label(row.data.rarity);
-	return entryMeta(row);
+	if (row.type === 'item') return label('itemRarity', row.data.rarity);
+	return entryMeta(row, t);
 }
 
 /** The saving throws a class grants, as a person reads them ("STR, CON"). A column, not a string:

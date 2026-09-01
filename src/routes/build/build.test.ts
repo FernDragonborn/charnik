@@ -13,7 +13,7 @@ import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import { build, ASI } from './build-view-model.svelte';
 import { newClassRow, ORIGIN_SLOT_KEY } from './draft';
-import { targetForTodo } from './inspector-specs';
+import { targetForTodo, sameTarget } from './inspector-specs';
 import { toggleSource } from '$lib/content/sources.svelte';
 
 const S = 'SRD 5.2.1';
@@ -562,6 +562,22 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(targetForTodo({ key: 'skills', kind: 'skills', required: true })).toEqual({
 			id: 'skills',
 		});
+	});
+
+	it('two targets are the same one by what they identify, not by how they were spelled', () => {
+		// the sheet cards' `active` state and the pane's remount both hang off this; comparing the
+		// objects as JSON made it depend on key order in unrelated components
+		expect(sameTarget({ id: 'class', index: 1 }, { id: 'class', index: 1 })).toBe(true);
+		expect(sameTarget({ id: 'class', index: 1 }, { id: 'class', index: 2 })).toBe(false);
+		expect(sameTarget({ id: 'class', index: 1 }, { id: 'subclass', index: 1 })).toBe(false);
+		expect(
+			sameTarget(
+				{ id: 'feat', level: 4, slotKey: 'r0:4' },
+				{ id: 'feat', slotKey: 'r0:4', level: 4 },
+			),
+		).toBe(true);
+		expect(sameTarget({ id: 'species' }, { id: 'species' })).toBe(true);
+		expect(sameTarget(null, { id: 'species' })).toBe(false);
 	});
 
 	it('a feat spent in another slot is offered with a reason, not withheld (N15)', () => {

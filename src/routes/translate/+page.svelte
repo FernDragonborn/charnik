@@ -111,7 +111,7 @@
 			entries: g.rows.map((r): Entry<LoadedRow> => ({
 				id: r.effectiveId,
 				name: rowName(r),
-				meta: entryMeta(r),
+				meta: entryMeta(r, $_),
 				edition: editionLabel(r.systems),
 				row: r,
 			})),

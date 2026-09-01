@@ -9,7 +9,7 @@
 	import Icon from '$lib/components/Icon.svelte';
 	import { _ } from '$lib/i18n';
 	import { build } from '../build-view-model.svelte';
-	import type { EditPane, Inspector } from '../inspector.svelte';
+	import { targetKey, type EditPane, type Inspector } from '../inspector.svelte';
 	import InspectorGrid from './InspectorGrid.svelte';
 	import FeatPane from './FeatPane.svelte';
 	import OriginFeatPane from './OriginFeatPane.svelte';
@@ -114,7 +114,7 @@
 		<!-- keyed on the target so switching from one choice to another starts the next pane clean: a
 		     card left open over the old option, or a search box still holding the old query, describes
 		     something the pane is not about. -->
-		{#key JSON.stringify(target)}
+		{#key targetKey(target)}
 			<div class="body scrolly" class:scrolls={ins.bodyScrolls}>
 				{#if target.id === 'feat'}
 					<FeatPane slotKey={target.slotKey} {ins} />

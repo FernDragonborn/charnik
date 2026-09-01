@@ -86,7 +86,7 @@
 				return true;
 			})
 			.map((x) => x.row);
-		return toEntryGroups(groupEntries(rows, 'spell'), (r) => rowName(r));
+		return toEntryGroups(groupEntries(rows, 'spell'), (r) => rowName(r), $_);
 	});
 
 	const detail = $derived(

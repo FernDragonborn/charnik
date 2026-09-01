@@ -234,7 +234,7 @@
 	});
 
 	const groups = $derived(
-		toEntryGroups(groupRows(rows.slice(0, 500), groupBy, selectedType), localName),
+		toEntryGroups(groupRows(rows.slice(0, 500), groupBy, selectedType), localName, $_),
 	);
 	// spell "Available to" comes from the reverse UNION access index (inline classes ∪ spell_lists),
 	// NOT the raw column — so a class that gained the spell class-side still shows, with provenance.

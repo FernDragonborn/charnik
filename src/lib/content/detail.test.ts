@@ -87,14 +87,34 @@ describe('buildDetail', () => {
 });
 
 describe('entryMeta', () => {
-	it('spell sub-line = school · damage', () => {
-		expect(entryMeta(row({ school: 'evocation', damage: '8d6' }))).toBe('evocation · 8d6');
+	/** A catalog that answers every key, so a test asserts the SHAPE of the line rather than the
+	 *  English in it — and a second one below proves the fallback when a key is missing. */
+	const t = (key: string, o?: { values?: Record<string, string | number>; default?: string }) =>
+		`«${key.split('.').pop()}${o?.values ? `:${Object.values(o.values).join(',')}` : ''}»`;
+
+	it('spell sub-line = school · damage, both through the catalog', () => {
+		expect(entryMeta(row({ school: 'evocation', damage: '8d6' }), t)).toBe('«evocation» · 8d6');
+	});
+
+	it('a spell that is cast, concentrated on, or ritual says so in the reader s language', () => {
+		expect(
+			entryMeta(row({ school: 'abjuration', resolution: 'save', save_ability: 'dex' }), t),
+		).toBe('«abjuration» · «save:DEX»');
+		expect(entryMeta(row({ school: 'abjuration', concentration: true, ritual: true }), t)).toBe(
+			'«abjuration» · «concentration» · «ritual»',
+		);
 	});
 
 	/* Since ITEM-TAGS the kind IS the category, so there is no broader/narrower pair left to dedupe —
 	   what an item is comes from `category`, and how magical it is from `rarity`. */
 	it('item sub-line = category · rarity', () => {
-		expect(entryMeta(row({ category: 'gear' }, 'item'))).toBe('gear');
-		expect(entryMeta(row({ category: 'ring', rarity: 'rare' }, 'item'))).toBe('ring · rare');
+		expect(entryMeta(row({ category: 'gear' }, 'item'), t)).toBe('«gear»');
+		expect(entryMeta(row({ category: 'ring', rarity: 'rare' }, 'item'), t)).toBe('«ring» · «rare»');
+	});
+
+	it('a value the catalog has no word for reads as its own name, not as a missing key', () => {
+		// these columns are OPEN enums: a homebrew pack's ninth school is content, not a bug
+		const fallback = (_key: string, o?: { default?: string }) => o?.default ?? '';
+		expect(entryMeta(row({ school: 'chronomancy' }), fallback)).toBe('Chronomancy');
 	});
 });
