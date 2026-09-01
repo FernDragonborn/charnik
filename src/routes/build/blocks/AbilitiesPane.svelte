@@ -117,7 +117,7 @@
 	.methods {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 		flex-wrap: wrap;
 	}
 	.points {
@@ -140,8 +140,8 @@
 		display: grid;
 		grid-template-columns: 34px 104px minmax(0, 1fr) 66px;
 		align-items: center;
-		gap: 9px;
-		padding: 7px 0;
+		gap: var(--space-2);
+		padding: var(--space-1-5) 0;
 		border-top: 1px solid var(--color-border);
 	}
 	.arow:first-of-type {
@@ -169,13 +169,13 @@
 		color: var(--color-text-muted);
 		font-size: var(--font-size-xs);
 		font-weight: 500;
-		margin-left: 4px;
+		margin-left: var(--space-1);
 	}
 	.boost {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
-		padding-top: 11px;
+		gap: var(--space-2);
+		padding-top: var(--space-2-5);
 		border-top: 1px solid var(--color-border);
 	}
 </style>

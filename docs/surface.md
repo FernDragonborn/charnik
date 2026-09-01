@@ -83,7 +83,7 @@ reused for genuinely different things) — judge, then either merge or leave.
 
 Style **only** through these — never hardcode a color/size. Names are semantic.
 
-**spacing scale (4px base)** — `--space-0`, `--space-1`, `--space-2`, `--space-3`, `--space-4`, `--space-5`, `--space-6`, `--space-8`
+**misc** — `--space-0`, `--space-1`, `--space-1-5`, `--space-2`, `--space-2-5`, `--space-3`, `--space-4`, `--space-5`, `--space-6`, `--space-8`
 
 **radius** — `--radius-sm`
 
@@ -1524,4 +1524,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 898 exports across 125 modules · 58 duplicate suspects._
+_47 tokens · 73 global classes · 50 components · 898 exports across 125 modules · 58 duplicate suspects._

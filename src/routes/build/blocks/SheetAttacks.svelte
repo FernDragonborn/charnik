@@ -54,7 +54,7 @@
 	.atks {
 		display: grid;
 		grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 0.9fr) minmax(0, 1.6fr);
-		gap: 6px 14px;
+		gap: var(--space-1-5) 14px;
 		align-items: baseline;
 		font-size: var(--font-size-xs);
 	}

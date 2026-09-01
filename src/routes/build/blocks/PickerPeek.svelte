@@ -57,7 +57,7 @@
 		position: fixed;
 		z-index: 38;
 		width: min(320px, calc(100vw - 24px));
-		padding-bottom: 9px;
+		padding-bottom: var(--space-2);
 		pointer-events: none;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
@@ -66,7 +66,7 @@
 		overflow: hidden;
 	}
 	header {
-		padding: 9px 12px 7px;
+		padding: var(--space-2) var(--space-3) var(--space-1-5);
 		border-bottom: 1px solid var(--color-border);
 	}
 	header b {
@@ -80,7 +80,7 @@
 		color: var(--color-resource);
 	}
 	.ptext {
-		margin: 8px 12px 0;
+		margin: var(--space-2) var(--space-3) 0;
 		font-size: var(--font-size-xs);
 		line-height: 1.5;
 		color: var(--color-text-muted);
@@ -92,7 +92,7 @@
 	}
 	.pmore {
 		display: block;
-		margin: 8px 12px 0;
+		margin: var(--space-2) var(--space-3) 0;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-accent-bright);

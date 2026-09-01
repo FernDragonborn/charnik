@@ -56,16 +56,16 @@
 	.pools {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-		gap: 9px;
+		gap: var(--space-2);
 	}
 	.pool {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: var(--space-1-5);
 		border: 1px solid var(--color-border);
 		background: var(--color-surface-2);
 		border-radius: var(--radius-md);
-		padding: 10px 12px;
+		padding: var(--space-2-5) var(--space-3);
 	}
 	.pool b {
 		font-family: var(--font-display);

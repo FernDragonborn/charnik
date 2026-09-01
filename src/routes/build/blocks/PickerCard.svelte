@@ -128,7 +128,7 @@
 		top: 8px;
 		right: 10px;
 		z-index: 1;
-		padding: 4px;
+		padding: var(--space-1);
 		border-radius: var(--radius-full);
 		background: var(--color-surface-2);
 	}
@@ -141,20 +141,20 @@
 	}
 	.cbody :global(.detail-body) {
 		flex: 1;
-		padding: 4px 14px 10px;
+		padding: var(--space-1) 14px var(--space-2-5);
 		scrollbar-width: thin;
 		scrollbar-color: var(--color-border-strong) transparent;
 	}
 	footer {
 		display: flex;
-		padding: 9px 14px;
+		padding: var(--space-2) 14px;
 		border-top: 1px solid var(--color-border);
 	}
 	.take {
 		margin-left: auto;
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.take.is-taken {
 		color: var(--color-resource);

@@ -275,8 +275,8 @@
 	   navigation as the headers, at a density that survives everything being open. */
 	.jump {
 		display: flex;
-		gap: 4px;
-		margin-top: 9px;
+		gap: var(--space-1);
+		margin-top: var(--space-2);
 		flex: none;
 		overflow-x: auto;
 		padding-bottom: 2px;
@@ -289,7 +289,7 @@
 		white-space: nowrap;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		padding: 4px 9px;
+		padding: var(--space-1) var(--space-2);
 		border-radius: var(--radius-full);
 		border: 1px solid var(--color-border);
 		background: var(--color-surface);
@@ -326,13 +326,13 @@
 		flex: 1;
 		min-height: 0;
 		overflow: auto;
-		padding: 8px 2px;
+		padding: var(--space-2) 2px;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
-		margin-top: 9px;
+		margin-top: var(--space-2);
 	}
 	.nomatch {
-		margin: 4px 8px;
+		margin: var(--space-1) var(--space-2);
 	}
 
 	.sect {
@@ -343,10 +343,10 @@
 		z-index: 3;
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		width: 100%;
-		padding: 7px 10px;
-		margin: 6px 0 2px;
+		padding: var(--space-1-5) var(--space-2-5);
+		margin: var(--space-1-5) 0 2px;
 		border-radius: var(--radius);
 		cursor: pointer;
 		background: var(--color-bg);
@@ -382,10 +382,10 @@
 	.srow {
 		display: flex;
 		align-items: stretch;
-		gap: 4px;
-		margin: 0 6px;
+		gap: var(--space-1);
+		margin: 0 var(--space-1-5);
 		border: 1px solid transparent;
-		border-radius: 9px;
+		border-radius: var(--radius);
 	}
 	/* the state fills are `.is-active` / `.is-taken` in build.css; hover borrows the active look
 	   because pointing at a row and reading it are the same intent a moment apart */
@@ -396,7 +396,7 @@
 	/* the control itself is `.addbtn` in build.css — shared with the feat pane's ASI row, which asks
 	   the same question. Where it sits in THIS row is what stays here. */
 	.srow .addbtn {
-		margin-left: 7px;
+		margin-left: var(--space-1-5);
 	}
 	.sbody {
 		all: unset;
@@ -406,9 +406,9 @@
 		min-width: 0;
 		display: flex;
 		align-items: baseline;
-		gap: 9px;
-		padding: 6px 10px 6px 2px;
-		border-radius: 9px;
+		gap: var(--space-2);
+		padding: var(--space-1-5) var(--space-2-5) var(--space-1-5) 2px;
+		border-radius: var(--radius);
 		/* `all: unset` puts text selection back, and the row's second click is a double-click that
 		   takes the spell — highlighting its name on the way is not what that gesture meant */
 		user-select: none;

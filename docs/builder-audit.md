@@ -436,7 +436,7 @@ four keys, same order; the second is simply not exported.
 - `.build-page .tag.gold` is declared twice (`build.css:79` and `:139`), and `:139` re-states the
   colour `.build-page .gold` (`:221`) already gives.
 
-**[ ] S14. Spacing does not follow the token scale.** 125 px literals across 4185 lines; the value
+**[~] S14. Spacing does not follow the token scale.** 125 px literals across 4185 lines; the value
 distribution is `6px`×23, `9px`×20, `4px`×18, `8px`×17, `11px`×13, `7px`×8, `10px`×8, `5px`×4,
 `3px`×2. `--space-*` is 4/8/12/16/24/32, so most of the commonest values sit off-scale and outside a
 user's theme. `border-radius: 9px` repeats four times (`SectionedPicker.svelte:374`, `:422`,

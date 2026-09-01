@@ -132,7 +132,7 @@
 		flex-direction: column;
 		flex: 1;
 		min-height: 0;
-		padding-top: 10px;
+		padding-top: var(--space-2-5);
 		border-top: 1px solid var(--color-border);
 	}
 	.caster:first-of-type {
@@ -140,7 +140,7 @@
 		padding-top: 0;
 	}
 	.facets {
-		margin-top: 9px;
+		margin-top: var(--space-2);
 		flex: none;
 	}
 </style>

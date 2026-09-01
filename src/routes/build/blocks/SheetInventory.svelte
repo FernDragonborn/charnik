@@ -101,22 +101,22 @@
 	.split {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) 220px;
-		gap: 16px;
+		gap: var(--space-4);
 		align-items: start;
 	}
 	.items {
 		display: flex;
 		flex-direction: column;
-		gap: 5px;
+		gap: var(--space-1);
 	}
 	.item {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
-		padding: 5px 9px;
+		padding: var(--space-1) var(--space-2);
 	}
 	.iname {
 		flex: 1;

@@ -141,14 +141,14 @@
 	.pane {
 		display: flex;
 		flex-direction: column;
-		gap: 11px;
+		gap: var(--space-2-5);
 		height: 100%;
 		min-height: 0;
 	}
 	.head {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 	.spacer {
 		flex: 1;
@@ -168,7 +168,7 @@
 	.body {
 		display: flex;
 		flex-direction: column;
-		gap: 11px;
+		gap: var(--space-2-5);
 		flex: 1;
 		min-height: 0;
 	}
@@ -183,10 +183,10 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		background: var(--color-surface);
-		padding: 13px;
+		padding: var(--space-3);
 		display: flex;
 		flex-direction: column;
-		gap: 9px;
+		gap: var(--space-2);
 	}
 	.resting.done {
 		border-color: var(--color-good-line);
@@ -198,15 +198,15 @@
 	.todolist {
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
+		gap: var(--space-1);
 	}
 	.todo {
 		all: unset;
 		cursor: pointer;
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		padding: 6px 8px;
+		gap: var(--space-1-5);
+		padding: var(--space-1-5) var(--space-2);
 		border-radius: var(--radius-sm);
 		font-size: var(--font-size-xs);
 		color: var(--color-accent-bright);
@@ -227,10 +227,10 @@
 	.foot {
 		display: flex;
 		align-items: center;
-		gap: 9px;
+		gap: var(--space-2);
 		flex: none;
 		border-top: 1px solid var(--color-border);
-		padding: 11px 0;
+		padding: var(--space-2-5) 0;
 	}
 	.foot .btn {
 		flex: none;

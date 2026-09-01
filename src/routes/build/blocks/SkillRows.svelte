@@ -75,7 +75,7 @@
 	}
 	.group {
 		break-inside: avoid;
-		margin-bottom: 8px;
+		margin-bottom: var(--space-2);
 	}
 	.group .sectlab {
 		margin-bottom: 2px;
@@ -83,7 +83,7 @@
 	.skill {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 		break-inside: avoid;
 		border-radius: var(--radius-sm);
 	}
@@ -96,8 +96,8 @@
 		min-width: 0;
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		padding: 4px 7px;
+		gap: var(--space-2);
+		padding: var(--space-1) var(--space-1-5);
 		border-radius: var(--radius-sm);
 		font-size: var(--font-size-sm);
 		cursor: pointer;
@@ -134,7 +134,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		font-weight: 700;
-		padding: 1px 5px;
+		padding: 1px var(--space-1);
 		border-radius: var(--radius-full);
 		border: 1px solid var(--color-border);
 		color: var(--color-text-muted);
@@ -173,7 +173,7 @@
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 		border-left: 1px solid var(--color-border);
-		padding-left: 6px;
+		padding-left: var(--space-1-5);
 	}
 	.skill.on .passive {
 		color: var(--color-resource);

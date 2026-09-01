@@ -44,7 +44,7 @@
 	   instead of claiming a minimum and spilling. */
 	.vitals {
 		display: flex;
-		gap: 9px;
+		gap: var(--space-2);
 	}
 	.vitals :global(.tile) {
 		flex: 1 1 0;

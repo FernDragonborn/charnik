@@ -27,8 +27,8 @@
 .build-page .card-head {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	margin-bottom: 11px;
+	gap: var(--space-2);
+	margin-bottom: var(--space-2-5);
 	flex-wrap: wrap;
 }
 .build-page .card-head .spacer {
@@ -98,7 +98,7 @@
 	border: 1px solid var(--color-border);
 	background: var(--color-surface);
 	border-radius: var(--radius-md);
-	padding: 11px 8px;
+	padding: var(--space-2-5) var(--space-2);
 	text-align: center;
 	min-width: 0;
 }
@@ -121,11 +121,11 @@
 .build-page .tag {
 	display: inline-flex;
 	align-items: center;
-	gap: 5px;
+	gap: var(--space-1);
 	border: 1px solid var(--color-border-strong);
 	background: var(--color-surface-2);
 	border-radius: var(--radius-full);
-	padding: 5px 11px;
+	padding: var(--space-1) var(--space-2-5);
 	font-size: var(--font-size-xs);
 	color: var(--color-text);
 	white-space: nowrap;
@@ -157,7 +157,7 @@
 /* pips — a countable resource. Available on the left, spent on the right (ui.md §7). */
 .build-page .pips {
 	display: flex;
-	gap: 5px;
+	gap: var(--space-1);
 	flex-wrap: wrap;
 }
 .build-page .pip {
@@ -181,7 +181,7 @@
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius-md);
 	background: var(--color-surface);
-	padding: 4px 14px 12px;
+	padding: var(--space-1) 14px var(--space-3);
 }
 
 /* two lines of a content row's prose, then an ellipsis — the sheet summarises, the inspector reads */
@@ -200,8 +200,8 @@
 .build-page .facts {
 	display: grid;
 	grid-template-columns: auto minmax(0, 1fr);
-	column-gap: 10px;
-	row-gap: 6px;
+	column-gap: var(--space-2-5);
+	row-gap: var(--space-1-5);
 	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
 }
@@ -232,7 +232,7 @@
 	font-size: var(--font-size-micro);
 	color: var(--color-text-muted);
 	border: 1px solid var(--color-border);
-	border-radius: 5px;
+	border-radius: var(--radius-sm);
 	padding: 2px 0;
 }
 .build-page .ftext {
@@ -251,10 +251,10 @@
 	font-family: var(--font-mono);
 	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
-	margin: 0 0 8px;
+	margin: 0 0 var(--space-2);
 }
 .build-page .subtext.note {
-	margin-top: 10px;
+	margin-top: var(--space-2-5);
 }
 .build-page .subtext.warn {
 	color: var(--color-warning);
@@ -271,7 +271,7 @@
 	background: var(--color-surface-2);
 	border: 1px solid var(--color-border);
 	border-radius: var(--radius);
-	padding: 7px 10px;
+	padding: var(--space-1-5) var(--space-2-5);
 	cursor: pointer;
 }
 .build-page select:focus-visible {
@@ -282,8 +282,8 @@
 .build-page .bare {
 	background: transparent;
 	border: 1px solid transparent;
-	padding: 3px 4px;
-	border-radius: 6px;
+	padding: var(--space-1) var(--space-1);
+	border-radius: var(--radius-sm);
 	font-family: var(--font-display);
 	font-weight: 600;
 	font-size: var(--font-size-body);
@@ -307,17 +307,17 @@
 .build-page .chips {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 7px;
+	gap: var(--space-1-5);
 }
 .build-page .chips.spaced {
-	margin-bottom: 12px;
+	margin-bottom: var(--space-3);
 }
 .build-page .pick-chip {
 	all: unset;
 	font-family: var(--font-display);
 	font-weight: 600;
 	font-size: var(--font-size-xs);
-	padding: 5px 11px;
+	padding: var(--space-1) var(--space-2-5);
 	border-radius: var(--radius-full);
 	background: var(--color-surface-2);
 	border: 1px solid var(--color-border);
@@ -353,7 +353,7 @@
 	font-family: var(--font-display);
 	font-weight: 600;
 	font-size: var(--font-size-xs);
-	padding: 7px 13px;
+	padding: var(--space-1-5) var(--space-3);
 	color: var(--color-text-muted);
 	cursor: pointer;
 }
@@ -409,6 +409,6 @@
 	color: var(--color-resource);
 }
 .build-page .segment-group.small button {
-	padding: 5px 10px;
+	padding: var(--space-1) var(--space-2-5);
 	font-size: var(--font-size-xs);
 }

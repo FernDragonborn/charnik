@@ -120,8 +120,8 @@
 	.head {
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding-bottom: 12px;
+		gap: var(--space-3);
+		padding-bottom: var(--space-3);
 		margin-bottom: 14px;
 		border-bottom: 1px solid var(--color-border);
 		flex-wrap: wrap;
@@ -146,8 +146,8 @@
 		color: var(--color-text);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 9px;
-		padding: 8px 12px;
+		border-radius: var(--radius);
+		padding: var(--space-2) var(--space-3);
 	}
 	.nameinput:focus-visible {
 		outline: var(--focus-ring);
@@ -156,7 +156,7 @@
 	.level {
 		display: inline-flex;
 		align-items: baseline;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.level b {
 		font-family: var(--font-display);
@@ -176,7 +176,7 @@
 		gap: 2px;
 	}
 	.undo button {
-		padding: 6px;
+		padding: var(--space-1-5);
 		border-radius: var(--radius-sm);
 	}
 	.undo button:hover:not(:disabled) {

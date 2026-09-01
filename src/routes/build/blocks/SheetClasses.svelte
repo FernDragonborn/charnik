@@ -188,8 +188,8 @@
 	.classrow {
 		display: flex;
 		align-items: center;
-		gap: 9px;
-		padding: 7px 0;
+		gap: var(--space-2);
+		padding: var(--space-1-5) 0;
 		border-top: 1px solid var(--color-border);
 	}
 	.classrow:first-of-type {
@@ -202,7 +202,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1px;
-		padding: 7px 10px;
+		padding: var(--space-1-5) var(--space-2-5);
 		border-color: var(--color-border);
 		background: var(--color-surface-2);
 	}
@@ -224,44 +224,44 @@
 	.features {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-		gap: 4px 16px;
-		margin-top: 11px;
-		padding-top: 11px;
+		gap: var(--space-1) var(--space-4);
+		margin-top: var(--space-2-5);
+		padding-top: var(--space-2-5);
 		border-top: 1px solid var(--color-border);
 	}
 	/* one block per class, so two Spellcastings never sit side by side unlabelled */
 	.clsgroup + .clsgroup {
-		margin-top: 6px;
+		margin-top: var(--space-1-5);
 	}
 	.clslabel {
 		display: flex;
 		align-items: baseline;
-		gap: 8px;
-		margin-top: 11px;
-		padding-top: 11px;
+		gap: var(--space-2);
+		margin-top: var(--space-2-5);
+		padding-top: var(--space-2-5);
 		border-top: 1px solid var(--color-border);
 	}
 	.clsgroup .features {
-		margin-top: 4px;
+		margin-top: var(--space-1);
 		padding-top: 0;
 		border-top: 0;
 	}
 	.feature {
 		display: flex;
-		gap: 9px;
+		gap: var(--space-2);
 		align-items: flex-start;
-		padding: 4px 0;
+		padding: var(--space-1) 0;
 	}
 	/* a gained feature is two clamped lines, so it says so and opens the rest */
 	.feature.readable {
 		all: unset;
 		box-sizing: border-box;
 		display: flex;
-		gap: 9px;
+		gap: var(--space-2);
 		align-items: flex-start;
 		width: 100%;
-		padding: 4px 6px;
-		margin: 0 -6px;
+		padding: var(--space-1) var(--space-1-5);
+		margin: 0 -var(--space-1-5);
 		border-radius: var(--radius-sm);
 		cursor: pointer;
 		text-align: left;

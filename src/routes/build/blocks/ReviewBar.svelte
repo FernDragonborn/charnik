@@ -54,7 +54,7 @@
 		display: flex;
 		align-items: flex-start;
 		gap: 18px;
-		margin-top: 4px;
+		margin-top: var(--space-1);
 		border-color: var(--color-accent-deep);
 		background: linear-gradient(180deg, var(--color-accent-soft), var(--color-surface));
 	}
@@ -67,7 +67,7 @@
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 	.ready-label {
 		color: var(--color-good);
@@ -75,7 +75,7 @@
 	.todos {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.todo {
 		border-color: var(--color-accent-deep);
@@ -99,12 +99,12 @@
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
 		color: var(--color-accent-text);
-		border-radius: 9px;
-		padding: 11px 20px;
+		border-radius: var(--radius);
+		padding: var(--space-2-5) 20px;
 		cursor: pointer;
 		display: inline-flex;
 		align-items: center;
-		gap: 7px;
+		gap: var(--space-1-5);
 	}
 	.create:hover:not(:disabled) {
 		background: var(--color-accent);

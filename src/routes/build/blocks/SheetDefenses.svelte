@@ -125,16 +125,16 @@
 	.saves {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(74px, 1fr));
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.save {
 		display: flex;
 		align-items: baseline;
-		gap: 6px;
+		gap: var(--space-1-5);
 		border: 1px solid var(--color-border);
 		background: var(--color-surface-2);
 		border-radius: var(--radius);
-		padding: 6px 9px;
+		padding: var(--space-1-5) var(--space-2);
 	}
 	.save.is-taken b {
 		color: var(--color-resource);
@@ -154,7 +154,7 @@
 	}
 	/* layout is the global .chips; what stays here is where this one sits */
 	.tags {
-		margin-top: 10px;
+		margin-top: var(--space-2-5);
 		align-items: center;
 	}
 </style>

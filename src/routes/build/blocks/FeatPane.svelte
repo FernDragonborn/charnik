@@ -132,8 +132,8 @@
 		flex: none;
 		display: flex;
 		align-items: center;
-		gap: 9px;
-		padding: 11px 13px;
+		gap: var(--space-2);
+		padding: var(--space-2-5) var(--space-3);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-md);
 		background: var(--color-surface-2);
@@ -148,7 +148,7 @@
 		cursor: pointer;
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
+		gap: var(--space-1);
 	}
 	.asi-body:focus-visible {
 		outline: var(--focus-ring);
@@ -168,6 +168,6 @@
 		display: flex;
 		flex-direction: column;
 		flex: none;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 </style>

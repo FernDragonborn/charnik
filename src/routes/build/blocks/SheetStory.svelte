@@ -65,19 +65,19 @@
 	.split {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-		gap: 16px;
+		gap: var(--space-4);
 		align-items: start;
 	}
 	.bars {
 		display: flex;
 		flex-direction: column;
-		gap: 9px;
+		gap: var(--space-2);
 	}
 	.bar {
 		display: grid;
 		grid-template-columns: 96px minmax(0, 1fr) auto;
 		align-items: center;
-		gap: 9px;
+		gap: var(--space-2);
 	}
 	.blabel {
 		font-size: var(--font-size-xs);
@@ -92,8 +92,8 @@
 	.notes {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
-		padding: 10px 12px;
+		gap: var(--space-1-5);
+		padding: var(--space-2-5) var(--space-3);
 		border-color: var(--color-border);
 		background: var(--color-surface-2);
 		text-align: left;

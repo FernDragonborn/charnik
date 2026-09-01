@@ -122,21 +122,21 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 7px;
-		margin-bottom: 12px;
+		gap: var(--space-1-5);
+		margin-bottom: var(--space-3);
 	}
 	.groups {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-		gap: 10px 16px;
+		gap: var(--space-2-5) var(--space-4);
 	}
 	.group .sectlab {
-		margin-bottom: 6px;
+		margin-bottom: var(--space-1-5);
 	}
 	.quiet {
-		padding: 12px 17px;
+		padding: var(--space-3) 17px;
 	}
 	.quiet .subtext {
-		margin: 4px 0 0;
+		margin: var(--space-1) 0 0;
 	}
 </style>

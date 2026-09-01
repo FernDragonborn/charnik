@@ -83,13 +83,13 @@
 	.slots {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
-		gap: 8px;
+		gap: var(--space-2);
 	}
 	.featrow {
 		display: flex;
-		gap: 10px;
+		gap: var(--space-2-5);
 		align-items: flex-start;
-		padding: 9px 11px;
+		padding: var(--space-2) var(--space-2-5);
 		border-radius: var(--radius-md);
 		border: 1px solid var(--color-border);
 		background: var(--color-surface-2);
@@ -100,7 +100,7 @@
 	.lvl {
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		padding: 2px 7px;
+		padding: 2px var(--space-1-5);
 		margin-top: 1px;
 	}
 	.lvl.done {

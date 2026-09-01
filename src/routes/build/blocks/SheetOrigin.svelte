@@ -105,14 +105,14 @@
 	.pair {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-		gap: 10px;
+		gap: var(--space-2-5);
 		align-items: stretch;
 	}
 	.slot.block {
 		display: flex;
 		flex-direction: column;
-		gap: 5px;
-		padding: 11px 12px;
+		gap: var(--space-1);
+		padding: var(--space-2-5) var(--space-3);
 		border-color: var(--color-border);
 		background: var(--color-surface-2);
 	}

@@ -40,15 +40,15 @@
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface-2);
 		border-radius: var(--radius-md);
-		padding: 11px 13px;
+		padding: var(--space-2-5) var(--space-3);
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 	.rows {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) auto auto auto;
-		gap: 5px 9px;
+		gap: var(--space-1) var(--space-2);
 		align-items: baseline;
 		font-size: var(--font-size-xs);
 	}

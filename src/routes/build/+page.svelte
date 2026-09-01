@@ -164,7 +164,7 @@
 		   share of the window instead, floored so the article never squeezes and capped so the sheet
 		   never becomes the smaller pane. */
 		grid-template-columns: minmax(0, 1fr) clamp(520px, 40vw, 880px);
-		gap: 16px;
+		gap: var(--space-4);
 		flex: 1;
 		min-height: 0;
 	}
@@ -174,7 +174,7 @@
 		gap: 14px;
 		overflow: auto;
 		min-height: 0;
-		padding-right: 4px;
+		padding-right: var(--space-1);
 	}
 	/* skills is the taller and denser of the two, so it takes the larger share; `start` keeps the
 	   short card short instead of stretching it to match. */
@@ -198,7 +198,7 @@
 		background: var(--color-bg);
 		overflow: hidden;
 		min-height: 0;
-		padding-left: 16px;
+		padding-left: var(--space-4);
 	}
 
 	/* under ~1100px the inspector can't hold a list and a diff side by side with the sheet — it moves
@@ -218,7 +218,7 @@
 			border-left: 0;
 			border-top: 1px solid var(--color-border);
 			padding-left: 0;
-			padding-top: 16px;
+			padding-top: var(--space-4);
 		}
 	}
 </style>

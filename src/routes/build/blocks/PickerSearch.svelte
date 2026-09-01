@@ -57,11 +57,11 @@
 	.lsearch {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius);
-		padding: 0 11px;
+		padding: 0 var(--space-2-5);
 		flex: none;
 	}
 	.lsearch input {
@@ -72,7 +72,7 @@
 		color: var(--color-text);
 		font-family: var(--font-body);
 		font-size: var(--font-size-sm);
-		padding: 8px 0;
+		padding: var(--space-2) 0;
 	}
 	.lsearch input:focus {
 		outline: none;

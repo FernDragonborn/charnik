@@ -40,7 +40,7 @@
 	.abilities {
 		display: grid;
 		grid-template-columns: repeat(6, minmax(0, 1fr));
-		gap: 9px;
+		gap: var(--space-2);
 	}
 	.ability {
 		display: flex;
@@ -49,7 +49,7 @@
 		gap: 1px;
 		background: var(--color-surface);
 		border-color: var(--color-border);
-		padding: 10px 6px;
+		padding: var(--space-2-5) var(--space-1-5);
 	}
 	.ability.boosted b {
 		color: var(--color-accent-bright);

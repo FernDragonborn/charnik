@@ -143,7 +143,7 @@
 	.oscroll {
 		display: flex;
 		flex-direction: column;
-		gap: 11px;
+		gap: var(--space-2-5);
 		flex: 1;
 		min-height: 0;
 		overflow: auto;
@@ -155,13 +155,13 @@
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
 		align-content: start;
-		gap: 6px;
-		margin-top: 7px;
+		gap: var(--space-1-5);
+		margin-top: var(--space-1-5);
 		flex: none;
 	}
 	.nomatch {
 		grid-column: 1 / -1;
-		margin: 4px 0;
+		margin: var(--space-1) 0;
 	}
 	.cell {
 		all: unset;
@@ -170,8 +170,8 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 4px;
-		padding: 9px 5px;
+		gap: var(--space-1);
+		padding: var(--space-2) var(--space-1);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-md);
 		background: var(--color-surface);

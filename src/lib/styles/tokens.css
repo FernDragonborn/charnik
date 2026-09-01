@@ -14,10 +14,16 @@
  */
 
 :root {
-	/* ---- spacing scale (4px base) ---- */
+	/* ---- spacing scale (4px base) ----
+	 * The half-steps are not decoration: a sheet row packs a label, a number and two controls onto one
+	 * line, and 4→8→12 is too coarse to space that — which is why hundreds of raw px literals grew
+	 * between them. They are DERIVED from the values already in use, so adopting one moves nothing,
+	 * and a theme can now reach the gaps it could not before. */
 	--space-0: 0;
 	--space-1: 0.25rem;
+	--space-1-5: 0.375rem;
 	--space-2: 0.5rem;
+	--space-2-5: 0.625rem;
 	--space-3: 0.75rem;
 	--space-4: 1rem;
 	--space-5: 1.5rem;
