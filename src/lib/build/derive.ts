@@ -169,20 +169,29 @@ export interface DraftClassEntry {
 	level: number;
 }
 
-/** Class rows that have reached the level their subclass was due at without choosing one. A
- *  character built straight to level 8 owes this exactly as much as one levelled up to it, which is
- *  why it is computed from the level rather than watched for during a level-up. Pure. */
+/**
+ * Class rows that have reached the level their subclass was due at without choosing one. A character
+ * built straight to level 8 owes this exactly as much as one levelled up to it, which is why it is
+ * computed from the level rather than watched for during a level-up. Pure.
+ *
+ * `hasOptions` is asked as well as the level, because a class whose `subclass_level` is set while no
+ * subclass row is loaded — the source is disabled, or the pack ships none — is a CONTENT problem, not
+ * something the player can fix. Left ungated, the review bar says "choose a subclass" and the click
+ * opens an empty pane. Charnik does not invent a default subclass to fill it: authoring game data is
+ * the one thing it must never do.
+ */
 export function openSubclassChoices(
 	classes: readonly DraftClassEntry[],
 	graph: ContentGraph,
-	nameOf: (row: LoadedRow) => string
+	nameOf: (row: LoadedRow) => string,
+	hasOptions: (classId: string) => boolean
 ): { index: number; className: string; level: number }[] {
 	return classes.flatMap((entry, index) => {
 		if (!entry.classId || entry.subclassId) return [];
 		const row = graph.get(entry.classId);
 		if (row?.type !== 'class') return [];
 		const due = Number(row.data.subclass_level ?? 0);
-		if (!due || entry.level < due) return [];
+		if (!due || entry.level < due || !hasOptions(entry.classId)) return [];
 		return [{ index, className: nameOf(row), level: due }];
 	});
 }

@@ -104,6 +104,14 @@ interface PickSpec extends SpecCopy {
 	apply: (host: InspectorHost, id: string | null) => void;
 	/** Can this choice be un-made? A class row cannot (removing it is a different control). */
 	clearable: boolean;
+	/**
+	 * Why an option cannot be taken here, as a catalog KEY — this module has no locale.
+	 *
+	 * An option nothing can be done with is shown and explained rather than dropped from the list:
+	 * a feat quietly missing from the menu is a player searching for it and concluding the app has
+	 * lost it (ui.md §10 — dimmed and disabled is a statement, an absence is a silence).
+	 */
+	blockedKey?: (id: string) => string | null;
 }
 
 interface EditSpec extends SpecCopy {
@@ -245,11 +253,11 @@ function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
 				blurbKey: 'featBlurb',
 				values: { level: t.level },
 				type: 'feat',
-				// same rule as a class: a feat another slot already spent is not offered again, unless
-				// its row says it repeats. Taking one twice grants its benefit once and reads as a bug.
-				options: b.feats
-					.featOptionsFor(t.level)
-					.filter((r) => !b.feats.featOptionBlocked(r.effectiveId, t.slotKey)),
+				// a feat another slot already spent stays in the list and says so, unless its row says it
+				// repeats. Taking one twice grants its benefit once and reads as a bug.
+				options: b.feats.featOptionsFor(t.level),
+				blockedKey: (id) =>
+					b.feats.featOptionBlocked(id, t.slotKey) ? 'build.feats.takenElsewhere' : null,
 				currentId: b.draft.slotFeats[t.slotKey] ?? null,
 				apply: (host, id) => host.feats.setSlotFeat(t.slotKey, id ?? ''),
 				clearable: true,
@@ -360,7 +368,8 @@ export class Inspector {
 	 */
 	take = (id: string) => {
 		const spec = this.pick;
-		if (!spec || id === spec.currentId) return;
+		// a blocked option is readable but not takeable — the double-click shortcut reaches it too
+		if (!spec || id === spec.currentId || spec.blockedKey?.(id)) return;
 		const host = this.host();
 		const before = host.sheet; // deriveSheet returns a fresh object, so this stays valid after apply
 		spec.apply(host, id);

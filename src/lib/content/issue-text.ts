@@ -90,6 +90,12 @@ export const issueText = {
 		detail: `${kind}_id "${id}"`,
 	}),
 
+	/** A class asks its players to choose a subclass, and this edition has none to choose from. */
+	noSubclassRows: (level: number): IssueText => ({
+		message: `This class hands out a subclass at level ${level}, but no subclass in this edition names it — so a character reaching that level is asked for a choice with nothing in it. Add the subclass rows, or clear "subclass_level".`,
+		detail: `subclass_level ${level}, 0 subclasses`,
+	}),
+
 	/** A tag whose value has to be a number isn't one. Folding a column into `tags` cost zod's
 	 *  per-column validation of it, so this is where that check comes back (docs/plan.md). */
 	badTagValue: (tag: string, name: string): IssueText => ({

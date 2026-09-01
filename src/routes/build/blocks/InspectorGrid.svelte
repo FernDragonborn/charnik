@@ -40,6 +40,10 @@
 		onpreview={(id) => (ins.previewId = id)}
 		ontake={ins.take}
 		detail={ins.detail}
+		blocked={(id) => {
+			const key = ins.pick?.blockedKey?.(id);
+			return key ? $_(key) : null;
+		}}
 		placeholder={placeholder ??
 			$_('build.inspector.searchIn', { values: { count: ins.pick.options.length } })}
 	>

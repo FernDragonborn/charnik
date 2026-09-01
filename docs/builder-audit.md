@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **21 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **24 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -72,7 +72,7 @@ Work this file does not itself hold:
   expertise side.
 - [ ] **X1. Origin feat needs its own component.** Granted, not chosen — it must not render as a feat
   slot that merely refuses to open (falls out of B13).
-- [ ] **X2. A class with no subclass rows is reported by content health.** The builder side is B14;
+- [x] **X2. A class with no subclass rows is reported by content health.** The builder side is B14;
   this is the other half, and it lives wherever content health already reports a broken class.
 
 Deferred by decision, not open work: the shared provenance popover (A15's second half), and keyboard
@@ -163,7 +163,7 @@ not in `setClass` (`:254`). `totalLevel` (`:241`) counts only rows that already 
 empty row is invisible to the cap: `addClass()` at level 1 → `setClass(0, wizard)` → raise to 20 →
 `setClass(1, fighter)` fills the pre-existing empty row → 21. Nothing downstream clamps it.
 
-**[ ] B8. Lowering a class level orphans its feat picks, which then invisibly delete feats from every
+**[x] B8. Lowering a class level orphans its feat picks, which then invisibly delete feats from every
 other slot's menu.** `feat-slots.svelte.ts:70-73` — `usedFeatRefs` reads the raw `draft.slotFeats`,
 while `featSlots` (`:35-46`) only yields keys for levels `asiFeatLevels` still grants, and
 `bumpClassLevel` never prunes the maps. Fighter 8 → take Alert in the level-8 slot → step back to 4.
@@ -217,7 +217,7 @@ static `<div class="featrow is-taken">` with no click target, and no `InspectorT
 A background granting Skilled or a half-feat loses both the skill grant and the +1. Wire it or delete
 the `'origin'` branch and fix the comment.
 
-**[ ] B14. A subclass todo with no subclass rows is a dead link.** `derive.ts:183-186` emits the todo from
+**[x] B14. A subclass todo with no subclass rows is a dead link.** `derive.ts:183-186` emits the todo from
 the class's `subclass_level` alone; `SheetClasses.svelte:90` renders the button only
 `{#if subs.length}`, and `inspector.svelte.ts:235` builds `options: b.subclassesFor(…)`. With the
 subclass source disabled the review bar says "choose a subclass" and the click opens an empty pane.
@@ -309,7 +309,7 @@ makes `allOpen` true, the button reads "Collapse all", and clicking sets `openKe
 changing on screen. It also discards the sections the user had opened, so clearing the query collapses
 everything.
 
-**[ ] A12. `OptionGrid` conveys "already chosen" by colour only.** `OptionGrid.svelte:96-98` —
+**[x] A12. `OptionGrid` conveys "already chosen" by colour only.** `OptionGrid.svelte:96-98` —
 `aria-selected` tracks the *highlight*, so the option that actually is the character's
 species/background/class carries no ARIA, only `--color-resource` gold. `SectionedPicker` is fine
 (`addbtn` carries `aria-pressed`, `:198-202`); the grid has no equivalent.

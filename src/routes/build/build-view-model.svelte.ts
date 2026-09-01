@@ -424,7 +424,14 @@ export class BuildVM {
 	);
 
 	openSubclasses = $derived(
-		this.graph ? openSubclassChoices(this.draft.classes, this.graph, (r) => rowName(r)) : []
+		this.graph
+			? openSubclassChoices(
+					this.draft.classes,
+					this.graph,
+					(r) => rowName(r),
+					(classId) => this.subclassesFor(classId).length > 0
+				)
+			: []
 	);
 
 	/** The inspector target that fixes a todo — so clicking the line opens the control, not a page. */

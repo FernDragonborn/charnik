@@ -432,7 +432,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `interface SpellPickerInput` — Build the per-caster-class spell picker: the pickable spell pool grouped by level, plus the * cantrip/leveled counts …
 - `function buildSpellPicker`
 - `interface DraftClassEntry` — A class row as the draft holds it, pre-resolution (ids nullable while the user is still choosing).
-- `function openSubclassChoices` — Class rows that have reached the level their subclass was due at without choosing one.
+- `function openSubclassChoices` — * Class rows that have reached the level their subclass was due at without choosing one.
 - `interface ClassFeatureLine` — One class feature as the sheet lists it: which level handed it over, from which class, and * whether the character ha…
 - `interface ClassFeatureInput` — * Every class feature the drafted classes grant, gained ones first, then a short look-ahead.
 - `function classFeatureLines`

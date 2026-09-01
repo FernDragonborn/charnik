@@ -7,6 +7,7 @@ import {
 	type BuildTodoInput,
 	expertiseSlotsAtLevel,
 	expertiseBudget,
+	openSubclassChoices,
 	halfFeatAbilities
 } from './derive';
 import { makeRow } from '../content/test-utils';
@@ -80,6 +81,33 @@ describe('expertiseBudget (drafted-class expertise cap)', () => {
 	it('drops a feature of another system, and an unset class', () => {
 		expect(expertiseBudget([{ classId: 'rogue', subclassId: null, level: 6 }], graph, '5e')).toBe(0);
 		expect(expertiseBudget([{ classId: null, subclassId: null, level: 6 }], graph, '5.5e')).toBe(0);
+	});
+});
+
+describe('openSubclassChoices', () => {
+	const graph = {
+		get: (id: string) =>
+			id === 'paladin' ? makeRow('class', { id: 'paladin', subclass_level: 3 }) : undefined,
+	} as unknown as ContentGraph;
+	const paladin = (level: number) => [{ classId: 'paladin', subclassId: null, level }];
+	const named = (row: { data: Record<string, unknown> }) => String(row.data.id);
+
+	it('asks once the class has reached the level its subclass is due at', () => {
+		expect(openSubclassChoices(paladin(2), graph, named, () => true)).toEqual([]);
+		expect(openSubclassChoices(paladin(3), graph, named, () => true)).toEqual([
+			{ index: 0, className: 'paladin', level: 3 },
+		]);
+	});
+
+	it('stays silent when the content offers no subclass to choose', () => {
+		// the class declares a subclass level while nothing loaded can fill it: a content problem, and
+		// a todo whose click opens an empty pane is not how the builder reports one
+		expect(openSubclassChoices(paladin(5), graph, named, () => false)).toEqual([]);
+	});
+
+	it('is done once one is chosen', () => {
+		const chosen = [{ classId: 'paladin', subclassId: 'devotion', level: 5 }];
+		expect(openSubclassChoices(chosen, graph, named, () => true)).toEqual([]);
 	});
 });
 

@@ -28,6 +28,7 @@
 		ontake,
 		detail,
 		placeholder,
+		blocked,
 		below,
 	}: {
 		options: LoadedRow[];
@@ -43,6 +44,9 @@
 		/** The article for `previewId`, rendered by the card. */
 		detail: DetailModel | null;
 		placeholder: string;
+		/** Why an option cannot be taken, already in the reader's language — or `null` when it can.
+		 *  A blocked option still opens its article; only the take is refused. */
+		blocked?: (id: string) => string | null;
 		/** Whatever the pane shows under the options — the diff, a taken pick's own sub-choices. It
 		 *  renders INSIDE the scroll region with the grid, because the pane gets one and this is it:
 		 *  two shrinkable boxes each with their own scrollbar is the failure this control exists to
@@ -85,6 +89,7 @@
 	>
 		{#each options as row (row.effectiveId)}
 			{@const meta = pickerMeta(row, $_)}
+			{@const why = blocked?.(row.effectiveId) ?? null}
 			<!-- the double-click takes it outright, the same gesture the sectioned list uses. It skips
 			     the diff, which is the one thing this pane exists to show — so it is a shortcut for
 			     someone who already knows what they want, and Ctrl+Z is the way back. -->
@@ -93,9 +98,12 @@
 				id={picker.optionId(row.effectiveId)}
 				data-entry={row.effectiveId}
 				role="option"
-				aria-selected={row.effectiveId === previewId}
+				aria-selected={taken.has(row.effectiveId)}
+				aria-disabled={why ? true : undefined}
+				title={why}
 				class:is-active={row.effectiveId === previewId}
 				class:is-taken={taken.has(row.effectiveId)}
+				class:is-blocked={!!why}
 				onclick={() => picker.read(row.effectiveId)}
 				ondblclick={() => ontake(row.effectiveId)}
 			>
@@ -198,5 +206,14 @@
 	   reading" — but the accent outline stays, so the card still points somewhere visible. */
 	.cell.is-taken.is-active {
 		border-color: var(--color-accent);
+	}
+	/* readable, and visibly not takeable — its `title` says why. Dropping it from the list instead
+	   reads as the app having lost it. */
+	.cell.is-blocked {
+		opacity: 0.45;
+	}
+	.cell.is-blocked:hover {
+		border-color: var(--color-border);
+		background: none;
 	}
 </style>

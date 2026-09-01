@@ -64,10 +64,22 @@ export class FeatSlots {
 	// ASI may be taken in every slot; a feat is repeatable iff its row says so.
 	isRepeatable = (ref: string): boolean =>
 		ref === ASI || Boolean(rowOfType(this.host().graph?.get(ref), 'feat')?.data.repeatable);
-	/** Feat refs already spent on slots (repeatable ones may recur). */
+	/**
+	 * Feat refs already spent on slots that the character currently HAS (repeatable ones may recur).
+	 *
+	 * Read off `featSlots` rather than off the raw map, because lowering a class level takes a slot
+	 * off the sheet without taking its pick out of the draft — deliberately, so raising the level
+	 * again brings the feat back. Counting the orphan as spent removed it from every other slot's
+	 * menu, silently, with no way to find out where it had gone.
+	 */
 	// `.by` rather than plain `$derived(…)`: the bare form's argument is evaluated at field-init
 	// time, which is before the constructor has assigned `host`.
-	usedFeatRefs = $derived.by<string[]>(() => Object.values(this.host().draft.slotFeats));
+	usedFeatRefs = $derived.by<string[]>(() =>
+		this.featSlots.flatMap((s) => {
+			const ref = this.host().draft.slotFeats[s.key];
+			return ref ? [ref] : [];
+		}),
+	);
 	/** A feat option is blocked for a slot if it's non-repeatable and already taken elsewhere. */
 	featOptionBlocked = (ref: string, slotKey: string): boolean =>
 		!this.isRepeatable(ref) && this.host().draft.slotFeats[slotKey] !== ref && this.usedFeatRefs.includes(ref);

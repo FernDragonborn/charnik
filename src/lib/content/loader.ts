@@ -451,6 +451,35 @@ function validateSpellListJoins(
 		checkJoin(classSystems, r.data.class_id, 'class');
 		checkJoin(spellSystems, r.data.spell_id, 'spell');
 	}
+	validateSubclassChoices(byType, issues);
+}
+
+/** A class whose `subclass_level` is set while its edition ships no subclass row asks the player for
+ *  a choice that cannot be made. The builder stays silent about it — a todo whose click opens an
+ *  empty pane is not a report — so it is reported HERE, where a content defect belongs. */
+function validateSubclassChoices(
+	byType: Map<ContentType, LoadedRow[]>,
+	issues: ContentIssue[],
+): void {
+	for (const r of byType.get('class') ?? []) {
+		if (r.type !== 'class') continue; // byType guarantees it; the guard narrows the union for TS
+		const level = Number(r.data.subclass_level ?? 0);
+		if (!level) continue;
+		const offered = (byType.get('subclass') ?? []).some(
+			(s) =>
+				s.type === 'subclass' &&
+				String(s.data.class_id) === r.id &&
+				s.systems.some((sys) => r.systems.includes(sys)),
+		);
+		if (offered) continue;
+		issues.push({
+			level: 'warn',
+			root: r.root,
+			file: r.file,
+			id: r.id,
+			...issueText.noSubclassRows(level),
+		});
+	}
 }
 
 /** Validate what folding item columns into `tags` took away from zod: a numeric tag's value, and the

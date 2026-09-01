@@ -36,6 +36,14 @@ async function graphOf(): Promise<ContentGraph> {
 		].join('\n')
 	);
 	await st.write(
+		'c/feats_srd.csv',
+		[
+			'id,systems,source,name_en,category',
+			`alert,5.5e,${S},Alert,general`,
+			`tough,5.5e,${S},Tough,general`
+		].join('\n')
+	);
+	await st.write(
 		'c/species_srd.csv',
 		[
 			'id,systems,source,name_en,effects,size,speed,creature_type',
@@ -486,6 +494,27 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(key).not.toBe('0:4'); // the row has an id now
 		expect(build.draft.slotFeats[key]).toBe(ASI); // …and its picks came with it
 		expect(build.assembled.build.abilityBoosts.con).toBe(2);
+	});
+
+	it('a feat left in a slot the level no longer grants stops blocking the others (B8)', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.classes = [
+			{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 8 },
+		];
+		const at = (level: number) => build.feats.featSlots.find((s) => s.level === level)?.key ?? '';
+		const alert = `feat:${S}:alert`;
+		const slot8 = at(8);
+		build.feats.setSlotFeat(slot8, alert);
+		// spent by a slot the character HAS: offering it again in another slot would grant it twice
+		expect(build.feats.featOptionBlocked(alert, at(4))).toBe(true);
+
+		// step the class back to 4 — the level-8 slot leaves the sheet, its pick stays in the draft so
+		// raising the level again brings the feat back
+		build.draft.classes = build.draft.classes.map((c) => ({ ...c, level: 4 }));
+		expect(build.feats.featSlots.map((s) => s.level)).toEqual([4]);
+		expect(build.draft.slotFeats[slot8]).toBe(alert);
+		expect(build.feats.featOptionBlocked(alert, at(4))).toBe(false);
 	});
 
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {

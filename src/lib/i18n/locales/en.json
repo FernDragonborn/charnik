@@ -668,6 +668,7 @@
 			"needClass": "Choose a class to see which levels offer a feat.",
 			"origin": "origin",
 			"grantedByBackground": "Granted by your background.",
+			"takenElsewhere": "Another slot already holds this feat — it grants its benefit once.",
 			"notChosenHint": "Raise your abilities, or take a feat that does what a score cannot.",
 			"asi": "Ability Score Improvement",
 			"asiHint": "+2 to one ability, or +1 to two. The safe answer when nothing on the feat list fits.",
