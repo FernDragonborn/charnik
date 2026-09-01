@@ -24,6 +24,7 @@ import type { BuildVM } from './build-view-model.svelte';
 export type InspectorHost = Pick<
 	BuildVM,
 	| 'draft'
+	| 'settledDraft'
 	| 'sheet'
 	| 'previewSheet'
 	| 'row'
@@ -141,6 +142,23 @@ export function editSpecFor(t: InspectorTarget): EditSpec | null {
 	return { kind: 'edit', pane: t.id, titleKey, blurbKey };
 }
 
+/** Why a settled choice cannot be re-made, as a catalog KEY — this module has no locale. */
+const SETTLED_KEY = 'build.strictSettled';
+
+/**
+ * How a pick behaves once the loaded character has already made it (Strict level-up).
+ *
+ * Every other option is shown, dimmed and explained rather than dropped — the same statement a feat
+ * spent elsewhere makes — and Clear stops offering to unmake a decision the character has played
+ * with. The way out is the Free toggle, not a per-control override.
+ */
+function settledPick(isSettled: boolean, currentId: string | null) {
+	return {
+		blocked: (id: string): string | null => (isSettled && id !== currentId ? SETTLED_KEY : null),
+		clearable: !isSettled,
+	};
+}
+
 /**
  * The classes a class row may take: every class except the ones the OTHER rows already hold.
  *
@@ -167,6 +185,11 @@ function classesOfferedTo(b: InspectorHost, row: number): LoadedRow[] {
  */
 function classPickSpec(b: InspectorHost, index: number): PickSpec {
 	const held = b.draft.classes[index]?.classId ?? null;
+	const rowId = b.draft.classes[index]?.rowId;
+	const settled = settledPick(
+		!!b.settledDraft?.classes.find((c) => c.rowId === rowId)?.classId,
+		held,
+	);
 	return {
 		kind: 'pick',
 		titleKey: index === 0 ? 'classTitle' : 'classTitleExtra',
@@ -179,15 +202,18 @@ function classPickSpec(b: InspectorHost, index: number): PickSpec {
 		options: classesOfferedTo(b, index),
 		currentId: held,
 		apply: (host, id) => host.setClass(index, id),
-		clearable: index > 0,
+		blockedKey: settled.blocked,
+		clearable: index > 0 && settled.clearable,
 	};
 }
 
 /** How each `pick` target behaves. Separate from the class so the descriptor stays a plain function
  *  of (target, draft) — and so neither this nor the class grows past what one screen can hold. */
 export function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | null {
+	const settled = b.settledDraft;
 	switch (t.id) {
-		case 'species':
+		case 'species': {
+			const lock = settledPick(!!settled?.speciesId, b.draft.speciesId);
 			return {
 				kind: 'pick',
 				titleKey: 'speciesTitle',
@@ -196,9 +222,12 @@ export function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | nu
 				options: b.speciesList,
 				currentId: b.draft.speciesId,
 				apply: (host, id) => host.pickSpecies(id),
-				clearable: true,
+				blockedKey: lock.blocked,
+				clearable: lock.clearable,
 			};
-		case 'speciesOption':
+		}
+		case 'speciesOption': {
+			const lock = settledPick(!!settled?.speciesOptionId, b.draft.speciesOptionId);
 			return {
 				kind: 'pick',
 				// the label is the CONTENT's own word for this choice ("Subrace" / "Lineage"), which no
@@ -210,9 +239,12 @@ export function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | nu
 				options: b.speciesOptions,
 				currentId: b.draft.speciesOptionId,
 				apply: (host, id) => (host.draft.speciesOptionId = id),
-				clearable: true,
+				blockedKey: lock.blocked,
+				clearable: lock.clearable,
 			};
-		case 'background':
+		}
+		case 'background': {
+			const lock = settledPick(!!settled?.backgroundId, b.draft.backgroundId);
 			return {
 				kind: 'pick',
 				titleKey: 'backgroundTitle',
@@ -221,12 +253,18 @@ export function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | nu
 				options: b.backgroundList,
 				currentId: b.draft.backgroundId,
 				apply: (host, id) => (host.draft.backgroundId = id),
-				clearable: true,
+				blockedKey: lock.blocked,
+				clearable: lock.clearable,
 			};
+		}
 		case 'class':
 			return classPickSpec(b, t.index);
 		case 'subclass': {
 			const cls = b.draft.classes[t.index];
+			const lock = settledPick(
+				!!settled?.classes.find((c) => c.rowId === cls?.rowId)?.subclassId,
+				cls?.subclassId ?? null,
+			);
 			return {
 				kind: 'pick',
 				titleKey: 'subclassTitle',
@@ -236,10 +274,15 @@ export function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | nu
 				options: b.subclassesFor(cls?.classId ?? null),
 				currentId: cls?.subclassId ?? null,
 				apply: (host, id) => host.setSubclass(t.index, id),
-				clearable: true,
+				blockedKey: lock.blocked,
+				clearable: lock.clearable,
 			};
 		}
-		case 'feat':
+		case 'feat': {
+			const lock = settledPick(
+				!!settled?.slotFeats[t.slotKey],
+				b.draft.slotFeats[t.slotKey] ?? null,
+			);
 			return {
 				kind: 'pick',
 				titleKey: 'featTitle',
@@ -250,11 +293,13 @@ export function pickSpecFor(t: InspectorTarget, b: InspectorHost): PickSpec | nu
 				// repeats. Taking one twice grants its benefit once and reads as a bug.
 				options: b.feats.featOptionsFor(t.level),
 				blockedKey: (id) =>
-					b.feats.featOptionBlocked(id, t.slotKey) ? 'build.feats.takenElsewhere' : null,
+					lock.blocked(id) ??
+					(b.feats.featOptionBlocked(id, t.slotKey) ? 'build.feats.takenElsewhere' : null),
 				currentId: b.draft.slotFeats[t.slotKey] ?? null,
 				apply: (host, id) => host.feats.setSlotFeat(t.slotKey, id ?? ''),
-				clearable: true,
+				clearable: lock.clearable,
 			};
+		}
 		default:
 			return null;
 	}

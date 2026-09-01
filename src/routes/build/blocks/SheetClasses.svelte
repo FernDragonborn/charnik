@@ -63,6 +63,11 @@
 		{@const subRow = rowOfType(b.row(cls.subclassId), 'subclass')}
 		{@const subDue = Number(clsRow?.data.subclass_level ?? 0)}
 		{@const named = { values: { name: rowName(clsRow) || $_('build.classes.classWord') } }}
+		<!-- Strict on a level-up settles what the character has played: the level it reached does not go
+		     back down, and the class it took is not un-taken. Both say so on the control; Free is the
+		     way out. -->
+		{@const lowerBlocked = !!b.settledDraft && !b.canLowerLevel(i)}
+		{@const removeBlocked = i > 0 && !b.canRemoveClass(i)}
 		<div class="classrow">
 			<button
 				class="slot pickbtn"
@@ -109,12 +114,28 @@
 			{/if}
 
 			<span class="stepper level">
-				<button aria-label={$_('build.classes.lowerLevel', named)} onclick={() => b.bumpClassLevel(i, -1)}><Icon name="minus" size={12} /></button>
+				<!-- `aria-disabled`, not `disabled`: a control that says why it will not move has to be
+				     reachable by the pointer AND the keyboard to say it, and a disabled button is neither.
+				     The refusal itself lives in the view-model, where every caller meets it. -->
+				<button
+					aria-label={$_('build.classes.lowerLevel', named)}
+					aria-disabled={lowerBlocked ? true : undefined}
+					class:is-blocked={lowerBlocked}
+					title={lowerBlocked ? $_('build.strictSettled') : undefined}
+					onclick={() => b.bumpClassLevel(i, -1)}><Icon name="minus" size={12} /></button
+				>
 				<span class="base">{cls.level}</span>
 				<button aria-label={$_('build.classes.raiseLevel', named)} onclick={() => b.bumpClassLevel(i, 1)} disabled={!b.canRaiseLevel}><Icon name="plus" size={12} /></button>
 			</span>
 			{#if i > 0}
-				<button class="icon-button" title={$_('build.classes.removeClass')} aria-label={$_('build.classes.removeClass')} onclick={() => b.removeClass(i)}><Icon name="x" size={12} /></button>
+				<button
+					class="icon-button"
+					class:is-blocked={removeBlocked}
+					aria-disabled={removeBlocked ? true : undefined}
+					title={removeBlocked ? $_('build.strictSettled') : $_('build.classes.removeClass')}
+					aria-label={$_('build.classes.removeClass')}
+					onclick={() => b.removeClass(i)}><Icon name="x" size={12} /></button
+				>
 			{/if}
 		</div>
 	{/each}

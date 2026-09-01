@@ -213,11 +213,8 @@
 	.cell.is-taken.is-active {
 		border-color: var(--color-accent);
 	}
-	/* readable, and visibly not takeable — its `title` says why. Dropping it from the list instead
-	   reads as the app having lost it. */
-	.cell.is-blocked {
-		opacity: 0.45;
-	}
+	/* dimmed by the shared `.is-blocked` state in build.css; what is the cell's own is that it stops
+	   offering a hover it will not honour */
 	.cell.is-blocked:hover {
 		border-color: var(--color-border);
 		background: none;

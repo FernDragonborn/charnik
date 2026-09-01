@@ -142,7 +142,11 @@ export class BuildVM {
 	 *  directly (via `draftFromCharacter`); abilities become manual (base scores) with boosts carried
 	 *  in `hydratedBoosts`, and the existing feats/skills/spells carried for Strict-edit locking. */
 	hydrate = (char: Character) => {
-		this.draft = draftFromCharacter(char); // restores the per-slot picks (UBUG-13)
+		const loaded = draftFromCharacter(char); // restores the per-slot picks (UBUG-13)
+		// copied BEFORE the draft takes it: `draftFromCharacter` mints a row id for a save made before
+		// rows had one, so reading the character twice would produce two sets of keys
+		const settled = structuredClone(loaded);
+		this.draft = loaded;
 		// This view-model is a singleton, so everything the PREVIOUS build left behind is still here.
 		// The stash is keyed by class ref alone: left in place, taking a class this character never had
 		// hands it the level and the skills another character stashed under that same ref.
@@ -163,7 +167,8 @@ export class BuildVM {
 			feats: char.build.feats.filter((f) => !Object.values(char.build.slotPicks.feats).includes(f)),
 			featSkills: [...(char.build.featSkills ?? [])],
 			skills: new Set(char.build.skills),
-			spells: new Set(this.draft.selectedSpells)
+			spells: new Set(this.draft.selectedSpells),
+			loaded: settled
 		};
 		this.history.reset();
 	};
@@ -268,6 +273,29 @@ export class BuildVM {
 		this.draft.inventory = this.draft.inventory.filter((i) => !dropped.has(i.item));
 	};
 
+	// --- what a played character has already settled ---------------------------------------------
+	/**
+	 * The draft as the level-up loaded it, when Strict says those decisions are made — `null` while
+	 * creating a character, and `null` in Free, which lifts every lock here.
+	 *
+	 * A level-up ADDS levels to a character that has been played. Re-picking its species or unmaking
+	 * the class it reached level 5 in is not levelling up, it is rewriting history — which is exactly
+	 * what Free is for, and why the toggle is the way out rather than a per-control override.
+	 */
+	settledDraft = $derived<DraftState | null>(
+		this.edit && this.draft.strict ? this.edit.loaded : null
+	);
+	/** That row as the character arrived with it, or `undefined` for a row added since. */
+	private settledRow = (i: number) => {
+		const rowId = this.draft.classes[i]?.rowId;
+		return rowId ? this.settledDraft?.classes.find((c) => c.rowId === rowId) : undefined;
+	};
+	/** Can this row's level go DOWN? Never below the level the character has already played. */
+	canLowerLevel = (i: number): boolean =>
+		(this.draft.classes[i]?.level ?? 1) > Math.max(this.settledRow(i)?.level ?? 1, 1);
+	/** Can this row be dropped? A class the character already has is not un-taken at a level-up. */
+	canRemoveClass = (i: number): boolean => i > 0 && !this.settledRow(i)?.classId;
+
 	// --- multiclass rows -------------------------------------------------------
 	/** Row 0's class. RAW it is the one that drives the saving throws, the skill list and the ASI. */
 	primaryClassId = $derived<string | null>(this.draft.classes[0]?.classId ?? null);
@@ -284,6 +312,7 @@ export class BuildVM {
 	};
 	/** Drop a class row, re-keying what the rows behind it own — see `class-picks-cache`. */
 	removeClass = (i: number) => {
+		if (!this.canRemoveClass(i)) return;
 		removeClassRow(this.draft, i, this.classPicks);
 		// every row after `i` moves down one, so a pane open on a class or a subclass is now about a
 		// different row — and the one that was removed is about nothing at all
@@ -319,6 +348,7 @@ export class BuildVM {
 	};
 	bumpClassLevel = (i: number, dir: 1 | -1) => {
 		if (dir === 1 && !this.canRaiseLevel) return; // total character level cap
+		if (dir === -1 && !this.canLowerLevel(i)) return; // level 1, or a level already played (Strict)
 		this.draft.classes = this.draft.classes.map((c, idx) =>
 			idx === i ? { ...c, level: Math.max(1, Math.min(MAX_CHARACTER_LEVEL, c.level + dir)) } : c
 		);

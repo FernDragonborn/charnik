@@ -560,6 +560,7 @@
 		"shortRestDiceHint": "Short rest: spend Hit Dice to heal (by the book)",
 		"shortRestHalfHint": "Short rest: heal half your max HP (house/video-game style)",
 		"notChosen": "Not chosen",
+		"strictSettled": "Strict keeps what this character has already played. Switch to Free to change it.",
 		"origin": {
 			"species": "Species",
 			"speciesHint": "Size, speed, senses and the traits you keep at every level.",

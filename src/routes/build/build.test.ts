@@ -620,6 +620,68 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.assembled.build.abilityBoosts.dex).toBe(1);
 	});
 
+	it('Strict settles what a level-up loaded: no level down, no re-picking, no dropping a class', () => {
+		const saved = savedCharacter(); // Valen, Wizard 3, Strict
+		build.reset();
+		build.graph = graph;
+		build.hydrate(saved);
+
+		// the level it has already played is the floor; the way UP is what a level-up is for
+		expect(build.canLowerLevel(0)).toBe(false);
+		build.bumpClassLevel(0, -1);
+		expect(build.draft.classes[0]?.level).toBe(3);
+		build.bumpClassLevel(0, 1);
+		expect(build.draft.classes[0]?.level).toBe(4);
+		expect(build.canLowerLevel(0)).toBe(true); // the level just added is not settled
+		build.bumpClassLevel(0, -1);
+		expect(build.draft.classes[0]?.level).toBe(3);
+
+		// the decisions it arrived with are shown and explained, never silently missing, and Clear
+		// stops offering to unmake one
+		build.inspector.open({ id: 'species' });
+		expect(build.inspector.pick?.blockedKey?.(`species:${S}:hardy`)).toBeNull(); // its own, taken
+		expect(build.inspector.pick?.blockedKey?.('species:x:elf')).toBe('build.strictSettled');
+		expect(build.inspector.pick?.clearable).toBe(false);
+		build.inspector.take(`class:${S}:fighter`); // a blocked take is refused, like any other
+		expect(build.draft.speciesId).toBe(`species:${S}:hardy`);
+
+		// a class the character has is not un-taken; one added at this level-up still is
+		expect(build.canRemoveClass(0)).toBe(false);
+		build.addClass();
+		build.setClass(1, `class:${S}:fighter`);
+		expect(build.canRemoveClass(1)).toBe(true);
+		build.removeClass(1);
+		expect(build.draft.classes).toHaveLength(1);
+	});
+
+	it('Free lifts every level-up lock — that is what the toggle is for', () => {
+		build.reset();
+		build.graph = graph;
+		const saved = savedCharacter();
+		saved.ui.strict = false;
+		build.hydrate(characterSchema.parse(saved));
+
+		expect(build.settledDraft).toBeNull();
+		expect(build.canLowerLevel(0)).toBe(true);
+		build.bumpClassLevel(0, -1);
+		expect(build.draft.classes[0]?.level).toBe(2);
+		build.inspector.open({ id: 'species' });
+		expect(build.inspector.pick?.blockedKey?.('species:x:elf')).toBeNull();
+		expect(build.inspector.pick?.clearable).toBe(true);
+	});
+
+	it('a new character settles nothing at all', () => {
+		build.reset();
+		build.graph = graph;
+		expect(build.settledDraft).toBeNull();
+		build.setClass(0, `class:${S}:wizard`);
+		build.bumpClassLevel(0, 1);
+		expect(build.canLowerLevel(0)).toBe(true);
+		build.bumpClassLevel(0, -1);
+		expect(build.draft.classes[0]?.level).toBe(1);
+		expect(build.canLowerLevel(0)).toBe(false); // level 1 is the floor for everyone
+	});
+
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {
 		build.hydrate(savedCharacter()); // picks class = wizard (source S); fighter stays unpicked
 		const wizard = `class:${S}:wizard`;

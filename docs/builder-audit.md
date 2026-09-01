@@ -67,7 +67,7 @@ verified. Count with `grep -c '^\*\*\[ \]'`. **55 of 65 done.**
 
 Work this file does not itself hold:
 
-- [ ] **Strict on the level-up path.** Under Strict, a level cannot go down and a decision already
+- [x] **Strict on the level-up path.** Under Strict, a level cannot go down and a decision already
   made cannot be re-picked; Free lifts both. Related to B15, which reaches the same flag from the
   expertise side.
 - [x] **X1. Origin feat needs its own component.** Granted, not chosen — it must not render as a feat

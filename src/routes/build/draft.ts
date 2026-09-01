@@ -388,4 +388,13 @@ export interface EditContext {
 	/** Spells / skills the character already had — can't be undone in Strict edit. */
 	spells: Set<string>;
 	skills: Set<string>;
+	/**
+	 * The draft exactly as this character was loaded — every decision it had already made.
+	 *
+	 * Strict reads it as settled: a level-up ADDS to a character that has been played, so it cannot
+	 * re-pick its species, lower a level it has already reached, or drop a class it took. Free lifts
+	 * all of it. Kept as the whole draft rather than as a list of frozen fields, because that is what
+	 * it is — and a list would need editing every time the draft grows one.
+	 */
+	loaded: DraftState;
 }

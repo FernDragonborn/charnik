@@ -96,8 +96,11 @@ good", so they are pinned here and every component follows them.
     looks live and is not is a dead end the user has to solve by guessing. `toggleCapped`
     (`src/routes/build/draft.ts`) is the one implementation, and `BuildVM.toggleSkill` follows it for
     the Strict class-skill cap. A chip blocked for a *different* reason — another slot already grants
-    that skill, a skill carried in from a level-up — is dimmed and disabled, which is a statement
-    rather than a silence.
+    that skill, a skill carried in from a level-up — is dimmed and blocked, which is a statement
+    rather than a silence. It is blocked with `aria-disabled` and a `title`, never `disabled`: a
+    disabled control takes neither hover nor focus, so the reason it carries can never be read. The
+    refusal itself belongs in the view-model, where every caller meets it (`.is-blocked` in
+    `build.css` is what dimmed looks like).
 
 11. **A row's own state sits on the LEFT; a modifier on that state sits on the right.** The
     spellbook puts `EyeToggle`/`Pin` before the name and the "prepared" `Switch` after it;
