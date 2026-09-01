@@ -12,6 +12,9 @@
 		"openCommandPalette": "Open command palette"
 	},
 	"combat": {
+		"attacks": {
+			"unarmedStrike": "Unarmed Strike"
+		},
 		"controls": {
 			"combat": "Combat",
 			"combatHint": "Track the action economy (rounds, action/bonus/reaction)",
@@ -615,7 +618,6 @@
 		},
 		"attacks": {
 			"title": "Attacks",
-			"unarmedStrike": "Unarmed Strike",
 			"perTurn": "{count, plural, one {# attack} other {# attacks}} per Attack action",
 			"equipment": "Equipment…",
 			"colAttack": "Attack",

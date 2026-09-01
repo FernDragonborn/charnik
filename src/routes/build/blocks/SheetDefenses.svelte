@@ -82,7 +82,7 @@
 				<b>{$_('build.defenses.tools')}</b><span>{tools || DASH}</span>
 				<b>{$_('build.defenses.languages')}</b><span>{languages || DASH}</span>
 			</div>
-			<div class="tags">
+			<div class="chips tags">
 				<!-- fly/swim moved here when the passive-senses card went: they are things you shrug off
 				     gravity or water with, and this card is already "what is true of your body". -->
 				{#if s.flySpeed.value}<span class="tag gold"
@@ -152,10 +152,8 @@
 		font-weight: 700;
 		font-size: var(--font-size-sm);
 	}
+	/* layout is the global .chips; what stays here is where this one sits */
 	.tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 6px;
 		margin-top: 10px;
 		align-items: center;
 	}

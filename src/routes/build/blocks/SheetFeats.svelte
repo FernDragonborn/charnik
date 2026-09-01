@@ -95,15 +95,11 @@
 		background: var(--color-surface-2);
 		text-align: left;
 	}
+	/* the badge itself is `.lvl` in build.css; a slot's says a WORD as well as a number ("origin"),
+	   so it is padded and letter-spaced here */
 	.lvl {
-		flex: none;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-micro);
 		text-transform: uppercase;
 		letter-spacing: 0.06em;
-		color: var(--color-text-muted);
-		border: 1px solid var(--color-border);
-		border-radius: 5px;
 		padding: 2px 7px;
 		margin-top: 1px;
 	}
@@ -112,14 +108,6 @@
 		color: var(--color-good);
 	}
 	.ftext {
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
 		gap: 2px;
-	}
-	.ftext b {
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: var(--font-size-sm);
 	}
 </style>

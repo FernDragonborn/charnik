@@ -377,10 +377,6 @@
 		margin-left: auto;
 		font-size: var(--font-size-micro);
 	}
-	.gold {
-		color: var(--color-resource);
-	}
-
 	/* a row is TWO controls: the state toggle on the left, the body that reads. The wrapper carries
 	   the state so both halves are inside the same lit box. */
 	.srow {

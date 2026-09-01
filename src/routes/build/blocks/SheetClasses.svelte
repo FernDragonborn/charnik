@@ -282,29 +282,13 @@
 	.feature.ahead {
 		opacity: 0.55;
 	}
+	/* the badge itself is `.lvl` in build.css; this row makes it a fixed, centred column */
 	.lvl {
-		flex: none;
 		min-width: 20px;
 		text-align: center;
-		font-family: var(--font-mono);
-		font-size: var(--font-size-micro);
-		color: var(--color-text-muted);
-		border: 1px solid var(--color-border);
-		border-radius: 5px;
-		padding: 2px 0;
 	}
 	.lvl.sub {
 		border-color: var(--color-accent-deep);
 		color: var(--color-accent-bright);
-	}
-	.ftext {
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-	}
-	.ftext b {
-		font-family: var(--font-display);
-		font-weight: 600;
-		font-size: var(--font-size-sm);
 	}
 </style>

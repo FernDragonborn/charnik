@@ -76,10 +76,7 @@
  * of specificity that makes the state land. A driven browser catches this; nothing else does.
  * ============================================================================================ */
 .build-page .is-taken.is-taken,
-.build-page .tag.gold {
-	border-color: var(--color-resource-line);
-	background: var(--color-resource-soft);
-}
+/* `.tag.gold` is declared once, with the rest of the tag variants — see below. */
 /* `.slot.active` is the sheet's own spelling of "open in the inspector" — the same state, so the
    same declarations, not a second copy of them */
 .build-page .is-active.is-active,
@@ -137,6 +134,9 @@
 	color: var(--color-text-muted);
 }
 .build-page .tag.gold {
+	border-color: var(--color-resource-line);
+	background: var(--color-resource-soft);
+	/* the colour `.gold` already gives, said once here so a tag needs one class, not two */
 	color: var(--color-resource);
 }
 .build-page .tag.accent {
@@ -217,9 +217,33 @@
 	font-family: var(--font-mono);
 	font-size: var(--font-size-xs);
 	letter-spacing: 0;
+	color: var(--color-text-muted);
 }
 .build-page .gold {
 	color: var(--color-resource);
+}
+
+/* A level badge and the two-line body beside it — the shape a "what this level gave you" row has,
+   used by the class feature list and the feat slots alike. Where the badge sits and how wide it is
+   belongs to the row; what it LOOKS like is one declaration. */
+.build-page .lvl {
+	flex: none;
+	font-family: var(--font-mono);
+	font-size: var(--font-size-micro);
+	color: var(--color-text-muted);
+	border: 1px solid var(--color-border);
+	border-radius: 5px;
+	padding: 2px 0;
+}
+.build-page .ftext {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+.build-page .ftext b {
+	font-family: var(--font-display);
+	font-weight: 600;
+	font-size: var(--font-size-sm);
 }
 
 /* muted sub-labels + their contextual variants */

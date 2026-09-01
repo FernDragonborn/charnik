@@ -12,6 +12,9 @@
 		"openCommandPalette": "Відкрити палітру команд"
 	},
 	"combat": {
+		"attacks": {
+			"unarmedStrike": "Удар без зброї"
+		},
 		"controls": {
 			"combat": "Бій",
 			"combatHint": "Стежити за економією дій (раунди, дія/бонусна/реакція)",
@@ -615,7 +618,6 @@
 		},
 		"attacks": {
 			"title": "Атаки",
-			"unarmedStrike": "Удар без зброї",
 			"perTurn": "{count, plural, one {# атака} few {# атаки} many {# атак} other {# атак}} за дію «Атака»",
 			"equipment": "Спорядження…",
 			"colAttack": "Атака",

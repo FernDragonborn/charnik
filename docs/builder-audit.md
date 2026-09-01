@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **51 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **52 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -423,7 +423,7 @@ formats the same column properly → "STR, CON". One fact, two spellings, and ex
 **[x] S12. `PROF_RANK` duplicates `PROF_ORDER`.** `sheet-diff.ts:68` against `derive-stats.ts:33` — same
 four keys, same order; the second is simply not exported.
 
-**[ ] S13. Duplicated CSS classes that should live in one place.**
+**[x] S13. Duplicated CSS classes that should live in one place.**
 
 - `.gold` — `build.css:221-223` and an identical copy at `SectionedPicker.svelte:362-364`.
 - `.count` — `build.css:216-220` (`--font-size-xs`) against `PickerSearch.svelte:81-85`
