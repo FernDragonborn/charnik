@@ -63,7 +63,7 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **0 of 65 done.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **8 of 65 done.**
 
 Work this file does not itself hold:
 
@@ -102,7 +102,7 @@ helper the builder ignores (S9).
 
 ## Bugs — data loss and wrong numbers
 
-**[ ] B1. Level-up double-counts every carried ASI boost on a cold load.**
+**[x] B1. Level-up double-counts every carried ASI boost on a cold load.**
 `build-view-model.svelte.ts:142-147` subtracts `abilities.slotBoosts` from `char.build.abilityBoosts`.
 `slotBoosts` walks `feats.featSlots`, which needs `graph` for the class's `asi_levels`. But
 `+page.svelte:41` (`onMount(build.load)`) and `+page.svelte:56` (`afterNavigate(… build.hydrate)`)
@@ -112,14 +112,14 @@ slot does not exist at that moment, nothing is subtracted, and the slot re-deriv
 of the flat boost once the graph arrives. Fighter 6 with ASI→CON saves as `con: 2`, reopens as
 `con: 4`. `build.test.ts:126` misses it because it assigns `build.graph` *before* `hydrate`.
 
-**[ ] B2. Saving a level-up deletes an unrelated unfinished draft.**
+**[x] B2. Saving a level-up deletes an unrelated unfinished draft.**
 `build-view-model.svelte.ts:552` calls `this.drafts.discard()` unconditionally, and `hydrate`
 (`:137-161`) never calls `drafts.renew()` — so an edit session keeps the guid the *new* build minted
 at construction. Open `/build`, type a name (autosave writes draft `G1`), then click "Level up" on
 another character in the same tab (`afterNavigate` → `hydrate`), then Create: `discard()` deletes
 `G1`. The unfinished build is gone with no user action naming it.
 
-**[ ] B3. `hydrate()` never clears `classPicks`, so a previous build's stash lands on the character.**
+**[x] B3. `hydrate()` never clears `classPicks`, so a previous build's stash lands on the character.**
 `:137-161` sets `draft`, `edit`, `history.reset()`. Compare `reset` (`:106` `classPicks.clear()`) and
 `hydrateDraft` (`:129`, replaces the map). Set row 0 = Wizard level 7 with skills on a fresh build,
 switch to Fighter (stashing the Wizard's `{level:7, skills, selectedSpells}`), then open
@@ -141,7 +141,7 @@ No class is added (the `.map` matches no row), so nothing appears to happen whil
 Two roots, either fixes it: `Inspector` never checks an indexed target still exists, and
 `clearClassPicks` treats "row out of range" as "clear the shared pools".
 
-**[ ] B5. `persist()` records the write as done before it happens, and the caller drops the rejection.**
+**[x] B5. `persist()` records the write as done before it happens, and the caller drops the rejection.**
 `draft-session.svelte.ts:56-58` sets `this.written = body` *before* `await saveDraft(...)`. On a
 rejection (disk full, permissions, a folder renamed under Tauri) `written` already claims that body is
 on disk, so every later identical `persist()` short-circuits and the draft is never retried.
@@ -234,7 +234,7 @@ replaces the oldest pick; dimmed-and-disabled is for a chip blocked for a *diffe
 `toggleSkill` (`:346-357`) does the replace correctly for the class-skill cap; expertise, ten lines
 below, does not.
 
-**[ ] B17. `reset()` and `hydrate()` do not close the inspector.** `:103-109` clears `edit`, `draft`,
+**[x] B17. `reset()` and `hydrate()` do not close the inspector.** `:103-109` clears `edit`, `draft`,
 `classPicks`, `drafts`, `history` — not `inspector`. Going from a level-up to "New character" with the
 pane open on `{id:'feat', slotKey:'1:4'}` leaves it open on a slot the blank draft does not have.
 
@@ -438,7 +438,7 @@ user's theme. `border-radius: 9px` repeats four times (`SectionedPicker.svelte:3
 Stylelint guards colours only (zero violations there); sizes are ungated. Repo-wide, not
 builder-specific — see the scope table.
 
-**[ ] S15. The boost-folding helper is written twice verbatim, twenty lines apart.**
+**[x] S15. The boost-folding helper is written twice verbatim, twenty lines apart.**
 `ability-allocation.svelte.ts:154-156` and `:168-170` — identical `add()` bodies in `slotBoosts` and
 `abilityBoosts`.
 
@@ -453,14 +453,14 @@ literal `damageType.sonic`, and the guard that exists for this does not look at 
 
 ## Nits
 
-**[ ] N1.** Dead `if` with an empty body — `ability-allocation.svelte.ts:98-100`. It survives `no-empty`
+**[x] N1.** Dead `if` with an empty body — `ability-allocation.svelte.ts:98-100`. It survives `no-empty`
 only because ESLint ignores blocks containing a comment; the next branch already does what the comment
 claims.
 
 **[ ] N2.** `previewIsCurrent` (`inspector.svelte.ts:330-332`) is dead — grep of `src/` returns only the
 definition.
 
-**[ ] N3.** Two comments describe deleted behaviour. `draft-session.svelte.ts:30-33` still says the option
+**[~] N3.** Two comments describe deleted behaviour. `draft-session.svelte.ts:30-33` still says the option
 preview "derives the sheet on a TRIAL draft and puts the draft back" — `ee92794` removed the put-back
 entirely. `feat-slots.svelte.ts:6` says the slot key is `"class-4"` while `:43` produces
 `${i}:${level}`, the format the whole of `class-picks-cache.ts` parses.
@@ -474,11 +474,11 @@ ways for the same import: `const csv = splitList` (`:58`) against
 narrows it honestly) and `:423` `abilityBoosts as Record<string, number>` (asserts a `Partial` is
 total, which it is not).
 
-**[ ] N6.** `boostCarrier` is asked twice, two ways: `ability-allocation.svelte.ts:141` gates on the raw
+**[x] N6.** `boostCarrier` is asked twice, two ways: `ability-allocation.svelte.ts:141` gates on the raw
 `draft.system === '5.5e'` three lines after `:130-132` exposes the named predicate that
 `AbilitiesPane.svelte:73` already uses.
 
-**[ ] N7.** Bare literals where a named constant belongs: `20` as the level cap twice (`:245`, `:263`);
+**[~] N7.** Bare literals where a named constant belongs: `20` as the level cap twice (`:245`, `:263`);
 `19` for epic boon (`feat-slots.svelte.ts:60`); `3`/`1`/`20`/`30` for manual score bounds and
 `value ?? 8` where `POINT_BUY_MIN` is already imported (`ability-allocation.svelte.ts:106-107, 121`).
 

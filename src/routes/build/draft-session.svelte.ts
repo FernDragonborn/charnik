@@ -5,10 +5,16 @@
  * the view-model is at its line budget. The host is declared structurally (like InspectorHost next
  * door) so the two modules stay acyclic.
  */
+import { toast } from 'svelte-sonner';
+import { t } from '$lib/i18n';
 import { getUserStorage } from '$lib/storage/provider';
 import { saveDraft, deleteDraft, type DraftRecord } from '$lib/character/draft-repository';
 import { draftSummary, isDraftWorthKeeping, type DraftState } from './draft';
 import type { ClassScopedPicks } from './class-picks-cache';
+
+/** One id for the autosave failure, so a disk that stays full replaces its notice instead of
+ *  stacking one per settled keystroke. */
+const DRAFT_SAVE_FAILED_TOAST = 'build-draft-save-failed';
 
 /** What this needs from the view-model around it. */
 export interface DraftSessionHost {
@@ -28,10 +34,10 @@ export class DraftSession {
 	/**
 	 * What was last written, so an unchanged draft is not written again.
 	 *
-	 * The builder's option preview derives the sheet on a TRIAL draft and puts the draft back, which
-	 * replaces the `$state` object twice — so merely reading what a class would do wakes the autosave
-	 * with nothing to save. Without this, a player browsing options rewrites the same file on disk
-	 * over and over. Compared by value because the draft is plain data.
+	 * The autosave subscribes by snapshotting the whole draft, so anything that REPLACES the `$state`
+	 * object — an undo, a redo, resuming the same record — wakes it with nothing new to save. Without
+	 * this, that rewrites the same file on disk over and over. Compared by value: the draft is plain
+	 * data.
 	 */
 	private written: string | null = null;
 
@@ -47,21 +53,36 @@ export class DraftSession {
 		const host = this.host();
 		if (host.isEditing) return;
 		const storage = getUserStorage();
-		if (!isDraftWorthKeeping(host.draft)) {
+		try {
+			if (!isDraftWorthKeeping(host.draft)) {
+				await deleteDraft(storage, this.guid);
+				this.written = null;
+				return;
+			}
+			const snapshot = $state.snapshot(host.draft);
+			const body = JSON.stringify([snapshot, [...host.classPicks]]);
+			if (body === this.written) return;
+			await saveDraft(storage, {
+				guid: this.guid,
+				savedAt: new Date().toISOString(),
+				summary: draftSummary(host.draft),
+				draft: snapshot,
+				classPicks: [...host.classPicks],
+			});
+			// recorded only once the write RETURNED. Claiming it beforehand meant a full disk or a
+			// renamed folder left `written` describing a file that does not exist, and every identical
+			// autosave after it short-circuited — the draft was never written again and never retried.
+			this.written = body;
+		} catch {
+			// Swallowed on purpose: the page calls this from a debounce as `void persist()`, so a
+			// rejection escaping here is an unhandled promise rejection nobody sees — the exact loss the
+			// autosave exists to prevent. Forgetting `written` is what makes the next change retry.
 			this.written = null;
-			return deleteDraft(storage, this.guid);
+			toast(t('build.notice.draftNotSaved'), {
+				id: DRAFT_SAVE_FAILED_TOAST, // one standing notice, not one per keystroke
+				description: t('build.notice.draftNotSavedBody'),
+			});
 		}
-		const snapshot = $state.snapshot(host.draft);
-		const body = JSON.stringify([snapshot, [...host.classPicks]]);
-		if (body === this.written) return;
-		this.written = body;
-		await saveDraft(storage, {
-			guid: this.guid,
-			savedAt: new Date().toISOString(),
-			summary: draftSummary(host.draft),
-			draft: snapshot,
-			classPicks: [...host.classPicks],
-		});
 	};
 
 	/** The draft became a character, so the unfinished copy has nothing left to be. */

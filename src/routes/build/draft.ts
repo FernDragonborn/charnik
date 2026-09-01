@@ -209,7 +209,8 @@ export interface EditContext {
 	id: string;
 	play: Character['play'];
 	ui: Character['ui'];
-	/** Ability boosts carried verbatim (not reverse-engineered); new picks add on top. */
+	/** Ability boosts carried verbatim, INCLUDING the share the restored slots re-derive for
+	 *  themselves — `AbilityAllocation.abilityBoosts` nets that back out. New picks add on top. */
 	boosts: Partial<Record<Ability, number>>;
 	feats: string[];
 	/** Feat-granted skill choices (§C) carried verbatim on edit — new slot picks add on top, mirroring

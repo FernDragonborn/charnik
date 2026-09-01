@@ -31,6 +31,14 @@ export const POINT_BUY_MIN = 8;
 export const POINT_BUY_MAX = 15;
 export const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8] as const;
 
+/** Bounds for a hand-typed score. Strict keeps it inside what three dice can roll; Free clamps only
+ *  to what still reads as an ability score, because Free is the mode that exists for a table doing
+ *  something the rules do not describe. */
+export const MANUAL_SCORE_BOUNDS = {
+	strict: { min: 3, max: 20 },
+	free: { min: 1, max: 30 },
+} as const;
+
 /** Cost of a single score under point-buy (0 outside the 8–15 band → treated as free/manual). */
 export function pointBuyCost(score: number): number {
 	return POINT_BUY_COST[score] ?? 0;

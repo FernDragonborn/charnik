@@ -5,10 +5,10 @@
  * merges). It asserts WHAT a build produces, never HOW the VM is structured.
  */
 import 'fake-indexeddb/auto'; // the draft session writes through the real Storage seam
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MemoryStorage } from '$lib/storage/memory';
 import { getUserStorage } from '$lib/storage/provider';
-import { listDrafts } from '$lib/character/draft-repository';
+import { listDrafts, deleteDraft } from '$lib/character/draft-repository';
 import { loadContent, type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import { build, ASI } from './build-view-model.svelte';
@@ -261,6 +261,90 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.hydrate(savedCharacter()); // editing an existing character — its own save is the record
 		await build.drafts.persist();
 		expect(await listDrafts(storage)).toEqual([]);
+	});
+
+	it('a level-up that lands before the content graph does not double the carried boost (B1)', () => {
+		build.reset();
+		build.graph = graph;
+		build.draft.name = 'Asi';
+		// level 6 is a Fighter-only ASI level: the fallback the builder uses with no graph does not
+		// know about it, which is what made the timing matter
+		build.draft.classes = [{ classId: `class:${S}:fighter`, subclassId: null, level: 6 }];
+		const key = build.feats.featSlots.find((s) => s.level === 6)?.key ?? '';
+		expect(key).toBeTruthy();
+		build.feats.setSlotFeat(key, ASI);
+		build.feats.toggleAsiPick(key, 'con');
+		const saved = characterSchema.parse(build.assembled);
+		expect(saved.build.abilityBoosts.con).toBe(2);
+
+		// the page navigates into the level-up before the content load returns
+		build.reset();
+		build.graph = null;
+		build.hydrate(saved);
+		build.graph = graph; // …and the graph lands a moment later
+		expect(build.assembled.build.abilityBoosts.con).toBe(2); // once, not 4
+	});
+
+	it('a level-up starts its own draft identity and leaves the unfinished build alone (B2)', async () => {
+		const storage = getUserStorage();
+		build.reset();
+		build.graph = graph;
+		build.draft.name = 'Unfinished';
+		await build.drafts.persist();
+		const unfinished = build.drafts.guid;
+		expect((await listDrafts(storage)).map((d) => d.guid)).toEqual([unfinished]);
+
+		// "Level up" on another character, in the same tab, then Create: the save discards the draft
+		// it is holding, and holding somebody else's is how an untouched build disappears
+		build.hydrate(savedCharacter());
+		expect(build.drafts.guid).not.toBe(unfinished);
+		await build.drafts.discard();
+		expect((await listDrafts(storage)).map((d) => d.guid)).toEqual([unfinished]);
+		await deleteDraft(storage, unfinished); // the tests share one store
+	});
+
+	it('a level-up does not inherit the previous build class stash (B3)', () => {
+		build.reset();
+		build.graph = graph;
+		build.setClass(0, `class:${S}:fighter`);
+		build.draft.classes = [{ classId: `class:${S}:fighter`, subclassId: null, level: 7 }];
+		build.draft.skills = ['athletics'];
+		build.setClass(0, `class:${S}:wizard`); // stashes the Fighter at level 7, with its skills
+
+		build.hydrate(savedCharacter()); // Valen, Wizard 3
+		build.setClass(0, `class:${S}:fighter`);
+		expect(build.draft.classes[0]?.level).toBe(3); // the level Valen has, not the stash's 7
+		expect(build.draft.skills).not.toContain('athletics');
+	});
+
+	it('closes the inspector when the draft under it is replaced (B17)', () => {
+		build.reset();
+		build.graph = graph;
+		build.inspector.open({ id: 'species' });
+		build.hydrate(savedCharacter());
+		expect(build.inspector.target).toBeNull();
+
+		build.inspector.open({ id: 'species' });
+		build.reset();
+		expect(build.inspector.target).toBeNull();
+	});
+
+	it('a failed autosave says so and writes the same body on the next try (B5)', async () => {
+		const storage = getUserStorage();
+		build.reset();
+		build.graph = graph;
+		build.draft.name = 'Doomed';
+
+		const write = vi.spyOn(storage, 'write').mockRejectedValueOnce(new Error('disk full'));
+		await build.drafts.persist(); // the page calls this as `void persist()` — it must not reject
+		const names = async () => (await listDrafts(storage)).map((d) => d.summary.name);
+		expect(await names()).not.toContain('Doomed');
+		write.mockRestore();
+
+		// the SAME body again: a write recorded before it happened would short-circuit here forever
+		await build.drafts.persist();
+		expect(await names()).toContain('Doomed');
+		await build.drafts.discard();
 	});
 
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {

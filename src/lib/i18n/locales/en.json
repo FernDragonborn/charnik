@@ -852,7 +852,9 @@
 			"capCantrips": "cantrips",
 			"capPrepared": "prepared spells",
 			"strictTrainedSkill": "Strict: you can't drop a trained skill — switch to Free to remove it.",
-			"strictAllTrained": "Strict: every pick here is a trained skill — switch to Free to change one."
+			"strictAllTrained": "Strict: every pick here is a trained skill — switch to Free to change one.",
+			"draftNotSaved": "This build isn't being saved",
+			"draftNotSavedBody": "Charnik can't write to your data folder, so nothing here is on disk. Check the folder still exists and has room, then make any change to try again."
 		}
 	},
 	"skillName": {

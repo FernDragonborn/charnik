@@ -447,6 +447,7 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `const POINT_BUY_MIN`
 - `const POINT_BUY_MAX`
 - `const STANDARD_ARRAY`
+- `const MANUAL_SCORE_BOUNDS` — Bounds for a hand-typed score.
 - `function pointBuyCost` — Cost of a single score under point-buy (0 outside the 8–15 band → treated as free/manual).
 - `function pointsSpent` — Total points spent on a full ability set under point-buy.
 - `function pointsRemaining` — Points remaining (budget − spent); can go negative if a caller over-allocates.
@@ -1516,4 +1517,4 @@ A shared class lives in exactly ONE place. Reuse before making a scoped lookalik
 - `function didYouMean` — The suffix to append to an error reason: ` — did you mean "x" or "y"?`, or '' if nothing is * close.
 
 ---
-_45 tokens · 73 global classes · 50 components · 890 exports across 125 modules · 58 duplicate suspects._
+_45 tokens · 73 global classes · 50 components · 891 exports across 125 modules · 58 duplicate suspects._

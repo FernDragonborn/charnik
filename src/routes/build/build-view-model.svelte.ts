@@ -106,6 +106,7 @@ export class BuildVM {
 		this.classPicks.clear();
 		this.drafts.renew();
 		this.history.reset();
+		this.inspector.close(); // a pane open on a slot the blank draft does not have
 	};
 
 	/** The unfinished build on disk — autosave, resume, discard. See `draft-session`. */
@@ -129,6 +130,7 @@ export class BuildVM {
 		this.classPicks = new Map(record.classPicks as [string, ClassScopedPicks][]);
 		this.drafts.adopt(record);
 		this.history.reset();
+		this.inspector.close();
 	};
 
 	/** Load an existing character into the draft (for level-up / editing). Straightforward fields map
@@ -136,20 +138,21 @@ export class BuildVM {
 	 *  in `hydratedBoosts`, and the existing feats/skills/spells carried for Strict-edit locking. */
 	hydrate = (char: Character) => {
 		this.draft = draftFromCharacter(char); // restores the per-slot picks (UBUG-13)
-		// The restored slots now RE-DERIVE their own ASI/half-feat boosts, so carrying those flat too
-		// would double-count. Carry only the residue (species/background boosts + old saves that stored
-		// no slots → nothing subtracts, so their whole flat boost survives, unchanged old behaviour).
-		const carried: Partial<Record<Ability, number>> = { ...char.build.abilityBoosts };
-		for (const [ab, n] of Object.entries(this.abilities.slotBoosts)) {
-			const left = (carried[ab as Ability] ?? 0) - (n);
-			if (left > 0) carried[ab as Ability] = left;
-			else delete carried[ab as Ability];
-		}
+		// This view-model is a singleton, so everything the PREVIOUS build left behind is still here.
+		// The stash is keyed by class ref alone: left in place, taking a class this character never had
+		// hands it the level and the skills another character stashed under that same ref.
+		this.classPicks.clear();
+		// A new identity for the same reason: the guid in the session belongs to the unfinished build
+		// this edit navigated away from, and saving discards whatever guid it is holding.
+		this.drafts.renew();
+		this.inspector.close();
 		this.edit = {
 			id: char.id,
 			play: char.play,
 			ui: char.ui,
-			boosts: carried,
+			// verbatim: the restored slots re-derive their own share of this, and `abilityBoosts` is
+			// where the two are reconciled — see the note there for why it cannot happen at this line
+			boosts: { ...char.build.abilityBoosts },
 			// slot feats re-derive from the restored slots; carry only NON-slot feats (origin/auto) so
 			// they aren't lost. (Feats dedup via Set, so this is belt-and-braces vs the boost double.)
 			feats: char.build.feats.filter((f) => !Object.values(char.build.slotPicks.feats).includes(f)),

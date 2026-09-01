@@ -7,7 +7,6 @@
 	// A thin shell composing src/routes/build/blocks/*; each block reads the shared `build` view-model.
 	// Shared builder CSS lives in $lib/styles/build.css (confined to `.build-page`); block-local CSS
 	// stays scoped inside its block.
-	import { onMount } from 'svelte';
 	import { goto, afterNavigate } from '$app/navigation';
 	import { page } from '$app/state';
 	import { base } from '$app/paths';
@@ -38,8 +37,6 @@
 
 	const b = build;
 
-	onMount(build.load);
-
 	// the sheet + inspector need the whole viewport width; hand it back on the way out (ARCH: a way
 	// in without a way out is a bug).
 	$effect(() => {
@@ -54,6 +51,12 @@
 	// unfinished build; no param → a fresh draft (so "New character" after a level-up doesn't reopen
 	// the last edit).
 	afterNavigate(async () => {
+		// The graph is loaded HERE rather than beside this in `onMount`, because hydrate needs it and
+		// two unawaited starts race: `hydrate` subtracts the boosts the restored feat slots re-derive,
+		// those slots come from the class's `asi_levels`, and with no graph the fallback levels hide a
+		// slot the class really grants. Nothing is subtracted, the slot then adds its boost again, and
+		// the character gains +2 every time it is opened.
+		await build.load();
 		const slug = page.url.searchParams.get('edit') || page.url.searchParams.get('levelup');
 		const guid = page.url.searchParams.get('draft');
 		const char = slug ? await loadCharacterBySlug(slug) : null;
