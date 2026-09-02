@@ -282,7 +282,7 @@
 	.strip .roll-label {
 		flex: 0 1 auto;
 		min-width: 3ch;
-		padding: 8px 4px 8px 13px;
+		padding: var(--space-2) var(--space-1) var(--space-2) var(--space-3);
 	}
 	.strip .roll-grid,
 	.strip .roll-grid.damaging,
@@ -290,8 +290,8 @@
 	.strip .roll-grid.volley {
 		display: flex;
 		align-items: center;
-		gap: 9px;
-		padding: 0 4px;
+		gap: var(--space-2);
+		padding: 0 var(--space-1);
 	}
 	.strip .roll-caption {
 		display: none;
@@ -306,13 +306,13 @@
 	}
 	.strip .roll-total,
 	.strip .roll-total.big-total {
-		padding: 0 11px;
+		padding: 0 var(--space-2-5);
 		font-size: var(--font-size-body);
 		border-inline-start: 1px solid var(--color-border);
 	}
 
 	.roll-label {
-		padding: 11px 16px 9px;
+		padding: var(--space-2-5) var(--space-4) var(--space-2);
 		font-family: var(--font-display);
 		font-size: var(--font-size-body);
 		font-weight: 600;
@@ -327,7 +327,7 @@
 		display: grid;
 		grid-template-columns: 1fr 58px;
 		align-items: center;
-		padding: 0 0 6px 16px;
+		padding: 0 0 var(--space-1-5) var(--space-4);
 	}
 	.roll-grid.damaging {
 		grid-template-columns: minmax(58px, max-content) minmax(36px, max-content) 1fr 58px;
@@ -350,13 +350,15 @@
 		border-inline-start: 0;
 	}
 	.roll-caption {
-		padding: 0 0 5px;
+		padding: 0 0 var(--space-1);
 		font-size: var(--font-size-micro);
 		text-align: center;
 	}
 	.roll-caption.hit {
 		grid-column: 1 / 3;
-		padding-inline-end: 12px; /* the to-hit total's own padding — the caption sits on its end edge */
+		padding-inline-end: var(
+			--space-3
+		); /* the to-hit total's own padding — the caption sits on its end edge */
 		text-align: end;
 	}
 	.multi .roll-caption.hit {
@@ -367,7 +369,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 6px 0;
+		padding: var(--space-1-5) 0;
 		font-size: var(--font-size-xs);
 		font-weight: 600;
 		color: var(--color-text-muted);
@@ -377,8 +379,8 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 4px;
-		padding: 6px 0;
+		gap: var(--space-1);
+		padding: var(--space-1-5) 0;
 		/* the dice group is as wide as its dice, never as wide as its column — a grid item stretches by
 		   default, and on a roll with no damage that column is `1fr`. */
 		justify-self: start;
@@ -387,10 +389,10 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 4px;
+		gap: var(--space-1);
 		min-width: 23px;
 		height: 22px;
-		padding: 0 6px;
+		padding: 0 var(--space-1-5);
 		border-radius: var(--radius-sm);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
@@ -428,7 +430,7 @@
 	.roll-die.dropped-die {
 		min-width: 19px;
 		height: 18px;
-		padding: 0 5px;
+		padding: 0 var(--space-1);
 		background: transparent;
 		color: var(--color-text-muted);
 		text-decoration: line-through;
@@ -450,7 +452,7 @@
 	   second value beside it */
 	.roll-die:has(.roll-cue) {
 		gap: 2px;
-		padding-inline-end: 4px;
+		padding-inline-end: var(--space-1);
 	}
 	/* The SHAPES are the shared `.advantage-cue` (styles/components.css); only the colours are ours.
 	   No third colour: each shape wears the colour of the state it reports — the same teal and red the
@@ -494,7 +496,7 @@
 	}
 	/* what the to-hit came to — subordinate to the damage, which is the number being read */
 	.roll-to-hit-total {
-		padding-inline-end: 12px;
+		padding-inline-end: var(--space-3);
 		text-align: end;
 		font-family: var(--font-display);
 		font-size: var(--font-size-body);
@@ -510,14 +512,14 @@
 		flex-wrap: wrap;
 		align-items: center;
 		justify-content: flex-end;
-		gap: 5px;
-		padding: 6px 12px 6px 14px;
+		gap: var(--space-1);
+		padding: var(--space-1-5) var(--space-3) var(--space-1-5) 14px;
 		border-inline-start: 1px solid var(--color-border);
 	}
 	.roll-damage-part {
 		display: inline-flex;
 		align-items: center;
-		gap: 3px;
+		gap: var(--space-1);
 		flex: none;
 		white-space: nowrap;
 	}
@@ -540,7 +542,7 @@
 		font-variant-numeric: tabular-nums;
 	}
 	.roll-total.big-total {
-		padding-bottom: 6px;
+		padding-bottom: var(--space-1-5);
 		font-size: var(--font-size-h2);
 		font-weight: 700;
 		color: var(--color-text);
@@ -566,13 +568,13 @@
 		flex-wrap: wrap;
 		align-items: center;
 		justify-content: flex-end;
-		gap: 12px;
-		padding: 7px 12px 11px 0;
+		gap: var(--space-3);
+		padding: var(--space-1-5) var(--space-3) var(--space-2-5) 0;
 	}
 	.roll-type-sum {
 		display: flex;
 		align-items: center;
-		gap: 5px;
+		gap: var(--space-1);
 		color: var(--color-text-muted);
 		font-size: var(--font-size-sm);
 		font-weight: 600;
@@ -583,11 +585,11 @@
 	}
 	.roll-total.grand-total {
 		align-self: stretch;
-		padding: 5px 0 11px;
+		padding: var(--space-1) 0 var(--space-2-5);
 		border-top: 1px solid var(--color-border);
 	}
 	.roll-note {
-		padding: 0 16px 9px;
+		padding: 0 var(--space-4) var(--space-2);
 		font-size: var(--font-size-xs);
 		color: var(--color-accent-bright);
 	}

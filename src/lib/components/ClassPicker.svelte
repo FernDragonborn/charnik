@@ -95,16 +95,16 @@
 	.options {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.cls {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 		font-size: var(--font-size-sm);
 		border: 1px solid var(--color-border);
 		border-radius: 20px;
-		padding: 4px 12px 4px 8px;
+		padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
 		background: transparent;
 		color: var(--color-text-muted);
 		cursor: pointer;
@@ -130,17 +130,17 @@
 	.customs {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
-		margin-top: 8px;
+		gap: var(--space-1-5);
+		margin-top: var(--space-2);
 	}
 	.custom-chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--space-1);
 		font-size: var(--font-size-xs);
 		border: 1px dashed var(--color-border-strong);
 		border-radius: 20px;
-		padding: 3px 6px 3px 10px;
+		padding: var(--space-1) var(--space-1-5) var(--space-1) var(--space-2-5);
 		color: var(--color-text);
 	}
 	.custom-chip .rm {
@@ -157,15 +157,15 @@
 	}
 	.add-row {
 		display: flex;
-		gap: 6px;
-		margin-top: 8px;
+		gap: var(--space-1-5);
+		margin-top: var(--space-2);
 	}
 	.add-input {
 		flex: 1;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
-		padding: 6px 10px;
+		padding: var(--space-1-5) var(--space-2-5);
 		color: var(--color-text);
 		font-size: var(--font-size-sm);
 	}
@@ -175,7 +175,7 @@
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface-2);
 		border-radius: 7px;
-		padding: 6px 12px;
+		padding: var(--space-1-5) var(--space-3);
 		color: var(--color-text);
 		cursor: pointer;
 	}
@@ -186,6 +186,6 @@
 	.hint {
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-		margin: 8px 0 0;
+		margin: var(--space-2) 0 0;
 	}
 </style>

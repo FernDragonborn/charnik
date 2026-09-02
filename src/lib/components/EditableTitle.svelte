@@ -23,8 +23,8 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-xl);
-		padding: 4px 10px;
-		margin: 4px 0 12px;
+		padding: var(--space-1) var(--space-2-5);
+		margin: var(--space-1) 0 var(--space-3);
 	}
 	.edit-title:focus {
 		outline: none;

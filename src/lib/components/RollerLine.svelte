@@ -528,12 +528,12 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 		min-height: 36px;
-		padding: 6px 8px;
+		padding: var(--space-1-5) var(--space-2);
 		background: transparent;
 		border: 1px solid transparent;
-		border-radius: 9px;
+		border-radius: var(--radius);
 	}
 	/* focus is NEUTRAL and light on purpose: colouring it by role would make "active" and "this is a
 	   test" the same signal, and then neither reads */
@@ -541,7 +541,7 @@
 		border-color: var(--color-border);
 	}
 	.roller-field.menu-open {
-		border-radius: 9px 9px 0 0;
+		border-radius: var(--radius) var(--radius) 0 0;
 		border-bottom-color: transparent;
 	}
 	/* a damage group: everything left of a type pill belongs to it. Outlined only on hover, and only
@@ -551,11 +551,11 @@
 	.roller-group {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 		padding: 2px;
 		margin: -2px;
 		border: 1px solid transparent;
-		border-radius: 9px;
+		border-radius: var(--radius);
 	}
 	/* nothing on its left to inherit and no type of its own: the same wavy underline a raw fragment
 	   gets, in a muted colour, because this one does not stop the roll */
@@ -572,8 +572,8 @@
 	.roller-pill {
 		display: inline-flex;
 		align-items: center;
-		gap: 5px;
-		padding: 4px 9px;
+		gap: var(--space-1);
+		padding: var(--space-1) var(--space-2);
 		border-radius: 7px;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
@@ -588,7 +588,7 @@
 		background: color-mix(in srgb, var(--color-text) 8%, var(--color-surface-2));
 	}
 	.roller-pill.type-pill {
-		padding: 4px 7px;
+		padding: var(--space-1) var(--space-1-5);
 		color: var(--color-text-muted);
 	}
 	/* an inherited type is drawn as the same pill, dashed — so inheritance is visible and editable
@@ -631,7 +631,7 @@
 		display: none;
 		align-items: center;
 		gap: 1px;
-		margin: -2px -5px -2px 0;
+		margin: -2px calc(-1 * var(--space-1)) -2px 0;
 	}
 	.roller-pill:hover .roller-steps,
 	.roller-pill:focus-within .roller-steps {
@@ -702,19 +702,19 @@
 	.roller-menu {
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
+		gap: var(--space-1);
 		/* it hangs off the FIELD, so it starts where the field does — past the stripe's column */
-		margin-inline-start: calc(3px + var(--space-2));
-		padding: 7px 8px;
+		margin-inline-start: calc(var(--space-1) + var(--space-2));
+		padding: var(--space-1-5) var(--space-2);
 		background: var(--color-surface);
 		border: 1px solid var(--color-text-muted);
 		border-top: 0;
-		border-radius: 0 0 9px 9px;
+		border-radius: 0 0 var(--radius) var(--radius);
 	}
 	.roller-menu-rows {
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
+		gap: var(--space-1);
 	}
 	/* the type picker is every damage type there is — a dozen-odd rows. Two columns because the list is
 	   a CHOICE, not a search result: nothing is ranked, so height is all the single column was buying.
@@ -732,7 +732,7 @@
 		align-items: center;
 		gap: var(--space-2);
 		width: 100%;
-		padding: 6px 8px;
+		padding: var(--space-1-5) var(--space-2);
 		border: 0;
 		border-radius: 7px;
 		background: transparent;
@@ -773,7 +773,7 @@
 	.roller-menu-preview {
 		flex: none;
 		min-width: 3.4em;
-		padding: 2px 7px;
+		padding: 2px var(--space-1-5);
 		border-radius: var(--radius-sm);
 		background: var(--color-bg);
 		font-variant-numeric: tabular-nums;
@@ -811,7 +811,7 @@
 		background: var(--color-good);
 	}
 	.roller-menu-key {
-		padding: 1px 5px;
+		padding: 1px var(--space-1);
 		border-radius: var(--radius-sm);
 		background: var(--color-bg);
 		font-size: var(--font-size-micro);
@@ -819,7 +819,7 @@
 	.roller-menu-hints {
 		display: flex;
 		gap: var(--space-3);
-		padding: 6px 8px 2px;
+		padding: var(--space-1-5) var(--space-2) 2px;
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
 		opacity: 0.7;

@@ -68,15 +68,15 @@
 	.collision {
 		border: 1px solid var(--color-border);
 		border-radius: 10px;
-		padding: 10px 12px;
-		margin-bottom: 8px;
+		padding: var(--space-2-5) var(--space-3);
+		margin-bottom: var(--space-2);
 		background: var(--color-surface-2);
 	}
 	.c-head {
 		display: flex;
 		align-items: baseline;
-		gap: 10px;
-		margin-bottom: 8px;
+		gap: var(--space-2-5);
+		margin-bottom: var(--space-2);
 	}
 	.c-name {
 		font-family: var(--font-display);
@@ -96,11 +96,11 @@
 	.choices {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.choice {
 		font-size: var(--font-size-xs);
-		padding: 4px 11px;
+		padding: var(--space-1) var(--space-2-5);
 		border-radius: 20px;
 		border: 1px solid var(--color-border-strong);
 		background: transparent;

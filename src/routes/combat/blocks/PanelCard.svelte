@@ -82,7 +82,7 @@
 <style>
 	.head-btns {
 		display: flex;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.prepared-count {
 		font-family: var(--font-mono);

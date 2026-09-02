@@ -150,7 +150,7 @@
 		display: flex;
 		align-items: stretch;
 		flex-wrap: wrap;
-		gap: 10px;
+		gap: var(--space-2-5);
 		margin-bottom: 18px;
 	}
 	.statusrow > :global(:first-child:not(:last-child)) {

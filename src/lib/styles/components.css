@@ -17,8 +17,8 @@
 .panel-head {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	margin: 0 0 10px;
+	gap: var(--space-2);
+	margin: 0 0 var(--space-2-5);
 }
 .htoggle {
 	display: inline-flex;
@@ -32,7 +32,7 @@
 	background: transparent;
 	border: 0;
 	cursor: pointer;
-	padding: 4px 8px 4px 2px;
+	padding: var(--space-1) var(--space-2) var(--space-1) 2px;
 	margin-inline-end: auto;
 	border-radius: var(--radius-sm);
 }
@@ -43,7 +43,7 @@
 .chevron {
 	color: var(--color-text-muted);
 	font-size: var(--font-size-micro);
-	margin-inline-end: 4px;
+	margin-inline-end: var(--space-1);
 }
 .drag-handle {
 	color: var(--color-border-strong);
@@ -51,7 +51,7 @@
 	cursor: grab;
 	background: transparent;
 	border: 0;
-	padding: 2px 4px;
+	padding: 2px var(--space-1);
 }
 .drag-handle:active {
 	cursor: grabbing;
@@ -67,7 +67,7 @@
 	background: transparent;
 	border: 1px solid var(--color-border);
 	border-radius: 7px;
-	padding: 5px 11px;
+	padding: var(--space-1) var(--space-2-5);
 	cursor: pointer;
 	/* the class is used on <a> too (e.g. "Manage all") — kill the browser link underline */
 	text-decoration: none;
@@ -80,7 +80,7 @@
 	color: var(--color-accent-bright);
 	background: var(--color-accent-soft);
 	border-color: var(--color-accent);
-	padding: 5px 12px;
+	padding: var(--space-1) var(--space-3);
 }
 .pill-btn.accent:hover {
 	background: var(--color-accent);
@@ -108,10 +108,10 @@
 .sectlab {
 	font-size: var(--font-size-micro);
 	color: var(--color-text-muted);
-	margin: 0 2px 9px;
+	margin: 0 2px var(--space-2);
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: var(--space-2);
 }
 .sectlab::after {
 	content: '';
@@ -138,7 +138,7 @@
 	font: inherit;
 	text-transform: inherit;
 	letter-spacing: inherit;
-	padding: 3px 6px 3px 2px;
+	padding: var(--space-1) var(--space-1-5) var(--space-1) 2px;
 	border-radius: var(--radius-sm);
 }
 .slabtoggle:hover {
@@ -163,7 +163,7 @@
 	display: flex;
 	justify-content: space-between;
 	align-items: baseline;
-	gap: 12px;
+	gap: var(--space-3);
 	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
 }
@@ -175,7 +175,7 @@
 	font-size: var(--font-size-xs);
 	color: var(--color-text-muted);
 	border-top: 1px solid var(--color-border);
-	padding-top: 11px;
+	padding-top: var(--space-2-5);
 }
 
 /* --- full-view loading / empty state --- */
@@ -229,7 +229,7 @@ svg.lucide {
 	align-items: center;
 	background: var(--color-surface-2);
 	border: 1px solid var(--color-border);
-	border-radius: 9px;
+	border-radius: var(--radius);
 	overflow: hidden;
 	width: max-content;
 }
@@ -268,9 +268,9 @@ svg.lucide {
 }
 .detail-meta {
 	display: grid;
-	gap: 8px;
+	gap: var(--space-2);
 	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-	margin-bottom: 16px;
+	margin-bottom: var(--space-4);
 }
 
 /* --- settings-tab section chrome (shared by every Settings panel: Content-health / Sources /
@@ -279,12 +279,12 @@ svg.lucide {
 .sec-head h2 {
 	font-family: var(--font-display);
 	font-size: var(--font-size-h6);
-	margin: 0 0 4px;
+	margin: 0 0 var(--space-1);
 }
 .sec-note {
 	color: var(--color-text-muted);
 	font-size: var(--font-size-sm);
-	margin: 0 0 16px;
+	margin: 0 0 var(--space-4);
 	max-width: 640px;
 }
 /* settings option rows (label + pill options / value), shared by the General + Data tabs and the
@@ -292,7 +292,7 @@ svg.lucide {
 .setting-row {
 	display: flex;
 	align-items: center;
-	gap: 16px;
+	gap: var(--space-4);
 	padding: 14px 0;
 	border-top: 1px solid var(--color-border);
 }
@@ -309,7 +309,7 @@ svg.lucide {
 .setting-options {
 	display: flex;
 	flex-wrap: wrap;
-	gap: 8px;
+	gap: var(--space-2);
 }
 /* a filesystem path shown inline (settings Data row) — mono, muted, ellipsized */
 .mono-path {
@@ -331,7 +331,7 @@ svg.lucide {
 	font-size: var(--font-size-body);
 	border: 1px solid var(--color-good);
 	border-radius: 10px;
-	padding: 12px 14px;
+	padding: var(--space-3) 14px;
 	background: var(--color-good-soft);
 }
 
@@ -347,8 +347,8 @@ svg.lucide {
 	font-size: var(--font-size-micro);
 	color: var(--color-resource);
 	border: 1px solid var(--color-resource);
-	border-radius: 5px;
-	padding: 1px 6px;
+	border-radius: var(--radius-sm);
+	padding: 1px var(--space-1-5);
 }
 
 /* --- combat bar: the horizontal surface strip above the panel grid (Turnbar, ResourceBar, TimeSkip
@@ -359,15 +359,15 @@ svg.lucide {
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: center;
-	gap: 8px;
+	gap: var(--space-2);
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
 	border-radius: 12px;
-	padding: 9px 12px;
+	padding: var(--space-2) var(--space-3);
 	/* uniform height across every combat bar (Turnbar / ResourceBar / TimeSkip) — the Turnbar's
 	   "Next turn" button is the tallest control, so pin all bars to its height (border-box) */
 	min-height: 56px;
-	margin-bottom: 12px;
+	margin-bottom: var(--space-3);
 }
 /* nowrap on the flex line only stops the CONTROLS from dropping to a second row — the text inside a
    squeezed pill still breaks, which grew the bar exactly the same way ("Next turn" over two lines) */
@@ -391,10 +391,10 @@ svg.lucide {
 .combat-row {
 	display: grid;
 	grid-template-columns: 1fr auto;
-	gap: 1px 10px;
-	padding: 8px 9px;
-	margin: 0 -9px;
-	border-radius: 9px;
+	gap: 1px var(--space-2-5);
+	padding: var(--space-2) var(--space-2);
+	margin: 0 calc(-1 * var(--space-2));
+	border-radius: var(--radius);
 	cursor: pointer;
 	width: calc(100% + 18px);
 	background: transparent;
@@ -504,7 +504,7 @@ svg.lucide {
 	color: var(--color-warning);
 	border: 1px solid var(--color-warning);
 	border-radius: 20px;
-	padding: 1px 9px;
+	padding: 1px var(--space-2);
 	margin-inline-start: var(--space-3);
 	vertical-align: middle;
 }
@@ -588,7 +588,7 @@ svg.lucide {
 	border-color: var(--color-good);
 }
 .toggle-track.on::after {
-	inset-inline-start: 16px;
+	inset-inline-start: var(--space-4);
 	background: var(--color-good);
 }
 
@@ -599,7 +599,7 @@ svg.lucide {
 	height: 24px;
 	display: grid;
 	place-items: center;
-	border-radius: 6px;
+	border-radius: var(--radius-sm);
 	border: 1px solid var(--color-border);
 	background: transparent;
 	color: var(--color-text-muted);

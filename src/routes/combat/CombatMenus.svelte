@@ -398,7 +398,7 @@
 		border: 1px solid var(--color-border-strong);
 		border-radius: 13px;
 		box-shadow: 0 18px 40px var(--color-overlay);
-		padding-bottom: 6px;
+		padding-bottom: var(--space-1-5);
 	}
 	/* the roll log's row is four columns wide (dice · to hit · damage · total) and does not fit the
 	   menu width — at 300px the d20 pair wrapped, which drew as a two-line blob. The row is the fixed
@@ -418,22 +418,22 @@
 		background: transparent;
 		border: 0;
 		box-shadow: none;
-		padding: 4px 16px 20px;
+		padding: var(--space-1) var(--space-4) 20px;
 	}
 	.popup-heading {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		font-size: var(--font-size-micro);
-		padding: 11px 13px;
+		padding: var(--space-2-5) var(--space-3);
 		border-bottom: 1px solid var(--color-border);
 	}
 	.menu-row {
 		display: flex;
 		align-items: center;
-		gap: 9px;
+		gap: var(--space-2);
 		width: 100%;
-		padding: 8px 10px;
+		padding: var(--space-2) var(--space-2-5);
 		border: 0;
 		background: transparent;
 		border-radius: var(--radius);
@@ -449,7 +449,7 @@
 		flex: 1;
 		display: inline-flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		font-size: var(--font-size-sm);
 	}
 	.menu-row .meta {
@@ -482,20 +482,20 @@
 	/* --- section label + search + divider (d-menus) --- */
 	.section {
 		font-size: var(--font-size-micro);
-		padding: 8px 13px 3px;
+		padding: var(--space-2) var(--space-3) var(--space-1);
 	}
 	.divider-light {
 		height: 1px;
 		background: var(--color-border);
-		margin: 4px 0;
+		margin: var(--space-1) 0;
 	}
 	/* duration picker (add-effect + custom-effect) — buttons reuse global .pill-btn; only the row
 	   layout, the value text, and the ∞-active tint are picker-specific */
 	.dur-picker {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		padding: 4px 13px 8px;
+		gap: var(--space-2);
+		padding: var(--space-1) var(--space-3) var(--space-2);
 	}
 	.dur-picker .dur-val {
 		flex: 1;
@@ -511,8 +511,8 @@
 	.search {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		padding: 12px 13px;
+		gap: var(--space-2-5);
+		padding: var(--space-3) var(--space-3);
 		border-bottom: 1px solid var(--color-border);
 		font-size: var(--font-size-body);
 	}
@@ -526,12 +526,12 @@
 	}
 	/* --- temp HP / custom modifier panel --- */
 	.menu-panel {
-		padding: 12px 13px;
+		padding: var(--space-3) var(--space-3);
 	}
 	.field {
 		display: flex;
-		gap: 8px;
-		margin: 6px 0 8px;
+		gap: var(--space-2);
+		margin: var(--space-1-5) 0 var(--space-2);
 	}
 	/* menu text inputs: the roll-builder field and the custom-modifier target share one style */
 	.field input,
@@ -543,7 +543,7 @@
 		border-radius: var(--radius);
 		color: var(--color-text);
 		font: inherit;
-		padding: 8px 10px;
+		padding: var(--space-2) var(--space-2-5);
 	}
 	.submit-btn {
 		font-family: var(--font-display);
@@ -552,7 +552,7 @@
 		border: 1px solid var(--color-good);
 		color: var(--color-good);
 		border-radius: var(--radius);
-		padding: 8px 14px;
+		padding: var(--space-2) 14px;
 		cursor: pointer;
 	}
 	.note {
@@ -569,7 +569,7 @@
 	.modifier-row {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 	.modifier-sign {
 		width: 36px;
@@ -590,15 +590,15 @@
 		border-radius: var(--radius);
 		color: var(--color-text);
 		font: inherit;
-		padding: 8px 6px;
+		padding: var(--space-2) var(--space-1-5);
 	}
 	/* --- short-rest Hit-Dice picker --- */
 	.hitdice-row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 9px;
-		padding: 5px 13px;
+		gap: var(--space-2);
+		padding: var(--space-1) var(--space-3);
 	}
 	.hitdice-name {
 		font-family: var(--font-display);
@@ -609,12 +609,12 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-text-muted);
-		margin-inline-start: 4px;
+		margin-inline-start: var(--space-1);
 	}
 	.hitdice-steppers {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 	.hitdice-pick {
 		min-width: 18px;
@@ -628,13 +628,13 @@
 		column-count: 2;
 		column-gap: 14px;
 		column-rule: 1px solid var(--color-border);
-		padding: 7px;
+		padding: var(--space-1-5);
 	}
 	.pin-wrap .category-block {
 		break-inside: avoid;
 	}
 	.pin-wrap .section {
-		padding: 6px 6px 2px;
+		padding: var(--space-1-5) var(--space-1-5) 2px;
 	}
 	.pin-wrap .menu-row .skill-name {
 		font-size: var(--font-size-sm);

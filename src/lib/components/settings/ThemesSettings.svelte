@@ -302,7 +302,7 @@
 	.themes-toolbar {
 		display: flex;
 		justify-content: flex-end;
-		margin-bottom: 12px;
+		margin-bottom: var(--space-3);
 	}
 	.hidden-file {
 		display: none;
@@ -310,16 +310,16 @@
 	.theme-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-		gap: 12px;
+		gap: var(--space-3);
 	}
 	.theme-card {
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--space-2);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
-		padding: 12px;
+		padding: var(--space-3);
 		cursor: pointer;
 	}
 	.theme-card.active {
@@ -335,7 +335,7 @@
 		width: 100%;
 		flex-direction: column;
 		align-items: flex-start;
-		gap: 8px;
+		gap: var(--space-2);
 		color: var(--color-text);
 	}
 	.theme-name {
@@ -348,7 +348,7 @@
 	}
 	.theme-swatches {
 		display: flex;
-		gap: 4px;
+		gap: var(--space-1);
 	}
 	.swatch {
 		width: 18px;
@@ -364,7 +364,7 @@
 	.theme-actions {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.btn.danger:hover {
 		color: var(--color-danger);
@@ -373,7 +373,7 @@
 	.editor-head {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: var(--space-2-5);
 		margin-bottom: 18px;
 	}
 	.name-input {
@@ -381,7 +381,7 @@
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-body);
-		padding: 7px 10px;
+		padding: var(--space-1-5) var(--space-2-5);
 	}
 	.btn.primary.active {
 		background: var(--color-good);
@@ -390,12 +390,12 @@
 	.token-grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: 8px 16px;
+		gap: var(--space-2) var(--space-4);
 	}
 	.token-row {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 	.token-label {
 		flex: 0 0 96px;
@@ -419,6 +419,6 @@
 		min-width: 0;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		padding: 4px 7px;
+		padding: var(--space-1) var(--space-1-5);
 	}
 </style>

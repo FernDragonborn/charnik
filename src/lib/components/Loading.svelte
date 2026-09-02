@@ -45,7 +45,7 @@
 		font-weight: 700;
 		font-size: var(--font-size-h2);
 		color: var(--color-text);
-		margin: 4px 0 0;
+		margin: var(--space-1) 0 0;
 	}
 	.loadbig.err {
 		color: var(--color-accent-bright);
@@ -61,7 +61,7 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-sm);
-		padding: 12px 14px;
+		padding: var(--space-3) 14px;
 		white-space: pre-wrap;
 		overflow-wrap: anywhere;
 	}

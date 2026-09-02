@@ -106,14 +106,14 @@
 	.trigger {
 		display: inline-flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-md);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius);
-		padding: 6px 12px;
+		padding: var(--space-1-5) var(--space-3);
 		color: var(--color-text);
 		cursor: pointer;
 	}
@@ -142,32 +142,32 @@
 		border: 1px solid var(--color-border-strong);
 		border-radius: 10px;
 		box-shadow: var(--shadow-2);
-		padding: 8px;
+		padding: var(--space-2);
 	}
 	.search {
 		width: 100%;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
-		padding: 7px 10px;
+		padding: var(--space-1-5) var(--space-2-5);
 		color: var(--color-text);
 		font-size: var(--font-size-sm);
-		margin-bottom: 6px;
+		margin-bottom: var(--space-1-5);
 	}
 	.section {
 		font-size: var(--font-size-micro);
-		padding: 8px 8px 4px;
+		padding: var(--space-2) var(--space-2) var(--space-1);
 	}
 	.opt {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		width: 100%;
 		text-align: start;
 		background: transparent;
 		border: 0;
 		border-radius: 7px;
-		padding: 7px 9px;
+		padding: var(--space-1-5) var(--space-2);
 		color: var(--color-text);
 		cursor: pointer;
 	}
@@ -193,7 +193,7 @@
 	.empty {
 		color: var(--color-text-muted);
 		font-size: var(--font-size-sm);
-		padding: 8px;
+		padding: var(--space-2);
 		margin: 0;
 	}
 </style>

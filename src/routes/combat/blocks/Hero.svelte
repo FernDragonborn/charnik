@@ -51,14 +51,14 @@
 		grid-template-columns: 1fr 1.35fr;
 		gap: 22px;
 		align-items: end;
-		margin-bottom: 16px;
+		margin-bottom: var(--space-4);
 	}
 	/* HP panel (primary) + Exhaustion block (its own component) side by side — read left→right.
 	   `wrap` is the narrow-screen fallback: exhaustion drops below HP instead of overflowing. */
 	.hp-col {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 12px;
+		gap: var(--space-3);
 		align-items: stretch;
 	}
 	.eyebrow {
@@ -74,7 +74,7 @@
 		font-size: var(--font-size-2xl);
 		line-height: 1.02;
 		letter-spacing: -0.02em;
-		margin: 7px 0 4px;
+		margin: var(--space-1-5) 0 var(--space-1);
 	}
 	.subline {
 		color: var(--color-text-muted);
@@ -85,7 +85,7 @@
 		font-weight: 600;
 	}
 	.levelup {
-		margin-inline-start: 8px;
+		margin-inline-start: var(--space-2);
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-xs);
@@ -93,7 +93,7 @@
 		background: var(--color-good-soft);
 		border: 1px solid var(--color-good);
 		border-radius: 7px;
-		padding: 3px 10px;
+		padding: var(--space-1) var(--space-2-5);
 		cursor: pointer;
 	}
 	.levelup:hover {
@@ -104,7 +104,7 @@
 		font-size: var(--font-size-xs);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-sm);
-		padding: 1px 6px;
+		padding: 1px var(--space-1-5);
 	}
 	@media (max-width: 640px) {
 		.hero {

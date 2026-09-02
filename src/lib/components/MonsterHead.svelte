@@ -94,30 +94,30 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-h2);
-		margin: 6px 0 12px;
+		margin: var(--space-1-5) 0 var(--space-3);
 	}
 	.content-cols {
 		display: grid;
 		grid-template-columns: 1fr 1.2fr;
-		gap: 12px;
-		margin-bottom: 12px;
+		gap: var(--space-3);
+		margin-bottom: var(--space-3);
 	}
 	.detail-panel {
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 11px;
-		padding: 11px 14px;
+		border-radius: var(--radius-md);
+		padding: var(--space-2-5) 14px;
 	}
 	.panel-header {
 		font-size: var(--font-size-micro);
-		margin-bottom: 6px;
+		margin-bottom: var(--space-1-5);
 	}
 	.value-row {
 		display: flex;
 		justify-content: space-between;
 		align-items: baseline;
-		gap: 10px;
-		padding: 5px 0;
+		gap: var(--space-2-5);
+		padding: var(--space-1) 0;
 		border-top: 1px solid var(--color-border);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-sm);
@@ -132,7 +132,7 @@
 		color: var(--color-text-muted);
 	}
 	.value-row.challenge-rating {
-		padding: 2px 0 6px;
+		padding: 2px 0 var(--space-1-5);
 	}
 	.value-row.challenge-rating .value-key {
 		align-self: center;
@@ -146,8 +146,8 @@
 	.ability-row {
 		display: grid;
 		grid-template-columns: 42px 1fr 1fr;
-		gap: 6px;
-		padding: 4px 0;
+		gap: var(--space-1-5);
+		padding: var(--space-1) 0;
 		border-top: 1px solid var(--color-border);
 		align-items: baseline;
 		font-family: var(--font-mono);
@@ -173,14 +173,14 @@
 	}
 	.band {
 		border: 1px solid var(--color-border);
-		border-radius: 11px;
+		border-radius: var(--radius-md);
 		padding: 2px 14px;
-		margin-bottom: 4px;
+		margin-bottom: var(--space-1);
 	}
 	.band-row {
 		display: flex;
-		gap: 12px;
-		padding: 6px 0;
+		gap: var(--space-3);
+		padding: var(--space-1-5) 0;
 		border-top: 1px solid var(--color-border);
 		font-size: var(--font-size-sm);
 	}

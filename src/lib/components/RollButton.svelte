@@ -44,8 +44,8 @@
 		font-size: var(--font-size-xs);
 		color: var(--color-accent-bright);
 		border: 1px solid var(--color-accent);
-		border-radius: 6px;
-		padding: 3px 10px;
+		border-radius: var(--radius-sm);
+		padding: var(--space-1) var(--space-2-5);
 		cursor: pointer;
 		background: transparent;
 	}

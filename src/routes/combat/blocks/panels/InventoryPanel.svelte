@@ -105,8 +105,8 @@
 	.load {
 		display: flex;
 		align-items: baseline;
-		gap: 8px;
-		margin-bottom: 6px;
+		gap: var(--space-2);
+		margin-bottom: var(--space-1-5);
 	}
 	.spacer {
 		flex: 1;
@@ -131,7 +131,7 @@
 		background: var(--color-danger);
 	}
 	.note {
-		margin: 8px 0 0;
+		margin: var(--space-2) 0 0;
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		line-height: 1.5;
@@ -139,14 +139,14 @@
 	.items {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
-		margin-top: 10px;
+		gap: var(--space-1);
+		margin-top: var(--space-2-5);
 	}
 	.inv-row {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		padding: 5px 9px;
+		gap: var(--space-2);
+		padding: var(--space-1) var(--space-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
 		background: var(--color-surface-2);
@@ -179,7 +179,7 @@
 	.acts {
 		display: flex;
 		align-items: center;
-		gap: 5px;
+		gap: var(--space-1);
 	}
 	.stepper button {
 		width: 22px;

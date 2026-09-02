@@ -76,19 +76,19 @@
 		color: var(--color-text);
 	}
 	.body :global(p) {
-		margin: 0 0 12px;
+		margin: 0 0 var(--space-3);
 	}
 	/* content tables (spell/item tables, embedded summon stat blocks) rendered from the CSV */
 	.body :global(table) {
 		width: 100%;
 		border-collapse: collapse;
-		margin: 6px 0 14px;
+		margin: var(--space-1-5) 0 14px;
 		font-size: var(--font-size-sm);
 	}
 	.body :global(th),
 	.body :global(td) {
 		border: 1px solid var(--color-border);
-		padding: 5px 9px;
+		padding: var(--space-1) var(--space-2);
 		text-align: start;
 		vertical-align: top;
 	}
@@ -103,7 +103,7 @@
 	.body :global(hr) {
 		border: 0;
 		border-top: 1px solid var(--color-border);
-		margin: 12px 0;
+		margin: var(--space-3) 0;
 	}
 	.body :global(h4),
 	.body :global(h5) {
@@ -112,11 +112,11 @@
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
-		margin: 14px 0 6px;
+		margin: 14px 0 var(--space-1-5);
 	}
 	.body :global(ul),
 	.body :global(ol) {
-		margin: 0 0 12px;
+		margin: 0 0 var(--space-3);
 		padding-inline-start: 20px;
 	}
 	.body :global(li) {
@@ -127,10 +127,10 @@
 		border: 1px solid var(--color-border);
 		border-inline-start: 3px solid var(--color-resource);
 		border-radius: var(--radius);
-		padding: 10px 13px;
+		padding: var(--space-2-5) var(--space-3);
 		font-size: var(--font-size-sm);
 		color: var(--color-text-muted);
-		margin: 6px 0 14px;
+		margin: var(--space-1-5) 0 14px;
 	}
 	/* ---- editable (translate) inputs — prose spots only ---- */
 	.edit-body {
@@ -140,25 +140,25 @@
 		font-family: var(--font-body);
 		font-size: var(--font-size-body);
 		line-height: 1.5;
-		padding: 10px 12px;
+		padding: var(--space-2-5) var(--space-3);
 	}
 	.edit-body.short {
 		min-height: 70px;
 	}
 	.edit-line {
 		display: block;
-		margin: 10px 0;
+		margin: var(--space-2-5) 0;
 	}
 	.edit-line > span {
 		display: block;
 		font-size: var(--font-size-micro);
-		margin-bottom: 4px;
+		margin-bottom: var(--space-1);
 	}
 	.edit-inline {
 		width: 100%;
 		font-family: var(--font-body);
 		font-size: var(--font-size-body);
-		padding: 7px 10px;
+		padding: var(--space-1-5) var(--space-2-5);
 	}
 	.edit-body:focus,
 	.edit-inline:focus {

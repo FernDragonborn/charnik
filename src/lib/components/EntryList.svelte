@@ -74,8 +74,8 @@
 	.lsearch {
 		display: flex;
 		align-items: center;
-		gap: 9px;
-		padding: 12px 13px;
+		gap: var(--space-2);
+		padding: var(--space-3) var(--space-3);
 		border-bottom: 1px solid var(--color-border);
 		font-size: var(--font-size-sm);
 	}
@@ -90,8 +90,8 @@
 	.lfilter {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
-		padding: 9px 13px;
+		gap: var(--space-1-5);
+		padding: var(--space-2) var(--space-3);
 		border-bottom: 1px solid var(--color-border);
 	}
 	.rows {
@@ -100,15 +100,15 @@
 	}
 	.section {
 		font-size: var(--font-size-micro);
-		padding: 10px 13px 4px;
+		padding: var(--space-2-5) var(--space-3) var(--space-1);
 		display: flex;
 		justify-content: space-between;
 	}
 	.entry-row {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		padding: 8px 13px;
+		gap: var(--space-2-5);
+		padding: var(--space-2) var(--space-3);
 		border-top: 1px solid var(--color-border);
 		cursor: pointer;
 	}
@@ -121,7 +121,7 @@
 	}
 	.acts {
 		display: flex;
-		gap: 4px;
+		gap: var(--space-1);
 		flex: none;
 	}
 	.edition-tag {

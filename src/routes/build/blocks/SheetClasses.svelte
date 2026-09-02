@@ -282,7 +282,7 @@
 		align-items: flex-start;
 		width: 100%;
 		padding: var(--space-1) var(--space-1-5);
-		margin: 0 -var(--space-1-5);
+		margin: 0 calc(-1 * var(--space-1-5));
 		border-radius: var(--radius-sm);
 		cursor: pointer;
 		text-align: start;

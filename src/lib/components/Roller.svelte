@@ -121,8 +121,8 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 6px;
-		padding: 10px 13px;
+		gap: var(--space-1-5);
+		padding: var(--space-2-5) var(--space-3);
 		background: var(--color-surface-2);
 		border-bottom: 1px solid var(--color-border);
 		border-radius: var(--radius-md) var(--radius-md) 0 0;
@@ -131,7 +131,7 @@
 		flex: none;
 		min-width: 34px;
 		height: 28px;
-		padding: 0 8px;
+		padding: 0 var(--space-2);
 		border-radius: 7px;
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface);
@@ -154,11 +154,11 @@
 	/* subordinate to the dice: these change the SHAPE of the roll, not its contents */
 	.roller-extras {
 		display: flex;
-		gap: 6px;
-		padding-inline-start: 11px;
+		gap: var(--space-1-5);
+		padding-inline-start: var(--space-2-5);
 	}
 	.roller-extra {
-		padding: 3px 8px;
+		padding: var(--space-1) var(--space-2);
 		border: 1px dashed var(--color-border-strong);
 		border-radius: var(--radius-sm);
 		background: transparent;
@@ -172,7 +172,7 @@
 		color: var(--color-text);
 	}
 	.roller-label {
-		padding: 9px 14px 0;
+		padding: var(--space-2) 14px 0;
 		font-family: var(--font-display);
 		font-size: var(--font-size-body);
 		font-weight: 700;
@@ -182,24 +182,24 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-2);
-		padding: 12px 13px;
+		padding: var(--space-3) var(--space-3);
 	}
 	.roller-blocked {
 		display: flex;
 		align-items: flex-start;
-		gap: 9px;
-		margin: 0 13px 12px;
-		padding: 9px 11px;
+		gap: var(--space-2);
+		margin: 0 var(--space-3) var(--space-3);
+		padding: var(--space-2) var(--space-2-5);
 		background: var(--color-resource-soft);
 		border: 1px solid var(--color-resource-line);
-		border-radius: 9px;
+		border-radius: var(--radius);
 		font-size: var(--font-size-xs);
 		color: var(--color-text);
 	}
 	/* a warning is the same band, drawn as quietly as the underline it explains: no fill, no badge —
 	   it must not read as "something is wrong", because nothing is */
 	.roller-blocked.warn {
-		padding: 0 11px;
+		padding: 0 var(--space-2-5);
 		background: transparent;
 		border-color: transparent;
 		color: var(--color-text-muted);

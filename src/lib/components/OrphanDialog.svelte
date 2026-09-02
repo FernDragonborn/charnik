@@ -260,7 +260,7 @@
 	}
 	.panelabel {
 		font-size: var(--font-size-micro);
-		margin-bottom: 12px;
+		margin-bottom: var(--space-3);
 	}
 	.panelabel.t {
 		color: var(--color-accent-bright);
@@ -274,7 +274,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-		margin: 3px 0 12px;
+		margin: var(--space-1) 0 var(--space-3);
 	}
 	.d-prose {
 		font-size: var(--font-size-sm);
@@ -287,24 +287,24 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius);
-		padding: 8px 11px;
+		padding: var(--space-2) var(--space-2-5);
 		color: var(--color-text);
 		font-size: var(--font-size-sm);
-		margin-bottom: 10px;
+		margin-bottom: var(--space-2-5);
 	}
 	.results {
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
-		margin-bottom: 12px;
+		gap: var(--space-1);
+		margin-bottom: var(--space-3);
 		max-height: 260px;
 		overflow: auto;
 	}
 	.res {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		padding: 7px 10px;
+		gap: var(--space-2-5);
+		padding: var(--space-1-5) var(--space-2-5);
 		border-radius: var(--radius);
 		cursor: pointer;
 		border: 1px solid transparent;
@@ -332,17 +332,17 @@
 	.no-res {
 		color: var(--color-text-muted);
 		font-size: var(--font-size-sm);
-		padding: 8px 2px;
+		padding: var(--space-2) 2px;
 	}
 	.preview {
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: 10px;
-		padding: 12px 14px;
+		padding: var(--space-3) 14px;
 	}
 	.pv-label {
 		font-size: var(--font-size-micro);
-		margin-bottom: 6px;
+		margin-bottom: var(--space-1-5);
 	}
 	.pv-title {
 		font-family: var(--font-display);
@@ -352,7 +352,7 @@
 	.pv-sub {
 		color: var(--color-text-muted);
 		font-size: var(--font-size-xs);
-		margin: 2px 0 8px;
+		margin: 2px 0 var(--space-2);
 	}
 	.pv-body {
 		font-size: var(--font-size-sm);
@@ -378,11 +378,11 @@
 	.cf-pane {
 		border: 1px solid var(--color-border);
 		border-radius: 10px;
-		padding: 12px 14px;
+		padding: var(--space-3) 14px;
 		background: var(--color-surface-2);
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 	.cf-label {
 		font-size: var(--font-size-micro);

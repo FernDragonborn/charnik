@@ -44,7 +44,7 @@
 	/* piece 3: resource-option cost chip in the actions block */
 	.cost-chip {
 		display: inline-block;
-		padding: 0 6px;
+		padding: 0 var(--space-1-5);
 		border: 1px solid var(--color-accent);
 		border-radius: 4px;
 		color: var(--color-accent-bright);

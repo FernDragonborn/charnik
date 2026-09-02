@@ -221,13 +221,13 @@
 	.counts {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 8px;
+		gap: var(--space-2);
 		margin-bottom: 18px;
 	}
 	.count {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
-		padding: 3px 10px;
+		padding: var(--space-1) var(--space-2-5);
 		border-radius: 20px;
 		border: 1px solid var(--color-border-strong);
 		color: var(--color-text);
@@ -248,19 +248,19 @@
 	}
 	.group-label {
 		font-size: var(--font-size-micro);
-		margin: 18px 0 8px;
+		margin: 18px 0 var(--space-2);
 	}
 	/* the "what it means / what to do" that every row in the group shares — said once above them
 	   instead of repeated on forty identical rows */
 	.group-note {
-		margin: -4px 0 8px;
+		margin: calc(-1 * var(--space-1)) 0 var(--space-2);
 		max-width: 70ch;
 	}
 	.plugin-retry-row {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 12px;
+		gap: var(--space-3);
 	}
 	.retry-btn {
 		font-family: var(--font-mono);
@@ -271,7 +271,7 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 20px;
-		padding: 3px 10px;
+		padding: var(--space-1) var(--space-2-5);
 		cursor: pointer;
 	}
 	.retry-btn:hover {
@@ -282,8 +282,8 @@
 		border: 1px solid var(--color-border);
 		border-inline-start-width: 3px;
 		border-radius: var(--radius);
-		padding: 8px 12px;
-		margin-bottom: 6px;
+		padding: var(--space-2) var(--space-3);
+		margin-bottom: var(--space-1-5);
 		background: var(--color-surface-2);
 	}
 	.row.err {
@@ -314,6 +314,6 @@
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		opacity: 0.75;
-		margin-top: 4px;
+		margin-top: var(--space-1);
 	}
 </style>

@@ -77,7 +77,7 @@
 	.no-roll {
 		display: flex;
 		align-items: center;
-		padding: 9px 14px;
+		padding: var(--space-2) 14px;
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
@@ -85,8 +85,8 @@
 		align-self: stretch;
 		display: flex;
 		align-items: center;
-		gap: 4px;
-		padding: 0 11px;
+		gap: var(--space-1);
+		padding: 0 var(--space-2-5);
 		border: 0;
 		border-inline-start: 1px solid var(--color-border);
 		background: var(--color-surface-2);

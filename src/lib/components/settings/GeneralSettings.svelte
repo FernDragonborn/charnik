@@ -98,6 +98,6 @@
 <style>
 	/* rows use the global .setting-row / .setting-label / .setting-options (components.css) */
 	.crit-note {
-		margin-top: 6px;
+		margin-top: var(--space-1-5);
 	}
 </style>

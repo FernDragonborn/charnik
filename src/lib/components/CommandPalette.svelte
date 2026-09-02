@@ -241,12 +241,12 @@
 	}
 	.group {
 		font-size: var(--font-size-micro);
-		padding: 8px 10px 4px;
+		padding: var(--space-2) var(--space-2-5) var(--space-1);
 	}
 	.item {
 		display: flex;
 		align-items: center;
-		gap: 9px;
+		gap: var(--space-2);
 		padding: var(--space-2) var(--space-3);
 		border-radius: var(--radius-sm);
 		cursor: pointer;
@@ -269,8 +269,8 @@
 		text-transform: uppercase;
 		color: var(--color-text-muted);
 		border: 1px solid var(--color-border);
-		border-radius: 5px;
-		padding: 2px 6px;
+		border-radius: var(--radius-sm);
+		padding: 2px var(--space-1-5);
 	}
 	.item-text {
 		min-width: 0;

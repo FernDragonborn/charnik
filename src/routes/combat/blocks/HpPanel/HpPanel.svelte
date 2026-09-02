@@ -159,7 +159,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
-		padding: 12px 16px;
+		padding: var(--space-3) var(--space-4);
 	}
 	/* main row: HP readout (label · number · bar) left, adjust controls right */
 	.hp-main {
@@ -178,7 +178,7 @@
 		width: 120px;
 		display: flex;
 		flex-direction: column;
-		gap: 5px;
+		gap: var(--space-1);
 		justify-content: space-between;
 		border-inline-start: 1px solid var(--color-border);
 		padding-inline-start: 15px;
@@ -201,7 +201,7 @@
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-xs);
-		padding: 3px 9px;
+		padding: var(--space-1) var(--space-2);
 		border-radius: var(--radius-full);
 		cursor: pointer;
 		background: var(--color-good-soft);
@@ -226,7 +226,7 @@
 		font-weight: 600;
 		font-size: var(--font-size-body);
 		color: var(--color-good);
-		margin-inline-start: 7px;
+		margin-inline-start: var(--space-1-5);
 	}
 	.hitpoints-bar {
 		height: 9px;
@@ -234,7 +234,7 @@
 		background: var(--color-surface-2);
 		overflow: hidden;
 		border: 1px solid var(--color-border);
-		margin-top: 8px;
+		margin-top: var(--space-2);
 		display: flex;
 	}
 	.hitpoints-bar > i {
@@ -258,13 +258,13 @@
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
 		color: var(--color-text);
-		padding: 4px;
+		padding: var(--space-1);
 	}
 	.hp-btn {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-xs);
-		padding: 5px 11px;
+		padding: var(--space-1) var(--space-2-5);
 		border-radius: 7px;
 		cursor: pointer;
 	}
@@ -282,9 +282,9 @@
 		filter: brightness(1.12);
 	}
 	.hp-damage-type {
-		margin-top: 6px;
+		margin-top: var(--space-1-5);
 		width: 100%;
-		padding: 5px 8px;
+		padding: var(--space-1) var(--space-2);
 		font-size: var(--font-size-xs);
 		border-radius: 7px;
 		background: var(--color-surface-2);
@@ -297,9 +297,9 @@
 		display: flex;
 		align-items: center;
 		flex-wrap: wrap;
-		gap: 9px;
-		margin-top: 10px;
-		padding: 7px 10px;
+		gap: var(--space-2);
+		margin-top: var(--space-2-5);
+		padding: var(--space-1-5) var(--space-2-5);
 		border-radius: var(--radius-md);
 		background: var(--color-accent-soft);
 		border: 1px solid var(--color-accent);
@@ -321,7 +321,7 @@
 		color: var(--color-text-muted);
 		display: inline-flex;
 		align-items: center;
-		gap: 5px;
+		gap: var(--space-1);
 	}
 	.conc-dc {
 		width: 44px;
@@ -332,13 +332,13 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-sm);
 		color: var(--color-text);
-		padding: 2px 3px;
+		padding: 2px var(--space-1);
 	}
 	.conc-btn {
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-xs);
-		padding: 4px 10px;
+		padding: var(--space-1) var(--space-2-5);
 		border-radius: var(--radius-sm);
 		cursor: pointer;
 		border: 1px solid var(--color-border);
@@ -349,7 +349,7 @@
 		margin-inline-start: auto;
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.conc-btn.roll {
 		background: var(--color-accent-soft);
@@ -357,7 +357,7 @@
 		color: var(--color-accent-bright);
 	}
 	.conc-btn.dismiss {
-		padding: 4px 8px;
+		padding: var(--space-1) var(--space-2);
 		background: transparent;
 		border-color: transparent;
 		color: var(--color-text-muted);
@@ -371,12 +371,12 @@
 	}
 
 	.death-saves {
-		margin-top: 12px;
-		padding-top: 11px;
+		margin-top: var(--space-3);
+		padding-top: var(--space-2-5);
 		border-top: 1px solid var(--color-border);
 		display: flex;
 		flex-direction: column;
-		gap: 9px;
+		gap: var(--space-2);
 	}
 	.hp-btn.death-roll {
 		flex: 0 0 auto;
@@ -388,12 +388,12 @@
 	.death-tracks {
 		display: flex;
 		flex-direction: column;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.death-track {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.death-track-label {
 		font-size: var(--font-size-xs);

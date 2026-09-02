@@ -174,7 +174,7 @@
 		color: var(--color-good);
 		border: 1px solid var(--color-good);
 		border-radius: 20px;
-		padding: 0 6px;
+		padding: 0 var(--space-1-5);
 	}
 	.count {
 		margin: var(--space-3) 0 0;

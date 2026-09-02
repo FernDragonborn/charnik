@@ -138,7 +138,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-		margin: -2px 0 9px;
+		margin: -2px 0 var(--space-2);
 	}
 	.cast-line b {
 		color: var(--color-resource);
@@ -158,9 +158,9 @@
 	.spell-category {
 		display: flex;
 		align-items: center;
-		gap: 9px;
+		gap: var(--space-2);
 		font-size: var(--font-size-micro);
-		padding: 11px 0 3px;
+		padding: var(--space-2-5) 0 var(--space-1);
 		break-inside: avoid;
 	}
 	.spell-category.star {
@@ -168,7 +168,7 @@
 	}
 	.spell-category .pips {
 		display: flex;
-		gap: 5px;
+		gap: var(--space-1);
 	}
 	.spell-category .slot-pip {
 		width: 12px;
@@ -194,8 +194,8 @@
 		   resolution pill (its cell stays empty but keeps its width) */
 		grid-template-columns: minmax(0, 1fr) 76px 74px 46px;
 		align-items: center;
-		gap: 8px;
-		padding: 7px 6px;
+		gap: var(--space-2);
+		padding: var(--space-1-5) var(--space-1-5);
 		border-top: 1px solid var(--color-border);
 		border-radius: 7px;
 		cursor: pointer;
@@ -219,7 +219,7 @@
 		min-width: 0;
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-sm);
@@ -244,8 +244,8 @@
 	.spell-row .resolution-tag {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		border-radius: 5px;
-		padding: 2px 4px;
+		border-radius: var(--radius-sm);
+		padding: 2px var(--space-1);
 		border: 1px solid var(--color-border);
 		color: var(--color-text-muted);
 		white-space: nowrap;
@@ -274,7 +274,7 @@
 	}
 	.spell-row .spell-level .cast-icon {
 		font-style: normal;
-		margin-inline-end: 6px;
+		margin-inline-end: var(--space-1-5);
 		color: var(--color-accent-bright);
 		cursor: help;
 	}
@@ -282,8 +282,8 @@
 	   clutter, then reads as clickable (interactive-affordance invariant). */
 	.spell-row .spell-level .upcast-btn {
 		display: inline-block;
-		margin-inline-end: 5px;
-		padding: 0 3px;
+		margin-inline-end: var(--space-1);
+		padding: 0 var(--space-1);
 		border-radius: 4px;
 		color: var(--color-resource);
 		opacity: 0;
@@ -305,7 +305,7 @@
 		height: 8px;
 		border-radius: 50%;
 		border: 1.5px solid var(--color-border-strong);
-		margin-inline-end: 8px;
+		margin-inline-end: var(--space-2);
 		vertical-align: middle;
 		cursor: pointer;
 	}
@@ -338,7 +338,7 @@
 		background: transparent;
 		border: 0;
 		color: var(--color-border-strong);
-		margin-inline-start: 5px;
+		margin-inline-start: var(--space-1);
 		cursor: pointer;
 		font-size: var(--font-size-xs);
 		line-height: 1;
@@ -348,7 +348,7 @@
 	.pin-star::before {
 		content: '';
 		position: absolute;
-		inset: -7px;
+		inset: calc(-1 * var(--space-1-5));
 		border-radius: 50%;
 	}
 	/* hover = a FILLED disc behind the star (bg + halo of the same colour, so it's a solid circle, not
@@ -363,8 +363,8 @@
 	}
 	/* B9: worn non-proficient armor blocks spellcasting (RAW rule-block) */
 	.armor-block {
-		margin: 4px 0 6px;
-		padding: 4px 8px;
+		margin: var(--space-1) 0 var(--space-1-5);
+		padding: var(--space-1) var(--space-2);
 		border: 1px solid var(--color-danger);
 		border-radius: 4px;
 		color: var(--color-danger);
@@ -372,8 +372,8 @@
 	}
 	/* ritual-cast badge — only on ritual-tagged spells; casts with no slot */
 	.ritual-cast {
-		margin-inline-start: 6px;
-		padding: 0 5px;
+		margin-inline-start: var(--space-1-5);
+		padding: 0 var(--space-1);
 		border: 1px solid var(--color-border);
 		border-radius: 4px;
 		color: var(--color-text-muted);

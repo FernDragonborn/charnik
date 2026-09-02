@@ -66,7 +66,7 @@
 		position: relative;
 		margin-top: -30px;
 		margin-inline-end: 90px;
-		padding: 6px 12px 10px;
+		padding: var(--space-1-5) var(--space-3) var(--space-2-5);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius-md);

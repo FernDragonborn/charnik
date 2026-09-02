@@ -186,7 +186,7 @@
 		flex: none;
 		font-size: var(--font-size-xs);
 		font-family: var(--font-mono);
-		padding: 2px 8px;
+		padding: 2px var(--space-2);
 		border-radius: 20px;
 		border: 1px solid var(--color-border);
 		color: var(--color-text-muted);

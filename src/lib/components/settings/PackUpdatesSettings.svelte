@@ -591,7 +591,7 @@
 		min-width: 280px;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-sm);
-		padding: 6px 10px;
+		padding: var(--space-1-5) var(--space-2-5);
 		color: var(--color-text);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);

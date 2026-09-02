@@ -83,17 +83,17 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		margin-bottom: 14px;
 	}
 	.toggle {
 		display: inline-flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-xs);
-		padding: 7px 12px;
+		padding: var(--space-1-5) var(--space-3);
 		border-radius: var(--radius-full);
 		cursor: pointer;
 		background: var(--color-surface);
@@ -104,8 +104,8 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 5px;
-		padding: 1px 6px;
+		border-radius: var(--radius-sm);
+		padding: 1px var(--space-1-5);
 		color: inherit;
 	}
 	.toggle.on {

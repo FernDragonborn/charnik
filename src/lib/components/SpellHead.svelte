@@ -98,14 +98,14 @@
 	.stat-title {
 		display: flex;
 		align-items: center;
-		gap: 11px;
-		margin: 4px 0 14px;
+		gap: var(--space-2-5);
+		margin: var(--space-1) 0 14px;
 	}
 	.stat-chip {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		border-radius: 5px;
-		padding: 2px 7px;
+		border-radius: var(--radius-sm);
+		padding: 2px var(--space-1-5);
 		border: 1px solid var(--color-border);
 		color: var(--color-text-muted);
 		white-space: nowrap;
@@ -129,9 +129,9 @@
 	.strip {
 		display: grid;
 		grid-template-columns: 168px 1fr;
-		gap: 12px;
+		gap: var(--space-3);
 		align-items: start;
-		margin-bottom: 4px;
+		margin-bottom: var(--space-1);
 	}
 	.strip.norolls {
 		grid-template-columns: 1fr;
@@ -142,11 +142,11 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 12px;
 		background: var(--color-surface-2);
-		padding: 12px 10px;
+		padding: var(--space-3) var(--space-2-5);
 		text-align: center;
 	}
 	.spell-effect-value {
@@ -173,7 +173,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
-		gap: 5px;
+		gap: var(--space-1);
 	}
 	/* auto-fit rather than a fixed pair: the same head is read in a wide compendium pane and in a
 	   builder inspector, and the cells should pack to whatever fits instead of squeezing "30 feet
@@ -181,14 +181,14 @@
 	.stat-cells {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-		gap: 8px;
+		gap: var(--space-2);
 		align-content: start;
 	}
 	.stat-cell {
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
-		border-radius: 9px;
-		padding: 7px 11px;
+		border-radius: var(--radius);
+		padding: var(--space-1-5) var(--space-2-5);
 	}
 	.stat-cell .stat-key {
 		font-size: var(--font-size-micro);
@@ -215,8 +215,8 @@
 			min-height: 0;
 			flex-direction: row;
 			justify-content: flex-start;
-			gap: 10px;
-			padding: 9px 12px;
+			gap: var(--space-2-5);
+			padding: var(--space-2) var(--space-3);
 			text-align: start;
 		}
 		.spell-effect-rolls {

@@ -156,7 +156,7 @@
 	.combat-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: 12px;
+		gap: var(--space-3);
 		margin-bottom: 22px;
 		align-items: stretch;
 	}
@@ -193,7 +193,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 13px;
-		padding: 13px 15px;
+		padding: var(--space-3) 15px;
 		color: var(--color-text);
 	}
 	button.tile {
@@ -216,7 +216,7 @@
 		font-weight: 700;
 		font-size: var(--font-size-h3);
 		line-height: 1.05;
-		margin-top: 4px;
+		margin-top: var(--space-1);
 	}
 	.tile .tile-value small {
 		font-size: var(--font-size-sm);
@@ -227,7 +227,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-		margin-top: 6px;
+		margin-top: var(--space-1-5);
 	}
 	.tile .tile-text b {
 		color: var(--color-resource);
@@ -237,23 +237,23 @@
 	.resources-block {
 		display: flex;
 		flex-direction: column;
-		gap: 9px;
+		gap: var(--space-2);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 13px;
-		padding: 12px 14px;
+		padding: var(--space-3) 14px;
 	}
 	.resource-chips {
 		display: flex;
 		flex-wrap: wrap;
 		align-content: flex-start;
-		gap: 7px;
+		gap: var(--space-1-5);
 	}
 	/* the whole chip is the "use one" button (UBUG-8) — clickable + highlighted on hover */
 	.resource-chips .resource {
 		display: inline-flex;
 		align-items: center;
-		gap: 7px;
+		gap: var(--space-1-5);
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-xs);
@@ -261,7 +261,7 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-full);
-		padding: 5px 11px;
+		padding: var(--space-1) var(--space-2-5);
 		cursor: pointer;
 	}
 	.resource-chips .resource small {
@@ -273,7 +273,7 @@
 	}
 	.resource-pips {
 		display: inline-flex;
-		gap: 4px;
+		gap: var(--space-1);
 	}
 	.resource-pip {
 		display: inline-block;
@@ -298,7 +298,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 12px;
-		padding: 11px 16px;
+		padding: var(--space-2-5) var(--space-4);
 	}
 	/* mono/uppercase/tracking/muted come from the shared .eyebrow primitive; keep only the micro size */
 	.senses-strip .bar-label {
@@ -315,7 +315,7 @@
 		font-weight: 400;
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-		margin-inline-end: 6px;
+		margin-inline-end: var(--space-1-5);
 	}
 	.senses-strip .separator-dot {
 		color: var(--color-border-strong);
@@ -324,7 +324,7 @@
 	   "reduced by a debuff", not a bug. The chevron is green up for advantage, red down for disadvantage. */
 	.senses-strip .advantage-mark {
 		font-size: var(--font-size-xs);
-		margin-inline-start: 3px;
+		margin-inline-start: var(--space-1);
 		/* muted toward the surface so the arrow recedes (darker on dark, lighter on light) — a hint,
 		   not an attention-grabber; the direction still reads adv/dis, tooltip has the detail */
 		color: color-mix(in srgb, var(--color-good) 45%, var(--color-surface));
@@ -340,7 +340,7 @@
 		background: transparent;
 		border: 1px solid transparent;
 		border-radius: var(--radius-sm);
-		padding: 3px 8px;
+		padding: var(--space-1) var(--space-2);
 		cursor: pointer;
 		align-self: center;
 	}
@@ -355,7 +355,7 @@
 	.defenses-strip .def-group {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 	}
 	.defenses-strip .def-label {
 		font-family: var(--font-body);
@@ -367,7 +367,7 @@
 		font-weight: 400;
 		font-size: var(--font-size-xs);
 		line-height: 1.6;
-		padding: 1px 8px;
+		padding: 1px var(--space-2);
 		border-radius: var(--radius-sm);
 		border: 1px solid var(--color-border-strong);
 		color: var(--color-text);

@@ -281,8 +281,8 @@
 	.section-head {
 		display: flex;
 		align-items: center;
-		gap: 7px;
-		padding: 12px 0 5px;
+		gap: var(--space-1-5);
+		padding: var(--space-3) 0 var(--space-1);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		letter-spacing: var(--tracking-label);
@@ -305,8 +305,8 @@
 	}
 	.effect-row {
 		display: flex;
-		gap: 9px;
-		padding: 7px 0;
+		gap: var(--space-2);
+		padding: var(--space-1-5) 0;
 		border-top: 1px solid var(--color-border);
 		align-items: flex-start;
 	}
@@ -321,7 +321,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 6px 8px;
+		gap: var(--space-1-5) var(--space-2);
 	}
 	.effect-name {
 		font-family: var(--font-display);
@@ -331,7 +331,7 @@
 	}
 	.effect-ctrl {
 		display: flex;
-		gap: 8px;
+		gap: var(--space-2);
 		flex: none;
 	}
 	/* tag pill — pos/neg share the box (identical height); modifier names avoid the row `.r` collision */
@@ -339,8 +339,8 @@
 	.derived-effect-row {
 		display: flex;
 		align-items: baseline;
-		gap: 8px;
-		padding: 3px 4px;
+		gap: var(--space-2);
+		padding: var(--space-1) var(--space-1);
 	}
 	.derived-effect-row .row-name {
 		flex: none;
@@ -348,7 +348,7 @@
 	.derived-tags {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 4px;
+		gap: var(--space-1);
 		justify-content: flex-end;
 		flex: 1;
 	}
@@ -360,8 +360,8 @@
 		font-size: var(--font-size-micro);
 		border: 1px solid var(--color-border);
 		background: var(--color-surface-2);
-		border-radius: 5px;
-		padding: 1px 6px;
+		border-radius: var(--radius-sm);
+		padding: 1px var(--space-1-5);
 		color: var(--color-text-muted);
 		white-space: nowrap;
 		flex: none;
@@ -371,14 +371,14 @@
 	.conc-badge {
 		display: inline-flex;
 		align-items: center;
-		gap: 4px;
+		gap: var(--space-1);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-accent-bright);
 		border: 1px solid var(--color-accent);
 		background: color-mix(in srgb, var(--color-accent) 10%, transparent);
-		border-radius: 5px;
-		padding: 1px 6px;
+		border-radius: var(--radius-sm);
+		padding: 1px var(--space-1-5);
 		cursor: pointer;
 		white-space: nowrap;
 	}
@@ -410,13 +410,13 @@
 	.duration-select {
 		display: inline-flex;
 		align-items: center;
-		gap: 5px;
+		gap: var(--space-1);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
 		color: var(--color-resource);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 7px;
-		padding: 3px 7px;
+		padding: var(--space-1) var(--space-1-5);
 		cursor: pointer;
 		white-space: nowrap;
 		flex: none;
@@ -434,11 +434,11 @@
 	}
 	/* the expanded condition rules text (G2 info channel) — reference prose under the row */
 	.effect-info-text {
-		margin: 0 0 7px;
-		padding: 7px 9px;
+		margin: 0 0 var(--space-1-5);
+		padding: var(--space-1-5) var(--space-2);
 		color: var(--color-text-muted);
 		background: var(--color-surface-2);
-		border-radius: 6px;
+		border-radius: var(--radius-sm);
 		border: 1px solid var(--color-border);
 	}
 	/* ArticleProse's .body trails a bottom margin on its last block — collapse it inside the chip */
@@ -447,7 +447,7 @@
 	}
 	/* a plugin handler's explanatory note — same reference styling family as the info text */
 	.plugin-note {
-		margin: 0 0 4px;
+		margin: 0 0 var(--space-1);
 		font-size: var(--font-size-xs);
 		line-height: 1.5;
 		color: var(--color-text-muted);
@@ -461,13 +461,13 @@
 	.resource-row {
 		display: flex;
 		align-items: center;
-		gap: 9px;
-		padding: 7px 9px;
-		margin: 0 -9px;
+		gap: var(--space-2);
+		padding: var(--space-1-5) var(--space-2);
+		margin: 0 calc(-1 * var(--space-2));
 		width: calc(100% + 18px);
 		border: 0;
 		border-top: 1px solid var(--color-border);
-		border-radius: 9px;
+		border-radius: var(--radius);
 		background: transparent;
 		color: var(--color-text);
 		text-align: start;
@@ -485,7 +485,7 @@
 	}
 	.resource-pips {
 		display: inline-flex;
-		gap: 4px;
+		gap: var(--space-1);
 	}
 	.resource-pip {
 		display: inline-block;
@@ -513,8 +513,8 @@
 		color: var(--color-resource);
 		border: 1px solid var(--color-resource-line);
 		background: color-mix(in srgb, var(--color-resource) 8%, transparent);
-		border-radius: 5px;
-		padding: 1px 6px;
+		border-radius: var(--radius-sm);
+		padding: 1px var(--space-1-5);
 		white-space: nowrap;
 	}
 </style>

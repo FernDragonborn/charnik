@@ -82,7 +82,7 @@
 		cursor: pointer;
 	}
 	.file input {
-		margin-top: 3px;
+		margin-top: var(--space-1);
 	}
 	.body {
 		display: flex;

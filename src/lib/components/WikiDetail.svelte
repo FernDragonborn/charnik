@@ -67,7 +67,7 @@
 		display: flex;
 		gap: 14px;
 		align-items: center;
-		margin: 4px 0 16px;
+		margin: var(--space-1) 0 var(--space-4);
 		flex-wrap: wrap;
 	}
 	.pick {

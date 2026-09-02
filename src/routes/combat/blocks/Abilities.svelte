@@ -55,7 +55,7 @@
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(6, 1fr);
-		gap: 10px;
+		gap: var(--space-2-5);
 		margin-bottom: 22px;
 	}
 	@media (max-width: 640px) {
@@ -69,8 +69,8 @@
 	.ability {
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 11px;
-		padding: 12px 8px;
+		border-radius: var(--radius-md);
+		padding: var(--space-3) var(--space-2);
 		color: var(--color-text);
 		display: block;
 		width: 100%;
@@ -112,13 +112,13 @@
 		font-weight: 700;
 		font-size: var(--font-size-h1);
 		line-height: 1;
-		margin: 6px 0 9px;
+		margin: var(--space-1-5) 0 var(--space-2);
 	}
 	.ability .ability-save {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 6px;
+		gap: var(--space-1-5);
 		width: 100%;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
@@ -127,7 +127,7 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: 7px;
-		padding: 5px 6px;
+		padding: var(--space-1) var(--space-1-5);
 		cursor: pointer;
 	}
 	.ability .ability-save:hover {

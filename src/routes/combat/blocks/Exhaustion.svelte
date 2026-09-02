@@ -68,9 +68,9 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-lg);
-		padding: 12px;
+		padding: var(--space-3);
 		display: flex;
-		gap: 11px;
+		gap: var(--space-2-5);
 	}
 	/* gauge column — tracks match the HP bar: neutral track, solid fill, NO coloured outline */
 	.gauge {
@@ -81,7 +81,7 @@
 		flex-direction: column-reverse;
 	}
 	.gauge.pips {
-		gap: 5px;
+		gap: var(--space-1);
 	}
 	.pip {
 		flex: 1;
@@ -142,12 +142,12 @@
 	}
 	.exhaustion-step {
 		display: flex;
-		gap: 6px;
+		gap: var(--space-1-5);
 		width: 100%;
 	}
 	.exhaustion-step button {
 		flex: 1;
-		padding: 4px 0;
+		padding: var(--space-1) 0;
 		font-size: var(--font-size-md);
 		font-weight: 600;
 		border-radius: var(--radius-sm);

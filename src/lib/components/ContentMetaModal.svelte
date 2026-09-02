@@ -314,7 +314,7 @@
 		color: var(--color-good);
 		background: var(--color-good-soft);
 		border-radius: var(--radius-full);
-		padding: 2px 10px;
+		padding: 2px var(--space-2-5);
 	}
 	/* .btn / .btn.ghost / .btn.primary are shared globals in styles/components.css */
 </style>

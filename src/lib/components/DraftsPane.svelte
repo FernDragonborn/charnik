@@ -167,7 +167,7 @@
 	.dp-head {
 		display: flex;
 		align-items: baseline;
-		gap: 10px;
+		gap: var(--space-2-5);
 	}
 	.dp-title {
 		font-family: var(--font-display);
@@ -182,7 +182,7 @@
 	.dp-hint {
 		color: var(--color-text-muted);
 		font-size: var(--font-size-xs);
-		margin: 4px 0 18px;
+		margin: var(--space-1) 0 18px;
 	}
 	.dp-empty {
 		color: var(--color-text-muted);
@@ -191,17 +191,17 @@
 	}
 	.dp-group-label {
 		font-size: var(--font-size-micro);
-		margin: 18px 0 8px;
+		margin: 18px 0 var(--space-2);
 	}
 	.draft {
 		display: flex;
 		align-items: center;
-		gap: 12px;
+		gap: var(--space-3);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: 10px;
-		padding: 11px 13px;
-		margin-bottom: 8px;
+		padding: var(--space-2-5) var(--space-3);
+		margin-bottom: var(--space-2);
 	}
 	.draft:hover {
 		border-color: var(--color-border-strong);
@@ -247,14 +247,14 @@
 		color: var(--color-text-muted);
 		margin-top: 2px;
 		display: flex;
-		gap: 10px;
+		gap: var(--space-2-5);
 		flex-wrap: wrap;
 		align-items: center;
 	}
 	.tag {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-micro);
-		padding: 1px 7px;
+		padding: 1px var(--space-1-5);
 		border-radius: 20px;
 		border: 1px solid var(--color-border-strong);
 		color: var(--color-text-muted);
@@ -269,7 +269,7 @@
 	}
 	.dactions {
 		display: flex;
-		gap: 8px;
+		gap: var(--space-2);
 		flex: none;
 	}
 	/* .btn / .btn.primary are shared globals; warn + danger are local variants */

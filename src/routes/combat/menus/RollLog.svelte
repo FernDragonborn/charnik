@@ -47,14 +47,14 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 11px 13px 6px;
+		padding: var(--space-2-5) var(--space-3) var(--space-1-5);
 	}
 	/* mono/uppercase/tracking/muted come from the shared .eyebrow primitive; keep only the micro size */
 	.log-head .menu-title {
 		font-size: var(--font-size-micro);
 	}
 	.log-scroll {
-		padding: 0 6px 4px;
+		padding: 0 var(--space-1-5) var(--space-1);
 	}
 	.log-row {
 		padding: 2px 0;

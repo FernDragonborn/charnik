@@ -118,11 +118,11 @@
 	   `container-type: normal; width: min-content` and read the bar's width back. */
 	@container (max-width: 630px) {
 		.turnbar .turn-slot {
-			gap: 5px;
-			padding: 5px 8px;
+			gap: var(--space-1);
+			padding: var(--space-1) var(--space-2);
 		}
 		.turnbar .nextturn {
-			padding: 7px 11px;
+			padding: var(--space-1-5) var(--space-2-5);
 		}
 		.turnbar .turn-slot.move .slot-label {
 			display: none;
@@ -144,14 +144,14 @@
 	.turn-slot {
 		display: inline-flex;
 		align-items: center;
-		gap: 7px;
+		gap: var(--space-1-5);
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-xs);
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-full);
-		padding: 5px 11px;
+		padding: var(--space-1) var(--space-2-5);
 		color: var(--color-text);
 		cursor: pointer;
 	}
@@ -160,7 +160,7 @@
 	}
 	.turn-slot .turn-pips {
 		display: inline-flex;
-		gap: 4px;
+		gap: var(--space-1);
 	}
 	/* One shape per slot, following Baldur's Gate 3's action economy — a circle for an action, a
 	   triangle for a bonus action, a four-pointed star for a reaction. The shape, not the colour, is
@@ -230,8 +230,8 @@
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
 		color: var(--color-accent-text);
-		border-radius: 9px;
-		padding: 7px 15px;
+		border-radius: var(--radius);
+		padding: var(--space-1-5) 15px;
 		cursor: pointer;
 	}
 	.nextturn:hover {

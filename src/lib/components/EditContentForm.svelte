@@ -457,7 +457,7 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-xl);
-		margin: 6px 0 8px;
+		margin: var(--space-1-5) 0 var(--space-2);
 		width: 100%;
 		background: transparent;
 		border: 0;
@@ -472,7 +472,7 @@
 	.id-row {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		margin-bottom: 14px;
 	}
 	.id-label,
@@ -484,12 +484,12 @@
 		font-size: var(--font-size-xs);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 6px;
-		padding: 3px 8px;
+		border-radius: var(--radius-sm);
+		padding: var(--space-1) var(--space-2);
 		color: var(--color-text-muted);
 	}
 	.id-hint {
-		margin: -8px 0 14px;
+		margin: calc(-1 * var(--space-2)) 0 14px;
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 	}
@@ -498,42 +498,42 @@
 		cursor: default;
 	}
 	.edit-target-note {
-		margin: 18px 0 10px;
+		margin: 18px 0 var(--space-2-5);
 		font-size: var(--font-size-xs);
 		line-height: 1.45;
 		color: var(--color-text-muted);
 		border-inline-start: 2px solid var(--color-border-strong);
-		padding-inline-start: 10px;
+		padding-inline-start: var(--space-2-5);
 	}
 	.target-row {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		flex-wrap: wrap;
-		margin: 18px 0 8px;
+		margin: 18px 0 var(--space-2);
 	}
 	.target-select {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 6px;
-		padding: 4px 8px;
+		border-radius: var(--radius-sm);
+		padding: var(--space-1) var(--space-2);
 		color: var(--color-text);
 	}
 	.shipped-warn {
 		border: 1px solid var(--color-danger);
 		background: var(--color-danger-soft);
 		border-radius: 10px;
-		padding: 12px 14px;
-		margin-bottom: 12px;
+		padding: var(--space-3) 14px;
+		margin-bottom: var(--space-3);
 	}
 	.shipped-warn b {
 		color: var(--color-danger);
 		font-size: var(--font-size-body);
 	}
 	.shipped-warn p {
-		margin: 6px 0 10px;
+		margin: var(--space-1-5) 0 var(--space-2-5);
 		font-size: var(--font-size-sm);
 		line-height: 1.4;
 		color: var(--color-text-muted);
@@ -541,15 +541,15 @@
 	.systems-row {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		margin-bottom: 16px;
+		gap: var(--space-2);
+		margin-bottom: var(--space-4);
 	}
 	.syschip {
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		border: 1px solid var(--color-border);
-		border-radius: 6px;
-		padding: 4px 12px;
+		border-radius: var(--radius-sm);
+		padding: var(--space-1) var(--space-3);
 		background: transparent;
 		color: var(--color-text-muted);
 		cursor: pointer;
@@ -566,11 +566,11 @@
 	.meta-cell {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--space-1);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 10px;
-		padding: 7px 11px;
+		padding: var(--space-1-5) var(--space-2-5);
 	}
 	.meta-cell .meta-key {
 		font-size: var(--font-size-micro);
@@ -653,7 +653,7 @@
 	}
 	.cell-warn {
 		display: block;
-		margin-top: 4px;
+		margin-top: var(--space-1);
 		font-size: var(--font-size-xs);
 		line-height: 1.3;
 		color: var(--color-warning);
@@ -661,7 +661,7 @@
 	.block-label {
 		display: block;
 		font-size: var(--font-size-micro);
-		margin-bottom: 8px;
+		margin-bottom: var(--space-2);
 	}
 	.bottom-field input {
 		width: 100%;
@@ -669,7 +669,7 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
 		color: var(--color-text);
-		padding: 8px 10px;
+		padding: var(--space-2) var(--space-2-5);
 		font-size: var(--font-size-body);
 	}
 	.bottom-field input:focus {
@@ -686,8 +686,8 @@
 		border: 1px solid var(--color-border);
 		border-radius: 10px;
 		color: var(--color-text);
-		padding: 10px 12px;
-		margin-bottom: 12px;
+		padding: var(--space-2-5) var(--space-3);
+		margin-bottom: var(--space-3);
 		resize: vertical;
 	}
 	.body-input:focus {
@@ -698,18 +698,18 @@
 		border: 1px solid var(--color-danger);
 		background: var(--color-danger-soft);
 		border-radius: 10px;
-		padding: 10px 14px;
-		margin-bottom: 12px;
+		padding: var(--space-2-5) 14px;
+		margin-bottom: var(--space-3);
 		font-size: var(--font-size-sm);
 		color: var(--color-text);
 	}
 	.issues ul {
-		margin: 6px 0 0;
+		margin: var(--space-1-5) 0 0;
 		padding-inline-start: 18px;
 	}
 	.actions {
 		display: flex;
-		gap: 10px;
+		gap: var(--space-2-5);
 		margin-bottom: 14px;
 	}
 	.save {
@@ -720,7 +720,7 @@
 		color: var(--color-accent-text);
 		border: 0;
 		border-radius: var(--radius);
-		padding: 9px 18px;
+		padding: var(--space-2) 18px;
 		cursor: pointer;
 	}
 	.save:disabled {
@@ -734,7 +734,7 @@
 		color: var(--color-text-muted);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
-		padding: 9px 16px;
+		padding: var(--space-2) var(--space-4);
 		cursor: pointer;
 	}
 	.cancel:hover {
@@ -749,7 +749,7 @@
 		color: var(--color-accent-bright);
 		border: 1px solid transparent;
 		border-radius: var(--radius);
-		padding: 9px 16px;
+		padding: var(--space-2) var(--space-4);
 		cursor: pointer;
 	}
 	.delete-entry:hover {

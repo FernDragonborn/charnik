@@ -35,20 +35,28 @@ const RADIUS_FOR = new Map([
 	[11, 'var(--radius-md)'],
 	[14, 'var(--radius-lg)'],
 ]);
+// the logical sides too — the repo's box sides are `inline`/`block`, so a physical-only pattern
+// walks straight past most of what is left
 const SPACING =
-	/^(\s*)(padding|margin|gap|row-gap|column-gap|inset)(-top|-bottom|-left|-right)?:\s*([^;]+);/;
+	/^(\s*)(padding|margin|gap|row-gap|column-gap|inset)(-(top|bottom|left|right|inline|block)(-(start|end))?)?:\s*([^;]+);/;
 const RADIUS = /^(\s*)(border-radius):\s*([^;]+);/;
+
+/** A negative offset is spacing too (a row bleeding into its card's padding), and `-var(…)` is not a
+ *  value — it parses as nothing and the whole declaration is dropped, silently. */
+const swap = (line, table) =>
+	line.replace(/(-?)(\d+)px/g, (px, sign, n) => {
+		const token = table.get(Number(n));
+		if (!token) return px;
+		return sign ? `calc(-1 * ${token})` : token;
+	});
 
 let changed = 0;
 for (const file of process.argv.slice(2)) {
 	const out = readFileSync(file, 'utf8')
 		.split('\n')
 		.map((line) => {
-			const radius = RADIUS.exec(line);
-			if (radius) return line.replace(/(\d+)px/g, (px, n) => RADIUS_FOR.get(Number(n)) ?? px);
-			const spacing = SPACING.exec(line);
-			if (!spacing) return line;
-			return line.replace(/(\d+)px/g, (px, n) => TOKEN_FOR.get(Number(n)) ?? px);
+			if (RADIUS.test(line)) return swap(line, RADIUS_FOR);
+			return SPACING.test(line) ? swap(line, TOKEN_FOR) : line;
 		})
 		.join('\n');
 	const before = readFileSync(file, 'utf8');

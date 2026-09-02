@@ -51,13 +51,13 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-h2);
-		margin: 6px 0 12px;
+		margin: var(--space-1-5) 0 var(--space-3);
 	}
 	.abilities {
 		display: grid;
 		grid-template-columns: repeat(6, 1fr);
-		gap: 6px;
-		margin-bottom: 16px;
+		gap: var(--space-1-5);
+		margin-bottom: var(--space-4);
 	}
 	.ability-block {
 		display: flex;
@@ -66,8 +66,8 @@
 		gap: 1px;
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
-		border-radius: 9px;
-		padding: 8px 4px;
+		border-radius: var(--radius);
+		padding: var(--space-2) var(--space-1);
 		text-align: center;
 	}
 	.ability-block .ability-code {
@@ -90,7 +90,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border);
 		border-radius: 10px;
-		padding: 7px 11px;
+		padding: var(--space-1-5) var(--space-2-5);
 	}
 	.meta-cell :global(.meta-key) {
 		font-size: var(--font-size-micro);

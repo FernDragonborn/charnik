@@ -50,12 +50,12 @@
 <style>
 	.sklgrid {
 		column-count: 2;
-		column-gap: 16px;
+		column-gap: var(--space-4);
 		column-rule: 1px solid var(--color-border);
 	}
 	.category-block {
 		break-inside: avoid;
-		margin-bottom: 7px;
+		margin-bottom: var(--space-1-5);
 	}
 	.ability-heading {
 		font-family: var(--font-mono);
@@ -63,13 +63,13 @@
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
-		padding: 6px 0 3px;
+		padding: var(--space-1-5) 0 var(--space-1);
 	}
 	.skill-row {
 		display: flex;
 		align-items: center;
-		gap: 8px;
-		padding: 5px 8px;
+		gap: var(--space-2);
+		padding: var(--space-1) var(--space-2);
 		border-radius: var(--radius);
 		break-inside: avoid;
 		cursor: pointer;

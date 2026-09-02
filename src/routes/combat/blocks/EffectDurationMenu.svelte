@@ -123,16 +123,16 @@
 		z-index: 61;
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 9px;
+		border-radius: var(--radius);
 		box-shadow: 0 12px 30px var(--color-overlay);
-		padding: 4px;
+		padding: var(--space-1);
 		width: max-content;
 	}
 	.dur-step-row {
 		display: flex;
-		gap: 4px;
+		gap: var(--space-1);
 		padding: 2px;
-		margin-bottom: 3px;
+		margin-bottom: var(--space-1);
 		border-bottom: 1px solid var(--color-border);
 	}
 	.dur-step-row button {
@@ -142,8 +142,8 @@
 		color: var(--color-text);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 6px;
-		padding: 3px 0;
+		border-radius: var(--radius-sm);
+		padding: var(--space-1) 0;
 		cursor: pointer;
 	}
 	.dur-step-row button:hover {
@@ -156,8 +156,8 @@
 		text-align: start;
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
-		padding: 5px 9px;
-		border-radius: 6px;
+		padding: var(--space-1) var(--space-2);
+		border-radius: var(--radius-sm);
 		color: var(--color-text);
 		background: transparent;
 		border: 0;
@@ -177,8 +177,8 @@
 	.dur-custom {
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		padding: 4px 6px;
+		gap: var(--space-1-5);
+		padding: var(--space-1) var(--space-1-5);
 	}
 	.dur-custom input {
 		width: 52px;
@@ -186,9 +186,9 @@
 		font-size: var(--font-size-xs);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
-		border-radius: 6px;
+		border-radius: var(--radius-sm);
 		color: var(--color-text);
-		padding: 4px 6px;
+		padding: var(--space-1) var(--space-1-5);
 	}
 	.dur-custom span {
 		font-family: var(--font-mono);
@@ -202,8 +202,8 @@
 		color: var(--color-resource);
 		background: transparent;
 		border: 1px solid var(--color-border-strong);
-		border-radius: 6px;
-		padding: 4px 9px;
+		border-radius: var(--radius-sm);
+		padding: var(--space-1) var(--space-2);
 		cursor: pointer;
 	}
 </style>

@@ -37,7 +37,7 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-full);
-		padding: 5px 11px;
+		padding: var(--space-1) var(--space-2-5);
 		cursor: pointer;
 		color: var(--color-text-muted);
 	}

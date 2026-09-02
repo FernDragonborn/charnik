@@ -147,28 +147,28 @@
 	.source {
 		border: 1px solid var(--color-border);
 		border-radius: 10px;
-		margin-bottom: 10px;
+		margin-bottom: var(--space-2-5);
 		overflow: hidden;
 	}
 	.source-head {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		padding: 10px 12px;
+		gap: var(--space-2-5);
+		padding: var(--space-2-5) var(--space-3);
 		background: var(--color-surface-2);
 	}
 	/* the name doubles as the expand/collapse control (same chev+label pattern as the play panels) */
 	.source-name {
 		display: inline-flex;
 		align-items: center;
-		gap: 5px;
+		gap: var(--space-1);
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-body);
 		color: var(--color-text);
 		background: transparent;
 		border: 0;
-		padding: 3px 7px 3px 3px;
+		padding: var(--space-1) var(--space-1-5) var(--space-1) var(--space-1);
 		border-radius: var(--radius-sm);
 		cursor: pointer;
 	}
@@ -187,7 +187,7 @@
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
 		background: transparent;
-		padding: 2px 7px;
+		padding: 2px var(--space-1-5);
 		cursor: pointer;
 	}
 	.source-tag.as-toggle:hover {
@@ -207,16 +207,16 @@
 		color: var(--color-text-muted);
 	}
 	.files {
-		padding: 6px 12px 10px 40px;
+		padding: var(--space-1-5) var(--space-3) var(--space-2-5) 40px;
 		display: flex;
 		flex-direction: column;
-		gap: 3px;
+		gap: var(--space-1);
 	}
 	.file {
 		display: flex;
 		align-items: center;
-		gap: 9px;
-		padding: 3px 0;
+		gap: var(--space-2);
+		padding: var(--space-1) 0;
 	}
 	.file-name {
 		font-family: var(--font-mono);
@@ -274,7 +274,7 @@
 		background: var(--color-good);
 	}
 	.toggle.small.on .knob {
-		inset-inline-start: 13px;
+		inset-inline-start: var(--space-3);
 	}
 	.toggle:disabled {
 		opacity: 0.4;
