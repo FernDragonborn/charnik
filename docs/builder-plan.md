@@ -79,6 +79,28 @@ exists. It is also what makes the fast gestures safe to offer.
 - **Autosave is debounced, so the last 600 ms of typing dies with a crashed tab.** Everything before
   it is on disk. A `beforeunload` flush would fight the desktop app's own quit for one name's worth
   of characters.
+- **The sectioned picker is a `listbox` that owns section headers.** Its rows are `presentation` and
+  their bodies are the options, but each section's header is an interactive `<button>` sitting inside
+  the same `listbox` — and `aria-required-children` allows a listbox `option` and `group`, not a
+  button. Every way out changes the picker's shape, which is why it is a decision and not a cleanup:
+
+  1. **One listbox per section.** Breaks the single `aria-controls` / `aria-activedescendant` the
+     search box's combobox needs — a combobox points at ONE popup.
+  2. **A non-interactive header**, collapsing moved to the jump rail. The rail already opens a
+     section and expands/collapses all of them; what is lost is closing ONE section by clicking it.
+  3. **The APG "combobox with grid popup"**: `role="grid"`, each section header its own single-cell
+     row, each option row a `row` of two `gridcell`s. The wrappers this needs used to be the reason
+     to reject it, and `SheetAttacks` has since shown the way — a `subgrid` row wrapper carries the
+     roles at zero pixels of layout change. This is the recommendation.
+
+  Nothing here is blocking: the options, their taken state and the whole keyboard walk are already
+  announced. What a screen reader hears wrong is the section header, as a button inside a list.
+- **Provenance on the sheet is `title`, so it is mouse-only.** `ui.md` §3 asks for hover **or** focus,
+  and the vitals tiles, the save cells and the passive scores are not focusable — but making them
+  focusable would not help, because no browser shows a `title` tooltip on keyboard focus. The real
+  fix is a shared provenance popover, and it is a repo-wide component, not a builder one: outside the
+  builder there is nowhere with focus to hang it on, and on a spell or a class action a click already
+  means *roll*, which collides with *open the article*.
 
 ## Not built, and why
 
@@ -118,3 +140,7 @@ any effect token at all, and none encode a numeric stat bonus):
 - [x] The old `blocks/*Card.svelte` deleted; gate green; screenshots in `design-preview/builder-*.png`.
 - [ ] The guided second mode (see above) — still open, and the reason N3 is `[~]` not `[x]`.
 - [ ] Skill-name i18n (shared with the combat sheet).
+- [ ] The sectioned picker's ARIA shape — a decision, costed under "Known sharp edges".
+- [ ] The shared provenance popover — repo-wide, same place.
+- [ ] Keyboard navigation past the double-Enter take (the walk moves the highlight and takes; it does
+      not yet reach the take toggle, the jump rail or the card's own controls without Tab).

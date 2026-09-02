@@ -1074,6 +1074,13 @@ stay semi-manual.
   built, the inspector's targets are a data descriptor so a wizard is a second entry point onto the
   same view-model, not a rewrite. Choice groups (N2 shape 3) still render here when N2 lands.
   Working notes: `docs/builder-plan.md`.
+  Also remaining, from the 2026-09-02 builder audit — three items that stop at a decision we have not
+  taken, each costed under `builder-plan.md` ▸ Known sharp edges: the **sectioned picker's ARIA
+  shape** (a `listbox` cannot own the section-header buttons; the recommendation is the APG grid
+  popup, now that `SheetAttacks` shows a `subgrid` row wrapper costs no pixels), the **shared
+  provenance popover** (repo-wide, not builder-only — `title` is mouse-only and focus does not fix
+  it), and **keyboard navigation past the double-Enter take**. Everything else the audit found is in
+  code.
 - [~] **N4 · Skills system fixes.** (a) **DONE (2026-08-02):** `toggleExpertise` capped from data
   — a curated `expertise_slots` `level:count` column on class_features (ONE row carries the
   progressive grant: Rogue `1:2,6:2`, Bard `3:2,10:2` 2014 / `2:2,9:2` 2024, 2024 Ranger `9:2`;

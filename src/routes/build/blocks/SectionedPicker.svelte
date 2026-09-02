@@ -112,6 +112,8 @@
 	 * screen repaints, and this reads a rect per section — fourteen of them in the item picker — so
 	 * unthrottled it asks the browser for layout many times over for one visible result.
 	 */
+	// No `cancelAnimationFrame` on teardown, deliberately: `list` is `$state` under `bind:this`, so
+	// Svelte nulls it on unmount and the guard below catches the frame that lands after.
 	let spying = 0;
 	function measure() {
 		spying = 0;
