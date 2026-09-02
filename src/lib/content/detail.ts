@@ -379,8 +379,12 @@ const PLAIN_ACTION = /^(1\s+)?action$/i;
  * columns are OPEN enums, so a homebrew pack's ninth school has to read as a name rather than as a
  * missing key. Takes the translator, because this module has no locale of its own.
  */
-export const contentLabel = (catalog: string, value: unknown, t: Translate): string =>
-	value ? t(`${catalog}.${String(value)}`, { default: titleCase(String(value)) }) : '';
+export const contentLabel = (catalog: string, value: unknown, t: Translate): string => {
+	// through `asText`, not `String`: a column whose cell holds a list or an object stringifies to
+	// "[object Object]", which would then be looked up as a key and printed as one
+	const key = asText(value);
+	return key ? t(`${catalog}.${key}`, { default: titleCase(key) }) : '';
+};
 
 /** The small sub-line under an entry's name in the list. */
 export function entryMeta(row: LoadedRow, t: Translate): string {

@@ -3,8 +3,8 @@
  * tokens. Only those four properties — a 1px border, a min-width or a font-size is not spacing, and
  * blanket-replacing every px is how a sweep like this breaks a layout.
  *
- * `node tools/space-tokens.mjs <files…>`. The builder is done; `src/routes/combat/**` and
- * `src/lib/components/**` are the two that remain, and each wants its own look-at-it pass after.
+ * `node tools/space-tokens.mjs <files…>`. `src/` is swept; this is here for the next file someone
+ * writes with literals in it, and every run still wants its own look-at-it pass after.
  *
  * Values snap to the NEAREST token, so nothing moves by more than a pixel; the half-steps exist
  * because the values themselves are what the scale was derived from.
