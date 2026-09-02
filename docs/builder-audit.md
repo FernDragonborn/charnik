@@ -63,13 +63,11 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **61 of 65 done; the four left are all partial.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **62 of 65 done; the three left are all partial.**
 
-What each of the four still owes:
+What each of the three still owes:
 
 - **S14** — the builder's spacing is on tokens; `combat` and `lib/components` are not.
-- **N15** — `classFeatureLines`, `buildSpellPicker`, `ability-allocation`, `card-placement` and
-  `picker-reading` still have no unit test of their own. `openSubclassChoices` now does.
 - **A9**, **A15** — see below; both stop at a decision, not at work.
 
 Work this file does not itself hold:
@@ -523,7 +521,7 @@ exactly one file.
 
 **[x] N14.** `class:free={true}` is a constant dressed as a directive — `BuildHead.svelte:58`.
 
-**[~] N15.** Test coverage stops at the small pure helpers. No unit tests for `classFeatureLines`,
+**[x] N15.** Test coverage stops at the small pure helpers. No unit tests for `classFeatureLines`,
 `openSubclassChoices`, `buildSpellPicker` — the three that touch the graph, the edition gate and
 multiclass attribution, which is why B11, B14 and S5 are invisible to the gate — nor for
 `ability-allocation.svelte.ts`, `card-placement.ts`, `picker-reading.svelte.ts`.

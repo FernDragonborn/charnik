@@ -120,12 +120,20 @@ export class AbilityAllocation {
 	/** Standard array: assign the next unused value to an ability, or clear it. */
 	assignArray = (ab: Ability, value: number | null) => {
 		const next = { ...this.host().draft.arrayPick };
-		// remove this value from any other ability first (each value used once)
-		if (value != null) for (const k of ABILITIES) if (next[k] === value) delete next[k];
+		const scores = { ...this.host().draft.abilities };
+		// each array value is used once, so taking it moves it — and the ability it LEFT goes back to
+		// the floor with it. The two are one fact in two places: dropping only the pick left that
+		// ability showing the score it no longer holds, with no chip to say where it came from.
+		if (value != null)
+			for (const k of ABILITIES)
+				if (k !== ab && next[k] === value) {
+					delete next[k];
+					scores[k] = POINT_BUY_MIN;
+				}
 		if (value == null) delete next[ab];
 		else next[ab] = value;
 		this.host().draft.arrayPick = next;
-		this.host().draft.abilities = { ...this.host().draft.abilities, [ab]: value ?? POINT_BUY_MIN };
+		this.host().draft.abilities = { ...scores, [ab]: value ?? POINT_BUY_MIN };
 	};
 	/** Standard-array values not yet assigned to an ability. */
 	get arrayRemaining(): number[] {

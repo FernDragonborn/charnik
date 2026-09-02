@@ -8,10 +8,13 @@ import {
 	expertiseSlotsAtLevel,
 	expertiseBudget,
 	openSubclassChoices,
-	halfFeatAbilities
+	halfFeatAbilities,
+	classFeatureLines,
+	buildSpellPicker
 } from './derive';
 import { makeRow } from '../content/test-utils';
-import type { ContentGraph } from '../content/loader';
+import type { ContentGraph, LoadedRow } from '../content/loader';
+import type { CharacterSheet } from '../character/derive';
 
 describe('parseSpeciesBoostChoice', () => {
 	it('parses "AxB" into { amount: A, count: B } and rejects junk', () => {
@@ -185,5 +188,141 @@ describe('buildTodos', () => {
 		});
 		// nothing left to choose — a granted feat is not a todo just for being granted
 		expect(kinds({ ...done, originFeat: { name: 'Alert', owed: 0 } })).toEqual([]);
+	});
+});
+
+
+describe('classFeatureLines', () => {
+	const feature = (over: Record<string, unknown>, system = '5.5e') => ({
+		...makeRow('class_feature', { class_id: 'cleric', ...over }),
+		systems: [system]
+	});
+	const rows = [
+		feature({ id: 'channel_divinity', level: 2 }),
+		feature({ id: 'destroy_undead', level: 5 }),
+		feature({ id: 'blessed_strikes', level: 7 }),
+		feature({ id: 'warding_flare', level: 1, subclass_id: 'light' }),
+		feature({ id: 'radiance_of_dawn', level: 2, subclass_id: 'life' }),
+		feature({ id: 'older_edition_only', level: 1 }, '5e')
+	];
+	// the subclass gate matches the feature's bare `subclass_id` against the chosen row's own `id`,
+	// never against the ref the draft holds — the drift that made every subclass feature miss
+	const graph = {
+		get: (id: string) =>
+			id === 'cleric'
+				? makeRow('class', { id: 'cleric' })
+				: id === 'subclass:SRD 5.2.1:light'
+					? makeRow('subclass', { id: 'light' })
+					: undefined,
+		featuresForClass: () => rows
+	} as unknown as ContentGraph;
+	const lines = (over: Partial<{ subclassId: string | null; level: number }> = {}) =>
+		classFeatureLines({
+			classes: [{ classId: 'cleric', subclassId: null, level: 5, ...over }],
+			graph,
+			system: '5.5e',
+			nameOf: (row: LoadedRow) => String(row.data.id)
+		});
+
+	it('marks what the level has reached as gained, and the look-ahead as not', () => {
+		expect(lines().map((l) => [String(l.row.data.id), l.level, l.gained])).toEqual([
+			['channel_divinity', 2, true],
+			['destroy_undead', 5, true],
+			['blessed_strikes', 7, false] // within the 3-level look-ahead
+		]);
+	});
+
+	it("shows only the chosen subclass's features, and says they came from it", () => {
+		const light = lines({ subclassId: 'subclass:SRD 5.2.1:light' });
+		expect(light.map((l) => String(l.row.data.id))).toContain('warding_flare');
+		expect(light.find((l) => l.row.data.id === 'warding_flare')?.fromSubclass).toBe(true);
+		expect(light.map((l) => String(l.row.data.id))).not.toContain('radiance_of_dawn');
+	});
+
+	it("drops a feature belonging to the other edition", () => {
+		expect(lines().map((l) => String(l.row.data.id))).not.toContain('older_edition_only');
+	});
+
+	it('stops the look-ahead where the caller says', () => {
+		const near = classFeatureLines({
+			classes: [{ classId: 'cleric', subclassId: null, level: 5 }],
+			graph,
+			system: '5.5e',
+			nameOf: (row: LoadedRow) => String(row.data.id),
+			lookaheadLevels: 1
+		});
+		expect(near.map((l) => l.level)).toEqual([2, 5]);
+	});
+});
+
+describe('buildSpellPicker', () => {
+	const spell = (id: string, level: number) => makeRow('spell', { id, level });
+	const fireBolt = spell('fire_bolt', 0);
+	const cureWounds = spell('cure_wounds', 1);
+	const fireball = spell('fireball', 3);
+	const wish = spell('wish', 9);
+	const allSpells = [fireBolt, cureWounds, fireball, wish];
+	const graph = {
+		get: (id: string) => allSpells.find((s) => s.effectiveId === id)
+	} as unknown as ContentGraph;
+	const caster = (
+		classId: string,
+		access: LoadedRow[],
+		maxSpellLevel: number,
+		saveDC: number
+	) => ({
+		classId,
+		accessSpellIds: access.map((s) => s.effectiveId),
+		maxSpellLevel,
+		saveDC: { value: saveDC }
+	});
+	const sheetOf = (...classes: ReturnType<typeof caster>[]) =>
+		({ spellcasting: { classes } }) as unknown as CharacterSheet;
+
+	it('Strict offers the class list up to the highest slot the character has', () => {
+		const picker = buildSpellPicker({
+			allSpells,
+			sheet: sheetOf(caster('wizard', [fireBolt, fireball, wish], 3, 15)),
+			graph,
+			strict: true,
+			selectedSpells: []
+		});
+		expect(picker[0]?.groups.map((g) => g.level)).toEqual([0, 3]); // wish is past maxSpellLevel
+		expect(picker[0]?.groups[1]?.spells.map((s) => s.id)).toEqual(['fireball']);
+	});
+
+	it('Free lifts both gates', () => {
+		const picker = buildSpellPicker({
+			allSpells,
+			sheet: sheetOf(caster('wizard', [fireBolt], 3, 15)),
+			graph,
+			strict: false,
+			selectedSpells: []
+		});
+		expect(picker[0]?.groups.map((g) => g.level)).toEqual([0, 1, 3, 9]);
+	});
+
+	it('charges a spell on two class lists to ONE class, the same one the play sheet does', () => {
+		// RV1/B11: Cure Wounds is on both lists; `casterForSpell` gives it to the higher save DC, and
+		// the other class's tally must not count it a second time
+		const picker = buildSpellPicker({
+			allSpells,
+			sheet: sheetOf(
+				caster('cleric', [cureWounds], 3, 16),
+				caster('wizard', [cureWounds, fireBolt], 3, 14)
+			),
+			graph,
+			strict: true,
+			selectedSpells: [cureWounds.effectiveId, fireBolt.effectiveId]
+		});
+		expect(picker[0]?.leveledChosen).toBe(1); // the cleric holds Cure Wounds
+		expect(picker[1]?.leveledChosen).toBe(0);
+		expect(picker[1]?.cantripsChosen).toBe(1); // and the wizard its own cantrip
+	});
+
+	it('a non-caster gets no picker at all', () => {
+		expect(
+			buildSpellPicker({ allSpells, sheet: sheetOf(), graph, strict: true, selectedSpells: [] })
+		).toEqual([]);
 	});
 });
