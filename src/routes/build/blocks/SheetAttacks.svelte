@@ -31,18 +31,25 @@
 	</div>
 
 	{#if attacks.length}
-		<div class="atks">
-			<span class="eyebrow h">{$_('build.attacks.colAttack')}</span>
-			<span class="eyebrow h">{$_('build.attacks.colToHit')}</span>
-			<span class="eyebrow h">{$_('build.attacks.colDamage')}</span>
-			<span class="eyebrow h">{$_('build.attacks.colNotes')}</span>
+		<!-- four columns with a header each IS a table, and a screen reader that is told so reads
+		     "Damage, 1d8+3" instead of a loose run of spans. The rows are `subgrid`, so saying it costs
+		     the wrapper the roles need and not one pixel of the alignment. -->
+		<div class="atks" role="table" aria-label={$_('build.attacks.title')}>
+			<div class="arow" role="row">
+				<span class="eyebrow h" role="columnheader">{$_('build.attacks.colAttack')}</span>
+				<span class="eyebrow h" role="columnheader">{$_('build.attacks.colToHit')}</span>
+				<span class="eyebrow h" role="columnheader">{$_('build.attacks.colDamage')}</span>
+				<span class="eyebrow h" role="columnheader">{$_('build.attacks.colNotes')}</span>
+			</div>
 			<!-- keyed on the id AND the position: two sources can ship the same weapon id, and a
 			     duplicate key is a crash rather than a wrong row -->
 			{#each attacks as a, i (`${a.id}-${i}`)}
-				<b class="aname">{attackName(a, $_)}</b>
-				<span class="hit">{signed(a.toHit)}</span>
-				<span class="dmg">{a.dmg}</span>
-				<span class="ameta">{[a.meta, a.note].filter(Boolean).join(' · ')}</span>
+				<div class="arow" role="row">
+					<b class="aname" role="cell">{attackName(a, $_)}</b>
+					<span class="hit" role="cell">{signed(a.toHit)}</span>
+					<span class="dmg" role="cell">{a.dmg}</span>
+					<span class="ameta" role="cell">{[a.meta, a.note].filter(Boolean).join(' · ')}</span>
+				</div>
 			{/each}
 		</div>
 	{:else}
@@ -55,8 +62,15 @@
 		display: grid;
 		grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 0.9fr) minmax(0, 1.6fr);
 		gap: var(--space-1-5) 14px;
-		align-items: baseline;
 		font-size: var(--font-size-xs);
+	}
+	/* the row wrapper the table roles need; `subgrid` keeps the four columns measured across the whole
+	   list rather than per row, and inherits the gaps with them */
+	.arow {
+		display: grid;
+		grid-column: 1 / -1;
+		grid-template-columns: subgrid;
+		align-items: baseline;
 	}
 	.eyebrow.h {
 		font-size: var(--font-size-micro);

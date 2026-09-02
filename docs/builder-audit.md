@@ -345,8 +345,7 @@ hover **or focus**, but `SheetVitals.svelte:16-18`, `SheetDefenses.svelte:65` an
 put `title={why(...)}` on plain `<div>`/`<span>` that never take focus. Separately
 `SheetStory.svelte:43-59` nests `<ul><li>` inside `<button>`, and `SheetClasses.svelte:126-138`,
 `SheetFeats.svelte:49-70`, `SheetOrigin.svelte:67-96` nest `<div>` inside `<button>` — invalid content
-model. `SheetAttacks.svelte:33-43` renders a four-column table as bare `<span>`s in a CSS grid with no
-table roles.
+model. `SheetAttacks.svelte` renders its four columns as a `role="table"` of `subgrid` rows.
 
 ## Smells
 
