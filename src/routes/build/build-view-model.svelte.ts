@@ -9,7 +9,6 @@
  * let the player fix the rest — matching the app's "everything doable, nothing enforced to a
  * dead end" stance.
  */
-import { toast } from 'svelte-sonner';
 import { t } from '$lib/i18n';
 import { content, loadContentStore } from '$lib/content/store.svelte';
 import { isRowActive } from '$lib/content/sources.svelte';
@@ -21,13 +20,13 @@ import { saveCharacterToStore, openCharacter } from '$lib/character/store.svelte
 import { uniqueCharacterId } from '$lib/character/repository';
 import { getUserStorage } from '$lib/storage/provider';
 import type { LoadedRow, LoadedRowByType } from '$lib/content/loader';
-import { MAX_CHARACTER_LEVEL } from '$lib/build/rules';
 import {
 	buildTodos,
 	openSubclassChoices,
 	type BuildTodo,
 } from '$lib/build/derive';
 import { Inspector, targetForTodo } from './inspector.svelte';
+import { ClassRows } from './class-rows.svelte';
 import { SkillPicks } from './skill-picks.svelte';
 import { SpellPicks } from './spell-picks.svelte';
 import type { ContentType } from '$lib/content/schemas';
@@ -42,7 +41,6 @@ import { DraftInventory } from './draft-inventory';
 export { ASI, rowName, rowOfType };
 import {
 	blankDraft,
-	newClassRow,
 	draftFromCharacter,
 	selectedRefs,
 	allSelectedRefs,
@@ -53,7 +51,7 @@ import {
 import type { DraftRecord } from '$lib/character/draft-repository';
 import { DraftSession } from './draft-session.svelte';
 import { DraftHistory } from './draft-history.svelte';
-import { parseClassPicks, removeClassRow, switchClass, type ClassScopedPicks } from './class-picks-cache';
+import { parseClassPicks, switchClass, type ClassScopedPicks } from './class-picks-cache';
 
 /** The id a character with no usable name gets. Not copy — an id, and one the user never reads. */
 const FALLBACK_SLUG = 'hero';
@@ -61,8 +59,9 @@ const FALLBACK_SLUG = 'hero';
 
 /**
  * What is left here is the draft itself and the derivations that read all of it. Everything with a
- * narrower job lives beside it: `AbilityAllocation`, `FeatSlots`, `DraftInventory`, `DraftSession`,
- * `DraftHistory`, `Inspector`, and the pure model in `draft.ts` / `derive.ts`.
+ * narrower job lives beside it: `ClassRows`, `SkillPicks`, `SpellPicks`, `AbilityAllocation`,
+ * `FeatSlots`, `DraftInventory`, `DraftSession`, `DraftHistory`, `Inspector`, and the pure model in
+ * `draft.ts` / `derive.ts`.
  *
  * **The `bind:`-ed draft is what makes a further split expensive.** It is one `$state` object whose
  * fields are bound across `build/blocks/*`, so moving any of it moves `bind:` surface across the
@@ -262,7 +261,7 @@ export class BuildVM {
 		if (this.draft.backgroundId && dropped.has(this.draft.backgroundId))
 			this.draft.backgroundId = null;
 		this.draft.classes.forEach((row, i) => {
-			if (row.subclassId && dropped.has(row.subclassId)) this.setSubclass(i, null);
+			if (row.subclassId && dropped.has(row.subclassId)) this.classRows.setSubclass(i, null);
 			// through `switchClass`, so the row's slot picks and its stash are handled the one way
 			if (row.classId && dropped.has(row.classId)) switchClass(this.draft, i, null, this.classPicks);
 		});
@@ -285,74 +284,16 @@ export class BuildVM {
 	settledDraft = $derived<DraftState | null>(
 		this.edit && this.draft.strict ? this.edit.loaded : null
 	);
-	/** That row as the character arrived with it, or `undefined` for a row added since. */
-	private settledRow = (i: number) => {
-		const rowId = this.draft.classes[i]?.rowId;
-		return rowId ? this.settledDraft?.classes.find((c) => c.rowId === rowId) : undefined;
-	};
-	/** Can this row's level go DOWN? Never below the level the character has already played. */
-	canLowerLevel = (i: number): boolean =>
-		(this.draft.classes[i]?.level ?? 1) > Math.max(this.settledRow(i)?.level ?? 1, 1);
-	/** Can this row be dropped? A class the character already has is not un-taken at a level-up. */
-	canRemoveClass = (i: number): boolean => i > 0 && !this.settledRow(i)?.classId;
 
 	// --- multiclass rows -------------------------------------------------------
-	/** Row 0's class. RAW it is the one that drives the saving throws, the skill list and the ASI. */
-	primaryClassId = $derived<string | null>(this.draft.classes[0]?.classId ?? null);
-	classRow = $derived(rowOfType(this.row(this.primaryClassId), 'class'));
-	/** Total character level = sum of all class levels (drives prof, HP, feat slots). */
-	totalLevel = $derived(
-		this.draft.classes.reduce((n, c) => n + (c.classId ? c.level : 0), 0) || 1
-	);
-	/** Character level is capped at 20 total across all classes. */
-	canRaiseLevel = $derived(this.totalLevel < MAX_CHARACTER_LEVEL);
-	addClass = () => {
-		if (!this.canRaiseLevel) return; // a new class starts at 1 → would exceed the cap
-		this.draft.classes = [...this.draft.classes, newClassRow()];
-	};
-	/** Drop a class row, re-keying what the rows behind it own — see `class-picks-cache`. */
-	removeClass = (i: number) => {
-		if (!this.canRemoveClass(i)) return;
-		removeClassRow(this.draft, i, this.classPicks);
-		// every row after `i` moves down one, so a pane open on a class or a subclass is now about a
-		// different row — and the one that was removed is about nothing at all
-		const open = this.inspector.target?.id;
-		if (open === 'class' || open === 'subclass') this.inspector.close();
-	};
-	/**
-	 * Change the class in row `i`, stashing what the outgoing one owned under its own ref and handing
-	 * it straight back if it returns — so trying a class costs nothing (see `class-picks-cache`).
-	 *
-	 * The cap is checked HERE and not only where a level is raised: an empty row contributes nothing
-	 * to `totalLevel`, so a draft at 20 can still hold one, and filling it is the one way past 20 that
-	 * nothing downstream clamps.
-	 */
-	setClass = (i: number, id: string | null) => {
-		if (id && this.levelAfterTaking(i, id) > MAX_CHARACTER_LEVEL) {
-			toast(t('build.notice.levelCapFull', { cap: MAX_CHARACTER_LEVEL }));
-			return;
-		}
-		switchClass(this.draft, i, id, this.classPicks);
-	};
-	/** What the character's total level becomes if row `i` takes `id` — a class that is coming back
-	 *  brings the level it left with, not the level the row shows now. */
-	private levelAfterTaking(i: number, id: string): number {
-		const row = this.draft.classes[i];
-		const held = row?.classId ? row.level : 0;
-		return this.totalLevel - held + (this.classPicks.get(id)?.level ?? row?.level ?? 1);
-	}
+	/** Which class each row holds, at what level, and the guards over changing that — see
+	 *  class-rows.svelte.ts. */
+	// annotated, unlike its siblings: `classRow` below reads back out of it, so leaving the type to be
+	// inferred asks TypeScript for a member of BuildVM while it is still working out what BuildVM is
+	classRows: ClassRows = new ClassRows(() => this);
 	/** Class-scoped picks by class ref, for as long as this draft lives. */
 	classPicks = new Map<string, ClassScopedPicks>();
-	setSubclass = (i: number, id: string | null) => {
-		this.draft.classes = this.draft.classes.map((c, idx) => (idx === i ? { ...c, subclassId: id } : c));
-	};
-	bumpClassLevel = (i: number, dir: 1 | -1) => {
-		if (dir === 1 && !this.canRaiseLevel) return; // total character level cap
-		if (dir === -1 && !this.canLowerLevel(i)) return; // level 1, or a level already played (Strict)
-		this.draft.classes = this.draft.classes.map((c, idx) =>
-			idx === i ? { ...c, level: Math.max(1, Math.min(MAX_CHARACTER_LEVEL, c.level + dir)) } : c
-		);
-	};
+	classRow = $derived(rowOfType(this.row(this.classRows.primaryClassId), 'class'));
 
 	/** Which spells are chosen, and the Strict caps over them — see spell-picks.svelte.ts. */
 	spellPicks = new SpellPicks(() => this);
@@ -506,7 +447,7 @@ export class BuildVM {
 			hasSpecies: !!this.draft.speciesId,
 			needsSpeciesOption: this.speciesOptions.length > 0 && !this.draft.speciesOptionId,
 			hasBackground: !!this.draft.backgroundId,
-			hasClass: !!this.primaryClassId,
+			hasClass: !!this.classRows.primaryClassId,
 			openSubclasses: this.openSubclasses,
 			pointsLeft: this.abilities.pointsLeft,
 			classSkillCount: this.skillPicks.classSkillCount,

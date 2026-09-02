@@ -37,8 +37,7 @@ export type InspectorHost = Pick<
 	| 'subclassesFor'
 	| 'feats'
 	| 'pickSpecies'
-	| 'setClass'
-	| 'setSubclass'
+	| 'classRows'
 >;
 
 /** Which thing on the sheet the inspector is currently about. */
@@ -225,7 +224,7 @@ function classPickSpec(b: InspectorHost, index: number): PickSpec {
 		type: 'class',
 		options: classesOfferedTo(b, index),
 		currentId: held,
-		apply: (host, id) => host.setClass(index, id),
+		apply: (host, id) => host.classRows.setClass(index, id),
 		blockedKey: settled.blocked,
 		clearable: index > 0 && settled.clearable,
 	};
@@ -291,7 +290,7 @@ function subclassPickSpec(b: InspectorHost, index: number): PickSpec {
 		type: 'subclass',
 		options: b.subclassesFor(cls?.classId ?? null),
 		currentId: cls?.subclassId ?? null,
-		apply: (host, id) => host.setSubclass(index, id),
+		apply: (host, id) => host.classRows.setSubclass(index, id),
 		blockedKey: lock.blocked,
 		clearable: lock.clearable,
 	};

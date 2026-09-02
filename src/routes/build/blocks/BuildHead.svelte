@@ -35,7 +35,7 @@
 	</label>
 
 	<span class="level" title={$_('build.levelTotal')}>
-		<b>{b.sheet?.level ?? b.totalLevel}</b>
+		<b>{b.sheet?.level ?? b.classRows.totalLevel}</b>
 		<small>{$_('build.levelMeta', { values: { bonus: signed(b.sheet?.proficiencyBonus ?? 2) } })}</small>
 	</span>
 

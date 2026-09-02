@@ -101,7 +101,7 @@ good", so they are pinned here and every component follows them.
 10. **A capped multi-select never dead-ends.** At the cap, a click on an unpicked chip replaces the
     oldest pick instead of doing nothing: nothing on screen says "un-pick one first", so a chip that
     looks live and is not is a dead end the user has to solve by guessing. `toggleCapped`
-    (`src/routes/build/draft.ts`) is the one implementation, and `BuildVM.toggleSkill` follows it for
+    (`src/routes/build/draft.ts`) is the one implementation, and `SkillPicks.toggleSkill` follows it for
     the Strict class-skill cap. A chip blocked for a *different* reason — another slot already grants
     that skill, a skill carried in from a level-up — is dimmed and blocked, which is a statement
     rather than a silence. It is blocked with `aria-disabled` and a `title`, never `disabled`: a

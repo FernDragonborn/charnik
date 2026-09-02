@@ -63,14 +63,10 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **60 of 65 done; the five left are all partial.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **61 of 65 done; the four left are all partial.**
 
-What each of the five still owes:
+What each of the four still owes:
 
-- **S2** — three of the four carves are out (`SkillPicks`, `SpellPicks`, `AbilityAllocation`). The
-  class rows are the fourth: `primaryClassId` / `totalLevel` / `canRaiseLevel` / `add·remove·set·bump`
-  / `canLowerLevel` / `canRemoveClass` (`build-view-model.svelte.ts:299-355`) → `class-rows.svelte.ts`.
-  `classPicks` stays on the view-model: the session persists it beside the draft.
 - **S14** — the builder's spacing is on tokens; `combat` and `lib/components` are not.
 - **N15** — `classFeatureLines`, `buildSpellPicker`, `ability-allocation`, `card-placement` and
   `picker-reading` still have no unit test of their own. `openSubclassChoices` now does.
@@ -367,7 +363,7 @@ Key the trial on `(previewId, targetIdentity)` and read the draft through a narr
 `restoreClassPicks` (`class-picks-cache.ts:88`) assigns the same nested `{shape, picks}` objects into
 the trial draft.
 
-**[~] S2. `BuildVM` is a god object, and three clean carves touch no `bind:`-ed field.** The class doc
+**[x] S2. `BuildVM` is a god object, and three clean carves touch no `bind:`-ed field.** The class doc
 (`:66-70`) argues a further split is expensive because draft fields are bound across `blocks/*`. True
 of `draft`, false of the derivations over it:
 

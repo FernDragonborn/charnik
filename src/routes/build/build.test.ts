@@ -212,7 +212,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 
 		// once filled, the same control replaces — and its diff moves the saves and the spellcasting,
 		// which reads as the app breaking the multiclass rule unless the pane says what it is doing
-		build.setClass(0, `class:${S}:wizard`);
+		build.classRows.setClass(0, `class:${S}:wizard`);
 		expect(build.inspector.spec?.blurbKey).toBe('classReplaceBlurb');
 		expect(build.inspector.spec?.values).toEqual({ class: 'Wizard' });
 	});
@@ -220,9 +220,9 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('a class another row already holds is not offered again', () => {
 		build.reset();
 		build.graph = graph;
-		build.setClass(0, `class:${S}:wizard`);
-		build.addClass();
-		build.setClass(1, `class:${S}:fighter`);
+		build.classRows.setClass(0, `class:${S}:wizard`);
+		build.classRows.addClass();
+		build.classRows.setClass(1, `class:${S}:fighter`);
 
 		build.inspector.open({ id: 'class', index: 0 });
 		const offered = build.inspector.options.map((r) => r.effectiveId);
@@ -236,7 +236,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		// the page records on the autosave debounce; a test settles each step itself
 		build.draft.name = 'Alia';
 		build.history.record();
-		build.setClass(0, `class:${S}:wizard`);
+		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.history.record();
 
 		build.history.undo();
@@ -336,13 +336,13 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('a level-up does not inherit the previous build class stash (B3)', () => {
 		build.reset();
 		build.graph = graph;
-		build.setClass(0, `class:${S}:fighter`);
+		build.classRows.setClass(0, `class:${S}:fighter`);
 		build.draft.classes = [{ ...newClassRow(), classId: `class:${S}:fighter`, subclassId: null, level: 7 }];
 		build.draft.skills = ['athletics'];
-		build.setClass(0, `class:${S}:wizard`); // stashes the Fighter at level 7, with its skills
+		build.classRows.setClass(0, `class:${S}:wizard`); // stashes the Fighter at level 7, with its skills
 
 		build.hydrate(savedCharacter()); // Valen, Wizard 3
-		build.setClass(0, `class:${S}:fighter`);
+		build.classRows.setClass(0, `class:${S}:fighter`);
 		expect(build.draft.classes[0]?.level).toBe(3); // the level Valen has, not the stash's 7
 		expect(build.draft.skills).not.toContain('athletics');
 	});
@@ -380,18 +380,18 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 	it('a class picker left open on a removed row cannot empty the shared pools (B4)', () => {
 		build.reset();
 		build.graph = graph;
-		build.setClass(0, `class:${S}:wizard`);
+		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.draft.skills = ['arcana'];
 		build.draft.selectedSpells = [`spell:${S}:fireball`];
-		build.addClass();
-		build.setClass(1, `class:${S}:fighter`);
+		build.classRows.addClass();
+		build.classRows.setClass(1, `class:${S}:fighter`);
 
 		build.inspector.open({ id: 'class', index: 1 });
-		build.removeClass(1);
+		build.classRows.removeClass(1);
 		expect(build.inspector.target).toBeNull(); // the pane went with the row
 
 		// and the pick that pane would have applied lands on nothing, instead of clearing the draft
-		build.setClass(1, `class:${S}:fighter`);
+		build.classRows.setClass(1, `class:${S}:fighter`);
 		expect(build.draft.classes).toHaveLength(1);
 		expect(build.draft.skills).toEqual(['arcana']);
 		expect(build.draft.selectedSpells).toEqual([`spell:${S}:fireball`]);
@@ -404,19 +404,19 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 			{ ...newClassRow(), classId: `class:${S}:wizard`, subclassId: null, level: 20 },
 			{ ...newClassRow(), classId: null, subclassId: null, level: 1 }, // added while the level was still low
 		];
-		build.setClass(1, `class:${S}:fighter`);
+		build.classRows.setClass(1, `class:${S}:fighter`);
 		expect(build.draft.classes[1]?.classId).toBeNull();
-		expect(build.totalLevel).toBe(20);
+		expect(build.classRows.totalLevel).toBe(20);
 	});
 
 	it('undo takes the class stash back with the draft (B18)', () => {
 		build.reset();
 		build.graph = graph;
-		build.setClass(0, `class:${S}:wizard`);
+		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.draft.selectedSpells = [`spell:${S}:fireball`];
 		build.history.record();
 
-		build.setClass(0, `class:${S}:fighter`); // stashes the Wizard's spell list
+		build.classRows.setClass(0, `class:${S}:fighter`); // stashes the Wizard's spell list
 		build.history.record();
 		expect(build.classPicks.size).toBe(1);
 
@@ -533,7 +533,7 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.reset();
 		build.graph = graph;
 		build.draft.speciesId = `species:${S}:hardy`; // 5.5e only, like everything in this fixture
-		build.setClass(0, `class:${S}:wizard`);
+		build.classRows.setClass(0, `class:${S}:wizard`);
 		build.draft.selectedSpells = [`spell:${S}:fireball`];
 
 		const losing = build.picksLostBySwitching('5e');
@@ -643,13 +643,13 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.hydrate(saved);
 
 		// the level it has already played is the floor; the way UP is what a level-up is for
-		expect(build.canLowerLevel(0)).toBe(false);
-		build.bumpClassLevel(0, -1);
+		expect(build.classRows.canLowerLevel(0)).toBe(false);
+		build.classRows.bumpClassLevel(0, -1);
 		expect(build.draft.classes[0]?.level).toBe(3);
-		build.bumpClassLevel(0, 1);
+		build.classRows.bumpClassLevel(0, 1);
 		expect(build.draft.classes[0]?.level).toBe(4);
-		expect(build.canLowerLevel(0)).toBe(true); // the level just added is not settled
-		build.bumpClassLevel(0, -1);
+		expect(build.classRows.canLowerLevel(0)).toBe(true); // the level just added is not settled
+		build.classRows.bumpClassLevel(0, -1);
 		expect(build.draft.classes[0]?.level).toBe(3);
 
 		// the decisions it arrived with are shown and explained, never silently missing, and Clear
@@ -662,11 +662,11 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		expect(build.draft.speciesId).toBe(`species:${S}:hardy`);
 
 		// a class the character has is not un-taken; one added at this level-up still is
-		expect(build.canRemoveClass(0)).toBe(false);
-		build.addClass();
-		build.setClass(1, `class:${S}:fighter`);
-		expect(build.canRemoveClass(1)).toBe(true);
-		build.removeClass(1);
+		expect(build.classRows.canRemoveClass(0)).toBe(false);
+		build.classRows.addClass();
+		build.classRows.setClass(1, `class:${S}:fighter`);
+		expect(build.classRows.canRemoveClass(1)).toBe(true);
+		build.classRows.removeClass(1);
 		expect(build.draft.classes).toHaveLength(1);
 	});
 
@@ -678,8 +678,8 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.hydrate(characterSchema.parse(saved));
 
 		expect(build.settledDraft).toBeNull();
-		expect(build.canLowerLevel(0)).toBe(true);
-		build.bumpClassLevel(0, -1);
+		expect(build.classRows.canLowerLevel(0)).toBe(true);
+		build.classRows.bumpClassLevel(0, -1);
 		expect(build.draft.classes[0]?.level).toBe(2);
 		build.inspector.open({ id: 'species' });
 		expect(build.inspector.pick?.blockedKey?.('species:x:elf')).toBeNull();
@@ -690,12 +690,12 @@ describe('BuildVM · hydrate → assemble round-trip (behavioral)', () => {
 		build.reset();
 		build.graph = graph;
 		expect(build.settledDraft).toBeNull();
-		build.setClass(0, `class:${S}:wizard`);
-		build.bumpClassLevel(0, 1);
-		expect(build.canLowerLevel(0)).toBe(true);
-		build.bumpClassLevel(0, -1);
+		build.classRows.setClass(0, `class:${S}:wizard`);
+		build.classRows.bumpClassLevel(0, 1);
+		expect(build.classRows.canLowerLevel(0)).toBe(true);
+		build.classRows.bumpClassLevel(0, -1);
 		expect(build.draft.classes[0]?.level).toBe(1);
-		expect(build.canLowerLevel(0)).toBe(false); // level 1 is the floor for everyone
+		expect(build.classRows.canLowerLevel(0)).toBe(false); // level 1 is the floor for everyone
 	});
 
 	it('RV3: a picked ref survives its source being disabled; an unpicked one is filtered out', () => {

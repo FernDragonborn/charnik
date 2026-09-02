@@ -34,8 +34,8 @@
 		build.draft.speciesId = build.speciesList[0]?.effectiveId ?? null;
 		build.draft.backgroundId = build.backgroundList[0]?.effectiveId ?? null;
 		const caster = build.classList.find((c) => c.data.caster !== 'none');
-		build.setClass(0, (caster ?? build.classList[0])?.effectiveId ?? null);
-		for (let i = 0; i < 7; i++) build.bumpClassLevel(0, 1); // level 8 → subclass + two feat slots
+		build.classRows.setClass(0, (caster ?? build.classList[0])?.effectiveId ?? null);
+		for (let i = 0; i < 7; i++) build.classRows.bumpClassLevel(0, 1); // level 8 → subclass + two feat slots
 
 		const slot = build.feats.featSlots[0];
 		const lineage: Target[] = build.speciesOptions.length
@@ -70,9 +70,10 @@
 <div class="page build-page">
 	<h1>Dev preview · every inspector target</h1>
 	<p class="hint">
-		One shared draft ({build.draft.name || 'unnamed'} · level {build.totalLevel}), one column per
-		target, each with its own <code>Inspector</code>. If a pane renders blank, that target's body
-		component is broken — the others will keep working, which is exactly why this page exists.
+		One shared draft ({build.draft.name || 'unnamed'} · level {build.classRows.totalLevel}), one
+		column per target, each with its own <code>Inspector</code>. If a pane renders blank, that
+		target's body component is broken — the others will keep working, which is exactly why this page
+		exists.
 	</p>
 
 	{#if !columns.length}

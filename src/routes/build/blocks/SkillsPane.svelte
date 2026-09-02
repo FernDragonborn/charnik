@@ -18,7 +18,7 @@
 			values: { skills: b.skillPicks.classSkillOptions.map((s) => skillLabel(s, $_)).join(' · ') }
 		})}
 	</p>
-{:else if b.primaryClassId}
+{:else if b.classRows.primaryClassId}
 	<p class="subtext">{$_('build.skills.noRestriction')}</p>
 {:else}
 	<p class="subtext">{$_('build.skills.needClass')}</p>

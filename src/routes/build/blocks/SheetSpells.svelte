@@ -110,7 +110,7 @@
 			<p class="subtext">{$_('build.spells.noneChosen')}</p>
 		{/if}
 	</div>
-{:else if b.primaryClassId}
+{:else if b.classRows.primaryClassId}
 	<div class="card quiet">
 		<span class="eyebrow">{$_('build.spells.title')}</span>
 		<p class="subtext">{$_('build.spells.noCasting', { values: { class: rowName(b.classRow) } })}</p>
