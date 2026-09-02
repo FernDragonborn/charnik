@@ -82,7 +82,7 @@
 	h1 {
 		font-family: var(--font-display);
 		font-size: var(--font-size-h4);
-		margin: 0 0 8px;
+		margin: 0 0 var(--space-2);
 	}
 	pre {
 		font-family: var(--font-mono);

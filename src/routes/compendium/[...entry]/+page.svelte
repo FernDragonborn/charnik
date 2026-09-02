@@ -610,14 +610,14 @@
 		font-family: var(--font-display);
 		font-size: var(--font-size-h5);
 		color: var(--color-text);
-		margin: 0 0 12px;
+		margin: 0 0 var(--space-3);
 	}
 	.types {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 6px;
+		gap: var(--space-1-5);
 		/* no page title — pull the type tabs up under the nav for max content room */
-		margin: calc(-1 * var(--space-3)) 0 12px;
+		margin: calc(-1 * var(--space-3)) 0 var(--space-3);
 	}
 	.types .count {
 		opacity: 0.55;
@@ -626,8 +626,8 @@
 		display: flex;
 		flex-wrap: wrap;
 		align-items: center;
-		gap: 8px;
-		margin-bottom: 12px;
+		gap: var(--space-2);
+		margin-bottom: var(--space-3);
 	}
 	.disclosure {
 		position: relative;
@@ -655,7 +655,7 @@
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 10px;
-		padding: 6px;
+		padding: var(--space-1-5);
 		box-shadow: var(--shadow-2);
 		min-width: 160px;
 	}
@@ -671,8 +671,8 @@
 		border: 0;
 		color: var(--color-text);
 		font: inherit;
-		padding: 6px 9px;
-		border-radius: 6px;
+		padding: var(--space-1-5) var(--space-2);
+		border-radius: var(--radius-sm);
 		cursor: pointer;
 	}
 	.dropdown-option:hover {
@@ -683,20 +683,20 @@
 	}
 	.dropdown-section {
 		font-size: var(--font-size-micro);
-		margin: 6px 4px 5px;
+		margin: var(--space-1-5) var(--space-1) var(--space-1);
 	}
 	.ddchips {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 5px;
-		padding: 0 4px;
+		gap: var(--space-1);
+		padding: 0 var(--space-1);
 	}
 	.ddchips.scroll {
 		max-height: 168px;
 		overflow: auto;
 	}
 	.ddclear {
-		margin: 8px 4px 2px;
+		margin: var(--space-2) var(--space-1) 2px;
 		background: transparent;
 		border: 0;
 		color: var(--color-accent-bright);
@@ -706,9 +706,9 @@
 	}
 	.homebrew-actions {
 		display: flex;
-		gap: 10px;
+		gap: var(--space-2-5);
 		margin-top: 22px;
-		padding-top: 16px;
+		padding-top: var(--space-4);
 		border-top: 1px solid var(--color-border);
 	}
 	.hb-btn {
@@ -716,7 +716,7 @@
 		font-size: var(--font-size-sm);
 		font-weight: 600;
 		border-radius: var(--radius);
-		padding: 8px 14px;
+		padding: var(--space-2) 14px;
 		border: 1px solid var(--color-border-strong);
 		background: var(--color-surface-2);
 		color: var(--color-text);
@@ -736,7 +736,7 @@
 	.lang-control {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		margin-inline-start: auto;
 	}
 	.lang-label {
@@ -765,12 +765,12 @@
 		position: absolute;
 		inset-inline-end: 0;
 		z-index: 20;
-		margin-top: 6px;
+		margin-top: var(--space-1-5);
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--space-1);
 		min-width: 230px;
-		padding: 6px;
+		padding: var(--space-1-5);
 		background: var(--color-surface);
 		border: 1px solid var(--color-border-strong);
 		border-radius: 10px;
@@ -782,7 +782,7 @@
 		align-items: flex-start;
 		gap: 1px;
 		text-align: start;
-		padding: 8px 11px;
+		padding: var(--space-2) var(--space-2-5);
 		border: 0;
 		border-radius: 7px;
 		background: transparent;
@@ -836,14 +836,14 @@
 	.epane {
 		overflow: auto;
 		min-height: 0;
-		padding: 16px 18px;
+		padding: var(--space-4) 18px;
 	}
 	.epane.before {
 		border-inline-end: 1px solid var(--color-border);
 	}
 	.epane-label {
 		font-size: var(--font-size-micro);
-		margin-bottom: 10px;
+		margin-bottom: var(--space-2-5);
 	}
 	.epane-label.edit {
 		color: var(--color-accent-bright);

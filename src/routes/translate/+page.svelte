@@ -336,8 +336,8 @@
 	.subbar {
 		display: flex;
 		align-items: center;
-		gap: 12px;
-		padding: 8px 0 12px;
+		gap: var(--space-3);
+		padding: var(--space-2) 0 var(--space-3);
 		flex-wrap: wrap;
 	}
 	.tlabel {
@@ -346,8 +346,8 @@
 	.pane-head {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		margin-bottom: 12px;
+		gap: var(--space-2-5);
+		margin-bottom: var(--space-3);
 	}
 	.pane-head .panelabel {
 		margin-bottom: 0;
@@ -363,7 +363,7 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
-		padding: 5px 10px;
+		padding: var(--space-1) var(--space-2-5);
 		color: var(--color-text);
 	}
 	.prog {
@@ -384,7 +384,7 @@
 		display: grid;
 		grid-template-columns: minmax(240px, 320px) 1fr 1fr;
 		grid-template-rows: minmax(0, 1fr); /* single row fills the page → each column scrolls itself */
-		gap: 12px;
+		gap: var(--space-3);
 		flex: 1;
 		min-height: 0;
 		overflow: hidden;
@@ -397,7 +397,7 @@
 	}
 	.panelabel {
 		font-size: var(--font-size-micro);
-		margin-bottom: 10px;
+		margin-bottom: var(--space-2-5);
 	}
 	.panelabel.target-label {
 		color: var(--color-accent-bright);
@@ -422,7 +422,7 @@
 	.status-row {
 		display: flex;
 		align-items: center;
-		gap: 10px;
+		gap: var(--space-2-5);
 		flex-wrap: wrap;
 		margin-bottom: 14px;
 	}
@@ -442,7 +442,7 @@
 		color: var(--color-text-muted);
 		border: 0;
 		border-inline-start: 1px solid var(--color-border);
-		padding: 6px 12px;
+		padding: var(--space-1-5) var(--space-3);
 		cursor: pointer;
 	}
 	.status-opt:first-child {
@@ -478,7 +478,7 @@
 		font-weight: 600;
 		font-size: var(--font-size-body);
 		border-radius: var(--radius);
-		padding: 9px 18px;
+		padding: var(--space-2) 18px;
 		border: 1px solid var(--color-accent-deep);
 		background: var(--color-accent-deep);
 		color: var(--color-accent-text);
@@ -493,7 +493,7 @@
 		color: var(--color-text-muted);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
-		padding: 10px 12px;
+		padding: var(--space-2-5) var(--space-3);
 		margin: 0;
 	}
 	.pick {

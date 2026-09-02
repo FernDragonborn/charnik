@@ -95,7 +95,7 @@
 		padding: 20px;
 		display: flex;
 		flex-direction: column;
-		gap: 12px;
+		gap: var(--space-3);
 	}
 	h1 {
 		font-family: var(--font-display);
@@ -111,7 +111,7 @@
 	.grid {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-		gap: 16px;
+		gap: var(--space-4);
 		align-items: start;
 	}
 	.col h2 {
@@ -120,7 +120,7 @@
 		text-transform: uppercase;
 		letter-spacing: var(--tracking-label);
 		color: var(--color-text-muted);
-		margin: 0 0 6px;
+		margin: 0 0 var(--space-1-5);
 	}
 	/* a DEFINITE height, not a max: a pane is a fixed-height box whose list scrolls inside it, and
 	   against an auto-height parent that collapses to "however tall the content is" — which is the

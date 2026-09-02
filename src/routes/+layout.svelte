@@ -506,7 +506,7 @@
 	.search-chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 5px;
+		gap: var(--space-1);
 	}
 	/* :global — the svg now belongs to Icon.svelte, so a scoped selector can't reach it */
 	.search-chip :global(svg) {

@@ -210,8 +210,8 @@
 	.mgrhead {
 		display: flex;
 		align-items: center;
-		gap: 16px;
-		margin: calc(-1 * var(--space-3)) 0 12px;
+		gap: var(--space-4);
+		margin: calc(-1 * var(--space-3)) 0 var(--space-3);
 		flex-wrap: wrap;
 	}
 	.mgrhead h1 {
@@ -234,7 +234,7 @@
 		font-weight: 700;
 		font-size: var(--font-size-sm);
 		border-radius: var(--radius);
-		padding: 7px 16px;
+		padding: var(--space-1-5) var(--space-4);
 		cursor: pointer;
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
@@ -252,7 +252,7 @@
 	.detail-toggle {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		font-family: var(--font-display);
 		font-weight: 600;
 		font-size: var(--font-size-sm);

@@ -126,7 +126,7 @@
 	.close {
 		position: absolute;
 		top: 8px;
-		inset-inline-end: 10px;
+		inset-inline-end: var(--space-2-5);
 		z-index: 1;
 		padding: var(--space-1);
 		border-radius: var(--radius-full);

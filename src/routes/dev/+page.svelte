@@ -86,7 +86,7 @@
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-text-muted);
-		margin: 24px 0 10px;
+		margin: var(--space-5) 0 var(--space-2-5);
 	}
 	.action {
 		font-family: var(--font-body);
@@ -95,7 +95,7 @@
 		background: var(--color-surface-2);
 		border: 1px solid var(--color-border-strong);
 		border-radius: var(--radius);
-		padding: 9px 14px;
+		padding: var(--space-2) 14px;
 		cursor: pointer;
 	}
 	.action:hover {
@@ -108,14 +108,14 @@
 	.hint {
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-		margin: 8px 0 0;
+		margin: var(--space-2) 0 0;
 	}
 	ul {
 		margin: 0;
 		padding-inline-start: 20px;
 	}
 	li {
-		margin: 4px 0;
+		margin: var(--space-1) 0;
 	}
 	a {
 		color: var(--color-accent);

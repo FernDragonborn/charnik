@@ -49,7 +49,7 @@
 	.vitals :global(.tile) {
 		flex: 1 1 0;
 		min-width: 0;
-		padding-inline: 4px;
+		padding-inline: var(--space-1);
 	}
 	.vitals :global(.tile small) {
 		display: block;

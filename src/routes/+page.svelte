@@ -135,7 +135,7 @@
 <style>
 	.demobanner {
 		display: block;
-		margin: 4px 0 22px;
+		margin: var(--space-1) 0 22px;
 		padding: 18px 22px;
 		border: 1px solid var(--color-accent);
 		border-inline-start-width: 5px;
@@ -152,14 +152,14 @@
 		color: var(--color-accent-bright);
 		border: 1px solid var(--color-accent);
 		border-radius: 999px;
-		padding: 3px 10px;
-		margin-bottom: 10px;
+		padding: var(--space-1) var(--space-2-5);
+		margin-bottom: var(--space-2-5);
 	}
 	.db-title {
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-h5);
-		margin: 0 0 6px;
+		margin: 0 0 var(--space-1-5);
 		color: var(--color-text);
 	}
 	.db-body {
@@ -179,7 +179,7 @@
 		background: var(--color-accent-deep);
 		border: 1px solid var(--color-accent-deep);
 		border-radius: var(--radius);
-		padding: 9px 16px;
+		padding: var(--space-2) var(--space-4);
 	}
 	.db-download:hover {
 		filter: brightness(1.08);
@@ -188,7 +188,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-end;
-		gap: 12px;
+		gap: var(--space-3);
 		margin-bottom: 18px;
 	}
 	.page :global(h1) {
@@ -213,7 +213,7 @@
 		border: 1px solid var(--color-accent-deep);
 		color: var(--color-accent-text);
 		border-radius: var(--radius);
-		padding: 8px 16px;
+		padding: var(--space-2) var(--space-4);
 		white-space: nowrap;
 	}
 	.muted {
@@ -225,7 +225,7 @@
 		padding: 0;
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-		gap: 10px;
+		gap: var(--space-2-5);
 	}
 	.roster-card {
 		display: flex;
@@ -238,12 +238,12 @@
 		flex: 1;
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--space-1);
 		text-align: start;
 		background: transparent;
 		border: 0;
 		color: var(--color-text);
-		padding: 14px 16px;
+		padding: 14px var(--space-4);
 		cursor: pointer;
 		text-decoration: none;
 	}
@@ -264,8 +264,8 @@
 		color: var(--color-accent-bright);
 		border: 1px solid var(--color-accent-deep);
 		border-radius: var(--radius-full);
-		padding: 1px 7px;
-		margin-inline-start: 6px;
+		padding: 1px var(--space-1-5);
+		margin-inline-start: var(--space-1-5);
 		vertical-align: middle;
 	}
 	.roster-open:hover {
@@ -279,7 +279,7 @@
 	.roster-subtitle {
 		display: flex;
 		align-items: center;
-		gap: 8px;
+		gap: var(--space-2);
 		font-family: var(--font-mono);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
@@ -287,8 +287,8 @@
 	}
 	.sysbadge {
 		border: 1px solid var(--color-border);
-		border-radius: 5px;
-		padding: 1px 6px;
+		border-radius: var(--radius-sm);
+		padding: 1px var(--space-1-5);
 		text-transform: none;
 	}
 	.roster-error {

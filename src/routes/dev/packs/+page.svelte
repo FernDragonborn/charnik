@@ -133,6 +133,6 @@
 	h1 {
 		font-family: var(--font-display);
 		font-size: var(--font-size-h4);
-		margin: 0 0 16px;
+		margin: 0 0 var(--space-4);
 	}
 </style>

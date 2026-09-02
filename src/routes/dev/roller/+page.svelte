@@ -152,21 +152,21 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-xl);
-		margin: 0 0 8px;
+		margin: 0 0 var(--space-2);
 	}
 	.hint {
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
-		margin: 0 0 16px;
+		margin: 0 0 var(--space-4);
 	}
 	.cases {
 		display: flex;
 		flex-direction: column;
-		gap: 4px;
+		gap: var(--space-1);
 		margin-bottom: 20px;
 	}
 	.case {
-		padding: 7px 10px;
+		padding: var(--space-1-5) var(--space-2-5);
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius);
 		background: var(--color-surface);

@@ -63,11 +63,10 @@ must honour it — under Strict, already-made decisions are frozen and a level c
 ## Progress
 
 Every finding below carries a status box: `[ ]` open, `[~]` decided or in flight, `[x]` in code and
-verified. Count with `grep -c '^\*\*\[ \]'`. **62 of 65 done; the three left are all partial.**
+verified. Count with `grep -c '^\*\*\[ \]'`. **63 of 65 done; the two left are all partial.**
 
-What each of the three still owes:
+What each of the two still owes:
 
-- **S14** — the builder's spacing is on tokens; `combat` and `lib/components` are not.
 - **A9**, **A15** — see below; both stop at a decision, not at work.
 
 Work this file does not itself hold:
@@ -445,7 +444,7 @@ four keys, same order; the second is simply not exported.
 - `.build-page .tag.gold` is declared twice (`build.css:79` and `:139`), and `:139` re-states the
   colour `.build-page .gold` (`:221`) already gives.
 
-**[~] S14. Spacing does not follow the token scale.** 125 px literals across 4185 lines; the value
+**[x] S14. Spacing does not follow the token scale.** 125 px literals across 4185 lines; the value
 distribution is `6px`×23, `9px`×20, `4px`×18, `8px`×17, `11px`×13, `7px`×8, `10px`×8, `5px`×4,
 `3px`×2. `--space-*` is 4/8/12/16/24/32, so most of the commonest values sit off-scale and outside a
 user's theme. `border-radius: 9px` repeats four times (`SectionedPicker.svelte:374`, `:422`,

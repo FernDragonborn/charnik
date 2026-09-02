@@ -181,7 +181,7 @@
 	.triggers {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 8px;
+		gap: var(--space-2);
 	}
 	.last {
 		color: var(--color-text-muted);

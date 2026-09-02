@@ -223,7 +223,7 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-xl);
-		margin: 0 0 12px;
+		margin: 0 0 var(--space-3);
 	}
 	p {
 		font-size: var(--font-size-sm);
@@ -242,7 +242,7 @@
 		letter-spacing: var(--tracking-label);
 		text-transform: uppercase;
 		color: var(--color-text-muted);
-		margin-bottom: 7px;
+		margin-bottom: var(--space-1-5);
 	}
 	/* the toaster column, so wrapping is what the app will actually show */
 	.slot {
@@ -252,7 +252,7 @@
 	.strips {
 		display: flex;
 		flex-direction: column;
-		gap: 7px;
+		gap: var(--space-1-5);
 	}
 	.strip {
 		display: flex;
@@ -266,13 +266,13 @@
 		border-color: var(--color-accent);
 	}
 	.action {
-		margin-top: 8px;
+		margin-top: var(--space-2);
 		font-size: var(--font-size-xs);
 		color: var(--color-text-muted);
 		background: transparent;
 		border: 1px solid var(--color-border);
 		border-radius: var(--radius-sm);
-		padding: 3px 9px;
+		padding: var(--space-1) var(--space-2);
 		cursor: pointer;
 	}
 	.action:hover {

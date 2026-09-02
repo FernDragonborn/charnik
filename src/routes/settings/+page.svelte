@@ -102,25 +102,25 @@
 		font-family: var(--font-display);
 		font-weight: 700;
 		font-size: var(--font-size-h4);
-		margin: 0 0 16px;
+		margin: 0 0 var(--space-4);
 	}
 	.tabs {
 		display: flex;
-		gap: 4px;
+		gap: var(--space-1);
 		border-bottom: 1px solid var(--color-border);
 		margin-bottom: 20px;
 	}
 	.tab {
 		display: flex;
 		align-items: center;
-		gap: 7px;
+		gap: var(--space-1-5);
 		font-family: var(--font-body);
 		font-size: var(--font-size-body);
 		background: transparent;
 		border: 0;
 		border-bottom: 2px solid transparent;
 		color: var(--color-text-muted);
-		padding: 8px 12px;
+		padding: var(--space-2) var(--space-3);
 		cursor: pointer;
 		margin-bottom: -1px;
 	}
@@ -136,7 +136,7 @@
 		font-size: var(--font-size-micro);
 		min-width: 16px;
 		text-align: center;
-		padding: 1px 5px;
+		padding: 1px var(--space-1);
 		border-radius: 20px;
 		background: var(--color-warning);
 		color: var(--color-warning-text);
