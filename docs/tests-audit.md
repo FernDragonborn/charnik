@@ -23,7 +23,12 @@ fixture helpers it specifies were never built.
 3. **Coverage uniqueness.** Each test file runs alone under v8 coverage; a file whose covered
    statements are fully contained in the union of every other file's is a candidate for carrying
    nothing of its own.
-4. **Manual classification.** Every machine hit is read on both sides before it becomes a finding.
+4. **Implementation-derived expectations.** The shape the AI-test literature calls tautological: the
+   expected value is produced by the same production call under test, so a bug moves both sides
+   together.
+5. **Mutation probes.** Break one behaviour on purpose, run the tests that should notice, revert. The
+   only method that answers "would this test fail if the code were wrong" directly.
+6. **Manual classification.** Every machine hit is read on both sides before it becomes a finding.
 
 ## Categories
 
@@ -262,24 +267,72 @@ three times; `storage/tauri-migrate.test.ts` repeats a before/after path asserti
 
 ---
 
+## Step 5 — implementation-derived expectations
+
+Eleven assertions compare a production call against the same production call. Ten are **invariance
+properties**, not tautologies — `hashFile(crlfBom)` equals `hashFile(a)` because line endings must not
+change a hash, `meaning(spaceEveryDelimiter(t))` equals `meaning(t)` because whitespace is formatting.
+The transformation is the assertion; both sides moving together is the point.
+
+The eleventh is not:
+
+- `effects/plugin-host.test.ts:124` · **tautological** · `expect(await consentHash('a','b')).toBe(await
+  consentHash('a','b'))` under the title "is deterministic". `consentHash` is a SHA-256 over
+  length-prefixed bytes with no salt, clock or randomness, so this passes for every implementation
+  that is not deliberately random — including one that hashes the wrong bytes entirely. Its two
+  siblings (`:126` boundary collision, `:129` any change alters the hash) also survive a salted hash,
+  so the determinism claim is the only thing standing here and it is stated in the weakest possible
+  form. **Action:** assert a golden hex digest for known inputs — one line, and it pins determinism,
+  the algorithm and the length-prefix framing at once.
+
+## Step 6 — mutation probes
+
+Five deliberate breakages, each reverted immediately, run against the tests that should catch them.
+
+| Mutation | Result |
+| --- | --- |
+| `abilityModifier` divisor 2 → 3 | **caught** — 18 of 28 in `rules/core.test.ts` |
+| 5e long-rest hit dice: half → third | **caught** — 1 failure, precisely targeted |
+| `carryingCapacity`: 5e/5.5e branch inverted | **caught** by `-t "edition divergence"`; **SURVIVED** `-t "system-agnostic"` (20 passed) |
+| Plugin memo disabled (every call misses) | **caught** by `plugin.test.ts` alone (3 failures) *and* by `plugin-perf.test.ts` |
+| `dismissOnEscape` listens for Enter | **caught** by both `ContentMetaModal` and `HashDriftModal` |
+
+Three of these settle open questions:
+
+- **Finding 1 gets worse.** The doubled `system-agnostic` block executes 20 cases, calls
+  `carryingCapacity` — and does not notice when its edition branch is inverted. It is not merely
+  redundant; it reads as cross-system coverage while providing none. The block that actually guards
+  the divergence is the plain `describe` beside it.
+- **Finding 2 is safe to act on.** Deleting the three `plugin-perf` memo tests loses no guard:
+  `plugin.test.ts` on its own turns red when the memo is disabled.
+- **Finding 3 has an order.** Both modal tests genuinely catch a broken `dismissOnEscape`, so they are
+  real guards, not decoration. The `DialogShell` test must exist **before** either copy is removed —
+  delete first and the wiring is unguarded for all six consumers.
+
+The suite as a whole answered well: every mutation was caught by something, and the two arithmetic
+ones by precisely the tests that own that rule.
+
+---
+
 ## The list
 
-Everything the audit would actually change, largest first. Four items.
+Everything the audit would actually change, largest first. Five items.
 
 | # | Where | Category | Action |
 | --- | --- | --- | --- |
-| 1 | `rules/core.test.ts:45` | duplicate | Drop `.each<System>(['5e','5.5e'])` → plain `describe`. ~10 cases stop running twice. |
-| 2 | `effects/plugin-perf.test.ts:92-115` | duplicate | Delete three memo tests (~24 lines); `plugin.test.ts:182-192,273-282,283-291` already prove them. |
-| 3 | `components/HashDriftModal.browser.test.ts:34-42` + `ContentMetaModal.browser.test.ts:40-53` | duplicate | Replace both with one `DialogShell.browser.test.ts`; covers six consumers instead of two. |
-| 4 | `effects/context.test.ts:162,164` | tautological | Strengthen — assert what the error says, not that one exists. |
+| 1 | `rules/core.test.ts:45` | duplicate | Drop `.each<System>(['5e','5.5e'])` → plain `describe`. Ten cases stop running twice, and the block stops posing as edition coverage it does not provide (mutation-proven). |
+| 2 | `effects/plugin-perf.test.ts:92-115` | duplicate | Delete three memo tests (~24 lines); `plugin.test.ts` alone catches a disabled memo (mutation-proven). |
+| 3 | `components/HashDriftModal.browser.test.ts:34-42` + `ContentMetaModal.browser.test.ts:40-53` | duplicate | Write `DialogShell.browser.test.ts` **first**, then drop both copies. Both currently catch a broken `dismissOnEscape`, so order matters. |
+| 4 | `effects/plugin-host.test.ts:124` | tautological | Replace `f(a,b) === f(a,b)` with a golden hex digest — passes today for any non-random implementation. |
+| 5 | `effects/context.test.ts:162,164` | tautological | Strengthen — assert what the error says, not that one exists. |
 
 Plus one file that is not a test: `src/lib/components/__screenshots__/…-1.png`, a gitignored leftover
 from a past local failure. Delete.
 
 **That is the whole harvest: ~35 lines out of 19 405, and one Chromium launch's worth of
 duplication.** Zero dead tests, zero over-mocked tests, zero snapshots, zero tests of a dependency.
-For a suite of 1 460 cases across four independent detection methods, that is a clean result and the
-audit is better read as evidence than as a cleanup queue.
+For a suite of 1 460 cases across six independent detection methods — one of which breaks the code on
+purpose — that is a clean result, and the audit is better read as evidence than as a cleanup queue.
 
 ## What the audit actually found
 
@@ -299,7 +352,7 @@ no test of their own, which is *why* two consumers ended up testing them.
 
 ## Reproducing it
 
-The three probes are one-offs, kept here rather than in `tools/` — nothing needs them on a schedule.
+The probes are one-offs, kept here rather than in `tools/` — nothing needs them on a schedule.
 
 **Duplication.** Copy `config/jscpd.json`, drop `"**/*.test.ts"` from `ignore`, point `pattern` at
 `{src,tests}/**/*.test.ts`, set `minTokens` to 25 and `threshold` to 100, then
@@ -309,6 +362,12 @@ The three probes are one-offs, kept here rather than in `tools/` — nothing nee
 `.toBeDefined(`/`.toBeTruthy(`/`.not.toThrow(`. Blank out comments first (prose like "one render per
 test (…)" parses as a case) and treat a call to a same-file helper that itself asserts as an
 assertion — without those two rules the false-positive rate is ~85%.
+
+**Mutation probes.** Replace one string in a source file, run the tests that should notice, then
+`git checkout -- <file>` in a `finally` so a crashed run cannot leave the tree dirty. Pick the
+mutation to answer a question you already have — "does this test still guard anything if I delete its
+neighbour" — rather than sweeping blindly; a full mutation run over 19 405 lines of tests costs hours,
+and five targeted breakages answered every open question in this audit.
 
 **Coverage uniqueness.** Per test file:
 `npx vitest run <file> --coverage.enabled --coverage.provider=v8 --coverage.reporter=json
