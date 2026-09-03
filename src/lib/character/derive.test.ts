@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { MemoryStorage } from '../storage/memory';
-import { loadContent, type ContentGraph } from '../content/loader';
+import { type ContentGraph } from '../content/loader';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
 import { makeTempContentRoot } from '../../test-support/fixtures';
@@ -15,32 +14,21 @@ import {
 const S = 'SRD 5.2.1';
 
 async function graphOf(): Promise<ContentGraph> {
-	const st = new MemoryStorage();
-	await st.write(
-		'c/classes_srd.csv',
-		[
+	return makeTempContentRoot({
+		'classes_srd.csv': [
 			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,ritual,weapon_profs,armor_profs',
 			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,true,"dagger,quarterstaff",light`,
 			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,false,"simple,martial","light,medium,heavy,shield"`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/species_srd.csv',
-		[
+		'species_srd.csv': [
 			'id,systems,source,name_en,effects,size,speed,creature_type',
 			`hardy,5.5e,${S},Hardy,flat_bonus:con+2,medium,30,humanoid`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/species_options_srd.csv',
-		[
+		'species_options_srd.csv': [
 			'id,systems,source,name_en,effects,species_id,kind,option_label',
 			`stoic,5.5e,${S},Stoic,flat_bonus:wis+1,hardy,subrace,Subrace`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/items_srd.csv',
-		[
+		'items_srd.csv': [
 			'id,systems,source,name_en,effects,category,tags,damage',
 			`leather_armor,5.5e,${S},Leather Armor,,armor,"armor:light, ac:11",`,
 			`plate_armor,5.5e,${S},Plate Armor,,armor,"armor:heavy, ac:18, dex_cap:0, str_min:15, stealth_disadvantage",`,
@@ -50,56 +38,37 @@ async function graphOf(): Promise<ContentGraph> {
 			`sunblade,5.5e,${S},Sun Blade,,weapon,"martial, melee",1d6 slashing; 1d4 radiant`,
 			`longbow,5.5e,${S},Longbow,,weapon,"martial, ranged, two_handed",1d8 piercing`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/feats_srd.csv',
-		[
+		'feats_srd.csv': [
 			'id,systems,source,name_en,effects,category',
 			`archery,5.5e,${S},Archery,flat_bonus:attack:ranged+2,fighting_style`,
 			`great_weapon_fighting,5.5e,${S},Great Weapon Fighting,"min_die:damage:two_handed,melee:3;min_die:damage:versatile,melee:3",fighting_style`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/subclasses_srd.csv',
-		[
+		'subclasses_srd.csv': [
 			'id,systems,source,name_en,effects,class_id',
 			`evoker,5.5e,${S},Evoker,flat_bonus:skill.arcana+1,wizard`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/class_features_srd.csv',
-		[
+		'class_features_srd.csv': [
 			'id,systems,source,name_en,effects,class_id,level,subclass_id',
 			`arcane_ward,5.5e,${S},Arcane Ward,grant_resource:arcane_ward:3:long,wizard,2,`,
 			`spell_mastery,5.5e,${S},Spell Mastery,flat_bonus:ac+1,wizard,18,`,
 			`sculpt_spells,5.5e,${S},Sculpt Spells,flat_bonus:save.dex+1,wizard,2,evoker`,
 			`overchannel,5.5e,${S},Overchannel,flat_bonus:ac+3,wizard,14,evoker`,
 		].join('\n'),
-	);
-	// RES-NAME: a pool's display name comes from content. Deliberately NOT what `titleCase(id)` would
-	// produce, so a test can tell the two apart. `ki` below is left unnamed to exercise the fallback.
-	await st.write(
-		'c/resources_srd.csv',
-		['id,systems,source,name_en', `arcane_ward,5.5e,${S},Ward Charges`].join('\n'),
-	);
-	await st.write(
-		'c/effects_srd.csv',
-		[
+		// RES-NAME: a pool's display name comes from content. Deliberately NOT what `titleCase(id)` would
+		// produce, so a test can tell the two apart. `ki` below is left unnamed to exercise the fallback.
+		'resources_srd.csv': ['id,systems,source,name_en', `arcane_ward,5.5e,${S},Ward Charges`].join(
+			'\n',
+		),
+		'effects_srd.csv': [
 			'id,systems,source,name_en,effects,negative,duration_rounds',
 			`bless,5.5e,${S},Bless,flat_bonus:ac+1,false,10`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/conditions_srd.csv',
-		[
+		'conditions_srd.csv': [
 			'id,systems,source,name_en,effects,negative',
 			`poisoned,5.5e,${S},Poisoned,disadvantage:attack,true`,
 			`frightened,5.5e,${S},Frightened,disadvantage:attack,true`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/resource_options_srd.csv',
-		[
+		'resource_options_srd.csv': [
 			'id,systems,source,name_en,resource_id,cost,action,action_type,available',
 			`ward_burst,5.5e,${S},Ward Burst,arcane_ward,2,roll:2d6,action,`,
 			`ward_mend,5.5e,${S},Ward Mend,arcane_ward,1,heal:1d10+class_level.wizard,bonus_action,`,
@@ -108,8 +77,7 @@ async function graphOf(): Promise<ContentGraph> {
 			`ward_ready,5.5e,${S},Ward Ready,arcane_ward,1,note:ready,action,is_combat_start`, // gated to combat start
 			`ki_flurry,5.5e,${S},Flurry,ki,1,note:two strikes,bonus_action,`, // a resource the wizard lacks
 		].join('\n'),
-	);
-	return loadContent(st, ['c']);
+	});
 }
 
 function wizard(): Character {
@@ -1072,23 +1040,17 @@ describe('B26: class features attach across sources (homebrew extends an SRD cla
 	// query matches on class_id + edition, so it attaches. This is the whole-PHB support contract.
 	const HB = 'My Homebrew';
 	async function graphWithHomebrewFeature(): Promise<ContentGraph> {
-		const st = new MemoryStorage();
-		await st.write(
-			'c/classes_srd.csv',
-			[
+		return makeTempContentRoot({
+			'classes_srd.csv': [
 				'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
 				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`,
 			].join('\n'),
-		);
-		// a SEPARATE file with a DIFFERENT source tag — the homebrew the user drops in
-		await st.write(
-			'c/class_features_homebrew.csv',
-			[
+			// a SEPARATE file with a DIFFERENT source tag — the homebrew the user drops in
+			'class_features_homebrew.csv': [
 				'id,systems,source,name_en,effects,class_id,level,subclass_id',
 				`focused_mind,5.5e,${HB},Focused Mind,flat_bonus:ac+5,wizard,1,`,
 			].join('\n'),
-		);
-		return loadContent(st, ['c']);
+		});
 	}
 	function plainWizard(): Character {
 		const c = newCharacter('gandalf', 'Gandalf', '5.5e');
@@ -1116,30 +1078,21 @@ describe('B26: class features attach across sources (homebrew extends an SRD cla
 describe('RV2: a same-(class,level,id) feature from two active sources folds ONCE, not twice', () => {
 	const HB = 'My Homebrew';
 	async function graphWithDupFeature(): Promise<ContentGraph> {
-		const st = new MemoryStorage();
-		await st.write(
-			'c/classes_srd.csv',
-			[
+		return makeTempContentRoot({
+			'classes_srd.csv': [
 				'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
 				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`,
 			].join('\n'),
-		);
-		await st.write(
-			'c/class_features_srd.csv',
-			[
+			'class_features_srd.csv': [
 				'id,systems,source,name_en,effects,class_id,level,subclass_id',
 				`ward,5.5e,${S},Ward,flat_bonus:ac+5,wizard,1,`,
 			].join('\n'),
-		);
-		// a homebrew row with the SAME feature id (an unresolved collision → both stay active)
-		await st.write(
-			'c/class_features_homebrew.csv',
-			[
+			// a homebrew row with the SAME feature id (an unresolved collision → both stay active)
+			'class_features_homebrew.csv': [
 				'id,systems,source,name_en,effects,class_id,level,subclass_id',
 				`ward,5.5e,${HB},Ward (buffed),flat_bonus:ac+5,wizard,1,`,
 			].join('\n'),
-		);
-		return loadContent(st, ['c']);
+		});
 	}
 	function plainWizard(): Character {
 		const c = newCharacter('gandalf', 'Gandalf', '5.5e');

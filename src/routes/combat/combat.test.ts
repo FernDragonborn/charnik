@@ -7,8 +7,7 @@ import { makeTempContentRoot } from '../../test-support/fixtures';
 import 'fake-indexeddb/auto'; // the VM's saveCharacterToStore hits IndexedDB (rest/level-up) — provide it
 import { describe, it, expect, beforeEach } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
-import { MemoryStorage } from '$lib/storage/memory';
-import { loadContent, type ContentGraph } from '$lib/content/loader';
+import { type ContentGraph } from '$lib/content/loader';
 import { newCharacter, type Character } from '$lib/character/schema';
 import type { CharacterSheet, ResourceOption } from '$lib/character/derive';
 import { spellRow } from '$lib/combat/helpers';
@@ -224,24 +223,16 @@ describe('CombatVM · concentration ends on 0 HP / damage reminder (CONCENTRATIO
 /** A caster graph (wizard with a full slot table) + a level-1 damage spell that upcasts, so an
  *  end-to-end cast folds the structured `upcast` delta into the rolled dice (UPCAST slice 1). */
 async function casterGraphOf(): Promise<ContentGraph> {
-	const st = new MemoryStorage();
-	await st.write(
-		'c/classes_srd.csv',
-		[
+	return makeTempContentRoot({
+		'classes_srd.csv': [
 			'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
 			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/spell_slots_srd.csv',
-		[
+		'spell_slots_srd.csv': [
 			'id,systems,source,kind,level,slot_1,slot_2,slot_3,slot_4,slot_5,slot_6,slot_7,slot_8,slot_9',
 			`full_5,5.5e,${S},full,5,4,3,2,0,0,0,0,0,0`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/spells_srd.csv',
-		[
+		'spells_srd.csv': [
 			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,resolution,save_ability,damage,upcast,effects',
 			// level-1 save-damage spell: base 3d8, +1d8 per slot above 1st
 			`chromatic_orb,5.5e,${S},Chromatic Orb,1,evocation,action,90 ft,Instantaneous,V S M,false,save,dex,3d8 fire,damage:per_slot(1d8)`,
@@ -270,9 +261,7 @@ async function casterGraphOf(): Promise<ContentGraph> {
 			// spawned as weapon-scoped attack+damage effect tokens (base +1 at slot 2, +2 at 4, +3 at 6)
 			`magic_weapon,5.5e,${S},Magic Weapon,2,transmutation,bonus,Touch,"Concentration, up to 1 hour",V S,true,none,,,"enhancement:step(slot, 2->1, 4->2, 6->3)",`,
 		].join('\n'),
-	);
-	const g = await loadContent(st, ['c']);
-	return g;
+	});
 }
 
 describe('CombatVM · structured upcast folds into the cast roll (UPCAST slice 1)', () => {
