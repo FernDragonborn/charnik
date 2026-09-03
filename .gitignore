@@ -59,3 +59,7 @@ coverage/
 # visual-regression screenshots (local, machine/font-specific)
 tools/visual/baseline/
 tools/visual/current/
+
+# Mutation testing (Stryker)
+.stryker-tmp
+/reports
