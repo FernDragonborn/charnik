@@ -4,10 +4,10 @@
  * like an empty cell, and a broken walk looks like a list that "just doesn't do arrows".
  */
 import { describe, it, expect } from 'vitest';
-import { MemoryStorage } from '$lib/storage/memory';
-import { loadContent, type LoadedRow } from '$lib/content/loader';
+import { type LoadedRow } from '$lib/content/loader';
 import { pickerMeta } from './rows';
 import { walkOptions } from './option-walk';
+import { makeTempContentRoot } from '../../test-support/fixtures';
 
 const S = 'SRD 5.2.1';
 /** Stands in for `$_`: renders the key plus its values, so a test can see WHICH string was asked for
@@ -16,31 +16,16 @@ const t = (key: string, options?: { values?: Record<string, string | number> }) 
 	`${key}(${Object.values(options?.values ?? {}).join('|')})`;
 
 async function rows(): Promise<Map<string, LoadedRow>> {
-	const st = new MemoryStorage();
-	await st.write(
-		'c/classes_srd.csv',
-		[
+	const graph = await makeTempContentRoot({
+		'classes_srd.csv': [
 			'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
 			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/species_srd.csv',
-		['id,systems,source,name_en,size,speed', `dwarf,5.5e,${S},Dwarf,medium,30`].join('\n'),
-	);
-	await st.write(
-		'c/backgrounds_srd.csv',
-		['id,systems,source,name_en,skills', `sage,5.5e,${S},Sage,"arcana,sleight_of_hand"`].join('\n'),
-	);
-	await st.write(
-		'c/feats_srd.csv',
-		['id,systems,source,name_en,category', `archery,5.5e,${S},Archery,fighting_style`].join('\n'),
-	);
-	await st.write(
-		'c/items_srd.csv',
-		['id,systems,source,name_en,category,rarity', `bag,5.5e,${S},Bag of Holding,wondrous,very_rare`].join('\n'),
-	);
-	const graph = await loadContent(st, ['c']);
+		'species_srd.csv': ['id,systems,source,name_en,size,speed', `dwarf,5.5e,${S},Dwarf,medium,30`].join('\n'),
+		'backgrounds_srd.csv': ['id,systems,source,name_en,skills', `sage,5.5e,${S},Sage,"arcana,sleight_of_hand"`].join('\n'),
+		'feats_srd.csv': ['id,systems,source,name_en,category', `archery,5.5e,${S},Archery,fighting_style`].join('\n'),
+		'items_srd.csv': ['id,systems,source,name_en,category,rarity', `bag,5.5e,${S},Bag of Holding,wondrous,very_rare`].join('\n'),
+	});
 	expect(graph.issues.filter((i) => i.level === 'error')).toEqual([]);
 	const types = ['class', 'species', 'background', 'feat', 'item'] as const;
 	return new Map(types.flatMap((type) => graph.list(type).map((r) => [r.id, r] as const)));

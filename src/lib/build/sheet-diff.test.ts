@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { MemoryStorage } from '../storage/memory';
-import { loadContent, type ContentGraph } from '../content/loader';
+import { makeTempContentRoot } from '../../test-support/fixtures';
+import { type ContentGraph } from '../content/loader';
 import { newCharacter, type Character } from '../character/schema';
 import { deriveSheet } from '../character/derive';
 import { diffSheets } from './sheet-diff';
@@ -13,25 +13,17 @@ const S = 'SRD 5.2.1';
 
 /** The smallest graph a sheet can derive from: one class, one background that boosts + trains. */
 async function graphOf(): Promise<ContentGraph> {
-	const st = new MemoryStorage();
-	await st.write(
-		'c/classes_srd.csv',
-		[
+	return makeTempContentRoot({
+		'classes_srd.csv': [
 			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,slot_table,weapon_profs,armor_profs',
 			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,,"simple,martial","light,medium,heavy,shield"`,
 			`cleric,5.5e,${S},Cleric,d8,"wis,cha",full,wis,full,simple,"light,medium,shield"`,
 			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,full,simple,`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/backgrounds_srd.csv',
-		['id,systems,source,name_en,skills', `soldier,5.5e,${S},Soldier,"athletics,intimidation"`].join(
+		'backgrounds_srd.csv': ['id,systems,source,name_en,skills', `soldier,5.5e,${S},Soldier,"athletics,intimidation"`].join(
 			'\n',
 		),
-	);
-	const g = await loadContent(st, ['c']);
-	expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
-	return g;
+	});
 }
 
 function fighter(): Character {

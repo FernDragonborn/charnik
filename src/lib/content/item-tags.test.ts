@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { MemoryStorage } from '$lib/storage/memory';
-import { loadContent, type ContentGraph } from './loader';
+import { makeTempContentRoot } from '../../test-support/fixtures';
+import { type ContentGraph } from './loader';
 import { parseItemTags, tagInt, armorWeightOf, weaponCategoryOf, ITEM_TAG } from './item-tags';
 import { resolveItem, armorCategoryOf } from './resolved-item';
 
@@ -64,14 +64,11 @@ describe('categories off tags', () => {
 });
 
 async function graphWith(rows: string[]): Promise<ContentGraph> {
-	const storage = new MemoryStorage();
-	await storage.write(
-		'c/items_srd.csv',
-		['id,systems,source,name_en,category,tags,damage,base_item_id', ...rows].join('\n'),
-	);
-	const graph = await loadContent(storage, ['c']);
-	expect(graph.issues.filter((i) => i.level === 'error')).toEqual([]);
-	return graph;
+	return makeTempContentRoot({
+		'items_srd.csv': ['id,systems,source,name_en,category,tags,damage,base_item_id', ...rows].join(
+			'\n',
+		),
+	});
 }
 
 const itemRow = (graph: ContentGraph, id: string) => {

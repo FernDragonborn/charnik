@@ -20,16 +20,7 @@ import {
 	type Rng,
 	type Rolled,
 } from './dice';
-
-/** RNG that yields the given [0,1) values in order (then throws if over-drawn — catches extra draws). */
-function rngSequence(...values: number[]): Rng {
-	let i = 0;
-	return () => {
-		if (i >= values.length) throw new Error('rng over-drawn');
-		return values[i++]!;
-	};
-}
-// rollDie(sides) = 1 + floor(rng()*sides); 0.5 on a d6 → 4, on a d20 → 11, on a d4 → 3.
+import { rngSequence } from '../../test-support/rng';
 
 describe('parseDiceTerm', () => {
 	it('parses a signed single dice term into a BonusDie', () => {

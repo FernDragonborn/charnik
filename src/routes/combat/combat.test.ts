@@ -3,6 +3,7 @@
  * (set character + graph, call an action, read the derived). Guards the concentration + condition
  * fixes (CVM-bug1/2). Asserts behavior, not internal shape.
  */
+import { makeTempContentRoot } from '../../test-support/fixtures';
 import 'fake-indexeddb/auto'; // the VM's saveCharacterToStore hits IndexedDB (rest/level-up) — provide it
 import { describe, it, expect, beforeEach } from 'vitest';
 import { loadPacks } from '../../test-support/real-content';
@@ -19,10 +20,8 @@ import { UNARMED_STRIKE_ID } from '$lib/combat/attacks';
 const S = 'SRD 5.2.1';
 
 async function graphOf(): Promise<ContentGraph> {
-	const st = new MemoryStorage();
-	await st.write(
-		'c/spells_srd.csv',
-		[
+	return makeTempContentRoot({
+		'spells_srd.csv': [
 			'id,systems,source,name_en,level,school,casting_time,range,duration,components,concentration,effects',
 			`bless,5.5e,${S},Bless,1,enchantment,action,30 ft,"Concentration, up to 1 minute",V S M,true,flat_bonus:saves+1d4`,
 			`shield_of_faith,5.5e,${S},Shield of Faith,1,abjuration,bonus,60 ft,"Concentration, up to 10 minutes",V S M,true,flat_bonus:ac+2`,
@@ -30,26 +29,17 @@ async function graphOf(): Promise<ContentGraph> {
 			// a token-less CONCENTRATION control spell (Model C: must still get a timed carrier)
 			`hold_person,5.5e,${S},Hold Person,2,enchantment,action,60 ft,"Concentration, up to 1 minute",V S M,true,`,
 		].join('\n'),
-	);
-	await st.write(
-		'c/conditions_srd.csv',
-		[
+		'conditions_srd.csv': [
 			'id,systems,source,name_en,max_level',
 			`prone,5.5e,${S},Prone,`,
 			`grappled,5e,${S},Grappled,`, // a DIFFERENT edition — must NOT appear for a 5.5e character
 			`exhaustion,5.5e,${S},Exhaustion,6`, // the leveled one — its max_level is the lethal rung
 		].join('\n'),
-	);
-	await st.write(
-		'c/items_srd.csv',
-		[
+		'items_srd.csv': [
 			'id,systems,source,name_en,category,tags,damage',
 			`dagger,5.5e,${S},Dagger,weapon,"simple, melee, finesse",1d4 piercing`,
 		].join('\n'),
-	);
-	const g = await loadContent(st, ['c']);
-	expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
-	return g;
+	});
 }
 
 const noModifiers = { shiftKey: false } as unknown as Event;

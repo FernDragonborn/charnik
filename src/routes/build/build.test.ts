@@ -4,12 +4,12 @@
  * `Character` out — so it survives refactors of the VM's internal shape (field regroup, method
  * merges). It asserts WHAT a build produces, never HOW the VM is structured.
  */
+import { makeTempContentRoot } from '../../test-support/fixtures';
 import 'fake-indexeddb/auto'; // the draft session writes through the real Storage seam
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { MemoryStorage } from '$lib/storage/memory';
 import { getUserStorage } from '$lib/storage/provider';
 import { listDrafts, deleteDraft } from '$lib/character/draft-repository';
-import { loadContent, type ContentGraph } from '$lib/content/loader';
+import { type ContentGraph } from '$lib/content/loader';
 import { characterSchema, newCharacter, type Character } from '$lib/character/schema';
 import { build, ASI } from './build-view-model.svelte';
 import { newClassRow, ORIGIN_SLOT_KEY } from './draft';
@@ -19,59 +19,39 @@ import { toggleSource } from '$lib/content/sources.svelte';
 const S = 'SRD 5.2.1';
 
 async function graphOf(): Promise<ContentGraph> {
-	const st = new MemoryStorage();
-	await st.write(
-		'c/classes_srd.csv',
-		[
+	return makeTempContentRoot({
+		'classes_srd.csv': [
 			'id,systems,source,name_en,hit_die,saves,caster,spell_ability,asi_levels',
 			`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int,"4,8,12,16,19"`,
 			`fighter,5.5e,${S},Fighter,d10,"str,con",none,,"4,6,8,12,14,16,19"`,
 			`rogue,5.5e,${S},Rogue,d8,"dex,int",none,,"4,8,10,12,16,19"`
-		].join('\n')
-	);
-	await st.write(
-		'c/class_features_srd.csv',
-		[
+		].join('\n'),
+		'class_features_srd.csv': [
 			'id,systems,source,name_en,class_id,level,expertise_slots',
 			`expertise,5.5e,${S},Expertise,rogue,1,"1:2,6:2"`
-		].join('\n')
-	);
-	await st.write(
-		'c/feats_srd.csv',
-		[
+		].join('\n'),
+		'feats_srd.csv': [
 			'id,systems,source,name_en,category,ability_choice,skill_choice',
 			`alert,5.5e,${S},Alert,general,,`,
 			`tough,5.5e,${S},Tough,general,,`,
 			`skilled,5.5e,${S},Skilled,origin,,3`,
 			// a half-feat origin feat: no SRD background grants one, a homebrew pack may
 			`gifted,5.5e,${S},Gifted,origin,"str,dex",`
-		].join('\n')
-	);
-	await st.write(
-		'c/backgrounds_srd.csv',
-		[
+		].join('\n'),
+		'backgrounds_srd.csv': [
 			'id,systems,source,name_en,skills,origin_feat',
 			`scholar,5.5e,${S},Scholar,"arcana,history",skilled`,
 			`prodigy,5.5e,${S},Prodigy,,gifted`
-		].join('\n')
-	);
-	await st.write(
-		'c/species_srd.csv',
-		[
+		].join('\n'),
+		'species_srd.csv': [
 			'id,systems,source,name_en,effects,size,speed,creature_type',
 			`hardy,5.5e,${S},Hardy,flat_bonus:con+2,medium,30,humanoid`
-		].join('\n')
-	);
-	await st.write(
-		'c/spells_srd.csv',
-		[
+		].join('\n'),
+		'spells_srd.csv': [
 			'id,systems,source,name_en,level,school,casting_time,range,duration,components',
 			`fireball,5.5e,${S},Fireball,3,evocation,action,150 ft,instant,V S M`
-		].join('\n')
-	);
-	const g = await loadContent(st, ['c']);
-	expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
-	return g;
+		].join('\n'),
+	});
 }
 
 /** A fully-specified saved character to round-trip through the builder. */

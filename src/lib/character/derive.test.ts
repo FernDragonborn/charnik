@@ -3,6 +3,7 @@ import { MemoryStorage } from '../storage/memory';
 import { loadContent, type ContentGraph } from '../content/loader';
 import { characterSchema, newCharacter, type Character } from './schema';
 import { deriveSheet } from './derive';
+import { makeTempContentRoot } from '../../test-support/fixtures';
 import { computeAttacks, rollEffectsFor } from '../combat/helpers';
 import {
 	registerPluginEvaluator,
@@ -108,9 +109,7 @@ async function graphOf(): Promise<ContentGraph> {
 			`ki_flurry,5.5e,${S},Flurry,ki,1,note:two strikes,bonus_action,`, // a resource the wizard lacks
 		].join('\n'),
 	);
-	const g = await loadContent(st, ['c']);
-	expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
-	return g;
+	return loadContent(st, ['c']);
 }
 
 function wizard(): Character {
@@ -665,27 +664,21 @@ describe('deriveSheet aggregator', () => {
 
 describe('deriveSheet · L2 value expressions (EXPR-2)', () => {
 	async function exprGraph(): Promise<ContentGraph> {
-		const st = new MemoryStorage();
-		await st.write(
-			'c/classes_srd.csv',
-			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n'),
-		);
-		await st.write(
-			'c/species_srd.csv',
-			[
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
+				'id,systems,source,name_en,hit_die,saves',
+				`monk,5.5e,${S},Monk,d8,"str,dex"`,
+			].join('\n'),
+			'species_srd.csv': [
 				'id,systems,source,name_en,effects,size,speed,creature_type',
 				// AC scales with character level: ceil(level/2); Ki pool = monk level
 				`ward,5.5e,${S},Ward,flat_bonus:ac+ceil(level/2),medium,30,humanoid`,
 			].join('\n'),
-		);
-		await st.write(
-			'c/class_features_srd.csv',
-			[
+			'class_features_srd.csv': [
 				'id,systems,source,name_en,effects,class_id,level,subclass_id',
 				`ki,5.5e,${S},Ki,grant_resource:ki:class_level.monk:short,monk,1,`,
 			].join('\n'),
-		);
-		const g = await loadContent(st, ['c']);
+		});
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 		return g;
 	}
@@ -714,23 +707,17 @@ describe('deriveSheet · L2 value expressions (EXPR-2)', () => {
 
 describe('deriveSheet · L2 condition guards (EXPR-3)', () => {
 	async function guardGraph(): Promise<ContentGraph> {
-		const st = new MemoryStorage();
-		await st.write(
-			'c/classes_srd.csv',
-			[
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
 				'id,systems,source,name_en,hit_die,saves',
 				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`,
 			].join('\n'),
-		);
-		await st.write(
-			'c/species_srd.csv',
-			[
+			'species_srd.csv': [
 				'id,systems,source,name_en,effects,size,speed,creature_type',
 				// Unarmored Defense: only applies with no armor; a CON-save bonus while bloodied
 				`brute,5.5e,${S},Brute,armor_type==none ? set_override:ac:13; is_bloodied ? flat_bonus:save.con+2,medium,30,humanoid`,
 			].join('\n'),
-		);
-		const g = await loadContent(st, ['c']);
+		});
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 		return g;
 	}
@@ -773,30 +760,21 @@ describe('deriveSheet · L2 condition guards (EXPR-3)', () => {
 
 describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 	async function condGraph(): Promise<ContentGraph> {
-		const st = new MemoryStorage();
-		await st.write(
-			'c/classes_srd.csv',
-			[
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
 				'id,systems,source,name_en,hit_die,saves',
 				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`,
 			].join('\n'),
-		);
-		await st.write(
-			'c/species_srd.csv',
-			[
+			'species_srd.csv': [
 				'id,systems,source,name_en,effects,size,speed,creature_type',
 				`brute,5.5e,${S},Brute,is_raging ? flat_bonus:ac+2,medium,30,humanoid`,
 			].join('\n'),
-		);
-		await st.write(
-			'c/conditions_srd.csv',
-			[
+			'conditions_srd.csv': [
 				'id,systems,source,name_en,effects,negative',
 				`rage,5.5e,${S},Rage,flat_bonus:save.str+1,false`,
 				`marked,5.5e,${S},Marked,flat_bonus:ac+5,true`,
 			].join('\n'),
-		);
-		const g = await loadContent(st, ['c']);
+		});
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 		return g;
 	}
@@ -858,22 +836,16 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 	it('does NOT expand a condition row from the OTHER edition (A16(a) edition filter)', async () => {
 		// `marked` here is a 5e row (+5 AC); a 5.5e character applying it must find NOTHING — before
 		// the edition filter, both-roots-loaded would wrongly apply the 5e condition to the 5e char.
-		const st = new MemoryStorage();
-		await st.write(
-			'c/classes_srd.csv',
-			[
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
 				'id,systems,source,name_en,hit_die,saves',
 				`barbarian,5.5e,${S},Barbarian,d12,"str,con"`,
 			].join('\n'),
-		);
-		await st.write(
-			'c/conditions_srd.csv',
-			[
+			'conditions_srd.csv': [
 				'id,systems,source,name_en,effects,negative',
 				`marked,5e,SRD 5.1,Marked,flat_bonus:ac+5,true`, // 5e ONLY
 			].join('\n'),
-		);
-		const g = await loadContent(st, ['c']);
+		});
 		const c = brute(); // a 5.5e character
 		c.play.effects = [
 			{ iid: 'm', label: 'Hex', effects: ['apply_condition:marked'], positive: false },
@@ -886,29 +858,23 @@ describe('deriveSheet · guard ctx is fail-closed (two-pass resolve)', () => {
 
 describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 	async function abilityGraph(): Promise<ContentGraph> {
-		const st = new MemoryStorage();
-		await st.write(
-			'c/classes_srd.csv',
-			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n'),
-		);
-		await st.write(
-			'c/species_srd.csv',
-			[
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
+				'id,systems,source,name_en,hit_die,saves',
+				`monk,5.5e,${S},Monk,d8,"str,dex"`,
+			].join('\n'),
+			'species_srd.csv': [
 				'id,systems,source,name_en,effects,size,speed,creature_type',
 				// an expression and a guard on ability targets — resolved by the DAG (dex is safe to
 				// guard on is_bloodied; CON would be a genuine cycle, tested separately below)
 				`odd,5.5e,${S},Odd,flat_bonus:str+ceil(level/4); is_bloodied ? flat_bonus:dex+2,medium,30,humanoid`,
 				`looper,5.5e,${S},Looper,is_bloodied ? flat_bonus:con+2,medium,30,humanoid`,
 			].join('\n'),
-		);
-		await st.write(
-			'c/items_srd.csv',
-			[
+			'items_srd.csv': [
 				'id,systems,source,name_en,effects,category',
 				`headband,5.5e,${S},Headband of Intellect,set_override:int:19,wondrous`,
 			].join('\n'),
-		);
-		const g = await loadContent(st, ['c']);
+		});
 		return g;
 	}
 	function odd(species = 'odd'): Character {
@@ -970,24 +936,18 @@ describe('deriveSheet · ability-score effects through the DAG (A10)', () => {
 
 describe('deriveSheet · spellcasting_mod reads the carrying class (SPEC4)', () => {
 	async function multiGraph(): Promise<ContentGraph> {
-		const st = new MemoryStorage();
-		await st.write(
-			'c/classes_srd.csv',
-			[
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
 				'id,systems,source,name_en,hit_die,saves,caster,spell_ability',
 				`wizard,5.5e,${S},Wizard,d6,"int,wis",full,int`,
 				`cleric,5.5e,${S},Cleric,d8,"wis,cha",full,wis`,
 			].join('\n'),
-		);
-		await st.write(
-			'c/class_features_srd.csv',
-			[
+			'class_features_srd.csv': [
 				'id,systems,source,name_en,effects,class_id,level,subclass_id',
 				// a cleric feature reading spellcasting_mod — must use WIS, not the primary (wizard/INT)
 				`blessed_ward,5.5e,${S},Blessed Ward,flat_bonus:save.wis+spellcasting_mod,cleric,1,`,
 			].join('\n'),
-		);
-		const g = await loadContent(st, ['c']);
+		});
 		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
 		return g;
 	}
@@ -1019,12 +979,12 @@ describe('deriveSheet · spellcasting_mod reads the carrying class (SPEC4)', () 
 
 describe('deriveSheet · set_override with a dice value degrades to a note', () => {
 	it('never silently drops the token', async () => {
-		const st = new MemoryStorage();
-		await st.write(
-			'c/classes_srd.csv',
-			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n'),
-		);
-		const g = await loadContent(st, ['c']);
+		const g = await makeTempContentRoot({
+			'classes_srd.csv': [
+				'id,systems,source,name_en,hit_die,saves',
+				`monk,5.5e,${S},Monk,d8,"str,dex"`,
+			].join('\n'),
+		});
 		const c = newCharacter('x', 'X', '5.5e');
 		c.build.classes = [{ class: `class:${S}:monk`, level: 1 }];
 		c.build.abilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
@@ -1050,25 +1010,20 @@ describe('deriveSheet · L3 plugin pre-pass (stage 3½)', () => {
 	});
 
 	async function pluginGraph(): Promise<ContentGraph> {
-		const st = new MemoryStorage();
-		await st.write(
-			'c/classes_srd.csv',
-			['id,systems,source,name_en,hit_die,saves', `monk,5.5e,${S},Monk,d8,"str,dex"`].join('\n'),
-		);
-		await st.write(
-			'c/items_srd.csv',
-			[
+		return makeTempContentRoot({
+			'classes_srd.csv': [
+				'id,systems,source,name_en,hit_die,saves',
+				`monk,5.5e,${S},Monk,d8,"str,dex"`,
+			].join('\n'),
+			'items_srd.csv': [
 				'id,systems,source,name_en,effects,category',
 				`cursed_ring,5.5e,${S},Cursed Ring,plugin:test-ns:curse,ring`,
 			].join('\n'),
-		);
-		await st.write(
-			'c/conditions_srd.csv',
-			['id,systems,source,name_en,effects', `poisoned,5.5e,${S},Poisoned,disadvantage:attack`].join(
-				'\n',
-			),
-		);
-		return loadContent(st, ['c']);
+			'conditions_srd.csv': [
+				'id,systems,source,name_en,effects',
+				`poisoned,5.5e,${S},Poisoned,disadvantage:attack`,
+			].join('\n'),
+		});
 	}
 
 	function ringWearer(): Character {
@@ -1133,9 +1088,7 @@ describe('B26: class features attach across sources (homebrew extends an SRD cla
 				`focused_mind,5.5e,${HB},Focused Mind,flat_bonus:ac+5,wizard,1,`,
 			].join('\n'),
 		);
-		const g = await loadContent(st, ['c']);
-		expect(g.issues.filter((i) => i.level === 'error')).toEqual([]);
-		return g;
+		return loadContent(st, ['c']);
 	}
 	function plainWizard(): Character {
 		const c = newCharacter('gandalf', 'Gandalf', '5.5e');
