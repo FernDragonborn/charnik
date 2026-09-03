@@ -192,29 +192,6 @@ Only the last one is worth working around. The whole ordinary gate — test, che
 minute, so **never reach for a narrower gate to save time that is not there**; `pnpm build` in
 particular type-checks *nothing*, because vite transpiles with esbuild.
 
-## Mutation testing
-
-`pnpm mutate` runs Stryker over `src/lib/rules` (`config/stryker.json`) and answers the question
-coverage cannot: would any test fail if the code were wrong? A surviving mutant is a line that runs
-without being asserted. Current score: **82.37%** — see [tests-audit.md](../tests-audit.md) for the
-per-file breakdown and what the survivors mean. Scope it with `--mutate` for a single file
-(`npx stryker run config/stryker.json --mutate "src/lib/rules/core.ts"`).
-
-**It runs `inPlace`, and that is not a preference.** Stryker's default is to copy the repo into
-`.stryker-tmp` per run, which here means copying an 11 GB `src-tauri/target` — the first attempt
-filled the disk mid-copy and took the concurrent test run down with it. The sandbox also breaks
-content resolution, because `../charnik-content-srd` does not exist beside a sandbox directory.
-In-place has its own cost, and it is sharp:
-
-- **The whole repo is modified while it runs.** Stryker stamps `// @ts-nocheck` on every TS file and
-  swaps one line at a time in the mutated module. **Do not edit files or run tests during a run** —
-  you will be testing a mutant. It restores from `.stryker-tmp/backup-*` when it finishes.
-- **A crashed run leaves the tree dirty.** `git checkout -- .` is the fix, so commit before starting.
-- A stale `.stryker-tmp` breaks `eslint .` afterwards with "multiple candidate TSConfigRootDirs" —
-  1 193 parse errors that look catastrophic and mean nothing. Delete the folder.
-
-Timing: `src/lib/rules` whole ~15 min, one file ~4 min. Background it.
-
 ## Toolchain constraints that will bite
 
 - **TypeScript stays on 6.x.** The 7.0 bump is on dependabot's ignore list (PR #7, closed
@@ -284,5 +261,4 @@ read the report. `/dev/packs-write` is the worked example.
 
 `tools/srd/*` are the SRD converters, `tools/build-static-content.mjs` vendors content on predev and
 prebuild, `tools/restamp.ts` is `pnpm restamp`, and `tools/content-repo.mjs` resolves where the
-content repo is. `config/vitest.mutation.config.ts` is the node-only vitest config Stryker runs
-against — a Chromium launch per mutant would cost more than the entire node suite.
+content repo is.

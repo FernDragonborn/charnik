@@ -54,11 +54,11 @@ engine disabled (identical shape; trace = base-only when off).
   Verifying that path needs a manual `pnpm tauri dev` run (or a future `tauri-driver` E2E + an
   OS-level dialog automator). So "no driver for the S2 dialog" means *this layer*, not "no driver".
 
-## Mutation (present)
-`pnpm mutate` (Stryker, `config/stryker.json`) mutates `src/lib/rules` and reports what the suite
-fails to notice — the only measure that distinguishes running a line from asserting it. The score and
-what its survivors mean live in [tests-audit.md](../tests-audit.md); the run's traps (it modifies the
-working tree in place) are in [tooling.md](tooling.md).
+## Mutation (measured once, not a standing gate)
+`src/lib/rules` scores **82.37%** against Stryker — the only measure that separates running a line
+from asserting it. The tool is deliberately NOT a dependency: it was run once, the survivors it found
+were fixed, and the score plus the recipe to redo it live in [tests-audit.md](../tests-audit.md).
+Reach for it when a module's assertions feel decorative, not on a schedule.
 
 ## Cross-system
 Parameterize rules/effects tests `describe.each(['5e','5.5e'])`; assert known

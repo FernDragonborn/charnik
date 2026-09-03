@@ -29,8 +29,7 @@
 		"jscpd": "jscpd -c config/jscpd.json --reporters consoleFull",
 		"loc": "node tools/loc.mjs",
 		"postinstall": "simple-git-hooks",
-		"plugin:test": "tsx tools/plugin-test.ts",
-		"mutate": "stryker run config/stryker.json"
+		"plugin:test": "tsx tools/plugin-test.ts"
 	},
 	"simple-git-hooks": {
 		"pre-commit": "node tools/surface.mjs && git add docs/surface.md && npx prettier --check . && npx eslint . && npx jscpd -c config/jscpd.json",
@@ -55,8 +54,6 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
-		"@stryker-mutator/core": "^10.0.0",
-		"@stryker-mutator/vitest-runner": "^10.0.0",
 		"@sveltejs/adapter-static": "^3.0.10",
 		"@sveltejs/kit": "^2.70.2",
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",

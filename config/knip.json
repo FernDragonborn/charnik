@@ -2,7 +2,7 @@
 	"$schema": "https://unpkg.com/knip@5/schema.json",
 	"entry": ["tools/**/*.mjs"],
 	"project": ["src/**/*.{ts,svelte}", "tools/**/*.mjs"],
-	"ignoreDependencies": ["@stryker-mutator/vitest-runner", "@tauri-apps/cli"],
+	"ignoreDependencies": ["@tauri-apps/cli"],
 	"stylelint": {
 		"config": ["config/stylelint.json"]
 	},

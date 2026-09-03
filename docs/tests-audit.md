@@ -26,10 +26,26 @@ fixture helpers it specifies were never built.
 4. **Implementation-derived expectations.** The shape the AI-test literature calls tautological: the
    expected value is produced by the same production call under test, so a bug moves both sides
    together.
-5. **Mutation probes.** Break one behaviour on purpose, run the tests that should notice, revert. The
+5. **Mutation score.** Stryker is **not installed** — a standing mutation gate buys little against a
+suite already this green, and it costs two dependencies plus a run nobody has 15 minutes for. To redo
+the measurement: `pnpm add -D @stryker-mutator/core @stryker-mutator/vitest-runner`, a config with
+`testRunner: "vitest"`, `plugins: ["@stryker-mutator/vitest-runner"]` (pnpm will not find it by glob),
+`mutate: ["src/lib/rules/**/*.ts", "!**/*.test.ts"]`, `coverageAnalysis: "perTest"`, and a vitest
+config that keeps only the `node` project — a Chromium launch per mutant costs more than the whole
+node suite. Then remove all of it again.
+
+**`inPlace: true` is mandatory here, and it bites.** The default sandbox copies the repo per run,
+which means copying an 11 GB `src-tauri/target` — the first attempt filled the disk mid-copy — and it
+breaks content resolution, because `../charnik-content-srd` does not exist beside a sandbox. In place,
+Stryker stamps `// @ts-nocheck` across every TS file and swaps one line at a time: **do not edit or
+run anything while it works**, commit first so a crash is one `git checkout -- .` away, and delete
+`.stryker-tmp` afterwards or `eslint .` reports 1 193 parse errors about "multiple candidate
+TSConfigRootDirs" that mean nothing.
+
+**Mutation probes.** Break one behaviour on purpose, run the tests that should notice, revert. The
    only method that answers "would this test fail if the code were wrong" directly.
-6. **Mutation score (Stryker).** The same question asked exhaustively: `pnpm mutate` over
-   `src/lib/rules`, 1 021 mutants.
+6. **Mutation score (Stryker, one-off).** The same question asked exhaustively — 1 021 mutants over
+   `src/lib/rules`. The tool is not a dependency; see [Reproducing it](#reproducing-it).
 7. **Manual classification.** Every machine hit is read on both sides before it becomes a finding.
 
 ## Categories
@@ -318,9 +334,9 @@ ones by precisely the tests that own that rule.
 
 ## Step 7 — the mutation score
 
-`pnpm mutate` runs Stryker over `src/lib/rules` — the module where a wrong number is worst and every
-function is pure, so a surviving mutant is a gap rather than an equivalent mutation. 1 021 mutants,
-15 minutes, **82.37% total / 84.02% of covered code**: 841 killed, 160 survived, 20 never reached.
+Stryker over `src/lib/rules` — the module where a wrong number is worst and every function is pure,
+so a surviving mutant is a gap rather than an equivalent mutation. 1 021 mutants, 15 minutes,
+**82.37% total / 84.02% of covered code**: 841 killed, 160 survived, 20 never reached.
 
 | File | Score | Killed | Survived | No coverage |
 | --- | ---: | ---: | ---: | ---: |
