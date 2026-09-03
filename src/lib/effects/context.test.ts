@@ -158,10 +158,14 @@ describe('resolveEffectValue · literal vs expression', () => {
 	});
 
 	it('degrades a malformed expression to an error (→ inert note)', () => {
-		const r = resolveEffectValue(parseToken('flat_bonus:ac+bogus_var'), ctx);
-		expect(r.error).toBeTruthy();
-		// and with no ctx an expression cannot resolve
-		expect(resolveEffectValue(parseToken('flat_bonus:ac+level'), undefined).error).toBeTruthy();
+		// the error names the offender and the two failures are told apart: a bare "something failed"
+		// would still pass if the resolver rejected every expression it was handed
+		expect(resolveEffectValue(parseToken('flat_bonus:ac+bogus_var'), ctx).error).toContain(
+			"unknown variable 'bogus_var'",
+		);
+		expect(resolveEffectValue(parseToken('flat_bonus:ac+level'), undefined).error).toBe(
+			'expression needs a context',
+		);
 	});
 
 	it('handles a negated expression value', () => {

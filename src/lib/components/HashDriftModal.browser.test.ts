@@ -30,14 +30,4 @@ describe('HashDriftModal (browser)', () => {
 		await page.getByRole('button', { name: /записати мої зміни/i }).click();
 		expect(onUpdate).toHaveBeenCalledWith(['monsters_homebrew.csv']);
 	});
-
-	it('Escape skips', async () => {
-		const onSkip = vi.fn();
-		await render(HashDriftModal, { items, onUpdate: () => {}, onSkip, onNeverAsk: () => {} });
-		page
-			.getByRole('dialog')
-			.element()
-			.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-		expect(onSkip).toHaveBeenCalled();
-	});
 });

@@ -16,7 +16,7 @@ import {
 	hitDiceRecoveredOnLongRest,
 	ABILITY_SCORE_CLAMP,
 } from './core';
-import type { System } from './pipeline';
+import { NOTE_KEY } from './pipeline';
 
 describe('primitives (golden SRD values)', () => {
 	it('ability modifier', () => {
@@ -41,8 +41,10 @@ describe('primitives (golden SRD values)', () => {
 	});
 });
 
-// The formulas are identical across editions; assert both, and the one real divergence.
-describe.each<System>(['5e', '5.5e'])('system-agnostic formulas (%s)', () => {
+// Deliberately NOT parameterized over the system: none of these formulas takes one, so a per-edition
+// run executes the identical body twice and proves nothing — a mutation to `carryingCapacity`'s
+// edition branch survived this block entirely. The divergences are asserted below, where they live.
+describe('system-agnostic formulas', () => {
 	it('saving throw = ability mod (+ proficiency if proficient)', () => {
 		const prof = savingThrow({ ability: 'dex', score: 16, level: 5, proficient: true });
 		expect(prof.value).toBe(6); // +3 DEX + 3 prof
@@ -126,9 +128,16 @@ describe.each<System>(['5e', '5.5e'])('system-agnostic formulas (%s)', () => {
 
 describe('edition divergence', () => {
 	it('encumbrance tiers are a 5e-only variant (5.5e drops speed instead)', () => {
-		expect(carryingCapacity({ strScore: 15, system: '5e' }).notes?.map((n) => n.text)).toEqual([
-			'Encumbered at 75 lb (−10 ft)',
-			'Heavily encumbered at 150 lb (−20 ft)',
+		// key + params, not just `text`: the translated UI renders the PARAMS, so asserting only the
+		// English sentence leaves the number a Ukrainian player sees unguarded — a mutation to
+		// `params.lb` survived exactly here
+		expect(carryingCapacity({ strScore: 15, system: '5e' }).notes).toEqual([
+			{ text: 'Encumbered at 75 lb (−10 ft)', key: NOTE_KEY.encumbered, params: { lb: 75 } },
+			{
+				text: 'Heavily encumbered at 150 lb (−20 ft)',
+				key: NOTE_KEY.heavilyEncumbered,
+				params: { lb: 150 },
+			},
 		]);
 		expect(carryingCapacity({ strScore: 15, system: '5.5e' }).notes?.map((n) => n.text)).toEqual([
 			'Over capacity → speed 5 ft',

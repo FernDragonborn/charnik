@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, vi } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 import { page } from 'vitest/browser';
 import ContentMetaModal from './ContentMetaModal.svelte';
@@ -35,20 +35,5 @@ describe('ContentMetaModal (browser)', () => {
 		await expect.element(page.getByText('Джерело', { exact: true })).toBeInTheDocument(); // source label
 		await expect.element(page.getByText('CC-BY-4.0')).toBeInTheDocument(); // a license card
 		await expect.element(page.getByText('CC-BY-SA-4.0')).toBeInTheDocument(); // ordered right after CC-BY
-	});
-
-	it('Escape skips (dismiss without filling)', async () => {
-		const onSkip = vi.fn();
-		await render(ContentMetaModal, {
-			issues: [underfilledIssue()],
-			onFillAndSave: () => {},
-			onSkip,
-			onNeverAsk: () => {},
-		});
-		page
-			.getByRole('dialog')
-			.element()
-			.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-		expect(onSkip).toHaveBeenCalled();
 	});
 });

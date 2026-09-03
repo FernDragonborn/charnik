@@ -63,3 +63,4 @@ tools/visual/current/
 # Mutation testing (Stryker)
 .stryker-tmp
 /reports
+/stryker-setup-*.js

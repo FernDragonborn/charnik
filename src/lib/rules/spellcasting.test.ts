@@ -234,13 +234,17 @@ describe('castableSlotLevels — the upcast picker options', () => {
 });
 
 describe('prepared cap helpers (D13 — shared by combat + spellbook)', () => {
+	// Deliberately asymmetric — two that count against one that does not. With one of each the
+	// expected number is 1 whether the exclusion works or is inverted, which is what a mutation
+	// dropping the `!` proved: the test's own name was the only thing asserting it.
 	const spells = [
+		{ prepared: true, alwaysPrepared: false }, // counts
 		{ prepared: true, alwaysPrepared: false }, // counts
 		{ prepared: true, alwaysPrepared: true }, // always → free, never counted
 		{ prepared: false, alwaysPrepared: false }, // not prepared
 	];
 	it('preparedLeveledCount counts only leveled prepared spells (excludes always-prepared)', () => {
-		expect(preparedLeveledCount(spells)).toBe(1);
+		expect(preparedLeveledCount(spells)).toBe(2);
 	});
 	it('canTogglePrepared refuses cantrips with a message', () => {
 		const r = canTogglePrepared({ prepared: false, alwaysPrepared: false }, true, 5, 0);

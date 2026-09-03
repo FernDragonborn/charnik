@@ -1,8 +1,8 @@
 # Test suite audit — what carries no weight
 
 A one-off inventory of tests that are **dead**, **duplicated**, or **tautological**, so the suite can
-be cut without losing a single real guard. Nothing here is deleted by the audit itself: this file is
-the list, the maintainer decides what goes.
+be cut without losing a single real guard. Everything in [the list](#the-list) is applied; the file
+stays as the record of what was measured, how, and what the measurements refused to confirm.
 
 Scope: `src/**/*.test.ts` + `tests/**/*.test.ts` — **100 files, 19 405 lines, 1 460 authored cases in
 364 `describe` blocks**, which `.each` parameterisation expands to **1 883 executed** (`pnpm test`:
@@ -28,7 +28,9 @@ fixture helpers it specifies were never built.
    together.
 5. **Mutation probes.** Break one behaviour on purpose, run the tests that should notice, revert. The
    only method that answers "would this test fail if the code were wrong" directly.
-6. **Manual classification.** Every machine hit is read on both sides before it becomes a finding.
+6. **Mutation score (Stryker).** The same question asked exhaustively: `pnpm mutate` over
+   `src/lib/rules`, 1 021 mutants.
+7. **Manual classification.** Every machine hit is read on both sides before it becomes a finding.
 
 ## Categories
 
@@ -314,9 +316,44 @@ ones by precisely the tests that own that rule.
 
 ---
 
+## Step 7 — the mutation score
+
+`pnpm mutate` runs Stryker over `src/lib/rules` — the module where a wrong number is worst and every
+function is pure, so a surviving mutant is a gap rather than an equivalent mutation. 1 021 mutants,
+15 minutes, **82.37% total / 84.02% of covered code**: 841 killed, 160 survived, 20 never reached.
+
+| File | Score | Killed | Survived | No coverage |
+| --- | ---: | ---: | ---: | ---: |
+| `spellcasting.ts` | 88.79 | 206 | 24 | 2 |
+| `proficiency.ts` | 86.36 | 38 | 6 | 0 |
+| `dice.ts` | 82.71 | 330 | 63 | 6 |
+| `core.ts` | 78.64 | 162 | 42 | 2 |
+| `pipeline.ts` | 75.00 | 105 | 25 | 10 |
+
+Stryker's own "high" threshold is 80. Nothing here needs rescuing.
+
+**Finding 1, settled by measurement.** Re-running `core.ts` alone after the `describe.each` collapse
+gives **78.64 / 79.41, 162 killed, 42 survived, 2 uncovered — identical to the digit**. Ten cases were
+executing twice and killing nothing the single run did not already kill.
+
+Half the survivors are `StringLiteral` mutants in error copy and note text — a message replaced by
+`""` that nothing asserts. Cheap to kill, rarely worth it. Three groups were worth reading:
+
+- **The always-prepared exclusion was never asserted** (fixed, finding 6 below).
+- **The encumbrance note's number is unasserted** (fixed, finding 7 below).
+- **The dice options are tested in the middle, never at the edge.** `dice.ts:379-387` — the `reroll`,
+  `minDie` and `maxDie` guards all survive being replaced by `true`, and their `<`/`>` comparisons
+  survive becoming `<=`/`>=`. The features work; their boundaries are unproven. Left open: each is a
+  new test, not a sharpened one.
+- **`pipeline.ts` holds 10 of the 20 never-reached mutants** — the lowest score of the five, and the
+  one file where the answer is "write a test" rather than "strengthen one".
+
+---
+
 ## The list
 
-Everything the audit would actually change, largest first. Five items.
+Everything the audit changed, largest first. Seven items, all applied — the suite went from 1 883
+executed cases to 1 872, losing fifteen and gaining four.
 
 | # | Where | Category | Action |
 | --- | --- | --- | --- |
@@ -325,14 +362,24 @@ Everything the audit would actually change, largest first. Five items.
 | 3 | `components/HashDriftModal.browser.test.ts:34-42` + `ContentMetaModal.browser.test.ts:40-53` | duplicate | Write `DialogShell.browser.test.ts` **first**, then drop both copies. Both currently catch a broken `dismissOnEscape`, so order matters. |
 | 4 | `effects/plugin-host.test.ts:124` | tautological | Replace `f(a,b) === f(a,b)` with a golden hex digest — passes today for any non-random implementation. |
 | 5 | `effects/context.test.ts:162,164` | tautological | Strengthen — assert what the error says, not that one exists. |
+| 6 | `rules/spellcasting.test.ts:238` | tautological | The fixture held one spell of each kind, so `preparedLeveledCount` returns 1 whether always-prepared spells are excluded or exclusively counted — the test's name was the only thing asserting it. Fixture made asymmetric. |
+| 7 | `rules/core.test.ts:130` | weak assertion | The encumbrance note asserted its English `text` only; the translated UI renders `params`, where `strScore * 5` could become `/ 5` unnoticed. Now asserts key and params too. |
 
 Plus one file that is not a test: `src/lib/components/__screenshots__/…-1.png`, a gitignored leftover
 from a past local failure. Delete.
 
-**That is the whole harvest: ~35 lines out of 19 405, and one Chromium launch's worth of
-duplication.** Zero dead tests, zero over-mocked tests, zero snapshots, zero tests of a dependency.
-For a suite of 1 460 cases across six independent detection methods — one of which breaks the code on
-purpose — that is a clean result, and the audit is better read as evidence than as a cleanup queue.
+**That is the whole harvest: ~35 lines deleted out of 19 405, three assertions sharpened, and one
+Chromium launch's worth of duplication.** Zero dead tests, zero over-mocked tests, zero snapshots,
+zero tests of a dependency. For 1 460 cases across seven detection methods — two of which break the
+code on purpose — that is a clean result, and the audit is better read as evidence than as a cleanup
+queue.
+
+The pattern in what did turn up is worth naming: **every real finding was a test whose name promised
+more than its assertion delivered.** A `describe.each` that reads as cross-system coverage and passes
+no system; a fixture with one spell of each kind under a title about excluding one kind; a hash
+compared to itself under the word "deterministic"; an English sentence asserted where the translated
+UI renders a number. None of them were noise, and none would have been found by reading for
+duplication alone — it took breaking the code to see them.
 
 ## What the audit actually found
 
