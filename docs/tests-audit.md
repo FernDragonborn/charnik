@@ -399,16 +399,19 @@ duplication alone — it took breaking the code to see them.
 
 ## What the audit actually found
 
-The 5.22% duplication is **not redundant tests**. It is one missing helper, three times over.
-`testing.md` §"Fixtures = contract" specifies `makeTempContentRoot(files)`, `buildCharacter(overrides)`
-and `seedRng(seed)`; none of the three exists, so every suite that needs a content graph hand-rolls
-`new MemoryStorage()` → `st.write('c/<table>_srd.csv', …)` → `loadContent(st, ['c'])` again — nine
-times in `character/derive.test.ts` alone, and across `sheet-diff`, `build`, `combat`, `spell-picks`,
-`picker`, `loader`, `spellAccess` and `reload`.
+The 5.22% duplication was **not redundant tests**. It was one missing helper, three times over:
+`testing.md` §"Fixtures = contract" specified `makeTempContentRoot(files)`, `buildCharacter(overrides)`
+and `seedRng(seed)`, none of which existed, so every suite needing a content graph hand-rolled
+`new MemoryStorage()` → `st.write('c/<table>_srd.csv', …)` → `loadContent(st, ['c'])` — nine times in
+`character/derive.test.ts` alone, and again across `sheet-diff`, `build`, `combat`, `spell-picks`,
+`picker`, `item-tags`.
 
-Building those three helpers is the single change that would collapse most of the 1 012 duplicated
-lines, and unlike deleting tests it costs no coverage. It is also already the documented design — the
-gap is that nobody built it.
+**Built, in `src/test-support/`.** `fixtures.ts` holds `makeTempContentRoot` (plus
+`makeTempContentStorage` for tests that reload) and `buildCharacter`; `rng.ts` holds `rngSequence`,
+hoisted out of `dice.test.ts` where it was already the right helper in the wrong place. Seven suites
+migrated, 126 lines gone, no assertion touched. `seedRng(seed)` was deliberately not built and the
+doc now says why: this suite asserts hand-derived faces, so an explicit sequence of draws is the
+shape it needs and a seeded PRNG would hide every expected number.
 
 The second structural gap: `DialogShell` and `dismissOnEscape` are shared by six components and have
 no test of their own, which is *why* two consumers ended up testing them.

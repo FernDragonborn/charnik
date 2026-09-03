@@ -112,11 +112,15 @@ shipped CSVs through `tools/content-repo.mjs` — twelve suites read it, the dat
 `spell_slots`, `class_features_content`) among them. `tests/fixtures/content/` holds the hand-authored
 edge cases shipped data cannot carry, such as the underfilled homebrew pack `meta.test.ts` reads.
 
-Everything else is built inline over `MemoryStorage`. The three helpers this section specifies —
-`makeTempContentRoot(files)`, `buildCharacter(overrides)`, `seedRng(seed)` — **do not exist**;
-their absence is what every suite hand-rolls around, and it is the largest single source of
-duplication in the suite ([tests-audit.md](../tests-audit.md), tracked in [plan.md](../plan.md)
-▸ Backlog ▸ Code quality).
+Everything else is built over `MemoryStorage` through **`src/test-support/fixtures.ts`**:
+`makeTempContentRoot(files)` writes CSVs into one in-memory root and returns the loaded graph,
+throwing if the fixture itself fails to load so a typo fails where it was written; its
+`makeTempContentStorage` sibling hands back the storage when a test needs to rewrite and reload; and
+`buildCharacter(overrides)` shallow-merges `build`/`play` over a fresh character and parses it.
+Randomness comes from **`src/test-support/rng.ts`** — `rngSequence(...draws)` yields exactly the
+values given and throws on an over-draw, because the assertions here are hand-derived faces (0.5 is
+a 4 on a d6, an 11 on a d20) that a seeded PRNG would make unexplainable. That is why there is no
+`seedRng(seed)`: an explicit sequence is the shape this suite actually needs.
 
 ## Test ↔ phase map (each phase self-verifies)
 P2 content store (integration: parse/merge/index/collision/filter/locale/watch/writes) ·
