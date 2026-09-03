@@ -153,8 +153,9 @@ Content edits are commits in the content repo. App code is commits here. A build
 
 ## Working on it
 
-`pnpm dev` · `pnpm test` · `pnpm lint` · `pnpm build` · `pnpm check` · `pnpm tauri dev` (needs Rust)
-· `pnpm restamp <file>` · `pnpm loc` · `node tools/surface.mjs`. Full tool notes: `docs/internals/tooling.md`.
+`pnpm dev` · `pnpm test` · `pnpm lint` · `pnpm build` · `pnpm check` · `pnpm lint:typed:changed` ·
+`pnpm tauri dev` (needs Rust) · `pnpm restamp <file>` · `pnpm loc` · `node tools/surface.mjs`.
+Full tool notes: `docs/internals/tooling.md`.
 
 **Reuse before you write.** Before writing any code in `src/`, regenerate `docs/surface.md`
 (`node tools/surface.mjs`, well under a second) and grep for the concept — a class name, a formatter,
@@ -162,11 +163,15 @@ a helper. The things most often re-created here are CSS classes and functions of
 obvious utilities. A shared class lives in exactly one place; a shared control is one component. If
 something close exists, extend it rather than forking a scoped lookalike.
 
-**Run the whole gate before committing.** `pnpm test && pnpm lint && pnpm build`. A subset is a false
-green: `pnpm check` type-checks but does not catch build and prerender failures, and `pnpm test` runs
-the browser project too. Before a release, add `pnpm lint:typed` — it is CI-only because it builds the
-whole TS program and takes about ten minutes, so nothing local catches its errors and they surface on
-push. Start it in the background early.
+**Run the whole gate before committing.** `pnpm test && pnpm lint && pnpm build` — under a minute
+together, so there is nothing to save by trimming it. A subset is a false green: `pnpm check`
+type-checks but does not catch build and prerender failures, `pnpm build` type-checks *nothing*
+(vite transpiles with esbuild), and `pnpm test` runs the browser project too.
+
+The type-aware rules are the one gate too slow to run whole. Run **`pnpm lint:typed:changed`** (~15 s,
+same rules, only the files you touched) as you work, and full `pnpm lint:typed` before a release —
+over eleven minutes, so start it in the background early. The scoped pass cannot replace it: widen a return
+type to `Promise<T>` and the floating promise lands in a caller you did not edit.
 
 ## Verifying
 

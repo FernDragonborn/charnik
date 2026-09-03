@@ -23,6 +23,7 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint . && stylelint --config config/stylelint.json \"src/**/*.{css,svelte}\" && knip --config config/knip.json && jscpd -c config/jscpd.json && madge --circular src",
 		"lint:typed": "eslint -c config/eslint.typed.config.js .",
+		"lint:typed:changed": "node tools/lint-typed-changed.mjs",
 		"lint:fix": "prettier --write . && eslint . --fix && stylelint --config config/stylelint.json \"src/**/*.{css,svelte}\" --fix",
 		"knip": "knip --config config/knip.json",
 		"jscpd": "jscpd -c config/jscpd.json --reporters consoleFull",

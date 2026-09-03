@@ -128,6 +128,24 @@ is fine, while a 550-line one carrying 221 lines of script is not.
   distinction: core `no-nested-ternary` bans both, and `unicorn/no-nested-ternary`, which draws the
   line at depth, demands parentheses that prettier immediately strips. Do not re-add either.
 
+### The typed pass is scoped, not skipped
+
+`pnpm lint:typed` runs the five type-aware rules over the whole repo. It is a pre-release and CI gate
+because it takes ~11m30 — and nearly all of that is per-file work: building the TypeScript program
+costs ~11 s, everything after it is linting. One changed file and eight changed files both finish in
+~11 s.
+
+So scope it. **`pnpm lint:typed:changed`** (`tools/lint-typed-changed.mjs`) runs the same config over
+what `git diff` reports against HEAD plus untracked files, in ~15 s. Pass a ref
+(`pnpm lint:typed:changed HEAD~2`) to take in recent commits as well.
+
+Scoping is the whole trick and also the whole limitation: a rule only fires on a file it was handed,
+and widening a return type to `Promise<T>` puts the floating promise in callers you did not edit. The
+scoped pass is for while you work; the full one still runs before a release.
+
+It is deliberately **not** on the pre-commit hook. Fifteen seconds on every commit, in a repo where a
+verified checkpoint is a commit, is the tax that teaches people `--no-verify`.
+
 ### A file that belongs somewhere else MOVES
 
 When a module — or a symbol inside one — turns out to belong in a different folder, move it as part
@@ -165,9 +183,14 @@ Completion detection is unreliable, so a finished command often keeps the turn b
 timeout expires: a 15-minute ceiling on a 15-second test run is 15 minutes someone sits through. The
 generous ceiling is not insurance, it is the cost.
 
-`pnpm test` ~15 s · `pnpm check` ~65 s · `eslint .` ~26 s · `pnpm build` ~10 s · a single
-`vitest run <file>` ~2 s · `shot.mjs` ~30 s for the full set · **`pnpm lint:typed` ~9m30**. For
-anything genuinely long or unknown, run it in the background instead of buying a big timeout.
+`pnpm test` ~21 s (node ~18 s, browser ~11 s — run one project to pay one) · `pnpm check` ~15 s ·
+`eslint .` ~17 s · `pnpm build` ~12 s · a single `vitest run <file>` ~4 s ·
+`pnpm lint:typed:changed` ~15 s · `shot.mjs` ~30 s for the full set · **`pnpm lint:typed` ~11m30**.
+For anything genuinely long or unknown, run it in the background instead of buying a big timeout.
+
+Only the last one is worth working around. The whole ordinary gate — test, check, build — is under a
+minute, so **never reach for a narrower gate to save time that is not there**; `pnpm build` in
+particular type-checks *nothing*, because vite transpiles with esbuild.
 
 ## Toolchain constraints that will bite
 
@@ -182,12 +205,16 @@ anything genuinely long or unknown, run it in the background instead of buying a
   The tsconfig is already 7.0-clean (`target: esnext`, `moduleResolution: bundler`, no `baseUrl`).
   Revisit when TS 7.1 ships its API and typescript-eslint peers it. typescript-eslint#10940 is a
   *different* ask — tsgo as a speed backend — and is explicitly not on their roadmap.
-- **`svelte-check --tsgo` is real but rides a dead package.** Measured here: `pnpm check` 69 s → 30 s,
-  and a planted type error in `.ts`, `.svelte`, a component and a `.browser.test.ts` was caught in
-  every one, so the `--incremental` "files outside rootDir go unchecked" caveat does not bite this
-  layout. It needs `@typescript/native-preview`, which stopped publishing on 2026-07-07, one day
-  before 7.0 GA. Not adopted: a frozen pre-GA compiler under the gate that must not lie is a bad
-  trade for 39 s on a pre-push hook.
+- **Do not try to make `svelte-check` faster.** A full pass is 986 files in ~15 s; there is no room
+  left to win, and both accelerators cost correctness. `--tsgo` needs `@typescript/native-preview`,
+  which stopped publishing on 2026-07-07, one day before 7.0 GA — a frozen pre-GA compiler under the
+  gate that must not lie. `--incremental` is worse than useless here: it checks **132 of the 986
+  files** and reports **three errors that the plain run does not have** (`OptionList.svelte`,
+  `PickPane.svelte`), so it is a slower way to be wrong in both directions at once.
+- **`svelte-check` cannot check one file, and does not need to.** The CLI has `--workspace`,
+  `--tsconfig` and `--no-tsconfig`, no file filter — a type gate that skips the callers is not a type
+  gate. For a tight loop use `pnpm check:watch`: one full pass, then each save re-checks in about a
+  second.
 - **Browser tests need a local chromium.** `*.browser.test.ts` run under the `browser` vitest project;
   a fresh machine needs `pnpm exec playwright install chromium` first. Run just them with
   `pnpm vitest run --project browser`. Under vitest-browser-svelte 3, `render()` is **async** — miss
