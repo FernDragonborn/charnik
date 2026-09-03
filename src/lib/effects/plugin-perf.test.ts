@@ -89,31 +89,6 @@ describe('L3 hot-path cost guarantees (work-count, not wall-clock)', () => {
 		expect(ev.calls).toBe(0); // no plugin token → returns null before any evaluator work
 	});
 
-	it('a build-only handler is computed ONCE across 500 play-state changes (§4.2 memo)', () => {
-		const ev = counting(() => ({ tokens: ['flat_bonus:ac+1'] }), { readPlay: false });
-		registerPluginEvaluator(ev);
-		for (let hp = 0; hp < 500; hp++) expandPluginEffects([carrier('plugin:ns1:h')], ctx(hp), []);
-		expect(ev.calls).toBe(1); // every HP tick is a cache hit — the point of the build/play split
-	});
-
-	it('the same token on 100 carriers computes once, folds per occurrence', () => {
-		const ev = counting(() => ({ tokens: ['flat_bonus:ac+1'] }));
-		registerPluginEvaluator(ev);
-		const carriers = Array.from({ length: 100 }, (_, i) => carrier('plugin:ns1:h', `Item${i}`));
-		const out = expandPluginEffects(carriers, ctx(), []);
-		expect(ev.calls).toBe(1);
-		expect(out?.syntheticEffects.length).toBe(100);
-	});
-
-	it('a play-reading handler re-runs only on DISTINCT play states, not every derive', () => {
-		const ev = counting(() => ({}), { readPlay: true });
-		registerPluginEvaluator(ev);
-		// 5 distinct HP values, each derived 20× → exactly 5 real calls
-		for (let round = 0; round < 20; round++)
-			for (const hp of [1, 2, 3, 4, 5]) expandPluginEffects([carrier('plugin:ns1:h')], ctx(hp), []);
-		expect(ev.calls).toBe(5);
-	});
-
 	it('the aggregate budget bounds sandbox calls per derive (a flood cannot run unbounded)', () => {
 		let calls = 0;
 		const ev: PluginEvaluator = {

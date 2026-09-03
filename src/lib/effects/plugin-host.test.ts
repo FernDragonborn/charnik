@@ -120,8 +120,14 @@ describe('discoverPlugins', () => {
 });
 
 describe('consentHash — length-prefixed SHA-256 (§6.3)', () => {
-	it('is deterministic', async () => {
-		expect(await consentHash('a', 'b')).toBe(await consentHash('a', 'b'));
+	// A golden digest, not `f(a,b) === f(a,b)`: comparing the function to itself passes for any
+	// implementation that is not deliberately random, including one hashing the wrong bytes. This
+	// value is derived from the §6.3 formula itself — sha256(be64(1)‖'a'‖be64(1)‖'b') — so it pins
+	// determinism, SHA-256, the length-prefix framing and lowercase hex in one assertion.
+	it('is a stable SHA-256 over the length-prefixed pair', async () => {
+		expect(await consentHash('a', 'b')).toBe(
+			'3c9d591045bc8876f9d0399bbfb05c6a412096e906f73278f98406cd5dca86df',
+		);
 	});
 	it('the file boundary is part of the signature (no byte-migration collision)', async () => {
 		// same concatenated bytes, different split — MUST differ (the §6.3 attack)
