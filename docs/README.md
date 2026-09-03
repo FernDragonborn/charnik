@@ -26,6 +26,8 @@ Open the one whose subject you are about to touch, before the recommendation and
   [plugins](internals/plugins.md) and [actions](internals/actions.md) (play-state mutation)
 - [The roller](internals/roller.md) — dice, the record a roll leaves, crits, the roller organ
 - [Testing](internals/testing.md) · [Security](internals/security.md)
+- [Test suite audit](tests-audit.md) — the inventory of tests that carry no weight: dead, duplicated,
+  tautological. A list to act on, not a rule
 - [Multi-system compatibility](internals/compatibility.md) — the chokepoints a 5e-only assumption
   would block later; read before touching the fold, the effect grammar, or a schema
 - [Tooling](internals/tooling.md) — the repo's own tools and their traps

@@ -2631,6 +2631,14 @@ holds the done-work log; these are the OPEN tails it carried):**
   Pages deploy recovery still open.
 
 **Code quality:**
+- [ ] **The three test fixture helpers `testing.md` specifies and nobody built.**
+  `makeTempContentRoot(files)`, `buildCharacter(overrides)` and `seedRng(seed)` have zero hits in the
+  tree, so every suite that needs a content graph hand-rolls `new MemoryStorage()` →
+  `st.write('c/<table>_srd.csv', …)` → `loadContent(st, ['c'])` — nine times in
+  `character/derive.test.ts` alone, and again across `sheet-diff`, `build`, `combat`, `spell-picks`,
+  `picker`, `loader`, `spellAccess`, `reload`. That single gap is where ~1 000 of the suite's
+  duplicated lines come from ([tests-audit.md](tests-audit.md)); closing it removes them without
+  touching coverage. `loadPacks(...packs)` below is the precedent.
 - [x] **Friendly source labels** — `sourceLabel()` shows "D&D 5e (2014)", never the raw SRD tag;
   the `source` value itself stays exact for attribution (AGENTS.md ▸ A small glossary (source)).
 - [x] **CSS class-naming rename pass — DONE 2026-08-21.** Renamed to verbose, self-evident,

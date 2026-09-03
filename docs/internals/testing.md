@@ -60,11 +60,11 @@ divergences: ASI source (species vs background), weapon mastery (5.5e-only),
 encumbrance tiers (5e-only), over-capacity→5 ft, multiclass slot rules.
 
 ## High-risk modules (extra coverage)
-Per [plan.md] these historically break (Aurora failed several). **Coverage status (2026-07-16):**
-the effects engine, multiclass spellcasting, and level-up math have unit tests today; the
-**rule-blocks** (armor→spellcasting), **concentration** prompt fn, and **rests** (hit-dice /
-per-rest resources / 5.5e long-rest −1 exhaustion) items below are still LARGELY UNIMPLEMENTED —
-they describe the target coverage, not what exists. Treat an unchecked item here as a TODO.
+Per [plan.md] these historically break (Aurora failed several). Every item below has coverage except
+one: **long-rest re-prepare** is asserted nowhere. Rule-blocks live in `character/derive.test.ts`
+(worn armor → `spellcasting.armorBlock` + the `armor_proficiency` issue); concentration and rests in
+`routes/combat/combat.test.ts` (prompt on damage, a long rest ends it unconditionally, spent slots
+and HP restored, Hit Dice, the 5.5e −1 exhaustion ladder, per-rest recharge policies).
 - **Effects engine** — every vocab verb; stacking order; cap clamping (20/30, half-feat
   +1); unknown-effect → falls back to text/manual (never silently dropped); global
   toggle off → manual/text only; **custom/temporary effects** apply; **duration
@@ -100,10 +100,17 @@ Inject a **seeded RNG** for dice (4d6 stat roll, the dice roller, HP rolls on le
 so tests are repeatable; all derived stats otherwise deterministic.
 
 ## Fixtures = contract
-A small canonical **SRD-subset** of CSVs in `tests/fixtures/` doubles as test data **and**
-the shipped seed → tests exercise the real data shape. Include rows with effects (both
-in-vocab and deliberately out-of-vocab) and a deliberate cross-source collision.
-Helpers: `makeTempContentRoot(files)`, `buildCharacter(overrides)`, `seedRng(seed)`.
+Tests exercise the real data shape from two places. `src/test-support/real-content.ts` loads the
+shipped CSVs through `tools/content-repo.mjs` — twelve suites read it, the data gates
+(`items_content`, `conditions_content`, `resources_content`, `content_stamps`, `effects_catalog`,
+`spell_slots`, `class_features_content`) among them. `tests/fixtures/content/` holds the hand-authored
+edge cases shipped data cannot carry, such as the underfilled homebrew pack `meta.test.ts` reads.
+
+Everything else is built inline over `MemoryStorage`. The three helpers this section specifies —
+`makeTempContentRoot(files)`, `buildCharacter(overrides)`, `seedRng(seed)` — **do not exist**;
+their absence is what every suite hand-rolls around, and it is the largest single source of
+duplication in the suite ([tests-audit.md](../tests-audit.md), tracked in [plan.md](../plan.md)
+▸ Backlog ▸ Code quality).
 
 ## Test ↔ phase map (each phase self-verifies)
 P2 content store (integration: parse/merge/index/collision/filter/locale/watch/writes) ·
